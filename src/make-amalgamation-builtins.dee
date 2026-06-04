@@ -1,0 +1,188 @@
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/* -DCONFIG="my-tpp-config.h"  (file containing '#define TPP_HAVE_TPP_TOK_STRING 1', ...) */
+#ifdef CONFIG
+#include CONFIG
+#endif /* CONFIG */
+
+/* Substitute config by pulling in macros (and macros only) from "tpp-amalgamation.h" */
+#pragma extension(push)
+#pragma warning(push, "-Wno-environ", "-Wno-undef")
+#pragma tpp_exec("#include \"tpp-amalgamation.h\"")
+#pragma warning(pop)
+#pragma extension(pop)
+
+/* -DCONFIG="my-tpp-defs.h"  (file containing 'TPP_KWD(MY_KWD_foo, "foo")', ...) */
+#ifdef DEFS
+#define TPP_CONFIG_USERDEFS_FILENAME DEFS
+#endif
+
+import * from deemon;
+
+@@Mapping from 'if' -> 'TPP_KWD_if'
+global kwds: {string: string} = Dict();
+
+@@Mapping from 'trigraphs' -> 'TPP_EXT_TRIGRAPHS'
+@@Also: index in this mapping is numerical ID of extension
+global extensions: {string: string} = Dict();
+
+@@Mapping from 'syntax' -> ('TPP_WG_SYNTAX', 0)
+@@Also: index in this mapping is numerical ID of group
+global warningGroups: {string: (string, int)} = Dict();
+
+
+{
+	function addKwd(kwd: string, id: string) {
+		if (!kwds.setnew(kwd, id))
+			throw Error(f"Duplicate keyword {repr kwd}");
+	}
+	function addExtension(ext: string, id: string) {
+		if (!extensions.setnew(ext, id))
+			throw Error(f"Duplicate extension {repr ext}");
+	}
+	function addWarningGroups(name: string, id: string, index: int) {
+		if (!warningGroups.setnew(name, (id, index)))
+			throw Error(f"Duplicate warning group {repr name}");
+	}
+#define TPP_DEFS
+#define TPP_KWD(id, string)                   addKwd(string, #id);
+#define TPP_EXTENSION(id, name, default)      addExtension(name, #id);
+#define TPP_WGROUP_NAME_ITEM(wgroup_id, index, value) \
+	addWarningGroups(value, #wgroup_id, index);
+#define TPP_WGROUP(wgroup_id, names, default) \
+	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, TPP_WGROUP_NAME_ITEM, wgroup_id)
+#include "tpp-amalgamation.h"
+#undef TPP_DEFS
+}
+
+
+
+function tpp_hashof(s) {
+	local result = 1;
+	for (local o: s.ordinals)
+		result = result * 263 + o;
+	return result;
+}
+
+class TppHashTableItem {
+	this = default;
+	public member next:  TppHashTableItem | none;
+	public member hash:  int;
+	public member key:   string;
+	public member value: string;
+}
+
+class TppHashTable {
+	this = default;
+	public member size:  int = 0;
+	public member mask:  int = 0;
+	public member table: {(TppHashTableItem | none)...} = [none];
+
+	private doAdd(item: TppHashTableItem) {
+		local index = item.hash & mask;
+		item.next = table[index];
+		table[index] = item;
+	}
+
+	private setMask(mask: int) {
+		local oldTable = this.table;
+		this.mask  = mask;
+		this.table = List([none] * (mask + 1));
+		for (local bucket: oldTable) {
+			while (bucket !is none) {
+				local next = bucket.next;
+				doAdd(bucket);
+				bucket = next;
+			}
+		}
+	}
+
+	public get(key: string): TppHashTableItem {
+		local hash = tpp_hashof(key);
+		local bucket = this.table[hash & this.mask];
+		while (bucket !is none) {
+			if (bucket.hash == hash && bucket.key == key)
+				break;
+			bucket = bucket.next;
+		}
+		return bucket;
+	}
+
+	public add(key: string, value: string) {
+		if (size >= mask) {
+			local newMask = (mask << 1) | 1;
+			if (newMask < 15)
+				newMask = 15;
+			setMask(newMask);
+		}
+		doAdd(TppHashTableItem(
+				hash:  tpp_hashof(key),
+				key:   key,
+				value: value
+		));
+		++size;
+	}
+}
+
+local kwdsTable = TppHashTable();
+for (local string, id: kwds)
+	kwdsTable.add(string, id);
+
+print("/* GENERATED FILE -- DO NOT EDIT */");
+print;
+for (local string, id: kwds)
+	print(f"TPP_BUILTIN_KEYWORD_DECL({id}, {#string})");
+print;
+print(f"#define TPP_BUILTIN_KEYWORD_COUNT {kwdsTable.size}");
+print(f"#define TPP_BUILTIN_KEYWORD_MASK  {kwdsTable.mask}");
+for (local string, id: kwds) {
+	local kwd = kwdsTable.get(string);
+	assert kwd !is none;
+	print(f"TPP_BUILTIN_KEYWORD_IMPL({id}, {#string}, {repr string}, {
+		kwd.next is none ? "NULL" : f"&tpp_builtin_keyword_{kwd.next.value}"}, "
+		f"{((kwd.hash >> 32) & 0xffffffff).tostr(16, 8, "X")}, "
+		f"{((kwd.hash) & 0xffffffff).tostr(16, 8, "X")})");
+}
+
+print(f"TPP_BUILTIN_KEYWORD_TABLE(");
+for (local i: [:kwdsTable.mask + 1]) {
+	local bucket = kwdsTable.table[i];
+	if (bucket !is none) {
+		print(f"	TPP_BUILTIN_KEYWORD_TABLE_ITEM(&tpp_builtin_keyword_{bucket.value})");
+	} else {
+		print(f"	TPP_BUILTIN_KEYWORD_TABLE_ITEM_BLANK");
+	}
+}
+print(f")");
+print;
+
+local extensionsSorted = extensions.sorted();
+print(f"TPP_BUILTIN_EXTENSION_NAMES(");
+for (local name, id: extensionsSorted)
+	print(f"	TPP_BUILTIN_EXTENSION_NAME({id}, {repr name})");
+print(f")");
+print;
+
+local warningGroupsSorted = warningGroups.sorted();
+print(f"TPP_BUILTIN_WARNING_GROUP_NAMES(");
+for (local name, id: warningGroupsSorted)
+	print(f"	TPP_BUILTIN_WARNING_GROUP_NAME({id.first}, {id.last}, {repr name})");
+print(f")");

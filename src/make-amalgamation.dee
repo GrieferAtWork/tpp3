@@ -1,0 +1,75 @@
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import posix;
+
+function getFile(filename: string): Bytes {
+	local data: Bytes;
+	with (local fp = File.open(filename, "rb"))
+		data = fp.readall();
+	final local START = "/*[[[tpp-begin]]]*/";
+	final local END   = "/*[[[tpp-end]]]*/";
+	local start = data.index(START) + #START;
+	local end   = data.index(END);
+	while (data.isspace(start))
+		++start;
+	while (data.isspace(end - 1))
+		--end;
+	return data[start:end]
+		/* Remove comments containing [[[deemon]]] scripts */
+		.rereplace(r"/\*\[\[\[deemon.*\]\]\]\*/\n(.*)/\*\[\[\[end\]\]\]\*/\n", r"\1");
+}
+
+function makeAmalgamation(inputFilename: string, outputFilename: string) {
+	local data: Bytes;
+	with (local fp = File.open(inputFilename, "rb"))
+		data = fp.readall();
+	local writer = File.Writer(hint: "bytes");
+	local i = 0;
+	while (i < #data) {
+		local MARKER = '#include "';
+		local inc = data.find(MARKER, i);
+		if (inc < 0)
+			break;
+		writer.write(data[i:inc]);
+		inc += #MARKER;
+		local incEnd = data.index('"', inc);
+		local filename = data[inc:incEnd].decode("utf-8");
+		local absFilename = posix.joinpath(posix.headof(inputFilename), filename);
+		writer.write(f"/************************************************************************/\n"
+		             f"/* File: {filename.ljust(63)}*/\n"
+		             f"/************************************************************************/\n");
+		writer.write(getFile(absFilename));
+		writer.write(f"\n/************************************************************************/\n"
+		             f"");
+		i = incEnd + 1;
+	}
+	writer.write(data[i:]);
+	local outData = writer.bytes;
+	with (local fp = File.open(outputFilename, "wb"))
+		fp.write(outData);
+}
+
+
+makeAmalgamation("tpp.h", "tpp-amalgamation.h");
+makeAmalgamation("tpp.c", "tpp-amalgamation.c");
+
+

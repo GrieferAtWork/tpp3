@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\frontend.c" />
+    <ClCompile Include="..\src\parts\builtins.c" />
+    <ClCompile Include="..\src\parts\ctype.c" />
+    <ClCompile Include="..\src\parts\error.c" />
+    <ClCompile Include="..\src\parts\extension.c" />
+    <ClCompile Include="..\src\parts\features.c" />
+    <ClCompile Include="..\src\parts\file-io.c" />
+    <ClCompile Include="..\src\parts\file.c" />
+    <ClCompile Include="..\src\parts\keyword.c" />
+    <ClCompile Include="..\src\parts\lexer-decodestring.c" />
+    <ClCompile Include="..\src\parts\lexer-warn.c" />
+    <ClCompile Include="..\src\parts\lexer-yield.c" />
+    <ClCompile Include="..\src\parts\lexer-yieldpp.c" />
+    <ClCompile Include="..\src\parts\lexer-yieldraw.c" />
+    <ClCompile Include="..\src\parts\lexer.c" />
+    <ClCompile Include="..\src\parts\macro.c" />
+    <ClCompile Include="..\src\parts\string.c" />
+    <ClCompile Include="..\src\parts\token-strtokenid.c" />
+    <ClCompile Include="..\src\parts\warnings.c" />
+    <ClCompile Include="..\src\tpp-amalgamation.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\tpp.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\parts\api.h" />
+    <ClInclude Include="..\src\parts\config.h" />
+    <ClInclude Include="..\src\parts\ctype.h" />
+    <ClInclude Include="..\src\parts\defs.h" />
+    <ClInclude Include="..\src\parts\error.h" />
+    <ClInclude Include="..\src\parts\extension.h" />
+    <ClInclude Include="..\src\parts\features.h" />
+    <ClInclude Include="..\src\parts\file-io.h" />
+    <ClInclude Include="..\src\parts\file.h" />
+    <ClInclude Include="..\src\parts\keyword.h" />
+    <ClInclude Include="..\src\parts\lexer.h" />
+    <ClInclude Include="..\src\parts\macro.h" />
+    <ClInclude Include="..\src\parts\string.h" />
+    <ClInclude Include="..\src\parts\token.h" />
+    <ClInclude Include="..\src\parts\tuple.h" />
+    <ClInclude Include="..\src\parts\warnings.h" />
+    <ClInclude Include="..\src\tpp-amalgamation.h" />
+    <ClInclude Include="..\src\tpp.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\cpp.hint" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{86D226C5-EF62-4562-AC06-E6A753DFA7CF}</ProjectGuid>
+    <RootNamespace>tpp</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <IntDir>$(ProjectDir)..\build\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(IncludePath)</IncludePath>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <IntDir>$(ProjectDir)..\build\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ShowIncludes>false</ShowIncludes>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

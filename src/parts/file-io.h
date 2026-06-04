@@ -1,0 +1,142 @@
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_TPP_FILE_IO_H
+#define GUARD_TPP_FILE_IO_H 1
+
+#include "api.h"
+#include "config.h"
+
+/*[[[tpp-begin]]]*/
+#ifndef TPP_OS_WINDOWS
+#if (defined(_WIN64) || defined(WIN64) || \
+     defined(_WIN32) || defined(WIN32) || defined(__WIN32__))
+#define TPP_OS_WINDOWS 1
+#else /* ... */
+#define TPP_OS_WINDOWS 0
+#endif /* !... */
+#endif /* !TPP_OS_WINDOWS */
+
+#ifndef TPP_OS_UNIX
+#if (defined(__unix__) || defined(__unix) || defined(unix) || \
+     defined(__posix__) || defined(__posix) || defined(posix))
+#define TPP_OS_UNIX 1
+#else /* ... */
+#define TPP_OS_UNIX 0
+#endif /* !... */
+#endif /* !TPP_OS_UNIX */
+
+#ifndef TPP_FS_HAVE_DRIVES
+#define TPP_FS_HAVE_DRIVES TPP_OS_WINDOWS
+#endif /* !TPP_FS_HAVE_DRIVES */
+
+#ifndef TPP_FS_HAVE_ICASE
+#define TPP_FS_HAVE_ICASE TPP_OS_WINDOWS
+#endif /* !TPP_FS_HAVE_ICASE */
+
+#ifndef TPP_FS_SEP
+#define TPP_FS_SEP '/'
+#endif /* !TPP_FS_SEP */
+
+#ifndef TPP_FS_ALTSEP
+#if TPP_OS_WINDOWS || defined(__CYGWIN__)
+#define TPP_FS_ALTSEP '\\'
+#else /* TPP_OS_WINDOWS */
+#define TPP_FS_ALTSEP '/'
+#endif /* !TPP_OS_WINDOWS */
+#endif /* !TPP_FS_ALTSEP */
+
+#ifndef TPP_FS_ISSEP
+#if TPP_FS_SEP == TPP_FS_ALTSEP
+#define TPP_FS_ISSEP(x) ((x) == TPP_FS_SEP)
+#else /* TPP_FS_SEP == TPP_FS_ALTSEP */
+#define TPP_FS_ISSEP(x) ((x) == TPP_FS_SEP || (x) == TPP_FS_ALTSEP)
+#endif /* TPP_FS_SEP != TPP_FS_ALTSEP */
+#endif /* !TPP_FS_ISSEP */
+
+#ifndef TPP_FS_ISABS
+#if TPP_FS_HAVE_DRIVES
+#define TPP_FS_ISABS(filename) ((filename)[0] && (filename)[1] == ':')
+#else /* TPP_FS_HAVE_DRIVES */
+#define TPP_FS_ISABS(filename) TPP_FS_ISSEP((filename)[0])
+#endif /* !TPP_FS_HAVE_DRIVES */
+#endif /* !TPP_FS_ISABS */
+
+#ifndef tpp_io_handle
+#define tpp_io_handle_IS_BUILTIN
+#if TPP_OS_WINDOWS
+#include <Windows.h>
+#define tpp_io_handle HANDLE
+#define tpp_io_handle_IS_HANDLE
+#define tpp_io_handle_INVALID INVALID_HANDLE_VALUE
+#elif TPP_OS_UNIX
+#define tpp_io_handle int
+#define tpp_io_handle_IS_int
+#define tpp_io_handle_INVALID (-1)
+#else /* ... */
+#include <stdio.h>
+#define tpp_io_handle FILE *
+#define tpp_io_handle_IS_FILE
+#define tpp_io_handle_INVALID NULL
+
+#if TPP_HAVE_FILE_NONBLOCK < 0
+#undef TPP_HAVE_FILE_NONBLOCK
+#define TPP_HAVE_FILE_NONBLOCK 0
+#elif TPP_HAVE_FILE_NONBLOCK
+#error "No way to implement 'TPP_HAVE_FILE_NONBLOCK' on this OS"
+#endif /* ... */
+#endif /* !... */
+#endif /* !tpp_io_handle */
+
+
+/* Support for non-blocking I/O */
+#if TPP_HAVE_FILE_NONBLOCK
+#define tpp_io_nonblock__PARAM , int nonblock
+#define tpp_io_nonblock__ARG   , nonblock
+#else /* TPP_HAVE_FILE_NONBLOCK */
+#define tpp_io_nonblock__PARAM /* nothing */
+#define tpp_io_nonblock__ARG   /* nothing */
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+
+
+#ifdef tpp_io_handle_IS_BUILTIN
+TPP_DECL_BEGIN
+
+/* Open a file for reading
+ * @return: tpp_io_handle_INVALID: No such file or directory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_io_handle TPPCALL
+tpp_io_open(/*utf-8*/ char const *filename);
+
+/* Close a file previously opened by `tpp_io_open()' */
+TPP_DECL void TPPCALL tpp_io_close(tpp_io_handle file);
+
+/* Read data from a given `file' into `buf'
+ * @return: * : The # of bytes read into `buf' (at most `bufsize')
+ * @return: (tpp_ssize)TPP_EIO:         I/O error
+ * #if TPP_HAVE_FILE_NONBLOCK
+ * @return: (tpp_ssize)TPP_EWOULDBLOCK: `nonblock' was given, but operation would block
+ * #endif // TPP_HAVE_FILE_NONBLOCK */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
+tpp_io_read(tpp_io_handle file, void *buf, tpp_size bufsize tpp_io_nonblock__PARAM);
+
+TPP_DECL_END
+#endif /* tpp_io_handle_IS_BUILTIN */
+/*[[[tpp-end]]]*/
+
+#endif /* !GUARD_TPP_FILE_IO_H */

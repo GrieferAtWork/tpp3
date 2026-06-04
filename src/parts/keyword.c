@@ -1,0 +1,888 @@
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_TPP_KEYWORD_C
+#define GUARD_TPP_KEYWORD_C 1
+#define TPP_BUILDING 1
+
+#include "api.h"
+
+#include "config.h"
+#include "keyword.h"
+#include "macro.h"
+#include "string.h"
+#include "token.h"
+
+/*[[[tpp-begin]]]*/
+TPP_DECL_BEGIN
+
+/* Assert that "tpp_keyword" and "tpp_string" are binary-compatible. */
+TPP_STATIC_ASSERT((tpp_offsetof(tpp_keyword, tk_refcnt) -
+                   tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)) ==
+                  (tpp_offsetof(tpp_string, ts_refcnt)));
+TPP_STATIC_ASSERT((tpp_offsetof(tpp_keyword, tk_len) -
+                   tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)) ==
+                  (tpp_offsetof(tpp_string, ts_len)));
+TPP_STATIC_ASSERT((tpp_offsetof(tpp_keyword, tk_kwd) -
+                   tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)) ==
+                  (tpp_offsetof(tpp_string, ts_str)));
+
+
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self) {
+	tpp_size i;
+	for (i = 0; i < self->tmps_cnt; ++i) {
+		TPP_REF tpp_macro *mac;
+		mac = self->tmps_vec[i].tmpe_macro;
+		if (mac)
+			tpp_macro_decref(mac);
+	}
+	tpp_free(self->tmps_vec);
+}
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+
+#if TPP_HAVE_KEYWORD_MISC
+/* Ensure that `self->tk_misc' has been allocated and return it.
+ * If it isn't already allocated, allocate+return it lazily.
+ * WARNING: Only call this function on a "writable" keyword (s.a. `tpp_keywords_copybuiltin()')
+ *
+ * @return: * :   The "misc" data of "self" (freshly allocated)
+ * @return: NULL: OOM (TPP_ENOMEM) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
+tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
+	tpp_keyword_misc *result = self->tk_misc;
+	if tpp_unlikely(result == NULL) {
+		result = (tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc));
+		if tpp_likely(result) {
+#if TPP_HAVE_KEYWORD_FLAGS
+			result->tkm_flags = TPP_KEYWORD_FLAG_NORMAL;
+#endif /* TPP_HAVE_KEYWORD_FLAGS */
+#if TPP_HAVE_KEYWORD_FILE_GUARD
+			result->tkm_file_guard = NULL;
+#endif /* TPP_HAVE_KEYWORD_FILE_GUARD */
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+			tpp_macro_pushstack_init(&result->tkm_macro_pushstack);
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+			self->tk_misc = result;
+		}
+	}
+	return result;
+}
+#endif /* TPP_HAVE_KEYWORD_MISC */
+
+
+/* Calculate the hash of a given keyword string */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
+tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len) {
+	tpp_hash result = 1;
+	tpp_size i;
+	for (i = 0; i < len; ++i) {
+		tpp_char ch = kwd[i];
+		result = result * 263 + ch;
+	}
+	return result;
+}
+
+
+
+/* Helper macros to skip over BSE when parsing already-loaded text.
+ * tpp_skipbse_fwd: If "pos" points at a \-character, skip forward until end of BSE (if it is one)
+ * tpp_skipbse_bck: If "pos" points after a line-feed character, skip backward until start of BSE (if it is one) */
+#if TPP_HAVE_BSE
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+tpp_skipbse_fwd_(tpp_char const *pos, tpp_char const *end tpp_bse_file__PARAM) {
+	tpp_char const *iter = pos;
+	tpp_assert(iter < end);
+#if TPP_HAVE_TRIGRAPHS
+	tpp_assert(*iter == '\\' || *iter == '?');
+	if (*iter == '?') {
+		if ((iter + 2) > end)
+			goto not_bse;
+		if (iter[1] != '?')
+			goto not_bse;
+		if (iter[2] != '/')
+			goto not_bse;
+		iter += 3;
+	} else {
+		iter += 1;
+	}
+#else /* TPP_HAVE_TRIGRAPHS */
+	tpp_assert(*iter == '\\');
+	++iter;
+#endif /* !TPP_HAVE_TRIGRAPHS */
+#if TPP_HAVE_UNICODE
+	if (tpp_file_isutf8(file)) {
+		tpp_unichar uc;
+#if TPP_HAVE_BSE_WHITESPACE
+		for (;;) {
+			uc = tpp_unicode_readutf8(&iter, end);
+			if (!uc && iter >= end)
+				goto not_bse;
+			if (!tpp_unicode_isspace_nolf(uc)) {
+				if (!tpp_unicode_islf(uc))
+					goto not_bse;
+				break;
+			}
+		}
+#else /* TPP_HAVE_BSE_WHITESPACE */
+		uc = tpp_unicode_readutf8(&iter, end);
+		if (!tpp_unicode_islf(*iter))
+			goto not_bse;
+#endif /* !TPP_HAVE_BSE_WHITESPACE */
+		if (uc == '\r' && iter < end && *iter == '\n')
+			++iter;
+	} else
+#endif /* TPP_HAVE_UNICODE */
+	{
+#if TPP_HAVE_BSE_WHITESPACE
+		for (;;) {
+			if (iter >= end)
+				goto not_bse;
+			if (!tpp_ascii_isspace_nolf(*iter))
+				break;
+			++iter;
+		}
+#endif /* TPP_HAVE_BSE_WHITESPACE */
+		if (!tpp_ascii_islf(*iter))
+			goto not_bse;
+		if (*iter == '\r') {
+			++iter;
+			if (iter < end && *iter == '\n')
+				++iter;
+		} else {
+			++iter;
+		}
+	}
+	return iter;
+not_bse:
+	return pos;
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+tpp_skipbse_bck_(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM) {
+	tpp_char const *iter = pos;
+	tpp_assert(iter > start);
+#if TPP_HAVE_UNICODE
+	tpp_assert(tpp_ascii_islfornascii(iter[-1]));
+	if (tpp_file_isutf8(file)) {
+		tpp_unichar uc;
+		uc = tpp_unicode_readutf8_rev(&iter, start);
+		if (!tpp_unicode_islf(uc))
+			goto not_bse;
+		if (uc == '\n' && iter > start && iter[-1] == '\r')
+			--iter;
+#if TPP_HAVE_BSE_WHITESPACE
+		for (;;) {
+			uc = tpp_unicode_readutf8_rev(&iter, start);
+			if (!uc && iter <= start)
+				goto not_bse;
+			if (!tpp_unicode_isspace_nolf(uc)) {
+				if (uc == '\\')
+					return iter;
+#if TPP_HAVE_TRIGRAPHS
+				if (uc == '/') {
+					uc = tpp_unicode_readutf8_rev(&iter, start);
+					if (uc != '?')
+						goto not_bse;
+					uc = tpp_unicode_readutf8_rev(&iter, start);
+					if (uc != '?')
+						goto not_bse;
+					return iter;
+				}
+#endif /* TPP_HAVE_TRIGRAPHS */
+				goto not_bse;
+			}
+		}
+#else /* TPP_HAVE_BSE_WHITESPACE */
+		uc = tpp_unicode_readutf8_rev(&iter, start);
+		if (uc == '\\')
+			return iter;
+#if TPP_HAVE_TRIGRAPHS
+		if (uc == '/') {
+			uc = tpp_unicode_readutf8_rev(&iter, start);
+			if (uc != '?')
+				goto not_bse;
+			uc = tpp_unicode_readutf8_rev(&iter, start);
+			if (uc != '?')
+				goto not_bse;
+			return iter;
+		}
+#endif /* TPP_HAVE_TRIGRAPHS */
+		goto not_bse;
+#endif /* !TPP_HAVE_BSE_WHITESPACE */
+	}
+	if (!tpp_ascii_islf(*iter))
+		goto not_bse;
+#else /* TPP_HAVE_UNICODE */
+	tpp_assert(tpp_ascii_islf(iter[-1]));
+#endif /* !TPP_HAVE_UNICODE */
+	--iter;
+	if (iter <= start)
+		goto not_bse;
+	if (iter[-1] == '\r' && *iter == '\n') {
+		--iter;
+		if (iter <= start)
+			goto not_bse;
+	}
+#if TPP_HAVE_BSE_WHITESPACE
+	for (;;) {
+		if (iter <= start)
+			goto not_bse;
+		--iter;
+		if (!tpp_ascii_isspace_nolf(*iter))
+			break;
+	}
+#endif /* TPP_HAVE_BSE_WHITESPACE */
+	if (*iter == '\\')
+		return iter;
+#if TPP_HAVE_TRIGRAPHS
+	if (*iter == '/') {
+		if ((iter - 2) < start)
+			goto not_bse;
+		if (iter[-1] == '?' && iter[-2] == '?')
+			return iter - 2;
+	}
+#endif /* TPP_HAVE_TRIGRAPHS */
+not_bse:
+	return pos;
+}
+#endif /* TPP_HAVE_BSE */
+
+
+#if TPP_HAVE_BSE
+/* Same as `tpp_hashof()', but skip over \-escaped linefeeds when calculating the hash */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
+tpp_hashof_bse_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PARAM) {
+	tpp_hash result = 1;
+	tpp_char const *end = kwd + len;
+	while (kwd < end) {
+		tpp_char ch = *kwd++;
+		result = result * 263 + ch;
+		kwd = tpp_skipbse_fwd(kwd, end, file);
+	}
+	return result;
+}
+
+/* Copy `in_text...+=len' to `out_text', whilst removing \-escaped linefeeds
+ * The caller must ensure that `out_text' has space for at least `len' bytes,
+ * and the actual # of used bytes of `out_text' is returned. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
+tpp_without_bse_(tpp_char *tpp_restrict out_text,
+                 tpp_char const *tpp_restrict in_text,
+                 tpp_size len tpp_bse_file__PARAM) {
+	tpp_size result = 0;
+	tpp_char const *end = in_text + len;
+	while (in_text < end) {
+		tpp_char ch = *in_text++;
+		out_text[result++] = ch;
+		in_text = tpp_skipbse_fwd(in_text, end, file);
+	}
+	return result;
+}
+
+/* Compare 2 strings, one of which may contain \-escaped linefeeds that must be skipped. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) int TPPCALL
+tpp_memcmp_bse_(tpp_char const *lhs_without_bse, tpp_size lhs_len,
+                tpp_char const *rhs_with_bse, tpp_size rhs_len
+                tpp_bse_file__PARAM) {
+	tpp_char const *lhs_end = lhs_without_bse + lhs_len;
+	tpp_char const *rhs_end = rhs_with_bse + rhs_len;
+	while (rhs_with_bse < rhs_end) {
+		tpp_char lhs_ch, rhs_ch;
+		if (lhs_without_bse >= lhs_end)
+			return -1;
+		lhs_ch = *lhs_without_bse++;
+		rhs_ch = *rhs_with_bse++;
+		if (lhs_ch != rhs_ch)
+			return lhs_ch < rhs_ch ? -1 : 1;
+		rhs_with_bse = tpp_skipbse_fwd(rhs_with_bse, rhs_end, file);
+	}
+	return 0;
+}
+#endif /* TPP_HAVE_BSE */
+
+
+#if TPP_HAVE_KEYWORD_MISC
+static TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+	tpp_macro_pushstack_fini(&self->tkm_macro_pushstack);
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+	tpp_free(self);
+}
+#endif /* TPP_HAVE_KEYWORD_MISC */
+
+static TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
+	tpp_assert(self->tk_refcnt == 1 && "Keyword still in use");
+#if TPP_HAVE_CPP_MACROS
+	if (self->tk_macro)
+		tpp_macro_decref(self->tk_macro);
+#endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_KEYWORD_MISC
+	if (self->tk_misc)
+		tpp_keyword_misc_destroy(self->tk_misc);
+#endif /* TPP_HAVE_KEYWORD_MISC */
+	tpp_free(self);
+}
+
+
+TPP_IMPL TPP_REF tpp_keyword *tpp_keywords_empty_map[1] = { NULL };
+
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_fini(tpp_keywords *tpp_restrict self) {
+	TPP_REF tpp_keyword **bckv = self->tks_bckv;
+	if (bckv != tpp_keywords_empty_map) {
+		tpp_hash i;
+		for (i = 0; i <= self->tks_bckm; ++i) {
+			TPP_REF tpp_keyword *chain = bckv[i];
+			while (chain) {
+				TPP_REF tpp_keyword *next = chain->tk_next;
+				tpp_keyword_destroy(chain);
+				chain = next;
+			}
+		}
+		tpp_free(bckv);
+	}
+}
+
+/* Lookup keywords within the given keywords-table **ONLY**
+ * @return: * :   The keyword in question
+ * @return: NULL: No such keyword (consider using "tpp_keywords_getkeyword" to
+ *                also check for builtin keywords, or "tpp_keywords_newkeyword"
+ *                to do the same, but lazily create missing keywords) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+_tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
+                         tpp_char const *tpp_restrict kwd,
+                         tpp_size len, tpp_hash hash) {
+	tpp_keyword *result = self->tks_bckv[hash & self->tks_bckm];
+	for (; result; result = result->tk_next) {
+		if (result->tk_hash != hash)
+			continue;
+		if (result->tk_len != len)
+			continue;
+		if (tpp_memcmp(result->tk_kwd, kwd, len) == 0)
+			break;
+	}
+	return result;
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+_tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
+                              enum tpp_token_id id) {
+	tpp_hash i;
+#if !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
+	if (!TPP_TOK_ISUSERKEYWORD(id))
+		return NULL;
+#endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+
+	/* XXX: This is slow... */
+	for (i = 0; i <= self->tks_bckm; ++i) {
+		tpp_keyword *chain = self->tks_bckv[i];
+		for (; chain; chain = chain->tk_next) {
+			if (chain->tk_id == id)
+				return chain;
+		}
+	}
+	return NULL;
+}
+
+#if TPP_HAVE_BSE
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+_tpp_keywords_getkeyword_bse_(tpp_keywords const *tpp_restrict self,
+                              tpp_char const *tpp_restrict kwd,
+                              tpp_size len, tpp_hash hash
+                              tpp_bse_file__PARAM) {
+	tpp_keyword *result = self->tks_bckv[hash & self->tks_bckm];
+	for (; result; result = result->tk_next) {
+		if (result->tk_hash != hash)
+			continue;
+		if (tpp_memcmp_bse(result->tk_kwd, result->tk_len, kwd, len, file) == 0)
+			break;
+	}
+	return result;
+}
+#endif /* TPP_HAVE_BSE */
+
+
+/* Same as above, but also search the built-in keyword table (tpp_builtin_getkeyword) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
+                        tpp_char const *tpp_restrict kwd,
+                        tpp_size len, tpp_hash hash) {
+	tpp_keyword const *result;
+	result = _tpp_keywords_getkeyword(self, kwd, len, hash);
+	if (result == NULL)
+		result = tpp_builtin_getkeyword(kwd, len, hash);
+	return result;
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
+                             enum tpp_token_id id) {
+	tpp_keyword const *result;
+	result = _tpp_keywords_getkeyword_byid(self, id);
+	if (result == NULL)
+		result = tpp_builtin_getkeyword_byid(id);
+	return result;
+}
+
+#if TPP_HAVE_BSE
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+tpp_keywords_getkeyword_bse_(tpp_keywords const *tpp_restrict self,
+                             tpp_char const *tpp_restrict kwd,
+                             tpp_size len, tpp_hash hash
+                             tpp_bse_file__PARAM) {
+	tpp_keyword const *result;
+	result = _tpp_keywords_getkeyword_bse(self, kwd, len, hash, file);
+	if (result == NULL)
+		result = tpp_builtin_getkeyword_bse(kwd, len, hash, file);
+	return result;
+}
+#endif /* TPP_HAVE_BSE */
+
+
+/* Insert "kwd" into "self". If necessary, resize the hash-map.
+ * If resizing fails, "kwd" is destroyed and "NULL" is returned. */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+tpp_keywords_inskeyword(tpp_keywords *tpp_restrict self,
+                        /*inherit(always)*/ tpp_keyword *kwd) {
+	if (self->tks_kwdc >= self->tks_bckm) {
+		/* Try to resize table. */
+		TPP_REF tpp_keyword **new_table;
+		tpp_hash i, new_mask = (self->tks_bckm << 1) | 1;
+		if (new_mask < 15)
+			new_mask = 15;
+		new_table = (TPP_REF tpp_keyword **)tpp_trymalloc((new_mask + 1) * sizeof(TPP_REF tpp_keyword *));
+		if tpp_unlikely(!new_table) {
+			new_mask = (self->tks_bckm << 1) | 1;
+			new_table = (TPP_REF tpp_keyword **)tpp_trymalloc((new_mask + 1) * sizeof(TPP_REF tpp_keyword *));
+			if tpp_unlikely(!new_table) {
+				if (self->tks_bckm != 0)
+					goto do_insert;
+				new_table = (TPP_REF tpp_keyword **)tpp_malloc((new_mask + 1) * sizeof(TPP_REF tpp_keyword *));
+				if tpp_unlikely(!new_table)
+					goto err_oom;
+			}
+		}
+		tpp_memset(new_table, 0, (new_mask + 1) * sizeof(TPP_REF tpp_keyword *));
+
+		/* Transfer "self->tks_bckv" (old table) into "new_table" */
+		for (i = 0; i <= self->tks_bckm; ++i) {
+			TPP_REF tpp_keyword *chain = self->tks_bckv[i];
+			while (chain) {
+				TPP_REF tpp_keyword *next = chain->tk_next;
+				TPP_REF tpp_keyword **bucket = &new_table[chain->tk_hash & new_mask];
+				chain->tk_next = *bucket;
+				*bucket = chain;
+				chain = next;
+			}
+		}
+
+		/* Free old table and assume new one. */
+		if (self->tks_bckv != tpp_keywords_empty_map)
+			tpp_free(self->tks_bckv);
+		self->tks_bckv = new_table;
+		self->tks_bckm = new_mask;
+	}
+
+do_insert:
+	tpp_assert(self->tks_bckm != 0);
+	tpp_assert(self->tks_bckv != tpp_keywords_empty_map);
+	{
+		TPP_REF tpp_keyword **bucket;
+		bucket = &self->tks_bckv[kwd->tk_hash & self->tks_bckm];
+		kwd->tk_next = *bucket;
+		*bucket = kwd;
+	}
+	++self->tks_kwdc;
+	return kwd;
+err_oom:
+	tpp_keyword_destroy(kwd);
+	return NULL;
+}
+
+/* Same as above, but if the keyword doesn't exist in `self' or the builtin
+ * keyword table, a new keyword is allocated, given an ID, and inserted into `self'
+ * @return: * :   The keyword associated with `kwd' (possibly having been just allocated)
+ * @return: NULL: OOM (TPP_ENOMEM) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
+                        tpp_char const *tpp_restrict kwd,
+                        tpp_size len, tpp_hash hash) {
+	tpp_keyword *result;
+	result = (tpp_keyword *)tpp_keywords_getkeyword(self, kwd, len, hash);
+	if (result != NULL)
+		goto done;
+
+	/* Must allocate a new keyword... */
+	result = (tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(len));
+	if (result == NULL)
+		goto done;
+
+	result->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
+#if TPP_HAVE_CPP_MACROS
+	result->tk_macro = NULL;
+#endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_KEYWORD_MISC
+	result->tk_misc = NULL;
+#endif /* TPP_HAVE_KEYWORD_MISC */
+	result->tk_hash = hash;
+	result->tk_refcnt = 1;
+	result->tk_len = len;
+	tpp_memcpy(result->tk_kwd, kwd, len * sizeof(tpp_char));
+	result->tk_kwd[len] = (tpp_char)'\0';
+	result = tpp_keywords_inskeyword(self, result);
+done:
+	return result;
+}
+
+#if TPP_HAVE_BSE
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+tpp_keywords_newkeyword_bse_(tpp_keywords *tpp_restrict self,
+                             tpp_char const *tpp_restrict kwd,
+                             tpp_size len, tpp_hash hash
+                             tpp_bse_file__PARAM) {
+	tpp_keyword *result;
+	tpp_size len_without_bse;
+	result = (tpp_keyword *)tpp_keywords_getkeyword_bse(self, kwd, len, hash, file);
+	if (result != NULL)
+		goto done;
+
+	/* Must allocate a new keyword... */
+	result = (tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(len));
+	if (result == NULL)
+		goto done;
+
+	result->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
+#if TPP_HAVE_CPP_MACROS
+	result->tk_macro = NULL;
+#endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_KEYWORD_MISC
+	result->tk_misc = NULL;
+#endif /* TPP_HAVE_KEYWORD_MISC */
+	result->tk_hash = hash;
+	result->tk_refcnt = 1;
+	len_without_bse = tpp_without_bse(result->tk_kwd, kwd, len, file);
+	tpp_assert(len_without_bse <= len);
+	result->tk_len = len_without_bse;
+	if (len_without_bse < len) {
+		tpp_keyword *new_result;
+		new_result = (tpp_keyword *)tpp_realloc(result, tpp_keyword_sizeof(len_without_bse));
+		if tpp_likely(new_result)
+			result = new_result;
+	}
+	result->tk_kwd[len_without_bse] = (tpp_char)'\0';
+	result = tpp_keywords_inskeyword(self, result);
+done:
+	return result;
+}
+#endif /* TPP_HAVE_BSE */
+
+
+#if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
+/* Check if "kwd" is contained in "self".
+ * If so: do nothing and simply re-return "kwd"
+ *
+ * Otherwise, assume that "kwd" is a "builtin" keyword (as returned
+ * by `tpp_builtin_getkeyword()'), in which the keyword is copied,
+ * inserted into "self", and said copy is returned.
+ *
+ * This function must be used to make a keyword "writable" (which is
+ * required before its `tk_macro' / `tk_misc' fields can safely be
+ * written to (and in the later case: all fields of a potentially
+ * pointed-to `tpp_keyword_misc', too)
+ *
+ * @return: * :   A writable copy of "kwd"
+ * @return: NULL: OOM (TPP_ENOMEM) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
+                         tpp_keyword const *tpp_restrict kwd) {
+	TPP_REF tpp_keyword *result;
+
+	/* Check for simple case: if it's a user-defined keyword,
+	 * it can't exist in built-ins, meaning it never needs to
+	 * be copied. */
+	if (TPP_TOK_ISUSERKEYWORD(kwd->tk_id))
+		return (tpp_keyword *)kwd;
+
+	/* Check if "kwd" is already contained with out map. */
+	result = self->tks_bckv[kwd->tk_hash & self->tks_bckm];
+	for (; result; result = result->tk_next) {
+		if (result == kwd)
+			return result;
+	}
+
+	/* Yes: must copy "kwd" */
+	result = (tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(kwd->tk_len));
+	if (result == NULL)
+		goto done;
+
+#if TPP_HAVE_KEYWORD_MISC
+	result->tk_misc = NULL; /* Builtin keywords never have "misc" data (flags are dynamically calculated) */
+#endif /* TPP_HAVE_KEYWORD_MISC */
+	result->tk_id = kwd->tk_id;
+#if TPP_HAVE_CPP_MACROS
+	result->tk_macro = kwd->tk_macro;
+	if (result->tk_macro)
+		tpp_macro_incref(result->tk_macro);
+#endif /* TPP_HAVE_CPP_MACROS */
+	result->tk_hash   = kwd->tk_hash;
+	result->tk_refcnt = 1;
+	result->tk_len    = kwd->tk_len;
+	tpp_memcpy(result->tk_kwd, kwd->tk_kwd, (kwd->tk_len + 1) * sizeof(tpp_char));
+	result = tpp_keywords_inskeyword(self, result);
+done:
+	return result;
+}
+#endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+
+
+
+#if TPP_HAVE_KEYWORDS_OPENFILE
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) /*utf-8*/char *TPPCALL
+tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer (with at least "srclen" char-s of space) */
+                 /*utf-8*/ char *dst_base,  /* Base pointer of destination buffer (start of destination filename string) */
+                 /*utf-8*/ char const *src, /* Filename string to append to "dst_iter" (".."-refs don't go beyond "dst_base") */
+                 tpp_size srclen) {         /* Length of "src" (in char-s) */
+	char const *src_end = src + srclen;
+
+#if TPP_FS_HAVE_DRIVES
+	if (src >= src_end)
+		goto done;
+	if (TPP_FS_ISABS(src)) {
+		dst_iter = dst_base;
+		*dst_iter++ = *src++;
+		*dst_iter++ = *src++;
+	}
+#endif /* TPP_FS_HAVE_DRIVES */
+
+	/* Deal with leading slashes. */
+	for (;;) {
+		if (src >= src_end)
+			goto done;
+		if (!TPP_FS_ISSEP(*src))
+			break;
+		++src;
+		if (dst_iter <= dst_base || dst_iter[-1] != TPP_FS_SEP)
+			*dst_iter++ = TPP_FS_SEP;
+	}
+
+	for (;;) {
+		char const *next_sep;
+		tpp_size segment_len;
+		if (src >= src_end)
+			goto done;
+
+		/* At this point, "src" is at the start of some path-component,
+		 * and "dst_iter" points at:
+		 * - The start (dst_base)
+		 * - After a TPP_FS_SEP
+		 * - Just after the drive base (in case of TPP_FS_HAVE_DRIVES) */
+		next_sep = src;
+		while (next_sep < src_end && !TPP_FS_ISSEP(*next_sep))
+			++next_sep;
+		segment_len = (tpp_size)(next_sep - src);
+		while (next_sep < src_end && TPP_FS_ISSEP(*next_sep))
+			++next_sep; /* Skip over trailing SEP of segment */
+
+		/* Deal with special segments. */
+		switch (segment_len) {
+		case 0:
+			goto continue_with_next_sep; /* Empty segment -> ignore */
+		case 1:
+			if (src[0] == '.')
+				goto continue_with_next_sep; /* Current-directory-segment -> ignore */
+			break;
+		case 2:
+			if (src[0] == '.' && src[1] == '.' && dst_iter > dst_base) {
+				/* Parent-directory-segment -> delete 1 up-ref in "dst" */
+				while (dst_iter > dst_base && dst_iter[-1] == TPP_FS_SEP)
+					--dst_iter;
+				while (dst_iter > dst_base && dst_iter[-1] != TPP_FS_SEP)
+					--dst_iter;
+				goto continue_with_next_sep;
+			}
+			break;
+		default: break;
+		}
+
+		/* Copy segment into "dst_iter" */
+		tpp_memcpy(dst_iter, src, segment_len * sizeof(char));
+		dst_iter += segment_len;
+		if (next_sep >= src_end)
+			goto done;
+
+		/* Append SEP to "dst_iter" */
+		*dst_iter++ = TPP_FS_SEP;
+
+continue_with_next_sep:
+		src = next_sep;
+	}
+
+
+done:
+	/* Remove trailing SEP */
+	if (dst_iter > dst_base && dst_iter[-1] == TPP_FS_SEP)
+		--dst_iter;
+	return dst_iter;
+}
+
+/* Construct the filename, open the file, and initialize "out_file" accordingly
+ * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
+ *                      in case "filename" is a relative path, in which case the
+ *                      filename of the file to open should be relative to the
+ *                      directory of "relative_to"
+ * @param: out_file:    The file that should be initialized (as `TPP_FILE_KIND_IO')
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Insufficient memory
+ * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+tpp_keywords_openfile_ex(/*1..1*/ tpp_keywords *tpp_restrict self,
+                         /*0..1*/ tpp_keyword const *tpp_restrict relative_to,
+                         /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                         /*1..1*/ tpp_file *tpp_restrict out_file,
+                         tpp_keyword_flags mask_flags)
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+tpp_keywords_openfile(/*1..1*/ tpp_keywords *tpp_restrict self,
+                      /*0..1*/ tpp_keyword const *tpp_restrict relative_to,
+                      /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                      /*1..1*/ tpp_file *tpp_restrict out_file)
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+{
+	bool is_known_keyword = false;
+	tpp_io_handle handle;
+	tpp_keyword *result_kwd;
+	tpp_size filename_len = tpp_strlen(filename);
+	if (TPP_FS_ISABS(filename) || !relative_to) {
+		tpp_keyword *new_result_kwd;
+		tpp_char *kwd_end;
+		tpp_size result_kwd_len;
+without_relative_to:
+		result_kwd = (tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(filename_len));
+		if tpp_unlikely(!result_kwd)
+			goto err_nomem;
+		kwd_end = (tpp_char *)tpp_fs_normalize((char *)result_kwd->tk_kwd,
+		                                       (char *)result_kwd->tk_kwd,
+		                                       filename, filename_len);
+		*kwd_end = (tpp_char)'\0';
+		result_kwd_len = (tpp_size)(kwd_end - result_kwd->tk_kwd);
+		tpp_assert(result_kwd_len <= filename_len);
+		new_result_kwd = (tpp_keyword *)tpp_tryrealloc(result_kwd, tpp_keyword_sizeof(result_kwd_len));
+		if tpp_likely(new_result_kwd)
+			result_kwd = new_result_kwd;
+		result_kwd->tk_len = result_kwd_len;
+	} else {
+		tpp_keyword *new_result_kwd;
+		tpp_size rel_size, whole_size;
+		char const *rel_base = (char const *)relative_to->tk_kwd;
+		char const *last_sep = rel_base + relative_to->tk_len;
+		char *dst_base, *dst_iter, *dst_end;
+		while (last_sep > rel_base && last_sep[-1] != TPP_FS_SEP)
+			--last_sep;
+		if (last_sep <= rel_base)
+			goto without_relative_to;
+		rel_size   = (tpp_size)(last_sep - rel_base); /* Including trailing '/' */
+		whole_size = rel_size + filename_len;
+		result_kwd = (tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(whole_size));
+		if tpp_unlikely(!result_kwd)
+			goto err_nomem;
+		dst_base = (char *)result_kwd->tk_kwd;
+		tpp_memcpy(dst_base, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
+		dst_iter = dst_base + rel_size;
+		dst_end = tpp_fs_normalize(dst_base, dst_iter, filename, filename_len);
+		*dst_end = '\0';
+		whole_size = (tpp_size)(dst_end - dst_base);
+		new_result_kwd = (tpp_keyword *)tpp_tryrealloc(result_kwd, tpp_keyword_sizeof(whole_size));
+		if tpp_likely(new_result_kwd)
+			result_kwd = new_result_kwd;
+		result_kwd->tk_len = whole_size;
+	}
+
+	/* Check if "result_kwd" is a known keyword... */
+	{
+		tpp_hash hash = tpp_hashof(result_kwd->tk_kwd, result_kwd->tk_len);
+		tpp_keyword *bucket = self->tks_bckv[hash & self->tks_bckm];
+		for (; bucket; bucket = bucket->tk_next) {
+			if (bucket->tk_hash != hash)
+				continue;
+			if (bucket->tk_len != result_kwd->tk_len)
+				continue;
+			if (tpp_memcmp(bucket->tk_kwd, result_kwd->tk_kwd,
+			               result_kwd->tk_len * sizeof(tpp_char)) != 0)
+				continue;
+
+			/* Keyword already exists */
+			tpp_free(result_kwd);
+			is_known_keyword = true;
+			result_kwd = bucket;
+
+			/* Check if the file should be marked out. */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+			if ((result_kwd->tk_misc) != NULL &&
+			    (result_kwd->tk_misc->tkm_flags & mask_flags) != 0)
+				return TPP_EMASKED;
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+
+			goto got_result_kwd;
+		}
+		result_kwd->tk_hash = hash;
+	}
+got_result_kwd:
+
+	/* Try to open the file */
+	handle = tpp_io_open((char const *)result_kwd->tk_kwd);
+	if (handle == tpp_io_handle_INVALID) {
+		tpp_free(result_kwd);
+		return TPP_ENOENT;
+	}
+
+	/* Initialize remaining fields of "result_kwd" and insert into keyword map */
+	if (!is_known_keyword) {
+		result_kwd->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
+#if TPP_HAVE_CPP_MACROS
+		result_kwd->tk_macro = NULL;
+#endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_KEYWORD_MISC
+		result_kwd->tk_misc = NULL;
+#endif /* TPP_HAVE_KEYWORD_MISC */
+		result_kwd->tk_refcnt = 1;
+		result_kwd = tpp_keywords_inskeyword(self, result_kwd);
+		if tpp_unlikely(!result_kwd) {
+			tpp_io_close(handle);
+			goto err_nomem;
+		}
+	}
+
+	/* Initialize "out_file" */
+	tpp_file_init_io(out_file, result_kwd, handle);
+	return TPP_EOK;
+err_nomem:
+	return TPP_ENOMEM;
+}
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+
+
+TPP_DECL_END
+/*[[[tpp-end]]]*/
+
+#endif /* !GUARD_TPP_KEYWORD_C */

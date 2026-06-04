@@ -1,0 +1,20 @@
+#define TPPCALL
+#define TPPVCALL
+#define TPP_DECL extern
+#define TPP_IMPL
+#define TPP_CONST_DECL extern
+#define TPP_CONST_IMPL
+#define TPP_INTERN_DECL extern
+#define TPP_INTERN_IMPL
+#define tpp_restrict __restrict
+#define TPP_NONNULL(x)
+#define TPP_WUNUSED
+#define TPP_NOINLINE
+#define TPP_RETNONNULL
+#define TPP_FLEX_ARRAY
+#define TPP_INLINE static
+#define TPP_DECL_BEGIN extern "C" {
+#define TPP_DECL_END }
+#define TPP_REF
+#define TPP_REF_IF(c)
+#define TPP_STATIC_ASSERT(expr)

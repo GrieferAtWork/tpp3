@@ -1,0 +1,12 @@
+bin/*
+build/*
+lib/*
+.vs/*.sdf
+.vs/*.suo
+.vs/*.opensdf
+.vs/.vs/
+*.exe
+*.dat
+*.out
+*.VC.db
+*.VC.opendb

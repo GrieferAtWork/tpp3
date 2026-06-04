@@ -1,0 +1,451 @@
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_TPP_KEYWORD_H
+#define GUARD_TPP_KEYWORD_H 1
+
+#include "api.h"
+
+#include "config.h"
+#include "error.h"
+#include "file.h"
+#include "string.h"
+#include "token.h"
+
+/*[[[tpp-begin]]]*/
+TPP_DECL_BEGIN
+
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+struct tpp_macro;
+typedef struct tpp_macro_pushent {
+	TPP_REF struct tpp_macro *tmpe_macro; /* [0..1] The macro that was pushed, or "NULL" if not defined at the time. */
+	tpp_size                  tmpe_count; /* # of times that `tmpe_macro' was pushed without the macro actually having changed */
+} tpp_macro_pushent;
+typedef struct tpp_macro_pushstack {
+	tpp_size           tmps_cnt; /* # of elements on `tmps_vec' */
+	tpp_macro_pushent *tmps_vec; /* [0..tmps_vec][owned] Vector of pushed macros (push_macro appends at the end; pop_macro takes from the end) */
+} tpp_macro_pushstack;
+
+#define tpp_macro_pushstack_init(self) \
+	(void)((self)->tmps_cnt = 0, (self)->tmps_vec = NULL)
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self);
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+
+#undef TPP_HAVE_KEYWORD_FLAGS
+#if ((TPP_HAVE_CPP_INCLUDE && (TPP_HAVE_CPP_IF_ELSE_ENDIF || \
+                               TPP_HAVE_PRAGMA_ONCE)) ||     \
+     TPP_HAVE_CPP_IMPORT ||                                  \
+     TPP_HAVE_CLANG_HAS_ATTRIBUTE ||                         \
+     TPP_HAVE_CLANG_HAS_BUILTIN ||                           \
+     TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE ||                     \
+     TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE ||                \
+     TPP_HAVE_CLANG_HAS_EXTENSION ||                         \
+     TPP_HAVE_CLANG_HAS_FEATURE ||                           \
+     TPP_HAVE_PRAGMA_DEPRECATED ||                           \
+     TPP_HAVE_PRAGMA_GCC_POISON ||                           \
+     TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS)
+#define TPP_HAVE_KEYWORD_FLAGS 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FLAGS 0
+#endif /* !... */
+
+#undef TPP_HAVE_KEYWORD_MISC
+#if (TPP_HAVE_CPP_INCLUDE ||       \
+     TPP_HAVE_PRAGMA_PUSH_MACRO || \
+     TPP_HAVE_KEYWORD_FLAGS)
+#define TPP_HAVE_KEYWORD_MISC 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_MISC 0
+#endif /* !... */
+
+
+
+#if TPP_HAVE_KEYWORD_MISC
+
+/* Keyword flags... */
+#if TPP_HAVE_KEYWORD_FLAGS
+#define tpp_keyword_flags uint_least32_t /* Set of `TPP_KEYWORD_FLAG_*' */
+#define TPP_KEYWORD_FLAG_NORMAL                 UINT32_C(0x00000000) /* Normal flags */
+#if TPP_HAVE_CLANG_HAS_ATTRIBUTE
+#define TPP_KEYWORD_FLAG_HAS_ATTRIBUTE          UINT32_C(0x00000001) /* `__has_attribute()' */
+#endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE */
+#if TPP_HAVE_CLANG_HAS_BUILTIN
+#define TPP_KEYWORD_FLAG_HAS_BUILTIN            UINT32_C(0x00000002) /* `__has_builtin()' */
+#endif /* TPP_HAVE_CLANG_HAS_BUILTIN */
+#if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
+#define TPP_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE      UINT32_C(0x00000004) /* `__has_cpp_attribute()' */
+#endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE */
+#if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
+#define TPP_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE UINT32_C(0x00000008) /* `__has_declspec_attribute()' */
+#endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE */
+#if TPP_HAVE_CLANG_HAS_EXTENSION
+#define TPP_KEYWORD_FLAG_HAS_EXTENSION          UINT32_C(0x00000010) /* `__has_extension()' */
+#endif /* TPP_HAVE_CLANG_HAS_EXTENSION */
+#if TPP_HAVE_CLANG_HAS_FEATURE
+#define TPP_KEYWORD_FLAG_HAS_FEATURE            UINT32_C(0x00000020) /* `__has_feature()' */
+#endif /* TPP_HAVE_CLANG_HAS_FEATURE */
+#if TPP_HAVE_PRAGMA_DEPRECATED
+#define TPP_KEYWORD_FLAG_IS_DEPRECATED          UINT32_C(0x00000040) /* Warn when the keyword appears as the result of lexical processing. */
+#endif /* TPP_HAVE_PRAGMA_DEPRECATED */
+#if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
+#define TPP_KEYWORD_FLAG_USERMASK               UINT32_C(0x0000007f) /* Set of flags modifiable through `#pragma tpp_set_keyword_flags()'. */
+#endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
+#if TPP_HAVE_PRAGMA_GCC_POISON
+#define TPP_KEYWORD_FLAG_IS_POISONED            UINT32_C(0x00000080) /* Extension for `TPP_KEYWORD_FLAG_IS_DEPRECATED':
+                                                                      * Don't emit a warning if the keyword is used inside of a macro.
+                                                                      * -> Only warn if it is used from a text file. */
+#endif /* TPP_HAVE_PRAGMA_GCC_POISON */
+#if TPP_HAVE_CPP_IMPORT
+#define TPP_KEYWORD_FLAG_HDR_IMPORTED           UINT32_C(0x20000000) /* Set after this header was `#import'-ed */
+#endif /* TPP_HAVE_CPP_IMPORT */
+#if TPP_HAVE_CPP_INCLUDE
+#if TPP_HAVE_PRAGMA_ONCE
+#define TPP_KEYWORD_FLAG_HDR_ONCE               UINT32_C(0x40000000) /* Set after `#pragma once' was encountered */
+#endif /* TPP_HAVE_PRAGMA_ONCE */
+#if TPP_HAVE_CPP_IF_ELSE_ENDIF
+#define TPP_KEYWORD_FLAG_HDR_NOGUARD            UINT32_C(0x80000000) /* Set after a secondary #ifdef block was detected at the top level of this file:
+                                                                      * >> // File: "myfile.h"
+                                                                      * >> #ifndef foo // Potential include-guard?
+                                                                      * >> #endif
+                                                                      * >> #ifndef bar // This #ifndef will set `tff_noguard=1'
+                                                                      * >> #endif */
+#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
+#endif /* TPP_HAVE_CPP_INCLUDE */
+#endif /* TPP_HAVE_KEYWORD_FLAGS */
+
+struct tpp_keyword;
+typedef struct tpp_keyword_misc {
+#if TPP_HAVE_KEYWORD_FLAGS
+	tpp_keyword_flags   tkm_flags; /* Set of `TPP_KEYWORD_FLAG_*' */
+#endif /* TPP_HAVE_KEYWORD_FLAGS */
+#if TPP_HAVE_KEYWORD_FILE_GUARD
+	struct tpp_keyword *tkm_file_guard; /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
+#endif /* TPP_HAVE_KEYWORD_FILE_GUARD */
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+	tpp_macro_pushstack tkm_macro_pushstack; /* For `#pragma push_macro()' */
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+} tpp_keyword_misc;
+#endif /* TPP_HAVE_KEYWORD_MISC */
+
+
+#if TPP_HAVE_CPP_MACROS
+struct tpp_macro;
+#endif /* TPP_HAVE_CPP_MACROS */
+
+#undef TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
+typedef struct tpp_keyword {
+	tpp_token_id              tk_id;                  /* [const] Keyword ID */
+	struct tpp_keyword       *tk_next;                /* [0..1] Next keyword with a similar hash */
+#if TPP_HAVE_CPP_MACROS
+	TPP_REF struct tpp_macro *tk_macro;               /* [0..1][const_if(IS_BUILTIN)] Macro definition */
+#define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
+#endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_KEYWORD_MISC
+	tpp_keyword_misc         *tk_misc;                /* [0..1][const_if(IS_BUILTIN)][owned] Misc. keyword data (lazily allocated) */
+#define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
+#endif /* TPP_HAVE_KEYWORD_MISC */
+	tpp_hash                  tk_hash;                /* [const] Hash for `tk_kwd' */
+	tpp_refcnt                tk_refcnt;              /* Keyword reference count (for binary compatibility with "tpp_string") */
+	tpp_size                  tk_len;                 /* [const] # of bytes (char-s) in `tk_kwd' (excluding trailing \0) */
+	tpp_char                  tk_kwd[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; \0-terminated; never contains \-escaped linefeeds) */
+/*	tpp_char                  tk_nul;                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
+} tpp_keyword;
+
+#define tpp_keyword_sizeof(len) (tpp_offsetof(tpp_keyword, tk_kwd) + ((len) + 1) * sizeof(tpp_char))
+
+/* When true, there are certain actions that require builtin keywords
+ * to be copied into the current lexer's keyword table. These include
+ * user-defined macros (with built-in identifiers as names), as well
+ * as any other "misc"-related, custom data being assigned ot keywords */
+#ifndef TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
+#define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 0
+#endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+
+/* Use this macro for comparing keywords instead of doing "a == b"
+ * We need to compare the IDs of keywords, since builtin keywords
+ * may need to be copied into the current lexer's `tpp_keywords'
+ * if `tk_macro' or `tk_misc' need to be modified */
+#if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
+#define tpp_keyword_equals(a, b) ((a)->tk_id == (b)->tk_id)
+#else /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+#define tpp_keyword_equals(a, b) ((a) == (b))
+#endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+
+/* Convert back-and-forth between keywords and strings */
+#define _TPP_KEYWORD_STRING_ABI_START tk_refcnt
+#define tpp_keyword_asstring(self) ((tpp_string *)&(self)->_TPP_KEYWORD_STRING_ABI_START)
+#define tpp_string_askeyword(self) ((tpp_keyword *)((char *)(self) - tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)))
+
+/* Check if "self" matches the C, constant string literal "cstr" */
+#define tpp_keyword_equals_cstr(self, cstr)                 \
+	((self)->tk_len == (sizeof(cstr) / sizeof(char)) - 1 && \
+	 tpp_memcmp((self)->tk_kwd, cstr, sizeof(cstr) - sizeof(char)) == 0)
+
+
+#if TPP_HAVE_KEYWORD_MISC
+/* Ensure that `self->tk_misc' has been allocated and return it.
+ * If it isn't already allocated, allocate+return it lazily.
+ * WARNING: Only call this function on a "writable" keyword (s.a. `tpp_keywords_copybuiltin()')
+ *
+ * @return: * :   The "misc" data of "self" (freshly allocated)
+ * @return: NULL: OOM (TPP_ENOMEM) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
+tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self);
+#endif /* TPP_HAVE_KEYWORD_MISC */
+
+
+/* Calculate the hash of a given keyword string */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
+tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
+
+
+#if TPP_HAVE_BSE && TPP_HAVE_UNICODE
+#define TPP_HAVE_BSE_FILE_PARAM 1
+#define tpp_bse_file__PARAM  , tpp_file const *tpp_restrict file
+#define tpp_bse_file__ARG(x) , x
+#else /* TPP_HAVE_BSE && TPP_HAVE_UNICODE */
+#define TPP_HAVE_BSE_FILE_PARAM 0
+#define tpp_bse_file__PARAM  /* nothing */
+#define tpp_bse_file__ARG(x) /* nothing */
+#endif /* !TPP_HAVE_BSE || !TPP_HAVE_UNICODE */
+
+
+/* Check if "ch" may be the first byte of a \-character */
+#if TPP_HAVE_TRIGRAPHS
+#define _tpp_maybe_isbackslash(ch) ((ch) == '\\' || (ch) == '?') /* ?: because "??/" maps to "\" */
+#else /* TPP_HAVE_TRIGRAPHS */
+#define _tpp_maybe_isbackslash(ch) ((ch) == '\\')
+#endif /* !TPP_HAVE_TRIGRAPHS */
+
+/* Check if "ch" may be the first byte of a LF-style character */
+#if TPP_HAVE_UNICODE
+#define _tpp_maybe_islf(ch) tpp_ascii_islfornascii(ch)
+#else /* TPP_HAVE_UNICODE */
+#define _tpp_maybe_islf(ch) tpp_ascii_islf(ch)
+#endif /* !TPP_HAVE_UNICODE */
+
+/* Helper macros to skip over BSE when parsing already-loaded text.
+ * tpp_skipbse_fwd: If "pos" points at a \-character, skip forward until end of BSE (if it is one)
+ * tpp_skipbse_bck: If "pos" points after a line-feed character, skip backward until start of BSE (if it is one) */
+#if TPP_HAVE_BSE
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+tpp_skipbse_fwd_(tpp_char const *pos, tpp_char const *end tpp_bse_file__PARAM);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+tpp_skipbse_bck_(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM);
+#define tpp_skipbse_fwd(pos, end, file)   (((pos) >= (end) || !_tpp_maybe_isbackslash(*(pos))) ? (pos) : tpp_skipbse_fwd_(pos, end tpp_bse_file__ARG(file)))
+#define tpp_skipbse_bck(pos, start, file) (((pos) <= (start) || !_tpp_maybe_islf((pos)[-1])) ? (pos) : tpp_skipbse_bck_(pos, start tpp_bse_file__ARG(file)))
+#else /* TPP_HAVE_BSE */
+#define tpp_skipbse_fwd(pos, end, file)   (pos)
+#define tpp_skipbse_bck(pos, start, file) (pos)
+#endif /* !TPP_HAVE_BSE */
+
+
+#if TPP_HAVE_BSE
+/* Same as `tpp_hashof()', but skip over \-escaped linefeeds when calculating the hash */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
+tpp_hashof_bse_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PARAM);
+#define tpp_hashof_bse(kwd, len, file) tpp_hashof_bse_(kwd, len tpp_bse_file__ARG(file))
+
+/* Copy `in_text...+=len' to `out_text', whilst removing \-escaped linefeeds
+ * The caller must ensure that `out_text' has space for at least `len' bytes,
+ * and the actual # of used bytes of `out_text' is returned. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
+tpp_without_bse_(tpp_char *tpp_restrict out_text,
+                 tpp_char const *tpp_restrict in_text,
+                 tpp_size len tpp_bse_file__PARAM);
+#define tpp_without_bse(out_text, in_text, len, file) \
+	tpp_without_bse_(out_text, in_text, len tpp_bse_file__ARG(file))
+
+/* Compare 2 strings, one of which may contain \-escaped linefeeds that must be skipped. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) int TPPCALL
+tpp_memcmp_bse_(tpp_char const *lhs_without_bse, tpp_size lhs_len,
+                tpp_char const *rhs_with_bse, tpp_size rhs_len
+                tpp_bse_file__PARAM);
+#define tpp_memcmp_bse(lhs_without_bse, lhs_len, rhs_with_bse, rhs_len, file) \
+	tpp_memcmp_bse_(lhs_without_bse, lhs_len, rhs_with_bse, rhs_len tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_BSE */
+
+
+/* Lookup one of the built-in, pre-defined keywords */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
+tpp_builtin_getkeyword(tpp_char const *tpp_restrict kwd,
+                       tpp_size len, tpp_hash hash);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
+tpp_builtin_getkeyword_byid(enum tpp_token_id id);
+#if TPP_HAVE_BSE
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
+tpp_builtin_getkeyword_bse_(tpp_char const *tpp_restrict kwd,
+                            tpp_size len, tpp_hash hash
+                            tpp_bse_file__PARAM);
+#define tpp_builtin_getkeyword_bse(kwd, len, hash, file) \
+	tpp_builtin_getkeyword_bse_(kwd, len, hash tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_BSE */
+
+
+
+/* Custom keywords table */
+typedef struct tpp_keywords {
+	unsigned int          tks_kwdc; /* Amount of keyword entries stored. */
+	tpp_hash              tks_bckm; /* Allocated bucket mask. */
+	TPP_REF tpp_keyword **tks_bckv; /* [0..1][owned][0..tks_bckc+1][owned] Resizable keyword hash-map vector.
+	                                 * NOTE: When the keyword map is destroyed, all linked keywords are, too.
+	                                 *       Since this only happens when a lexer is finalized, this should
+	                                 *       only happen once *all* keywords have their reference counters
+	                                 *       set to "1". For this purpose, "tpp_keywords_fini" asserts that
+	                                 *       no keyword has some other reference count value. */
+} tpp_keywords;
+
+TPP_DECL TPP_REF tpp_keyword *tpp_keywords_empty_map[1];
+
+/* Initialize/finalize a given keywords table. */
+#define tpp_keywords_init(self)                     \
+	(void)((self)->tks_kwdc = (self)->tks_bckm = 0, \
+	       (self)->tks_bckv = tpp_keywords_empty_map)
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_fini(tpp_keywords *tpp_restrict self);
+
+/* Lookup keywords within the given keywords-table **ONLY**
+ * @return: * :   The keyword in question
+ * @return: NULL: No such keyword (consider using "tpp_keywords_getkeyword" to
+ *                also check for builtin keywords, or "tpp_keywords_newkeyword"
+ *                to do the same, but lazily create missing keywords) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+_tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
+                         tpp_char const *tpp_restrict kwd,
+                         tpp_size len, tpp_hash hash);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+_tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
+                              enum tpp_token_id id);
+#if TPP_HAVE_BSE
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+_tpp_keywords_getkeyword_bse_(tpp_keywords const *tpp_restrict self,
+                              tpp_char const *tpp_restrict kwd,
+                              tpp_size len, tpp_hash hash
+                              tpp_bse_file__PARAM);
+#define _tpp_keywords_getkeyword_bse(self, kwd, len, hash, file) \
+	_tpp_keywords_getkeyword_bse_(self, kwd, len, hash tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_BSE */
+
+
+/* Same as above, but also search the built-in keyword table (tpp_builtin_getkeyword) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
+                        tpp_char const *tpp_restrict kwd,
+                        tpp_size len, tpp_hash hash);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
+                             enum tpp_token_id id);
+#if TPP_HAVE_BSE
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+tpp_keywords_getkeyword_bse_(tpp_keywords const *tpp_restrict self,
+                             tpp_char const *tpp_restrict kwd,
+                             tpp_size len, tpp_hash hash
+                             tpp_bse_file__PARAM);
+#define tpp_keywords_getkeyword_bse(self, kwd, len, hash, file) \
+	tpp_keywords_getkeyword_bse_(self, kwd, len, hash tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_BSE */
+
+
+/* Same as above, but if the keyword doesn't exist in `self' or the builtin
+ * keyword table, a new keyword is allocated, given an ID, and inserted into `self'
+ * @return: * :   The keyword associated with `kwd' (possibly having been just allocated)
+ * @return: NULL: OOM (TPP_ENOMEM) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
+                        tpp_char const *tpp_restrict kwd,
+                        tpp_size len, tpp_hash hash);
+#if TPP_HAVE_BSE
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+tpp_keywords_newkeyword_bse_(tpp_keywords *tpp_restrict self,
+                             tpp_char const *tpp_restrict kwd,
+                             tpp_size len, tpp_hash hash
+                             tpp_bse_file__PARAM);
+#define tpp_keywords_newkeyword_bse(self, kwd, len, hash, file) \
+	tpp_keywords_newkeyword_bse_(self, kwd, len, hash tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_BSE */
+
+
+#if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
+/* Check if "kwd" is contained in "self".
+ * If so: do nothing and simply re-return "kwd"
+ *
+ * Otherwise, assume that "kwd" is a "builtin" keyword (as returned
+ * by `tpp_builtin_getkeyword()'), in which the keyword is copied,
+ * inserted into "self", and said copy is returned.
+ *
+ * This function must be used to make a keyword "writable" (which is
+ * required before its `tk_macro' / `tk_misc' fields can safely be
+ * written to (and in the later case: all fields of a potentially
+ * pointed-to `tpp_keyword_misc', too)
+ *
+ * @return: * :   A writable copy of "kwd"
+ * @return: NULL: OOM (TPP_ENOMEM) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
+                         tpp_keyword const *tpp_restrict kwd);
+#endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+
+
+#if TPP_HAVE_KEYWORDS_OPENFILE
+/* Construct the filename, open the file, and initialize "out_file" accordingly
+ * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
+ *                      in case "filename" is a relative path, in which case the
+ *                      filename of the file to open should be relative to the
+ *                      directory of "relative_to"
+ * @param: out_file:    The file that should be initialized (as `TPP_FILE_KIND_IO')
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Insufficient memory
+ * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#define tpp_keywords_openfile(self, relative_to, filename, out_file) \
+	tpp_keywords_openfile_ex(self, relative_to, filename, out_file, 0)
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+tpp_keywords_openfile(/*1..1*/ tpp_keywords *tpp_restrict self,
+                      /*0..1*/ tpp_keyword const *tpp_restrict relative_to,
+                      /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                      /*1..1*/ tpp_file *tpp_restrict out_file);
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+
+/* Same as `tpp_keywords_openfile', but return `TPP_EMASKED' if the file was already
+ * included before, and its keyword has any of the bits specified by `mask_flags' set.
+ * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set. */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+tpp_keywords_openfile_ex(/*1..1*/ tpp_keywords *tpp_restrict self,
+                         /*0..1*/ tpp_keyword const *tpp_restrict relative_to,
+                         /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                         /*1..1*/ tpp_file *tpp_restrict out_file,
+                         tpp_keyword_flags mask_flags);
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#define tpp_keywords_openfile_ex(self, relative_to, filename, out_file, mask_flags) \
+	tpp_keywords_openfile(self, relative_to, filename, out_file)
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+
+/* Allocate+return a filename keyword */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+tpp_keywords_newkeyword_file(/*1..1*/ tpp_keywords *tpp_restrict self,
+                             /*1..1*/ /*utf-8*/ char const *tpp_restrict filename);
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+
+TPP_DECL_END
+/*[[[tpp-end]]]*/
+
+#endif /* !GUARD_TPP_KEYWORD_H */
