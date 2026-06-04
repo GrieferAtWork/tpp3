@@ -338,7 +338,6 @@ do_decode_basic:
 }
 #endif /* TPP_HAVE_TPP_TOK_STRINGLIKE */
 
-
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

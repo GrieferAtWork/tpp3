@@ -24,7 +24,7 @@
 #include "api.h"
 
 #include "config.h"
-#include "extension.h"
+#include "extensions.h"
 #include "features.h"
 #include "file.h"
 #include "keyword.h"
@@ -33,9 +33,11 @@
 #include "warnings.h"
 
 /*[[[tpp-begin]]]*/
+#ifndef TPP_NO_SYSTEM_INCLUDES
 #if TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER
 #include <stdio.h>
 #endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
+#endif /* !TPP_NO_SYSTEM_INCLUDES */
 
 TPP_DECL_BEGIN
 
@@ -394,9 +396,9 @@ tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
                     tpp_warning_id id, va_list args) {
+	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_errno result;
 	tpp_ssize printer_status;
-	tpp_file *const file = tpp_lexer_getfile(self);
 	char const *warning_format;
 	struct tpp_warning_invokeinfo invokeinfo;
 	tpp_formatprinter printer;
@@ -411,11 +413,20 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 
 	/* Deal with certain warning states. */
 	switch (invokeinfo.twii_state) {
+
 	case TPP_WSTATE_DISABLED:
 		goto done; /* Nothing to do here */
-	case TPP_WSTATE_WARN:
+
+	case TPP_WSTATE_WARN: {
 		/* Display as a warning */
-		break;
+#if TPP_HAVE_FILE_SYSHDR
+		tpp_file const *const iofile = tpp_file_getiofile(file);
+		if (iofile->tf_kind == TPP_FILE_KIND_IO &&
+		    iofile->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_SYSHDR)
+			return TPP_EOK; /* Suppress warnings in this file */
+#endif /* TPP_HAVE_FILE_SYSHDR */
+	}	break;
+
 #if TPP_HAVE_WARNING_ERROR
 	case TPP_WSTATE_ERROR: {
 		tpp_size errors = tpp_lexer_geterrorcount(self);
@@ -424,9 +435,11 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			result = TPP_ELEXERROR;
 	}	break;
 #endif /* TPP_HAVE_WARNING_ERROR */
+
 	case TPP_WSTATE_FATAL:
 		result = TPP_ELEXERROR;
 		break;
+
 	default: tpp_unreachable();
 	}
 

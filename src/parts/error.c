@@ -47,9 +47,11 @@ tpp_strerror(tpp_errno error) {
 		return "No such file or directory";
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
 	case TPP_EMASKED:
-		return "File has been masked";
+		return "File cannot be opened because it has been masked";
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
+	case TPP_ELEXERROR:
+		return "User compilation/lexer error";
 	case TPP_EWARNPRINT:
 		return "Error while printing warning";
 #endif /* TPP_HAVE_WARNINGS */

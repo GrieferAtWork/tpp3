@@ -24,7 +24,7 @@
 #include "api.h"
 
 #include "config.h"
-#include "extension.h"
+#include "extensions.h"
 #include "file.h"
 #include "keyword.h"
 #include "lexer.h"
@@ -83,24 +83,24 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	if (tpp_keyword_equals_cstr(kwd, "push_macro") ||
 	    tpp_keyword_equals_cstr(kwd, "pop_macro")) {
 		if (tpp_lexer_getext(self, TPP_EXT_PRAGMA_PUSH_MACRO)) {
-			bool is_push = kwd->tk_kwd[1] == 'u';
+			bool const is_push = kwd->tk_kwd[1] == 'u';
 			tok = tpp_lexer_yield(self);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
-			(void)is_push;
 			/* TODO: skip "(" */
 			/* TODO: Parse string */
+			(void)is_push;
 			/* TODO: skip ")" */
 		}
 	} else
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_PRAGMA_ONCE
 	if (tpp_keyword_equals_cstr(kwd, "once")) {
-		tpp_file const *file = tpp_file_getiofile(tpp_lexer_getfile(self));
-		tpp_keyword *file_kwd = tpp_file_filename_kwd(file);
-		if (file_kwd) {
+		tpp_file const *const iofile = tpp_file_getiofile(tpp_lexer_getfile(self));
+		tpp_keyword *const iofile_kwd = tpp_file_filename_kwd(iofile);
+		if (iofile_kwd) {
 			tpp_keyword_misc *misc;
-			misc = tpp_keyword_requiremisc(file_kwd);
+			misc = tpp_keyword_requiremisc(iofile_kwd);
 			if tpp_unlikely(!misc)
 				return TPP_ENOMEM;
 			misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_ONCE;
@@ -144,6 +144,15 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 #define TPP_HAVE_PRAGMA_EXTENSION_PUSH ((TPP_HAVE_PRAGMA_EXTENSION && TPP_HAVE_EXTENSIONS_PUSH_POP) ? -1 : 0)
 #endif /* !TPP_HAVE_PRAGMA_EXTENSION_PUSH */
 
+/* Support for: #pragma warning(...) */
+#ifndef TPP_HAVE_PRAGMA_WARNING
+#define TPP_HAVE_PRAGMA_WARNING ((TPP_COMMON_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? -1 : 0)
+#endif /* !TPP_HAVE_PRAGMA_WARNING */
+
+/* Support for: #pragma warning(push) */
+#ifndef TPP_HAVE_PRAGMA_WARNING_PUSH
+#define TPP_HAVE_PRAGMA_WARNING_PUSH ((TPP_HAVE_PRAGMA_WARNING && TPP_HAVE_WARNINGS_PUSH_POP) ? -1 : 0)
+#endif /* !TPP_HAVE_PRAGMA_WARNING_PUSH */
 
 unknown_pragma:
 	/* TODO: Warning */

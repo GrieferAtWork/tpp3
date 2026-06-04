@@ -24,7 +24,7 @@
 #include "api.h"
 
 #include "config.h"
-#include "extension.h"
+#include "extensions.h"
 #include "file.h"
 #include "keyword.h"
 #include "lexer.h"

@@ -19,10 +19,12 @@
 
 .DELETE_ON_ERROR:
 
-TPP_SOURCE := ../../src
+all: tpp-amalgamation.h tpp-amalgamation.c
+.PHONY: all
 
-# The main (single-source-file) program
-a.out: main.c config.h defs.h \
-	$(TPP_SOURCE)/tpp-amalgamation.h \
-	$(TPP_SOURCE)/tpp-amalgamation.c
-	gcc -o a.out main.c
+tpp-amalgamation.c: tpp.c $(wildcard parts/*.c)
+	deemon -Wno-usage -Wno-user -F parts/*.h parts/*.c
+	deemon make-amalgamation.dee
+tpp-amalgamation.h: tpp.h $(wildcard parts/*.h)
+	deemon -Wno-usage -Wno-user -F parts/*.h parts/*.c
+	deemon make-amalgamation.dee

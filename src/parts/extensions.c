@@ -17,13 +17,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_TPP_EXTENSION_C
-#define GUARD_TPP_EXTENSION_C 1
+#ifndef GUARD_TPP_EXTENSIONS_C
+#define GUARD_TPP_EXTENSIONS_C 1
 #define TPP_BUILDING 1
 
 #include "api.h"
 #include "config.h"
-#include "extension.h"
+#include "extensions.h"
 
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
@@ -31,7 +31,7 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_EXTENSIONS
 
 /* Default extension state */
-TPP_CONST_IMPL tpp_extension_state const tpp_extension_state_default = {
+TPP_CONST_IMPL tpp_extensions_state const tpp_extensions_state_default = {
 	/* .tes_flags = */ {
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) /* .tef_##id = */ default,
@@ -72,7 +72,7 @@ tpp_extensions_set(tpp_extensions *tpp_restrict self,
                    tpp_extension_id id, int enabled) {
 	if (tpp_extensions_mustcopy(self)) {
 		tpp_extensions *copy;
-		if (!!tpp_extension_state_getid(&self->te_state, id) == !!enabled)
+		if (!!tpp_extensions_state_getid(&self->te_state, id) == !!enabled)
 			return TPP_EOK; /* Unchanged -> no need to actually copy! */
 		copy = (tpp_extensions *)tpp_malloc(sizeof(tpp_extensions));
 		if tpp_unlikely(!copy)
@@ -81,7 +81,7 @@ tpp_extensions_set(tpp_extensions *tpp_restrict self,
 		self->te_prev    = copy;
 		self->te_pushcnt = 0;
 	}
-	tpp_extension_state_set(&self->te_state, id, enabled);
+	tpp_extensions_state_set(&self->te_state, id, enabled);
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;
@@ -92,4 +92,4 @@ err_nomem:
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 
-#endif /* !GUARD_TPP_EXTENSION_C */
+#endif /* !GUARD_TPP_EXTENSIONS_C */

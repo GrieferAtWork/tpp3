@@ -24,9 +24,6 @@
     <ClCompile Include="..\src\tpp-amalgamation.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parts\extension.c">
-      <Filter>src\parts</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\parts\lexer.c">
       <Filter>src\parts</Filter>
     </ClCompile>
@@ -72,6 +69,9 @@
     <ClCompile Include="..\src\parts\warnings.c">
       <Filter>src\parts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\extensions.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">
@@ -113,9 +113,6 @@
     <ClInclude Include="..\src\parts\ctype.h">
       <Filter>src\parts</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\parts\extension.h">
-      <Filter>src\parts</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\parts\lexer.h">
       <Filter>src\parts</Filter>
     </ClInclude>
@@ -126,6 +123,9 @@
       <Filter>src\parts</Filter>
     </ClInclude>
     <ClInclude Include="..\src\parts\warnings.h">
+      <Filter>src\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\extensions.h">
       <Filter>src\parts</Filter>
     </ClInclude>
   </ItemGroup>

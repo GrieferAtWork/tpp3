@@ -15,7 +15,7 @@
     <ClCompile Include="..\src\parts\builtins.c" />
     <ClCompile Include="..\src\parts\ctype.c" />
     <ClCompile Include="..\src\parts\error.c" />
-    <ClCompile Include="..\src\parts\extension.c" />
+    <ClCompile Include="..\src\parts\extensions.c" />
     <ClCompile Include="..\src\parts\features.c" />
     <ClCompile Include="..\src\parts\file-io.c" />
     <ClCompile Include="..\src\parts\file.c" />
@@ -45,7 +45,7 @@
     <ClInclude Include="..\src\parts\ctype.h" />
     <ClInclude Include="..\src\parts\defs.h" />
     <ClInclude Include="..\src\parts\error.h" />
-    <ClInclude Include="..\src\parts\extension.h" />
+    <ClInclude Include="..\src\parts\extensions.h" />
     <ClInclude Include="..\src\parts\features.h" />
     <ClInclude Include="..\src\parts\file-io.h" />
     <ClInclude Include="..\src\parts\file.h" />

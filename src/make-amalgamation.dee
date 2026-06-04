@@ -35,7 +35,9 @@ function getFile(filename: string): Bytes {
 		--end;
 	return data[start:end]
 		/* Remove comments containing [[[deemon]]] scripts */
-		.rereplace(r"/\*\[\[\[deemon.*\]\]\]\*/\n(.*)/\*\[\[\[end\]\]\]\*/\n", r"\1");
+		.rereplace(r"/\*\[\[\[deemon.*\]\]\]\*/\n(.*)/\*\[\[\[end\]\]\]\*/\n", r"\1")
+		.rereplace(r"/\*\s*clang-format\s*(on|off)\s*\*/\n", r"")
+		;
 }
 
 function makeAmalgamation(inputFilename: string, outputFilename: string) {
@@ -64,6 +66,9 @@ function makeAmalgamation(inputFilename: string, outputFilename: string) {
 	}
 	writer.write(data[i:]);
 	local outData = writer.bytes;
+	/* TODO: Remove "TPP_DECL_END ... TPP_DECL_BEGIN" blocks such that only the
+	 *       "..." part is kept (so-long as the "..." part contains only comments) */
+
 	with (local fp = File.open(outputFilename, "wb"))
 		fp.write(outData);
 }

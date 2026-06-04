@@ -192,167 +192,167 @@ for (local feat: {
 	print("#if TPP_HAVE_", feat, " < 0");
 	local name = feat.lower().replace("_", "-");
 	print("TPP_EXTENSION(TPP_EXT_", feat, ", ", repr(name), ", TPP_HAVE_", feat, " == -1)");
-	print("#define _tpp_extension_state_get_TPP_EXT_", feat, "(self) (self)->tes_flags.tef_TPP_EXT_", feat);
+	print("#define _tpp_extensions_state_get_TPP_EXT_", feat, "(self) (self)->tes_flags.tef_TPP_EXT_", feat);
 	print("#else /" "* TPP_HAVE_", feat, " < 0 *" "/");
-	print("#define _tpp_extension_state_get_TPP_EXT_", feat, "(self) TPP_HAVE_", feat);
+	print("#define _tpp_extensions_state_get_TPP_EXT_", feat, "(self) TPP_HAVE_", feat);
 	print("#endif /" "* TPP_HAVE_", feat, " >= 0 *" "/");
 }
 ]]]*/
 #if TPP_HAVE_TRIGRAPHS < 0
 TPP_EXTENSION(TPP_EXT_TRIGRAPHS, "trigraphs", TPP_HAVE_TRIGRAPHS == -1)
-#define _tpp_extension_state_get_TPP_EXT_TRIGRAPHS(self) (self)->tes_flags.tef_TPP_EXT_TRIGRAPHS
+#define _tpp_extensions_state_get_TPP_EXT_TRIGRAPHS(self) (self)->tes_flags.tef_TPP_EXT_TRIGRAPHS
 #else /* TPP_HAVE_TRIGRAPHS < 0 */
-#define _tpp_extension_state_get_TPP_EXT_TRIGRAPHS(self) TPP_HAVE_TRIGRAPHS
+#define _tpp_extensions_state_get_TPP_EXT_TRIGRAPHS(self) TPP_HAVE_TRIGRAPHS
 #endif /* TPP_HAVE_TRIGRAPHS >= 0 */
 #if TPP_HAVE_DIGRAPHS < 0
 TPP_EXTENSION(TPP_EXT_DIGRAPHS, "digraphs", TPP_HAVE_DIGRAPHS == -1)
-#define _tpp_extension_state_get_TPP_EXT_DIGRAPHS(self) (self)->tes_flags.tef_TPP_EXT_DIGRAPHS
+#define _tpp_extensions_state_get_TPP_EXT_DIGRAPHS(self) (self)->tes_flags.tef_TPP_EXT_DIGRAPHS
 #else /* TPP_HAVE_DIGRAPHS < 0 */
-#define _tpp_extension_state_get_TPP_EXT_DIGRAPHS(self) TPP_HAVE_DIGRAPHS
+#define _tpp_extensions_state_get_TPP_EXT_DIGRAPHS(self) TPP_HAVE_DIGRAPHS
 #endif /* TPP_HAVE_DIGRAPHS >= 0 */
 #if TPP_HAVE_BSE < 0
 TPP_EXTENSION(TPP_EXT_BSE, "bse", TPP_HAVE_BSE == -1)
-#define _tpp_extension_state_get_TPP_EXT_BSE(self) (self)->tes_flags.tef_TPP_EXT_BSE
+#define _tpp_extensions_state_get_TPP_EXT_BSE(self) (self)->tes_flags.tef_TPP_EXT_BSE
 #else /* TPP_HAVE_BSE < 0 */
-#define _tpp_extension_state_get_TPP_EXT_BSE(self) TPP_HAVE_BSE
+#define _tpp_extensions_state_get_TPP_EXT_BSE(self) TPP_HAVE_BSE
 #endif /* TPP_HAVE_BSE >= 0 */
 #if TPP_HAVE_BSE_WHITESPACE < 0
 TPP_EXTENSION(TPP_EXT_BSE_WHITESPACE, "bse-whitespace", TPP_HAVE_BSE_WHITESPACE == -1)
-#define _tpp_extension_state_get_TPP_EXT_BSE_WHITESPACE(self) (self)->tes_flags.tef_TPP_EXT_BSE_WHITESPACE
+#define _tpp_extensions_state_get_TPP_EXT_BSE_WHITESPACE(self) (self)->tes_flags.tef_TPP_EXT_BSE_WHITESPACE
 #else /* TPP_HAVE_BSE_WHITESPACE < 0 */
-#define _tpp_extension_state_get_TPP_EXT_BSE_WHITESPACE(self) TPP_HAVE_BSE_WHITESPACE
+#define _tpp_extensions_state_get_TPP_EXT_BSE_WHITESPACE(self) TPP_HAVE_BSE_WHITESPACE
 #endif /* TPP_HAVE_BSE_WHITESPACE >= 0 */
 #if TPP_HAVE_CLANG_HAS_ATTRIBUTE < 0
 TPP_EXTENSION(TPP_EXT_CLANG_HAS_ATTRIBUTE, "clang-has-attribute", TPP_HAVE_CLANG_HAS_ATTRIBUTE == -1)
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_ATTRIBUTE
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_ATTRIBUTE
 #else /* TPP_HAVE_CLANG_HAS_ATTRIBUTE < 0 */
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_ATTRIBUTE
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_ATTRIBUTE
 #endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE >= 0 */
 #if TPP_HAVE_CLANG_HAS_BUILTIN < 0
 TPP_EXTENSION(TPP_EXT_CLANG_HAS_BUILTIN, "clang-has-builtin", TPP_HAVE_CLANG_HAS_BUILTIN == -1)
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_BUILTIN(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_BUILTIN
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_BUILTIN(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_BUILTIN
 #else /* TPP_HAVE_CLANG_HAS_BUILTIN < 0 */
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_BUILTIN(self) TPP_HAVE_CLANG_HAS_BUILTIN
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_BUILTIN(self) TPP_HAVE_CLANG_HAS_BUILTIN
 #endif /* TPP_HAVE_CLANG_HAS_BUILTIN >= 0 */
 #if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE < 0
 TPP_EXTENSION(TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE, "clang-has-cpp-attribute", TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE == -1)
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE
 #else /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE < 0 */
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
 #endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE >= 0 */
 #if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE < 0
 TPP_EXTENSION(TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE, "clang-has-declspec-attribute", TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE == -1)
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE
 #else /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE < 0 */
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
 #endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE >= 0 */
 #if TPP_HAVE_CLANG_HAS_EXTENSION < 0
 TPP_EXTENSION(TPP_EXT_CLANG_HAS_EXTENSION, "clang-has-extension", TPP_HAVE_CLANG_HAS_EXTENSION == -1)
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_EXTENSION(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_EXTENSION
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_EXTENSION(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_EXTENSION
 #else /* TPP_HAVE_CLANG_HAS_EXTENSION < 0 */
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_EXTENSION(self) TPP_HAVE_CLANG_HAS_EXTENSION
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_EXTENSION(self) TPP_HAVE_CLANG_HAS_EXTENSION
 #endif /* TPP_HAVE_CLANG_HAS_EXTENSION >= 0 */
 #if TPP_HAVE_CLANG_HAS_FEATURE < 0
 TPP_EXTENSION(TPP_EXT_CLANG_HAS_FEATURE, "clang-has-feature", TPP_HAVE_CLANG_HAS_FEATURE == -1)
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_FEATURE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_FEATURE
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_FEATURE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_FEATURE
 #else /* TPP_HAVE_CLANG_HAS_FEATURE < 0 */
-#define _tpp_extension_state_get_TPP_EXT_CLANG_HAS_FEATURE(self) TPP_HAVE_CLANG_HAS_FEATURE
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_FEATURE(self) TPP_HAVE_CLANG_HAS_FEATURE
 #endif /* TPP_HAVE_CLANG_HAS_FEATURE >= 0 */
 #if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS < 0
 TPP_EXTENSION(TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS, "alternative-macro-parenthesis", TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS == -1)
-#define _tpp_extension_state_get_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS(self) (self)->tes_flags.tef_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS
+#define _tpp_extensions_state_get_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS(self) (self)->tes_flags.tef_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS
 #else /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS < 0 */
-#define _tpp_extension_state_get_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS(self) TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
+#define _tpp_extensions_state_get_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS(self) TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
 #endif /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS >= 0 */
 #if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
 TPP_EXTENSION(TPP_EXT_MACRO_ARGUMENT_WHITESPACE, "macro-argument-whitespace", TPP_HAVE_MACRO_ARGUMENT_WHITESPACE == -1)
-#define _tpp_extension_state_get_TPP_EXT_MACRO_ARGUMENT_WHITESPACE(self) (self)->tes_flags.tef_TPP_EXT_MACRO_ARGUMENT_WHITESPACE
+#define _tpp_extensions_state_get_TPP_EXT_MACRO_ARGUMENT_WHITESPACE(self) (self)->tes_flags.tef_TPP_EXT_MACRO_ARGUMENT_WHITESPACE
 #else /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
-#define _tpp_extension_state_get_TPP_EXT_MACRO_ARGUMENT_WHITESPACE(self) TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
+#define _tpp_extensions_state_get_TPP_EXT_MACRO_ARGUMENT_WHITESPACE(self) TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE >= 0 */
 #if TPP_HAVE_MACRO_RECURSION < 0
 TPP_EXTENSION(TPP_EXT_MACRO_RECURSION, "macro-recursion", TPP_HAVE_MACRO_RECURSION == -1)
-#define _tpp_extension_state_get_TPP_EXT_MACRO_RECURSION(self) (self)->tes_flags.tef_TPP_EXT_MACRO_RECURSION
+#define _tpp_extensions_state_get_TPP_EXT_MACRO_RECURSION(self) (self)->tes_flags.tef_TPP_EXT_MACRO_RECURSION
 #else /* TPP_HAVE_MACRO_RECURSION < 0 */
-#define _tpp_extension_state_get_TPP_EXT_MACRO_RECURSION(self) TPP_HAVE_MACRO_RECURSION
+#define _tpp_extensions_state_get_TPP_EXT_MACRO_RECURSION(self) TPP_HAVE_MACRO_RECURSION
 #endif /* TPP_HAVE_MACRO_RECURSION >= 0 */
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS < 0
 TPP_EXTENSION(TPP_EXT_NAMED_VARARGS_IN_MACROS, "named-varargs-in-macros", TPP_HAVE_NAMED_VARARGS_IN_MACROS == -1)
-#define _tpp_extension_state_get_TPP_EXT_NAMED_VARARGS_IN_MACROS(self) (self)->tes_flags.tef_TPP_EXT_NAMED_VARARGS_IN_MACROS
+#define _tpp_extensions_state_get_TPP_EXT_NAMED_VARARGS_IN_MACROS(self) (self)->tes_flags.tef_TPP_EXT_NAMED_VARARGS_IN_MACROS
 #else /* TPP_HAVE_NAMED_VARARGS_IN_MACROS < 0 */
-#define _tpp_extension_state_get_TPP_EXT_NAMED_VARARGS_IN_MACROS(self) TPP_HAVE_NAMED_VARARGS_IN_MACROS
+#define _tpp_extensions_state_get_TPP_EXT_NAMED_VARARGS_IN_MACROS(self) TPP_HAVE_NAMED_VARARGS_IN_MACROS
 #endif /* TPP_HAVE_NAMED_VARARGS_IN_MACROS >= 0 */
 #if TPP_HAVE_VA_ARGS_IN_MACROS < 0
 TPP_EXTENSION(TPP_EXT_VA_ARGS_IN_MACROS, "va-args-in-macros", TPP_HAVE_VA_ARGS_IN_MACROS == -1)
-#define _tpp_extension_state_get_TPP_EXT_VA_ARGS_IN_MACROS(self) (self)->tes_flags.tef_TPP_EXT_VA_ARGS_IN_MACROS
+#define _tpp_extensions_state_get_TPP_EXT_VA_ARGS_IN_MACROS(self) (self)->tes_flags.tef_TPP_EXT_VA_ARGS_IN_MACROS
 #else /* TPP_HAVE_VA_ARGS_IN_MACROS < 0 */
-#define _tpp_extension_state_get_TPP_EXT_VA_ARGS_IN_MACROS(self) TPP_HAVE_VA_ARGS_IN_MACROS
+#define _tpp_extensions_state_get_TPP_EXT_VA_ARGS_IN_MACROS(self) TPP_HAVE_VA_ARGS_IN_MACROS
 #endif /* TPP_HAVE_VA_ARGS_IN_MACROS >= 0 */
 #if TPP_HAVE_VA_COMMA_IN_MACROS < 0
 TPP_EXTENSION(TPP_EXT_VA_COMMA_IN_MACROS, "va-comma-in-macros", TPP_HAVE_VA_COMMA_IN_MACROS == -1)
-#define _tpp_extension_state_get_TPP_EXT_VA_COMMA_IN_MACROS(self) (self)->tes_flags.tef_TPP_EXT_VA_COMMA_IN_MACROS
+#define _tpp_extensions_state_get_TPP_EXT_VA_COMMA_IN_MACROS(self) (self)->tes_flags.tef_TPP_EXT_VA_COMMA_IN_MACROS
 #else /* TPP_HAVE_VA_COMMA_IN_MACROS < 0 */
-#define _tpp_extension_state_get_TPP_EXT_VA_COMMA_IN_MACROS(self) TPP_HAVE_VA_COMMA_IN_MACROS
+#define _tpp_extensions_state_get_TPP_EXT_VA_COMMA_IN_MACROS(self) TPP_HAVE_VA_COMMA_IN_MACROS
 #endif /* TPP_HAVE_VA_COMMA_IN_MACROS >= 0 */
 #if TPP_HAVE_VA_OPT_IN_MACROS < 0
 TPP_EXTENSION(TPP_EXT_VA_OPT_IN_MACROS, "va-opt-in-macros", TPP_HAVE_VA_OPT_IN_MACROS == -1)
-#define _tpp_extension_state_get_TPP_EXT_VA_OPT_IN_MACROS(self) (self)->tes_flags.tef_TPP_EXT_VA_OPT_IN_MACROS
+#define _tpp_extensions_state_get_TPP_EXT_VA_OPT_IN_MACROS(self) (self)->tes_flags.tef_TPP_EXT_VA_OPT_IN_MACROS
 #else /* TPP_HAVE_VA_OPT_IN_MACROS < 0 */
-#define _tpp_extension_state_get_TPP_EXT_VA_OPT_IN_MACROS(self) TPP_HAVE_VA_OPT_IN_MACROS
+#define _tpp_extensions_state_get_TPP_EXT_VA_OPT_IN_MACROS(self) TPP_HAVE_VA_OPT_IN_MACROS
 #endif /* TPP_HAVE_VA_OPT_IN_MACROS >= 0 */
 #if TPP_HAVE_VA_NARGS_IN_MACROS < 0
 TPP_EXTENSION(TPP_EXT_VA_NARGS_IN_MACROS, "va-nargs-in-macros", TPP_HAVE_VA_NARGS_IN_MACROS == -1)
-#define _tpp_extension_state_get_TPP_EXT_VA_NARGS_IN_MACROS(self) (self)->tes_flags.tef_TPP_EXT_VA_NARGS_IN_MACROS
+#define _tpp_extensions_state_get_TPP_EXT_VA_NARGS_IN_MACROS(self) (self)->tes_flags.tef_TPP_EXT_VA_NARGS_IN_MACROS
 #else /* TPP_HAVE_VA_NARGS_IN_MACROS < 0 */
-#define _tpp_extension_state_get_TPP_EXT_VA_NARGS_IN_MACROS(self) TPP_HAVE_VA_NARGS_IN_MACROS
+#define _tpp_extensions_state_get_TPP_EXT_VA_NARGS_IN_MACROS(self) TPP_HAVE_VA_NARGS_IN_MACROS
 #endif /* TPP_HAVE_VA_NARGS_IN_MACROS >= 0 */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO < 0
 TPP_EXTENSION(TPP_EXT_PRAGMA_PUSH_MACRO, "pragma-push-macro", TPP_HAVE_PRAGMA_PUSH_MACRO == -1)
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_PUSH_MACRO(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_PUSH_MACRO
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_PUSH_MACRO(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_PUSH_MACRO
 #else /* TPP_HAVE_PRAGMA_PUSH_MACRO < 0 */
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_PUSH_MACRO(self) TPP_HAVE_PRAGMA_PUSH_MACRO
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_PUSH_MACRO(self) TPP_HAVE_PRAGMA_PUSH_MACRO
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO >= 0 */
 #if TPP_HAVE_PRAGMA_ONCE < 0
 TPP_EXTENSION(TPP_EXT_PRAGMA_ONCE, "pragma-once", TPP_HAVE_PRAGMA_ONCE == -1)
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_ONCE(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_ONCE
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_ONCE(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_ONCE
 #else /* TPP_HAVE_PRAGMA_ONCE < 0 */
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_ONCE(self) TPP_HAVE_PRAGMA_ONCE
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_ONCE(self) TPP_HAVE_PRAGMA_ONCE
 #endif /* TPP_HAVE_PRAGMA_ONCE >= 0 */
 #if TPP_HAVE_PRAGMA_DEPRECATED < 0
 TPP_EXTENSION(TPP_EXT_PRAGMA_DEPRECATED, "pragma-deprecated", TPP_HAVE_PRAGMA_DEPRECATED == -1)
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_DEPRECATED(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_DEPRECATED
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_DEPRECATED(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_DEPRECATED
 #else /* TPP_HAVE_PRAGMA_DEPRECATED < 0 */
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_DEPRECATED(self) TPP_HAVE_PRAGMA_DEPRECATED
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_DEPRECATED(self) TPP_HAVE_PRAGMA_DEPRECATED
 #endif /* TPP_HAVE_PRAGMA_DEPRECATED >= 0 */
 #if TPP_HAVE_PRAGMA_GCC_POISON < 0
 TPP_EXTENSION(TPP_EXT_PRAGMA_GCC_POISON, "pragma-gcc-poison", TPP_HAVE_PRAGMA_GCC_POISON == -1)
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_GCC_POISON(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_GCC_POISON
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_GCC_POISON(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_GCC_POISON
 #else /* TPP_HAVE_PRAGMA_GCC_POISON < 0 */
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_GCC_POISON(self) TPP_HAVE_PRAGMA_GCC_POISON
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_GCC_POISON(self) TPP_HAVE_PRAGMA_GCC_POISON
 #endif /* TPP_HAVE_PRAGMA_GCC_POISON >= 0 */
 #if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS < 0
 TPP_EXTENSION(TPP_EXT_PRAGMA_TPP_SET_KEYWORD_FLAGS, "pragma-tpp-set-keyword-flags", TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS == -1)
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_TPP_SET_KEYWORD_FLAGS(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_TPP_SET_KEYWORD_FLAGS
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_TPP_SET_KEYWORD_FLAGS(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_TPP_SET_KEYWORD_FLAGS
 #else /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS < 0 */
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_TPP_SET_KEYWORD_FLAGS(self) TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_TPP_SET_KEYWORD_FLAGS(self) TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 #endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS >= 0 */
 #if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER < 0
 TPP_EXTENSION(TPP_EXT_PRAGMA_GCC_SYSTEM_HEADER, "pragma-gcc-system-header", TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER == -1)
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_GCC_SYSTEM_HEADER(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_GCC_SYSTEM_HEADER
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_GCC_SYSTEM_HEADER(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_GCC_SYSTEM_HEADER
 #else /* TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER < 0 */
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_GCC_SYSTEM_HEADER(self) TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_GCC_SYSTEM_HEADER(self) TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
 #endif /* TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER >= 0 */
 #if TPP_HAVE_PRAGMA_EXTENSION < 0
 TPP_EXTENSION(TPP_EXT_PRAGMA_EXTENSION, "pragma-extension", TPP_HAVE_PRAGMA_EXTENSION == -1)
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_EXTENSION(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_EXTENSION
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_EXTENSION(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_EXTENSION
 #else /* TPP_HAVE_PRAGMA_EXTENSION < 0 */
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_EXTENSION(self) TPP_HAVE_PRAGMA_EXTENSION
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_EXTENSION(self) TPP_HAVE_PRAGMA_EXTENSION
 #endif /* TPP_HAVE_PRAGMA_EXTENSION >= 0 */
 #if TPP_HAVE_PRAGMA_EXTENSION_PUSH < 0
 TPP_EXTENSION(TPP_EXT_PRAGMA_EXTENSION_PUSH, "pragma-extension-push", TPP_HAVE_PRAGMA_EXTENSION_PUSH == -1)
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_EXTENSION_PUSH(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_EXTENSION_PUSH
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_EXTENSION_PUSH(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_EXTENSION_PUSH
 #else /* TPP_HAVE_PRAGMA_EXTENSION_PUSH < 0 */
-#define _tpp_extension_state_get_TPP_EXT_PRAGMA_EXTENSION_PUSH(self) TPP_HAVE_PRAGMA_EXTENSION_PUSH
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_EXTENSION_PUSH(self) TPP_HAVE_PRAGMA_EXTENSION_PUSH
 #endif /* TPP_HAVE_PRAGMA_EXTENSION_PUSH >= 0 */
 
 
@@ -2254,7 +2254,7 @@ typedef enum tpp_errno {
 	TPP_EWOULDBLOCK = -4, /* Operation would block, but non-blocking was requested */
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
-	TPP_EMASKED     = -5, /* File has been masked */
+	TPP_EMASKED     = -5, /* File cannot be opened because it has been masked */
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
 	TPP_ELEXERROR   = -6, /* Hard lexer error (usually when too many -Werror were emitted) */
@@ -3880,7 +3880,7 @@ tpp_file_filename_kwd(tpp_file const *tpp_restrict self);
  * If no such file exists, simply re-return "self". This function never
  * returns "NULL" */
 #if TPP_HAVE_INCLUDE_STACK
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getiofile(tpp_file const *tpp_restrict self);
 #else /* TPP_HAVE_INCLUDE_STACK */
 #define tpp_file_getiofile(self) (self)
@@ -4430,7 +4430,7 @@ TPP_DECL_END
 /************************************************************************/
 
 /************************************************************************/
-/* File: parts/extension.h                                              */
+/* File: parts/extensions.h                                             */
 /************************************************************************/
 TPP_DECL_BEGIN
 
@@ -4444,7 +4444,7 @@ typedef enum tpp_extension_id {
 } tpp_extension_id;
 
 /* Default extension state */
-typedef union tpp_extension_state {
+typedef union tpp_extensions_state {
 	struct {
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) unsigned int tef_##id: 1;
@@ -4452,22 +4452,22 @@ typedef union tpp_extension_state {
 #undef TPP_DEFS
 	} tes_flags;
 	unsigned char tes_bitset[TPP_EXT_COUNT ? ((TPP_EXT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
-} tpp_extension_state;
-TPP_CONST_DECL tpp_extension_state const tpp_extension_state_default;
+} tpp_extensions_state;
+TPP_CONST_DECL tpp_extensions_state const tpp_extensions_state_default;
 
-#define tpp_extension_state_getid(self, id) \
+#define tpp_extensions_state_getid(self, id) \
 	((self)->tes_bitset[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
-#define tpp_extension_state_get(self, id) _tpp_extension_state_get_##id(self)
-#define tpp_extension_state_enable(self, id) \
+#define tpp_extensions_state_get(self, id) _tpp_extensions_state_get_##id(self)
+#define tpp_extensions_state_enable(self, id) \
 	(void)((self)->tes_bitset[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
-#define tpp_extension_state_disable(self, id) \
+#define tpp_extensions_state_disable(self, id) \
 	(void)((self)->tes_bitset[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
-#define tpp_extension_state_set(self, id, enabled) \
-	((enabled) ? tpp_extension_state_enable(self, id) : tpp_extension_state_disable(self, id))
+#define tpp_extensions_state_set(self, id, enabled) \
+	((enabled) ? tpp_extensions_state_enable(self, id) : tpp_extensions_state_disable(self, id))
 
 
 typedef struct tpp_extensions {
-	tpp_extension_state    te_state;   /* [const_if(te_pushcnt > 0)] Enabled-extensions state */
+	tpp_extensions_state    te_state;   /* [const_if(te_pushcnt > 0)] Enabled-extensions state */
 #if TPP_HAVE_EXTENSIONS_PUSH_POP
 	tpp_size               te_pushcnt; /* # of times extensions were pushed since last modified */
 	struct tpp_extensions *te_prev;    /* [0..1][owned] Old extension state. */
@@ -4475,9 +4475,9 @@ typedef struct tpp_extensions {
 } tpp_extensions;
 
 #if TPP_HAVE_EXTENSIONS_PUSH_POP
-#define tpp_extensions_init(self)                            \
-	(void)((self)->te_state   = tpp_extension_state_default, \
-	       (self)->te_pushcnt = 0,                           \
+#define tpp_extensions_init(self)                             \
+	(void)((self)->te_state   = tpp_extensions_state_default, \
+	       (self)->te_pushcnt = 0,                            \
 	       (self)->te_prev    = NULL)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_extensions_fini(tpp_extensions *tpp_restrict self);
@@ -4499,12 +4499,12 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_extensions_set(tpp_extensions *tpp_restrict self,
                    tpp_extension_id id, int enabled);
 #else /* TPP_HAVE_EXTENSIONS_PUSH_POP */
-#define tpp_extensions_init(self) (void)((self)->te_state = tpp_extension_state_default)
+#define tpp_extensions_init(self) (void)((self)->te_state = tpp_extensions_state_default)
 #define tpp_extensions_fini(self) (void)0
 #define tpp_extensions_set(self, id, enabled) \
-	(tpp_extension_state_set(&(self)->te_state, id, enabled), TPP_EOK)
+	(tpp_extensions_state_set(&(self)->te_state, id, enabled), TPP_EOK)
 #endif /* !TPP_HAVE_EXTENSIONS_PUSH_POP */
-#define tpp_extensions_get(self, id) tpp_extension_state_get(&(self)->te_state, id)
+#define tpp_extensions_get(self, id) tpp_extensions_state_get(&(self)->te_state, id)
 
 
 /* Convert between extension IDs and their human-readable names. */
@@ -4520,8 +4520,8 @@ tpp_extension_byname(char const *tpp_restrict name);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
 tpp_extension_nearest(char const *tpp_restrict name);
 #else /* TPP_HAVE_EXTENSIONS */
-#define tpp_extension_state_get(self, id) 1
-#define tpp_extensions_get(self, id)      1
+#define tpp_extensions_state_get(self, id) 1
+#define tpp_extensions_get(self, id)       1
 #endif /* !TPP_HAVE_EXTENSIONS */
 
 TPP_DECL_END

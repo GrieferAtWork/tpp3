@@ -37,7 +37,7 @@ typedef enum tpp_errno {
 	TPP_EWOULDBLOCK = -4, /* Operation would block, but non-blocking was requested */
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
-	TPP_EMASKED     = -5, /* File has been masked */
+	TPP_EMASKED     = -5, /* File cannot be opened because it has been masked */
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
 	TPP_ELEXERROR   = -6, /* Hard lexer error (usually when too many -Werror were emitted) */

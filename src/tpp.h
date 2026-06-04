@@ -36,7 +36,7 @@
 #include "parts/file.h"
 #include "parts/macro.h"
 #include "parts/keyword.h"
-#include "parts/extension.h"
+#include "parts/extensions.h"
 #include "parts/warnings.h"
 #include "parts/lexer.h"
 

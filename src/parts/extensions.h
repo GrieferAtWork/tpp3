@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_TPP_EXTENSION_H
-#define GUARD_TPP_EXTENSION_H 1
+#ifndef GUARD_TPP_EXTENSIONS_H
+#define GUARD_TPP_EXTENSIONS_H 1
 
 #include "api.h"
 #include "config.h"
@@ -37,7 +37,7 @@ typedef enum tpp_extension_id {
 } tpp_extension_id;
 
 /* Default extension state */
-typedef union tpp_extension_state {
+typedef union tpp_extensions_state {
 	struct {
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) unsigned int tef_##id: 1;
@@ -45,22 +45,22 @@ typedef union tpp_extension_state {
 #undef TPP_DEFS
 	} tes_flags;
 	unsigned char tes_bitset[TPP_EXT_COUNT ? ((TPP_EXT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
-} tpp_extension_state;
-TPP_CONST_DECL tpp_extension_state const tpp_extension_state_default;
+} tpp_extensions_state;
+TPP_CONST_DECL tpp_extensions_state const tpp_extensions_state_default;
 
-#define tpp_extension_state_getid(self, id) \
+#define tpp_extensions_state_getid(self, id) \
 	((self)->tes_bitset[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
-#define tpp_extension_state_get(self, id) _tpp_extension_state_get_##id(self)
-#define tpp_extension_state_enable(self, id) \
+#define tpp_extensions_state_get(self, id) _tpp_extensions_state_get_##id(self)
+#define tpp_extensions_state_enable(self, id) \
 	(void)((self)->tes_bitset[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
-#define tpp_extension_state_disable(self, id) \
+#define tpp_extensions_state_disable(self, id) \
 	(void)((self)->tes_bitset[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
-#define tpp_extension_state_set(self, id, enabled) \
-	((enabled) ? tpp_extension_state_enable(self, id) : tpp_extension_state_disable(self, id))
+#define tpp_extensions_state_set(self, id, enabled) \
+	((enabled) ? tpp_extensions_state_enable(self, id) : tpp_extensions_state_disable(self, id))
 
 
 typedef struct tpp_extensions {
-	tpp_extension_state    te_state;   /* [const_if(te_pushcnt > 0)] Enabled-extensions state */
+	tpp_extensions_state    te_state;   /* [const_if(te_pushcnt > 0)] Enabled-extensions state */
 #if TPP_HAVE_EXTENSIONS_PUSH_POP
 	tpp_size               te_pushcnt; /* # of times extensions were pushed since last modified */
 	struct tpp_extensions *te_prev;    /* [0..1][owned] Old extension state. */
@@ -68,9 +68,9 @@ typedef struct tpp_extensions {
 } tpp_extensions;
 
 #if TPP_HAVE_EXTENSIONS_PUSH_POP
-#define tpp_extensions_init(self)                            \
-	(void)((self)->te_state   = tpp_extension_state_default, \
-	       (self)->te_pushcnt = 0,                           \
+#define tpp_extensions_init(self)                             \
+	(void)((self)->te_state   = tpp_extensions_state_default, \
+	       (self)->te_pushcnt = 0,                            \
 	       (self)->te_prev    = NULL)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_extensions_fini(tpp_extensions *tpp_restrict self);
@@ -92,12 +92,12 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_extensions_set(tpp_extensions *tpp_restrict self,
                    tpp_extension_id id, int enabled);
 #else /* TPP_HAVE_EXTENSIONS_PUSH_POP */
-#define tpp_extensions_init(self) (void)((self)->te_state = tpp_extension_state_default)
+#define tpp_extensions_init(self) (void)((self)->te_state = tpp_extensions_state_default)
 #define tpp_extensions_fini(self) (void)0
 #define tpp_extensions_set(self, id, enabled) \
-	(tpp_extension_state_set(&(self)->te_state, id, enabled), TPP_EOK)
+	(tpp_extensions_state_set(&(self)->te_state, id, enabled), TPP_EOK)
 #endif /* !TPP_HAVE_EXTENSIONS_PUSH_POP */
-#define tpp_extensions_get(self, id) tpp_extension_state_get(&(self)->te_state, id)
+#define tpp_extensions_get(self, id) tpp_extensions_state_get(&(self)->te_state, id)
 
 
 /* Convert between extension IDs and their human-readable names. */
@@ -113,11 +113,11 @@ tpp_extension_byname(char const *tpp_restrict name);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
 tpp_extension_nearest(char const *tpp_restrict name);
 #else /* TPP_HAVE_EXTENSIONS */
-#define tpp_extension_state_get(self, id) 1
-#define tpp_extensions_get(self, id)      1
+#define tpp_extensions_state_get(self, id) 1
+#define tpp_extensions_get(self, id)       1
 #endif /* !TPP_HAVE_EXTENSIONS */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 
-#endif /* !GUARD_TPP_EXTENSION_H */
+#endif /* !GUARD_TPP_EXTENSIONS_H */

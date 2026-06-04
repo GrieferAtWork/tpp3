@@ -274,7 +274,7 @@ tpp_file_filename_kwd(tpp_file const *tpp_restrict self);
  * If no such file exists, simply re-return "self". This function never
  * returns "NULL" */
 #if TPP_HAVE_INCLUDE_STACK
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getiofile(tpp_file const *tpp_restrict self);
 #else /* TPP_HAVE_INCLUDE_STACK */
 #define tpp_file_getiofile(self) (self)

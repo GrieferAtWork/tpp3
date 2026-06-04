@@ -885,11 +885,15 @@ tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
  * If no such file exists, simply re-return "self". This function never
  * returns "NULL" */
 #if TPP_HAVE_INCLUDE_STACK
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getiofile(tpp_file const *tpp_restrict self) {
-	while (self->tf_prev)
-		self = self->tf_prev;
-	return (tpp_file *)self;
+	tpp_file *iter = (tpp_file *)self;
+	while (iter->tf_kind != TPP_FILE_KIND_IO) {
+		iter = iter->tf_prev;
+		if (iter == NULL)
+			return (tpp_file *)self;
+	}
+	return (tpp_file *)iter;
 }
 #endif /* TPP_HAVE_INCLUDE_STACK */
 

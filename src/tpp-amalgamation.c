@@ -49,9 +49,11 @@ tpp_strerror(tpp_errno error) {
 		return "No such file or directory";
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
 	case TPP_EMASKED:
-		return "File has been masked";
+		return "File cannot be opened because it has been masked";
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
+	case TPP_ELEXERROR:
+		return "User compilation/lexer error";
 	case TPP_EWARNPRINT:
 		return "Error while printing warning";
 #endif /* TPP_HAVE_WARNINGS */
@@ -1446,11 +1448,15 @@ tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
  * If no such file exists, simply re-return "self". This function never
  * returns "NULL" */
 #if TPP_HAVE_INCLUDE_STACK
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getiofile(tpp_file const *tpp_restrict self) {
-	while (self->tf_prev)
-		self = self->tf_prev;
-	return (tpp_file *)self;
+	tpp_file *iter = (tpp_file *)self;
+	while (iter->tf_kind != TPP_FILE_KIND_IO) {
+		iter = iter->tf_prev;
+		if (iter == NULL)
+			return (tpp_file *)self;
+	}
+	return (tpp_file *)iter;
 }
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
@@ -3149,14 +3155,14 @@ TPP_DECL_END
 /************************************************************************/
 
 /************************************************************************/
-/* File: parts/extension.c                                              */
+/* File: parts/extensions.c                                             */
 /************************************************************************/
 TPP_DECL_BEGIN
 
 #if TPP_HAVE_EXTENSIONS
 
 /* Default extension state */
-TPP_CONST_IMPL tpp_extension_state const tpp_extension_state_default = {
+TPP_CONST_IMPL tpp_extensions_state const tpp_extensions_state_default = {
 	/* .tes_flags = */ {
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) /* .tef_##id = */ default,
@@ -3197,7 +3203,7 @@ tpp_extensions_set(tpp_extensions *tpp_restrict self,
                    tpp_extension_id id, int enabled) {
 	if (tpp_extensions_mustcopy(self)) {
 		tpp_extensions *copy;
-		if (!!tpp_extension_state_getid(&self->te_state, id) == !!enabled)
+		if (!!tpp_extensions_state_getid(&self->te_state, id) == !!enabled)
 			return TPP_EOK; /* Unchanged -> no need to actually copy! */
 		copy = (tpp_extensions *)tpp_malloc(sizeof(tpp_extensions));
 		if tpp_unlikely(!copy)
@@ -3206,7 +3212,7 @@ tpp_extensions_set(tpp_extensions *tpp_restrict self,
 		self->te_prev    = copy;
 		self->te_pushcnt = 0;
 	}
-	tpp_extension_state_set(&self->te_state, id, enabled);
+	tpp_extensions_state_set(&self->te_state, id, enabled);
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;
@@ -3998,9 +4004,11 @@ TPP_DECL_END
 /************************************************************************/
 /* File: parts/lexer-warn.c                                             */
 /************************************************************************/
+#ifndef TPP_NO_SYSTEM_INCLUDES
 #if TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER
 #include <stdio.h>
 #endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
+#endif /* !TPP_NO_SYSTEM_INCLUDES */
 
 TPP_DECL_BEGIN
 
@@ -4359,9 +4367,9 @@ tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
                     tpp_warning_id id, va_list args) {
+	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_errno result;
 	tpp_ssize printer_status;
-	tpp_file *const file = tpp_lexer_getfile(self);
 	char const *warning_format;
 	struct tpp_warning_invokeinfo invokeinfo;
 	tpp_formatprinter printer;
@@ -4376,11 +4384,20 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 
 	/* Deal with certain warning states. */
 	switch (invokeinfo.twii_state) {
+
 	case TPP_WSTATE_DISABLED:
 		goto done; /* Nothing to do here */
-	case TPP_WSTATE_WARN:
+
+	case TPP_WSTATE_WARN: {
 		/* Display as a warning */
-		break;
+#if TPP_HAVE_FILE_SYSHDR
+		tpp_file const *const iofile = tpp_file_getiofile(file);
+		if (iofile->tf_kind == TPP_FILE_KIND_IO &&
+		    iofile->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_SYSHDR)
+			return TPP_EOK; /* Suppress warnings in this file */
+#endif /* TPP_HAVE_FILE_SYSHDR */
+	}	break;
+
 #if TPP_HAVE_WARNING_ERROR
 	case TPP_WSTATE_ERROR: {
 		tpp_size errors = tpp_lexer_geterrorcount(self);
@@ -4389,9 +4406,11 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			result = TPP_ELEXERROR;
 	}	break;
 #endif /* TPP_HAVE_WARNING_ERROR */
+
 	case TPP_WSTATE_FATAL:
 		result = TPP_ELEXERROR;
 		break;
+
 	default: tpp_unreachable();
 	}
 
@@ -4535,7 +4554,6 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_UNICODE
 
-/* clang-format off */
 #define TPP_UTF8_SEQLEN_INIT(_0, _1, _2, _3, _4, _5, _6, _7, _8)         \
 	{                                                                    \
 		/* Unicode follow-up word (`0b10??????'). */                     \
@@ -4555,7 +4573,6 @@ TPP_DECL_BEGIN
 		_7,                                              /* 0xfe */      \
 		_8                                               /* 0xff */      \
 	}
-/* clang-format on */
 static uint_least8_t const tpp_unicode_utf8seqlen[128] =
 TPP_UTF8_SEQLEN_INIT(0, ~, 2, 3, 4, 0, 0, 0, 0);
 static uint_least8_t const tpp_unicode_utf8seqlen_safe[128] =
@@ -7763,24 +7780,24 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	if (tpp_keyword_equals_cstr(kwd, "push_macro") ||
 	    tpp_keyword_equals_cstr(kwd, "pop_macro")) {
 		if (tpp_lexer_getext(self, TPP_EXT_PRAGMA_PUSH_MACRO)) {
-			bool is_push = kwd->tk_kwd[1] == 'u';
+			bool const is_push = kwd->tk_kwd[1] == 'u';
 			tok = tpp_lexer_yield(self);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
-			(void)is_push;
 			/* TODO: skip "(" */
 			/* TODO: Parse string */
+			(void)is_push;
 			/* TODO: skip ")" */
 		}
 	} else
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_PRAGMA_ONCE
 	if (tpp_keyword_equals_cstr(kwd, "once")) {
-		tpp_file const *file = tpp_file_getiofile(tpp_lexer_getfile(self));
-		tpp_keyword *file_kwd = tpp_file_filename_kwd(file);
-		if (file_kwd) {
+		tpp_file const *const iofile = tpp_file_getiofile(tpp_lexer_getfile(self));
+		tpp_keyword *const iofile_kwd = tpp_file_filename_kwd(iofile);
+		if (iofile_kwd) {
 			tpp_keyword_misc *misc;
-			misc = tpp_keyword_requiremisc(file_kwd);
+			misc = tpp_keyword_requiremisc(iofile_kwd);
 			if tpp_unlikely(!misc)
 				return TPP_ENOMEM;
 			misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_ONCE;
@@ -7824,6 +7841,15 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 #define TPP_HAVE_PRAGMA_EXTENSION_PUSH ((TPP_HAVE_PRAGMA_EXTENSION && TPP_HAVE_EXTENSIONS_PUSH_POP) ? -1 : 0)
 #endif /* !TPP_HAVE_PRAGMA_EXTENSION_PUSH */
 
+/* Support for: #pragma warning(...) */
+#ifndef TPP_HAVE_PRAGMA_WARNING
+#define TPP_HAVE_PRAGMA_WARNING ((TPP_COMMON_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? -1 : 0)
+#endif /* !TPP_HAVE_PRAGMA_WARNING */
+
+/* Support for: #pragma warning(push) */
+#ifndef TPP_HAVE_PRAGMA_WARNING_PUSH
+#define TPP_HAVE_PRAGMA_WARNING_PUSH ((TPP_HAVE_PRAGMA_WARNING && TPP_HAVE_WARNINGS_PUSH_POP) ? -1 : 0)
+#endif /* !TPP_HAVE_PRAGMA_WARNING_PUSH */
 
 unknown_pragma:
 	/* TODO: Warning */
@@ -8744,7 +8770,6 @@ do_decode_basic:
 #undef HAVE_do_decode_basic
 }
 #endif /* TPP_HAVE_TPP_TOK_STRINGLIKE */
-
 
 TPP_DECL_END
 /************************************************************************/

@@ -34,7 +34,7 @@
 #include "parts/keyword.c"
 #include "parts/builtins.c"
 #include "parts/macro.c"
-#include "parts/extension.c"
+#include "parts/extensions.c"
 #include "parts/features.c"
 #include "parts/warnings.c"
 #include "parts/lexer.c"
