@@ -91,6 +91,9 @@ local BUILTIN_KEYWORDS: {string: string} = {
 	"pragma": "TPP_HAVE_CPP_PRAGMA",
 	"_Pragma": "TPP_HAVE_STDC_PRAGMA",
 	"__pragma": "TPP_HAVE_MSVC_PRAGMA",
+	"push_macro": "TPP_HAVE_PRAGMA_PUSH_MACRO",
+	"pop_macro": "TPP_HAVE_PRAGMA_PUSH_MACRO",
+	"once": "TPP_HAVE_PRAGMA_ONCE",
 };
 for (local kwd, cond: BUILTIN_KEYWORDS) {
 	print("#if ", cond);
@@ -191,6 +194,18 @@ TPP_KWD(TPP_KWD__Pragma, "_Pragma")
 #define TPP_KWD___pragma TPP_KWD___pragma
 TPP_KWD(TPP_KWD___pragma, "__pragma")
 #endif /* TPP_HAVE_MSVC_PRAGMA */
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+#define TPP_KWD_push_macro TPP_KWD_push_macro
+TPP_KWD(TPP_KWD_push_macro, "push_macro")
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+#define TPP_KWD_pop_macro TPP_KWD_pop_macro
+TPP_KWD(TPP_KWD_pop_macro, "pop_macro")
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_PRAGMA_ONCE
+#define TPP_KWD_once TPP_KWD_once
+TPP_KWD(TPP_KWD_once, "once")
+#endif /* TPP_HAVE_PRAGMA_ONCE */
 /*[[[end]]]*/
 
 
@@ -413,7 +428,7 @@ TPP_WARNING(TPP_W_SLASHSTAR_INSIDE_OF_COMMENT, 1(TPP_WG_COMMENT), 0(), "%[/*%] r
 
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
 #define TPP_W_LINE_COMMENT_CONTINUED TPP_W_LINE_COMMENT_CONTINUED
-TPP_WARNING(TPP_W_LINE_COMMENT_CONTINUED, 1(TPP_WG_COMMENT), 1(4010), "Line-comment continued")
+TPP_WARNING(TPP_W_LINE_COMMENT_CONTINUED, 1(TPP_WG_COMMENT), 1(4010), "line-comment continued")
 #endif /* TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
 
 
@@ -431,7 +446,7 @@ TPP_WGROUP(TPP_WG_TRIGRAPHS, 1("trigraphs"), TPP_WSTATE_WARN)
 
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 #define TPP_W_ENCOUNTERED_TRIGRAPH TPP_W_ENCOUNTERED_TRIGRAPH
-TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), "Encountered trigraph character sequence %.3Pt")
+TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), "encountered trigraph character sequence %.3Pt")
 #endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 
 
@@ -441,7 +456,9 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), "Encountered t
 #ifndef TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_HAVE_TPP_WG_SYNTAX                       \
 	(TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED || \
-	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF)
+	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF ||      \
+	 TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF ||     \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_WG_SYNTAX TPP_WG_SYNTAX
@@ -450,25 +467,93 @@ TPP_WGROUP(TPP_WG_SYNTAX, 1("syntax"), TPP_WSTATE_ERROR_OR_FATAL)
 
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 #define TPP_W_STRING_TERMINATED_BY_LINEFEED TPP_W_STRING_TERMINATED_BY_LINEFEED
-TPP_WARNING(TPP_W_STRING_TERMINATED_BY_LINEFEED, 1(TPP_WG_SYNTAX), 0(), "String was terminated by a linefeed")
+TPP_WARNING(TPP_W_STRING_TERMINATED_BY_LINEFEED, 1(TPP_WG_SYNTAX), 0(), "string was terminated by a linefeed")
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
 #define TPP_W_STRING_TERMINATED_BY_EOF TPP_W_STRING_TERMINATED_BY_EOF
-TPP_WARNING(TPP_W_STRING_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), "String was terminated by EOF")
+TPP_WARNING(TPP_W_STRING_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), "string was terminated by EOF")
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 #define TPP_W_COMMENT_TERMINATED_BY_EOF TPP_W_COMMENT_TERMINATED_BY_EOF
-TPP_WARNING(TPP_W_COMMENT_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), "Comment was terminated by EOF")
+TPP_WARNING(TPP_W_COMMENT_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), "comment was terminated by EOF")
 #endif /* TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
 
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_UNEXPECTED_TOKEN TPP_W_UNEXPECTED_TOKEN
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN, 1(TPP_WG_SYNTAX), 0(), "expected %[%s%] but got %Pt")
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
+
+
+/************************************************************************/
+/* -Wuser, -Wcpp                                                        */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_USER
+#define TPP_HAVE_TPP_WG_USER (TPP_HAVE_TPP_W_ERROR || TPP_HAVE_TPP_W_WARNING)
+#endif /* !TPP_HAVE_TPP_WG_USER */
+#ifndef TPP_HAVE_TPP_WG_CPP
+#define TPP_HAVE_TPP_WG_CPP (TPP_HAVE_TPP_W_WARNING)
+#endif /* !TPP_HAVE_TPP_WG_CPP */
+#if TPP_HAVE_TPP_WG_USER
+#define TPP_WG_USER TPP_WG_USER
+TPP_WGROUP(TPP_WG_USER, 1("user"), TPP_WSTATE_ERROR_OR_FATAL)
+#endif /* TPP_HAVE_TPP_WG_USER */
+#if TPP_HAVE_TPP_WG_CPP
+#define TPP_WG_CPP TPP_WG_CPP
+TPP_WGROUP(TPP_WG_CPP, 1("cpp"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_CPP */
+#if TPP_HAVE_TPP_W_ERROR
+#define TPP_W_ERROR TPP_W_ERROR
+TPP_WARNING(TPP_W_ERROR, 1(TPP_WG_USER), 0(), "%.*s")
+#endif /* TPP_HAVE_TPP_W_ERROR */
+#if TPP_HAVE_TPP_W_WARNING
+#define TPP_W_WARNING TPP_W_WARNING
+TPP_WARNING(TPP_W_WARNING, 2(TPP_WG_USER, TPP_WG_CPP), 0(), "%.*s")
+#endif /* TPP_HAVE_TPP_W_WARNING */
+
+
+/************************************************************************/
+/* -Wunknown-pragmas                                                    */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_UNKNOWN_PRAGMAS
+#define TPP_HAVE_TPP_WG_UNKNOWN_PRAGMAS (TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS)
+#endif /* !TPP_HAVE_TPP_WG_UNKNOWN_PRAGMAS */
+#if TPP_HAVE_TPP_WG_UNKNOWN_PRAGMAS
+#define TPP_WG_UNKNOWN_PRAGMAS TPP_WG_UNKNOWN_PRAGMAS
+TPP_WGROUP(TPP_WG_UNKNOWN_PRAGMAS, 1("unknown-pragmas"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_UNKNOWN_PRAGMAS */
+#if TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS
+#define TPP_W_UNKNOWN_PRAGMAS TPP_W_UNKNOWN_PRAGMAS
+TPP_WARNING(TPP_W_UNKNOWN_PRAGMAS, 1(TPP_WG_UNKNOWN_PRAGMAS), 1(4068), "unknown pragma %Pt")
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
+#define TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
+TPP_WARNING(TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE, 1(TPP_WG_UNKNOWN_PRAGMAS), 1(4083),
+            "extra tokens at end of %[#pragma%] directive")
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
+
+
+/************************************************************************/
+/* -Wpragma-once-outside-header                                         */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER
+#define TPP_HAVE_TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER (TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER)
+#endif /* !TPP_HAVE_TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER */
+#if TPP_HAVE_TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER
+#define TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER
+TPP_WGROUP(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER, 1("pragma-once-outside-header"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER */
+#if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
+#define TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
+TPP_WARNING(TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER, 1(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER), 0(),
+            "%[#pragma%] once in main file")
+#endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
 
 
 TPP_WGROUP(TPP_WG_MACROS, /*         */ 1("macros"),               TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_USAGE, /*          */ 1("usage"),                TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
-TPP_WGROUP(TPP_WG_USER, /*           */ 1("user"),                 TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_ENVIRON, /*        */ 1("environ"),              TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_UNDEF, /*          */ 1("undef"),                TPP_WSTATE_WARN)

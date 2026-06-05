@@ -28,6 +28,8 @@
 
 #include <stdio.h>
 
+#error HERE
+
 TPP_DECL_BEGIN
 
 int main(int argc, char *argv[]) {

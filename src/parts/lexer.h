@@ -34,8 +34,7 @@
 TPP_DECL_BEGIN
 
 #undef TPP_HAVE_LEXER_STATE_FLAGS
-#if (TPP_HAVE_CPP_DIRECTIVES || \
-     TPP_HAVE_INCLUDE_STACK)
+#if (TPP_HAVE_CPP_DIRECTIVES)
 #define TPP_HAVE_LEXER_STATE_FLAGS 1
 #else /* ... */
 #define TPP_HAVE_LEXER_STATE_FLAGS 0
@@ -49,9 +48,6 @@ TPP_DECL_BEGIN
 #define TPP_LEXER_STATE_FLAG_NODIRECTIVES UINT8_C(0x01) /* A non-comment/space token was encountered since the last
                                                          * TPP_TOK_LF, meaning PP-directives may not be parsed. */
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
-#if TPP_HAVE_INCLUDE_STACK
-#define TPP_LEXER_STATE_FLAG_NOPOPFILE    UINT8_C(0x02) /* Do not pop files from the #include-stack */
-#endif /* TPP_HAVE_INCLUDE_STACK */
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
 typedef struct tpp_lexer {
@@ -286,13 +282,9 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 
 /* Temporarily disable automatic pop-to-prev-file on EOF */
-#if TPP_HAVE_INCLUDE_STACK
-#define tpp_lexer_autopopfile_pushoff(self) tpp_lexer_state_push(self, 0, TPP_LEXER_STATE_FLAG_NOPOPFILE)
-#define tpp_lexer_autopopfile_pop(self)     tpp_lexer_state_pop(self, 0, TPP_LEXER_STATE_FLAG_NOPOPFILE)
-#else /* TPP_HAVE_INCLUDE_STACK */
-#define tpp_lexer_autopopfile_pushoff(self) do {
-#define tpp_lexer_autopopfile_pop(self)     } while (0)
-#endif /* !TPP_HAVE_INCLUDE_STACK */
+#define tpp_lexer_autopopfile_pushoff(self) tpp_file_autopopfile_pushoff(tpp_lexer_getfile(self))
+#define tpp_lexer_autopopfile_pop(self)     tpp_file_autopopfile_pop(tpp_lexer_getfile(self))
+
 
 /* Do a raw yield and update `self->tl_tok' in the process, then return `tl_tok.tt_id'.
  * - On EOF, automatically pop `tl_file->tf_prev' and continue reading from there
@@ -356,6 +348,16 @@ tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield(tpp_lexer *tpp_restrict self);
 
+
+
+#if TPP_HAVE_LEXER_SKIP
+/* Check that the currently loaded token is 'tok'. If so, "tpp_lexer_yield" to the
+ * next token (which is also returned). Otherwise, trigger 'TPP_W_UNEXPECTED_TOKEN'
+ * and (if that warning wasn't fatal), try to seek ahead to see if "tok" can be found
+ * somewhere close by (depending on what 'tok' and what was actually loaded on entry) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok);
+#endif /* TPP_HAVE_LEXER_SKIP */
 
 
 
@@ -446,6 +448,13 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warni
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPVCALL
 tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warning_id id, ...);
 #endif /* TPP_HAVE_WARNINGS */
+
+
+#if TPP_HAVE_LEXER_REPRTOKENID
+/* Return the (canonical) string-representation of a given token ID */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char const *TPPCALL
+tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok);
+#endif /* TPP_HAVE_LEXER_REPRTOKENID */
 
 
 

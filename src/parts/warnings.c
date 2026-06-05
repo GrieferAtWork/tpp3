@@ -299,11 +299,11 @@ tpp_warnings_setctx_(tpp_warnings *tpp_restrict self,
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,
-                    struct tpp_warning_invokeinfo *tpp_restrict result)
+                    tpp_warning_invokeinfo *tpp_restrict result)
 #else /* TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 TPP_IMPL TPP_NONNULL((1, 3)) void TPPCALL
 tpp_warnings_invoke_(tpp_warnings const *tpp_restrict self, tpp_warning_id warning_id,
-                     struct tpp_warning_invokeinfo *tpp_restrict result)
+                     tpp_warning_invokeinfo *tpp_restrict result)
 #endif /* !TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 {
 	tpp_size i;

@@ -115,14 +115,14 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_print_uint(tpp_formatprinter printer, void *arg, tpp_uintmax value) {
 	char buf[TPP_UTOA_MAXLEN];
 	char const *start = tpp_utoa(buf, value);
-	return (*printer)(arg, (tpp_char const *)start, (tpp_size)(buf + tpp_lengthof(buf) - start));
+	return (*printer)(arg, (tpp_char const *)start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 	char buf[TPP_ITOA_MAXLEN];
 	char const *start = tpp_itoa(buf, value);
-	return (*printer)(arg, (tpp_char const *)start, (tpp_size)(buf + tpp_lengthof(buf) - start));
+	return (*printer)(arg, (tpp_char const *)start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
@@ -203,8 +203,8 @@ handle_eof:
 			if (tpp_lcinfo_getline(lcinfo) == -1)
 				lcinfo = tpp_file_lcinfo(file, pos);
 			temp = tpp_format_print_int(printer, arg,
-			                            ch == 'l' ? tpp_lcinfo_getline(lcinfo)
-			                                      : tpp_lcinfo_getcol(lcinfo));
+			                            ch == 'l' ? (tpp_lcinfo_getline(lcinfo) + 1)
+			                                      : (tpp_lcinfo_getcol(lcinfo) + 1));
 		}	break;
 
 		case 'f': {
@@ -400,7 +400,7 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	tpp_errno result;
 	tpp_ssize printer_status;
 	char const *warning_format;
-	struct tpp_warning_invokeinfo invokeinfo;
+	tpp_warning_invokeinfo invokeinfo;
 	tpp_formatprinter printer;
 	void *printer_arg;
 
@@ -480,6 +480,9 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		if tpp_unlikely(group_name == NULL) {
 			printer_status = (*printer)(printer_arg, (tpp_char const *)"?", 1);
 		} else {
+			printer_status = (*printer)(printer_arg, (tpp_char const *)"-W", 2);
+			if (printer_status < 0)
+				goto err_printer;
 			printer_status = (*printer)(printer_arg, (tpp_char const *)group_name, tpp_strlen(group_name));
 		}
 	}
@@ -537,15 +540,20 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		}
 	}
 
+	/* Print origin traceback */
 #if TPP_HAVE_INCLUDE_STACK
-//TODO:	{
-//TODO:		tpp_file *caller = file->tf_prev;
-//TODO:		for (; caller; caller = caller->tf_prev) {
-//TODO:			printer_status = tpp_lexer_printf_warning(self, file, pos, printer, printer_arg,
-//TODO:			                                          TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT);
-//TODO:
-//TODO:		}
-//TODO:	}
+	{
+		tpp_file *caller = file->tf_rprev;
+		for (; caller; caller = caller->tf_rprev) {
+			printer_status = tpp_lexer_printf_warning(self, file, pos, printer, printer_arg,
+			                                          TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT);
+			if (printer_status < 0)
+				goto err_printer;
+			printer_status = (*printer)(printer_arg, (tpp_char const *)"note: originating from here\n", 28);
+			if (printer_status < 0)
+				goto err_printer;
+		}
+	}
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 done:

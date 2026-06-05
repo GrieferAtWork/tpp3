@@ -148,6 +148,23 @@ tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
 }
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
 
+#if TPP_HAVE_LEXER_REPRTOKENID
+/* Return the (canonical) string-representation of a given token ID */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) char const *TPPCALL
+tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok) {
+	char const *result = tpp_reprtokenid(tok);
+	if (result)
+		return result;
+	if (TPP_TOK_ISUSERKEYWORD(tok)) {
+		/* Lookup keyword */
+		tpp_keyword const *kwd = tpp_keywords_getkeyword_byid(&self->tl_kwds, tok);
+		if (kwd)
+			return (char const *)kwd->tk_kwd;
+	}
+	return NULL;
+}
+#endif /* TPP_HAVE_LEXER_REPRTOKENID */
+
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

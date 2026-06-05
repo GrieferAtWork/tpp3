@@ -50,6 +50,37 @@ tpp_lexer_yield(tpp_lexer *tpp_restrict self) {
 }
 
 
+
+#if TPP_HAVE_LEXER_SKIP
+/* Check that the currently loaded token is 'tok'. If so, "tpp_lexer_yield" to the
+ * next token (which is also returned). Otherwise, trigger 'TPP_W_UNEXPECTED_TOKEN'
+ * and (if that warning wasn't fatal), try to seek ahead to see if "tok" can be found
+ * somewhere close by (depending on what 'tok' and what was actually loaded on entry) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
+	tpp_token const *const token = tpp_lexer_gettoken(self);
+	if tpp_likely(token->tt_id == tok)
+		return tpp_lexer_yield(self);
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
+	{
+		tpp_errno error;
+		char const *expected = tpp_lexer_reprtokenid(self, tok);
+		if tpp_unlikely(!expected)
+			expected = "?";
+		error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN, expected);
+		if (error != TPP_EOK)
+			return TPP_TOK_OFERR(error);
+	}
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
+	/* TODO: Try to seek ahead (within the current line) to
+	 *       find "tok" when it's (e.g.) a '(' (to deal with
+	 *       cases where the user added some extra, unrelated
+	 *       tokens before the one we're expecting) */
+
+	return token->tt_id;
+}
+#endif /* TPP_HAVE_LEXER_SKIP */
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

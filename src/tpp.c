@@ -29,6 +29,7 @@
 #include "parts/ctype.c"
 #include "parts/string.c"
 #include "parts/token-strtokenid.c"
+#include "parts/token-reprtokenid.c"
 #include "parts/file-io.c"
 #include "parts/file.c"
 #include "parts/keyword.c"

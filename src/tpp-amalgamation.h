@@ -156,6 +156,18 @@ TPP_KWD(TPP_KWD__Pragma, "_Pragma")
 #define TPP_KWD___pragma TPP_KWD___pragma
 TPP_KWD(TPP_KWD___pragma, "__pragma")
 #endif /* TPP_HAVE_MSVC_PRAGMA */
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+#define TPP_KWD_push_macro TPP_KWD_push_macro
+TPP_KWD(TPP_KWD_push_macro, "push_macro")
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+#define TPP_KWD_pop_macro TPP_KWD_pop_macro
+TPP_KWD(TPP_KWD_pop_macro, "pop_macro")
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_PRAGMA_ONCE
+#define TPP_KWD_once TPP_KWD_once
+TPP_KWD(TPP_KWD_once, "once")
+#endif /* TPP_HAVE_PRAGMA_ONCE */
 /*[[[end]]]*/
 
 
@@ -377,7 +389,7 @@ TPP_WARNING(TPP_W_SLASHSTAR_INSIDE_OF_COMMENT, 1(TPP_WG_COMMENT), 0(), "%[/*%] r
 
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
 #define TPP_W_LINE_COMMENT_CONTINUED TPP_W_LINE_COMMENT_CONTINUED
-TPP_WARNING(TPP_W_LINE_COMMENT_CONTINUED, 1(TPP_WG_COMMENT), 1(4010), "Line-comment continued")
+TPP_WARNING(TPP_W_LINE_COMMENT_CONTINUED, 1(TPP_WG_COMMENT), 1(4010), "line-comment continued")
 #endif /* TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
 
 
@@ -395,7 +407,7 @@ TPP_WGROUP(TPP_WG_TRIGRAPHS, 1("trigraphs"), TPP_WSTATE_WARN)
 
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 #define TPP_W_ENCOUNTERED_TRIGRAPH TPP_W_ENCOUNTERED_TRIGRAPH
-TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), "Encountered trigraph character sequence %.3Pt")
+TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), "encountered trigraph character sequence %.3Pt")
 #endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 
 
@@ -405,7 +417,9 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), "Encountered t
 #ifndef TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_HAVE_TPP_WG_SYNTAX                       \
 	(TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED || \
-	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF)
+	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF ||      \
+	 TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF ||     \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_WG_SYNTAX TPP_WG_SYNTAX
@@ -414,25 +428,93 @@ TPP_WGROUP(TPP_WG_SYNTAX, 1("syntax"), TPP_WSTATE_ERROR_OR_FATAL)
 
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 #define TPP_W_STRING_TERMINATED_BY_LINEFEED TPP_W_STRING_TERMINATED_BY_LINEFEED
-TPP_WARNING(TPP_W_STRING_TERMINATED_BY_LINEFEED, 1(TPP_WG_SYNTAX), 0(), "String was terminated by a linefeed")
+TPP_WARNING(TPP_W_STRING_TERMINATED_BY_LINEFEED, 1(TPP_WG_SYNTAX), 0(), "string was terminated by a linefeed")
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
 #define TPP_W_STRING_TERMINATED_BY_EOF TPP_W_STRING_TERMINATED_BY_EOF
-TPP_WARNING(TPP_W_STRING_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), "String was terminated by EOF")
+TPP_WARNING(TPP_W_STRING_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), "string was terminated by EOF")
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 #define TPP_W_COMMENT_TERMINATED_BY_EOF TPP_W_COMMENT_TERMINATED_BY_EOF
-TPP_WARNING(TPP_W_COMMENT_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), "Comment was terminated by EOF")
+TPP_WARNING(TPP_W_COMMENT_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), "comment was terminated by EOF")
 #endif /* TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
 
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_UNEXPECTED_TOKEN TPP_W_UNEXPECTED_TOKEN
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN, 1(TPP_WG_SYNTAX), 0(), "expected %[%s%] but got %Pt")
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
+
+
+/************************************************************************/
+/* -Wuser, -Wcpp                                                        */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_USER
+#define TPP_HAVE_TPP_WG_USER (TPP_HAVE_TPP_W_ERROR || TPP_HAVE_TPP_W_WARNING)
+#endif /* !TPP_HAVE_TPP_WG_USER */
+#ifndef TPP_HAVE_TPP_WG_CPP
+#define TPP_HAVE_TPP_WG_CPP (TPP_HAVE_TPP_W_WARNING)
+#endif /* !TPP_HAVE_TPP_WG_CPP */
+#if TPP_HAVE_TPP_WG_USER
+#define TPP_WG_USER TPP_WG_USER
+TPP_WGROUP(TPP_WG_USER, 1("user"), TPP_WSTATE_ERROR_OR_FATAL)
+#endif /* TPP_HAVE_TPP_WG_USER */
+#if TPP_HAVE_TPP_WG_CPP
+#define TPP_WG_CPP TPP_WG_CPP
+TPP_WGROUP(TPP_WG_CPP, 1("cpp"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_CPP */
+#if TPP_HAVE_TPP_W_ERROR
+#define TPP_W_ERROR TPP_W_ERROR
+TPP_WARNING(TPP_W_ERROR, 1(TPP_WG_USER), 0(), "%.*s")
+#endif /* TPP_HAVE_TPP_W_ERROR */
+#if TPP_HAVE_TPP_W_WARNING
+#define TPP_W_WARNING TPP_W_WARNING
+TPP_WARNING(TPP_W_WARNING, 2(TPP_WG_USER, TPP_WG_CPP), 0(), "%.*s")
+#endif /* TPP_HAVE_TPP_W_WARNING */
+
+
+/************************************************************************/
+/* -Wunknown-pragmas                                                    */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_UNKNOWN_PRAGMAS
+#define TPP_HAVE_TPP_WG_UNKNOWN_PRAGMAS (TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS)
+#endif /* !TPP_HAVE_TPP_WG_UNKNOWN_PRAGMAS */
+#if TPP_HAVE_TPP_WG_UNKNOWN_PRAGMAS
+#define TPP_WG_UNKNOWN_PRAGMAS TPP_WG_UNKNOWN_PRAGMAS
+TPP_WGROUP(TPP_WG_UNKNOWN_PRAGMAS, 1("unknown-pragmas"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_UNKNOWN_PRAGMAS */
+#if TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS
+#define TPP_W_UNKNOWN_PRAGMAS TPP_W_UNKNOWN_PRAGMAS
+TPP_WARNING(TPP_W_UNKNOWN_PRAGMAS, 1(TPP_WG_UNKNOWN_PRAGMAS), 1(4068), "unknown pragma %Pt")
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
+#define TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
+TPP_WARNING(TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE, 1(TPP_WG_UNKNOWN_PRAGMAS), 1(4083),
+            "extra tokens at end of %[#pragma%] directive")
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
+
+
+/************************************************************************/
+/* -Wpragma-once-outside-header                                         */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER
+#define TPP_HAVE_TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER (TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER)
+#endif /* !TPP_HAVE_TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER */
+#if TPP_HAVE_TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER
+#define TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER
+TPP_WGROUP(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER, 1("pragma-once-outside-header"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER */
+#if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
+#define TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
+TPP_WARNING(TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER, 1(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER), 0(),
+            "%[#pragma%] once in main file")
+#endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
 
 
 TPP_WGROUP(TPP_WG_MACROS, /*         */ 1("macros"),               TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_USAGE, /*          */ 1("usage"),                TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
-TPP_WGROUP(TPP_WG_USER, /*           */ 1("user"),                 TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_ENVIRON, /*        */ 1("environ"),              TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_UNDEF, /*          */ 1("undef"),                TPP_WSTATE_WARN)
@@ -1675,14 +1757,10 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_MSVC_PRAGMA */
 
 
-#if (!TPP_HAVE_CPP_PRAGMA && \
-     !TPP_HAVE_STDC_PRAGMA && \
-     !TPP_HAVE_MSVC_PRAGMA)
-#undef TPP_COMMON_HAVE_PRAGMA
-#define TPP_COMMON_HAVE_PRAGMA 0
-#undef TPP_COMMON_HAVE_PRAGMA_GCC
-#define TPP_COMMON_HAVE_PRAGMA_GCC 0
-#endif /* !... */
+/* Support for: #pragma */
+#ifndef TPP_HAVE_PRAGMA
+#define TPP_HAVE_PRAGMA (TPP_HAVE_CPP_PRAGMA || TPP_HAVE_STDC_PRAGMA || TPP_HAVE_MSVC_PRAGMA)
+#endif /* !TPP_HAVE_PRAGMA */
 
 
 /* Support for clang __has_attribute */
@@ -1762,105 +1840,6 @@ TPP_DECL_END
 
 
 /************************************************************************/
-/* WARNINGS                                                             */
-/************************************************************************/
-
-/*  */
-#ifndef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT
-#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV */
-
-#if defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#elif defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#else /* !... */
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#ifdef _MSC_VER
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 1
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
-#else /* _MSC_VER */
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  1
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
-#endif /* !_MSC_VER */
-#endif /* ... */
-#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
-#elif TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf:%Pl:%Pc: "
-#else /* ... */
-#error "Invalid configuration of 'TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT'"
-#endif /* !... */
-#else /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
-#endif /* TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
-
-/* Configurations for individual warnings */
-#ifndef TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT
-#define TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT TPP_HAVE_WARNINGS
-#endif /* !TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT */
-#ifndef TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
-#define TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED (TPP_HAVE_WARNINGS && TPP_HAVE_BSE)
-#endif /* !TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
-#ifndef TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
-#define TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH (TPP_HAVE_WARNINGS && TPP_HAVE_TRIGRAPHS)
-#endif /* !TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
-#ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED                    \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_CHAR ||                     \
-	                       TPP_HAVE_TPP_TOK_STRING ||                   \
-	                       TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-	                       TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||       \
-	                       TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
-#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
-#ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE)
-#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
-#ifndef TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
-#define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE)
-#endif /* !TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
-
-
-/* Warning printer configuration */
-#if TPP_HAVE_WARNINGS
-#ifdef TPP_CONFIG_WARNING_PRINTER
-#ifndef TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
-#define TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG 1
-#endif /* !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG */
-
-/* >> #define TPP_CONFIG_WARNING_PRINTER my_warning_printer
- * >> #if TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
- * >> static tpp_ssize TPP_FORMATPRINTER_CC
- * >> my_warning_printer(void *arg, tpp_char const *text, tpp_size num_bytes)
- * >> #else // TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
- * >> static tpp_ssize TPP_FORMATPRINTER_CC
- * >> my_warning_printer(tpp_char const *text, tpp_size num_bytes)
- * >> #endif // !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
- * >> {
- * >>    ...
- * >> } */
-#else /* TPP_CONFIG_WARNING_PRINTER */
-/* Supply a built-in printer (that uses "fwrite(stderr)") when  */
-#ifndef TPP_HAVE_BUILTIN_WARNPRINTER
-#define TPP_HAVE_BUILTIN_WARNPRINTER 1
-#endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */
-#endif /* !TPP_CONFIG_WARNING_PRINTER */
-#endif /* TPP_HAVE_WARNINGS */
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-
-
-
-/************************************************************************/
 /* #PRAGMA DIRECTIVES                                                   */
 /************************************************************************/
 
@@ -1922,6 +1901,123 @@ TPP_DECL_END
 
 
 /************************************************************************/
+/* WARNINGS                                                             */
+/************************************************************************/
+
+/* Format to use for file+line+column log messages */
+#ifndef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT
+#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV */
+
+#if defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#elif defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#else /* !... */
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#ifdef _MSC_VER
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 1
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
+#else /* _MSC_VER */
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  1
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
+#endif /* !_MSC_VER */
+#endif /* ... */
+#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
+#elif TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf:%Pl:%Pc: "
+#else /* ... */
+#error "Invalid configuration of 'TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT'"
+#endif /* !... */
+#else /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
+#endif /* TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
+
+/* Configurations for individual warnings */
+#ifndef TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT
+#define TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT TPP_HAVE_WARNINGS
+#endif /* !TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT */
+#ifndef TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
+#define TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED (TPP_HAVE_WARNINGS && TPP_HAVE_BSE)
+#endif /* !TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
+#ifndef TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
+#define TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH (TPP_HAVE_WARNINGS && TPP_HAVE_TRIGRAPHS)
+#endif /* !TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
+#ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
+#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED                    \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_CHAR ||                     \
+	                       TPP_HAVE_TPP_TOK_STRING ||                   \
+	                       TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+	                       TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||       \
+	                       TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
+#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+#ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
+#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE)
+#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
+#ifndef TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
+#define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE)
+#endif /* !TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN (TPP_HAVE_WARNINGS)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
+#ifndef TPP_HAVE_TPP_W_ERROR
+#define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_ERROR)
+#endif /* !TPP_HAVE_TPP_W_ERROR */
+#ifndef TPP_HAVE_TPP_W_WARNING
+#define TPP_HAVE_TPP_W_WARNING (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_WARNING)
+#endif /* !TPP_HAVE_TPP_W_WARNING */
+#ifndef TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS
+#define TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
+#endif /* !TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
+#ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
+#define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
+#endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
+#ifndef TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
+#define TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_ONCE && TPP_HAVE_INCLUDE_STACK)
+#endif /* !TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
+
+
+/* Warning printer configuration */
+#if TPP_HAVE_WARNINGS
+#ifdef TPP_CONFIG_WARNING_PRINTER
+#ifndef TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+#define TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG 1
+#endif /* !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG */
+
+/* >> #define TPP_CONFIG_WARNING_PRINTER my_warning_printer
+ * >> #if TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+ * >> static tpp_ssize TPP_FORMATPRINTER_CC
+ * >> my_warning_printer(void *arg, tpp_char const *text, tpp_size num_bytes)
+ * >> #else // TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+ * >> static tpp_ssize TPP_FORMATPRINTER_CC
+ * >> my_warning_printer(tpp_char const *text, tpp_size num_bytes)
+ * >> #endif // !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+ * >> {
+ * >>    ...
+ * >> } */
+#else /* TPP_CONFIG_WARNING_PRINTER */
+/* Supply a built-in printer (that uses "fwrite(stderr)") when  */
+#ifndef TPP_HAVE_BUILTIN_WARNPRINTER
+#define TPP_HAVE_BUILTIN_WARNPRINTER 1
+#endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */
+#endif /* !TPP_CONFIG_WARNING_PRINTER */
+#endif /* TPP_HAVE_WARNINGS */
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+/************************************************************************/
 /* IMPLICIT API FEATURES                                                */
 /************************************************************************/
 /* Enable support for `TPP_FILE_IOFLAGS_SYSHDR' */
@@ -1959,6 +2055,26 @@ TPP_DECL_END
 #ifndef TPP_HAVE_KEYWORD_FILE_GUARD
 #define TPP_HAVE_KEYWORD_FILE_GUARD ((TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_HAVE_CPP_IF_ELSE_ENDIF)
 #endif /* !TPP_HAVE_KEYWORD_FILE_GUARD */
+
+/* Enable support for `tpp_lexer_skip()' */
+#ifndef TPP_HAVE_LEXER_SKIP
+#define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1)
+#endif /* !TPP_HAVE_LEXER_SKIP */
+
+ /* Provide a function "tpp_lexer_reprtokenid()" to
+ * return the string-representation of a given token ID */
+#ifndef TPP_HAVE_LEXER_REPRTOKENID
+#define TPP_HAVE_LEXER_REPRTOKENID (TPP_HAVE_LEXER_SKIP)
+#endif /* !TPP_HAVE_LEXER_REPRTOKENID */
+
+/* Provide a function "tpp_reprtokenid()" that does the
+ * same as "tpp_lexer_reprtokenid()" (and is also used to
+ * implement that function), but fails for user-defined
+ * keyword token IDs */
+#ifndef TPP_HAVE_REPRTOKENID
+#define TPP_HAVE_REPRTOKENID (TPP_HAVE_LEXER_REPRTOKENID)
+#endif /* !TPP_HAVE_REPRTOKENID */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -2289,12 +2405,13 @@ typedef enum tpp_token_id {
 	TPP_TOK_EWARNPRINT  = (int)TPP_EWARNPRINT,
 #endif /* TPP_HAVE_WARNINGS */
 #define TPP_TOK_ISERR(id)  ((int)(id) < 0)
-#define TPP_TOK_ASERR(id)  ((enum tpp_errno)(int)(id))
-#define TPP_TOK_OFERR(err) ((enum tpp_token_id)(int)(err))
+#define TPP_TOK_ASERR(id)  ((tpp_errno)(int)(id))
+#define TPP_TOK_OFERR(err) ((tpp_token_id)(int)(err))
+#define TPP_TOK_OFCHAR(ch) ((tpp_token_id)(unsigned int)(tpp_char)(ch))
 
-	TPP_TOK_EOF   = '\0', /* END-OF-FILE (will always be ZERO) */
-	TPP_TOK_LF    = '\n', /* Line-feed (always generated by `tpp_lexer_yieldraw()', filtered later if disabled) */
-	TPP_TOK_SPACE = ' ',  /* Whitespace (always generated by `tpp_lexer_yieldraw()', filtered later if disabled) */
+	TPP_TOK_EOF   = '\0', /* "<eof>" END-OF-FILE (will always be ZERO) */
+	TPP_TOK_LF    = '\n', /* "<linefeed>" Line-feed (always generated by `tpp_lexer_yieldraw()', filtered later if disabled) */
+	TPP_TOK_SPACE = ' ',  /* "<space>" Whitespace (always generated by `tpp_lexer_yieldraw()', filtered later if disabled) */
 
 	/* Single-character tokens (always equal to that character's ordinal). */
 	TPP_TOK_PLUS      = '+',
@@ -2326,28 +2443,28 @@ typedef enum tpp_token_id {
 	TPP_TOK_HAT       = '^',
 
 	/* Double(or more)-character tokens. */
-	_TPP_TOK_STARTICHAR_BEGIN = 255,
+	_TPP_TOK_MULTICHAR_BEGIN = 255, /* KEEP THIS THE FIRST MULTICHAR TOKEN! */
 #if TPP_HAVE_UNICODE
-	TPP_TOK_UNICHAR, /* Misc unicode character that could not be classified */
+	TPP_TOK_UNICHAR, /* "<unicode character>" Misc unicode character that could not be classified */
 #endif /* TPP_HAVE_UNICODE */
 #if TPP_HAVE_TPP_TOK_INT
-	TPP_TOK_INT, /* 42 */
+	TPP_TOK_INT, /* "<integer>" 42 */
 #endif /* TPP_HAVE_TPP_TOK_INT */
 #if TPP_HAVE_TPP_TOK_FLOAT
-	TPP_TOK_FLOAT, /* 42.0 */
+	TPP_TOK_FLOAT, /* "<float>" 42.0 */
 #endif /* TPP_HAVE_TPP_TOK_FLOAT */
 
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE
 	TPP_TOK_COMMENTLIKE_MIN,
 	_TPP_TOK_COMMENTLIKE_MIN = TPP_TOK_COMMENTLIKE_MIN - 1,
 #if TPP_HAVE_TPP_TOK_C_COMMENT
-	TPP_TOK_C_COMMENT, /* like this one! */
+	TPP_TOK_C_COMMENT, /* "<comment>" like this one! */
 #define _TPP_CASE_TPP_TOK_C_COMMENT case TPP_TOK_C_COMMENT:
 #else /* TPP_HAVE_TPP_TOK_C_COMMENT */
 #define _TPP_CASE_TPP_TOK_C_COMMENT /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_C_COMMENT */
 #if TPP_HAVE_TPP_TOK_PASCAL_COMMENT
-	TPP_TOK_PASCAL_COMMENT, // "(*like this one!*)"
+	TPP_TOK_PASCAL_COMMENT, // "<comment>" "(*like this one!*)"
 #define _TPP_CASE_TPP_TOK_PASCAL_COMMENT case TPP_TOK_PASCAL_COMMENT:
 #else /* TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
 #define _TPP_CASE_TPP_TOK_PASCAL_COMMENT /* nothing */
@@ -2355,25 +2472,25 @@ typedef enum tpp_token_id {
 	_TPP_TOK_COMMENTLIKE_NOLINE_MAX,
 	TPP_TOK_COMMENTLIKE_NOLINE_MAX = _TPP_TOK_COMMENTLIKE_NOLINE_MAX - 1,
 #if TPP_HAVE_TPP_TOK_CXX_COMMENT
-	TPP_TOK_CXX_COMMENT, // like this one!
+	TPP_TOK_CXX_COMMENT, // "<comment>" like this one!
 #define _TPP_CASE_TPP_TOK_CXX_COMMENT case TPP_TOK_CXX_COMMENT:
 #else /* TPP_HAVE_TPP_TOK_CXX_COMMENT */
 #define _TPP_CASE_TPP_TOK_CXX_COMMENT /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_COMMENT */
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
-	TPP_TOK_SHELL_COMMENT, // "# like this one!"
+	TPP_TOK_SHELL_COMMENT, // "<comment>" "# like this one!"
 #define _TPP_CASE_TPP_TOK_SHELL_COMMENT case TPP_TOK_SHELL_COMMENT:
 #else /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 #define _TPP_CASE_TPP_TOK_SHELL_COMMENT /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 #if TPP_HAVE_TPP_TOK_ASM_COMMENT
-	TPP_TOK_ASM_COMMENT, // "/ like this one!"
+	TPP_TOK_ASM_COMMENT, // "<comment>" "/ like this one!"
 #define _TPP_CASE_TPP_TOK_ASM_COMMENT case TPP_TOK_ASM_COMMENT:
 #else /* TPP_HAVE_TPP_TOK_ASM_COMMENT */
 #define _TPP_CASE_TPP_TOK_ASM_COMMENT /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_ASM_COMMENT */
 #if TPP_HAVE_TPP_TOK_SQL_COMMENT
-	TPP_TOK_SQL_COMMENT, // "-- like this one!"
+	TPP_TOK_SQL_COMMENT, // "<comment>" "-- like this one!"
 #define _TPP_CASE_TPP_TOK_SQL_COMMENT case TPP_TOK_SQL_COMMENT:
 #else /* TPP_HAVE_TPP_TOK_SQL_COMMENT */
 #define _TPP_CASE_TPP_TOK_SQL_COMMENT /* nothing */
@@ -2420,28 +2537,28 @@ typedef enum tpp_token_id {
 	TPP_TOK_STRINGLIKE_MIN,
 	_TPP_TOK_STRINGLIKE_MIN = TPP_TOK_STRINGLIKE_MIN - 1,
 #if TPP_HAVE_TPP_TOK_CHAR
-	TPP_TOK_CHAR, /* 'foo' */
+	TPP_TOK_CHAR, /* "<char>" 'foo' */
 #define _TPP_CASE_TPP_TOK_CHAR case TPP_TOK_CHAR:
 #else /* TPP_HAVE_TPP_TOK_CHAR */
 #define _TPP_CASE_TPP_TOK_CHAR /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_CHAR */
 #if TPP_HAVE_TPP_TOK_STRING
-	TPP_TOK_STRING, /* "foo" */
+	TPP_TOK_STRING, /* "<string>" "foo" */
 #define _TPP_CASE_TPP_TOK_STRING case TPP_TOK_STRING:
 #else /* TPP_HAVE_TPP_TOK_STRING */
 #define _TPP_CASE_TPP_TOK_STRING /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_STRING */
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-	TPP_TOK_CXX_RAW_STRING_LITERAL, /* R"AB(foo)AB" */
+	TPP_TOK_CXX_RAW_STRING_LITERAL, /* "<string>" R"AB(foo)AB" */
 #define _TPP_CASE_TPP_TOK_CXX_RAW_STRING_LITERAL case TPP_TOK_CXX_RAW_STRING_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #define _TPP_CASE_TPP_TOK_CXX_RAW_STRING_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
-	TPP_TOK_CXX_WIDE_STRING_LITERAL, /* L"foo" */
+	TPP_TOK_CXX_WIDE_STRING_LITERAL, /* "<string>" L"foo" */
 #define _TPP_CASE_TPP_TOK_CXX_WIDE_STRING_LITERAL case TPP_TOK_CXX_WIDE_STRING_LITERAL:
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-	TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL, /* LR"AB(foo)AB" */
+	TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL, /* "<string>" LR"AB(foo)AB" */
 #define _TPP_CASE_TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL case TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #define _TPP_CASE_TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL /* nothing */
@@ -2451,10 +2568,10 @@ typedef enum tpp_token_id {
 #define _TPP_CASE_TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
-	TPP_TOK_CXX_UTF8_STRING_LITERAL, /* u8"foo" */
+	TPP_TOK_CXX_UTF8_STRING_LITERAL, /* "<string>" u8"foo" */
 #define _TPP_CASE_TPP_TOK_CXX_UTF8_STRING_LITERAL case TPP_TOK_CXX_UTF8_STRING_LITERAL:
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-	TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL, /* u8R"AB(foo)AB" */
+	TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL, /* "<string>" u8R"AB(foo)AB" */
 #define _TPP_CASE_TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL case TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #define _TPP_CASE_TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL /* nothing */
@@ -2464,10 +2581,10 @@ typedef enum tpp_token_id {
 #define _TPP_CASE_TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
-	TPP_TOK_CXX_UTF16_STRING_LITERAL, /* u"foo" */
+	TPP_TOK_CXX_UTF16_STRING_LITERAL, /* "<string>" u"foo" */
 #define _TPP_CASE_TPP_TOK_CXX_UTF16_STRING_LITERAL case TPP_TOK_CXX_UTF16_STRING_LITERAL:
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-	TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL, /* uR"AB(foo)AB" */
+	TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL, /* "<string>" uR"AB(foo)AB" */
 #define _TPP_CASE_TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL case TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #define _TPP_CASE_TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL /* nothing */
@@ -2477,10 +2594,10 @@ typedef enum tpp_token_id {
 #define _TPP_CASE_TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
-	TPP_TOK_CXX_UTF32_STRING_LITERAL, /* U"foo" */
+	TPP_TOK_CXX_UTF32_STRING_LITERAL, /* "<string>" U"foo" */
 #define _TPP_CASE_TPP_TOK_CXX_UTF32_STRING_LITERAL case TPP_TOK_CXX_UTF32_STRING_LITERAL:
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-	TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL, /* UR"AB(foo)AB" */
+	TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL, /* "<string>" UR"AB(foo)AB" */
 #define _TPP_CASE_TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL case TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #define _TPP_CASE_TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL /* nothing */
@@ -2490,25 +2607,25 @@ typedef enum tpp_token_id {
 #define _TPP_CASE_TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
-	TPP_TOK_RAW_STRING_LITERAL, /* R"foo"  r"foo"  */
+	TPP_TOK_RAW_STRING_LITERAL, /* "<string>" R"foo"  r"foo"  */
 #define _TPP_CASE_TPP_TOK_RAW_STRING_LITERAL case TPP_TOK_RAW_STRING_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
 #define _TPP_CASE_TPP_TOK_RAW_STRING_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
-	TPP_TOK_RAW_CHAR_LITERAL, /* R'bar'  r'bar' */
+	TPP_TOK_RAW_CHAR_LITERAL, /* "<string>" R'bar'  r'bar' */
 #define _TPP_CASE_TPP_TOK_RAW_CHAR_LITERAL case TPP_TOK_RAW_CHAR_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
 #define _TPP_CASE_TPP_TOK_RAW_CHAR_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL
-	TPP_TOK_BLOCK_STRING_LITERAL, /* """foo""" */
+	TPP_TOK_BLOCK_STRING_LITERAL, /* "<string>" """foo""" */
 #define _TPP_CASE_TPP_TOK_BLOCK_STRING_LITERAL case TPP_TOK_BLOCK_STRING_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
 #define _TPP_CASE_TPP_TOK_BLOCK_STRING_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
-	TPP_TOK_BLOCK_CHAR_LITERAL, /* '''foo''' */
+	TPP_TOK_BLOCK_CHAR_LITERAL, /* "<string>" '''foo''' */
 #define _TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL case TPP_TOK_BLOCK_CHAR_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
 #define _TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL /* nothing */
@@ -2675,8 +2792,8 @@ typedef enum tpp_token_id {
 	TPP_TOK_QMARK_EQUAL, /* "?=" */
 #endif /* TPP_HAVE_TPP_TOK_QMARK_EQUAL */
 
-	TPP_TOK_STARTICHAR_END, /* KEEP THIS THE LAST TOKEN! */
-	TPP_TOK_KEYWORD_BEGIN = TPP_TOK_STARTICHAR_END, /* First builtin keyword */
+	TPP_TOK_MULTICHAR_END, /* KEEP THIS THE LAST MULTICHAR TOKEN! */
+	TPP_TOK_KEYWORD_BEGIN = TPP_TOK_MULTICHAR_END, /* First builtin keyword */
 	_TPP_TOK_KEYWORD_BEGIN = TPP_TOK_KEYWORD_BEGIN - 1,
 #define TPP_DEFS
 #define TPP_KWD(id, string) id,
@@ -2700,6 +2817,11 @@ typedef enum tpp_token_id {
 /* Returns the "*" in "TPP_TOK_*" of "id", which must be a (non-keyword and non-error) token ID */
 TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_strtokenid(tpp_token_id id);
 #endif /* TPP_HAVE_STRTOKENID */
+
+#if TPP_HAVE_REPRTOKENID
+/* Similar to `tpp_strtokenid()', but returns a (canonical) representation of "id" */
+TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_reprtokenid(tpp_token_id id);
+#endif /* TPP_HAVE_REPRTOKENID */
 
 struct tpp_keyword;
 typedef struct tpp_token {
@@ -3700,6 +3822,7 @@ typedef struct tpp_file {
 	tpp_char const     *tf_end;   /* [0..1][>= tf_chunk->ts_str && <= tf_chunk->ts_str+tf_chunk->ts_len][const_if(tf_kind != TPP_FILE_KIND_IO)] End of effective file content (mutable for text-files) */
 #if TPP_HAVE_INCLUDE_STACK
 	struct tpp_file    *tf_prev;  /* [0..1] Parent file in #include stack */
+	struct tpp_file    *tf_rprev; /* [0..1] Real parent for the purposes of message tracebacks (not affected by `tpp_file_autopopfile_pushoff') */
 #endif /* TPP_HAVE_INCLUDE_STACK */
 #if TPP_HAVE_FILE_LC_CACHE
 	tpp_char const     *tf_lcpos; /* [0..1] Position that `tf_lcval' applies to. */
@@ -3729,7 +3852,9 @@ typedef struct tpp_file {
 
 #if TPP_HAVE_CPP_MACROS
 		struct {
-			TPP_REF struct tpp_macro *tfm_macro; /* [1..1][const] The macro definition that produced this file as its expansion */
+			/* [1..1][const] The macro definition that produced this file
+			 * as its expansion (also holds a reference to "tm_expansions") */
+			TPP_REF struct tpp_macro *tfm_macro;
 		} td_macro; /* [tf_kind == TPP_FILE_KIND_MACRO] */
 #endif /* TPP_HAVE_CPP_MACROS */
 	} tf_data;
@@ -3737,7 +3862,7 @@ typedef struct tpp_file {
 
 
 #if TPP_HAVE_INCLUDE_STACK
-#define _tpp_file_init_prev(self) , (self)->tf_prev = NULL
+#define _tpp_file_init_prev(self) , (self)->tf_prev = NULL, (self)->tf_rprev = NULL
 #else /* TPP_HAVE_INCLUDE_STACK */
 #define _tpp_file_init_prev(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_STACK */
@@ -3770,6 +3895,20 @@ typedef struct tpp_file {
 #define tpp_file_isascii(self) 1
 #endif /* !TPP_HAVE_UNICODE */
 
+
+/* Temporarily disable automatic pop-to-prev-file on EOF */
+#if TPP_HAVE_INCLUDE_STACK
+#define tpp_file_autopopfile_pushoff(self)              \
+	do {                                                \
+		tpp_file *const _tfapfp_prev = (self)->tf_prev; \
+		(self)->tf_prev = NULL
+#define tpp_file_autopopfile_pop(self)  \
+		(self)->tf_prev = _tfapfp_prev; \
+	} while (0)
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_file_autopopfile_pushoff(self) do {
+#define tpp_file_autopopfile_pop(self)     } while (0)
+#endif /* !TPP_HAVE_INCLUDE_STACK */
 
 
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
@@ -3876,9 +4015,8 @@ tpp_file_filename(tpp_file const *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
 tpp_file_filename_kwd(tpp_file const *tpp_restrict self);
 
-/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack
- * If no such file exists, simply re-return "self". This function never
- * returns "NULL" */
+/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_rprev")
+ * If no such file exists, simply re-return "self". This function never returns "NULL" */
 #if TPP_HAVE_INCLUDE_STACK
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getiofile(tpp_file const *tpp_restrict self);
@@ -4738,8 +4876,8 @@ typedef union tpp_warnings_state {
 
 TPP_DECL tpp_warnings_state const tpp_warnings_state_default;
 
-#define _tpp_warnings_state_bitindx(ctx_id) ((unsigned int)((unsigned int)(ctx_id) / (TPP_CHAR_BIT >> 1)))
-#define _tpp_warnings_state_bitshft(ctx_id) ((unsigned int)((unsigned int)(ctx_id) % (TPP_CHAR_BIT >> 1)))
+#define _tpp_warnings_state_bitindx(ctx_id) (((unsigned int)((unsigned int)(ctx_id) / (TPP_CHAR_BIT >> 1))))
+#define _tpp_warnings_state_bitshft(ctx_id) (((unsigned int)((unsigned int)(ctx_id) % (TPP_CHAR_BIT >> 1))) << 1)
 
 /* Get/set the warning state of a given "tpp_warning_context_id ctx_id" */
 #define tpp_warnings_state_get(self, ctx_id) \
@@ -4855,7 +4993,7 @@ tpp_warnings_setctx_(tpp_warnings *tpp_restrict self,
 
 
 
-struct tpp_warning_invokeinfo {
+typedef struct tpp_warning_invokeinfo {
 	tpp_warning_state      twii_state;  /* State with which the warning should be invoked.
 	                                     * Always one of:
 	                                     * - TPP_WSTATE_DISABLED
@@ -4863,7 +5001,7 @@ struct tpp_warning_invokeinfo {
 	                                     * - TPP_WSTATE_ERROR      #if TPP_HAVE_WARNING_ERROR
 	                                     * - TPP_WSTATE_FATAL */
 	tpp_warning_context_id twii_ctx_id; /* Context ID that for error messages */
-};
+} tpp_warning_invokeinfo;
 
 #undef TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 #define TPP_HAVE_WARNINGS_INVOKE_MAYFAIL \
@@ -4878,13 +5016,13 @@ struct tpp_warning_invokeinfo {
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,
-                    struct tpp_warning_invokeinfo *tpp_restrict result);
+                    tpp_warning_invokeinfo *tpp_restrict result);
 #else /* TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 #define tpp_warnings_invoke(self, warning_id, result) \
 	(tpp_warnings_invoke_(self, warning_id, result), TPP_EOK)
 TPP_DECL TPP_NONNULL((1, 3)) void TPPCALL
 tpp_warnings_invoke_(tpp_warnings const *tpp_restrict self, tpp_warning_id warning_id,
-                     struct tpp_warning_invokeinfo *tpp_restrict result);
+                     tpp_warning_invokeinfo *tpp_restrict result);
 #endif /* !TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 
 #endif /* TPP_HAVE_WARNINGS */
@@ -4898,8 +5036,7 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 #undef TPP_HAVE_LEXER_STATE_FLAGS
-#if (TPP_HAVE_CPP_DIRECTIVES || \
-     TPP_HAVE_INCLUDE_STACK)
+#if (TPP_HAVE_CPP_DIRECTIVES)
 #define TPP_HAVE_LEXER_STATE_FLAGS 1
 #else /* ... */
 #define TPP_HAVE_LEXER_STATE_FLAGS 0
@@ -4913,9 +5050,6 @@ TPP_DECL_BEGIN
 #define TPP_LEXER_STATE_FLAG_NODIRECTIVES UINT8_C(0x01) /* A non-comment/space token was encountered since the last
                                                          * TPP_TOK_LF, meaning PP-directives may not be parsed. */
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
-#if TPP_HAVE_INCLUDE_STACK
-#define TPP_LEXER_STATE_FLAG_NOPOPFILE    UINT8_C(0x02) /* Do not pop files from the #include-stack */
-#endif /* TPP_HAVE_INCLUDE_STACK */
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
 typedef struct tpp_lexer {
@@ -5150,13 +5284,9 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 
 /* Temporarily disable automatic pop-to-prev-file on EOF */
-#if TPP_HAVE_INCLUDE_STACK
-#define tpp_lexer_autopopfile_pushoff(self) tpp_lexer_state_push(self, 0, TPP_LEXER_STATE_FLAG_NOPOPFILE)
-#define tpp_lexer_autopopfile_pop(self)     tpp_lexer_state_pop(self, 0, TPP_LEXER_STATE_FLAG_NOPOPFILE)
-#else /* TPP_HAVE_INCLUDE_STACK */
-#define tpp_lexer_autopopfile_pushoff(self) do {
-#define tpp_lexer_autopopfile_pop(self)     } while (0)
-#endif /* !TPP_HAVE_INCLUDE_STACK */
+#define tpp_lexer_autopopfile_pushoff(self) tpp_file_autopopfile_pushoff(tpp_lexer_getfile(self))
+#define tpp_lexer_autopopfile_pop(self)     tpp_file_autopopfile_pop(tpp_lexer_getfile(self))
+
 
 /* Do a raw yield and update `self->tl_tok' in the process, then return `tl_tok.tt_id'.
  * - On EOF, automatically pop `tl_file->tf_prev' and continue reading from there
@@ -5220,6 +5350,16 @@ tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield(tpp_lexer *tpp_restrict self);
 
+
+
+#if TPP_HAVE_LEXER_SKIP
+/* Check that the currently loaded token is 'tok'. If so, "tpp_lexer_yield" to the
+ * next token (which is also returned). Otherwise, trigger 'TPP_W_UNEXPECTED_TOKEN'
+ * and (if that warning wasn't fatal), try to seek ahead to see if "tok" can be found
+ * somewhere close by (depending on what 'tok' and what was actually loaded on entry) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok);
+#endif /* TPP_HAVE_LEXER_SKIP */
 
 
 
@@ -5310,6 +5450,13 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warni
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPVCALL
 tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warning_id id, ...);
 #endif /* TPP_HAVE_WARNINGS */
+
+
+#if TPP_HAVE_LEXER_REPRTOKENID
+/* Return the (canonical) string-representation of a given token ID */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char const *TPPCALL
+tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok);
+#endif /* TPP_HAVE_LEXER_REPRTOKENID */
 
 
 

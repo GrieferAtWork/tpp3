@@ -721,14 +721,10 @@
 #endif /* !TPP_HAVE_MSVC_PRAGMA */
 
 
-#if (!TPP_HAVE_CPP_PRAGMA && \
-     !TPP_HAVE_STDC_PRAGMA && \
-     !TPP_HAVE_MSVC_PRAGMA)
-#undef TPP_COMMON_HAVE_PRAGMA
-#define TPP_COMMON_HAVE_PRAGMA 0
-#undef TPP_COMMON_HAVE_PRAGMA_GCC
-#define TPP_COMMON_HAVE_PRAGMA_GCC 0
-#endif /* !... */
+/* Support for: #pragma */
+#ifndef TPP_HAVE_PRAGMA
+#define TPP_HAVE_PRAGMA (TPP_HAVE_CPP_PRAGMA || TPP_HAVE_STDC_PRAGMA || TPP_HAVE_MSVC_PRAGMA)
+#endif /* !TPP_HAVE_PRAGMA */
 
 
 /* Support for clang __has_attribute */
@@ -808,105 +804,6 @@
 
 
 /************************************************************************/
-/* WARNINGS                                                             */
-/************************************************************************/
-
-/*  */
-#ifndef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT
-#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV */
-
-#if defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#elif defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#else /* !... */
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#ifdef _MSC_VER
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 1
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
-#else /* _MSC_VER */
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  1
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
-#endif /* !_MSC_VER */
-#endif /* ... */
-#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
-#elif TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf:%Pl:%Pc: "
-#else /* ... */
-#error "Invalid configuration of 'TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT'"
-#endif /* !... */
-#else /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
-#endif /* TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
-
-/* Configurations for individual warnings */
-#ifndef TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT
-#define TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT TPP_HAVE_WARNINGS
-#endif /* !TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT */
-#ifndef TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
-#define TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED (TPP_HAVE_WARNINGS && TPP_HAVE_BSE)
-#endif /* !TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
-#ifndef TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
-#define TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH (TPP_HAVE_WARNINGS && TPP_HAVE_TRIGRAPHS)
-#endif /* !TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
-#ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED                    \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_CHAR ||                     \
-	                       TPP_HAVE_TPP_TOK_STRING ||                   \
-	                       TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-	                       TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||       \
-	                       TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
-#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
-#ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE)
-#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
-#ifndef TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
-#define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE)
-#endif /* !TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
-
-
-/* Warning printer configuration */
-#if TPP_HAVE_WARNINGS
-#ifdef TPP_CONFIG_WARNING_PRINTER
-#ifndef TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
-#define TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG 1
-#endif /* !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG */
-
-/* >> #define TPP_CONFIG_WARNING_PRINTER my_warning_printer
- * >> #if TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
- * >> static tpp_ssize TPP_FORMATPRINTER_CC
- * >> my_warning_printer(void *arg, tpp_char const *text, tpp_size num_bytes)
- * >> #else // TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
- * >> static tpp_ssize TPP_FORMATPRINTER_CC
- * >> my_warning_printer(tpp_char const *text, tpp_size num_bytes)
- * >> #endif // !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
- * >> {
- * >>    ...
- * >> } */
-#else /* TPP_CONFIG_WARNING_PRINTER */
-/* Supply a built-in printer (that uses "fwrite(stderr)") when  */
-#ifndef TPP_HAVE_BUILTIN_WARNPRINTER
-#define TPP_HAVE_BUILTIN_WARNPRINTER 1
-#endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */
-#endif /* !TPP_CONFIG_WARNING_PRINTER */
-#endif /* TPP_HAVE_WARNINGS */
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-
-
-
-/************************************************************************/
 /* #PRAGMA DIRECTIVES                                                   */
 /************************************************************************/
 
@@ -968,6 +865,123 @@
 
 
 /************************************************************************/
+/* WARNINGS                                                             */
+/************************************************************************/
+
+/* Format to use for file+line+column log messages */
+#ifndef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT
+#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV */
+
+#if defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#elif defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#else /* !... */
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#ifdef _MSC_VER
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 1
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
+#else /* _MSC_VER */
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  1
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
+#endif /* !_MSC_VER */
+#endif /* ... */
+#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
+#elif TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf:%Pl:%Pc: "
+#else /* ... */
+#error "Invalid configuration of 'TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT'"
+#endif /* !... */
+#else /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
+#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
+#endif /* TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
+
+/* Configurations for individual warnings */
+#ifndef TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT
+#define TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT TPP_HAVE_WARNINGS
+#endif /* !TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT */
+#ifndef TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
+#define TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED (TPP_HAVE_WARNINGS && TPP_HAVE_BSE)
+#endif /* !TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
+#ifndef TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
+#define TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH (TPP_HAVE_WARNINGS && TPP_HAVE_TRIGRAPHS)
+#endif /* !TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
+#ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
+#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED                    \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_CHAR ||                     \
+	                       TPP_HAVE_TPP_TOK_STRING ||                   \
+	                       TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+	                       TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||       \
+	                       TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
+#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+#ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
+#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE)
+#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
+#ifndef TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
+#define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE)
+#endif /* !TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN (TPP_HAVE_WARNINGS)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
+#ifndef TPP_HAVE_TPP_W_ERROR
+#define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_ERROR)
+#endif /* !TPP_HAVE_TPP_W_ERROR */
+#ifndef TPP_HAVE_TPP_W_WARNING
+#define TPP_HAVE_TPP_W_WARNING (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_WARNING)
+#endif /* !TPP_HAVE_TPP_W_WARNING */
+#ifndef TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS
+#define TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
+#endif /* !TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
+#ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
+#define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
+#endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
+#ifndef TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
+#define TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_ONCE && TPP_HAVE_INCLUDE_STACK)
+#endif /* !TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
+
+
+/* Warning printer configuration */
+#if TPP_HAVE_WARNINGS
+#ifdef TPP_CONFIG_WARNING_PRINTER
+#ifndef TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+#define TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG 1
+#endif /* !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG */
+
+/* >> #define TPP_CONFIG_WARNING_PRINTER my_warning_printer
+ * >> #if TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+ * >> static tpp_ssize TPP_FORMATPRINTER_CC
+ * >> my_warning_printer(void *arg, tpp_char const *text, tpp_size num_bytes)
+ * >> #else // TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+ * >> static tpp_ssize TPP_FORMATPRINTER_CC
+ * >> my_warning_printer(tpp_char const *text, tpp_size num_bytes)
+ * >> #endif // !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+ * >> {
+ * >>    ...
+ * >> } */
+#else /* TPP_CONFIG_WARNING_PRINTER */
+/* Supply a built-in printer (that uses "fwrite(stderr)") when  */
+#ifndef TPP_HAVE_BUILTIN_WARNPRINTER
+#define TPP_HAVE_BUILTIN_WARNPRINTER 1
+#endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */
+#endif /* !TPP_CONFIG_WARNING_PRINTER */
+#endif /* TPP_HAVE_WARNINGS */
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+/************************************************************************/
 /* IMPLICIT API FEATURES                                                */
 /************************************************************************/
 /* Enable support for `TPP_FILE_IOFLAGS_SYSHDR' */
@@ -1005,6 +1019,26 @@
 #ifndef TPP_HAVE_KEYWORD_FILE_GUARD
 #define TPP_HAVE_KEYWORD_FILE_GUARD ((TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_HAVE_CPP_IF_ELSE_ENDIF)
 #endif /* !TPP_HAVE_KEYWORD_FILE_GUARD */
+
+/* Enable support for `tpp_lexer_skip()' */
+#ifndef TPP_HAVE_LEXER_SKIP
+#define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1)
+#endif /* !TPP_HAVE_LEXER_SKIP */
+
+ /* Provide a function "tpp_lexer_reprtokenid()" to
+ * return the string-representation of a given token ID */
+#ifndef TPP_HAVE_LEXER_REPRTOKENID
+#define TPP_HAVE_LEXER_REPRTOKENID (TPP_HAVE_LEXER_SKIP)
+#endif /* !TPP_HAVE_LEXER_REPRTOKENID */
+
+/* Provide a function "tpp_reprtokenid()" that does the
+ * same as "tpp_lexer_reprtokenid()" (and is also used to
+ * implement that function), but fails for user-defined
+ * keyword token IDs */
+#ifndef TPP_HAVE_REPRTOKENID
+#define TPP_HAVE_REPRTOKENID (TPP_HAVE_LEXER_REPRTOKENID)
+#endif /* !TPP_HAVE_REPRTOKENID */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/

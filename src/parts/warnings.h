@@ -234,8 +234,8 @@ typedef union tpp_warnings_state {
 
 TPP_DECL tpp_warnings_state const tpp_warnings_state_default;
 
-#define _tpp_warnings_state_bitindx(ctx_id) ((unsigned int)((unsigned int)(ctx_id) / (TPP_CHAR_BIT >> 1)))
-#define _tpp_warnings_state_bitshft(ctx_id) ((unsigned int)((unsigned int)(ctx_id) % (TPP_CHAR_BIT >> 1)))
+#define _tpp_warnings_state_bitindx(ctx_id) (((unsigned int)((unsigned int)(ctx_id) / (TPP_CHAR_BIT >> 1))))
+#define _tpp_warnings_state_bitshft(ctx_id) (((unsigned int)((unsigned int)(ctx_id) % (TPP_CHAR_BIT >> 1))) << 1)
 
 /* Get/set the warning state of a given "tpp_warning_context_id ctx_id" */
 #define tpp_warnings_state_get(self, ctx_id) \
@@ -351,7 +351,7 @@ tpp_warnings_setctx_(tpp_warnings *tpp_restrict self,
 
 
 
-struct tpp_warning_invokeinfo {
+typedef struct tpp_warning_invokeinfo {
 	tpp_warning_state      twii_state;  /* State with which the warning should be invoked.
 	                                     * Always one of:
 	                                     * - TPP_WSTATE_DISABLED
@@ -359,7 +359,7 @@ struct tpp_warning_invokeinfo {
 	                                     * - TPP_WSTATE_ERROR      #if TPP_HAVE_WARNING_ERROR
 	                                     * - TPP_WSTATE_FATAL */
 	tpp_warning_context_id twii_ctx_id; /* Context ID that for error messages */
-};
+} tpp_warning_invokeinfo;
 
 #undef TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 #define TPP_HAVE_WARNINGS_INVOKE_MAYFAIL \
@@ -374,13 +374,13 @@ struct tpp_warning_invokeinfo {
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,
-                    struct tpp_warning_invokeinfo *tpp_restrict result);
+                    tpp_warning_invokeinfo *tpp_restrict result);
 #else /* TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 #define tpp_warnings_invoke(self, warning_id, result) \
 	(tpp_warnings_invoke_(self, warning_id, result), TPP_EOK)
 TPP_DECL TPP_NONNULL((1, 3)) void TPPCALL
 tpp_warnings_invoke_(tpp_warnings const *tpp_restrict self, tpp_warning_id warning_id,
-                     struct tpp_warning_invokeinfo *tpp_restrict result);
+                     tpp_warning_invokeinfo *tpp_restrict result);
 #endif /* !TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 
 #endif /* TPP_HAVE_WARNINGS */

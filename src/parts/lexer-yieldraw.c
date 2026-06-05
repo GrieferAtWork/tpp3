@@ -3175,8 +3175,7 @@ eof:
 
 	/* Check if we can pop to another file */
 #if TPP_HAVE_INCLUDE_STACK
-	if (file->tf_prev && p_pos == &file->tf_pos &&
-	    !(self->tl_state & TPP_LEXER_STATE_FLAG_NOPOPFILE)) {
+	if (file->tf_prev && p_pos == &file->tf_pos) {
 		tpp_file *const prev = file->tf_prev;
 		tpp_file_fini(file);
 		*file = *prev;

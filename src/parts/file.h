@@ -94,6 +94,7 @@ typedef struct tpp_file {
 	tpp_char const     *tf_end;   /* [0..1][>= tf_chunk->ts_str && <= tf_chunk->ts_str+tf_chunk->ts_len][const_if(tf_kind != TPP_FILE_KIND_IO)] End of effective file content (mutable for text-files) */
 #if TPP_HAVE_INCLUDE_STACK
 	struct tpp_file    *tf_prev;  /* [0..1] Parent file in #include stack */
+	struct tpp_file    *tf_rprev; /* [0..1] Real parent for the purposes of message tracebacks (not affected by `tpp_file_autopopfile_pushoff') */
 #endif /* TPP_HAVE_INCLUDE_STACK */
 #if TPP_HAVE_FILE_LC_CACHE
 	tpp_char const     *tf_lcpos; /* [0..1] Position that `tf_lcval' applies to. */
@@ -123,7 +124,9 @@ typedef struct tpp_file {
 
 #if TPP_HAVE_CPP_MACROS
 		struct {
-			TPP_REF struct tpp_macro *tfm_macro; /* [1..1][const] The macro definition that produced this file as its expansion */
+			/* [1..1][const] The macro definition that produced this file
+			 * as its expansion (also holds a reference to "tm_expansions") */
+			TPP_REF struct tpp_macro *tfm_macro;
 		} td_macro; /* [tf_kind == TPP_FILE_KIND_MACRO] */
 #endif /* TPP_HAVE_CPP_MACROS */
 	} tf_data;
@@ -131,7 +134,7 @@ typedef struct tpp_file {
 
 
 #if TPP_HAVE_INCLUDE_STACK
-#define _tpp_file_init_prev(self) , (self)->tf_prev = NULL
+#define _tpp_file_init_prev(self) , (self)->tf_prev = NULL, (self)->tf_rprev = NULL
 #else /* TPP_HAVE_INCLUDE_STACK */
 #define _tpp_file_init_prev(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_STACK */
@@ -164,6 +167,20 @@ typedef struct tpp_file {
 #define tpp_file_isascii(self) 1
 #endif /* !TPP_HAVE_UNICODE */
 
+
+/* Temporarily disable automatic pop-to-prev-file on EOF */
+#if TPP_HAVE_INCLUDE_STACK
+#define tpp_file_autopopfile_pushoff(self)              \
+	do {                                                \
+		tpp_file *const _tfapfp_prev = (self)->tf_prev; \
+		(self)->tf_prev = NULL
+#define tpp_file_autopopfile_pop(self)  \
+		(self)->tf_prev = _tfapfp_prev; \
+	} while (0)
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_file_autopopfile_pushoff(self) do {
+#define tpp_file_autopopfile_pop(self)     } while (0)
+#endif /* !TPP_HAVE_INCLUDE_STACK */
 
 
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
@@ -270,9 +287,8 @@ tpp_file_filename(tpp_file const *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
 tpp_file_filename_kwd(tpp_file const *tpp_restrict self);
 
-/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack
- * If no such file exists, simply re-return "self". This function never
- * returns "NULL" */
+/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_rprev")
+ * If no such file exists, simply re-return "self". This function never returns "NULL" */
 #if TPP_HAVE_INCLUDE_STACK
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getiofile(tpp_file const *tpp_restrict self);

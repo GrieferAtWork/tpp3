@@ -93,7 +93,7 @@ tpp_itoa(char buf[TPP_ITOA_MAXLEN], tpp_intmax value) {
 	bool is_neg = value < 0;
 	if (is_neg)
 		value = -value;
-	result = tpp_utoa(buf, value);
+	result = tpp_utoa(buf + TPP_ITOA_MAXLEN - TPP_UTOA_MAXLEN, value);
 	if (is_neg)
 		*--result = '-';
 	return result;

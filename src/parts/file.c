@@ -66,9 +66,12 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		}
 		break;
 #if TPP_HAVE_CPP_MACROS
-	case TPP_FILE_KIND_MACRO:
-		tpp_macro_decref(self->tf_data.td_macro.tfm_macro);
-		break;
+	case TPP_FILE_KIND_MACRO: {
+		tpp_macro *macro = self->tf_data.td_macro.tfm_macro;
+		tpp_assert(macro->tm_expansions != 0);
+		--macro->tm_expansions;
+		tpp_macro_decref(macro);
+	}	break;
 #endif /* TPP_HAVE_CPP_MACROS */
 	default: break;
 	}
@@ -881,15 +884,14 @@ tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
 }
 
 
-/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack
- * If no such file exists, simply re-return "self". This function never
- * returns "NULL" */
+/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_rprev")
+ * If no such file exists, simply re-return "self". This function never returns "NULL" */
 #if TPP_HAVE_INCLUDE_STACK
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getiofile(tpp_file const *tpp_restrict self) {
 	tpp_file *iter = (tpp_file *)self;
 	while (iter->tf_kind != TPP_FILE_KIND_IO) {
-		iter = iter->tf_prev;
+		iter = iter->tf_rprev;
 		if (iter == NULL)
 			return (tpp_file *)self;
 	}
