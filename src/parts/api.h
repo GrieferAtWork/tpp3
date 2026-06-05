@@ -115,6 +115,10 @@
 #endif /* !__SIZEOF_INT__ */
 #endif /* !__SIZEOF_INT__ */
 
+#define TPP_PREPROCESSOR_VERSION 300 /* Preprocessor version. */
+#define TPP_API_VERSION          300 /* Api version (Version of this api). */
+
+
 /* The standard calling convention used by TPP APIs */
 #ifndef TPPCALL
 #define TPPCALL /* nothing */
@@ -167,6 +171,11 @@
 #ifndef TPP_FLEX_ARRAY
 #define TPP_FLEX_ARRAY 4096
 #endif /* !TPP_FLEX_ARRAY */
+
+/* Does the host preprocessor have support for __VA_ARGS__? */
+#ifndef TPP_HOST_HAVE_PP_VARARGS
+#define TPP_HOST_HAVE_PP_VARARGS 1
+#endif /* !TPP_HOST_HAVE_PP_VARARGS */
 
 #ifndef TPP_CHAR_BIT
 #ifdef CHAR_BIT
@@ -227,6 +236,7 @@
 #ifndef tpp_memcpy
 #include <string.h>
 #define tpp_strlen      strlen
+#define tpp_strnlen     strnlen
 #define tpp_strcmp      strcmp
 #define tpp_memcmp      memcmp
 #define tpp_memcpy      memcpy
@@ -253,6 +263,7 @@
 
 #ifndef tpp_size
 #define TPP_SIZEOF_tpp_size __SIZEOF_SIZE_T__
+#define TPP_SIZE_MAX SIZE_MAX
 #define tpp_size size_t
 #endif /* !tpp_size */
 #ifndef tpp_ssize
@@ -297,33 +308,6 @@
 #define TPP_STATIC_ASSERT(expr) typedef int _TPP_STATIC_ASSERT_ID(__LINE__)[(expr) ? 1 : -1]
 #endif /* !TPP_STATIC_ASSERT */
 
-#ifndef tpp_refcnt
-/* NOTE: Multi-threaded applications can leave this alone: a single
- *       TPP lexer can only ever be used by a single thread, meaning
- *       that reference counts don't need to be atomic, because all
- *       components are thread-local. */
-#define tpp_refcnt             uint_fast32_t
-#define tpp_refcnt_inc(p)      (void)(++*(p))
-#define tpp_refcnt_decfetch(p) (--*(p))
-#define tpp_refcnt_isshared(p) (*(p) > 1)
-#endif /* !tpp_refcnt */
-#ifndef tpp_refcnt_dec
-#define tpp_refcnt_dec(p) (void)tpp_refcnt_decfetch(p)
-#endif /* !tpp_refcnt_dec */
-
-#ifndef tpp_once
-/* WARNING: Multi-threaded applications must override this */
-#define tpp_once(expr)             \
-	do {                           \
-		static int _to_didrun = 0; \
-		if (!_to_didrun) {         \
-			_to_didrun = 1;        \
-			expr;                  \
-		}                          \
-	} while (0)
-
-#endif /* !tpp_once */
-
 #ifndef tpp_malloc
 #include <stdlib.h>
 #define tpp_trymalloc(s)     malloc(s)     /* tpp_trymalloc -- use when failure allows for re-try */
@@ -334,6 +318,7 @@
 #endif /* !tpp_malloc */
 
 TPP_DECL_BEGIN
+
 #ifndef tpp_formatprinter
 #define tpp_formatprinter tpp_formatprinter
 #define TPP_FORMATPRINTER_CC TPPCALL
@@ -367,6 +352,55 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 #define tpp_lcinfo_init(self, line, col) \
 	(void)((self) = tpp_lcinfo_of(line, col))
 #endif /* !tpp_lcinfo_init */
+
+#ifndef tpp_refcnt
+/* NOTE: Multi-threaded applications can leave this alone: a single
+ *       TPP lexer can only ever be used by a single thread, meaning
+ *       that reference counts don't need to be atomic, because all
+ *       components are thread-local. */
+typedef struct {
+	uint_fast32_t trc_count; /* Reference counter */
+} tpp_refcnt;
+#define tpp_refcnt             tpp_refcnt
+#define TPP_REFCNT_INIT(v)     { v }
+#define tpp_refcnt_init(p, v)  (void)((p)->trc_count = (v))
+#define tpp_refcnt_inc(p)      (void)(++(p)->trc_count)
+#define tpp_refcnt_decfetch(p) (--(p)->trc_count)
+#define tpp_refcnt_isshared(p) ((p)->trc_count > 1)
+#endif /* !tpp_refcnt */
+#ifndef tpp_refcnt_dec
+#define tpp_refcnt_dec(p) (void)tpp_refcnt_decfetch(p)
+#endif /* !tpp_refcnt_dec */
+
+#ifndef tpp_refcnt_atomic
+/* WARNING: Multi-threaded applications must override this */
+typedef struct {
+	uint_fast32_t trca_count; /* Reference counter */
+} tpp_refcnt_atomic;
+#define tpp_refcnt_atomic             tpp_refcnt_atomic
+#define TPP_REFCNT_ATOMIC_INIT(v)     { v }
+#define tpp_refcnt_atomic_init(p, v)  (void)((p)->trca_count = (v))
+#define tpp_refcnt_atomic_inc(p)      (void)(++(p)->trca_count)
+#define tpp_refcnt_atomic_decfetch(p) (--(p)->trca_count)
+#define tpp_refcnt_atomic_isshared(p) ((p)->trca_count > 1)
+#endif /* !tpp_refcnt_atomic */
+#ifndef tpp_refcnt_atomic_dec
+#define tpp_refcnt_atomic_dec(p) (void)tpp_refcnt_atomic_decfetch(p)
+#endif /* !tpp_refcnt_atomic_dec */
+
+#ifndef tpp_once
+/* WARNING: Multi-threaded applications must override this */
+#define tpp_once(expr)             \
+	do {                           \
+		static int _to_didrun = 0; \
+		if (!_to_didrun) {         \
+			_to_didrun = 1;        \
+			expr;                  \
+		}                          \
+	} while (0)
+
+#endif /* !tpp_once */
+
 
 TPP_DECL_END
 

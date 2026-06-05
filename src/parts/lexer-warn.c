@@ -404,6 +404,10 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	tpp_formatprinter printer;
 	void *printer_arg;
 
+	/* Quick check: are warnings disabled? */
+	if (self->tl_state & TPP_LEXER_STATE_FLAG_NOWARNINGS)
+		return TPP_EOK;
+
 	/* Ask warning configuration how we should have this one */
 	result = tpp_warnings_invoke(tpp_lexer_getwarn(self), id, &invokeinfo);
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
@@ -511,6 +515,7 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 /************************************************************************/
 /* MACROS FOR USE BY "TPP_WARNING_EX"                                   */
 /************************************************************************/
+#if TPP_HOST_HAVE_PP_VARARGS
 #define tpp_warnf(...)                                                       \
 	do {                                                                     \
 		printer_status = tpp_lexer_printf_warning(self, file,                \
@@ -519,6 +524,7 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		if (printer_status < 0)                                              \
 			goto err_printer;                                                \
 	} while (0)
+#endif /* TPP_HOST_HAVE_PP_VARARGS */
 /* ... */
 /************************************************************************/
 
@@ -543,9 +549,17 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	/* Print origin traceback */
 #if TPP_HAVE_INCLUDE_STACK
 	{
-		tpp_file *caller = file->tf_rprev;
-		for (; caller; caller = caller->tf_rprev) {
-			printer_status = tpp_lexer_printf_warning(self, file, pos, printer, printer_arg,
+		tpp_file *caller = file->tf_tprev;
+		for (; caller; caller = caller->tf_tprev) {
+			/* XXX: We could also display a range here:
+			 * >> [caller->tf_tpos, caller->tf_pos)
+			 *
+			 * This range of bytes describes the "expression" that caused
+			 * the include/macro-expansion to happen (it is either the range
+			 * from the start of a macro's name, to the end of its parameter
+			 * list, or the start of a #include-directive, to the trailing
+			 * line-feed) */
+			printer_status = tpp_lexer_printf_warning(self, caller, caller->tf_tpos, printer, printer_arg,
 			                                          TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT);
 			if (printer_status < 0)
 				goto err_printer;

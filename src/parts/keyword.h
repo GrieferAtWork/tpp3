@@ -37,15 +37,23 @@ typedef struct tpp_macro_pushent {
 	TPP_REF struct tpp_macro *tmpe_macro; /* [0..1] The macro that was pushed, or "NULL" if not defined at the time. */
 	tpp_size                  tmpe_count; /* # of times that `tmpe_macro' was pushed without the macro actually having changed */
 } tpp_macro_pushent;
+
 typedef struct tpp_macro_pushstack {
 	tpp_size           tmps_cnt; /* # of elements on `tmps_vec' */
 	tpp_macro_pushent *tmps_vec; /* [0..tmps_vec][owned] Vector of pushed macros (push_macro appends at the end; pop_macro takes from the end) */
 } tpp_macro_pushstack;
 
+/* Initialize/finalize a given macro-push stack */
 #define tpp_macro_pushstack_init(self) \
 	(void)((self)->tmps_cnt = 0, (self)->tmps_vec = NULL)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self);
+
+/* Allocate space for- and return a new (uninitialized) macro-push entry
+ * @return: * :   The newly allocated macro-push entry.
+ * @return: NULL: Out-of-memory (TPP_ENOMEM) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_macro_pushent *TPPCALL
+tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
 #undef TPP_HAVE_KEYWORD_FLAGS
@@ -58,6 +66,9 @@ tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self);
      TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE ||                \
      TPP_HAVE_CLANG_HAS_EXTENSION ||                         \
      TPP_HAVE_CLANG_HAS_FEATURE ||                           \
+     TPP_HAVE_CLANG_HAS_C_ATTRIBUTE ||                       \
+     TPP_HAVE_TPPX_IS_DEPRECATED ||                          \
+     TPP_HAVE_TPPX_IS_POISONED ||                            \
      TPP_HAVE_PRAGMA_DEPRECATED ||                           \
      TPP_HAVE_PRAGMA_GCC_POISON ||                           \
      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS)
@@ -101,17 +112,20 @@ tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self);
 #if TPP_HAVE_CLANG_HAS_FEATURE
 #define TPP_KEYWORD_FLAG_HAS_FEATURE            UINT32_C(0x00000020) /* `__has_feature()' */
 #endif /* TPP_HAVE_CLANG_HAS_FEATURE */
-#if TPP_HAVE_PRAGMA_DEPRECATED
+#if TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_TPPX_IS_DEPRECATED
 #define TPP_KEYWORD_FLAG_IS_DEPRECATED          UINT32_C(0x00000040) /* Warn when the keyword appears as the result of lexical processing. */
-#endif /* TPP_HAVE_PRAGMA_DEPRECATED */
+#endif /* TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_TPPX_IS_DEPRECATED */
 #if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 #define TPP_KEYWORD_FLAG_USERMASK               UINT32_C(0x0000007f) /* Set of flags modifiable through `#pragma tpp_set_keyword_flags()'. */
 #endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
-#if TPP_HAVE_PRAGMA_GCC_POISON
+#if TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_TPPX_IS_POISONED
 #define TPP_KEYWORD_FLAG_IS_POISONED            UINT32_C(0x00000080) /* Extension for `TPP_KEYWORD_FLAG_IS_DEPRECATED':
                                                                       * Don't emit a warning if the keyword is used inside of a macro.
                                                                       * -> Only warn if it is used from a text file. */
-#endif /* TPP_HAVE_PRAGMA_GCC_POISON */
+#endif /* TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_TPPX_IS_POISONED */
+#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
+#define TPP_KEYWORD_FLAG_HAS_C_ATTRIBUTE        UINT32_C(0x00000100) /* `__has_c_attribute()' */
+#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE */
 #if TPP_HAVE_CPP_IMPORT
 #define TPP_KEYWORD_FLAG_HDR_IMPORTED           UINT32_C(0x20000000) /* Set after this header was `#import'-ed */
 #endif /* TPP_HAVE_CPP_IMPORT */
@@ -209,6 +223,20 @@ typedef struct tpp_keyword {
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
 tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self);
 #endif /* TPP_HAVE_KEYWORD_MISC */
+
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+/* Push the current macro-definition of "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out-of-memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_pushmacro(tpp_keyword *tpp_restrict self);
+
+/* Pop the current macro-definition of "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: Macro-push-stack was already empty (soft-error) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_popmacro(tpp_keyword *tpp_restrict self);
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
 
 /* Calculate the hash of a given keyword string */

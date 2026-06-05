@@ -72,6 +72,53 @@ tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+struct tpp_lexer_handle_pushpopmacro_data {
+	tpp_lexer *tlhppmd_lexer; /* [1..1] Lexer */
+	bool       tlhppmd_push;  /* True if "push_macro", false if "pop_macro" */
+};
+
+static tpp_errno TPPCALL
+tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_char const *str, tpp_size length) {
+	tpp_errno result;
+	struct tpp_lexer_handle_pushpopmacro_data *data;
+	tpp_keyword const *ro_keyword;
+	tpp_keyword *keyword;
+	tpp_hash hash = tpp_hashof(str, length);
+	data = (struct tpp_lexer_handle_pushpopmacro_data *)arg;
+
+	/* Load keyword */
+	ro_keyword = tpp_keywords_newkeyword(&data->tlhppmd_lexer->tl_kwds, str, length, hash);
+	if tpp_unlikely(!ro_keyword)
+		goto err_nomem;
+
+	/* Make keyword writable */
+	keyword = tpp_keywords_copybuiltin(&data->tlhppmd_lexer->tl_kwds, ro_keyword);
+	if tpp_unlikely(!keyword)
+		goto err_nomem;
+
+	/* Push/pop the macro linked to this keyword. */
+	if (data->tlhppmd_push)
+		return tpp_keyword_pushmacro(keyword);
+
+	result = tpp_keyword_popmacro(keyword);
+	tpp_assert(result == TPP_EOK ||
+	           result == TPP_ENOENT);
+	if (result == TPP_ENOENT) {
+		/* Emit a warning */
+#if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
+		result = tpp_lexer_warnf(data->tlhppmd_lexer, TPP_W_POP_MACRO_EMPTY_STACK,
+		                         (unsigned int)length, str);
+#else /* TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
+		result = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
+	}
+	return result;
+err_nomem:
+	return TPP_ENOMEM;
+}
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+
 TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
@@ -81,19 +128,29 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	case TPP_KWD_push_macro:
 	case TPP_KWD_pop_macro: {
-		bool const is_push = tok == TPP_KWD_push_macro;
+		tpp_errno error;
+		struct tpp_lexer_handle_pushpopmacro_data data;
+		data.tlhppmd_lexer = self;
+		data.tlhppmd_push  = tok == TPP_KWD_push_macro;
 		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_PUSH_MACRO))
-			goto unknown_pragma;;
-		tok = tpp_lexer_yield(self);
+			goto unknown_pragma;
+		tok = tpp_lexer_yield_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		/* TODO: Parse string */
-		(void)is_push;
 
-		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+		/* Skip leading '(' */
+		tok = tpp_lexer_skip_blocking(self, TPP_TOK_OFCHAR('('));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+
+		/* Parse+process string (using "tpp_lexer_parsestring_cb()") */
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_pushpopmacro_cb,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
+		if (error != TPP_EOK)
+			return error;
+
+		/* Skip trailing ')' */
+		tok = tpp_lexer_skip_blocking(self, TPP_TOK_OFCHAR(')'));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 	}	break;
@@ -104,7 +161,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 		tpp_file const *iofile;
 		tpp_keyword *iofile_kwd;
 		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_ONCE))
-			goto unknown_pragma;;
+			goto unknown_pragma;
 		iofile     = tpp_file_getiofile(tpp_lexer_getfile(self));
 		iofile_kwd = tpp_file_filename_kwd(iofile);
 		if (iofile_kwd) {
@@ -124,7 +181,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 				return error;
 		}
 #endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
-		tok = tpp_lexer_yieldraw(self);
+		tok = tpp_lexer_yieldraw_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 	}	break;
@@ -199,7 +256,7 @@ tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
 		return error;
 	}
 	while (TPP_TOK_ISSPACE_OR_COMMENT(token->tt_id)) {
-		tpp_token_id tok = tpp_lexer_yieldraw(self);
+		tpp_token_id tok = tpp_lexer_yieldraw_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 	}
@@ -214,7 +271,7 @@ tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
 skip_garbage_without_warning:
 	for (;;) {
-		tpp_token_id tok = tpp_lexer_yieldraw(self);
+		tpp_token_id tok = tpp_lexer_yieldraw_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		if (TPP_TOK_ISLF_OR_COMMENT(tok))
@@ -241,7 +298,7 @@ tpp_lexer_process_directive(tpp_lexer *tpp_restrict self) {
 
 	/* Load token that comes after leading '#' */
 again_yield_directive_iter:
-	result = tpp_lexer_yieldraw_at(self, &directive_iter);
+	result = tpp_lexer_yieldraw_at_blocking(self, &directive_iter);
 	switch (result) {
 
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE
@@ -530,8 +587,9 @@ again_yield_directive_iter:
 		tpp_errno error;
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_PRAGMA))
 			goto handle_unknown_directive;
+		token->tt_end = directive_iter;
 		do {
-			result = tpp_lexer_yieldraw(self);
+			result = tpp_lexer_yieldraw_blocking(self);
 		} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
 		if (TPP_TOK_ISERR(result))
 			return result;
@@ -539,12 +597,10 @@ again_yield_directive_iter:
 		if (error != TPP_EOK)
 			return TPP_TOK_OFERR(error);
 		while (TPP_TOK_ISSPACE_OR_COMMENT(token->tt_id)) {
-			result = tpp_lexer_yieldraw(self);
+			result = tpp_lexer_yieldraw_blocking(self);
 			if (TPP_TOK_ISERR(result))
 				return result;
 		}
-
-		/* TODO */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
 	}
@@ -615,8 +671,8 @@ handle_unknown_directive:
 #undef WANT_seek_end_of_line
 seek_end_of_line:
 #endif /* WANT_seek_end_of_line */
-			while (result != TPP_TOK_LF && result != TPP_TOK_EOF) {
-				result = tpp_lexer_yieldraw(self);
+			while (!TPP_TOK_ISLF_OR_COMMENT(result) && result != TPP_TOK_EOF) {
+				result = tpp_lexer_yieldraw_blocking(self);
 				if (TPP_TOK_ISERR(result))
 					break;
 			}
@@ -637,8 +693,12 @@ seek_end_of_line:
  * - TPP_TOK_SPACE:   Filtered based on `TPP_HAVE_TPP_TOK_SPACE' / `TPP_FEAT_TPP_TOK_SPACE'
  * - TPP_TOK_COMMENT: Filtered based on `TPP_HAVE_TPP_TOK_COMMENT' / `TPP_FEAT_TPP_TOK_COMMENT'
  *
- * @return: * :               The newly read token (after accounting for preprocessor directives)
- * @return: TPP_TOK_ISERR(*): Error (s.a. `TPP_TOK_ASERR(return)' and `enum tpp_errno') */
+ * @return: * :                  The newly read token (after accounting for preprocessor directives)
+ * @return: TPP_TOK_ENOMEM:      Out of memory
+ * @return: TPP_TOK_EIO:         I/O error while trying to read from file
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_ELEXERROR:   Lexer error
+ * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;

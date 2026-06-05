@@ -35,7 +35,7 @@ typedef enum tpp_token_id {
 	/* Token IDs can also represent error */
 	TPP_TOK_ENOMEM      = (int)TPP_ENOMEM,
 	TPP_TOK_EIO         = (int)TPP_EIO,
-	TPP_TOK_ENOENT      = (int)TPP_ENOENT,
+//	TPP_TOK_ENOENT      = (int)TPP_ENOENT, /* Not allowed for error->token translation */
 #if TPP_HAVE_FILE_NONBLOCK
 	TPP_TOK_EWOULDBLOCK = (int)TPP_EWOULDBLOCK,
 #endif /* TPP_HAVE_FILE_NONBLOCK */

@@ -28,12 +28,10 @@
 
 #include <stdio.h>
 
-#error HERE
-
 TPP_DECL_BEGIN
 
 int main(int argc, char *argv[]) {
-	int result = 1;
+	int result = 0;
 	tpp_lexer lexer;
 	tpp_errno error;
 	tpp_token_id tok;

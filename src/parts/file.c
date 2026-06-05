@@ -467,7 +467,7 @@ reuse_old_chunk:
 				if tpp_unlikely(!new_chunk)
 					return TPP_ENOMEM;
 			}
-			tpp_assert(new_chunk->ts_refcnt == 1);
+			tpp_assert(!tpp_string_isshared(new_chunk));
 			new_chunk->ts_str[new_size] = '\0';
 			new_chunk->ts_len = new_size;
 			self->tf_pos = new_chunk->ts_str;
@@ -497,7 +497,7 @@ reuse_old_chunk:
 			                                                      self->tf_data.td_io.tff_start_lc,
 			                                                      old_chunk->ts_str, unused_head);
 			tpp_assert(tpp_string_isshared(old_chunk));
-			tpp_refcnt_dec(&old_chunk->ts_refcnt);
+			tpp_string_decref_nokill(old_chunk);
 #if TPP_HAVE_UNICODE
 			is_first_chunk = false;
 #endif /* TPP_HAVE_UNICODE */
@@ -884,14 +884,14 @@ tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
 }
 
 
-/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_rprev")
+/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_tprev")
  * If no such file exists, simply re-return "self". This function never returns "NULL" */
 #if TPP_HAVE_INCLUDE_STACK
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getiofile(tpp_file const *tpp_restrict self) {
 	tpp_file *iter = (tpp_file *)self;
 	while (iter->tf_kind != TPP_FILE_KIND_IO) {
-		iter = iter->tf_rprev;
+		iter = iter->tf_tprev;
 		if (iter == NULL)
 			return (tpp_file *)self;
 	}

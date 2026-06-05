@@ -36,6 +36,10 @@ TPP_DECL_BEGIN
 
 /* Make sure that offsets within "tpp_lexer" are properly aligned such that
  * the tail end of "tpp_token" correctly overlaps with the start of "tpp_file" */
+#if TPP_HAVE_INCLUDE_STACK
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_start) ==
+                  tpp_offsetof(tpp_lexer, tl_core.tlc_input.tli_file.tf_tpos));
+#endif /* !TPP_HAVE_INCLUDE_STACK */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_end) ==
                   tpp_offsetof(tpp_lexer, tl_core.tlc_input.tli_file.tf_pos));
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_chunk) ==
@@ -72,7 +76,7 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 	for (iter = file->tf_prev; iter;) {
 		tpp_file *next = iter->tf_prev;
 		tpp_file_fini(iter);
-		tpp_free(iter);
+		tpp_file_free(iter);
 		iter = next;
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */

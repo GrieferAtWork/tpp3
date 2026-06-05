@@ -46,9 +46,10 @@ int main(int argc, char *argv[]) {
 	for (;;) {
 		char const *desc, *lexer_filename;
 		tpp_lcinfo lc;
+		tpp_file *file;
 		tok = tpp_lexer_yield(&lexer);
 		if (TPP_TOK_ISERR(tok)) {
-			fprintf(stderr, "\nYield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
+			fprintf(stderr, "Yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
 			goto out;
 		}
 		if (tok == TPP_TOK_EOF)
@@ -58,8 +59,9 @@ int main(int argc, char *argv[]) {
 			desc = (char const *)tpp_lexer_gettoken(&lexer)->tt_kwd->tk_kwd;
 		if (desc == NULL)
 			desc = "?";
-		lexer_filename = tpp_file_filename(tpp_lexer_getfile(&lexer));
-		lc = tpp_file_lcinfo(tpp_lexer_getfile(&lexer), tpp_lexer_gettoken(&lexer)->tt_start);
+		file = tpp_lexer_getfile(&lexer);
+		lexer_filename = tpp_file_filename(file);
+		lc = tpp_file_lcinfo(file, tpp_lexer_gettoken(&lexer)->tt_start);
 		printf("[%s:%d:%d:%s(%d):%.*s]\n",
 		       lexer_filename ? lexer_filename : "?",
 		       tpp_lcinfo_getline(lc) + 1,

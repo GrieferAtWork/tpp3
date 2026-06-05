@@ -55,9 +55,6 @@ typedef enum tpp_warning_state {
 #define TPP_WSTATE_ERROR_OR_FATAL TPP_WSTATE_FATAL
 #endif /* !TPP_HAVE_WARNING_ERROR */
 	TPP_WSTATE_FATAL    = 3, /* Immediately cause a `TPP_ELEXERROR' error */
-#if TPP_HAVE_WARNING_NUMBERS && TPP_BUILDING
-	_TPP_WSTATE_UNDEFINED = 3, /* Config for numbered-warnings (causes state of linked groups to be used instead) */
-#endif /* TPP_HAVE_WARNING_NUMBERS && TPP_BUILDING */
 
 #if TPP_HAVE_WARNING_SUPPRESS
 	TPP_WSTATE_SUPPRESS = -1, /* Treat as `TPP_WSTATE_DISABLED' a couple of times, then switch to old state
@@ -75,6 +72,15 @@ typedef enum tpp_warning_state {
  * importance is used to determine how that specific warning should be treated. */
 #define tpp_warning_state_ismoreimportant(lhs, rhs) \
 	((int)(lhs) < (int)(rhs))
+
+/* Check if the warning state specified by "self" will cause something to be emitted. */
+#if TPP_HAVE_WARNING_SUPPRESS
+#define tpp_warning_state_willemit(self) \
+	((self) != TPP_WSTATE_DISABLED && (self) != TPP_WSTATE_SUPPRESS)
+#else /* TPP_HAVE_WARNING_SUPPRESS */
+#define tpp_warning_state_willemit(self) \
+	((self) != TPP_WSTATE_DISABLED)
+#endif /* !TPP_HAVE_WARNING_SUPPRESS */
 
 
 
@@ -98,12 +104,14 @@ tpp_warning_group_getnames(tpp_warning_group_id id);
 
 /* @return: TPP_WG_COUNT: No such warning_group */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
-tpp_warning_group_byname(char const *tpp_restrict name);
+tpp_warning_group_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen);
+#define tpp_warning_group_byname(name) tpp_warning_group_byname_ex(name, TPP_SIZE_MAX)
 
 /* Returns the ID of the warning group with the name that is closest to "name"
  * When no warning groups are defined (at all), this will return "TPP_WG_COUNT" */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
-tpp_warning_group_nearest(char const *tpp_restrict name);
+tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen);
+#define tpp_warning_group_nearest(name) tpp_warning_group_nearest_ex(name, TPP_SIZE_MAX)
 
 
 

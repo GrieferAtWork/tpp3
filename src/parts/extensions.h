@@ -97,7 +97,8 @@ tpp_extensions_set(tpp_extensions *tpp_restrict self,
 #define tpp_extensions_set(self, id, enabled) \
 	(tpp_extensions_state_set(&(self)->te_state, id, enabled), TPP_EOK)
 #endif /* !TPP_HAVE_EXTENSIONS_PUSH_POP */
-#define tpp_extensions_get(self, id) tpp_extensions_state_get(&(self)->te_state, id)
+#define tpp_extensions_get(self, id)   tpp_extensions_state_get(&(self)->te_state, id)
+#define tpp_extensions_getid(self, id) tpp_extensions_state_getid(&(self)->te_state, id)
 
 
 /* Convert between extension IDs and their human-readable names. */
@@ -106,12 +107,14 @@ tpp_extension_getname(tpp_extension_id id);
 
 /* @return: TPP_EXT_COUNT: No such extension */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
-tpp_extension_byname(char const *tpp_restrict name);
+tpp_extension_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen);
+#define tpp_extension_byname(name) tpp_extension_byname_ex(name, TPP_SIZE_MAX)
 
 /* Returns the ID of the extension with the name that is closest to "name"
  * When no extensions are defined (at all), this will return "TPP_EXT_COUNT" */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
-tpp_extension_nearest(char const *tpp_restrict name);
+tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen);
+#define tpp_extension_nearest(name) tpp_extension_nearest_ex(name, TPP_SIZE_MAX)
 #else /* TPP_HAVE_EXTENSIONS */
 #define tpp_extensions_state_get(self, id) 1
 #define tpp_extensions_get(self, id)       1

@@ -1019,8 +1019,14 @@ handle_backslash:
 			goto done;
 		rel_after_bse = tpp_file_ptr2rel(file, pos);
 		tpp_assert(rel_before_bse <= rel_after_bse);
-		if (rel_before_bse >= rel_after_bse)
+		if (rel_before_bse >= rel_after_bse) {
+#if TPP_HAVE_TRIGRAPHS
+			if (ch != '\\')
+				pos += 2;
+#endif /* TPP_HAVE_TRIGRAPHS */
+			++pos;
 			goto again; /* Not a BSE sequence */
+		}
 
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
 		/* Emit warning if we don't encounter a start-of-line matching "comment_style":
@@ -1336,11 +1342,12 @@ tpp_lexer_seek_end_of_cxx_raw_string(tpp_lexer *tpp_restrict self,
                                      tpp_char const **tpp_restrict p_pos) {
 	tpp_file const *const file = tpp_lexer_getfile(self);
 	tpp_size rel_pattern_start = tpp_file_ptr2rel(file, *p_pos);
-	tpp_size rel_pattern_end;
+	tpp_size rel_pattern_end, delim_len;
 	tpp_char ch;
 	tpp_errno error;
 
 	/* Find end of pattern string */
+	delim_len = 0;
 	for (;;) {
 		rel_pattern_end = tpp_file_ptr2rel(file, *p_pos);
 		error = tpp_lexer_readchar(self, p_pos, &ch);
@@ -1348,6 +1355,14 @@ tpp_lexer_seek_end_of_cxx_raw_string(tpp_lexer *tpp_restrict self,
 			return error;
 		if (ch == '(')
 			break;
+		if (tpp_ascii_islf(ch)) {
+			/* TODO: Warning if a line-feed is encountered */
+		}
+		if (delim_len == 16) {
+			/* TODO: Warning if raw string delimiter longer than 16 characters */
+		}
+
+		++delim_len;
 		if (ch == 0 && (*p_pos) >= file->tf_end)
 			goto warn_premature_eof;
 	}
@@ -1479,8 +1494,12 @@ warn_premature_eof:
  * - Builtin macros
  * - User-defined macros
  *
- * @return: * :               The newly read token
- * @return: TPP_TOK_ISERR(*): Error (s.a. `TPP_TOK_ASERR(return)' and `enum tpp_errno') */
+ * @return: * :                  The newly read token
+ * @return: TPP_TOK_ENOMEM:      Out of memory
+ * @return: TPP_TOK_EIO:         I/O error while trying to read from file
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_ELEXERROR:   Lexer error
+ * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self) {
 	return tpp_lexer_yieldraw_at(self, &tpp_lexer_gettoken(self)->tt_end);
@@ -1511,7 +1530,10 @@ tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self) {
  *    given `p_pos == &file->tf_pos'), meaning that TPP_TOK_EOF will be
  *    returned when no more data can be loaded.
  *
- * This is used to implement `tpp_lexer_yieldraw()', which simply passes `' */
+ * This is used to implement `tpp_lexer_yieldraw()', which simply
+ * passes `p_pos = &tpp_lexer_gettoken(self)->tt_end'
+ *
+ * @return: * : See `tpp_lexer_yieldraw()' */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 #undef NEED_read_ch2

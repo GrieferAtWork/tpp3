@@ -29,7 +29,7 @@ a.out: main.c config.h defs.h \
 	gcc -Wall -o a.out main.c
 
 # How to (re-)generate the (optional) cache file that TPP can use to improve performance
-make-amalgamation-builtins.inl: config.h defs.h
+make-amalgamation-builtins.inl: config.h defs.h $(TPP_SOURCE)/tpp-amalgamation.h
 	deemon \
 		'-DCONFIG="$(shell realpath --relative-to=$(TPP_SOURCE) ./config.h)"' \
 		'-DDEFS="$(shell realpath --relative-to=$(TPP_SOURCE) ./defs.h)"' \

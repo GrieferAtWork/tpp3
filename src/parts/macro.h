@@ -26,6 +26,7 @@
 #include "error.h"
 #include "string.h"
 #include "token.h"
+#include "file.h"
 
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
@@ -90,6 +91,9 @@ typedef struct tpp_macro {
 	TPP_REF tpp_string *tm_body_chunk; /* [0..1][const] Data-chunk containing the macro's body (or "NULL" if static or originating from file with "tf_chunk == NULL") */
 	tpp_char const     *tm_body_start; /* [1..1][const] Pointer to start of macro body */
 	tpp_char const     *tm_body_end;   /* [1..1][const] Pointer to end of macro body */
+#if TPP_HAVE_UNICODE
+	tpp_file_encoding   tm_body_enc;   /* Encoding of body. */
+#endif /* TPP_HAVE_UNICODE */
 	tpp_size            tm_expansions; /* The amount of existing expansions of this macro.
 	                                    * NOTE: Depending on the `TPP_MACRO_FLAG_SELFEXPAND' flag,
 	                                    *       this value may not be allowed to exceed one(1). */
@@ -118,6 +122,28 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_macro_destroy(tpp_macro *tpp_restrict
 #define tpp_macro_isshared(self) tpp_refcnt_isshared(&(self)->tm_refcnt)
 #define tpp_macro_incref(self)   tpp_refcnt_inc(&(self)->tm_refcnt)
 #define tpp_macro_decref(self)   (void)(tpp_refcnt_decfetch(&(self)->tm_refcnt) || (tpp_macro_destroy(self), 0))
+
+
+
+typedef struct tpp_builtin_macro {
+	tpp_size tbm_body_size;            /* Length of "tbm_body" (in characters; excluding trailing NUL) */
+	tpp_char tbm_body[TPP_FLEX_ARRAY]; /* [tbm_body_size] Body text (followed by a trailing NUL) */
+} tpp_builtin_macro;
+
+#define TPP_BUILTIN_MACRO_DEFINE(name, value)                      \
+	struct name##_struct {                                         \
+		tpp_size tbm_body_size;                                    \
+		char tbm_body[sizeof(value) / sizeof(char)];               \
+	} const name = {                                               \
+		/* .tbm_body_size = */ (sizeof(value) / sizeof(char)) - 1, \
+		/* .tbm_body      = */ value,                              \
+	}
+
+/* Return the hard-coded expansion of the builtin macro linked to "id".
+ * If "id" isn't a builtin keyword, or that keyword doesn't specify a
+ * value for "TPP_BUILTIN_MACRO()", return "NULL" instead. */
+TPP_DECL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
+tpp_macro_getbuiltin(tpp_token_id id);
 
 
 #if TPP_BUILDING

@@ -94,6 +94,20 @@ local BUILTIN_KEYWORDS: {string: string} = {
 	"push_macro": "TPP_HAVE_PRAGMA_PUSH_MACRO",
 	"pop_macro": "TPP_HAVE_PRAGMA_PUSH_MACRO",
 	"once": "TPP_HAVE_PRAGMA_ONCE",
+	"__has_attribute": "TPP_HAVE_CLANG_HAS_ATTRIBUTE",
+	"__has_builtin": "TPP_HAVE_CLANG_HAS_BUILTIN",
+	"__has_cpp_attribute": "TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE",
+	"__has_declspec_attribute": "TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE",
+	"__has_extension": "TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION",
+	"__has_feature": "TPP_HAVE_CLANG_HAS_FEATURE",
+	"__has_c_attribute": "TPP_HAVE_CLANG_HAS_C_ATTRIBUTE",
+	"__is_identifier": "TPP_HAVE_CLANG_IS_IDENTIFIER",
+	"__is_deprecated": "TPP_HAVE_TPPX_IS_DEPRECATED",
+	"__is_poisoned": "TPP_HAVE_TPPX_IS_POISONED",
+	"__has_known_extension": "TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION",
+	"__has_warning": "TPP_HAVE_TPPX_HAS_WARNING",
+	"__has_known_warning": "TPP_HAVE_TPPX_HAS_KNOWN_WARNING",
+	"__TPP_VERSION__": "TPP_HAVE_CPP_MACROS",
 };
 for (local kwd, cond: BUILTIN_KEYWORDS) {
 	print("#if ", cond);
@@ -206,8 +220,112 @@ TPP_KWD(TPP_KWD_pop_macro, "pop_macro")
 #define TPP_KWD_once TPP_KWD_once
 TPP_KWD(TPP_KWD_once, "once")
 #endif /* TPP_HAVE_PRAGMA_ONCE */
+#if TPP_HAVE_CLANG_HAS_ATTRIBUTE
+#define TPP_KWD___has_attribute TPP_KWD___has_attribute
+TPP_KWD(TPP_KWD___has_attribute, "__has_attribute")
+#endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE */
+#if TPP_HAVE_CLANG_HAS_BUILTIN
+#define TPP_KWD___has_builtin TPP_KWD___has_builtin
+TPP_KWD(TPP_KWD___has_builtin, "__has_builtin")
+#endif /* TPP_HAVE_CLANG_HAS_BUILTIN */
+#if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
+#define TPP_KWD___has_cpp_attribute TPP_KWD___has_cpp_attribute
+TPP_KWD(TPP_KWD___has_cpp_attribute, "__has_cpp_attribute")
+#endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE */
+#if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
+#define TPP_KWD___has_declspec_attribute TPP_KWD___has_declspec_attribute
+TPP_KWD(TPP_KWD___has_declspec_attribute, "__has_declspec_attribute")
+#endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE */
+#if TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION
+#define TPP_KWD___has_extension TPP_KWD___has_extension
+TPP_KWD(TPP_KWD___has_extension, "__has_extension")
+#endif /* TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION */
+#if TPP_HAVE_CLANG_HAS_FEATURE
+#define TPP_KWD___has_feature TPP_KWD___has_feature
+TPP_KWD(TPP_KWD___has_feature, "__has_feature")
+#endif /* TPP_HAVE_CLANG_HAS_FEATURE */
+#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
+#define TPP_KWD___has_c_attribute TPP_KWD___has_c_attribute
+TPP_KWD(TPP_KWD___has_c_attribute, "__has_c_attribute")
+#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE */
+#if TPP_HAVE_CLANG_IS_IDENTIFIER
+#define TPP_KWD___is_identifier TPP_KWD___is_identifier
+TPP_KWD(TPP_KWD___is_identifier, "__is_identifier")
+#endif /* TPP_HAVE_CLANG_IS_IDENTIFIER */
+#if TPP_HAVE_TPPX_IS_DEPRECATED
+#define TPP_KWD___is_deprecated TPP_KWD___is_deprecated
+TPP_KWD(TPP_KWD___is_deprecated, "__is_deprecated")
+#endif /* TPP_HAVE_TPPX_IS_DEPRECATED */
+#if TPP_HAVE_TPPX_IS_POISONED
+#define TPP_KWD___is_poisoned TPP_KWD___is_poisoned
+TPP_KWD(TPP_KWD___is_poisoned, "__is_poisoned")
+#endif /* TPP_HAVE_TPPX_IS_POISONED */
+#if TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
+#define TPP_KWD___has_known_extension TPP_KWD___has_known_extension
+TPP_KWD(TPP_KWD___has_known_extension, "__has_known_extension")
+#endif /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION */
+#if TPP_HAVE_TPPX_HAS_WARNING
+#define TPP_KWD___has_warning TPP_KWD___has_warning
+TPP_KWD(TPP_KWD___has_warning, "__has_warning")
+#endif /* TPP_HAVE_TPPX_HAS_WARNING */
+#if TPP_HAVE_TPPX_HAS_KNOWN_WARNING
+#define TPP_KWD___has_known_warning TPP_KWD___has_known_warning
+TPP_KWD(TPP_KWD___has_known_warning, "__has_known_warning")
+#endif /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING */
+#if TPP_HAVE_CPP_MACROS
+#define TPP_KWD___TPP_VERSION__ TPP_KWD___TPP_VERSION__
+TPP_KWD(TPP_KWD___TPP_VERSION__, "__TPP_VERSION__")
+#endif /* TPP_HAVE_CPP_MACROS */
 /*[[[end]]]*/
 
+
+
+#if TPP_HAVE_CPP_MACROS
+TPP_MACRO(TPP_KWD___TPP_VERSION__, 1)
+TPP_BUILTIN_MACRO(TPP_KWD___TPP_VERSION__, "300")
+#endif /* TPP_HAVE_CPP_MACROS */
+
+/* Declare magic, built-in macros */
+#if TPP_HAVE_CLANG_HAS_ATTRIBUTE
+TPP_MACRO(TPP_KWD___has_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_ATTRIBUTE))
+#endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE */
+#if TPP_HAVE_CLANG_HAS_BUILTIN
+TPP_MACRO(TPP_KWD___has_builtin, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_BUILTIN))
+#endif /* TPP_HAVE_CLANG_HAS_BUILTIN */
+#if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
+TPP_MACRO(TPP_KWD___has_cpp_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE))
+#endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE */
+#if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
+TPP_MACRO(TPP_KWD___has_declspec_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE))
+#endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE */
+#if TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION
+TPP_MACRO(TPP_KWD___has_extension, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_EXTENSION) ||
+                                   tpp_lexer_getext(self, TPP_EXT_TPPX_HAS_EXTENSION))
+#endif /* TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION */
+#if TPP_HAVE_CLANG_HAS_FEATURE
+TPP_MACRO(TPP_KWD___has_feature, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_FEATURE))
+#endif /* TPP_HAVE_CLANG_HAS_FEATURE */
+#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
+TPP_MACRO(TPP_KWD___has_c_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_C_ATTRIBUTE))
+#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE */
+#if TPP_HAVE_CLANG_IS_IDENTIFIER
+TPP_MACRO(TPP_KWD___is_identifier, tpp_lexer_getext(self, TPP_EXT_CLANG_IS_IDENTIFIER))
+#endif /* TPP_HAVE_CLANG_IS_IDENTIFIER */
+#if TPP_HAVE_TPPX_IS_DEPRECATED
+TPP_MACRO(TPP_KWD___is_deprecated, tpp_lexer_getext(self, TPP_EXT_TPPX_IS_DEPRECATED))
+#endif /* TPP_HAVE_TPPX_IS_DEPRECATED */
+#if TPP_HAVE_TPPX_IS_POISONED
+TPP_MACRO(TPP_KWD___is_poisoned, tpp_lexer_getext(self, TPP_EXT_TPPX_IS_POISONED))
+#endif /* TPP_HAVE_TPPX_IS_POISONED */
+#if TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
+TPP_MACRO(TPP_KWD___has_known_extension, tpp_lexer_getext(self, TPP_EXT_TPPX_HAS_KNOWN_EXTENSION))
+#endif /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION */
+#if TPP_HAVE_TPPX_HAS_WARNING
+TPP_MACRO(TPP_KWD___has_warning, tpp_lexer_getext(self, TPP_EXT_TPPX_HAS_WARNING))
+#endif /* TPP_HAVE_TPPX_HAS_WARNING */
+#if TPP_HAVE_TPPX_HAS_KNOWN_WARNING
+TPP_MACRO(TPP_KWD___has_known_warning, tpp_lexer_getext(self, TPP_EXT_TPPX_HAS_KNOWN_WARNING))
+#endif /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING */
 
 
 /*[[[deemon
@@ -216,12 +334,22 @@ for (local feat: {
 	"DIGRAPHS",
 	"BSE",
 	"BSE_WHITESPACE",
+	"ESCAPE_E_IN_STRINGS",
+	"ESCAPE_S_IN_STRINGS",
 	"CLANG_HAS_ATTRIBUTE",
 	"CLANG_HAS_BUILTIN",
 	"CLANG_HAS_CPP_ATTRIBUTE",
 	"CLANG_HAS_DECLSPEC_ATTRIBUTE",
 	"CLANG_HAS_EXTENSION",
 	"CLANG_HAS_FEATURE",
+	"CLANG_HAS_C_ATTRIBUTE",
+	"CLANG_IS_IDENTIFIER",
+	"TPPX_IS_DEPRECATED",
+	"TPPX_IS_POISONED",
+	"TPPX_HAS_EXTENSION",
+	"TPPX_HAS_KNOWN_EXTENSION",
+	"TPPX_HAS_WARNING",
+	"TPPX_HAS_KNOWN_WARNING",
 	"ALTERNATIVE_MACRO_PARENTHESIS",
 	"MACRO_ARGUMENT_WHITESPACE",
 	"MACRO_RECURSION",
@@ -272,6 +400,18 @@ TPP_EXTENSION(TPP_EXT_BSE_WHITESPACE, "bse-whitespace", TPP_HAVE_BSE_WHITESPACE 
 #else /* TPP_HAVE_BSE_WHITESPACE < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_BSE_WHITESPACE(self) TPP_HAVE_BSE_WHITESPACE
 #endif /* TPP_HAVE_BSE_WHITESPACE >= 0 */
+#if TPP_HAVE_ESCAPE_E_IN_STRINGS < 0
+TPP_EXTENSION(TPP_EXT_ESCAPE_E_IN_STRINGS, "escape-e-in-strings", TPP_HAVE_ESCAPE_E_IN_STRINGS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_ESCAPE_E_IN_STRINGS(self) (self)->tes_flags.tef_TPP_EXT_ESCAPE_E_IN_STRINGS
+#else /* TPP_HAVE_ESCAPE_E_IN_STRINGS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_ESCAPE_E_IN_STRINGS(self) TPP_HAVE_ESCAPE_E_IN_STRINGS
+#endif /* TPP_HAVE_ESCAPE_E_IN_STRINGS >= 0 */
+#if TPP_HAVE_ESCAPE_S_IN_STRINGS < 0
+TPP_EXTENSION(TPP_EXT_ESCAPE_S_IN_STRINGS, "escape-s-in-strings", TPP_HAVE_ESCAPE_S_IN_STRINGS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_ESCAPE_S_IN_STRINGS(self) (self)->tes_flags.tef_TPP_EXT_ESCAPE_S_IN_STRINGS
+#else /* TPP_HAVE_ESCAPE_S_IN_STRINGS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_ESCAPE_S_IN_STRINGS(self) TPP_HAVE_ESCAPE_S_IN_STRINGS
+#endif /* TPP_HAVE_ESCAPE_S_IN_STRINGS >= 0 */
 #if TPP_HAVE_CLANG_HAS_ATTRIBUTE < 0
 TPP_EXTENSION(TPP_EXT_CLANG_HAS_ATTRIBUTE, "clang-has-attribute", TPP_HAVE_CLANG_HAS_ATTRIBUTE == -1)
 #define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_ATTRIBUTE
@@ -308,6 +448,54 @@ TPP_EXTENSION(TPP_EXT_CLANG_HAS_FEATURE, "clang-has-feature", TPP_HAVE_CLANG_HAS
 #else /* TPP_HAVE_CLANG_HAS_FEATURE < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_FEATURE(self) TPP_HAVE_CLANG_HAS_FEATURE
 #endif /* TPP_HAVE_CLANG_HAS_FEATURE >= 0 */
+#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE < 0
+TPP_EXTENSION(TPP_EXT_CLANG_HAS_C_ATTRIBUTE, "clang-has-c-attribute", TPP_HAVE_CLANG_HAS_C_ATTRIBUTE == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_C_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_C_ATTRIBUTE
+#else /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_C_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE >= 0 */
+#if TPP_HAVE_CLANG_IS_IDENTIFIER < 0
+TPP_EXTENSION(TPP_EXT_CLANG_IS_IDENTIFIER, "clang-is-identifier", TPP_HAVE_CLANG_IS_IDENTIFIER == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_IS_IDENTIFIER(self) (self)->tes_flags.tef_TPP_EXT_CLANG_IS_IDENTIFIER
+#else /* TPP_HAVE_CLANG_IS_IDENTIFIER < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_IS_IDENTIFIER(self) TPP_HAVE_CLANG_IS_IDENTIFIER
+#endif /* TPP_HAVE_CLANG_IS_IDENTIFIER >= 0 */
+#if TPP_HAVE_TPPX_IS_DEPRECATED < 0
+TPP_EXTENSION(TPP_EXT_TPPX_IS_DEPRECATED, "tppx-is-deprecated", TPP_HAVE_TPPX_IS_DEPRECATED == -1)
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_IS_DEPRECATED(self) (self)->tes_flags.tef_TPP_EXT_TPPX_IS_DEPRECATED
+#else /* TPP_HAVE_TPPX_IS_DEPRECATED < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_IS_DEPRECATED(self) TPP_HAVE_TPPX_IS_DEPRECATED
+#endif /* TPP_HAVE_TPPX_IS_DEPRECATED >= 0 */
+#if TPP_HAVE_TPPX_IS_POISONED < 0
+TPP_EXTENSION(TPP_EXT_TPPX_IS_POISONED, "tppx-is-poisoned", TPP_HAVE_TPPX_IS_POISONED == -1)
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_IS_POISONED(self) (self)->tes_flags.tef_TPP_EXT_TPPX_IS_POISONED
+#else /* TPP_HAVE_TPPX_IS_POISONED < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_IS_POISONED(self) TPP_HAVE_TPPX_IS_POISONED
+#endif /* TPP_HAVE_TPPX_IS_POISONED >= 0 */
+#if TPP_HAVE_TPPX_HAS_EXTENSION < 0
+TPP_EXTENSION(TPP_EXT_TPPX_HAS_EXTENSION, "tppx-has-extension", TPP_HAVE_TPPX_HAS_EXTENSION == -1)
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_EXTENSION(self) (self)->tes_flags.tef_TPP_EXT_TPPX_HAS_EXTENSION
+#else /* TPP_HAVE_TPPX_HAS_EXTENSION < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_EXTENSION(self) TPP_HAVE_TPPX_HAS_EXTENSION
+#endif /* TPP_HAVE_TPPX_HAS_EXTENSION >= 0 */
+#if TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION < 0
+TPP_EXTENSION(TPP_EXT_TPPX_HAS_KNOWN_EXTENSION, "tppx-has-known-extension", TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION == -1)
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_KNOWN_EXTENSION(self) (self)->tes_flags.tef_TPP_EXT_TPPX_HAS_KNOWN_EXTENSION
+#else /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_KNOWN_EXTENSION(self) TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
+#endif /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION >= 0 */
+#if TPP_HAVE_TPPX_HAS_WARNING < 0
+TPP_EXTENSION(TPP_EXT_TPPX_HAS_WARNING, "tppx-has-warning", TPP_HAVE_TPPX_HAS_WARNING == -1)
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_WARNING(self) (self)->tes_flags.tef_TPP_EXT_TPPX_HAS_WARNING
+#else /* TPP_HAVE_TPPX_HAS_WARNING < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_WARNING(self) TPP_HAVE_TPPX_HAS_WARNING
+#endif /* TPP_HAVE_TPPX_HAS_WARNING >= 0 */
+#if TPP_HAVE_TPPX_HAS_KNOWN_WARNING < 0
+TPP_EXTENSION(TPP_EXT_TPPX_HAS_KNOWN_WARNING, "tppx-has-known-warning", TPP_HAVE_TPPX_HAS_KNOWN_WARNING == -1)
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_KNOWN_WARNING(self) (self)->tes_flags.tef_TPP_EXT_TPPX_HAS_KNOWN_WARNING
+#else /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_KNOWN_WARNING(self) TPP_HAVE_TPPX_HAS_KNOWN_WARNING
+#endif /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING >= 0 */
 #if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS < 0
 TPP_EXTENSION(TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS, "alternative-macro-parenthesis", TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS == -1)
 #define _tpp_extensions_state_get_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS(self) (self)->tes_flags.tef_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS
@@ -446,7 +634,8 @@ TPP_WGROUP(TPP_WG_TRIGRAPHS, 1("trigraphs"), TPP_WSTATE_WARN)
 
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 #define TPP_W_ENCOUNTERED_TRIGRAPH TPP_W_ENCOUNTERED_TRIGRAPH
-TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), "encountered trigraph character sequence %.3Pt")
+TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(),
+            "encountered trigraph character sequence %.3Pt")
 #endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 
 
@@ -551,6 +740,51 @@ TPP_WARNING(TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER, 1(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADE
 #endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
 
 
+/************************************************************************/
+/* -Wdeprecated                                                         */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_DEPRECATED
+#define TPP_HAVE_TPP_WG_DEPRECATED (TPP_HAVE_TPP_W_DEPRECATED_KEYWORD)
+#endif /* !TPP_HAVE_TPP_WG_DEPRECATED */
+#if TPP_HAVE_TPP_WG_DEPRECATED
+#define TPP_WG_DEPRECATED TPP_WG_DEPRECATED
+TPP_WGROUP(TPP_WG_DEPRECATED, 1("deprecated"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_DEPRECATED */
+#if TPP_HAVE_TPP_W_DEPRECATED_KEYWORD
+#define TPP_W_DEPRECATED_KEYWORD TPP_W_DEPRECATED_KEYWORD
+TPP_WARNING(TPP_W_DEPRECATED_KEYWORD, 1(TPP_WG_DEPRECATED), 1(4995),
+            "deprecated keyword %Pt used")
+#endif /* TPP_HAVE_TPP_W_DEPRECATED_KEYWORD */
+
+
+/************************************************************************/
+/* -Wstring-escape                                                      */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_STRING_ESCAPE
+#define TPP_HAVE_TPP_WG_STRING_ESCAPE (TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE)
+#endif /* !TPP_HAVE_TPP_WG_STRING_ESCAPE */
+#if TPP_HAVE_TPP_WG_STRING_ESCAPE
+#define TPP_WG_STRING_ESCAPE TPP_WG_STRING_ESCAPE
+TPP_WGROUP(TPP_WG_STRING_ESCAPE, 1("string-escape"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_STRING_ESCAPE */
+#if TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
+#define TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
+TPP_WARNING(TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 1(4129),
+            "unknown escape sequence %[\\%c%]")
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
+
+
+/************************************************************************/
+/* Misc warnings...                                                     */
+/************************************************************************/
+#if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
+#define TPP_W_POP_MACRO_EMPTY_STACK TPP_W_POP_MACRO_EMPTY_STACK
+TPP_WARNING(TPP_W_POP_MACRO_EMPTY_STACK, 0(), 1(4602),
+            "cannot %[#pragma pop_macro(\"%.*s\")%]: no preceding %[#pragma push_macro%]")
+#endif /* TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
+
+
+
 TPP_WGROUP(TPP_WG_MACROS, /*         */ 1("macros"),               TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_USAGE, /*          */ 1("usage"),                TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
@@ -559,7 +793,6 @@ TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FA
 TPP_WGROUP(TPP_WG_UNDEF, /*          */ 1("undef"),                TPP_WSTATE_WARN)
 TPP_WGROUP(TPP_WG_EXPANSION_TO_DEFINED, 1("expansion-to-defined"), TPP_WSTATE_WARN)
 TPP_WGROUP(TPP_WG_QUALITY, /*        */ 1("quality"),              TPP_WSTATE_FATAL)
-TPP_WGROUP(TPP_WG_DEPRECATED, /*     */ 1("deprecated"),           TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WARN)
 
 

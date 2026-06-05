@@ -170,6 +170,14 @@ for (local n: [:N]) {
 #define _TPP_TUPLE_IF_NONEMPTY_1(what, _)     what(_)
 #define _TPP_TUPLE_IF_NONEMPTY_0(what, _)
 
+/* >> TPP_TUPLE_IF_EMPTY(tuple, what, _)
+ * expands to "what(_)" if "tuple" is empty; otherwise, expands to nothing */
+#define TPP_TUPLE_IF_EMPTY(tuple, what, _) _TPP_TUPLE_IF_EMPTY(TPP_TUPLE_NONEMPTY(tuple), what, _)
+#define _TPP_TUPLE_IF_EMPTY(if, what, _)   _TPP_TUPLE_IF_EMPTY_(if, what, _)
+#define _TPP_TUPLE_IF_EMPTY_(if, what, _)  _TPP_TUPLE_IF_EMPTY_##if (what, _)
+#define _TPP_TUPLE_IF_EMPTY_0(what, _)     what(_)
+#define _TPP_TUPLE_IF_EMPTY_1(what, _)
+
 /* >> TPP_TUPLE_SIZE(tuple)
  * expands to a decimal number describing the size of "tuple" */
 #define TPP_TUPLE_SIZE(tuple)  _TPP_TUPLE_SIZE(tuple)

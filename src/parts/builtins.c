@@ -83,7 +83,7 @@ static struct tpp_warning_group_names_struct {
 #define TPP_DEFS
 #define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
 	char twgn_##wgroup_id##_##index[sizeof(value) / sizeof(char)];
-#define TPP_WGROUP(wgroup_id, names, default)                                                \
+#define TPP_WGROUP(wgroup_id, names, default)                                                  \
 	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id) \
 	char twgn_tail_##wgroup_id;
 #include TPP_CONFIG_DEFS_FILENAME
@@ -93,7 +93,7 @@ static struct tpp_warning_group_names_struct {
 #define TPP_DEFS
 #define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
 	/* .twgn_##wgroup_id##_##index = */ value,
-#define TPP_WGROUP(wgroup_id, names, default)                                                \
+#define TPP_WGROUP(wgroup_id, names, default)                                                  \
 	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id) \
 	/* .twgn_tail_##wgroup_id = */ 0,
 #include TPP_CONFIG_DEFS_FILENAME
@@ -127,29 +127,42 @@ static struct tpp_warning_groups_struct {
 #define TPP_DEFS
 #define _TPP_EXPAND_WARNING_GROUP_IDS(warning_id, index, value) \
 	tpp_warning_group_id twig_##warning_id##_##index;
+#define _TPP_EXPAND_WARNING_GROUP_TAIL(warning_id) \
+	tpp_warning_group_id twig_tail_##warning_id;
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, format)                                              \
 	TPP_TUPLE_FOREACH(wgroup_ids, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WARNING_GROUP_IDS, warning_id) \
-	tpp_warning_group_id twig_tail_##warning_id;
+	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_EXPAND_WARNING_GROUP_TAIL, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef _TPP_EXPAND_WARNING_GROUP_IDS
+#undef _TPP_EXPAND_WARNING_GROUP_TAIL
 #undef TPP_DEFS
 } const tpp_warning_groups = {
 #define TPP_DEFS
 #define _TPP_EXPAND_WARNING_GROUP_IDS(warning_id, index, value) \
 	/* .twig_##warning_id##_##index = */ value,
+#define _TPP_EXPAND_WARNING_GROUP_TAIL(warning_id) \
+	/* .twig_tail_##warning_id = */ TPP_WG_COUNT,
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, format)                                              \
 	TPP_TUPLE_FOREACH(wgroup_ids, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WARNING_GROUP_IDS, warning_id) \
-	/* .twig_tail_##warning_id = */ TPP_WG_COUNT,
+	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_EXPAND_WARNING_GROUP_TAIL, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef _TPP_EXPAND_WARNING_GROUP_IDS
+#undef _TPP_EXPAND_WARNING_GROUP_TAIL
 #undef TPP_DEFS
 };
 
-static tpp_size const tpp_warning_group_offsets_byid[TPP_EXT_COUNT] = {
+static tpp_size const tpp_warning_group_offsets_byid[TPP_W_COUNT] = {
 #define TPP_DEFS
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
-	/* [wgroup_id] = */ tpp_offsetof(struct tpp_warning_groups_struct, twig_##warning_id##_0),
+#define _TPP_WARNING_GROUPS_NONEMPTY(warning_id) \
+	/* [warning_id] = */ tpp_offsetof(struct tpp_warning_groups_struct, twig_##warning_id##_0),
+#define _TPP_WARNING_GROUPS_EMPTY(warning_id) \
+	/* [warning_id] = */ sizeof(struct tpp_warning_groups_struct) - sizeof(tpp_warning_group_id),
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, format)                    \
+	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_WARNING_GROUPS_NONEMPTY, warning_id) \
+	TPP_TUPLE_IF_EMPTY(wgroup_ids, _TPP_WARNING_GROUPS_EMPTY, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
+#undef _TPP_WARNING_GROUPS_NONEMPTY
+#undef _TPP_WARNING_GROUPS_EMPTY
 #undef TPP_DEFS
 };
 #define tpp_warning_groups_fast(id) \
@@ -176,7 +189,7 @@ TPP_IMPL tpp_warnings_state const tpp_warnings_state_default = {
 #include TPP_CONFIG_DEFS_FILENAME
 #if TPP_HAVE_WARNING_NUMBERS
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) \
-		/* .twsn_##warning_id = */ (unsigned int)_TPP_WSTATE_UNDEFINED,
+		/* .twsn_##warning_id = */ (unsigned int)TPP_WSTATE_FATAL,
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
 		TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
@@ -308,7 +321,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		tpp_hash             tk_hash;                            \
 		tpp_refcnt           tk_refcnt;                          \
 		tpp_size             tk_len;                             \
-		tpp_char             tk_kwd[sizeof(str) / sizeof(char)]; \
+		char                 tk_kwd[sizeof(str) / sizeof(char)]; \
 	} tpp_builtin_keyword_##id;                                  \
 	TPP_INTERN_IMPL struct tpp_builtin_keyword_struct_##id       \
 	tpp_builtin_keyword_##id = {                                 \
@@ -317,7 +330,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_INIT                       \
 		_TPP_BUILTIN_KEYWORD_tk_misc_INIT                        \
 		/* .tk_hash      = */ TPP_MAYBE_HASHOF(str),             \
-		/* .tk_refcnt    = */ 1,                                 \
+		/* .tk_refcnt    = */ TPP_REFCNT_INIT(1),                \
 		/* .tk_len       = */ (sizeof(str) / sizeof(char)) - 1,  \
 		/* .tk_kwd       = */ str                                \
 	};
@@ -379,7 +392,7 @@ static void tpp_init_builtin_keywords(void) {
 		tpp_hash             tk_hash;                        \
 		tpp_refcnt           tk_refcnt;                      \
 		tpp_size             tk_len;                         \
-		tpp_char             tk_kwd[kwd_len + 1];            \
+		char                 tk_kwd[kwd_len + 1];            \
 	} tpp_builtin_keyword_##id;
 #if TPP_SIZEOF_tpp_hash == 4
 #define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) UINT32_C(0x##hash_lo)
@@ -395,7 +408,7 @@ static void tpp_init_builtin_keywords(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_INIT                                 \
 		_TPP_BUILTIN_KEYWORD_tk_misc_INIT                                  \
 		/* .tk_hash      = */ TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo),      \
-		/* .tk_refcnt    = */ 1,                                           \
+		/* .tk_refcnt    = */ TPP_REFCNT_INIT(1),                          \
 		/* .tk_len       = */ kwd_len,                                     \
 		/* .tk_kwd       = */ kwd                                          \
 	};
@@ -537,7 +550,7 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 }
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
 
-#if TPP_HAVE_CPP_IF_ELSE_ENDIF
+#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
 /* Returns true if "kwd" should be considered to be "#if defined()"
  * Since "builtin" keywords can be considered to be "defined", even
  * when `kwd->tk_macro == NULL', this function is needed to handle
@@ -545,8 +558,10 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
                             tpp_keyword const *tpp_restrict kwd) {
+#if TPP_HAVE_CPP_MACROS
 	if (!TPP_TOK_ISBUILTINKEYWORD(kwd->tk_id))
 		return kwd->tk_macro != NULL;
+#endif /* TPP_HAVE_CPP_MACROS */
 	(void)self;
 	switch (kwd->tk_id) {
 #define TPP_DEFS
@@ -558,7 +573,7 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 	}
 	return false;
 }
-#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
+#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
 
 
 #if TPP_HAVE_EXTENSIONS
@@ -590,16 +605,19 @@ tpp_extension_byname_offset(tpp_size name_offset) {
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
-tpp_extension_byname(char const *tpp_restrict name) {
+tpp_extension_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
 	unsigned int lo, hi;
 	tpp_init_extension_name_offsets_byname();
+	name_maxlen = tpp_strnlen(name, name_maxlen);
 	lo = 0;
 	hi = tpp_lengthof(tpp_extension_name_offsets_byname);
 	while (lo < hi) {
 		unsigned int mid = (lo + hi) / 2;
 		tpp_size mid_offset = tpp_extension_name_offsets_byname[mid];
 		char const *mid_name = (char const *)&tpp_extension_names + mid_offset;
-		int cmp = tpp_strcmp(name, mid_name);
+		int cmp = tpp_memcmp(name, mid_name, name_maxlen * sizeof(char));
+		if (cmp == 0 && mid_name[name_maxlen])
+			cmp = -1;
 		if (cmp < 0) {
 			hi = mid;
 		} else if (cmp > 0) {
@@ -618,8 +636,9 @@ tpp_extension_byname(char const *tpp_restrict name) {
 /* Returns the ID of the extension with the name that is closest to "name"
  * When no extensions are defined (at all), this will return "TPP_EXT_COUNT" */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
-tpp_extension_nearest(char const *tpp_restrict name) {
+tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
 	(void)name;
+	(void)name_maxlen;
 	/* TODO */
 	return TPP_EXT_COUNT;
 }
@@ -782,16 +801,19 @@ tpp_warning_group_byname_offset(tpp_size name_offset) {
 
 /* @return: TPP_WG_COUNT: No such warning_group */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
-tpp_warning_group_byname(char const *tpp_restrict name) {
+tpp_warning_group_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
 	unsigned int lo, hi;
 	tpp_init_warning_group_name_offsets_byname();
+	name_maxlen = tpp_strnlen(name, name_maxlen);
 	lo = 0;
 	hi = tpp_lengthof(tpp_warning_group_name_offsets_byname);
 	while (lo < hi) {
 		unsigned int mid = (lo + hi) / 2;
 		tpp_size mid_offset = tpp_warning_group_name_offsets_byname[mid];
 		char const *mid_name = (char const *)&tpp_warning_group_names + mid_offset;
-		int cmp = tpp_strcmp(name, mid_name);
+		int cmp = tpp_memcmp(name, mid_name, name_maxlen * sizeof(char));
+		if (cmp == 0 && mid_name[name_maxlen])
+			cmp = -1;
 		if (cmp < 0) {
 			hi = mid;
 		} else if (cmp > 0) {
@@ -811,12 +833,35 @@ tpp_warning_group_byname(char const *tpp_restrict name) {
 /* Returns the ID of the warning group with the name that is closest to "name"
  * When no warning groups are defined (at all), this will return "TPP_WG_COUNT" */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
-tpp_warning_group_nearest(char const *tpp_restrict name) {
+tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
 	(void)name;
+	(void)name_maxlen;
 	/* TODO */
 	return TPP_WG_COUNT;
 }
 #endif /* TPP_HAVE_WARNINGS */
+
+
+#if TPP_HAVE_CPP_MACROS
+/* Return the hard-coded expansion of the builtin macro linked to "id".
+ * If "id" isn't a builtin keyword, or that keyword doesn't specify a
+ * value for "TPP_BUILTIN_MACRO()", return "NULL" instead. */
+TPP_IMPL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
+tpp_macro_getbuiltin(tpp_token_id id) {
+	switch (id) {
+#define TPP_DEFS
+#define TPP_BUILTIN_MACRO(name, value)                          \
+	case name: {                                                \
+		static TPP_BUILTIN_MACRO_DEFINE(builtin_##name, value); \
+		return (tpp_builtin_macro const *)&builtin_##name;      \
+	}	break;
+#include TPP_CONFIG_DEFS_FILENAME
+#undef TPP_DEFS
+	default: break;
+	}
+	return NULL;
+}
+#endif /* TPP_HAVE_CPP_MACROS */
 
 
 TPP_DECL_END

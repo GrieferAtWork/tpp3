@@ -27,22 +27,25 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
+/* NOTE: "[SOFT_ERROR]" are "temporary" errors that are intended to-be recovered from.
+ *       These errors should be caught & dealt with at appropriate points in the code. */
 typedef enum tpp_errno {
 #define TPP_ISERR(error) ((error) != TPP_EOK)
 	TPP_EOK         = 0,  /* Success */
 	TPP_ENOMEM      = -1, /* tpp_malloc() or tpp_realloc() returned NULL */
 	TPP_EIO         = -2, /* Filesystem I/O operation failed */
-	TPP_ENOENT      = -3, /* No such file or directory */
+	TPP_ENOENT      = -3, /* [SOFT_ERROR] No such file or directory */
 #if TPP_HAVE_FILE_NONBLOCK
-	TPP_EWOULDBLOCK = -4, /* Operation would block, but non-blocking was requested */
+	TPP_EWOULDBLOCK = -4, /* [SOFT_ERROR] Operation would block, but non-blocking was requested */
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
-	TPP_EMASKED     = -5, /* File cannot be opened because it has been masked */
+	TPP_EMASKED     = -5, /* [SOFT_ERROR] File cannot be opened because it has been masked */
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
 	TPP_ELEXERROR   = -6, /* Hard lexer error (usually when too many -Werror were emitted) */
 	TPP_EWARNPRINT  = -7, /* Printer registered for "tpp_lexer_warnf" returned an error */
 #endif /* TPP_HAVE_WARNINGS */
+	TPP_ELAST       = -7, /* Last defined error number */
 } tpp_errno;
 
 #if TPP_HAVE_STRERROR

@@ -45,6 +45,7 @@ TPP_STATIC_ASSERT((tpp_offsetof(tpp_keyword, tk_kwd) -
 
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
+/* Initialize/finalize a given macro-push stack */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self) {
 	tpp_size i;
@@ -55,6 +56,22 @@ tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self) {
 			tpp_macro_decref(mac);
 	}
 	tpp_free(self->tmps_vec);
+}
+
+/* Allocate space for- and return a new (uninitialized) macro-push entry
+ * @return: * :   The newly allocated macro-push entry.
+ * @return: NULL: Out-of-memory (TPP_ENOMEM) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_macro_pushent *TPPCALL
+tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self) {
+	tpp_macro_pushent *new_vec;
+	tpp_size new_cnt = self->tmps_cnt + 1;
+	new_vec = (tpp_macro_pushent *)tpp_realloc(self->tmps_vec, new_cnt * sizeof(tpp_macro_pushent));
+	if tpp_likely(new_vec) {
+		self->tmps_vec = new_vec;
+		self->tmps_cnt = new_cnt;
+		new_vec += new_cnt - 1; /* Return pointer to last (newly allocated / uninitialized) element. */
+	}
+	return new_vec;
 }
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
@@ -86,6 +103,94 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 	return result;
 }
 #endif /* TPP_HAVE_KEYWORD_MISC */
+
+
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+/* Push the current macro-definition of "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out-of-memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_pushmacro(tpp_keyword *tpp_restrict self) {
+	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
+	tpp_macro_pushent *ent;
+	if tpp_unlikely(!misc)
+		goto err_nomem;
+
+	/* Check if the last-pushed entry still correctly describes the state. */
+	if (misc->tkm_macro_pushstack.tmps_cnt) {
+		ent = &misc->tkm_macro_pushstack.tmps_vec[misc->tkm_macro_pushstack.tmps_cnt - 1];
+		tpp_assert(ent->tmpe_count != 0);
+		if (ent->tmpe_macro == self->tk_macro) {
+			++ent->tmpe_count;
+			return TPP_EOK;
+		}
+	}
+
+	/* Must allocate a new push-entry. */
+	ent = tpp_macro_pushstack_append(&misc->tkm_macro_pushstack);
+	if tpp_unlikely(!ent)
+		goto err_nomem;
+
+	/* Initialize the new push-entry */
+	ent->tmpe_count = 1;              /* First time! */
+	ent->tmpe_macro = self->tk_macro; /* Current definition */
+	if (ent->tmpe_macro)
+		tpp_macro_incref(ent->tmpe_macro);
+	return TPP_EOK;
+err_nomem:
+	return TPP_ENOMEM;
+}
+
+
+/* Pop the current macro-definition of "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: Macro-push-stack was already empty (soft-error) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_popmacro(tpp_keyword *tpp_restrict self) {
+	tpp_keyword_misc *misc = self->tk_misc;
+	tpp_macro_pushent *last;
+	if (misc == NULL)
+		goto err_empty;
+	if (misc->tkm_macro_pushstack.tmps_cnt == 0)
+		goto err_empty;
+	last = &misc->tkm_macro_pushstack.tmps_vec[misc->tkm_macro_pushstack.tmps_cnt - 1];
+	tpp_assert(last->tmpe_count != 0);
+
+	/* Restore macro definition */
+	if (last->tmpe_macro)
+		tpp_macro_incref(last->tmpe_macro);
+	if (self->tk_macro)
+		tpp_macro_decref(self->tk_macro);
+	self->tk_macro = last->tmpe_macro;
+
+	/* Update stack-element counter. */
+	--last->tmpe_count;
+	if (last->tmpe_count == 0) {
+		/* Remove stack element. */
+		if (last->tmpe_macro)
+			tpp_refcnt_dec(&last->tmpe_macro->tm_refcnt);
+		--misc->tkm_macro_pushstack.tmps_cnt;
+#ifndef __OPTIMIZE_SIZE__
+		if (misc->tkm_macro_pushstack.tmps_cnt == 0) {
+			/* Free push-stack */
+			tpp_free(misc->tkm_macro_pushstack.tmps_vec);
+			misc->tkm_macro_pushstack.tmps_vec = NULL;
+		} else {
+			/* Try to truncate push-stack */
+			tpp_macro_pushent *new_vec;
+			new_vec = (tpp_macro_pushent *)tpp_tryrealloc(misc->tkm_macro_pushstack.tmps_vec,
+			                                              misc->tkm_macro_pushstack.tmps_cnt *
+			                                              sizeof(tpp_macro_pushent));
+			if tpp_likely(new_vec)
+				misc->tkm_macro_pushstack.tmps_vec = new_vec;
+		}
+#endif /* !__OPTIMIZE_SIZE__ */
+	}
+	return TPP_EOK;
+err_empty:
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
 
 /* Calculate the hash of a given keyword string */
@@ -331,7 +436,7 @@ tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
 
 static TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
-	tpp_assert(self->tk_refcnt == 1 && "Keyword still in use");
+	tpp_assert(!tpp_refcnt_isshared(&self->tk_refcnt) && "Keyword still in use");
 #if TPP_HAVE_CPP_MACROS
 	if (self->tk_macro)
 		tpp_macro_decref(self->tk_macro);
@@ -545,7 +650,7 @@ tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
 	result->tk_misc = NULL;
 #endif /* TPP_HAVE_KEYWORD_MISC */
 	result->tk_hash = hash;
-	result->tk_refcnt = 1;
+	tpp_refcnt_init(&result->tk_refcnt, 1);
 	result->tk_len = len;
 	tpp_memcpy(result->tk_kwd, kwd, len * sizeof(tpp_char));
 	result->tk_kwd[len] = (tpp_char)'\0';
@@ -579,7 +684,7 @@ tpp_keywords_newkeyword_bse_(tpp_keywords *tpp_restrict self,
 	result->tk_misc = NULL;
 #endif /* TPP_HAVE_KEYWORD_MISC */
 	result->tk_hash = hash;
-	result->tk_refcnt = 1;
+	tpp_refcnt_init(&result->tk_refcnt, 1);
 	len_without_bse = tpp_without_bse(result->tk_kwd, kwd, len, file);
 	tpp_assert(len_without_bse <= len);
 	result->tk_len = len_without_bse;
@@ -644,9 +749,9 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 	if (result->tk_macro)
 		tpp_macro_incref(result->tk_macro);
 #endif /* TPP_HAVE_CPP_MACROS */
-	result->tk_hash   = kwd->tk_hash;
-	result->tk_refcnt = 1;
-	result->tk_len    = kwd->tk_len;
+	result->tk_hash = kwd->tk_hash;
+	tpp_refcnt_init(&result->tk_refcnt, 1);
+	result->tk_len = kwd->tk_len;
 	tpp_memcpy(result->tk_kwd, kwd->tk_kwd, (kwd->tk_len + 1) * sizeof(tpp_char));
 	result = tpp_keywords_inskeyword(self, result);
 done:
@@ -865,7 +970,7 @@ got_result_kwd:
 #if TPP_HAVE_KEYWORD_MISC
 		result_kwd->tk_misc = NULL;
 #endif /* TPP_HAVE_KEYWORD_MISC */
-		result_kwd->tk_refcnt = 1;
+		tpp_refcnt_init(&result_kwd->tk_refcnt, 1);
 		result_kwd = tpp_keywords_inskeyword(self, result_kwd);
 		if tpp_unlikely(!result_kwd) {
 			tpp_io_close(handle);
