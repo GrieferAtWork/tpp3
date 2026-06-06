@@ -36,6 +36,15 @@
 TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_MACROS
+
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_PAREN) == TPP_TOK_LPAREN);
+#if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_BRACKET) == TPP_TOK_LBRACKET);
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_BRACE) == TPP_TOK_LBRACE);
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_ANGLE) == TPP_TOK_LANGLE);
+#endif /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
+
+
 /* Perform the expansion of a user-defined "macro", with the lexer's
  * current token set to point at the macro's identifier (meaning that
  * you have to seek ahead in order to find the opening '(' token in
@@ -73,6 +82,7 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self, tpp_macro *macro) {
 		 *          - tpp_file_free(prev_file); // Allocated above, but not actually used
 		 *          - return token->tt_id;      // The keyword-id of the macro
 		 */
+
 		/* TODO: Set-up "file" such that it will read from "body-chunk-string" */
 		tpp_file_free(prev_file);
 		return token->tt_id;
@@ -122,26 +132,26 @@ err_nomem:
 
 /* Support for feature-test-style macros */
 #undef TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS
-#if (TPP_HAVE_CLANG_HAS_ATTRIBUTE ||          \
-     TPP_HAVE_CLANG_HAS_BUILTIN ||            \
-     TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE ||      \
-     TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE || \
-     TPP_HAVE_CLANG_HAS_EXTENSION ||          \
-     TPP_HAVE_CLANG_HAS_FEATURE ||            \
-     TPP_HAVE_CLANG_HAS_C_ATTRIBUTE ||        \
-     TPP_HAVE_CLANG_IS_IDENTIFIER ||          \
-     TPP_HAVE_TPPX_IS_DEPRECATED ||           \
-     TPP_HAVE_TPPX_IS_POISONED)
+#if (TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+     TPP_HAVE_CLANG_MACRO___has_extension ||          \
+     TPP_HAVE_CLANG_MACRO___has_feature ||            \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
+     TPP_HAVE_MACRO___is_identifier ||                \
+     TPP_HAVE_MACRO___is_deprecated ||                \
+     TPP_HAVE_MACRO___is_poisoned)
 #define TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS 1
 #else /* ... */
 #define TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS 0
 #endif /* !... */
 
 #undef TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS
-#if (TPP_HAVE_TPPX_HAS_EXTENSION ||       \
-     TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION || \
-     TPP_HAVE_TPPX_HAS_WARNING ||         \
-     TPP_HAVE_TPPX_HAS_KNOWN_WARNING)
+#if (TPP_HAVE_MACRO___has_extension ||       \
+     TPP_HAVE_MACRO___has_known_extension || \
+     TPP_HAVE_MACRO___has_warning ||         \
+     TPP_HAVE_MACRO___has_known_warning)
 #define TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS 1
 #else /* ... */
 #define TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS 0
@@ -167,13 +177,13 @@ tpp_lexer_handle_string_feature_test_cb(void *arg, tpp_char const *str, tpp_size
 	data = (struct tpp_lexer_handle_string_feature_test_data *)arg;
 	switch (data->tlhsftd_mode) {
 
-#if TPP_HAVE_TPPX_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
-#if TPP_HAVE_TPPX_HAS_EXTENSION
+#if TPP_HAVE_MACRO___has_extension || TPP_HAVE_MACRO___has_known_extension
+#if TPP_HAVE_MACRO___has_extension
 	case TPP_KWD___has_extension:
-#endif /* TPP_HAVE_TPPX_HAS_EXTENSION */
-#if TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
+#endif /* TPP_HAVE_MACRO___has_extension */
+#if TPP_HAVE_MACRO___has_known_extension
 	case TPP_KWD___has_known_extension:
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION */
+#endif /* TPP_HAVE_MACRO___has_known_extension */
 	{
 		tpp_extension_id extension_id;
 		if (length >= 2 && str[0] == '-' && str[1] == 'f') {
@@ -182,30 +192,30 @@ tpp_lexer_handle_string_feature_test_cb(void *arg, tpp_char const *str, tpp_size
 		}
 		extension_id = tpp_extension_byname_ex((char const *)str, length);
 		if ((unsigned int)extension_id < (unsigned int)TPP_EXT_COUNT) {
-#if TPP_HAVE_TPPX_HAS_EXTENSION
+#if TPP_HAVE_MACRO___has_extension
 			if (data->tlhsftd_mode == TPP_KWD___has_extension) {
 				if (tpp_extensions_getid(&data->tlhsftd_lexer->tl_exts, extension_id))
 					data->tlhsftd_expansion[0] = '1';
 			} else
-#endif /* TPP_HAVE_TPPX_HAS_EXTENSION */
-#if TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
+#endif /* TPP_HAVE_MACRO___has_extension */
+#if TPP_HAVE_MACRO___has_known_extension
 			if (data->tlhsftd_mode == TPP_KWD___has_known_extension) {
 				data->tlhsftd_expansion[0] = '1'; /* We only even get here if the extension is known! */
 			} else
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION */
+#endif /* TPP_HAVE_MACRO___has_known_extension */
 			{
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPPX_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION */
+#endif /* TPP_HAVE_MACRO___has_extension || TPP_HAVE_MACRO___has_known_extension */
 
-#if TPP_HAVE_TPPX_HAS_WARNING || TPP_HAVE_TPPX_HAS_KNOWN_WARNING
-#if TPP_HAVE_TPPX_HAS_WARNING
+#if TPP_HAVE_MACRO___has_warning || TPP_HAVE_MACRO___has_known_warning
+#if TPP_HAVE_MACRO___has_warning
 	case TPP_KWD___has_warning:
-#endif /* TPP_HAVE_TPPX_HAS_WARNING */
-#if TPP_HAVE_TPPX_HAS_KNOWN_WARNING
+#endif /* TPP_HAVE_MACRO___has_warning */
+#if TPP_HAVE_MACRO___has_known_warning
 	case TPP_KWD___has_known_warning:
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING */
+#endif /* TPP_HAVE_MACRO___has_known_warning */
 	{
 		tpp_warning_group_id warning_group_id;
 		if (length >= 2 && str[0] == '-' && str[1] == 'W') {
@@ -214,24 +224,24 @@ tpp_lexer_handle_string_feature_test_cb(void *arg, tpp_char const *str, tpp_size
 		}
 		warning_group_id = tpp_warning_group_byname_ex((char const *)str, length);
 		if ((unsigned int)warning_group_id < (unsigned int)TPP_WG_COUNT) {
-#if TPP_HAVE_TPPX_HAS_WARNING
+#if TPP_HAVE_MACRO___has_warning
 			if (data->tlhsftd_mode == TPP_KWD___has_warning) {
 				tpp_warning_context_id ctx_id = tpp_warning_context_id_ofgroup(warning_group_id);
 				tpp_warning_state state = tpp_warnings_getctx(&data->tlhsftd_lexer->tl_warn, ctx_id);
 				if (tpp_warning_state_willemit(state))
 					data->tlhsftd_expansion[0] = '1';
 			} else
-#endif /* TPP_HAVE_TPPX_HAS_WARNING */
-#if TPP_HAVE_TPPX_HAS_KNOWN_WARNING
+#endif /* TPP_HAVE_MACRO___has_warning */
+#if TPP_HAVE_MACRO___has_known_warning
 			if (data->tlhsftd_mode == TPP_KWD___has_known_warning) {
 				data->tlhsftd_expansion[0] = '1'; /* We only even get here if the warning is known! */
 			} else
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING */
+#endif /* TPP_HAVE_MACRO___has_known_warning */
 			{
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPPX_HAS_WARNING || TPP_HAVE_TPPX_HAS_KNOWN_WARNING */
+#endif /* TPP_HAVE_MACRO___has_warning || TPP_HAVE_MACRO___has_known_warning */
 
 	default: break;
 	}
@@ -275,12 +285,12 @@ again_yield:
 #if TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS
 	if (TPP_TOK_ISSTRING(tok)) {
 		tpp_errno error;
-#if TPP_HAVE_CLANG_HAS_EXTENSION
+#if TPP_HAVE_CLANG_MACRO___has_extension
 		if (mode == TPP_KWD___has_extension &&
-		    !tpp_lexer_getext(self, TPP_EXT_TPPX_HAS_EXTENSION))
+		    !tpp_lexer_getext(self, TPP_EXT_MACRO___has_extension))
 			goto seek_end_of_macro;
 #define WANT_seek_end_of_macro
-#endif /* TPP_HAVE_CLANG_HAS_EXTENSION */
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
 
 		/* Parse the string that the user entered. */
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_string_feature_test_cb,
@@ -320,62 +330,64 @@ again_yield:
 
 			/* Determine expansion based on "mode" and "flags" */
 			switch (mode) {
-#if TPP_HAVE_CLANG_HAS_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_attribute
 			case TPP_KWD___has_attribute:
 				mask = TPP_KEYWORD_FLAG_HAS_ATTRIBUTE;
 				break;
-#endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_BUILTIN
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
 			case TPP_KWD___has_builtin:
 				mask = TPP_KEYWORD_FLAG_HAS_BUILTIN;
 				break;
-#endif /* TPP_HAVE_CLANG_HAS_BUILTIN */
-#if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
 			case TPP_KWD___has_cpp_attribute:
 				mask = TPP_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE;
 				break;
-#endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
 			case TPP_KWD___has_declspec_attribute:
 				mask = TPP_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE;
 				break;
-#endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_EXTENSION
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension
 			case TPP_KWD___has_extension:
 				mask = TPP_KEYWORD_FLAG_HAS_EXTENSION;
 				break;
-#endif /* TPP_HAVE_CLANG_HAS_EXTENSION */
-#if TPP_HAVE_CLANG_HAS_FEATURE
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
 			case TPP_KWD___has_feature:
 				mask = TPP_KEYWORD_FLAG_HAS_FEATURE;
 				break;
-#endif /* TPP_HAVE_CLANG_HAS_FEATURE */
-#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute
 			case TPP_KWD___has_c_attribute:
 				mask = TPP_KEYWORD_FLAG_HAS_C_ATTRIBUTE;
 				break;
-#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE */
-#if TPP_HAVE_CLANG_IS_IDENTIFIER
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#if TPP_HAVE_MACRO___is_identifier
 			case TPP_KWD___is_identifier:
-				tpp_feature_test_macro_expansion[0] = TPP_TOK_ISBUILTINKEYWORD(feature_keyword->tk_id) ? '1' : '0';
+				/* Something is considered to be an "identifier" if it's not a builtin keyword. */
+				if (!TPP_TOK_ISBUILTINKEYWORD(feature_keyword->tk_id))
+					tpp_feature_test_macro_expansion[0] = '1';
 				goto after_expansion_mode_assignment;
-#endif /* TPP_HAVE_CLANG_IS_IDENTIFIER */
-#if TPP_HAVE_TPPX_IS_DEPRECATED
+#endif /* TPP_HAVE_MACRO___is_identifier */
+#if TPP_HAVE_MACRO___is_deprecated
 			case TPP_KWD___is_deprecated:
 				mask = TPP_KEYWORD_FLAG_IS_DEPRECATED;
 				break;
-#endif /* TPP_HAVE_TPPX_IS_DEPRECATED */
-#if TPP_HAVE_TPPX_IS_POISONED
+#endif /* TPP_HAVE_MACRO___is_deprecated */
+#if TPP_HAVE_MACRO___is_poisoned
 			case TPP_KWD___is_poisoned:
 				mask = TPP_KEYWORD_FLAG_IS_POISONED;
 				break;
-#endif /* TPP_HAVE_TPPX_IS_POISONED */
+#endif /* TPP_HAVE_MACRO___is_poisoned */
 			default: tpp_unreachable();
 			}
 			tpp_feature_test_macro_expansion[0] = (flags & mask) != 0 ? '1' : '0';
-#if TPP_HAVE_CLANG_IS_IDENTIFIER
+#if TPP_HAVE_MACRO___is_identifier
 after_expansion_mode_assignment:
-#endif /* TPP_HAVE_CLANG_IS_IDENTIFIER */
+#endif /* TPP_HAVE_MACRO___is_identifier */
 			do {
 				tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 				if tpp_unlikely(TPP_TOK_ISERR(tok))
@@ -476,49 +488,146 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	/* Deal with pre-defined macros. */
 	switch (tok) {
 
-		/* CLANG-style feature test macros... */
+
+/************************************************************************/
 #if TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO
-#if TPP_HAVE_CLANG_HAS_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_attribute
 	case TPP_KWD___has_attribute:
-#endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_BUILTIN
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
 	case TPP_KWD___has_builtin:
-#endif /* TPP_HAVE_CLANG_HAS_BUILTIN */
-#if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
 	case TPP_KWD___has_cpp_attribute:
-#endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
 	case TPP_KWD___has_declspec_attribute:
-#endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension || TPP_HAVE_MACRO___has_extension
 	case TPP_KWD___has_extension:
-#endif /* TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION */
-#if TPP_HAVE_CLANG_HAS_FEATURE
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension || TPP_HAVE_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
 	case TPP_KWD___has_feature:
-#endif /* TPP_HAVE_CLANG_HAS_FEATURE */
-#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute
 	case TPP_KWD___has_c_attribute:
-#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE */
-#if TPP_HAVE_CLANG_IS_IDENTIFIER
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#if TPP_HAVE_MACRO___is_identifier
 	case TPP_KWD___is_identifier:
-#endif /* TPP_HAVE_CLANG_IS_IDENTIFIER */
-#if TPP_HAVE_TPPX_IS_DEPRECATED
+#endif /* TPP_HAVE_MACRO___is_identifier */
+#if TPP_HAVE_MACRO___is_deprecated
 	case TPP_KWD___is_deprecated:
-#endif /* TPP_HAVE_TPPX_IS_DEPRECATED */
-#if TPP_HAVE_TPPX_IS_POISONED
+#endif /* TPP_HAVE_MACRO___is_deprecated */
+#if TPP_HAVE_MACRO___is_poisoned
 	case TPP_KWD___is_poisoned:
-#endif /* TPP_HAVE_TPPX_IS_POISONED */
-#if TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
+#endif /* TPP_HAVE_MACRO___is_poisoned */
+#if TPP_HAVE_MACRO___has_known_extension
 	case TPP_KWD___has_known_extension:
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION */
-#if TPP_HAVE_TPPX_HAS_WARNING
+#endif /* TPP_HAVE_MACRO___has_known_extension */
+#if TPP_HAVE_MACRO___has_warning
 	case TPP_KWD___has_warning:
-#endif /* TPP_HAVE_TPPX_HAS_WARNING */
-#if TPP_HAVE_TPPX_HAS_KNOWN_WARNING
+#endif /* TPP_HAVE_MACRO___has_warning */
+#if TPP_HAVE_MACRO___has_known_warning
 	case TPP_KWD___has_known_warning:
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING */
+#endif /* TPP_HAVE_MACRO___has_known_warning */
 		return tpp_lexer_handle_feature_test_macro(self, tok);
 #endif /* TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next
+#if TPP_HAVE_MACRO___has_include
+	case TPP_KWD___has_include:
+#endif /* TPP_HAVE_MACRO___has_include */
+#if TPP_HAVE_MACRO___has_include_next
+	case TPP_KWD___has_include_next:
+#endif /* TPP_HAVE_MACRO___has_include_next */
+	{
+		/* TODO */
+	}	break;
+#endif /* TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__
+#if TPP_HAVE_MACRO___FILE__
+	case TPP_KWD___FILE__:
+#endif /* TPP_HAVE_MACRO___FILE__ */
+#if TPP_HAVE_MACRO___BASE_FILE__
+	case TPP_KWD___BASE_FILE__:
+#endif /* TPP_HAVE_MACRO___BASE_FILE__ */
+	{
+		/* TODO */
+	}	break;
+#endif /* TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_MACRO___LINE__ || TPP_HAVE_MACRO___COLUMN__
+#if TPP_HAVE_MACRO___LINE__
+	case TPP_KWD___LINE__:
+#endif /* TPP_HAVE_MACRO___LINE__ */
+#if TPP_HAVE_MACRO___COLUMN__
+	case TPP_KWD___COLUMN__:
+#endif /* TPP_HAVE_MACRO___COLUMN__ */
+	{
+		/* TODO */
+	}	break;
+#endif /* TPP_HAVE_MACRO___LINE__ || TPP_HAVE_MACRO___COLUMN__ */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_MACRO___TIME__ || TPP_HAVE_MACRO___DATE__ || TPP_HAVE_MACRO___TIMESTAMP__
+#if TPP_HAVE_MACRO___TIME__
+	case TPP_KWD___TIME__:
+#endif /* TPP_HAVE_MACRO___TIME__ */
+#if TPP_HAVE_MACRO___DATE__
+	case TPP_KWD___DATE__:
+#endif /* TPP_HAVE_MACRO___DATE__ */
+#if TPP_HAVE_MACRO___TIMESTAMP__
+	case TPP_KWD___TIMESTAMP__:
+#endif /* TPP_HAVE_MACRO___TIMESTAMP__ */
+	{
+		/* TODO */
+	}	break;
+#endif /* TPP_HAVE_MACRO___TIME__ || TPP_HAVE_MACRO___DATE__ || TPP_HAVE_MACRO___TIMESTAMP__ */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_MACRO___INCLUDE_LEVEL__ || TPP_HAVE_MACRO___INCLUDE_DEPTH__
+#if TPP_HAVE_MACRO___INCLUDE_LEVEL__
+	case TPP_KWD___INCLUDE_LEVEL__:
+#endif /* TPP_HAVE_MACRO___INCLUDE_LEVEL__ */
+#if TPP_HAVE_MACRO___INCLUDE_DEPTH__
+	case TPP_KWD___INCLUDE_DEPTH__:
+#endif /* TPP_HAVE_MACRO___INCLUDE_DEPTH__ */
+	{
+		/* TODO */
+	}	break;
+#endif /* TPP_HAVE_MACRO___INCLUDE_LEVEL__ || TPP_HAVE_MACRO___INCLUDE_DEPTH__ */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_MACRO___COUNTER__
+	case TPP_KWD___COUNTER__:
+		/* TODO */
+		break;
+#endif /* TPP_HAVE_MACRO___COUNTER__ */
+/************************************************************************/
+
+
 
 	default: {
 		/* Check for a pre-defined, builtin macro expansion */

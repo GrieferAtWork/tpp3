@@ -27,123 +27,47 @@
 TPP_DECL_BEGIN
 
 /*[[[deemon
-local TPP_FEATURES = {
-	"TPP_TOK_LF",
-	"TPP_TOK_SPACE",
-	"TPP_TOK_COMMENT",
-	"TPP_TOK_CXX_COMMENT",
-	"TPP_TOK_C_COMMENT",
-	"TPP_TOK_PASCAL_COMMENT",
-	"TPP_TOK_SHELL_COMMENT",
-	"TPP_TOK_ASM_COMMENT",
-	"TPP_TOK_SQL_COMMENT",
-	"TPP_TOK_INT",
-	"TPP_TOK_FLOAT",
-	"TPP_TOK_CHAR",
-	"TPP_TOK_STRING",
-	"TPP_TOK_CXX_RAW_STRING_LITERAL",
-	"TPP_TOK_CXX_WIDE_STRING_LITERAL",
-	"TPP_TOK_CXX_UTF8_STRING_LITERAL",
-	"TPP_TOK_CXX_UTF16_STRING_LITERAL",
-	"TPP_TOK_CXX_UTF32_STRING_LITERAL",
-	"TPP_TOK_RAW_STRING_LITERAL",
-	"TPP_TOK_RAW_CHAR_LITERAL",
-	"TPP_TOK_BLOCK_STRING_LITERAL",
-	"TPP_TOK_BLOCK_CHAR_LITERAL",
-	"TPP_TOK_LANGLE_LANGLE",
-	"TPP_TOK_RANGLE_RANGLE",
-	"TPP_TOK_EQUAL_EQUAL",
-	"TPP_TOK_EXCLAIM_EQUAL",
-	"TPP_TOK_RANGLE_EQUAL",
-	"TPP_TOK_LANGLE_EQUAL",
-	"TPP_TOK_DOT_DOT_DOT",
-	"TPP_TOK_PLUS_EQUAL",
-	"TPP_TOK_MINUS_EQUAL",
-	"TPP_TOK_STAR_EQUAL",
-	"TPP_TOK_SLASH_EQUAL",
-	"TPP_TOK_PERCENT_EQUAL",
-	"TPP_TOK_LANGLE_LANGLE_EQUAL",
-	"TPP_TOK_RANGLE_RANGLE_EQUAL",
-	"TPP_TOK_AMP_EQUAL",
-	"TPP_TOK_PIPE_EQUAL",
-	"TPP_TOK_HAT_EQUAL",
-	"TPP_TOK_STAR_STAR_EQUAL",
-	"TPP_TOK_SLASH_SLASH_EQUAL",
-	"TPP_TOK_AT_EQUAL",
-	"TPP_TOK_POUND_POUND",
-	"TPP_TOK_AMP_AMP",
-	"TPP_TOK_PIPE_PIPE",
-	"TPP_TOK_HAT_HAT",
-	"TPP_TOK_PLUS_PLUS",
-	"TPP_TOK_MINUS_MINUS",
-	"TPP_TOK_STAR_STAR",
-	"TPP_TOK_SLASH_SLASH",
-	"TPP_TOK_TILDE_TILDE",
-	"TPP_TOK_TILDE_EQUAL",
-	"TPP_TOK_MINUS_RANGLE",
-	"TPP_TOK_COLON_EQUAL",
-	"TPP_TOK_COLON_COLON",
-	"TPP_TOK_MINUS_RANGLE_STAR",
-	"TPP_TOK_DOT_STAR",
-	"TPP_TOK_DOT_DOT",
-	"TPP_TOK_LANGLE_RANGLE",
-	"TPP_TOK_LANGLE_LANGLE_LANGLE",
-	"TPP_TOK_RANGLE_RANGLE_RANGLE",
-	"TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL",
-	"TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL",
-	"TPP_TOK_EQUAL_EQUAL_EQUAL",
-	"TPP_TOK_EXCLAIM_EQUAL_EQUAL",
-	"TPP_TOK_QMARK_QMARK",
-	"TPP_TOK_QMARK_EQUAL",
-	"CPP_DIRECTIVES",
-	"CPP_MACROS",
-	"CPP_EXCLAIM",
-	"CPP_BLANK",
-	"CPP_DIGIT_LINE",
-	"CPP_LINE",
-	"CPP_INCLUDE",
-	"CPP_INCLUDE_NEXT",
-	"CPP_IMPORT",
-	"CPP_IF_ELSE_ENDIF",
-	"CPP_DEFINE",
-	"CPP_ASSERT",
-	"CPP_ERROR",
-	"CPP_WARNING",
-	"CPP_IDENT",
-	"CPP_SCSS",
-	"CPP_PRAGMA",
-	"STDC_PRAGMA",
-	"MSVC_PRAGMA",
-};
+import * from deemon;
+local features: {string: string} = Dict();
+for (local line: File.open("config.h", "rb").read().decode("utf-8").splitlines(false)) {
+	local TPP_HAVE_FOO, featureName;
+	try {
+		TPP_HAVE_FOO, featureName = line.rescanf(r'#\s*define\s+(\w+)\s*[^/]+/\*\s*"TPP_FEAT_([^"]+)"')...;
+	} catch (...) {
+		continue;
+	}
+	features["TPP_FEAT_" + featureName] = TPP_HAVE_FOO;
+}
 
-local len = (TPP_FEATURES.each.length > ...);
+local keysLen = (features.keys.each.length > ...);
+local valuesLen = (features.values.each.length > ...);
 print("#undef TPP_HAVE_FEATURES");
-print("#if (", "\\\n     ".join(TPP_FEATURES.map(
-	e -> f"(TPP_HAVE_{e} < 0) ||".ljust(len + 19))).rstrip(" |"), ")");
+print("#if (", "\\\n     ".join(features.values.map(
+	e -> f"({e} < 0) ||".ljust(valuesLen + 10))).rstrip(" |"), ")");
 print("#define TPP_HAVE_FEATURES 1");
 print("#else /" "* ... *" "/");
 print("#define TPP_HAVE_FEATURES 0");
 print("#endif/" "* !... *" "/");
 print();
 print("#if TPP_HAVE_FEATURES");
-print("enum tpp_feature {");
-for (local feat: TPP_FEATURES) {
-	print("#if TPP_HAVE_", feat, " < 0");
-	print("	TPP_FEAT_", feat, ",");
-	print("#endif /" "* TPP_HAVE_", feat, " < 0 *" "/");
+print("typedef enum tpp_feature_id {");
+for (local featureName, TPP_HAVE_FOO: features) {
+	print("#if ", TPP_HAVE_FOO, " < 0");
+	print("	", featureName, ",");
+	print("#endif /" "* ", TPP_HAVE_FOO, " < 0 *" "/");
 }
 print("	TPP_FEAT_COUNT");
-print("};");
+print("} tpp_feature_id;");
 print();
 print("typedef union tpp_features {");
 print("	struct {");
-for (local feat: TPP_FEATURES) {
-	print("#if TPP_HAVE_", feat, " < 0");
-	print("		unsigned int tff_TPP_FEAT_", feat, ": 1;");
-	print("#define _tpp_features_get_TPP_FEAT_", feat, "(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_", feat, ", TPP_HAVE_", feat, " == -1)");
-	print("#else /" "* TPP_HAVE_", feat, " < 0 *" "/");
-	print("#define _tpp_features_get_TPP_FEAT_", feat, "(self) TPP_HAVE_", feat);
-	print("#endif /" "* TPP_HAVE_", feat, " >= 0 *" "/");
+for (local featureName, TPP_HAVE_FOO: features) {
+	print("#if ", TPP_HAVE_FOO, " < 0");
+	print("		unsigned int tff_", featureName, ": 1;");
+	print("#define _tpp_features_get_", featureName, "(self) tpp_expect((self)->tf_flags.tff_", featureName, ", ", TPP_HAVE_FOO, " == -1)");
+	print("#else /" "* ", TPP_HAVE_FOO, " < 0 *" "/");
+	print("#define _tpp_features_get_", featureName, "(self) ", TPP_HAVE_FOO);
+	print("#endif /" "* ", TPP_HAVE_FOO, " >= 0 *" "/");
 }
 print("	} tf_flags;");
 print("	unsigned char ttf_bitset[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];");
@@ -201,8 +125,9 @@ print("#endif /" "* TPP_HAVE_FEATURES *" "/");
      (TPP_HAVE_TPP_TOK_AMP_EQUAL < 0) ||                  \
      (TPP_HAVE_TPP_TOK_PIPE_EQUAL < 0) ||                 \
      (TPP_HAVE_TPP_TOK_HAT_EQUAL < 0) ||                  \
-     (TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0) ||            \
+     (TPP_HAVE_TPP_TOK_SLASH_SLASH < 0) ||                \
      (TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0) ||          \
+     (TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0) ||            \
      (TPP_HAVE_TPP_TOK_AT_EQUAL < 0) ||                   \
      (TPP_HAVE_TPP_TOK_POUND_POUND < 0) ||                \
      (TPP_HAVE_TPP_TOK_AMP_AMP < 0) ||                    \
@@ -211,7 +136,6 @@ print("#endif /" "* TPP_HAVE_FEATURES *" "/");
      (TPP_HAVE_TPP_TOK_PLUS_PLUS < 0) ||                  \
      (TPP_HAVE_TPP_TOK_MINUS_MINUS < 0) ||                \
      (TPP_HAVE_TPP_TOK_STAR_STAR < 0) ||                  \
-     (TPP_HAVE_TPP_TOK_SLASH_SLASH < 0) ||                \
      (TPP_HAVE_TPP_TOK_TILDE_TILDE < 0) ||                \
      (TPP_HAVE_TPP_TOK_TILDE_EQUAL < 0) ||                \
      (TPP_HAVE_TPP_TOK_MINUS_RANGLE < 0) ||               \
@@ -231,30 +155,20 @@ print("#endif /" "* TPP_HAVE_FEATURES *" "/");
      (TPP_HAVE_TPP_TOK_QMARK_EQUAL < 0) ||                \
      (TPP_HAVE_CPP_DIRECTIVES < 0) ||                     \
      (TPP_HAVE_CPP_MACROS < 0) ||                         \
-     (TPP_HAVE_CPP_EXCLAIM < 0) ||                        \
      (TPP_HAVE_CPP_BLANK < 0) ||                          \
      (TPP_HAVE_CPP_DIGIT_LINE < 0) ||                     \
      (TPP_HAVE_CPP_LINE < 0) ||                           \
-     (TPP_HAVE_CPP_INCLUDE < 0) ||                        \
-     (TPP_HAVE_CPP_INCLUDE_NEXT < 0) ||                   \
-     (TPP_HAVE_CPP_IMPORT < 0) ||                         \
      (TPP_HAVE_CPP_IF_ELSE_ENDIF < 0) ||                  \
      (TPP_HAVE_CPP_DEFINE < 0) ||                         \
      (TPP_HAVE_CPP_ASSERT < 0) ||                         \
-     (TPP_HAVE_CPP_ERROR < 0) ||                          \
-     (TPP_HAVE_CPP_WARNING < 0) ||                        \
-     (TPP_HAVE_CPP_IDENT < 0) ||                          \
-     (TPP_HAVE_CPP_SCSS < 0) ||                           \
-     (TPP_HAVE_CPP_PRAGMA < 0) ||                         \
-     (TPP_HAVE_STDC_PRAGMA < 0) ||                        \
-     (TPP_HAVE_MSVC_PRAGMA < 0))
+     (TPP_HAVE_CPP_PRAGMA < 0))
 #define TPP_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_HAVE_FEATURES 0
 #endif/* !... */
 
 #if TPP_HAVE_FEATURES
-enum tpp_feature {
+typedef enum tpp_feature_id {
 #if TPP_HAVE_TPP_TOK_LF < 0
 	TPP_FEAT_TPP_TOK_LF,
 #endif /* TPP_HAVE_TPP_TOK_LF < 0 */
@@ -372,12 +286,15 @@ enum tpp_feature {
 #if TPP_HAVE_TPP_TOK_HAT_EQUAL < 0
 	TPP_FEAT_TPP_TOK_HAT_EQUAL,
 #endif /* TPP_HAVE_TPP_TOK_HAT_EQUAL < 0 */
-#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
-	TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL,
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
+#if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
+	TPP_FEAT_TPP_TOK_SLASH_SLASH,
+#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0
 	TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL,
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0 */
+#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
+	TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL,
+#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
 #if TPP_HAVE_TPP_TOK_AT_EQUAL < 0
 	TPP_FEAT_TPP_TOK_AT_EQUAL,
 #endif /* TPP_HAVE_TPP_TOK_AT_EQUAL < 0 */
@@ -402,9 +319,6 @@ enum tpp_feature {
 #if TPP_HAVE_TPP_TOK_STAR_STAR < 0
 	TPP_FEAT_TPP_TOK_STAR_STAR,
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR < 0 */
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
-	TPP_FEAT_TPP_TOK_SLASH_SLASH,
-#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
 #if TPP_HAVE_TPP_TOK_TILDE_TILDE < 0
 	TPP_FEAT_TPP_TOK_TILDE_TILDE,
 #endif /* TPP_HAVE_TPP_TOK_TILDE_TILDE < 0 */
@@ -462,9 +376,6 @@ enum tpp_feature {
 #if TPP_HAVE_CPP_MACROS < 0
 	TPP_FEAT_CPP_MACROS,
 #endif /* TPP_HAVE_CPP_MACROS < 0 */
-#if TPP_HAVE_CPP_EXCLAIM < 0
-	TPP_FEAT_CPP_EXCLAIM,
-#endif /* TPP_HAVE_CPP_EXCLAIM < 0 */
 #if TPP_HAVE_CPP_BLANK < 0
 	TPP_FEAT_CPP_BLANK,
 #endif /* TPP_HAVE_CPP_BLANK < 0 */
@@ -474,15 +385,6 @@ enum tpp_feature {
 #if TPP_HAVE_CPP_LINE < 0
 	TPP_FEAT_CPP_LINE,
 #endif /* TPP_HAVE_CPP_LINE < 0 */
-#if TPP_HAVE_CPP_INCLUDE < 0
-	TPP_FEAT_CPP_INCLUDE,
-#endif /* TPP_HAVE_CPP_INCLUDE < 0 */
-#if TPP_HAVE_CPP_INCLUDE_NEXT < 0
-	TPP_FEAT_CPP_INCLUDE_NEXT,
-#endif /* TPP_HAVE_CPP_INCLUDE_NEXT < 0 */
-#if TPP_HAVE_CPP_IMPORT < 0
-	TPP_FEAT_CPP_IMPORT,
-#endif /* TPP_HAVE_CPP_IMPORT < 0 */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF < 0
 	TPP_FEAT_CPP_IF_ELSE_ENDIF,
 #endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF < 0 */
@@ -492,29 +394,11 @@ enum tpp_feature {
 #if TPP_HAVE_CPP_ASSERT < 0
 	TPP_FEAT_CPP_ASSERT,
 #endif /* TPP_HAVE_CPP_ASSERT < 0 */
-#if TPP_HAVE_CPP_ERROR < 0
-	TPP_FEAT_CPP_ERROR,
-#endif /* TPP_HAVE_CPP_ERROR < 0 */
-#if TPP_HAVE_CPP_WARNING < 0
-	TPP_FEAT_CPP_WARNING,
-#endif /* TPP_HAVE_CPP_WARNING < 0 */
-#if TPP_HAVE_CPP_IDENT < 0
-	TPP_FEAT_CPP_IDENT,
-#endif /* TPP_HAVE_CPP_IDENT < 0 */
-#if TPP_HAVE_CPP_SCSS < 0
-	TPP_FEAT_CPP_SCSS,
-#endif /* TPP_HAVE_CPP_SCSS < 0 */
 #if TPP_HAVE_CPP_PRAGMA < 0
 	TPP_FEAT_CPP_PRAGMA,
 #endif /* TPP_HAVE_CPP_PRAGMA < 0 */
-#if TPP_HAVE_STDC_PRAGMA < 0
-	TPP_FEAT_STDC_PRAGMA,
-#endif /* TPP_HAVE_STDC_PRAGMA < 0 */
-#if TPP_HAVE_MSVC_PRAGMA < 0
-	TPP_FEAT_MSVC_PRAGMA,
-#endif /* TPP_HAVE_MSVC_PRAGMA < 0 */
 	TPP_FEAT_COUNT
-};
+} tpp_feature_id;
 
 typedef union tpp_features {
 	struct {
@@ -752,18 +636,24 @@ typedef union tpp_features {
 #else /* TPP_HAVE_TPP_TOK_HAT_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_HAT_EQUAL(self) TPP_HAVE_TPP_TOK_HAT_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_HAT_EQUAL >= 0 */
-#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL, TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL == -1)
-#else /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL >= 0 */
+#if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
+		unsigned int tff_TPP_FEAT_TPP_TOK_SLASH_SLASH: 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SLASH_SLASH, TPP_HAVE_TPP_TOK_SLASH_SLASH == -1)
+#else /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) TPP_HAVE_TPP_TOK_SLASH_SLASH
+#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH >= 0 */
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0
 		unsigned int tff_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL: 1;
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL, TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL(self) TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL >= 0 */
+#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
+		unsigned int tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL: 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL, TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL == -1)
+#else /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
+#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_AT_EQUAL < 0
 		unsigned int tff_TPP_FEAT_TPP_TOK_AT_EQUAL: 1;
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_AT_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_AT_EQUAL, TPP_HAVE_TPP_TOK_AT_EQUAL == -1)
@@ -812,12 +702,6 @@ typedef union tpp_features {
 #else /* TPP_HAVE_TPP_TOK_STAR_STAR < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR(self) TPP_HAVE_TPP_TOK_STAR_STAR
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR >= 0 */
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_SLASH_SLASH: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SLASH_SLASH, TPP_HAVE_TPP_TOK_SLASH_SLASH == -1)
-#else /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) TPP_HAVE_TPP_TOK_SLASH_SLASH
-#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH >= 0 */
 #if TPP_HAVE_TPP_TOK_TILDE_TILDE < 0
 		unsigned int tff_TPP_FEAT_TPP_TOK_TILDE_TILDE: 1;
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_TILDE_TILDE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_TILDE_TILDE, TPP_HAVE_TPP_TOK_TILDE_TILDE == -1)
@@ -932,12 +816,6 @@ typedef union tpp_features {
 #else /* TPP_HAVE_CPP_MACROS < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_MACROS(self) TPP_HAVE_CPP_MACROS
 #endif /* TPP_HAVE_CPP_MACROS >= 0 */
-#if TPP_HAVE_CPP_EXCLAIM < 0
-		unsigned int tff_TPP_FEAT_CPP_EXCLAIM: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_EXCLAIM(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_EXCLAIM, TPP_HAVE_CPP_EXCLAIM == -1)
-#else /* TPP_HAVE_CPP_EXCLAIM < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_EXCLAIM(self) TPP_HAVE_CPP_EXCLAIM
-#endif /* TPP_HAVE_CPP_EXCLAIM >= 0 */
 #if TPP_HAVE_CPP_BLANK < 0
 		unsigned int tff_TPP_FEAT_CPP_BLANK: 1;
 #define _tpp_features_get_TPP_FEAT_CPP_BLANK(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_BLANK, TPP_HAVE_CPP_BLANK == -1)
@@ -956,24 +834,6 @@ typedef union tpp_features {
 #else /* TPP_HAVE_CPP_LINE < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_LINE(self) TPP_HAVE_CPP_LINE
 #endif /* TPP_HAVE_CPP_LINE >= 0 */
-#if TPP_HAVE_CPP_INCLUDE < 0
-		unsigned int tff_TPP_FEAT_CPP_INCLUDE: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_INCLUDE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_INCLUDE, TPP_HAVE_CPP_INCLUDE == -1)
-#else /* TPP_HAVE_CPP_INCLUDE < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_INCLUDE(self) TPP_HAVE_CPP_INCLUDE
-#endif /* TPP_HAVE_CPP_INCLUDE >= 0 */
-#if TPP_HAVE_CPP_INCLUDE_NEXT < 0
-		unsigned int tff_TPP_FEAT_CPP_INCLUDE_NEXT: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_INCLUDE_NEXT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_INCLUDE_NEXT, TPP_HAVE_CPP_INCLUDE_NEXT == -1)
-#else /* TPP_HAVE_CPP_INCLUDE_NEXT < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_INCLUDE_NEXT(self) TPP_HAVE_CPP_INCLUDE_NEXT
-#endif /* TPP_HAVE_CPP_INCLUDE_NEXT >= 0 */
-#if TPP_HAVE_CPP_IMPORT < 0
-		unsigned int tff_TPP_FEAT_CPP_IMPORT: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_IMPORT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_IMPORT, TPP_HAVE_CPP_IMPORT == -1)
-#else /* TPP_HAVE_CPP_IMPORT < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_IMPORT(self) TPP_HAVE_CPP_IMPORT
-#endif /* TPP_HAVE_CPP_IMPORT >= 0 */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF < 0
 		unsigned int tff_TPP_FEAT_CPP_IF_ELSE_ENDIF: 1;
 #define _tpp_features_get_TPP_FEAT_CPP_IF_ELSE_ENDIF(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_IF_ELSE_ENDIF, TPP_HAVE_CPP_IF_ELSE_ENDIF == -1)
@@ -992,48 +852,12 @@ typedef union tpp_features {
 #else /* TPP_HAVE_CPP_ASSERT < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_ASSERT(self) TPP_HAVE_CPP_ASSERT
 #endif /* TPP_HAVE_CPP_ASSERT >= 0 */
-#if TPP_HAVE_CPP_ERROR < 0
-		unsigned int tff_TPP_FEAT_CPP_ERROR: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_ERROR(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_ERROR, TPP_HAVE_CPP_ERROR == -1)
-#else /* TPP_HAVE_CPP_ERROR < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_ERROR(self) TPP_HAVE_CPP_ERROR
-#endif /* TPP_HAVE_CPP_ERROR >= 0 */
-#if TPP_HAVE_CPP_WARNING < 0
-		unsigned int tff_TPP_FEAT_CPP_WARNING: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_WARNING(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_WARNING, TPP_HAVE_CPP_WARNING == -1)
-#else /* TPP_HAVE_CPP_WARNING < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_WARNING(self) TPP_HAVE_CPP_WARNING
-#endif /* TPP_HAVE_CPP_WARNING >= 0 */
-#if TPP_HAVE_CPP_IDENT < 0
-		unsigned int tff_TPP_FEAT_CPP_IDENT: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_IDENT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_IDENT, TPP_HAVE_CPP_IDENT == -1)
-#else /* TPP_HAVE_CPP_IDENT < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_IDENT(self) TPP_HAVE_CPP_IDENT
-#endif /* TPP_HAVE_CPP_IDENT >= 0 */
-#if TPP_HAVE_CPP_SCSS < 0
-		unsigned int tff_TPP_FEAT_CPP_SCSS: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_SCSS(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_SCSS, TPP_HAVE_CPP_SCSS == -1)
-#else /* TPP_HAVE_CPP_SCSS < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_SCSS(self) TPP_HAVE_CPP_SCSS
-#endif /* TPP_HAVE_CPP_SCSS >= 0 */
 #if TPP_HAVE_CPP_PRAGMA < 0
 		unsigned int tff_TPP_FEAT_CPP_PRAGMA: 1;
 #define _tpp_features_get_TPP_FEAT_CPP_PRAGMA(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_PRAGMA, TPP_HAVE_CPP_PRAGMA == -1)
 #else /* TPP_HAVE_CPP_PRAGMA < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_PRAGMA(self) TPP_HAVE_CPP_PRAGMA
 #endif /* TPP_HAVE_CPP_PRAGMA >= 0 */
-#if TPP_HAVE_STDC_PRAGMA < 0
-		unsigned int tff_TPP_FEAT_STDC_PRAGMA: 1;
-#define _tpp_features_get_TPP_FEAT_STDC_PRAGMA(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_STDC_PRAGMA, TPP_HAVE_STDC_PRAGMA == -1)
-#else /* TPP_HAVE_STDC_PRAGMA < 0 */
-#define _tpp_features_get_TPP_FEAT_STDC_PRAGMA(self) TPP_HAVE_STDC_PRAGMA
-#endif /* TPP_HAVE_STDC_PRAGMA >= 0 */
-#if TPP_HAVE_MSVC_PRAGMA < 0
-		unsigned int tff_TPP_FEAT_MSVC_PRAGMA: 1;
-#define _tpp_features_get_TPP_FEAT_MSVC_PRAGMA(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_MSVC_PRAGMA, TPP_HAVE_MSVC_PRAGMA == -1)
-#else /* TPP_HAVE_MSVC_PRAGMA < 0 */
-#define _tpp_features_get_TPP_FEAT_MSVC_PRAGMA(self) TPP_HAVE_MSVC_PRAGMA
-#endif /* TPP_HAVE_MSVC_PRAGMA >= 0 */
 	} tf_flags;
 	unsigned char ttf_bitset[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_features;

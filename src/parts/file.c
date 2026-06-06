@@ -779,16 +779,18 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 
 	/* Cannot use cache -> must calculate off of known file-base */
 	switch (self->tf_kind) {
+
 	case TPP_FILE_KIND_IO:
+	case TPP_FILE_KIND_TEXT: {
+		TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
+		                  tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
+		TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
+		                  tpp_offsetof(tpp_file, tf_data.td_text.tft_start_lc));
 		result = self->tf_data.td_io.tff_start_lc;
 		result = tpp_lcinfo_account(self, result, self->tf_chunk->ts_str,
 		                            (tpp_size)(pos - self->tf_chunk->ts_str));
-		break;
-	case TPP_FILE_KIND_TEXT:
-		tpp_lcinfo_init(result, 0, 0);
-		result = tpp_lcinfo_account(self, result, self->tf_chunk->ts_str,
-		                            (tpp_size)(pos - self->tf_chunk->ts_str));
-		break;
+	}	break;
+
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
 		tpp_macro const *macro = self->tf_data.td_macro.tfm_macro;
@@ -838,13 +840,12 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_filename(tpp_file const *tpp_restrict self) {
 	switch (self->tf_kind) {
 
-	case TPP_FILE_KIND_IO: {
-		tpp_keyword const *kwd = self->tf_data.td_io.tff_name;
-		return kwd ? (char const *)kwd->tk_kwd : NULL;
+	case TPP_FILE_KIND_IO:
+	case TPP_FILE_KIND_TEXT: {
+		TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
+		                  tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
+		return self->tf_data.td_io.tff_name;
 	}	break;
-
-	case TPP_FILE_KIND_TEXT:
-		return self->tf_data.td_text.tft_name;
 
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
@@ -864,12 +865,17 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
 tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
 	switch (self->tf_kind) {
 
-	case TPP_FILE_KIND_IO:
+	case TPP_FILE_KIND_IO: {
+		char const *filename;
 #if TPP_HAVE_FILE_NOKWD
 		if (self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD)
 			return NULL; /* Name isn't actually a keyword... */
 #endif /* TPP_HAVE_FILE_NOKWD */
-		return self->tf_data.td_io.tff_name;
+		filename = self->tf_data.td_io.tff_name;
+		if (filename == NULL)
+			return NULL;
+		return (struct tpp_keyword *)(filename - offsetof(struct tpp_keyword, tk_kwd));
+	}	break;
 
 	case TPP_FILE_KIND_TEXT:
 		return NULL;

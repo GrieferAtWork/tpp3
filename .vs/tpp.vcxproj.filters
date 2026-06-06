@@ -75,6 +75,9 @@
     <ClCompile Include="..\src\parts\token-reprtokenid.c">
       <Filter>src\parts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\lexer-seek-rparen.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">

@@ -95,16 +95,17 @@ TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ex(tpp_lexer *tpp_restrict self,
                        /*utf-8*/ char const *filename,
                        void const *text, tpp_size text_size,
-                       tpp_file_encoding encoding)
+                       tpp_lcinfo start_lc, tpp_file_encoding encoding)
 #else /* TPP_HAVE_UNICODE */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ascii(tpp_lexer *tpp_restrict self,
                           /*utf-8*/ char const *filename,
-                          void const *text, tpp_size text_size)
+                          void const *text, tpp_size text_size,
+                          tpp_lcinfo start_lc)
 #endif /* !TPP_HAVE_UNICODE */
 {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file_init_text_ex(file, filename, text, text_size, encoding);
+	tpp_file_init_text_ex(file, filename, text, text_size, start_lc, encoding);
 	_tpp_lexer_init_common(self);
 }
 
@@ -123,12 +124,11 @@ TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
                      tpp_io_handle handle, tpp_file_ioflags ioflags) {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_keyword *filename_kwd = NULL;
-	if (filename != NULL) {
-		filename_kwd = (tpp_keyword *)((char *)filename - offsetof(tpp_keyword, tk_kwd));
-		ioflags |= TPP_HAVE_FILE_NOKWD;
-	}
-	tpp_file_init_io_ex(file, filename_kwd, handle, ioflags);
+	/* It can never be a keyword, since the lexer is only being
+	 * initialized right now (and the keyword would have had to
+	 * be allocated by the lexer) */
+	ioflags |= TPP_FILE_IOFLAGS_NOKWD;
+	tpp_file_init_io_ex(file, filename, handle, ioflags);
 	_tpp_lexer_init_common(self);
 }
 #endif /* TPP_HAVE_LEXER_INIT_IO */

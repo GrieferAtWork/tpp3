@@ -331,7 +331,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_EXCLAIM
 	case '!':
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_EXCLAIM))
+		if (!tpp_lexer_getext(self, TPP_EXT_CPP_EXCLAIM))
 			goto handle_unknown_directive;
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
@@ -372,21 +372,21 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_INCLUDE
 		if (0) {
 	case TPP_KWD_include:
-			if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_INCLUDE))
+			if (!tpp_lexer_getext(self, TPP_EXT_CPP_INCLUDE))
 				goto handle_unknown_directive;
 		}
 #endif /* TPP_HAVE_CPP_INCLUDE */
 #if TPP_HAVE_CPP_INCLUDE_NEXT
 		if (0) {
 	case TPP_KWD_include_next:
-			if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_INCLUDE_NEXT))
+			if (!tpp_lexer_getext(self, TPP_EXT_CPP_INCLUDE_NEXT))
 				goto handle_unknown_directive;
 		}
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT */
 #if TPP_HAVE_CPP_IMPORT
 		if (0) {
 	case TPP_KWD_import:
-			if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IMPORT))
+			if (!tpp_lexer_getext(self, TPP_EXT_CPP_IMPORT))
 				goto handle_unknown_directive;
 		}
 #endif /* TPP_HAVE_CPP_IMPORT */
@@ -479,14 +479,14 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_ERROR
 		if (0) {
 	case TPP_KWD_error:
-			if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_ERROR))
+			if (!tpp_lexer_getext(self, TPP_EXT_CPP_ERROR))
 				goto handle_unknown_directive;
 		}
 #endif /* TPP_HAVE_CPP_ERROR */
 #if TPP_HAVE_CPP_WARNING
 		if (0) {
 	case TPP_KWD_warning:
-			if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_WARNING))
+			if (!tpp_lexer_getext(self, TPP_EXT_CPP_WARNING))
 				goto handle_unknown_directive;
 		}
 #endif /* TPP_HAVE_CPP_WARNING */
@@ -556,27 +556,15 @@ again_yield_directive_iter:
 
 
 /************************************************************************/
-#if TPP_HAVE_CPP_IDENT
+#if TPP_HAVE_CPP_IDENT_SCSS
 	case TPP_KWD_ident:
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IDENT))
-			goto handle_unknown_directive;
-		/* TODO */
-		goto seek_end_of_line;
-#define WANT_seek_end_of_line
-#endif /* TPP_HAVE_CPP_IDENT */
-/************************************************************************/
-
-
-
-/************************************************************************/
-#if TPP_HAVE_CPP_SCSS
 	case TPP_KWD_scss:
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_SCSS))
+		if (!tpp_lexer_getext(self, TPP_EXT_CPP_IDENT_SCSS))
 			goto handle_unknown_directive;
 		/* TODO */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
-#endif /* TPP_HAVE_CPP_SCSS */
+#endif /* TPP_HAVE_CPP_IDENT_SCSS */
 /************************************************************************/
 
 

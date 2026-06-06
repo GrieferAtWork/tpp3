@@ -315,7 +315,7 @@ tpp_warnings_invoke_(tpp_warnings const *tpp_restrict self, tpp_warning_id warni
 	groups = tpp_warning_getgroups(warning_id);
 
 	result->twii_ctx_id = TPP_WC_COUNT;
-	result->twii_state  = TPP_WSTATE_DISABLED;
+	result->twii_state  = TPP_WSTATE_WARN; /* Default behavior for warnings without context IDs */
 	for (i = 0; (unsigned int)groups[i] < (unsigned int)TPP_WG_COUNT; ++i) {
 		tpp_warning_context_id ctx_id = tpp_warning_context_id_ofgroup(groups[i]);
 		tpp_warning_state state = tpp_warnings_getctx(self, ctx_id);

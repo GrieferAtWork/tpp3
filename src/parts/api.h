@@ -115,9 +115,9 @@
 #endif /* !__SIZEOF_INT__ */
 #endif /* !__SIZEOF_INT__ */
 
-#define TPP_PREPROCESSOR_VERSION 300 /* Preprocessor version. */
-#define TPP_API_VERSION          300 /* Api version (Version of this api). */
-
+#define TPP_PREPROCESSOR_VERSION     300 /* Preprocessor version. */
+#define TPP_API_VERSION              300 /* Api version (Version of this api). */
+#define TPP_PREPROCESSOR_VERSION_STR "300"
 
 /* The standard calling convention used by TPP APIs */
 #ifndef TPPCALL
@@ -159,6 +159,12 @@
 #ifndef TPP_RETNONNULL
 #define TPP_RETNONNULL /* nothing */
 #endif /* !TPP_RETNONNULL */
+#ifndef TPP_PURECALL
+#define TPP_PURECALL /* nothing */
+#endif /* !TPP_PURECALL */
+#ifndef TPP_CONSTCALL
+#define TPP_CONSTCALL /* nothing */
+#endif /* !TPP_CONSTCALL */
 #ifndef TPP_NOINLINE
 #ifdef _MSC_VER
 #define TPP_NOINLINE __declspec(noinline)
@@ -388,8 +394,8 @@ typedef struct {
 #define tpp_refcnt_atomic_dec(p) (void)tpp_refcnt_atomic_decfetch(p)
 #endif /* !tpp_refcnt_atomic_dec */
 
-#ifndef tpp_once
 /* WARNING: Multi-threaded applications must override this */
+#ifndef tpp_once
 #define tpp_once(expr)             \
 	do {                           \
 		static int _to_didrun = 0; \
@@ -398,9 +404,7 @@ typedef struct {
 			expr;                  \
 		}                          \
 	} while (0)
-
 #endif /* !tpp_once */
-
 
 TPP_DECL_END
 

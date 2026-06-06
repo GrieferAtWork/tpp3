@@ -862,14 +862,14 @@ done:
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
 tpp_keywords_openfile_ex(/*1..1*/ tpp_keywords *tpp_restrict self,
-                         /*0..1*/ tpp_keyword const *tpp_restrict relative_to,
+                         /*0..1*/ char const *tpp_restrict relative_to,
                          /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
                          /*1..1*/ tpp_file *tpp_restrict out_file,
                          tpp_keyword_flags mask_flags)
 #else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
 tpp_keywords_openfile(/*1..1*/ tpp_keywords *tpp_restrict self,
-                      /*0..1*/ tpp_keyword const *tpp_restrict relative_to,
+                      /*0..1*/ char const *tpp_restrict relative_to,
                       /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
                       /*1..1*/ tpp_file *tpp_restrict out_file)
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
@@ -899,8 +899,8 @@ without_relative_to:
 	} else {
 		tpp_keyword *new_result_kwd;
 		tpp_size rel_size, whole_size;
-		char const *rel_base = (char const *)relative_to->tk_kwd;
-		char const *last_sep = rel_base + relative_to->tk_len;
+		char const *rel_base = relative_to;
+		char const *last_sep = rel_base + tpp_strlen(relative_to);
 		char *dst_base, *dst_iter, *dst_end;
 		while (last_sep > rel_base && last_sep[-1] != TPP_FS_SEP)
 			--last_sep;
@@ -979,7 +979,7 @@ got_result_kwd:
 	}
 
 	/* Initialize "out_file" */
-	tpp_file_init_io(out_file, result_kwd, handle);
+	tpp_file_init_io(out_file, (char const *)result_kwd->tk_kwd, handle);
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;

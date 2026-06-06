@@ -208,16 +208,17 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ex(tpp_lexer *tpp_restrict self,
                        /*utf-8*/ char const *filename,
                        void const *text, tpp_size text_size,
-                       tpp_file_encoding encoding);
-#define tpp_lexer_init_text_ascii(self, filename, text, text_size) \
-	tpp_lexer_init_text_ex(self, filename, text, text_size, TPP_FILE_ENCODING_ASCII)
-#define tpp_lexer_init_text_utf8(self, filename, text, text_size) \
-	tpp_lexer_init_text_ex(self, filename, text, text_size, TPP_FILE_ENCODING_FORCE_UTF8)
+                       tpp_lcinfo start_lc, tpp_file_encoding encoding);
+#define tpp_lexer_init_text_ascii(self, filename, text, text_size, start_lc) \
+	tpp_lexer_init_text_ex(self, filename, text, text_size, start_lc, TPP_FILE_ENCODING_ASCII)
+#define tpp_lexer_init_text_utf8(self, filename, text, text_size, start_lc) \
+	tpp_lexer_init_text_ex(self, filename, text, text_size, start_lc, TPP_FILE_ENCODING_FORCE_UTF8)
 #else /* TPP_HAVE_UNICODE */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ascii(tpp_lexer *tpp_restrict self,
                           /*utf-8*/ char const *filename,
-                          void const *text, tpp_size text_size);
+                          void const *text, tpp_size text_size,
+                       tpp_lcinfo start_lc);
 #endif /* !TPP_HAVE_UNICODE */
 
 #if TPP_HAVE_LEXER_INIT_IO
@@ -486,6 +487,85 @@ tpp_lexer_skip_blocking(tpp_lexer *tpp_restrict self, tpp_token_id tok);
 #define tpp_lexer_skip_blocking(self, tok) tpp_lexer_skip(self, tok)
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 #endif /* TPP_HAVE_LEXER_SKIP */
+
+
+#if TPP_HAVE_LEXER_SEEK_RPAREN
+typedef struct tpp_lexer_arginfo {
+	/* NOTE: Leading/trailing whitespace in arguments is controlled by "TPP_HAVE_MACRO_ARGUMENT_WHITESPACE" */
+	tpp_char const *tlai_start; /* [1..1][<= tlai_end] Pointer to argument start text data */
+	tpp_char const *tlai_end;   /* [1..1][>= tlai_start] Pointer to argument end text data */
+} tpp_lexer_arginfo;
+
+
+#define TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL  0x0000
+#define TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS 0x0001 /* Store varargs info in p_argv[IN(*p_argc) - 1] */
+
+/* Find the position of the next unmatched ')'-token, gathering information
+ * about ranges of ','-token-separated text-sequences along the way.
+ *
+ * NOTE: This function automatically handles "TPP_TOK_EWOULDBLOCK" (meaning it always blocks)
+ *
+ * @param: p_pos: [in/out]  In:  Pointer to first character to start checking for ')'
+ *                          Out: Pointer to the trailing ')', or EOF
+ *                               if end-of-file was reached first, or
+ *                               in case of TPP_TOK_EWOULDBLOCK.
+ *                          WARNING: must DIFFER from "&tpp_lexer_gettoken(self)->tt_end"!
+ * @param: p_argv: [out]    Output buffer for the bounds of macro
+ *                          arguments encountered along the way.
+ *                          The size of this buffer is IN(*p_argc)
+ * @param: p_argc: [in/out] In:  Size of provided "p_argv" buffer (in elements)
+ *                          Out: Number of arguments actually encountered. May
+ *                               be set to a number greater tha IN(*p_argc), in
+ *                               which case only info about the first IN(*p_argc)
+ *                               arguments is actually returned. But note the
+ *                               `TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS' flag, which
+ *                               causes the last element of `p_argv' to span up
+ *                               to the closing ')'
+ * @param: opt_function_name_for_messages:
+ *                          Function name for too-many-arguments/end-of-params message
+ * @param: flags:           Set of `TPP_LEXER_SEEK_RPAREN_FLAG_*'
+ *
+ * @return: TPP_TOK_EOF:         EOF was encountered before an unmatched ')' was found
+ * @return: TPP_TOK_RPAREN:      Unmatched closing ')' was encountered
+ * @return: TPP_TOK_ENOMEM:      Out of memory
+ * @return: TPP_TOK_EIO:         I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR:   Lexer error
+ * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
+#define tpp_lexer_seek_rparen(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags) \
+	tpp_lexer_seek_rparen_ex(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags, TPP_TOK_LPAREN)
+#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
+tpp_lexer_seek_rparen(tpp_lexer *tpp_restrict self,
+                      tpp_char const **tpp_restrict p_pos,
+                      tpp_lexer_arginfo *tpp_restrict p_argv,
+                      tpp_size *tpp_restrict p_argc,
+                      char const *opt_function_name_for_messages,
+                      unsigned int flags);
+#if TPP_BUILDING
+#define tpp_lexer_seek_rparen_ex(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags, lparen_kind) \
+	tpp_lexer_seek_rparen(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags)
+#endif /* TPP_BUILDING */
+#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+
+/* Same as `tpp_lexer_seek_rparen()', but also able to accept alternate
+ * parenthesis, depending on "lparen_kind"
+ * @param: lparen_kind: One of 'TPP_TOK_LPAREN', 'TPP_TOK_LBRACKET',
+ *                      'TPP_TOK_LBRACE' or 'TPP_TOK_LANGLE'.
+ * @return: * : See `tpp_lexer_seek_rparen()' */
+#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
+tpp_lexer_seek_rparen_ex(tpp_lexer *tpp_restrict self,
+                         tpp_char const **tpp_restrict p_pos,
+                         tpp_lexer_arginfo *tpp_restrict p_argv,
+                         tpp_size *tpp_restrict p_argc,
+                         char const *opt_function_name_for_messages,
+                         unsigned int flags,
+                         tpp_token_id lparen_kind);
+#endif /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+#endif /* TPP_HAVE_LEXER_SEEK_RPAREN */
+
+
 
 
 

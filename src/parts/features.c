@@ -30,22 +30,24 @@ TPP_DECL_BEGIN
 
 /*[[[deemon
 import * from deemon;
-local TPP_FEATURES = File.open("features.h", "rb").read()
-	.rescanf(r".*TPP_FEATURES\s*=\s*\{([^}]*)\}")
-	.first
-	.strip()
-	.split(",")
-	.map(e -> e.strip().decode("c-escape"))
-	.filter(e -> e)
-	.frozen;
-local len = (TPP_FEATURES.each.length > ...);
+local features: {string: string} = Dict();
+for (local line: File.open("config.h", "rb").read().decode("utf-8").splitlines(false)) {
+	local TPP_HAVE_FOO, featureName;
+	try {
+		TPP_HAVE_FOO, featureName = line.rescanf(r'#\s*define\s+(\w+)\s*[^/]+/\*\s*"TPP_FEAT_([^"]+)"')...;
+	} catch (...) {
+		continue;
+	}
+	features["TPP_FEAT_" + featureName] = TPP_HAVE_FOO;
+}
 print("#if TPP_HAVE_FEATURES");
 print("TPP_CONST_IMPL tpp_features const tpp_features_default = {");
 print("	/" "* .tf_flags = *" "/ {");
-for (local feat: TPP_FEATURES) {
-	print("#if TPP_HAVE_", feat, " < 0");
-	print("		/" "* .tff_TPP_FEAT_", feat, " " * (len - #feat), " = *" "/ TPP_HAVE_", feat, " == -1,");
-	print("#endif /" "* TPP_HAVE_", feat, " < 0 *" "/");
+local keysLen = (features.keys.each.length > ...);
+for (local featureName, TPP_HAVE_FOO: features) {
+	print("#if ", TPP_HAVE_FOO, " < 0");
+	print("		/" "* .tff_", featureName, " " * (keysLen - #featureName), " = *" "/ ", TPP_HAVE_FOO, " == -1,");
+	print("#endif /" "* ", TPP_HAVE_FOO, " < 0 *" "/");
 }
 print("	}");
 print("};");
@@ -171,12 +173,15 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_HAVE_TPP_TOK_HAT_EQUAL < 0
 		/* .tff_TPP_FEAT_TPP_TOK_HAT_EQUAL                  = */ TPP_HAVE_TPP_TOK_HAT_EQUAL == -1,
 #endif /* TPP_HAVE_TPP_TOK_HAT_EQUAL < 0 */
-#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
-		/* .tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL            = */ TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL == -1,
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
+#if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
+		/* .tff_TPP_FEAT_TPP_TOK_SLASH_SLASH                = */ TPP_HAVE_TPP_TOK_SLASH_SLASH == -1,
+#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0
 		/* .tff_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL          = */ TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL == -1,
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0 */
+#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
+		/* .tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL            = */ TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL == -1,
+#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
 #if TPP_HAVE_TPP_TOK_AT_EQUAL < 0
 		/* .tff_TPP_FEAT_TPP_TOK_AT_EQUAL                   = */ TPP_HAVE_TPP_TOK_AT_EQUAL == -1,
 #endif /* TPP_HAVE_TPP_TOK_AT_EQUAL < 0 */
@@ -201,9 +206,6 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_HAVE_TPP_TOK_STAR_STAR < 0
 		/* .tff_TPP_FEAT_TPP_TOK_STAR_STAR                  = */ TPP_HAVE_TPP_TOK_STAR_STAR == -1,
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR < 0 */
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
-		/* .tff_TPP_FEAT_TPP_TOK_SLASH_SLASH                = */ TPP_HAVE_TPP_TOK_SLASH_SLASH == -1,
-#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
 #if TPP_HAVE_TPP_TOK_TILDE_TILDE < 0
 		/* .tff_TPP_FEAT_TPP_TOK_TILDE_TILDE                = */ TPP_HAVE_TPP_TOK_TILDE_TILDE == -1,
 #endif /* TPP_HAVE_TPP_TOK_TILDE_TILDE < 0 */
@@ -261,9 +263,6 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_HAVE_CPP_MACROS < 0
 		/* .tff_TPP_FEAT_CPP_MACROS                         = */ TPP_HAVE_CPP_MACROS == -1,
 #endif /* TPP_HAVE_CPP_MACROS < 0 */
-#if TPP_HAVE_CPP_EXCLAIM < 0
-		/* .tff_TPP_FEAT_CPP_EXCLAIM                        = */ TPP_HAVE_CPP_EXCLAIM == -1,
-#endif /* TPP_HAVE_CPP_EXCLAIM < 0 */
 #if TPP_HAVE_CPP_BLANK < 0
 		/* .tff_TPP_FEAT_CPP_BLANK                          = */ TPP_HAVE_CPP_BLANK == -1,
 #endif /* TPP_HAVE_CPP_BLANK < 0 */
@@ -273,15 +272,6 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_HAVE_CPP_LINE < 0
 		/* .tff_TPP_FEAT_CPP_LINE                           = */ TPP_HAVE_CPP_LINE == -1,
 #endif /* TPP_HAVE_CPP_LINE < 0 */
-#if TPP_HAVE_CPP_INCLUDE < 0
-		/* .tff_TPP_FEAT_CPP_INCLUDE                        = */ TPP_HAVE_CPP_INCLUDE == -1,
-#endif /* TPP_HAVE_CPP_INCLUDE < 0 */
-#if TPP_HAVE_CPP_INCLUDE_NEXT < 0
-		/* .tff_TPP_FEAT_CPP_INCLUDE_NEXT                   = */ TPP_HAVE_CPP_INCLUDE_NEXT == -1,
-#endif /* TPP_HAVE_CPP_INCLUDE_NEXT < 0 */
-#if TPP_HAVE_CPP_IMPORT < 0
-		/* .tff_TPP_FEAT_CPP_IMPORT                         = */ TPP_HAVE_CPP_IMPORT == -1,
-#endif /* TPP_HAVE_CPP_IMPORT < 0 */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF < 0
 		/* .tff_TPP_FEAT_CPP_IF_ELSE_ENDIF                  = */ TPP_HAVE_CPP_IF_ELSE_ENDIF == -1,
 #endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF < 0 */
@@ -291,27 +281,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_HAVE_CPP_ASSERT < 0
 		/* .tff_TPP_FEAT_CPP_ASSERT                         = */ TPP_HAVE_CPP_ASSERT == -1,
 #endif /* TPP_HAVE_CPP_ASSERT < 0 */
-#if TPP_HAVE_CPP_ERROR < 0
-		/* .tff_TPP_FEAT_CPP_ERROR                          = */ TPP_HAVE_CPP_ERROR == -1,
-#endif /* TPP_HAVE_CPP_ERROR < 0 */
-#if TPP_HAVE_CPP_WARNING < 0
-		/* .tff_TPP_FEAT_CPP_WARNING                        = */ TPP_HAVE_CPP_WARNING == -1,
-#endif /* TPP_HAVE_CPP_WARNING < 0 */
-#if TPP_HAVE_CPP_IDENT < 0
-		/* .tff_TPP_FEAT_CPP_IDENT                          = */ TPP_HAVE_CPP_IDENT == -1,
-#endif /* TPP_HAVE_CPP_IDENT < 0 */
-#if TPP_HAVE_CPP_SCSS < 0
-		/* .tff_TPP_FEAT_CPP_SCSS                           = */ TPP_HAVE_CPP_SCSS == -1,
-#endif /* TPP_HAVE_CPP_SCSS < 0 */
 #if TPP_HAVE_CPP_PRAGMA < 0
 		/* .tff_TPP_FEAT_CPP_PRAGMA                         = */ TPP_HAVE_CPP_PRAGMA == -1,
 #endif /* TPP_HAVE_CPP_PRAGMA < 0 */
-#if TPP_HAVE_STDC_PRAGMA < 0
-		/* .tff_TPP_FEAT_STDC_PRAGMA                        = */ TPP_HAVE_STDC_PRAGMA == -1,
-#endif /* TPP_HAVE_STDC_PRAGMA < 0 */
-#if TPP_HAVE_MSVC_PRAGMA < 0
-		/* .tff_TPP_FEAT_MSVC_PRAGMA                        = */ TPP_HAVE_MSVC_PRAGMA == -1,
-#endif /* TPP_HAVE_MSVC_PRAGMA < 0 */
 	}
 };
 #endif /* TPP_HAVE_FEATURES */

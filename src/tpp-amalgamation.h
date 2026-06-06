@@ -136,26 +136,26 @@ TPP_KWD(TPP_KWD_error, "error")
 #define TPP_KWD_warning TPP_KWD_warning
 TPP_KWD(TPP_KWD_warning, "warning")
 #endif /* TPP_HAVE_CPP_WARNING */
-#if TPP_HAVE_CPP_IDENT
+#if TPP_HAVE_CPP_IDENT_SCSS
 #define TPP_KWD_ident TPP_KWD_ident
 TPP_KWD(TPP_KWD_ident, "ident")
-#endif /* TPP_HAVE_CPP_IDENT */
-#if TPP_HAVE_CPP_SCSS
+#endif /* TPP_HAVE_CPP_IDENT_SCSS */
+#if TPP_HAVE_CPP_IDENT_SCSS
 #define TPP_KWD_scss TPP_KWD_scss
 TPP_KWD(TPP_KWD_scss, "scss")
-#endif /* TPP_HAVE_CPP_SCSS */
+#endif /* TPP_HAVE_CPP_IDENT_SCSS */
 #if TPP_HAVE_CPP_PRAGMA
 #define TPP_KWD_pragma TPP_KWD_pragma
 TPP_KWD(TPP_KWD_pragma, "pragma")
 #endif /* TPP_HAVE_CPP_PRAGMA */
-#if TPP_HAVE_STDC_PRAGMA
+#if TPP_HAVE_MACRO__Pragma
 #define TPP_KWD__Pragma TPP_KWD__Pragma
 TPP_KWD(TPP_KWD__Pragma, "_Pragma")
-#endif /* TPP_HAVE_STDC_PRAGMA */
-#if TPP_HAVE_MSVC_PRAGMA
+#endif /* TPP_HAVE_MACRO__Pragma */
+#if TPP_HAVE_MACRO___pragma
 #define TPP_KWD___pragma TPP_KWD___pragma
 TPP_KWD(TPP_KWD___pragma, "__pragma")
-#endif /* TPP_HAVE_MSVC_PRAGMA */
+#endif /* TPP_HAVE_MACRO___pragma */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 #define TPP_KWD_push_macro TPP_KWD_push_macro
 TPP_KWD(TPP_KWD_push_macro, "push_macro")
@@ -168,160 +168,193 @@ TPP_KWD(TPP_KWD_pop_macro, "pop_macro")
 #define TPP_KWD_once TPP_KWD_once
 TPP_KWD(TPP_KWD_once, "once")
 #endif /* TPP_HAVE_PRAGMA_ONCE */
-#if TPP_HAVE_CLANG_HAS_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_attribute
 #define TPP_KWD___has_attribute TPP_KWD___has_attribute
 TPP_KWD(TPP_KWD___has_attribute, "__has_attribute")
-#endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_BUILTIN
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
 #define TPP_KWD___has_builtin TPP_KWD___has_builtin
 TPP_KWD(TPP_KWD___has_builtin, "__has_builtin")
-#endif /* TPP_HAVE_CLANG_HAS_BUILTIN */
-#if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
 #define TPP_KWD___has_cpp_attribute TPP_KWD___has_cpp_attribute
 TPP_KWD(TPP_KWD___has_cpp_attribute, "__has_cpp_attribute")
-#endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
 #define TPP_KWD___has_declspec_attribute TPP_KWD___has_declspec_attribute
 TPP_KWD(TPP_KWD___has_declspec_attribute, "__has_declspec_attribute")
-#endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension || TPP_HAVE_MACRO___has_extension
 #define TPP_KWD___has_extension TPP_KWD___has_extension
 TPP_KWD(TPP_KWD___has_extension, "__has_extension")
-#endif /* TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION */
-#if TPP_HAVE_CLANG_HAS_FEATURE
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension || TPP_HAVE_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
 #define TPP_KWD___has_feature TPP_KWD___has_feature
 TPP_KWD(TPP_KWD___has_feature, "__has_feature")
-#endif /* TPP_HAVE_CLANG_HAS_FEATURE */
-#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute
 #define TPP_KWD___has_c_attribute TPP_KWD___has_c_attribute
 TPP_KWD(TPP_KWD___has_c_attribute, "__has_c_attribute")
-#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE */
-#if TPP_HAVE_CLANG_IS_IDENTIFIER
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#if TPP_HAVE_MACRO___is_identifier
 #define TPP_KWD___is_identifier TPP_KWD___is_identifier
 TPP_KWD(TPP_KWD___is_identifier, "__is_identifier")
-#endif /* TPP_HAVE_CLANG_IS_IDENTIFIER */
-#if TPP_HAVE_TPPX_IS_DEPRECATED
+#endif /* TPP_HAVE_MACRO___is_identifier */
+#if TPP_HAVE_MACRO___is_deprecated
 #define TPP_KWD___is_deprecated TPP_KWD___is_deprecated
 TPP_KWD(TPP_KWD___is_deprecated, "__is_deprecated")
-#endif /* TPP_HAVE_TPPX_IS_DEPRECATED */
-#if TPP_HAVE_TPPX_IS_POISONED
+#endif /* TPP_HAVE_MACRO___is_deprecated */
+#if TPP_HAVE_MACRO___is_poisoned
 #define TPP_KWD___is_poisoned TPP_KWD___is_poisoned
 TPP_KWD(TPP_KWD___is_poisoned, "__is_poisoned")
-#endif /* TPP_HAVE_TPPX_IS_POISONED */
-#if TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
+#endif /* TPP_HAVE_MACRO___is_poisoned */
+#if TPP_HAVE_MACRO___has_known_extension
 #define TPP_KWD___has_known_extension TPP_KWD___has_known_extension
 TPP_KWD(TPP_KWD___has_known_extension, "__has_known_extension")
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION */
-#if TPP_HAVE_TPPX_HAS_WARNING
+#endif /* TPP_HAVE_MACRO___has_known_extension */
+#if TPP_HAVE_MACRO___has_warning
 #define TPP_KWD___has_warning TPP_KWD___has_warning
 TPP_KWD(TPP_KWD___has_warning, "__has_warning")
-#endif /* TPP_HAVE_TPPX_HAS_WARNING */
-#if TPP_HAVE_TPPX_HAS_KNOWN_WARNING
+#endif /* TPP_HAVE_MACRO___has_warning */
+#if TPP_HAVE_MACRO___has_known_warning
 #define TPP_KWD___has_known_warning TPP_KWD___has_known_warning
 TPP_KWD(TPP_KWD___has_known_warning, "__has_known_warning")
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING */
+#endif /* TPP_HAVE_MACRO___has_known_warning */
 #if TPP_HAVE_CPP_MACROS
 #define TPP_KWD___TPP_VERSION__ TPP_KWD___TPP_VERSION__
 TPP_KWD(TPP_KWD___TPP_VERSION__, "__TPP_VERSION__")
 #endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_MACRO___has_include
+#define TPP_KWD___has_include TPP_KWD___has_include
+TPP_KWD(TPP_KWD___has_include, "__has_include")
+#endif /* TPP_HAVE_MACRO___has_include */
+#if TPP_HAVE_MACRO___has_include_next
+#define TPP_KWD___has_include_next TPP_KWD___has_include_next
+TPP_KWD(TPP_KWD___has_include_next, "__has_include_next")
+#endif /* TPP_HAVE_MACRO___has_include_next */
+#if TPP_HAVE_MACRO___FILE__
+#define TPP_KWD___FILE__ TPP_KWD___FILE__
+TPP_KWD(TPP_KWD___FILE__, "__FILE__")
+#endif /* TPP_HAVE_MACRO___FILE__ */
+#if TPP_HAVE_MACRO___LINE__
+#define TPP_KWD___LINE__ TPP_KWD___LINE__
+TPP_KWD(TPP_KWD___LINE__, "__LINE__")
+#endif /* TPP_HAVE_MACRO___LINE__ */
+#if TPP_HAVE_MACRO___TIME__
+#define TPP_KWD___TIME__ TPP_KWD___TIME__
+TPP_KWD(TPP_KWD___TIME__, "__TIME__")
+#endif /* TPP_HAVE_MACRO___TIME__ */
+#if TPP_HAVE_MACRO___DATE__
+#define TPP_KWD___DATE__ TPP_KWD___DATE__
+TPP_KWD(TPP_KWD___DATE__, "__DATE__")
+#endif /* TPP_HAVE_MACRO___DATE__ */
+#if TPP_HAVE_MACRO___COLUMN__
+#define TPP_KWD___COLUMN__ TPP_KWD___COLUMN__
+TPP_KWD(TPP_KWD___COLUMN__, "__COLUMN__")
+#endif /* TPP_HAVE_MACRO___COLUMN__ */
+#if TPP_HAVE_MACRO___BASE_FILE__
+#define TPP_KWD___BASE_FILE__ TPP_KWD___BASE_FILE__
+TPP_KWD(TPP_KWD___BASE_FILE__, "__BASE_FILE__")
+#endif /* TPP_HAVE_MACRO___BASE_FILE__ */
+#if TPP_HAVE_MACRO___INCLUDE_LEVEL__
+#define TPP_KWD___INCLUDE_LEVEL__ TPP_KWD___INCLUDE_LEVEL__
+TPP_KWD(TPP_KWD___INCLUDE_LEVEL__, "__INCLUDE_LEVEL__")
+#endif /* TPP_HAVE_MACRO___INCLUDE_LEVEL__ */
+#if TPP_HAVE_MACRO___INCLUDE_DEPTH__
+#define TPP_KWD___INCLUDE_DEPTH__ TPP_KWD___INCLUDE_DEPTH__
+TPP_KWD(TPP_KWD___INCLUDE_DEPTH__, "__INCLUDE_DEPTH__")
+#endif /* TPP_HAVE_MACRO___INCLUDE_DEPTH__ */
+#if TPP_HAVE_MACRO___COUNTER__
+#define TPP_KWD___COUNTER__ TPP_KWD___COUNTER__
+TPP_KWD(TPP_KWD___COUNTER__, "__COUNTER__")
+#endif /* TPP_HAVE_MACRO___COUNTER__ */
+#if TPP_HAVE_MACRO___TIMESTAMP__
+#define TPP_KWD___TIMESTAMP__ TPP_KWD___TIMESTAMP__
+TPP_KWD(TPP_KWD___TIMESTAMP__, "__TIMESTAMP__")
+#endif /* TPP_HAVE_MACRO___TIMESTAMP__ */
 /*[[[end]]]*/
 
 
-
+/* Pre-defined macros... */
 #if TPP_HAVE_CPP_MACROS
-TPP_MACRO(TPP_KWD___TPP_VERSION__, 1)
-TPP_BUILTIN_MACRO(TPP_KWD___TPP_VERSION__, "300")
-#endif /* TPP_HAVE_CPP_MACROS */
+TPP_MACRO(TPP_KWD___TPP_VERSION__, true)
+TPP_BUILTIN_MACRO(TPP_KWD___TPP_VERSION__, TPP_PREPROCESSOR_VERSION_STR)
+#if TPP_HAVE_MACRO__Pragma /* GCC defines _Pragma as a macro... So I'll just do that as well! */
+TPP_MACRO(TPP_KWD__Pragma, tpp_lexer_getext(self, TPP_EXT_MACRO__Pragma))
+#endif /* TPP_HAVE_MACRO__Pragma */
+#if TPP_HAVE_MACRO___pragma /* I promised this would be defined as a macro... */
+TPP_MACRO(TPP_KWD___pragma, tpp_lexer_getext(self, TPP_EXT_MACRO___pragma))
+#endif /* TPP_HAVE_MACRO___pragma */
 
 /* Declare magic, built-in macros */
-#if TPP_HAVE_CLANG_HAS_ATTRIBUTE
-TPP_MACRO(TPP_KWD___has_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_ATTRIBUTE))
-#endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_BUILTIN
-TPP_MACRO(TPP_KWD___has_builtin, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_BUILTIN))
-#endif /* TPP_HAVE_CLANG_HAS_BUILTIN */
-#if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
-TPP_MACRO(TPP_KWD___has_cpp_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE))
-#endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
-TPP_MACRO(TPP_KWD___has_declspec_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE))
-#endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION
-TPP_MACRO(TPP_KWD___has_extension, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_EXTENSION) ||
-                                   tpp_lexer_getext(self, TPP_EXT_TPPX_HAS_EXTENSION))
-#endif /* TPP_HAVE_CLANG_HAS_EXTENSION || TPP_HAVE_TPPX_HAS_EXTENSION */
-#if TPP_HAVE_CLANG_HAS_FEATURE
-TPP_MACRO(TPP_KWD___has_feature, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_FEATURE))
-#endif /* TPP_HAVE_CLANG_HAS_FEATURE */
-#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
-TPP_MACRO(TPP_KWD___has_c_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_HAS_C_ATTRIBUTE))
-#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE */
-#if TPP_HAVE_CLANG_IS_IDENTIFIER
-TPP_MACRO(TPP_KWD___is_identifier, tpp_lexer_getext(self, TPP_EXT_CLANG_IS_IDENTIFIER))
-#endif /* TPP_HAVE_CLANG_IS_IDENTIFIER */
-#if TPP_HAVE_TPPX_IS_DEPRECATED
-TPP_MACRO(TPP_KWD___is_deprecated, tpp_lexer_getext(self, TPP_EXT_TPPX_IS_DEPRECATED))
-#endif /* TPP_HAVE_TPPX_IS_DEPRECATED */
-#if TPP_HAVE_TPPX_IS_POISONED
-TPP_MACRO(TPP_KWD___is_poisoned, tpp_lexer_getext(self, TPP_EXT_TPPX_IS_POISONED))
-#endif /* TPP_HAVE_TPPX_IS_POISONED */
-#if TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
-TPP_MACRO(TPP_KWD___has_known_extension, tpp_lexer_getext(self, TPP_EXT_TPPX_HAS_KNOWN_EXTENSION))
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION */
-#if TPP_HAVE_TPPX_HAS_WARNING
-TPP_MACRO(TPP_KWD___has_warning, tpp_lexer_getext(self, TPP_EXT_TPPX_HAS_WARNING))
-#endif /* TPP_HAVE_TPPX_HAS_WARNING */
-#if TPP_HAVE_TPPX_HAS_KNOWN_WARNING
-TPP_MACRO(TPP_KWD___has_known_warning, tpp_lexer_getext(self, TPP_EXT_TPPX_HAS_KNOWN_WARNING))
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING */
+#if TPP_HAVE_CLANG_MACRO___has_attribute
+TPP_MACRO(TPP_KWD___has_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_MACRO___has_attribute))
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
+TPP_MACRO(TPP_KWD___has_builtin, tpp_lexer_getext(self, TPP_EXT_CLANG_MACRO___has_builtin))
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+TPP_MACRO(TPP_KWD___has_cpp_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_MACRO___has_cpp_attribute))
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+TPP_MACRO(TPP_KWD___has_declspec_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_MACRO___has_declspec_attribute))
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension || TPP_HAVE_MACRO___has_extension
+TPP_MACRO(TPP_KWD___has_extension, tpp_lexer_getext(self, TPP_EXT_CLANG_MACRO___has_extension) ||
+                                   tpp_lexer_getext(self, TPP_EXT_MACRO___has_extension))
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension || TPP_HAVE_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
+TPP_MACRO(TPP_KWD___has_feature, tpp_lexer_getext(self, TPP_EXT_CLANG_MACRO___has_feature))
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute
+TPP_MACRO(TPP_KWD___has_c_attribute, tpp_lexer_getext(self, TPP_EXT_CLANG_MACRO___has_c_attribute))
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#if TPP_HAVE_MACRO___is_identifier
+TPP_MACRO(TPP_KWD___is_identifier, tpp_lexer_getext(self, TPP_EXT_MACRO___is_identifier))
+#endif /* TPP_HAVE_MACRO___is_identifier */
+#if TPP_HAVE_MACRO___is_deprecated
+TPP_MACRO(TPP_KWD___is_deprecated, tpp_lexer_getext(self, TPP_EXT_MACRO___is_deprecated))
+#endif /* TPP_HAVE_MACRO___is_deprecated */
+#if TPP_HAVE_MACRO___is_poisoned
+TPP_MACRO(TPP_KWD___is_poisoned, tpp_lexer_getext(self, TPP_EXT_MACRO___is_poisoned))
+#endif /* TPP_HAVE_MACRO___is_poisoned */
+#if TPP_HAVE_MACRO___has_known_extension
+TPP_MACRO(TPP_KWD___has_known_extension, tpp_lexer_getext(self, TPP_EXT_MACRO___has_known_extension))
+#endif /* TPP_HAVE_MACRO___has_known_extension */
+#if TPP_HAVE_MACRO___has_warning
+TPP_MACRO(TPP_KWD___has_warning, tpp_lexer_getext(self, TPP_EXT_MACRO___has_warning))
+#endif /* TPP_HAVE_MACRO___has_warning */
+#if TPP_HAVE_MACRO___has_known_warning
+TPP_MACRO(TPP_KWD___has_known_warning, tpp_lexer_getext(self, TPP_EXT_MACRO___has_known_warning))
+#endif /* TPP_HAVE_MACRO___has_known_warning */
+#if TPP_HAVE_MACRO___has_include
+TPP_MACRO(TPP_KWD___has_include, tpp_lexer_getext(self, TPP_EXT_MACRO___has_include))
+#endif /* TPP_HAVE_MACRO___has_include */
+#if TPP_HAVE_MACRO___has_include_next
+TPP_MACRO(TPP_KWD___has_include_next, tpp_lexer_getext(self, TPP_EXT_MACRO___has_include_next))
+#endif /* TPP_HAVE_MACRO___has_include_next */
+#endif /* TPP_HAVE_CPP_MACROS */
+
+
+
 
 
 /*[[[deemon
-for (local feat: {
-	"TRIGRAPHS",
-	"DIGRAPHS",
-	"BSE",
-	"BSE_WHITESPACE",
-	"ESCAPE_E_IN_STRINGS",
-	"ESCAPE_S_IN_STRINGS",
-	"CLANG_HAS_ATTRIBUTE",
-	"CLANG_HAS_BUILTIN",
-	"CLANG_HAS_CPP_ATTRIBUTE",
-	"CLANG_HAS_DECLSPEC_ATTRIBUTE",
-	"CLANG_HAS_EXTENSION",
-	"CLANG_HAS_FEATURE",
-	"CLANG_HAS_C_ATTRIBUTE",
-	"CLANG_IS_IDENTIFIER",
-	"TPPX_IS_DEPRECATED",
-	"TPPX_IS_POISONED",
-	"TPPX_HAS_EXTENSION",
-	"TPPX_HAS_KNOWN_EXTENSION",
-	"TPPX_HAS_WARNING",
-	"TPPX_HAS_KNOWN_WARNING",
-	"ALTERNATIVE_MACRO_PARENTHESIS",
-	"MACRO_ARGUMENT_WHITESPACE",
-	"MACRO_RECURSION",
-	"NAMED_VARARGS_IN_MACROS",
-	"VA_ARGS_IN_MACROS",
-	"VA_COMMA_IN_MACROS",
-	"VA_OPT_IN_MACROS",
-	"VA_NARGS_IN_MACROS",
-	"PRAGMA_PUSH_MACRO",
-	"PRAGMA_ONCE",
-	"PRAGMA_DEPRECATED",
-	"PRAGMA_GCC_POISON",
-	"PRAGMA_TPP_SET_KEYWORD_FLAGS",
-	"PRAGMA_GCC_SYSTEM_HEADER",
-	"PRAGMA_EXTENSION",
-	"PRAGMA_EXTENSION_PUSH",
-}) {
-	print("#if TPP_HAVE_", feat, " < 0");
-	local name = feat.lower().replace("_", "-");
-	print("TPP_EXTENSION(TPP_EXT_", feat, ", ", repr(name), ", TPP_HAVE_", feat, " == -1)");
-	print("#define _tpp_extensions_state_get_TPP_EXT_", feat, "(self) (self)->tes_flags.tef_TPP_EXT_", feat);
-	print("#else /" "* TPP_HAVE_", feat, " < 0 *" "/");
-	print("#define _tpp_extensions_state_get_TPP_EXT_", feat, "(self) TPP_HAVE_", feat);
-	print("#endif /" "* TPP_HAVE_", feat, " >= 0 *" "/");
+import * from deemon;
+for (local line: File.open("config.h", "rb").read().decode("utf-8").splitlines(false)) {
+	local TPP_HAVE_FOO, extName;
+	try {
+		TPP_HAVE_FOO, extName = line.rescanf(r'#\s*define\s+(\w+)\s*[^/]+/\*\s*"-f([^"]+)"')...;
+	} catch (...) {
+		continue;
+	}
+	local TPP_EXT_FOO = "TPP_EXT_" + TPP_HAVE_FOO.lsstrip("TPP_HAVE_");
+	print("#if ", TPP_HAVE_FOO, " < 0");
+	print("TPP_EXTENSION(", TPP_EXT_FOO, ", ", repr(extName), ", ", TPP_HAVE_FOO, " == -1)");
+	print("#define _tpp_extensions_state_get_", TPP_EXT_FOO, "(self) (self)->tes_flags.tef_", TPP_EXT_FOO);
+	print("#else /" "* ", TPP_HAVE_FOO, " < 0 *" "/");
+	print("#define _tpp_extensions_state_get_", TPP_EXT_FOO, "(self) ", TPP_HAVE_FOO);
+	print("#endif /" "* ", TPP_HAVE_FOO, " >= 0 *" "/");
 }
 ]]]*/
 #if TPP_HAVE_TRIGRAPHS < 0
@@ -360,90 +393,216 @@ TPP_EXTENSION(TPP_EXT_ESCAPE_S_IN_STRINGS, "escape-s-in-strings", TPP_HAVE_ESCAP
 #else /* TPP_HAVE_ESCAPE_S_IN_STRINGS < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_ESCAPE_S_IN_STRINGS(self) TPP_HAVE_ESCAPE_S_IN_STRINGS
 #endif /* TPP_HAVE_ESCAPE_S_IN_STRINGS >= 0 */
-#if TPP_HAVE_CLANG_HAS_ATTRIBUTE < 0
-TPP_EXTENSION(TPP_EXT_CLANG_HAS_ATTRIBUTE, "clang-has-attribute", TPP_HAVE_CLANG_HAS_ATTRIBUTE == -1)
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_ATTRIBUTE
-#else /* TPP_HAVE_CLANG_HAS_ATTRIBUTE < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_ATTRIBUTE
-#endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE >= 0 */
-#if TPP_HAVE_CLANG_HAS_BUILTIN < 0
-TPP_EXTENSION(TPP_EXT_CLANG_HAS_BUILTIN, "clang-has-builtin", TPP_HAVE_CLANG_HAS_BUILTIN == -1)
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_BUILTIN(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_BUILTIN
-#else /* TPP_HAVE_CLANG_HAS_BUILTIN < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_BUILTIN(self) TPP_HAVE_CLANG_HAS_BUILTIN
-#endif /* TPP_HAVE_CLANG_HAS_BUILTIN >= 0 */
-#if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE < 0
-TPP_EXTENSION(TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE, "clang-has-cpp-attribute", TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE == -1)
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE
-#else /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_CPP_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
-#endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE >= 0 */
-#if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE < 0
-TPP_EXTENSION(TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE, "clang-has-declspec-attribute", TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE == -1)
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE
-#else /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_DECLSPEC_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
-#endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE >= 0 */
-#if TPP_HAVE_CLANG_HAS_EXTENSION < 0
-TPP_EXTENSION(TPP_EXT_CLANG_HAS_EXTENSION, "clang-has-extension", TPP_HAVE_CLANG_HAS_EXTENSION == -1)
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_EXTENSION(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_EXTENSION
-#else /* TPP_HAVE_CLANG_HAS_EXTENSION < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_EXTENSION(self) TPP_HAVE_CLANG_HAS_EXTENSION
-#endif /* TPP_HAVE_CLANG_HAS_EXTENSION >= 0 */
-#if TPP_HAVE_CLANG_HAS_FEATURE < 0
-TPP_EXTENSION(TPP_EXT_CLANG_HAS_FEATURE, "clang-has-feature", TPP_HAVE_CLANG_HAS_FEATURE == -1)
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_FEATURE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_FEATURE
-#else /* TPP_HAVE_CLANG_HAS_FEATURE < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_FEATURE(self) TPP_HAVE_CLANG_HAS_FEATURE
-#endif /* TPP_HAVE_CLANG_HAS_FEATURE >= 0 */
-#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE < 0
-TPP_EXTENSION(TPP_EXT_CLANG_HAS_C_ATTRIBUTE, "clang-has-c-attribute", TPP_HAVE_CLANG_HAS_C_ATTRIBUTE == -1)
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_C_ATTRIBUTE(self) (self)->tes_flags.tef_TPP_EXT_CLANG_HAS_C_ATTRIBUTE
-#else /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_HAS_C_ATTRIBUTE(self) TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
-#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE >= 0 */
-#if TPP_HAVE_CLANG_IS_IDENTIFIER < 0
-TPP_EXTENSION(TPP_EXT_CLANG_IS_IDENTIFIER, "clang-is-identifier", TPP_HAVE_CLANG_IS_IDENTIFIER == -1)
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_IS_IDENTIFIER(self) (self)->tes_flags.tef_TPP_EXT_CLANG_IS_IDENTIFIER
-#else /* TPP_HAVE_CLANG_IS_IDENTIFIER < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_CLANG_IS_IDENTIFIER(self) TPP_HAVE_CLANG_IS_IDENTIFIER
-#endif /* TPP_HAVE_CLANG_IS_IDENTIFIER >= 0 */
-#if TPP_HAVE_TPPX_IS_DEPRECATED < 0
-TPP_EXTENSION(TPP_EXT_TPPX_IS_DEPRECATED, "tppx-is-deprecated", TPP_HAVE_TPPX_IS_DEPRECATED == -1)
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_IS_DEPRECATED(self) (self)->tes_flags.tef_TPP_EXT_TPPX_IS_DEPRECATED
-#else /* TPP_HAVE_TPPX_IS_DEPRECATED < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_IS_DEPRECATED(self) TPP_HAVE_TPPX_IS_DEPRECATED
-#endif /* TPP_HAVE_TPPX_IS_DEPRECATED >= 0 */
-#if TPP_HAVE_TPPX_IS_POISONED < 0
-TPP_EXTENSION(TPP_EXT_TPPX_IS_POISONED, "tppx-is-poisoned", TPP_HAVE_TPPX_IS_POISONED == -1)
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_IS_POISONED(self) (self)->tes_flags.tef_TPP_EXT_TPPX_IS_POISONED
-#else /* TPP_HAVE_TPPX_IS_POISONED < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_IS_POISONED(self) TPP_HAVE_TPPX_IS_POISONED
-#endif /* TPP_HAVE_TPPX_IS_POISONED >= 0 */
-#if TPP_HAVE_TPPX_HAS_EXTENSION < 0
-TPP_EXTENSION(TPP_EXT_TPPX_HAS_EXTENSION, "tppx-has-extension", TPP_HAVE_TPPX_HAS_EXTENSION == -1)
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_EXTENSION(self) (self)->tes_flags.tef_TPP_EXT_TPPX_HAS_EXTENSION
-#else /* TPP_HAVE_TPPX_HAS_EXTENSION < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_EXTENSION(self) TPP_HAVE_TPPX_HAS_EXTENSION
-#endif /* TPP_HAVE_TPPX_HAS_EXTENSION >= 0 */
-#if TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION < 0
-TPP_EXTENSION(TPP_EXT_TPPX_HAS_KNOWN_EXTENSION, "tppx-has-known-extension", TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION == -1)
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_KNOWN_EXTENSION(self) (self)->tes_flags.tef_TPP_EXT_TPPX_HAS_KNOWN_EXTENSION
-#else /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_KNOWN_EXTENSION(self) TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION >= 0 */
-#if TPP_HAVE_TPPX_HAS_WARNING < 0
-TPP_EXTENSION(TPP_EXT_TPPX_HAS_WARNING, "tppx-has-warning", TPP_HAVE_TPPX_HAS_WARNING == -1)
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_WARNING(self) (self)->tes_flags.tef_TPP_EXT_TPPX_HAS_WARNING
-#else /* TPP_HAVE_TPPX_HAS_WARNING < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_WARNING(self) TPP_HAVE_TPPX_HAS_WARNING
-#endif /* TPP_HAVE_TPPX_HAS_WARNING >= 0 */
-#if TPP_HAVE_TPPX_HAS_KNOWN_WARNING < 0
-TPP_EXTENSION(TPP_EXT_TPPX_HAS_KNOWN_WARNING, "tppx-has-known-warning", TPP_HAVE_TPPX_HAS_KNOWN_WARNING == -1)
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_KNOWN_WARNING(self) (self)->tes_flags.tef_TPP_EXT_TPPX_HAS_KNOWN_WARNING
-#else /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING < 0 */
-#define _tpp_extensions_state_get_TPP_EXT_TPPX_HAS_KNOWN_WARNING(self) TPP_HAVE_TPPX_HAS_KNOWN_WARNING
-#endif /* TPP_HAVE_TPPX_HAS_KNOWN_WARNING >= 0 */
+#if TPP_HAVE_CPP_EXCLAIM < 0
+TPP_EXTENSION(TPP_EXT_CPP_EXCLAIM, "shebang-directives", TPP_HAVE_CPP_EXCLAIM == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CPP_EXCLAIM(self) (self)->tes_flags.tef_TPP_EXT_CPP_EXCLAIM
+#else /* TPP_HAVE_CPP_EXCLAIM < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CPP_EXCLAIM(self) TPP_HAVE_CPP_EXCLAIM
+#endif /* TPP_HAVE_CPP_EXCLAIM >= 0 */
+#if TPP_HAVE_CPP_INCLUDE < 0
+TPP_EXTENSION(TPP_EXT_CPP_INCLUDE, "include-directives", TPP_HAVE_CPP_INCLUDE == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CPP_INCLUDE(self) (self)->tes_flags.tef_TPP_EXT_CPP_INCLUDE
+#else /* TPP_HAVE_CPP_INCLUDE < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CPP_INCLUDE(self) TPP_HAVE_CPP_INCLUDE
+#endif /* TPP_HAVE_CPP_INCLUDE >= 0 */
+#if TPP_HAVE_CPP_INCLUDE_NEXT < 0
+TPP_EXTENSION(TPP_EXT_CPP_INCLUDE_NEXT, "include-next-directives", TPP_HAVE_CPP_INCLUDE_NEXT == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CPP_INCLUDE_NEXT(self) (self)->tes_flags.tef_TPP_EXT_CPP_INCLUDE_NEXT
+#else /* TPP_HAVE_CPP_INCLUDE_NEXT < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CPP_INCLUDE_NEXT(self) TPP_HAVE_CPP_INCLUDE_NEXT
+#endif /* TPP_HAVE_CPP_INCLUDE_NEXT >= 0 */
+#if TPP_HAVE_CPP_IMPORT < 0
+TPP_EXTENSION(TPP_EXT_CPP_IMPORT, "import-directives", TPP_HAVE_CPP_IMPORT == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CPP_IMPORT(self) (self)->tes_flags.tef_TPP_EXT_CPP_IMPORT
+#else /* TPP_HAVE_CPP_IMPORT < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CPP_IMPORT(self) TPP_HAVE_CPP_IMPORT
+#endif /* TPP_HAVE_CPP_IMPORT >= 0 */
+#if TPP_HAVE_CPP_ERROR < 0
+TPP_EXTENSION(TPP_EXT_CPP_ERROR, "error-directives", TPP_HAVE_CPP_ERROR == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CPP_ERROR(self) (self)->tes_flags.tef_TPP_EXT_CPP_ERROR
+#else /* TPP_HAVE_CPP_ERROR < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CPP_ERROR(self) TPP_HAVE_CPP_ERROR
+#endif /* TPP_HAVE_CPP_ERROR >= 0 */
+#if TPP_HAVE_CPP_WARNING < 0
+TPP_EXTENSION(TPP_EXT_CPP_WARNING, "warning-directives", TPP_HAVE_CPP_WARNING == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CPP_WARNING(self) (self)->tes_flags.tef_TPP_EXT_CPP_WARNING
+#else /* TPP_HAVE_CPP_WARNING < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CPP_WARNING(self) TPP_HAVE_CPP_WARNING
+#endif /* TPP_HAVE_CPP_WARNING >= 0 */
+#if TPP_HAVE_CPP_IDENT_SCSS < 0
+TPP_EXTENSION(TPP_EXT_CPP_IDENT_SCSS, "ident-directives", TPP_HAVE_CPP_IDENT_SCSS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CPP_IDENT_SCSS(self) (self)->tes_flags.tef_TPP_EXT_CPP_IDENT_SCSS
+#else /* TPP_HAVE_CPP_IDENT_SCSS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CPP_IDENT_SCSS(self) TPP_HAVE_CPP_IDENT_SCSS
+#endif /* TPP_HAVE_CPP_IDENT_SCSS >= 0 */
+#if TPP_HAVE_MACRO__Pragma < 0
+TPP_EXTENSION(TPP_EXT_MACRO__Pragma, "_Pragma", TPP_HAVE_MACRO__Pragma == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO__Pragma(self) (self)->tes_flags.tef_TPP_EXT_MACRO__Pragma
+#else /* TPP_HAVE_MACRO__Pragma < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO__Pragma(self) TPP_HAVE_MACRO__Pragma
+#endif /* TPP_HAVE_MACRO__Pragma >= 0 */
+#if TPP_HAVE_MACRO___pragma < 0
+TPP_EXTENSION(TPP_EXT_MACRO___pragma, "__pragma", TPP_HAVE_MACRO___pragma == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___pragma(self) (self)->tes_flags.tef_TPP_EXT_MACRO___pragma
+#else /* TPP_HAVE_MACRO___pragma < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___pragma(self) TPP_HAVE_MACRO___pragma
+#endif /* TPP_HAVE_MACRO___pragma >= 0 */
+#if TPP_HAVE_CLANG_MACRO___has_attribute < 0
+TPP_EXTENSION(TPP_EXT_CLANG_MACRO___has_attribute, "clang-__has_attribute", TPP_HAVE_CLANG_MACRO___has_attribute == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_attribute(self) (self)->tes_flags.tef_TPP_EXT_CLANG_MACRO___has_attribute
+#else /* TPP_HAVE_CLANG_MACRO___has_attribute < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_attribute(self) TPP_HAVE_CLANG_MACRO___has_attribute
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute >= 0 */
+#if TPP_HAVE_CLANG_MACRO___has_builtin < 0
+TPP_EXTENSION(TPP_EXT_CLANG_MACRO___has_builtin, "clang-__has_builtin", TPP_HAVE_CLANG_MACRO___has_builtin == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_builtin(self) (self)->tes_flags.tef_TPP_EXT_CLANG_MACRO___has_builtin
+#else /* TPP_HAVE_CLANG_MACRO___has_builtin < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_builtin(self) TPP_HAVE_CLANG_MACRO___has_builtin
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin >= 0 */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute < 0
+TPP_EXTENSION(TPP_EXT_CLANG_MACRO___has_cpp_attribute, "clang-__has_cpp_attribute", TPP_HAVE_CLANG_MACRO___has_cpp_attribute == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_cpp_attribute(self) (self)->tes_flags.tef_TPP_EXT_CLANG_MACRO___has_cpp_attribute
+#else /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_cpp_attribute(self) TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute >= 0 */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute < 0
+TPP_EXTENSION(TPP_EXT_CLANG_MACRO___has_declspec_attribute, "clang-__has_declspec_attribute", TPP_HAVE_CLANG_MACRO___has_declspec_attribute == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_declspec_attribute(self) (self)->tes_flags.tef_TPP_EXT_CLANG_MACRO___has_declspec_attribute
+#else /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_declspec_attribute(self) TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute >= 0 */
+#if TPP_HAVE_CLANG_MACRO___has_extension < 0
+TPP_EXTENSION(TPP_EXT_CLANG_MACRO___has_extension, "clang-__has_extension", TPP_HAVE_CLANG_MACRO___has_extension == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_extension(self) (self)->tes_flags.tef_TPP_EXT_CLANG_MACRO___has_extension
+#else /* TPP_HAVE_CLANG_MACRO___has_extension < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_extension(self) TPP_HAVE_CLANG_MACRO___has_extension
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension >= 0 */
+#if TPP_HAVE_CLANG_MACRO___has_feature < 0
+TPP_EXTENSION(TPP_EXT_CLANG_MACRO___has_feature, "clang-__has_feature", TPP_HAVE_CLANG_MACRO___has_feature == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_feature(self) (self)->tes_flags.tef_TPP_EXT_CLANG_MACRO___has_feature
+#else /* TPP_HAVE_CLANG_MACRO___has_feature < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_feature(self) TPP_HAVE_CLANG_MACRO___has_feature
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature >= 0 */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute < 0
+TPP_EXTENSION(TPP_EXT_CLANG_MACRO___has_c_attribute, "clang-__has_c_attribute", TPP_HAVE_CLANG_MACRO___has_c_attribute == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_c_attribute(self) (self)->tes_flags.tef_TPP_EXT_CLANG_MACRO___has_c_attribute
+#else /* TPP_HAVE_CLANG_MACRO___has_c_attribute < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CLANG_MACRO___has_c_attribute(self) TPP_HAVE_CLANG_MACRO___has_c_attribute
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute >= 0 */
+#if TPP_HAVE_MACRO___is_identifier < 0
+TPP_EXTENSION(TPP_EXT_MACRO___is_identifier, "__is_identifier", TPP_HAVE_MACRO___is_identifier == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___is_identifier(self) (self)->tes_flags.tef_TPP_EXT_MACRO___is_identifier
+#else /* TPP_HAVE_MACRO___is_identifier < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___is_identifier(self) TPP_HAVE_MACRO___is_identifier
+#endif /* TPP_HAVE_MACRO___is_identifier >= 0 */
+#if TPP_HAVE_MACRO___is_deprecated < 0
+TPP_EXTENSION(TPP_EXT_MACRO___is_deprecated, "__is_deprecated", TPP_HAVE_MACRO___is_deprecated == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___is_deprecated(self) (self)->tes_flags.tef_TPP_EXT_MACRO___is_deprecated
+#else /* TPP_HAVE_MACRO___is_deprecated < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___is_deprecated(self) TPP_HAVE_MACRO___is_deprecated
+#endif /* TPP_HAVE_MACRO___is_deprecated >= 0 */
+#if TPP_HAVE_MACRO___is_poisoned < 0
+TPP_EXTENSION(TPP_EXT_MACRO___is_poisoned, "__is_poisoned", TPP_HAVE_MACRO___is_poisoned == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___is_poisoned(self) (self)->tes_flags.tef_TPP_EXT_MACRO___is_poisoned
+#else /* TPP_HAVE_MACRO___is_poisoned < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___is_poisoned(self) TPP_HAVE_MACRO___is_poisoned
+#endif /* TPP_HAVE_MACRO___is_poisoned >= 0 */
+#if TPP_HAVE_MACRO___has_extension < 0
+TPP_EXTENSION(TPP_EXT_MACRO___has_extension, "__has_extension", TPP_HAVE_MACRO___has_extension == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_extension(self) (self)->tes_flags.tef_TPP_EXT_MACRO___has_extension
+#else /* TPP_HAVE_MACRO___has_extension < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_extension(self) TPP_HAVE_MACRO___has_extension
+#endif /* TPP_HAVE_MACRO___has_extension >= 0 */
+#if TPP_HAVE_MACRO___has_known_extension < 0
+TPP_EXTENSION(TPP_EXT_MACRO___has_known_extension, "__has_known_extension", TPP_HAVE_MACRO___has_known_extension == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_known_extension(self) (self)->tes_flags.tef_TPP_EXT_MACRO___has_known_extension
+#else /* TPP_HAVE_MACRO___has_known_extension < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_known_extension(self) TPP_HAVE_MACRO___has_known_extension
+#endif /* TPP_HAVE_MACRO___has_known_extension >= 0 */
+#if TPP_HAVE_MACRO___has_warning < 0
+TPP_EXTENSION(TPP_EXT_MACRO___has_warning, "__has_warning", TPP_HAVE_MACRO___has_warning == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_warning(self) (self)->tes_flags.tef_TPP_EXT_MACRO___has_warning
+#else /* TPP_HAVE_MACRO___has_warning < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_warning(self) TPP_HAVE_MACRO___has_warning
+#endif /* TPP_HAVE_MACRO___has_warning >= 0 */
+#if TPP_HAVE_MACRO___has_known_warning < 0
+TPP_EXTENSION(TPP_EXT_MACRO___has_known_warning, "__has_known_warning", TPP_HAVE_MACRO___has_known_warning == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_known_warning(self) (self)->tes_flags.tef_TPP_EXT_MACRO___has_known_warning
+#else /* TPP_HAVE_MACRO___has_known_warning < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_known_warning(self) TPP_HAVE_MACRO___has_known_warning
+#endif /* TPP_HAVE_MACRO___has_known_warning >= 0 */
+#if TPP_HAVE_MACRO___has_include < 0
+TPP_EXTENSION(TPP_EXT_MACRO___has_include, "__has_include", TPP_HAVE_MACRO___has_include == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_include(self) (self)->tes_flags.tef_TPP_EXT_MACRO___has_include
+#else /* TPP_HAVE_MACRO___has_include < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_include(self) TPP_HAVE_MACRO___has_include
+#endif /* TPP_HAVE_MACRO___has_include >= 0 */
+#if TPP_HAVE_MACRO___has_include_next < 0
+TPP_EXTENSION(TPP_EXT_MACRO___has_include_next, "__has_include_next", TPP_HAVE_MACRO___has_include_next == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_include_next(self) (self)->tes_flags.tef_TPP_EXT_MACRO___has_include_next
+#else /* TPP_HAVE_MACRO___has_include_next < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_include_next(self) TPP_HAVE_MACRO___has_include_next
+#endif /* TPP_HAVE_MACRO___has_include_next >= 0 */
+#if TPP_HAVE_MACRO___FILE__ < 0
+TPP_EXTENSION(TPP_EXT_MACRO___FILE__, "__FILE__", TPP_HAVE_MACRO___FILE__ == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___FILE__(self) (self)->tes_flags.tef_TPP_EXT_MACRO___FILE__
+#else /* TPP_HAVE_MACRO___FILE__ < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___FILE__(self) TPP_HAVE_MACRO___FILE__
+#endif /* TPP_HAVE_MACRO___FILE__ >= 0 */
+#if TPP_HAVE_MACRO___LINE__ < 0
+TPP_EXTENSION(TPP_EXT_MACRO___LINE__, "__LINE__", TPP_HAVE_MACRO___LINE__ == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___LINE__(self) (self)->tes_flags.tef_TPP_EXT_MACRO___LINE__
+#else /* TPP_HAVE_MACRO___LINE__ < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___LINE__(self) TPP_HAVE_MACRO___LINE__
+#endif /* TPP_HAVE_MACRO___LINE__ >= 0 */
+#if TPP_HAVE_MACRO___TIME__ < 0
+TPP_EXTENSION(TPP_EXT_MACRO___TIME__, "__TIME__", TPP_HAVE_MACRO___TIME__ == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___TIME__(self) (self)->tes_flags.tef_TPP_EXT_MACRO___TIME__
+#else /* TPP_HAVE_MACRO___TIME__ < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___TIME__(self) TPP_HAVE_MACRO___TIME__
+#endif /* TPP_HAVE_MACRO___TIME__ >= 0 */
+#if TPP_HAVE_MACRO___DATE__ < 0
+TPP_EXTENSION(TPP_EXT_MACRO___DATE__, "__DATE__", TPP_HAVE_MACRO___DATE__ == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___DATE__(self) (self)->tes_flags.tef_TPP_EXT_MACRO___DATE__
+#else /* TPP_HAVE_MACRO___DATE__ < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___DATE__(self) TPP_HAVE_MACRO___DATE__
+#endif /* TPP_HAVE_MACRO___DATE__ >= 0 */
+#if TPP_HAVE_MACRO___COLUMN__ < 0
+TPP_EXTENSION(TPP_EXT_MACRO___COLUMN__, "column-macro", TPP_HAVE_MACRO___COLUMN__ == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___COLUMN__(self) (self)->tes_flags.tef_TPP_EXT_MACRO___COLUMN__
+#else /* TPP_HAVE_MACRO___COLUMN__ < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___COLUMN__(self) TPP_HAVE_MACRO___COLUMN__
+#endif /* TPP_HAVE_MACRO___COLUMN__ >= 0 */
+#if TPP_HAVE_MACRO___BASE_FILE__ < 0
+TPP_EXTENSION(TPP_EXT_MACRO___BASE_FILE__, "basefile-macro", TPP_HAVE_MACRO___BASE_FILE__ == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___BASE_FILE__(self) (self)->tes_flags.tef_TPP_EXT_MACRO___BASE_FILE__
+#else /* TPP_HAVE_MACRO___BASE_FILE__ < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___BASE_FILE__(self) TPP_HAVE_MACRO___BASE_FILE__
+#endif /* TPP_HAVE_MACRO___BASE_FILE__ >= 0 */
+#if TPP_HAVE_MACRO___INCLUDE_LEVEL__ < 0
+TPP_EXTENSION(TPP_EXT_MACRO___INCLUDE_LEVEL__, "include-level-macro", TPP_HAVE_MACRO___INCLUDE_LEVEL__ == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___INCLUDE_LEVEL__(self) (self)->tes_flags.tef_TPP_EXT_MACRO___INCLUDE_LEVEL__
+#else /* TPP_HAVE_MACRO___INCLUDE_LEVEL__ < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___INCLUDE_LEVEL__(self) TPP_HAVE_MACRO___INCLUDE_LEVEL__
+#endif /* TPP_HAVE_MACRO___INCLUDE_LEVEL__ >= 0 */
+#if TPP_HAVE_MACRO___INCLUDE_DEPTH__ < 0
+TPP_EXTENSION(TPP_EXT_MACRO___INCLUDE_DEPTH__, "include-depth-macro", TPP_HAVE_MACRO___INCLUDE_DEPTH__ == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___INCLUDE_DEPTH__(self) (self)->tes_flags.tef_TPP_EXT_MACRO___INCLUDE_DEPTH__
+#else /* TPP_HAVE_MACRO___INCLUDE_DEPTH__ < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___INCLUDE_DEPTH__(self) TPP_HAVE_MACRO___INCLUDE_DEPTH__
+#endif /* TPP_HAVE_MACRO___INCLUDE_DEPTH__ >= 0 */
+#if TPP_HAVE_MACRO___COUNTER__ < 0
+TPP_EXTENSION(TPP_EXT_MACRO___COUNTER__, "counter-macro", TPP_HAVE_MACRO___COUNTER__ == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___COUNTER__(self) (self)->tes_flags.tef_TPP_EXT_MACRO___COUNTER__
+#else /* TPP_HAVE_MACRO___COUNTER__ < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___COUNTER__(self) TPP_HAVE_MACRO___COUNTER__
+#endif /* TPP_HAVE_MACRO___COUNTER__ >= 0 */
+#if TPP_HAVE_MACRO___TIMESTAMP__ < 0
+TPP_EXTENSION(TPP_EXT_MACRO___TIMESTAMP__, "timestamp-macro", TPP_HAVE_MACRO___TIMESTAMP__ == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___TIMESTAMP__(self) (self)->tes_flags.tef_TPP_EXT_MACRO___TIMESTAMP__
+#else /* TPP_HAVE_MACRO___TIMESTAMP__ < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___TIMESTAMP__(self) TPP_HAVE_MACRO___TIMESTAMP__
+#endif /* TPP_HAVE_MACRO___TIMESTAMP__ >= 0 */
 #if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS < 0
 TPP_EXTENSION(TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS, "alternative-macro-parenthesis", TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS == -1)
 #define _tpp_extensions_state_get_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS(self) (self)->tes_flags.tef_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS
@@ -540,6 +699,22 @@ TPP_EXTENSION(TPP_EXT_PRAGMA_EXTENSION_PUSH, "pragma-extension-push", TPP_HAVE_P
 #else /* TPP_HAVE_PRAGMA_EXTENSION_PUSH < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_PRAGMA_EXTENSION_PUSH(self) TPP_HAVE_PRAGMA_EXTENSION_PUSH
 #endif /* TPP_HAVE_PRAGMA_EXTENSION_PUSH >= 0 */
+#if TPP_HAVE_PRAGMA_WARNING < 0
+TPP_EXTENSION(TPP_EXT_PRAGMA_WARNING, "pragma-warning", TPP_HAVE_PRAGMA_WARNING == -1)
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_WARNING(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_WARNING
+#else /* TPP_HAVE_PRAGMA_WARNING < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_WARNING(self) TPP_HAVE_PRAGMA_WARNING
+#endif /* TPP_HAVE_PRAGMA_WARNING >= 0 */
+#if TPP_HAVE_PRAGMA_WARNING_PUSH < 0
+TPP_EXTENSION(TPP_EXT_PRAGMA_WARNING_PUSH, "pragma-warning-push", TPP_HAVE_PRAGMA_WARNING_PUSH == -1)
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_WARNING_PUSH(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_WARNING_PUSH
+#else /* TPP_HAVE_PRAGMA_WARNING_PUSH < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_PRAGMA_WARNING_PUSH(self) TPP_HAVE_PRAGMA_WARNING_PUSH
+#endif /* TPP_HAVE_PRAGMA_WARNING_PUSH >= 0 */
+
+
+
+
 
 
 /* Declare builtin warnings. */
@@ -722,6 +897,30 @@ TPP_WARNING(TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 1(412
 
 
 /************************************************************************/
+/* -Wmacros                                                             */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_MACROS
+#define TPP_HAVE_TPP_WG_MACROS              \
+	(TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST || \
+	 TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS)
+#endif /* !TPP_HAVE_TPP_WG_MACROS */
+#if TPP_HAVE_TPP_WG_MACROS
+#define TPP_WG_MACROS TPP_WG_MACROS
+TPP_WGROUP(TPP_WG_MACROS, 1("macros"), TPP_WSTATE_ERROR_OR_FATAL)
+#endif /* TPP_HAVE_TPP_WG_MACROS */
+#if TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
+#define TPP_W_EOF_IN_ARGUMENT_LIST TPP_W_EOF_IN_ARGUMENT_LIST
+TPP_WARNING(TPP_W_EOF_IN_ARGUMENT_LIST, 1(TPP_WG_MACROS), 0(/*TODO*/),
+            "eof in argument list for %[%s%]")
+#endif /* TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST */
+#if TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS
+#define TPP_W_TOO_MANY_ARGUMENTS TPP_W_TOO_MANY_ARGUMENTS
+TPP_WARNING(TPP_W_TOO_MANY_ARGUMENTS, 1(TPP_WG_MACROS), 0(/*TODO*/),
+            "too many arguments for %[%s%] which takes %u when %u were given")
+#endif /* TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS */
+
+
+/************************************************************************/
 /* Misc warnings...                                                     */
 /************************************************************************/
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -732,7 +931,6 @@ TPP_WARNING(TPP_W_POP_MACRO_EMPTY_STACK, 0(), 1(4602),
 
 
 
-TPP_WGROUP(TPP_WG_MACROS, /*         */ 1("macros"),               TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_USAGE, /*          */ 1("usage"),                TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_ENVIRON, /*        */ 1("environ"),              TPP_WSTATE_FATAL)
@@ -862,9 +1060,9 @@ TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WA
 #endif /* !__SIZEOF_INT__ */
 #endif /* !__SIZEOF_INT__ */
 
-#define TPP_PREPROCESSOR_VERSION 300 /* Preprocessor version. */
-#define TPP_API_VERSION          300 /* Api version (Version of this api). */
-
+#define TPP_PREPROCESSOR_VERSION     300 /* Preprocessor version. */
+#define TPP_API_VERSION              300 /* Api version (Version of this api). */
+#define TPP_PREPROCESSOR_VERSION_STR "300"
 
 /* The standard calling convention used by TPP APIs */
 #ifndef TPPCALL
@@ -906,6 +1104,12 @@ TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WA
 #ifndef TPP_RETNONNULL
 #define TPP_RETNONNULL /* nothing */
 #endif /* !TPP_RETNONNULL */
+#ifndef TPP_PURECALL
+#define TPP_PURECALL /* nothing */
+#endif /* !TPP_PURECALL */
+#ifndef TPP_CONSTCALL
+#define TPP_CONSTCALL /* nothing */
+#endif /* !TPP_CONSTCALL */
 #ifndef TPP_NOINLINE
 #ifdef _MSC_VER
 #define TPP_NOINLINE __declspec(noinline)
@@ -1135,8 +1339,8 @@ typedef struct {
 #define tpp_refcnt_atomic_dec(p) (void)tpp_refcnt_atomic_decfetch(p)
 #endif /* !tpp_refcnt_atomic_dec */
 
-#ifndef tpp_once
 /* WARNING: Multi-threaded applications must override this */
+#ifndef tpp_once
 #define tpp_once(expr)             \
 	do {                           \
 		static int _to_didrun = 0; \
@@ -1145,9 +1349,7 @@ typedef struct {
 			expr;                  \
 		}                          \
 	} while (0)
-
 #endif /* !tpp_once */
-
 
 TPP_DECL_END
 
@@ -1510,7 +1712,7 @@ TPP_DECL_END
  * "??-" -> "~"
  * "???" -> "?" */
 #ifndef TPP_HAVE_TRIGRAPHS
-#define TPP_HAVE_TRIGRAPHS (-1)
+#define TPP_HAVE_TRIGRAPHS (-1) /* "-ftrigraphs" */
 #endif /* !TPP_HAVE_TRIGRAPHS */
 
 /* Support for token aliases:
@@ -1524,343 +1726,343 @@ TPP_DECL_END
  * "<::"  -> "<", "::"
  * "%:%:" -> "##" */
 #ifndef TPP_HAVE_DIGRAPHS
-#define TPP_HAVE_DIGRAPHS (-1)
+#define TPP_HAVE_DIGRAPHS (-1) /* "-fdigraphs" */
 #endif /* !TPP_HAVE_DIGRAPHS */
 
 /* Configures if line-feed tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()' */
 #ifndef TPP_HAVE_TPP_TOK_LF
-#define TPP_HAVE_TPP_TOK_LF TPP_COMMON_HAVE_TPP_TOK_SPACE
+#define TPP_HAVE_TPP_TOK_LF TPP_COMMON_HAVE_TPP_TOK_SPACE /* "TPP_FEAT_TPP_TOK_LF" */
 #endif /* !TPP_HAVE_TPP_TOK_LF */
 
 /* Configures if whitespace tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()' */
 #ifndef TPP_HAVE_TPP_TOK_SPACE
-#define TPP_HAVE_TPP_TOK_SPACE TPP_COMMON_HAVE_TPP_TOK_SPACE
+#define TPP_HAVE_TPP_TOK_SPACE TPP_COMMON_HAVE_TPP_TOK_SPACE /* "TPP_FEAT_TPP_TOK_SPACE" */
 #endif /* !TPP_HAVE_TPP_TOK_SPACE */
 
 /* Configures if comment tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()' */
 #ifndef TPP_HAVE_TPP_TOK_COMMENT
-#define TPP_HAVE_TPP_TOK_COMMENT (-1)
+#define TPP_HAVE_TPP_TOK_COMMENT (-1) /* "TPP_FEAT_TPP_TOK_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_COMMENT */
 
 /* Enable support for c++ comments: "// like this one!" */
 #ifndef TPP_HAVE_TPP_TOK_CXX_COMMENT
-#define TPP_HAVE_TPP_TOK_CXX_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT
+#define TPP_HAVE_TPP_TOK_CXX_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_CXX_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_COMMENT */
 
 /* Enable support for c comments: "/" "* like this one! *" "/" */
 #ifndef TPP_HAVE_TPP_TOK_C_COMMENT
-#define TPP_HAVE_TPP_TOK_C_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT
+#define TPP_HAVE_TPP_TOK_C_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_C_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_C_COMMENT */
 
 /* Enable support for pascal comments: "(*like this one!*)" */
 #ifndef TPP_HAVE_TPP_TOK_PASCAL_COMMENT
-#define TPP_HAVE_TPP_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT
+#define TPP_HAVE_TPP_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_PASCAL_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
 
 /* Enable support for shell comments: "# like this one!" */
 #ifndef TPP_HAVE_TPP_TOK_SHELL_COMMENT
-#define TPP_HAVE_TPP_TOK_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT
+#define TPP_HAVE_TPP_TOK_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_SHELL_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 
 /* Enable support for ASM comments: "/ like this one!" */
 #ifndef TPP_HAVE_TPP_TOK_ASM_COMMENT
-#define TPP_HAVE_TPP_TOK_ASM_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT
+#define TPP_HAVE_TPP_TOK_ASM_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_ASM_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_ASM_COMMENT */
 
 /* Enable support for SQL comments: "-- like this one!" */
 #ifndef TPP_HAVE_TPP_TOK_SQL_COMMENT
-#define TPP_HAVE_TPP_TOK_SQL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT
+#define TPP_HAVE_TPP_TOK_SQL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_SQL_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
 
 
 /* 123 */
 #ifndef TPP_HAVE_TPP_TOK_INT
-#define TPP_HAVE_TPP_TOK_INT TPP_COMMON_HAVE_TPP_TOK_GENERIC
+#define TPP_HAVE_TPP_TOK_INT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "TPP_FEAT_TPP_TOK_INT" */
 #endif /* !TPP_HAVE_TPP_TOK_INT */
 
 /* 123.0 */
 #ifndef TPP_HAVE_TPP_TOK_FLOAT
-#define TPP_HAVE_TPP_TOK_FLOAT TPP_COMMON_HAVE_TPP_TOK_GENERIC
+#define TPP_HAVE_TPP_TOK_FLOAT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "TPP_FEAT_TPP_TOK_FLOAT" */
 #endif /* !TPP_HAVE_TPP_TOK_FLOAT */
 
 /* 'foo' */
 #ifndef TPP_HAVE_TPP_TOK_CHAR
-#define TPP_HAVE_TPP_TOK_CHAR TPP_COMMON_HAVE_TPP_TOK_GENERIC
+#define TPP_HAVE_TPP_TOK_CHAR TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "TPP_FEAT_TPP_TOK_CHAR" */
 #endif /* !TPP_HAVE_TPP_TOK_CHAR */
 
 /* "foo" */
 #ifndef TPP_HAVE_TPP_TOK_STRING
-#define TPP_HAVE_TPP_TOK_STRING TPP_COMMON_HAVE_TPP_TOK_GENERIC
+#define TPP_HAVE_TPP_TOK_STRING TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "TPP_FEAT_TPP_TOK_STRING" */
 #endif /* !TPP_HAVE_TPP_TOK_STRING */
 
 /* R"AB(foo)AB" */
 #ifndef TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING
+#define TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 
 /* L"foo"  (TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL: LR"AB(foo)AB") */
 #ifndef TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING
+#define TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL */
 
 /* u8"foo" (TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL: u8R"AB(foo)AB") */
 #ifndef TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING
+#define TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
 
 /* u"foo"  (TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL: uR"AB(foo)AB") */
 #ifndef TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING
+#define TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL */
 
 /* U"foo"  (TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL: UR"AB(foo)AB") */
 #ifndef TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING
+#define TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL */
 
 /* R"foo"  r"foo"  */
 #ifndef TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
+#define TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
 
 /* R'bar'  r'bar' */
 #ifndef TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
-#define TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
+#define TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
 
 /* """foo""" */
 #ifndef TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
+#define TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "TPP_FEAT_TPP_TOK_BLOCK_STRING_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
 
 /* '''foo''' */
 #ifndef TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
-#define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
+#define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
 
 /* "<<" */
 #ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_LANGLE_LANGLE" */
 #endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
 
 /* ">>" */
 #ifndef TPP_HAVE_TPP_TOK_RANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_RANGLE_RANGLE" */
 #endif /* !TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
 
 /* "==" */
 #ifndef TPP_HAVE_TPP_TOK_EQUAL_EQUAL
-#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_EQUAL_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL */
 
 /* "!=" */
 #ifndef TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
-#define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
 
 /* ">=" */
 #ifndef TPP_HAVE_TPP_TOK_RANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_RANGLE_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
 
 /* "<=" */
 #ifndef TPP_HAVE_TPP_TOK_LANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_LANGLE_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
 
 /* "..." */
 #ifndef TPP_HAVE_TPP_TOK_DOT_DOT_DOT
-#define TPP_HAVE_TPP_TOK_DOT_DOT_DOT TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_DOT_DOT_DOT TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_DOT_DOT_DOT" */
 #endif /* !TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
 
 /* "+=" */
 #ifndef TPP_HAVE_TPP_TOK_PLUS_EQUAL
-#define TPP_HAVE_TPP_TOK_PLUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_PLUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_PLUS_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_PLUS_EQUAL */
 
 /* "-=" */
 #ifndef TPP_HAVE_TPP_TOK_MINUS_EQUAL
-#define TPP_HAVE_TPP_TOK_MINUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_MINUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_MINUS_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_MINUS_EQUAL */
 
 /* "*=" */
 #ifndef TPP_HAVE_TPP_TOK_STAR_EQUAL
-#define TPP_HAVE_TPP_TOK_STAR_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_STAR_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_STAR_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_STAR_EQUAL */
 
 /* "/=" */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_EQUAL
-#define TPP_HAVE_TPP_TOK_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_SLASH_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_SLASH_EQUAL */
 
 /* "%=" */
 #ifndef TPP_HAVE_TPP_TOK_PERCENT_EQUAL
-#define TPP_HAVE_TPP_TOK_PERCENT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_PERCENT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_PERCENT_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_PERCENT_EQUAL */
 
 /* "<<=" */
 #ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
 
 /* ">>=" */
 #ifndef TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL */
 
 /* "&=" */
 #ifndef TPP_HAVE_TPP_TOK_AMP_EQUAL
-#define TPP_HAVE_TPP_TOK_AMP_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_AMP_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_AMP_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_AMP_EQUAL */
 
 /* "|=" */
 #ifndef TPP_HAVE_TPP_TOK_PIPE_EQUAL
-#define TPP_HAVE_TPP_TOK_PIPE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_PIPE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_PIPE_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_PIPE_EQUAL */
 
 /* "^=" */
 #ifndef TPP_HAVE_TPP_TOK_HAT_EQUAL
-#define TPP_HAVE_TPP_TOK_HAT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_HAT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_HAT_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_HAT_EQUAL */
 
 /* "//" */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH
-#define TPP_HAVE_TPP_TOK_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_SLASH_SLASH" */
 #endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH */
 
 /* "//=" */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
-#define TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
 
 /* "**=" */
 #ifndef TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
-#define TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL */
 
 /* "@=" */
 #ifndef TPP_HAVE_TPP_TOK_AT_EQUAL
-#define TPP_HAVE_TPP_TOK_AT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_AT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_AT_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_AT_EQUAL */
 
 /* "##" */
 #ifndef TPP_HAVE_TPP_TOK_POUND_POUND
-#define TPP_HAVE_TPP_TOK_POUND_POUND TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_POUND_POUND TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_POUND_POUND" */
 #endif /* !TPP_HAVE_TPP_TOK_POUND_POUND */
 
 /* "&&" */
 #ifndef TPP_HAVE_TPP_TOK_AMP_AMP
-#define TPP_HAVE_TPP_TOK_AMP_AMP TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_AMP_AMP TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_AMP_AMP" */
 #endif /* !TPP_HAVE_TPP_TOK_AMP_AMP */
 
 /* "||" */
 #ifndef TPP_HAVE_TPP_TOK_PIPE_PIPE
-#define TPP_HAVE_TPP_TOK_PIPE_PIPE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_PIPE_PIPE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_PIPE_PIPE" */
 #endif /* !TPP_HAVE_TPP_TOK_PIPE_PIPE */
 
 /* "^^" */
 #ifndef TPP_HAVE_TPP_TOK_HAT_HAT
-#define TPP_HAVE_TPP_TOK_HAT_HAT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_HAT_HAT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_HAT_HAT" */
 #endif /* !TPP_HAVE_TPP_TOK_HAT_HAT */
 
 /* "++" */
 #ifndef TPP_HAVE_TPP_TOK_PLUS_PLUS
-#define TPP_HAVE_TPP_TOK_PLUS_PLUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_PLUS_PLUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_PLUS_PLUS" */
 #endif /* !TPP_HAVE_TPP_TOK_PLUS_PLUS */
 
 /* "--" */
 #ifndef TPP_HAVE_TPP_TOK_MINUS_MINUS
-#define TPP_HAVE_TPP_TOK_MINUS_MINUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_MINUS_MINUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_MINUS_MINUS" */
 #endif /* !TPP_HAVE_TPP_TOK_MINUS_MINUS */
 
 /* "**" */
 #ifndef TPP_HAVE_TPP_TOK_STAR_STAR
-#define TPP_HAVE_TPP_TOK_STAR_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_STAR_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_STAR_STAR" */
 #endif /* !TPP_HAVE_TPP_TOK_STAR_STAR */
 
 /* "~~" */
 #ifndef TPP_HAVE_TPP_TOK_TILDE_TILDE
-#define TPP_HAVE_TPP_TOK_TILDE_TILDE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_TILDE_TILDE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_TILDE_TILDE" */
 #endif /* !TPP_HAVE_TPP_TOK_TILDE_TILDE */
 
 /* "~=" */
 #ifndef TPP_HAVE_TPP_TOK_TILDE_EQUAL
-#define TPP_HAVE_TPP_TOK_TILDE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_TILDE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_TILDE_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_TILDE_EQUAL */
 
 /* "->" */
 #ifndef TPP_HAVE_TPP_TOK_MINUS_RANGLE
-#define TPP_HAVE_TPP_TOK_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
+#define TPP_HAVE_TPP_TOK_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_MINUS_RANGLE" */
 #endif /* !TPP_HAVE_TPP_TOK_MINUS_RANGLE */
 
 /* ":=" */
 #ifndef TPP_HAVE_TPP_TOK_COLON_EQUAL
-#define TPP_HAVE_TPP_TOK_COLON_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_COLON_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_COLON_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_COLON_EQUAL */
 
 /* "::" */
 #ifndef TPP_HAVE_TPP_TOK_COLON_COLON
-#define TPP_HAVE_TPP_TOK_COLON_COLON TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS
+#define TPP_HAVE_TPP_TOK_COLON_COLON TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "TPP_FEAT_TPP_TOK_COLON_COLON" */
 #endif /* !TPP_HAVE_TPP_TOK_COLON_COLON */
 
 /* "->*" */
 #ifndef TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
-#define TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS
+#define TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR" */
 #endif /* !TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
 
 /* ".*" */
 #ifndef TPP_HAVE_TPP_TOK_DOT_STAR
-#define TPP_HAVE_TPP_TOK_DOT_STAR TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS
+#define TPP_HAVE_TPP_TOK_DOT_STAR TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "TPP_FEAT_TPP_TOK_DOT_STAR" */
 #endif /* !TPP_HAVE_TPP_TOK_DOT_STAR */
 
 /* ".." */
 #ifndef TPP_HAVE_TPP_TOK_DOT_DOT
-#define TPP_HAVE_TPP_TOK_DOT_DOT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_DOT_DOT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_DOT_DOT" */
 #endif /* !TPP_HAVE_TPP_TOK_DOT_DOT */
 
 /* "<>" */
 #ifndef TPP_HAVE_TPP_TOK_LANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_LANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_LANGLE_RANGLE" */
 #endif /* !TPP_HAVE_TPP_TOK_LANGLE_RANGLE */
 
 /* "<<<" */
 #ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE" */
 #endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
 
 /* ">>>" */
 #ifndef TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE" */
 #endif /* !TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
 
 /* "<<<=" */
 #ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
 
 /* ">>>=" */
 #ifndef TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 
 /* "===" */
 #ifndef TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL
-#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL */
 
 /* "!==" */
 #ifndef TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
-#define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
 
 /* "??" */
 #ifndef TPP_HAVE_TPP_TOK_QMARK_QMARK
-#define TPP_HAVE_TPP_TOK_QMARK_QMARK TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_QMARK_QMARK TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_QMARK_QMARK" */
 #endif /* !TPP_HAVE_TPP_TOK_QMARK_QMARK */
 
 /* "?=" */
 #ifndef TPP_HAVE_TPP_TOK_QMARK_EQUAL
-#define TPP_HAVE_TPP_TOK_QMARK_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
+#define TPP_HAVE_TPP_TOK_QMARK_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_QMARK_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_QMARK_EQUAL */
 
 
@@ -1923,7 +2125,7 @@ TPP_DECL_END
  * This does NOT affect the line-continuation features of C++ // comments,
  * and multi-line macro definitions. */
 #ifndef TPP_HAVE_BSE
-#define TPP_HAVE_BSE (-1)
+#define TPP_HAVE_BSE (-1) /* "-fbse" */
 #endif /* !TPP_HAVE_BSE */
 
 /* Extension to `TPP_HAVE_BSE': the \ backslash is allowed to be followed by extra
@@ -1932,229 +2134,285 @@ TPP_DECL_END
  * This DOES affect the line-continuation features of C++ // comments, and
  * multi-line macro definitions. */
 #ifndef TPP_HAVE_BSE_WHITESPACE
-#define TPP_HAVE_BSE_WHITESPACE (TPP_HAVE_BSE ? -1 : 0)
+#define TPP_HAVE_BSE_WHITESPACE (TPP_HAVE_BSE ? -1 : 0) /* "-fbse-whitespace" */
 #endif /* !TPP_HAVE_BSE_WHITESPACE */
 
 /* Support for "\e" (for U+001B) escape sequences */
 #ifndef TPP_HAVE_ESCAPE_E_IN_STRINGS
-#define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? -1 : 0)
+#define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? -1 : 0) /* "-fescape-e-in-strings" */
 #endif /* !TPP_HAVE_ESCAPE_E_IN_STRINGS */
 
 /* Support for "\s" (for U+0020) escape sequences */
 #ifndef TPP_HAVE_ESCAPE_S_IN_STRINGS
-#define TPP_HAVE_ESCAPE_S_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? -1 : 0)
+#define TPP_HAVE_ESCAPE_S_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? -1 : 0) /* "-fescape-s-in-strings" */
 #endif /* !TPP_HAVE_ESCAPE_S_IN_STRINGS */
 
 /* Specifies if *any* CPP directives are supported */
 #ifndef TPP_HAVE_CPP_DIRECTIVES
-#define TPP_HAVE_CPP_DIRECTIVES TPP_COMMON_HAVE_CPP_DIRECTIVES
+#define TPP_HAVE_CPP_DIRECTIVES TPP_COMMON_HAVE_CPP_DIRECTIVES /* "TPP_FEAT_CPP_DIRECTIVES" */
 #endif /* !TPP_HAVE_CPP_DIRECTIVES */
 
 /* Support for C-style macros */
 #ifndef TPP_HAVE_CPP_MACROS
-#define TPP_HAVE_CPP_MACROS (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_MACROS (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_MACROS" */
 #endif /* !TPP_HAVE_CPP_MACROS */
 
 /* Support for: #!foobar  (comments) */
 #ifndef TPP_HAVE_CPP_EXCLAIM
-#define TPP_HAVE_CPP_EXCLAIM (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_EXCLAIM (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "-fshebang-directives" */
 #endif /* !TPP_HAVE_CPP_EXCLAIM */
 
 /* Support for: #  (blank line) */
 #ifndef TPP_HAVE_CPP_BLANK
-#define TPP_HAVE_CPP_BLANK (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_BLANK (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_BLANK" */
 #endif /* !TPP_HAVE_CPP_BLANK */
 
 /* Support for: # 42 ...  (similar to #line) */
 #ifndef TPP_HAVE_CPP_DIGIT_LINE
-#define TPP_HAVE_CPP_DIGIT_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_DIGIT_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_DIGIT_LINE" */
 #endif /* !TPP_HAVE_CPP_DIGIT_LINE */
 
 /* Support for: #line ... */
 #ifndef TPP_HAVE_CPP_LINE
-#define TPP_HAVE_CPP_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_LINE" */
 #endif /* !TPP_HAVE_CPP_LINE */
 
 /* Support for: #include */
 #ifndef TPP_HAVE_CPP_INCLUDE
-#define TPP_HAVE_CPP_INCLUDE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_INCLUDE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "-finclude-directives" */
 #endif /* !TPP_HAVE_CPP_INCLUDE */
 
 /* Support for: #include_next */
 #ifndef TPP_HAVE_CPP_INCLUDE_NEXT
-#define TPP_HAVE_CPP_INCLUDE_NEXT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_INCLUDE_NEXT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "-finclude-next-directives" */
 #endif /* !TPP_HAVE_CPP_INCLUDE_NEXT */
 
 /* Support for: #import */
 #ifndef TPP_HAVE_CPP_IMPORT
-#define TPP_HAVE_CPP_IMPORT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_IMPORT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "-fimport-directives" */
 #endif /* !TPP_HAVE_CPP_IMPORT */
 
 /* Support for: #if, #ifdef, #ifndef, #elif, #elifdef, #elifndef, #else, #endif */
 #ifndef TPP_HAVE_CPP_IF_ELSE_ENDIF
-#define TPP_HAVE_CPP_IF_ELSE_ENDIF ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_DIRECTIVES) ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_IF_ELSE_ENDIF ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_DIRECTIVES) ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_IF_ELSE_ENDIF" */
 #endif /* !TPP_HAVE_CPP_IF_ELSE_ENDIF */
 
 /* Support for: #define, #undef */
 #ifndef TPP_HAVE_CPP_DEFINE
-#define TPP_HAVE_CPP_DEFINE ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_DIRECTIVES) ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_DEFINE ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_DIRECTIVES) ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_DEFINE" */
 #endif /* !TPP_HAVE_CPP_DEFINE */
 
 /* Support for: #assert, #unassert */
 #ifndef TPP_HAVE_CPP_ASSERT
-#define TPP_HAVE_CPP_ASSERT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_ASSERT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_ASSERT" */
 #endif /* !TPP_HAVE_CPP_ASSERT */
 
 /* Support for: #error */
 #ifndef TPP_HAVE_CPP_ERROR
-#define TPP_HAVE_CPP_ERROR (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_ERROR (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "-ferror-directives" */
 #endif /* !TPP_HAVE_CPP_ERROR */
 
 /* Support for: #warning */
 #ifndef TPP_HAVE_CPP_WARNING
-#define TPP_HAVE_CPP_WARNING (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_WARNING (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "-fwarning-directives" */
 #endif /* !TPP_HAVE_CPP_WARNING */
 
 /* Support for: #ident */
-#ifndef TPP_HAVE_CPP_IDENT
-#define TPP_HAVE_CPP_IDENT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
-#endif /* !TPP_HAVE_CPP_IDENT */
-
-/* Support for: #scss */
-#ifndef TPP_HAVE_CPP_SCSS
-#define TPP_HAVE_CPP_SCSS (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
-#endif /* !TPP_HAVE_CPP_SCSS */
+#ifndef TPP_HAVE_CPP_IDENT_SCSS
+#define TPP_HAVE_CPP_IDENT_SCSS (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "-fident-directives" */
+#endif /* !TPP_HAVE_CPP_IDENT_SCSS */
 
 /* Support for: #pragma */
 #ifndef TPP_HAVE_CPP_PRAGMA
-#define TPP_HAVE_CPP_PRAGMA (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0)
+#define TPP_HAVE_CPP_PRAGMA (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_PRAGMA" */
 #endif /* !TPP_HAVE_CPP_PRAGMA */
 
 /* Support for: _Pragma("foo") */
-#ifndef TPP_HAVE_STDC_PRAGMA
-#define TPP_HAVE_STDC_PRAGMA TPP_COMMON_HAVE_PRAGMA
-#endif /* !TPP_HAVE_STDC_PRAGMA */
+#ifndef TPP_HAVE_MACRO__Pragma
+#define TPP_HAVE_MACRO__Pragma TPP_COMMON_HAVE_PRAGMA /* "-f_Pragma" */
+#endif /* !TPP_HAVE_MACRO__Pragma */
 
 /* Support for: __pragma(foo) */
-#ifndef TPP_HAVE_MSVC_PRAGMA
-#define TPP_HAVE_MSVC_PRAGMA TPP_COMMON_HAVE_PRAGMA
-#endif /* !TPP_HAVE_MSVC_PRAGMA */
+#ifndef TPP_HAVE_MACRO___pragma
+#define TPP_HAVE_MACRO___pragma TPP_COMMON_HAVE_PRAGMA /* "-f__pragma" */
+#endif /* !TPP_HAVE_MACRO___pragma */
 
 
-/* Support for: #pragma */
+/* Support for pragma directives */
 #ifndef TPP_HAVE_PRAGMA
-#define TPP_HAVE_PRAGMA (TPP_HAVE_CPP_PRAGMA || TPP_HAVE_STDC_PRAGMA || TPP_HAVE_MSVC_PRAGMA)
+#define TPP_HAVE_PRAGMA (TPP_HAVE_CPP_PRAGMA || TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma)
 #endif /* !TPP_HAVE_PRAGMA */
 
 
 /* Support for clang __has_attribute */
-#ifndef TPP_HAVE_CLANG_HAS_ATTRIBUTE
-#define TPP_HAVE_CLANG_HAS_ATTRIBUTE (TPP_HAVE_CPP_MACROS ? (-1) : 0)
-#endif /* !TPP_HAVE_CLANG_HAS_ATTRIBUTE */
+#ifndef TPP_HAVE_CLANG_MACRO___has_attribute
+#define TPP_HAVE_CLANG_MACRO___has_attribute (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fclang-__has_attribute" */
+#endif /* !TPP_HAVE_CLANG_MACRO___has_attribute */
 
 /* Support for clang __has_builtin */
-#ifndef TPP_HAVE_CLANG_HAS_BUILTIN
-#define TPP_HAVE_CLANG_HAS_BUILTIN (TPP_HAVE_CPP_MACROS ? (-1) : 0)
-#endif /* !TPP_HAVE_CLANG_HAS_BUILTIN */
+#ifndef TPP_HAVE_CLANG_MACRO___has_builtin
+#define TPP_HAVE_CLANG_MACRO___has_builtin (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fclang-__has_builtin" */
+#endif /* !TPP_HAVE_CLANG_MACRO___has_builtin */
 
 /* Support for clang __has_cpp_attribute */
-#ifndef TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
-#define TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE (TPP_HAVE_CPP_MACROS ? (-1) : 0)
-#endif /* !TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE */
+#ifndef TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+#define TPP_HAVE_CLANG_MACRO___has_cpp_attribute (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fclang-__has_cpp_attribute" */
+#endif /* !TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
 
 /* Support for clang __has_declspec_attribute */
-#ifndef TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
-#define TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE (TPP_HAVE_CPP_MACROS ? (-1) : 0)
-#endif /* !TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE */
+#ifndef TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+#define TPP_HAVE_CLANG_MACRO___has_declspec_attribute (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fclang-__has_declspec_attribute" */
+#endif /* !TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
 
 /* Support for clang __has_extension */
-#ifndef TPP_HAVE_CLANG_HAS_EXTENSION
-#define TPP_HAVE_CLANG_HAS_EXTENSION (TPP_HAVE_CPP_MACROS ? (-1) : 0)
-#endif /* !TPP_HAVE_CLANG_HAS_EXTENSION */
+#ifndef TPP_HAVE_CLANG_MACRO___has_extension
+#define TPP_HAVE_CLANG_MACRO___has_extension (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fclang-__has_extension" */
+#endif /* !TPP_HAVE_CLANG_MACRO___has_extension */
 
 /* Support for clang __has_feature */
-#ifndef TPP_HAVE_CLANG_HAS_FEATURE
-#define TPP_HAVE_CLANG_HAS_FEATURE (TPP_HAVE_CPP_MACROS ? (-1) : 0)
-#endif /* !TPP_HAVE_CLANG_HAS_FEATURE */
+#ifndef TPP_HAVE_CLANG_MACRO___has_feature
+#define TPP_HAVE_CLANG_MACRO___has_feature (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fclang-__has_feature" */
+#endif /* !TPP_HAVE_CLANG_MACRO___has_feature */
 
 /* Support for clang __has_c_attribute */
-#ifndef TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
-#define TPP_HAVE_CLANG_HAS_C_ATTRIBUTE (TPP_HAVE_CPP_MACROS ? (-1) : 0)
-#endif /* !TPP_HAVE_CLANG_HAS_C_ATTRIBUTE */
+#ifndef TPP_HAVE_CLANG_MACRO___has_c_attribute
+#define TPP_HAVE_CLANG_MACRO___has_c_attribute (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fclang-__has_c_attribute" */
+#endif /* !TPP_HAVE_CLANG_MACRO___has_c_attribute */
 
 /* Support for clang __is_identifier */
-#ifndef TPP_HAVE_CLANG_IS_IDENTIFIER
-#define TPP_HAVE_CLANG_IS_IDENTIFIER (TPP_HAVE_CPP_MACROS ? (-1) : 0)
-#endif /* !TPP_HAVE_CLANG_IS_IDENTIFIER */
+#ifndef TPP_HAVE_MACRO___is_identifier
+#define TPP_HAVE_MACRO___is_identifier (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-f__is_identifier" */
+#endif /* !TPP_HAVE_MACRO___is_identifier */
 
 /* Support for TPP's __is_deprecated */
-#ifndef TPP_HAVE_TPPX_IS_DEPRECATED
-#define TPP_HAVE_TPPX_IS_DEPRECATED (TPP_HAVE_CPP_MACROS ? (-1) : 0)
-#endif /* !TPP_HAVE_TPPX_IS_DEPRECATED */
+#ifndef TPP_HAVE_MACRO___is_deprecated
+#define TPP_HAVE_MACRO___is_deprecated (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-f__is_deprecated" */
+#endif /* !TPP_HAVE_MACRO___is_deprecated */
 
 /* Support for TPP's __is_poisoned */
-#ifndef TPP_HAVE_TPPX_IS_POISONED
-#define TPP_HAVE_TPPX_IS_POISONED (TPP_HAVE_CPP_MACROS ? (-1) : 0)
-#endif /* !TPP_HAVE_TPPX_IS_POISONED */
+#ifndef TPP_HAVE_MACRO___is_poisoned
+#define TPP_HAVE_MACRO___is_poisoned (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-f__is_poisoned" */
+#endif /* !TPP_HAVE_MACRO___is_poisoned */
 
 /* Support for TPP's __has_extension */
-#ifndef TPP_HAVE_TPPX_HAS_EXTENSION
-#define TPP_HAVE_TPPX_HAS_EXTENSION ((TPP_HAVE_EXTENSIONS && TPP_HAVE_CPP_MACROS) ? (-1) : 0)
-#endif /* !TPP_HAVE_TPPX_HAS_EXTENSION */
+#ifndef TPP_HAVE_MACRO___has_extension
+#define TPP_HAVE_MACRO___has_extension ((TPP_HAVE_EXTENSIONS && TPP_HAVE_CPP_MACROS) ? -1 : 0) /* "-f__has_extension" */
+#endif /* !TPP_HAVE_MACRO___has_extension */
 
 /* Support for TPP's __has_known_extension */
-#ifndef TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION
-#define TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION ((TPP_HAVE_EXTENSIONS && TPP_HAVE_CPP_MACROS) ? (-1) : 0)
-#endif /* !TPP_HAVE_TPPX_HAS_KNOWN_EXTENSION */
+#ifndef TPP_HAVE_MACRO___has_known_extension
+#define TPP_HAVE_MACRO___has_known_extension ((TPP_HAVE_EXTENSIONS && TPP_HAVE_CPP_MACROS) ? -1 : 0) /* "-f__has_known_extension" */
+#endif /* !TPP_HAVE_MACRO___has_known_extension */
 
 /* Support for TPP's __has_warning */
-#ifndef TPP_HAVE_TPPX_HAS_WARNING
-#define TPP_HAVE_TPPX_HAS_WARNING ((TPP_HAVE_WARNINGS && TPP_HAVE_CPP_MACROS) ? (-1) : 0)
-#endif /* !TPP_HAVE_TPPX_HAS_WARNING */
+#ifndef TPP_HAVE_MACRO___has_warning
+#define TPP_HAVE_MACRO___has_warning ((TPP_HAVE_WARNINGS && TPP_HAVE_CPP_MACROS) ? -1 : 0) /* "-f__has_warning" */
+#endif /* !TPP_HAVE_MACRO___has_warning */
 
 /* Support for TPP's __has_known_warning */
-#ifndef TPP_HAVE_TPPX_HAS_KNOWN_WARNING
-#define TPP_HAVE_TPPX_HAS_KNOWN_WARNING ((TPP_HAVE_WARNINGS && TPP_HAVE_CPP_MACROS) ? (-1) : 0)
-#endif /* !TPP_HAVE_TPPX_HAS_KNOWN_WARNING */
+#ifndef TPP_HAVE_MACRO___has_known_warning
+#define TPP_HAVE_MACRO___has_known_warning ((TPP_HAVE_WARNINGS && TPP_HAVE_CPP_MACROS) ? -1 : 0) /* "-f__has_known_warning" */
+#endif /* !TPP_HAVE_MACRO___has_known_warning */
+
+/* Support for clang __has_include */
+#ifndef TPP_HAVE_MACRO___has_include
+#define TPP_HAVE_MACRO___has_include ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_IMPORT)) ? -1 : 0) /* "-f__has_include" */
+#endif /* !TPP_HAVE_MACRO___has_include */
+
+/* Support for clang __has_include_next */
+#ifndef TPP_HAVE_MACRO___has_include_next
+#define TPP_HAVE_MACRO___has_include_next ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_INCLUDE_NEXT) ? -1 : 0) /* "-f__has_include_next" */
+#endif /* !TPP_HAVE_MACRO___has_include_next */
+
+/* __FILE__ */
+#ifndef TPP_HAVE_MACRO___FILE__
+#define TPP_HAVE_MACRO___FILE__ (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-f__FILE__" */
+#endif /* !TPP_HAVE_MACRO___FILE__ */
+
+/* __LINE__ */
+#ifndef TPP_HAVE_MACRO___LINE__
+#define TPP_HAVE_MACRO___LINE__ (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-f__LINE__" */
+#endif /* !TPP_HAVE_MACRO___LINE__ */
+
+/* __TIME__ */
+#ifndef TPP_HAVE_MACRO___TIME__
+#define TPP_HAVE_MACRO___TIME__ (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-f__TIME__" */
+#endif /* !TPP_HAVE_MACRO___TIME__ */
+
+/* __DATE__ */
+#ifndef TPP_HAVE_MACRO___DATE__
+#define TPP_HAVE_MACRO___DATE__ (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-f__DATE__" */
+#endif /* !TPP_HAVE_MACRO___DATE__ */
+
+/* __COLUMN__ */
+#ifndef TPP_HAVE_MACRO___COLUMN__
+#define TPP_HAVE_MACRO___COLUMN__ (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fcolumn-macro" */
+#endif /* !TPP_HAVE_MACRO___COLUMN__ */
+
+/* __BASE_FILE__ */
+#ifndef TPP_HAVE_MACRO___BASE_FILE__
+#define TPP_HAVE_MACRO___BASE_FILE__ (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fbasefile-macro" */
+#endif /* !TPP_HAVE_MACRO___BASE_FILE__ */
+
+/* __INCLUDE_LEVEL__ */
+#ifndef TPP_HAVE_MACRO___INCLUDE_LEVEL__
+#define TPP_HAVE_MACRO___INCLUDE_LEVEL__ (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-finclude-level-macro" */
+#endif /* !TPP_HAVE_MACRO___INCLUDE_LEVEL__ */
+
+/* __INCLUDE_DEPTH__ */
+#ifndef TPP_HAVE_MACRO___INCLUDE_DEPTH__
+#define TPP_HAVE_MACRO___INCLUDE_DEPTH__ (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-finclude-depth-macro" */
+#endif /* !TPP_HAVE_MACRO___INCLUDE_DEPTH__ */
+
+/* __COUNTER__ */
+#ifndef TPP_HAVE_MACRO___COUNTER__
+#define TPP_HAVE_MACRO___COUNTER__ (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fcounter-macro" */
+#endif /* !TPP_HAVE_MACRO___COUNTER__ */
+
+/* __TIMESTAMP__ */
+#ifndef TPP_HAVE_MACRO___TIMESTAMP__
+#define TPP_HAVE_MACRO___TIMESTAMP__ (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-ftimestamp-macro" */
+#endif /* !TPP_HAVE_MACRO___TIMESTAMP__ */
+
 
 /* Support for: #define point<T> ... */
 #ifndef TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
-#define TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS (TPP_HAVE_CPP_MACROS ? -1 : 0)
+#define TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-falternative-macro-parenthesis" */
 #endif /* !TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
 
 /* Support for retaining whitespace around macro arguments */
 #ifndef TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
-#define TPP_HAVE_MACRO_ARGUMENT_WHITESPACE (TPP_HAVE_CPP_MACROS ? -1 : 0)
+#define TPP_HAVE_MACRO_ARGUMENT_WHITESPACE (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-fmacro-argument-whitespace" */
 #endif /* !TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
 
 /* Support for: #pragma extension("-fmacro-recursion") */
 #ifndef TPP_HAVE_MACRO_RECURSION
-#define TPP_HAVE_MACRO_RECURSION (TPP_HAVE_CPP_MACROS ? -2 : 0)
+#define TPP_HAVE_MACRO_RECURSION (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-fmacro-recursion" */
 #endif /* !TPP_HAVE_MACRO_RECURSION */
 
 /* Support for: #define printf(format, args...) args */
 #ifndef TPP_HAVE_NAMED_VARARGS_IN_MACROS
-#define TPP_HAVE_NAMED_VARARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0)
+#define TPP_HAVE_NAMED_VARARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fnamed-varargs-in-macros" */
 #endif /* !TPP_HAVE_NAMED_VARARGS_IN_MACROS */
 
 /* Support for: #define printf(format, ...) __VA_ARGS__ */
 #ifndef TPP_HAVE_VA_ARGS_IN_MACROS
-#define TPP_HAVE_VA_ARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0)
+#define TPP_HAVE_VA_ARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fva-args-in-macros" */
 #endif /* !TPP_HAVE_VA_ARGS_IN_MACROS */
 
 /* Support for: #define printf(format, ...) fprintf(stderr, format __VA_COMMA__ __VA_ARGS__) */
 #ifndef TPP_HAVE_VA_COMMA_IN_MACROS
-#define TPP_HAVE_VA_COMMA_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0)
+#define TPP_HAVE_VA_COMMA_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fva-comma-in-macros" */
 #endif /* !TPP_HAVE_VA_COMMA_IN_MACROS */
 
 /* Support for: #define printf(format, ...) fprintf(stderr, format __VA_OPT__(,) __VA_ARGS__) */
 #ifndef TPP_HAVE_VA_OPT_IN_MACROS
-#define TPP_HAVE_VA_OPT_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0)
+#define TPP_HAVE_VA_OPT_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fva-opt-in-macros" */
 #endif /* !TPP_HAVE_VA_OPT_IN_MACROS */
 
 /* Support for: #define min(...) min_##__VA_NARGS__(__VA_ARGS__) */
 #ifndef TPP_HAVE_VA_NARGS_IN_MACROS
-#define TPP_HAVE_VA_NARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0)
+#define TPP_HAVE_VA_NARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fva-nargs-in-macros" */
 #endif /* !TPP_HAVE_VA_NARGS_IN_MACROS */
 /************************************************************************/
 /************************************************************************/
@@ -2169,53 +2427,202 @@ TPP_DECL_END
 
 /* Support for: #pragma push_macro() / #pragma pop_macro() */
 #ifndef TPP_HAVE_PRAGMA_PUSH_MACRO
-#define TPP_HAVE_PRAGMA_PUSH_MACRO ((TPP_HAVE_CPP_MACROS && TPP_COMMON_HAVE_PRAGMA) ? -1 : 0)
+#define TPP_HAVE_PRAGMA_PUSH_MACRO ((TPP_HAVE_CPP_MACROS && TPP_COMMON_HAVE_PRAGMA) ? -1 : 0) /* "-fpragma-push-macro" */
 #endif /* !TPP_HAVE_PRAGMA_PUSH_MACRO */
 
 /* Support for: #pragma once */
 #ifndef TPP_HAVE_PRAGMA_ONCE
-#define TPP_HAVE_PRAGMA_ONCE (((TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_COMMON_HAVE_PRAGMA) ? -1 : 0)
+#define TPP_HAVE_PRAGMA_ONCE (((TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_COMMON_HAVE_PRAGMA) ? -1 : 0) /* "-fpragma-once" */
 #endif /* !TPP_HAVE_PRAGMA_ONCE */
 
 /* Support for: #pragma deprecated("foo") */
 #ifndef TPP_HAVE_PRAGMA_DEPRECATED
-#define TPP_HAVE_PRAGMA_DEPRECATED (TPP_COMMON_HAVE_PRAGMA ? -1 : 0)
+#define TPP_HAVE_PRAGMA_DEPRECATED (TPP_COMMON_HAVE_PRAGMA ? -1 : 0) /* "-fpragma-deprecated" */
 #endif /* !TPP_HAVE_PRAGMA_DEPRECATED */
 
 /* Support for: #pragma GCC poison foo */
 #ifndef TPP_HAVE_PRAGMA_GCC_POISON
-#define TPP_HAVE_PRAGMA_GCC_POISON (TPP_COMMON_HAVE_PRAGMA_GCC ? -1 : 0)
+#define TPP_HAVE_PRAGMA_GCC_POISON (TPP_COMMON_HAVE_PRAGMA_GCC ? -1 : 0) /* "-fpragma-gcc-poison" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_POISON */
 
 /* Support for: #pragma tpp_set_keyword_flags */
 #ifndef TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
-#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS (TPP_COMMON_HAVE_PRAGMA ? -1 : 0)
+#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS (TPP_COMMON_HAVE_PRAGMA ? -1 : 0) /* "-fpragma-tpp-set-keyword-flags" */
 #endif /* !TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
 
 /* Support for: #pragma GCC system_header */
 #ifndef TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
-#define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER (TPP_COMMON_HAVE_PRAGMA_GCC ? -1 : 0)
+#define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER (TPP_COMMON_HAVE_PRAGMA_GCC ? -1 : 0) /* "-fpragma-gcc-system-header" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
 
 /* Support for: #pragma extension(...) */
 #ifndef TPP_HAVE_PRAGMA_EXTENSION
-#define TPP_HAVE_PRAGMA_EXTENSION ((TPP_COMMON_HAVE_PRAGMA && TPP_HAVE_EXTENSIONS) ? -1 : 0)
+#define TPP_HAVE_PRAGMA_EXTENSION ((TPP_COMMON_HAVE_PRAGMA && TPP_HAVE_EXTENSIONS) ? -1 : 0) /* "-fpragma-extension" */
 #endif /* !TPP_HAVE_PRAGMA_EXTENSION */
 
 /* Support for: #pragma extension(push) */
 #ifndef TPP_HAVE_PRAGMA_EXTENSION_PUSH
-#define TPP_HAVE_PRAGMA_EXTENSION_PUSH ((TPP_HAVE_PRAGMA_EXTENSION && TPP_HAVE_EXTENSIONS_PUSH_POP) ? -1 : 0)
+#define TPP_HAVE_PRAGMA_EXTENSION_PUSH ((TPP_HAVE_PRAGMA_EXTENSION && TPP_HAVE_EXTENSIONS_PUSH_POP) ? -1 : 0) /* "-fpragma-extension-push" */
 #endif /* !TPP_HAVE_PRAGMA_EXTENSION_PUSH */
 
 /* Support for: #pragma warning(...) */
 #ifndef TPP_HAVE_PRAGMA_WARNING
-#define TPP_HAVE_PRAGMA_WARNING ((TPP_COMMON_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? -1 : 0)
+#define TPP_HAVE_PRAGMA_WARNING ((TPP_COMMON_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? -1 : 0) /* "-fpragma-warning" */
 #endif /* !TPP_HAVE_PRAGMA_WARNING */
 
 /* Support for: #pragma warning(push) */
 #ifndef TPP_HAVE_PRAGMA_WARNING_PUSH
-#define TPP_HAVE_PRAGMA_WARNING_PUSH ((TPP_HAVE_PRAGMA_WARNING && TPP_HAVE_WARNINGS_PUSH_POP) ? -1 : 0)
+#define TPP_HAVE_PRAGMA_WARNING_PUSH ((TPP_HAVE_PRAGMA_WARNING && TPP_HAVE_WARNINGS_PUSH_POP) ? -1 : 0) /* "-fpragma-warning-push" */
 #endif /* !TPP_HAVE_PRAGMA_WARNING_PUSH */
+
+#if 0 /* TODO */
+#ifndef TPP_CONFIG_EXTENSION_TPP_EVAL
+EXTENSION(EXT_TPP_EVAL,          "tpp-eval-macro",                TPP_CONFIG_EXTENSION_TPP_EVAL_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_EVAL */
+#ifndef TPP_CONFIG_EXTENSION_TPP_UNIQUE
+EXTENSION(EXT_TPP_UNIQUE,        "tpp-unique-macro",              TPP_CONFIG_EXTENSION_TPP_UNIQUE_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_UNIQUE */
+#ifndef TPP_CONFIG_EXTENSION_TPP_LOAD_FILE
+EXTENSION(EXT_TPP_LOAD_FILE,     "tpp-load-file-macro",           TPP_CONFIG_EXTENSION_TPP_LOAD_FILE_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_LOAD_FILE */
+#ifndef TPP_CONFIG_EXTENSION_TPP_COUNTER
+EXTENSION(EXT_TPP_COUNTER,       "tpp-counter-macro",             TPP_CONFIG_EXTENSION_TPP_COUNTER_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_COUNTER */
+#ifndef TPP_CONFIG_EXTENSION_TPP_RANDOM
+EXTENSION(EXT_TPP_RANDOM,        "tpp-random-macro",              TPP_CONFIG_EXTENSION_TPP_RANDOM_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_RANDOM */
+#ifndef TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE
+EXTENSION(EXT_TPP_STR_DECOMPILE, "tpp-str-decompile-macro",       TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE */
+#ifndef TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR
+EXTENSION(EXT_TPP_STR_SUBSTR,    "tpp-str-substr-macro",          TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR */
+#ifndef TPP_CONFIG_EXTENSION_TPP_STR_PACK
+EXTENSION(EXT_TPP_STR_PACK,      "tpp-str-pack-macro",            TPP_CONFIG_EXTENSION_TPP_STR_PACK_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_STR_PACK */
+#ifndef TPP_CONFIG_EXTENSION_TPP_STR_SIZE
+EXTENSION(EXT_TPP_STR_SIZE,      "tpp-str-size-macro",            TPP_CONFIG_EXTENSION_TPP_STR_SIZE_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_STR_SIZE */
+#ifndef TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS
+EXTENSION(EXT_TPP_COUNT_TOKENS,  "tpp-count-tokens-macro",        TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS */
+#ifndef TPP_CONFIG_EXTENSION_TPP_IDENTIFIER
+EXTENSION(EXT_TPP_IDENTIFIER,    "tpp-identifier-macro",          TPP_CONFIG_EXTENSION_TPP_IDENTIFIER_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TPP_IDENTIFIER */
+#ifndef TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA
+EXTENSION(EXT_DOLLAR_IS_ALPHA,   "dollars-in-identifiers",        TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA */
+#ifndef TPP_CONFIG_EXTENSION_ASSERTIONS
+EXTENSION(EXT_ASSERTIONS,        "assertions",                    TPP_CONFIG_EXTENSION_ASSERTIONS_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_ASSERTIONS */
+#ifndef TPP_CONFIG_EXTENSION_CANONICAL_HEADERS
+EXTENSION(EXT_CANONICAL_HEADERS, "canonical-system-headers",      TPP_CONFIG_EXTENSION_CANONICAL_HEADERS_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_CANONICAL_HEADERS */
+#ifndef TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES
+EXTENSION(EXT_EXT_ARE_FEATURES,  "extensions-are-features",       TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES */
+#ifndef TPP_CONFIG_EXTENSION_MSVC_FIXED_INT
+EXTENSION(EXT_MSVC_FIXED_INT,    "fixed-length-integrals",        TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_MSVC_FIXED_INT */
+#ifndef TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED
+EXTENSION(EXT_NO_EXPAND_DEFINED, "dont-expand-defined",           TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED */
+#ifndef TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR
+EXTENSION(EXT_IFELSE_IN_EXPR,    "ifelse-in-expressions",         TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR */
+#ifndef TPP_CONFIG_EXTENSION_EXTENDED_IDENTS
+EXTENSION(EXT_EXTENDED_IDENTS,   "extended-identifiers",          TPP_CONFIG_EXTENSION_EXTENDED_IDENTS_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_EXTENDED_IDENTS */
+#ifndef TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO /* Traditional macro expansion rules. */
+EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO_DEFAULT)
+#endif /* TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO */
+#endif
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+/************************************************************************/
+/* IMPLICIT API FEATURES                                                */
+/************************************************************************/
+/* Enable support for `TPP_FILE_IOFLAGS_SYSHDR' */
+#ifndef TPP_HAVE_FILE_SYSHDR
+#define TPP_HAVE_FILE_SYSHDR (TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0)
+#endif /* !TPP_HAVE_FILE_SYSHDR */
+
+/* Enable support for `tpp_file::tf_prev' */
+#ifndef TPP_HAVE_INCLUDE_STACK
+#define TPP_HAVE_INCLUDE_STACK (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT)
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+
+/* Enable support for `tpp_keywords_openfile()' */
+#ifndef TPP_HAVE_KEYWORDS_OPENFILE
+#define TPP_HAVE_KEYWORDS_OPENFILE (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || 1)
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE */
+
+/* Enable support for `tpp_keywords_openfile_ex()' */
+#ifndef TPP_HAVE_KEYWORDS_OPENFILE_EX
+#define TPP_HAVE_KEYWORDS_OPENFILE_EX \
+	(TPP_HAVE_KEYWORDS_OPENFILE && (TPP_HAVE_CPP_IMPORT || ((TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_HAVE_PRAGMA_ONCE)))
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+
+/* Enable support for `tpp_lexer_init_io_ex()' */
+#ifndef TPP_HAVE_LEXER_INIT_IO
+#define TPP_HAVE_LEXER_INIT_IO TPP_HAVE_FILE_NOKWD
+#endif /* !TPP_HAVE_LEXER_INIT_IO */
+
+/* Enable support for `tpp_lexer_init_filename()' */
+#ifndef TPP_HAVE_LEXER_INIT_FILENAME
+#define TPP_HAVE_LEXER_INIT_FILENAME TPP_HAVE_KEYWORDS_OPENFILE
+#endif /* !TPP_HAVE_LEXER_INIT_FILENAME */
+
+/* Enable support for `tpp_keyword_misc::tkm_file_guard' */
+#ifndef TPP_HAVE_KEYWORD_FILE_GUARD
+#define TPP_HAVE_KEYWORD_FILE_GUARD ((TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_KEYWORD_FILE_GUARD */
+
+/* Enable support for `tpp_lexer_skip_blocking()' */
+#ifndef TPP_HAVE_LEXER_SKIP
+#define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1)
+#endif /* !TPP_HAVE_LEXER_SKIP */
+
+ /* Provide a function "tpp_lexer_reprtokenid()" to
+ * return the string-representation of a given token ID */
+#ifndef TPP_HAVE_LEXER_REPRTOKENID
+#define TPP_HAVE_LEXER_REPRTOKENID (TPP_HAVE_LEXER_SKIP)
+#endif /* !TPP_HAVE_LEXER_REPRTOKENID */
+
+/* Provide a function "tpp_reprtokenid()" that does the
+ * same as "tpp_lexer_reprtokenid()" (and is also used to
+ * implement that function), but fails for user-defined
+ * keyword token IDs */
+#ifndef TPP_HAVE_REPRTOKENID
+#define TPP_HAVE_REPRTOKENID (TPP_HAVE_LEXER_REPRTOKENID)
+#endif /* !TPP_HAVE_REPRTOKENID */
+
+/* Provide a function "tpp_lexer_getkeyworddefined()" to check
+ * if a given keyword is "defined()" (meaning it can be expanded
+ * as a (potentially builtin) macro) */
+#ifndef TPP_HAVE_LEXER_GETKEYWORDDEFINED
+#define TPP_HAVE_LEXER_GETKEYWORDDEFINED \
+	(TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+
+/* Provide a function "tpp_lexer_seek_rparen()" that can be used
+ * to find the position of a matching ')'-token for the purpose
+ * of macro argument lists. */
+#ifndef TPP_HAVE_LEXER_SEEK_RPAREN
+#define TPP_HAVE_LEXER_SEEK_RPAREN (TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN */
+
+/* Same as "tpp_lexer_seek_rparen()", but also able to deal with
+ * alternate parenthesis pairs: [ ] { } < > */
+#ifndef TPP_HAVE_LEXER_SEEK_RPAREN_EX
+#define TPP_HAVE_LEXER_SEEK_RPAREN_EX (TPP_HAVE_LEXER_SEEK_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
+#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -2324,6 +2731,12 @@ TPP_DECL_END
 	                       TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
 	                       TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
+#ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
+#define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEK_RPAREN)
+#endif /* !TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST */
+#ifndef TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS
+#define TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEK_RPAREN)
+#endif /* !TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS */
 
 
 /* Warning printer configuration */
@@ -2351,79 +2764,6 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */
 #endif /* !TPP_CONFIG_WARNING_PRINTER */
 #endif /* TPP_HAVE_WARNINGS */
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-
-
-
-/************************************************************************/
-/* IMPLICIT API FEATURES                                                */
-/************************************************************************/
-/* Enable support for `TPP_FILE_IOFLAGS_SYSHDR' */
-#ifndef TPP_HAVE_FILE_SYSHDR
-#define TPP_HAVE_FILE_SYSHDR (TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0)
-#endif /* !TPP_HAVE_FILE_SYSHDR */
-
-/* Enable support for `tpp_file::tf_prev' */
-#ifndef TPP_HAVE_INCLUDE_STACK
-#define TPP_HAVE_INCLUDE_STACK (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT)
-#endif /* !TPP_HAVE_INCLUDE_STACK */
-
-/* Enable support for `tpp_keywords_openfile()' */
-#ifndef TPP_HAVE_KEYWORDS_OPENFILE
-#define TPP_HAVE_KEYWORDS_OPENFILE (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || 1)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE */
-
-/* Enable support for `tpp_keywords_openfile_ex()' */
-#ifndef TPP_HAVE_KEYWORDS_OPENFILE_EX
-#define TPP_HAVE_KEYWORDS_OPENFILE_EX \
-	(TPP_HAVE_KEYWORDS_OPENFILE && (TPP_HAVE_CPP_IMPORT || ((TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_HAVE_PRAGMA_ONCE)))
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
-
-/* Enable support for `tpp_lexer_init_io_ex()' */
-#ifndef TPP_HAVE_LEXER_INIT_IO
-#define TPP_HAVE_LEXER_INIT_IO TPP_HAVE_FILE_NOKWD
-#endif /* !TPP_HAVE_LEXER_INIT_IO */
-
-/* Enable support for `tpp_lexer_init_filename()' */
-#ifndef TPP_HAVE_LEXER_INIT_FILENAME
-#define TPP_HAVE_LEXER_INIT_FILENAME TPP_HAVE_KEYWORDS_OPENFILE
-#endif /* !TPP_HAVE_LEXER_INIT_FILENAME */
-
-/* Enable support for `tpp_keyword_misc::tkm_file_guard' */
-#ifndef TPP_HAVE_KEYWORD_FILE_GUARD
-#define TPP_HAVE_KEYWORD_FILE_GUARD ((TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_HAVE_CPP_IF_ELSE_ENDIF)
-#endif /* !TPP_HAVE_KEYWORD_FILE_GUARD */
-
-/* Enable support for `tpp_lexer_skip_blocking()' */
-#ifndef TPP_HAVE_LEXER_SKIP
-#define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1)
-#endif /* !TPP_HAVE_LEXER_SKIP */
-
- /* Provide a function "tpp_lexer_reprtokenid()" to
- * return the string-representation of a given token ID */
-#ifndef TPP_HAVE_LEXER_REPRTOKENID
-#define TPP_HAVE_LEXER_REPRTOKENID (TPP_HAVE_LEXER_SKIP)
-#endif /* !TPP_HAVE_LEXER_REPRTOKENID */
-
-/* Provide a function "tpp_reprtokenid()" that does the
- * same as "tpp_lexer_reprtokenid()" (and is also used to
- * implement that function), but fails for user-defined
- * keyword token IDs */
-#ifndef TPP_HAVE_REPRTOKENID
-#define TPP_HAVE_REPRTOKENID (TPP_HAVE_LEXER_REPRTOKENID)
-#endif /* !TPP_HAVE_REPRTOKENID */
-
-/* Provide a function "tpp_lexer_getkeyworddefined()" to check
- * if a given keyword is "defined()" (meaning it can be expanded
- * as a (potentially builtin) macro) */
-#ifndef TPP_HAVE_LEXER_GETKEYWORDDEFINED
-#define TPP_HAVE_LEXER_GETKEYWORDDEFINED \
-	(TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_MACROS)
-#endif /* !TPP_HAVE_LEXER_GETKEYWORDDEFINED */
-
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -3301,8 +3641,9 @@ TPP_DECL_BEGIN
      (TPP_HAVE_TPP_TOK_AMP_EQUAL < 0) ||                  \
      (TPP_HAVE_TPP_TOK_PIPE_EQUAL < 0) ||                 \
      (TPP_HAVE_TPP_TOK_HAT_EQUAL < 0) ||                  \
-     (TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0) ||            \
+     (TPP_HAVE_TPP_TOK_SLASH_SLASH < 0) ||                \
      (TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0) ||          \
+     (TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0) ||            \
      (TPP_HAVE_TPP_TOK_AT_EQUAL < 0) ||                   \
      (TPP_HAVE_TPP_TOK_POUND_POUND < 0) ||                \
      (TPP_HAVE_TPP_TOK_AMP_AMP < 0) ||                    \
@@ -3311,7 +3652,6 @@ TPP_DECL_BEGIN
      (TPP_HAVE_TPP_TOK_PLUS_PLUS < 0) ||                  \
      (TPP_HAVE_TPP_TOK_MINUS_MINUS < 0) ||                \
      (TPP_HAVE_TPP_TOK_STAR_STAR < 0) ||                  \
-     (TPP_HAVE_TPP_TOK_SLASH_SLASH < 0) ||                \
      (TPP_HAVE_TPP_TOK_TILDE_TILDE < 0) ||                \
      (TPP_HAVE_TPP_TOK_TILDE_EQUAL < 0) ||                \
      (TPP_HAVE_TPP_TOK_MINUS_RANGLE < 0) ||               \
@@ -3331,30 +3671,20 @@ TPP_DECL_BEGIN
      (TPP_HAVE_TPP_TOK_QMARK_EQUAL < 0) ||                \
      (TPP_HAVE_CPP_DIRECTIVES < 0) ||                     \
      (TPP_HAVE_CPP_MACROS < 0) ||                         \
-     (TPP_HAVE_CPP_EXCLAIM < 0) ||                        \
      (TPP_HAVE_CPP_BLANK < 0) ||                          \
      (TPP_HAVE_CPP_DIGIT_LINE < 0) ||                     \
      (TPP_HAVE_CPP_LINE < 0) ||                           \
-     (TPP_HAVE_CPP_INCLUDE < 0) ||                        \
-     (TPP_HAVE_CPP_INCLUDE_NEXT < 0) ||                   \
-     (TPP_HAVE_CPP_IMPORT < 0) ||                         \
      (TPP_HAVE_CPP_IF_ELSE_ENDIF < 0) ||                  \
      (TPP_HAVE_CPP_DEFINE < 0) ||                         \
      (TPP_HAVE_CPP_ASSERT < 0) ||                         \
-     (TPP_HAVE_CPP_ERROR < 0) ||                          \
-     (TPP_HAVE_CPP_WARNING < 0) ||                        \
-     (TPP_HAVE_CPP_IDENT < 0) ||                          \
-     (TPP_HAVE_CPP_SCSS < 0) ||                           \
-     (TPP_HAVE_CPP_PRAGMA < 0) ||                         \
-     (TPP_HAVE_STDC_PRAGMA < 0) ||                        \
-     (TPP_HAVE_MSVC_PRAGMA < 0))
+     (TPP_HAVE_CPP_PRAGMA < 0))
 #define TPP_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_HAVE_FEATURES 0
 #endif/* !... */
 
 #if TPP_HAVE_FEATURES
-enum tpp_feature {
+typedef enum tpp_feature_id {
 #if TPP_HAVE_TPP_TOK_LF < 0
 	TPP_FEAT_TPP_TOK_LF,
 #endif /* TPP_HAVE_TPP_TOK_LF < 0 */
@@ -3472,12 +3802,15 @@ enum tpp_feature {
 #if TPP_HAVE_TPP_TOK_HAT_EQUAL < 0
 	TPP_FEAT_TPP_TOK_HAT_EQUAL,
 #endif /* TPP_HAVE_TPP_TOK_HAT_EQUAL < 0 */
-#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
-	TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL,
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
+#if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
+	TPP_FEAT_TPP_TOK_SLASH_SLASH,
+#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0
 	TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL,
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0 */
+#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
+	TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL,
+#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
 #if TPP_HAVE_TPP_TOK_AT_EQUAL < 0
 	TPP_FEAT_TPP_TOK_AT_EQUAL,
 #endif /* TPP_HAVE_TPP_TOK_AT_EQUAL < 0 */
@@ -3502,9 +3835,6 @@ enum tpp_feature {
 #if TPP_HAVE_TPP_TOK_STAR_STAR < 0
 	TPP_FEAT_TPP_TOK_STAR_STAR,
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR < 0 */
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
-	TPP_FEAT_TPP_TOK_SLASH_SLASH,
-#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
 #if TPP_HAVE_TPP_TOK_TILDE_TILDE < 0
 	TPP_FEAT_TPP_TOK_TILDE_TILDE,
 #endif /* TPP_HAVE_TPP_TOK_TILDE_TILDE < 0 */
@@ -3562,9 +3892,6 @@ enum tpp_feature {
 #if TPP_HAVE_CPP_MACROS < 0
 	TPP_FEAT_CPP_MACROS,
 #endif /* TPP_HAVE_CPP_MACROS < 0 */
-#if TPP_HAVE_CPP_EXCLAIM < 0
-	TPP_FEAT_CPP_EXCLAIM,
-#endif /* TPP_HAVE_CPP_EXCLAIM < 0 */
 #if TPP_HAVE_CPP_BLANK < 0
 	TPP_FEAT_CPP_BLANK,
 #endif /* TPP_HAVE_CPP_BLANK < 0 */
@@ -3574,15 +3901,6 @@ enum tpp_feature {
 #if TPP_HAVE_CPP_LINE < 0
 	TPP_FEAT_CPP_LINE,
 #endif /* TPP_HAVE_CPP_LINE < 0 */
-#if TPP_HAVE_CPP_INCLUDE < 0
-	TPP_FEAT_CPP_INCLUDE,
-#endif /* TPP_HAVE_CPP_INCLUDE < 0 */
-#if TPP_HAVE_CPP_INCLUDE_NEXT < 0
-	TPP_FEAT_CPP_INCLUDE_NEXT,
-#endif /* TPP_HAVE_CPP_INCLUDE_NEXT < 0 */
-#if TPP_HAVE_CPP_IMPORT < 0
-	TPP_FEAT_CPP_IMPORT,
-#endif /* TPP_HAVE_CPP_IMPORT < 0 */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF < 0
 	TPP_FEAT_CPP_IF_ELSE_ENDIF,
 #endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF < 0 */
@@ -3592,29 +3910,11 @@ enum tpp_feature {
 #if TPP_HAVE_CPP_ASSERT < 0
 	TPP_FEAT_CPP_ASSERT,
 #endif /* TPP_HAVE_CPP_ASSERT < 0 */
-#if TPP_HAVE_CPP_ERROR < 0
-	TPP_FEAT_CPP_ERROR,
-#endif /* TPP_HAVE_CPP_ERROR < 0 */
-#if TPP_HAVE_CPP_WARNING < 0
-	TPP_FEAT_CPP_WARNING,
-#endif /* TPP_HAVE_CPP_WARNING < 0 */
-#if TPP_HAVE_CPP_IDENT < 0
-	TPP_FEAT_CPP_IDENT,
-#endif /* TPP_HAVE_CPP_IDENT < 0 */
-#if TPP_HAVE_CPP_SCSS < 0
-	TPP_FEAT_CPP_SCSS,
-#endif /* TPP_HAVE_CPP_SCSS < 0 */
 #if TPP_HAVE_CPP_PRAGMA < 0
 	TPP_FEAT_CPP_PRAGMA,
 #endif /* TPP_HAVE_CPP_PRAGMA < 0 */
-#if TPP_HAVE_STDC_PRAGMA < 0
-	TPP_FEAT_STDC_PRAGMA,
-#endif /* TPP_HAVE_STDC_PRAGMA < 0 */
-#if TPP_HAVE_MSVC_PRAGMA < 0
-	TPP_FEAT_MSVC_PRAGMA,
-#endif /* TPP_HAVE_MSVC_PRAGMA < 0 */
 	TPP_FEAT_COUNT
-};
+} tpp_feature_id;
 
 typedef union tpp_features {
 	struct {
@@ -3852,18 +4152,24 @@ typedef union tpp_features {
 #else /* TPP_HAVE_TPP_TOK_HAT_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_HAT_EQUAL(self) TPP_HAVE_TPP_TOK_HAT_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_HAT_EQUAL >= 0 */
-#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL, TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL == -1)
-#else /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL >= 0 */
+#if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
+		unsigned int tff_TPP_FEAT_TPP_TOK_SLASH_SLASH: 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SLASH_SLASH, TPP_HAVE_TPP_TOK_SLASH_SLASH == -1)
+#else /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) TPP_HAVE_TPP_TOK_SLASH_SLASH
+#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH >= 0 */
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0
 		unsigned int tff_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL: 1;
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL, TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL(self) TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL >= 0 */
+#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
+		unsigned int tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL: 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL, TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL == -1)
+#else /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
+#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_AT_EQUAL < 0
 		unsigned int tff_TPP_FEAT_TPP_TOK_AT_EQUAL: 1;
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_AT_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_AT_EQUAL, TPP_HAVE_TPP_TOK_AT_EQUAL == -1)
@@ -3912,12 +4218,6 @@ typedef union tpp_features {
 #else /* TPP_HAVE_TPP_TOK_STAR_STAR < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR(self) TPP_HAVE_TPP_TOK_STAR_STAR
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR >= 0 */
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_SLASH_SLASH: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SLASH_SLASH, TPP_HAVE_TPP_TOK_SLASH_SLASH == -1)
-#else /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) TPP_HAVE_TPP_TOK_SLASH_SLASH
-#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH >= 0 */
 #if TPP_HAVE_TPP_TOK_TILDE_TILDE < 0
 		unsigned int tff_TPP_FEAT_TPP_TOK_TILDE_TILDE: 1;
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_TILDE_TILDE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_TILDE_TILDE, TPP_HAVE_TPP_TOK_TILDE_TILDE == -1)
@@ -4032,12 +4332,6 @@ typedef union tpp_features {
 #else /* TPP_HAVE_CPP_MACROS < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_MACROS(self) TPP_HAVE_CPP_MACROS
 #endif /* TPP_HAVE_CPP_MACROS >= 0 */
-#if TPP_HAVE_CPP_EXCLAIM < 0
-		unsigned int tff_TPP_FEAT_CPP_EXCLAIM: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_EXCLAIM(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_EXCLAIM, TPP_HAVE_CPP_EXCLAIM == -1)
-#else /* TPP_HAVE_CPP_EXCLAIM < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_EXCLAIM(self) TPP_HAVE_CPP_EXCLAIM
-#endif /* TPP_HAVE_CPP_EXCLAIM >= 0 */
 #if TPP_HAVE_CPP_BLANK < 0
 		unsigned int tff_TPP_FEAT_CPP_BLANK: 1;
 #define _tpp_features_get_TPP_FEAT_CPP_BLANK(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_BLANK, TPP_HAVE_CPP_BLANK == -1)
@@ -4056,24 +4350,6 @@ typedef union tpp_features {
 #else /* TPP_HAVE_CPP_LINE < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_LINE(self) TPP_HAVE_CPP_LINE
 #endif /* TPP_HAVE_CPP_LINE >= 0 */
-#if TPP_HAVE_CPP_INCLUDE < 0
-		unsigned int tff_TPP_FEAT_CPP_INCLUDE: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_INCLUDE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_INCLUDE, TPP_HAVE_CPP_INCLUDE == -1)
-#else /* TPP_HAVE_CPP_INCLUDE < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_INCLUDE(self) TPP_HAVE_CPP_INCLUDE
-#endif /* TPP_HAVE_CPP_INCLUDE >= 0 */
-#if TPP_HAVE_CPP_INCLUDE_NEXT < 0
-		unsigned int tff_TPP_FEAT_CPP_INCLUDE_NEXT: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_INCLUDE_NEXT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_INCLUDE_NEXT, TPP_HAVE_CPP_INCLUDE_NEXT == -1)
-#else /* TPP_HAVE_CPP_INCLUDE_NEXT < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_INCLUDE_NEXT(self) TPP_HAVE_CPP_INCLUDE_NEXT
-#endif /* TPP_HAVE_CPP_INCLUDE_NEXT >= 0 */
-#if TPP_HAVE_CPP_IMPORT < 0
-		unsigned int tff_TPP_FEAT_CPP_IMPORT: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_IMPORT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_IMPORT, TPP_HAVE_CPP_IMPORT == -1)
-#else /* TPP_HAVE_CPP_IMPORT < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_IMPORT(self) TPP_HAVE_CPP_IMPORT
-#endif /* TPP_HAVE_CPP_IMPORT >= 0 */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF < 0
 		unsigned int tff_TPP_FEAT_CPP_IF_ELSE_ENDIF: 1;
 #define _tpp_features_get_TPP_FEAT_CPP_IF_ELSE_ENDIF(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_IF_ELSE_ENDIF, TPP_HAVE_CPP_IF_ELSE_ENDIF == -1)
@@ -4092,48 +4368,12 @@ typedef union tpp_features {
 #else /* TPP_HAVE_CPP_ASSERT < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_ASSERT(self) TPP_HAVE_CPP_ASSERT
 #endif /* TPP_HAVE_CPP_ASSERT >= 0 */
-#if TPP_HAVE_CPP_ERROR < 0
-		unsigned int tff_TPP_FEAT_CPP_ERROR: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_ERROR(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_ERROR, TPP_HAVE_CPP_ERROR == -1)
-#else /* TPP_HAVE_CPP_ERROR < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_ERROR(self) TPP_HAVE_CPP_ERROR
-#endif /* TPP_HAVE_CPP_ERROR >= 0 */
-#if TPP_HAVE_CPP_WARNING < 0
-		unsigned int tff_TPP_FEAT_CPP_WARNING: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_WARNING(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_WARNING, TPP_HAVE_CPP_WARNING == -1)
-#else /* TPP_HAVE_CPP_WARNING < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_WARNING(self) TPP_HAVE_CPP_WARNING
-#endif /* TPP_HAVE_CPP_WARNING >= 0 */
-#if TPP_HAVE_CPP_IDENT < 0
-		unsigned int tff_TPP_FEAT_CPP_IDENT: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_IDENT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_IDENT, TPP_HAVE_CPP_IDENT == -1)
-#else /* TPP_HAVE_CPP_IDENT < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_IDENT(self) TPP_HAVE_CPP_IDENT
-#endif /* TPP_HAVE_CPP_IDENT >= 0 */
-#if TPP_HAVE_CPP_SCSS < 0
-		unsigned int tff_TPP_FEAT_CPP_SCSS: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_SCSS(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_SCSS, TPP_HAVE_CPP_SCSS == -1)
-#else /* TPP_HAVE_CPP_SCSS < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_SCSS(self) TPP_HAVE_CPP_SCSS
-#endif /* TPP_HAVE_CPP_SCSS >= 0 */
 #if TPP_HAVE_CPP_PRAGMA < 0
 		unsigned int tff_TPP_FEAT_CPP_PRAGMA: 1;
 #define _tpp_features_get_TPP_FEAT_CPP_PRAGMA(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_PRAGMA, TPP_HAVE_CPP_PRAGMA == -1)
 #else /* TPP_HAVE_CPP_PRAGMA < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_PRAGMA(self) TPP_HAVE_CPP_PRAGMA
 #endif /* TPP_HAVE_CPP_PRAGMA >= 0 */
-#if TPP_HAVE_STDC_PRAGMA < 0
-		unsigned int tff_TPP_FEAT_STDC_PRAGMA: 1;
-#define _tpp_features_get_TPP_FEAT_STDC_PRAGMA(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_STDC_PRAGMA, TPP_HAVE_STDC_PRAGMA == -1)
-#else /* TPP_HAVE_STDC_PRAGMA < 0 */
-#define _tpp_features_get_TPP_FEAT_STDC_PRAGMA(self) TPP_HAVE_STDC_PRAGMA
-#endif /* TPP_HAVE_STDC_PRAGMA >= 0 */
-#if TPP_HAVE_MSVC_PRAGMA < 0
-		unsigned int tff_TPP_FEAT_MSVC_PRAGMA: 1;
-#define _tpp_features_get_TPP_FEAT_MSVC_PRAGMA(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_MSVC_PRAGMA, TPP_HAVE_MSVC_PRAGMA == -1)
-#else /* TPP_HAVE_MSVC_PRAGMA < 0 */
-#define _tpp_features_get_TPP_FEAT_MSVC_PRAGMA(self) TPP_HAVE_MSVC_PRAGMA
-#endif /* TPP_HAVE_MSVC_PRAGMA >= 0 */
 	} tf_flags;
 	unsigned char ttf_bitset[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_features;
@@ -4214,7 +4454,7 @@ typedef enum tpp_file_encoding {
 #define TPP_FILE_IOFLAGS_SYSHDR   UINT8_C(0x04) /* Suppress all warnings produced in the context of this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 #if TPP_HAVE_FILE_NOKWD
-#define TPP_FILE_IOFLAGS_NOKWD    UINT8_C(0x08) /* The file's "tff_name" field isn't actually a "tpp_keyword", but rather a raw \0-terminated C string. */
+#define TPP_FILE_IOFLAGS_NOKWD    UINT8_C(0x08) /* The file's "tff_name" field isn't actually a "tpp_keyword::tk_kwd", but rather a raw \0-terminated C string. */
 #endif /* TPP_HAVE_FILE_NOKWD */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 
@@ -4256,11 +4496,11 @@ typedef struct tpp_file {
 #endif /* TPP_HAVE_UNICODE */
 	union {
 		struct {
-			struct tpp_keyword *tff_name;     /* [0..1][const] Filename by which this file was included (if available) */
-			tpp_io_handle       tff_file;     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
-			tpp_lcinfo          tff_start_lc; /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+			char const      *tff_name;     /* [0..1][const] Filename by which this file was included (if available) */
+			tpp_lcinfo       tff_start_lc; /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+			tpp_io_handle    tff_file;     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
 #if TPP_HAVE_FILE_IOFLAGS
-			tpp_file_ioflags    tff_flags;    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
+			tpp_file_ioflags tff_flags;    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 #if TPP_HAVE_UNICODE
 			uint_least8_t tff_tailc;    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
@@ -4269,7 +4509,8 @@ typedef struct tpp_file {
 		} td_io; /* [tf_kind == TPP_FILE_KIND_IO] */
 
 		struct {
-			char const *tft_name; /* [0..1][const] Filename for messages (if available) */
+			char const *tft_name;     /* [0..1][const] Filename for messages (if available) */
+			tpp_lcinfo  tft_start_lc; /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
 		} td_text; /* [tf_kind == TPP_FILE_KIND_TEXT] */
 
 #if TPP_HAVE_CPP_MACROS
@@ -4347,8 +4588,55 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 
 
+#if TPP_HAVE_CPP_MACROS
+#define _tpp_file_io2text(self) ((self)->tf_kind == TPP_FILE_KIND_IO ? (void)((self)->tf_kind = TPP_FILE_KIND_TEXT) : (void)0)
+#else /* TPP_HAVE_CPP_MACROS */
+#define _tpp_file_io2text(self) (void)((self)->tf_kind = TPP_FILE_KIND_TEXT)
+#endif /* !TPP_HAVE_CPP_MACROS */
+
+
+/* An extension to "tpp_file_autopopfile_pushoff":
+ * - Disable automatic popping of "self" from the #include-stack
+ * - Disable I/O expansion by reading additional data from the file
+ * - Make it so the file's EOF position gets overwritten as "end"
+ *   (such that trying to yield additional tokens at/beyond that
+ *   position will cause "tpp_lexer_yieldraw()" to return TPP_TOK_EOF)
+ * - The previous state can be restored by `tpp_file_popeof()' */
+#if TPP_HAVE_INCLUDE_STACK
+#define tpp_file_pusheof(self, end)                         \
+	do {                                                    \
+		tpp_file *const _tfpeof_prev = (self)->tf_prev;     \
+		tpp_file_kind const _tfpeof_kind = (self)->tf_kind; \
+		tpp_char const *const _tfpeof_end = (self)->tf_end; \
+		(self)->tf_end = (end);                             \
+		_tpp_file_io2text(self);                            \
+		(self)->tf_prev = NULL
+#define tpp_file_popeof(self)                         \
+		do {                                          \
+			tpp_file *_tfpeof_last = (self);          \
+			while (_tfpeof_last->tf_prev)             \
+				_tfpeof_last = _tfpeof_last->tf_prev; \
+			_tfpeof_last->tf_prev = _tfpeof_prev;     \
+			_tfpeof_last->tf_end  = _tfpeof_end;      \
+			_tfpeof_last->tf_kind = _tfpeof_kind;     \
+		} while (0);                                  \
+	} while (0)
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_file_pusheof(self, end)                         \
+	do {                                                    \
+		tpp_file_kind const _tfpeof_kind = (self)->tf_kind; \
+		tpp_char const *const _tfpeof_end = (self)->tf_end; \
+		(self)->tf_end = (end);                             \
+		_tpp_file_io2text(self)
+#define tpp_file_popeof(self)           \
+		(self)->tf_end  = _tfpeof_end;  \
+		(self)->tf_kind = _tfpeof_kind; \
+	} while (0)
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+
+
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
- * @param: tpp_keyword     *filename: [0..1] Filename (if known)
+ * @param: char const      *filename: [0..1] Filename (if known)
  * @param: tpp_io_handle    fp:       File descriptor (inherited)
  * @param: tpp_file_ioflags flags:    I/O file flags (set of `TPP_FILE_IOFLAGS_*') */
 #define tpp_file_init_io(self, filename, /*inherit*/ fp) \
@@ -4372,18 +4660,20 @@ typedef struct tpp_file {
  * @param: char const       *filename:  [0..1] Filename (if known)
  * @param: void const       *text:      File data base pointer
  * @param: tpp_size          text_size: File data size
+ * @param: tpp_lcinfo        start_lc:  0-based line/column info for start of "text"
  * @param: tpp_file_encoding encoding:  File data encoding */
-#define tpp_file_init_text_ascii(self, filename, text, text_size) \
-	tpp_file_init_text_ex(self, filename, text, TPP_FILE_ENCODING_ASCII)
-#define tpp_file_init_text_ex(self, filename, text, text_size, encoding) \
-	(void)(_tpp_file_init_common(self),                                  \
-	       (self)->tf_pos   = (tpp_char const *)(text),                  \
-	       (self)->tf_chunk = NULL,                                      \
-	       (self)->tf_end   = (tpp_char const *)(text) + (text_size)     \
-	       _tpp_file_init_prev(self),                                    \
-	       (self)->tf_kind = TPP_FILE_KIND_TEXT                          \
-	       _tpp_file_init_enc_ex(self, encoding),                        \
-	       (self)->tf_data.td_text.tft_name = (filename))
+#define tpp_file_init_text_ascii(self, filename, text, text_size, start_lc) \
+	tpp_file_init_text_ex(self, filename, text, start_lc, TPP_FILE_ENCODING_ASCII)
+#define tpp_file_init_text_ex(self, filename, text, text_size, start_lc, encoding) \
+	(void)(_tpp_file_init_common(self),                                            \
+	       (self)->tf_pos   = (tpp_char const *)(text),                            \
+	       (self)->tf_chunk = NULL,                                                \
+	       (self)->tf_end   = (tpp_char const *)(text) + (text_size)               \
+	       _tpp_file_init_prev(self),                                              \
+	       (self)->tf_kind = TPP_FILE_KIND_TEXT                                    \
+	       _tpp_file_init_enc_ex(self, encoding),                                  \
+	       (self)->tf_data.td_text.tft_name = (filename),                          \
+	       (self)->tf_data.td_text.tft_start_lc = (start_lc))
 
 
 
@@ -4483,6 +4773,7 @@ TPP_DECL_BEGIN
 #define TPP_MACRO_KIND_KEYWORD      UINT8_C(0)
 #define TPP_MACRO_KIND_FUNC_PAREN   '('
 #define TPP_MACRO_KIND_ISFUNC(kind) ((kind) != TPP_MACRO_KIND_KEYWORD)
+#define TPP_MACRO_KIND_ASTOK(kind)  ((tpp_token_id)(kind))
 #if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
 #define TPP_MACRO_KIND_FUNC_BRACKET '['
 #define TPP_MACRO_KIND_FUNC_BRACE   '{'
@@ -4640,15 +4931,15 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #if ((TPP_HAVE_CPP_INCLUDE && (TPP_HAVE_CPP_IF_ELSE_ENDIF || \
                                TPP_HAVE_PRAGMA_ONCE)) ||     \
      TPP_HAVE_CPP_IMPORT ||                                  \
-     TPP_HAVE_CLANG_HAS_ATTRIBUTE ||                         \
-     TPP_HAVE_CLANG_HAS_BUILTIN ||                           \
-     TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE ||                     \
-     TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE ||                \
-     TPP_HAVE_CLANG_HAS_EXTENSION ||                         \
-     TPP_HAVE_CLANG_HAS_FEATURE ||                           \
-     TPP_HAVE_CLANG_HAS_C_ATTRIBUTE ||                       \
-     TPP_HAVE_TPPX_IS_DEPRECATED ||                          \
-     TPP_HAVE_TPPX_IS_POISONED ||                            \
+     TPP_HAVE_CLANG_MACRO___has_attribute ||                         \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||                           \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||                     \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute ||                \
+     TPP_HAVE_CLANG_MACRO___has_extension ||                         \
+     TPP_HAVE_CLANG_MACRO___has_feature ||                           \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute ||                       \
+     TPP_HAVE_MACRO___is_deprecated ||                          \
+     TPP_HAVE_MACRO___is_poisoned ||                            \
      TPP_HAVE_PRAGMA_DEPRECATED ||                           \
      TPP_HAVE_PRAGMA_GCC_POISON ||                           \
      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS)
@@ -4674,38 +4965,38 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #if TPP_HAVE_KEYWORD_FLAGS
 #define tpp_keyword_flags uint_least32_t /* Set of `TPP_KEYWORD_FLAG_*' */
 #define TPP_KEYWORD_FLAG_NORMAL                 UINT32_C(0x00000000) /* Normal flags */
-#if TPP_HAVE_CLANG_HAS_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_attribute
 #define TPP_KEYWORD_FLAG_HAS_ATTRIBUTE          UINT32_C(0x00000001) /* `__has_attribute()' */
-#endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_BUILTIN
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
 #define TPP_KEYWORD_FLAG_HAS_BUILTIN            UINT32_C(0x00000002) /* `__has_builtin()' */
-#endif /* TPP_HAVE_CLANG_HAS_BUILTIN */
-#if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
 #define TPP_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE      UINT32_C(0x00000004) /* `__has_cpp_attribute()' */
-#endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
 #define TPP_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE UINT32_C(0x00000008) /* `__has_declspec_attribute()' */
-#endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_EXTENSION
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension
 #define TPP_KEYWORD_FLAG_HAS_EXTENSION          UINT32_C(0x00000010) /* `__has_extension()' */
-#endif /* TPP_HAVE_CLANG_HAS_EXTENSION */
-#if TPP_HAVE_CLANG_HAS_FEATURE
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
 #define TPP_KEYWORD_FLAG_HAS_FEATURE            UINT32_C(0x00000020) /* `__has_feature()' */
-#endif /* TPP_HAVE_CLANG_HAS_FEATURE */
-#if TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_TPPX_IS_DEPRECATED
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#if TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_MACRO___is_deprecated
 #define TPP_KEYWORD_FLAG_IS_DEPRECATED          UINT32_C(0x00000040) /* Warn when the keyword appears as the result of lexical processing. */
-#endif /* TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_TPPX_IS_DEPRECATED */
+#endif /* TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_MACRO___is_deprecated */
 #if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 #define TPP_KEYWORD_FLAG_USERMASK               UINT32_C(0x0000007f) /* Set of flags modifiable through `#pragma tpp_set_keyword_flags()'. */
 #endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
-#if TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_TPPX_IS_POISONED
+#if TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned
 #define TPP_KEYWORD_FLAG_IS_POISONED            UINT32_C(0x00000080) /* Extension for `TPP_KEYWORD_FLAG_IS_DEPRECATED':
                                                                       * Don't emit a warning if the keyword is used inside of a macro.
                                                                       * -> Only warn if it is used from a text file. */
-#endif /* TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_TPPX_IS_POISONED */
-#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
+#endif /* TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute
 #define TPP_KEYWORD_FLAG_HAS_C_ATTRIBUTE        UINT32_C(0x00000100) /* `__has_c_attribute()' */
-#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE */
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
 #if TPP_HAVE_CPP_IMPORT
 #define TPP_KEYWORD_FLAG_HDR_IMPORTED           UINT32_C(0x20000000) /* Set after this header was `#import'-ed */
 #endif /* TPP_HAVE_CPP_IMPORT */
@@ -5027,7 +5318,7 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 #else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
 tpp_keywords_openfile(/*1..1*/ tpp_keywords *tpp_restrict self,
-                      /*0..1*/ tpp_keyword const *tpp_restrict relative_to,
+                      /*0..1*/ char const *tpp_restrict relative_to,
                       /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
                       /*1..1*/ tpp_file *tpp_restrict out_file);
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
@@ -5038,7 +5329,7 @@ tpp_keywords_openfile(/*1..1*/ tpp_keywords *tpp_restrict self,
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
 tpp_keywords_openfile_ex(/*1..1*/ tpp_keywords *tpp_restrict self,
-                         /*0..1*/ tpp_keyword const *tpp_restrict relative_to,
+                         /*0..1*/ char const *tpp_restrict relative_to,
                          /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
                          /*1..1*/ tpp_file *tpp_restrict out_file,
                          tpp_keyword_flags mask_flags);
@@ -5710,16 +6001,17 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ex(tpp_lexer *tpp_restrict self,
                        /*utf-8*/ char const *filename,
                        void const *text, tpp_size text_size,
-                       tpp_file_encoding encoding);
-#define tpp_lexer_init_text_ascii(self, filename, text, text_size) \
-	tpp_lexer_init_text_ex(self, filename, text, text_size, TPP_FILE_ENCODING_ASCII)
-#define tpp_lexer_init_text_utf8(self, filename, text, text_size) \
-	tpp_lexer_init_text_ex(self, filename, text, text_size, TPP_FILE_ENCODING_FORCE_UTF8)
+                       tpp_lcinfo start_lc, tpp_file_encoding encoding);
+#define tpp_lexer_init_text_ascii(self, filename, text, text_size, start_lc) \
+	tpp_lexer_init_text_ex(self, filename, text, text_size, start_lc, TPP_FILE_ENCODING_ASCII)
+#define tpp_lexer_init_text_utf8(self, filename, text, text_size, start_lc) \
+	tpp_lexer_init_text_ex(self, filename, text, text_size, start_lc, TPP_FILE_ENCODING_FORCE_UTF8)
 #else /* TPP_HAVE_UNICODE */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ascii(tpp_lexer *tpp_restrict self,
                           /*utf-8*/ char const *filename,
-                          void const *text, tpp_size text_size);
+                          void const *text, tpp_size text_size,
+                       tpp_lcinfo start_lc);
 #endif /* !TPP_HAVE_UNICODE */
 
 #if TPP_HAVE_LEXER_INIT_IO
@@ -5988,6 +6280,85 @@ tpp_lexer_skip_blocking(tpp_lexer *tpp_restrict self, tpp_token_id tok);
 #define tpp_lexer_skip_blocking(self, tok) tpp_lexer_skip(self, tok)
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 #endif /* TPP_HAVE_LEXER_SKIP */
+
+
+#if TPP_HAVE_LEXER_SEEK_RPAREN
+typedef struct tpp_lexer_arginfo {
+	/* NOTE: Leading/trailing whitespace in arguments is controlled by "TPP_HAVE_MACRO_ARGUMENT_WHITESPACE" */
+	tpp_char const *tlai_start; /* [1..1][<= tlai_end] Pointer to argument start text data */
+	tpp_char const *tlai_end;   /* [1..1][>= tlai_start] Pointer to argument end text data */
+} tpp_lexer_arginfo;
+
+
+#define TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL  0x0000
+#define TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS 0x0001 /* Store varargs info in p_argv[IN(*p_argc) - 1] */
+
+/* Find the position of the next unmatched ')'-token, gathering information
+ * about ranges of ','-token-separated text-sequences along the way.
+ *
+ * NOTE: This function automatically handles "TPP_TOK_EWOULDBLOCK" (meaning it always blocks)
+ *
+ * @param: p_pos: [in/out]  In:  Pointer to first character to start checking for ')'
+ *                          Out: Pointer to the trailing ')', or EOF
+ *                               if end-of-file was reached first, or
+ *                               in case of TPP_TOK_EWOULDBLOCK.
+ *                          WARNING: must DIFFER from "&tpp_lexer_gettoken(self)->tt_end"!
+ * @param: p_argv: [out]    Output buffer for the bounds of macro
+ *                          arguments encountered along the way.
+ *                          The size of this buffer is IN(*p_argc)
+ * @param: p_argc: [in/out] In:  Size of provided "p_argv" buffer (in elements)
+ *                          Out: Number of arguments actually encountered. May
+ *                               be set to a number greater tha IN(*p_argc), in
+ *                               which case only info about the first IN(*p_argc)
+ *                               arguments is actually returned. But note the
+ *                               `TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS' flag, which
+ *                               causes the last element of `p_argv' to span up
+ *                               to the closing ')'
+ * @param: opt_function_name_for_messages:
+ *                          Function name for too-many-arguments/end-of-params message
+ * @param: flags:           Set of `TPP_LEXER_SEEK_RPAREN_FLAG_*'
+ *
+ * @return: TPP_TOK_EOF:         EOF was encountered before an unmatched ')' was found
+ * @return: TPP_TOK_RPAREN:      Unmatched closing ')' was encountered
+ * @return: TPP_TOK_ENOMEM:      Out of memory
+ * @return: TPP_TOK_EIO:         I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR:   Lexer error
+ * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
+#define tpp_lexer_seek_rparen(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags) \
+	tpp_lexer_seek_rparen_ex(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags, TPP_TOK_LPAREN)
+#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
+tpp_lexer_seek_rparen(tpp_lexer *tpp_restrict self,
+                      tpp_char const **tpp_restrict p_pos,
+                      tpp_lexer_arginfo *tpp_restrict p_argv,
+                      tpp_size *tpp_restrict p_argc,
+                      char const *opt_function_name_for_messages,
+                      unsigned int flags);
+#if TPP_BUILDING
+#define tpp_lexer_seek_rparen_ex(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags, lparen_kind) \
+	tpp_lexer_seek_rparen(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags)
+#endif /* TPP_BUILDING */
+#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+
+/* Same as `tpp_lexer_seek_rparen()', but also able to accept alternate
+ * parenthesis, depending on "lparen_kind"
+ * @param: lparen_kind: One of 'TPP_TOK_LPAREN', 'TPP_TOK_LBRACKET',
+ *                      'TPP_TOK_LBRACE' or 'TPP_TOK_LANGLE'.
+ * @return: * : See `tpp_lexer_seek_rparen()' */
+#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
+tpp_lexer_seek_rparen_ex(tpp_lexer *tpp_restrict self,
+                         tpp_char const **tpp_restrict p_pos,
+                         tpp_lexer_arginfo *tpp_restrict p_argv,
+                         tpp_size *tpp_restrict p_argc,
+                         char const *opt_function_name_for_messages,
+                         unsigned int flags,
+                         tpp_token_id lparen_kind);
+#endif /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+#endif /* TPP_HAVE_LEXER_SEEK_RPAREN */
+
+
 
 
 

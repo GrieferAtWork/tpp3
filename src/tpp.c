@@ -22,6 +22,10 @@
 #define GUARD_TPP_C 1
 #undef TPP_BUILDING
 #define TPP_BUILDING 1
+#ifndef TPP_INTERN_DECL
+#define TPP_INTERN_DECL static
+#define TPP_INTERN_IMPL static
+#endif /* !TPP_INTERN_DECL */
 
 # include "tpp-amalgamation.h"
 
@@ -41,6 +45,7 @@
 #include "parts/lexer.c"
 #include "parts/lexer-warn.c"
 #include "parts/lexer-yieldraw.c"
+#include "parts/lexer-seek-rparen.c"
 #include "parts/lexer-yieldpp.c"
 #include "parts/lexer-yield.c"
 #include "parts/lexer-decodestring.c"

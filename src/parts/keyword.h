@@ -60,15 +60,15 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #if ((TPP_HAVE_CPP_INCLUDE && (TPP_HAVE_CPP_IF_ELSE_ENDIF || \
                                TPP_HAVE_PRAGMA_ONCE)) ||     \
      TPP_HAVE_CPP_IMPORT ||                                  \
-     TPP_HAVE_CLANG_HAS_ATTRIBUTE ||                         \
-     TPP_HAVE_CLANG_HAS_BUILTIN ||                           \
-     TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE ||                     \
-     TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE ||                \
-     TPP_HAVE_CLANG_HAS_EXTENSION ||                         \
-     TPP_HAVE_CLANG_HAS_FEATURE ||                           \
-     TPP_HAVE_CLANG_HAS_C_ATTRIBUTE ||                       \
-     TPP_HAVE_TPPX_IS_DEPRECATED ||                          \
-     TPP_HAVE_TPPX_IS_POISONED ||                            \
+     TPP_HAVE_CLANG_MACRO___has_attribute ||                         \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||                           \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||                     \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute ||                \
+     TPP_HAVE_CLANG_MACRO___has_extension ||                         \
+     TPP_HAVE_CLANG_MACRO___has_feature ||                           \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute ||                       \
+     TPP_HAVE_MACRO___is_deprecated ||                          \
+     TPP_HAVE_MACRO___is_poisoned ||                            \
      TPP_HAVE_PRAGMA_DEPRECATED ||                           \
      TPP_HAVE_PRAGMA_GCC_POISON ||                           \
      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS)
@@ -94,38 +94,38 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #if TPP_HAVE_KEYWORD_FLAGS
 #define tpp_keyword_flags uint_least32_t /* Set of `TPP_KEYWORD_FLAG_*' */
 #define TPP_KEYWORD_FLAG_NORMAL                 UINT32_C(0x00000000) /* Normal flags */
-#if TPP_HAVE_CLANG_HAS_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_attribute
 #define TPP_KEYWORD_FLAG_HAS_ATTRIBUTE          UINT32_C(0x00000001) /* `__has_attribute()' */
-#endif /* TPP_HAVE_CLANG_HAS_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_BUILTIN
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
 #define TPP_KEYWORD_FLAG_HAS_BUILTIN            UINT32_C(0x00000002) /* `__has_builtin()' */
-#endif /* TPP_HAVE_CLANG_HAS_BUILTIN */
-#if TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
 #define TPP_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE      UINT32_C(0x00000004) /* `__has_cpp_attribute()' */
-#endif /* TPP_HAVE_CLANG_HAS_CPP_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
 #define TPP_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE UINT32_C(0x00000008) /* `__has_declspec_attribute()' */
-#endif /* TPP_HAVE_CLANG_HAS_DECLSPEC_ATTRIBUTE */
-#if TPP_HAVE_CLANG_HAS_EXTENSION
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension
 #define TPP_KEYWORD_FLAG_HAS_EXTENSION          UINT32_C(0x00000010) /* `__has_extension()' */
-#endif /* TPP_HAVE_CLANG_HAS_EXTENSION */
-#if TPP_HAVE_CLANG_HAS_FEATURE
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
 #define TPP_KEYWORD_FLAG_HAS_FEATURE            UINT32_C(0x00000020) /* `__has_feature()' */
-#endif /* TPP_HAVE_CLANG_HAS_FEATURE */
-#if TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_TPPX_IS_DEPRECATED
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#if TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_MACRO___is_deprecated
 #define TPP_KEYWORD_FLAG_IS_DEPRECATED          UINT32_C(0x00000040) /* Warn when the keyword appears as the result of lexical processing. */
-#endif /* TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_TPPX_IS_DEPRECATED */
+#endif /* TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_MACRO___is_deprecated */
 #if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 #define TPP_KEYWORD_FLAG_USERMASK               UINT32_C(0x0000007f) /* Set of flags modifiable through `#pragma tpp_set_keyword_flags()'. */
 #endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
-#if TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_TPPX_IS_POISONED
+#if TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned
 #define TPP_KEYWORD_FLAG_IS_POISONED            UINT32_C(0x00000080) /* Extension for `TPP_KEYWORD_FLAG_IS_DEPRECATED':
                                                                       * Don't emit a warning if the keyword is used inside of a macro.
                                                                       * -> Only warn if it is used from a text file. */
-#endif /* TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_TPPX_IS_POISONED */
-#if TPP_HAVE_CLANG_HAS_C_ATTRIBUTE
+#endif /* TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute
 #define TPP_KEYWORD_FLAG_HAS_C_ATTRIBUTE        UINT32_C(0x00000100) /* `__has_c_attribute()' */
-#endif /* TPP_HAVE_CLANG_HAS_C_ATTRIBUTE */
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
 #if TPP_HAVE_CPP_IMPORT
 #define TPP_KEYWORD_FLAG_HDR_IMPORTED           UINT32_C(0x20000000) /* Set after this header was `#import'-ed */
 #endif /* TPP_HAVE_CPP_IMPORT */
@@ -447,7 +447,7 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 #else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
 tpp_keywords_openfile(/*1..1*/ tpp_keywords *tpp_restrict self,
-                      /*0..1*/ tpp_keyword const *tpp_restrict relative_to,
+                      /*0..1*/ char const *tpp_restrict relative_to,
                       /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
                       /*1..1*/ tpp_file *tpp_restrict out_file);
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
@@ -458,7 +458,7 @@ tpp_keywords_openfile(/*1..1*/ tpp_keywords *tpp_restrict self,
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
 tpp_keywords_openfile_ex(/*1..1*/ tpp_keywords *tpp_restrict self,
-                         /*0..1*/ tpp_keyword const *tpp_restrict relative_to,
+                         /*0..1*/ char const *tpp_restrict relative_to,
                          /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
                          /*1..1*/ tpp_file *tpp_restrict out_file,
                          tpp_keyword_flags mask_flags);

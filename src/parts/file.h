@@ -77,7 +77,7 @@ typedef enum tpp_file_encoding {
 #define TPP_FILE_IOFLAGS_SYSHDR   UINT8_C(0x04) /* Suppress all warnings produced in the context of this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 #if TPP_HAVE_FILE_NOKWD
-#define TPP_FILE_IOFLAGS_NOKWD    UINT8_C(0x08) /* The file's "tff_name" field isn't actually a "tpp_keyword", but rather a raw \0-terminated C string. */
+#define TPP_FILE_IOFLAGS_NOKWD    UINT8_C(0x08) /* The file's "tff_name" field isn't actually a "tpp_keyword::tk_kwd", but rather a raw \0-terminated C string. */
 #endif /* TPP_HAVE_FILE_NOKWD */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 
@@ -119,11 +119,11 @@ typedef struct tpp_file {
 #endif /* TPP_HAVE_UNICODE */
 	union {
 		struct {
-			struct tpp_keyword *tff_name;     /* [0..1][const] Filename by which this file was included (if available) */
-			tpp_io_handle       tff_file;     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
-			tpp_lcinfo          tff_start_lc; /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+			char const      *tff_name;     /* [0..1][const] Filename by which this file was included (if available) */
+			tpp_lcinfo       tff_start_lc; /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+			tpp_io_handle    tff_file;     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
 #if TPP_HAVE_FILE_IOFLAGS
-			tpp_file_ioflags    tff_flags;    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
+			tpp_file_ioflags tff_flags;    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 #if TPP_HAVE_UNICODE
 			uint_least8_t tff_tailc;    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
@@ -132,7 +132,8 @@ typedef struct tpp_file {
 		} td_io; /* [tf_kind == TPP_FILE_KIND_IO] */
 
 		struct {
-			char const *tft_name; /* [0..1][const] Filename for messages (if available) */
+			char const *tft_name;     /* [0..1][const] Filename for messages (if available) */
+			tpp_lcinfo  tft_start_lc; /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
 		} td_text; /* [tf_kind == TPP_FILE_KIND_TEXT] */
 
 #if TPP_HAVE_CPP_MACROS
@@ -210,8 +211,55 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 
 
+#if TPP_HAVE_CPP_MACROS
+#define _tpp_file_io2text(self) ((self)->tf_kind == TPP_FILE_KIND_IO ? (void)((self)->tf_kind = TPP_FILE_KIND_TEXT) : (void)0)
+#else /* TPP_HAVE_CPP_MACROS */
+#define _tpp_file_io2text(self) (void)((self)->tf_kind = TPP_FILE_KIND_TEXT)
+#endif /* !TPP_HAVE_CPP_MACROS */
+
+
+/* An extension to "tpp_file_autopopfile_pushoff":
+ * - Disable automatic popping of "self" from the #include-stack
+ * - Disable I/O expansion by reading additional data from the file
+ * - Make it so the file's EOF position gets overwritten as "end"
+ *   (such that trying to yield additional tokens at/beyond that
+ *   position will cause "tpp_lexer_yieldraw()" to return TPP_TOK_EOF)
+ * - The previous state can be restored by `tpp_file_popeof()' */
+#if TPP_HAVE_INCLUDE_STACK
+#define tpp_file_pusheof(self, end)                         \
+	do {                                                    \
+		tpp_file *const _tfpeof_prev = (self)->tf_prev;     \
+		tpp_file_kind const _tfpeof_kind = (self)->tf_kind; \
+		tpp_char const *const _tfpeof_end = (self)->tf_end; \
+		(self)->tf_end = (end);                             \
+		_tpp_file_io2text(self);                            \
+		(self)->tf_prev = NULL
+#define tpp_file_popeof(self)                         \
+		do {                                          \
+			tpp_file *_tfpeof_last = (self);          \
+			while (_tfpeof_last->tf_prev)             \
+				_tfpeof_last = _tfpeof_last->tf_prev; \
+			_tfpeof_last->tf_prev = _tfpeof_prev;     \
+			_tfpeof_last->tf_end  = _tfpeof_end;      \
+			_tfpeof_last->tf_kind = _tfpeof_kind;     \
+		} while (0);                                  \
+	} while (0)
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_file_pusheof(self, end)                         \
+	do {                                                    \
+		tpp_file_kind const _tfpeof_kind = (self)->tf_kind; \
+		tpp_char const *const _tfpeof_end = (self)->tf_end; \
+		(self)->tf_end = (end);                             \
+		_tpp_file_io2text(self)
+#define tpp_file_popeof(self)           \
+		(self)->tf_end  = _tfpeof_end;  \
+		(self)->tf_kind = _tfpeof_kind; \
+	} while (0)
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+
+
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
- * @param: tpp_keyword     *filename: [0..1] Filename (if known)
+ * @param: char const      *filename: [0..1] Filename (if known)
  * @param: tpp_io_handle    fp:       File descriptor (inherited)
  * @param: tpp_file_ioflags flags:    I/O file flags (set of `TPP_FILE_IOFLAGS_*') */
 #define tpp_file_init_io(self, filename, /*inherit*/ fp) \
@@ -235,18 +283,20 @@ typedef struct tpp_file {
  * @param: char const       *filename:  [0..1] Filename (if known)
  * @param: void const       *text:      File data base pointer
  * @param: tpp_size          text_size: File data size
+ * @param: tpp_lcinfo        start_lc:  0-based line/column info for start of "text"
  * @param: tpp_file_encoding encoding:  File data encoding */
-#define tpp_file_init_text_ascii(self, filename, text, text_size) \
-	tpp_file_init_text_ex(self, filename, text, TPP_FILE_ENCODING_ASCII)
-#define tpp_file_init_text_ex(self, filename, text, text_size, encoding) \
-	(void)(_tpp_file_init_common(self),                                  \
-	       (self)->tf_pos   = (tpp_char const *)(text),                  \
-	       (self)->tf_chunk = NULL,                                      \
-	       (self)->tf_end   = (tpp_char const *)(text) + (text_size)     \
-	       _tpp_file_init_prev(self),                                    \
-	       (self)->tf_kind = TPP_FILE_KIND_TEXT                          \
-	       _tpp_file_init_enc_ex(self, encoding),                        \
-	       (self)->tf_data.td_text.tft_name = (filename))
+#define tpp_file_init_text_ascii(self, filename, text, text_size, start_lc) \
+	tpp_file_init_text_ex(self, filename, text, start_lc, TPP_FILE_ENCODING_ASCII)
+#define tpp_file_init_text_ex(self, filename, text, text_size, start_lc, encoding) \
+	(void)(_tpp_file_init_common(self),                                            \
+	       (self)->tf_pos   = (tpp_char const *)(text),                            \
+	       (self)->tf_chunk = NULL,                                                \
+	       (self)->tf_end   = (tpp_char const *)(text) + (text_size)               \
+	       _tpp_file_init_prev(self),                                              \
+	       (self)->tf_kind = TPP_FILE_KIND_TEXT                                    \
+	       _tpp_file_init_enc_ex(self, encoding),                                  \
+	       (self)->tf_data.td_text.tft_name = (filename),                          \
+	       (self)->tf_data.td_text.tft_start_lc = (start_lc))
 
 
 
