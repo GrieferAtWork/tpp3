@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 	tpp_lexer lexer;
 	tpp_errno error;
 	tpp_token_id tok;
-	char const *filename = "input.c";
+	char const *filename = "input.txt";
 	if (argc) {
 		--argc;
 		++argv;
