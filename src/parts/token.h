@@ -471,17 +471,25 @@ typedef struct tpp_token {
 	TPP_REF tpp_string       *tt_chunk; /* [0..1] Text chunk containing "tt_start" and "tt_end" (or "NULL" if not needed) */
 } tpp_token;
 
-#define tpp_token_initcopy(self, other) \
+#define tpp_token_copy(self, other) \
 	(void)(*(self) = *(other), tpp_string_incref((self)->tt_chunk))
 #define tpp_token_fini(self) tpp_string_decref((self)->tt_chunk)
 
 
-#if 0
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+#if TPP_HAVE_TOKEN_ENCODESTRING
+/* \-encode "data...+=num_bytes" by passing it to "printer"
+ * NOTE: Leading/trailing " (or ')-characters are *NOT* printed!
+ *
+ * @return: >= 0: Sum of positive return values of "printer"
+ * @return: < 0:  First negative return value of "printer".
+ *                Note that this function never causes errors
+ *                on its own, meaning that the meaning of
+ *                *all* negative values is entirely up to the
+ *                given "printer"! */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes);
-#endif
-
+#endif /* TPP_HAVE_TOKEN_ENCODESTRING */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

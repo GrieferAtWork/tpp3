@@ -129,8 +129,8 @@ tpp_lexer_seek_rparen(tpp_lexer *tpp_restrict self,
 
 	tpp_lexer_arginfo_rel *const p_argv_rel = (tpp_lexer_arginfo_rel *)p_argv;
 	tpp_file const *const file = tpp_lexer_getfile(self);
-	tpp_token_id tok = tpp_lexer_gettoken(self)->tt_id;
 	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
+	tpp_token_id tok;
 	tpp_size const argv_bufsize = *p_argc;
 	tpp_size i, argc = 0;
 	tpp_size current_arg_rel_start;
@@ -154,7 +154,13 @@ tpp_lexer_seek_rparen(tpp_lexer *tpp_restrict self,
 	                                     "list");
 	current_arg_rel_start = rel_start;
 	current_arg_rel_end   = current_arg_rel_start;
+
+	/* Yield first token. */
+again_yield_and_switch_tok:
+	tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
 again_switch_tok:
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
 	switch (tok) {
 
 	case TPP_TOK_EOF: {
@@ -179,7 +185,7 @@ again_switch_tok:
 			break;
 		if (current_arg_rel_start == current_arg_rel_end) {
 			/* Skip leading whitespace... */
-			tok = tpp_lexer_yieldraw_at(self, p_pos);
+			tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 			current_arg_rel_start = tpp_file_ptr2rel(file, *p_pos);
 			current_arg_rel_end   = current_arg_rel_start;
 			goto again_switch_tok;
@@ -395,8 +401,7 @@ handle_rangle:
 		break;
 	}
 	current_arg_rel_end = tpp_file_ptr2rel(file, *p_pos);
-	tok = tpp_lexer_yieldraw_at(self, p_pos);
-	goto again_switch_tok;
+	goto again_yield_and_switch_tok;
 
 done:
 	if (argc || (current_arg_rel_end > current_arg_rel_start)) {

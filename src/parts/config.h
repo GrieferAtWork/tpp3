@@ -1153,6 +1153,11 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
 #define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #endif /* !TPP_HAVE_MACRO_EQUALS */
 
+/* Provide a function "tpp_token_encodestring()" to perform \-escaping of arbitrary data */
+#ifndef TPP_HAVE_TOKEN_ENCODESTRING
+#define TPP_HAVE_TOKEN_ENCODESTRING (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT)
+#endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -1270,6 +1275,9 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
 #ifndef TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS
 #define TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEK_RPAREN)
 #endif /* !TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS */
+#ifndef TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
+#define TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_DEFINE))

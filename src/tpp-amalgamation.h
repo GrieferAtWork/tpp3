@@ -972,14 +972,19 @@ TPP_WGROUP(TPP_WG_MACROS, 1("macros"), TPP_WSTATE_ERROR_OR_FATAL)
 #endif /* TPP_HAVE_TPP_WG_MACROS */
 #if TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
 #define TPP_W_EOF_IN_ARGUMENT_LIST TPP_W_EOF_IN_ARGUMENT_LIST
-TPP_WARNING(TPP_W_EOF_IN_ARGUMENT_LIST, 1(TPP_WG_MACROS), 0(/*TODO*/), TPP_WSTATE_UNDEFINED,
+TPP_WARNING(TPP_W_EOF_IN_ARGUMENT_LIST, 1(TPP_WG_MACROS), 1(1057), TPP_WSTATE_UNDEFINED,
             "eof in argument list for %[%s%]")
 #endif /* TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST */
 #if TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS
 #define TPP_W_TOO_MANY_ARGUMENTS TPP_W_TOO_MANY_ARGUMENTS
-TPP_WARNING(TPP_W_TOO_MANY_ARGUMENTS, 1(TPP_WG_MACROS), 0(/*TODO*/), TPP_WSTATE_UNDEFINED,
+TPP_WARNING(TPP_W_TOO_MANY_ARGUMENTS, 1(TPP_WG_MACROS), 1(4002), TPP_WSTATE_UNDEFINED,
             "too many arguments for %[%s%] which takes %u when %u were given")
 #endif /* TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS */
+#if TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
+#define TPP_W_TOO_FEW_ARGUMENTS TPP_W_TOO_FEW_ARGUMENTS
+TPP_WARNING(TPP_W_TOO_FEW_ARGUMENTS, 1(TPP_WG_MACROS), 1(4003), TPP_WSTATE_UNDEFINED,
+            "too few arguments for %[%s%] which takes %u when %u were given")
+#endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
 
 
 /************************************************************************/
@@ -998,7 +1003,7 @@ TPP_WARNING(TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, 0(), 1(4067), TPP_WSTATE_WARN,
 #if TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
 #define TPP_W_CANNOT_UNDEF_BUILTIN_MACRO TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
 TPP_WARNING(TPP_W_CANNOT_UNDEF_BUILTIN_MACRO, 0(), 1(4117), TPP_WSTATE_WARN,
-            "cannot %[#undef%] builtin keyword %Pt")
+            "cannot %[#undef%] builtin keyword %[%s%]")
 #endif /* TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
 #if TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO
 #define TPP_W_DEFINE_BUILTIN_MACRO TPP_W_DEFINE_BUILTIN_MACRO
@@ -2745,6 +2750,11 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
 #define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #endif /* !TPP_HAVE_MACRO_EQUALS */
 
+/* Provide a function "tpp_token_encodestring()" to perform \-escaping of arbitrary data */
+#ifndef TPP_HAVE_TOKEN_ENCODESTRING
+#define TPP_HAVE_TOKEN_ENCODESTRING (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT)
+#endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -2862,6 +2872,9 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
 #ifndef TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS
 #define TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEK_RPAREN)
 #endif /* !TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS */
+#ifndef TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
+#define TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_DEFINE))
@@ -3730,17 +3743,25 @@ typedef struct tpp_token {
 	TPP_REF tpp_string       *tt_chunk; /* [0..1] Text chunk containing "tt_start" and "tt_end" (or "NULL" if not needed) */
 } tpp_token;
 
-#define tpp_token_initcopy(self, other) \
+#define tpp_token_copy(self, other) \
 	(void)(*(self) = *(other), tpp_string_incref((self)->tt_chunk))
 #define tpp_token_fini(self) tpp_string_decref((self)->tt_chunk)
 
 
-#if 0
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+#if TPP_HAVE_TOKEN_ENCODESTRING
+/* \-encode "data...+=num_bytes" by passing it to "printer"
+ * NOTE: Leading/trailing " (or ')-characters are *NOT* printed!
+ *
+ * @return: >= 0: Sum of positive return values of "printer"
+ * @return: < 0:  First negative return value of "printer".
+ *                Note that this function never causes errors
+ *                on its own, meaning that the meaning of
+ *                *all* negative values is entirely up to the
+ *                given "printer"! */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes);
-#endif
-
+#endif /* TPP_HAVE_TOKEN_ENCODESTRING */
 
 TPP_DECL_END
 /************************************************************************/
@@ -5016,6 +5037,7 @@ enum {
 #endif /* TPP_BUILDING */
 
 struct tpp_keyword;
+struct tpp_macro_argbuf; /* Opaque... */
 typedef struct tpp_macro {
 	tpp_refcnt          tm_refcnt;     /* Reference count */
 	tpp_macro_kind      tm_kind;       /* [const] Macro kind (one of `TPP_MACRO_KIND_*') */
@@ -5038,15 +5060,15 @@ typedef struct tpp_macro {
 		struct {
 			tpp_size            tmf_argc;       /* [const] Amount of arguments this macro-function takes */
 			tpp_macro_argument *tmf_argv;       /* [const][0..f_argc][owned] Vector of argument information (used for fast calculation of the expanded macro's size) */
-			tpp_size            tmf_skiptotal;  /* [const] Max amount of bytes skipped during expansion. */
+			tpp_size            tmf_expbase;    /* [const] Base size of macro expansion buffer (== (tm_body_end-tm_body_start) - <TOTAL_SPACE_FROM(TPP_MACRO_OPCODE_SKIP-like)>) */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
 			tpp_size            tmf_n_vaopt;    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seek_rparen:OUT(*p_argc) > tmf_argc). */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
 			tpp_size            tmf_n_vanargs;  /* [const] Amount of times `__VA_NARGS__' is used in `tmf_expand'. */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
-			void               *tmf_argbuf;     /* [0..1][owned] Internal preallocated cache for a required temporary buffer used during expansion.
-			                                     * NOTE: Implementation-wise, this is a vector of `argcache_t' (an internal, hidden data structure). */
+			struct tpp_macro_argbuf
+			                   *tmf_argbuf;     /* [0..1][owned] Internal cache used during macro expansion */
 			tpp_macro_opcode    tmf_expand[TPP_FLEX_ARRAY]; /* [const][1..1] Sequence of `TPP_MACRO_OPCODE_*'-opcodes, together with their operands */
 		} tmd_func; /* [TPP_MACRO_KIND_ISFUNC(tm_kind)] */
 	} tm_data;
@@ -6413,12 +6435,12 @@ tpp_lexer_seek_begin(tpp_lexer *tpp_restrict self,
 }
 #define tpp_lexer_seek_commit(self, pos) \
 	(void)(tpp_lexer_gettoken(self)->tt_end = (pos))
-#define tpp_lexer_seek_rollback(self, backup)                                                         \
-	(void)(tpp_lexer_gettoken(self)->tt_id  = (backup)->tlsb_id,                                      \
-	       tpp_lexer_gettoken(self)->tt_kwd = (backup)->tlsb_kwd,                                     \
-	       tpp_lexer_gettoken(self)->tt_start = tpp_lexer_gettoken(self)->tt_end,                     \
-	       tpp_lexer_gettoken(self)->tt_end = tpp_lexer_gettoken(self)->tt_start + (backup)->tlsb_len \
-	       _tpp_lexer_seek_backup_restore_state(backup, self))
+#define tpp_lexer_seek_rollback(self, backup)                                                   \
+	(tpp_lexer_gettoken(self)->tt_kwd = (backup)->tlsb_kwd,                                     \
+	 tpp_lexer_gettoken(self)->tt_start = tpp_lexer_gettoken(self)->tt_end,                     \
+	 tpp_lexer_gettoken(self)->tt_end = tpp_lexer_gettoken(self)->tt_start + (backup)->tlsb_len \
+	 _tpp_lexer_seek_backup_restore_state(backup, self),                                        \
+	 tpp_lexer_gettoken(self)->tt_id  = (backup)->tlsb_id)
 
 
 /* Wrapper around `tpp_lexer_yieldraw()' that filters certain tokens (based on

@@ -131,6 +131,7 @@ enum {
 #endif /* TPP_BUILDING */
 
 struct tpp_keyword;
+struct tpp_macro_argbuf; /* Opaque... */
 typedef struct tpp_macro {
 	tpp_refcnt          tm_refcnt;     /* Reference count */
 	tpp_macro_kind      tm_kind;       /* [const] Macro kind (one of `TPP_MACRO_KIND_*') */
@@ -153,15 +154,15 @@ typedef struct tpp_macro {
 		struct {
 			tpp_size            tmf_argc;       /* [const] Amount of arguments this macro-function takes */
 			tpp_macro_argument *tmf_argv;       /* [const][0..f_argc][owned] Vector of argument information (used for fast calculation of the expanded macro's size) */
-			tpp_size            tmf_skiptotal;  /* [const] Max amount of bytes skipped during expansion. */
+			tpp_size            tmf_expbase;    /* [const] Base size of macro expansion buffer (== (tm_body_end-tm_body_start) - <TOTAL_SPACE_FROM(TPP_MACRO_OPCODE_SKIP-like)>) */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
 			tpp_size            tmf_n_vaopt;    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seek_rparen:OUT(*p_argc) > tmf_argc). */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
 			tpp_size            tmf_n_vanargs;  /* [const] Amount of times `__VA_NARGS__' is used in `tmf_expand'. */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
-			void               *tmf_argbuf;     /* [0..1][owned] Internal preallocated cache for a required temporary buffer used during expansion.
-			                                     * NOTE: Implementation-wise, this is a vector of `argcache_t' (an internal, hidden data structure). */
+			struct tpp_macro_argbuf
+			                   *tmf_argbuf;     /* [0..1][owned] Internal cache used during macro expansion */
 			tpp_macro_opcode    tmf_expand[TPP_FLEX_ARRAY]; /* [const][1..1] Sequence of `TPP_MACRO_OPCODE_*'-opcodes, together with their operands */
 		} tmd_func; /* [TPP_MACRO_KIND_ISFUNC(tm_kind)] */
 	} tm_data;

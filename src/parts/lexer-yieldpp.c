@@ -611,11 +611,16 @@ tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict self,
                                       tpp_lexer *tpp_restrict lexer,
                                       tpp_char const *body_start,
                                       tpp_char const *body_end) {
-	(void)self;
+	tpp_macro_opcode *opcodes;
 	(void)lexer;
-	(void)body_start;
-	(void)body_end;
 	/* TODO */
+
+	opcodes = tpp_macro_builder_requireop(self, 3);
+	if tpp_unlikely(!opcodes)
+		return TPP_ENOMEM;
+	opcodes[0] = TPP_MACRO_OPCODE_COPY;
+	opcodes[1] = (tpp_size)(body_end - body_start);
+	opcodes[2] = TPP_MACRO_OPCODE_END;
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_TRADITIONAL_MACROS != 0 */
@@ -626,11 +631,16 @@ tpp_macro_builder_compile_modern(tpp_macro_builder *tpp_restrict self,
                                  tpp_lexer *tpp_restrict lexer,
                                  tpp_char const *body_start,
                                  tpp_char const *body_end) {
-	(void)self;
+	tpp_macro_opcode *opcodes;
 	(void)lexer;
-	(void)body_start;
-	(void)body_end;
 	/* TODO */
+
+	opcodes = tpp_macro_builder_requireop(self, 3);
+	if tpp_unlikely(!opcodes)
+		return TPP_ENOMEM;
+	opcodes[0] = TPP_MACRO_OPCODE_COPY;
+	opcodes[1] = (tpp_size)(body_end - body_start);
+	opcodes[2] = TPP_MACRO_OPCODE_END;
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_TRADITIONAL_MACROS <= 0 */
@@ -703,9 +713,11 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 		result->tm_deflc   = deflc;
 		result->tm_body_lc = tpp_file_lcinfo(file, body_start);
 	}
-	result->tm_data.tmd_func.tmf_argc      = self->mab_argc;
-	result->tm_data.tmd_func.tmf_argv      = self->mab_argv; /* Inherit data */
-	result->tm_data.tmd_func.tmf_skiptotal = self->mab_skiptotal;
+	result->tm_data.tmd_func.tmf_argc    = self->mab_argc;
+	result->tm_data.tmd_func.tmf_argv    = self->mab_argv; /* Inherit data */
+	result->tm_data.tmd_func.tmf_expbase = (tpp_size)(body_end - body_start);
+	tpp_assert(result->tm_data.tmd_func.tmf_expbase >= self->mab_skiptotal);
+	result->tm_data.tmd_func.tmf_expbase -= self->mab_skiptotal;
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
 	result->tm_data.tmd_func.tmf_n_vaopt = self->mab_n_vaopt;
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
@@ -838,7 +850,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 
 	/* Find end of body (moving the lexer to point at the trailing EOF/LF/COMMENT token) */
 	while (tok != TPP_TOK_EOF && !TPP_TOK_ISLF_OR_COMMENT(tok)) {
-		rel_body_start = tpp_file_ptr2rel(file, *p_pos);
+		rel_body_end = tpp_file_ptr2rel(file, *p_pos);
 		tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 		if (TPP_TOK_ISERR(tok)) {
 			error = TPP_TOK_ASERR(tok);

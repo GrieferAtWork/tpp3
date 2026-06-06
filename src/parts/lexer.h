@@ -402,12 +402,12 @@ tpp_lexer_seek_begin(tpp_lexer *tpp_restrict self,
 }
 #define tpp_lexer_seek_commit(self, pos) \
 	(void)(tpp_lexer_gettoken(self)->tt_end = (pos))
-#define tpp_lexer_seek_rollback(self, backup)                                                         \
-	(void)(tpp_lexer_gettoken(self)->tt_id  = (backup)->tlsb_id,                                      \
-	       tpp_lexer_gettoken(self)->tt_kwd = (backup)->tlsb_kwd,                                     \
-	       tpp_lexer_gettoken(self)->tt_start = tpp_lexer_gettoken(self)->tt_end,                     \
-	       tpp_lexer_gettoken(self)->tt_end = tpp_lexer_gettoken(self)->tt_start + (backup)->tlsb_len \
-	       _tpp_lexer_seek_backup_restore_state(backup, self))
+#define tpp_lexer_seek_rollback(self, backup)                                                   \
+	(tpp_lexer_gettoken(self)->tt_kwd = (backup)->tlsb_kwd,                                     \
+	 tpp_lexer_gettoken(self)->tt_start = tpp_lexer_gettoken(self)->tt_end,                     \
+	 tpp_lexer_gettoken(self)->tt_end = tpp_lexer_gettoken(self)->tt_start + (backup)->tlsb_len \
+	 _tpp_lexer_seek_backup_restore_state(backup, self),                                        \
+	 tpp_lexer_gettoken(self)->tt_id  = (backup)->tlsb_id)
 
 
 /* Wrapper around `tpp_lexer_yieldraw()' that filters certain tokens (based on

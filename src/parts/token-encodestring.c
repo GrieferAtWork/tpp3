@@ -17,39 +17,38 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/* clang-format off */
-#ifndef GUARD_TPP_C
-#define GUARD_TPP_C 1
-#undef TPP_BUILDING
+#ifndef GUARD_TPP_TOKEN_ENCODESTRING_C
+#define GUARD_TPP_TOKEN_ENCODESTRING_C 1
 #define TPP_BUILDING 1
-#ifndef TPP_INTERN_DECL
-#define TPP_INTERN_DECL static
-#define TPP_INTERN_IMPL static
-#endif /* !TPP_INTERN_DECL */
 
-# include "tpp-amalgamation.h"
+#include "api.h"
 
-#include "parts/error.c"
-#include "parts/ctype.c"
-#include "parts/string.c"
-#include "parts/token-strtokenid.c"
-#include "parts/token-reprtokenid.c"
-#include "parts/token-encodestring.c"
-#include "parts/file-io.c"
-#include "parts/file.c"
-#include "parts/keyword.c"
-#include "parts/builtins.c"
-#include "parts/macro.c"
-#include "parts/extensions.c"
-#include "parts/features.c"
-#include "parts/warnings.c"
-#include "parts/lexer.c"
-#include "parts/lexer-warn.c"
-#include "parts/lexer-yieldraw.c"
-#include "parts/lexer-seek-rparen.c"
-#include "parts/lexer-yieldpp.c"
-#include "parts/lexer-yield.c"
-#include "parts/lexer-decodestring.c"
+#include "config.h"
+#include "token.h"
 
-#endif /* !GUARD_TPP_C */
-/* clang-format on */
+/*[[[tpp-begin]]]*/
+TPP_DECL_BEGIN
+
+#if TPP_HAVE_TOKEN_ENCODESTRING
+/* \-encode "data...+=num_bytes" by passing it to "printer"
+ * NOTE: Leading/trailing " (or ')-characters are *NOT* printed!
+ *
+ * @return: >= 0: Sum of positive return values of "printer"
+ * @return: < 0:  First negative return value of "printer".
+ *                Note that this function never causes errors
+ *                on its own, meaning that the meaning of
+ *                *all* negative values is entirely up to the
+ *                given "printer"! */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
+tpp_token_encodestring(tpp_formatprinter printer, void *arg,
+                       void const *data, tpp_size num_bytes) {
+	/* TODO */
+	return (*printer)(arg, (tpp_char const *)data, num_bytes);
+}
+#endif /* TPP_HAVE_TOKEN_ENCODESTRING */
+
+
+TPP_DECL_END
+/*[[[tpp-end]]]*/
+
+#endif /* !GUARD_TPP_TOKEN_ENCODESTRING_C */
