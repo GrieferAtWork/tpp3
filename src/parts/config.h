@@ -33,14 +33,6 @@
 #define TPP_CONFIG_DEFS_FILENAME "tpp-amalgamation.h"
 #endif /* !TPP_CONFIG_DEFS_FILENAME */
 
-#ifndef TPP_CONFIG_DEBUG
-#ifdef NDEBUG
-#define TPP_CONFIG_DEBUG 0
-#else /* NDEBUG */
-#define TPP_CONFIG_DEBUG 1
-#endif /* !NDEBUG */
-#endif /* !TPP_CONFIG_DEBUG */
-
 /* API features:
  *  0: Disabled
  *  1: Enabled
@@ -373,7 +365,7 @@
 
 /* "..." */
 #ifndef TPP_HAVE_TPP_TOK_DOT_DOT_DOT
-#define TPP_HAVE_TPP_TOK_DOT_DOT_DOT TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_DOT_DOT_DOT" */
+#define TPP_HAVE_TPP_TOK_DOT_DOT_DOT ((TPP_COMMON_HAVE_TPP_TOK_C_TOKENS < 0) ? TPP_COMMON_HAVE_TPP_TOK_C_TOKENS : (TPP_COMMON_HAVE_TPP_TOK_C_TOKENS || TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS)) /* "TPP_FEAT_TPP_TOK_DOT_DOT_DOT" */
 #endif /* !TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
 
 /* "+=" */
@@ -891,6 +883,18 @@
 #define TPP_HAVE_MACRO_RECURSION (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-fmacro-recursion" */
 #endif /* !TPP_HAVE_MACRO_RECURSION */
 
+// Support for traditional macro expansion:
+// #if __has_extension("-ftraditional-macro")
+// #define STR(x)    "x"
+// #define CAT(a, b) a/**/b
+// #else
+// #define STR(x)    #x
+// #define CAT(a, b) a##b
+// #endif
+#ifndef TPP_HAVE_TRADITIONAL_MACROS
+#define TPP_HAVE_TRADITIONAL_MACROS (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-ftraditional-macro" */
+#endif /* !TPP_HAVE_TRADITIONAL_MACROS */
+
 /* Support for: #define printf(format, args...) args */
 #ifndef TPP_HAVE_NAMED_VARARGS_IN_MACROS
 #define TPP_HAVE_NAMED_VARARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fnamed-varargs-in-macros" */
@@ -903,18 +907,38 @@
 
 /* Support for: #define printf(format, ...) fprintf(stderr, format __VA_COMMA__ __VA_ARGS__) */
 #ifndef TPP_HAVE_VA_COMMA_IN_MACROS
-#define TPP_HAVE_VA_COMMA_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fva-comma-in-macros" */
+#define TPP_HAVE_VA_COMMA_IN_MACROS ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fva-comma-in-macros" */
 #endif /* !TPP_HAVE_VA_COMMA_IN_MACROS */
 
 /* Support for: #define printf(format, ...) fprintf(stderr, format __VA_OPT__(,) __VA_ARGS__) */
 #ifndef TPP_HAVE_VA_OPT_IN_MACROS
-#define TPP_HAVE_VA_OPT_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fva-opt-in-macros" */
+#define TPP_HAVE_VA_OPT_IN_MACROS ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fva-opt-in-macros" */
 #endif /* !TPP_HAVE_VA_OPT_IN_MACROS */
 
 /* Support for: #define min(...) min_##__VA_NARGS__(__VA_ARGS__) */
 #ifndef TPP_HAVE_VA_NARGS_IN_MACROS
-#define TPP_HAVE_VA_NARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fva-nargs-in-macros" */
+#define TPP_HAVE_VA_NARGS_IN_MACROS ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fva-nargs-in-macros" */
 #endif /* !TPP_HAVE_VA_NARGS_IN_MACROS */
+
+/* Support for: #define printf(format, ...) fprintf(stderr, format,##__VA_ARGS__) */
+#ifndef TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
+#define TPP_HAVE_VA_GLUE_COMMA_IN_MACROS ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fglue-comma-in-macros" */
+#endif /* !TPP_HAVE_VA_GLUE_COMMA_IN_MACROS */
+
+/* Support for: #define str(x) #x */
+#ifndef TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
+#define TPP_HAVE_STRINGIZE_MACRO_ARGUMENT ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fstringize-macro-argument" */
+#endif /* !TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
+
+/* Support for: #define str(x) #@x */
+#ifndef TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+#define TPP_HAVE_CHARIZE_MACRO_ARGUMENT ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fcharize-macro-argument" */
+#endif /* !TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+
+/* Support for: #define str(x) #!x */
+#ifndef TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
+#define TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fdont-expand-macro-argument" */
+#endif /* !TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -1124,6 +1148,11 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
 #define TPP_HAVE_LEXER_SEEK_RPAREN_EX (TPP_HAVE_LEXER_SEEK_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
 #endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
 
+/* Provide a function "tpp_macro_equals()" to compare macro definitions */
+#ifndef TPP_HAVE_MACRO_EQUALS
+#define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
+#endif /* !TPP_HAVE_MACRO_EQUALS */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -1209,6 +1238,9 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS
 #define TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
+#ifndef TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE
+#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_SHELL_COMMENT <= 0) && TPP_HAVE_CPP_DIRECTIVES)
+#endif /* !TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
 #endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
@@ -1238,6 +1270,30 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
 #ifndef TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS
 #define TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEK_RPAREN)
 #endif /* !TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
+#define TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_DEFINE))
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE */
+#ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+#define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_DEFINE))
+#endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+#ifndef TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
+#define TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
+#endif /* !TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
+#ifndef TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO
+#define TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
+#endif /* !TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO */
+#ifndef TPP_HAVE_TPP_W_REDEFINE_MACRO
+#define TPP_HAVE_TPP_W_REDEFINE_MACRO \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
+#endif /* !TPP_HAVE_TPP_W_REDEFINE_MACRO */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST */
 
 
 /* Warning printer configuration */

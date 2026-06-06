@@ -129,7 +129,7 @@ static struct tpp_warning_groups_struct {
 	tpp_warning_group_id twig_##warning_id##_##index;
 #define _TPP_EXPAND_WARNING_GROUP_TAIL(warning_id) \
 	tpp_warning_group_id twig_tail_##warning_id;
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format)                                              \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format)                             \
 	TPP_TUPLE_FOREACH(wgroup_ids, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WARNING_GROUP_IDS, warning_id) \
 	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_EXPAND_WARNING_GROUP_TAIL, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
@@ -142,7 +142,7 @@ static struct tpp_warning_groups_struct {
 	/* .twig_##warning_id##_##index = */ value,
 #define _TPP_EXPAND_WARNING_GROUP_TAIL(warning_id) \
 	/* .twig_tail_##warning_id = */ TPP_WG_COUNT,
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format)                                              \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format)                             \
 	TPP_TUPLE_FOREACH(wgroup_ids, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WARNING_GROUP_IDS, warning_id) \
 	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_EXPAND_WARNING_GROUP_TAIL, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
@@ -157,7 +157,7 @@ static tpp_size const tpp_warning_group_offsets_byid[TPP_W_COUNT] = {
 	/* [warning_id] = */ tpp_offsetof(struct tpp_warning_groups_struct, twig_##warning_id##_0),
 #define _TPP_WARNING_GROUPS_EMPTY(warning_id) \
 	/* [warning_id] = */ sizeof(struct tpp_warning_groups_struct) - sizeof(tpp_warning_group_id),
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format)                    \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format)   \
 	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_WARNING_GROUPS_NONEMPTY, warning_id) \
 	TPP_TUPLE_IF_EMPTY(wgroup_ids, _TPP_WARNING_GROUPS_EMPTY, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
@@ -188,10 +188,10 @@ TPP_IMPL tpp_warnings_state const tpp_warnings_state_default = {
 		/* .twsg_##wgroup_id  = */ (unsigned int)default,
 #include TPP_CONFIG_DEFS_FILENAME
 #if TPP_HAVE_WARNING_NUMBERS
-#define TPP_DECLARE_NUMBERED_WARNING(warning_id) \
-		/* .twsn_##warning_id = */ (unsigned int)TPP_WSTATE_FATAL,
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
-		TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
+#define TPP_DECLARE_NUMBERED_WARNING(numbers_default) \
+		/* .twsn_##warning_id = */ (unsigned int)numbers_default,
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
+		TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, numbers_default)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DECLARE_NUMBERED_WARNING
 #endif /* TPP_HAVE_WARNING_NUMBERS */
@@ -650,17 +650,17 @@ tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
 
 static struct tpp_warning_format_strings_struct {
 #define TPP_DEFS
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	char twf_##warning_id[sizeof(format) / sizeof(char)];
-#define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, expr)
+#define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 } const tpp_warning_format_strings = {
 #define TPP_DEFS
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	/* [twf_##warning_id] = */ format,
-#define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, expr)
+#define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
@@ -668,9 +668,9 @@ static struct tpp_warning_format_strings_struct {
 
 static tpp_size const tpp_warning_format_string_offsets[TPP_W_COUNT] = {
 #define TPP_DEFS
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	/* [warning_id] = */ tpp_offsetof(struct tpp_warning_format_strings_struct, twf_##warning_id),
-#define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, expr) \
+#define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) \
 	/* [warning_id] = */ sizeof(struct tpp_warning_format_strings_struct) - 1,
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_WARNING_NUMBER_CASE
@@ -701,7 +701,7 @@ tpp_warning_ofnumber(unsigned int number) {
 #define TPP_DEFS
 #define TPP_WARNING_NUMBER_CASE(_, index, value) \
 	case value: return _;
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_FOREACH(numbers, TPP_TUPLE_FOREACH_DUMMY_SEP, TPP_WARNING_NUMBER_CASE, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_WARNING_NUMBER_CASE
@@ -729,7 +729,7 @@ tpp_warning_getnumbers(tpp_warning_id warning_id) {
 		return this_warning_numbers;                                                                  \
 	}
 #define TPP_WARNING_NUMBERS_CASE(args) TPP_WARNING_NUMBERS_CASE_ args
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_WARNING_NUMBERS_CASE, (warning_id, numbers))
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_WARNING_NUMBERS_CASE
@@ -749,7 +749,7 @@ tpp_warning_context_id_ofwarning(tpp_warning_id warning_id) {
 #define TPP_DEFS
 #define _TPP_CASE_NUMBERED_WARNING(warning_id) \
 	case warning_id: return TPP_WC_##warning_id;
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, _TPP_CASE_NUMBERED_WARNING, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef _TPP_CASE_NUMBERED_WARNING
@@ -768,7 +768,7 @@ tpp_warning_context_id_aswarning(tpp_warning_context_id ctx_id) {
 #define TPP_DEFS
 #define _TPP_CASE_NUMBERED_WARNING(warning_id) \
 	case TPP_WC_##warning_id: return warning_id;
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, _TPP_CASE_NUMBERED_WARNING, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef _TPP_CASE_NUMBERED_WARNING
@@ -846,7 +846,7 @@ tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen
 /* Return the hard-coded expansion of the builtin macro linked to "id".
  * If "id" isn't a builtin keyword, or that keyword doesn't specify a
  * value for "TPP_BUILTIN_MACRO()", return "NULL" instead. */
-TPP_IMPL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
+TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
 tpp_macro_getbuiltin(tpp_token_id id) {
 	switch (id) {
 #define TPP_DEFS

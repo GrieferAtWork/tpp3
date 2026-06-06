@@ -44,6 +44,19 @@ tpp_macro_destroy(tpp_macro *tpp_restrict self) {
 	}
 }
 
+
+#if TPP_HAVE_MACRO_EQUALS
+/* Compare 2 macro definitions to see if they are identical. */
+TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs) {
+	(void)lhs;
+	(void)rhs;
+	/* TODO */
+	return false;
+}
+#endif /* TPP_HAVE_MACRO_EQUALS */
+
+
 /* Figure out the line/column of "pos" in "expanded_text", as produced
  * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
 TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL

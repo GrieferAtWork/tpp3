@@ -738,6 +738,14 @@ convert_multiword_to_utf8:
 
 
 
+/* These are needed for the shared
+ * >> case TPP_FILE_KIND_IO:
+ * >> case TPP_FILE_KIND_TEXT: {
+ * in "tpp_file_lcinfo()" */
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
+                  tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
+                  tpp_offsetof(tpp_file, tf_data.td_text.tft_start_lc));
 
 /* Return line/column information (1-based) for "pos" */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
@@ -782,10 +790,6 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT: {
-		TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
-		                  tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
-		TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
-		                  tpp_offsetof(tpp_file, tf_data.td_text.tft_start_lc));
 		result = self->tf_data.td_io.tff_start_lc;
 		result = tpp_lcinfo_account(self, result, self->tf_chunk->ts_str,
 		                            (tpp_size)(pos - self->tf_chunk->ts_str));
@@ -835,24 +839,25 @@ done_nocache:
 }
 
 
+/* These are needed for the shared
+ * >> case TPP_FILE_KIND_IO:
+ * >> case TPP_FILE_KIND_TEXT:
+ * in "tpp_file_filename()" */
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
+                  tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
+
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_filename(tpp_file const *tpp_restrict self) {
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO:
-	case TPP_FILE_KIND_TEXT: {
-		TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
-		                  tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
+	case TPP_FILE_KIND_TEXT:
 		return self->tf_data.td_io.tff_name;
-	}	break;
 
 #if TPP_HAVE_CPP_MACROS
-	case TPP_FILE_KIND_MACRO: {
-		tpp_macro const *macro = self->tf_data.td_macro.tfm_macro;
-		tpp_keyword const *kwd = macro->tm_deffile;
-		return kwd ? (char const *)kwd->tk_kwd : NULL;
-	}	break;
+	case TPP_FILE_KIND_MACRO:
+		return self->tf_data.td_macro.tfm_macro->tm_deffile;
 #endif /* TPP_HAVE_CPP_MACROS */
 
 	default: tpp_unreachable();
@@ -878,12 +883,10 @@ tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
 	}	break;
 
 	case TPP_FILE_KIND_TEXT:
-		return NULL;
-
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO:
-		return self->tf_data.td_macro.tfm_macro->tm_deffile;
 #endif /* TPP_HAVE_CPP_MACROS */
+		return NULL;
 
 	default: tpp_unreachable();
 	}

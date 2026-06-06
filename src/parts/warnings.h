@@ -55,6 +55,7 @@ typedef enum tpp_warning_state {
 #define TPP_WSTATE_ERROR_OR_FATAL TPP_WSTATE_FATAL
 #endif /* !TPP_HAVE_WARNING_ERROR */
 	TPP_WSTATE_FATAL    = 3, /* Immediately cause a `TPP_ELEXERROR' error */
+#define TPP_WSTATE_UNDEFINED TPP_WSTATE_FATAL /* Intended for numbers-definitions: refer to linked groups */
 
 #if TPP_HAVE_WARNING_SUPPRESS
 	TPP_WSTATE_SUPPRESS = -1, /* Treat as `TPP_WSTATE_DISABLED' a couple of times, then switch to old state
@@ -121,7 +122,7 @@ tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen
 
 typedef enum tpp_warning_id {
 #define TPP_DEFS
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) warning_id,
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) warning_id,
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS
 	TPP_W_COUNT
@@ -169,7 +170,7 @@ typedef enum tpp_warning_context_id {
 	TPP_WC_NUMBER_MIN,
 	_TPP_WC_NUMBER_MIN = TPP_WC_NUMBER_MIN - 1,
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) TPP_WC_##warning_id,
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DECLARE_NUMBERED_WARNING
@@ -230,7 +231,7 @@ typedef union tpp_warnings_state {
 #if TPP_HAVE_WARNING_NUMBERS
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) \
 	unsigned int twsn_##warning_id: 2; /* One of `tpp_warning_state' */
-#define TPP_WARNING(warning_id, wgroup_ids, numbers, format) \
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DECLARE_NUMBERED_WARNING

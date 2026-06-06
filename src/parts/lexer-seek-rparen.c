@@ -121,6 +121,12 @@ tpp_lexer_seek_rparen(tpp_lexer *tpp_restrict self,
                       unsigned int flags)
 #endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
 {
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
+#define tpp_lexer_seek_rparen_keepspace() (flags & TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC)
+#else /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
+#define tpp_lexer_seek_rparen_keepspace() (TPP_HAVE_MACRO_ARGUMENT_WHITESPACE != 0)
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE >= 0 */
+
 	tpp_lexer_arginfo_rel *const p_argv_rel = (tpp_lexer_arginfo_rel *)p_argv;
 	tpp_file const *const file = tpp_lexer_getfile(self);
 	tpp_token_id tok = tpp_lexer_gettoken(self)->tt_id;
@@ -169,7 +175,7 @@ again_switch_tok:
 	case TPP_TOK_SPACE:
 	case TPP_TOK_LF:
 	TPP_CASE_TPP_TOK_COMMENT {
-		if (!tpp_lexer_getext(self, TPP_EXT_MACRO_ARGUMENT_WHITESPACE))
+		if (!tpp_lexer_seek_rparen_keepspace())
 			break;
 		if (current_arg_rel_start == current_arg_rel_end) {
 			/* Skip leading whitespace... */
@@ -211,7 +217,7 @@ again_switch_tok:
 #endif /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
 
 #if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
-		if (tpp_lexer_getext(self, TPP_EXT_MACRO_ARGUMENT_WHITESPACE)) {
+		if (tpp_lexer_seek_rparen_keepspace()) {
 			/* Argument must includes whitespace preceding the ","-token */
 			tpp_char const *comma_start = tpp_lexer_gettoken(self)->tt_start;
 			current_arg_rel_end = tpp_file_ptr2rel(file, comma_start);
@@ -266,9 +272,9 @@ again_switch_tok:
 		--recursion[TPP_RECURSION_CC_BRACE];
 		break;
 
-#if (TPP_HAVE_TPP_TOK_LANGLE_EQUAL || \
-	 TPP_HAVE_TPP_TOK_LANGLE_LANGLE || \
-     TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL || \
+#if (TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||         \
+     TPP_HAVE_TPP_TOK_LANGLE_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL ||  \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
@@ -298,9 +304,9 @@ again_switch_tok:
 #endif /* ... */
 
 
-#if (TPP_HAVE_TPP_TOK_RANGLE_RANGLE || \
-     TPP_HAVE_TPP_TOK_RANGLE_EQUAL || \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || \
+#if (TPP_HAVE_TPP_TOK_RANGLE_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||         \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL ||  \
      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || \
      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
@@ -433,6 +439,7 @@ done_err:
 	}
 	return tok;
 #undef tpp_recursion_cc
+#undef tpp_lexer_seek_rparen_keepspace
 }
 
 #endif /* TPP_HAVE_LEXER_SEEK_RPAREN */

@@ -32,7 +32,8 @@
 #define _CRT_OBSOLETE_NO_DEPRECATE
 
 /* Disable some warnings */
-#pragma warning(disable: 4065) /* "switch statement contains 'default' but no 'case' labels" */
+#pragma warning(disable: 4065) /* "switch statement contains 'default' but no 'case' labels" (cannot be avoided under certain feature-configurations) */
+#pragma warning(disable: 4127) /* Conditional expression is constant (cannot be avoided when features are compile-time enabled/disabled) */
 
 /* Disable some garbage inspection warnings */
 #pragma warning(disable: 26446)

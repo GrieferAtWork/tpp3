@@ -497,8 +497,11 @@ typedef struct tpp_lexer_arginfo {
 } tpp_lexer_arginfo;
 
 
-#define TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL  0x0000
-#define TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS 0x0001 /* Store varargs info in p_argv[IN(*p_argc) - 1] */
+#define TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL     0x0000
+#define TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS    0x0001 /* Store varargs info in p_argv[IN(*p_argc) - 1] */
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
+#define TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC 0x0002 /* Do not strip whitespace/comments around arguments */
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
 
 /* Find the position of the next unmatched ')'-token, gathering information
  * about ranges of ','-token-separated text-sequences along the way.

@@ -82,7 +82,6 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self, tpp_macro *macro) {
 		 *          - tpp_file_free(prev_file); // Allocated above, but not actually used
 		 *          - return token->tt_id;      // The keyword-id of the macro
 		 */
-
 		/* TODO: Set-up "file" such that it will read from "body-chunk-string" */
 		tpp_file_free(prev_file);
 		return token->tt_id;

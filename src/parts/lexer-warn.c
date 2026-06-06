@@ -29,6 +29,7 @@
 #include "file.h"
 #include "keyword.h"
 #include "lexer.h"
+#include "macro.h"
 #include "token.h"
 #include "warnings.h"
 
@@ -451,8 +452,7 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	printer_arg = tpp_lexer_getwarnprinterarg(self);
 
 	/* Print file-and-line prefix */
-	printer_status = tpp_lexer_printf_warning(self, file,
-	                                          pos, printer, printer_arg,
+	printer_status = tpp_lexer_printf_warning(self, file, pos, printer, printer_arg,
 	                                          TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT);
 	if (printer_status < 0)
 		goto err_printer;
@@ -515,23 +515,24 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 /************************************************************************/
 /* MACROS FOR USE BY "TPP_WARNING_EX"                                   */
 /************************************************************************/
-#if TPP_HOST_HAVE_PP_VARARGS
-#define tpp_warnf(...)                                                       \
-	do {                                                                     \
-		printer_status = tpp_lexer_printf_warning(self, file,                \
-		                                          pos, printer, printer_arg, \
-		                                          __VA_ARGS__);              \
-		if (printer_status < 0)                                              \
-			goto err_printer;                                                \
+#define tpp_do(expr)                       \
+	do {                                   \
+		if ((printer_status = (expr)) < 0) \
+			goto err_printer;              \
 	} while (0)
+#if TPP_HOST_HAVE_PP_VARARGS
+#define tpp_warnf(...)                                    \
+	tpp_do(tpp_lexer_printf_warning(self, file, pos,      \
+	                                printer, printer_arg, \
+	                                __VA_ARGS__))
 #endif /* TPP_HOST_HAVE_PP_VARARGS */
 /* ... */
 /************************************************************************/
 
 #define TPP_DEFS
-#define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, expr) \
-		case warning_id: {                                    \
-			expr;                                             \
+#define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) \
+		case warning_id: {                                                     \
+			expr;                                                              \
 		}	break;
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_WARNING_NUMBER_CASE
