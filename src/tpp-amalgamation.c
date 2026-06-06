@@ -2570,6 +2570,12 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 #if TPP_HAVE_TOKEN_ENCODESTRING
+
+#define TPP_CASE_UTF8_FIRSTBYTE_ISLF_FOREACH(cb) \
+	cb(0xc2, "\\xc2") \
+	cb(0xe2, "\\xe2")
+
+
 /* \-encode "data...+=num_bytes" by passing it to "printer"
  * NOTE: Leading/trailing " (or ')-characters are *NOT* printed!
  *
@@ -2582,8 +2588,56 @@ TPP_DECL_BEGIN
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes) {
-	/* TODO */
-	return (*printer)(arg, (tpp_char const *)data, num_bytes);
+	char const *output_repr;
+	tpp_ssize temp, result = 0;
+	tpp_char const *iter = (tpp_char const *)data;
+	tpp_char const *end  = iter + num_bytes;
+	tpp_char ch;
+again:
+	if (iter >= end) {
+		temp = (*printer)(arg, (tpp_char const *)data, (tpp_size)(end - (tpp_char const *)data));
+		if (temp < 0)
+			return temp;
+		result += temp;
+		return result;
+	}
+	ch = *iter++;
+	switch (ch) {
+#define TPP_TOKEN_ENCODESTRING_CASE(b, repr) \
+	case b:                                  \
+		output_repr = repr;                  \
+		break;
+
+	/* Only really need to escape \ " ' CR LF and (TPP_HAVE_UNICODE-only)
+	 * ordinals >=0xC0 that *might* form unicode line-feed characters. */
+
+	TPP_TOKEN_ENCODESTRING_CASE('\\', "\\\\");
+	TPP_TOKEN_ENCODESTRING_CASE('\'', "\\'");
+	TPP_TOKEN_ENCODESTRING_CASE('\"', "\\\"");
+	TPP_TOKEN_ENCODESTRING_CASE('\r', "\\r");
+	TPP_TOKEN_ENCODESTRING_CASE('\n', "\\n");
+
+#if TPP_HAVE_UNICODE
+	TPP_CASE_UTF8_FIRSTBYTE_ISLF_FOREACH(TPP_TOKEN_ENCODESTRING_CASE)
+#endif /* TPP_HAVE_UNICODE */
+#undef TPP_TOKEN_ENCODESTRING_CASE
+	default: goto again;
+	}
+	temp = (*printer)(arg, (tpp_char const *)data, (tpp_size)(end - (tpp_char const *)data));
+	if (temp < 0)
+		return temp;
+	result += temp;
+#if TPP_HAVE_UNICODE
+	temp = (*printer)(arg, (tpp_char const *)output_repr, tpp_strlen(output_repr));
+#else /* TPP_HAVE_UNICODE */
+	/* All mandatory ASCII-escape-sequences are 2 bytes long! */
+	temp = (*printer)(arg, (tpp_char const *)output_repr, 2);
+#endif /* !TPP_HAVE_UNICODE */
+	if (temp < 0)
+		return temp;
+	result += temp;
+	data = (void const *)iter;
+	goto again;
 }
 #endif /* TPP_HAVE_TOKEN_ENCODESTRING */
 
@@ -11097,7 +11151,7 @@ tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict self,
 		return TPP_ENOMEM;
 	opcodes[0] = TPP_MACRO_OPCODE_COPY;
 	opcodes[1] = (tpp_size)(body_end - body_start);
-	opcodes[1] = TPP_MACRO_OPCODE_END;
+	opcodes[2] = TPP_MACRO_OPCODE_END;
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_TRADITIONAL_MACROS != 0 */
@@ -11117,7 +11171,7 @@ tpp_macro_builder_compile_modern(tpp_macro_builder *tpp_restrict self,
 		return TPP_ENOMEM;
 	opcodes[0] = TPP_MACRO_OPCODE_COPY;
 	opcodes[1] = (tpp_size)(body_end - body_start);
-	opcodes[1] = TPP_MACRO_OPCODE_END;
+	opcodes[2] = TPP_MACRO_OPCODE_END;
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_TRADITIONAL_MACROS <= 0 */
@@ -11327,7 +11381,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 
 	/* Find end of body (moving the lexer to point at the trailing EOF/LF/COMMENT token) */
 	while (tok != TPP_TOK_EOF && !TPP_TOK_ISLF_OR_COMMENT(tok)) {
-		rel_body_start = tpp_file_ptr2rel(file, *p_pos);
+		rel_body_end = tpp_file_ptr2rel(file, *p_pos);
 		tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 		if (TPP_TOK_ISERR(tok)) {
 			error = TPP_TOK_ASERR(tok);
@@ -12537,6 +12591,7 @@ next_op:
 	if tpp_unlikely(!prev_file)
 		goto err_rollback_result_chunk_nomem;
 	*prev_file = *file;
+	prev_file->tf_pos = pos; /* Override return-file to continue parsing after ')'-token */
 	file->tf_pos   = result_chunk->ts_str;
 	file->tf_chunk = result_chunk; /* Inherit reference */
 	file->tf_end   = result_chunk->ts_str + result_chunk->ts_len;
