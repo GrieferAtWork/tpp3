@@ -33,6 +33,15 @@ typedef struct tpp_string {
 /*	tpp_char          ts_nul;                  * [const][== 0] Trailing \0-character */
 } tpp_string;
 
+#define tpp_string_len(self)  ((self)->ts_len)
+#define tpp_string_str(self)  ((self)->ts_str)
+#define tpp_string_end(self)  (tpp_string_str(self) + tpp_string_len(self))
+#define tpp_string_cstr(self) ((char const *)tpp_string_str(self))
+
+#define tpp_string_equals(lhs, rhs)    \
+	((lhs)->ts_len == (rhs)->ts_len && \
+	 tpp_memcmp((lhs)->ts_str, (rhs)->ts_str, (lhs)->ts_len * sizeof(tpp_char)) == 0)
+
 /* Helpers for interacting with TPP strings */
 #define tpp_string_destroy(self)  tpp_free(self)
 #define tpp_string_incref(self)   tpp_refcnt_atomic_inc(&(self)->ts_refcnt)

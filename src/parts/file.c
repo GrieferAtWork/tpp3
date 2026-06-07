@@ -423,19 +423,19 @@ again:
 	if (new_size < old_inuse + TPP_IO_MINREAD)
 		new_size = old_inuse + TPP_IO_MINREAD;
 	tpp_assert(self->tf_pos <= self->tf_end);
-	tpp_assert(!old_chunk || self->tf_pos >= (old_chunk->ts_str));
-	tpp_assert(!old_chunk || self->tf_end <= (old_chunk->ts_str + old_chunk->ts_len));
+	tpp_assert(!old_chunk || self->tf_pos >= tpp_string_str(old_chunk));
+	tpp_assert(!old_chunk || self->tf_end <= tpp_string_end(old_chunk));
 	if (old_chunk && !tpp_string_isshared(old_chunk)) {
 		/* Can re-use the old chunk */
-		tpp_size unused_head = (tpp_size)(self->tf_pos - old_chunk->ts_str);
+		tpp_size unused_head = (tpp_size)(self->tf_pos - tpp_string_str(old_chunk));
 #ifndef __OPTIMIZE_SIZE__
 		if (unused_head)
 #endif /* !__OPTIMIZE_SIZE__ */
 		{
 			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account(self,
 			                                                      self->tf_data.td_io.tff_start_lc,
-			                                                      old_chunk->ts_str, unused_head);
-			tpp_memmovedown(old_chunk->ts_str, self->tf_pos, old_inuse);
+			                                                      tpp_string_str(old_chunk), unused_head);
+			tpp_memmovedown(tpp_string_str(old_chunk), self->tf_pos, old_inuse);
 			self->tf_pos -= unused_head;
 			self->tf_end -= unused_head;
 #if TPP_HAVE_FILE_LC_CACHE
@@ -446,22 +446,22 @@ again:
 			}
 #endif /* TPP_HAVE_FILE_LC_CACHE */
 		}
-		tpp_assert(self->tf_pos == old_chunk->ts_str);
-		tpp_assert(self->tf_end == old_chunk->ts_str + old_inuse);
-		if (old_chunk->ts_len >= new_size) {
+		tpp_assert(self->tf_pos == tpp_string_str(old_chunk));
+		tpp_assert(self->tf_end == tpp_string_str(old_chunk) + old_inuse);
+		if (tpp_string_len(old_chunk) >= new_size) {
 			/* Don't even need to realloc() the old chunk! */
 reuse_old_chunk:
 			new_chunk = old_chunk;
-			new_size  = old_chunk->ts_len;
+			new_size  = tpp_string_len(old_chunk);
 		} else {
 			/* Must realloc() the old chunk */
 #if TPP_HAVE_FILE_LC_CACHE
-			tpp_size lc_rel = (tpp_size)(self->tf_lcpos - old_chunk->ts_str);
+			tpp_size lc_rel = (tpp_size)(self->tf_lcpos - tpp_string_str(old_chunk));
 #endif /* TPP_HAVE_FILE_LC_CACHE */
 			new_chunk = (TPP_REF tpp_string *)tpp_tryrealloc(old_chunk, tpp_string_sizeof(new_size));
 			if tpp_unlikely(!new_chunk) {
 				new_size = old_inuse + TPP_FILE_MINEXTRA;
-				if (old_chunk->ts_len >= new_size)
+				if (tpp_string_len(old_chunk) >= new_size)
 					goto reuse_old_chunk;
 				new_chunk = (TPP_REF tpp_string *)tpp_realloc(old_chunk, tpp_string_sizeof(new_size));
 				if tpp_unlikely(!new_chunk)
@@ -470,11 +470,11 @@ reuse_old_chunk:
 			tpp_assert(!tpp_string_isshared(new_chunk));
 			new_chunk->ts_str[new_size] = '\0';
 			new_chunk->ts_len = new_size;
-			self->tf_pos = new_chunk->ts_str;
-			self->tf_end = new_chunk->ts_str + old_inuse;
+			self->tf_pos = tpp_string_str(new_chunk);
+			self->tf_end = tpp_string_str(new_chunk) + old_inuse;
 #if TPP_HAVE_FILE_LC_CACHE
 			if (self->tf_lcpos)
-				self->tf_lcpos = new_chunk->ts_str + lc_rel;
+				self->tf_lcpos = tpp_string_str(new_chunk) + lc_rel;
 #endif /* TPP_HAVE_FILE_LC_CACHE */
 		}
 		self->tf_chunk = new_chunk;
@@ -490,12 +490,12 @@ reuse_old_chunk:
 			if tpp_unlikely(!new_chunk)
 				return TPP_ENOMEM;
 		}
-		tpp_memcpy(new_chunk->ts_str, self->tf_pos, old_inuse);
+		tpp_memcpy(tpp_string_str(new_chunk), self->tf_pos, old_inuse);
 		if (old_chunk) {
-			tpp_size unused_head = (tpp_size)(self->tf_pos - old_chunk->ts_str);
+			tpp_size unused_head = (tpp_size)(self->tf_pos - tpp_string_str(old_chunk));
 			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account(self,
 			                                                      self->tf_data.td_io.tff_start_lc,
-			                                                      old_chunk->ts_str, unused_head);
+			                                                      tpp_string_str(old_chunk), unused_head);
 			tpp_assert(tpp_string_isshared(old_chunk));
 			tpp_string_decref_nokill(old_chunk);
 #if TPP_HAVE_UNICODE
@@ -509,20 +509,20 @@ reuse_old_chunk:
 		}
 #if TPP_HAVE_FILE_LC_CACHE
 		if (self->tf_lcpos) {
-			self->tf_lcpos = new_chunk->ts_str + (self->tf_lcpos - self->tf_pos);
-			if (self->tf_lcpos < new_chunk->ts_str)
+			self->tf_lcpos = tpp_string_str(new_chunk) + (self->tf_lcpos - self->tf_pos);
+			if (self->tf_lcpos < tpp_string_str(new_chunk))
 				self->tf_lcpos = NULL; /* Cache fell out-of-scope */
 		}
 #endif /* TPP_HAVE_FILE_LC_CACHE */
-		self->tf_pos   = new_chunk->ts_str;
-		self->tf_end   = new_chunk->ts_str + old_inuse;
+		self->tf_pos   = tpp_string_str(new_chunk);
+		self->tf_end   = tpp_string_str(new_chunk) + old_inuse;
 		self->tf_chunk = new_chunk; /* Inherit reference */
 	}
 
 	tpp_assert(self->tf_chunk == new_chunk);
-	tpp_assert(self->tf_pos == new_chunk->ts_str);
-	tpp_assert(self->tf_end <= (new_chunk->ts_str + new_chunk->ts_len));
-	io_size = (tpp_size)((new_chunk->ts_str + new_chunk->ts_len) - self->tf_end);
+	tpp_assert(self->tf_pos == tpp_string_str(new_chunk));
+	tpp_assert(self->tf_end <= tpp_string_end(new_chunk));
+	io_size = (tpp_size)(tpp_string_end(new_chunk) - self->tf_end);
 	tpp_assert(io_size >= 1 && "Reallocations above should have ensured sufficient space!");
 	io_dst = (tpp_char *)self->tf_end;
 #if TPP_HAVE_UNICODE
@@ -659,7 +659,7 @@ convert_multiword_to_utf8:
 			tpp_memcpy(self->tf_data.td_io.tff_tailv, tail_base, tail_size);
 		}
 
-		dst_end = new_chunk->ts_str + new_chunk->ts_len;
+		dst_end = tpp_string_end(new_chunk);
 		switch (self->tf_enc) {
 		case TPP_FILE_ENCODING_UTF16_LE:
 		case TPP_FILE_ENCODING_UTF16_BE: {
@@ -753,8 +753,8 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcinfo result;
 	if tpp_unlikely(!self->tf_chunk)
 		return tpp_lcinfo_of(0, 0);
-	tpp_assert(pos >= (self->tf_chunk->ts_str));
-	tpp_assert(pos <= (self->tf_chunk->ts_str + self->tf_chunk->ts_len));
+	tpp_assert(pos >= tpp_string_str(self->tf_chunk));
+	tpp_assert(pos <= tpp_string_end(self->tf_chunk));
 
 	/* Check against the cache */
 #if TPP_HAVE_FILE_LC_CACHE
@@ -767,12 +767,12 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			                            (tpp_size)(pos - self->tf_lcpos));
 			goto done;
 		}
-		delta_from_chunk = (tpp_size)(pos - self->tf_chunk->ts_str);
+		delta_from_chunk = (tpp_size)(pos - tpp_string_str(self->tf_chunk));
 		delta_from_lcpos = (tpp_size)(self->tf_lcpos - pos);
 		if (delta_from_chunk > (delta_from_lcpos * 2)) {
 			/* Given "pos" is much closer to "tf_lcpos", so try to work off of the cache! */
 			tpp_char const *last_linefeed;
-			last_linefeed = tpp_lcinfo_find_last_linefeed(self, self->tf_chunk->ts_str, pos);
+			last_linefeed = tpp_lcinfo_find_last_linefeed(self, tpp_string_str(self->tf_chunk), pos);
 			if (last_linefeed) {
 				tpp_line num_lf = tpp_lcinfo_count_linefeed(self, last_linefeed, self->tf_lcpos);
 				tpp_line last_linefeed_lno = tpp_lcinfo_getline(self->tf_lcval) - num_lf;
@@ -791,8 +791,8 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT: {
 		result = self->tf_data.td_io.tff_start_lc;
-		result = tpp_lcinfo_account(self, result, self->tf_chunk->ts_str,
-		                            (tpp_size)(pos - self->tf_chunk->ts_str));
+		result = tpp_lcinfo_account(self, result, tpp_string_str(self->tf_chunk),
+		                            (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
 	}	break;
 
 #if TPP_HAVE_CPP_MACROS
@@ -818,8 +818,8 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			goto done_nocache;
 		} else {
 			result = macro->tm_body_lc;
-			result = tpp_lcinfo_account(self, result, self->tf_chunk->ts_str,
-			                            (tpp_size)(pos - self->tf_chunk->ts_str));
+			result = tpp_lcinfo_account(self, result, tpp_string_str(self->tf_chunk),
+			                            (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
 		}
 	}	break;
 #endif /* TPP_HAVE_CPP_MACROS */

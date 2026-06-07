@@ -137,6 +137,9 @@
     <ClInclude Include="..\src\parts\extensions.h">
       <Filter>src\parts</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\tpp2.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\cpp.hint" />

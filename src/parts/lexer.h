@@ -183,6 +183,27 @@ typedef struct tpp_lexer {
 #if TPP_HAVE_WARNINGS
 #define tpp_lexer_getwarn(self) (&(self)->tl_warn)
 #endif /* TPP_HAVE_WARNINGS */
+#define tpp_lexer_setfeat(self, TPP_FEAT_x, enabled) tpp_features_setid(&(self)->tl_feat, TPP_FEAT_x, enabled)
+#define tpp_lexer_enablefeat(self, TPP_FEAT_x)       tpp_features_enable(&(self)->tl_feat, TPP_FEAT_x)
+#define tpp_lexer_disablefeat(self, TPP_FEAT_x)      tpp_features_disable(&(self)->tl_feat, TPP_FEAT_x)
+
+
+/* Wrappers for keywords API */
+#define _tpp_lexer_kwds_getkeyword(self, kwd, len, hash) _tpp_keywords_getkeyword(&(self)->tl_kwds, kwd, len, hash)
+#define _tpp_lexer_kwds_getkeyword_byid(self, id)        _tpp_keywords_getkeyword_byid(&(self)->tl_kwds, id)
+#define tpp_lexer_kwds_getkeyword(self, kwd, len, hash)  tpp_keywords_getkeyword(&(self)->tl_kwds, kwd, len, hash)
+#define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->tl_kwds, id)
+#define tpp_lexer_kwds_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->tl_kwds, kwd, len, hash)
+#if TPP_HAVE_BSE
+#define _tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) _tpp_keywords_getkeyword_bse(&(self)->tl_kwds, kwd, len, hash, file)
+#define tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) tpp_keywords_getkeyword_bse(&(self)->tl_kwds, kwd, len, hash, file)
+#define tpp_lexer_kwds_newkeyword_bse(self, kwd, len, hash, file) tpp_keywords_newkeyword_bse(&(self)->tl_kwds, kwd, len, hash, file)
+#endif /* TPP_HAVE_BSE */
+#if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
+#define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->tl_kwds, kwd)
+#endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+
+
 
 /* Initialize/finalize everything about "self" except for "tl_core" */
 #define _tpp_lexer_init_common(self)           \
@@ -646,7 +667,7 @@ tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
                          void *arg, unsigned int flags);
 
 /* Convenience wrapper around `tpp_lexer_parsestring_ex()'
- * On success (return == TPP_EOK), caller must "tpp_string_decref(*p_result)"
+ * On success (!TPP_ISERR(return)), caller must "tpp_string_decref(*p_result)"
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
  *
@@ -681,7 +702,6 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsestring_cb(tpp_lexer *tpp_restrict self,
                          tpp_errno (TPPCALL *cb)(void *arg, tpp_char const *str, tpp_size length),
                          void *arg, unsigned int flags);
-
 #endif /* TPP_HAVE_TPP_TOK_STRINGLIKE */
 
 

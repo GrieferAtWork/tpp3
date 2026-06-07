@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 	if (argc)
 		filename = *argv;
 	error = tpp_lexer_init_filename(&lexer, filename);
-	if (error != TPP_EOK) {
+	if (TPP_ISERR(error)) {
 		fprintf(stderr, "Initialization failed: %s\n", tpp_strerror(error));
 		return 1;
 	}

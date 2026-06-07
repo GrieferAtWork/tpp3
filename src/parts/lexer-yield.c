@@ -268,7 +268,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			                           (char const *)backup.tlsb_kwd->tk_kwd,
 			                           (unsigned int)macro_argc,
 			                           (unsigned int)argc);
-			if (error != TPP_EOK) {
+			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
 				goto err_rollback;
 			}
@@ -317,7 +317,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			tpp_errno error;
 			tpp_macro_expinfo *expand = &invoke_expinfo[i];
 			error = tpp_macro_expinfo_init(expand, arginfo, self);
-			if (error != TPP_EOK) {
+			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
 				goto err_rollback_invoke_expinfo_i;
 			}
@@ -350,7 +350,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 
 	/* Produce body-chunk-string for function-style macro expansion */
 	{
-		tpp_char *dst = result_chunk->ts_str;
+		tpp_char *dst = tpp_string_str(result_chunk);
 		tpp_char const *src = macro->tm_body_start;
 		tpp_macro_opcode const *pc = macro->tm_data.tmd_func.tmf_expand;
 		tpp_macro_opcode opcode;
@@ -478,7 +478,7 @@ next_op:
 
 		default: tpp_unreachable();
 		}
-		tpp_assert((dst == result_chunk->ts_str + result_chunk->ts_len) &&
+		tpp_assert((dst == tpp_string_end(result_chunk)) &&
 		           "This failing means that argument specs and macro opcodes have diverged ("
 		           "this shouldn't happen and indicates a bug in `tpp_macro_builder_compile()')");
 		tpp_assert((src <= macro->tm_body_end) &&
@@ -506,10 +506,7 @@ next_op:
 			if (iter->tf_kind == TPP_FILE_KIND_MACRO &&
 			    iter->tf_data.td_macro.tfm_macro == macro) {
 				tpp_string const *existing_chunk = iter->tf_chunk;
-				if (existing_chunk->ts_len == result_chunk->ts_len &&
-				    tpp_memcmp(existing_chunk->ts_str,
-				               result_chunk->ts_str,
-				               result_chunk->ts_len) == 0) {
+				if (tpp_string_equals(existing_chunk, result_chunk)) {
 					/* Duplicate chunk!!! -> Mustn't expand (else: would result in infinite loop) */
 					tpp_string_destroy(result_chunk);
 					goto rollback;
@@ -525,9 +522,9 @@ next_op:
 		goto err_rollback_result_chunk_nomem;
 	*prev_file = *file;
 	prev_file->tf_pos = pos; /* Override return-file to continue parsing after ')'-token */
-	file->tf_pos   = result_chunk->ts_str;
+	file->tf_pos   = tpp_string_str(result_chunk);
 	file->tf_chunk = result_chunk; /* Inherit reference */
-	file->tf_end   = result_chunk->ts_str + result_chunk->ts_len;
+	file->tf_end   = tpp_string_end(result_chunk);
 	_tpp_file_init_common(file);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -805,7 +802,7 @@ again_yield:
 		/* Parse the string that the user entered. */
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_string_feature_test_cb,
 		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
 	} else
 #endif /* TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS */
@@ -868,6 +865,10 @@ again_yield:
 #if TPP_HAVE_CLANG_MACRO___has_feature
 			case TPP_KWD___has_feature:
 				mask = TPP_KEYWORD_FLAG_HAS_FEATURE;
+#if TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES
+				if (tpp_lexer_getext(self, TPP_EXT_CLANG_EXTENSIONS_ARE_FEATURES))
+					mask |= TPP_KEYWORD_FLAG_HAS_EXTENSION;
+#endif /* TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES */
 				break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_feature */
 #if TPP_HAVE_CLANG_MACRO___has_c_attribute
@@ -961,7 +962,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS */
 			{
 				tpp_errno error = tpp_lexer_warnf(self, TPP_W_DEPRECATED_KEYWORD);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					return TPP_TOK_OFERR(error);
 			}
 		}
@@ -1139,6 +1140,50 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 
 
 
+/************************************************************************/
+#if TPP_HAVE_NUMERIC_DATE_MACROS
+	/* TODO: __DATE_DAY__, __DATE_WDAY__, __DATE_YDAY__, __DATE_MONTH__, __DATE_YEAR__ */
+#endif /* !TPP_HAVE_NUMERIC_DATE_MACROS */
+#if TPP_HAVE_NUMERIC_TIME_MACROS
+	/* TODO: __TIME_SEC__, __TIME_MIN__, __TIME_HOUR__ */
+#endif /* !TPP_HAVE_NUMERIC_TIME_MACROS */
+#if TPP_HAVE_MACRO___TPP_EVAL
+	/* TODO: __TPP_EVAL */
+#endif /* !TPP_HAVE_MACRO___TPP_EVAL */
+#if TPP_HAVE_MACRO___TPP_UNIQUE
+	/* TODO: __TPP_UNIQUE */
+#endif /* !TPP_HAVE_MACRO___TPP_UNIQUE */
+#if TPP_HAVE_MACRO___TPP_LOAD_FILE
+	/* TODO: __TPP_LOAD_FILE */
+#endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+	/* TODO: __TPP_COUNTER */
+#endif /* !TPP_HAVE_MACRO___TPP_COUNTER */
+#if TPP_HAVE_MACRO___TPP_RANDOM
+	/* TODO: __TPP_RANDOM */
+#endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
+#if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
+	/* TODO: __TPP_STR_DECOMPILE */
+#endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
+#if TPP_HAVE_MACRO___TPP_STR_SUBSTR
+	/* TODO: __TPP_STR_SUBSTR */
+#endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
+#if TPP_HAVE_MACRO___TPP_STR_PACK
+	/* TODO: __TPP_STR_PACK */
+#endif /* !TPP_HAVE_MACRO___TPP_STR_PACK */
+#if TPP_HAVE_MACRO___TPP_STR_SIZE
+	/* TODO: __TPP_STR_SIZE */
+#endif /* !TPP_HAVE_MACRO___TPP_STR_SIZE */
+#if TPP_HAVE_MACRO___TPP_COUNT_TOKENS
+	/* TODO: __TPP_COUNT_TOKENS */
+#endif /* !TPP_HAVE_MACRO___TPP_COUNT_TOKENS */
+#if TPP_HAVE_MACRO___TPP_IDENTIFIER
+	/* TODO: __TPP_IDENTIFIER */
+#endif /* !TPP_HAVE_MACRO___TPP_IDENTIFIER */
+/************************************************************************/
+
+
+
 	default: {
 		/* Check for a pre-defined, builtin macro expansion */
 		tpp_builtin_macro const *builtin_macro;
@@ -1252,7 +1297,7 @@ tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		if tpp_unlikely(!expected)
 			expected = "?";
 		error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN, expected);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
 	}
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */

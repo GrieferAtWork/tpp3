@@ -103,7 +103,7 @@ tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_char const *str, tpp_size length
 		return tpp_keyword_pushmacro(keyword);
 
 	result = tpp_keyword_popmacro(keyword);
-	tpp_assert(result == TPP_EOK ||
+	tpp_assert(!TPP_ISERR(result) ||
 	           result == TPP_ENOENT);
 	if (result == TPP_ENOENT) {
 		/* Emit a warning */
@@ -143,11 +143,18 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 		tok = tpp_lexer_skip_blocking(self, TPP_TOK_OFCHAR('('));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-
-		/* Parse+process string (using "tpp_lexer_parsestring_cb()") */
-		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_pushpopmacro_cb,
-		                                 &data, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
-		if (error != TPP_EOK)
+		if (TPP_TOK_ISSTRING(tok)) {
+			/* Parse+process string (using "tpp_lexer_parsestring_cb()") */
+			error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_pushpopmacro_cb,
+			                                 &data, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
+		} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+			error = TPP_EOK;;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+		}
+		if (TPP_ISERR(error))
 			return error;
 
 		/* Skip trailing ')' */
@@ -178,7 +185,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_STACK */
 		{
 			tpp_errno error = tpp_lexer_warnf(self, TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return error;
 		}
 #endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
@@ -188,45 +195,73 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	}	break;
 #endif /* TPP_HAVE_PRAGMA_ONCE */
 
-/* Support for: #pragma deprecated("foo") */
-#ifndef TPP_HAVE_PRAGMA_DEPRECATED
-#define TPP_HAVE_PRAGMA_DEPRECATED (TPP_COMMON_HAVE_PRAGMA ? -1 : 0)
-#endif /* !TPP_HAVE_PRAGMA_DEPRECATED */
+#if TPP_HAVE_PRAGMA_DEPRECATED
+	/* TODO: #pragma deprecated("foo") */
+#endif /* TPP_HAVE_PRAGMA_DEPRECATED */
 
-/* Support for: #pragma GCC poison foo */
-#ifndef TPP_HAVE_PRAGMA_GCC_POISON
-#define TPP_HAVE_PRAGMA_GCC_POISON (TPP_COMMON_HAVE_PRAGMA_GCC ? -1 : 0)
-#endif /* !TPP_HAVE_PRAGMA_GCC_POISON */
+#if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
+	/* TODO: #pragma tpp_set_keyword_flags("foo", 0x7f) */
+#endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
 
-/* Support for: #pragma tpp_set_keyword_flags */
-#ifndef TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
-#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS (TPP_COMMON_HAVE_PRAGMA ? -1 : 0)
-#endif /* !TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
+#if TPP_HAVE_PRAGMA_EXTENSION
+	/* TODO: #pragma extension(...) */
+#endif /* TPP_HAVE_PRAGMA_EXTENSION */
 
-/* Support for: #pragma GCC system_header */
-#ifndef TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
-#define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER (TPP_COMMON_HAVE_PRAGMA_GCC ? -1 : 0)
-#endif /* !TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
+#if TPP_HAVE_PRAGMA_EXTENSION_PUSH
+	/* TODO: #pragma extension(push) */
+#endif /* TPP_HAVE_PRAGMA_EXTENSION_PUSH */
 
-/* Support for: #pragma extension(...) */
-#ifndef TPP_HAVE_PRAGMA_EXTENSION
-#define TPP_HAVE_PRAGMA_EXTENSION ((TPP_COMMON_HAVE_PRAGMA && TPP_HAVE_EXTENSIONS) ? -1 : 0)
-#endif /* !TPP_HAVE_PRAGMA_EXTENSION */
+#if TPP_HAVE_PRAGMA_WARNING
+	/* TODO: #pragma warning(...) */
+#endif /* TPP_HAVE_PRAGMA_WARNING */
 
-/* Support for: #pragma extension(push) */
-#ifndef TPP_HAVE_PRAGMA_EXTENSION_PUSH
-#define TPP_HAVE_PRAGMA_EXTENSION_PUSH ((TPP_HAVE_PRAGMA_EXTENSION && TPP_HAVE_EXTENSIONS_PUSH_POP) ? -1 : 0)
-#endif /* !TPP_HAVE_PRAGMA_EXTENSION_PUSH */
+#if TPP_HAVE_PRAGMA_WARNING_PUSH
+	/* TODO: #pragma warning(push) */
+#endif /* TPP_HAVE_PRAGMA_WARNING_PUSH */
 
-/* Support for: #pragma warning(...) */
-#ifndef TPP_HAVE_PRAGMA_WARNING
-#define TPP_HAVE_PRAGMA_WARNING ((TPP_COMMON_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? -1 : 0)
-#endif /* !TPP_HAVE_PRAGMA_WARNING */
+#if TPP_HAVE_PRAGMA_TPP_EXEC
+	/* TODO: #pragma tpp_exec("...") */
+#endif /* TPP_HAVE_PRAGMA_TPP_EXEC */
 
-/* Support for: #pragma warning(push) */
-#ifndef TPP_HAVE_PRAGMA_WARNING_PUSH
-#define TPP_HAVE_PRAGMA_WARNING_PUSH ((TPP_HAVE_PRAGMA_WARNING && TPP_HAVE_WARNINGS_PUSH_POP) ? -1 : 0)
-#endif /* !TPP_HAVE_PRAGMA_WARNING_PUSH */
+#if TPP_HAVE_PRAGMA_MESSAGE
+	/* TODO: #pragma message("...") */
+#endif /* TPP_HAVE_PRAGMA_MESSAGE */
+
+#if TPP_HAVE_PRAGMA_ERROR
+	/* TODO: #pragma error("...") */
+#endif /* TPP_HAVE_PRAGMA_ERROR */
+
+#if TPP_HAVE_PRAGMA_REGION
+	/* TODO: #pragma region,  #pragma endregion */
+#endif /* TPP_HAVE_PRAGMA_REGION */
+
+#if TPP_HAVE_PRAGMA_GCC_POISON
+	/* TODO: #pragma GCC poison foo */
+#endif /* TPP_HAVE_PRAGMA_GCC_POISON */
+
+#if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
+	/* TODO: #pragma GCC system_header */
+#endif /* TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
+
+#if TPP_HAVE_PRAGMA_TPP_WARNING
+	/* TODO: #pragma TPP warning(...)  (same as TPP_HAVE_PRAGMA_WARNING) */
+#endif /* TPP_HAVE_PRAGMA_TPP_WARNING */
+
+#if TPP_HAVE_PRAGMA_TPP_EXTENSION
+	/* TODO: #pragma TPP extension(...)  (same as TPP_HAVE_PRAGMA_EXTENSION) */
+#endif /* TPP_HAVE_PRAGMA_TPP_EXTENSION */
+
+#if TPP_HAVE_PRAGMA_TPP_TPP_EXEC
+	/* TODO: #pragma TPP tpp_exec(...)  (same as TPP_HAVE_PRAGMA_TPP_EXEC) */
+#endif /* TPP_HAVE_PRAGMA_TPP_TPP_EXEC */
+
+#if TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
+	/* TODO: #pragma TPP tpp_set_keyword_flags("foo", 0x7f)  (same as TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS) */
+#endif /* TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS */
+
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+	/* TODO: #pragma TPP include_path(...) */
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 
 	default: goto unknown_pragma;
 	}
@@ -236,7 +271,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 		tpp_errno error;
 unknown_pragma:
 		error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_PRAGMAS);
-		if (error == TPP_EOK)
+		if (!TPP_ISERR(error))
 			error = TPP_ENOENT;
 		return error;
 	}
@@ -251,7 +286,7 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
 	tpp_errno error = tpp_lexer_process_pragma(self);
-	if (error != TPP_EOK) {
+	if (TPP_ISERR(error)) {
 		if (error == TPP_ENOENT)
 			goto skip_garbage_without_warning;
 		return TPP_TOK_OFERR(error);
@@ -267,7 +302,7 @@ tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
 		return TPP_TOK_EOF;
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 	error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE);
-	if (error != TPP_EOK)
+	if (TPP_ISERR(error))
 		return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
 skip_garbage_without_warning:
@@ -411,11 +446,12 @@ tpp_lexer_is_rparen_token(tpp_lexer *tpp_restrict self,
 			return true;
 		break;
 
-#if (TPP_HAVE_TPP_TOK_RANGLE_RANGLE ||        \
-     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||         \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL ||  \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)
+#if (TPP_HAVE_TPP_TOK_RANGLE_RANGLE ||              \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||               \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE ||       \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL || \
+     TPP_HAVE_TPP_TOK_RANGLE_LANGLE)
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
 	case TPP_TOK_RANGLE_RANGLE: /* ">>" */
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
@@ -431,6 +467,9 @@ tpp_lexer_is_rparen_token(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 	case TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL: /* ">>>=" */
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TPP_TOK_RANGLE_LANGLE
+	case TPP_TOK_RANGLE_LANGLE: /* "><" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_LANGLE */
 		/* Convert to ">" token */
 		if (lparen_token == '<') {
 			tpp_assert(tpp_lexer_gettoken(self)->tt_start < *p_pos);
@@ -501,7 +540,7 @@ again_yield_macro_argument_list:
 		token->tt_end = *p_pos;
 		error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST);
 		token->tt_end = saved_end;
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST */
 		goto again_yield_macro_argument_list;
@@ -524,7 +563,7 @@ do_append_keyword_to_argument_list:
 			token->tt_end = *p_pos;
 			error = tpp_lexer_warnf(self, TPP_W_DUPLICATE_MACRO_PARAMETER_NAME);
 			token->tt_end = saved_end;
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return error;
 		}
 #endif /* TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME */
@@ -1081,7 +1120,7 @@ handle_not_varargs_argument_after_comma_glue:
 				token->tt_end = body_iter;
 				error = tpp_lexer_warnf_at(self, start_of_va_opt, TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT);
 				token->tt_end = saved_end;
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					return error;
 #endif /* TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT */
 				last_non_space_end = body_iter;
@@ -1100,7 +1139,7 @@ handle_not_varargs_argument_after_comma_glue:
 					token->tt_end = body_iter;
 					error = tpp_lexer_warnf_at(self, start_of_va_opt, TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT);
 					token->tt_end = saved_end;
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						return error;
 #endif /* TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT */
 					goto found_va_opt_body_end;
@@ -1289,7 +1328,7 @@ found_va_opt_body_end:
 				token->tt_end = body_iter;
 				error = tpp_lexer_warnf_at(self, start_of_defined, TPP_W_EXPANSION_TO_DEFINED);
 				token->tt_end = saved_end;
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					return error;
 			}
 #endif /* TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
@@ -1591,7 +1630,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 
 	/* Parse macro argument list */
 	error = tpp_macro_builder_parse_params(&builder, self, p_pos);
-	if (error != TPP_EOK)
+	if (TPP_ISERR(error))
 		goto err_builder;
 	tpp_macro_builder_truncate_argv(&builder);
 
@@ -1616,7 +1655,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	tpp_file_pusheof_fast(file, body_end); /* This is needed by macro compilers */
 	error = tpp_macro_builder_compile(&builder, self, body_start, body_end);
 	tpp_file_popeof_fast(file);
-	if (error != TPP_EOK)
+	if (TPP_ISERR(error))
 		goto err_builder;
 
 	/* Pack the macro together... */
@@ -1661,7 +1700,7 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 
 	/* Parse+compile the actual macro */
 	error = tpp_lexer_parse_macro_definition(self, &macro, &pos, deflc);
-	if tpp_unlikely(error != TPP_EOK)
+	if tpp_unlikely(TPP_ISERR(error))
 		return TPP_TOK_OFERR(error);
 
 	/* Setup token such that it describes the entire macro definition (for messages) */
@@ -1677,7 +1716,7 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 			error = tpp_lexer_warnf_at(self, token->tt_end,
 			                           TPP_W_DEFINE_BUILTIN_MACRO,
 			                           keyword->tk_kwd);
-			if (error != TPP_EOK) {
+			if (TPP_ISERR(error)) {
 				tpp_macro_decref(macro);
 				return TPP_TOK_OFERR(error);
 			}
@@ -1691,7 +1730,7 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 			error = tpp_lexer_warnf_at(self, token->tt_end,
 			                           TPP_W_REDEFINE_MACRO,
 			                           keyword);
-			if (error != TPP_EOK) {
+			if (TPP_ISERR(error)) {
 				tpp_macro_decref(macro);
 				return TPP_TOK_OFERR(error);
 			}
@@ -1874,7 +1913,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 			tpp_errno error;
 			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE, "define");
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE */
 			goto seek_end_of_line;
@@ -1897,7 +1936,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 			tpp_errno error;
 			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE, "undef");
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE */
 			goto seek_end_of_line;
@@ -1918,7 +1957,7 @@ again_yield_directive_iter:
 		if (tpp_lexer_getkeyworddefined(self, ro_keyword)) {
 			/* Builtin keyword... */
 			tpp_errno error = tpp_lexer_warnf(self, TPP_W_CANNOT_UNDEF_BUILTIN_MACRO);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return TPP_TOK_OFERR(error);
 		} else
 #endif /* TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
@@ -1939,7 +1978,7 @@ again_yield_directive_iter:
 		{
 			tpp_errno error;
 			error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, "undef");
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return TPP_TOK_OFERR(error);
 		}
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
@@ -1994,7 +2033,7 @@ again_yield_directive_iter:
 		error = tpp_lexer_seek_eol(self, &directive_iter tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_EOF));
 		rel_message_end = tpp_file_ptr2rel(file, directive_iter);
 		token->tt_start = tpp_file_rel2ptr(file, rel_token_start);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
 
 		/* Load range of message string. */
@@ -2045,7 +2084,7 @@ again_yield_directive_iter:
 			break;
 		default: tpp_unreachable();
 		}
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
 		break;
 	}
@@ -2055,15 +2094,15 @@ again_yield_directive_iter:
 
 
 /************************************************************************/
-#if TPP_HAVE_CPP_IDENT_SCSS
+#if TPP_HAVE_CPP_IDENT_SCCS
 	case TPP_KWD_ident:
-	case TPP_KWD_scss:
-		if (!tpp_lexer_getext(self, TPP_EXT_CPP_IDENT_SCSS))
+	case TPP_KWD_sccs:
+		if (!tpp_lexer_getext(self, TPP_EXT_CPP_IDENT_SCCS))
 			goto handle_unknown_directive;
 		/* TODO */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
-#endif /* TPP_HAVE_CPP_IDENT_SCSS */
+#endif /* TPP_HAVE_CPP_IDENT_SCCS */
 /************************************************************************/
 
 
@@ -2110,7 +2149,7 @@ handle_unknown_directive:
 			tpp_assert(tpp_is_start_of_hash(*file->tf_pos));
 			token->tt_start = eol = file->tf_pos;
 			error = tpp_lexer_seek_eol(self, &eol tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SHELL_COMMENT));
-			if (error != TPP_EOK) {
+			if (TPP_ISERR(error)) {
 				token->tt_start = file->tf_pos;
 				token->tt_end = file->tf_pos + 1;
 #if TPP_HAVE_TRIGRAPHS
@@ -2142,7 +2181,7 @@ handle_unknown_directive:
 #if TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE
 			tpp_errno error;
 			error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_DIRECTIVE);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT <= 0 */

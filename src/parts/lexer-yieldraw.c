@@ -267,7 +267,7 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 		tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 		tpp_size rel_end = tpp_file_ptr2rel(file, end);
 		tpp_errno error  = tpp_file_expandchunk(file);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		end = tpp_file_rel2ptr(file, rel_end);
 		tpp_assert(end <= file->tf_end);
@@ -327,7 +327,7 @@ handle_ilseq:
 		tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 		tpp_size rel_end = tpp_file_ptr2rel(file, end);
 		tpp_errno error  = tpp_file_expandchunk(file);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		end = tpp_file_rel2ptr(file, rel_end);
 		tpp_assert(end <= file->tf_end);
@@ -414,7 +414,7 @@ again:
 		/* Must extend the file */
 		tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 		error = tpp_file_expandchunk(file);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto return_error;
 		pos = tpp_file_rel2ptr(file, rel_pos);
 		end = file->tf_end;
@@ -433,7 +433,7 @@ again:
 		tpp_unichar uc;
 		tpp_char const *npos = pos;
 		error = tpp_lexer_readutf8(self, &npos, &uc);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto return_error;
 		if (tpp_unicode_isspace_nolf(uc)) {
 			pos = npos;
@@ -495,7 +495,7 @@ again_scan:
 #if TPP_HAVE_BSE_WHITESPACE
 	if (tpp_lexer_getext(self, TPP_EXT_BSE_WHITESPACE)) {
 		error = tpp_lexer_skipspace_nolf(self, &scan);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto return_error;
 	}
 #endif /* TPP_HAVE_BSE_WHITESPACE */
@@ -503,7 +503,7 @@ again_scan:
 		/* Must extend file! */
 		tpp_size rel_scan = tpp_file_ptr2rel(file, scan);
 		error = tpp_file_expandchunk(file);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto return_error;
 		scan = tpp_file_rel2ptr(file, rel_scan);
 		if tpp_unlikely(scan >= file->tf_end)
@@ -519,7 +519,7 @@ again_scan:
 				/* Must extend file! */
 				tpp_size rel_scan = tpp_file_ptr2rel(file, scan);
 				error = tpp_file_expandchunk(file);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				scan = tpp_file_rel2ptr(file, rel_scan);
 			}
@@ -533,7 +533,7 @@ got_bse_after_linefeed:
 		if (is_trigraph) {
 			error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_pos),
 			                           TPP_W_ENCOUNTERED_TRIGRAPH);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto return_error;
 		}
 #endif /* TPP_HAVE_TRIGRAPHS && TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
@@ -543,7 +543,7 @@ got_bse_after_linefeed:
 			/* Must extend file! */
 			tpp_size rel_scan = tpp_file_ptr2rel(file, scan);
 			error = tpp_file_expandchunk(file);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto return_error;
 			scan = tpp_file_rel2ptr(file, rel_scan);
 		}
@@ -555,7 +555,7 @@ got_bse_after_linefeed:
 				if ((scan + 1) >= file->tf_end) {
 					tpp_size rel_scan = tpp_file_ptr2rel(file, scan);
 					error = tpp_file_expandchunk(file);
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					scan = tpp_file_rel2ptr(file, rel_scan);
 				}
@@ -563,7 +563,7 @@ got_bse_after_linefeed:
 					if ((scan + 2) >= file->tf_end) {
 						tpp_size rel_scan = tpp_file_ptr2rel(file, scan);
 						error = tpp_file_expandchunk(file);
-						if (error != TPP_EOK)
+						if (TPP_ISERR(error))
 							goto return_error;
 						scan = tpp_file_rel2ptr(file, rel_scan);
 					}
@@ -583,9 +583,9 @@ got_bse_after_linefeed:
 		tpp_unichar uc;
 		tpp_char const *nscan = scan;
 		error = tpp_lexer_readutf8(self, &nscan, &uc);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto return_error;
-		if (tpp_unicode_issymcont(uc)) {
+		if (tpp_unicode_islf(uc)) {
 			scan = nscan;
 			goto got_bse_after_linefeed;
 		}
@@ -618,7 +618,7 @@ again:
 		/* Must extend the file */
 		tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 		error = tpp_file_expandchunk(file);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto return_error;
 		pos = tpp_file_rel2ptr(file, rel_pos);
 		end = file->tf_end;
@@ -628,6 +628,10 @@ again:
 
 	ch = *pos;
 	if (tpp_ascii_issymcont(ch)) {
+#if TPP_HAVE_TPP_TOK_DOLLAR
+		if (ch == '$' && tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_DOLLAR))
+			goto done;
+#endif /* TPP_HAVE_TPP_TOK_DOLLAR */
 		++pos;
 		goto again;
 	}
@@ -637,7 +641,7 @@ again:
 		tpp_unichar uc;
 		tpp_char const *npos = pos;
 		error = tpp_lexer_readutf8(self, &npos, &uc);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto return_error;
 		if (tpp_unicode_issymcont(uc)) {
 			pos = npos;
@@ -670,7 +674,7 @@ tpp_lexer_skip_bse_after_keyword(tpp_lexer *self, tpp_char const **p_pos) {
 			if ((pos + 1) >= file->tf_end) {
 				tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 				error = tpp_file_expandchunk(file);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					return error;
 				pos = tpp_file_rel2ptr(file, rel_pos);
 			}
@@ -678,7 +682,7 @@ tpp_lexer_skip_bse_after_keyword(tpp_lexer *self, tpp_char const **p_pos) {
 				if ((pos + 2) >= file->tf_end) {
 					tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 					error = tpp_file_expandchunk(file);
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						return error;
 					pos = tpp_file_rel2ptr(file, rel_pos);
 				}
@@ -698,13 +702,13 @@ tpp_lexer_skip_bse_after_keyword(tpp_lexer *self, tpp_char const **p_pos) {
 
 		npos  = pos;
 		error = tpp_lexer_skip_bse(self, &npos);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		if (npos == pos)
 			break;
 		rel_before = tpp_file_ptr2rel(file, npos);
 		error = tpp_lexer_seek_end_of_keyword(self, &npos);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		rel_after = tpp_file_ptr2rel(file, npos);
 		tpp_assert(rel_before <= rel_after);
@@ -788,7 +792,7 @@ continue_at_pos:
 		tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 		tpp_size rel_end = tpp_file_ptr2rel(file, end);
 		tpp_errno error  = tpp_file_expandchunk(file);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		end = tpp_file_rel2ptr(file, rel_end);
 		tpp_assert(end <= file->tf_end);
@@ -809,7 +813,7 @@ continue_at_pos:
 		tpp_size rel_after;
 		tpp_size rel_before = tpp_file_ptr2rel(file, pos);
 		tpp_errno error = tpp_lexer_skip_bse(self, &pos);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		rel_after = tpp_file_ptr2rel(file, pos);
 		tpp_assert(rel_before <= rel_after);
@@ -836,7 +840,7 @@ continue_at_pos:
 		if (pos >= end) {
 			tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 			tpp_errno error  = tpp_file_expandchunk(file);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return error;
 			pos = tpp_file_rel2ptr(file, rel_pos);
 			end = file->tf_end;
@@ -846,7 +850,7 @@ continue_at_pos:
 			if (pos >= end) {
 				tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 				tpp_errno error  = tpp_file_expandchunk(file);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					return error;
 				pos = tpp_file_rel2ptr(file, rel_pos);
 				end = file->tf_end;
@@ -876,7 +880,7 @@ not_a_trigraph:
 						pos -= 2;
 						rel_before = tpp_file_ptr2rel(file, pos);
 						error = tpp_lexer_skip_bse(self, &pos);
-						if (error != TPP_EOK)
+						if (TPP_ISERR(error))
 							return error;
 						rel_after = tpp_file_ptr2rel(file, pos);
 						tpp_assert(rel_before <= rel_after);
@@ -912,7 +916,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
                       tpp_unichar *tpp_restrict p_result) {
 	tpp_char ch;
 	tpp_errno error = tpp_lexer_readchar(self, p_pos, &ch);
-	if (error == TPP_EOK && ch >= 0x80) {
+	if (!TPP_ISERR(error) && ch >= 0x80) {
 		tpp_file const *const file = tpp_lexer_getfile(self);
 		if (tpp_file_isutf8(file)) {
 			--(*p_pos);
@@ -968,7 +972,7 @@ again:
 		tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 		error = tpp_file_expandchunk(file);
 		pos = tpp_file_rel2ptr(file, rel_pos);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto done;
 		if (pos >= file->tf_end)
 			goto done; /* True EOF */
@@ -983,7 +987,7 @@ handle_ascii_lf:
 				tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 				error = tpp_file_expandchunk(file);
 				pos = tpp_file_rel2ptr(file, rel_pos);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto done;
 			}
 			if (pos < file->tf_end && *pos == '\n')
@@ -996,7 +1000,7 @@ handle_ascii_lf:
 		tpp_unichar uc;
 		--pos;
 		error = tpp_lexer_readutf8(self, &pos, &uc);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto done;
 		if (tpp_unicode_islf(uc))
 			goto done;
@@ -1015,7 +1019,7 @@ handle_backslash:
 		--pos;
 		rel_before_bse = tpp_file_ptr2rel(file, pos);
 		error = tpp_lexer_skip_bse(self, &pos);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto done;
 		rel_after_bse = tpp_file_ptr2rel(file, pos);
 		tpp_assert(rel_before_bse <= rel_after_bse);
@@ -1041,7 +1045,7 @@ handle_backslash:
 					tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 					error = tpp_file_expandchunk(file);
 					pos = tpp_file_rel2ptr(file, rel_pos);
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto done;
 					if (pos >= file->tf_end)
 						goto done; /* True EOF */
@@ -1050,7 +1054,7 @@ handle_backslash:
 				if (tpp_ascii_islf(ch)) {
 					error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_before_bse),
 					                           TPP_W_LINE_COMMENT_CONTINUED);
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto done;
 					goto handle_ascii_lf;
 				} else if (tpp_ascii_isspace(ch)) {
@@ -1062,7 +1066,7 @@ handle_backslash:
 					tpp_unichar uc;
 					--pos;
 					error = tpp_lexer_readutf8(self, &pos, &uc);
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto done;
 					if (tpp_unicode_islf(uc)) {
 						error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_before_bse),
@@ -1083,7 +1087,7 @@ handle_backslash:
 							tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 							error = tpp_file_expandchunk(file);
 							pos = tpp_file_rel2ptr(file, rel_pos);
-							if (error != TPP_EOK)
+							if (TPP_ISERR(error))
 								goto done;
 							if (pos >= file->tf_end)
 								break;
@@ -1105,7 +1109,7 @@ handle_backslash:
 							tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 							error = tpp_file_expandchunk(file);
 							pos = tpp_file_rel2ptr(file, rel_pos);
-							if (error != TPP_EOK)
+							if (TPP_ISERR(error))
 								goto done;
 							if (pos >= file->tf_end)
 								break;
@@ -1115,7 +1119,7 @@ handle_backslash:
 								tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 								error = tpp_file_expandchunk(file);
 								pos = tpp_file_rel2ptr(file, rel_pos);
-								if (error != TPP_EOK)
+								if (TPP_ISERR(error))
 									goto done;
 								if ((pos + 1) >= file->tf_end)
 									break;
@@ -1123,7 +1127,7 @@ handle_backslash:
 							if (pos[1] == '=') {
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 								error = tpp_lexer_warnf_at(self, pos - 1, TPP_W_ENCOUNTERED_TRIGRAPH);
-								if (error != TPP_EOK)
+								if (TPP_ISERR(error))
 									goto done;
 #endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 								pos += 2;
@@ -1147,7 +1151,7 @@ handle_backslash:
 							tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 							error = tpp_file_expandchunk(file);
 							pos = tpp_file_rel2ptr(file, rel_pos);
-							if (error != TPP_EOK)
+							if (TPP_ISERR(error))
 								goto done;
 						}
 						if (pos[0] == '-') {
@@ -1161,7 +1165,7 @@ handle_backslash:
 				}
 				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_before_bse),
 				                           TPP_W_LINE_COMMENT_CONTINUED);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto done;
 				goto handle_non_lf_ch;
 			}
@@ -1175,7 +1179,7 @@ handle_backslash:
 			tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 			error = tpp_file_expandchunk(file);
 			pos = tpp_file_rel2ptr(file, rel_pos);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto done;
 			if (pos >= file->tf_end)
 				goto done; /* True EOF */
@@ -1186,7 +1190,7 @@ handle_backslash:
 			tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 			error = tpp_file_expandchunk(file);
 			pos = tpp_file_rel2ptr(file, rel_pos);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto done;
 			if ((pos + 1) >= file->tf_end)
 				goto again;
@@ -1195,7 +1199,7 @@ handle_backslash:
 			goto again;
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 		error = tpp_lexer_warnf_at(self, pos - 1, TPP_W_ENCOUNTERED_TRIGRAPH);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto done;
 #endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 		goto handle_backslash;
@@ -1229,7 +1233,7 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 		tpp_errno error;
 		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
 		error = tpp_lexer_readchar(self, p_pos, &ch);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		if (ch == quote_char)
 			break;
@@ -1237,7 +1241,7 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 			goto warn_premature_eof;
 		if (ch == '\\') {
 			error = tpp_lexer_readchar(self, p_pos, &ch);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return error;
 			if (ch == 0 && (*p_pos) >= file->tf_end)
 				goto warn_premature_eof;
@@ -1260,7 +1264,7 @@ handle_linefeed:
 			tpp_unichar uc;
 			*p_pos = tpp_file_rel2ptr(file, old_pos);
 			error = tpp_lexer_readutf8(self, p_pos, &uc);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return error;
 			if (tpp_unicode_islf(uc))
 				goto handle_linefeed;
@@ -1298,15 +1302,15 @@ tpp_lexer_seek_end_of_block_string(tpp_lexer *tpp_restrict self,
 		tpp_char ch;
 		tpp_errno error;
 		error = tpp_lexer_readchar(self, p_pos, &ch);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		if (ch == quote_char) {
 			error = tpp_lexer_readchar(self, p_pos, &ch);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return error;
 			if (ch == quote_char) {
 				error = tpp_lexer_readchar(self, p_pos, &ch);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					return error;
 				if (ch == quote_char)
 					break; /* triple quote_char -> end block-string */
@@ -1316,7 +1320,7 @@ tpp_lexer_seek_end_of_block_string(tpp_lexer *tpp_restrict self,
 			goto warn_premature_eof;
 		if (ch == '\\') {
 			error = tpp_lexer_readchar(self, p_pos, &ch);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return error;
 			if (ch == 0 && (*p_pos) >= file->tf_end)
 				goto warn_premature_eof;
@@ -1351,7 +1355,7 @@ tpp_lexer_seek_end_of_cxx_raw_string(tpp_lexer *tpp_restrict self,
 	for (;;) {
 		rel_pattern_end = tpp_file_ptr2rel(file, *p_pos);
 		error = tpp_lexer_readchar(self, p_pos, &ch);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		if (ch == '(')
 			break;
@@ -1373,7 +1377,7 @@ tpp_lexer_seek_end_of_cxx_raw_string(tpp_lexer *tpp_restrict self,
 		tpp_char const *pos2;
 continue_string:
 		error = tpp_lexer_readchar(self, p_pos, &ch);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		if (ch != ')') {
 			if (ch == 0 && (*p_pos) >= file->tf_end)
@@ -1391,12 +1395,12 @@ continue_string:
 			error   = tpp_lexer_readchar(self, &pos2, &pattern_ch);
 			rel_pattern_iter = tpp_file_ptr2rel(file, pos2);
 			(*p_pos) = tpp_file_rel2ptr(file, rel_pos);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return error; /* Shouldn't cause errors (was already scanned before) */
 
 			/* Read input character */
 			error = tpp_lexer_readchar(self, p_pos, &ch);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return error;
 			if (pattern_ch != ch)
 				goto continue_string;
@@ -1404,7 +1408,7 @@ continue_string:
 
 		/* Entire pattern was matched -> next character must be '"' */
 		error = tpp_lexer_readchar(self, p_pos, &ch);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		if (ch == '"')
 			break;
@@ -1437,7 +1441,7 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
 		tpp_errno error;
 		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
 		error = tpp_lexer_readchar(self, p_pos, &ch);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			return error;
 		if (ch == quote_char)
 			break;
@@ -1462,7 +1466,7 @@ handle_linefeed:
 			tpp_unichar uc;
 			*p_pos = tpp_file_rel2ptr(file, old_pos);
 			error = tpp_lexer_readutf8(self, p_pos, &uc);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return error;
 			if (tpp_unicode_islf(uc))
 				goto handle_linefeed;
@@ -1580,7 +1584,7 @@ switch_on_ch:
 #define read_ch2()                                    \
 	do {                                              \
 		error = tpp_lexer_readchar(self, &pos, &ch2); \
-		if (error != TPP_EOK)                         \
+		if (TPP_ISERR(error))                         \
 			goto return_error;                        \
 	} while (0)
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
@@ -1590,7 +1594,7 @@ switch_on_ch:
 	do {                                                                           \
 		if (pos[-1] != ch2) {                                                      \
 			error = tpp_lexer_warnf_at(self, pos - 3, TPP_W_ENCOUNTERED_TRIGRAPH); \
-			if (error != TPP_EOK)                                                  \
+			if (TPP_ISERR(error))                                                  \
 				goto return_error;                                                 \
 		}                                                                          \
 	} while (0)
@@ -1998,7 +2002,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_SQL_COMMENT
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SQL_COMMENT)) {
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SQL_COMMENT));
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				result = TPP_TOK_SQL_COMMENT; // "-- like this one!"
 				goto set_result;
@@ -2141,7 +2145,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_CXX_COMMENT
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_COMMENT)) {
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_CXX_COMMENT));
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				result = TPP_TOK_CXX_COMMENT; // like this one!
 				goto set_result;
@@ -2164,7 +2168,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 						error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
 						                           TPP_W_COMMENT_TERMINATED_BY_EOF);
-						if (error != TPP_EOK)
+						if (TPP_ISERR(error))
 							goto return_error;
 #endif /* TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
 						break;
@@ -2178,7 +2182,7 @@ switch_on_ch:
 								continue;
 							error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, slash_pos),
 							                           TPP_W_SLASHSTAR_INSIDE_OF_COMMENT);
-							if (error != TPP_EOK)
+							if (TPP_ISERR(error))
 								goto return_error;
 						} else
 #endif /* TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT */
@@ -2208,7 +2212,7 @@ switch_on_ch:
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_ASM_COMMENT)) {
 				pos = tpp_file_rel2ptr(file, rel_end_of_1char);
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_ASM_COMMENT));
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				result = TPP_TOK_ASM_COMMENT; // "/ like this one!"
 				goto set_result;
@@ -2405,7 +2409,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
 		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SHELL_COMMENT)) {
 			error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SHELL_COMMENT));
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto return_error;
 			result = TPP_TOK_SHELL_COMMENT; // "# like this one!"
 			goto set_result;
@@ -2488,6 +2492,109 @@ switch_on_ch:
 /************************************************************************/
 
 
+#if TPP_HAVE_TPP_TOK_RANGLE_LANGLE
+	/* TODO: "><" */
+#endif /* !TPP_HAVE_TPP_TOK_RANGLE_LANGLE */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_PLUS
+	/* TODO: "=+" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_PLUS */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_MINUS
+	/* TODO: "=-" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_MINUS */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_STAR
+	/* TODO: "=*" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_STAR */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
+	/* TODO: "=**" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_SLASH
+	/* TODO: "=/" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_SLASH */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
+	/* TODO: "=//" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT
+	/* TODO: "=%" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_PERCENT */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_AMP
+	/* TODO: "=&" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_AMP */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_PIPE
+	/* TODO: "=|" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_PIPE */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_HAT
+	/* TODO: "=^" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_HAT */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE
+	/* TODO: "=<" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
+	/* TODO: "=<<" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
+	/* TODO: "=<<<" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE
+	/* TODO: "=>" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
+	/* TODO: "=>>" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
+	/* TODO: "=>>>" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_AT
+	/* TODO: "=@" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_AT */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_TILDE
+	/* TODO: "=~" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_TILDE */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_COLON
+	/* TODO: "=:" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_COLON */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM
+	/* TODO: "=!" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM
+	/* TODO: "==!" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM */
+
+#if TPP_HAVE_TPP_TOK_EQUAL_QMARK
+	/* TODO: "=?" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_QMARK */
+
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
+	/* TODO: "<-" */
+#endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+
+#if TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS
+	/* TODO: "*<-" */
+#endif /* !TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS */
+
+#if TPP_HAVE_TPP_TOK_STAR_DOT
+	/* TODO: "*." */
+#endif /* !TPP_HAVE_TPP_TOK_STAR_DOT */
 
 /************************************************************************/
 	case '?': {
@@ -2496,14 +2603,14 @@ switch_on_ch:
 		if (tpp_lexer_getext(self, TPP_EXT_TRIGRAPHS)) {
 			if (pos >= file->tf_end) {
 				error = tpp_file_expandchunk(file);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				pos = tpp_file_rel2ptr(file, rel_start + 1);
 			}
 			if (pos < file->tf_end && *pos == '?') {
 				if ((pos + 1) >= file->tf_end) {
 					error = tpp_file_expandchunk(file);
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					pos = tpp_file_rel2ptr(file, rel_start + 1);
 				}
@@ -2527,7 +2634,7 @@ switch_on_ch:
 					}
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 					error = tpp_lexer_warnf_at(self, pos - 3, TPP_W_ENCOUNTERED_TRIGRAPH);
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 #endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 					if (ch != '?')
@@ -2582,7 +2689,7 @@ not_a_trigraph:
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
 				                           TPP_W_COMMENT_TERMINATED_BY_EOF);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 #endif /* TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
 				break;
@@ -2609,7 +2716,7 @@ not_a_trigraph:
 		npos = tpp_file_rel2ptr(file, rel_start);
 		rel_before = tpp_file_ptr2rel(file, npos);
 		error = tpp_lexer_skip_bse(self, &npos);
-		if (error != TPP_EOK)
+		if (TPP_ISERR(error))
 			goto return_error;
 		rel_after = tpp_file_ptr2rel(file, npos);
 		tpp_assert(rel_before <= rel_after);
@@ -2638,7 +2745,7 @@ not_a_trigraph:
 				read_ch2();
 				if (ch2 == '\'') {
 					error = tpp_lexer_seek_end_of_block_string(self, &pos, '\'');
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_BLOCK_CHAR_LITERAL; /* '''foo''' */
 					goto set_result;
@@ -2652,7 +2759,7 @@ not_a_trigraph:
 #if TPP_HAVE_TPP_TOK_CHAR
 		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CHAR)) {
 			error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto return_error;
 			result = TPP_TOK_CHAR; /* 'foo' */
 			goto set_result;
@@ -2677,7 +2784,7 @@ not_a_trigraph:
 				read_ch2();
 				if (ch2 == '"') {
 					error = tpp_lexer_seek_end_of_block_string(self, &pos, '"');
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_BLOCK_STRING_LITERAL; /* """foo""" */
 					goto set_result;
@@ -2691,7 +2798,7 @@ not_a_trigraph:
 #if TPP_HAVE_TPP_TOK_STRING
 		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STRING)) {
 			error = tpp_lexer_seek_end_of_string(self, &pos, '"');
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto return_error;
 			result = TPP_TOK_STRING; /* "foo" */
 			goto set_result;
@@ -2717,7 +2824,7 @@ not_a_trigraph:
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_CXX_RAW_STRING_LITERAL; /* R"AB(foo)AB" */
 					goto set_result;
@@ -2726,7 +2833,7 @@ not_a_trigraph:
 #if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
 				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '"');
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_RAW_STRING_LITERAL; /* R"foo" */
 					goto set_result;
@@ -2738,7 +2845,7 @@ not_a_trigraph:
 			if (ch2 == '\'') {
 				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '\'');
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_RAW_CHAR_LITERAL; /* R'foo' */
 					goto set_result;
@@ -2768,7 +2875,7 @@ not_a_trigraph:
 			if (ch2 == '"') {
 				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '"');
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_RAW_STRING_LITERAL; /* r"foo"  */
 					goto set_result;
@@ -2779,7 +2886,7 @@ not_a_trigraph:
 			if (ch2 == '\'') {
 				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '\'');
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_RAW_CHAR_LITERAL; /* r'foo' */
 					goto set_result;
@@ -2805,7 +2912,7 @@ not_a_trigraph:
 			read_ch2();
 			if (ch2 == '"') {
 				error = tpp_lexer_seek_end_of_string(self, &pos, '"');
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				result = TPP_TOK_CXX_WIDE_STRING_LITERAL; /* L"foo" */
 				goto set_result;
@@ -2816,7 +2923,7 @@ not_a_trigraph:
 					read_ch2();
 					if (ch2 == '"') {
 						error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
-						if (error != TPP_EOK)
+						if (TPP_ISERR(error))
 							goto return_error;
 						result = TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL; /* LR"AB(foo)AB" */
 						goto set_result;
@@ -2848,7 +2955,7 @@ not_a_trigraph:
 					read_ch2();
 					if (ch2 == '"') {
 						error = tpp_lexer_seek_end_of_string(self, &pos, '"');
-						if (error != TPP_EOK)
+						if (TPP_ISERR(error))
 							goto return_error;
 						result = TPP_TOK_CXX_UTF8_STRING_LITERAL; /* u8"foo" */
 						goto set_result;
@@ -2859,7 +2966,7 @@ not_a_trigraph:
 							read_ch2();
 							if (ch2 == '"') {
 								error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
-								if (error != TPP_EOK)
+								if (TPP_ISERR(error))
 									goto return_error;
 								result = TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL; /* u8R"AB(foo)AB" */
 								goto set_result;
@@ -2876,7 +2983,7 @@ not_a_trigraph:
 			if (ch2 == '"') {
 				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_CXX_UTF16_STRING_LITERAL; /* u8"foo" */
 					goto set_result;
@@ -2889,7 +2996,7 @@ not_a_trigraph:
 					read_ch2();
 					if (ch2 == '"') {
 						error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
-						if (error != TPP_EOK)
+						if (TPP_ISERR(error))
 							goto return_error;
 						result = TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL; /* uR"AB(foo)AB" */
 						goto set_result;
@@ -2917,7 +3024,7 @@ not_a_trigraph:
 			read_ch2();
 			if (ch2 == '"') {
 				error = tpp_lexer_seek_end_of_string(self, &pos, '"');
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				result = TPP_TOK_CXX_UTF32_STRING_LITERAL; /* U"foo" */
 				goto set_result;
@@ -2928,7 +3035,7 @@ not_a_trigraph:
 					read_ch2();
 					if (ch2 == '"') {
 						error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
-						if (error != TPP_EOK)
+						if (TPP_ISERR(error))
 							goto return_error;
 						result = TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL; /* UR"AB(foo)AB" */
 						goto set_result;
@@ -2947,6 +3054,22 @@ not_a_trigraph:
 /************************************************************************/
 
 
+
+/************************************************************************/
+#if TPP_HAVE_TPP_TOK_DOLLAR
+	case '$':
+#if TPP_HAVE_TPP_TOK_DOLLAR > 0
+		break; /* Follow single-char code-branch */
+#else /* TPP_HAVE_TPP_TOK_DOLLAR > 0 */
+		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_DOLLAR))
+			break; /* Follow single-char code-branch */
+		goto handle_keyword;
+#define WANT_handle_keyword
+#endif /* TPP_HAVE_TPP_TOK_DOLLAR <= 0 */
+#endif /* TPP_HAVE_TPP_TOK_DOLLAR */
+/************************************************************************/
+
+
 	default: {
 #if TPP_HAVE_UNICODE
 		/* Check for utf-8 sequence */
@@ -2954,7 +3077,7 @@ not_a_trigraph:
 			tpp_unichar uc;
 			--pos;
 			error = tpp_lexer_readutf8(self, &pos, &uc);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto return_error;
 			if tpp_unlikely(uc == 0 && !tpp_file_isutf8(file)) {
 				++pos; /* Malformed utf-8 sequence caused unicode to be disabled */
@@ -2982,7 +3105,7 @@ not_a_trigraph:
 			if (ch == '\r') {
 				if tpp_unlikely(pos >= end) {
 					error = tpp_file_expandchunk(file);
-					if (error != TPP_EOK)
+					if (TPP_ISERR(error))
 						goto return_error;
 					pos = tpp_file_rel2ptr(file, rel_start + 1);
 					end = file->tf_end;
@@ -3003,7 +3126,7 @@ do_set_linefeed:
 handle_space:
 #endif /* TPP_HAVE_UNICODE */
 			error = tpp_lexer_skipspace_nolf(self, &pos);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto return_error;
 #if TPP_HAVE_BSE
 			while (pos < file->tf_end && *pos == '\\') {
@@ -3011,13 +3134,13 @@ handle_space:
 				tpp_size rel_before, rel_after;
 				npos = pos;
 				error = tpp_lexer_skip_bse(self, &npos);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				if (npos == pos)
 					break;
 				rel_before = tpp_file_ptr2rel(file, npos);
 				error = tpp_lexer_skipspace_nolf(self, &npos);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				rel_after  = tpp_file_ptr2rel(file, npos);
 				tpp_assert(rel_before <= rel_after);
@@ -3045,7 +3168,7 @@ handle_space:
 handle_keyword:
 #endif /* WANT_handle_keyword */
 			error = tpp_lexer_seek_end_of_keyword(self, &pos);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto return_error;
 #if TPP_HAVE_BSE
 			uses_bse = false;
@@ -3060,7 +3183,7 @@ handle_keyword:
 					if ((pos + 1) >= file->tf_end) {
 						tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 						error = tpp_file_expandchunk(file);
-						if (error != TPP_EOK)
+						if (TPP_ISERR(error))
 							goto return_error;
 						pos = tpp_file_rel2ptr(file, rel_pos);
 					}
@@ -3068,7 +3191,7 @@ handle_keyword:
 						if ((pos + 2) >= file->tf_end) {
 							tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 							error = tpp_file_expandchunk(file);
-							if (error != TPP_EOK)
+							if (TPP_ISERR(error))
 								goto return_error;
 							pos = tpp_file_rel2ptr(file, rel_pos);
 						}
@@ -3087,13 +3210,13 @@ handle_keyword:
 				}
 				npos = pos;
 				error = tpp_lexer_skip_bse(self, &npos);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				if (npos == pos)
 					break;
 				rel_before = tpp_file_ptr2rel(file, npos);
 				error = tpp_lexer_seek_end_of_keyword(self, &npos);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 				rel_after  = tpp_file_ptr2rel(file, npos);
 				tpp_assert(rel_before <= rel_after);
@@ -3134,11 +3257,11 @@ handle_keyword:
 handle_digit:
 #endif /* TPP_HAVE_UNICODE */
 			error = tpp_lexer_seek_end_of_keyword(self, &pos);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto return_error;
 #if TPP_HAVE_BSE
 			error = tpp_lexer_skip_bse_after_keyword(self, &pos);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				goto return_error;
 #endif /* TPP_HAVE_BSE */
 
@@ -3148,11 +3271,11 @@ handle_digit:
 				/* Floating point token... */
 				++pos;
 				error = tpp_lexer_seek_end_of_keyword(self, &pos);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 #if TPP_HAVE_BSE
 				error = tpp_lexer_skip_bse_after_keyword(self, &pos);
-				if (error != TPP_EOK)
+				if (TPP_ISERR(error))
 					goto return_error;
 #endif /* TPP_HAVE_BSE */
 				/* TODO: 1.0E+1 */
@@ -3188,7 +3311,7 @@ eof:
 	/* Check if we can read some more data from the file */
 	rel_start = tpp_file_ptr2rel(file, pos);
 	error = tpp_file_expandchunk(file);
-	if (error != TPP_EOK)
+	if (TPP_ISERR(error))
 		goto return_error;
 	pos = tpp_file_rel2ptr(file, rel_start);
 	end = file->tf_end;

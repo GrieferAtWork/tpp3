@@ -412,7 +412,7 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	/* Ask warning configuration how we should have this one */
 	result = tpp_warnings_invoke(tpp_lexer_getwarn(self), id, &invokeinfo);
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
-	if (result != TPP_EOK)
+	if (TPP_ISERR(result))
 		goto done;
 #endif /* TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 

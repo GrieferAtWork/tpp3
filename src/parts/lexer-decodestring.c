@@ -406,7 +406,7 @@ handle_unknown_escape_sequence:
 #if TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
 		{
 			tpp_errno error = tpp_lexer_warnf_at(self, iter, TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, ch);
-			if (error != TPP_EOK)
+			if (TPP_ISERR(error))
 				return (tpp_ssize)error;
 		}
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
@@ -797,7 +797,7 @@ again_yield:
 
 
 /* Convenience wrapper around `tpp_lexer_parsestring_ex()'
- * On success (return == TPP_EOK), caller must "tpp_string_decref(*p_result)"
+ * On success (!TPP_ISERR(return)), caller must "tpp_string_decref(*p_result)"
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
  *
@@ -894,7 +894,7 @@ tpp_lexer_decodestring_as_single_chunk_cb(void *arg, tpp_char const *text, tpp_s
 	data->tldsascd_cb = NULL;
 #endif /* TPP_DEBUG */
 #ifndef __OPTIMIZE_SIZE__
-	if (error == TPP_EOK)
+	if (!TPP_ISERR(error))
 		return TPP_LEXER_PARSESTRING_CHUNK_STOP;
 #endif /* !__OPTIMIZE_SIZE__ */
 	return (tpp_ssize)error;
@@ -1025,7 +1025,7 @@ again_yield_after_single:
 
 			/* Actually give our caller the string */
 			result = tpp_lexer_decodestring_as_single_chunk(self, cb, arg);
-			if (result == TPP_EOK) {
+			if (!TPP_ISERR(result)) {
 				/* Restore the context of the non-string token following the single-chunk'd string */
 				token->tt_id    = final_tt_id;
 				token->tt_kwd   = final_tt_kwd;
@@ -1039,8 +1039,8 @@ again_yield_after_single:
 		TPP_REF tpp_string *string;
 do_multi_chunk_string:
 		result = tpp_lexer_parsestring(self, &string, flags);
-		if (result == TPP_EOK) {
-			result = (*cb)(arg, string->ts_str, string->ts_len);
+		if (!TPP_ISERR(result)) {
+			result = (*cb)(arg, tpp_string_str(string), tpp_string_len(string));
 			tpp_string_decref(string);
 		}
 		return result;

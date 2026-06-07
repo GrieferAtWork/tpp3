@@ -146,7 +146,7 @@ tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
 	tpp_errno error;
 	_tpp_lexer_init_common(self);
 	error = tpp_keywords_openfile(&self->tl_kwds, NULL, filename, file);
-	if tpp_unlikely(error != TPP_EOK)
+	if tpp_unlikely(TPP_ISERR(error))
 		_tpp_lexer_fini_common(self);
 	return error;
 }

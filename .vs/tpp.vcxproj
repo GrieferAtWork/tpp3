@@ -61,6 +61,7 @@
     <ClInclude Include="..\src\parts\warnings.h" />
     <ClInclude Include="..\src\tpp-amalgamation.h" />
     <ClInclude Include="..\src\tpp.h" />
+    <ClInclude Include="..\src\tpp2.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\cpp.hint" />

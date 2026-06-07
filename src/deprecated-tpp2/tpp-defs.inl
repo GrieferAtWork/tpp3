@@ -935,8 +935,8 @@ break;
 WARNING_NAMESPACE(WN_TPX, 100)
 
 /* Warnings added by the new TPP. */
-//DONE:DEF_WARNING(W_SLASHSTAR_INSIDE_OF_COMMENT, (WG_COMMENTS, WG_COMMENT), WSTATE_WARN, WARNF(Q("/*") " repeated inside of comment"))                                /* [char *]. */
-//DONE:DEF_WARNING(W_LINE_COMMENT_CONTINUED, (WG_COMMENTS, WG_COMMENT), WSTATE_WARN, WARNF("Line-comment continued"))                                                  /* . */
+DEF_WARNING(W_SLASHSTAR_INSIDE_OF_COMMENT, (WG_COMMENTS, WG_COMMENT), WSTATE_WARN, WARNF(Q("/*") " repeated inside of comment"))                                /* [char *]. */
+DEF_WARNING(W_LINE_COMMENT_CONTINUED, (WG_COMMENTS, WG_COMMENT), WSTATE_WARN, WARNF("Line-comment continued"))                                                  /* . */
 DEF_WARNING(W_VA_KEYWORD_IN_REGULAR_MACRO, (WG_MACROS), WSTATE_WARN, WARNF("Variadic keyword " Q("%s") " used in regular macro", KWDNAME()))                    /* [struct TPPKeyword *]. */
 DEF_WARNING(W_KEYWORD_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Keyword-style macro " Q("%s") " is already being expanded", FILENAME()))      /* [struct TPPFile *]. */
 DEF_WARNING(W_FUNCTION_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Function-style macro " Q("%s") " is expanded to the same text", FILENAME())) /* [struct TPPFile *]. */
@@ -944,14 +944,14 @@ DEF_WARNING(W_NOT_ENGOUH_MACRO_ARGUMENTS, (WG_MACROS), WSTATE_ERROR, WARNF("Not 
 DEF_WARNING(W_CHARACTER_TOO_LONG, (WG_VALUE), WSTATE_ERROR, WARNF("Character sequence is too long"))                                                            /* . */
 DEF_WARNING(W_MULTICHAR_NOT_ALLOWED, (WG_VALUE), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("The multi-character sequence " Q("%.*s") " is not not allowed", (int)ARG(size_t), temp); })                                                                                             /* [char const *,size_t]. */
 DEF_WARNING(W_INDEX_OUT_OF_BOUNDS, (WG_VALUE), WSTATE_DISABLED, { struct TPPString *s = ARG(struct TPPString *); WARNF("Index %ld is out-of-bounds of 0..%lu", (unsigned long)s->s_size, (unsigned long)ARG(ptrdiff_t)); })                                                                                            /* [struct TPPString *,ptrdiff_t]. */
-//DONE:DEF_WARNING(W_STRING_TERMINATED_BY_LINEFEED, (WG_SYNTAX), WSTATE_ERROR, WARNF("String was terminated by a linefeed"))                                           /* . */
-//DONE:DEF_WARNING(W_STRING_TERMINATED_BY_EOF, (WG_SYNTAX), WSTATE_ERROR, WARNF("String was terminated by EOF"))                                                       /* . */
-//DONE:DEF_WARNING(W_COMMENT_TERMINATED_BY_EOF, (WG_SYNTAX), WSTATE_ERROR, WARNF("Comment was terminated by EOF"))                                                     /* . */
-//DONE:#if !defined(TPP_CONFIG_FEATURE_TRIGRAPHS) || TPP_CONFIG_FEATURE_TRIGRAPHS
-//DONE:DEF_WARNING(W_ENCOUNTERED_TRIGRAPH, (WG_TRIGRAPHS), WSTATE_WARN, WARNF("Encountered trigraph character sequence " Q("%.3s"), ARG(char *))) /* [char (*)[3]]. */
-//DONE:#else /* TPP_CONFIG_FEATURE_TRIGRAPHS */
-//DONE:WARNING(W_UNUSED_112, (WG_VALUE), WSTATE_ERROR)
-//DONE:#endif /* !TPP_CONFIG_FEATURE_TRIGRAPHS */
+DEF_WARNING(W_STRING_TERMINATED_BY_LINEFEED, (WG_SYNTAX), WSTATE_ERROR, WARNF("String was terminated by a linefeed"))                                           /* . */
+DEF_WARNING(W_STRING_TERMINATED_BY_EOF, (WG_SYNTAX), WSTATE_ERROR, WARNF("String was terminated by EOF"))                                                       /* . */
+DEF_WARNING(W_COMMENT_TERMINATED_BY_EOF, (WG_SYNTAX), WSTATE_ERROR, WARNF("Comment was terminated by EOF"))                                                     /* . */
+#if !defined(TPP_CONFIG_FEATURE_TRIGRAPHS) || TPP_CONFIG_FEATURE_TRIGRAPHS
+DEF_WARNING(W_ENCOUNTERED_TRIGRAPH, (WG_TRIGRAPHS), WSTATE_WARN, WARNF("Encountered trigraph character sequence " Q("%.3s"), ARG(char *))) /* [char (*)[3]]. */
+#else /* TPP_CONFIG_FEATURE_TRIGRAPHS */
+WARNING(W_UNUSED_112, (WG_VALUE), WSTATE_ERROR)
+#endif /* !TPP_CONFIG_FEATURE_TRIGRAPHS */
 DEF_WARNING(W_EXPECTED_RBRACKET_IN_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q("]") " in expression, but got " TOK_S, TOK_A))                          /* . */
 DEF_WARNING(W_EXPECTED_COLON_AFTER_WARNING, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(":") " after #pragma warning, but got " TOK_S, TOK_A))                    /* . */
 #ifndef W_EXPECTED_COLLON_AFTER_WARNING /* Deprecated typo */
