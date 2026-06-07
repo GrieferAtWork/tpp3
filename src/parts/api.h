@@ -326,6 +326,10 @@
 #define TPP_UINTMAX_C   UINTMAX_C
 #endif /* !tpp_intmax */
 
+#ifndef tpp_float
+#define tpp_float double
+#endif /* !tpp_float */
+
 #ifndef TPP_REF
 #define TPP_REF       /* nothing */
 #define TPP_REF_IF(c) /* nothing */
@@ -357,7 +361,7 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 #endif /* !tpp_formatprinter */
 
 #ifndef tpp_lcinfo
-typedef struct {
+typedef struct tpp_lcinfo {
 	tpp_line   lci_line; /* Line */
 	tpp_column lci_col;  /* Column */
 } tpp_lcinfo;

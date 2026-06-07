@@ -188,6 +188,10 @@
 /* ALTER CONFIGURATION                                                  */
 /************************************************************************/
 
+#ifdef TPP_CONFIG_DEBUG
+#define TPP_DEBUG TPP_CONFIG_DEBUG
+#endif /* TPP_CONFIG_DEBUG */
+
 /* TPP2 configuration macros */
 
 #ifndef TPP_CONFIG_FEATURE_TRIGRAPHS_DEFAULT
@@ -2700,50 +2704,22 @@ alias("W_EXPECTED_RPAREN_AFTER_VA_OPT", "TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT");
 #define TPP_ENCODING_UTF32_BE TPP_FILE_ENCODING_UTF32_BE
 #define TPP_ENCODING_UTF32_LE TPP_FILE_ENCODING_UTF32_LE
 
-#define TPPFile tpp_file
 #define TPPKeyword tpp_keyword
-#define TPPString tpp_string
-#define s_refcnt ts_refcnt
-#define s_size ts_len
-#define s_text ts_str
+#define TPPString  tpp_string
+#define s_refcnt   ts_refcnt
+#define s_size     ts_len
+#define s_text     ts_str
 
-#if 0 /* TODO */
-//#define TPPString_TEXT(x)   ((x)->s_text)
-//#define TPPString_SIZE(x)   ((x)->s_size)
-//#define TPPString_Shared(x) ((x)->s_refcnt > 1)
-//
-//#define TPPSTRING_DEF(name, value)                      \
-//	struct {                                            \
-//		TPP(refcnt_t) _r;                               \
-//		size_t        _s;                               \
-//		char          _t[sizeof(value) / sizeof(char)]; \
-//	} name = {                                          \
-//		0x80000000,                                     \
-//		(sizeof(value) / sizeof(char)) - 1,             \
-//		value                                           \
-//	}
-//
-//#ifndef TPPString_Free
-//#define TPPString_Free(self)   free(self)
-//#endif /* !TPPString_Free */
-//#define TPPString_Incref(self) (void)(++(self)->s_refcnt)
-//#define TPPString_Decref(self) (void)(--(self)->s_refcnt || (TPPString_Free(self), 0))
-//
-///* Concat two given string and drop ONE(1) references from each.
-// * @return: * :   A reference to a string containing the sum of what is given.
-// * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
-//TPPFUN /*ref*/struct TPPString *TPPCALL
-//TPPString_Cat(/*ref*/struct TPPString *__restrict lhs,
-//              /*ref*/struct TPPString *__restrict rhs);
-//
-///* Returns a new string from the given text.
-// * @return: * :   A reference to a string containing the given text.
-// * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
-//TPPFUN /*ref*/struct TPPString *TPPCALL TPPString_New(char const *__restrict text, size_t size);
-//TPPFUN /*ref*/struct TPPString *TPPCALL TPPString_NewSized(size_t size);
-//#define TPPString_NewEmpty() (TPPString_Incref(TPPFile_Empty.f_text), TPPFile_Empty.f_text)
-//
-//
+#define TPPString_TEXT(x)   ((char *)tpp_string_str(x))
+#define TPPString_SIZE(x)   tpp_string_len(x)
+#define TPPString_Shared(x) tpp_string_isshared(x)
+#define TPPString_Free(x)   tpp_string_destroy(x)
+#define TPPString_Incref(x) tpp_string_incref(x)
+#define TPPString_Decref(x) tpp_string_decref(x)
+/*#define TPPString_Cat(lhs, rhs) tpp_string_cat(lhs, rhs)*/
+/*#define TPPString_New(text, size) tpp_string_new(text, size)*/
+#define TPPString_NewSized(size) tpp_string_malloc(size)
+#define TPPString_NewEmpty()     tpp_string_newempty()
 //struct TPPTextFile {
 //	/* [owned((:f_name) = true]
 //	 * HINT: `:f_name' usually is the string passed to the
@@ -2796,512 +2772,111 @@ alias("W_EXPECTED_RPAREN_AFTER_VA_OPT", "TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT");
 //#endif /* TPP_USERTEXTDATA */
 //};
 //
-///* HINT: something like
-// * >> #define cat(a,b) a ## b
-// * is simply implemented as:
-// * >> {
-// * >>     { TPP_FUNOP_INS, { 0, 1 } }, // Without expanding, insert `a' and override 1 character ("a")
-// * >>     { TPP_FUNOP_INS, { 1, 5 } }, // Without expanding, insert `b' and override 5 characters (" ## b")
-// * >> } */
-//#define TPP_FUNOP_END      0x00 /* [0] End of command list. */
-//#define TPP_FUNOP_ADV      0x01 /* [1] Advance the text pointer by ARG(0) characters. */
-//#define TPP_FUNOP_INS      0x02 /* [2] Insert argument ARG(0), override ARG(1) characters and put the text pointer after the inserted text. */
-//#define TPP_FUNOP_INS_EXP  0x03 /* [2] Same as `TPP_FUNOP_INS', but expand macros within the argument text before inserting it. */
-//#define TPP_FUNOP_INS_STR  0x04 /* [2] Same as `TPP_FUNOP_INS', but encode the argument as a single-token string. */
-//#define TPP_FUNOP_INS_CHR  0x05 /* [2] Same as `TPP_FUNOP_INS', but encode the argument as a single-token character. */
-//#define TPP_FUNOP_DEL      0x06 /* [1] Delete ARG(0) characters (doesn't advance the text pointer). */
-//#if (!defined(TPP_CONFIG_EXTENSION_VA_COMMA) || TPP_CONFIG_EXTENSION_VA_COMMA || \
-//     !defined(TPP_CONFIG_EXTENSION_GCC_VA_COMMA) || TPP_CONFIG_EXTENSION_GCC_VA_COMMA)
-//#define TPP_FUNOP_VA_COMMA 0x07 /* [1] Delete ARG(0) characters and insert a `,' if the variadic portion of the argument list is non-empty (NOTE: When inserting, the text-pointer is advanced). */
-//#endif /* TPP_CONFIG_EXTENSION_VA_COMMA || TPP_CONFIG_EXTENSION_GCC_VA_COMMA */
-//#if (!defined(TPP_CONFIG_EXTENSION_VA_NARGS) || TPP_CONFIG_EXTENSION_VA_NARGS)
-//#define TPP_FUNOP_VA_NARGS 0x08 /* [1] Delete ARG(0) characters and insert a decimal representation of the variadic argument size (NOTE: When inserting, the text-pointer is advanced). */
-//#endif /* TPP_CONFIG_EXTENSION_VA_NARGS */
-//#if (!defined(TPP_CONFIG_EXTENSION_VA_OPT) || TPP_CONFIG_EXTENSION_VA_OPT)
-//#define TPP_FUNOP_VA_OPT   0x09 /* [3] Delete ARG(0) characters, Delete (if varargs are empty) or Insert (otherwise) ARG(1) characters, Delete ARG(2) characters */
-//#endif /* TPP_CONFIG_EXTENSION_VA_OPT */
-//typedef uint8_t        TPP(funop_t);
-//typedef int_least64_t  TPP(tint_t);
-//typedef uint_least64_t TPP(tuint_t);
-//typedef long double    TPP(tfloat_t);
-//
-//struct TPP(arginfo_t) {
-//	TPP(tok_t) ai_id;       /* Token ID associated with this argument name. */
-//	size_t     ai_ins;      /* Amount of times the argument is inserted without expansion. */
-//	size_t     ai_ins_exp;  /* Amount of times the argument is inserted after expansion. */
-//	size_t     ai_ins_str;  /* Amount of times the argument is inserted in its escaped form. */
-//#if TPP_CONFIG_DEBUG
-//	char      *ai_name;     /* [1..1] Name of this macro (Weakly references the names from the keyword list). */
-//	size_t     ai_namesize; /* Size of this argument's name (in characters) */
-//#endif /* TPP_CONFIG_DEBUG */
-//};
-//
-//struct TPPLCInfo {
-//	/* TPP Line/Column information. */
-//#ifdef __INTELLISENSE__
-//	    line_t  lc_line; /* zero-based line index in the associated file. */
-//	    col_t   lc_col;  /* zero-based column index in the associated file (NOTE: Tabs are already expanded in this). */
-//#else /* __INTELLISENSE__ */
-//	TPP(line_t) lc_line; /* zero-based line index in the associated file. */
-//	TPP(col_t)  lc_col;  /* zero-based column index in the associated file (NOTE: Tabs are already expanded in this). */
-//#endif /* !__INTELLISENSE__ */
-//};
-//
-//
-//struct TPPMacroFile {
-//	/* [owned(f_name) = m_flags&TPP_MACROFILE_FLAG_OWNSNAME] */
-//#define TPP_MACROFILE_KIND                   0x000000ff
-//#define TPP_MACROFILE_KIND_HASCOMMON(k)      (((k) & TPP_MACROFILE_KIND) != TPP_MACROFILE_KIND_EXPANDED)
-//#define TPP_MACROFILE_KIND_KEYWORD           0x00000000 /* Keyword-style macro (without string/concat operations). */
-//#define TPP_MACROFILE_KIND_FUNCTION          0x00000001 /* Function-style macro. */
-//#define TPP_MACROFILE_FLAG_FUNC_VARIADIC     0x00000100 /* The last argument of the function is variadic. */
-//#define TPP_MACROFILE_FLAG_FUNC_SELFEXPAND   0x00000200 /* After being expanded, this function is allowed to re-invoke itself and be expanded, when
-//                                                         * the generated text is not identical to a previous iteration. (s.a.: `-fmacro-recursion') */
-//#define TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC   0x00000400 /* When set, keep whitespace surrounding macro arguments during invocation.
-//                                                         * WARNING: Also affects recursive macro expansion. */
-//#define TPP_MACROFILE_FLAG_OWNSNAME          0x00000800 /* The associated ":f_name" member is owned. */
-//#define TPP_MACROFILE_MASK_FUNC_STARTCH      0x00003000 /* The character that should be recognized as start of an argument list (one of the macros below). */
-//#define TPP_MACROFILE_FUNC_START_LPAREN      0x00000000 /* `(...)' */
-//#define TPP_MACROFILE_FUNC_START_LBRACKET    0x00001000 /* `[...]' */
-//#define TPP_MACROFILE_FUNC_START_LBRACE      0x00002000 /* `{...}' */
-//#define TPP_MACROFILE_FUNC_START_LANGLE      0x00003000 /* `<...>' */
-//#define TPP_MACROFILE_FUNC_START(ch)       \
-//	((ch) == '('                           \
-//	 ? TPP_MACROFILE_FUNC_START_LPAREN     \
-//	 : (ch) == '['                         \
-//	   ? TPP_MACROFILE_FUNC_START_LBRACKET \
-//	   : (ch) == '{'                       \
-//	     ? TPP_MACROFILE_FUNC_START_LBRACE \
-//	     : TPP_MACROFILE_FUNC_START_LANGLE)
-//#define TPP_MACROFILE_KIND_EXPANDED 0x00000002      /* Expanded version of a function macro. */
-//	uint32_t                       m_flags;         /* [const] Macro flags. */
-//	/*ref*/struct TPPFile         *m_deffile;       /* [const][0..1] The file that originally defined this macro (or NULL if predefined, or from the commandline). */
-//	struct TPPLCInfo               m_defloc;        /* [const] Line/col where this macro was defined (based on first character of the macro's text, aka. `:f_begin'). */
-//	/*ref*/struct TPPFile         *m_pushprev;      /* [0..1] Previous version of a pushed macro. */
-//	size_t                         m_pushcount;     /* The amount of times this macro was pushed (used to handle multiple calls to `push_macro'). */
-//	union {
-//		struct {
-//			size_t                 f_argc;          /* [const] Amount of arguments this function takes. */
-//			size_t                 f_expansions;    /* The amount of existing expansions of this macro.
-//			                                         * NOTE: Depending on the `TPP_MACROFILE_FLAG_FUNC_SELFEXPAND' flag,
-//			                                         *       this value may not be allowed to exceed ONE(1). */
-//			TPP(funop_t)          *f_expand;        /* [const][1..1][owned] Chain of text commands invoked to expand a function macro. */
-//			struct TPP(arginfo_t) *f_arginfo;       /* [const][0..f_argc][owned] Vector of argument information (used for fast calculation of the expanded macro's size) */
-//			size_t                 f_deltotal;      /* [const][<= (:f_end-:f_begin)] The total amount of characters removed during expansion (minus those added). */
-//#if defined(TPP_FUNOP_VA_COMMA) || defined(TPP_FUNOP_VA_OPT)
-//			size_t                 f_n_vacomma;     /* [const] Amount of times `TPP_FUNOP_VA_COMMA' is used in `f_expand' + amount of characters potentially inserted by `TPP_FUNOP_VA_OPT'. */
-//#endif /* TPP_FUNOP_VA_COMMA || TPP_FUNOP_VA_OPT */
-//#ifdef TPP_FUNOP_VA_NARGS
-//			size_t                 f_n_vanargs;     /* [const] Amount of times `TPP_FUNOP_VA_NARGS' is used in `f_expand'. */
-//#endif /* TPP_FUNOP_VA_NARGS */
-//			void                  *f_argbuf;        /* [0..1][owned] Internal preallocated cache for a required temporary buffer used during expansion.
-//			                                         * NOTE: Implementation-wise, this is a vector of `argcache_t' (an internal, hidden data structure). */
-//		}                          m_function;      /* [TPP_MACROFILE_KIND_KEYWORD]. */
-//		struct {
-//			/*ref*/struct TPPFile *e_expand_origin; /* [const][1..1] Original macro-file that was expanded.
-//			                                         * NOTE: While this file is part of the #include-stack of the current lexer, this pointer
-//			                                         *       also holds a reference to `e_expand_origin->f_macro.m_function.f_expansions'. */
-//		}                          m_expand;        /* [TPP_MACROFILE_KIND_EXPANDED]. */
-//	} TPP_UNNAMED_UNION_DEF(m_specific);
-//};
-//
-///* Minimum malloc-sizes of various kinds of TPP files types. */
-//#define TPPFILE_SIZEOF_TEXT           TPP_OFFSETAFTER(struct TPPFile, f_textfile)
-//#define TPPFILE_SIZEOF_MACRO_KEYWORD  TPP_OFFSETOF(struct TPPFile, f_macro.m_function)
-//#define TPPFILE_SIZEOF_MACRO_FUNCTION TPP_OFFSETAFTER(struct TPPFile, f_macro.m_function)
-//#define TPPFILE_SIZEOF_MACRO_EXPANDED TPP_OFFSETAFTER(struct TPPFile, f_macro.m_expand)
-//#define TPPFILE_SIZEOF_EXPLICIT       TPP_OFFSETOF(struct TPPFile, f_textfile)
-//
-//struct TPPFile {
-//	/* Input file/user macro. */
-//	TPP(refcnt_t)            f_refcnt;    /* File reference counter. */
-//#define TPPFILE_KIND_TEXT     0           /* Input file. */
-//#define TPPFILE_KIND_MACRO    1           /* Macro file. */
-//#define TPPFILE_KIND_EXPLICIT 2           /* An explicit file, that is the result of manually inserting text, such as resulting from expanding builtin macros. */
-//	unsigned int             f_kind;      /* [const] The kind of file (One of `TPPFILE_KIND_*') */
-//	/*C:ref*/struct TPPFile *f_prev;      /* [0..1][caller_ref] Previous entry in the #include-stack chain or NULL if base-file or macro not part of the include stack. */
-//	char                    *f_name;      /* [1..f_namesize][owned_if(...)][const] Name of this file.
-//	                                       * WARNING: Except for text files, this may not be `\0'-terminated
-//	                                       *          and may contain non-escaped linefeeds and trigraphs. */
-//	size_t                   f_namesize;  /* [const] Size of `f_name' in characters. */
-//	size_t                   f_namehash;  /* [const] Hash of `f_name..f_namesize'. */
-//	/*ref*/struct TPPString *f_text;      /* [1..1] Reference to a chunk of text containing the `f_begin', `f_end' and `f_pos' pointers.
-//	                                       * NOTE: For regular text-files, this block always ends after a non-escaped linefeed ("[LF]\0"; never "\\[LF]\0").
-//	                                       * NOTE: If the original input-file doesn't terminate with this pattern, it may be missing. */
-//	char                    *f_begin;     /* [const][1..1] Raw, unformatted text start. */
-//	char                    *f_end;       /* [const][1..1] End of the text associated with this file (NOTE: Always dereferences to a `\0'-character). */
-//	char                    *f_pos;       /* [1..1] Current position between `f_begin..f_end'. */
-//	union {
-//		struct TPPTextFile   f_textfile;  /* [if(f_kind == TPPFILE_KIND_TEXT)] Text-specific data. */
-//		struct TPPMacroFile  f_macro;     /* [if(f_kind == TPPFILE_KIND_MACRO)] Macro-specific data. */
-//	} TPP_UNNAMED_UNION_DEF(f_specific);
-//};
-//
-//TPPFUN struct TPPFile TPPFile_Empty;
-//#define TPPFile_Incref(self)       (void)(++(self)->f_refcnt)
-//#define TPPFile_Decref(self)       (void)(TPP_assert((self)->f_refcnt), --(self)->f_refcnt || (TPPFile_Destroy(self), 0))
-//#define TPPFile_DecrefNoKill(self) (void)(TPP_assert((self)->f_refcnt >= 2), --(self)->f_refcnt)
-//TPPFUN void TPPCALL TPPFile_Destroy(struct TPPFile *__restrict self);
-//
-///* Create a new explicit text file by inherited the given `inherited_text'.
-// * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
-//TPPFUN /*ref*/struct TPPFile *TPPCALL
-//TPPFile_NewExplicitInherited(/*ref*/struct TPPString *__restrict inherited_text);
-//
-///* Query file/line information a the given text_pointer.
-// * HINT: You can simply pass `self->f_pos' for
-// *       information in the file's current source location.
-// * NOTE: The caller is responsible for only passing a value
-// *       for `text_pointer', that is conforming to:
-// *       `self->f_begin <= text_pointer <= self->f_end'
-// *       (Yes: `self->f_end' is still valid, although
-// *       technically already out-of-bounds, but an exception
-// *       is made to allow for safe calls to this function, even
-// *       when `text_pointer' was retrieved from an EOF token) */
-//TPPFUN void TPPCALL
-//TPPFile_LCAt_(TPP_LEXER_PARAM_
-//              struct TPPFile const *__restrict self,
-//              struct TPPLCInfo *__restrict info,
-//              char const *__restrict text_pointer);
-//#define TPPFile_LCAt(self, info, text_pointer) \
-//	TPPFile_LCAt_(TPP_LEXER_ARG_ self, info, text_pointer)
-//
-//
-///* Returns the zero-based line index of a given text pointer.
-// * NOTE: The returned line index is always absolute to
-// *       the original text file and continues to be valid
-// *       even when the given file is a macro defined within. */
-//#define TPPFile_LineAt(self, text_pointer) TPPFile_LineAt_(TPP_LEXER_ARG_ self, text_pointer)
-//TPP_LOCAL TPP(line_t) TPPCALL
-//TPPFile_LineAt_(TPP_LEXER_PARAM_ struct TPPFile const *__restrict self,
-//                char const *__restrict text_pointer) {
-//	struct TPPLCInfo info;
-//	TPPFile_LCAt(self, &info, text_pointer);
-//	return info.lc_line;
-//}
-//
-///* Similar to `TPPFile_LineAt', but instead returns the column number. */
-//#define TPPFile_ColumnAt(self, text_pointer) TPPFile_ColumnAt_(TPP_LEXER_ARG_ self, text_pointer)
-//TPP_LOCAL TPP(col_t) TPPCALL
-//TPPFile_ColumnAt_(TPP_LEXER_PARAM_ struct TPPFile const *__restrict self,
-//                  char const *__restrict text_pointer) {
-//	struct TPPLCInfo info;
-//	TPPFile_LCAt(self, &info, text_pointer);
-//	return info.lc_col;
-//}
-//
-///* Returns the human-readable filename of a given file.
-// * NOTE: For macro files, the returned filename continues
-// *       to refer to the file that the macro was defined
-// *       within.
-// * NOTE: Returns NULL if no name is associated with the
-// *       given file, such as for predefined macros. */
-//TPPFUN char const *TPPCALL
-//TPPFile_Filename(struct TPPFile const *__restrict self,
-//                 size_t *opt_filename_length);
-//
-///* Same as `TPPFile_Filename()', however return the original
-// * file name if a #line directive was used to override it. */
-//TPPFUN char const *TPPCALL
-//TPPFile_RealFilename(struct TPPFile const *__restrict self,
-//                     size_t *opt_filename_length);
-//
-///* If the given file is a macro-file, ensure that it
-// * owns a copy of its own name. In other words,
-// * replace the file's name with a copy of itself when
-// * the `TPP_MACROFILE_FLAG_OWNSNAME' flag isn't set.
-// * @return: 1: Either the given file isn't a macro-file, the filename
-// *             had already been copied, or the filename was copied
-// *             successfully.
-// * @return: 0: Not enough available memory (TPP_CONFIG_SET_API_ERROR) */
-//TPPFUN int TPPCALL
-//TPPFile_Copyname(struct TPPFile *__restrict self);
-//
-///* Copy the given file for use as #include-stack entry.
-// * WARNING: The caller is responsible for only passing text files. */
-//TPPFUN /*ref*/struct TPPFile *TPPCALL
-//TPPFile_CopyForInclude(struct TPPFile *__restrict self);
-//
-//
-///* Opens a file.
-// * NOTE: The given filename is what will appear as text when expanding __FILE__
-// * @return: NULL: Failed to open the given file (`errno' was set to ENOENT)
-// * @return: NULL: Not enough available memory (TPP_CONFIG_SET_API_ERROR) */
+
+#define TPP_funop_t   tpp_macro_opcode
+#define TPP_tint_t    tpp_intmax
+#define TPP_tuint_t   tpp_uintmax
+#define TPP_tfloat_t  tpp_float
+#define TPP_arginfo_t tpp_macro_argument
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define funop_t   tpp_macro_opcode
+#define tint_t    tpp_intmax
+#define tuint_t   tpp_uintmax
+#define tfloat_t  tpp_float
+#define arginfo_t tpp_macro_argument
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+
+#define ai_id tma_id
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
+#define ai_ins tma_ins
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
+#define ai_ins_exp tma_ins_exp
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+#define ai_ins_str tma_ins_str
+#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+#if TPP_DEBUG
+#define ai_name tma_name
+/*#define ai_namesize tma_namelen*/
+#endif /* TPP_DEBUG */
+
+#define TPPLCInfo tpp_lcinfo
+#define lc_line   lci_line
+#define lc_col    lci_col
+
+#define TPPMacroFile          tpp_macro
+#define TPPFile               tpp_file
+#define TPPFILE_KIND_TEXT     TPP_FILE_KIND_IO
+#define TPPFILE_KIND_EXPLICIT TPP_FILE_KIND_TEXT
+#define TPPFILE_KIND_MACRO    TPP_FILE_KIND_MACRO
+#define f_kind                tf_kind
+#define f_prev                tf_tprev /* Or maybe "tf_prev"... */
+#define f_name                tf_data.td_io.tff_name /* Should really use "tpp_file_filename()" instead! */
+#define f_text                tf_chunk
+#define f_begin               tf_chunk->ts_str /* Shouldn't be used */
+#define f_end                 tf_end
+#define f_pos                 tf_pos
+
+#define TPPFile_LCAt(self, info, text_pointer) \
+	(void)(*(info) = tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
+#define TPPFile_LineAt(self, text_pointer) \
+	tpp_lcinfo_getline(tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
+#define TPPFile_ColumnAt(self, text_pointer) \
+	tpp_lcinfo_getcol(tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
+#define TPPFile_Filename(self, opt_filename_length)                                         \
+	((opt_filename_length)                                                                  \
+	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_userfilename(self))) \
+	 : (void)0,                                                                             \
+	 tpp_file_userfilename(self))
+#define TPPFile_RealFilename(self, opt_filename_length)                                 \
+	((opt_filename_length)                                                              \
+	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_filename(self))) \
+	 : (void)0,                                                                         \
+	 tpp_file_filename(self))
+
+
+#define TPP_Itos(buf, i) tpp_itoa(buf, i)
+TPP_INLINE tpp_size TPPCALL TPP_SizeofItos(tpp_intmax i) {
+	char buf[TPP_ITOA_MAXLEN];
+	return (tpp_size)((buf + TPP_ITOA_MAXLEN) - tpp_itoa(buf, i));
+}
+
+#define TPP_Hashof(data, size) tpp_hashof((tpp_char const *)(data), size)
+
+#define TPP_wstate_t tpp_warning_state
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define WSTATE_DISABLED TPP_WSTATE_DISABLED
+#define WSTATE_FATAL    TPP_WSTATE_FATAL
+#define WSTATE_WARN     TPP_WSTATE_WARN
+#define WSTATE_ERROR    TPP_WSTATE_ERROR
+#define WSTATE_SUPPRESS TPP_WSTATE_SUPPRESS
+#define WSTATE_DEFAULT  TPP_WSTATE_DEFAULT
+#define WSTATE_DISABLE  TPP_WSTATE_DISABLED
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#define TPP_WSTATE_DISABLE TPP_WSTATE_DISABLED
+
+#define TPP_WSTATE_ISENABLED(s) tpp_warning_state_willemit(s)
+
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define WG_COUNT TPP_WG_COUNT
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+
+
+#if 0 /* TODO */
+//TPPFUN int TPPCALL TPPFile_Copyname(struct TPPFile *__restrict self);
+//TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_CopyForInclude(struct TPPFile *__restrict self);
 //TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_Open(char const *__restrict filename);
-//
-///* Similar to `TPPFile_Open', but allows the caller to specify a stream,
-// * allowing them to use this function for opening things like STD handles.
-// * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
 //TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, char const *__restrict name);
-//
-///* Parse a #define-style preprocessor command, expecting the
-// * current lexer's token to point at the name of the macro.
-// * NOTE: This function will also register the macro in the keyword list.
-// * NOTE: When attempting to (re-)define a locked keyword, either the
-// *       previous macro definition, or `&TPPFile_Empty' is returned.
-// * WARNING: This function expects the `TPPLEXER_FLAG_WANTLF' flag to be set.
-// * WARNING: This function does _not_ return a reference.
-// * @return: NULL: A lexer error has been set. */
 //TPPFUN struct TPPFile *TPPCALL TPPFile_NewDefine_(TPP_LEXER_PARAM);
-//#define TPPFile_NewDefine() TPPFile_NewDefine_(TPP_LEXER_ARG)
-//
-///* Advances the given file to its next chunk.
-// * NOTE: When `flags' contains `TPPFILE_NEXTCHUNK_FLAG_EXTEND', instead of dropping
-// *       already-read data from the existing chunk, new data will be appended to that
-// *       chunk, meaning that the resulting stream contains both old and new data,
-// *       allowing for higher-level data lookahead while still remaining
-// *       as unbuffered as possible.
-// * @return:  0: The file's EOF was already reached, or the
-// *             `TPPFILE_NEXTCHUNK_FLAG_NOBLCK' flag was passed
-// *              and no data is available for reading right now.
-// * @return:  1: Successfully read input.
-// * #ifdef TPP_CONFIG_SET_API_ERROR
-// * @return: -1: Not enough available memory (TPP_CONFIG_SET_API_ERROR)
-// * #ifdef TPP_USERSTREAM_FREAD
-// * @return: -1: The user-defined read callback returned 0 and set TPPLEXER_FLAG_ERROR-flag.
-// * #endif
-// * #else
-// * @return:  0: Not enough available memory
-// * #endif
-// */
 //TPPFUN int TPPCALL TPPFile_NextChunk_(TPP_LEXER_PARAM_ struct TPPFile *__restrict self, unsigned int flags);
-//#define TPPFile_NextChunk(self, flags) TPPFile_NextChunk_(TPP_LEXER_ARG_ self, flags)
-//#define TPPFILE_NEXTCHUNK_FLAG_NONE   0x00000000 /* No special behavior modification. */
-//#define TPPFILE_NEXTCHUNK_FLAG_EXTEND 0x00020000 /* Extend the current file chunk. */
-//#define TPPFILE_NEXTCHUNK_FLAG_BINARY 0x00000002 /* Read data in binary mode (don't convert to UTF-8 without BOM).
-//                                                  * NOTE: This flag is implied if the lexer has the `TPPLEXER_FLAG_NO_ENCODING' flag set. */
-//#ifdef TPP_CONFIG_NONBLOCKING_IO
-//#define TPPFILE_NEXTCHUNK_FLAG_NOBLCK 0x00000040 /* If the stream has been marked as `TPP_TEXTFILE_FLAG_NONBLOCK',
-//                                                  * do not block when reading more file memory. */
-//#endif /* TPP_CONFIG_NONBLOCKING_IO */
-//
-//
-//#ifndef TPP_UNESCAPE_ENDIAN
-//#define TPP_UNESCAPE_ENDIAN  TPP_BYTEORDER
-//#endif /* !TPP_UNESCAPE_ENDIAN */
-//#ifndef TPP_UNESCAPE_MAXCHAR
-///* Max value for `charsize' passed to `TPP_Unescape' (Must be one of 1,2,4 or 8) */
-//#define TPP_UNESCAPE_MAXCHAR 1
-//#endif /* !TPP_UNESCAPE_MAXCHAR */
-//
-///* Escape/Unescape a given block of data.
-// * NOTE: `TPP_Unescape/TPP_Escape' will return the surrounding  */
-//#if TPP_UNESCAPE_MAXCHAR == 1
-//TPPFUN char *TPPCALL TPP_Unescape_(TPP_LEXER_PARAM_ char *__restrict buf, char const *__restrict data, size_t size);
-//TPPFUN size_t TPPCALL TPP_SizeofUnescape_(TPP_LEXER_PARAM_ char const *__restrict data, size_t size);
-//#define TPP_Unescape(buf, data, size, charsize)  TPP_Unescape_(TPP_LEXER_ARG_ buf, data, size)
-//#define TPP_SizeofUnescape(data, size, charsize) TPP_SizeofUnescape_(TPP_LEXER_ARG_ data, size)
-//#else /* TPP_UNESCAPE_MAXCHAR == 1 */
 //TPPFUN char *TPPCALL TPP_Unescape_(TPP_LEXER_PARAM_ char *__restrict buf, char const *__restrict data, size_t size, size_t charsize);
 //TPPFUN size_t TPPCALL TPP_SizeofUnescape_(TPP_LEXER_PARAM_ char const *__restrict data, size_t size, size_t charsize);
-//#define TPP_Unescape(buf, data, size, charsize)  TPP_Unescape_(TPP_LEXER_ARG_ buf, data, size, charsize)
-//#define TPP_SizeofUnescape(data, size, charsize) TPP_SizeofUnescape_(TPP_LEXER_ARG_ data, size, charsize)
-//#endif /* TPP_UNESCAPE_MAXCHAR != 1 */
-//#ifdef TPP_CONFIG_RAW_STRING_LITERALS
 //TPPFUN char *TPPCALL TPP_UnescapeRaw(char *__restrict buf, char const *__restrict data, size_t size);
 //TPPFUN size_t TPPCALL TPP_SizeofUnescapeRaw(char const *__restrict data, size_t size);
-//#endif /* TPP_CONFIG_RAW_STRING_LITERALS */
-//
 //TPPFUN char *TPPCALL TPP_Escape_(TPP_LEXER_PARAM_ char *__restrict buf, char const *__restrict data, size_t size);
-//#define TPP_Escape(buf, data, size) TPP_Escape_(TPP_LEXER_ARG_ buf, data, size)
-//TPPFUN char *TPPCALL TPP_Itos(char *__restrict buf, TPP(tint_t) i);
-//TPPFUN char *TPPCALL TPP_Ftos(char *__restrict buf, TPP(tfloat_t) f);
 //TPPFUN size_t TPPCALL TPP_SizeofEscape_(TPP_LEXER_PARAM_ char const *__restrict data, size_t size);
-//#define TPP_SizeofEscape(data, size) TPP_SizeofEscape_(TPP_LEXER_ARG_ data, size)
-//TPPFUN size_t TPPCALL TPP_SizeofItos(TPP(tint_t) i);
+//TPPFUN char *TPPCALL TPP_Ftos(char *__restrict buf, TPP(tfloat_t) f);
 //TPPFUN size_t TPPCALL TPP_SizeofFtos(TPP(tfloat_t) f);
-//TPPFUN TPP(hash_t) TPPCALL TPP_Hashof(void const *__restrict data, size_t size);
-//
-///* Implement TPP's hashing algorithm for constant strings, using only the preprocessor!
-// * -> THIS! Is the power that TPP can wield: Full functional programming */
-//#if defined(__TPP_VERSION__) && (__SIZEOF_POINTER__ == 4 || __SIZEOF_POINTER__ == 8)
-//#define TPP_PRIVATE_PP_CAT2(a,b) a##b
-//#define TPP_PRIVATE_PP_CAT(a,b) TPP_PRIVATE_PP_CAT2(a,b)
-//#define TPP_PRIVATE_HASHOF_0(result,str) result
-//#pragma warning(disable: 108) /* Index out-of-bounds in `__TPP_EVAL' */
-//
-///* Using some sick-a$$ TPP extensions, we can actually
-// * calculate keyword hashes within the preprocessor! */
-//#pragma extension(push,"-fmacro-recursion")
-//#if __SIZEOF_POINTER__ == 4
-//#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&0xfffffffful),__TPP_EVAL(str[1:]))
-//#elif __SIZEOF_POINTER__ == 8
-//#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&0xffffffffffffffffull),__TPP_EVAL(str[1:]))
-//#endif
-//#define TPP_PRIVATE_HASHOF2(result,str) TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF_,__TPP_EVAL(!!str))(result,str)
-//#pragma extension(pop)
-//#if __SIZEOF_POINTER__ == 4
-//#define TPP_HASHOF(str)         TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF2(1,str),ul)
-//#elif __SIZEOF_POINTER__ == 8
-//#define TPP_HASHOF(str)         TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF2(1,str),ull)
-//#endif
-//#endif /* __TPP_VERSION__ && (__SIZEOF_POINTER__ == 4 || __SIZEOF_POINTER__ == 8) */
-//
-//
-//enum {
-//	/* Special tokens. */
-//	TPP(TOK_EOF)     = '\0', /* END-OF-FILE (will always be ZERO) */
-//	TPP(TOK_CHAR)    = '\'', /* 'f'. */
-//	TPP(TOK_STRING)  = '\"', /* "foobar". (also includes `r"foobar"' when `TPP_CONFIG_RAW_STRING_LITERALS' is enabled) */
-//	TPP(TOK_INT)     = '0',  /* 42 */
-//	TPP(TOK_FLOAT)   = 'f',  /* 42.0 */
-//	TPP(TOK_LF)      = '\n',
-//	TPP(TOK_SPACE)   = ' ',
-//	TPP(TOK_COMMENT) = 'c',              /* like this one! */
-//	TPP(TOK_ERR)     = (TPP(tok_t)) - 1, /* An error occurred (will always be negative). */
-//
-//	/* Single-character tokens (always equal to that character's ordinal). */
-//	TPP(TOK_ADD)       = '+',
-//	TPP(TOK_AND)       = '&',
-//	TPP(TOK_ASSIGN)    = '=',
-//	TPP(TOK_AT)        = '@',
-//	TPP(TOK_BACKSLASH) = '\\',
-//	TPP(TOK_COLON)     = ':',
-//	TPP(TOK_COMMA)     = ',',
-//	TPP(TOK_DIV)       = '/',
-//	TPP(TOK_DOT)       = '.',
-//	TPP(TOK_HASH)      = '#',
-//	TPP(TOK_LANGLE)    = '<',
-//	TPP(TOK_LBRACE)    = '{',
-//	TPP(TOK_LBRACKET)  = '[',
-//	TPP(TOK_LPAREN)    = '(',
-//	TPP(TOK_MOD)       = '%',
-//	TPP(TOK_MUL)       = '*',
-//	TPP(TOK_NOT)       = '!',
-//	TPP(TOK_OR)        = '|',
-//	TPP(TOK_QUESTION)  = '?',
-//	TPP(TOK_RANGLE)    = '>',
-//	TPP(TOK_RBRACE)    = '}',
-//	TPP(TOK_RBRACKET)  = ']',
-//	TPP(TOK_RPAREN)    = ')',
-//	TPP(TOK_SEMICOLON) = ';',
-//	TPP(TOK_SUB)       = '-',
-//	TPP(TOK_TILDE)     = '~',
-//	TPP(TOK_XOR)       = '^',
-//
-//	/* Double(or more)-character tokens. */
-//	TPP(TOK_TWOCHAR_BEGIN) = 256,
-//	TPP(TOK_SHL) = TPP(TOK_TWOCHAR_BEGIN), /* "<<". */
-//	TPP(TOK_SHR),           /* ">>". */
-//	TPP(TOK_EQUAL),         /* "==". */
-//	TPP(TOK_NOT_EQUAL),     /* "!=". */
-//	TPP(TOK_GREATER_EQUAL), /* ">=". */
-//	TPP(TOK_LOWER_EQUAL),   /* "<=". */
-//	TPP(TOK_DOTS),          /* "...". */
-//	TPP(TOK_ADD_EQUAL),     /* "+=". */
-//	TPP(TOK_SUB_EQUAL),     /* "-=". */
-//	TPP(TOK_MUL_EQUAL),     /* "*=". */
-//	TPP(TOK_DIV_EQUAL),     /* "/=". */
-//	TPP(TOK_MOD_EQUAL),     /* "%=". */
-//	TPP(TOK_SHL_EQUAL),     /* "<<=". */
-//	TPP(TOK_SHR_EQUAL),     /* ">>=". */
-//	TPP(TOK_AND_EQUAL),     /* "&=". */
-//	TPP(TOK_OR_EQUAL),      /* "|=". */
-//	TPP(TOK_XOR_EQUAL),     /* "^=". */
-//	TPP(TOK_POW_EQUAL),     /* "**=". */
-//	TPP(TOK_AT_EQUAL),      /* "@=". */
-//	TPP(TOK_GLUE),          /* "##". */
-//	TPP(TOK_LAND),          /* "&&". */
-//	TPP(TOK_LOR),           /* "||". */
-//	TPP(TOK_LXOR),          /* "^^". */
-//	TPP(TOK_INC),           /* "++". */
-//	TPP(TOK_DEC),           /* "--". */
-//	TPP(TOK_POW),           /* "**". */
-//	TPP(TOK_TILDE_TILDE),   /* "~~". */
-//	TPP(TOK_ARROW),         /* "->". */
-//	TPP(TOK_COLON_EQUAL),   /* ":=". */
-//	TPP(TOK_NAMESPACE),     /* "::". */
-//	TPP(TOK_ARROW_STAR),    /* "->*". */
-//	TPP(TOK_DOT_STAR),      /* ".*". */
-//	TPP(TOK_DOTDOT),        /* "..". */
-//	TPP(TOK_LOGT),          /* "<>". */
-//	TPP(TOK_LANGLE3),       /* "<<<". */
-//	TPP(TOK_RANGLE3),       /* ">>>". */
-//	TPP(TOK_LANGLE3_EQUAL), /* "<<<=". */
-//	TPP(TOK_RANGLE3_EQUAL), /* ">>>=". */
-//	TPP(TOK_EQUAL3),        /* "===". */
-//	TPP(TOK_NOT_EQUAL3),    /* "!==". */
-//	TPP(TOK_QMARK_QMARK),   /* "??". */
-//	TPP(TOK_KEYWORD_BEGIN), /* KEEP THIS THE LAST TOKEN! */
-//
-//	TPP(TOK_TWOCHAR_END) = TPP(TOK_KEYWORD_BEGIN),
-//
-//	/* Name aliases */
-//	TPP(TOK_POS)           = TPP(TOK_ADD),
-//	TPP(TOK_NEG)           = TPP(TOK_SUB),
-//	TPP(TOK_LOWER)         = TPP(TOK_LANGLE),
-//	TPP(TOK_GREATER)       = TPP(TOK_RANGLE),
-//	TPP(TOK_COLON_COLON)   = TPP(TOK_NAMESPACE),
-//	TPP(TOK_LOWER_GREATER) = TPP(TOK_LOGT),
-//	TPP(TOK_LANGLE_RANGLE) = TPP(TOK_LOGT),
-//	TPP(TOK_LANGLE1)       = TPP(TOK_LANGLE),
-//	TPP(TOK_LANGLE2)       = TPP(TOK_SHL),
-//	TPP(TOK_LANGLE_EQUAL)  = TPP(TOK_LOWER_EQUAL),
-//	TPP(TOK_LANGLE1_EQUAL) = TPP(TOK_LOWER_EQUAL),
-//	TPP(TOK_LANGLE2_EQUAL) = TPP(TOK_SHL_EQUAL),
-//	TPP(TOK_RANGLE1)       = TPP(TOK_RANGLE),
-//	TPP(TOK_RANGLE2)       = TPP(TOK_SHR),
-//	TPP(TOK_RANGLE_EQUAL)  = TPP(TOK_GREATER_EQUAL),
-//	TPP(TOK_RANGLE1_EQUAL) = TPP(TOK_GREATER_EQUAL),
-//	TPP(TOK_RANGLE2_EQUAL) = TPP(TOK_SHR_EQUAL),
-//
-///* Deprecated typos */
-//	TPP(TOK_COLLON)        = TPP(TOK_COLON),
-//	TPP(TOK_COLLON_EQUAL)  = TPP(TOK_COLON_EQUAL),
-//	TPP(TOK_COLLON_COLLON) = TPP(TOK_COLON_COLON),
-//};
-//
-///* Check if token ID is OK (neither an error, nor EOF) */
-//#define TPP_ISOK(id)          ((id) > 0)
-//
-///* Check if a token ID is a keyword (when true, the token's `t_kwd' field is up-to-date). */
-//#define TPP_ISKEYWORD(id)     ((id) >= TPP(TOK_KEYWORD_BEGIN))
-//#define TPP_ISUSERKEYWORD(id) ((id) >= TPP(_KWD_BACK))
-//
-///* Check if a given token ID is a builtin macro currently
-// * defined (which may depend on active extensions). */
-//TPPFUN int TPPCALL TPP_ISBUILTINMACRO_(TPP_LEXER_PARAM_ TPP(tok_t) id);
-//#define TPP_ISBUILTINMACRO(id) TPP_ISBUILTINMACRO_(TPP_LEXER_ARG_ id)
-//
-//enum {
-//	TPP(_KWD_FRONT) = TPP(TOK_KEYWORD_BEGIN)-1,
-//#define KWD(name,str) TPP(name),
-//#include "tpp-defs.inl"
-//#undef KWD
-//	TPP(_KWD_BACK),
-//	TPP(_KWD_COUNT) = (TPP(_KWD_BACK)-TPP(_KWD_FRONT))-1,
-//};
-//
-//typedef enum { /* Warning states. */
-//	TPP(WSTATE_DISABLED) = 0,
-//	TPP(WSTATE_FATAL)    = 1,
-//	TPP(WSTATE_WARN)     = 2,
-//	TPP(WSTATE_ERROR)    = 3, /* Error (limited to a max number of invocations). */
-//	TPP(WSTATE_SUPPRESS) = 4, /* Can be set multiple times for recursion.
-//	                           * NOTE: Internally, this uses the same code as `WSTATE_ERROR',
-//	                           *       but the differentiation is made within the associated
-//	                           *      `TPPWarningStateEx' structure. */
-//	TPP(WSTATE_DEFAULT)  = 5,
-//	TPP(WSTATE_UNKNOWN)  = 5, /* May not be used as state. - May be returned by `TPPLexer_GetWarning(s)' */
-//	TPP(WSTATE_DISABLE)  = TPP(WSTATE_DISABLED), /* Deprecated alias. */
-//} TPP(wstate_t);
-//#define TPP_WSTATE_ISENABLED(s) ((6 >> (s))&1) /* WSTATE_FATAL|WSTATE_WARN */
-//
-//enum {
-//#define WGROUP(name, str, default) TPP(name),
-//#include "tpp-defs.inl"
-//#undef WGROUP
-//	TPP(WG_COUNT)
-//};
-//
-//enum { /* Declare symbolic warning numbers and namespaces (or rather ID-spaces). */
-//#define WARNING(name, groups, default) TPP(name),
-//#define WARNING_NAMESPACE(name, start) TPP(name) = (start), TPP(_WNEXT_##name) = (start)-1,
-//#include "tpp-defs.inl"
-//#undef WARNING_NAMESPACE
-//#undef WARNING
-//};
-//
+
 //enum { /* Figure out effective warning ID. */
 //#define WARNING(name, groups, default) TPP(_WID_##name),
 //#define WARNING_NAMESPACE(name, start) TPP(_WID_##name##_START), TPP(_WID_##name##_NEXT) = TPP(_WID_##name##_START) - 1,

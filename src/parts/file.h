@@ -365,6 +365,10 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_filename(tpp_file const *tpp_restrict self);
 
+/* Same as `tpp_file_filename()', but may be overwritten by "#line" directives */
+#define tpp_file_userfilename(self) \
+	tpp_file_filename(self)
+
 /* Returns the filename "keyword" (which may not always be
  * available, even when "tpp_file_filename()" returns non-NULL) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL

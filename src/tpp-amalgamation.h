@@ -1974,6 +1974,10 @@ TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WA
 #define TPP_UINTMAX_C   UINTMAX_C
 #endif /* !tpp_intmax */
 
+#ifndef tpp_float
+#define tpp_float double
+#endif /* !tpp_float */
+
 #ifndef TPP_REF
 #define TPP_REF       /* nothing */
 #define TPP_REF_IF(c) /* nothing */
@@ -2005,7 +2009,7 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 #endif /* !tpp_formatprinter */
 
 #ifndef tpp_lcinfo
-typedef struct {
+typedef struct tpp_lcinfo {
 	tpp_line   lci_line; /* Line */
 	tpp_column lci_col;  /* Column */
 } tpp_lcinfo;
@@ -6362,6 +6366,10 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self,
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_filename(tpp_file const *tpp_restrict self);
+
+/* Same as `tpp_file_filename()', but may be overwritten by "#line" directives */
+#define tpp_file_userfilename(self) \
+	tpp_file_filename(self)
 
 /* Returns the filename "keyword" (which may not always be
  * available, even when "tpp_file_filename()" returns non-NULL) */
