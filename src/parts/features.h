@@ -160,7 +160,6 @@ print("#endif /" "* TPP_HAVE_FEATURES *" "/");
      (TPP_HAVE_CPP_LINE < 0) ||                           \
      (TPP_HAVE_CPP_IF_ELSE_ENDIF < 0) ||                  \
      (TPP_HAVE_CPP_DEFINE < 0) ||                         \
-     (TPP_HAVE_CPP_ASSERT < 0) ||                         \
      (TPP_HAVE_CPP_PRAGMA < 0))
 #define TPP_HAVE_FEATURES 1
 #else /* ... */
@@ -391,9 +390,6 @@ typedef enum tpp_feature_id {
 #if TPP_HAVE_CPP_DEFINE < 0
 	TPP_FEAT_CPP_DEFINE,
 #endif /* TPP_HAVE_CPP_DEFINE < 0 */
-#if TPP_HAVE_CPP_ASSERT < 0
-	TPP_FEAT_CPP_ASSERT,
-#endif /* TPP_HAVE_CPP_ASSERT < 0 */
 #if TPP_HAVE_CPP_PRAGMA < 0
 	TPP_FEAT_CPP_PRAGMA,
 #endif /* TPP_HAVE_CPP_PRAGMA < 0 */
@@ -846,12 +842,6 @@ typedef union tpp_features {
 #else /* TPP_HAVE_CPP_DEFINE < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_DEFINE(self) TPP_HAVE_CPP_DEFINE
 #endif /* TPP_HAVE_CPP_DEFINE >= 0 */
-#if TPP_HAVE_CPP_ASSERT < 0
-		unsigned int tff_TPP_FEAT_CPP_ASSERT: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_ASSERT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_ASSERT, TPP_HAVE_CPP_ASSERT == -1)
-#else /* TPP_HAVE_CPP_ASSERT < 0 */
-#define _tpp_features_get_TPP_FEAT_CPP_ASSERT(self) TPP_HAVE_CPP_ASSERT
-#endif /* TPP_HAVE_CPP_ASSERT >= 0 */
 #if TPP_HAVE_CPP_PRAGMA < 0
 		unsigned int tff_TPP_FEAT_CPP_PRAGMA: 1;
 #define _tpp_features_get_TPP_FEAT_CPP_PRAGMA(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_PRAGMA, TPP_HAVE_CPP_PRAGMA == -1)

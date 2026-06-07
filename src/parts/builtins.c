@@ -559,8 +559,8 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
                             tpp_keyword const *tpp_restrict kwd) {
 #if TPP_HAVE_CPP_MACROS
-	if (!TPP_TOK_ISBUILTINKEYWORD(kwd->tk_id))
-		return kwd->tk_macro != NULL;
+	if (kwd->tk_macro != NULL)
+		return true;
 #endif /* TPP_HAVE_CPP_MACROS */
 	(void)self;
 	switch (kwd->tk_id) {

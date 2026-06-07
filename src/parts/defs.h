@@ -486,6 +486,12 @@ TPP_EXTENSION(TPP_EXT_CPP_IMPORT, "import-directives", TPP_HAVE_CPP_IMPORT == -1
 #else /* TPP_HAVE_CPP_IMPORT < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_CPP_IMPORT(self) TPP_HAVE_CPP_IMPORT
 #endif /* TPP_HAVE_CPP_IMPORT >= 0 */
+#if TPP_HAVE_CPP_ASSERT < 0
+TPP_EXTENSION(TPP_EXT_CPP_ASSERT, "assertions", TPP_HAVE_CPP_ASSERT == -1)
+#define _tpp_extensions_state_get_TPP_EXT_CPP_ASSERT(self) (self)->tes_flags.tef_TPP_EXT_CPP_ASSERT
+#else /* TPP_HAVE_CPP_ASSERT < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_CPP_ASSERT(self) TPP_HAVE_CPP_ASSERT
+#endif /* TPP_HAVE_CPP_ASSERT >= 0 */
 #if TPP_HAVE_CPP_ERROR < 0
 TPP_EXTENSION(TPP_EXT_CPP_ERROR, "error-directives", TPP_HAVE_CPP_ERROR == -1)
 #define _tpp_extensions_state_get_TPP_EXT_CPP_ERROR(self) (self)->tes_flags.tef_TPP_EXT_CPP_ERROR
@@ -750,6 +756,12 @@ TPP_EXTENSION(TPP_EXT_DONT_EXPAND_MACRO_ARGUMENT, "dont-expand-macro-argument", 
 #else /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_DONT_EXPAND_MACRO_ARGUMENT(self) TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT >= 0 */
+#if TPP_HAVE_GLUE_MACRO_ARGUMENT < 0
+TPP_EXTENSION(TPP_EXT_GLUE_MACRO_ARGUMENT, "glue-macro-argument", TPP_HAVE_GLUE_MACRO_ARGUMENT == -1)
+#define _tpp_extensions_state_get_TPP_EXT_GLUE_MACRO_ARGUMENT(self) (self)->tes_flags.tef_TPP_EXT_GLUE_MACRO_ARGUMENT
+#else /* TPP_HAVE_GLUE_MACRO_ARGUMENT < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_GLUE_MACRO_ARGUMENT(self) TPP_HAVE_GLUE_MACRO_ARGUMENT
+#endif /* TPP_HAVE_GLUE_MACRO_ARGUMENT >= 0 */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO < 0
 TPP_EXTENSION(TPP_EXT_PRAGMA_PUSH_MACRO, "pragma-push-macro", TPP_HAVE_PRAGMA_PUSH_MACRO == -1)
 #define _tpp_extensions_state_get_TPP_EXT_PRAGMA_PUSH_MACRO(self) (self)->tes_flags.tef_TPP_EXT_PRAGMA_PUSH_MACRO
@@ -867,14 +879,15 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 /* -Wsyntax                                                             */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_SYNTAX
-#define TPP_HAVE_TPP_WG_SYNTAX                          \
-	(TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED ||    \
-	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF ||         \
-	 TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF ||        \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN ||                 \
-	 TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE ||                \
-	 TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE || \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST)
+#define TPP_HAVE_TPP_WG_SYNTAX                                  \
+	(TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED ||            \
+	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF ||                 \
+	 TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF ||                \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN ||                         \
+	 TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE ||                        \
+	 TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE ||         \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST || \
+	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_WG_SYNTAX TPP_WG_SYNTAX
@@ -922,6 +935,12 @@ TPP_WARNING(TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE, 1(TPP_WG_SYNTAX), 1(4006), T
 TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST, 1(TPP_WG_SYNTAX), 1(2010), TPP_WSTATE_UNDEFINED,
             "unexpected token %Pt in macro parameter list")
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST */
+
+#if TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME
+#define TPP_W_DUPLICATE_MACRO_PARAMETER_NAME TPP_W_DUPLICATE_MACRO_PARAMETER_NAME
+TPP_WARNING(TPP_W_DUPLICATE_MACRO_PARAMETER_NAME, 1(TPP_WG_SYNTAX), 1(2009), TPP_WSTATE_UNDEFINED,
+            "duplicate macro parameter name %Pt")
+#endif /* TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME */
 
 
 /************************************************************************/
@@ -1084,7 +1103,7 @@ TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
 	tpp_warnf("macro %[%s%] redefined\n", keyword->tk_kwd);
 	if (old_definition->tm_deffile) {
 		/* TODO: must use "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT" */
-		tpp_warnf("%s(%d, %d): note: see referene to previous definition\n",
+		tpp_warnf("%s(%d, %d): note: see previous definition\n",
 		          old_definition->tm_deffile,
 		          (int)tpp_lcinfo_getline(old_definition->tm_deflc) + 1,
 		          (int)tpp_lcinfo_getcol(old_definition->tm_deflc) + 1);

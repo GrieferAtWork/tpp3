@@ -245,17 +245,23 @@ typedef struct tpp_file {
 		} while (0);                                  \
 	} while (0)
 #else /* TPP_HAVE_INCLUDE_STACK */
-#define tpp_file_pusheof(self, end)                         \
+#define tpp_file_pusheof(self, end) tpp_file_pusheof_fast(self, end)
+#define tpp_file_popeof(self)       tpp_file_popeof_fast(self)
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+
+/* Same as above, but may only be used when nothing
+ * might push additional files in the mean-time. */
+#define tpp_file_pusheof_fast(self, end)                    \
 	do {                                                    \
 		tpp_file_kind const _tfpeof_kind = (self)->tf_kind; \
 		tpp_char const *const _tfpeof_end = (self)->tf_end; \
 		(self)->tf_end = (end);                             \
 		_tpp_file_io2text(self)
-#define tpp_file_popeof(self)           \
+#define tpp_file_popeof_fast(self)      \
 		(self)->tf_end  = _tfpeof_end;  \
 		(self)->tf_kind = _tfpeof_kind; \
 	} while (0)
-#endif /* !TPP_HAVE_INCLUDE_STACK */
+
 
 
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file

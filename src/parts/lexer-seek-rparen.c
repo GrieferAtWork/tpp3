@@ -158,9 +158,6 @@ tpp_lexer_seek_rparen(tpp_lexer *tpp_restrict self,
 	/* Yield first token. */
 again_yield_and_switch_tok:
 	tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
-again_switch_tok:
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
 	switch (tok) {
 
 	case TPP_TOK_EOF: {
@@ -177,21 +174,23 @@ again_switch_tok:
 		goto done;
 	}	break;
 
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
 	case TPP_TOK_SPACE:
 	case TPP_TOK_LF:
 	TPP_CASE_TPP_TOK_COMMENT {
-		if (!tpp_lexer_seek_rparen_keepspace())
-			break;
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
+		if (tpp_lexer_seek_rparen_keepspace())
+			break; /* When whitespace should be kept: treat it like a regular token */
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0
 		if (current_arg_rel_start == current_arg_rel_end) {
 			/* Skip leading whitespace... */
-			tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 			current_arg_rel_start = tpp_file_ptr2rel(file, *p_pos);
 			current_arg_rel_end   = current_arg_rel_start;
-			goto again_switch_tok;
+			goto again_yield_and_switch_tok;
 		}
+		goto again_yield_and_switch_tok;
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0 */
 	}	break;
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
 
 	case '(':
 		++recursion[0];

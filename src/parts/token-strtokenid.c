@@ -190,31 +190,31 @@ static struct tpp_token_str_strings_struct {
 	char ttr_TPP_TOK_EOF[4];
 	char ttr_TPP_TOK_LF[3];
 	char ttr_TPP_TOK_SPACE[6];
-	char ttr_TPP_TOK_PLUS[5];
-	char ttr_TPP_TOK_AMP[4];
 	char ttr_TPP_TOK_EQUAL[6];
 	char ttr_TPP_TOK_AT[3];
 	char ttr_TPP_TOK_BACKSLASH[10];
-	char ttr_TPP_TOK_COLON[6];
-	char ttr_TPP_TOK_COMMA[6];
-	char ttr_TPP_TOK_SLASH[6];
 	char ttr_TPP_TOK_DOT[4];
+	char ttr_TPP_TOK_COMMA[6];
+	char ttr_TPP_TOK_COLON[6];
 	char ttr_TPP_TOK_POUND[6];
 	char ttr_TPP_TOK_LANGLE[7];
-	char ttr_TPP_TOK_LBRACE[7];
-	char ttr_TPP_TOK_LBRACKET[9];
-	char ttr_TPP_TOK_LPAREN[7];
-	char ttr_TPP_TOK_PERCENT[8];
-	char ttr_TPP_TOK_STAR[5];
-	char ttr_TPP_TOK_EXCLAIM[8];
-	char ttr_TPP_TOK_PIPE[5];
-	char ttr_TPP_TOK_QMARK[6];
 	char ttr_TPP_TOK_RANGLE[7];
-	char ttr_TPP_TOK_RBRACE[7];
-	char ttr_TPP_TOK_RBRACKET[9];
+	char ttr_TPP_TOK_LPAREN[7];
 	char ttr_TPP_TOK_RPAREN[7];
-	char ttr_TPP_TOK_SEMICOLON[10];
+	char ttr_TPP_TOK_LBRACKET[9];
+	char ttr_TPP_TOK_RBRACKET[9];
+	char ttr_TPP_TOK_LBRACE[7];
+	char ttr_TPP_TOK_RBRACE[7];
+	char ttr_TPP_TOK_PERCENT[8];
+	char ttr_TPP_TOK_EXCLAIM[8];
+	char ttr_TPP_TOK_AMP[4];
+	char ttr_TPP_TOK_PIPE[5];
+	char ttr_TPP_TOK_PLUS[5];
 	char ttr_TPP_TOK_MINUS[6];
+	char ttr_TPP_TOK_STAR[5];
+	char ttr_TPP_TOK_SLASH[6];
+	char ttr_TPP_TOK_QMARK[6];
+	char ttr_TPP_TOK_SEMICOLON[10];
 	char ttr_TPP_TOK_TILDE[6];
 	char ttr_TPP_TOK_HAT[4];
 #if TPP_HAVE_UNICODE
@@ -428,31 +428,31 @@ static struct tpp_token_str_strings_struct {
 	/* .ttr_TPP_TOK_EOF = */ "EOF",
 	/* .ttr_TPP_TOK_LF = */ "LF",
 	/* .ttr_TPP_TOK_SPACE = */ "SPACE",
-	/* .ttr_TPP_TOK_PLUS = */ "PLUS",
-	/* .ttr_TPP_TOK_AMP = */ "AMP",
 	/* .ttr_TPP_TOK_EQUAL = */ "EQUAL",
 	/* .ttr_TPP_TOK_AT = */ "AT",
 	/* .ttr_TPP_TOK_BACKSLASH = */ "BACKSLASH",
-	/* .ttr_TPP_TOK_COLON = */ "COLON",
-	/* .ttr_TPP_TOK_COMMA = */ "COMMA",
-	/* .ttr_TPP_TOK_SLASH = */ "SLASH",
 	/* .ttr_TPP_TOK_DOT = */ "DOT",
+	/* .ttr_TPP_TOK_COMMA = */ "COMMA",
+	/* .ttr_TPP_TOK_COLON = */ "COLON",
 	/* .ttr_TPP_TOK_POUND = */ "POUND",
 	/* .ttr_TPP_TOK_LANGLE = */ "LANGLE",
-	/* .ttr_TPP_TOK_LBRACE = */ "LBRACE",
-	/* .ttr_TPP_TOK_LBRACKET = */ "LBRACKET",
-	/* .ttr_TPP_TOK_LPAREN = */ "LPAREN",
-	/* .ttr_TPP_TOK_PERCENT = */ "PERCENT",
-	/* .ttr_TPP_TOK_STAR = */ "STAR",
-	/* .ttr_TPP_TOK_EXCLAIM = */ "EXCLAIM",
-	/* .ttr_TPP_TOK_PIPE = */ "PIPE",
-	/* .ttr_TPP_TOK_QMARK = */ "QMARK",
 	/* .ttr_TPP_TOK_RANGLE = */ "RANGLE",
-	/* .ttr_TPP_TOK_RBRACE = */ "RBRACE",
-	/* .ttr_TPP_TOK_RBRACKET = */ "RBRACKET",
+	/* .ttr_TPP_TOK_LPAREN = */ "LPAREN",
 	/* .ttr_TPP_TOK_RPAREN = */ "RPAREN",
-	/* .ttr_TPP_TOK_SEMICOLON = */ "SEMICOLON",
+	/* .ttr_TPP_TOK_LBRACKET = */ "LBRACKET",
+	/* .ttr_TPP_TOK_RBRACKET = */ "RBRACKET",
+	/* .ttr_TPP_TOK_LBRACE = */ "LBRACE",
+	/* .ttr_TPP_TOK_RBRACE = */ "RBRACE",
+	/* .ttr_TPP_TOK_PERCENT = */ "PERCENT",
+	/* .ttr_TPP_TOK_EXCLAIM = */ "EXCLAIM",
+	/* .ttr_TPP_TOK_AMP = */ "AMP",
+	/* .ttr_TPP_TOK_PIPE = */ "PIPE",
+	/* .ttr_TPP_TOK_PLUS = */ "PLUS",
 	/* .ttr_TPP_TOK_MINUS = */ "MINUS",
+	/* .ttr_TPP_TOK_STAR = */ "STAR",
+	/* .ttr_TPP_TOK_SLASH = */ "SLASH",
+	/* .ttr_TPP_TOK_QMARK = */ "QMARK",
+	/* .ttr_TPP_TOK_SEMICOLON = */ "SEMICOLON",
 	/* .ttr_TPP_TOK_TILDE = */ "TILDE",
 	/* .ttr_TPP_TOK_HAT = */ "HAT",
 #if TPP_HAVE_UNICODE

@@ -36,6 +36,8 @@
 /* API features:
  *  0: Disabled
  *  1: Enabled
+ *
+ * (certain features only)
  * -1: Enable if possible (re-defined to `0' if unsupported)
  */
 
@@ -57,7 +59,8 @@
 #define TPP_ERROR_LIMIT (-64)
 #endif /* !TPP_ERROR_LIMIT */
 
-/* Enable support for non-blocking I/O */
+/* Enable support for non-blocking I/O
+ * Configure to "-1" to only enable compile-time support if supported by OS */
 #ifndef TPP_HAVE_FILE_NONBLOCK
 #define TPP_HAVE_FILE_NONBLOCK (-1)
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
@@ -68,10 +71,9 @@
  * - Automatic detection of utf-8, utf-8-bom, utf-16[le/be], utf-32[le/be] in input files
  *   NOTE: The Lexer assumes "utf-8" by default, unless it encounters an invalid utf-8
  *         byte sequence, at which point it will automatically downgrade to ASCII-only
- *         for the remainder of the relevant file
- */
+ *         for the remainder of the relevant file */
 #ifndef TPP_HAVE_UNICODE
-#define TPP_HAVE_UNICODE (-1)
+#define TPP_HAVE_UNICODE 1
 #endif /* !TPP_HAVE_UNICODE */
 
 /* Provide a function "tpp_strerror()" to get a description of a given "tpp_errno" error code. */
@@ -126,12 +128,12 @@
 
 /* Enable support for `TPP_FILE_IOFLAGS_NOCLOSE' */
 #ifndef TPP_HAVE_FILE_NOCLOSE
-#define TPP_HAVE_FILE_NOCLOSE (-1) /* TODO: Default should be `0' */
+#define TPP_HAVE_FILE_NOCLOSE 1 /* TODO: Default should be `0' */
 #endif /* !TPP_HAVE_FILE_NOCLOSE */
 
 /* Enable support for `TPP_FILE_IOFLAGS_NOKWD' */
 #ifndef TPP_HAVE_FILE_NOKWD
-#define TPP_HAVE_FILE_NOKWD (-1)
+#define TPP_HAVE_FILE_NOKWD 1
 #endif /* !TPP_HAVE_FILE_NOKWD */
 
 /* Speed up calls to `tpp_file_lcinfo()' by caching the last-read
@@ -142,11 +144,11 @@
 #endif /* !TPP_HAVE_FILE_LC_CACHE */
 
 
-/* All config options can be defined as:
+/* All feature- ("TPP_FEAT_*") / extension ("-f*") -style config options can be defined as:
  *  0: Compile-time disabled
- *  1: Compile-time enabled (without #pragma extension("-f..."))
- * -1: Compile-time enabled (with #pragma extension("-f..."), default = true)
- * -2: Compile-time enabled (with #pragma extension("-f..."), default = false)
+ *  1: Compile-time enabled  (always on; no #pragma extension("-f...") / TPP_FEAT_* available)
+ * -1: Runtime-time enabled  (with #pragma extension("-f...") / TPP_FEAT_*, default = true)
+ * -2: Runtime-time disabled (with #pragma extension("-f...") / TPP_FEAT_*, default = false)
  */
 
 #ifndef TPP_COMMON_HAVE_TPP_TOK_SPACE
@@ -217,7 +219,7 @@
  *
  * Extra, special exceptions/extensions:
  * "<::"  -> "<", "::"
- * "%:%:" -> "##" */
+ * "%:%:" -> "##" (TPP_TOK_POUND_POUND) */
 #ifndef TPP_HAVE_DIGRAPHS
 #define TPP_HAVE_DIGRAPHS (-1) /* "-fdigraphs" */
 #endif /* !TPP_HAVE_DIGRAPHS */
@@ -237,36 +239,43 @@
 #define TPP_HAVE_TPP_TOK_COMMENT (-1) /* "TPP_FEAT_TPP_TOK_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_COMMENT */
 
-/* Enable support for c++ comments: "// like this one!" */
+/* Enable support for recognizing c++ comments: "// like this one!" */
 #ifndef TPP_HAVE_TPP_TOK_CXX_COMMENT
 #define TPP_HAVE_TPP_TOK_CXX_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_CXX_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_COMMENT */
 
-/* Enable support for c comments: "/" "* like this one! *" "/" */
+/* Enable support for recognizing c comments: "/" "* like this one! *" "/" */
 #ifndef TPP_HAVE_TPP_TOK_C_COMMENT
 #define TPP_HAVE_TPP_TOK_C_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_C_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_C_COMMENT */
 
-/* Enable support for pascal comments: "(*like this one!*)" */
+/* Enable support for recognizing pascal comments: "(*like this one!*)" */
 #ifndef TPP_HAVE_TPP_TOK_PASCAL_COMMENT
 #define TPP_HAVE_TPP_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_PASCAL_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
 
-/* Enable support for shell comments: "# like this one!" */
+/* Enable support for recognizing shell comments: "# like this one!"
+ * This still works in conjunction with "TPP_HAVE_CPP_DIRECTIVES", in
+ * that unknown directives will simply be re-emit as shell comments,
+ * and shell comments that don't appear at the start of lines are not
+ * even processed as CPP directives. */
 #ifndef TPP_HAVE_TPP_TOK_SHELL_COMMENT
 #define TPP_HAVE_TPP_TOK_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_SHELL_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 
-/* Enable support for ASM comments: "/ like this one!" */
+/* Enable support for recognizing ASM comments: "/ like this one!" */
 #ifndef TPP_HAVE_TPP_TOK_ASM_COMMENT
 #define TPP_HAVE_TPP_TOK_ASM_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_ASM_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_ASM_COMMENT */
 
-/* Enable support for SQL comments: "-- like this one!" */
+/* Enable support for recognizing SQL comments: "-- like this one!" */
 #ifndef TPP_HAVE_TPP_TOK_SQL_COMMENT
 #define TPP_HAVE_TPP_TOK_SQL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_SQL_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
 
+/************************************************************************/
+/* Number tokens                                                        */
+/************************************************************************/
 
 /* 123 */
 #ifndef TPP_HAVE_TPP_TOK_INT
@@ -277,6 +286,10 @@
 #ifndef TPP_HAVE_TPP_TOK_FLOAT
 #define TPP_HAVE_TPP_TOK_FLOAT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "TPP_FEAT_TPP_TOK_FLOAT" */
 #endif /* !TPP_HAVE_TPP_TOK_FLOAT */
+
+/************************************************************************/
+/* String tokens                                                        */
+/************************************************************************/
 
 /* 'foo' */
 #ifndef TPP_HAVE_TPP_TOK_CHAR
@@ -332,6 +345,10 @@
 #ifndef TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
 #define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
+
+/************************************************************************/
+/* Multi-char tokens                                                    */
+/************************************************************************/
 
 /* "<<" */
 #ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE
@@ -440,7 +457,7 @@
 
 /* "##" */
 #ifndef TPP_HAVE_TPP_TOK_POUND_POUND
-#define TPP_HAVE_TPP_TOK_POUND_POUND TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_POUND_POUND" */
+#define TPP_HAVE_TPP_TOK_POUND_POUND ((TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS < 0) ? TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS : (TPP_HAVE_GLUE_MACRO_ARGUMENT)) /* "TPP_FEAT_TPP_TOK_POUND_POUND" */
 #endif /* !TPP_HAVE_TPP_TOK_POUND_POUND */
 
 /* "&&" */
@@ -697,7 +714,7 @@
 
 /* Support for: #assert, #unassert */
 #ifndef TPP_HAVE_CPP_ASSERT
-#define TPP_HAVE_CPP_ASSERT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_ASSERT" */
+#define TPP_HAVE_CPP_ASSERT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "-fassertions" */
 #endif /* !TPP_HAVE_CPP_ASSERT */
 
 /* Support for: #error */
@@ -732,9 +749,9 @@
 
 
 /* Support for pragma directives */
-#ifndef TPP_HAVE_PRAGMA
-#define TPP_HAVE_PRAGMA (TPP_HAVE_CPP_PRAGMA || TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma)
-#endif /* !TPP_HAVE_PRAGMA */
+#undef TPP_HAVE_PRAGMA
+#define TPP_HAVE_PRAGMA \
+	(TPP_HAVE_CPP_PRAGMA || TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma)
 
 
 /* Support for clang __has_attribute */
@@ -878,7 +895,8 @@
 #define TPP_HAVE_MACRO_ARGUMENT_WHITESPACE (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-fmacro-argument-whitespace" */
 #endif /* !TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
 
-/* Support for: #pragma extension("-fmacro-recursion") */
+/* Support for: #pragma extension("-fmacro-recursion")
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION* */
 #ifndef TPP_HAVE_MACRO_RECURSION
 #define TPP_HAVE_MACRO_RECURSION (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-fmacro-recursion" */
 #endif /* !TPP_HAVE_MACRO_RECURSION */
@@ -891,8 +909,9 @@
 // #define STR(x)    #x
 // #define CAT(a, b) a##b
 // #endif
+// NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 #ifndef TPP_HAVE_TRADITIONAL_MACROS
-#define TPP_HAVE_TRADITIONAL_MACROS (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-ftraditional-macro" */
+#define TPP_HAVE_TRADITIONAL_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-ftraditional-macro" */
 #endif /* !TPP_HAVE_TRADITIONAL_MACROS */
 
 /* Support for: #define printf(format, args...) args */
@@ -930,15 +949,20 @@
 #define TPP_HAVE_STRINGIZE_MACRO_ARGUMENT ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fstringize-macro-argument" */
 #endif /* !TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
 
-/* Support for: #define str(x) #@x */
+/* Support for: #define chr(x) #@x */
 #ifndef TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 #define TPP_HAVE_CHARIZE_MACRO_ARGUMENT ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fcharize-macro-argument" */
 #endif /* !TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 
-/* Support for: #define str(x) #!x */
+/* Support for: #define noexpand(x) #!x */
 #ifndef TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
 #define TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fdont-expand-macro-argument" */
 #endif /* !TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
+
+/* Support for: #define cat(a, b) a##b */
+#ifndef TPP_HAVE_GLUE_MACRO_ARGUMENT
+#define TPP_HAVE_GLUE_MACRO_ARGUMENT ((TPP_HAVE_CPP_MACROS && (TPP_HAVE_TRADITIONAL_MACROS <= 0)) ? -1 : 0) /* "-fglue-macro-argument" */
+#endif /* !TPP_HAVE_GLUE_MACRO_ARGUMENT */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -1034,12 +1058,6 @@ EXTENSION(EXT_TPP_COUNT_TOKENS,  "tpp-count-tokens-macro",        TPP_CONFIG_EXT
 #ifndef TPP_CONFIG_EXTENSION_TPP_IDENTIFIER
 EXTENSION(EXT_TPP_IDENTIFIER,    "tpp-identifier-macro",          TPP_CONFIG_EXTENSION_TPP_IDENTIFIER_DEFAULT)
 #endif /* TPP_CONFIG_EXTENSION_TPP_IDENTIFIER */
-#ifndef TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA
-EXTENSION(EXT_DOLLAR_IS_ALPHA,   "dollars-in-identifiers",        TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA_DEFAULT)
-#endif /* TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA */
-#ifndef TPP_CONFIG_EXTENSION_ASSERTIONS
-EXTENSION(EXT_ASSERTIONS,        "assertions",                    TPP_CONFIG_EXTENSION_ASSERTIONS_DEFAULT)
-#endif /* TPP_CONFIG_EXTENSION_ASSERTIONS */
 #ifndef TPP_CONFIG_EXTENSION_CANONICAL_HEADERS
 EXTENSION(EXT_CANONICAL_HEADERS, "canonical-system-headers",      TPP_CONFIG_EXTENSION_CANONICAL_HEADERS_DEFAULT)
 #endif /* TPP_CONFIG_EXTENSION_CANONICAL_HEADERS */
@@ -1055,12 +1073,6 @@ EXTENSION(EXT_NO_EXPAND_DEFINED, "dont-expand-defined",           TPP_CONFIG_EXT
 #ifndef TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR
 EXTENSION(EXT_IFELSE_IN_EXPR,    "ifelse-in-expressions",         TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR_DEFAULT)
 #endif /* TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR */
-#ifndef TPP_CONFIG_EXTENSION_EXTENDED_IDENTS
-EXTENSION(EXT_EXTENDED_IDENTS,   "extended-identifiers",          TPP_CONFIG_EXTENSION_EXTENDED_IDENTS_DEFAULT)
-#endif /* TPP_CONFIG_EXTENSION_EXTENDED_IDENTS */
-#ifndef TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO /* Traditional macro expansion rules. */
-EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO_DEFAULT)
-#endif /* TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO */
 #endif
 /************************************************************************/
 /************************************************************************/
@@ -1108,7 +1120,7 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
 #define TPP_HAVE_KEYWORD_FILE_GUARD ((TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_HAVE_CPP_IF_ELSE_ENDIF)
 #endif /* !TPP_HAVE_KEYWORD_FILE_GUARD */
 
-/* Enable support for `tpp_lexer_skip_blocking()' */
+/* Enable support for `tpp_lexer_skip()' */
 #ifndef TPP_HAVE_LEXER_SKIP
 #define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1)
 #endif /* !TPP_HAVE_LEXER_SKIP */
@@ -1172,9 +1184,6 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
 
 /* Format to use for file+line+column log messages */
 #ifndef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT
-#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV */
-
 #if defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
 #undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
 #elif defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
@@ -1302,6 +1311,10 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
 #define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST */
+#ifndef TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME
+#define TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
+#endif /* !TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME */
 
 
 /* Warning printer configuration */
@@ -1323,7 +1336,8 @@ EXTENSION(EXT_TRADITIONAL_MACRO, "traditional-macro",             TPP_CONFIG_EXT
  * >>    ...
  * >> } */
 #else /* TPP_CONFIG_WARNING_PRINTER */
-/* Supply a built-in printer (that uses "fwrite(stderr)") when  */
+/* Supply a built-in printer (that uses "fwrite(stderr)")
+ * when no user-defined printer was configured for a lexer. */
 #ifndef TPP_HAVE_BUILTIN_WARNPRINTER
 #define TPP_HAVE_BUILTIN_WARNPRINTER 1
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */

@@ -278,9 +278,6 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_HAVE_CPP_DEFINE < 0
 		/* .tff_TPP_FEAT_CPP_DEFINE                         = */ TPP_HAVE_CPP_DEFINE == -1,
 #endif /* TPP_HAVE_CPP_DEFINE < 0 */
-#if TPP_HAVE_CPP_ASSERT < 0
-		/* .tff_TPP_FEAT_CPP_ASSERT                         = */ TPP_HAVE_CPP_ASSERT == -1,
-#endif /* TPP_HAVE_CPP_ASSERT < 0 */
 #if TPP_HAVE_CPP_PRAGMA < 0
 		/* .tff_TPP_FEAT_CPP_PRAGMA                         = */ TPP_HAVE_CPP_PRAGMA == -1,
 #endif /* TPP_HAVE_CPP_PRAGMA < 0 */

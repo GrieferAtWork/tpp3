@@ -606,7 +606,7 @@ return_error:
  *
  * NOTE: This function does NOT handle BSE!
  */
-static tpp_errno TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_keyword(tpp_lexer *self, tpp_char const **p_pos) {
 	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -654,7 +654,7 @@ return_error:
 }
 
 #if TPP_HAVE_BSE
-static tpp_errno TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_skip_bse_after_keyword(tpp_lexer *self, tpp_char const **p_pos) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;

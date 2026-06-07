@@ -343,6 +343,18 @@ tpp_macro_builder_truncate_argv(tpp_macro_builder *tpp_restrict self) {
 }
 #endif /* !__OPTIMIZE_SIZE__ */
 
+/* Check if "name" identifies a known argument. If so: return it. Otherwise, return "NULL" */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_macro_argument *TPPCALL
+tpp_macro_builder_getargument(tpp_macro_builder const *tpp_restrict self, tpp_token_id name) {
+	tpp_size i;
+	tpp_macro_argument *argv = self->mab_argv;
+	for (i = 0; i < self->mab_argc; ++i) {
+		if (argv[i].tma_id == name)
+			return &argv[i];
+	}
+	return NULL;
+}
+
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_macro_argument *TPPCALL
 tpp_macro_builder_newargument(tpp_macro_builder *tpp_restrict self) {
 	tpp_assert(self->mab_argc <= self->mab_arga);
@@ -502,6 +514,22 @@ again_yield_macro_argument_list:
 #undef WANT_do_append_keyword_to_argument_list
 do_append_keyword_to_argument_list:
 #endif /* WANT_do_append_keyword_to_argument_list */
+
+		/* Check if "tok" is already a known argument. */
+#if TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME
+		arg = tpp_macro_builder_getargument(builder, tok);
+		if tpp_unlikely(arg) {
+			tpp_errno error;
+			tpp_char const *saved_end = token->tt_end;
+			token->tt_end = *p_pos;
+			error = tpp_lexer_warnf(self, TPP_W_DUPLICATE_MACRO_PARAMETER_NAME);
+			token->tt_end = saved_end;
+			if (error != TPP_EOK)
+				return error;
+		}
+#endif /* TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME */
+
+		/* Allocate new argument */
 		arg = tpp_macro_builder_newargument(builder);
 		if tpp_unlikely(!arg)
 			return TPP_ENOMEM;
@@ -526,12 +554,18 @@ do_append_keyword_to_argument_list:
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 
-	/* Check for named varargs "..." */
+	/* Check for named varargs, as in:
+	 * >> #define printf(format, args...) fprintf(stderr, format,##args) */
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS
 	if (tok == TPP_TOK_DOT_DOT_DOT &&
 	    !(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC) &&
 	    tpp_lexer_getext(self, TPP_EXT_NAMED_VARARGS_IN_MACROS)) {
-
+		builder->mab_flags |= TPP_MACRO_FLAG_VARIADIC;
+		do {
+			tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
+		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
 	}
 #endif /* TPP_HAVE_NAMED_VARARGS_IN_MACROS */
 
@@ -606,36 +640,145 @@ tpp_macro_builder_requireop(tpp_macro_builder *tpp_restrict self,
 }
 
 #if TPP_HAVE_TRADITIONAL_MACROS != 0
+/* Compile a traditional macro (allowed to clobber the token in "builder") */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
-tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict self,
-                                      tpp_lexer *tpp_restrict lexer,
+tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict builder,
+                                      tpp_lexer *tpp_restrict self,
                                       tpp_char const *body_start,
                                       tpp_char const *body_end) {
 	tpp_macro_opcode *opcodes;
-	(void)lexer;
-	/* TODO */
+	tpp_token const *const token = tpp_lexer_gettoken(self);
+	tpp_char const *body_iter = body_start;
 
-	opcodes = tpp_macro_builder_requireop(self, 3);
+	/* Scan for the body for keywords (including inside of "string" or (*comment*) tokens)
+	 * to see if we can find mentions of arguments taken by the macro. Anything found here
+	 * must then be used as a point to inject (expanded) arguments.
+	 *
+	 * As a consequence, you can "stringize" (kind-of) like this:
+	 * >> #define str(x) "x"
+	 * However, I say "kind-of" because this won't re-escape:
+	 * >> str(foo)    // OK:   "foo"           (1 token)
+	 * >> str("foo")  // Huh?  ""   foo   ""   (3 tokens)
+	 *
+	 * ... yeah. It's argument substitution in the most literal sense (which is also why
+	 * it has been superseded by "modern" macro compilation for a very long time; as a
+	 * matter of fact: ever since __STDC__ has been introduced). So yes: this sort of
+	 * behavior actually goes back to those good 'ol <<K&R C>> times. */
+
+	while (body_iter < body_end) {
+		tpp_macro_argument *arg;
+		tpp_token_id tok;
+		tok = tpp_lexer_yieldraw_at(self, &body_iter);
+		switch (tok) {
+
+#if TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE
+		TPP_CASE_TPP_TOK_COMMENT_NOLINE {
+			if (TPP_TOK_ISCOMMENT_NOLINE(tok)) {
+				/* Non-line comments must be deleted in order to support traditional cat operations!
+				 * Also note that line-comments shouldn't be present at all (since those should have
+				 * caused our caller to terminate the macro body, in case you're wondering) */
+				if (token->tt_start > body_start) {
+					opcodes = tpp_macro_builder_requireop(builder, 2);
+					if tpp_unlikely(!opcodes)
+						goto err_nomem;
+					opcodes[0] = TPP_MACRO_OPCODE_COPY;
+					opcodes[1] = (tpp_size)(token->tt_start - body_start);
+				}
+				builder->mab_skiptotal += (tpp_size)(body_iter - token->tt_start);
+				body_start = body_iter;
+			}
+		}	continue; /* Not a keyword */
+#endif /* TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE */
+
+#if TPP_HAVE_TPP_TOK_STRINGLIKE
+		/* Strings must not actually be parsed as whole tokens!
+		 *
+		 * Since this can (easily) cause warnings to be emitted
+		 * (~ala "string terminated by eol"), our caller has
+		 * disabled them for us!
+		 *
+		 * This is needed for stuff like:
+		 * >> #define str(x) "x"
+		 */
+		TPP_CASE_TPP_TOK_STRING {
+			body_iter = token->tt_start + 1;
+			continue;
+		}
+#endif /* TPP_HAVE_TPP_TOK_STRINGLIKE */
+
+		default:
+			/* Shouldn't really be able to produce errors, but better be safe. */
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (!TPP_TOK_ISKEYWORD(tok))
+				continue;
+			break;
+		}
+
+
+		/* Check if this keyword (identified by "tok") is an argument. */
+		arg = tpp_macro_builder_getargument(builder, tok);
+		if (!arg)
+			continue; /* Not actually an argument */
+
+		/* Append opcodes to copy text leading up to argument. */
+		if (token->tt_start > body_start) {
+			opcodes = tpp_macro_builder_requireop(builder, 2);
+			if tpp_unlikely(!opcodes)
+				goto err_nomem;
+			opcodes[0] = TPP_MACRO_OPCODE_COPY;
+			opcodes[1] = (tpp_size)(token->tt_start - body_start);
+		}
+
+		/* Append opcodes to insert argument */
+		opcodes = tpp_macro_builder_requireop(builder, 3);
+		if tpp_unlikely(!opcodes)
+			goto err_nomem;
+		opcodes[0] = TPP_MACRO_OPCODE_INS_EXP;
+		opcodes[1] = (tpp_size)(arg - builder->mab_argv);
+		opcodes[2] = (tpp_size)(body_iter - token->tt_start);
+
+		/* Account for expansion in size trackings. */
+		builder->mab_skiptotal += (tpp_size)(body_iter - token->tt_start);
+		++arg->tma_ins_exp;
+
+		/* Remember that input body text has been
+		 * flushed until the end of the keyword. */
+		body_start = body_iter;
+	}
+
+	/* Append opcodes to copy remainder. */
+	if (body_start < body_end) {
+		opcodes = tpp_macro_builder_requireop(builder, 2);
+		if tpp_unlikely(!opcodes)
+			goto err_nomem;
+		opcodes[0] = TPP_MACRO_OPCODE_COPY;
+		opcodes[1] = (tpp_size)(body_end - body_start);
+	}
+
+	/* Terminate body builder (*flexes muscles*) */
+	opcodes = tpp_macro_builder_requireop(builder, 1);
 	if tpp_unlikely(!opcodes)
-		return TPP_ENOMEM;
-	opcodes[0] = TPP_MACRO_OPCODE_COPY;
-	opcodes[1] = (tpp_size)(body_end - body_start);
-	opcodes[2] = TPP_MACRO_OPCODE_END;
+		goto err_nomem;
+	opcodes[0] = TPP_MACRO_OPCODE_END;
 	return TPP_EOK;
+err_nomem:
+	return TPP_ENOMEM;
 }
 #endif /* TPP_HAVE_TRADITIONAL_MACROS != 0 */
 
 #if TPP_HAVE_TRADITIONAL_MACROS <= 0
+/* Compile a modern macro (allowed to clobber the token in "builder") */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
-tpp_macro_builder_compile_modern(tpp_macro_builder *tpp_restrict self,
-                                 tpp_lexer *tpp_restrict lexer,
+tpp_macro_builder_compile_modern(tpp_macro_builder *tpp_restrict builder,
+                                 tpp_lexer *tpp_restrict self,
                                  tpp_char const *body_start,
                                  tpp_char const *body_end) {
 	tpp_macro_opcode *opcodes;
-	(void)lexer;
+	(void)self;
 	/* TODO */
 
-	opcodes = tpp_macro_builder_requireop(self, 3);
+	opcodes = tpp_macro_builder_requireop(builder, 3);
 	if tpp_unlikely(!opcodes)
 		return TPP_ENOMEM;
 	opcodes[0] = TPP_MACRO_OPCODE_COPY;
@@ -648,20 +791,20 @@ tpp_macro_builder_compile_modern(tpp_macro_builder *tpp_restrict self,
 
 #if TPP_HAVE_TRADITIONAL_MACROS < 0
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
-tpp_macro_builder_compile(tpp_macro_builder *tpp_restrict self,
-                          tpp_lexer *tpp_restrict lexer,
+tpp_macro_builder_compile(tpp_macro_builder *tpp_restrict builder,
+                          tpp_lexer *tpp_restrict self,
                           tpp_char const *body_start,
                           tpp_char const *body_end) {
-	if (tpp_lexer_getext(lexer, TPP_EXT_TRADITIONAL_MACROS))
-		return tpp_macro_builder_compile_traditional(self, lexer, body_start, body_end);
-	return tpp_macro_builder_compile_modern(self, lexer, body_start, body_end);
+	if (tpp_lexer_getext(self, TPP_EXT_TRADITIONAL_MACROS))
+		return tpp_macro_builder_compile_traditional(builder, self, body_start, body_end);
+	return tpp_macro_builder_compile_modern(builder, self, body_start, body_end);
 }
 #elif TPP_HAVE_TRADITIONAL_MACROS == 0
-#define tpp_macro_builder_compile(self, lexer, body_start, body_end) \
-	tpp_macro_builder_compile_modern(self, lexer, body_start, body_end)
+#define tpp_macro_builder_compile(builder, self, body_start, body_end) \
+	tpp_macro_builder_compile_modern(builder, self, body_start, body_end)
 #else /* TPP_HAVE_TRADITIONAL_MACROS > 0 */
-#define tpp_macro_builder_compile(self, lexer, body_start, body_end) \
-	tpp_macro_builder_compile_traditional(self, lexer, body_start, body_end)
+#define tpp_macro_builder_compile(builder, self, body_start, body_end) \
+	tpp_macro_builder_compile_traditional(builder, self, body_start, body_end)
 #endif /* TPP_HAVE_TRADITIONAL_MACROS... */
 
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) TPP_REF tpp_macro *TPPCALL
@@ -829,11 +972,11 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_MACRO_FLAGS
 #if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
 	if (tpp_lexer_getext(self, TPP_EXT_MACRO_ARGUMENT_WHITESPACE))
-		builder.mab_flags = TPP_MACRO_FLAG_KEEPARGSPC;
+		builder.mab_flags |= TPP_MACRO_FLAG_KEEPARGSPC;
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
 #if TPP_HAVE_MACRO_RECURSION < 0
 	if (tpp_lexer_getext(self, TPP_EXT_MACRO_RECURSION))
-		builder.mab_flags = TPP_MACRO_FLAG_SELFEXPAND;
+		builder.mab_flags |= TPP_MACRO_FLAG_SELFEXPAND;
 #endif /* TPP_HAVE_MACRO_RECURSION < 0 */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
@@ -861,7 +1004,15 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	/* Compile the macro according to active lexer rules */
 	body_start = tpp_file_rel2ptr(file, rel_body_start);
 	body_end   = tpp_file_rel2ptr(file, rel_body_end);
+	tpp_file_pusheof_fast(file, body_end); /* This is needed by macro compilers */
+#if TPP_HAVE_WARNINGS
+	tpp_lexer_state_push(self, ~0, TPP_LEXER_STATE_FLAG_NOWARNINGS);
+#endif /* TPP_HAVE_WARNINGS */
 	error = tpp_macro_builder_compile(&builder, self, body_start, body_end);
+#if TPP_HAVE_WARNINGS
+	tpp_lexer_state_pop(self, ~0, TPP_LEXER_STATE_FLAG_NOWARNINGS);
+#endif /* TPP_HAVE_WARNINGS */
+	tpp_file_popeof_fast(file);
 	if (error != TPP_EOK)
 		goto err_builder;
 
@@ -1201,7 +1352,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_ASSERT
 	case TPP_KWD_assert:
 	case TPP_KWD_unassert:
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_ASSERT))
+		if (!tpp_lexer_getext(self, TPP_EXT_CPP_ASSERT))
 			goto handle_unknown_directive;
 		/* TODO */
 		goto seek_end_of_line;
@@ -1504,7 +1655,7 @@ again:
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE
 #if TPP_HAVE_TPP_TOK_COMMENT < 0
 		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_COMMENT))
-			break; /* Enabled */
+			break; /* Comments are enabled -> emit to caller */
 #endif /* TPP_HAVE_TPP_TOK_COMMENT < 0 */
 		goto again;
 #elif TPP_HAVE_CPP_DIRECTIVES

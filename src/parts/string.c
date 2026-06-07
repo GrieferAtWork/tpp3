@@ -80,6 +80,7 @@ tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict sel
 
 	/* Truncate buffer to used length, and initialize reference counter */
 	result = self->tsb_buf;
+	tpp_assert(result);
 	tpp_assert(self->tsb_len <= result->ts_len);
 	if (self->tsb_len < result->ts_len) {
 		result = _tpp_string_tryrealloc(result, self->tsb_len);
