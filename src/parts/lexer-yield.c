@@ -331,16 +331,16 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			tpp_size raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
 			tpp_size str_size = (tpp_size)tpp_token_encodestring(&tpp_count_printer, NULL,
 			                                                     arginfo->tlai_start, raw_size);
-			str_size += 2; /* Account for leading/trailing " or ' characters */
+/*			str_size += 2; * Account for leading/trailing " or ' characters -- Already account for during compilation */
 			result_chunk_size += (arg->tma_ins_str * str_size);
 		}
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
-#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
 		if (arg->tma_ins != 0) {
 			tpp_size raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
 			result_chunk_size += (arg->tma_ins * raw_size);
 		}
-#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 	}
 
 	/* Allocate the perfectly-sized chunk that will describe the expanded macro's text */
@@ -386,21 +386,6 @@ next_op:
 			goto next_op;
 		}
 
-#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
-		case TPP_MACRO_OPCODE_INS: {
-			tpp_size argi = *pc++;
-			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[argi];
-			tpp_size raw_size;
-			tpp_assert(argi < macro_argc);
-			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins != 0);
-			raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
-			tpp_memcpy(dst, arginfo->tlai_start, raw_size);
-			dst += raw_size;
-			src += *pc++;
-			goto next_op;
-		}
-#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
-
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
 		case TPP_MACRO_OPCODE_INS_STR: {
 			/* +2  Insert argument[ARG[0]] ("-escaped) and advance macro body template reader by ARG[1] bytes */
@@ -435,6 +420,21 @@ next_op:
 		}
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
+		case TPP_MACRO_OPCODE_INS: {
+			tpp_size argi = *pc++;
+			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[argi];
+			tpp_size raw_size;
+			tpp_assert(argi < macro_argc);
+			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins != 0);
+			raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
+			tpp_memcpy(dst, arginfo->tlai_start, raw_size);
+			dst += raw_size;
+			src += *pc++;
+			goto next_op;
+		}
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
+
 #if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
 		case TPP_MACRO_OPCODE_VA_COMMA: {
 			src += *pc++;
@@ -458,6 +458,23 @@ next_op:
 			goto next_op;
 		}
 #endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+		case TPP_MACRO_OPCODE_VA_NARGS: {
+			src += *pc++;
+
+			/* NOTE: If you leave "va_nargs_len" uninitialized, this right here would
+			 *       be marked as a use of an uninitialized variable by the compiler.
+			 * That is technically true, but:
+			 * - The "TPP_MACRO_OPCODE_VA_NARGS" opcode may only be emitted if
+			 *   the macro compiler sets "tm_data.tmd_func.tmf_n_vanargs != 0"
+			 * - When "tm_data.tmd_func.tmf_n_vanargs != 0", then "va_nargs_len"
+			 *   gets initialized to its correct value above! */
+			tpp_memcpy(dst, va_nargs, va_nargs_len);
+			dst += va_nargs_len;
+			goto next_op;
+		}
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
 
 		default: tpp_unreachable();
 		}

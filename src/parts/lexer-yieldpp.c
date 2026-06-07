@@ -293,7 +293,7 @@ typedef struct tpp_macro_builder {
 #else /* TPP_HAVE_MACRO_FLAGS */
 #define _tpp_macro_builder_init_flags(self) /* nothing */
 #endif /* !TPP_HAVE_MACRO_FLAGS */
-	tpp_size            mab_skiptotal;   /* Max amount of characters skipped during expansion. */
+	tpp_ssize           mab_skiptotal;   /* # of characters skipped during expansion. */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
 	tpp_size            mab_n_vaopt;     /* Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seek_rparen:OUT(*p_argc) > tmf_argc). */
 #define _tpp_macro_builder_init_n_vaopt(self) , (self)->mab_n_vaopt = 0
@@ -538,9 +538,9 @@ do_append_keyword_to_argument_list:
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 		arg->tma_ins_str = 0;
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
-#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
 		arg->tma_ins = 0;
-#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 #if TPP_DEBUG
 		tpp_assert(token->tt_kwd);
 		arg->tma_name = token->tt_kwd->tk_kwd;
@@ -639,14 +639,80 @@ tpp_macro_builder_requireop(tpp_macro_builder *tpp_restrict self,
 	return result;
 }
 
+#define _tpp_macro_builder_appendops(err_nomem, self, n_ops, init)                  \
+	do {                                                                            \
+		tpp_macro_opcode *const opcodes = tpp_macro_builder_requireop(self, n_ops); \
+		if tpp_unlikely (!opcodes)                                                  \
+			goto err_nomem;                                                         \
+		(init);                                                                     \
+	} while (0)
+
+#define tpp_macro_builder_append_end(err_nomem, self) \
+	_tpp_macro_builder_appendops(err_nomem, self, 1, (opcodes[0] = TPP_MACRO_OPCODE_END))
+#define tpp_macro_builder_append_skip(err_nomem, self, num_bytes)     \
+	_tpp_macro_builder_appendops(err_nomem, self, 2,                  \
+	                             (opcodes[0] = TPP_MACRO_OPCODE_SKIP, \
+	                              (self)->mab_skiptotal += (opcodes[1] = (num_bytes))))
+#define tpp_macro_builder_append_copy(err_nomem, self, num_bytes)     \
+	_tpp_macro_builder_appendops(err_nomem, self, 2,                  \
+	                             (opcodes[0] = TPP_MACRO_OPCODE_COPY, \
+	                              opcodes[1] = (num_bytes)))
+#define tpp_macro_builder_append_ins_exp(err_nomem, self, arg, skip_bytes)              \
+	_tpp_macro_builder_appendops(err_nomem, self, 3,                                    \
+	                             (opcodes[0] = TPP_MACRO_OPCODE_INS_EXP,                \
+	                              opcodes[1] = (tpp_size)((arg) - (self)->mab_argv),    \
+	                              (self)->mab_skiptotal += (opcodes[2] = (skip_bytes)), \
+	                              ++(arg)->tma_ins_exp))
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+#define tpp_macro_builder_append_ins_str(err_nomem, self, opcode, arg, skip_bytes)      \
+	_tpp_macro_builder_appendops(err_nomem, self, 3,                                    \
+	                             (opcodes[0] = opcode, /* TPP_MACRO_OPCODE_INS_STR or   \
+	                                                    * TPP_MACRO_OPCODE_INS_CHR */   \
+	                              opcodes[1] = (tpp_size)((arg) - (self)->mab_argv),    \
+	                              (self)->mab_skiptotal += (opcodes[2] = (skip_bytes)), \
+	                              (self)->mab_skiptotal -= 2 /* leading/trailing " */,  \
+	                              ++(arg)->tma_ins_str))
+#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
+#define tpp_macro_builder_append_ins(err_nomem, self, arg, skip_bytes)                  \
+	_tpp_macro_builder_appendops(err_nomem, self, 3,                                    \
+	                             (opcodes[0] = TPP_MACRO_OPCODE_INS,                    \
+	                              opcodes[1] = (tpp_size)((arg) - (self)->mab_argv),    \
+	                              (self)->mab_skiptotal += (opcodes[2] = (skip_bytes)), \
+	                              ++(arg)->tma_ins))
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
+#if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
+#define tpp_macro_builder_append_va_comma(err_nomem, self, skip_bytes)                  \
+	_tpp_macro_builder_appendops(err_nomem, self, 2,                                    \
+	                             (opcodes[0] = TPP_MACRO_OPCODE_VA_COMMA,               \
+	                              (self)->mab_skiptotal += (opcodes[1] = (skip_bytes)), \
+	                              ++(self)->mab_n_vaopt))
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS */
+#if TPP_HAVE_VA_OPT_IN_MACROS
+#define tpp_macro_builder_append_va_opt(err_nomem, self, skip1, copy, skip2)       \
+	_tpp_macro_builder_appendops(err_nomem, self, 4,                               \
+	                             (opcodes[0] = TPP_MACRO_OPCODE_VA_OPT,            \
+	                              (self)->mab_skiptotal += (opcodes[1] = (skip1)), \
+	                              (self)->mab_skiptotal += (opcodes[2] = (copy)),  \
+	                              (self)->mab_skiptotal += (opcodes[3] = (skip2)), \
+	                              (self)->mab_n_vaopt += (copy)))
+#endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+#define tpp_macro_builder_append_va_nargs(err_nomem, self, skip)                  \
+	_tpp_macro_builder_appendops(err_nomem, self, 2,                              \
+	                             (opcodes[0] = TPP_MACRO_OPCODE_VA_NARGS,         \
+	                              (self)->mab_skiptotal += (opcodes[1] = (skip)), \
+	                              ++(self)->mab_n_vanargs))
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
+
+
 #if TPP_HAVE_TRADITIONAL_MACROS != 0
 /* Compile a traditional macro (allowed to clobber the token in "builder") */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
-tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict builder,
-                                      tpp_lexer *tpp_restrict self,
-                                      tpp_char const *body_start,
-                                      tpp_char const *body_end) {
-	tpp_macro_opcode *opcodes;
+tpp_macro_builder_compile_traditional_impl(tpp_macro_builder *tpp_restrict builder,
+                                           tpp_lexer *tpp_restrict self,
+                                           tpp_char const *body_start,
+                                           tpp_char const *body_end) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
 	tpp_char const *body_iter = body_start;
 
@@ -678,13 +744,11 @@ tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict builder,
 				 * Also note that line-comments shouldn't be present at all (since those should have
 				 * caused our caller to terminate the macro body, in case you're wondering) */
 				if (token->tt_start > body_start) {
-					opcodes = tpp_macro_builder_requireop(builder, 2);
-					if tpp_unlikely(!opcodes)
-						goto err_nomem;
-					opcodes[0] = TPP_MACRO_OPCODE_COPY;
-					opcodes[1] = (tpp_size)(token->tt_start - body_start);
+					tpp_macro_builder_append_copy(err_nomem, builder,
+						                          (tpp_size)(token->tt_start - body_start));
 				}
-				builder->mab_skiptotal += (tpp_size)(body_iter - token->tt_start);
+				tpp_macro_builder_append_skip(err_nomem, builder,
+					                          (tpp_size)(body_iter - token->tt_start));
 				body_start = body_iter;
 			}
 		}	continue; /* Not a keyword */
@@ -723,48 +787,50 @@ tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict builder,
 
 		/* Append opcodes to copy text leading up to argument. */
 		if (token->tt_start > body_start) {
-			opcodes = tpp_macro_builder_requireop(builder, 2);
-			if tpp_unlikely(!opcodes)
-				goto err_nomem;
-			opcodes[0] = TPP_MACRO_OPCODE_COPY;
-			opcodes[1] = (tpp_size)(token->tt_start - body_start);
+			tpp_macro_builder_append_copy(err_nomem, builder,
+			                              (tpp_size)(token->tt_start - body_start));
 		}
 
 		/* Append opcodes to insert argument */
-		opcodes = tpp_macro_builder_requireop(builder, 3);
-		if tpp_unlikely(!opcodes)
-			goto err_nomem;
-		opcodes[0] = TPP_MACRO_OPCODE_INS_EXP;
-		opcodes[1] = (tpp_size)(arg - builder->mab_argv);
-		opcodes[2] = (tpp_size)(body_iter - token->tt_start);
-
-		/* Account for expansion in size trackings. */
-		builder->mab_skiptotal += (tpp_size)(body_iter - token->tt_start);
-		++arg->tma_ins_exp;
+		tpp_macro_builder_append_ins_exp(err_nomem, builder, arg,
+		                                 (tpp_size)(body_iter - token->tt_start));
 
 		/* Remember that input body text has been
 		 * flushed until the end of the keyword. */
 		body_start = body_iter;
 	}
 
-	/* Append opcodes to copy remainder. */
+	/* Copy remainder. */
 	if (body_start < body_end) {
-		opcodes = tpp_macro_builder_requireop(builder, 2);
-		if tpp_unlikely(!opcodes)
-			goto err_nomem;
-		opcodes[0] = TPP_MACRO_OPCODE_COPY;
-		opcodes[1] = (tpp_size)(body_end - body_start);
+		tpp_macro_builder_append_copy(err_nomem, builder,
+		                              (tpp_size)(body_end - body_start));
 	}
 
 	/* Terminate body builder (*flexes muscles*) */
-	opcodes = tpp_macro_builder_requireop(builder, 1);
-	if tpp_unlikely(!opcodes)
-		goto err_nomem;
-	opcodes[0] = TPP_MACRO_OPCODE_END;
+	tpp_macro_builder_append_end(err_nomem, builder);
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;
 }
+
+#if TPP_HAVE_WARNINGS
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
+tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict builder,
+                                      tpp_lexer *tpp_restrict self,
+                                      tpp_char const *body_start,
+                                      tpp_char const *body_end) {
+	tpp_errno result;
+	/* Disable warnings because compiler does some questionable stuff in order to parse
+	 * the contents of strings in order to allow arguments to be embedded within them. */
+	tpp_lexer_state_push(self, ~0, TPP_LEXER_STATE_FLAG_NOWARNINGS);
+	result = tpp_macro_builder_compile_traditional_impl(builder, self, body_start, body_end);
+	tpp_lexer_state_pop(self, ~0, TPP_LEXER_STATE_FLAG_NOWARNINGS);
+	return result;
+}
+#else /* TPP_HAVE_WARNINGS */
+#define tpp_macro_builder_compile_traditional(builder, self, body_start, body_end) \
+	tpp_macro_builder_compile_traditional_impl(builder, self, body_start, body_end)
+#endif /* !TPP_HAVE_WARNINGS */
 #endif /* TPP_HAVE_TRADITIONAL_MACROS != 0 */
 
 #if TPP_HAVE_TRADITIONAL_MACROS <= 0
@@ -774,17 +840,561 @@ tpp_macro_builder_compile_modern(tpp_macro_builder *tpp_restrict builder,
                                  tpp_lexer *tpp_restrict self,
                                  tpp_char const *body_start,
                                  tpp_char const *body_end) {
-	tpp_macro_opcode *opcodes;
-	(void)self;
-	/* TODO */
+	tpp_token *const token = tpp_lexer_gettoken(self);
+	tpp_char const *body_iter = body_start;
+#if TPP_HAVE_GLUE_MACRO_ARGUMENT
+	/* Specifies the start of a whitespace-area that is deleted by the ##-operator */
+	tpp_char const *last_non_space_end = body_start;
+#endif /* TPP_HAVE_GLUE_MACRO_ARGUMENT */
 
-	opcodes = tpp_macro_builder_requireop(builder, 3);
-	if tpp_unlikely(!opcodes)
-		return TPP_ENOMEM;
-	opcodes[0] = TPP_MACRO_OPCODE_COPY;
-	opcodes[1] = (tpp_size)(body_end - body_start);
-	opcodes[2] = TPP_MACRO_OPCODE_END;
+	while (body_iter < body_end) {
+		tpp_macro_argument *arg;
+		tpp_token_id tok;
+		tok = tpp_lexer_yieldraw_at(self, &body_iter);
+#if (TPP_HAVE_GLUE_MACRO_ARGUMENT || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS ||       \
+     TPP_HAVE_VA_OPT_IN_MACROS || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT ||         \
+     TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || \
+     TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED || TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR)
+again_switch_tok:
+#endif /* ... */
+		switch (tok) {
+
+
+/************************************************************************/
+#if TPP_HAVE_GLUE_MACRO_ARGUMENT
+		case TPP_TOK_SPACE:
+		TPP_CASE_TPP_TOK_COMMENT_NOLINE
+			/* "continue" so-as not to update "last_non_space_end",
+			 * allowing a potentially following ##-operator to delete
+			 * this token. */
+			continue;
+
+		case TPP_TOK_POUND_POUND: {
+			tpp_char const *argument_end;
+			if (!tpp_lexer_getext(self, TPP_EXT_GLUE_MACRO_ARGUMENT))
+				break;
+			/* Consume any whitespace that might following this operator.
+			 * Whitespace preceding it is automatically consumed because
+			 * we skip all not-already-flushed data after "last_non_space_end" */
+			do {
+				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+
+			/* Encode a copy operation for range: [body_start, last_non_space_end) */
+			if (body_start < last_non_space_end) {
+				tpp_macro_builder_append_copy(err_nomem, builder,
+				                              (tpp_size)(last_non_space_end - body_start));
+				body_start = last_non_space_end;
+			}
+
+			/* Encode a skip operation for range: [body_start, token->tt_start) */
+			if (body_start < token->tt_start) {
+				tpp_macro_builder_append_skip(err_nomem, builder,
+				                              (tpp_size)(token->tt_start - body_start));
+				body_start = token->tt_start;
+			}
+
+handle_token_after_glue:
+			/* If what follows after the ##-operator is another keyword,
+			 * must treat it specially if it's a macro-argument! */
+			if (!TPP_TOK_ISKEYWORD(tok))
+				goto again_switch_tok;
+			arg = tpp_macro_builder_getargument(builder, tok);
+			if (arg == NULL)
+				goto again_switch_tok; /* Must switch on "tok" in case it's something like __VA_NARGS__! */
+			argument_end = body_iter; /* End of argument keyword after "##"-token */
+
+			do {
+				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+
+			/* Check if there'll be another ##-operator after the argument */
+			if (tok == TPP_TOK_POUND_POUND) {
+				do {
+					tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+				if (TPP_TOK_ISERR(tok))
+					return TPP_TOK_ASERR(tok);
+				if (body_start < token->tt_start) {
+					tpp_macro_builder_append_ins(err_nomem, builder, arg,
+					                             (tpp_size)(token->tt_start - body_start));
+					body_start = token->tt_start;
+				}
+				goto handle_token_after_glue;
+			}
+
+			/* End of ##-chain, but still: must insert the last argument *without* expansion! */
+			tpp_macro_builder_append_ins(err_nomem, builder, arg,
+			                             (tpp_size)(argument_end - body_start));
+			last_non_space_end = argument_end;
+			body_start = argument_end;
+			goto again_switch_tok;
+		}	break;
+#endif /* TPP_HAVE_GLUE_MACRO_ARGUMENT */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
+		case ',': {
+			tpp_char const *start_of_comma;
+
+			/* >> #define printf(format, ...) fprintf(stderr, format,##__VA_ARGS__)
+			 *
+			 * Compiled the same as (when ignoring whitespace):
+			 * >> #define printf(format, ...) fprintf(stderr, format __VA_COMMA__ __VA_ARGS__) */
+			if (!tpp_lexer_getext(self, TPP_EXT_VA_GLUE_COMMA_IN_MACROS))
+				break;
+			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
+				break;
+			start_of_comma = token->tt_start;
+			do {
+				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (tok != TPP_TOK_POUND_POUND)
+				goto again_switch_tok;
+			do {
+				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (!TPP_TOK_ISKEYWORD(tok)) {
+				/* Implement regular glue (simply deleting whitespace), or do nothing */
+handle_not_varargs_argument_after_comma_glue:
+#if TPP_HAVE_GLUE_MACRO_ARGUMENT
+				if (tpp_lexer_getext(self, TPP_EXT_GLUE_MACRO_ARGUMENT)) {
+					++start_of_comma; /* Keep the "," character itself! */
+					if (body_start < start_of_comma) {
+						tpp_macro_builder_append_copy(err_nomem, builder,
+						                              (tpp_size)(start_of_comma - body_start));
+						body_start = start_of_comma;
+					}
+					/* Encode a skip operation for range: [body_start, token->tt_start) */
+					if (body_start < token->tt_start) {
+						tpp_macro_builder_append_skip(err_nomem, builder,
+						                              (tpp_size)(token->tt_start - body_start));
+						body_start = token->tt_start;
+					}
+				}
+#endif /* TPP_HAVE_GLUE_MACRO_ARGUMENT */
+				goto again_switch_tok;
+			}
+			arg = tpp_macro_builder_getargument(builder, tok);
+			if (!arg)
+				goto handle_not_varargs_argument_after_comma_glue; /* Not an argument */
+			if (arg != builder->mab_argv + builder->mab_argc - 1)
+				goto handle_not_varargs_argument_after_comma_glue; /* Not the varargs argument */
+
+			/* Yes! This *does* have to be encoded as a __VA_COMMA__! */
+			if (body_start < start_of_comma) {
+				tpp_macro_builder_append_copy(err_nomem, builder,
+				                              (tpp_size)(start_of_comma - body_start));
+				body_start = start_of_comma;
+			}
+			/* Insert __VA_COMMA__ and skip template body until the start of the varargs argument */
+			tpp_macro_builder_append_va_comma(err_nomem, builder,
+			                                  (tpp_size)(token->tt_start - body_start));
+			body_start = token->tt_start;
+			goto handle_keyword_after_arg;
+#define WANT_handle_keyword_after_arg
+		}	break;
+#endif /* TPP_HAVE_VA_GLUE_COMMA_IN_MACROS */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_VA_COMMA_IN_MACROS
+		case TPP_KWD___VA_COMMA__:
+			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
+				goto handle_keyword;
+			if (!tpp_lexer_getext(self, TPP_EXT_VA_COMMA_IN_MACROS))
+				goto handle_keyword;
+#define WANT_handle_keyword
+			if (body_start < token->tt_start) {
+				tpp_macro_builder_append_copy(err_nomem, builder,
+				                              (tpp_size)(token->tt_start - body_start));
+				body_start = token->tt_start;
+			}
+			tpp_macro_builder_append_va_comma(err_nomem, builder,
+			                                  (tpp_size)(body_iter - body_start));
+			body_start = body_iter;
+			break;
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+		case TPP_KWD___VA_NARGS__:
+			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
+				goto handle_keyword;
+			if (!tpp_lexer_getext(self, TPP_EXT_VA_NARGS_IN_MACROS))
+				goto handle_keyword;
+#define WANT_handle_keyword
+			if (body_start < token->tt_start) {
+				tpp_macro_builder_append_copy(err_nomem, builder,
+				                              (tpp_size)(token->tt_start - body_start));
+				body_start = token->tt_start;
+			}
+			tpp_macro_builder_append_va_nargs(err_nomem, builder,
+			                                  (tpp_size)(body_iter - body_start));
+			body_start = body_iter;
+			break;
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_VA_OPT_IN_MACROS
+		case TPP_KWD___VA_OPT__: {
+			tpp_char const *start_of_va_opt;
+			tpp_char const *start_of_va_opt_body;
+			tpp_char const *end_of_va_opt_body;
+			unsigned int recursion;
+			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
+				goto handle_keyword;
+			if (!tpp_lexer_getext(self, TPP_EXT_VA_OPT_IN_MACROS))
+				goto handle_keyword;
+#define WANT_handle_keyword
+			start_of_va_opt = token->tt_start;
+
+			/* Next token must be ( */
+			do {
+				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (tok != '(') {
+#if TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT
+				tpp_errno error;
+				tpp_char const *saved_end = token->tt_end;
+				token->tt_end = body_iter;
+				error = tpp_lexer_warnf_at(self, start_of_va_opt, TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT);
+				token->tt_end = saved_end;
+				if (error != TPP_EOK)
+					return error;
+#endif /* TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT */
+				last_non_space_end = body_iter;
+				break;
+			}
+
+			start_of_va_opt_body = body_iter;
+			recursion = 0;
+			for (;;) {
+				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				switch (tok) {
+				case TPP_TOK_EOF: {
+#if TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT
+					tpp_errno error;
+					tpp_char const *saved_end = token->tt_end;
+					token->tt_end = body_iter;
+					error = tpp_lexer_warnf_at(self, start_of_va_opt, TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT);
+					token->tt_end = saved_end;
+					if (error != TPP_EOK)
+						return error;
+#endif /* TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT */
+					goto found_va_opt_body_end;
+				}	break;
+				case '(':
+					++recursion;
+					break;
+				case ')':
+					if (recursion == 0)
+						goto found_va_opt_body_end;
+					--recursion;
+					break;
+				default:
+					if (TPP_TOK_ISERR(tok))
+						return TPP_TOK_ASERR(tok);
+					break;
+				}
+			}
+found_va_opt_body_end:
+			end_of_va_opt_body = token->tt_start;
+			if (body_start < start_of_va_opt) {
+				tpp_macro_builder_append_copy(err_nomem, builder,
+				                              (tpp_size)(start_of_va_opt - body_start));
+				body_start = start_of_va_opt;
+			}
+			tpp_macro_builder_append_va_opt(err_nomem, builder,
+			                                (tpp_size)(start_of_va_opt_body - start_of_va_opt),
+			                                (tpp_size)(end_of_va_opt_body - start_of_va_opt_body),
+			                                (tpp_size)(body_iter - end_of_va_opt_body));
+			body_start = body_iter;
+		}	break;
+#endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+/************************************************************************/
+
+
+/************************************************************************/
+#if (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || \
+     TPP_HAVE_CHARIZE_MACRO_ARGUMENT ||   \
+     TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT)
+		case '#': {
+			tpp_char const *start_of_pound;
+#if TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
+			tpp_macro_opcode opcode;
+#endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
+			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
+				goto handle_keyword;
+			if (!tpp_lexer_getext(self, TPP_EXT_STRINGIZE_MACRO_ARGUMENT) &&
+			    !tpp_lexer_getext(self, TPP_EXT_CHARIZE_MACRO_ARGUMENT) &&
+			    !tpp_lexer_getext(self, TPP_EXT_DONT_EXPAND_MACRO_ARGUMENT))
+				goto handle_keyword;
+			start_of_pound = token->tt_start;
+#define WANT_handle_keyword
+			do {
+				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
+			if (tok == '!') {
+				last_non_space_end = body_iter;
+				if (!tpp_lexer_getext(self, TPP_EXT_DONT_EXPAND_MACRO_ARGUMENT))
+					break;
+				do {
+					tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+				if (TPP_TOK_ISERR(tok))
+					return TPP_TOK_ASERR(tok);
+				if (!TPP_TOK_ISKEYWORD(tok))
+					goto again_switch_tok;
+				arg = tpp_macro_builder_getargument(builder, tok);
+				if (!arg)
+					goto again_switch_tok;
+				if (body_start < start_of_pound) {
+					tpp_macro_builder_append_copy(err_nomem, builder,
+					                              (tpp_size)(start_of_pound - body_start));
+					body_start = start_of_pound;
+				}
+				tpp_macro_builder_append_ins(err_nomem, builder, arg,
+				                             (tpp_size)(body_iter - body_start));
+				body_start = body_iter;
+				break;
+			} else
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
+#if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+			if (tok == '@') {
+				if (!tpp_lexer_getext(self, TPP_EXT_CHARIZE_MACRO_ARGUMENT))
+					break;
+				opcode = TPP_MACRO_OPCODE_INS_CHR;
+				do {
+					tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+				if (TPP_TOK_ISERR(tok))
+					return TPP_TOK_ASERR(tok);
+			} else
+#endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+			{
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
+				if (!tpp_lexer_getext(self, TPP_EXT_STRINGIZE_MACRO_ARGUMENT))
+					break;
+				opcode = TPP_MACRO_OPCODE_INS_STR;
+#else /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
+				break;
+#endif /* !TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
+			}
+#if TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
+			if (!TPP_TOK_ISKEYWORD(tok))
+				goto again_switch_tok;
+			arg = tpp_macro_builder_getargument(builder, tok);
+			if (!arg)
+				goto again_switch_tok;
+			if (body_start < start_of_pound) {
+				tpp_macro_builder_append_copy(err_nomem, builder,
+				                              (tpp_size)(start_of_pound - body_start));
+				body_start = start_of_pound;
+			}
+			tpp_macro_builder_append_ins_str(err_nomem, builder, opcode, arg,
+			                                 (tpp_size)(body_iter - body_start));
+			body_start = body_iter;
+			break;
+#endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
+		}	break;
+#endif /* ... */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED || TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
+		case TPP_KWD_defined: {
+			/* case TPP_KWD_defined: -Wexpansion-to-defined
+			 *
+			 * BUT: Not in the following cases:
+			 * >> #define foo(defined, x) defined(x)    // Macro has a parameter "defined"
+			 * >> #define foo(x)          defined+x     // Next token isn't '(' or a keyword (also handles "defined(#!x)")
+			 * >> #define foo(x)          defined(bar)  // Linked keyword isn't a macro argument
+			 *
+			 * Also: when -fdont-expand-defined is enabled, don't emit
+			 *       the waring and instead suppress expansion of the
+			 *       macro argument. */
+#if TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED
+			tpp_char const *start_of_defined = token->tt_start;
+#endif /* TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
+			arg = tpp_macro_builder_getargument(builder, TPP_KWD_defined);
+			if (arg)
+				goto handle_keyword_after_arg; /* "defined" is actually an argument! */
+#define WANT_handle_keyword_after_arg
+
+			last_non_space_end = body_iter;
+			do {
+				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+			if (tok == '(') {
+				last_non_space_end = body_iter;
+				do {
+					tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+			}
+			if (!TPP_TOK_ISKEYWORD(tok))
+				goto again_switch_tok;
+			arg = tpp_macro_builder_getargument(builder, tok);
+			if (!arg)
+				goto again_switch_tok;
+
+			/* Got a keyword that is actually a macro argument after "defined"
+			 * -> This is what this extension/warning is all about! */
+#if TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
+			if (tpp_lexer_getext(self, TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR)) {
+				if (body_start < token->tt_start) {
+					tpp_macro_builder_append_copy(err_nomem, builder,
+					                              (tpp_size)(token->tt_start - body_start));
+					body_start = token->tt_start;
+				}
+				tpp_macro_builder_append_ins(err_nomem, builder, arg,
+				                             (tpp_size)(body_iter - body_start));
+				body_start = body_iter;
+				break;
+			}
+#endif /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR */
+
+			/* Emit the warning */
+#if TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED
+			{
+				tpp_errno error;
+				tpp_char const *saved_end = token->tt_end;
+				token->tt_end = body_iter;
+				error = tpp_lexer_warnf_at(self, start_of_defined, TPP_W_EXPANSION_TO_DEFINED);
+				token->tt_end = saved_end;
+				if (error != TPP_EOK)
+					return error;
+			}
+#endif /* TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
+
+			goto handle_keyword_after_arg;
+#define WANT_handle_keyword_after_arg
+		}	break;
+#endif /* TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED || TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR */
+/************************************************************************/
+
+
+
+/************************************************************************/
+		default: {
+			/* Shouldn't really be able to produce errors, but better be safe. */
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (TPP_TOK_ISKEYWORD(tok)) {
+#ifdef WANT_handle_keyword
+#undef WANT_handle_keyword
+handle_keyword:
+#endif /* WANT_handle_keyword */
+				/* Check if this keyword (identified by "tok") is an argument. */
+				arg = tpp_macro_builder_getargument(builder, tok);
+				if (!arg)
+					break; /* Not actually an argument */
+
+#ifdef WANT_handle_keyword_after_arg
+#undef WANT_handle_keyword_after_arg
+handle_keyword_after_arg:
+#endif /* WANT_handle_keyword_after_arg */
+				/* Append opcodes to copy text leading up to argument. */
+				if (body_start < token->tt_start) {
+					tpp_macro_builder_append_copy(err_nomem, builder,
+					                              (tpp_size)(token->tt_start - body_start));
+					body_start = token->tt_start;
+				}
+
+#if TPP_HAVE_GLUE_MACRO_ARGUMENT
+				if (tpp_lexer_getext(self, TPP_EXT_GLUE_MACRO_ARGUMENT)) {
+					/* Must seek ahead to the next non-whitespace token. if it's the
+					 * ##-operator, then we have to insert the argument *WITHOUT* it
+					 * being expanded! */
+					tpp_char const *argument_end = body_iter;
+					do {
+						tok = tpp_lexer_yieldraw_at(self, &body_iter);
+					} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+					if (TPP_TOK_ISERR(tok))
+						return TPP_TOK_ASERR(tok);
+
+					/* Append opcodes to insert argument */
+					if (tok == TPP_TOK_POUND_POUND) {
+						do {
+							tok = tpp_lexer_yieldraw_at(self, &body_iter);
+						} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+						if (TPP_TOK_ISERR(tok))
+							return TPP_TOK_ASERR(tok);
+						/* Insert argument without expansion, and skip input until the start
+						 * of the first non-whitespace token following the ##-operator itself. */
+						tpp_macro_builder_append_ins(err_nomem, builder, arg,
+						                             (tpp_size)(token->tt_start - body_start));
+						body_start = token->tt_start;
+						goto handle_token_after_glue;
+					}
+
+					/* Insert argument regularly (with expansion) and (since we've already
+					 * processed data until that point), continue processing on the next
+					 * non-whitespace token. */
+					tpp_macro_builder_append_ins_exp(err_nomem, builder, arg,
+					                                 (tpp_size)(argument_end - body_start));
+					last_non_space_end = argument_end;
+					body_start = argument_end;
+					goto again_switch_tok;
+				} else
+#endif /* TPP_HAVE_GLUE_MACRO_ARGUMENT */
+				{
+#if TPP_HAVE_GLUE_MACRO_ARGUMENT <= 0
+					/* Append opcodes to insert argument */
+					tpp_macro_builder_append_ins_exp(err_nomem, builder, arg,
+					                                 (tpp_size)(body_iter - body_start));
+
+					/* Remember that input body text has been
+					 * flushed until the end of the keyword. */
+					body_start = body_iter;
+#endif /* TPP_HAVE_GLUE_MACRO_ARGUMENT <= 0 */
+				}
+			}
+		}	break;
+/************************************************************************/
+
+		}
+		last_non_space_end = body_iter;
+	}
+
+	/* Copy remainder. */
+	if (body_start < body_end) {
+		tpp_macro_builder_append_copy(err_nomem, builder,
+		                              (tpp_size)(body_end - body_start));
+	}
+
+	/* Terminate body builder */
+	tpp_macro_builder_append_end(err_nomem, builder);
 	return TPP_EOK;
+err_nomem:
+	return TPP_ENOMEM;
 }
 #endif /* TPP_HAVE_TRADITIONAL_MACROS <= 0 */
 
@@ -859,7 +1469,6 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 	result->tm_data.tmd_func.tmf_argc    = self->mab_argc;
 	result->tm_data.tmd_func.tmf_argv    = self->mab_argv; /* Inherit data */
 	result->tm_data.tmd_func.tmf_expbase = (tpp_size)(body_end - body_start);
-	tpp_assert(result->tm_data.tmd_func.tmf_expbase >= self->mab_skiptotal);
 	result->tm_data.tmd_func.tmf_expbase -= self->mab_skiptotal;
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
 	result->tm_data.tmd_func.tmf_n_vaopt = self->mab_n_vaopt;
@@ -913,8 +1522,8 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	case '<':
 		if (tpp_lexer_getext(self, TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS))
 			break;
+		TPP_FALLTHRU
 #endif /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
-		/* FALLTHRU */
 	default: {
 		/* Keyword-style macro */
 		tok = lparen_token;
@@ -1005,13 +1614,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	body_start = tpp_file_rel2ptr(file, rel_body_start);
 	body_end   = tpp_file_rel2ptr(file, rel_body_end);
 	tpp_file_pusheof_fast(file, body_end); /* This is needed by macro compilers */
-#if TPP_HAVE_WARNINGS
-	tpp_lexer_state_push(self, ~0, TPP_LEXER_STATE_FLAG_NOWARNINGS);
-#endif /* TPP_HAVE_WARNINGS */
 	error = tpp_macro_builder_compile(&builder, self, body_start, body_end);
-#if TPP_HAVE_WARNINGS
-	tpp_lexer_state_pop(self, ~0, TPP_LEXER_STATE_FLAG_NOWARNINGS);
-#endif /* TPP_HAVE_WARNINGS */
 	tpp_file_popeof_fast(file);
 	if (error != TPP_EOK)
 		goto err_builder;
@@ -1641,8 +2244,8 @@ again:
 
 			/* Fallthru to regular maybe-emit-comment code below... */
 		}
+		TPP_FALLTHRU
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_HAVE_CPP_DIRECTIVES */
-		/* FALLTHRU */
 #if TPP_HAVE_TPP_TOK_COMMENT <= 0 /* Always, or conditionally disabled */
 	_TPP_CASE_TPP_TOK_CXX_COMMENT
 	_TPP_CASE_TPP_TOK_ASM_COMMENT
@@ -1650,8 +2253,8 @@ again:
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES
 		/* Remember that we've seen a linefeed. */
 		self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		TPP_FALLTHRU
 #endif /* TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES */
-		/* FALLTHRU */
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE
 #if TPP_HAVE_TPP_TOK_COMMENT < 0
 		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_COMMENT))

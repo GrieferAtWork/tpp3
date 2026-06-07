@@ -121,6 +121,10 @@ local BUILTIN_KEYWORDS: {string: string} = {
 	"__COUNTER__": "TPP_HAVE_MACRO___COUNTER__",
 	"__TIMESTAMP__": "TPP_HAVE_MACRO___TIMESTAMP__",
 	"__VA_ARGS__": "TPP_HAVE_VA_ARGS_IN_MACROS",
+	"__VA_COMMA__": "TPP_HAVE_VA_COMMA_IN_MACROS",
+	"__VA_NARGS__": "TPP_HAVE_VA_NARGS_IN_MACROS",
+	"__VA_OPT__": "TPP_HAVE_VA_OPT_IN_MACROS",
+	"defined": "TPP_HAVE_EXPR_DEFINED",
 };
 for (local kwd, cond: BUILTIN_KEYWORDS) {
 	print("#if ", cond);
@@ -341,6 +345,22 @@ TPP_KWD(TPP_KWD___TIMESTAMP__, "__TIMESTAMP__")
 #define TPP_KWD___VA_ARGS__ TPP_KWD___VA_ARGS__
 TPP_KWD(TPP_KWD___VA_ARGS__, "__VA_ARGS__")
 #endif /* TPP_HAVE_VA_ARGS_IN_MACROS */
+#if TPP_HAVE_VA_COMMA_IN_MACROS
+#define TPP_KWD___VA_COMMA__ TPP_KWD___VA_COMMA__
+TPP_KWD(TPP_KWD___VA_COMMA__, "__VA_COMMA__")
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS */
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+#define TPP_KWD___VA_NARGS__ TPP_KWD___VA_NARGS__
+TPP_KWD(TPP_KWD___VA_NARGS__, "__VA_NARGS__")
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
+#if TPP_HAVE_VA_OPT_IN_MACROS
+#define TPP_KWD___VA_OPT__ TPP_KWD___VA_OPT__
+TPP_KWD(TPP_KWD___VA_OPT__, "__VA_OPT__")
+#endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+#if TPP_HAVE_EXPR_DEFINED
+#define TPP_KWD_defined TPP_KWD_defined
+TPP_KWD(TPP_KWD_defined, "defined")
+#endif /* TPP_HAVE_EXPR_DEFINED */
 /*[[[end]]]*/
 
 
@@ -822,6 +842,12 @@ TPP_EXTENSION(TPP_EXT_PRAGMA_WARNING_PUSH, "pragma-warning-push", TPP_HAVE_PRAGM
 #else /* TPP_HAVE_PRAGMA_WARNING_PUSH < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_PRAGMA_WARNING_PUSH(self) TPP_HAVE_PRAGMA_WARNING_PUSH
 #endif /* TPP_HAVE_PRAGMA_WARNING_PUSH >= 0 */
+#if TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR < 0
+TPP_EXTENSION(TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR, "dont-expand-defined", TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR == -1)
+#define _tpp_extensions_state_get_TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR(self) (self)->tes_flags.tef_TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR
+#else /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR(self) TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
+#endif /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR >= 0 */
 /*[[[end]]]*/
 
 
@@ -887,7 +913,8 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE ||                        \
 	 TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE ||         \
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST || \
-	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME)
+	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||           \
+	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_WG_SYNTAX TPP_WG_SYNTAX
@@ -941,6 +968,18 @@ TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST, 1(TPP_WG_SYNTAX), 1(
 TPP_WARNING(TPP_W_DUPLICATE_MACRO_PARAMETER_NAME, 1(TPP_WG_SYNTAX), 1(2009), TPP_WSTATE_UNDEFINED,
             "duplicate macro parameter name %Pt")
 #endif /* TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME */
+
+#if TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT
+#define TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT
+TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT, 1(TPP_WG_SYNTAX), 1(7514), TPP_WSTATE_UNDEFINED,
+            "expected %[(%] after %[__VA_OPT__%] in macro body")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT */
+
+#if TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT
+#define TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT
+TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT, 1(TPP_WG_SYNTAX), 1(7615), TPP_WSTATE_UNDEFINED,
+            "expected %[)%] after %[__VA_OPT__%] in macro body")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT */
 
 
 /************************************************************************/
@@ -1073,6 +1112,32 @@ TPP_WARNING(TPP_W_TOO_FEW_ARGUMENTS, 1(TPP_WG_MACROS), 1(4003), TPP_WSTATE_UNDEF
 
 
 /************************************************************************/
+/* -Wmacros                                                             */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_EXPANSION_TO_DEFINED
+#define TPP_HAVE_TPP_WG_EXPANSION_TO_DEFINED \
+	(TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED)
+#endif /* !TPP_HAVE_TPP_WG_EXPANSION_TO_DEFINED */
+#if TPP_HAVE_TPP_WG_EXPANSION_TO_DEFINED
+#define TPP_WG_EXPANSION_TO_DEFINED TPP_WG_EXPANSION_TO_DEFINED
+TPP_WGROUP(TPP_WG_EXPANSION_TO_DEFINED, 1("expansion-to-defined"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_EXPANSION_TO_DEFINED */
+#if TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED
+#define TPP_W_EXPANSION_TO_DEFINED TPP_W_EXPANSION_TO_DEFINED
+#if TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR < 0
+TPP_WARNING(TPP_W_EXPANSION_TO_DEFINED, 1(TPP_WG_EXPANSION_TO_DEFINED), 0(), TPP_WSTATE_UNDEFINED,
+            "using %[defined%] on macro argument %Pt will not work, because macros are expanded "
+            /**/ "before %[defined%] will seem them. If you want to prevent expansion in this "
+            /**/ "specific case, enable %[#pragma extension(\"-fdont-expand-defined\")%]")
+#else /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR < 0 */
+TPP_WARNING(TPP_W_EXPANSION_TO_DEFINED, 1(TPP_WG_EXPANSION_TO_DEFINED), 0(), TPP_WSTATE_UNDEFINED,
+            "using %[defined%] on macro argument %Pt will not work, because macros are expanded "
+            /**/ "before %[defined%] will seem them.")
+#endif /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR >= 0 */
+#endif /* TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
+
+
+/************************************************************************/
 /* Misc warnings...                                                     */
 /************************************************************************/
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -1118,7 +1183,6 @@ TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FA
 TPP_WGROUP(TPP_WG_ENVIRON, /*        */ 1("environ"),              TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_UNDEF, /*          */ 1("undef"),                TPP_WSTATE_WARN)
-TPP_WGROUP(TPP_WG_EXPANSION_TO_DEFINED, 1("expansion-to-defined"), TPP_WSTATE_WARN)
 TPP_WGROUP(TPP_WG_QUALITY, /*        */ 1("quality"),              TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WARN)
 

@@ -178,6 +178,28 @@
 #ifndef TPP_FLEX_ARRAY
 #define TPP_FLEX_ARRAY 4096
 #endif /* !TPP_FLEX_ARRAY */
+#ifndef TPP_FALLTHRU
+#ifdef __has_cpp_attribute
+#if __has_cpp_attribute(fallthrough)
+#define TPP_FALLTHRU [[fallthrough]];
+#endif /* __has_cpp_attribute(fallthrough) */
+#endif /* __has_cpp_attribute */
+#ifndef TPP_FALLTHRU
+#ifdef __has_attribute
+#if __has_attribute(fallthrough)
+#define TPP_FALLTHRU __attribute__((__fallthrough__));
+#endif /* __has_attribute(fallthrough) */
+#endif /* __has_attribute */
+#ifndef TPP_FALLTHRU
+#if defined(__GNUC__) && (__GNUC__ > 6 || (__GNUC__ == 6 && __GNUC_MINOR__ >= 3))
+#define TPP_FALLTHRU __attribute__((__fallthrough__));
+#endif /* ... */
+#ifndef TPP_FALLTHRU
+#define TPP_FALLTHRU /* @fallthrough@ */
+#endif /* !TPP_FALLTHRU */
+#endif /* !TPP_FALLTHRU */
+#endif /* !TPP_FALLTHRU */
+#endif /* !TPP_FALLTHRU */
 
 /* Does the host preprocessor have support for __VA_ARGS__? */
 #ifndef TPP_HOST_HAVE_PP_VARARGS

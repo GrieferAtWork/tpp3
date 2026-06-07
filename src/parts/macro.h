@@ -95,9 +95,9 @@ typedef struct tpp_macro_argument {
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 	tpp_size        tma_ins_str; /* [const] Amount of times the argument is inserted in its string-escaped form. */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
-#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
 	tpp_size        tma_ins;     /* [const] Amount of times the argument is inserted without expansion. */
-#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 #if TPP_DEBUG
 	tpp_char const *tma_name;    /* [1..1][const] Name of this macro (aliases `struct tpp_keyword::tk_kwd'). */
 #endif /* TPP_DEBUG */
@@ -112,21 +112,24 @@ enum {
 	TPP_MACRO_OPCODE_SKIP,     /* +1  Advance macro body template reader by ARG[0] bytes */
 	TPP_MACRO_OPCODE_COPY,     /* +1  Copy ARG[0] bytes from macro body template & advance reader */
 	TPP_MACRO_OPCODE_INS_EXP,  /* +2  Insert argument[ARG[0]] (expanded) and advance macro body template reader by ARG[1] bytes */
-#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
-	TPP_MACRO_OPCODE_INS,      /* +2  Insert argument[ARG[0]] (non-expanded) and advance macro body template reader by ARG[1] bytes */
-#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
 	TPP_MACRO_OPCODE_INS_STR,  /* +2  Insert argument[ARG[0]] ("-escaped) and advance macro body template reader by ARG[1] bytes */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 	TPP_MACRO_OPCODE_INS_CHR,  /* +2  Insert argument[ARG[0]] ('-escaped) and advance macro body template reader by ARG[1] bytes */
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
+	TPP_MACRO_OPCODE_INS,      /* +2  Insert argument[ARG[0]] (non-expanded) and advance macro body template reader by ARG[1] bytes */
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 #if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
 	TPP_MACRO_OPCODE_VA_COMMA, /* +1  TPP_MACRO_OPCODE_SKIP[ARG[0]]; If varargs are non-empty: insert a ','-character */
 #endif /* TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS */
 #if TPP_HAVE_VA_OPT_IN_MACROS
 	TPP_MACRO_OPCODE_VA_OPT,   /* +3  TPP_MACRO_OPCODE_SKIP[ARG[0]]; If varargs are non-empty: TPP_MACRO_OPCODE_COPY[ARG[1]]; TPP_MACRO_OPCODE_SKIP[ARG[2]] */
 #endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+	TPP_MACRO_OPCODE_VA_NARGS, /* +1  TPP_MACRO_OPCODE_SKIP[ARG[0]]; insert decimal token representing # of varargs (or "0" if there are no varargs) */
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
 };
 #endif /* TPP_BUILDING */
 

@@ -98,7 +98,7 @@ tpp_lcinfo_account(tpp_file const *tpp_restrict self, tpp_lcinfo lc,
 		case '\r':
 			if (text < endp && *text == '\n')
 				++text;
-			/* FALLTHRU */
+			TPP_FALLTHRU
 		case '\n': {
 #if TPP_HAVE_UNICODE
 handle_linefeed:

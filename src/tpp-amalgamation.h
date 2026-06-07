@@ -276,6 +276,22 @@ TPP_KWD(TPP_KWD___TIMESTAMP__, "__TIMESTAMP__")
 #define TPP_KWD___VA_ARGS__ TPP_KWD___VA_ARGS__
 TPP_KWD(TPP_KWD___VA_ARGS__, "__VA_ARGS__")
 #endif /* TPP_HAVE_VA_ARGS_IN_MACROS */
+#if TPP_HAVE_VA_COMMA_IN_MACROS
+#define TPP_KWD___VA_COMMA__ TPP_KWD___VA_COMMA__
+TPP_KWD(TPP_KWD___VA_COMMA__, "__VA_COMMA__")
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS */
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+#define TPP_KWD___VA_NARGS__ TPP_KWD___VA_NARGS__
+TPP_KWD(TPP_KWD___VA_NARGS__, "__VA_NARGS__")
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
+#if TPP_HAVE_VA_OPT_IN_MACROS
+#define TPP_KWD___VA_OPT__ TPP_KWD___VA_OPT__
+TPP_KWD(TPP_KWD___VA_OPT__, "__VA_OPT__")
+#endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+#if TPP_HAVE_EXPR_DEFINED
+#define TPP_KWD_defined TPP_KWD_defined
+TPP_KWD(TPP_KWD_defined, "defined")
+#endif /* TPP_HAVE_EXPR_DEFINED */
 /*[[[end]]]*/
 
 
@@ -757,6 +773,12 @@ TPP_EXTENSION(TPP_EXT_PRAGMA_WARNING_PUSH, "pragma-warning-push", TPP_HAVE_PRAGM
 #else /* TPP_HAVE_PRAGMA_WARNING_PUSH < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_PRAGMA_WARNING_PUSH(self) TPP_HAVE_PRAGMA_WARNING_PUSH
 #endif /* TPP_HAVE_PRAGMA_WARNING_PUSH >= 0 */
+#if TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR < 0
+TPP_EXTENSION(TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR, "dont-expand-defined", TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR == -1)
+#define _tpp_extensions_state_get_TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR(self) (self)->tes_flags.tef_TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR
+#else /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR(self) TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
+#endif /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR >= 0 */
 
 
 
@@ -821,7 +843,8 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE ||                        \
 	 TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE ||         \
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST || \
-	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME)
+	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||           \
+	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_WG_SYNTAX TPP_WG_SYNTAX
@@ -875,6 +898,18 @@ TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST, 1(TPP_WG_SYNTAX), 1(
 TPP_WARNING(TPP_W_DUPLICATE_MACRO_PARAMETER_NAME, 1(TPP_WG_SYNTAX), 1(2009), TPP_WSTATE_UNDEFINED,
             "duplicate macro parameter name %Pt")
 #endif /* TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME */
+
+#if TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT
+#define TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT
+TPP_WARNING(TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT, 1(TPP_WG_SYNTAX), 1(7514), TPP_WSTATE_UNDEFINED,
+            "expected %[(%] after %[__VA_OPT__%] in macro body")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT */
+
+#if TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT
+#define TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT
+TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT, 1(TPP_WG_SYNTAX), 1(7615), TPP_WSTATE_UNDEFINED,
+            "expected %[)%] after %[__VA_OPT__%] in macro body")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT */
 
 
 /************************************************************************/
@@ -1007,6 +1042,32 @@ TPP_WARNING(TPP_W_TOO_FEW_ARGUMENTS, 1(TPP_WG_MACROS), 1(4003), TPP_WSTATE_UNDEF
 
 
 /************************************************************************/
+/* -Wmacros                                                             */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_EXPANSION_TO_DEFINED
+#define TPP_HAVE_TPP_WG_EXPANSION_TO_DEFINED \
+	(TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED)
+#endif /* !TPP_HAVE_TPP_WG_EXPANSION_TO_DEFINED */
+#if TPP_HAVE_TPP_WG_EXPANSION_TO_DEFINED
+#define TPP_WG_EXPANSION_TO_DEFINED TPP_WG_EXPANSION_TO_DEFINED
+TPP_WGROUP(TPP_WG_EXPANSION_TO_DEFINED, 1("expansion-to-defined"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_EXPANSION_TO_DEFINED */
+#if TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED
+#define TPP_W_EXPANSION_TO_DEFINED TPP_W_EXPANSION_TO_DEFINED
+#if TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR < 0
+TPP_WARNING(TPP_W_EXPANSION_TO_DEFINED, 1(TPP_WG_EXPANSION_TO_DEFINED), 0(), TPP_WSTATE_UNDEFINED,
+            "using %[defined%] on macro argument %Pt will not work, because macros are expanded "
+            /**/ "before %[defined%] will seem them. If you want to prevent expansion in this "
+            /**/ "specific case, enable %[#pragma extension(\"-fdont-expand-defined\")%]")
+#else /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR < 0 */
+TPP_WARNING(TPP_W_EXPANSION_TO_DEFINED, 1(TPP_WG_EXPANSION_TO_DEFINED), 0(), TPP_WSTATE_UNDEFINED,
+            "using %[defined%] on macro argument %Pt will not work, because macros are expanded "
+            /**/ "before %[defined%] will seem them.")
+#endif /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR >= 0 */
+#endif /* TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
+
+
+/************************************************************************/
 /* Misc warnings...                                                     */
 /************************************************************************/
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -1052,7 +1113,6 @@ TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FA
 TPP_WGROUP(TPP_WG_ENVIRON, /*        */ 1("environ"),              TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_UNDEF, /*          */ 1("undef"),                TPP_WSTATE_WARN)
-TPP_WGROUP(TPP_WG_EXPANSION_TO_DEFINED, 1("expansion-to-defined"), TPP_WSTATE_WARN)
 TPP_WGROUP(TPP_WG_QUALITY, /*        */ 1("quality"),              TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WARN)
 
@@ -1239,6 +1299,28 @@ TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WA
 #ifndef TPP_FLEX_ARRAY
 #define TPP_FLEX_ARRAY 4096
 #endif /* !TPP_FLEX_ARRAY */
+#ifndef TPP_FALLTHRU
+#ifdef __has_cpp_attribute
+#if __has_cpp_attribute(fallthrough)
+#define TPP_FALLTHRU [[fallthrough]];
+#endif /* __has_cpp_attribute(fallthrough) */
+#endif /* __has_cpp_attribute */
+#ifndef TPP_FALLTHRU
+#ifdef __has_attribute
+#if __has_attribute(fallthrough)
+#define TPP_FALLTHRU __attribute__((__fallthrough__));
+#endif /* __has_attribute(fallthrough) */
+#endif /* __has_attribute */
+#ifndef TPP_FALLTHRU
+#if defined(__GNUC__) && (__GNUC__ > 6 || (__GNUC__ == 6 && __GNUC_MINOR__ >= 3))
+#define TPP_FALLTHRU __attribute__((__fallthrough__));
+#endif /* ... */
+#ifndef TPP_FALLTHRU
+#define TPP_FALLTHRU /* @fallthrough@ */
+#endif /* !TPP_FALLTHRU */
+#endif /* !TPP_FALLTHRU */
+#endif /* !TPP_FALLTHRU */
+#endif /* !TPP_FALLTHRU */
 
 /* Does the host preprocessor have support for __VA_ARGS__? */
 #ifndef TPP_HOST_HAVE_PP_VARARGS
@@ -2073,7 +2155,7 @@ TPP_DECL_END
 
 /* "##" */
 #ifndef TPP_HAVE_TPP_TOK_POUND_POUND
-#define TPP_HAVE_TPP_TOK_POUND_POUND ((TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS < 0) ? TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS : (TPP_HAVE_GLUE_MACRO_ARGUMENT)) /* "TPP_FEAT_TPP_TOK_POUND_POUND" */
+#define TPP_HAVE_TPP_TOK_POUND_POUND ((TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS < 0) ? TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS : (TPP_HAVE_GLUE_MACRO_ARGUMENT || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS)) /* "TPP_FEAT_TPP_TOK_POUND_POUND" */
 #endif /* !TPP_HAVE_TPP_TOK_POUND_POUND */
 
 /* "&&" */
@@ -2527,7 +2609,7 @@ TPP_DECL_END
 // #endif
 // NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 #ifndef TPP_HAVE_TRADITIONAL_MACROS
-#define TPP_HAVE_TRADITIONAL_MACROS (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-ftraditional-macro" */
+#define TPP_HAVE_TRADITIONAL_MACROS (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-ftraditional-macro" */
 #endif /* !TPP_HAVE_TRADITIONAL_MACROS */
 
 /* Support for: #define printf(format, args...) args */
@@ -2683,9 +2765,6 @@ EXTENSION(EXT_EXT_ARE_FEATURES,  "extensions-are-features",       TPP_CONFIG_EXT
 #ifndef TPP_CONFIG_EXTENSION_MSVC_FIXED_INT
 EXTENSION(EXT_MSVC_FIXED_INT,    "fixed-length-integrals",        TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
 #endif /* TPP_CONFIG_EXTENSION_MSVC_FIXED_INT */
-#ifndef TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED
-EXTENSION(EXT_NO_EXPAND_DEFINED, "dont-expand-defined",           TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED_DEFAULT)
-#endif /* TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED */
 #ifndef TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR
 EXTENSION(EXT_IFELSE_IN_EXPR,    "ifelse-in-expressions",         TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR_DEFAULT)
 #endif /* TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR */
@@ -2785,6 +2864,21 @@ EXTENSION(EXT_IFELSE_IN_EXPR,    "ifelse-in-expressions",         TPP_CONFIG_EXT
 #ifndef TPP_HAVE_TOKEN_ENCODESTRING
 #define TPP_HAVE_TOKEN_ENCODESTRING (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT)
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+
+/* Provide a function "tpp_lexer_parseexpr()" that
+ * is used to implement "#if" directive expressions */
+#ifndef TPP_HAVE_LEXER_PARSEEXPR
+#define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF /* || TPP_HAVE_MACRO___TPP_EVAL*/)
+#endif /* !TPP_HAVE_LEXER_PARSEEXPR */
+
+/* Enable support for "defined(MACRO)" in lexer expressions */
+#ifndef TPP_HAVE_EXPR_DEFINED
+#define TPP_HAVE_EXPR_DEFINED (TPP_HAVE_LEXER_PARSEEXPR)
+#endif /* !TPP_HAVE_EXPR_DEFINED */
+
+#ifndef TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
+#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR (TPP_HAVE_EXPR_DEFINED ? -2 : 0) /* "-fdont-expand-defined" */
+#endif /* !TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR */
 
 /************************************************************************/
 /************************************************************************/
@@ -2931,6 +3025,18 @@ EXTENSION(EXT_IFELSE_IN_EXPR,    "ifelse-in-expressions",         TPP_CONFIG_EXT
 #define TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
 #endif /* !TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT
+#define TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_VA_OPT_IN_MACROS)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT
+#define TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_VA_OPT_IN_MACROS)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT */
+#ifndef TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED
+#define TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_EXPR_DEFINED && (TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR <= 0))
+#endif /* !TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
 
 
 /* Warning printer configuration */
@@ -5030,9 +5136,9 @@ typedef struct tpp_macro_argument {
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 	tpp_size        tma_ins_str; /* [const] Amount of times the argument is inserted in its string-escaped form. */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
-#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
 	tpp_size        tma_ins;     /* [const] Amount of times the argument is inserted without expansion. */
-#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 #if TPP_DEBUG
 	tpp_char const *tma_name;    /* [1..1][const] Name of this macro (aliases `struct tpp_keyword::tk_kwd'). */
 #endif /* TPP_DEBUG */
@@ -5047,21 +5153,24 @@ enum {
 	TPP_MACRO_OPCODE_SKIP,     /* +1  Advance macro body template reader by ARG[0] bytes */
 	TPP_MACRO_OPCODE_COPY,     /* +1  Copy ARG[0] bytes from macro body template & advance reader */
 	TPP_MACRO_OPCODE_INS_EXP,  /* +2  Insert argument[ARG[0]] (expanded) and advance macro body template reader by ARG[1] bytes */
-#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
-	TPP_MACRO_OPCODE_INS,      /* +2  Insert argument[ARG[0]] (non-expanded) and advance macro body template reader by ARG[1] bytes */
-#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
 	TPP_MACRO_OPCODE_INS_STR,  /* +2  Insert argument[ARG[0]] ("-escaped) and advance macro body template reader by ARG[1] bytes */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 	TPP_MACRO_OPCODE_INS_CHR,  /* +2  Insert argument[ARG[0]] ('-escaped) and advance macro body template reader by ARG[1] bytes */
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
+	TPP_MACRO_OPCODE_INS,      /* +2  Insert argument[ARG[0]] (non-expanded) and advance macro body template reader by ARG[1] bytes */
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 #if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
 	TPP_MACRO_OPCODE_VA_COMMA, /* +1  TPP_MACRO_OPCODE_SKIP[ARG[0]]; If varargs are non-empty: insert a ','-character */
 #endif /* TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS */
 #if TPP_HAVE_VA_OPT_IN_MACROS
 	TPP_MACRO_OPCODE_VA_OPT,   /* +3  TPP_MACRO_OPCODE_SKIP[ARG[0]]; If varargs are non-empty: TPP_MACRO_OPCODE_COPY[ARG[1]]; TPP_MACRO_OPCODE_SKIP[ARG[2]] */
 #endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+	TPP_MACRO_OPCODE_VA_NARGS, /* +1  TPP_MACRO_OPCODE_SKIP[ARG[0]]; insert decimal token representing # of varargs (or "0" if there are no varargs) */
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
 };
 #endif /* TPP_BUILDING */
 

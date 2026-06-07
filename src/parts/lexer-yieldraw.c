@@ -1064,7 +1064,7 @@ handle_backslash:
 					error = tpp_lexer_readutf8(self, &pos, &uc);
 					if (error != TPP_EOK)
 						goto done;
-					if (tpp_unicode_islf(ch)) {
+					if (tpp_unicode_islf(uc)) {
 						error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_before_bse),
 						                           TPP_W_LINE_COMMENT_CONTINUED);
 						goto done;

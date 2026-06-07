@@ -550,6 +550,7 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
 	_TPP_CASE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF32_STRING_LITERAL
 		tpp_bse_seek_until_fwd(start, '"');
+		TPP_FALLTHRU
 #endif /* ... */
 #else /* TPP_HAVE_BSE */
 #if (TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
@@ -558,18 +559,19 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 		++start;
+		TPP_FALLTHRU
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
-		/* FALLTHRU */
 	_TPP_CASE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF32_STRING_LITERAL
 		++start;
+		TPP_FALLTHRU
 #else /* ... */
 	_TPP_CASE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 		start += 2;
+		TPP_FALLTHRU
 #endif /* ... */
 #endif /* !TPP_HAVE_BSE */
-		/* FALLTHRU */
 	_TPP_CASE_TPP_TOK_CHAR
 	_TPP_CASE_TPP_TOK_STRING {
 		++start; /* Skip leading quote */
