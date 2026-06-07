@@ -393,7 +393,7 @@ next_op:
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[argi];
 			tpp_size raw_size;
 			tpp_assert(argi < macro_argc);
-			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins != 0);
+			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins_str != 0);
 			*dst++ = '"';
 			raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
 			tpp_token_encodestring(&tpp_buffer_printer, &dst, arginfo->tlai_start, raw_size);
@@ -410,7 +410,7 @@ next_op:
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[argi];
 			tpp_size raw_size;
 			tpp_assert(argi < macro_argc);
-			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins != 0);
+			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins_str != 0);
 			*dst++ = '\'';
 			raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
 			tpp_token_encodestring(&tpp_buffer_printer, &dst, arginfo->tlai_start, raw_size);

@@ -71,6 +71,10 @@ int main(int argc, char *argv[]) {
 		             tpp_lexer_gettoken(&lexer)->tt_start),
 		       tpp_lexer_gettoken(&lexer)->tt_start);
 	}
+	if (tpp_lexer_geterrorcount(&lexer)) {
+		fprintf(stderr, "There were lexer errors\n");
+		goto out;
+	}
 	result = 0;
 out:
 	tpp_lexer_fini(&lexer);

@@ -3102,7 +3102,9 @@ again:
 #undef TPP_TOKEN_ENCODESTRING_CASE
 	default: goto again;
 	}
-	temp = (*printer)(arg, (tpp_char const *)data, (tpp_size)(end - (tpp_char const *)data));
+	temp = (*printer)(arg, (tpp_char const *)data,
+	                  (tpp_size)((iter - 1) -
+	                             (tpp_char const *)data));
 	if (temp < 0)
 		return temp;
 	result += temp;
@@ -12671,19 +12673,22 @@ found_va_opt_body_end:
 #if (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || \
      TPP_HAVE_CHARIZE_MACRO_ARGUMENT ||   \
      TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT)
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+		case TPP_TOK_SHELL_COMMENT:
+			/* Deal with special case of shell comments (which must be re-parsed as a #-token) */
+			body_iter = token->tt_start + 1;
+			TPP_FALLTHRU
+#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 		case '#': {
 			tpp_char const *start_of_pound;
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
 			tpp_macro_opcode opcode;
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
-			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
-				goto handle_keyword;
 			if (!tpp_lexer_getext(self, TPP_EXT_STRINGIZE_MACRO_ARGUMENT) &&
 			    !tpp_lexer_getext(self, TPP_EXT_CHARIZE_MACRO_ARGUMENT) &&
 			    !tpp_lexer_getext(self, TPP_EXT_DONT_EXPAND_MACRO_ARGUMENT))
-				goto handle_keyword;
+				break;
 			start_of_pound = token->tt_start;
-#define WANT_handle_keyword
 			do {
 				tok = tpp_lexer_yieldraw_at(self, &body_iter);
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
@@ -13133,6 +13138,9 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 
 	/* Find end of body (moving the lexer to point at the trailing EOF/LF/COMMENT token) */
 	while (tok != TPP_TOK_EOF && !TPP_TOK_ISLF_OR_COMMENT(tok)) {
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+again_scan_end_of_macro_body:
+#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 		rel_body_end = tpp_file_ptr2rel(file, *p_pos);
 		tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 		if (TPP_TOK_ISERR(tok)) {
@@ -13140,6 +13148,14 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 			goto err_builder;
 		}
 	}
+
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+	if (tok == TPP_TOK_SHELL_COMMENT) {
+		/* Deal with special case of shell comments (which must be re-parsed as a #-token) */
+		*p_pos = token->tt_start + 1;
+		goto again_scan_end_of_macro_body;
+	}
+#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 
 	/* Compile the macro according to active lexer rules */
 	body_start = tpp_file_rel2ptr(file, rel_body_start);
@@ -14231,7 +14247,7 @@ next_op:
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[argi];
 			tpp_size raw_size;
 			tpp_assert(argi < macro_argc);
-			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins != 0);
+			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins_str != 0);
 			*dst++ = '"';
 			raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
 			tpp_token_encodestring(&tpp_buffer_printer, &dst, arginfo->tlai_start, raw_size);
@@ -14248,7 +14264,7 @@ next_op:
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[argi];
 			tpp_size raw_size;
 			tpp_assert(argi < macro_argc);
-			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins != 0);
+			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins_str != 0);
 			*dst++ = '\'';
 			raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
 			tpp_token_encodestring(&tpp_buffer_printer, &dst, arginfo->tlai_start, raw_size);

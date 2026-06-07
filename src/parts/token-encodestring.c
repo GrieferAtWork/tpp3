@@ -108,7 +108,9 @@ again:
 #undef TPP_TOKEN_ENCODESTRING_CASE
 	default: goto again;
 	}
-	temp = (*printer)(arg, (tpp_char const *)data, (tpp_size)(end - (tpp_char const *)data));
+	temp = (*printer)(arg, (tpp_char const *)data,
+	                  (tpp_size)((iter - 1) -
+	                             (tpp_char const *)data));
 	if (temp < 0)
 		return temp;
 	result += temp;
