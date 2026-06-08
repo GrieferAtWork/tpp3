@@ -177,6 +177,15 @@ typedef struct tpp_lexer {
 #define _tpp_lexer_initerrorlimit(self)  /* nothing */
 #define tpp_lexer_geterrorcount(self)    0
 #endif /* !TPP_HAVE_WARNING_ERROR */
+
+
+	/* Next value for __COUNTER__ */
+#if TPP_HAVE_MACRO___COUNTER__
+	tpp_size tl_builtin_counter; /* Next value for __COUNTER__ */
+#define _tpp_lexer_initcounter(self) , (self)->tl_builtin_counter = 0
+#else /* TPP_HAVE_MACRO___COUNTER__ */
+#define _tpp_lexer_initcounter(self) /* nothing */
+#endif /* !TPP_HAVE_MACRO___COUNTER__ */
 } tpp_lexer;
 
 
@@ -219,7 +228,8 @@ typedef struct tpp_lexer {
 	       _tpp_lexer_init_warn(self)          \
 	       _tpp_lexer_init_warnprinter(self)   \
 	       _tpp_lexer_initerrorcount(self)     \
-	       _tpp_lexer_initerrorlimit(self))
+	       _tpp_lexer_initerrorlimit(self)     \
+	       _tpp_lexer_initcounter(self))
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_fini_common(tpp_lexer *tpp_restrict self);
 
