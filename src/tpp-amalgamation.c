@@ -15204,9 +15204,11 @@ err_nomem:
 	return TPP_TOK_ENOMEM;
 }
 
-#if (TPP_HAVE_MACRO___COUNTER__ || \
-     TPP_HAVE_MACRO___LINE__ ||    \
-     TPP_HAVE_MACRO___COLUMN__)
+#if (TPP_HAVE_MACRO___COUNTER__ ||       \
+     TPP_HAVE_MACRO___LINE__ ||          \
+     TPP_HAVE_MACRO___COLUMN__ ||        \
+     TPP_HAVE_MACRO___INCLUDE_LEVEL__ || \
+     TPP_HAVE_MACRO___INCLUDE_DEPTH__)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_push_textfile_copy(tpp_lexer *tpp_restrict self,
                              tpp_char const *text,
@@ -15218,6 +15220,15 @@ tpp_lexer_push_textfile_copy(tpp_lexer *tpp_restrict self,
 	tpp_memcpy(tpp_string_str(chunk), text, textsize);
 	return tpp_lexer_push_textfile(self, tpp_string_str(chunk),
 	                               textsize, chunk);
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_push_textfile_int(tpp_lexer *tpp_restrict self,
+                            tpp_intmax value) {
+	char buf[TPP_ITOA_MAXLEN];
+	char const *p = tpp_itoa(buf, value);
+	return tpp_lexer_push_textfile_copy(self, (tpp_char const *)p,
+	                                    (tpp_size)(buf + tpp_lengthof(buf) - p));
 }
 #endif /* ... */
 
@@ -15732,8 +15743,6 @@ err_tok:
 #if TPP_HAVE_MACRO___LINE__ || TPP_HAVE_MACRO___COLUMN__
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
-	char buf[TPP_ITOA_MAXLEN];
-	char const *p;
 	tpp_lcinfo info;
 	tpp_file *file = tpp_lexer_getfile(self);
 	tpp_intmax value;
@@ -15768,9 +15777,7 @@ tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
 	default: tpp_unreachable();
 	}
 	++value;
-	p = tpp_itoa(buf, value);
-	return tpp_lexer_push_textfile_copy(self, (tpp_char const *)p,
-	                                    (tpp_size)(buf + tpp_lengthof(buf) - p));
+	return tpp_lexer_push_textfile_int(self, value);
 }
 #endif /* ... */
 
@@ -15778,11 +15785,21 @@ tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
 #if TPP_HAVE_MACRO___COUNTER__
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___COUNTER__(tpp_lexer *tpp_restrict self) {
-	char buf[TPP_UTOA_MAXLEN];
-	char const *p = tpp_utoa(buf, self->tl_builtin_counter);
-	++self->tl_builtin_counter;
-	return tpp_lexer_push_textfile_copy(self, (tpp_char const *)p,
-	                                    (tpp_size)(buf + tpp_lengthof(buf) - p));
+	return tpp_lexer_push_textfile_int(self, self->tl_builtin_counter++);
+}
+#endif /* ... */
+
+
+#if TPP_HAVE_MACRO___INCLUDE_LEVEL__ || TPP_HAVE_MACRO___INCLUDE_DEPTH__
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___INCLUDE_LEVEL__(tpp_lexer *tpp_restrict self) {
+	tpp_intmax value = -1;
+	tpp_file const *iter = tpp_lexer_getfile(self);
+	do {
+		if (iter->tf_kind != TPP_FILE_KIND_MACRO)
+			++value;
+	} while ((iter = iter->tf_tprev) != NULL);
+	return tpp_lexer_push_textfile_int(self, value);
 }
 #endif /* ... */
 
@@ -15940,9 +15957,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___INCLUDE_DEPTH__
 	case TPP_KWD___INCLUDE_DEPTH__:
 #endif /* TPP_HAVE_MACRO___INCLUDE_DEPTH__ */
-	{
-		/* TODO */
-	}	break;
+		return tpp_lexer_yield_handle___INCLUDE_LEVEL__(self);
 #endif /* ... */
 /************************************************************************/
 
