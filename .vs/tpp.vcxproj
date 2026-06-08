@@ -22,6 +22,7 @@
     <ClCompile Include="..\src\parts\keyword.c" />
     <ClCompile Include="..\src\parts\lexer-decodestring.c" />
     <ClCompile Include="..\src\parts\lexer-pp-define.c" />
+    <ClCompile Include="..\src\parts\lexer-pp-pragma.c" />
     <ClCompile Include="..\src\parts\lexer-seek-rparen.c" />
     <ClCompile Include="..\src\parts\lexer-warn.c" />
     <ClCompile Include="..\src\parts\lexer-yield.c" />

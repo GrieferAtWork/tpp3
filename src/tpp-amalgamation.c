@@ -13319,40 +13319,9 @@ TPP_DECL_END
 /************************************************************************/
 
 /************************************************************************/
-/* File: parts/lexer-yieldpp.c                                          */
+/* File: parts/lexer-pp-pragma.c                                        */
 /************************************************************************/
 TPP_DECL_BEGIN
-
-#if TPP_HAVE_TRIGRAPHS && TPP_HAVE_DIGRAPHS
-#define tpp_is_start_of_hash(ch) ((ch) == '#' || (ch) == '?' || (ch) == '%')
-#elif TPP_HAVE_DIGRAPHS
-#define tpp_is_start_of_hash(ch) ((ch) == '#' || (ch) == '%')
-#elif TPP_HAVE_TRIGRAPHS
-#define tpp_is_start_of_hash(ch) ((ch) == '#' || (ch) == '?')
-#else /* ... */
-#define tpp_is_start_of_hash(ch) ((ch) == '#')
-#endif /* !... */
-
-#if TPP_HAVE_CPP_DIRECTIVES
-
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT
-#undef tpp_lexer_seek_eol__STYLE_PARAM
-#undef tpp_lexer_seek_eol__STYLE_ARG
-#if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
-#define tpp_lexer_seek_eol__STYLE_PARAM  , tpp_token_id comment_style
-#define tpp_lexer_seek_eol__STYLE_ARG(x) , x
-#else /* TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
-#define tpp_lexer_seek_eol__STYLE_PARAM  /* nothing */
-#define tpp_lexer_seek_eol__STYLE_ARG(x) /* nothing */
-#endif /* !TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
-
-/* From "./lexer-yieldraw.c" */
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
-                   tpp_char const **tpp_restrict p_pos
-                   tpp_lexer_seek_eol__STYLE_PARAM);
-#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT */
-
 
 #if TPP_HAVE_PRAGMA
 /* Process a pragma directive, starting after the "TPP_KWD_pragma" keyword
@@ -13408,6 +13377,14 @@ err_nomem:
 }
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
+/* Process a #pragma directive, start at the first token that comes after
+ * the leading "#pragma" (i.e.: the first token of the actual directive
+ * itself)
+ *
+ * @return: TPP_EOK:    Success (but there may still be garbage after
+ *                      the directive that hasn't been parsed, yet).
+ * @return: TPP_ENOENT: Unknown pragma (soft-error; must be handled by caller)
+ * @return: TPP_E*:     Error */
 TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
@@ -13568,6 +13545,58 @@ unknown_pragma:
 	return TPP_ENOENT;
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
 }
+#endif /* TPP_HAVE_PRAGMA */
+
+TPP_DECL_END
+/************************************************************************/
+
+/************************************************************************/
+/* File: parts/lexer-yieldpp.c                                          */
+/************************************************************************/
+TPP_DECL_BEGIN
+
+#if TPP_HAVE_TRIGRAPHS && TPP_HAVE_DIGRAPHS
+#define tpp_is_start_of_hash(ch) ((ch) == '#' || (ch) == '?' || (ch) == '%')
+#elif TPP_HAVE_DIGRAPHS
+#define tpp_is_start_of_hash(ch) ((ch) == '#' || (ch) == '%')
+#elif TPP_HAVE_TRIGRAPHS
+#define tpp_is_start_of_hash(ch) ((ch) == '#' || (ch) == '?')
+#else /* ... */
+#define tpp_is_start_of_hash(ch) ((ch) == '#')
+#endif /* !... */
+
+#if TPP_HAVE_CPP_DIRECTIVES
+
+#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#undef tpp_lexer_seek_eol__STYLE_PARAM
+#undef tpp_lexer_seek_eol__STYLE_ARG
+#if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
+#define tpp_lexer_seek_eol__STYLE_PARAM  , tpp_token_id comment_style
+#define tpp_lexer_seek_eol__STYLE_ARG(x) , x
+#else /* TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
+#define tpp_lexer_seek_eol__STYLE_PARAM  /* nothing */
+#define tpp_lexer_seek_eol__STYLE_ARG(x) /* nothing */
+#endif /* !TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
+
+/* From "./lexer-yieldraw.c" */
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
+                   tpp_char const **tpp_restrict p_pos
+                   tpp_lexer_seek_eol__STYLE_PARAM);
+#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+
+
+#if TPP_HAVE_PRAGMA
+/* Process a #pragma directive, start at the first token that comes after
+ * the leading "#pragma" (i.e.: the first token of the actual directive
+ * itself)
+ *
+ * @return: TPP_EOK:    Success (but there may still be garbage after
+ *                      the directive that hasn't been parsed, yet).
+ * @return: TPP_ENOENT: Unknown pragma (soft-error; must be handled by caller)
+ * @return: TPP_E*:     Error */
+TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 
 /* Process a pragma directive, starting after the "TPP_KWD_pragma" keyword */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL

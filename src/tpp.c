@@ -48,6 +48,7 @@
 #include "parts/lexer-yieldraw.c"
 #include "parts/lexer-seek-rparen.c"
 #include "parts/lexer-pp-define.c"
+#include "parts/lexer-pp-pragma.c"
 #include "parts/lexer-yieldpp.c"
 #include "parts/lexer-yield.c"
 #include "parts/lexer-decodestring.c"
