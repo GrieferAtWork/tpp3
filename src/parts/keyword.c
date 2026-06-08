@@ -97,6 +97,9 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 			tpp_macro_pushstack_init(&result->tkm_macro_pushstack);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+			result->tkm_builtin_counter = 0;
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
 			self->tk_misc = result;
 		}
 	}

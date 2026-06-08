@@ -6994,6 +6994,9 @@ typedef struct tpp_keyword_misc {
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	tpp_macro_pushstack tkm_macro_pushstack; /* For `#pragma push_macro()' */
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+	tpp_size tkm_builtin_counter; /* Next value for __TPP_COUNTER */
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
 } tpp_keyword_misc;
 #endif /* TPP_HAVE_KEYWORD_MISC */
 

@@ -4272,6 +4272,9 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 			tpp_macro_pushstack_init(&result->tkm_macro_pushstack);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+			result->tkm_builtin_counter = 0;
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
 			self->tk_misc = result;
 		}
 	}
@@ -15178,9 +15181,9 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
                        tpp_macro *tpp_restrict macro);
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_push_textfile(tpp_lexer *tpp_restrict self,
-                        tpp_char const *text, tpp_size textsize,
-                        /*0..1,inherit(always)*/ TPP_REF tpp_string *chunk) {
+tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
+                                  tpp_char const *text, tpp_size textsize,
+                                  /*0..1,inherit(always)*/ TPP_REF tpp_string *chunk) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
@@ -15204,33 +15207,42 @@ err_nomem:
 	return TPP_TOK_ENOMEM;
 }
 
-#if (TPP_HAVE_MACRO___COUNTER__ ||       \
-     TPP_HAVE_MACRO___LINE__ ||          \
-     TPP_HAVE_MACRO___COLUMN__ ||        \
-     TPP_HAVE_MACRO___INCLUDE_LEVEL__ || \
-     TPP_HAVE_MACRO___INCLUDE_DEPTH__)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_push_textfile_copy(tpp_lexer *tpp_restrict self,
-                             tpp_char const *text,
-                             tpp_size textsize) {
+tpp_lexer_push_textfile(tpp_lexer *tpp_restrict self,
+                        tpp_char const *text,
+                        tpp_size textsize) {
 	TPP_REF tpp_string *chunk;
 	chunk = tpp_string_malloc(textsize);
 	if tpp_unlikely(!chunk)
 		return TPP_TOK_ENOMEM;
 	tpp_memcpy(tpp_string_str(chunk), text, textsize);
-	return tpp_lexer_push_textfile(self, tpp_string_str(chunk),
-	                               textsize, chunk);
+	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk),
+	                                         textsize, chunk);
 }
 
+#if (TPP_HAVE_MACRO___COUNTER__ ||       \
+     TPP_HAVE_MACRO___LINE__ ||          \
+     TPP_HAVE_MACRO___COLUMN__ ||        \
+     TPP_HAVE_MACRO___INCLUDE_LEVEL__ || \
+     TPP_HAVE_MACRO___INCLUDE_DEPTH__)
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_push_textfile_int(tpp_lexer *tpp_restrict self,
                             tpp_intmax value) {
 	char buf[TPP_ITOA_MAXLEN];
 	char const *p = tpp_itoa(buf, value);
-	return tpp_lexer_push_textfile_copy(self, (tpp_char const *)p,
-	                                    (tpp_size)(buf + tpp_lengthof(buf) - p));
+	return tpp_lexer_push_textfile(self, (tpp_char const *)p,
+	                               (tpp_size)(buf + tpp_lengthof(buf) - p));
 }
 #endif /* ... */
+
+/* Support for feature-test-style macros */
+#undef TPP_HAVE_KEYWORD_TEST_MACROS
+#if (TPP_HAVE_MACRO___TPP_UNIQUE || \
+     TPP_HAVE_MACRO___TPP_COUNTER)
+#define TPP_HAVE_KEYWORD_TEST_MACROS 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_TEST_MACROS 0
+#endif /* !... */
 
 /* Support for feature-test-style macros */
 #undef TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS
@@ -15262,15 +15274,23 @@ tpp_lexer_push_textfile_int(tpp_lexer *tpp_restrict self,
 #undef TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO
 #define TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO \
 	(TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS ||    \
-	 TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS)
+	 TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS ||     \
+	 TPP_HAVE_KEYWORD_TEST_MACROS)
 
 #if TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO
 
+#undef TPP_FEATURE_FLAG_EXPANSION_MAXLEN
+#if TPP_HAVE_MACRO___TPP_UNIQUE || TPP_HAVE_MACRO___TPP_COUNTER
+#define TPP_FEATURE_FLAG_EXPANSION_MAXLEN TPP_ITOA_MAXLEN
+#else /* ... */
+#define TPP_FEATURE_FLAG_EXPANSION_MAXLEN 1
+#endif /* !... */
+
 #if TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS
 struct tpp_lexer_handle_string_feature_test_data {
-	tpp_lexer   *tlhsftd_lexer;        /* [1..1] Lexer */
-	tpp_token_id tlhsftd_mode;         /* Feature-test mode */
-	tpp_char     tlhsftd_expansion[1]; /* Desired expansion */
+	tpp_lexer   *tlhsftd_lexer; /* [1..1] Lexer */
+	tpp_token_id tlhsftd_mode;  /* Feature-test mode */
+	tpp_char     tlhsftd_expansion[TPP_FEATURE_FLAG_EXPANSION_MAXLEN]; /* Desired expansion */
 };
 
 static tpp_errno TPPCALL
@@ -15363,9 +15383,14 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 	struct tpp_lexer_handle_string_feature_test_data data;
 #define tpp_feature_test_macro_expansion data.tlhsftd_expansion
 #else /* TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS */
-	tpp_char expansion[1];
+	tpp_char expansion[TPP_FEATURE_FLAG_EXPANSION_MAXLEN];
 #define tpp_feature_test_macro_expansion expansion
 #endif /* !TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS */
+#if TPP_FEATURE_FLAG_EXPANSION_MAXLEN > 1
+	tpp_size tpp_feature_test_macro_expansion_len = 1;
+#else /* TPP_FEATURE_FLAG_EXPANSION_MAXLEN > 1 */
+#define tpp_feature_test_macro_expansion_len 1
+#endif /* TPP_FEATURE_FLAG_EXPANSION_MAXLEN <= 1 */
 again_yield:
 	tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 	if tpp_unlikely(TPP_TOK_ISERR(tok))
@@ -15404,14 +15429,68 @@ again_yield:
 	} else
 #endif /* TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS */
 	{
-#if TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS
+#if TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS || TPP_HAVE_KEYWORD_TEST_MACROS
 		/* Deal with keyword-style feature tests... */
 		if (TPP_TOK_ISKEYWORD(tok)) {
 			tpp_keyword const *feature_keyword;
 			tpp_keyword_flags mask, flags;
 
-			/* Load keyword flags. */
+			/* Load keyword. */
 			feature_keyword = tpp_lexer_gettoken(self)->tt_kwd;
+			switch (mode) {
+
+#if TPP_HAVE_MACRO___is_identifier
+			case TPP_KWD___is_identifier:
+				/* Something is considered to be an "identifier" if it's not a builtin keyword. */
+				if (!TPP_TOK_ISBUILTINKEYWORD(feature_keyword->tk_id))
+					tpp_feature_test_macro_expansion[0] = '1';
+				goto after_expansion_mode_assignment;
+#define WANT_after_expansion_mode_assignment
+#endif /* TPP_HAVE_MACRO___is_identifier */
+
+#if TPP_HAVE_MACRO___TPP_UNIQUE || TPP_HAVE_MACRO___TPP_COUNTER
+			{
+				tpp_intmax expansion_value;
+				char *expansion_dst;
+#if TPP_HAVE_MACRO___TPP_UNIQUE
+				if(0) {
+			case TPP_KWD___TPP_UNIQUE:
+					expansion_value = (tpp_intmax)feature_keyword->tk_id;
+				}
+#endif /* TPP_HAVE_MACRO___TPP_UNIQUE */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+				if(0) {
+					tpp_keyword_misc *misc;
+					tpp_keyword *rw_keyword;
+			case TPP_KWD___TPP_COUNTER:
+					rw_keyword = tpp_keywords_copybuiltin(&self->tl_kwds, feature_keyword);
+					if tpp_unlikely(!rw_keyword)
+						return TPP_TOK_ENOMEM;
+					misc = tpp_keyword_requiremisc(rw_keyword);
+					if tpp_unlikely(!misc)
+						return TPP_TOK_ENOMEM;
+					expansion_value = misc->tkm_builtin_counter++;
+				}
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+				expansion_dst = tpp_itoa((char *)tpp_feature_test_macro_expansion, expansion_value);
+				tpp_feature_test_macro_expansion_len = (tpp_size)((char *)tpp_feature_test_macro_expansion +
+					                                              tpp_lengthof(tpp_feature_test_macro_expansion) -
+					                                              expansion_dst);
+				tpp_memmovedown(tpp_feature_test_macro_expansion, expansion_dst, tpp_feature_test_macro_expansion_len);
+				goto after_expansion_mode_assignment;
+#define WANT_after_expansion_mode_assignment
+			}	break;
+#endif /* !TPP_HAVE_MACRO___TPP_UNIQUE || TPP_HAVE_MACRO___TPP_COUNTER */
+
+#if TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS
+			default: break;
+#else /* TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS */
+			default: tpp_unreachable();
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS */
+			}
+
+#if TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS
+			/* Load keyword flags. */
 			flags = tpp_lexer_getkeywordflags(self, feature_keyword);
 
 			/* Also include flags after stripping leading/trailing _-s */
@@ -15473,13 +15552,6 @@ again_yield:
 				mask = TPP_KEYWORD_FLAG_HAS_C_ATTRIBUTE;
 				break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
-#if TPP_HAVE_MACRO___is_identifier
-			case TPP_KWD___is_identifier:
-				/* Something is considered to be an "identifier" if it's not a builtin keyword. */
-				if (!TPP_TOK_ISBUILTINKEYWORD(feature_keyword->tk_id))
-					tpp_feature_test_macro_expansion[0] = '1';
-				goto after_expansion_mode_assignment;
-#endif /* TPP_HAVE_MACRO___is_identifier */
 #if TPP_HAVE_MACRO___is_deprecated
 			case TPP_KWD___is_deprecated:
 				mask = TPP_KEYWORD_FLAG_IS_DEPRECATED;
@@ -15493,16 +15565,19 @@ again_yield:
 			default: tpp_unreachable();
 			}
 			tpp_feature_test_macro_expansion[0] = (flags & mask) != 0 ? '1' : '0';
-#if TPP_HAVE_MACRO___is_identifier
+#endif /* TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS */
+
+#ifdef WANT_after_expansion_mode_assignment
+#undef WANT_after_expansion_mode_assignment
 after_expansion_mode_assignment:
-#endif /* TPP_HAVE_MACRO___is_identifier */
+#endif /* WANT_after_expansion_mode_assignment */
 			do {
 				tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 			if tpp_unlikely(TPP_TOK_ISERR(tok))
 				goto err_tok;
 		}
-#endif /* TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS || TPP_HAVE_KEYWORD_TEST_MACROS */
 	}
 
 #ifdef WANT_seek_end_of_macro
@@ -15519,6 +15594,9 @@ seek_end_of_macro:
 			--recursion;
 		}
 		tpp_feature_test_macro_expansion[0] = '0';
+#if TPP_FEATURE_FLAG_EXPANSION_MAXLEN > 1
+		tpp_feature_test_macro_expansion_len = 1;
+#endif /* TPP_FEATURE_FLAG_EXPANSION_MAXLEN > 1 */
 		if (tok == TPP_TOK_EOF)
 			goto rollback;
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
@@ -15526,12 +15604,14 @@ seek_end_of_macro:
 			goto err_tok;
 	}
 	tpp_lexer_seek_commit(self, pos);
-	return tpp_lexer_push_textfile(self, tpp_feature_test_macro_expansion, 1, NULL);
+	return tpp_lexer_push_textfile(self, tpp_feature_test_macro_expansion,
+	                               tpp_feature_test_macro_expansion_len);
 rollback:
 	tok = backup.tlsb_id;
 err_tok:
 	tpp_lexer_seek_rollback(self, &backup);
 	return tok;
+#undef tpp_feature_test_macro_expansion_len
 #undef tpp_feature_test_macro_expansion
 }
 #endif /* TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO */
@@ -15855,6 +15935,12 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___has_known_warning
 	case TPP_KWD___has_known_warning:
 #endif /* TPP_HAVE_MACRO___has_known_warning */
+#if TPP_HAVE_MACRO___TPP_UNIQUE
+	case TPP_KWD___TPP_UNIQUE:
+#endif /* !TPP_HAVE_MACRO___TPP_UNIQUE */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+	case TPP_KWD___TPP_COUNTER:
+#endif /* !TPP_HAVE_MACRO___TPP_COUNTER */
 		return tpp_lexer_handle_feature_test_macro(self, tok);
 #endif /* TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO */
 /************************************************************************/
@@ -15994,15 +16080,9 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___TPP_EVAL
 	/* TODO: __TPP_EVAL */
 #endif /* !TPP_HAVE_MACRO___TPP_EVAL */
-#if TPP_HAVE_MACRO___TPP_UNIQUE
-	/* TODO: __TPP_UNIQUE */
-#endif /* !TPP_HAVE_MACRO___TPP_UNIQUE */
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
 	/* TODO: __TPP_LOAD_FILE */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
-#if TPP_HAVE_MACRO___TPP_COUNTER
-	/* TODO: __TPP_COUNTER */
-#endif /* !TPP_HAVE_MACRO___TPP_COUNTER */
 #if TPP_HAVE_MACRO___TPP_RANDOM
 	/* TODO: __TPP_RANDOM */
 #endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
@@ -16033,9 +16113,9 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 		tpp_builtin_macro const *builtin_macro;
 		builtin_macro = tpp_macro_getbuiltin(tok);
 		if (builtin_macro != NULL) {
-			return tpp_lexer_push_textfile(self, builtin_macro->tbm_body,
-			                               builtin_macro->tbm_body_size,
-			                               NULL);
+			return tpp_lexer_push_textfile_inherited(self, builtin_macro->tbm_body,
+			                                         builtin_macro->tbm_body_size,
+			                                         NULL);
 		}
 	}	break;
 
