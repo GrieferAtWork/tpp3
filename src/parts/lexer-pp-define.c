@@ -580,9 +580,9 @@ tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict builder,
 	tpp_errno result;
 	/* Disable warnings because compiler does some questionable stuff in order to parse
 	 * the contents of strings in order to allow arguments to be embedded within them. */
-	tpp_lexer_state_push(self, ~0, TPP_LEXER_STATE_FLAG_NOWARNINGS);
+	tpp_lexer_state_push_nowarnings(self);
 	result = tpp_macro_builder_compile_traditional_impl(builder, self, body_start, body_end);
-	tpp_lexer_state_pop(self, ~0, TPP_LEXER_STATE_FLAG_NOWARNINGS);
+	tpp_lexer_state_pop_nowarnings(self);
 	return result;
 }
 #else /* TPP_HAVE_WARNINGS */
@@ -1388,9 +1388,10 @@ again_scan_end_of_macro_body:
 	/* Compile the macro according to active lexer rules */
 	body_start = tpp_file_rel2ptr(file, rel_body_start);
 	body_end   = tpp_file_rel2ptr(file, rel_body_end);
-	tpp_file_pusheof_fast(file, body_end); /* This is needed by macro compilers */
+	tpp_file_pusheof(file);
+	tpp_file_seteof(file, body_end); /* This is needed by macro compilers */
 	error = tpp_macro_builder_compile(&builder, self, body_start, body_end);
-	tpp_file_popeof_fast(file);
+	tpp_file_popeof(file);
 	if (TPP_ISERR(error))
 		goto err_builder;
 

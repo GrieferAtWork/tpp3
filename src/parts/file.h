@@ -194,19 +194,15 @@ typedef struct tpp_file {
 	do {                                                \
 		tpp_file *const _tfapfp_prev = (self)->tf_prev; \
 		(self)->tf_prev = NULL
-#define tpp_file_autopopfile_pop(self)                         \
-		if ((self)->tf_prev == NULL) {                         \
-			(self)->tf_prev = _tfapfp_prev;                    \
-		} else {                                               \
-			/* Deal with case where extra files were pushed */ \
-			tpp_file *_tfapfp_last = (self)->tf_prev;          \
-			while (_tfapfp_last->tf_prev)                      \
-				_tfapfp_last = _tfapfp_last->tf_prev;          \
-			_tfapfp_last->tf_prev = _tfapfp_prev;              \
-		}                                                      \
+#define tpp_file_autopopfile_break(self)                                  \
+		(void)(tpp_assert((self)->tf_prev == NULL && "New files pushed"), \
+		       (self)->tf_prev = _tfapfp_prev)
+#define tpp_file_autopopfile_pop(self)    \
+		tpp_file_autopopfile_break(self); \
 	} while (0)
 #else /* TPP_HAVE_INCLUDE_STACK */
 #define tpp_file_autopopfile_pushoff(self) do {
+#define tpp_file_autopopfile_break(self)   (void)0
 #define tpp_file_autopopfile_pop(self)     } while (0)
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 
@@ -218,48 +214,54 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_CPP_MACROS */
 
 
-/* An extension to "tpp_file_autopopfile_pushoff":
- * - Disable automatic popping of "self" from the #include-stack
+/* - Disable automatic popping of "self" from the #include-stack
  * - Disable I/O expansion by reading additional data from the file
- * - Make it so the file's EOF position gets overwritten as "end"
+ * - Make it so the file's EOF position can be overwritten freely
  *   (such that trying to yield additional tokens at/beyond that
  *   position will cause "tpp_lexer_yieldraw()" to return TPP_TOK_EOF)
- * - The previous state can be restored by `tpp_file_popeof()' */
-#if TPP_HAVE_INCLUDE_STACK
-#define tpp_file_pusheof(self, end)                         \
+ * - The previous state can be restored by `tpp_file_popeof()'
+ *
+ * WARNING:
+ * - The caller must ensure that all files pushed are
+ *   also popped before breaking out of a PUSHEOF block
+ * - These functions don't save/restore the #ifdef-stack
+ *   For that, also make use of "tpp_file_pushifdef()" */
+#define tpp_file_pusheof(self)                              \
 	do {                                                    \
-		tpp_file *const _tfpeof_prev = (self)->tf_prev;     \
 		tpp_file_kind const _tfpeof_kind = (self)->tf_kind; \
 		tpp_char const *const _tfpeof_end = (self)->tf_end; \
-		(self)->tf_end = (end);                             \
-		_tpp_file_io2text(self);                            \
-		(self)->tf_prev = NULL
-#define tpp_file_popeof(self)                         \
-		do {                                          \
-			tpp_file *_tfpeof_last = (self);          \
-			while (_tfpeof_last->tf_prev)             \
-				_tfpeof_last = _tfpeof_last->tf_prev; \
-			_tfpeof_last->tf_prev = _tfpeof_prev;     \
-			_tfpeof_last->tf_end  = _tfpeof_end;      \
-			_tfpeof_last->tf_kind = _tfpeof_kind;     \
-		} while (0);                                  \
+		_tpp_file_io2text(self)
+#define tpp_file_seteof(self, end) \
+		(void)((self)->tf_end = (end))
+#define tpp_file_breakeof(self)               \
+		(void)((self)->tf_end  = _tfpeof_end, \
+		       (self)->tf_kind = _tfpeof_kind)
+#define tpp_file_popeof(self)    \
+		tpp_file_breakeof(self); \
 	} while (0)
-#else /* TPP_HAVE_INCLUDE_STACK */
-#define tpp_file_pusheof(self, end) tpp_file_pusheof_fast(self, end)
-#define tpp_file_popeof(self)       tpp_file_popeof_fast(self)
-#endif /* !TPP_HAVE_INCLUDE_STACK */
+
+
+/* Save/restore the position where the next token will be read from */
+#define tpp_file_pushpos(self) \
+	do {                       \
+		tpp_char const *const _tfppos_pos = (self)->tf_pos
+#define tpp_file_setpos(self, pos) \
+		(void)((self)->tf_pos = (pos))
+#define tpp_file_breakpos(self) \
+		(void)((self)->tf_pos = _tfppos_pos)
+#define tpp_file_poppos(self)    \
+		tpp_file_breakpos(self); \
+	} while (0)
 
 /* Same as above, but may only be used when nothing
  * might push additional files in the mean-time. */
-#define tpp_file_pusheof_fast(self, end)                    \
-	do {                                                    \
-		tpp_file_kind const _tfpeof_kind = (self)->tf_kind; \
-		tpp_char const *const _tfpeof_end = (self)->tf_end; \
-		(self)->tf_end = (end);                             \
-		_tpp_file_io2text(self)
-#define tpp_file_popeof_fast(self)      \
-		(self)->tf_end  = _tfpeof_end;  \
-		(self)->tf_kind = _tfpeof_kind; \
+#define tpp_file_pushifdef(self) \
+	do {                         \
+		/* TODO: push+clear #ifdef-stack */
+#define tpp_file_breakifdef(self) \
+		/* TODO: restore pushed #ifdef stack (fini everything still in current stack) */
+#define tpp_file_popifdef(self)    \
+		tpp_file_breakifdef(self); \
 	} while (0)
 
 

@@ -34,7 +34,9 @@
 TPP_DECL_BEGIN
 
 #undef TPP_HAVE_LEXER_STATE_FLAGS
-#if (TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_WARNINGS)
+#if (TPP_HAVE_CPP_DIRECTIVES || \
+     TPP_HAVE_WARNINGS ||       \
+     TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS)
 #define TPP_HAVE_LEXER_STATE_FLAGS 1
 #else /* ... */
 #define TPP_HAVE_LEXER_STATE_FLAGS 0
@@ -51,6 +53,9 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_WARNINGS
 #define TPP_LEXER_STATE_FLAG_NOWARNINGS   UINT8_C(0x02) /* Do not emit any warnings/errors (don't even trigger them) -- should be used during seek-ahead yields. */
 #endif /* TPP_HAVE_WARNINGS */
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+#define TPP_LEXER_STATE_FLAG_ALLTOKENS    UINT8_C(0x04) /* Prevent `tpp_lexer_yieldpp()' from (possibly) skipp SPACE/LF/COMMENT tokens */
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
 
@@ -300,14 +305,39 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 	do {                                                                \
 		tpp_lexer_state_flags const _tlsp_old_flags = (self)->tl_state; \
 		(self)->tl_state = ((self)->tl_state & (tpp_lexer_state_flags)(mask)) | (tpp_lexer_state_flags)(flags)
-#define tpp_lexer_state_pop(self, mask, flags)                                                                      \
-		(self)->tl_state = ((self)->tl_state & ((tpp_lexer_state_flags)(mask) & ~(tpp_lexer_state_flags)(flags))) | \
-		                   (_tlsp_old_flags & ~((tpp_lexer_state_flags)(mask) & ~(tpp_lexer_state_flags)(flags)));  \
+#define tpp_lexer_state_break(self)           \
+		(void)((self)->tl_state = _tlsp_old_flags)
+#define tpp_lexer_state_pop(self)    \
+		tpp_lexer_state_break(self); \
 	} while (0)
 #else /* TPP_HAVE_LEXER_STATE_FLAGS */
 #define tpp_lexer_state_push(self, mask, flags) do {
-#define tpp_lexer_state_pop(self, mask)         } while (0)
+#define tpp_lexer_state_break(self)             (void)0
+#define tpp_lexer_state_pop(self)               } while (0)
 #endif /* !TPP_HAVE_LEXER_STATE_FLAGS */
+#define tpp_lexer_state_pushon(self, flags)  tpp_lexer_state_push(self, ~0, flags)
+#define tpp_lexer_state_pushoff(self, flags) tpp_lexer_state_push(self, ~(flags), 0)
+
+#if TPP_HAVE_WARNINGS
+#define tpp_lexer_state_push_nowarnings(self)  tpp_lexer_state_pushon(self, TPP_LEXER_STATE_FLAG_NOWARNINGS)
+#define tpp_lexer_state_break_nowarnings(self) tpp_lexer_state_break(self)
+#define tpp_lexer_state_pop_nowarnings(self)   tpp_lexer_state_pop(self)
+#else /* TPP_HAVE_WARNINGS */
+#define tpp_lexer_state_push_nowarnings(self)  do {
+#define tpp_lexer_state_break_nowarnings(self) (void)0
+#define tpp_lexer_state_pop_nowarnings(self)   } while (0)
+#endif /* !TPP_HAVE_WARNINGS */
+
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+#define tpp_lexer_state_push_alltokens(self)  tpp_lexer_state_pushon(self, TPP_LEXER_STATE_FLAG_ALLTOKENS)
+#define tpp_lexer_state_break_alltokens(self) tpp_lexer_state_break(self)
+#define tpp_lexer_state_pop_alltokens(self)   tpp_lexer_state_pop(self)
+#else /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#define tpp_lexer_state_push_alltokens(self)  do {
+#define tpp_lexer_state_break_alltokens(self) (void)0
+#define tpp_lexer_state_pop_alltokens(self)   } while (0)
+#endif /* !TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+
 
 
 /* Temporarily disable automatic pop-to-prev-file on EOF */
@@ -365,23 +395,10 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
 
 
-#undef TPP_HAVE_LEXER_SEEK_BACKUP_FLAGS
-#if TPP_HAVE_WARNINGS
-#define TPP_HAVE_LEXER_SEEK_BACKUP_FLAGS 1
-#else /* ... */
-#define TPP_HAVE_LEXER_SEEK_BACKUP_FLAGS 0
-#endif /* !... */
-
 typedef struct tpp_lexer_seek_backup {
 	tpp_token_id              tlsb_id;    /* Saved token id */
 	struct tpp_keyword const *tlsb_kwd;   /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tlsb_id))] Saved token keyword */
 	tpp_size                  tlsb_len;   /* Relative length of token */
-#if TPP_HAVE_LEXER_SEEK_BACKUP_FLAGS
-	tpp_lexer_state_flags     tlsb_state; /* Saved lexer state flags. */
-#define _tpp_lexer_seek_backup_restore_state(self, lexer) , (lexer)->tl_state = (self)->tlsb_state
-#else /* TPP_HAVE_LEXER_SEEK_BACKUP_FLAGS */
-#define _tpp_lexer_seek_backup_restore_state(self, lexer) /* nothing */
-#endif /* !TPP_HAVE_LEXER_SEEK_BACKUP_FLAGS */
 } tpp_lexer_seek_backup;
 
 /* Save/restore the currently loaded token. This must be done before/after
@@ -401,33 +418,22 @@ typedef struct tpp_lexer_seek_backup {
  * >> } */
 TPP_INLINE TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
 tpp_lexer_seek_begin(tpp_lexer *tpp_restrict self,
-                     tpp_lexer_seek_backup *tpp_restrict backup,
-                     bool disable_warnings) {
+                     tpp_lexer_seek_backup *tpp_restrict backup) {
 	tpp_char const *result;
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	backup->tlsb_id  = token->tt_id;
 	backup->tlsb_kwd = token->tt_kwd;
 	backup->tlsb_len = (tpp_size)(token->tt_end - token->tt_start);
-#if TPP_HAVE_LEXER_SEEK_BACKUP_FLAGS
-	backup->tlsb_state = self->tl_state;
-#endif /* TPP_HAVE_LEXER_SEEK_BACKUP_FLAGS */
-#if TPP_HAVE_WARNINGS
-	if (disable_warnings)
-		self->tl_state |= TPP_LEXER_STATE_FLAG_NOWARNINGS;
-#else /* TPP_HAVE_WARNINGS */
-	(void)disable_warnings;
-#endif /* !TPP_HAVE_WARNINGS */
 	result        = token->tt_end;
 	token->tt_end = token->tt_start;
 	return result;
 }
 #define tpp_lexer_seek_commit(self, pos) \
 	(void)(tpp_lexer_gettoken(self)->tt_end = (pos))
-#define tpp_lexer_seek_rollback(self, backup)                                                   \
-	(tpp_lexer_gettoken(self)->tt_kwd = (backup)->tlsb_kwd,                                     \
-	 tpp_lexer_gettoken(self)->tt_start = tpp_lexer_gettoken(self)->tt_end,                     \
-	 tpp_lexer_gettoken(self)->tt_end = tpp_lexer_gettoken(self)->tt_start + (backup)->tlsb_len \
-	 _tpp_lexer_seek_backup_restore_state(backup, self),                                        \
+#define tpp_lexer_seek_rollback(self, backup)                                                    \
+	(tpp_lexer_gettoken(self)->tt_kwd = (backup)->tlsb_kwd,                                      \
+	 tpp_lexer_gettoken(self)->tt_start = tpp_lexer_gettoken(self)->tt_end,                      \
+	 tpp_lexer_gettoken(self)->tt_end = tpp_lexer_gettoken(self)->tt_start + (backup)->tlsb_len, \
 	 tpp_lexer_gettoken(self)->tt_id  = (backup)->tlsb_id)
 
 

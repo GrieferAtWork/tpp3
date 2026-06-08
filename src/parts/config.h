@@ -1386,6 +1386,20 @@
 #define TPP_HAVE_REPRTOKENID (TPP_HAVE_LEXER_REPRTOKENID)
 #endif /* !TPP_HAVE_REPRTOKENID */
 
+/* Provide a lexer state flag "TPP_LEXER_STATE_FLAG_ALLTOKENS"
+ * that forces "tpp_lexer_yieldpp()" to always re-emit *all*
+ * tokens (rather than skip over space/lf/comment tokens based
+ * on `TPP_HAVE_TPP_TOK_*' and `TPP_FEAT_TPP_TOK_*')
+ *
+ * This flag is also needed internally when TPP needs to expand
+ * the arguments supplied to a user-defined macro */
+#ifndef TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+#define TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS                   \
+	(TPP_HAVE_CPP_MACROS && ((TPP_HAVE_TPP_TOK_SPACE <= 0) || \
+	                         (TPP_HAVE_TPP_TOK_LF <= 0) ||    \
+	                         (TPP_HAVE_TPP_TOK_COMMENT <= 0)))
+#endif /* !TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+
 /* Provide a function "tpp_lexer_getkeyworddefined()" to check
  * if a given keyword is "defined()" (meaning it can be expanded
  * as a (potentially builtin) macro) */
@@ -1423,11 +1437,6 @@
 #define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF  || TPP_HAVE_MACRO___TPP_EVAL)
 #endif /* !TPP_HAVE_LEXER_PARSEEXPR */
 
-/* Enable support for "defined(MACRO)" in lexer expressions */
-#ifndef TPP_HAVE_EXPR_DEFINED
-#define TPP_HAVE_EXPR_DEFINED (TPP_HAVE_LEXER_PARSEEXPR)
-#endif /* !TPP_HAVE_EXPR_DEFINED */
-
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -1439,6 +1448,11 @@
 /************************************************************************/
 /* LEXER EXPRESSIONS                                                    */
 /************************************************************************/
+
+/* Enable support for "defined(MACRO)" in lexer expressions */
+#ifndef TPP_HAVE_EXPR_DEFINED
+#define TPP_HAVE_EXPR_DEFINED (TPP_HAVE_LEXER_PARSEEXPR)
+#endif /* !TPP_HAVE_EXPR_DEFINED */
 
 /* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
 #ifndef TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR

@@ -70,6 +70,12 @@ int main(int argc, char *argv[]) {
 		file = tpp_lexer_getfile(&lexer);
 		lexer_filename = tpp_file_filename(file);
 		lc = tpp_file_lcinfo(file, tpp_lexer_gettoken(&lexer)->tt_start);
+#if 1
+		printf("%.*s",
+		       (int)(tpp_lexer_gettoken(&lexer)->tt_end -
+		             tpp_lexer_gettoken(&lexer)->tt_start),
+		       tpp_lexer_gettoken(&lexer)->tt_start);
+#else
 		printf("[%s:%d:%d:%s(%d):%.*s]\n",
 		       lexer_filename ? lexer_filename : "?",
 		       tpp_lcinfo_getline(lc) + 1,
@@ -78,6 +84,7 @@ int main(int argc, char *argv[]) {
 		       (int)(tpp_lexer_gettoken(&lexer)->tt_end -
 		             tpp_lexer_gettoken(&lexer)->tt_start),
 		       tpp_lexer_gettoken(&lexer)->tt_start);
+#endif
 	}
 	if (tpp_lexer_geterrorcount(&lexer)) {
 		fprintf(stderr, "There were lexer errors\n");

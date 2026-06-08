@@ -624,6 +624,10 @@ again:
 /************************************************************************/
 #if TPP_HAVE_TPP_TOK_SPACE <= 0 /* Always, or conditionally disabled */
 	case TPP_TOK_SPACE:
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+		if (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
+			break;
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_HAVE_TPP_TOK_SPACE < 0
 		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SPACE))
 			break; /* Enabled */
@@ -688,6 +692,10 @@ again:
 		TPP_FALLTHRU
 #endif /* TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES */
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+		if (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
+			break;
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_HAVE_TPP_TOK_COMMENT < 0
 		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_COMMENT))
 			break; /* Comments are enabled -> emit to caller */
@@ -713,6 +721,10 @@ again:
 		self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 #if TPP_HAVE_TPP_TOK_LF <= 0 /* Always, or conditionally disabled */
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+		if (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
+			break;
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_HAVE_TPP_TOK_LF < 0
 		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LF))
 			break; /* Enabled */

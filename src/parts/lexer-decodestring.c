@@ -924,7 +924,8 @@ again_yield_after_empty:
 		tpp_errno result;
 
 		/* Must make sure that the next token isn't another (non-empty) string */
-		pos = tpp_lexer_seek_begin(self, &backup, true);
+		pos = tpp_lexer_seek_begin(self, &backup);
+		tpp_lexer_state_push_nowarnings(self);
 again_yield_after_single:
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 		switch (tok) {
@@ -935,6 +936,7 @@ again_yield_after_single:
 				goto again_yield_after_single;
 
 			/* Not possible using a single chunk... */
+			tpp_lexer_state_break_nowarnings(self);
 			tpp_lexer_seek_rollback(self, &backup);
 			goto do_multi_chunk_string;
 		}	break;
@@ -951,10 +953,14 @@ again_yield_after_single:
 			break;
 
 		default:
-			if (TPP_TOK_ISERR(tok))
+			if (TPP_TOK_ISERR(tok)) {
+				tpp_lexer_state_break_nowarnings(self);
+				tpp_lexer_seek_rollback(self, &backup);
 				return TPP_TOK_ASERR(tok);
+			}
 			break;
 		}
+		tpp_lexer_state_pop_nowarnings(self);
 
 		/* **IS** possible using a single chunk! */
 		{
