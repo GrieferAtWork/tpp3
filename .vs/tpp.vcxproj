@@ -25,6 +25,7 @@
     <ClCompile Include="..\src\parts\lexer-pp-pragma.c" />
     <ClCompile Include="..\src\parts\lexer-seek-rparen.c" />
     <ClCompile Include="..\src\parts\lexer-warn.c" />
+    <ClCompile Include="..\src\parts\lexer-yield-macro.c" />
     <ClCompile Include="..\src\parts\lexer-yield.c" />
     <ClCompile Include="..\src\parts\lexer-yieldpp.c" />
     <ClCompile Include="..\src\parts\lexer-yieldraw.c" />

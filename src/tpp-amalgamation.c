@@ -14303,7 +14303,7 @@ TPP_DECL_END
 /************************************************************************/
 
 /************************************************************************/
-/* File: parts/lexer-yield.c                                            */
+/* File: parts/lexer-yield-macro.c                                      */
 /************************************************************************/
 TPP_DECL_BEGIN
 
@@ -15061,7 +15061,7 @@ err_rollback_nomem:
  * @return: TPP_TOK_EOF: Success -- caller should yield again to load the
  *                                  first macro's first expansion token.
  * @return: TPP_TOK_ENOMEM: Out of memory */
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
                        tpp_macro *tpp_restrict macro) {
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -15098,6 +15098,30 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
 err_nomem:
 	return TPP_TOK_ENOMEM;
 }
+#endif /* TPP_HAVE_CPP_MACROS */
+
+TPP_DECL_END
+/************************************************************************/
+
+/************************************************************************/
+/* File: parts/lexer-yield.c                                            */
+/************************************************************************/
+TPP_DECL_BEGIN
+
+#if TPP_HAVE_CPP_MACROS
+
+/* Perform the expansion of a user-defined "macro", with the lexer's
+ * current token set to point at the macro's identifier (meaning that
+ * you have to seek ahead in order to find the opening '(' token in
+ * case of a function-style macro).
+ *
+ * @return: tpp_lexer_gettoken(self)->tt_id : Function-style macro cannot be expanded
+ * @return: TPP_TOK_EOF: Success -- caller should yield again to load the
+ *                                  first macro's first expansion token.
+ * @return: TPP_TOK_ENOMEM: Out of memory */
+TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
+                       tpp_macro *tpp_restrict macro);
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_push_textfile(tpp_lexer *tpp_restrict self,

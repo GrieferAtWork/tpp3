@@ -50,6 +50,7 @@
 #include "parts/lexer-pp-define.c"
 #include "parts/lexer-pp-pragma.c"
 #include "parts/lexer-yieldpp.c"
+#include "parts/lexer-yield-macro.c"
 #include "parts/lexer-yield.c"
 #include "parts/lexer-decodestring.c"
 
