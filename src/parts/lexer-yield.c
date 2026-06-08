@@ -59,17 +59,9 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
 	*prev_file = *file;
-	file->tf_pos   = text;
-	file->tf_chunk = chunk;
-	file->tf_end   = text + textsize;
-	_tpp_file_init_common(file);
-	file->tf_prev  = prev_file;
-	file->tf_tprev = prev_file;
-	file->tf_kind  = TPP_FILE_KIND_TEXT;
-#if TPP_HAVE_UNICODE
-	file->tf_enc = TPP_FILE_ENCODING_FORCE_UTF8;
-#endif /* TPP_HAVE_UNICODE */
-	file->tf_data.td_text.tft_name = NULL;
+	tpp_file_init_text_ex(file, NULL, chunk, text, textsize,
+	                      tpp_lcinfo_of(-1, -1),
+	                      TPP_FILE_ENCODING_FORCE_UTF8);
 	return TPP_TOK_EOF;
 err_nomem:
 	if (chunk)
@@ -618,7 +610,7 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 			} else
 #endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 			{
-				/* TODO: Warning if #ifdef-stack isn't empty */
+				error = tpp_lexer_warn_nonempty_ifdef(self);
 			}
 		}
 	}
@@ -670,9 +662,8 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 		error = TPP_TOK_ASERR(tok);
 	} else {
 		error = tpp_lexer_process_pragma_until_eof(self);
-		if (error == TPP_EOK) {
-			/* TODO: Warning if #ifdef-stack isn't empty */
-		}
+		if (error == TPP_EOK)
+			error = tpp_lexer_warn_nonempty_ifdef(self);
 	}
 	tpp_file_popifdef(file);
 	tpp_file_popeof(file);
@@ -693,11 +684,10 @@ err_tok:
 #if TPP_HAVE_MACRO___LINE__ || TPP_HAVE_MACRO___COLUMN__
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
+	tpp_file *const lcfile = tpp_file_getlcfile(tpp_lexer_getfile(self));
 	tpp_lcinfo info;
-	tpp_file *file = tpp_lexer_getfile(self);
 	tpp_intmax value;
-	while (file->tf_tprev && file->tf_kind == TPP_FILE_KIND_MACRO)
-		file = file->tf_tprev;
+
 	/* HINT: Meaning of "tf_tpos" / "tf_pos" here:
 	 * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
 	 * >> ...
@@ -712,7 +702,7 @@ tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
 	 *
 	 * For the sake of being pretty, we use "tf_tpos" since that's the location of the
 	 * name of the macro that's currently being expanded. */
-	info = tpp_file_lcinfo(file, file->tf_tpos);
+	info = tpp_file_lcinfo(lcfile, lcfile->tf_tpos);
 	switch (what) {
 #if TPP_HAVE_MACRO___LINE__
 	case TPP_KWD___LINE__:
@@ -796,7 +786,8 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
 		goto err_tok;
-	identifier_start = file->tf_pos; /* points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_begin()") */
+	/* file->tf_pos: points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_begin()") */
+	identifier_start = file->tf_pos;
 	tpp_file_pusheof(file);
 	tpp_file_pushifdef(file);
 
@@ -827,7 +818,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 			} else
 #endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 			{
-				/* TODO: Warning if #ifdef-stack isn't empty */
+				error = tpp_lexer_warn_nonempty_ifdef(self);
 			}
 		}
 	}

@@ -3327,6 +3327,12 @@ TPP_DECL_END
 /************************************************************************/
 TPP_DECL_BEGIN
 
+
+#if TPP_HAVE_FILE_USER_FILENAME
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_user_filename) ==
+                  tpp_offsetof(tpp_file, tf_data.td_text.tft_user_filename));
+#endif /* TPP_HAVE_FILE_USER_FILENAME */
+
 #if TPP_DEBUG && 1
 #ifndef TPP_IO_CHUNKSIZE
 #define TPP_IO_CHUNKSIZE 1
@@ -3343,11 +3349,85 @@ TPP_DECL_BEGIN
 #endif /* !TPP_IO_MINREAD */
 #endif /* !TPP_DEBUG */
 
+
+#if TPP_HAVE_IFDEF_STACK
+/* Allocate an additional #ifdef-stack entry, and return a pointer to it.
+ * This function will increment `self->tids_cnt', but it is up to the
+ * caller to initialize the returned #ifdef-stack entry
+ *
+ * @return: * :   The (uninitialized) #ifdef-stack entry
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ifdef_stack_entry *TPPCALL
+tpp_ifdef_stack_append(tpp_ifdef_stack *tpp_restrict self) {
+	tpp_ifdef_stack_entry *result;
+	tpp_assert(self->tids_cnt <= self->tids_alc);
+	if (self->tids_cnt >= self->tids_alc) {
+		tpp_ifdef_stack_entry *new_vec;
+		/* Only allocate in batches-of-1: #ifdef-stacks don't usually grow very deep */
+		tpp_size new_alloc = self->tids_cnt + 1;
+
+		/* Use a minimal buffer size of "4": most files won't exceed this depth. */
+		if (new_alloc < 4)
+			new_alloc = 4;
+		new_vec = (tpp_ifdef_stack_entry *)tpp_tryrealloc(self->tids_vec,
+		                                                  new_alloc *
+		                                                  sizeof(tpp_ifdef_stack_entry));
+		if tpp_unlikely(!new_vec) {
+			new_alloc = self->tids_cnt + 1;
+			new_vec = (tpp_ifdef_stack_entry *)tpp_realloc(self->tids_vec,
+			                                               new_alloc *
+			                                               sizeof(tpp_ifdef_stack_entry));
+			if tpp_unlikely (!new_vec)
+				return NULL;
+		}
+		self->tids_vec = new_vec;
+		self->tids_alc = new_alloc;
+	}
+	tpp_assert(self->tids_cnt < self->tids_alc);
+	result = self->tids_vec + self->tids_cnt;
+	++self->tids_cnt;
+#if TPP_DEBUG
+	tpp_memset(result, 0xcc, sizeof(*result));
+#endif /* TPP_DEBUG */
+	return result;
+}
+
+/* Do the inverse of "tpp_ifdef_stack_append()", removing the last entry, and
+ * potentially freeing unused memory.
+ * The caller is responsible to ensure that `tpp_ifdef_stack_isnonempty(self)' */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_ifdef_stack_remove(tpp_ifdef_stack *tpp_restrict self) {
+	tpp_assert(self->tids_cnt != 0);
+	tpp_assert(self->tids_cnt <= self->tids_alc);
+	--self->tids_cnt;
+#ifndef __OPTIMIZE_SIZE__
+	{
+		tpp_size unused_count = self->tids_alc - self->tids_cnt;
+		if (unused_count > 8) {
+			/* Free unused memory */
+			tpp_ifdef_stack_entry *new_vec;
+			new_vec = (tpp_ifdef_stack_entry *)tpp_tryrealloc(self->tids_vec,
+			                                                  self->tids_alc *
+			                                                  sizeof(tpp_ifdef_stack_entry));
+			if tpp_likely(new_vec) {
+				self->tids_vec = new_vec;
+				self->tids_alc = self->tids_cnt;
+			}
+		}
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+#endif /* TPP_HAVE_IFDEF_STACK */
+
+
 /* Finalize the given file. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_file_fini(tpp_file *tpp_restrict self) {
 	if (self->tf_chunk)
 		tpp_string_decref(self->tf_chunk);
+#if TPP_HAVE_IFDEF_STACK
+	tpp_ifdef_stack_fini(&self->tf_ifdef);
+#endif /* TPP_HAVE_IFDEF_STACK */
 	switch (self->tf_kind) {
 	case TPP_FILE_KIND_IO:
 #if TPP_HAVE_FILE_NOCLOSE
@@ -3356,7 +3436,13 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
+#if TPP_HAVE_FILE_USER_FILENAME
+		TPP_FALLTHRU
+	case TPP_FILE_KIND_TEXT:
+		if (self->tf_data.td_text.tft_user_filename)
+			tpp_string_decref(self->tf_data.td_text.tft_user_filename);
 		break;
+#endif /* TPP_HAVE_FILE_USER_FILENAME */
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
 		tpp_macro *macro = self->tf_data.td_macro.tfm_macro;
@@ -4149,6 +4235,78 @@ tpp_file_filename(tpp_file const *tpp_restrict self) {
 	}
 }
 
+/* Same as `tpp_file_filename()', but may be overwritten by "#line" directives */
+#if TPP_HAVE_FILE_USER_FILENAME
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
+tpp_file_userfilename(tpp_file const *tpp_restrict self) {
+	switch (self->tf_kind) {
+
+	case TPP_FILE_KIND_IO:
+	case TPP_FILE_KIND_TEXT: {
+		TPP_REF tpp_string *user;
+		user = self->tf_data.td_io.tff_user_filename;
+		if (user != NULL)
+			return (char const *)user->ts_str;
+		return self->tf_data.td_io.tff_name;
+	}	break;
+
+#if TPP_HAVE_CPP_MACROS
+	case TPP_FILE_KIND_MACRO:
+		return self->tf_data.td_macro.tfm_macro->tm_deffile;
+#endif /* TPP_HAVE_CPP_MACROS */
+
+	default: tpp_unreachable();
+	}
+}
+
+/* Sets the user-filename override of "self" to "filename"
+ *
+ * NOTE: The caller must ensure that:
+ *       >> self->tf_kind == TPP_FILE_KIND_IO ||
+ *       >> self->tf_kind == TPP_FILE_KIND_TEXT;
+ *
+ * You may also pass "NULL" for `filename' to disable the override */
+TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_file_setuserfilename(tpp_file *tpp_restrict self,
+                         tpp_string *tpp_restrict filename) {
+	tpp_string *old_override;
+	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
+	           self->tf_kind == TPP_FILE_KIND_TEXT);
+	old_override = self->tf_data.td_text.tft_user_filename;
+	self->tf_data.td_text.tft_user_filename = filename;
+	if (filename)
+		tpp_string_incref(filename);
+	if (old_override)
+		tpp_string_decref(old_override);
+}
+#endif /* TPP_HAVE_FILE_USER_FILENAME */
+
+
+/* Set the (0-based) line that applies to "pos" (as returned by "tpp_file_lcinfo") in "self"
+ *
+ * NOTE: The caller must ensure that:
+ *       >> self->tf_kind == TPP_FILE_KIND_IO ||
+ *       >> self->tf_kind == TPP_FILE_KIND_TEXT; */
+#if TPP_HAVE_FILE_SETLINE
+TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_file_setline(tpp_file *tpp_restrict self,
+                 tpp_char const *pos, tpp_line line) {
+	tpp_lcinfo cur_info;
+	tpp_line cur_line, delta, start_line;
+	tpp_column start_col;
+	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
+	           self->tf_kind == TPP_FILE_KIND_TEXT);
+	cur_info   = tpp_file_lcinfo(self, pos);
+	cur_line   = tpp_lcinfo_getline(cur_info);
+	delta      = line - cur_line;
+	start_line = tpp_lcinfo_getline(self->tf_data.td_text.tft_start_lc) + delta;
+	start_col  = tpp_lcinfo_getcol(self->tf_data.td_text.tft_start_lc);
+	tpp_lcinfo_init(self->tf_data.td_text.tft_start_lc, start_line, start_col);
+}
+#endif /* TPP_HAVE_FILE_SETLINE */
+
+
+
 /* Returns the filename "keyword" (which may not always be
  * available, even when "tpp_file_filename()" returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
@@ -4189,8 +4347,32 @@ tpp_file_getiofile(tpp_file const *tpp_restrict self) {
 		if (iter == NULL)
 			return (tpp_file *)self;
 	}
-	return (tpp_file *)iter;
+	return iter;
 }
+
+/* Returns the first tf_kind!=TPP_FILE_KIND_MACRO file in the #include-stack (using "tf_tprev")
+ * If no such file exists, returns "NULL" */
+#if TPP_HAVE_CPP_MACROS
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+tpp_file_gettextfile(tpp_file const *tpp_restrict self) {
+	tpp_file *iter = (tpp_file *)self;
+	while (iter->tf_kind == TPP_FILE_KIND_MACRO) {
+		iter = iter->tf_tprev;
+		if (iter == NULL)
+			break;
+	}
+	return iter;
+}
+
+/* Same as `tpp_file_gettextfile()', but re-return "self" instead of returning "NULL"
+ * The term "lc" here refers to the fact that this is the file that's used as basis
+ * for the builtin __FILE__, __LINE__ and __COLUMN__ macros. */
+TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
+	tpp_file *result = tpp_file_gettextfile(self);
+	return result ? result : (tpp_file *)self;
+}
+#endif /* TPP_HAVE_CPP_MACROS */
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 
@@ -7029,23 +7211,26 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 }
 
 
-/* Initialize a lexer that simply reads the given [text,text+text_size) blob. */
+/* Initialize a lexer that simply reads the given [text,text+text_size) blob.
+ * @param: start_lc: [valid_if(chunk != NULL)] */
 #if TPP_HAVE_UNICODE
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ex(tpp_lexer *tpp_restrict self,
                        /*utf-8*/ char const *filename,
+                       /*inherit(always)*/ TPP_REF tpp_string *chunk,
                        void const *text, tpp_size text_size,
                        tpp_lcinfo start_lc, tpp_file_encoding encoding)
 #else /* TPP_HAVE_UNICODE */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ascii(tpp_lexer *tpp_restrict self,
                           /*utf-8*/ char const *filename,
+                          /*inherit(always)*/ TPP_REF tpp_string *chunk,
                           void const *text, tpp_size text_size,
                           tpp_lcinfo start_lc)
 #endif /* !TPP_HAVE_UNICODE */
 {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file_init_text_ex(file, filename, text, text_size, start_lc, encoding);
+	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
 	_tpp_lexer_init_common(self);
 }
 
@@ -7172,23 +7357,25 @@ _tpp_lexer_noop_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes)
  * - "%c"    As defined by stdc, using va_arg(args, int)
  * - "%%"    "%" (emit a singular %-character)
  *
- * @param: pos:     Lexer position used by certain format-patterns.
- * @param: file:    The file containing "pos"
- * @param: printer: Output printer for formatted text
- * @param: arg:     Cookie argument for "printer"
- * @param: format:  Format pattern (see above)
- * @param: args:    Extra varargs-arguments for "format"
- * @return: >= 0:   Sum of return values of "printer".
- * @return: < 0:    First negative return value of "printer". The more high-level
- *                  "tpp_lexer_warnf" API returns "TPP_EWARNPRINT" in this case. */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 6)) tpp_ssize TPPVCALL
+ * @param: pos:        [0..1] Lexer position used by certain format-patterns.
+ * @param: pos_lcinfo: Lexer position used when "pos == NULL"
+ * @param: file:       The file containing "pos"
+ * @param: printer:    Output printer for formatted text
+ * @param: arg:        Cookie argument for "printer"
+ * @param: format:     Format pattern (see above)
+ * @param: args:       Extra varargs-arguments for "format"
+ * @return: >= 0:      Sum of return values of "printer".
+ * @return: < 0:       First negative return value of "printer". The more high-level
+ *                     "tpp_lexer_warnf" API returns "TPP_EWARNPRINT" in this case. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 5, 7)) tpp_ssize TPPVCALL
 tpp_lexer_printf_warning(tpp_lexer const *self, tpp_file *file, tpp_char const *pos,
-                         tpp_formatprinter printer, void *arg,
+                         tpp_lcinfo pos_lcinfo, tpp_formatprinter printer, void *arg,
                          char const *format, ...) {
 	tpp_ssize result;
 	va_list args;
 	va_start(args, format);
-	result = tpp_lexer_vprintf_warning(self, file, pos, printer, arg, format, args);
+	result = tpp_lexer_vprintf_warning(self, file, pos, pos_lcinfo,
+	                                   printer, arg, format, args);
 	va_end(args);
 	return result;
 }
@@ -7227,16 +7414,15 @@ tpp_format_token_data(tpp_formatprinter printer, void *arg,
 	return (*printer)(arg, start, length);
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5, 6)) tpp_ssize TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 5, 7)) tpp_ssize TPPCALL
 tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_file *file, tpp_char const *pos,
-                          tpp_formatprinter printer, void *arg,
+                          tpp_lcinfo pos_lcinfo, tpp_formatprinter printer, void *arg,
                           char const *format, va_list args) {
+	bool lcinfo_loaded = pos == NULL;
 	static char const null_str[] = "(null)";
-	tpp_lcinfo lcinfo;
 	tpp_ssize temp, result = 0;
 	char const *iter = format;
 	char ch;
-	tpp_lcinfo_init(lcinfo, -1, -1);
 again:
 	ch = *iter++;
 	if (ch != '%') {
@@ -7283,16 +7469,18 @@ handle_eof:
 		case 'c': /* "%Pc"   1-based column of "pos" in "file" */
 		{
 			/* Lazily load line/column information (if not already loaded) */
-			if (tpp_lcinfo_getline(lcinfo) == -1)
-				lcinfo = tpp_file_lcinfo(file, pos);
+			if (!lcinfo_loaded) {
+				pos_lcinfo = tpp_file_lcinfo(file, pos);
+				lcinfo_loaded = true;
+			}
 			temp = tpp_format_print_int(printer, arg,
-			                            ch == 'l' ? (tpp_lcinfo_getline(lcinfo) + 1)
-			                                      : (tpp_lcinfo_getcol(lcinfo) + 1));
+			                            ch == 'l' ? (tpp_lcinfo_getline(pos_lcinfo) + 1)
+			                                      : (tpp_lcinfo_getcol(pos_lcinfo) + 1));
 		}	break;
 
 		case 'f': {
 			/* "%Pf"   Filename of given "file" */
-			char const *filename = tpp_file_filename(file);
+			char const *filename = tpp_file_userfilename(file);
 			if (filename == NULL)
 				filename = "?";
 			temp = (*printer)(arg, (tpp_char const *)filename, tpp_strlen(filename));
@@ -7454,31 +7642,10 @@ err_temp:
 	return temp;
 }
 
-/* Emits the specified lexer warning at the start of the current token.
- * @param: args: Format arguments specific to "id" (see '%'-sequences in warning expressions)
- * @return: TPP_EOK:        Warning was emitted, but you may proceed
- * @return: TPP_ELEXERROR:  Warning was emitted, but was configured as an error
- * @return: TPP_EWARNPRINT: Error while printing warning */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_vwarnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, va_list args) {
-	tpp_token const *const token = tpp_lexer_gettoken(self);
-	return tpp_lexer_vwarnf_at(self, token->tt_start, id, args);
-}
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
-tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
-	tpp_errno result;
-	va_list args;
-	va_start(args, id);
-	result = tpp_lexer_vwarnf(self, id, args);
-	va_end(args);
-	return result;
-}
-
-
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
-                    tpp_warning_id id, va_list args) {
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
+                      tpp_lcinfo pos_lcinfo, tpp_warning_id id, va_list args) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_errno result;
 	tpp_ssize printer_status;
@@ -7534,7 +7701,7 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	printer_arg = tpp_lexer_getwarnprinterarg(self);
 
 	/* Print file-and-line prefix */
-	printer_status = tpp_lexer_printf_warning(self, file, pos, printer, printer_arg,
+	printer_status = tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg,
 	                                          TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT);
 	if (printer_status < 0)
 		goto err_printer;
@@ -7582,8 +7749,8 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	/* Lookup the generic warning-message format for "id" */
 	warning_format = tpp_warning_getformat(id);
 	if (warning_format) {
-		printer_status = tpp_lexer_vprintf_warning(self, file,
-		                                           pos, printer, printer_arg,
+		printer_status = tpp_lexer_vprintf_warning(self, file, pos, pos_lcinfo,
+		                                           printer, printer_arg,
 		                                           warning_format, args);
 		if (printer_status < 0)
 			goto err_printer;
@@ -7603,9 +7770,9 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			goto err_printer;              \
 	} while (0)
 #if TPP_HOST_HAVE_PP_VARARGS
-#define tpp_warnf(...)                                    \
-	tpp_do(tpp_lexer_printf_warning(self, file, pos,      \
-	                                printer, printer_arg, \
+#define tpp_warnf(...)                                           \
+	tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, \
+	                                printer, printer_arg,        \
 	                                __VA_ARGS__))
 #endif /* TPP_HOST_HAVE_PP_VARARGS */
 /* ... */
@@ -7642,7 +7809,9 @@ tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			 * from the start of a macro's name, to the end of its parameter
 			 * list, or the start of a #include-directive, to the trailing
 			 * line-feed) */
-			printer_status = tpp_lexer_printf_warning(self, caller, caller->tf_tpos, printer, printer_arg,
+			printer_status = tpp_lexer_printf_warning(self, caller, caller->tf_tpos,
+			                                          tpp_lcinfo_of(-1, -1),
+			                                          printer, printer_arg,
 			                                          TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT);
 			if (printer_status < 0)
 				goto err_printer;
@@ -7666,16 +7835,83 @@ err_printer:
 	return TPP_EWARNPRINT;
 }
 
+
+
+/* Emits the specified lexer warning at the start of the current token.
+ * @param: args: Format arguments specific to "id" (see '%'-sequences in warning expressions)
+ * @return: TPP_EOK:        Warning was emitted, but you may proceed
+ * @return: TPP_ELEXERROR:  Warning was emitted, but was configured as an error
+ * @return: TPP_EWARNPRINT: Error while printing warning */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_vwarnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, va_list args) {
+	tpp_token const *const token = tpp_lexer_gettoken(self);
+	return tpp_lexer_vwarnf_at(self, token->tt_start, id, args);
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
+tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
+	tpp_errno result;
+	va_list args;
+	va_start(args, id);
+	result = tpp_lexer_vwarnf(self, id, args);
+	va_end(args);
+	return result;
+}
+
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
+                    tpp_warning_id id, va_list args) {
+	return tpp_lexer_vwarnf_impl(self, pos, tpp_lcinfo_of(-1, -1), id, args);
+}
+
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPVCALL
 tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warning_id id, ...) {
 	tpp_errno result;
 	va_list args;
 	va_start(args, id);
-	result = tpp_lexer_vwarnf_at(self, pos, id, args);
+	result = tpp_lexer_vwarnf_impl(self, pos, tpp_lcinfo_of(-1, -1), id, args);
+	va_end(args);
+	return result;
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_vwarnf_lc(tpp_lexer *tpp_restrict self, tpp_lcinfo lc,
+                    tpp_warning_id id, va_list args) {
+	return tpp_lexer_vwarnf_impl(self, NULL, lc, id, args);
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
+tpp_lexer_warnf_lc(tpp_lexer *tpp_restrict self, tpp_lcinfo lc, tpp_warning_id id, ...) {
+	tpp_errno result;
+	va_list args;
+	va_start(args, id);
+	result = tpp_lexer_vwarnf_impl(self, NULL, lc, id, args);
 	va_end(args);
 	return result;
 }
 #endif /* TPP_HAVE_WARNINGS */
+
+
+/* Warn if the current file's #ifdef-stack is non-empty.
+ * @return: * : See `tpp_lexer_warnf()' */
+#if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_warn_nonempty_ifdef(tpp_lexer *tpp_restrict self) {
+	tpp_errno result = TPP_EOK;
+	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_size count = file->tf_ifdef.tids_cnt;
+	while (count) {
+		tpp_ifdef_stack_entry const *entry;
+		--count;
+		entry = &file->tf_ifdef.tids_vec[count];
+		result = tpp_lexer_warnf_lc(self, entry->tidse_updated, TPP_W_EOF_BEFORE_ENDIF);
+		if (TPP_ISERR(result))
+			break;
+	}
+	return result;
+}
+#endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 
 
 TPP_DECL_END
@@ -11367,7 +11603,20 @@ eof:
 	/* Check if we can pop to another file */
 #if TPP_HAVE_INCLUDE_STACK
 	if (file->tf_prev && p_pos == &file->tf_pos) {
-		tpp_file *const prev = file->tf_prev;
+		tpp_file *prev;
+
+		/* Warn if the file still has an active #ifdef-stack
+		 * Only do this when we're actually going to pop the
+		 * file off the #include-stack. In those cases where
+		 * we're not allowed to do so, it's up to the caller
+		 * to emit these sorts of warnings! */
+#if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+		error = tpp_lexer_warn_nonempty_ifdef(self);
+		if (TPP_ISERR(error))
+			goto return_error;
+#endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+
+		prev = file->tf_prev;
 		tpp_file_fini(file);
 		*file = *prev;
 		tpp_free(prev);
@@ -15067,7 +15316,7 @@ next_op:
 	file->tf_pos   = tpp_string_str(result_chunk);
 	file->tf_chunk = result_chunk; /* Inherit reference */
 	file->tf_end   = tpp_string_end(result_chunk);
-	_tpp_file_init_common(file);
+	(void)0 _tpp_file_init_common(file);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	file->tf_kind  = TPP_FILE_KIND_MACRO;
@@ -15139,7 +15388,7 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
 	if (file->tf_chunk)
 		tpp_string_incref(file->tf_chunk);
 
-	_tpp_file_init_common(file);
+	(void)0 _tpp_file_init_common(file);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	file->tf_kind  = TPP_FILE_KIND_MACRO;
@@ -15189,17 +15438,9 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
 	*prev_file = *file;
-	file->tf_pos   = text;
-	file->tf_chunk = chunk;
-	file->tf_end   = text + textsize;
-	_tpp_file_init_common(file);
-	file->tf_prev  = prev_file;
-	file->tf_tprev = prev_file;
-	file->tf_kind  = TPP_FILE_KIND_TEXT;
-#if TPP_HAVE_UNICODE
-	file->tf_enc = TPP_FILE_ENCODING_FORCE_UTF8;
-#endif /* TPP_HAVE_UNICODE */
-	file->tf_data.td_text.tft_name = NULL;
+	tpp_file_init_text_ex(file, NULL, chunk, text, textsize,
+	                      tpp_lcinfo_of(-1, -1),
+	                      TPP_FILE_ENCODING_FORCE_UTF8);
 	return TPP_TOK_EOF;
 err_nomem:
 	if (chunk)
@@ -15748,7 +15989,7 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 			} else
 #endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 			{
-				/* TODO: Warning if #ifdef-stack isn't empty */
+				error = tpp_lexer_warn_nonempty_ifdef(self);
 			}
 		}
 	}
@@ -15800,9 +16041,8 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 		error = TPP_TOK_ASERR(tok);
 	} else {
 		error = tpp_lexer_process_pragma_until_eof(self);
-		if (error == TPP_EOK) {
-			/* TODO: Warning if #ifdef-stack isn't empty */
-		}
+		if (error == TPP_EOK)
+			error = tpp_lexer_warn_nonempty_ifdef(self);
 	}
 	tpp_file_popifdef(file);
 	tpp_file_popeof(file);
@@ -15823,11 +16063,10 @@ err_tok:
 #if TPP_HAVE_MACRO___LINE__ || TPP_HAVE_MACRO___COLUMN__
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
+	tpp_file *const lcfile = tpp_file_getlcfile(tpp_lexer_getfile(self));
 	tpp_lcinfo info;
-	tpp_file *file = tpp_lexer_getfile(self);
 	tpp_intmax value;
-	while (file->tf_tprev && file->tf_kind == TPP_FILE_KIND_MACRO)
-		file = file->tf_tprev;
+
 	/* HINT: Meaning of "tf_tpos" / "tf_pos" here:
 	 * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
 	 * >> ...
@@ -15842,7 +16081,7 @@ tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
 	 *
 	 * For the sake of being pretty, we use "tf_tpos" since that's the location of the
 	 * name of the macro that's currently being expanded. */
-	info = tpp_file_lcinfo(file, file->tf_tpos);
+	info = tpp_file_lcinfo(lcfile, lcfile->tf_tpos);
 	switch (what) {
 #if TPP_HAVE_MACRO___LINE__
 	case TPP_KWD___LINE__:
@@ -15926,7 +16165,8 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
 		goto err_tok;
-	identifier_start = file->tf_pos; /* points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_begin()") */
+	/* file->tf_pos: points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_begin()") */
+	identifier_start = file->tf_pos;
 	tpp_file_pusheof(file);
 	tpp_file_pushifdef(file);
 
@@ -15957,7 +16197,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 			} else
 #endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 			{
-				/* TODO: Warning if #ifdef-stack isn't empty */
+				error = tpp_lexer_warn_nonempty_ifdef(self);
 			}
 		}
 	}
@@ -17268,9 +17508,10 @@ tpp_lexer_decodestring_as_single_chunk(tpp_lexer *tpp_restrict self,
  * the case, no intermediate heap-buffer needs to be created, as "cb" can just
  * be invoked using the currently loaded file's content-buffer.
  *
- * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: cb.arg:   Cookie argument (s.a. `arg')
  * @param: cb.chunk: The string-chunk containing "str" (or "NULL" if "str" is statically allocated)
  *                   NOTE: May be non-NULL, even if "str" is statically allocated!
+ * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*'
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or

@@ -1336,6 +1336,21 @@
 #define TPP_HAVE_INCLUDE_STACK (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED)
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 
+/* Enable support for `tpp_file::tf_ifdef' */
+#ifndef TPP_HAVE_IFDEF_STACK
+#define TPP_HAVE_IFDEF_STACK (TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_IFDEF_STACK */
+
+/* Enable support for `tpp_file::tf_data.td_io.tff_user_filename' */
+#ifndef TPP_HAVE_FILE_USER_FILENAME
+#define TPP_HAVE_FILE_USER_FILENAME (TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE)
+#endif /* !TPP_HAVE_FILE_USER_FILENAME */
+
+/* Enable support for `tpp_file_setline()' */
+#ifndef TPP_HAVE_FILE_SETLINE
+#define TPP_HAVE_FILE_SETLINE (TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE)
+#endif /* !TPP_HAVE_FILE_SETLINE */
+
 /* Provide a secondary set of keyword APIs that include support for \-escape sequences */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
 #define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
@@ -1634,6 +1649,10 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_PRAGMA_PUSH_MACRO || ...))
 #endif
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+#ifndef TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+#define TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_IFDEF_STACK)
+#endif /* !TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 
 
 /* Warning printer configuration */

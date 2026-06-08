@@ -238,23 +238,26 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_fini(tpp_lexer *tpp_restrict self);
 
 
-/* Initialize a lexer that simply reads the given [text,text+text_size) blob. */
+/* Initialize a lexer that simply reads the given [text,text+text_size) blob.
+ * @param: start_lc: [valid_if(chunk != NULL)] */
 #if TPP_HAVE_UNICODE
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ex(tpp_lexer *tpp_restrict self,
                        /*utf-8*/ char const *filename,
+                       /*inherit(always)*/ TPP_REF tpp_string *chunk,
                        void const *text, tpp_size text_size,
                        tpp_lcinfo start_lc, tpp_file_encoding encoding);
-#define tpp_lexer_init_text_ascii(self, filename, text, text_size, start_lc) \
-	tpp_lexer_init_text_ex(self, filename, text, text_size, start_lc, TPP_FILE_ENCODING_ASCII)
-#define tpp_lexer_init_text_utf8(self, filename, text, text_size, start_lc) \
-	tpp_lexer_init_text_ex(self, filename, text, text_size, start_lc, TPP_FILE_ENCODING_FORCE_UTF8)
+#define tpp_lexer_init_text_ascii(self, filename, chunk, text, text_size, start_lc) \
+	tpp_lexer_init_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_ASCII)
+#define tpp_lexer_init_text_utf8(self, filename, chunk, text, text_size, start_lc) \
+	tpp_lexer_init_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_FORCE_UTF8)
 #else /* TPP_HAVE_UNICODE */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ascii(tpp_lexer *tpp_restrict self,
                           /*utf-8*/ char const *filename,
+                          /*inherit(always)*/ TPP_REF tpp_string *chunk,
                           void const *text, tpp_size text_size,
-                       tpp_lcinfo start_lc);
+                          tpp_lcinfo start_lc);
 #endif /* !TPP_HAVE_UNICODE */
 
 #if TPP_HAVE_LEXER_INIT_IO
@@ -730,9 +733,10 @@ tpp_lexer_parsestring(tpp_lexer *tpp_restrict self,
  * the case, no intermediate heap-buffer needs to be created, as "cb" can just
  * be invoked using the currently loaded file's content-buffer.
  *
- * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: cb.arg:   Cookie argument (s.a. `arg')
  * @param: cb.chunk: The string-chunk containing "str" (or "NULL" if "str" is statically allocated)
  *                   NOTE: May be non-NULL, even if "str" is statically allocated!
+ * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*'
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
@@ -767,22 +771,23 @@ tpp_lexer_parsestring_cb(tpp_lexer *self,
  * - "%c"    As defined by stdc, using va_arg(args, int)
  * - "%%"    "%" (emit a singular %-character)
  *
- * @param: pos:     Lexer position used by certain format-patterns.
- * @param: file:    The file containing "pos"
- * @param: printer: Output printer for formatted text
- * @param: arg:     Cookie argument for "printer"
- * @param: format:  Format pattern (see above)
- * @param: args:    Extra varargs-arguments for "format"
- * @return: >= 0:   Sum of return values of "printer".
- * @return: < 0:    First negative return value of "printer". The more high-level
- *                  "tpp_lexer_warnf" API returns "TPP_EWARNPRINT" in this case. */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 6)) tpp_ssize TPPVCALL
+ * @param: pos:        [0..1] Lexer position used by certain format-patterns.
+ * @param: pos_lcinfo: Lexer position used when "pos == NULL"
+ * @param: file:       The file containing "pos"
+ * @param: printer:    Output printer for formatted text
+ * @param: arg:        Cookie argument for "printer"
+ * @param: format:     Format pattern (see above)
+ * @param: args:       Extra varargs-arguments for "format"
+ * @return: >= 0:      Sum of return values of "printer".
+ * @return: < 0:       First negative return value of "printer". The more high-level
+ *                     "tpp_lexer_warnf" API returns "TPP_EWARNPRINT" in this case. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 5, 7)) tpp_ssize TPPVCALL
 tpp_lexer_printf_warning(tpp_lexer const *self, tpp_file *file, tpp_char const *pos,
-                         tpp_formatprinter printer, void *arg,
+                         tpp_lcinfo pos_lcinfo, tpp_formatprinter printer, void *arg,
                          char const *format, ...);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 6)) tpp_ssize TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 5, 7)) tpp_ssize TPPCALL
 tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_file *file, tpp_char const *pos,
-                          tpp_formatprinter printer, void *arg,
+                          tpp_lcinfo pos_lcinfo, tpp_formatprinter printer, void *arg,
                           char const *format, va_list args);
 
 /* Emits the specified lexer warning at the start of the current token.
@@ -798,24 +803,38 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warning_id id, va_list args);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPVCALL
 tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warning_id id, ...);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_vwarnf_lc(tpp_lexer *tpp_restrict self, tpp_lcinfo lc, tpp_warning_id id, va_list args);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
+tpp_lexer_warnf_lc(tpp_lexer *tpp_restrict self, tpp_lcinfo lc, tpp_warning_id id, ...);
 #else /* TPP_HAVE_WARNINGS */
 #define tpp_lexer_vwarnf(self, id, args)         TPP_EOK
 #define tpp_lexer_vwarnf_at(self, pos, id, args) TPP_EOK
+#define tpp_lexer_vwarnf_lc(self, lc, id, args)  TPP_EOK
 #if TPP_HOST_HAVE_PP_VARARGS
 #define tpp_lexer_warnf(self, id, ...)           TPP_EOK
 #define tpp_lexer_warnf_at(self, pos, id, ...)   TPP_EOK
+#define tpp_lexer_warnf_lc(self, lc, id, ...)    TPP_EOK
 #else /* TPP_HOST_HAVE_PP_VARARGS */
-TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
+TPP_INLINE tpp_errno TPPVCALL
 tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
 	(void)self;
 	(void)id;
 	return TPP_EOK;
 }
 
-TPP_INLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPVCALL
+TPP_INLINE tpp_errno TPPVCALL
 tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warning_id id, ...) {
 	(void)self;
 	(void)pos;
+	(void)id;
+	return TPP_EOK;
+}
+
+TPP_INLINE tpp_errno TPPVCALL
+tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_lcinfo lc, tpp_warning_id id, ...) {
+	(void)self;
+	(void)lc;
 	(void)id;
 	return TPP_EOK;
 }
@@ -823,8 +842,18 @@ tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warnin
 #endif /* !TPP_HAVE_WARNINGS */
 
 
-#if TPP_HAVE_LEXER_REPRTOKENID
+/* Warn if the current file's #ifdef-stack is non-empty.
+ * @return: * : See `tpp_lexer_warnf()' */
+#if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_warn_nonempty_ifdef(tpp_lexer *tpp_restrict self);
+#else /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+#define tpp_lexer_warn_nonempty_ifdef(self) TPP_EOK
+#endif /* !TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+
+
 /* Return the (canonical) string-representation of a given token ID */
+#if TPP_HAVE_LEXER_REPRTOKENID
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char const *TPPCALL
 tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok);
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */

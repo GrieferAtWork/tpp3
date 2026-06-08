@@ -877,9 +877,10 @@ tpp_lexer_decodestring_as_single_chunk(tpp_lexer *tpp_restrict self,
  * the case, no intermediate heap-buffer needs to be created, as "cb" can just
  * be invoked using the currently loaded file's content-buffer.
  *
- * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: cb.arg:   Cookie argument (s.a. `arg')
  * @param: cb.chunk: The string-chunk containing "str" (or "NULL" if "str" is statically allocated)
  *                   NOTE: May be non-NULL, even if "str" is statically allocated!
+ * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*'
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or

@@ -742,7 +742,7 @@ next_op:
 	file->tf_pos   = tpp_string_str(result_chunk);
 	file->tf_chunk = result_chunk; /* Inherit reference */
 	file->tf_end   = tpp_string_end(result_chunk);
-	_tpp_file_init_common(file);
+	(void)0 _tpp_file_init_common(file);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	file->tf_kind  = TPP_FILE_KIND_MACRO;
@@ -814,7 +814,7 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
 	if (file->tf_chunk)
 		tpp_string_incref(file->tf_chunk);
 
-	_tpp_file_init_common(file);
+	(void)0 _tpp_file_init_common(file);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	file->tf_kind  = TPP_FILE_KIND_MACRO;

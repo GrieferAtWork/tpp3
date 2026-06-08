@@ -56,12 +56,14 @@ int main(int argc, char *argv[]) {
 		tpp_lcinfo lc;
 		tpp_file *file;
 		tok = tpp_lexer_yield(&lexer);
-		if (TPP_TOK_ISERR(tok)) {
-			fprintf(stderr, "Yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
-			goto out;
-		}
-		if (tok == TPP_TOK_EOF)
+		if (TPP_TOK_ISERR(tok))
 			break;
+		if (tok == TPP_TOK_EOF) {
+			error = tpp_lexer_warn_nonempty_ifdef(&lexer);
+			if (TPP_ISERR(error))
+				tok = TPP_TOK_OFERR(error);
+			break;
+		}
 		desc = tpp_strtokenid(tok);
 		if (desc == NULL && TPP_TOK_ISKEYWORD(tok))
 			desc = (char const *)tpp_lexer_gettoken(&lexer)->tt_kwd->tk_kwd;
@@ -70,8 +72,8 @@ int main(int argc, char *argv[]) {
 		file = tpp_lexer_getfile(&lexer);
 		lexer_filename = tpp_file_filename(file);
 		lc = tpp_file_lcinfo(file, tpp_lexer_gettoken(&lexer)->tt_start);
-#if 0
-		printf("%.*s",
+#if 1
+		printf("[%.*s]",
 		       (int)(tpp_lexer_gettoken(&lexer)->tt_end -
 		             tpp_lexer_gettoken(&lexer)->tt_start),
 		       tpp_lexer_gettoken(&lexer)->tt_start);
@@ -85,6 +87,10 @@ int main(int argc, char *argv[]) {
 		             tpp_lexer_gettoken(&lexer)->tt_start),
 		       tpp_lexer_gettoken(&lexer)->tt_start);
 #endif
+	}
+	if (TPP_TOK_ISERR(tok)) {
+		fprintf(stderr, "Yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
+		goto out;
 	}
 	if (tpp_lexer_geterrorcount(&lexer)) {
 		fprintf(stderr, "There were lexer errors\n");

@@ -89,23 +89,26 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 }
 
 
-/* Initialize a lexer that simply reads the given [text,text+text_size) blob. */
+/* Initialize a lexer that simply reads the given [text,text+text_size) blob.
+ * @param: start_lc: [valid_if(chunk != NULL)] */
 #if TPP_HAVE_UNICODE
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ex(tpp_lexer *tpp_restrict self,
                        /*utf-8*/ char const *filename,
+                       /*inherit(always)*/ TPP_REF tpp_string *chunk,
                        void const *text, tpp_size text_size,
                        tpp_lcinfo start_lc, tpp_file_encoding encoding)
 #else /* TPP_HAVE_UNICODE */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init_text_ascii(tpp_lexer *tpp_restrict self,
                           /*utf-8*/ char const *filename,
+                          /*inherit(always)*/ TPP_REF tpp_string *chunk,
                           void const *text, tpp_size text_size,
                           tpp_lcinfo start_lc)
 #endif /* !TPP_HAVE_UNICODE */
 {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file_init_text_ex(file, filename, text, text_size, start_lc, encoding);
+	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
 	_tpp_lexer_init_common(self);
 }
 

@@ -35,6 +35,12 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
+
+#if TPP_HAVE_FILE_USER_FILENAME
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_user_filename) ==
+                  tpp_offsetof(tpp_file, tf_data.td_text.tft_user_filename));
+#endif /* TPP_HAVE_FILE_USER_FILENAME */
+
 #if TPP_DEBUG && 1
 #ifndef TPP_IO_CHUNKSIZE
 #define TPP_IO_CHUNKSIZE 1
@@ -51,11 +57,85 @@ TPP_DECL_BEGIN
 #endif /* !TPP_IO_MINREAD */
 #endif /* !TPP_DEBUG */
 
+
+#if TPP_HAVE_IFDEF_STACK
+/* Allocate an additional #ifdef-stack entry, and return a pointer to it.
+ * This function will increment `self->tids_cnt', but it is up to the
+ * caller to initialize the returned #ifdef-stack entry
+ *
+ * @return: * :   The (uninitialized) #ifdef-stack entry
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ifdef_stack_entry *TPPCALL
+tpp_ifdef_stack_append(tpp_ifdef_stack *tpp_restrict self) {
+	tpp_ifdef_stack_entry *result;
+	tpp_assert(self->tids_cnt <= self->tids_alc);
+	if (self->tids_cnt >= self->tids_alc) {
+		tpp_ifdef_stack_entry *new_vec;
+		/* Only allocate in batches-of-1: #ifdef-stacks don't usually grow very deep */
+		tpp_size new_alloc = self->tids_cnt + 1;
+
+		/* Use a minimal buffer size of "4": most files won't exceed this depth. */
+		if (new_alloc < 4)
+			new_alloc = 4;
+		new_vec = (tpp_ifdef_stack_entry *)tpp_tryrealloc(self->tids_vec,
+		                                                  new_alloc *
+		                                                  sizeof(tpp_ifdef_stack_entry));
+		if tpp_unlikely(!new_vec) {
+			new_alloc = self->tids_cnt + 1;
+			new_vec = (tpp_ifdef_stack_entry *)tpp_realloc(self->tids_vec,
+			                                               new_alloc *
+			                                               sizeof(tpp_ifdef_stack_entry));
+			if tpp_unlikely (!new_vec)
+				return NULL;
+		}
+		self->tids_vec = new_vec;
+		self->tids_alc = new_alloc;
+	}
+	tpp_assert(self->tids_cnt < self->tids_alc);
+	result = self->tids_vec + self->tids_cnt;
+	++self->tids_cnt;
+#if TPP_DEBUG
+	tpp_memset(result, 0xcc, sizeof(*result));
+#endif /* TPP_DEBUG */
+	return result;
+}
+
+/* Do the inverse of "tpp_ifdef_stack_append()", removing the last entry, and
+ * potentially freeing unused memory.
+ * The caller is responsible to ensure that `tpp_ifdef_stack_isnonempty(self)' */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_ifdef_stack_remove(tpp_ifdef_stack *tpp_restrict self) {
+	tpp_assert(self->tids_cnt != 0);
+	tpp_assert(self->tids_cnt <= self->tids_alc);
+	--self->tids_cnt;
+#ifndef __OPTIMIZE_SIZE__
+	{
+		tpp_size unused_count = self->tids_alc - self->tids_cnt;
+		if (unused_count > 8) {
+			/* Free unused memory */
+			tpp_ifdef_stack_entry *new_vec;
+			new_vec = (tpp_ifdef_stack_entry *)tpp_tryrealloc(self->tids_vec,
+			                                                  self->tids_alc *
+			                                                  sizeof(tpp_ifdef_stack_entry));
+			if tpp_likely(new_vec) {
+				self->tids_vec = new_vec;
+				self->tids_alc = self->tids_cnt;
+			}
+		}
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+#endif /* TPP_HAVE_IFDEF_STACK */
+
+
 /* Finalize the given file. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_file_fini(tpp_file *tpp_restrict self) {
 	if (self->tf_chunk)
 		tpp_string_decref(self->tf_chunk);
+#if TPP_HAVE_IFDEF_STACK
+	tpp_ifdef_stack_fini(&self->tf_ifdef);
+#endif /* TPP_HAVE_IFDEF_STACK */
 	switch (self->tf_kind) {
 	case TPP_FILE_KIND_IO:
 #if TPP_HAVE_FILE_NOCLOSE
@@ -64,7 +144,13 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
+#if TPP_HAVE_FILE_USER_FILENAME
+		TPP_FALLTHRU
+	case TPP_FILE_KIND_TEXT:
+		if (self->tf_data.td_text.tft_user_filename)
+			tpp_string_decref(self->tf_data.td_text.tft_user_filename);
 		break;
+#endif /* TPP_HAVE_FILE_USER_FILENAME */
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
 		tpp_macro *macro = self->tf_data.td_macro.tfm_macro;
@@ -857,6 +943,78 @@ tpp_file_filename(tpp_file const *tpp_restrict self) {
 	}
 }
 
+/* Same as `tpp_file_filename()', but may be overwritten by "#line" directives */
+#if TPP_HAVE_FILE_USER_FILENAME
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
+tpp_file_userfilename(tpp_file const *tpp_restrict self) {
+	switch (self->tf_kind) {
+
+	case TPP_FILE_KIND_IO:
+	case TPP_FILE_KIND_TEXT: {
+		TPP_REF tpp_string *user;
+		user = self->tf_data.td_io.tff_user_filename;
+		if (user != NULL)
+			return (char const *)user->ts_str;
+		return self->tf_data.td_io.tff_name;
+	}	break;
+
+#if TPP_HAVE_CPP_MACROS
+	case TPP_FILE_KIND_MACRO:
+		return self->tf_data.td_macro.tfm_macro->tm_deffile;
+#endif /* TPP_HAVE_CPP_MACROS */
+
+	default: tpp_unreachable();
+	}
+}
+
+/* Sets the user-filename override of "self" to "filename"
+ *
+ * NOTE: The caller must ensure that:
+ *       >> self->tf_kind == TPP_FILE_KIND_IO ||
+ *       >> self->tf_kind == TPP_FILE_KIND_TEXT;
+ *
+ * You may also pass "NULL" for `filename' to disable the override */
+TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_file_setuserfilename(tpp_file *tpp_restrict self,
+                         tpp_string *tpp_restrict filename) {
+	tpp_string *old_override;
+	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
+	           self->tf_kind == TPP_FILE_KIND_TEXT);
+	old_override = self->tf_data.td_text.tft_user_filename;
+	self->tf_data.td_text.tft_user_filename = filename;
+	if (filename)
+		tpp_string_incref(filename);
+	if (old_override)
+		tpp_string_decref(old_override);
+}
+#endif /* TPP_HAVE_FILE_USER_FILENAME */
+
+
+/* Set the (0-based) line that applies to "pos" (as returned by "tpp_file_lcinfo") in "self"
+ *
+ * NOTE: The caller must ensure that:
+ *       >> self->tf_kind == TPP_FILE_KIND_IO ||
+ *       >> self->tf_kind == TPP_FILE_KIND_TEXT; */
+#if TPP_HAVE_FILE_SETLINE
+TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_file_setline(tpp_file *tpp_restrict self,
+                 tpp_char const *pos, tpp_line line) {
+	tpp_lcinfo cur_info;
+	tpp_line cur_line, delta, start_line;
+	tpp_column start_col;
+	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
+	           self->tf_kind == TPP_FILE_KIND_TEXT);
+	cur_info   = tpp_file_lcinfo(self, pos);
+	cur_line   = tpp_lcinfo_getline(cur_info);
+	delta      = line - cur_line;
+	start_line = tpp_lcinfo_getline(self->tf_data.td_text.tft_start_lc) + delta;
+	start_col  = tpp_lcinfo_getcol(self->tf_data.td_text.tft_start_lc);
+	tpp_lcinfo_init(self->tf_data.td_text.tft_start_lc, start_line, start_col);
+}
+#endif /* TPP_HAVE_FILE_SETLINE */
+
+
+
 /* Returns the filename "keyword" (which may not always be
  * available, even when "tpp_file_filename()" returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
@@ -897,8 +1055,32 @@ tpp_file_getiofile(tpp_file const *tpp_restrict self) {
 		if (iter == NULL)
 			return (tpp_file *)self;
 	}
-	return (tpp_file *)iter;
+	return iter;
 }
+
+/* Returns the first tf_kind!=TPP_FILE_KIND_MACRO file in the #include-stack (using "tf_tprev")
+ * If no such file exists, returns "NULL" */
+#if TPP_HAVE_CPP_MACROS
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+tpp_file_gettextfile(tpp_file const *tpp_restrict self) {
+	tpp_file *iter = (tpp_file *)self;
+	while (iter->tf_kind == TPP_FILE_KIND_MACRO) {
+		iter = iter->tf_tprev;
+		if (iter == NULL)
+			break;
+	}
+	return iter;
+}
+
+/* Same as `tpp_file_gettextfile()', but re-return "self" instead of returning "NULL"
+ * The term "lc" here refers to the fact that this is the file that's used as basis
+ * for the builtin __FILE__, __LINE__ and __COLUMN__ macros. */
+TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
+	tpp_file *result = tpp_file_gettextfile(self);
+	return result ? result : (tpp_file *)self;
+}
+#endif /* TPP_HAVE_CPP_MACROS */
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 

@@ -3719,7 +3719,20 @@ eof:
 	/* Check if we can pop to another file */
 #if TPP_HAVE_INCLUDE_STACK
 	if (file->tf_prev && p_pos == &file->tf_pos) {
-		tpp_file *const prev = file->tf_prev;
+		tpp_file *prev;
+
+		/* Warn if the file still has an active #ifdef-stack
+		 * Only do this when we're actually going to pop the
+		 * file off the #include-stack. In those cases where
+		 * we're not allowed to do so, it's up to the caller
+		 * to emit these sorts of warnings! */
+#if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+		error = tpp_lexer_warn_nonempty_ifdef(self);
+		if (TPP_ISERR(error))
+			goto return_error;
+#endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+
+		prev = file->tf_prev;
 		tpp_file_fini(file);
 		*file = *prev;
 		tpp_free(prev);

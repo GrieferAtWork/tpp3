@@ -82,6 +82,58 @@ typedef enum tpp_file_encoding {
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 
 
+
+#if TPP_HAVE_IFDEF_STACK
+typedef enum tpp_ifdef_mode {
+	TPP_IFDEF_MODE_IFDEF, /* Inside of an active #ifdef (or #if, #elif, ...) block.
+	                       * Allowed follow-up directives are: "#elif", "#else", "#endif" */
+	TPP_IFDEF_MODE_ELSE,  /* Inside of an active #else-block (following an already-skipped #if-block)
+	                       * Allowed follow-up directives are: "#endif" */
+} tpp_ifdef_mode;
+
+typedef struct tpp_ifdef_stack_entry {
+	tpp_ifdef_mode tidse_mode;    /* Behavioral mode of this entry */
+	tpp_lcinfo     tidse_created; /* line/column info of #if/#ifdef/#ifndef directive that created this block */
+	tpp_lcinfo     tidse_updated; /* line/column info of last directive that updated this block.
+	                               * Or in other words: staring-position of current sub-block
+	                               * e.g.: after #elif or #else, points at that directive, while
+	                               *       "tidse_created" continues to point at initial #if/... */
+} tpp_ifdef_stack_entry;
+
+typedef struct tpp_ifdef_stack {
+	tpp_size               tids_alc; /* Allocated size of `tids_vec' */
+	tpp_size               tids_cnt; /* Used size of `tids_vec' */
+	tpp_ifdef_stack_entry *tids_vec; /* [0..tids_cnt][owned] Vector of active #ifdef-stack entries */
+} tpp_ifdef_stack;
+
+#define tpp_ifdef_stack_init(self) \
+	(void)((self)->tids_alc = 0,   \
+	       (self)->tids_cnt = 0,   \
+	       (self)->tids_vec = NULL)
+#define tpp_ifdef_stack_fini(self) \
+	tpp_free((self)->tids_vec)
+
+/* Check if the given #ifdef-stack is non-empty */
+#define tpp_ifdef_stack_isnonempty(self) \
+	((self)->tids_cnt != 0)
+
+/* Allocate an additional #ifdef-stack entry, and return a pointer to it.
+ * This function will increment `self->tids_cnt', but it is up to the
+ * caller to initialize the returned #ifdef-stack entry
+ *
+ * @return: * :   The (uninitialized) #ifdef-stack entry
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_ifdef_stack_entry *TPPCALL
+tpp_ifdef_stack_append(tpp_ifdef_stack *tpp_restrict self);
+
+/* Do the inverse of "tpp_ifdef_stack_append()", removing the last entry, and
+ * potentially freeing unused memory.
+ * The caller is responsible to ensure that `tpp_ifdef_stack_isnonempty(self)' */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_ifdef_stack_remove(tpp_ifdef_stack *tpp_restrict self);
+#endif /* TPP_HAVE_IFDEF_STACK */
+
+
 struct tpp_keyword;
 #if TPP_HAVE_CPP_MACROS
 struct tpp_macro;
@@ -105,24 +157,42 @@ typedef struct tpp_file {
 #if TPP_HAVE_INCLUDE_STACK
 	struct tpp_file    *tf_prev;  /* [0..1] Parent file in #include stack */
 	struct tpp_file    *tf_tprev; /* [0..1] Real parent for the purposes of message tracebacks (not affected by `tpp_file_autopopfile_pushoff') */
-#endif /* TPP_HAVE_INCLUDE_STACK */
+#define _tpp_file_init_prev(self) , (self)->tf_prev = NULL, (self)->tf_tprev = NULL
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define _tpp_file_init_prev(self) /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_STACK */
 #if TPP_HAVE_FILE_LC_CACHE
 	tpp_char const     *tf_lcpos; /* [0..1] Position that `tf_lcval' applies to. */
 	tpp_lcinfo          tf_lcval; /* [valid_if(tf_lcpos)] Cached line/column at `tf_lcpos' */
-#endif /* TPP_HAVE_FILE_LC_CACHE */
-
-	/* TODO: user-defined __FILE__ override */
-
-	/* TODO: #ifdef stack */
-
+#define _tpp_file_init_lcpos(self) , (self)->tf_lcpos = NULL
+#else /* TPP_HAVE_FILE_LC_CACHE */
+#define _tpp_file_init_lcpos(self) /* nothing */
+#endif /* !TPP_HAVE_FILE_LC_CACHE */
+#if TPP_HAVE_IFDEF_STACK
+	tpp_ifdef_stack     tf_ifdef; /* #ifdef-stack */
+#define _tpp_file_init_ifdef(self) , tpp_ifdef_stack_init(&(self)->tf_ifdef)
+#else /* TPP_HAVE_IFDEF_STACK */
+#define _tpp_file_init_ifdef(self) /* nothing */
+#endif /* !TPP_HAVE_IFDEF_STACK */
 	tpp_file_kind       tf_kind;  /* [const] File kind */
 #if TPP_HAVE_UNICODE
 	tpp_file_encoding   tf_enc;   /* File encoding */
-#endif /* TPP_HAVE_UNICODE */
+#define _tpp_file_init_enc(self)       , (self)->tf_enc = TPP_FILE_ENCODING_UTF8
+#define _tpp_file_init_enc_ex(self, v) , (self)->tf_enc = v
+#else /* TPP_HAVE_UNICODE */
+#define _tpp_file_init_enc(self)       /* nothing */
+#define _tpp_file_init_enc_ex(self, v) /* nothing */
+#endif /* !TPP_HAVE_UNICODE */
 	union {
 		struct {
 			char const      *tff_name;     /* [0..1][const] Filename by which this file was included (if available) */
 			tpp_lcinfo       tff_start_lc; /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+#if TPP_HAVE_FILE_USER_FILENAME
+			TPP_REF tpp_string *tff_user_filename; /* [0..1] User-defined override for name of this file */
+#define _tpp_file_init_io_user_filename(self) , (self)->tf_data.td_io.tff_user_filename = NULL
+#else /* TPP_HAVE_FILE_USER_FILENAME */
+#define _tpp_file_init_io_user_filename(self) /* nothing */
+#endif /* !TPP_HAVE_FILE_USER_FILENAME */
 			tpp_io_handle    tff_file;     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
 #if TPP_HAVE_FILE_IOFLAGS
 			tpp_file_ioflags tff_flags;    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
@@ -136,6 +206,12 @@ typedef struct tpp_file {
 		struct {
 			char const *tft_name;     /* [0..1][const] Filename for messages (if available) */
 			tpp_lcinfo  tft_start_lc; /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+#if TPP_HAVE_FILE_USER_FILENAME
+			TPP_REF tpp_string *tft_user_filename; /* [0..1] User-defined override for name of this file */
+#define _tpp_file_init_text_user_filename(self) , (self)->tf_data.td_text.tft_user_filename = NULL
+#else /* TPP_HAVE_FILE_USER_FILENAME */
+#define _tpp_file_init_text_user_filename(self) /* nothing */
+#endif /* !TPP_HAVE_FILE_USER_FILENAME */
 		} td_text; /* [tf_kind == TPP_FILE_KIND_TEXT] */
 
 #if TPP_HAVE_CPP_MACROS
@@ -150,21 +226,6 @@ typedef struct tpp_file {
 
 #define tpp_file_alloc() ((tpp_file *)tpp_malloc(sizeof(tpp_file)))
 #define tpp_file_free(p) tpp_free(p)
-
-
-#if TPP_HAVE_INCLUDE_STACK
-#define _tpp_file_init_prev(self) , (self)->tf_prev = NULL, (self)->tf_tprev = NULL
-#else /* TPP_HAVE_INCLUDE_STACK */
-#define _tpp_file_init_prev(self) /* nothing */
-#endif /* !TPP_HAVE_INCLUDE_STACK */
-
-#if TPP_HAVE_UNICODE
-#define _tpp_file_init_enc(self)       , (self)->tf_enc = TPP_FILE_ENCODING_UTF8
-#define _tpp_file_init_enc_ex(self, v) , (self)->tf_enc = v
-#else /* TPP_HAVE_UNICODE */
-#define _tpp_file_init_enc(self)       /* nothing */
-#define _tpp_file_init_enc_ex(self, v) /* nothing */
-#endif /* !TPP_HAVE_UNICODE */
 
 #if TPP_HAVE_FILE_IOFLAGS
 #define _tpp_file_init_ioflags(self, flags) , (self)->tf_data.td_io.tff_flags = (flags)
@@ -182,13 +243,9 @@ typedef struct tpp_file {
 
 
 /* Initialize common fields of "self" */
-#if TPP_HAVE_FILE_LC_CACHE
-#define _tpp_file_init_common(self) (void)((self)->tf_lcpos = NULL)
-/* TODO: Must also initialize #ifdef-stack here */
-#else /* TPP_HAVE_FILE_LC_CACHE */
-#define _tpp_file_init_common(self) (void)0
-#endif /* !TPP_HAVE_FILE_LC_CACHE */
-
+#define _tpp_file_init_common(self) \
+	_tpp_file_init_lcpos(self)      \
+	_tpp_file_init_ifdef(self)
 
 /* Temporarily disable automatic pop-to-prev-file on EOF */
 #if TPP_HAVE_INCLUDE_STACK
@@ -210,9 +267,13 @@ typedef struct tpp_file {
 
 
 #if TPP_HAVE_CPP_MACROS
-#define _tpp_file_io2text(self) ((self)->tf_kind == TPP_FILE_KIND_IO ? (void)((self)->tf_kind = TPP_FILE_KIND_TEXT) : (void)0)
+#define _tpp_file_io2text(self)                     \
+	((self)->tf_kind == TPP_FILE_KIND_IO            \
+	 ? (void)((self)->tf_kind = TPP_FILE_KIND_TEXT) \
+	 : (void)0)
 #else /* TPP_HAVE_CPP_MACROS */
-#define _tpp_file_io2text(self) (void)((self)->tf_kind = TPP_FILE_KIND_TEXT)
+#define _tpp_file_io2text(self) \
+	(void)((self)->tf_kind = TPP_FILE_KIND_TEXT)
 #endif /* !TPP_HAVE_CPP_MACROS */
 
 
@@ -255,16 +316,23 @@ typedef struct tpp_file {
 		tpp_file_breakpos(self); \
 	} while (0)
 
-/* Same as above, but may only be used when nothing
- * might push additional files in the mean-time. */
-#define tpp_file_pushifdef(self) \
-	do {                         \
-		/* TODO: push+clear #ifdef-stack */
-#define tpp_file_breakifdef(self) \
-		/* TODO: restore pushed #ifdef stack (fini everything still in current stack) */
+/* Push (+clear) and later (clear+)restore the #ifdef-stack of a given file */
+#if TPP_HAVE_IFDEF_STACK
+#define tpp_file_pushifdef(self)                               \
+	do {                                                       \
+		tpp_ifdef_stack const _tfpid_stack = (self)->tf_ifdef; \
+		tpp_ifdef_stack_init(&(self)->tf_ifdef)
+#define tpp_file_breakifdef(self)                       \
+		(void)(tpp_ifdef_stack_fini(&(self)->tf_ifdef), \
+		       (self)->tf_ifdef = _tfpid_stack)
 #define tpp_file_popifdef(self)    \
 		tpp_file_breakifdef(self); \
 	} while (0)
+#else /* TPP_HAVE_IFDEF_STACK */
+#define tpp_file_pushifdef(self)  do {
+#define tpp_file_breakifdef(self) (void)0
+#define tpp_file_popifdef(self)   } while (0)
+#endif /* !TPP_HAVE_IFDEF_STACK */
 
 
 
@@ -275,37 +343,40 @@ typedef struct tpp_file {
 #define tpp_file_init_io(self, filename, /*inherit*/ fp) \
 	tpp_file_init_io_ex(self, filename, fp, TPP_FILE_IOFLAGS_NORMAL)
 #define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags)   \
-	(void)(_tpp_file_init_common(self),                              \
-	       (self)->tf_pos   = NULL,                                  \
+	(void)((self)->tf_pos   = NULL,                                  \
 	       (self)->tf_chunk = NULL,                                  \
 	       (self)->tf_end   = NULL                                   \
 	       _tpp_file_init_prev(self),                                \
 	       (self)->tf_kind = TPP_FILE_KIND_IO                        \
-	       _tpp_file_init_enc(self),                                 \
+	       _tpp_file_init_enc(self)                                  \
+	       _tpp_file_init_common(self),                              \
 	       (self)->tf_data.td_io.tff_name = (filename),              \
 	       (self)->tf_data.td_io.tff_file = (fp),                    \
 	       tpp_lcinfo_init((self)->tf_data.td_io.tff_start_lc, 0, 0) \
+	       _tpp_file_init_io_user_filename(self)                     \
 	       _tpp_file_init_ioflags(self, flags))
 
 
 
 /* Initialize "self " as a "TPP_FILE_KIND_TEXT" file
- * @param: char const       *filename:  [0..1] Filename (if known)
- * @param: void const       *text:      File data base pointer
- * @param: tpp_size          text_size: File data size
- * @param: tpp_lcinfo        start_lc:  0-based line/column info for start of "text"
- * @param: tpp_file_encoding encoding:  File data encoding */
-#define tpp_file_init_text_ascii(self, filename, text, text_size, start_lc) \
-	tpp_file_init_text_ex(self, filename, text, start_lc, TPP_FILE_ENCODING_ASCII)
-#define tpp_file_init_text_ex(self, filename, text, text_size, start_lc, encoding) \
-	(void)(_tpp_file_init_common(self),                                            \
-	       (self)->tf_pos   = (tpp_char const *)(text),                            \
-	       (self)->tf_chunk = NULL,                                                \
-	       (self)->tf_end   = (tpp_char const *)(text) + (text_size)               \
-	       _tpp_file_init_prev(self),                                              \
-	       (self)->tf_kind = TPP_FILE_KIND_TEXT                                    \
-	       _tpp_file_init_enc_ex(self, encoding),                                  \
-	       (self)->tf_data.td_text.tft_name = (filename),                          \
+ * @param: char const         *filename:  [0..1] Filename (if known)
+ * @param: TPP_REF tpp_string *chunk:     File data chunk
+ * @param: void const         *text:      File data base pointer
+ * @param: tpp_size            text_size: File data size
+ * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text"
+ * @param: tpp_file_encoding   encoding:  File data encoding */
+#define tpp_file_init_text_ascii(self, filename, chunk, text, text_size, start_lc) \
+	tpp_file_init_text_ex(self, filename, chunk, text, start_lc, TPP_FILE_ENCODING_ASCII)
+#define tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, encoding) \
+	(void)((self)->tf_pos   = (tpp_char const *)(text),                                   \
+	       (self)->tf_chunk = (chunk),                                                    \
+	       (self)->tf_end   = (tpp_char const *)(text) + (text_size)                      \
+	       _tpp_file_init_prev(self),                                                     \
+	       (self)->tf_kind = TPP_FILE_KIND_TEXT                                           \
+	       _tpp_file_init_enc_ex(self, encoding)                                          \
+	       _tpp_file_init_common(self)                                                    \
+	       _tpp_file_init_text_user_filename(self),                                       \
+	       (self)->tf_data.td_text.tft_name = (filename),                                 \
 	       (self)->tf_data.td_text.tft_start_lc = (start_lc))
 
 
@@ -370,22 +441,71 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_filename(tpp_file const *tpp_restrict self);
 
 /* Same as `tpp_file_filename()', but may be overwritten by "#line" directives */
-#define tpp_file_userfilename(self) \
-	tpp_file_filename(self)
+#if TPP_HAVE_FILE_USER_FILENAME
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
+tpp_file_userfilename(tpp_file const *tpp_restrict self);
+
+/* Sets the user-filename override of "self" to "filename"
+ *
+ * NOTE: The caller must ensure that:
+ *       >> self->tf_kind == TPP_FILE_KIND_IO ||
+ *       >> self->tf_kind == TPP_FILE_KIND_TEXT;
+ *
+ * You may also pass "NULL" for `filename' to disable the override */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_file_setuserfilename(tpp_file *tpp_restrict self,
+                         tpp_string *tpp_restrict filename);
+#else /* TPP_HAVE_FILE_USER_FILENAME */
+#define tpp_file_userfilename(self) tpp_file_filename(self)
+#endif /* !TPP_HAVE_FILE_USER_FILENAME */
+
+/* Set the (0-based) line that applies to "pos" (as returned by "tpp_file_lcinfo") in "self"
+ *
+ * NOTE: The caller must ensure that:
+ *       >> self->tf_kind == TPP_FILE_KIND_IO ||
+ *       >> self->tf_kind == TPP_FILE_KIND_TEXT; */
+#if TPP_HAVE_FILE_SETLINE
+TPP_DECL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_file_setline(tpp_file *tpp_restrict self,
+                 tpp_char const *pos, tpp_line line);
+#endif /* TPP_HAVE_FILE_SETLINE */
 
 /* Returns the filename "keyword" (which may not always be
  * available, even when "tpp_file_filename()" returns non-NULL) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
 tpp_file_filename_kwd(tpp_file const *tpp_restrict self);
 
+#if TPP_HAVE_INCLUDE_STACK
 /* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_tprev")
  * If no such file exists, simply re-return "self". This function never returns "NULL" */
-#if TPP_HAVE_INCLUDE_STACK
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getiofile(tpp_file const *tpp_restrict self);
+
+#if TPP_HAVE_CPP_MACROS
+/* Returns the first tf_kind!=TPP_FILE_KIND_MACRO file in the #include-stack (using "tf_tprev")
+ * If no such file exists, returns "NULL" */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+tpp_file_gettextfile(tpp_file const *tpp_restrict self);
+
+/* Same as `tpp_file_gettextfile()', but re-return "self" instead of returning "NULL"
+ * The term "lc" here refers to the fact that this is the file that's used as basis
+ * for the builtin __FILE__, __LINE__ and __COLUMN__ macros. */
+TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+tpp_file_getlcfile(tpp_file const *tpp_restrict self);
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_file_gettextfile(self) ((tpp_file *)(self))
+#define tpp_file_getlcfile(self)   ((tpp_file *)(self))
+#endif /* !TPP_HAVE_CPP_MACROS */
 #else /* TPP_HAVE_INCLUDE_STACK */
-#define tpp_file_getiofile(self) (self)
+#define tpp_file_getiofile(self) ((tpp_file *)(self))
+#define tpp_file_getlcfile(self) ((tpp_file *)(self))
+#if TPP_HAVE_CPP_MACROS
+#define tpp_file_gettextfile(self) ((self)->tf_kind == TPP_FILE_KIND_MACRO ? NULL : ((tpp_file *)(self)))
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_file_gettextfile(self) ((tpp_file *)(self))
+#endif /* !TPP_HAVE_CPP_MACROS */
 #endif /* !TPP_HAVE_INCLUDE_STACK */
+
 
 /* Size of \t as reported by `tpp_file_lcinfo()' */
 #if TPP_TABSIZE >= 0
