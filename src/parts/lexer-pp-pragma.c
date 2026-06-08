@@ -49,12 +49,14 @@ struct tpp_lexer_handle_pushpopmacro_data {
 };
 
 static tpp_errno TPPCALL
-tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_char const *str, tpp_size length) {
+tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
+                                 tpp_char const *str, tpp_size length) {
 	tpp_errno result;
 	struct tpp_lexer_handle_pushpopmacro_data *data;
 	tpp_keyword const *ro_keyword;
 	tpp_keyword *keyword;
 	tpp_hash hash = tpp_hashof(str, length);
+	(void)chunk;
 	data = (struct tpp_lexer_handle_pushpopmacro_data *)arg;
 
 	/* Load keyword */

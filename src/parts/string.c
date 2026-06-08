@@ -135,7 +135,7 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,
 		tpp_assert(new_alloc >= min_alloc);
 	}
 
-	tpp_assert(buffer);
+	tpp_assert(buffer || !num_bytes);
 	result = buffer->ts_str + self->tsb_len;
 	self->tsb_len += num_bytes;
 	return result;

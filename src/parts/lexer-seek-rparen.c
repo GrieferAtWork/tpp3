@@ -485,6 +485,54 @@ done_err:
 #undef tpp_lexer_seek_rparen_keepspace
 }
 
+
+/* Same as above, but always initializes *exactly* "argc" arguments,
+ * and automatically emits "TPP_W_TOO_FEW_ARGUMENTS" when fewer were
+ * parsed. */
+#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
+tpp_lexer_seek_rparen_exact_ex(tpp_lexer *tpp_restrict self,
+                               tpp_char const **tpp_restrict p_pos,
+                               tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
+                               char const *opt_function_name_for_messages,
+                               unsigned int flags, tpp_token_id lparen_kind)
+#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
+tpp_lexer_seek_rparen_exact(tpp_lexer *tpp_restrict self,
+                            tpp_char const **tpp_restrict p_pos,
+                            tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
+                            char const *opt_function_name_for_messages,
+                            unsigned int flags);
+#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+{
+	tpp_token_id result;
+	tpp_size argc_actual = argc;
+	result = tpp_lexer_seek_rparen_ex(self, p_pos, p_argv, &argc_actual,
+	                                  opt_function_name_for_messages,
+	                                  flags, lparen_kind);
+	if (!TPP_TOK_ISERR(result) && argc_actual < argc) {
+		tpp_size i;
+		tpp_char const *fallback_pos = *p_pos;
+#if TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
+		tpp_errno error;
+		tpp_token *const token = tpp_lexer_gettoken(self);
+		tpp_char const *saved_end = token->tt_end;
+		token->tt_end = fallback_pos;
+		error = tpp_lexer_warnf_at(self, fallback_pos, TPP_W_TOO_FEW_ARGUMENTS,
+		                           opt_function_name_for_messages,
+		                           (unsigned int)argc,
+		                           (unsigned int)argc_actual);
+		token->tt_end = saved_end;
+		if (TPP_ISERR(error))
+			result = TPP_TOK_OFERR(error);
+#endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
+		for (i = argc_actual; i < argc; ++i) {
+			p_argv[i].tlai_start = fallback_pos;
+			p_argv[i].tlai_end   = fallback_pos;
+		}
+	}
+	return result;
+}
 #endif /* TPP_HAVE_LEXER_SEEK_RPAREN */
 
 TPP_DECL_END

@@ -117,8 +117,10 @@ struct tpp_lexer_handle_string_feature_test_data {
 };
 
 static tpp_errno TPPCALL
-tpp_lexer_handle_string_feature_test_cb(void *arg, tpp_char const *str, tpp_size length) {
+tpp_lexer_handle_string_feature_test_cb(void *arg, tpp_string *chunk,
+                                        tpp_char const *str, tpp_size length) {
 	struct tpp_lexer_handle_string_feature_test_data *data;
+	(void)chunk;
 	data = (struct tpp_lexer_handle_string_feature_test_data *)arg;
 	switch (data->tlhsftd_mode) {
 
@@ -339,9 +341,9 @@ after_expansion_mode_assignment:
 #endif /* TPP_HAVE_MACRO___is_identifier */
 			do {
 				tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
-				if tpp_unlikely(TPP_TOK_ISERR(tok))
-					goto err_tok;
 			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+			if tpp_unlikely(TPP_TOK_ISERR(tok))
+				goto err_tok;
 		}
 #endif /* TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS */
 	}
@@ -377,63 +379,216 @@ err_tok:
 }
 #endif /* TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO */
 
-#endif /* TPP_HAVE_CPP_MACROS */
 
-/* Handle a keyword-style macro.
+#if TPP_HAVE_PRAGMA
+/* Process a #pragma directive, start at the first token that comes after
+ * the leading "#pragma" (i.e.: the first token of the actual directive
+ * itself)
+ *
+ * @return: TPP_EOK:    Success (but there may still be garbage after
+ *                      the directive that hasn't been parsed, yet).
+ * @return: TPP_ENOENT: Unknown pragma (soft-error; must be handled by caller)
+ * @return: TPP_E*:     Error */
+TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
+#endif /* TPP_HAVE_PRAGMA */
+
+
+#if TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma
+static TPP_WUNUSED tpp_errno TPPCALL 
+tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
+	tpp_errno result = tpp_lexer_process_pragma(self);
+	if (result == TPP_ENOENT) {
+		result = TPP_EOK; /* Don't warn about trailing tokens in this case */
+	} else
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
+	if (!TPP_ISERR(result)) {
+		/* Warn about trailing tokens */
+		tpp_token_id tok = tpp_lexer_gettoken(self)->tt_id;
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok)) {
+			tok = tpp_lexer_yieldraw_blocking(self);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+		}
+		if (tok != TPP_TOK_EOF)
+			result = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE);
+	} else
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
+	{
+	}
+	return result;
+}
+#endif /* TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma */
+
+#if TPP_HAVE_MACRO__Pragma
+static TPP_WUNUSED tpp_errno TPPCALL 
+tpp_lexer_yield_handle__Pragma_string(void *arg, tpp_string *chunk,
+                                      tpp_char const *str, tpp_size length) {
+	tpp_token_id tok;
+	tpp_errno result;
+	tpp_lexer *self = (tpp_lexer *)arg;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	TPP_REF tpp_string *const saved__tf_chunk = file->tf_chunk;
+	tpp_file_kind const saved_kind = file->tf_kind;
+	tpp_lcinfo const saved_lcinfo = file->tf_data.td_text.tft_start_lc;
+	tpp_assert(file->tf_prev == NULL);
+
+	/* (re-)configure "file" to point at "str" (and setup LC info as close as possible)
+	 * Really though: LC info will only be perfectly precise when "str" is actually still
+	 * part of the original buffer. Otherwise, it will be off. */
+	if (file->tf_chunk != chunk) {
+		tpp_lcinfo lc = tpp_file_lcinfo(file, file->tf_pos);
+		file->tf_chunk = chunk;
+		file->tf_kind = TPP_FILE_KIND_TEXT;
+		file->tf_data.td_text.tft_start_lc = lc;
+#if TPP_HAVE_FILE_LC_CACHE
+		file->tf_lcpos = NULL;
+#endif /* TPP_HAVE_FILE_LC_CACHE */
+	}
+	tpp_file_setpos(file, str);
+	tpp_file_seteof(file, str + length);
+
+	/* Yield decoded _Pragma-string as a token. */
+	do {
+		tok = tpp_lexer_yieldraw(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok)) {
+		result = TPP_TOK_ASERR(tok);
+	} else {
+		/* Process _Pragma string as a pragma */
+		result = tpp_lexer_process_pragma_until_eof(self);
+	}
+	file->tf_data.td_text.tft_start_lc = saved_lcinfo;
+	file->tf_kind = saved_kind;
+	file->tf_chunk = saved__tf_chunk;
+	return result;
+}
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
+	tpp_errno error;
+	tpp_lexer_seek_backup backup;
+	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_lexer_arginfo argv[1];
+	tpp_token_id tok;
+	do {
+		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if tpp_unlikely(TPP_TOK_ISERR(tok))
+		goto err_tok;
+	if (tok != '(')
+		goto rollback;
+	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "_Pragma",
+	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
+	if (TPP_TOK_ISERR(tok))
+		goto err_tok;
+	tpp_file_pusheof(file);
+	tpp_file_pushifdef(file);
+
+	/* Setup file to (re-)parse the _Pragma string */
+	tpp_file_setpos(file, argv[0].tlai_start);
+	tpp_file_seteof(file, argv[0].tlai_end);
+	tok = tpp_lexer_yield(self);
+	if (!TPP_TOK_ISSTRING(tok)) {
+		if (TPP_TOK_ISERR(tok)) {
+			error = TPP_TOK_ASERR(tok);
+		} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+			error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+		}
+	} else {
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_yield_handle__Pragma_string,
+		                                 self, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		if (error == TPP_EOK) {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+			if (tpp_lexer_gettoken(self)->tt_id != TPP_TOK_EOF) {
+				/* Warning if current token isn't EOF */
+				error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			} else
+#endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+			{
+				/* TODO: Warning if #ifdef-stack isn't empty */
+			}
+		}
+	}
+	tpp_file_popifdef(file);
+	tpp_file_popeof(file);
+	tpp_file_setpos(file, pos); /* Continue parsing after the closing ')' once pragma is finished */
+
+	tok = TPP_TOK_EOF;
+	if (TPP_ISERR(error))
+		tok = TPP_TOK_OFERR(error);
+	return tok;
+rollback:
+	tok = backup.tlsb_id;
+err_tok:
+	tpp_lexer_seek_rollback(self, &backup);
+	return tok;
+}
+#endif /* TPP_HAVE_MACRO__Pragma */
+
+
+#if TPP_HAVE_MACRO___pragma
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
+	tpp_errno error;
+	tpp_lexer_seek_backup backup;
+	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_lexer_arginfo argv[1];
+	tpp_token_id tok;
+	do {
+		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if tpp_unlikely(TPP_TOK_ISERR(tok))
+		goto err_tok;
+	if (tok != '(')
+		goto rollback;
+	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "__pragma",
+	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
+	if (TPP_TOK_ISERR(tok))
+		goto err_tok;
+	tpp_file_pusheof(file);
+	tpp_file_pushifdef(file);
+
+	/* Setup file to (re-)parse the __pragma content */
+	tpp_file_setpos(file, argv[0].tlai_start);
+	tpp_file_seteof(file, argv[0].tlai_end);
+	tok = tpp_lexer_yield(self);
+	if (TPP_TOK_ISERR(tok)) {
+		error = TPP_TOK_ASERR(tok);
+	} else {
+		error = tpp_lexer_process_pragma_until_eof(self);
+		if (error == TPP_EOK) {
+			/* TODO: Warning if #ifdef-stack isn't empty */
+		}
+	}
+	tpp_file_popifdef(file);
+	tpp_file_popeof(file);
+	tpp_file_setpos(file, pos); /* Continue parsing after the closing ')' once pragma is finished */
+	tok = TPP_TOK_EOF;
+	if (TPP_ISERR(error))
+		tok = TPP_TOK_OFERR(error);
+	return tok;
+rollback:
+	tok = backup.tlsb_id;
+err_tok:
+	tpp_lexer_seek_rollback(self, &backup);
+	return tok;
+}
+#endif /* TPP_HAVE_MACRO___pragma */
+
+
+
+/* Handle a builtin macro.
  * @return: TPP_TOK_EOF: Caller should yield again.
  * @return: * : The new expansion token after keywords were handled */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
-	tpp_token const *const token = tpp_lexer_gettoken(self);
-	tpp_keyword const *const keyword = token->tt_kwd;
-
-	/* Emit warnings for "deprecated" keywords. */
-#if TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED
-	if (keyword->tk_misc) {
-		tpp_keyword_misc const *misc = keyword->tk_misc;
-		if (misc->tkm_flags & TPP_KEYWORD_FLAG_IS_DEPRECATED) {
-#if TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS
-			if ((misc->tkm_flags & TPP_KEYWORD_FLAG_IS_POISONED) &&
-			    (tpp_lexer_getfile(self)->tf_kind == TPP_FILE_KIND_MACRO)) {
-				/* Don't emit warning */
-			} else
-#endif /* TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS */
-			{
-				tpp_errno error = tpp_lexer_warnf(self, TPP_W_DEPRECATED_KEYWORD);
-				if (TPP_ISERR(error))
-					return TPP_TOK_OFERR(error);
-			}
-		}
-	}
-#endif /* TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED */
-
-#if TPP_HAVE_CPP_MACROS
-	/* Check if this keyword should be expanded as a macro.
-	 * This also does the is-enabled checks for builtin macros. */
-#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
-	if (!tpp_lexer_getkeyworddefined(self, keyword))
-		return tok;
-#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
-
-	/* Check for explicitly defined macros... */
-	{
-		tpp_macro *const macro = keyword->tk_macro;
-		if (macro) {
-			/* Check if expansion of the macro is allowed. */
-			if (macro->tm_expansions > 0) {
-#if TPP_HAVE_MACRO_RECURSION
-				if (!(macro->tm_flags & TPP_MACRO_FLAG_SELFEXPAND))
-#endif /* TPP_HAVE_MACRO_RECURSION */
-				{
-					return tok;
-				}
-			}
-
-			/* Expand user-defined macro... */
-			return tpp_lexer_expand_macro(self, macro);
-		}
-	}
-
+tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	/* Deal with pre-defined macros. */
 	switch (tok) {
 
@@ -586,6 +741,24 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 
 
 /************************************************************************/
+#if TPP_HAVE_MACRO__Pragma
+	case TPP_KWD__Pragma:
+		return tpp_lexer_yield_handle__Pragma(self);
+#endif /* TPP_HAVE_MACRO__Pragma */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_MACRO___pragma
+	case TPP_KWD___pragma:
+		return tpp_lexer_yield_handle___pragma(self);
+#endif /* TPP_HAVE_MACRO___pragma */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_NUMERIC_DATE_MACROS
 	/* TODO: __DATE_DAY__, __DATE_WDAY__, __DATE_YDAY__, __DATE_MONTH__, __DATE_YEAR__ */
 	/* TODO: -Wdate-time (disabled by default) */
@@ -645,8 +818,68 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 
 	/* Fallback: act as though the macro takes no arguments, and expands to itself:
 	 * >> #define SOME_MACRO SOME_MACRO */
-#endif /* TPP_HAVE_CPP_MACROS */
 	return tok;
+}
+#endif /* TPP_HAVE_CPP_MACROS */
+
+/* Handle a keyword-style macro.
+ * @return: TPP_TOK_EOF: Caller should yield again.
+ * @return: * : The new expansion token after keywords were handled */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
+	tpp_token const *const token = tpp_lexer_gettoken(self);
+	tpp_keyword const *const keyword = token->tt_kwd;
+
+	/* Emit warnings for "deprecated" keywords. */
+#if TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED
+	if (keyword->tk_misc) {
+		tpp_keyword_misc const *misc = keyword->tk_misc;
+		if (misc->tkm_flags & TPP_KEYWORD_FLAG_IS_DEPRECATED) {
+#if TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS
+			if ((misc->tkm_flags & TPP_KEYWORD_FLAG_IS_POISONED) &&
+			    (tpp_lexer_getfile(self)->tf_kind == TPP_FILE_KIND_MACRO)) {
+				/* Don't emit warning */
+			} else
+#endif /* TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS */
+			{
+				tpp_errno error = tpp_lexer_warnf(self, TPP_W_DEPRECATED_KEYWORD);
+				if (TPP_ISERR(error))
+					return TPP_TOK_OFERR(error);
+			}
+		}
+	}
+#endif /* TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED */
+
+#if TPP_HAVE_CPP_MACROS
+	/* Check if this keyword should be expanded as a macro.
+	 * This also does the is-enabled checks for builtin macros. */
+#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
+	if (!tpp_lexer_getkeyworddefined(self, keyword))
+		return tok;
+#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+
+	/* Check for explicitly defined macros... */
+	{
+		tpp_macro *const macro = keyword->tk_macro;
+		if (macro) {
+			/* Check if expansion of the macro is allowed. */
+			if (macro->tm_expansions > 0) {
+#if TPP_HAVE_MACRO_RECURSION
+				if (!(macro->tm_flags & TPP_MACRO_FLAG_SELFEXPAND))
+#endif /* TPP_HAVE_MACRO_RECURSION */
+				{
+					return tok;
+				}
+			}
+
+			/* Expand user-defined macro... */
+			return tpp_lexer_expand_macro(self, macro);
+		}
+	}
+	return tpp_lexer_yield_handle_builtin_macro(self, tok);
+#else /* TPP_HAVE_CPP_MACROS */
+	return tok;
+#endif /* !TPP_HAVE_CPP_MACROS */
 }
 
 /* Wrapper around `tpp_lexer_yieldpp()' that adds handling for macro expansion.

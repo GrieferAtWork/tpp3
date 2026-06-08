@@ -111,6 +111,8 @@ typedef struct tpp_file {
 	tpp_lcinfo          tf_lcval; /* [valid_if(tf_lcpos)] Cached line/column at `tf_lcpos' */
 #endif /* TPP_HAVE_FILE_LC_CACHE */
 
+	/* TODO: user-defined __FILE__ override */
+
 	/* TODO: #ifdef stack */
 
 	tpp_file_kind       tf_kind;  /* [const] File kind */

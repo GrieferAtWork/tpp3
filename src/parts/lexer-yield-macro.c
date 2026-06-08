@@ -448,10 +448,14 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 		{
 #if TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
 			tpp_errno error;
+			tpp_token *const token = tpp_lexer_gettoken(self);
+			tpp_char const *saved_end = token->tt_end;
+			token->tt_end = pos;
 			error = tpp_lexer_warnf_at(self, pos, TPP_W_TOO_FEW_ARGUMENTS,
 			                           (char const *)backup.tlsb_kwd->tk_kwd,
 			                           (unsigned int)macro_argc,
 			                           (unsigned int)argc);
+			token->tt_end = saved_end;
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
 				goto err_rollback_argbuf;

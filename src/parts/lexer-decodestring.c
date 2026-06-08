@@ -823,8 +823,10 @@ tpp_lexer_parsestring_is_single_chunk(tpp_lexer *tpp_restrict self) {
 }
 
 struct tpp_lexer_decodestring_as_single_chunk_data {
-	tpp_errno (TPPCALL *tldsascd_cb)(void *arg, tpp_char const *str, tpp_size length);
+	tpp_errno (TPPCALL *tldsascd_cb)(void *arg, tpp_string *chunk,
+	                                 tpp_char const *str, tpp_size length);
 	void               *tldsascd_arg;
+	tpp_string         *tldsascd_chunk;
 };
 
 static tpp_ssize TPP_FORMATPRINTER_CC
@@ -835,7 +837,7 @@ tpp_lexer_decodestring_as_single_chunk_cb(void *arg, tpp_char const *text, tpp_s
 		return 0;
 	data = (struct tpp_lexer_decodestring_as_single_chunk_data *)arg;
 	tpp_assert(data->tldsascd_cb != NULL && "Multiple invocations?");
-	error = (*data->tldsascd_cb)(data->tldsascd_arg, text, num_bytes);
+	error = (*data->tldsascd_cb)(data->tldsascd_arg, data->tldsascd_chunk, text, num_bytes);
 #if TPP_DEBUG
 	data->tldsascd_cb = NULL;
 #endif /* TPP_DEBUG */
@@ -848,13 +850,15 @@ tpp_lexer_decodestring_as_single_chunk_cb(void *arg, tpp_char const *text, tpp_s
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_decodestring_as_single_chunk(tpp_lexer *tpp_restrict self,
-                                       tpp_errno (TPPCALL *cb)(void *arg, tpp_char const *str, tpp_size length),
+                                       tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
+                                                               tpp_char const *str, tpp_size length),
                                        void *arg) {
 	tpp_ssize status;
 	struct tpp_lexer_decodestring_as_single_chunk_data data;
 	tpp_assert(cb && "NULL-callback given");
-	data.tldsascd_cb  = cb;
-	data.tldsascd_arg = arg;
+	data.tldsascd_cb    = cb;
+	data.tldsascd_arg   = arg;
+	data.tldsascd_chunk = tpp_lexer_getfile(self)->tf_chunk;
 	status = tpp_lexer_decodestring(self,
 	                                &tpp_lexer_decodestring_as_single_chunk_cb,
 	                                &tpp_lexer_decodestring_as_single_chunk_cb,
@@ -873,7 +877,9 @@ tpp_lexer_decodestring_as_single_chunk(tpp_lexer *tpp_restrict self,
  * the case, no intermediate heap-buffer needs to be created, as "cb" can just
  * be invoked using the currently loaded file's content-buffer.
  *
- * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: cb.chunk: The string-chunk containing "str" (or "NULL" if "str" is statically allocated)
+ *                   NOTE: May be non-NULL, even if "str" is statically allocated!
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
@@ -883,8 +889,9 @@ tpp_lexer_decodestring_as_single_chunk(tpp_lexer *tpp_restrict self,
  * @return: TPP_EWARNPRINT: Error while printing a warning
  * @return: * :             Return value of given "cb" */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_parsestring_cb(tpp_lexer *tpp_restrict self,
-                         tpp_errno (TPPCALL *cb)(void *arg, tpp_char const *str, tpp_size length),
+tpp_lexer_parsestring_cb(tpp_lexer *self,
+                         tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
+                                                 tpp_char const *str, tpp_size length),
                          void *arg, unsigned int flags) {
 	unsigned int how;
 again:
@@ -916,7 +923,8 @@ again_yield_after_empty:
 		}
 
 		/* Indicate an empty chunk to the caller */
-		return (*cb)(arg, (tpp_char const *)"", 0);
+		return (*cb)(arg, tpp_lexer_getfile(self)->tf_chunk,
+		             tpp_lexer_getfile(self)->tf_pos, 0);
 	} else if (how == TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_YES) {
 		tpp_lexer_seek_backup backup;
 		tpp_char const *pos;
@@ -992,7 +1000,7 @@ again_yield_after_single:
 do_multi_chunk_string:
 		result = tpp_lexer_parsestring(self, &string, flags);
 		if (!TPP_ISERR(result)) {
-			result = (*cb)(arg, tpp_string_str(string), tpp_string_len(string));
+			result = (*cb)(arg, string, tpp_string_str(string), tpp_string_len(string));
 			tpp_string_decref(string);
 		}
 		return result;

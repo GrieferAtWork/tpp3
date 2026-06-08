@@ -1501,7 +1501,7 @@ TPP_WARNING(TPP_W_UNKNOWN_PRAGMAS, 1(TPP_WG_UNKNOWN_PRAGMAS), 1(4068), TPP_WSTAT
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 #define TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 TPP_WARNING(TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE, 1(TPP_WG_UNKNOWN_PRAGMAS), 1(4083), TPP_WSTATE_UNDEFINED,
-            "extra tokens at end of %[#pragma%] directive")
+            "extra tokens at end of %[#pragma%] directive: %Pt")
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
 
 
@@ -1519,7 +1519,7 @@ TPP_WGROUP(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER, 1("pragma-once-outside-header"), T
 #if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
 #define TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
 TPP_WARNING(TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER, 1(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER), 0(), ~,
-            "%[#pragma%] once in main file")
+            "%[#pragma once%] in main file")
 #endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
 
 
@@ -6216,6 +6216,8 @@ typedef struct tpp_file {
 	tpp_lcinfo          tf_lcval; /* [valid_if(tf_lcpos)] Cached line/column at `tf_lcpos' */
 #endif /* TPP_HAVE_FILE_LC_CACHE */
 
+	/* TODO: user-defined __FILE__ override */
+
 	/* TODO: #ifdef stack */
 
 	tpp_file_kind       tf_kind;  /* [const] File kind */
@@ -8199,6 +8201,31 @@ tpp_lexer_seek_rparen_ex(tpp_lexer *tpp_restrict self,
                          unsigned int flags,
                          tpp_token_id lparen_kind);
 #endif /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+
+/* Same as above, but always initializes *exactly* "argc" arguments,
+ * and automatically emits "TPP_W_TOO_FEW_ARGUMENTS" when fewer were
+ * parsed. */
+#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
+#define tpp_lexer_seek_rparen_exact(self, p_pos, p_argv, argc, opt_function_name_for_messages, flags) \
+	tpp_lexer_seek_rparen_exact_ex(self, p_pos, p_argv, argc, opt_function_name_for_messages, flags, TPP_TOK_LPAREN)
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
+tpp_lexer_seek_rparen_exact_ex(tpp_lexer *tpp_restrict self,
+                               tpp_char const **tpp_restrict p_pos,
+                               tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
+                               char const *opt_function_name_for_messages,
+                               unsigned int flags, tpp_token_id lparen_kind);
+#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
+tpp_lexer_seek_rparen_exact(tpp_lexer *tpp_restrict self,
+                            tpp_char const **tpp_restrict p_pos,
+                            tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
+                            char const *opt_function_name_for_messages,
+                            unsigned int flags);
+#if TPP_BUILDING
+#define tpp_lexer_seek_rparen_exact_ex(self, p_pos, p_argv, argc, opt_function_name_for_messages, flags, lparen_kind) \
+	tpp_lexer_seek_rparen_exact(self, p_pos, p_argv, argc, opt_function_name_for_messages, flags)
+#endif /* TPP_BUILDING */
+#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
 #endif /* TPP_HAVE_LEXER_SEEK_RPAREN */
 
 
@@ -8301,7 +8328,9 @@ tpp_lexer_parsestring(tpp_lexer *tpp_restrict self,
  * the case, no intermediate heap-buffer needs to be created, as "cb" can just
  * be invoked using the currently loaded file's content-buffer.
  *
- * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: cb.chunk: The string-chunk containing "str" (or "NULL" if "str" is statically allocated)
+ *                   NOTE: May be non-NULL, even if "str" is statically allocated!
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
@@ -8311,8 +8340,9 @@ tpp_lexer_parsestring(tpp_lexer *tpp_restrict self,
  * @return: TPP_EWARNPRINT: Error while printing a warning
  * @return: * :             Return value of given "cb" */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_parsestring_cb(tpp_lexer *tpp_restrict self,
-                         tpp_errno (TPPCALL *cb)(void *arg, tpp_char const *str, tpp_size length),
+tpp_lexer_parsestring_cb(tpp_lexer *self,
+                         tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
+                                                 tpp_char const *str, tpp_size length),
                          void *arg, unsigned int flags);
 #endif /* TPP_HAVE_TPP_TOK_STRINGLIKE */
 
