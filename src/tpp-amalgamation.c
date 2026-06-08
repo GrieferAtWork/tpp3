@@ -15884,6 +15884,107 @@ tpp_lexer_yield_handle___INCLUDE_LEVEL__(tpp_lexer *tpp_restrict self) {
 #endif /* ... */
 
 
+#if TPP_HAVE_MACRO___TPP_IDENTIFIER
+struct tpp_lexer_handle_tpp_identifier_data {
+	tpp_lexer         *tlhtid_lexer;   /* [1..1] Lexer */
+	tpp_keyword const *tlhtid_keyword; /* [1..1] The identified keyword */
+};
+
+static TPP_WUNUSED tpp_errno TPPCALL 
+tpp_lexer_handle_tpp_identifier_cb(void *arg, tpp_string *chunk,
+                                   tpp_char const *str, tpp_size length) {
+	tpp_keyword const *kwd;
+	struct tpp_lexer_handle_tpp_identifier_data *data;
+	(void)chunk;
+	data = (struct tpp_lexer_handle_tpp_identifier_data *)arg;
+	kwd = tpp_keywords_newkeyword(&data->tlhtid_lexer->tl_kwds,
+	                              str, length, tpp_hashof(str, length));
+	if tpp_unlikely(!kwd)
+		return TPP_ENOMEM;
+	data->tlhtid_keyword = kwd;
+	return TPP_EOK;
+}
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
+	struct tpp_lexer_handle_tpp_identifier_data data;
+	tpp_errno error;
+	tpp_lexer_seek_backup backup;
+	tpp_char const *identifier_start;
+	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_lexer_arginfo argv[1];
+	tpp_token_id tok;
+	do {
+		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if tpp_unlikely(TPP_TOK_ISERR(tok))
+		goto err_tok;
+	if (tok != '(')
+		goto rollback;
+	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "__TPP_IDENTIFIER",
+	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
+	if (TPP_TOK_ISERR(tok))
+		goto err_tok;
+	identifier_start = file->tf_pos; /* points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_begin()") */
+	tpp_file_pusheof(file);
+	tpp_file_pushifdef(file);
+
+	/* Setup file to (re-)parse the _Pragma string */
+	tpp_file_setpos(file, argv[0].tlai_start);
+	tpp_file_seteof(file, argv[0].tlai_end);
+	tok = tpp_lexer_yield(self);
+	data.tlhtid_lexer   = self;
+	data.tlhtid_keyword = NULL;
+	if (!TPP_TOK_ISSTRING(tok)) {
+		if (TPP_TOK_ISERR(tok)) {
+			error = TPP_TOK_ASERR(tok);
+		} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+			error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+		}
+	} else {
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_tpp_identifier_cb,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		if (error == TPP_EOK) {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+			if (tpp_lexer_gettoken(self)->tt_id != TPP_TOK_EOF) {
+				/* Warning if current token isn't EOF */
+				error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			} else
+#endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+			{
+				/* TODO: Warning if #ifdef-stack isn't empty */
+			}
+		}
+	}
+	tpp_file_popifdef(file);
+	tpp_file_popeof(file);
+	tpp_file_setpos(file, pos); /* Continue parsing after the closing ')' once pragma is finished */
+	if (TPP_ISERR(error)) {
+		tok = TPP_TOK_OFERR(error);
+	} else {
+		tpp_token *token = tpp_lexer_gettoken(self);
+		tpp_assert(data.tlhtid_keyword);
+		/* Setup current token to refer to "data.tlhtid_keyword" */
+		token->tt_id    = tok = data.tlhtid_keyword->tk_id;
+		token->tt_kwd   = data.tlhtid_keyword;
+		token->tt_start = identifier_start;
+/*		token->tt_end   = ...;  * Already correct (points after the trailing ')'-token) */
+	}
+	return tok;
+rollback:
+	tok = backup.tlsb_id;
+err_tok:
+	tpp_lexer_seek_rollback(self, &backup);
+	return tok;
+}
+#endif /* TPP_HAVE_MACRO___TPP_IDENTIFIER */
+
+
 
 /* Handle a builtin macro.
  * @return: TPP_TOK_EOF: Caller should yield again.
@@ -16077,6 +16178,15 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
+#if TPP_HAVE_MACRO___TPP_IDENTIFIER
+	case TPP_KWD___TPP_IDENTIFIER:
+		return tpp_lexer_yield_handle___TPP_IDENTIFIER(self);
+#endif /* !TPP_HAVE_MACRO___TPP_IDENTIFIER */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_MACRO___TPP_EVAL
 	/* TODO: __TPP_EVAL */
 #endif /* !TPP_HAVE_MACRO___TPP_EVAL */
@@ -16101,9 +16211,6 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___TPP_COUNT_TOKENS
 	/* TODO: __TPP_COUNT_TOKENS */
 #endif /* !TPP_HAVE_MACRO___TPP_COUNT_TOKENS */
-#if TPP_HAVE_MACRO___TPP_IDENTIFIER
-	/* TODO: __TPP_IDENTIFIER */
-#endif /* !TPP_HAVE_MACRO___TPP_IDENTIFIER */
 /************************************************************************/
 
 

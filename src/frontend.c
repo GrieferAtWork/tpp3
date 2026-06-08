@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 		file = tpp_lexer_getfile(&lexer);
 		lexer_filename = tpp_file_filename(file);
 		lc = tpp_file_lcinfo(file, tpp_lexer_gettoken(&lexer)->tt_start);
-#if 1
+#if 0
 		printf("%.*s",
 		       (int)(tpp_lexer_gettoken(&lexer)->tt_end -
 		             tpp_lexer_gettoken(&lexer)->tt_start),
