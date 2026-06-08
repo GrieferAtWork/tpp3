@@ -507,9 +507,15 @@ tpp_lexer_seek_rparen_exact(tpp_lexer *tpp_restrict self,
 {
 	tpp_token_id result;
 	tpp_size argc_actual = argc;
+#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
 	result = tpp_lexer_seek_rparen_ex(self, p_pos, p_argv, &argc_actual,
 	                                  opt_function_name_for_messages,
 	                                  flags, lparen_kind);
+#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+	result = tpp_lexer_seek_rparen(self, p_pos, p_argv, &argc_actual,
+	                               opt_function_name_for_messages,
+	                               flags);
+#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
 	if (!TPP_TOK_ISERR(result) && argc_actual < argc) {
 		tpp_size i;
 		tpp_char const *fallback_pos = *p_pos;

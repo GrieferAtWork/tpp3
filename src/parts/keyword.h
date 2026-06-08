@@ -34,18 +34,19 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 struct tpp_macro;
 typedef struct tpp_macro_pushent {
-	TPP_REF struct tpp_macro *tmpe_macro; /* [0..1] The macro that was pushed, or "NULL" if not defined at the time. */
-	tpp_size                  tmpe_count; /* # of times that `tmpe_macro' was pushed without the macro actually having changed */
+	TPP_REF struct tpp_macro *TPP_INTERNAL(tmpe_macro); /* [0..1] The macro that was pushed, or "NULL" if not defined at the time. */
+	tpp_size                  TPP_INTERNAL(tmpe_count); /* # of times that `tmpe_macro' was pushed without the macro actually having changed */
 } tpp_macro_pushent;
 
 typedef struct tpp_macro_pushstack {
-	tpp_size           tmps_cnt; /* # of elements on `tmps_vec' */
-	tpp_macro_pushent *tmps_vec; /* [0..tmps_vec][owned] Vector of pushed macros (push_macro appends at the end; pop_macro takes from the end) */
+	tpp_size           TPP_INTERNAL(tmps_cnt); /* # of elements on `tmps_vec' */
+	tpp_macro_pushent *TPP_INTERNAL(tmps_vec); /* [0..tmps_vec][owned] Vector of pushed macros (push_macro appends at the end; pop_macro takes from the end) */
 } tpp_macro_pushstack;
 
 /* Initialize/finalize a given macro-push stack */
-#define tpp_macro_pushstack_init(self) \
-	(void)((self)->tmps_cnt = 0, (self)->tmps_vec = NULL)
+#define tpp_macro_pushstack_init(self)         \
+	(void)((self)->TPP_INTERNAL(tmps_cnt) = 0, \
+	       (self)->TPP_INTERNAL(tmps_vec) = NULL)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self);
 
@@ -60,15 +61,15 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #if ((TPP_HAVE_CPP_INCLUDE && (TPP_HAVE_CPP_IF_ELSE_ENDIF || \
                                TPP_HAVE_PRAGMA_ONCE)) ||     \
      TPP_HAVE_CPP_IMPORT ||                                  \
-     TPP_HAVE_CLANG_MACRO___has_attribute ||                         \
-     TPP_HAVE_CLANG_MACRO___has_builtin ||                           \
-     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||                     \
-     TPP_HAVE_CLANG_MACRO___has_declspec_attribute ||                \
-     TPP_HAVE_CLANG_MACRO___has_extension ||                         \
-     TPP_HAVE_CLANG_MACRO___has_feature ||                           \
-     TPP_HAVE_CLANG_MACRO___has_c_attribute ||                       \
-     TPP_HAVE_MACRO___is_deprecated ||                          \
-     TPP_HAVE_MACRO___is_poisoned ||                            \
+     TPP_HAVE_CLANG_MACRO___has_attribute ||                 \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||                   \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||             \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute ||        \
+     TPP_HAVE_CLANG_MACRO___has_extension ||                 \
+     TPP_HAVE_CLANG_MACRO___has_feature ||                   \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute ||               \
+     TPP_HAVE_MACRO___is_deprecated ||                       \
+     TPP_HAVE_MACRO___is_poisoned ||                         \
      TPP_HAVE_PRAGMA_DEPRECATED ||                           \
      TPP_HAVE_PRAGMA_GCC_POISON ||                           \
      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS)
@@ -147,16 +148,16 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 struct tpp_keyword;
 typedef struct tpp_keyword_misc {
 #if TPP_HAVE_KEYWORD_FLAGS
-	tpp_keyword_flags   tkm_flags; /* Set of `TPP_KEYWORD_FLAG_*' */
+	tpp_keyword_flags TPP_INTERNAL(tkm_flags); /* Set of `TPP_KEYWORD_FLAG_*' */
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
 #if TPP_HAVE_KEYWORD_FILE_GUARD
-	struct tpp_keyword *tkm_file_guard; /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
+	struct tpp_keyword *TPP_INTERNAL(tkm_file_guard); /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
 #endif /* TPP_HAVE_KEYWORD_FILE_GUARD */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
-	tpp_macro_pushstack tkm_macro_pushstack; /* For `#pragma push_macro()' */
+	tpp_macro_pushstack TPP_INTERNAL(tkm_macro_pushstack); /* For `#pragma push_macro()' */
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_MACRO___TPP_COUNTER
-	tpp_size tkm_builtin_counter; /* Next value for __TPP_COUNTER */
+	tpp_size TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
 } tpp_keyword_misc;
 #endif /* TPP_HAVE_KEYWORD_MISC */
@@ -168,24 +169,25 @@ struct tpp_macro;
 
 #undef TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 typedef struct tpp_keyword {
-	tpp_token_id              tk_id;                  /* [const] Keyword ID */
-	struct tpp_keyword       *tk_next;                /* [0..1] Next keyword with a similar hash */
+	tpp_token_id              TPP_INTERNAL(tk_id);                  /* [const] Keyword ID */
+	struct tpp_keyword       *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
 #if TPP_HAVE_CPP_MACROS
-	TPP_REF struct tpp_macro *tk_macro;               /* [0..1][const_if(IS_BUILTIN)] Macro definition */
+	TPP_REF struct tpp_macro *TPP_INTERNAL(tk_macro);               /* [0..1][const_if(IS_BUILTIN)] Macro definition */
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
-	tpp_keyword_misc         *tk_misc;                /* [0..1][const_if(IS_BUILTIN)][owned] Misc. keyword data (lazily allocated) */
+	tpp_keyword_misc         *TPP_INTERNAL(tk_misc);                /* [0..1][const_if(IS_BUILTIN)][owned] Misc. keyword data (lazily allocated) */
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_KEYWORD_MISC */
-	tpp_hash                  tk_hash;                /* [const] Hash for `tk_kwd' */
-	tpp_refcnt                tk_refcnt;              /* Keyword reference count (for binary compatibility with "tpp_string") */
-	tpp_size                  tk_len;                 /* [const] # of bytes (char-s) in `tk_kwd' (excluding trailing \0) */
-	tpp_char                  tk_kwd[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; \0-terminated; never contains \-escaped linefeeds) */
-/*	tpp_char                  tk_nul;                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
+	tpp_hash                  TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd' */
+	tpp_refcnt                TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with "tpp_string") */
+	tpp_size                  TPP_INTERNAL(tk_len);                 /* [const] # of bytes (char-s) in `tk_kwd' (excluding trailing \0) */
+	tpp_char                  TPP_INTERNAL(tk_kwd)[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; \0-terminated; never contains \-escaped linefeeds) */
+/*	tpp_char                  TPP_INTERNAL(tk_nul);                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
 } tpp_keyword;
 
-#define tpp_keyword_sizeof(len) (tpp_offsetof(tpp_keyword, tk_kwd) + ((len) + 1) * sizeof(tpp_char))
+#define tpp_keyword_sizeof(len) \
+	(tpp_offsetof(tpp_keyword, TPP_INTERNAL(tk_kwd)) + ((len) + 1) * sizeof(tpp_char))
 
 /* When true, there are certain actions that require builtin keywords
  * to be copied into the current lexer's keyword table. These include
@@ -200,21 +202,31 @@ typedef struct tpp_keyword {
  * may need to be copied into the current lexer's `tpp_keywords'
  * if `tk_macro' or `tk_misc' need to be modified */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
-#define tpp_keyword_equals(a, b) ((a)->tk_id == (b)->tk_id)
+#define tpp_keyword_equals(a, b) ((a)->TPP_INTERNAL(tk_id) == (b)->TPP_INTERNAL(tk_id))
 #else /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 #define tpp_keyword_equals(a, b) ((a) == (b))
 #endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
+/* Public API for accessing "tpp_keyword" internals */
+#define tpp_keyword_getid(self)      ((self)->TPP_INTERNAL(tk_id))
+#define tpp_keyword_getkwd(self)     ((self)->TPP_INTERNAL(tk_kwd))
+#define tpp_keyword_getkwdcstr(self) ((char const *)(self)->TPP_INTERNAL(tk_kwd))
+#define tpp_keyword_getkwdlen(self)  ((self)->TPP_INTERNAL(tk_len))
+#define tpp_keyword_getkwdhash(self) ((self)->TPP_INTERNAL(tk_hash))
+#if TPP_HAVE_CPP_MACROS
+#define tpp_keyword_getmacro(self) ((self)->TPP_INTERNAL(tk_macro))
+#endif /* TPP_HAVE_CPP_MACROS */
+
+
 /* Convert back-and-forth between keywords and strings */
-#define _TPP_KEYWORD_STRING_ABI_START tk_refcnt
+#define _TPP_KEYWORD_STRING_ABI_START TPP_INTERNAL(tk_refcnt)
 #define tpp_keyword_asstring(self) ((tpp_string *)&(self)->_TPP_KEYWORD_STRING_ABI_START)
 #define tpp_string_askeyword(self) ((tpp_keyword *)((char *)(self) - tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)))
 
 /* Check if "self" matches the C, constant string literal "cstr" */
-#define tpp_keyword_equals_cstr(self, cstr)                 \
-	((self)->tk_len == (sizeof(cstr) / sizeof(char)) - 1 && \
-	 tpp_memcmp((self)->tk_kwd, cstr, sizeof(cstr) - sizeof(char)) == 0)
-
+#define tpp_keyword_equals_cstr(self, cstr)                               \
+	((self)->TPP_INTERNAL(tk_len) == (sizeof(cstr) / sizeof(char)) - 1 && \
+	 tpp_memcmp((self)->TPP_INTERNAL(tk_kwd), cstr, sizeof(cstr) - sizeof(char)) == 0)
 
 #if TPP_HAVE_KEYWORD_MISC
 /* Ensure that `self->tk_misc' has been allocated and return it.
@@ -224,7 +236,7 @@ typedef struct tpp_keyword {
  * @return: * :   The "misc" data of "self" (freshly allocated)
  * @return: NULL: OOM (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
-tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self);
+tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self); /* TODO: This function shouldn't be part of the public API! */
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
@@ -333,22 +345,23 @@ tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
 
 /* Custom keywords table */
 typedef struct tpp_keywords {
-	unsigned int          tks_kwdc; /* Amount of keyword entries stored. */
-	tpp_hash              tks_bckm; /* Allocated bucket mask. */
-	TPP_REF tpp_keyword **tks_bckv; /* [0..1][owned][0..tks_bckc+1][owned] Resizable keyword hash-map vector.
-	                                 * NOTE: When the keyword map is destroyed, all linked keywords are, too.
-	                                 *       Since this only happens when a lexer is finalized, this should
-	                                 *       only happen once *all* keywords have their reference counters
-	                                 *       set to "1". For this purpose, "tpp_keywords_fini" asserts that
-	                                 *       no keyword has some other reference count value. */
+	unsigned int          TPP_INTERNAL(tks_kwdc); /* Amount of keyword entries stored. */
+	tpp_hash              TPP_INTERNAL(tks_bckm); /* Allocated bucket mask. */
+	TPP_REF tpp_keyword **TPP_INTERNAL(tks_bckv); /* [0..1][owned][0..tks_bckc+1][owned] Resizable keyword hash-map vector.
+	                                               * NOTE: When the keyword map is destroyed, all linked keywords are, too.
+	                                               *       Since this only happens when a lexer is finalized, this should
+	                                               *       only happen once *all* keywords have their reference counters
+	                                               *       set to "1". For this purpose, "tpp_keywords_fini" asserts that
+	                                               *       no keyword has some other reference count value. */
 } tpp_keywords;
 
-TPP_DECL TPP_REF tpp_keyword *tpp_keywords_empty_map[1];
+TPP_DECL TPP_REF tpp_keyword *tpp_keywords_empty_map[1]; /* Consider this one TPP_INTERNAL */
 
 /* Initialize/finalize a given keywords table. */
-#define tpp_keywords_init(self)                     \
-	(void)((self)->tks_kwdc = (self)->tks_bckm = 0, \
-	       (self)->tks_bckv = tpp_keywords_empty_map)
+#define tpp_keywords_init(self)                \
+	(void)((self)->TPP_INTERNAL(tks_kwdc) = 0, \
+	       (self)->TPP_INTERNAL(tks_bckm) = 0, \
+	       (self)->TPP_INTERNAL(tks_bckv) = tpp_keywords_empty_map)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_fini(tpp_keywords *tpp_restrict self);
 

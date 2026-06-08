@@ -27,34 +27,40 @@
 TPP_DECL_BEGIN
 
 typedef struct tpp_string {
-	tpp_refcnt_atomic ts_refcnt;              /* Reference counter (must be atomic because of "_tpp_string_empty") */
-	tpp_size          ts_len;                 /* [const] Length of the string */
-	tpp_char          ts_str[TPP_FLEX_ARRAY]; /* [const][ts_len] String content */
-/*	tpp_char          ts_nul;                  * [const][== 0] Trailing \0-character */
+	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt);              /* Reference counter (must be atomic because of "_tpp_string_empty") */
+	tpp_size          TPP_INTERNAL(ts_len);                 /* [const] Length of the string */
+	tpp_char          TPP_INTERNAL(ts_str)[TPP_FLEX_ARRAY]; /* [const][ts_len] String content */
+/*	tpp_char          TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing \0-character */
 } tpp_string;
 
-#define tpp_string_len(self)  ((self)->ts_len)
-#define tpp_string_str(self)  ((self)->ts_str)
+/* Public API */
+#define tpp_string_len(self)  ((self)->TPP_INTERNAL(ts_len))
+#define tpp_string_str(self)  ((self)->TPP_INTERNAL(ts_str))
 #define tpp_string_end(self)  (tpp_string_str(self) + tpp_string_len(self))
 #define tpp_string_cstr(self) ((char const *)tpp_string_str(self))
-
-#define tpp_string_equals(lhs, rhs)    \
-	((lhs)->ts_len == (rhs)->ts_len && \
-	 tpp_memcmp((lhs)->ts_str, (rhs)->ts_str, (lhs)->ts_len * sizeof(tpp_char)) == 0)
-
-/* Helpers for interacting with TPP strings */
-#define tpp_string_destroy(self)  tpp_free(self)
-#define tpp_string_incref(self)   tpp_refcnt_atomic_inc(&(self)->ts_refcnt)
-#define tpp_string_isshared(self) tpp_refcnt_atomic_isshared(&(self)->ts_refcnt)
-#define tpp_string_decref(self) \
-	(void)(tpp_refcnt_atomic_decfetch(&(self)->ts_refcnt) || (tpp_string_destroy(self), 0))
-#define tpp_string_decref_nokill(self) tpp_refcnt_atomic_dec(&(self)->ts_refcnt)
+#define tpp_string_equals(lhs, rhs)                       \
+	(tpp_string_len(lhs) == tpp_string_len(rhs) &&        \
+	 tpp_memcmp(tpp_string_str(lhs), tpp_string_str(rhs), \
+	            tpp_string_len(lhs) * sizeof(tpp_char)) == 0)
+#define tpp_string_equals_cstr(lhs, rhs_cstr)                    \
+	(tpp_string_len(lhs) == (sizeof(rhs_cstr) - sizeof(char)) && \
+	 tpp_memcmp(tpp_string_str(lhs), rhs_cstr,                   \
+	            (sizeof(rhs_cstr) - sizeof(char)) * sizeof(tpp_char)) == 0)
 
 #define tpp_string_sizeof(len)         (tpp_offsetof(tpp_string, ts_str) + ((len) + 1) * sizeof(tpp_char))
 #define _tpp_string_trymalloc(len)     ((tpp_string *)tpp_trymalloc(tpp_string_sizeof(len)))
 #define _tpp_string_malloc(len)        ((tpp_string *)tpp_malloc(tpp_string_sizeof(len)))
 #define _tpp_string_tryrealloc(p, len) ((tpp_string *)tpp_tryrealloc(p, tpp_string_sizeof(len)))
 #define _tpp_string_realloc(p, len)    ((tpp_string *)tpp_realloc(p, tpp_string_sizeof(len)))
+#define _tpp_string_free(p)            tpp_free(p)
+
+/* Helpers for interacting with TPP strings */
+#define tpp_string_destroy(self)  _tpp_string_free(self)
+#define tpp_string_incref(self)   tpp_refcnt_atomic_inc(&(self)->TPP_INTERNAL(ts_refcnt))
+#define tpp_string_isshared(self) tpp_refcnt_atomic_isshared(&(self)->TPP_INTERNAL(ts_refcnt))
+#define tpp_string_decref(self) \
+	(void)(tpp_refcnt_atomic_decfetch(&(self)->TPP_INTERNAL(ts_refcnt)) || (tpp_string_destroy(self), 0))
+#define tpp_string_decref_nokill(self) tpp_refcnt_atomic_dec(&(self)->TPP_INTERNAL(ts_refcnt))
 
 /* Allocate new (uninitialized) string buffers
  * @return: NULL: Propagate TPP_ENOMEM */
@@ -63,9 +69,9 @@ TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_malloc(tpp_size len);
 
 
 TPP_DECL struct tpp_string_empty_struct {
-	tpp_refcnt_atomic ts_refcnt; /* Reference counter */
-	tpp_size          ts_len;    /* [const] Length of the string */
-	tpp_char          ts_nul;    /* [const][== 0] Trailing \0-character */
+	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt); /* Reference counter */
+	tpp_size          TPP_INTERNAL(ts_len);    /* [const] Length of the string */
+	tpp_char          TPP_INTERNAL(ts_nul);    /* [const][== 0] Trailing \0-character */
 } _tpp_string_empty;
 
 #define tpp_string_newempty()               \
@@ -79,15 +85,16 @@ TPP_DECL struct tpp_string_empty_struct {
 /************************************************************************/
 
 typedef struct tpp_string_builder {
-	tpp_string *tsb_buf; /* [0..1][owned] Allocated string buffer ("ts_len" in here is then *allocated* buffer size) */
-	tpp_size    tsb_len; /* [<= tsb_buf->ts_len] Used buffer size */
+	tpp_string *TPP_INTERNAL(tsb_buf); /* [0..1][owned] Allocated string buffer ("ts_len" in here is then *allocated* buffer size) */
+	tpp_size    TPP_INTERNAL(tsb_len); /* [<= tsb_buf->ts_len] Used buffer size */
 } tpp_string_builder;
 
 /* Initialize / finalize a given "tpp_string_builder *self" */
-#define tpp_string_builder_init(self) \
-	(void)((self)->tsb_buf = NULL, (self)->tsb_len = 0)
+#define tpp_string_builder_init(self)            \
+	(void)((self)->TPP_INTERNAL(tsb_buf) = NULL, \
+	       (self)->TPP_INTERNAL(tsb_len) = 0)
 #define tpp_string_builder_fini(self) \
-	tpp_free((self)->tsb_buf)
+	_tpp_string_free((self)->TPP_INTERNAL(tsb_buf))
 
 /* Package "self" into a tpp string and return said string.
  * This function never fails, but it *DOES* finalize "self"

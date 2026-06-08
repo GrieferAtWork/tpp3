@@ -153,7 +153,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	 *   >> tpp_file_pusheof(file);
 	 *   >> tpp_file_pushpos(file);
 	 *   >> tpp_file_pushifdef(file);
-	 *   >> tpp_lexer_state_push_alltokens(lexer);
+	 *   >> tpp_lexer_alltokens_pushon(lexer);
 	 */
 	tpp_file *const file = tpp_lexer_getfile(lexer);
 	tpp_token const *const token = tpp_lexer_gettoken(lexer);
@@ -427,10 +427,16 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	invoke_expinfo = tpp_macro_argbuf_getexpinfo(argbuf, argc);
 
 	/* Load parameters of function-style macro */
+#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
 	tok = tpp_lexer_seek_rparen_ex(self, &pos, invoke_arginfo, &argc,
 	                               (char const *)backup.tlsb_kwd->tk_kwd,
 	                               tpp_lexer_seek_rparen_flags_frommacro(macro),
 	                               TPP_MACRO_KIND_ASTOK(macro->tm_kind));
+#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+	tok = tpp_lexer_seek_rparen(self, &pos, invoke_arginfo, &argc,
+	                            (char const *)backup.tlsb_kwd->tk_kwd,
+	                            tpp_lexer_seek_rparen_flags_frommacro(macro));
+#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
 	if (TPP_TOK_ISERR(tok))
 		goto err_rollback_argbuf;
 	tpp_assert(macro_argc == macro->tm_data.tmd_func.tmf_argc);
@@ -503,7 +509,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 		tpp_file_pusheof(file);               /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
 		tpp_file_pushpos(file);               /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
 		tpp_file_pushifdef(file);             /* tpp_macro_expinfo_init() needs this (to ensure no dangling #ifdef-blocks in arguments) */
-		tpp_lexer_state_push_alltokens(self); /* tpp_macro_expinfo_init() needs this (to replicate whitespace when expanding arguments) */
+		tpp_lexer_alltokens_pushon(self); /* tpp_macro_expinfo_init() needs this (to replicate whitespace when expanding arguments) */
 		for (i = 0; i < macro_argc; ++i) {
 			tpp_macro_argument const *arg = &macro->tm_data.tmd_func.tmf_argv[i];
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[i];
@@ -513,7 +519,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 				error = tpp_macro_expinfo_init(expand, arginfo, self);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
-					tpp_lexer_state_break_alltokens(self);
+					tpp_lexer_alltokens_break(self);
 					tpp_file_breakifdef(file);
 					tpp_file_breakpos(file);
 					tpp_file_breakeof(file);
@@ -541,7 +547,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			}
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 		}
-		tpp_lexer_state_pop_alltokens(self);
+		tpp_lexer_alltokens_pop(self);
 		tpp_file_popifdef(file);
 		tpp_file_poppos(file);
 		tpp_file_popeof(file);

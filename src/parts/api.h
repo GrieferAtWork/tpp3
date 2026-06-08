@@ -217,6 +217,17 @@
 #endif /* !TPP_CHAR_BIT */
 
 
+/* Used to wrap an identifier that is considered to be internal to TPP
+ * Identifiers wrapped as such should **NOT** be accessed directly.
+ * Instead, the provided TPP APIs should be used. */
+#ifndef TPP_INTERNAL
+#if TPP_BUILDING
+#define TPP_INTERNAL(x) x
+#else /* TPP_BUILDING */
+#define TPP_INTERNAL(x) _##x
+#endif /* !TPP_BUILDING */
+#endif /* !TPP_INTERNAL */
+
 #ifndef TPP_DEBUG
 #ifdef NDEBUG
 #define TPP_DEBUG 0
@@ -309,6 +320,15 @@
 #define tpp_hash uint_fast32_t
 #endif /* !tpp_hash */
 #ifndef tpp_line
+#if UINT_FAST32_MAX == UINT32_C(0xffffffff)
+#define TPP_SIZEOF_tpp_line   4
+#define TPP_SIZEOF_tpp_column 4
+#elif UINT_FAST32_MAX == UINT64_C(0xffffffffffffffff)
+#define TPP_SIZEOF_tpp_line   8
+#define TPP_SIZEOF_tpp_column 8
+#else /* UINT_FAST32_MAX == ... */
+#error "Unrecognized 'UINT_FAST32_MAX'"
+#endif /* UINT_FAST32_MAX != ... */
 #define tpp_line   int_fast32_t
 #define tpp_column int_fast32_t
 #endif /* !tpp_line */
@@ -361,30 +381,48 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 #endif /* !tpp_formatprinter */
 
 #ifndef tpp_lcinfo
+#if defined(INT_LEAST64_MAX) && defined(UINT32_MAX)
+typedef int_least64_t tpp_lcinfo;
+#define tpp_lcinfo tpp_lcinfo
+
+#define tpp_lcinfo_equals(a, b)  ((a) == (b))
+#define tpp_lcinfo_getline(self) ((tpp_line)((uint32_t)(self)))
+#define tpp_lcinfo_getcol(self)  ((tpp_column)((uint32_t)((self) >> 32)))
+#define tpp_lcinfo_of(line, col)                  \
+	(((int_least64_t)(uint32_t)(int32_t)(line)) | \
+	 ((int_least64_t)(uint32_t)(int32_t)(col) << 32))
+#else /* INT_LEAST64_MAX && UINT32_MAX */
 typedef struct tpp_lcinfo {
-	tpp_line   lci_line; /* Line */
-	tpp_column lci_col;  /* Column */
+	tpp_line   TPP_INTERNAL(lci_line); /* Line */
+	tpp_column TPP_INTERNAL(lci_col);  /* Column */
 } tpp_lcinfo;
 #define tpp_lcinfo tpp_lcinfo
 
-#define tpp_lcinfo_getline(self) ((tpp_line)(self).lci_line)
-#define tpp_lcinfo_getcol(self)  ((tpp_column)(self).lci_col)
+#define tpp_lcinfo_getline(self) ((tpp_line)(self).TPP_INTERNAL(lci_line))
+#define tpp_lcinfo_getcol(self)  ((tpp_column)(self).TPP_INTERNAL(lci_col))
 #define tpp_lcinfo_init(self, line, col) \
-	(void)((self).lci_line = line, (self).lci_col = col)
+	(void)((self).TPP_INTERNAL(lci_line) = line,       \
+	       (self).TPP_INTERNAL(lci_col)  = col)
 
 TPP_INLINE TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_of(tpp_line line, tpp_column col) {
 	tpp_lcinfo result;
-	result.lci_line = line;
-	result.lci_col  = col;
+	result.TPP_INTERNAL(lci_line) = line;
+	result.TPP_INTERNAL(lci_col)  = col;
 	return result;
 }
+#endif /* !INT_LEAST64_MAX || !UINT32_MAX */
 #endif /* !tpp_lcinfo */
 
 #ifndef tpp_lcinfo_init
 #define tpp_lcinfo_init(self, line, col) \
 	(void)((self) = tpp_lcinfo_of(line, col))
 #endif /* !tpp_lcinfo_init */
+#ifndef tpp_lcinfo_equals
+#define tpp_lcinfo_equals(a, b)                        \
+	(tpp_lcinfo_getline(a) == tpp_lcinfo_getline(b) && \
+	 tpp_lcinfo_getcol(a) == tpp_lcinfo_getcol(b))
+#endif /* !tpp_lcinfo_equals */
 
 #ifndef tpp_refcnt
 /* NOTE: Multi-threaded applications can leave this alone: a single

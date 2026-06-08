@@ -68,8 +68,8 @@ tpp_extensions_pop(tpp_extensions *tpp_restrict self) {
 /* @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: OOM */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_extensions_set(tpp_extensions *tpp_restrict self,
-                   tpp_extension_id id, int enabled) {
+tpp_extensions_setid(tpp_extensions *tpp_restrict self,
+                     tpp_extension_id id, bool enabled) {
 	if (tpp_extensions_mustcopy(self)) {
 		tpp_extensions *copy;
 		if (!!tpp_extensions_state_getid(&self->te_state, id) == !!enabled)
@@ -81,7 +81,7 @@ tpp_extensions_set(tpp_extensions *tpp_restrict self,
 		self->te_prev    = copy;
 		self->te_pushcnt = 0;
 	}
-	tpp_extensions_state_set(&self->te_state, id, enabled);
+	tpp_extensions_state_setid(&self->te_state, id, enabled);
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;

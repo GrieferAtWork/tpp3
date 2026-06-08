@@ -4118,6 +4118,17 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_start_lc));
 
+
+#if TPP_HAVE_CPP_MACROS
+/* Figure out the line/column of "pos" in "expanded_text", as produced
+ * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL
+tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
+                      tpp_string const *expanded_text,
+                      tpp_char const *pos);
+#endif /* TPP_HAVE_CPP_MACROS */
+
+
 /* Return line/column information (1-based) for "pos" */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
@@ -6421,8 +6432,8 @@ tpp_extensions_pop(tpp_extensions *tpp_restrict self) {
 /* @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: OOM */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_extensions_set(tpp_extensions *tpp_restrict self,
-                   tpp_extension_id id, int enabled) {
+tpp_extensions_setid(tpp_extensions *tpp_restrict self,
+                     tpp_extension_id id, bool enabled) {
 	if (tpp_extensions_mustcopy(self)) {
 		tpp_extensions *copy;
 		if (!!tpp_extensions_state_getid(&self->te_state, id) == !!enabled)
@@ -6434,7 +6445,7 @@ tpp_extensions_set(tpp_extensions *tpp_restrict self,
 		self->te_prev    = copy;
 		self->te_pushcnt = 0;
 	}
-	tpp_extensions_state_set(&self->te_state, id, enabled);
+	tpp_extensions_state_setid(&self->te_state, id, enabled);
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;
@@ -7659,7 +7670,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		return TPP_EOK;
 
 	/* Ask warning configuration how we should have this one */
-	result = tpp_warnings_invoke(tpp_lexer_getwarn(self), id, &invokeinfo);
+	result = tpp_lexer_invokewarning(self, id, &invokeinfo);
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 	if (TPP_ISERR(result))
 		goto done;
@@ -12129,9 +12140,15 @@ tpp_lexer_seek_rparen_exact(tpp_lexer *tpp_restrict self,
 {
 	tpp_token_id result;
 	tpp_size argc_actual = argc;
+#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
 	result = tpp_lexer_seek_rparen_ex(self, p_pos, p_argv, &argc_actual,
 	                                  opt_function_name_for_messages,
 	                                  flags, lparen_kind);
+#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+	result = tpp_lexer_seek_rparen(self, p_pos, p_argv, &argc_actual,
+	                               opt_function_name_for_messages,
+	                               flags);
+#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
 	if (!TPP_TOK_ISERR(result) && argc_actual < argc) {
 		tpp_size i;
 		tpp_char const *fallback_pos = *p_pos;
@@ -12710,9 +12727,9 @@ tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict builder,
 	tpp_errno result;
 	/* Disable warnings because compiler does some questionable stuff in order to parse
 	 * the contents of strings in order to allow arguments to be embedded within them. */
-	tpp_lexer_state_push_nowarnings(self);
+	tpp_lexer_nowarnings_pushon(self);
 	result = tpp_macro_builder_compile_traditional_impl(builder, self, body_start, body_end);
-	tpp_lexer_state_pop_nowarnings(self);
+	tpp_lexer_nowarnings_pop(self);
 	return result;
 }
 #else /* TPP_HAVE_WARNINGS */
@@ -14727,7 +14744,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	 *   >> tpp_file_pusheof(file);
 	 *   >> tpp_file_pushpos(file);
 	 *   >> tpp_file_pushifdef(file);
-	 *   >> tpp_lexer_state_push_alltokens(lexer);
+	 *   >> tpp_lexer_alltokens_pushon(lexer);
 	 */
 	tpp_file *const file = tpp_lexer_getfile(lexer);
 	tpp_token const *const token = tpp_lexer_gettoken(lexer);
@@ -15001,10 +15018,16 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	invoke_expinfo = tpp_macro_argbuf_getexpinfo(argbuf, argc);
 
 	/* Load parameters of function-style macro */
+#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
 	tok = tpp_lexer_seek_rparen_ex(self, &pos, invoke_arginfo, &argc,
 	                               (char const *)backup.tlsb_kwd->tk_kwd,
 	                               tpp_lexer_seek_rparen_flags_frommacro(macro),
 	                               TPP_MACRO_KIND_ASTOK(macro->tm_kind));
+#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+	tok = tpp_lexer_seek_rparen(self, &pos, invoke_arginfo, &argc,
+	                            (char const *)backup.tlsb_kwd->tk_kwd,
+	                            tpp_lexer_seek_rparen_flags_frommacro(macro));
+#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
 	if (TPP_TOK_ISERR(tok))
 		goto err_rollback_argbuf;
 	tpp_assert(macro_argc == macro->tm_data.tmd_func.tmf_argc);
@@ -15077,7 +15100,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 		tpp_file_pusheof(file);               /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
 		tpp_file_pushpos(file);               /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
 		tpp_file_pushifdef(file);             /* tpp_macro_expinfo_init() needs this (to ensure no dangling #ifdef-blocks in arguments) */
-		tpp_lexer_state_push_alltokens(self); /* tpp_macro_expinfo_init() needs this (to replicate whitespace when expanding arguments) */
+		tpp_lexer_alltokens_pushon(self); /* tpp_macro_expinfo_init() needs this (to replicate whitespace when expanding arguments) */
 		for (i = 0; i < macro_argc; ++i) {
 			tpp_macro_argument const *arg = &macro->tm_data.tmd_func.tmf_argv[i];
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[i];
@@ -15087,7 +15110,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 				error = tpp_macro_expinfo_init(expand, arginfo, self);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
-					tpp_lexer_state_break_alltokens(self);
+					tpp_lexer_alltokens_break(self);
 					tpp_file_breakifdef(file);
 					tpp_file_breakpos(file);
 					tpp_file_breakeof(file);
@@ -15115,7 +15138,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			}
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 		}
-		tpp_lexer_state_pop_alltokens(self);
+		tpp_lexer_alltokens_pop(self);
 		tpp_file_popifdef(file);
 		tpp_file_poppos(file);
 		tpp_file_popeof(file);
@@ -15438,9 +15461,17 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
 	*prev_file = *file;
-	tpp_file_init_text_ex(file, NULL, chunk, text, textsize,
-	                      tpp_lcinfo_of(-1, -1),
-	                      TPP_FILE_ENCODING_FORCE_UTF8);
+	file->tf_pos   = text;
+	file->tf_chunk = chunk; /* Inherit reference */
+	file->tf_end   = text + textsize;
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	file->tf_kind  = TPP_FILE_KIND_TEXT;
+	(void)0 _tpp_file_init_enc_ex(file, TPP_FILE_ENCODING_FORCE_UTF8);
+	(void)0 _tpp_file_init_common(file);
+	(void)0 _tpp_file_init_text_user_filename(file);
+	file->tf_data.td_text.tft_name     = NULL;
+	tpp_lcinfo_init(file->tf_data.td_text.tft_start_lc, -1, -1);
 	return TPP_TOK_EOF;
 err_nomem:
 	if (chunk)
@@ -17565,7 +17596,7 @@ again_yield_after_empty:
 
 		/* Must make sure that the next token isn't another (non-empty) string */
 		pos = tpp_lexer_seek_begin(self, &backup);
-		tpp_lexer_state_push_nowarnings(self);
+		tpp_lexer_nowarnings_pushon(self);
 again_yield_after_single:
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 		switch (tok) {
@@ -17576,7 +17607,7 @@ again_yield_after_single:
 				goto again_yield_after_single;
 
 			/* Not possible using a single chunk... */
-			tpp_lexer_state_break_nowarnings(self);
+			tpp_lexer_nowarnings_break(self);
 			tpp_lexer_seek_rollback(self, &backup);
 			goto do_multi_chunk_string;
 		}	break;
@@ -17594,13 +17625,13 @@ again_yield_after_single:
 
 		default:
 			if (TPP_TOK_ISERR(tok)) {
-				tpp_lexer_state_break_nowarnings(self);
+				tpp_lexer_nowarnings_break(self);
 				tpp_lexer_seek_rollback(self, &backup);
 				return TPP_TOK_ASERR(tok);
 			}
 			break;
 		}
-		tpp_lexer_state_pop_nowarnings(self);
+		tpp_lexer_nowarnings_pop(self);
 
 		/* **IS** possible using a single chunk! */
 		{

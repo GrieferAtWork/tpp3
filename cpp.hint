@@ -21,3 +21,4 @@
 #define TPP_REF_IF(c)
 #define TPP_STATIC_ASSERT(expr)
 #define TPP_FALLTHRU
+#define TPP_INTERNAL(x) x

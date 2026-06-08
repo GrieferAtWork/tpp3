@@ -49,7 +49,7 @@ TPP_DECL_BEGIN
 #define _TPP_CTYPE_ISLF       0x10 /* Linefeed character (\r and \n) */
 #define _TPP_CTYPE_ISNONASCII 0x20 /* 128+ */
 
-TPP_CONST_DECL uint_least8_t const tpp_ctype[256];
+TPP_CONST_DECL uint_least8_t const tpp_ctype[256]; /* Don't access directly! (considered TPP_INTERNAL) */
 #if UINT_LEAST8_MAX == 0xff
 #define _tpp_ascii_mask(ch) ((uint_least8_t)(ch))
 #else /* UINT_LEAST8_MAX == 0xff */

@@ -53,7 +53,7 @@ local conditionStack = [];
 local inside = false;
 for (local line: File.open("token.h").read().decode("utf-8").splitlines(false)) {
 	if (!inside) {
-		if ("_TPP_TOK_MULTICHAR_BEGIN" in line)
+		if ("TPP_TOK_MULTICHAR_BEGIN" in line)
 			inside = true;
 		continue;
 	}

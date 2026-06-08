@@ -66,26 +66,24 @@ int main(int argc, char *argv[]) {
 		}
 		desc = tpp_strtokenid(tok);
 		if (desc == NULL && TPP_TOK_ISKEYWORD(tok))
-			desc = (char const *)tpp_lexer_gettoken(&lexer)->tt_kwd->tk_kwd;
+			desc = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(&lexer));
 		if (desc == NULL)
 			desc = "?";
 		file = tpp_lexer_getfile(&lexer);
 		lexer_filename = tpp_file_filename(file);
-		lc = tpp_file_lcinfo(file, tpp_lexer_gettoken(&lexer)->tt_start);
+		lc = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(&lexer));
 #if 1
 		printf("[%.*s]",
-		       (int)(tpp_lexer_gettoken(&lexer)->tt_end -
-		             tpp_lexer_gettoken(&lexer)->tt_start),
-		       tpp_lexer_gettoken(&lexer)->tt_start);
+		       (int)tpp_lexer_gettokenlen(&lexer),
+		       tpp_lexer_gettokenstart(&lexer));
 #else
 		printf("[%s:%d:%d:%s(%d):%.*s]\n",
 		       lexer_filename ? lexer_filename : "?",
 		       tpp_lcinfo_getline(lc) + 1,
 		       tpp_lcinfo_getcol(lc) + 1,
 		       desc, tok,
-		       (int)(tpp_lexer_gettoken(&lexer)->tt_end -
-		             tpp_lexer_gettoken(&lexer)->tt_start),
-		       tpp_lexer_gettoken(&lexer)->tt_start);
+		       (int)tpp_lexer_gettokenlen(&lexer),
+		       tpp_lexer_gettokenstart(&lexer));
 #endif
 	}
 	if (TPP_TOK_ISERR(tok)) {

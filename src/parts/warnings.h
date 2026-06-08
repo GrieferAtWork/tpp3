@@ -168,7 +168,7 @@ typedef enum tpp_warning_context_id {
 
 #if TPP_HAVE_WARNING_NUMBERS
 	TPP_WC_NUMBER_MIN,
-	_TPP_WC_NUMBER_MIN = TPP_WC_NUMBER_MIN - 1,
+	TPP_INTERNAL(_TPP_WC_NUMBER_MIN) = TPP_WC_NUMBER_MIN - 1,
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) TPP_WC_##warning_id,
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
@@ -226,19 +226,19 @@ typedef union tpp_warnings_state {
 	struct {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
-	unsigned int twsg_##wgroup_id: 2; /* One of `tpp_warning_state' */
+	unsigned int TPP_INTERNAL(twsg_##wgroup_id): 2; /* One of `tpp_warning_state' */
 #include TPP_CONFIG_DEFS_FILENAME
 #if TPP_HAVE_WARNING_NUMBERS
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) \
-	unsigned int twsn_##warning_id: 2; /* One of `tpp_warning_state' */
+	unsigned int TPP_INTERNAL(twsn_##warning_id): 2; /* One of `tpp_warning_state' */
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DECLARE_NUMBERED_WARNING
 #endif /* TPP_HAVE_WARNING_NUMBERS */
 #undef TPP_DEFS
-	} tws_state;
-	unsigned char tws_bitset[TPP_WC_COUNT ? (((TPP_WC_COUNT * 2) + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
+	} TPP_INTERNAL(tws_state);
+	unsigned char TPP_INTERNAL(tws_bitset)[TPP_WC_COUNT ? (((TPP_WC_COUNT * 2) + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_warnings_state;
 
 TPP_DECL tpp_warnings_state const tpp_warnings_state_default;
@@ -248,55 +248,57 @@ TPP_DECL tpp_warnings_state const tpp_warnings_state_default;
 
 /* Get/set the warning state of a given "tpp_warning_context_id ctx_id" */
 #define tpp_warnings_state_get(self, ctx_id) \
-	((tpp_warning_state)(((self)->tws_bitset[_tpp_warnings_state_bitindx(ctx_id)] >> _tpp_warnings_state_bitshft(ctx_id)) & 3))
-#define tpp_warnings_state_set(self, ctx_id, value)                                                                  \
-	(void)((self)->tws_bitset[_tpp_warnings_state_bitindx(ctx_id)] =                                                 \
-	       ((self)->tws_bitset[_tpp_warnings_state_bitindx(ctx_id)] & ~(3 << _tpp_warnings_state_bitshft(ctx_id))) | \
+	((tpp_warning_state)(((self)->TPP_INTERNAL(tws_bitset)[_tpp_warnings_state_bitindx(ctx_id)] >> _tpp_warnings_state_bitshft(ctx_id)) & 3))
+#define tpp_warnings_state_set(self, ctx_id, value)                                                                                \
+	(void)((self)->TPP_INTERNAL(tws_bitset)[_tpp_warnings_state_bitindx(ctx_id)] =                                                 \
+	       ((self)->TPP_INTERNAL(tws_bitset)[_tpp_warnings_state_bitindx(ctx_id)] & ~(3 << _tpp_warnings_state_bitshft(ctx_id))) | \
 	       (((unsigned char)(unsigned int)(value)) << _tpp_warnings_state_bitshft(ctx_id)))
 
 
 
 #if TPP_HAVE_WARNING_SUPPRESS
 typedef struct tpp_warning_suppress_item {
-	tpp_warning_context_id twsi_ctx_id;  /* Context ID of this suppression item */
-	tpp_warning_state      twsi_restore; /* Warning state to restore once the warning is no longer being suppressed */
-	tpp_size               twsi_count;   /* # of times to suppress this warning before restoring its previous state */
+	tpp_warning_context_id TPP_INTERNAL(twsi_ctx_id);  /* Context ID of this suppression item */
+	tpp_warning_state      TPP_INTERNAL(twsi_restore); /* Warning state to restore once the warning is no longer being suppressed */
+	tpp_size               TPP_INTERNAL(twsi_count);   /* # of times to suppress this warning before restoring its previous state */
 } tpp_warning_suppress_item;
 
 typedef struct tpp_warning_suppressions {
-	tpp_size                   tws_ctxc; /* # of warnings that are being suppressed right now */
-	tpp_size                   tws_ctxa; /* Allocated size of `tws_ctxv' */
-	tpp_warning_suppress_item *tws_ctxv; /* [0..tws_ctxc|alloc(tws_ctxa)][owned] Vector of suppressions (sorted by `twsi_ctx_id') */
+	tpp_size                   TPP_INTERNAL(tws_ctxc); /* # of warnings that are being suppressed right now */
+	tpp_size                   TPP_INTERNAL(tws_ctxa); /* Allocated size of `tws_ctxv' */
+	tpp_warning_suppress_item *TPP_INTERNAL(tws_ctxv); /* [0..tws_ctxc|alloc(tws_ctxa)][owned] Vector of suppressions (sorted by `twsi_ctx_id') */
 } tpp_warning_suppressions;
-#define tpp_warning_suppressions_init(self) \
-	(void)((self)->tws_ctxc = (self)->tws_ctxa = 0, (self)->tws_ctxv = NULL)
+#define tpp_warning_suppressions_init(self)    \
+	(void)((self)->TPP_INTERNAL(tws_ctxc) = 0, \
+	       (self)->TPP_INTERNAL(tws_ctxa) = 0, \
+	       (self)->TPP_INTERNAL(tws_ctxv) = NULL)
 #define tpp_warning_suppressions_fini(self) \
-	(void)tpp_free((self)->tws_ctxv)
+	(void)tpp_free((self)->TPP_INTERNAL(tws_ctxv))
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 
 
 /* Lexer warnings configuration */
 typedef struct tpp_warnings {
-	tpp_warnings_state       tw_state;        /* [const_if(tw_pushcnt > 0)] Warning state */
+	tpp_warnings_state       TPP_INTERNAL(tw_state);        /* [const_if(tw_pushcnt > 0)] Warning state */
 #if TPP_HAVE_WARNING_SUPPRESS
-	tpp_warning_suppressions tw_suppressions; /* [const_if(tw_pushcnt > 0)] Information about suppressed warnings */
-#define _tpp_warnings_init_suppressions(self) , tpp_warning_suppressions_init(&(self)->tw_suppressions)
+	tpp_warning_suppressions TPP_INTERNAL(tw_suppressions); /* [const_if(tw_pushcnt > 0)] Information about suppressed warnings */
+#define _tpp_warnings_init_suppressions(self) , tpp_warning_suppressions_init(&(self)->TPP_INTERNAL(tw_suppressions))
 #else /* TPP_HAVE_WARNING_SUPPRESS */
 #define _tpp_warnings_init_suppressions(self) /* nothing */
 #endif /* !TPP_HAVE_WARNING_SUPPRESS */
 #if TPP_HAVE_WARNINGS_PUSH_POP
-	tpp_size                 tw_pushcnt;      /* # of times warnings pushed were since last modified */
-	struct tpp_warnings     *tw_prev;         /* [0..1][owned] Old warning state. */
-#define _tpp_warnings_init_push(self) , (self)->tw_pushcnt = 0, (self)->tw_prev = NULL
+	tpp_size                 TPP_INTERNAL(tw_pushcnt);      /* # of times warnings pushed were since last modified */
+	struct tpp_warnings     *TPP_INTERNAL(tw_prev);         /* [0..1][owned] Old warning state. */
+#define _tpp_warnings_init_push(self) , (self)->TPP_INTERNAL(tw_pushcnt) = 0, (self)->TPP_INTERNAL(tw_prev) = NULL
 #else /* TPP_HAVE_WARNINGS_PUSH_POP */
 #define _tpp_warnings_init_push(self) /* nothing */
 #endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
 } tpp_warnings;
 
 /* Initialize a given warnings context "self" */
-#define tpp_warnings_init(self)                          \
-	(void)((self)->tw_state = tpp_warnings_state_default \
-	       _tpp_warnings_init_suppressions(self)         \
+#define tpp_warnings_init(self)                                        \
+	(void)((self)->TPP_INTERNAL(tw_state) = tpp_warnings_state_default \
+	       _tpp_warnings_init_suppressions(self)                       \
 	       _tpp_warnings_init_push(self))
 
 #undef TPP_HAVE_WARNINGS_FINI
@@ -314,15 +316,17 @@ tpp_warnings_fini(tpp_warnings *tpp_restrict self);
 
 #if TPP_HAVE_WARNINGS_PUSH_POP
 /* Push the current warnings state */
-#define tpp_warnings_push(self) (void)(++(self)->tw_pushcnt)
+#define tpp_warnings_push(self) (void)(++(self)->TPP_INTERNAL(tw_pushcnt))
 
 /* Pop the current warnings state (may only be called when `tpp_warnings_canpop(self)') */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_warnings_pop(tpp_warnings *tpp_restrict self);
-#define tpp_warnings_canpop(self) ((self)->tw_pushcnt != 0 || (self)->tw_prev != NULL)
+#define tpp_warnings_canpop(self)             \
+	((self)->TPP_INTERNAL(tw_pushcnt) != 0 || \
+	 (self)->TPP_INTERNAL(tw_prev) != NULL)
 
 /* When true, `tpp_warnings_setctx()' must first copy the extension
  * state (which requires heap memory, and may thus fail) */
-#define tpp_warnings_mustcopy(self) ((self)->tw_pushcnt != 0)
+#define tpp_warnings_mustcopy(self) ((self)->TPP_INTERNAL(tw_pushcnt) != 0)
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 
 /* Return the state of "ctx_id". The caller is
@@ -333,7 +337,7 @@ tpp_warnings_getctx(tpp_warnings const *tpp_restrict self,
                     tpp_warning_context_id ctx_id);
 #else /* TPP_HAVE_WARNING_SUPPRESS */
 #define tpp_warnings_getctx(self, ctx_id) \
-	tpp_warnings_state_get(&(self)->tw_state, ctx_id)
+	tpp_warnings_state_get(&(self)->TPP_INTERNAL(tw_state), ctx_id)
 #endif /* !TPP_HAVE_WARNING_SUPPRESS */
 
 

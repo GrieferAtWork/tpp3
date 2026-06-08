@@ -2054,6 +2054,17 @@ TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WA
 #endif /* !TPP_CHAR_BIT */
 
 
+/* Used to wrap an identifier that is considered to be internal to TPP
+ * Identifiers wrapped as such should **NOT** be accessed directly.
+ * Instead, the provided TPP APIs should be used. */
+#ifndef TPP_INTERNAL
+#if TPP_BUILDING
+#define TPP_INTERNAL(x) x
+#else /* TPP_BUILDING */
+#define TPP_INTERNAL(x) _##x
+#endif /* !TPP_BUILDING */
+#endif /* !TPP_INTERNAL */
+
 #ifndef TPP_DEBUG
 #ifdef NDEBUG
 #define TPP_DEBUG 0
@@ -2146,6 +2157,15 @@ TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WA
 #define tpp_hash uint_fast32_t
 #endif /* !tpp_hash */
 #ifndef tpp_line
+#if UINT_FAST32_MAX == UINT32_C(0xffffffff)
+#define TPP_SIZEOF_tpp_line   4
+#define TPP_SIZEOF_tpp_column 4
+#elif UINT_FAST32_MAX == UINT64_C(0xffffffffffffffff)
+#define TPP_SIZEOF_tpp_line   8
+#define TPP_SIZEOF_tpp_column 8
+#else /* UINT_FAST32_MAX == ... */
+#error "Unrecognized 'UINT_FAST32_MAX'"
+#endif /* UINT_FAST32_MAX != ... */
 #define tpp_line   int_fast32_t
 #define tpp_column int_fast32_t
 #endif /* !tpp_line */
@@ -2198,30 +2218,48 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 #endif /* !tpp_formatprinter */
 
 #ifndef tpp_lcinfo
+#if defined(INT_LEAST64_MAX) && defined(UINT32_MAX)
+typedef int_least64_t tpp_lcinfo;
+#define tpp_lcinfo tpp_lcinfo
+
+#define tpp_lcinfo_equals(a, b)  ((a) == (b))
+#define tpp_lcinfo_getline(self) ((tpp_line)((uint32_t)(self)))
+#define tpp_lcinfo_getcol(self)  ((tpp_column)((uint32_t)((self) >> 32)))
+#define tpp_lcinfo_of(line, col)                  \
+	(((int_least64_t)(uint32_t)(int32_t)(line)) | \
+	 ((int_least64_t)(uint32_t)(int32_t)(col) << 32))
+#else /* INT_LEAST64_MAX && UINT32_MAX */
 typedef struct tpp_lcinfo {
-	tpp_line   lci_line; /* Line */
-	tpp_column lci_col;  /* Column */
+	tpp_line   TPP_INTERNAL(lci_line); /* Line */
+	tpp_column TPP_INTERNAL(lci_col);  /* Column */
 } tpp_lcinfo;
 #define tpp_lcinfo tpp_lcinfo
 
-#define tpp_lcinfo_getline(self) ((tpp_line)(self).lci_line)
-#define tpp_lcinfo_getcol(self)  ((tpp_column)(self).lci_col)
+#define tpp_lcinfo_getline(self) ((tpp_line)(self).TPP_INTERNAL(lci_line))
+#define tpp_lcinfo_getcol(self)  ((tpp_column)(self).TPP_INTERNAL(lci_col))
 #define tpp_lcinfo_init(self, line, col) \
-	(void)((self).lci_line = line, (self).lci_col = col)
+	(void)((self).TPP_INTERNAL(lci_line) = line,       \
+	       (self).TPP_INTERNAL(lci_col)  = col)
 
 TPP_INLINE TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_of(tpp_line line, tpp_column col) {
 	tpp_lcinfo result;
-	result.lci_line = line;
-	result.lci_col  = col;
+	result.TPP_INTERNAL(lci_line) = line;
+	result.TPP_INTERNAL(lci_col)  = col;
 	return result;
 }
+#endif /* !INT_LEAST64_MAX || !UINT32_MAX */
 #endif /* !tpp_lcinfo */
 
 #ifndef tpp_lcinfo_init
 #define tpp_lcinfo_init(self, line, col) \
 	(void)((self) = tpp_lcinfo_of(line, col))
 #endif /* !tpp_lcinfo_init */
+#ifndef tpp_lcinfo_equals
+#define tpp_lcinfo_equals(a, b)                        \
+	(tpp_lcinfo_getline(a) == tpp_lcinfo_getline(b) && \
+	 tpp_lcinfo_getcol(a) == tpp_lcinfo_getcol(b))
+#endif /* !tpp_lcinfo_equals */
 
 #ifndef tpp_refcnt
 /* NOTE: Multi-threaded applications can leave this alone: a single
@@ -4132,7 +4170,7 @@ TPP_DECL_BEGIN
 #define _TPP_CTYPE_ISLF       0x10 /* Linefeed character (\r and \n) */
 #define _TPP_CTYPE_ISNONASCII 0x20 /* 128+ */
 
-TPP_CONST_DECL uint_least8_t const tpp_ctype[256];
+TPP_CONST_DECL uint_least8_t const tpp_ctype[256]; /* Don't access directly! (considered TPP_INTERNAL) */
 #if UINT_LEAST8_MAX == 0xff
 #define _tpp_ascii_mask(ch) ((uint_least8_t)(ch))
 #else /* UINT_LEAST8_MAX == 0xff */
@@ -4252,34 +4290,40 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 typedef struct tpp_string {
-	tpp_refcnt_atomic ts_refcnt;              /* Reference counter (must be atomic because of "_tpp_string_empty") */
-	tpp_size          ts_len;                 /* [const] Length of the string */
-	tpp_char          ts_str[TPP_FLEX_ARRAY]; /* [const][ts_len] String content */
-/*	tpp_char          ts_nul;                  * [const][== 0] Trailing \0-character */
+	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt);              /* Reference counter (must be atomic because of "_tpp_string_empty") */
+	tpp_size          TPP_INTERNAL(ts_len);                 /* [const] Length of the string */
+	tpp_char          TPP_INTERNAL(ts_str)[TPP_FLEX_ARRAY]; /* [const][ts_len] String content */
+/*	tpp_char          TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing \0-character */
 } tpp_string;
 
-#define tpp_string_len(self)  ((self)->ts_len)
-#define tpp_string_str(self)  ((self)->ts_str)
+/* Public API */
+#define tpp_string_len(self)  ((self)->TPP_INTERNAL(ts_len))
+#define tpp_string_str(self)  ((self)->TPP_INTERNAL(ts_str))
 #define tpp_string_end(self)  (tpp_string_str(self) + tpp_string_len(self))
 #define tpp_string_cstr(self) ((char const *)tpp_string_str(self))
-
-#define tpp_string_equals(lhs, rhs)    \
-	((lhs)->ts_len == (rhs)->ts_len && \
-	 tpp_memcmp((lhs)->ts_str, (rhs)->ts_str, (lhs)->ts_len * sizeof(tpp_char)) == 0)
-
-/* Helpers for interacting with TPP strings */
-#define tpp_string_destroy(self)  tpp_free(self)
-#define tpp_string_incref(self)   tpp_refcnt_atomic_inc(&(self)->ts_refcnt)
-#define tpp_string_isshared(self) tpp_refcnt_atomic_isshared(&(self)->ts_refcnt)
-#define tpp_string_decref(self) \
-	(void)(tpp_refcnt_atomic_decfetch(&(self)->ts_refcnt) || (tpp_string_destroy(self), 0))
-#define tpp_string_decref_nokill(self) tpp_refcnt_atomic_dec(&(self)->ts_refcnt)
+#define tpp_string_equals(lhs, rhs)                       \
+	(tpp_string_len(lhs) == tpp_string_len(rhs) &&        \
+	 tpp_memcmp(tpp_string_str(lhs), tpp_string_str(rhs), \
+	            tpp_string_len(lhs) * sizeof(tpp_char)) == 0)
+#define tpp_string_equals_cstr(lhs, rhs_cstr)                    \
+	(tpp_string_len(lhs) == (sizeof(rhs_cstr) - sizeof(char)) && \
+	 tpp_memcmp(tpp_string_str(lhs), rhs_cstr,                   \
+	            (sizeof(rhs_cstr) - sizeof(char)) * sizeof(tpp_char)) == 0)
 
 #define tpp_string_sizeof(len)         (tpp_offsetof(tpp_string, ts_str) + ((len) + 1) * sizeof(tpp_char))
 #define _tpp_string_trymalloc(len)     ((tpp_string *)tpp_trymalloc(tpp_string_sizeof(len)))
 #define _tpp_string_malloc(len)        ((tpp_string *)tpp_malloc(tpp_string_sizeof(len)))
 #define _tpp_string_tryrealloc(p, len) ((tpp_string *)tpp_tryrealloc(p, tpp_string_sizeof(len)))
 #define _tpp_string_realloc(p, len)    ((tpp_string *)tpp_realloc(p, tpp_string_sizeof(len)))
+#define _tpp_string_free(p)            tpp_free(p)
+
+/* Helpers for interacting with TPP strings */
+#define tpp_string_destroy(self)  _tpp_string_free(self)
+#define tpp_string_incref(self)   tpp_refcnt_atomic_inc(&(self)->TPP_INTERNAL(ts_refcnt))
+#define tpp_string_isshared(self) tpp_refcnt_atomic_isshared(&(self)->TPP_INTERNAL(ts_refcnt))
+#define tpp_string_decref(self) \
+	(void)(tpp_refcnt_atomic_decfetch(&(self)->TPP_INTERNAL(ts_refcnt)) || (tpp_string_destroy(self), 0))
+#define tpp_string_decref_nokill(self) tpp_refcnt_atomic_dec(&(self)->TPP_INTERNAL(ts_refcnt))
 
 /* Allocate new (uninitialized) string buffers
  * @return: NULL: Propagate TPP_ENOMEM */
@@ -4288,9 +4332,9 @@ TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_malloc(tpp_size len);
 
 
 TPP_DECL struct tpp_string_empty_struct {
-	tpp_refcnt_atomic ts_refcnt; /* Reference counter */
-	tpp_size          ts_len;    /* [const] Length of the string */
-	tpp_char          ts_nul;    /* [const][== 0] Trailing \0-character */
+	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt); /* Reference counter */
+	tpp_size          TPP_INTERNAL(ts_len);    /* [const] Length of the string */
+	tpp_char          TPP_INTERNAL(ts_nul);    /* [const][== 0] Trailing \0-character */
 } _tpp_string_empty;
 
 #define tpp_string_newempty()               \
@@ -4304,15 +4348,16 @@ TPP_DECL struct tpp_string_empty_struct {
 /************************************************************************/
 
 typedef struct tpp_string_builder {
-	tpp_string *tsb_buf; /* [0..1][owned] Allocated string buffer ("ts_len" in here is then *allocated* buffer size) */
-	tpp_size    tsb_len; /* [<= tsb_buf->ts_len] Used buffer size */
+	tpp_string *TPP_INTERNAL(tsb_buf); /* [0..1][owned] Allocated string buffer ("ts_len" in here is then *allocated* buffer size) */
+	tpp_size    TPP_INTERNAL(tsb_len); /* [<= tsb_buf->ts_len] Used buffer size */
 } tpp_string_builder;
 
 /* Initialize / finalize a given "tpp_string_builder *self" */
-#define tpp_string_builder_init(self) \
-	(void)((self)->tsb_buf = NULL, (self)->tsb_len = 0)
+#define tpp_string_builder_init(self)            \
+	(void)((self)->TPP_INTERNAL(tsb_buf) = NULL, \
+	       (self)->TPP_INTERNAL(tsb_len) = 0)
 #define tpp_string_builder_fini(self) \
-	tpp_free((self)->tsb_buf)
+	_tpp_string_free((self)->TPP_INTERNAL(tsb_buf))
 
 /* Package "self" into a tpp string and return said string.
  * This function never fails, but it *DOES* finalize "self"
@@ -4745,7 +4790,7 @@ typedef enum tpp_token_id {
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
 
 	/* Double(or more)-character tokens. */
-	_TPP_TOK_MULTICHAR_BEGIN = 255, /* KEEP THIS THE FIRST MULTICHAR TOKEN! */
+	TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN) = 255, /* KEEP THIS THE FIRST MULTICHAR TOKEN! */
 #if TPP_HAVE_UNICODE
 	TPP_TOK_UNICHAR, /* "<unicode character>" Misc unicode character that could not be classified */
 #endif /* TPP_HAVE_UNICODE */
@@ -4758,7 +4803,7 @@ typedef enum tpp_token_id {
 
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE
 	TPP_TOK_COMMENTLIKE_MIN,
-	_TPP_TOK_COMMENTLIKE_MIN = TPP_TOK_COMMENTLIKE_MIN - 1,
+	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MIN) = TPP_TOK_COMMENTLIKE_MIN - 1,
 #if TPP_HAVE_TPP_TOK_C_COMMENT
 	TPP_TOK_C_COMMENT, /* "<comment>" like this one! */
 #define _TPP_CASE_TPP_TOK_C_COMMENT case TPP_TOK_C_COMMENT:
@@ -4771,8 +4816,8 @@ typedef enum tpp_token_id {
 #else /* TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
 #define _TPP_CASE_TPP_TOK_PASCAL_COMMENT /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
-	_TPP_TOK_COMMENTLIKE_NOLINE_MAX,
-	TPP_TOK_COMMENTLIKE_NOLINE_MAX = _TPP_TOK_COMMENTLIKE_NOLINE_MAX - 1,
+	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_NOLINE_MAX),
+	TPP_TOK_COMMENTLIKE_NOLINE_MAX = TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_NOLINE_MAX) - 1,
 #if TPP_HAVE_TPP_TOK_CXX_COMMENT
 	TPP_TOK_CXX_COMMENT, // "<comment>" like this one!
 #define _TPP_CASE_TPP_TOK_CXX_COMMENT case TPP_TOK_CXX_COMMENT:
@@ -4797,8 +4842,8 @@ typedef enum tpp_token_id {
 #else /* TPP_HAVE_TPP_TOK_SQL_COMMENT */
 #define _TPP_CASE_TPP_TOK_SQL_COMMENT /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
-	_TPP_TOK_COMMENTLIKE_MAX,
-	TPP_TOK_COMMENTLIKE_MAX = _TPP_TOK_COMMENTLIKE_MAX - 1,
+	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX),
+	TPP_TOK_COMMENTLIKE_MAX = TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX) - 1,
 #define TPP_TOK_ISCOMMENT(id)                     \
 	((int)(id) >= (int)TPP_TOK_COMMENTLIKE_MIN && \
 	 (int)(id) <= (int)TPP_TOK_COMMENTLIKE_MAX)
@@ -4837,7 +4882,7 @@ typedef enum tpp_token_id {
 
 #if TPP_HAVE_TPP_TOK_STRINGLIKE
 	TPP_TOK_STRINGLIKE_MIN,
-	_TPP_TOK_STRINGLIKE_MIN = TPP_TOK_STRINGLIKE_MIN - 1,
+	TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MIN) = TPP_TOK_STRINGLIKE_MIN - 1,
 #if TPP_HAVE_TPP_TOK_CHAR
 	TPP_TOK_CHAR, /* "<char>" 'foo' */
 #define _TPP_CASE_TPP_TOK_CHAR case TPP_TOK_CHAR:
@@ -4932,8 +4977,8 @@ typedef enum tpp_token_id {
 #else /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
 #define _TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
-	_TPP_TOK_STRINGLIKE_MAX,
-	TPP_TOK_STRINGLIKE_MAX = _TPP_TOK_STRINGLIKE_MAX - 1,
+	TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MAX),
+	TPP_TOK_STRINGLIKE_MAX = TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MAX) - 1,
 #define TPP_TOK_ISSTRING(id)                     \
 	((int)(id) >= (int)TPP_TOK_STRINGLIKE_MIN && \
 	 (int)(id) <= (int)TPP_TOK_STRINGLIKE_MAX)
@@ -5173,7 +5218,7 @@ typedef enum tpp_token_id {
 #endif /* !TPP_HAVE_TPP_TOK_STAR_DOT */
 	TPP_TOK_MULTICHAR_END, /* KEEP THIS THE LAST MULTICHAR TOKEN! */
 	TPP_TOK_KEYWORD_BEGIN = TPP_TOK_MULTICHAR_END, /* First builtin keyword */
-	_TPP_TOK_KEYWORD_BEGIN = TPP_TOK_KEYWORD_BEGIN - 1,
+	TPP_INTERNAL(_TPP_TOK_KEYWORD_BEGIN) = TPP_TOK_KEYWORD_BEGIN - 1,
 #define TPP_DEFS
 #define TPP_KWD(id, string) id,
 #include TPP_CONFIG_DEFS_FILENAME
@@ -5204,16 +5249,39 @@ TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_reprtokenid(tpp_token_id id);
 
 struct tpp_keyword;
 typedef struct tpp_token {
-	tpp_token_id              tt_id;    /* Token ID (never set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF) */
-	struct tpp_keyword const *tt_kwd;   /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tt_id))] Keyword identified by `tt_id' */
-	tpp_char const           *tt_start; /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
-	tpp_char const           *tt_end;   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
-	TPP_REF tpp_string       *tt_chunk; /* [0..1] Text chunk containing "tt_start" and "tt_end" (or "NULL" if not needed) */
+	tpp_token_id              TPP_INTERNAL(tt_id);    /* Token ID (never set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF) */
+	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tt_id))] Keyword identified by `tt_id' */
+	tpp_char const           *TPP_INTERNAL(tt_start); /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
+	tpp_char const           *TPP_INTERNAL(tt_end);   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
+	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing "tt_start" and "tt_end" (or "NULL" if not needed) */
 } tpp_token;
 
-#define tpp_token_copy(self, other) \
-	(void)(*(self) = *(other), tpp_string_incref((self)->tt_chunk))
-#define tpp_token_fini(self) tpp_string_decref((self)->tt_chunk)
+/* Public API */
+#define tpp_token_copy(self, other)             \
+	(void)(*(self) = *(other),                  \
+	       !((self)->TPP_INTERNAL(tt_chunk)) || \
+	       (tpp_string_incref((self)->TPP_INTERNAL(tt_chunk)), 1))
+#define tpp_token_fini(self)                    \
+	(void)(!((self)->TPP_INTERNAL(tt_chunk)) || \
+	       (tpp_string_decref((self)->TPP_INTERNAL(tt_chunk)), 1))
+#define tpp_token_getid(self)    ((self)->TPP_INTERNAL(tt_id))
+#define tpp_token_getkwd(self)   ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "TPP_TOK_ISKEYWORD(tpp_token_getid(self))" */
+#define tpp_token_getstart(self) ((self)->TPP_INTERNAL(tt_start))
+#define tpp_token_getend(self)   ((self)->TPP_INTERNAL(tt_end))
+#define tpp_token_getlen(self)   ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
+
+/* Convenience aliases */
+#define tpp_token_iseof(self)                    (tpp_token_getid(id) == TPP_TOK_EOF)
+#define tpp_token_isspace_or_comment(self)       TPP_TOK_ISSPACE_OR_COMMENT(tpp_token_getid(id))
+#define tpp_token_islf_or_comment(self)          TPP_TOK_ISLF_OR_COMMENT(tpp_token_getid(id))
+#define tpp_token_isspace_or_lf_or_comment(self) TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tpp_token_getid(id))
+#define tpp_token_iskeyword(self)                TPP_TOK_ISKEYWORD(tpp_token_getid(id))
+#define tpp_token_isuserkeyword(self)            TPP_TOK_ISUSERKEYWORD(tpp_token_getid(id))
+#define tpp_token_isbuiltinkeyword(self)         TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(id))
+#define tpp_token_iscomment(self)                TPP_TOK_ISCOMMENT(tpp_token_getid(id))
+#define tpp_token_iscomment_line(self)           TPP_TOK_ISCOMMENT_LINE(tpp_token_getid(id))
+#define tpp_token_iscomment_noline(self)         TPP_TOK_ISCOMMENT_NOLINE(tpp_token_getid(id))
+#define tpp_token_isstring(self)                 TPP_TOK_ISSTRING(tpp_token_getid(id))
 
 
 #if TPP_HAVE_TOKEN_ENCODESTRING
@@ -5665,635 +5733,635 @@ typedef enum tpp_feature_id {
 typedef union tpp_features {
 	struct {
 #if TPP_HAVE_TPP_TOK_LF < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_LF: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_LF(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_LF, TPP_HAVE_TPP_TOK_LF == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LF): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_LF(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LF), TPP_HAVE_TPP_TOK_LF == -1)
 #else /* TPP_HAVE_TPP_TOK_LF < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_LF(self) TPP_HAVE_TPP_TOK_LF
 #endif /* TPP_HAVE_TPP_TOK_LF >= 0 */
 #if TPP_HAVE_TPP_TOK_SPACE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_SPACE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_SPACE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SPACE, TPP_HAVE_TPP_TOK_SPACE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SPACE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_SPACE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SPACE), TPP_HAVE_TPP_TOK_SPACE == -1)
 #else /* TPP_HAVE_TPP_TOK_SPACE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_SPACE(self) TPP_HAVE_TPP_TOK_SPACE
 #endif /* TPP_HAVE_TPP_TOK_SPACE >= 0 */
 #if TPP_HAVE_TPP_TOK_COMMENT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_COMMENT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_COMMENT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_COMMENT, TPP_HAVE_TPP_TOK_COMMENT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_COMMENT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_COMMENT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_COMMENT), TPP_HAVE_TPP_TOK_COMMENT == -1)
 #else /* TPP_HAVE_TPP_TOK_COMMENT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_COMMENT(self) TPP_HAVE_TPP_TOK_COMMENT
 #endif /* TPP_HAVE_TPP_TOK_COMMENT >= 0 */
 #if TPP_HAVE_TPP_TOK_CXX_COMMENT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_CXX_COMMENT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_COMMENT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_CXX_COMMENT, TPP_HAVE_TPP_TOK_CXX_COMMENT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_COMMENT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_COMMENT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_COMMENT), TPP_HAVE_TPP_TOK_CXX_COMMENT == -1)
 #else /* TPP_HAVE_TPP_TOK_CXX_COMMENT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_COMMENT(self) TPP_HAVE_TPP_TOK_CXX_COMMENT
 #endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT >= 0 */
 #if TPP_HAVE_TPP_TOK_C_COMMENT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_C_COMMENT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_C_COMMENT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_C_COMMENT, TPP_HAVE_TPP_TOK_C_COMMENT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_C_COMMENT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_C_COMMENT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_C_COMMENT), TPP_HAVE_TPP_TOK_C_COMMENT == -1)
 #else /* TPP_HAVE_TPP_TOK_C_COMMENT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_C_COMMENT(self) TPP_HAVE_TPP_TOK_C_COMMENT
 #endif /* TPP_HAVE_TPP_TOK_C_COMMENT >= 0 */
 #if TPP_HAVE_TPP_TOK_PASCAL_COMMENT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_PASCAL_COMMENT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_PASCAL_COMMENT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_PASCAL_COMMENT, TPP_HAVE_TPP_TOK_PASCAL_COMMENT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PASCAL_COMMENT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_PASCAL_COMMENT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PASCAL_COMMENT), TPP_HAVE_TPP_TOK_PASCAL_COMMENT == -1)
 #else /* TPP_HAVE_TPP_TOK_PASCAL_COMMENT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_PASCAL_COMMENT(self) TPP_HAVE_TPP_TOK_PASCAL_COMMENT
 #endif /* TPP_HAVE_TPP_TOK_PASCAL_COMMENT >= 0 */
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_SHELL_COMMENT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_SHELL_COMMENT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SHELL_COMMENT, TPP_HAVE_TPP_TOK_SHELL_COMMENT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SHELL_COMMENT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_SHELL_COMMENT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SHELL_COMMENT), TPP_HAVE_TPP_TOK_SHELL_COMMENT == -1)
 #else /* TPP_HAVE_TPP_TOK_SHELL_COMMENT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_SHELL_COMMENT(self) TPP_HAVE_TPP_TOK_SHELL_COMMENT
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT >= 0 */
 #if TPP_HAVE_TPP_TOK_ASM_COMMENT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_ASM_COMMENT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_ASM_COMMENT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_ASM_COMMENT, TPP_HAVE_TPP_TOK_ASM_COMMENT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_ASM_COMMENT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_ASM_COMMENT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_ASM_COMMENT), TPP_HAVE_TPP_TOK_ASM_COMMENT == -1)
 #else /* TPP_HAVE_TPP_TOK_ASM_COMMENT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_ASM_COMMENT(self) TPP_HAVE_TPP_TOK_ASM_COMMENT
 #endif /* TPP_HAVE_TPP_TOK_ASM_COMMENT >= 0 */
 #if TPP_HAVE_TPP_TOK_SQL_COMMENT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_SQL_COMMENT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_SQL_COMMENT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SQL_COMMENT, TPP_HAVE_TPP_TOK_SQL_COMMENT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SQL_COMMENT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_SQL_COMMENT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SQL_COMMENT), TPP_HAVE_TPP_TOK_SQL_COMMENT == -1)
 #else /* TPP_HAVE_TPP_TOK_SQL_COMMENT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_SQL_COMMENT(self) TPP_HAVE_TPP_TOK_SQL_COMMENT
 #endif /* TPP_HAVE_TPP_TOK_SQL_COMMENT >= 0 */
 #if TPP_HAVE_TPP_TOK_DOLLAR < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_DOLLAR: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_DOLLAR(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_DOLLAR, TPP_HAVE_TPP_TOK_DOLLAR == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_DOLLAR): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_DOLLAR(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_DOLLAR), TPP_HAVE_TPP_TOK_DOLLAR == -1)
 #else /* TPP_HAVE_TPP_TOK_DOLLAR < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_DOLLAR(self) TPP_HAVE_TPP_TOK_DOLLAR
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR >= 0 */
 #if TPP_HAVE_TPP_TOK_INT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_INT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_INT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_INT, TPP_HAVE_TPP_TOK_INT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_INT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_INT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_INT), TPP_HAVE_TPP_TOK_INT == -1)
 #else /* TPP_HAVE_TPP_TOK_INT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_INT(self) TPP_HAVE_TPP_TOK_INT
 #endif /* TPP_HAVE_TPP_TOK_INT >= 0 */
 #if TPP_HAVE_TPP_TOK_FLOAT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_FLOAT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_FLOAT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_FLOAT, TPP_HAVE_TPP_TOK_FLOAT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_FLOAT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_FLOAT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_FLOAT), TPP_HAVE_TPP_TOK_FLOAT == -1)
 #else /* TPP_HAVE_TPP_TOK_FLOAT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_FLOAT(self) TPP_HAVE_TPP_TOK_FLOAT
 #endif /* TPP_HAVE_TPP_TOK_FLOAT >= 0 */
 #if TPP_HAVE_TPP_TOK_CHAR < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_CHAR: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_CHAR(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_CHAR, TPP_HAVE_TPP_TOK_CHAR == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CHAR): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CHAR(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CHAR), TPP_HAVE_TPP_TOK_CHAR == -1)
 #else /* TPP_HAVE_TPP_TOK_CHAR < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_CHAR(self) TPP_HAVE_TPP_TOK_CHAR
 #endif /* TPP_HAVE_TPP_TOK_CHAR >= 0 */
 #if TPP_HAVE_TPP_TOK_STRING < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_STRING: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_STRING(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_STRING, TPP_HAVE_TPP_TOK_STRING == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STRING): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STRING(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STRING), TPP_HAVE_TPP_TOK_STRING == -1)
 #else /* TPP_HAVE_TPP_TOK_STRING < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_STRING(self) TPP_HAVE_TPP_TOK_STRING
 #endif /* TPP_HAVE_TPP_TOK_STRING >= 0 */
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL, TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL), TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL == -1)
 #else /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL >= 0 */
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL, TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL), TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL == -1)
 #else /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL >= 0 */
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL, TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL), TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL == -1)
 #else /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL >= 0 */
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL, TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL), TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL == -1)
 #else /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL >= 0 */
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL, TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL), TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL == -1)
 #else /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL >= 0 */
 #if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL, TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL), TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL == -1)
 #else /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL(self) TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL >= 0 */
 #if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL, TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL), TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL == -1)
 #else /* TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL(self) TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL >= 0 */
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_BLOCK_STRING_LITERAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_BLOCK_STRING_LITERAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_BLOCK_STRING_LITERAL, TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_BLOCK_STRING_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_BLOCK_STRING_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_BLOCK_STRING_LITERAL), TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL == -1)
 #else /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_BLOCK_STRING_LITERAL(self) TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL >= 0 */
 #if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL, TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL), TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL == -1)
 #else /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL(self) TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL >= 0 */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE, TPP_HAVE_TPP_TOK_LANGLE_LANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE), TPP_HAVE_TPP_TOK_LANGLE_LANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE(self) TPP_HAVE_TPP_TOK_LANGLE_LANGLE
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE, TPP_HAVE_TPP_TOK_RANGLE_RANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE), TPP_HAVE_TPP_TOK_RANGLE_RANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE(self) TPP_HAVE_TPP_TOK_RANGLE_RANGLE
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL, TPP_HAVE_TPP_TOK_EQUAL_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL), TPP_HAVE_TPP_TOK_EQUAL_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EQUAL(self) TPP_HAVE_TPP_TOK_EQUAL_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL, TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL), TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL(self) TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_RANGLE_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_RANGLE_EQUAL, TPP_HAVE_TPP_TOK_RANGLE_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_EQUAL), TPP_HAVE_TPP_TOK_RANGLE_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_EQUAL(self) TPP_HAVE_TPP_TOK_RANGLE_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_LANGLE_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_LANGLE_EQUAL, TPP_HAVE_TPP_TOK_LANGLE_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_EQUAL), TPP_HAVE_TPP_TOK_LANGLE_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_EQUAL(self) TPP_HAVE_TPP_TOK_LANGLE_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_DOT_DOT_DOT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_DOT_DOT_DOT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_DOT_DOT_DOT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_DOT_DOT_DOT, TPP_HAVE_TPP_TOK_DOT_DOT_DOT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_DOT_DOT_DOT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_DOT_DOT_DOT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_DOT_DOT_DOT), TPP_HAVE_TPP_TOK_DOT_DOT_DOT == -1)
 #else /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_DOT_DOT_DOT(self) TPP_HAVE_TPP_TOK_DOT_DOT_DOT
 #endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT >= 0 */
 #if TPP_HAVE_TPP_TOK_PLUS_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_PLUS_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_PLUS_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_PLUS_EQUAL, TPP_HAVE_TPP_TOK_PLUS_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PLUS_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_PLUS_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PLUS_EQUAL), TPP_HAVE_TPP_TOK_PLUS_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_PLUS_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_PLUS_EQUAL(self) TPP_HAVE_TPP_TOK_PLUS_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_PLUS_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_MINUS_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_MINUS_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_MINUS_EQUAL, TPP_HAVE_TPP_TOK_MINUS_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_MINUS_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_MINUS_EQUAL), TPP_HAVE_TPP_TOK_MINUS_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_MINUS_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_EQUAL(self) TPP_HAVE_TPP_TOK_MINUS_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_MINUS_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_STAR_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_STAR_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_STAR_EQUAL, TPP_HAVE_TPP_TOK_STAR_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STAR_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STAR_EQUAL), TPP_HAVE_TPP_TOK_STAR_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_STAR_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_EQUAL(self) TPP_HAVE_TPP_TOK_STAR_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_STAR_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_SLASH_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_SLASH_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SLASH_EQUAL, TPP_HAVE_TPP_TOK_SLASH_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SLASH_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SLASH_EQUAL), TPP_HAVE_TPP_TOK_SLASH_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_SLASH_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_EQUAL(self) TPP_HAVE_TPP_TOK_SLASH_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_SLASH_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_PERCENT_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_PERCENT_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_PERCENT_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_PERCENT_EQUAL, TPP_HAVE_TPP_TOK_PERCENT_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PERCENT_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_PERCENT_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PERCENT_EQUAL), TPP_HAVE_TPP_TOK_PERCENT_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_PERCENT_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_PERCENT_EQUAL(self) TPP_HAVE_TPP_TOK_PERCENT_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_PERCENT_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL, TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL), TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL(self) TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL, TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL), TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL(self) TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_AMP_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_AMP_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_AMP_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_AMP_EQUAL, TPP_HAVE_TPP_TOK_AMP_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_AMP_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_AMP_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_AMP_EQUAL), TPP_HAVE_TPP_TOK_AMP_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_AMP_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_AMP_EQUAL(self) TPP_HAVE_TPP_TOK_AMP_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_AMP_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_PIPE_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_PIPE_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_PIPE_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_PIPE_EQUAL, TPP_HAVE_TPP_TOK_PIPE_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PIPE_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_PIPE_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PIPE_EQUAL), TPP_HAVE_TPP_TOK_PIPE_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_PIPE_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_PIPE_EQUAL(self) TPP_HAVE_TPP_TOK_PIPE_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_PIPE_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_HAT_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_HAT_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_HAT_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_HAT_EQUAL, TPP_HAVE_TPP_TOK_HAT_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_HAT_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_HAT_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_HAT_EQUAL), TPP_HAVE_TPP_TOK_HAT_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_HAT_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_HAT_EQUAL(self) TPP_HAVE_TPP_TOK_HAT_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_HAT_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_SLASH_SLASH: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SLASH_SLASH, TPP_HAVE_TPP_TOK_SLASH_SLASH == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SLASH_SLASH): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SLASH_SLASH), TPP_HAVE_TPP_TOK_SLASH_SLASH == -1)
 #else /* TPP_HAVE_TPP_TOK_SLASH_SLASH < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH(self) TPP_HAVE_TPP_TOK_SLASH_SLASH
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH >= 0 */
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL, TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL), TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL(self) TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL, TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL), TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL(self) TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_AT_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_AT_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_AT_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_AT_EQUAL, TPP_HAVE_TPP_TOK_AT_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_AT_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_AT_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_AT_EQUAL), TPP_HAVE_TPP_TOK_AT_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_AT_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_AT_EQUAL(self) TPP_HAVE_TPP_TOK_AT_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_AT_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_POUND_POUND < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_POUND_POUND: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_POUND_POUND(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_POUND_POUND, TPP_HAVE_TPP_TOK_POUND_POUND == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_POUND_POUND): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_POUND_POUND(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_POUND_POUND), TPP_HAVE_TPP_TOK_POUND_POUND == -1)
 #else /* TPP_HAVE_TPP_TOK_POUND_POUND < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_POUND_POUND(self) TPP_HAVE_TPP_TOK_POUND_POUND
 #endif /* TPP_HAVE_TPP_TOK_POUND_POUND >= 0 */
 #if TPP_HAVE_TPP_TOK_AMP_AMP < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_AMP_AMP: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_AMP_AMP(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_AMP_AMP, TPP_HAVE_TPP_TOK_AMP_AMP == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_AMP_AMP): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_AMP_AMP(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_AMP_AMP), TPP_HAVE_TPP_TOK_AMP_AMP == -1)
 #else /* TPP_HAVE_TPP_TOK_AMP_AMP < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_AMP_AMP(self) TPP_HAVE_TPP_TOK_AMP_AMP
 #endif /* TPP_HAVE_TPP_TOK_AMP_AMP >= 0 */
 #if TPP_HAVE_TPP_TOK_PIPE_PIPE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_PIPE_PIPE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_PIPE_PIPE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_PIPE_PIPE, TPP_HAVE_TPP_TOK_PIPE_PIPE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PIPE_PIPE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_PIPE_PIPE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PIPE_PIPE), TPP_HAVE_TPP_TOK_PIPE_PIPE == -1)
 #else /* TPP_HAVE_TPP_TOK_PIPE_PIPE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_PIPE_PIPE(self) TPP_HAVE_TPP_TOK_PIPE_PIPE
 #endif /* TPP_HAVE_TPP_TOK_PIPE_PIPE >= 0 */
 #if TPP_HAVE_TPP_TOK_HAT_HAT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_HAT_HAT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_HAT_HAT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_HAT_HAT, TPP_HAVE_TPP_TOK_HAT_HAT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_HAT_HAT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_HAT_HAT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_HAT_HAT), TPP_HAVE_TPP_TOK_HAT_HAT == -1)
 #else /* TPP_HAVE_TPP_TOK_HAT_HAT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_HAT_HAT(self) TPP_HAVE_TPP_TOK_HAT_HAT
 #endif /* TPP_HAVE_TPP_TOK_HAT_HAT >= 0 */
 #if TPP_HAVE_TPP_TOK_PLUS_PLUS < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_PLUS_PLUS: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_PLUS_PLUS(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_PLUS_PLUS, TPP_HAVE_TPP_TOK_PLUS_PLUS == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PLUS_PLUS): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_PLUS_PLUS(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_PLUS_PLUS), TPP_HAVE_TPP_TOK_PLUS_PLUS == -1)
 #else /* TPP_HAVE_TPP_TOK_PLUS_PLUS < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_PLUS_PLUS(self) TPP_HAVE_TPP_TOK_PLUS_PLUS
 #endif /* TPP_HAVE_TPP_TOK_PLUS_PLUS >= 0 */
 #if TPP_HAVE_TPP_TOK_MINUS_MINUS < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_MINUS_MINUS: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_MINUS(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_MINUS_MINUS, TPP_HAVE_TPP_TOK_MINUS_MINUS == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_MINUS_MINUS): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_MINUS(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_MINUS_MINUS), TPP_HAVE_TPP_TOK_MINUS_MINUS == -1)
 #else /* TPP_HAVE_TPP_TOK_MINUS_MINUS < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_MINUS(self) TPP_HAVE_TPP_TOK_MINUS_MINUS
 #endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS >= 0 */
 #if TPP_HAVE_TPP_TOK_STAR_STAR < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_STAR_STAR: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_STAR_STAR, TPP_HAVE_TPP_TOK_STAR_STAR == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STAR_STAR): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STAR_STAR), TPP_HAVE_TPP_TOK_STAR_STAR == -1)
 #else /* TPP_HAVE_TPP_TOK_STAR_STAR < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_STAR(self) TPP_HAVE_TPP_TOK_STAR_STAR
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR >= 0 */
 #if TPP_HAVE_TPP_TOK_TILDE_TILDE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_TILDE_TILDE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_TILDE_TILDE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_TILDE_TILDE, TPP_HAVE_TPP_TOK_TILDE_TILDE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_TILDE_TILDE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_TILDE_TILDE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_TILDE_TILDE), TPP_HAVE_TPP_TOK_TILDE_TILDE == -1)
 #else /* TPP_HAVE_TPP_TOK_TILDE_TILDE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_TILDE_TILDE(self) TPP_HAVE_TPP_TOK_TILDE_TILDE
 #endif /* TPP_HAVE_TPP_TOK_TILDE_TILDE >= 0 */
 #if TPP_HAVE_TPP_TOK_TILDE_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_TILDE_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_TILDE_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_TILDE_EQUAL, TPP_HAVE_TPP_TOK_TILDE_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_TILDE_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_TILDE_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_TILDE_EQUAL), TPP_HAVE_TPP_TOK_TILDE_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_TILDE_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_TILDE_EQUAL(self) TPP_HAVE_TPP_TOK_TILDE_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_TILDE_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_MINUS_RANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_RANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_MINUS_RANGLE, TPP_HAVE_TPP_TOK_MINUS_RANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_MINUS_RANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_RANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_MINUS_RANGLE), TPP_HAVE_TPP_TOK_MINUS_RANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_MINUS_RANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_RANGLE(self) TPP_HAVE_TPP_TOK_MINUS_RANGLE
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_COLON_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_COLON_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_COLON_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_COLON_EQUAL, TPP_HAVE_TPP_TOK_COLON_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_COLON_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_COLON_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_COLON_EQUAL), TPP_HAVE_TPP_TOK_COLON_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_COLON_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_COLON_EQUAL(self) TPP_HAVE_TPP_TOK_COLON_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_COLON_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_COLON_COLON < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_COLON_COLON: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_COLON_COLON(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_COLON_COLON, TPP_HAVE_TPP_TOK_COLON_COLON == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_COLON_COLON): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_COLON_COLON(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_COLON_COLON), TPP_HAVE_TPP_TOK_COLON_COLON == -1)
 #else /* TPP_HAVE_TPP_TOK_COLON_COLON < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_COLON_COLON(self) TPP_HAVE_TPP_TOK_COLON_COLON
 #endif /* TPP_HAVE_TPP_TOK_COLON_COLON >= 0 */
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR, TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR), TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR == -1)
 #else /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR(self) TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR >= 0 */
 #if TPP_HAVE_TPP_TOK_DOT_STAR < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_DOT_STAR: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_DOT_STAR(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_DOT_STAR, TPP_HAVE_TPP_TOK_DOT_STAR == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_DOT_STAR): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_DOT_STAR(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_DOT_STAR), TPP_HAVE_TPP_TOK_DOT_STAR == -1)
 #else /* TPP_HAVE_TPP_TOK_DOT_STAR < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_DOT_STAR(self) TPP_HAVE_TPP_TOK_DOT_STAR
 #endif /* TPP_HAVE_TPP_TOK_DOT_STAR >= 0 */
 #if TPP_HAVE_TPP_TOK_DOT_DOT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_DOT_DOT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_DOT_DOT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_DOT_DOT, TPP_HAVE_TPP_TOK_DOT_DOT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_DOT_DOT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_DOT_DOT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_DOT_DOT), TPP_HAVE_TPP_TOK_DOT_DOT == -1)
 #else /* TPP_HAVE_TPP_TOK_DOT_DOT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_DOT_DOT(self) TPP_HAVE_TPP_TOK_DOT_DOT
 #endif /* TPP_HAVE_TPP_TOK_DOT_DOT >= 0 */
 #if TPP_HAVE_TPP_TOK_LANGLE_RANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_LANGLE_RANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_RANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_LANGLE_RANGLE, TPP_HAVE_TPP_TOK_LANGLE_RANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_RANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_RANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_RANGLE), TPP_HAVE_TPP_TOK_LANGLE_RANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_LANGLE_RANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_RANGLE(self) TPP_HAVE_TPP_TOK_LANGLE_RANGLE
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_RANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE, TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE), TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE(self) TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE, TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE), TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE(self) TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL, TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL), TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL(self) TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL, TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL), TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL(self) TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL, TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL), TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL(self) TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL, TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL), TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL(self) TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_QMARK_QMARK: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_QMARK_QMARK(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_QMARK_QMARK, TPP_HAVE_TPP_TOK_QMARK_QMARK == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_QMARK_QMARK): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_QMARK_QMARK(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_QMARK_QMARK), TPP_HAVE_TPP_TOK_QMARK_QMARK == -1)
 #else /* TPP_HAVE_TPP_TOK_QMARK_QMARK < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_QMARK_QMARK(self) TPP_HAVE_TPP_TOK_QMARK_QMARK
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK >= 0 */
 #if TPP_HAVE_TPP_TOK_QMARK_EQUAL < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_QMARK_EQUAL: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_QMARK_EQUAL(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_QMARK_EQUAL, TPP_HAVE_TPP_TOK_QMARK_EQUAL == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_QMARK_EQUAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_QMARK_EQUAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_QMARK_EQUAL), TPP_HAVE_TPP_TOK_QMARK_EQUAL == -1)
 #else /* TPP_HAVE_TPP_TOK_QMARK_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_QMARK_EQUAL(self) TPP_HAVE_TPP_TOK_QMARK_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_QMARK_EQUAL >= 0 */
 #if TPP_HAVE_TPP_TOK_RANGLE_LANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_RANGLE_LANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_LANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_RANGLE_LANGLE, TPP_HAVE_TPP_TOK_RANGLE_LANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_LANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_LANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RANGLE_LANGLE), TPP_HAVE_TPP_TOK_RANGLE_LANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_RANGLE_LANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_RANGLE_LANGLE(self) TPP_HAVE_TPP_TOK_RANGLE_LANGLE
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_LANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_PLUS < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_PLUS: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_PLUS(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_PLUS, TPP_HAVE_TPP_TOK_EQUAL_PLUS == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_PLUS): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_PLUS(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_PLUS), TPP_HAVE_TPP_TOK_EQUAL_PLUS == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_PLUS < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_PLUS(self) TPP_HAVE_TPP_TOK_EQUAL_PLUS
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_PLUS >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_MINUS < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_MINUS: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_MINUS(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_MINUS, TPP_HAVE_TPP_TOK_EQUAL_MINUS == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_MINUS): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_MINUS(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_MINUS), TPP_HAVE_TPP_TOK_EQUAL_MINUS == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_MINUS < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_MINUS(self) TPP_HAVE_TPP_TOK_EQUAL_MINUS
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_MINUS >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_STAR < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_STAR: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_STAR(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_STAR, TPP_HAVE_TPP_TOK_EQUAL_STAR == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_STAR): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_STAR(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_STAR), TPP_HAVE_TPP_TOK_EQUAL_STAR == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_STAR < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_STAR(self) TPP_HAVE_TPP_TOK_EQUAL_STAR
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR, TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR), TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR(self) TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_SLASH < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_SLASH: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_SLASH(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_SLASH, TPP_HAVE_TPP_TOK_EQUAL_SLASH == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_SLASH): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_SLASH(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_SLASH), TPP_HAVE_TPP_TOK_EQUAL_SLASH == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_SLASH < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_SLASH(self) TPP_HAVE_TPP_TOK_EQUAL_SLASH
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_SLASH_SLASH: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_SLASH_SLASH(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_SLASH_SLASH, TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_SLASH_SLASH): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_SLASH_SLASH(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_SLASH_SLASH), TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_SLASH_SLASH(self) TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_PERCENT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_PERCENT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_PERCENT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_PERCENT, TPP_HAVE_TPP_TOK_EQUAL_PERCENT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_PERCENT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_PERCENT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_PERCENT), TPP_HAVE_TPP_TOK_EQUAL_PERCENT == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_PERCENT(self) TPP_HAVE_TPP_TOK_EQUAL_PERCENT
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_AMP < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_AMP: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_AMP(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_AMP, TPP_HAVE_TPP_TOK_EQUAL_AMP == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_AMP): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_AMP(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_AMP), TPP_HAVE_TPP_TOK_EQUAL_AMP == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_AMP < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_AMP(self) TPP_HAVE_TPP_TOK_EQUAL_AMP
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_AMP >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_PIPE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_PIPE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_PIPE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_PIPE, TPP_HAVE_TPP_TOK_EQUAL_PIPE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_PIPE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_PIPE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_PIPE), TPP_HAVE_TPP_TOK_EQUAL_PIPE == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_PIPE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_PIPE(self) TPP_HAVE_TPP_TOK_EQUAL_PIPE
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_PIPE >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_HAT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_HAT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_HAT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_HAT, TPP_HAVE_TPP_TOK_EQUAL_HAT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_HAT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_HAT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_HAT), TPP_HAVE_TPP_TOK_EQUAL_HAT == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_HAT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_HAT(self) TPP_HAVE_TPP_TOK_EQUAL_HAT
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_HAT >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_LANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE, TPP_HAVE_TPP_TOK_EQUAL_LANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_LANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE), TPP_HAVE_TPP_TOK_EQUAL_LANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_LANGLE(self) TPP_HAVE_TPP_TOK_EQUAL_LANGLE
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE, TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE), TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE(self) TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE, TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE), TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE(self) TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_RANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE, TPP_HAVE_TPP_TOK_EQUAL_RANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_RANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE), TPP_HAVE_TPP_TOK_EQUAL_RANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_RANGLE(self) TPP_HAVE_TPP_TOK_EQUAL_RANGLE
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE, TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE), TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE(self) TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE, TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE), TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE(self) TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_AT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_AT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_AT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_AT, TPP_HAVE_TPP_TOK_EQUAL_AT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_AT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_AT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_AT), TPP_HAVE_TPP_TOK_EQUAL_AT == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_AT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_AT(self) TPP_HAVE_TPP_TOK_EQUAL_AT
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_AT >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_TILDE < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_TILDE: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_TILDE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_TILDE, TPP_HAVE_TPP_TOK_EQUAL_TILDE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_TILDE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_TILDE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_TILDE), TPP_HAVE_TPP_TOK_EQUAL_TILDE == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_TILDE < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_TILDE(self) TPP_HAVE_TPP_TOK_EQUAL_TILDE
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_TILDE >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_COLON < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_COLON: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_COLON(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_COLON, TPP_HAVE_TPP_TOK_EQUAL_COLON == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_COLON): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_COLON(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_COLON), TPP_HAVE_TPP_TOK_EQUAL_COLON == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_COLON < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_COLON(self) TPP_HAVE_TPP_TOK_EQUAL_COLON
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_COLON >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_EXCLAIM: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EXCLAIM(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_EXCLAIM, TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_EXCLAIM): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EXCLAIM(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_EXCLAIM), TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EXCLAIM(self) TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EXCLAIM: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EXCLAIM(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EXCLAIM, TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EXCLAIM): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EXCLAIM(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EXCLAIM), TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EXCLAIM(self) TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM >= 0 */
 #if TPP_HAVE_TPP_TOK_EQUAL_QMARK < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_EQUAL_QMARK: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_QMARK(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_EQUAL_QMARK, TPP_HAVE_TPP_TOK_EQUAL_QMARK == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_QMARK): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_QMARK(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EQUAL_QMARK), TPP_HAVE_TPP_TOK_EQUAL_QMARK == -1)
 #else /* TPP_HAVE_TPP_TOK_EQUAL_QMARK < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EQUAL_QMARK(self) TPP_HAVE_TPP_TOK_EQUAL_QMARK
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_QMARK >= 0 */
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_LANGLE_MINUS: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_MINUS(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_LANGLE_MINUS, TPP_HAVE_TPP_TOK_LANGLE_MINUS == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_MINUS): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_MINUS(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_MINUS), TPP_HAVE_TPP_TOK_LANGLE_MINUS == -1)
 #else /* TPP_HAVE_TPP_TOK_LANGLE_MINUS < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_MINUS(self) TPP_HAVE_TPP_TOK_LANGLE_MINUS
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS >= 0 */
 #if TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_STAR_LANGLE_MINUS: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_LANGLE_MINUS(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_STAR_LANGLE_MINUS, TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STAR_LANGLE_MINUS): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_LANGLE_MINUS(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STAR_LANGLE_MINUS), TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS == -1)
 #else /* TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_LANGLE_MINUS(self) TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS
 #endif /* TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS >= 0 */
 #if TPP_HAVE_TPP_TOK_STAR_DOT < 0
-		unsigned int tff_TPP_FEAT_TPP_TOK_STAR_DOT: 1;
-#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_DOT(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_TPP_TOK_STAR_DOT, TPP_HAVE_TPP_TOK_STAR_DOT == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STAR_DOT): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_DOT(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STAR_DOT), TPP_HAVE_TPP_TOK_STAR_DOT == -1)
 #else /* TPP_HAVE_TPP_TOK_STAR_DOT < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_STAR_DOT(self) TPP_HAVE_TPP_TOK_STAR_DOT
 #endif /* TPP_HAVE_TPP_TOK_STAR_DOT >= 0 */
 #if TPP_HAVE_CPP_DIRECTIVES < 0
-		unsigned int tff_TPP_FEAT_CPP_DIRECTIVES: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_DIRECTIVES(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_DIRECTIVES, TPP_HAVE_CPP_DIRECTIVES == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_DIRECTIVES): 1;
+#define _tpp_features_get_TPP_FEAT_CPP_DIRECTIVES(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_DIRECTIVES), TPP_HAVE_CPP_DIRECTIVES == -1)
 #else /* TPP_HAVE_CPP_DIRECTIVES < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_DIRECTIVES(self) TPP_HAVE_CPP_DIRECTIVES
 #endif /* TPP_HAVE_CPP_DIRECTIVES >= 0 */
 #if TPP_HAVE_CPP_MACROS < 0
-		unsigned int tff_TPP_FEAT_CPP_MACROS: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_MACROS(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_MACROS, TPP_HAVE_CPP_MACROS == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_MACROS): 1;
+#define _tpp_features_get_TPP_FEAT_CPP_MACROS(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_MACROS), TPP_HAVE_CPP_MACROS == -1)
 #else /* TPP_HAVE_CPP_MACROS < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_MACROS(self) TPP_HAVE_CPP_MACROS
 #endif /* TPP_HAVE_CPP_MACROS >= 0 */
 #if TPP_HAVE_CPP_BLANK < 0
-		unsigned int tff_TPP_FEAT_CPP_BLANK: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_BLANK(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_BLANK, TPP_HAVE_CPP_BLANK == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_BLANK): 1;
+#define _tpp_features_get_TPP_FEAT_CPP_BLANK(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_BLANK), TPP_HAVE_CPP_BLANK == -1)
 #else /* TPP_HAVE_CPP_BLANK < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_BLANK(self) TPP_HAVE_CPP_BLANK
 #endif /* TPP_HAVE_CPP_BLANK >= 0 */
 #if TPP_HAVE_CPP_DIGIT_LINE < 0
-		unsigned int tff_TPP_FEAT_CPP_DIGIT_LINE: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_DIGIT_LINE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_DIGIT_LINE, TPP_HAVE_CPP_DIGIT_LINE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_DIGIT_LINE): 1;
+#define _tpp_features_get_TPP_FEAT_CPP_DIGIT_LINE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_DIGIT_LINE), TPP_HAVE_CPP_DIGIT_LINE == -1)
 #else /* TPP_HAVE_CPP_DIGIT_LINE < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_DIGIT_LINE(self) TPP_HAVE_CPP_DIGIT_LINE
 #endif /* TPP_HAVE_CPP_DIGIT_LINE >= 0 */
 #if TPP_HAVE_CPP_LINE < 0
-		unsigned int tff_TPP_FEAT_CPP_LINE: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_LINE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_LINE, TPP_HAVE_CPP_LINE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_LINE): 1;
+#define _tpp_features_get_TPP_FEAT_CPP_LINE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_LINE), TPP_HAVE_CPP_LINE == -1)
 #else /* TPP_HAVE_CPP_LINE < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_LINE(self) TPP_HAVE_CPP_LINE
 #endif /* TPP_HAVE_CPP_LINE >= 0 */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF < 0
-		unsigned int tff_TPP_FEAT_CPP_IF_ELSE_ENDIF: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_IF_ELSE_ENDIF(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_IF_ELSE_ENDIF, TPP_HAVE_CPP_IF_ELSE_ENDIF == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_IF_ELSE_ENDIF): 1;
+#define _tpp_features_get_TPP_FEAT_CPP_IF_ELSE_ENDIF(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_IF_ELSE_ENDIF), TPP_HAVE_CPP_IF_ELSE_ENDIF == -1)
 #else /* TPP_HAVE_CPP_IF_ELSE_ENDIF < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_IF_ELSE_ENDIF(self) TPP_HAVE_CPP_IF_ELSE_ENDIF
 #endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF >= 0 */
 #if TPP_HAVE_CPP_DEFINE < 0
-		unsigned int tff_TPP_FEAT_CPP_DEFINE: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_DEFINE(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_DEFINE, TPP_HAVE_CPP_DEFINE == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_DEFINE): 1;
+#define _tpp_features_get_TPP_FEAT_CPP_DEFINE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_DEFINE), TPP_HAVE_CPP_DEFINE == -1)
 #else /* TPP_HAVE_CPP_DEFINE < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_DEFINE(self) TPP_HAVE_CPP_DEFINE
 #endif /* TPP_HAVE_CPP_DEFINE >= 0 */
 #if TPP_HAVE_CPP_PRAGMA < 0
-		unsigned int tff_TPP_FEAT_CPP_PRAGMA: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_PRAGMA(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_PRAGMA, TPP_HAVE_CPP_PRAGMA == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_PRAGMA): 1;
+#define _tpp_features_get_TPP_FEAT_CPP_PRAGMA(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_PRAGMA), TPP_HAVE_CPP_PRAGMA == -1)
 #else /* TPP_HAVE_CPP_PRAGMA < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_PRAGMA(self) TPP_HAVE_CPP_PRAGMA
 #endif /* TPP_HAVE_CPP_PRAGMA >= 0 */
 #if TPP_HAVE_CPP_EMBED < 0
-		unsigned int tff_TPP_FEAT_CPP_EMBED: 1;
-#define _tpp_features_get_TPP_FEAT_CPP_EMBED(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_EMBED, TPP_HAVE_CPP_EMBED == -1)
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_EMBED): 1;
+#define _tpp_features_get_TPP_FEAT_CPP_EMBED(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_EMBED), TPP_HAVE_CPP_EMBED == -1)
 #else /* TPP_HAVE_CPP_EMBED < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_EMBED(self) TPP_HAVE_CPP_EMBED
 #endif /* TPP_HAVE_CPP_EMBED >= 0 */
-	} tf_flags;
-	unsigned char ttf_bitset[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
+	} TPP_INTERNAL(tf_flags);
+	unsigned char TPP_INTERNAL(ttf_bitset)[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_features;
 
 TPP_CONST_DECL tpp_features const tpp_features_default;
 
 #define tpp_features_getid(self, id) \
-	((self)->ttf_bitset[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	((self)->TPP_INTERNAL(ttf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_features_enable(self, id) \
-	(void)((self)->ttf_bitset[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_INTERNAL(ttf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_features_disable(self, id) \
-	(void)((self)->ttf_bitset[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_INTERNAL(ttf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_features_setid(self, id, enabled) \
 	((enabled) ? tpp_features_enable(self, id) : tpp_features_disable(self, id))
 #endif /* TPP_HAVE_FEATURES */
@@ -6377,30 +6445,36 @@ typedef enum tpp_ifdef_mode {
 } tpp_ifdef_mode;
 
 typedef struct tpp_ifdef_stack_entry {
-	tpp_ifdef_mode tidse_mode;    /* Behavioral mode of this entry */
-	tpp_lcinfo     tidse_created; /* line/column info of #if/#ifdef/#ifndef directive that created this block */
-	tpp_lcinfo     tidse_updated; /* line/column info of last directive that updated this block.
-	                               * Or in other words: staring-position of current sub-block
-	                               * e.g.: after #elif or #else, points at that directive, while
-	                               *       "tidse_created" continues to point at initial #if/... */
+	tpp_ifdef_mode TPP_INTERNAL(tidse_mode);    /* Behavioral mode of this entry */
+	tpp_lcinfo     TPP_INTERNAL(tidse_created); /* line/column info of #if/#ifdef/#ifndef directive that created this block */
+	tpp_lcinfo     TPP_INTERNAL(tidse_updated); /* line/column info of last directive that updated this block.
+	                                             * Or in other words: staring-position of current sub-block
+	                                             * e.g.: after #elif or #else, points at that directive, while
+	                                             *       "tidse_created" continues to point at initial #if/... */
 } tpp_ifdef_stack_entry;
 
 typedef struct tpp_ifdef_stack {
-	tpp_size               tids_alc; /* Allocated size of `tids_vec' */
-	tpp_size               tids_cnt; /* Used size of `tids_vec' */
-	tpp_ifdef_stack_entry *tids_vec; /* [0..tids_cnt][owned] Vector of active #ifdef-stack entries */
+	tpp_size               TPP_INTERNAL(tids_alc); /* Allocated size of `tids_vec' */
+	tpp_size               TPP_INTERNAL(tids_cnt); /* Used size of `tids_vec' */
+	tpp_ifdef_stack_entry *TPP_INTERNAL(tids_vec); /* [0..tids_cnt][owned] Vector of active #ifdef-stack entries */
 } tpp_ifdef_stack;
 
 #define tpp_ifdef_stack_init(self) \
-	(void)((self)->tids_alc = 0,   \
-	       (self)->tids_cnt = 0,   \
-	       (self)->tids_vec = NULL)
+	(void)((self)->TPP_INTERNAL(tids_alc) = 0,   \
+	       (self)->TPP_INTERNAL(tids_cnt) = 0,   \
+	       (self)->TPP_INTERNAL(tids_vec) = NULL)
 #define tpp_ifdef_stack_fini(self) \
-	tpp_free((self)->tids_vec)
+	tpp_free((self)->TPP_INTERNAL(tids_vec))
 
 /* Check if the given #ifdef-stack is non-empty */
 #define tpp_ifdef_stack_isnonempty(self) \
-	((self)->tids_cnt != 0)
+	((self)->TPP_INTERNAL(tids_cnt) != 0)
+
+/* Check if the most-recent #ifdef-stack entry indicates
+ * that TPP is currently inside of a #else-block. The caller
+ * must ensure that "tpp_ifdef_stack_isnonempty(self)" */
+#define tpp_ifdef_stack_isafterelse(self) \
+	((self)->TPP_INTERNAL(tids_vec)[(self)->TPP_INTERNAL(tids_cnt) - 1].TPP_INTERNAL(tidse_mode) == TPP_IFDEF_MODE_ELSE)
 
 /* Allocate an additional #ifdef-stack entry, and return a pointer to it.
  * This function will increment `self->tids_cnt', but it is up to the
@@ -6426,106 +6500,114 @@ struct tpp_macro;
 
 typedef struct tpp_file {
 #if TPP_HAVE_INCLUDE_STACK
-	tpp_char const     *tf_tpos;  /* [?..?][valid_if(DID_CALL(tpp_lexer_yieldraw))]
-	                               * Start of last-loaded token (also valid in "tf_tprev"-files)
-	                               * WARNING: This field is NOT maintained/updated by `tpp_file_*' APIs
-	                               *          It is only here so it overlaps with the lexer's token's
-	                               *          "tt_start" field, such that said field is saved when
-	                               *          a new file is pushed onto the #include-stack, and can
-	                               *          then be used to calculate line/column information when
-	                               *          lexer prints its #include-stack. */
+	tpp_char const     *TPP_INTERNAL(tf_tpos);  /* [?..?][valid_if(DID_CALL(tpp_lexer_yieldraw))]
+	                                             * Start of last-loaded token (also valid in "tf_tprev"-files)
+	                                             * WARNING: This field is NOT maintained/updated by `tpp_file_*' APIs
+	                                             *          It is only here so it overlaps with the lexer's token's
+	                                             *          "tt_start" field, such that said field is saved when
+	                                             *          a new file is pushed onto the #include-stack, and can
+	                                             *          then be used to calculate line/column information when
+	                                             *          lexer prints its #include-stack. */
 #endif /* TPP_HAVE_INCLUDE_STACK */
 	/* Important: "tf_pos" and "tf_chunk" must come first, so they can shadow the tail of "tpp_token" */
-	tpp_char const     *tf_pos;   /* [0..1][<= tf_end] File pointer to next unread byte. */
-	TPP_REF tpp_string *tf_chunk; /* [0..1][const_if(tf_kind != TPP_FILE_KIND_IO)] Currently loaded text-chunk (mutable for text-files) */
-	tpp_char const     *tf_end;   /* [0..1][>= tf_chunk->ts_str && <= tf_chunk->ts_str+tf_chunk->ts_len][const_if(tf_kind != TPP_FILE_KIND_IO)] End of effective file content (mutable for text-files) */
+	tpp_char const     *TPP_INTERNAL(tf_pos);   /* [0..1][<= tf_end] File pointer to next unread byte. */
+	TPP_REF tpp_string *TPP_INTERNAL(tf_chunk); /* [0..1][const_if(tf_kind != TPP_FILE_KIND_IO)] Currently loaded text-chunk (mutable for text-files) */
+	tpp_char const     *TPP_INTERNAL(tf_end);   /* [0..1][>= tf_chunk->ts_str && <= tf_chunk->ts_str+tf_chunk->ts_len][const_if(tf_kind != TPP_FILE_KIND_IO)] End of effective file content (mutable for text-files) */
 #if TPP_HAVE_INCLUDE_STACK
-	struct tpp_file    *tf_prev;  /* [0..1] Parent file in #include stack */
-	struct tpp_file    *tf_tprev; /* [0..1] Real parent for the purposes of message tracebacks (not affected by `tpp_file_autopopfile_pushoff') */
+	struct tpp_file    *TPP_INTERNAL(tf_prev);  /* [0..1] Parent file in #include stack */
+	struct tpp_file    *TPP_INTERNAL(tf_tprev); /* [0..1] Real parent for the purposes of message tracebacks (not affected by `tpp_file_autopopfile_pushoff') */
 #define _tpp_file_init_prev(self) , (self)->tf_prev = NULL, (self)->tf_tprev = NULL
 #else /* TPP_HAVE_INCLUDE_STACK */
 #define _tpp_file_init_prev(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 #if TPP_HAVE_FILE_LC_CACHE
-	tpp_char const     *tf_lcpos; /* [0..1] Position that `tf_lcval' applies to. */
-	tpp_lcinfo          tf_lcval; /* [valid_if(tf_lcpos)] Cached line/column at `tf_lcpos' */
+	tpp_char const     *TPP_INTERNAL(tf_lcpos); /* [0..1] Position that `tf_lcval' applies to. */
+	tpp_lcinfo          TPP_INTERNAL(tf_lcval); /* [valid_if(tf_lcpos)] Cached line/column at `tf_lcpos' */
 #define _tpp_file_init_lcpos(self) , (self)->tf_lcpos = NULL
 #else /* TPP_HAVE_FILE_LC_CACHE */
 #define _tpp_file_init_lcpos(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_LC_CACHE */
 #if TPP_HAVE_IFDEF_STACK
-	tpp_ifdef_stack     tf_ifdef; /* #ifdef-stack */
-#define _tpp_file_init_ifdef(self) , tpp_ifdef_stack_init(&(self)->tf_ifdef)
+	tpp_ifdef_stack     TPP_INTERNAL(tf_ifdef); /* #ifdef-stack */
+#define _tpp_file_init_ifdef(self) , tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
 #else /* TPP_HAVE_IFDEF_STACK */
 #define _tpp_file_init_ifdef(self) /* nothing */
 #endif /* !TPP_HAVE_IFDEF_STACK */
-	tpp_file_kind       tf_kind;  /* [const] File kind */
+	tpp_file_kind       TPP_INTERNAL(tf_kind);  /* [const] File kind */
 #if TPP_HAVE_UNICODE
-	tpp_file_encoding   tf_enc;   /* File encoding */
-#define _tpp_file_init_enc(self)       , (self)->tf_enc = TPP_FILE_ENCODING_UTF8
-#define _tpp_file_init_enc_ex(self, v) , (self)->tf_enc = v
+	tpp_file_encoding   TPP_INTERNAL(tf_enc);   /* File encoding */
+#define _tpp_file_init_enc(self)       , (self)->TPP_INTERNAL(tf_enc) = TPP_FILE_ENCODING_UTF8
+#define _tpp_file_init_enc_ex(self, v) , (self)->TPP_INTERNAL(tf_enc) = v
 #else /* TPP_HAVE_UNICODE */
 #define _tpp_file_init_enc(self)       /* nothing */
 #define _tpp_file_init_enc_ex(self, v) /* nothing */
 #endif /* !TPP_HAVE_UNICODE */
 	union {
 		struct {
-			char const      *tff_name;     /* [0..1][const] Filename by which this file was included (if available) */
-			tpp_lcinfo       tff_start_lc; /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+			char const      *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
+			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
 #if TPP_HAVE_FILE_USER_FILENAME
-			TPP_REF tpp_string *tff_user_filename; /* [0..1] User-defined override for name of this file */
-#define _tpp_file_init_io_user_filename(self) , (self)->tf_data.td_io.tff_user_filename = NULL
+			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
+#define _tpp_file_init_io_user_filename(self) , (self)->tf_data.td_io.TPP_INTERNAL(tff_user_filename) = NULL
 #else /* TPP_HAVE_FILE_USER_FILENAME */
 #define _tpp_file_init_io_user_filename(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
-			tpp_io_handle    tff_file;     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
+			tpp_io_handle    TPP_INTERNAL(tff_file);     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
 #if TPP_HAVE_FILE_IOFLAGS
-			tpp_file_ioflags tff_flags;    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
+			tpp_file_ioflags TPP_INTERNAL(tff_flags);    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 #if TPP_HAVE_UNICODE
-			uint_least8_t tff_tailc;    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
-			unsigned char tff_tailv[3]; /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+			uint_least8_t TPP_INTERNAL(tff_tailc);    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+			unsigned char TPP_INTERNAL(tff_tailv)[3]; /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
 #endif /* TPP_HAVE_UNICODE */
-		} td_io; /* [tf_kind == TPP_FILE_KIND_IO] */
+		} TPP_INTERNAL(td_io); /* [tf_kind == TPP_FILE_KIND_IO] */
 
 		struct {
-			char const *tft_name;     /* [0..1][const] Filename for messages (if available) */
-			tpp_lcinfo  tft_start_lc; /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+			char const *TPP_INTERNAL(tft_name);     /* [0..1][const] Filename for messages (if available) */
+			tpp_lcinfo  TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
 #if TPP_HAVE_FILE_USER_FILENAME
-			TPP_REF tpp_string *tft_user_filename; /* [0..1] User-defined override for name of this file */
-#define _tpp_file_init_text_user_filename(self) , (self)->tf_data.td_text.tft_user_filename = NULL
+			TPP_REF tpp_string *TPP_INTERNAL(tft_user_filename); /* [0..1] User-defined override for name of this file */
+#define _tpp_file_init_text_user_filename(self) , (self)->tf_data.td_text.TPP_INTERNAL(tft_user_filename) = NULL
 #else /* TPP_HAVE_FILE_USER_FILENAME */
 #define _tpp_file_init_text_user_filename(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
-		} td_text; /* [tf_kind == TPP_FILE_KIND_TEXT] */
+		} TPP_INTERNAL(td_text); /* [tf_kind == TPP_FILE_KIND_TEXT] */
 
 #if TPP_HAVE_CPP_MACROS
 		struct {
 			/* [1..1][const] The macro definition that produced this file
 			 * as its expansion (also holds a reference to "tm_expansions") */
-			TPP_REF struct tpp_macro *tfm_macro;
-		} td_macro; /* [tf_kind == TPP_FILE_KIND_MACRO] */
+			TPP_REF struct tpp_macro *TPP_INTERNAL(tfm_macro);
+		} TPP_INTERNAL(td_macro); /* [tf_kind == TPP_FILE_KIND_MACRO] */
 #endif /* TPP_HAVE_CPP_MACROS */
-	} tf_data;
+	} TPP_INTERNAL(tf_data);
 } tpp_file;
 
 #define tpp_file_alloc() ((tpp_file *)tpp_malloc(sizeof(tpp_file)))
 #define tpp_file_free(p) tpp_free(p)
 
 #if TPP_HAVE_FILE_IOFLAGS
-#define _tpp_file_init_ioflags(self, flags) , (self)->tf_data.td_io.tff_flags = (flags)
+#define _tpp_file_init_ioflags(self, flags) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_flags) = (flags)
 #else /* TPP_HAVE_FILE_SYSHDR */
 #define _tpp_file_init_ioflags(self, flags) /* nothing */
 #endif /* !TPP_HAVE_FILE_SYSHDR */
 
 #if TPP_HAVE_UNICODE
-#define tpp_file_isutf8(self)  TPP_FILE_ENCODING_ISUTF8((self)->tf_enc)
-#define tpp_file_isascii(self) TPP_FILE_ENCODING_ISASCII((self)->tf_enc)
+#define tpp_file_isutf8(self)  TPP_FILE_ENCODING_ISUTF8((self)->TPP_INTERNAL(tf_enc))
+#define tpp_file_isascii(self) TPP_FILE_ENCODING_ISASCII((self)->TPP_INTERNAL(tf_enc))
 #else /* TPP_HAVE_UNICODE */
 #define tpp_file_isutf8(self)  0
 #define tpp_file_isascii(self) 1
 #endif /* !TPP_HAVE_UNICODE */
 
+/* Public API for accessing internal components of "tpp_file" */
+#define tpp_file_getkind(self)  ((self)->TPP_INTERNAL(tf_kind))
+#define tpp_file_getpos(self)   ((self)->TPP_INTERNAL(tf_pos))
+#define tpp_file_getend(self)   ((self)->TPP_INTERNAL(tf_end))
+#define tpp_file_getchunk(self) ((self)->TPP_INTERNAL(tf_chunk))
+#if TPP_HAVE_IFDEF_STACK
+#define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef))
+#endif /* !TPP_HAVE_IFDEF_STACK */
 
 /* Initialize common fields of "self" */
 #define _tpp_file_init_common(self) \
@@ -6534,13 +6616,13 @@ typedef struct tpp_file {
 
 /* Temporarily disable automatic pop-to-prev-file on EOF */
 #if TPP_HAVE_INCLUDE_STACK
-#define tpp_file_autopopfile_pushoff(self)              \
-	do {                                                \
-		tpp_file *const _tfapfp_prev = (self)->tf_prev; \
-		(self)->tf_prev = NULL
-#define tpp_file_autopopfile_break(self)                                  \
-		(void)(tpp_assert((self)->tf_prev == NULL && "New files pushed"), \
-		       (self)->tf_prev = _tfapfp_prev)
+#define tpp_file_autopopfile_pushoff(self)                            \
+	do {                                                              \
+		tpp_file *const _tfapfp_prev = (self)->TPP_INTERNAL(tf_prev); \
+		(self)->TPP_INTERNAL(tf_prev) = NULL
+#define tpp_file_autopopfile_break(self)                                                \
+		(void)(tpp_assert((self)->TPP_INTERNAL(tf_prev) == NULL && "New files pushed"), \
+		       (self)->TPP_INTERNAL(tf_prev) = _tfapfp_prev)
 #define tpp_file_autopopfile_pop(self)    \
 		tpp_file_autopopfile_break(self); \
 	} while (0)
@@ -6552,13 +6634,13 @@ typedef struct tpp_file {
 
 
 #if TPP_HAVE_CPP_MACROS
-#define _tpp_file_io2text(self)                     \
-	((self)->tf_kind == TPP_FILE_KIND_IO            \
-	 ? (void)((self)->tf_kind = TPP_FILE_KIND_TEXT) \
+#define _tpp_file_io2text(self)                                   \
+	((self)->TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_IO            \
+	 ? (void)((self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT) \
 	 : (void)0)
 #else /* TPP_HAVE_CPP_MACROS */
 #define _tpp_file_io2text(self) \
-	(void)((self)->tf_kind = TPP_FILE_KIND_TEXT)
+	(void)((self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT)
 #endif /* !TPP_HAVE_CPP_MACROS */
 
 
@@ -6576,14 +6658,14 @@ typedef struct tpp_file {
  *   For that, also make use of "tpp_file_pushifdef()" */
 #define tpp_file_pusheof(self)                              \
 	do {                                                    \
-		tpp_file_kind const _tfpeof_kind = (self)->tf_kind; \
-		tpp_char const *const _tfpeof_end = (self)->tf_end; \
+		tpp_file_kind const _tfpeof_kind = (self)->TPP_INTERNAL(tf_kind); \
+		tpp_char const *const _tfpeof_end = (self)->TPP_INTERNAL(tf_end); \
 		_tpp_file_io2text(self)
 #define tpp_file_seteof(self, end) \
-		(void)((self)->tf_end = (end))
-#define tpp_file_breakeof(self)               \
-		(void)((self)->tf_end  = _tfpeof_end, \
-		       (self)->tf_kind = _tfpeof_kind)
+		(void)((self)->TPP_INTERNAL(tf_end) = (end))
+#define tpp_file_breakeof(self)                             \
+		(void)((self)->TPP_INTERNAL(tf_end)  = _tfpeof_end, \
+		       (self)->TPP_INTERNAL(tf_kind) = _tfpeof_kind)
 #define tpp_file_popeof(self)    \
 		tpp_file_breakeof(self); \
 	} while (0)
@@ -6592,24 +6674,24 @@ typedef struct tpp_file {
 /* Save/restore the position where the next token will be read from */
 #define tpp_file_pushpos(self) \
 	do {                       \
-		tpp_char const *const _tfppos_pos = (self)->tf_pos
+		tpp_char const *const _tfppos_pos = (self)->TPP_INTERNAL(tf_pos)
 #define tpp_file_setpos(self, pos) \
-		(void)((self)->tf_pos = (pos))
+		(void)((self)->TPP_INTERNAL(tf_pos) = (pos))
 #define tpp_file_breakpos(self) \
-		(void)((self)->tf_pos = _tfppos_pos)
+		(void)((self)->TPP_INTERNAL(tf_pos) = _tfppos_pos)
 #define tpp_file_poppos(self)    \
 		tpp_file_breakpos(self); \
 	} while (0)
 
 /* Push (+clear) and later (clear+)restore the #ifdef-stack of a given file */
 #if TPP_HAVE_IFDEF_STACK
-#define tpp_file_pushifdef(self)                               \
-	do {                                                       \
-		tpp_ifdef_stack const _tfpid_stack = (self)->tf_ifdef; \
-		tpp_ifdef_stack_init(&(self)->tf_ifdef)
-#define tpp_file_breakifdef(self)                       \
-		(void)(tpp_ifdef_stack_fini(&(self)->tf_ifdef), \
-		       (self)->tf_ifdef = _tfpid_stack)
+#define tpp_file_pushifdef(self)                                             \
+	do {                                                                     \
+		tpp_ifdef_stack const _tfpid_stack = (self)->TPP_INTERNAL(tf_ifdef); \
+		tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
+#define tpp_file_breakifdef(self)                                     \
+		(void)(tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)), \
+		       (self)->TPP_INTERNAL(tf_ifdef) = _tfpid_stack)
 #define tpp_file_popifdef(self)    \
 		tpp_file_breakifdef(self); \
 	} while (0)
@@ -6627,18 +6709,18 @@ typedef struct tpp_file {
  * @param: tpp_file_ioflags flags:    I/O file flags (set of `TPP_FILE_IOFLAGS_*') */
 #define tpp_file_init_io(self, filename, /*inherit*/ fp) \
 	tpp_file_init_io_ex(self, filename, fp, TPP_FILE_IOFLAGS_NORMAL)
-#define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags)   \
-	(void)((self)->tf_pos   = NULL,                                  \
-	       (self)->tf_chunk = NULL,                                  \
-	       (self)->tf_end   = NULL                                   \
-	       _tpp_file_init_prev(self),                                \
-	       (self)->tf_kind = TPP_FILE_KIND_IO                        \
-	       _tpp_file_init_enc(self)                                  \
-	       _tpp_file_init_common(self),                              \
-	       (self)->tf_data.td_io.tff_name = (filename),              \
-	       (self)->tf_data.td_io.tff_file = (fp),                    \
-	       tpp_lcinfo_init((self)->tf_data.td_io.tff_start_lc, 0, 0) \
-	       _tpp_file_init_io_user_filename(self)                     \
+#define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags)                                             \
+	(void)((self)->TPP_INTERNAL(tf_pos)   = NULL,                                                              \
+	       (self)->TPP_INTERNAL(tf_chunk) = NULL,                                                              \
+	       (self)->TPP_INTERNAL(tf_end)   = NULL                                                               \
+	       _tpp_file_init_prev(self),                                                                          \
+	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                                    \
+	       _tpp_file_init_enc(self)                                                                            \
+	       _tpp_file_init_common(self),                                                                        \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename),              \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
+	       tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc), 0, 0) \
+	       _tpp_file_init_io_user_filename(self)                                                               \
 	       _tpp_file_init_ioflags(self, flags))
 
 
@@ -6652,17 +6734,17 @@ typedef struct tpp_file {
  * @param: tpp_file_encoding   encoding:  File data encoding */
 #define tpp_file_init_text_ascii(self, filename, chunk, text, text_size, start_lc) \
 	tpp_file_init_text_ex(self, filename, chunk, text, start_lc, TPP_FILE_ENCODING_ASCII)
-#define tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, encoding) \
-	(void)((self)->tf_pos   = (tpp_char const *)(text),                                   \
-	       (self)->tf_chunk = (chunk),                                                    \
-	       (self)->tf_end   = (tpp_char const *)(text) + (text_size)                      \
-	       _tpp_file_init_prev(self),                                                     \
-	       (self)->tf_kind = TPP_FILE_KIND_TEXT                                           \
-	       _tpp_file_init_enc_ex(self, encoding)                                          \
-	       _tpp_file_init_common(self)                                                    \
-	       _tpp_file_init_text_user_filename(self),                                       \
-	       (self)->tf_data.td_text.tft_name = (filename),                                 \
-	       (self)->tf_data.td_text.tft_start_lc = (start_lc))
+#define tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, encoding)               \
+	(void)((self)->TPP_INTERNAL(tf_pos)   = (tpp_char const *)(text),                                   \
+	       (self)->TPP_INTERNAL(tf_chunk) = (chunk),                                                    \
+	       (self)->TPP_INTERNAL(tf_end)   = (tpp_char const *)(text) + (text_size)                      \
+	       _tpp_file_init_prev(self),                                                                   \
+	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT                                           \
+	       _tpp_file_init_enc_ex(self, encoding)                                                        \
+	       _tpp_file_init_common(self)                                                                  \
+	       _tpp_file_init_text_user_filename(self),                                                     \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name)     = (filename), \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = (start_lc))
 
 
 
@@ -6711,8 +6793,8 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
  *       of the currently loaded chunk can change if another chunk is
  *       allocated that doesn't include the already-read buffer area
  *       located in [tf_chunk->ts_str,tf_pos) */
-#define tpp_file_ptr2rel(self, ptr) (tpp_size)((ptr) - (self)->tf_pos)
-#define tpp_file_rel2ptr(self, rel) ((self)->tf_pos + (rel))
+#define tpp_file_ptr2rel(self, ptr) (tpp_size)((ptr) - (self)->TPP_INTERNAL(tf_pos))
+#define tpp_file_rel2ptr(self, rel) ((self)->TPP_INTERNAL(tf_pos) + (rel))
 
 
 
@@ -6785,7 +6867,7 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self);
 #define tpp_file_getiofile(self) ((tpp_file *)(self))
 #define tpp_file_getlcfile(self) ((tpp_file *)(self))
 #if TPP_HAVE_CPP_MACROS
-#define tpp_file_gettextfile(self) ((self)->tf_kind == TPP_FILE_KIND_MACRO ? NULL : ((tpp_file *)(self)))
+#define tpp_file_gettextfile(self) ((self)->TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_MACRO ? NULL : ((tpp_file *)(self)))
 #else /* TPP_HAVE_CPP_MACROS */
 #define tpp_file_gettextfile(self) ((tpp_file *)(self))
 #endif /* !TPP_HAVE_CPP_MACROS */
@@ -6868,107 +6950,102 @@ TPP_DECL_BEGIN
 
 
 typedef struct tpp_macro_argument {
-	tpp_token_id    tma_id;      /* [const] (Keyword) token id associated with this argument name. */
-	tpp_size        tma_ins_exp; /* [const] Amount of times the argument is inserted after expansion. */
+	tpp_token_id    TPP_INTERNAL(tma_id);      /* [const] (Keyword) token id associated with this argument name. */
+	tpp_size        TPP_INTERNAL(tma_ins_exp); /* [const] Amount of times the argument is inserted after expansion. */
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-	tpp_size        tma_ins_str; /* [const] Amount of times the argument is inserted in its string-escaped form. */
+	tpp_size        TPP_INTERNAL(tma_ins_str); /* [const] Amount of times the argument is inserted in its string-escaped form. */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
-	tpp_size        tma_ins;     /* [const] Amount of times the argument is inserted without expansion. */
+	tpp_size        TPP_INTERNAL(tma_ins);     /* [const] Amount of times the argument is inserted without expansion. */
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 #if TPP_DEBUG
-	tpp_char const *tma_name;    /* [1..1][const] Name of this macro (aliases `struct tpp_keyword::tk_kwd'). */
+	tpp_char const *TPP_INTERNAL(tma_name);    /* [1..1][const] Name of this macro (aliases `struct tpp_keyword::tk_kwd'). */
 #endif /* TPP_DEBUG */
 } tpp_macro_argument;
 
 
 /* Opcodes for function-tyle macro expansion */
 #define tpp_macro_opcode tpp_size
-#if TPP_BUILDING
 enum {
-	TPP_MACRO_OPCODE_END,      /* +0  Expansion has finished */
-	TPP_MACRO_OPCODE_SKIP,     /* +1  Advance macro body template reader by ARG[0] bytes */
-	TPP_MACRO_OPCODE_COPY,     /* +1  Copy ARG[0] bytes from macro body template & advance reader */
-	TPP_MACRO_OPCODE_INS_EXP,  /* +2  Insert argument[ARG[0]] (expanded) and advance macro body template reader by ARG[1] bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_END),      /* +0  Expansion has finished */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_SKIP),     /* +1  Advance macro body template reader by ARG[0] bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_COPY),     /* +1  Copy ARG[0] bytes from macro body template & advance reader */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_EXP),  /* +2  Insert argument[ARG[0]] (expanded) and advance macro body template reader by ARG[1] bytes */
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
-	TPP_MACRO_OPCODE_INS_STR,  /* +2  Insert argument[ARG[0]] ("-escaped) and advance macro body template reader by ARG[1] bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_STR),  /* +2  Insert argument[ARG[0]] ("-escaped) and advance macro body template reader by ARG[1] bytes */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-	TPP_MACRO_OPCODE_INS_CHR,  /* +2  Insert argument[ARG[0]] ('-escaped) and advance macro body template reader by ARG[1] bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_CHR),  /* +2  Insert argument[ARG[0]] ('-escaped) and advance macro body template reader by ARG[1] bytes */
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
-	TPP_MACRO_OPCODE_INS,      /* +2  Insert argument[ARG[0]] (non-expanded) and advance macro body template reader by ARG[1] bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS),      /* +2  Insert argument[ARG[0]] (non-expanded) and advance macro body template reader by ARG[1] bytes */
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 #if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
-	TPP_MACRO_OPCODE_VA_COMMA, /* +1  TPP_MACRO_OPCODE_SKIP[ARG[0]]; If varargs are non-empty: insert a ','-character */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_COMMA), /* +1  TPP_MACRO_OPCODE_SKIP[ARG[0]]; If varargs are non-empty: insert a ','-character */
 #endif /* TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS */
 #if TPP_HAVE_VA_OPT_IN_MACROS
-	TPP_MACRO_OPCODE_VA_OPT,   /* +3  TPP_MACRO_OPCODE_SKIP[ARG[0]]; If varargs are non-empty: TPP_MACRO_OPCODE_COPY[ARG[1]]; TPP_MACRO_OPCODE_SKIP[ARG[2]] */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_OPT),   /* +3  TPP_MACRO_OPCODE_SKIP[ARG[0]]; If varargs are non-empty: TPP_MACRO_OPCODE_COPY[ARG[1]]; TPP_MACRO_OPCODE_SKIP[ARG[2]] */
 #endif /* TPP_HAVE_VA_OPT_IN_MACROS */
 #if TPP_HAVE_VA_NARGS_IN_MACROS
-	TPP_MACRO_OPCODE_VA_NARGS, /* +1  TPP_MACRO_OPCODE_SKIP[ARG[0]]; insert decimal token representing # of varargs (or "0" if there are no varargs) */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_NARGS), /* +1  TPP_MACRO_OPCODE_SKIP[ARG[0]]; insert decimal token representing # of varargs (or "0" if there are no varargs) */
 #endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
 };
-#endif /* TPP_BUILDING */
 
 struct tpp_keyword;
 struct tpp_macro_argbuf; /* Opaque... */
 typedef struct tpp_macro {
-	tpp_refcnt          tm_refcnt;     /* Reference count */
-	tpp_macro_kind      tm_kind;       /* [const] Macro kind (one of `TPP_MACRO_KIND_*') */
+	tpp_refcnt          TPP_INTERNAL(tm_refcnt);     /* Reference count */
+	tpp_macro_kind      TPP_INTERNAL(tm_kind);       /* [const] Macro kind (one of `TPP_MACRO_KIND_*') */
 #if TPP_HAVE_MACRO_FLAGS
-	tpp_macro_flag      tm_flags;      /* [const] Macro flags (set of `TPP_MACRO_FLAG_*') */
+	tpp_macro_flag      TPP_INTERNAL(tm_flags);      /* [const] Macro flags (set of `TPP_MACRO_FLAG_*') */
 #endif /* TPP_HAVE_MACRO_FLAGS */
-	TPP_REF tpp_string *tm_body_chunk; /* [0..1][const] Data-chunk containing the macro's body (or "NULL" if static or originating from file with "tf_chunk == NULL") */
-	tpp_char const     *tm_body_start; /* [1..1][const] Pointer to start of macro body */
-	tpp_char const     *tm_body_end;   /* [1..1][const] Pointer to end of macro body */
+	TPP_REF tpp_string *TPP_INTERNAL(tm_body_chunk); /* [0..1][const] Data-chunk containing the macro's body (or "NULL" if static or originating from file with "tf_chunk == NULL") */
+	tpp_char const     *TPP_INTERNAL(tm_body_start); /* [1..1][const] Pointer to start of macro body */
+	tpp_char const     *TPP_INTERNAL(tm_body_end);   /* [1..1][const] Pointer to end of macro body */
 #if TPP_HAVE_UNICODE
-	tpp_file_encoding   tm_body_enc;   /* Encoding of body. */
+	tpp_file_encoding   TPP_INTERNAL(tm_body_enc);   /* Encoding of body. */
 #endif /* TPP_HAVE_UNICODE */
-	tpp_size            tm_expansions; /* The amount of existing expansions of this macro.
-	                                    * NOTE: Depending on the `TPP_MACRO_FLAG_SELFEXPAND' flag,
-	                                    *       this value may not be allowed to exceed one(1). */
-	char const         *tm_deffile;    /* [0..1][const] File in which this macro was defined (or "NULL" if unknown / custom definition) */
-	tpp_lcinfo          tm_deflc;      /* [const][valid_if(tm_deffile != NULL)] Macro name line/column (0-based) */
-	tpp_lcinfo          tm_body_lc;    /* [const][valid_if(tm_deffile != NULL)] Macro body line/column (0-based) */
+	tpp_size            TPP_INTERNAL(tm_expansions); /* The amount of existing expansions of this macro.
+	                                                  * NOTE: Depending on the `TPP_MACRO_FLAG_SELFEXPAND' flag,
+	                                                  *       this value may not be allowed to exceed one(1). */
+	char const         *TPP_INTERNAL(tm_deffile);    /* [0..1][const] File in which this macro was defined (or "NULL" if unknown / custom definition) */
+	tpp_lcinfo          TPP_INTERNAL(tm_deflc);      /* [const][valid_if(tm_deffile != NULL)] Macro name line/column (0-based) */
+	tpp_lcinfo          TPP_INTERNAL(tm_body_lc);    /* [const][valid_if(tm_deffile != NULL)] Macro body line/column (0-based) */
 	union {
 		struct {
-			tpp_size            tmf_argc;       /* [const] Amount of arguments this macro-function takes */
-			tpp_macro_argument *tmf_argv;       /* [const][0..f_argc][owned] Vector of argument information (used for fast calculation of the expanded macro's size) */
-			tpp_size            tmf_expbase;    /* [const] Base size of macro expansion buffer (== (tm_body_end-tm_body_start) - <TOTAL_SPACE_FROM(TPP_MACRO_OPCODE_SKIP-like)>) */
+			tpp_size            TPP_INTERNAL(tmf_argc);       /* [const] Amount of arguments this macro-function takes */
+			tpp_macro_argument *TPP_INTERNAL(tmf_argv);       /* [const][0..f_argc][owned] Vector of argument information (used for fast calculation of the expanded macro's size) */
+			tpp_size            TPP_INTERNAL(tmf_expbase);    /* [const] Base size of macro expansion buffer (== (tm_body_end-tm_body_start) - <TOTAL_SPACE_FROM(TPP_MACRO_OPCODE_SKIP-like)>) */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
-			tpp_size            tmf_n_vaopt;    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seek_rparen:OUT(*p_argc) > tmf_argc). */
+			tpp_size            TPP_INTERNAL(tmf_n_vaopt);    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seek_rparen:OUT(*p_argc) > tmf_argc). */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
-			tpp_size            tmf_n_vanargs;  /* [const] Amount of times `__VA_NARGS__' is used in `tmf_expand'. */
+			tpp_size            TPP_INTERNAL(tmf_n_vanargs);  /* [const] Amount of times `__VA_NARGS__' is used in `tmf_expand'. */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
 			struct tpp_macro_argbuf
-			                   *tmf_argbuf;     /* [0..1][owned] Internal cache used during macro expansion */
-			tpp_macro_opcode    tmf_expand[TPP_FLEX_ARRAY]; /* [const][1..1] Sequence of `TPP_MACRO_OPCODE_*'-opcodes, together with their operands */
-		} tmd_func; /* [TPP_MACRO_KIND_ISFUNC(tm_kind)] */
-	} tm_data;
+			                   *TPP_INTERNAL(tmf_argbuf);     /* [0..1][owned] Internal cache used during macro expansion */
+			tpp_macro_opcode    TPP_INTERNAL(tmf_expand)[TPP_FLEX_ARRAY]; /* [const][1..1] Sequence of `TPP_MACRO_OPCODE_*'-opcodes, together with their operands */
+		} TPP_INTERNAL(tmd_func); /* [TPP_MACRO_KIND_ISFUNC(tm_kind)] */
+	} TPP_INTERNAL(tm_data);
 } tpp_macro;
 
-#define tpp_macro_malloc_keyword() \
-	((tpp_macro *)tpp_malloc(tpp_offsetof(tpp_macro, tm_data)))
-#define tpp_macro_malloc_function(expand_count)                                     \
-	((tpp_macro *)tpp_malloc(tpp_offsetof(tpp_macro, tm_data.tmd_func.tmf_expand) + \
-	                         ((expand_count) * sizeof(tpp_macro_opcode))))
-#define tpp_macro_trymalloc_function(expand_count)                                     \
-	((tpp_macro *)tpp_trymalloc(tpp_offsetof(tpp_macro, tm_data.tmd_func.tmf_expand) + \
-	                            ((expand_count) * sizeof(tpp_macro_opcode))))
-#define tpp_macro_realloc_function(p, expand_count)                                     \
-	((tpp_macro *)tpp_realloc(p, tpp_offsetof(tpp_macro, tm_data.tmd_func.tmf_expand) + \
-	                             ((expand_count) * sizeof(tpp_macro_opcode))))
-#define tpp_macro_tryrealloc_function(p, expand_count)                                     \
-	((tpp_macro *)tpp_tryrealloc(p, tpp_offsetof(tpp_macro, tm_data.tmd_func.tmf_expand) + \
-	                                ((expand_count) * sizeof(tpp_macro_opcode))))
-#define tpp_macro_free(p) tpp_free(p)
+#define tpp_macro_sizeof_keyword() \
+	tpp_offsetof(tpp_macro, TPP_INTERNAL(tm_data))
+#define tpp_macro_sizeof_function(expand_count)                                                       \
+	(tpp_offsetof(tpp_macro, TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_expand)) + \
+	 ((expand_count) * sizeof(tpp_macro_opcode)))
+
+#define tpp_macro_malloc_keyword()                     ((tpp_macro *)tpp_malloc(tpp_macro_sizeof_keyword()))
+#define tpp_macro_malloc_function(expand_count)        ((tpp_macro *)tpp_malloc(tpp_macro_sizeof_function(expand_count)))
+#define tpp_macro_trymalloc_function(expand_count)     ((tpp_macro *)tpp_trymalloc(tpp_macro_sizeof_function(expand_count)))
+#define tpp_macro_realloc_function(p, expand_count)    ((tpp_macro *)tpp_realloc(p, tpp_macro_sizeof_function(expand_count)))
+#define tpp_macro_tryrealloc_function(p, expand_count) ((tpp_macro *)tpp_tryrealloc(p, tpp_macro_sizeof_function(expand_count)))
+#define tpp_macro_free(p)                              tpp_free(p)
 
 TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_macro_destroy(tpp_macro *tpp_restrict self);
-#define tpp_macro_isshared(self) tpp_refcnt_isshared(&(self)->tm_refcnt)
-#define tpp_macro_incref(self)   tpp_refcnt_inc(&(self)->tm_refcnt)
-#define tpp_macro_decref(self)   (void)(tpp_refcnt_decfetch(&(self)->tm_refcnt) || (tpp_macro_destroy(self), 0))
+#define tpp_macro_isshared(self) tpp_refcnt_isshared(&(self)->TPP_INTERNAL(tm_refcnt))
+#define tpp_macro_incref(self)   tpp_refcnt_inc(&(self)->TPP_INTERNAL(tm_refcnt))
+#define tpp_macro_decref(self)   (void)(tpp_refcnt_decfetch(&(self)->TPP_INTERNAL(tm_refcnt)) || (tpp_macro_destroy(self), 0))
 
 #if TPP_HAVE_MACRO_EQUALS
 /* Compare 2 macro definitions to see if they are identical. */
@@ -6976,29 +7053,63 @@ TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #endif /* TPP_HAVE_MACRO_EQUALS */
 
-#if TPP_BUILDING
-/* Figure out the line/column of "pos" in "expanded_text", as produced
- * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL
-tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
-                      tpp_string const *expanded_text,
-                      tpp_char const *pos);
-#endif /* TPP_BUILDING */
+/* Public API */
+#define tpp_macro_isfunc(self)         TPP_MACRO_KIND_ISFUNC((self)->TPP_INTERNAL(tm_kind))
+#define tpp_macro_getbodychunk(self)   ((self)->TPP_INTERNAL(tm_body_chunk))
+#define tpp_macro_getbodystart(self)   ((self)->TPP_INTERNAL(tm_body_start))
+#define tpp_macro_getbodyend(self)     ((self)->TPP_INTERNAL(tm_body_end))
+#define tpp_macro_getbodysize(self)    ((tpp_size)(tpp_macro_getbodyend(self) - tpp_macro_getbodystart(self)))
+#define tpp_macro_getdeffilename(self) ((self)->TPP_INTERNAL(tm_deffile))
+#define tpp_macro_getdeflcinfo(self)   ((self)->TPP_INTERNAL(tm_deflc))
+#define tpp_macro_getbodylcinfo(self)  ((self)->TPP_INTERNAL(tm_body_lc))
+#if TPP_HAVE_UNICODE
+#define tpp_macro_isbodyutf8(self)  TPP_FILE_ENCODING_ISUTF8((self)->TPP_INTERNAL(tm_body_enc))
+#define tpp_macro_isbodyascii(self) TPP_FILE_ENCODING_ISASCII((self)->TPP_INTERNAL(tm_body_enc))
+#else /* TPP_HAVE_UNICODE */
+#define tpp_macro_isbodyutf8(self)  0
+#define tpp_macro_isbodyascii(self) 1
+#endif /* !TPP_HAVE_UNICODE */
+
+/* The following all require the caller to ensure that `tpp_macro_isfunc(self)' */
+#define tpp_macro_getfuncargc(self)      ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argc))
+#define tpp_macro_getfuncargtok(self, i) ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argv)[i].TPP_INTERNAL(tma_id))
+#define tpp_macro_getfunclparen(self)    TPP_MACRO_KIND_ASTOK((self)->TPP_INTERNAL(tm_kind))
+#if TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS
+#define tpp_macro_isvarargs(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_VARIADIC)
+#else /* TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS */
+#define tpp_macro_isvarargs(self) 0
+#endif /* !TPP_HAVE_NAMED_VARARGS_IN_MACROS && !TPP_HAVE_VA_ARGS_IN_MACROS */
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
+#define tpp_macro_keepsargspc(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_KEEPARGSPC)
+#else /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
+#define tpp_macro_keepsargspc(self) (TPP_HAVE_MACRO_ARGUMENT_WHITESPACE != 0)
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE >= 0 */
+#if TPP_HAVE_MACRO_RECURSION < 0
+#define tpp_macro_allowsselfexpansion(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_SELFEXPAND)
+#else /* TPP_HAVE_MACRO_RECURSION < 0 */
+#define tpp_macro_allowsselfexpansion(self) (TPP_HAVE_MACRO_RECURSION != 0)
+#endif /* TPP_HAVE_MACRO_RECURSION >= 0 */
+
+
+
 
 
 typedef struct tpp_builtin_macro {
-	tpp_size tbm_body_size;            /* Length of "tbm_body" (in characters; excluding trailing NUL) */
-	tpp_char tbm_body[TPP_FLEX_ARRAY]; /* [tbm_body_size] Body text (followed by a trailing NUL) */
+	tpp_size TPP_INTERNAL(tbm_body_size);            /* Length of "tbm_body" (in characters; excluding trailing NUL) */
+	tpp_char TPP_INTERNAL(tbm_body)[TPP_FLEX_ARRAY]; /* [tbm_body_size] Body text (followed by a trailing NUL) */
 } tpp_builtin_macro;
 
 #define TPP_BUILTIN_MACRO_DEFINE(name, value)                      \
 	struct name##_struct {                                         \
-		tpp_size tbm_body_size;                                    \
-		char tbm_body[sizeof(value) / sizeof(char)];               \
+		tpp_size TPP_INTERNAL(tbm_body_size);                      \
+		char TPP_INTERNAL(tbm_body)[sizeof(value) / sizeof(char)]; \
 	} const name = {                                               \
 		/* .tbm_body_size = */ (sizeof(value) / sizeof(char)) - 1, \
 		/* .tbm_body      = */ value,                              \
 	}
+
+#define tpp_builtin_macro_getbody(self) ((self)->TPP_INTERNAL(tbm_body))
+#define tpp_builtin_macro_getsize(self) ((self)->TPP_INTERNAL(tbm_body_size))
 
 /* Return the hard-coded expansion of the builtin macro linked to "id".
  * If "id" isn't a builtin keyword, or that keyword doesn't specify a
@@ -7019,18 +7130,19 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 struct tpp_macro;
 typedef struct tpp_macro_pushent {
-	TPP_REF struct tpp_macro *tmpe_macro; /* [0..1] The macro that was pushed, or "NULL" if not defined at the time. */
-	tpp_size                  tmpe_count; /* # of times that `tmpe_macro' was pushed without the macro actually having changed */
+	TPP_REF struct tpp_macro *TPP_INTERNAL(tmpe_macro); /* [0..1] The macro that was pushed, or "NULL" if not defined at the time. */
+	tpp_size                  TPP_INTERNAL(tmpe_count); /* # of times that `tmpe_macro' was pushed without the macro actually having changed */
 } tpp_macro_pushent;
 
 typedef struct tpp_macro_pushstack {
-	tpp_size           tmps_cnt; /* # of elements on `tmps_vec' */
-	tpp_macro_pushent *tmps_vec; /* [0..tmps_vec][owned] Vector of pushed macros (push_macro appends at the end; pop_macro takes from the end) */
+	tpp_size           TPP_INTERNAL(tmps_cnt); /* # of elements on `tmps_vec' */
+	tpp_macro_pushent *TPP_INTERNAL(tmps_vec); /* [0..tmps_vec][owned] Vector of pushed macros (push_macro appends at the end; pop_macro takes from the end) */
 } tpp_macro_pushstack;
 
 /* Initialize/finalize a given macro-push stack */
-#define tpp_macro_pushstack_init(self) \
-	(void)((self)->tmps_cnt = 0, (self)->tmps_vec = NULL)
+#define tpp_macro_pushstack_init(self)         \
+	(void)((self)->TPP_INTERNAL(tmps_cnt) = 0, \
+	       (self)->TPP_INTERNAL(tmps_vec) = NULL)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self);
 
@@ -7045,15 +7157,15 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #if ((TPP_HAVE_CPP_INCLUDE && (TPP_HAVE_CPP_IF_ELSE_ENDIF || \
                                TPP_HAVE_PRAGMA_ONCE)) ||     \
      TPP_HAVE_CPP_IMPORT ||                                  \
-     TPP_HAVE_CLANG_MACRO___has_attribute ||                         \
-     TPP_HAVE_CLANG_MACRO___has_builtin ||                           \
-     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||                     \
-     TPP_HAVE_CLANG_MACRO___has_declspec_attribute ||                \
-     TPP_HAVE_CLANG_MACRO___has_extension ||                         \
-     TPP_HAVE_CLANG_MACRO___has_feature ||                           \
-     TPP_HAVE_CLANG_MACRO___has_c_attribute ||                       \
-     TPP_HAVE_MACRO___is_deprecated ||                          \
-     TPP_HAVE_MACRO___is_poisoned ||                            \
+     TPP_HAVE_CLANG_MACRO___has_attribute ||                 \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||                   \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||             \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute ||        \
+     TPP_HAVE_CLANG_MACRO___has_extension ||                 \
+     TPP_HAVE_CLANG_MACRO___has_feature ||                   \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute ||               \
+     TPP_HAVE_MACRO___is_deprecated ||                       \
+     TPP_HAVE_MACRO___is_poisoned ||                         \
      TPP_HAVE_PRAGMA_DEPRECATED ||                           \
      TPP_HAVE_PRAGMA_GCC_POISON ||                           \
      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS)
@@ -7132,16 +7244,16 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 struct tpp_keyword;
 typedef struct tpp_keyword_misc {
 #if TPP_HAVE_KEYWORD_FLAGS
-	tpp_keyword_flags   tkm_flags; /* Set of `TPP_KEYWORD_FLAG_*' */
+	tpp_keyword_flags TPP_INTERNAL(tkm_flags); /* Set of `TPP_KEYWORD_FLAG_*' */
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
 #if TPP_HAVE_KEYWORD_FILE_GUARD
-	struct tpp_keyword *tkm_file_guard; /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
+	struct tpp_keyword *TPP_INTERNAL(tkm_file_guard); /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
 #endif /* TPP_HAVE_KEYWORD_FILE_GUARD */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
-	tpp_macro_pushstack tkm_macro_pushstack; /* For `#pragma push_macro()' */
+	tpp_macro_pushstack TPP_INTERNAL(tkm_macro_pushstack); /* For `#pragma push_macro()' */
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_MACRO___TPP_COUNTER
-	tpp_size tkm_builtin_counter; /* Next value for __TPP_COUNTER */
+	tpp_size TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
 } tpp_keyword_misc;
 #endif /* TPP_HAVE_KEYWORD_MISC */
@@ -7153,24 +7265,25 @@ struct tpp_macro;
 
 #undef TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 typedef struct tpp_keyword {
-	tpp_token_id              tk_id;                  /* [const] Keyword ID */
-	struct tpp_keyword       *tk_next;                /* [0..1] Next keyword with a similar hash */
+	tpp_token_id              TPP_INTERNAL(tk_id);                  /* [const] Keyword ID */
+	struct tpp_keyword       *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
 #if TPP_HAVE_CPP_MACROS
-	TPP_REF struct tpp_macro *tk_macro;               /* [0..1][const_if(IS_BUILTIN)] Macro definition */
+	TPP_REF struct tpp_macro *TPP_INTERNAL(tk_macro);               /* [0..1][const_if(IS_BUILTIN)] Macro definition */
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
-	tpp_keyword_misc         *tk_misc;                /* [0..1][const_if(IS_BUILTIN)][owned] Misc. keyword data (lazily allocated) */
+	tpp_keyword_misc         *TPP_INTERNAL(tk_misc);                /* [0..1][const_if(IS_BUILTIN)][owned] Misc. keyword data (lazily allocated) */
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_KEYWORD_MISC */
-	tpp_hash                  tk_hash;                /* [const] Hash for `tk_kwd' */
-	tpp_refcnt                tk_refcnt;              /* Keyword reference count (for binary compatibility with "tpp_string") */
-	tpp_size                  tk_len;                 /* [const] # of bytes (char-s) in `tk_kwd' (excluding trailing \0) */
-	tpp_char                  tk_kwd[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; \0-terminated; never contains \-escaped linefeeds) */
-/*	tpp_char                  tk_nul;                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
+	tpp_hash                  TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd' */
+	tpp_refcnt                TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with "tpp_string") */
+	tpp_size                  TPP_INTERNAL(tk_len);                 /* [const] # of bytes (char-s) in `tk_kwd' (excluding trailing \0) */
+	tpp_char                  TPP_INTERNAL(tk_kwd)[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; \0-terminated; never contains \-escaped linefeeds) */
+/*	tpp_char                  TPP_INTERNAL(tk_nul);                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
 } tpp_keyword;
 
-#define tpp_keyword_sizeof(len) (tpp_offsetof(tpp_keyword, tk_kwd) + ((len) + 1) * sizeof(tpp_char))
+#define tpp_keyword_sizeof(len) \
+	(tpp_offsetof(tpp_keyword, TPP_INTERNAL(tk_kwd)) + ((len) + 1) * sizeof(tpp_char))
 
 /* When true, there are certain actions that require builtin keywords
  * to be copied into the current lexer's keyword table. These include
@@ -7185,21 +7298,31 @@ typedef struct tpp_keyword {
  * may need to be copied into the current lexer's `tpp_keywords'
  * if `tk_macro' or `tk_misc' need to be modified */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
-#define tpp_keyword_equals(a, b) ((a)->tk_id == (b)->tk_id)
+#define tpp_keyword_equals(a, b) ((a)->TPP_INTERNAL(tk_id) == (b)->TPP_INTERNAL(tk_id))
 #else /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 #define tpp_keyword_equals(a, b) ((a) == (b))
 #endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
+/* Public API for accessing "tpp_keyword" internals */
+#define tpp_keyword_getid(self)      ((self)->TPP_INTERNAL(tk_id))
+#define tpp_keyword_getkwd(self)     ((self)->TPP_INTERNAL(tk_kwd))
+#define tpp_keyword_getkwdcstr(self) ((char const *)(self)->TPP_INTERNAL(tk_kwd))
+#define tpp_keyword_getkwdlen(self)  ((self)->TPP_INTERNAL(tk_len))
+#define tpp_keyword_getkwdhash(self) ((self)->TPP_INTERNAL(tk_hash))
+#if TPP_HAVE_CPP_MACROS
+#define tpp_keyword_getmacro(self) ((self)->TPP_INTERNAL(tk_macro))
+#endif /* TPP_HAVE_CPP_MACROS */
+
+
 /* Convert back-and-forth between keywords and strings */
-#define _TPP_KEYWORD_STRING_ABI_START tk_refcnt
+#define _TPP_KEYWORD_STRING_ABI_START TPP_INTERNAL(tk_refcnt)
 #define tpp_keyword_asstring(self) ((tpp_string *)&(self)->_TPP_KEYWORD_STRING_ABI_START)
 #define tpp_string_askeyword(self) ((tpp_keyword *)((char *)(self) - tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)))
 
 /* Check if "self" matches the C, constant string literal "cstr" */
-#define tpp_keyword_equals_cstr(self, cstr)                 \
-	((self)->tk_len == (sizeof(cstr) / sizeof(char)) - 1 && \
-	 tpp_memcmp((self)->tk_kwd, cstr, sizeof(cstr) - sizeof(char)) == 0)
-
+#define tpp_keyword_equals_cstr(self, cstr)                               \
+	((self)->TPP_INTERNAL(tk_len) == (sizeof(cstr) / sizeof(char)) - 1 && \
+	 tpp_memcmp((self)->TPP_INTERNAL(tk_kwd), cstr, sizeof(cstr) - sizeof(char)) == 0)
 
 #if TPP_HAVE_KEYWORD_MISC
 /* Ensure that `self->tk_misc' has been allocated and return it.
@@ -7209,7 +7332,7 @@ typedef struct tpp_keyword {
  * @return: * :   The "misc" data of "self" (freshly allocated)
  * @return: NULL: OOM (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
-tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self);
+tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self); /* TODO: This function shouldn't be part of the public API! */
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
@@ -7318,22 +7441,23 @@ tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
 
 /* Custom keywords table */
 typedef struct tpp_keywords {
-	unsigned int          tks_kwdc; /* Amount of keyword entries stored. */
-	tpp_hash              tks_bckm; /* Allocated bucket mask. */
-	TPP_REF tpp_keyword **tks_bckv; /* [0..1][owned][0..tks_bckc+1][owned] Resizable keyword hash-map vector.
-	                                 * NOTE: When the keyword map is destroyed, all linked keywords are, too.
-	                                 *       Since this only happens when a lexer is finalized, this should
-	                                 *       only happen once *all* keywords have their reference counters
-	                                 *       set to "1". For this purpose, "tpp_keywords_fini" asserts that
-	                                 *       no keyword has some other reference count value. */
+	unsigned int          TPP_INTERNAL(tks_kwdc); /* Amount of keyword entries stored. */
+	tpp_hash              TPP_INTERNAL(tks_bckm); /* Allocated bucket mask. */
+	TPP_REF tpp_keyword **TPP_INTERNAL(tks_bckv); /* [0..1][owned][0..tks_bckc+1][owned] Resizable keyword hash-map vector.
+	                                               * NOTE: When the keyword map is destroyed, all linked keywords are, too.
+	                                               *       Since this only happens when a lexer is finalized, this should
+	                                               *       only happen once *all* keywords have their reference counters
+	                                               *       set to "1". For this purpose, "tpp_keywords_fini" asserts that
+	                                               *       no keyword has some other reference count value. */
 } tpp_keywords;
 
-TPP_DECL TPP_REF tpp_keyword *tpp_keywords_empty_map[1];
+TPP_DECL TPP_REF tpp_keyword *tpp_keywords_empty_map[1]; /* Consider this one TPP_INTERNAL */
 
 /* Initialize/finalize a given keywords table. */
-#define tpp_keywords_init(self)                     \
-	(void)((self)->tks_kwdc = (self)->tks_bckm = 0, \
-	       (self)->tks_bckv = tpp_keywords_empty_map)
+#define tpp_keywords_init(self)                \
+	(void)((self)->TPP_INTERNAL(tks_kwdc) = 0, \
+	       (self)->TPP_INTERNAL(tks_bckm) = 0, \
+	       (self)->TPP_INTERNAL(tks_bckv) = tpp_keywords_empty_map)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_fini(tpp_keywords *tpp_restrict self);
 
@@ -7485,62 +7609,62 @@ typedef union tpp_extensions_state {
 #define TPP_EXTENSION(id, name, default) unsigned int tef_##id: 1;
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS
-	} tes_flags;
-	unsigned char tes_bitset[TPP_EXT_COUNT ? ((TPP_EXT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
+	} tes_flags; /* Consider this one as "TPP_INTERNAL", too! */
+	unsigned char TPP_INTERNAL(tes_bitset)[TPP_EXT_COUNT ? ((TPP_EXT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_extensions_state;
 TPP_CONST_DECL tpp_extensions_state const tpp_extensions_state_default;
 
 #define tpp_extensions_state_getid(self, id) \
-	((self)->tes_bitset[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	((self)->TPP_INTERNAL(tes_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_extensions_state_get(self, id) _tpp_extensions_state_get_##id(self)
 #define tpp_extensions_state_enable(self, id) \
-	(void)((self)->tes_bitset[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_INTERNAL(tes_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_extensions_state_disable(self, id) \
-	(void)((self)->tes_bitset[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
-#define tpp_extensions_state_set(self, id, enabled) \
+	(void)((self)->TPP_INTERNAL(tes_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+#define tpp_extensions_state_setid(self, id, enabled) \
 	((enabled) ? tpp_extensions_state_enable(self, id) : tpp_extensions_state_disable(self, id))
 
 
 typedef struct tpp_extensions {
-	tpp_extensions_state    te_state;   /* [const_if(te_pushcnt > 0)] Enabled-extensions state */
+	tpp_extensions_state   TPP_INTERNAL(te_state);   /* [const_if(te_pushcnt > 0)] Enabled-extensions state */
 #if TPP_HAVE_EXTENSIONS_PUSH_POP
-	tpp_size               te_pushcnt; /* # of times extensions were pushed since last modified */
-	struct tpp_extensions *te_prev;    /* [0..1][owned] Old extension state. */
+	tpp_size               TPP_INTERNAL(te_pushcnt); /* # of times extensions were pushed since last modified */
+	struct tpp_extensions *TPP_INTERNAL(te_prev);    /* [0..1][owned] Old extension state. */
 #endif /* TPP_HAVE_EXTENSIONS_PUSH_POP */
 } tpp_extensions;
 
 #if TPP_HAVE_EXTENSIONS_PUSH_POP
 #define tpp_extensions_init(self)                             \
-	(void)((self)->te_state   = tpp_extensions_state_default, \
-	       (self)->te_pushcnt = 0,                            \
-	       (self)->te_prev    = NULL)
+	(void)((self)->TPP_INTERNAL(te_state)   = tpp_extensions_state_default, \
+	       (self)->TPP_INTERNAL(te_pushcnt) = 0,                            \
+	       (self)->TPP_INTERNAL(te_prev)    = NULL)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_extensions_fini(tpp_extensions *tpp_restrict self);
 
 /* Push the current extensions state */
-#define tpp_extensions_push(self) (void)(++(self)->te_pushcnt)
+#define tpp_extensions_push(self) (void)(++(self)->TPP_INTERNAL(te_pushcnt))
 
 /* Pop the current extensions state (may only be called when `tpp_extensions_canpop(self)') */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_extensions_pop(tpp_extensions *tpp_restrict self);
-#define tpp_extensions_canpop(self) ((self)->te_pushcnt != 0 || (self)->te_prev != NULL)
+#define tpp_extensions_canpop(self) ((self)->TPP_INTERNAL(te_pushcnt) != 0 || (self)->TPP_INTERNAL(te_prev) != NULL)
 
-/* When true, `tpp_extensions_set()' must first copy the extension
+/* When true, `tpp_extensions_setid()' must first copy the extension
  * state (which requires heap memory, and may thus fail) */
-#define tpp_extensions_mustcopy(self) ((self)->te_pushcnt != 0)
+#define tpp_extensions_mustcopy(self) ((self)->TPP_INTERNAL(te_pushcnt) != 0)
 
 /* @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: OOM */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_extensions_set(tpp_extensions *tpp_restrict self,
-                   tpp_extension_id id, int enabled);
+tpp_extensions_setid(tpp_extensions *tpp_restrict self,
+                     tpp_extension_id id, bool enabled);
 #else /* TPP_HAVE_EXTENSIONS_PUSH_POP */
-#define tpp_extensions_init(self) (void)((self)->te_state = tpp_extensions_state_default)
+#define tpp_extensions_init(self) (void)((self)->TPP_INTERNAL(te_state) = tpp_extensions_state_default)
 #define tpp_extensions_fini(self) (void)0
-#define tpp_extensions_set(self, id, enabled) \
-	(tpp_extensions_state_set(&(self)->te_state, id, enabled), TPP_EOK)
+#define tpp_extensions_setid(self, id, enabled) \
+	(tpp_extensions_state_setid(&(self)->TPP_INTERNAL(te_state), id, enabled), TPP_EOK)
 #endif /* !TPP_HAVE_EXTENSIONS_PUSH_POP */
-#define tpp_extensions_get(self, id)   tpp_extensions_state_get(&(self)->te_state, id)
-#define tpp_extensions_getid(self, id) tpp_extensions_state_getid(&(self)->te_state, id)
+#define tpp_extensions_get(self, id)   tpp_extensions_state_get(&(self)->TPP_INTERNAL(te_state), id)
+#define tpp_extensions_getid(self, id) tpp_extensions_state_getid(&(self)->TPP_INTERNAL(te_state), id)
 
 
 /* Convert between extension IDs and their human-readable names. */
@@ -7710,7 +7834,7 @@ typedef enum tpp_warning_context_id {
 
 #if TPP_HAVE_WARNING_NUMBERS
 	TPP_WC_NUMBER_MIN,
-	_TPP_WC_NUMBER_MIN = TPP_WC_NUMBER_MIN - 1,
+	TPP_INTERNAL(_TPP_WC_NUMBER_MIN) = TPP_WC_NUMBER_MIN - 1,
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) TPP_WC_##warning_id,
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
@@ -7768,19 +7892,19 @@ typedef union tpp_warnings_state {
 	struct {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
-	unsigned int twsg_##wgroup_id: 2; /* One of `tpp_warning_state' */
+	unsigned int TPP_INTERNAL(twsg_##wgroup_id): 2; /* One of `tpp_warning_state' */
 #include TPP_CONFIG_DEFS_FILENAME
 #if TPP_HAVE_WARNING_NUMBERS
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) \
-	unsigned int twsn_##warning_id: 2; /* One of `tpp_warning_state' */
+	unsigned int TPP_INTERNAL(twsn_##warning_id): 2; /* One of `tpp_warning_state' */
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DECLARE_NUMBERED_WARNING
 #endif /* TPP_HAVE_WARNING_NUMBERS */
 #undef TPP_DEFS
-	} tws_state;
-	unsigned char tws_bitset[TPP_WC_COUNT ? (((TPP_WC_COUNT * 2) + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
+	} TPP_INTERNAL(tws_state);
+	unsigned char TPP_INTERNAL(tws_bitset)[TPP_WC_COUNT ? (((TPP_WC_COUNT * 2) + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_warnings_state;
 
 TPP_DECL tpp_warnings_state const tpp_warnings_state_default;
@@ -7790,55 +7914,57 @@ TPP_DECL tpp_warnings_state const tpp_warnings_state_default;
 
 /* Get/set the warning state of a given "tpp_warning_context_id ctx_id" */
 #define tpp_warnings_state_get(self, ctx_id) \
-	((tpp_warning_state)(((self)->tws_bitset[_tpp_warnings_state_bitindx(ctx_id)] >> _tpp_warnings_state_bitshft(ctx_id)) & 3))
-#define tpp_warnings_state_set(self, ctx_id, value)                                                                  \
-	(void)((self)->tws_bitset[_tpp_warnings_state_bitindx(ctx_id)] =                                                 \
-	       ((self)->tws_bitset[_tpp_warnings_state_bitindx(ctx_id)] & ~(3 << _tpp_warnings_state_bitshft(ctx_id))) | \
+	((tpp_warning_state)(((self)->TPP_INTERNAL(tws_bitset)[_tpp_warnings_state_bitindx(ctx_id)] >> _tpp_warnings_state_bitshft(ctx_id)) & 3))
+#define tpp_warnings_state_set(self, ctx_id, value)                                                                                \
+	(void)((self)->TPP_INTERNAL(tws_bitset)[_tpp_warnings_state_bitindx(ctx_id)] =                                                 \
+	       ((self)->TPP_INTERNAL(tws_bitset)[_tpp_warnings_state_bitindx(ctx_id)] & ~(3 << _tpp_warnings_state_bitshft(ctx_id))) | \
 	       (((unsigned char)(unsigned int)(value)) << _tpp_warnings_state_bitshft(ctx_id)))
 
 
 
 #if TPP_HAVE_WARNING_SUPPRESS
 typedef struct tpp_warning_suppress_item {
-	tpp_warning_context_id twsi_ctx_id;  /* Context ID of this suppression item */
-	tpp_warning_state      twsi_restore; /* Warning state to restore once the warning is no longer being suppressed */
-	tpp_size               twsi_count;   /* # of times to suppress this warning before restoring its previous state */
+	tpp_warning_context_id TPP_INTERNAL(twsi_ctx_id);  /* Context ID of this suppression item */
+	tpp_warning_state      TPP_INTERNAL(twsi_restore); /* Warning state to restore once the warning is no longer being suppressed */
+	tpp_size               TPP_INTERNAL(twsi_count);   /* # of times to suppress this warning before restoring its previous state */
 } tpp_warning_suppress_item;
 
 typedef struct tpp_warning_suppressions {
-	tpp_size                   tws_ctxc; /* # of warnings that are being suppressed right now */
-	tpp_size                   tws_ctxa; /* Allocated size of `tws_ctxv' */
-	tpp_warning_suppress_item *tws_ctxv; /* [0..tws_ctxc|alloc(tws_ctxa)][owned] Vector of suppressions (sorted by `twsi_ctx_id') */
+	tpp_size                   TPP_INTERNAL(tws_ctxc); /* # of warnings that are being suppressed right now */
+	tpp_size                   TPP_INTERNAL(tws_ctxa); /* Allocated size of `tws_ctxv' */
+	tpp_warning_suppress_item *TPP_INTERNAL(tws_ctxv); /* [0..tws_ctxc|alloc(tws_ctxa)][owned] Vector of suppressions (sorted by `twsi_ctx_id') */
 } tpp_warning_suppressions;
-#define tpp_warning_suppressions_init(self) \
-	(void)((self)->tws_ctxc = (self)->tws_ctxa = 0, (self)->tws_ctxv = NULL)
+#define tpp_warning_suppressions_init(self)    \
+	(void)((self)->TPP_INTERNAL(tws_ctxc) = 0, \
+	       (self)->TPP_INTERNAL(tws_ctxa) = 0, \
+	       (self)->TPP_INTERNAL(tws_ctxv) = NULL)
 #define tpp_warning_suppressions_fini(self) \
-	(void)tpp_free((self)->tws_ctxv)
+	(void)tpp_free((self)->TPP_INTERNAL(tws_ctxv))
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 
 
 /* Lexer warnings configuration */
 typedef struct tpp_warnings {
-	tpp_warnings_state       tw_state;        /* [const_if(tw_pushcnt > 0)] Warning state */
+	tpp_warnings_state       TPP_INTERNAL(tw_state);        /* [const_if(tw_pushcnt > 0)] Warning state */
 #if TPP_HAVE_WARNING_SUPPRESS
-	tpp_warning_suppressions tw_suppressions; /* [const_if(tw_pushcnt > 0)] Information about suppressed warnings */
-#define _tpp_warnings_init_suppressions(self) , tpp_warning_suppressions_init(&(self)->tw_suppressions)
+	tpp_warning_suppressions TPP_INTERNAL(tw_suppressions); /* [const_if(tw_pushcnt > 0)] Information about suppressed warnings */
+#define _tpp_warnings_init_suppressions(self) , tpp_warning_suppressions_init(&(self)->TPP_INTERNAL(tw_suppressions))
 #else /* TPP_HAVE_WARNING_SUPPRESS */
 #define _tpp_warnings_init_suppressions(self) /* nothing */
 #endif /* !TPP_HAVE_WARNING_SUPPRESS */
 #if TPP_HAVE_WARNINGS_PUSH_POP
-	tpp_size                 tw_pushcnt;      /* # of times warnings pushed were since last modified */
-	struct tpp_warnings     *tw_prev;         /* [0..1][owned] Old warning state. */
-#define _tpp_warnings_init_push(self) , (self)->tw_pushcnt = 0, (self)->tw_prev = NULL
+	tpp_size                 TPP_INTERNAL(tw_pushcnt);      /* # of times warnings pushed were since last modified */
+	struct tpp_warnings     *TPP_INTERNAL(tw_prev);         /* [0..1][owned] Old warning state. */
+#define _tpp_warnings_init_push(self) , (self)->TPP_INTERNAL(tw_pushcnt) = 0, (self)->TPP_INTERNAL(tw_prev) = NULL
 #else /* TPP_HAVE_WARNINGS_PUSH_POP */
 #define _tpp_warnings_init_push(self) /* nothing */
 #endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
 } tpp_warnings;
 
 /* Initialize a given warnings context "self" */
-#define tpp_warnings_init(self)                          \
-	(void)((self)->tw_state = tpp_warnings_state_default \
-	       _tpp_warnings_init_suppressions(self)         \
+#define tpp_warnings_init(self)                                        \
+	(void)((self)->TPP_INTERNAL(tw_state) = tpp_warnings_state_default \
+	       _tpp_warnings_init_suppressions(self)                       \
 	       _tpp_warnings_init_push(self))
 
 #undef TPP_HAVE_WARNINGS_FINI
@@ -7856,15 +7982,17 @@ tpp_warnings_fini(tpp_warnings *tpp_restrict self);
 
 #if TPP_HAVE_WARNINGS_PUSH_POP
 /* Push the current warnings state */
-#define tpp_warnings_push(self) (void)(++(self)->tw_pushcnt)
+#define tpp_warnings_push(self) (void)(++(self)->TPP_INTERNAL(tw_pushcnt))
 
 /* Pop the current warnings state (may only be called when `tpp_warnings_canpop(self)') */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_warnings_pop(tpp_warnings *tpp_restrict self);
-#define tpp_warnings_canpop(self) ((self)->tw_pushcnt != 0 || (self)->tw_prev != NULL)
+#define tpp_warnings_canpop(self)             \
+	((self)->TPP_INTERNAL(tw_pushcnt) != 0 || \
+	 (self)->TPP_INTERNAL(tw_prev) != NULL)
 
 /* When true, `tpp_warnings_setctx()' must first copy the extension
  * state (which requires heap memory, and may thus fail) */
-#define tpp_warnings_mustcopy(self) ((self)->tw_pushcnt != 0)
+#define tpp_warnings_mustcopy(self) ((self)->TPP_INTERNAL(tw_pushcnt) != 0)
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 
 /* Return the state of "ctx_id". The caller is
@@ -7875,7 +8003,7 @@ tpp_warnings_getctx(tpp_warnings const *tpp_restrict self,
                     tpp_warning_context_id ctx_id);
 #else /* TPP_HAVE_WARNING_SUPPRESS */
 #define tpp_warnings_getctx(self, ctx_id) \
-	tpp_warnings_state_get(&(self)->tw_state, ctx_id)
+	tpp_warnings_state_get(&(self)->TPP_INTERNAL(tw_state), ctx_id)
 #endif /* !TPP_HAVE_WARNING_SUPPRESS */
 
 
@@ -7971,32 +8099,32 @@ TPP_DECL_BEGIN
 
 
 #if TPP_HAVE_INCLUDE_STACK
-#define TPP_TOKEN_START_OF_FILE_FIELD tt_start /* tt_start == tf_tpos */
+#define TPP_TOKEN_START_OF_FILE_FIELD TPP_INTERNAL(tt_start) /* tt_start == tf_tpos */
 #else /* TPP_HAVE_INCLUDE_STACK */
-#define TPP_TOKEN_START_OF_FILE_FIELD tt_end   /* tt_end == tf_pos */
+#define TPP_TOKEN_START_OF_FILE_FIELD TPP_INTERNAL(tt_end)   /* tt_end == tf_pos */
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 
 typedef struct tpp_lexer {
 	union {
-		tpp_token      tlc_tok;  /* [valid_if(WAS_CALLED(tpp_lexer_yieldraw()))] Last-read token (never
-		                          * set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF). */
+		tpp_token      TPP_INTERNAL(tlc_tok);  /* [valid_if(WAS_CALLED(tpp_lexer_yieldraw()))] Last-read token (never
+		                                        * set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF). */
 		struct {
 			char _tli_pad[tpp_offsetof(tpp_token, TPP_TOKEN_START_OF_FILE_FIELD)];
-			tpp_file   tli_file; /* [OVERRIDE(.tf_prev, [owned])]
-			                      * The file that lies at the top of the lexer's #include/macro-stack.
-			                      * this is also the file whose buffer currently contains `tl_tok' */
-		} tlc_input;
-	} tl_core;
+			tpp_file   TPP_INTERNAL(tli_file); /* [OVERRIDE(.tf_prev, [owned])]
+			                                    * The file that lies at the top of the lexer's #include/macro-stack.
+			                                    * this is also the file whose buffer currently contains `tl_tok' */
+		} TPP_INTERNAL(tlc_input);
+	} TPP_INTERNAL(tl_core);
 
 
 	/* Custom keywords table. */
-	tpp_keywords tl_kwds;
+	tpp_keywords TPP_INTERNAL(tl_kwds);
 
 
 	/* Lexer extensions. */
 #if TPP_HAVE_EXTENSIONS
-	tpp_extensions tl_exts;
-#define _tpp_lexer_init_exts(self) , tpp_extensions_init(&(self)->tl_exts)
+	tpp_extensions TPP_INTERNAL(tl_exts);
+#define _tpp_lexer_init_exts(self) , tpp_extensions_init(&(self)->TPP_INTERNAL(tl_exts))
 #else /* TPP_HAVE_EXTENSIONS */
 #define _tpp_lexer_init_exts(self) /* noting */
 #endif /* !TPP_HAVE_EXTENSIONS */
@@ -8004,8 +8132,8 @@ typedef struct tpp_lexer {
 
 	/* Enabled tokens */
 #if TPP_HAVE_FEATURES
-	tpp_features tl_feat;
-#define _tpp_lexer_init_feat(self) , tpp_features_init(&(self)->tl_feat)
+	tpp_features TPP_INTERNAL(tl_feat);
+#define _tpp_lexer_init_feat(self) , tpp_features_init(&(self)->TPP_INTERNAL(tl_feat))
 #else /* TPP_HAVE_FEATURES */
 #define _tpp_lexer_init_feat(self) /* nothing */
 #endif /* !TPP_HAVE_FEATURES */
@@ -8013,8 +8141,8 @@ typedef struct tpp_lexer {
 
 	/* Lexer state flags */
 #if TPP_HAVE_LEXER_STATE_FLAGS
-	tpp_lexer_state_flags tl_state;
-#define _tpp_lexer_init_state(self) , (self)->tl_state = TPP_LEXER_STATE_FLAG_NORMAL
+	tpp_lexer_state_flags TPP_INTERNAL(tl_state);
+#define _tpp_lexer_init_state(self) , (self)->TPP_INTERNAL(tl_state) = TPP_LEXER_STATE_FLAG_NORMAL
 #else /* TPP_HAVE_LEXER_STATE_FLAGS */
 #define _tpp_lexer_init_state(self) /* nothing */
 #endif /* !TPP_HAVE_LEXER_STATE_FLAGS */
@@ -8028,36 +8156,36 @@ typedef struct tpp_lexer {
 #undef TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER /* Calls "fwrite(stderr)" */
 #undef TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER    /* Does nothing */
 #if TPP_HAVE_WARNINGS
-	tpp_warnings tl_warn; /* Compiler warnings state */
-#define _tpp_lexer_init_warn(self) , tpp_warnings_init(&(self)->tl_warn)
+	tpp_warnings TPP_INTERNAL(tl_warn); /* Compiler warnings state */
+#define _tpp_lexer_init_warn(self) , tpp_warnings_init(&(self)->TPP_INTERNAL(tl_warn))
 #ifdef TPP_CONFIG_WARNPRINTER
 #if TPP_CONFIG_WARNPRINTER_NEEDS_ARG
-	void             *tl_warnprinterarg; /* [?..?] Argument for "TPP_CONFIG_WARNPRINTER" */
+	void             *TPP_INTERNAL(tl_warnprinterarg); /* [?..?] Argument for "TPP_CONFIG_WARNPRINTER" */
 #define tpp_lexer_getwarnprinter(self)    (&TPP_CONFIG_WARNPRINTER)
-#define tpp_lexer_getwarnprinterarg(self) (self)->tl_warnprinterarg
+#define tpp_lexer_getwarnprinterarg(self) (self)->TPP_INTERNAL(tl_warnprinterarg)
 #else /* TPP_CONFIG_WARNPRINTER_NEEDS_ARG */
 #define TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER 1
 #define tpp_lexer_getwarnprinter(self)    &_tpp_lexer_wrapped_warnprinter
 #define tpp_lexer_getwarnprinterarg(self) NULL
 #endif /* !TPP_CONFIG_WARNPRINTER_NEEDS_ARG */
 #else /* TPP_CONFIG_WARNPRINTER */
-	tpp_formatprinter tl_warnprinter;    /* [0..1] Warning printer (or "NULL" to use "fwrite(stderr)") */
-	void             *tl_warnprinterarg; /* [valid_if(tl_warnprinter != NULL)] */
-#define _tpp_lexer_init_warnprinter(self) , (self)->tl_warnprinter = NULL
+	tpp_formatprinter TPP_INTERNAL(tl_warnprinter);    /* [0..1] Warning printer (or "NULL" to use "fwrite(stderr)") */
+	void             *TPP_INTERNAL(tl_warnprinterarg); /* [valid_if(TPP_INTERNAL(tl_warnprinter) != NULL)] */
+#define _tpp_lexer_init_warnprinter(self) , (self)->TPP_INTERNAL(tl_warnprinter) = NULL
 #define tpp_lexer_setwarnprinter(self, printer, arg) \
-	(void)((self)->tl_warnprinter    = (printer),    \
-	       (self)->tl_warnprinterarg = (arg))
+	(void)((self)->TPP_INTERNAL(tl_warnprinter)    = (printer),    \
+	       (self)->TPP_INTERNAL(tl_warnprinterarg) = (arg))
 #if TPP_HAVE_BUILTIN_WARNPRINTER
 #define TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER 1
-#define tpp_lexer_getwarnprinter(self) ((self)->tl_warnprinter ? (self)->tl_warnprinter : &_tpp_lexer_builtin_warnprinter)
+#define tpp_lexer_getwarnprinter(self) ((self)->TPP_INTERNAL(tl_warnprinter) ? (self)->TPP_INTERNAL(tl_warnprinter) : &_tpp_lexer_builtin_warnprinter)
 #else /* TPP_HAVE_BUILTIN_WARNPRINTER */
 #define TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER 1
-#define tpp_lexer_getwarnprinter(self) ((self)->tl_warnprinter ? (self)->tl_warnprinter : &_tpp_lexer_noop_warnprinter)
+#define tpp_lexer_getwarnprinter(self) ((self)->TPP_INTERNAL(tl_warnprinter) ? (self)->TPP_INTERNAL(tl_warnprinter) : &_tpp_lexer_noop_warnprinter)
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */
-#define tpp_lexer_getwarnprinterarg(self) (self)->tl_warnprinterarg
+#define tpp_lexer_getwarnprinterarg(self) (self)->TPP_INTERNAL(tl_warnprinterarg)
 #endif /* !TPP_CONFIG_WARNPRINTER */
 #else /* TPP_HAVE_WARNINGS */
-#define _tpp_lexer_init_warn(self)                        /* nothing */
+#define _tpp_lexer_init_warn(self) /* nothing */
 #define tpp_lexer_setwarnprinter(self, printer, arg) (void)0
 #endif /* !TPP_HAVE_WARNINGS */
 #ifndef _tpp_lexer_init_warnprinter
@@ -8067,18 +8195,18 @@ typedef struct tpp_lexer {
 
 	/* Lexer error limits */
 #if TPP_HAVE_WARNING_ERROR
-	tpp_size tl_error_count; /* # of times "TPP_WSTATE_ERROR" was emitted.
+	tpp_size TPP_INTERNAL(tl_error_count); /* # of times "TPP_WSTATE_ERROR" was emitted.
 	                          * When this is non-zero by the time your compiler finishes
 	                          * compiling your source file, you should NOT proceed, but
 	                          * propagate an error. */
-#define _tpp_lexer_initerrorcount(self)  , (self)->tl_error_count = 0
-#define tpp_lexer_geterrorcount(self)    (self)->tl_error_count
-#define tpp_lexer_seterrorcount(self, v) (void)((self)->tl_error_count = (v))
+#define _tpp_lexer_initerrorcount(self)  , (self)->TPP_INTERNAL(tl_error_count) = 0
+#define tpp_lexer_geterrorcount(self)    (self)->TPP_INTERNAL(tl_error_count)
+#define tpp_lexer_seterrorcount(self, v) (void)((self)->TPP_INTERNAL(tl_error_count) = (v))
 #if TPP_ERROR_LIMIT < 0
-	tpp_size tl_error_limit; /* Once `tl_error_count >= tl_error_limit', "TPP_WSTATE_ERROR" is treated as "TPP_WSTATE_FATAL" */
-#define _tpp_lexer_initerrorlimit(self)  , (self)->tl_error_limit = (tpp_size)(-TPP_ERROR_LIMIT)
-#define tpp_lexer_geterrorlimit(self)    ((self)->tl_error_limit)
-#define tpp_lexer_seterrorlimit(self, v) (void)((self)->tl_error_limit = (v))
+	tpp_size TPP_INTERNAL(tl_error_limit); /* Once `tl_error_count >= tl_error_limit', "TPP_WSTATE_ERROR" is treated as "TPP_WSTATE_FATAL" */
+#define _tpp_lexer_initerrorlimit(self)  , (self)->TPP_INTERNAL(tl_error_limit) = (tpp_size)(-TPP_ERROR_LIMIT)
+#define tpp_lexer_geterrorlimit(self)    ((self)->TPP_INTERNAL(tl_error_limit))
+#define tpp_lexer_seterrorlimit(self, v) (void)((self)->TPP_INTERNAL(tl_error_limit) = (v))
 #else /* TPP_ERROR_LIMIT < 0 */
 #define _tpp_lexer_initerrorlimit(self)  /* nothing */
 #define tpp_lexer_geterrorlimit(self)    TPP_ERROR_LIMIT
@@ -8092,54 +8220,84 @@ typedef struct tpp_lexer {
 
 	/* Next value for __COUNTER__ */
 #if TPP_HAVE_MACRO___COUNTER__
-	tpp_size tl_builtin_counter; /* Next value for __COUNTER__ */
-#define _tpp_lexer_initcounter(self) , (self)->tl_builtin_counter = 0
+	tpp_size TPP_INTERNAL(tl_builtin_counter); /* Next value for __COUNTER__ */
+#define _tpp_lexer_initcounter(self) , (self)->TPP_INTERNAL(tl_builtin_counter) = 0
 #else /* TPP_HAVE_MACRO___COUNTER__ */
 #define _tpp_lexer_initcounter(self) /* nothing */
 #endif /* !TPP_HAVE_MACRO___COUNTER__ */
 } tpp_lexer;
 
 
+#define tpp_lexer_gettok(self)                       ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
+#define tpp_lexer_gettoken(self)                     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
+#define tpp_lexer_gettokenkwd(self)                  tpp_token_getkwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenstart(self)                tpp_token_getstart(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenend(self)                  tpp_token_getend(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenlen(self)                  tpp_token_getlen(tpp_lexer_gettoken(self))
+#define tpp_lexer_getfile(self)                      (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
+#define tpp_lexer_getfeat(self, TPP_FEAT_x)          tpp_features_get(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
+#define tpp_lexer_getext(self, TPP_EXT_x)            tpp_extensions_get(&(self)->TPP_INTERNAL(tl_exts), TPP_EXT_x)
+#define tpp_lexer_setfeat(self, TPP_FEAT_x, enabled) tpp_features_setid(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x, enabled)
+#define tpp_lexer_enablefeat(self, TPP_FEAT_x)       tpp_features_enable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
+#define tpp_lexer_disablefeat(self, TPP_FEAT_x)      tpp_features_disable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
 
-#define tpp_lexer_gettoken(self)            (&(self)->tl_core.tlc_tok)
-#define tpp_lexer_getfile(self)             (&(self)->tl_core.tlc_input.tli_file)
-#define tpp_lexer_getfeat(self, TPP_FEAT_x) tpp_features_get(&(self)->tl_feat, TPP_FEAT_x)
-#define tpp_lexer_getext(self, TPP_EXT_x)   tpp_extensions_get(&(self)->tl_exts, TPP_EXT_x)
 #if TPP_HAVE_WARNINGS
-#define tpp_lexer_getwarn(self) (&(self)->tl_warn)
+#if TPP_HAVE_WARNINGS_PUSH_POP
+#define tpp_lexer_pushwarnings(self)   tpp_warnings_push(&(self)->TPP_INTERNAL(tl_warn))
+#define tpp_lexer_popwarnings(self)    tpp_warnings_pop(&(self)->TPP_INTERNAL(tl_warn))
+#define tpp_lexer_canpopwarnings(self) tpp_warnings_canpop(&(self)->TPP_INTERNAL(tl_warn))
+#else /* TPP_HAVE_WARNINGS_PUSH_POP */
+#define tpp_lexer_canpopwarnings(self) 0
+#endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
+#define tpp_lexer_getwarningctx(self, ctx_id)             tpp_warnings_getctx(&(self)->TPP_INTERNAL(tl_warn), ctx_id)
+#define tpp_lexer_setwarningctx(self, ctx_id, state)      tpp_warnings_setctx(&(self)->TPP_INTERNAL(tl_warn), ctx_id, state)
+#define tpp_lexer_invokewarning(self, warning_id, result) tpp_warnings_invoke(&(self)->TPP_INTERNAL(tl_warn), warning_id, result)
 #endif /* TPP_HAVE_WARNINGS */
-#define tpp_lexer_setfeat(self, TPP_FEAT_x, enabled) tpp_features_setid(&(self)->tl_feat, TPP_FEAT_x, enabled)
-#define tpp_lexer_enablefeat(self, TPP_FEAT_x)       tpp_features_enable(&(self)->tl_feat, TPP_FEAT_x)
-#define tpp_lexer_disablefeat(self, TPP_FEAT_x)      tpp_features_disable(&(self)->tl_feat, TPP_FEAT_x)
+
+#if TPP_HAVE_EXTENSIONS
+#define tpp_lexer_getextension(self, TPP_EXT_x)          tpp_extensions_getid(&(self)->TPP_INTERNAL(tl_exts), TPP_EXT_x)
+#define tpp_lexer_setextension(self, TPP_EXT_x, enabled) tpp_extensions_setid(&(self)->TPP_INTERNAL(tl_exts), TPP_EXT_x, enabled)
+#define tpp_lexer_enableextension(self, TPP_EXT_x)       tpp_lexer_setextension(self, TPP_EXT_x, true)
+#define tpp_lexer_disableextension(self, TPP_EXT_x)      tpp_lexer_setextension(self, TPP_EXT_x, false)
+#endif /* TPP_HAVE_EXTENSIONS */
+
+#if TPP_HAVE_FEATURES
+#define tpp_lexer_getfeature(self, TPP_FEAT_x)          tpp_features_getid(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
+#define tpp_lexer_setfeature(self, TPP_FEAT_x, enabled) tpp_features_setid(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x, enabled)
+#define tpp_lexer_enablefeature(self, TPP_FEAT_x)       tpp_features_enable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
+#define tpp_lexer_disablefeature(self, TPP_FEAT_x)      tpp_features_disable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
+#endif /* TPP_HAVE_FEATURES */
+
+
 
 
 /* Wrappers for keywords API */
-#define _tpp_lexer_kwds_getkeyword(self, kwd, len, hash) _tpp_keywords_getkeyword(&(self)->tl_kwds, kwd, len, hash)
-#define _tpp_lexer_kwds_getkeyword_byid(self, id)        _tpp_keywords_getkeyword_byid(&(self)->tl_kwds, id)
-#define tpp_lexer_kwds_getkeyword(self, kwd, len, hash)  tpp_keywords_getkeyword(&(self)->tl_kwds, kwd, len, hash)
-#define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->tl_kwds, id)
-#define tpp_lexer_kwds_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->tl_kwds, kwd, len, hash)
+#define _tpp_lexer_kwds_getkeyword(self, kwd, len, hash) _tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
+#define _tpp_lexer_kwds_getkeyword_byid(self, id)        _tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
+#define tpp_lexer_kwds_getkeyword(self, kwd, len, hash)  tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
+#define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
+#define tpp_lexer_kwds_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
 #if TPP_HAVE_BSE
-#define _tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) _tpp_keywords_getkeyword_esc(&(self)->tl_kwds, kwd, len, hash, file)
-#define tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) tpp_keywords_getkeyword_esc(&(self)->tl_kwds, kwd, len, hash, file)
-#define tpp_lexer_kwds_newkeyword_bse(self, kwd, len, hash, file) tpp_keywords_newkeyword_esc(&(self)->tl_kwds, kwd, len, hash, file)
+#define _tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
+#define tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
+#define tpp_lexer_kwds_newkeyword_bse(self, kwd, len, hash, file) tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
 #endif /* TPP_HAVE_BSE */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
-#define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->tl_kwds, kwd)
+#define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->TPP_INTERNAL(tl_kwds), kwd)
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
 
 
 /* Initialize/finalize everything about "self" except for "tl_core" */
-#define _tpp_lexer_init_common(self)           \
-	(void)(tpp_keywords_init(&(self)->tl_kwds) \
-	       _tpp_lexer_init_exts(self)          \
-	       _tpp_lexer_init_feat(self)          \
-	       _tpp_lexer_init_state(self)         \
-	       _tpp_lexer_init_warn(self)          \
-	       _tpp_lexer_init_warnprinter(self)   \
-	       _tpp_lexer_initerrorcount(self)     \
-	       _tpp_lexer_initerrorlimit(self)     \
+#define _tpp_lexer_init_common(self)                         \
+	(void)(tpp_keywords_init(&(self)->TPP_INTERNAL(tl_kwds)) \
+	       _tpp_lexer_init_exts(self)                        \
+	       _tpp_lexer_init_feat(self)                        \
+	       _tpp_lexer_init_state(self)                       \
+	       _tpp_lexer_init_warn(self)                        \
+	       _tpp_lexer_init_warnprinter(self)                 \
+	       _tpp_lexer_initerrorcount(self)                   \
+	       _tpp_lexer_initerrorlimit(self)                   \
 	       _tpp_lexer_initcounter(self))
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_fini_common(tpp_lexer *tpp_restrict self);
@@ -8223,49 +8381,54 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 
 
-/* Temporarily modify the lexer state flags */
+/* Temporarily modify lexer state flags */
 #if TPP_HAVE_LEXER_STATE_FLAGS
-#define tpp_lexer_state_push(self, mask, flags)                         \
-	do {                                                                \
-		tpp_lexer_state_flags const _tlsp_old_flags = (self)->tl_state; \
-		(self)->tl_state = ((self)->tl_state & (tpp_lexer_state_flags)(mask)) | (tpp_lexer_state_flags)(flags)
-#define tpp_lexer_state_break(self)           \
-		(void)((self)->tl_state = _tlsp_old_flags)
-#define tpp_lexer_state_pop(self)    \
-		tpp_lexer_state_break(self); \
+#define _tpp_lexer_pushstate(self, mask, flags)                                       \
+	do {                                                                              \
+		tpp_lexer_state_flags const _tlsp_old_flags = (self)->TPP_INTERNAL(tl_state); \
+		(self)->TPP_INTERNAL(tl_state) = ((self)->TPP_INTERNAL(tl_state) & (tpp_lexer_state_flags)(mask)) | (tpp_lexer_state_flags)(flags)
+#define _tpp_lexer_enablestate(self, state)  (void)((self)->TPP_INTERNAL(tl_state) |= (state))
+#define _tpp_lexer_disablestate(self, state) (void)((self)->TPP_INTERNAL(tl_state) &= ~(state))
+#define _tpp_lexer_breakstate(self) \
+		(void)((self)->TPP_INTERNAL(tl_state) = _tlsp_old_flags)
+#define _tpp_lexer_popstate(self)    \
+		_tpp_lexer_breakstate(self); \
 	} while (0)
 #else /* TPP_HAVE_LEXER_STATE_FLAGS */
-#define tpp_lexer_state_push(self, mask, flags) do {
-#define tpp_lexer_state_break(self)             (void)0
-#define tpp_lexer_state_pop(self)               } while (0)
+#define _tpp_lexer_pushstate(self, mask, flags) do {
+#define _tpp_lexer_enablestate(self, state)     (void)0
+#define _tpp_lexer_disablestate(self, state)    (void)0
+#define _tpp_lexer_breakstate(self)             (void)0
+#define _tpp_lexer_popstate(self)               } while (0)
 #endif /* !TPP_HAVE_LEXER_STATE_FLAGS */
-#define tpp_lexer_state_pushon(self, flags)  tpp_lexer_state_push(self, ~0, flags)
-#define tpp_lexer_state_pushoff(self, flags) tpp_lexer_state_push(self, ~(flags), 0)
+#define _tpp_lexer_pushstate_on(self, flags)  _tpp_lexer_pushstate(self, ~0, flags)
+#define _tpp_lexer_pushstate_off(self, flags) _tpp_lexer_pushstate(self, ~(flags), 0)
 
+/* Alter the lexer state such that no warning messages are produces. */
 #if TPP_HAVE_WARNINGS
-#define tpp_lexer_state_push_nowarnings(self)  tpp_lexer_state_pushon(self, TPP_LEXER_STATE_FLAG_NOWARNINGS)
-#define tpp_lexer_state_break_nowarnings(self) tpp_lexer_state_break(self)
-#define tpp_lexer_state_pop_nowarnings(self)   tpp_lexer_state_pop(self)
+#define tpp_lexer_nowarnings_pushon(self) _tpp_lexer_pushstate_on(self, TPP_LEXER_STATE_FLAG_NOWARNINGS)
+#define tpp_lexer_nowarnings_break(self)  _tpp_lexer_breakstate(self)
+#define tpp_lexer_nowarnings_pop(self)    _tpp_lexer_popstate(self)
 #else /* TPP_HAVE_WARNINGS */
-#define tpp_lexer_state_push_nowarnings(self)  do {
-#define tpp_lexer_state_break_nowarnings(self) (void)0
-#define tpp_lexer_state_pop_nowarnings(self)   } while (0)
+#define tpp_lexer_nowarnings_pushon(self) do {
+#define tpp_lexer_nowarnings_break(self)  (void)0
+#define tpp_lexer_nowarnings_pop(self)    } while (0)
 #endif /* !TPP_HAVE_WARNINGS */
 
+/* Alter the lexer state such that `tpp_lexer_yieldpp()' does not filter tokens. */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
-#define tpp_lexer_state_push_alltokens(self)  tpp_lexer_state_pushon(self, TPP_LEXER_STATE_FLAG_ALLTOKENS)
-#define tpp_lexer_state_break_alltokens(self) tpp_lexer_state_break(self)
-#define tpp_lexer_state_pop_alltokens(self)   tpp_lexer_state_pop(self)
+#define tpp_lexer_alltokens_pushon(self) _tpp_lexer_pushstate_on(self, TPP_LEXER_STATE_FLAG_ALLTOKENS)
+#define tpp_lexer_alltokens_break(self)  _tpp_lexer_breakstate(self)
+#define tpp_lexer_alltokens_pop(self)    _tpp_lexer_popstate(self)
 #else /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-#define tpp_lexer_state_push_alltokens(self)  do {
-#define tpp_lexer_state_break_alltokens(self) (void)0
-#define tpp_lexer_state_pop_alltokens(self)   } while (0)
+#define tpp_lexer_alltokens_pushon(self) do {
+#define tpp_lexer_alltokens_break(self)  (void)0
+#define tpp_lexer_alltokens_pop(self)    } while (0)
 #endif /* !TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-
-
 
 /* Temporarily disable automatic pop-to-prev-file on EOF */
 #define tpp_lexer_autopopfile_pushoff(self) tpp_file_autopopfile_pushoff(tpp_lexer_getfile(self))
+#define tpp_lexer_autopopfile_break(self)   tpp_file_autopopfile_break(tpp_lexer_getfile(self))
 #define tpp_lexer_autopopfile_pop(self)     tpp_file_autopopfile_pop(tpp_lexer_getfile(self))
 
 
@@ -8320,9 +8483,9 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
 
 
 typedef struct tpp_lexer_seek_backup {
-	tpp_token_id              tlsb_id;    /* Saved token id */
-	struct tpp_keyword const *tlsb_kwd;   /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tlsb_id))] Saved token keyword */
-	tpp_size                  tlsb_len;   /* Relative length of token */
+	tpp_token_id              TPP_INTERNAL(tlsb_id);    /* Saved token id */
+	struct tpp_keyword const *TPP_INTERNAL(tlsb_kwd);   /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tlsb_id))] Saved token keyword */
+	tpp_size                  TPP_INTERNAL(tlsb_len);   /* Relative length of token */
 } tpp_lexer_seek_backup;
 
 /* Save/restore the currently loaded token. This must be done before/after
@@ -8345,20 +8508,20 @@ tpp_lexer_seek_begin(tpp_lexer *tpp_restrict self,
                      tpp_lexer_seek_backup *tpp_restrict backup) {
 	tpp_char const *result;
 	tpp_token *const token = tpp_lexer_gettoken(self);
-	backup->tlsb_id  = token->tt_id;
-	backup->tlsb_kwd = token->tt_kwd;
-	backup->tlsb_len = (tpp_size)(token->tt_end - token->tt_start);
-	result        = token->tt_end;
-	token->tt_end = token->tt_start;
+	backup->TPP_INTERNAL(tlsb_id)  = tpp_token_getid(token);
+	backup->TPP_INTERNAL(tlsb_kwd) = tpp_token_getkwd(token);
+	backup->TPP_INTERNAL(tlsb_len) = tpp_token_getlen(token);
+	result                         = tpp_token_getend(token);
+	token->TPP_INTERNAL(tt_end)    = tpp_token_getstart(token);
 	return result;
 }
 #define tpp_lexer_seek_commit(self, pos) \
-	(void)(tpp_lexer_gettoken(self)->tt_end = (pos))
-#define tpp_lexer_seek_rollback(self, backup)                                                    \
-	(tpp_lexer_gettoken(self)->tt_kwd = (backup)->tlsb_kwd,                                      \
-	 tpp_lexer_gettoken(self)->tt_start = tpp_lexer_gettoken(self)->tt_end,                      \
-	 tpp_lexer_gettoken(self)->tt_end = tpp_lexer_gettoken(self)->tt_start + (backup)->tlsb_len, \
-	 tpp_lexer_gettoken(self)->tt_id  = (backup)->tlsb_id)
+	(void)(tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end) = (pos))
+#define tpp_lexer_seek_rollback(self, backup)                                                                             \
+	(tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_kwd)   = (backup)->TPP_INTERNAL(tlsb_kwd),                                 \
+	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_start) = tpp_lexer_gettokenend(self),                                      \
+	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end)   = tpp_lexer_gettokenstart(self) + (backup)->TPP_INTERNAL(tlsb_len), \
+	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_id)    = (backup)->TPP_INTERNAL(tlsb_id))
 
 
 /* Wrapper around `tpp_lexer_yieldraw()' that filters certain tokens (based on
@@ -8496,10 +8659,6 @@ tpp_lexer_seek_rparen(tpp_lexer *tpp_restrict self,
                       tpp_size *tpp_restrict p_argc,
                       char const *opt_function_name_for_messages,
                       unsigned int flags);
-#if TPP_BUILDING
-#define tpp_lexer_seek_rparen_ex(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags, lparen_kind) \
-	tpp_lexer_seek_rparen(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags)
-#endif /* TPP_BUILDING */
 #endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
 
 /* Same as `tpp_lexer_seek_rparen()', but also able to accept alternate
@@ -8537,10 +8696,6 @@ tpp_lexer_seek_rparen_exact(tpp_lexer *tpp_restrict self,
                             tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
                             char const *opt_function_name_for_messages,
                             unsigned int flags);
-#if TPP_BUILDING
-#define tpp_lexer_seek_rparen_exact_ex(self, p_pos, p_argv, argc, opt_function_name_for_messages, flags, lparen_kind) \
-	tpp_lexer_seek_rparen_exact(self, p_pos, p_argv, argc, opt_function_name_for_messages, flags)
-#endif /* TPP_BUILDING */
 #endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
 #endif /* TPP_HAVE_LEXER_SEEK_RPAREN */
 

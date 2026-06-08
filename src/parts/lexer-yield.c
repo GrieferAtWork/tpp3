@@ -59,9 +59,17 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
 	*prev_file = *file;
-	tpp_file_init_text_ex(file, NULL, chunk, text, textsize,
-	                      tpp_lcinfo_of(-1, -1),
-	                      TPP_FILE_ENCODING_FORCE_UTF8);
+	file->tf_pos   = text;
+	file->tf_chunk = chunk; /* Inherit reference */
+	file->tf_end   = text + textsize;
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	file->tf_kind  = TPP_FILE_KIND_TEXT;
+	(void)0 _tpp_file_init_enc_ex(file, TPP_FILE_ENCODING_FORCE_UTF8);
+	(void)0 _tpp_file_init_common(file);
+	(void)0 _tpp_file_init_text_user_filename(file);
+	file->tf_data.td_text.tft_name     = NULL;
+	tpp_lcinfo_init(file->tf_data.td_text.tft_start_lc, -1, -1);
 	return TPP_TOK_EOF;
 err_nomem:
 	if (chunk)

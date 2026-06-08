@@ -168,7 +168,7 @@ typedef enum tpp_token_id {
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
 
 	/* Double(or more)-character tokens. */
-	_TPP_TOK_MULTICHAR_BEGIN = 255, /* KEEP THIS THE FIRST MULTICHAR TOKEN! */
+	TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN) = 255, /* KEEP THIS THE FIRST MULTICHAR TOKEN! */
 #if TPP_HAVE_UNICODE
 	TPP_TOK_UNICHAR, /* "<unicode character>" Misc unicode character that could not be classified */
 #endif /* TPP_HAVE_UNICODE */
@@ -181,7 +181,7 @@ typedef enum tpp_token_id {
 
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE
 	TPP_TOK_COMMENTLIKE_MIN,
-	_TPP_TOK_COMMENTLIKE_MIN = TPP_TOK_COMMENTLIKE_MIN - 1,
+	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MIN) = TPP_TOK_COMMENTLIKE_MIN - 1,
 #if TPP_HAVE_TPP_TOK_C_COMMENT
 	TPP_TOK_C_COMMENT, /* "<comment>" like this one! */
 #define _TPP_CASE_TPP_TOK_C_COMMENT case TPP_TOK_C_COMMENT:
@@ -194,8 +194,8 @@ typedef enum tpp_token_id {
 #else /* TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
 #define _TPP_CASE_TPP_TOK_PASCAL_COMMENT /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
-	_TPP_TOK_COMMENTLIKE_NOLINE_MAX,
-	TPP_TOK_COMMENTLIKE_NOLINE_MAX = _TPP_TOK_COMMENTLIKE_NOLINE_MAX - 1,
+	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_NOLINE_MAX),
+	TPP_TOK_COMMENTLIKE_NOLINE_MAX = TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_NOLINE_MAX) - 1,
 #if TPP_HAVE_TPP_TOK_CXX_COMMENT
 	TPP_TOK_CXX_COMMENT, // "<comment>" like this one!
 #define _TPP_CASE_TPP_TOK_CXX_COMMENT case TPP_TOK_CXX_COMMENT:
@@ -220,8 +220,8 @@ typedef enum tpp_token_id {
 #else /* TPP_HAVE_TPP_TOK_SQL_COMMENT */
 #define _TPP_CASE_TPP_TOK_SQL_COMMENT /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
-	_TPP_TOK_COMMENTLIKE_MAX,
-	TPP_TOK_COMMENTLIKE_MAX = _TPP_TOK_COMMENTLIKE_MAX - 1,
+	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX),
+	TPP_TOK_COMMENTLIKE_MAX = TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX) - 1,
 #define TPP_TOK_ISCOMMENT(id)                     \
 	((int)(id) >= (int)TPP_TOK_COMMENTLIKE_MIN && \
 	 (int)(id) <= (int)TPP_TOK_COMMENTLIKE_MAX)
@@ -260,7 +260,7 @@ typedef enum tpp_token_id {
 
 #if TPP_HAVE_TPP_TOK_STRINGLIKE
 	TPP_TOK_STRINGLIKE_MIN,
-	_TPP_TOK_STRINGLIKE_MIN = TPP_TOK_STRINGLIKE_MIN - 1,
+	TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MIN) = TPP_TOK_STRINGLIKE_MIN - 1,
 #if TPP_HAVE_TPP_TOK_CHAR
 	TPP_TOK_CHAR, /* "<char>" 'foo' */
 #define _TPP_CASE_TPP_TOK_CHAR case TPP_TOK_CHAR:
@@ -355,8 +355,8 @@ typedef enum tpp_token_id {
 #else /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
 #define _TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
-	_TPP_TOK_STRINGLIKE_MAX,
-	TPP_TOK_STRINGLIKE_MAX = _TPP_TOK_STRINGLIKE_MAX - 1,
+	TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MAX),
+	TPP_TOK_STRINGLIKE_MAX = TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MAX) - 1,
 #define TPP_TOK_ISSTRING(id)                     \
 	((int)(id) >= (int)TPP_TOK_STRINGLIKE_MIN && \
 	 (int)(id) <= (int)TPP_TOK_STRINGLIKE_MAX)
@@ -596,7 +596,7 @@ typedef enum tpp_token_id {
 #endif /* !TPP_HAVE_TPP_TOK_STAR_DOT */
 	TPP_TOK_MULTICHAR_END, /* KEEP THIS THE LAST MULTICHAR TOKEN! */
 	TPP_TOK_KEYWORD_BEGIN = TPP_TOK_MULTICHAR_END, /* First builtin keyword */
-	_TPP_TOK_KEYWORD_BEGIN = TPP_TOK_KEYWORD_BEGIN - 1,
+	TPP_INTERNAL(_TPP_TOK_KEYWORD_BEGIN) = TPP_TOK_KEYWORD_BEGIN - 1,
 #define TPP_DEFS
 #define TPP_KWD(id, string) id,
 #include TPP_CONFIG_DEFS_FILENAME
@@ -627,16 +627,39 @@ TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_reprtokenid(tpp_token_id id);
 
 struct tpp_keyword;
 typedef struct tpp_token {
-	tpp_token_id              tt_id;    /* Token ID (never set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF) */
-	struct tpp_keyword const *tt_kwd;   /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tt_id))] Keyword identified by `tt_id' */
-	tpp_char const           *tt_start; /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
-	tpp_char const           *tt_end;   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
-	TPP_REF tpp_string       *tt_chunk; /* [0..1] Text chunk containing "tt_start" and "tt_end" (or "NULL" if not needed) */
+	tpp_token_id              TPP_INTERNAL(tt_id);    /* Token ID (never set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF) */
+	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tt_id))] Keyword identified by `tt_id' */
+	tpp_char const           *TPP_INTERNAL(tt_start); /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
+	tpp_char const           *TPP_INTERNAL(tt_end);   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
+	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing "tt_start" and "tt_end" (or "NULL" if not needed) */
 } tpp_token;
 
-#define tpp_token_copy(self, other) \
-	(void)(*(self) = *(other), tpp_string_incref((self)->tt_chunk))
-#define tpp_token_fini(self) tpp_string_decref((self)->tt_chunk)
+/* Public API */
+#define tpp_token_copy(self, other)             \
+	(void)(*(self) = *(other),                  \
+	       !((self)->TPP_INTERNAL(tt_chunk)) || \
+	       (tpp_string_incref((self)->TPP_INTERNAL(tt_chunk)), 1))
+#define tpp_token_fini(self)                    \
+	(void)(!((self)->TPP_INTERNAL(tt_chunk)) || \
+	       (tpp_string_decref((self)->TPP_INTERNAL(tt_chunk)), 1))
+#define tpp_token_getid(self)    ((self)->TPP_INTERNAL(tt_id))
+#define tpp_token_getkwd(self)   ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "TPP_TOK_ISKEYWORD(tpp_token_getid(self))" */
+#define tpp_token_getstart(self) ((self)->TPP_INTERNAL(tt_start))
+#define tpp_token_getend(self)   ((self)->TPP_INTERNAL(tt_end))
+#define tpp_token_getlen(self)   ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
+
+/* Convenience aliases */
+#define tpp_token_iseof(self)                    (tpp_token_getid(id) == TPP_TOK_EOF)
+#define tpp_token_isspace_or_comment(self)       TPP_TOK_ISSPACE_OR_COMMENT(tpp_token_getid(id))
+#define tpp_token_islf_or_comment(self)          TPP_TOK_ISLF_OR_COMMENT(tpp_token_getid(id))
+#define tpp_token_isspace_or_lf_or_comment(self) TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tpp_token_getid(id))
+#define tpp_token_iskeyword(self)                TPP_TOK_ISKEYWORD(tpp_token_getid(id))
+#define tpp_token_isuserkeyword(self)            TPP_TOK_ISUSERKEYWORD(tpp_token_getid(id))
+#define tpp_token_isbuiltinkeyword(self)         TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(id))
+#define tpp_token_iscomment(self)                TPP_TOK_ISCOMMENT(tpp_token_getid(id))
+#define tpp_token_iscomment_line(self)           TPP_TOK_ISCOMMENT_LINE(tpp_token_getid(id))
+#define tpp_token_iscomment_noline(self)         TPP_TOK_ISCOMMENT_NOLINE(tpp_token_getid(id))
+#define tpp_token_isstring(self)                 TPP_TOK_ISSTRING(tpp_token_getid(id))
 
 
 #if TPP_HAVE_TOKEN_ENCODESTRING

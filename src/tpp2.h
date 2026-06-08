@@ -521,9 +521,9 @@
      defined(_WIN32) || defined(WIN32) || \
      defined(_WIN64) || defined(WIN64) || \
      defined(__WIN32__) || defined(__TOS_WIN__))
-#define TPPLEXER_DEFAULT_TABSIZE    4   /* Default tab size (used for `__COLUMN__' and in error messages). */
+#define TPPLEXER_DEFAULT_TABSIZE 4 /* Default tab size (used for `__COLUMN__' and in error messages). */
 #else /* Windows... */
-#define TPPLEXER_DEFAULT_TABSIZE    8   /* Default tab size (used for `__COLUMN__' and in error messages). */
+#define TPPLEXER_DEFAULT_TABSIZE 8 /* Default tab size (used for `__COLUMN__' and in error messages). */
 #endif /* Unix... */
 #endif /* !TPPLEXER_DEFAULT_TABSIZE */
 #undef TPP_TABSIZE
@@ -544,22 +544,23 @@
 #define TPP_HAVE_FILE_NONBLOCK 0
 #endif /* !TPP_CONFIG_NONBLOCKING_IO */
 
-#define TPP_HAVE_UNICODE 1 /* Always enable unicode support */
-#define TPP_HAVE_STRERROR 0
-#define TPP_HAVE_STRTOKENID 0
-#define TPP_HAVE_EXTENSIONS 1
-#define TPP_HAVE_EXTENSIONS_PUSH_POP 1
-#define TPP_HAVE_WARNINGS 1
-#define TPP_HAVE_WARNINGS_PUSH_POP 1
-#define TPP_HAVE_WARNING_NUMBERS 1 /* Enable this, even though TPP2 had different warning numbers... */
-#define TPP_HAVE_WARNING_ERROR 1
-#define TPP_HAVE_WARNING_SUPPRESS 1
-#define TPP_HAVE_WARNING_DEFAULT 1
-#define TPP_HAVE_FILE_NOCLOSE 0 /* TTP2 didn't have this */
-#define TPP_HAVE_FILE_NOKWD 0 /* TTP2 didn't have this */
-#define TPP_COMMON_HAVE_TPP_TOK 0 /* We want to configure tokens individually */
+#define TPP_BUILDING                   1 /* Not actually true, but needed to prevent internals from being escaped (TPP3 doesn't expose internals by default anymore) */
+#define TPP_HAVE_UNICODE               1 /* Always enable unicode support */
+#define TPP_HAVE_STRERROR              0
+#define TPP_HAVE_STRTOKENID            0
+#define TPP_HAVE_EXTENSIONS            1
+#define TPP_HAVE_EXTENSIONS_PUSH_POP   1
+#define TPP_HAVE_WARNINGS              1
+#define TPP_HAVE_WARNINGS_PUSH_POP     1
+#define TPP_HAVE_WARNING_NUMBERS       1 /* Enable this, even though TPP2 had different warning numbers... */
+#define TPP_HAVE_WARNING_ERROR         1
+#define TPP_HAVE_WARNING_SUPPRESS      1
+#define TPP_HAVE_WARNING_DEFAULT       1
+#define TPP_HAVE_FILE_NOCLOSE          0 /* TTP2 didn't have this */
+#define TPP_HAVE_FILE_NOKWD            0 /* TTP2 didn't have this */
+#define TPP_COMMON_HAVE_TPP_TOK        0 /* We want to configure tokens individually */
 #define TPP_COMMON_HAVE_CPP_DIRECTIVES 1
-#define TPP_COMMON_HAVE_PRAGMA 1
+#define TPP_COMMON_HAVE_PRAGMA         1
 
 #ifdef TPP_CONFIG_RAW_STRING_LITERALS
 #define TPP2_HAVE_RAW_STRING_LITERALS 1
@@ -2638,91 +2639,8 @@ alias("W_EXPECTED_RPAREN_AFTER_VA_OPT", "TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT");
 
 
 /* API Compatibility */
-#define TPP_SYMARRAY_SIZE TPP_FLEX_ARRAY
 
-#ifndef TPP_CONFIG_ONELEXER
-/* Globally provide only one lexer (faster, but more restrictive).
- * 0: Have a global "struct TPPLexer *TPPLexer_Current"
- * 1: Have a global "struct TPPLexer TPPLexer_Global"
- * 2: Have a global "struct TPPLexer TPPLexer_Global" that can be backed-up/restored using "memcpy"
- * 3: Pass the current lexer to functions via arguments.*/
-#define TPP_CONFIG_ONELEXER 1
-#endif /* !TPP_CONFIG_ONELEXER */
-
-#if TPP_CONFIG_ONELEXER == 3
-#define TPP_LEXER_PARAM  tpp_lexer *__restrict _current
-#define TPP_LEXER_PARAM_ tpp_lexer *__restrict _current,
-#define TPP_LEXER__PARAM , tpp_lexer *__restrict _current
-#define TPP_LEXER_ARG    _current
-#define TPP_LEXER_ARG_   _current,
-#define TPP_LEXER__ARG   , _current
-#define TPP2_LEXER       _current
-#else /* TPP_CONFIG_ONELEXER == 3 */
-#define TPP_LEXER_PARAM  void
-#define TPP_LEXER_PARAM_ /* nothing */
-#define TPP_LEXER__PARAM /* nothing */
-#define TPP_LEXER_ARG    /* nothing */
-#define TPP_LEXER_ARG_   /* nothing */
-#define TPP_LEXER__ARG   /* nothing */
-
-#if TPP_CONFIG_ONELEXER == 0
-#define TPP2_LEXER TPPLexer_Current
-#else /* TPP_CONFIG_ONELEXER == 0 */
-#define TPP2_LEXER (&TPPLexer_Global)
-#endif /* TPP_CONFIG_ONELEXER != 0 */
-#endif /* TPP_CONFIG_ONELEXER != 3 */
-
-
-
-#define TPP_ISOK(id)                   (!TPP_TOK_ISERR(id))
-#define TPP_ISKEYWORD(id)              TPP_TOK_ISKEYWORD(id)
-#define TPP_ISUSERKEYWORD(id)          TPP_TOK_ISUSERKEYWORD(id)
-#define TPP_ISBUILTINMACRO_(lexer, id) tpp_lexer_getkeyworddefined(lexer, tpp_lexer_kwds_getkeyword_byid(self, id))
-#define TPP_ISBUILTINMACRO(id)         TPP_ISBUILTINMACRO_(TPP2_LEXER, id)
-
-#define TPP_stream_t   tpp_io_handle
-#define TPP_tok_t      tpp_token_id
-#define TPP_hash_t     tpp_hash
-#define TPP_encoding_t tpp_file_encoding
-#define TPP_wgroup_t   tpp_warning_group_id
-#define TPP_col_t      tpp_column
-#define TPP_line_t     tpp_line
-#define TPP_refcnt_t   tpp_refcnt
-#define TPP_printer_t  tpp_formatprinter
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define stream_t   tpp_io_handle
-#define tok_t      tpp_token_id
-#define hash_t     tpp_hash
-#define encoding_t tpp_file_encoding
-#define wgroup_t   tpp_warning_group_id
-#define col_t      tpp_column
-#define line_t     tpp_line
-#define refcnt_t   tpp_refcnt
-#define printer_t  tpp_formatprinter
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-
-#define TPP_ENCODING_UTF8     TPP_FILE_ENCODING_UTF8 /* Use TPP_FILE_ENCODING_ISUTF8() */
-#define TPP_ENCODING_UTF16_BE TPP_FILE_ENCODING_UTF16_BE
-#define TPP_ENCODING_UTF16_LE TPP_FILE_ENCODING_UTF16_LE
-#define TPP_ENCODING_UTF32_BE TPP_FILE_ENCODING_UTF32_BE
-#define TPP_ENCODING_UTF32_LE TPP_FILE_ENCODING_UTF32_LE
-
-#define TPPKeyword tpp_keyword
-#define TPPString  tpp_string
-#define s_refcnt   ts_refcnt
-#define s_size     ts_len
-#define s_text     ts_str
-
-#define TPPString_TEXT(x)   ((char *)tpp_string_str(x))
-#define TPPString_SIZE(x)   tpp_string_len(x)
-#define TPPString_Shared(x) tpp_string_isshared(x)
-#define TPPString_Free(x)   tpp_string_destroy(x)
-#define TPPString_Incref(x) tpp_string_incref(x)
-#define TPPString_Decref(x) tpp_string_decref(x)
-/*#define TPPString_Cat(lhs, rhs) tpp_string_cat(lhs, rhs)*/
-/*#define TPPString_New(text, size) tpp_string_new(text, size)*/
-#define TPPString_NewSized(size) tpp_string_malloc(size)
-#define TPPString_NewEmpty()     tpp_string_newempty()
+#if 0 /* TODO: Not directly portable (write migration notes for this stuff) */
 //struct TPPTextFile {
 //	/* [owned((:f_name) = true]
 //	 * HINT: `:f_name' usually is the string passed to the
@@ -2776,128 +2694,6 @@ alias("W_EXPECTED_RPAREN_AFTER_VA_OPT", "TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT");
 //};
 //
 
-#define TPP_funop_t   tpp_macro_opcode
-#define TPP_tint_t    tpp_intmax
-#define TPP_tuint_t   tpp_uintmax
-#define TPP_tfloat_t  tpp_float
-#define TPP_arginfo_t tpp_macro_argument
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define funop_t   tpp_macro_opcode
-#define tint_t    tpp_intmax
-#define tuint_t   tpp_uintmax
-#define tfloat_t  tpp_float
-#define arginfo_t tpp_macro_argument
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-
-#define ai_id tma_id
-#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
-#define ai_ins tma_ins
-#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
-#define ai_ins_exp tma_ins_exp
-#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-#define ai_ins_str tma_ins_str
-#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
-#if TPP_DEBUG
-#define ai_name tma_name
-/*#define ai_namesize tma_namelen*/
-#endif /* TPP_DEBUG */
-
-#define TPPLCInfo tpp_lcinfo
-#define lc_line   lci_line
-#define lc_col    lci_col
-
-#define TPPMacroFile          tpp_macro
-#define TPPFile               tpp_file
-#define TPPFILE_KIND_TEXT     TPP_FILE_KIND_IO
-#define TPPFILE_KIND_EXPLICIT TPP_FILE_KIND_TEXT
-#define TPPFILE_KIND_MACRO    TPP_FILE_KIND_MACRO
-#define f_kind                tf_kind
-#define f_prev                tf_tprev /* Or maybe "tf_prev"... */
-#define f_name                tf_data.td_io.tff_name /* Should really use "tpp_file_filename()" instead! */
-#define f_text                tf_chunk
-#define f_begin               tf_chunk->ts_str /* Shouldn't be used */
-#define f_end                 tf_end
-#define f_pos                 tf_pos
-
-#define TPPFile_LCAt(self, info, text_pointer) \
-	(void)(*(info) = tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
-#define TPPFile_LineAt(self, text_pointer) \
-	tpp_lcinfo_getline(tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
-#define TPPFile_ColumnAt(self, text_pointer) \
-	tpp_lcinfo_getcol(tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
-#define TPPFile_Filename(self, opt_filename_length)                                         \
-	((opt_filename_length)                                                                  \
-	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_userfilename(self))) \
-	 : (void)0,                                                                             \
-	 tpp_file_userfilename(self))
-#define TPPFile_RealFilename(self, opt_filename_length)                                 \
-	((opt_filename_length)                                                              \
-	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_filename(self))) \
-	 : (void)0,                                                                         \
-	 tpp_file_filename(self))
-
-
-#define TPP_Itos(buf, i) tpp_itoa(buf, i)
-TPP_INLINE tpp_size TPPCALL TPP_SizeofItos(tpp_intmax i) {
-	char buf[TPP_ITOA_MAXLEN];
-	return (tpp_size)((buf + TPP_ITOA_MAXLEN) - tpp_itoa(buf, i));
-}
-
-#define TPP_Hashof(data, size) tpp_hashof((tpp_char const *)(data), size)
-
-#define TPP_wstate_t tpp_warning_state
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define WSTATE_DISABLED TPP_WSTATE_DISABLED
-#define WSTATE_FATAL    TPP_WSTATE_FATAL
-#define WSTATE_WARN     TPP_WSTATE_WARN
-#define WSTATE_ERROR    TPP_WSTATE_ERROR
-#define WSTATE_SUPPRESS TPP_WSTATE_SUPPRESS
-#define WSTATE_DEFAULT  TPP_WSTATE_DEFAULT
-#define WSTATE_DISABLE  TPP_WSTATE_DISABLED
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#define TPP_WSTATE_DISABLE TPP_WSTATE_DISABLED
-
-#define TPP_WSTATE_ISENABLED(s) tpp_warning_state_willemit(s)
-
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define WG_COUNT TPP_WG_COUNT
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-
-
-#if 0 /* TODO */
-//TPPFUN int TPPCALL TPPFile_Copyname(struct TPPFile *__restrict self);
-//TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_CopyForInclude(struct TPPFile *__restrict self);
-//TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_Open(char const *__restrict filename);
-//TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, char const *__restrict name);
-//TPPFUN struct TPPFile *TPPCALL TPPFile_NewDefine_(TPP_LEXER_PARAM);
-//TPPFUN int TPPCALL TPPFile_NextChunk_(TPP_LEXER_PARAM_ struct TPPFile *__restrict self, unsigned int flags);
-//TPPFUN char *TPPCALL TPP_Unescape_(TPP_LEXER_PARAM_ char *__restrict buf, char const *__restrict data, size_t size, size_t charsize);
-//TPPFUN size_t TPPCALL TPP_SizeofUnescape_(TPP_LEXER_PARAM_ char const *__restrict data, size_t size, size_t charsize);
-//TPPFUN char *TPPCALL TPP_UnescapeRaw(char *__restrict buf, char const *__restrict data, size_t size);
-//TPPFUN size_t TPPCALL TPP_SizeofUnescapeRaw(char const *__restrict data, size_t size);
-//TPPFUN char *TPPCALL TPP_Escape_(TPP_LEXER_PARAM_ char *__restrict buf, char const *__restrict data, size_t size);
-//TPPFUN size_t TPPCALL TPP_SizeofEscape_(TPP_LEXER_PARAM_ char const *__restrict data, size_t size);
-//TPPFUN char *TPPCALL TPP_Ftos(char *__restrict buf, TPP(tfloat_t) f);
-//TPPFUN size_t TPPCALL TPP_SizeofFtos(TPP(tfloat_t) f);
-
-//enum { /* Figure out effective warning ID. */
-//#define WARNING(name, groups, default) TPP(_WID_##name),
-//#define WARNING_NAMESPACE(name, start) TPP(_WID_##name##_START), TPP(_WID_##name##_NEXT) = TPP(_WID_##name##_START) - 1,
-//#include "tpp-defs.inl"
-//#undef WARNING_NAMESPACE
-//#undef WARNING
-//	TPP(W_COUNT)
-//};
-//
-//
-//enum { /* Figure out effective warning ID. */
-//#define EXTENSION(name, str, default) TPP(name),
-//#include "tpp-defs.inl"
-//#undef EXTENSION
-//	TPP(EXT_COUNT)
-//};
-//
-//
 ///* Without the ident/sccs extension, disable the insert-comment callback. */
 //#if (defined(TPP_CONFIG_EXTENSION_IDENT_SCCS) && !TPP_CONFIG_EXTENSION_IDENT_SCCS)
 //#undef TPP_CONFIG_NO_CALLBACK_INS_COMMENT
@@ -3004,130 +2800,338 @@ TPP_INLINE tpp_size TPPCALL TPP_SizeofItos(tpp_intmax i) {
 ///* Return value by `c_unknown_file' to indicate that the open should be re-attempted. */
 //#define TPP_UNKNOWN_FILE_RETRY ((struct TPPFile *)-1)
 //#endif /* !TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE */
-//
-//
-//struct TPPWarningStateEx {   /* Extended state for a 0b11-warning (aka. `WSTATE_SUPPRESS'). */
-//	int           wse_wid;      /* Warning/group ID. */
-//	unsigned int  wse_suppress; /* Amount of remaining times this warning should be suppressed.
-//	                             * NOTE: When ZERO(0), this slot is unused.
-//	                             * NOTE: When (unsigned int)-1, this the current state is `WSTATE_ERROR'. */
-//#ifdef __INTELLISENSE__
-//	wstate_t      wse_oldstate; /* Old warning state to return to after suppression ends.
-//	                             * NOTE: Never `WSTATE_SUPPRESS' */
-//#else /* __INTELLISENSE__ */
-//	TPP(wstate_t) wse_oldstate; /* Old warning state to return to after suppression ends.
-//	                             * NOTE: Never `WSTATE_SUPPRESS' */
-//#endif /* !__INTELLISENSE__ */
-//};
-//#define TPP_WARNING_BITS       2 /* One of WSTATE_*. */
-//#define TPP_WARNING_TOTAL      (TPP(WG_COUNT) + TPP(W_COUNT))
-//#define TPP_WARNING_BITSETSIZE (((TPP_WARNING_TOTAL * TPP_WARNING_BITS + 7)) / 8)
-//struct TPPWarningState {
-//	/* Bitset describing the current warning state.
-//	 * NOTE: Warning groups come before warning numbers. */
-//	uint8_t                   ws_state[TPP_WARNING_BITSETSIZE];
-//	uint8_t                   ws_padding[sizeof(void *) - (TPP_WARNING_BITSETSIZE % sizeof(void *))]; /* Force pointer-alignment. */
-//	size_t                    ws_extendeda; /* Allocated members for the `ws_extendedv' vector. */
-//	struct TPPWarningStateEx *ws_extendedv; /* [0..ws_extendedc|alloc(ws_extendeda)][owned] Extended warning state data (Sorted by `wse_num'). */
-//	struct TPPWarningState   *ws_prev;      /* [0..1][owned_if(!= &:w_basestate)] Previous warning state.
-//	                                         * NOTE: Always NULL if `self == &:w_basestate' */
-//};
-//struct TPPWarnings {
-//	struct TPPWarningState *w_curstate;  /* [1..1][owned_if(!= &w_basestate)] Current warning state. */
-//	struct TPPWarningState  w_basestate; /* Base (aka. first) warning state. */
-//};
-//
-///* Push/Pop the current warning state.
-// * @return: 0: [TPPLexer_PushWarnings] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
-// * @return: 0: [TPPLexer_PopWarnings] No older warning state was available to restore.
-// * @return: 1: Successfully pushed/popped the warnings. */
-//TPPFUN int TPPCALL TPPLexer_PushWarnings_(TPP_LEXER_PARAM);
-//TPPFUN int TPPCALL TPPLexer_PopWarnings_(TPP_LEXER_PARAM);
-//#define TPPLexer_PushWarnings() TPPLexer_PushWarnings_(TPP_LEXER_ARG)
-//#define TPPLexer_PopWarnings()  TPPLexer_PopWarnings_(TPP_LEXER_ARG)
-//
-///* Set the state of a given warning number.
-// * NOTE: If the given state is `WSTATE_SUPPRESS', ONE(1)
-// *       will be added to the suppress recursion counter.
-// * @return: 0: Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
-// * @return: 1: Successfully set the given warning number.
-// * @return: 2: The given warning number is unknown. */
-//TPPFUN int TPPCALL TPPLexer_SetWarning_(TPP_LEXER_PARAM_ int wnum, TPP(wstate_t) state);
-//TPPFUN int TPPCALL TPPLexer_SetWarningGroup_(TPP_LEXER_PARAM_ int wgrp, TPP(wstate_t) state);
-//TPPFUN TPP(wstate_t) TPPCALL TPPLexer_GetWarning_(TPP_LEXER_PARAM_ int wnum);
-//TPPFUN TPP(wstate_t) TPPCALL TPPLexer_GetWarningGroup_(TPP_LEXER_PARAM_ int wgrp);
-//#define TPPLexer_SetWarning(wnum, state)      TPPLexer_SetWarning_(TPP_LEXER_ARG_ wnum, state)
-//#define TPPLexer_SetWarningGroup(wgrp, state) TPPLexer_SetWarningGroup_(TPP_LEXER_ARG_ wgrp, state)
-//#define TPPLexer_GetWarning(wnum)             TPPLexer_GetWarning_(TPP_LEXER_ARG_ wnum)
-//#define TPPLexer_GetWarningGroup(wgrp)        TPPLexer_GetWarningGroup_(TPP_LEXER_ARG_ wgrp)
-//
-///* Similar to `TPPLexer_SetWarning', but set the state of all warnings from a given group.
-// * NOTES:
-// *   - Groups work independent of warning ids, meaning you can even
-// *     specify `WSTATE_SUPPRESS' as state, with the next warning
-// *     part of that group occurring simply consuming that suppression.
-// *   - If you disable an entire warning group, no warning apart of it will be emit.
-// *   - If a warning is invoked, that is both part of an error and a warning/disabled
-// *     group it will always tend to do as little damage as possible:
-// *     >> suppress >= disabled >= warning >= error
-// *     With that in mind, both the warning itself, as well as all of its groups
-// *     must be configured as `WSTATE_FATAL' for the warning to actually result
-// *     in an error.
-// * @return: 0: Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
-// * @return: 1: Successfully set the given warning number.
-// * @return: 2: The given group name is unknown. */
-//TPPFUN int TPPCALL TPPLexer_SetWarnings_(TPP_LEXER_PARAM_ char const *__restrict group, TPP(wstate_t) state);
-//TPPFUN TPP(wstate_t) TPPCALL TPPLexer_GetWarnings_(TPP_LEXER_PARAM_ char const *__restrict group);
-//#define TPPLexer_SetWarnings(group, state) TPPLexer_SetWarnings_(TPP_LEXER_ARG_ group, state)
-//#define TPPLexer_GetWarnings(group)        TPPLexer_GetWarnings_(TPP_LEXER_ARG_ group)
-//
-///* Invoke a given warning number, returning one of `TPP_WARNINGMODE_*'.
-// * NOTE: Unknown warnings will always result in `TPP_WARNINGMODE_WARN' being returned. */
-//TPPFUN int TPPCALL TPPLexer_InvokeWarning_(TPP_LEXER_PARAM_ int wnum);
-//#define TPPLexer_InvokeWarning(wnum) TPPLexer_InvokeWarning_(TPP_LEXER_ARG_ wnum)
-//#define TPP_WARNINGMODE_FATAL  0 /* Emit an error and call TPPLexer_SetErr(). */
-//#define TPP_WARNINGMODE_ERROR  1 /* Emit an error, but continue normally. */
-//#define TPP_WARNINGMODE_WARN   2 /* Emit a warning, but continue normally. */
-//#define TPP_WARNINGMODE_IGNORE 3 /* Do nothing and continue normally (NOTE: If the warning was just suppressed, its ). */
-//
-//
-//struct TPPIfdefStackSlot {
-//#define TPP_IFDEFMODE_FALSE 0 /* The block is disabled. */
-//#define TPP_IFDEFMODE_TRUE  1 /* FLAG: The block is enabled. */
-//#define TPP_IFDEFMODE_ELSE  2 /* FLAG: The block follows an #else. */
-//	int             iss_mode; /* Slot mode (Used to differentiate between #if, #elif and #else regions). */
-//	TPP(line_t)     iss_line; /* ZERO-based line in which this slot was last updated (Used in warning messages). */
-//	struct TPPFile *iss_file; /* [1..1] The file that owns this #ifdef slot
-//	                           * NOTE: This file _must_ be part of the #include stack!
-//	                           * WARNING: This is not a reference and relies on the file
-//	                           *          being kept alive through the #include stack.
-//	                           * HINT: Also used to pop all unclosed blocks when a file ends. */
-//};
-//struct TPPIfdefStack {
-//	size_t                    is_slotc; /* Amount of #ifdef slots in use. */
-//	size_t                    is_slota; /* Allocated amount of #ifdef slots. */
-//	struct TPPIfdefStackSlot *is_slotv; /* [0..is_slotc|alloc(is_slota)][owned] Vector of #ifdef slots. */
-//};
-//#define TPP_EXTENSIONS_BITSETSIZE (TPP(EXT_COUNT) ? (TPP(EXT_COUNT) + 7) / 8 : 1)
-//struct TPPExtState {
-//	struct TPPExtState *es_prev; /* [0..1][owned] Previous extension state. */
-//	uint8_t             es_bitset[TPP_EXTENSIONS_BITSETSIZE]; /* Bitset of enabled extensions. */
-//	uint8_t             es_padding[sizeof(void *) - (TPP_EXTENSIONS_BITSETSIZE % sizeof(void *))];
-//};
-//
-///* Check if a given extension `ext' is currently enabled.
-// * @return: 0: The extension is disabled.
-// * @return: !0: The extension is enabled. */
-//#define TPPLexer_HasExtension(ext) TPPLexer_HasExtension_(TPPLexer_Current, ext)
-//#define TPPLexer_HasExtension_(_current, ext) \
-//	(_current->l_extensions.es_bitset[(ext) / 8] & (1 << ((ext) % 8)))
-//
-///* Set the state of a given extension `ext'. */
-//#define TPPLexer_EnableExtension(ext)  TPPLexer_EnableExtension_(TPPLexer_Current, ext)
-//#define TPPLexer_DisableExtension(ext) TPPLexer_DisableExtension_(TPPLexer_Current, ext)
-//#define TPPLexer_EnableExtension_(_current, ext)  (void)(_current->l_extensions.es_bitset[(ext) / 8] |= (1 << ((ext) % 8)))
-//#define TPPLexer_DisableExtension_(_current, ext) (void)(_current->l_extensions.es_bitset[(ext) / 8] &= ~(1 << ((ext) % 8)))
-//
+
+#endif
+
+#define TPP_SYMARRAY_SIZE TPP_FLEX_ARRAY
+
+#ifndef TPP_CONFIG_ONELEXER
+/* Globally provide only one lexer (faster, but more restrictive).
+ * 0: Have a global "struct TPPLexer *TPPLexer_Current"
+ * 1: Have a global "struct TPPLexer TPPLexer_Global"
+ * 2: Have a global "struct TPPLexer TPPLexer_Global" that can be backed-up/restored using "memcpy"
+ * 3: Pass the current lexer to functions via arguments.*/
+#define TPP_CONFIG_ONELEXER 1
+#endif /* !TPP_CONFIG_ONELEXER */
+
+#if TPP_CONFIG_ONELEXER == 3
+#define TPP_LEXER_PARAM  tpp_lexer *__restrict _current
+#define TPP_LEXER_PARAM_ tpp_lexer *__restrict _current,
+#define TPP_LEXER__PARAM , tpp_lexer *__restrict _current
+#define TPP_LEXER_ARG    _current
+#define TPP_LEXER_ARG_   _current,
+#define TPP_LEXER__ARG   , _current
+#define TPP2_LEXER       _current
+#else /* TPP_CONFIG_ONELEXER == 3 */
+#define TPP_LEXER_PARAM  void
+#define TPP_LEXER_PARAM_ /* nothing */
+#define TPP_LEXER__PARAM /* nothing */
+#define TPP_LEXER_ARG    /* nothing */
+#define TPP_LEXER_ARG_   /* nothing */
+#define TPP_LEXER__ARG   /* nothing */
+
+#if TPP_CONFIG_ONELEXER == 0
+#define TPP2_LEXER TPPLexer_Current
+#else /* TPP_CONFIG_ONELEXER == 0 */
+#define TPP2_LEXER (&TPPLexer_Global)
+#endif /* TPP_CONFIG_ONELEXER != 0 */
+#endif /* TPP_CONFIG_ONELEXER != 3 */
+
+
+
+#define TPP_ISOK(id)                   (!TPP_TOK_ISERR(id))
+#define TPP_ISKEYWORD(id)              TPP_TOK_ISKEYWORD(id)
+#define TPP_ISUSERKEYWORD(id)          TPP_TOK_ISUSERKEYWORD(id)
+#define TPP_ISBUILTINMACRO_(lexer, id) tpp_lexer_getkeyworddefined(lexer, tpp_lexer_kwds_getkeyword_byid(self, id))
+#define TPP_ISBUILTINMACRO(id)         TPP_ISBUILTINMACRO_(TPP2_LEXER, id)
+
+#define TPP_stream_t   tpp_io_handle
+#define TPP_tok_t      tpp_token_id
+#define TPP_hash_t     tpp_hash
+#define TPP_encoding_t tpp_file_encoding
+#define TPP_wgroup_t   tpp_warning_group_id
+#define TPP_col_t      tpp_column
+#define TPP_line_t     tpp_line
+#define TPP_refcnt_t   tpp_refcnt
+#define TPP_printer_t  tpp_formatprinter
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define stream_t   tpp_io_handle
+#define tok_t      tpp_token_id
+#define hash_t     tpp_hash
+#define encoding_t tpp_file_encoding
+#define wgroup_t   tpp_warning_group_id
+#define col_t      tpp_column
+#define line_t     tpp_line
+#define refcnt_t   tpp_refcnt
+#define printer_t  tpp_formatprinter
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+
+#define TPP_ENCODING_UTF8     TPP_FILE_ENCODING_UTF8 /* Use TPP_FILE_ENCODING_ISUTF8() */
+#define TPP_ENCODING_UTF16_BE TPP_FILE_ENCODING_UTF16_BE
+#define TPP_ENCODING_UTF16_LE TPP_FILE_ENCODING_UTF16_LE
+#define TPP_ENCODING_UTF32_BE TPP_FILE_ENCODING_UTF32_BE
+#define TPP_ENCODING_UTF32_LE TPP_FILE_ENCODING_UTF32_LE
+
+#define TPPKeyword tpp_keyword
+#define TPPString  tpp_string
+#define s_refcnt   ts_refcnt
+#define s_size     ts_len
+#define s_text     ts_str
+
+#define TPPString_TEXT(x)   ((char *)tpp_string_str(x))
+#define TPPString_SIZE(x)   tpp_string_len(x)
+#define TPPString_Shared(x) tpp_string_isshared(x)
+#define TPPString_Free(x)   tpp_string_destroy(x)
+#define TPPString_Incref(x) tpp_string_incref(x)
+#define TPPString_Decref(x) tpp_string_decref(x)
+/*#define TPPString_Cat(lhs, rhs) tpp_string_cat(lhs, rhs)*/
+/*#define TPPString_New(text, size) tpp_string_new(text, size)*/
+#define TPPString_NewSized(size) tpp_string_malloc(size)
+#define TPPString_NewEmpty()     tpp_string_newempty()
+
+#define TPP_funop_t   tpp_macro_opcode
+#define TPP_tint_t    tpp_intmax
+#define TPP_tuint_t   tpp_uintmax
+#define TPP_tfloat_t  tpp_float
+#define TPP_arginfo_t tpp_macro_argument
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define funop_t   tpp_macro_opcode
+#define tint_t    tpp_intmax
+#define tuint_t   tpp_uintmax
+#define tfloat_t  tpp_float
+#define arginfo_t tpp_macro_argument
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+
+#define ai_id tma_id
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
+#define ai_ins tma_ins
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
+#define ai_ins_exp tma_ins_exp
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+#define ai_ins_str tma_ins_str
+#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+#if TPP_DEBUG
+#define ai_name tma_name
+/*#define ai_namesize tma_namelen*/
+#endif /* TPP_DEBUG */
+
+#define TPPLCInfo tpp_lcinfo
+#define lc_line   lci_line
+#define lc_col    lci_col
+
+#define TPPMacroFile          tpp_macro
+#define TPPFile               tpp_file
+#define TPPFILE_KIND_TEXT     TPP_FILE_KIND_IO
+#define TPPFILE_KIND_EXPLICIT TPP_FILE_KIND_TEXT
+#define TPPFILE_KIND_MACRO    TPP_FILE_KIND_MACRO
+#define f_kind                TPP_INTERNAL(tf_kind)
+#define f_prev                TPP_INTERNAL(tf_tprev) /* Or maybe "tf_prev"... */
+#define f_name                TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) /* Should really use "tpp_file_filename()" instead! */
+#define f_text                TPP_INTERNAL(tf_chunk)
+#define f_begin               TPP_INTERNAL(tf_chunk)->TPP_INTERNAL(ts_str) /* Shouldn't be used */
+#define f_end                 TPP_INTERNAL(tf_end)
+#define f_pos                 TPP_INTERNAL(tf_pos)
+
+#define TPPFile_LCAt(self, info, text_pointer) \
+	(void)(*(info) = tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
+#define TPPFile_LineAt(self, text_pointer) \
+	tpp_lcinfo_getline(tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
+#define TPPFile_ColumnAt(self, text_pointer) \
+	tpp_lcinfo_getcol(tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
+#define TPPFile_Filename(self, opt_filename_length)                                         \
+	((opt_filename_length)                                                                  \
+	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_userfilename(self))) \
+	 : (void)0,                                                                             \
+	 tpp_file_userfilename(self))
+#define TPPFile_RealFilename(self, opt_filename_length)                                 \
+	((opt_filename_length)                                                              \
+	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_filename(self))) \
+	 : (void)0,                                                                         \
+	 tpp_file_filename(self))
+
+
+#define TPP_Itos(buf, i) tpp_itoa(buf, i)
+TPP_INLINE tpp_size TPPCALL TPP_SizeofItos(tpp_intmax i) {
+	char buf[TPP_ITOA_MAXLEN];
+	return (tpp_size)((buf + TPP_ITOA_MAXLEN) - tpp_itoa(buf, i));
+}
+
+#define TPP_Hashof(data, size) tpp_hashof((tpp_char const *)(data), size)
+
+#define TPP_wstate_t tpp_warning_state
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define wstate_t        tpp_warning_state
+#define WSTATE_DISABLED TPP_WSTATE_DISABLED
+#define WSTATE_FATAL    TPP_WSTATE_FATAL
+#define WSTATE_WARN     TPP_WSTATE_WARN
+#define WSTATE_ERROR    TPP_WSTATE_ERROR
+#define WSTATE_SUPPRESS TPP_WSTATE_SUPPRESS
+#define WSTATE_DEFAULT  TPP_WSTATE_DEFAULT
+#define WSTATE_DISABLE  TPP_WSTATE_DISABLED
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#define TPP_WSTATE_DISABLE TPP_WSTATE_DISABLED
+
+#define TPP_WSTATE_ISENABLED(s) tpp_warning_state_willemit(s)
+
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define WG_COUNT TPP_WG_COUNT
+#define W_COUNT  TPP_W_COUNT
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+
+#define TPPWarningStateEx      tpp_warning_suppress_item
+#define wse_wid                TPP_INTERNAL(twsi_ctx_id)
+#define wse_suppress           TPP_INTERNAL(twsi_count)
+#define wse_oldstate           TPP_INTERNAL(twsi_restore)
+#define TPP_WARNING_BITS       2
+#define TPP_WARNING_TOTAL      TPP_WC_COUNT
+#define TPP_WARNING_BITSETSIZE (((TPP_WARNING_TOTAL * TPP_WARNING_BITS + 7)) / 8)
+#define TPPWarningState        tpp_warnings
+#define ws_state               TPP_INTERNAL(tw_state).TPP_INTERNAL(tws_bitset)
+#define ws_extendeda           TPP_INTERNAL(tw_suppressions).TPP_INTERNAL(tws_ctxc)
+#define ws_extendedv           TPP_INTERNAL(tw_suppressions).TPP_INTERNAL(tws_ctxv)
+#define ws_prev                TPP_INTERNAL(tw_prev)
+
+#define TPPLexer_PushWarnings_(lexer) (tpp_lexer_pushwarnings(lexer), 1)
+#define TPPLexer_PopWarnings_(lexer)  (tpp_lexer_canpopwarnings(lexer) && (tpp_lexer_pushwarnings(lexer), 1))
+#define TPPLexer_PushWarnings()       TPPLexer_PushWarnings_(TPP2_LEXER)
+#define TPPLexer_PopWarnings()        TPPLexer_PopWarnings_(TPP2_LEXER)
+
+
+/* Set the state of a given warning number.
+ * NOTE: If the given state is `WSTATE_SUPPRESS', ONE(1)
+ *       will be added to the suppress recursion counter.
+ * @return: 0: Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
+ * @return: 1: Successfully set the given warning number.
+ * @return: 2: The given warning number is unknown. */
+#define TPPLexer_SetWarning(wnum, state)      TPPLexer_SetWarning_(TPP2_LEXER, wnum, state)
+#define TPPLexer_SetWarningGroup(wgrp, state) TPPLexer_SetWarningGroup_(TPP2_LEXER, wgrp, state)
+#define TPPLexer_GetWarning(wnum)             TPPLexer_GetWarning_(TPP2_LEXER, wnum)
+#define TPPLexer_GetWarningGroup(wgrp)        TPPLexer_GetWarningGroup_(TPP2_LEXER, wgrp)
+TPP_INLINE int TPPCALL TPPLexer_SetWarning_(tpp_lexer *self, int wnum, TPP_wstate_t state) {
+	tpp_errno error;
+	tpp_warning_context_id ctx = tpp_warning_context_id_ofwarning((tpp_warning_id)wnum);
+	if ((unsigned int)ctx >= (unsigned int)TPP_WC_COUNT)
+		return 2;
+	error = tpp_lexer_setwarningctx(self, ctx, state);
+	return error == TPP_EOK ? 0 : 1;
+}
+TPP_INLINE int TPPCALL TPPLexer_SetWarningGroup_(tpp_lexer *self, int wgrp, TPP_wstate_t state) {
+	tpp_errno error;
+	tpp_warning_context_id ctx = tpp_warning_context_id_ofgroup((tpp_warning_group_id)wgrp);
+	if ((unsigned int)ctx >= (unsigned int)TPP_WC_COUNT)
+		return 2;
+	error = tpp_lexer_setwarningctx(self, ctx, state);
+	return error == TPP_EOK ? 0 : 1;
+}
+TPP_INLINE TPP_wstate_t TPPCALL TPPLexer_GetWarning_(tpp_lexer *self, int wnum) {
+	tpp_warning_context_id ctx = tpp_warning_context_id_ofwarning((tpp_warning_id)wnum);
+	if ((unsigned int)ctx >= (unsigned int)TPP_WC_COUNT)
+		return TPP_WSTATE_DISABLED;
+	return tpp_lexer_getwarningctx(self, ctx);
+}
+TPP_INLINE TPP_wstate_t TPPCALL TPPLexer_GetWarningGroup_(tpp_lexer *self, int wgrp) {
+	tpp_warning_context_id ctx = tpp_warning_context_id_ofgroup((tpp_warning_group_id)wgrp);
+	if ((unsigned int)ctx >= (unsigned int)TPP_WC_COUNT)
+		return TPP_WSTATE_DISABLED;
+	return tpp_lexer_getwarningctx(self, ctx);
+}
+
+/* Similar to `TPPLexer_SetWarning', but set the state of all warnings from a given group.
+ * NOTES:
+ *   - Groups work independent of warning ids, meaning you can even
+ *     specify `WSTATE_SUPPRESS' as state, with the next warning
+ *     part of that group occurring simply consuming that suppression.
+ *   - If you disable an entire warning group, no warning apart of it will be emit.
+ *   - If a warning is invoked, that is both part of an error and a warning/disabled
+ *     group it will always tend to do as little damage as possible:
+ *     >> suppress >= disabled >= warning >= error
+ *     With that in mind, both the warning itself, as well as all of its groups
+ *     must be configured as `WSTATE_FATAL' for the warning to actually result
+ *     in an error.
+ * @return: 0: Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
+ * @return: 1: Successfully set the given warning number.
+ * @return: 2: The given group name is unknown. */
+TPP_INLINE int TPPCALL
+TPPLexer_SetWarnings_(tpp_lexer *self, char const *__restrict group, TPP_wstate_t state) {
+	tpp_warning_group_id wgrp = tpp_warning_group_byname(group);
+	return TPPLexer_SetWarningGroup_(self, (int)wgrp, state);
+}
+TPP_INLINE TPP_wstate_t TPPCALL
+TPPLexer_GetWarnings_(tpp_lexer *self, char const *__restrict group) {
+	tpp_warning_group_id wgrp = tpp_warning_group_byname(group);
+	return TPPLexer_GetWarningGroup_(self, (int)wgrp);
+}
+#define TPPLexer_SetWarnings(group, state) TPPLexer_SetWarnings_(TPP2_LEXER, group, state)
+#define TPPLexer_GetWarnings(group)        TPPLexer_GetWarnings_(TPP2_LEXER, group)
+
+#define TPP_WARNINGMODE_FATAL  ((int)TPP_WSTATE_FATAL)
+#define TPP_WARNINGMODE_ERROR  ((int)TPP_WSTATE_ERROR)
+#define TPP_WARNINGMODE_WARN   ((int)TPP_WSTATE_WARN)
+#define TPP_WARNINGMODE_IGNORE ((int)TPP_WSTATE_DISABLED)
+
+/* Invoke a given warning number, returning one of `TPP_WARNINGMODE_*'.
+ * NOTE: Unknown warnings will always result in `TPP_WARNINGMODE_WARN' being returned. */
+#define TPPLexer_InvokeWarning(wnum) TPPLexer_InvokeWarning_(TPP2_LEXER, wnum)
+TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
+	tpp_errno error;
+	tpp_warning_invokeinfo info;
+	if ((unsigned int)wnum >= (unsigned int)TPP_W_COUNT)
+		return TPP_WARNINGMODE_IGNORE;
+	error = tpp_lexer_invokewarning(self, (tpp_warning_id)wnum, &info);
+	if (TPP_ISERR(error))
+		return TPP_WARNINGMODE_FATAL; /* Wrong behavior... */
+	return (int)info.twii_state;
+}
+
+
+
+#define TPPIfdefStackSlot tpp_ifdef_stack_entry
+/*#define TPP_IFDEFMODE_FALSE 0 * Status doesn't exist in TPP3 anymore */
+#define TPP_IFDEFMODE_TRUE  TPP_IFDEF_MODE_IFDEF /* The block is enabled. */
+#define TPP_IFDEFMODE_ELSE  TPP_IFDEF_MODE_ELSE  /* The block follows an #else. */
+#define iss_mode            TPP_INTERNAL(tidse_mode)
+#define iss_line            TPP_INTERNAL(tidse_updated).TPP_INTERNAL(lci_line)
+#define iss_file            tpp3_ifdef_stack_is_per_file_so_there_is_no_file_property
+#define TPPIfdefStack       tpp_ifdef_stack
+#define is_slotc            TPP_INTERNAL(tids_cnt)
+#define is_slota            TPP_INTERNAL(tids_alc)
+#define is_slotv            TPP_INTERNAL(tids_vec)
+
+#define TPP_EXTENSIONS_BITSETSIZE (TPP_EXT_COUNT ? (TPP_EXT_COUNT + 7) / 8 : 1)
+#define TPPExtState               tpp_extensions
+#define es_prev                   TPP_INTERNAL(te_prev)
+#define es_bitset                 TPP_INTERNAL(te_state).TPP_INTERNAL(tes_bitset)
+
+/* Check if a given extension `ext' is currently enabled.
+ * @return: 0: The extension is disabled.
+ * @return: !0: The extension is enabled. */
+#define TPPLexer_HasExtension_(_current, ext) tpp_lexer_getextension(_current, expt)
+#define TPPLexer_HasExtension(ext)            TPPLexer_HasExtension_(TPP2_LEXER, ext)
+
+/* Set the state of a given extension `ext'. */
+#define TPPLexer_EnableExtension_(_current, ext)  tpp_lexer_enableextension(_current, ext)
+#define TPPLexer_DisableExtension_(_current, ext) tpp_lexer_disableextension(_current, ext)
+#define TPPLexer_EnableExtension(ext)             TPPLexer_EnableExtension_(TPP2_LEXER, ext)
+#define TPPLexer_DisableExtension(ext)            TPPLexer_DisableExtension_(TPP2_LEXER, ext)
+
+
+#if 0 /* TODO */
+//TPPFUN int TPPCALL TPPFile_Copyname(struct TPPFile *__restrict self);
+//TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_CopyForInclude(struct TPPFile *__restrict self);
+//TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_Open(char const *__restrict filename);
+//TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, char const *__restrict name);
+//TPPFUN struct TPPFile *TPPCALL TPPFile_NewDefine_(TPP_LEXER_PARAM);
+//TPPFUN int TPPCALL TPPFile_NextChunk_(TPP_LEXER_PARAM_ struct TPPFile *__restrict self, unsigned int flags);
+//TPPFUN char *TPPCALL TPP_Unescape_(TPP_LEXER_PARAM_ char *__restrict buf, char const *__restrict data, size_t size, size_t charsize);
+//TPPFUN size_t TPPCALL TPP_SizeofUnescape_(TPP_LEXER_PARAM_ char const *__restrict data, size_t size, size_t charsize);
+//TPPFUN char *TPPCALL TPP_UnescapeRaw(char *__restrict buf, char const *__restrict data, size_t size);
+//TPPFUN size_t TPPCALL TPP_SizeofUnescapeRaw(char const *__restrict data, size_t size);
+//TPPFUN char *TPPCALL TPP_Escape_(TPP_LEXER_PARAM_ char *__restrict buf, char const *__restrict data, size_t size);
+//TPPFUN size_t TPPCALL TPP_SizeofEscape_(TPP_LEXER_PARAM_ char const *__restrict data, size_t size);
+//TPPFUN char *TPPCALL TPP_Ftos(char *__restrict buf, TPP(tfloat_t) f);
+//TPPFUN size_t TPPCALL TPP_SizeofFtos(TPP(tfloat_t) f);
+
+
 //struct TPPIncludeList {
 //	/* List of sanitized #include paths. */
 //	struct TPPIncludeList    *il_prev;  /* [0..1][owned] Pointer to another m-allocated list of system #include-paths.

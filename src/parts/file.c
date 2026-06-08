@@ -826,6 +826,17 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_start_lc));
 
+
+#if TPP_HAVE_CPP_MACROS
+/* Figure out the line/column of "pos" in "expanded_text", as produced
+ * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL
+tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
+                      tpp_string const *expanded_text,
+                      tpp_char const *pos);
+#endif /* TPP_HAVE_CPP_MACROS */
+
+
 /* Return line/column information (1-based) for "pos" */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {

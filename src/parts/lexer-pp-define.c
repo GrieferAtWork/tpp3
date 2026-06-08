@@ -580,9 +580,9 @@ tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict builder,
 	tpp_errno result;
 	/* Disable warnings because compiler does some questionable stuff in order to parse
 	 * the contents of strings in order to allow arguments to be embedded within them. */
-	tpp_lexer_state_push_nowarnings(self);
+	tpp_lexer_nowarnings_pushon(self);
 	result = tpp_macro_builder_compile_traditional_impl(builder, self, body_start, body_end);
-	tpp_lexer_state_pop_nowarnings(self);
+	tpp_lexer_nowarnings_pop(self);
 	return result;
 }
 #else /* TPP_HAVE_WARNINGS */
