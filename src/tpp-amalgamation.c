@@ -15177,17 +15177,17 @@ TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCAL
 tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
                        tpp_macro *tpp_restrict macro);
 
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_push_textfile(tpp_lexer *tpp_restrict self,
-                        tpp_char const *text, tpp_size textsize) {
+                        tpp_char const *text, tpp_size textsize,
+                        /*0..1,inherit(always)*/ TPP_REF tpp_string *chunk) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
 	*prev_file = *file;
-
 	file->tf_pos   = text;
-	file->tf_chunk = NULL;
+	file->tf_chunk = chunk;
 	file->tf_end   = text + textsize;
 	_tpp_file_init_common(file);
 	file->tf_prev  = prev_file;
@@ -15199,8 +15199,27 @@ tpp_lexer_push_textfile(tpp_lexer *tpp_restrict self,
 	file->tf_data.td_text.tft_name = NULL;
 	return TPP_TOK_EOF;
 err_nomem:
+	if (chunk)
+		tpp_string_decref(chunk);
 	return TPP_TOK_ENOMEM;
 }
+
+#if (TPP_HAVE_MACRO___COUNTER__ || \
+     TPP_HAVE_MACRO___LINE__ ||    \
+     TPP_HAVE_MACRO___COLUMN__)
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_push_textfile_copy(tpp_lexer *tpp_restrict self,
+                             tpp_char const *text,
+                             tpp_size textsize) {
+	TPP_REF tpp_string *chunk;
+	chunk = tpp_string_malloc(textsize);
+	if tpp_unlikely(!chunk)
+		return TPP_TOK_ENOMEM;
+	tpp_memcpy(tpp_string_str(chunk), text, textsize);
+	return tpp_lexer_push_textfile(self, tpp_string_str(chunk),
+	                               textsize, chunk);
+}
+#endif /* ... */
 
 /* Support for feature-test-style macros */
 #undef TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS
@@ -15496,7 +15515,7 @@ seek_end_of_macro:
 			goto err_tok;
 	}
 	tpp_lexer_seek_commit(self, pos);
-	return tpp_lexer_push_textfile(self, tpp_feature_test_macro_expansion, 1);
+	return tpp_lexer_push_textfile(self, tpp_feature_test_macro_expansion, 1, NULL);
 rollback:
 	tok = backup.tlsb_id;
 err_tok:
@@ -15710,6 +15729,64 @@ err_tok:
 #endif /* TPP_HAVE_MACRO___pragma */
 
 
+#if TPP_HAVE_MACRO___LINE__ || TPP_HAVE_MACRO___COLUMN__
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
+	char buf[TPP_ITOA_MAXLEN];
+	char const *p;
+	tpp_lcinfo info;
+	tpp_file *file = tpp_lexer_getfile(self);
+	tpp_intmax value;
+	while (file->tf_tprev && file->tf_kind == TPP_FILE_KIND_MACRO)
+		file = file->tf_tprev;
+	/* HINT: Meaning of "tf_tpos" / "tf_pos" here:
+	 * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
+	 * >> ...
+	 * >> 
+	 * >> if (x)
+	 * >>     assert(y);
+	 *        ^        ^
+	 *        tf_tpos  tf_pos
+	 *
+	 * iow: "tf_tpos" position for tracebacks (points at what "caused" a macro/file push)
+	 *      "tf_pos" position of next byte to-be parsed once lexer returns to this file
+	 *
+	 * For the sake of being pretty, we use "tf_tpos" since that's the location of the
+	 * name of the macro that's currently being expanded. */
+	info = tpp_file_lcinfo(file, file->tf_tpos);
+	switch (what) {
+#if TPP_HAVE_MACRO___LINE__
+	case TPP_KWD___LINE__:
+		value = tpp_lcinfo_getline(info);
+		break;
+#endif /* TPP_HAVE_MACRO___LINE__ */
+#if TPP_HAVE_MACRO___COLUMN__
+	case TPP_KWD___COLUMN__:
+		value = tpp_lcinfo_getcol(info);
+		break;
+#endif /* TPP_HAVE_MACRO___COLUMN__ */
+	default: tpp_unreachable();
+	}
+	++value;
+	p = tpp_itoa(buf, value);
+	return tpp_lexer_push_textfile_copy(self, (tpp_char const *)p,
+	                                    (tpp_size)(buf + tpp_lengthof(buf) - p));
+}
+#endif /* ... */
+
+
+#if TPP_HAVE_MACRO___COUNTER__
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___COUNTER__(tpp_lexer *tpp_restrict self) {
+	char buf[TPP_UTOA_MAXLEN];
+	char const *p = tpp_utoa(buf, self->tl_builtin_counter);
+	++self->tl_builtin_counter;
+	return tpp_lexer_push_textfile_copy(self, (tpp_char const *)p,
+	                                    (tpp_size)(buf + tpp_lengthof(buf) - p));
+}
+#endif /* ... */
+
+
 
 /* Handle a builtin macro.
  * @return: TPP_TOK_EOF: Caller should yield again.
@@ -15813,16 +15890,18 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___COLUMN__
 	case TPP_KWD___COLUMN__:
 #endif /* TPP_HAVE_MACRO___COLUMN__ */
-	{
-		/* TODO */
-	}	break;
+		return tpp_lexer_yield_handle_lcinfo(self, tok);
 #endif /* TPP_HAVE_MACRO___LINE__ || TPP_HAVE_MACRO___COLUMN__ */
 /************************************************************************/
 
 
 
 /************************************************************************/
-#if TPP_HAVE_MACRO___TIME__ || TPP_HAVE_MACRO___DATE__ || TPP_HAVE_MACRO___TIMESTAMP__
+#if (TPP_HAVE_MACRO___TIME__ ||      \
+     TPP_HAVE_MACRO___DATE__ ||      \
+     TPP_HAVE_MACRO___TIMESTAMP__ || \
+     TPP_HAVE_NUMERIC_DATE_MACROS || \
+     TPP_HAVE_NUMERIC_TIME_MACROS)
 #if TPP_HAVE_MACRO___TIME__
 	case TPP_KWD___TIME__:
 #endif /* TPP_HAVE_MACRO___TIME__ */
@@ -15832,11 +15911,23 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___TIMESTAMP__
 	case TPP_KWD___TIMESTAMP__:
 #endif /* TPP_HAVE_MACRO___TIMESTAMP__ */
+#if TPP_HAVE_NUMERIC_DATE_MACROS
+	case TPP_KWD___DATE_DAY__:
+	case TPP_KWD___DATE_WDAY__:
+	case TPP_KWD___DATE_YDAY__:
+	case TPP_KWD___DATE_MONTH__:
+	case TPP_KWD___DATE_YEAR__:
+#endif /* !TPP_HAVE_NUMERIC_DATE_MACROS */
+#if TPP_HAVE_NUMERIC_TIME_MACROS
+	case TPP_KWD___TIME_SEC__:
+	case TPP_KWD___TIME_MIN__:
+	case TPP_KWD___TIME_HOUR__:
+#endif /* !TPP_HAVE_NUMERIC_TIME_MACROS */
 	{
-		/* TODO: -Wdate-time (disabled by default) */
+		/* TODO: -Wdate-time (warning should be disabled by default) */
 		/* TODO */
 	}	break;
-#endif /* TPP_HAVE_MACRO___TIME__ || TPP_HAVE_MACRO___DATE__ || TPP_HAVE_MACRO___TIMESTAMP__ */
+#endif /* ... */
 /************************************************************************/
 
 
@@ -15852,7 +15943,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	{
 		/* TODO */
 	}	break;
-#endif /* TPP_HAVE_MACRO___INCLUDE_LEVEL__ || TPP_HAVE_MACRO___INCLUDE_DEPTH__ */
+#endif /* ... */
 /************************************************************************/
 
 
@@ -15860,8 +15951,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 /************************************************************************/
 #if TPP_HAVE_MACRO___COUNTER__
 	case TPP_KWD___COUNTER__:
-		/* TODO */
-		break;
+		return tpp_lexer_yield_handle___COUNTER__(self);
 #endif /* TPP_HAVE_MACRO___COUNTER__ */
 /************************************************************************/
 
@@ -15886,14 +15976,6 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
-#if TPP_HAVE_NUMERIC_DATE_MACROS
-	/* TODO: __DATE_DAY__, __DATE_WDAY__, __DATE_YDAY__, __DATE_MONTH__, __DATE_YEAR__ */
-	/* TODO: -Wdate-time (disabled by default) */
-#endif /* !TPP_HAVE_NUMERIC_DATE_MACROS */
-#if TPP_HAVE_NUMERIC_TIME_MACROS
-	/* TODO: __TIME_SEC__, __TIME_MIN__, __TIME_HOUR__ */
-	/* TODO: -Wdate-time (disabled by default) */
-#endif /* !TPP_HAVE_NUMERIC_TIME_MACROS */
 #if TPP_HAVE_MACRO___TPP_EVAL
 	/* TODO: __TPP_EVAL */
 #endif /* !TPP_HAVE_MACRO___TPP_EVAL */
@@ -15937,7 +16019,8 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 		builtin_macro = tpp_macro_getbuiltin(tok);
 		if (builtin_macro != NULL) {
 			return tpp_lexer_push_textfile(self, builtin_macro->tbm_body,
-			                               builtin_macro->tbm_body_size);
+			                               builtin_macro->tbm_body_size,
+			                               NULL);
 		}
 	}	break;
 

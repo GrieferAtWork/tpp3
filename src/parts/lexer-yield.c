@@ -77,7 +77,9 @@ err_nomem:
 	return TPP_TOK_ENOMEM;
 }
 
-#if TPP_HAVE_MACRO___COUNTER__
+#if (TPP_HAVE_MACRO___COUNTER__ || \
+     TPP_HAVE_MACRO___LINE__ ||    \
+     TPP_HAVE_MACRO___COLUMN__)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_push_textfile_copy(tpp_lexer *tpp_restrict self,
                              tpp_char const *text,
@@ -600,6 +602,52 @@ err_tok:
 #endif /* TPP_HAVE_MACRO___pragma */
 
 
+#if TPP_HAVE_MACRO___LINE__ || TPP_HAVE_MACRO___COLUMN__
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
+	char buf[TPP_ITOA_MAXLEN];
+	char const *p;
+	tpp_lcinfo info;
+	tpp_file *file = tpp_lexer_getfile(self);
+	tpp_intmax value;
+	while (file->tf_tprev && file->tf_kind == TPP_FILE_KIND_MACRO)
+		file = file->tf_tprev;
+	/* HINT: Meaning of "tf_tpos" / "tf_pos" here:
+	 * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
+	 * >> ...
+	 * >> 
+	 * >> if (x)
+	 * >>     assert(y);
+	 *        ^        ^
+	 *        tf_tpos  tf_pos
+	 *
+	 * iow: "tf_tpos" position for tracebacks (points at what "caused" a macro/file push)
+	 *      "tf_pos" position of next byte to-be parsed once lexer returns to this file
+	 *
+	 * For the sake of being pretty, we use "tf_tpos" since that's the location of the
+	 * name of the macro that's currently being expanded. */
+	info = tpp_file_lcinfo(file, file->tf_tpos);
+	switch (what) {
+#if TPP_HAVE_MACRO___LINE__
+	case TPP_KWD___LINE__:
+		value = tpp_lcinfo_getline(info);
+		break;
+#endif /* TPP_HAVE_MACRO___LINE__ */
+#if TPP_HAVE_MACRO___COLUMN__
+	case TPP_KWD___COLUMN__:
+		value = tpp_lcinfo_getcol(info);
+		break;
+#endif /* TPP_HAVE_MACRO___COLUMN__ */
+	default: tpp_unreachable();
+	}
+	++value;
+	p = tpp_itoa(buf, value);
+	return tpp_lexer_push_textfile_copy(self, (tpp_char const *)p,
+	                                    (tpp_size)(buf + tpp_lengthof(buf) - p));
+}
+#endif /* ... */
+
+
 #if TPP_HAVE_MACRO___COUNTER__
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___COUNTER__(tpp_lexer *tpp_restrict self) {
@@ -607,7 +655,7 @@ tpp_lexer_yield_handle___COUNTER__(tpp_lexer *tpp_restrict self) {
 	char const *p = tpp_utoa(buf, self->tl_builtin_counter);
 	++self->tl_builtin_counter;
 	return tpp_lexer_push_textfile_copy(self, (tpp_char const *)p,
-	                                    (tpp_size)(buf + TPP_UTOA_MAXLEN - p));
+	                                    (tpp_size)(buf + tpp_lengthof(buf) - p));
 }
 #endif /* ... */
 
@@ -715,9 +763,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___COLUMN__
 	case TPP_KWD___COLUMN__:
 #endif /* TPP_HAVE_MACRO___COLUMN__ */
-	{
-		/* TODO */
-	}	break;
+		return tpp_lexer_yield_handle_lcinfo(self, tok);
 #endif /* TPP_HAVE_MACRO___LINE__ || TPP_HAVE_MACRO___COLUMN__ */
 /************************************************************************/
 
