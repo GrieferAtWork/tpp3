@@ -196,13 +196,6 @@ tpp_lcinfo_count_linefeed(tpp_file const *tpp_restrict self,
 #define TPP_FILE_UTF32_MINEXTRA 7  /* max(4, TPP_UNICODE_32TO8_MAXBUF(1)) */
 #define TPP_FILE_MINEXTRA       10 /* max(1, TPP_FILE_UTF16_MINEXTRA, TPP_FILE_UTF32_MINEXTRA) + lengthof(tff_tailv) */
 
-#define TPP_UTF8_1BYTE_MAX ((UINT32_C(1) << 7) - 1)
-#define TPP_UTF8_2BYTE_MAX ((UINT32_C(1) << 11) - 1)
-#define TPP_UTF8_3BYTE_MAX ((UINT32_C(1) << 16) - 1)
-#define TPP_UTF8_4BYTE_MAX ((UINT32_C(1) << 21) - 1)
-#define TPP_UTF8_5BYTE_MAX ((UINT32_C(1) << 26) - 1)
-#define TPP_UTF8_6BYTE_MAX ((UINT32_C(1) << 31) - 1)
-
 static tpp_char *TPPCALL
 tpp_writeutf8_rev(tpp_char *dst, tpp_unichar uc) {
 	if (uc <= TPP_UTF8_1BYTE_MAX) {

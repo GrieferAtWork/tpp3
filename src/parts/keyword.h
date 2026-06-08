@@ -285,30 +285,30 @@ tpp_skipbse_bck_(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM)
 #endif /* !TPP_HAVE_BSE */
 
 
-#if TPP_HAVE_BSE
+#if TPP_HAVE_ESCAPED_KEYWORDS
 /* Same as `tpp_hashof()', but skip over \-escaped linefeeds when calculating the hash */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
-tpp_hashof_bse_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PARAM);
-#define tpp_hashof_bse(kwd, len, file) tpp_hashof_bse_(kwd, len tpp_bse_file__ARG(file))
+tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PARAM);
+#define tpp_hashof_esc(kwd, len, file) tpp_hashof_esc_(kwd, len tpp_bse_file__ARG(file))
 
 /* Copy `in_text...+=len' to `out_text', whilst removing \-escaped linefeeds
  * The caller must ensure that `out_text' has space for at least `len' bytes,
  * and the actual # of used bytes of `out_text' is returned. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-tpp_without_bse_(tpp_char *tpp_restrict out_text,
+tpp_without_esc_(tpp_char *tpp_restrict out_text,
                  tpp_char const *tpp_restrict in_text,
                  tpp_size len tpp_bse_file__PARAM);
-#define tpp_without_bse(out_text, in_text, len, file) \
-	tpp_without_bse_(out_text, in_text, len tpp_bse_file__ARG(file))
+#define tpp_without_esc(out_text, in_text, len, file) \
+	tpp_without_esc_(out_text, in_text, len tpp_bse_file__ARG(file))
 
 /* Compare 2 strings, one of which may contain \-escaped linefeeds that must be skipped. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) int TPPCALL
-tpp_memcmp_bse_(tpp_char const *lhs_without_bse, tpp_size lhs_len,
-                tpp_char const *rhs_with_bse, tpp_size rhs_len
+tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
+                tpp_char const *rhs_with_esc, tpp_size rhs_len
                 tpp_bse_file__PARAM);
-#define tpp_memcmp_bse(lhs_without_bse, lhs_len, rhs_with_bse, rhs_len, file) \
-	tpp_memcmp_bse_(lhs_without_bse, lhs_len, rhs_with_bse, rhs_len tpp_bse_file__ARG(file))
-#endif /* TPP_HAVE_BSE */
+#define tpp_memcmp_esc(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len, file) \
+	tpp_memcmp_esc_(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
 /* Lookup one of the built-in, pre-defined keywords */
@@ -317,14 +317,14 @@ tpp_builtin_getkeyword(tpp_char const *tpp_restrict kwd,
                        tpp_size len, tpp_hash hash);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword_byid(enum tpp_token_id id);
-#if TPP_HAVE_BSE
+#if TPP_HAVE_ESCAPED_KEYWORDS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
-tpp_builtin_getkeyword_bse_(tpp_char const *tpp_restrict kwd,
+tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
                             tpp_size len, tpp_hash hash
                             tpp_bse_file__PARAM);
-#define tpp_builtin_getkeyword_bse(kwd, len, hash, file) \
-	tpp_builtin_getkeyword_bse_(kwd, len, hash tpp_bse_file__ARG(file))
-#endif /* TPP_HAVE_BSE */
+#define tpp_builtin_getkeyword_esc(kwd, len, hash, file) \
+	tpp_builtin_getkeyword_esc_(kwd, len, hash tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
 
@@ -361,15 +361,15 @@ _tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                               enum tpp_token_id id);
-#if TPP_HAVE_BSE
+#if TPP_HAVE_ESCAPED_KEYWORDS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
-_tpp_keywords_getkeyword_bse_(tpp_keywords const *tpp_restrict self,
+_tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
                               tpp_char const *tpp_restrict kwd,
                               tpp_size len, tpp_hash hash
                               tpp_bse_file__PARAM);
-#define _tpp_keywords_getkeyword_bse(self, kwd, len, hash, file) \
-	_tpp_keywords_getkeyword_bse_(self, kwd, len, hash tpp_bse_file__ARG(file))
-#endif /* TPP_HAVE_BSE */
+#define _tpp_keywords_getkeyword_esc(self, kwd, len, hash, file) \
+	_tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
 /* Same as above, but also search the built-in keyword table (tpp_builtin_getkeyword) */
@@ -380,15 +380,15 @@ tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                              enum tpp_token_id id);
-#if TPP_HAVE_BSE
+#if TPP_HAVE_ESCAPED_KEYWORDS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
-tpp_keywords_getkeyword_bse_(tpp_keywords const *tpp_restrict self,
+tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
                              tpp_char const *tpp_restrict kwd,
                              tpp_size len, tpp_hash hash
                              tpp_bse_file__PARAM);
-#define tpp_keywords_getkeyword_bse(self, kwd, len, hash, file) \
-	tpp_keywords_getkeyword_bse_(self, kwd, len, hash tpp_bse_file__ARG(file))
-#endif /* TPP_HAVE_BSE */
+#define tpp_keywords_getkeyword_esc(self, kwd, len, hash, file) \
+	tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
 /* Same as above, but if the keyword doesn't exist in `self' or the builtin
@@ -401,12 +401,12 @@ tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
                         tpp_size len, tpp_hash hash);
 #if TPP_HAVE_BSE
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
-tpp_keywords_newkeyword_bse_(tpp_keywords *tpp_restrict self,
+tpp_keywords_newkeyword_esc_(tpp_keywords *tpp_restrict self,
                              tpp_char const *tpp_restrict kwd,
                              tpp_size len, tpp_hash hash
                              tpp_bse_file__PARAM);
-#define tpp_keywords_newkeyword_bse(self, kwd, len, hash, file) \
-	tpp_keywords_newkeyword_bse_(self, kwd, len, hash tpp_bse_file__ARG(file))
+#define tpp_keywords_newkeyword_esc(self, kwd, len, hash, file) \
+	tpp_keywords_newkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
 #endif /* TPP_HAVE_BSE */
 
 

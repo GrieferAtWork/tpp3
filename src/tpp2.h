@@ -572,11 +572,11 @@
 #define TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL \
 	TPP2_HAVE_RAW_STRING_LITERALS /* *ditto* */
 
-#define TPP_HAVE_TPP_TOK_LF                         (-1) /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_WANTLF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LF)") */
-#define TPP_HAVE_TPP_TOK_SPACE                      (-1) /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_WANTSPACE"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SPACE)") */
-#define TPP_HAVE_TPP_TOK_COMMENT                    (-1) /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_WANTCOMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COMMENT)") */
-#define TPP_HAVE_TPP_TOK_CXX_COMMENT                (-1) /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_CPP_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_CXX_COMMENT)") */
-#define TPP_HAVE_TPP_TOK_C_COMMENT                  (-1) /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_C_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_COMMENT)") */
+#define TPP_HAVE_TPP_TOK_LF                         (-2) /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_WANTLF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LF)") */
+#define TPP_HAVE_TPP_TOK_SPACE                      (-2) /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_WANTSPACE"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SPACE)") */
+#define TPP_HAVE_TPP_TOK_COMMENT                    (-2) /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_WANTCOMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COMMENT)") */
+#define TPP_HAVE_TPP_TOK_CXX_COMMENT                (-1) /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_CPP_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_CXX_COMMENT)") */
+#define TPP_HAVE_TPP_TOK_C_COMMENT                  (-1) /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_C_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_COMMENT)") */
 #define TPP_HAVE_TPP_TOK_PASCAL_COMMENT             0    /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TPP_TOK_SHELL_COMMENT              0    /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TPP_TOK_ASM_COMMENT                0    /* TPP2 only recognized C/C++-like comments */
@@ -668,6 +668,7 @@
 /* Features... */
 #define TPP_HAVE_BSE                                  1 /* TPP2 didn't even let you disable this */
 #define TPP_HAVE_BSE_WHITESPACE                       0 /* TPP2 didn't support whitespace between \ and LF */
+#define TPP_HAVE_ESCAPE_IN_IDENTIFIERS                0 /* TPP2 didn't support \uXXXX or \UXXXXXXXX characters in identifiers */
 #define TPP_HAVE_TRIGRAPHS                            TPP_CONFIG_FEATURE_TRIGRAPHS
 #define TPP_HAVE_DIGRAPHS                             TPP_CONFIG_FEATURE_DIGRAPHS
 #define TPP_HAVE_ESCAPE_E_IN_STRINGS                  TPP_CONFIG_EXTENSION_STR_E             /* Support for "\e" (for U+001B) escape sequences */
@@ -688,6 +689,7 @@
 #define TPP_HAVE_CPP_WARNING                          TPP_CONFIG_EXTENSION_WARNING           /* Support for: #warning */
 #define TPP_HAVE_CPP_IDENT_SCCS                       TPP_CONFIG_EXTENSION_IDENT_SCCS        /* Support for: #ident, #sccs */
 #define TPP_HAVE_CPP_PRAGMA                           1                                      /* Support for: #pragma */
+#define TPP_HAVE_CPP_EMBED                            0                                      /* Support for: #embed */
 #define TPP_HAVE_MACRO__Pragma                        1                                      /* Support for: _Pragma("foo") */
 #define TPP_HAVE_MACRO___pragma                       TPP_CONFIG_EXTENSION_MSVC_PRAGMA       /* Support for: __pragma(foo) */
 #define TPP_HAVE_CLANG_MACRO___has_attribute          TPP_CONFIG_EXTENSION_CLANG_FEATURES    /* Support for clang __has_attribute */
@@ -707,6 +709,7 @@
 #define TPP_HAVE_MACRO___has_known_warning            TPP_CONFIG_EXTENSION_CLANG_FEATURES    /* Support for TPP's __has_known_warning */
 #define TPP_HAVE_MACRO___has_include                  TPP_CONFIG_EXTENSION_HAS_INCLUDE       /* Support for clang __has_include */
 #define TPP_HAVE_MACRO___has_include_next             TPP_CONFIG_EXTENSION_HAS_INCLUDE       /* Support for clang __has_include_next */
+#define TPP_HAVE_MACRO___has_embed                    0                                      /* Support for clang __has_embed */
 #define TPP_HAVE_MACRO___FILE__                       1                                      /* __FILE__ */
 #define TPP_HAVE_MACRO___LINE__                       1                                      /* __LINE__ */
 #define TPP_HAVE_MACRO___TIME__                       1                                      /* __TIME__ */

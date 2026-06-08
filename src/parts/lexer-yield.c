@@ -64,8 +64,31 @@ static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
                        tpp_lexer_arginfo const *tpp_restrict arginfo,
                        tpp_lexer *tpp_restrict lexer) {
+	/* Must actually expand argument data! (i.e.: when text contains
+	 * "__TPP_EVAL(10+20)", then our output must contain "30")
+	 *
+	 * NOTES:
+	 *  - This can only really be implemented using tpp_lexer_yield(),
+	 *    and then appending the start/end ranges of successive tokens
+	 *    to a string buffer. However, for this we need a special flag
+	 *    for the lexer that will cause it to *always* emit space/lf/
+	 *    comment tokens (since those must be retained in expanded
+	 *    text).
+	 *  - In order to force-overwrite the lexer to only yield tokens
+	 *    from the macro-argument area, we can use tpp_file_pusheof()
+	 *    (or rather: tpp_file_pusheof_fast, whilst ensuring that
+	 *    any extra files pushed by tpp_lexer_yield() are always once
+	 *    again popped; including in case of errors)
+	 *  - For the sake of performance, "simple" arguments are treated
+	 *    specially by not making use of a secondary heap-buffer.
+	 *    "simple" here means that tpp_lexer_yield()-ing "arginfo"
+	 *    produces an uninterrupted stream of tokens all originating
+	 *    from the file providing argument information. Or in other
+	 *    words: "simple" means that expanding the argument doesn't
+	 *    change anything about it. */
 	(void)lexer;
-	/* TODO: Must actually expand argument data! */
+	/* TODO: New lexer state flag that force-enables emission of all tokens */
+	/* TODO */
 	self->tmei_expand_data = (tpp_char *)arginfo->tlai_start;
 	self->tmei_expand_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
 	return TPP_EOK;
@@ -1048,17 +1071,23 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 
 
 /************************************************************************/
-#if TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next
+#if (TPP_HAVE_MACRO___has_include ||      \
+     TPP_HAVE_MACRO___has_include_next || \
+     TPP_HAVE_MACRO___has_embed)
 #if TPP_HAVE_MACRO___has_include
 	case TPP_KWD___has_include:
 #endif /* TPP_HAVE_MACRO___has_include */
 #if TPP_HAVE_MACRO___has_include_next
 	case TPP_KWD___has_include_next:
 #endif /* TPP_HAVE_MACRO___has_include_next */
+#if TPP_HAVE_MACRO___has_embed
+	case TPP_KWD___has_embed:
+#endif /* TPP_HAVE_MACRO___has_embed */
 	{
 		/* TODO */
+		/* TODO: __has_embed (https://en.cppreference.com/c/preprocessor/embed) */
 	}	break;
-#endif /* TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next */
+#endif /* ... */
 /************************************************************************/
 
 
@@ -1107,6 +1136,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	case TPP_KWD___TIMESTAMP__:
 #endif /* TPP_HAVE_MACRO___TIMESTAMP__ */
 	{
+		/* TODO: -Wdate-time (disabled by default) */
 		/* TODO */
 	}	break;
 #endif /* TPP_HAVE_MACRO___TIME__ || TPP_HAVE_MACRO___DATE__ || TPP_HAVE_MACRO___TIMESTAMP__ */
@@ -1143,9 +1173,11 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 /************************************************************************/
 #if TPP_HAVE_NUMERIC_DATE_MACROS
 	/* TODO: __DATE_DAY__, __DATE_WDAY__, __DATE_YDAY__, __DATE_MONTH__, __DATE_YEAR__ */
+	/* TODO: -Wdate-time (disabled by default) */
 #endif /* !TPP_HAVE_NUMERIC_DATE_MACROS */
 #if TPP_HAVE_NUMERIC_TIME_MACROS
 	/* TODO: __TIME_SEC__, __TIME_MIN__, __TIME_HOUR__ */
+	/* TODO: -Wdate-time (disabled by default) */
 #endif /* !TPP_HAVE_NUMERIC_TIME_MACROS */
 #if TPP_HAVE_MACRO___TPP_EVAL
 	/* TODO: __TPP_EVAL */

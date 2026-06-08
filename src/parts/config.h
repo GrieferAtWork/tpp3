@@ -794,6 +794,12 @@
 #define TPP_HAVE_BSE_WHITESPACE (TPP_HAVE_BSE ? -1 : 0) /* "-fbse-whitespace" */
 #endif /* !TPP_HAVE_BSE_WHITESPACE */
 
+/* Support for \uABCD and \U01234567 in identifier names (will be
+ * replaced with effective UTF-8 encodings when translated to keywords) */
+#ifndef TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+#define TPP_HAVE_ESCAPE_IN_IDENTIFIERS (-1) /* "-fescape-in-identifiers" */
+#endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+
 /* Support for "\e" (for U+001B) escape sequences */
 #ifndef TPP_HAVE_ESCAPE_E_IN_STRINGS
 #define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? -1 : 0) /* "-fescape-e-in-strings" */
@@ -883,6 +889,11 @@
 #ifndef TPP_HAVE_CPP_PRAGMA
 #define TPP_HAVE_CPP_PRAGMA (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_PRAGMA" */
 #endif /* !TPP_HAVE_CPP_PRAGMA */
+
+/* Support for: #embed */
+#ifndef TPP_HAVE_CPP_EMBED
+#define TPP_HAVE_CPP_EMBED (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_EMBED" */
+#endif /* !TPP_HAVE_CPP_EMBED */
 
 /* Support for: _Pragma("foo") */
 #ifndef TPP_HAVE_MACRO__Pragma
@@ -985,6 +996,11 @@
 #ifndef TPP_HAVE_MACRO___has_include_next
 #define TPP_HAVE_MACRO___has_include_next ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_INCLUDE_NEXT) ? -1 : 0) /* "-f__has_include_next" */
 #endif /* !TPP_HAVE_MACRO___has_include_next */
+
+/* Support for clang __has_embed */
+#ifndef TPP_HAVE_MACRO___has_embed
+#define TPP_HAVE_MACRO___has_embed ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_EMBED) ? -1 : 0) /* "-f__has_embed" */
+#endif /* !TPP_HAVE_MACRO___has_embed */
 
 /* __FILE__ */
 #ifndef TPP_HAVE_MACRO___FILE__
@@ -1296,6 +1312,20 @@
 /************************************************************************/
 /* IMPLICIT API FEATURES                                                */
 /************************************************************************/
+/* Provide an API function `tpp_unicode_writeutf8()' */
+#ifndef TPP_HAVE_TPP_UNICODE_WRITEUTF8
+#define TPP_HAVE_TPP_UNICODE_WRITEUTF8            \
+	(TPP_HAVE_TPP_TOK_CHAR ||                     \
+	 TPP_HAVE_TPP_TOK_STRING ||                   \
+	 TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
+	 TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+	 TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+	 TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
+	 TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
+	 TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL ||       \
+	 TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
+#endif /* !TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
+
 /* Enable support for `TPP_FILE_IOFLAGS_SYSHDR' */
 #ifndef TPP_HAVE_FILE_SYSHDR
 #define TPP_HAVE_FILE_SYSHDR (TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0)
@@ -1303,12 +1333,17 @@
 
 /* Enable support for `tpp_file::tf_prev' */
 #ifndef TPP_HAVE_INCLUDE_STACK
-#define TPP_HAVE_INCLUDE_STACK (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT)
+#define TPP_HAVE_INCLUDE_STACK (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED)
 #endif /* !TPP_HAVE_INCLUDE_STACK */
+
+/* Provide a secondary set of keyword APIs that include support for \-escape sequences */
+#ifndef TPP_HAVE_ESCAPED_KEYWORDS
+#define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
+#endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
 
 /* Enable support for `tpp_keywords_openfile()' */
 #ifndef TPP_HAVE_KEYWORDS_OPENFILE
-#define TPP_HAVE_KEYWORDS_OPENFILE (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || 1)
+#define TPP_HAVE_KEYWORDS_OPENFILE (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED || 1)
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE */
 
 /* Enable support for `tpp_keywords_openfile_ex()' */
@@ -1417,7 +1452,7 @@ EXTENSION(EXT_GCC_IFELSE,        "if-else-optional-true",         TPP_CONFIG_EXT
 EXTENSION(EXT_IFELSE_IN_EXPR,    "ifelse-in-expressions",         TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR_DEFAULT)
 EXTENSION(EXT_STRINGOPS,         "strings-in-expressions",        TPP_CONFIG_EXTENSION_STRINGOPS_DEFAULT)
 EXTENSION(EXT_LXOR,              "logical-xor-in-expressions",    TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
-EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT)
+EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT) /* TODO: Relation to -Wno-multichar? */
 #endif
 /************************************************************************/
 /************************************************************************/

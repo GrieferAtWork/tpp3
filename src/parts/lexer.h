@@ -195,9 +195,9 @@ typedef struct tpp_lexer {
 #define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->tl_kwds, id)
 #define tpp_lexer_kwds_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->tl_kwds, kwd, len, hash)
 #if TPP_HAVE_BSE
-#define _tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) _tpp_keywords_getkeyword_bse(&(self)->tl_kwds, kwd, len, hash, file)
-#define tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) tpp_keywords_getkeyword_bse(&(self)->tl_kwds, kwd, len, hash, file)
-#define tpp_lexer_kwds_newkeyword_bse(self, kwd, len, hash, file) tpp_keywords_newkeyword_bse(&(self)->tl_kwds, kwd, len, hash, file)
+#define _tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) _tpp_keywords_getkeyword_esc(&(self)->tl_kwds, kwd, len, hash, file)
+#define tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) tpp_keywords_getkeyword_esc(&(self)->tl_kwds, kwd, len, hash, file)
+#define tpp_lexer_kwds_newkeyword_bse(self, kwd, len, hash, file) tpp_keywords_newkeyword_esc(&(self)->tl_kwds, kwd, len, hash, file)
 #endif /* TPP_HAVE_BSE */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 #define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->tl_kwds, kwd)

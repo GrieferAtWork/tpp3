@@ -120,6 +120,10 @@ TPP_KWD(TPP_KWD_define, "define")
 #define TPP_KWD_undef TPP_KWD_undef
 TPP_KWD(TPP_KWD_undef, "undef")
 #endif /* TPP_HAVE_CPP_DEFINE */
+#if TPP_HAVE_CPP_EMBED
+#define TPP_KWD_embed TPP_KWD_embed
+TPP_KWD(TPP_KWD_embed, "embed")
+#endif /* TPP_HAVE_CPP_EMBED */
 #if TPP_HAVE_CPP_ASSERT
 #define TPP_KWD_assert TPP_KWD_assert
 TPP_KWD(TPP_KWD_assert, "assert")
@@ -232,6 +236,10 @@ TPP_KWD(TPP_KWD___has_include, "__has_include")
 #define TPP_KWD___has_include_next TPP_KWD___has_include_next
 TPP_KWD(TPP_KWD___has_include_next, "__has_include_next")
 #endif /* TPP_HAVE_MACRO___has_include_next */
+#if TPP_HAVE_MACRO___has_embed
+#define TPP_KWD___has_embed TPP_KWD___has_embed
+TPP_KWD(TPP_KWD___has_embed, "__has_embed")
+#endif /* TPP_HAVE_MACRO___has_embed */
 #if TPP_HAVE_MACRO___FILE__
 #define TPP_KWD___FILE__ TPP_KWD___FILE__
 TPP_KWD(TPP_KWD___FILE__, "__FILE__")
@@ -462,6 +470,16 @@ TPP_EXTENSION(TPP_EXT_BSE_WHITESPACE, TPP_EXTNAME_BSE_WHITESPACE, TPP_HAVE_BSE_W
 #else /* TPP_HAVE_BSE_WHITESPACE < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_BSE_WHITESPACE(self) TPP_HAVE_BSE_WHITESPACE
 #endif /* TPP_HAVE_BSE_WHITESPACE >= 0 */
+#if TPP_HAVE_ESCAPE_IN_IDENTIFIERS < 0
+#define TPP_EXT_ESCAPE_IN_IDENTIFIERS TPP_EXT_ESCAPE_IN_IDENTIFIERS
+#ifndef TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS
+#define TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS "escape-in-identifiers"
+#endif /* !TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS */
+TPP_EXTENSION(TPP_EXT_ESCAPE_IN_IDENTIFIERS, TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS, TPP_HAVE_ESCAPE_IN_IDENTIFIERS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_ESCAPE_IN_IDENTIFIERS(self) (self)->tes_flags.tef_TPP_EXT_ESCAPE_IN_IDENTIFIERS
+#else /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_ESCAPE_IN_IDENTIFIERS(self) TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+#endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS >= 0 */
 #if TPP_HAVE_ESCAPE_E_IN_STRINGS < 0
 #define TPP_EXT_ESCAPE_E_IN_STRINGS TPP_EXT_ESCAPE_E_IN_STRINGS
 #ifndef TPP_EXTNAME_ESCAPE_E_IN_STRINGS
@@ -752,6 +770,16 @@ TPP_EXTENSION(TPP_EXT_MACRO___has_include_next, TPP_EXTNAME_MACRO___has_include_
 #else /* TPP_HAVE_MACRO___has_include_next < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_MACRO___has_include_next(self) TPP_HAVE_MACRO___has_include_next
 #endif /* TPP_HAVE_MACRO___has_include_next >= 0 */
+#if TPP_HAVE_MACRO___has_embed < 0
+#define TPP_EXT_MACRO___has_embed TPP_EXT_MACRO___has_embed
+#ifndef TPP_EXTNAME_MACRO___has_embed
+#define TPP_EXTNAME_MACRO___has_embed "__has_embed"
+#endif /* !TPP_EXTNAME_MACRO___has_embed */
+TPP_EXTENSION(TPP_EXT_MACRO___has_embed, TPP_EXTNAME_MACRO___has_embed, TPP_HAVE_MACRO___has_embed == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_embed(self) (self)->tes_flags.tef_TPP_EXT_MACRO___has_embed
+#else /* TPP_HAVE_MACRO___has_embed < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_embed(self) TPP_HAVE_MACRO___has_embed
+#endif /* TPP_HAVE_MACRO___has_embed >= 0 */
 #if TPP_HAVE_MACRO___FILE__ < 0
 #define TPP_EXT_MACRO___FILE__ TPP_EXT_MACRO___FILE__
 #ifndef TPP_EXTNAME_MACRO___FILE__
@@ -3023,6 +3051,12 @@ TPP_DECL_END
 #define TPP_HAVE_BSE_WHITESPACE (TPP_HAVE_BSE ? -1 : 0) /* "-fbse-whitespace" */
 #endif /* !TPP_HAVE_BSE_WHITESPACE */
 
+/* Support for \uABCD and \U01234567 in identifier names (will be
+ * replaced with effective UTF-8 encodings when translated to keywords) */
+#ifndef TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+#define TPP_HAVE_ESCAPE_IN_IDENTIFIERS (-1) /* "-fescape-in-identifiers" */
+#endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+
 /* Support for "\e" (for U+001B) escape sequences */
 #ifndef TPP_HAVE_ESCAPE_E_IN_STRINGS
 #define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? -1 : 0) /* "-fescape-e-in-strings" */
@@ -3112,6 +3146,11 @@ TPP_DECL_END
 #ifndef TPP_HAVE_CPP_PRAGMA
 #define TPP_HAVE_CPP_PRAGMA (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_PRAGMA" */
 #endif /* !TPP_HAVE_CPP_PRAGMA */
+
+/* Support for: #embed */
+#ifndef TPP_HAVE_CPP_EMBED
+#define TPP_HAVE_CPP_EMBED (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES : 0) /* "TPP_FEAT_CPP_EMBED" */
+#endif /* !TPP_HAVE_CPP_EMBED */
 
 /* Support for: _Pragma("foo") */
 #ifndef TPP_HAVE_MACRO__Pragma
@@ -3214,6 +3253,11 @@ TPP_DECL_END
 #ifndef TPP_HAVE_MACRO___has_include_next
 #define TPP_HAVE_MACRO___has_include_next ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_INCLUDE_NEXT) ? -1 : 0) /* "-f__has_include_next" */
 #endif /* !TPP_HAVE_MACRO___has_include_next */
+
+/* Support for clang __has_embed */
+#ifndef TPP_HAVE_MACRO___has_embed
+#define TPP_HAVE_MACRO___has_embed ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_EMBED) ? -1 : 0) /* "-f__has_embed" */
+#endif /* !TPP_HAVE_MACRO___has_embed */
 
 /* __FILE__ */
 #ifndef TPP_HAVE_MACRO___FILE__
@@ -3525,6 +3569,20 @@ TPP_DECL_END
 /************************************************************************/
 /* IMPLICIT API FEATURES                                                */
 /************************************************************************/
+/* Provide an API function `tpp_unicode_writeutf8()' */
+#ifndef TPP_HAVE_TPP_UNICODE_WRITEUTF8
+#define TPP_HAVE_TPP_UNICODE_WRITEUTF8            \
+	(TPP_HAVE_TPP_TOK_CHAR ||                     \
+	 TPP_HAVE_TPP_TOK_STRING ||                   \
+	 TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
+	 TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+	 TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+	 TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
+	 TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
+	 TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL ||       \
+	 TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
+#endif /* !TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
+
 /* Enable support for `TPP_FILE_IOFLAGS_SYSHDR' */
 #ifndef TPP_HAVE_FILE_SYSHDR
 #define TPP_HAVE_FILE_SYSHDR (TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0)
@@ -3532,12 +3590,17 @@ TPP_DECL_END
 
 /* Enable support for `tpp_file::tf_prev' */
 #ifndef TPP_HAVE_INCLUDE_STACK
-#define TPP_HAVE_INCLUDE_STACK (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT)
+#define TPP_HAVE_INCLUDE_STACK (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED)
 #endif /* !TPP_HAVE_INCLUDE_STACK */
+
+/* Provide a secondary set of keyword APIs that include support for \-escape sequences */
+#ifndef TPP_HAVE_ESCAPED_KEYWORDS
+#define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
+#endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
 
 /* Enable support for `tpp_keywords_openfile()' */
 #ifndef TPP_HAVE_KEYWORDS_OPENFILE
-#define TPP_HAVE_KEYWORDS_OPENFILE (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || 1)
+#define TPP_HAVE_KEYWORDS_OPENFILE (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED || 1)
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE */
 
 /* Enable support for `tpp_keywords_openfile_ex()' */
@@ -3646,7 +3709,7 @@ EXTENSION(EXT_GCC_IFELSE,        "if-else-optional-true",         TPP_CONFIG_EXT
 EXTENSION(EXT_IFELSE_IN_EXPR,    "ifelse-in-expressions",         TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR_DEFAULT)
 EXTENSION(EXT_STRINGOPS,         "strings-in-expressions",        TPP_CONFIG_EXTENSION_STRINGOPS_DEFAULT)
 EXTENSION(EXT_LXOR,              "logical-xor-in-expressions",    TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
-EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT)
+EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT) /* TODO: Relation to -Wno-multichar? */
 #endif
 /************************************************************************/
 /************************************************************************/
@@ -3969,6 +4032,22 @@ tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base);
 /* Convert an integer into a string */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL tpp_utoa(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL tpp_itoa(char buf[TPP_ITOA_MAXLEN], tpp_intmax value);
+
+
+#define TPP_UTF8_1BYTE_MAX ((UINT32_C(1) << 7) - 1)
+#define TPP_UTF8_2BYTE_MAX ((UINT32_C(1) << 11) - 1)
+#define TPP_UTF8_3BYTE_MAX ((UINT32_C(1) << 16) - 1)
+#define TPP_UTF8_4BYTE_MAX ((UINT32_C(1) << 21) - 1)
+#define TPP_UTF8_5BYTE_MAX ((UINT32_C(1) << 26) - 1)
+#define TPP_UTF8_6BYTE_MAX ((UINT32_C(1) << 31) - 1)
+
+#define TPP_UTF8_MAXLEN 7 /* Enough to write *any* 32-bit unicode ordinal as utf-8 (including invalid ones) */
+
+#if TPP_HAVE_TPP_UNICODE_WRITEUTF8
+/* Encode "uch" as utf-8 into "buf" and return the pointer after the last-written byte. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
+tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc);
+#endif /* TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
 
 TPP_DECL_END
 /************************************************************************/
@@ -5068,7 +5147,8 @@ TPP_DECL_BEGIN
      (TPP_HAVE_CPP_LINE < 0) ||                           \
      (TPP_HAVE_CPP_IF_ELSE_ENDIF < 0) ||                  \
      (TPP_HAVE_CPP_DEFINE < 0) ||                         \
-     (TPP_HAVE_CPP_PRAGMA < 0))
+     (TPP_HAVE_CPP_PRAGMA < 0) ||                         \
+     (TPP_HAVE_CPP_EMBED < 0))
 #define TPP_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_HAVE_FEATURES 0
@@ -5382,6 +5462,9 @@ typedef enum tpp_feature_id {
 #if TPP_HAVE_CPP_PRAGMA < 0
 	TPP_FEAT_CPP_PRAGMA,
 #endif /* TPP_HAVE_CPP_PRAGMA < 0 */
+#if TPP_HAVE_CPP_EMBED < 0
+	TPP_FEAT_CPP_EMBED,
+#endif /* TPP_HAVE_CPP_EMBED < 0 */
 	TPP_FEAT_COUNT
 } tpp_feature_id;
 
@@ -5999,6 +6082,12 @@ typedef union tpp_features {
 #else /* TPP_HAVE_CPP_PRAGMA < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_PRAGMA(self) TPP_HAVE_CPP_PRAGMA
 #endif /* TPP_HAVE_CPP_PRAGMA >= 0 */
+#if TPP_HAVE_CPP_EMBED < 0
+		unsigned int tff_TPP_FEAT_CPP_EMBED: 1;
+#define _tpp_features_get_TPP_FEAT_CPP_EMBED(self) tpp_expect((self)->tf_flags.tff_TPP_FEAT_CPP_EMBED, TPP_HAVE_CPP_EMBED == -1)
+#else /* TPP_HAVE_CPP_EMBED < 0 */
+#define _tpp_features_get_TPP_FEAT_CPP_EMBED(self) TPP_HAVE_CPP_EMBED
+#endif /* TPP_HAVE_CPP_EMBED >= 0 */
 	} tf_flags;
 	unsigned char ttf_bitset[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_features;
@@ -6863,30 +6952,30 @@ tpp_skipbse_bck_(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM)
 #endif /* !TPP_HAVE_BSE */
 
 
-#if TPP_HAVE_BSE
+#if TPP_HAVE_ESCAPED_KEYWORDS
 /* Same as `tpp_hashof()', but skip over \-escaped linefeeds when calculating the hash */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
-tpp_hashof_bse_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PARAM);
-#define tpp_hashof_bse(kwd, len, file) tpp_hashof_bse_(kwd, len tpp_bse_file__ARG(file))
+tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PARAM);
+#define tpp_hashof_esc(kwd, len, file) tpp_hashof_esc_(kwd, len tpp_bse_file__ARG(file))
 
 /* Copy `in_text...+=len' to `out_text', whilst removing \-escaped linefeeds
  * The caller must ensure that `out_text' has space for at least `len' bytes,
  * and the actual # of used bytes of `out_text' is returned. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-tpp_without_bse_(tpp_char *tpp_restrict out_text,
+tpp_without_esc_(tpp_char *tpp_restrict out_text,
                  tpp_char const *tpp_restrict in_text,
                  tpp_size len tpp_bse_file__PARAM);
-#define tpp_without_bse(out_text, in_text, len, file) \
-	tpp_without_bse_(out_text, in_text, len tpp_bse_file__ARG(file))
+#define tpp_without_esc(out_text, in_text, len, file) \
+	tpp_without_esc_(out_text, in_text, len tpp_bse_file__ARG(file))
 
 /* Compare 2 strings, one of which may contain \-escaped linefeeds that must be skipped. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) int TPPCALL
-tpp_memcmp_bse_(tpp_char const *lhs_without_bse, tpp_size lhs_len,
-                tpp_char const *rhs_with_bse, tpp_size rhs_len
+tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
+                tpp_char const *rhs_with_esc, tpp_size rhs_len
                 tpp_bse_file__PARAM);
-#define tpp_memcmp_bse(lhs_without_bse, lhs_len, rhs_with_bse, rhs_len, file) \
-	tpp_memcmp_bse_(lhs_without_bse, lhs_len, rhs_with_bse, rhs_len tpp_bse_file__ARG(file))
-#endif /* TPP_HAVE_BSE */
+#define tpp_memcmp_esc(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len, file) \
+	tpp_memcmp_esc_(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
 /* Lookup one of the built-in, pre-defined keywords */
@@ -6895,14 +6984,14 @@ tpp_builtin_getkeyword(tpp_char const *tpp_restrict kwd,
                        tpp_size len, tpp_hash hash);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword_byid(enum tpp_token_id id);
-#if TPP_HAVE_BSE
+#if TPP_HAVE_ESCAPED_KEYWORDS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
-tpp_builtin_getkeyword_bse_(tpp_char const *tpp_restrict kwd,
+tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
                             tpp_size len, tpp_hash hash
                             tpp_bse_file__PARAM);
-#define tpp_builtin_getkeyword_bse(kwd, len, hash, file) \
-	tpp_builtin_getkeyword_bse_(kwd, len, hash tpp_bse_file__ARG(file))
-#endif /* TPP_HAVE_BSE */
+#define tpp_builtin_getkeyword_esc(kwd, len, hash, file) \
+	tpp_builtin_getkeyword_esc_(kwd, len, hash tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
 
@@ -6939,15 +7028,15 @@ _tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                               enum tpp_token_id id);
-#if TPP_HAVE_BSE
+#if TPP_HAVE_ESCAPED_KEYWORDS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
-_tpp_keywords_getkeyword_bse_(tpp_keywords const *tpp_restrict self,
+_tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
                               tpp_char const *tpp_restrict kwd,
                               tpp_size len, tpp_hash hash
                               tpp_bse_file__PARAM);
-#define _tpp_keywords_getkeyword_bse(self, kwd, len, hash, file) \
-	_tpp_keywords_getkeyword_bse_(self, kwd, len, hash tpp_bse_file__ARG(file))
-#endif /* TPP_HAVE_BSE */
+#define _tpp_keywords_getkeyword_esc(self, kwd, len, hash, file) \
+	_tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
 /* Same as above, but also search the built-in keyword table (tpp_builtin_getkeyword) */
@@ -6958,15 +7047,15 @@ tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                              enum tpp_token_id id);
-#if TPP_HAVE_BSE
+#if TPP_HAVE_ESCAPED_KEYWORDS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
-tpp_keywords_getkeyword_bse_(tpp_keywords const *tpp_restrict self,
+tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
                              tpp_char const *tpp_restrict kwd,
                              tpp_size len, tpp_hash hash
                              tpp_bse_file__PARAM);
-#define tpp_keywords_getkeyword_bse(self, kwd, len, hash, file) \
-	tpp_keywords_getkeyword_bse_(self, kwd, len, hash tpp_bse_file__ARG(file))
-#endif /* TPP_HAVE_BSE */
+#define tpp_keywords_getkeyword_esc(self, kwd, len, hash, file) \
+	tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
 /* Same as above, but if the keyword doesn't exist in `self' or the builtin
@@ -6979,12 +7068,12 @@ tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
                         tpp_size len, tpp_hash hash);
 #if TPP_HAVE_BSE
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
-tpp_keywords_newkeyword_bse_(tpp_keywords *tpp_restrict self,
+tpp_keywords_newkeyword_esc_(tpp_keywords *tpp_restrict self,
                              tpp_char const *tpp_restrict kwd,
                              tpp_size len, tpp_hash hash
                              tpp_bse_file__PARAM);
-#define tpp_keywords_newkeyword_bse(self, kwd, len, hash, file) \
-	tpp_keywords_newkeyword_bse_(self, kwd, len, hash tpp_bse_file__ARG(file))
+#define tpp_keywords_newkeyword_esc(self, kwd, len, hash, file) \
+	tpp_keywords_newkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
 #endif /* TPP_HAVE_BSE */
 
 
@@ -7696,9 +7785,9 @@ typedef struct tpp_lexer {
 #define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->tl_kwds, id)
 #define tpp_lexer_kwds_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->tl_kwds, kwd, len, hash)
 #if TPP_HAVE_BSE
-#define _tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) _tpp_keywords_getkeyword_bse(&(self)->tl_kwds, kwd, len, hash, file)
-#define tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) tpp_keywords_getkeyword_bse(&(self)->tl_kwds, kwd, len, hash, file)
-#define tpp_lexer_kwds_newkeyword_bse(self, kwd, len, hash, file) tpp_keywords_newkeyword_bse(&(self)->tl_kwds, kwd, len, hash, file)
+#define _tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) _tpp_keywords_getkeyword_esc(&(self)->tl_kwds, kwd, len, hash, file)
+#define tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) tpp_keywords_getkeyword_esc(&(self)->tl_kwds, kwd, len, hash, file)
+#define tpp_lexer_kwds_newkeyword_bse(self, kwd, len, hash, file) tpp_keywords_newkeyword_esc(&(self)->tl_kwds, kwd, len, hash, file)
 #endif /* TPP_HAVE_BSE */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 #define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->tl_kwds, kwd)

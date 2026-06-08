@@ -82,6 +82,7 @@ local BUILTIN_KEYWORDS: {string: string} = {
 	"endif": "TPP_HAVE_CPP_IF_ELSE_ENDIF",
 	"define": "TPP_HAVE_CPP_DEFINE",
 	"undef": "TPP_HAVE_CPP_DEFINE",
+	"embed": "TPP_HAVE_CPP_EMBED",
 	"assert": "TPP_HAVE_CPP_ASSERT",
 	"unassert": "TPP_HAVE_CPP_ASSERT",
 	"error": "TPP_HAVE_CPP_ERROR",
@@ -110,6 +111,7 @@ local BUILTIN_KEYWORDS: {string: string} = {
 	"__TPP_VERSION__": "TPP_HAVE_CPP_MACROS",
 	"__has_include": "TPP_HAVE_MACRO___has_include",
 	"__has_include_next": "TPP_HAVE_MACRO___has_include_next",
+	"__has_embed": "TPP_HAVE_MACRO___has_embed",
 	"__FILE__": "TPP_HAVE_MACRO___FILE__",
 	"__LINE__": "TPP_HAVE_MACRO___LINE__",
 	"__TIME__": "TPP_HAVE_MACRO___TIME__",
@@ -189,6 +191,10 @@ TPP_KWD(TPP_KWD_define, "define")
 #define TPP_KWD_undef TPP_KWD_undef
 TPP_KWD(TPP_KWD_undef, "undef")
 #endif /* TPP_HAVE_CPP_DEFINE */
+#if TPP_HAVE_CPP_EMBED
+#define TPP_KWD_embed TPP_KWD_embed
+TPP_KWD(TPP_KWD_embed, "embed")
+#endif /* TPP_HAVE_CPP_EMBED */
 #if TPP_HAVE_CPP_ASSERT
 #define TPP_KWD_assert TPP_KWD_assert
 TPP_KWD(TPP_KWD_assert, "assert")
@@ -301,6 +307,10 @@ TPP_KWD(TPP_KWD___has_include, "__has_include")
 #define TPP_KWD___has_include_next TPP_KWD___has_include_next
 TPP_KWD(TPP_KWD___has_include_next, "__has_include_next")
 #endif /* TPP_HAVE_MACRO___has_include_next */
+#if TPP_HAVE_MACRO___has_embed
+#define TPP_KWD___has_embed TPP_KWD___has_embed
+TPP_KWD(TPP_KWD___has_embed, "__has_embed")
+#endif /* TPP_HAVE_MACRO___has_embed */
 #if TPP_HAVE_MACRO___FILE__
 #define TPP_KWD___FILE__ TPP_KWD___FILE__
 TPP_KWD(TPP_KWD___FILE__, "__FILE__")
@@ -531,6 +541,16 @@ TPP_EXTENSION(TPP_EXT_BSE_WHITESPACE, TPP_EXTNAME_BSE_WHITESPACE, TPP_HAVE_BSE_W
 #else /* TPP_HAVE_BSE_WHITESPACE < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_BSE_WHITESPACE(self) TPP_HAVE_BSE_WHITESPACE
 #endif /* TPP_HAVE_BSE_WHITESPACE >= 0 */
+#if TPP_HAVE_ESCAPE_IN_IDENTIFIERS < 0
+#define TPP_EXT_ESCAPE_IN_IDENTIFIERS TPP_EXT_ESCAPE_IN_IDENTIFIERS
+#ifndef TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS
+#define TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS "escape-in-identifiers"
+#endif /* !TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS */
+TPP_EXTENSION(TPP_EXT_ESCAPE_IN_IDENTIFIERS, TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS, TPP_HAVE_ESCAPE_IN_IDENTIFIERS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_ESCAPE_IN_IDENTIFIERS(self) (self)->tes_flags.tef_TPP_EXT_ESCAPE_IN_IDENTIFIERS
+#else /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_ESCAPE_IN_IDENTIFIERS(self) TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+#endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS >= 0 */
 #if TPP_HAVE_ESCAPE_E_IN_STRINGS < 0
 #define TPP_EXT_ESCAPE_E_IN_STRINGS TPP_EXT_ESCAPE_E_IN_STRINGS
 #ifndef TPP_EXTNAME_ESCAPE_E_IN_STRINGS
@@ -821,6 +841,16 @@ TPP_EXTENSION(TPP_EXT_MACRO___has_include_next, TPP_EXTNAME_MACRO___has_include_
 #else /* TPP_HAVE_MACRO___has_include_next < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_MACRO___has_include_next(self) TPP_HAVE_MACRO___has_include_next
 #endif /* TPP_HAVE_MACRO___has_include_next >= 0 */
+#if TPP_HAVE_MACRO___has_embed < 0
+#define TPP_EXT_MACRO___has_embed TPP_EXT_MACRO___has_embed
+#ifndef TPP_EXTNAME_MACRO___has_embed
+#define TPP_EXTNAME_MACRO___has_embed "__has_embed"
+#endif /* !TPP_EXTNAME_MACRO___has_embed */
+TPP_EXTENSION(TPP_EXT_MACRO___has_embed, TPP_EXTNAME_MACRO___has_embed, TPP_HAVE_MACRO___has_embed == -1)
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_embed(self) (self)->tes_flags.tef_TPP_EXT_MACRO___has_embed
+#else /* TPP_HAVE_MACRO___has_embed < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_MACRO___has_embed(self) TPP_HAVE_MACRO___has_embed
+#endif /* TPP_HAVE_MACRO___has_embed >= 0 */
 #if TPP_HAVE_MACRO___FILE__ < 0
 #define TPP_EXT_MACRO___FILE__ TPP_EXT_MACRO___FILE__
 #ifndef TPP_EXTNAME_MACRO___FILE__

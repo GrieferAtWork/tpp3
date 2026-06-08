@@ -1175,6 +1175,7 @@ found_va_opt_body_end:
 /************************************************************************/
 
 
+
 /************************************************************************/
 #if (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || \
      TPP_HAVE_CHARIZE_MACRO_ARGUMENT ||   \
@@ -1274,6 +1275,8 @@ found_va_opt_body_end:
 #if TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED || TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
 		case TPP_KWD_defined: {
 			/* case TPP_KWD_defined: -Wexpansion-to-defined
+			 *
+			 * Warn about use of "defined" in the body of function-style macros.
 			 *
 			 * BUT: Not in the following cases:
 			 * >> #define foo(defined, x) defined(x)    // Macro has a parameter "defined"
@@ -1721,6 +1724,8 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	token->tt_start = token->tt_end;
 	token->tt_end   = pos;
 
+	/* TODO: -Wkeyword-macro */
+
 	/* Store the macro definition within the keyword. */
 	if (!keyword->tk_macro) {
 #if TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO
@@ -1886,6 +1891,7 @@ again_yield_directive_iter:
 	case TPP_KWD_elif:
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
+		/* TODO: -Wundef */
 		/* TODO */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
@@ -1896,6 +1902,7 @@ again_yield_directive_iter:
 	case TPP_KWD_elifndef:
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
+		/* TODO: -Wheader-guard */
 		/* TODO */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
@@ -1904,6 +1911,7 @@ again_yield_directive_iter:
 	case TPP_KWD_endif:
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
+		/* TODO: -Wno-endif-labels */
 		/* TODO */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
@@ -2135,6 +2143,20 @@ again_yield_directive_iter:
 		return tpp_lexer_process_pragma_directive(self);
 	}	break;
 #endif /* TPP_HAVE_CPP_PRAGMA */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_CPP_EMBED
+	case TPP_KWD_embed: {
+		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_EMBED))
+			goto handle_unknown_directive;
+		/* TODO: #embed  (https://en.cppreference.com/c/preprocessor/embed) */
+		goto seek_end_of_line;
+#define WANT_seek_end_of_line
+	}	break;
+#endif /* TPP_HAVE_CPP_EMBED */
 /************************************************************************/
 
 

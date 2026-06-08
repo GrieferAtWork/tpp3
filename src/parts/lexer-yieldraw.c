@@ -24,6 +24,7 @@
 #include "api.h"
 
 #include "config.h"
+#include "ctype.h"
 #include "extensions.h"
 #include "features.h"
 #include "file.h"
@@ -227,10 +228,6 @@ tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base) {
 	return uc;
 }
 
-
-#define TPP_UTF8_1BYTE_MAX ((UINT32_C(1) << 7) - 1)
-#define TPP_UTF8_2BYTE_MAX ((UINT32_C(1) << 11) - 1)
-#define TPP_UTF8_3BYTE_MAX ((UINT32_C(1) << 16) - 1)
 
 /* Decode a single utf-8 character.
  * - If necessary, expand the current file's chunk
@@ -1485,6 +1482,77 @@ warn_premature_eof:
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 }
 #endif /* NEED_tpp_lexer_seek_end_of_raw_string */
+
+
+#if TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+/* Seek end of unichar: foo\U12345678XY
+ *                         ^=in      ^out */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
+	tpp_errno error = TPP_EOK;
+	tpp_char const *scan = *p_pos;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_size rel_start = tpp_file_ptr2rel(file, scan);
+	tpp_assert(scan < file->tf_end);
+#if TPP_HAVE_TRIGRAPHS
+	tpp_assert(*scan == '\\' || *scan == '?');
+	++scan;
+	if (scan[-1] == '?')
+		scan += 2; /* ??/ */
+#else /* TPP_HAVE_TRIGRAPHS */
+	tpp_assert(*scan == '\\');
+	++scan;
+#endif /* !TPP_HAVE_TRIGRAPHS */
+	if (scan >= file->tf_end) {
+		tpp_size rel_pos = tpp_file_ptr2rel(file, scan);
+		error = tpp_file_expandchunk(file);
+		if (TPP_ISERR(error))
+			goto done;
+		scan = tpp_file_rel2ptr(file, rel_pos);
+	}
+	if (*scan == 'u' || *scan == 'U') {
+		/* No BSE allowed in here -- \u \U happens at the same time,
+		 * and I don't want to allow one escape escaping another escape.
+		 *
+		 * NOTE: If this ever needs to be added, would also need to add
+		 *       support in "tpp_decode_bsi()" (our partner function) */
+		unsigned int cur_digit = 0;
+		unsigned int max_digit = *scan == 'U' ? 8 : 4;
+		do {
+			tpp_char nibble_ch;
+			if ((scan + cur_digit + 1) >= file->tf_end) {
+				tpp_size rel_pos = tpp_file_ptr2rel(file, scan);
+				error = tpp_file_expandchunk(file);
+				if (TPP_ISERR(error))
+					goto done;
+				scan = tpp_file_rel2ptr(file, rel_pos);
+				if ((scan + cur_digit + 1) >= file->tf_end)
+					break;
+			}
+			nibble_ch = scan[cur_digit + 1];
+			if (nibble_ch >= '0' && nibble_ch <= '9') {
+				/* ... */
+			} else if (nibble_ch >= 'a' && nibble_ch <= 'f') {
+				/* ... */
+			} else if (nibble_ch >= 'A' && nibble_ch <= 'F') {
+				/* ... */
+			} else {
+				break;
+			}
+			++cur_digit;
+		} while (cur_digit < max_digit);
+		if (cur_digit == 0)
+			goto done;
+		scan += 1;
+		scan += cur_digit;
+		*p_pos = scan;
+		return TPP_EOK;
+	}
+done:
+	*p_pos = tpp_file_rel2ptr(file, rel_start);
+	return error;
+}
+#endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 
 
 
@@ -2953,23 +3021,43 @@ not_a_trigraph:
 
 /************************************************************************/
 	case '\\': {
+#if TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+		if (tpp_lexer_getext(self, TPP_EXT_ESCAPE_IN_IDENTIFIERS)) {
+			tpp_char const *npos;
+			tpp_size rel_before, rel_after;
+			npos = tpp_file_rel2ptr(file, rel_start);
+			rel_before = tpp_file_ptr2rel(file, npos);
+			error = tpp_lexer_skip_bsi(self, &npos);
+			if (TPP_ISERR(error))
+				goto return_error;
+			rel_after = tpp_file_ptr2rel(file, npos);
+			tpp_assert(rel_before <= rel_after);
+			if (rel_before < rel_after) {
+				pos = npos;
+				goto handle_keyword_with_esc;
+#define WANT_handle_keyword_with_esc
+			}
+		}
+#endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+		{
 #if TPP_HAVE_BSE
-		tpp_char const *npos;
-		tpp_size rel_before, rel_after;
-		npos = tpp_file_rel2ptr(file, rel_start);
-		rel_before = tpp_file_ptr2rel(file, npos);
-		error = tpp_lexer_skip_bse(self, &npos);
-		if (TPP_ISERR(error))
-			goto return_error;
-		rel_after = tpp_file_ptr2rel(file, npos);
-		tpp_assert(rel_before <= rel_after);
-		if (rel_before >= rel_after)
-			break; /* No BSE -> regular backslash */
-
-		/* BSE was skipped -> read whatever comes after... */
-		*p_pos = npos;
-		goto again;
+			tpp_char const *npos;
+			tpp_size rel_before, rel_after;
+			npos = tpp_file_rel2ptr(file, rel_start);
+			rel_before = tpp_file_ptr2rel(file, npos);
+			error = tpp_lexer_skip_bse(self, &npos);
+			if (TPP_ISERR(error))
+				goto return_error;
+			rel_after = tpp_file_ptr2rel(file, npos);
+			tpp_assert(rel_before <= rel_after);
+			if (rel_before >= rel_after)
+				break; /* No BSE -> regular backslash */
+	
+			/* BSE was skipped -> read whatever comes after... */
+			*p_pos = npos;
+			goto again;
 #endif /* TPP_HAVE_BSE */
+		}
 	}	break;
 /************************************************************************/
 
@@ -3005,6 +3093,7 @@ not_a_trigraph:
 			if (TPP_ISERR(error))
 				goto return_error;
 			result = TPP_TOK_CHAR; /* 'foo' */
+			/* TODO: -Wno-multichar (but should also depend on "-fmultichar-constants"; aka. "EXT_MULTICHAR_CONST") */
 			goto set_result;
 		}
 #endif /* TPP_HAVE_TPP_TOK_CHAR */
@@ -3312,6 +3401,15 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
 /************************************************************************/
 
+		/* TODO: C says that (implementations can threat) this:
+		 * >> char const *\U0001f431 = "cat";
+		 *
+		 * as a valid identifier. -- We should support that (*and* interpret
+		 * it as "\xF0\x9F\x90\xB1" (its utf-8 repr) during keyword lookup)
+		 *
+		 * For this purpose, the "*_bse" version of keyword lookup functions
+		 * should also have another extension that lets them treat \u and \U
+		 * sequences specially! */
 
 	default: {
 #if TPP_HAVE_UNICODE
@@ -3403,21 +3501,39 @@ handle_space:
 			tpp_size kwd_len;
 			tpp_hash kwd_hash;
 			tpp_keyword const *kwd;
-#if TPP_HAVE_BSE
-			bool uses_bse;
-#endif /* TPP_HAVE_BSE */
+#if TPP_HAVE_ESCAPED_KEYWORDS
+			bool uses_esc;
+			tpp_size rel_kwd_end;
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 #ifdef WANT_handle_keyword
 #undef WANT_handle_keyword
 handle_keyword:
 #endif /* WANT_handle_keyword */
+#if TPP_HAVE_ESCAPED_KEYWORDS
+			uses_esc = false;
+#ifdef WANT_handle_keyword_with_esc
+#undef WANT_handle_keyword_with_esc
+			if (0) {
+handle_keyword_with_esc:
+				uses_esc = true;
+			}
+#endif /* WANT_handle_keyword_with_esc */
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 			error = tpp_lexer_seek_end_of_keyword(self, &pos);
 			if (TPP_ISERR(error))
 				goto return_error;
-#if TPP_HAVE_BSE
-			uses_bse = false;
-			while (pos < file->tf_end) {
-				tpp_char const *npos;
-				tpp_size rel_before, rel_after;
+#if TPP_HAVE_ESCAPED_KEYWORDS
+			rel_kwd_end = tpp_file_ptr2rel(file, pos);
+			for (;;) {
+				if (pos >= file->tf_end) {
+					tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
+					error = tpp_file_expandchunk(file);
+					if (TPP_ISERR(error))
+						goto return_error;
+					pos = tpp_file_rel2ptr(file, rel_pos);
+					if (pos >= file->tf_end)
+						break;
+				}
 				if (*pos == '\\') {
 					/* Backslash */
 				} else
@@ -3449,36 +3565,75 @@ handle_keyword:
 				} else
 #endif /* TPP_HAVE_TRIGRAPHS */
 				{
-					break;
+					break; /* No backslash */
 				}
-				npos = pos;
-				error = tpp_lexer_skip_bse(self, &npos);
-				if (TPP_ISERR(error))
-					goto return_error;
-				if (npos == pos)
-					break;
-				rel_before = tpp_file_ptr2rel(file, npos);
-				error = tpp_lexer_seek_end_of_keyword(self, &npos);
-				if (TPP_ISERR(error))
-					goto return_error;
-				rel_after  = tpp_file_ptr2rel(file, npos);
-				tpp_assert(rel_before <= rel_after);
-				if (rel_before >= rel_after)
-					break;
-				uses_bse = true;
-				pos      = npos;
-			}
+#if TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+				if (tpp_lexer_getext(self, TPP_EXT_ESCAPE_IN_IDENTIFIERS)) {
+					tpp_char const *npos = pos;
+					tpp_size rel_pos;
+					rel_pos = tpp_file_ptr2rel(file, pos);
+					error = tpp_lexer_skip_bsi(self, &npos);
+					pos = tpp_file_rel2ptr(file, rel_pos);
+					if (TPP_ISERR(error))
+						goto return_error;
+					tpp_assert(pos <= npos);
+					if (pos < npos) {
+						pos = npos;
+						uses_esc = true;
+						error = tpp_lexer_seek_end_of_keyword(self, &pos);
+						if (TPP_ISERR(error))
+							goto return_error;
+						rel_kwd_end = tpp_file_ptr2rel(file, pos);
+						continue;
+					}
+				}
+#endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+				{
+#if TPP_HAVE_BSE
+					tpp_char const *npos = pos;
+					tpp_size rel_pos;
+					rel_pos = tpp_file_ptr2rel(file, pos);
+					error = tpp_lexer_skip_bse(self, &npos);
+					pos = tpp_file_rel2ptr(file, rel_pos);
+					if (TPP_ISERR(error))
+						goto return_error;
+					tpp_assert(pos <= npos);
+					if (pos < npos) {
+						pos = npos;
+						rel_pos = tpp_file_ptr2rel(file, pos);
+						error = tpp_lexer_seek_end_of_keyword(self, &npos);
+						pos = tpp_file_rel2ptr(file, rel_pos);
+						if (TPP_ISERR(error))
+							goto return_error;
+						tpp_assert(pos <= npos);
+						if (pos < npos) {
+							pos = npos;
+							uses_esc = true;
+							rel_kwd_end = tpp_file_ptr2rel(file, pos);
+						} else {
+							/* Still continue in case there's more to be found... */
+#if !TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+							break; /* No need to continue without \u-identifiers */
+#endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+						}
+						continue;
+					}
 #endif /* TPP_HAVE_BSE */
+				}
+				break;
+			}
+			pos = tpp_file_rel2ptr(file, rel_kwd_end);
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 			/* Lookup/create keyword */
 			kwd_start = tpp_file_rel2ptr(file, rel_start);
 			kwd_len   = (tpp_size)(pos - kwd_start);
-#if TPP_HAVE_BSE
-			if (uses_bse) {
-				kwd_hash = tpp_hashof_bse(kwd_start, kwd_len, file);
-				kwd = tpp_keywords_newkeyword_bse(&self->tl_kwds, kwd_start, kwd_len, kwd_hash, file);
+#if TPP_HAVE_ESCAPED_KEYWORDS
+			if (uses_esc) {
+				kwd_hash = tpp_hashof_esc(kwd_start, kwd_len, file);
+				kwd = tpp_keywords_newkeyword_esc(&self->tl_kwds, kwd_start, kwd_len, kwd_hash, file);
 			} else
-#endif /* TPP_HAVE_BSE */
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 			{
 				kwd_hash = tpp_hashof(kwd_start, kwd_len);
 				kwd = tpp_keywords_newkeyword(&self->tl_kwds, kwd_start, kwd_len, kwd_hash);

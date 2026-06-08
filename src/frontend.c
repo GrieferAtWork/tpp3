@@ -22,6 +22,10 @@
 
 #include <stdio.h>
 
+#if TPP_OS_WINDOWS
+#include <Windows.h>
+#endif /* TPP_OS_WINDOWS */
+
 TPP_DECL_BEGIN
 
 int main(int argc, char *argv[]) {
@@ -34,6 +38,10 @@ int main(int argc, char *argv[]) {
 		--argc;
 		++argv;
 	}
+
+#if TPP_OS_WINDOWS
+	SetConsoleOutputCP(CP_UTF8);
+#endif /* TPP_OS_WINDOWS */
 
 	if (argc)
 		filename = *argv;

@@ -144,6 +144,22 @@ tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL tpp_utoa(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL tpp_itoa(char buf[TPP_ITOA_MAXLEN], tpp_intmax value);
 
+
+#define TPP_UTF8_1BYTE_MAX ((UINT32_C(1) << 7) - 1)
+#define TPP_UTF8_2BYTE_MAX ((UINT32_C(1) << 11) - 1)
+#define TPP_UTF8_3BYTE_MAX ((UINT32_C(1) << 16) - 1)
+#define TPP_UTF8_4BYTE_MAX ((UINT32_C(1) << 21) - 1)
+#define TPP_UTF8_5BYTE_MAX ((UINT32_C(1) << 26) - 1)
+#define TPP_UTF8_6BYTE_MAX ((UINT32_C(1) << 31) - 1)
+
+#define TPP_UTF8_MAXLEN 7 /* Enough to write *any* 32-bit unicode ordinal as utf-8 (including invalid ones) */
+
+#if TPP_HAVE_TPP_UNICODE_WRITEUTF8
+/* Encode "uch" as utf-8 into "buf" and return the pointer after the last-written byte. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
+tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc);
+#endif /* TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

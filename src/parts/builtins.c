@@ -499,9 +499,9 @@ tpp_builtin_getkeyword_byid(enum tpp_token_id id) {
 	return NULL;
 }
 
-#if TPP_HAVE_BSE
+#if TPP_HAVE_ESCAPED_KEYWORDS
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
-tpp_builtin_getkeyword_bse_(tpp_char const *tpp_restrict kwd,
+tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
                             tpp_size len, tpp_hash hash
                             tpp_bse_file__PARAM) {
 	tpp_keyword const *result;
@@ -510,14 +510,14 @@ tpp_builtin_getkeyword_bse_(tpp_char const *tpp_restrict kwd,
 	for (; result; result = result->tk_next) {
 		if (result->tk_hash != hash)
 			continue;
-		if (tpp_memcmp_bse(result->tk_kwd,
+		if (tpp_memcmp_esc(result->tk_kwd,
 		                   result->tk_len,
 		                   kwd, len, file) == 0)
 			break;
 	}
 	return result;
 }
-#endif /* TPP_HAVE_BSE */
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
 
