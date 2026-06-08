@@ -283,14 +283,42 @@ typedef struct tpp_macro_argbuf {
 /* Return the invocation argument buffer of "macro"
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_macro_argbuf *TPPCALL
-tpp_macro_require_argbuf(tpp_macro *tpp_restrict macro) {
+tpp_macro_acquire_argbuf(tpp_macro *tpp_restrict macro) {
 	tpp_macro_argbuf *result = macro->tm_data.tmd_func.tmf_argbuf;
 	if (result == NULL) {
 		tpp_size size = tpp_macro_argbuf_sizeof(macro->tm_data.tmd_func.tmf_argc);
 		result = (tpp_macro_argbuf *)tpp_malloc(size);
-		macro->tm_data.tmd_func.tmf_argbuf = result;
+	} else {
+		/* Steal buffer (to prevent duplicate buffer use on recursion) */
+		macro->tm_data.tmd_func.tmf_argbuf = NULL;
 	}
 	return result;
+}
+
+/* Release an argument buffer back to a macro. */
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
+                         tpp_macro_argbuf *tpp_restrict buffer) {
+	if (macro->tm_data.tmd_func.tmf_argbuf == NULL) {
+		/* Likely case (when there was no recursion): can cache buffer in macro */
+		macro->tm_data.tmd_func.tmf_argbuf = buffer;
+	} else {
+		/* This case can happen during recursion, when another invocation
+		 * of the same macro appears somewhere in the arguments given to it:
+		 *
+		 * >> #define min(a, b) ((a) < (b) ? (a) : (b))
+		 * >> min(10, min(20, 30));
+		 * ^ Notice how another call to "min" appears in the arguments of
+		 *   an outer call. As such, at one point both calls need to be
+		 *   active at the same time, at which point there will need to
+		 *   be (at least) 2 "tpp_macro_argbuf" for the same macro.
+		 *
+		 * The point where we get here is when the outer "min" completes,
+		 * and wants to dispose of its argument buffer, but notices that
+		 * the macro already has a buffer cached within (namely: the one
+		 * that was used by the inner invocation) */
+		tpp_free(buffer);
+	}
 }
 
 
@@ -391,7 +419,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	}
 
 	/* Load argument buffer of macro */
-	argbuf = tpp_macro_require_argbuf(macro);
+	argbuf = tpp_macro_acquire_argbuf(macro);
 	if tpp_unlikely(!argbuf)
 		goto err_rollback_nomem;
 	argc = macro_argc = macro->tm_data.tmd_func.tmf_argc;
@@ -404,7 +432,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	                               tpp_lexer_seek_rparen_flags_frommacro(macro),
 	                               TPP_MACRO_KIND_ASTOK(macro->tm_kind));
 	if (TPP_TOK_ISERR(tok))
-		goto err_rollback;
+		goto err_rollback_argbuf;
 	tpp_assert(macro_argc == macro->tm_data.tmd_func.tmf_argc);
 	if (argc < macro_argc) {
 		/* Too few arguments */
@@ -426,7 +454,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			                           (unsigned int)argc);
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
-				goto err_rollback;
+				goto err_rollback_argbuf;
 			}
 		}
 #endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
@@ -486,7 +514,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 					tpp_file_breakpos(file);
 					tpp_file_breakeof(file);
 					tpp_file_autopopfile_break(file);
-					goto err_rollback_invoke_expinfo_i;
+					goto err_rollback_argbuf_invoke_expinfo_i;
 				}
 
 				/* Account for expanded text */
@@ -519,7 +547,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	/* Allocate the perfectly-sized chunk that will describe the expanded macro's text */
 	result_chunk = tpp_string_malloc(result_chunk_size);
 	if tpp_unlikely(!result_chunk)
-		goto err_rollback_invoke_expinfo_nomem;
+		goto err_rollback_argbuf_invoke_expinfo_nomem;
 
 	/* Produce body-chunk-string for function-style macro expansion */
 	{
@@ -669,6 +697,9 @@ next_op:
 		}
 	}
 
+	/* Release argument buffer back to macro */
+	tpp_macro_release_argbuf(macro, argbuf);
+
 #if TPP_HAVE_MACRO_RECURSION
 	if (macro->tm_expansions > 0) {
 		/* Check if an identical body-chunk-string already exists
@@ -725,11 +756,11 @@ err_rollback_result_chunk_nomem:
 /*err_rollback_result_chunk:*/
 	tpp_string_destroy(result_chunk);
 	goto err_rollback;
-err_rollback_invoke_expinfo_nomem:
+err_rollback_argbuf_invoke_expinfo_nomem:
 	tok = TPP_TOK_ENOMEM;
-/*err_rollback_invoke_expinfo:*/
+/*err_rollback_argbuf_invoke_expinfo:*/
 	i = macro_argc;
-err_rollback_invoke_expinfo_i:
+err_rollback_argbuf_invoke_expinfo_i:
 	while (i) {
 		--i;
 		tpp_macro_argument const *arg = &macro->tm_data.tmd_func.tmf_argv[i];
@@ -739,6 +770,8 @@ err_rollback_invoke_expinfo_i:
 			tpp_macro_expinfo_fini(expand, arginfo);
 		}
 	}
+err_rollback_argbuf:
+	tpp_macro_release_argbuf(macro, argbuf);
 err_rollback:
 	tpp_lexer_seek_rollback(self, &backup);
 	return tok;
