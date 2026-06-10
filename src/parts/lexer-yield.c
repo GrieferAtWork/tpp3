@@ -246,7 +246,7 @@ tpp_lexer_handle_string_feature_test_cb(void *arg, tpp_string *chunk,
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id mode) {
 	tpp_lexer_seek_backup backup;
-	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	tpp_token_id tok;
 	unsigned int recursion;
 #if TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS
@@ -267,6 +267,8 @@ again_yield:
 		goto err_tok;
 	if (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 		goto again_yield;
+	/* FIXME: Opening '(' may be in files further up the #include-stack! */
+	/* FIXME: Arguments may be in files further up the #include-stack! */
 	if (tok != TPP_TOK_OFCHAR('('))
 		goto rollback;
 
@@ -575,7 +577,7 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lexer_seek_backup backup;
-	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
@@ -584,8 +586,10 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if tpp_unlikely(TPP_TOK_ISERR(tok))
 		goto err_tok;
+	/* FIXME: Opening '(' may be in files further up the #include-stack! */
 	if (tok != '(')
 		goto rollback;
+	/* FIXME: Arguments may be in files further up the #include-stack! */
 	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "_Pragma",
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
@@ -644,7 +648,7 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lexer_seek_backup backup;
-	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
@@ -653,8 +657,10 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if tpp_unlikely(TPP_TOK_ISERR(tok))
 		goto err_tok;
+	/* FIXME: Opening '(' may be in files further up the #include-stack! */
 	if (tok != '(')
 		goto rollback;
+	/* FIXME: Arguments may be in files further up the #include-stack! */
 	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "__pragma",
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
@@ -779,7 +785,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lexer_seek_backup backup;
 	tpp_char const *identifier_start;
-	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
@@ -788,13 +794,15 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if tpp_unlikely(TPP_TOK_ISERR(tok))
 		goto err_tok;
+	/* FIXME: Opening '(' may be in files further up the #include-stack! */
 	if (tok != '(')
 		goto rollback;
+	/* FIXME: Arguments may be in files further up the #include-stack! */
 	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "__TPP_IDENTIFIER",
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
 		goto err_tok;
-	/* file->tf_pos: points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_begin()") */
+	/* file->tf_pos: points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_start()") */
 	identifier_start = file->tf_pos;
 	tpp_file_pusheof(file);
 	tpp_file_pushifdef(file);
@@ -932,7 +940,8 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #endif /* TPP_HAVE_MACRO___has_embed */
 	{
 		/* TODO */
-		/* TODO: __has_embed (https://en.cppreference.com/c/preprocessor/embed) */
+		/* TODO: __has_embed (https://en.cppreference.com/c/preprocessor/embed)
+		 * >> __STDC_EMBED_NOT_FOUND__, __STDC_EMBED_FOUND__, __STDC_EMBED_EMPTY__ */
 	}	break;
 #endif /* ... */
 /************************************************************************/

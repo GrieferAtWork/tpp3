@@ -933,7 +933,7 @@ again_yield_after_empty:
 		tpp_errno result;
 
 		/* Must make sure that the next token isn't another (non-empty) string */
-		pos = tpp_lexer_seek_begin(self, &backup);
+		pos = tpp_lexer_seek_start(self, &backup);
 		tpp_lexer_nowarnings_pushon(self);
 again_yield_after_single:
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);

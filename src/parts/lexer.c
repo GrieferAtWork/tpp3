@@ -36,10 +36,8 @@ TPP_DECL_BEGIN
 
 /* Make sure that offsets within "tpp_lexer" are properly aligned such that
  * the tail end of "tpp_token" correctly overlaps with the start of "tpp_file" */
-#if TPP_HAVE_INCLUDE_STACK
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_start) ==
                   tpp_offsetof(tpp_lexer, tl_core.tlc_input.tli_file.tf_tpos));
-#endif /* !TPP_HAVE_INCLUDE_STACK */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_end) ==
                   tpp_offsetof(tpp_lexer, tl_core.tlc_input.tli_file.tf_pos));
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_chunk) ==
@@ -171,6 +169,102 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok) {
 	return NULL;
 }
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */
+
+#if TPP_HAVE_LEXER_MANUALPOPFILE
+
+/* Example of the data-layout (also demonstrating how data is backed up)
+ * when using the `tpp_lexer_manualpopfile_*()' set of functions:
+ *
+ * Input:
+ * >> #define foo(a, b) a+b
+ * >> #define bar       foo
+ * >> #define baz       bar
+ * >> #define exo       baz
+ * >> 
+ * >> bot:  exo[10, 20]
+ *
+ * Data-layout:
+ * >> tpp_lexer_manualpopfile_start(self):
+ *    tpp_lexer_getfile    ="bar"->tf_prev=@baz="baz"
+ *    _tlmpf_orig_prev @baz="baz"->tf_prev=@exo="exo"
+ *                     @exo="exo"->tf_prev=@bot="bot"
+ *                     @bot="bot"->tf_prev=NULL
+ *
+ * >> tpp_lexer_manualpopfile_popfile(self):            // 1st
+ *    tpp_lexer_getfile    ="baz"->tf_prev=@exo="exo"
+ *    _tlmpf_orig_prev @baz="bar"->tf_prev=@exo="exo"
+ *                     @exo="exo"->tf_prev=@bot="bot"
+ *                     @bot="bot"->tf_prev=NULL
+ *
+ * >> tpp_lexer_manualpopfile_popfile(self):            // 2nd
+ *    tpp_lexer_getfile    ="exo"->tf_prev=@bot="bot"
+ *    _tlmpf_orig_prev @baz="bar"->tf_prev=@exo="baz"
+ *                     @exo="baz"->tf_prev=@bot="bot"
+ *                     @bot="bot"->tf_prev=NULL
+ *
+ * >> tpp_lexer_manualpopfile_popfile(self):            // 3rd
+ *    tpp_lexer_getfile    ="bot"->tf_prev=NULL
+ *    _tlmpf_orig_prev @baz="bar"->tf_prev=@exo="baz"
+ *                     @exo="baz"->tf_prev=@bot="exo"
+ *                     @bot="exo"->tf_prev=NULL
+ */
+
+TPP_INLINE TPP_NONNULL((1, 2)) void TPPCALL
+tpp_swapmem(void *a, void *b, tpp_size num_bytes) {
+	unsigned char *ca = (unsigned char *)a;
+	unsigned char *cb = (unsigned char *)b;
+	for (; num_bytes; --num_bytes, ++ca, ++cb) {
+		unsigned char temp;
+		temp = *ca;
+		*ca  = *cb;
+		*cb  = temp;
+	}
+}
+
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_manualpopfile_popfile(tpp_lexer *tpp_restrict self) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *const prev = file->TPP_INTERNAL(tf_prev);
+	tpp_assert(prev != NULL && "Nowhere to pop to (caller didn't check `tpp_lexer_manualpopfile_canpopfile()')");
+	file->tf_prev = prev->tf_prev;
+	tpp_swapmem(file, prev, sizeof(tpp_file)); /* NOTE: This could skip "tf_prev", since that's equal in both */
+}
+
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+_tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
+                                        tpp_file *tpp_restrict orig_prev) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	while (file->tf_prev != orig_prev) {
+		tpp_file *last = orig_prev;
+		tpp_file *last_prev;
+		tpp_assert(last);
+		while (last->tf_prev != file->tf_prev) {
+			tpp_assert(last->tf_prev);
+			last = last->tf_prev;
+		}
+		/* "tf_prev" shouldn't be swapped, so backup */
+		last_prev = last->tf_prev;
+		/* This could skip "tf_prev"; then wouldn't need "last_prev" */
+		tpp_swapmem(file, last, sizeof(tpp_file));
+		last->tf_prev = last_prev;
+		file->tf_prev = last;
+	}
+}
+
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+_tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
+                                      tpp_file *tpp_restrict orig_prev) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	while (file->tf_prev != orig_prev) {
+		tpp_file *prev_prev;
+		tpp_assert(orig_prev);
+		prev_prev = orig_prev->tf_prev;
+		tpp_file_fini(orig_prev);
+		tpp_file_free(orig_prev);
+		orig_prev = prev_prev;
+	}
+}
+#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 
 
 TPP_DECL_END

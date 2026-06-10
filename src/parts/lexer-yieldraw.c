@@ -1515,7 +1515,12 @@ tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 		 * and I don't want to allow one escape escaping another escape.
 		 *
 		 * NOTE: If this ever needs to be added, would also need to add
-		 *       support in "tpp_decode_bsi()" (our partner function) */
+		 *       support in "tpp_decode_bsi()" (our partner function)
+		 *
+		 * TODO: This is incorrect -- the C standard allows BSE inside
+		 *       \u (and \U)-characters keywords since C++23:
+		 * https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2621r2.pdf
+		 */
 		unsigned int cur_digit = 0;
 		unsigned int max_digit = *scan == 'U' ? 8 : 4;
 		do {

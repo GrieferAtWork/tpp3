@@ -369,8 +369,55 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	tpp_assert(TPP_MACRO_KIND_ISFUNC(macro->tm_kind));
 
 	/* Seek ahead to find the '('-token expected by the macro. */
-	pos = tpp_lexer_seek_begin(self, &backup);
+	pos = tpp_lexer_seek_start(self, &backup);
 	do {
+		/* FIXME: Both this code here, as well as code in "tpp_lexer_seek_rparen_ex()"
+		 *        must be allowed to move up the #include-stack (macro argument lists
+		 *        are not required to end in the current macro):
+		 * >> #define foo(a, b) [a][b]
+		 * >> #define foz       foo          // case #1: opening '(' exists in caller ("bar")
+		 * >> #define bar(x)    foz(x, _     // case #2: (remainder of) second parameter exists in caller "y"
+		 * >> #define baz(x, y) bar(x) y)    // case #3: final closing ')' is in different file than opening '('
+		 * >> baz(10, 20);  // Should expand to "[10][_ 20]"
+		 *
+		 * NOTE: Even the old deemon didn't get this completely right; it seems like
+		 *       it only allowed the opening '(' to exist in a different file than
+		 *       the name of the macro being called, but didn't handle file-breaks
+		 *       within macro parameter lists, either...
+		 *
+		 * TODO: The only real way to handle this efficiently in the general case where all
+		 *       arguments are supplied by the same #include-file, is for "tpp_lexer_arginfo"
+		 *       to include another property "TPP_REF tpp_string *tlai_chunk" that stores a
+		 *       reference to the chunk containing the argument data. This chunk then either
+		 *       aliases some input file, or was created on-the-fly in those cases where a
+		 *       macro argument is the concatenation of multiple files (above: "_ 20" would
+		 *       be one such on-the-fly-allocated string); this also needs to happen when
+		 *       input arguments aren't continuous (which can happen when #if-directives
+		 *       are contained in macro arguments)
+		 *       Additionally, "tpp_lexer_seek_rparen()" must be changed to no longer take a
+		 *       "tpp_char const **p_pos" argument, and instead operate using tpp_lexer_yieldpp,
+		 *       which will also very neatly solve the issue of allowing #if-directives within
+		 *       macro arguments, including allowing #if-directives to mask ","-s used to
+		 *       separate arguments (which is something that doesn't work at all right now,
+		 *       and also didn't work in TPP2)
+		 * TODO: Secondly, "tpp_lexer_seek_start()" must be made capable of moving up the
+		 *       #include-stack, meaning it probably needs to be re-designed entirely such
+		 *       that it doesn't require the caller to use "tpp_lexer_yieldraw_at()", since
+		 *       that function is specifically designed not to walk the #include-stack.
+		 *       >> #define foo(a) a+a
+		 *       >> #define bar(x) x
+		 *       >> bar(foo)[10];  // Must expand to "foo[10]"
+		 *       >> bar(foo)(10);  // Must expand to "10+10"
+		 *       The problem here is that (at least for the initial, opening '('-token),
+		 *       if that token doesn't exist, then the macro's name must expand to itself,
+		 *       meaning that this peek-ahead functionality needs to be able to run on
+		 *       files other than the current one.
+		 *       Idea: don't try to re-design "tpp_lexer_yieldraw_at()" -- instead, have a
+		 *             function specifically designed to go through the #include-stack and
+		 *             temporarily override the current file when searching for '('.
+		 *       Once a '(' token is found, the "rollback" path isn't needed anymore, and
+		 *       all files (temporarily) popped in search for the '(' can then actually be
+		 *       popped. */
 		tok = tpp_lexer_yieldraw_at(self, &pos);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
@@ -426,6 +473,9 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	invoke_arginfo = tpp_macro_argbuf_getarginfo(argbuf, argc);
 	invoke_expinfo = tpp_macro_argbuf_getexpinfo(argbuf, argc);
 
+	/* TODO: This the argument-parsing-call here must eventually use tpp_lexer_yieldpp(),
+	 *       there needs to be a tpp_macro_incref() since otherwise "macro" might be
+	 *       free'd if a #undef directive is parsed in here! */
 	/* Load parameters of function-style macro */
 #if TPP_HAVE_LEXER_SEEK_RPAREN_EX
 	tok = tpp_lexer_seek_rparen_ex(self, &pos, invoke_arginfo, &argc,
@@ -739,7 +789,7 @@ next_op:
 	/* For tracebacks: point at the macro's name
 	 *
 	 * The pointer found in `file->tf_pos' was previously
-	 * set up as such by `tpp_lexer_seek_begin()'. */
+	 * set up as such by `tpp_lexer_seek_start()'. */
 	prev_file->tf_tpos = prev_file->tf_pos;
 
 	/* Override return-file to continue parsing after ')'-token */

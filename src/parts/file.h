@@ -146,7 +146,6 @@ struct tpp_macro;
 #endif /* TPP_HAVE_CPP_MACROS */
 
 typedef struct tpp_file {
-#if TPP_HAVE_INCLUDE_STACK
 	tpp_char const     *TPP_INTERNAL(tf_tpos);  /* [?..?][valid_if(DID_CALL(tpp_lexer_yieldraw))]
 	                                             * Start of last-loaded token (also valid in "tf_tprev"-files)
 	                                             * WARNING: This field is NOT maintained/updated by `tpp_file_*' APIs
@@ -155,11 +154,39 @@ typedef struct tpp_file {
 	                                             *          a new file is pushed onto the #include-stack, and can
 	                                             *          then be used to calculate line/column information when
 	                                             *          lexer prints its #include-stack. */
-#endif /* TPP_HAVE_INCLUDE_STACK */
 	/* Important: "tf_pos" and "tf_chunk" must come first, so they can shadow the tail of "tpp_token" */
 	tpp_char const     *TPP_INTERNAL(tf_pos);   /* [0..1][<= tf_end] File pointer to next unread byte. */
 	TPP_REF tpp_string *TPP_INTERNAL(tf_chunk); /* [0..1][const_if(tf_kind != TPP_FILE_KIND_IO)] Currently loaded text-chunk (mutable for text-files) */
 	tpp_char const     *TPP_INTERNAL(tf_end);   /* [0..1][>= tf_chunk->ts_str && <= tf_chunk->ts_str+tf_chunk->ts_len][const_if(tf_kind != TPP_FILE_KIND_IO)] End of effective file content (mutable for text-files) */
+	/* TODO: Need an additional "tpp_char const *tf_keep" here whose only purpose
+	 *       is to set an extra, lower-bound of effective text-data to always
+	 *       keep loaded. But this pointer can also just be NULL, in which case
+	 *       only data in [tf_pos,tf_end) must be kept loaded!
+	 *       This pointer is needed when parsing the argument list of macros,
+	 *       and is needed to keep already-parsed argument data in memory when
+	 *       using tpp_lexer_yieldpp (which doesn't have a *_at variant), as
+	 *       well as keep the names of macros loaded such that (once the end
+	 *       of a macro argument list is found), the bottom-most macro name
+	 *       is still loaded in memory for "tpp_file_getlastpos()":
+	 *       >> #define foo(a, b) a+b
+	 *       >> #define bar       foo(10
+	 *       >> bar,20)
+	 *       1. While parsing macro arguments, when "bar" is popped from
+	 *          the #include-stack, the string "10" from "bar" is saved
+	 *          in "tpp_lexer_arginfo", alongside a TPP_REF to the chunk
+	 *          containing that string
+	 *       2. Then, in the main file "tf_tpos" will point at "bar", but
+	 *          the next call to tpp_lexer_yieldpp() (that will eventually
+	 *          return ",") would be allocated to deallocate the chunk that
+	 *          contains "bar" (which we don't want). Because of that, the
+	 *          macro-argument parsing code must set "tf_keep = tf_tpos"
+	 *          (assuming that "!tf_keep || tf_keep > tf_tpos") before
+	 *          continuing to yield tokens, such that "bar" will continue
+	 *          to remain loaded
+	 *       3. Once the argument is fully loaded, "tf_keep" can be reset
+	 *          to its previous value, and "tf_tpos" can once again be set
+	 *          to "bar", allowing tracebacks to display the correct location
+	 */
 #if TPP_HAVE_INCLUDE_STACK
 	struct tpp_file    *TPP_INTERNAL(tf_prev);  /* [0..1] Parent file in #include stack */
 	struct tpp_file    *TPP_INTERNAL(tf_tprev); /* [0..1] Real parent for the purposes of message tracebacks (not affected by `tpp_file_autopopfile_pushoff') */
@@ -255,6 +282,25 @@ typedef struct tpp_file {
 #if TPP_HAVE_IFDEF_STACK
 #define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef))
 #endif /* !TPP_HAVE_IFDEF_STACK */
+
+/* Returns a pointer to the start of the effectively relevant source.
+ * - For the currently loaded file, this is the start of the current
+ *   token If no tokens have been yielded yet, the value returned by
+ *   this macro is undefined.
+ * - For macros further up the #include-stack, this (tries to) point
+ *   to the start of the macro's name. However, if the macro's name
+ *   was located in a file that has since been popped, this will
+ *   instead be the start of whatever macro-invocation originally
+ *   caused whatever file to be pushed that then contains the current
+ *   macro-call:
+ *   >> #define foo(a, b) a+b
+ *   >> #define bar       foo(10
+ *   >> bar,20)
+ *      ^      ^ tpp_file_getpos(self)   (These are the pointed-to positions from the parent-
+ *      tpp_file_getlastpos()             file of the one containing the expanded "10+20" text)
+ */
+#define tpp_file_getlastpos(self) ((self)->TPP_INTERNAL(tf_tpos))
+
 
 /* Initialize common fields of "self" */
 #define _tpp_file_init_common(self) \

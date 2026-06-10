@@ -243,7 +243,7 @@
 
 /* Configures if comment tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()' */
 #ifndef TPP_HAVE_TPP_TOK_COMMENT
-#define TPP_HAVE_TPP_TOK_COMMENT (-1) /* "TPP_FEAT_TPP_TOK_COMMENT" */
+#define TPP_HAVE_TPP_TOK_COMMENT TPP_COMMON_HAVE_TPP_TOK_SPACE /* "TPP_FEAT_TPP_TOK_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_COMMENT */
 
 /* Enable support for recognizing c++ comments: "// like this one!" */
@@ -251,17 +251,18 @@
 #define TPP_HAVE_TPP_TOK_CXX_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_CXX_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_COMMENT */
 
-/* Enable support for recognizing c comments: "/" "* like this one! *" "/" */
+// Enable support for recognizing c comments: "/* like this one! */"
 #ifndef TPP_HAVE_TPP_TOK_C_COMMENT
 #define TPP_HAVE_TPP_TOK_C_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_C_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_C_COMMENT */
 
-/* Enable support for recognizing pascal comments: "(*like this one!*)" */
+/* Enable support for recognizing pascal comments: "(* like this one! *)" */
 #ifndef TPP_HAVE_TPP_TOK_PASCAL_COMMENT
 #define TPP_HAVE_TPP_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "TPP_FEAT_TPP_TOK_PASCAL_COMMENT" */
 #endif /* !TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
 
 /* Enable support for recognizing shell comments: "# like this one!"
+ *
  * This still works in conjunction with "TPP_HAVE_CPP_DIRECTIVES", in
  * that unknown directives will simply be re-emit as shell comments,
  * and shell comments that don't appear at the start of lines are not
@@ -451,12 +452,12 @@
 #define TPP_HAVE_TPP_TOK_HAT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_HAT_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_HAT_EQUAL */
 
-/* "//" */
+/* "//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT) */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH
 #define TPP_HAVE_TPP_TOK_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_SLASH_SLASH" */
 #endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH */
 
-/* "//=" */
+/* "//="  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT) */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
 #define TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
@@ -496,7 +497,7 @@
 #define TPP_HAVE_TPP_TOK_PLUS_PLUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_PLUS_PLUS" */
 #endif /* !TPP_HAVE_TPP_TOK_PLUS_PLUS */
 
-/* "--" */
+/* "--"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SQL_COMMENT) */
 #ifndef TPP_HAVE_TPP_TOK_MINUS_MINUS
 #define TPP_HAVE_TPP_TOK_MINUS_MINUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "TPP_FEAT_TPP_TOK_MINUS_MINUS" */
 #endif /* !TPP_HAVE_TPP_TOK_MINUS_MINUS */
@@ -621,7 +622,7 @@
 #define TPP_HAVE_TPP_TOK_EQUAL_SLASH TPP_COMMON_HAVE_TPP_TOK_REVERSE_TOKENS /* "TPP_FEAT_TPP_TOK_EQUAL_SLASH" */
 #endif /* !TPP_HAVE_TPP_TOK_EQUAL_SLASH */
 
-/* "=//" */
+/* "=//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT) */
 #ifndef TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
 #define TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_REVERSE_TOKENS /* "TPP_FEAT_TPP_TOK_EQUAL_SLASH_SLASH" */
 #endif /* !TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH */
@@ -1429,6 +1430,13 @@
 #ifndef TPP_HAVE_LEXER_SEEK_RPAREN
 #define TPP_HAVE_LEXER_SEEK_RPAREN (TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_LEXER_SEEK_RPAREN */
+
+/* Provide a set of macros/functions `tpp_lexer_manualpopfile_*'
+ * that can be used to seek through the contents of files further
+ * up the #include-stack in a way that allows for rollback. */
+#ifndef TPP_HAVE_LEXER_MANUALPOPFILE
+#define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
 
 /* Same as "tpp_lexer_seek_rparen()", but also able to deal with
  * alternate parenthesis pairs: [ ] { } < > */

@@ -7305,6 +7305,102 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok) {
 }
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */
 
+#if TPP_HAVE_LEXER_MANUALPOPFILE
+
+/* Example of the data-layout (also demonstrating how data is backed up)
+ * when using the `tpp_lexer_manualpopfile_*()' set of functions:
+ *
+ * Input:
+ * >> #define foo(a, b) a+b
+ * >> #define bar       foo
+ * >> #define baz       bar
+ * >> #define exo       baz
+ * >> 
+ * >> bot:  exo[10, 20]
+ *
+ * Data-layout:
+ * >> tpp_lexer_manualpopfile_start(self):
+ *    tpp_lexer_getfile    ="bar"->tf_prev=@baz="baz"
+ *    _tlmpf_orig_prev @baz="baz"->tf_prev=@exo="exo"
+ *                     @exo="exo"->tf_prev=@bot="bot"
+ *                     @bot="bot"->tf_prev=NULL
+ *
+ * >> tpp_lexer_manualpopfile_popfile(self):            // 1st
+ *    tpp_lexer_getfile    ="baz"->tf_prev=@exo="exo"
+ *    _tlmpf_orig_prev @baz="bar"->tf_prev=@exo="exo"
+ *                     @exo="exo"->tf_prev=@bot="bot"
+ *                     @bot="bot"->tf_prev=NULL
+ *
+ * >> tpp_lexer_manualpopfile_popfile(self):            // 2nd
+ *    tpp_lexer_getfile    ="exo"->tf_prev=@bot="bot"
+ *    _tlmpf_orig_prev @baz="bar"->tf_prev=@exo="baz"
+ *                     @exo="baz"->tf_prev=@bot="bot"
+ *                     @bot="bot"->tf_prev=NULL
+ *
+ * >> tpp_lexer_manualpopfile_popfile(self):            // 3rd
+ *    tpp_lexer_getfile    ="bot"->tf_prev=NULL
+ *    _tlmpf_orig_prev @baz="bar"->tf_prev=@exo="baz"
+ *                     @exo="baz"->tf_prev=@bot="exo"
+ *                     @bot="exo"->tf_prev=NULL
+ */
+
+TPP_INLINE TPP_NONNULL((1, 2)) void TPPCALL
+tpp_swapmem(void *a, void *b, tpp_size num_bytes) {
+	unsigned char *ca = (unsigned char *)a;
+	unsigned char *cb = (unsigned char *)b;
+	for (; num_bytes; --num_bytes, ++ca, ++cb) {
+		unsigned char temp;
+		temp = *ca;
+		*ca  = *cb;
+		*cb  = temp;
+	}
+}
+
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_manualpopfile_popfile(tpp_lexer *tpp_restrict self) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *const prev = file->TPP_INTERNAL(tf_prev);
+	tpp_assert(prev != NULL && "Nowhere to pop to (caller didn't check `tpp_lexer_manualpopfile_canpopfile()')");
+	file->tf_prev = prev->tf_prev;
+	tpp_swapmem(file, prev, sizeof(tpp_file)); /* NOTE: This could skip "tf_prev", since that's equal in both */
+}
+
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+_tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
+                                        tpp_file *tpp_restrict orig_prev) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	while (file->tf_prev != orig_prev) {
+		tpp_file *last = orig_prev;
+		tpp_file *last_prev;
+		tpp_assert(last);
+		while (last->tf_prev != file->tf_prev) {
+			tpp_assert(last->tf_prev);
+			last = last->tf_prev;
+		}
+		/* "tf_prev" shouldn't be swapped, so backup */
+		last_prev = last->tf_prev;
+		/* This could skip "tf_prev"; then wouldn't need "last_prev" */
+		tpp_swapmem(file, last, sizeof(tpp_file));
+		last->tf_prev = last_prev;
+		file->tf_prev = last;
+	}
+}
+
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+_tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
+                                      tpp_file *tpp_restrict orig_prev) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	while (file->tf_prev != orig_prev) {
+		tpp_file *prev_prev;
+		tpp_assert(orig_prev);
+		prev_prev = orig_prev->tf_prev;
+		tpp_file_fini(orig_prev);
+		tpp_file_free(orig_prev);
+		orig_prev = prev_prev;
+	}
+}
+#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
+
 
 TPP_DECL_END
 /************************************************************************/
@@ -9410,7 +9506,12 @@ tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 		 * and I don't want to allow one escape escaping another escape.
 		 *
 		 * NOTE: If this ever needs to be added, would also need to add
-		 *       support in "tpp_decode_bsi()" (our partner function) */
+		 *       support in "tpp_decode_bsi()" (our partner function)
+		 *
+		 * TODO: This is incorrect -- the C standard allows BSE inside
+		 *       \u (and \U)-characters keywords since C++23:
+		 * https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2621r2.pdf
+		 */
 		unsigned int cur_digit = 0;
 		unsigned int max_digit = *scan == 'U' ? 8 : 4;
 		do {
@@ -14960,8 +15061,55 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	tpp_assert(TPP_MACRO_KIND_ISFUNC(macro->tm_kind));
 
 	/* Seek ahead to find the '('-token expected by the macro. */
-	pos = tpp_lexer_seek_begin(self, &backup);
+	pos = tpp_lexer_seek_start(self, &backup);
 	do {
+		/* FIXME: Both this code here, as well as code in "tpp_lexer_seek_rparen_ex()"
+		 *        must be allowed to move up the #include-stack (macro argument lists
+		 *        are not required to end in the current macro):
+		 * >> #define foo(a, b) [a][b]
+		 * >> #define foz       foo          // case #1: opening '(' exists in caller ("bar")
+		 * >> #define bar(x)    foz(x, _     // case #2: (remainder of) second parameter exists in caller "y"
+		 * >> #define baz(x, y) bar(x) y)    // case #3: final closing ')' is in different file than opening '('
+		 * >> baz(10, 20);  // Should expand to "[10][_ 20]"
+		 *
+		 * NOTE: Even the old deemon didn't get this completely right; it seems like
+		 *       it only allowed the opening '(' to exist in a different file than
+		 *       the name of the macro being called, but didn't handle file-breaks
+		 *       within macro parameter lists, either...
+		 *
+		 * TODO: The only real way to handle this efficiently in the general case where all
+		 *       arguments are supplied by the same #include-file, is for "tpp_lexer_arginfo"
+		 *       to include another property "TPP_REF tpp_string *tlai_chunk" that stores a
+		 *       reference to the chunk containing the argument data. This chunk then either
+		 *       aliases some input file, or was created on-the-fly in those cases where a
+		 *       macro argument is the concatenation of multiple files (above: "_ 20" would
+		 *       be one such on-the-fly-allocated string); this also needs to happen when
+		 *       input arguments aren't continuous (which can happen when #if-directives
+		 *       are contained in macro arguments)
+		 *       Additionally, "tpp_lexer_seek_rparen()" must be changed to no longer take a
+		 *       "tpp_char const **p_pos" argument, and instead operate using tpp_lexer_yieldpp,
+		 *       which will also very neatly solve the issue of allowing #if-directives within
+		 *       macro arguments, including allowing #if-directives to mask ","-s used to
+		 *       separate arguments (which is something that doesn't work at all right now,
+		 *       and also didn't work in TPP2)
+		 * TODO: Secondly, "tpp_lexer_seek_start()" must be made capable of moving up the
+		 *       #include-stack, meaning it probably needs to be re-designed entirely such
+		 *       that it doesn't require the caller to use "tpp_lexer_yieldraw_at()", since
+		 *       that function is specifically designed not to walk the #include-stack.
+		 *       >> #define foo(a) a+a
+		 *       >> #define bar(x) x
+		 *       >> bar(foo)[10];  // Must expand to "foo[10]"
+		 *       >> bar(foo)(10);  // Must expand to "10+10"
+		 *       The problem here is that (at least for the initial, opening '('-token),
+		 *       if that token doesn't exist, then the macro's name must expand to itself,
+		 *       meaning that this peek-ahead functionality needs to be able to run on
+		 *       files other than the current one.
+		 *       Idea: don't try to re-design "tpp_lexer_yieldraw_at()" -- instead, have a
+		 *             function specifically designed to go through the #include-stack and
+		 *             temporarily override the current file when searching for '('.
+		 *       Once a '(' token is found, the "rollback" path isn't needed anymore, and
+		 *       all files (temporarily) popped in search for the '(' can then actually be
+		 *       popped. */
 		tok = tpp_lexer_yieldraw_at(self, &pos);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
@@ -15330,7 +15478,7 @@ next_op:
 	/* For tracebacks: point at the macro's name
 	 *
 	 * The pointer found in `file->tf_pos' was previously
-	 * set up as such by `tpp_lexer_seek_begin()'. */
+	 * set up as such by `tpp_lexer_seek_start()'. */
 	prev_file->tf_tpos = prev_file->tf_pos;
 
 	/* Override return-file to continue parsing after ')'-token */
@@ -15648,7 +15796,7 @@ tpp_lexer_handle_string_feature_test_cb(void *arg, tpp_string *chunk,
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id mode) {
 	tpp_lexer_seek_backup backup;
-	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	tpp_token_id tok;
 	unsigned int recursion;
 #if TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS
@@ -15669,6 +15817,8 @@ again_yield:
 		goto err_tok;
 	if (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 		goto again_yield;
+	/* FIXME: Opening '(' may be in files further up the #include-stack! */
+	/* FIXME: Arguments may be in files further up the #include-stack! */
 	if (tok != TPP_TOK_OFCHAR('('))
 		goto rollback;
 
@@ -15977,7 +16127,7 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lexer_seek_backup backup;
-	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
@@ -15986,8 +16136,10 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if tpp_unlikely(TPP_TOK_ISERR(tok))
 		goto err_tok;
+	/* FIXME: Opening '(' may be in files further up the #include-stack! */
 	if (tok != '(')
 		goto rollback;
+	/* FIXME: Arguments may be in files further up the #include-stack! */
 	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "_Pragma",
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
@@ -16046,7 +16198,7 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lexer_seek_backup backup;
-	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
@@ -16055,8 +16207,10 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if tpp_unlikely(TPP_TOK_ISERR(tok))
 		goto err_tok;
+	/* FIXME: Opening '(' may be in files further up the #include-stack! */
 	if (tok != '(')
 		goto rollback;
+	/* FIXME: Arguments may be in files further up the #include-stack! */
 	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "__pragma",
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
@@ -16181,7 +16335,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lexer_seek_backup backup;
 	tpp_char const *identifier_start;
-	tpp_char const *pos = tpp_lexer_seek_begin(self, &backup);
+	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
@@ -16190,13 +16344,15 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if tpp_unlikely(TPP_TOK_ISERR(tok))
 		goto err_tok;
+	/* FIXME: Opening '(' may be in files further up the #include-stack! */
 	if (tok != '(')
 		goto rollback;
+	/* FIXME: Arguments may be in files further up the #include-stack! */
 	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "__TPP_IDENTIFIER",
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
 		goto err_tok;
-	/* file->tf_pos: points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_begin()") */
+	/* file->tf_pos: points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_start()") */
 	identifier_start = file->tf_pos;
 	tpp_file_pusheof(file);
 	tpp_file_pushifdef(file);
@@ -16334,7 +16490,8 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #endif /* TPP_HAVE_MACRO___has_embed */
 	{
 		/* TODO */
-		/* TODO: __has_embed (https://en.cppreference.com/c/preprocessor/embed) */
+		/* TODO: __has_embed (https://en.cppreference.com/c/preprocessor/embed)
+		 * >> __STDC_EMBED_NOT_FOUND__, __STDC_EMBED_FOUND__, __STDC_EMBED_EMPTY__ */
 	}	break;
 #endif /* ... */
 /************************************************************************/
@@ -17595,7 +17752,7 @@ again_yield_after_empty:
 		tpp_errno result;
 
 		/* Must make sure that the next token isn't another (non-empty) string */
-		pos = tpp_lexer_seek_begin(self, &backup);
+		pos = tpp_lexer_seek_start(self, &backup);
 		tpp_lexer_nowarnings_pushon(self);
 again_yield_after_single:
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
