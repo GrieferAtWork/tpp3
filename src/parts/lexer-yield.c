@@ -246,7 +246,7 @@ tpp_lexer_handle_string_feature_test_cb(void *arg, tpp_string *chunk,
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id mode) {
 	tpp_lexer_seek_backup backup;
-	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
+	tpp_char const *pos;
 	tpp_token_id tok;
 	unsigned int recursion;
 #if TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS
@@ -261,22 +261,21 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 #else /* TPP_FEATURE_FLAG_EXPANSION_MAXLEN > 1 */
 #define tpp_feature_test_macro_expansion_len 1
 #endif /* TPP_FEATURE_FLAG_EXPANSION_MAXLEN <= 1 */
-again_yield:
-	tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
-		goto err_tok;
-	if (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
-		goto again_yield;
-	/* FIXME: Opening '(' may be in files further up the #include-stack! */
-	/* FIXME: Arguments may be in files further up the #include-stack! */
-	if (tok != TPP_TOK_OFCHAR('('))
-		goto rollback;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
 
+	pos = tpp_lexer_seek_start(self, &backup);
+	/* FIXME: Arguments may be in files further up the #include-stack! */
 	/* Yield feature keyword */
 	do {
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 		if tpp_unlikely(TPP_TOK_ISERR(tok))
-			goto err_tok;
+			goto err_tok_rollback;
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 
 	/* Default to expanding to "0" */
@@ -447,7 +446,7 @@ after_expansion_mode_assignment:
 				tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 			if tpp_unlikely(TPP_TOK_ISERR(tok))
-				goto err_tok;
+				goto err_tok_rollback;
 		}
 #endif /* TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS || TPP_HAVE_KEYWORD_TEST_MACROS */
 	}
@@ -473,14 +472,14 @@ seek_end_of_macro:
 			goto rollback;
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 		if tpp_unlikely(TPP_TOK_ISERR(tok))
-			goto err_tok;
+			goto err_tok_rollback;
 	}
 	tpp_lexer_seek_commit(self, pos);
 	return tpp_lexer_push_textfile(self, tpp_feature_test_macro_expansion,
 	                               tpp_feature_test_macro_expansion_len);
 rollback:
 	tok = backup.tlsb_id;
-err_tok:
+err_tok_rollback:
 	tpp_lexer_seek_rollback(self, &backup);
 	return tok;
 #undef tpp_feature_test_macro_expansion_len
@@ -577,23 +576,23 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lexer_seek_backup backup;
-	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
+	tpp_char const *pos;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
-	do {
-		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
-	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
-		goto err_tok;
-	/* FIXME: Opening '(' may be in files further up the #include-stack! */
-	if (tok != '(')
-		goto rollback;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+	pos = tpp_lexer_seek_start(self, &backup);
 	/* FIXME: Arguments may be in files further up the #include-stack! */
 	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "_Pragma",
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
-		goto err_tok;
+		goto err_tok_rollback;
 	tpp_file_pusheof(file);
 	tpp_file_pushifdef(file);
 
@@ -634,9 +633,7 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 	if (TPP_ISERR(error))
 		tok = TPP_TOK_OFERR(error);
 	return tok;
-rollback:
-	tok = backup.tlsb_id;
-err_tok:
+err_tok_rollback:
 	tpp_lexer_seek_rollback(self, &backup);
 	return tok;
 }
@@ -648,23 +645,23 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lexer_seek_backup backup;
-	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
+	tpp_char const *pos;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
-	do {
-		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
-	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
-		goto err_tok;
-	/* FIXME: Opening '(' may be in files further up the #include-stack! */
-	if (tok != '(')
-		goto rollback;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+	pos = tpp_lexer_seek_start(self, &backup);
 	/* FIXME: Arguments may be in files further up the #include-stack! */
 	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "__pragma",
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
-		goto err_tok;
+		goto err_tok_rollback;
 	tpp_file_pusheof(file);
 	tpp_file_pushifdef(file);
 
@@ -686,9 +683,7 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 	if (TPP_ISERR(error))
 		tok = TPP_TOK_OFERR(error);
 	return tok;
-rollback:
-	tok = backup.tlsb_id;
-err_tok:
+err_tok_rollback:
 	tpp_lexer_seek_rollback(self, &backup);
 	return tok;
 }
@@ -785,23 +780,23 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lexer_seek_backup backup;
 	tpp_char const *identifier_start;
-	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
+	tpp_char const *pos;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
-	do {
-		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
-	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
-		goto err_tok;
-	/* FIXME: Opening '(' may be in files further up the #include-stack! */
-	if (tok != '(')
-		goto rollback;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+	pos = tpp_lexer_seek_start(self, &backup);
 	/* FIXME: Arguments may be in files further up the #include-stack! */
 	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "__TPP_IDENTIFIER",
 	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
-		goto err_tok;
+		goto err_tok_rollback;
 	/* file->tf_pos: points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_start()") */
 	identifier_start = file->tf_pos;
 	tpp_file_pusheof(file);
@@ -853,9 +848,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 /*		token->tt_end   = ...;  * Already correct (points after the trailing ')'-token) */
 	}
 	return tok;
-rollback:
-	tok = backup.tlsb_id;
-err_tok:
+err_tok_rollback:
 	tpp_lexer_seek_rollback(self, &backup);
 	return tok;
 }
@@ -1241,7 +1234,6 @@ again:
 }
 
 #endif /* TPP_HAVE_FILE_NONBLOCK */
-
 
 #if TPP_HAVE_LEXER_SKIP
 /* Check that the currently loaded token is 'tok'. If so, "tpp_lexer_yield_blocking()" to

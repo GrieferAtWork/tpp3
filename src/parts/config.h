@@ -1352,6 +1352,12 @@
 #define TPP_HAVE_FILE_SETLINE (TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE)
 #endif /* !TPP_HAVE_FILE_SETLINE */
 
+/* Enable support for setting a special pointer in files to
+ * represent a lower bound of memory that must be kept loaded. */
+#ifndef TPP_HAVE_FILE_KEEPPOS
+#define TPP_HAVE_FILE_KEEPPOS (TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_FILE_KEEPPOS */
+
 /* Provide a secondary set of keyword APIs that include support for \-escape sequences */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
 #define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
@@ -1387,6 +1393,16 @@
 #ifndef TPP_HAVE_LEXER_SKIP
 #define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1)
 #endif /* !TPP_HAVE_LEXER_SKIP */
+
+/* Enable support for `tpp_lexer_rawskip_raw()', a function that is used-
+ * and needed in order to seek- and skip-over the '(' token following a
+ * macro's name (with support for searching for tokens in parent files
+ * of the current one, but rolling back all changes if the next token
+ * isn't '('). It also includes some additional functionality that will
+ * retain the [tf_tpos,*) regions of files as they are scanned. */
+#ifndef TPP_HAVE_LEXER_TRYSKIP_RAW
+#define TPP_HAVE_LEXER_TRYSKIP_RAW (TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_LEXER_TRYSKIP_RAW */
 
  /* Provide a function "tpp_lexer_reprtokenid()" to
  * return the string-representation of a given token ID */
@@ -1435,7 +1451,7 @@
  * that can be used to seek through the contents of files further
  * up the #include-stack in a way that allows for rollback. */
 #ifndef TPP_HAVE_LEXER_MANUALPOPFILE
-#define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS)
+#define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS/* && TPP_HAVE_INCLUDE_STACK*/)
 #endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
 
 /* Same as "tpp_lexer_seek_rparen()", but also able to deal with

@@ -644,6 +644,44 @@ tpp_lexer_skip_blocking(tpp_lexer *tpp_restrict self, tpp_token_id tok);
 #endif /* TPP_HAVE_LEXER_SKIP */
 
 
+
+#if TPP_HAVE_LEXER_TRYSKIP_RAW
+#define TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL      0x0000 /* Normal flags */
+#define TPP_LEXER_TRYSKIP_RAW_FLAG_STOPONSPACE 0x0001 /* Rollback if a NOLINE-COMMENT or SPACE token is hit */
+#define TPP_LEXER_TRYSKIP_RAW_FLAG_STOPONLF    0x0002 /* Rollback if a LINE-COMMENT or LF token is hit */
+#define TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV    0x0004 /* On success, include the previous token in the selected text-area, too */
+
+/* Make use of:
+ * - tpp_lexer_seek_start()
+ * - tpp_lexer_yieldraw_at()
+ * - tpp_lexer_manualpopfile_start(self)
+ * to seek ahead to the next token, skipping whitespace/line-feed (+resp. comments)
+ * based on "flags", check if said "next token" is equal to "expected" (with some extra-
+ * extra handling when "TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && expected == '<'").
+ * If that is the case, commit the lexer such that it points at a token equal to
+ * the specified "expected", truly disposing of any files popped in the mean-time.
+ * Otherwise (the next token is "!= expected"), roll back any changes made, such
+ * that "self" once again points at the same token it did upon entry. In either
+ * case, return the ID of whatever token came next.
+ *
+ * NOTE: This function automatically handles "TPP_TOK_EWOULDBLOCK" by blocking!
+ *
+ * @return: * :                 The next token (rollback)
+ * @return: expected:           The next token (commit)
+ *                              When "TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV" is set,
+ *                              the text-range of "self" will actually include the
+ *                              previous token as well.
+ * @return: TPP_TOK_ENOMEM:     Out of memory
+ * @return: TPP_TOK_EIO:        I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR:  Lexer error
+ * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
+                      unsigned int flags);
+#endif /* TPP_HAVE_LEXER_TRYSKIP_RAW */
+
+
+
 #if TPP_HAVE_LEXER_SEEK_RPAREN
 typedef struct tpp_lexer_arginfo {
 	/* NOTE: Leading/trailing whitespace in arguments is controlled by "TPP_HAVE_MACRO_ARGUMENT_WHITESPACE" */

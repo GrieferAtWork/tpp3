@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 		lexer_filename = tpp_file_filename(file);
 		lc = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(&lexer));
 #if 1
-		printf("%.*s",
+		printf("[%.*s]",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
 #else

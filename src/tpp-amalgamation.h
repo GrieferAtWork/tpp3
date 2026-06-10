@@ -3808,6 +3808,12 @@ TPP_DECL_END
 #define TPP_HAVE_FILE_SETLINE (TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE)
 #endif /* !TPP_HAVE_FILE_SETLINE */
 
+/* Enable support for setting a special pointer in files to
+ * represent a lower bound of memory that must be kept loaded. */
+#ifndef TPP_HAVE_FILE_KEEPPOS
+#define TPP_HAVE_FILE_KEEPPOS (TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_FILE_KEEPPOS */
+
 /* Provide a secondary set of keyword APIs that include support for \-escape sequences */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
 #define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
@@ -3843,6 +3849,16 @@ TPP_DECL_END
 #ifndef TPP_HAVE_LEXER_SKIP
 #define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1)
 #endif /* !TPP_HAVE_LEXER_SKIP */
+
+/* Enable support for `tpp_lexer_rawskip_raw()', a function that is used-
+ * and needed in order to seek- and skip-over the '(' token following a
+ * macro's name (with support for searching for tokens in parent files
+ * of the current one, but rolling back all changes if the next token
+ * isn't '('). It also includes some additional functionality that will
+ * retain the [tf_tpos,*) regions of files as they are scanned. */
+#ifndef TPP_HAVE_LEXER_TRYSKIP_RAW
+#define TPP_HAVE_LEXER_TRYSKIP_RAW (TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_LEXER_TRYSKIP_RAW */
 
  /* Provide a function "tpp_lexer_reprtokenid()" to
  * return the string-representation of a given token ID */
@@ -3891,7 +3907,7 @@ TPP_DECL_END
  * that can be used to seek through the contents of files further
  * up the #include-stack in a way that allows for rollback. */
 #ifndef TPP_HAVE_LEXER_MANUALPOPFILE
-#define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS)
+#define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS/* && TPP_HAVE_INCLUDE_STACK*/)
 #endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
 
 /* Same as "tpp_lexer_seek_rparen()", but also able to deal with
@@ -6507,7 +6523,6 @@ struct tpp_macro;
 #endif /* TPP_HAVE_CPP_MACROS */
 
 typedef struct tpp_file {
-#if TPP_HAVE_INCLUDE_STACK
 	tpp_char const     *TPP_INTERNAL(tf_tpos);  /* [?..?][valid_if(DID_CALL(tpp_lexer_yieldraw))]
 	                                             * Start of last-loaded token (also valid in "tf_tprev"-files)
 	                                             * WARNING: This field is NOT maintained/updated by `tpp_file_*' APIs
@@ -6516,7 +6531,6 @@ typedef struct tpp_file {
 	                                             *          a new file is pushed onto the #include-stack, and can
 	                                             *          then be used to calculate line/column information when
 	                                             *          lexer prints its #include-stack. */
-#endif /* TPP_HAVE_INCLUDE_STACK */
 	/* Important: "tf_pos" and "tf_chunk" must come first, so they can shadow the tail of "tpp_token" */
 	tpp_char const     *TPP_INTERNAL(tf_pos);   /* [0..1][<= tf_end] File pointer to next unread byte. */
 	TPP_REF tpp_string *TPP_INTERNAL(tf_chunk); /* [0..1][const_if(tf_kind != TPP_FILE_KIND_IO)] Currently loaded text-chunk (mutable for text-files) */
@@ -6524,14 +6538,14 @@ typedef struct tpp_file {
 #if TPP_HAVE_INCLUDE_STACK
 	struct tpp_file    *TPP_INTERNAL(tf_prev);  /* [0..1] Parent file in #include stack */
 	struct tpp_file    *TPP_INTERNAL(tf_tprev); /* [0..1] Real parent for the purposes of message tracebacks (not affected by `tpp_file_autopopfile_pushoff') */
-#define _tpp_file_init_prev(self) , (self)->tf_prev = NULL, (self)->tf_tprev = NULL
+#define _tpp_file_init_prev(self) , (self)->TPP_INTERNAL(tf_prev) = NULL, (self)->TPP_INTERNAL(tf_tprev) = NULL
 #else /* TPP_HAVE_INCLUDE_STACK */
 #define _tpp_file_init_prev(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 #if TPP_HAVE_FILE_LC_CACHE
 	tpp_char const     *TPP_INTERNAL(tf_lcpos); /* [0..1] Position that `tf_lcval' applies to. */
 	tpp_lcinfo          TPP_INTERNAL(tf_lcval); /* [valid_if(tf_lcpos)] Cached line/column at `tf_lcpos' */
-#define _tpp_file_init_lcpos(self) , (self)->tf_lcpos = NULL
+#define _tpp_file_init_lcpos(self) , (self)->TPP_INTERNAL(tf_lcpos) = NULL
 #else /* TPP_HAVE_FILE_LC_CACHE */
 #define _tpp_file_init_lcpos(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_LC_CACHE */
@@ -6556,10 +6570,48 @@ typedef struct tpp_file {
 			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
 #if TPP_HAVE_FILE_USER_FILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
-#define _tpp_file_init_io_user_filename(self) , (self)->tf_data.td_io.TPP_INTERNAL(tff_user_filename) = NULL
+#define _tpp_file_init_io_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_user_filename) = NULL
 #else /* TPP_HAVE_FILE_USER_FILENAME */
 #define _tpp_file_init_io_user_filename(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
+#if TPP_HAVE_FILE_KEEPPOS
+			/* Need an additional "tpp_char const *ttf_keep" here whose only purpose
+			 * is to set an extra, lower-bound of effective text-data to always
+			 * keep loaded. But this pointer can also just be NULL, in which case
+			 * only data in [tf_pos,tf_end) must be kept loaded!
+			 * This pointer is needed when parsing the argument list of macros,
+			 * and is needed to keep already-parsed argument data in memory when
+			 * using tpp_lexer_yieldpp (which doesn't have a *_at variant), as
+			 * well as keep the names of macros loaded such that (once the end
+			 * of a macro argument list is found), the bottom-most macro name
+			 * is still loaded in memory for "tpp_file_getlastpos()":
+			 * >> #define foo(a, b) a+b
+			 * >> #define bar       foo(10
+			 * >> bar,20)
+			 * 1. While parsing macro arguments, when "bar" is popped from
+			 *    the #include-stack, the string "10" from "bar" is saved
+			 *    in "tpp_lexer_arginfo", alongside a TPP_REF to the chunk
+			 *    containing that string
+			 * 2. Then, in the main file "tf_tpos" will point at "bar", but
+			 *    the next call to tpp_lexer_yieldpp() (that will eventually
+			 *    return ",") would be allocated to deallocate the chunk that
+			 *    contains "bar" (which we don't want). Because of that, the
+			 *    macro-argument parsing code must set "ttf_keep = tf_tpos"
+			 *    (assuming that "!ttf_keep || ttf_keep > tf_tpos") before
+			 *    continuing to yield tokens, such that "bar" will continue
+			 *    to remain loaded
+			 * 3. Once the argument is fully loaded, "ttf_keep" can be reset
+			 *    to its previous value, and "tf_tpos" can once again be set
+			 *    to "bar", allowing tracebacks to display the correct location */
+			tpp_char const  *TPP_INTERNAL(ttf_keep);     /* [0..1][<= tf_end] Extra pointer specifying a position in memory that must be kept loaded.
+			                                              * When `tpp_file_expandchunk()' is called, and this is field is non-NULL, it will
+			                                              * be updated to point to the same effective position in a newly allocated chunk.
+			                                              * If it is also less than "tf_pos", then it represents of lower bound of memory
+			                                              * to retain in a new file chunk. */
+#define _tpp_file_init_io_keep(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = NULL
+#else /* TPP_HAVE_FILE_KEEPPOS */
+#define _tpp_file_init_io_keep(self) /* nothing */
+#endif /* !TPP_HAVE_FILE_KEEPPOS */
 			tpp_io_handle    TPP_INTERNAL(tff_file);     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
 #if TPP_HAVE_FILE_IOFLAGS
 			tpp_file_ioflags TPP_INTERNAL(tff_flags);    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
@@ -6575,7 +6627,7 @@ typedef struct tpp_file {
 			tpp_lcinfo  TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
 #if TPP_HAVE_FILE_USER_FILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tft_user_filename); /* [0..1] User-defined override for name of this file */
-#define _tpp_file_init_text_user_filename(self) , (self)->tf_data.td_text.TPP_INTERNAL(tft_user_filename) = NULL
+#define _tpp_file_init_text_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename) = NULL
 #else /* TPP_HAVE_FILE_USER_FILENAME */
 #define _tpp_file_init_text_user_filename(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
@@ -6616,6 +6668,25 @@ typedef struct tpp_file {
 #if TPP_HAVE_IFDEF_STACK
 #define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef))
 #endif /* !TPP_HAVE_IFDEF_STACK */
+
+/* Returns a pointer to the start of the effectively relevant source.
+ * - For the currently loaded file, this is the start of the current
+ *   token If no tokens have been yielded yet, the value returned by
+ *   this macro is undefined.
+ * - For macros further up the #include-stack, this (tries to) point
+ *   to the start of the macro's name. However, if the macro's name
+ *   was located in a file that has since been popped, this will
+ *   instead be the start of whatever macro-invocation originally
+ *   caused whatever file to be pushed that then contains the current
+ *   macro-call:
+ *   >> #define foo(a, b) a+b
+ *   >> #define bar       foo(10
+ *   >> bar,20)
+ *      ^      ^ tpp_file_getpos(self)   (These are the pointed-to positions from the parent-
+ *      tpp_file_getlastpos()             file of the one containing the expanded "10+20" text)
+ */
+#define tpp_file_getlastpos(self) ((self)->TPP_INTERNAL(tf_tpos))
+
 
 /* Initialize common fields of "self" */
 #define _tpp_file_init_common(self) \
@@ -6710,6 +6781,42 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
 
+#if TPP_HAVE_FILE_KEEPPOS
+/* Push the current keep-pointer for "self"
+ * This macro has no effect if "tpp_file_getkind(self) != TPP_FILE_KIND_IO" */
+#define tpp_file_pushkeep(self) \
+	do {                        \
+		tpp_char const *const _tfpk_oldkeep = (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep);
+#define tpp_file_breakkeep(self) \
+		(void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = _tfpk_oldkeep)
+#define tpp_file_popkeep(self)    \
+		tpp_file_breakkeep(self); \
+	} while (0)
+
+/* Returns the keep-pointer for the file (which may be "NULL").
+ * Return value is undefined if "tpp_file_getkind(self) != TPP_FILE_KIND_IO" */
+#define tpp_file_getkeep(self) \
+	(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep)
+
+/* Set the keep-pointer for the file (given "ptr" must not be "NULL").
+ * This macro has no effect if "tpp_file_getkind(self) != TPP_FILE_KIND_IO"
+ *
+ * @return: true:  Keep pointer was updated because "ptr" describes a greater
+ *                 area of effect than the previously active keep-range.
+ * @return: false: Keep pointer was not updated */
+#define tpp_file_setkeep(self, ptr)                                              \
+	(tpp_assert(!(self)->tf_chunk || (ptr) >= tpp_string_str((self)->tf_chunk)), \
+	 tpp_assert((ptr) <= (self)->tf_end),                                        \
+	 (!tpp_file_getkeep(self) || ((ptr) < tpp_file_getkeep(self))) &&            \
+	 ((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = (ptr), 1))
+#else /* TPP_HAVE_FILE_KEEPPOS */
+#define tpp_file_pushkeep(self)  do {
+#define tpp_file_breakkeep(self) (void)0
+#define tpp_file_popkeep(self)   } while (0)
+#define tpp_file_getkeep(self)   tpp_file_getpos(self)
+#endif /* !TPP_HAVE_FILE_KEEPPOS */
+
+
 
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
  * @param: char const      *filename: [0..1] Filename (if known)
@@ -6729,6 +6836,7 @@ typedef struct tpp_file {
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
 	       tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc), 0, 0) \
 	       _tpp_file_init_io_user_filename(self)                                                               \
+	       _tpp_file_init_io_keep(self)                                                                        \
 	       _tpp_file_init_ioflags(self, flags))
 
 
@@ -6763,7 +6871,7 @@ tpp_file_fini(tpp_file *tpp_restrict self);
 
 /* Try to expand the currently loaded `self->tf_chunk':
  * - If the file's kind isn't `TPP_FILE_KIND_IO', return `TPP_EOK'
- * - Allocate a new `struct tpp_string' suitable for holding both
+ * - Allocate a new `tpp_string' suitable for holding both
  *   [tf_pos,tf_end), as well as at least 1 additional byte.
  *   HINT: When `!tpp_string_isshared(self->tf_chunk)', the old
  *         chunk string may simply be re-used (since it'd be free'd
@@ -8106,18 +8214,12 @@ TPP_DECL_BEGIN
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
 
-#if TPP_HAVE_INCLUDE_STACK
-#define TPP_TOKEN_START_OF_FILE_FIELD TPP_INTERNAL(tt_start) /* tt_start == tf_tpos */
-#else /* TPP_HAVE_INCLUDE_STACK */
-#define TPP_TOKEN_START_OF_FILE_FIELD TPP_INTERNAL(tt_end)   /* tt_end == tf_pos */
-#endif /* !TPP_HAVE_INCLUDE_STACK */
-
 typedef struct tpp_lexer {
 	union {
 		tpp_token      TPP_INTERNAL(tlc_tok);  /* [valid_if(WAS_CALLED(tpp_lexer_yieldraw()))] Last-read token (never
 		                                        * set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF). */
 		struct {
-			char _tli_pad[tpp_offsetof(tpp_token, TPP_TOKEN_START_OF_FILE_FIELD)];
+			char _tli_pad[tpp_offsetof(tpp_token, TPP_INTERNAL(tt_start))];
 			tpp_file   TPP_INTERNAL(tli_file); /* [OVERRIDE(.tf_prev, [owned])]
 			                                    * The file that lies at the top of the lexer's #include/macro-stack.
 			                                    * this is also the file whose buffer currently contains `tl_tok' */
@@ -8695,6 +8797,44 @@ tpp_lexer_skip_blocking(tpp_lexer *tpp_restrict self, tpp_token_id tok);
 #define tpp_lexer_skip_blocking(self, tok) tpp_lexer_skip(self, tok)
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 #endif /* TPP_HAVE_LEXER_SKIP */
+
+
+
+#if TPP_HAVE_LEXER_TRYSKIP_RAW
+#define TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL      0x0000 /* Normal flags */
+#define TPP_LEXER_TRYSKIP_RAW_FLAG_STOPONSPACE 0x0001 /* Rollback if a NOLINE-COMMENT or SPACE token is hit */
+#define TPP_LEXER_TRYSKIP_RAW_FLAG_STOPONLF    0x0002 /* Rollback if a LINE-COMMENT or LF token is hit */
+#define TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV    0x0004 /* On success, include the previous token in the selected text-area, too */
+
+/* Make use of:
+ * - tpp_lexer_seek_start()
+ * - tpp_lexer_yieldraw_at()
+ * - tpp_lexer_manualpopfile_start(self)
+ * to seek ahead to the next token, skipping whitespace/line-feed (+resp. comments)
+ * based on "flags", check if said "next token" is equal to "expected" (with some extra-
+ * extra handling when "TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && expected == '<'").
+ * If that is the case, commit the lexer such that it points at a token equal to
+ * the specified "expected", truly disposing of any files popped in the mean-time.
+ * Otherwise (the next token is "!= expected"), roll back any changes made, such
+ * that "self" once again points at the same token it did upon entry. In either
+ * case, return the ID of whatever token came next.
+ *
+ * NOTE: This function automatically handles "TPP_TOK_EWOULDBLOCK" by blocking!
+ *
+ * @return: * :                 The next token (rollback)
+ * @return: expected:           The next token (commit)
+ *                              When "TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV" is set,
+ *                              the text-range of "self" will actually include the
+ *                              previous token as well.
+ * @return: TPP_TOK_ENOMEM:     Out of memory
+ * @return: TPP_TOK_EIO:        I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR:  Lexer error
+ * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
+                      unsigned int flags);
+#endif /* TPP_HAVE_LEXER_TRYSKIP_RAW */
+
 
 
 #if TPP_HAVE_LEXER_SEEK_RPAREN

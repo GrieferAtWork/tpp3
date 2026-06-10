@@ -51,9 +51,6 @@
     <ClCompile Include="..\src\parts\lexer-yieldpp.c">
       <Filter>src\parts</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parts\lexer-yield.c">
-      <Filter>src\parts</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\parts\token-strtokenid.c">
       <Filter>src\parts</Filter>
     </ClCompile>
@@ -88,6 +85,12 @@
       <Filter>src\parts</Filter>
     </ClCompile>
     <ClCompile Include="..\src\parts\lexer-yield-macro.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parts\lexer-skipraw.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parts\lexer-yield.c">
       <Filter>src\parts</Filter>
     </ClCompile>
   </ItemGroup>

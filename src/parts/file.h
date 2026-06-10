@@ -158,46 +158,17 @@ typedef struct tpp_file {
 	tpp_char const     *TPP_INTERNAL(tf_pos);   /* [0..1][<= tf_end] File pointer to next unread byte. */
 	TPP_REF tpp_string *TPP_INTERNAL(tf_chunk); /* [0..1][const_if(tf_kind != TPP_FILE_KIND_IO)] Currently loaded text-chunk (mutable for text-files) */
 	tpp_char const     *TPP_INTERNAL(tf_end);   /* [0..1][>= tf_chunk->ts_str && <= tf_chunk->ts_str+tf_chunk->ts_len][const_if(tf_kind != TPP_FILE_KIND_IO)] End of effective file content (mutable for text-files) */
-	/* TODO: Need an additional "tpp_char const *tf_keep" here whose only purpose
-	 *       is to set an extra, lower-bound of effective text-data to always
-	 *       keep loaded. But this pointer can also just be NULL, in which case
-	 *       only data in [tf_pos,tf_end) must be kept loaded!
-	 *       This pointer is needed when parsing the argument list of macros,
-	 *       and is needed to keep already-parsed argument data in memory when
-	 *       using tpp_lexer_yieldpp (which doesn't have a *_at variant), as
-	 *       well as keep the names of macros loaded such that (once the end
-	 *       of a macro argument list is found), the bottom-most macro name
-	 *       is still loaded in memory for "tpp_file_getlastpos()":
-	 *       >> #define foo(a, b) a+b
-	 *       >> #define bar       foo(10
-	 *       >> bar,20)
-	 *       1. While parsing macro arguments, when "bar" is popped from
-	 *          the #include-stack, the string "10" from "bar" is saved
-	 *          in "tpp_lexer_arginfo", alongside a TPP_REF to the chunk
-	 *          containing that string
-	 *       2. Then, in the main file "tf_tpos" will point at "bar", but
-	 *          the next call to tpp_lexer_yieldpp() (that will eventually
-	 *          return ",") would be allocated to deallocate the chunk that
-	 *          contains "bar" (which we don't want). Because of that, the
-	 *          macro-argument parsing code must set "tf_keep = tf_tpos"
-	 *          (assuming that "!tf_keep || tf_keep > tf_tpos") before
-	 *          continuing to yield tokens, such that "bar" will continue
-	 *          to remain loaded
-	 *       3. Once the argument is fully loaded, "tf_keep" can be reset
-	 *          to its previous value, and "tf_tpos" can once again be set
-	 *          to "bar", allowing tracebacks to display the correct location
-	 */
 #if TPP_HAVE_INCLUDE_STACK
 	struct tpp_file    *TPP_INTERNAL(tf_prev);  /* [0..1] Parent file in #include stack */
 	struct tpp_file    *TPP_INTERNAL(tf_tprev); /* [0..1] Real parent for the purposes of message tracebacks (not affected by `tpp_file_autopopfile_pushoff') */
-#define _tpp_file_init_prev(self) , (self)->tf_prev = NULL, (self)->tf_tprev = NULL
+#define _tpp_file_init_prev(self) , (self)->TPP_INTERNAL(tf_prev) = NULL, (self)->TPP_INTERNAL(tf_tprev) = NULL
 #else /* TPP_HAVE_INCLUDE_STACK */
 #define _tpp_file_init_prev(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 #if TPP_HAVE_FILE_LC_CACHE
 	tpp_char const     *TPP_INTERNAL(tf_lcpos); /* [0..1] Position that `tf_lcval' applies to. */
 	tpp_lcinfo          TPP_INTERNAL(tf_lcval); /* [valid_if(tf_lcpos)] Cached line/column at `tf_lcpos' */
-#define _tpp_file_init_lcpos(self) , (self)->tf_lcpos = NULL
+#define _tpp_file_init_lcpos(self) , (self)->TPP_INTERNAL(tf_lcpos) = NULL
 #else /* TPP_HAVE_FILE_LC_CACHE */
 #define _tpp_file_init_lcpos(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_LC_CACHE */
@@ -222,10 +193,48 @@ typedef struct tpp_file {
 			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
 #if TPP_HAVE_FILE_USER_FILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
-#define _tpp_file_init_io_user_filename(self) , (self)->tf_data.td_io.TPP_INTERNAL(tff_user_filename) = NULL
+#define _tpp_file_init_io_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_user_filename) = NULL
 #else /* TPP_HAVE_FILE_USER_FILENAME */
 #define _tpp_file_init_io_user_filename(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
+#if TPP_HAVE_FILE_KEEPPOS
+			/* Need an additional "tpp_char const *ttf_keep" here whose only purpose
+			 * is to set an extra, lower-bound of effective text-data to always
+			 * keep loaded. But this pointer can also just be NULL, in which case
+			 * only data in [tf_pos,tf_end) must be kept loaded!
+			 * This pointer is needed when parsing the argument list of macros,
+			 * and is needed to keep already-parsed argument data in memory when
+			 * using tpp_lexer_yieldpp (which doesn't have a *_at variant), as
+			 * well as keep the names of macros loaded such that (once the end
+			 * of a macro argument list is found), the bottom-most macro name
+			 * is still loaded in memory for "tpp_file_getlastpos()":
+			 * >> #define foo(a, b) a+b
+			 * >> #define bar       foo(10
+			 * >> bar,20)
+			 * 1. While parsing macro arguments, when "bar" is popped from
+			 *    the #include-stack, the string "10" from "bar" is saved
+			 *    in "tpp_lexer_arginfo", alongside a TPP_REF to the chunk
+			 *    containing that string
+			 * 2. Then, in the main file "tf_tpos" will point at "bar", but
+			 *    the next call to tpp_lexer_yieldpp() (that will eventually
+			 *    return ",") would be allocated to deallocate the chunk that
+			 *    contains "bar" (which we don't want). Because of that, the
+			 *    macro-argument parsing code must set "ttf_keep = tf_tpos"
+			 *    (assuming that "!ttf_keep || ttf_keep > tf_tpos") before
+			 *    continuing to yield tokens, such that "bar" will continue
+			 *    to remain loaded
+			 * 3. Once the argument is fully loaded, "ttf_keep" can be reset
+			 *    to its previous value, and "tf_tpos" can once again be set
+			 *    to "bar", allowing tracebacks to display the correct location */
+			tpp_char const  *TPP_INTERNAL(ttf_keep);     /* [0..1][<= tf_end] Extra pointer specifying a position in memory that must be kept loaded.
+			                                              * When `tpp_file_expandchunk()' is called, and this is field is non-NULL, it will
+			                                              * be updated to point to the same effective position in a newly allocated chunk.
+			                                              * If it is also less than "tf_pos", then it represents of lower bound of memory
+			                                              * to retain in a new file chunk. */
+#define _tpp_file_init_io_keep(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = NULL
+#else /* TPP_HAVE_FILE_KEEPPOS */
+#define _tpp_file_init_io_keep(self) /* nothing */
+#endif /* !TPP_HAVE_FILE_KEEPPOS */
 			tpp_io_handle    TPP_INTERNAL(tff_file);     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
 #if TPP_HAVE_FILE_IOFLAGS
 			tpp_file_ioflags TPP_INTERNAL(tff_flags);    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
@@ -241,7 +250,7 @@ typedef struct tpp_file {
 			tpp_lcinfo  TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
 #if TPP_HAVE_FILE_USER_FILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tft_user_filename); /* [0..1] User-defined override for name of this file */
-#define _tpp_file_init_text_user_filename(self) , (self)->tf_data.td_text.TPP_INTERNAL(tft_user_filename) = NULL
+#define _tpp_file_init_text_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename) = NULL
 #else /* TPP_HAVE_FILE_USER_FILENAME */
 #define _tpp_file_init_text_user_filename(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
@@ -395,6 +404,42 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
 
+#if TPP_HAVE_FILE_KEEPPOS
+/* Push the current keep-pointer for "self"
+ * This macro has no effect if "tpp_file_getkind(self) != TPP_FILE_KIND_IO" */
+#define tpp_file_pushkeep(self) \
+	do {                        \
+		tpp_char const *const _tfpk_oldkeep = (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep);
+#define tpp_file_breakkeep(self) \
+		(void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = _tfpk_oldkeep)
+#define tpp_file_popkeep(self)    \
+		tpp_file_breakkeep(self); \
+	} while (0)
+
+/* Returns the keep-pointer for the file (which may be "NULL").
+ * Return value is undefined if "tpp_file_getkind(self) != TPP_FILE_KIND_IO" */
+#define tpp_file_getkeep(self) \
+	(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep)
+
+/* Set the keep-pointer for the file (given "ptr" must not be "NULL").
+ * This macro has no effect if "tpp_file_getkind(self) != TPP_FILE_KIND_IO"
+ *
+ * @return: true:  Keep pointer was updated because "ptr" describes a greater
+ *                 area of effect than the previously active keep-range.
+ * @return: false: Keep pointer was not updated */
+#define tpp_file_setkeep(self, ptr)                                              \
+	(tpp_assert(!(self)->tf_chunk || (ptr) >= tpp_string_str((self)->tf_chunk)), \
+	 tpp_assert((ptr) <= (self)->tf_end),                                        \
+	 (!tpp_file_getkeep(self) || ((ptr) < tpp_file_getkeep(self))) &&            \
+	 ((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = (ptr), 1))
+#else /* TPP_HAVE_FILE_KEEPPOS */
+#define tpp_file_pushkeep(self)  do {
+#define tpp_file_breakkeep(self) (void)0
+#define tpp_file_popkeep(self)   } while (0)
+#define tpp_file_getkeep(self)   tpp_file_getpos(self)
+#endif /* !TPP_HAVE_FILE_KEEPPOS */
+
+
 
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
  * @param: char const      *filename: [0..1] Filename (if known)
@@ -414,6 +459,7 @@ typedef struct tpp_file {
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
 	       tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc), 0, 0) \
 	       _tpp_file_init_io_user_filename(self)                                                               \
+	       _tpp_file_init_io_keep(self)                                                                        \
 	       _tpp_file_init_ioflags(self, flags))
 
 
@@ -448,7 +494,7 @@ tpp_file_fini(tpp_file *tpp_restrict self);
 
 /* Try to expand the currently loaded `self->tf_chunk':
  * - If the file's kind isn't `TPP_FILE_KIND_IO', return `TPP_EOK'
- * - Allocate a new `struct tpp_string' suitable for holding both
+ * - Allocate a new `tpp_string' suitable for holding both
  *   [tf_pos,tf_end), as well as at least 1 additional byte.
  *   HINT: When `!tpp_string_isshared(self->tf_chunk)', the old
  *         chunk string may simply be re-used (since it'd be free'd
