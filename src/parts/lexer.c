@@ -234,6 +234,7 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
                                         tpp_file *tpp_restrict orig_prev) {
 	tpp_file *const file = tpp_lexer_getfile(self);
+	/* FIXME: this breaks if further files were #include-d by "self" since */
 	while (file->tf_prev != orig_prev) {
 		tpp_file *last = orig_prev;
 		tpp_file *last_prev;
@@ -255,6 +256,7 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
                                       tpp_file *tpp_restrict orig_prev) {
 	tpp_file *const file = tpp_lexer_getfile(self);
+	/* FIXME: this breaks if further files were #include-d by "self" since */
 	while (file->tf_prev != orig_prev) {
 		tpp_file *prev_prev;
 		tpp_assert(orig_prev);

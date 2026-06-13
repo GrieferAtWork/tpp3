@@ -3896,13 +3896,6 @@ TPP_DECL_END
 	(TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_LEXER_GETKEYWORDDEFINED */
 
-/* Provide a function "tpp_lexer_seek_rparen()" that can be used
- * to find the position of a matching ')'-token for the purpose
- * of macro argument lists. */
-#ifndef TPP_HAVE_LEXER_SEEK_RPAREN
-#define TPP_HAVE_LEXER_SEEK_RPAREN (TPP_HAVE_CPP_MACROS)
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN */
-
 /* Provide a set of macros/functions `tpp_lexer_manualpopfile_*'
  * that can be used to seek through the contents of files further
  * up the #include-stack in a way that allows for rollback. */
@@ -3910,13 +3903,20 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS/* && TPP_HAVE_INCLUDE_STACK*/)
 #endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
 
+/* Provide a function "tpp_lexer_seek_rparen()" that can be used
+ * to find the position of a matching ')'-token for the purpose
+ * of macro argument lists. */
+#ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN
+#define TPP_HAVE_LEXER_SEEKPP_RPAREN (TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN */
+
 /* Same as "tpp_lexer_seek_rparen()", but also able to deal with
  * alternate parenthesis pairs: [ ] { } < > */
-#ifndef TPP_HAVE_LEXER_SEEK_RPAREN_EX
-#define TPP_HAVE_LEXER_SEEK_RPAREN_EX (TPP_HAVE_LEXER_SEEK_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+#ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+#define TPP_HAVE_LEXER_SEEKPP_RPAREN_EX (TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
-/* Provide a function "tpp_macro_equals()" to compare macro definitions */
+ /* Provide a function "tpp_macro_equals()" to compare macro definitions */
 #ifndef TPP_HAVE_MACRO_EQUALS
 #define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #endif /* !TPP_HAVE_MACRO_EQUALS */
@@ -4072,10 +4072,10 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 	                       TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
-#define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEK_RPAREN)
+#define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
 #endif /* !TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST */
 #ifndef TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS
-#define TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEK_RPAREN)
+#define TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
 #endif /* !TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS */
 #ifndef TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
 #define TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_MACROS)
@@ -4760,6 +4760,13 @@ typedef enum tpp_token_id {
  * The caller must ensure that "err" has an associated "TPP_TOK_E*" entry. */
 #define TPP_TOK_OFERR(err) ((tpp_token_id)(int)(err))
 
+/* Same as "TPP_TOK_OFERR()", but returns "TPP_TOK_EOF" for "TPP_EOK" */
+#if 1
+#define TPP_TOK_OFERR_OR_EOF(err) ((tpp_token_id)(int)(err))
+#else
+#define TPP_TOK_OFERR_OR_EOF(err) ((err) == TPP_EOK ? TPP_TOK_EOF : TPP_TOK_OFERR(err))
+#endif
+
 /* Convert a given "tpp_token_id id" into the associated error code "TPP_E*"
  * The caller must ensure that "TPP_TOK_ISERR(id) == true" */
 #define TPP_TOK_ASERR(id)  ((tpp_errno)(int)(id))
@@ -4868,9 +4875,6 @@ typedef enum tpp_token_id {
 #endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
 	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX),
 	TPP_TOK_COMMENTLIKE_MAX = TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX) - 1,
-#define TPP_TOK_ISCOMMENT(id)                     \
-	((int)(id) >= (int)TPP_TOK_COMMENTLIKE_MIN && \
-	 (int)(id) <= (int)TPP_TOK_COMMENTLIKE_MAX)
 #define TPP_CASE_TPP_TOK_COMMENT_NOLINE \
 	_TPP_CASE_TPP_TOK_C_COMMENT         \
 	_TPP_CASE_TPP_TOK_PASCAL_COMMENT
@@ -4879,6 +4883,9 @@ typedef enum tpp_token_id {
 	_TPP_CASE_TPP_TOK_SHELL_COMMENT   \
 	_TPP_CASE_TPP_TOK_ASM_COMMENT     \
 	_TPP_CASE_TPP_TOK_SQL_COMMENT
+#define TPP_TOK_ISCOMMENT(id)                     \
+	((int)(id) >= (int)TPP_TOK_COMMENTLIKE_MIN && \
+	 (int)(id) <= (int)TPP_TOK_COMMENTLIKE_MAX)
 #define TPP_CASE_TPP_TOK_COMMENT    \
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE \
 	TPP_CASE_TPP_TOK_COMMENT_LINE
@@ -5295,17 +5302,17 @@ typedef struct tpp_token {
 #define tpp_token_getlen(self)   ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
 
 /* Convenience aliases */
-#define tpp_token_iseof(self)                    (tpp_token_getid(id) == TPP_TOK_EOF)
-#define tpp_token_isspace_or_comment(self)       TPP_TOK_ISSPACE_OR_COMMENT(tpp_token_getid(id))
-#define tpp_token_islf_or_comment(self)          TPP_TOK_ISLF_OR_COMMENT(tpp_token_getid(id))
-#define tpp_token_isspace_or_lf_or_comment(self) TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tpp_token_getid(id))
-#define tpp_token_iskeyword(self)                TPP_TOK_ISKEYWORD(tpp_token_getid(id))
-#define tpp_token_isuserkeyword(self)            TPP_TOK_ISUSERKEYWORD(tpp_token_getid(id))
-#define tpp_token_isbuiltinkeyword(self)         TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(id))
-#define tpp_token_iscomment(self)                TPP_TOK_ISCOMMENT(tpp_token_getid(id))
-#define tpp_token_iscomment_line(self)           TPP_TOK_ISCOMMENT_LINE(tpp_token_getid(id))
-#define tpp_token_iscomment_noline(self)         TPP_TOK_ISCOMMENT_NOLINE(tpp_token_getid(id))
-#define tpp_token_isstring(self)                 TPP_TOK_ISSTRING(tpp_token_getid(id))
+#define tpp_token_iseof(self)                    (tpp_token_getid(self) == TPP_TOK_EOF)
+#define tpp_token_isspace_or_comment(self)       TPP_TOK_ISSPACE_OR_COMMENT(tpp_token_getid(self))
+#define tpp_token_islf_or_comment(self)          TPP_TOK_ISLF_OR_COMMENT(tpp_token_getid(self))
+#define tpp_token_isspace_or_lf_or_comment(self) TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tpp_token_getid(self))
+#define tpp_token_iskeyword(self)                TPP_TOK_ISKEYWORD(tpp_token_getid(self))
+#define tpp_token_isuserkeyword(self)            TPP_TOK_ISUSERKEYWORD(tpp_token_getid(self))
+#define tpp_token_isbuiltinkeyword(self)         TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(self))
+#define tpp_token_iscomment(self)                TPP_TOK_ISCOMMENT(tpp_token_getid(self))
+#define tpp_token_iscomment_line(self)           TPP_TOK_ISCOMMENT_LINE(tpp_token_getid(self))
+#define tpp_token_iscomment_noline(self)         TPP_TOK_ISCOMMENT_NOLINE(tpp_token_getid(self))
+#define tpp_token_isstring(self)                 TPP_TOK_ISSTRING(tpp_token_getid(self))
 
 
 #if TPP_HAVE_TOKEN_ENCODESTRING
@@ -6735,11 +6742,13 @@ typedef struct tpp_file {
  *   also popped before breaking out of a PUSHEOF block
  * - These functions don't save/restore the #ifdef-stack
  *   For that, also make use of "tpp_file_pushifdef()" */
-#define tpp_file_pusheof(self)                              \
-	do {                                                    \
+#define tpp_file_pusheof(self)                                            \
+	do {                                                                  \
 		tpp_file_kind const _tfpeof_kind = (self)->TPP_INTERNAL(tf_kind); \
 		tpp_char const *const _tfpeof_end = (self)->TPP_INTERNAL(tf_end); \
 		_tpp_file_io2text(self)
+#define tpp_file_setpos(self, pos) \
+		(void)((self)->TPP_INTERNAL(tf_pos) = (pos))
 #define tpp_file_seteof(self, end) \
 		(void)((self)->TPP_INTERNAL(tf_end) = (end))
 #define tpp_file_breakeof(self)                             \
@@ -6750,16 +6759,35 @@ typedef struct tpp_file {
 	} while (0)
 
 
-/* Save/restore the position where the next token will be read from */
-#define tpp_file_pushpos(self) \
-	do {                       \
-		tpp_char const *const _tfppos_pos = (self)->TPP_INTERNAL(tf_pos)
-#define tpp_file_setpos(self, pos) \
-		(void)((self)->TPP_INTERNAL(tf_pos) = (pos))
-#define tpp_file_breakpos(self) \
-		(void)((self)->TPP_INTERNAL(tf_pos) = _tfppos_pos)
-#define tpp_file_poppos(self)    \
-		tpp_file_breakpos(self); \
+/* Save/restore the chunk that tokens will be read from */
+#define tpp_file_pushchunk(self)                                             \
+	do {                                                                     \
+		tpp_char const *const _tfpchnk_pos = (self)->TPP_INTERNAL(tf_pos);   \
+		tpp_string *const _tfpchnk_chunk   = (self)->TPP_INTERNAL(tf_chunk); \
+		tpp_char const *const _tfpchnk_end = (self)->TPP_INTERNAL(tf_end);   \
+		tpp_file_kind const _tfpchnk_kind  = (self)->TPP_INTERNAL(tf_kind);  \
+		tpp_lcinfo const _tfpchnk_lcinfo   = (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc); \
+		_tpp_file_io2text(self)
+#define tpp_file_setchunk(self, chunk, pos, end, start_lc) \
+		(void)((self)->TPP_INTERNAL(tf_chunk) = (chunk),   \
+		       (self)->TPP_INTERNAL(tf_pos)   = (pos),     \
+		       (self)->TPP_INTERNAL(tf_end)   = (end),     \
+		       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = start_lc)
+#define tpp_file_setchunk_fromarg(self, arg)                                                                                    \
+		(void)((_tfpchnk_chunk) == (arg)->tlai_chunk                                                                            \
+		       ? (void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = _tfpchnk_lcinfo)       \
+		       : (void)tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc), -1, -1), \
+		       (self)->TPP_INTERNAL(tf_chunk) = (arg)->tlai_chunk,                                                              \
+		       (self)->TPP_INTERNAL(tf_pos)   = (arg)->tlai_start,                                                              \
+		       (self)->TPP_INTERNAL(tf_end)   = (arg)->tlai_end)
+#define tpp_file_breakchunk(self)                               \
+		(void)((self)->TPP_INTERNAL(tf_pos)   = _tfpchnk_pos,   \
+		       (self)->TPP_INTERNAL(tf_chunk) = _tfpchnk_chunk, \
+		       (self)->TPP_INTERNAL(tf_end)   = _tfpchnk_end,   \
+		       (self)->TPP_INTERNAL(tf_kind)  = _tfpchnk_kind,  \
+		       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = _tfpchnk_lcinfo)
+#define tpp_file_popchunk(self)    \
+		tpp_file_breakchunk(self); \
 	} while (0)
 
 /* Push (+clear) and later (clear+)restore the #ifdef-stack of a given file */
@@ -6911,6 +6939,12 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
  *       located in [tf_chunk->ts_str,tf_pos) */
 #define tpp_file_ptr2rel(self, ptr) (tpp_size)((ptr) - (self)->TPP_INTERNAL(tf_pos))
 #define tpp_file_rel2ptr(self, rel) ((self)->TPP_INTERNAL(tf_pos) + (rel))
+
+/* Same as above, but pointers are relative to the file's keep-position */
+#if TPP_HAVE_FILE_KEEPPOS
+#define tpp_file_keep_ptr2rel(self, ptr) (tpp_size)((ptr) - tpp_file_getkeep(self))
+#define tpp_file_keep_rel2ptr(self, rel) (tpp_file_getkeep(self) + (rel))
+#endif /* TPP_HAVE_FILE_KEEPPOS */
 
 
 
@@ -7133,7 +7167,7 @@ typedef struct tpp_macro {
 			tpp_macro_argument *TPP_INTERNAL(tmf_argv);       /* [const][0..f_argc][owned] Vector of argument information (used for fast calculation of the expanded macro's size) */
 			tpp_size            TPP_INTERNAL(tmf_expbase);    /* [const] Base size of macro expansion buffer (== (tm_body_end-tm_body_start) - <TOTAL_SPACE_FROM(TPP_MACRO_OPCODE_SKIP-like)>) */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
-			tpp_size            TPP_INTERNAL(tmf_n_vaopt);    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seek_rparen:OUT(*p_argc) > tmf_argc). */
+			tpp_size            TPP_INTERNAL(tmf_n_vaopt);    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seekraw_rparen:OUT(*p_argc) > tmf_argc). */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
 			tpp_size            TPP_INTERNAL(tmf_n_vanargs);  /* [const] Amount of times `__VA_NARGS__' is used in `tmf_expand'. */
@@ -8189,9 +8223,10 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 #undef TPP_HAVE_LEXER_STATE_FLAGS
-#if (TPP_HAVE_CPP_DIRECTIVES || \
-     TPP_HAVE_WARNINGS ||       \
-     TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS)
+#if (TPP_HAVE_CPP_DIRECTIVES ||             \
+     TPP_HAVE_WARNINGS ||                   \
+     TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS || \
+     TPP_HAVE_LEXER_MANUALPOPFILE)
 #define TPP_HAVE_LEXER_STATE_FLAGS 1
 #else /* ... */
 #define TPP_HAVE_LEXER_STATE_FLAGS 0
@@ -8211,6 +8246,12 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 #define TPP_LEXER_STATE_FLAG_ALLTOKENS    UINT8_C(0x04) /* Prevent `tpp_lexer_yieldpp()' from (possibly) skipp SPACE/LF/COMMENT tokens */
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#if TPP_HAVE_LEXER_MANUALPOPFILE
+#define TPP_LEXER_STATE_FLAG_POPFILERLBK  UINT8_C(0x08) /* When "tpp_lexer_yieldraw()" pops off the #include-stack, use "tpp_lexer_manualpopfile_popfile()".
+                                                         * This assumes that the caller has established a "tpp_lexer_manualpopfile_start()"-block, and when
+                                                         * combined with "tpp_file_setkeep()", allows the caller to perform rollback operations across calls
+                                                         * to "tpp_lexer_yieldpp()", or even "tpp_lexer_yield()" */
+#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
 
@@ -8345,6 +8386,7 @@ typedef struct tpp_lexer {
 #define tpp_lexer_gettokenend(self)                  tpp_token_getend(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenlen(self)                  tpp_token_getlen(tpp_lexer_gettoken(self))
 #define tpp_lexer_getfile(self)                      (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
+#define tpp_lexer_getfilekind(self)                  tpp_file_getkind(tpp_lexer_getfile(self))
 #define tpp_lexer_getfeat(self, TPP_FEAT_x)          tpp_features_get(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
 #define tpp_lexer_getext(self, TPP_EXT_x)            tpp_extensions_get(&(self)->TPP_INTERNAL(tl_exts), TPP_EXT_x)
 #define tpp_lexer_setfeat(self, TPP_FEAT_x, enabled) tpp_features_setid(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x, enabled)
@@ -8536,6 +8578,17 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 #define tpp_lexer_alltokens_pop(self)    } while (0)
 #endif /* !TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 
+#if TPP_HAVE_LEXER_MANUALPOPFILE
+#define tpp_lexer_popfilerlbk_pushon(self) _tpp_lexer_pushstate_on(self, TPP_LEXER_STATE_FLAG_POPFILERLBK)
+#define tpp_lexer_popfilerlbk_break(self)  _tpp_lexer_breakstate(self)
+#define tpp_lexer_popfilerlbk_pop(self)    _tpp_lexer_popstate(self)
+#else /* TPP_HAVE_LEXER_MANUALPOPFILE */
+#define tpp_lexer_popfilerlbk_pushon(self) do {
+#define tpp_lexer_popfilerlbk_break(self)  (void)0
+#define tpp_lexer_popfilerlbk_pop(self)    } while (0)
+#endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
+
+
 /* Temporarily disable automatic pop-to-prev-file on EOF */
 #define tpp_lexer_autopopfile_pushoff(self) tpp_file_autopopfile_pushoff(tpp_lexer_getfile(self))
 #define tpp_lexer_autopopfile_break(self)   tpp_file_autopopfile_break(tpp_lexer_getfile(self))
@@ -8694,6 +8747,26 @@ tpp_lexer_seek_start(tpp_lexer *tpp_restrict self,
  * >>     }
  * >>     return false;
  * >> }
+ *
+ * Another use case is to:
+ * - Setup
+ *   - Use "tpp_file_autopopfile_pushoff()" to set a limit on how far files can be popped
+ *   - Use "tpp_file_setkeep()" on all popable files to prevent old data from being free'd
+ *   - Save "tpp_file_getpos()" of popable files relative to their "tpp_file_getkeep()"
+ *   - Use "tpp_lexer_manualpopfile_start()"
+ *   - Set the "TPP_LEXER_STATE_FLAG_POPFILERLBK" state flag
+ * - At this, functions like "tpp_lexer_yieldpp()" or "tpp_lexer_yield()"
+ *   can be called like normal.
+ * - Rollback can then Implement rollback as:
+ *   - Restore the "TPP_LEXER_STATE_FLAG_POPFILERLBK" flag
+ *   - "tpp_lexer_manualpopfile_end_rollback(self)"
+ *   - Restore positions of popable files by doing "tpp_file_getkeep() + REL_POS"
+ *   - Restore the old keep-positions of popable files
+ *   - Calling "tpp_file_autopopfile_pop()" on popable files
+ * - But be careful: side-effects like macro definitions or #pragma directives aren't rolled back"
+ *
+ * HINT: Something similar to this is done to parse the argument lists of macros when
+ *       rollback needs to be possible due to the "TPP_MACRO_FLAG_SELFEXPAND" extension.
  */
 #define tpp_lexer_manualpopfile_start(self) \
 	do{ tpp_file *const _tlmpf_orig_prev = tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev)
@@ -8755,6 +8828,11 @@ tpp_lexer_yield(tpp_lexer *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_blocking(tpp_lexer *tpp_restrict self);
 
+/* Same as `tpp_lexer_yieldpp()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
+ * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yieldpp_blocking(tpp_lexer *tpp_restrict self);
+
 /* Same as `tpp_lexer_yieldraw()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
  * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
 #define tpp_lexer_yieldraw_blocking(self) \
@@ -8766,6 +8844,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
 #else /* TPP_HAVE_FILE_NONBLOCK */
 #define tpp_lexer_yield_blocking(self)              tpp_lexer_yield(self)
+#define tpp_lexer_yieldpp_blocking(self)            tpp_lexer_yieldpp(self)
 #define tpp_lexer_yieldraw_blocking(self)           tpp_lexer_yieldraw(self)
 #define tpp_lexer_yieldraw_at_blocking(self, p_pos) tpp_lexer_yieldraw_at(self, p_pos)
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
@@ -8837,44 +8916,54 @@ tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
 
 
 
-#if TPP_HAVE_LEXER_SEEK_RPAREN
-typedef struct tpp_lexer_arginfo {
-	/* NOTE: Leading/trailing whitespace in arguments is controlled by "TPP_HAVE_MACRO_ARGUMENT_WHITESPACE" */
-	tpp_char const *tlai_start; /* [1..1][<= tlai_end] Pointer to argument start text data */
-	tpp_char const *tlai_end;   /* [1..1][>= tlai_start] Pointer to argument end text data */
-	/* TODO: Need "TPP_REF tpp_string *tlai_chunk; // [0..1]" in here to support arguments in parent-files, and arguments spanning multiple files */
-} tpp_lexer_arginfo;
-
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN
 
 #define TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL     0x0000
 #define TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS    0x0001 /* Store varargs info in p_argv[IN(*p_argc) - 1] */
 #if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
 #define TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC 0x0002 /* Do not strip whitespace/comments around arguments */
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
+#if TPP_HAVE_MACRO_RECURSION
+#define TPP_LEXER_SEEK_RPAREN_FLAG_YIELDRAW   0x0004 /* Use "tpp_lexer_yieldraw()" instead of "tpp_lexer_yieldpp()" */
+#endif /* TPP_HAVE_MACRO_RECURSION */
 
-/* Find the position of the next unmatched ')'-token, gathering information
- * about ranges of ','-token-separated text-sequences along the way.
+typedef struct tpp_lexer_arginfo {
+	/* NOTE: Leading/trailing whitespace in arguments is controlled by "TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC" */
+	tpp_char const     *tlai_start;  /* [1..1][<= tlai_end] Pointer to argument start text data */
+	tpp_char const     *tlai_end;    /* [1..1][>= tlai_start] Pointer to argument end text data */
+	TPP_REF tpp_string *tlai_chunk;  /* [0..1] Chunk of text containing [tlai_start,tlai_end), or "NULL" if statically allocated */
+} tpp_lexer_arginfo;
+
+#define tpp_lexer_arginfo_fini(self) \
+	(void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0))
+#define tpp_lexer_arginfo_copy(dst, src) \
+	(void)(*(dst) = *(src), (!(self)->tlai_chunk || (tpp_string_incref((self)->tlai_chunk), 0)))
+
+/* Seek the first unmatched ')'-token, whilst collecting information
+ * about every ','-separated text-area encountered until then.
  *
- * NOTE: This function automatically handles "TPP_TOK_EWOULDBLOCK" (meaning it always blocks)
+ * NOTES:
+ *  - This function is used to parse the argument list for user-defined
+ *    macros, as well as a couple of built-in macros.
+ *  - This function preserves the effective "tf_tpos" (aka. tpp_token_getstart())
+ *    of the final output file (and when using "tpp_lexer_manualpopfile_start":
+ *    all intermediate popped files also)
  *
- * @param: p_pos: [in/out]  In:  Pointer to first character to start checking for ')'
- *                          Out: Pointer to the trailing ')', or EOF
- *                               if end-of-file was reached first, or
- *                               in case of TPP_TOK_EWOULDBLOCK.
- *                          WARNING: must DIFFER from "&tpp_lexer_gettoken(self)->tt_end"!
  * @param: p_argv: [out]    Output buffer for the bounds of macro
  *                          arguments encountered along the way.
  *                          The size of this buffer is IN(*p_argc)
  * @param: p_argc: [in/out] In:  Size of provided "p_argv" buffer (in elements)
  *                          Out: Number of arguments actually encountered. May
  *                               be set to a number greater tha IN(*p_argc), in
- *                               which case only info about the first IN(*p_argc)
- *                               arguments is actually returned. But note the
- *                               `TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS' flag, which
- *                               causes the last element of `p_argv' to span up
- *                               to the closing ')'
+ *                               which case the last argument (IN(*p_argc) - 1)
+ *                               is treated as a varargs argument. Unless the
+ *                               `TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS' flag is
+ *                               given in this case, this also causes a warning
+ *                               to be emitted.
+ * @param: p_rollback_pos:  [out] Set to the position that the current file should
+ *                                be rewound to for the sake of performing a rollback
  * @param: opt_function_name_for_messages:
- *                          Function name for too-many-arguments/end-of-params message
+ *                          Function name for warning messages
  * @param: flags:           Set of `TPP_LEXER_SEEK_RPAREN_FLAG_*'
  *
  * @return: TPP_TOK_EOF:         EOF was encountered before an unmatched ')' was found
@@ -8883,56 +8972,46 @@ typedef struct tpp_lexer_arginfo {
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
-#define tpp_lexer_seek_rparen(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags) \
-	tpp_lexer_seek_rparen_ex(self, p_pos, p_argv, p_argc, opt_function_name_for_messages, flags, TPP_TOK_LPAREN)
-#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+#define tpp_lexer_seekpp_rparen(self, p_argv, p_argc, p_rollback_pos, opt_function_name_for_messages, flags) \
+	tpp_lexer_seekpp_rparen_ex(self, p_argv, p_argc, p_rollback_pos, opt_function_name_for_messages, flags, TPP_TOK_LPAREN)
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
-tpp_lexer_seek_rparen(tpp_lexer *tpp_restrict self,
-                      tpp_char const **tpp_restrict p_pos,
-                      tpp_lexer_arginfo *tpp_restrict p_argv,
-                      tpp_size *tpp_restrict p_argc,
-                      char const *opt_function_name_for_messages,
-                      unsigned int flags);
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
-
-/* Same as `tpp_lexer_seek_rparen()', but also able to accept alternate
- * parenthesis, depending on "lparen_kind"
- * @param: lparen_kind: One of 'TPP_TOK_LPAREN', 'TPP_TOK_LBRACKET',
- *                      'TPP_TOK_LBRACE' or 'TPP_TOK_LANGLE'.
- * @return: * : See `tpp_lexer_seek_rparen()' */
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
+tpp_lexer_seekpp_rparen_ex(tpp_lexer *tpp_restrict self,
+                           tpp_lexer_arginfo *tpp_restrict p_argv,
+                           tpp_size *tpp_restrict p_argc,
+                           tpp_char const **p_rollback_pos,
+                           char const *opt_function_name_for_messages,
+                           unsigned int flags,
+                           tpp_token_id lparen_kind);
+#else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
-tpp_lexer_seek_rparen_ex(tpp_lexer *tpp_restrict self,
-                         tpp_char const **tpp_restrict p_pos,
-                         tpp_lexer_arginfo *tpp_restrict p_argv,
-                         tpp_size *tpp_restrict p_argc,
-                         char const *opt_function_name_for_messages,
-                         unsigned int flags,
-                         tpp_token_id lparen_kind);
-#endif /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
+                        tpp_lexer_arginfo *tpp_restrict p_argv,
+                        tpp_size *tpp_restrict p_argc,
+                        tpp_char const **p_rollback_pos,
+                        char const *opt_function_name_for_messages,
+                        unsigned int flags);
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
 /* Same as above, but always initializes *exactly* "argc" arguments,
  * and automatically emits "TPP_W_TOO_FEW_ARGUMENTS" when fewer were
  * parsed. */
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
-#define tpp_lexer_seek_rparen_exact(self, p_pos, p_argv, argc, opt_function_name_for_messages, flags) \
-	tpp_lexer_seek_rparen_exact_ex(self, p_pos, p_argv, argc, opt_function_name_for_messages, flags, TPP_TOK_LPAREN)
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
-tpp_lexer_seek_rparen_exact_ex(tpp_lexer *tpp_restrict self,
-                               tpp_char const **tpp_restrict p_pos,
-                               tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
-                               char const *opt_function_name_for_messages,
-                               unsigned int flags, tpp_token_id lparen_kind);
-#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
-tpp_lexer_seek_rparen_exact(tpp_lexer *tpp_restrict self,
-                            tpp_char const **tpp_restrict p_pos,
-                            tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
-                            char const *opt_function_name_for_messages,
-                            unsigned int flags);
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
-#endif /* TPP_HAVE_LEXER_SEEK_RPAREN */
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+#define tpp_lexer_seekpp_rparen_exact(self, p_argv, argc, opt_function_name_for_messages, flags) \
+	tpp_lexer_seekpp_rparen_exact_ex(self, p_argv, argc, opt_function_name_for_messages, flags, TPP_TOK_LPAREN)
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_seekpp_rparen_exact_ex(tpp_lexer *tpp_restrict self,
+                                 tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
+                                 char const *opt_function_name_for_messages,
+                                 unsigned int flags, tpp_token_id lparen_kind);
+#else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
+                              tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
+                              char const *opt_function_name_for_messages,
+                              unsigned int flags);
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+#endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN */
 
 
 

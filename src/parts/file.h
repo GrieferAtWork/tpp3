@@ -358,11 +358,13 @@ typedef struct tpp_file {
  *   also popped before breaking out of a PUSHEOF block
  * - These functions don't save/restore the #ifdef-stack
  *   For that, also make use of "tpp_file_pushifdef()" */
-#define tpp_file_pusheof(self)                              \
-	do {                                                    \
+#define tpp_file_pusheof(self)                                            \
+	do {                                                                  \
 		tpp_file_kind const _tfpeof_kind = (self)->TPP_INTERNAL(tf_kind); \
 		tpp_char const *const _tfpeof_end = (self)->TPP_INTERNAL(tf_end); \
 		_tpp_file_io2text(self)
+#define tpp_file_setpos(self, pos) \
+		(void)((self)->TPP_INTERNAL(tf_pos) = (pos))
 #define tpp_file_seteof(self, end) \
 		(void)((self)->TPP_INTERNAL(tf_end) = (end))
 #define tpp_file_breakeof(self)                             \
@@ -373,16 +375,35 @@ typedef struct tpp_file {
 	} while (0)
 
 
-/* Save/restore the position where the next token will be read from */
-#define tpp_file_pushpos(self) \
-	do {                       \
-		tpp_char const *const _tfppos_pos = (self)->TPP_INTERNAL(tf_pos)
-#define tpp_file_setpos(self, pos) \
-		(void)((self)->TPP_INTERNAL(tf_pos) = (pos))
-#define tpp_file_breakpos(self) \
-		(void)((self)->TPP_INTERNAL(tf_pos) = _tfppos_pos)
-#define tpp_file_poppos(self)    \
-		tpp_file_breakpos(self); \
+/* Save/restore the chunk that tokens will be read from */
+#define tpp_file_pushchunk(self)                                             \
+	do {                                                                     \
+		tpp_char const *const _tfpchnk_pos = (self)->TPP_INTERNAL(tf_pos);   \
+		tpp_string *const _tfpchnk_chunk   = (self)->TPP_INTERNAL(tf_chunk); \
+		tpp_char const *const _tfpchnk_end = (self)->TPP_INTERNAL(tf_end);   \
+		tpp_file_kind const _tfpchnk_kind  = (self)->TPP_INTERNAL(tf_kind);  \
+		tpp_lcinfo const _tfpchnk_lcinfo   = (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc); \
+		_tpp_file_io2text(self)
+#define tpp_file_setchunk(self, chunk, pos, end, start_lc) \
+		(void)((self)->TPP_INTERNAL(tf_chunk) = (chunk),   \
+		       (self)->TPP_INTERNAL(tf_pos)   = (pos),     \
+		       (self)->TPP_INTERNAL(tf_end)   = (end),     \
+		       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = start_lc)
+#define tpp_file_setchunk_fromarg(self, arg)                                                                                    \
+		(void)((_tfpchnk_chunk) == (arg)->tlai_chunk                                                                            \
+		       ? (void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = _tfpchnk_lcinfo)       \
+		       : (void)tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc), -1, -1), \
+		       (self)->TPP_INTERNAL(tf_chunk) = (arg)->tlai_chunk,                                                              \
+		       (self)->TPP_INTERNAL(tf_pos)   = (arg)->tlai_start,                                                              \
+		       (self)->TPP_INTERNAL(tf_end)   = (arg)->tlai_end)
+#define tpp_file_breakchunk(self)                               \
+		(void)((self)->TPP_INTERNAL(tf_pos)   = _tfpchnk_pos,   \
+		       (self)->TPP_INTERNAL(tf_chunk) = _tfpchnk_chunk, \
+		       (self)->TPP_INTERNAL(tf_end)   = _tfpchnk_end,   \
+		       (self)->TPP_INTERNAL(tf_kind)  = _tfpchnk_kind,  \
+		       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = _tfpchnk_lcinfo)
+#define tpp_file_popchunk(self)    \
+		tpp_file_breakchunk(self); \
 	} while (0)
 
 /* Push (+clear) and later (clear+)restore the #ifdef-stack of a given file */
@@ -534,6 +555,12 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
  *       located in [tf_chunk->ts_str,tf_pos) */
 #define tpp_file_ptr2rel(self, ptr) (tpp_size)((ptr) - (self)->TPP_INTERNAL(tf_pos))
 #define tpp_file_rel2ptr(self, rel) ((self)->TPP_INTERNAL(tf_pos) + (rel))
+
+/* Same as above, but pointers are relative to the file's keep-position */
+#if TPP_HAVE_FILE_KEEPPOS
+#define tpp_file_keep_ptr2rel(self, ptr) (tpp_size)((ptr) - tpp_file_getkeep(self))
+#define tpp_file_keep_rel2ptr(self, rel) (tpp_file_getkeep(self) + (rel))
+#endif /* TPP_HAVE_FILE_KEEPPOS */
 
 
 

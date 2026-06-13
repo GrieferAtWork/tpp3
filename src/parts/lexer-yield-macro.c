@@ -150,8 +150,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	 *
 	 * HINT:
 	 * - Our caller has set-up a context as follows:
-	 *   >> tpp_file_pusheof(file);
-	 *   >> tpp_file_pushpos(file);
+	 *   >> tpp_file_pushchunk(file);
 	 *   >> tpp_file_pushifdef(file);
 	 *   >> tpp_lexer_alltokens_pushon(lexer);
 	 */
@@ -161,13 +160,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	tpp_token_id tok;
 	tpp_char const *expected_simple_tok_start;
 	tpp_assert(file->tf_prev == NULL);
-
-	/* Can simply be overwritten because caller did "tpp_file_pushpos(file);" */
-	tpp_file_setpos(file, arginfo->tlai_start); /* This is where we want to start parsing */
 	expected_simple_tok_start = arginfo->tlai_start;
-
-	/* Can simply be overwritten because caller did "tpp_file_pusheof(file);" */
-	tpp_file_seteof(file, arginfo->tlai_end); /* This is where we want to stop parsing */
 
 next_tok:
 	tok = tpp_lexer_yield(lexer);
@@ -219,9 +212,9 @@ again_print_token:
 	self->tmei_expand_data = buffer.tsb_data;
 	self->tmei_expand_size = buffer.tsb_size;
 done:
-	/* TODO: Verify that the #ifdef-stack of "file" is empty.
-	 *       If it isn't, emit warnings and clear it now. */
-	return TPP_EOK;
+	/* Verify that the #ifdef-stack of "file" is empty.
+	 * If it isn't, emit warnings and clear it now. */
+	return tpp_lexer_warn_nonempty_ifdef(lexer);
 err_builder_nomem:
 	tpp_string_buffer_fini(&buffer);
 	return TPP_ENOMEM;
@@ -347,35 +340,36 @@ tpp_buffer_printer(void *arg, tpp_char const *text, tpp_size num_bytes) {
  * @return: TPP_TOK_EOF: Success -- caller should yield again to load the
  *                                  first macro's first expansion token.
  * @return: TPP_TOK_ENOMEM: Out of memory */
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
                                 tpp_macro *tpp_restrict macro) {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_lexer_seek_backup backup;
-	tpp_char const *pos;
+	tpp_token *const token = tpp_lexer_gettoken(self);
+	tpp_keyword const *const macro_keyword = tpp_lexer_gettokenkwd(self);
+	tpp_char const *rollback_pos;
+#if TPP_HAVE_MACRO_RECURSION
+	tpp_size const macro_keyword_len = tpp_lexer_gettokenlen(self);
+#endif /* TPP_HAVE_MACRO_RECURSION */
 	tpp_token_id tok;
 	tpp_size i, argc;    /* # of arguments given in-source during invocation */
 	tpp_size macro_argc; /* == macro->tm_data.tmd_func.tmf_argc */
 	tpp_macro_argbuf *argbuf;
 	tpp_lexer_arginfo *invoke_arginfo; /* == argbuf->tmab_arginfo */
 	tpp_macro_expinfo *invoke_expinfo; /* == argbuf->tmab_expinfo */
-	tpp_string *result_chunk;
 	tpp_file *prev_file;
+	tpp_string *result_chunk;
+	tpp_size result_chunk_size;
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
 	char va_nargs[TPP_UTOA_MAXLEN]; /* Value for __VA_NARGS__ */
 	tpp_size va_nargs_len = 0; /* XXX: Initialization doesn't matter; only here to shut up compiler warnings */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
-	tpp_size result_chunk_size;
 	tpp_assert(TPP_MACRO_KIND_ISFUNC(macro->tm_kind));
 
 	/* Skip the initial macro-argument-start '('-token */
 	tok = tpp_lexer_tryskip_raw(self, TPP_MACRO_KIND_ASTOK(macro->tm_kind),
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
-	if (tok != TPP_MACRO_KIND_ASTOK(macro->tm_kind)) {
-		if (!TPP_TOK_ISERR(tok))
-			tok = tpp_lexer_gettok(self);
-		return tok;
-	}
+	if (TPP_TOK_ISERR(tok))
+		goto err_tok;
 
 	/* Load argument buffer of macro */
 	argbuf = tpp_macro_acquire_argbuf(macro);
@@ -385,42 +379,46 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	invoke_arginfo = tpp_macro_argbuf_getarginfo(argbuf, argc);
 	invoke_expinfo = tpp_macro_argbuf_getexpinfo(argbuf, argc);
 
-	/* TODO: This the argument-parsing-call here must eventually use tpp_lexer_yieldpp(),
-	 *       there needs to be a tpp_macro_incref() since otherwise "macro" might be
-	 *       free'd if a #undef directive is parsed in here!
-	 *
-	 * iow: All of the following must work:
-	 *
-	 * >> #define foo(a, b) a+b
-	 * >> #define bar       foo(10
-	 * >> #define baz       bar _,_
-	 * >> baz 20)  // Must expand to [10][ ][_][+][_][ ][20]
-	 * >>
-	 * >> // Must expand to [10][ ][_][+][_][7][<LF>][20]
-	 * >> // (Especially complicated since this one contains a directive
-	 * >> // within arguments, and on-top of that: one that deletes the
-	 * >> // macro currently being expanded)
-	 * >> baz 7
-	 * >> #undef foo
-	 * >> 20)
-	 */
-	/* Load parameters of function-style macro */
-	pos = tpp_lexer_seek_start(self, &backup);
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
-	tok = tpp_lexer_seek_rparen_ex(self, &pos, invoke_arginfo, &argc,
-	                               (char const *)backup.tlsb_kwd->tk_kwd,
-	                               tpp_lexer_seek_rparen_flags_frommacro(macro),
-	                               TPP_MACRO_KIND_ASTOK(macro->tm_kind));
-#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
-	tok = tpp_lexer_seek_rparen(self, &pos, invoke_arginfo, &argc,
-	                            (char const *)backup.tlsb_kwd->tk_kwd,
-	                            tpp_lexer_seek_rparen_flags_frommacro(macro));
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+	/* Create a reference to the macro (that will eventually be inherited by the produced file)
+	 * Do this very early on because:
+	 * - Argument scanning may need to call tpp_lexer_yieldpp(), which might #undef the macro
+	 * - Argument expansion may need to call tpp_lexer_yield(), which can do the same */
+	tpp_macro_incref(macro);
+
+	/* Enter a block where file popping can be rolled back. */
+	tpp_lexer_manualpopfile_start(self);
+	_tpp_lexer_pushstate_on(self, TPP_LEXER_STATE_FLAG_ALLTOKENS | TPP_LEXER_STATE_FLAG_POPFILERLBK);
+
+	/* Parse arguments */
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+	tok = tpp_lexer_seekpp_rparen_ex(self, invoke_arginfo, &argc, &rollback_pos,
+	                                 (char const *)macro_keyword->tk_kwd,
+	                                 tpp_lexer_seek_rparen_flags_frommacro(macro),
+	                                 TPP_MACRO_KIND_ASTOK(macro->tm_kind));
+#else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+	tok = tpp_lexer_seekpp_rparen(self, invoke_arginfo, &argc, &rollback_pos,
+	                              (char const *)macro_keyword->tk_kwd,
+	                              tpp_lexer_seek_rparen_flags_frommacro(macro));
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 	if (TPP_TOK_ISERR(tok))
-		goto err_rollback_argbuf;
+		goto err_tok_macro_argbuf_rollback;
+
 	tpp_assert(macro_argc == macro->tm_data.tmd_func.tmf_argc);
 	if (argc < macro_argc) {
 		/* Too few arguments */
+		for (i = argc; i < macro_argc; ++i) {
+			/* Initialize as empty arguments (actually assigned pointer
+			 * here doesn't matter; so-long as "tlai_start == tlai_end",
+			 * the argument is considered to be empty, and no data will
+			 * be dereferenced) */
+#if TPP_DEBUG
+			invoke_arginfo[i].tlai_start = NULL;
+			invoke_arginfo[i].tlai_end   = NULL;
+#else /* TPP_DEBUG */
+			invoke_arginfo[i].tlai_start = invoke_arginfo[i].tlai_end;
+#endif /* !TPP_DEBUG */
+			invoke_arginfo[i].tlai_chunk = NULL;
+		}
 
 		/* Check for special case: exactly 1 argument is missing, and macro takes varargs.
 		 * In this case, the last argument becomes optional and must be treated as empty. */
@@ -433,32 +431,16 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 		{
 #if TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
 			tpp_errno error;
-			tpp_token *const token = tpp_lexer_gettoken(self);
-			tpp_char const *saved_end = token->tt_end;
-			token->tt_end = pos;
-			error = tpp_lexer_warnf_at(self, pos, TPP_W_TOO_FEW_ARGUMENTS,
-			                           (char const *)backup.tlsb_kwd->tk_kwd,
-			                           (unsigned int)macro_argc,
-			                           (unsigned int)argc);
-			token->tt_end = saved_end;
+			error = tpp_lexer_warnf(self, TPP_W_TOO_FEW_ARGUMENTS,
+			                        (char const *)macro_keyword->tk_kwd,
+			                        (unsigned int)macro_argc,
+			                        (unsigned int)argc);
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
-				goto err_rollback_argbuf;
+				goto err_tok_macro_argbuf_rollback_arginfo;
 			}
 		}
 #endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
-		for (i = argc; i < macro_argc; ++i) {
-			/* Initialize as empty arguments (actually assigned pointer
-			 * here doesn't matter; so-long as "tlai_start == tlai_end",
-			 * the argument is considered to be empty, and no data will
-			 * be dereferenced) */
-#if TPP_DEBUG
-			invoke_arginfo[i].tlai_start = NULL;
-			invoke_arginfo[i].tlai_end   = NULL;
-#else /* TPP_DEBUG */
-			invoke_arginfo[i].tlai_start = invoke_arginfo[i].tlai_end;
-#endif /* !TPP_DEBUG */
-		}
 	}
 
 	/* Figure out how much space is needed for the resulting string-chunk */
@@ -484,26 +466,23 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	 * This is also the part where arguments are recursively
 	 * expanded */
 	{
-		tpp_file_autopopfile_pushoff(file);   /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
-		tpp_file_pusheof(file);               /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
-		tpp_file_pushpos(file);               /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
-		tpp_file_pushifdef(file);             /* tpp_macro_expinfo_init() needs this (to ensure no dangling #ifdef-blocks in arguments) */
-		tpp_lexer_alltokens_pushon(self); /* tpp_macro_expinfo_init() needs this (to replicate whitespace when expanding arguments) */
+		tpp_file_autopopfile_pushoff(file); /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
+		tpp_file_pushchunk(file);           /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
+		tpp_file_pushifdef(file);           /* tpp_macro_expinfo_init() needs this (to ensure no dangling #ifdef-blocks in arguments) */
 		for (i = 0; i < macro_argc; ++i) {
 			tpp_macro_argument const *arg = &macro->tm_data.tmd_func.tmf_argv[i];
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[i];
 			if (arg->tma_ins_exp) {
 				tpp_errno error;
 				tpp_macro_expinfo *expand = &invoke_expinfo[i];
+				tpp_file_setchunk_fromarg(file, arginfo);
 				error = tpp_macro_expinfo_init(expand, arginfo, self);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
-					tpp_lexer_alltokens_break(self);
 					tpp_file_breakifdef(file);
-					tpp_file_breakpos(file);
-					tpp_file_breakeof(file);
+					tpp_file_breakchunk(file);
 					tpp_file_autopopfile_break(file);
-					goto err_rollback_argbuf_invoke_expinfo_i;
+					goto err_tok_macro_argbuf_rollback_arginfo_expinfo_i;
 				}
 
 				/* Account for expanded text */
@@ -526,17 +505,15 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			}
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 		}
-		tpp_lexer_alltokens_pop(self);
 		tpp_file_popifdef(file);
-		tpp_file_poppos(file);
-		tpp_file_popeof(file);
+		tpp_file_popchunk(file);
 		tpp_file_autopopfile_pop(file);
 	}
 
 	/* Allocate the perfectly-sized chunk that will describe the expanded macro's text */
 	result_chunk = tpp_string_malloc(result_chunk_size);
 	if tpp_unlikely(!result_chunk)
-		goto err_rollback_argbuf_invoke_expinfo_nomem;
+		goto err_nomem_macro_argbuf_rollback_arginfo_expinfo;
 
 	/* Produce body-chunk-string for function-style macro expansion */
 	{
@@ -678,12 +655,13 @@ next_op:
 
 	/* Cleanup temporary expansion buffers. */
 	for (i = 0; i < macro_argc; ++i) {
+		tpp_lexer_arginfo *arginfo = &invoke_arginfo[i];
 		tpp_macro_argument const *arg = &macro->tm_data.tmd_func.tmf_argv[i];
 		if (arg->tma_ins_exp) {
 			tpp_macro_expinfo *expand = &invoke_expinfo[i];
-			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[i];
 			tpp_macro_expinfo_fini(expand, arginfo);
 		}
+		tpp_lexer_arginfo_fini(arginfo);
 	}
 
 	/* Release argument buffer back to macro */
@@ -702,7 +680,8 @@ next_op:
 				if (tpp_string_equals(existing_chunk, result_chunk)) {
 					/* Duplicate chunk!!! -> Mustn't expand (else: would result in infinite loop) */
 					tpp_string_destroy(result_chunk);
-					goto rollback;
+					tpp_macro_decref(macro);
+					goto done_rollback;
 				}
 			}
 		} while ((iter = iter->tf_tprev) != NULL);
@@ -711,18 +690,15 @@ next_op:
 
 	/* Set-up "result_chunk" such that it will read from "body-chunk-string" */
 	prev_file = tpp_file_alloc();
-	if tpp_unlikely(!prev_file)
-		goto err_rollback_result_chunk_nomem;
+	_tpp_lexer_breakstate(self);
+	if tpp_unlikely(!prev_file) {
+		tpp_lexer_manualpopfile_break_rollback(self);
+		tpp_string_decref(result_chunk);
+		tok = TPP_TOK_ENOMEM;
+		goto err_tok_macro;
+	}
+	tpp_lexer_manualpopfile_break_commit(self);
 	*prev_file = *file;
-
-	/* For tracebacks: point at the macro's name
-	 *
-	 * The pointer found in `file->tf_pos' was previously
-	 * set up as such by `tpp_lexer_seek_start()'. */
-	prev_file->tf_tpos = prev_file->tf_pos;
-
-	/* Override return-file to continue parsing after ')'-token */
-	prev_file->tf_pos = pos;
 
 	file->tf_pos   = tpp_string_str(result_chunk);
 	file->tf_chunk = result_chunk; /* Inherit reference */
@@ -734,24 +710,32 @@ next_op:
 #if TPP_HAVE_UNICODE
 	file->tf_enc = macro->tm_body_enc;
 #endif /* TPP_HAVE_UNICODE */
-	file->tf_data.td_macro.tfm_macro = macro;
-	tpp_macro_incref(macro);
+	file->tf_data.td_macro.tfm_macro = macro; /* Inherit the reference created at the very start */
 	++macro->tm_expansions;
 	return TPP_TOK_EOF;
-rollback:
-	return tpp_lexer_seek_rollback(self, &backup);
-err_rollback_result_chunk_nomem:
+#if TPP_HAVE_MACRO_RECURSION
+done_rollback:
+	_tpp_lexer_breakstate(self);
+	file->tf_pos = rollback_pos;
+	tpp_lexer_manualpopfile_break_rollback(self);
+
+	/* NOTE: After this rollback, any preprocessor directives already
+	 *       parsed will be parsed again. - While this isn't necessarily
+	 *       intentional, we can only get here when "-fmacro-recursion"
+	 *       is enabled, which is a TPP-specific extension, so this does
+	 *       not violate any standard. */
+	token->tt_end = token->tt_start + macro_keyword_len;
+	token->tt_kwd = macro_keyword;
+	token->tt_id  = macro_keyword->tk_id;
+	return macro_keyword->tk_id;
+#endif /* TPP_HAVE_MACRO_RECURSION */
+
+err_nomem_macro_argbuf_rollback_arginfo_expinfo:
 	tok = TPP_TOK_ENOMEM;
-/*err_rollback_result_chunk:*/
-	tpp_string_destroy(result_chunk);
-	goto err_rollback;
-err_rollback_argbuf_invoke_expinfo_nomem:
-	tok = TPP_TOK_ENOMEM;
-/*err_rollback_argbuf_invoke_expinfo:*/
+/*err_tok_macro_argbuf_rollback_arginfo_expinfo:*/
 	i = macro_argc;
-err_rollback_argbuf_invoke_expinfo_i:
-	while (i) {
-		--i;
+err_tok_macro_argbuf_rollback_arginfo_expinfo_i:
+	while (i--) {
 		tpp_macro_argument const *arg = &macro->tm_data.tmd_func.tmf_argv[i];
 		if (arg->tma_ins_exp) {
 			tpp_macro_expinfo *expand = &invoke_expinfo[i];
@@ -759,10 +743,19 @@ err_rollback_argbuf_invoke_expinfo_i:
 			tpp_macro_expinfo_fini(expand, arginfo);
 		}
 	}
-err_rollback_argbuf:
+err_tok_macro_argbuf_rollback_arginfo:
+	while (macro_argc--)
+		tpp_lexer_arginfo_fini(&invoke_arginfo[macro_argc]);
+err_tok_macro_argbuf_rollback:
+	_tpp_lexer_popstate(self);
+	tpp_lexer_manualpopfile_end_rollback(self);
+/*err_tok_macro_argbuf:*/
 	tpp_macro_release_argbuf(macro, argbuf);
-err_rollback:
-	tpp_lexer_seek_rollback(self, &backup);
+err_tok_macro:
+	tpp_macro_decref(macro);
+err_tok:
+	/* Reset token so another attempt to yield will get us here again */
+	token->tt_end = token->tt_start;
 	return tok;
 }
 

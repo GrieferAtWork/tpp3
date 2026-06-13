@@ -33,20 +33,9 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-#if TPP_HAVE_LEXER_SEEK_RPAREN
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN
 
-typedef struct tpp_lexer_arginfo_rel {
-	tpp_size tlair_start; /* [<= tlai_end] Relative offset to argument start text data */
-	tpp_size tlair_end;   /* [>= tlai_start] Relative offset to argument end text data */
-} tpp_lexer_arginfo_rel;
-
-TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer_arginfo_rel, tlair_start) ==
-                  tpp_offsetof(tpp_lexer_arginfo, tlai_start));
-TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer_arginfo_rel, tlair_end) ==
-                  tpp_offsetof(tpp_lexer_arginfo, tlai_end));
-TPP_STATIC_ASSERT(sizeof(tpp_lexer_arginfo_rel) == sizeof(tpp_lexer_arginfo));
-
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 #define TPP_RECURSION_CC_PAREN   0
 #define TPP_RECURSION_CC_BRACKET 1
 #define TPP_RECURSION_CC_BRACE   2
@@ -66,34 +55,150 @@ tpp_get_recursion_cc(tpp_token_id lparen_kind) {
 	default: tpp_unreachable();
 	}
 }
-#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+#else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 #define TPP_RECURSION_CC_PAREN 0
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
 
+typedef struct tpp_seek_rparen_state {
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+	/* Recursively nested ( ), [ ], { }, < > -pairs (in that order)
+	 * The recursion level at any index can only be altered if all
+	 * recursion levels with lower indices are set to 0:
+	 * >> #define ARR[x] #x
+	 * >> ARR[foo(])bar([)baz]
+	 * Expands to 1 token:  "foo(])bar([)baz"
+	 * rather than:         "foo("   )   bar   (   [   )   baz   ]   ) */
+	tpp_ssize    tsrps_recursion[4];
+	unsigned int tsrps_cc;
+#define tpp_seek_rparen_state_init(self, lparen_kind) \
+	(void)((self)->tsrps_recursion[0] = 0,            \
+	       (self)->tsrps_recursion[1] = 0,            \
+	       (self)->tsrps_recursion[2] = 0,            \
+	       (self)->tsrps_recursion[3] = 0,            \
+	       (self)->tsrps_cc = tpp_get_recursion_cc(lparen_kind))
+#define tpp_seek_rparen_state_getcc(self) ((self)->tsrps_cc)
+#else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+	tpp_ssize tsrps_recursion[1]; /* Recursively nested ( )-pairs */
+#define tpp_seek_rparen_state_init(self, lparen_kind) \
+	(void)((self)->tsrps_recursion[0] = 0)
+#define tpp_seek_rparen_state_getcc(self) TPP_RECURSION_CC_PAREN
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
-/* Find the position of the next unmatched ')'-token, gathering information
- * about ranges of ','-token-separated text-sequences along the way.
+#if TPP_HAVE_INCLUDE_STACK
+	tpp_file       *tsrps_curfile_saved_prev;     /* [0..1] Saved "tf_prev" of current file */
+#endif /* TPP_HAVE_INCLUDE_STACK */
+	tpp_size        tsrps_curfile_saved_keep;     /* Saved "ttf_keep" of current file, relative to current "ttf_keep", or (tpp_size)-1 if there was no keep-pointer */
+	tpp_size        tsrps_curfile_saved_tpos_rel; /* Saved "tf_tpos" of current file, relative to current "ttf_keep" */
+	tpp_size        tsrps_curfile_saved_pos_rel;  /* Saved "tf_pos" of current file, relative to current "ttf_keep" */
+
+	/* Already-parsed text that must be prepended before the current argument. */
+	tpp_string_builder tsrps_curarg_prefix;
+#define tpp_seek_rparen_state_init_curarg(self) \
+	tpp_string_builder_init(&(self)->tsrps_curarg_prefix)
+#define tpp_seek_rparen_state_fini_curarg(self)               \
+	tpp_string_builder_fini(&(self)->tsrps_curarg_prefix)
+#define tpp_seek_rparen_state_curarg_append(self, data, size) \
+	(tpp_string_builder_print(&(self)->tsrps_curarg_prefix, data, size) >= 0)
+} tpp_seek_rparen_state;
+
+
+TPP_INLINE TPP_NONNULL((1, 2)) void TPPCALL
+tpp_seek_rparen_state_save_curfile(tpp_seek_rparen_state *tpp_restrict self,
+                                   tpp_lexer *tpp_restrict lexer) {
+	tpp_file *const file = tpp_lexer_getfile(lexer);
+	tpp_char const *keep = file->tf_data.td_io.ttf_keep;
+	tpp_char const *tpos = file->tf_tpos;
+	if (!keep) {
+		self->tsrps_curfile_saved_keep = (tpp_size)-1;
+		file->tf_data.td_io.ttf_keep   = tpos;
+		keep = tpos;
+	} else if (keep <= tpos) {
+		self->tsrps_curfile_saved_keep = 0;
+	} else {
+		self->tsrps_curfile_saved_keep = (tpp_size)(keep - tpos);
+		file->tf_data.td_io.ttf_keep   = tpos;
+		keep = tpos;
+	}
+	self->tsrps_curfile_saved_tpos_rel = (tpp_size)(tpos - keep);
+	self->tsrps_curfile_saved_pos_rel = (tpp_size)(file->tf_pos - keep);
+#if TPP_HAVE_INCLUDE_STACK
+	self->tsrps_curfile_saved_prev = file->tf_prev;
+	file->tf_prev = NULL;
+#endif /* TPP_HAVE_INCLUDE_STACK */
+}
+
+TPP_INLINE TPP_NONNULL((1, 2)) void TPPCALL
+tpp_seek_rparen_state_rstr_curfile(tpp_seek_rparen_state *tpp_restrict self,
+                                   tpp_lexer *tpp_restrict lexer,
+                                   bool restore_pos) {
+	tpp_file *const file = tpp_lexer_getfile(lexer);
+#if TPP_HAVE_INCLUDE_STACK
+	file->tf_prev = self->tsrps_curfile_saved_prev;
+#endif /* TPP_HAVE_INCLUDE_STACK */
+	file->tf_tpos = tpp_file_keep_rel2ptr(file, self->tsrps_curfile_saved_tpos_rel);
+	if (restore_pos)
+		file->tf_pos = tpp_file_keep_rel2ptr(file, self->tsrps_curfile_saved_pos_rel);
+	if (self->tsrps_curfile_saved_keep != (tpp_size)-1) {
+		file->tf_data.td_io.ttf_keep += self->tsrps_curfile_saved_keep;
+	} else {
+		file->tf_data.td_io.ttf_keep = NULL;
+	}
+}
+
+TPP_INLINE TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
+#if TPP_HAVE_LEXER_MANUALPOPFILE
+	if (self->tl_state & TPP_LEXER_STATE_FLAG_POPFILERLBK) {
+		/* Special case: use an alternate (rollback-capable) mechanism to pop files. */
+		tpp_lexer_manualpopfile_popfile(self);
+	} else
+#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
+	{
+		tpp_file *const file = tpp_lexer_getfile(self);
+		tpp_file *prev = file->tf_prev;
+		tpp_file_fini(file);
+		*file = *prev;
+		tpp_free(prev);
+	}
+}
+
+
+#define tpp_lexer_arginfo_isrelative(self) \
+	((self)->tlai_chunk == (TPP_REF tpp_string *)-1)
+#define tpp_lexer_arginfo_rel2ptr(self, file)                                              \
+	(void)((self)->tlai_start = tpp_file_keep_rel2ptr(file, (tpp_size)(self)->tlai_start), \
+	       (self)->tlai_end   = tpp_file_keep_rel2ptr(file, (tpp_size)(self)->tlai_end))
+#define tpp_lexer_arginfo_ptr2rel(self, file)                                                      \
+	(void)((self)->tlai_start = (tpp_char const *)tpp_file_keep_ptr2rel(file, (self)->tlai_start), \
+	       (self)->tlai_end   = (tpp_char const *)tpp_file_keep_ptr2rel(file, (self)->tlai_end))
+
+
+/* Seek the first unmatched ')'-token, whilst collecting information
+ * about every ','-separated text-area encountered until then.
  *
- * NOTE: This function automatically handles "TPP_TOK_EWOULDBLOCK" (meaning it always blocks)
+ * NOTES:
+ *  - This function is used to parse the argument list for user-defined
+ *    macros, as well as a couple of built-in macros.
+ *  - This function preserves the effective "tf_tpos" (aka. tpp_token_getstart())
+ *    of the final output file (and when using "tpp_lexer_manualpopfile_start":
+ *    all intermediate popped files also)
  *
- * @param: p_pos: [in/out]  In:  Pointer to first character to start checking for ')'
- *                          Out: Pointer to the trailing ')', or EOF
- *                               if end-of-file was reached first, or
- *                               in case of TPP_TOK_EWOULDBLOCK.
  * @param: p_argv: [out]    Output buffer for the bounds of macro
  *                          arguments encountered along the way.
  *                          The size of this buffer is IN(*p_argc)
  * @param: p_argc: [in/out] In:  Size of provided "p_argv" buffer (in elements)
  *                          Out: Number of arguments actually encountered. May
  *                               be set to a number greater tha IN(*p_argc), in
- *                               which case only info about the first IN(*p_argc)
- *                               arguments is actually returned. But note the
- *                               `TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS' flag, which
- *                               causes the last element of `p_argv' to span up
- *                               to the closing ')'
+ *                               which case the last argument (IN(*p_argc) - 1)
+ *                               is treated as a varargs argument. Unless the
+ *                               `TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS' flag is
+ *                               given in this case, this also causes a warning
+ *                               to be emitted.
+ * @param: p_rollback_pos:  [out] Set to the position that the current file should
+ *                                be rewound to for the sake of performing a rollback
  * @param: opt_function_name_for_messages:
- *                          Function name for too-many-arguments/end-of-params message
+ *                          Function name for warning messages
  * @param: flags:           Set of `TPP_LEXER_SEEK_RPAREN_FLAG_*'
  *
  * @return: TPP_TOK_EOF:         EOF was encountered before an unmatched ')' was found
@@ -102,179 +207,234 @@ tpp_get_recursion_cc(tpp_token_id lparen_kind) {
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
-tpp_lexer_seek_rparen_ex(tpp_lexer *tpp_restrict self,
-                         tpp_char const **tpp_restrict p_pos,
-                         tpp_lexer_arginfo *tpp_restrict p_argv,
-                         tpp_size *tpp_restrict p_argc,
-                         char const *opt_function_name_for_messages,
-                         unsigned int flags,
-                         tpp_token_id lparen_kind)
-#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
-tpp_lexer_seek_rparen(tpp_lexer *tpp_restrict self,
-                      tpp_char const **tpp_restrict p_pos,
-                      tpp_lexer_arginfo *tpp_restrict p_argv,
-                      tpp_size *tpp_restrict p_argc,
-                      char const *opt_function_name_for_messages,
-                      unsigned int flags)
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
+tpp_lexer_seekpp_rparen_ex(tpp_lexer *tpp_restrict self,
+                           tpp_lexer_arginfo *tpp_restrict p_argv,
+                           tpp_size *tpp_restrict p_argc,
+                           tpp_char const **p_rollback_pos,
+                           char const *opt_function_name_for_messages,
+                           unsigned int flags, tpp_token_id lparen_kind)
+#else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
+tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
+                        tpp_lexer_arginfo *tpp_restrict p_argv,
+                        tpp_size *tpp_restrict p_argc,
+                        tpp_char const **p_rollback_pos,
+                        char const *opt_function_name_for_messages,
+                        unsigned int flags)
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 {
 #if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
-#define tpp_lexer_seek_rparen_keepspace() (flags & TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC)
+#define tpp_lexer_seekpp_rparen_keepspace() (flags & TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC)
 #else /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
-#define tpp_lexer_seek_rparen_keepspace() (TPP_HAVE_MACRO_ARGUMENT_WHITESPACE != 0)
+#define tpp_lexer_seekpp_rparen_keepspace() (TPP_HAVE_MACRO_ARGUMENT_WHITESPACE != 0)
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE >= 0 */
-
-	tpp_lexer_arginfo_rel *const p_argv_rel = (tpp_lexer_arginfo_rel *)p_argv;
-	tpp_file const *const file = tpp_lexer_getfile(self);
-	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
-	tpp_token_id tok;
 	tpp_size const argv_bufsize = *p_argc;
-	tpp_size i, argc = 0;
-	tpp_size current_arg_rel_start;
-	tpp_size current_arg_rel_end;
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
-	/* Recursively nested ( ), [ ], { }, < > -pairs (in that order)
-	 * The recursion level at any index can only be altered if all
-	 * recursion levels with lower indices are set to 0:
-	 * >> #define ARR[x] #x
-	 * >> ARR[foo(])bar([)baz]
-	 * Expands to 1 token:  "foo(])bar([)baz"
-	 * rather than:         "foo("   )   bar   (   [   )   baz   ]   ) */
-	tpp_ssize recursion[4] = { 0, 0, 0, 0 };
-	unsigned int const tpp_recursion_cc = tpp_get_recursion_cc(lparen_kind);
-#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
-	tpp_ssize recursion[1] = { 0 }; /* Recursively nested ( )-pairs */
-#define tpp_recursion_cc TPP_RECURSION_CC_PAREN
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
-	tpp_assert(p_pos != &file->tf_pos && "This would allow for file-popping and chunk deallocation, "
-	                                     "neither of which are compatible with loading an argument "
-	                                     "list");
-	current_arg_rel_start = rel_start;
-	current_arg_rel_end   = current_arg_rel_start;
+	tpp_size argc = 0;
+	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_token *const token = tpp_lexer_gettoken(self);
+	tpp_token_id result;
+	tpp_seek_rparen_state state;
+	tpp_lexer_state_flags saved_lexer_state;
+	tpp_size curarg_rel_start; /* Start of current argument (relative to current file's KEEP) */
+	tpp_size curarg_rel_end;   /* End of current argument (relative to current file's KEEP) */
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0
+	tpp_size curarg_rel_rend;  /* End of current argument without trailing whitespace */
+#define tpp_set_curarg_rel_rend(v) (curarg_rel_end = curarg_rel_rend = (v))
+#define tpp_get_curarg_rel_rend()  curarg_rel_rend
+#else /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0 */
+#define tpp_set_curarg_rel_rend(v) (curarg_rel_end = (v))
+#define tpp_get_curarg_rel_rend()   curarg_rel_end
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE > 0 */
+	saved_lexer_state = self->tl_state;
+	self->tl_state |= TPP_LEXER_STATE_FLAG_ALLTOKENS;
+	tpp_seek_rparen_state_init(&state, lparen_kind);
+	tpp_seek_rparen_state_save_curfile(&state, self);
+	tpp_seek_rparen_state_init_curarg(&state);
 
-	/* Yield first token. */
+	/* NOTES:
+	 * - Elements of "p_argv" are:
+	 *   - Only initialized in the range [0,min(argv_bufsize-1, argc))
+	 *   - When tpp_lexer_arginfo_isrelative() is true, "tlai_chunk",
+	 *     "tlai_enc" and "tlai_lcinfo" are all undefined, and the
+	 *     "tlai_start"+"tlai_end" fields are actually relative offsets
+	 *     to the current file's keep-pointer
+	 *   - When tpp_lexer_arginfo_isrelative() is false, the argument
+	 *     is initialized as per the specifications from "lexer.h"
+	 *
+	 * - "curarg_rel_start" / "curarg_rel_end" specify additional text
+	 *   that needs to be appended to the current argument
+	 */
+
+	result = token->tt_id;
+	curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_end);
+	tpp_set_curarg_rel_rend(curarg_rel_start);
 again_yield_and_switch_tok:
-	tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
-	switch (tok) {
-
-	case TPP_TOK_EOF: {
-#if TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
-		tpp_errno error;
-		error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
-		                           TPP_W_EOF_IN_ARGUMENT_LIST,
-		                           opt_function_name_for_messages);
-		if (TPP_ISERR(error)) {
-			tok = TPP_TOK_OFERR(error);
-			goto done_err;
+	result = tpp_lexer_yieldpp_blocking(self);
+again_switch_tok:
+	if (file->tf_prev != NULL && !TPP_TOK_ISERR(result)) {
+		/* Extra file was pushed -- include all tokens as-is and don't scan for arguments */
+		if (curarg_rel_start < tpp_get_curarg_rel_rend()) { /* Save argument text */
+			tpp_char const *data;
+			tpp_size num_bytes = (tpp_size)(tpp_get_curarg_rel_rend() - curarg_rel_start);
+			tpp_file *curfile = file->tf_prev;
+			while (curfile->tf_prev)
+				curfile = curfile->tf_prev;
+			data = tpp_file_keep_rel2ptr(curfile, curarg_rel_start);
+			if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
+				goto err_nomem;
 		}
-#endif /* TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST */
-		goto done;
-	}	break;
+		for (;;) {
+			if (!tpp_seek_rparen_state_curarg_append(&state,
+			                                         tpp_token_getstart(token),
+			                                         tpp_token_getlen(token)))
+				goto err_nomem;
+			result = tpp_lexer_yieldpp_blocking(self);
+			if (TPP_TOK_ISERR(result))
+				break;
+		} while (file->tf_prev != NULL);
+		curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
+		tpp_set_curarg_rel_rend(curarg_rel_start);
+	}
+
+	switch (result) {
 
 	case TPP_TOK_SPACE:
 	case TPP_TOK_LF:
 	TPP_CASE_TPP_TOK_COMMENT {
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
-		if (tpp_lexer_seek_rparen_keepspace())
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
+		if (tpp_lexer_seekpp_rparen_keepspace())
 			break; /* When whitespace should be kept: treat it like a regular token */
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
 #if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0
-		if (current_arg_rel_start == current_arg_rel_end) {
+		if (state.tsrps_curarg_prefix.tsb_len == 0 &&
+		    curarg_rel_start == curarg_rel_rend) {
 			/* Skip leading whitespace... */
-			current_arg_rel_start = tpp_file_ptr2rel(file, *p_pos);
-			current_arg_rel_end   = current_arg_rel_start;
+			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_end);
+			tpp_set_curarg_rel_rend(curarg_rel_start);
 			goto again_yield_and_switch_tok;
 		}
+		if (curarg_rel_end != tpp_file_keep_ptr2rel(file, token->tt_start)) {
+			tpp_assert(curarg_rel_rend >= curarg_rel_start);
+			if (curarg_rel_rend > curarg_rel_start) {
+				tpp_size num_bytes = (tpp_size)(curarg_rel_rend - curarg_rel_start);
+				tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
+				if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
+					goto err_nomem;
+			}
+			curarg_rel_start = curarg_rel_rend;
+		}
+		curarg_rel_end = tpp_file_keep_ptr2rel(file, token->tt_end);
 		goto again_yield_and_switch_tok;
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0 */
 	}	break;
 
+	case TPP_TOK_EOF:
+#if TPP_HAVE_INCLUDE_STACK
+		if (file->tf_prev || (state.tsrps_curfile_saved_prev &&
+		                      file->tf_kind != TPP_FILE_KIND_IO)) {
+			/* Make already-encoded arguments absolute */
+			tpp_size i, written_argc = argc;
+			if (written_argc >= argv_bufsize) {
+				written_argc = argv_bufsize;
+				if (written_argc)
+					--written_argc;
+			}
+			for (i = 0; i < written_argc; ++i) {
+				tpp_lexer_arginfo *arg = &p_argv[i];
+				if (tpp_lexer_arginfo_isrelative(arg)) {
+					tpp_lexer_arginfo_rel2ptr(arg, file);
+					arg->tlai_chunk = file->tf_chunk;
+					if (arg->tlai_chunk)
+						tpp_string_incref(arg->tlai_chunk);
+				}
+			}
+
+			if (curarg_rel_start < tpp_get_curarg_rel_rend()) { /* Save argument text */
+				tpp_size num_bytes   = (tpp_size)(tpp_get_curarg_rel_rend() - curarg_rel_start);
+				tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
+				if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
+					goto err_nomem;
+			}
+
+			/* Continue with next file */
+			tpp_seek_rparen_state_rstr_curfile(&state, self, true);
+			tpp_lexer_popfile(self);
+			tpp_seek_rparen_state_save_curfile(&state, self);
+			result = tpp_lexer_yieldpp_blocking(self);
+			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
+			tpp_set_curarg_rel_rend(curarg_rel_start);
+			goto again_switch_tok;
+		} else
+#endif /* TPP_HAVE_INCLUDE_STACK */
+		{
+#if TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
+			tpp_errno error;
+			tpp_char const *pos = file->tf_data.td_io.ttf_keep + state.tsrps_curfile_saved_tpos_rel;
+			error = tpp_lexer_warnf_at(self, pos, TPP_W_EOF_IN_ARGUMENT_LIST,
+			                           opt_function_name_for_messages);
+			if (TPP_ISERR(error)) {
+				result = TPP_TOK_OFERR(error);
+				goto err_result;
+			}
+#endif /* TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST */
+		}
+		goto done;
+
 	case '(':
-		++recursion[0];
+		++state.tsrps_recursion[0];
 		break;
 
 	case ')':
-		if (recursion[TPP_RECURSION_CC_PAREN] == 0) {
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
-			if (tpp_recursion_cc == TPP_RECURSION_CC_PAREN)
-#endif /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+		if (state.tsrps_recursion[TPP_RECURSION_CC_PAREN] == 0) {
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+			if (tpp_seek_rparen_state_getcc(&state) == TPP_RECURSION_CC_PAREN)
+#endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 			{
 				goto done;
 			}
 		}
-		--recursion[TPP_RECURSION_CC_PAREN];
+		--state.tsrps_recursion[TPP_RECURSION_CC_PAREN];
 		break;
 
-	case ',': {
-		/* Make sure that we're not inside of a nested ( )-pair */
-		if (recursion[TPP_RECURSION_CC_PAREN] != 0)
-			break;
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
-		if (recursion[TPP_RECURSION_CC_BRACKET] != 0)
-			break;
-		if (recursion[TPP_RECURSION_CC_BRACE] != 0)
-			break;
-		if (recursion[TPP_RECURSION_CC_ANGLE] != 0)
-			break;
-#endif /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
-
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
-		if (tpp_lexer_seek_rparen_keepspace()) {
-			/* Argument must includes whitespace preceding the ","-token */
-			tpp_char const *comma_start = tpp_lexer_gettoken(self)->tt_start;
-			current_arg_rel_end = tpp_file_ptr2rel(file, comma_start);
-		}
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
-
-		/* Write next argument */
-		if (argc < argv_bufsize) {
-			p_argv_rel[argc].tlair_start = current_arg_rel_start;
-			p_argv_rel[argc].tlair_end   = current_arg_rel_end;
-		}
-		++argc;
-		current_arg_rel_start = tpp_file_ptr2rel(file, *p_pos);
-	}	break;
-
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 	case '[':
-		if (tpp_recursion_cc < TPP_RECURSION_CC_BRACKET)
+		if (tpp_seek_rparen_state_getcc(&state) < TPP_RECURSION_CC_BRACKET)
 			break;
-		if (recursion[TPP_RECURSION_CC_PAREN] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_PAREN] != 0)
 			break;
-		++recursion[TPP_RECURSION_CC_BRACKET];
+		++state.tsrps_recursion[TPP_RECURSION_CC_BRACKET];
 		break;
 	case ']':
-		if (tpp_recursion_cc < TPP_RECURSION_CC_BRACKET)
+		if (tpp_seek_rparen_state_getcc(&state) < TPP_RECURSION_CC_BRACKET)
 			break;
-		if (recursion[TPP_RECURSION_CC_PAREN] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_PAREN] != 0)
 			break;
-		if (recursion[TPP_RECURSION_CC_BRACKET] == 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_BRACKET] == 0)
 			goto done;
-		--recursion[TPP_RECURSION_CC_BRACKET];
+		--state.tsrps_recursion[TPP_RECURSION_CC_BRACKET];
 		break;
 
 	case '{':
-		if (tpp_recursion_cc < TPP_RECURSION_CC_BRACE)
+		if (tpp_seek_rparen_state_getcc(&state) < TPP_RECURSION_CC_BRACE)
 			break;
-		if (recursion[TPP_RECURSION_CC_PAREN] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_PAREN] != 0)
 			break;
-		if (recursion[TPP_RECURSION_CC_BRACKET] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_BRACKET] != 0)
 			break;
-		++recursion[TPP_RECURSION_CC_BRACE];
+		++state.tsrps_recursion[TPP_RECURSION_CC_BRACE];
 		break;
 	case '}':
-		if (tpp_recursion_cc < TPP_RECURSION_CC_BRACE)
+		if (tpp_seek_rparen_state_getcc(&state) < TPP_RECURSION_CC_BRACE)
 			break;
-		if (recursion[TPP_RECURSION_CC_PAREN] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_PAREN] != 0)
 			break;
-		if (recursion[TPP_RECURSION_CC_BRACKET] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_BRACKET] != 0)
 			break;
-		if (recursion[TPP_RECURSION_CC_BRACE] == 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_BRACE] == 0)
 			goto done;
-		--recursion[TPP_RECURSION_CC_BRACE];
+		--state.tsrps_recursion[TPP_RECURSION_CC_BRACE];
 		break;
 
 #if (TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||               \
@@ -302,11 +462,11 @@ again_yield_and_switch_tok:
 	case TPP_TOK_LANGLE_MINUS: /* "<-" */
 #endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS */
 		/* Convert to "<" token */
-		tpp_assert(tpp_lexer_gettoken(self)->tt_start < *p_pos);
-		tpp_assert(tpp_lexer_gettoken(self)->tt_start[0] == '<');
-		*p_pos = tpp_lexer_gettoken(self)->tt_start + 1;
-/*		tok = TPP_TOK_OFCHAR('<');             * Not necessary */
-/*		tpp_lexer_gettoken(self)->tt_id = tok; * Not necessary */
+		tpp_assert(token->tt_start < token->tt_end);
+		tpp_assert(token->tt_start[0] == '<');
+		token->tt_end = token->tt_start + 1;
+/*		result = TPP_TOK_OFCHAR('<');  * Not necessary */
+/*		token->tt_id = result;         * Not necessary */
 		goto handle_langle;
 #define WANT_handle_langle
 		break;
@@ -339,11 +499,11 @@ again_yield_and_switch_tok:
 	case TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL: /* ">>>=" */
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 		/* Convert to ">" token */
-		tpp_assert(tpp_lexer_gettoken(self)->tt_start < *p_pos);
-		tpp_assert(tpp_lexer_gettoken(self)->tt_start[0] == '>');
-		*p_pos = tpp_lexer_gettoken(self)->tt_start + 1;
-		tok = TPP_TOK_OFCHAR('>');
-		tpp_lexer_gettoken(self)->tt_id = tok;
+		tpp_assert(token->tt_start < token->tt_end);
+		tpp_assert(token->tt_start[0] == '>');
+		token->tt_end = token->tt_start + 1;
+		result = TPP_TOK_OFCHAR('>');
+		token->tt_id = result;
 		goto handle_rangle;
 #define WANT_handle_rangle
 		break;
@@ -389,10 +549,10 @@ again_yield_and_switch_tok:
 	case TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE: /* "=>>>" */
 #endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 		/* Convert to 1-char token */
-		tpp_assert(tpp_lexer_gettoken(self)->tt_start < *p_pos);
-		*p_pos = tpp_lexer_gettoken(self)->tt_start + 1;
-/*		tok = TPP_TOK_OFCHAR(tpp_lexer_gettoken(self)->tt_start[0]); * Not necessary */
-/*		tpp_lexer_gettoken(self)->tt_id = tok;                       * Not necessary */
+		tpp_assert(token->tt_start < token->tt_end);
+		token->tt_end = token->tt_start + 1;
+/*		result = TPP_TOK_OFCHAR(token->tt_start[0]); * Not necessary */
+/*		token->tt_id = result;                       * Not necessary */
 		break;
 #endif /* ... */
 
@@ -401,15 +561,15 @@ again_yield_and_switch_tok:
 #undef WANT_handle_langle
 handle_langle:
 #endif /* WANT_handle_langle */
-		if (tpp_recursion_cc < TPP_RECURSION_CC_ANGLE)
+		if (tpp_seek_rparen_state_getcc(&state) < TPP_RECURSION_CC_ANGLE)
 			break;
-		if (recursion[TPP_RECURSION_CC_PAREN] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_PAREN] != 0)
 			break;
-		if (recursion[TPP_RECURSION_CC_BRACKET] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_BRACKET] != 0)
 			break;
-		if (recursion[TPP_RECURSION_CC_BRACE] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_BRACE] != 0)
 			break;
-		++recursion[TPP_RECURSION_CC_ANGLE];
+		++state.tsrps_recursion[TPP_RECURSION_CC_ANGLE];
 		break;
 
 	case '>':
@@ -417,129 +577,226 @@ handle_langle:
 #undef WANT_handle_rangle
 handle_rangle:
 #endif /* WANT_handle_rangle */
-		if (tpp_recursion_cc < TPP_RECURSION_CC_ANGLE)
+		if (tpp_seek_rparen_state_getcc(&state) < TPP_RECURSION_CC_ANGLE)
 			break;
-		if (recursion[TPP_RECURSION_CC_PAREN] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_PAREN] != 0)
 			break;
-		if (recursion[TPP_RECURSION_CC_BRACKET] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_BRACKET] != 0)
 			break;
-		if (recursion[TPP_RECURSION_CC_BRACE] != 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_BRACE] != 0)
 			break;
-		if (recursion[TPP_RECURSION_CC_ANGLE] == 0)
+		if (state.tsrps_recursion[TPP_RECURSION_CC_ANGLE] == 0)
 			goto done;
-		--recursion[TPP_RECURSION_CC_ANGLE];
+		--state.tsrps_recursion[TPP_RECURSION_CC_ANGLE];
 		break;
 
-#endif /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+#endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
 
-	default:
-		if (TPP_TOK_ISERR(tok))
-			goto done_err;
-		break;
-	}
-	current_arg_rel_end = tpp_file_ptr2rel(file, *p_pos);
-	goto again_yield_and_switch_tok;
+	case ',': {
+		/* Make sure that we're not inside of a nested ( )-pair */
+		if (state.tsrps_recursion[TPP_RECURSION_CC_PAREN] != 0)
+			break;
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+		if (state.tsrps_recursion[TPP_RECURSION_CC_BRACKET] != 0)
+			break;
+		if (state.tsrps_recursion[TPP_RECURSION_CC_BRACE] != 0)
+			break;
+		if (state.tsrps_recursion[TPP_RECURSION_CC_ANGLE] != 0)
+			break;
+#endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
-done:
-	if (argc || (current_arg_rel_end > current_arg_rel_start)) {
-		/* Write last argument */
-		if (argc < argv_bufsize) {
-			p_argv_rel[argc].tlair_start = current_arg_rel_start;
-			p_argv_rel[argc].tlair_end   = current_arg_rel_end;
-		} else if (argv_bufsize) {
-			/* Update end-pointer of last argument (for varargs) */
-			p_argv_rel[argv_bufsize - 1].tlair_end = current_arg_rel_end;
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
+		if (tpp_lexer_seekpp_rparen_keepspace())
+			curarg_rel_rend = curarg_rel_end; /* Argument must includes whitespace preceding the ","-token */
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
+
+		/* Write next argument */
+		if (argc < (argv_bufsize - 1)) {
+			tpp_lexer_arginfo *arg = &p_argv[argc];
+			if (state.tsrps_curarg_prefix.tsb_len) {
+				if (curarg_rel_start < tpp_get_curarg_rel_rend()) { /* Save argument text */
+					tpp_size num_bytes   = (tpp_size)(tpp_get_curarg_rel_rend() - curarg_rel_start);
+					tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
+					if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
+						goto err_nomem;
+				}
+				arg->tlai_chunk = tpp_string_builder_pack(&state.tsrps_curarg_prefix);
+				arg->tlai_start = tpp_string_str(arg->tlai_chunk);
+				arg->tlai_end   = tpp_string_end(arg->tlai_chunk);
+				tpp_seek_rparen_state_init_curarg(&state);
+			} else {
+				arg->tlai_chunk = (TPP_REF tpp_string *)-1; /* Indicate that this is a relative argument (fixed later) */
+				arg->tlai_start = (tpp_char const *)curarg_rel_start;
+				arg->tlai_end   = (tpp_char const *)tpp_get_curarg_rel_rend();
+			}
+			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_end);
+			tpp_set_curarg_rel_rend(curarg_rel_start);
+			++argc;
+			goto again_yield_and_switch_tok;
 		}
 		++argc;
+	}	break;
+
+	default:
+		if (TPP_TOK_ISERR(result))
+			goto err_result;
+		break;
 	}
+	if (curarg_rel_end != tpp_file_keep_ptr2rel(file, token->tt_start)) {
+		tpp_assert(curarg_rel_end >= curarg_rel_start);
+		if (curarg_rel_end > curarg_rel_start) {
+			tpp_size num_bytes = (tpp_size)(curarg_rel_end - curarg_rel_start);
+			tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
+			if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
+				goto err_nomem;
+		}
+		curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
+	}
+	tpp_set_curarg_rel_rend(tpp_file_keep_ptr2rel(file, token->tt_end));
+	goto again_yield_and_switch_tok;
+
+
+done:
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
+	if (tpp_lexer_seekpp_rparen_keepspace())
+		curarg_rel_rend = curarg_rel_end; /* Argument must includes trailing whitespace */
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
+	if (argc || (state.tsrps_curarg_prefix.tsb_len ||
+	             tpp_get_curarg_rel_rend() > curarg_rel_start)) {
+		/* Write last argument */
+		tpp_lexer_arginfo *arg;
+		if (argc < argv_bufsize) {
+			arg = &p_argv[argc];
+		} else if (argv_bufsize) {
+			/* Update end-pointer of last argument (for varargs) */
+			arg = &p_argv[argv_bufsize - 1];
+		} else {
+			++argc;
+			goto done_after_last_arg;
+		}
+		++argc;
+		if (state.tsrps_curarg_prefix.tsb_len) {
+			if (tpp_get_curarg_rel_rend() > curarg_rel_start) {
+				tpp_size num_bytes   = (tpp_size)(tpp_get_curarg_rel_rend() - curarg_rel_start);
+				tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
+				if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
+					goto err_nomem;
+			}
+			arg->tlai_chunk = tpp_string_builder_pack(&state.tsrps_curarg_prefix);
+			arg->tlai_start = tpp_string_str(arg->tlai_chunk);
+			arg->tlai_end   = tpp_string_end(arg->tlai_chunk);
+			tpp_seek_rparen_state_init_curarg(&state);
+		} else {
+			arg->tlai_chunk = (TPP_REF tpp_string *)-1; /* Indicate that this is a relative argument (fixed later) */
+			arg->tlai_start = (tpp_char const *)curarg_rel_start;
+			arg->tlai_end   = (tpp_char const *)tpp_get_curarg_rel_rend();
+		}
+	}
+done_after_last_arg:
 #if TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS
 	if (argc > argv_bufsize && !(flags & TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS)) {
 		tpp_errno error;
-		tpp_size warning_pos = rel_start;
-		if (argv_bufsize) {
-			warning_pos = p_argv_rel[argv_bufsize - 1].tlair_start;
-			/* XXX: "warning_pos" here points at the start of the last in-bounds
-			 *      argument, but for optimal effect, this warning should probably
-			 *      point at the ","-token *AFTER* the last in-bounds argument... */
-		}
-		error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, warning_pos),
-		                           TPP_W_TOO_MANY_ARGUMENTS,
+		tpp_char const *pos = file->tf_data.td_io.ttf_keep + state.tsrps_curfile_saved_tpos_rel;
+		error = tpp_lexer_warnf_at(self, pos, TPP_W_TOO_MANY_ARGUMENTS,
 		                           opt_function_name_for_messages,
 		                           (unsigned int)argv_bufsize,
 		                           (unsigned int)argc);
 		if (TPP_ISERR(error))
-			tok = TPP_TOK_OFERR(error);
+			result = TPP_TOK_OFERR(error);
 	}
 #endif /* TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS */
-done_err:
+err_result:
 	*p_argc = argc;
 	if (argc > argv_bufsize)
 		argc = argv_bufsize;
-	for (i = 0; i < argc; ++i) {
-		p_argv[i].tlai_start = tpp_file_rel2ptr(file, p_argv_rel[i].tlair_start);
-		p_argv[i].tlai_end   = tpp_file_rel2ptr(file, p_argv_rel[i].tlair_end);
+	if tpp_unlikely(TPP_TOK_ISERR(result)) {
+		tpp_size i;
+		if (argc)
+			--argc; /* Last argument is initialized at the very end */
+		for (i = 0; i < argc; ++i) {
+			tpp_lexer_arginfo *arg = &p_argv[i];
+			if (!tpp_lexer_arginfo_isrelative(arg))
+				tpp_lexer_arginfo_fini(arg);
+		}
+	} else {
+		tpp_size i;
+		for (i = 0; i < argc; ++i) {
+			tpp_lexer_arginfo *arg = &p_argv[i];
+			if (tpp_lexer_arginfo_isrelative(arg)) {
+				tpp_lexer_arginfo_rel2ptr(arg, file);
+				arg->tlai_chunk = file->tf_chunk;
+				if (arg->tlai_chunk)
+					tpp_string_incref(arg->tlai_chunk);
+			}
+		}
 	}
-	return tok;
-#undef tpp_recursion_cc
-#undef tpp_lexer_seek_rparen_keepspace
+	*p_rollback_pos = tpp_file_keep_rel2ptr(file, state.tsrps_curfile_saved_pos_rel);
+	tpp_seek_rparen_state_rstr_curfile(&state, self, false);
+	tpp_seek_rparen_state_fini_curarg(&state);
+	self->tl_state = saved_lexer_state;
+	return result;
+err_nomem:
+	result = TPP_TOK_ENOMEM;
+	goto err_result;
+#undef tpp_set_curarg_rel_rend
+#undef tpp_lexer_seekpp_rparen_keepspace
 }
+
 
 
 /* Same as above, but always initializes *exactly* "argc" arguments,
  * and automatically emits "TPP_W_TOO_FEW_ARGUMENTS" when fewer were
  * parsed. */
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
-tpp_lexer_seek_rparen_exact_ex(tpp_lexer *tpp_restrict self,
-                               tpp_char const **tpp_restrict p_pos,
-                               tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
-                               char const *opt_function_name_for_messages,
-                               unsigned int flags, tpp_token_id lparen_kind)
-#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
-tpp_lexer_seek_rparen_exact(tpp_lexer *tpp_restrict self,
-                            tpp_char const **tpp_restrict p_pos,
-                            tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
-                            char const *opt_function_name_for_messages,
-                            unsigned int flags);
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_seekpp_rparen_exact_ex(tpp_lexer *tpp_restrict self,
+                                 tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
+                                 char const *opt_function_name_for_messages,
+                                 unsigned int flags, tpp_token_id lparen_kind)
+#else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
+                              tpp_lexer_arginfo *tpp_restrict p_argv, tpp_size argc,
+                              char const *opt_function_name_for_messages,
+                              unsigned int flags)
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 {
+	tpp_file const *const file = tpp_lexer_getfile(self);
 	tpp_token_id result;
 	tpp_size argc_actual = argc;
-#if TPP_HAVE_LEXER_SEEK_RPAREN_EX
-	result = tpp_lexer_seek_rparen_ex(self, p_pos, p_argv, &argc_actual,
-	                                  opt_function_name_for_messages,
-	                                  flags, lparen_kind);
-#else /* TPP_HAVE_LEXER_SEEK_RPAREN_EX */
-	result = tpp_lexer_seek_rparen(self, p_pos, p_argv, &argc_actual,
-	                               opt_function_name_for_messages,
-	                               flags);
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+	tpp_char const *rollback_pos;
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+	result = tpp_lexer_seekpp_rparen_ex(self, p_argv, &argc_actual, &rollback_pos,
+	                                    opt_function_name_for_messages, flags,
+	                                    lparen_kind);
+#else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+	result = tpp_lexer_seekpp_rparen(self, p_pos, p_argv, &argc_actual, &rollback_pos,
+	                                 opt_function_name_for_messages, flags);
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 	if (!TPP_TOK_ISERR(result) && argc_actual < argc) {
 		tpp_size i;
-		tpp_char const *fallback_pos = *p_pos;
 #if TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
 		tpp_errno error;
-		tpp_token *const token = tpp_lexer_gettoken(self);
-		tpp_char const *saved_end = token->tt_end;
-		token->tt_end = fallback_pos;
-		error = tpp_lexer_warnf_at(self, fallback_pos, TPP_W_TOO_FEW_ARGUMENTS,
-		                           opt_function_name_for_messages,
-		                           (unsigned int)argc,
-		                           (unsigned int)argc_actual);
-		token->tt_end = saved_end;
+		error = tpp_lexer_warnf(self, TPP_W_TOO_FEW_ARGUMENTS,
+		                        opt_function_name_for_messages,
+		                        (unsigned int)argc,
+		                        (unsigned int)argc_actual);
 		if (TPP_ISERR(error))
 			result = TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
 		for (i = argc_actual; i < argc; ++i) {
-			p_argv[i].tlai_start = fallback_pos;
-			p_argv[i].tlai_end   = fallback_pos;
+			p_argv[i].tlai_start = rollback_pos;
+			p_argv[i].tlai_end   = rollback_pos;
+			p_argv[i].tlai_chunk = file->tf_chunk;
+			if (file->tf_chunk)
+				tpp_string_incref(file->tf_chunk);
 		}
 	}
 	return result;
 }
-#endif /* TPP_HAVE_LEXER_SEEK_RPAREN */
+
+#endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

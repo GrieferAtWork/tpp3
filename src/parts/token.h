@@ -114,6 +114,13 @@ typedef enum tpp_token_id {
  * The caller must ensure that "err" has an associated "TPP_TOK_E*" entry. */
 #define TPP_TOK_OFERR(err) ((tpp_token_id)(int)(err))
 
+/* Same as "TPP_TOK_OFERR()", but returns "TPP_TOK_EOF" for "TPP_EOK" */
+#if 1
+#define TPP_TOK_OFERR_OR_EOF(err) ((tpp_token_id)(int)(err))
+#else
+#define TPP_TOK_OFERR_OR_EOF(err) ((err) == TPP_EOK ? TPP_TOK_EOF : TPP_TOK_OFERR(err))
+#endif
+
 /* Convert a given "tpp_token_id id" into the associated error code "TPP_E*"
  * The caller must ensure that "TPP_TOK_ISERR(id) == true" */
 #define TPP_TOK_ASERR(id)  ((tpp_errno)(int)(id))
@@ -222,9 +229,6 @@ typedef enum tpp_token_id {
 #endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
 	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX),
 	TPP_TOK_COMMENTLIKE_MAX = TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX) - 1,
-#define TPP_TOK_ISCOMMENT(id)                     \
-	((int)(id) >= (int)TPP_TOK_COMMENTLIKE_MIN && \
-	 (int)(id) <= (int)TPP_TOK_COMMENTLIKE_MAX)
 #define TPP_CASE_TPP_TOK_COMMENT_NOLINE \
 	_TPP_CASE_TPP_TOK_C_COMMENT         \
 	_TPP_CASE_TPP_TOK_PASCAL_COMMENT
@@ -233,6 +237,9 @@ typedef enum tpp_token_id {
 	_TPP_CASE_TPP_TOK_SHELL_COMMENT   \
 	_TPP_CASE_TPP_TOK_ASM_COMMENT     \
 	_TPP_CASE_TPP_TOK_SQL_COMMENT
+#define TPP_TOK_ISCOMMENT(id)                     \
+	((int)(id) >= (int)TPP_TOK_COMMENTLIKE_MIN && \
+	 (int)(id) <= (int)TPP_TOK_COMMENTLIKE_MAX)
 #define TPP_CASE_TPP_TOK_COMMENT    \
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE \
 	TPP_CASE_TPP_TOK_COMMENT_LINE
@@ -649,17 +656,17 @@ typedef struct tpp_token {
 #define tpp_token_getlen(self)   ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
 
 /* Convenience aliases */
-#define tpp_token_iseof(self)                    (tpp_token_getid(id) == TPP_TOK_EOF)
-#define tpp_token_isspace_or_comment(self)       TPP_TOK_ISSPACE_OR_COMMENT(tpp_token_getid(id))
-#define tpp_token_islf_or_comment(self)          TPP_TOK_ISLF_OR_COMMENT(tpp_token_getid(id))
-#define tpp_token_isspace_or_lf_or_comment(self) TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tpp_token_getid(id))
-#define tpp_token_iskeyword(self)                TPP_TOK_ISKEYWORD(tpp_token_getid(id))
-#define tpp_token_isuserkeyword(self)            TPP_TOK_ISUSERKEYWORD(tpp_token_getid(id))
-#define tpp_token_isbuiltinkeyword(self)         TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(id))
-#define tpp_token_iscomment(self)                TPP_TOK_ISCOMMENT(tpp_token_getid(id))
-#define tpp_token_iscomment_line(self)           TPP_TOK_ISCOMMENT_LINE(tpp_token_getid(id))
-#define tpp_token_iscomment_noline(self)         TPP_TOK_ISCOMMENT_NOLINE(tpp_token_getid(id))
-#define tpp_token_isstring(self)                 TPP_TOK_ISSTRING(tpp_token_getid(id))
+#define tpp_token_iseof(self)                    (tpp_token_getid(self) == TPP_TOK_EOF)
+#define tpp_token_isspace_or_comment(self)       TPP_TOK_ISSPACE_OR_COMMENT(tpp_token_getid(self))
+#define tpp_token_islf_or_comment(self)          TPP_TOK_ISLF_OR_COMMENT(tpp_token_getid(self))
+#define tpp_token_isspace_or_lf_or_comment(self) TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tpp_token_getid(self))
+#define tpp_token_iskeyword(self)                TPP_TOK_ISKEYWORD(tpp_token_getid(self))
+#define tpp_token_isuserkeyword(self)            TPP_TOK_ISUSERKEYWORD(tpp_token_getid(self))
+#define tpp_token_isbuiltinkeyword(self)         TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(self))
+#define tpp_token_iscomment(self)                TPP_TOK_ISCOMMENT(tpp_token_getid(self))
+#define tpp_token_iscomment_line(self)           TPP_TOK_ISCOMMENT_LINE(tpp_token_getid(self))
+#define tpp_token_iscomment_noline(self)         TPP_TOK_ISCOMMENT_NOLINE(tpp_token_getid(self))
+#define tpp_token_isstring(self)                 TPP_TOK_ISSTRING(tpp_token_getid(self))
 
 
 #if TPP_HAVE_TOKEN_ENCODESTRING

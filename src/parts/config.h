@@ -1440,13 +1440,6 @@
 	(TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_LEXER_GETKEYWORDDEFINED */
 
-/* Provide a function "tpp_lexer_seek_rparen()" that can be used
- * to find the position of a matching ')'-token for the purpose
- * of macro argument lists. */
-#ifndef TPP_HAVE_LEXER_SEEK_RPAREN
-#define TPP_HAVE_LEXER_SEEK_RPAREN (TPP_HAVE_CPP_MACROS)
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN */
-
 /* Provide a set of macros/functions `tpp_lexer_manualpopfile_*'
  * that can be used to seek through the contents of files further
  * up the #include-stack in a way that allows for rollback. */
@@ -1454,13 +1447,20 @@
 #define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS/* && TPP_HAVE_INCLUDE_STACK*/)
 #endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
 
+/* Provide a function "tpp_lexer_seek_rparen()" that can be used
+ * to find the position of a matching ')'-token for the purpose
+ * of macro argument lists. */
+#ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN
+#define TPP_HAVE_LEXER_SEEKPP_RPAREN (TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN */
+
 /* Same as "tpp_lexer_seek_rparen()", but also able to deal with
  * alternate parenthesis pairs: [ ] { } < > */
-#ifndef TPP_HAVE_LEXER_SEEK_RPAREN_EX
-#define TPP_HAVE_LEXER_SEEK_RPAREN_EX (TPP_HAVE_LEXER_SEEK_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
-#endif /* !TPP_HAVE_LEXER_SEEK_RPAREN_EX */
+#ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+#define TPP_HAVE_LEXER_SEEKPP_RPAREN_EX (TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
-/* Provide a function "tpp_macro_equals()" to compare macro definitions */
+ /* Provide a function "tpp_macro_equals()" to compare macro definitions */
 #ifndef TPP_HAVE_MACRO_EQUALS
 #define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #endif /* !TPP_HAVE_MACRO_EQUALS */
@@ -1616,10 +1616,10 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 	                       TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
-#define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEK_RPAREN)
+#define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
 #endif /* !TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST */
 #ifndef TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS
-#define TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEK_RPAREN)
+#define TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
 #endif /* !TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS */
 #ifndef TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
 #define TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_MACROS)

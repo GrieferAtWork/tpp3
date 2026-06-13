@@ -140,7 +140,8 @@ again_yield_mainfile:
 	if (tok == TPP_TOK_EOF) {
 		/* Check files further up the #include-stack */
 		tpp_lexer_manualpopfile_start(self);
-		while (tpp_lexer_manualpopfile_canpopfile(self)) {
+		while (tpp_lexer_manualpopfile_canpopfile(self) &&
+		       tpp_lexer_getfilekind(self) != TPP_FILE_KIND_IO) {
 			tpp_lexer_manualpopfile_popfile(self);
 			pos = tpp_lexer_seek_start(self, &backup);
 again_yield_nextfile:

@@ -245,8 +245,6 @@ tpp_lexer_handle_string_feature_test_cb(void *arg, tpp_string *chunk,
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id mode) {
-	tpp_lexer_seek_backup backup;
-	tpp_char const *pos;
 	tpp_token_id tok;
 	unsigned int recursion;
 #if TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS
@@ -269,13 +267,10 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 		return tok;
 	}
 
-	pos = tpp_lexer_seek_start(self, &backup);
-	/* FIXME: Arguments may be in files further up the #include-stack! */
-	/* Yield feature keyword */
 	do {
-		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
+		tok = tpp_lexer_yieldpp_blocking(self);
 		if tpp_unlikely(TPP_TOK_ISERR(tok))
-			goto err_tok_rollback;
+			return tok;
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 
 	/* Default to expanding to "0" */
@@ -291,12 +286,15 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 			goto seek_end_of_macro;
 #define WANT_seek_end_of_macro
 #endif /* TPP_HAVE_CLANG_MACRO___has_extension */
+		data.tlhsftd_lexer = self;
+		data.tlhsftd_mode  = mode;
 
 		/* Parse the string that the user entered. */
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_string_feature_test_cb,
 		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
+		tok = tpp_lexer_gettok(self);
 	} else
 #endif /* TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS */
 	{
@@ -443,10 +441,10 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 after_expansion_mode_assignment:
 #endif /* WANT_after_expansion_mode_assignment */
 			do {
-				tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
+				tok = tpp_lexer_yieldpp_blocking(self);
 			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 			if tpp_unlikely(TPP_TOK_ISERR(tok))
-				goto err_tok_rollback;
+				return tok;
 		}
 #endif /* TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS || TPP_HAVE_KEYWORD_TEST_MACROS */
 	}
@@ -469,19 +467,13 @@ seek_end_of_macro:
 		tpp_feature_test_macro_expansion_len = 1;
 #endif /* TPP_FEATURE_FLAG_EXPANSION_MAXLEN > 1 */
 		if (tok == TPP_TOK_EOF)
-			goto rollback;
-		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
+			break;
+		tok = tpp_lexer_yieldpp_blocking(self);
 		if tpp_unlikely(TPP_TOK_ISERR(tok))
-			goto err_tok_rollback;
+			return tok;
 	}
-	tpp_lexer_seek_commit(self, pos);
 	return tpp_lexer_push_textfile(self, tpp_feature_test_macro_expansion,
 	                               tpp_feature_test_macro_expansion_len);
-rollback:
-	tok = backup.tlsb_id;
-err_tok_rollback:
-	tpp_lexer_seek_rollback(self, &backup);
-	return tok;
 #undef tpp_feature_test_macro_expansion_len
 #undef tpp_feature_test_macro_expansion
 }
@@ -553,8 +545,8 @@ tpp_lexer_yield_handle__Pragma_string(void *arg, tpp_string *chunk,
 		file->tf_lcpos = NULL;
 #endif /* TPP_HAVE_FILE_LC_CACHE */
 	}
-	tpp_file_setpos(file, str);
-	tpp_file_seteof(file, str + length);
+	file->tf_pos = str;
+	file->tf_end = str + length;
 
 	/* Yield decoded _Pragma-string as a token. */
 	do {
@@ -574,9 +566,6 @@ tpp_lexer_yield_handle__Pragma_string(void *arg, tpp_string *chunk,
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
-	tpp_errno error;
-	tpp_lexer_seek_backup backup;
-	tpp_char const *pos;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
@@ -587,30 +576,28 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 			tok = tpp_lexer_gettok(self);
 		return tok;
 	}
-	pos = tpp_lexer_seek_start(self, &backup);
-	/* FIXME: Arguments may be in files further up the #include-stack! */
-	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "_Pragma",
-	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
+	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "_Pragma",
+	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
-		goto err_tok_rollback;
-	tpp_file_pusheof(file);
+		return tok;
 	tpp_file_pushifdef(file);
+	tpp_file_autopopfile_pushoff(file);
+	tpp_file_pushchunk(file);
 
 	/* Setup file to (re-)parse the _Pragma string */
-	tpp_file_setpos(file, argv[0].tlai_start);
-	tpp_file_seteof(file, argv[0].tlai_end);
+	tpp_file_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self);
 	if (!TPP_TOK_ISSTRING(tok)) {
-		if (TPP_TOK_ISERR(tok)) {
-			error = TPP_TOK_ASERR(tok);
-		} else {
+		if (!TPP_TOK_ISERR(tok)) {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
-			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			tok = TPP_TOK_OFERR_OR_EOF(error);
 #else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
-			error = TPP_EOK;
+			tok = TPP_TOK_EOF;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
 		}
 	} else {
+		tpp_errno error;
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_yield_handle__Pragma_string,
 		                                 self, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 		if (error == TPP_EOK) {
@@ -624,17 +611,12 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 				error = tpp_lexer_warn_nonempty_ifdef(self);
 			}
 		}
+		tok = TPP_TOK_OFERR_OR_EOF(error);
 	}
+	tpp_file_popchunk(file);
+	tpp_file_autopopfile_pop(file);
 	tpp_file_popifdef(file);
-	tpp_file_popeof(file);
-	tpp_file_setpos(file, pos); /* Continue parsing after the closing ')' once pragma is finished */
-
-	tok = TPP_TOK_EOF;
-	if (TPP_ISERR(error))
-		tok = TPP_TOK_OFERR(error);
-	return tok;
-err_tok_rollback:
-	tpp_lexer_seek_rollback(self, &backup);
+	tpp_lexer_arginfo_fini(&argv[0]);
 	return tok;
 }
 #endif /* TPP_HAVE_MACRO__Pragma */
@@ -643,9 +625,6 @@ err_tok_rollback:
 #if TPP_HAVE_MACRO___pragma
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
-	tpp_errno error;
-	tpp_lexer_seek_backup backup;
-	tpp_char const *pos;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
@@ -656,35 +635,28 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 			tok = tpp_lexer_gettok(self);
 		return tok;
 	}
-	pos = tpp_lexer_seek_start(self, &backup);
-	/* FIXME: Arguments may be in files further up the #include-stack! */
-	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "__pragma",
-	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
+	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "__pragma",
+	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
-		goto err_tok_rollback;
-	tpp_file_pusheof(file);
+		return tok;
 	tpp_file_pushifdef(file);
+	tpp_file_autopopfile_pushoff(file);
+	tpp_file_pushchunk(file);
 
 	/* Setup file to (re-)parse the __pragma content */
-	tpp_file_setpos(file, argv[0].tlai_start);
-	tpp_file_seteof(file, argv[0].tlai_end);
+	tpp_file_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self);
-	if (TPP_TOK_ISERR(tok)) {
-		error = TPP_TOK_ASERR(tok);
-	} else {
+	if (!TPP_TOK_ISERR(tok)) {
+		tpp_errno error;
 		error = tpp_lexer_process_pragma_until_eof(self);
 		if (error == TPP_EOK)
 			error = tpp_lexer_warn_nonempty_ifdef(self);
+		tok = TPP_TOK_OFERR_OR_EOF(error);
 	}
+	tpp_file_popchunk(file);
+	tpp_file_autopopfile_pop(file);
 	tpp_file_popifdef(file);
-	tpp_file_popeof(file);
-	tpp_file_setpos(file, pos); /* Continue parsing after the closing ')' once pragma is finished */
-	tok = TPP_TOK_EOF;
-	if (TPP_ISERR(error))
-		tok = TPP_TOK_OFERR(error);
-	return tok;
-err_tok_rollback:
-	tpp_lexer_seek_rollback(self, &backup);
+	tpp_lexer_arginfo_fini(&argv[0]);
 	return tok;
 }
 #endif /* TPP_HAVE_MACRO___pragma */
@@ -777,11 +749,9 @@ tpp_lexer_handle_tpp_identifier_cb(void *arg, tpp_string *chunk,
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	struct tpp_lexer_handle_tpp_identifier_data data;
-	tpp_errno error;
-	tpp_lexer_seek_backup backup;
 	tpp_char const *identifier_start;
-	tpp_char const *pos;
 	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
 	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
@@ -791,34 +761,31 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 			tok = tpp_lexer_gettok(self);
 		return tok;
 	}
-	pos = tpp_lexer_seek_start(self, &backup);
-	/* FIXME: Arguments may be in files further up the #include-stack! */
-	tok = tpp_lexer_seek_rparen_exact(self, &pos, argv, 1, "__TPP_IDENTIFIER",
-	                                  TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
+	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "__TPP_IDENTIFIER",
+	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
-		goto err_tok_rollback;
-	/* file->tf_pos: points to start of __TPP_IDENTIFIER (set as such by "tpp_lexer_seek_start()") */
-	identifier_start = file->tf_pos;
-	tpp_file_pusheof(file);
+		return tok;
+	identifier_start = token->tt_start;
 	tpp_file_pushifdef(file);
+	tpp_file_autopopfile_pushoff(file);
+	tpp_file_pushchunk(file);
 
 	/* Setup file to (re-)parse the _Pragma string */
-	tpp_file_setpos(file, argv[0].tlai_start);
-	tpp_file_seteof(file, argv[0].tlai_end);
+	tpp_file_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self);
 	data.tlhtid_lexer   = self;
 	data.tlhtid_keyword = NULL;
 	if (!TPP_TOK_ISSTRING(tok)) {
-		if (TPP_TOK_ISERR(tok)) {
-			error = TPP_TOK_ASERR(tok);
-		} else {
+		if (!TPP_TOK_ISERR(tok)) {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
-			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			tok = TPP_TOK_OFERR_OR_EOF(error);
 #else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
-			error = TPP_EOK;
+			tok = TPP_TOK_EOF;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
 		}
 	} else {
+		tpp_errno error;
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_tpp_identifier_cb,
 		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 		if (error == TPP_EOK) {
@@ -832,14 +799,12 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 				error = tpp_lexer_warn_nonempty_ifdef(self);
 			}
 		}
+		tok = TPP_TOK_OFERR_OR_EOF(error);
 	}
+	tpp_file_popchunk(file);
+	tpp_file_autopopfile_pop(file);
 	tpp_file_popifdef(file);
-	tpp_file_popeof(file);
-	tpp_file_setpos(file, pos); /* Continue parsing after the closing ')' once pragma is finished */
-	if (TPP_ISERR(error)) {
-		tok = TPP_TOK_OFERR(error);
-	} else {
-		tpp_token *token = tpp_lexer_gettoken(self);
+	if (!TPP_TOK_ISERR(tok)) {
 		tpp_assert(data.tlhtid_keyword);
 		/* Setup current token to refer to "data.tlhtid_keyword" */
 		token->tt_id    = tok = data.tlhtid_keyword->tk_id;
@@ -847,9 +812,6 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 		token->tt_start = identifier_start;
 /*		token->tt_end   = ...;  * Already correct (points after the trailing ')'-token) */
 	}
-	return tok;
-err_tok_rollback:
-	tpp_lexer_seek_rollback(self, &backup);
 	return tok;
 }
 #endif /* TPP_HAVE_MACRO___TPP_IDENTIFIER */
@@ -1187,6 +1149,7 @@ again:
 
 
 #if TPP_HAVE_FILE_NONBLOCK
+
 /* Same as `tpp_lexer_yield()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
  * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -1201,6 +1164,29 @@ again:
 		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
 		tpp_lexer_autopopfile_pushoff(self);
 		result = tpp_lexer_yield(self);
+		tpp_lexer_autopopfile_pop(self);
+		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
+		if (result == TPP_TOK_EOF)
+			goto again; /* EOF was encountered after blocking... */
+		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
+	}
+	return result;
+}
+
+/* Same as `tpp_lexer_yieldpp()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
+ * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yieldpp_blocking(tpp_lexer *tpp_restrict self) {
+	tpp_token_id result;
+again:
+	result = tpp_lexer_yieldpp(self);
+	if (result == TPP_TOK_EWOULDBLOCK) {
+		tpp_file *const file = tpp_lexer_getfile(self);
+		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
+		tpp_assert(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NONBLOCK);
+		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
+		tpp_lexer_autopopfile_pushoff(self);
+		result = tpp_lexer_yieldpp(self);
 		tpp_lexer_autopopfile_pop(self);
 		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
 		if (result == TPP_TOK_EOF)

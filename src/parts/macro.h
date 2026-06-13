@@ -157,7 +157,7 @@ typedef struct tpp_macro {
 			tpp_macro_argument *TPP_INTERNAL(tmf_argv);       /* [const][0..f_argc][owned] Vector of argument information (used for fast calculation of the expanded macro's size) */
 			tpp_size            TPP_INTERNAL(tmf_expbase);    /* [const] Base size of macro expansion buffer (== (tm_body_end-tm_body_start) - <TOTAL_SPACE_FROM(TPP_MACRO_OPCODE_SKIP-like)>) */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
-			tpp_size            TPP_INTERNAL(tmf_n_vaopt);    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seek_rparen:OUT(*p_argc) > tmf_argc). */
+			tpp_size            TPP_INTERNAL(tmf_n_vaopt);    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seekraw_rparen:OUT(*p_argc) > tmf_argc). */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
 			tpp_size            TPP_INTERNAL(tmf_n_vanargs);  /* [const] Amount of times `__VA_NARGS__' is used in `tmf_expand'. */

@@ -49,7 +49,7 @@ typedef struct tpp_macro_builder {
 #endif /* !TPP_HAVE_MACRO_FLAGS */
 	tpp_ssize           mab_skiptotal;   /* # of characters skipped during expansion. */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
-	tpp_size            mab_n_vaopt;     /* Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seek_rparen:OUT(*p_argc) > tmf_argc). */
+	tpp_size            mab_n_vaopt;     /* Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seekpp_rparen:OUT(*p_argc) > tmf_argc). */
 #define _tpp_macro_builder_init_n_vaopt(self) , (self)->mab_n_vaopt = 0
 #else /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
 #define _tpp_macro_builder_init_n_vaopt(self) /* nothing */
