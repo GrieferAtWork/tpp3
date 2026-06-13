@@ -2255,11 +2255,15 @@ switch_on_ch:
 
 /************************************************************************/
 	case '!': {
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
+#if (TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL ||       \
+     TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL || \
+     TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM)
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL))
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM))
 			break;
 		read_ch2();
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL)) {
@@ -2282,6 +2286,17 @@ switch_on_ch:
 				goto set_result;
 			}
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+		} else
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+		if (ch == '!') {
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM)) {
+				result = TPP_TOK_EXCLAIM_EXCLAIM; /* "!!" */
+				goto set_result;
+			}
+		} else
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
+		{
 		}
 #endif /* ... */
 	}	break;

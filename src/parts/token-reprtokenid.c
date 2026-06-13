@@ -582,6 +582,9 @@ static struct tpp_token_repr_strings_struct {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 	char ttr_TPP_TOK_EXCLAIM_EQUAL_EQUAL[4];
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	char ttr_TPP_TOK_EXCLAIM_EXCLAIM[3];
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 	char ttr_TPP_TOK_QMARK_QMARK[3];
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */
@@ -1070,6 +1073,9 @@ static struct tpp_token_repr_strings_struct {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 	/* .ttr_TPP_TOK_EXCLAIM_EQUAL_EQUAL = */ "!==",
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	/* .ttr_TPP_TOK_EXCLAIM_EXCLAIM = */ "!!",
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 	/* .ttr_TPP_TOK_QMARK_QMARK = */ "??",
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */
@@ -1613,6 +1619,9 @@ static uint_least16_t const tpp_token_repr_offsets[] = {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 	/* [TPP_TOK_EXCLAIM_EQUAL_EQUAL] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_EXCLAIM_EQUAL_EQUAL),
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	/* [TPP_TOK_EXCLAIM_EXCLAIM] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_EXCLAIM_EXCLAIM),
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 	/* [TPP_TOK_QMARK_QMARK] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_QMARK_QMARK),
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */

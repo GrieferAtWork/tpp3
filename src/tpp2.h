@@ -635,6 +635,7 @@
 #define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL (-1) /* ">>>=" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)") */
 #define TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL          (-1) /* "==="  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUAL3"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL)") */
 #define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL        (-1) /* "!=="  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUAL3"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL)") */
+#define TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM            0    /* "!!"   Completely unknown to TPP2 */
 #define TPP_HAVE_TPP_TOK_QMARK_QMARK                (-1) /* "??"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_QMARK_QMARK"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
 #define TPP_HAVE_TPP_TOK_SLASH_SLASH                0    /* "//"   Completely unknown to TPP2 */
 #define TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL          0    /* "//="  Completely unknown to TPP2 */
