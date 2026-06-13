@@ -80,10 +80,10 @@ TPP_KWD(TPP_KWD_include_next, "include_next")
 #define TPP_KWD_import TPP_KWD_import
 TPP_KWD(TPP_KWD_import, "import")
 #endif /* TPP_HAVE_CPP_IMPORT */
-#if TPP_HAVE_CPP_IF_ELSE_ENDIF
+#if TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #define TPP_KWD_if TPP_KWD_if
 TPP_KWD(TPP_KWD_if, "if")
-#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
+#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF
 #define TPP_KWD_ifdef TPP_KWD_ifdef
 TPP_KWD(TPP_KWD_ifdef, "ifdef")
@@ -92,10 +92,10 @@ TPP_KWD(TPP_KWD_ifdef, "ifdef")
 #define TPP_KWD_ifndef TPP_KWD_ifndef
 TPP_KWD(TPP_KWD_ifndef, "ifndef")
 #endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
-#if TPP_HAVE_CPP_IF_ELSE_ENDIF
+#if TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #define TPP_KWD_elif TPP_KWD_elif
 TPP_KWD(TPP_KWD_elif, "elif")
-#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
+#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF
 #define TPP_KWD_elifdef TPP_KWD_elifdef
 TPP_KWD(TPP_KWD_elifdef, "elifdef")
@@ -104,10 +104,10 @@ TPP_KWD(TPP_KWD_elifdef, "elifdef")
 #define TPP_KWD_elifndef TPP_KWD_elifndef
 TPP_KWD(TPP_KWD_elifndef, "elifndef")
 #endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
-#if TPP_HAVE_CPP_IF_ELSE_ENDIF
+#if TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #define TPP_KWD_else TPP_KWD_else
 TPP_KWD(TPP_KWD_else, "else")
-#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
+#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF
 #define TPP_KWD_endif TPP_KWD_endif
 TPP_KWD(TPP_KWD_endif, "endif")
@@ -372,10 +372,10 @@ TPP_KWD(TPP_KWD___VA_NARGS__, "__VA_NARGS__")
 #define TPP_KWD___VA_OPT__ TPP_KWD___VA_OPT__
 TPP_KWD(TPP_KWD___VA_OPT__, "__VA_OPT__")
 #endif /* TPP_HAVE_VA_OPT_IN_MACROS */
-#if TPP_HAVE_EXPR_DEFINED
+#if TPP_HAVE_BUILTIN_EXPR_DEFINED
 #define TPP_KWD_defined TPP_KWD_defined
 TPP_KWD(TPP_KWD_defined, "defined")
-#endif /* TPP_HAVE_EXPR_DEFINED */
+#endif /* TPP_HAVE_BUILTIN_EXPR_DEFINED */
 /*[[[end]]]*/
 
 
@@ -1464,6 +1464,36 @@ TPP_EXTENSION(TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR, TPP_EXTNAME_DONT_EXPAND_DEFIN
 #else /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR(self) TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
 #endif /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS < 0
+#define TPP_EXT_BUILTIN_EXPR_STRINGS TPP_EXT_BUILTIN_EXPR_STRINGS
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_STRINGS
+#define TPP_EXTNAME_BUILTIN_EXPR_STRINGS "strings-in-expressions"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_STRINGS */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_STRINGS, TPP_EXTNAME_BUILTIN_EXPR_STRINGS, TPP_HAVE_BUILTIN_EXPR_STRINGS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_STRINGS(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_STRINGS
+#else /* TPP_HAVE_BUILTIN_EXPR_STRINGS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_STRINGS(self) TPP_HAVE_BUILTIN_EXPR_STRINGS
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT < 0
+#define TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT "if-else-optional-true"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT, TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT, TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#else /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT(self) TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#endif /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS < 0
+#define TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS "ifelse-in-expressions"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS, TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS, TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#else /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS(self) TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#endif /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS >= 0 */
 
 
 
@@ -1531,7 +1561,8 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||           \
 	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT ||             \
 	 TPP_HAVE_TPP_W_EXPECTED_STRING ||                          \
-	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF)
+	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF ||                         \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_WG_SYNTAX TPP_WG_SYNTAX
@@ -1606,9 +1637,54 @@ TPP_WARNING(TPP_W_EXPECTED_STRING, 1(TPP_WG_SYNTAX), 1(4081), TPP_WSTATE_UNDEFIN
 
 #if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
 #define TPP_W_EOF_BEFORE_ENDIF TPP_W_EOF_BEFORE_ENDIF
-TPP_WARNING(TPP_W_EOF_BEFORE_ENDIF, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_UNDEFINED,
+TPP_WARNING(TPP_W_EOF_BEFORE_ENDIF, 1(TPP_WG_SYNTAX), 1(1070), TPP_WSTATE_UNDEFINED,
             "unterminated %[#if%]-directive")
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+
+#if TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+#define TPP_W_ELIF_OR_ELSE_AFTER_ELSE TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+TPP_WARNING_EX(TPP_W_ELIF_OR_ELSE_AFTER_ELSE, 1(TPP_WG_SYNTAX), 1(1022), TPP_WSTATE_UNDEFINED, {
+	tpp_ifdef_stack_entry const *const entry = tpp_va_arg(tpp_ifdef_stack_entry const *);
+	tpp_file *const current_file = tpp_lexer_getfile(self);
+	char const *directive_name = tpp_va_arg(char const *);
+	tpp_warnf1("%[%s%]-directive after %[#else%]\n", directive_name);
+	tpp_print_file_and_line_lc(current_file, entry->tidse_updated);
+	tpp_warnf0("note: see associated %[#else%]\n");
+	tpp_print_file_and_line_lc(current_file, entry->tidse_created);
+	tpp_warnf0("note: see associated %[#if%], %[#ifdef%] or %[#ifndef%]\n");
+})
+#endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
+
+#if TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+#define TPP_W_ELIF_OR_ELSE_WITHOUT_IF TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+TPP_WARNING(TPP_W_ELIF_OR_ELSE_WITHOUT_IF, 1(TPP_WG_SYNTAX), 2(1018, 1019), TPP_WSTATE_UNDEFINED,
+            "%[#%s%]-directive without preceding %[#if%], %[#ifdef%] or %[#ifndef%]")
+#endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF */
+
+#if TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF
+#define TPP_W_ENDIF_WITHOUT_IF TPP_W_ENDIF_WITHOUT_IF
+TPP_WARNING(TPP_W_ENDIF_WITHOUT_IF, 1(TPP_WG_SYNTAX), 1(1020), TPP_WSTATE_UNDEFINED,
+            "%[#endif%]-directive without preceding %[#if%], %[#ifdef%] or %[#ifndef%]")
+#endif /* TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF */
+
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION
+#define TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION, 1(TPP_WG_SYNTAX), 1(1017), TPP_WSTATE_UNDEFINED,
+            "unexpected token %Pt in preprocessor expression")
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION */
+
+#if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF
+#define TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF
+TPP_WARNING(TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF, 1(TPP_WG_SYNTAX), 1(1016), TPP_WSTATE_UNDEFINED,
+            "expected <keyword> after %[#%s%], but got %Pt")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF */
+
+#if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+#define TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+TPP_WARNING(TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED, 1(TPP_WG_SYNTAX), 1(2003), TPP_WSTATE_UNDEFINED,
+            "expected <keyword> after %[defined%] in expression, but got %Pt")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
+
 
 
 
@@ -1682,6 +1758,42 @@ TPP_WGROUP(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER, 1("pragma-once-outside-header"), T
 TPP_WARNING(TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER, 1(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER), 0(), ~,
             "%[#pragma once%] in main file")
 #endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
+
+
+/************************************************************************/
+/* -Wundef                                                              */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_UNDEF
+#define TPP_HAVE_TPP_WG_UNDEF (TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION)
+#endif /* !TPP_HAVE_TPP_WG_UNDEF */
+#if TPP_HAVE_TPP_WG_UNDEF
+#define TPP_WG_UNDEF TPP_WG_UNDEF
+TPP_WGROUP(TPP_WG_UNDEF, 1("undef"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_UNDEF */
+
+#if TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+#define TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+TPP_WARNING(TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION, 1(TPP_WG_UNDEF), 0(), ~,
+            "undefined keyword %Pt is replaced with %[0%] in expression")
+#endif /* TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION */
+
+
+/************************************************************************/
+/* -Wendif-labels                                                              */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_ENDIF_LABELS
+#define TPP_HAVE_TPP_WG_ENDIF_LABELS (TPP_HAVE_TPP_W_ENDIF_LABELS)
+#endif /* !TPP_HAVE_TPP_WG_ENDIF_LABELS */
+#if TPP_HAVE_TPP_WG_ENDIF_LABELS
+#define TPP_WG_ENDIF_LABELS TPP_WG_ENDIF_LABELS
+TPP_WGROUP(TPP_WG_ENDIF_LABELS, 1("endif-labels"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_ENDIF_LABELS */
+
+#if TPP_HAVE_TPP_W_ENDIF_LABELS
+#define TPP_W_ENDIF_LABELS TPP_W_ENDIF_LABELS
+TPP_WARNING(TPP_W_ENDIF_LABELS, 1(TPP_WG_ENDIF_LABELS), 0(), ~,
+            "endif-label %Pt used")
+#endif /* TPP_HAVE_TPP_W_ENDIF_LABELS */
 
 
 /************************************************************************/
@@ -1809,15 +1921,15 @@ TPP_WARNING(TPP_W_DEFINE_BUILTIN_MACRO, 0(), 1(4118), TPP_WSTATE_WARN,
 #if TPP_HAVE_TPP_W_REDEFINE_MACRO
 #define TPP_W_REDEFINE_MACRO TPP_W_REDEFINE_MACRO
 TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
-	tpp_keyword const *keyword = va_arg(args, tpp_keyword const *);
+	tpp_keyword const *keyword = tpp_va_arg(tpp_keyword const *);
 	tpp_macro const *const old_definition = keyword->tk_macro;
-	tpp_warnf("macro %[%s%] redefined\n", keyword->tk_kwd);
+	tpp_warnf1("macro %[%s%] redefined\n", keyword->tk_kwd);
 	if (old_definition->tm_deffile) {
 		/* TODO: must use "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT" */
-		tpp_warnf("%s(%d, %d): note: see previous definition\n",
-		          old_definition->tm_deffile,
-		          (int)tpp_lcinfo_getline(old_definition->tm_deflc) + 1,
-		          (int)tpp_lcinfo_getcol(old_definition->tm_deflc) + 1);
+		tpp_warnf3("%s(%d, %d): note: see previous definition\n",
+		           old_definition->tm_deffile,
+		           (int)tpp_lcinfo_getline(old_definition->tm_deflc) + 1,
+		           (int)tpp_lcinfo_getcol(old_definition->tm_deflc) + 1);
 	}
 })
 #endif /* TPP_HAVE_TPP_W_REDEFINE_MACRO */
@@ -1828,7 +1940,6 @@ TPP_WGROUP(TPP_WG_USAGE, /*          */ 1("usage"),                TPP_WSTATE_FA
 TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_ENVIRON, /*        */ 1("environ"),              TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
-TPP_WGROUP(TPP_WG_UNDEF, /*          */ 1("undef"),                TPP_WSTATE_WARN)
 TPP_WGROUP(TPP_WG_QUALITY, /*        */ 1("quality"),              TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WARN)
 
@@ -3767,6 +3878,88 @@ TPP_DECL_END
 
 
 /************************************************************************/
+/* LEXER EXPRESSIONS                                                    */
+/************************************************************************/
+
+/* Provide a function "tpp_lexer_parseexpr()" that
+ * is used to implement "#if" directive expressions */
+#ifndef TPP_HAVE_LEXER_PARSEEXPR
+#define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF  || TPP_HAVE_MACRO___TPP_EVAL)
+#endif /* !TPP_HAVE_LEXER_PARSEEXPR */
+
+/* Expression parser configuration */
+#if TPP_HAVE_LEXER_PARSEEXPR
+#ifdef TPP_CONFIG_EXPRPARSER
+#ifndef TPP_CONFIG_EXPRPARSER_NEEDS_ARG
+#define TPP_CONFIG_EXPRPARSER_NEEDS_ARG 1
+#endif /* !TPP_CONFIG_EXPRPARSER_NEEDS_ARG */
+
+/* >> #define TPP_CONFIG_EXPRPARSER my_expr_parser
+ * >> #if TPP_CONFIG_EXPRPARSER_NEEDS_ARG
+ * >> static tpp_errno TPP_FORMATPRINTER_CC
+ * >> my_expr_parser(void *arg, tpp_lexer *self, tpp_expr_value *result)
+ * >> #else // TPP_CONFIG_EXPRPARSER_NEEDS_ARG
+ * >> static tpp_errno TPP_FORMATPRINTER_CC
+ * >> my_expr_parser(tpp_char const *self, tpp_expr_value *result)
+ * >> #endif // !TPP_CONFIG_EXPRPARSER_NEEDS_ARG
+ * >> {
+ * >>    ...
+ * >>    return TPP_EOK;
+ * >> } */
+#else /* TPP_CONFIG_EXPRPARSER */
+/* Supply a built-in expression parser.
+ *
+ * -1: Provide builtin, but allow users to override
+ *  1: Provide+hard-wire builtin
+ *  0: Don't provide builtin, but allow users to override
+ */
+#ifndef TPP_HAVE_BUILTIN_EXPRPARSER
+#define TPP_HAVE_BUILTIN_EXPRPARSER (-1)
+#endif /* !TPP_HAVE_BUILTIN_EXPRPARSER */
+#endif /* !TPP_CONFIG_EXPRPARSER */
+#endif /* TPP_HAVE_LEXER_PARSEEXPR */
+
+/* Enable support for "defined(MACRO)" in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_DEFINED
+#define TPP_HAVE_BUILTIN_EXPR_DEFINED (TPP_HAVE_LEXER_PARSEEXPR) /* "TPP_FEAT_BUILTIN_EXPR_DEFINED" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_DEFINED */
+
+/* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
+#ifndef TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
+#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR (TPP_HAVE_BUILTIN_EXPR_DEFINED ? -2 : 0) /* "-fdont-expand-defined" */
+#endif /* !TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR */
+
+/* Enable support for string operations in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_STRINGS
+#define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_LEXER_PARSEEXPR && TPP_HAVE_TPP_TOK_STRINGLIKE) ? -1 : 0) /* "-fstrings-in-expressions" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+/* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
+#ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT (TPP_HAVE_LEXER_PARSEEXPR ? -1 : 0) /* "-fif-else-optional-true" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
+
+/* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS (TPP_HAVE_LEXER_PARSEEXPR ? -1 : 0) /* "-fifelse-in-expressions" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
+
+
+#if 0 /* TODO: Extensions related to lexer expression evaluation */
+EXTENSION(EXT_BININTEGRAL,       "binary-literals",               TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT)
+EXTENSION(EXT_MSVC_FIXED_INT,    "fixed-length-integrals",        TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
+EXTENSION(EXT_LXOR,              "logical-xor-in-expressions",    TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
+EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT) /* TODO: Relation to -Wno-multichar? */
+#endif
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+
+/************************************************************************/
 /* IMPLICIT API FEATURES                                                */
 /************************************************************************/
 /* Provide an API function `tpp_unicode_writeutf8()' */
@@ -3847,7 +4040,7 @@ TPP_DECL_END
 
 /* Enable support for `tpp_lexer_skip()' */
 #ifndef TPP_HAVE_LEXER_SKIP
-#define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1)
+#define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1) /* TODO: List all features that use this function */
 #endif /* !TPP_HAVE_LEXER_SKIP */
 
 /* Enable support for `tpp_lexer_rawskip_raw()', a function that is used-
@@ -3926,43 +4119,11 @@ TPP_DECL_END
 #define TPP_HAVE_TOKEN_ENCODESTRING (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT)
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
-/* Provide a function "tpp_lexer_parseexpr()" that
- * is used to implement "#if" directive expressions */
-#ifndef TPP_HAVE_LEXER_PARSEEXPR
-#define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF  || TPP_HAVE_MACRO___TPP_EVAL)
-#endif /* !TPP_HAVE_LEXER_PARSEEXPR */
+/* Provide a function "tpp_expr_value_printrepr()" to construct the result of __TPP_EVAL */
+#ifndef TPP_HAVE_EXPR_VALUE_PRINTREPR
+#define TPP_HAVE_EXPR_VALUE_PRINTREPR (TPP_HAVE_MACRO___TPP_EVAL)
+#endif /* !TPP_HAVE_EXPR_VALUE_PRINTREPR */
 
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-
-
-
-
-/************************************************************************/
-/* LEXER EXPRESSIONS                                                    */
-/************************************************************************/
-
-/* Enable support for "defined(MACRO)" in lexer expressions */
-#ifndef TPP_HAVE_EXPR_DEFINED
-#define TPP_HAVE_EXPR_DEFINED (TPP_HAVE_LEXER_PARSEEXPR)
-#endif /* !TPP_HAVE_EXPR_DEFINED */
-
-/* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
-#ifndef TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
-#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR (TPP_HAVE_EXPR_DEFINED ? -2 : 0) /* "-fdont-expand-defined" */
-#endif /* !TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR */
-
-#if 0 /* TODO: Extensions related to lexer expression evaluation */
-EXTENSION(EXT_BININTEGRAL,       "binary-literals",               TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT)
-EXTENSION(EXT_MSVC_FIXED_INT,    "fixed-length-integrals",        TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
-EXTENSION(EXT_GCC_IFELSE,        "if-else-optional-true",         TPP_CONFIG_EXTENSION_GCC_IFELSE_DEFAULT)
-EXTENSION(EXT_IFELSE_IN_EXPR,    "ifelse-in-expressions",         TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR_DEFAULT)
-EXTENSION(EXT_STRINGOPS,         "strings-in-expressions",        TPP_CONFIG_EXTENSION_STRINGOPS_DEFAULT)
-EXTENSION(EXT_LXOR,              "logical-xor-in-expressions",    TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
-EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT) /* TODO: Relation to -Wno-multichar? */
-#endif
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -4034,7 +4195,7 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE)
 #endif /* !TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
 #ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
-#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN (TPP_HAVE_WARNINGS)
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SKIP)
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
 #ifndef TPP_HAVE_TPP_W_ERROR
 #define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_ERROR)
@@ -4118,7 +4279,7 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT */
 #ifndef TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED
 #define TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED \
-	(TPP_HAVE_WARNINGS && TPP_HAVE_EXPR_DEFINED && (TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR <= 0))
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_DEFINED && (TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR <= 0))
 #endif /* !TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_STRING
 #if 1
@@ -4133,33 +4294,70 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #define TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_IFDEF_STACK)
 #endif /* !TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+#ifndef TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+#define TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF */
+#ifndef TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+#define TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
+#ifndef TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF
+#define TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF */
+#ifndef TPP_HAVE_TPP_W_ENDIF_LABELS
+#define TPP_HAVE_TPP_W_ENDIF_LABELS \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_TPP_W_ENDIF_LABELS */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF
+#define TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPRPARSER)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION */
+#ifndef TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+#define TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPRPARSER)
+#endif /* !TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+#define TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_DEFINED)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
 
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS
-#ifdef TPP_CONFIG_WARNING_PRINTER
-#ifndef TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
-#define TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG 1
-#endif /* !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG */
+#ifdef TPP_CONFIG_WARNPRINTER
+#ifndef TPP_CONFIG_WARNPRINTER_NEEDS_ARG
+#define TPP_CONFIG_WARNPRINTER_NEEDS_ARG 1
+#endif /* !TPP_CONFIG_WARNPRINTER_NEEDS_ARG */
 
-/* >> #define TPP_CONFIG_WARNING_PRINTER my_warning_printer
- * >> #if TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+/* >> #define TPP_CONFIG_WARNPRINTER my_warning_printer
+ * >> #if TPP_CONFIG_WARNPRINTER_NEEDS_ARG
  * >> static tpp_ssize TPP_FORMATPRINTER_CC
  * >> my_warning_printer(void *arg, tpp_char const *text, tpp_size num_bytes)
- * >> #else // TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+ * >> #else // TPP_CONFIG_WARNPRINTER_NEEDS_ARG
  * >> static tpp_ssize TPP_FORMATPRINTER_CC
  * >> my_warning_printer(tpp_char const *text, tpp_size num_bytes)
- * >> #endif // !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+ * >> #endif // !TPP_CONFIG_WARNPRINTER_NEEDS_ARG
  * >> {
  * >>    ...
  * >> } */
-#else /* TPP_CONFIG_WARNING_PRINTER */
+#else /* TPP_CONFIG_WARNPRINTER */
 /* Supply a built-in printer (that uses "fwrite(stderr)")
- * when no user-defined printer was configured for a lexer. */
+ * when no user-defined printer was configured for a lexer.
+ *
+ * -1: Provide builtin, but allow users to override
+ *  1: Provide+hard-wire builtin
+ *  0: Don't provide builtin, but allow users to override
+ */
 #ifndef TPP_HAVE_BUILTIN_WARNPRINTER
-#define TPP_HAVE_BUILTIN_WARNPRINTER 1
+#define TPP_HAVE_BUILTIN_WARNPRINTER (-1)
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */
-#endif /* !TPP_CONFIG_WARNING_PRINTER */
+#endif /* !TPP_CONFIG_WARNPRINTER */
 #endif /* TPP_HAVE_WARNINGS */
 /************************************************************************/
 /************************************************************************/
@@ -4408,6 +4606,76 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self, tpp_size num_byt
  * @return: (tpp_size)TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED tpp_ssize TPP_FORMATPRINTER_CC
 tpp_string_builder_print(void *arg, tpp_char const *text, tpp_size num_bytes);
+
+TPP_DECL_END
+/************************************************************************/
+
+/************************************************************************/
+/* File: parts/expr.h                                                   */
+/************************************************************************/
+TPP_DECL_BEGIN
+
+#undef TPP_HAVE_BUILTIN_EXPR_VALUE
+#ifndef tpp_expr_value
+#define TPP_HAVE_BUILTIN_EXPR_VALUE 1
+#define tpp_expr_value tpp_expr_value
+typedef struct tpp_expr_value {
+	tpp_intmax xv_value;
+} tpp_expr_value;
+
+#define tpp_expr_value_move(dst, src) (void)(*(dst) = *(src))
+#define tpp_expr_value_copy(dst, src) (*(dst) = *(src), TPP_EOK)
+#define tpp_expr_value_fini(self)     (void)0
+
+/* Initialize to int=0/1 */
+#define tpp_expr_value_init_bool(self, v) ((self)->xv_value = (v) ? 1 : 0, TPP_EOK)
+
+#define tpp_expr_value_pos(self, result)     (*(result) = *(self), TPP_EOK)
+#define tpp_expr_value_neg(self, result)     ((result)->xv_value = -(self)->xv_value, TPP_EOK)
+#define tpp_expr_value_inv(self, result)     ((result)->xv_value = ~(self)->xv_value, TPP_EOK)
+#define tpp_expr_value_add(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value + (rhs)->xv_value, TPP_EOK)
+#define tpp_expr_value_sub(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value - (rhs)->xv_value, TPP_EOK)
+#define tpp_expr_value_mul(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value * (rhs)->xv_value, TPP_EOK)
+#define tpp_expr_value_div(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value / (rhs)->xv_value, TPP_EOK)
+#define tpp_expr_value_mod(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value % (rhs)->xv_value, TPP_EOK)
+#define tpp_expr_value_shl(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value << (rhs)->xv_value, TPP_EOK)
+#define tpp_expr_value_shr(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value >> (rhs)->xv_value, TPP_EOK)
+#define tpp_expr_value_and(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value & (rhs)->xv_value, TPP_EOK)
+#define tpp_expr_value_or(lhs, rhs, result)  ((result)->xv_value = (lhs)->xv_value | (rhs)->xv_value, TPP_EOK)
+#define tpp_expr_value_xor(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value ^ (rhs)->xv_value, TPP_EOK)
+
+#define tpp_expr_value_cmp_eq(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value == (rhs)->xv_value), TPP_EOK)
+#define tpp_expr_value_cmp_ne(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value != (rhs)->xv_value), TPP_EOK)
+#define tpp_expr_value_cmp_lo(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value < (rhs)->xv_value), TPP_EOK)
+#define tpp_expr_value_cmp_le(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value <= (rhs)->xv_value), TPP_EOK)
+#define tpp_expr_value_cmp_gr(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value > (rhs)->xv_value), TPP_EOK)
+#define tpp_expr_value_cmp_ge(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value >= (rhs)->xv_value), TPP_EOK)
+
+/* Determine the boolean-style value of "self" */
+#define tpp_expr_value_istrue(self, p_bool_result) (*(p_bool_result) = ((self)->xv_value != 0), TPP_EOK)
+
+#if TPP_HAVE_EXPR_VALUE_PRINTREPR
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_expr_value_printrepr(tpp_expr_value const *tpp_restrict self,
+                         tpp_formatprinter printer, void *arg);
+#endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
+#endif /* !tpp_expr_value */
+
+#ifndef TPP_HAVE_BUILTIN_EXPR_VALUE
+#define TPP_HAVE_BUILTIN_EXPR_VALUE 0
+#endif /* !TPP_HAVE_BUILTIN_EXPR_VALUE */
+
+
+/* Initialize to int=0 */
+#ifndef tpp_expr_value_init_zero
+#define tpp_expr_value_init_zero(self) tpp_expr_value_init_bool(self, 0)
+#endif /* !tpp_expr_value_init_zero */
+
+/* Initialize to int=1 */
+#ifndef tpp_expr_value_init_one
+#define tpp_expr_value_init_one(self) tpp_expr_value_init_bool(self, 1)
+#endif /* !tpp_expr_value_init_one */
+
 
 TPP_DECL_END
 /************************************************************************/
@@ -5441,7 +5709,8 @@ TPP_DECL_BEGIN
      (TPP_HAVE_CPP_IF_ELSE_ENDIF < 0) ||                  \
      (TPP_HAVE_CPP_DEFINE < 0) ||                         \
      (TPP_HAVE_CPP_PRAGMA < 0) ||                         \
-     (TPP_HAVE_CPP_EMBED < 0))
+     (TPP_HAVE_CPP_EMBED < 0) ||                          \
+     (TPP_HAVE_BUILTIN_EXPR_DEFINED < 0))
 #define TPP_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_HAVE_FEATURES 0
@@ -5758,6 +6027,9 @@ typedef enum tpp_feature_id {
 #if TPP_HAVE_CPP_EMBED < 0
 	TPP_FEAT_CPP_EMBED,
 #endif /* TPP_HAVE_CPP_EMBED < 0 */
+#if TPP_HAVE_BUILTIN_EXPR_DEFINED < 0
+	TPP_FEAT_BUILTIN_EXPR_DEFINED,
+#endif /* TPP_HAVE_BUILTIN_EXPR_DEFINED < 0 */
 	TPP_FEAT_COUNT
 } tpp_feature_id;
 
@@ -6381,6 +6653,12 @@ typedef union tpp_features {
 #else /* TPP_HAVE_CPP_EMBED < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_EMBED(self) TPP_HAVE_CPP_EMBED
 #endif /* TPP_HAVE_CPP_EMBED >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_DEFINED < 0
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_BUILTIN_EXPR_DEFINED): 1;
+#define _tpp_features_get_TPP_FEAT_BUILTIN_EXPR_DEFINED(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_BUILTIN_EXPR_DEFINED), TPP_HAVE_BUILTIN_EXPR_DEFINED == -1)
+#else /* TPP_HAVE_BUILTIN_EXPR_DEFINED < 0 */
+#define _tpp_features_get_TPP_FEAT_BUILTIN_EXPR_DEFINED(self) TPP_HAVE_BUILTIN_EXPR_DEFINED
+#endif /* TPP_HAVE_BUILTIN_EXPR_DEFINED >= 0 */
 	} TPP_INTERNAL(tf_flags);
 	unsigned char TPP_INTERNAL(ttf_bitset)[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_features;
@@ -6497,13 +6775,18 @@ typedef struct tpp_ifdef_stack {
 #define tpp_ifdef_stack_fini(self) \
 	tpp_free((self)->TPP_INTERNAL(tids_vec))
 
-/* Check if the given #ifdef-stack is non-empty */
-#define tpp_ifdef_stack_isnonempty(self) \
-	((self)->TPP_INTERNAL(tids_cnt) != 0)
+/* Check if the given #ifdef-stack is empty */
+#define tpp_ifdef_stack_isempty(self) \
+	((self)->TPP_INTERNAL(tids_cnt) == 0)
+
+/* Return the last #ifdef-stack entry. The caller
+ * must ensure that "!tpp_ifdef_stack_isempty(self)" */
+#define tpp_ifdef_stack_getlast(self) \
+	(&(self)->TPP_INTERNAL(tids_vec)[(self)->TPP_INTERNAL(tids_cnt) - 1])
 
 /* Check if the most-recent #ifdef-stack entry indicates
  * that TPP is currently inside of a #else-block. The caller
- * must ensure that "tpp_ifdef_stack_isnonempty(self)" */
+ * must ensure that "!tpp_ifdef_stack_isempty(self)" */
 #define tpp_ifdef_stack_isafterelse(self) \
 	((self)->TPP_INTERNAL(tids_vec)[(self)->TPP_INTERNAL(tids_cnt) - 1].TPP_INTERNAL(tidse_mode) == TPP_IFDEF_MODE_ELSE)
 
@@ -8312,20 +8595,27 @@ typedef struct tpp_lexer {
 #ifdef TPP_CONFIG_WARNPRINTER
 #if TPP_CONFIG_WARNPRINTER_NEEDS_ARG
 	void             *TPP_INTERNAL(tl_warnprinterarg); /* [?..?] Argument for "TPP_CONFIG_WARNPRINTER" */
-#define tpp_lexer_getwarnprinter(self)    (&TPP_CONFIG_WARNPRINTER)
-#define tpp_lexer_getwarnprinterarg(self) (self)->TPP_INTERNAL(tl_warnprinterarg)
+#define tpp_lexer_getwarnprinter(self)       (&TPP_CONFIG_WARNPRINTER)
+#define tpp_lexer_getwarnprinterarg(self)    (self)->TPP_INTERNAL(tl_warnprinterarg)
+#define tpp_lexer_setwarnprinterarg(self, v) (void)((self)->TPP_INTERNAL(tl_warnprinterarg) = (v))
 #else /* TPP_CONFIG_WARNPRINTER_NEEDS_ARG */
 #define TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER 1
 #define tpp_lexer_getwarnprinter(self)    &_tpp_lexer_wrapped_warnprinter
 #define tpp_lexer_getwarnprinterarg(self) NULL
 #endif /* !TPP_CONFIG_WARNPRINTER_NEEDS_ARG */
+#elif TPP_HAVE_BUILTIN_WARNPRINTER > 0
+#define TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER 1
+#define tpp_lexer_getwarnprinter(self)    (&_tpp_lexer_builtin_warnprinter)
+#define tpp_lexer_getwarnprinterarg(self) NULL
 #else /* TPP_CONFIG_WARNPRINTER */
 	tpp_formatprinter TPP_INTERNAL(tl_warnprinter);    /* [0..1] Warning printer (or "NULL" to use "fwrite(stderr)") */
 	void             *TPP_INTERNAL(tl_warnprinterarg); /* [valid_if(TPP_INTERNAL(tl_warnprinter) != NULL)] */
 #define _tpp_lexer_init_warnprinter(self) , (self)->TPP_INTERNAL(tl_warnprinter) = NULL
-#define tpp_lexer_setwarnprinter(self, printer, arg) \
-	(void)((self)->TPP_INTERNAL(tl_warnprinter)    = (printer),    \
+#define tpp_lexer_setwarnprinter(self, printer, arg)            \
+	(void)((self)->TPP_INTERNAL(tl_warnprinter)    = (printer), \
 	       (self)->TPP_INTERNAL(tl_warnprinterarg) = (arg))
+#define tpp_lexer_setwarnprinterarg(self, v) \
+	(void)((self)->TPP_INTERNAL(tl_warnprinterarg) = (v))
 #if TPP_HAVE_BUILTIN_WARNPRINTER
 #define TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER 1
 #define tpp_lexer_getwarnprinter(self) ((self)->TPP_INTERNAL(tl_warnprinter) ? (self)->TPP_INTERNAL(tl_warnprinter) : &_tpp_lexer_builtin_warnprinter)
@@ -8337,19 +8627,86 @@ typedef struct tpp_lexer {
 #endif /* !TPP_CONFIG_WARNPRINTER */
 #else /* TPP_HAVE_WARNINGS */
 #define _tpp_lexer_init_warn(self) /* nothing */
-#define tpp_lexer_setwarnprinter(self, printer, arg) (void)0
 #endif /* !TPP_HAVE_WARNINGS */
 #ifndef _tpp_lexer_init_warnprinter
 #define _tpp_lexer_init_warnprinter(self) /* nothing */
 #endif /* !_tpp_lexer_init_warnprinter */
 
 
+	/* Expression parser configuration */
+#undef TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR
+#undef TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG
+#if TPP_HAVE_LEXER_PARSEEXPR
+	/* User-defined callback for parsing "#if"-style expressions
+	 * - This callback is invoked in a context where "self" points
+	 *   before the expression's first token (meaning that this
+	 *   callback is responsible to do the initial yield using
+	 *   whatever method it wants to use).
+	 * - When it is known that the expression has finite length,
+	 *   as in: it has to end before EOF, or at the next unmatched
+	 *   ')'-token, the caller will have configured the lexer's
+	 *   current EOF accordingly (and disabled file-popping)
+	 * - When this function returns an error, the caller will rewind
+	 *   back to the start of the expression (or even further, if
+	 *   applicable; meaning this callback doesn't need to concern
+	 *   itself with rollback)
+	 *
+	 * @return: TPP_EOK:         Success (*result was initialized)
+	 * @return: TPP_ENOMEM:      Out of memory
+	 * @return: TPP_EIO:         Filesystem I/O operation failed
+	 * @return: TPP_EWOULDBLOCK: Operation would block
+	 * @return: TPP_ELEXERROR:   A lexer error happened
+	 * @return: TPP_EWARNPRINT:  Error while printing a warning */
+#ifdef TPP_CONFIG_EXPRPARSER
+#if TPP_CONFIG_EXPRPARSER_NEEDS_ARG
+	void *TPP_INTERNAL(tl_expr_parser_arg); /* [?..?][valid_if(tl_expr_parser_cb)] Cookie for "tl_expr_parser_cb" */
+#define tpp_lexer_getparseexprarg(self)    (self)->TPP_INTERNAL(tl_expr_parser_arg)
+#define tpp_lexer_setparseexprarg(self, v) (void)((self)->TPP_INTERNAL(tl_expr_parser_arg) = (v))
+#define tpp_lexer_parseexpr(self, result) TPP_CONFIG_EXPRPARSER(tpp_lexer_getparseexprarg(self), self, result)
+#else /* TPP_CONFIG_EXPRPARSER_NEEDS_ARG */
+#define tpp_lexer_parseexpr(self, result) TPP_CONFIG_EXPRPARSER(self, result)
+#endif /* !TPP_CONFIG_EXPRPARSER_NEEDS_ARG */
+#elif TPP_HAVE_BUILTIN_EXPRPARSER > 0
+#define TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR 1
+#define tpp_lexer_parseexpr(self, result) _tpp_lexer_builtin_parseexpr(self, result)
+#else /* TPP_CONFIG_EXPRPARSER */
+	/* User-defined override for parsing preprocessor expressions */
+	tpp_errno (TPPCALL *TPP_INTERNAL(tl_expr_parser_cb))(void *arg, struct tpp_lexer *tpp_restrict self,
+	                                                     tpp_expr_value *tpp_restrict result);
+	void *TPP_INTERNAL(tl_expr_parser_arg); /* [?..?][valid_if(tl_expr_parser_cb)] Cookie for "tl_expr_parser_cb" */
+#define _tpp_lexer_init_parseexpr(self) , (self)->TPP_INTERNAL(tl_expr_parser_cb) = NULL
+#define tpp_lexer_setparseexpr(self, cb, arg)               \
+	(void)((self)->TPP_INTERNAL(tl_expr_parser_cb)  = (cb), \
+	       (self)->TPP_INTERNAL(tl_expr_parser_arg) = (arg))
+#define tpp_lexer_getparseexprarg(self)    (self)->TPP_INTERNAL(tl_expr_parser_arg)
+#define tpp_lexer_setparseexprarg(self, v) (void)((self)->TPP_INTERNAL(tl_expr_parser_arg) = (v))
+#if TPP_HAVE_BUILTIN_EXPRPARSER
+#define TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG 1
+#define tpp_lexer_getparseexpr(self)           \
+	((self)->TPP_INTERNAL(tl_expr_parser_cb)   \
+	 ? (self)->TPP_INTERNAL(tl_expr_parser_cb) \
+	 : &_tpp_lexer_builtin_parseexpr_with_arg)
+#define tpp_lexer_parseexpr(self, result) \
+	((*tpp_lexer_getparseexpr(self))(tpp_lexer_getparseexprarg(self), self, result))
+#else /* TPP_HAVE_BUILTIN_EXPRPARSER */
+#define tpp_lexer_parseexpr(self, result)                                               \
+	(tpp_lexer_getparseexpr(self)                                                       \
+	 ? ((*tpp_lexer_getparseexpr(self))(tpp_lexer_getparseexprarg(self), self, result)) \
+	 : TPP_EOK)
+#endif /* !TPP_HAVE_BUILTIN_EXPRPARSER */
+#endif /* !TPP_CONFIG_EXPRPARSER */
+#endif /* TPP_HAVE_LEXER_PARSEEXPR */
+#ifndef _tpp_lexer_init_parseexpr
+#define _tpp_lexer_init_parseexpr(self) /* nothing */
+#endif /* !_tpp_lexer_init_parseexpr */
+
+
 	/* Lexer error limits */
 #if TPP_HAVE_WARNING_ERROR
 	tpp_size TPP_INTERNAL(tl_error_count); /* # of times "TPP_WSTATE_ERROR" was emitted.
-	                          * When this is non-zero by the time your compiler finishes
-	                          * compiling your source file, you should NOT proceed, but
-	                          * propagate an error. */
+	                                        * When this is non-zero by the time your compiler finishes
+	                                        * compiling your source file, you should NOT proceed, but
+	                                        * propagate an error. */
 #define _tpp_lexer_initerrorcount(self)  , (self)->TPP_INTERNAL(tl_error_count) = 0
 #define tpp_lexer_geterrorcount(self)    (self)->TPP_INTERNAL(tl_error_count)
 #define tpp_lexer_seterrorcount(self, v) (void)((self)->TPP_INTERNAL(tl_error_count) = (v))
@@ -8448,6 +8805,7 @@ typedef struct tpp_lexer {
 	       _tpp_lexer_init_state(self)                       \
 	       _tpp_lexer_init_warn(self)                        \
 	       _tpp_lexer_init_warnprinter(self)                 \
+	       _tpp_lexer_init_parseexpr(self)                   \
 	       _tpp_lexer_initerrorcount(self)                   \
 	       _tpp_lexer_initerrorlimit(self)                   \
 	       _tpp_lexer_initcounter(self))
@@ -9240,7 +9598,7 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok);
 
 
 
-
+/* Builtin warning printers... */
 #ifndef TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER
 #define TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER 0
 #endif /* !TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER */
@@ -9250,7 +9608,6 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok);
 #ifndef TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER
 #define TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER 0
 #endif /* !TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER */
-
 #if TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER
 TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_wrapped_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes);
 #endif /* TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER */
@@ -9260,6 +9617,25 @@ TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_builtin_warnprinter(void *arg
 #if TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER
 TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_noop_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes);
 #endif /* TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER */
+
+
+/* Builtin expression parsers... */
+#ifndef TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR
+#define TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR 0
+#endif /* !TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR */
+#ifndef TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG
+#define TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG 0
+#endif /* !TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG */
+#if TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_lexer_builtin_parseexpr(tpp_lexer *tpp_restrict self,
+                             tpp_expr_value *tpp_restrict result);
+#endif /* TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR */
+#if TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG
+TPP_DECL TPP_WUNUSED TPP_NONNULL((2, 3)) tpp_errno TPPCALL
+_tpp_lexer_builtin_parseexpr_with_arg(void *arg, tpp_lexer *tpp_restrict self,
+                                      tpp_expr_value *tpp_restrict result);
+#endif /* TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG */
 
 TPP_DECL_END
 /************************************************************************/

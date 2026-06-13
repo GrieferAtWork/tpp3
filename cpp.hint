@@ -22,3 +22,6 @@
 #define TPP_STATIC_ASSERT(expr)
 #define TPP_FALLTHRU
 #define TPP_INTERNAL(x) x
+#define TPP_DEFINE_PX_PARSER(tpp_px_prev, tpp_px_this, tpp_px_this_suffix, TPP_TEST_PX_THIS_SUFFIX) \
+	static tpp_errno tpp_px_this(tpp_lexer *tpp_restrict self, tpp_expr_value *result) {}
+

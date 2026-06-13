@@ -113,13 +113,18 @@ typedef struct tpp_ifdef_stack {
 #define tpp_ifdef_stack_fini(self) \
 	tpp_free((self)->TPP_INTERNAL(tids_vec))
 
-/* Check if the given #ifdef-stack is non-empty */
-#define tpp_ifdef_stack_isnonempty(self) \
-	((self)->TPP_INTERNAL(tids_cnt) != 0)
+/* Check if the given #ifdef-stack is empty */
+#define tpp_ifdef_stack_isempty(self) \
+	((self)->TPP_INTERNAL(tids_cnt) == 0)
+
+/* Return the last #ifdef-stack entry. The caller
+ * must ensure that "!tpp_ifdef_stack_isempty(self)" */
+#define tpp_ifdef_stack_getlast(self) \
+	(&(self)->TPP_INTERNAL(tids_vec)[(self)->TPP_INTERNAL(tids_cnt) - 1])
 
 /* Check if the most-recent #ifdef-stack entry indicates
  * that TPP is currently inside of a #else-block. The caller
- * must ensure that "tpp_ifdef_stack_isnonempty(self)" */
+ * must ensure that "!tpp_ifdef_stack_isempty(self)" */
 #define tpp_ifdef_stack_isafterelse(self) \
 	((self)->TPP_INTERNAL(tids_vec)[(self)->TPP_INTERNAL(tids_cnt) - 1].TPP_INTERNAL(tidse_mode) == TPP_IFDEF_MODE_ELSE)
 

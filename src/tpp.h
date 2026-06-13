@@ -29,6 +29,7 @@
 #include "parts/config.h"
 #include "parts/ctype.h"
 #include "parts/string.h"
+#include "parts/expr.h"
 #include "parts/file-io.h"
 #include "parts/error.h"
 #include "parts/token.h"

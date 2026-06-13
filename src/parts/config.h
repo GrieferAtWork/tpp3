@@ -1311,6 +1311,88 @@
 
 
 /************************************************************************/
+/* LEXER EXPRESSIONS                                                    */
+/************************************************************************/
+
+/* Provide a function "tpp_lexer_parseexpr()" that
+ * is used to implement "#if" directive expressions */
+#ifndef TPP_HAVE_LEXER_PARSEEXPR
+#define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF  || TPP_HAVE_MACRO___TPP_EVAL)
+#endif /* !TPP_HAVE_LEXER_PARSEEXPR */
+
+/* Expression parser configuration */
+#if TPP_HAVE_LEXER_PARSEEXPR
+#ifdef TPP_CONFIG_EXPRPARSER
+#ifndef TPP_CONFIG_EXPRPARSER_NEEDS_ARG
+#define TPP_CONFIG_EXPRPARSER_NEEDS_ARG 1
+#endif /* !TPP_CONFIG_EXPRPARSER_NEEDS_ARG */
+
+/* >> #define TPP_CONFIG_EXPRPARSER my_expr_parser
+ * >> #if TPP_CONFIG_EXPRPARSER_NEEDS_ARG
+ * >> static tpp_errno TPP_FORMATPRINTER_CC
+ * >> my_expr_parser(void *arg, tpp_lexer *self, tpp_expr_value *result)
+ * >> #else // TPP_CONFIG_EXPRPARSER_NEEDS_ARG
+ * >> static tpp_errno TPP_FORMATPRINTER_CC
+ * >> my_expr_parser(tpp_char const *self, tpp_expr_value *result)
+ * >> #endif // !TPP_CONFIG_EXPRPARSER_NEEDS_ARG
+ * >> {
+ * >>    ...
+ * >>    return TPP_EOK;
+ * >> } */
+#else /* TPP_CONFIG_EXPRPARSER */
+/* Supply a built-in expression parser.
+ *
+ * -1: Provide builtin, but allow users to override
+ *  1: Provide+hard-wire builtin
+ *  0: Don't provide builtin, but allow users to override
+ */
+#ifndef TPP_HAVE_BUILTIN_EXPRPARSER
+#define TPP_HAVE_BUILTIN_EXPRPARSER (-1)
+#endif /* !TPP_HAVE_BUILTIN_EXPRPARSER */
+#endif /* !TPP_CONFIG_EXPRPARSER */
+#endif /* TPP_HAVE_LEXER_PARSEEXPR */
+
+/* Enable support for "defined(MACRO)" in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_DEFINED
+#define TPP_HAVE_BUILTIN_EXPR_DEFINED (TPP_HAVE_LEXER_PARSEEXPR) /* "TPP_FEAT_BUILTIN_EXPR_DEFINED" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_DEFINED */
+
+/* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
+#ifndef TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
+#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR (TPP_HAVE_BUILTIN_EXPR_DEFINED ? -2 : 0) /* "-fdont-expand-defined" */
+#endif /* !TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR */
+
+/* Enable support for string operations in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_STRINGS
+#define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_LEXER_PARSEEXPR && TPP_HAVE_TPP_TOK_STRINGLIKE) ? -1 : 0) /* "-fstrings-in-expressions" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+/* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
+#ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT (TPP_HAVE_LEXER_PARSEEXPR ? -1 : 0) /* "-fif-else-optional-true" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
+
+/* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS (TPP_HAVE_LEXER_PARSEEXPR ? -1 : 0) /* "-fifelse-in-expressions" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
+
+
+#if 0 /* TODO: Extensions related to lexer expression evaluation */
+EXTENSION(EXT_BININTEGRAL,       "binary-literals",               TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT)
+EXTENSION(EXT_MSVC_FIXED_INT,    "fixed-length-integrals",        TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
+EXTENSION(EXT_LXOR,              "logical-xor-in-expressions",    TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
+EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT) /* TODO: Relation to -Wno-multichar? */
+#endif
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+
+/************************************************************************/
 /* IMPLICIT API FEATURES                                                */
 /************************************************************************/
 /* Provide an API function `tpp_unicode_writeutf8()' */
@@ -1391,7 +1473,7 @@
 
 /* Enable support for `tpp_lexer_skip()' */
 #ifndef TPP_HAVE_LEXER_SKIP
-#define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1)
+#define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1) /* TODO: List all features that use this function */
 #endif /* !TPP_HAVE_LEXER_SKIP */
 
 /* Enable support for `tpp_lexer_rawskip_raw()', a function that is used-
@@ -1470,43 +1552,11 @@
 #define TPP_HAVE_TOKEN_ENCODESTRING (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT)
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
-/* Provide a function "tpp_lexer_parseexpr()" that
- * is used to implement "#if" directive expressions */
-#ifndef TPP_HAVE_LEXER_PARSEEXPR
-#define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF  || TPP_HAVE_MACRO___TPP_EVAL)
-#endif /* !TPP_HAVE_LEXER_PARSEEXPR */
+/* Provide a function "tpp_expr_value_printrepr()" to construct the result of __TPP_EVAL */
+#ifndef TPP_HAVE_EXPR_VALUE_PRINTREPR
+#define TPP_HAVE_EXPR_VALUE_PRINTREPR (TPP_HAVE_MACRO___TPP_EVAL)
+#endif /* !TPP_HAVE_EXPR_VALUE_PRINTREPR */
 
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-
-
-
-
-/************************************************************************/
-/* LEXER EXPRESSIONS                                                    */
-/************************************************************************/
-
-/* Enable support for "defined(MACRO)" in lexer expressions */
-#ifndef TPP_HAVE_EXPR_DEFINED
-#define TPP_HAVE_EXPR_DEFINED (TPP_HAVE_LEXER_PARSEEXPR)
-#endif /* !TPP_HAVE_EXPR_DEFINED */
-
-/* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
-#ifndef TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
-#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR (TPP_HAVE_EXPR_DEFINED ? -2 : 0) /* "-fdont-expand-defined" */
-#endif /* !TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR */
-
-#if 0 /* TODO: Extensions related to lexer expression evaluation */
-EXTENSION(EXT_BININTEGRAL,       "binary-literals",               TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT)
-EXTENSION(EXT_MSVC_FIXED_INT,    "fixed-length-integrals",        TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
-EXTENSION(EXT_GCC_IFELSE,        "if-else-optional-true",         TPP_CONFIG_EXTENSION_GCC_IFELSE_DEFAULT)
-EXTENSION(EXT_IFELSE_IN_EXPR,    "ifelse-in-expressions",         TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR_DEFAULT)
-EXTENSION(EXT_STRINGOPS,         "strings-in-expressions",        TPP_CONFIG_EXTENSION_STRINGOPS_DEFAULT)
-EXTENSION(EXT_LXOR,              "logical-xor-in-expressions",    TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
-EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT) /* TODO: Relation to -Wno-multichar? */
-#endif
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -1578,7 +1628,7 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE)
 #endif /* !TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
 #ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
-#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN (TPP_HAVE_WARNINGS)
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SKIP)
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
 #ifndef TPP_HAVE_TPP_W_ERROR
 #define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_ERROR)
@@ -1662,7 +1712,7 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT */
 #ifndef TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED
 #define TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED \
-	(TPP_HAVE_WARNINGS && TPP_HAVE_EXPR_DEFINED && (TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR <= 0))
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_DEFINED && (TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR <= 0))
 #endif /* !TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_STRING
 #if 1
@@ -1677,33 +1727,70 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #define TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_IFDEF_STACK)
 #endif /* !TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+#ifndef TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+#define TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF */
+#ifndef TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+#define TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
+#ifndef TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF
+#define TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF */
+#ifndef TPP_HAVE_TPP_W_ENDIF_LABELS
+#define TPP_HAVE_TPP_W_ENDIF_LABELS \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_TPP_W_ENDIF_LABELS */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF
+#define TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPRPARSER)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION */
+#ifndef TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+#define TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPRPARSER)
+#endif /* !TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+#define TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_DEFINED)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
 
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS
-#ifdef TPP_CONFIG_WARNING_PRINTER
-#ifndef TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
-#define TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG 1
-#endif /* !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG */
+#ifdef TPP_CONFIG_WARNPRINTER
+#ifndef TPP_CONFIG_WARNPRINTER_NEEDS_ARG
+#define TPP_CONFIG_WARNPRINTER_NEEDS_ARG 1
+#endif /* !TPP_CONFIG_WARNPRINTER_NEEDS_ARG */
 
-/* >> #define TPP_CONFIG_WARNING_PRINTER my_warning_printer
- * >> #if TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+/* >> #define TPP_CONFIG_WARNPRINTER my_warning_printer
+ * >> #if TPP_CONFIG_WARNPRINTER_NEEDS_ARG
  * >> static tpp_ssize TPP_FORMATPRINTER_CC
  * >> my_warning_printer(void *arg, tpp_char const *text, tpp_size num_bytes)
- * >> #else // TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+ * >> #else // TPP_CONFIG_WARNPRINTER_NEEDS_ARG
  * >> static tpp_ssize TPP_FORMATPRINTER_CC
  * >> my_warning_printer(tpp_char const *text, tpp_size num_bytes)
- * >> #endif // !TPP_CONFIG_WARNING_PRINTER_NEEDS_ARG
+ * >> #endif // !TPP_CONFIG_WARNPRINTER_NEEDS_ARG
  * >> {
  * >>    ...
  * >> } */
-#else /* TPP_CONFIG_WARNING_PRINTER */
+#else /* TPP_CONFIG_WARNPRINTER */
 /* Supply a built-in printer (that uses "fwrite(stderr)")
- * when no user-defined printer was configured for a lexer. */
+ * when no user-defined printer was configured for a lexer.
+ *
+ * -1: Provide builtin, but allow users to override
+ *  1: Provide+hard-wire builtin
+ *  0: Don't provide builtin, but allow users to override
+ */
 #ifndef TPP_HAVE_BUILTIN_WARNPRINTER
-#define TPP_HAVE_BUILTIN_WARNPRINTER 1
+#define TPP_HAVE_BUILTIN_WARNPRINTER (-1)
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */
-#endif /* !TPP_CONFIG_WARNING_PRINTER */
+#endif /* !TPP_CONFIG_WARNPRINTER */
 #endif /* TPP_HAVE_WARNINGS */
 /************************************************************************/
 /************************************************************************/

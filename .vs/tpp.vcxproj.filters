@@ -93,6 +93,9 @@
     <ClCompile Include="..\src\parts\lexer-yield.c">
       <Filter>src\parts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\lexer-parseexpr.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">
@@ -151,6 +154,9 @@
     </ClInclude>
     <ClInclude Include="..\src\tpp2.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\expr.h">
+      <Filter>src\parts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

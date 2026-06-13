@@ -72,13 +72,13 @@ local BUILTIN_KEYWORDS: {string: string} = {
 	"include": "TPP_HAVE_CPP_INCLUDE",
 	"include_next": "TPP_HAVE_CPP_INCLUDE_NEXT",
 	"import": "TPP_HAVE_CPP_IMPORT",
-	"if": "TPP_HAVE_CPP_IF_ELSE_ENDIF",
+	"if": "TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS",
 	"ifdef": "TPP_HAVE_CPP_IF_ELSE_ENDIF",
 	"ifndef": "TPP_HAVE_CPP_IF_ELSE_ENDIF",
-	"elif": "TPP_HAVE_CPP_IF_ELSE_ENDIF",
+	"elif": "TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS",
 	"elifdef": "TPP_HAVE_CPP_IF_ELSE_ENDIF",
 	"elifndef": "TPP_HAVE_CPP_IF_ELSE_ENDIF",
-	"else": "TPP_HAVE_CPP_IF_ELSE_ENDIF",
+	"else": "TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS",
 	"endif": "TPP_HAVE_CPP_IF_ELSE_ENDIF",
 	"define": "TPP_HAVE_CPP_DEFINE",
 	"undef": "TPP_HAVE_CPP_DEFINE",
@@ -145,7 +145,7 @@ local BUILTIN_KEYWORDS: {string: string} = {
 	"__VA_COMMA__": "TPP_HAVE_VA_COMMA_IN_MACROS",
 	"__VA_NARGS__": "TPP_HAVE_VA_NARGS_IN_MACROS",
 	"__VA_OPT__": "TPP_HAVE_VA_OPT_IN_MACROS",
-	"defined": "TPP_HAVE_EXPR_DEFINED",
+	"defined": "TPP_HAVE_BUILTIN_EXPR_DEFINED",
 };
 for (local kwd, cond: BUILTIN_KEYWORDS) {
 	print("#if ", cond);
@@ -170,10 +170,10 @@ TPP_KWD(TPP_KWD_include_next, "include_next")
 #define TPP_KWD_import TPP_KWD_import
 TPP_KWD(TPP_KWD_import, "import")
 #endif /* TPP_HAVE_CPP_IMPORT */
-#if TPP_HAVE_CPP_IF_ELSE_ENDIF
+#if TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #define TPP_KWD_if TPP_KWD_if
 TPP_KWD(TPP_KWD_if, "if")
-#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
+#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF
 #define TPP_KWD_ifdef TPP_KWD_ifdef
 TPP_KWD(TPP_KWD_ifdef, "ifdef")
@@ -182,10 +182,10 @@ TPP_KWD(TPP_KWD_ifdef, "ifdef")
 #define TPP_KWD_ifndef TPP_KWD_ifndef
 TPP_KWD(TPP_KWD_ifndef, "ifndef")
 #endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
-#if TPP_HAVE_CPP_IF_ELSE_ENDIF
+#if TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #define TPP_KWD_elif TPP_KWD_elif
 TPP_KWD(TPP_KWD_elif, "elif")
-#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
+#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF
 #define TPP_KWD_elifdef TPP_KWD_elifdef
 TPP_KWD(TPP_KWD_elifdef, "elifdef")
@@ -194,10 +194,10 @@ TPP_KWD(TPP_KWD_elifdef, "elifdef")
 #define TPP_KWD_elifndef TPP_KWD_elifndef
 TPP_KWD(TPP_KWD_elifndef, "elifndef")
 #endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
-#if TPP_HAVE_CPP_IF_ELSE_ENDIF
+#if TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #define TPP_KWD_else TPP_KWD_else
 TPP_KWD(TPP_KWD_else, "else")
-#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
+#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF
 #define TPP_KWD_endif TPP_KWD_endif
 TPP_KWD(TPP_KWD_endif, "endif")
@@ -462,10 +462,10 @@ TPP_KWD(TPP_KWD___VA_NARGS__, "__VA_NARGS__")
 #define TPP_KWD___VA_OPT__ TPP_KWD___VA_OPT__
 TPP_KWD(TPP_KWD___VA_OPT__, "__VA_OPT__")
 #endif /* TPP_HAVE_VA_OPT_IN_MACROS */
-#if TPP_HAVE_EXPR_DEFINED
+#if TPP_HAVE_BUILTIN_EXPR_DEFINED
 #define TPP_KWD_defined TPP_KWD_defined
 TPP_KWD(TPP_KWD_defined, "defined")
-#endif /* TPP_HAVE_EXPR_DEFINED */
+#endif /* TPP_HAVE_BUILTIN_EXPR_DEFINED */
 /*[[[end]]]*/
 
 
@@ -1554,6 +1554,36 @@ TPP_EXTENSION(TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR, TPP_EXTNAME_DONT_EXPAND_DEFIN
 #else /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR(self) TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
 #endif /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS < 0
+#define TPP_EXT_BUILTIN_EXPR_STRINGS TPP_EXT_BUILTIN_EXPR_STRINGS
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_STRINGS
+#define TPP_EXTNAME_BUILTIN_EXPR_STRINGS "strings-in-expressions"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_STRINGS */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_STRINGS, TPP_EXTNAME_BUILTIN_EXPR_STRINGS, TPP_HAVE_BUILTIN_EXPR_STRINGS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_STRINGS(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_STRINGS
+#else /* TPP_HAVE_BUILTIN_EXPR_STRINGS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_STRINGS(self) TPP_HAVE_BUILTIN_EXPR_STRINGS
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT < 0
+#define TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT "if-else-optional-true"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT, TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT, TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#else /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT(self) TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#endif /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS < 0
+#define TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS "ifelse-in-expressions"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS, TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS, TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#else /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS(self) TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#endif /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS >= 0 */
 /*[[[end]]]*/
 
 
@@ -1622,7 +1652,8 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||           \
 	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT ||             \
 	 TPP_HAVE_TPP_W_EXPECTED_STRING ||                          \
-	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF)
+	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF ||                         \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_WG_SYNTAX TPP_WG_SYNTAX
@@ -1697,9 +1728,54 @@ TPP_WARNING(TPP_W_EXPECTED_STRING, 1(TPP_WG_SYNTAX), 1(4081), TPP_WSTATE_UNDEFIN
 
 #if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
 #define TPP_W_EOF_BEFORE_ENDIF TPP_W_EOF_BEFORE_ENDIF
-TPP_WARNING(TPP_W_EOF_BEFORE_ENDIF, 1(TPP_WG_SYNTAX), 0(/*TODO*/), TPP_WSTATE_UNDEFINED,
+TPP_WARNING(TPP_W_EOF_BEFORE_ENDIF, 1(TPP_WG_SYNTAX), 1(1070), TPP_WSTATE_UNDEFINED,
             "unterminated %[#if%]-directive")
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+
+#if TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+#define TPP_W_ELIF_OR_ELSE_AFTER_ELSE TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+TPP_WARNING_EX(TPP_W_ELIF_OR_ELSE_AFTER_ELSE, 1(TPP_WG_SYNTAX), 1(1022), TPP_WSTATE_UNDEFINED, {
+	tpp_ifdef_stack_entry const *const entry = tpp_va_arg(tpp_ifdef_stack_entry const *);
+	tpp_file *const current_file = tpp_lexer_getfile(self);
+	char const *directive_name = tpp_va_arg(char const *);
+	tpp_warnf1("%[%s%]-directive after %[#else%]\n", directive_name);
+	tpp_print_file_and_line_lc(current_file, entry->tidse_updated);
+	tpp_warnf0("note: see associated %[#else%]\n");
+	tpp_print_file_and_line_lc(current_file, entry->tidse_created);
+	tpp_warnf0("note: see associated %[#if%], %[#ifdef%] or %[#ifndef%]\n");
+})
+#endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
+
+#if TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+#define TPP_W_ELIF_OR_ELSE_WITHOUT_IF TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+TPP_WARNING(TPP_W_ELIF_OR_ELSE_WITHOUT_IF, 1(TPP_WG_SYNTAX), 2(1018, 1019), TPP_WSTATE_UNDEFINED,
+            "%[#%s%]-directive without preceding %[#if%], %[#ifdef%] or %[#ifndef%]")
+#endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF */
+
+#if TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF
+#define TPP_W_ENDIF_WITHOUT_IF TPP_W_ENDIF_WITHOUT_IF
+TPP_WARNING(TPP_W_ENDIF_WITHOUT_IF, 1(TPP_WG_SYNTAX), 1(1020), TPP_WSTATE_UNDEFINED,
+            "%[#endif%]-directive without preceding %[#if%], %[#ifdef%] or %[#ifndef%]")
+#endif /* TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF */
+
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION
+#define TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION, 1(TPP_WG_SYNTAX), 1(1017), TPP_WSTATE_UNDEFINED,
+            "unexpected token %Pt in preprocessor expression")
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION */
+
+#if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF
+#define TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF
+TPP_WARNING(TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF, 1(TPP_WG_SYNTAX), 1(1016), TPP_WSTATE_UNDEFINED,
+            "expected <keyword> after %[#%s%], but got %Pt")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF */
+
+#if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+#define TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+TPP_WARNING(TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED, 1(TPP_WG_SYNTAX), 1(2003), TPP_WSTATE_UNDEFINED,
+            "expected <keyword> after %[defined%] in expression, but got %Pt")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
+
 
 
 
@@ -1773,6 +1849,42 @@ TPP_WGROUP(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER, 1("pragma-once-outside-header"), T
 TPP_WARNING(TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER, 1(TPP_WG_PRAGMA_ONCE_OUTSIDE_HEADER), 0(), ~,
             "%[#pragma once%] in main file")
 #endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
+
+
+/************************************************************************/
+/* -Wundef                                                              */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_UNDEF
+#define TPP_HAVE_TPP_WG_UNDEF (TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION)
+#endif /* !TPP_HAVE_TPP_WG_UNDEF */
+#if TPP_HAVE_TPP_WG_UNDEF
+#define TPP_WG_UNDEF TPP_WG_UNDEF
+TPP_WGROUP(TPP_WG_UNDEF, 1("undef"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_UNDEF */
+
+#if TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+#define TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+TPP_WARNING(TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION, 1(TPP_WG_UNDEF), 0(), ~,
+            "undefined keyword %Pt is replaced with %[0%] in expression")
+#endif /* TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION */
+
+
+/************************************************************************/
+/* -Wendif-labels                                                              */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_ENDIF_LABELS
+#define TPP_HAVE_TPP_WG_ENDIF_LABELS (TPP_HAVE_TPP_W_ENDIF_LABELS)
+#endif /* !TPP_HAVE_TPP_WG_ENDIF_LABELS */
+#if TPP_HAVE_TPP_WG_ENDIF_LABELS
+#define TPP_WG_ENDIF_LABELS TPP_WG_ENDIF_LABELS
+TPP_WGROUP(TPP_WG_ENDIF_LABELS, 1("endif-labels"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_ENDIF_LABELS */
+
+#if TPP_HAVE_TPP_W_ENDIF_LABELS
+#define TPP_W_ENDIF_LABELS TPP_W_ENDIF_LABELS
+TPP_WARNING(TPP_W_ENDIF_LABELS, 1(TPP_WG_ENDIF_LABELS), 0(), ~,
+            "endif-label %Pt used")
+#endif /* TPP_HAVE_TPP_W_ENDIF_LABELS */
 
 
 /************************************************************************/
@@ -1900,15 +2012,15 @@ TPP_WARNING(TPP_W_DEFINE_BUILTIN_MACRO, 0(), 1(4118), TPP_WSTATE_WARN,
 #if TPP_HAVE_TPP_W_REDEFINE_MACRO
 #define TPP_W_REDEFINE_MACRO TPP_W_REDEFINE_MACRO
 TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
-	tpp_keyword const *keyword = va_arg(args, tpp_keyword const *);
+	tpp_keyword const *keyword = tpp_va_arg(tpp_keyword const *);
 	tpp_macro const *const old_definition = keyword->tk_macro;
-	tpp_warnf("macro %[%s%] redefined\n", keyword->tk_kwd);
+	tpp_warnf1("macro %[%s%] redefined\n", keyword->tk_kwd);
 	if (old_definition->tm_deffile) {
 		/* TODO: must use "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT" */
-		tpp_warnf("%s(%d, %d): note: see previous definition\n",
-		          old_definition->tm_deffile,
-		          (int)tpp_lcinfo_getline(old_definition->tm_deflc) + 1,
-		          (int)tpp_lcinfo_getcol(old_definition->tm_deflc) + 1);
+		tpp_warnf3("%s(%d, %d): note: see previous definition\n",
+		           old_definition->tm_deffile,
+		           (int)tpp_lcinfo_getline(old_definition->tm_deflc) + 1,
+		           (int)tpp_lcinfo_getcol(old_definition->tm_deflc) + 1);
 	}
 })
 #endif /* TPP_HAVE_TPP_W_REDEFINE_MACRO */
@@ -1919,7 +2031,6 @@ TPP_WGROUP(TPP_WG_USAGE, /*          */ 1("usage"),                TPP_WSTATE_FA
 TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_ENVIRON, /*        */ 1("environ"),              TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
-TPP_WGROUP(TPP_WG_UNDEF, /*          */ 1("undef"),                TPP_WSTATE_WARN)
 TPP_WGROUP(TPP_WG_QUALITY, /*        */ 1("quality"),              TPP_WSTATE_FATAL)
 TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WARN)
 

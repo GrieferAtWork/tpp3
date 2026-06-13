@@ -771,61 +771,66 @@
 #define TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH          1 /* Support for: #pragma TPP include_path(...) */
 
 /* Lexer expressions */
-#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED /* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
+#define TPP_HAVE_BUILTIN_EXPR_DEFINED                1                                      /* Enable support for "defined(MACRO)" in builtin lexer expressions */
+#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR         TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED /* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
+#define TPP_HAVE_BUILTIN_EXPR_STRINGS                TPP_CONFIG_EXTENSION_STRINGOPS         /* Enable support for string operations in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    TPP_CONFIG_EXTENSION_GCC_IFELSE        /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    /* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
+
 #if 0 /* TODO: Extensions related to lexer expression evaluation */
 EXTENSION(EXT_BININTEGRAL,       "binary-literals",               TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT)
 EXTENSION(EXT_MSVC_FIXED_INT,    "fixed-length-integrals",        TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
-EXTENSION(EXT_GCC_IFELSE,        "if-else-optional-true",         TPP_CONFIG_EXTENSION_GCC_IFELSE_DEFAULT)
-EXTENSION(EXT_IFELSE_IN_EXPR,    "ifelse-in-expressions",         TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR_DEFAULT)
-EXTENSION(EXT_STRINGOPS,         "strings-in-expressions",        TPP_CONFIG_EXTENSION_STRINGOPS_DEFAULT)
 EXTENSION(EXT_LXOR,              "logical-xor-in-expressions",    TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
 EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT)
 #endif
 
 
 /* Force extensions to use the names they'd been using in TPP2 */
-#define TPP_EXTNAME_TRIGRAPHS                     "trigraphs"
-#define TPP_EXTNAME_DIGRAPHS                      "digraphs"
-#define TPP_EXTNAME_NAMED_VARARGS_IN_MACROS       "named-varargs-in-macros"
-#define TPP_EXTNAME_VA_GLUE_COMMA_IN_MACROS       "glue-comma-in-macros"
-#define TPP_EXTNAME_VA_COMMA_IN_MACROS            "va-comma-in-macros"
-#define TPP_EXTNAME_VA_OPT_IN_MACROS              "va-opt-in-macros"
-#define TPP_EXTNAME_VA_NARGS_IN_MACROS            "va-nargs-in-macros"
-#define TPP_EXTNAME_VA_ARGS_IN_MACROS             "va-args-in-macros"
-#define TPP_EXTNAME_ESCAPE_E_IN_STRINGS           "escape-e-in-strings"
-#define TPP_EXTNAME_ALTERNATIVE_MACRO_PARENTHESIS "alternative-macro-parenthesis"
-#define TPP_EXTNAME_MACRO_RECURSION               "macro-recursion"
-#define TPP_EXTNAME_MACRO_ARGUMENT_WHITESPACE     "macro-argument-whitespace"
-#define TPP_EXTNAME_MACRO___pragma                "msvc-pragma-support" /* TPP3 renamed "-fmsvc-pragma-support" -> "-f__pragma" */
-#define TPP_EXTNAME_CHARIZE_MACRO_ARGUMENT        "charize-macro-argument"
-#define TPP_EXTNAME_DONT_EXPAND_MACRO_ARGUMENT    "dont-expand-macro-argument"
-#define TPP_EXTNAME_CPP_WARNING                   "warning-directives"
-#define TPP_EXTNAME_CPP_EXCLAIM                   "shebang-directives"
-#define TPP_EXTNAME_CPP_INCLUDE_NEXT              "include-next-directives"
-#define TPP_EXTNAME_CPP_IMPORT                    "import-directives"
-#define TPP_EXTNAME_CPP_IDENT_SCCS                "ident-directives"
-#define TPP_EXTNAME_MACRO___BASE_FILE__           "basefile-macro"
-#define TPP_EXTNAME_MACRO___INCLUDE_LEVEL__       "include-level-macro"
-#define TPP_EXTNAME_MACRO___COUNTER__             "counter-macro"
-#define TPP_EXTNAME_MACRO___TIMESTAMP__           "timestamp-macro"
-#define TPP_EXTNAME_MACRO___COLUMN__              "column-macro"
-#define TPP_EXTNAME_NUMERIC_DATE_MACROS           "numeric-date-macros"
-#define TPP_EXTNAME_NUMERIC_TIME_MACROS           "numeric-time-macros"
-#define TPP_EXTNAME_MACRO___TPP_EVAL              "tpp-eval-macro"
-#define TPP_EXTNAME_MACRO___TPP_UNIQUE            "tpp-unique-macro"
-#define TPP_EXTNAME_MACRO___TPP_LOAD_FILE         "tpp-load-file-macro"
-#define TPP_EXTNAME_MACRO___TPP_COUNTER           "tpp-counter-macro"
-#define TPP_EXTNAME_MACRO___TPP_RANDOM            "tpp-random-macro"
-#define TPP_EXTNAME_MACRO___TPP_STR_DECOMPILE     "tpp-str-decompile-macro"
-#define TPP_EXTNAME_MACRO___TPP_STR_SUBSTR        "tpp-str-substr-macro"
-#define TPP_EXTNAME_MACRO___TPP_STR_PACK          "tpp-str-pack-macro"
-#define TPP_EXTNAME_MACRO___TPP_STR_SIZE          "tpp-str-size-macro"
-#define TPP_EXTNAME_MACRO___TPP_COUNT_TOKENS      "tpp-count-tokens-macro"
-#define TPP_EXTNAME_MACRO___TPP_IDENTIFIER        "tpp-identifier-macro"
-#define TPP_EXTNAME_CPP_ASSERT                    "assertions"
-#define TPP_EXTNAME_DONT_EXPAND_DEFINED_IN_EXPR   "dont-expand-defined"
-#define TPP_EXTNAME_TRADITIONAL_MACROS            "traditional-macro"
-#define TPP_EXTNAME_CLANG_EXTENSIONS_ARE_FEATURES "extensions-are-features" /* TPP3 renamed "-fextensions-are-features" -> "-fclang-extensions-are-features" */
+#define TPP_EXTNAME_TRIGRAPHS                           "trigraphs"
+#define TPP_EXTNAME_DIGRAPHS                            "digraphs"
+#define TPP_EXTNAME_NAMED_VARARGS_IN_MACROS             "named-varargs-in-macros"
+#define TPP_EXTNAME_VA_GLUE_COMMA_IN_MACROS             "glue-comma-in-macros"
+#define TPP_EXTNAME_VA_COMMA_IN_MACROS                  "va-comma-in-macros"
+#define TPP_EXTNAME_VA_OPT_IN_MACROS                    "va-opt-in-macros"
+#define TPP_EXTNAME_VA_NARGS_IN_MACROS                  "va-nargs-in-macros"
+#define TPP_EXTNAME_VA_ARGS_IN_MACROS                   "va-args-in-macros"
+#define TPP_EXTNAME_ESCAPE_E_IN_STRINGS                 "escape-e-in-strings"
+#define TPP_EXTNAME_ALTERNATIVE_MACRO_PARENTHESIS       "alternative-macro-parenthesis"
+#define TPP_EXTNAME_MACRO_RECURSION                     "macro-recursion"
+#define TPP_EXTNAME_MACRO_ARGUMENT_WHITESPACE           "macro-argument-whitespace"
+#define TPP_EXTNAME_MACRO___pragma                      "msvc-pragma-support" /* TPP3 renamed "-fmsvc-pragma-support" -> "-f__pragma" */
+#define TPP_EXTNAME_CHARIZE_MACRO_ARGUMENT              "charize-macro-argument"
+#define TPP_EXTNAME_DONT_EXPAND_MACRO_ARGUMENT          "dont-expand-macro-argument"
+#define TPP_EXTNAME_CPP_WARNING                         "warning-directives"
+#define TPP_EXTNAME_CPP_EXCLAIM                         "shebang-directives"
+#define TPP_EXTNAME_CPP_INCLUDE_NEXT                    "include-next-directives"
+#define TPP_EXTNAME_CPP_IMPORT                          "import-directives"
+#define TPP_EXTNAME_CPP_IDENT_SCCS                      "ident-directives"
+#define TPP_EXTNAME_MACRO___BASE_FILE__                 "basefile-macro"
+#define TPP_EXTNAME_MACRO___INCLUDE_LEVEL__             "include-level-macro"
+#define TPP_EXTNAME_MACRO___COUNTER__                   "counter-macro"
+#define TPP_EXTNAME_MACRO___TIMESTAMP__                 "timestamp-macro"
+#define TPP_EXTNAME_MACRO___COLUMN__                    "column-macro"
+#define TPP_EXTNAME_NUMERIC_DATE_MACROS                 "numeric-date-macros"
+#define TPP_EXTNAME_NUMERIC_TIME_MACROS                 "numeric-time-macros"
+#define TPP_EXTNAME_MACRO___TPP_EVAL                    "tpp-eval-macro"
+#define TPP_EXTNAME_MACRO___TPP_UNIQUE                  "tpp-unique-macro"
+#define TPP_EXTNAME_MACRO___TPP_LOAD_FILE               "tpp-load-file-macro"
+#define TPP_EXTNAME_MACRO___TPP_COUNTER                 "tpp-counter-macro"
+#define TPP_EXTNAME_MACRO___TPP_RANDOM                  "tpp-random-macro"
+#define TPP_EXTNAME_MACRO___TPP_STR_DECOMPILE           "tpp-str-decompile-macro"
+#define TPP_EXTNAME_MACRO___TPP_STR_SUBSTR              "tpp-str-substr-macro"
+#define TPP_EXTNAME_MACRO___TPP_STR_PACK                "tpp-str-pack-macro"
+#define TPP_EXTNAME_MACRO___TPP_STR_SIZE                "tpp-str-size-macro"
+#define TPP_EXTNAME_MACRO___TPP_COUNT_TOKENS            "tpp-count-tokens-macro"
+#define TPP_EXTNAME_MACRO___TPP_IDENTIFIER              "tpp-identifier-macro"
+#define TPP_EXTNAME_CPP_ASSERT                          "assertions"
+#define TPP_EXTNAME_DONT_EXPAND_DEFINED_IN_EXPR         "dont-expand-defined"
+#define TPP_EXTNAME_TRADITIONAL_MACROS                  "traditional-macro"
+#define TPP_EXTNAME_CLANG_EXTENSIONS_ARE_FEATURES       "extensions-are-features" /* TPP3 renamed "-fextensions-are-features" -> "-fclang-extensions-are-features" */
+#define TPP_EXTNAME_BUILTIN_EXPR_STRINGS                "strings-in-expressions"
+#define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    "if-else-optional-true"
+#define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS "ifelse-in-expressions"
 /************************************************************************/
 
 
@@ -1160,6 +1165,9 @@ alias("EXT_ASSERTIONS", "TPP_EXT_CPP_ASSERT");
 alias("EXT_NO_EXPAND_DEFINED", "TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR");
 alias("EXT_TRADITIONAL_MACRO", "TPP_EXT_TRADITIONAL_MACROS");
 alias("EXT_EXT_ARE_FEATURES", "TPP_EXT_CLANG_EXTENSIONS_ARE_FEATURES");
+alias("EXT_STRINGOPS", "TPP_EXT_BUILTIN_EXPR_STRINGS");
+alias("EXT_GCC_IFELSE", "TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT");
+alias("EXT_IFELSE_IN_EXPR", "TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS");
 
 // Warning groups
 alias("WG_COMMENT",  "TPP_WG_COMMENT");
@@ -1221,6 +1229,12 @@ alias("W_EXPECTED_STRING_AFTER_IDENT", "TPP_W_EXPECTED_STRING");
 alias("W_EXPECTED_STRING_AFTER_GCC_DIAG", "TPP_W_EXPECTED_STRING");
 alias("W_EXPECTED_LPAREN_AFTER_VA_OPT", "TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT");
 alias("W_EXPECTED_RPAREN_AFTER_VA_OPT", "TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT");
+alias("W_IF_WITHOUT_ENDIF", "TPP_W_EOF_BEFORE_ENDIF");
+alias("W_ENDIF_WITHOUT_IF", "TPP_W_ENDIF_WITHOUT_IF");
+alias("W_ELSE_WITHOUT_IF", "TPP_W_ELIF_OR_ELSE_WITHOUT_IF");
+alias("W_ELSE_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
+alias("W_ELIF_WITHOUT_IF", "TPP_W_ELIF_OR_ELSE_WITHOUT_IF");
+alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 ]]]*/
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_EOF TPP_TOK_EOF
@@ -2235,6 +2249,24 @@ alias("W_EXPECTED_RPAREN_AFTER_VA_OPT", "TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT");
 #define EXT_EXT_ARE_FEATURES TPP_EXT_CLANG_EXTENSIONS_ARE_FEATURES
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_EXT_CLANG_EXTENSIONS_ARE_FEATURES */
+#ifdef TPP_EXT_BUILTIN_EXPR_STRINGS
+#define TPP_EXT_STRINGOPS TPP_EXT_BUILTIN_EXPR_STRINGS
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define EXT_STRINGOPS TPP_EXT_BUILTIN_EXPR_STRINGS
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_EXT_BUILTIN_EXPR_STRINGS */
+#ifdef TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#define TPP_EXT_GCC_IFELSE TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define EXT_GCC_IFELSE TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
+#ifdef TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#define TPP_EXT_IFELSE_IN_EXPR TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define EXT_IFELSE_IN_EXPR TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_WG_COMMENT)
 #define WG_COMMENT TPP_WG_COMMENT
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_WG_COMMENT */
@@ -2505,6 +2537,39 @@ alias("W_EXPECTED_RPAREN_AFTER_VA_OPT", "TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT");
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT)
 #define W_EXPECTED_RPAREN_AFTER_VA_OPT TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT */
+#ifdef TPP_W_EOF_BEFORE_ENDIF
+#define TPP_W_IF_WITHOUT_ENDIF TPP_W_EOF_BEFORE_ENDIF
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_IF_WITHOUT_ENDIF TPP_W_EOF_BEFORE_ENDIF
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_EOF_BEFORE_ENDIF */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_ENDIF_WITHOUT_IF)
+#define W_ENDIF_WITHOUT_IF TPP_W_ENDIF_WITHOUT_IF
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_ENDIF_WITHOUT_IF */
+#ifdef TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+#define TPP_W_ELSE_WITHOUT_IF TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_ELSE_WITHOUT_IF TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_ELIF_OR_ELSE_WITHOUT_IF */
+#ifdef TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+#define TPP_W_ELSE_AFTER_ELSE TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_ELSE_AFTER_ELSE TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
+#ifdef TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+#define TPP_W_ELIF_WITHOUT_IF TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_ELIF_WITHOUT_IF TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_ELIF_OR_ELSE_WITHOUT_IF */
+#ifdef TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+#define TPP_W_ELIF_AFTER_ELSE TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_ELIF_AFTER_ELSE TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
 /*[[[end]]]*/
 
 
@@ -2513,34 +2578,6 @@ alias("W_EXPECTED_RPAREN_AFTER_VA_OPT", "TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT");
 //TODO:/* 8*/ DEF_WARNING(W_EXPECTED_RPAREN_AFTER_DEFINED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(")") " after " Q("defined") ", but got " TOK_S, TOK_A))             /* OLD(TPPWarn_ExpectedRParenAfterDefined). */
 //TODO:/*14*/ DEF_WARNING(W_EXPECTED_INCLUDE_STRING, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected #include-string, but got " TOK_S, TOK_A))                                     /* OLD(TPPWarn_ExpectedIncludeString). */
 //TODO:/*15*/ DEF_WARNING(W_FILE_NOT_FOUND, (WG_ENVIRON), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("File not found: " Q("%.*s"), (int)ARG(size_t), temp); })           /* [char const *,size_t] OLD(TPPWarn_IncludeFileNotFound). */
-//TODO:/*28*/ DEF_WARNING(W_ELSE_WITHOUT_IF, (WG_SYNTAX), WSTATE_ERROR, WARNF("#else without #if"))                                                          /* OLD(TPPWarn_ElseWithoutIfdef). */
-//TODO:/*29*/ DEF_WARNING(W_ELSE_AFTER_ELSE, (WG_SYNTAX), WSTATE_ERROR, {
-//TODO:	/* [struct TPPIfdefStackSlot *] OLD(TPPWarn_ElseAfterElse). */
-//TODO:	struct TPPIfdefStackSlot *ifdef_slot;
-//TODO:	WARNF("#else after #else\n");
-//TODO:	ifdef_slot = ARG(struct TPPIfdefStackSlot *);
-//TODO:	WARNF(TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
-//TODO:	      ? "%s(%d) : "
-//TODO:	      : "%s:%d: ",
-//TODO:	      ifdef_slot->iss_file->f_name,
-//TODO:	      (int)(ifdef_slot->iss_line + 1));
-//TODO:	WARNF("See reference to previous #else");
-//TODO:})
-//TODO:/*30*/ DEF_WARNING(W_ELIF_WITHOUT_IF, (WG_SYNTAX), WSTATE_ERROR, WARNF("#elif without #if")) /* OLD(TPPWarn_ElifWithoutIfdef). */
-//TODO:/*31*/ DEF_WARNING(W_ELIF_AFTER_ELSE, (WG_SYNTAX), WSTATE_ERROR, {
-//TODO:	/* [struct TPPIfdefStackSlot *] OLD(TPPWarn_ElifAfterElse). */
-//TODO:	struct TPPIfdefStackSlot *ifdef_slot;
-//TODO:	WARNF("#elif after #else\n");
-//TODO:	ifdef_slot = ARG(struct TPPIfdefStackSlot *);
-//TODO:	WARNF(TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
-//TODO:	      ? "%s(%d) : "
-//TODO:	      : "%s:%d: ",
-//TODO:	      ifdef_slot->iss_file->f_name,
-//TODO:	      (int)(ifdef_slot->iss_line + 1));
-//TODO:	WARNF("See reference to #else");
-//TODO:})
-//TODO:/*32*/ DEF_WARNING(W_IF_WITHOUT_ENDIF, (WG_SYNTAX), WSTATE_ERROR, WARNF("#if without #endif"))                                                             /* [struct TPPIfdefStackSlot *] OLD(TPPWarn_IfdefWithoutEndif). */
-//TODO:/*33*/ DEF_WARNING(W_ENDIF_WITHOUT_IF, (WG_SYNTAX), WSTATE_ERROR, WARNF("#endif without #if"))                                                             /* OLD(TPPWarn_EndifWithoutIfdef). */
 //TODO:/*35*/ DEF_WARNING(W_EXPECTED_STRING_AFTER_LINE, (WG_SYNTAX, WG_VALUE), WSTATE_ERROR, WARNF("Expected string after #line, but got " Q("%s"), CONST_STR())) /* [struct TPPConst *] OLD(TPPWarn_ExpectedStringAfterLine). */
 //TODO:/*36*/ DEF_WARNING(W_MACRO_NOT_DEFINED, (WG_MACROS), WSTATE_DISABLED, WARNF("Macro " Q("%s") " is not defined", KWDNAME()))                                /* [struct TPPKeyword *] OLD(TPPWarn_MacroDoesntExist). */
 //TODO:/*40*/ DEF_WARNING(W_EXPECTED_COLON_AFTER_QUESTION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(":") " after " Q("?")))                                /* OLD(TPPWarn_ExpectedColonAfterQuestion). */

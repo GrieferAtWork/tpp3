@@ -24,6 +24,7 @@
 #include "api.h"
 
 #include "config.h"
+#include "expr.h"
 #include "extensions.h"
 #include "features.h"
 #include "file.h"
@@ -121,6 +122,496 @@ skip_garbage_without_warning:
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self);
 #endif /* TPP_HAVE_CPP_DEFINE */
+
+
+#if TPP_HAVE_CPP_IF_ELSE_ENDIF
+/* Call with the current token loaded as "if" or "elif"
+ * @param: p_directive_start: [out] On success (TPP_EOK or TPP_ENOENT), set
+ *                                  to the start of the "if" or "elif" keyword
+ * @return: TPP_EOK:    Directive evaluates to "true"
+ * @return: TPP_ENOENT: Directive evaluates to "false"
+ * @return: * :         Error */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
+                             tpp_char const **p_directive_start) {
+	tpp_errno result;
+	tpp_token_id tok;
+	tpp_token const *const token = tpp_lexer_gettoken(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_char const *trailing_lf_start;
+	tpp_char const *trailing_lf_end;
+	tpp_char const *directive_iter;
+	tpp_expr_value expr_value;
+	tpp_size directive_keyword_len;
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+	char const *directive_name = (char const *)token->tt_kwd->tk_kwd;
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+	directive_iter = file->tf_pos;
+	file->tf_pos = token->tt_start; /* Retain start of "if" / "elif" keyword */
+	directive_keyword_len = (tpp_size)(directive_iter - file->tf_pos);
+
+	/* Seek end-of-line */
+	do {
+		tok = tpp_lexer_yieldraw_at_blocking(self, &directive_iter);
+		if (TPP_TOK_ISERR(tok)) {
+			tpp_assert(TPP_TOK_ASERR(tok) != TPP_ENOENT);
+			return TPP_TOK_ASERR(tok);
+		}
+	} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+
+	trailing_lf_start = token->tt_start;
+	trailing_lf_end   = directive_iter;
+	tpp_file_autopopfile_pushoff(file);
+	tpp_file_pushifdef(file);
+	tpp_file_pusheof(file);
+	*p_directive_start = file->tf_pos;     /* Restore to continue pointing at effective start of expression */
+	file->tf_end = trailing_lf_start;      /* Mark as EOF */
+	file->tf_pos += directive_keyword_len; /* Skip over leading keyword */
+
+	/* Parse expression */
+	result = tpp_lexer_parseexpr(self, &expr_value);
+
+	/* Evaluate expression result (and warn about trailing tokens) */
+	if (!TPP_ISERR(result)) {
+		bool b_expr_value;
+		result = tpp_expr_value_istrue(&expr_value, &b_expr_value);
+		tpp_expr_value_fini(&expr_value);
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+		if (!TPP_ISERR(result) && tpp_lexer_gettok(self) != TPP_TOK_EOF)
+			result = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, directive_name);
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+		if (!TPP_ISERR(result))
+			result = b_expr_value ? TPP_EOK : TPP_ENOENT;
+	}
+	file->tf_pos = trailing_lf_end; /* Tell caller to continue parsing *after* EOL */
+	tpp_file_popeof(file);
+	tpp_file_popifdef(file);
+	tpp_file_autopopfile_pop(file);
+	return result;
+}
+
+/* Call with the current token loaded as "ifdef", "ifndef", "elifdef" or "elifndef"
+ * @param: p_directive_start: [out] On success (TPP_EOK or TPP_ENOENT), set
+ *                                  to the start of the "ifdef", ... keyword
+ * @return: TPP_EOK:    Directive evaluates to "true"
+ * @return: TPP_ENOENT: Directive evaluates to "false"
+ * @return: * :         Error */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
+                                tpp_char const **p_directive_start) {
+	tpp_errno result;
+	tpp_token_id tok;
+	tpp_token const *const token = tpp_lexer_gettoken(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_char const *directive_iter;
+	tpp_token_id const mode = token->tt_id;
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+	char const *directive_name = (char const *)token->tt_kwd->tk_kwd;
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+	bool is_keyword_defined;
+	directive_iter = file->tf_pos;
+	file->tf_pos = token->tt_start; /* Retain start of "ifdef" / "ifndef" keyword */
+
+	/* Skip over space tokens to find the (presumably) keyword to test for being defined. */
+	do {
+		tok = tpp_lexer_yieldraw_at_blocking(self, &directive_iter);
+	} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok)) {
+		file->tf_pos = directive_iter;
+		return TPP_TOK_ASERR(tok);
+	}
+
+	/* Check if keyword is defined */
+	if (TPP_TOK_ISKEYWORD(tok)) {
+		is_keyword_defined = tpp_lexer_getkeyworddefined(self, tpp_lexer_gettokenkwd(self));
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF
+		tpp_char const *saved_pos = file->tf_pos;
+		file->tf_pos = directive_iter;
+		result = tpp_lexer_warnf(self, TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF, directive_name);
+		file->tf_pos = saved_pos;
+		if (TPP_ISERR(result))
+			return result;
+#endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF */
+		is_keyword_defined = false;
+	}
+
+	/* Warn about extra tokens after the #ifdef-keyword */
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+	if (!TPP_TOK_ISLF_OR_COMMENT(tok) /*&& tok != TPP_TOK_EOF*/) {
+		do {
+			tok = tpp_lexer_yieldraw_at_blocking(self, &directive_iter);
+		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok)) {
+			file->tf_pos = directive_iter;
+			return TPP_TOK_ASERR(tok);
+		}
+	}
+	if (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+		tpp_char const *saved_pos = file->tf_pos;
+		file->tf_pos = directive_iter;
+		result = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, directive_name);
+		file->tf_pos = saved_pos;
+		if (TPP_ISERR(result))
+			return result;
+		do {
+			tok = tpp_lexer_yieldraw_at_blocking(self, &directive_iter);
+			if (TPP_TOK_ISERR(tok)) {
+				tpp_assert(TPP_TOK_ASERR(tok) != TPP_ENOENT);
+				return TPP_TOK_ASERR(tok);
+			}
+		} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+	}
+#else /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+	while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+		tok = tpp_lexer_yieldraw_at_blocking(self, &directive_iter);
+		if (TPP_TOK_ISERR(tok)) {
+			tpp_assert(TPP_TOK_ASERR(tok) != TPP_ENOENT);
+			return TPP_TOK_ASERR(tok);
+		}
+	}
+#endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+
+	/* Load "directive_iter" into file, and extract start of directive */
+	*p_directive_start = file->tf_pos;
+	file->tf_pos = directive_iter;
+
+	if (mode == TPP_KWD_ifndef) {
+		/* TODO: Try to register as include-guard for current file */
+		/* TODO: -Wheader-guard */
+	}
+
+	if (mode == TPP_KWD_ifndef ||
+	    mode == TPP_KWD_elifndef)
+		is_keyword_defined = !is_keyword_defined;
+	return is_keyword_defined ? TPP_EOK : TPP_ENOENT;
+}
+
+/* Load the next #ifdef-like directive into "self", and return it.
+ * On entry, allowed to be pretty much anywhere (method starts out
+ * by seeking the next newline, then scanning for directives from
+ * there on...)
+ *
+ * @return: TPP_KWD_ifdef:    Found an #ifdef-directive (current token points at like "# [ifdef] foo")
+ * @return: TPP_KWD_ifndef:   Found an #ifdef-directive (current token points at like "# [ifndef] foo")
+ * @return: TPP_KWD_elif:     Found an #ifdef-directive (current token points at like "# [elif] foo")
+ * @return: TPP_KWD_elifdef:  Found an #ifdef-directive (current token points at like "# [elifdef] foo")
+ * @return: TPP_KWD_elifndef: Found an #ifdef-directive (current token points at like "# [elifndef] foo")
+ * @return: TPP_KWD_else:     Found an #ifdef-directive (current token points at like "# [else]")
+ * @return: TPP_KWD_endif:    Found an #ifdef-directive (current token points at like "# [endif]")
+ * @return: TPP_TOK_EOF:      End-of-file (no warning issued, yet)
+ * @return: TPP_TOK_ISERR(*): Error
+ */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_seek_next_ifdef_directive(tpp_lexer *tpp_restrict self) {
+	tpp_token_id tok = tpp_lexer_gettok(self);
+
+	/* Seek until next line-feed */
+seek_next_lf:
+	while (!TPP_TOK_ISLF_OR_COMMENT(tok)) {
+		tok = tpp_lexer_yieldraw_blocking(self);
+		if (TPP_TOK_ISERR(tok) || tok == TPP_TOK_EOF)
+			return tok;
+	}
+
+	/* Seek next non-whitespace/comment token (i.e.: the first non-whitespace token) */
+	do {
+		tok = tpp_lexer_yieldraw_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+
+	/* First non-whitespace/comment token must be '#' */
+	if (tok != '#') {
+		/* Deal with shell comment tokens (must be re-interpreted as directives) */
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+		if (tok == TPP_TOK_SHELL_COMMENT) {
+			tpp_token *const token = tpp_lexer_gettoken(self);
+			token->tt_end = token->tt_start + 1;
+/*			token->tt_id = tok = TPP_TOK_OFCHAR('#'); * Not needed */
+		} else
+#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+		{
+			goto seek_next_lf;
+		}
+	}
+
+	/* Find token that comes after the leading '#'
+	 * -> This (may be) the that our caller is interested in. */
+	do {
+		tok = tpp_lexer_yieldraw_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+
+	switch (tok) {
+
+	case TPP_KWD_if:
+	case TPP_KWD_ifdef:
+	case TPP_KWD_ifndef:
+	case TPP_KWD_elif:
+	case TPP_KWD_elifdef:
+	case TPP_KWD_elifndef:
+	case TPP_KWD_else:
+	case TPP_KWD_endif:
+		/* Found a preprocessor directive of interest */
+		return tok;
+
+		/* Special case for #error / #warning directives: allow incomplete strings
+		 * >> #if 0
+		 * >> #error That's allowed
+		 * >> #endif
+		 *
+		 * >> #if 0
+		 * >> #not_error But this isn't
+		 * >> #endif
+		 */
+#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING
+	{
+		tpp_errno error;
+#if TPP_HAVE_CPP_ERROR
+		if (0) {
+	case TPP_KWD_error:
+			if (!tpp_lexer_getext(self, TPP_EXT_CPP_ERROR))
+				break;
+		}
+#endif /* TPP_HAVE_CPP_ERROR */
+#if TPP_HAVE_CPP_WARNING
+		if (0) {
+	case TPP_KWD_warning:
+			if (!tpp_lexer_getext(self, TPP_EXT_CPP_WARNING))
+				break;
+		}
+#endif /* TPP_HAVE_CPP_WARNING */
+		error = tpp_lexer_seek_eol(self, &tpp_lexer_gettoken(self)->tt_end
+		                           tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_EOF));
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+		break;
+	}
+#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING */
+
+	default: break;
+	}
+	goto seek_next_lf;
+}
+
+/* Seek end of an inactive "#if 1 ... #else"-style block.
+ * - Warn about "#elif" / "#else" directives via "TPP_W_ELIF_OR_ELSE_AFTER_ELSE"
+ */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_seek_end_of_next_unmatched_endif(tpp_lexer *tpp_restrict self,
+                                           tpp_ifdef_stack_entry *ifdef_entry) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_errno error;
+	tpp_token_id tok;
+again:
+	tok = tpp_lexer_seek_next_ifdef_directive(self);
+	switch (tok) {
+	case TPP_TOK_EOF:
+#if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+		error = tpp_lexer_warnf_lc(self, ifdef_entry->tidse_created, TPP_W_EOF_BEFORE_ENDIF);
+		if (TPP_ISERR(error))
+			return error;
+#endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+		return TPP_EOK;
+
+	case TPP_KWD_if:
+	case TPP_KWD_ifdef:
+	case TPP_KWD_ifndef: {
+		/* Skip over nested block */
+		tpp_ifdef_stack_entry temp_entry;
+		temp_entry.tidse_mode    = TPP_IFDEF_MODE_IFDEF;
+		temp_entry.tidse_created = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+		temp_entry.tidse_updated = temp_entry.tidse_created;
+		error = tpp_lexer_seek_end_of_next_unmatched_endif(self, &temp_entry);
+		if (TPP_ISERR(error))
+			return error;
+	}	break;
+
+	case TPP_KWD_elif:
+	case TPP_KWD_elifdef:
+	case TPP_KWD_elifndef:
+	case TPP_KWD_else: {
+		tpp_lcinfo ifdef_location = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+#if TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+		error = tpp_lexer_warnf(self, TPP_W_ELIF_OR_ELSE_AFTER_ELSE, ifdef_entry,
+		                        (char const *)tpp_lexer_gettokenkwd(self)->tk_kwd);
+		if (TPP_ISERR(error))
+			return error;
+#endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
+		ifdef_entry->tidse_updated = ifdef_location;
+	}	break;
+
+	case TPP_KWD_endif:
+		/* Check for -Wendif-labels */
+#if TPP_HAVE_TPP_W_ENDIF_LABELS
+		do {
+			tok = tpp_lexer_yieldraw_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		if (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+			error = tpp_lexer_warnf(self, TPP_W_ENDIF_LABELS);
+			if (TPP_ISERR(error))
+				return error;
+		}
+		while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+			tok = tpp_lexer_yieldraw_blocking(self);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+		}
+#else /* TPP_HAVE_TPP_W_ENDIF_LABELS */
+		do {
+			tok = tpp_lexer_yieldraw_blocking(self);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+		} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+#endif /* !TPP_HAVE_TPP_W_ENDIF_LABELS */
+		return TPP_EOK;
+
+	default:
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		break;
+	}
+	goto again;
+}
+
+/* Seek end of an inactive "#if 0"-style block.
+ * - If a "#else" or "#elif 1"-style block is found, push+create a
+ *   new #ifdef-entry using "ifdef_location" as the created-position
+ * - If a "#endif" is found, behave like "tpp_lexer_seek_end_of_next_unmatched_endif" */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_seek_end_of_inactive_ifdef(tpp_lexer *tpp_restrict self,
+                                     tpp_lcinfo ifdef_location) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_errno error;
+	tpp_token_id tok;
+again:
+	tok = tpp_lexer_seek_next_ifdef_directive(self);
+	switch (tok) {
+	case TPP_TOK_EOF:
+#if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+		error = tpp_lexer_warnf_lc(self, ifdef_location, TPP_W_EOF_BEFORE_ENDIF);
+		if (TPP_ISERR(error))
+			return error;
+#endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+		return TPP_EOK;
+
+	case TPP_KWD_if:
+	case TPP_KWD_ifdef:
+	case TPP_KWD_ifndef: {
+		/* Skip over nested block */
+		tpp_ifdef_stack_entry temp_entry;
+		temp_entry.tidse_mode    = TPP_IFDEF_MODE_IFDEF;
+		temp_entry.tidse_created = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+		temp_entry.tidse_updated = temp_entry.tidse_created;
+		error = tpp_lexer_seek_end_of_next_unmatched_endif(self, &temp_entry);
+		if (TPP_ISERR(error))
+			return error;
+	}	break;
+
+	{
+		tpp_char const *directive_start;
+		tpp_ifdef_stack_entry *ifdef_entry;
+	case TPP_KWD_elifdef:
+	case TPP_KWD_elifndef:
+		error = tpp_lexer_parse_ifdef_directive(self, &directive_start);
+		goto handle_pp_if_error;
+	case TPP_KWD_elif:
+		error = tpp_lexer_parse_if_directive(self, &directive_start);
+handle_pp_if_error:
+		if (error == TPP_ENOENT)
+			goto again;
+		if (TPP_ISERR(error))
+			return error;
+
+		/* Create a new #ifdef-entry */
+		ifdef_entry = tpp_ifdef_stack_append(tpp_file_getifdef(file));
+		if tpp_unlikely(!ifdef_entry)
+			return TPP_ENOMEM;
+		ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_IFDEF;
+		ifdef_entry->tidse_created = ifdef_location;
+		ifdef_entry->tidse_updated = tpp_file_lcinfo(file, directive_start);
+		return TPP_EOK;
+	}	break;
+
+
+	case TPP_KWD_else: {
+		tpp_ifdef_stack_entry *ifdef_entry;
+		tpp_lcinfo updated_at = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+
+		/* Check for -Wendif-labels */
+#if TPP_HAVE_TPP_W_ENDIF_LABELS
+		do {
+			tok = tpp_lexer_yieldraw_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		if (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+			error = tpp_lexer_warnf(self, TPP_W_ENDIF_LABELS);
+			if (TPP_ISERR(error))
+				return error;
+		}
+		while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+			tok = tpp_lexer_yieldraw_blocking(self);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+		}
+#else /* TPP_HAVE_TPP_W_ENDIF_LABELS */
+		do {
+			tok = tpp_lexer_yieldraw_blocking(self);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+		} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+#endif /* !TPP_HAVE_TPP_W_ENDIF_LABELS */
+
+		/* Create a new #ifdef-entry */
+		ifdef_entry = tpp_ifdef_stack_append(tpp_file_getifdef(file));
+		if tpp_unlikely(!ifdef_entry)
+			return TPP_ENOMEM;
+		ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_IFDEF;
+		ifdef_entry->tidse_created = ifdef_location;
+		ifdef_entry->tidse_updated = updated_at;
+		return TPP_EOK;
+	}	break;
+
+	case TPP_KWD_endif:
+		/* Check for -Wendif-labels */
+#if TPP_HAVE_TPP_W_ENDIF_LABELS
+		do {
+			tok = tpp_lexer_yieldraw_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		if (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+			error = tpp_lexer_warnf(self, TPP_W_ENDIF_LABELS);
+			if (TPP_ISERR(error))
+				return error;
+		}
+		while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+			tok = tpp_lexer_yieldraw_blocking(self);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+		}
+#else /* TPP_HAVE_TPP_W_ENDIF_LABELS */
+		do {
+			tok = tpp_lexer_yieldraw_blocking(self);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+		} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+#endif /* !TPP_HAVE_TPP_W_ENDIF_LABELS */
+		return TPP_EOK;
+
+	default:
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		break;
+	}
+	goto again;
+}
+#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
 
 
 /* Process a preprocessor directive, with the currently loaded token being the leading '#'
@@ -244,34 +735,164 @@ again_yield_directive_iter:
 
 /************************************************************************/
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF
-	case TPP_KWD_if:
-	case TPP_KWD_elif:
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
-			goto handle_unknown_directive;
-		/* TODO: -Wundef */
-		/* TODO */
-		goto seek_end_of_line;
-#define WANT_seek_end_of_line
-
+	{
+		tpp_errno error;
+		tpp_ifdef_stack_entry *ifdef_entry;
+		tpp_char const *directive_start;
 	case TPP_KWD_ifdef:
 	case TPP_KWD_ifndef:
+		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
+			goto handle_unknown_directive;
+handle_pp_ifdef:
+		file->tf_pos = directive_iter;
+		error = tpp_lexer_parse_ifdef_directive(self, &directive_start);
+		goto handle_pp_if_error;
+
+	case TPP_KWD_if:
+		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
+			goto handle_unknown_directive;
+handle_pp_if:
+		/* Evaluate expression */
+		file->tf_pos = directive_iter;
+		error = tpp_lexer_parse_if_directive(self, &directive_start);
+handle_pp_if_error:
+		if (error == TPP_ENOENT) {
+			/* false-condition -> seek end-of-block */
+			tpp_lcinfo created_at = tpp_file_lcinfo(file, directive_start);
+			error = tpp_lexer_seek_end_of_inactive_ifdef(self, created_at);
+			return TPP_TOK_OFERR_OR_EOF(error);
+		}
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+		ifdef_entry = tpp_ifdef_stack_append(tpp_file_getifdef(file));
+		if tpp_unlikely(!ifdef_entry)
+			return TPP_TOK_ENOMEM;
+		ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_IFDEF;
+		ifdef_entry->tidse_created = tpp_file_lcinfo(file, directive_start);
+		ifdef_entry->tidse_updated = ifdef_entry->tidse_created;
+		return TPP_TOK_EOF;
+	}
+
+	case TPP_KWD_elif:
 	case TPP_KWD_elifdef:
 	case TPP_KWD_elifndef:
+	case TPP_KWD_else: {
+		tpp_errno error;
+		tpp_lcinfo lc_update;
+		tpp_ifdef_stack_entry *ifdef_entry;
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
-		/* TODO: -Wheader-guard */
-		/* TODO */
-		goto seek_end_of_line;
-#define WANT_seek_end_of_line
 
-	case TPP_KWD_else:
-	case TPP_KWD_endif:
+		/* Check for error-case: #ifdef-stack is empty */
+		if (tpp_ifdef_stack_isempty(tpp_file_getifdef(file))) {
+#if TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF
+			file->tf_pos = directive_iter;
+			error = tpp_lexer_warnf(self, TPP_W_ELIF_OR_ELSE_WITHOUT_IF,
+			                        (char const *)token->tt_kwd->tk_kwd);
+			file->tf_pos = token->tt_start;
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
+#endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF */
+			if (result == TPP_KWD_elif)
+				goto handle_pp_if;
+			if (result == TPP_KWD_elifdef)
+				goto handle_pp_ifdef;
+			if (result == TPP_KWD_elifndef)
+				goto handle_pp_ifdef;
+			ifdef_entry = tpp_ifdef_stack_append(tpp_file_getifdef(file));
+			if tpp_unlikely(!ifdef_entry)
+				return TPP_TOK_ENOMEM;
+			ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_ELSE;
+			ifdef_entry->tidse_created = tpp_file_lcinfo(file, file->tf_pos);
+			ifdef_entry->tidse_updated = ifdef_entry->tidse_created;
+			file->tf_pos = directive_iter;
+			goto seek_end_of_line;
+#define WANT_seek_end_of_line
+		}
+
+		/* Load the most-recent #ifdef-stack entry */
+		ifdef_entry = tpp_ifdef_stack_getlast(tpp_file_getifdef(file));
+		lc_update = tpp_file_lcinfo(file, file->tf_pos);
+#if TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE
+		if (ifdef_entry->tidse_mode == TPP_IFDEF_MODE_ELSE) {
+			file->tf_pos = directive_iter;
+			error = tpp_lexer_warnf_lc(self, lc_update, TPP_W_ELIF_OR_ELSE_AFTER_ELSE, ifdef_entry,
+			                           (char const *)token->tt_kwd->tk_kwd);
+			file->tf_pos = token->tt_start;
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
+		}
+#endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
+		ifdef_entry->tidse_updated = lc_update;
+
+		/* Continue parsing after directive */
+		file->tf_pos = directive_iter;
+
+		/* Check for -Wendif-labels */
+#if TPP_HAVE_TPP_W_ENDIF_LABELS
+		if (result == TPP_KWD_else) {
+			do {
+				result = tpp_lexer_yieldraw_blocking(self);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
+			if (TPP_TOK_ISERR(result))
+				return result;
+			if (!TPP_TOK_ISLF_OR_COMMENT(result) && result != TPP_TOK_EOF) {
+				error = tpp_lexer_warnf(self, TPP_W_ENDIF_LABELS);
+				if (TPP_ISERR(error))
+					return TPP_TOK_OFERR(error);
+			}
+		}
+#endif /* TPP_HAVE_TPP_W_ENDIF_LABELS */
+
+		/* Seek end of next unmatched #endif-directive */
+		error = tpp_lexer_seek_end_of_next_unmatched_endif(self, ifdef_entry);
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+
+		/* Remove #ifdef-stack entry */
+		tpp_assert(!tpp_ifdef_stack_isempty(tpp_file_getifdef(file)));
+		tpp_assert(ifdef_entry == tpp_ifdef_stack_getlast(tpp_file_getifdef(file)));
+		tpp_ifdef_stack_remove(tpp_file_getifdef(file));
+		return TPP_TOK_EOF;
+	}	break;
+
+	case TPP_KWD_endif: {
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
-		/* TODO: -Wno-endif-labels */
-		/* TODO */
+		file->tf_pos = directive_iter;
+
+		if (tpp_ifdef_stack_isempty(tpp_file_getifdef(file))) {
+#if TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_ENDIF_WITHOUT_IF);
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
+#endif /* TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF */
+			goto seek_end_of_line;
+#define WANT_seek_end_of_line
+		}
+
+		/* Remove #ifdef-stack entry */
+		tpp_assert(!tpp_ifdef_stack_isempty(tpp_file_getifdef(file)));
+		tpp_ifdef_stack_remove(tpp_file_getifdef(file));
+
+		/* Check for -Wendif-labels */
+#if TPP_HAVE_TPP_W_ENDIF_LABELS
+		do {
+			result = tpp_lexer_yieldraw_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
+		if (TPP_TOK_ISERR(result))
+			return result;
+		if (!TPP_TOK_ISLF_OR_COMMENT(result) && result != TPP_TOK_EOF) {
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_ENDIF_LABELS);
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
+		}
+#endif /* TPP_HAVE_TPP_W_ENDIF_LABELS */
+
+		/* Seek end-of-line */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
+	}	break;
 #endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
 /************************************************************************/
 
@@ -667,7 +1288,9 @@ again:
 			}
 
 			tpp_lexer_autopopfile_pushoff(self);
+			self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 			result = tpp_lexer_process_directive(self);
+			self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 			tpp_lexer_autopopfile_pop(self);
 			if (TPP_TOK_ISERR(result))
 				break;
@@ -747,7 +1370,9 @@ again:
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_DIRECTIVES))
 			break; /* Directives are disabled. */
 		tpp_lexer_autopopfile_pushoff(self);
+		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 		result = tpp_lexer_process_directive(self);
+		self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 		tpp_lexer_autopopfile_pop(self);
 		if (TPP_TOK_ISERR(result))
 			break;

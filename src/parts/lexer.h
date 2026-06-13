@@ -23,11 +23,12 @@
 #include "api.h"
 
 #include "config.h"
+#include "expr.h"
 #include "extensions.h"
+#include "features.h"
 #include "file.h"
 #include "keyword.h"
 #include "token.h"
-#include "features.h"
 #include "warnings.h"
 
 /*[[[tpp-begin]]]*/
@@ -123,20 +124,27 @@ typedef struct tpp_lexer {
 #ifdef TPP_CONFIG_WARNPRINTER
 #if TPP_CONFIG_WARNPRINTER_NEEDS_ARG
 	void             *TPP_INTERNAL(tl_warnprinterarg); /* [?..?] Argument for "TPP_CONFIG_WARNPRINTER" */
-#define tpp_lexer_getwarnprinter(self)    (&TPP_CONFIG_WARNPRINTER)
-#define tpp_lexer_getwarnprinterarg(self) (self)->TPP_INTERNAL(tl_warnprinterarg)
+#define tpp_lexer_getwarnprinter(self)       (&TPP_CONFIG_WARNPRINTER)
+#define tpp_lexer_getwarnprinterarg(self)    (self)->TPP_INTERNAL(tl_warnprinterarg)
+#define tpp_lexer_setwarnprinterarg(self, v) (void)((self)->TPP_INTERNAL(tl_warnprinterarg) = (v))
 #else /* TPP_CONFIG_WARNPRINTER_NEEDS_ARG */
 #define TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER 1
 #define tpp_lexer_getwarnprinter(self)    &_tpp_lexer_wrapped_warnprinter
 #define tpp_lexer_getwarnprinterarg(self) NULL
 #endif /* !TPP_CONFIG_WARNPRINTER_NEEDS_ARG */
+#elif TPP_HAVE_BUILTIN_WARNPRINTER > 0
+#define TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER 1
+#define tpp_lexer_getwarnprinter(self)    (&_tpp_lexer_builtin_warnprinter)
+#define tpp_lexer_getwarnprinterarg(self) NULL
 #else /* TPP_CONFIG_WARNPRINTER */
 	tpp_formatprinter TPP_INTERNAL(tl_warnprinter);    /* [0..1] Warning printer (or "NULL" to use "fwrite(stderr)") */
 	void             *TPP_INTERNAL(tl_warnprinterarg); /* [valid_if(TPP_INTERNAL(tl_warnprinter) != NULL)] */
 #define _tpp_lexer_init_warnprinter(self) , (self)->TPP_INTERNAL(tl_warnprinter) = NULL
-#define tpp_lexer_setwarnprinter(self, printer, arg) \
-	(void)((self)->TPP_INTERNAL(tl_warnprinter)    = (printer),    \
+#define tpp_lexer_setwarnprinter(self, printer, arg)            \
+	(void)((self)->TPP_INTERNAL(tl_warnprinter)    = (printer), \
 	       (self)->TPP_INTERNAL(tl_warnprinterarg) = (arg))
+#define tpp_lexer_setwarnprinterarg(self, v) \
+	(void)((self)->TPP_INTERNAL(tl_warnprinterarg) = (v))
 #if TPP_HAVE_BUILTIN_WARNPRINTER
 #define TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER 1
 #define tpp_lexer_getwarnprinter(self) ((self)->TPP_INTERNAL(tl_warnprinter) ? (self)->TPP_INTERNAL(tl_warnprinter) : &_tpp_lexer_builtin_warnprinter)
@@ -148,19 +156,86 @@ typedef struct tpp_lexer {
 #endif /* !TPP_CONFIG_WARNPRINTER */
 #else /* TPP_HAVE_WARNINGS */
 #define _tpp_lexer_init_warn(self) /* nothing */
-#define tpp_lexer_setwarnprinter(self, printer, arg) (void)0
 #endif /* !TPP_HAVE_WARNINGS */
 #ifndef _tpp_lexer_init_warnprinter
 #define _tpp_lexer_init_warnprinter(self) /* nothing */
 #endif /* !_tpp_lexer_init_warnprinter */
 
 
+	/* Expression parser configuration */
+#undef TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR
+#undef TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG
+#if TPP_HAVE_LEXER_PARSEEXPR
+	/* User-defined callback for parsing "#if"-style expressions
+	 * - This callback is invoked in a context where "self" points
+	 *   before the expression's first token (meaning that this
+	 *   callback is responsible to do the initial yield using
+	 *   whatever method it wants to use).
+	 * - When it is known that the expression has finite length,
+	 *   as in: it has to end before EOF, or at the next unmatched
+	 *   ')'-token, the caller will have configured the lexer's
+	 *   current EOF accordingly (and disabled file-popping)
+	 * - When this function returns an error, the caller will rewind
+	 *   back to the start of the expression (or even further, if
+	 *   applicable; meaning this callback doesn't need to concern
+	 *   itself with rollback)
+	 *
+	 * @return: TPP_EOK:         Success (*result was initialized)
+	 * @return: TPP_ENOMEM:      Out of memory
+	 * @return: TPP_EIO:         Filesystem I/O operation failed
+	 * @return: TPP_EWOULDBLOCK: Operation would block
+	 * @return: TPP_ELEXERROR:   A lexer error happened
+	 * @return: TPP_EWARNPRINT:  Error while printing a warning */
+#ifdef TPP_CONFIG_EXPRPARSER
+#if TPP_CONFIG_EXPRPARSER_NEEDS_ARG
+	void *TPP_INTERNAL(tl_expr_parser_arg); /* [?..?][valid_if(tl_expr_parser_cb)] Cookie for "tl_expr_parser_cb" */
+#define tpp_lexer_getparseexprarg(self)    (self)->TPP_INTERNAL(tl_expr_parser_arg)
+#define tpp_lexer_setparseexprarg(self, v) (void)((self)->TPP_INTERNAL(tl_expr_parser_arg) = (v))
+#define tpp_lexer_parseexpr(self, result) TPP_CONFIG_EXPRPARSER(tpp_lexer_getparseexprarg(self), self, result)
+#else /* TPP_CONFIG_EXPRPARSER_NEEDS_ARG */
+#define tpp_lexer_parseexpr(self, result) TPP_CONFIG_EXPRPARSER(self, result)
+#endif /* !TPP_CONFIG_EXPRPARSER_NEEDS_ARG */
+#elif TPP_HAVE_BUILTIN_EXPRPARSER > 0
+#define TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR 1
+#define tpp_lexer_parseexpr(self, result) _tpp_lexer_builtin_parseexpr(self, result)
+#else /* TPP_CONFIG_EXPRPARSER */
+	/* User-defined override for parsing preprocessor expressions */
+	tpp_errno (TPPCALL *TPP_INTERNAL(tl_expr_parser_cb))(void *arg, struct tpp_lexer *tpp_restrict self,
+	                                                     tpp_expr_value *tpp_restrict result);
+	void *TPP_INTERNAL(tl_expr_parser_arg); /* [?..?][valid_if(tl_expr_parser_cb)] Cookie for "tl_expr_parser_cb" */
+#define _tpp_lexer_init_parseexpr(self) , (self)->TPP_INTERNAL(tl_expr_parser_cb) = NULL
+#define tpp_lexer_setparseexpr(self, cb, arg)               \
+	(void)((self)->TPP_INTERNAL(tl_expr_parser_cb)  = (cb), \
+	       (self)->TPP_INTERNAL(tl_expr_parser_arg) = (arg))
+#define tpp_lexer_getparseexprarg(self)    (self)->TPP_INTERNAL(tl_expr_parser_arg)
+#define tpp_lexer_setparseexprarg(self, v) (void)((self)->TPP_INTERNAL(tl_expr_parser_arg) = (v))
+#if TPP_HAVE_BUILTIN_EXPRPARSER
+#define TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG 1
+#define tpp_lexer_getparseexpr(self)           \
+	((self)->TPP_INTERNAL(tl_expr_parser_cb)   \
+	 ? (self)->TPP_INTERNAL(tl_expr_parser_cb) \
+	 : &_tpp_lexer_builtin_parseexpr_with_arg)
+#define tpp_lexer_parseexpr(self, result) \
+	((*tpp_lexer_getparseexpr(self))(tpp_lexer_getparseexprarg(self), self, result))
+#else /* TPP_HAVE_BUILTIN_EXPRPARSER */
+#define tpp_lexer_parseexpr(self, result)                                               \
+	(tpp_lexer_getparseexpr(self)                                                       \
+	 ? ((*tpp_lexer_getparseexpr(self))(tpp_lexer_getparseexprarg(self), self, result)) \
+	 : TPP_EOK)
+#endif /* !TPP_HAVE_BUILTIN_EXPRPARSER */
+#endif /* !TPP_CONFIG_EXPRPARSER */
+#endif /* TPP_HAVE_LEXER_PARSEEXPR */
+#ifndef _tpp_lexer_init_parseexpr
+#define _tpp_lexer_init_parseexpr(self) /* nothing */
+#endif /* !_tpp_lexer_init_parseexpr */
+
+
 	/* Lexer error limits */
 #if TPP_HAVE_WARNING_ERROR
 	tpp_size TPP_INTERNAL(tl_error_count); /* # of times "TPP_WSTATE_ERROR" was emitted.
-	                          * When this is non-zero by the time your compiler finishes
-	                          * compiling your source file, you should NOT proceed, but
-	                          * propagate an error. */
+	                                        * When this is non-zero by the time your compiler finishes
+	                                        * compiling your source file, you should NOT proceed, but
+	                                        * propagate an error. */
 #define _tpp_lexer_initerrorcount(self)  , (self)->TPP_INTERNAL(tl_error_count) = 0
 #define tpp_lexer_geterrorcount(self)    (self)->TPP_INTERNAL(tl_error_count)
 #define tpp_lexer_seterrorcount(self, v) (void)((self)->TPP_INTERNAL(tl_error_count) = (v))
@@ -259,6 +334,7 @@ typedef struct tpp_lexer {
 	       _tpp_lexer_init_state(self)                       \
 	       _tpp_lexer_init_warn(self)                        \
 	       _tpp_lexer_init_warnprinter(self)                 \
+	       _tpp_lexer_init_parseexpr(self)                   \
 	       _tpp_lexer_initerrorcount(self)                   \
 	       _tpp_lexer_initerrorlimit(self)                   \
 	       _tpp_lexer_initcounter(self))
@@ -1051,7 +1127,7 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok);
 
 
 
-
+/* Builtin warning printers... */
 #ifndef TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER
 #define TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER 0
 #endif /* !TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER */
@@ -1061,7 +1137,6 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok);
 #ifndef TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER
 #define TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER 0
 #endif /* !TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER */
-
 #if TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER
 TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_wrapped_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes);
 #endif /* TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER */
@@ -1071,6 +1146,25 @@ TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_builtin_warnprinter(void *arg
 #if TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER
 TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_noop_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes);
 #endif /* TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER */
+
+
+/* Builtin expression parsers... */
+#ifndef TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR
+#define TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR 0
+#endif /* !TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR */
+#ifndef TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG
+#define TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG 0
+#endif /* !TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG */
+#if TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_lexer_builtin_parseexpr(tpp_lexer *tpp_restrict self,
+                             tpp_expr_value *tpp_restrict result);
+#endif /* TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR */
+#if TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG
+TPP_DECL TPP_WUNUSED TPP_NONNULL((2, 3)) tpp_errno TPPCALL
+_tpp_lexer_builtin_parseexpr_with_arg(void *arg, tpp_lexer *tpp_restrict self,
+                                      tpp_expr_value *tpp_restrict result);
+#endif /* TPP_HAVE__TPP_LEXER_BUILTIN_PARSEEXPR_WITH_ARG */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

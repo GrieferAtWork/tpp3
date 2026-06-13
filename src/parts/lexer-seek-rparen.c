@@ -351,6 +351,21 @@ again_switch_tok:
 				}
 			}
 
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
+			if (tpp_lexer_seekpp_rparen_keepspace()) {
+				curarg_rel_rend = curarg_rel_end;
+			} else
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
+			{
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0
+				/* FIXME: Have to print text until "curarg_rel_end" (iow: including whitespace)
+				 *        if follow-up files contain tokens that also have to be appended (the
+				 *        trailing whitespace of the current (old) file must only be trimmed if
+				 *        the argument at the very start of the next file (possibly after being
+				 *        preceded by some more whitespace)) */
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0 */
+			}
+
 			if (curarg_rel_start < tpp_get_curarg_rel_rend()) { /* Save argument text */
 				tpp_size num_bytes   = (tpp_size)(tpp_get_curarg_rel_rend() - curarg_rel_start);
 				tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);

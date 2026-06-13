@@ -375,6 +375,7 @@ err_temp:
 	return temp;
 }
 
+static char const tpp_file_and_line[] = TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT;
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
@@ -434,8 +435,9 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	printer_arg = tpp_lexer_getwarnprinterarg(self);
 
 	/* Print file-and-line prefix */
-	printer_status = tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg,
-	                                          TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT);
+	printer_status = tpp_lexer_printf_warning(self, file, pos, pos_lcinfo,
+	                                          printer, printer_arg,
+	                                          tpp_file_and_line);
 	if (printer_status < 0)
 		goto err_printer;
 
@@ -502,12 +504,18 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		if ((printer_status = (expr)) < 0) \
 			goto err_printer;              \
 	} while (0)
-#if TPP_HOST_HAVE_PP_VARARGS
-#define tpp_warnf(...)                                           \
-	tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, \
-	                                printer, printer_arg,        \
-	                                __VA_ARGS__))
-#endif /* TPP_HOST_HAVE_PP_VARARGS */
+#define tpp_print_file_and_line(at_file, at_pos, at_lc)           \
+	tpp_do(tpp_lexer_printf_warning(self, at_file, at_pos, at_lc, \
+	                                printer, printer_arg,         \
+	                                tpp_file_and_line))
+#define tpp_print_file_and_line_at(at_file, at_pos) tpp_print_file_and_line(at_file, at_pos, tpp_lcinfo_of(-1, -1))
+#define tpp_print_file_and_line_lc(at_file, at_lc)  tpp_print_file_and_line(at_file, NULL, at_lc)
+#define tpp_warnf0(format)                 tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format))
+#define tpp_warnf1(format, a)              tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a))
+#define tpp_warnf2(format, a, b)           tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b))
+#define tpp_warnf3(format, a, b, c)        tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b, c))
+#define tpp_warnf4(format, a, b, c, d)     tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b, c, d))
+#define tpp_va_arg(T) va_arg(args, T)
 /* ... */
 /************************************************************************/
 
@@ -520,6 +528,16 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 #undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 
+/************************************************************************/
+#undef tpp_do
+#undef tpp_print_file_and_line
+#undef tpp_print_file_and_line_at
+#undef tpp_print_file_and_line_lc
+#undef tpp_warnf0
+#undef tpp_warnf1
+#undef tpp_warnf2
+#undef tpp_warnf3
+#undef tpp_warnf4
 /************************************************************************/
 		default:
 			printer_status = (*printer)(printer_arg, (tpp_char const *)"UNKNOWN WARNING\n", 16);
@@ -545,7 +563,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			printer_status = tpp_lexer_printf_warning(self, caller, caller->tf_tpos,
 			                                          tpp_lcinfo_of(-1, -1),
 			                                          printer, printer_arg,
-			                                          TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT);
+			                                          tpp_file_and_line);
 			if (printer_status < 0)
 				goto err_printer;
 			printer_status = (*printer)(printer_arg, (tpp_char const *)"note: originating from here\n", 28);
