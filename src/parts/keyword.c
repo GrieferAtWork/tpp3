@@ -582,8 +582,10 @@ static TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
 	tpp_assert(!tpp_refcnt_isshared(&self->tk_refcnt) && "Keyword still in use");
 #if TPP_HAVE_CPP_MACROS
-	if (self->tk_macro)
+	if (self->tk_macro) {
+		tpp_assert(self->tk_macro->tm_expansions == 0 && "Macro still part of #include-stack?");
 		tpp_macro_decref(self->tk_macro);
+	}
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
 	if (self->tk_misc)

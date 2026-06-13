@@ -2289,7 +2289,7 @@ switch_on_ch:
 		} else
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
-		if (ch == '!') {
+		if (ch2 == '!') {
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM)) {
 				result = TPP_TOK_EXCLAIM_EXCLAIM; /* "!!" */
 				goto set_result;
@@ -3739,6 +3739,7 @@ eof:
 	/* Check if we can pop to another file */
 #if TPP_HAVE_INCLUDE_STACK
 	if (file->tf_prev && p_pos == &file->tf_pos) {
+		tpp_file *prev;
 
 		/* Warn if the file still has an active #ifdef-stack
 		 * Only do this when we're actually going to pop the
@@ -3751,18 +3752,10 @@ eof:
 			goto return_error;
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 
-#if TPP_HAVE_LEXER_MANUALPOPFILE
-		if (self->tl_state & TPP_LEXER_STATE_FLAG_POPFILERLBK) {
-			/* Special case: use an alternate (rollback-capable) mechanism to pop files. */
-			tpp_lexer_manualpopfile_popfile(self);
-		} else
-#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
-		{
-			tpp_file *prev = file->tf_prev;
-			tpp_file_fini(file);
-			*file = *prev;
-			tpp_free(prev);
-		}
+		prev = file->tf_prev;
+		tpp_file_fini(file);
+		*file = *prev;
+		tpp_free(prev);
 		goto again;
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */

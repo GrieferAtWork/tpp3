@@ -35,10 +35,9 @@
 TPP_DECL_BEGIN
 
 #undef TPP_HAVE_LEXER_STATE_FLAGS
-#if (TPP_HAVE_CPP_DIRECTIVES ||             \
-     TPP_HAVE_WARNINGS ||                   \
-     TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS || \
-     TPP_HAVE_LEXER_MANUALPOPFILE)
+#if (TPP_HAVE_CPP_DIRECTIVES || \
+     TPP_HAVE_WARNINGS ||       \
+     TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS)
 #define TPP_HAVE_LEXER_STATE_FLAGS 1
 #else /* ... */
 #define TPP_HAVE_LEXER_STATE_FLAGS 0
@@ -58,12 +57,6 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 #define TPP_LEXER_STATE_FLAG_ALLTOKENS    UINT8_C(0x04) /* Prevent `tpp_lexer_yieldpp()' from (possibly) skipp SPACE/LF/COMMENT tokens */
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-#if TPP_HAVE_LEXER_MANUALPOPFILE
-#define TPP_LEXER_STATE_FLAG_POPFILERLBK  UINT8_C(0x08) /* When "tpp_lexer_yieldraw()" pops off the #include-stack, use "tpp_lexer_manualpopfile_popfile()".
-                                                         * This assumes that the caller has established a "tpp_lexer_manualpopfile_start()"-block, and when
-                                                         * combined with "tpp_file_setkeep()", allows the caller to perform rollback operations across calls
-                                                         * to "tpp_lexer_yieldpp()", or even "tpp_lexer_yield()" */
-#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
 
@@ -813,6 +806,9 @@ tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
 #if TPP_HAVE_MACRO_RECURSION
 #define TPP_LEXER_SEEK_RPAREN_FLAG_YIELDRAW   0x0004 /* Use "tpp_lexer_yieldraw()" instead of "tpp_lexer_yieldpp()" */
 #endif /* TPP_HAVE_MACRO_RECURSION */
+#if TPP_HAVE_LEXER_MANUALPOPFILE
+#define TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK    0x0008 /* Use "tpp_lexer_manualpopfile_popfile()" to pop files */
+#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 
 typedef struct tpp_lexer_arginfo {
 	/* NOTE: Leading/trailing whitespace in arguments is controlled by "TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC" */

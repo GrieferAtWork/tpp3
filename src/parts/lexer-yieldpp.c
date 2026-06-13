@@ -523,7 +523,7 @@ again:
 		error = tpp_lexer_parse_if_directive(self, &directive_start);
 handle_pp_if_error:
 		if (error == TPP_ENOENT)
-			goto again;
+			goto again; /* *waves hand* "These aren't the #elif-s you're looking for..." */
 		if (TPP_ISERR(error))
 			return error;
 
@@ -664,6 +664,9 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_EXCLAIM
 	case '!':
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	case TPP_TOK_EXCLAIM_EXCLAIM:
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 		if (!tpp_lexer_getext(self, TPP_EXT_CPP_EXCLAIM))
 			goto handle_unknown_directive;
 		goto seek_end_of_line;

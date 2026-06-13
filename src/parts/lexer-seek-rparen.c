@@ -146,24 +146,6 @@ tpp_seek_rparen_state_rstr_curfile(tpp_seek_rparen_state *tpp_restrict self,
 	}
 }
 
-TPP_INLINE TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
-#if TPP_HAVE_LEXER_MANUALPOPFILE
-	if (self->tl_state & TPP_LEXER_STATE_FLAG_POPFILERLBK) {
-		/* Special case: use an alternate (rollback-capable) mechanism to pop files. */
-		tpp_lexer_manualpopfile_popfile(self);
-	} else
-#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
-	{
-		tpp_file *const file = tpp_lexer_getfile(self);
-		tpp_file *prev = file->tf_prev;
-		tpp_file_fini(file);
-		*file = *prev;
-		tpp_free(prev);
-	}
-}
-
-
 #define tpp_lexer_arginfo_isrelative(self) \
 	((self)->tlai_chunk == (TPP_REF tpp_string *)-1)
 #define tpp_lexer_arginfo_rel2ptr(self, file)                                              \
@@ -232,7 +214,7 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE >= 0 */
 	tpp_size const argv_bufsize = *p_argc;
 	tpp_size argc = 0;
-	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_token_id result;
 	tpp_seek_rparen_state state;
@@ -332,8 +314,7 @@ again_switch_tok:
 
 	case TPP_TOK_EOF:
 #if TPP_HAVE_INCLUDE_STACK
-		if (file->tf_prev || (state.tsrps_curfile_saved_prev &&
-		                      file->tf_kind != TPP_FILE_KIND_IO)) {
+		if (state.tsrps_curfile_saved_prev && file->tf_kind != TPP_FILE_KIND_IO) {
 			/* Make already-encoded arguments absolute */
 			tpp_size i, written_argc = argc;
 			if (written_argc >= argv_bufsize) {
@@ -375,7 +356,20 @@ again_switch_tok:
 
 			/* Continue with next file */
 			tpp_seek_rparen_state_rstr_curfile(&state, self, true);
-			tpp_lexer_popfile(self);
+			tpp_assert(file->tf_prev == state.tsrps_curfile_saved_prev);
+			tpp_assert(file->tf_prev);
+#if TPP_HAVE_LEXER_MANUALPOPFILE
+			if (flags & TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK) {
+				/* Special case: use an alternate (rollback-capable) mechanism to pop files. */
+				tpp_lexer_manualpopfile_popfile(self);
+			} else
+#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
+			{
+				tpp_file *prev = file->tf_prev;
+				tpp_file_fini(file);
+				*file = *prev;
+				tpp_free(prev);
+			}
 			tpp_seek_rparen_state_save_curfile(&state, self);
 			result = tpp_lexer_yieldpp_blocking(self);
 			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);

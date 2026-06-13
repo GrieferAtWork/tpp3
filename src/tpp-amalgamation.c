@@ -371,6 +371,7 @@ static struct tpp_token_str_strings_struct {
 #if TPP_HAVE_TPP_TOK_DOLLAR
 	char ttr_TPP_TOK_DOLLAR[7];
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
+	char ttr_TPP_TOK_BACKTICK[9];
 #if TPP_HAVE_UNICODE
 	char ttr_TPP_TOK_UNICHAR[8];
 #endif /* TPP_HAVE_UNICODE */
@@ -572,6 +573,9 @@ static struct tpp_token_str_strings_struct {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 	char ttr_TPP_TOK_EXCLAIM_EQUAL_EQUAL[20];
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	char ttr_TPP_TOK_EXCLAIM_EXCLAIM[16];
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 	char ttr_TPP_TOK_QMARK_QMARK[12];
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */
@@ -690,6 +694,7 @@ static struct tpp_token_str_strings_struct {
 #if TPP_HAVE_TPP_TOK_DOLLAR
 	/* .ttr_TPP_TOK_DOLLAR = */ "DOLLAR",
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
+	/* .ttr_TPP_TOK_BACKTICK = */ "BACKTICK",
 #if TPP_HAVE_UNICODE
 	/* .ttr_TPP_TOK_UNICHAR = */ "UNICHAR",
 #endif /* TPP_HAVE_UNICODE */
@@ -891,6 +896,9 @@ static struct tpp_token_str_strings_struct {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 	/* .ttr_TPP_TOK_EXCLAIM_EQUAL_EQUAL = */ "EXCLAIM_EQUAL_EQUAL",
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	/* .ttr_TPP_TOK_EXCLAIM_EXCLAIM = */ "EXCLAIM_EXCLAIM",
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 	/* .ttr_TPP_TOK_QMARK_QMARK = */ "QMARK_QMARK",
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */
@@ -1077,7 +1085,7 @@ static uint_least16_t const tpp_token_str_offsets[] = {
 	/* [TPP_TOK_RBRACKET] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_RBRACKET),
 	/* [TPP_TOK_HAT] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_HAT),
 	/* [0x5f] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
-	/* [0x60] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+	/* [TPP_TOK_BACKTICK] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_BACKTICK),
 	/* [0x61] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
 	/* [0x62] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
 	/* [0x63] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
@@ -1438,6 +1446,9 @@ static uint_least16_t const tpp_token_str_offsets[] = {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 	/* [TPP_TOK_EXCLAIM_EQUAL_EQUAL] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_EXCLAIM_EQUAL_EQUAL),
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	/* [TPP_TOK_EXCLAIM_EXCLAIM] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_EXCLAIM_EXCLAIM),
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 	/* [TPP_TOK_QMARK_QMARK] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_QMARK_QMARK),
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */
@@ -1953,6 +1964,9 @@ static struct tpp_token_repr_strings_struct {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 	char ttr_TPP_TOK_EXCLAIM_EQUAL_EQUAL[4];
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	char ttr_TPP_TOK_EXCLAIM_EXCLAIM[3];
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 	char ttr_TPP_TOK_QMARK_QMARK[3];
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */
@@ -2441,6 +2455,9 @@ static struct tpp_token_repr_strings_struct {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 	/* .ttr_TPP_TOK_EXCLAIM_EQUAL_EQUAL = */ "!==",
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	/* .ttr_TPP_TOK_EXCLAIM_EXCLAIM = */ "!!",
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 	/* .ttr_TPP_TOK_QMARK_QMARK = */ "??",
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */
@@ -2984,6 +3001,9 @@ static uint_least16_t const tpp_token_repr_offsets[] = {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 	/* [TPP_TOK_EXCLAIM_EQUAL_EQUAL] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_EXCLAIM_EQUAL_EQUAL),
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	/* [TPP_TOK_EXCLAIM_EXCLAIM] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_EXCLAIM_EXCLAIM),
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 	/* [TPP_TOK_QMARK_QMARK] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_QMARK_QMARK),
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */
@@ -5008,8 +5028,10 @@ static TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
 	tpp_assert(!tpp_refcnt_isshared(&self->tk_refcnt) && "Keyword still in use");
 #if TPP_HAVE_CPP_MACROS
-	if (self->tk_macro)
+	if (self->tk_macro) {
+		tpp_assert(self->tk_macro->tm_expansions == 0 && "Macro still part of #include-stack?");
 		tpp_macro_decref(self->tk_macro);
+	}
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
 	if (self->tk_misc)
@@ -6720,6 +6742,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL < 0
 		/* .tff_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL        = */ TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL == -1,
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL < 0 */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM < 0
+		/* .tff_TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM            = */ TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM == -1,
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM < 0 */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK < 0
 		/* .tff_TPP_FEAT_TPP_TOK_QMARK_QMARK                = */ TPP_HAVE_TPP_TOK_QMARK_QMARK == -1,
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK < 0 */
@@ -10325,11 +10350,15 @@ switch_on_ch:
 
 /************************************************************************/
 	case '!': {
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
+#if (TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL ||       \
+     TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL || \
+     TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM)
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL))
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM))
 			break;
 		read_ch2();
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL)) {
@@ -10352,6 +10381,17 @@ switch_on_ch:
 				goto set_result;
 			}
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+		} else
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+		if (ch2 == '!') {
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM)) {
+				result = TPP_TOK_EXCLAIM_EXCLAIM; /* "!!" */
+				goto set_result;
+			}
+		} else
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
+		{
 		}
 #endif /* ... */
 	}	break;
@@ -11794,6 +11834,7 @@ eof:
 	/* Check if we can pop to another file */
 #if TPP_HAVE_INCLUDE_STACK
 	if (file->tf_prev && p_pos == &file->tf_pos) {
+		tpp_file *prev;
 
 		/* Warn if the file still has an active #ifdef-stack
 		 * Only do this when we're actually going to pop the
@@ -11806,18 +11847,10 @@ eof:
 			goto return_error;
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 
-#if TPP_HAVE_LEXER_MANUALPOPFILE
-		if (self->tl_state & TPP_LEXER_STATE_FLAG_POPFILERLBK) {
-			/* Special case: use an alternate (rollback-capable) mechanism to pop files. */
-			tpp_lexer_manualpopfile_popfile(self);
-		} else
-#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
-		{
-			tpp_file *prev = file->tf_prev;
-			tpp_file_fini(file);
-			*file = *prev;
-			tpp_free(prev);
-		}
+		prev = file->tf_prev;
+		tpp_file_fini(file);
+		*file = *prev;
+		tpp_free(prev);
 		goto again;
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */
@@ -11966,24 +11999,6 @@ tpp_seek_rparen_state_rstr_curfile(tpp_seek_rparen_state *tpp_restrict self,
 	}
 }
 
-TPP_INLINE TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
-#if TPP_HAVE_LEXER_MANUALPOPFILE
-	if (self->tl_state & TPP_LEXER_STATE_FLAG_POPFILERLBK) {
-		/* Special case: use an alternate (rollback-capable) mechanism to pop files. */
-		tpp_lexer_manualpopfile_popfile(self);
-	} else
-#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
-	{
-		tpp_file *const file = tpp_lexer_getfile(self);
-		tpp_file *prev = file->tf_prev;
-		tpp_file_fini(file);
-		*file = *prev;
-		tpp_free(prev);
-	}
-}
-
-
 #define tpp_lexer_arginfo_isrelative(self) \
 	((self)->tlai_chunk == (TPP_REF tpp_string *)-1)
 #define tpp_lexer_arginfo_rel2ptr(self, file)                                              \
@@ -12052,7 +12067,7 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE >= 0 */
 	tpp_size const argv_bufsize = *p_argc;
 	tpp_size argc = 0;
-	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_token_id result;
 	tpp_seek_rparen_state state;
@@ -12152,8 +12167,7 @@ again_switch_tok:
 
 	case TPP_TOK_EOF:
 #if TPP_HAVE_INCLUDE_STACK
-		if (file->tf_prev || (state.tsrps_curfile_saved_prev &&
-		                      file->tf_kind != TPP_FILE_KIND_IO)) {
+		if (state.tsrps_curfile_saved_prev && file->tf_kind != TPP_FILE_KIND_IO) {
 			/* Make already-encoded arguments absolute */
 			tpp_size i, written_argc = argc;
 			if (written_argc >= argv_bufsize) {
@@ -12195,7 +12209,20 @@ again_switch_tok:
 
 			/* Continue with next file */
 			tpp_seek_rparen_state_rstr_curfile(&state, self, true);
-			tpp_lexer_popfile(self);
+			tpp_assert(file->tf_prev == state.tsrps_curfile_saved_prev);
+			tpp_assert(file->tf_prev);
+#if TPP_HAVE_LEXER_MANUALPOPFILE
+			if (flags & TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK) {
+				/* Special case: use an alternate (rollback-capable) mechanism to pop files. */
+				tpp_lexer_manualpopfile_popfile(self);
+			} else
+#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
+			{
+				tpp_file *prev = file->tf_prev;
+				tpp_file_fini(file);
+				*file = *prev;
+				tpp_free(prev);
+			}
 			tpp_seek_rparen_state_save_curfile(&state, self);
 			result = tpp_lexer_yieldpp_blocking(self);
 			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
@@ -15815,7 +15842,7 @@ again:
 		error = tpp_lexer_parse_if_directive(self, &directive_start);
 handle_pp_if_error:
 		if (error == TPP_ENOENT)
-			goto again;
+			goto again; /* *waves hand* "These aren't the #elif-s you're looking for..." */
 		if (TPP_ISERR(error))
 			return error;
 
@@ -15956,6 +15983,9 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_EXCLAIM
 	case '!':
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	case TPP_TOK_EXCLAIM_EXCLAIM:
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 		if (!tpp_lexer_getext(self, TPP_EXT_CPP_EXCLAIM))
 			goto handle_unknown_directive;
 		goto seek_end_of_line;
@@ -16822,12 +16852,11 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	 *   >> tpp_file_pushifdef(file);
 	 *   >> tpp_lexer_alltokens_pushon(lexer);
 	 */
-	tpp_file *const file = tpp_lexer_getfile(lexer);
 	tpp_token const *const token = tpp_lexer_gettoken(lexer);
 	tpp_string_buffer buffer;
 	tpp_token_id tok;
 	tpp_char const *expected_simple_tok_start;
-	tpp_assert(file->tf_prev == NULL);
+	tpp_assert(tpp_lexer_getfile(lexer)->tf_prev == NULL);
 	expected_simple_tok_start = arginfo->tlai_start;
 
 next_tok:
@@ -16836,17 +16865,17 @@ next_tok:
 		return TPP_TOK_ASERR(tok);
 	if (tok == TPP_TOK_EOF) {
 		/* Simple case: it's a "simple" argument (that doesn't do anything when expanded) */
-		tpp_assert(expected_simple_tok_start >= arginfo->tlai_end);
+		tpp_assert(expected_simple_tok_start <= arginfo->tlai_end);
 		self->tmei_expand_data = (tpp_char *)arginfo->tlai_start;
 		self->tmei_expand_size = (tpp_size)(expected_simple_tok_start - arginfo->tlai_start);
 		goto done;
 	}
 	if (token->tt_start == expected_simple_tok_start) {
-		/* Jup: just a simple continuation */
+		/* Yup: just a simple continuation */
 		expected_simple_tok_start = token->tt_end;
 		tpp_assert(expected_simple_tok_start <= arginfo->tlai_end &&
 		           "Token spans beyond (expected) EOF?");
-		tpp_assert(file->tf_prev == NULL &&
+		tpp_assert(tpp_lexer_getfile(lexer)->tf_prev == NULL &&
 		           "Nothing should have pushed a new file (because "
 		           "that wouldn't be 'simple', meaning that the "
 		           "'token->tt_start == expected_simple_tok_start'"
@@ -17015,10 +17044,12 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_keyword const *const macro_keyword = tpp_lexer_gettokenkwd(self);
 	tpp_char const *rollback_pos;
+	tpp_char const *macro_call_start_pos;
 #if TPP_HAVE_MACRO_RECURSION
 	tpp_size const macro_keyword_len = tpp_lexer_gettokenlen(self);
 #endif /* TPP_HAVE_MACRO_RECURSION */
 	tpp_token_id tok;
+	tpp_token_id lparen_kind;
 	tpp_size i, argc;    /* # of arguments given in-source during invocation */
 	tpp_size macro_argc; /* == macro->tm_data.tmd_func.tmf_argc */
 	tpp_macro_argbuf *argbuf;
@@ -17034,10 +17065,14 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	tpp_assert(TPP_MACRO_KIND_ISFUNC(macro->tm_kind));
 
 	/* Skip the initial macro-argument-start '('-token */
-	tok = tpp_lexer_tryskip_raw(self, TPP_MACRO_KIND_ASTOK(macro->tm_kind),
+	lparen_kind = TPP_MACRO_KIND_ASTOK(macro->tm_kind);
+	tok = tpp_lexer_tryskip_raw(self, lparen_kind,
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
-	if (TPP_TOK_ISERR(tok))
-		goto err_tok;
+	if (tok != lparen_kind) {
+		if (TPP_TOK_ISERR(tok))
+			goto err_tok;
+		return token->tt_id; /* Missing opening '(' */
+	}
 
 	/* Load argument buffer of macro */
 	argbuf = tpp_macro_acquire_argbuf(macro);
@@ -17055,21 +17090,24 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 
 	/* Enter a block where file popping can be rolled back. */
 	tpp_lexer_manualpopfile_start(self);
-	_tpp_lexer_pushstate_on(self, TPP_LEXER_STATE_FLAG_ALLTOKENS | TPP_LEXER_STATE_FLAG_POPFILERLBK);
+	tpp_lexer_alltokens_pushon(self);
 
 	/* Parse arguments */
 #if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 	tok = tpp_lexer_seekpp_rparen_ex(self, invoke_arginfo, &argc, &rollback_pos,
 	                                 (char const *)macro_keyword->tk_kwd,
-	                                 tpp_lexer_seek_rparen_flags_frommacro(macro),
+	                                 tpp_lexer_seek_rparen_flags_frommacro(macro) |
+	                                 TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK,
 	                                 TPP_MACRO_KIND_ASTOK(macro->tm_kind));
 #else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 	tok = tpp_lexer_seekpp_rparen(self, invoke_arginfo, &argc, &rollback_pos,
 	                              (char const *)macro_keyword->tk_kwd,
-	                              tpp_lexer_seek_rparen_flags_frommacro(macro));
+	                              tpp_lexer_seek_rparen_flags_frommacro(macro) |
+	                              TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK);
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 	if (TPP_TOK_ISERR(tok))
 		goto err_tok_macro_argbuf_rollback;
+	macro_call_start_pos = file->tf_tpos;
 
 	tpp_assert(macro_argc == macro->tm_data.tmd_func.tmf_argc);
 	if (argc < macro_argc) {
@@ -17358,7 +17396,7 @@ next_op:
 
 	/* Set-up "result_chunk" such that it will read from "body-chunk-string" */
 	prev_file = tpp_file_alloc();
-	_tpp_lexer_breakstate(self);
+	tpp_lexer_alltokens_break(self);
 	if tpp_unlikely(!prev_file) {
 		tpp_lexer_manualpopfile_break_rollback(self);
 		tpp_string_decref(result_chunk);
@@ -17367,6 +17405,7 @@ next_op:
 	}
 	tpp_lexer_manualpopfile_break_commit(self);
 	*prev_file = *file;
+	prev_file->tf_tpos = macro_call_start_pos;
 
 	file->tf_pos   = tpp_string_str(result_chunk);
 	file->tf_chunk = result_chunk; /* Inherit reference */
@@ -17383,7 +17422,7 @@ next_op:
 	return TPP_TOK_EOF;
 #if TPP_HAVE_MACRO_RECURSION
 done_rollback:
-	_tpp_lexer_breakstate(self);
+	tpp_lexer_alltokens_break(self);
 	file->tf_pos = rollback_pos;
 	tpp_lexer_manualpopfile_break_rollback(self);
 
@@ -17415,7 +17454,7 @@ err_tok_macro_argbuf_rollback_arginfo:
 	while (macro_argc--)
 		tpp_lexer_arginfo_fini(&invoke_arginfo[macro_argc]);
 err_tok_macro_argbuf_rollback:
-	_tpp_lexer_popstate(self);
+	tpp_lexer_alltokens_pop(self);
 	tpp_lexer_manualpopfile_end_rollback(self);
 /*err_tok_macro_argbuf:*/
 	tpp_macro_release_argbuf(macro, argbuf);

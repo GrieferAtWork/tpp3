@@ -3149,6 +3149,11 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL" */
 #endif /* !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
 
+/* "!!" */
+#ifndef TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+#define TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM" */
+#endif /* !TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
+
 /* "??" */
 #ifndef TPP_HAVE_TPP_TOK_QMARK_QMARK
 #define TPP_HAVE_TPP_TOK_QMARK_QMARK TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "TPP_FEAT_TPP_TOK_QMARK_QMARK" */
@@ -5087,6 +5092,7 @@ typedef enum tpp_token_id {
 #if TPP_HAVE_TPP_TOK_DOLLAR
 	TPP_TOK_DOLLAR    = '$',
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
+	TPP_TOK_BACKTICK  = '`',
 
 	/* Double(or more)-character tokens. */
 	TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN) = 255, /* KEEP THIS THE FIRST MULTICHAR TOKEN! */
@@ -5431,6 +5437,9 @@ typedef enum tpp_token_id {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 	TPP_TOK_EXCLAIM_EQUAL_EQUAL, /* "!==" */
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+	TPP_TOK_EXCLAIM_EXCLAIM, /* "!!" */
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 	TPP_TOK_QMARK_QMARK, /* "??" */
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */
@@ -5673,6 +5682,7 @@ TPP_DECL_BEGIN
      (TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL < 0) || \
      (TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL < 0) ||          \
      (TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL < 0) ||        \
+     (TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM < 0) ||            \
      (TPP_HAVE_TPP_TOK_QMARK_QMARK < 0) ||                \
      (TPP_HAVE_TPP_TOK_QMARK_EQUAL < 0) ||                \
      (TPP_HAVE_TPP_TOK_RANGLE_LANGLE < 0) ||              \
@@ -5916,6 +5926,9 @@ typedef enum tpp_feature_id {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL < 0
 	TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL,
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL < 0 */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM < 0
+	TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM,
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM < 0 */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK < 0
 	TPP_FEAT_TPP_TOK_QMARK_QMARK,
 #endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK < 0 */
@@ -6431,6 +6444,12 @@ typedef union tpp_features {
 #else /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL(self) TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL >= 0 */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM < 0
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM), TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM == -1)
+#else /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM(self) TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM >= 0 */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK < 0
 		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_QMARK_QMARK): 1;
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_QMARK_QMARK(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_QMARK_QMARK), TPP_HAVE_TPP_TOK_QMARK_QMARK == -1)
@@ -8506,10 +8525,9 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 #undef TPP_HAVE_LEXER_STATE_FLAGS
-#if (TPP_HAVE_CPP_DIRECTIVES ||             \
-     TPP_HAVE_WARNINGS ||                   \
-     TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS || \
-     TPP_HAVE_LEXER_MANUALPOPFILE)
+#if (TPP_HAVE_CPP_DIRECTIVES || \
+     TPP_HAVE_WARNINGS ||       \
+     TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS)
 #define TPP_HAVE_LEXER_STATE_FLAGS 1
 #else /* ... */
 #define TPP_HAVE_LEXER_STATE_FLAGS 0
@@ -8529,12 +8547,6 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 #define TPP_LEXER_STATE_FLAG_ALLTOKENS    UINT8_C(0x04) /* Prevent `tpp_lexer_yieldpp()' from (possibly) skipp SPACE/LF/COMMENT tokens */
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-#if TPP_HAVE_LEXER_MANUALPOPFILE
-#define TPP_LEXER_STATE_FLAG_POPFILERLBK  UINT8_C(0x08) /* When "tpp_lexer_yieldraw()" pops off the #include-stack, use "tpp_lexer_manualpopfile_popfile()".
-                                                         * This assumes that the caller has established a "tpp_lexer_manualpopfile_start()"-block, and when
-                                                         * combined with "tpp_file_setkeep()", allows the caller to perform rollback operations across calls
-                                                         * to "tpp_lexer_yieldpp()", or even "tpp_lexer_yield()" */
-#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
 
@@ -9284,6 +9296,9 @@ tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
 #if TPP_HAVE_MACRO_RECURSION
 #define TPP_LEXER_SEEK_RPAREN_FLAG_YIELDRAW   0x0004 /* Use "tpp_lexer_yieldraw()" instead of "tpp_lexer_yieldpp()" */
 #endif /* TPP_HAVE_MACRO_RECURSION */
+#if TPP_HAVE_LEXER_MANUALPOPFILE
+#define TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK    0x0008 /* Use "tpp_lexer_manualpopfile_popfile()" to pop files */
+#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 
 typedef struct tpp_lexer_arginfo {
 	/* NOTE: Leading/trailing whitespace in arguments is controlled by "TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC" */
