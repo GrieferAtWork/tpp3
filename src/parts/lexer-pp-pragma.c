@@ -119,7 +119,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 			return TPP_TOK_ASERR(tok);
 
 		/* Skip leading '(' */
-		tok = tpp_lexer_skip_blocking(self, TPP_TOK_OFCHAR('('));
+		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		if (TPP_TOK_ISSTRING(tok)) {
@@ -137,7 +137,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 			return error;
 
 		/* Skip trailing ')' */
-		tok = tpp_lexer_skip_blocking(self, TPP_TOK_OFCHAR(')'));
+		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 	}	break;

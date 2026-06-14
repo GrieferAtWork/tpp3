@@ -1183,7 +1183,7 @@
 /* Support for: #pragma extension("-fmacro-recursion")
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION* */
 #ifndef TPP_HAVE_MACRO_RECURSION
-#define TPP_HAVE_MACRO_RECURSION (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-fmacro-recursion" */
+#define TPP_HAVE_MACRO_RECURSION (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fmacro-recursion" */
 #endif /* !TPP_HAVE_MACRO_RECURSION */
 
 // Support for traditional macro expansion:

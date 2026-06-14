@@ -770,7 +770,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	tpp_file_autopopfile_pushoff(file);
 	tpp_file_pushchunk(file);
 
-	/* Setup file to (re-)parse the _Pragma string */
+	/* Setup file to (re-)parse the identifier string */
 	tpp_file_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self);
 	data.tlhtid_lexer   = self;
@@ -815,6 +815,59 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	return tok;
 }
 #endif /* TPP_HAVE_MACRO___TPP_IDENTIFIER */
+
+
+#if TPP_HAVE_MACRO___TPP_EVAL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
+	tpp_expr_value eval_result;
+	tpp_string_builder eval_repr_builder;
+	TPP_REF tpp_string *eval_repr;
+	tpp_ssize eval_repr_print_status;
+	tpp_errno error;
+	tpp_token_id tok;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+
+	/* Setup file to (re-)parse the eval expression */
+	error = tpp_lexer_parseexpr(self, &eval_result);
+	if (TPP_ISERR(error))
+		return TPP_TOK_OFERR(error);
+	tok = tpp_lexer_gettok(self);
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+
+	/* Print representation of evaluation result */
+	tpp_string_builder_init(&eval_repr_builder);
+	eval_repr_print_status = tpp_expr_value_printrepr(&eval_result,
+	                                                  &tpp_string_builder_print,
+	                                                  &eval_repr_builder);
+	tpp_expr_value_fini(&eval_result);
+	if tpp_unlikely(eval_repr_print_status < 0) {
+		tpp_string_builder_fini(&eval_repr_builder);
+		error = (tpp_errno)(int)eval_repr_print_status;
+		return TPP_TOK_OFERR(error);
+	}
+
+	/* Pack representation into a string... */
+	eval_repr = tpp_string_builder_pack(&eval_repr_builder);
+
+	/* ... and push that string as a text file. */
+	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(eval_repr),
+	                                         tpp_string_len(eval_repr),
+	                                         eval_repr);
+}
+#endif /* !TPP_HAVE_MACRO___TPP_EVAL */
 
 
 
@@ -1021,8 +1074,14 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 /************************************************************************/
 #if TPP_HAVE_MACRO___TPP_EVAL
-	/* TODO: __TPP_EVAL */
+	case TPP_KWD___TPP_EVAL:
+		return tpp_lexer_yield_handle___TPP_EVAL(self);
 #endif /* !TPP_HAVE_MACRO___TPP_EVAL */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
 	/* TODO: __TPP_LOAD_FILE */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
@@ -1222,22 +1281,18 @@ again:
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 
 #if TPP_HAVE_LEXER_SKIP
-/* Check that the currently loaded token is 'tok'. If so, "tpp_lexer_yield_blocking()" to
- * the next token (which is also returned). Otherwise, trigger 'TPP_W_UNEXPECTED_TOKEN'
- * and (if that warning wasn't fatal), try to seek ahead to see if "tok" can be found
- * somewhere close by (depending on what 'tok' and what was actually loaded on entry)
- *
- * @return: * :                  The token that comes after the one that was just skipped
- * @return: TPP_TOK_ENOMEM:      Out of memory
- * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
- * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+/* Same as "tpp_lexer_skip()", but don't advance to the next token. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
+tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
 	if tpp_likely(token->tt_id == tok)
-		return tpp_lexer_yield(self);
+		return tok;
+
+	/* TODO: If "tok" is a single-char token, see if the currently
+	 *       loaded token is a multi-char token that starts with
+	 *       the same value.
+	 * XXX: Also handle "tok == '>>' && CURRENT_TOKEN == '>>>'", etc. */
+
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
 	{
 		tpp_errno error;
@@ -1250,25 +1305,37 @@ tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	}
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
 
-	/* TODO: Try to seek ahead (within the current line) to
-	 *       find "tok" when it's (e.g.) a '(' (to deal with
-	 *       cases where the user added some extra, unrelated
-	 *       tokens before the one we're expecting) */
+	/* TODO: Try to seek ahead to find "tok" when it's (e.g.) a '(' (to
+	 *       deal with cases where the user added some extra, unrelated
+	 *       tokens before the one we're expecting)
+	 *
+	 * - If "tok == ')", find next unmatched ')'
+	 * - If "tok == ']", find next unmatched ']'
+	 * - If "tok == '}", find next unmatched '}'
+	 * - If "tok == '>", find next unmatched '>' */
 
 	return token->tt_id;
 }
 
-#if TPP_HAVE_FILE_NONBLOCK
-/* Same as `tpp_lexer_skip()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
- * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
+/* Check that the currently loaded token is 'tok'. If so, "tpp_lexer_yield_blocking()" to
+ * the next token (which is also returned). Otherwise, trigger 'TPP_W_UNEXPECTED_TOKEN'
+ * and (if that warning wasn't fatal), try to seek ahead to see if "tok" can be found
+ * somewhere close by (depending on what 'tok' and what was actually loaded on entry)
+ *
+ * NOTE: This function automatically handles "TPP_TOK_EWOULDBLOCK"
+ *
+ * @return: * :                 The token that comes after the one that was just skipped
+ * @return: TPP_TOK_ENOMEM:     Out of memory
+ * @return: TPP_TOK_EIO:        I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR:  Lexer error
+ * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_skip_blocking(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
-	tpp_token_id result = tpp_lexer_skip(self, tok);
-	if (result == TPP_TOK_EWOULDBLOCK)
+tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
+	tpp_token_id result = tpp_lexer_require(self, tok);
+	if (result == tok)
 		result = tpp_lexer_yield_blocking(self);
 	return result;
 }
-#endif /* TPP_HAVE_FILE_NONBLOCK */
 
 #endif /* TPP_HAVE_LEXER_SKIP */
 

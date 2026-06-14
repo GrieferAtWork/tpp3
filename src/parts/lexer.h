@@ -738,23 +738,19 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
  * and (if that warning wasn't fatal), try to seek ahead to see if "tok" can be found
  * somewhere close by (depending on what 'tok' and what was actually loaded on entry)
  *
- * @return: * :                  The token that comes after the one that was just skipped
- * @return: TPP_TOK_ENOMEM:      Out of memory
- * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
- * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+ * NOTE: This function automatically handles "TPP_TOK_EWOULDBLOCK"
+ *
+ * @return: * :                 The token that comes after the one that was just skipped
+ * @return: TPP_TOK_ENOMEM:     Out of memory
+ * @return: TPP_TOK_EIO:        I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR:  Lexer error
+ * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok);
 
-#if TPP_HAVE_FILE_NONBLOCK
-/* Same as `tpp_lexer_skip()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
- * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
+/* Same as "tpp_lexer_skip()", but don't advance to the next token. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_skip_blocking(tpp_lexer *tpp_restrict self, tpp_token_id tok);
-#else /* TPP_HAVE_FILE_NONBLOCK */
-#define tpp_lexer_skip_blocking(self, tok) tpp_lexer_skip(self, tok)
-#endif /* !TPP_HAVE_FILE_NONBLOCK */
+tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok);
 #endif /* TPP_HAVE_LEXER_SKIP */
 
 

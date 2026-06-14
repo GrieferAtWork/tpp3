@@ -1242,9 +1242,21 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 	case _TPP_EXPR_VALUE_KIND_STRING: {
+		tpp_ssize temp, result;
 		tpp_string const *const str = _tpp_expr_value_getstring(self);
-		return tpp_token_encodestring(printer, arg, tpp_string_str(str),
+		result = (*printer)(arg, (tpp_char const *)"\"", 1);
+		if tpp_unlikely(result < 0)
+			return result;
+		temp = tpp_token_encodestring(printer, arg, tpp_string_str(str),
 		                              tpp_string_len(str) * sizeof(tpp_char));
+		if tpp_unlikely(temp < 0)
+			return temp;
+		result += temp;
+		temp = (*printer)(arg, (tpp_char const *)"\"", 1);
+		if tpp_unlikely(temp < 0)
+			return temp;
+		result += temp;
+		return result;
 	}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 

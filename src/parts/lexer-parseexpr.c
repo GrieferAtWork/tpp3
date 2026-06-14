@@ -56,6 +56,14 @@ tpp_lexer_yield_forexpr(tpp_lexer *tpp_restrict self) {
 	return result;
 }
 
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_skip_forexpr(tpp_lexer *tpp_restrict self, tpp_token_id id) {
+	tpp_token_id result = tpp_lexer_skip(self, id);
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(result))
+		result = tpp_lexer_yield_blocking(self);
+	return result;
+}
+
 /************************************************************************/
 /* LEVEL #0 : UNARY PREFIX                                              */
 /************************************************************************/
@@ -81,7 +89,7 @@ again:
 		error = tpp_px_expr(self, result);
 		if (TPP_ISERR(error))
 			return error;
-		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+		tok = tpp_lexer_skip_forexpr(self, TPP_TOK_OFCHAR(')'));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		return TPP_EOK;
@@ -260,7 +268,7 @@ again:
 #endif /* TPP_HAVE_TPP_TOK_STRINGLIKE || TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT */
 		}
 		if (has_paren) {
-			tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+			tok = tpp_lexer_skip_forexpr(self, TPP_TOK_OFCHAR(')'));
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
 		}
@@ -281,7 +289,7 @@ again_handle_if:
 		tok = tpp_lexer_yield_forexpr(self);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
+		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('(')); /* Doesn't have to be "tpp_lexer_skip_forexpr" */
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		error = tpp_px_expr(self, result);
@@ -294,7 +302,7 @@ again_handle_if:
 			if (TPP_ISERR(error))
 				return error;
 		}
-		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')')); /* Doesn't have to be "tpp_lexer_skip_forexpr" */
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		error = tpp_px_expr(self, is_true ? result : NULL);
@@ -482,7 +490,7 @@ err_r_tok_index:
 			if (TPP_TOK_ISERR(tok))
 				goto err_r_tok;
 		}
-		tok = tpp_lexer_skip_blocking(self, TPP_TOK_OFCHAR(']'));
+		tok = tpp_lexer_skip_forexpr(self, TPP_TOK_OFCHAR(']'));
 		if (TPP_TOK_ISERR(tok))
 			goto err_r_tok;
 	} while (TPP_TEST_PX_UNARY_SUFFIX(tpp_lexer_gettok(self)));
@@ -1125,7 +1133,7 @@ tpp_px_question_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_v
 			error = tpp_px_lor(self, cond_is_true ? result : NULL);
 			if (TPP_ISERR(error))
 				return error;
-			tok = tpp_lexer_skip_blocking(self, TPP_TOK_OFCHAR(':'));
+			tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(':')); /* Doesn't have to be "tpp_lexer_skip_forexpr" */
 			if (TPP_TOK_ISERR(tok)) {
 				if (cond_is_true)
 					tpp_expr_value_fini(result);
