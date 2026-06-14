@@ -343,6 +343,31 @@
 #define TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL */
 
+/* R'AB(f)AB' */
+#ifndef TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+#define TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+
+/* L'f'  (TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL: LR'AB(f)AB') */
+#ifndef TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+#define TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
+
+/* u8'f' (TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL: u8R'AB(f)AB') */
+#ifndef TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+#define TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
+
+/* u'f'  (TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL: uR'AB(f)AB') */
+#ifndef TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+#define TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL */
+
+/* U'f'  (TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL: UR'AB(f)AB') */
+#ifndef TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+#define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+
 /* R"foo"  r"foo"  */
 #ifndef TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
 #define TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL" */
@@ -739,30 +764,51 @@
 #undef TPP_HAVE_TPP_TOK_COMMENTLIKE
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE \
 	(TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE || TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE)
-#undef TPP_HAVE_TPP_TOK_STRINGLIKE
+#undef TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE
 #if (TPP_HAVE_TPP_TOK_CHAR ||                     \
-     TPP_HAVE_TPP_TOK_STRING ||                   \
-     TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||       \
+     TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
      TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL ||         \
-     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
      TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE 0
+#endif /* !... */
+#undef TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE
+#if (TPP_HAVE_TPP_TOK_STRING ||                     \
+     TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||         \
+     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL)
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE 0
+#endif /* !... */
+#undef TPP_HAVE_TPP_TOK_STRINGLIKE
+#if (TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE || \
+     TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE)
 #define TPP_HAVE_TPP_TOK_STRINGLIKE 1
 #else /* ... */
 #define TPP_HAVE_TPP_TOK_STRINGLIKE 0
 #endif /* !... */
 #undef TPP_HAVE_STRING_ESCAPE
-#if (TPP_HAVE_TPP_TOK_CHAR ||                     \
-     TPP_HAVE_TPP_TOK_STRING ||                   \
+#if (TPP_HAVE_TPP_TOK_STRING ||                   \
      TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
      TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
      TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
      TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
      TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CHAR ||                     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
      TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
 #define TPP_HAVE_STRING_ESCAPE 1
 #else /* ... */
@@ -1359,7 +1405,7 @@
 
 /* Enable support for "defined(MACRO)" in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_DEFINED
-#define TPP_HAVE_BUILTIN_EXPR_DEFINED (TPP_HAVE_LEXER_PARSEEXPR) /* "TPP_FEAT_BUILTIN_EXPR_DEFINED" */
+#define TPP_HAVE_BUILTIN_EXPR_DEFINED (TPP_HAVE_BUILTIN_EXPRPARSER) /* "TPP_FEAT_BUILTIN_EXPR_DEFINED" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_DEFINED */
 
 /* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
@@ -1369,26 +1415,48 @@
 
 /* Enable support for string operations in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_STRINGS
-#define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_LEXER_PARSEEXPR && TPP_HAVE_TPP_TOK_STRINGLIKE) ? -1 : 0) /* "-fstrings-in-expressions" */
+#define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_STRINGLIKE) ? -1 : 0) /* "-fstrings-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+/* Enable support for floats in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_FLOATS
+#define TPP_HAVE_BUILTIN_EXPR_FLOATS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_FLOAT) ? 1 : 0) /* "-ffloats-in-expressions" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
 /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
-#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT (TPP_HAVE_LEXER_PARSEEXPR ? -1 : 0) /* "-fif-else-optional-true" */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT (TPP_HAVE_BUILTIN_EXPRPARSER ? -1 : 0) /* "-fif-else-optional-true" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
 
 /* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
-#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS (TPP_HAVE_LEXER_PARSEEXPR ? -1 : 0) /* "-fifelse-in-expressions" */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS (TPP_HAVE_BUILTIN_EXPRPARSER ? -1 : 0) /* "-fifelse-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 
+/* Enable support for "^^" in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR
+#define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR (TPP_HAVE_BUILTIN_EXPRPARSER ? -1 : 0) /* "-flogical-xor-in-expressions" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR */
 
-#if 0 /* TODO: Extensions related to lexer expression evaluation */
-EXTENSION(EXT_BININTEGRAL,       "binary-literals",               TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT)
-EXTENSION(EXT_MSVC_FIXED_INT,    "fixed-length-integrals",        TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
-EXTENSION(EXT_LXOR,              "logical-xor-in-expressions",    TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
-EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT) /* TODO: Relation to -Wno-multichar? */
-#endif
+/* Enable support for "0b" literals in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
+#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT) ? -1 : 0) /* "-fbinary-literals" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
+
+/* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+#define TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT) ? -1 : 0) /* "-ffixed-type-integrals" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
+
+/* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#define TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT) ? -1 : 0) /* "-ffixed-length-integrals" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+
+/* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
+#ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE) ? 1 : 0) /* "-fcharacter-literals" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -1403,13 +1471,17 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 /* Provide an API function `tpp_unicode_writeutf8()' */
 #ifndef TPP_HAVE_TPP_UNICODE_WRITEUTF8
 #define TPP_HAVE_TPP_UNICODE_WRITEUTF8            \
-	(TPP_HAVE_TPP_TOK_CHAR ||                     \
-	 TPP_HAVE_TPP_TOK_STRING ||                   \
+	(TPP_HAVE_TPP_TOK_STRING ||                   \
 	 TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
 	 TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
 	 TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
 	 TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
 	 TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
+	 TPP_HAVE_TPP_TOK_CHAR ||                     \
+	 TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+	 TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+	 TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+	 TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
 	 TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL ||       \
 	 TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
 #endif /* !TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
@@ -1552,15 +1624,60 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #endif /* !TPP_HAVE_MACRO_EQUALS */
 
-/* Provide a function "tpp_token_encodestring()" to perform \-escaping of arbitrary data */
-#ifndef TPP_HAVE_TOKEN_ENCODESTRING
-#define TPP_HAVE_TOKEN_ENCODESTRING (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT)
-#endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+/* Provide a function "TPP_HAVE_TPP_TOK_STRINGLIKE()" to perform \-escaping of arbitrary data */
+#ifndef TPP_HAVE_LEXER_DECODESTRING
+#define TPP_HAVE_LEXER_DECODESTRING (TPP_HAVE_TPP_TOK_STRINGLIKE)
+#endif /* !TPP_HAVE_LEXER_DECODESTRING */
 
 /* Provide a function "tpp_expr_value_printrepr()" to construct the result of __TPP_EVAL */
 #ifndef TPP_HAVE_EXPR_VALUE_PRINTREPR
 #define TPP_HAVE_EXPR_VALUE_PRINTREPR (TPP_HAVE_MACRO___TPP_EVAL)
 #endif /* !TPP_HAVE_EXPR_VALUE_PRINTREPR */
+
+/* Provide a function "tpp_token_encodestring()" to perform \-escaping of arbitrary data */
+#ifndef TPP_HAVE_TOKEN_ENCODESTRING
+#define TPP_HAVE_TOKEN_ENCODESTRING                                          \
+	(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || \
+	 (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS))
+#endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+
+/* Provide a function "tpp_lexer_decodeint_expr()" to parse an integer */
+#ifndef TPP_HAVE_LEXER_DECODEINT_EXPR
+#define TPP_HAVE_LEXER_DECODEINT_EXPR (TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT)
+#endif /* !TPP_HAVE_LEXER_DECODEINT_EXPR */
+
+/* Provide a function "tpp_lexer_decodeint()" to parse an integer */
+#ifndef TPP_HAVE_LEXER_DECODEINT
+#define TPP_HAVE_LEXER_DECODEINT ((TPP_HAVE_LEXER_DECODEINT_EXPR || TPP_HAVE_CPP_LINE || TPP_HAVE_CPP_DIGIT_LINE) && TPP_HAVE_TPP_TOK_INT)
+#endif /* !TPP_HAVE_LEXER_DECODEINT */
+
+/* Provide a function "tpp_lexer_decodefloat_expr()" to parse a float */
+#ifndef TPP_HAVE_LEXER_DECODEFLOAT_EXPR
+#define TPP_HAVE_LEXER_DECODEFLOAT_EXPR (TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TPP_TOK_FLOAT)
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
+
+/* Provide a function "tpp_lexer_decodefloat()" to parse a float */
+#ifndef TPP_HAVE_LEXER_DECODEFLOAT
+#define TPP_HAVE_LEXER_DECODEFLOAT (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
+
+/* Provide a function "tpp_lexer_parsestring_expr()" to parse a string */
+#ifndef TPP_HAVE_LEXER_PARSESTRING_EXPR
+#define TPP_HAVE_LEXER_PARSESTRING_EXPR (TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_BUILTIN_EXPR_STRINGS && TPP_HAVE_LEXER_DECODESTRING)
+#endif /* !TPP_HAVE_LEXER_PARSESTRING_EXPR */
+
+/* Provide a function "tpp_lexer_parsecharacter_expr()" to parse a character literal */
+#ifndef TPP_HAVE_LEXER_PARSECHARACTER_EXPR
+#define TPP_HAVE_LEXER_PARSECHARACTER_EXPR (TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS && TPP_HAVE_LEXER_DECODESTRING)
+#endif /* !TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+
+#undef TPP_HAVE_BUILTIN_EXPR_VALUE
+#ifndef tpp_expr_value
+#define TPP_HAVE_BUILTIN_EXPR_VALUE 1
+#endif /* !tpp_expr_value */
+#ifndef TPP_HAVE_BUILTIN_EXPR_VALUE
+#define TPP_HAVE_BUILTIN_EXPR_VALUE 0
+#endif /* !TPP_HAVE_BUILTIN_EXPR_VALUE */
 
 /************************************************************************/
 /************************************************************************/
@@ -1617,13 +1734,17 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #endif /* !TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 #define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED                    \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_CHAR ||                     \
-	                       TPP_HAVE_TPP_TOK_STRING ||                   \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_STRING ||                   \
 	                       TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
 	                       TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||       \
+	                       TPP_HAVE_TPP_TOK_CHAR ||                     \
+	                       TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
 	                       TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
@@ -1661,13 +1782,17 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #endif /* !TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
 #define TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE                   \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_CHAR ||                     \
-	                       TPP_HAVE_TPP_TOK_STRING ||                   \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_STRING ||                   \
 	                       TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
 	                       TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
+	                       TPP_HAVE_TPP_TOK_CHAR ||                     \
+	                       TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
 	                       TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
@@ -1764,6 +1889,22 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #define TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_DEFINED)
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
+#ifndef TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS
+#define TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_BUILTIN_EXPR_STRINGS)
+#endif /* !TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS */
+#ifndef TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
+#define TPP_HAVE_TPP_W_DIVIDE_BY_ZERO \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_VALUE)
+#endif /* !TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
+#ifndef TPP_HAVE_TPP_W_INVALID_INTEGER
+#define TPP_HAVE_TPP_W_INVALID_INTEGER \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_DECODEINT)
+#endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+#ifndef TPP_HAVE_TPP_W_MULTICHAR_LITERAL
+#define TPP_HAVE_TPP_W_MULTICHAR_LITERAL \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
+#endif /* !TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
 
 
 /* Warning printer configuration */

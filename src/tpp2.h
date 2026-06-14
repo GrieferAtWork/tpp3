@@ -178,6 +178,14 @@
  *   -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
  *   -> You will not see this error when not using the "TPP_FILE_IOFLAGS_NONBLOCK" flag
  */
+
+/* TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT,
+ * TPP_CONFIG_EXTENSION_MULTICHAR_CONST, EXT_MULTICHAR_CONST, "-fmultichar-constants":
+ *  - TPP3 allows multi-char literals by default. Instead of having an extension to
+ *    enable/disable support for this, there is now a warning "-Wmultichar" that is
+ *    emitted by default when multi-char constants are used.
+ *  - see: TPP_HAVE_TPP_W_MULTICHAR_LITERAL
+ */
 /************************************************************************/
 
 
@@ -281,9 +289,6 @@
 #ifndef TPP_CONFIG_EXTENSION_LXOR_DEFAULT
 #define TPP_CONFIG_EXTENSION_LXOR_DEFAULT 1
 #endif /* !TPP_CONFIG_EXTENSION_LXOR_DEFAULT */
-#ifndef TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT
-#define TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT 1
-#endif /* !TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT */
 #ifndef TPP_CONFIG_EXTENSION_DATEUTILS_DEFAULT
 #define TPP_CONFIG_EXTENSION_DATEUTILS_DEFAULT 1
 #endif /* !TPP_CONFIG_EXTENSION_DATEUTILS_DEFAULT */
@@ -441,9 +446,6 @@
 #ifndef TPP_CONFIG_EXTENSION_LXOR
 #define TPP_CONFIG_EXTENSION_LXOR (TPP_CONFIG_EXTENSION_LXOR_DEFAULT ? -1 : -2)
 #endif /* !TPP_CONFIG_EXTENSION_LXOR */
-#ifndef TPP_CONFIG_EXTENSION_MULTICHAR_CONST
-#define TPP_CONFIG_EXTENSION_MULTICHAR_CONST (TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT ? -1 : -2)
-#endif /* !TPP_CONFIG_EXTENSION_MULTICHAR_CONST */
 #ifndef TPP_CONFIG_EXTENSION_DATEUTILS
 #define TPP_CONFIG_EXTENSION_DATEUTILS (TPP_CONFIG_EXTENSION_DATEUTILS_DEFAULT ? -1 : -2)
 #endif /* !TPP_CONFIG_EXTENSION_DATEUTILS */
@@ -585,14 +587,19 @@
 #define TPP_HAVE_TPP_TOK_DOLLAR                     (-2) /* "$" Configurable, default=false (TPP2 used to configure this via "TPPLEXER_TOKEN_DOLLAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOLLAR)") */
 #define TPP_HAVE_TPP_TOK_INT                        1    /* ... */
 #define TPP_HAVE_TPP_TOK_FLOAT                      1    /* ... */
-#define TPP_HAVE_TPP_TOK_CHAR                       1    /* TPP2 only supported C character/string literals */
-#define TPP_HAVE_TPP_TOK_STRING                     1    /* *ditto* */
+#define TPP_HAVE_TPP_TOK_STRING                     1    /* TPP2 only supported C character/string literals */
+#define TPP_HAVE_TPP_TOK_CHAR                       1    /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL     0    /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL    0    /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL    0    /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL   0    /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL   0    /* *ditto* */
 #define TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL       0    /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL       0    /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL      0    /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL      0    /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL     0    /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL     0    /* *ditto* */
 #define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL         0    /* *ditto* */
 #define TPP_HAVE_TPP_TOK_LANGLE_LANGLE              1    /* "<<" */
 #define TPP_HAVE_TPP_TOK_RANGLE_RANGLE              1    /* ">>" */
@@ -775,16 +782,14 @@
 #define TPP_HAVE_BUILTIN_EXPR_DEFINED                1                                      /* Enable support for "defined(MACRO)" in builtin lexer expressions */
 #define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR         TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED /* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
 #define TPP_HAVE_BUILTIN_EXPR_STRINGS                TPP_CONFIG_EXTENSION_STRINGOPS         /* Enable support for string operations in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_FLOATS                 1                                      /* Enable support for floats in builtin lexer expressions */
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    TPP_CONFIG_EXTENSION_GCC_IFELSE        /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    /* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
-
-#if 0 /* TODO: Extensions related to lexer expression evaluation */
-EXTENSION(EXT_BININTEGRAL,       "binary-literals",               TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT)
-EXTENSION(EXT_MSVC_FIXED_INT,    "fixed-length-integrals",        TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
-EXTENSION(EXT_LXOR,              "logical-xor-in-expressions",    TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
-EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT)
-#endif
-
+#define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR            TPP_CONFIG_EXTENSION_LXOR              /* Enable support for "^^" in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS        TPP_CONFIG_EXTENSION_BININTEGRAL       /* Enable support for "0b" literals in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS   1                                      /* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS TPP_CONFIG_EXTENSION_MSVC_FIXED_INT    /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS     1                                      /* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
 
 /* Force extensions to use the names they'd been using in TPP2 */
 #define TPP_EXTNAME_TRIGRAPHS                           "trigraphs"
@@ -832,6 +837,9 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #define TPP_EXTNAME_BUILTIN_EXPR_STRINGS                "strings-in-expressions"
 #define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    "if-else-optional-true"
 #define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS "ifelse-in-expressions"
+#define TPP_EXTNAME_BUILTIN_EXPR_LOGICAL_XOR            "logical-xor-in-expressions"
+#define TPP_EXTNAME_BUILTIN_EXPR_BINARY_LITERALS        "binary-literals"
+#define TPP_EXTNAME_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS "fixed-length-integrals"
 /************************************************************************/
 
 
@@ -1169,6 +1177,9 @@ alias("EXT_EXT_ARE_FEATURES", "TPP_EXT_CLANG_EXTENSIONS_ARE_FEATURES");
 alias("EXT_STRINGOPS", "TPP_EXT_BUILTIN_EXPR_STRINGS");
 alias("EXT_GCC_IFELSE", "TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT");
 alias("EXT_IFELSE_IN_EXPR", "TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS");
+alias("EXT_LXOR", "TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR");
+alias("EXT_BININTEGRAL", "TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS");
+alias("EXT_MSVC_FIXED_INT", "TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS");
 
 // Warning groups
 alias("WG_COMMENT",  "TPP_WG_COMMENT");

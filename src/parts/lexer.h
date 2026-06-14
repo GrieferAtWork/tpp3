@@ -924,8 +924,91 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
 
 
-#if TPP_HAVE_TPP_TOK_STRINGLIKE
+#if TPP_HAVE_LEXER_DECODEINT
+#undef TPP_HAVE_INTEGER_SUFFIX_KIND
+#if TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS || TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#define TPP_HAVE_INTEGER_SUFFIX_KIND 1
+typedef enum tpp_integer_suffix_kind {
+	TPP_INTEGER_SUFFIX_KIND_INT, /* "" (default) */
+#if TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+	TPP_INTEGER_SUFFIX_KIND_UNSIGNED,           /* "u" */
+	TPP_INTEGER_SUFFIX_KIND_LONG,               /* "l" */
+	TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG,      /* "ul" */
+	TPP_INTEGER_SUFFIX_KIND_LONG_LONG,          /* "ll" */
+	TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG_LONG, /* "ull" */
+#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
+#if TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+	TPP_INTEGER_SUFFIX_KIND_INT8,   /* "i8" */
+	TPP_INTEGER_SUFFIX_KIND_INT16,  /* "i16" */
+	TPP_INTEGER_SUFFIX_KIND_INT32,  /* "i32" */
+	TPP_INTEGER_SUFFIX_KIND_INT64,  /* "i64" */
+	TPP_INTEGER_SUFFIX_KIND_UINT8,  /* "ui8" */
+	TPP_INTEGER_SUFFIX_KIND_UINT16, /* "ui16" */
+	TPP_INTEGER_SUFFIX_KIND_UINT32, /* "ui32" */
+	TPP_INTEGER_SUFFIX_KIND_UINT64, /* "ui64" */
+#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+} tpp_integer_suffix_kind;
+#else /* TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS || TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+#define TPP_HAVE_INTEGER_SUFFIX_KIND 0
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS && !TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
 
+
+/* Decode the current token (which should be TPP_TOK_INT) into an integer
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Lexer error happened
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#if TPP_HAVE_INTEGER_SUFFIX_KIND
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
+                       tpp_intmax *tpp_restrict result,
+                       tpp_integer_suffix_kind *p_suffix_kind);
+#define tpp_lexer_decodeint(self, result) \
+	tpp_lexer_decodeint_ex(self, result, NULL)
+#else /* TPP_HAVE_INTEGER_SUFFIX_KIND */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
+                    tpp_intmax *tpp_restrict result);
+#endif /* !TPP_HAVE_INTEGER_SUFFIX_KIND */
+#endif /* TPP_HAVE_LEXER_DECODEINT */
+
+/* Decode the current token (which should be TPP_TOK_INT) into an integer
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Lexer error happened
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#if TPP_HAVE_LEXER_DECODEINT_EXPR
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
+                         tpp_expr_value *tpp_restrict result);
+#endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
+
+
+/* Decode the current token (which should be TPP_TOK_FLOAT) into a float
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Lexer error happened
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#if TPP_HAVE_LEXER_DECODEFLOAT
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodefloat(tpp_lexer *tpp_restrict self,
+                      tpp_float *tpp_restrict result);
+#endif /* TPP_HAVE_LEXER_DECODEFLOAT */
+
+/* Decode the current token (which should be TPP_TOK_FLOAT) into a float
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Lexer error happened
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
+                           tpp_expr_value *tpp_restrict result);
+#endif /* TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
+
+
+
+
+
+#if TPP_HAVE_LEXER_DECODESTRING
 /* Print the unescaped representation of the string-token described by "self"
  * The caller must ensure that `TPP_TOK_ISSTRING(tpp_lexer_gettoken(self)->tt_id)'
  *
@@ -1013,7 +1096,79 @@ tpp_lexer_parsestring_cb(tpp_lexer *self,
                          tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
                                                  tpp_char const *str, tpp_size length),
                          void *arg, unsigned int flags);
-#endif /* TPP_HAVE_TPP_TOK_STRINGLIKE */
+
+#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+/* Convenience wrapper to parse a character integer literal
+ *
+ * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ *
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O error while yielding to next token
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
+                                 /*out*/ tpp_intmax *tpp_restrict p_result,
+                                 unsigned int flags);
+#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+#endif /* TPP_HAVE_LEXER_DECODESTRING */
+
+#undef TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR
+#if TPP_HAVE_LEXER_PARSESTRING_EXPR
+/* Convenience wrapper around `tpp_lexer_parsestring()'
+ * On success (!TPP_ISERR(return)), caller must "tpp_expr_value_fini(result)"
+ *
+ * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ *
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O error while yielding to next token
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#ifndef tpp_lexer_parsestring_expr
+#define tpp_lexer_parsestring_expr tpp_lexer_parsestring_expr
+#define TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR 1
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
+                           /*out*/ tpp_expr_value *tpp_restrict result,
+                           unsigned int flags);
+#endif /* !tpp_lexer_parsestring_expr */
+#endif /* TPP_HAVE_LEXER_PARSESTRING_EXPR */
+#ifndef TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR
+#define TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR 0
+#endif /* !TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR */
+
+
+
+#undef TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR
+#if TPP_HAVE_LEXER_PARSECHARACTER_EXPR
+/* Convenience wrapper around `tpp_lexer_parsecharacter()'
+ * On success (!TPP_ISERR(return)), caller must "tpp_expr_value_fini(result)"
+ *
+ * @param: flags: Set of `TPP_LEXER_PARSECHARACTER_FLAG_*'
+ *
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O error while yielding to next token
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#ifndef tpp_lexer_parsecharacter_expr
+#define tpp_lexer_parsecharacter_expr tpp_lexer_parsecharacter_expr
+#define TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR 1
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
+                              /*out*/ tpp_expr_value *tpp_restrict result,
+                              unsigned int flags);
+#endif /* !tpp_lexer_parsecharacter_expr */
+#endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+#ifndef TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR
+#define TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR 0
+#endif /* !TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR */
+
 
 
 #if TPP_HAVE_WARNINGS

@@ -45,16 +45,18 @@
 #include "parts/warnings.c"
 #include "parts/lexer.c"
 #include "parts/lexer-warn.c"
+#include "parts/expr.c"
 #include "parts/lexer-yieldraw.c"
 #include "parts/lexer-seek-rparen.c"
 #include "parts/lexer-pp-define.c"
 #include "parts/lexer-pp-pragma.c"
 #include "parts/lexer-skipraw.c"
-#include "parts/lexer-parseexpr.c"
+#include "parts/lexer-decodeint.c"
 #include "parts/lexer-yieldpp.c"
 #include "parts/lexer-yield-macro.c"
 #include "parts/lexer-yield.c"
 #include "parts/lexer-decodestring.c"
+#include "parts/lexer-parseexpr.c"
 
 #endif /* !GUARD_TPP_C */
 /* clang-format on */

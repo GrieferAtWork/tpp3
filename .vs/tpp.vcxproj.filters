@@ -96,6 +96,12 @@
     <ClCompile Include="..\src\parts\lexer-parseexpr.c">
       <Filter>src\parts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\lexer-decodeint.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parts\expr.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">

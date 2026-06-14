@@ -15,11 +15,13 @@
     <ClCompile Include="..\src\parts\builtins.c" />
     <ClCompile Include="..\src\parts\ctype.c" />
     <ClCompile Include="..\src\parts\error.c" />
+    <ClCompile Include="..\src\parts\expr.c" />
     <ClCompile Include="..\src\parts\extensions.c" />
     <ClCompile Include="..\src\parts\features.c" />
     <ClCompile Include="..\src\parts\file-io.c" />
     <ClCompile Include="..\src\parts\file.c" />
     <ClCompile Include="..\src\parts\keyword.c" />
+    <ClCompile Include="..\src\parts\lexer-decodeint.c" />
     <ClCompile Include="..\src\parts\lexer-decodestring.c" />
     <ClCompile Include="..\src\parts\lexer-parseexpr.c" />
     <ClCompile Include="..\src\parts\lexer-pp-define.c" />

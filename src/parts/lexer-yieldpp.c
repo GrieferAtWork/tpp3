@@ -174,7 +174,7 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 	/* Evaluate expression result (and warn about trailing tokens) */
 	if (!TPP_ISERR(result)) {
 		bool b_expr_value;
-		result = tpp_expr_value_istrue(&expr_value, &b_expr_value);
+		result = tpp_expr_value_asbool(self, &expr_value, &b_expr_value);
 		tpp_expr_value_fini(&expr_value);
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
 		if (!TPP_ISERR(result) && tpp_lexer_gettok(self) != TPP_TOK_EOF)

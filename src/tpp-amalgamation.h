@@ -1474,6 +1474,16 @@ TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_STRINGS, TPP_EXTNAME_BUILTIN_EXPR_STRINGS, TP
 #else /* TPP_HAVE_BUILTIN_EXPR_STRINGS < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_STRINGS(self) TPP_HAVE_BUILTIN_EXPR_STRINGS
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS < 0
+#define TPP_EXT_BUILTIN_EXPR_FLOATS TPP_EXT_BUILTIN_EXPR_FLOATS
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_FLOATS
+#define TPP_EXTNAME_BUILTIN_EXPR_FLOATS "floats-in-expressions"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_FLOATS */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_FLOATS, TPP_EXTNAME_BUILTIN_EXPR_FLOATS, TPP_HAVE_BUILTIN_EXPR_FLOATS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_FLOATS(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_FLOATS
+#else /* TPP_HAVE_BUILTIN_EXPR_FLOATS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_FLOATS(self) TPP_HAVE_BUILTIN_EXPR_FLOATS
+#endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS >= 0 */
 #if TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT < 0
 #define TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
 #ifndef TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
@@ -1494,6 +1504,56 @@ TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS, TPP_EXTNAME_BUILTIN_E
 #else /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS < 0 */
 #define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS(self) TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #endif /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR < 0
+#define TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_LOGICAL_XOR
+#define TPP_EXTNAME_BUILTIN_EXPR_LOGICAL_XOR "logical-xor-in-expressions"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_LOGICAL_XOR */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR, TPP_EXTNAME_BUILTIN_EXPR_LOGICAL_XOR, TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR
+#else /* TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR(self) TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR
+#endif /* TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS < 0
+#define TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_BINARY_LITERALS
+#define TPP_EXTNAME_BUILTIN_EXPR_BINARY_LITERALS "binary-literals"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_BINARY_LITERALS */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS, TPP_EXTNAME_BUILTIN_EXPR_BINARY_LITERALS, TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS
+#else /* TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS(self) TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
+#endif /* TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS < 0
+#define TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+#define TPP_EXTNAME_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS "fixed-type-integrals"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS, TPP_EXTNAME_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS, TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+#else /* TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS(self) TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS < 0
+#define TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#define TPP_EXTNAME_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS "fixed-length-integrals"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS, TPP_EXTNAME_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS, TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#else /* TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS(self) TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS >= 0 */
+#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS < 0
+#define TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS
+#ifndef TPP_EXTNAME_BUILTIN_EXPR_CHARACTER_LITERALS
+#define TPP_EXTNAME_BUILTIN_EXPR_CHARACTER_LITERALS "character-literals"
+#endif /* !TPP_EXTNAME_BUILTIN_EXPR_CHARACTER_LITERALS */
+TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS, TPP_EXTNAME_BUILTIN_EXPR_CHARACTER_LITERALS, TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS == -1)
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS(self) (self)->tes_flags.tef_TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS
+#else /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS < 0 */
+#define _tpp_extensions_state_get_TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS(self) TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS >= 0 */
 
 
 
@@ -1562,7 +1622,13 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT ||             \
 	 TPP_HAVE_TPP_W_EXPECTED_STRING ||                          \
 	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF ||                         \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION)
+	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE ||                  \
+	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF ||                  \
+	 TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF ||                         \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION ||           \
+	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF ||          \
+	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED ||        \
+	 TPP_HAVE_TPP_W_INVALID_INTEGER)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_WG_SYNTAX TPP_WG_SYNTAX
@@ -1684,6 +1750,12 @@ TPP_WARNING(TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF, 1(TPP_WG_SYNTAX), 1(1016), TP
 TPP_WARNING(TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED, 1(TPP_WG_SYNTAX), 1(2003), TPP_WSTATE_UNDEFINED,
             "expected <keyword> after %[defined%] in expression, but got %Pt")
 #endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
+
+#if TPP_HAVE_TPP_W_INVALID_INTEGER
+#define TPP_W_INVALID_INTEGER TPP_W_INVALID_INTEGER
+TPP_WARNING(TPP_W_INVALID_INTEGER, 1(TPP_WG_SYNTAX), 1(3688), TPP_WSTATE_UNDEFINED,
+            "invalid integer literal: %Pt")
+#endif /* TPP_HAVE_TPP_W_INVALID_INTEGER */
 
 
 
@@ -1833,6 +1905,24 @@ TPP_WARNING(TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 1(412
 
 
 /************************************************************************/
+/* -Wmultichar                                                          */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_MULTICHAR_LITERAL
+#define TPP_HAVE_TPP_WG_MULTICHAR_LITERAL (TPP_HAVE_TPP_W_MULTICHAR_LITERAL)
+#endif /* !TPP_HAVE_TPP_WG_MULTICHAR_LITERAL */
+#if TPP_HAVE_TPP_WG_MULTICHAR_LITERAL
+#define TPP_WG_MULTICHAR_LITERAL TPP_WG_MULTICHAR_LITERAL
+TPP_WGROUP(TPP_WG_MULTICHAR_LITERAL, 1("multichar"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_MULTICHAR_LITERAL */
+
+#if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
+#define TPP_W_MULTICHAR_LITERAL TPP_W_MULTICHAR_LITERAL
+TPP_WARNING(TPP_W_MULTICHAR_LITERAL, 1(TPP_WG_MULTICHAR_LITERAL), 0(), TPP_WSTATE_UNDEFINED,
+            "multichar literal %Pt used")
+#endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
+
+
+/************************************************************************/
 /* -Wmacros                                                             */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_MACROS
@@ -1933,6 +2023,18 @@ TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
 	}
 })
 #endif /* TPP_HAVE_TPP_W_REDEFINE_MACRO */
+
+#if TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS
+#define TPP_W_BAD_EXPRESSION_OPERANDS TPP_W_BAD_EXPRESSION_OPERANDS
+TPP_WARNING(TPP_W_BAD_EXPRESSION_OPERANDS, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
+            "bad operand types in %[%s%s%s%s%s%s%]")
+#endif /* TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS */
+
+#if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
+#define TPP_W_DIVIDE_BY_ZERO TPP_W_DIVIDE_BY_ZERO
+TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
+            "division by zero")
+#endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
 
 
 
@@ -2910,6 +3012,31 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL */
 
+/* R'AB(f)AB' */
+#ifndef TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+#define TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+
+/* L'f'  (TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL: LR'AB(f)AB') */
+#ifndef TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+#define TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
+
+/* u8'f' (TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL: u8R'AB(f)AB') */
+#ifndef TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+#define TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
+
+/* u'f'  (TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL: uR'AB(f)AB') */
+#ifndef TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+#define TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL */
+
+/* U'f'  (TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL: UR'AB(f)AB') */
+#ifndef TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+#define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+
 /* R"foo"  r"foo"  */
 #ifndef TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
 #define TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL" */
@@ -3306,30 +3433,51 @@ TPP_DECL_END
 #undef TPP_HAVE_TPP_TOK_COMMENTLIKE
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE \
 	(TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE || TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE)
-#undef TPP_HAVE_TPP_TOK_STRINGLIKE
+#undef TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE
 #if (TPP_HAVE_TPP_TOK_CHAR ||                     \
-     TPP_HAVE_TPP_TOK_STRING ||                   \
-     TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||       \
+     TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
      TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL ||         \
-     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
      TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE 0
+#endif /* !... */
+#undef TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE
+#if (TPP_HAVE_TPP_TOK_STRING ||                     \
+     TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||         \
+     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL)
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE 0
+#endif /* !... */
+#undef TPP_HAVE_TPP_TOK_STRINGLIKE
+#if (TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE || \
+     TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE)
 #define TPP_HAVE_TPP_TOK_STRINGLIKE 1
 #else /* ... */
 #define TPP_HAVE_TPP_TOK_STRINGLIKE 0
 #endif /* !... */
 #undef TPP_HAVE_STRING_ESCAPE
-#if (TPP_HAVE_TPP_TOK_CHAR ||                     \
-     TPP_HAVE_TPP_TOK_STRING ||                   \
+#if (TPP_HAVE_TPP_TOK_STRING ||                   \
      TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
      TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
      TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
      TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
      TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CHAR ||                     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
      TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
 #define TPP_HAVE_STRING_ESCAPE 1
 #else /* ... */
@@ -3926,7 +4074,7 @@ TPP_DECL_END
 
 /* Enable support for "defined(MACRO)" in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_DEFINED
-#define TPP_HAVE_BUILTIN_EXPR_DEFINED (TPP_HAVE_LEXER_PARSEEXPR) /* "TPP_FEAT_BUILTIN_EXPR_DEFINED" */
+#define TPP_HAVE_BUILTIN_EXPR_DEFINED (TPP_HAVE_BUILTIN_EXPRPARSER) /* "TPP_FEAT_BUILTIN_EXPR_DEFINED" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_DEFINED */
 
 /* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
@@ -3936,26 +4084,48 @@ TPP_DECL_END
 
 /* Enable support for string operations in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_STRINGS
-#define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_LEXER_PARSEEXPR && TPP_HAVE_TPP_TOK_STRINGLIKE) ? -1 : 0) /* "-fstrings-in-expressions" */
+#define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_STRINGLIKE) ? -1 : 0) /* "-fstrings-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+/* Enable support for floats in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_FLOATS
+#define TPP_HAVE_BUILTIN_EXPR_FLOATS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_FLOAT) ? 1 : 0) /* "-ffloats-in-expressions" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
 /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
-#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT (TPP_HAVE_LEXER_PARSEEXPR ? -1 : 0) /* "-fif-else-optional-true" */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT (TPP_HAVE_BUILTIN_EXPRPARSER ? -1 : 0) /* "-fif-else-optional-true" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
 
 /* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
-#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS (TPP_HAVE_LEXER_PARSEEXPR ? -1 : 0) /* "-fifelse-in-expressions" */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS (TPP_HAVE_BUILTIN_EXPRPARSER ? -1 : 0) /* "-fifelse-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 
+/* Enable support for "^^" in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR
+#define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR (TPP_HAVE_BUILTIN_EXPRPARSER ? -1 : 0) /* "-flogical-xor-in-expressions" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR */
 
-#if 0 /* TODO: Extensions related to lexer expression evaluation */
-EXTENSION(EXT_BININTEGRAL,       "binary-literals",               TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT)
-EXTENSION(EXT_MSVC_FIXED_INT,    "fixed-length-integrals",        TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
-EXTENSION(EXT_LXOR,              "logical-xor-in-expressions",    TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
-EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT) /* TODO: Relation to -Wno-multichar? */
-#endif
+/* Enable support for "0b" literals in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
+#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT) ? -1 : 0) /* "-fbinary-literals" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
+
+/* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+#define TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT) ? -1 : 0) /* "-ffixed-type-integrals" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
+
+/* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes in builtin lexer expressions */
+#ifndef TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#define TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT) ? -1 : 0) /* "-ffixed-length-integrals" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+
+/* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
+#ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE) ? 1 : 0) /* "-fcharacter-literals" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -3970,13 +4140,17 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 /* Provide an API function `tpp_unicode_writeutf8()' */
 #ifndef TPP_HAVE_TPP_UNICODE_WRITEUTF8
 #define TPP_HAVE_TPP_UNICODE_WRITEUTF8            \
-	(TPP_HAVE_TPP_TOK_CHAR ||                     \
-	 TPP_HAVE_TPP_TOK_STRING ||                   \
+	(TPP_HAVE_TPP_TOK_STRING ||                   \
 	 TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
 	 TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
 	 TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
 	 TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
 	 TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
+	 TPP_HAVE_TPP_TOK_CHAR ||                     \
+	 TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+	 TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+	 TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+	 TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
 	 TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL ||       \
 	 TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
 #endif /* !TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
@@ -4119,15 +4293,60 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #endif /* !TPP_HAVE_MACRO_EQUALS */
 
-/* Provide a function "tpp_token_encodestring()" to perform \-escaping of arbitrary data */
-#ifndef TPP_HAVE_TOKEN_ENCODESTRING
-#define TPP_HAVE_TOKEN_ENCODESTRING (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT)
-#endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+/* Provide a function "TPP_HAVE_TPP_TOK_STRINGLIKE()" to perform \-escaping of arbitrary data */
+#ifndef TPP_HAVE_LEXER_DECODESTRING
+#define TPP_HAVE_LEXER_DECODESTRING (TPP_HAVE_TPP_TOK_STRINGLIKE)
+#endif /* !TPP_HAVE_LEXER_DECODESTRING */
 
 /* Provide a function "tpp_expr_value_printrepr()" to construct the result of __TPP_EVAL */
 #ifndef TPP_HAVE_EXPR_VALUE_PRINTREPR
 #define TPP_HAVE_EXPR_VALUE_PRINTREPR (TPP_HAVE_MACRO___TPP_EVAL)
 #endif /* !TPP_HAVE_EXPR_VALUE_PRINTREPR */
+
+/* Provide a function "tpp_token_encodestring()" to perform \-escaping of arbitrary data */
+#ifndef TPP_HAVE_TOKEN_ENCODESTRING
+#define TPP_HAVE_TOKEN_ENCODESTRING                                          \
+	(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || \
+	 (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS))
+#endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+
+/* Provide a function "tpp_lexer_decodeint_expr()" to parse an integer */
+#ifndef TPP_HAVE_LEXER_DECODEINT_EXPR
+#define TPP_HAVE_LEXER_DECODEINT_EXPR (TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT)
+#endif /* !TPP_HAVE_LEXER_DECODEINT_EXPR */
+
+/* Provide a function "tpp_lexer_decodeint()" to parse an integer */
+#ifndef TPP_HAVE_LEXER_DECODEINT
+#define TPP_HAVE_LEXER_DECODEINT ((TPP_HAVE_LEXER_DECODEINT_EXPR || TPP_HAVE_CPP_LINE || TPP_HAVE_CPP_DIGIT_LINE) && TPP_HAVE_TPP_TOK_INT)
+#endif /* !TPP_HAVE_LEXER_DECODEINT */
+
+/* Provide a function "tpp_lexer_decodefloat_expr()" to parse a float */
+#ifndef TPP_HAVE_LEXER_DECODEFLOAT_EXPR
+#define TPP_HAVE_LEXER_DECODEFLOAT_EXPR (TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TPP_TOK_FLOAT)
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
+
+/* Provide a function "tpp_lexer_decodefloat()" to parse a float */
+#ifndef TPP_HAVE_LEXER_DECODEFLOAT
+#define TPP_HAVE_LEXER_DECODEFLOAT (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
+
+/* Provide a function "tpp_lexer_parsestring_expr()" to parse a string */
+#ifndef TPP_HAVE_LEXER_PARSESTRING_EXPR
+#define TPP_HAVE_LEXER_PARSESTRING_EXPR (TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_BUILTIN_EXPR_STRINGS && TPP_HAVE_LEXER_DECODESTRING)
+#endif /* !TPP_HAVE_LEXER_PARSESTRING_EXPR */
+
+/* Provide a function "tpp_lexer_parsecharacter_expr()" to parse a character literal */
+#ifndef TPP_HAVE_LEXER_PARSECHARACTER_EXPR
+#define TPP_HAVE_LEXER_PARSECHARACTER_EXPR (TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS && TPP_HAVE_LEXER_DECODESTRING)
+#endif /* !TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+
+#undef TPP_HAVE_BUILTIN_EXPR_VALUE
+#ifndef tpp_expr_value
+#define TPP_HAVE_BUILTIN_EXPR_VALUE 1
+#endif /* !tpp_expr_value */
+#ifndef TPP_HAVE_BUILTIN_EXPR_VALUE
+#define TPP_HAVE_BUILTIN_EXPR_VALUE 0
+#endif /* !TPP_HAVE_BUILTIN_EXPR_VALUE */
 
 /************************************************************************/
 /************************************************************************/
@@ -4184,13 +4403,17 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #endif /* !TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 #define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED                    \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_CHAR ||                     \
-	                       TPP_HAVE_TPP_TOK_STRING ||                   \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_STRING ||                   \
 	                       TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
 	                       TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||       \
+	                       TPP_HAVE_TPP_TOK_CHAR ||                     \
+	                       TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
 	                       TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
@@ -4228,13 +4451,17 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #endif /* !TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
 #define TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE                   \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_CHAR ||                     \
-	                       TPP_HAVE_TPP_TOK_STRING ||                   \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_STRING ||                   \
 	                       TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
 	                       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
 	                       TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
+	                       TPP_HAVE_TPP_TOK_CHAR ||                     \
+	                       TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+	                       TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
 	                       TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
@@ -4331,6 +4558,22 @@ EXTENSION(EXT_MULTICHAR_CONST,   "multichar-constants",           TPP_CONFIG_EXT
 #define TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_DEFINED)
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
+#ifndef TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS
+#define TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_BUILTIN_EXPR_STRINGS)
+#endif /* !TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS */
+#ifndef TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
+#define TPP_HAVE_TPP_W_DIVIDE_BY_ZERO \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_VALUE)
+#endif /* !TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
+#ifndef TPP_HAVE_TPP_W_INVALID_INTEGER
+#define TPP_HAVE_TPP_W_INVALID_INTEGER \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_DECODEINT)
+#endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+#ifndef TPP_HAVE_TPP_W_MULTICHAR_LITERAL
+#define TPP_HAVE_TPP_W_MULTICHAR_LITERAL \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
+#endif /* !TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
 
 
 /* Warning printer configuration */
@@ -4616,76 +4859,6 @@ TPP_DECL_END
 /************************************************************************/
 
 /************************************************************************/
-/* File: parts/expr.h                                                   */
-/************************************************************************/
-TPP_DECL_BEGIN
-
-#undef TPP_HAVE_BUILTIN_EXPR_VALUE
-#ifndef tpp_expr_value
-#define TPP_HAVE_BUILTIN_EXPR_VALUE 1
-#define tpp_expr_value tpp_expr_value
-typedef struct tpp_expr_value {
-	tpp_intmax xv_value;
-} tpp_expr_value;
-
-#define tpp_expr_value_move(dst, src) (void)(*(dst) = *(src))
-#define tpp_expr_value_copy(dst, src) (*(dst) = *(src), TPP_EOK)
-#define tpp_expr_value_fini(self)     (void)0
-
-/* Initialize to int=0/1 */
-#define tpp_expr_value_init_bool(self, v) ((self)->xv_value = (v) ? 1 : 0, TPP_EOK)
-
-#define tpp_expr_value_pos(self, result)     (*(result) = *(self), TPP_EOK)
-#define tpp_expr_value_neg(self, result)     ((result)->xv_value = -(self)->xv_value, TPP_EOK)
-#define tpp_expr_value_inv(self, result)     ((result)->xv_value = ~(self)->xv_value, TPP_EOK)
-#define tpp_expr_value_add(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value + (rhs)->xv_value, TPP_EOK)
-#define tpp_expr_value_sub(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value - (rhs)->xv_value, TPP_EOK)
-#define tpp_expr_value_mul(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value * (rhs)->xv_value, TPP_EOK)
-#define tpp_expr_value_div(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value / (rhs)->xv_value, TPP_EOK)
-#define tpp_expr_value_mod(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value % (rhs)->xv_value, TPP_EOK)
-#define tpp_expr_value_shl(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value << (rhs)->xv_value, TPP_EOK)
-#define tpp_expr_value_shr(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value >> (rhs)->xv_value, TPP_EOK)
-#define tpp_expr_value_and(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value & (rhs)->xv_value, TPP_EOK)
-#define tpp_expr_value_or(lhs, rhs, result)  ((result)->xv_value = (lhs)->xv_value | (rhs)->xv_value, TPP_EOK)
-#define tpp_expr_value_xor(lhs, rhs, result) ((result)->xv_value = (lhs)->xv_value ^ (rhs)->xv_value, TPP_EOK)
-
-#define tpp_expr_value_cmp_eq(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value == (rhs)->xv_value), TPP_EOK)
-#define tpp_expr_value_cmp_ne(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value != (rhs)->xv_value), TPP_EOK)
-#define tpp_expr_value_cmp_lo(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value < (rhs)->xv_value), TPP_EOK)
-#define tpp_expr_value_cmp_le(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value <= (rhs)->xv_value), TPP_EOK)
-#define tpp_expr_value_cmp_gr(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value > (rhs)->xv_value), TPP_EOK)
-#define tpp_expr_value_cmp_ge(lhs, rhs, p_bool_result) (*(p_bool_result) = ((lhs)->xv_value >= (rhs)->xv_value), TPP_EOK)
-
-/* Determine the boolean-style value of "self" */
-#define tpp_expr_value_istrue(self, p_bool_result) (*(p_bool_result) = ((self)->xv_value != 0), TPP_EOK)
-
-#if TPP_HAVE_EXPR_VALUE_PRINTREPR
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
-tpp_expr_value_printrepr(tpp_expr_value const *tpp_restrict self,
-                         tpp_formatprinter printer, void *arg);
-#endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
-#endif /* !tpp_expr_value */
-
-#ifndef TPP_HAVE_BUILTIN_EXPR_VALUE
-#define TPP_HAVE_BUILTIN_EXPR_VALUE 0
-#endif /* !TPP_HAVE_BUILTIN_EXPR_VALUE */
-
-
-/* Initialize to int=0 */
-#ifndef tpp_expr_value_init_zero
-#define tpp_expr_value_init_zero(self) tpp_expr_value_init_bool(self, 0)
-#endif /* !tpp_expr_value_init_zero */
-
-/* Initialize to int=1 */
-#ifndef tpp_expr_value_init_one
-#define tpp_expr_value_init_one(self) tpp_expr_value_init_bool(self, 1)
-#endif /* !tpp_expr_value_init_one */
-
-
-TPP_DECL_END
-/************************************************************************/
-
-/************************************************************************/
 /* File: parts/file-io.h                                                */
 /************************************************************************/
 #ifndef TPP_OS_WINDOWS
@@ -4945,6 +5118,269 @@ TPP_DECL_END
 /************************************************************************/
 
 /************************************************************************/
+/* File: parts/expr.h                                                   */
+/************************************************************************/
+TPP_DECL_BEGIN
+
+#if TPP_HAVE_BUILTIN_EXPR_VALUE
+#undef _TPP_EXPR_VALUE_KIND_MULTIPLE
+typedef enum _tpp_expr_value_kind {
+	_TPP_EXPR_VALUE_KIND_INT,
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS
+	_TPP_EXPR_VALUE_KIND_FLOAT,
+#define _TPP_EXPR_VALUE_KIND_MULTIPLE 1
+#endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+	_TPP_EXPR_VALUE_KIND_STRING,
+#define _TPP_EXPR_VALUE_KIND_MULTIPLE 1
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+} _tpp_expr_value_kind;
+
+#ifndef _TPP_EXPR_VALUE_KIND_MULTIPLE
+#define _TPP_EXPR_VALUE_KIND_MULTIPLE 0
+#endif /* !_TPP_EXPR_VALUE_KIND_MULTIPLE */
+
+#define tpp_expr_value tpp_expr_value
+typedef struct tpp_expr_value {
+#if _TPP_EXPR_VALUE_KIND_MULTIPLE
+	_tpp_expr_value_kind TPP_INTERNAL(xv_kind); /* Expression value kind */
+#define _tpp_expr_value_getkind(self)    (self)->TPP_INTERNAL(xv_kind)
+#define _tpp_expr_value_setkind(self, v) , (self)->TPP_INTERNAL(xv_kind) = (v)
+#else /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
+#define _tpp_expr_value_getkind(self)    _TPP_EXPR_VALUE_KIND_INT
+#define _tpp_expr_value_setkind(self, v) /* nothing */
+#endif /* !_TPP_EXPR_VALUE_KIND_MULTIPLE */
+
+	/* Expression value union */
+	union {
+		tpp_intmax          TPP_INTERNAL(xd_int);    /* [valid_if(_tpp_expr_value_getkind(self) == _TPP_EXPR_VALUE_KIND_INT)] */
+#define _tpp_expr_value_getint(self) (self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_int)
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS
+		tpp_float           TPP_INTERNAL(xd_float);  /* [valid_if(_tpp_expr_value_getkind(self) == _TPP_EXPR_VALUE_KIND_FLOAT)] */
+#define _tpp_expr_value_getfloat(self) (self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_float)
+#endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+		TPP_REF tpp_string *TPP_INTERNAL(xd_string); /* [1..1][valid_if(_tpp_expr_value_getkind(self) == _TPP_EXPR_VALUE_KIND_STRING)] */
+#define _tpp_expr_value_getstring(self) (self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string)
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+	} TPP_INTERNAL(xv_data);
+} tpp_expr_value;
+
+
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+#define _tpp_expr_value_incref(self)                                   \
+	, (_tpp_expr_value_getkind(self) != _TPP_EXPR_VALUE_KIND_STRING || \
+	   (tpp_string_incref((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string)), 0))
+#define _tpp_expr_value_decref(self)                                   \
+	, (_tpp_expr_value_getkind(self) != _TPP_EXPR_VALUE_KIND_STRING || \
+	   (tpp_string_decref((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string)), 0))
+#else /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+#define _tpp_expr_value_incref(self) /* noting */
+#define _tpp_expr_value_decref(self) /* noting */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+
+/* Move "src" into "dst", invalidating "src" along the way and initializing "dst"
+ * @return: TPP_EOK: Success */
+#define tpp_expr_value_move(dst, src) (void)(*(dst) = *(src))
+
+/* Copy-construct "src" into "dst"
+ * @return: TPP_EOK: Success */
+#define tpp_expr_value_copy(dst, src) \
+	(*(dst) = *(src)_tpp_expr_value_incref(dst), TPP_EOK)
+
+/* Finalize "self" (never fails) */
+#define tpp_expr_value_fini(self) (void)((void)0 _tpp_expr_value_decref(self))
+
+/* Check which native representation is used by "self" (never fails) */
+#if _TPP_EXPR_VALUE_KIND_MULTIPLE
+#define tpp_expr_value_isint(self) (_tpp_expr_value_getkind(self) == _TPP_EXPR_VALUE_KIND_INT)
+#else /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
+#define tpp_expr_value_isint(self) 1
+#endif /* !_TPP_EXPR_VALUE_KIND_MULTIPLE */
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS
+#define tpp_expr_value_isfloat(self) (_tpp_expr_value_getkind(self) == _TPP_EXPR_VALUE_KIND_FLOAT)
+#else /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
+#define tpp_expr_value_isfloat(self) 0
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+#define tpp_expr_value_isstring(self) (_tpp_expr_value_getkind(self) == _TPP_EXPR_VALUE_KIND_STRING)
+#else /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+#define tpp_expr_value_isstring(self) 0
+#endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+/* Extract a specifically-typed value from "self"
+ * Caller must ensure that "tpp_expr_value_is*" returned true.
+ * @return: TPP_EOK: Success */
+#define tpp_expr_value_asint(self, p_result) (*(p_result) = _tpp_expr_value_getint(self), TPP_EOK)
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS
+#define tpp_expr_value_asfloat(self, p_result) (*(p_result) = _tpp_expr_value_getfloat(self), TPP_EOK)
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+#define tpp_expr_value_asstringref(self, p_result)  \
+	(*(p_result) = _tpp_expr_value_getstring(self), \
+	 tpp_string_incref(*(p_result)), TPP_EOK)
+#endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+
+/* Initialize "self" as int-typed, with "v" as value
+ * @return: TPP_EOK: Success */
+#define tpp_expr_value_init_int(self, /*tpp_intmax*/ v)       \
+	((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_int) = (v) \
+	 _tpp_expr_value_setkind(self, _TPP_EXPR_VALUE_KIND_INT), \
+	 TPP_EOK)
+
+/* Initialize "self" as float-typed, with "v" as value
+ * @return: TPP_EOK: Success */
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS
+#define tpp_expr_value_init_float(self, /*tpp_float*/ v)        \
+	((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_float) = (v) \
+	 _tpp_expr_value_setkind(self, _TPP_EXPR_VALUE_KIND_FLOAT), \
+	 TPP_EOK)
+#endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
+
+/* Initialize "self" as string-typed, with "v" as value
+ * @param: str: [1..1] The string value to assign
+ * @return: TPP_EOK: Success */
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+#define tpp_expr_value_init_string(self, /*tpp_string **/ str)                 \
+	((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string) = (str)             \
+	 _tpp_expr_value_setkind(self, _TPP_EXPR_VALUE_KIND_STRING),               \
+	 tpp_string_incref((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string)), \
+	 TPP_EOK)
+#define tpp_expr_value_init_string_inherited(self, /*inherit(always)*/ /*TPP_REF tpp_string **/ str) \
+	((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string) = (str)                                   \
+	 _tpp_expr_value_setkind(self, _TPP_EXPR_VALUE_KIND_STRING),                                     \
+	 TPP_EOK)
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+struct tpp_lexer;
+
+/* Invoke operators on expression values. */
+#if _TPP_EXPR_VALUE_KIND_MULTIPLE
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_pos(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict self, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_neg(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict self, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_inv(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict self, /*out*/ tpp_expr_value *tpp_restrict result);
+#define tpp_expr_value_pos tpp_expr_value_pos
+#define tpp_expr_value_neg tpp_expr_value_neg
+#define tpp_expr_value_inv tpp_expr_value_inv
+
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_add(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_sub(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_mul(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_shl(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_shr(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_and(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_xor(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_or(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
+#define tpp_expr_value_add tpp_expr_value_add
+#define tpp_expr_value_sub tpp_expr_value_sub
+#define tpp_expr_value_mul tpp_expr_value_mul
+#define tpp_expr_value_shl tpp_expr_value_shl
+#define tpp_expr_value_shr tpp_expr_value_shr
+#define tpp_expr_value_and tpp_expr_value_and
+#define tpp_expr_value_xor tpp_expr_value_xor
+#define tpp_expr_value_or  tpp_expr_value_or
+
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_cmp_eq(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ bool *tpp_restrict p_bool_result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_cmp_ne(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ bool *tpp_restrict p_bool_result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_cmp_lo(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ bool *tpp_restrict p_bool_result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_cmp_le(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ bool *tpp_restrict p_bool_result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_cmp_gr(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ bool *tpp_restrict p_bool_result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_cmp_ge(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ bool *tpp_restrict p_bool_result);
+#define tpp_expr_value_cmp_eq tpp_expr_value_cmp_eq
+#define tpp_expr_value_cmp_ne tpp_expr_value_cmp_ne
+#define tpp_expr_value_cmp_lo tpp_expr_value_cmp_lo
+#define tpp_expr_value_cmp_le tpp_expr_value_cmp_le
+#define tpp_expr_value_cmp_gr tpp_expr_value_cmp_gr
+#define tpp_expr_value_cmp_ge tpp_expr_value_cmp_ge
+
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_getindex(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict index, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 5)) tpp_errno TPPCALL tpp_expr_value_getrange(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *lo, /*in*/ tpp_expr_value *hi, /*out*/ tpp_expr_value *tpp_restrict result);
+#define tpp_expr_value_getindex tpp_expr_value_getindex
+#define tpp_expr_value_getrange tpp_expr_value_getrange
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+/* Determine the boolean-style value of "self"
+ * Works for any kind of expression value.
+ * @return: TPP_EOK: Success */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_asbool(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict self, bool *tpp_restrict p_bool_result);
+#define tpp_expr_value_asbool tpp_expr_value_asbool
+
+#else /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
+#define tpp_expr_value_pos(lexer, self, result)               tpp_expr_value_init_int(result, +_tpp_expr_value_getint(self))
+#define tpp_expr_value_neg(lexer, self, result)               tpp_expr_value_init_int(result, -_tpp_expr_value_getint(self))
+#define tpp_expr_value_inv(lexer, self, result)               tpp_expr_value_init_int(result, ~_tpp_expr_value_getint(self))
+#define tpp_expr_value_add(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) + _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_sub(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) - _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_mul(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) * _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_shl(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) << _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_shr(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) >> _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_and(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) & _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_xor(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) | _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_or(lexer, lhs, rhs, result)            tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) ^ _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_cmp_eq(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) == _tpp_expr_value_getint(rhs)), TPP_EOK)
+#define tpp_expr_value_cmp_ne(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) != _tpp_expr_value_getint(rhs)), TPP_EOK)
+#define tpp_expr_value_cmp_lo(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) < _tpp_expr_value_getint(rhs)), TPP_EOK)
+#define tpp_expr_value_cmp_le(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) <= _tpp_expr_value_getint(rhs)), TPP_EOK)
+#define tpp_expr_value_cmp_gr(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) > _tpp_expr_value_getint(rhs)), TPP_EOK)
+#define tpp_expr_value_cmp_ge(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) >= _tpp_expr_value_getint(rhs)), TPP_EOK)
+
+/* Determine the boolean-style value of "self"
+ * Works for any kind of expression value.
+ * @return: TPP_EOK: Success */
+#define tpp_expr_value_asbool(lexer, self, p_bool_result) \
+	(*(p_bool_result) = (_tpp_expr_value_getint(self) != 0), TPP_EOK)
+#endif /* !_TPP_EXPR_VALUE_KIND_MULTIPLE */
+
+#define tpp_expr_value_div tpp_expr_value_div
+#define tpp_expr_value_mod tpp_expr_value_mod
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_div(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
+
+/* Print the representation of "self" to "printer" (used to implement __TPP_EVAL)
+ * @return: * : Sum of positive return value of `printer'
+ * @return: (tpp_ssize)TPP_ISERR(*): An error was thrown, or `printer' returned this value */
+#if TPP_HAVE_EXPR_VALUE_PRINTREPR
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
+                         tpp_formatprinter printer, void *arg);
+#endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
+#endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
+
+/* Initialize to int=0 */
+#ifndef tpp_expr_value_init_zero
+#ifdef tpp_expr_value_init_bool
+#define tpp_expr_value_init_zero(self) tpp_expr_value_init_bool(self, 0)
+#else /* tpp_expr_value_init_bool */
+#define tpp_expr_value_init_zero(self) tpp_expr_value_init_int(self, 0)
+#endif /* !tpp_expr_value_init_bool */
+#endif /* !tpp_expr_value_init_zero */
+
+/* Initialize to int=1 */
+#ifndef tpp_expr_value_init_one
+#ifdef tpp_expr_value_init_bool
+#define tpp_expr_value_init_one(self) tpp_expr_value_init_bool(self, 1)
+#else /* tpp_expr_value_init_bool */
+#define tpp_expr_value_init_one(self) tpp_expr_value_init_int(self, 1)
+#endif /* !tpp_expr_value_init_bool */
+#endif /* !tpp_expr_value_init_one */
+
+/* Initialize to int=0/1 */
+#ifndef tpp_expr_value_init_bool
+#define tpp_expr_value_init_bool(self, v) tpp_expr_value_init_int(self, (v) ? 1 : 0)
+#endif /* !tpp_expr_value_init_bool */
+
+#ifndef tpp_expr_value_pos
+#define tpp_expr_value_pos(lexer, self, result) tpp_expr_value_copy(result, self)
+#endif /* !tpp_expr_value_pos */
+
+
+TPP_DECL_END
+/************************************************************************/
+
+/************************************************************************/
 /* File: parts/token.h                                                  */
 /************************************************************************/
 TPP_DECL_BEGIN
@@ -5062,37 +5498,37 @@ typedef enum tpp_token_id {
 	TPP_TOK_SPACE = ' ',  /* "<space>" Whitespace (always generated by `tpp_lexer_yieldraw()', filtered later if disabled) */
 
 	/* Single-character tokens (always equal to that character's ordinal). */
-	TPP_TOK_EQUAL     = '=',
-	TPP_TOK_AT        = '@',
-	TPP_TOK_BACKSLASH = '\\',
-	TPP_TOK_DOT       = '.',
-	TPP_TOK_COMMA     = ',',
-	TPP_TOK_COLON     = ':',
-	TPP_TOK_POUND     = '#',
-	TPP_TOK_LANGLE    = '<',
-	TPP_TOK_RANGLE    = '>',
-	TPP_TOK_LPAREN    = '(',
-	TPP_TOK_RPAREN    = ')',
-	TPP_TOK_LBRACKET  = '[',
-	TPP_TOK_RBRACKET  = ']',
-	TPP_TOK_LBRACE    = '{',
-	TPP_TOK_RBRACE    = '}',
-	TPP_TOK_PERCENT   = '%',
 	TPP_TOK_EXCLAIM   = '!',
-	TPP_TOK_AMP       = '&',
-	TPP_TOK_PIPE      = '|',
-	TPP_TOK_PLUS      = '+',
-	TPP_TOK_MINUS     = '-',
-	TPP_TOK_STAR      = '*',
-	TPP_TOK_SLASH     = '/',
-	TPP_TOK_QMARK     = '?',
-	TPP_TOK_SEMICOLON = ';',
-	TPP_TOK_TILDE     = '~',
-	TPP_TOK_HAT       = '^',
+	TPP_TOK_POUND     = '#',
 #if TPP_HAVE_TPP_TOK_DOLLAR
 	TPP_TOK_DOLLAR    = '$',
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
+	TPP_TOK_PERCENT   = '%',
+	TPP_TOK_AMP       = '&',
+	TPP_TOK_LPAREN    = '(',
+	TPP_TOK_RPAREN    = ')',
+	TPP_TOK_STAR      = '*',
+	TPP_TOK_PLUS      = '+',
+	TPP_TOK_COMMA     = ',',
+	TPP_TOK_MINUS     = '-',
+	TPP_TOK_DOT       = '.',
+	TPP_TOK_SLASH     = '/',
+	TPP_TOK_COLON     = ':',
+	TPP_TOK_SEMICOLON = ';',
+	TPP_TOK_LANGLE    = '<',
+	TPP_TOK_EQUAL     = '=',
+	TPP_TOK_RANGLE    = '>',
+	TPP_TOK_QMARK     = '?',
+	TPP_TOK_AT        = '@',
+	TPP_TOK_LBRACKET  = '[',
+	TPP_TOK_BACKSLASH = '\\',
+	TPP_TOK_RBRACKET  = ']',
+	TPP_TOK_HAT       = '^',
 	TPP_TOK_BACKTICK  = '`',
+	TPP_TOK_LBRACE    = '{',
+	TPP_TOK_PIPE      = '|',
+	TPP_TOK_RBRACE    = '}',
+	TPP_TOK_TILDE     = '~',
 
 	/* Double(or more)-character tokens. */
 	TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN) = 255, /* KEEP THIS THE FIRST MULTICHAR TOKEN! */
@@ -5188,12 +5624,6 @@ typedef enum tpp_token_id {
 #if TPP_HAVE_TPP_TOK_STRINGLIKE
 	TPP_TOK_STRINGLIKE_MIN,
 	TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MIN) = TPP_TOK_STRINGLIKE_MIN - 1,
-#if TPP_HAVE_TPP_TOK_CHAR
-	TPP_TOK_CHAR, /* "<char>" 'foo' */
-#define _TPP_CASE_TPP_TOK_CHAR case TPP_TOK_CHAR:
-#else /* TPP_HAVE_TPP_TOK_CHAR */
-#define _TPP_CASE_TPP_TOK_CHAR /* nothing */
-#endif /* !TPP_HAVE_TPP_TOK_CHAR */
 #if TPP_HAVE_TPP_TOK_STRING
 	TPP_TOK_STRING, /* "<string>" "foo" */
 #define _TPP_CASE_TPP_TOK_STRING case TPP_TOK_STRING:
@@ -5264,31 +5694,122 @@ typedef enum tpp_token_id {
 #else /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
 #define _TPP_CASE_TPP_TOK_RAW_STRING_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
-	TPP_TOK_RAW_CHAR_LITERAL, /* "<string>" R'bar'  r'bar' */
-#define _TPP_CASE_TPP_TOK_RAW_CHAR_LITERAL case TPP_TOK_RAW_CHAR_LITERAL:
-#else /* TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
-#define _TPP_CASE_TPP_TOK_RAW_CHAR_LITERAL /* nothing */
-#endif /* !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL
 	TPP_TOK_BLOCK_STRING_LITERAL, /* "<string>" """foo""" */
 #define _TPP_CASE_TPP_TOK_BLOCK_STRING_LITERAL case TPP_TOK_BLOCK_STRING_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
 #define _TPP_CASE_TPP_TOK_BLOCK_STRING_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
+	TPP_TOK_CHARLIKE_MIN,
+	TPP_INTERNAL(_TPP_TOK_CHARLIKE_MIN) = TPP_TOK_CHARLIKE_MIN - 1,
+#if TPP_HAVE_TPP_TOK_CHAR
+	TPP_TOK_CHAR, /* "<char>" 'f' */
+#define _TPP_CASE_TPP_TOK_CHAR case TPP_TOK_CHAR:
+#else /* TPP_HAVE_TPP_TOK_CHAR */
+#define _TPP_CASE_TPP_TOK_CHAR /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CHAR */
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	TPP_TOK_CXX_RAW_CHAR_LITERAL, /* "<char>" R'AB(f)AB' */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_CHAR_LITERAL case TPP_TOK_CXX_RAW_CHAR_LITERAL:
+#else /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_CHAR_LITERAL /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+	TPP_TOK_CXX_WIDE_CHAR_LITERAL, /* "<char>" L'f' */
+#define _TPP_CASE_TPP_TOK_CXX_WIDE_CHAR_LITERAL case TPP_TOK_CXX_WIDE_CHAR_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL, /* "<char>" LR'AB(f)AB' */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL case TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL:
+#else /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#else /* TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
+#define _TPP_CASE_TPP_TOK_CXX_WIDE_CHAR_LITERAL     /* nothing */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+	TPP_TOK_CXX_UTF8_CHAR_LITERAL, /* "<char>" u8'f' */
+#define _TPP_CASE_TPP_TOK_CXX_UTF8_CHAR_LITERAL case TPP_TOK_CXX_UTF8_CHAR_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL, /* "<char>" u8R'AB(f)AB' */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL case TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL:
+#else /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#else /* TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
+#define _TPP_CASE_TPP_TOK_CXX_UTF8_CHAR_LITERAL     /* nothing */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+	TPP_TOK_CXX_UTF16_CHAR_LITERAL, /* "<char>" u'f' */
+#define _TPP_CASE_TPP_TOK_CXX_UTF16_CHAR_LITERAL case TPP_TOK_CXX_UTF16_CHAR_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL, /* "<char>" uR'AB(f)AB' */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL case TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL:
+#else /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#else /* TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL */
+#define _TPP_CASE_TPP_TOK_CXX_UTF16_CHAR_LITERAL     /* nothing */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+	TPP_TOK_CXX_UTF32_CHAR_LITERAL, /* "<char>" U'f' */
+#define _TPP_CASE_TPP_TOK_CXX_UTF32_CHAR_LITERAL case TPP_TOK_CXX_UTF32_CHAR_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL, /* "<char>" UR'AB(f)AB' */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL case TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL:
+#else /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#else /* TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+#define _TPP_CASE_TPP_TOK_CXX_UTF32_CHAR_LITERAL     /* nothing */
+#define _TPP_CASE_TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+	TPP_TOK_RAW_CHAR_LITERAL, /* "<char>" R'f'  r'f'  */
+#define _TPP_CASE_TPP_TOK_RAW_CHAR_LITERAL case TPP_TOK_RAW_CHAR_LITERAL:
+#else /* TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#define _TPP_CASE_TPP_TOK_RAW_CHAR_LITERAL /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
 #if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
 	TPP_TOK_BLOCK_CHAR_LITERAL, /* "<string>" '''foo''' */
 #define _TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL case TPP_TOK_BLOCK_CHAR_LITERAL:
 #else /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
 #define _TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
+
 	TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MAX),
 	TPP_TOK_STRINGLIKE_MAX = TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MAX) - 1,
-#define TPP_TOK_ISSTRING(id)                     \
-	((int)(id) >= (int)TPP_TOK_STRINGLIKE_MIN && \
+#if TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE
+#define TPP_TOK_ISSTRING_SQUOTE(id)            \
+	((int)(id) >= (int)TPP_TOK_CHARLIKE_MIN && \
 	 (int)(id) <= (int)TPP_TOK_STRINGLIKE_MAX)
-#define TPP_CASE_TPP_TOK_STRING                    \
-	_TPP_CASE_TPP_TOK_CHAR                         \
+#else /* TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE */
+#define TPP_TOK_ISSTRING_SQUOTE(id) 0
+#endif /* !TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE */
+#define TPP_CASE_TPP_TOK_STRING_SQUOTE           \
+	_TPP_CASE_TPP_TOK_CHAR                       \
+	_TPP_CASE_TPP_TOK_CXX_RAW_CHAR_LITERAL       \
+	_TPP_CASE_TPP_TOK_CXX_WIDE_CHAR_LITERAL      \
+	_TPP_CASE_TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL  \
+	_TPP_CASE_TPP_TOK_CXX_UTF8_CHAR_LITERAL      \
+	_TPP_CASE_TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL  \
+	_TPP_CASE_TPP_TOK_CXX_UTF16_CHAR_LITERAL     \
+	_TPP_CASE_TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL \
+	_TPP_CASE_TPP_TOK_CXX_UTF32_CHAR_LITERAL     \
+	_TPP_CASE_TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL \
+	_TPP_CASE_TPP_TOK_RAW_CHAR_LITERAL           \
+	_TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL
+
+#if TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE
+#define TPP_TOK_ISSTRING_DQUOTE(id)              \
+	((int)(id) >= (int)TPP_TOK_STRINGLIKE_MIN && \
+	 (int)(id) < (int)TPP_TOK_CHARLIKE_MIN)
+#else /* TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE */
+#define TPP_TOK_ISSTRING_DQUOTE(id) 0
+#endif /* !TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE */
+#define TPP_CASE_TPP_TOK_STRING_DQUOTE             \
 	_TPP_CASE_TPP_TOK_STRING                       \
 	_TPP_CASE_TPP_TOK_CXX_RAW_STRING_LITERAL       \
 	_TPP_CASE_TPP_TOK_CXX_WIDE_STRING_LITERAL      \
@@ -5300,12 +5821,21 @@ typedef enum tpp_token_id {
 	_TPP_CASE_TPP_TOK_CXX_UTF32_STRING_LITERAL     \
 	_TPP_CASE_TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL \
 	_TPP_CASE_TPP_TOK_RAW_STRING_LITERAL           \
-	_TPP_CASE_TPP_TOK_RAW_CHAR_LITERAL             \
-	_TPP_CASE_TPP_TOK_BLOCK_STRING_LITERAL         \
-	_TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_BLOCK_STRING_LITERAL
+
+#define TPP_TOK_ISSTRING(id)                     \
+	((int)(id) >= (int)TPP_TOK_STRINGLIKE_MIN && \
+	 (int)(id) <= (int)TPP_TOK_STRINGLIKE_MAX)
+#define TPP_CASE_TPP_TOK_STRING    \
+	TPP_CASE_TPP_TOK_STRING_DQUOTE \
+	TPP_CASE_TPP_TOK_STRING_SQUOTE
 #else /* TPP_HAVE_TPP_TOK_STRINGLIKE */
-#define TPP_TOK_ISSTRING(id)    0
-#define TPP_CASE_TPP_TOK_STRING /* nothing */
+#define TPP_TOK_ISSTRING(id)           0
+#define TPP_TOK_ISSTRING_DQUOTE(id)    0
+#define TPP_TOK_ISSTRING_SQUOTE(id)    0
+#define TPP_CASE_TPP_TOK_STRING        /* nothing */
+#define TPP_CASE_TPP_TOK_STRING_DQUOTE /* nothing */
+#define TPP_CASE_TPP_TOK_STRING_SQUOTE /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_STRINGLIKE */
 
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
@@ -5635,6 +6165,11 @@ TPP_DECL_BEGIN
      (TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL < 0) ||    \
      (TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL < 0) ||   \
      (TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL < 0) ||   \
+     (TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL < 0) ||       \
+     (TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL < 0) ||      \
+     (TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL < 0) ||      \
+     (TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL < 0) ||     \
+     (TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL < 0) ||     \
      (TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL < 0) ||         \
      (TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL < 0) ||           \
      (TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL < 0) ||       \
@@ -5785,6 +6320,21 @@ typedef enum tpp_feature_id {
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL < 0
 	TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL,
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL < 0 */
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL < 0
+	TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL,
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL < 0 */
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL < 0
+	TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL,
+#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL < 0 */
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL < 0
+	TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL,
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL < 0 */
+#if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL < 0
+	TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL,
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL < 0 */
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL < 0
+	TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL,
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL < 0 */
 #if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL < 0
 	TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL,
 #endif /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL < 0 */
@@ -6162,6 +6712,36 @@ typedef union tpp_features {
 #else /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL >= 0 */
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL < 0
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL), TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL == -1)
+#else /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL >= 0 */
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL < 0
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL), TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL == -1)
+#else /* TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL >= 0 */
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL < 0
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL), TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL == -1)
+#else /* TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL >= 0 */
+#if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL < 0
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL), TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL == -1)
+#else /* TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL >= 0 */
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL < 0
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL), TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL == -1)
+#else /* TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL(self) TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL >= 0 */
 #if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL < 0
 		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL): 1;
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL), TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL == -1)
@@ -9414,8 +9994,91 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
 
 
-#if TPP_HAVE_TPP_TOK_STRINGLIKE
+#if TPP_HAVE_LEXER_DECODEINT
+#undef TPP_HAVE_INTEGER_SUFFIX_KIND
+#if TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS || TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#define TPP_HAVE_INTEGER_SUFFIX_KIND 1
+typedef enum tpp_integer_suffix_kind {
+	TPP_INTEGER_SUFFIX_KIND_INT, /* "" (default) */
+#if TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+	TPP_INTEGER_SUFFIX_KIND_UNSIGNED,           /* "u" */
+	TPP_INTEGER_SUFFIX_KIND_LONG,               /* "l" */
+	TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG,      /* "ul" */
+	TPP_INTEGER_SUFFIX_KIND_LONG_LONG,          /* "ll" */
+	TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG_LONG, /* "ull" */
+#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
+#if TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+	TPP_INTEGER_SUFFIX_KIND_INT8,   /* "i8" */
+	TPP_INTEGER_SUFFIX_KIND_INT16,  /* "i16" */
+	TPP_INTEGER_SUFFIX_KIND_INT32,  /* "i32" */
+	TPP_INTEGER_SUFFIX_KIND_INT64,  /* "i64" */
+	TPP_INTEGER_SUFFIX_KIND_UINT8,  /* "ui8" */
+	TPP_INTEGER_SUFFIX_KIND_UINT16, /* "ui16" */
+	TPP_INTEGER_SUFFIX_KIND_UINT32, /* "ui32" */
+	TPP_INTEGER_SUFFIX_KIND_UINT64, /* "ui64" */
+#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+} tpp_integer_suffix_kind;
+#else /* TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS || TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+#define TPP_HAVE_INTEGER_SUFFIX_KIND 0
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS && !TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
 
+
+/* Decode the current token (which should be TPP_TOK_INT) into an integer
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Lexer error happened
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#if TPP_HAVE_INTEGER_SUFFIX_KIND
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
+                       tpp_intmax *tpp_restrict result,
+                       tpp_integer_suffix_kind *p_suffix_kind);
+#define tpp_lexer_decodeint(self, result) \
+	tpp_lexer_decodeint_ex(self, result, NULL)
+#else /* TPP_HAVE_INTEGER_SUFFIX_KIND */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
+                    tpp_intmax *tpp_restrict result);
+#endif /* !TPP_HAVE_INTEGER_SUFFIX_KIND */
+#endif /* TPP_HAVE_LEXER_DECODEINT */
+
+/* Decode the current token (which should be TPP_TOK_INT) into an integer
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Lexer error happened
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#if TPP_HAVE_LEXER_DECODEINT_EXPR
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
+                         tpp_expr_value *tpp_restrict result);
+#endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
+
+
+/* Decode the current token (which should be TPP_TOK_FLOAT) into a float
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Lexer error happened
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#if TPP_HAVE_LEXER_DECODEFLOAT
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodefloat(tpp_lexer *tpp_restrict self,
+                      tpp_float *tpp_restrict result);
+#endif /* TPP_HAVE_LEXER_DECODEFLOAT */
+
+/* Decode the current token (which should be TPP_TOK_FLOAT) into a float
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Lexer error happened
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
+                           tpp_expr_value *tpp_restrict result);
+#endif /* TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
+
+
+
+
+
+#if TPP_HAVE_LEXER_DECODESTRING
 /* Print the unescaped representation of the string-token described by "self"
  * The caller must ensure that `TPP_TOK_ISSTRING(tpp_lexer_gettoken(self)->tt_id)'
  *
@@ -9503,7 +10166,79 @@ tpp_lexer_parsestring_cb(tpp_lexer *self,
                          tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
                                                  tpp_char const *str, tpp_size length),
                          void *arg, unsigned int flags);
-#endif /* TPP_HAVE_TPP_TOK_STRINGLIKE */
+
+#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+/* Convenience wrapper to parse a character integer literal
+ *
+ * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ *
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O error while yielding to next token
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
+                                 /*out*/ tpp_intmax *tpp_restrict p_result,
+                                 unsigned int flags);
+#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+#endif /* TPP_HAVE_LEXER_DECODESTRING */
+
+#undef TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR
+#if TPP_HAVE_LEXER_PARSESTRING_EXPR
+/* Convenience wrapper around `tpp_lexer_parsestring()'
+ * On success (!TPP_ISERR(return)), caller must "tpp_expr_value_fini(result)"
+ *
+ * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ *
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O error while yielding to next token
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#ifndef tpp_lexer_parsestring_expr
+#define tpp_lexer_parsestring_expr tpp_lexer_parsestring_expr
+#define TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR 1
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
+                           /*out*/ tpp_expr_value *tpp_restrict result,
+                           unsigned int flags);
+#endif /* !tpp_lexer_parsestring_expr */
+#endif /* TPP_HAVE_LEXER_PARSESTRING_EXPR */
+#ifndef TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR
+#define TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR 0
+#endif /* !TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR */
+
+
+
+#undef TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR
+#if TPP_HAVE_LEXER_PARSECHARACTER_EXPR
+/* Convenience wrapper around `tpp_lexer_parsecharacter()'
+ * On success (!TPP_ISERR(return)), caller must "tpp_expr_value_fini(result)"
+ *
+ * @param: flags: Set of `TPP_LEXER_PARSECHARACTER_FLAG_*'
+ *
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O error while yielding to next token
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+#ifndef tpp_lexer_parsecharacter_expr
+#define tpp_lexer_parsecharacter_expr tpp_lexer_parsecharacter_expr
+#define TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR 1
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
+                              /*out*/ tpp_expr_value *tpp_restrict result,
+                              unsigned int flags);
+#endif /* !tpp_lexer_parsecharacter_expr */
+#endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+#ifndef TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR
+#define TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR 0
+#endif /* !TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR */
+
 
 
 #if TPP_HAVE_WARNINGS

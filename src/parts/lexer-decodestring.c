@@ -26,21 +26,27 @@
 #include "config.h"
 #include "ctype.h"
 #include "error.h"
-#include "string.h"
+#include "expr.h"
 #include "lexer.h"
+#include "string.h"
 #include "token.h"
 
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-#if TPP_HAVE_TPP_TOK_STRINGLIKE
+#if TPP_HAVE_LEXER_DECODESTRING
 
-#if (TPP_HAVE_TPP_TOK_CHAR || TPP_HAVE_TPP_TOK_STRING || \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||         \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||        \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||        \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||         \
-     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||            \
+#if (TPP_HAVE_TPP_TOK_STRING ||                   \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CHAR ||                     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
      TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
 
 /* Decode string: "foobar fdasudfad"
@@ -481,39 +487,79 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
 	tpp_assert(TPP_TOK_ISSTRING(token->tt_id));
 	switch (token->tt_id) {
 
-#if (TPP_HAVE_TPP_TOK_CHAR || TPP_HAVE_TPP_TOK_STRING || \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||         \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||        \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||        \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL)
+#if (TPP_HAVE_TPP_TOK_STRING ||                   \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TPP_TOK_CHAR ||                     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL)
 #if TPP_HAVE_BSE
 #if (TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
      TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
      TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL)
+     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL)
+	{
+		tpp_char quote_char;
+	_TPP_CASE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF32_STRING_LITERAL
-		tpp_bse_seek_until_fwd(start, '"');
-		TPP_FALLTHRU
+#if ((TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
+      TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+      TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+      TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL) && \
+     (TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+      TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+      TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+      TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL))
+		quote_char = TPP_TOK_ISSTRING_SQUOTE(token->tt_id) ? '\'' : '"';
+#elif (TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
+       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL)
+		quote_char = '"';
+#else /* ... */
+		quote_char = '\'';
+#endif /* !... */
+		tpp_bse_seek_until_fwd(start, quote_char);
+	}	TPP_FALLTHRU
 #endif /* ... */
 #else /* TPP_HAVE_BSE */
 #if (TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
      TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL)
-#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
+     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL)
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF8_STRING_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 		++start;
 		TPP_FALLTHRU
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
 	_TPP_CASE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF32_STRING_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
 		++start;
 		TPP_FALLTHRU
 #else /* ... */
 	_TPP_CASE_TPP_TOK_CXX_UTF8_STRING_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 		start += 2;
 		TPP_FALLTHRU
 #endif /* ... */
@@ -536,12 +582,17 @@ do_decode_basic:
 	}	break;
 #endif /* ... */
 
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_RAW_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL
-	_TPP_CASE_TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL {
+	_TPP_CASE_TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL {
 		while ((start < end) && *start != '(')
 			++start;
 		while ((start < end) && end[-1] != ')')
@@ -566,7 +617,7 @@ do_decode_basic:
 		return tpp_token_decodestring_raw(self, start, end, data_printer, arg);
 #endif /* !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
 
 #if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
 	_TPP_CASE_TPP_TOK_RAW_STRING_LITERAL
@@ -1008,7 +1059,119 @@ do_multi_chunk_string:
 	}
 	tpp_unreachable();
 }
-#endif /* TPP_HAVE_TPP_TOK_STRINGLIKE */
+#endif /* TPP_HAVE_LEXER_DECODESTRING */
+
+#if TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR
+/* Convenience wrapper around `tpp_lexer_parsestring()'
+ * On success (!TPP_ISERR(return)), caller must "tpp_expr_value_fini(result)"
+ *
+ * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ *
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O error while yielding to next token
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
+                           /*out*/ tpp_expr_value *tpp_restrict result,
+                           unsigned int flags) {
+	TPP_REF tpp_string *string;
+	tpp_errno error = tpp_lexer_parsestring(self, &string, flags);
+	if (TPP_ISERR(error))
+		return error;
+	return tpp_expr_value_init_string_inherited(result, string);
+}
+#endif /* TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR */
+
+
+#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+struct tpp_lexer_decodecharacter_data {
+#if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
+	tpp_lexer *tldcd_lexer; /* [1..1] Active lexer */
+	tpp_size   tldcd_count; /* # of bytes already parsed */
+#endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
+	tpp_intmax tldcd_value; /* Multichar value */
+};
+
+static tpp_ssize TPP_FORMATPRINTER_CC
+tpp_lexer_decodecharacter_cb(void *arg, tpp_char const *text, tpp_size num_bytes) {
+	tpp_size i;
+	struct tpp_lexer_decodecharacter_data *data;
+	data = (struct tpp_lexer_decodecharacter_data *)arg;
+#if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
+	if ((data->tldcd_count <= 1) &&
+	    (data->tldcd_count + num_bytes) > 1) {
+		/* Emit warning about multi-char literals being used */
+		tpp_errno error = tpp_lexer_warnf(data->tldcd_lexer, TPP_W_MULTICHAR_LITERAL);
+		if (TPP_ISERR(error))
+			return (tpp_ssize)(int)error;
+	}
+	data->tldcd_count += num_bytes;
+#endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
+	for (i = 0; i < num_bytes; ++i) {
+		data->tldcd_value <<= TPP_CHAR_BIT;
+		data->tldcd_value |= text[i];
+	}
+	return 0;
+}
+
+/* Convenience wrapper to parse a character integer literal
+ *
+ * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ *
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O error while yielding to next token
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
+                                 /*out*/ tpp_intmax *tpp_restrict p_result,
+                                 unsigned int flags) {
+	tpp_ssize status;
+	struct tpp_lexer_decodecharacter_data data;
+#if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
+	data.tldcd_lexer = self;
+	data.tldcd_count = 0;
+#endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
+	data.tldcd_value = 0;
+	status = tpp_lexer_parsestring_ex(self,
+	                                  &tpp_lexer_decodecharacter_cb,
+	                                  &tpp_lexer_decodecharacter_cb,
+	                                  &data, flags);
+	*p_result = data.tldcd_value;
+	return (tpp_errno)(int)status;
+}
+#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+
+
+#if TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR
+/* Convenience wrapper around `tpp_lexer_parsecharacter_literal()'
+ * On success (!TPP_ISERR(return)), caller must "tpp_expr_value_fini(result)"
+ *
+ * @param: flags: Set of `TPP_LEXER_PARSECHARACTER_FLAG_*'
+ *
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O error while yielding to next token
+ * @return: TPP_EWARNPRINT: Error while printing a warning */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
+                              /*out*/ tpp_expr_value *tpp_restrict result,
+                              unsigned int flags) {
+	tpp_intmax value;
+	tpp_errno error = tpp_lexer_parsecharacter_literal(self, &value, flags);
+	if (TPP_ISERR(error))
+		return error;
+	return tpp_expr_value_init_int(result, value);
+}
+#endif /* TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR */
+
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

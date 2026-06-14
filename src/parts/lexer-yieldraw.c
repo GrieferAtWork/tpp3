@@ -730,11 +730,16 @@ tpp_lexer_skip_bse_after_keyword(tpp_lexer *self, tpp_char const **p_pos) {
 #endif /* !... */
 
 #undef NEED_tpp_lexer_seek_end_of_string
-#if (TPP_HAVE_TPP_TOK_CHAR || TPP_HAVE_TPP_TOK_STRING || \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||         \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||        \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||         \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL)
+#if (TPP_HAVE_TPP_TOK_STRING ||                   \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TPP_TOK_CHAR ||                     \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL)
 #define NEED_tpp_lexer_seek_end_of_string 1
 #else /* ... */
 #define NEED_tpp_lexer_seek_end_of_string 0
@@ -748,7 +753,7 @@ tpp_lexer_skip_bse_after_keyword(tpp_lexer *self, tpp_char const **p_pos) {
 #endif /* !... */
 
 #undef NEED_tpp_lexer_seek_end_of_cxx_raw_string
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 #define NEED_tpp_lexer_seek_end_of_cxx_raw_string 1
 #else /* ... */
 #define NEED_tpp_lexer_seek_end_of_cxx_raw_string 0
@@ -1489,6 +1494,15 @@ warn_premature_eof:
  *                         ^=in      ^out */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
+	/* C says that (implementations can threat) this:
+	 * >> char const *\U0001f431 = "cat";
+	 *
+	 * as a valid identifier. -- We should support that (*and* interpret
+	 * it as "\xF0\x9F\x90\xB1" (its utf-8 repr) during keyword lookup)
+	 *
+	 * For this purpose, the "*_bse" version of keyword lookup functions
+	 * should also have another extension that lets them treat \u and \U
+	 * sequences specially! */
 	tpp_errno error = TPP_EOK;
 	tpp_char const *scan = *p_pos;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -3113,7 +3127,6 @@ not_a_trigraph:
 			if (TPP_ISERR(error))
 				goto return_error;
 			result = TPP_TOK_CHAR; /* 'foo' */
-			/* TODO: -Wno-multichar (but should also depend on "-fmultichar-constants"; aka. "EXT_MULTICHAR_CONST") */
 			goto set_result;
 		}
 #endif /* TPP_HAVE_TPP_TOK_CHAR */
@@ -3165,10 +3178,12 @@ not_a_trigraph:
 /************************************************************************/
 #if (TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || \
      TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL ||   \
      TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)
 	case 'R': {
 		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL) ||
 		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL) ||
+		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL) ||
 		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
@@ -3193,8 +3208,18 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
 			} else
 #endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
 			if (ch2 == '\'') {
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+					if (TPP_ISERR(error))
+						goto return_error;
+					result = TPP_TOK_CXX_RAW_CHAR_LITERAL; /* R'AB(f)AB' */
+					goto set_result;
+				}
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
 				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
@@ -3202,8 +3227,9 @@ not_a_trigraph:
 					result = TPP_TOK_RAW_CHAR_LITERAL; /* R'foo' */
 					goto set_result;
 				}
-			} else
 #endif /* TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+			} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
 			{
 			}
 			pos = tpp_file_rel2ptr(file, rel_start + 1);
@@ -3211,7 +3237,7 @@ not_a_trigraph:
 		goto handle_keyword;
 #define WANT_handle_keyword
 	}
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#endif /* ... */
 /************************************************************************/
 
 
@@ -3252,37 +3278,78 @@ not_a_trigraph:
 		goto handle_keyword;
 #define WANT_handle_keyword
 	}
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#endif /* ... */
 /************************************************************************/
 
 
 
 /************************************************************************/
-#if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
 	case 'L': {
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL)) {
+		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL) ||
+		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
 			read_ch2();
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 			if (ch2 == '"') {
-				error = tpp_lexer_seek_end_of_string(self, &pos, '"');
-				if (TPP_ISERR(error))
-					goto return_error;
-				result = TPP_TOK_CXX_WIDE_STRING_LITERAL; /* L"foo" */
-				goto set_result;
+				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL)) {
+					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
+					if (TPP_ISERR(error))
+						goto return_error;
+					result = TPP_TOK_CXX_WIDE_STRING_LITERAL; /* L"foo" */
+					goto set_result;
+				}
 			} else
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+			if (ch2 == '\'') {
+				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
+					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
+					if (TPP_ISERR(error))
+						goto return_error;
+					result = TPP_TOK_CXX_WIDE_CHAR_LITERAL; /* L'f' */
+					goto set_result;
+				}
+			} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
+#if ((TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
+     (TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+				if ((tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
+				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
+				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
-						if (TPP_ISERR(error))
-							goto return_error;
-						result = TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL; /* LR"AB(foo)AB" */
-						goto set_result;
+						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
+						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							if (TPP_ISERR(error))
+								goto return_error;
+							result = TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL; /* LR"AB(foo)AB" */
+							goto set_result;
+						}
+					} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+					if (ch2 == '"') {
+						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
+						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							if (TPP_ISERR(error))
+								goto return_error;
+							result = TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL; /* LR'AB(f)AB' */
+							goto set_result;
+						}
+					} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+					{
 					}
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#endif /* ... */
+#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
 			{
 			}
 			pos = tpp_file_rel2ptr(file, rel_start + 1);
@@ -3290,111 +3357,152 @@ not_a_trigraph:
 		goto handle_keyword;
 #define WANT_handle_keyword
 	}
-#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL */
+#endif /* ... */
 /************************************************************************/
 
 
 
 /************************************************************************/
-#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
+#if (TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL)
 	case 'u': {
 		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
-		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL)) {
+		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL) ||
+		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL) ||
+		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 			if (ch2 == '8') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL)) {
+				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
+				    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
 					read_ch2();
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 					if (ch2 == '"') {
-						error = tpp_lexer_seek_end_of_string(self, &pos, '"');
-						if (TPP_ISERR(error))
-							goto return_error;
-						result = TPP_TOK_CXX_UTF8_STRING_LITERAL; /* u8"foo" */
-						goto set_result;
+						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL)) {
+							error = tpp_lexer_seek_end_of_string(self, &pos, '"');
+							if (TPP_ISERR(error))
+								goto return_error;
+							result = TPP_TOK_CXX_UTF8_STRING_LITERAL; /* u8"foo" */
+							goto set_result;
+						}
 					} else
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+					if (ch2 == '\'') {
+						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
+							error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
+							if (TPP_ISERR(error))
+								goto return_error;
+							result = TPP_TOK_CXX_UTF8_CHAR_LITERAL; /* u8'f' */
+							goto set_result;
+						}
+					} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
+#if ((TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
+     (TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 					if (ch2 == 'R') {
-						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+						if ((tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
+						     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+						    (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
+						     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 							read_ch2();
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 							if (ch2 == '"') {
-								error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
-								if (TPP_ISERR(error))
-									goto return_error;
-								result = TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL; /* u8R"AB(foo)AB" */
-								goto set_result;
+								if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
+								    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+									if (TPP_ISERR(error))
+										goto return_error;
+									result = TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL; /* u8R"AB(foo)AB" */
+									goto set_result;
+								}
+							} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+							if (ch2 == '"') {
+								if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
+								    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+									if (TPP_ISERR(error))
+										goto return_error;
+									result = TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL; /* u8R'AB(f)AB' */
+									goto set_result;
+								}
+							} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+							{
 							}
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#endif /* ... */
 					{
 					}
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 			if (ch2 == '"') {
 				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
-					result = TPP_TOK_CXX_UTF16_STRING_LITERAL; /* u8"foo" */
+					result = TPP_TOK_CXX_UTF16_STRING_LITERAL; /* u"foo" */
 					goto set_result;
 				}
 			} else
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-			if (ch2 == 'R') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
-				    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
-					read_ch2();
-					if (ch2 == '"') {
-						error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
-						if (TPP_ISERR(error))
-							goto return_error;
-						result = TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL; /* uR"AB(foo)AB" */
-						goto set_result;
-					}
-				}
-			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL */
-			{
-			}
-			pos = tpp_file_rel2ptr(file, rel_start + 1);
-		}
-		goto handle_keyword;
-#define WANT_handle_keyword
-	}
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL */
-/************************************************************************/
-
-
-
-/************************************************************************/
-#if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
-	case 'U': {
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL)) {
-			read_ch2();
-			if (ch2 == '"') {
-				error = tpp_lexer_seek_end_of_string(self, &pos, '"');
-				if (TPP_ISERR(error))
-					goto return_error;
-				result = TPP_TOK_CXX_UTF32_STRING_LITERAL; /* U"foo" */
-				goto set_result;
+#if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+			if (ch2 == '\'') {
+				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
+					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
+					if (TPP_ISERR(error))
+						goto return_error;
+					result = TPP_TOK_CXX_UTF16_CHAR_LITERAL; /* u'f' */
+					goto set_result;
+				}
 			} else
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL */
+#if ((TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
+     (TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+				if ((tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
+				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
+				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
+#if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
-						if (TPP_ISERR(error))
-							goto return_error;
-						result = TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL; /* UR"AB(foo)AB" */
-						goto set_result;
+						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
+						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							if (TPP_ISERR(error))
+								goto return_error;
+							result = TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL; /* uR"AB(foo)AB" */
+							goto set_result;
+						}
+					} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+					if (ch2 == '"') {
+						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
+						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							if (TPP_ISERR(error))
+								goto return_error;
+							result = TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL; /* uR'AB(f)AB' */
+							goto set_result;
+						}
+					} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+					{
 					}
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#endif /* ... */
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL */
 			{
 			}
 			pos = tpp_file_rel2ptr(file, rel_start + 1);
@@ -3402,7 +3510,86 @@ not_a_trigraph:
 		goto handle_keyword;
 #define WANT_handle_keyword
 	}
+#endif /* ... */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+	case 'U': {
+		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL) ||
+		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
+			read_ch2();
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
+			if (ch2 == '"') {
+				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL)) {
+					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
+					if (TPP_ISERR(error))
+						goto return_error;
+					result = TPP_TOK_CXX_UTF32_STRING_LITERAL; /* U"foo" */
+					goto set_result;
+				}
+			} else
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+			if (ch2 == '\'') {
+				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
+					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
+					if (TPP_ISERR(error))
+						goto return_error;
+					result = TPP_TOK_CXX_UTF32_CHAR_LITERAL; /* U'f' */
+					goto set_result;
+				}
+			} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+#if ((TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
+     (TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
+			if (ch2 == 'R') {
+				if ((tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
+				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
+				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+					read_ch2();
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+					if (ch2 == '"') {
+						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
+						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							if (TPP_ISERR(error))
+								goto return_error;
+							result = TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL; /* UR"AB(foo)AB" */
+							goto set_result;
+						}
+					} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+					if (ch2 == '"') {
+						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
+						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							if (TPP_ISERR(error))
+								goto return_error;
+							result = TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL; /* UR'AB(f)AB' */
+							goto set_result;
+						}
+					} else
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+					{
+					}
+				}
+			} else
+#endif /* ... */
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+			{
+			}
+			pos = tpp_file_rel2ptr(file, rel_start + 1);
+		}
+		goto handle_keyword;
+#define WANT_handle_keyword
+	}
+#endif /* ... */
 /************************************************************************/
 
 
@@ -3420,16 +3607,6 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR <= 0 */
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
 /************************************************************************/
-
-		/* TODO: C says that (implementations can threat) this:
-		 * >> char const *\U0001f431 = "cat";
-		 *
-		 * as a valid identifier. -- We should support that (*and* interpret
-		 * it as "\xF0\x9F\x90\xB1" (its utf-8 repr) during keyword lookup)
-		 *
-		 * For this purpose, the "*_bse" version of keyword lookup functions
-		 * should also have another extension that lets them treat \u and \U
-		 * sequences specially! */
 
 	default: {
 #if TPP_HAVE_UNICODE

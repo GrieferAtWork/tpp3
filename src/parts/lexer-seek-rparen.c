@@ -93,6 +93,26 @@ typedef struct tpp_seek_rparen_state {
 	tpp_size        tsrps_curfile_saved_pos_rel;  /* Saved "tf_pos" of current file, relative to current "ttf_keep" */
 
 	/* Already-parsed text that must be prepended before the current argument. */
+
+	/* TODO: Come up with a smart way of tracking debug info for custom printed arguments
+	 *       -> need to be able to track lcinfo for custom char ranges (any range of chars
+	 *          from this string must be able to map to its own file/line/col triple)
+	 *       -> also must adjust tpp_file_lcinfo() to support this, and somehow also
+	 *          incorporate tpp_file_filename()/tpp_file_userfilename() to support
+	 *          different filenames based on char position
+	 * where this is necessary:
+	 * >> #define foo(a) a a
+	 * >> foo(
+	 * >> #include "file1.txt"   // Contains 10
+	 * >> #include "file2.txt"   // Contains 20
+	 * >> )
+	 *
+	 * Must result in 4 tokens (not accounting for whitespace/linefeed tokens):
+	 * - file1.txt:1:1: 10
+	 * - file2.txt:1:1: 20
+	 * - file1.txt:1:1: 10
+	 * - file2.txt:1:1: 20
+	 */
 	tpp_string_builder tsrps_curarg_prefix;
 #define tpp_seek_rparen_state_init_curarg(self) \
 	tpp_string_builder_init(&(self)->tsrps_curarg_prefix)
