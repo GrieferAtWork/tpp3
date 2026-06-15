@@ -81,7 +81,7 @@ local BUILTIN_KEYWORDS: {string: string} = {
 	"else": "TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS",
 	"endif": "TPP_HAVE_CPP_IF_ELSE_ENDIF",
 	"define": "TPP_HAVE_CPP_DEFINE",
-	"undef": "TPP_HAVE_CPP_DEFINE",
+	"undef": "TPP_HAVE_CPP_DEFINE || TPP_HAVE_PRAGMA_PUSH_MACRO",
 	"embed": "TPP_HAVE_CPP_EMBED",
 	"assert": "TPP_HAVE_CPP_ASSERT",
 	"unassert": "TPP_HAVE_CPP_ASSERT",
@@ -206,10 +206,10 @@ TPP_KWD(TPP_KWD_endif, "endif")
 #define TPP_KWD_define TPP_KWD_define
 TPP_KWD(TPP_KWD_define, "define")
 #endif /* TPP_HAVE_CPP_DEFINE */
-#if TPP_HAVE_CPP_DEFINE
+#if TPP_HAVE_CPP_DEFINE || TPP_HAVE_PRAGMA_PUSH_MACRO
 #define TPP_KWD_undef TPP_KWD_undef
 TPP_KWD(TPP_KWD_undef, "undef")
-#endif /* TPP_HAVE_CPP_DEFINE */
+#endif /* TPP_HAVE_CPP_DEFINE || TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_CPP_EMBED
 #define TPP_KWD_embed TPP_KWD_embed
 TPP_KWD(TPP_KWD_embed, "embed")

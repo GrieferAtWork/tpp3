@@ -4852,6 +4852,20 @@ err_empty:
 }
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
+#if TPP_HAVE_CPP_MACROS
+/* Delete the macro definition of `self'.
+ * The caller must ensure that `tpp_keyword_canundef(self)' */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_undef(tpp_keyword *tpp_restrict self) {
+	TPP_REF tpp_macro *old_macro;
+	tpp_assert(tpp_keyword_canundef(self));
+	old_macro = self->tk_macro;
+	self->tk_macro = NULL;
+	tpp_macro_decref(old_macro);
+}
+#endif /* TPP_HAVE_CPP_MACROS */
+
+
 
 /* Calculate the hash of a given keyword string */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
@@ -15883,60 +15897,139 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 #if TPP_HAVE_PRAGMA
-/* Process a pragma directive, starting after the "TPP_KWD_pragma" keyword
- * @return: TPP_ENOENT: Unknown pragma (warning was already emitted; caller
- *                      should seek until after macro) */
-TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 
+/************************************************************************/
+/* #pragma push_macro("foo")                                            */
+/* #pragma pop_macro("foo")                                             */
+/************************************************************************/
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 struct tpp_lexer_handle_pushpopmacro_data {
-	tpp_lexer *tlhppmd_lexer; /* [1..1] Lexer */
-	bool       tlhppmd_push;  /* True if "push_macro", false if "pop_macro" */
+	tpp_lexer   *tlhppmd_lexer; /* [1..1] Lexer */
+	tpp_token_id tlhppmd_mode;  /* TPP_KWD_push_macro or TPP_KWD_pop_macro */
+	bool         tlhppmd_undef; /* True if macros should be #undef'd after being pushed */
 };
 
 static tpp_errno TPPCALL
 tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
                                  tpp_char const *str, tpp_size length) {
 	tpp_errno result;
+	tpp_lexer *lexer;
 	struct tpp_lexer_handle_pushpopmacro_data *data;
 	tpp_keyword const *ro_keyword;
 	tpp_keyword *keyword;
 	tpp_hash hash = tpp_hashof(str, length);
 	(void)chunk;
-	data = (struct tpp_lexer_handle_pushpopmacro_data *)arg;
+	data  = (struct tpp_lexer_handle_pushpopmacro_data *)arg;
+	lexer = data->tlhppmd_lexer;
 
 	/* Load keyword */
-	ro_keyword = tpp_keywords_newkeyword(&data->tlhppmd_lexer->tl_kwds, str, length, hash);
+	ro_keyword = tpp_keywords_newkeyword(&lexer->tl_kwds, str, length, hash);
 	if tpp_unlikely(!ro_keyword)
 		goto err_nomem;
 
 	/* Make keyword writable */
-	keyword = tpp_keywords_copybuiltin(&data->tlhppmd_lexer->tl_kwds, ro_keyword);
+	keyword = tpp_keywords_copybuiltin(&lexer->tl_kwds, ro_keyword);
 	if tpp_unlikely(!keyword)
 		goto err_nomem;
 
 	/* Push/pop the macro linked to this keyword. */
-	if (data->tlhppmd_push)
-		return tpp_keyword_pushmacro(keyword);
-
-	result = tpp_keyword_popmacro(keyword);
-	tpp_assert(!TPP_ISERR(result) ||
-	           result == TPP_ENOENT);
-	if (result == TPP_ENOENT) {
-		/* Emit a warning */
+	if (data->tlhppmd_mode == TPP_KWD_push_macro) {
+		result = tpp_keyword_pushmacro(keyword);
+		if (data->tlhppmd_undef) {
+			/* Also #undef the keyword if requested */
+			if (tpp_keyword_canundef(keyword))
+				tpp_keyword_undef(keyword);
+		}
+	} else {
+		result = tpp_keyword_popmacro(keyword);
+		tpp_assert(!TPP_ISERR(result) ||
+		           result == TPP_ENOENT);
+		if (result == TPP_ENOENT) {
+			/* Emit a warning */
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
-		result = tpp_lexer_warnf(data->tlhppmd_lexer, TPP_W_POP_MACRO_EMPTY_STACK,
-		                         (unsigned int)length, str);
+			result = tpp_lexer_warnf(lexer, TPP_W_POP_MACRO_EMPTY_STACK,
+			                         (unsigned int)length, str);
 #else /* TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
-		result = TPP_EOK;
+			result = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
+		}
 	}
 	return result;
 err_nomem:
 	return TPP_ENOMEM;
 }
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_pushpop_macro(tpp_lexer *tpp_restrict self, tpp_token_id mode) {
+	tpp_errno error;
+	struct tpp_lexer_handle_pushpopmacro_data data;
+	tpp_token_id tok;
+	data.tlhppmd_lexer = self;
+	data.tlhppmd_mode  = mode;
+	data.tlhppmd_undef = false;
+	tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Skip leading '(' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	if (tok == TPP_KWD_undef) {
+		data.tlhppmd_undef = true;
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(','));
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+	}
+
+again_parse_string:
+	if (TPP_TOK_ISSTRING(tok)) {
+		/* Parse+process string (using "tpp_lexer_parsestring_cb()") */
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_pushpopmacro_cb,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+		error = TPP_EOK;;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+	}
+	if (TPP_ISERR(error))
+		return error;
+	tok = tpp_lexer_gettok(self);
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* TPP allows multiple strings to be specified here */
+	if (tok == ',') {
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		goto again_parse_string;
+	}
+
+	/* Skip trailing ')' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	return TPP_EOK;
+}
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+
+
 
 /* Process a #pragma directive, start at the first token that comes after
  * the leading "#pragma" (i.e.: the first token of the actual directive
@@ -15946,50 +16039,27 @@ err_nomem:
  *                      the directive that hasn't been parsed, yet).
  * @return: TPP_ENOENT: Unknown pragma (soft-error; must be handled by caller)
  * @return: TPP_E*:     Error */
+TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
 	tpp_token_id tok = token->tt_id;
 	switch (tok) {
 
+/************************************************************************/
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	case TPP_KWD_push_macro:
-	case TPP_KWD_pop_macro: {
-		tpp_errno error;
-		struct tpp_lexer_handle_pushpopmacro_data data;
-		data.tlhppmd_lexer = self;
-		data.tlhppmd_push  = tok == TPP_KWD_push_macro;
+	case TPP_KWD_pop_macro:
 		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_PUSH_MACRO))
-			goto unknown_pragma;
-		tok = tpp_lexer_yield_blocking(self);
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-
-		/* Skip leading '(' */
-		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		if (TPP_TOK_ISSTRING(tok)) {
-			/* Parse+process string (using "tpp_lexer_parsestring_cb()") */
-			error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_pushpopmacro_cb,
-			                                 &data, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
-		} else {
-#if TPP_HAVE_TPP_W_EXPECTED_STRING
-			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
-#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
-			error = TPP_EOK;;
-#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
-		}
-		if (TPP_ISERR(error))
-			return error;
-
-		/* Skip trailing ')' */
-		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-	}	break;
+			break;
+		return tpp_lexer_process_pragma_pushpop_macro(self, tok);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+/************************************************************************/
 
+
+
+/************************************************************************/
 #if TPP_HAVE_PRAGMA_ONCE
 	case TPP_KWD_once: {
 		tpp_file const *iofile;
@@ -16020,6 +16090,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 			return TPP_TOK_ASERR(tok);
 	}	break;
 #endif /* TPP_HAVE_PRAGMA_ONCE */
+/************************************************************************/
 
 #if TPP_HAVE_PRAGMA_DEPRECATED
 	/* TODO: #pragma deprecated("foo") */
@@ -17601,13 +17672,12 @@ handle_pp_if_error:
 
 		/* Delete keyword definition */
 		ro_keyword = tpp_lexer_gettoken(self)->tt_kwd;
-		if (ro_keyword->tk_macro) {
+		if (tpp_keyword_canundef(ro_keyword)) {
 			tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
 			if tpp_unlikely(!keyword)
 				return TPP_TOK_ENOMEM;
-			tpp_assert(keyword->tk_macro);
-			tpp_macro_decref(keyword->tk_macro);
-			keyword->tk_macro = NULL;
+			tpp_assert(tpp_keyword_canundef(keyword));
+			tpp_keyword_undef(keyword);
 		} else
 #if TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
 		if (tpp_lexer_getkeyworddefined(self, ro_keyword)) {

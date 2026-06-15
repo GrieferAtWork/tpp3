@@ -1051,13 +1051,12 @@ handle_pp_if_error:
 
 		/* Delete keyword definition */
 		ro_keyword = tpp_lexer_gettoken(self)->tt_kwd;
-		if (ro_keyword->tk_macro) {
+		if (tpp_keyword_canundef(ro_keyword)) {
 			tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
 			if tpp_unlikely(!keyword)
 				return TPP_TOK_ENOMEM;
-			tpp_assert(keyword->tk_macro);
-			tpp_macro_decref(keyword->tk_macro);
-			keyword->tk_macro = NULL;
+			tpp_assert(tpp_keyword_canundef(keyword));
+			tpp_keyword_undef(keyword);
 		} else
 #if TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
 		if (tpp_lexer_getkeyworddefined(self, ro_keyword)) {

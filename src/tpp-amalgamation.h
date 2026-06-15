@@ -116,10 +116,10 @@ TPP_KWD(TPP_KWD_endif, "endif")
 #define TPP_KWD_define TPP_KWD_define
 TPP_KWD(TPP_KWD_define, "define")
 #endif /* TPP_HAVE_CPP_DEFINE */
-#if TPP_HAVE_CPP_DEFINE
+#if TPP_HAVE_CPP_DEFINE || TPP_HAVE_PRAGMA_PUSH_MACRO
 #define TPP_KWD_undef TPP_KWD_undef
 TPP_KWD(TPP_KWD_undef, "undef")
-#endif /* TPP_HAVE_CPP_DEFINE */
+#endif /* TPP_HAVE_CPP_DEFINE || TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_CPP_EMBED
 #define TPP_KWD_embed TPP_KWD_embed
 TPP_KWD(TPP_KWD_embed, "embed")
@@ -8646,6 +8646,18 @@ tpp_keyword_pushmacro(tpp_keyword *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_popmacro(tpp_keyword *tpp_restrict self);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+
+#if TPP_HAVE_CPP_MACROS
+/* Check if "tpp_keyword_undef()" can be invoked on "self" */
+#define tpp_keyword_canundef(self) \
+	(tpp_keyword_getmacro(self) != NULL)
+
+/* Delete the macro definition of `self'.
+ * The caller must ensure that `tpp_keyword_canundef(self)' */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_undef(tpp_keyword *tpp_restrict self);
+#endif /* TPP_HAVE_CPP_MACROS */
+
 
 
 /* Calculate the hash of a given keyword string */

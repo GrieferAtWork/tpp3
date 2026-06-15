@@ -227,6 +227,20 @@ err_empty:
 }
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
+#if TPP_HAVE_CPP_MACROS
+/* Delete the macro definition of `self'.
+ * The caller must ensure that `tpp_keyword_canundef(self)' */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_undef(tpp_keyword *tpp_restrict self) {
+	TPP_REF tpp_macro *old_macro;
+	tpp_assert(tpp_keyword_canundef(self));
+	old_macro = self->tk_macro;
+	self->tk_macro = NULL;
+	tpp_macro_decref(old_macro);
+}
+#endif /* TPP_HAVE_CPP_MACROS */
+
+
 
 /* Calculate the hash of a given keyword string */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
