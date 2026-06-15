@@ -143,9 +143,17 @@ tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base);
 #define TPP_ITOA_MAXLEN (TPP_UTOA_MAXLEN + 1) /* +1 for leading "-" */
 #endif /* !TPP_ITOA_MAXLEN */
 
+
 /* Convert an integer into a string */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL tpp_utoa(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL tpp_itoa(char buf[TPP_ITOA_MAXLEN], tpp_intmax value);
+
+
+/* Convert a float into a string */
+#if TPP_HAVE_FTOA
+#define TPP_FTOA_MAXLEN ((TPP_ITOA_MAXLEN * 2) + 1)
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_size TPPCALL tpp_ftoa(char buf[TPP_FTOA_MAXLEN], tpp_float value);
+#endif /* TPP_HAVE_FTOA */
 
 
 #define TPP_UTF8_1BYTE_MAX ((UINT32_C(1) << 7) - 1)

@@ -21,9 +21,6 @@
     <ClCompile Include="..\src\parts\ctype.c">
       <Filter>src\parts</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\tpp-amalgamation.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\parts\lexer.c">
       <Filter>src\parts</Filter>
     </ClCompile>
@@ -115,9 +112,6 @@
     </ClInclude>
     <ClInclude Include="..\src\parts\defs.h">
       <Filter>src\parts</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\tpp-amalgamation.h">
-      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\parts\api.h">
       <Filter>src\parts</Filter>

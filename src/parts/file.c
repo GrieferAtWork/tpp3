@@ -138,6 +138,25 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 #endif /* TPP_HAVE_IFDEF_STACK */
 	switch (self->tf_kind) {
 	case TPP_FILE_KIND_IO:
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+		if (self->tf_pos >= self->tf_end &&
+#if TPP_HAVE_FILE_NOKWD
+		    !(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+#endif /* TPP_HAVE_FILE_NOKWD */
+		    self->tf_data.td_io.tff_name) {
+			/* If the file's keyword still has a valid "tkm_file_guard",
+			 * then we can set its "TPP_KEYWORD_FLAG_HDR_GUARD_VALID" flag. */
+			tpp_keyword *kwd;
+			tpp_keyword_misc *misc;
+			kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
+			                      tpp_offsetof(tpp_keyword, tk_kwd));
+			misc = tpp_keyword_getmisc(kwd);
+			if (misc && misc->tkm_file_guard) {
+				/* Yes! We got a #ifndef-style #include-guard for this file now! */
+				misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_GUARD_VALID;
+			}
+		}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_FILE_NOCLOSE
 		if (!(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOCLOSE))
 #endif /* TPP_HAVE_FILE_NOCLOSE */
@@ -472,10 +491,11 @@ tpp_utf32be_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst
  *       set `tf_end' to point at the end of the new string.
  *     - replace `tf_chunk' with the new string
  *     - return `TPP_EOK'
- * @return: TPP_EOK: Either the current chunk was expanded (the delta
- *                   between `tf_pos' and `tf_end' has increased), or
- *                   no further data can be read from `self'.
- * @return: TPP_EIO: I/O error
+ * @return: TPP_EOK:         Either the current chunk was expanded (the delta
+ *                           between `tf_pos' and `tf_end' has increased), or
+ *                           no further data can be read from `self'.
+ * @return: TPP_EIO:         I/O error
+ * @return: TPP_ENOMEM:      Out of memory
  * #if TPP_HAVE_FILE_NONBLOCK
  * @return: TPP_EWOULDBLOCK: Operation would block.
  * #endif // TPP_HAVE_FILE_NONBLOCK */
@@ -1125,6 +1145,14 @@ tpp_file_getiofile(tpp_file const *tpp_restrict self) {
 			return (tpp_file *)self;
 	}
 	return iter;
+}
+
+/* Returns the last file in the #include-stack (using "tf_tprev") */
+TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
+	while (self->tf_tprev)
+		self = self->tf_tprev;
+	return (tpp_file *)self;
 }
 
 /* Returns the first tf_kind!=TPP_FILE_KIND_MACRO file in the #include-stack (using "tf_tprev")

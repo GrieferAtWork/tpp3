@@ -100,6 +100,49 @@ tpp_itoa(char buf[TPP_ITOA_MAXLEN], tpp_intmax value) {
 }
 
 
+/* Convert a float into a string */
+#if TPP_HAVE_FTOA
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL
+tpp_inplace_utoa(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value) {
+	char *p = tpp_utoa(buf, value);
+	tpp_size len = (tpp_size)((buf + TPP_UTOA_MAXLEN) - p);
+	tpp_memmovedown(buf, p, len);
+	return buf + len;
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_size TPPCALL
+tpp_ftoa(char buf[TPP_FTOA_MAXLEN], tpp_float value) {
+	tpp_uintmax whole;
+	char *p = buf;
+	char *decimal_start;
+	tpp_size decimal_len;
+	if (value < 0) {
+		*p++ = '-';
+		value = -value;
+	}
+	whole = (tpp_uintmax)value;
+	p = tpp_inplace_utoa(p, whole);
+	value -= (tpp_float)whole;
+	whole = (tpp_uintmax)(value * 10000000000.0); /* 10 digits */
+	tpp_assert(whole < TPP_UINTMAX_C(10000000000));
+	*p++ = '.';
+	decimal_start = tpp_utoa(p, whole);
+	tpp_assert(decimal_start >= p);
+	decimal_len = (tpp_size)((p + TPP_UTOA_MAXLEN) - decimal_start);
+	while (decimal_len < 10) {
+		*--decimal_start = '0';
+		++decimal_len;
+	}
+	tpp_assert(decimal_start >= p);
+	while ((decimal_len > 1) && decimal_start[decimal_len - 1] == '0')
+		--decimal_len;
+	tpp_memmovedown(decimal_start, p, decimal_len);
+	p += decimal_len;
+	return (tpp_size)(p - buf);
+}
+#endif /* TPP_HAVE_FTOA */
+
+
 #if TPP_HAVE_TPP_UNICODE_WRITEUTF8
 /* Encode "uch" as utf-8 into "buf" and return the pointer after the last-written byte. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL

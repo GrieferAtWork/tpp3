@@ -1233,7 +1233,9 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 	for (;;) {
 		tpp_char ch;
 		tpp_errno error;
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
 		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
 		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			return error;
@@ -1247,31 +1249,43 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 				return error;
 			if (ch == 0 && (*p_pos) >= file->tf_end)
 				goto warn_premature_eof;
-		} else if (tpp_ascii_islf(ch)) {
+		} else
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
+		if (tpp_ascii_islf(ch)) {
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
-			*p_pos = tpp_file_rel2ptr(file, old_pos);
-			/* Warning if a line-feed is encountered */
+			if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)) {
+				*p_pos = tpp_file_rel2ptr(file, old_pos);
+				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-			return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
-			                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
+				return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+				                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
 #else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
-			break;
+				break;
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+			} else {
+#if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, old_pos),
+				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
+				if (TPP_ISERR(error))
+					return error;
+#endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
+			}
 		} else
 #if TPP_HAVE_UNICODE
 		if (ch >= 0x80 && tpp_file_isutf8(file)) {
 			/* Check for unicode linefeed */
 			tpp_unichar uc;
 			*p_pos = tpp_file_rel2ptr(file, old_pos);
-			error = tpp_lexer_readutf8(self, p_pos, &uc);
+			error  = tpp_lexer_readutf8(self, p_pos, &uc);
 			if (TPP_ISERR(error))
 				return error;
 			if (tpp_unicode_islf(uc))
 				goto handle_linefeed;
 		} else
 #endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
 		{
 		}
 	}
@@ -1441,7 +1455,9 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
 	for (;;) {
 		tpp_char ch;
 		tpp_errno error;
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
 		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
 		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			return error;
@@ -1449,31 +1465,42 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
 			break;
 		if (ch == 0 && (*p_pos) >= file->tf_end)
 			goto warn_premature_eof;
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
 		if (tpp_ascii_islf(ch)) {
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
-			*p_pos = tpp_file_rel2ptr(file, old_pos);
-			/* Warning if a line-feed is encountered */
+			if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)) {
+				*p_pos = tpp_file_rel2ptr(file, old_pos);
+				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-			return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
-			                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
+				return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+				                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
 #else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
-			break;
+				break;
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+			} else {
+#if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, old_pos),
+				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
+				if (TPP_ISERR(error))
+					return error;
+#endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
+			}
 		} else
 #if TPP_HAVE_UNICODE
 		if (ch >= 0x80 && tpp_file_isutf8(file)) {
 			/* Check for unicode linefeed */
 			tpp_unichar uc;
 			*p_pos = tpp_file_rel2ptr(file, old_pos);
-			error = tpp_lexer_readutf8(self, p_pos, &uc);
+			error  = tpp_lexer_readutf8(self, p_pos, &uc);
 			if (TPP_ISERR(error))
 				return error;
 			if (tpp_unicode_islf(uc))
 				goto handle_linefeed;
 		} else
 #endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
 		{
 		}
 	}
@@ -3916,8 +3943,6 @@ eof:
 	/* Check if we can pop to another file */
 #if TPP_HAVE_INCLUDE_STACK
 	if (file->tf_prev && p_pos == &file->tf_pos) {
-		tpp_file *prev;
-
 		/* Warn if the file still has an active #ifdef-stack
 		 * Only do this when we're actually going to pop the
 		 * file off the #include-stack. In those cases where
@@ -3929,10 +3954,8 @@ eof:
 			goto return_error;
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 
-		prev = file->tf_prev;
-		tpp_file_fini(file);
-		*file = *prev;
-		tpp_free(prev);
+		/* Actually pop the file! */
+		tpp_lexer_popfile(self);
 		goto again;
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */

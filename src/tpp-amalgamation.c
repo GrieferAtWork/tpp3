@@ -147,6 +147,49 @@ tpp_itoa(char buf[TPP_ITOA_MAXLEN], tpp_intmax value) {
 }
 
 
+/* Convert a float into a string */
+#if TPP_HAVE_FTOA
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL
+tpp_inplace_utoa(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value) {
+	char *p = tpp_utoa(buf, value);
+	tpp_size len = (tpp_size)((buf + TPP_UTOA_MAXLEN) - p);
+	tpp_memmovedown(buf, p, len);
+	return buf + len;
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_size TPPCALL
+tpp_ftoa(char buf[TPP_FTOA_MAXLEN], tpp_float value) {
+	tpp_uintmax whole;
+	char *p = buf;
+	char *decimal_start;
+	tpp_size decimal_len;
+	if (value < 0) {
+		*p++ = '-';
+		value = -value;
+	}
+	whole = (tpp_uintmax)value;
+	p = tpp_inplace_utoa(p, whole);
+	value -= (tpp_float)whole;
+	whole = (tpp_uintmax)(value * 10000000000.0); /* 10 digits */
+	tpp_assert(whole < TPP_UINTMAX_C(10000000000));
+	*p++ = '.';
+	decimal_start = tpp_utoa(p, whole);
+	tpp_assert(decimal_start >= p);
+	decimal_len = (tpp_size)((p + TPP_UTOA_MAXLEN) - decimal_start);
+	while (decimal_len < 10) {
+		*--decimal_start = '0';
+		++decimal_len;
+	}
+	tpp_assert(decimal_start >= p);
+	while ((decimal_len > 1) && decimal_start[decimal_len - 1] == '0')
+		--decimal_len;
+	tpp_memmovedown(decimal_start, p, decimal_len);
+	p += decimal_len;
+	return (tpp_size)(p - buf);
+}
+#endif /* TPP_HAVE_FTOA */
+
+
 #if TPP_HAVE_TPP_UNICODE_WRITEUTF8
 /* Encode "uch" as utf-8 into "buf" and return the pointer after the last-written byte. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
@@ -3237,7 +3280,7 @@ TPP_DECL_BEGIN
  *                on its own, meaning that the meaning of
  *                *all* negative values is entirely up to the
  *                given "printer"! */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
+TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes) {
 	char const *output_repr;
@@ -3558,6 +3601,25 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 #endif /* TPP_HAVE_IFDEF_STACK */
 	switch (self->tf_kind) {
 	case TPP_FILE_KIND_IO:
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+		if (self->tf_pos >= self->tf_end &&
+#if TPP_HAVE_FILE_NOKWD
+		    !(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+#endif /* TPP_HAVE_FILE_NOKWD */
+		    self->tf_data.td_io.tff_name) {
+			/* If the file's keyword still has a valid "tkm_file_guard",
+			 * then we can set its "TPP_KEYWORD_FLAG_HDR_GUARD_VALID" flag. */
+			tpp_keyword *kwd;
+			tpp_keyword_misc *misc;
+			kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
+			                      tpp_offsetof(tpp_keyword, tk_kwd));
+			misc = tpp_keyword_getmisc(kwd);
+			if (misc && misc->tkm_file_guard) {
+				/* Yes! We got a #ifndef-style #include-guard for this file now! */
+				misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_GUARD_VALID;
+			}
+		}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_FILE_NOCLOSE
 		if (!(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOCLOSE))
 #endif /* TPP_HAVE_FILE_NOCLOSE */
@@ -3892,10 +3954,11 @@ tpp_utf32be_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst
  *       set `tf_end' to point at the end of the new string.
  *     - replace `tf_chunk' with the new string
  *     - return `TPP_EOK'
- * @return: TPP_EOK: Either the current chunk was expanded (the delta
- *                   between `tf_pos' and `tf_end' has increased), or
- *                   no further data can be read from `self'.
- * @return: TPP_EIO: I/O error
+ * @return: TPP_EOK:         Either the current chunk was expanded (the delta
+ *                           between `tf_pos' and `tf_end' has increased), or
+ *                           no further data can be read from `self'.
+ * @return: TPP_EIO:         I/O error
+ * @return: TPP_ENOMEM:      Out of memory
  * #if TPP_HAVE_FILE_NONBLOCK
  * @return: TPP_EWOULDBLOCK: Operation would block.
  * #endif // TPP_HAVE_FILE_NONBLOCK */
@@ -4547,6 +4610,14 @@ tpp_file_getiofile(tpp_file const *tpp_restrict self) {
 	return iter;
 }
 
+/* Returns the last file in the #include-stack (using "tf_tprev") */
+TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
+	while (self->tf_tprev)
+		self = self->tf_tprev;
+	return (tpp_file *)self;
+}
+
 /* Returns the first tf_kind!=TPP_FILE_KIND_MACRO file in the #include-stack (using "tf_tprev")
  * If no such file exists, returns "NULL" */
 #if TPP_HAVE_CPP_MACROS
@@ -4635,7 +4706,7 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self) {
  * WARNING: Only call this function on a "writable" keyword (s.a. `tpp_keywords_copybuiltin()')
  *
  * @return: * :   The "misc" data of "self" (freshly allocated)
- * @return: NULL: OOM (TPP_ENOMEM) */
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
 tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 	tpp_keyword_misc *result = self->tk_misc;
@@ -4645,15 +4716,19 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 #if TPP_HAVE_KEYWORD_FLAGS
 			result->tkm_flags = TPP_KEYWORD_FLAG_NORMAL;
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
-#if TPP_HAVE_KEYWORD_FILE_GUARD
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 			result->tkm_file_guard = NULL;
-#endif /* TPP_HAVE_KEYWORD_FILE_GUARD */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 			tpp_macro_pushstack_init(&result->tkm_macro_pushstack);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_MACRO___TPP_COUNTER
 			result->tkm_builtin_counter = 0;
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+#if TPP_HAVE_KEYWORD_USERDATA
+			result->tkm_userdata_ptr  = NULL;
+			result->tkm_userdata_dtor = NULL;
+#endif /* TPP_HAVE_KEYWORD_USERDATA */
 			self->tk_misc = result;
 		}
 	}
@@ -4662,10 +4737,38 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
 
+#if TPP_HAVE_KEYWORD_USERDATA
+/* Get the user-data pointer for "self"
+ * @return: NULL: No pointer set, or set pointer is "NULL" */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) void *TPPCALL
+tpp_keyword_getuserdata(tpp_keyword const *tpp_restrict self) {
+	tpp_keyword_misc const *misc = self->tk_misc;
+	return misc ? tpp_keyword_misc_getuserdata(misc) : NULL;
+}
+
+/* Set the user-data pointer for "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
+                        void *ptr, void (TPPCALL *dtor)(void *ptr)) {
+	tpp_keyword_misc *misc;
+	if (!ptr && !dtor && !self->tk_misc)
+		return TPP_EOK;
+	misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	tpp_keyword_misc_setuserdata(misc, ptr, dtor);
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_KEYWORD_USERDATA */
+
+
+
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 /* Push the current macro-definition of "self"
  * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out-of-memory */
+ * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_pushmacro(tpp_keyword *tpp_restrict self) {
 	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
@@ -5128,6 +5231,10 @@ tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	tpp_macro_pushstack_fini(&self->tkm_macro_pushstack);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_KEYWORD_USERDATA
+	if (self->tkm_userdata_dtor)
+		(*self->tkm_userdata_dtor)(self->tkm_userdata_ptr);
+#endif /* TPP_HAVE_KEYWORD_USERDATA */
 	tpp_free(self);
 }
 #endif /* TPP_HAVE_KEYWORD_MISC */
@@ -5327,7 +5434,7 @@ err_oom:
 /* Same as above, but if the keyword doesn't exist in `self' or the builtin
  * keyword table, a new keyword is allocated, given an ID, and inserted into `self'
  * @return: * :   The keyword associated with `kwd' (possibly having been just allocated)
- * @return: NULL: OOM (TPP_ENOMEM) */
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
                         tpp_char const *tpp_restrict kwd,
@@ -5416,7 +5523,7 @@ done:
  * pointed-to `tpp_keyword_misc', too)
  *
  * @return: * :   A writable copy of "kwd"
- * @return: NULL: OOM (TPP_ENOMEM) */
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
                          tpp_keyword const *tpp_restrict kwd) {
@@ -6222,6 +6329,11 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 	if (kwd->tk_macro != NULL)
 		return true;
 #endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+#if TPP_HAVE_CPP_BUILTIN_MACROS < 0
+	if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_BUILTIN_MACROS))
+		return false;
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS < 0 */
 	(void)self;
 	switch (kwd->tk_id) {
 #define TPP_DEFS
@@ -6231,6 +6343,7 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 #undef TPP_DEFS
 	default: break;
 	}
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 	return false;
 }
 #endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
@@ -6736,6 +6849,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL < 0
 		/* .tff_TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL         = */ TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL == -1,
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL < 0 */
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE < 0
+		/* .tff_TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE     = */ TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE == -1,
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE < 0 */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE < 0
 		/* .tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE              = */ TPP_HAVE_TPP_TOK_LANGLE_LANGLE == -1,
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE < 0 */
@@ -6958,6 +7074,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_HAVE_CPP_MACROS < 0
 		/* .tff_TPP_FEAT_CPP_MACROS                         = */ TPP_HAVE_CPP_MACROS == -1,
 #endif /* TPP_HAVE_CPP_MACROS < 0 */
+#if TPP_HAVE_CPP_BUILTIN_MACROS < 0
+		/* .tff_TPP_FEAT_CPP_BUILTIN_MACROS                 = */ TPP_HAVE_CPP_BUILTIN_MACROS == -1,
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS < 0 */
 #if TPP_HAVE_CPP_BLANK < 0
 		/* .tff_TPP_FEAT_CPP_BLANK                          = */ TPP_HAVE_CPP_BLANK == -1,
 #endif /* TPP_HAVE_CPP_BLANK < 0 */
@@ -7480,8 +7599,8 @@ tpp_lexer_init_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filenam
 
 #if TPP_HAVE_LEXER_INIT_FILENAME
 /* Initialize a lexer such that it starts reading from "filename"
- * @return: * : TPP_ENOENT: No such file or directory
- * @return: * : TPP_ENOMEM: Out of memory */
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
                         /*utf-8*/ char const *tpp_restrict filename) {
@@ -7494,6 +7613,86 @@ tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
 	return error;
 }
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+
+
+#if TPP_HAVE_INCLUDE_STACK
+#if TPP_HAVE_LEXER_INIT_IO
+/* Push another file onto the #include-stack:
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_filename()')
+ *                          WARNING: This filename is *NOT* copied -- it must remain
+ *                                   allocated and valid until "self" is finalized.
+ * @param: handle:   The I/O handle to read from in order to retrieve text data.
+ * @param: ioflags:  Extra flags specifying how to interact with "handle":
+ *                   - TPP_FILE_IOFLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
+ *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_fini()' will not close "handle"
+ *                   - TPP_FILE_IOFLAGS_SYSHDR:   Do not emit warnings
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
+                         tpp_io_handle handle, tpp_file_ioflags ioflags) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *const prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		return TPP_ENOMEM;
+	*prev_file = *file;
+	ioflags |= TPP_FILE_IOFLAGS_NOKWD;
+	tpp_file_init_io_ex(file, filename, handle, ioflags);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_INIT_IO */
+
+#if TPP_HAVE_LEXER_INIT_FILENAME
+/* Push another file onto the #include-stack:
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *tpp_restrict filename) {
+	tpp_errno error;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *const prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		return TPP_ENOMEM;
+	*prev_file = *file;
+	error = tpp_keywords_openfile(&self->tl_kwds, NULL, filename, file);
+	if tpp_likely(!TPP_ISERR(error)) {
+		file->tf_prev  = prev_file;
+		file->tf_tprev = prev_file;
+	} else {
+		*file = *prev_file;
+		tpp_file_free(prev_file);
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+
+/* Check if the current file can be popped. */
+#define tpp_lexer_canpopfile(self) \
+	(tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev) != NULL)
+
+/* Pop the current file off the #include-stack.
+ * The caller is responsible to ensure that "tpp_lexer_canpopfile(self) == true"
+ * After a call to this function, the caller is responsible to yield the next token!
+ * WARNING: It is the caller's responsibility to call "tpp_lexer_manualpopfile_popfile()"
+ *          instead of this function if rollback of the pop should be possible.
+ * NOTE: It is recommended to call "tpp_lexer_warn_nonempty_ifdef()" before calling
+ *       this function in order to warn about unterminated #ifdef-blocks. */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *prev = file->tf_prev;
+	tpp_file_fini(file);
+	*file = *prev;
+	tpp_file_free(prev);
+}
+
+#endif /* TPP_HAVE_INCLUDE_STACK */
+
 
 #if TPP_HAVE_LEXER_REPRTOKENID
 /* Return the (canonical) string-representation of a given token ID */
@@ -9268,7 +9467,7 @@ tpp_expr_value_getindex(struct tpp_lexer *tpp_restrict lexer,
 	lhs_value   = _tpp_expr_value_getstring(lhs);
 	index_value = _tpp_expr_value_getint(index);
 	if (index_value < 0 || index_value > (tpp_intmax)tpp_string_len(lhs_value))
-		index_value = tpp_string_len(lhs_value);
+		index_value = tpp_string_len(lhs_value); /* XXX: TPP_W_INDEX_OUT_OF_BOUNDS */
 	result_value = tpp_string_str(lhs_value)[(tpp_size)index_value];
 	/* XXX: If hosting compiler has "-fsigned-char", must:
 	 *      >> result_value = (tpp_intmax)(signed char)result_value;
@@ -9413,7 +9612,12 @@ tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer,
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
                          tpp_formatprinter printer, void *arg) {
-	char intval_buf[TPP_ITOA_MAXLEN], *intval_ptr;
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS
+	char value_buffer[TPP_ITOA_MAXLEN < TPP_FTOA_MAXLEN ? TPP_FTOA_MAXLEN : TPP_ITOA_MAXLEN];
+#else /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
+	char value_buffer[TPP_ITOA_MAXLEN];
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
+	char *value_ptr;
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE
 	switch (_tpp_expr_value_getkind(self)) {
 
@@ -9422,45 +9626,9 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 	case _TPP_EXPR_VALUE_KIND_FLOAT: {
-		/* XXX: Use something better? */
-		tpp_size post_len;
-		tpp_ssize temp, result = 0;
 		tpp_float value = _tpp_expr_value_getfloat(self);
-		tpp_intmax whole;
-		if (value < 0) {
-			result = (*printer)(arg, (tpp_char const *)"-", 1);
-			if (result < 0)
-				return result;
-			value = -value;
-		}
-		whole = (tpp_intmax)value;
-		intval_ptr = tpp_itoa(intval_buf, _tpp_expr_value_getint(self));
-		temp = (*printer)(arg, (tpp_char const *)intval_ptr,
-		                  (tpp_size)((intval_buf + tpp_lengthof(intval_buf)) - intval_ptr));
-		if (temp < 0)
-			return temp;
-		result += temp;
-		value -= (tpp_float)whole;
-		whole = (tpp_intmax)(value * 10000000000.0); /* 10 digits */
-		intval_ptr = tpp_itoa(intval_buf, _tpp_expr_value_getint(self));
-		post_len = (tpp_size)((intval_buf + tpp_lengthof(intval_buf)) - intval_ptr);
-		while (post_len < 10) {
-			*--intval_ptr = '0';
-			++post_len;
-		}
-		while (post_len && intval_ptr[post_len - 1] == '0')
-			--post_len;
-		if (post_len) {
-			temp = (*printer)(arg, (tpp_char const *)".", 1);
-			if (temp < 0)
-				return temp;
-			result += temp;
-			temp = (*printer)(arg, (tpp_char const *)intval_ptr, post_len);
-			if (temp < 0)
-				return temp;
-			result += temp;
-		}
-		return result;
+		tpp_size value_len = tpp_ftoa(value_buffer, value);
+		return (*printer)(arg, (tpp_char const *)value_buffer, value_len);
 	}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
@@ -9487,9 +9655,9 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 	default: tpp_unreachable();
 	}
 #endif /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
-	intval_ptr = tpp_itoa(intval_buf, _tpp_expr_value_getint(self));
-	return (*printer)(arg, (tpp_char const *)intval_ptr,
-	                  (tpp_size)((intval_buf + tpp_lengthof(intval_buf)) - intval_ptr));
+	value_ptr = tpp_itoa(value_buffer, _tpp_expr_value_getint(self));
+	return (*printer)(arg, (tpp_char const *)value_ptr,
+	                  (tpp_size)((value_buffer + TPP_ITOA_MAXLEN) - value_ptr));
 }
 #endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
 
@@ -10698,7 +10866,9 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 	for (;;) {
 		tpp_char ch;
 		tpp_errno error;
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
 		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
 		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			return error;
@@ -10712,31 +10882,43 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 				return error;
 			if (ch == 0 && (*p_pos) >= file->tf_end)
 				goto warn_premature_eof;
-		} else if (tpp_ascii_islf(ch)) {
+		} else
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
+		if (tpp_ascii_islf(ch)) {
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
-			*p_pos = tpp_file_rel2ptr(file, old_pos);
-			/* Warning if a line-feed is encountered */
+			if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)) {
+				*p_pos = tpp_file_rel2ptr(file, old_pos);
+				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-			return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
-			                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
+				return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+				                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
 #else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
-			break;
+				break;
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+			} else {
+#if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, old_pos),
+				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
+				if (TPP_ISERR(error))
+					return error;
+#endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
+			}
 		} else
 #if TPP_HAVE_UNICODE
 		if (ch >= 0x80 && tpp_file_isutf8(file)) {
 			/* Check for unicode linefeed */
 			tpp_unichar uc;
 			*p_pos = tpp_file_rel2ptr(file, old_pos);
-			error = tpp_lexer_readutf8(self, p_pos, &uc);
+			error  = tpp_lexer_readutf8(self, p_pos, &uc);
 			if (TPP_ISERR(error))
 				return error;
 			if (tpp_unicode_islf(uc))
 				goto handle_linefeed;
 		} else
 #endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
 		{
 		}
 	}
@@ -10906,7 +11088,9 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
 	for (;;) {
 		tpp_char ch;
 		tpp_errno error;
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
 		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
 		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			return error;
@@ -10914,31 +11098,42 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
 			break;
 		if (ch == 0 && (*p_pos) >= file->tf_end)
 			goto warn_premature_eof;
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
 		if (tpp_ascii_islf(ch)) {
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
-			*p_pos = tpp_file_rel2ptr(file, old_pos);
-			/* Warning if a line-feed is encountered */
+			if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)) {
+				*p_pos = tpp_file_rel2ptr(file, old_pos);
+				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-			return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
-			                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
+				return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+				                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
 #else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
-			break;
+				break;
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+			} else {
+#if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, old_pos),
+				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
+				if (TPP_ISERR(error))
+					return error;
+#endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
+			}
 		} else
 #if TPP_HAVE_UNICODE
 		if (ch >= 0x80 && tpp_file_isutf8(file)) {
 			/* Check for unicode linefeed */
 			tpp_unichar uc;
 			*p_pos = tpp_file_rel2ptr(file, old_pos);
-			error = tpp_lexer_readutf8(self, p_pos, &uc);
+			error  = tpp_lexer_readutf8(self, p_pos, &uc);
 			if (TPP_ISERR(error))
 				return error;
 			if (tpp_unicode_islf(uc))
 				goto handle_linefeed;
 		} else
 #endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
 		{
 		}
 	}
@@ -13381,8 +13576,6 @@ eof:
 	/* Check if we can pop to another file */
 #if TPP_HAVE_INCLUDE_STACK
 	if (file->tf_prev && p_pos == &file->tf_pos) {
-		tpp_file *prev;
-
 		/* Warn if the file still has an active #ifdef-stack
 		 * Only do this when we're actually going to pop the
 		 * file off the #include-stack. In those cases where
@@ -13394,10 +13587,8 @@ eof:
 			goto return_error;
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 
-		prev = file->tf_prev;
-		tpp_file_fini(file);
-		*file = *prev;
-		tpp_free(prev);
+		/* Actually pop the file! */
+		tpp_lexer_popfile(self);
 		goto again;
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */
@@ -13785,10 +13976,7 @@ again_switch_tok:
 			} else
 #endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 			{
-				tpp_file *prev = file->tf_prev;
-				tpp_file_fini(file);
-				*file = *prev;
-				tpp_free(prev);
+				tpp_lexer_popfile(self);
 			}
 			tpp_seek_rparen_state_save_curfile(&state, self);
 			result = tpp_lexer_yieldpp_blocking(self);
@@ -16486,6 +16674,35 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self);
 #endif /* TPP_HAVE_CPP_DEFINE */
 
 
+/* Delete "tpp_keyword_misc::tkm_file_guard" for the current file if appropriate
+ * - Must be called just before calling "tpp_ifdef_stack_append()", to deal with
+ *   the case of a file having multiple top-level #if-blocks (in which case the
+ *   file can't have a #ifndef-style #include-guard)
+ * - Must also be called when returning a token from tpp_lexer_yieldpp()
+ */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+static TPP_NONNULL((1)) void TPPCALL
+tpp_file_maybe_delete_include_guard_keyword(tpp_file *tpp_restrict self) {
+	if (tpp_ifdef_stack_isempty(tpp_file_getifdef(self)) &&
+	    self->tf_kind == TPP_FILE_KIND_IO &&
+#if TPP_HAVE_FILE_NOKWD
+	    !(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+#endif /* TPP_HAVE_FILE_NOKWD */
+	    self->tf_data.td_io.tff_name != NULL) {
+		tpp_keyword *kwd;
+		tpp_keyword_misc *misc;
+		kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
+		                      tpp_offsetof(tpp_keyword, tk_kwd));
+		misc = tpp_keyword_getmisc(kwd);
+		if (misc && misc->tkm_file_guard &&
+		    !(misc->tkm_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID))
+			misc->tkm_file_guard = NULL;
+	}
+}
+#else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#define tpp_file_maybe_delete_include_guard_keyword(self) (void)0
+#endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF
 /* Call with the current token loaded as "if" or "elif"
  * @param: p_directive_start: [out] On success (TPP_EOK or TPP_ENOENT), set
@@ -16558,9 +16775,19 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
  * @return: TPP_EOK:    Directive evaluates to "true"
  * @return: TPP_ENOENT: Directive evaluates to "false"
  * @return: * :         Error */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parse_ifdef_directive_ex(tpp_lexer *tpp_restrict self,
+                                   tpp_char const **p_directive_start,
+                                   tpp_keyword const **p_macro_keyword)
+#define tpp_lexer_parse_ifdef_directive(self, p_directive_start) \
+	tpp_lexer_parse_ifdef_directive_ex(self, p_directive_start, NULL)
+#else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
-                                tpp_char const **p_directive_start) {
+                                tpp_char const **p_directive_start)
+#endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+{
 	tpp_errno result;
 	tpp_token_id tok;
 	tpp_token const *const token = tpp_lexer_gettoken(self);
@@ -16586,6 +16813,10 @@ tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
 	/* Check if keyword is defined */
 	if (TPP_TOK_ISKEYWORD(tok)) {
 		is_keyword_defined = tpp_lexer_getkeyworddefined(self, tpp_lexer_gettokenkwd(self));
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+		if (p_macro_keyword)
+			*p_macro_keyword = tpp_lexer_gettokenkwd(self);
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 	} else {
 #if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF
 		tpp_char const *saved_pos = file->tf_pos;
@@ -16890,6 +17121,7 @@ handle_pp_if_error:
 			return error;
 
 		/* Create a new #ifdef-entry */
+		tpp_file_maybe_delete_include_guard_keyword(file);
 		ifdef_entry = tpp_ifdef_stack_append(tpp_file_getifdef(file));
 		if tpp_unlikely(!ifdef_entry)
 			return TPP_ENOMEM;
@@ -16930,6 +17162,7 @@ handle_pp_if_error:
 #endif /* !TPP_HAVE_TPP_W_ENDIF_LABELS */
 
 		/* Create a new #ifdef-entry */
+		tpp_file_maybe_delete_include_guard_keyword(file);
 		ifdef_entry = tpp_ifdef_stack_append(tpp_file_getifdef(file));
 		if tpp_unlikely(!ifdef_entry)
 			return TPP_ENOMEM;
@@ -16983,6 +17216,11 @@ handle_pp_if_error:
  * @return: TPP_TOK_SHELL_COMMENT : Directive was transformed to a shell-comment which the caller should re-emit */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_directive(tpp_lexer *tpp_restrict self) {
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+#define tpp_lexer_process_directive_set_noguard() (file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NOGUARD)
+#else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#define tpp_lexer_process_directive_set_noguard() (void)0
+#endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token_id result;
@@ -17043,6 +17281,8 @@ again_yield_directive_iter:
 	case TPP_TOK_INT:
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_DIGIT_LINE))
 			goto handle_unknown_directive;
+		tpp_lexer_process_directive_set_noguard();
+
 		/* TODO */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
@@ -17056,6 +17296,8 @@ again_yield_directive_iter:
 	case TPP_KWD_line:
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_LINE))
 			goto handle_unknown_directive;
+		tpp_lexer_process_directive_set_noguard();
+
 		/* TODO */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
@@ -17088,6 +17330,7 @@ again_yield_directive_iter:
 				goto handle_unknown_directive;
 		}
 #endif /* TPP_HAVE_CPP_IMPORT */
+		tpp_lexer_process_directive_set_noguard();
 
 		/* TODO */
 		goto seek_end_of_line;
@@ -17104,18 +17347,60 @@ again_yield_directive_iter:
 		tpp_errno error;
 		tpp_ifdef_stack_entry *ifdef_entry;
 		tpp_char const *directive_start;
-	case TPP_KWD_ifdef:
 	case TPP_KWD_ifndef:
+	case TPP_KWD_ifdef:
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
 handle_pp_ifdef:
 		file->tf_pos = directive_iter;
-		error = tpp_lexer_parse_ifdef_directive(self, &directive_start);
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+		if (token->tt_id == TPP_KWD_ifndef) {
+			tpp_keyword const *ifndef_keyword = NULL;
+			error = tpp_lexer_parse_ifdef_directive_ex(self, &directive_start, &ifndef_keyword);
+			if (!(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOGUARD) &&
+			    (error == TPP_EOK || error == TPP_ENOENT) && ifndef_keyword != NULL &&
+			    file->tf_kind == TPP_FILE_KIND_IO && tpp_ifdef_stack_isempty(tpp_file_getifdef(file)) &&
+#if TPP_HAVE_FILE_NOKWD
+			    !(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+#endif /* TPP_HAVE_FILE_NOKWD */
+			    file->tf_data.td_io.tff_name != NULL) {
+				tpp_keyword *kwd;
+				tpp_keyword_misc *misc;
+				kwd = (tpp_keyword *)((char const *)file->tf_data.td_io.tff_name -
+				                      tpp_offsetof(tpp_keyword, tk_kwd));
+				kwd = tpp_keywords_copybuiltin(&self->tl_kwds, kwd);
+				if tpp_unlikely(!kwd)
+					return TPP_TOK_ENOMEM;
+				misc = tpp_keyword_requiremisc(kwd);
+				if tpp_unlikely(!misc)
+					return TPP_TOK_ENOMEM;
+				misc->tkm_file_guard = ifndef_keyword;
+				if (error == TPP_ENOENT) {
+					/* false-condition -> seek end-of-block */
+					tpp_lcinfo created_at = tpp_file_lcinfo(file, directive_start);
+					error = tpp_lexer_seek_end_of_inactive_ifdef(self, created_at);
+					return TPP_TOK_OFERR_OR_EOF(error);
+				}
+				ifdef_entry = tpp_ifdef_stack_append(tpp_file_getifdef(file));
+				if tpp_unlikely(!ifdef_entry)
+					return TPP_TOK_ENOMEM;
+				ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_IFDEF;
+				ifdef_entry->tidse_created = tpp_file_lcinfo(file, directive_start);
+				ifdef_entry->tidse_updated = ifdef_entry->tidse_created;
+				return TPP_TOK_EOF;
+			}
+		} else
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+		{
+			error = tpp_lexer_parse_ifdef_directive(self, &directive_start);
+		}
+		tpp_lexer_process_directive_set_noguard();
 		goto handle_pp_if_error;
 
 	case TPP_KWD_if:
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
+		tpp_lexer_process_directive_set_noguard(); /* XXX: Also allow guards for "#if !defined(FOO)" ? */
 handle_pp_if:
 		/* Evaluate expression */
 		file->tf_pos = directive_iter;
@@ -17129,6 +17414,7 @@ handle_pp_if_error:
 		}
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
+		tpp_file_maybe_delete_include_guard_keyword(file);
 		ifdef_entry = tpp_ifdef_stack_append(tpp_file_getifdef(file));
 		if tpp_unlikely(!ifdef_entry)
 			return TPP_TOK_ENOMEM;
@@ -17147,6 +17433,7 @@ handle_pp_if_error:
 		tpp_ifdef_stack_entry *ifdef_entry;
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
+		tpp_lexer_process_directive_set_noguard();
 
 		/* Check for error-case: #ifdef-stack is empty */
 		if (tpp_ifdef_stack_isempty(tpp_file_getifdef(file))) {
@@ -17164,6 +17451,7 @@ handle_pp_if_error:
 				goto handle_pp_ifdef;
 			if (result == TPP_KWD_elifndef)
 				goto handle_pp_ifdef;
+			tpp_file_maybe_delete_include_guard_keyword(file);
 			ifdef_entry = tpp_ifdef_stack_append(tpp_file_getifdef(file));
 			if tpp_unlikely(!ifdef_entry)
 				return TPP_TOK_ENOMEM;
@@ -17224,6 +17512,7 @@ handle_pp_if_error:
 	case TPP_KWD_endif: {
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
+		/*tpp_lexer_process_directive_set_noguard();*/ /* Not needed... */
 		file->tf_pos = directive_iter;
 
 		if (tpp_ifdef_stack_isempty(tpp_file_getifdef(file))) {
@@ -17268,6 +17557,7 @@ handle_pp_if_error:
 	case TPP_KWD_define: {
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_DEFINE))
 			goto handle_unknown_directive;
+		tpp_lexer_process_directive_set_noguard();
 		token->tt_end = directive_iter;
 		do {
 			result = tpp_lexer_yieldraw_blocking(self);
@@ -17291,6 +17581,7 @@ handle_pp_if_error:
 		tpp_keyword const *ro_keyword;
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_DEFINE))
 			goto handle_unknown_directive;
+		tpp_lexer_process_directive_set_noguard();
 		token->tt_end = directive_iter;
 		do {
 			result = tpp_lexer_yieldraw_blocking(self);
@@ -17361,6 +17652,7 @@ handle_pp_if_error:
 	case TPP_KWD_unassert:
 		if (!tpp_lexer_getext(self, TPP_EXT_CPP_ASSERT))
 			goto handle_unknown_directive;
+		tpp_lexer_process_directive_set_noguard();
 		/* TODO */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
@@ -17393,6 +17685,7 @@ handle_pp_if_error:
 				goto handle_unknown_directive;
 		}
 #endif /* TPP_HAVE_CPP_WARNING */
+		tpp_lexer_process_directive_set_noguard();
 		rel_token_start   = tpp_file_ptr2rel(file, token->tt_start);
 		rel_message_start = tpp_file_ptr2rel(file, directive_iter);
 		error = tpp_lexer_seek_eol(self, &directive_iter tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_EOF));
@@ -17464,6 +17757,7 @@ handle_pp_if_error:
 	case TPP_KWD_sccs:
 		if (!tpp_lexer_getext(self, TPP_EXT_CPP_IDENT_SCCS))
 			goto handle_unknown_directive;
+		tpp_lexer_process_directive_set_noguard();
 		/* TODO */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
@@ -17477,6 +17771,7 @@ handle_pp_if_error:
 	case TPP_KWD_pragma: {
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_PRAGMA))
 			goto handle_unknown_directive;
+		tpp_lexer_process_directive_set_noguard();
 		token->tt_end = directive_iter;
 		do {
 			result = tpp_lexer_yieldraw_blocking(self);
@@ -17495,6 +17790,7 @@ handle_pp_if_error:
 	case TPP_KWD_embed: {
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_EMBED))
 			goto handle_unknown_directive;
+		tpp_lexer_process_directive_set_noguard();
 		/* TODO: #embed  (https://en.cppreference.com/c/preprocessor/embed) */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
@@ -17555,13 +17851,16 @@ handle_unknown_directive:
 		} else
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 		{
+			tpp_lexer_process_directive_set_noguard();
 #if defined(WANT_seek_end_of_line) || TPP_HAVE_TPP_TOK_SHELL_COMMENT <= 0
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT <= 0
 #if TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE
-			tpp_errno error;
-			error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_DIRECTIVE);
-			if (TPP_ISERR(error))
-				return TPP_TOK_OFERR(error);
+			{
+				tpp_errno error;
+				error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_DIRECTIVE);
+				if (TPP_ISERR(error))
+					return TPP_TOK_OFERR(error);
+			}
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT <= 0 */
 	
@@ -17581,6 +17880,7 @@ seek_end_of_line:
 		break;
 	}
 	return TPP_TOK_EOF;
+#undef tpp_lexer_process_directive_set_noguard
 }
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 
@@ -17757,13 +18057,23 @@ again:
 
 /************************************************************************/
 	default:
-#if TPP_HAVE_CPP_DIRECTIVES
 		/* Remember that we've seen something that will prevent CPP directives */
+#if TPP_HAVE_CPP_DIRECTIVES
 		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 		break;
 /************************************************************************/
 	}
+
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+	/* Remember that #include-guards are no longer possible at this
+	 * point (because a relevant token "result" was hit first) */
+	tpp_lexer_getfile(self)->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NOGUARD;
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+
+	/* Delete a previously recognized #ifndef-guard keyword if
+	 * we're at the top-level #ifdef-block for the current file. */
+	tpp_file_maybe_delete_include_guard_keyword(tpp_lexer_getfile(self));
 	return result;
 }
 
@@ -19585,6 +19895,7 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 
 
 
+#if TPP_HAVE_CPP_BUILTIN_MACROS
 /* Handle a builtin macro.
  * @return: TPP_TOK_EOF: Caller should yield again.
  * @return: * : The new expansion token after keywords were handled */
@@ -19673,10 +19984,10 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 /************************************************************************/
 #if TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__
 #if TPP_HAVE_MACRO___FILE__
-	case TPP_KWD___FILE__:
+	case TPP_KWD___FILE__: /* TODO: Use tpp_file_getlcfile() */
 #endif /* TPP_HAVE_MACRO___FILE__ */
 #if TPP_HAVE_MACRO___BASE_FILE__
-	case TPP_KWD___BASE_FILE__:
+	case TPP_KWD___BASE_FILE__: /* TODO: Use tpp_file_getbasefile() */
 #endif /* TPP_HAVE_MACRO___BASE_FILE__ */
 	{
 		/* TODO */
@@ -19798,6 +20109,8 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	 *       (the case where the caller is normally expected to yield the next
 	 *       token), simply jump back to repeat the '<' / '"' check.
 	 *       If the next token's first char isn't '<' / '"', that's "-Wsyntax"
+	 *       If the next token doesn't start with '<' / '"', yield it so it is
+	 *       possible to skip SPACE/COMMENT tokens before trying again.
 	 * ^ An implementation like that is completely standard-confirming, since the
 	 *   standard only mandates that macros be expanded in #include-filenames
 	 *   before the '<' / '"' check is to-be repeated. */
@@ -19841,6 +20154,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	 * >> #define SOME_MACRO SOME_MACRO */
 	return tok;
 }
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 #endif /* TPP_HAVE_CPP_MACROS */
 
 /* Handle a keyword-style macro.
@@ -19872,6 +20186,13 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED */
 
 #if TPP_HAVE_CPP_MACROS
+
+	/* Check if macros are runtime-configurable and currently disabled. */
+#if TPP_HAVE_CPP_MACROS < 0
+	if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_MACROS))
+		return tok;
+#endif /* TPP_HAVE_CPP_MACROS < 0 */
+
 	/* Check if this keyword should be expanded as a macro.
 	 * This also does the is-enabled checks for builtin macros. */
 #if TPP_HAVE_LEXER_GETKEYWORDDEFINED
@@ -19897,7 +20218,15 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 			return tpp_lexer_expand_macro(self, macro);
 		}
 	}
+
+	/* Expand builtin macros (if enabled)
+	 * NOTE: Don't need to check "TPP_FEAT_CPP_BUILTIN_MACROS" here; that feature
+	 *       flag (if enabled) was already checked by "tpp_lexer_getkeyworddefined()" */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
 	return tpp_lexer_yield_handle_builtin_macro(self, tok);
+#else /* TPP_HAVE_CPP_BUILTIN_MACROS */
+	return tok;
+#endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 #else /* TPP_HAVE_CPP_MACROS */
 	return tok;
 #endif /* !TPP_HAVE_CPP_MACROS */
@@ -21400,14 +21729,24 @@ again:
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 
-#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT
 	case '#':
+		/* Preprocessor assertions */
+#if TPP_HAVE_CPP_ASSERT
+		if (tpp_lexer_getext(self, TPP_EXT_CPP_ASSERT)) {
+			/* TODO */
+		}
+#endif /* TPP_HAVE_CPP_ASSERT */
+
 		/* length-operator for string expressions */
-		if (!tpp_lexer_getext(self, TPP_EXT_BUILTIN_EXPR_STRINGS))
-			break;
-		/* TODO */
-		break;
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+		if (tpp_lexer_getext(self, TPP_EXT_BUILTIN_EXPR_STRINGS)) {
+			/* TODO */
+		}
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+		goto handle_default;
+#define WANT_handle_default
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT */
 
 
 #if TPP_HAVE_BUILTIN_EXPR_DEFINED
@@ -21415,8 +21754,8 @@ again:
 		bool is_defined;
 		bool has_paren;
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_BUILTIN_EXPR_DEFINED))
-			goto handle_keyword;
-#define WANT_handle_keyword
+			goto handle_default;
+#define WANT_handle_default
 		tok = tpp_lexer_yield_forexpr(self);
 		has_paren = tok == '(';
 		if (has_paren)
@@ -21470,8 +21809,8 @@ again:
 		tpp_errno error;
 		bool is_true;
 		if (!tpp_lexer_getext(self, TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS))
-			goto handle_keyword;
-#define WANT_handle_keyword
+			goto handle_default;
+#define WANT_handle_default
 again_handle_if:
 		tok = tpp_lexer_yield_forexpr(self);
 		if (TPP_TOK_ISERR(tok))
@@ -21528,10 +21867,10 @@ again_handle_if:
 	}	break;
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 
-#ifdef WANT_handle_keyword
-#undef WANT_handle_keyword
-handle_keyword:
-#endif /* WANT_handle_keyword */
+#ifdef WANT_handle_default
+#undef WANT_handle_default
+handle_default:
+#endif /* WANT_handle_default */
 	default: {
 		tpp_errno error = TPP_EOK;
 		if (TPP_TOK_ISKEYWORD(tok)) {

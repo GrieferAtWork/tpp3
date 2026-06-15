@@ -38,145 +38,192 @@
 /* MIGRATION NOTES (use CTRL+F to search for TPP2 identifiers)          */
 /************************************************************************/
 
+/* TPP_CONFIG_ONELEXER, TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
+ *  - TPP3 now only supports the multi-lexer configuration (TPP_CONFIG_ONELEXER=3)
+ *    where the lexer is passed as an argument to various APIs. This has been done
+ *    intentionally in order to allow multi-threaded API usage, where every thread
+ *    has its own "tpp_lexer", which are all able to operate individually.
+ *  - For global/one-lexer configurations, this compatibility header uses a new
+ *    configuration macro "TPP2_LEXER", which is used in place for the current
+ *    lexer. When transitioning to TPP3, this can be used as a stop-gap measure.
+ */
+
+/* TPP_CONFIG_MINMACRO, TPP_CONFIG_GCCFUNC, TPP_CONFIG_MINGCCFUNC
+ *  - TPP3 no longer includes "builtin" function support, nor does it try to pre-
+ *    define CPU-specific macros. As such, these config options (which used to
+ *    configure which macros/builtins are available) are no longer needed.
+ *  - Adding CPU-specific should be done by the API user in TPP3
+ */
+
+/* TPP_UNESCAPE_MAXCHAR
+ *  - TPP3 operates entirely on unicode/utf-8. As such, you can no longer configure
+ *    the width of your designed USC-character type.
+ *  - To decode multi-char characters, you must supply your own utf-8 decoder when
+ *    calling "tpp_lexer_parsestring_ex()", which you can then use to transform
+ *    input into whichever encoding you wish to use (though I recommend you just
+ *    stick with utf-8 if possible)
+ */
+
+/* TPP_UNESCAPE_ENDIAN, TPP_BYTEORDER
+ *  - TPP3 is written to be agnostic to CPU endian at runtime
+ *  - The only place TPP2 (and TPP3) need the endian is for decoding UTF-16
+ */
+
+/* TPP_CONFIG_EXPORT
+ *  - TPP3 has a completely different API, so it wouldn't make sense to
+ *    support a legacy config macro that enables the dllexport-style export
+ *    of that API
+ *  - Instead, if you want to export TPP3, you can override the following:
+ *    - TPP_DECL
+ *    - TPP_IMPL
+ *    - TPP_CONST_DECL
+ *    - TPP_CONST_IMPL
+ *    - TPP_INTERN_DECL
+ *    - TPP_INTERN_IMPL
+ */
+
 /* EXT_CLANG_FEATURES: "-fhas-feature-macros"
- *   -> TPP_EXT_CLANG_MACRO___has_attribute:          "-fclang-__has_attribute"
- *   -> TPP_EXT_CLANG_MACRO___has_builtin:            "-fclang-__has_builtin"
- *   -> TPP_EXT_CLANG_MACRO___has_cpp_attribute:      "-fclang-__has_cpp_attribute"
- *   -> TPP_EXT_CLANG_MACRO___has_declspec_attribute: "-fclang-__has_declspec_attribute"
- *   -> TPP_EXT_CLANG_MACRO___has_extension:          "-fclang-__has_extension"
- *   -> TPP_EXT_CLANG_MACRO___has_feature:            "-fclang-__has_feature"
- *   -> TPP_EXT_CLANG_MACRO___has_c_attribute:        "-fclang-__has_c_attribute"
- *   -> TPP_EXT_MACRO___is_identifier:                "-f__is_identifier"
- *   -> TPP_EXT_MACRO___is_deprecated:                "-f__is_deprecated"
- *   -> TPP_EXT_MACRO___is_poisoned:                  "-f__is_poisoned"
+ *  - This extension has been split into its individual components:
+ *    -> TPP_EXT_CLANG_MACRO___has_attribute:          "-fclang-__has_attribute"
+ *    -> TPP_EXT_CLANG_MACRO___has_builtin:            "-fclang-__has_builtin"
+ *    -> TPP_EXT_CLANG_MACRO___has_cpp_attribute:      "-fclang-__has_cpp_attribute"
+ *    -> TPP_EXT_CLANG_MACRO___has_declspec_attribute: "-fclang-__has_declspec_attribute"
+ *    -> TPP_EXT_CLANG_MACRO___has_extension:          "-fclang-__has_extension"
+ *    -> TPP_EXT_CLANG_MACRO___has_feature:            "-fclang-__has_feature"
+ *    -> TPP_EXT_CLANG_MACRO___has_c_attribute:        "-fclang-__has_c_attribute"
+ *    -> TPP_EXT_MACRO___is_identifier:                "-f__is_identifier"
+ *    -> TPP_EXT_MACRO___is_deprecated:                "-f__is_deprecated"
+ *    -> TPP_EXT_MACRO___is_poisoned:                  "-f__is_poisoned"
  */
 
 /* EXT_HAS_INCLUDE: "has-include-macros"
- *   -> TPP_EXT_MACRO___has_include:                  "-f__has_include"
- *   -> TPP_EXT_MACRO___has_include_next:             "-f__has_include_next"
+ *  - This extension has been split into its individual components:
+ *    -> TPP_EXT_MACRO___has_include:                  "-f__has_include"
+ *    -> TPP_EXT_MACRO___has_include_next:             "-f__has_include_next"
  */
 
 /* EXT_EXTENDED_IDENTS: "extended-identifiers"
- *   - TPP3 no longer includes ANSI support. Instead, TPP3 supports proper unicode
- *     and utf-8. As such, there is no extension to enable/disable ANSI identifiers.
- *     Instead, you can pre-define macros like "tpp_unicode_issymstrt()" to supply
- *     TPP with a unicode character traits database, which it will happly use.
- *   - Decoding input files from (certain) codecs into utf-8 is done automatically
- *   - TPP unicode support is enabled with "TPP_HAVE_UNICODE"
- *   - For compatibility with TPP2's (flaky) attempts at decoding (e.g.) utf-16
- *     into utf-8, this compatibility header force-enables unicode support, even
- *     though that (somewhat) conflicts with TPP2's ANSI support.
+ *  - TPP3 no longer includes ANSI support. Instead, TPP3 supports proper unicode
+ *    and utf-8. As such, there is no extension to enable/disable ANSI identifiers.
+ *    Instead, you can pre-define macros like "tpp_unicode_issymstrt()" to supply
+ *    TPP with a unicode character traits database, which it will happly use.
+ *  - Decoding input files from (certain) codecs into utf-8 is done automatically
+ *  - TPP unicode support is enabled with "TPP_HAVE_UNICODE"
+ *  - For compatibility with TPP2's (flaky) attempts at decoding (e.g.) utf-16
+ *    into utf-8, this compatibility header force-enables unicode support, even
+ *    though that (somewhat) conflicts with TPP2's ANSI support.
  */
 
 /* TPPLEXER_TOKEN_NONE, TPPLEXER_TOKEN_DEFAULT:
- *   - TPP3 allows recognized tokens to be configured on a per-token basis.
- *   - Every recognized token can also be configured to be runtime configurable
- *   - When runtime configurable, tokens can be enabled/disabled using "tpp_lexer_setfeat"
+ *  - TPP3 allows recognized tokens to be configured on a per-token basis.
+ *  - Every recognized token can also be configured to be runtime configurable
+ *  - When runtime configurable, tokens can be enabled/disabled using "tpp_lexer_setfeat"
  */
 
 /* TPPLEXER_TOKEN_EQUALBINOP:
- *   - TPP3 still includes support for tokens like "=+", however unlike
- *     in TPP2, TPP3 defines separate token IDs for all mirrored variants.
- *   - As such, you will need to re-write your code as:
- *     ```diff
- *     -case TPP_TOK_SHL_EQUAL:
- *     +case TPP_TOK_LANGLE_LANGLE_EQUAL:
- *     +case TPP_TOK_EQUAL_LANGLE_LANGLE:
- *     ```
+ *  - TPP3 still includes support for tokens like "=+", however unlike
+ *    in TPP2, TPP3 defines separate token IDs for all mirrored variants.
+ *  - As such, you will need to re-write your code as:
+ *    ```diff
+ *    -case TPP_TOK_SHL_EQUAL:
+ *    +case TPP_TOK_LANGLE_LANGLE_EQUAL:
+ *    +case TPP_TOK_EQUAL_LANGLE_LANGLE:
+ *    ```
  */
 
 /* EXT_DOLLAR_IS_ALPHA: "-fdollars-in-identifiers"
  * TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA_DEFAULT
  * TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA
- *   - TPP3 has removed this feature as an extension switch.
- *     Instead, it is a lexer "feature" that can be configured
- *     (possibly at runtime) via "TPP_HAVE_TPP_TOK_DOLLAR"
- *   - When "TPP_HAVE_TPP_TOK_DOLLAR" is enabled, '$' is treated
- *     as its own, 1-char token.
- *   - When "TPP_HAVE_TPP_TOK_DOLLAR" is disabled, '$' is treated
- *     like any other tpp_ascii_issymcont() byte, meaning it is
- *     treated as part of a keyword / identifier
- *   - HINT: #define TPP_HAVE_TPP_TOK_DOLLAR (-1)  // Runtime-configurable; default=true
- *     HINT: #define TPP_HAVE_TPP_TOK_DOLLAR (-2)  // Runtime-configurable; default=false
+ *  - TPP3 has removed this feature as an extension switch.
+ *    Instead, it is a lexer "feature" that can be configured
+ *    (possibly at runtime) via "TPP_HAVE_TPP_TOK_DOLLAR"
+ *  - When "TPP_HAVE_TPP_TOK_DOLLAR" is enabled, '$' is treated
+ *    as its own, 1-char token.
+ *  - When "TPP_HAVE_TPP_TOK_DOLLAR" is disabled, '$' is treated
+ *    like any other tpp_ascii_issymcont() byte, meaning it is
+ *    treated as part of a keyword / identifier
+ *  - HINT: #define TPP_HAVE_TPP_TOK_DOLLAR (-1)  // Runtime-configurable; default=true
+ *    HINT: #define TPP_HAVE_TPP_TOK_DOLLAR (-2)  // Runtime-configurable; default=false
  */
 
 /* EXT_CANONICAL_HEADERS: "-fcanonical-system-headers"
  * TPP_CONFIG_EXTENSION_CANONICAL_HEADERS_DEFAULT
  * TPP_CONFIG_EXTENSION_CANONICAL_HEADERS
- *   - Filename normalization is no longer something that can be configured
- *     or affected using conventional lexer features / extensions. This is
- *     because the act of normalizing a filename / opening a file is now
- *     something that needs to happen at the time a lexer is initialized
- *   - Since TPP3 requires you to specify the file to-be loaded initially
- *     when initializing your lexer, that also means that there is no point
- *     in time where filename normalization could be overwritten/configured
- *   - You can however still affect how TPP3 normalizes filenames (TPP_FS_*):
- *     - TPP_FS_HAVE_DRIVES
- *     - TPP_FS_HAVE_ICASE
- *     - TPP_FS_SEP
- *     - TPP_FS_ALTSEP
- *     - TPP_FS_ISSEP
- *     - TPP_FS_ISABS
- *     Additionally, you may take a look at `tpp_fs_normalize()'
+ *  - Filename normalization is no longer something that can be configured
+ *    or affected using conventional lexer features / extensions. This is
+ *    because the act of normalizing a filename / opening a file is now
+ *    something that needs to happen at the time a lexer is initialized
+ *  - Since TPP3 requires you to specify the file to-be loaded initially
+ *    when initializing your lexer, that also means that there is no point
+ *    in time where filename normalization could be overwritten/configured
+ *  - You can however still affect how TPP3 normalizes filenames (TPP_FS_*):
+ *    - TPP_FS_HAVE_DRIVES
+ *    - TPP_FS_HAVE_ICASE
+ *    - TPP_FS_SEP
+ *    - TPP_FS_ALTSEP
+ *    - TPP_FS_ISSEP
+ *    - TPP_FS_ISABS
+ *    Additionally, you may take a look at `tpp_fs_normalize()'
  */
 
 /* TOK_CHAR, TPP_TOK_CHAR, TOK_STRING, TPP_TOK_STRING:
- *   - TPP3 has individual tokens for every type of string, whereas
- *     TPP2 used to have only 2 token types describing string and
- *     char tokens
- *   - Because of this, you should migrate code as follows:
- *     ```diff
- *     - case TPP_TOK_CHAR:
- *     - case TPP_TOK_STRING:
- *     +     if (tok == TPP_TOK_CHAR || tok == TPP_TOK_STRING) {
- *     + TPP_CASE_TPP_TOK_STRING
- *     +     if (TPP_TOK_ISSTRING(tok)) {
- *     ```
+ *  - TPP3 has individual tokens for every type of string, whereas
+ *    TPP2 used to have only 2 token types describing string and
+ *    char tokens
+ *  - Because of this, you should migrate code as follows:
+ *    ```diff
+ *    - case TPP_TOK_CHAR:
+ *    - case TPP_TOK_STRING:
+ *    +     if (tok == TPP_TOK_CHAR || tok == TPP_TOK_STRING) {
+ *    + TPP_CASE_TPP_TOK_STRING
+ *    +     if (TPP_TOK_ISSTRING(tok)) {
+ *    ```
  */
 
 /* TOK_COMMENT, TPP_TOK_COMMENT:
- *   - TPP3 has individual tokens for every type of comment
- *   - It also differentiates between comments that include a trailing
- *     line-feed, and comments that end in-line
- *   - Because of this, you should migrate code as follows:
- *     ```diff
- *     - case TPP_TOK_COMMENT:
- *     -     if (tok == TPP_TOK_COMMENT) {
- *     + TPP_CASE_TPP_TOK_COMMENT
- *     +     if (TPP_TOK_ISCOMMENT(tok)) {
- *     ```
+ *  - TPP3 has individual tokens for every type of comment
+ *  - It also differentiates between comments that include a trailing
+ *    line-feed, and comments that end in-line
+ *  - Because of this, you should migrate code as follows:
+ *    ```diff
+ *    - case TPP_TOK_COMMENT:
+ *    -     if (tok == TPP_TOK_COMMENT) {
+ *    + TPP_CASE_TPP_TOK_COMMENT
+ *    +     if (TPP_TOK_ISCOMMENT(tok)) {
+ *    ```
  */
 
-/* TOK_ERR:
- *   - TPP3 defines individual token IDs for different errors that can
- *     happen during lexing, whereas TPP2 only used to define a singular
- *     token ID to represent errors.
- *   - When migrating, you should adjust your error-checking code to
- *     deal with all possible types of lexing errors:
- *     ```diff
- *     - case TOK_ERR:
- *     -     if (tok == TOK_ERR) {
- *     + TPP_CASE_TPP_TOK_ERR
- *     +     if (TPP_TOK_ISERR(tok)) {
- *     ```
+/* TOK_ERR, TPP_CONFIG_SET_API_ERROR, TPPLEXER_FLAG_ERROR,
+ * TPP_CONFIG_SET_API_ERROR_BADALLOC, TPP_CONFIG_INLINE_SETERR:
+ *  - TPP3 defines individual token IDs for different errors that can
+ *    happen during lexing, whereas TPP2 only used to define a singular
+ *    token ID to represent errors.
+ *  - When migrating, you should adjust your error-checking code to
+ *    deal with all possible types of lexing errors:
+ *    ```diff
+ *    - case TOK_ERR:
+ *    -     if (tok == TOK_ERR) {
+ *    + TPP_CASE_TPP_TOK_ERR
+ *    +     if (TPP_TOK_ISERR(tok)) {
+ *    ```
  *
  * Note however that you are advised to deal with the meaning of actual errors:
- * - TPP_TOK_ENOMEM, TPP_TOK_EIO, TPP_TOK_EWARNPRINT:
- *   These errors are not caused by TPP itself and indicate a problem
- *   with the underlying operating system. In all likelyhook, you can
- *   probably just propagate these errors
- * - TPP_TOK_ELEXERROR:
- *   This error is what comes closest to TPP2's "TPPLexer_SetErr()"
- *   macro. This error is returned when an error/fatal-level message
- *   was emitted in a way where the configuration of lexer warnings
- *   indicates that compilation must be aborted.
- * - TPP_TOK_EWOULDBLOCK:
- *   You will only see this error if you made use of "TPP_CONFIG_NONBLOCKING_IO"
- *   (aka. "TPP_HAVE_FILE_NONBLOCK" in TPP3). This is a temporary error
- *   that means that the next token cannot be read *right now* because
- *   reading from the underlying I/O file would block.
- *   -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
- *   -> You will not see this error when not using the "TPP_FILE_IOFLAGS_NONBLOCK" flag
+ *  - TPP_TOK_ENOMEM, TPP_TOK_EIO, TPP_TOK_EWARNPRINT:
+ *    These errors are not caused by TPP itself and indicate a problem
+ *    with the underlying operating system. In all likelyhook, you can
+ *    probably just propagate these errors
+ *  - TPP_TOK_ELEXERROR:
+ *    This error is what comes closest to TPP2's "TPPLexer_SetErr()"
+ *    macro. This error is returned when an error/fatal-level message
+ *    was emitted in a way where the configuration of lexer warnings
+ *    indicates that compilation must be aborted.
+ *  - TPP_TOK_EWOULDBLOCK:
+ *    You will only see this error if you made use of "TPP_CONFIG_NONBLOCKING_IO"
+ *    (aka. "TPP_HAVE_FILE_NONBLOCK" in TPP3). This is a temporary error
+ *    that means that the next token cannot be read *right now* because
+ *    reading from the underlying I/O file would block.
+ *    -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
+ *    -> You will not see this error when not using the "TPP_FILE_IOFLAGS_NONBLOCK" flag
  */
 
 /* TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT,
@@ -186,19 +233,207 @@
  *    emitted by default when multi-char constants are used.
  *  - see: TPP_HAVE_TPP_W_MULTICHAR_LITERAL
  */
+
+/* >> int TPPFile_Copyname(struct TPPFile *self);
+ * >> struct TPPFile *TPPFile_CopyForInclude(struct TPPFile *self);
+ * >> struct TPPFile *TPPFile_NewDefine(void);
+ * >> int TPPLexer_ExpandFunctionMacro_(struct TPPLexer *self, struct TPPFile *macro);
+ * >> int TPPLexer_ExpandFunctionMacro(struct TPPFile *macro);
+ *  - These functions should have never been exposed by the TPP2 API.
+ *    If you've been using them, you'll have to decide how to migrate
+ *  - TPP3 uses a completely different model when it comes to how files
+ *    are managed and pushed on the #include-stack: namely, the current
+ *    file is *inlined* within the lexer, allowing for faster access,
+ *    and allowing a simple lexer to be constructed without the need
+ *    for *any* heap allocations */
+
+/* >> struct TPPFile *TPPFile_Open(char const *filename);
+ * >> struct TPPFile *TPPFile_OpenStream(TPP_stream_t stream, char const *name);
+ *  - TPP3 uses a completely different model when it comes to how files
+ *    are managed and pushed on the #include-stack
+ *  - These functions don't exist in the same manner anymore
+ *  - To migrate these functions, see the following:
+ *    - tpp_lexer_init_filename()   (TPPFile_Open)
+ *    - tpp_lexer_init_io_ex()      (TPPFile_OpenStream)
+ */
+
+/* >> char *TPP_Unescape_(tpp_lexer *self, char *buf, char const *data, size_t size);
+ * >> char *TPP_Unescape(char *buf, char const *data, size_t size);
+ * >> char *TPP_UnescapeRaw(char *buf, char const *data, size_t size);
+ * >> size_t TPP_SizeofUnescape_(tpp_lexer *self, char const *data, size_t size);
+ * >> size_t TPP_SizeofUnescape(char const *data, size_t size);
+ * >> size_t TPP_SizeofUnescapeRaw(char const *data, size_t size);
+ *  - Since TPP3 supports many different string formats (some of which don't even
+ *    support \-escape sequences), these function no longer exist.
+ *  - Instead, TPP3 has a function "tpp_lexer_decodestring()" can can be used to
+ *    decode the character data of *any* type of string token. However, unlike
+ *    the TPP2 api, "tpp_lexer_decodestring()" expects the currently loaded token
+ *    to be string-like (TPP_TOK_ISSTRING()), rather than taking string token data
+ *    via "data" + "size" arguments
+ *  - Migrate use of these APIs as follows:
+ *    ```diff
+ *    - size_t size = TPP_SizeofUnescape(TPPLexer_Current->l_token.t_begin,
+ *    -                                  (size_t)(TPPLexer_Current->l_token.t_end -
+ *    -                                           TPPLexer_Current->l_token.t_begin));
+ *    - char *buf = (char *)malloc(size);
+ *    - if (!buf) return NULL;
+ *    - TPP_Unescape(buf, TPPLexer_Current->l_token.t_begin,
+ *    -              (size_t)(TPPLexer_Current->l_token.t_end -
+ *    -                       TPPLexer_Current->l_token.t_begin));
+ *    - ...
+ *    - free(buf);
+ *    + tpp_string_builder builder;
+ *    + tpp_string_builder_init(&builder);
+ *    + if (tpp_lexer_decodestring(TPPLexer_Current, &tpp_string_builder_print, &tpp_string_builder_print, &builder) < 0)
+ *    +     return NULL;
+ *    + TPP_REF tpp_string *string = tpp_string_builder_pack(&builder);
+ *    + char *buf = (char *)tpp_string_str(string);
+ *    + tpp_size size = tpp_string_len(string);
+ *    + ...
+ *    + tpp_string_decref(string);
+ *    ```
+ */
+
+/* TPP_CONFIG_LOCKED_KEYWORDS, TPP_KEYWORDFLAG_LOCKED,
+ * W_CANT_DEFINE_LOCKED_KEYWORD, W_CANT_UNDEF_LOCKED_KEYWORD:
+ *  - Locked keywords are no longer supported by TPP3.
+ *  - Instead, TPP3 simply doesn't allow users to re-define builtin macros,
+ *    but there is no runtime configurable flag (that can't even be set by
+ *    a builtin #pragma, meaning it's entire purpose is to be set explicitly)
+ */
+
+/* TPP_KEYWORDFLAG_NO_UNDERSCORES:
+ *  - No longer supported in TPP3. All feature-test macros allow for optional
+ *    leading/trailing _-characters, and this functionality cannot be disabled
+ *    for some specific feature macro (because: why would you want to?)
+ */
+
+/* TPPLEXER_FLAG_WILLRESTORE,
+ * >> struct TPPLexerFilePosition { ... };
+ * >> struct TPPLexerPosition { ... };
+ * >> int TPPLexer_SavePosition_(struct TPPLexer *lexer, struct TPPLexerPosition *self);
+ * >> void TPPLexer_LoadPosition_(struct TPPLexer *lexer, struct TPPLexerPosition *self);
+ * >> int TPPLexer_SavePosition(struct TPPLexerPosition *self);
+ * >> void TPPLexer_LoadPosition(struct TPPLexerPosition *self);
+ * >> int TPPLexer_ParsePragma_(struct TPPLexer *lexer);
+ * >> int TPPLexer_ParseBuiltinPragma_(struct TPPLexer *lexer);
+ * >> int TPPLexer_ParsePragma(void);
+ * >> int TPPLexer_ParseBuiltinPragma(void);
+ *  - These APIs are no longer supported like this in TPP3
+ *  - Instead, many individual lexer states can be pushed/popped, including
+ *    in a way that makes (different types of) rollback possible:
+ *    - tpp_lexer_yieldraw_at()
+ *    - tpp_lexer_seek_start()
+ *    - tpp_lexer_manualpopfile_start()
+ *    - tpp_lexer_tryskip_raw()
+ *    - TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK
+ */
+
+/* TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF, TPPLEXER_FLAG_COMMENT_NOOWN_LF:
+ *  - These flags are no longer supported in TPP3 (in TPP3, line-like comment tokens
+ *    *always* include the trailing line-feed (if any) as part of the comment itself)
+ *  - If line-feeds have special meaning in your programming language, I recommend
+ *    you migrate your code as follows:
+ *    ```diff
+ *    - case TPP_TOK_LF:
+ *    -    if (tok == TPP_TOK_LF)
+ *    + case TPP_TOK_LF:
+ *    + TPP_CASE_TPP_TOK_COMMENT_LINE
+ *    +    if (TPP_TOK_ISLF_OR_COMMENT(tok))
+ *    ```
+ */
+
+/* TPPLEXER_FLAG_INCLUDESTRING:
+ * - No longer supported; in TPP3, #include-strings are parsed without the use
+ *   of "tpp_lexer_yieldraw()" (with macro expansion also handled manually)
+ *   meaning that there is no need to have some special flag to alter the
+ *   parsing of "string" literals for the sake of complying with #include-strings.
+ */
+
+/* TPPLEXER_FLAG_EXTENDFILE:
+ * - In TPP3, this flag no longer exists: files are allowed to unload any chunk
+ *   data that is considered to be unused (and all data that is still considered
+ *   to be used will never be unloaded). For this purpose, you have multiple ways
+ *   of telling "tpp_file" that you want certain ranges of memory to be kept loaded:
+ *   - tpp_file_pushkeep() + tpp_file_setkeep():
+ *     Probably the most useful method: allows you to set a position within a file
+ *     from which point forth no data can be unloaded.
+ *   - tpp_lexer_yieldraw_at():
+ *     Not as powerful as tpp_file_setkeep(), but still useful none-the-less, this
+ *     method of reading tokens uses your own, custom file-pointer, whilst keeping
+ *     the file's *actual* pointer unchanged. As such (since the file's actual
+ *     pointer isn't advanced), no file data will be unloaded, however more file
+ *     data may be read (whilst keeping your pointer up-to-date) in order to read
+ *     the next token resp.
+ *   - tpp_string_incref(tpp_file_getchunk()):
+ *     If you need to retain access to data that is already loaded into memory,
+ *     you can simply increment the file's chunk's reference counter. When TPP3
+ *     needs to load more file data into memory, it will no re-use the file's old
+ *     chunk, but will instead allocate a new chunk, allowing you to keep using
+ *     data form the original chunk without even needing to relocate pointers.
+ * - Implementation notes:
+ *   Whenever tpp_file_expandchunk() is called, all file data between the current
+ *   file's current chunk's start, and the file's position (tpp_file_getpos()) [or
+ *   the file's keep-pointer (tpp_file_getkeep())] may be unloaded, such that only
+ *   data file data after that position is retained in the file's new chunk (before
+ *   being followed by whatever additional data was read from disk)
+ */
+
+/* TPPLEXER_FLAG_NO_LEGACY_GUARDS:
+ * - In TPP3, detection of #ifndef-style #include-guards cannot be disabled
+ *   at runtime, though you can disable for some specific file at the time
+ *   when that file is pushed by setting "TPP_FILE_IOFLAGS_NOGUARD".
+ * - TPP3 does however let you compile-time disable this feature by building
+ *   with "#define TPP_HAVE_IFNDEF_INCLUDE_GUARDS 0"
+ */
+
+/* TPPLEXER_FLAG_NO_ENCODING:
+ * - TPP3 doesn't let you global-disable unicode support (or for that matter:
+ *   disable automatic decoding/detection of input file codecs). However, you
+ *   *can* disable codec detection of a text file by changing its encoding
+ *   before the first token is read from it:
+ *   - TPP_FILE_ENCODING_ASCII:      What "TPPLEXER_FLAG_NO_ENCODING" would have done
+ *                                   Treat time data as ASCII and don't detect codec
+ *   - TPP_FILE_ENCODING_FORCE_UTF8: Treat time data as UTF-8
+ *   - TPP_FILE_ENCODING_UTF16_LE:   Treat time data as UTF-16 (LE)
+ *   - TPP_FILE_ENCODING_UTF16_BE:   Treat time data as UTF-16 (BE)
+ *   - TPP_FILE_ENCODING_UTF32_LE:   Treat time data as UTF-32 (LE)
+ *   - TPP_FILE_ENCODING_UTF32_BE:   Treat time data as UTF-32 (BE)
+ */
+
+/* TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA:
+ * - TPP3 does no longer support re-emission of unknown #pragma-directives
+ * - Instead, you should define you own, custom #pragma-hook (TODO: API for
+ *   this) that will be called whenever TPP encounters an unknown pragma.
+ */
+
+/* TPPLEXER_FLAG_CHAR_UNSIGNED:
+ * - This flag no longer has any meaning. In TPP2, this flag used to control
+ *   if calls to "TPP_Atoi()" with TPP_TOK_CHAR-tokens would return with or
+ *   without the "TPP_ATOI_UNSIGNED" flag set.
+ * - In TPP3, parsing or 'TPP_TOK_CHAR' is delegated to a separate function
+ *   "tpp_lexer_parsecharacter_literal()" that expects to be called with a
+ *   string-like token. Additionally, the C standard specifies that 'x'-like
+ *   character literals have "int" typing, meaning they are never signed.
+ */
+
+/* TPPLEXER_FLAG_EOF_ON_PAREN, TPPLexer::l_eof_paren:
+ * - No longer needed by TPP3, which handles detection of (...)-pairs by
+ *   doing an initial argument-list scan via "tpp_lexer_seekpp_rparen()",
+ *   and then re-injecting data via "tpp_file_setchunk_fromarg()"
+ */
+
+/* TPPLEXER_FLAG_RANDOM_INITIALIZED:
+ * - TPP3 implements __TPP_RANDOM on a per-lexer basis, thus producing reproducible
+ *   results that are based on actual input data, rather than the current time.
+ */
 /************************************************************************/
 
 
-
-
-
+#ifndef TPP2_NO_AUTOCONFIGURE_TPP3 /* Define this to prevent this header from configuring TPP3 */
 /************************************************************************/
 /* ALTER CONFIGURATION                                                  */
 /************************************************************************/
-
-#ifdef TPP_CONFIG_DEBUG
-#define TPP_DEBUG TPP_CONFIG_DEBUG
-#endif /* TPP_CONFIG_DEBUG */
 
 /* TPP2 configuration macros */
 
@@ -517,6 +752,11 @@
 #endif /* !TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO */
 
 
+#ifdef TPP_CONFIG_DEBUG
+#define TPP_DEBUG TPP_CONFIG_DEBUG
+#endif /* TPP_CONFIG_DEBUG */
+
+
 /* Inherit legacy tabsize configuration */
 #ifndef TPPLEXER_DEFAULT_TABSIZE
 #if (defined(_WIN16) || defined(WIN16) || \
@@ -530,6 +770,15 @@
 #endif /* !TPPLEXER_DEFAULT_TABSIZE */
 #undef TPP_TABSIZE
 #define TPP_TABSIZE TPPLEXER_DEFAULT_TABSIZE
+
+#if 0 /* TODO */
+//#ifndef TPPLEXER_DEFAULT_LIMIT_MREC
+//#define TPPLEXER_DEFAULT_LIMIT_MREC 512 /* Even when generated text differs from previous version, don't allow more self-recursion per macro than this. */
+//#endif /* !TPPLEXER_DEFAULT_LIMIT_MREC */
+//#ifndef TPPLEXER_DEFAULT_LIMIT_INCL
+//#define TPPLEXER_DEFAULT_LIMIT_INCL 64  /* User attempts to #include a file more often that file will fail with an error message. */
+//#endif /* !TPPLEXER_DEFAULT_LIMIT_INCL */
+#endif
 
 /* Inherit legacy error limit configuration */
 #ifndef TPPLEXER_DEFAULT_LIMIT_ECNT
@@ -546,10 +795,12 @@
 #define TPP_HAVE_FILE_NONBLOCK 0
 #endif /* !TPP_CONFIG_NONBLOCKING_IO */
 
+#define TPP_HAVE_TPP2_COMPAT           1 /* Enable some extra TPP2 compatibility tweaks */
 #define TPP_BUILDING                   1 /* Not actually true, but needed to prevent internals from being escaped (TPP3 doesn't expose internals by default anymore) */
 #define TPP_HAVE_UNICODE               1 /* Always enable unicode support */
 #define TPP_HAVE_STRERROR              0
 #define TPP_HAVE_STRTOKENID            0
+#define TPP_HAVE_KEYWORD_USERDATA      1 /* To emulate "kr_user" */
 #define TPP_HAVE_EXTENSIONS            1
 #define TPP_HAVE_EXTENSIONS_PUSH_POP   1
 #define TPP_HAVE_WARNINGS              1
@@ -563,6 +814,13 @@
 #define TPP_COMMON_HAVE_TPP_TOK        0 /* We want to configure tokens individually */
 #define TPP_COMMON_HAVE_CPP_DIRECTIVES 1
 #define TPP_COMMON_HAVE_PRAGMA         1
+
+#ifdef TPP_CONFIG_NO_PRECACHE_TEXTLINES
+#define TPP_HAVE_FILE_LC_CACHE 0
+#else /* TPP_CONFIG_NO_PRECACHE_TEXTLINES */
+#define TPP_HAVE_FILE_LC_CACHE 1
+#endif /* !TPP_CONFIG_NO_PRECACHE_TEXTLINES */
+
 
 #ifdef TPP_CONFIG_RAW_STRING_LITERALS
 #define TPP2_HAVE_RAW_STRING_LITERALS 1
@@ -581,7 +839,7 @@
 #define TPP_HAVE_TPP_TOK_CXX_COMMENT                (-1) /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_CPP_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_CXX_COMMENT)") */
 #define TPP_HAVE_TPP_TOK_C_COMMENT                  (-1) /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_C_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_COMMENT)") */
 #define TPP_HAVE_TPP_TOK_PASCAL_COMMENT             0    /* TPP2 only recognized C/C++-like comments */
-#define TPP_HAVE_TPP_TOK_SHELL_COMMENT              0    /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TPP_TOK_SHELL_COMMENT              (-2) /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_ASM_COMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SHELL_COMMENT)") */
 #define TPP_HAVE_TPP_TOK_ASM_COMMENT                0    /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TPP_TOK_SQL_COMMENT                0    /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TPP_TOK_DOLLAR                     (-2) /* "$" Configurable, default=false (TPP2 used to configure this via "TPPLEXER_TOKEN_DOLLAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOLLAR)") */
@@ -601,6 +859,8 @@
 #define TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL     0    /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL     0    /* *ditto* */
 #define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL         0    /* *ditto* */
+#define TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE     (-1) /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)") */
+#define TPP_HAVE_TPP_TOK_STRING_WARN_MULTILINE      0    /* TPP2 offered no such warning */
 #define TPP_HAVE_TPP_TOK_LANGLE_LANGLE              1    /* "<<" */
 #define TPP_HAVE_TPP_TOK_RANGLE_RANGLE              1    /* ">>" */
 #define TPP_HAVE_TPP_TOK_EQUAL_EQUAL                1    /* "==" */
@@ -648,23 +908,23 @@
 #define TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL          0    /* "//="  Completely unknown to TPP2 */
 #define TPP_HAVE_TPP_TOK_QMARK_EQUAL                0    /* "?="   Completely unknown to TPP2 */
 #define TPP_HAVE_TPP_TOK_RANGLE_LANGLE              0    /* "><"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_PLUS                 (-1) /* "=+"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_MINUS                (-1) /* "=-"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_STAR                 (-1) /* "=*"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR            (-1) /* "=**"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_STARSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_SLASH                (-1) /* "=/"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_PLUS                 (-1) /* "=+"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PLUS)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_MINUS                (-1) /* "=-"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_MINUS)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_STAR                 (-1) /* "=*"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_STAR)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR            (-1) /* "=**"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_STARSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_SLASH                (-1) /* "=/"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_SLASH)") */
 #define TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH          0    /* "=//"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_PERCENT              (-1) /* "=%"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_AMP                  (-1) /* "=&"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_PIPE                 (-1) /* "=|"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_HAT                  (-1) /* "=^"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_PERCENT              (-1) /* "=%"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PERCENT)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_AMP                  (-1) /* "=&"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_AMP)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_PIPE                 (-1) /* "=|"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PIPE)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_HAT                  (-1) /* "=^"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_HAT)") */
 #define TPP_HAVE_TPP_TOK_EQUAL_LANGLE               0    /* "=<"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE        (-1) /* "=<<"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE (-1) /* "=<<<" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE        (-1) /* "=<<"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE (-1) /* "=<<<" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)") */
 #define TPP_HAVE_TPP_TOK_EQUAL_RANGLE               0    /* "=>"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE        (-1) /* "=>>"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE (-1) /* "=>>>" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_AT                   (-1) /* "=@"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ATEQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE        (-1) /* "=>>"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE (-1) /* "=>>>" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_AT                   (-1) /* "=@"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ATEQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_AT)") */
 #define TPP_HAVE_TPP_TOK_EQUAL_TILDE                0    /* "=~"   Completely unknown to TPP2 */
 #define TPP_HAVE_TPP_TOK_EQUAL_COLON                0    /* "=:"   Completely unknown to TPP2 */
 #define TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM              0    /* "=!"   Completely unknown to TPP2 */
@@ -851,9 +1111,28 @@
 /************************************************************************/
 #ifdef TPP_CONFIG_USERSTREAMS
 #define tpp_io_handle         TPP_USERSTREAM_TYPE
-#define tpp_io_handle_INVALID TPP_STREAM_INVALID
+#define tpp_io_handle_INVALID TPP_USERSTREAM_INVALID
+#define tpp_io_open(filename) TPP_USERSTREAM_FOPEN(filename)
+#define tpp_io_close(file)  TPP_USERSTREAM_FCLOSE(file)
+#if TPP_HAVE_FILE_NONBLOCK
+#define tpp_io_read(file, buf, bufsize, nonblock)                   \
+	((nonblock) ? TPP_USERSTREAM_FREAD_NONBLOCK(file, buf, bufsize) \
+	            : TPP_USERSTREAM_FREAD(file, buf, bufsize))
+#else /* TPP_HAVE_FILE_NONBLOCK */
+#define tpp_io_read(file, buf, bufsize) \
+	TPP_USERSTREAM_FREAD(file, buf, bufsize)
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
 #endif /* TPP_CONFIG_USERSTREAMS */
+/************************************************************************/
 
+
+
+
+
+/************************************************************************/
+/* Configure the user's custom "defs.h" file                            */
+/************************************************************************/
+// TODO: TPP_CONFIG_MINMACRO, TPP_CONFIG_GCCFUNC, TPP_CONFIG_MINGCCFUNC
 /************************************************************************/
 
 
@@ -863,6 +1142,7 @@
 /************************************************************************/
 /* PULL IN HEADER                                                       */
 /************************************************************************/
+#endif /* !TPP2_NO_AUTOCONFIGURE_TPP3 */
 #include "tpp-amalgamation.h"
 /************************************************************************/
 
@@ -1247,6 +1527,22 @@ alias("W_ELSE_WITHOUT_IF", "TPP_W_ELIF_OR_ELSE_WITHOUT_IF");
 alias("W_ELSE_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 alias("W_ELIF_WITHOUT_IF", "TPP_W_ELIF_OR_ELSE_WITHOUT_IF");
 alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
+alias("W_EXPECTED_KWDLPAR_AFTER_DEFINED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED");
+alias("W_EXPECTED_KEYWORD_AFTER_DEFINED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED");
+alias("W_EXPECTED_RPAREN_AFTER_DEFINED", "TPP_W_UNEXPECTED_TOKEN");
+alias("W_EXPECTED_COLON_AFTER_QUESTION", "TPP_W_UNEXPECTED_TOKEN");
+alias("W_EXPECTED_COLLON_AFTER_QUESTION", "TPP_W_UNEXPECTED_TOKEN");
+alias("W_INVALID_INTEGER", "TPP_W_INVALID_INTEGER");
+alias("W_EXPECTED_RPAREN_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
+alias("W_UNKNOWN_TOKEN_IN_EXPR_IS_ZERO", "TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION");
+alias("W_EXPECTED_STRING_AFTER_PRAGMA", "TPP_W_EXPECTED_STRING");
+alias("W_DIVIDE_BY_ZERO", "TPP_W_DIVIDE_BY_ZERO");
+alias("W_CHARACTER_TOO_LONG", "TPP_W_MULTICHAR_LITERAL");
+alias("W_MULTICHAR_NOT_ALLOWED", "TPP_W_MULTICHAR_LITERAL");
+alias("W_EXPECTED_RBRACKET_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
+alias("W_EXPECTED_COMMA", "TPP_W_UNEXPECTED_TOKEN");
+alias("W_INTEGRAL_OVERFLOW", "TPP_W_INVALID_INTEGER");
+alias("W_EXPECTED_ELSE_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
 ]]]*/
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_EOF TPP_TOK_EOF
@@ -2279,6 +2575,24 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 #define EXT_IFELSE_IN_EXPR TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
+#ifdef TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR
+#define TPP_EXT_LXOR TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define EXT_LXOR TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR */
+#ifdef TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS
+#define TPP_EXT_BININTEGRAL TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define EXT_BININTEGRAL TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS */
+#ifdef TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#define TPP_EXT_MSVC_FIXED_INT TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define EXT_MSVC_FIXED_INT TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_WG_COMMENT)
 #define WG_COMMENT TPP_WG_COMMENT
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_WG_COMMENT */
@@ -2582,22 +2896,116 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 #define W_ELIF_AFTER_ELSE TPP_W_ELIF_OR_ELSE_AFTER_ELSE
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
+#ifdef TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+#define TPP_W_EXPECTED_KWDLPAR_AFTER_DEFINED TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_KWDLPAR_AFTER_DEFINED TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
+#ifdef TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+#define TPP_W_EXPECTED_KEYWORD_AFTER_DEFINED TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_KEYWORD_AFTER_DEFINED TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
+#ifdef TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_EXPECTED_RPAREN_AFTER_DEFINED TPP_W_UNEXPECTED_TOKEN
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_RPAREN_AFTER_DEFINED TPP_W_UNEXPECTED_TOKEN
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNEXPECTED_TOKEN */
+#ifdef TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_EXPECTED_COLON_AFTER_QUESTION TPP_W_UNEXPECTED_TOKEN
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_COLON_AFTER_QUESTION TPP_W_UNEXPECTED_TOKEN
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNEXPECTED_TOKEN */
+#ifdef TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_EXPECTED_COLLON_AFTER_QUESTION TPP_W_UNEXPECTED_TOKEN
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_COLLON_AFTER_QUESTION TPP_W_UNEXPECTED_TOKEN
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNEXPECTED_TOKEN */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_INVALID_INTEGER)
+#define W_INVALID_INTEGER TPP_W_INVALID_INTEGER
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_INVALID_INTEGER */
+#ifdef TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_EXPECTED_RPAREN_IN_EXPRESSION TPP_W_UNEXPECTED_TOKEN
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_RPAREN_IN_EXPRESSION TPP_W_UNEXPECTED_TOKEN
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNEXPECTED_TOKEN */
+#ifdef TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+#define TPP_W_UNKNOWN_TOKEN_IN_EXPR_IS_ZERO TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_UNKNOWN_TOKEN_IN_EXPR_IS_ZERO TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION */
+#ifdef TPP_W_EXPECTED_STRING
+#define TPP_W_EXPECTED_STRING_AFTER_PRAGMA TPP_W_EXPECTED_STRING
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_STRING_AFTER_PRAGMA TPP_W_EXPECTED_STRING
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_EXPECTED_STRING */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_DIVIDE_BY_ZERO)
+#define W_DIVIDE_BY_ZERO TPP_W_DIVIDE_BY_ZERO
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_DIVIDE_BY_ZERO */
+#ifdef TPP_W_MULTICHAR_LITERAL
+#define TPP_W_CHARACTER_TOO_LONG TPP_W_MULTICHAR_LITERAL
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_CHARACTER_TOO_LONG TPP_W_MULTICHAR_LITERAL
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_MULTICHAR_LITERAL */
+#ifdef TPP_W_MULTICHAR_LITERAL
+#define TPP_W_MULTICHAR_NOT_ALLOWED TPP_W_MULTICHAR_LITERAL
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_MULTICHAR_NOT_ALLOWED TPP_W_MULTICHAR_LITERAL
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_MULTICHAR_LITERAL */
+#ifdef TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_EXPECTED_RBRACKET_IN_EXPRESSION TPP_W_UNEXPECTED_TOKEN
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_RBRACKET_IN_EXPRESSION TPP_W_UNEXPECTED_TOKEN
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNEXPECTED_TOKEN */
+#ifdef TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_EXPECTED_COMMA TPP_W_UNEXPECTED_TOKEN
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_COMMA TPP_W_UNEXPECTED_TOKEN
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNEXPECTED_TOKEN */
+#ifdef TPP_W_INVALID_INTEGER
+#define TPP_W_INTEGRAL_OVERFLOW TPP_W_INVALID_INTEGER
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_INTEGRAL_OVERFLOW TPP_W_INVALID_INTEGER
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_INVALID_INTEGER */
+#ifdef TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_EXPECTED_ELSE_IN_EXPRESSION TPP_W_UNEXPECTED_TOKEN
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_ELSE_IN_EXPRESSION TPP_W_UNEXPECTED_TOKEN
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNEXPECTED_TOKEN */
 /*[[[end]]]*/
 
+//TODO: /* #define TPP_CONFIG_CALLBACK_WARNING          x // int x(int wnum, ...) { ... } -- A user-replacement for `TPPLexer_Warn' */
+//TODO: /* #define TPP_CONFIG_CALLBACK_PARSE_PRAGMA     x // int TPPCALL x(void) { ... } */
+//TODO: /* #define TPP_CONFIG_CALLBACK_PARSE_PRAGMA_GCC x // int TPPCALL x(void) { ... } */
+//TODO: /* #define TPP_CONFIG_CALLBACK_INS_COMMENT      x // int TPPCALL x(struct TPPString *tpp_restrict comment) { ... } */
+//TODO: /* #define TPP_CONFIG_CALLBACK_NEW_TEXTFILE     x // int TPPCALL x(struct TPPFile *tpp_restrict file, int is_system_header) { ... } */
+//TODO: /* #define TPP_CONFIG_CALLBACK_UNKNOWN_FILE     x // struct TPPFile *TPPCALL x(int mode, char *tpp_restrict filename, size_t filename_size, struct TPPKeyword **pkeyword_entry) */
+//TODO: /* #define TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA     1 */
+//TODO: /* #define TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA_GCC 1 */
+//TODO: /* #define TPP_CONFIG_NO_CALLBACK_INS_COMMENT      1 */
+//TODO: /* #define TPP_CONFIG_NO_CALLBACK_NEW_TEXTFILE     1 */
+//TODO: /* #define TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE     1 */
 
-//TODO:/* 6*/ DEF_WARNING(W_EXPECTED_KWDLPAR_AFTER_DEFINED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword or " Q("(") " after " Q("defined") ", but got " TOK_S, TOK_A)) /* OLD(TPPWarn_ExpectedKeywordOrLParenAfterDefined). */
-//TODO:/* 7*/ DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_DEFINED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword after " Q("defined") ", but got " TOK_S, TOK_A))               /* OLD(TPPWarn_ExpectedKeywordAfterDefined). */
-//TODO:/* 8*/ DEF_WARNING(W_EXPECTED_RPAREN_AFTER_DEFINED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(")") " after " Q("defined") ", but got " TOK_S, TOK_A))             /* OLD(TPPWarn_ExpectedRParenAfterDefined). */
+
 //TODO:/*14*/ DEF_WARNING(W_EXPECTED_INCLUDE_STRING, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected #include-string, but got " TOK_S, TOK_A))                                     /* OLD(TPPWarn_ExpectedIncludeString). */
 //TODO:/*15*/ DEF_WARNING(W_FILE_NOT_FOUND, (WG_ENVIRON), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("File not found: " Q("%.*s"), (int)ARG(size_t), temp); })           /* [char const *,size_t] OLD(TPPWarn_IncludeFileNotFound). */
 //TODO:/*35*/ DEF_WARNING(W_EXPECTED_STRING_AFTER_LINE, (WG_SYNTAX, WG_VALUE), WSTATE_ERROR, WARNF("Expected string after #line, but got " Q("%s"), CONST_STR())) /* [struct TPPConst *] OLD(TPPWarn_ExpectedStringAfterLine). */
 //TODO:/*36*/ DEF_WARNING(W_MACRO_NOT_DEFINED, (WG_MACROS), WSTATE_DISABLED, WARNF("Macro " Q("%s") " is not defined", KWDNAME()))                                /* [struct TPPKeyword *] OLD(TPPWarn_MacroDoesntExist). */
-//TODO:/*40*/ DEF_WARNING(W_EXPECTED_COLON_AFTER_QUESTION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(":") " after " Q("?")))                                /* OLD(TPPWarn_ExpectedColonAfterQuestion). */
-//TODO:#define W_EXPECTED_COLLON_AFTER_QUESTION W_EXPECTED_COLON_AFTER_QUESTION
-//TODO:/*41*/ DEF_WARNING(W_INVALID_INTEGER, (WG_SYNTAX), WSTATE_ERROR, WARNF("Invalid integer " TOK_S, TOK_A)) /* OLD(TPPWarn_ExpectedInteger). */
-//TODO:/*42*/ DEF_WARNING(W_EXPECTED_RPAREN_IN_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(")") " in preprocessor expression, but got " TOK_S, TOK_A))                  /* OLD(TPPWarn_ExpectedRparenAfterLParen). */
-//TODO (this is actually -Wundef):/*43*/ DEF_WARNING(W_UNKNOWN_TOKEN_IN_EXPR_IS_ZERO, (WG_UNDEF, WG_SYNTAX), WSTATE_WARN, WARNF("Unrecognized token " TOK_S " is replaced with " Q("0") " in expression", TOK_A)) /* OLD(TPPWarn_UnexpectedTokenInConstExpr). */
-//TODO:/*47*/ DEF_WARNING(W_EXPECTED_STRING_AFTER_PRAGMA, (WG_SYNTAX, WG_VALUE), WSTATE_ERROR, WARNF("Expected string after _Pragma, but got " Q("%s"), CONST_STR()))                  /* [struct TPPConst *] OLD(TPPWarn_ExpectedStringAfterPragma). */
+
 //TODO:/*50*/ DEF_WARNING(W_INVALID_WARNING, (WG_VALUE), WSTATE_ERROR, {
 //TODO:	/* [struct TPPConst *] OLD(TPPWarn_InvalidWarning). */
 //TODO:	struct TPPConst *c = ARG(struct TPPConst *);
@@ -2631,7 +3039,6 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 //TODO:	WARNF("Non-portable casing in " Q("%s") ": " Q("%.*s") " should be " Q("%s") " instead",
 //TODO:	      temp, (int)temp3, temp2, ARG(char *));
 //TODO:})
-//TODO:/*62*/ DEF_WARNING(W_DIVIDE_BY_ZERO, (WG_VALUE), WSTATE_ERROR, WARNF("Divide by ZERO")) /* OLD(TPPWarn_DivideByZero|TPPWarn_ModuloByZero). */
 //TODO:/*64*/ DEF_WARNING(W_SPECIAL_ARGUMENT_NAME, (WG_MACROS), WSTATE_WARN, WARNF("Special keyword " Q("%s") " used as argument name", KWDNAME())) /* [struct TPPKeyword *] OLD(TPPWarn_VaArgsUsedAsMacroParameter). */
 //TODO:/*68*/ WARNING(W_EXPECTED_BOOL, (WG_BOOLVALUE, WG_VALUE), WSTATE_DISABLED)            /* [struct TPPConst *] OLD(TPPWarn_ExpectedBoolExpression). */
 //TODO:/*69*/ WARNING(W_EXPECTED_BOOL_UNARY, (WG_BOOLVALUE, WG_VALUE), WSTATE_DISABLED)      /* [struct TPPConst *] OLD(TPPWarn_ExpectedBoolExpressionNot). */
@@ -2642,13 +3049,9 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 //TODO:DEF_WARNING(W_VA_KEYWORD_IN_REGULAR_MACRO, (WG_MACROS), WSTATE_WARN, WARNF("Variadic keyword " Q("%s") " used in regular macro", KWDNAME()))                    /* [struct TPPKeyword *]. */
 //TODO:DEF_WARNING(W_KEYWORD_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Keyword-style macro " Q("%s") " is already being expanded", FILENAME()))      /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_FUNCTION_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Function-style macro " Q("%s") " is expanded to the same text", FILENAME())) /* [struct TPPFile *]. */
-//TODO:DEF_WARNING(W_CHARACTER_TOO_LONG, (WG_VALUE), WSTATE_ERROR, WARNF("Character sequence is too long"))                                                            /* . */
-//TODO:DEF_WARNING(W_MULTICHAR_NOT_ALLOWED, (WG_VALUE), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("The multi-character sequence " Q("%.*s") " is not not allowed", (int)ARG(size_t), temp); })                                                                                             /* [char const *,size_t]. */
 //TODO:DEF_WARNING(W_INDEX_OUT_OF_BOUNDS, (WG_VALUE), WSTATE_DISABLED, { struct TPPString *s = ARG(struct TPPString *); WARNF("Index %ld is out-of-bounds of 0..%lu", (unsigned long)s->s_size, (unsigned long)ARG(ptrdiff_t)); })                                                                                            /* [struct TPPString *,ptrdiff_t]. */
-//TODO:DEF_WARNING(W_EXPECTED_RBRACKET_IN_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q("]") " in expression, but got " TOK_S, TOK_A))                          /* . */
 //TODO:DEF_WARNING(W_EXPECTED_COLON_AFTER_WARNING, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(":") " after #pragma warning, but got " TOK_S, TOK_A))                    /* . */
 //TODO:#define W_EXPECTED_COLLON_AFTER_WARNING W_EXPECTED_COLON_AFTER_WARNING
-//TODO:DEF_WARNING(W_EXPECTED_COMMA, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(",") ", but got " TOK_S, TOK_A))                                                         /* . */
 //TODO:DEF_WARNING(W_MACRO_RECURSION_LIMIT_EXCEEDED, (WG_LIMIT), WSTATE_ERROR, WARNF("Macro recursion limit exceeded when expanding " Q("%s") " (Consider passing " Q("-fno-macro-recursion") ")", FILENAME())) /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_INCLUDE_RECURSION_LIMIT_EXCEEDED, (WG_LIMIT), WSTATE_ERROR, WARNF("Include recursion limit exceeded when including " Q("%s"), FILENAME()))                                                 /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_UNKNOWN_EXTENSION, (WG_VALUE), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("Unknown extension " Q("%s") " (Did you mean " Q("%s") "?)", temp,find_most_likely_extension(temp)); })                                                                                                                                          /* [char const *]. */
@@ -2661,18 +3064,14 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 //TODO:DEF_WARNING(W_CANT_POP_EXTENSIONS, (WG_VALUE), WSTATE_ERROR, WARNF("Can't pop extensions"))                                                                                     /* . */
 //TODO:DEF_WARNING(W_CANT_POP_INCLUDE_PATH, (WG_VALUE), WSTATE_ERROR, WARNF("Can't pop #include paths"))                                                                               /* . */
 //TODO:DEF_WARNING(W_CONSIDER_PAREN_AROUND_LAND, (WG_QUALITY), WSTATE_WARN, WARNF("Consider adding parenthesis around " Q("&&") " to prevent confusion with " Q("||")))                /* . */
-//TODO:DEF_WARNING(W_INTEGRAL_OVERFLOW, (WG_VALUE), WSTATE_WARN, { tint_t old = ARG(tint_t); WARNF("Integral constant overflow from " Q("%lld") " to " Q("%lld"), (long long)old, (long long)ARG(tint_t)); }) /* [tint_t,tint_t]. */
 //TODO:DEF_WARNING(W_INTEGRAL_CLAMPED, (WG_VALUE), WSTATE_WARN, WARNF("Integral constant clamped to fit")) /* [tint_t,tint_t]. */
 //TODO:DEF_WARNING(W_UNKNOWN_INCLUDE_PATH, (WG_VALUE), WSTATE_WARN, { char *temp = ARG(char *); WARNF("Unknown system #include-path " Q("%.*s"), (int)ARG(size_t), temp); })                                   /* [char const *,size_t]. */
 //TODO:DEF_WARNING(W_INCLUDE_PATH_ALREADY_EXISTS, (WG_VALUE), WSTATE_WARN, { char *temp = ARG(char *); WARNF("System #include-path " Q("%.*s") " already exists", (int)ARG(size_t), temp); })                            /* [char const *,size_t]. */
-//TODO:DEF_WARNING(W_EXPECTED_ELSE_IN_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q("else") " in expression, but got " TOK_S, TOK_A)) /* . */
 //TODO:DEF_WARNING(W_STATEMENT_IN_EXPRESSION, (WG_USAGE, WG_SYNTAX), WSTATE_WARN, WARNF("GCC-style statement " TOK_S " in expression is not understood", TOK_A))                                                  /* . */
 //TODO:DEF_WARNING(W_TYPECAST_IN_EXPRESSION, (WG_USAGE, WG_SYNTAX), WSTATE_WARN, WARNF("C-style type cast " TOK_S " in expression is not understood (Consider using bit-masks to narrow integral types)", TOK_A)) /* . */
 //TODO:DEF_WARNING(W_EXPECTED_RPAREN_AFTER_CAST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(")") " after casting type, but got " TOK_S, TOK_A))                                                               /* . */
 //TODO:DEF_WARNING(W_EXPECTED_RBRACE_AFTER_STATEMENT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q("}") " after statement, but got " TOK_S, TOK_A))                                                             /* . */
 //TODO:DEF_WARNING(W_EXPECTED_WARNING_NAMEORID, (WG_SYNTAX, WG_VALUE), WSTATE_ERROR, WARNF("Expected warning name or id, but got " Q("%s"), CONST_STR()))                                                         /* [struct TPPConst *]. */
-//TODO:DEF_WARNING(W_CANT_DEFINE_LOCKED_KEYWORD, (WG_VALUE), WSTATE_DISABLED, WARNF("Cannot #define macro for locked keyword " Q("%s"), KWDNAME())) /* [struct TPPKeyword *]. */
-//TODO:DEF_WARNING(W_CANT_UNDEF_LOCKED_KEYWORD, (WG_VALUE), WSTATE_DISABLED, WARNF("Cannot #undef macro for locked keyword " Q("%s"), KWDNAME()))   /* [struct TPPKeyword *]. */
 //TODO:DEF_WARNING(W_INVALID_FLOAT_SUFFIX, (WG_SYNTAX), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("Invalid floating point suffix " Q("%.*s"), (int)ARG(size_t), temp); }) /* [char const *,size_t] */
 //TODO:DEF_WARNING(W_DEPENDENCY_CHANGED, (WG_DEPENDENCY), WSTATE_ERROR, {
 //TODO:	char *depnam         = ARG(char *);
@@ -2816,7 +3215,7 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 //	/* Insert the given text into the ".comment" section of the current object file.
 //	 * @return: 0: Error occurred (Set a lexer error if not already set)
 //	 * @return: 1: Successfully inserted the given text. */
-//	int (TPPCALL *c_ins_comment)(struct TPPString *__restrict comment);
+//	int (TPPCALL *c_ins_comment)(struct TPPString *tpp_restrict comment);
 //#endif /* TPP_CONFIG_DYN_CALLBACK_INS_COMMENT */
 //
 //#ifdef TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE
@@ -2826,7 +3225,7 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 //	 *       for any given file within the same lexer.
 //	 * @return: 0: Error occurred (Set a lexer error if not already set)
 //	 * @return: 1: Continue parsing (same as not filling in this member). */
-//	int (TPPCALL *c_new_textfile)(struct TPPFile *__restrict file, int is_system_header);
+//	int (TPPCALL *c_new_textfile)(struct TPPFile *tpp_restrict file, int is_system_header);
 //#endif /* TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE */
 //
 //#if TPP_CONFIG_DYN_CALLBACK_UNKNOWN_FILE
@@ -2838,7 +3237,7 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 //	 * @return: TPP_UNKNOWN_FILE_RETRY: Instruct the file loader to try again (without invoking this function on that try)
 //	 * WARNING: This callback is responsible to caching the file in a keyword entry!
 //	 */
-//	struct TPPFile *(TPPCALL *c_unknown_file)(int mode, char *__restrict filename,
+//	struct TPPFile *(TPPCALL *c_unknown_file)(int mode, char *tpp_restrict filename,
 //	                                          size_t filename_size,
 //	                                          struct TPPKeyword **pkeyword_entry);
 //#endif /* TPP_CONFIG_DYN_CALLBACK_UNKNOWN_FILE */
@@ -2864,13 +3263,15 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 #endif /* !TPP_CONFIG_ONELEXER */
 
 #if TPP_CONFIG_ONELEXER == 3
-#define TPP_LEXER_PARAM  tpp_lexer *__restrict _current
-#define TPP_LEXER_PARAM_ tpp_lexer *__restrict _current,
-#define TPP_LEXER__PARAM , tpp_lexer *__restrict _current
+#define TPP_LEXER_PARAM  tpp_lexer *tpp_restrict _current
+#define TPP_LEXER_PARAM_ tpp_lexer *tpp_restrict _current,
+#define TPP_LEXER__PARAM , tpp_lexer *tpp_restrict _current
 #define TPP_LEXER_ARG    _current
 #define TPP_LEXER_ARG_   _current,
 #define TPP_LEXER__ARG   , _current
+#ifndef TPP2_LEXER
 #define TPP2_LEXER       _current
+#endif /* !TPP2_LEXER */
 #else /* TPP_CONFIG_ONELEXER == 3 */
 #define TPP_LEXER_PARAM  void
 #define TPP_LEXER_PARAM_ /* nothing */
@@ -2878,13 +3279,41 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 #define TPP_LEXER_ARG    /* nothing */
 #define TPP_LEXER_ARG_   /* nothing */
 #define TPP_LEXER__ARG   /* nothing */
-
-#if TPP_CONFIG_ONELEXER == 0
-#define TPP2_LEXER TPPLexer_Current
-#else /* TPP_CONFIG_ONELEXER == 0 */
-#define TPP2_LEXER (&TPPLexer_Global)
-#endif /* TPP_CONFIG_ONELEXER != 0 */
 #endif /* TPP_CONFIG_ONELEXER != 3 */
+
+/* Used in places where TPP2 never returned an error, but TPP3 can */
+#ifndef TPP2_FATAL
+#if 1
+#include <stdlib.h>
+#define TPP2_FATAL(fallback) (abort(), fallback)
+#else
+#define TPP2_FATAL(fallback) (fallback)
+#endif
+#endif /* !TPP2_FATAL */
+
+TPP_DECL_BEGIN
+
+#ifndef TPPLexer_Current
+#ifdef TPP2_LEXER
+#define TPPLexer_Current TPP2_LEXER
+#elif TPP_CONFIG_ONELEXER == 3
+#define TPPLexer_Current _current
+#elif TPP_CONFIG_ONELEXER != 0
+#define TPPLexer_Current (&TPPLexer_Global)
+extern tpp_lexer TPPLexer_Global;
+#else /* ... */
+/* [1..1] The currently selected lexer
+ * >> When NULL, only certain parts of TPP can work without problems. */
+extern tpp_lexer *TPPLexer_Current;
+#define TPPLexer_Current TPPLexer_Current
+#endif /* !... */
+#endif /* !TPPLexer_Current */
+
+#ifndef TPP2_LEXER
+#define TPP2_LEXER TPPLexer_Current
+#endif /* !TPP2_LEXER */
+
+
 
 
 
@@ -2923,9 +3352,9 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 
 #define TPPKeyword tpp_keyword
 #define TPPString  tpp_string
-#define s_refcnt   ts_refcnt
-#define s_size     ts_len
-#define s_text     ts_str
+#define s_refcnt   ts_refcnt /* Use tpp_string_isshared() */
+#define s_size     ts_len    /* Use tpp_string_len() */
+#define s_text     ts_str    /* Use tpp_string_str() */
 
 #define TPPString_TEXT(x)   ((char *)tpp_string_str(x))
 #define TPPString_SIZE(x)   tpp_string_len(x)
@@ -2951,35 +3380,35 @@ alias("W_ELIF_AFTER_ELSE", "TPP_W_ELIF_OR_ELSE_AFTER_ELSE");
 #define arginfo_t tpp_macro_argument
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 
-#define ai_id tma_id
+#define ai_id tma_id /* Use tpp_macro_getfuncargtok() */
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
-#define ai_ins tma_ins
+#define ai_ins tma_ins /* Don't access */
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
-#define ai_ins_exp tma_ins_exp
+#define ai_ins_exp tma_ins_exp /* Don't access */
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-#define ai_ins_str tma_ins_str
+#define ai_ins_str tma_ins_str /* Don't access */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 #if TPP_DEBUG
-#define ai_name tma_name
+#define ai_name tma_name /* Don't access */
 /*#define ai_namesize tma_namelen*/
 #endif /* TPP_DEBUG */
 
 #define TPPLCInfo tpp_lcinfo
-#define lc_line   lci_line
-#define lc_col    lci_col
+#define lc_line   lci_line /* Use tpp_lcinfo_getline() */
+#define lc_col    lci_col  /* Use tpp_lcinfo_getcol() */
 
 #define TPPMacroFile          tpp_macro
 #define TPPFile               tpp_file
 #define TPPFILE_KIND_TEXT     TPP_FILE_KIND_IO
 #define TPPFILE_KIND_EXPLICIT TPP_FILE_KIND_TEXT
 #define TPPFILE_KIND_MACRO    TPP_FILE_KIND_MACRO
-#define f_kind                TPP_INTERNAL(tf_kind)
-#define f_prev                TPP_INTERNAL(tf_tprev) /* Or maybe "tf_prev"... */
-#define f_name                TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) /* Should really use "tpp_file_filename()" instead! */
-#define f_text                TPP_INTERNAL(tf_chunk)
+#define f_kind                TPP_INTERNAL(tf_kind)  /* Use tpp_file_getkind() */
+#define f_prev                TPP_INTERNAL(tf_tprev) /* Don't access */ /* Or maybe "tf_prev"... */
+#define f_name                TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) /* Use tpp_file_filename() */
+#define f_text                TPP_INTERNAL(tf_chunk) /* Use tpp_file_getchunk() */
 #define f_begin               TPP_INTERNAL(tf_chunk)->TPP_INTERNAL(ts_str) /* Shouldn't be used */
-#define f_end                 TPP_INTERNAL(tf_end)
-#define f_pos                 TPP_INTERNAL(tf_pos)
+#define f_end                 TPP_INTERNAL(tf_end)   /* Use tpp_file_getend() */
+#define f_pos                 TPP_INTERNAL(tf_pos)   /* Use tpp_file_getpos() */
 
 #define TPPFile_LCAt(self, info, text_pointer) \
 	(void)(*(info) = tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
@@ -3005,6 +3434,34 @@ TPP_INLINE tpp_size TPPCALL TPP_SizeofItos(tpp_intmax i) {
 	return (tpp_size)((buf + TPP_ITOA_MAXLEN) - tpp_itoa(buf, i));
 }
 
+#define TPP_Ftos(buf, f) ((buf) + tpp_ftoa(buf, f))
+TPP_INLINE tpp_size TPPCALL TPP_SizeofFtos(tpp_float f) {
+	char buf[TPP_FTOA_MAXLEN];
+	return tpp_ftoa(buf, f);
+}
+
+
+TPP_INLINE tpp_ssize TPP_FORMATPRINTER_CC
+_TPP_Escape_buffer_cb(void *arg, tpp_char const *text, tpp_size num_bytes) {
+	if (arg) {
+		char **p_buf = (char **)arg;
+		tpp_memcpy(*p_buf, text, num_bytes);
+		*p_buf += num_bytes;
+	}
+	return (tpp_ssize)num_bytes;
+}
+
+#define TPP_Escape_(lexer, buf, data, size)  TPP_Escape(buf, data, size)
+#define TPP_SizeofEscape_(lexer, data, size) TPP_SizeofEscape(data, size)
+#define TPP_SizeofEscape(data, size) \
+	((tpp_size)tpp_token_encodestring(&_TPP_Escape_buffer_cb, NULL, data, size))
+TPP_INLINE char *TPPCALL
+TPP_Escape(char *tpp_restrict buf, char const *tpp_restrict data, size_t size) {
+	tpp_token_encodestring(&_TPP_Escape_buffer_cb, &buf, data, size);
+	return buf;
+}
+
+
 #define TPP_Hashof(data, size) tpp_hashof((tpp_char const *)(data), size)
 
 #define TPP_wstate_t tpp_warning_state
@@ -3028,17 +3485,17 @@ TPP_INLINE tpp_size TPPCALL TPP_SizeofItos(tpp_intmax i) {
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 
 #define TPPWarningStateEx      tpp_warning_suppress_item
-#define wse_wid                TPP_INTERNAL(twsi_ctx_id)
-#define wse_suppress           TPP_INTERNAL(twsi_count)
-#define wse_oldstate           TPP_INTERNAL(twsi_restore)
+#define wse_wid                TPP_INTERNAL(twsi_ctx_id)  /* Don't access */
+#define wse_suppress           TPP_INTERNAL(twsi_count)   /* Don't access */
+#define wse_oldstate           TPP_INTERNAL(twsi_restore) /* Don't access */
 #define TPP_WARNING_BITS       2
 #define TPP_WARNING_TOTAL      TPP_WC_COUNT
 #define TPP_WARNING_BITSETSIZE (((TPP_WARNING_TOTAL * TPP_WARNING_BITS + 7)) / 8)
 #define TPPWarningState        tpp_warnings
-#define ws_state               TPP_INTERNAL(tw_state).TPP_INTERNAL(tws_bitset)
-#define ws_extendeda           TPP_INTERNAL(tw_suppressions).TPP_INTERNAL(tws_ctxc)
-#define ws_extendedv           TPP_INTERNAL(tw_suppressions).TPP_INTERNAL(tws_ctxv)
-#define ws_prev                TPP_INTERNAL(tw_prev)
+#define ws_state               TPP_INTERNAL(tw_state).TPP_INTERNAL(tws_bitset)      /* Don't access */
+#define ws_extendeda           TPP_INTERNAL(tw_suppressions).TPP_INTERNAL(tws_ctxc) /* Don't access */
+#define ws_extendedv           TPP_INTERNAL(tw_suppressions).TPP_INTERNAL(tws_ctxv) /* Don't access */
+#define ws_prev                TPP_INTERNAL(tw_prev)                                /* Don't access */
 
 #define TPPLexer_PushWarnings_(lexer) (tpp_lexer_pushwarnings(lexer), 1)
 #define TPPLexer_PopWarnings_(lexer)  (tpp_lexer_canpopwarnings(lexer) && (tpp_lexer_pushwarnings(lexer), 1))
@@ -3101,12 +3558,12 @@ TPP_INLINE TPP_wstate_t TPPCALL TPPLexer_GetWarningGroup_(tpp_lexer *self, int w
  * @return: 1: Successfully set the given warning number.
  * @return: 2: The given group name is unknown. */
 TPP_INLINE int TPPCALL
-TPPLexer_SetWarnings_(tpp_lexer *self, char const *__restrict group, TPP_wstate_t state) {
+TPPLexer_SetWarnings_(tpp_lexer *self, char const *tpp_restrict group, TPP_wstate_t state) {
 	tpp_warning_group_id wgrp = tpp_warning_group_byname(group);
 	return TPPLexer_SetWarningGroup_(self, (int)wgrp, state);
 }
 TPP_INLINE TPP_wstate_t TPPCALL
-TPPLexer_GetWarnings_(tpp_lexer *self, char const *__restrict group) {
+TPPLexer_GetWarnings_(tpp_lexer *self, char const *tpp_restrict group) {
 	tpp_warning_group_id wgrp = tpp_warning_group_byname(group);
 	return TPPLexer_GetWarningGroup_(self, (int)wgrp);
 }
@@ -3142,14 +3599,14 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 #define iss_line            TPP_INTERNAL(tidse_updated).TPP_INTERNAL(lci_line)
 #define iss_file            tpp3_ifdef_stack_is_per_file_so_there_is_no_file_property
 #define TPPIfdefStack       tpp_ifdef_stack
-#define is_slotc            TPP_INTERNAL(tids_cnt)
-#define is_slota            TPP_INTERNAL(tids_alc)
-#define is_slotv            TPP_INTERNAL(tids_vec)
+#define is_slotc            TPP_INTERNAL(tids_cnt) /* Don't access */
+#define is_slota            TPP_INTERNAL(tids_alc) /* Don't access */
+#define is_slotv            TPP_INTERNAL(tids_vec) /* Don't access */
 
 #define TPP_EXTENSIONS_BITSETSIZE (TPP_EXT_COUNT ? (TPP_EXT_COUNT + 7) / 8 : 1)
 #define TPPExtState               tpp_extensions
-#define es_prev                   TPP_INTERNAL(te_prev)
-#define es_bitset                 TPP_INTERNAL(te_state).TPP_INTERNAL(tes_bitset)
+#define es_prev                   TPP_INTERNAL(te_prev)                           /* Don't access */
+#define es_bitset                 TPP_INTERNAL(te_state).TPP_INTERNAL(tes_bitset) /* Don't access */
 
 /* Check if a given extension `ext' is currently enabled.
  * @return: 0: The extension is disabled.
@@ -3164,23 +3621,37 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 #define TPPLexer_DisableExtension(ext)            TPPLexer_DisableExtension_(TPP2_LEXER, ext)
 
 
+/* CAUTION: This function works differently:
+ * - TPPFILE_NEXTCHUNK_FLAG_EXTEND: Extension is now works such that the file may
+ *                                  only discard bytes that have already been read,
+ *                                  and are not covered by "tpp_file_setkeep"
+ * - TPPFILE_NEXTCHUNK_FLAG_BINARY: Not available anymore (if you want to do binary
+ *                                  read, you must directly use "tpp_io_read()")
+ * - TPPFILE_NEXTCHUNK_FLAG_NOBLCK: Not available anymore: non-blocking is controlled on
+ *                                  a per-file basis (s.a. "TPP_FILE_IOFLAGS_NONBLOCK")
+ */
+#define TPPFILE_NEXTCHUNK_FLAG_NONE   0 /* No special behavior modification. */
+#undef TPPFILE_NEXTCHUNK_FLAG_EXTEND
+#undef TPPFILE_NEXTCHUNK_FLAG_BINARY
+#undef TPPFILE_NEXTCHUNK_FLAG_NOBLCK
+TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
+	tpp_errno error = tpp_file_expandchunk(self);
+#if TPP_HAVE_FILE_NONBLOCK
+	if (error == TPP_EWOULDBLOCK)
+		return 0;
+#endif /* TPP_HAVE_FILE_NONBLOCK */
+	if (TPP_ISERR(error)) {
+#ifdef TPP_CONFIG_SET_API_ERROR
+		return -1; /* TPP_ENOMEM or TPP_EIO */
+#else /* TPP_CONFIG_SET_API_ERROR */
+		return 0; /* TPP_ENOMEM or TPP_EIO */
+#endif /* !TPP_CONFIG_SET_API_ERROR */
+	}
+	return 1;
+}
+
+
 #if 0 /* TODO */
-//TPPFUN int TPPCALL TPPFile_Copyname(struct TPPFile *__restrict self);
-//TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_CopyForInclude(struct TPPFile *__restrict self);
-//TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_Open(char const *__restrict filename);
-//TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, char const *__restrict name);
-//TPPFUN struct TPPFile *TPPCALL TPPFile_NewDefine_(TPP_LEXER_PARAM);
-//TPPFUN int TPPCALL TPPFile_NextChunk_(TPP_LEXER_PARAM_ struct TPPFile *__restrict self, unsigned int flags);
-//TPPFUN char *TPPCALL TPP_Unescape_(TPP_LEXER_PARAM_ char *__restrict buf, char const *__restrict data, size_t size, size_t charsize);
-//TPPFUN size_t TPPCALL TPP_SizeofUnescape_(TPP_LEXER_PARAM_ char const *__restrict data, size_t size, size_t charsize);
-//TPPFUN char *TPPCALL TPP_UnescapeRaw(char *__restrict buf, char const *__restrict data, size_t size);
-//TPPFUN size_t TPPCALL TPP_SizeofUnescapeRaw(char const *__restrict data, size_t size);
-//TPPFUN char *TPPCALL TPP_Escape_(TPP_LEXER_PARAM_ char *__restrict buf, char const *__restrict data, size_t size);
-//TPPFUN size_t TPPCALL TPP_SizeofEscape_(TPP_LEXER_PARAM_ char const *__restrict data, size_t size);
-//TPPFUN char *TPPCALL TPP_Ftos(char *__restrict buf, TPP(tfloat_t) f);
-//TPPFUN size_t TPPCALL TPP_SizeofFtos(TPP(tfloat_t) f);
-
-
 //struct TPPIncludeList {
 //	/* List of sanitized #include paths. */
 //	struct TPPIncludeList    *il_prev;  /* [0..1][owned] Pointer to another m-allocated list of system #include-paths.
@@ -3211,12 +3682,14 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 // * @return: 2: [TPPLexer_AddIncludePath] The given path had already been added before.
 // * @return: 0: [TPPLexer_DelIncludePath] The given path was not found.
 // * @return: 1: [TPPLexer_DelIncludePath] The given path was successfully removed. */
-//TPPFUN int TPPCALL TPPLexer_AddIncludePath_(TPP_LEXER_PARAM_ char *__restrict path, size_t pathsize);
-//TPPFUN int TPPCALL TPPLexer_DelIncludePath_(TPP_LEXER_PARAM_ char *__restrict path, size_t pathsize);
+//TPPFUN int TPPCALL TPPLexer_AddIncludePath_(TPP_LEXER_PARAM_ char *tpp_restrict path, size_t pathsize);
+//TPPFUN int TPPCALL TPPLexer_DelIncludePath_(TPP_LEXER_PARAM_ char *tpp_restrict path, size_t pathsize);
 //#define TPPLexer_AddIncludePath(path, pathsize) TPPLexer_AddIncludePath_(TPP_LEXER_ARG_ path, pathsize)
 //#define TPPLexer_DelIncludePath(path, pathsize) TPPLexer_DelIncludePath_(TPP_LEXER_ARG_ path, pathsize)
-//
-//
+#endif
+
+
+#if 0 /* TODO */
 //#ifndef TPP_CONFIG_NO_ASSERTIONS
 //struct TPPAssertion {
 //	struct TPPAssertion *as_next; /* [0..1][owned] Next assertion. */
@@ -3229,385 +3702,262 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 //	struct TPPAssertion **as_assv; /* [0..1][owned][0..as_alloc][owned] Hash-map of existing assertions. */
 //};
 //#endif /* !TPP_CONFIG_NO_ASSERTIONS */
-//
-//struct TPPRareKeyword {
-//	/* Keyword-specific data that is only rarely used. */
-//	/*ref*/struct TPPFile    *kr_file;     /* [0..1] Set if this keyword is actually the name of a file, when that file was already included.
-//	                                        *        Used to track recursive file-inclusion, as well as quickly dismiss guarded files and
-//	                                        *        speed up determining the correct filename for `include_next'.
-//	                                        *  NOTE: Sadly, this cannot simply be made into a union with `k_macro', as a filename could
-//	                                        *        potentially be equal to a keyword (e.g.: `#include "header"' vs. `#define header 42') */
-//	/*ref*/struct TPPFile    *kr_oldmacro; /* [0..1][linked_list(->f_hashnext...)] Linked list of old (aka. pushed) version of this macro. */
-//	/*ref*/struct TPPFile    *kr_defmacro; /* [0..1] Default macro definition (backup of the original, builtin macro when re-defined by the
-//	                                        *        user). This macro file is restored as the active macro when lexer macros are reset and
-//	                                        *        the `TPP_KEYWORDFLAG_BUILTINMACRO' keyword flag is set below. */
-//#define TPP_KEYWORDFLAG_NONE                   0x00000000 /* No special flags (default) */
-//#define TPP_KEYWORDFLAG_BUILTINMACRO           0x20000000 /* An explicitly defined builtin macro-definition, that can't be #undef'ed */
-//#define TPP_KEYWORDFLAG_NO_UNDERSCORES         0x40000000 /* When looking up keyword flags, don't allow this keyword to alias another with additional underscores at the front and back:
-//                                                           * >> __has_feature(__tpp_dollar_is_alpha__) // If `tpp_dollar_is_alpha' doesn't have this flag set, it can alias `__tpp_dollar_is_alpha__' */
-//#define TPP_KEYWORDFLAG_IMPORTED               0x80000000 /* Set for for files after they've been #import-ed. */
-//#if !defined(TPP_CONFIG_LOCKED_KEYWORDS) || TPP_CONFIG_LOCKED_KEYWORDS
-//#define TPP_KEYWORDFLAG_LOCKED                 0x00000200 /* Any attempts at defining or deleting a macro for this keyword using #define or #undef are denied. */
-//#endif /* TPP_CONFIG_LOCKED_KEYWORDS */
-//	/* NOTE: These flags share their values with those
-//	 *       from the old TPP for backwards compatibility. */
-//#define TPP_KEYWORDFLAG_HAS_ATTRIBUTE          0x00000001 /* `__has_attribute()' */
-//#define TPP_KEYWORDFLAG_HAS_BUILTIN            0x00000002 /* `__has_builtin()' */
-//#define TPP_KEYWORDFLAG_HAS_CPP_ATTRIBUTE      0x00000004 /* `__has_cpp_attribute()' */
-//#define TPP_KEYWORDFLAG_HAS_DECLSPEC_ATTRIBUTE 0x00000008 /* `__has_declspec_attribute()' */
-//#define TPP_KEYWORDFLAG_HAS_EXTENSION          0x00000010 /* `__has_extension()' */
-//#define TPP_KEYWORDFLAG_HAS_FEATURE            0x00000020 /* `__has_feature()' */
-//#define TPP_KEYWORDFLAG_IS_DEPRECATED          0x00000040 /* Warn when the keyword appears as the result of lexical processing. */
-//#define TPP_KEYWORDFLAG_IS_POISONED            0x00000080 /* Extension for `TPP_KEYWORDFLAG_IS_DEPRECATED':
-//                                                           * Don't emit a warning if the keyword is used inside of a macro.
-//                                                           * -> Only warn if it is used from a text file. */
-//#define TPP_KEYWORDFLAG_HAS_TPP_BUILTIN        0x00000100 /* The keyword is a __builtin-function available for use in preprocessor expressions. */
-//#define TPP_KEYWORDFLAG_USERMASK               0x0000007f /* Set of flags modifiable through `#pragma tpp_set_keyword_flags()'. */
-//	uint32_t                  kr_flags;    /* A set of `TPP_KEYWORDFLAG_*'. */
-//	TPP(tint_t)               kr_counter;  /* Counter value used by `__TPP_COUNTER()' */
+#endif
+
+
+
+#define TPP_KEYWORDFLAG_NONE TPP_KEYWORD_FLAG_NORMAL
+#undef TPP_KEYWORDFLAG_BUILTINMACRO   /* Must be checked for using `tpp_macro_getbuiltin()' */
+#undef TPP_KEYWORDFLAG_NO_UNDERSCORES /* Must be checked for using `tpp_macro_getbuiltin()' */
+#define TPP_KEYWORDFLAG_IMPORTED               TPP_KEYWORD_FLAG_HDR_IMPORTED
+#define TPP_KEYWORDFLAG_HAS_ATTRIBUTE          TPP_KEYWORD_FLAG_HAS_ATTRIBUTE
+#define TPP_KEYWORDFLAG_HAS_BUILTIN            TPP_KEYWORD_FLAG_HAS_BUILTIN
+#define TPP_KEYWORDFLAG_HAS_CPP_ATTRIBUTE      TPP_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE
+#define TPP_KEYWORDFLAG_HAS_DECLSPEC_ATTRIBUTE TPP_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE
+#define TPP_KEYWORDFLAG_HAS_EXTENSION          TPP_KEYWORD_FLAG_HAS_EXTENSION
+#define TPP_KEYWORDFLAG_HAS_FEATURE            TPP_KEYWORD_FLAG_HAS_FEATURE
+#define TPP_KEYWORDFLAG_IS_DEPRECATED          TPP_KEYWORD_FLAG_IS_DEPRECATED
+#define TPP_KEYWORDFLAG_IS_POISONED            TPP_KEYWORD_FLAG_IS_POISONED
+#undef TPP_KEYWORDFLAG_HAS_TPP_BUILTIN /* TPP builtins (and consequently "__has_tpp_builtin") are no longer supported */
+#define TPP_KEYWORDFLAG_USERMASK TPP_KEYWORD_FLAG_USERMASK
+
+#define TPPRareKeyword tpp_keyword_misc
+#undef kr_file     /* Replaced with "tkm_file_guard" (which has a slightly different meaning) */
+#undef kr_oldmacro /* Replaced with "tkm_macro_pushstack" (which has a slightly different meaning) */
+#undef kr_defmacro /* Builtin macros are now handled by `tpp_macro_getbuiltin()' */
+#define kr_flags   tkm_flags /* Use tpp_lexer_getkeywordflags() */
+#define kr_counter tkm_builtin_counter /* Don't access */
+#if 0 /* TODO */
 //#ifndef TPP_CONFIG_NO_ASSERTIONS
 //	struct TPPAssertions      kr_asserts;  /* Assertions (aka. #assert/#unassert associated with this keyword) */
 //#endif /* !TPP_CONFIG_NO_ASSERTIONS */
-//	void                     *kr_user;     /* User-defined meaning; initialized to NULL. */
-//};
-//
-//struct TPPKeyword {
-//	       struct TPPKeyword *k_next;     /* [0..1][owned] Pointer to another keyword entry with the same hash. */
-//	/*ref*/struct TPPFile    *k_macro;    /* [0..1] Macro currently associated with this keyword. */
-//	struct TPPRareKeyword    *k_rare;     /* [0..1][owned] Rare keyword data. */
-//#ifdef __INTELLISENSE__
-//	    tok_t                 k_id;       /* [const] Unique token ID associated with this keyword. */
-//#else /* __INTELLISENSE__ */
-//	TPP(tok_t)                k_id;       /* [const] Unique token ID associated with this keyword. */
-//#endif /* !__INTELLISENSE__ */
-//#if __SIZEOF_POINTER__ > __SIZEOF_INT__
-//	uint8_t                   k_pad[sizeof(void *) - sizeof(int)];
-//#endif /* __SIZEOF_POINTER__ > __SIZEOF_INT__ */
-//	size_t                    k_size;     /* [const] Size of the keyword (in characters). */
-//	TPP(hash_t)               k_hash;     /* [const] The hash-value of the keyword. */
-//	char                      k_name[TPP_SYMARRAY_SIZE]; /* [const][k_size] name of this keyword (HINT: doesn't contain unescaped linefeeds). */
-///*	char                      k_zero;     /* [const][== 0] Ensure ZERO-termination of the keyword name. */
-//};
-//#define TPPKeyword_ISDEFINED(self) ((self)->k_macro != NULL || TPP_ISBUILTINMACRO((self)->k_id))
-//#define TPPKeyword_MAKERARE(self)                                  \
-//	((self)->k_rare || ((self)->k_rare = (struct TPPRareKeyword *) \
-//	                    calloc(1, sizeof(struct TPPRareKeyword))) != NULL)
-//#ifdef TPP_HASHOF
-//#define TPPKeyword_EQUALS(self, constant_string)                       \
-//	((self)->k_hash == TPP_HASHOF(constant_string) &&                  \
-//	 (self)->k_size == (sizeof(constant_string) / sizeof(char)) - 1 && \
-//	 memcmp((self)->k_name, constant_string, sizeof(constant_string) - sizeof(char)) == 0)
-//#else /* TPP_HASHOF */
-//#define TPPKeyword_EQUALS(self, constant_string)                       \
-//	((self)->k_size == (sizeof(constant_string) / sizeof(char)) - 1 && \
-//	 memcmp((self)->k_name, constant_string, sizeof(constant_string) - sizeof(char)) == 0)
-//#endif /* !TPP_HASHOF */
-//
-//
-///* Returns the effective keyword flags of `self'.
-// * @return: A set of `TPP_KEYWORDFLAG_*' */
-//TPPFUN uint32_t TPPCALL
-//TPPKeyword_GetFlags_(TPP_LEXER_PARAM_
-//                     struct TPPKeyword const *__restrict self,
-//                     int check_without_underscores);
-//#define TPPKeyword_GetFlags(self, check_without_underscores) \
-//	TPPKeyword_GetFlags_(TPP_LEXER_ARG_ self, check_without_underscores)
-//
-//
-//struct TPPKeywordMap {
-//	size_t              km_entryc;  /* Amount of keyword entries stored. */
-//	size_t              km_bucketc; /* Used amount of buckets. */
-//	struct TPPKeyword **km_bucketv; /* [0..1][owned][0..km_bucketc][owned]
-//	                                 * Resizable keyword hash-map vector. */
-//};
-///* When this evaluates to true, TPP attempts to rehash the keyword map to `km_entryc' entries. */
-//#define TPPKeywordMap_SHOULDHASH(self) \
-//	((self)->km_entryc >= (self)->km_bucketc * 2)
-//
-//struct TPPToken {
-//	TPP(tok_t)              t_id;    /* The symbol/keyword ID of this token. */
-//	unsigned long           t_num;   /* The token number (incremented every time a new token is yielded). */
-//	/*ref*/struct TPPFile  *t_file;  /* [1..1] File associated with this token. */
-//	char                   *t_begin; /* [1..1][<= t_end] Token text start pointer. */
-//	char                   *t_end;   /* [1..1][>= t_begin] Token text end pointer. */
-//	struct TPPKeyword      *t_kwd;   /* [0..1] Set when `t_id' is a keyword (WARNING: Not always updated during yield; check `TPP_ISKEYWORD(t_id)' before using). */
-//};
-//
-///* Returns the top-level source locations (in-macro & everything)
-// * NOTE: These are _not_ what you're probably looking for.
-// *       You probably expect these to act like __FILE__ and __LINE__,
-// *       but instead they will show the true source locations where the
-// *       current token originates from (e.g.: from a macro definition.)
-// *    >> To get information about the source file you must walk the
-// *       current token's t_file->f_prev->... chain until you reach
-// *       a text file. Then, taking that file, use it and its f_pos
-// *       pointers to figure out what you actually want to know. */
-//#define TPPLexer_TRUE_FILE(plength) TPPFile_Filename(TPPLexer_Current->l_token.t_file, plength)
-//#define TPPLexer_TRUE_LC(info)      TPPFile_LCAt(TPPLexer_Current->l_token.t_file, info, TPPLexer_Current->l_token.t_begin)
-//#define TPPLexer_TRUE_LINE()        TPPFile_LineAt(TPPLexer_Current->l_token.t_file, TPPLexer_Current->l_token.t_begin)
-//#define TPPLexer_TRUE_COLUMN()      TPPFile_ColumnAt(TPPLexer_Current->l_token.t_file, TPPLexer_Current->l_token.t_begin)
-//
-///* Returns the top-most text file associated with the current lexer.
-// * NOTE: These functions never returns NULL. */
-//TPPFUN struct TPPFile *TPPCALL TPPLexer_Textfile_(TPP_LEXER_PARAM);
-//TPPFUN struct TPPFile *TPPCALL TPPLexer_Basefile_(TPP_LEXER_PARAM);
-//#define TPPLexer_Textfile() TPPLexer_Textfile_(TPP_LEXER_ARG)
-//#define TPPLexer_Basefile() TPPLexer_Basefile_(TPP_LEXER_ARG)
-//
-//#define TPPLexer_FILE(plength)     TPPFile_Filename(TPPLexer_Textfile(), plength)
-//#define TPPLexer_BASEFILE(plength) TPPFile_Filename(TPPLexer_Basefile(), plength)
-//#define TPPLexer_LC(info)          TPPLexer_LC_(TPP_LEXER_ARG_ info)
-//#define TPPLexer_LINE()            TPPLexer_LINE_(TPP_LEXER_ARG)
-//#define TPPLexer_COLUMN()          TPPLexer_COLUMN_(TPP_LEXER_ARG)
-//TPP_LOCAL void TPPCALL TPPLexer_LC_(TPP_LEXER_PARAM_ struct TPPLCInfo *__restrict info) {
-//	struct TPPFile *f = TPPLexer_Textfile();
-//	TPPFile_LCAt(f, info, f->f_pos);
-//}
-//TPP_LOCAL TPP(line_t) TPPCALL TPPLexer_LINE_(TPP_LEXER_PARAM) {
-//	struct TPPFile *f = TPPLexer_Textfile();
-//	return TPPFile_LineAt(f, f->f_pos);
-//}
-//TPP_LOCAL TPP(col_t) TPPCALL TPPLexer_COLUMN_(TPP_LEXER_PARAM) {
-//	struct TPPFile *f = TPPLexer_Textfile();
-//	return TPPFile_ColumnAt(f, f->f_pos);
-//}
-//
-//
-///* Saved lexer position (can be restore to rewind the lexer)
-// * When wanting to rewind the lexer, flags must be set as follows (+: set; -: clear)
-// *  [+] TPPLEXER_FLAG_NO_DIRECTIVES     (Disallow directives since rewinding them isn't possible
-// *                                      If a macro were to be deleted or defined, we'd not be
-// *                                      able to undo that)
-// *  [+] TPPLEXER_FLAG_EXTENDFILE        (Don't discard already-read data)
-// *  [-] TPPLEXER_FLAG_WERROR            (You probably don't want errors)
-// *  [+] TPPLEXER_FLAG_NO_WARNINGS       (You probably don't want warnings enabled...)
-// *  [+] TPPLEXER_FLAG_WILLRESTORE       (Prevent some internal events from firing)
-// * WARNING:
-// *  - __TPP_RANDOM will yield different results after rewinding!
-// *  - __TPP_COUNTER and __COUNTER__ will not be reset during rewinding!
-// */
-//struct TPPLexerFilePosition {
-//	/*ref*/struct TPPFile *tlfp_file; /* [1..1] The file to restore. */
-//	ptrdiff_t              tlfp_pos;  /* File position to restore (relative to `tlfp_file->f_begin'). */
-//};
-//struct TPPLexerPosition {
-//	TPP(tok_t)                   tlp_tok_id;    /* The symbol/keyword ID of this token. */
-//	unsigned long                tlp_tok_num;   /* The token number (incremented every time a new token is yielded). */
-//	ptrdiff_t                    tlp_tok_begin; /* [<= tlp_tok_end] Token text start pointer (relative to `tlp_filev[tlp_filec-1].tlfp_file->f_begin'). */
-//	ptrdiff_t                    tlp_tok_end;   /* [>= tlp_tok_begin] Token text end pointer. */
-//	struct TPPKeyword           *tlp_tok_kwd;   /* [0..1] Set when `t_id' is a keyword (WARNING: Not always updated during yield; check `TPP_ISKEYWORD(t_id)' before using). */
-//	size_t                       tlp_filec;     /* # of files to restore from the #include-stack. */
-//	struct TPPLexerFilePosition *tlp_filev;     /* [0..tlp_filec] Vector of files to restore. */
-//	uint32_t                     tlp_flags;     /* Old lexer flags. */
-//};
-//
-///* Save/restore the lexer position (during save: lexer flags are altered as documented above)
-// * @return: 1 : Success
-// * @return: 0 : Error */
-//TPPFUN int TPPCALL TPPLexer_SavePosition_(TPP_LEXER_PARAM_ struct TPPLexerPosition *__restrict self);
-//TPPFUN void TPPCALL TPPLexer_LoadPosition_(TPP_LEXER_PARAM_ struct TPPLexerPosition *__restrict self);
-//#define TPPLexer_SavePosition(self) TPPLexer_SavePosition_(TPP_LEXER_ARG_ self)
-//#define TPPLexer_LoadPosition(self) TPPLexer_LoadPosition_(TPP_LEXER_ARG_ self)
-//
-//
-//
-///* Lexer state flags. */
-//#define TPPLEXER_FLAG_NONE                   0x00000000
-//#define TPPLEXER_FLAG_WANTCOMMENTS           0x00000001 /* Emit COMMENT tokens. */
-//#define TPPLEXER_FLAG_WANTSPACE              0x00000002 /* Emit SPACE tokens. */
-//#define TPPLEXER_FLAG_WANTLF                 0x00000004 /* Emit LF tokens. */
-//#define TPPLEXER_FLAG_NO_SEEK_ON_EOB         0x00000008 /* Don't seek the next chunk when the current one ends (instead, signal EOF). */
-//#define TPPLEXER_FLAG_NO_POP_ON_EOF          0x00000010 /* Don't pop the top file when an EOF occurs. */
-//#define TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE  0x00000020 /* Keep whitespace tokens around the front and back of macro texts. */
-//#ifdef TPP_CONFIG_NONBLOCKING_IO
-//#define TPPLEXER_FLAG_NONBLOCKING            0x00000040 /* Enable non-blocking I/O in files that support that flag.
-//                                                         * When enabled, the lexer will produce EOF tokens in text files
-//                                                         * with the `TPP_TEXTFILE_FLAG_NONBLOCK' flag set, if the current
-//                                                         * text location is desirable for such behavior (i.e. no trailing
-//                                                         * unescaped linefeeds, or unfinished comments or strings), if
-//                                                         * reading data from the source stream would block.
-//                                                         * For convenience, you may use `TPPLexer_Yield*NB()' to set this
-//                                                         * flag for a single call. */
-//#endif /* TPP_CONFIG_NONBLOCKING_IO */
-//#define TPPLEXER_FLAG_TERMINATE_STRING_LF    0x00000080 /* Terminate character/string sequences when a linefeed is detected (also emit a warning in that case). */
-//#define TPPLEXER_FLAG_NO_DIRECTIVES          0x00000100 /* Disable evaluation of preprocessor directives. */
-//#define TPPLEXER_FLAG_NO_MACROS              0x00000200 /* Disable expansion of macros (user defined only; builtin must be disabled explicitly with `TPPLEXER_FLAG_NO_BUILTIN_MACROS'). */
-//#define TPPLEXER_FLAG_NO_BUILTIN_MACROS      0x00000400 /* When set, don't expand _any_ builtin macros (such as __FILE__ and __LINE__). */
-//#define TPPLEXER_FLAG_ASM_COMMENTS           0x00000800 /* Suppress warnings for unknown/invalid preprocessor directives, instead either emitting them as `TOK_COMMENT' or ignoring them based on `TPPLEXER_FLAG_WANTCOMMENTS'. */
-//#define TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF     0x00001000 /* Linefeeds terminating preprocessor directives are not part of those directives and are instead re-emit (Meaningless without `TPPLEXER_FLAG_WANTLF').
-//                                                         * WARNING: Using this flag is not recommended, as a freshly defined macro will modify
-//                                                         *          text from the file and set the first character of that linefeed to `\0'. */
-//#define TPPLEXER_FLAG_COMMENT_NOOWN_LF       0x00002000 /* Linefeeds terminating a `// foo'-style comment are not owned by that comment, but are re-emit (Meaningless without `TPPLEXER_FLAG_WANTLF'). */
+#endif
+#define kr_user tkm_userdata_ptr /* Use tpp_keyword_getuserdata() / tpp_keyword_setuserdata() / tpp_keyword_misc_getuserdata() / tpp_keyword_misc_setuserdata() */
+
+
+#define TPPKeyword tpp_keyword
+#define k_next     TPP_INTERNAL(tk_next)  /* Don't access */
+#define k_macro    TPP_INTERNAL(tk_macro) /* Use tpp_keyword_getmacro() */
+#define k_rare     TPP_INTERNAL(tk_misc)  /* Use tpp_keyword_getmisc() / tpp_keyword_requiremisc() */
+#define k_id       TPP_INTERNAL(tk_id)    /* Use tpp_keyword_getid() */
+#define k_size     TPP_INTERNAL(tk_len)   /* Use tpp_keyword_getkwdlen() */
+#define k_hash     TPP_INTERNAL(tk_hash)  /* Use tpp_keyword_getkwdhash() */
+#define k_name     TPP_INTERNAL(tk_kwd)   /* Use tpp_keyword_getkwdcstr() */
+
+#define TPPKeyword_ISDEFINED(self) ((self)->k_macro != NULL || TPP_ISBUILTINMACRO((self)->k_id))
+#define TPPKeyword_MAKERARE(self)  (tpp_keyword_requiremisc(self) != NULL)
+#define TPPKeyword_EQUALS(self, constant_string) \
+	tpp_keyword_equals_cstr(self, constant_string)
+
+/* Returns the effective keyword flags of `self'.
+ * @return: A set of `TPP_KEYWORDFLAG_*' */
+#define TPPKeyword_GetFlags(self, check_without_underscores) \
+	TPPKeyword_GetFlags_(TPP_LEXER_ARG_ self, check_without_underscores)
+TPP_INLINE tpp_keyword_flags TPPCALL
+TPPKeyword_GetFlags_(tpp_lexer *lexer,
+                     tpp_keyword const *tpp_restrict self,
+                     int check_without_underscores) {
+	tpp_keyword_flags result = tpp_lexer_getkeywordflags(lexer, self);
+	if (check_without_underscores) {
+		tpp_char const *without_underscore_start = tpp_keyword_getkwd(self);
+		tpp_size without_underscore_len          = tpp_keyword_getkwdlen(self);
+		while (without_underscore_len && *without_underscore_start == '_')
+			++without_underscore_start, --without_underscore_len;
+		while (without_underscore_len && without_underscore_start[without_underscore_len - 1] == '_')
+			--without_underscore_len;
+		if (without_underscore_len < tpp_keyword_getkwdlen(self)) {
+			tpp_hash hash = tpp_hashof(without_underscore_start, without_underscore_len);
+			tpp_keyword const *without_underscore = tpp_lexer_kwds_getkeyword(lexer, without_underscore_start,
+			                                                                  without_underscore_len, hash);
+			if (without_underscore)
+				result |= tpp_lexer_getkeywordflags(lexer, without_underscore);
+		}
+	}
+	return result;
+}
+
+
+#define TPPKeywordMap tpp_keywords
+#define km_entryc     TPP_INTERNAL(tks_kwdc)
+#define km_bucketc    TPP_INTERNAL(tks_bckm)+1 /* Not really the same (km_bucketc == tks_bckm+1), but close enough... */
+#define km_bucketv    TPP_INTERNAL(tks_bckv)
+#define TPPKeywordMap_SHOULDHASH(self) \
+	((self)->km_entryc >= (self)->km_bucketc * 2)
+
+
+#define TPPToken tpp_token
+#define t_id TPP_INTERNAL(tt_id)
+#undef t_num  /* Not supported by TPP3 */
+#undef t_file /* In TPP3, the lexer always re-uses the same file structure as the current file.
+               * (when a new file is #include-ed, the old one is saved in the #include-stack)
+               * To access the current file, use `tpp_lexer_getfile()' */
+#define t_begin TPP_INTERNAL(tt_start)
+#define t_end   TPP_INTERNAL(tt_end)
+#define t_kwd   TPP_INTERNAL(tt_kwd)
+
+/* Returns the top-level source locations (in-macro & everything)
+ * NOTE: These are _not_ what you're probably looking for.
+ *       You probably expect these to act like __FILE__ and __LINE__,
+ *       but instead they will show the true source locations where the
+ *       current token originates from (e.g.: from a macro definition.)
+ *    >> To get information about the source file you must walk the
+ *       current token's t_file->f_prev->... chain until you reach
+ *       a text file. Then, taking that file, use it and its f_pos
+ *       pointers to figure out what you actually want to know. */
+#define TPPLexer_TRUE_FILE(plength) TPPFile_Filename(tpp_lexer_getfile(TPP2_LEXER), plength)
+#define TPPLexer_TRUE_LC(info)      TPPFile_LCAt(tpp_lexer_getfile(TPP2_LEXER), info, tpp_lexer_gettokenstart(TPP2_LEXER))
+#define TPPLexer_TRUE_LINE()        TPPFile_LineAt(tpp_lexer_getfile(TPP2_LEXER), tpp_lexer_gettokenstart(TPP2_LEXER))
+#define TPPLexer_TRUE_COLUMN()      TPPFile_ColumnAt(tpp_lexer_getfile(TPP2_LEXER), tpp_lexer_gettokenstart(TPP2_LEXER))
+
+
+/* Returns the top-most text file associated with the current lexer.
+ * NOTE: These functions never returns NULL. */
+#define TPPLexer_Textfile_(lexer) tpp_file_getlcfile(tpp_lexer_getfile(lexer))
+#define TPPLexer_Basefile_(lexer) tpp_file_getbasefile(tpp_lexer_getfile(lexer))
+#define TPPLexer_Textfile()       TPPLexer_Textfile_(TPP_LEXER_ARG)
+#define TPPLexer_Basefile()       TPPLexer_Basefile_(TPP_LEXER_ARG)
+
+#define TPPLexer_FILE(plength)     TPPFile_Filename(TPPLexer_Textfile(), plength)
+#define TPPLexer_BASEFILE(plength) TPPFile_Filename(TPPLexer_Basefile(), plength)
+#define TPPLexer_LC(info)          TPPLexer_LC_(TPP_LEXER_ARG_ info)
+#define TPPLexer_LINE()            TPPLexer_LINE_(TPP_LEXER_ARG)
+#define TPPLexer_COLUMN()          TPPLexer_COLUMN_(TPP_LEXER_ARG)
+
+TPP_INLINE void TPPCALL TPPLexer_LC_(tpp_lexer *self, tpp_lcinfo *tpp_restrict info) {
+	struct TPPFile *f = TPPLexer_Textfile_(self);
+	TPPFile_LCAt(f, info, f->f_pos);
+}
+TPP_INLINE tpp_line TPPCALL TPPLexer_LINE_(tpp_lexer *self) {
+	struct TPPFile *f = TPPLexer_Textfile_(self);
+	return TPPFile_LineAt(f, f->f_pos);
+}
+TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
+	struct TPPFile *f = TPPLexer_Textfile_(self);
+	return TPPFile_ColumnAt(f, f->f_pos);
+}
+
+
+
+/* Lexer state flags. */
+#define TPPLEXER_FLAG_NONE    TPP_LEXER_STATE_FLAG_NORMAL
+#define TPPLEXER_FLAG_DEFAULT TPP_LEXER_STATE_FLAG_NORMAL
+#undef TPPLEXER_FLAG_WANTCOMMENTS          /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COMMENT) */
+#undef TPPLEXER_FLAG_WANTSPACE             /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SPACE) */
+#undef TPPLEXER_FLAG_WANTLF                /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LF) */
+#undef TPPLEXER_FLAG_NO_SEEK_ON_EOB        /* Use tpp_file_pusheof() or tpp_file_pushchunk() */
+#undef TPPLEXER_FLAG_NO_POP_ON_EOF         /* Use tpp_file_autopopfile_pushoff() */
+#undef TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE /* Use "TPP_EXT_MACRO_ARGUMENT_WHITESPACE" (global) or "TPP_MACRO_FLAG_KEEPARGSPC" (individual macro) */
+#undef TPPLEXER_FLAG_NONBLOCKING           /* Use "TPP_FILE_IOFLAGS_NONBLOCK" (per-file) */
+#undef TPPLEXER_FLAG_TERMINATE_STRING_LF   /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE) (inverted meaning) */
+#undef TPPLEXER_FLAG_NO_DIRECTIVES         /* Use tpp_lexer_setfeat(TPP_FEAT_CPP_DIRECTIVES) */
+#undef TPPLEXER_FLAG_NO_MACROS             /* Use tpp_lexer_setfeat(TPP_FEAT_CPP_MACROS) */
+#undef TPPLEXER_FLAG_NO_BUILTIN_MACROS     /* Use tpp_lexer_setfeat(TPP_FEAT_CPP_BUILTIN_MACROS) */
+#undef TPPLEXER_FLAG_ASM_COMMENTS          /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SHELL_COMMENT) */
+#undef TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF    /* No longer supported; in TPP3, preprocessor directives *always* include the trailing line-feed */
+#undef TPPLEXER_FLAG_COMMENT_NOOWN_LF      /* No longer supported; in TPP3, line-comments *always* include the trailing line-feed */
+#if 0 /* TODO */
 //#define TPPLEXER_FLAG_MESSAGE_LOCATION       0x00004000 /* Print the file+line location in messages from `#pragma message'. */
 //#define TPPLEXER_FLAG_MESSAGE_NOLINEFEED     0x00008000 /* Don't print a linefeed following the user-provided message in `#pragma message'. */
-//#define TPPLEXER_FLAG_INCLUDESTRING          0x00010000 /* Parse strings as #include strings (without \-escape sequences). (WARNING: system-style (<...>) strings must be handled manually by the caller) */
-//#define TPPLEXER_FLAG_EXTENDFILE             0x00020000 /* Set the `TPPFILE_NEXTCHUNK_FLAG_EXTEND' flag when loading more file data. */
-//#define TPPLEXER_FLAG_NO_LEGACY_GUARDS       0x00040000 /* Don't recognize legacy #include-guards
-//                                                         * WARNING: Not setting this option may lead to whitespace and comments at the
-//                                                         *          start and end of a guarded file to not be emit on a second pass.
-//                                                         *       >> Enable this option when your compiler is sensitive to whitespace
-//                                                         *          in situations such as these. */
+#endif
+#undef TPPLEXER_FLAG_INCLUDESTRING         /* No longer supported; in TPP3, #include-strings parsing bypasses regular tokenization done by "tpp_lexer_yieldraw()" */
+#undef TPPLEXER_FLAG_EXTENDFILE            /* Use tpp_file_pushkeep() + tpp_file_setkeep() to keep certain file data loaded into memory */
+#undef TPPLEXER_FLAG_NO_LEGACY_GUARDS      /* No longer supported; in TPP3, this can only be compile-time configured via "TPP_HAVE_IFNDEF_INCLUDE_GUARDS" */
+#if 0 /* TODO */
 //#define TPPLEXER_FLAG_WERROR                 0x00080000 /* All warnings are turned into errors (NOTE: less powerful than `TPPLEXER_FLAG_WSYSTEMHEADERS'). */
 //#define TPPLEXER_FLAG_WSYSTEMHEADERS         0x00100000 /* Still emit warnings in system headers (alongside errors). */
 //#define TPPLEXER_FLAG_NO_DEPRECATED          0x00200000 /* Don't warn about deprecated or poisoned keywords. */
 //#define TPPLEXER_FLAG_MSVC_MESSAGEFORMAT     0x00400000 /* Use msvc's file+line format `%s(%d,%d) : ' instead of GCC's `%s:%d:%d: '. */
-//#define TPPLEXER_FLAG_NO_WARNINGS            0x00800000 /* Don't emit warnings. */
-//#define TPPLEXER_FLAG_NO_ENCODING            0x01000000 /* Don't try to detect file encodings (Everything is UTF-8 without BOM; aka. raw text). */
-//#define TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA  0x02000000 /* Re-emit unknown pragmas. */
-//#define TPPLEXER_FLAG_CHAR_UNSIGNED          0x04000000 /* When set, character-constants are unsigned. */
-//#define TPPLEXER_FLAG_EOF_ON_PAREN           0x08000000 /* When set, recursively track `(`...`)' pairs and yield EOF when `l_eof_paren' reaches ZERO(0). */
-//#define TPPLEXER_FLAG_WILLRESTORE            0x10000000 /* A preceding lexer position will be restored (don't fire internal events that could pose problems with this) */
-///*                                           0x20000000 /* ... */
-//#define TPPLEXER_FLAG_RANDOM_INITIALIZED     0x40000000 /* Set when rand() has been initialized. */
-//#define TPPLEXER_FLAG_ERROR                  0x80000000 /* When set, the lexer is in an error-state in which calls to yield() will return TOK_ERR. */
-//#define TPPLEXER_FLAG_MERGEMASK              0xe0000000 /* A mask of flags that are merged (or'd together) during popf(). */
-//#define TPPLEXER_FLAG_DEFAULT                0x00000000 /* Default set of flags (suitable for use with most token-based compilers). */
-///* A mask of flags that are preserved when modified by #pragma directives.
-// * WARNING: `TPPLEXER_FLAG_MERGEMASK' must not be part of this mask.
-// * WARNING: `TPPLEXER_FLAG_NO_MACROS|TPPLEXER_FLAG_NO_DIRECTIVES|TPPLEXER_FLAG_NO_BUILTIN_MACROS'
-// *           must not be part of this mask, as these flags may
-// *           contain custom values while pragmas are executed. */
-//#define TPPLEXER_FLAG_PRAGMA_KEEPMASK                                          \
-//	(TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE | TPPLEXER_FLAG_TERMINATE_STRING_LF | \
-//	 TPPLEXER_FLAG_ASM_COMMENTS | TPPLEXER_FLAG_MESSAGE_LOCATION |             \
-//	 TPPLEXER_FLAG_MESSAGE_NOLINEFEED | TPPLEXER_FLAG_EXTENDFILE |             \
-//	 TPPLEXER_FLAG_NO_LEGACY_GUARDS | TPPLEXER_FLAG_WERROR |                   \
-//	 TPPLEXER_FLAG_WSYSTEMHEADERS | TPPLEXER_FLAG_NO_DEPRECATED |              \
-//	 TPPLEXER_FLAG_MSVC_MESSAGEFORMAT | TPPLEXER_FLAG_NO_WARNINGS |            \
-//	 TPPLEXER_FLAG_NO_ENCODING | TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA |         \
-//	 TPPLEXER_FLAG_CHAR_UNSIGNED | TPPLEXER_FLAG_WILLRESTORE)
-//
-//
-//
-///* Recognized extension token flags. */
-//#define TPPLEXER_TOKEN_NONE                  0x00000000
-//#define TPPLEXER_TOKEN_TILDETILDE            0x00000001 /* Enable recognition of `~~' tokens. */
-//#define TPPLEXER_TOKEN_ROOFROOF              0x00000002 /* Enable recognition of `^^' tokens. */
-//#define TPPLEXER_TOKEN_COLONCOLON            0x00000004 /* Enable recognition of `::' tokens. */
-//#define TPPLEXER_TOKEN_COLONASSIGN           0x00000008 /* Enable recognition of `:=' tokens. */
-//#define TPPLEXER_TOKEN_STARSTAR              0x00000010 /* Enable recognition of `**' and `**=' tokens. */
-//#define TPPLEXER_TOKEN_ARROW                 0x00000020 /* Enable recognition of `->' tokens. */
-//#define TPPLEXER_TOKEN_ARROWSTAR             0x00000040 /* Enable recognition of `->*' tokens. */
-//#define TPPLEXER_TOKEN_DOTSTAR               0x00000080 /* Enable recognition of `.*' tokens. */
-//#define TPPLEXER_TOKEN_DOTDOT                0x00000100 /* Enable recognition of `..' tokens. */
-//#define TPPLEXER_TOKEN_ATEQUAL               0x00000200 /* Enable recognition of `@=' tokens. */
-//#define TPPLEXER_TOKEN_C_COMMENT             0x00000400 /* Enable recognition of `/[]* comment *[]/' tokens. */
-//#define TPPLEXER_TOKEN_CPP_COMMENT           0x00000800 /* Enable recognition of `// comment' tokens. */
-//#define TPPLEXER_TOKEN_ANGLE3                0x00001000 /* Enable recognition of `<<<' and `>>>' tokens. */
-//#define TPPLEXER_TOKEN_ANGLE3_EQUAL          0x00002000 /* Enable recognition of `<<<=' and `>>>=' tokens. */
-//#define TPPLEXER_TOKEN_LOGT                  0x00004000 /* Enable recognition of `<>' tokens. */
-//#define TPPLEXER_TOKEN_EQUALBINOP            0x00008000 /* Enable recognition of `=+', `=-', `=*', `=/', `=%', `=&', `=|', `=^', `=<<', `=>>', `=>>>', `=<<<', `=@' and `=**' tokens (NOTE: These are all aliasing the regular inplace versions).
-//                                                         * NOTE: Special token such as `=@' or `=<<<' are only available when other token extensions are enabled as well! */
-//#define TPPLEXER_TOKEN_EQUAL3                0x00010000 /* Enable recognition of `===' and `!==' tokens. */
-//#define TPPLEXER_TOKEN_QMARK_QMARK           0x00020000 /* Enable recognition of `??' tokens. */
-//#define TPPLEXER_TOKEN_DOLLAR                0x80000000 /* Recognize `$' as its own token (Supersedes `EXT_DOLLAR_IS_ALPHA'). */
-//#define TPPLEXER_TOKEN_DEFAULT               0x0fffffff /* Default set of extension tokens (enable all). */
-//
-///* Deprecated typos */
-//#define TPPLEXER_TOKEN_COLLONCOLLON TPPLEXER_TOKEN_COLONCOLON
-//#define TPPLEXER_TOKEN_COLLONASSIGN TPPLEXER_TOKEN_COLONASSIGN
-//
-//
-///* Predefined set of extension tokens for some languages.
-// * WARNING: Most of these languages will also need additional tweaks to other flags. */
-//#define TPPLEXER_TOKEN_LANG_C                          \
-//	(TPPLEXER_TOKEN_ARROW | TPPLEXER_TOKEN_C_COMMENT | \
-//	 TPPLEXER_TOKEN_CPP_COMMENT)
-//#define TPPLEXER_TOKEN_LANG_ASM                    \
-//	(TPPLEXER_TOKEN_DOLLAR | TPPLEXER_TOKEN_LOGT | \
-//	 TPPLEXER_TOKEN_C_COMMENT | TPPLEXER_TOKEN_CPP_COMMENT)
-//#define TPPLEXER_TOKEN_LANG_CPP                          \
-//	(TPPLEXER_TOKEN_COLONCOLON | TPPLEXER_TOKEN_ARROW |  \
-//	 TPPLEXER_TOKEN_ARROWSTAR | TPPLEXER_TOKEN_DOTSTAR | \
-//	 TPPLEXER_TOKEN_C_COMMENT | TPPLEXER_TOKEN_CPP_COMMENT)
-//#define TPPLEXER_TOKEN_LANG_JAVA \
-//	(TPPLEXER_TOKEN_C_COMMENT | TPPLEXER_TOKEN_CPP_COMMENT)
-//#define TPPLEXER_TOKEN_LANG_DEEMON                            \
-//	(TPPLEXER_TOKEN_COLONCOLON | TPPLEXER_TOKEN_COLONASSIGN | \
-//	 TPPLEXER_TOKEN_STARSTAR | TPPLEXER_TOKEN_ARROW |         \
-//	 TPPLEXER_TOKEN_C_COMMENT | TPPLEXER_TOKEN_CPP_COMMENT |  \
-//	 TPPLEXER_TOKEN_EQUAL3 | TPPLEXER_TOKEN_QMARK_QMARK)
-//
-//
-//struct TPPLexer {
-//	struct TPPToken       l_token;      /* The current token. */
-//	struct TPPFile       *l_eob_file;   /* [0..1] When non-NULL prevent seek_on_eob when this file is atop the stack.
-//	                                     * >> NOTE: This does the same as `TPPLEXER_FLAG_NO_SEEK_ON_EOB', but only for a specific file.
-//	                                     * >> Using this, you can restrict the lexer to a sub-space of a file, allowing
-//	                                     *    you to safely parse data until the current chunk of a given file ends. */
-//	struct TPPFile       *l_eof_file;   /* [0..1] Similar to `l_eob_file', but used for end-of-file instead. */
-//	uint32_t              l_flags;      /* A set of `TPPLEXER_FLAG_*' */
-//	uint32_t              l_extokens;   /* A set of `TPPLEXER_TOKEN_*' */
-//	struct TPPExtState    l_extensions; /* Enabled preprocessor features/extensions. */
-//	struct TPPKeywordMap  l_keywords;   /* Hash-map used to map keyword strings to their ids. */
+#endif
+#define TPPLEXER_FLAG_NO_WARNINGS TPP_LEXER_STATE_FLAG_NOWARNINGS
+#undef TPPLEXER_FLAG_NO_ENCODING           /* No longer supported; encoding detection can be disabled on a per-file basis, though */
+#undef TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA /* No longer supported; define your own hook that gets called for unknown pragmas */
+#undef TPPLEXER_FLAG_CHAR_UNSIGNED         /* No longer relevant since APIs were split */
+#undef TPPLEXER_FLAG_EOF_ON_PAREN          /* No longer supported; paren-tracking is now done by "tpp_lexer_seekpp_rparen()" + "tpp_file_setchunk_fromarg()" */
+#undef TPPLEXER_FLAG_WILLRESTORE           /* No longer supported; TPP3 has no global restore-lexer-position API */
+#undef TPPLEXER_FLAG_RANDOM_INITIALIZED    /* No longer needed; TPP3 implements __TPP_RANDOM() differently */
+#undef TPPLEXER_FLAG_ERROR                 /* No longer relevant: TPP3 handles errors explicitly via return values */
+#undef TPPLEXER_FLAG_MERGEMASK             /* No longer relevant: TPP3's state flags are no longer used like that */
+#undef TPPLEXER_FLAG_MERGEMASK             /* No longer relevant: TPP3's state flags are no longer used like that */
+#undef TPPLEXER_FLAG_PRAGMA_KEEPMASK       /* No longer relevant: TPP3's state flags are no longer used like that */
+
+
+/* Recognized extension token flags. */
+#undef TPPLEXER_TOKEN_NONE         /* No longer exists in TPP3 (though for default tokens, though you could do `tpp_lexer_resetfeatures()' to reset token emissions to their default) */
+#undef TPPLEXER_TOKEN_DEFAULT      /* No longer exists in TPP3 (though for default tokens, though you could do `tpp_lexer_resetfeatures()' to reset token emissions to their default) */
+#undef TPPLEXER_TOKEN_TILDETILDE   /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_TILDE_TILDE) */
+#undef TPPLEXER_TOKEN_ROOFROOF     /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_HAT_HAT) */
+#undef TPPLEXER_TOKEN_COLONCOLON   /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COLON_COLON) */
+#undef TPPLEXER_TOKEN_COLLONCOLLON /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COLON_COLON) */
+#undef TPPLEXER_TOKEN_COLONASSIGN  /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COLON_EQUAL) */
+#undef TPPLEXER_TOKEN_COLLONASSIGN /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COLON_EQUAL) */
+#undef TPPLEXER_TOKEN_STARSTAR     /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL) + tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STAR_STAR) */
+#undef TPPLEXER_TOKEN_ARROW        /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_MINUS_RANGLE) */
+#undef TPPLEXER_TOKEN_ARROWSTAR    /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR) */
+#undef TPPLEXER_TOKEN_DOTSTAR      /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOT_STAR) */
+#undef TPPLEXER_TOKEN_DOTDOT       /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOT_DOT) */
+#undef TPPLEXER_TOKEN_ATEQUAL      /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_AT_EQUAL) */
+#undef TPPLEXER_TOKEN_C_COMMENT    /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_COMMENT) */
+#undef TPPLEXER_TOKEN_CPP_COMMENT  /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_CXX_COMMENT) */
+#undef TPPLEXER_TOKEN_ANGLE3       /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE) + tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE) */
+#undef TPPLEXER_TOKEN_ANGLE3_EQUAL /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) + tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL) */
+#undef TPPLEXER_TOKEN_LOGT         /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LANGLE_RANGLE) */
+#undef TPPLEXER_TOKEN_EQUALBINOP   /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PLUS), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_MINUS), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_STAR), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_SLASH), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PERCENT), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_AMP), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PIPE), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_HAT), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE), tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_AT) */
+#undef TPPLEXER_TOKEN_EQUAL3       /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL) + tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL) */
+#undef TPPLEXER_TOKEN_QMARK_QMARK  /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK) */
+#undef TPPLEXER_TOKEN_DOLLAR       /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOLLAR) */
+#undef TPPLEXER_TOKEN_LANG_C
+#undef TPPLEXER_TOKEN_LANG_ASM
+#undef TPPLEXER_TOKEN_LANG_CPP
+#undef TPPLEXER_TOKEN_LANG_JAVA
+#undef TPPLEXER_TOKEN_LANG_DEEMON
+
+
+#define TPPLexer tpp_lexer
+#define l_token      TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok) /* Use tpp_lexer_gettoken() */
+#undef l_eob_file    /* No longer exists because "TPPLEXER_FLAG_NO_SEEK_ON_EOB" no longer exists */
+#undef l_eof_file    /* No longer exists; use "tpp_file_autopopfile_pushoff()" */
+#define l_flags      TPP_INTERNAL(tl_state) /* Use "tpp_lexer_*_pushon()" instead */
+#undef l_extokens    /* No longer exists: recognized tokens are controlled via "tpp_lexer_setfeat()" */
+#define l_extensions TPP_INTERNAL(tl_exts) /* Use tpp_lexer_getext() / tpp_lexer_pushextensions() / ... */
+#define l_keywords   TPP_INTERNAL(tl_kwds) /* Use tpp_lexer_kwds_*() */
+#if 0 /* TODO */
 //	struct TPPIncludeList l_syspaths;   /* List of paths searched when looking for system #include files. */
 //	size_t                l_limit_mrec; /* Limit for how often a macro may recursively expand into itself. */
 //	size_t                l_limit_incl; /* Limit for how often the same text file may exist on the #include stack. */
 //	size_t                l_eof_paren;  /* Recursion counter used by the `TPPLEXER_FLAG_EOF_ON_PAREN' flag. */
 //	size_t                l_warncount;  /* Amount of warnings that were invoked (including those that were dismissed). */
-//	size_t                l_errorcount; /* Amount of errors that were invoked when compilation still continued. */
-//	size_t                l_maxerrors;  /* Max amount of errors (`l_errorcount') that should be ignored before they become fatal.
-//	                                     * NOTE: Defaults to `TPPLEXER_DEFAULT_LIMIT_ECNT'. */
-//	size_t                l_tabsize;    /* Width of `\t' tab characters (used for __COLUMN__ and in error messages).
-//	                                     * NOTE: Defaults to `TPPLEXER_DEFAULT_TABSIZE' */
-//	struct TPPIfdefStack  l_ifdef;      /* #ifdef stack. */
-//	struct TPPWarnings    l_warnings;   /* Current user-configured warnings state. */
 //#ifdef TPP_CONFIG_DYN_CALLBACKS
 //	struct TPPCallbacks   l_callbacks;  /* User-defined lexer callbacks. */
 //#endif /* TPP_CONFIG_DYN_CALLBACKS */
-//	TPP(tok_t)            l_noerror;    /* Old token ID before `TPPLEXER_FLAG_ERROR' was set. */
-//	TPP(tint_t)           l_counter;    /* Value returned the next time `__COUNTER__' is expanded (Initialized to ZERO(0)). */
-//};
-//
-//#ifndef TPPLEXER_DEFAULT_LIMIT_ECNT
-//#define TPPLEXER_DEFAULT_LIMIT_ECNT 16  /* Default value of `l_errorcount' */
-//#endif /* !TPPLEXER_DEFAULT_LIMIT_ECNT */
-//#ifndef TPPLEXER_DEFAULT_LIMIT_MREC
-//#define TPPLEXER_DEFAULT_LIMIT_MREC 512 /* Even when generated text differs from previous version, don't allow more self-recursion per macro than this. */
-//#endif /* !TPPLEXER_DEFAULT_LIMIT_MREC */
-//#ifndef TPPLEXER_DEFAULT_LIMIT_INCL
-//#define TPPLEXER_DEFAULT_LIMIT_INCL 64  /* User attempts to #include a file more often that file will fail with an error message. */
-//#endif /* !TPPLEXER_DEFAULT_LIMIT_INCL */
-//#ifndef TPPLEXER_DEFAULT_TABSIZE
-//#if (defined(_WIN16) || defined(WIN16) || \
-//     defined(_WIN32) || defined(WIN32) || \
-//     defined(_WIN64) || defined(WIN64) || \
-//     defined(__WIN32__) || defined(__TOS_WIN__))
-//#define TPPLEXER_DEFAULT_TABSIZE    4   /* Default tab size (used for `__COLUMN__' and in error messages). */
-//#else /* Windows... */
-//#define TPPLEXER_DEFAULT_TABSIZE    8   /* Default tab size (used for `__COLUMN__' and in error messages). */
-//#endif /* Unix... */
-//#endif /* !TPPLEXER_DEFAULT_TABSIZE */
-//
-//#if TPP_CONFIG_ONELEXER == 3
-//#define TPPLexer_Current _current
-//#elif TPP_CONFIG_ONELEXER
-//#define TPPLexer_Current  (&TPPLexer_Global)
-//TPPFUN struct TPPLexer TPPLexer_Global;
-//#else /* TPP_CONFIG_ONELEXER */
-///* [1..1] The currently selected lexer
-// * >> When NULL, only certain parts of TPP can work without problems. */
-//TPPFUN struct TPPLexer *TPPLexer_Current;
-//#endif /* !TPP_CONFIG_ONELEXER */
-//
-///* Initialize/Finalize the given TPP Lexer object.
-// * NOTE: These functions can (obviously) be called when
-// *      `TPPLexer_Current' is NULL, or not initialized.
-// * @return: 1: Successfully initialized the given lexer.
-// * @return: 0: Not enough available memory to setup builtin keywords. (TPP_CONFIG_SET_API_ERROR) */
-//TPPFUN int  TPPCALL TPPLexer_Init(struct TPPLexer *__restrict self);
-//TPPFUN void TPPCALL TPPLexer_Quit(struct TPPLexer *__restrict self);
-//
-///* Clear the current ifdef-stack and warn about each entry.
-// * @return: 1: Everything was ok, or no critical warning happened.
-// * @return: 0: A critical warning happened. */
-//TPPFUN int TPPCALL TPPLexer_ClearIfdefStack_(TPP_LEXER_PARAM);
-//#define TPPLexer_ClearIfdefStack() TPPLexer_ClearIfdefStack_(TPP_LEXER_ARG)
-//
-///* Reset certain parts of the lexer.
-// * NOTE: This function can be called when `TPPLexer_Current' is NULL, or not initialized.
-// * @param: flags: Set of `TPPLEXER_RESET_*' */
-//TPPFUN void TPPCALL TPPLexer_Reset(struct TPPLexer *__restrict self, uint32_t flags);
+#endif
+#define l_errorcount TPP_INTERNAL(tl_error_count)
+#define l_maxerrors  TPP_INTERNAL(tl_error_limit)
+#undef l_tabsize     /* This is now one of the very few *global* configs in TPP3: use tpp_gettabsize() / tpp_settabsize() */
+#define l_ifdef      TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file).TPP_INTERNAL(tf_ifdef) /* WARNING: ifdef-stacks are configured on a per-file basis in TPP3! */
+#define l_warnings   TPP_INTERNAL(tl_warn)
+#undef l_noerror     /* No longer relevant since errors are now handled via return values */
+#define l_counter    TPP_INTERNAL(tl_builtin_counter)
+
+#define TPPLexer_Init(self) \
+	(tpp_lexer_init_text_ex(self, NULL, NULL, NULL, 0, tpp_lcinfo_of(-1, -1), TPP_FILE_ENCODING_UTF8), 1)
+#define TPPLexer_Quit(self) tpp_lexer_fini(self)
+
+/* Clear the current ifdef-stack and warn about each entry.
+ * @return: 1: Everything was ok, or no critical warning happened.
+ * @return: 0: A critical warning happened. */
+#define TPPLexer_ClearIfdefStack() TPPLexer_ClearIfdefStack_(TPP2_LEXER)
+TPP_INLINE int TPPCALL TPPLexer_ClearIfdefStack_(tpp_lexer *self) {
+	tpp_ifdef_stack *ifdef_stack;
+	tpp_errno error = tpp_lexer_warn_nonempty_ifdef(self);
+	if (TPP_ISERR(error))
+		return 0;
+	ifdef_stack = tpp_file_getifdef(tpp_lexer_getfile(self));
+	tpp_ifdef_stack_fini(ifdef_stack);
+	tpp_ifdef_stack_init(ifdef_stack);
+	return 1;
+}
+
+#if 0 /* TODO */
 //#define TPPLEXER_RESET_NONE       0x00000000
 //#define TPPLEXER_RESET_INCLUDE    0x00000001 /* Reset the #include/#ifdef-stack and set the current token to EOF.
 //                                              * NOTE: Also resets the `l_eob_file' and `l_eof_file' special
@@ -3631,34 +3981,62 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 //                                              *       `TPPLEXER_RESET_COUNTER' and `TPPLEXER_RESET_FONCE'.
 //                                              * NOTE: It also implies `TPPLEXER_RESET_NORESTOREMACROS' */
 //#define TPPLEXER_RESET_NORESTOREMACROS 0x00001000 /* When used with `TPPLEXER_RESET_MACRO': Don't restore builtin macro definitions. */
-//
 //#define TPPLEXER_RESET_EXTENSIONS (TPPLEXER_RESET_ESTATE|TPPLEXER_RESET_ESTACK)
 //#define TPPLEXER_RESET_WARNINGS   (TPPLEXER_RESET_WSTATE|TPPLEXER_RESET_WSTACK)
-//
-///* Push/Pop the current extension state.
-// * @return: 0: [TPPLexer_PushExtensions] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
-// * @return: 0: [TPPLexer_PopExtensions] No older extension state was available to restore.
-// * @return: 1: Successfully pushed/popped active extensions. */
-//TPPFUN int TPPCALL TPPLexer_PushExtensions_(TPP_LEXER_PARAM);
-//TPPFUN int TPPCALL TPPLexer_PopExtensions_(TPP_LEXER_PARAM);
-//#define TPPLexer_PushExtensions() TPPLexer_PushExtensions_(TPP_LEXER_ARG)
-//#define TPPLexer_PopExtensions()  TPPLexer_PopExtensions_(TPP_LEXER_ARG)
-//
-///* Set the state of a given extension `name'.
-// * Extension names attempt to follow gcc names of the same extension.
-// * The name of an extension can be found above.
-// * @return: 0: Unknown extension.
-// * @return: 1: Successfully configured the given extension. */
-//TPPFUN int TPPCALL TPPLexer_SetExtension_(TPP_LEXER_PARAM_ char const *__restrict name, int enable);
-//#define TPPLexer_SetExtension(name, enable) TPPLexer_SetExtension_(TPP_LEXER_ARG_ name, enable)
-//
-///* Returns the state of a given extension.
-// * @return: -1: Unknown extension.
-// * @return:  0: Disabled extension.
-// * @return:  1: Enabled extension. */
-//TPPFUN int TPPCALL TPPLexer_GetExtension_(TPP_LEXER_PARAM_ char const *__restrict name);
-//#define TPPLexer_GetExtension(name) TPPLexer_GetExtension_(TPP_LEXER_ARG_ name)
-//
+
+///* Reset certain parts of the lexer.
+// * NOTE: This function can be called when `TPPLexer_Current' is NULL, or not initialized.
+// * @param: flags: Set of `TPPLEXER_RESET_*' */
+//TPPFUN void TPPCALL TPPLexer_Reset(struct TPPLexer *tpp_restrict self, uint32_t flags);
+#endif
+
+/* Push/Pop the current extension state.
+ * @return: 0: [TPPLexer_PushExtensions] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
+ * @return: 0: [TPPLexer_PopExtensions] No older extension state was available to restore.
+ * @return: 1: Successfully pushed/popped active extensions. */
+#define TPPLexer_PushExtensions_(self) (tpp_lexer_pushextensions(self), 1)
+#define TPPLexer_PushExtensions() TPPLexer_PushExtensions_(TPP2_LEXER)
+#define TPPLexer_PopExtensions()  TPPLexer_PopExtensions_(TPP2_LEXER)
+TPP_INLINE int TPPCALL TPPLexer_PopExtensions_(tpp_lexer *self) {
+	if (!tpp_lexer_canpopextensions(self))
+		return 0;
+	tpp_lexer_popextensions(self);
+	return 1;
+}
+
+/* Set the state of a given extension `name'.
+ * Extension names attempt to follow gcc names of the same extension.
+ * The name of an extension can be found above.
+ * @return: 0: Unknown extension.
+ * @return: 1: Successfully configured the given extension. */
+#define TPPLexer_SetExtension(name, enable) TPPLexer_SetExtension_(TPP2_LEXER, name, enable)
+TPP_INLINE int TPPCALL
+TPPLexer_SetExtension_(tpp_lexer *self, char const *tpp_restrict name, int enable) {
+	tpp_errno error;
+	tpp_extension_id id = tpp_extension_byname(name);
+	if ((unsigned int)id >= (unsigned int)TPP_EXT_COUNT)
+		return 0;
+	error = tpp_lexer_setextension(self, id, enable);
+	if (TPP_ISERR(error))
+		return TPP2_FATAL(-1); /* TPP2 could not trigger OOM here, but we can... */
+	return 1;
+}
+
+/* Returns the state of a given extension.
+ * @return: -1: Unknown extension.
+ * @return:  0: Disabled extension.
+ * @return:  1: Enabled extension. */
+#define TPPLexer_GetExtension(name) TPPLexer_GetExtension_(TPP2_LEXER, name)
+TPP_INLINE int TPPCALL
+TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
+	tpp_extension_id id = tpp_extension_byname(name);
+	if ((unsigned int)id >= (unsigned int)TPP_EXT_COUNT)
+		return -1;
+	return tpp_lexer_getextension(self, id) ? 1 : 0;
+}
+
+
+#if 0 /* TODO */
 ///* Searches the cache and opens a new file if not found.
 // * WARNING: If the caller intends to push the file onto the #include-stack,
 // *          additional steps must be taken when the file was already
@@ -3670,7 +4048,7 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 // * @return: NULL: File not found. */
 //TPPFUN struct TPPFile *TPPCALL
 //TPPLexer_OpenFile_(TPP_LEXER_PARAM_
-//                   int mode, char *__restrict filename, size_t filename_size,
+//                   int mode, char *tpp_restrict filename, size_t filename_size,
 //                   struct TPPKeyword **pkeyword_entry);
 //#define TPPLexer_OpenFile(mode, filename, filename_size, pkeyword_entry) \
 //	TPPLexer_OpenFile_(TPP_LEXER_ARG_ mode, filename, filename_size, pkeyword_entry)
@@ -3696,44 +4074,36 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 //	       _current->l_token.t_file = (f))
 //#define TPPLexer_PushFile_(_current, f) \
 //	(TPPFile_Incref(f), TPPLexer_PushFileInherited_(_current, f))
-//
-///* Returns the currently active #include-file. */
-//#define TPPLexer_GetFile() TPPLexer_GetFile_(TPPLexer_Current)
-//#define TPPLexer_GetFile_(_current) _current->l_token.t_file
-//
-///* Pop the current file off of the #include-stack.
-// * HINT: This function is save to call, even when the current
-// *       file is `TPPFile_Empty' (aka. no files are loaded)
-// * WARNING: The caller is responsible never to call this
-// *          function when `TPPLexer_GetFile()' has been
-// *          configured as either the EOB or EOF lexer-file.
-// * NOTE: This function is usually called in a context like:
-// *    >> while (TPPLexer_GetFile() != my_file) TPPLexer_PopFile(); */
-//TPPFUN void TPPCALL TPPLexer_PopFile_(TPP_LEXER_PARAM);
-//#define TPPLexer_PopFile() TPPLexer_PopFile_(TPP_LEXER_ARG)
-//
-///* Lookup or create a keyword entry for the given name.
-// * HINT: TPP also caches files inside the keyword hashmap.
-// * @return: NULL: [create_missing]  Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
-// * @return: NULL: [!create_missing] No keyword with the given name.
-// * @return: * :    The keyword entry associated with the given name. */
-//TPPFUN struct TPPKeyword *TPPCALL
-//TPPLexer_LookupKeyword_(TPP_LEXER_PARAM_ char const *__restrict name,
-//                        size_t namelen, int create_missing);
-//TPPFUN struct TPPKeyword *TPPCALL
-//TPPLexer_LookupEscapedKeyword_(TPP_LEXER_PARAM_ char const *__restrict name,
-//                               size_t namelen, int create_missing);
-//#define TPPLexer_LookupKeyword(name, namelen, create_missing) \
-//	TPPLexer_LookupKeyword_(TPP_LEXER_ARG_ name, namelen, create_missing)
-//#define TPPLexer_LookupEscapedKeyword(name, namelen, create_missing) \
-//	TPPLexer_LookupEscapedKeyword_(TPP_LEXER_ARG_ name, namelen, create_missing)
-//
-///* Looks up a keyword, given its ID
-// * WARNING: This function is _extremely_ slow and should only
-// *          be used if there is absolutely no other choice. */
-//TPPFUN struct TPPKeyword *TPPCALL TPPLexer_LookupKeywordID_(TPP_LEXER_PARAM_ TPP(tok_t) id);
-//#define TPPLexer_LookupKeywordID(id) TPPLexer_LookupKeywordID_(TPP_LEXER_ARG_ id)
-//
+#endif
+
+/* Returns the currently active #include-file.
+ * WARNING: The file returned here will *always* be the "current" file!
+ *          This is because in TPP3, the file currently being read from
+ *          is inlined into the lexer, and pushing/popping files saved/
+ *          restores/overrides that same file. */
+#define TPPLexer_GetFile_(self) tpp_lexer_getfile(self)
+#define TPPLexer_GetFile()      tpp_lexer_getfile(TPP2_LEXER)
+
+/* Pop the current file off of the #include-stack. */
+#define TPPLexer_PopFile_(self) tpp_lexer_popfile(self)
+#define TPPLexer_PopFile()      TPPLexer_PopFile_(TPP2_LEXER)
+
+#define TPPLexer_LookupKeyword_(self, name, namelen, create_missing)                              \
+	((create_missing) ? tpp_lexer_kwds_newkeyword(self, name, namelen, tpp_hashof(name, namelen)) \
+	                  : tpp_lexer_kwds_getkeyword(self, name, namelen, tpp_hashof(name, namelen)))
+#define TPPLexer_LookupEscapedKeyword_(self, name, namelen, create_missing)                           \
+	((create_missing) ? tpp_lexer_kwds_newkeyword_bse(self, name, namelen, tpp_hashof(name, namelen)) \
+	                  : tpp_lexer_kwds_getkeyword_bse(self, name, namelen, tpp_hashof(name, namelen)))
+#define TPPLexer_LookupKeyword(name, namelen, create_missing) \
+	TPPLexer_LookupKeyword_(TPP2_LEXER, name, namelen, create_missing)
+#define TPPLexer_LookupEscapedKeyword(name, namelen, create_missing) \
+	TPPLexer_LookupEscapedKeyword_(TPP2_LEXER, name, namelen, create_missing)
+
+/* Looks up a keyword, given its ID */
+#define TPPLexer_LookupKeywordID_(self, id) tpp_lexer_kwds_getkeyword_byid(self, id)
+#define TPPLexer_LookupKeywordID(id)        tpp_lexer_kwds_getkeyword_byid(TPP2_LEXER, id)
+
+#if 0 /* TODO */
 ///* Define a regular, keyword-style macro `name' as `value'.
 // * @param: flags: A set of `TPPLEXER_DEFINE_FLAG_*'
 // * @return: 0: Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
@@ -3741,8 +4111,8 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 // * @return: 2: A macro named `name' was already defined, and was overwritten. */
 //TPPFUN int TPPCALL
 //TPPLexer_Define_(TPP_LEXER_PARAM_
-//                 char const *__restrict name, size_t name_size,
-//                 char const *__restrict value, size_t value_size,
+//                 char const *tpp_restrict name, size_t name_size,
+//                 char const *tpp_restrict value, size_t value_size,
 //                 uint32_t flags);
 //#define TPPLexer_Define(name, name_size, value, value_size, flags) \
 //	TPPLexer_Define_(TPP_LEXER_ARG_ name, name_size, value, value_size, flags)
@@ -3754,7 +4124,7 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 ///* Undefine the macro associated with a given name.
 // * @return: 0: No macro was associated with the given name.
 // * @return: 1: Successfully undefined a macro. */
-//TPPFUN int TPPCALL TPPLexer_Undef_(TPP_LEXER_PARAM_ char const *__restrict name, size_t name_size);
+//TPPFUN int TPPCALL TPPLexer_Undef_(TPP_LEXER_PARAM_ char const *tpp_restrict name, size_t name_size);
 //#define TPPLexer_Undef(name, name_size) TPPLexer_Undef_(TPP_LEXER_ARG_ name, name_size)
 //
 //#ifndef TPP_CONFIG_NO_ASSERTIONS
@@ -3765,284 +4135,329 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 // * @return: 1: Successfully added/deleted any assertion(s) */
 //TPPFUN int TPPCALL
 //TPPLexer_AddAssert_(TPP_LEXER_PARAM_
-//                    char const *__restrict predicate, size_t predicate_size,
-//                    char const *__restrict answer, size_t answer_size);
+//                    char const *tpp_restrict predicate, size_t predicate_size,
+//                    char const *tpp_restrict answer, size_t answer_size);
 //TPPFUN int TPPCALL
 //TPPLexer_DelAssert_(TPP_LEXER_PARAM_
-//                    char const *__restrict predicate, size_t predicate_size,
+//                    char const *tpp_restrict predicate, size_t predicate_size,
 //                    char const *answer, size_t answer_size);
 //#define TPPLexer_AddAssert(predicate, predicate_size, answer, answer_size) \
 //	TPPLexer_AddAssert_(TPP_LEXER_ARG_ predicate, predicate_size, answer, answer_size)
 //#define TPPLexer_DelAssert(predicate, predicate_size, answer, answer_size) \
 //	TPPLexer_DelAssert_(TPP_LEXER_ARG_ predicate, predicate_size, answer, answer_size)
 //#endif /* !TPP_CONFIG_NO_ASSERTIONS */
-//
-///* Similar to `TPPLexer_Yield' and used to implement it, but
-// * doesn't expand macros or execute preprocessor directives. */
-//TPPFUN TPP(tok_t) TPPCALL TPPLexer_YieldRaw_(TPP_LEXER_PARAM);
-//#define TPPLexer_YieldRaw() TPPLexer_YieldRaw_(TPP_LEXER_ARG)
-//
-///* Similar to `TPPLexer_Yield' and used to
-// * implement it, but doesn't expand macros. */
-//TPPFUN TPP(tok_t) TPPCALL TPPLexer_YieldPP_(TPP_LEXER_PARAM);
-//#define TPPLexer_YieldPP() TPPLexer_YieldPP_(TPP_LEXER_ARG)
-//
-///* Advance the selected lexer by one token and return the id of the new one.
-// * HINT: Returns ZERO(0) if EOF was reached. */
-//TPPFUN TPP(tok_t) TPPCALL TPPLexer_Yield_(TPP_LEXER_PARAM);
-//#define TPPLexer_Yield() TPPLexer_Yield_(TPP_LEXER_ARG)
-//
-///* Return non-ZERO if the current token is the first of the current input line.
-// * Return ZERO otherwise. */
-//TPPFUN int TPPCALL TPPLexer_AtStartOfLine_(TPP_LEXER_PARAM);
-//#define TPPLexer_AtStartOfLine() TPPLexer_AtStartOfLine_(TPP_LEXER_ARG)
-//
-//#ifdef TPP_CONFIG_NONBLOCKING_IO
-///* Yield the next token while trying not
-// * to block in a non-block enabled file. */
-//TPP_LOCAL TPP(tok_t) TPPCALL TPPLexer_YieldRawNB_(TPP_LEXER_PARAM) {
-//	TPP(tok_t)
-//	result;
-//	uint32_t old_flags = TPPLexer_Current->l_flags;
-//	TPPLexer_Current->l_flags |= TPPLEXER_FLAG_NONBLOCKING;
-//	result = TPPLexer_YieldRaw();
-//	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
-//	TPPLexer_Current->l_flags |= old_flags & ~TPPLEXER_FLAG_MERGEMASK;
-//	return result;
-//}
-//
-//TPP_LOCAL TPP(tok_t) TPPCALL TPPLexer_YieldPPNB_(TPP_LEXER_PARAM) {
-//	TPP(tok_t)
-//	result;
-//	uint32_t old_flags = TPPLexer_Current->l_flags;
-//	TPPLexer_Current->l_flags |= TPPLEXER_FLAG_NONBLOCKING;
-//	result = TPPLexer_YieldPP();
-//	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
-//	TPPLexer_Current->l_flags |= old_flags & ~TPPLEXER_FLAG_MERGEMASK;
-//	return result;
-//}
-//
-//TPP_LOCAL TPP(tok_t) TPPCALL TPPLexer_YieldNB_(TPP_LEXER_PARAM) {
-//	TPP(tok_t)
-//	result;
-//	uint32_t old_flags = TPPLexer_Current->l_flags;
-//	TPPLexer_Current->l_flags |= TPPLEXER_FLAG_NONBLOCKING;
-//	result = TPPLexer_Yield();
-//	TPPLexer_Current->l_flags &= TPPLEXER_FLAG_MERGEMASK;
-//	TPPLexer_Current->l_flags |= old_flags & ~TPPLEXER_FLAG_MERGEMASK;
-//	return result;
-//}
-//#define TPPLexer_YieldRawNB() TPPLexer_YieldRawNB_(TPP_LEXER_ARG)
-//#define TPPLexer_YieldPPNB()  TPPLexer_YieldPPNB_(TPP_LEXER_ARG)
-//#define TPPLexer_YieldNB()    TPPLexer_YieldNB_(TPP_LEXER_ARG)
-//#endif /* TPP_CONFIG_NONBLOCKING_IO */
-//
-//
-//#ifndef TPP_CONFIG_CALLBACK_WARNING
-///* Emit a given warning.
-// * @return: 0: The warning was critical (TPPLexer_SetErr() was called and you should try to abort)
-// * @return: 1: The warning was ignored, suppressed or simply non-fatal. */
-//TPPFUN int TPPVCALL TPPLexer_Warn_(TPP_LEXER_PARAM_ int wnum, ...); /* TODO: __attribute__((cold)) */
-//#if TPP_CONFIG_ONELEXER == 3
-//#define TPPLexer_Warn(...) TPPLexer_Warn_(TPP_LEXER_ARG_ __VA_ARGS__)
-//#else /* TPP_CONFIG_ONELEXER == 2 */
-//#define TPPLexer_Warn TPPLexer_Warn_
-//#endif /* TPP_CONFIG_ONELEXER != 2 */
-//#endif /* !TPP_CONFIG_CALLBACK_WARNING */
-//
-//#undef TPPLexer_SetErr
-//#undef TPPLexer_UnsetErr
-//
-//#define TPPLexer_SetErr_inline()   TPPLexer_SetErr_inline_(TPPLexer_Current)
-//#define TPPLexer_UnsetErr_inline() TPPLexer_UnsetErr_inline_(TPPLexer_Current)
-//#define TPPLexer_SetErr_inline_(_current)                \
-//	((_current->l_flags & TPPLEXER_FLAG_ERROR)           \
-//	 ? 0                                                 \
-//	 : (_current->l_flags |= TPPLEXER_FLAG_ERROR,        \
-//	    _current->l_noerror    = _current->l_token.t_id, \
-//	    _current->l_token.t_id = TPP(TOK_ERR), 1))
-//#define TPPLexer_UnsetErr_inline_(_current)              \
-//	((_current->l_flags & TPPLEXER_FLAG_ERROR)           \
-//	 ? (_current->l_flags &= ~TPPLEXER_FLAG_ERROR,       \
-//	    _current->l_token.t_id = _current->l_noerror, 1) \
-//	 : 0)
-//
-//
-///* Set the lexer into an error-state in which
-// * calls to to any yield function return TOK_ERR.
-// * >> Called when an unrecoverable error occurrs.
-// * HINT: To recover after such an event, `TPPLexer_UnsetErr()' should be called.
-// * @return: 0: [TPPLexer_SetErr]   A lexer error was already set.
-// *             [TPPLexer_UnsetErr] No lexer error was set.
-// * @return: 1: [TPPLexer_SetErr]   Successfully set a lexer error.
-// *             [TPPLexer_UnsetErr] Successfully cleared a lexer error. */
-//TPPFUN int TPPCALL TPPLexer_SetErr_(TPP_LEXER_PARAM);
-//TPPFUN int TPPCALL TPPLexer_UnsetErr_(TPP_LEXER_PARAM);
-//#define TPPLexer_SetErr()   TPPLexer_SetErr_(TPP_LEXER_ARG)
-//#define TPPLexer_UnsetErr() TPPLexer_UnsetErr_(TPP_LEXER_ARG)
-//
-//#ifdef TPP_CONFIG_INLINE_SETERR
-//#undef TPPLexer_SetErr
-//#undef TPPLexer_UnsetErr
-//#define TPPLexer_SetErr    TPPLexer_SetErr_inline
-//#define TPPLexer_UnsetErr  TPPLexer_UnsetErr_inline
-//#endif /* TPP_CONFIG_INLINE_SETERR */
-//
-///* Called after a given macro was referenced and
-// * the associated parenthesis was located.
-// * Expected to be called when the current token is the macro's name,
-// * this function will parse the macro's argument list remainder of the macro's
-// * argument list (including the terminating parenthesis), before 
-// * pushing a new file describing the expanded macro onto the include stack.
-// * @return: 0: A hard error occurred (such as not enough memory; (TPP_CONFIG_SET_API_ERROR))
-// * @return: 1: Successfully expanded the macro.
-// * @return: 2: Missing argument list or illegal recursive expansion. */
-//TPPFUN int TPPCALL TPPLexer_ExpandFunctionMacro_(TPP_LEXER_PARAM_ struct TPPFile *__restrict macro);
-//#define TPPLexer_ExpandFunctionMacro(macro) TPPLexer_ExpandFunctionMacro_(TPP_LEXER_ARG_ macro)
-//
-//
-//struct TPPConst {
-//#define TPP_CONST_INTEGRAL 0
-//#define TPP_CONST_FLOAT    1
-//#define TPP_CONST_STRING   2
-//	unsigned int c_kind; /* Constant kind (One of `TPP_CONST_*'). */
-//	union {
-//		TPP(tint_t)              c_int;    /* [TPP_CONST_INTEGRAL] Integral. */
-//		TPP(tfloat_t)            c_float;  /* [TPP_CONST_FLOAT] Floating point. */
-//		/*ref*/struct TPPString *c_string; /* [TPP_CONST_STRING][1..1] String. */
-//	} c_data;
-//};
-//#define TPPConst_IsTrue(self)                         \
-//	((self)->c_kind == TPP_CONST_STRING               \
-//	 ? (TPPString_SIZE((self)->c_data.c_string) != 0) \
-//	 : (self)->c_kind == TPP_CONST_FLOAT              \
-//	   ? ((self)->c_data.c_float != 0.0L)             \
-//	   : ((self)->c_data.c_int != 0))
-//#define TPPConst_IsBool(self)                \
-//	((self)->c_kind == TPP_CONST_INTEGRAL && \
-//	 !((self)->c_data.c_int & ~(TPP(tint_t))1))
-//#define TPPConst_AsInt(self)                 \
-//	((self)->c_kind == TPP_CONST_INTEGRAL    \
-//	 ? (self)->c_data.c_int                  \
-//	 : (self)->c_kind == TPP_CONST_FLOAT     \
-//	   ? (TPP(tint_t))(self)->c_data.c_float \
-//	   : TPPString_SIZE((self)->c_data.c_string) != 0)
-//#define TPPConst_AsFloat(self)               \
-//	((self)->c_kind == TPP_CONST_FLOAT       \
-//	 ? (self)->c_data.c_float                \
-//	 : (self)->c_kind == TPP_CONST_INTEGRAL  \
-//	   ? (TPP(tfloat_t))(self)->c_data.c_int \
-//	   : (TPP(tfloat_t))(TPPString_SIZE((self)->c_data.c_string) != 0))
-//#define TPPConst_InitCopy(self, right)                 \
-//	do {                                               \
-//		*(self) = *(right);                            \
-//		if ((self)->c_kind == TPP_CONST_STRING)        \
-//			TPPString_Incref((self)->c_data.c_string); \
-//	} while (TPP_MACRO_FALSE)
-//
-//#define TPPConst_ToBool(self)                                            \
-//	do {                                                                 \
-//		if ((self)->c_kind == TPP_CONST_STRING) {                        \
-//			int c_newval = TPPString_SIZE((self)->c_data.c_string) != 0; \
-//			TPPString_Decref((self)->c_data.c_string);                   \
-//			(self)->c_data.c_int = (TPP(tint_t))c_newval;                \
-//			(self)->c_kind       = TPP_CONST_INTEGRAL;                   \
-//		} else if ((self)->c_kind == TPP_CONST_FLOAT) {                  \
-//			(self)->c_data.c_int = (self)->c_data.c_float != 0.0L;       \
-//			(self)->c_kind       = TPP_CONST_INTEGRAL;                   \
-//		} else {                                                         \
-//			(self)->c_data.c_int = !!(self)->c_data.c_int;               \
-//		}                                                                \
-//	} while (TPP_MACRO_FALSE)
-//#define TPPConst_ToInt(self)                                             \
-//	do {                                                                 \
-//		if ((self)->c_kind == TPP_CONST_STRING) {                        \
-//			int c_newval = TPPString_SIZE((self)->c_data.c_string) != 0; \
-//			TPPString_Decref((self)->c_data.c_string);                   \
-//			(self)->c_data.c_int = (TPP(tint_t))c_newval;                \
-//			(self)->c_kind       = TPP_CONST_INTEGRAL;                   \
-//		} else if ((self)->c_kind == TPP_CONST_FLOAT) {                  \
-//			(self)->c_data.c_int = (TPP(tint_t))(self)->c_data.c_float;  \
-//			(self)->c_kind       = TPP_CONST_INTEGRAL;                   \
-//		}                                                                \
-//	} while (TPP_MACRO_FALSE)
-//
-//#define TPPConst_ZERO(self)                           \
-//	(void)((self)->c_kind       = TPP_CONST_INTEGRAL, \
-//	       (self)->c_data.c_int = 0)
-//#define TPPConst_Quit(self)                      \
-//	(void)((self)->c_kind != TPP_CONST_STRING || \
-//	       (TPPString_Decref((self)->c_data.c_string), 1))
-//
-///* Convert a given preprocessor constant into a string:
-// * >> The returned string can be used to create a file
-// *    that represents the constant's value as loaded
-// *    by the `__TPP_EVAL' extension.
-// * NOTE: If `self' is a string, it will be escaped.
-// * @return: NULL: Not enough available memory. */
-//TPPFUN /*ref*/struct TPPString *TPPCALL
-//TPPConst_ToString_(TPP_LEXER_PARAM_ struct TPPConst const *__restrict self);
-//#define TPPConst_ToString(self) TPPConst_ToString_(TPP_LEXER_ARG_ self)
-//
-///* Evaluate a constant expression as found after `#if' or in `__TPP_EVAL(...)'
-// * NOTE: If `result' is NULL, the expression's is
-// *       parsed, yet warnings will not be emit.
-// * NOTE: Expects the current token to point to the first one part of the expression.
-// *       Upon exit, that token will point to the first one past the expression.
-// * NOTE: Evaluation is compatible with standard c rules, but
-// *       `,' operators are not parsed at the highest level.
-// * @return: 1: Successfully parsed an expression
-// * @return: 0: An error occurred. */
-//TPPFUN int TPPCALL TPPLexer_Eval_(TPP_LEXER_PARAM_ struct TPPConst *result);
-//#define TPPLexer_Eval(result) TPPLexer_Eval_(TPP_LEXER_ARG_ result)
-//
-///* Parse the data block of a pragma.
-// * NOTE: `TPPLexer_ParseBuiltinPragma' behaves similar to
-// *       `TPPLexer_ParsePragma', but will not invoke a
-// *       user-provided pragma handler in the even of an
-// *       unknown one.
-// * @return: 0: Unknown/errorous pragma.
-// * @return: 1: Successfully parsed the given pragma. */
-//TPPFUN int TPPCALL TPPLexer_ParsePragma_(TPP_LEXER_PARAM);
-//TPPFUN int TPPCALL TPPLexer_ParseBuiltinPragma_(TPP_LEXER_PARAM);
-//#define TPPLexer_ParsePragma()        TPPLexer_ParsePragma_(TPP_LEXER_ARG)
-//#define TPPLexer_ParseBuiltinPragma() TPPLexer_ParseBuiltinPragma_(TPP_LEXER_ARG)
-//
-///* Parse an evaluate a string from the current lexer.
-// * NOTE: This functions expects the current token to be a string token
-// *       and will continue parsing and concat-ing strings until the
-// *       next non-string token.
-// * @return: * :   A reference to the unescaped string that was parsed.
-// * @return: NULL: A lexer error occurred (TPPLexer_SetErr() was set; (TPP_CONFIG_SET_API_ERROR)). */
-//#if TPP_UNESCAPE_MAXCHAR == 1
-//TPPFUN /*ref*/struct TPPString *TPPCALL TPPLexer_ParseString_(TPP_LEXER_PARAM);
-//#define TPPLexer_ParseString() TPPLexer_ParseString_(TPP_LEXER_ARG)
-//#else /* TPP_UNESCAPE_MAXCHAR == 1 */
-//#define TPPLexer_ParseString() TPPLexer_ParseStringEx_(TPP_LEXER_ARG_ sizeof(char))
-//TPPFUN /*ref*/struct TPPString *TPPCALL TPPLexer_ParseStringEx_(TPP_LEXER_PARAM_ size_t sizeof_char);
-//#endif /* TPP_UNESCAPE_MAXCHAR != 1 */
-//
-///* Transform the current token (which must either be `TOK_INT' or `TOK_CHAR')
-// * into an integral value, storing that value in `*pint' and returning
-// * a set of `TPP_ATOI_*' flags, indicating typing and success.
-// * NOTE: This function does _NOT_ yield the current token once finished.
-// *       If intended, the caller is responsible for advancing it upon success.
-// * @return: TPP_ATOI_ERR: Emiting a warning caused the lexer to error out (TPPLexer_SetErr() was set).
-// * @return: * :           A set of `TPP_ATOI_*' (see below) */
-//TPPFUN int TPPCALL TPP_Atoi_(TPP_LEXER_PARAM_ TPP(tint_t) *__restrict pint);
-//#define TPP_Atoi(pint) TPP_Atoi_(TPP_LEXER_ARG_ pint)
-//#define TPP_ATOI_ERR           0x00 /* NOTE: Never used with any flags (indicates failure). */
-//#define TPP_ATOI_OK            0x01 /* Always set on success. */
-//#define TPP_ATOI_UNSIGNED      0x02 /* Unless set, the integral is signed. */
-//#define TPP_ATOI_TYPE_MASK     0xf0 /* Mask of the integral's typing (NOTE: The function already clamped the resulting value with this type's range). */
-//#define TPP_ATOI_TYPE_INT      0x00 /* `int' (default typing without suffix/for chars). */
-//#define TPP_ATOI_TYPE_LONG     0x10 /* `long'. */
-//#define TPP_ATOI_TYPE_LONGLONG 0x20 /* `long long'. */
-//#define TPP_ATOI_TYPE_INT8     0x30 /* `__int8' (msvc-extension). */
-//#define TPP_ATOI_TYPE_INT16    0x40 /* `__int16' (msvc-extension). */
-//#define TPP_ATOI_TYPE_INT32    0x50 /* `__int32' (msvc-extension). */
-//#define TPP_ATOI_TYPE_INT64    0x60 /* `__int64' (msvc-extension). */
-//
+#endif
+
+/* Similar to `TPPLexer_Yield' and used to implement it, but
+ * doesn't expand macros or execute preprocessor directives. */
+#define TPPLexer_YieldRaw_(self) tpp_lexer_yieldraw_blocking(self)
+#define TPPLexer_YieldRaw()      tpp_lexer_yieldraw_blocking(TPP2_LEXER)
+
+/* Similar to `TPPLexer_Yield' and used to
+ * implement it, but doesn't expand macros. */
+#define TPPLexer_YieldPP_(self) tpp_lexer_yieldpp_blocking(self)
+#define TPPLexer_YieldPP()      tpp_lexer_yieldpp_blocking(TPP2_LEXER)
+
+/* Advance the selected lexer by one token and return the id of the new one.
+ * HINT: Returns ZERO(0) if EOF was reached. */
+#define TPPLexer_Yield_(self) tpp_lexer_yield_blocking(self)
+#define TPPLexer_Yield()      tpp_lexer_yield_blocking(TPP2_LEXER)
+
+#if TPP_HAVE_FILE_NONBLOCK
+/* In TPP3, non-blocking is enabled by default (if enabled for the current file),
+ * but can be "disabled" by simply handling "TPP_EWOULDBLOCK" when that error
+ * happens. */
+#define TPPLexer_YieldRawNB_(self) tpp_lexer_yieldraw(self)
+#define TPPLexer_YieldRawNB()      tpp_lexer_yieldraw(TPP2_LEXER)
+#define TPPLexer_YieldPPNB_(self)  tpp_lexer_yieldpp(self)
+#define TPPLexer_YieldPPNB()       tpp_lexer_yieldpp(TPP2_LEXER)
+#define TPPLexer_YieldNB_(self)    tpp_lexer_yield(self)
+#define TPPLexer_YieldNB()         tpp_lexer_yield(TPP2_LEXER)
+#endif /* TPP_HAVE_FILE_NONBLOCK */
+
+
+/* Return non-ZERO if the current token is the first of the current input line.
+ * Return ZERO otherwise. */
+#define TPPLexer_AtStartOfLine_(self) (!((self)->TPP_INTERNAL(tl_state) & TPP_LEXER_STATE_FLAG_NODIRECTIVES))
+#define TPPLexer_AtStartOfLine()      TPPLexer_AtStartOfLine_(TPP2_LEXER)
+
+/* Emit a given warning.
+ * @return: 0: The warning was critical (TPPLexer_SetErr() was called and you should try to abort)
+ * @return: 1: The warning was ignored, suppressed or simply non-fatal. */
+#define TPPLexer_Warn_(self, ...) (!TPP_ISERR(tpp_lexer_warnf(self, __VA_ARGS__)))
+#define TPPLexer_Warn(...)        (!TPP_ISERR(tpp_lexer_warnf(TPP2_LEXER, __VA_ARGS__)))
+
+/* None of these are available since TPP3 passes errors through return values */
+#undef TPPLexer_SetErr
+#undef TPPLexer_SetErr_
+#undef TPPLexer_UnsetErr
+#undef TPPLexer_UnsetErr_
+#undef TPPLexer_SetErr_inline
+#undef TPPLexer_SetErr_inline_
+#undef TPPLexer_UnsetErr_inline
+#undef TPPLexer_UnsetErr_inline_
+
+
+#define TPPConst tpp_expr_value
+#define TPP_CONST_INTEGRAL _TPP_EXPR_VALUE_KIND_INT    /* Use tpp_expr_value_isint() */
+#define TPP_CONST_FLOAT    _TPP_EXPR_VALUE_KIND_FLOAT  /* Use tpp_expr_value_isfloat() */
+#define TPP_CONST_STRING   _TPP_EXPR_VALUE_KIND_STRING /* Use tpp_expr_value_isstring() */
+#define c_kind             TPP_INTERNAL(xv_kind)       /* Use tpp_expr_value_is*() */
+#define c_data             TPP_INTERNAL(xv_data)       /* Use tpp_expr_value_as*() */
+#define c_int              TPP_INTERNAL(xd_int)        /* Use tpp_expr_value_asint() */
+#define c_float            TPP_INTERNAL(xd_float)      /* Use tpp_expr_value_asfloat() */
+#define c_string           TPP_INTERNAL(xd_string)     /* Use tpp_expr_value_asstringref() */
+
+#define TPPConst_IsTrue(self) TPPConst_IsTrue_(TPP2_LEXER, self)
+TPP_INLINE bool TPPConst_IsTrue_(tpp_lexer *lexer, tpp_expr_value *self) {
+	bool result;
+	if (tpp_expr_value_asbool(lexer, self, &result))
+		return TPP2_FATAL(false);
+	return result;
+}
+
+TPP_INLINE bool TPPConst_IsBool(tpp_expr_value *self) {
+	tpp_intmax value;
+	tpp_errno error;
+	if (!tpp_expr_value_isint(self))
+		return false;
+	error = tpp_expr_value_asint(self, &value);
+	if (TPP_ISERR(error))
+		return TPP2_FATAL(false);
+	return value == 0 || value == 1;
+}
+
+TPP_INLINE tpp_intmax TPPConst_AsInt(tpp_expr_value *self) {
+	tpp_errno error;
+	tpp_intmax value;
+	if (tpp_expr_value_isint(self)) {
+		error = tpp_expr_value_asint(self, &value);
+	} else if (tpp_expr_value_isfloat(self)) {
+		tpp_float float_value;
+		error = tpp_expr_value_asint(self, &float_value);
+		value = (tpp_intmax)float_value;
+	} else if (tpp_expr_value_isstring(self)) {
+		TPP_REF tpp_string *string_value;
+		error = tpp_expr_value_asstringref(self, &string_value);
+		if (TPP_ISERR(error))
+			return TPP2_FATAL(0);
+		value = tpp_string_len(string_value) ? 1 : 0;
+		tpp_string_decref(string_value);
+	} else {
+		return TPP2_FATAL(0);
+	}
+	if (TPP_ISERR(error))
+		return TPP2_FATAL(0);
+	return value;
+}
+
+TPP_INLINE tpp_float TPPConst_AsFloat(tpp_expr_value *self) {
+	tpp_errno error;
+	tpp_float value;
+	if (tpp_expr_value_isint(self)) {
+		tpp_intmax int_value;
+		error = tpp_expr_value_asint(self, &int_value);
+		value = (tpp_float)int_value;
+	} else if (tpp_expr_value_isfloat(self)) {
+		error = tpp_expr_value_asfloat(self, &value);
+	} else if (tpp_expr_value_isstring(self)) {
+		TPP_REF tpp_string *string_value;
+		error = tpp_expr_value_asstringref(self, &string_value);
+		if (TPP_ISERR(error))
+			return TPP2_FATAL(0.0);
+		value = tpp_string_len(string_value) ? 1.0 : 0.0;
+		tpp_string_decref(string_value);
+	} else {
+		return TPP2_FATAL(0.0);
+	}
+	if (TPP_ISERR(error))
+		return TPP2_FATAL(0.0);
+	return value;
+}
+
+TPP_INLINE void TPPConst_InitCopy(tpp_expr_value *self, tpp_expr_value *right) {
+	tpp_errno error = tpp_expr_value_copy(self, right);
+	if (TPP_ISERR(error))
+		(void)TPP2_FATAL(0);
+}
+
+#define TPPConst_ToBool(self) TPPConst_ToBool_(TPP2_LEXER, self)
+TPP_INLINE void TPPConst_ToBool_(tpp_lexer *lexer, tpp_expr_value *self) {
+	bool result;
+	tpp_errno error = tpp_expr_value_asbool(lexer, self, &result);
+	if (TPP_ISERR(error))
+		result = TPP2_FATAL(false);
+	tpp_expr_value_fini(self);
+	error = tpp_expr_value_init_bool(self, result);
+	if (TPP_ISERR(error))
+		(void)TPP2_FATAL(0);
+}
+
+TPP_INLINE void TPPConst_ToInt(tpp_expr_value *self) {
+	if (tpp_expr_value_isfloat(self)) {
+		tpp_float value;
+		tpp_errno error = tpp_expr_value_asfloat(self, &value);
+		if (TPP_ISERR(error))
+			value = TPP2_FATAL(0.0);
+		tpp_expr_value_fini(self);
+		error = tpp_expr_value_init_int(self, (tpp_intmax)value);
+		if (TPP_ISERR(error))
+			(void)TPP2_FATAL(0);
+	} else if (tpp_expr_value_isstring(self)) {
+		TPP_REF tpp_string *string_value;
+		tpp_errno error = tpp_expr_value_asstringref(self, &string_value);
+		if (TPP_ISERR(error))
+			string_value = TPP2_FATAL(tpp_string_newempty());
+		tpp_expr_value_fini(self);
+		error = tpp_expr_value_init_int(self, tpp_string_len(string_value) ? 1 : 0);
+		tpp_string_decref(string_value);
+		if (TPP_ISERR(error))
+			(void)TPP2_FATAL(0);
+	} else if (!tpp_expr_value_isint(self)) {
+		(void)TPP2_FATAL(0);
+	}
+}
+
+TPP_INLINE void TPPConst_ZERO(tpp_expr_value *self) {
+	tpp_errno error = tpp_expr_value_init_int(self, 0);
+	if (TPP_ISERR(error))
+		(void)TPP2_FATAL(0);
+}
+
+#define TPPConst_Quit(self) tpp_expr_value_fini(self)
+
+/* Convert a given preprocessor constant into a string:
+ * >> The returned string can be used to create a file
+ *    that represents the constant's value as loaded
+ *    by the `__TPP_EVAL' extension.
+ * NOTE: If `self' is a string, it will be escaped.
+ * @return: NULL: Not enough available memory. */
+#define TPPConst_ToString_(lexer, self) TPPConst_ToString(self)
+TPP_INLINE /*ref*/ tpp_string *TPPCALL
+TPPConst_ToString(tpp_expr_value const *tpp_restrict self) {
+	tpp_ssize status;
+	tpp_string_builder builder;
+	tpp_string_builder_init(&builder);
+	status = tpp_expr_value_printrepr((tpp_expr_value *)self,
+	                                  &tpp_string_builder_print,
+	                                  &builder);
+	if (status < 0) {
+		tpp_string_builder_fini(&builder);
+		return NULL;
+	}
+	return tpp_string_builder_pack(&builder);
+}
+
+/* Evaluate a constant expression as found after `#if' or in `__TPP_EVAL(...)'
+ * NOTE: If `result' is NULL, the expression's is
+ *       parsed, yet warnings will not be emit.
+ * NOTE: Expects the current token to point to the first one part of the expression.
+ *       Upon exit, that token will point to the first one past the expression.
+ * NOTE: Evaluation is compatible with standard c rules, but
+ *       `,' operators are not parsed at the highest level.
+ * @return: 1: Successfully parsed an expression
+ * @return: 0: An error occurred. */
+#define TPPLexer_Eval(result) TPPLexer_Eval_(TPP2_LEXER, result)
+TPP_INLINE int TPPCALL TPPLexer_Eval_(tpp_lexer *self, tpp_expr_value *result) {
+	tpp_errno error;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file_setpos(file, tpp_lexer_gettokenstart(self)); /* Rewind so current token gets yielded again */
+	error = tpp_lexer_parseexpr(self, result);
+	return TPP_ISERR(error) ? 0 : 1;
+}
+
+/* Parse an evaluate a string from the current lexer.
+ * NOTE: This functions expects the current token to be a string token
+ *       and will continue parsing and concat-ing strings until the
+ *       next non-string token.
+ * @return: * :   A reference to the unescaped string that was parsed.
+ * @return: NULL: A lexer error occurred (TPPLexer_SetErr() was set; (TPP_CONFIG_SET_API_ERROR)). */
+#define TPPLexer_ParseString() TPPLexer_ParseString_(TPP2_LEXER)
+TPP_INLINE TPP_REF tpp_string *TPPCALL TPPLexer_ParseString_(tpp_lexer *self) {
+	TPP_REF tpp_string *result;
+	tpp_errno error = tpp_lexer_parsestring(self, &result, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+	if (TPP_ISERR(error))
+		result = NULL;
+	return result;
+}
+
+
+#define TPP_ATOI_ERR           0x00 /* NOTE: Never used with any flags (indicates failure). */
+#define TPP_ATOI_OK            0x01 /* Always set on success. */
+#define TPP_ATOI_UNSIGNED      0x02 /* Unless set, the integral is signed. */
+#define TPP_ATOI_TYPE_MASK     0xf0 /* Mask of the integral's typing (NOTE: The function already clamped the resulting value with this type's range). */
+#define TPP_ATOI_TYPE_INT      0x00 /* `int' (default typing without suffix/for chars). */
+#define TPP_ATOI_TYPE_LONG     0x10 /* `long'. */
+#define TPP_ATOI_TYPE_LONGLONG 0x20 /* `long long'. */
+#define TPP_ATOI_TYPE_INT8     0x30 /* `__int8' (msvc-extension). */
+#define TPP_ATOI_TYPE_INT16    0x40 /* `__int16' (msvc-extension). */
+#define TPP_ATOI_TYPE_INT32    0x50 /* `__int32' (msvc-extension). */
+#define TPP_ATOI_TYPE_INT64    0x60 /* `__int64' (msvc-extension). */
+
+/* Transform the current token (which must either be `TOK_INT' or `TOK_CHAR')
+ * into an integral value, storing that value in `*pint' and returning
+ * a set of `TPP_ATOI_*' flags, indicating typing and success.
+ * NOTE: This function does _NOT_ yield the current token once finished.
+ *       If intended, the caller is responsible for advancing it upon success.
+ * @return: TPP_ATOI_ERR: Emiting a warning caused the lexer to error out (TPPLexer_SetErr() was set).
+ * @return: * :           A set of `TPP_ATOI_*' (see below) */
+#define TPP_Atoi(pint) TPP_Atoi_(TPP_LEXER_ARG_ pint)
+TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint) {
+	tpp_errno error;
+	tpp_token_id tok = tpp_lexer_gettok(self);
+	tpp_integer_suffix_kind kind;
+	if (TPP_TOK_ISSTRING(tok)) {
+		/* Parse strings into character literals */
+		error = tpp_lexer_parsecharacter_literal(self, pint, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		if (TPP_ISERR(error))
+			return TPP_ATOI_ERR;
+		/* Rewind so token after character literal gets yielded again */
+		tpp_file_setpos(tpp_lexer_getfile(self), tpp_lexer_gettokenstart(self));
+//		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT | TPP_ATOI_UNSIGNED; /* Returned by TPP2 dependent on "TPPLEXER_FLAG_CHAR_UNSIGNED" */
+		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT;
+	}
+	error = tpp_lexer_decodeint_ex(self, pint, &kind);
+	if (TPP_ISERR(error))
+		return TPP_ATOI_ERR;
+	switch (kind) {
+	case TPP_INTEGER_SUFFIX_KIND_INT:
+		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT;
+#if TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+	case TPP_INTEGER_SUFFIX_KIND_UNSIGNED:
+		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT | TPP_ATOI_UNSIGNED;
+	case TPP_INTEGER_SUFFIX_KIND_LONG:
+		return TPP_ATOI_OK | TPP_ATOI_TYPE_LONG;
+	case TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG:
+		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_LONG;
+	case TPP_INTEGER_SUFFIX_KIND_LONG_LONG:
+		return TPP_ATOI_OK | TPP_ATOI_TYPE_LONGLONG;
+	case TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG_LONG:
+		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_LONGLONG;
+#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
+#if TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+	case TPP_INTEGER_SUFFIX_KIND_INT8:
+		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT8;
+	case TPP_INTEGER_SUFFIX_KIND_INT16:
+		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT16;
+	case TPP_INTEGER_SUFFIX_KIND_INT32:
+		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT32;
+	case TPP_INTEGER_SUFFIX_KIND_INT64:
+		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT64;
+	case TPP_INTEGER_SUFFIX_KIND_UINT8:
+		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT8;
+	case TPP_INTEGER_SUFFIX_KIND_UINT16:
+		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT16;
+	case TPP_INTEGER_SUFFIX_KIND_UINT32:
+		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT32;
+	case TPP_INTEGER_SUFFIX_KIND_UINT64:
+		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT64;
+#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+	default: tpp_unreachable();
+	}
+	tpp_unreachable();
+}
+
+#if 0 /* TODO */
 ///* Transform the current token (which must be `TOK_FLOAT') into a
 // * floating point value, storing that value in `*pfloat' and returning
 // * a set of `TPP_ATOF_*' flags, indicating typing and success.
@@ -4050,7 +4465,7 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 // *       If intended, the caller is responsible for advancing it upon success.
 // * @return: TPP_ATOF_ERR: Emiting a warning caused the lexer to error out (TPPLexer_SetErr() was set).
 // * @return: * :           A set of `TPP_ATOF_*' (see below) */
-//TPPFUN int TPPCALL TPP_Atof_(TPP_LEXER_PARAM_ TPP(tfloat_t) *__restrict pfloat);
+//TPPFUN int TPPCALL TPP_Atof_(TPP_LEXER_PARAM_ TPP(tfloat_t) *tpp_restrict pfloat);
 //#define TPP_Atof(pfloat) TPP_Atof_(TPP_LEXER_ARG_ pfloat)
 //#define TPP_ATOF_ERR             0x00 /* NOTE: Never used with any flags (indicates failure). */
 //#define TPP_ATOF_OK              0x01 /* Always set on success. */
@@ -4058,7 +4473,10 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 //#define TPP_ATOF_TYPE_DOUBLE     0x00 /* `double' (default typing without suffix). */
 //#define TPP_ATOF_TYPE_FLOAT      0x10 /* `float' (float-suffix `f') */
 //#define TPP_ATOF_TYPE_LONGDOUBLE 0x20 /* `long double' (long-double-suffix `L'). */
-//
+#endif
+
+
+#if 0 /* TODO */
 ///* Prints the text contained within the current token, automatically
 // * skipping escaped linefeeds and converting di/trigraphs.
 // * NOTE: `TPP_PrintComment' behaves similar, but will
@@ -4070,37 +4488,24 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 //TPPFUN ptrdiff_t TPPCALL TPP_PrintComment_(TPP_LEXER_PARAM_ TPP(printer_t) printer, void *closure);
 //#define TPP_PrintToken(printer, closure)   TPP_PrintToken_(TPP_LEXER_ARG_ printer, closure)
 //#define TPP_PrintComment(printer, closure) TPP_PrintComment_(TPP_LEXER_ARG_ printer, closure)
-//
-//
-///* Helper macros to initialize/finalize the global TPP context.
-// * NOTE: These macros can (obviously) be called when
-// *      `TPPLexer_Current' is NULL, or not initialized. */
-//#if TPP_CONFIG_ONELEXER == 3
-///* You have to allocate+TPPLexer_Init()+TPPLexer_Quit() your own lexer(s) */
-//#elif TPP_CONFIG_ONELEXER
-//#define TPP_INITIALIZE() TPPLexer_Init(&TPPLexer_Global)
-//#define TPP_FINALIZE()   TPPLexer_Quit(&TPPLexer_Global)
-//#else /* TPP_CONFIG_ONELEXER */
-//#define TPP_INITIALIZE()                                                    \
-//	(TPPLexer_Current = (struct TPPLexer *)malloc(sizeof(struct TPPLexer)), \
-//	 TPPLexer_Current ? (TPPLexer_Init(TPPLexer_Current) ? 1 : (free(TPPLexer_Current), 0)) : 0)
-//#define TPP_FINALIZE() (TPPLexer_Quit(TPPLexer_Current), free(TPPLexer_Current))
-//#endif /* !TPP_CONFIG_ONELEXER */
-//
-//
-//#ifdef TPP_NAMESPACE_DEFINED
-//#undef TPP_NAMESPACE_DEFINED
-//#undef TPP
-//#endif /* TPP_NAMESPACE_DEFINED */
-//
-//
-///* Fix unnamed union/struct members. */
-//#if !TPP_HAVE_UNNAMED_UNION
-//#define m_function     m_specific.m_function
-//#define m_expand       m_specific.m_expand
-//#define f_textfile     f_specific.f_textfile
-//#define f_macro        f_specific.f_macro
-//#endif /* !TPP_HAVE_UNNAMED_UNION */
 #endif
+
+
+/* Helper macros to initialize/finalize the global TPP context.
+ * NOTE: These macros can (obviously) be called when
+ *      `TPPLexer_Current' is NULL, or not initialized. */
+#if TPP_CONFIG_ONELEXER == 3
+/* You have to allocate+TPPLexer_Init()+TPPLexer_Quit() your own lexer(s) */
+#elif TPP_CONFIG_ONELEXER
+#define TPP_INITIALIZE() TPPLexer_Init(&TPPLexer_Global)
+#define TPP_FINALIZE()   TPPLexer_Quit(&TPPLexer_Global)
+#else /* TPP_CONFIG_ONELEXER */
+#define TPP_INITIALIZE()                                                        \
+	(TPPLexer_Current = (struct TPPLexer *)tpp_malloc(sizeof(struct TPPLexer)), \
+	 TPPLexer_Current ? (TPPLexer_Init(TPPLexer_Current) ? 1 : (tpp_free(TPPLexer_Current), 0)) : 0)
+#define TPP_FINALIZE() (TPPLexer_Quit(TPPLexer_Current), tpp_free(TPPLexer_Current))
+#endif /* !TPP_CONFIG_ONELEXER */
+
+TPP_DECL_END
 
 #endif /* !GUARD_TPP2_H */

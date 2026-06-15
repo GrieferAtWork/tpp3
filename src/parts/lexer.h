@@ -303,6 +303,11 @@ typedef struct tpp_lexer {
 #define tpp_lexer_setextension(self, TPP_EXT_x, enabled) tpp_extensions_setid(&(self)->TPP_INTERNAL(tl_exts), TPP_EXT_x, enabled)
 #define tpp_lexer_enableextension(self, TPP_EXT_x)       tpp_lexer_setextension(self, TPP_EXT_x, true)
 #define tpp_lexer_disableextension(self, TPP_EXT_x)      tpp_lexer_setextension(self, TPP_EXT_x, false)
+#if TPP_HAVE_EXTENSIONS_PUSH_POP
+#define tpp_lexer_pushextensions(self)   tpp_extensions_push(&(self)->TPP_INTERNAL(tl_exts))
+#define tpp_lexer_popextensions(self)    tpp_extensions_pop(&(self)->TPP_INTERNAL(tl_exts))
+#define tpp_lexer_canpopextensions(self) tpp_extensions_canpop(&(self)->TPP_INTERNAL(tl_exts))
+#endif /* TPP_HAVE_EXTENSIONS_PUSH_POP */
 #endif /* TPP_HAVE_EXTENSIONS */
 
 #if TPP_HAVE_FEATURES
@@ -310,6 +315,7 @@ typedef struct tpp_lexer {
 #define tpp_lexer_setfeature(self, TPP_FEAT_x, enabled) tpp_features_setid(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x, enabled)
 #define tpp_lexer_enablefeature(self, TPP_FEAT_x)       tpp_features_enable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
 #define tpp_lexer_disablefeature(self, TPP_FEAT_x)      tpp_features_disable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
+#define tpp_lexer_resetfeatures(self)                   tpp_features_reset(&(self)->TPP_INTERNAL(tl_feat))
 #endif /* TPP_HAVE_FEATURES */
 
 
@@ -392,11 +398,57 @@ tpp_lexer_init_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filenam
 
 #if TPP_HAVE_LEXER_INIT_FILENAME
 /* Initialize a lexer such that it starts reading from "filename"
- * @return: * : TPP_ENOENT: No such file or directory
- * @return: * : TPP_ENOMEM: Out of memory */
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_init_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *tpp_restrict filename);
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+
+
+#if TPP_HAVE_INCLUDE_STACK
+#if TPP_HAVE_LEXER_INIT_IO
+/* Push another file onto the #include-stack:
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_filename()')
+ *                          WARNING: This filename is *NOT* copied -- it must remain
+ *                                   allocated and valid until "self" is finalized.
+ * @param: handle:   The I/O handle to read from in order to retrieve text data.
+ * @param: ioflags:  Extra flags specifying how to interact with "handle":
+ *                   - TPP_FILE_IOFLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
+ *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_fini()' will not close "handle"
+ *                   - TPP_FILE_IOFLAGS_SYSHDR:   Do not emit warnings
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
+                         tpp_io_handle handle, tpp_file_ioflags ioflags);
+#endif /* TPP_HAVE_LEXER_INIT_IO */
+
+#if TPP_HAVE_LEXER_INIT_FILENAME
+/* Push another file onto the #include-stack:
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *tpp_restrict filename);
+#endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+
+/* Check if the current file can be popped. */
+#define tpp_lexer_canpopfile(self) \
+	(tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev) != NULL)
+
+/* Pop the current file off the #include-stack.
+ * The caller is responsible to ensure that "tpp_lexer_canpopfile(self) == true"
+ * After a call to this function, the caller is responsible to yield the next token!
+ * WARNING: It is the caller's responsibility to call "tpp_lexer_manualpopfile_popfile()"
+ *          instead of this function if rollback of the pop should be possible.
+ * NOTE: It is recommended to call "tpp_lexer_warn_nonempty_ifdef()" before calling
+ *       this function in order to warn about unterminated #ifdef-blocks. */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
+#endif /* TPP_HAVE_INCLUDE_STACK */
 
 
 

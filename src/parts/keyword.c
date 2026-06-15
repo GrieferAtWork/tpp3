@@ -81,7 +81,7 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self) {
  * WARNING: Only call this function on a "writable" keyword (s.a. `tpp_keywords_copybuiltin()')
  *
  * @return: * :   The "misc" data of "self" (freshly allocated)
- * @return: NULL: OOM (TPP_ENOMEM) */
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
 tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 	tpp_keyword_misc *result = self->tk_misc;
@@ -91,15 +91,19 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 #if TPP_HAVE_KEYWORD_FLAGS
 			result->tkm_flags = TPP_KEYWORD_FLAG_NORMAL;
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
-#if TPP_HAVE_KEYWORD_FILE_GUARD
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 			result->tkm_file_guard = NULL;
-#endif /* TPP_HAVE_KEYWORD_FILE_GUARD */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 			tpp_macro_pushstack_init(&result->tkm_macro_pushstack);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_MACRO___TPP_COUNTER
 			result->tkm_builtin_counter = 0;
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+#if TPP_HAVE_KEYWORD_USERDATA
+			result->tkm_userdata_ptr  = NULL;
+			result->tkm_userdata_dtor = NULL;
+#endif /* TPP_HAVE_KEYWORD_USERDATA */
 			self->tk_misc = result;
 		}
 	}
@@ -108,10 +112,38 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
 
+#if TPP_HAVE_KEYWORD_USERDATA
+/* Get the user-data pointer for "self"
+ * @return: NULL: No pointer set, or set pointer is "NULL" */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) void *TPPCALL
+tpp_keyword_getuserdata(tpp_keyword const *tpp_restrict self) {
+	tpp_keyword_misc const *misc = self->tk_misc;
+	return misc ? tpp_keyword_misc_getuserdata(misc) : NULL;
+}
+
+/* Set the user-data pointer for "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
+                        void *ptr, void (TPPCALL *dtor)(void *ptr)) {
+	tpp_keyword_misc *misc;
+	if (!ptr && !dtor && !self->tk_misc)
+		return TPP_EOK;
+	misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	tpp_keyword_misc_setuserdata(misc, ptr, dtor);
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_KEYWORD_USERDATA */
+
+
+
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 /* Push the current macro-definition of "self"
  * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out-of-memory */
+ * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_pushmacro(tpp_keyword *tpp_restrict self) {
 	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
@@ -574,6 +606,10 @@ tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	tpp_macro_pushstack_fini(&self->tkm_macro_pushstack);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_KEYWORD_USERDATA
+	if (self->tkm_userdata_dtor)
+		(*self->tkm_userdata_dtor)(self->tkm_userdata_ptr);
+#endif /* TPP_HAVE_KEYWORD_USERDATA */
 	tpp_free(self);
 }
 #endif /* TPP_HAVE_KEYWORD_MISC */
@@ -773,7 +809,7 @@ err_oom:
 /* Same as above, but if the keyword doesn't exist in `self' or the builtin
  * keyword table, a new keyword is allocated, given an ID, and inserted into `self'
  * @return: * :   The keyword associated with `kwd' (possibly having been just allocated)
- * @return: NULL: OOM (TPP_ENOMEM) */
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
                         tpp_char const *tpp_restrict kwd,
@@ -862,7 +898,7 @@ done:
  * pointed-to `tpp_keyword_misc', too)
  *
  * @return: * :   A writable copy of "kwd"
- * @return: NULL: OOM (TPP_ENOMEM) */
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
                          tpp_keyword const *tpp_restrict kwd) {

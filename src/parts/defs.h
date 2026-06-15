@@ -2014,6 +2014,25 @@ TPP_WARNING(TPP_W_MULTICHAR_LITERAL, 1(TPP_WG_MULTICHAR_LITERAL), 0(), TPP_WSTAT
 
 
 /************************************************************************/
+/* -Wmultiline-string                                                   */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_MULTILINE_STRING
+#define TPP_HAVE_TPP_WG_MULTILINE_STRING (TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED)
+#endif /* !TPP_HAVE_TPP_WG_MULTILINE_STRING */
+#if TPP_HAVE_TPP_WG_MULTILINE_STRING
+#define TPP_WG_MULTILINE_STRING TPP_WG_MULTILINE_STRING
+TPP_WGROUP(TPP_WG_MULTILINE_STRING, 1("multiline-string"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_MULTILINE_STRING */
+
+#if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+#define TPP_W_STRING_CONTINUED_AFTER_LINEFEED TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+TPP_WARNING(TPP_W_STRING_CONTINUED_AFTER_LINEFEED, 1(TPP_WG_MULTILINE_STRING), 0(), ~,
+            "string continues after linefeed")
+#endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
+
+
+
+/************************************************************************/
 /* -Wdate-time                                                          */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_DATE_TIME

@@ -58,7 +58,8 @@ typedef enum tpp_file_encoding {
 #if (TPP_HAVE_FILE_NONBLOCK || \
      TPP_HAVE_FILE_NOCLOSE ||  \
      TPP_HAVE_FILE_SYSHDR ||   \
-     TPP_HAVE_FILE_NOKWD)
+     TPP_HAVE_FILE_NOKWD ||    \
+     TPP_HAVE_IFNDEF_INCLUDE_GUARDS)
 #define TPP_HAVE_FILE_IOFLAGS 1
 #else /* ... */
 #define TPP_HAVE_FILE_IOFLAGS 0
@@ -79,6 +80,10 @@ typedef enum tpp_file_encoding {
 #if TPP_HAVE_FILE_NOKWD
 #define TPP_FILE_IOFLAGS_NOKWD    UINT8_C(0x08) /* The file's "tff_name" field isn't actually a "tpp_keyword::tk_kwd", but rather a raw \0-terminated C string. */
 #endif /* TPP_HAVE_FILE_NOKWD */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+#define TPP_FILE_IOFLAGS_NOGUARD  UINT8_C(0x10) /* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
+                                                 * file. A #ifndef-directive encountered at this point can never count as a #include-guard. */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 
 
@@ -541,10 +546,11 @@ tpp_file_fini(tpp_file *tpp_restrict self);
  *       set `tf_end' to point at the end of the new string.
  *     - replace `tf_chunk' with the new string
  *     - return `TPP_EOK'
- * @return: TPP_EOK: Either the current chunk was expanded (the delta
- *                   between `tf_pos' and `tf_end' has increased), or
- *                   no further data can be read from `self'.
- * @return: TPP_EIO: I/O error
+ * @return: TPP_EOK:         Either the current chunk was expanded (the delta
+ *                           between `tf_pos' and `tf_end' has increased), or
+ *                           no further data can be read from `self'.
+ * @return: TPP_EIO:         I/O error
+ * @return: TPP_ENOMEM:      Out of memory
  * #if TPP_HAVE_FILE_NONBLOCK
  * @return: TPP_EWOULDBLOCK: Operation would block.
  * #endif // TPP_HAVE_FILE_NONBLOCK */
@@ -618,6 +624,10 @@ tpp_file_filename_kwd(tpp_file const *tpp_restrict self);
  * If no such file exists, simply re-return "self". This function never returns "NULL" */
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getiofile(tpp_file const *tpp_restrict self);
+
+/* Returns the last file in the #include-stack (using "tf_tprev") */
+TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+tpp_file_getbasefile(tpp_file const *tpp_restrict self);
 
 #if TPP_HAVE_CPP_MACROS
 /* Returns the first tf_kind!=TPP_FILE_KIND_MACRO file in the #include-stack (using "tf_tprev")

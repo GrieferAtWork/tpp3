@@ -385,10 +385,7 @@ again_switch_tok:
 			} else
 #endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 			{
-				tpp_file *prev = file->tf_prev;
-				tpp_file_fini(file);
-				*file = *prev;
-				tpp_free(prev);
+				tpp_lexer_popfile(self);
 			}
 			tpp_seek_rparen_state_save_curfile(&state, self);
 			result = tpp_lexer_yieldpp_blocking(self);

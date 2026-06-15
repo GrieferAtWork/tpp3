@@ -562,6 +562,11 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 	if (kwd->tk_macro != NULL)
 		return true;
 #endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+#if TPP_HAVE_CPP_BUILTIN_MACROS < 0
+	if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_BUILTIN_MACROS))
+		return false;
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS < 0 */
 	(void)self;
 	switch (kwd->tk_id) {
 #define TPP_DEFS
@@ -571,6 +576,7 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 #undef TPP_DEFS
 	default: break;
 	}
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 	return false;
 }
 #endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */

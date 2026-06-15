@@ -70,7 +70,7 @@ print("	", " \\\n	".join(bytes.map(b -> f'cb({b.hex()}, "\\\\x{b.tostr(16, 2)}")
  *                on its own, meaning that the meaning of
  *                *all* negative values is entirely up to the
  *                given "printer"! */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
+TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes) {
 	char const *output_repr;

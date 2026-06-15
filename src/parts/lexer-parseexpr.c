@@ -223,14 +223,24 @@ again:
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 
-#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT
 	case '#':
+		/* Preprocessor assertions */
+#if TPP_HAVE_CPP_ASSERT
+		if (tpp_lexer_getext(self, TPP_EXT_CPP_ASSERT)) {
+			/* TODO */
+		}
+#endif /* TPP_HAVE_CPP_ASSERT */
+
 		/* length-operator for string expressions */
-		if (!tpp_lexer_getext(self, TPP_EXT_BUILTIN_EXPR_STRINGS))
-			break;
-		/* TODO */
-		break;
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+		if (tpp_lexer_getext(self, TPP_EXT_BUILTIN_EXPR_STRINGS)) {
+			/* TODO */
+		}
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+		goto handle_default;
+#define WANT_handle_default
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT */
 
 
 #if TPP_HAVE_BUILTIN_EXPR_DEFINED
@@ -238,8 +248,8 @@ again:
 		bool is_defined;
 		bool has_paren;
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_BUILTIN_EXPR_DEFINED))
-			goto handle_keyword;
-#define WANT_handle_keyword
+			goto handle_default;
+#define WANT_handle_default
 		tok = tpp_lexer_yield_forexpr(self);
 		has_paren = tok == '(';
 		if (has_paren)
@@ -293,8 +303,8 @@ again:
 		tpp_errno error;
 		bool is_true;
 		if (!tpp_lexer_getext(self, TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS))
-			goto handle_keyword;
-#define WANT_handle_keyword
+			goto handle_default;
+#define WANT_handle_default
 again_handle_if:
 		tok = tpp_lexer_yield_forexpr(self);
 		if (TPP_TOK_ISERR(tok))
@@ -351,10 +361,10 @@ again_handle_if:
 	}	break;
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 
-#ifdef WANT_handle_keyword
-#undef WANT_handle_keyword
-handle_keyword:
-#endif /* WANT_handle_keyword */
+#ifdef WANT_handle_default
+#undef WANT_handle_default
+handle_default:
+#endif /* WANT_handle_default */
 	default: {
 		tpp_errno error = TPP_EOK;
 		if (TPP_TOK_ISKEYWORD(tok)) {

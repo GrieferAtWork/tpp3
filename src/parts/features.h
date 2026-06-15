@@ -114,6 +114,7 @@ print("#endif /" "* TPP_HAVE_FEATURES *" "/");
      (TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL < 0) ||           \
      (TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL < 0) ||       \
      (TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL < 0) ||         \
+     (TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE < 0) ||     \
      (TPP_HAVE_TPP_TOK_LANGLE_LANGLE < 0) ||              \
      (TPP_HAVE_TPP_TOK_RANGLE_RANGLE < 0) ||              \
      (TPP_HAVE_TPP_TOK_EQUAL_EQUAL < 0) ||                \
@@ -188,6 +189,7 @@ print("#endif /" "* TPP_HAVE_FEATURES *" "/");
      (TPP_HAVE_TPP_TOK_STAR_DOT < 0) ||                   \
      (TPP_HAVE_CPP_DIRECTIVES < 0) ||                     \
      (TPP_HAVE_CPP_MACROS < 0) ||                         \
+     (TPP_HAVE_CPP_BUILTIN_MACROS < 0) ||                 \
      (TPP_HAVE_CPP_BLANK < 0) ||                          \
      (TPP_HAVE_CPP_DIGIT_LINE < 0) ||                     \
      (TPP_HAVE_CPP_LINE < 0) ||                           \
@@ -287,6 +289,9 @@ typedef enum tpp_feature_id {
 #if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL < 0
 	TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL,
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL < 0 */
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE < 0
+	TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE,
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE < 0 */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE < 0
 	TPP_FEAT_TPP_TOK_LANGLE_LANGLE,
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE < 0 */
@@ -509,6 +514,9 @@ typedef enum tpp_feature_id {
 #if TPP_HAVE_CPP_MACROS < 0
 	TPP_FEAT_CPP_MACROS,
 #endif /* TPP_HAVE_CPP_MACROS < 0 */
+#if TPP_HAVE_CPP_BUILTIN_MACROS < 0
+	TPP_FEAT_CPP_BUILTIN_MACROS,
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS < 0 */
 #if TPP_HAVE_CPP_BLANK < 0
 	TPP_FEAT_CPP_BLANK,
 #endif /* TPP_HAVE_CPP_BLANK < 0 */
@@ -706,6 +714,12 @@ typedef union tpp_features {
 #else /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL < 0 */
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL(self) TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL >= 0 */
+#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE < 0
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE): 1;
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE), TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE == -1)
+#else /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE < 0 */
+#define _tpp_features_get_TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE(self) TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE
+#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE >= 0 */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE < 0
 		unsigned int TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE): 1;
 #define _tpp_features_get_TPP_FEAT_TPP_TOK_LANGLE_LANGLE(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_TPP_TOK_LANGLE_LANGLE), TPP_HAVE_TPP_TOK_LANGLE_LANGLE == -1)
@@ -1150,6 +1164,12 @@ typedef union tpp_features {
 #else /* TPP_HAVE_CPP_MACROS < 0 */
 #define _tpp_features_get_TPP_FEAT_CPP_MACROS(self) TPP_HAVE_CPP_MACROS
 #endif /* TPP_HAVE_CPP_MACROS >= 0 */
+#if TPP_HAVE_CPP_BUILTIN_MACROS < 0
+		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_BUILTIN_MACROS): 1;
+#define _tpp_features_get_TPP_FEAT_CPP_BUILTIN_MACROS(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_BUILTIN_MACROS), TPP_HAVE_CPP_BUILTIN_MACROS == -1)
+#else /* TPP_HAVE_CPP_BUILTIN_MACROS < 0 */
+#define _tpp_features_get_TPP_FEAT_CPP_BUILTIN_MACROS(self) TPP_HAVE_CPP_BUILTIN_MACROS
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS >= 0 */
 #if TPP_HAVE_CPP_BLANK < 0
 		unsigned int TPP_INTERNAL(tff_TPP_FEAT_CPP_BLANK): 1;
 #define _tpp_features_get_TPP_FEAT_CPP_BLANK(self) tpp_expect((self)->TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_FEAT_CPP_BLANK), TPP_HAVE_CPP_BLANK == -1)
@@ -1216,8 +1236,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 /*[[[end]]]*/
 
 #if TPP_HAVE_FEATURES
-#define tpp_features_init(self) (void)(*(self) = tpp_features_default)
-#define tpp_features_fini(self) (void)0
+#define tpp_features_init(self)            (void)(*(self) = tpp_features_default)
+#define tpp_features_reset(self)           (void)(*(self) = tpp_features_default)
+#define tpp_features_fini(self)            (void)0
 #define tpp_features_get(self, TPP_FEAT_x) _tpp_features_get_##TPP_FEAT_x(self)
 #else /* TPP_HAVE_FEATURES */
 #define tpp_features_get(self, TPP_FEAT_x) 1

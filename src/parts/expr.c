@@ -1044,7 +1044,7 @@ tpp_expr_value_getindex(struct tpp_lexer *tpp_restrict lexer,
 	lhs_value   = _tpp_expr_value_getstring(lhs);
 	index_value = _tpp_expr_value_getint(index);
 	if (index_value < 0 || index_value > (tpp_intmax)tpp_string_len(lhs_value))
-		index_value = tpp_string_len(lhs_value);
+		index_value = tpp_string_len(lhs_value); /* XXX: TPP_W_INDEX_OUT_OF_BOUNDS */
 	result_value = tpp_string_str(lhs_value)[(tpp_size)index_value];
 	/* XXX: If hosting compiler has "-fsigned-char", must:
 	 *      >> result_value = (tpp_intmax)(signed char)result_value;
@@ -1189,7 +1189,12 @@ tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer,
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
                          tpp_formatprinter printer, void *arg) {
-	char intval_buf[TPP_ITOA_MAXLEN], *intval_ptr;
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS
+	char value_buffer[TPP_ITOA_MAXLEN < TPP_FTOA_MAXLEN ? TPP_FTOA_MAXLEN : TPP_ITOA_MAXLEN];
+#else /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
+	char value_buffer[TPP_ITOA_MAXLEN];
+#endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
+	char *value_ptr;
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE
 	switch (_tpp_expr_value_getkind(self)) {
 
@@ -1198,45 +1203,9 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 	case _TPP_EXPR_VALUE_KIND_FLOAT: {
-		/* XXX: Use something better? */
-		tpp_size post_len;
-		tpp_ssize temp, result = 0;
 		tpp_float value = _tpp_expr_value_getfloat(self);
-		tpp_intmax whole;
-		if (value < 0) {
-			result = (*printer)(arg, (tpp_char const *)"-", 1);
-			if (result < 0)
-				return result;
-			value = -value;
-		}
-		whole = (tpp_intmax)value;
-		intval_ptr = tpp_itoa(intval_buf, _tpp_expr_value_getint(self));
-		temp = (*printer)(arg, (tpp_char const *)intval_ptr,
-		                  (tpp_size)((intval_buf + tpp_lengthof(intval_buf)) - intval_ptr));
-		if (temp < 0)
-			return temp;
-		result += temp;
-		value -= (tpp_float)whole;
-		whole = (tpp_intmax)(value * 10000000000.0); /* 10 digits */
-		intval_ptr = tpp_itoa(intval_buf, _tpp_expr_value_getint(self));
-		post_len = (tpp_size)((intval_buf + tpp_lengthof(intval_buf)) - intval_ptr);
-		while (post_len < 10) {
-			*--intval_ptr = '0';
-			++post_len;
-		}
-		while (post_len && intval_ptr[post_len - 1] == '0')
-			--post_len;
-		if (post_len) {
-			temp = (*printer)(arg, (tpp_char const *)".", 1);
-			if (temp < 0)
-				return temp;
-			result += temp;
-			temp = (*printer)(arg, (tpp_char const *)intval_ptr, post_len);
-			if (temp < 0)
-				return temp;
-			result += temp;
-		}
-		return result;
+		tpp_size value_len = tpp_ftoa(value_buffer, value);
+		return (*printer)(arg, (tpp_char const *)value_buffer, value_len);
 	}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
@@ -1263,9 +1232,9 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 	default: tpp_unreachable();
 	}
 #endif /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
-	intval_ptr = tpp_itoa(intval_buf, _tpp_expr_value_getint(self));
-	return (*printer)(arg, (tpp_char const *)intval_ptr,
-	                  (tpp_size)((intval_buf + tpp_lengthof(intval_buf)) - intval_ptr));
+	value_ptr = tpp_itoa(value_buffer, _tpp_expr_value_getint(self));
+	return (*printer)(arg, (tpp_char const *)value_ptr,
+	                  (tpp_size)((value_buffer + TPP_ITOA_MAXLEN) - value_ptr));
 }
 #endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
 

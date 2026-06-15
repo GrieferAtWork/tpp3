@@ -78,6 +78,7 @@
 #endif /* !TPP_FS_HAVE_DRIVES */
 #endif /* !TPP_FS_ISABS */
 
+#undef tpp_io_handle_IS_BUILTIN
 #ifndef tpp_io_handle
 #define tpp_io_handle_IS_BUILTIN
 #if TPP_OS_WINDOWS

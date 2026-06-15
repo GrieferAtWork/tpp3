@@ -58,20 +58,19 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
 #undef TPP_HAVE_KEYWORD_FLAGS
-#if ((TPP_HAVE_CPP_INCLUDE && (TPP_HAVE_CPP_IF_ELSE_ENDIF || \
-                               TPP_HAVE_PRAGMA_ONCE)) ||     \
-     TPP_HAVE_CPP_IMPORT ||                                  \
-     TPP_HAVE_CLANG_MACRO___has_attribute ||                 \
-     TPP_HAVE_CLANG_MACRO___has_builtin ||                   \
-     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||             \
-     TPP_HAVE_CLANG_MACRO___has_declspec_attribute ||        \
-     TPP_HAVE_CLANG_MACRO___has_extension ||                 \
-     TPP_HAVE_CLANG_MACRO___has_feature ||                   \
-     TPP_HAVE_CLANG_MACRO___has_c_attribute ||               \
-     TPP_HAVE_MACRO___is_deprecated ||                       \
-     TPP_HAVE_MACRO___is_poisoned ||                         \
-     TPP_HAVE_PRAGMA_DEPRECATED ||                           \
-     TPP_HAVE_PRAGMA_GCC_POISON ||                           \
+#if (TPP_HAVE_PRAGMA_ONCE ||                          \
+     TPP_HAVE_CPP_IMPORT ||                           \
+     TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+     TPP_HAVE_CLANG_MACRO___has_extension ||          \
+     TPP_HAVE_CLANG_MACRO___has_feature ||            \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
+     TPP_HAVE_MACRO___is_deprecated ||                \
+     TPP_HAVE_MACRO___is_poisoned ||                  \
+     TPP_HAVE_PRAGMA_DEPRECATED ||                    \
+     TPP_HAVE_PRAGMA_GCC_POISON ||                    \
      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS)
 #define TPP_HAVE_KEYWORD_FLAGS 1
 #else /* ... */
@@ -79,9 +78,11 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #endif /* !... */
 
 #undef TPP_HAVE_KEYWORD_MISC
-#if (TPP_HAVE_CPP_INCLUDE ||       \
-     TPP_HAVE_PRAGMA_PUSH_MACRO || \
-     TPP_HAVE_KEYWORD_FLAGS)
+#if (TPP_HAVE_KEYWORD_FLAGS ||         \
+     TPP_HAVE_IFNDEF_INCLUDE_GUARDS || \
+     TPP_HAVE_PRAGMA_PUSH_MACRO ||     \
+     TPP_HAVE_MACRO___TPP_COUNTER ||   \
+     TPP_HAVE_KEYWORD_USERDATA)
 #define TPP_HAVE_KEYWORD_MISC 1
 #else /* ... */
 #define TPP_HAVE_KEYWORD_MISC 0
@@ -130,19 +131,14 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #if TPP_HAVE_CPP_IMPORT
 #define TPP_KEYWORD_FLAG_HDR_IMPORTED           UINT32_C(0x20000000) /* Set after this header was `#import'-ed */
 #endif /* TPP_HAVE_CPP_IMPORT */
-#if TPP_HAVE_CPP_INCLUDE
 #if TPP_HAVE_PRAGMA_ONCE
 #define TPP_KEYWORD_FLAG_HDR_ONCE               UINT32_C(0x40000000) /* Set after `#pragma once' was encountered */
 #endif /* TPP_HAVE_PRAGMA_ONCE */
-#if TPP_HAVE_CPP_IF_ELSE_ENDIF
-#define TPP_KEYWORD_FLAG_HDR_NOGUARD            UINT32_C(0x80000000) /* Set after a secondary #ifdef block was detected at the top level of this file:
-                                                                      * >> // File: "myfile.h"
-                                                                      * >> #ifndef foo // Potential include-guard?
-                                                                      * >> #endif
-                                                                      * >> #ifndef bar // This #ifndef will set `tff_noguard=1'
-                                                                      * >> #endif */
-#endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
-#endif /* TPP_HAVE_CPP_INCLUDE */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+#define TPP_KEYWORD_FLAG_HDR_GUARD_VALID        UINT32_C(0x80000000) /* The configured "tkm_file_guard" is valid and should be used
+                                                                      * (Set when the file is removed from the #include-stack with
+                                                                      * its #ifdef-stack empty, and "tkm_file_guard != NULL") */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
 
 struct tpp_keyword;
@@ -150,15 +146,27 @@ typedef struct tpp_keyword_misc {
 #if TPP_HAVE_KEYWORD_FLAGS
 	tpp_keyword_flags TPP_INTERNAL(tkm_flags); /* Set of `TPP_KEYWORD_FLAG_*' */
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
-#if TPP_HAVE_KEYWORD_FILE_GUARD
-	struct tpp_keyword *TPP_INTERNAL(tkm_file_guard); /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
-#endif /* TPP_HAVE_KEYWORD_FILE_GUARD */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+	struct tpp_keyword const *TPP_INTERNAL(tkm_file_guard); /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	tpp_macro_pushstack TPP_INTERNAL(tkm_macro_pushstack); /* For `#pragma push_macro()' */
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_MACRO___TPP_COUNTER
 	tpp_size TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+#if TPP_HAVE_KEYWORD_USERDATA
+	void    *TPP_INTERNAL(tkm_userdata_ptr); /* [?..?] User-data pointer (initialize to "NULL") */
+	void (TPPCALL *TPP_INTERNAL(tkm_userdata_dtor))(void *ptr); /* [0..1] Optional finalizer for user-data */
+#define tpp_keyword_misc_setuserdata(self, ptr, dtor) \
+	(void)((self)->tkm_userdata_ptr  = (ptr),         \
+	       (self)->tkm_userdata_dtor = (dtor))
+#define tpp_keyword_misc_getuserdata(self)      ((self)->tkm_userdata_ptr)
+#define tpp_keyword_misc_getuserdata_dtor(self) ((self)->tkm_userdata_dtor)
+#else /* TPP_HAVE_KEYWORD_USERDATA */
+#define tpp_keyword_misc_getuserdata(self)      ((void *)NULL)
+#define tpp_keyword_misc_getuserdata_dtor(self) ((void (TPPCALL *)(void *))NULL)
+#endif /* !TPP_HAVE_KEYWORD_USERDATA */
 } tpp_keyword_misc;
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
@@ -234,15 +242,33 @@ typedef struct tpp_keyword {
  * WARNING: Only call this function on a "writable" keyword (s.a. `tpp_keywords_copybuiltin()')
  *
  * @return: * :   The "misc" data of "self" (freshly allocated)
- * @return: NULL: OOM (TPP_ENOMEM) */
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
 tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self); /* TODO: This function shouldn't be part of the public API! */
+
+/* Same as "tpp_keyword_requiremisc()", but don't lazily allocate,
+ * and simply return "NULL" if "self" doesn't have misc-data, yet. */
+#define tpp_keyword_getmisc(self) ((self)->TPP_INTERNAL(tk_misc))
 #endif /* TPP_HAVE_KEYWORD_MISC */
+
+#if TPP_HAVE_KEYWORD_USERDATA
+/* Get the user-data pointer for "self"
+ * @return: NULL: No pointer set, or set pointer is "NULL" */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) void *TPPCALL
+tpp_keyword_getuserdata(tpp_keyword const *tpp_restrict self);
+
+/* Set the user-data pointer for "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
+                        void *ptr, void (TPPCALL *dtor)(void *ptr));
+#endif /* TPP_HAVE_KEYWORD_USERDATA */
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 /* Push the current macro-definition of "self"
  * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out-of-memory */
+ * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_pushmacro(tpp_keyword *tpp_restrict self);
 
@@ -410,7 +436,7 @@ tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
 /* Same as above, but if the keyword doesn't exist in `self' or the builtin
  * keyword table, a new keyword is allocated, given an ID, and inserted into `self'
  * @return: * :   The keyword associated with `kwd' (possibly having been just allocated)
- * @return: NULL: OOM (TPP_ENOMEM) */
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
                         tpp_char const *tpp_restrict kwd,
@@ -440,7 +466,7 @@ tpp_keywords_newkeyword_esc_(tpp_keywords *tpp_restrict self,
  * pointed-to `tpp_keyword_misc', too)
  *
  * @return: * :   A writable copy of "kwd"
- * @return: NULL: OOM (TPP_ENOMEM) */
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
                          tpp_keyword const *tpp_restrict kwd);

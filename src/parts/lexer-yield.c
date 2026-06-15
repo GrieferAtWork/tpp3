@@ -1056,6 +1056,7 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 
 
 
+#if TPP_HAVE_CPP_BUILTIN_MACROS
 /* Handle a builtin macro.
  * @return: TPP_TOK_EOF: Caller should yield again.
  * @return: * : The new expansion token after keywords were handled */
@@ -1144,10 +1145,10 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 /************************************************************************/
 #if TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__
 #if TPP_HAVE_MACRO___FILE__
-	case TPP_KWD___FILE__:
+	case TPP_KWD___FILE__: /* TODO: Use tpp_file_getlcfile() */
 #endif /* TPP_HAVE_MACRO___FILE__ */
 #if TPP_HAVE_MACRO___BASE_FILE__
-	case TPP_KWD___BASE_FILE__:
+	case TPP_KWD___BASE_FILE__: /* TODO: Use tpp_file_getbasefile() */
 #endif /* TPP_HAVE_MACRO___BASE_FILE__ */
 	{
 		/* TODO */
@@ -1269,6 +1270,8 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	 *       (the case where the caller is normally expected to yield the next
 	 *       token), simply jump back to repeat the '<' / '"' check.
 	 *       If the next token's first char isn't '<' / '"', that's "-Wsyntax"
+	 *       If the next token doesn't start with '<' / '"', yield it so it is
+	 *       possible to skip SPACE/COMMENT tokens before trying again.
 	 * ^ An implementation like that is completely standard-confirming, since the
 	 *   standard only mandates that macros be expanded in #include-filenames
 	 *   before the '<' / '"' check is to-be repeated. */
@@ -1312,6 +1315,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	 * >> #define SOME_MACRO SOME_MACRO */
 	return tok;
 }
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 #endif /* TPP_HAVE_CPP_MACROS */
 
 /* Handle a keyword-style macro.
@@ -1343,6 +1347,13 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED */
 
 #if TPP_HAVE_CPP_MACROS
+
+	/* Check if macros are runtime-configurable and currently disabled. */
+#if TPP_HAVE_CPP_MACROS < 0
+	if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_MACROS))
+		return tok;
+#endif /* TPP_HAVE_CPP_MACROS < 0 */
+
 	/* Check if this keyword should be expanded as a macro.
 	 * This also does the is-enabled checks for builtin macros. */
 #if TPP_HAVE_LEXER_GETKEYWORDDEFINED
@@ -1368,7 +1379,15 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 			return tpp_lexer_expand_macro(self, macro);
 		}
 	}
+
+	/* Expand builtin macros (if enabled)
+	 * NOTE: Don't need to check "TPP_FEAT_CPP_BUILTIN_MACROS" here; that feature
+	 *       flag (if enabled) was already checked by "tpp_lexer_getkeyworddefined()" */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
 	return tpp_lexer_yield_handle_builtin_macro(self, tok);
+#else /* TPP_HAVE_CPP_BUILTIN_MACROS */
+	return tok;
+#endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 #else /* TPP_HAVE_CPP_MACROS */
 	return tok;
 #endif /* !TPP_HAVE_CPP_MACROS */

@@ -228,6 +228,10 @@
 #endif /* !TPP_BUILDING */
 #endif /* !TPP_INTERNAL */
 
+#ifndef TPP_HAVE_TPP2_COMPAT
+#define TPP_HAVE_TPP2_COMPAT 0
+#endif /* !TPP_HAVE_TPP2_COMPAT */
+
 #ifndef TPP_DEBUG
 #ifdef NDEBUG
 #define TPP_DEBUG 0
@@ -381,7 +385,7 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 #endif /* !tpp_formatprinter */
 
 #ifndef tpp_lcinfo
-#if defined(INT_LEAST64_MAX) && defined(UINT32_MAX)
+#if defined(INT_LEAST64_MAX) && defined(UINT32_MAX) && !TPP_HAVE_TPP2_COMPAT
 typedef int_least64_t tpp_lcinfo;
 #define tpp_lcinfo tpp_lcinfo
 
@@ -391,7 +395,7 @@ typedef int_least64_t tpp_lcinfo;
 #define tpp_lcinfo_of(line, col)                  \
 	(((int_least64_t)(uint32_t)(int32_t)(line)) | \
 	 ((int_least64_t)(uint32_t)(int32_t)(col) << 32))
-#else /* INT_LEAST64_MAX && UINT32_MAX */
+#else /* INT_LEAST64_MAX && UINT32_MAX && !TPP_HAVE_TPP2_COMPAT */
 typedef struct tpp_lcinfo {
 	tpp_line   TPP_INTERNAL(lci_line); /* Line */
 	tpp_column TPP_INTERNAL(lci_col);  /* Column */
@@ -411,7 +415,7 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 	result.TPP_INTERNAL(lci_col)  = col;
 	return result;
 }
-#endif /* !INT_LEAST64_MAX || !UINT32_MAX */
+#endif /* !INT_LEAST64_MAX || !UINT32_MAX || TPP_HAVE_TPP2_COMPAT */
 #endif /* !tpp_lcinfo */
 
 #ifndef tpp_lcinfo_init

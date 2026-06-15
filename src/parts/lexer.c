@@ -138,8 +138,8 @@ tpp_lexer_init_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filenam
 
 #if TPP_HAVE_LEXER_INIT_FILENAME
 /* Initialize a lexer such that it starts reading from "filename"
- * @return: * : TPP_ENOENT: No such file or directory
- * @return: * : TPP_ENOMEM: Out of memory */
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
                         /*utf-8*/ char const *tpp_restrict filename) {
@@ -152,6 +152,86 @@ tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
 	return error;
 }
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+
+
+#if TPP_HAVE_INCLUDE_STACK
+#if TPP_HAVE_LEXER_INIT_IO
+/* Push another file onto the #include-stack:
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_filename()')
+ *                          WARNING: This filename is *NOT* copied -- it must remain
+ *                                   allocated and valid until "self" is finalized.
+ * @param: handle:   The I/O handle to read from in order to retrieve text data.
+ * @param: ioflags:  Extra flags specifying how to interact with "handle":
+ *                   - TPP_FILE_IOFLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
+ *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_fini()' will not close "handle"
+ *                   - TPP_FILE_IOFLAGS_SYSHDR:   Do not emit warnings
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
+                         tpp_io_handle handle, tpp_file_ioflags ioflags) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *const prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		return TPP_ENOMEM;
+	*prev_file = *file;
+	ioflags |= TPP_FILE_IOFLAGS_NOKWD;
+	tpp_file_init_io_ex(file, filename, handle, ioflags);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_INIT_IO */
+
+#if TPP_HAVE_LEXER_INIT_FILENAME
+/* Push another file onto the #include-stack:
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *tpp_restrict filename) {
+	tpp_errno error;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *const prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		return TPP_ENOMEM;
+	*prev_file = *file;
+	error = tpp_keywords_openfile(&self->tl_kwds, NULL, filename, file);
+	if tpp_likely(!TPP_ISERR(error)) {
+		file->tf_prev  = prev_file;
+		file->tf_tprev = prev_file;
+	} else {
+		*file = *prev_file;
+		tpp_file_free(prev_file);
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+
+/* Check if the current file can be popped. */
+#define tpp_lexer_canpopfile(self) \
+	(tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev) != NULL)
+
+/* Pop the current file off the #include-stack.
+ * The caller is responsible to ensure that "tpp_lexer_canpopfile(self) == true"
+ * After a call to this function, the caller is responsible to yield the next token!
+ * WARNING: It is the caller's responsibility to call "tpp_lexer_manualpopfile_popfile()"
+ *          instead of this function if rollback of the pop should be possible.
+ * NOTE: It is recommended to call "tpp_lexer_warn_nonempty_ifdef()" before calling
+ *       this function in order to warn about unterminated #ifdef-blocks. */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *prev = file->tf_prev;
+	tpp_file_fini(file);
+	*file = *prev;
+	tpp_file_free(prev);
+}
+
+#endif /* TPP_HAVE_INCLUDE_STACK */
+
 
 #if TPP_HAVE_LEXER_REPRTOKENID
 /* Return the (canonical) string-representation of a given token ID */
