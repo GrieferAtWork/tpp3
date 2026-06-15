@@ -25,12 +25,13 @@
 
 #include "config.h"
 #include "extensions.h"
+#include "features.h"
 #include "file.h"
 #include "keyword.h"
-#include "macro.h"
 #include "lexer.h"
+#include "macro.h"
+#include "time.h"
 #include "token.h"
-#include "features.h"
 
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
@@ -77,6 +78,58 @@ err_nomem:
 	return TPP_TOK_ENOMEM;
 }
 
+/* Support for feature-test-style macros */
+#undef TPP_HAVE_KEYWORD_TEST_MACROS
+#define TPP_HAVE_KEYWORD_TEST_MACROS \
+	(TPP_HAVE_MACRO___TPP_UNIQUE ||  \
+	 TPP_HAVE_MACRO___TPP_COUNTER)
+
+/* Support for feature-test-style macros */
+#undef TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS
+#define TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS     \
+	(TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+	 TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+	 TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+	 TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+	 TPP_HAVE_CLANG_MACRO___has_extension ||          \
+	 TPP_HAVE_CLANG_MACRO___has_feature ||            \
+	 TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
+	 TPP_HAVE_MACRO___is_identifier ||                \
+	 TPP_HAVE_MACRO___is_deprecated ||                \
+	 TPP_HAVE_MACRO___is_poisoned)
+
+#undef TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS
+#define TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS \
+	(TPP_HAVE_MACRO___has_extension ||           \
+	 TPP_HAVE_MACRO___has_known_extension ||     \
+	 TPP_HAVE_MACRO___has_warning ||             \
+	 TPP_HAVE_MACRO___has_known_warning)
+
+#undef TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO
+#define TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO \
+	(TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS ||    \
+	 TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS ||     \
+	 TPP_HAVE_KEYWORD_TEST_MACROS)
+
+#undef TPP_HAVE_LEXER_PUSH_TEXTFILE_INT
+#define TPP_HAVE_LEXER_PUSH_TEXTFILE_INT \
+	(TPP_HAVE_MACRO___COUNTER__ ||       \
+	 TPP_HAVE_MACRO___LINE__ ||          \
+	 TPP_HAVE_MACRO___COLUMN__ ||        \
+	 TPP_HAVE_MACRO___INCLUDE_LEVEL__ || \
+	 TPP_HAVE_MACRO___INCLUDE_DEPTH__ || \
+	 TPP_HAVE_NUMERIC_DATE_MACROS ||     \
+	 TPP_HAVE_NUMERIC_TIME_MACROS)
+
+#undef TPP_HAVE_LEXER_PUSH_TEXTFILE
+#define TPP_HAVE_LEXER_PUSH_TEXTFILE                 \
+	(TPP_HAVE_LEXER_PUSH_TEXTFILE_INT ||             \
+	 TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO || \
+	 TPP_HAVE_MACRO___TIME__ ||                      \
+	 TPP_HAVE_MACRO___DATE__ ||                      \
+	 TPP_HAVE_MACRO___TIMESTAMP__)
+
+#if TPP_HAVE_LEXER_PUSH_TEXTFILE
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_push_textfile(tpp_lexer *tpp_restrict self,
                         tpp_char const *text,
@@ -89,12 +142,9 @@ tpp_lexer_push_textfile(tpp_lexer *tpp_restrict self,
 	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk),
 	                                         textsize, chunk);
 }
+#endif /* TPP_HAVE_LEXER_PUSH_TEXTFILE */
 
-#if (TPP_HAVE_MACRO___COUNTER__ ||       \
-     TPP_HAVE_MACRO___LINE__ ||          \
-     TPP_HAVE_MACRO___COLUMN__ ||        \
-     TPP_HAVE_MACRO___INCLUDE_LEVEL__ || \
-     TPP_HAVE_MACRO___INCLUDE_DEPTH__)
+#if TPP_HAVE_LEXER_PUSH_TEXTFILE_INT
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_push_textfile_int(tpp_lexer *tpp_restrict self,
                             tpp_intmax value) {
@@ -103,52 +153,10 @@ tpp_lexer_push_textfile_int(tpp_lexer *tpp_restrict self,
 	return tpp_lexer_push_textfile(self, (tpp_char const *)p,
 	                               (tpp_size)(buf + tpp_lengthof(buf) - p));
 }
-#endif /* ... */
+#endif /* TPP_HAVE_LEXER_PUSH_TEXTFILE_INT */
 
-/* Support for feature-test-style macros */
-#undef TPP_HAVE_KEYWORD_TEST_MACROS
-#if (TPP_HAVE_MACRO___TPP_UNIQUE || \
-     TPP_HAVE_MACRO___TPP_COUNTER)
-#define TPP_HAVE_KEYWORD_TEST_MACROS 1
-#else /* ... */
-#define TPP_HAVE_KEYWORD_TEST_MACROS 0
-#endif /* !... */
-
-/* Support for feature-test-style macros */
-#undef TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS
-#if (TPP_HAVE_CLANG_MACRO___has_attribute ||          \
-     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
-     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
-     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
-     TPP_HAVE_CLANG_MACRO___has_extension ||          \
-     TPP_HAVE_CLANG_MACRO___has_feature ||            \
-     TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
-     TPP_HAVE_MACRO___is_identifier ||                \
-     TPP_HAVE_MACRO___is_deprecated ||                \
-     TPP_HAVE_MACRO___is_poisoned)
-#define TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS 1
-#else /* ... */
-#define TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS 0
-#endif /* !... */
-
-#undef TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS
-#if (TPP_HAVE_MACRO___has_extension ||       \
-     TPP_HAVE_MACRO___has_known_extension || \
-     TPP_HAVE_MACRO___has_warning ||         \
-     TPP_HAVE_MACRO___has_known_warning)
-#define TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS 1
-#else /* ... */
-#define TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS 0
-#endif /* !... */
-
-#undef TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO
-#define TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO \
-	(TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS ||    \
-	 TPP_HAVE_STRING_FEATURE_FLAG_TEST_MACROS ||     \
-	 TPP_HAVE_KEYWORD_TEST_MACROS)
 
 #if TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO
-
 #undef TPP_FEATURE_FLAG_EXPANSION_MAXLEN
 #if TPP_HAVE_MACRO___TPP_UNIQUE || TPP_HAVE_MACRO___TPP_COUNTER
 #define TPP_FEATURE_FLAG_EXPANSION_MAXLEN TPP_ITOA_MAXLEN
@@ -711,6 +719,183 @@ tpp_lexer_yield_handle___COUNTER__(tpp_lexer *tpp_restrict self) {
 #endif /* ... */
 
 
+#undef TPP_HAVE_TIME_MACROS
+#define TPP_HAVE_TIME_MACROS         \
+	(TPP_HAVE_MACRO___TIME__ ||      \
+	 TPP_HAVE_MACRO___DATE__ ||      \
+	 TPP_HAVE_MACRO___TIMESTAMP__ || \
+	 TPP_HAVE_NUMERIC_DATE_MACROS || \
+	 TPP_HAVE_NUMERIC_TIME_MACROS)
+#if TPP_HAVE_TIME_MACROS
+
+#if TPP_HAVE_MACRO___DATE__ || TPP_HAVE_MACRO___TIMESTAMP__
+static char const tpp_date_month_names[12][3] = {
+	{ 'J', 'a', 'n' },
+	{ 'F', 'e', 'b' },
+	{ 'M', 'a', 'r' },
+	{ 'A', 'p', 'r' },
+	{ 'M', 'a', 'y' },
+	{ 'J', 'u', 'n' },
+	{ 'J', 'u', 'l' },
+	{ 'A', 'u', 'g' },
+	{ 'S', 'e', 'p' },
+	{ 'O', 'c', 't' },
+	{ 'N', 'o', 'v' },
+	{ 'D', 'e', 'c' },
+};
+#endif /* TPP_HAVE_MACRO___DATE__ || TPP_HAVE_MACRO___TIMESTAMP__ */
+
+#if TPP_HAVE_MACRO___TIMESTAMP__
+static char const tpp_date_wday_names[7][3] = {
+	{ 'S', 'u', 'n' },
+	{ 'M', 'o', 'n' },
+	{ 'T', 'u', 'e' },
+	{ 'W', 'e', 'd' },
+	{ 'T', 'h', 'u' },
+	{ 'F', 'r', 'i' },
+	{ 'S', 'a', 't' },
+};
+#endif /* TPP_HAVE_MACRO___TIMESTAMP__ */
+
+#if TPP_HAVE_MACRO___TIME__
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TIME__(tpp_lexer *tpp_restrict self, tpp_tm const *cur) {
+	char buf[tpp_lengthof("\"00:00:00\"") - 1], *p = buf;
+	*p++ = '"';
+	*p++ = (char)('0' + (tpp_tm_gethour(cur) / 10));
+	*p++ = (char)('0' + (tpp_tm_gethour(cur) % 10));
+	*p++ = ':';
+	*p++ = (char)('0' + (tpp_tm_getmin(cur) / 10));
+	*p++ = (char)('0' + (tpp_tm_getmin(cur) % 10));
+	*p++ = ':';
+	*p++ = (char)('0' + (tpp_tm_getsec(cur) / 10));
+	*p++ = (char)('0' + (tpp_tm_getsec(cur) % 10));
+	*p++ = '"';
+	tpp_assert(p == (buf + tpp_lengthof(buf)));
+	return tpp_lexer_push_textfile(self, (tpp_char const *)buf, (tpp_size)(p - buf));
+}
+#endif /* TPP_HAVE_MACRO___TIME__ */
+
+#if TPP_HAVE_MACRO___DATE__
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___DATE__(tpp_lexer *tpp_restrict self, tpp_tm const *cur) {
+	char buf[tpp_lengthof("\"00:00:00\"") - 1], *p = buf;
+	*p++ = '"';
+	*p++ = (char)('0' + (tpp_tm_gethour(cur) / 10));
+	*p++ = (char)('0' + (tpp_tm_gethour(cur) % 10));
+	*p++ = ':';
+	*p++ = (char)('0' + (tpp_tm_getmin(cur) / 10));
+	*p++ = (char)('0' + (tpp_tm_getmin(cur) % 10));
+	*p++ = ':';
+	*p++ = (char)('0' + (tpp_tm_getsec(cur) / 10));
+	*p++ = (char)('0' + (tpp_tm_getsec(cur) % 10));
+	*p++ = '"';
+	tpp_assert(p == (buf + tpp_lengthof(buf)));
+	return tpp_lexer_push_textfile(self, (tpp_char const *)buf, (tpp_size)(p - buf));
+}
+#endif /* TPP_HAVE_MACRO___DATE__ */
+
+#if TPP_HAVE_MACRO___TIMESTAMP__
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TIMESTAMP__(tpp_lexer *tpp_restrict self, tpp_tm const *cur) {
+	char buf[tpp_lengthof("\"Mon Jan 12 00:00:00 2026\"") - 1], *p = buf;
+	char const *mon = tpp_date_month_names[(tpp_tm_getmon(cur) - 1) % 12];
+	char const *day = tpp_date_wday_names[tpp_tm_getwday(cur) % 7];
+	*p++ = '"';
+	*p++ = day[0];
+	*p++ = day[1];
+	*p++ = day[2];
+	*p++ = ' ';
+	*p++ = mon[0];
+	*p++ = mon[1];
+	*p++ = mon[2];
+	*p++ = ' ';
+	*p++ = (tpp_tm_getmday(cur) >= 10) ? (char)('0' + (tpp_tm_getmday(cur) / 10)) : ' ';
+	*p++ = (char)('0' + (tpp_tm_getmday(cur) % 10));
+	*p++ = ' ';
+	*p++ = (char)('0' + (tpp_tm_gethour(cur) / 10));
+	*p++ = (char)('0' + (tpp_tm_gethour(cur) % 10));
+	*p++ = ':';
+	*p++ = (char)('0' + (tpp_tm_getmin(cur) / 10));
+	*p++ = (char)('0' + (tpp_tm_getmin(cur) % 10));
+	*p++ = ':';
+	*p++ = (char)('0' + (tpp_tm_getsec(cur) / 10));
+	*p++ = (char)('0' + (tpp_tm_getsec(cur) % 10));
+	*p++ = ' ';
+	*p++ = (char)('0' + ((tpp_tm_getyear(cur) / 1000) % 10));
+	*p++ = (char)('0' + ((tpp_tm_getyear(cur) / 100) % 10));
+	*p++ = (char)('0' + ((tpp_tm_getyear(cur) / 10) % 10));
+	*p++ = (char)('0' + (tpp_tm_getyear(cur) % 10));
+	*p++ = '"';
+	tpp_assert(p == (buf + tpp_lengthof(buf)));
+	return tpp_lexer_push_textfile(self, (tpp_char const *)buf, (tpp_size)(p - buf));
+}
+#endif /* TPP_HAVE_MACRO___TIMESTAMP__ */
+
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle_time_macro(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
+	tpp_tm cur;
+	tpp_errno error;
+
+	/* Initialize time if this is the first *time* (pun intended) we get here */
+	if (tpp_time_isempty(tpp_lexer_gettimeptr(self))) {
+		error = tpp_time_now(tpp_lexer_gettimeptr(self));
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+#if TPP_HAVE_TPP_W_DATE_TIME
+		error = tpp_lexer_warnf(self, TPP_W_DATE_TIME);
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+#endif /* TPP_HAVE_TPP_W_DATE_TIME */
+	}
+
+	/* Load tm from time */
+	error = tpp_tm_fromtime(&cur, tpp_lexer_gettimeptr(self));
+	if (TPP_ISERR(error))
+		return TPP_TOK_OFERR(error);
+
+	/* Process time according to given "tok" */
+	switch (tok) {
+#if TPP_HAVE_MACRO___TIME__
+	case TPP_KWD___TIME__:
+		return tpp_lexer_yield_handle___TIME__(self, &cur);
+#endif /* TPP_HAVE_MACRO___TIME__ */
+#if TPP_HAVE_MACRO___DATE__
+	case TPP_KWD___DATE__:
+		return tpp_lexer_yield_handle___DATE__(self, &cur);
+#endif /* TPP_HAVE_MACRO___DATE__ */
+#if TPP_HAVE_MACRO___TIMESTAMP__
+	case TPP_KWD___TIMESTAMP__:
+		return tpp_lexer_yield_handle___TIMESTAMP__(self, &cur);
+#endif /* TPP_HAVE_MACRO___TIMESTAMP__ */
+#if TPP_HAVE_NUMERIC_DATE_MACROS
+	case TPP_KWD___DATE_DAY__:
+		return tpp_lexer_push_textfile_int(self, tpp_tm_getmday(&cur));
+	case TPP_KWD___DATE_WDAY__:
+		return tpp_lexer_push_textfile_int(self, tpp_tm_getwday(&cur));
+	case TPP_KWD___DATE_YDAY__:
+		return tpp_lexer_push_textfile_int(self, tpp_tm_getyday(&cur));
+	case TPP_KWD___DATE_MONTH__:
+		return tpp_lexer_push_textfile_int(self, tpp_tm_getmon(&cur));
+	case TPP_KWD___DATE_YEAR__:
+		return tpp_lexer_push_textfile_int(self, tpp_tm_getyear(&cur));
+#endif /* !TPP_HAVE_NUMERIC_DATE_MACROS */
+#if TPP_HAVE_NUMERIC_TIME_MACROS
+	case TPP_KWD___TIME_SEC__:
+		return tpp_lexer_push_textfile_int(self, tpp_tm_getsec(&cur));
+	case TPP_KWD___TIME_MIN__:
+		return tpp_lexer_push_textfile_int(self, tpp_tm_getmin(&cur));
+	case TPP_KWD___TIME_HOUR__:
+		return tpp_lexer_push_textfile_int(self, tpp_tm_gethour(&cur));
+#endif /* !TPP_HAVE_NUMERIC_TIME_MACROS */
+	default: tpp_unreachable();
+	}
+	tpp_unreachable();
+}
+#endif /* TPP_HAVE_TIME_MACROS */
+
+
 #if TPP_HAVE_MACRO___INCLUDE_LEVEL__ || TPP_HAVE_MACRO___INCLUDE_DEPTH__
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___INCLUDE_LEVEL__(tpp_lexer *tpp_restrict self) {
@@ -987,11 +1172,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
-#if (TPP_HAVE_MACRO___TIME__ ||      \
-     TPP_HAVE_MACRO___DATE__ ||      \
-     TPP_HAVE_MACRO___TIMESTAMP__ || \
-     TPP_HAVE_NUMERIC_DATE_MACROS || \
-     TPP_HAVE_NUMERIC_TIME_MACROS)
+#if TPP_HAVE_TIME_MACROS
 #if TPP_HAVE_MACRO___TIME__
 	case TPP_KWD___TIME__:
 #endif /* TPP_HAVE_MACRO___TIME__ */
@@ -1013,11 +1194,8 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	case TPP_KWD___TIME_MIN__:
 	case TPP_KWD___TIME_HOUR__:
 #endif /* !TPP_HAVE_NUMERIC_TIME_MACROS */
-	{
-		/* TODO: -Wdate-time (warning should be disabled by default) */
-		/* TODO */
-	}	break;
-#endif /* ... */
+		return tpp_lexer_yield_handle_time_macro(self, tok);
+#endif /* TPP_HAVE_TIME_MACROS */
 /************************************************************************/
 
 
@@ -1084,6 +1262,16 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 /************************************************************************/
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
 	/* TODO: __TPP_LOAD_FILE */
+	/* TODO: Parsing the #include-filename can be done by checking of the next token
+	 *       starts with a '<' or '"' character. If it doesn't, but is instead a
+	 *       keyword, then call "tpp_lexer_yield_handle_keyword(self, result)"
+	 *       to (try to) expand said keyword. If that function then returns EOF
+	 *       (the case where the caller is normally expected to yield the next
+	 *       token), simply jump back to repeat the '<' / '"' check.
+	 *       If the next token's first char isn't '<' / '"', that's "-Wsyntax"
+	 * ^ An implementation like that is completely standard-confirming, since the
+	 *   standard only mandates that macros be expanded in #include-filenames
+	 *   before the '<' / '"' check is to-be repeated. */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
 #if TPP_HAVE_MACRO___TPP_RANDOM
 	/* TODO: __TPP_RANDOM */

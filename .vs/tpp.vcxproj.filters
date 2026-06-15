@@ -164,6 +164,9 @@
     <ClInclude Include="..\src\parts\expr.h">
       <Filter>src\parts</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\parts\time.h">
+      <Filter>src\parts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\cpp.hint" />

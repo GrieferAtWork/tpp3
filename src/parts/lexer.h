@@ -28,6 +28,7 @@
 #include "features.h"
 #include "file.h"
 #include "keyword.h"
+#include "time.h"
 #include "token.h"
 #include "warnings.h"
 
@@ -255,6 +256,18 @@ typedef struct tpp_lexer {
 #else /* TPP_HAVE_MACRO___COUNTER__ */
 #define _tpp_lexer_initcounter(self) /* nothing */
 #endif /* !TPP_HAVE_MACRO___COUNTER__ */
+
+
+	/* Next value for __COUNTER__ */
+#if TPP_HAVE_LEXER_TIME
+	tpp_time TPP_INTERNAL(tl_time); /* Current time, or empty if not yet loaded */
+#define _tpp_lexer_inittime(self) , tpp_time_empty(&(self)->TPP_INTERNAL(tl_time))
+#define tpp_lexer_gettimeptr(self) (&(self)->TPP_INTERNAL(tl_time))
+#define tpp_lexer_gettime(self)    (self)->TPP_INTERNAL(tl_time)
+#define tpp_lexer_settime(self, v) (void)((self)->TPP_INTERNAL(tl_time) = (v))
+#else /* TPP_HAVE_LEXER_TIME */
+#define _tpp_lexer_inittime(self) /* nothing */
+#endif /* !TPP_HAVE_LEXER_TIME */
 } tpp_lexer;
 
 
@@ -330,7 +343,8 @@ typedef struct tpp_lexer {
 	       _tpp_lexer_init_parseexpr(self)                   \
 	       _tpp_lexer_initerrorcount(self)                   \
 	       _tpp_lexer_initerrorlimit(self)                   \
-	       _tpp_lexer_initcounter(self))
+	       _tpp_lexer_initcounter(self)                      \
+	       _tpp_lexer_inittime(self))
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_fini_common(tpp_lexer *tpp_restrict self);
 

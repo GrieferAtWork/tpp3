@@ -223,6 +223,16 @@ again:
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+	case '#':
+		/* length-operator for string expressions */
+		if (!tpp_lexer_getext(self, TPP_EXT_BUILTIN_EXPR_STRINGS))
+			break;
+		/* TODO */
+		break;
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+
 #if TPP_HAVE_BUILTIN_EXPR_DEFINED
 	case TPP_KWD_defined: {
 		bool is_defined;

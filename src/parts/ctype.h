@@ -79,6 +79,9 @@ TPP_CONST_DECL uint_least8_t const tpp_ctype[256]; /* Don't access directly! (co
 #endif /* !tpp_ascii_isspace_nolf */
 #endif /* TPP_HAVE_BUILTIN_CTYPE */
 
+/* TODO: "tpp_ascii_islfornascii()" could also be replaced with "tpp_ascii_islf_or_maybe_utf8_lf()",
+ *       which would just also return true of the first byte of a utf-8 sequence that evaluates to a
+ *       unicode linefeed character */
 #ifndef tpp_ascii_islfornascii
 #define tpp_ascii_islfornascii(ch) (tpp_ascii_islf(ch) || (ch) >= 0x80)
 #endif /* !tpp_ascii_islfornascii */

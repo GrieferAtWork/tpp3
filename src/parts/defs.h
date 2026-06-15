@@ -2014,6 +2014,24 @@ TPP_WARNING(TPP_W_MULTICHAR_LITERAL, 1(TPP_WG_MULTICHAR_LITERAL), 0(), TPP_WSTAT
 
 
 /************************************************************************/
+/* -Wdate-time                                                          */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_DATE_TIME
+#define TPP_HAVE_TPP_WG_DATE_TIME (TPP_HAVE_TPP_W_DATE_TIME)
+#endif /* !TPP_HAVE_TPP_WG_DATE_TIME */
+#if TPP_HAVE_TPP_WG_DATE_TIME
+#define TPP_WG_DATE_TIME TPP_WG_DATE_TIME
+TPP_WGROUP(TPP_WG_DATE_TIME, 1("date-time"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_DATE_TIME */
+
+#if TPP_HAVE_TPP_W_DATE_TIME
+#define TPP_W_DATE_TIME TPP_W_DATE_TIME
+TPP_WARNING(TPP_W_DATE_TIME, 1(TPP_WG_DATE_TIME), 0(), TPP_WSTATE_UNDEFINED,
+            "date-time macro used")
+#endif /* TPP_HAVE_TPP_W_DATE_TIME */
+
+
+/************************************************************************/
 /* -Wmacros                                                             */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_MACROS

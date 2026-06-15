@@ -31,6 +31,7 @@
 #include "parts/string.h"
 #include "parts/file-io.h"
 #include "parts/error.h"
+#include "parts/time.h"
 #include "parts/expr.h"
 #include "parts/token.h"
 #include "parts/features.h"

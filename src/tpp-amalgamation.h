@@ -1923,6 +1923,24 @@ TPP_WARNING(TPP_W_MULTICHAR_LITERAL, 1(TPP_WG_MULTICHAR_LITERAL), 0(), TPP_WSTAT
 
 
 /************************************************************************/
+/* -Wdate-time                                                          */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_DATE_TIME
+#define TPP_HAVE_TPP_WG_DATE_TIME (TPP_HAVE_TPP_W_DATE_TIME)
+#endif /* !TPP_HAVE_TPP_WG_DATE_TIME */
+#if TPP_HAVE_TPP_WG_DATE_TIME
+#define TPP_WG_DATE_TIME TPP_WG_DATE_TIME
+TPP_WGROUP(TPP_WG_DATE_TIME, 1("date-time"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_DATE_TIME */
+
+#if TPP_HAVE_TPP_W_DATE_TIME
+#define TPP_W_DATE_TIME TPP_W_DATE_TIME
+TPP_WARNING(TPP_W_DATE_TIME, 1(TPP_WG_DATE_TIME), 0(), TPP_WSTATE_UNDEFINED,
+            "date-time macro used")
+#endif /* TPP_HAVE_TPP_W_DATE_TIME */
+
+
+/************************************************************************/
 /* -Wmacros                                                             */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_MACROS
@@ -3852,7 +3870,7 @@ TPP_DECL_END
 /* Support for: #pragma extension("-fmacro-recursion")
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION* */
 #ifndef TPP_HAVE_MACRO_RECURSION
-#define TPP_HAVE_MACRO_RECURSION (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fmacro-recursion" */
+#define TPP_HAVE_MACRO_RECURSION (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-fmacro-recursion" */
 #endif /* !TPP_HAVE_MACRO_RECURSION */
 
 // Support for traditional macro expansion:
@@ -4155,6 +4173,16 @@ TPP_DECL_END
 	 TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
 #endif /* !TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
 
+/* Provide an API for loading the current date/time */
+#ifndef TPP_HAVE_TIME_API
+#define TPP_HAVE_TIME_API            \
+	(TPP_HAVE_MACRO___TIME__ ||      \
+	 TPP_HAVE_MACRO___DATE__ ||      \
+	 TPP_HAVE_MACRO___TIMESTAMP__ || \
+	 TPP_HAVE_NUMERIC_DATE_MACROS || \
+	 TPP_HAVE_NUMERIC_TIME_MACROS)
+#endif /* !TPP_HAVE_TIME_API */
+
 /* Enable support for `TPP_FILE_IOFLAGS_SYSHDR' */
 #ifndef TPP_HAVE_FILE_SYSHDR
 #define TPP_HAVE_FILE_SYSHDR (TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0)
@@ -4221,6 +4249,16 @@ TPP_DECL_END
 #ifndef TPP_HAVE_LEXER_SKIP
 #define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1) /* TODO: List all features that use this function */
 #endif /* !TPP_HAVE_LEXER_SKIP */
+
+/* Enable support for storing a time value in "tpp_lexer" */
+#ifndef TPP_HAVE_LEXER_TIME
+#define TPP_HAVE_LEXER_TIME          \
+	(TPP_HAVE_MACRO___TIME__ ||      \
+	 TPP_HAVE_MACRO___DATE__ ||      \
+	 TPP_HAVE_MACRO___TIMESTAMP__ || \
+	 TPP_HAVE_NUMERIC_DATE_MACROS || \
+	 TPP_HAVE_NUMERIC_TIME_MACROS)
+#endif /* !TPP_HAVE_LEXER_TIME */
 
 /* Enable support for `tpp_lexer_rawskip_raw()', a function that is used-
  * and needed in order to seek- and skip-over the '(' token following a
@@ -4574,6 +4612,14 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_MULTICHAR_LITERAL \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
 #endif /* !TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
+#ifndef TPP_HAVE_TPP_W_DATE_TIME
+#define TPP_HAVE_TPP_W_DATE_TIME                           \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_MACRO___TIME__ ||      \
+	                       TPP_HAVE_MACRO___DATE__ ||      \
+	                       TPP_HAVE_MACRO___TIMESTAMP__ || \
+	                       TPP_HAVE_NUMERIC_DATE_MACROS || \
+	                       TPP_HAVE_NUMERIC_TIME_MACROS))
+#endif /* !TPP_HAVE_TPP_W_DATE_TIME */
 
 
 /* Warning printer configuration */
@@ -4670,6 +4716,9 @@ TPP_CONST_DECL uint_least8_t const tpp_ctype[256]; /* Don't access directly! (co
 #endif /* !tpp_ascii_isspace_nolf */
 #endif /* TPP_HAVE_BUILTIN_CTYPE */
 
+/* TODO: "tpp_ascii_islfornascii()" could also be replaced with "tpp_ascii_islf_or_maybe_utf8_lf()",
+ *       which would just also return true of the first byte of a utf-8 sequence that evaluates to a
+ *       unicode linefeed character */
 #ifndef tpp_ascii_islfornascii
 #define tpp_ascii_islfornascii(ch) (tpp_ascii_islf(ch) || (ch) >= 0x80)
 #endif /* !tpp_ascii_islfornascii */
@@ -5115,6 +5164,58 @@ TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_strerror(tpp_errno error);
 #endif /* TPP_HAVE_STRERROR */
 
 TPP_DECL_END
+/************************************************************************/
+
+/************************************************************************/
+/* File: parts/time.h                                                   */
+/************************************************************************/
+#if TPP_HAVE_TIME_API
+#ifndef tpp_time
+#include <time.h>
+
+TPP_DECL_BEGIN
+
+/* Time API */
+#define tpp_time                 time_t
+#define tpp_time_now(p_time)     (time(p_time), TPP_EOK)
+#define tpp_time_empty(p_time)   (*(p_time) = 0)
+#define tpp_time_isempty(p_time) (*(p_time) == 0)
+
+/* Time -> tm conversion (splitting time into its individual components) */
+typedef struct tm tpp_tm;
+#ifdef _MSC_VER
+#define tpp_tm_fromtime(self, p_time) (localtime_s(self, p_time) == 0 ? TPP_EOK : TPP_EIO)
+#else /* _MSC_VER */
+#ifndef TPP_CONFIG_HAVE_LOCALTIME_R
+#define TPP_CONFIG_HAVE_LOCALTIME_R 1 /* Override if your platform doesn't have this... */
+#endif /* !TPP_CONFIG_HAVE_LOCALTIME_R */
+
+#if TPP_CONFIG_HAVE_LOCALTIME_R
+#define tpp_tm_fromtime(self, p_time) (localtime_r(p_time, self) ? TPP_EOK : TPP_EIO)
+#else /* TPP_CONFIG_HAVE_LOCALTIME_R */
+#define tpp_tm_fromtime tpp_tm_fromtime
+TPP_INLINE tpp_errno TPPCALL tpp_tm_fromtime(tpp_tm *self, tpp_time *p_time) {
+	struct tm *tmp = localtime(p_time);
+	if (!tmp)
+		return TPP_EIO;
+	*self = *tmp;
+	return TPP_EOK;
+}
+#endif /* !TPP_CONFIG_HAVE_LOCALTIME_R */
+#endif /* !_MSC_VER */
+
+#define tpp_tm_getsec(self)  ((self)->tm_sec)         /* [0, 60] */
+#define tpp_tm_getmin(self)  ((self)->tm_min)         /* [0, 59] */
+#define tpp_tm_gethour(self) ((self)->tm_hour)        /* [0, 23] */
+#define tpp_tm_getmday(self) ((self)->tm_mday)        /* [1, 31] */
+#define tpp_tm_getmon(self)  ((self)->tm_mon + 1)     /* [1, 12] */
+#define tpp_tm_getyear(self) ((self)->tm_year + 1900) /* ... */
+#define tpp_tm_getwday(self) ((self)->tm_wday)        /* [0, 6] */
+#define tpp_tm_getyday(self) ((self)->tm_yday)        /* [0, 365] */
+
+TPP_DECL_END
+#endif /* !tpp_time */
+#endif /* TPP_HAVE_TIME_API */
 /************************************************************************/
 
 /************************************************************************/
@@ -9325,6 +9426,18 @@ typedef struct tpp_lexer {
 #else /* TPP_HAVE_MACRO___COUNTER__ */
 #define _tpp_lexer_initcounter(self) /* nothing */
 #endif /* !TPP_HAVE_MACRO___COUNTER__ */
+
+
+	/* Next value for __COUNTER__ */
+#if TPP_HAVE_LEXER_TIME
+	tpp_time TPP_INTERNAL(tl_time); /* Current time, or empty if not yet loaded */
+#define _tpp_lexer_inittime(self) , tpp_time_empty(&(self)->TPP_INTERNAL(tl_time))
+#define tpp_lexer_gettimeptr(self) (&(self)->TPP_INTERNAL(tl_time))
+#define tpp_lexer_gettime(self)    (self)->TPP_INTERNAL(tl_time)
+#define tpp_lexer_settime(self, v) (void)((self)->TPP_INTERNAL(tl_time) = (v))
+#else /* TPP_HAVE_LEXER_TIME */
+#define _tpp_lexer_inittime(self) /* nothing */
+#endif /* !TPP_HAVE_LEXER_TIME */
 } tpp_lexer;
 
 
@@ -9400,7 +9513,8 @@ typedef struct tpp_lexer {
 	       _tpp_lexer_init_parseexpr(self)                   \
 	       _tpp_lexer_initerrorcount(self)                   \
 	       _tpp_lexer_initerrorlimit(self)                   \
-	       _tpp_lexer_initcounter(self))
+	       _tpp_lexer_initcounter(self)                      \
+	       _tpp_lexer_inittime(self))
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_fini_common(tpp_lexer *tpp_restrict self);
 

@@ -1183,7 +1183,7 @@
 /* Support for: #pragma extension("-fmacro-recursion")
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION* */
 #ifndef TPP_HAVE_MACRO_RECURSION
-#define TPP_HAVE_MACRO_RECURSION (TPP_HAVE_CPP_MACROS ? -1 : 0) /* "-fmacro-recursion" */
+#define TPP_HAVE_MACRO_RECURSION (TPP_HAVE_CPP_MACROS ? -2 : 0) /* "-fmacro-recursion" */
 #endif /* !TPP_HAVE_MACRO_RECURSION */
 
 // Support for traditional macro expansion:
@@ -1486,6 +1486,16 @@
 	 TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
 #endif /* !TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
 
+/* Provide an API for loading the current date/time */
+#ifndef TPP_HAVE_TIME_API
+#define TPP_HAVE_TIME_API            \
+	(TPP_HAVE_MACRO___TIME__ ||      \
+	 TPP_HAVE_MACRO___DATE__ ||      \
+	 TPP_HAVE_MACRO___TIMESTAMP__ || \
+	 TPP_HAVE_NUMERIC_DATE_MACROS || \
+	 TPP_HAVE_NUMERIC_TIME_MACROS)
+#endif /* !TPP_HAVE_TIME_API */
+
 /* Enable support for `TPP_FILE_IOFLAGS_SYSHDR' */
 #ifndef TPP_HAVE_FILE_SYSHDR
 #define TPP_HAVE_FILE_SYSHDR (TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0)
@@ -1552,6 +1562,16 @@
 #ifndef TPP_HAVE_LEXER_SKIP
 #define TPP_HAVE_LEXER_SKIP (TPP_HAVE_PRAGMA_PUSH_MACRO || 1) /* TODO: List all features that use this function */
 #endif /* !TPP_HAVE_LEXER_SKIP */
+
+/* Enable support for storing a time value in "tpp_lexer" */
+#ifndef TPP_HAVE_LEXER_TIME
+#define TPP_HAVE_LEXER_TIME          \
+	(TPP_HAVE_MACRO___TIME__ ||      \
+	 TPP_HAVE_MACRO___DATE__ ||      \
+	 TPP_HAVE_MACRO___TIMESTAMP__ || \
+	 TPP_HAVE_NUMERIC_DATE_MACROS || \
+	 TPP_HAVE_NUMERIC_TIME_MACROS)
+#endif /* !TPP_HAVE_LEXER_TIME */
 
 /* Enable support for `tpp_lexer_rawskip_raw()', a function that is used-
  * and needed in order to seek- and skip-over the '(' token following a
@@ -1905,6 +1925,14 @@
 #define TPP_HAVE_TPP_W_MULTICHAR_LITERAL \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
 #endif /* !TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
+#ifndef TPP_HAVE_TPP_W_DATE_TIME
+#define TPP_HAVE_TPP_W_DATE_TIME                           \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_MACRO___TIME__ ||      \
+	                       TPP_HAVE_MACRO___DATE__ ||      \
+	                       TPP_HAVE_MACRO___TIMESTAMP__ || \
+	                       TPP_HAVE_NUMERIC_DATE_MACROS || \
+	                       TPP_HAVE_NUMERIC_TIME_MACROS))
+#endif /* !TPP_HAVE_TPP_W_DATE_TIME */
 
 
 /* Warning printer configuration */
