@@ -74,7 +74,8 @@ tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
  *
  * @return: TPP_EOK:    Success (but there may still be garbage after
  *                      the directive that hasn't been parsed, yet).
- * @return: TPP_ENOENT: Unknown pragma (soft-error; must be handled by caller)
+ * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
+ *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
  * @return: TPP_E*:     Error */
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
@@ -82,21 +83,22 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 /* Process a pragma directive, starting after the "TPP_KWD_pragma" keyword */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
-	tpp_token const *const token = tpp_lexer_gettoken(self);
+	tpp_token_id tok;
 	tpp_errno error = tpp_lexer_process_pragma(self);
 	if (TPP_ISERR(error)) {
 		if (error == TPP_ENOENT)
 			goto skip_garbage_without_warning;
 		return TPP_TOK_OFERR(error);
 	}
-	while (TPP_TOK_ISSPACE_OR_COMMENT(token->tt_id)) {
-		tpp_token_id tok = tpp_lexer_yieldraw_blocking(self);
+	tok = tpp_lexer_gettok(self);
+	while (TPP_TOK_ISSPACE_OR_COMMENT(tok)) {
+		tok = tpp_lexer_yieldraw_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return tok;
 	}
-	if (TPP_TOK_ISLF_OR_COMMENT(token->tt_id))
+	if (TPP_TOK_ISLF_OR_COMMENT(tok))
 		return TPP_TOK_EOF;
-	if (token->tt_id == TPP_TOK_EOF)
+	if (tok == TPP_TOK_EOF)
 		return TPP_TOK_EOF;
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 	error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE);
@@ -104,12 +106,11 @@ tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
 		return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
 skip_garbage_without_warning:
-	for (;;) {
-		tpp_token_id tok = tpp_lexer_yieldraw_blocking(self);
+	tok = tpp_lexer_gettok(self);
+	while (!TPP_TOK_ISLF_OR_COMMENT(tok)) {
+		tok = tpp_lexer_yieldraw_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return tok;
-		if (TPP_TOK_ISLF_OR_COMMENT(tok))
-			break;
 	}
 	return TPP_TOK_EOF;
 }

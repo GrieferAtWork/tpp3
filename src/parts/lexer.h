@@ -105,8 +105,24 @@ typedef struct tpp_lexer {
 #endif /* !TPP_HAVE_LEXER_STATE_FLAGS */
 
 
+#if TPP_HAVE_INCLUDE_PATH
 	/* TODO: system #include paths (/usr/include, ...) */
+#define _tpp_lexer_init_incpath(self) /* TODO */
+#else /* TPP_HAVE_INCLUDE_PATH */
+#define _tpp_lexer_init_incpath(self) /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH */
 
+
+	/* TODO: User-defined callback hook to parse pragmas not known to TPP itself
+	 * -> Should come in 3 flavors:
+	 *    - Compile-time disabled
+	 *    - Compile-time enabled (with hardcoded function call to user-defined macro)
+	 *    - Runtime enabled (with nullable function pointer in lexer)
+	 *
+	 * TODO: All these different runtime hooks (tl_warnprinter, tl_expr_parser_cb, and
+	 *       now this new "unknown_pragma_handler") shouldn't each do their own thing!
+	 *       Instead, these should be a generic runtime-hooks component to "tpp_lexer",
+	 *       similar to TPP2's "struct TPPCallbacks" */
 
 	/* Warning configuration / printer */
 #undef TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER /* Wrapper for "TPP_CONFIG_WARNPRINTER" */
@@ -344,6 +360,7 @@ typedef struct tpp_lexer {
 	       _tpp_lexer_init_exts(self)                        \
 	       _tpp_lexer_init_feat(self)                        \
 	       _tpp_lexer_init_state(self)                       \
+	       _tpp_lexer_init_incpath(self)                     \
 	       _tpp_lexer_init_warn(self)                        \
 	       _tpp_lexer_init_warnprinter(self)                 \
 	       _tpp_lexer_init_parseexpr(self)                   \

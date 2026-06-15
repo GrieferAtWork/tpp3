@@ -41,7 +41,7 @@ TPP_CONST_IMPL tpp_extensions_state const tpp_extensions_state_default = {
 };
 
 
-#if TPP_HAVE_PRAGMA_EXTENSION_PUSH
+#if TPP_HAVE_EXTENSIONS_PUSH_POP
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_extensions_fini(tpp_extensions *tpp_restrict self) {
 	tpp_extensions *iter = self->te_prev;
@@ -86,7 +86,7 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 err_nomem:
 	return TPP_ENOMEM;
 }
-#endif /* TPP_HAVE_PRAGMA_EXTENSION_PUSH */
+#endif /* TPP_HAVE_EXTENSIONS_PUSH_POP */
 #endif /* TPP_HAVE_EXTENSIONS */
 
 TPP_DECL_END

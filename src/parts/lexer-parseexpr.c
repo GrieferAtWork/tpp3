@@ -90,9 +90,7 @@ again:
 		if (TPP_ISERR(error))
 			return error;
 		tok = tpp_lexer_skip_forexpr(self, TPP_TOK_OFCHAR(')'));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		return TPP_EOK;
+		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
 
 #if (TPP_HAVE_TPP_TOK_MINUS_MINUS || \
@@ -194,9 +192,7 @@ again:
 			do {
 				tok = tpp_lexer_yield_forexpr(self);
 			} while (TPP_TOK_ISSTRING(tok));
-			if (TPP_TOK_ISERR(tok))
-				return TPP_TOK_ASERR(tok);
-			return TPP_EOK;
+			return TPP_TOK_ASERR_OR_EOK(tok);
 		}
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 		TPP_FALLTHRU
@@ -217,9 +213,7 @@ again:
 		do {
 			tok = tpp_lexer_yield_forexpr(self);
 		} while (TPP_TOK_ISSTRING(tok));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		return TPP_EOK;
+		return TPP_TOK_ASERR_OR_EOK(tok);
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 

@@ -6720,7 +6720,7 @@ TPP_CONST_IMPL tpp_extensions_state const tpp_extensions_state_default = {
 };
 
 
-#if TPP_HAVE_PRAGMA_EXTENSION_PUSH
+#if TPP_HAVE_EXTENSIONS_PUSH_POP
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_extensions_fini(tpp_extensions *tpp_restrict self) {
 	tpp_extensions *iter = self->te_prev;
@@ -6765,7 +6765,7 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 err_nomem:
 	return TPP_ENOMEM;
 }
-#endif /* TPP_HAVE_PRAGMA_EXTENSION_PUSH */
+#endif /* TPP_HAVE_EXTENSIONS_PUSH_POP */
 #endif /* TPP_HAVE_EXTENSIONS */
 
 TPP_DECL_END
@@ -14744,9 +14744,7 @@ done_yield_rparen:
 		do {
 			tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		return TPP_EOK;
+		return TPP_TOK_ASERR_OR_EOK(tok);
 	}
 
 warn_unexpected_parameter_list_token:
@@ -15899,8 +15897,8 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_PRAGMA
 
 /************************************************************************/
-/* #pragma push_macro("foo")                                            */
-/* #pragma pop_macro("foo")                                             */
+/* #pragma push_macro(undef, "foo", "bar")                              */
+/* #pragma pop_macro("foo", "bar")                                      */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 struct tpp_lexer_handle_pushpopmacro_data {
@@ -15967,7 +15965,9 @@ tpp_lexer_process_pragma_pushpop_macro(tpp_lexer *tpp_restrict self, tpp_token_i
 	data.tlhppmd_lexer = self;
 	data.tlhppmd_mode  = mode;
 	data.tlhppmd_undef = false;
-	tok = tpp_lexer_yield_blocking(self);
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 
@@ -16023,11 +16023,402 @@ again_parse_string:
 
 	/* Skip trailing ')' */
 	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
-	if (TPP_TOK_ISERR(tok))
-		return TPP_TOK_ASERR(tok);
-	return TPP_EOK;
+	return TPP_TOK_ASERR_OR_EOK(tok);
 }
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+
+
+
+
+
+/************************************************************************/
+/* #pragma once                                                         */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_ONCE
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
+	tpp_token_id tok;
+	tpp_file const *iofile;
+	tpp_keyword *iofile_kwd;
+	iofile     = tpp_file_getiofile(tpp_lexer_getfile(self));
+	iofile_kwd = tpp_file_filename_kwd(iofile);
+	if (iofile_kwd) {
+		tpp_keyword_misc *misc;
+		misc = tpp_keyword_requiremisc(iofile_kwd);
+		if tpp_unlikely(!misc)
+			return TPP_ENOMEM;
+		misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_ONCE;
+	}
+#if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
+#if TPP_HAVE_INCLUDE_STACK
+	if (iofile->tf_prev == NULL)
+#endif /* TPP_HAVE_INCLUDE_STACK */
+	{
+		tpp_errno error = tpp_lexer_warnf(self, TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER);
+		if (TPP_ISERR(error))
+			return error;
+	}
+#endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
+	tok = tpp_lexer_yieldraw_blocking(self);
+	return TPP_TOK_ASERR_OR_EOK(tok);
+}
+#endif /* TPP_HAVE_PRAGMA_ONCE */
+
+
+
+
+
+/************************************************************************/
+/* #pragma deprecated("foo")                                            */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_DEPRECATED
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_deprecated(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_DEPRECATED */
+
+
+
+
+
+/************************************************************************/
+/* #pragma extension(...)                                               */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_extension(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	/* TODO: Only support push when "TPP_HAVE_EXTENSIONS_PUSH_POP" */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
+
+
+
+
+
+/************************************************************************/
+/* #pragma warning(...)                                               */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_warning(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	/* TODO: Only support push when "TPP_HAVE_WARNINGS_PUSH_POP" */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
+
+
+
+
+
+/************************************************************************/
+/* #pragma message("...")                                               */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_MESSAGE
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_message(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_MESSAGE */
+
+
+
+
+
+/************************************************************************/
+/* #pragma error("...")                                                 */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_ERROR
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_error(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_ERROR */
+
+
+
+
+
+/************************************************************************/
+/* #pragma GCC system_header                                            */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_system_header(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
+
+
+
+
+
+/************************************************************************/
+/* #pragma GCC diagnostic push                                          */
+/* #pragma GCC diagnostic warning "-Wunknown-pragmas"                   */
+/* #pragma GCC diagnostic error "-Wunknown-pragmas"                     */
+/* #pragma GCC diagnostic ignored "-Wunknown-pragmas"                   */
+/* #pragma GCC diagnostic pop                                           */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_diagnostic(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	/* TODO: Only support push when "TPP_HAVE_WARNINGS_PUSH_POP" */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC */
+
+
+
+
+
+/************************************************************************/
+/* #pragma GCC poison foo bar foobar ...                                 */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_GCC_POISON
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_poison(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_GCC_POISON */
+
+
+
+
+
+/************************************************************************/
+/* #pragma GCC warning "message"                                        */
+/* #pragma GCC error "message"                                          */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_GCC_WARNING || TPP_HAVE_PRAGMA_GCC_ERROR
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_warning(tpp_lexer *tpp_restrict self, tpp_warning_id mode) {
+	/* TODO */
+	(void)self;
+	(void)mode;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_GCC_WARNING || TPP_HAVE_PRAGMA_GCC_ERROR */
+
+
+
+
+
+/************************************************************************/
+/* #pragma GCC dependency <file> [<message>]                            */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_GCC_DEPENDENCY
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_dependency(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_GCC_DEPENDENCY */
+
+
+
+
+
+/************************************************************************/
+/* #pragma tpp_exec("...")                                              */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_TPP_EXEC || TPP_HAVE_PRAGMA_TPP_TPP_EXEC
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_tpp_exec(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_TPP_EXEC || TPP_HAVE_PRAGMA_TPP_TPP_EXEC */
+
+
+
+
+
+/************************************************************************/
+/* #pragma tpp_set_keyword_flags("foo", 0x7f)                           */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS || TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS || TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS */
+
+
+
+
+
+/************************************************************************/
+/* #pragma TPP include_path(push, + "/usr/include")                     */
+/* #pragma TPP include_path("/usr/local/include")   // same as '+'      */
+/* #pragma TPP include_path(- "/usr/include")                           */
+/* #pragma TPP include_path(pop)                                        */
+/* #pragma TPP include_path(clear)                                      */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_TPP_include_path(tpp_lexer *tpp_restrict self) {
+	/* TODO */
+	/* TODO: Only support push when "TPP_HAVE_INCLUDE_PATH_PUSH_POP" */
+	(void)self;
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+
+
+
+
+
+/************************************************************************/
+/* #pragma GCC ...                                                      */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_GCC
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
+	tpp_token_id tok;
+	tpp_lexer_seek_backup backup;
+	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
+	do {
+		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	switch (tok) {
+
+#if TPP_HAVE_PRAGMA_GCC_POISON
+	case TPP_KWD_poison:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_POISON))
+			break;
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_GCC_poison(self);
+#endif /* TPP_HAVE_PRAGMA_GCC_POISON */
+
+#if TPP_HAVE_PRAGMA_GCC_WARNING
+	case TPP_KWD_warning:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_WARNING))
+			break;
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_GCC_warning(self, TPP_W_WARNING);
+#endif /* TPP_HAVE_PRAGMA_GCC_WARNING */
+
+#if TPP_HAVE_PRAGMA_GCC_ERROR
+	case TPP_KWD_error:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_ERROR))
+			break;
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_GCC_warning(self, TPP_W_ERROR);
+#endif /* TPP_HAVE_PRAGMA_GCC_ERROR */
+
+#if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
+	case TPP_KWD_system_header:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_SYSTEM_HEADER))
+			break;
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_GCC_system_header(self);
+#endif /* TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
+
+#if TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
+	case TPP_KWD_diagnostic:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_DIAGNOSTIC))
+			break;
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_GCC_diagnostic(self);
+#endif /* !TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC */
+
+#if TPP_HAVE_PRAGMA_GCC_DEPENDENCY
+	case TPP_KWD_dependency:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_DEPENDENCY))
+			break;
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_GCC_dependency(self);
+#endif /* !TPP_HAVE_PRAGMA_GCC_DEPENDENCY */
+
+	default: break;
+	}
+	tpp_lexer_seek_rollback(self, &backup);
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_GCC */
+
+
+
+
+
+/************************************************************************/
+/* #pragma TPP ...                                                      */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_TPP
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_TPP(tpp_lexer *tpp_restrict self) {
+	tpp_token_id tok;
+	tpp_lexer_seek_backup backup;
+	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
+	do {
+		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	switch (tok) {
+
+#if TPP_HAVE_PRAGMA_TPP_EXTENSION
+	case TPP_KWD_extension:
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_extension(self);
+#endif /* TPP_HAVE_PRAGMA_TPP_EXTENSION */
+
+#if TPP_HAVE_PRAGMA_TPP_WARNING
+	case TPP_KWD_warning:
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_warning(self);
+#endif /* TPP_HAVE_PRAGMA_TPP_WARNING */
+
+#if TPP_HAVE_PRAGMA_TPP_TPP_EXEC
+	case TPP_KWD_tpp_exec:
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_tpp_exec(self);
+#endif /* TPP_HAVE_PRAGMA_TPP_TPP_EXEC */
+
+#if TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
+	case TPP_KWD_tpp_set_keyword_flags:
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_tpp_set_keyword_flags(self);
+#endif /* TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS */
+
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+	case TPP_KWD_include_path:
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_TPP_include_path(self);
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+
+	default: break;
+	}
+	tpp_lexer_seek_rollback(self, &backup);
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_PRAGMA_TPP */
+
+
 
 
 
@@ -16037,7 +16428,8 @@ again_parse_string:
  *
  * @return: TPP_EOK:    Success (but there may still be garbage after
  *                      the directive that hasn't been parsed, yet).
- * @return: TPP_ENOENT: Unknown pragma (soft-error; must be handled by caller)
+ * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
+ *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
  * @return: TPP_E*:     Error */
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
@@ -16047,7 +16439,6 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok = token->tt_id;
 	switch (tok) {
 
-/************************************************************************/
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	case TPP_KWD_push_macro:
 	case TPP_KWD_pop_macro:
@@ -16055,125 +16446,110 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 			break;
 		return tpp_lexer_process_pragma_pushpop_macro(self, tok);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
-/************************************************************************/
 
-
-
-/************************************************************************/
 #if TPP_HAVE_PRAGMA_ONCE
-	case TPP_KWD_once: {
-		tpp_file const *iofile;
-		tpp_keyword *iofile_kwd;
+	case TPP_KWD_once:
 		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_ONCE))
-			goto unknown_pragma;
-		iofile     = tpp_file_getiofile(tpp_lexer_getfile(self));
-		iofile_kwd = tpp_file_filename_kwd(iofile);
-		if (iofile_kwd) {
-			tpp_keyword_misc *misc;
-			misc = tpp_keyword_requiremisc(iofile_kwd);
-			if tpp_unlikely(!misc)
-				return TPP_ENOMEM;
-			misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_ONCE;
-		}
-#if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
-#if TPP_HAVE_INCLUDE_STACK
-		if (iofile->tf_prev == NULL)
-#endif /* TPP_HAVE_INCLUDE_STACK */
-		{
-			tpp_errno error = tpp_lexer_warnf(self, TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER);
-			if (TPP_ISERR(error))
-				return error;
-		}
-#endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
-		tok = tpp_lexer_yieldraw_blocking(self);
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-	}	break;
+			break;
+		return tpp_lexer_process_pragma_once(self);
 #endif /* TPP_HAVE_PRAGMA_ONCE */
-/************************************************************************/
 
 #if TPP_HAVE_PRAGMA_DEPRECATED
-	/* TODO: #pragma deprecated("foo") */
+	case TPP_KWD_deprecated:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_DEPRECATED))
+			break;
+		return tpp_lexer_process_pragma_deprecated(self);
 #endif /* TPP_HAVE_PRAGMA_DEPRECATED */
 
-#if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
-	/* TODO: #pragma tpp_set_keyword_flags("foo", 0x7f) */
-#endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
-
 #if TPP_HAVE_PRAGMA_EXTENSION
-	/* TODO: #pragma extension(...) */
+	case TPP_KWD_extension:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_EXTENSION))
+			break;
+		return tpp_lexer_process_pragma_extension(self);
 #endif /* TPP_HAVE_PRAGMA_EXTENSION */
 
-#if TPP_HAVE_PRAGMA_EXTENSION_PUSH
-	/* TODO: #pragma extension(push) */
-#endif /* TPP_HAVE_PRAGMA_EXTENSION_PUSH */
-
 #if TPP_HAVE_PRAGMA_WARNING
-	/* TODO: #pragma warning(...) */
+	case TPP_KWD_warning:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_WARNING))
+			break;
+		return tpp_lexer_process_pragma_warning(self);
 #endif /* TPP_HAVE_PRAGMA_WARNING */
 
-#if TPP_HAVE_PRAGMA_WARNING_PUSH
-	/* TODO: #pragma warning(push) */
-#endif /* TPP_HAVE_PRAGMA_WARNING_PUSH */
-
-#if TPP_HAVE_PRAGMA_TPP_EXEC
-	/* TODO: #pragma tpp_exec("...") */
-#endif /* TPP_HAVE_PRAGMA_TPP_EXEC */
-
 #if TPP_HAVE_PRAGMA_MESSAGE
-	/* TODO: #pragma message("...") */
+	case TPP_KWD_message:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_MESSAGE))
+			break;
+		return tpp_lexer_process_pragma_message(self);
 #endif /* TPP_HAVE_PRAGMA_MESSAGE */
 
 #if TPP_HAVE_PRAGMA_ERROR
-	/* TODO: #pragma error("...") */
+	case TPP_KWD_error:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_ERROR))
+			break;
+		return tpp_lexer_process_pragma_error(self);
 #endif /* TPP_HAVE_PRAGMA_ERROR */
 
 #if TPP_HAVE_PRAGMA_REGION
-	/* TODO: #pragma region,  #pragma endregion */
+		/* >> #pragma region MY_REGION
+		 * >> #pragma endregion MY_REGION */
+	case TPP_KWD_region:
+	case TPP_KWD_endregion:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_REGION))
+			break;
+		/* These #pragma-s are no-ops, and the remainder of the #pragma-line should
+		 * just be ignored. Since (depending on how the #pragma is being generated),
+		 * that might include an unknown number of characters, we cheat a little and
+		 * return TPP_EENOENT here, which our caller(s) interprets as:
+		 * - Skip all trailing tokens
+		 * - Don't warn about the presence of trailing tokens
+		 * - Translate to TPP_EOK */
+		return TPP_ENOENT;
 #endif /* TPP_HAVE_PRAGMA_REGION */
 
-#if TPP_HAVE_PRAGMA_GCC_POISON
-	/* TODO: #pragma GCC poison foo */
-#endif /* TPP_HAVE_PRAGMA_GCC_POISON */
-
-#if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
-	/* TODO: #pragma GCC system_header */
-#endif /* TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
-
-#if TPP_HAVE_PRAGMA_TPP_WARNING
-	/* TODO: #pragma TPP warning(...)  (same as TPP_HAVE_PRAGMA_WARNING) */
-#endif /* TPP_HAVE_PRAGMA_TPP_WARNING */
-
-#if TPP_HAVE_PRAGMA_TPP_EXTENSION
-	/* TODO: #pragma TPP extension(...)  (same as TPP_HAVE_PRAGMA_EXTENSION) */
-#endif /* TPP_HAVE_PRAGMA_TPP_EXTENSION */
-
 #if TPP_HAVE_PRAGMA_TPP_TPP_EXEC
-	/* TODO: #pragma TPP tpp_exec(...)  (same as TPP_HAVE_PRAGMA_TPP_EXEC) */
+	case TPP_KWD_tpp_exec:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_TPP_EXEC))
+			break;
+		return tpp_lexer_process_pragma_tpp_exec(self);
 #endif /* TPP_HAVE_PRAGMA_TPP_TPP_EXEC */
 
-#if TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
-	/* TODO: #pragma TPP tpp_set_keyword_flags("foo", 0x7f)  (same as TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS) */
-#endif /* TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS */
+#if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
+	case TPP_KWD_tpp_set_keyword_flags:
+		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_TPP_SET_KEYWORD_FLAGS))
+			break;
+		return tpp_lexer_process_pragma_tpp_set_keyword_flags(self);
+#endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
 
-#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
-	/* TODO: #pragma TPP include_path(...) */
-#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+#if TPP_HAVE_PRAGMA_GCC
+	case TPP_KWD_GCC: {
+		tpp_errno error = tpp_lexer_process_pragma_GCC(self);
+		if (error != TPP_ENOENT)
+			return error;
+	}	break;
+#endif /* TPP_HAVE_PRAGMA_GCC */
 
-	default: goto unknown_pragma;
+#if TPP_HAVE_PRAGMA_TPP
+	case TPP_KWD_TPP: {
+		tpp_errno error = tpp_lexer_process_pragma_TPP(self);
+		if (error != TPP_ENOENT)
+			return error;
+	}	break;
+#endif /* TPP_HAVE_PRAGMA_TPP */
+
+	default: break;
 	}
-	return TPP_EOK;
+
+	/* TODO: User-defined callback hook to parse pragmas not known to TPP itself */
+
 #if TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS
 	{
 		tpp_errno error;
-unknown_pragma:
 		error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_PRAGMAS);
 		if (!TPP_ISERR(error))
 			error = TPP_ENOENT;
 		return error;
 	}
 #else /* TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
-unknown_pragma:
 	return TPP_ENOENT;
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
 }
@@ -16695,7 +17071,8 @@ tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
  *
  * @return: TPP_EOK:    Success (but there may still be garbage after
  *                      the directive that hasn't been parsed, yet).
- * @return: TPP_ENOENT: Unknown pragma (soft-error; must be handled by caller)
+ * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
+ *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
  * @return: TPP_E*:     Error */
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
@@ -16703,21 +17080,22 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 /* Process a pragma directive, starting after the "TPP_KWD_pragma" keyword */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
-	tpp_token const *const token = tpp_lexer_gettoken(self);
+	tpp_token_id tok;
 	tpp_errno error = tpp_lexer_process_pragma(self);
 	if (TPP_ISERR(error)) {
 		if (error == TPP_ENOENT)
 			goto skip_garbage_without_warning;
 		return TPP_TOK_OFERR(error);
 	}
-	while (TPP_TOK_ISSPACE_OR_COMMENT(token->tt_id)) {
-		tpp_token_id tok = tpp_lexer_yieldraw_blocking(self);
+	tok = tpp_lexer_gettok(self);
+	while (TPP_TOK_ISSPACE_OR_COMMENT(tok)) {
+		tok = tpp_lexer_yieldraw_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return tok;
 	}
-	if (TPP_TOK_ISLF_OR_COMMENT(token->tt_id))
+	if (TPP_TOK_ISLF_OR_COMMENT(tok))
 		return TPP_TOK_EOF;
-	if (token->tt_id == TPP_TOK_EOF)
+	if (tok == TPP_TOK_EOF)
 		return TPP_TOK_EOF;
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 	error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE);
@@ -16725,12 +17103,11 @@ tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
 		return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
 skip_garbage_without_warning:
-	for (;;) {
-		tpp_token_id tok = tpp_lexer_yieldraw_blocking(self);
+	tok = tpp_lexer_gettok(self);
+	while (!TPP_TOK_ISLF_OR_COMMENT(tok)) {
+		tok = tpp_lexer_yieldraw_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return tok;
-		if (TPP_TOK_ISLF_OR_COMMENT(tok))
-			break;
 	}
 	return TPP_TOK_EOF;
 }
@@ -19404,7 +19781,8 @@ seek_end_of_macro:
  *
  * @return: TPP_EOK:    Success (but there may still be garbage after
  *                      the directive that hasn't been parsed, yet).
- * @return: TPP_ENOENT: Unknown pragma (soft-error; must be handled by caller)
+ * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
+ *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
  * @return: TPP_E*:     Error */
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
@@ -21666,9 +22044,7 @@ again:
 		if (TPP_ISERR(error))
 			return error;
 		tok = tpp_lexer_skip_forexpr(self, TPP_TOK_OFCHAR(')'));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		return TPP_EOK;
+		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
 
 #if (TPP_HAVE_TPP_TOK_MINUS_MINUS || \
@@ -21770,9 +22146,7 @@ again:
 			do {
 				tok = tpp_lexer_yield_forexpr(self);
 			} while (TPP_TOK_ISSTRING(tok));
-			if (TPP_TOK_ISERR(tok))
-				return TPP_TOK_ASERR(tok);
-			return TPP_EOK;
+			return TPP_TOK_ASERR_OR_EOK(tok);
 		}
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 		TPP_FALLTHRU
@@ -21793,9 +22167,7 @@ again:
 		do {
 			tok = tpp_lexer_yield_forexpr(self);
 		} while (TPP_TOK_ISSTRING(tok));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		return TPP_EOK;
+		return TPP_TOK_ASERR_OR_EOK(tok);
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 

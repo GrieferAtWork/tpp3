@@ -131,6 +131,13 @@
 #define TPP_HAVE_WARNING_DEFAULT TPP_HAVE_WARNINGS
 #endif /* !TPP_HAVE_WARNING_DEFAULT */
 
+/* TODO: General configuration to determine default configuration of preprocessor features:
+ * >> #define TPP_CONFIG_PROFILE_LANG_MINIMAL 0 // Disable everything, except dependencies of explicitly enabled features
+ * >> #define TPP_CONFIG_PROFILE_LANG_ALL     1 // Enable (almost) all features, with everything configurable at runtime
+ * >> #define TPP_CONFIG_PROFILE_LANG_C       2 // Enable features needed for a C compiler (warning: subjective)
+ * >> #define TPP_CONFIG_PROFILE_LANG_CXX     3 // Enable features needed for a C++ compiler (warning: subjective)
+ * >> #define TPP_CONFIG_PROFILE ... */
+
 /* Enable support for `TPP_FILE_IOFLAGS_NOCLOSE' */
 #ifndef TPP_HAVE_FILE_NOCLOSE
 #define TPP_HAVE_FILE_NOCLOSE 1 /* TODO: Default should be `0' */
@@ -147,7 +154,6 @@
 #ifndef TPP_HAVE_FILE_LC_CACHE
 #define TPP_HAVE_FILE_LC_CACHE 1
 #endif /* !TPP_HAVE_FILE_LC_CACHE */
-
 
 /* All feature- ("TPP_FEAT_*") / extension ("-f*") -style config options can be defined as:
  *  0: Compile-time disabled
@@ -1311,6 +1317,15 @@
 /* #PRAGMA DIRECTIVES                                                   */
 /************************************************************************/
 
+/* TODO: Builtin support for STDC pragmas:
+ * >> #pragma STDC FENV_ACCESS ON/OFF/DEFAULT
+ * >> #pragma STDC FP_CONTRACT ON/OFF/DEFAULT
+ * >> #pragma STDC CX_LIMITED_RANGE ON/OFF/DEFAULT
+ */
+
+/* TODO: Support #pragma pack(...) */
+/* TODO: Support #pragma GCC visibility ... */
+
 /* Support for: #pragma push_macro() / #pragma pop_macro() */
 #ifndef TPP_HAVE_PRAGMA_PUSH_MACRO
 #define TPP_HAVE_PRAGMA_PUSH_MACRO ((TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA) ? -1 : 0) /* "-fpragma-push-macro" */
@@ -1326,35 +1341,15 @@
 #define TPP_HAVE_PRAGMA_DEPRECATED (TPP_HAVE_PRAGMA ? -1 : 0) /* "-fpragma-deprecated" */
 #endif /* !TPP_HAVE_PRAGMA_DEPRECATED */
 
-/* Support for: #pragma tpp_set_keyword_flags("foo", 0x7f) */
-#ifndef TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
-#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS (TPP_HAVE_PRAGMA ? -1 : 0) /* "-fpragma-tpp-set-keyword-flags" */
-#endif /* !TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
-
 /* Support for: #pragma extension(...) */
 #ifndef TPP_HAVE_PRAGMA_EXTENSION
 #define TPP_HAVE_PRAGMA_EXTENSION ((TPP_HAVE_PRAGMA && TPP_HAVE_EXTENSIONS) ? -1 : 0) /* "-fpragma-extension" */
 #endif /* !TPP_HAVE_PRAGMA_EXTENSION */
 
-/* Support for: #pragma extension(push) */
-#ifndef TPP_HAVE_PRAGMA_EXTENSION_PUSH
-#define TPP_HAVE_PRAGMA_EXTENSION_PUSH ((TPP_HAVE_PRAGMA_EXTENSION && TPP_HAVE_EXTENSIONS_PUSH_POP) ? -1 : 0) /* "-fpragma-extension-push" */
-#endif /* !TPP_HAVE_PRAGMA_EXTENSION_PUSH */
-
 /* Support for: #pragma warning(...) */
 #ifndef TPP_HAVE_PRAGMA_WARNING
 #define TPP_HAVE_PRAGMA_WARNING ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? -1 : 0) /* "-fpragma-warning" */
 #endif /* !TPP_HAVE_PRAGMA_WARNING */
-
-/* Support for: #pragma warning(push) */
-#ifndef TPP_HAVE_PRAGMA_WARNING_PUSH
-#define TPP_HAVE_PRAGMA_WARNING_PUSH ((TPP_HAVE_PRAGMA_WARNING && TPP_HAVE_WARNINGS_PUSH_POP) ? -1 : 0) /* "-fpragma-warning-push" */
-#endif /* !TPP_HAVE_PRAGMA_WARNING_PUSH */
-
-/* Support for: #pragma tpp_exec("...") */
-#ifndef TPP_HAVE_PRAGMA_TPP_EXEC
-#define TPP_HAVE_PRAGMA_TPP_EXEC (TPP_HAVE_PRAGMA ? -1 : 0) /* "-fpragma-tpp_exec" */
-#endif /* !TPP_HAVE_PRAGMA_TPP_EXEC */
 
 /* Support for: #pragma message("...") */
 #ifndef TPP_HAVE_PRAGMA_MESSAGE
@@ -1371,40 +1366,86 @@
 #define TPP_HAVE_PRAGMA_REGION (TPP_HAVE_PRAGMA ? 1 : 0) /* "-fpragma-region" */
 #endif /* !TPP_HAVE_PRAGMA_REGION */
 
+/* Support for: #pragma tpp_exec("...") */
+#ifndef TPP_HAVE_PRAGMA_TPP_EXEC
+#define TPP_HAVE_PRAGMA_TPP_EXEC (TPP_HAVE_PRAGMA ? 1 : 0) /* "-fpragma-tpp-exec" */
+#endif /* !TPP_HAVE_PRAGMA_TPP_EXEC */
+
+/* Support for: #pragma tpp_set_keyword_flags("foo", 0x7f) */
+#ifndef TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
+#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS (TPP_HAVE_PRAGMA ? 1 : 0) /* "-fpragma-tpp-set-keyword-flags" */
+#endif /* !TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
+
 /* Support for: #pragma GCC poison foo */
 #ifndef TPP_HAVE_PRAGMA_GCC_POISON
-#define TPP_HAVE_PRAGMA_GCC_POISON (TPP_HAVE_PRAGMA ? -1 : 0) /* "-fpragma-gcc-poison" */
+#define TPP_HAVE_PRAGMA_GCC_POISON (TPP_HAVE_PRAGMA ? 1 : 0) /* "-fpragma-gcc-poison" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_POISON */
+
+/* Support for: #pragma GCC warning "message" */
+#ifndef TPP_HAVE_PRAGMA_GCC_WARNING
+#define TPP_HAVE_PRAGMA_GCC_WARNING ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? 1 : 0) /* "-fpragma-gcc-warning" */
+#endif /* !TPP_HAVE_PRAGMA_GCC_WARNING */
+
+/* Support for: #pragma GCC error "message" */
+#ifndef TPP_HAVE_PRAGMA_GCC_ERROR
+#define TPP_HAVE_PRAGMA_GCC_ERROR ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? 1 : 0) /* "-fpragma-gcc-error" */
+#endif /* !TPP_HAVE_PRAGMA_GCC_ERROR */
 
 /* Support for: #pragma GCC system_header */
 #ifndef TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
-#define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER (TPP_HAVE_PRAGMA ? -1 : 0) /* "-fpragma-gcc-system-header" */
+#define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER (TPP_HAVE_PRAGMA ? 1 : 0) /* "-fpragma-gcc-system-header" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
 
-/* Support for: #pragma TPP warning(...)  (same as TPP_HAVE_PRAGMA_WARNING) */
+/* Support for: #pragma GCC diagnostic */
+#ifndef TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
+#define TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? 1 : 0) /* "-fpragma-gcc-diagnostic" */
+#endif /* !TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC */
+
+/* Support for: #pragma GCC dependency */
+#ifndef TPP_HAVE_PRAGMA_GCC_DEPENDENCY
+#define TPP_HAVE_PRAGMA_GCC_DEPENDENCY (TPP_HAVE_PRAGMA ? 1 : 0) /* "-fpragma-gcc-dependency" */
+#endif /* !TPP_HAVE_PRAGMA_GCC_DEPENDENCY */
+
+/* Support for: #pragma TPP warning(...)  (same as TPP_HAVE_PRAGMA_WARNING, but doesn't require "-fpragma-warning") */
 #ifndef TPP_HAVE_PRAGMA_TPP_WARNING
 #define TPP_HAVE_PRAGMA_TPP_WARNING TPP_HAVE_PRAGMA_WARNING
 #endif /* !TPP_HAVE_PRAGMA_TPP_WARNING */
 
-/* Support for: #pragma TPP extension(...)  (same as TPP_HAVE_PRAGMA_EXTENSION) */
+/* Support for: #pragma TPP extension(...)  (same as TPP_HAVE_PRAGMA_EXTENSION, but doesn't require "-fpragma-extension") */
 #ifndef TPP_HAVE_PRAGMA_TPP_EXTENSION
 #define TPP_HAVE_PRAGMA_TPP_EXTENSION TPP_HAVE_PRAGMA_EXTENSION
 #endif /* !TPP_HAVE_PRAGMA_TPP_EXTENSION */
 
-/* Support for: #pragma TPP tpp_exec(...)  (same as TPP_HAVE_PRAGMA_TPP_EXEC) */
+/* Support for: #pragma TPP tpp_exec(...)  (same as TPP_HAVE_PRAGMA_TPP_EXEC, but doesn't require "-fpragma-tpp-exec") */
 #ifndef TPP_HAVE_PRAGMA_TPP_TPP_EXEC
 #define TPP_HAVE_PRAGMA_TPP_TPP_EXEC TPP_HAVE_PRAGMA_TPP_EXEC
 #endif /* !TPP_HAVE_PRAGMA_TPP_TPP_EXEC */
 
-/* Support for: #pragma TPP tpp_set_keyword_flags("foo", 0x7f)  (same as TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS) */
+/* Support for: #pragma TPP tpp_set_keyword_flags("foo", 0x7f)  (same as TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS, but doesn't require "-fpragma-tpp-set-keyword-flags") */
 #ifndef TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
 #define TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 #endif /* !TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS */
 
 /* Support for: #pragma TPP include_path(...) */
 #ifndef TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
-#define TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH (TPP_HAVE_PRAGMA ? -1 : 0) /* "-fpragma-tpp-include-path" */
+#define TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH (TPP_HAVE_PRAGMA && TPP_HAVE_INCLUDE_PATH)
 #endif /* !TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+
+#undef TPP_HAVE_PRAGMA_GCC
+#define TPP_HAVE_PRAGMA_GCC               \
+	(TPP_HAVE_PRAGMA_GCC_POISON ||        \
+	 TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER || \
+	 TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC ||    \
+	 TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
+
+#undef TPP_HAVE_PRAGMA_TPP
+#define TPP_HAVE_PRAGMA_TPP                       \
+	(TPP_HAVE_PRAGMA_TPP_WARNING ||               \
+	 TPP_HAVE_PRAGMA_TPP_EXTENSION ||             \
+	 TPP_HAVE_PRAGMA_TPP_TPP_EXEC ||              \
+	 TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS || \
+	 TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH)
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -1556,6 +1597,17 @@
 #ifndef TPP_HAVE_INCLUDE_STACK
 #define TPP_HAVE_INCLUDE_STACK (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED)
 #endif /* !TPP_HAVE_INCLUDE_STACK */
+
+/* Support for: custom string list describing the available
+ * "-I/usr/include-style" -> "#include <foo.h>" -paths */
+#ifndef TPP_HAVE_INCLUDE_PATH
+#define TPP_HAVE_INCLUDE_PATH TPP_HAVE_INCLUDE_STACK
+#endif /* !TPP_HAVE_INCLUDE_PATH */
+
+/* Enable support to push/pop the include-path state */
+#ifndef TPP_HAVE_INCLUDE_PATH_PUSH_POP
+#define TPP_HAVE_INCLUDE_PATH_PUSH_POP TPP_HAVE_INCLUDE_PATH
+#endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 
 /* Enable support for `tpp_file::tf_ifdef' */
 #ifndef TPP_HAVE_IFDEF_STACK
@@ -1853,10 +1905,10 @@
 #define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SKIP)
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
 #ifndef TPP_HAVE_TPP_W_ERROR
-#define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_ERROR)
+#define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_ERROR || TPP_HAVE_PRAGMA_ERROR || TPP_HAVE_PRAGMA_GCC_ERROR))
 #endif /* !TPP_HAVE_TPP_W_ERROR */
 #ifndef TPP_HAVE_TPP_W_WARNING
-#define TPP_HAVE_TPP_W_WARNING (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_WARNING)
+#define TPP_HAVE_TPP_W_WARNING (TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_WARNING || TPP_HAVE_PRAGMA_GCC_WARNING))
 #endif /* !TPP_HAVE_TPP_W_WARNING */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS
 #define TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)

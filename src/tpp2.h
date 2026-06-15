@@ -1021,17 +1021,19 @@
 #define TPP_HAVE_PRAGMA_PUSH_MACRO                1 /* Support for: #pragma push_macro() / #pragma pop_macro() */
 #define TPP_HAVE_PRAGMA_ONCE                      1 /* Support for: #pragma once */
 #define TPP_HAVE_PRAGMA_DEPRECATED                1 /* Support for: #pragma deprecated("foo") */
-#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS     1 /* Support for: #pragma tpp_set_keyword_flags("foo", 0x7f) */
 #define TPP_HAVE_PRAGMA_EXTENSION                 1 /* Support for: #pragma extension(...) */
-#define TPP_HAVE_PRAGMA_EXTENSION_PUSH            1 /* Support for: #pragma extension(push) */
 #define TPP_HAVE_PRAGMA_WARNING                   1 /* Support for: #pragma warning(...) */
-#define TPP_HAVE_PRAGMA_WARNING_PUSH              1 /* Support for: #pragma warning(push) */
-#define TPP_HAVE_PRAGMA_TPP_EXEC                  1 /* Support for: #pragma tpp_exec("...") */
 #define TPP_HAVE_PRAGMA_MESSAGE                   1 /* Support for: #pragma message("...") */
 #define TPP_HAVE_PRAGMA_ERROR                     1 /* Support for: #pragma error("...") */
-#define TPP_HAVE_PRAGMA_REGION                    1 /* Support for: #pragma region,  #pragma endregion */
+#define TPP_HAVE_PRAGMA_REGION                    1 /* Support for: #pragma region + #pragma endregion */
+#define TPP_HAVE_PRAGMA_TPP_EXEC                  1 /* Support for: #pragma tpp_exec("...") */
+#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS     1 /* Support for: #pragma tpp_set_keyword_flags("foo", 0x7f) */
 #define TPP_HAVE_PRAGMA_GCC_POISON                1 /* Support for: #pragma GCC poison foo */
+#define TPP_HAVE_PRAGMA_GCC_WARNING               0 /* TPP2 didn't know this one */
+#define TPP_HAVE_PRAGMA_GCC_ERROR                 0 /* TPP2 didn't know this one */
 #define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER         1 /* Support for: #pragma GCC system_header */
+#define TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC            1 /* Support for: #pragma GCC diagnostic */
+#define TPP_HAVE_PRAGMA_GCC_DEPENDENCY            1 /* Support for: #pragma GCC dependency */
 #define TPP_HAVE_PRAGMA_TPP_WARNING               1 /* Support for: #pragma TPP warning(...)  (same as TPP_HAVE_PRAGMA_WARNING) */
 #define TPP_HAVE_PRAGMA_TPP_EXTENSION             1 /* Support for: #pragma TPP extension(...)  (same as TPP_HAVE_PRAGMA_EXTENSION) */
 #define TPP_HAVE_PRAGMA_TPP_TPP_EXEC              1 /* Support for: #pragma TPP tpp_exec(...)  (same as TPP_HAVE_PRAGMA_TPP_EXEC) */

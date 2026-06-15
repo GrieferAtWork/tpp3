@@ -123,7 +123,8 @@ typedef enum tpp_token_id {
 
 /* Convert a given "tpp_token_id id" into the associated error code "TPP_E*"
  * The caller must ensure that "TPP_TOK_ISERR(id) == true" */
-#define TPP_TOK_ASERR(id)  ((tpp_errno)(int)(id))
+#define TPP_TOK_ASERR(id)        ((tpp_errno)(int)(id))
+#define TPP_TOK_ASERR_OR_EOK(id) (TPP_TOK_ISERR(id) ? TPP_TOK_ASERR(id) : TPP_EOK)
 
 /* Convenience macro to list the case-labels for all "TPP_TOK_E*" errors. */
 #define TPP_CASE_TPP_TOK_ERR      \

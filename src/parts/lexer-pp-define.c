@@ -342,9 +342,7 @@ done_yield_rparen:
 		do {
 			tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		return TPP_EOK;
+		return TPP_TOK_ASERR_OR_EOK(tok);
 	}
 
 warn_unexpected_parameter_list_token:

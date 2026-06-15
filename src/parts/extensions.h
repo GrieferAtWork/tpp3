@@ -68,7 +68,7 @@ typedef struct tpp_extensions {
 } tpp_extensions;
 
 #if TPP_HAVE_EXTENSIONS_PUSH_POP
-#define tpp_extensions_init(self)                             \
+#define tpp_extensions_init(self)                                           \
 	(void)((self)->TPP_INTERNAL(te_state)   = tpp_extensions_state_default, \
 	       (self)->TPP_INTERNAL(te_pushcnt) = 0,                            \
 	       (self)->TPP_INTERNAL(te_prev)    = NULL)

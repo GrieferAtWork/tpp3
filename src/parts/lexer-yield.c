@@ -495,7 +495,8 @@ seek_end_of_macro:
  *
  * @return: TPP_EOK:    Success (but there may still be garbage after
  *                      the directive that hasn't been parsed, yet).
- * @return: TPP_ENOENT: Unknown pragma (soft-error; must be handled by caller)
+ * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
+ *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
  * @return: TPP_E*:     Error */
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
