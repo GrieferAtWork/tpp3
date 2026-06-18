@@ -986,8 +986,8 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			goto done_nocache;
 		} else {
 			result = macro->tm_body_lc;
-			result = tpp_lcinfo_account(self, result, tpp_string_str(self->tf_chunk),
-			                            (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
+			result = tpp_lcinfo_account(self, result, macro->tm_body_start,
+			                            (tpp_size)(pos - macro->tm_body_start));
 		}
 	}	break;
 #endif /* TPP_HAVE_CPP_MACROS */

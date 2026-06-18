@@ -394,8 +394,8 @@ again_switch_tok:
 			goto again_switch_tok;
 		} else
 #endif /* TPP_HAVE_INCLUDE_STACK */
-		{
 #if TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
+		if (!(flags & TPP_LEXER_SEEK_RPAREN_FLAG_NOWARNEOF)) {
 			tpp_errno error;
 			tpp_char const *pos = file->tf_data.td_io.ttf_keep + state.tsrps_curfile_saved_tpos_rel;
 			error = tpp_lexer_warnf_at(self, pos, TPP_W_EOF_IN_ARGUMENT_LIST,
@@ -404,7 +404,9 @@ again_switch_tok:
 				result = TPP_TOK_OFERR(error);
 				goto err_result;
 			}
+		} else
 #endif /* TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST */
+		{
 		}
 		goto done;
 

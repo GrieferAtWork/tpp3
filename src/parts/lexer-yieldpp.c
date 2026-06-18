@@ -96,7 +96,7 @@ tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
 		return tok;
 	eol_start = token->tt_start;
 	eol_end   = token->tt_end;
-	if (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+	if (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 		tpp_token_id first_token_id = token->tt_id;
 		struct tpp_keyword const *first_token_kwd = token->tt_kwd;
 		tpp_size first_token_len = tpp_token_getlen(token);
@@ -109,7 +109,7 @@ tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
 				token->tt_end = eol_end;
 				return tok;
 			}
-		} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+		} while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok));
 		/* Restore first token of #pragma directive */
 		eol_start       = token->tt_start;
 		token->tt_id    = first_token_id;
@@ -139,6 +139,12 @@ tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
 	{
 	}
+#if TPP_HAVE_INCLUDE_STACK
+	/* Cleanup files pushed by the expression */
+	while (file->tf_prev)
+		tpp_lexer_popfile(self);
+#endif /* TPP_HAVE_INCLUDE_STACK */
+
 	tpp_file_popeof(file);
 	file->tf_pos = eol_end; /* Continue parsing after EOL (comment) */
 	return TPP_TOK_OFERR_OR_EOF(error);
@@ -216,11 +222,10 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 			tpp_assert(TPP_TOK_ASERR(tok) != TPP_ENOENT);
 			return TPP_TOK_ASERR(tok);
 		}
-	} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+	} while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok));
 
 	trailing_lf_start = token->tt_start;
 	trailing_lf_end   = directive_iter;
-	tpp_file_autopopfile_pushoff(file);
 	tpp_file_pushifdef(file);
 	tpp_file_pusheof(file);
 	*p_directive_start = file->tf_pos;     /* Restore to continue pointing at effective start of expression */
@@ -242,10 +247,15 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 		if (!TPP_ISERR(result))
 			result = b_expr_value ? TPP_EOK : TPP_ENOENT;
 	}
+
+#if TPP_HAVE_INCLUDE_STACK
+	/* Cleanup files pushed by the expression */
+	while (file->tf_prev)
+		tpp_lexer_popfile(self);
+#endif /* TPP_HAVE_INCLUDE_STACK */
 	file->tf_pos = trailing_lf_end; /* Tell caller to continue parsing *after* EOL */
 	tpp_file_popeof(file);
 	tpp_file_popifdef(file);
-	tpp_file_autopopfile_pop(file);
 	return result;
 }
 
@@ -311,7 +321,7 @@ tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
 
 	/* Warn about extra tokens after the #ifdef-keyword */
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
-	if (!TPP_TOK_ISLF_OR_COMMENT(tok) /*&& tok != TPP_TOK_EOF*/) {
+	if (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 		do {
 			tok = tpp_lexer_yieldraw_at_blocking(self, &directive_iter);
 		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
@@ -320,7 +330,7 @@ tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
 			return TPP_TOK_ASERR(tok);
 		}
 	}
-	if (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+	if (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 		tpp_char const *saved_pos = file->tf_pos;
 		file->tf_pos = directive_iter;
 		result = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, directive_name);
@@ -333,10 +343,10 @@ tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
 				tpp_assert(TPP_TOK_ASERR(tok) != TPP_ENOENT);
 				return TPP_TOK_ASERR(tok);
 			}
-		} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+		} while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok));
 	}
 #else /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
-	while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+	while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 		tok = tpp_lexer_yieldraw_at_blocking(self, &directive_iter);
 		if (TPP_TOK_ISERR(tok)) {
 			tpp_assert(TPP_TOK_ASERR(tok) != TPP_ENOENT);
@@ -524,12 +534,12 @@ again:
 		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-		if (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+		if (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 			error = tpp_lexer_warnf(self, TPP_W_ENDIF_LABELS);
 			if (TPP_ISERR(error))
 				return error;
 		}
-		while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+		while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 			tok = tpp_lexer_yieldraw_blocking(self);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
@@ -539,7 +549,7 @@ again:
 			tok = tpp_lexer_yieldraw_blocking(self);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
-		} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+		} while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok));
 #endif /* !TPP_HAVE_TPP_W_ENDIF_LABELS */
 		return TPP_EOK;
 
@@ -623,12 +633,12 @@ handle_pp_if_error:
 		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-		if (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+		if (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 			error = tpp_lexer_warnf(self, TPP_W_ENDIF_LABELS);
 			if (TPP_ISERR(error))
 				return error;
 		}
-		while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+		while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 			tok = tpp_lexer_yieldraw_blocking(self);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
@@ -638,7 +648,7 @@ handle_pp_if_error:
 			tok = tpp_lexer_yieldraw_blocking(self);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
-		} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+		} while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok));
 #endif /* !TPP_HAVE_TPP_W_ENDIF_LABELS */
 
 		/* Create a new #ifdef-entry */
@@ -660,12 +670,12 @@ handle_pp_if_error:
 		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-		if (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+		if (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 			error = tpp_lexer_warnf(self, TPP_W_ENDIF_LABELS);
 			if (TPP_ISERR(error))
 				return error;
 		}
-		while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+		while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 			tok = tpp_lexer_yieldraw_blocking(self);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
@@ -675,7 +685,7 @@ handle_pp_if_error:
 			tok = tpp_lexer_yieldraw_blocking(self);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
-		} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+		} while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok));
 #endif /* !TPP_HAVE_TPP_W_ENDIF_LABELS */
 		return TPP_EOK;
 
@@ -969,7 +979,7 @@ handle_pp_if_error:
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
 			if (TPP_TOK_ISERR(result))
 				return result;
-			if (!TPP_TOK_ISLF_OR_COMMENT(result) && result != TPP_TOK_EOF) {
+			if (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(result)) {
 				error = tpp_lexer_warnf(self, TPP_W_ENDIF_LABELS);
 				if (TPP_ISERR(error))
 					return TPP_TOK_OFERR(error);
@@ -1016,7 +1026,7 @@ handle_pp_if_error:
 		} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
 		if (TPP_TOK_ISERR(result))
 			return result;
-		if (!TPP_TOK_ISLF_OR_COMMENT(result) && result != TPP_TOK_EOF) {
+		if (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(result)) {
 			tpp_errno error = tpp_lexer_warnf(self, TPP_W_ENDIF_LABELS);
 			if (TPP_ISERR(error))
 				return TPP_TOK_OFERR(error);
@@ -1344,7 +1354,7 @@ handle_unknown_directive:
 #undef WANT_seek_end_of_line
 seek_end_of_line:
 #endif /* WANT_seek_end_of_line */
-			while (!TPP_TOK_ISLF_OR_COMMENT(result) && result != TPP_TOK_EOF) {
+			while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(result)) {
 				result = tpp_lexer_yieldraw_blocking(self);
 				if (TPP_TOK_ISERR(result))
 					break;
@@ -1426,7 +1436,7 @@ again:
 			{
 			}
 
-			tpp_lexer_autopopfile_pushoff(self);
+			tpp_lexer_autopopfile_pushoff(self); /* TODO: #include-directives need to skip this step */
 			self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 			result = tpp_lexer_process_directive(self);
 			self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
@@ -1508,7 +1518,7 @@ again:
 			break; /* Not allowed here... */
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_DIRECTIVES))
 			break; /* Directives are disabled. */
-		tpp_lexer_autopopfile_pushoff(self);
+		tpp_lexer_autopopfile_pushoff(self); /* TODO: #include-directives need to skip this step */
 		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 		result = tpp_lexer_process_directive(self);
 		self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;

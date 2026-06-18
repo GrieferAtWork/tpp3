@@ -1462,17 +1462,54 @@ again:
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 
 #if TPP_HAVE_LEXER_SKIP
-/* Same as "tpp_lexer_skip()", but don't advance to the next token. */
+
+static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
+	tpp_token *const token = tpp_lexer_gettoken(self);
+
+	/* Check for simple (expected) case: the current token is correct */
+	if tpp_likely(token->tt_id == tok)
+		return true;
+
+	/* If "tok" is a single-char token, see if the currently
+	 * loaded token is a multi-char token that starts with
+	 * the same value. */
+	if ((TPP_TOK_ISCHAR(tok)) &&
+	    (token->tt_start < token->tt_end) &&
+	    (*token->tt_start == (tpp_char)(unsigned int)tok)) {
+		token->tt_end = token->tt_start + 1;
+		token->tt_id  = tok;
+		return true;
+	}
+
+	/* Handle stuff like "tok == '>>' && CURRENT_TOKEN == '>>>'", etc. */
+	switch (tok) {
+	/* TODO */
+
+	default: break;
+	}
+
+	return false;
+}
+
+/* Same as "tpp_lexer_skip()", but don't advance to the next token,
+ * except in those cases where the requested "tok" could be found
+ * a little further up ahead, and the implementation decided that
+ * the tokens that lay in-between should be skipped.
+ *
+ * @return: * :                 The currently loaded token
+ * @return: tok:                Success
+ * @return: TPP_TOK_ENOMEM:     Out of memory
+ * @return: TPP_TOK_EIO:        I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR:  Lexer error
+ * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
-	tpp_token const *const token = tpp_lexer_gettoken(self);
-	if tpp_likely(token->tt_id == tok)
+	tpp_char const *pos;
+	tpp_token_id result;
+	tpp_lexer_seek_backup backup;
+	if (tpp_lexer_token_matches(self, tok))
 		return tok;
-
-	/* TODO: If "tok" is a single-char token, see if the currently
-	 *       loaded token is a multi-char token that starts with
-	 *       the same value.
-	 * XXX: Also handle "tok == '>>' && CURRENT_TOKEN == '>>>'", etc. */
 
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
 	{
@@ -1486,16 +1523,89 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	}
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
 
-	/* TODO: Try to seek ahead to find "tok" when it's (e.g.) a '(' (to
-	 *       deal with cases where the user added some extra, unrelated
-	 *       tokens before the one we're expecting)
+	/* Start seeking ahead... */
+	pos = tpp_lexer_seek_start(self, &backup);
+
+	/* Skip over whitespace */
+	result = tpp_lexer_gettok(self);
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(result))
+		result = tpp_lexer_yieldraw_at_blocking(self, &pos);
+	if (TPP_TOK_ISERR(result))
+		goto err_result_rollback;
+	if (tpp_lexer_token_matches(self, tok)) {
+		tpp_lexer_seek_commit(self, pos);
+		return tok;
+	}
+
+	/* Try to seek ahead to find "tok" when it's (e.g.) a '(' (to
+	 * deal with cases where the user added some extra, unrelated
+	 * tokens before the one we're expecting)
 	 *
 	 * - If "tok == ')", find next unmatched ')'
 	 * - If "tok == ']", find next unmatched ']'
 	 * - If "tok == '}", find next unmatched '}'
 	 * - If "tok == '>", find next unmatched '>' */
+#if TPP_HAVE_LEXER_MANUALPOPFILE
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+	if (tok == ')' || tok == ']' || tok == '}' || tok == '>')
+#else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+	if (tok == ')')
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+	{
+		tpp_token *const token = tpp_lexer_gettoken(self);
+		tpp_lexer_arginfo argv[1];
+		size_t argc = 1;
+		token->tt_start = token->tt_end;
+		token->tt_end   = pos;
+		tpp_lexer_manualpopfile_start(self);
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+		{
+			tpp_token_id lparen_kind;
+			switch (tok) {
+			case ')': lparen_kind = TPP_TOK_OFCHAR('('); break;
+			case ']': lparen_kind = TPP_TOK_OFCHAR('['); break;
+			case '}': lparen_kind = TPP_TOK_OFCHAR('{'); break;
+			case '>': lparen_kind = TPP_TOK_OFCHAR('<'); break;
+			default: tpp_unreachable();
+			}
+			result = tpp_lexer_seekpp_rparen_ex(self, argv, &argc, &pos, NULL,
+			                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS |
+			                                    TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK |
+			                                    TPP_LEXER_SEEK_RPAREN_FLAG_NOWARNEOF,
+			                                    lparen_kind);
+		}
+#else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+		result = tpp_lexer_seekpp_rparen(self, argv, &argc, &pos, NULL,
+		                                 TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS |
+		                                 TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK |
+		                                 TPP_LEXER_SEEK_RPAREN_FLAG_NOWARNEOF);
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+		if (!TPP_TOK_ISERR(result) && argc)
+			tpp_lexer_arginfo_fini(&argv[0]);
+		if (result == tok) {
+			/* Found it! */
+			tpp_lexer_manualpopfile_break_commit(self);
+			token->tt_start = token->tt_end - 1;
+			return result;
+		}
+		tpp_lexer_getfile(self)->tf_pos = pos;
+		tpp_lexer_manualpopfile_end_rollback(self);
+		token->tt_end   = token->tt_start + backup.tlsb_len;
+		token->tt_id    = backup.tlsb_id;
+		token->tt_kwd   = backup.tlsb_kwd;
+		if (!TPP_TOK_ISERR(result))
+			result = backup.tlsb_id;
+		return result;
+	}
+#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 
-	return token->tt_id;
+	if (tok == ',') {
+		/* TODO: Seek to the next ','-token, so-long as no unmatched ) ] } or > is found first */
+	}
+
+err_result_rollback:
+	tpp_lexer_seek_rollback(self, &backup);
+	return result;
 }
 
 /* Check that the currently loaded token is 'tok'. If so, "tpp_lexer_yield_blocking()" to

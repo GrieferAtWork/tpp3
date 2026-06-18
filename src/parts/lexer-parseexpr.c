@@ -605,7 +605,7 @@ tpp_px_sum_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value 
 			if (TPP_ISERR(error))
 				goto err_r;
 		}
-	} while (TPP_TEST_PX_PROD_SUFFIX(tpp_lexer_gettok(self)));
+	} while (TPP_TEST_PX_SUM_SUFFIX(tpp_lexer_gettok(self)));
 	return TPP_EOK;
 err_r:
 	if (result)
@@ -668,7 +668,7 @@ tpp_px_shift_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_valu
 			if (TPP_ISERR(error))
 				return error;
 		}
-	} while (TPP_TEST_PX_PROD_SUFFIX(tpp_lexer_gettok(self)));
+	} while (TPP_TEST_PX_SHIFT_SUFFIX(tpp_lexer_gettok(self)));
 	return TPP_EOK;
 err_r:
 	if (result)

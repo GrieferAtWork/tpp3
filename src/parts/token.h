@@ -136,6 +136,7 @@ typedef enum tpp_token_id {
 
 /* Return the token ID used to describe a given byte-code "ch" */
 #define TPP_TOK_OFCHAR(ch) ((tpp_token_id)(unsigned int)(tpp_char)(ch))
+#define TPP_TOK_ISCHAR(id) ((unsigned int)(id) <= 0xff)
 
 
 
@@ -711,9 +712,11 @@ typedef enum tpp_token_id {
 } tpp_token_id;
 
 /* Helper macros to easily detect certain types of whitespace. */
-#define TPP_TOK_ISSPACE_OR_COMMENT(id)       ((id) == TPP_TOK_SPACE || TPP_TOK_ISCOMMENT_NOLINE(id))
-#define TPP_TOK_ISLF_OR_COMMENT(id)          ((id) == TPP_TOK_LF || TPP_TOK_ISCOMMENT_LINE(id))
-#define TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(id) ((id) == TPP_TOK_SPACE || (id) == TPP_TOK_LF || TPP_TOK_ISCOMMENT(id))
+#define TPP_TOK_ISSPACE_OR_COMMENT(id)              ((id) == TPP_TOK_SPACE || TPP_TOK_ISCOMMENT_NOLINE(id))
+#define TPP_TOK_ISLF_OR_COMMENT(id)                 ((id) == TPP_TOK_LF || TPP_TOK_ISCOMMENT_LINE(id))
+#define TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(id)        ((id) == TPP_TOK_SPACE || (id) == TPP_TOK_LF || TPP_TOK_ISCOMMENT(id))
+#define TPP_TOK_ISLF_OR_COMMENT_OR_EOF(id)          ((id) == TPP_TOK_LF || TPP_TOK_ISCOMMENT_LINE(id) || (id) == TPP_TOK_EOF)
+#define TPP_TOK_ISSPACE_OR_LF_OR_COMMENT_OR_EOF(id) ((id) == TPP_TOK_SPACE || (id) == TPP_TOK_LF || TPP_TOK_ISCOMMENT(id) || (id) == TPP_TOK_EOF)
 
 
 /* Helper macros to determine which (and what kind of) keyword is described by a given `id' */

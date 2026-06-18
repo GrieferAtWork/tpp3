@@ -873,6 +873,18 @@ tpp_lexer_parsestring_is_single_chunk(tpp_lexer *tpp_restrict self) {
 	return chunk_count;
 }
 
+static TPP_NONNULL((1)) unsigned int TPPCALL
+tpp_lexer_parsestring_is_single_chunk_at(tpp_lexer *tpp_restrict self,
+                                         tpp_char const *token_end) {
+	unsigned int result;
+	tpp_token *const token = tpp_lexer_gettoken(self);
+	tpp_char const *saved_token_end = token->tt_end;
+	token->tt_end = token_end;
+	result = tpp_lexer_parsestring_is_single_chunk(self);
+	token->tt_end = saved_token_end;
+	return result;
+}
+
 struct tpp_lexer_decodestring_as_single_chunk_data {
 	tpp_errno (TPPCALL *tldsascd_cb)(void *arg, tpp_string *chunk,
 	                                 tpp_char const *str, tpp_size length);
@@ -991,11 +1003,14 @@ again_yield_after_single:
 		switch (tok) {
 
 		TPP_CASE_TPP_TOK_STRING {
-			how = tpp_lexer_parsestring_is_single_chunk(self);
+			how = tpp_lexer_parsestring_is_single_chunk_at(self, pos);
 			if (how == TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY)
 				goto again_yield_after_single;
 
 			/* Not possible using a single chunk... */
+#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
+break_nowarnings_and_do_multi_chunk_string:
+#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
 			tpp_lexer_nowarnings_break(self);
 			tpp_lexer_seek_rollback(self, &backup);
 			goto do_multi_chunk_string;
@@ -1012,12 +1027,116 @@ again_yield_after_single:
 				goto again_yield_after_single;
 			break;
 
+#if TPP_HAVE_INCLUDE_STACK
+		case TPP_TOK_EOF: {
+			/* Check if string continues in the next file... */
+			if (!tpp_lexer_getfile(self)->tf_prev)
+				break;
+			tpp_lexer_seek_rollback(self, &backup);
+			tpp_lexer_manualpopfile_start(self);
+			tpp_lexer_manualpopfile_popfile(self);
+			pos = tpp_lexer_seek_start(self, &backup);
+again_yield_after_eof:
+			tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
+			switch (tok) {
+
+			TPP_CASE_TPP_TOK_STRING
+				how = tpp_lexer_parsestring_is_single_chunk_at(self, pos);
+				if (how == TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY)
+					goto again_yield_after_eof;
+#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
+do_multi_chunk_string_after_eof:
+#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+				tpp_lexer_seek_rollback(self, &backup);
+				tpp_lexer_manualpopfile_break_rollback(self);
+				tpp_lexer_nowarnings_break(self);
+				goto do_multi_chunk_string;
+
+			case TPP_TOK_SPACE:
+			TPP_CASE_TPP_TOK_COMMENT_NOLINE
+				if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+					goto again_yield_after_eof;
+				break;
+
+			case TPP_TOK_LF:
+			TPP_CASE_TPP_TOK_COMMENT_LINE
+				if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+					goto again_yield_after_eof;
+				break;
+
+			default:
+#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
+				if (TPP_TOK_ISKEYWORD(tok) &&
+				    tpp_lexer_getkeyworddefined(self, tpp_lexer_gettokenkwd(self)))
+					goto do_multi_chunk_string_after_eof;
+#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+				if (TPP_TOK_ISERR(tok)) {
+					tpp_lexer_seek_rollback(self, &backup);
+					tpp_lexer_manualpopfile_break_rollback(self);
+					tpp_lexer_nowarnings_break(self);
+					return TPP_TOK_ASERR(tok);
+				}
+				break;
+			}
+
+			/* Following token is something that could never be a (non-empty) string
+			 * -> *can* decode as a single-chunk string, but then have to follow this
+			 *    up by doing a (rather complicated) seek until the next (effective)
+			 *    token, whilst making sure not to do too little, or too much. */
+			tpp_lexer_seek_rollback(self, &backup);
+			tpp_lexer_manualpopfile_end_rollback(self);
+			tpp_lexer_nowarnings_break(self);
+			result = tpp_lexer_decodestring_as_single_chunk(self, cb, arg);
+			if (!TPP_ISERR(result)) {
+				/* Yield to the next token (which shouldn't be another string) */
+again_yield_after_eof_decoded:
+				tok = tpp_lexer_yieldraw_blocking(self);
+				switch (tok) {
+				TPP_CASE_TPP_TOK_STRING
+					/* Should be an empty string! */
+					tpp_assert(tpp_lexer_parsestring_is_single_chunk(self) ==
+					           TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY);
+					goto again_yield_after_eof_decoded;
+				case TPP_TOK_SPACE:
+				TPP_CASE_TPP_TOK_COMMENT_NOLINE
+					if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+						goto again_yield_after_eof_decoded;
+					break;
+				case TPP_TOK_LF:
+				TPP_CASE_TPP_TOK_COMMENT_LINE
+					if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+						goto again_yield_after_eof_decoded;
+					break;
+				default:
+					if (TPP_TOK_ISERR(tok))
+						result = TPP_TOK_ASERR(tok);
+					break;
+				}
+			}
+			return result;
+		}	break;
+#endif /* TPP_HAVE_INCLUDE_STACK */
+
 		default:
 			if (TPP_TOK_ISERR(tok)) {
 				tpp_lexer_nowarnings_break(self);
 				tpp_lexer_seek_rollback(self, &backup);
 				return TPP_TOK_ASERR(tok);
 			}
+
+			/* If it's a keyword that (might) expand to macro, then that macro
+			 * might contain additional strings that must also be included as
+			 * part of this one:
+			 * >> #define str(x) #x
+			 * >> "foo" str(42)
+			 *          ^^^
+			 *          we're here right now
+			 */
+#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
+			if (TPP_TOK_ISKEYWORD(tok) &&
+			    tpp_lexer_getkeyworddefined(self, tpp_lexer_gettokenkwd(self)))
+				goto break_nowarnings_and_do_multi_chunk_string;
+#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
 			break;
 		}
 		tpp_lexer_nowarnings_pop(self);

@@ -221,13 +221,25 @@ handle_eof:
 
 		case 't': {
 			/* "%Pt"   "%[current-token%]" */
+#if TPP_HAVE_LEXER_REPRTOKENID
+			char const *token_repr;
+#endif /* TPP_HAVE_LEXER_REPRTOKENID */
 			tpp_token const *const token = tpp_lexer_gettoken(self);
+			tpp_size length;
 			temp = tpp_format_quote_start(printer, arg);
 			if tpp_unlikely(temp < 0)
 				goto err_temp;
 			result += temp;
-			temp = tpp_format_token_data(printer, arg, token->tt_start,
-			                             (tpp_size)(token->tt_end - token->tt_start));
+			length = (tpp_size)(token->tt_end - token->tt_start);
+#if TPP_HAVE_LEXER_REPRTOKENID
+			if ((length == 0) &&
+			    (token_repr = tpp_lexer_reprtokenid(self, token->tt_id)) != NULL) {
+				temp = (*printer)(arg, (tpp_char const *)token_repr, tpp_strlen(token_repr));
+			} else
+#endif /* TPP_HAVE_LEXER_REPRTOKENID */
+			{
+				temp = tpp_format_token_data(printer, arg, token->tt_start, length);
+			}
 			if tpp_unlikely(temp < 0)
 				goto err_temp;
 			result += temp;

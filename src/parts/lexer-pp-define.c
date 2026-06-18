@@ -490,7 +490,7 @@ tpp_macro_builder_compile_traditional_impl(tpp_macro_builder *tpp_restrict build
 	while (body_iter < body_end) {
 		tpp_macro_argument *arg;
 		tpp_token_id tok;
-		tok = tpp_lexer_yieldraw_at(self, &body_iter);
+		tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 		switch (tok) {
 
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE
@@ -606,7 +606,7 @@ tpp_macro_builder_compile_modern(tpp_macro_builder *tpp_restrict builder,
 	while (body_iter < body_end) {
 		tpp_macro_argument *arg;
 		tpp_token_id tok;
-		tok = tpp_lexer_yieldraw_at(self, &body_iter);
+		tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 #if (TPP_HAVE_GLUE_MACRO_ARGUMENT || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS ||       \
      TPP_HAVE_VA_OPT_IN_MACROS || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT ||         \
      TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || \
@@ -633,7 +633,7 @@ again_switch_tok:
 			 * Whitespace preceding it is automatically consumed because
 			 * we skip all not-already-flushed data after "last_non_space_end" */
 			do {
-				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
@@ -663,7 +663,7 @@ handle_token_after_glue:
 			argument_end = body_iter; /* End of argument keyword after "##"-token */
 
 			do {
-				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
@@ -671,7 +671,7 @@ handle_token_after_glue:
 			/* Check if there'll be another ##-operator after the argument */
 			if (tok == TPP_TOK_POUND_POUND) {
 				do {
-					tok = tpp_lexer_yieldraw_at(self, &body_iter);
+					tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 				} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 				if (TPP_TOK_ISERR(tok))
 					return TPP_TOK_ASERR(tok);
@@ -710,14 +710,14 @@ handle_token_after_glue:
 				break;
 			start_of_comma = token->tt_start;
 			do {
-				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
 			if (tok != TPP_TOK_POUND_POUND)
 				goto again_switch_tok;
 			do {
-				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
@@ -826,7 +826,7 @@ handle_not_varargs_argument_after_comma_glue:
 
 			/* Next token must be ( */
 			do {
-				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
@@ -847,7 +847,7 @@ handle_not_varargs_argument_after_comma_glue:
 			start_of_va_opt_body = body_iter;
 			recursion = 0;
 			for (;;) {
-				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 				switch (tok) {
 				case TPP_TOK_EOF: {
 #if TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT
@@ -914,7 +914,7 @@ found_va_opt_body_end:
 				break;
 			start_of_pound = token->tt_start;
 			do {
-				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
@@ -925,7 +925,7 @@ found_va_opt_body_end:
 				if (!tpp_lexer_getext(self, TPP_EXT_DONT_EXPAND_MACRO_ARGUMENT))
 					break;
 				do {
-					tok = tpp_lexer_yieldraw_at(self, &body_iter);
+					tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 				} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 				if (TPP_TOK_ISERR(tok))
 					return TPP_TOK_ASERR(tok);
@@ -951,7 +951,7 @@ found_va_opt_body_end:
 					break;
 				opcode = TPP_MACRO_OPCODE_INS_CHR;
 				do {
-					tok = tpp_lexer_yieldraw_at(self, &body_iter);
+					tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 				} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 				if (TPP_TOK_ISERR(tok))
 					return TPP_TOK_ASERR(tok);
@@ -1013,12 +1013,12 @@ found_va_opt_body_end:
 
 			last_non_space_end = body_iter;
 			do {
-				tok = tpp_lexer_yieldraw_at(self, &body_iter);
+				tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 			if (tok == '(') {
 				last_non_space_end = body_iter;
 				do {
-					tok = tpp_lexer_yieldraw_at(self, &body_iter);
+					tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 				} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 			}
 			if (!TPP_TOK_ISKEYWORD(tok))
@@ -1097,7 +1097,7 @@ handle_keyword_after_arg:
 					 * being expanded! */
 					tpp_char const *argument_end = body_iter;
 					do {
-						tok = tpp_lexer_yieldraw_at(self, &body_iter);
+						tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 					} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 					if (TPP_TOK_ISERR(tok))
 						return TPP_TOK_ASERR(tok);
@@ -1105,7 +1105,7 @@ handle_keyword_after_arg:
 					/* Append opcodes to insert argument */
 					if (tok == TPP_TOK_POUND_POUND) {
 						do {
-							tok = tpp_lexer_yieldraw_at(self, &body_iter);
+							tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 						} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 						if (TPP_TOK_ISERR(tok))
 							return TPP_TOK_ASERR(tok);
@@ -1300,7 +1300,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 		rel_body_end   = rel_body_start;
 
 		/* Find end of body */
-		while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+		while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 			rel_body_end = tpp_file_ptr2rel(file, *p_pos);
 			tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 			if (TPP_TOK_ISERR(tok))
@@ -1363,7 +1363,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	tok            = token->tt_id;
 
 	/* Find end of body (moving the lexer to point at the trailing EOF/LF/COMMENT token) */
-	while (tok != TPP_TOK_EOF && !TPP_TOK_ISLF_OR_COMMENT(tok)) {
+	while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
 again_scan_end_of_macro_body:
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */

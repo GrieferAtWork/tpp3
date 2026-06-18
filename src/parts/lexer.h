@@ -831,7 +831,17 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok);
 
-/* Same as "tpp_lexer_skip()", but don't advance to the next token. */
+/* Same as "tpp_lexer_skip()", but don't advance to the next token,
+ * except in those cases where the requested "tok" could be found
+ * a little further up ahead, and the implementation decided that
+ * the tokens that lay in-between should be skipped.
+ *
+ * @return: * :                 The currently loaded token
+ * @return: tok:                Success
+ * @return: TPP_TOK_ENOMEM:     Out of memory
+ * @return: TPP_TOK_EIO:        I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR:  Lexer error
+ * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok);
 #endif /* TPP_HAVE_LEXER_SKIP */
@@ -882,12 +892,10 @@ tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
 #if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
 #define TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC 0x0002 /* Do not strip whitespace/comments around arguments */
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
-#if TPP_HAVE_MACRO_RECURSION
-#define TPP_LEXER_SEEK_RPAREN_FLAG_YIELDRAW   0x0004 /* Use "tpp_lexer_yieldraw()" instead of "tpp_lexer_yieldpp()" */
-#endif /* TPP_HAVE_MACRO_RECURSION */
 #if TPP_HAVE_LEXER_MANUALPOPFILE
-#define TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK    0x0008 /* Use "tpp_lexer_manualpopfile_popfile()" to pop files */
+#define TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK    0x0004 /* Use "tpp_lexer_manualpopfile_popfile()" to pop files */
 #endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
+#define TPP_LEXER_SEEK_RPAREN_FLAG_NOWARNEOF  0x0008 /* Do not emit "TPP_W_EOF_IN_ARGUMENT_LIST" warnings */
 
 typedef struct tpp_lexer_arginfo {
 	/* NOTE: Leading/trailing whitespace in arguments is controlled by "TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC" */
