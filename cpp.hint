@@ -24,4 +24,11 @@
 #define TPP_INTERNAL(x) x
 #define TPP_DEFINE_PX_PARSER(tpp_px_prev, tpp_px_this, tpp_px_this_suffix, TPP_TEST_PX_THIS_SUFFIX) \
 	static tpp_errno tpp_px_this(tpp_lexer *tpp_restrict self, tpp_expr_value *result) {}
-
+#define TPP_KWD(id, string) enum{id};
+#define TPP_KWD_FLAGS(id, flags)
+#define TPP_EXTENSION(id, name, default) enum{id};
+#define TPP_WGROUP(wgroup_id, names, default) enum{wgroup_id};
+#define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) enum{warning_id};
+#define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) enum{warning_id};
+#define TPP_MACRO(keyword_id, if)
+#define TPP_BUILTIN_MACRO(keyword_id, value)

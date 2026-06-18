@@ -660,7 +660,6 @@ static struct tpp_warning_format_strings_struct {
 	char twf_##warning_id[sizeof(format) / sizeof(char)];
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
 #include TPP_CONFIG_DEFS_FILENAME
-#undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 } const tpp_warning_format_strings = {
 #define TPP_DEFS
@@ -668,7 +667,6 @@ static struct tpp_warning_format_strings_struct {
 	/* [twf_##warning_id] = */ format,
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
 #include TPP_CONFIG_DEFS_FILENAME
-#undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 };
 
@@ -679,7 +677,6 @@ static tpp_size const tpp_warning_format_string_offsets[TPP_W_COUNT] = {
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) \
 	/* [warning_id] = */ sizeof(struct tpp_warning_format_strings_struct) - 1,
 #include TPP_CONFIG_DEFS_FILENAME
-#undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 };
 
@@ -856,10 +853,10 @@ TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
 tpp_macro_getbuiltin(tpp_token_id id) {
 	switch (id) {
 #define TPP_DEFS
-#define TPP_BUILTIN_MACRO(name, value)                          \
-	case name: {                                                \
-		static TPP_BUILTIN_MACRO_DEFINE(builtin_##name, value); \
-		return (tpp_builtin_macro const *)&builtin_##name;      \
+#define TPP_BUILTIN_MACRO(keyword_id, value)                          \
+	case keyword_id: {                                                \
+		static TPP_BUILTIN_MACRO_DEFINE(builtin_##keyword_id, value); \
+		return (tpp_builtin_macro const *)&builtin_##keyword_id;      \
 	}	break;
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS

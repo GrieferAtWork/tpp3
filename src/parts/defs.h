@@ -61,7 +61,7 @@
  * should expand to. Without this, the expansion is either controlled
  * via custom behavior (in the case of macros like __FILE__, __LINE__),
  * or as a fallback: the macro will simply expand to itself. */
-#define TPP_BUILTIN_MACRO(name, value)
+#define TPP_BUILTIN_MACRO(keyword_id, value)
 #endif /* !TPP_BUILTIN_MACRO */
 
 
@@ -2213,6 +2213,32 @@ TPP_WARNING(TPP_W_EXPANSION_TO_DEFINED, 1(TPP_WG_EXPANSION_TO_DEFINED), 0(), TPP
             /**/ "before %[defined%] will seem them.")
 #endif /* TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR >= 0 */
 #endif /* TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
+
+
+/************************************************************************/
+/* -Wextension                                                          */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_EXTENSION
+#define TPP_HAVE_TPP_WG_EXTENSION        \
+	(TPP_HAVE_TPP_W_UNKNOWN_EXTENSION || \
+	 TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS)
+#endif /* !TPP_HAVE_TPP_WG_EXTENSION */
+#if TPP_HAVE_TPP_WG_EXTENSION
+#define TPP_WG_EXTENSION TPP_WG_EXTENSION
+TPP_WGROUP(TPP_WG_EXTENSION, 1("extension"), TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_EXTENSION */
+
+#if TPP_HAVE_TPP_W_UNKNOWN_EXTENSION
+#define TPP_W_UNKNOWN_EXTENSION TPP_W_UNKNOWN_EXTENSION
+TPP_WARNING(TPP_W_UNKNOWN_EXTENSION, 1(TPP_WG_EXTENSION), 0(), TPP_WSTATE_UNDEFINED,
+            "unknown extension %[-f%.*s%], did you mean %[-f%s%]")
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_EXTENSION */
+
+#if TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS
+#define TPP_W_CANNOT_POP_EXTENSIONS TPP_W_CANNOT_POP_EXTENSIONS
+TPP_WARNING(TPP_W_CANNOT_POP_EXTENSIONS, 1(TPP_WG_EXTENSION), 0(), TPP_WSTATE_UNDEFINED,
+            "cannot %[#pragma extension(pop)%] no preceding %[push%]")
+#endif /* TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS */
 
 
 /************************************************************************/

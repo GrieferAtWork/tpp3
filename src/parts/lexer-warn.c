@@ -525,7 +525,6 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			expr;                                                              \
 		}	break;
 #include TPP_CONFIG_DEFS_FILENAME
-#undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 
 /************************************************************************/

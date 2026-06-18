@@ -43,6 +43,7 @@
 #pragma warning(disable: 26496)
 #pragma warning(disable: 26485)
 #pragma warning(disable: 26448)
+#pragma warning(disable: 26461) /* Kind-of like this one, but also warns in cases where adding "const" causes compiler errors due to function prototype conflicts... */
 #endif /* _MSC_VER */
 #endif /* TPP_BUILDING */
 

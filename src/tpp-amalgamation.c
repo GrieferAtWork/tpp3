@@ -6441,7 +6441,6 @@ static struct tpp_warning_format_strings_struct {
 	char twf_##warning_id[sizeof(format) / sizeof(char)];
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
 #include TPP_CONFIG_DEFS_FILENAME
-#undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 } const tpp_warning_format_strings = {
 #define TPP_DEFS
@@ -6449,7 +6448,6 @@ static struct tpp_warning_format_strings_struct {
 	/* [twf_##warning_id] = */ format,
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
 #include TPP_CONFIG_DEFS_FILENAME
-#undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 };
 
@@ -6460,7 +6458,6 @@ static tpp_size const tpp_warning_format_string_offsets[TPP_W_COUNT] = {
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) \
 	/* [warning_id] = */ sizeof(struct tpp_warning_format_strings_struct) - 1,
 #include TPP_CONFIG_DEFS_FILENAME
-#undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 };
 
@@ -6637,10 +6634,10 @@ TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
 tpp_macro_getbuiltin(tpp_token_id id) {
 	switch (id) {
 #define TPP_DEFS
-#define TPP_BUILTIN_MACRO(name, value)                          \
-	case name: {                                                \
-		static TPP_BUILTIN_MACRO_DEFINE(builtin_##name, value); \
-		return (tpp_builtin_macro const *)&builtin_##name;      \
+#define TPP_BUILTIN_MACRO(keyword_id, value)                          \
+	case keyword_id: {                                                \
+		static TPP_BUILTIN_MACRO_DEFINE(builtin_##keyword_id, value); \
+		return (tpp_builtin_macro const *)&builtin_##keyword_id;      \
 	}	break;
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS
@@ -8321,7 +8318,6 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			expr;                                                              \
 		}	break;
 #include TPP_CONFIG_DEFS_FILENAME
-#undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 
 /************************************************************************/
@@ -15896,6 +15892,14 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_PRAGMA
 
+#if 1 /* TODO: Don't do this -- currently needed to prevent continuation in next line during "#pragma push_macro\n('foo')" */
+#define TPP_PRAGMA_PARSESTRING_FLAGS TPP_LEXER_PARSESTRING_FLAG_STOPONLF
+#define TPP_PRAGMA_ISSPACE(tok)      TPP_TOK_ISSPACE_OR_COMMENT(tok)
+#else
+#define TPP_PRAGMA_PARSESTRING_FLAGS TPP_LEXER_PARSESTRING_FLAG_NORMAL
+#define TPP_PRAGMA_ISSPACE(tok)      TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok)
+#endif
+
 /************************************************************************/
 /* #pragma push_macro(undef, "foo", "bar")                              */
 /* #pragma pop_macro("foo", "bar")                                      */
@@ -15967,13 +15971,13 @@ tpp_lexer_process_pragma_pushpop_macro(tpp_lexer *tpp_restrict self, tpp_token_i
 	data.tlhppmd_undef = false;
 	do {
 		tok = tpp_lexer_yield_blocking(self);
-	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	} while (TPP_PRAGMA_ISSPACE(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 
 	/* Skip leading '(' */
 	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
-	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+	while (TPP_PRAGMA_ISSPACE(tok))
 		tok = tpp_lexer_yield_blocking(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
@@ -15981,11 +15985,11 @@ tpp_lexer_process_pragma_pushpop_macro(tpp_lexer *tpp_restrict self, tpp_token_i
 		data.tlhppmd_undef = true;
 		do {
 			tok = tpp_lexer_yield_blocking(self);
-		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		} while (TPP_PRAGMA_ISSPACE(tok));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(','));
-		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		while (TPP_PRAGMA_ISSPACE(tok))
 			tok = tpp_lexer_yield_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
@@ -15995,18 +15999,18 @@ again_parse_string:
 	if (TPP_TOK_ISSTRING(tok)) {
 		/* Parse+process string (using "tpp_lexer_parsestring_cb()") */
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_pushpopmacro_cb,
-		                                 &data, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
+		                                 &data, TPP_PRAGMA_PARSESTRING_FLAGS);
 	} else {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
 		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
 #else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
-		error = TPP_EOK;;
+		error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
 	}
 	if (TPP_ISERR(error))
 		return error;
 	tok = tpp_lexer_gettok(self);
-	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+	while (TPP_PRAGMA_ISSPACE(tok))
 		tok = tpp_lexer_yield_blocking(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
@@ -16015,7 +16019,7 @@ again_parse_string:
 	if (tok == ',') {
 		do {
 			tok = tpp_lexer_yield_blocking(self);
-		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		} while (TPP_PRAGMA_ISSPACE(tok));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		goto again_parse_string;
@@ -16072,11 +16076,76 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 /* #pragma deprecated("foo")                                            */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_DEPRECATED
+static tpp_errno TPPCALL
+tpp_lexer_process_pragma_deprecated_cb(void *arg, tpp_string *chunk,
+                                       tpp_char const *str, tpp_size length) {
+	tpp_lexer *lexer = (tpp_lexer *)arg;
+	tpp_keyword const *ro_keyword;
+	tpp_keyword *keyword;
+	tpp_keyword_misc *misc;
+	tpp_hash hash = tpp_hashof(str, length);
+	(void)chunk;
+	ro_keyword = tpp_keywords_newkeyword(&lexer->tl_kwds, str, length, hash);
+	if tpp_unlikely(!ro_keyword)
+		return TPP_ENOMEM;
+	keyword = tpp_keywords_copybuiltin(&lexer->tl_kwds, ro_keyword);
+	if tpp_unlikely(!keyword)
+		return TPP_ENOMEM;
+	misc = tpp_keyword_requiremisc(keyword);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	misc->tkm_flags |= TPP_KEYWORD_FLAG_IS_DEPRECATED;
+	return TPP_EOK;
+}
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_deprecated(tpp_lexer *tpp_restrict self) {
-	/* TODO */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_errno error;
+	tpp_token_id tok;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_PRAGMA_ISSPACE(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Skip leading '(' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
+	while (TPP_PRAGMA_ISSPACE(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+again_parse_string:
+	if (TPP_TOK_ISSTRING(tok)) {
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_deprecated_cb,
+		                                 self, TPP_PRAGMA_PARSESTRING_FLAGS);
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+		error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+	}
+	if (TPP_ISERR(error))
+		return error;
+	tok = tpp_lexer_gettok(self);
+	while (TPP_PRAGMA_ISSPACE(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* TPP allows multiple strings to be specified here */
+	if (tok == ',') {
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_PRAGMA_ISSPACE(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		goto again_parse_string;
+	}
+
+	/* Skip trailing ')' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+	return TPP_TOK_ASERR_OR_EOK(tok);
 }
 #endif /* TPP_HAVE_PRAGMA_DEPRECATED */
 
@@ -16085,15 +16154,112 @@ tpp_lexer_process_pragma_deprecated(tpp_lexer *tpp_restrict self) {
 
 
 /************************************************************************/
-/* #pragma extension(...)                                               */
+/* #pragma extension(push, "-fmacro-recursion")                         */
+/* #pragma extension("-fno-macro-recursion")                            */
+/* #pragma extension(pop)                                               */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
+static tpp_errno TPPCALL
+tpp_lexer_process_pragma_extension_cb(void *arg, tpp_string *chunk,
+                                      tpp_char const *str, tpp_size length) {
+	tpp_errno error;
+	tpp_lexer *lexer = (tpp_lexer *)arg;
+	tpp_extension_id id;
+	bool enable_extension = true;
+	(void)chunk;
+	if (length >= 2 && str[0] == '-' && str[1] == 'f')
+		length -= 2, str += 2;
+	if (length >= 3 && str[0] == 'n' && str[1] == 'o' && str[2] == '-')
+		length -= 3, str += 3, enable_extension = false;
+	id = tpp_extension_byname_ex((char const *)str, length);
+	if ((unsigned int)id >= (unsigned int)TPP_EXT_COUNT) {
+#if TPP_HAVE_TPP_W_UNKNOWN_EXTENSION
+		tpp_extension_id nearest = tpp_extension_nearest_ex((char const *)str, length);
+		char const *nearest_name = tpp_extension_getname(nearest);
+		error = tpp_lexer_warnf(lexer, TPP_W_UNKNOWN_EXTENSION,
+		                        (unsigned int)length, str, nearest_name);
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_EXTENSION */
+	} else {
+		error = tpp_lexer_setextension(lexer, id, enable_extension);
+	}
+	return error;
+}
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_extension(tpp_lexer *tpp_restrict self) {
-	/* TODO */
-	/* TODO: Only support push when "TPP_HAVE_EXTENSIONS_PUSH_POP" */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_errno error;
+	tpp_token_id tok;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_PRAGMA_ISSPACE(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Skip leading '(' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
+	while (TPP_PRAGMA_ISSPACE(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+again_parse_string:
+	switch (tok) {
+
+#if TPP_HAVE_EXTENSIONS_PUSH_POP
+	case TPP_KWD_push:
+		tpp_lexer_pushextensions(self);
+		tok   = tpp_lexer_yield_blocking(self);
+		error = TPP_TOK_ASERR_OR_EOK(tok);
+		break;
+
+	case TPP_KWD_pop:
+		if (tpp_lexer_canpopextensions(self)) {
+			tpp_lexer_popextensions(self);
+		} else {
+#if TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS
+			error = tpp_lexer_warnf(self, TPP_W_CANNOT_POP_EXTENSIONS);
+#endif /* TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS */
+			if (TPP_ISERR(error))
+				break;
+		}
+		tok   = tpp_lexer_yield_blocking(self);
+		error = TPP_TOK_ASERR_OR_EOK(tok);
+		break;
+#endif /* TPP_HAVE_EXTENSIONS_PUSH_POP */
+
+	TPP_CASE_TPP_TOK_STRING
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_extension_cb,
+		                                 self, TPP_PRAGMA_PARSESTRING_FLAGS);
+		break;
+
+	default:
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+		error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+		break;
+	}
+	if (TPP_ISERR(error))
+		return error;
+	tok = tpp_lexer_gettok(self);
+	while (TPP_PRAGMA_ISSPACE(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* TPP allows multiple strings to be specified here */
+	if (tok == ',') {
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_PRAGMA_ISSPACE(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		goto again_parse_string;
+	}
+
+	/* Skip trailing ')' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+	return TPP_TOK_ASERR_OR_EOK(tok);
 }
 #endif /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
 
@@ -16102,7 +16268,21 @@ tpp_lexer_process_pragma_extension(tpp_lexer *tpp_restrict self) {
 
 
 /************************************************************************/
-/* #pragma warning(...)                                               */
+/* #pragma warning(push, disable: 4068, "[-W]unknown-pragmas")          */
+/* #pragma warning(enable: 4068, "[-W]unknown-pragmas")                 */
+/* #pragma warning(suppress: 4068, "[-W]unknown-pragmas")               */
+/* #pragma warning(error: 4068, "[-W]unknown-pragmas")                  */
+/* #pragma warning(default: 4068, "[-W]unknown-pragmas")                */
+/* #pragma warning(-1: 4068)                       // #pragma warning(error: 4068)                   */
+/* #pragma warning(0: 4068)                        // #pragma warning(enable: 4068)                  */
+/* #pragma warning(1: 4068)                        // #pragma warning(disable: 4068)                 */
+/* #pragma warning(2: 4068)                        // #pragma warning(suppress: 4068)                */
+/* #pragma warning("[-W]unknown-pragmas")          // #pragma warning(enable: "-Wunknown-pragmas")   */
+/* #pragma warning("[-W]no-unknown-pragmas")       // #pragma warning(disable: "-Wunknown-pragmas")  */
+/* #pragma warning("[-W]def-unknown-pragmas")      // #pragma warning(default: "-Wunknown-pragmas")  */
+/* #pragma warning("[-W]sup-unknown-pragmas")      // #pragma warning(suppress: "-Wunknown-pragmas") */
+/* #pragma warning("[-W]suppress-unknown-pragmas") // #pragma warning(suppress: "-Wunknown-pragmas") */
+/* #pragma warning(pop)                                                 */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -16120,11 +16300,12 @@ tpp_lexer_process_pragma_warning(tpp_lexer *tpp_restrict self) {
 
 /************************************************************************/
 /* #pragma message("...")                                               */
+/* #pragma message "..."                                                */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_MESSAGE
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_message(tpp_lexer *tpp_restrict self) {
-	/* TODO */
+	/* TODO: Need another user-overwritable output printer (similar to the lexer's warning printer) */
 	(void)self;
 	return TPP_ENOENT;
 }
@@ -16156,9 +16337,10 @@ tpp_lexer_process_pragma_error(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_GCC_system_header(tpp_lexer *tpp_restrict self) {
-	/* TODO */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_file *iofile = tpp_file_getiofile(tpp_lexer_getfile(self));
+	if (iofile->tf_kind == TPP_FILE_KIND_IO)
+		iofile->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_SYSHDR;
+	return TPP_EOK;
 }
 #endif /* TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
 
@@ -16188,7 +16370,7 @@ tpp_lexer_process_pragma_GCC_diagnostic(tpp_lexer *tpp_restrict self) {
 
 
 /************************************************************************/
-/* #pragma GCC poison foo bar foobar ...                                 */
+/* #pragma GCC poison foo bar foobar ...                                */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_GCC_POISON
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -16301,7 +16483,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	do {
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
-	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	} while (TPP_PRAGMA_ISSPACE(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	switch (tok) {
@@ -16376,7 +16558,7 @@ tpp_lexer_process_pragma_TPP(tpp_lexer *tpp_restrict self) {
 	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	do {
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
-	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	} while (TPP_PRAGMA_ISSPACE(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	switch (tok) {
