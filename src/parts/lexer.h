@@ -730,7 +730,10 @@ tpp_lexer_seek_start(tpp_lexer *tpp_restrict self,
  *
  * HINT: Something similar to this is done to parse the argument lists of macros when
  *       rollback needs to be possible due to the "TPP_MACRO_FLAG_SELFEXPAND" extension.
- */
+ *
+ * WARNING: All additional files pushed onto the #include-stack at any point while
+ *          inside of a tpp_lexer_manualpopfile_start()-block must be popped again
+ *          before the block may be committed or rolled back! */
 #define tpp_lexer_manualpopfile_start(self) \
 	do{ tpp_file *const _tlmpf_orig_prev = tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_lexer_manualpopfile_popfile(tpp_lexer *tpp_restrict self);

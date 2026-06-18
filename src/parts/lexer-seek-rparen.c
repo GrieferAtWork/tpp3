@@ -470,7 +470,11 @@ again_switch_tok:
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL ||        \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE ||       \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || \
-     TPP_HAVE_TPP_TOK_LANGLE_MINUS)
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS ||               \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE)
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
 	case TPP_TOK_LANGLE_EQUAL: /* "<=" */
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
@@ -489,6 +493,18 @@ again_switch_tok:
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS
 	case TPP_TOK_LANGLE_MINUS: /* "<-" */
 #endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+	case TPP_TOK_LANGLE_EQUAL_RANGLE: /* "<=>" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+	case TPP_TOK_LANGLE_MINUS_RANGLE: /* "<->" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+	case TPP_TOK_LANGLE_EQUAL_LANGLE: /* "<=<" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+	case TPP_TOK_LANGLE_MINUS_LANGLE: /* "<-<" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
 		/* Convert to "<" token */
 		tpp_assert(token->tt_start < token->tt_end);
 		tpp_assert(token->tt_start[0] == '<');
@@ -502,12 +518,17 @@ again_switch_tok:
 
 
 
-#if (TPP_HAVE_TPP_TOK_RANGLE_LANGLE ||        \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE ||        \
-     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||         \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL ||  \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)
+#if (TPP_HAVE_TPP_TOK_RANGLE_LANGLE ||              \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE ||              \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||               \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE ||       \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL || \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS ||               \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
 #if TPP_HAVE_TPP_TOK_RANGLE_LANGLE
 	case TPP_TOK_RANGLE_LANGLE: /* "><" */
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_LANGLE */
@@ -526,6 +547,21 @@ again_switch_tok:
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 	case TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL: /* ">>>=" */
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+	case TPP_TOK_RANGLE_MINUS: /* ">-" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+	case TPP_TOK_RANGLE_EQUAL_LANGLE: /* ">=<" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+	case TPP_TOK_RANGLE_MINUS_LANGLE: /* ">-<" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+	case TPP_TOK_RANGLE_EQUAL_RANGLE: /* ">=>" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+	case TPP_TOK_RANGLE_MINUS_RANGLE: /* ">->" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 		/* Convert to ">" token */
 		tpp_assert(token->tt_start < token->tt_end);
 		tpp_assert(token->tt_start[0] == '>');
@@ -537,8 +573,6 @@ again_switch_tok:
 		break;
 #endif /* ... */
 
-
-
 	/* Tokens where the first character is irrelevant, and need to be split into 2 */
 #if (TPP_HAVE_TPP_TOK_MINUS_RANGLE ||               \
      TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR ||          \
@@ -548,7 +582,8 @@ again_switch_tok:
      TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || \
      TPP_HAVE_TPP_TOK_EQUAL_RANGLE ||               \
      TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE ||        \
-     TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)
+     TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE || \
+     TPP_HAVE_TPP_TOK_MINUS_LANGLE)
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE
 	case TPP_TOK_MINUS_RANGLE: /* "->" */
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
@@ -576,6 +611,9 @@ again_switch_tok:
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 	case TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE: /* "=>>>" */
 #endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+	case TPP_TOK_MINUS_LANGLE: /* "-<" */
+#endif /* !TPP_HAVE_TPP_TOK_MINUS_LANGLE */
 		/* Convert to 1-char token */
 		tpp_assert(token->tt_start < token->tt_end);
 		token->tt_end = token->tt_start + 1;

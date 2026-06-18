@@ -730,6 +730,36 @@ static struct tpp_token_str_strings_struct {
 #if TPP_HAVE_TPP_TOK_STAR_DOT
 	char ttr_TPP_TOK_STAR_DOT[9];
 #endif /* TPP_HAVE_TPP_TOK_STAR_DOT */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+	char ttr_TPP_TOK_MINUS_LANGLE[13];
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+	char ttr_TPP_TOK_RANGLE_MINUS[13];
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+	char ttr_TPP_TOK_LANGLE_EQUAL_RANGLE[20];
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+	char ttr_TPP_TOK_LANGLE_MINUS_RANGLE[20];
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+	char ttr_TPP_TOK_RANGLE_EQUAL_LANGLE[20];
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+	char ttr_TPP_TOK_RANGLE_MINUS_LANGLE[20];
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+	char ttr_TPP_TOK_LANGLE_EQUAL_LANGLE[20];
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+	char ttr_TPP_TOK_LANGLE_MINUS_LANGLE[20];
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+	char ttr_TPP_TOK_RANGLE_EQUAL_RANGLE[20];
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+	char ttr_TPP_TOK_RANGLE_MINUS_RANGLE[20];
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 } const tpp_token_str_strings = {
 	/* .ttr_TPP_TOK_EOF = */ "EOF",
 	/* .ttr_TPP_TOK_LF = */ "LF",
@@ -1080,6 +1110,36 @@ static struct tpp_token_str_strings_struct {
 #if TPP_HAVE_TPP_TOK_STAR_DOT
 	/* .ttr_TPP_TOK_STAR_DOT = */ "STAR_DOT",
 #endif /* TPP_HAVE_TPP_TOK_STAR_DOT */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+	/* .ttr_TPP_TOK_MINUS_LANGLE = */ "MINUS_LANGLE",
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+	/* .ttr_TPP_TOK_RANGLE_MINUS = */ "RANGLE_MINUS",
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+	/* .ttr_TPP_TOK_LANGLE_EQUAL_RANGLE = */ "LANGLE_EQUAL_RANGLE",
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+	/* .ttr_TPP_TOK_LANGLE_MINUS_RANGLE = */ "LANGLE_MINUS_RANGLE",
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+	/* .ttr_TPP_TOK_RANGLE_EQUAL_LANGLE = */ "RANGLE_EQUAL_LANGLE",
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+	/* .ttr_TPP_TOK_RANGLE_MINUS_LANGLE = */ "RANGLE_MINUS_LANGLE",
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+	/* .ttr_TPP_TOK_LANGLE_EQUAL_LANGLE = */ "LANGLE_EQUAL_LANGLE",
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+	/* .ttr_TPP_TOK_LANGLE_MINUS_LANGLE = */ "LANGLE_MINUS_LANGLE",
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+	/* .ttr_TPP_TOK_RANGLE_EQUAL_RANGLE = */ "RANGLE_EQUAL_RANGLE",
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+	/* .ttr_TPP_TOK_RANGLE_MINUS_RANGLE = */ "RANGLE_MINUS_RANGLE",
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 };
 static uint_least16_t const tpp_token_str_offsets[] = {
 	/* [TPP_TOK_EOF] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_EOF),
@@ -1657,6 +1717,36 @@ static uint_least16_t const tpp_token_str_offsets[] = {
 #if TPP_HAVE_TPP_TOK_STAR_DOT
 	/* [TPP_TOK_STAR_DOT] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_STAR_DOT),
 #endif /* TPP_HAVE_TPP_TOK_STAR_DOT */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+	/* [TPP_TOK_MINUS_LANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_MINUS_LANGLE),
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+	/* [TPP_TOK_RANGLE_MINUS] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_RANGLE_MINUS),
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+	/* [TPP_TOK_LANGLE_EQUAL_RANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_LANGLE_EQUAL_RANGLE),
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+	/* [TPP_TOK_LANGLE_MINUS_RANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_LANGLE_MINUS_RANGLE),
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+	/* [TPP_TOK_RANGLE_EQUAL_LANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_RANGLE_EQUAL_LANGLE),
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+	/* [TPP_TOK_RANGLE_MINUS_LANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_RANGLE_MINUS_LANGLE),
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+	/* [TPP_TOK_LANGLE_EQUAL_LANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_LANGLE_EQUAL_LANGLE),
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+	/* [TPP_TOK_LANGLE_MINUS_LANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_LANGLE_MINUS_LANGLE),
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+	/* [TPP_TOK_RANGLE_EQUAL_RANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_RANGLE_EQUAL_RANGLE),
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+	/* [TPP_TOK_RANGLE_MINUS_RANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_RANGLE_MINUS_RANGLE),
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 };
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_token_str_offsets) == TPP_TOK_MULTICHAR_END);
 
@@ -2175,6 +2265,36 @@ static struct tpp_token_repr_strings_struct {
 #if TPP_HAVE_TPP_TOK_STAR_DOT
 	char ttr_TPP_TOK_STAR_DOT[3];
 #endif /* TPP_HAVE_TPP_TOK_STAR_DOT */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+	char ttr_TPP_TOK_MINUS_LANGLE[3];
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+	char ttr_TPP_TOK_RANGLE_MINUS[3];
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+	char ttr_TPP_TOK_LANGLE_EQUAL_RANGLE[4];
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+	char ttr_TPP_TOK_LANGLE_MINUS_RANGLE[4];
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+	char ttr_TPP_TOK_RANGLE_EQUAL_LANGLE[4];
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+	char ttr_TPP_TOK_RANGLE_MINUS_LANGLE[4];
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+	char ttr_TPP_TOK_LANGLE_EQUAL_LANGLE[4];
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+	char ttr_TPP_TOK_LANGLE_MINUS_LANGLE[4];
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+	char ttr_TPP_TOK_RANGLE_EQUAL_RANGLE[4];
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+	char ttr_TPP_TOK_RANGLE_MINUS_RANGLE[4];
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 } const tpp_token_repr_strings = {
 	/* .ttr_eof = */ "<eof>",
 	/* .ttr_x01 = */ "\\x01",
@@ -2666,6 +2786,36 @@ static struct tpp_token_repr_strings_struct {
 #if TPP_HAVE_TPP_TOK_STAR_DOT
 	/* .ttr_TPP_TOK_STAR_DOT = */ "*.",
 #endif /* TPP_HAVE_TPP_TOK_STAR_DOT */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+	/* .ttr_TPP_TOK_MINUS_LANGLE = */ "-<",
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+	/* .ttr_TPP_TOK_RANGLE_MINUS = */ ">-",
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+	/* .ttr_TPP_TOK_LANGLE_EQUAL_RANGLE = */ "<=>",
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+	/* .ttr_TPP_TOK_LANGLE_MINUS_RANGLE = */ "<->",
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+	/* .ttr_TPP_TOK_RANGLE_EQUAL_LANGLE = */ ">=<",
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+	/* .ttr_TPP_TOK_RANGLE_MINUS_LANGLE = */ ">-<",
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+	/* .ttr_TPP_TOK_LANGLE_EQUAL_LANGLE = */ "<=<",
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+	/* .ttr_TPP_TOK_LANGLE_MINUS_LANGLE = */ "<-<",
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+	/* .ttr_TPP_TOK_RANGLE_EQUAL_RANGLE = */ ">=>",
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+	/* .ttr_TPP_TOK_RANGLE_MINUS_RANGLE = */ ">->",
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 };
 static uint_least16_t const tpp_token_repr_offsets[] = {
 	/* [0x0] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_eof),
@@ -3239,6 +3389,36 @@ static uint_least16_t const tpp_token_repr_offsets[] = {
 #if TPP_HAVE_TPP_TOK_STAR_DOT
 	/* [TPP_TOK_STAR_DOT] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_STAR_DOT),
 #endif /* TPP_HAVE_TPP_TOK_STAR_DOT */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+	/* [TPP_TOK_MINUS_LANGLE] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_MINUS_LANGLE),
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+	/* [TPP_TOK_RANGLE_MINUS] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_RANGLE_MINUS),
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+	/* [TPP_TOK_LANGLE_EQUAL_RANGLE] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_LANGLE_EQUAL_RANGLE),
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+	/* [TPP_TOK_LANGLE_MINUS_RANGLE] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_LANGLE_MINUS_RANGLE),
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+	/* [TPP_TOK_RANGLE_EQUAL_LANGLE] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_RANGLE_EQUAL_LANGLE),
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+	/* [TPP_TOK_RANGLE_MINUS_LANGLE] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_RANGLE_MINUS_LANGLE),
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+	/* [TPP_TOK_LANGLE_EQUAL_LANGLE] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_LANGLE_EQUAL_LANGLE),
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+	/* [TPP_TOK_LANGLE_MINUS_LANGLE] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_LANGLE_MINUS_LANGLE),
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+	/* [TPP_TOK_RANGLE_EQUAL_RANGLE] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_RANGLE_EQUAL_RANGLE),
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+	/* [TPP_TOK_RANGLE_MINUS_RANGLE] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_RANGLE_MINUS_RANGLE),
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 };
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_token_repr_offsets) == TPP_TOK_MULTICHAR_END);
 
@@ -7079,6 +7259,36 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_HAVE_TPP_TOK_STAR_DOT < 0
 		/* .tff_TPP_FEAT_TPP_TOK_STAR_DOT                   = */ TPP_HAVE_TPP_TOK_STAR_DOT == -1,
 #endif /* TPP_HAVE_TPP_TOK_STAR_DOT < 0 */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE < 0
+		/* .tff_TPP_FEAT_TPP_TOK_MINUS_LANGLE               = */ TPP_HAVE_TPP_TOK_MINUS_LANGLE == -1,
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE < 0 */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS < 0
+		/* .tff_TPP_FEAT_TPP_TOK_RANGLE_MINUS               = */ TPP_HAVE_TPP_TOK_RANGLE_MINUS == -1,
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS < 0 */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE < 0
+		/* .tff_TPP_FEAT_TPP_TOK_LANGLE_EQUAL_RANGLE        = */ TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE == -1,
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE < 0 */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE < 0
+		/* .tff_TPP_FEAT_TPP_TOK_LANGLE_MINUS_RANGLE        = */ TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE == -1,
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE < 0 */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE < 0
+		/* .tff_TPP_FEAT_TPP_TOK_RANGLE_EQUAL_LANGLE        = */ TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE == -1,
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE < 0 */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE < 0
+		/* .tff_TPP_FEAT_TPP_TOK_RANGLE_MINUS_LANGLE        = */ TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE == -1,
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE < 0 */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE < 0
+		/* .tff_TPP_FEAT_TPP_TOK_LANGLE_EQUAL_LANGLE        = */ TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE == -1,
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE < 0 */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE < 0
+		/* .tff_TPP_FEAT_TPP_TOK_LANGLE_MINUS_LANGLE        = */ TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE == -1,
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE < 0 */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE < 0
+		/* .tff_TPP_FEAT_TPP_TOK_RANGLE_EQUAL_RANGLE        = */ TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE == -1,
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE < 0 */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE < 0
+		/* .tff_TPP_FEAT_TPP_TOK_RANGLE_MINUS_RANGLE        = */ TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE == -1,
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE < 0 */
 #if TPP_HAVE_CPP_DIRECTIVES < 0
 		/* .tff_TPP_FEAT_CPP_DIRECTIVES                     = */ TPP_HAVE_CPP_DIRECTIVES == -1,
 #endif /* TPP_HAVE_CPP_DIRECTIVES < 0 */
@@ -7786,7 +7996,6 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
                                         tpp_file *tpp_restrict orig_prev) {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	/* FIXME: this breaks if further files were #include-d by "self" since */
 	while (file->tf_prev != orig_prev) {
 		tpp_file *last = orig_prev;
 		tpp_file *last_prev;
@@ -7807,8 +8016,7 @@ _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
                                       tpp_file *tpp_restrict orig_prev) {
-	tpp_file *const file = tpp_lexer_getfile(self);
-	/* FIXME: this breaks if further files were #include-d by "self" since */
+	tpp_file const *const file = tpp_lexer_getfile(self);
 	while (file->tf_prev != orig_prev) {
 		tpp_file *prev_prev;
 		tpp_assert(orig_prev);
@@ -11377,19 +11585,28 @@ switch_on_ch:
 /************************************************************************/
 	case '<': {
 #if (TPP_HAVE_TPP_TOK_LANGLE_LANGLE ||              \
-     TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||               \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL ||        \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE ||       \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || \
      TPP_HAVE_TPP_TOK_LANGLE_RANGLE ||              \
-     TPP_HAVE_TPP_TOK_LANGLE_MINUS || TPP_HAVE_DIGRAPHS)
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||               \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS ||               \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE ||        \
+     TPP_HAVE_DIGRAPHS)
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_RANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_RANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_LANGLE) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_RANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_LANGLE) &&
 		    !tpp_lexer_getext(self, TPP_EXT_DIGRAPHS))
 			break;
 		read_ch2();
@@ -11475,14 +11692,92 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
 		} else
 #endif /* ... */
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
+#if (TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE)
 		if (ch2 == '=') {
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_LANGLE) ||
+			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_RANGLE)) {
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+				if (ch2 == '<') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_LANGLE)) {
+						result = TPP_TOK_LANGLE_EQUAL_LANGLE; /* "<=<" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+				if (ch2 == '>') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_RANGLE)) {
+						result = TPP_TOK_LANGLE_EQUAL_RANGLE; /* "<=>" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
+			}
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL)) {
 				result = TPP_TOK_LANGLE_EQUAL; /* "<=" */
 				goto set_result;
 			}
-		} else
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
+		} else
+#endif /* ... */
+#if (TPP_HAVE_TPP_TOK_LANGLE_MINUS ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE)
+		if (ch2 == '-') {
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_LANGLE) ||
+			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_RANGLE)) {
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+				if (ch2 == '<') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_LANGLE)) {
+						result = TPP_TOK_LANGLE_MINUS_LANGLE; /* "<-<" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+				if (ch2 == '>') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_RANGLE)) {
+						result = TPP_TOK_LANGLE_MINUS_RANGLE; /* "<->" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+			}
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS)) {
+				result = TPP_TOK_LANGLE_MINUS; /* "<-" */
+				goto set_result;
+			}
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+		} else
+#endif /* ... */
 #if TPP_HAVE_TPP_TOK_LANGLE_RANGLE
 		if (ch2 == '>') {
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_RANGLE)) {
@@ -11491,14 +11786,6 @@ switch_on_ch:
 			}
 		} else
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
-		if (ch2 == '-') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS)) {
-				result = TPP_TOK_LANGLE_MINUS; /* "<-" */
-				goto set_result;
-			}
-		} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
 		{
 		}
 #endif /* ... */
@@ -11510,17 +11797,27 @@ switch_on_ch:
 /************************************************************************/
 	case '>': {
 #if (TPP_HAVE_TPP_TOK_RANGLE_RANGLE ||              \
-     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||               \
      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL ||        \
      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE ||       \
      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL || \
-     TPP_HAVE_TPP_TOK_RANGLE_LANGLE)
+     TPP_HAVE_TPP_TOK_RANGLE_LANGLE ||              \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||               \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS ||               \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_LANGLE))
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_LANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_LANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_RANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_LANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_RANGLE))
 			break;
 		read_ch2();
 
@@ -11586,14 +11883,92 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
 		} else
 #endif /* ... */
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+#if (TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE)
 		if (ch2 == '=') {
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_LANGLE) ||
+			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_RANGLE)) {
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+				if (ch2 == '<') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_LANGLE)) {
+						result = TPP_TOK_RANGLE_EQUAL_LANGLE; /* ">=<" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+				if (ch2 == '>') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_RANGLE)) {
+						result = TPP_TOK_RANGLE_EQUAL_RANGLE; /* ">=>" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+			}
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL)) {
 				result = TPP_TOK_RANGLE_EQUAL; /* ">=" */
 				goto set_result;
 			}
-		} else
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+		} else
+#endif /* ... */
+#if (TPP_HAVE_TPP_TOK_RANGLE_MINUS ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
+		if (ch2 == '-') {
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_LANGLE) ||
+			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_RANGLE)) {
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+				if (ch2 == '<') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_LANGLE)) {
+						result = TPP_TOK_RANGLE_MINUS_LANGLE; /* ">-<" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+				if (ch2 == '>') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_RANGLE)) {
+						result = TPP_TOK_RANGLE_MINUS_RANGLE; /* ">->" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+			}
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS)) {
+				result = TPP_TOK_RANGLE_MINUS; /* ">-" */
+				goto set_result;
+			}
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+		} else
+#endif /* ... */
 #if TPP_HAVE_TPP_TOK_RANGLE_LANGLE
 		if (ch2 == '<') {
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_LANGLE)) {
@@ -12084,16 +12459,18 @@ switch_on_ch:
 
 /************************************************************************/
 	case '-': {
-#if (TPP_HAVE_TPP_TOK_MINUS_EQUAL ||  \
-     TPP_HAVE_TPP_TOK_MINUS_MINUS ||  \
-     TPP_HAVE_TPP_TOK_SQL_COMMENT ||  \
-     TPP_HAVE_TPP_TOK_MINUS_RANGLE || \
-     TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR)
+#if (TPP_HAVE_TPP_TOK_MINUS_EQUAL ||       \
+     TPP_HAVE_TPP_TOK_MINUS_MINUS ||       \
+     TPP_HAVE_TPP_TOK_SQL_COMMENT ||       \
+     TPP_HAVE_TPP_TOK_MINUS_RANGLE ||      \
+     TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || \
+     TPP_HAVE_TPP_TOK_MINUS_LANGLE)
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_MINUS) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SQL_COMMENT) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR))
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_LANGLE))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_MINUS_EQUAL
@@ -12148,6 +12525,14 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
 		} else
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+		if (ch2 == '<') {
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_LANGLE)) {
+				result = TPP_TOK_MINUS_LANGLE; /* "-<" */
+				goto set_result;
+			}
+		} else
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
 		{
 		}
 #endif /* ... */
@@ -14083,7 +14468,11 @@ again_switch_tok:
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL ||        \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE ||       \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || \
-     TPP_HAVE_TPP_TOK_LANGLE_MINUS)
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS ||               \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE)
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
 	case TPP_TOK_LANGLE_EQUAL: /* "<=" */
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
@@ -14102,6 +14491,18 @@ again_switch_tok:
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS
 	case TPP_TOK_LANGLE_MINUS: /* "<-" */
 #endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+	case TPP_TOK_LANGLE_EQUAL_RANGLE: /* "<=>" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+	case TPP_TOK_LANGLE_MINUS_RANGLE: /* "<->" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+	case TPP_TOK_LANGLE_EQUAL_LANGLE: /* "<=<" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+	case TPP_TOK_LANGLE_MINUS_LANGLE: /* "<-<" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
 		/* Convert to "<" token */
 		tpp_assert(token->tt_start < token->tt_end);
 		tpp_assert(token->tt_start[0] == '<');
@@ -14115,12 +14516,17 @@ again_switch_tok:
 
 
 
-#if (TPP_HAVE_TPP_TOK_RANGLE_LANGLE ||        \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE ||        \
-     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||         \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL ||  \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)
+#if (TPP_HAVE_TPP_TOK_RANGLE_LANGLE ||              \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE ||              \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||               \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE ||       \
+     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL || \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS ||               \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
 #if TPP_HAVE_TPP_TOK_RANGLE_LANGLE
 	case TPP_TOK_RANGLE_LANGLE: /* "><" */
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_LANGLE */
@@ -14139,6 +14545,21 @@ again_switch_tok:
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 	case TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL: /* ">>>=" */
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+	case TPP_TOK_RANGLE_MINUS: /* ">-" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+	case TPP_TOK_RANGLE_EQUAL_LANGLE: /* ">=<" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+	case TPP_TOK_RANGLE_MINUS_LANGLE: /* ">-<" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+	case TPP_TOK_RANGLE_EQUAL_RANGLE: /* ">=>" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+	case TPP_TOK_RANGLE_MINUS_RANGLE: /* ">->" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 		/* Convert to ">" token */
 		tpp_assert(token->tt_start < token->tt_end);
 		tpp_assert(token->tt_start[0] == '>');
@@ -14150,8 +14571,6 @@ again_switch_tok:
 		break;
 #endif /* ... */
 
-
-
 	/* Tokens where the first character is irrelevant, and need to be split into 2 */
 #if (TPP_HAVE_TPP_TOK_MINUS_RANGLE ||               \
      TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR ||          \
@@ -14161,7 +14580,8 @@ again_switch_tok:
      TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || \
      TPP_HAVE_TPP_TOK_EQUAL_RANGLE ||               \
      TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE ||        \
-     TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)
+     TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE || \
+     TPP_HAVE_TPP_TOK_MINUS_LANGLE)
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE
 	case TPP_TOK_MINUS_RANGLE: /* "->" */
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
@@ -14189,6 +14609,9 @@ again_switch_tok:
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 	case TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE: /* "=>>>" */
 #endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+	case TPP_TOK_MINUS_LANGLE: /* "-<" */
+#endif /* !TPP_HAVE_TPP_TOK_MINUS_LANGLE */
 		/* Convert to 1-char token */
 		tpp_assert(token->tt_start < token->tt_end);
 		token->tt_end = token->tt_start + 1;
@@ -16758,12 +17181,17 @@ TPP_DECL_BEGIN
  * in which case "tok" is allowed to be some other token whose
  * first character is '<'. In that last case, "self" is updated
  * to describe '<' before "true" is returned. */
-#if (TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && \
-     (TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||         \
-      TPP_HAVE_TPP_TOK_LANGLE_LANGLE ||        \
-      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL ||  \
-      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || \
-      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL))
+#if (TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS &&       \
+     (TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||               \
+      TPP_HAVE_TPP_TOK_LANGLE_LANGLE ||              \
+      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL ||        \
+      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE ||       \
+      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || \
+      TPP_HAVE_TPP_TOK_LANGLE_MINUS ||               \
+      TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE ||        \
+      TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE ||        \
+      TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE ||        \
+      TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE))
 static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_istok(tpp_lexer *tpp_restrict self,
                 tpp_token_id tok,
@@ -16788,6 +17216,21 @@ tpp_lexer_istok(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
 		case TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL: /* "<<<=" */
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
+		case TPP_TOK_LANGLE_MINUS: /* "<-" */
+#endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+		case TPP_TOK_LANGLE_EQUAL_RANGLE: /* "<=>" */
+#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+		case TPP_TOK_LANGLE_MINUS_RANGLE: /* "<->" */
+#endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+		case TPP_TOK_LANGLE_EQUAL_LANGLE: /* "<=<" */
+#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+		case TPP_TOK_LANGLE_MINUS_LANGLE: /* "<-<" */
+#endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
 			/* Convert to "<" token */
 			tpp_assert(tpp_lexer_gettoken(self)->tt_start < (*p_pos));
 			tpp_assert(tpp_lexer_gettoken(self)->tt_start[0] == '<');
@@ -16800,9 +17243,9 @@ tpp_lexer_istok(tpp_lexer *tpp_restrict self,
 	}
 	return false;
 }
-#else /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
+#else /* ... */
 #define tpp_lexer_istok(self, tok, expected, p_pos) ((tok) == (expected))
-#endif /* !TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
+#endif /* !... */
 
 /* Make use of:
  * - tpp_lexer_seek_start()
@@ -17544,11 +17987,6 @@ tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
 	*p_directive_start = file->tf_pos;
 	file->tf_pos = directive_iter;
 
-	if (mode == TPP_KWD_ifndef) {
-		/* TODO: Try to register as include-guard for current file */
-		/* TODO: -Wheader-guard */
-	}
-
 	if (mode == TPP_KWD_ifndef ||
 	    mode == TPP_KWD_elifndef)
 		is_keyword_defined = !is_keyword_defined;
@@ -18062,6 +18500,7 @@ handle_pp_ifdef:
 				ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_IFDEF;
 				ifdef_entry->tidse_created = tpp_file_lcinfo(file, directive_start);
 				ifdef_entry->tidse_updated = ifdef_entry->tidse_created;
+				/* TODO: -Wheader-guard */
 				return TPP_TOK_EOF;
 			}
 		} else
@@ -20991,8 +21430,92 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	}
 
 	/* Handle stuff like "tok == '>>' && CURRENT_TOKEN == '>>>'", etc. */
-	switch (tok) {
-	/* TODO */
+	switch (token->tt_id) {
+
+#if TPP_HAVE_TPP_TOK_DOT_DOT_DOT
+	/* TODO: case TPP_TOK_DOT_DOT_DOT: "..." */
+#endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
+#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
+	/* TODO: case TPP_TOK_LANGLE_LANGLE_EQUAL: "<<=" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
+#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL
+	/* TODO: case TPP_TOK_RANGLE_RANGLE_EQUAL: ">>=" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
+	/* TODO: case TPP_TOK_STAR_STAR_EQUAL: "**=" */
+#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL */
+#if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
+	/* TODO: case TPP_TOK_SLASH_SLASH_EQUAL: "//=" */
+#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
+	/* TODO: case TPP_TOK_MINUS_RANGLE_STAR: "->*" */
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
+#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
+	/* TODO: case TPP_TOK_LANGLE_LANGLE_LANGLE: "<<<" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
+	/* TODO: case TPP_TOK_RANGLE_RANGLE_RANGLE: ">>>" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
+	/* TODO: case TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL: "<<<=" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
+#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+	/* TODO: case TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL: ">>>=" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL
+	/* TODO: case TPP_TOK_EQUAL_EQUAL_EQUAL: "===" */
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
+	/* TODO: case TPP_TOK_EXCLAIM_EQUAL_EQUAL: "!==" */
+#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
+	/* TODO: case TPP_TOK_EQUAL_STAR_STAR: "=**" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR */
+#if TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
+	/* TODO: case TPP_TOK_EQUAL_SLASH_SLASH: "=//" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH */
+#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
+	/* TODO: case TPP_TOK_EQUAL_LANGLE_LANGLE: "=<<" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
+#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
+	/* TODO: case TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE: "=<<<" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
+	/* TODO: case TPP_TOK_EQUAL_RANGLE_RANGLE: "=>>" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
+#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
+	/* TODO: case TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE: "=>>>" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM
+	/* TODO: case TPP_TOK_EQUAL_EQUAL_EXCLAIM: "==!" */
+#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM */
+#if TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS
+	/* TODO: case TPP_TOK_STAR_LANGLE_MINUS: "*<-" */
+#endif /* !TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+	/* TODO: case TPP_TOK_LANGLE_EQUAL_RANGLE: "<=>" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+	/* TODO: case TPP_TOK_LANGLE_MINUS_RANGLE: "<->" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+	/* TODO: case TPP_TOK_RANGLE_EQUAL_LANGLE: ">=<" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+	/* TODO: case TPP_TOK_RANGLE_MINUS_LANGLE: ">-<" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+	/* TODO: case TPP_TOK_LANGLE_EQUAL_LANGLE: "<=<" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+	/* TODO: case TPP_TOK_LANGLE_MINUS_LANGLE: "<-<" */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+	/* TODO: case TPP_TOK_RANGLE_EQUAL_RANGLE: ">=>" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+	/* TODO: case TPP_TOK_RANGLE_MINUS_RANGLE: ">->" */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 
 	default: break;
 	}
@@ -21062,7 +21585,7 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	{
 		tpp_token *const token = tpp_lexer_gettoken(self);
 		tpp_lexer_arginfo argv[1];
-		size_t argc = 1;
+		tpp_size argc = 1;
 		token->tt_start = token->tt_end;
 		token->tt_end   = pos;
 		tpp_lexer_manualpopfile_start(self);

@@ -2131,6 +2131,16 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TPP_TOK_LANGLE_MINUS               0    /* "<-"   Completely unknown to TPP2 */
 #define TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS          0    /* "*<-"  Completely unknown to TPP2 */
 #define TPP_HAVE_TPP_TOK_STAR_DOT                   0    /* "*."   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_MINUS_LANGLE               0    /* "-<"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_MINUS               0    /* ">-"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE        0    /* "<=>"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE        0    /* "<->"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE        0    /* ">=<"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE        0    /* ">-<"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE        0    /* "<=<"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE        0    /* "<-<"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE        0    /* ">=>"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE        0    /* ">->"  Completely unknown to TPP2 */
 
 /* Features... */
 #define TPP_HAVE_BSE                                  1 /* TPP2 didn't even let you disable this */

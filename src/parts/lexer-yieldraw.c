@@ -1722,19 +1722,28 @@ switch_on_ch:
 /************************************************************************/
 	case '<': {
 #if (TPP_HAVE_TPP_TOK_LANGLE_LANGLE ||              \
-     TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||               \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL ||        \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE ||       \
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || \
      TPP_HAVE_TPP_TOK_LANGLE_RANGLE ||              \
-     TPP_HAVE_TPP_TOK_LANGLE_MINUS || TPP_HAVE_DIGRAPHS)
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||               \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS ||               \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE ||        \
+     TPP_HAVE_DIGRAPHS)
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_RANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_RANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_LANGLE) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_RANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_LANGLE) &&
 		    !tpp_lexer_getext(self, TPP_EXT_DIGRAPHS))
 			break;
 		read_ch2();
@@ -1820,14 +1829,92 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
 		} else
 #endif /* ... */
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
+#if (TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || \
+     TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE)
 		if (ch2 == '=') {
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_LANGLE) ||
+			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_RANGLE)) {
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+				if (ch2 == '<') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_LANGLE)) {
+						result = TPP_TOK_LANGLE_EQUAL_LANGLE; /* "<=<" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+				if (ch2 == '>') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_RANGLE)) {
+						result = TPP_TOK_LANGLE_EQUAL_RANGLE; /* "<=>" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
+			}
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL)) {
 				result = TPP_TOK_LANGLE_EQUAL; /* "<=" */
 				goto set_result;
 			}
-		} else
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
+		} else
+#endif /* ... */
+#if (TPP_HAVE_TPP_TOK_LANGLE_MINUS ||        \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || \
+     TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE)
+		if (ch2 == '-') {
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_LANGLE) ||
+			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_RANGLE)) {
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+				if (ch2 == '<') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_LANGLE)) {
+						result = TPP_TOK_LANGLE_MINUS_LANGLE; /* "<-<" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+				if (ch2 == '>') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_RANGLE)) {
+						result = TPP_TOK_LANGLE_MINUS_RANGLE; /* "<->" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+			}
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS)) {
+				result = TPP_TOK_LANGLE_MINUS; /* "<-" */
+				goto set_result;
+			}
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+		} else
+#endif /* ... */
 #if TPP_HAVE_TPP_TOK_LANGLE_RANGLE
 		if (ch2 == '>') {
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_RANGLE)) {
@@ -1836,14 +1923,6 @@ switch_on_ch:
 			}
 		} else
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
-		if (ch2 == '-') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS)) {
-				result = TPP_TOK_LANGLE_MINUS; /* "<-" */
-				goto set_result;
-			}
-		} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
 		{
 		}
 #endif /* ... */
@@ -1855,17 +1934,27 @@ switch_on_ch:
 /************************************************************************/
 	case '>': {
 #if (TPP_HAVE_TPP_TOK_RANGLE_RANGLE ||              \
-     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||               \
      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL ||        \
      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE ||       \
      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL || \
-     TPP_HAVE_TPP_TOK_RANGLE_LANGLE)
+     TPP_HAVE_TPP_TOK_RANGLE_LANGLE ||              \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||               \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS ||               \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_LANGLE))
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_LANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_LANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_RANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_LANGLE) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_RANGLE))
 			break;
 		read_ch2();
 
@@ -1931,14 +2020,92 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
 		} else
 #endif /* ... */
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+#if (TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || \
+     TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE)
 		if (ch2 == '=') {
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_LANGLE) ||
+			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_RANGLE)) {
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+				if (ch2 == '<') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_LANGLE)) {
+						result = TPP_TOK_RANGLE_EQUAL_LANGLE; /* ">=<" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+				if (ch2 == '>') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_RANGLE)) {
+						result = TPP_TOK_RANGLE_EQUAL_RANGLE; /* ">=>" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+			}
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL)) {
 				result = TPP_TOK_RANGLE_EQUAL; /* ">=" */
 				goto set_result;
 			}
-		} else
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+		} else
+#endif /* ... */
+#if (TPP_HAVE_TPP_TOK_RANGLE_MINUS ||        \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || \
+     TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
+		if (ch2 == '-') {
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_LANGLE) ||
+			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_RANGLE)) {
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+				if (ch2 == '<') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_LANGLE)) {
+						result = TPP_TOK_RANGLE_MINUS_LANGLE; /* ">-<" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+				if (ch2 == '>') {
+					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_RANGLE)) {
+						result = TPP_TOK_RANGLE_MINUS_RANGLE; /* ">->" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+			}
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
+
+#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS)) {
+				result = TPP_TOK_RANGLE_MINUS; /* ">-" */
+				goto set_result;
+			}
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+		} else
+#endif /* ... */
 #if TPP_HAVE_TPP_TOK_RANGLE_LANGLE
 		if (ch2 == '<') {
 			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_LANGLE)) {
@@ -2429,16 +2596,18 @@ switch_on_ch:
 
 /************************************************************************/
 	case '-': {
-#if (TPP_HAVE_TPP_TOK_MINUS_EQUAL ||  \
-     TPP_HAVE_TPP_TOK_MINUS_MINUS ||  \
-     TPP_HAVE_TPP_TOK_SQL_COMMENT ||  \
-     TPP_HAVE_TPP_TOK_MINUS_RANGLE || \
-     TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR)
+#if (TPP_HAVE_TPP_TOK_MINUS_EQUAL ||       \
+     TPP_HAVE_TPP_TOK_MINUS_MINUS ||       \
+     TPP_HAVE_TPP_TOK_SQL_COMMENT ||       \
+     TPP_HAVE_TPP_TOK_MINUS_RANGLE ||      \
+     TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || \
+     TPP_HAVE_TPP_TOK_MINUS_LANGLE)
 		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_EQUAL) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_MINUS) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SQL_COMMENT) &&
 		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR))
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR) &&
+		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_LANGLE))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_MINUS_EQUAL
@@ -2493,6 +2662,14 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
 		} else
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+		if (ch2 == '<') {
+			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_LANGLE)) {
+				result = TPP_TOK_MINUS_LANGLE; /* "-<" */
+				goto set_result;
+			}
+		} else
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
 		{
 		}
 #endif /* ... */

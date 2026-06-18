@@ -359,11 +359,6 @@ tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
 	*p_directive_start = file->tf_pos;
 	file->tf_pos = directive_iter;
 
-	if (mode == TPP_KWD_ifndef) {
-		/* TODO: Try to register as include-guard for current file */
-		/* TODO: -Wheader-guard */
-	}
-
 	if (mode == TPP_KWD_ifndef ||
 	    mode == TPP_KWD_elifndef)
 		is_keyword_defined = !is_keyword_defined;
@@ -877,6 +872,7 @@ handle_pp_ifdef:
 				ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_IFDEF;
 				ifdef_entry->tidse_created = tpp_file_lcinfo(file, directive_start);
 				ifdef_entry->tidse_updated = ifdef_entry->tidse_created;
+				/* TODO: -Wheader-guard */
 				return TPP_TOK_EOF;
 			}
 		} else
