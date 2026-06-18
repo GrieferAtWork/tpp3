@@ -83,36 +83,65 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 /* Process a pragma directive, starting after the "TPP_KWD_pragma" keyword */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_pragma_directive(tpp_lexer *tpp_restrict self) {
+	tpp_token *const token = tpp_lexer_gettoken(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token_id tok;
-	tpp_errno error = tpp_lexer_process_pragma(self);
-	if (TPP_ISERR(error)) {
-		if (error == TPP_ENOENT)
-			goto skip_garbage_without_warning;
-		return TPP_TOK_OFERR(error);
-	}
-	tok = tpp_lexer_gettok(self);
-	while (TPP_TOK_ISSPACE_OR_COMMENT(tok)) {
+	tpp_errno error;
+	tpp_char const *eol_start;
+	tpp_char const *eol_end;
+	do {
 		tok = tpp_lexer_yieldraw_blocking(self);
-		if (TPP_TOK_ISERR(tok))
-			return tok;
+	} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	eol_start = token->tt_start;
+	eol_end   = token->tt_end;
+	if (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF) {
+		tpp_token_id first_token_id = token->tt_id;
+		struct tpp_keyword const *first_token_kwd = token->tt_kwd;
+		tpp_size first_token_len = tpp_token_getlen(token);
+		token->tt_end = token->tt_start;
+		tpp_assert(first_token_id == tok);
+		/* Seek until EOL (so we can set a parsing limit for the pragma handler) */
+		do {
+			tok = tpp_lexer_yieldraw_at_blocking(self, &eol_end);
+			if (TPP_TOK_ISERR(tok)) {
+				token->tt_end = eol_end;
+				return tok;
+			}
+		} while (!TPP_TOK_ISLF_OR_COMMENT(tok) && tok != TPP_TOK_EOF);
+		/* Restore first token of #pragma directive */
+		eol_start       = token->tt_start;
+		token->tt_id    = first_token_id;
+		token->tt_kwd   = first_token_kwd;
+		token->tt_start = token->tt_end;
+		token->tt_end += first_token_len;
 	}
-	if (TPP_TOK_ISLF_OR_COMMENT(tok))
-		return TPP_TOK_EOF;
-	if (tok == TPP_TOK_EOF)
-		return TPP_TOK_EOF;
+
+	/* Handle the pragma, but in a context where the file can't be read beyond EOL */
+	tpp_file_pusheof(file);
+	tpp_file_seteof(file, eol_start);
+	error = tpp_lexer_process_pragma(self);
+	if (error == TPP_ENOENT) {
+		error = TPP_EOK;
+	} else
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
-	error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE);
-	if (TPP_ISERR(error))
-		return TPP_TOK_OFERR(error);
+	if (!TPP_ISERR(error)) {
+		tok = tpp_lexer_gettok(self);
+		while (TPP_TOK_ISSPACE_OR_COMMENT(tok))
+			tok = tpp_lexer_yieldraw(self);
+		if (TPP_TOK_ISERR(tok)) {
+			error = TPP_TOK_ASERR(tok);
+		} else if (tok != TPP_TOK_EOF) {
+			error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE);
+		}
+	} else
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
-skip_garbage_without_warning:
-	tok = tpp_lexer_gettok(self);
-	while (!TPP_TOK_ISLF_OR_COMMENT(tok)) {
-		tok = tpp_lexer_yieldraw_blocking(self);
-		if (TPP_TOK_ISERR(tok))
-			return tok;
+	{
 	}
-	return TPP_TOK_EOF;
+	tpp_file_popeof(file);
+	file->tf_pos = eol_end; /* Continue parsing after EOL (comment) */
+	return TPP_TOK_OFERR_OR_EOF(error);
 }
 #endif /* TPP_HAVE_PRAGMA */
 
@@ -1223,11 +1252,6 @@ handle_pp_if_error:
 			goto handle_unknown_directive;
 		tpp_lexer_process_directive_set_noguard();
 		token->tt_end = directive_iter;
-		do {
-			result = tpp_lexer_yieldraw_blocking(self);
-		} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
-		if (TPP_TOK_ISERR(result))
-			return result;
 		return tpp_lexer_process_pragma_directive(self);
 	}	break;
 #endif /* TPP_HAVE_CPP_PRAGMA */

@@ -37,14 +37,6 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_PRAGMA
 
-#if 1 /* TODO: Don't do this -- currently needed to prevent continuation in next line during "#pragma push_macro\n('foo')" */
-#define TPP_PRAGMA_PARSESTRING_FLAGS TPP_LEXER_PARSESTRING_FLAG_STOPONLF
-#define TPP_PRAGMA_ISSPACE(tok)      TPP_TOK_ISSPACE_OR_COMMENT(tok)
-#else
-#define TPP_PRAGMA_PARSESTRING_FLAGS TPP_LEXER_PARSESTRING_FLAG_NORMAL
-#define TPP_PRAGMA_ISSPACE(tok)      TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok)
-#endif
-
 /************************************************************************/
 /* #pragma push_macro(undef, "foo", "bar")                              */
 /* #pragma pop_macro("foo", "bar")                                      */
@@ -116,13 +108,13 @@ tpp_lexer_process_pragma_pushpop_macro(tpp_lexer *tpp_restrict self, tpp_token_i
 	data.tlhppmd_undef = false;
 	do {
 		tok = tpp_lexer_yield_blocking(self);
-	} while (TPP_PRAGMA_ISSPACE(tok));
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 
 	/* Skip leading '(' */
 	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
-	while (TPP_PRAGMA_ISSPACE(tok))
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 		tok = tpp_lexer_yield_blocking(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
@@ -130,11 +122,11 @@ tpp_lexer_process_pragma_pushpop_macro(tpp_lexer *tpp_restrict self, tpp_token_i
 		data.tlhppmd_undef = true;
 		do {
 			tok = tpp_lexer_yield_blocking(self);
-		} while (TPP_PRAGMA_ISSPACE(tok));
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(','));
-		while (TPP_PRAGMA_ISSPACE(tok))
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 			tok = tpp_lexer_yield_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
@@ -144,7 +136,7 @@ again_parse_string:
 	if (TPP_TOK_ISSTRING(tok)) {
 		/* Parse+process string (using "tpp_lexer_parsestring_cb()") */
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_pushpopmacro_cb,
-		                                 &data, TPP_PRAGMA_PARSESTRING_FLAGS);
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 	} else {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
 		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
@@ -155,7 +147,7 @@ again_parse_string:
 	if (TPP_ISERR(error))
 		return error;
 	tok = tpp_lexer_gettok(self);
-	while (TPP_PRAGMA_ISSPACE(tok))
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 		tok = tpp_lexer_yield_blocking(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
@@ -164,7 +156,7 @@ again_parse_string:
 	if (tok == ',') {
 		do {
 			tok = tpp_lexer_yield_blocking(self);
-		} while (TPP_PRAGMA_ISSPACE(tok));
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		goto again_parse_string;
@@ -249,20 +241,20 @@ tpp_lexer_process_pragma_deprecated(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok;
 	do {
 		tok = tpp_lexer_yield_blocking(self);
-	} while (TPP_PRAGMA_ISSPACE(tok));
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 
 	/* Skip leading '(' */
 	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
-	while (TPP_PRAGMA_ISSPACE(tok))
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 		tok = tpp_lexer_yield_blocking(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 again_parse_string:
 	if (TPP_TOK_ISSTRING(tok)) {
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_deprecated_cb,
-		                                 self, TPP_PRAGMA_PARSESTRING_FLAGS);
+		                                 self, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 	} else {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
 		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
@@ -273,7 +265,7 @@ again_parse_string:
 	if (TPP_ISERR(error))
 		return error;
 	tok = tpp_lexer_gettok(self);
-	while (TPP_PRAGMA_ISSPACE(tok))
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 		tok = tpp_lexer_yield_blocking(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
@@ -282,7 +274,7 @@ again_parse_string:
 	if (tok == ',') {
 		do {
 			tok = tpp_lexer_yield_blocking(self);
-		} while (TPP_PRAGMA_ISSPACE(tok));
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		goto again_parse_string;
@@ -336,13 +328,13 @@ tpp_lexer_process_pragma_extension(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok;
 	do {
 		tok = tpp_lexer_yield_blocking(self);
-	} while (TPP_PRAGMA_ISSPACE(tok));
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 
 	/* Skip leading '(' */
 	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
-	while (TPP_PRAGMA_ISSPACE(tok))
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 		tok = tpp_lexer_yield_blocking(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
@@ -373,7 +365,7 @@ again_parse_string:
 
 	TPP_CASE_TPP_TOK_STRING
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_extension_cb,
-		                                 self, TPP_PRAGMA_PARSESTRING_FLAGS);
+		                                 self, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 		break;
 
 	default:
@@ -387,7 +379,7 @@ again_parse_string:
 	if (TPP_ISERR(error))
 		return error;
 	tok = tpp_lexer_gettok(self);
-	while (TPP_PRAGMA_ISSPACE(tok))
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 		tok = tpp_lexer_yield_blocking(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
@@ -396,7 +388,7 @@ again_parse_string:
 	if (tok == ',') {
 		do {
 			tok = tpp_lexer_yield_blocking(self);
-		} while (TPP_PRAGMA_ISSPACE(tok));
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		goto again_parse_string;
@@ -628,7 +620,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	do {
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
-	} while (TPP_PRAGMA_ISSPACE(tok));
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	switch (tok) {
@@ -703,7 +695,7 @@ tpp_lexer_process_pragma_TPP(tpp_lexer *tpp_restrict self) {
 	tpp_char const *pos = tpp_lexer_seek_start(self, &backup);
 	do {
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
-	} while (TPP_PRAGMA_ISSPACE(tok));
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	switch (tok) {
