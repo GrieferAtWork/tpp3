@@ -21,6 +21,29 @@
 import * from deemon;
 import posix;
 
+@@Remove comments containing [[[deemon]]] scripts
+function removeDeemonScripts(data: Bytes): Bytes {
+	final local START_MARKER = "/*[[[deemon";
+	final local MID_MARKER = "]]]*/";
+	final local END_MARKER1 = "/*[[[end]]]*/";
+	final local END_MARKER2 = "//[[[end]]]\n";
+	while (true) {
+		local start = data.find(START_MARKER);
+		if (start < 0)
+			break;
+		local mid = data.index(MID_MARKER, start + #START_MARKER);
+		mid += #MID_MARKER;
+		while (mid < #data && data.islf(mid))
+			++mid;
+		local end = data.indexany({END_MARKER1,END_MARKER2}, mid);
+		local endEnd = end + (data.startswith("//", end) ? #END_MARKER2 : #END_MARKER1);
+		if (endEnd < #data && data.islf(endEnd))
+			++endEnd;
+		data = data[:start] + data[mid:end] + data[endEnd:];
+	}
+	return data;
+}
+
 function getFile(filename: string): Bytes {
 	local data: Bytes;
 	with (local fp = File.open(filename, "rb"))
@@ -33,11 +56,13 @@ function getFile(filename: string): Bytes {
 		++start;
 	while (data.isspace(end - 1))
 		--end;
-	return data[start:end]
-		/* Remove comments containing [[[deemon]]] scripts */
-		.rereplace(r"/\*\[\[\[deemon.*\]\]\]\*/\n(.*)/\*\[\[\[end\]\]\]\*/\n", r"\1")
-		.rereplace(r"/\*\s*clang-format\s*(on|off)\s*\*/\n", r"")
-		;
+	data = data[start:end].unifylines();
+	data = removeDeemonScripts(data);
+	data = data.replace("/* clang-format off */\n", "");
+	data = data.replace("/* clang-format on */\n", "");
+	data = data.replace("// clang-format off\n", "");
+	data = data.replace("// clang-format on\n", "");
+	return data;
 }
 
 function makeAmalgamation(inputFilename: string, outputFilename: string) {

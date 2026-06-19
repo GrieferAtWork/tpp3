@@ -290,7 +290,7 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 		tpp_errno error;
 #if TPP_HAVE_CLANG_MACRO___has_extension
 		if (mode == TPP_KWD___has_extension &&
-		    !tpp_lexer_getext(self, TPP_EXT_MACRO___has_extension))
+		    !tpp_lexer_have(self, MACRO___has_extension))
 			goto seek_end_of_macro;
 #define WANT_seek_end_of_macro
 #endif /* TPP_HAVE_CLANG_MACRO___has_extension */
@@ -419,7 +419,7 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 			case TPP_KWD___has_feature:
 				mask = TPP_KEYWORD_FLAG_HAS_FEATURE;
 #if TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES
-				if (tpp_lexer_getext(self, TPP_EXT_CLANG_EXTENSIONS_ARE_FEATURES))
+				if (tpp_lexer_have(self, CLANG_EXTENSIONS_ARE_FEATURES))
 					mask |= TPP_KEYWORD_FLAG_HAS_EXTENSION;
 #endif /* TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES */
 				break;
@@ -1323,10 +1323,10 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #if TPP_HAVE_CPP_MACROS
 
 	/* Check if macros are runtime-configurable and currently disabled. */
-#if TPP_HAVE_CPP_MACROS < 0
-	if (!tpp_lexer_getfeat(self, TPP_FEAT_CPP_MACROS))
+#if TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS)
+	if (!tpp_lexer_have(self, CPP_MACROS))
 		return tok;
-#endif /* TPP_HAVE_CPP_MACROS < 0 */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS) */
 
 	/* Check if this keyword should be expanded as a macro.
 	 * This also does the is-enabled checks for builtin macros. */

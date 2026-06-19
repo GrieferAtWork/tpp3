@@ -40,10 +40,10 @@ typedef enum tpp_extension_id {
 typedef union tpp_extensions_state {
 	struct {
 #define TPP_DEFS
-#define TPP_EXTENSION(id, name, default) unsigned int tef_##id: 1;
+#define TPP_EXTENSION(id, name, default) unsigned int TPP_INTERNAL(tef_##id): 1;
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS
-	} tes_flags; /* Consider this one as "TPP_INTERNAL", too! */
+	} TPP_INTERNAL(tes_flags);
 	unsigned char TPP_INTERNAL(tes_bitset)[TPP_EXT_COUNT ? ((TPP_EXT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_extensions_state;
 TPP_CONST_DECL tpp_extensions_state const tpp_extensions_state_default;

@@ -78,14 +78,14 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS
 #define TPP_MACRO_FLAG_VARIADIC   UINT8_C(0x01) /* The last argument of the function is variadic. */
 #endif /* TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS */
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 #define TPP_MACRO_FLAG_KEEPARGSPC UINT8_C(0x02) /* When set, keep whitespace surrounding macro arguments during invocation.
                                                  * WARNING: Also affects recursive macro expansion. */
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
-#if TPP_HAVE_MACRO_RECURSION < 0
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION)
 #define TPP_MACRO_FLAG_SELFEXPAND UINT8_C(0x04) /* After being expanded, this function is allowed to re-invoke itself and be expanded, when
                                                  * the generated text is not identical to a previous iteration. (s.a.: `-fmacro-recursion') */
-#endif /* TPP_HAVE_MACRO_RECURSION < 0 */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
 
@@ -219,16 +219,16 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #else /* TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS */
 #define tpp_macro_isvarargs(self) 0
 #endif /* !TPP_HAVE_NAMED_VARARGS_IN_MACROS && !TPP_HAVE_VA_ARGS_IN_MACROS */
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 #define tpp_macro_keepsargspc(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_KEEPARGSPC)
-#else /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
+#else /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #define tpp_macro_keepsargspc(self) (TPP_HAVE_MACRO_ARGUMENT_WHITESPACE != 0)
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE >= 0 */
-#if TPP_HAVE_MACRO_RECURSION < 0
+#endif /* !TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION)
 #define tpp_macro_allowsselfexpansion(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_SELFEXPAND)
-#else /* TPP_HAVE_MACRO_RECURSION < 0 */
+#else /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
 #define tpp_macro_allowsselfexpansion(self) (TPP_HAVE_MACRO_RECURSION != 0)
-#endif /* TPP_HAVE_MACRO_RECURSION >= 0 */
+#endif /* !TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
 
 
 

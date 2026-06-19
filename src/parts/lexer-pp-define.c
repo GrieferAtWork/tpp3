@@ -235,7 +235,7 @@ again_yield_macro_argument_list:
 
 #if TPP_HAVE_VA_ARGS_IN_MACROS
 	case TPP_TOK_DOT_DOT_DOT:
-		if (!tpp_lexer_getext(self, TPP_EXT_VA_ARGS_IN_MACROS))
+		if (!tpp_lexer_have(self, VA_ARGS_IN_MACROS))
 			break;
 		tok = TPP_KWD___VA_ARGS__;
 #if TPP_DEBUG
@@ -317,7 +317,7 @@ do_append_keyword_to_argument_list:
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS
 	if (tok == TPP_TOK_DOT_DOT_DOT &&
 	    !(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC) &&
-	    tpp_lexer_getext(self, TPP_EXT_NAMED_VARARGS_IN_MACROS)) {
+	    tpp_lexer_have(self, NAMED_VARARGS_IN_MACROS)) {
 		builder->mab_flags |= TPP_MACRO_FLAG_VARIADIC;
 		do {
 			tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
@@ -462,7 +462,7 @@ tpp_macro_builder_requireop(tpp_macro_builder *tpp_restrict self,
 #endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
 
 
-#if TPP_HAVE_TRADITIONAL_MACROS != 0
+#if TPP_HAVE_TRADITIONAL_MACROS
 /* Compile a traditional macro (allowed to clobber the token in "builder") */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_macro_builder_compile_traditional_impl(tpp_macro_builder *tpp_restrict builder,
@@ -587,9 +587,9 @@ tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict builder,
 #define tpp_macro_builder_compile_traditional(builder, self, body_start, body_end) \
 	tpp_macro_builder_compile_traditional_impl(builder, self, body_start, body_end)
 #endif /* !TPP_HAVE_WARNINGS */
-#endif /* TPP_HAVE_TRADITIONAL_MACROS != 0 */
+#endif /* TPP_HAVE_TRADITIONAL_MACROS */
 
-#if TPP_HAVE_TRADITIONAL_MACROS <= 0
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS)
 /* Compile a modern macro (allowed to clobber the token in "builder") */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_macro_builder_compile_modern(tpp_macro_builder *tpp_restrict builder,
@@ -627,7 +627,7 @@ again_switch_tok:
 
 		case TPP_TOK_POUND_POUND: {
 			tpp_char const *argument_end;
-			if (!tpp_lexer_getext(self, TPP_EXT_GLUE_MACRO_ARGUMENT))
+			if (!tpp_lexer_have(self, GLUE_MACRO_ARGUMENT))
 				break;
 			/* Consume any whitespace that might following this operator.
 			 * Whitespace preceding it is automatically consumed because
@@ -704,7 +704,7 @@ handle_token_after_glue:
 			 *
 			 * Compiled the same as (when ignoring whitespace):
 			 * >> #define printf(format, ...) fprintf(stderr, format __VA_COMMA__ __VA_ARGS__) */
-			if (!tpp_lexer_getext(self, TPP_EXT_VA_GLUE_COMMA_IN_MACROS))
+			if (!tpp_lexer_have(self, VA_GLUE_COMMA_IN_MACROS))
 				break;
 			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
 				break;
@@ -725,7 +725,7 @@ handle_token_after_glue:
 				/* Implement regular glue (simply deleting whitespace), or do nothing */
 handle_not_varargs_argument_after_comma_glue:
 #if TPP_HAVE_GLUE_MACRO_ARGUMENT
-				if (tpp_lexer_getext(self, TPP_EXT_GLUE_MACRO_ARGUMENT)) {
+				if (tpp_lexer_have(self, GLUE_MACRO_ARGUMENT)) {
 					++start_of_comma; /* Keep the "," character itself! */
 					if (body_start < start_of_comma) {
 						tpp_macro_builder_append_copy(err_nomem, builder,
@@ -771,7 +771,7 @@ handle_not_varargs_argument_after_comma_glue:
 		case TPP_KWD___VA_COMMA__:
 			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
 				goto handle_keyword;
-			if (!tpp_lexer_getext(self, TPP_EXT_VA_COMMA_IN_MACROS))
+			if (!tpp_lexer_have(self, VA_COMMA_IN_MACROS))
 				goto handle_keyword;
 #define WANT_handle_keyword
 			if (body_start < token->tt_start) {
@@ -793,7 +793,7 @@ handle_not_varargs_argument_after_comma_glue:
 		case TPP_KWD___VA_NARGS__:
 			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
 				goto handle_keyword;
-			if (!tpp_lexer_getext(self, TPP_EXT_VA_NARGS_IN_MACROS))
+			if (!tpp_lexer_have(self, VA_NARGS_IN_MACROS))
 				goto handle_keyword;
 #define WANT_handle_keyword
 			if (body_start < token->tt_start) {
@@ -819,7 +819,7 @@ handle_not_varargs_argument_after_comma_glue:
 			unsigned int recursion;
 			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
 				goto handle_keyword;
-			if (!tpp_lexer_getext(self, TPP_EXT_VA_OPT_IN_MACROS))
+			if (!tpp_lexer_have(self, VA_OPT_IN_MACROS))
 				goto handle_keyword;
 #define WANT_handle_keyword
 			start_of_va_opt = token->tt_start;
@@ -908,9 +908,9 @@ found_va_opt_body_end:
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
 			tpp_macro_opcode opcode;
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
-			if (!tpp_lexer_getext(self, TPP_EXT_STRINGIZE_MACRO_ARGUMENT) &&
-			    !tpp_lexer_getext(self, TPP_EXT_CHARIZE_MACRO_ARGUMENT) &&
-			    !tpp_lexer_getext(self, TPP_EXT_DONT_EXPAND_MACRO_ARGUMENT))
+			if (!tpp_lexer_have(self, STRINGIZE_MACRO_ARGUMENT) &&
+			    !tpp_lexer_have(self, CHARIZE_MACRO_ARGUMENT) &&
+			    !tpp_lexer_have(self, DONT_EXPAND_MACRO_ARGUMENT))
 				break;
 			start_of_pound = token->tt_start;
 			do {
@@ -922,7 +922,7 @@ found_va_opt_body_end:
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
 			if (tok == '!') {
 				last_non_space_end = body_iter;
-				if (!tpp_lexer_getext(self, TPP_EXT_DONT_EXPAND_MACRO_ARGUMENT))
+				if (!tpp_lexer_have(self, DONT_EXPAND_MACRO_ARGUMENT))
 					break;
 				do {
 					tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
@@ -947,7 +947,7 @@ found_va_opt_body_end:
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 			if (tok == '@') {
-				if (!tpp_lexer_getext(self, TPP_EXT_CHARIZE_MACRO_ARGUMENT))
+				if (!tpp_lexer_have(self, CHARIZE_MACRO_ARGUMENT))
 					break;
 				opcode = TPP_MACRO_OPCODE_INS_CHR;
 				do {
@@ -959,7 +959,7 @@ found_va_opt_body_end:
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 			{
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
-				if (!tpp_lexer_getext(self, TPP_EXT_STRINGIZE_MACRO_ARGUMENT))
+				if (!tpp_lexer_have(self, STRINGIZE_MACRO_ARGUMENT))
 					break;
 				opcode = TPP_MACRO_OPCODE_INS_STR;
 #else /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
@@ -1030,7 +1030,7 @@ found_va_opt_body_end:
 			/* Got a keyword that is actually a macro argument after "defined"
 			 * -> This is what this extension/warning is all about! */
 #if TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
-			if (tpp_lexer_getext(self, TPP_EXT_DONT_EXPAND_DEFINED_IN_EXPR)) {
+			if (tpp_lexer_have(self, DONT_EXPAND_DEFINED_IN_EXPR)) {
 				if (body_start < token->tt_start) {
 					tpp_macro_builder_append_copy(err_nomem, builder,
 					                              (tpp_size)(token->tt_start - body_start));
@@ -1091,7 +1091,7 @@ handle_keyword_after_arg:
 				}
 
 #if TPP_HAVE_GLUE_MACRO_ARGUMENT
-				if (tpp_lexer_getext(self, TPP_EXT_GLUE_MACRO_ARGUMENT)) {
+				if (tpp_lexer_have(self, GLUE_MACRO_ARGUMENT)) {
 					/* Must seek ahead to the next non-whitespace token. if it's the
 					 * ##-operator, then we have to insert the argument *WITHOUT* it
 					 * being expanded! */
@@ -1128,7 +1128,7 @@ handle_keyword_after_arg:
 				} else
 #endif /* TPP_HAVE_GLUE_MACRO_ARGUMENT */
 				{
-#if TPP_HAVE_GLUE_MACRO_ARGUMENT <= 0
+#if TPP_CONF_MAYBE_0(TPP_HAVE_GLUE_MACRO_ARGUMENT)
 					/* Append opcodes to insert argument */
 					tpp_macro_builder_append_ins_exp(err_nomem, builder, arg,
 					                                 (tpp_size)(body_iter - body_start));
@@ -1136,7 +1136,7 @@ handle_keyword_after_arg:
 					/* Remember that input body text has been
 					 * flushed until the end of the keyword. */
 					body_start = body_iter;
-#endif /* TPP_HAVE_GLUE_MACRO_ARGUMENT <= 0 */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_GLUE_MACRO_ARGUMENT) */
 				}
 			}
 		}	break;
@@ -1158,26 +1158,26 @@ handle_keyword_after_arg:
 err_nomem:
 	return TPP_ENOMEM;
 }
-#endif /* TPP_HAVE_TRADITIONAL_MACROS <= 0 */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS) */
 
 
-#if TPP_HAVE_TRADITIONAL_MACROS < 0
+#if TPP_CONF_IS_RT(TPP_HAVE_TRADITIONAL_MACROS)
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_macro_builder_compile(tpp_macro_builder *tpp_restrict builder,
                           tpp_lexer *tpp_restrict self,
                           tpp_char const *body_start,
                           tpp_char const *body_end) {
-	if (tpp_lexer_getext(self, TPP_EXT_TRADITIONAL_MACROS))
+	if (tpp_lexer_have(self, TRADITIONAL_MACROS))
 		return tpp_macro_builder_compile_traditional(builder, self, body_start, body_end);
 	return tpp_macro_builder_compile_modern(builder, self, body_start, body_end);
 }
-#elif TPP_HAVE_TRADITIONAL_MACROS == 0
-#define tpp_macro_builder_compile(builder, self, body_start, body_end) \
-	tpp_macro_builder_compile_modern(builder, self, body_start, body_end)
-#else /* TPP_HAVE_TRADITIONAL_MACROS > 0 */
+#elif TPP_HAVE_TRADITIONAL_MACROS
 #define tpp_macro_builder_compile(builder, self, body_start, body_end) \
 	tpp_macro_builder_compile_traditional(builder, self, body_start, body_end)
-#endif /* TPP_HAVE_TRADITIONAL_MACROS... */
+#else /* TPP_HAVE_TRADITIONAL_MACROS */
+#define tpp_macro_builder_compile(builder, self, body_start, body_end) \
+	tpp_macro_builder_compile_modern(builder, self, body_start, body_end)
+#endif /* !TPP_HAVE_TRADITIONAL_MACROS */
 
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) TPP_REF tpp_macro *TPPCALL
 tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict self,
@@ -1282,7 +1282,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	case '[':
 	case '{':
 	case '<':
-		if (tpp_lexer_getext(self, TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS))
+		if (tpp_lexer_have(self, ALTERNATIVE_MACRO_PARENTHESIS))
 			break;
 		TPP_FALLTHRU
 #endif /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
@@ -1341,14 +1341,14 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	/* Initialize flags for the macro being built. */
 	tpp_macro_builder_init(&builder);
 #if TPP_HAVE_MACRO_FLAGS
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
-	if (tpp_lexer_getext(self, TPP_EXT_MACRO_ARGUMENT_WHITESPACE))
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+	if (tpp_lexer_have(self, MACRO_ARGUMENT_WHITESPACE))
 		builder.mab_flags |= TPP_MACRO_FLAG_KEEPARGSPC;
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
-#if TPP_HAVE_MACRO_RECURSION < 0
-	if (tpp_lexer_getext(self, TPP_EXT_MACRO_RECURSION))
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION)
+	if (tpp_lexer_have(self, MACRO_RECURSION))
 		builder.mab_flags |= TPP_MACRO_FLAG_SELFEXPAND;
-#endif /* TPP_HAVE_MACRO_RECURSION < 0 */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
 	/* Parse macro argument list */

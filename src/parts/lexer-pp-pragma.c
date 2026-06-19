@@ -627,7 +627,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_POISON
 	case TPP_KWD_poison:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_POISON))
+		if (!tpp_lexer_have(self, PRAGMA_GCC_POISON))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_poison(self);
@@ -635,7 +635,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_WARNING
 	case TPP_KWD_warning:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_WARNING))
+		if (!tpp_lexer_have(self, PRAGMA_GCC_WARNING))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_warning(self, TPP_W_WARNING);
@@ -643,7 +643,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_ERROR
 	case TPP_KWD_error:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_ERROR))
+		if (!tpp_lexer_have(self, PRAGMA_GCC_ERROR))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_warning(self, TPP_W_ERROR);
@@ -651,7 +651,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
 	case TPP_KWD_system_header:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_SYSTEM_HEADER))
+		if (!tpp_lexer_have(self, PRAGMA_GCC_SYSTEM_HEADER))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_system_header(self);
@@ -659,7 +659,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
 	case TPP_KWD_diagnostic:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_DIAGNOSTIC))
+		if (!tpp_lexer_have(self, PRAGMA_GCC_DIAGNOSTIC))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_diagnostic(self);
@@ -667,7 +667,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_DEPENDENCY
 	case TPP_KWD_dependency:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_GCC_DEPENDENCY))
+		if (!tpp_lexer_have(self, PRAGMA_GCC_DEPENDENCY))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_dependency(self);
@@ -761,49 +761,49 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	case TPP_KWD_push_macro:
 	case TPP_KWD_pop_macro:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_PUSH_MACRO))
+		if (!tpp_lexer_have(self, PRAGMA_PUSH_MACRO))
 			break;
 		return tpp_lexer_process_pragma_pushpop_macro(self, tok);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
 #if TPP_HAVE_PRAGMA_ONCE
 	case TPP_KWD_once:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_ONCE))
+		if (!tpp_lexer_have(self, PRAGMA_ONCE))
 			break;
 		return tpp_lexer_process_pragma_once(self);
 #endif /* TPP_HAVE_PRAGMA_ONCE */
 
 #if TPP_HAVE_PRAGMA_DEPRECATED
 	case TPP_KWD_deprecated:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_DEPRECATED))
+		if (!tpp_lexer_have(self, PRAGMA_DEPRECATED))
 			break;
 		return tpp_lexer_process_pragma_deprecated(self);
 #endif /* TPP_HAVE_PRAGMA_DEPRECATED */
 
 #if TPP_HAVE_PRAGMA_EXTENSION
 	case TPP_KWD_extension:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_EXTENSION))
+		if (!tpp_lexer_have(self, PRAGMA_EXTENSION))
 			break;
 		return tpp_lexer_process_pragma_extension(self);
 #endif /* TPP_HAVE_PRAGMA_EXTENSION */
 
 #if TPP_HAVE_PRAGMA_WARNING
 	case TPP_KWD_warning:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_WARNING))
+		if (!tpp_lexer_have(self, PRAGMA_WARNING))
 			break;
 		return tpp_lexer_process_pragma_warning(self);
 #endif /* TPP_HAVE_PRAGMA_WARNING */
 
 #if TPP_HAVE_PRAGMA_MESSAGE
 	case TPP_KWD_message:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_MESSAGE))
+		if (!tpp_lexer_have(self, PRAGMA_MESSAGE))
 			break;
 		return tpp_lexer_process_pragma_message(self);
 #endif /* TPP_HAVE_PRAGMA_MESSAGE */
 
 #if TPP_HAVE_PRAGMA_ERROR
 	case TPP_KWD_error:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_ERROR))
+		if (!tpp_lexer_have(self, PRAGMA_ERROR))
 			break;
 		return tpp_lexer_process_pragma_error(self);
 #endif /* TPP_HAVE_PRAGMA_ERROR */
@@ -813,7 +813,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 		 * >> #pragma endregion MY_REGION */
 	case TPP_KWD_region:
 	case TPP_KWD_endregion:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_REGION))
+		if (!tpp_lexer_have(self, PRAGMA_REGION))
 			break;
 		/* These #pragma-s are no-ops, and the remainder of the #pragma-line should
 		 * just be ignored. Since (depending on how the #pragma is being generated),
@@ -827,14 +827,14 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_TPP_TPP_EXEC
 	case TPP_KWD_tpp_exec:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_TPP_EXEC))
+		if (!tpp_lexer_have(self, PRAGMA_TPP_EXEC))
 			break;
 		return tpp_lexer_process_pragma_tpp_exec(self);
 #endif /* TPP_HAVE_PRAGMA_TPP_TPP_EXEC */
 
 #if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 	case TPP_KWD_tpp_set_keyword_flags:
-		if (!tpp_lexer_getext(self, TPP_EXT_PRAGMA_TPP_SET_KEYWORD_FLAGS))
+		if (!tpp_lexer_have(self, PRAGMA_TPP_SET_KEYWORD_FLAGS))
 			break;
 		return tpp_lexer_process_pragma_tpp_set_keyword_flags(self);
 #endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */

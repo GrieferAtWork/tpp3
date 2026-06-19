@@ -466,7 +466,7 @@ tpp_lexer_skip_bse(tpp_lexer *self, tpp_char const **p_pos) {
 #if TPP_HAVE_TRIGRAPHS && TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 	bool is_trigraph;
 #endif /* TPP_HAVE_TRIGRAPHS && TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
-	if (!tpp_lexer_getext(self, TPP_EXT_BSE))
+	if (!tpp_lexer_have(self, BSE))
 		return TPP_EOK;
 
 again_scan:
@@ -490,7 +490,7 @@ again_scan:
 #endif /* !TPP_HAVE_TRIGRAPHS */
 
 #if TPP_HAVE_BSE_WHITESPACE
-	if (tpp_lexer_getext(self, TPP_EXT_BSE_WHITESPACE)) {
+	if (tpp_lexer_have(self, BSE_WHITESPACE)) {
 		error = tpp_lexer_skipspace_nolf(self, &scan);
 		if (TPP_ISERR(error))
 			goto return_error;
@@ -548,7 +548,7 @@ got_bse_after_linefeed:
 			if (*scan == '\\')
 				goto again_scan;
 #if TPP_HAVE_TRIGRAPHS
-			if (*scan == '?' && tpp_lexer_getext(self, TPP_EXT_TRIGRAPHS)) {
+			if (*scan == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
 				if ((scan + 1) >= file->tf_end) {
 					tpp_size rel_scan = tpp_file_ptr2rel(file, scan);
 					error = tpp_file_expandchunk(file);
@@ -626,7 +626,7 @@ again:
 	ch = *pos;
 	if (tpp_ascii_issymcont(ch)) {
 #if TPP_HAVE_TPP_TOK_DOLLAR
-		if (ch == '$' && tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_DOLLAR))
+		if (ch == '$' && tpp_lexer_have(self, TPP_TOK_DOLLAR))
 			goto done;
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
 		++pos;
@@ -667,7 +667,7 @@ tpp_lexer_skip_bse_after_keyword(tpp_lexer *self, tpp_char const **p_pos) {
 			/* Backslash */
 		} else
 #if TPP_HAVE_TRIGRAPHS
-		if (*pos == '?' && tpp_lexer_getext(self, TPP_EXT_TRIGRAPHS)) {
+		if (*pos == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
 			if ((pos + 1) >= file->tf_end) {
 				tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 				error = tpp_file_expandchunk(file);
@@ -838,7 +838,7 @@ continue_at_pos:
 	 * "??>" -> "}"
 	 * "??-" -> "~"
 	 * "???" -> "?" */
-	if (ch == '?' && tpp_lexer_getext(self, TPP_EXT_TRIGRAPHS)) {
+	if (ch == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
 		if (pos >= end) {
 			tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 			tpp_errno error  = tpp_file_expandchunk(file);
@@ -875,7 +875,7 @@ not_a_trigraph:
 					ch = '\\';
 #if TPP_HAVE_BSE
 					/* Deal with BSE sequences... */
-					if (tpp_lexer_getext(self, TPP_EXT_BSE)) {
+					if (tpp_lexer_have(self, BSE)) {
 						tpp_size rel_after;
 						tpp_size rel_before;
 						tpp_errno error;
@@ -1106,7 +1106,7 @@ handle_backslash:
 					if (ch == '#')
 						goto again;
 #if TPP_HAVE_TRIGRAPHS
-					if (ch == '?' && tpp_lexer_getext(self, TPP_EXT_TRIGRAPHS)) {
+					if (ch == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
 						if (pos >= file->tf_end) {
 							tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 							error = tpp_file_expandchunk(file);
@@ -1176,7 +1176,7 @@ handle_backslash:
 		goto again;
 	} else
 #if TPP_HAVE_TRIGRAPHS
-	if (ch == '?' && tpp_lexer_getext(self, TPP_EXT_TRIGRAPHS)) {
+	if (ch == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
 		if (pos >= file->tf_end) {
 			tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 			error = tpp_file_expandchunk(file);
@@ -1233,9 +1233,9 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 	for (;;) {
 		tpp_char ch;
 		tpp_errno error;
-#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE)
 		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
-#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE) */
 		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			return error;
@@ -1250,12 +1250,12 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 			if (ch == 0 && (*p_pos) >= file->tf_end)
 				goto warn_premature_eof;
 		} else
-#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE)
 		if (tpp_ascii_islf(ch)) {
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
-			if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)) {
+			if (!tpp_lexer_have(self, TPP_TOK_STRING_ALLOW_MULTILINE)) {
 				*p_pos = tpp_file_rel2ptr(file, old_pos);
 				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
@@ -1285,7 +1285,7 @@ handle_linefeed:
 				goto handle_linefeed;
 		} else
 #endif /* TPP_HAVE_UNICODE */
-#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE) */
 		{
 		}
 	}
@@ -1455,9 +1455,9 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
 	for (;;) {
 		tpp_char ch;
 		tpp_errno error;
-#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE)
 		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
-#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE) */
 		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			return error;
@@ -1465,12 +1465,12 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
 			break;
 		if (ch == 0 && (*p_pos) >= file->tf_end)
 			goto warn_premature_eof;
-#if TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE)
 		if (tpp_ascii_islf(ch)) {
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
-			if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)) {
+			if (!tpp_lexer_have(self, TPP_TOK_STRING_ALLOW_MULTILINE)) {
 				*p_pos = tpp_file_rel2ptr(file, old_pos);
 				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
@@ -1500,7 +1500,7 @@ handle_linefeed:
 				goto handle_linefeed;
 		} else
 #endif /* TPP_HAVE_UNICODE */
-#endif /* TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE <= 0 */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE) */
 		{
 		}
 	}
@@ -1733,29 +1733,29 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE ||        \
      TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE ||        \
      TPP_HAVE_DIGRAPHS)
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_LANGLE) &&
-		    !tpp_lexer_getext(self, TPP_EXT_DIGRAPHS))
+		if (!tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_LANGLE_RANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_RANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_LANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS) &&
+		    !tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_RANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_LANGLE) &&
+		    !tpp_lexer_have(self, DIGRAPHS))
 			break;
 		read_ch2();
 
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '%') {
-			if (tpp_lexer_getext(self, TPP_EXT_DIGRAPHS)) {
+			if (tpp_lexer_have(self, DIGRAPHS)) {
 				result = (tpp_token_id)'{'; /* "<%" -> "{" */
 				goto set_result;
 			}
 		} else if (ch2 == ':') {
-			if (tpp_lexer_getext(self, TPP_EXT_DIGRAPHS)) {
+			if (tpp_lexer_have(self, DIGRAPHS)) {
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 				read_ch2();
 				if (ch2 == ':')
@@ -1770,9 +1770,9 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)
 		if (ch2 == '<') {
 #if (TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_EQUAL) ||
+			    tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE) ||
+			    tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
@@ -1781,7 +1781,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
 				if (ch2 == '<') {
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
+					if (tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
@@ -1797,7 +1797,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
 
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE)) {
 						result = TPP_TOK_LANGLE_LANGLE_LANGLE; /* "<<<" */
 						goto set_result;
 					}
@@ -1806,7 +1806,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
 				if (ch2 == '=') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE_EQUAL)) {
+					if (tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_EQUAL)) {
 						result = TPP_TOK_LANGLE_LANGLE_EQUAL; /* "<<=" */
 						goto set_result;
 					}
@@ -1822,7 +1822,7 @@ switch_on_ch:
 #endif /* ... */
 
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_LANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE)) {
 				result = TPP_TOK_LANGLE_LANGLE; /* "<<" */
 				goto set_result;
 			}
@@ -1834,15 +1834,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE)
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_LANGLE) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_RANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_LANGLE) ||
+			    tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
 				read_ch2();
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
 				if (ch2 == '<') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_LANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_LANGLE)) {
 						result = TPP_TOK_LANGLE_EQUAL_LANGLE; /* "<=<" */
 						goto set_result;
 					}
@@ -1850,7 +1850,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
 				if (ch2 == '>') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL_RANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_RANGLE)) {
 						result = TPP_TOK_LANGLE_EQUAL_RANGLE; /* "<=>" */
 						goto set_result;
 					}
@@ -1865,7 +1865,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL)) {
 				result = TPP_TOK_LANGLE_EQUAL; /* "<=" */
 				goto set_result;
 			}
@@ -1877,15 +1877,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE)
 		if (ch2 == '-') {
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_LANGLE) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_RANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_LANGLE) ||
+			    tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
 				read_ch2();
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
 				if (ch2 == '<') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_LANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_LANGLE)) {
 						result = TPP_TOK_LANGLE_MINUS_LANGLE; /* "<-<" */
 						goto set_result;
 					}
@@ -1893,7 +1893,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
 				if (ch2 == '>') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS_RANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_RANGLE)) {
 						result = TPP_TOK_LANGLE_MINUS_RANGLE; /* "<->" */
 						goto set_result;
 					}
@@ -1908,7 +1908,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_MINUS)) {
+			if (tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS)) {
 				result = TPP_TOK_LANGLE_MINUS; /* "<-" */
 				goto set_result;
 			}
@@ -1917,7 +1917,7 @@ switch_on_ch:
 #endif /* ... */
 #if TPP_HAVE_TPP_TOK_LANGLE_RANGLE
 		if (ch2 == '>') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_LANGLE_RANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_LANGLE_RANGLE)) {
 				result = TPP_TOK_LANGLE_RANGLE; /* "<>" */
 				goto set_result;
 			}
@@ -1944,17 +1944,17 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_RANGLE_MINUS ||               \
      TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE ||        \
      TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_RANGLE))
+		if (!tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_RANGLE_LANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_LANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_RANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS) &&
+		    !tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_LANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_RANGLE))
 			break;
 		read_ch2();
 
@@ -1962,9 +1962,9 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)
 		if (ch2 == '>') {
 #if (TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_EQUAL) ||
+			    tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE) ||
+			    tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
@@ -1973,7 +1973,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 				if (ch2 == '>') {
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
+					if (tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
@@ -1989,7 +1989,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE)) {
 						result = TPP_TOK_RANGLE_RANGLE_RANGLE; /* ">>>" */
 						goto set_result;
 					}
@@ -1998,7 +1998,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL
 				if (ch2 == '=') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE_EQUAL)) {
+					if (tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_EQUAL)) {
 						result = TPP_TOK_RANGLE_RANGLE_EQUAL; /* ">>=" */
 						goto set_result;
 					}
@@ -2013,7 +2013,7 @@ switch_on_ch:
 			}
 #endif /* ... */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_RANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE)) {
 				result = TPP_TOK_RANGLE_RANGLE; /* ">>" */
 				goto set_result;
 			}
@@ -2025,15 +2025,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE)
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_LANGLE) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_RANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_LANGLE) ||
+			    tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
 				read_ch2();
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
 				if (ch2 == '<') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_LANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_LANGLE)) {
 						result = TPP_TOK_RANGLE_EQUAL_LANGLE; /* ">=<" */
 						goto set_result;
 					}
@@ -2041,7 +2041,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
 				if (ch2 == '>') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL_RANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_RANGLE)) {
 						result = TPP_TOK_RANGLE_EQUAL_RANGLE; /* ">=>" */
 						goto set_result;
 					}
@@ -2056,7 +2056,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL)) {
 				result = TPP_TOK_RANGLE_EQUAL; /* ">=" */
 				goto set_result;
 			}
@@ -2068,15 +2068,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
 		if (ch2 == '-') {
 #if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_LANGLE) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_RANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_LANGLE) ||
+			    tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_RANGLE_MINUS
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
 				read_ch2();
 #if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
 				if (ch2 == '<') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_LANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_LANGLE)) {
 						result = TPP_TOK_RANGLE_MINUS_LANGLE; /* ">-<" */
 						goto set_result;
 					}
@@ -2084,7 +2084,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
 #if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
 				if (ch2 == '>') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS_RANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_RANGLE)) {
 						result = TPP_TOK_RANGLE_MINUS_RANGLE; /* ">->" */
 						goto set_result;
 					}
@@ -2099,7 +2099,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_RANGLE_MINUS
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_MINUS)) {
+			if (tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS)) {
 				result = TPP_TOK_RANGLE_MINUS; /* ">-" */
 				goto set_result;
 			}
@@ -2108,7 +2108,7 @@ switch_on_ch:
 #endif /* ... */
 #if TPP_HAVE_TPP_TOK_RANGLE_LANGLE
 		if (ch2 == '<') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RANGLE_LANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_RANGLE_LANGLE)) {
 				result = TPP_TOK_RANGLE_LANGLE; /* "><" */
 				goto set_result;
 			}
@@ -2149,30 +2149,30 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM ||        \
      TPP_HAVE_TPP_TOK_EQUAL_QMARK)
 
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_PLUS) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_MINUS) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_STAR) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_SLASH) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_SLASH_SLASH) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_PERCENT) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_AMP) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_PIPE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_HAT) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_AT) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_TILDE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_COLON) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_EXCLAIM) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EXCLAIM) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_QMARK))
+		if (!tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_PLUS) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_MINUS) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_STAR) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_STAR_STAR) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_SLASH) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_SLASH_SLASH) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_PERCENT) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_AMP) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_PIPE) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_HAT) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_AT) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_TILDE) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_COLON) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_EXCLAIM) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM) &&
+		    !tpp_lexer_have(self, TPP_TOK_EQUAL_QMARK))
 			break;
 		read_ch2();
 #if (TPP_HAVE_TPP_TOK_EQUAL_EQUAL ||       \
@@ -2180,15 +2180,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM)
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EXCLAIM)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EQUAL) ||
+			    tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL */
 				read_ch2();
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL
 				if (ch2 == '=') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL)) {
+					if (tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EQUAL)) {
 						result = TPP_TOK_EQUAL_EQUAL_EQUAL; /* "===" */
 						goto set_result;
 					}
@@ -2196,7 +2196,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL */
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM
 				if (ch2 == '=') {
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EXCLAIM)) {
+					if (tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM)) {
 						result = TPP_TOK_EQUAL_EQUAL_EXCLAIM; /* "==!" */
 						goto set_result;
 					}
@@ -2210,7 +2210,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL)) {
 				result = TPP_TOK_EQUAL_EQUAL; /* "==" */
 				goto set_result;
 			}
@@ -2220,7 +2220,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_EQUAL_STAR || TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
 		if (ch == '*') {
 #if TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_STAR_STAR)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_STAR
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR */
@@ -2235,7 +2235,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR */
 #if TPP_HAVE_TPP_TOK_EQUAL_STAR
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_STAR)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_STAR)) {
 				result = TPP_TOK_EQUAL_STAR; /* "=*" */
 				goto set_result;
 			}
@@ -2245,7 +2245,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_EQUAL_SLASH || TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
 		if (ch == '/') {
 #if TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_SLASH_SLASH)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_SLASH_SLASH)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_SLASH
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH */
@@ -2260,7 +2260,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH */
 #if TPP_HAVE_TPP_TOK_EQUAL_SLASH
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_SLASH)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_SLASH)) {
 				result = TPP_TOK_EQUAL_SLASH; /* "=/" */
 				goto set_result;
 			}
@@ -2272,15 +2272,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)
 		if (ch2 == '<') {
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) ||
+			    tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE */
 				read_ch2();
 				if (ch2 == '<') {
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
@@ -2296,7 +2296,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
 
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE)) {
 						result = TPP_TOK_EQUAL_LANGLE_LANGLE; /* "=<<" */
 						goto set_result;
 					}
@@ -2309,7 +2309,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
 
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_LANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE)) {
 				result = TPP_TOK_EQUAL_LANGLE; /* "=<" */
 				goto set_result;
 			}
@@ -2321,15 +2321,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)
 		if (ch2 == '>') {
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) ||
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) ||
+			    tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE */
 				read_ch2();
 				if (ch2 == '>') {
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
@@ -2345,7 +2345,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
-					if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE)) {
+					if (tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE)) {
 						result = TPP_TOK_EQUAL_RANGLE_RANGLE; /* "=>>" */
 						goto set_result;
 					}
@@ -2358,7 +2358,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_RANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE)) {
 				result = TPP_TOK_EQUAL_RANGLE; /* "=>" */
 				goto set_result;
 			}
@@ -2367,7 +2367,7 @@ switch_on_ch:
 #endif /* ... */
 #if TPP_HAVE_TPP_TOK_EQUAL_PLUS
 		if (ch2 == '+') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_PLUS)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_PLUS)) {
 				result = TPP_TOK_EQUAL_PLUS; /* "=+" */
 				goto set_result;
 			}
@@ -2375,7 +2375,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_PLUS */
 #if TPP_HAVE_TPP_TOK_EQUAL_MINUS
 		if (ch2 == '-') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_MINUS)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_MINUS)) {
 				result = TPP_TOK_EQUAL_MINUS; /* "=-" */
 				goto set_result;
 			}
@@ -2383,7 +2383,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_MINUS */
 #if TPP_HAVE_TPP_TOK_EQUAL_PERCENT
 		if (ch2 == '%') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_PERCENT)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_PERCENT)) {
 				result = TPP_TOK_EQUAL_PERCENT; /* "=%" */
 				goto set_result;
 			}
@@ -2391,7 +2391,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT */
 #if TPP_HAVE_TPP_TOK_EQUAL_AMP
 		if (ch2 == '&') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_AMP)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_AMP)) {
 				result = TPP_TOK_EQUAL_AMP; /* "=&" */
 				goto set_result;
 			}
@@ -2399,7 +2399,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_AMP */
 #if TPP_HAVE_TPP_TOK_EQUAL_PIPE
 		if (ch2 == '|') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_PIPE)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_PIPE)) {
 				result = TPP_TOK_EQUAL_PIPE; /* "=|" */
 				goto set_result;
 			}
@@ -2407,7 +2407,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_PIPE */
 #if TPP_HAVE_TPP_TOK_EQUAL_HAT
 		if (ch2 == '^') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_HAT)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_HAT)) {
 				result = TPP_TOK_EQUAL_HAT; /* "=^" */
 				goto set_result;
 			}
@@ -2415,7 +2415,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_HAT */
 #if TPP_HAVE_TPP_TOK_EQUAL_AT
 		if (ch2 == '@') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_AT)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_AT)) {
 				result = TPP_TOK_EQUAL_AT; /* "=@" */
 				goto set_result;
 			}
@@ -2423,7 +2423,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_AT */
 #if TPP_HAVE_TPP_TOK_EQUAL_TILDE
 		if (ch2 == '~') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_TILDE)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_TILDE)) {
 				result = TPP_TOK_EQUAL_TILDE; /* "=~" */
 				goto set_result;
 			}
@@ -2431,7 +2431,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_TILDE */
 #if TPP_HAVE_TPP_TOK_EQUAL_COLON
 		if (ch2 == ':') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_COLON)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_COLON)) {
 				result = TPP_TOK_EQUAL_COLON; /* "=:" */
 				goto set_result;
 			}
@@ -2439,7 +2439,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_COLON */
 #if TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM
 		if (ch2 == '!') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_EXCLAIM)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_EXCLAIM)) {
 				result = TPP_TOK_EQUAL_EXCLAIM; /* "=!" */
 				goto set_result;
 			}
@@ -2447,7 +2447,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_EQUAL_QMARK
 		if (ch2 == '?') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EQUAL_QMARK)) {
+			if (tpp_lexer_have(self, TPP_TOK_EQUAL_QMARK)) {
 				result = TPP_TOK_EQUAL_QMARK; /* "=?" */
 				goto set_result;
 			}
@@ -2466,15 +2466,15 @@ switch_on_ch:
 #if (TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL ||       \
      TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL || \
      TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM)
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM))
+		if (!tpp_lexer_have(self, TPP_TOK_EXCLAIM_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_EXCLAIM_EQUAL_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_EXCLAIM_EXCLAIM))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_EXCLAIM_EQUAL_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
@@ -2489,7 +2489,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_EXCLAIM_EQUAL)) {
 				result = TPP_TOK_EXCLAIM_EQUAL; /* "!=" */
 				goto set_result;
 			}
@@ -2498,7 +2498,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
 		if (ch2 == '!') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_EXCLAIM_EXCLAIM)) {
+			if (tpp_lexer_have(self, TPP_TOK_EXCLAIM_EXCLAIM)) {
 				result = TPP_TOK_EXCLAIM_EXCLAIM; /* "!!" */
 				goto set_result;
 			}
@@ -2517,15 +2517,15 @@ switch_on_ch:
 #if (TPP_HAVE_TPP_TOK_DOT_DOT_DOT || \
      TPP_HAVE_TPP_TOK_DOT_DOT ||     \
      TPP_HAVE_TPP_TOK_DOT_STAR)
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_DOT_DOT_DOT) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_DOT_DOT) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_DOT_STAR))
+		if (!tpp_lexer_have(self, TPP_TOK_DOT_DOT_DOT) &&
+		    !tpp_lexer_have(self, TPP_TOK_DOT_DOT) &&
+		    !tpp_lexer_have(self, TPP_TOK_DOT_STAR))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_DOT_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT
 		if (ch2 == '.') {
 #if TPP_HAVE_TPP_TOK_DOT_DOT_DOT
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_DOT_DOT_DOT)) {
+			if (tpp_lexer_have(self, TPP_TOK_DOT_DOT_DOT)) {
 #if TPP_HAVE_TPP_TOK_DOT_DOT
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
@@ -2540,7 +2540,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
 #if TPP_HAVE_TPP_TOK_DOT_DOT
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_DOT_DOT)) {
+			if (tpp_lexer_have(self, TPP_TOK_DOT_DOT)) {
 				result = TPP_TOK_DOT_DOT; /* ".." */
 				goto set_result;
 			}
@@ -2549,7 +2549,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT */
 #if TPP_HAVE_TPP_TOK_DOT_STAR
 		if (ch2 == '*') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_DOT_STAR)) {
+			if (tpp_lexer_have(self, TPP_TOK_DOT_STAR)) {
 				result = TPP_TOK_DOT_STAR; /* ".*" */
 				goto set_result;
 			}
@@ -2566,13 +2566,13 @@ switch_on_ch:
 /************************************************************************/
 	case '+': {
 #if TPP_HAVE_TPP_TOK_PLUS_EQUAL || TPP_HAVE_TPP_TOK_PLUS_PLUS
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PLUS_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PLUS_PLUS))
+		if (!tpp_lexer_have(self, TPP_TOK_PLUS_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_PLUS_PLUS))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_PLUS_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PLUS_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_PLUS_EQUAL)) {
 				result = TPP_TOK_PLUS_EQUAL; /* "+=" */
 				goto set_result;
 			}
@@ -2580,7 +2580,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_PLUS_EQUAL */
 #if TPP_HAVE_TPP_TOK_PLUS_PLUS
 		if (ch2 == '+') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PLUS_PLUS)) {
+			if (tpp_lexer_have(self, TPP_TOK_PLUS_PLUS)) {
 				result = TPP_TOK_PLUS_PLUS; /* "++" */
 				goto set_result;
 			}
@@ -2602,17 +2602,17 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_MINUS_RANGLE ||      \
      TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || \
      TPP_HAVE_TPP_TOK_MINUS_LANGLE)
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_MINUS) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SQL_COMMENT) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_RANGLE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_LANGLE))
+		if (!tpp_lexer_have(self, TPP_TOK_MINUS_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_MINUS_MINUS) &&
+		    !tpp_lexer_have(self, TPP_TOK_SQL_COMMENT) &&
+		    !tpp_lexer_have(self, TPP_TOK_MINUS_RANGLE) &&
+		    !tpp_lexer_have(self, TPP_TOK_MINUS_RANGLE_STAR) &&
+		    !tpp_lexer_have(self, TPP_TOK_MINUS_LANGLE))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_MINUS_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_MINUS_EQUAL)) {
 				result = TPP_TOK_MINUS_EQUAL; /* "-=" */
 				goto set_result;
 			}
@@ -2621,7 +2621,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_MINUS_MINUS || TPP_HAVE_TPP_TOK_SQL_COMMENT
 		if (ch2 == '-') {
 #if TPP_HAVE_TPP_TOK_SQL_COMMENT
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SQL_COMMENT)) {
+			if (tpp_lexer_have(self, TPP_TOK_SQL_COMMENT)) {
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SQL_COMMENT));
 				if (TPP_ISERR(error))
 					goto return_error;
@@ -2630,7 +2630,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_SQL_COMMENT */
 #if TPP_HAVE_TPP_TOK_MINUS_MINUS
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_MINUS)) {
+			if (tpp_lexer_have(self, TPP_TOK_MINUS_MINUS)) {
 				result = TPP_TOK_MINUS_MINUS; /* "--" */
 				goto set_result;
 			}
@@ -2640,7 +2640,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
 		if (ch2 == '>') {
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR)) {
+			if (tpp_lexer_have(self, TPP_TOK_MINUS_RANGLE_STAR)) {
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
@@ -2655,7 +2655,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_RANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_MINUS_RANGLE)) {
 				result = TPP_TOK_MINUS_RANGLE; /* "->" */
 				goto set_result;
 			}
@@ -2664,7 +2664,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
 #if TPP_HAVE_TPP_TOK_MINUS_LANGLE
 		if (ch2 == '<') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_MINUS_LANGLE)) {
+			if (tpp_lexer_have(self, TPP_TOK_MINUS_LANGLE)) {
 				result = TPP_TOK_MINUS_LANGLE; /* "-<" */
 				goto set_result;
 			}
@@ -2685,16 +2685,16 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL ||   \
      TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS || \
      TPP_HAVE_TPP_TOK_STAR_DOT)
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STAR_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STAR_STAR) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STAR_LANGLE_MINUS) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STAR_DOT))
+		if (!tpp_lexer_have(self, TPP_TOK_STAR_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_STAR_STAR) &&
+		    !tpp_lexer_have(self, TPP_TOK_STAR_STAR_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_STAR_LANGLE_MINUS) &&
+		    !tpp_lexer_have(self, TPP_TOK_STAR_DOT))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_STAR_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STAR_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_STAR_EQUAL)) {
 				result = TPP_TOK_STAR_EQUAL; /* "*=" */
 				goto set_result;
 			}
@@ -2703,7 +2703,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_STAR_STAR || TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
 		if (ch2 == '*') {
 #if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_STAR_STAR_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_STAR_STAR
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR */
@@ -2718,7 +2718,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL */
 #if TPP_HAVE_TPP_TOK_STAR_STAR
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STAR_STAR)) {
+			if (tpp_lexer_have(self, TPP_TOK_STAR_STAR)) {
 				result = TPP_TOK_STAR_STAR; /* "**" */
 				goto set_result;
 			}
@@ -2727,7 +2727,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR || TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL */
 #if TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS
 		if (ch2 == '<') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STAR_LANGLE_MINUS)) {
+			if (tpp_lexer_have(self, TPP_TOK_STAR_LANGLE_MINUS)) {
 				read_ch2();
 				if (ch2 == '-') {
 					result = TPP_TOK_STAR_LANGLE_MINUS; /* "*<-" */
@@ -2738,7 +2738,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS */
 #if TPP_HAVE_TPP_TOK_STAR_DOT
 		if (ch2 == '.') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STAR_DOT)) {
+			if (tpp_lexer_have(self, TPP_TOK_STAR_DOT)) {
 				result = TPP_TOK_STAR_DOT; /* "*." */
 				goto set_result;
 			}
@@ -2763,12 +2763,12 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_ASM_COMMENT
 		tpp_size rel_end_of_1char;
 #endif /* TPP_HAVE_TPP_TOK_ASM_COMMENT */
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_COMMENT) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_C_COMMENT) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SLASH_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SLASH_SLASH) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_ASM_COMMENT))
+		if (!tpp_lexer_have(self, TPP_TOK_CXX_COMMENT) &&
+		    !tpp_lexer_have(self, TPP_TOK_C_COMMENT) &&
+		    !tpp_lexer_have(self, TPP_TOK_SLASH_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_SLASH_SLASH) &&
+		    !tpp_lexer_have(self, TPP_TOK_SLASH_SLASH_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_ASM_COMMENT))
 			break;
 #if TPP_HAVE_TPP_TOK_ASM_COMMENT
 		rel_end_of_1char = tpp_file_ptr2rel(file, pos);
@@ -2780,7 +2780,7 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL)
 		if (ch2 == '/') {
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SLASH_SLASH_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_SLASH_SLASH_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_CXX_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH */
@@ -2795,7 +2795,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
 #if TPP_HAVE_TPP_TOK_CXX_COMMENT
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_COMMENT)) {
+			if (tpp_lexer_have(self, TPP_TOK_CXX_COMMENT)) {
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_CXX_COMMENT));
 				if (TPP_ISERR(error))
 					goto return_error;
@@ -2804,7 +2804,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT */
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SLASH_SLASH)) {
+			if (tpp_lexer_have(self, TPP_TOK_SLASH_SLASH)) {
 				result = TPP_TOK_SLASH_SLASH; /* "//" */
 				goto set_result;
 			}
@@ -2813,7 +2813,7 @@ switch_on_ch:
 #endif /* ... */
 #if TPP_HAVE_TPP_TOK_C_COMMENT
 		if (ch2 == '*') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_C_COMMENT)) {
+			if (tpp_lexer_have(self, TPP_TOK_C_COMMENT)) {
 				for (;;) {
 					read_ch2();
 					if (ch2 == 0 && pos >= file->tf_end) {
@@ -2853,7 +2853,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_C_COMMENT */
 #if TPP_HAVE_TPP_TOK_SLASH_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SLASH_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_SLASH_EQUAL)) {
 				result = TPP_TOK_SLASH_EQUAL; /* "/=" */
 				goto set_result;
 			}
@@ -2861,7 +2861,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_SLASH_EQUAL */
 		{
 #if TPP_HAVE_TPP_TOK_ASM_COMMENT
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_ASM_COMMENT)) {
+			if (tpp_lexer_have(self, TPP_TOK_ASM_COMMENT)) {
 				pos = tpp_file_rel2ptr(file, rel_end_of_1char);
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_ASM_COMMENT));
 				if (TPP_ISERR(error))
@@ -2880,13 +2880,13 @@ switch_on_ch:
 /************************************************************************/
 	case '%': {
 #if TPP_HAVE_TPP_TOK_PERCENT_EQUAL || TPP_HAVE_DIGRAPHS
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PERCENT_EQUAL) &&
-		    !tpp_lexer_getext(self, TPP_EXT_DIGRAPHS))
+		if (!tpp_lexer_have(self, TPP_TOK_PERCENT_EQUAL) &&
+		    !tpp_lexer_have(self, DIGRAPHS))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_PERCENT_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PERCENT_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_PERCENT_EQUAL)) {
 				result = TPP_TOK_PERCENT_EQUAL; /* "%=" */
 				goto set_result;
 			}
@@ -2894,15 +2894,15 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_PERCENT_EQUAL */
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '>') {
-			if (tpp_lexer_getext(self, TPP_EXT_DIGRAPHS)) {
+			if (tpp_lexer_have(self, DIGRAPHS)) {
 				result = (tpp_token_id)'}'; /* "%>" -> "}" */
 				goto set_result;
 			}
 		} else
 		if (ch2 == ':') {
-			if (tpp_lexer_getext(self, TPP_EXT_DIGRAPHS)) {
+			if (tpp_lexer_have(self, DIGRAPHS)) {
 #if TPP_HAVE_TPP_TOK_POUND_POUND
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_POUND_POUND)) {
+				if (tpp_lexer_have(self, TPP_TOK_POUND_POUND)) {
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 					read_ch2();
 					if (ch2 == '%') {
@@ -2931,13 +2931,13 @@ switch_on_ch:
 /************************************************************************/
 	case '&': {
 #if TPP_HAVE_TPP_TOK_AMP_EQUAL || TPP_HAVE_TPP_TOK_AMP_AMP
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_AMP_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_AMP_AMP))
+		if (!tpp_lexer_have(self, TPP_TOK_AMP_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_AMP_AMP))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_AMP_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_AMP_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_AMP_EQUAL)) {
 				result = TPP_TOK_AMP_EQUAL; /* "&=" */
 				goto set_result;
 			}
@@ -2945,7 +2945,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_AMP_EQUAL */
 #if TPP_HAVE_TPP_TOK_AMP_AMP
 		if (ch2 == '&') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_AMP_AMP)) {
+			if (tpp_lexer_have(self, TPP_TOK_AMP_AMP)) {
 				result = TPP_TOK_AMP_AMP; /* "&&" */
 				goto set_result;
 			}
@@ -2962,13 +2962,13 @@ switch_on_ch:
 /************************************************************************/
 	case '|': {
 #if TPP_HAVE_TPP_TOK_PIPE_EQUAL || TPP_HAVE_TPP_TOK_PIPE_PIPE
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PIPE_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PIPE_PIPE))
+		if (!tpp_lexer_have(self, TPP_TOK_PIPE_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_PIPE_PIPE))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_PIPE_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PIPE_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_PIPE_EQUAL)) {
 				result = TPP_TOK_PIPE_EQUAL; /* "|=" */
 				goto set_result;
 			}
@@ -2976,7 +2976,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_PIPE_EQUAL */
 #if TPP_HAVE_TPP_TOK_PIPE_PIPE
 		if (ch2 == '|') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PIPE_PIPE)) {
+			if (tpp_lexer_have(self, TPP_TOK_PIPE_PIPE)) {
 				warn_if_ch2_is_trigraph();  /* "??!" -> "|" */
 				result = TPP_TOK_PIPE_PIPE; /* "||" */
 				goto set_result;
@@ -2994,13 +2994,13 @@ switch_on_ch:
 /************************************************************************/
 	case '^':{
 #if TPP_HAVE_TPP_TOK_HAT_EQUAL || TPP_HAVE_TPP_TOK_HAT_HAT
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_HAT_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_HAT_HAT))
+		if (!tpp_lexer_have(self, TPP_TOK_HAT_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_HAT_HAT))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_HAT_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_HAT_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_HAT_EQUAL)) {
 				result = TPP_TOK_HAT_EQUAL; /* "^=" */
 				goto set_result;
 			}
@@ -3008,7 +3008,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_HAT_EQUAL */
 #if TPP_HAVE_TPP_TOK_HAT_HAT
 		if (ch2 == '^') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_HAT_HAT)) {
+			if (tpp_lexer_have(self, TPP_TOK_HAT_HAT)) {
 				warn_if_ch2_is_trigraph(); /* "??'" -> "^" */
 				result = TPP_TOK_HAT_HAT; /* "^^" */
 				goto set_result;
@@ -3026,7 +3026,7 @@ switch_on_ch:
 /************************************************************************/
 	case '@': {
 #if TPP_HAVE_TPP_TOK_AT_EQUAL
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_AT_EQUAL)) {
+		if (tpp_lexer_have(self, TPP_TOK_AT_EQUAL)) {
 			read_ch2();
 			if (ch2 == '=') {
 				result = TPP_TOK_AT_EQUAL; /* "@=" */
@@ -3043,7 +3043,7 @@ switch_on_ch:
 	case '#': {
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_TPP_TOK_POUND_POUND
 #if TPP_HAVE_TPP_TOK_POUND_POUND
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_POUND_POUND)) {
+		if (tpp_lexer_have(self, TPP_TOK_POUND_POUND)) {
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
@@ -3059,7 +3059,7 @@ switch_on_ch:
 		}
 #endif /* TPP_HAVE_TPP_TOK_POUND_POUND */
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_SHELL_COMMENT)) {
+		if (tpp_lexer_have(self, TPP_TOK_SHELL_COMMENT)) {
 			error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SHELL_COMMENT));
 			if (TPP_ISERR(error))
 				goto return_error;
@@ -3076,13 +3076,13 @@ switch_on_ch:
 /************************************************************************/
 	case '~': {
 #if TPP_HAVE_TPP_TOK_TILDE_TILDE || TPP_HAVE_TPP_TOK_TILDE_EQUAL
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_TILDE_TILDE) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_TILDE_EQUAL))
+		if (!tpp_lexer_have(self, TPP_TOK_TILDE_TILDE) &&
+		    !tpp_lexer_have(self, TPP_TOK_TILDE_EQUAL))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_TILDE_TILDE
 		if (ch2 == '~') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_TILDE_TILDE)) {
+			if (tpp_lexer_have(self, TPP_TOK_TILDE_TILDE)) {
 				warn_if_ch2_is_trigraph();    /* "??-" -> "~" */
 				result = TPP_TOK_TILDE_TILDE; /* "~~" */
 				goto set_result;
@@ -3091,7 +3091,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_TILDE_TILDE */
 #if TPP_HAVE_TPP_TOK_TILDE_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_TILDE_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_TILDE_EQUAL)) {
 				result = TPP_TOK_TILDE_EQUAL; /* "~=" */
 				goto set_result;
 			}
@@ -3108,14 +3108,14 @@ switch_on_ch:
 /************************************************************************/
 	case ':': {
 #if TPP_HAVE_TPP_TOK_COLON_EQUAL || TPP_HAVE_TPP_TOK_COLON_COLON || TPP_HAVE_DIGRAPHS
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_COLON_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_COLON_COLON) &&
-		    !tpp_lexer_getext(self, TPP_EXT_DIGRAPHS))
+		if (!tpp_lexer_have(self, TPP_TOK_COLON_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_COLON_COLON) &&
+		    !tpp_lexer_have(self, DIGRAPHS))
 			break;
 		read_ch2();
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '>') {
-			if (tpp_lexer_getext(self, TPP_EXT_DIGRAPHS)) {
+			if (tpp_lexer_have(self, DIGRAPHS)) {
 				result = (tpp_token_id)']'; /* ":>" -> "]" */
 				goto set_result;
 			}
@@ -3123,7 +3123,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_DIGRAPHS */
 #if TPP_HAVE_TPP_TOK_COLON_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_COLON_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_COLON_EQUAL)) {
 				result = TPP_TOK_COLON_EQUAL; /* ":=" */
 				goto set_result;
 			}
@@ -3131,7 +3131,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_COLON_EQUAL */
 #if TPP_HAVE_TPP_TOK_COLON_COLON
 		if (ch2 == ':') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_COLON_COLON)) {
+			if (tpp_lexer_have(self, TPP_TOK_COLON_COLON)) {
 				result = TPP_TOK_COLON_COLON; /* "::" */
 				goto set_result;
 			}
@@ -3149,7 +3149,7 @@ switch_on_ch:
 	case '?': {
 #if TPP_HAVE_TPP_TOK_QMARK_EQUAL || TPP_HAVE_TPP_TOK_QMARK_QMARK || TPP_HAVE_TRIGRAPHS
 #if TPP_HAVE_TRIGRAPHS
-		if (tpp_lexer_getext(self, TPP_EXT_TRIGRAPHS)) {
+		if (tpp_lexer_have(self, TRIGRAPHS)) {
 			if (pos >= file->tf_end) {
 				error = tpp_file_expandchunk(file);
 				if (TPP_ISERR(error))
@@ -3195,13 +3195,13 @@ switch_on_ch:
 not_a_trigraph:
 #endif /* TPP_HAVE_TRIGRAPHS */
 
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_QMARK_EQUAL) &&
-		    !tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_QMARK_QMARK))
+		if (!tpp_lexer_have(self, TPP_TOK_QMARK_EQUAL) &&
+		    !tpp_lexer_have(self, TPP_TOK_QMARK_QMARK))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_QMARK_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_QMARK_EQUAL)) {
+			if (tpp_lexer_have(self, TPP_TOK_QMARK_EQUAL)) {
 				result = TPP_TOK_QMARK_EQUAL; /* "?=" */
 				goto set_result;
 			}
@@ -3209,7 +3209,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_QMARK_EQUAL */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 		if (ch2 == '?') {
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_QMARK_QMARK)) {
+			if (tpp_lexer_have(self, TPP_TOK_QMARK_QMARK)) {
 				warn_if_ch2_is_trigraph();    /* "???" -> "?" */
 				result = TPP_TOK_QMARK_QMARK; /* "??" */
 				goto set_result;
@@ -3227,7 +3227,7 @@ not_a_trigraph:
 /************************************************************************/
 	case '(': {
 #if TPP_HAVE_TPP_TOK_PASCAL_COMMENT
-		if (!tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_PASCAL_COMMENT))
+		if (!tpp_lexer_have(self, TPP_TOK_PASCAL_COMMENT))
 			break;
 		read_ch2(); // "(*like this one!*)"
 		if (ch2 != '*')
@@ -3260,7 +3260,7 @@ not_a_trigraph:
 /************************************************************************/
 	case '\\': {
 #if TPP_HAVE_ESCAPE_IN_IDENTIFIERS
-		if (tpp_lexer_getext(self, TPP_EXT_ESCAPE_IN_IDENTIFIERS)) {
+		if (tpp_lexer_have(self, ESCAPE_IN_IDENTIFIERS)) {
 			tpp_char const *npos;
 			tpp_size rel_before, rel_after;
 			npos = tpp_file_rel2ptr(file, rel_start);
@@ -3305,7 +3305,7 @@ not_a_trigraph:
 	case '\'': {
 #if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CHAR
 #if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_BLOCK_CHAR_LITERAL)) {
+		if (tpp_lexer_have(self, TPP_TOK_BLOCK_CHAR_LITERAL)) {
 #if TPP_HAVE_TPP_TOK_CHAR
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_CHAR */
@@ -3326,7 +3326,7 @@ not_a_trigraph:
 		}
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
 #if TPP_HAVE_TPP_TOK_CHAR
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CHAR)) {
+		if (tpp_lexer_have(self, TPP_TOK_CHAR)) {
 			error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 			if (TPP_ISERR(error))
 				goto return_error;
@@ -3344,7 +3344,7 @@ not_a_trigraph:
 	case '"': {
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_STRING
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_BLOCK_STRING_LITERAL)) {
+		if (tpp_lexer_have(self, TPP_TOK_BLOCK_STRING_LITERAL)) {
 #if TPP_HAVE_TPP_TOK_STRING
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_STRING */
@@ -3365,7 +3365,7 @@ not_a_trigraph:
 		}
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_STRING
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_STRING)) {
+		if (tpp_lexer_have(self, TPP_TOK_STRING)) {
 			error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 			if (TPP_ISERR(error))
 				goto return_error;
@@ -3385,15 +3385,15 @@ not_a_trigraph:
      TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL ||   \
      TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)
 	case 'R': {
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL) ||
-		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL) ||
-		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL) ||
-		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL)) {
+		if (tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL) ||
+		    tpp_lexer_have(self, TPP_TOK_RAW_STRING_LITERAL) ||
+		    tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL) ||
+		    tpp_lexer_have(self, TPP_TOK_RAW_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
 			if (ch2 == '"') {
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3402,7 +3402,7 @@ not_a_trigraph:
 				}
 #endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3415,7 +3415,7 @@ not_a_trigraph:
 #if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
 			if (ch2 == '\'') {
 #if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3424,7 +3424,7 @@ not_a_trigraph:
 				}
 #endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
 #if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3450,12 +3450,12 @@ not_a_trigraph:
 #if (TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || \
      TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)
 	case 'r': {
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL) ||
-		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL)) {
+		if (tpp_lexer_have(self, TPP_TOK_RAW_STRING_LITERAL) ||
+		    tpp_lexer_have(self, TPP_TOK_RAW_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_STRING_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3466,7 +3466,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_RAW_CHAR_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3490,13 +3490,13 @@ not_a_trigraph:
 /************************************************************************/
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
 	case 'L': {
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL) ||
-		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
+		if (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) ||
+		    tpp_lexer_have(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3507,7 +3507,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3519,15 +3519,15 @@ not_a_trigraph:
 #if ((TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
      (TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if ((tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
-				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-				    (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
-				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+				if ((tpp_lexer_have(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
+				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
+				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
-						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+						if (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
+						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -3538,8 +3538,8 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
-						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+						if (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
+						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -3572,19 +3572,19 @@ not_a_trigraph:
      TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
      TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL)
 	case 'u': {
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
-		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL) ||
-		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL) ||
-		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
+		if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
+		    tpp_lexer_have(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) ||
+		    tpp_lexer_have(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) ||
+		    tpp_lexer_have(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 			if (ch2 == '8') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
-				    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
+				    tpp_lexer_have(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
 					read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL)) {
+						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -3595,7 +3595,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 					if (ch2 == '\'') {
-						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
+						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -3607,15 +3607,15 @@ not_a_trigraph:
 #if ((TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
      (TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 					if (ch2 == 'R') {
-						if ((tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
-						     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-						    (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
-						     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+						if ((tpp_lexer_have(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
+						     tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+						    (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
+						     tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 							read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 							if (ch2 == '"') {
-								if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
-								    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+								if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
+								    tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 									if (TPP_ISERR(error))
 										goto return_error;
@@ -3626,8 +3626,8 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 							if (ch2 == '"') {
-								if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
-								    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+								if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
+								    tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
 									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 									if (TPP_ISERR(error))
 										goto return_error;
@@ -3649,7 +3649,7 @@ not_a_trigraph:
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_CXX_UTF16_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3660,7 +3660,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3672,15 +3672,15 @@ not_a_trigraph:
 #if ((TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
      (TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if ((tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
-				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-				    (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
-				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+				if ((tpp_lexer_have(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
+				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_have(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
+				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
-						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
+						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -3691,8 +3691,8 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
-						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
+						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -3722,13 +3722,13 @@ not_a_trigraph:
 /************************************************************************/
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
 	case 'U': {
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL) ||
-		    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
+		if (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) ||
+		    tpp_lexer_have(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3739,7 +3739,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
+				if (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -3751,15 +3751,15 @@ not_a_trigraph:
 #if ((TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
      (TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if ((tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
-				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-				    (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
-				     tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+				if ((tpp_lexer_have(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
+				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
+				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
-						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
+						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -3770,8 +3770,8 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
-						    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
+						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -3801,14 +3801,14 @@ not_a_trigraph:
 /************************************************************************/
 #if TPP_HAVE_TPP_TOK_DOLLAR
 	case '$':
-#if TPP_HAVE_TPP_TOK_DOLLAR > 0
-		break; /* Follow single-char code-branch */
-#else /* TPP_HAVE_TPP_TOK_DOLLAR > 0 */
-		if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_DOLLAR))
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_DOLLAR)
+		if (tpp_lexer_have(self, TPP_TOK_DOLLAR))
 			break; /* Follow single-char code-branch */
 		goto handle_keyword;
 #define WANT_handle_keyword
-#endif /* TPP_HAVE_TPP_TOK_DOLLAR <= 0 */
+#else /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_DOLLAR) */
+		break; /* Follow single-char code-branch */
+#endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_DOLLAR) */
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
 /************************************************************************/
 
@@ -3939,7 +3939,7 @@ handle_keyword_with_esc:
 					/* Backslash */
 				} else
 #if TPP_HAVE_TRIGRAPHS
-				if (*pos == '?' && tpp_lexer_getext(self, TPP_EXT_TRIGRAPHS)) {
+				if (*pos == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
 					if ((pos + 1) >= file->tf_end) {
 						tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 						error = tpp_file_expandchunk(file);
@@ -3969,7 +3969,7 @@ handle_keyword_with_esc:
 					break; /* No backslash */
 				}
 #if TPP_HAVE_ESCAPE_IN_IDENTIFIERS
-				if (tpp_lexer_getext(self, TPP_EXT_ESCAPE_IN_IDENTIFIERS)) {
+				if (tpp_lexer_have(self, ESCAPE_IN_IDENTIFIERS)) {
 					tpp_char const *npos = pos;
 					tpp_size rel_pos;
 					rel_pos = tpp_file_ptr2rel(file, pos);
@@ -4050,8 +4050,8 @@ handle_keyword_with_esc:
 
 		/* Check for digits */
 #if TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT
-		if (tpp_ascii_isdigit(ch) && (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_FLOAT) ||
-		                              tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_INT))) {
+		if (tpp_ascii_isdigit(ch) && (tpp_lexer_have(self, TPP_TOK_FLOAT) ||
+		                              tpp_lexer_have(self, TPP_TOK_INT))) {
 #if TPP_HAVE_UNICODE
 handle_digit:
 #endif /* TPP_HAVE_UNICODE */
@@ -4066,7 +4066,7 @@ handle_digit:
 
 #if TPP_HAVE_TPP_TOK_FLOAT
 			if (pos < file->tf_end && *pos == '.' &&
-			    tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_FLOAT)) {
+			    tpp_lexer_have(self, TPP_TOK_FLOAT)) {
 				/* Floating point token... */
 				++pos;
 				error = tpp_lexer_seek_end_of_keyword(self, &pos);
@@ -4086,7 +4086,7 @@ handle_digit:
 #endif /* TPP_HAVE_TPP_TOK_FLOAT */
 
 #if TPP_HAVE_TPP_TOK_INT
-			if (tpp_lexer_getfeat(self, TPP_FEAT_TPP_TOK_INT)) {
+			if (tpp_lexer_have(self, TPP_TOK_INT)) {
 				result = TPP_TOK_INT;
 				goto set_result;
 			}

@@ -286,20 +286,18 @@ typedef struct tpp_lexer {
 #endif /* !TPP_HAVE_LEXER_TIME */
 } tpp_lexer;
 
+/* Check if a runtime-configurable config option "conf" in "TPP_HAVE_conf" is currently enabled.
+ * When "TPP_HAVE_conf" is configured as "TPP_CONF_IS_CONST()", return that constant instead. */
+#define tpp_lexer_have(self, conf) _tpp_lexer_have_##conf(self)
 
-#define tpp_lexer_gettok(self)                       ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
-#define tpp_lexer_gettoken(self)                     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
-#define tpp_lexer_gettokenkwd(self)                  tpp_token_getkwd(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenstart(self)                tpp_token_getstart(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenend(self)                  tpp_token_getend(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenlen(self)                  tpp_token_getlen(tpp_lexer_gettoken(self))
-#define tpp_lexer_getfile(self)                      (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
-#define tpp_lexer_getfilekind(self)                  tpp_file_getkind(tpp_lexer_getfile(self))
-#define tpp_lexer_getfeat(self, TPP_FEAT_x)          tpp_features_get(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
-#define tpp_lexer_getext(self, TPP_EXT_x)            tpp_extensions_get(&(self)->TPP_INTERNAL(tl_exts), TPP_EXT_x)
-#define tpp_lexer_setfeat(self, TPP_FEAT_x, enabled) tpp_features_setid(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x, enabled)
-#define tpp_lexer_enablefeat(self, TPP_FEAT_x)       tpp_features_enable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
-#define tpp_lexer_disablefeat(self, TPP_FEAT_x)      tpp_features_disable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
+#define tpp_lexer_gettok(self)           ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
+#define tpp_lexer_gettoken(self)         (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
+#define tpp_lexer_gettokenkwd(self)      tpp_token_getkwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenstart(self)    tpp_token_getstart(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenend(self)      tpp_token_getend(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenlen(self)      tpp_token_getlen(tpp_lexer_gettoken(self))
+#define tpp_lexer_getfile(self)          (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
+#define tpp_lexer_getfilekind(self)      tpp_file_getkind(tpp_lexer_getfile(self))
 
 #if TPP_HAVE_WARNINGS
 #if TPP_HAVE_WARNINGS_PUSH_POP
@@ -892,9 +890,9 @@ tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
 
 #define TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL     0x0000
 #define TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS    0x0001 /* Store varargs info in p_argv[IN(*p_argc) - 1] */
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 #define TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC 0x0002 /* Do not strip whitespace/comments around arguments */
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #if TPP_HAVE_LEXER_MANUALPOPFILE
 #define TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK    0x0004 /* Use "tpp_lexer_manualpopfile_popfile()" to pop files */
 #endif /* TPP_HAVE_LEXER_MANUALPOPFILE */

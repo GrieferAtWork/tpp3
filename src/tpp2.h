@@ -1793,160 +1793,160 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #endif /* !TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO_DEFAULT */
 
 #ifndef TPP_CONFIG_FEATURE_TRIGRAPHS
-#define TPP_CONFIG_FEATURE_TRIGRAPHS (TPP_CONFIG_FEATURE_TRIGRAPHS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_FEATURE_TRIGRAPHS TPP_CONF_MAKEEXT(TPP_CONFIG_FEATURE_TRIGRAPHS_DEFAULT)
 #endif /* !TPP_CONFIG_FEATURE_TRIGRAPHS */
 #ifndef TPP_CONFIG_FEATURE_DIGRAPHS
-#define TPP_CONFIG_FEATURE_DIGRAPHS (TPP_CONFIG_FEATURE_DIGRAPHS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_FEATURE_DIGRAPHS TPP_CONF_MAKEEXT(TPP_CONFIG_FEATURE_DIGRAPHS_DEFAULT)
 #endif /* !TPP_CONFIG_FEATURE_DIGRAPHS */
 #ifndef TPP_CONFIG_EXTENSION_GCC_VA_ARGS
-#define TPP_CONFIG_EXTENSION_GCC_VA_ARGS (TPP_CONFIG_EXTENSION_GCC_VA_ARGS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_GCC_VA_ARGS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_GCC_VA_ARGS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_GCC_VA_ARGS */
 #ifndef TPP_CONFIG_EXTENSION_GCC_VA_COMMA
-#define TPP_CONFIG_EXTENSION_GCC_VA_COMMA (TPP_CONFIG_EXTENSION_GCC_VA_COMMA_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_GCC_VA_COMMA TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_GCC_VA_COMMA_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_GCC_VA_COMMA */
 #ifndef TPP_CONFIG_EXTENSION_GCC_IFELSE
-#define TPP_CONFIG_EXTENSION_GCC_IFELSE (TPP_CONFIG_EXTENSION_GCC_IFELSE_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_GCC_IFELSE TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_GCC_IFELSE_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_GCC_IFELSE */
 #ifndef TPP_CONFIG_EXTENSION_VA_COMMA
-#define TPP_CONFIG_EXTENSION_VA_COMMA (TPP_CONFIG_EXTENSION_VA_COMMA_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_VA_COMMA TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_VA_COMMA_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_VA_COMMA */
 #ifndef TPP_CONFIG_EXTENSION_VA_OPT
-#define TPP_CONFIG_EXTENSION_VA_OPT (TPP_CONFIG_EXTENSION_VA_OPT_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_VA_OPT TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_VA_OPT_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_VA_OPT */
 #ifndef TPP_CONFIG_EXTENSION_VA_NARGS
-#define TPP_CONFIG_EXTENSION_VA_NARGS (TPP_CONFIG_EXTENSION_VA_NARGS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_VA_NARGS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_VA_NARGS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_VA_NARGS */
 #ifndef TPP_CONFIG_EXTENSION_VA_ARGS
-#define TPP_CONFIG_EXTENSION_VA_ARGS (TPP_CONFIG_EXTENSION_VA_ARGS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_VA_ARGS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_VA_ARGS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_VA_ARGS */
 #ifndef TPP_CONFIG_EXTENSION_STR_E
-#define TPP_CONFIG_EXTENSION_STR_E (TPP_CONFIG_EXTENSION_STR_E_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_STR_E TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_STR_E_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_STR_E */
 #ifndef TPP_CONFIG_EXTENSION_ALTMAC
-#define TPP_CONFIG_EXTENSION_ALTMAC (TPP_CONFIG_EXTENSION_ALTMAC_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_ALTMAC TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_ALTMAC_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_ALTMAC */
 #ifndef TPP_CONFIG_EXTENSION_RECMAC
-#define TPP_CONFIG_EXTENSION_RECMAC (TPP_CONFIG_EXTENSION_RECMAC_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_RECMAC TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_RECMAC_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_RECMAC */
 #ifndef TPP_CONFIG_EXTENSION_ARGSPACE
-#define TPP_CONFIG_EXTENSION_ARGSPACE (TPP_CONFIG_EXTENSION_ARGSPACE_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_ARGSPACE TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_ARGSPACE_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_ARGSPACE */
 #ifndef TPP_CONFIG_EXTENSION_BININTEGRAL
-#define TPP_CONFIG_EXTENSION_BININTEGRAL (TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_BININTEGRAL TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_BININTEGRAL_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_BININTEGRAL */
 #ifndef TPP_CONFIG_EXTENSION_MSVC_PRAGMA
-#define TPP_CONFIG_EXTENSION_MSVC_PRAGMA (TPP_CONFIG_EXTENSION_MSVC_PRAGMA_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_MSVC_PRAGMA TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_MSVC_PRAGMA_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_MSVC_PRAGMA */
 #ifndef TPP_CONFIG_EXTENSION_STRINGOPS
-#define TPP_CONFIG_EXTENSION_STRINGOPS (TPP_CONFIG_EXTENSION_STRINGOPS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_STRINGOPS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_STRINGOPS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_STRINGOPS */
 #ifndef TPP_CONFIG_EXTENSION_HASH_AT
-#define TPP_CONFIG_EXTENSION_HASH_AT (TPP_CONFIG_EXTENSION_HASH_AT_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_HASH_AT TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_HASH_AT_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_HASH_AT */
 #ifndef TPP_CONFIG_EXTENSION_HASH_XCLAIM
-#define TPP_CONFIG_EXTENSION_HASH_XCLAIM (TPP_CONFIG_EXTENSION_HASH_XCLAIM_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_HASH_XCLAIM TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_HASH_XCLAIM_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_HASH_XCLAIM */
 #ifndef TPP_CONFIG_EXTENSION_WARNING
-#define TPP_CONFIG_EXTENSION_WARNING (TPP_CONFIG_EXTENSION_WARNING_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_WARNING TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_WARNING_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_WARNING */
 #ifndef TPP_CONFIG_EXTENSION_SHEBANG
-#define TPP_CONFIG_EXTENSION_SHEBANG (TPP_CONFIG_EXTENSION_SHEBANG_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_SHEBANG TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_SHEBANG_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_SHEBANG */
 #ifndef TPP_CONFIG_EXTENSION_INCLUDE_NEXT
-#define TPP_CONFIG_EXTENSION_INCLUDE_NEXT (TPP_CONFIG_EXTENSION_INCLUDE_NEXT_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_INCLUDE_NEXT TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_INCLUDE_NEXT_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_INCLUDE_NEXT */
 #ifndef TPP_CONFIG_EXTENSION_IMPORT
-#define TPP_CONFIG_EXTENSION_IMPORT (TPP_CONFIG_EXTENSION_IMPORT_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_IMPORT TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_IMPORT_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_IMPORT */
 #ifndef TPP_CONFIG_EXTENSION_IDENT_SCCS
-#define TPP_CONFIG_EXTENSION_IDENT_SCCS (TPP_CONFIG_EXTENSION_IDENT_SCCS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_IDENT_SCCS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_IDENT_SCCS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_IDENT_SCCS */
 #ifndef TPP_CONFIG_EXTENSION_BASEFILE
-#define TPP_CONFIG_EXTENSION_BASEFILE (TPP_CONFIG_EXTENSION_BASEFILE_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_BASEFILE TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_BASEFILE_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_BASEFILE */
 #ifndef TPP_CONFIG_EXTENSION_INCLUDE_LEVEL
-#define TPP_CONFIG_EXTENSION_INCLUDE_LEVEL (TPP_CONFIG_EXTENSION_INCLUDE_LEVEL_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_INCLUDE_LEVEL TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_INCLUDE_LEVEL_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_INCLUDE_LEVEL */
 #ifndef TPP_CONFIG_EXTENSION_COUNTER
-#define TPP_CONFIG_EXTENSION_COUNTER (TPP_CONFIG_EXTENSION_COUNTER_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_COUNTER TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_COUNTER_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_COUNTER */
 #ifndef TPP_CONFIG_EXTENSION_CLANG_FEATURES
-#define TPP_CONFIG_EXTENSION_CLANG_FEATURES (TPP_CONFIG_EXTENSION_CLANG_FEATURES_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_CLANG_FEATURES TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_CLANG_FEATURES_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_CLANG_FEATURES */
 #ifndef TPP_CONFIG_EXTENSION_HAS_INCLUDE
-#define TPP_CONFIG_EXTENSION_HAS_INCLUDE (TPP_CONFIG_EXTENSION_HAS_INCLUDE_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_HAS_INCLUDE TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_HAS_INCLUDE_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_HAS_INCLUDE */
 #ifndef TPP_CONFIG_EXTENSION_LXOR
-#define TPP_CONFIG_EXTENSION_LXOR (TPP_CONFIG_EXTENSION_LXOR_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_LXOR TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_LXOR_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_LXOR */
 #ifndef TPP_CONFIG_EXTENSION_DATEUTILS
-#define TPP_CONFIG_EXTENSION_DATEUTILS (TPP_CONFIG_EXTENSION_DATEUTILS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_DATEUTILS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_DATEUTILS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_DATEUTILS */
 #ifndef TPP_CONFIG_EXTENSION_TIMEUTILS
-#define TPP_CONFIG_EXTENSION_TIMEUTILS (TPP_CONFIG_EXTENSION_TIMEUTILS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TIMEUTILS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TIMEUTILS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TIMEUTILS */
 #ifndef TPP_CONFIG_EXTENSION_TIMESTAMP
-#define TPP_CONFIG_EXTENSION_TIMESTAMP (TPP_CONFIG_EXTENSION_TIMESTAMP_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TIMESTAMP TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TIMESTAMP_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TIMESTAMP */
 #ifndef TPP_CONFIG_EXTENSION_COLUMN
-#define TPP_CONFIG_EXTENSION_COLUMN (TPP_CONFIG_EXTENSION_COLUMN_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_COLUMN TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_COLUMN_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_COLUMN */
 #ifndef TPP_CONFIG_EXTENSION_TPP_EVAL
-#define TPP_CONFIG_EXTENSION_TPP_EVAL (TPP_CONFIG_EXTENSION_TPP_EVAL_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_EVAL TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_EVAL_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_EVAL */
 #ifndef TPP_CONFIG_EXTENSION_TPP_UNIQUE
-#define TPP_CONFIG_EXTENSION_TPP_UNIQUE (TPP_CONFIG_EXTENSION_TPP_UNIQUE_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_UNIQUE TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_UNIQUE_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_UNIQUE */
 #ifndef TPP_CONFIG_EXTENSION_TPP_LOAD_FILE
-#define TPP_CONFIG_EXTENSION_TPP_LOAD_FILE (TPP_CONFIG_EXTENSION_TPP_LOAD_FILE_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_LOAD_FILE TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_LOAD_FILE_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_LOAD_FILE */
 #ifndef TPP_CONFIG_EXTENSION_TPP_COUNTER
-#define TPP_CONFIG_EXTENSION_TPP_COUNTER (TPP_CONFIG_EXTENSION_TPP_COUNTER_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_COUNTER TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_COUNTER_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_COUNTER */
 #ifndef TPP_CONFIG_EXTENSION_TPP_RANDOM
-#define TPP_CONFIG_EXTENSION_TPP_RANDOM (TPP_CONFIG_EXTENSION_TPP_RANDOM_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_RANDOM TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_RANDOM_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_RANDOM */
 #ifndef TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE
-#define TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE (TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_STR_DECOMPILE */
 #ifndef TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR
-#define TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR (TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_STR_SUBSTR */
 #ifndef TPP_CONFIG_EXTENSION_TPP_STR_SIZE
-#define TPP_CONFIG_EXTENSION_TPP_STR_SIZE (TPP_CONFIG_EXTENSION_TPP_STR_SIZE_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_STR_SIZE TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_STR_SIZE_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_STR_SIZE */
 #ifndef TPP_CONFIG_EXTENSION_TPP_STR_PACK
-#define TPP_CONFIG_EXTENSION_TPP_STR_PACK (TPP_CONFIG_EXTENSION_TPP_STR_PACK_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_STR_PACK TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_STR_PACK_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_STR_PACK */
 #ifndef TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS
-#define TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS (TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS */
 #ifndef TPP_CONFIG_EXTENSION_TPP_IDENTIFIER
-#define TPP_CONFIG_EXTENSION_TPP_IDENTIFIER (TPP_CONFIG_EXTENSION_TPP_IDENTIFIER_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TPP_IDENTIFIER TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TPP_IDENTIFIER_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TPP_IDENTIFIER */
 #ifndef TPP_CONFIG_EXTENSION_ASSERTIONS
-#define TPP_CONFIG_EXTENSION_ASSERTIONS (TPP_CONFIG_EXTENSION_ASSERTIONS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_ASSERTIONS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_ASSERTIONS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_ASSERTIONS */
 #ifndef TPP_CONFIG_EXTENSION_CANONICAL_HEADERS
-#define TPP_CONFIG_EXTENSION_CANONICAL_HEADERS (TPP_CONFIG_EXTENSION_CANONICAL_HEADERS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_CANONICAL_HEADERS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_CANONICAL_HEADERS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_CANONICAL_HEADERS */
 #ifndef TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES
-#define TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES (TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES */
 #ifndef TPP_CONFIG_EXTENSION_MSVC_FIXED_INT
-#define TPP_CONFIG_EXTENSION_MSVC_FIXED_INT (TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_MSVC_FIXED_INT TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_MSVC_FIXED_INT */
 #ifndef TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED
-#define TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED (TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED */
 #ifndef TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR
-#define TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR (TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR */
 #ifndef TPP_CONFIG_EXTENSION_EXTENDED_IDENTS
-#define TPP_CONFIG_EXTENSION_EXTENDED_IDENTS (TPP_CONFIG_EXTENSION_EXTENDED_IDENTS_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_EXTENDED_IDENTS TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_EXTENDED_IDENTS_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_EXTENDED_IDENTS */
 #ifndef TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO
-#define TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO (TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO_DEFAULT ? -1 : -2)
+#define TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO */
 
 
@@ -2031,116 +2031,116 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL \
 	TPP2_HAVE_RAW_STRING_LITERALS /* *ditto* */
 
-#define TPP_HAVE_TPP_TOK_LF                         (-2) /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_WANTLF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LF)") */
-#define TPP_HAVE_TPP_TOK_SPACE                      (-2) /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_WANTSPACE"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SPACE)") */
-#define TPP_HAVE_TPP_TOK_COMMENT                    (-2) /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_WANTCOMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COMMENT)") */
-#define TPP_HAVE_TPP_TOK_CXX_COMMENT                (-1) /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_CPP_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_CXX_COMMENT)") */
-#define TPP_HAVE_TPP_TOK_C_COMMENT                  (-1) /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_C_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_COMMENT)") */
-#define TPP_HAVE_TPP_TOK_PASCAL_COMMENT             0    /* TPP2 only recognized C/C++-like comments */
-#define TPP_HAVE_TPP_TOK_SHELL_COMMENT              (-2) /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_ASM_COMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SHELL_COMMENT)") */
-#define TPP_HAVE_TPP_TOK_ASM_COMMENT                0    /* TPP2 only recognized C/C++-like comments */
-#define TPP_HAVE_TPP_TOK_SQL_COMMENT                0    /* TPP2 only recognized C/C++-like comments */
-#define TPP_HAVE_TPP_TOK_DOLLAR                     (-2) /* "$" Configurable, default=false (TPP2 used to configure this via "TPPLEXER_TOKEN_DOLLAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOLLAR)") */
-#define TPP_HAVE_TPP_TOK_INT                        1    /* ... */
-#define TPP_HAVE_TPP_TOK_FLOAT                      1    /* ... */
-#define TPP_HAVE_TPP_TOK_STRING                     1    /* TPP2 only supported C character/string literals */
-#define TPP_HAVE_TPP_TOK_CHAR                       1    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL     0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL    0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL    0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL   0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL   0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL       0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL       0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL      0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL      0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL     0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL     0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL         0    /* *ditto* */
-#define TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE     (-1) /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)") */
-#define TPP_HAVE_TPP_TOK_STRING_WARN_MULTILINE      0    /* TPP2 offered no such warning */
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE              1    /* "<<" */
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE              1    /* ">>" */
-#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL                1    /* "==" */
-#define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL              1    /* "!=" */
-#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL               1    /* ">=" */
-#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL               1    /* "<=" */
-#define TPP_HAVE_TPP_TOK_DOT_DOT_DOT                1    /* "..." */
-#define TPP_HAVE_TPP_TOK_PLUS_EQUAL                 1    /* "+=" */
-#define TPP_HAVE_TPP_TOK_MINUS_EQUAL                1    /* "-=" */
-#define TPP_HAVE_TPP_TOK_STAR_EQUAL                 1    /* "*=" */
-#define TPP_HAVE_TPP_TOK_SLASH_EQUAL                1    /* "/=" */
-#define TPP_HAVE_TPP_TOK_PERCENT_EQUAL              1    /* "%=" */
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL        1    /* "<<=" */
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL        1    /* ">>=" */
-#define TPP_HAVE_TPP_TOK_AMP_EQUAL                  1    /* "&=" */
-#define TPP_HAVE_TPP_TOK_PIPE_EQUAL                 1    /* "|=" */
-#define TPP_HAVE_TPP_TOK_HAT_EQUAL                  1    /* "^=" */
-#define TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL            (-1) /* "**="  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_STARSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL)") */
-#define TPP_HAVE_TPP_TOK_AT_EQUAL                   (-1) /* "@="   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ATEQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_AT_EQUAL)") */
-#define TPP_HAVE_TPP_TOK_POUND_POUND                1    /* "##" */
-#define TPP_HAVE_TPP_TOK_AMP_AMP                    1    /* "&&" */
-#define TPP_HAVE_TPP_TOK_PIPE_PIPE                  1    /* "||" */
-#define TPP_HAVE_TPP_TOK_HAT_HAT                    (-1) /* "^^"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ROOFROOF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_HAT_HAT)") */
-#define TPP_HAVE_TPP_TOK_PLUS_PLUS                  1    /* "++" */
-#define TPP_HAVE_TPP_TOK_MINUS_MINUS                1    /* "--" */
-#define TPP_HAVE_TPP_TOK_STAR_STAR                  (-1) /* "**"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_STARSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STAR_STAR)") */
-#define TPP_HAVE_TPP_TOK_TILDE_TILDE                (-1) /* "~~"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_TILDETILDE"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_TILDE_TILDE)") */
-#define TPP_HAVE_TPP_TOK_TILDE_EQUAL                1    /* "~=" */
-#define TPP_HAVE_TPP_TOK_MINUS_RANGLE               (-1) /* "->"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ARROW"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_MINUS_RANGLE)") */
-#define TPP_HAVE_TPP_TOK_COLON_EQUAL                (-1) /* ":="   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_COLONASSIGN" / "TPPLEXER_TOKEN_COLLONASSIGN"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COLON_EQUAL)") */
-#define TPP_HAVE_TPP_TOK_COLON_COLON                (-1) /* "::"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_COLONCOLON" / "TPPLEXER_TOKEN_COLLONCOLLON"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COLON_COLON)") */
-#define TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR          (-1) /* "->*"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ARROWSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR)") */
-#define TPP_HAVE_TPP_TOK_DOT_STAR                   (-1) /* ".*"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_DOTSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOT_STAR)") */
-#define TPP_HAVE_TPP_TOK_DOT_DOT                    (-1) /* ".."   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_DOTDOT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOT_DOT)") */
-#define TPP_HAVE_TPP_TOK_LANGLE_RANGLE              (-1) /* "<>"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_LOGT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LANGLE_RANGLE)") */
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE       (-1) /* "<<<"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ANGLE3"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE)") */
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE       (-1) /* ">>>"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ANGLE3"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE)") */
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL (-1) /* "<<<=" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)") */
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL (-1) /* ">>>=" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL          (-1) /* "==="  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUAL3"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL)") */
-#define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL        (-1) /* "!=="  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUAL3"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL)") */
-#define TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM            0    /* "!!"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_QMARK_QMARK                (-1) /* "??"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_QMARK_QMARK"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
-#define TPP_HAVE_TPP_TOK_SLASH_SLASH                0    /* "//"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL          0    /* "//="  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_QMARK_EQUAL                0    /* "?="   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_RANGLE_LANGLE              0    /* "><"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_PLUS                 (-1) /* "=+"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PLUS)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_MINUS                (-1) /* "=-"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_MINUS)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_STAR                 (-1) /* "=*"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_STAR)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR            (-1) /* "=**"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_STARSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_SLASH                (-1) /* "=/"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_SLASH)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH          0    /* "=//"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_PERCENT              (-1) /* "=%"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PERCENT)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_AMP                  (-1) /* "=&"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_AMP)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_PIPE                 (-1) /* "=|"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PIPE)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_HAT                  (-1) /* "=^"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_HAT)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE               0    /* "=<"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE        (-1) /* "=<<"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE (-1) /* "=<<<" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE               0    /* "=>"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE        (-1) /* "=>>"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE (-1) /* "=>>>" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_AT                   (-1) /* "=@"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ATEQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_AT)") */
-#define TPP_HAVE_TPP_TOK_EQUAL_TILDE                0    /* "=~"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_COLON                0    /* "=:"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM              0    /* "=!"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM        0    /* "==!"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_EQUAL_QMARK                0    /* "=?"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_LANGLE_MINUS               0    /* "<-"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS          0    /* "*<-"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_STAR_DOT                   0    /* "*."   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_MINUS_LANGLE               0    /* "-<"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_RANGLE_MINUS               0    /* ">-"   Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE        0    /* "<=>"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE        0    /* "<->"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE        0    /* ">=<"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE        0    /* ">-<"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE        0    /* "<=<"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE        0    /* "<-<"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE        0    /* ">=>"  Completely unknown to TPP2 */
-#define TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE        0    /* ">->"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LF                         TPP_CONF_FEAT0 /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_WANTLF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LF)") */
+#define TPP_HAVE_TPP_TOK_SPACE                      TPP_CONF_FEAT0 /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_WANTSPACE"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SPACE)") */
+#define TPP_HAVE_TPP_TOK_COMMENT                    TPP_CONF_FEAT0 /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_WANTCOMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COMMENT)") */
+#define TPP_HAVE_TPP_TOK_CXX_COMMENT                TPP_CONF_FEAT1 /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_CPP_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_CXX_COMMENT)") */
+#define TPP_HAVE_TPP_TOK_C_COMMENT                  TPP_CONF_FEAT1 /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_C_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_COMMENT)") */
+#define TPP_HAVE_TPP_TOK_PASCAL_COMMENT             0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TPP_TOK_SHELL_COMMENT              TPP_CONF_FEAT0 /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_ASM_COMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SHELL_COMMENT)") */
+#define TPP_HAVE_TPP_TOK_ASM_COMMENT                0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TPP_TOK_SQL_COMMENT                0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TPP_TOK_DOLLAR                     TPP_CONF_FEAT0 /* "$" Configurable, default=false (TPP2 used to configure this via "TPPLEXER_TOKEN_DOLLAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOLLAR)") */
+#define TPP_HAVE_TPP_TOK_INT                        1              /* ... */
+#define TPP_HAVE_TPP_TOK_FLOAT                      1              /* ... */
+#define TPP_HAVE_TPP_TOK_STRING                     1              /* TPP2 only supported C character/string literals */
+#define TPP_HAVE_TPP_TOK_CHAR                       1              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL     0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL    0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL    0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL   0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL   0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL       0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL       0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL      0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL      0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL     0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL     0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL         0              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE     TPP_CONF_FEAT1 /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)") */
+#define TPP_HAVE_TPP_TOK_STRING_WARN_MULTILINE      0              /* TPP2 offered no such warning */
+#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE              1              /* "<<" */
+#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE              1              /* ">>" */
+#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL                1              /* "==" */
+#define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL              1              /* "!=" */
+#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL               1              /* ">=" */
+#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL               1              /* "<=" */
+#define TPP_HAVE_TPP_TOK_DOT_DOT_DOT                1              /* "..." */
+#define TPP_HAVE_TPP_TOK_PLUS_EQUAL                 1              /* "+=" */
+#define TPP_HAVE_TPP_TOK_MINUS_EQUAL                1              /* "-=" */
+#define TPP_HAVE_TPP_TOK_STAR_EQUAL                 1              /* "*=" */
+#define TPP_HAVE_TPP_TOK_SLASH_EQUAL                1              /* "/=" */
+#define TPP_HAVE_TPP_TOK_PERCENT_EQUAL              1              /* "%=" */
+#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL        1              /* "<<=" */
+#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL        1              /* ">>=" */
+#define TPP_HAVE_TPP_TOK_AMP_EQUAL                  1              /* "&=" */
+#define TPP_HAVE_TPP_TOK_PIPE_EQUAL                 1              /* "|=" */
+#define TPP_HAVE_TPP_TOK_HAT_EQUAL                  1              /* "^=" */
+#define TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL            TPP_CONF_FEAT1 /* "**="  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_STARSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STAR_STAR_EQUAL)") */
+#define TPP_HAVE_TPP_TOK_AT_EQUAL                   TPP_CONF_FEAT1 /* "@="   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ATEQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_AT_EQUAL)") */
+#define TPP_HAVE_TPP_TOK_POUND_POUND                1              /* "##" */
+#define TPP_HAVE_TPP_TOK_AMP_AMP                    1              /* "&&" */
+#define TPP_HAVE_TPP_TOK_PIPE_PIPE                  1              /* "||" */
+#define TPP_HAVE_TPP_TOK_HAT_HAT                    TPP_CONF_FEAT1 /* "^^"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ROOFROOF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_HAT_HAT)") */
+#define TPP_HAVE_TPP_TOK_PLUS_PLUS                  1              /* "++" */
+#define TPP_HAVE_TPP_TOK_MINUS_MINUS                1              /* "--" */
+#define TPP_HAVE_TPP_TOK_STAR_STAR                  TPP_CONF_FEAT1 /* "**"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_STARSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STAR_STAR)") */
+#define TPP_HAVE_TPP_TOK_TILDE_TILDE                TPP_CONF_FEAT1 /* "~~"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_TILDETILDE"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_TILDE_TILDE)") */
+#define TPP_HAVE_TPP_TOK_TILDE_EQUAL                1              /* "~=" */
+#define TPP_HAVE_TPP_TOK_MINUS_RANGLE               TPP_CONF_FEAT1 /* "->"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ARROW"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_MINUS_RANGLE)") */
+#define TPP_HAVE_TPP_TOK_COLON_EQUAL                TPP_CONF_FEAT1 /* ":="   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_COLONASSIGN" / "TPPLEXER_TOKEN_COLLONASSIGN"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COLON_EQUAL)") */
+#define TPP_HAVE_TPP_TOK_COLON_COLON                TPP_CONF_FEAT1 /* "::"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_COLONCOLON" / "TPPLEXER_TOKEN_COLLONCOLLON"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COLON_COLON)") */
+#define TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR          TPP_CONF_FEAT1 /* "->*"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ARROWSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_MINUS_RANGLE_STAR)") */
+#define TPP_HAVE_TPP_TOK_DOT_STAR                   TPP_CONF_FEAT1 /* ".*"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_DOTSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOT_STAR)") */
+#define TPP_HAVE_TPP_TOK_DOT_DOT                    TPP_CONF_FEAT1 /* ".."   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_DOTDOT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOT_DOT)") */
+#define TPP_HAVE_TPP_TOK_LANGLE_RANGLE              TPP_CONF_FEAT1 /* "<>"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_LOGT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LANGLE_RANGLE)") */
+#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE       TPP_CONF_FEAT1 /* "<<<"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ANGLE3"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE)") */
+#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE       TPP_CONF_FEAT1 /* ">>>"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ANGLE3"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE)") */
+#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL TPP_CONF_FEAT1 /* "<<<=" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)") */
+#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL TPP_CONF_FEAT1 /* ">>>=" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL          TPP_CONF_FEAT1 /* "==="  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUAL3"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_EQUAL_EQUAL)") */
+#define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL        TPP_CONF_FEAT1 /* "!=="  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUAL3"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EXCLAIM_EQUAL_EQUAL)") */
+#define TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM            0              /* "!!"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_QMARK_QMARK                TPP_CONF_FEAT1 /* "??"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_QMARK_QMARK"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_QMARK_QMARK)") */
+#define TPP_HAVE_TPP_TOK_SLASH_SLASH                0              /* "//"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL          0              /* "//="  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_QMARK_EQUAL                0              /* "?="   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_LANGLE              0              /* "><"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_EQUAL_PLUS                 TPP_CONF_FEAT1 /* "=+"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PLUS)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_MINUS                TPP_CONF_FEAT1 /* "=-"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_MINUS)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_STAR                 TPP_CONF_FEAT1 /* "=*"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_STAR)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR            TPP_CONF_FEAT1 /* "=**"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_STARSTAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_STAR_STAR)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_SLASH                TPP_CONF_FEAT1 /* "=/"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_SLASH)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH          0              /* "=//"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_EQUAL_PERCENT              TPP_CONF_FEAT1 /* "=%"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PERCENT)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_AMP                  TPP_CONF_FEAT1 /* "=&"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_AMP)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_PIPE                 TPP_CONF_FEAT1 /* "=|"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_PIPE)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_HAT                  TPP_CONF_FEAT1 /* "=^"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_HAT)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE               0              /* "=<"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE        TPP_CONF_FEAT1 /* "=<<"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE TPP_CONF_FEAT1 /* "=<<<" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE               0              /* "=>"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE        TPP_CONF_FEAT1 /* "=>>"  Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE TPP_CONF_FEAT1 /* "=>>>" Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ANGLE3_EQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_AT                   TPP_CONF_FEAT1 /* "=@"   Configurable, default=true (TPP2 used to configure this via "TPPLEXER_TOKEN_EQUALBINOP" + "TPPLEXER_TOKEN_ATEQUAL"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_EQUAL_AT)") */
+#define TPP_HAVE_TPP_TOK_EQUAL_TILDE                0              /* "=~"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_EQUAL_COLON                0              /* "=:"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM              0              /* "=!"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM        0              /* "==!"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_EQUAL_QMARK                0              /* "=?"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_MINUS               0              /* "<-"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS          0              /* "*<-"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_STAR_DOT                   0              /* "*."   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_MINUS_LANGLE               0              /* "-<"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_MINUS               0              /* ">-"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE        0              /* "<=>"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE        0              /* "<->"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE        0              /* ">=<"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE        0              /* ">-<"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE        0              /* "<=<"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE        0              /* "<-<"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE        0              /* ">=>"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE        0              /* ">->"  Completely unknown to TPP2 */
 
 /* Features... */
 #define TPP_HAVE_BSE                                  1 /* TPP2 didn't even let you disable this */
@@ -5136,7 +5136,7 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #undef l_eof_file    /* No longer exists; use "tpp_file_autopopfile_pushoff()" */
 #define l_flags      TPP_INTERNAL(tl_state) /* Use "tpp_lexer_*_pushon()" instead */
 #undef l_extokens    /* No longer exists: recognized tokens are controlled via "tpp_lexer_setfeat()" */
-#define l_extensions TPP_INTERNAL(tl_exts) /* Use tpp_lexer_getext() / tpp_lexer_pushextensions() / ... */
+#define l_extensions TPP_INTERNAL(tl_exts) /* Use tpp_lexer_getextension() / tpp_lexer_pushextensions() / ... */
 #define l_keywords   TPP_INTERNAL(tl_kwds) /* Use tpp_lexer_kwds_*() */
 #if 0 /* TODO */
 //	struct TPPIncludeList l_syspaths;   /* List of paths searched when looking for system #include files. */

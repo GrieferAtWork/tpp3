@@ -227,11 +227,11 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
                         unsigned int flags)
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 {
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 #define tpp_lexer_seekpp_rparen_keepspace() (flags & TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC)
-#else /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
+#else /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #define tpp_lexer_seekpp_rparen_keepspace() (TPP_HAVE_MACRO_ARGUMENT_WHITESPACE != 0)
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE >= 0 */
+#endif /* !TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 	tpp_size const argv_bufsize = *p_argc;
 	tpp_size argc = 0;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -241,14 +241,14 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 	tpp_lexer_state_flags saved_lexer_state;
 	tpp_size curarg_rel_start; /* Start of current argument (relative to current file's KEEP) */
 	tpp_size curarg_rel_end;   /* End of current argument (relative to current file's KEEP) */
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0
+#if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 	tpp_size curarg_rel_rend;  /* End of current argument without trailing whitespace */
 #define tpp_set_curarg_rel_rend(v) (curarg_rel_end = curarg_rel_rend = (v))
 #define tpp_get_curarg_rel_rend()  curarg_rel_rend
-#else /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0 */
+#else /* TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #define tpp_set_curarg_rel_rend(v) (curarg_rel_end = (v))
 #define tpp_get_curarg_rel_rend()   curarg_rel_end
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE > 0 */
+#endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 	saved_lexer_state = self->tl_state;
 	self->tl_state |= TPP_LEXER_STATE_FLAG_ALLTOKENS;
 	tpp_seek_rparen_state_init(&state, lparen_kind);
@@ -305,11 +305,11 @@ again_switch_tok:
 	case TPP_TOK_SPACE:
 	case TPP_TOK_LF:
 	TPP_CASE_TPP_TOK_COMMENT {
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 		if (tpp_lexer_seekpp_rparen_keepspace())
 			break; /* When whitespace should be kept: treat it like a regular token */
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE < 0 */
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 		if (state.tsrps_curarg_prefix.tsb_len == 0 &&
 		    curarg_rel_start == curarg_rel_rend) {
 			/* Skip leading whitespace... */
@@ -329,7 +329,7 @@ again_switch_tok:
 		}
 		curarg_rel_end = tpp_file_keep_ptr2rel(file, token->tt_end);
 		goto again_yield_and_switch_tok;
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0 */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 	}	break;
 
 	case TPP_TOK_EOF:
@@ -358,13 +358,13 @@ again_switch_tok:
 			} else
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
 			{
-#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0
+#if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 				/* FIXME: Have to print text until "curarg_rel_end" (iow: including whitespace)
 				 *        if follow-up files contain tokens that also have to be appended (the
 				 *        trailing whitespace of the current (old) file must only be trimmed if
 				 *        the argument at the very start of the next file (possibly after being
 				 *        preceded by some more whitespace)) */
-#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE <= 0 */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 			}
 
 			if (curarg_rel_start < tpp_get_curarg_rel_rend()) { /* Save argument text */
