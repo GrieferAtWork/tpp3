@@ -10136,7 +10136,7 @@ tpp_expr_value_getrange(struct tpp_lexer *tpp_restrict lexer,
 	tpp_assert((tpp_size)hi_value <= lhs_size);
 	if (hi_value < lo_value)
 		hi_value = lo_value;
-	if ((tpp_size)hi_value >= (tpp_size)lo_value)
+	if ((tpp_size)lo_value >= (tpp_size)hi_value)
 		goto return_empty_string;
 	result_size   = (tpp_size)hi_value - (tpp_size)lo_value;
 	result_string = tpp_string_malloc(result_size);
