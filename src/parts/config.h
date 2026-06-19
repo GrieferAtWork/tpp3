@@ -22,24 +22,27 @@
 
 #include "api.h"
 
-#ifndef TPP_CONFIG_DEFS_FILENAME
+#undef TPP_CONFIG_DEFS_FILENAME
 #define TPP_CONFIG_DEFS_FILENAME "defs.h"
-#endif /* !TPP_CONFIG_DEFS_FILENAME */
 
 /*[[[tpp-begin]]]*/
 
-/* Name of the file to #include for dynamic definitions */
-#ifndef TPP_CONFIG_DEFS_FILENAME
-#define TPP_CONFIG_DEFS_FILENAME "tpp-amalgamation.h"
-#endif /* !TPP_CONFIG_DEFS_FILENAME */
+/************************************************************************/
+/*                                                                      */
+/* To learn how to supply your own keywords/warnings/extensions/etc.    */
+/* definitions to TPP3, see comment at start of "File: parts/defs.h"    */
+/*                                                                      */
+/************************************************************************/
 
+
+/************************************************************************/
 /* API features:
  *  0: Disabled
  *  1: Enabled
  *
  * (certain features only)
- * -1: Enable if possible (re-defined to `0' if unsupported)
- */
+ * -1: Enable if possible (re-defined to `0' if unsupported) */
+/************************************************************************/
 
 /* TPP tab size.
  * when positive: compile-time hard-code
@@ -168,6 +171,8 @@
  * "-f..." comment, but can be overwritten via #define TPP_EXTNAME_<name> "my-name":
  * >> #define TPP_HAVE_TRIGRAPHS    TPP_CONF_EXT1
  * >> #define TPP_EXTNAME_TRIGRAPHS "the-cool-trigraphs"
+ *
+ * WARNING: Use of "TPP_CONF_EXT1" / "TPP_CONF_EXT0" requires "#define TPP_HAVE_EXTENSIONS 1"
  */
 
 /* Possible values for configs */

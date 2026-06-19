@@ -81,7 +81,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
 		case 'b':
 		case 'B':
-			if (!tpp_lexer_have(self, BUILTIN_EXPR_BINARY_LITERALS))
+			if (!tpp_lexer_has(self, BUILTIN_EXPR_BINARY_LITERALS))
 				break;
 			if (start >= end)
 				goto handle_invalid;
@@ -131,7 +131,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
 	case 'i':
 	case 'I':
-		if (!tpp_lexer_have(self, BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS))
+		if (!tpp_lexer_has(self, BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS))
 			goto handle_invalid;
 		if (start >= end)
 			goto handle_invalid;
@@ -179,7 +179,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 	case 'u':
 	case 'U': {
 		if (start < end && (*start == 'i' || *start == 'I') &&
-		    tpp_lexer_have(self, BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)) {
+		    tpp_lexer_has(self, BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)) {
 			++start;
 			start = tpp_skipbse_fwd(start, end, tpp_lexer_getfile(self));
 			if (start >= end)
@@ -243,7 +243,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 	case 'L': {
 		unsigned int has_u = 0;
 		unsigned int has_l = 0;
-		if (!tpp_lexer_have(self, BUILTIN_EXPR_FIXED_TYPE_INTEGRALS))
+		if (!tpp_lexer_has(self, BUILTIN_EXPR_FIXED_TYPE_INTEGRALS))
 			break;
 		for (;;) {
 			if (ch == 'u' || ch == 'U') {

@@ -62,6 +62,7 @@ function getFile(filename: string): Bytes {
 	data = data.replace("/* clang-format on */\n", "");
 	data = data.replace("// clang-format off\n", "");
 	data = data.replace("// clang-format on\n", "");
+	data = data.replace("TPP_CONFIG_DEFS_FILENAME", '"tpp-amalgamation.h"');
 	return data;
 }
 

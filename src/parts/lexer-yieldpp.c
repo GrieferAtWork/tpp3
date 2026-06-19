@@ -620,14 +620,14 @@ seek_next_lf:
 #if TPP_HAVE_CPP_ERROR
 		if (0) {
 	case TPP_KWD_error:
-			if (!tpp_lexer_have(self, CPP_ERROR))
+			if (!tpp_lexer_has(self, CPP_ERROR))
 				break;
 		}
 #endif /* TPP_HAVE_CPP_ERROR */
 #if TPP_HAVE_CPP_WARNING
 		if (0) {
 	case TPP_KWD_warning:
-			if (!tpp_lexer_have(self, CPP_WARNING))
+			if (!tpp_lexer_has(self, CPP_WARNING))
 				break;
 		}
 #endif /* TPP_HAVE_CPP_WARNING */
@@ -1107,7 +1107,7 @@ again_yield_directive_iter:
 		 * since they effective cap-off the directive via a commented line-feed */
 	case TPP_TOK_EOF:
 	case TPP_TOK_LF:
-		if (!tpp_lexer_have(self, CPP_BLANK))
+		if (!tpp_lexer_has(self, CPP_BLANK))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		result = TPP_TOK_EOF;
@@ -1123,7 +1123,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
 	case TPP_TOK_EXCLAIM_EXCLAIM:
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
-		if (!tpp_lexer_have(self, CPP_EXCLAIM))
+		if (!tpp_lexer_has(self, CPP_EXCLAIM))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		goto seek_end_of_line;
@@ -1136,7 +1136,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_DIGIT_LINE
 	case TPP_TOK_INT:
-		if (!tpp_lexer_have(self, CPP_DIGIT_LINE))
+		if (!tpp_lexer_has(self, CPP_DIGIT_LINE))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -1152,7 +1152,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_LINE
 	case TPP_KWD_line:
-		if (!tpp_lexer_have(self, CPP_LINE))
+		if (!tpp_lexer_has(self, CPP_LINE))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -1170,14 +1170,14 @@ again_yield_directive_iter:
 	{
 #if TPP_HAVE_CPP_INCLUDE
 	case TPP_KWD_include:
-		if (!tpp_lexer_have(self, CPP_INCLUDE))
+		if (!tpp_lexer_has(self, CPP_INCLUDE))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 #endif /* TPP_HAVE_CPP_INCLUDE */
 #if TPP_HAVE_CPP_INCLUDE_NEXT
 		if (0) {
 	case TPP_KWD_include_next:
-			if (!tpp_lexer_have(self, CPP_INCLUDE_NEXT))
+			if (!tpp_lexer_has(self, CPP_INCLUDE_NEXT))
 				goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		}
@@ -1185,7 +1185,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_IMPORT
 		if (0) {
 	case TPP_KWD_import:
-			if (!tpp_lexer_have(self, CPP_IMPORT))
+			if (!tpp_lexer_has(self, CPP_IMPORT))
 				goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		}
@@ -1207,7 +1207,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_EMBED
 	case TPP_KWD_embed: {
-		if (!tpp_lexer_have(self, CPP_EMBED))
+		if (!tpp_lexer_has(self, CPP_EMBED))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -1225,7 +1225,7 @@ again_yield_directive_iter:
 	case TPP_KWD_ifndef:
 	case TPP_KWD_ifdef:
 	case TPP_KWD_if:
-		if (!tpp_lexer_have(self, CPP_IF_ELSE_ENDIF))
+		if (!tpp_lexer_has(self, CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		file->tf_pos = directive_iter;
@@ -1237,7 +1237,7 @@ again_yield_directive_iter:
 	case TPP_KWD_elifdef:
 	case TPP_KWD_elifndef:
 	case TPP_KWD_else:
-		if (!tpp_lexer_have(self, CPP_IF_ELSE_ENDIF))
+		if (!tpp_lexer_has(self, CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -1246,7 +1246,7 @@ again_yield_directive_iter:
 		break;
 
 	case TPP_KWD_endif:
-		if (!tpp_lexer_have(self, CPP_IF_ELSE_ENDIF))
+		if (!tpp_lexer_has(self, CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		/*tpp_lexer_process_directive_set_noguard();*/ /* Not needed... */
@@ -1261,7 +1261,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_DEFINE
 	case TPP_KWD_define:
-		if (!tpp_lexer_have(self, CPP_DEFINE))
+		if (!tpp_lexer_has(self, CPP_DEFINE))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -1269,7 +1269,7 @@ again_yield_directive_iter:
 		result = tpp_lexer_handle_define_directive(self);
 		break;
 	case TPP_KWD_undef:
-		if (!tpp_lexer_have(self, CPP_DEFINE))
+		if (!tpp_lexer_has(self, CPP_DEFINE))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -1285,7 +1285,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_ASSERT
 	case TPP_KWD_assert:
 	case TPP_KWD_unassert:
-		if (!tpp_lexer_have(self, CPP_ASSERT))
+		if (!tpp_lexer_has(self, CPP_ASSERT))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -1301,14 +1301,14 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING
 #if TPP_HAVE_CPP_ERROR
 	case TPP_KWD_error:
-		if (!tpp_lexer_have(self, CPP_ERROR))
+		if (!tpp_lexer_has(self, CPP_ERROR))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 #endif /* TPP_HAVE_CPP_ERROR */
 #if TPP_HAVE_CPP_WARNING
 		if (0) {
 	case TPP_KWD_warning:
-			if (!tpp_lexer_have(self, CPP_WARNING))
+			if (!tpp_lexer_has(self, CPP_WARNING))
 				goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		}
@@ -1325,7 +1325,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_IDENT_SCCS
 	case TPP_KWD_ident:
 	case TPP_KWD_sccs:
-		if (!tpp_lexer_have(self, CPP_IDENT_SCCS))
+		if (!tpp_lexer_has(self, CPP_IDENT_SCCS))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -1340,7 +1340,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_PRAGMA
 	case TPP_KWD_pragma:
-		if (!tpp_lexer_have(self, CPP_PRAGMA))
+		if (!tpp_lexer_has(self, CPP_PRAGMA))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -1360,7 +1360,7 @@ again_yield_directive_iter:
 handle_unknown_directive:
 #endif /* WANT_handle_unknown_directive */
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
-		if (tpp_lexer_have(self, TPP_TOK_SHELL_COMMENT)
+		if (tpp_lexer_has(self, TPP_TOK_SHELL_COMMENT)
 #if TPP_HAVE_DIGRAPHS
 		    && *file->tf_pos != '%' /* Digraph "%:" must never become a shell comment (since
 		                             * "%:" is a **TOKEN** substitution, but not a **CHARACTER**
@@ -1477,7 +1477,7 @@ again:
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_SPACE)
-		if (tpp_lexer_have(self, TPP_TOK_SPACE))
+		if (tpp_lexer_has(self, TPP_TOK_SPACE))
 			break; /* Enabled */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_SPACE) */
 		goto again;
@@ -1494,7 +1494,7 @@ again:
 	_TPP_CASE_TPP_TOK_SHELL_COMMENT
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_HAVE_CPP_DIRECTIVES
 		if (!(self->tl_state & TPP_LEXER_STATE_FLAG_NODIRECTIVES) &&
-			tpp_lexer_have(self, CPP_DIRECTIVES)) {
+			tpp_lexer_has(self, CPP_DIRECTIVES)) {
 			tpp_token *const token = tpp_lexer_gettoken(self);
 
 			/* Must re-parse comment as a preprocessor directive instead! */
@@ -1547,7 +1547,7 @@ again:
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_COMMENT)
-		if (tpp_lexer_have(self, TPP_TOK_COMMENT))
+		if (tpp_lexer_has(self, TPP_TOK_COMMENT))
 			break; /* Comments are enabled -> emit to caller */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_COMMENT) */
 		goto again;
@@ -1576,7 +1576,7 @@ again:
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_LF)
-		if (tpp_lexer_have(self, TPP_TOK_LF))
+		if (tpp_lexer_has(self, TPP_TOK_LF))
 			break; /* Enabled */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_LF) */
 		goto again;
@@ -1594,7 +1594,7 @@ again:
 	case '#':
 		if (self->tl_state & TPP_LEXER_STATE_FLAG_NODIRECTIVES)
 			break; /* Not allowed here... */
-		if (!tpp_lexer_have(self, CPP_DIRECTIVES))
+		if (!tpp_lexer_has(self, CPP_DIRECTIVES))
 			break; /* Directives are disabled. */
 		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 		result = tpp_lexer_process_directive(self);
@@ -1605,7 +1605,7 @@ again:
 		if (result != TPP_TOK_EOF) {
 			/* Emit as a shell-comment (if enabled). Otherwise, check next raw token. */
 			tpp_assert(result == TPP_TOK_SHELL_COMMENT);
-			if (tpp_lexer_have(self, TPP_TOK_COMMENT))
+			if (tpp_lexer_has(self, TPP_TOK_COMMENT))
 				break;
 		}
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */

@@ -288,7 +288,7 @@ typedef struct tpp_lexer {
 
 /* Check if a runtime-configurable config option "conf" in "TPP_HAVE_conf" is currently enabled.
  * When "TPP_HAVE_conf" is configured as "TPP_CONF_IS_CONST()", return that constant instead. */
-#define tpp_lexer_have(self, conf) _tpp_lexer_have_##conf(self)
+#define tpp_lexer_has(self, conf) _tpp_lexer_has_##conf(self)
 
 #define tpp_lexer_gettok(self)           ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
 #define tpp_lexer_gettoken(self)         (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))

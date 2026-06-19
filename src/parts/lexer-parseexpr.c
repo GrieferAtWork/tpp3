@@ -186,7 +186,7 @@ again:
 
 #if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS != 0
 	TPP_CASE_TPP_TOK_STRING_SQUOTE
-		if (tpp_lexer_have(self, BUILTIN_EXPR_CHARACTER_LITERALS)) {
+		if (tpp_lexer_has(self, BUILTIN_EXPR_CHARACTER_LITERALS)) {
 			if (result)
 				return tpp_lexer_parsecharacter_expr(self, result, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 			do {
@@ -206,7 +206,7 @@ again:
 	TPP_CASE_TPP_TOK_STRING_SQUOTE
 #endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS == 0 */
 	TPP_CASE_TPP_TOK_STRING_DQUOTE
-		if (!tpp_lexer_have(self, BUILTIN_EXPR_STRINGS))
+		if (!tpp_lexer_has(self, BUILTIN_EXPR_STRINGS))
 			break;
 		if (result)
 			return tpp_lexer_parsestring_expr(self, result, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
@@ -221,14 +221,14 @@ again:
 	case '#':
 		/* Preprocessor assertions */
 #if TPP_HAVE_CPP_ASSERT
-		if (tpp_lexer_have(self, CPP_ASSERT)) {
+		if (tpp_lexer_has(self, CPP_ASSERT)) {
 			/* TODO */
 		}
 #endif /* TPP_HAVE_CPP_ASSERT */
 
 		/* length-operator for string expressions */
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
-		if (tpp_lexer_have(self, BUILTIN_EXPR_STRINGS)) {
+		if (tpp_lexer_has(self, BUILTIN_EXPR_STRINGS)) {
 			/* TODO */
 		}
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
@@ -241,7 +241,7 @@ again:
 	case TPP_KWD_defined: {
 		bool is_defined;
 		bool has_paren;
-		if (!tpp_lexer_have(self, BUILTIN_EXPR_DEFINED))
+		if (!tpp_lexer_has(self, BUILTIN_EXPR_DEFINED))
 			goto handle_default;
 #define WANT_handle_default
 		tok = tpp_lexer_yield_forexpr(self);
@@ -296,7 +296,7 @@ again:
 	case TPP_KWD_if: {
 		tpp_errno error;
 		bool is_true;
-		if (!tpp_lexer_have(self, BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS))
+		if (!tpp_lexer_has(self, BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS))
 			goto handle_default;
 #define WANT_handle_default
 again_handle_if:
@@ -1008,7 +1008,7 @@ TPP_DEFINE_PX_PARSER(tpp_px_or, tpp_px_land, tpp_px_land_suffix, TPP_TEST_PX_LAN
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_px_lxor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value *result) {
 	tpp_assert(TPP_TEST_PX_LXOR_SUFFIX(tpp_lexer_gettok(self)));
-	if (!tpp_lexer_have(self, BUILTIN_EXPR_LOGICAL_XOR))
+	if (!tpp_lexer_has(self, BUILTIN_EXPR_LOGICAL_XOR))
 		return TPP_EOK;
 	do {
 		tpp_errno error;
@@ -1128,7 +1128,7 @@ tpp_px_question_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_v
 				goto err_result_tok;
 		}
 #if TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
-		if (tok == ':' && tpp_lexer_have(self, BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT)) {
+		if (tok == ':' && tpp_lexer_has(self, BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT)) {
 			tok = tpp_lexer_yield_forexpr(self);
 			if (TPP_TOK_ISERR(tok))
 				goto err_result_tok;

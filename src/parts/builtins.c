@@ -537,9 +537,15 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 		(void)self;
 		switch (kwd->tk_id) {
 #define TPP_DEFS
-#define TPP_KWD_FLAGS(id, flags) \
-		case id: return flags;
+#define TPP_KWD_FLAGS(id, flags_expr) \
+		case id: return flags_expr;
+#define tpp_current_lexer()      self
+#define tpp_current_keyword()    kwd
+#define tpp_current_keyword_id() kwd->tk_id
 #include TPP_CONFIG_DEFS_FILENAME
+#undef tpp_current_lexer
+#undef tpp_current_keyword
+#undef tpp_current_keyword_id
 #undef TPP_DEFS
 		default: break;
 		}
@@ -564,15 +570,21 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 #if TPP_CONF_IS_RT(TPP_HAVE_CPP_BUILTIN_MACROS)
-	if (!tpp_lexer_have(self, CPP_BUILTIN_MACROS))
+	if (!tpp_lexer_has(self, CPP_BUILTIN_MACROS))
 		return false;
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_BUILTIN_MACROS) */
 	(void)self;
 	switch (kwd->tk_id) {
 #define TPP_DEFS
-#define TPP_MACRO(id, if) \
-	case id: return if;
+#define TPP_MACRO(id, if_expr) \
+	case id: return if_expr;
+#define tpp_current_lexer()      self
+#define tpp_current_keyword()    kwd
+#define tpp_current_keyword_id() kwd->tk_id
 #include TPP_CONFIG_DEFS_FILENAME
+#undef tpp_current_lexer
+#undef tpp_current_keyword
+#undef tpp_current_keyword_id
 #undef TPP_DEFS
 	default: break;
 	}

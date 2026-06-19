@@ -72,7 +72,7 @@ again:
 	/* Decode trigraphs... */
 #if TPP_HAVE_TRIGRAPHS
 	if (ch == '?' && ((iter + 1) < end && iter[0] == '?') &&
-	    tpp_lexer_have(self, TRIGRAPHS)) {
+	    tpp_lexer_has(self, TRIGRAPHS)) {
 		switch (iter[1]) {
 		case '=': ch = '#'; break;
 		case '(': ch = '['; break;
@@ -145,7 +145,7 @@ not_trigraph:
 		/* Only '??/??/' is allowed (which is the same as \\; which is printed as \) */
 		if (iter[1] != '/')
 			goto handle_unknown_escape_sequence;
-		if (!tpp_lexer_have(self, TRIGRAPHS))
+		if (!tpp_lexer_has(self, TRIGRAPHS))
 			goto handle_unknown_escape_sequence;
 		iter += 2;
 		goto print_backslash_and_flush_at_iter;
@@ -162,7 +162,7 @@ not_trigraph:
 
 #if TPP_HAVE_ESCAPE_E_IN_STRINGS
 	case 'e':
-		if (!tpp_lexer_have(self, ESCAPE_E_IN_STRINGS))
+		if (!tpp_lexer_has(self, ESCAPE_E_IN_STRINGS))
 			goto handle_unknown_escape_sequence;
 		ch = 0x1b;
 		goto print_ch;
@@ -170,7 +170,7 @@ not_trigraph:
 
 #if TPP_HAVE_ESCAPE_S_IN_STRINGS
 	case 's':
-		if (!tpp_lexer_have(self, ESCAPE_S_IN_STRINGS))
+		if (!tpp_lexer_has(self, ESCAPE_S_IN_STRINGS))
 			goto handle_unknown_escape_sequence;
 		ch = 0x20;
 		goto print_ch;
@@ -245,7 +245,7 @@ print_ch:
 	case '\r':
 	case '\n':
 		/* Escaped line-feed */
-		if (!tpp_lexer_have(self, BSE))
+		if (!tpp_lexer_has(self, BSE))
 			goto handle_unknown_escape_sequence;
 		if (ch == '\r' && (iter < end) && *iter == '\n')
 			++iter;
@@ -294,7 +294,7 @@ print_ch:
 #if TPP_HAVE_BSE && TPP_HAVE_UNICODE
 		tpp_char const *bse_iter;
 		if (ch >= 0x80 && tpp_file_isutf8(tpp_lexer_getfile(self))) {
-			if (tpp_lexer_have(self, BSE)) {
+			if (tpp_lexer_has(self, BSE)) {
 				bse_iter = iter;
 				tpp_unichar uc;
 #if TPP_HAVE_BSE_WHITESPACE
@@ -312,7 +312,7 @@ again_read_unicode_whitespace_after_backslash:
 				} else
 #if TPP_HAVE_BSE_WHITESPACE
 				if (tpp_unicode_isspace(uc)) {
-					if (tpp_lexer_have(self, BSE_WHITESPACE))
+					if (tpp_lexer_has(self, BSE_WHITESPACE))
 						goto again_read_unicode_whitespace_after_backslash;
 				} else
 #endif /* TPP_HAVE_BSE_WHITESPACE */
@@ -323,8 +323,8 @@ again_read_unicode_whitespace_after_backslash:
 #endif /* TPP_HAVE_BSE && TPP_HAVE_UNICODE */
 #if TPP_HAVE_BSE_WHITESPACE
 		if (tpp_ascii_isspace_nolf(ch)) {
-			if (tpp_lexer_have(self, BSE) &&
-			    tpp_lexer_have(self, BSE_WHITESPACE)) {
+			if (tpp_lexer_has(self, BSE) &&
+			    tpp_lexer_has(self, BSE_WHITESPACE)) {
 				tpp_char wch;
 #if !TPP_HAVE_UNICODE
 				tpp_char const *bse_iter;

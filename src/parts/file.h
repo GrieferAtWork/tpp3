@@ -105,6 +105,9 @@ typedef struct tpp_ifdef_stack_entry {
 	                                             *       "tidse_created" continues to point at initial #if/... */
 } tpp_ifdef_stack_entry;
 
+#define tpp_ifdef_stack_entry_getcreated(self) (self)->TPP_INTERNAL(tidse_created)
+#define tpp_ifdef_stack_entry_getupdated(self) (self)->TPP_INTERNAL(tidse_updated)
+
 typedef struct tpp_ifdef_stack {
 	tpp_size               TPP_INTERNAL(tids_alc); /* Allocated size of `tids_vec' */
 	tpp_size               TPP_INTERNAL(tids_cnt); /* Used size of `tids_vec' */

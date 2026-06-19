@@ -5992,12 +5992,12 @@ TPP_DECL_BEGIN
 static struct tpp_extension_names_struct {
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) char ten_##id[sizeof(name) / sizeof(char)];
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 } const tpp_extension_names = {
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) /* .ten_##id = */ name,
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 };
 
@@ -6005,7 +6005,7 @@ static tpp_size const tpp_extension_name_offsets_byid[TPP_EXT_COUNT] = {
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) \
 	/* [id] = */ tpp_offsetof(struct tpp_extension_names_struct, ten_##id),
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 };
 #define tpp_extension_getname_fast(id) \
@@ -6023,7 +6023,7 @@ static struct tpp_warning_group_names_struct {
 #define TPP_WGROUP(wgroup_id, names, default)                                                  \
 	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id) \
 	char twgn_tail_##wgroup_id;
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef _TPP_EXPAND_WGROUP_NAMES
 #undef TPP_DEFS
 } const tpp_warning_group_names = {
@@ -6033,7 +6033,7 @@ static struct tpp_warning_group_names_struct {
 #define TPP_WGROUP(wgroup_id, names, default)                                                  \
 	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id) \
 	/* .twgn_tail_##wgroup_id = */ 0,
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef _TPP_EXPAND_WGROUP_NAMES
 #undef TPP_DEFS
 };
@@ -6042,7 +6042,7 @@ static tpp_size const tpp_warning_group_name_offsets_byid[TPP_EXT_COUNT] = {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 	/* [wgroup_id] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_0),
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 };
 #define tpp_warning_group_getname_fast(id) \
@@ -6069,7 +6069,7 @@ static struct tpp_warning_groups_struct {
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format)                             \
 	TPP_TUPLE_FOREACH(wgroup_ids, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WARNING_GROUP_IDS, warning_id) \
 	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_EXPAND_WARNING_GROUP_TAIL, warning_id)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef _TPP_EXPAND_WARNING_GROUP_IDS
 #undef _TPP_EXPAND_WARNING_GROUP_TAIL
 #undef TPP_DEFS
@@ -6082,7 +6082,7 @@ static struct tpp_warning_groups_struct {
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format)                             \
 	TPP_TUPLE_FOREACH(wgroup_ids, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WARNING_GROUP_IDS, warning_id) \
 	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_EXPAND_WARNING_GROUP_TAIL, warning_id)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef _TPP_EXPAND_WARNING_GROUP_IDS
 #undef _TPP_EXPAND_WARNING_GROUP_TAIL
 #undef TPP_DEFS
@@ -6097,7 +6097,7 @@ static tpp_size const tpp_warning_group_offsets_byid[TPP_W_COUNT] = {
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format)   \
 	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_WARNING_GROUPS_NONEMPTY, warning_id) \
 	TPP_TUPLE_IF_EMPTY(wgroup_ids, _TPP_WARNING_GROUPS_EMPTY, warning_id)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef _TPP_WARNING_GROUPS_NONEMPTY
 #undef _TPP_WARNING_GROUPS_EMPTY
 #undef TPP_DEFS
@@ -6123,13 +6123,13 @@ TPP_IMPL tpp_warnings_state const tpp_warnings_state_default = {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 		/* .twsg_##wgroup_id  = */ (unsigned int)default,
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #if TPP_HAVE_WARNING_NUMBERS
 #define TPP_DECLARE_NUMBERED_WARNING(numbers_default) \
 		/* .twsn_##warning_id = */ (unsigned int)numbers_default,
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 		TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, numbers_default)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DECLARE_NUMBERED_WARNING
 #endif /* TPP_HAVE_WARNING_NUMBERS */
 #undef TPP_DEFS
@@ -6175,7 +6175,7 @@ enum {
 	_TPP_WGN_##wgroup_id##_##index,
 #define TPP_WGROUP(wgroup_id, names, default) \
 	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef _TPP_EXPAND_WGROUP_NAMES
 #undef TPP_DEFS
 	TPP_WGN_COUNT
@@ -6187,7 +6187,7 @@ static tpp_size const tpp_warning_group_name_offsets_bynameid[TPP_WGN_COUNT] = {
 	/* [_TPP_WGN_##wgroup_id##_##index] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_##index),
 #define TPP_WGROUP(wgroup_id, names, default) \
 	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef _TPP_EXPAND_WGROUP_NAMES
 #undef TPP_DEFS
 };
@@ -6275,14 +6275,14 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 #define TPP_DEFS
 #define TPP_KWD(id, string) \
 	TPP_DEFINE_BUILTIN_KEYWORD(id, string)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 
 #define tpp_builtin_keywords_list tpp_builtin_keywords_list
 static tpp_keyword *tpp_builtin_keywords_list[] = {
 #define TPP_DEFS
 #define TPP_KWD(id, string) (tpp_keyword *)&tpp_builtin_keyword_##id,
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 	NULL
 };
@@ -6474,9 +6474,15 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 		(void)self;
 		switch (kwd->tk_id) {
 #define TPP_DEFS
-#define TPP_KWD_FLAGS(id, flags) \
-		case id: return flags;
-#include TPP_CONFIG_DEFS_FILENAME
+#define TPP_KWD_FLAGS(id, flags_expr) \
+		case id: return flags_expr;
+#define tpp_current_lexer()      self
+#define tpp_current_keyword()    kwd
+#define tpp_current_keyword_id() kwd->tk_id
+#include "tpp-amalgamation.h"
+#undef tpp_current_lexer
+#undef tpp_current_keyword
+#undef tpp_current_keyword_id
 #undef TPP_DEFS
 		default: break;
 		}
@@ -6501,15 +6507,21 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 #if TPP_CONF_IS_RT(TPP_HAVE_CPP_BUILTIN_MACROS)
-	if (!tpp_lexer_have(self, CPP_BUILTIN_MACROS))
+	if (!tpp_lexer_has(self, CPP_BUILTIN_MACROS))
 		return false;
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_BUILTIN_MACROS) */
 	(void)self;
 	switch (kwd->tk_id) {
 #define TPP_DEFS
-#define TPP_MACRO(id, if) \
-	case id: return if;
-#include TPP_CONFIG_DEFS_FILENAME
+#define TPP_MACRO(id, if_expr) \
+	case id: return if_expr;
+#define tpp_current_lexer()      self
+#define tpp_current_keyword()    kwd
+#define tpp_current_keyword_id() kwd->tk_id
+#include "tpp-amalgamation.h"
+#undef tpp_current_lexer
+#undef tpp_current_keyword
+#undef tpp_current_keyword_id
 #undef TPP_DEFS
 	default: break;
 	}
@@ -6596,14 +6608,14 @@ static struct tpp_warning_format_strings_struct {
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	char twf_##warning_id[sizeof(format) / sizeof(char)];
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 } const tpp_warning_format_strings = {
 #define TPP_DEFS
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	/* [twf_##warning_id] = */ format,
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 };
 
@@ -6613,7 +6625,7 @@ static tpp_size const tpp_warning_format_string_offsets[TPP_W_COUNT] = {
 	/* [warning_id] = */ tpp_offsetof(struct tpp_warning_format_strings_struct, twf_##warning_id),
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) \
 	/* [warning_id] = */ sizeof(struct tpp_warning_format_strings_struct) - 1,
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 };
 
@@ -6643,7 +6655,7 @@ tpp_warning_ofnumber(unsigned int number) {
 	case value: return _;
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_FOREACH(numbers, TPP_TUPLE_FOREACH_DUMMY_SEP, TPP_WARNING_NUMBER_CASE, warning_id)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 	default: break;
@@ -6671,7 +6683,7 @@ tpp_warning_getnumbers(tpp_warning_id warning_id) {
 #define TPP_WARNING_NUMBERS_CASE(args) TPP_WARNING_NUMBERS_CASE_ args
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_WARNING_NUMBERS_CASE, (warning_id, numbers))
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_WARNING_NUMBERS_CASE
 #undef TPP_DEFS
 	default: break;
@@ -6691,7 +6703,7 @@ tpp_warning_context_id_ofwarning(tpp_warning_id warning_id) {
 	case warning_id: return TPP_WC_##warning_id;
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, _TPP_CASE_NUMBERED_WARNING, warning_id)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef _TPP_CASE_NUMBERED_WARNING
 #undef TPP_DEFS
 	default: break;
@@ -6710,7 +6722,7 @@ tpp_warning_context_id_aswarning(tpp_warning_context_id ctx_id) {
 	case TPP_WC_##warning_id: return warning_id;
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, _TPP_CASE_NUMBERED_WARNING, warning_id)
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef _TPP_CASE_NUMBERED_WARNING
 #undef TPP_DEFS
 	default: break;
@@ -6795,7 +6807,7 @@ tpp_macro_getbuiltin(tpp_token_id id) {
 		static TPP_BUILTIN_MACRO_DEFINE(builtin_##keyword_id, value); \
 		return (tpp_builtin_macro const *)&builtin_##keyword_id;      \
 	}	break;
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 	default: break;
 	}
@@ -6867,7 +6879,7 @@ TPP_CONST_IMPL tpp_extensions_state const tpp_extensions_state_default = {
 	/* .tes_flags = */ {
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) /* .tef_##id = */ default,
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 	}
 };
@@ -8895,12 +8907,15 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	                                tpp_file_and_line))
 #define tpp_print_file_and_line_at(at_file, at_pos) tpp_print_file_and_line(at_file, at_pos, tpp_lcinfo_of(-1, -1))
 #define tpp_print_file_and_line_lc(at_file, at_lc)  tpp_print_file_and_line(at_file, NULL, at_lc)
-#define tpp_warnf0(format)                 tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format))
-#define tpp_warnf1(format, a)              tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a))
-#define tpp_warnf2(format, a, b)           tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b))
-#define tpp_warnf3(format, a, b, c)        tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b, c))
-#define tpp_warnf4(format, a, b, c, d)     tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b, c, d))
-#define tpp_va_arg(T) va_arg(args, T)
+#define tpp_warnf0(format)             tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format))
+#define tpp_warnf1(format, a)          tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a))
+#define tpp_warnf2(format, a, b)       tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b))
+#define tpp_warnf3(format, a, b, c)    tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b, c))
+#define tpp_warnf4(format, a, b, c, d) tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b, c, d))
+#define tpp_current_va_arg(T)          va_arg(args, T)
+#define tpp_current_va_args()          args
+#define tpp_current_lexer()            self
+#define tpp_current_warning_id()       id
 /* ... */
 /************************************************************************/
 
@@ -8909,7 +8924,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		case warning_id: {                                                     \
 			expr;                                                              \
 		}	break;
-#include TPP_CONFIG_DEFS_FILENAME
+#include "tpp-amalgamation.h"
 #undef TPP_DEFS
 
 /************************************************************************/
@@ -8922,6 +8937,10 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 #undef tpp_warnf2
 #undef tpp_warnf3
 #undef tpp_warnf4
+#undef tpp_current_va_arg
+#undef tpp_current_va_args
+#undef tpp_current_lexer
+#undef tpp_current_warning_id
 /************************************************************************/
 		default:
 			printer_status = (*printer)(printer_arg, (tpp_char const *)"UNKNOWN WARNING\n", 16);
@@ -10701,7 +10720,7 @@ tpp_lexer_skip_bse(tpp_lexer *self, tpp_char const **p_pos) {
 #if TPP_HAVE_TRIGRAPHS && TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 	bool is_trigraph;
 #endif /* TPP_HAVE_TRIGRAPHS && TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
-	if (!tpp_lexer_have(self, BSE))
+	if (!tpp_lexer_has(self, BSE))
 		return TPP_EOK;
 
 again_scan:
@@ -10725,7 +10744,7 @@ again_scan:
 #endif /* !TPP_HAVE_TRIGRAPHS */
 
 #if TPP_HAVE_BSE_WHITESPACE
-	if (tpp_lexer_have(self, BSE_WHITESPACE)) {
+	if (tpp_lexer_has(self, BSE_WHITESPACE)) {
 		error = tpp_lexer_skipspace_nolf(self, &scan);
 		if (TPP_ISERR(error))
 			goto return_error;
@@ -10783,7 +10802,7 @@ got_bse_after_linefeed:
 			if (*scan == '\\')
 				goto again_scan;
 #if TPP_HAVE_TRIGRAPHS
-			if (*scan == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
+			if (*scan == '?' && tpp_lexer_has(self, TRIGRAPHS)) {
 				if ((scan + 1) >= file->tf_end) {
 					tpp_size rel_scan = tpp_file_ptr2rel(file, scan);
 					error = tpp_file_expandchunk(file);
@@ -10861,7 +10880,7 @@ again:
 	ch = *pos;
 	if (tpp_ascii_issymcont(ch)) {
 #if TPP_HAVE_TPP_TOK_DOLLAR
-		if (ch == '$' && tpp_lexer_have(self, TPP_TOK_DOLLAR))
+		if (ch == '$' && tpp_lexer_has(self, TPP_TOK_DOLLAR))
 			goto done;
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
 		++pos;
@@ -10902,7 +10921,7 @@ tpp_lexer_skip_bse_after_keyword(tpp_lexer *self, tpp_char const **p_pos) {
 			/* Backslash */
 		} else
 #if TPP_HAVE_TRIGRAPHS
-		if (*pos == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
+		if (*pos == '?' && tpp_lexer_has(self, TRIGRAPHS)) {
 			if ((pos + 1) >= file->tf_end) {
 				tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 				error = tpp_file_expandchunk(file);
@@ -11073,7 +11092,7 @@ continue_at_pos:
 	 * "??>" -> "}"
 	 * "??-" -> "~"
 	 * "???" -> "?" */
-	if (ch == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
+	if (ch == '?' && tpp_lexer_has(self, TRIGRAPHS)) {
 		if (pos >= end) {
 			tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 			tpp_errno error  = tpp_file_expandchunk(file);
@@ -11110,7 +11129,7 @@ not_a_trigraph:
 					ch = '\\';
 #if TPP_HAVE_BSE
 					/* Deal with BSE sequences... */
-					if (tpp_lexer_have(self, BSE)) {
+					if (tpp_lexer_has(self, BSE)) {
 						tpp_size rel_after;
 						tpp_size rel_before;
 						tpp_errno error;
@@ -11341,7 +11360,7 @@ handle_backslash:
 					if (ch == '#')
 						goto again;
 #if TPP_HAVE_TRIGRAPHS
-					if (ch == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
+					if (ch == '?' && tpp_lexer_has(self, TRIGRAPHS)) {
 						if (pos >= file->tf_end) {
 							tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 							error = tpp_file_expandchunk(file);
@@ -11411,7 +11430,7 @@ handle_backslash:
 		goto again;
 	} else
 #if TPP_HAVE_TRIGRAPHS
-	if (ch == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
+	if (ch == '?' && tpp_lexer_has(self, TRIGRAPHS)) {
 		if (pos >= file->tf_end) {
 			tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 			error = tpp_file_expandchunk(file);
@@ -11490,7 +11509,7 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
-			if (!tpp_lexer_have(self, TPP_TOK_STRING_ALLOW_MULTILINE)) {
+			if (!tpp_lexer_has(self, TPP_TOK_STRING_ALLOW_MULTILINE)) {
 				*p_pos = tpp_file_rel2ptr(file, old_pos);
 				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
@@ -11705,7 +11724,7 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
-			if (!tpp_lexer_have(self, TPP_TOK_STRING_ALLOW_MULTILINE)) {
+			if (!tpp_lexer_has(self, TPP_TOK_STRING_ALLOW_MULTILINE)) {
 				*p_pos = tpp_file_rel2ptr(file, old_pos);
 				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
@@ -11968,29 +11987,29 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE ||        \
      TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE ||        \
      TPP_HAVE_DIGRAPHS)
-		if (!tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_LANGLE_RANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_RANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_LANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS) &&
-		    !tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_RANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_LANGLE) &&
-		    !tpp_lexer_have(self, DIGRAPHS))
+		if (!tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_LANGLE) &&
+		    !tpp_lexer_has(self, DIGRAPHS))
 			break;
 		read_ch2();
 
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '%') {
-			if (tpp_lexer_have(self, DIGRAPHS)) {
+			if (tpp_lexer_has(self, DIGRAPHS)) {
 				result = (tpp_token_id)'{'; /* "<%" -> "{" */
 				goto set_result;
 			}
 		} else if (ch2 == ':') {
-			if (tpp_lexer_have(self, DIGRAPHS)) {
+			if (tpp_lexer_has(self, DIGRAPHS)) {
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 				read_ch2();
 				if (ch2 == ':')
@@ -12005,9 +12024,9 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)
 		if (ch2 == '<') {
 #if (TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)
-			if (tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_EQUAL) ||
-			    tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE) ||
-			    tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_EQUAL) ||
+			    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
@@ -12016,7 +12035,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
 				if (ch2 == '<') {
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
-					if (tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
+					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
@@ -12032,7 +12051,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
 
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
-					if (tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_LANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE)) {
 						result = TPP_TOK_LANGLE_LANGLE_LANGLE; /* "<<<" */
 						goto set_result;
 					}
@@ -12041,7 +12060,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
 				if (ch2 == '=') {
-					if (tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE_EQUAL)) {
+					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_EQUAL)) {
 						result = TPP_TOK_LANGLE_LANGLE_EQUAL; /* "<<=" */
 						goto set_result;
 					}
@@ -12057,7 +12076,7 @@ switch_on_ch:
 #endif /* ... */
 
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
-			if (tpp_lexer_have(self, TPP_TOK_LANGLE_LANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE)) {
 				result = TPP_TOK_LANGLE_LANGLE; /* "<<" */
 				goto set_result;
 			}
@@ -12069,15 +12088,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE)
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
-			if (tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_LANGLE) ||
-			    tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_RANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_LANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
 				read_ch2();
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
 				if (ch2 == '<') {
-					if (tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_LANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_LANGLE)) {
 						result = TPP_TOK_LANGLE_EQUAL_LANGLE; /* "<=<" */
 						goto set_result;
 					}
@@ -12085,7 +12104,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
 				if (ch2 == '>') {
-					if (tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL_RANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_RANGLE)) {
 						result = TPP_TOK_LANGLE_EQUAL_RANGLE; /* "<=>" */
 						goto set_result;
 					}
@@ -12100,7 +12119,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
-			if (tpp_lexer_have(self, TPP_TOK_LANGLE_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL)) {
 				result = TPP_TOK_LANGLE_EQUAL; /* "<=" */
 				goto set_result;
 			}
@@ -12112,15 +12131,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE)
 		if (ch2 == '-') {
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
-			if (tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_LANGLE) ||
-			    tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_RANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_LANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
 				read_ch2();
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
 				if (ch2 == '<') {
-					if (tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_LANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_LANGLE)) {
 						result = TPP_TOK_LANGLE_MINUS_LANGLE; /* "<-<" */
 						goto set_result;
 					}
@@ -12128,7 +12147,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
 				if (ch2 == '>') {
-					if (tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS_RANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_RANGLE)) {
 						result = TPP_TOK_LANGLE_MINUS_RANGLE; /* "<->" */
 						goto set_result;
 					}
@@ -12143,7 +12162,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS
-			if (tpp_lexer_have(self, TPP_TOK_LANGLE_MINUS)) {
+			if (tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS)) {
 				result = TPP_TOK_LANGLE_MINUS; /* "<-" */
 				goto set_result;
 			}
@@ -12152,7 +12171,7 @@ switch_on_ch:
 #endif /* ... */
 #if TPP_HAVE_TPP_TOK_LANGLE_RANGLE
 		if (ch2 == '>') {
-			if (tpp_lexer_have(self, TPP_TOK_LANGLE_RANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_LANGLE_RANGLE)) {
 				result = TPP_TOK_LANGLE_RANGLE; /* "<>" */
 				goto set_result;
 			}
@@ -12179,17 +12198,17 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_RANGLE_MINUS ||               \
      TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE ||        \
      TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
-		if (!tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_RANGLE_LANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_LANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_RANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS) &&
-		    !tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_LANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_RANGLE))
+		if (!tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_RANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS) &&
+		    !tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_RANGLE))
 			break;
 		read_ch2();
 
@@ -12197,9 +12216,9 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)
 		if (ch2 == '>') {
 #if (TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)
-			if (tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_EQUAL) ||
-			    tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE) ||
-			    tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_EQUAL) ||
+			    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
@@ -12208,7 +12227,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 				if (ch2 == '>') {
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
-					if (tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
+					if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
@@ -12224,7 +12243,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
-					if (tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_RANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE)) {
 						result = TPP_TOK_RANGLE_RANGLE_RANGLE; /* ">>>" */
 						goto set_result;
 					}
@@ -12233,7 +12252,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL
 				if (ch2 == '=') {
-					if (tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE_EQUAL)) {
+					if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_EQUAL)) {
 						result = TPP_TOK_RANGLE_RANGLE_EQUAL; /* ">>=" */
 						goto set_result;
 					}
@@ -12248,7 +12267,7 @@ switch_on_ch:
 			}
 #endif /* ... */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
-			if (tpp_lexer_have(self, TPP_TOK_RANGLE_RANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE)) {
 				result = TPP_TOK_RANGLE_RANGLE; /* ">>" */
 				goto set_result;
 			}
@@ -12260,15 +12279,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE)
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
-			if (tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_LANGLE) ||
-			    tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_RANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_LANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
 				read_ch2();
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
 				if (ch2 == '<') {
-					if (tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_LANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_LANGLE)) {
 						result = TPP_TOK_RANGLE_EQUAL_LANGLE; /* ">=<" */
 						goto set_result;
 					}
@@ -12276,7 +12295,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
 				if (ch2 == '>') {
-					if (tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL_RANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_RANGLE)) {
 						result = TPP_TOK_RANGLE_EQUAL_RANGLE; /* ">=>" */
 						goto set_result;
 					}
@@ -12291,7 +12310,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
-			if (tpp_lexer_have(self, TPP_TOK_RANGLE_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL)) {
 				result = TPP_TOK_RANGLE_EQUAL; /* ">=" */
 				goto set_result;
 			}
@@ -12303,15 +12322,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
 		if (ch2 == '-') {
 #if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
-			if (tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_LANGLE) ||
-			    tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_RANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_LANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_RANGLE_MINUS
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
 				read_ch2();
 #if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
 				if (ch2 == '<') {
-					if (tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_LANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_LANGLE)) {
 						result = TPP_TOK_RANGLE_MINUS_LANGLE; /* ">-<" */
 						goto set_result;
 					}
@@ -12319,7 +12338,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
 #if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
 				if (ch2 == '>') {
-					if (tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS_RANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_RANGLE)) {
 						result = TPP_TOK_RANGLE_MINUS_RANGLE; /* ">->" */
 						goto set_result;
 					}
@@ -12334,7 +12353,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_RANGLE_MINUS
-			if (tpp_lexer_have(self, TPP_TOK_RANGLE_MINUS)) {
+			if (tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS)) {
 				result = TPP_TOK_RANGLE_MINUS; /* ">-" */
 				goto set_result;
 			}
@@ -12343,7 +12362,7 @@ switch_on_ch:
 #endif /* ... */
 #if TPP_HAVE_TPP_TOK_RANGLE_LANGLE
 		if (ch2 == '<') {
-			if (tpp_lexer_have(self, TPP_TOK_RANGLE_LANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_RANGLE_LANGLE)) {
 				result = TPP_TOK_RANGLE_LANGLE; /* "><" */
 				goto set_result;
 			}
@@ -12384,30 +12403,30 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM ||        \
      TPP_HAVE_TPP_TOK_EQUAL_QMARK)
 
-		if (!tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_PLUS) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_MINUS) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_STAR) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_STAR_STAR) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_SLASH) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_SLASH_SLASH) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_PERCENT) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_AMP) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_PIPE) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_HAT) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_AT) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_TILDE) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_COLON) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_EXCLAIM) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM) &&
-		    !tpp_lexer_have(self, TPP_TOK_EQUAL_QMARK))
+		if (!tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_PLUS) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_MINUS) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_STAR) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_STAR_STAR) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_SLASH) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_SLASH_SLASH) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_AMP) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_PIPE) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_HAT) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_AT) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_TILDE) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_COLON) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_EXCLAIM) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM) &&
+		    !tpp_lexer_has(self, TPP_TOK_EQUAL_QMARK))
 			break;
 		read_ch2();
 #if (TPP_HAVE_TPP_TOK_EQUAL_EQUAL ||       \
@@ -12415,15 +12434,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM)
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EQUAL) ||
-			    tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EQUAL) ||
+			    tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL */
 				read_ch2();
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL
 				if (ch2 == '=') {
-					if (tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EQUAL)) {
+					if (tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EQUAL)) {
 						result = TPP_TOK_EQUAL_EQUAL_EQUAL; /* "===" */
 						goto set_result;
 					}
@@ -12431,7 +12450,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL */
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM
 				if (ch2 == '=') {
-					if (tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM)) {
+					if (tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM)) {
 						result = TPP_TOK_EQUAL_EQUAL_EXCLAIM; /* "==!" */
 						goto set_result;
 					}
@@ -12445,7 +12464,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_EQUAL_EQUAL
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL)) {
 				result = TPP_TOK_EQUAL_EQUAL; /* "==" */
 				goto set_result;
 			}
@@ -12455,7 +12474,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_EQUAL_STAR || TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
 		if (ch == '*') {
 #if TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_STAR_STAR)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_STAR_STAR)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_STAR
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR */
@@ -12470,7 +12489,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR */
 #if TPP_HAVE_TPP_TOK_EQUAL_STAR
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_STAR)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_STAR)) {
 				result = TPP_TOK_EQUAL_STAR; /* "=*" */
 				goto set_result;
 			}
@@ -12480,7 +12499,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_EQUAL_SLASH || TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
 		if (ch == '/') {
 #if TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_SLASH_SLASH)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_SLASH_SLASH)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_SLASH
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH */
@@ -12495,7 +12514,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH */
 #if TPP_HAVE_TPP_TOK_EQUAL_SLASH
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_SLASH)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_SLASH)) {
 				result = TPP_TOK_EQUAL_SLASH; /* "=/" */
 				goto set_result;
 			}
@@ -12507,15 +12526,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)
 		if (ch2 == '<') {
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) ||
-			    tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE */
 				read_ch2();
 				if (ch2 == '<') {
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
-					if (tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
@@ -12531,7 +12550,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
 
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
-					if (tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE_LANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE)) {
 						result = TPP_TOK_EQUAL_LANGLE_LANGLE; /* "=<<" */
 						goto set_result;
 					}
@@ -12544,7 +12563,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
 
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_LANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE)) {
 				result = TPP_TOK_EQUAL_LANGLE; /* "=<" */
 				goto set_result;
 			}
@@ -12556,15 +12575,15 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)
 		if (ch2 == '>') {
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) ||
-			    tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE */
 				read_ch2();
 				if (ch2 == '>') {
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
-					if (tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
@@ -12580,7 +12599,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
-					if (tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE_RANGLE)) {
+					if (tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE)) {
 						result = TPP_TOK_EQUAL_RANGLE_RANGLE; /* "=>>" */
 						goto set_result;
 					}
@@ -12593,7 +12612,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
 
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_RANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE)) {
 				result = TPP_TOK_EQUAL_RANGLE; /* "=>" */
 				goto set_result;
 			}
@@ -12602,7 +12621,7 @@ switch_on_ch:
 #endif /* ... */
 #if TPP_HAVE_TPP_TOK_EQUAL_PLUS
 		if (ch2 == '+') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_PLUS)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_PLUS)) {
 				result = TPP_TOK_EQUAL_PLUS; /* "=+" */
 				goto set_result;
 			}
@@ -12610,7 +12629,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_PLUS */
 #if TPP_HAVE_TPP_TOK_EQUAL_MINUS
 		if (ch2 == '-') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_MINUS)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_MINUS)) {
 				result = TPP_TOK_EQUAL_MINUS; /* "=-" */
 				goto set_result;
 			}
@@ -12618,7 +12637,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_MINUS */
 #if TPP_HAVE_TPP_TOK_EQUAL_PERCENT
 		if (ch2 == '%') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_PERCENT)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT)) {
 				result = TPP_TOK_EQUAL_PERCENT; /* "=%" */
 				goto set_result;
 			}
@@ -12626,7 +12645,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT */
 #if TPP_HAVE_TPP_TOK_EQUAL_AMP
 		if (ch2 == '&') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_AMP)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_AMP)) {
 				result = TPP_TOK_EQUAL_AMP; /* "=&" */
 				goto set_result;
 			}
@@ -12634,7 +12653,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_AMP */
 #if TPP_HAVE_TPP_TOK_EQUAL_PIPE
 		if (ch2 == '|') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_PIPE)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_PIPE)) {
 				result = TPP_TOK_EQUAL_PIPE; /* "=|" */
 				goto set_result;
 			}
@@ -12642,7 +12661,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_PIPE */
 #if TPP_HAVE_TPP_TOK_EQUAL_HAT
 		if (ch2 == '^') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_HAT)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_HAT)) {
 				result = TPP_TOK_EQUAL_HAT; /* "=^" */
 				goto set_result;
 			}
@@ -12650,7 +12669,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_HAT */
 #if TPP_HAVE_TPP_TOK_EQUAL_AT
 		if (ch2 == '@') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_AT)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_AT)) {
 				result = TPP_TOK_EQUAL_AT; /* "=@" */
 				goto set_result;
 			}
@@ -12658,7 +12677,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_AT */
 #if TPP_HAVE_TPP_TOK_EQUAL_TILDE
 		if (ch2 == '~') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_TILDE)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_TILDE)) {
 				result = TPP_TOK_EQUAL_TILDE; /* "=~" */
 				goto set_result;
 			}
@@ -12666,7 +12685,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_TILDE */
 #if TPP_HAVE_TPP_TOK_EQUAL_COLON
 		if (ch2 == ':') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_COLON)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_COLON)) {
 				result = TPP_TOK_EQUAL_COLON; /* "=:" */
 				goto set_result;
 			}
@@ -12674,7 +12693,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_COLON */
 #if TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM
 		if (ch2 == '!') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_EXCLAIM)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_EXCLAIM)) {
 				result = TPP_TOK_EQUAL_EXCLAIM; /* "=!" */
 				goto set_result;
 			}
@@ -12682,7 +12701,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM */
 #if TPP_HAVE_TPP_TOK_EQUAL_QMARK
 		if (ch2 == '?') {
-			if (tpp_lexer_have(self, TPP_TOK_EQUAL_QMARK)) {
+			if (tpp_lexer_has(self, TPP_TOK_EQUAL_QMARK)) {
 				result = TPP_TOK_EQUAL_QMARK; /* "=?" */
 				goto set_result;
 			}
@@ -12701,15 +12720,15 @@ switch_on_ch:
 #if (TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL ||       \
      TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL || \
      TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM)
-		if (!tpp_lexer_have(self, TPP_TOK_EXCLAIM_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_EXCLAIM_EQUAL_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_EXCLAIM_EXCLAIM))
+		if (!tpp_lexer_has(self, TPP_TOK_EXCLAIM_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_EXCLAIM_EQUAL_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_EXCLAIM_EXCLAIM))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
-			if (tpp_lexer_have(self, TPP_TOK_EXCLAIM_EQUAL_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_EXCLAIM_EQUAL_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
@@ -12724,7 +12743,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
-			if (tpp_lexer_have(self, TPP_TOK_EXCLAIM_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_EXCLAIM_EQUAL)) {
 				result = TPP_TOK_EXCLAIM_EQUAL; /* "!=" */
 				goto set_result;
 			}
@@ -12733,7 +12752,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
 		if (ch2 == '!') {
-			if (tpp_lexer_have(self, TPP_TOK_EXCLAIM_EXCLAIM)) {
+			if (tpp_lexer_has(self, TPP_TOK_EXCLAIM_EXCLAIM)) {
 				result = TPP_TOK_EXCLAIM_EXCLAIM; /* "!!" */
 				goto set_result;
 			}
@@ -12752,15 +12771,15 @@ switch_on_ch:
 #if (TPP_HAVE_TPP_TOK_DOT_DOT_DOT || \
      TPP_HAVE_TPP_TOK_DOT_DOT ||     \
      TPP_HAVE_TPP_TOK_DOT_STAR)
-		if (!tpp_lexer_have(self, TPP_TOK_DOT_DOT_DOT) &&
-		    !tpp_lexer_have(self, TPP_TOK_DOT_DOT) &&
-		    !tpp_lexer_have(self, TPP_TOK_DOT_STAR))
+		if (!tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT) &&
+		    !tpp_lexer_has(self, TPP_TOK_DOT_DOT) &&
+		    !tpp_lexer_has(self, TPP_TOK_DOT_STAR))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_DOT_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT
 		if (ch2 == '.') {
 #if TPP_HAVE_TPP_TOK_DOT_DOT_DOT
-			if (tpp_lexer_have(self, TPP_TOK_DOT_DOT_DOT)) {
+			if (tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)) {
 #if TPP_HAVE_TPP_TOK_DOT_DOT
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
@@ -12775,7 +12794,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
 #if TPP_HAVE_TPP_TOK_DOT_DOT
-			if (tpp_lexer_have(self, TPP_TOK_DOT_DOT)) {
+			if (tpp_lexer_has(self, TPP_TOK_DOT_DOT)) {
 				result = TPP_TOK_DOT_DOT; /* ".." */
 				goto set_result;
 			}
@@ -12784,7 +12803,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT */
 #if TPP_HAVE_TPP_TOK_DOT_STAR
 		if (ch2 == '*') {
-			if (tpp_lexer_have(self, TPP_TOK_DOT_STAR)) {
+			if (tpp_lexer_has(self, TPP_TOK_DOT_STAR)) {
 				result = TPP_TOK_DOT_STAR; /* ".*" */
 				goto set_result;
 			}
@@ -12801,13 +12820,13 @@ switch_on_ch:
 /************************************************************************/
 	case '+': {
 #if TPP_HAVE_TPP_TOK_PLUS_EQUAL || TPP_HAVE_TPP_TOK_PLUS_PLUS
-		if (!tpp_lexer_have(self, TPP_TOK_PLUS_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_PLUS_PLUS))
+		if (!tpp_lexer_has(self, TPP_TOK_PLUS_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_PLUS_PLUS))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_PLUS_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_PLUS_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_PLUS_EQUAL)) {
 				result = TPP_TOK_PLUS_EQUAL; /* "+=" */
 				goto set_result;
 			}
@@ -12815,7 +12834,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_PLUS_EQUAL */
 #if TPP_HAVE_TPP_TOK_PLUS_PLUS
 		if (ch2 == '+') {
-			if (tpp_lexer_have(self, TPP_TOK_PLUS_PLUS)) {
+			if (tpp_lexer_has(self, TPP_TOK_PLUS_PLUS)) {
 				result = TPP_TOK_PLUS_PLUS; /* "++" */
 				goto set_result;
 			}
@@ -12837,17 +12856,17 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_MINUS_RANGLE ||      \
      TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || \
      TPP_HAVE_TPP_TOK_MINUS_LANGLE)
-		if (!tpp_lexer_have(self, TPP_TOK_MINUS_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_MINUS_MINUS) &&
-		    !tpp_lexer_have(self, TPP_TOK_SQL_COMMENT) &&
-		    !tpp_lexer_have(self, TPP_TOK_MINUS_RANGLE) &&
-		    !tpp_lexer_have(self, TPP_TOK_MINUS_RANGLE_STAR) &&
-		    !tpp_lexer_have(self, TPP_TOK_MINUS_LANGLE))
+		if (!tpp_lexer_has(self, TPP_TOK_MINUS_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_MINUS_MINUS) &&
+		    !tpp_lexer_has(self, TPP_TOK_SQL_COMMENT) &&
+		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_STAR) &&
+		    !tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_MINUS_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_MINUS_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_MINUS_EQUAL)) {
 				result = TPP_TOK_MINUS_EQUAL; /* "-=" */
 				goto set_result;
 			}
@@ -12856,7 +12875,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_MINUS_MINUS || TPP_HAVE_TPP_TOK_SQL_COMMENT
 		if (ch2 == '-') {
 #if TPP_HAVE_TPP_TOK_SQL_COMMENT
-			if (tpp_lexer_have(self, TPP_TOK_SQL_COMMENT)) {
+			if (tpp_lexer_has(self, TPP_TOK_SQL_COMMENT)) {
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SQL_COMMENT));
 				if (TPP_ISERR(error))
 					goto return_error;
@@ -12865,7 +12884,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_SQL_COMMENT */
 #if TPP_HAVE_TPP_TOK_MINUS_MINUS
-			if (tpp_lexer_have(self, TPP_TOK_MINUS_MINUS)) {
+			if (tpp_lexer_has(self, TPP_TOK_MINUS_MINUS)) {
 				result = TPP_TOK_MINUS_MINUS; /* "--" */
 				goto set_result;
 			}
@@ -12875,7 +12894,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
 		if (ch2 == '>') {
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
-			if (tpp_lexer_have(self, TPP_TOK_MINUS_RANGLE_STAR)) {
+			if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_STAR)) {
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
@@ -12890,7 +12909,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE
-			if (tpp_lexer_have(self, TPP_TOK_MINUS_RANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE)) {
 				result = TPP_TOK_MINUS_RANGLE; /* "->" */
 				goto set_result;
 			}
@@ -12899,7 +12918,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
 #if TPP_HAVE_TPP_TOK_MINUS_LANGLE
 		if (ch2 == '<') {
-			if (tpp_lexer_have(self, TPP_TOK_MINUS_LANGLE)) {
+			if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE)) {
 				result = TPP_TOK_MINUS_LANGLE; /* "-<" */
 				goto set_result;
 			}
@@ -12920,16 +12939,16 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL ||   \
      TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS || \
      TPP_HAVE_TPP_TOK_STAR_DOT)
-		if (!tpp_lexer_have(self, TPP_TOK_STAR_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_STAR_STAR) &&
-		    !tpp_lexer_have(self, TPP_TOK_STAR_STAR_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_STAR_LANGLE_MINUS) &&
-		    !tpp_lexer_have(self, TPP_TOK_STAR_DOT))
+		if (!tpp_lexer_has(self, TPP_TOK_STAR_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_STAR_STAR) &&
+		    !tpp_lexer_has(self, TPP_TOK_STAR_STAR_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_STAR_LANGLE_MINUS) &&
+		    !tpp_lexer_has(self, TPP_TOK_STAR_DOT))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_STAR_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_STAR_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_STAR_EQUAL)) {
 				result = TPP_TOK_STAR_EQUAL; /* "*=" */
 				goto set_result;
 			}
@@ -12938,7 +12957,7 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_STAR_STAR || TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
 		if (ch2 == '*') {
 #if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
-			if (tpp_lexer_have(self, TPP_TOK_STAR_STAR_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_STAR_STAR_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_STAR_STAR
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR */
@@ -12953,7 +12972,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL */
 #if TPP_HAVE_TPP_TOK_STAR_STAR
-			if (tpp_lexer_have(self, TPP_TOK_STAR_STAR)) {
+			if (tpp_lexer_has(self, TPP_TOK_STAR_STAR)) {
 				result = TPP_TOK_STAR_STAR; /* "**" */
 				goto set_result;
 			}
@@ -12962,7 +12981,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_STAR_STAR || TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL */
 #if TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS
 		if (ch2 == '<') {
-			if (tpp_lexer_have(self, TPP_TOK_STAR_LANGLE_MINUS)) {
+			if (tpp_lexer_has(self, TPP_TOK_STAR_LANGLE_MINUS)) {
 				read_ch2();
 				if (ch2 == '-') {
 					result = TPP_TOK_STAR_LANGLE_MINUS; /* "*<-" */
@@ -12973,7 +12992,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS */
 #if TPP_HAVE_TPP_TOK_STAR_DOT
 		if (ch2 == '.') {
-			if (tpp_lexer_have(self, TPP_TOK_STAR_DOT)) {
+			if (tpp_lexer_has(self, TPP_TOK_STAR_DOT)) {
 				result = TPP_TOK_STAR_DOT; /* "*." */
 				goto set_result;
 			}
@@ -12998,12 +13017,12 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_ASM_COMMENT
 		tpp_size rel_end_of_1char;
 #endif /* TPP_HAVE_TPP_TOK_ASM_COMMENT */
-		if (!tpp_lexer_have(self, TPP_TOK_CXX_COMMENT) &&
-		    !tpp_lexer_have(self, TPP_TOK_C_COMMENT) &&
-		    !tpp_lexer_have(self, TPP_TOK_SLASH_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_SLASH_SLASH) &&
-		    !tpp_lexer_have(self, TPP_TOK_SLASH_SLASH_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_ASM_COMMENT))
+		if (!tpp_lexer_has(self, TPP_TOK_CXX_COMMENT) &&
+		    !tpp_lexer_has(self, TPP_TOK_C_COMMENT) &&
+		    !tpp_lexer_has(self, TPP_TOK_SLASH_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_SLASH_SLASH) &&
+		    !tpp_lexer_has(self, TPP_TOK_SLASH_SLASH_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_ASM_COMMENT))
 			break;
 #if TPP_HAVE_TPP_TOK_ASM_COMMENT
 		rel_end_of_1char = tpp_file_ptr2rel(file, pos);
@@ -13015,7 +13034,7 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL)
 		if (ch2 == '/') {
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
-			if (tpp_lexer_have(self, TPP_TOK_SLASH_SLASH_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_SLASH_SLASH_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_CXX_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH */
@@ -13030,7 +13049,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
 #if TPP_HAVE_TPP_TOK_CXX_COMMENT
-			if (tpp_lexer_have(self, TPP_TOK_CXX_COMMENT)) {
+			if (tpp_lexer_has(self, TPP_TOK_CXX_COMMENT)) {
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_CXX_COMMENT));
 				if (TPP_ISERR(error))
 					goto return_error;
@@ -13039,7 +13058,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT */
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH
-			if (tpp_lexer_have(self, TPP_TOK_SLASH_SLASH)) {
+			if (tpp_lexer_has(self, TPP_TOK_SLASH_SLASH)) {
 				result = TPP_TOK_SLASH_SLASH; /* "//" */
 				goto set_result;
 			}
@@ -13048,7 +13067,7 @@ switch_on_ch:
 #endif /* ... */
 #if TPP_HAVE_TPP_TOK_C_COMMENT
 		if (ch2 == '*') {
-			if (tpp_lexer_have(self, TPP_TOK_C_COMMENT)) {
+			if (tpp_lexer_has(self, TPP_TOK_C_COMMENT)) {
 				for (;;) {
 					read_ch2();
 					if (ch2 == 0 && pos >= file->tf_end) {
@@ -13088,7 +13107,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_C_COMMENT */
 #if TPP_HAVE_TPP_TOK_SLASH_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_SLASH_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_SLASH_EQUAL)) {
 				result = TPP_TOK_SLASH_EQUAL; /* "/=" */
 				goto set_result;
 			}
@@ -13096,7 +13115,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_SLASH_EQUAL */
 		{
 #if TPP_HAVE_TPP_TOK_ASM_COMMENT
-			if (tpp_lexer_have(self, TPP_TOK_ASM_COMMENT)) {
+			if (tpp_lexer_has(self, TPP_TOK_ASM_COMMENT)) {
 				pos = tpp_file_rel2ptr(file, rel_end_of_1char);
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_ASM_COMMENT));
 				if (TPP_ISERR(error))
@@ -13115,13 +13134,13 @@ switch_on_ch:
 /************************************************************************/
 	case '%': {
 #if TPP_HAVE_TPP_TOK_PERCENT_EQUAL || TPP_HAVE_DIGRAPHS
-		if (!tpp_lexer_have(self, TPP_TOK_PERCENT_EQUAL) &&
-		    !tpp_lexer_have(self, DIGRAPHS))
+		if (!tpp_lexer_has(self, TPP_TOK_PERCENT_EQUAL) &&
+		    !tpp_lexer_has(self, DIGRAPHS))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_PERCENT_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_PERCENT_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_PERCENT_EQUAL)) {
 				result = TPP_TOK_PERCENT_EQUAL; /* "%=" */
 				goto set_result;
 			}
@@ -13129,15 +13148,15 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_PERCENT_EQUAL */
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '>') {
-			if (tpp_lexer_have(self, DIGRAPHS)) {
+			if (tpp_lexer_has(self, DIGRAPHS)) {
 				result = (tpp_token_id)'}'; /* "%>" -> "}" */
 				goto set_result;
 			}
 		} else
 		if (ch2 == ':') {
-			if (tpp_lexer_have(self, DIGRAPHS)) {
+			if (tpp_lexer_has(self, DIGRAPHS)) {
 #if TPP_HAVE_TPP_TOK_POUND_POUND
-				if (tpp_lexer_have(self, TPP_TOK_POUND_POUND)) {
+				if (tpp_lexer_has(self, TPP_TOK_POUND_POUND)) {
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 					read_ch2();
 					if (ch2 == '%') {
@@ -13166,13 +13185,13 @@ switch_on_ch:
 /************************************************************************/
 	case '&': {
 #if TPP_HAVE_TPP_TOK_AMP_EQUAL || TPP_HAVE_TPP_TOK_AMP_AMP
-		if (!tpp_lexer_have(self, TPP_TOK_AMP_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_AMP_AMP))
+		if (!tpp_lexer_has(self, TPP_TOK_AMP_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_AMP_AMP))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_AMP_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_AMP_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_AMP_EQUAL)) {
 				result = TPP_TOK_AMP_EQUAL; /* "&=" */
 				goto set_result;
 			}
@@ -13180,7 +13199,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_AMP_EQUAL */
 #if TPP_HAVE_TPP_TOK_AMP_AMP
 		if (ch2 == '&') {
-			if (tpp_lexer_have(self, TPP_TOK_AMP_AMP)) {
+			if (tpp_lexer_has(self, TPP_TOK_AMP_AMP)) {
 				result = TPP_TOK_AMP_AMP; /* "&&" */
 				goto set_result;
 			}
@@ -13197,13 +13216,13 @@ switch_on_ch:
 /************************************************************************/
 	case '|': {
 #if TPP_HAVE_TPP_TOK_PIPE_EQUAL || TPP_HAVE_TPP_TOK_PIPE_PIPE
-		if (!tpp_lexer_have(self, TPP_TOK_PIPE_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_PIPE_PIPE))
+		if (!tpp_lexer_has(self, TPP_TOK_PIPE_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_PIPE_PIPE))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_PIPE_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_PIPE_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_PIPE_EQUAL)) {
 				result = TPP_TOK_PIPE_EQUAL; /* "|=" */
 				goto set_result;
 			}
@@ -13211,7 +13230,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_PIPE_EQUAL */
 #if TPP_HAVE_TPP_TOK_PIPE_PIPE
 		if (ch2 == '|') {
-			if (tpp_lexer_have(self, TPP_TOK_PIPE_PIPE)) {
+			if (tpp_lexer_has(self, TPP_TOK_PIPE_PIPE)) {
 				warn_if_ch2_is_trigraph();  /* "??!" -> "|" */
 				result = TPP_TOK_PIPE_PIPE; /* "||" */
 				goto set_result;
@@ -13229,13 +13248,13 @@ switch_on_ch:
 /************************************************************************/
 	case '^':{
 #if TPP_HAVE_TPP_TOK_HAT_EQUAL || TPP_HAVE_TPP_TOK_HAT_HAT
-		if (!tpp_lexer_have(self, TPP_TOK_HAT_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_HAT_HAT))
+		if (!tpp_lexer_has(self, TPP_TOK_HAT_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_HAT_HAT))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_HAT_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_HAT_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_HAT_EQUAL)) {
 				result = TPP_TOK_HAT_EQUAL; /* "^=" */
 				goto set_result;
 			}
@@ -13243,7 +13262,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_HAT_EQUAL */
 #if TPP_HAVE_TPP_TOK_HAT_HAT
 		if (ch2 == '^') {
-			if (tpp_lexer_have(self, TPP_TOK_HAT_HAT)) {
+			if (tpp_lexer_has(self, TPP_TOK_HAT_HAT)) {
 				warn_if_ch2_is_trigraph(); /* "??'" -> "^" */
 				result = TPP_TOK_HAT_HAT; /* "^^" */
 				goto set_result;
@@ -13261,7 +13280,7 @@ switch_on_ch:
 /************************************************************************/
 	case '@': {
 #if TPP_HAVE_TPP_TOK_AT_EQUAL
-		if (tpp_lexer_have(self, TPP_TOK_AT_EQUAL)) {
+		if (tpp_lexer_has(self, TPP_TOK_AT_EQUAL)) {
 			read_ch2();
 			if (ch2 == '=') {
 				result = TPP_TOK_AT_EQUAL; /* "@=" */
@@ -13278,7 +13297,7 @@ switch_on_ch:
 	case '#': {
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_TPP_TOK_POUND_POUND
 #if TPP_HAVE_TPP_TOK_POUND_POUND
-		if (tpp_lexer_have(self, TPP_TOK_POUND_POUND)) {
+		if (tpp_lexer_has(self, TPP_TOK_POUND_POUND)) {
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
@@ -13294,7 +13313,7 @@ switch_on_ch:
 		}
 #endif /* TPP_HAVE_TPP_TOK_POUND_POUND */
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
-		if (tpp_lexer_have(self, TPP_TOK_SHELL_COMMENT)) {
+		if (tpp_lexer_has(self, TPP_TOK_SHELL_COMMENT)) {
 			error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SHELL_COMMENT));
 			if (TPP_ISERR(error))
 				goto return_error;
@@ -13311,13 +13330,13 @@ switch_on_ch:
 /************************************************************************/
 	case '~': {
 #if TPP_HAVE_TPP_TOK_TILDE_TILDE || TPP_HAVE_TPP_TOK_TILDE_EQUAL
-		if (!tpp_lexer_have(self, TPP_TOK_TILDE_TILDE) &&
-		    !tpp_lexer_have(self, TPP_TOK_TILDE_EQUAL))
+		if (!tpp_lexer_has(self, TPP_TOK_TILDE_TILDE) &&
+		    !tpp_lexer_has(self, TPP_TOK_TILDE_EQUAL))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_TILDE_TILDE
 		if (ch2 == '~') {
-			if (tpp_lexer_have(self, TPP_TOK_TILDE_TILDE)) {
+			if (tpp_lexer_has(self, TPP_TOK_TILDE_TILDE)) {
 				warn_if_ch2_is_trigraph();    /* "??-" -> "~" */
 				result = TPP_TOK_TILDE_TILDE; /* "~~" */
 				goto set_result;
@@ -13326,7 +13345,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_TILDE_TILDE */
 #if TPP_HAVE_TPP_TOK_TILDE_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_TILDE_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_TILDE_EQUAL)) {
 				result = TPP_TOK_TILDE_EQUAL; /* "~=" */
 				goto set_result;
 			}
@@ -13343,14 +13362,14 @@ switch_on_ch:
 /************************************************************************/
 	case ':': {
 #if TPP_HAVE_TPP_TOK_COLON_EQUAL || TPP_HAVE_TPP_TOK_COLON_COLON || TPP_HAVE_DIGRAPHS
-		if (!tpp_lexer_have(self, TPP_TOK_COLON_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_COLON_COLON) &&
-		    !tpp_lexer_have(self, DIGRAPHS))
+		if (!tpp_lexer_has(self, TPP_TOK_COLON_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_COLON_COLON) &&
+		    !tpp_lexer_has(self, DIGRAPHS))
 			break;
 		read_ch2();
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '>') {
-			if (tpp_lexer_have(self, DIGRAPHS)) {
+			if (tpp_lexer_has(self, DIGRAPHS)) {
 				result = (tpp_token_id)']'; /* ":>" -> "]" */
 				goto set_result;
 			}
@@ -13358,7 +13377,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_DIGRAPHS */
 #if TPP_HAVE_TPP_TOK_COLON_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_COLON_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_COLON_EQUAL)) {
 				result = TPP_TOK_COLON_EQUAL; /* ":=" */
 				goto set_result;
 			}
@@ -13366,7 +13385,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_COLON_EQUAL */
 #if TPP_HAVE_TPP_TOK_COLON_COLON
 		if (ch2 == ':') {
-			if (tpp_lexer_have(self, TPP_TOK_COLON_COLON)) {
+			if (tpp_lexer_has(self, TPP_TOK_COLON_COLON)) {
 				result = TPP_TOK_COLON_COLON; /* "::" */
 				goto set_result;
 			}
@@ -13384,7 +13403,7 @@ switch_on_ch:
 	case '?': {
 #if TPP_HAVE_TPP_TOK_QMARK_EQUAL || TPP_HAVE_TPP_TOK_QMARK_QMARK || TPP_HAVE_TRIGRAPHS
 #if TPP_HAVE_TRIGRAPHS
-		if (tpp_lexer_have(self, TRIGRAPHS)) {
+		if (tpp_lexer_has(self, TRIGRAPHS)) {
 			if (pos >= file->tf_end) {
 				error = tpp_file_expandchunk(file);
 				if (TPP_ISERR(error))
@@ -13430,13 +13449,13 @@ switch_on_ch:
 not_a_trigraph:
 #endif /* TPP_HAVE_TRIGRAPHS */
 
-		if (!tpp_lexer_have(self, TPP_TOK_QMARK_EQUAL) &&
-		    !tpp_lexer_have(self, TPP_TOK_QMARK_QMARK))
+		if (!tpp_lexer_has(self, TPP_TOK_QMARK_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_QMARK_QMARK))
 			break;
 		read_ch2();
 #if TPP_HAVE_TPP_TOK_QMARK_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_have(self, TPP_TOK_QMARK_EQUAL)) {
+			if (tpp_lexer_has(self, TPP_TOK_QMARK_EQUAL)) {
 				result = TPP_TOK_QMARK_EQUAL; /* "?=" */
 				goto set_result;
 			}
@@ -13444,7 +13463,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_QMARK_EQUAL */
 #if TPP_HAVE_TPP_TOK_QMARK_QMARK
 		if (ch2 == '?') {
-			if (tpp_lexer_have(self, TPP_TOK_QMARK_QMARK)) {
+			if (tpp_lexer_has(self, TPP_TOK_QMARK_QMARK)) {
 				warn_if_ch2_is_trigraph();    /* "???" -> "?" */
 				result = TPP_TOK_QMARK_QMARK; /* "??" */
 				goto set_result;
@@ -13462,7 +13481,7 @@ not_a_trigraph:
 /************************************************************************/
 	case '(': {
 #if TPP_HAVE_TPP_TOK_PASCAL_COMMENT
-		if (!tpp_lexer_have(self, TPP_TOK_PASCAL_COMMENT))
+		if (!tpp_lexer_has(self, TPP_TOK_PASCAL_COMMENT))
 			break;
 		read_ch2(); // "(*like this one!*)"
 		if (ch2 != '*')
@@ -13495,7 +13514,7 @@ not_a_trigraph:
 /************************************************************************/
 	case '\\': {
 #if TPP_HAVE_ESCAPE_IN_IDENTIFIERS
-		if (tpp_lexer_have(self, ESCAPE_IN_IDENTIFIERS)) {
+		if (tpp_lexer_has(self, ESCAPE_IN_IDENTIFIERS)) {
 			tpp_char const *npos;
 			tpp_size rel_before, rel_after;
 			npos = tpp_file_rel2ptr(file, rel_start);
@@ -13540,7 +13559,7 @@ not_a_trigraph:
 	case '\'': {
 #if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CHAR
 #if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
-		if (tpp_lexer_have(self, TPP_TOK_BLOCK_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TPP_TOK_BLOCK_CHAR_LITERAL)) {
 #if TPP_HAVE_TPP_TOK_CHAR
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_CHAR */
@@ -13561,7 +13580,7 @@ not_a_trigraph:
 		}
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
 #if TPP_HAVE_TPP_TOK_CHAR
-		if (tpp_lexer_have(self, TPP_TOK_CHAR)) {
+		if (tpp_lexer_has(self, TPP_TOK_CHAR)) {
 			error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 			if (TPP_ISERR(error))
 				goto return_error;
@@ -13579,7 +13598,7 @@ not_a_trigraph:
 	case '"': {
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_STRING
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL
-		if (tpp_lexer_have(self, TPP_TOK_BLOCK_STRING_LITERAL)) {
+		if (tpp_lexer_has(self, TPP_TOK_BLOCK_STRING_LITERAL)) {
 #if TPP_HAVE_TPP_TOK_STRING
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_STRING */
@@ -13600,7 +13619,7 @@ not_a_trigraph:
 		}
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_STRING
-		if (tpp_lexer_have(self, TPP_TOK_STRING)) {
+		if (tpp_lexer_has(self, TPP_TOK_STRING)) {
 			error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 			if (TPP_ISERR(error))
 				goto return_error;
@@ -13620,15 +13639,15 @@ not_a_trigraph:
      TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL ||   \
      TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)
 	case 'R': {
-		if (tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL) ||
-		    tpp_lexer_have(self, TPP_TOK_RAW_STRING_LITERAL) ||
-		    tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL) ||
-		    tpp_lexer_have(self, TPP_TOK_RAW_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TPP_TOK_RAW_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL) ||
+		    tpp_lexer_has(self, TPP_TOK_RAW_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
 			if (ch2 == '"') {
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-				if (tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13637,7 +13656,7 @@ not_a_trigraph:
 				}
 #endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
-				if (tpp_lexer_have(self, TPP_TOK_RAW_STRING_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13650,7 +13669,7 @@ not_a_trigraph:
 #if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
 			if (ch2 == '\'') {
 #if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
-				if (tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13659,7 +13678,7 @@ not_a_trigraph:
 				}
 #endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
 #if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
-				if (tpp_lexer_have(self, TPP_TOK_RAW_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13685,12 +13704,12 @@ not_a_trigraph:
 #if (TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || \
      TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)
 	case 'r': {
-		if (tpp_lexer_have(self, TPP_TOK_RAW_STRING_LITERAL) ||
-		    tpp_lexer_have(self, TPP_TOK_RAW_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TPP_TOK_RAW_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TPP_TOK_RAW_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_have(self, TPP_TOK_RAW_STRING_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13701,7 +13720,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_have(self, TPP_TOK_RAW_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13725,13 +13744,13 @@ not_a_trigraph:
 /************************************************************************/
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
 	case 'L': {
-		if (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) ||
-		    tpp_lexer_have(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_STRING_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13742,7 +13761,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13754,15 +13773,15 @@ not_a_trigraph:
 #if ((TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
      (TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if ((tpp_lexer_have(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
-				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-				    (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
-				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+				if ((tpp_lexer_has(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
+				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
+				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
-						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+						if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
+						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -13773,8 +13792,8 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_have(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
-						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+						if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
+						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -13807,19 +13826,19 @@ not_a_trigraph:
      TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
      TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL)
 	case 'u': {
-		if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
-		    tpp_lexer_have(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) ||
-		    tpp_lexer_have(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) ||
-		    tpp_lexer_have(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) ||
+		    tpp_lexer_has(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 			if (ch2 == '8') {
-				if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
-				    tpp_lexer_have(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
+				    tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
 					read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_STRING_LITERAL)) {
+						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -13830,7 +13849,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 					if (ch2 == '\'') {
-						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
+						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -13842,15 +13861,15 @@ not_a_trigraph:
 #if ((TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
      (TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 					if (ch2 == 'R') {
-						if ((tpp_lexer_have(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
-						     tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-						    (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
-						     tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+						if ((tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
+						     tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+						    (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
+						     tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 							read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 							if (ch2 == '"') {
-								if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
-								    tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+								if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
+								    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 									if (TPP_ISERR(error))
 										goto return_error;
@@ -13861,8 +13880,8 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 							if (ch2 == '"') {
-								if (tpp_lexer_have(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
-								    tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+								if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
+								    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
 									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 									if (TPP_ISERR(error))
 										goto return_error;
@@ -13884,7 +13903,7 @@ not_a_trigraph:
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_have(self, TPP_TOK_CXX_UTF16_STRING_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13895,7 +13914,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_have(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13907,15 +13926,15 @@ not_a_trigraph:
 #if ((TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
      (TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if ((tpp_lexer_have(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
-				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-				    (tpp_lexer_have(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
-				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+				if ((tpp_lexer_has(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
+				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
+				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
-						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
+						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -13926,8 +13945,8 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
-						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
+						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -13957,13 +13976,13 @@ not_a_trigraph:
 /************************************************************************/
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
 	case 'U': {
-		if (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) ||
-		    tpp_lexer_have(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
 			read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_STRING_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13974,7 +13993,7 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -13986,15 +14005,15 @@ not_a_trigraph:
 #if ((TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
      (TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if ((tpp_lexer_have(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
-				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-				    (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
-				     tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+				if ((tpp_lexer_has(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
+				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
+				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
-						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
+						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -14005,8 +14024,8 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_have(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
-						    tpp_lexer_have(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
+						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -14037,7 +14056,7 @@ not_a_trigraph:
 #if TPP_HAVE_TPP_TOK_DOLLAR
 	case '$':
 #if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_DOLLAR)
-		if (tpp_lexer_have(self, TPP_TOK_DOLLAR))
+		if (tpp_lexer_has(self, TPP_TOK_DOLLAR))
 			break; /* Follow single-char code-branch */
 		goto handle_keyword;
 #define WANT_handle_keyword
@@ -14174,7 +14193,7 @@ handle_keyword_with_esc:
 					/* Backslash */
 				} else
 #if TPP_HAVE_TRIGRAPHS
-				if (*pos == '?' && tpp_lexer_have(self, TRIGRAPHS)) {
+				if (*pos == '?' && tpp_lexer_has(self, TRIGRAPHS)) {
 					if ((pos + 1) >= file->tf_end) {
 						tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 						error = tpp_file_expandchunk(file);
@@ -14204,7 +14223,7 @@ handle_keyword_with_esc:
 					break; /* No backslash */
 				}
 #if TPP_HAVE_ESCAPE_IN_IDENTIFIERS
-				if (tpp_lexer_have(self, ESCAPE_IN_IDENTIFIERS)) {
+				if (tpp_lexer_has(self, ESCAPE_IN_IDENTIFIERS)) {
 					tpp_char const *npos = pos;
 					tpp_size rel_pos;
 					rel_pos = tpp_file_ptr2rel(file, pos);
@@ -14285,8 +14304,8 @@ handle_keyword_with_esc:
 
 		/* Check for digits */
 #if TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT
-		if (tpp_ascii_isdigit(ch) && (tpp_lexer_have(self, TPP_TOK_FLOAT) ||
-		                              tpp_lexer_have(self, TPP_TOK_INT))) {
+		if (tpp_ascii_isdigit(ch) && (tpp_lexer_has(self, TPP_TOK_FLOAT) ||
+		                              tpp_lexer_has(self, TPP_TOK_INT))) {
 #if TPP_HAVE_UNICODE
 handle_digit:
 #endif /* TPP_HAVE_UNICODE */
@@ -14301,7 +14320,7 @@ handle_digit:
 
 #if TPP_HAVE_TPP_TOK_FLOAT
 			if (pos < file->tf_end && *pos == '.' &&
-			    tpp_lexer_have(self, TPP_TOK_FLOAT)) {
+			    tpp_lexer_has(self, TPP_TOK_FLOAT)) {
 				/* Floating point token... */
 				++pos;
 				error = tpp_lexer_seek_end_of_keyword(self, &pos);
@@ -14321,7 +14340,7 @@ handle_digit:
 #endif /* TPP_HAVE_TPP_TOK_FLOAT */
 
 #if TPP_HAVE_TPP_TOK_INT
-			if (tpp_lexer_have(self, TPP_TOK_INT)) {
+			if (tpp_lexer_has(self, TPP_TOK_INT)) {
 				result = TPP_TOK_INT;
 				goto set_result;
 			}
@@ -15442,7 +15461,7 @@ again_yield_macro_argument_list:
 
 #if TPP_HAVE_VA_ARGS_IN_MACROS
 	case TPP_TOK_DOT_DOT_DOT:
-		if (!tpp_lexer_have(self, VA_ARGS_IN_MACROS))
+		if (!tpp_lexer_has(self, VA_ARGS_IN_MACROS))
 			break;
 		tok = TPP_KWD___VA_ARGS__;
 #if TPP_DEBUG
@@ -15524,7 +15543,7 @@ do_append_keyword_to_argument_list:
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS
 	if (tok == TPP_TOK_DOT_DOT_DOT &&
 	    !(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC) &&
-	    tpp_lexer_have(self, NAMED_VARARGS_IN_MACROS)) {
+	    tpp_lexer_has(self, NAMED_VARARGS_IN_MACROS)) {
 		builder->mab_flags |= TPP_MACRO_FLAG_VARIADIC;
 		do {
 			tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
@@ -15834,7 +15853,7 @@ again_switch_tok:
 
 		case TPP_TOK_POUND_POUND: {
 			tpp_char const *argument_end;
-			if (!tpp_lexer_have(self, GLUE_MACRO_ARGUMENT))
+			if (!tpp_lexer_has(self, GLUE_MACRO_ARGUMENT))
 				break;
 			/* Consume any whitespace that might following this operator.
 			 * Whitespace preceding it is automatically consumed because
@@ -15911,7 +15930,7 @@ handle_token_after_glue:
 			 *
 			 * Compiled the same as (when ignoring whitespace):
 			 * >> #define printf(format, ...) fprintf(stderr, format __VA_COMMA__ __VA_ARGS__) */
-			if (!tpp_lexer_have(self, VA_GLUE_COMMA_IN_MACROS))
+			if (!tpp_lexer_has(self, VA_GLUE_COMMA_IN_MACROS))
 				break;
 			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
 				break;
@@ -15932,7 +15951,7 @@ handle_token_after_glue:
 				/* Implement regular glue (simply deleting whitespace), or do nothing */
 handle_not_varargs_argument_after_comma_glue:
 #if TPP_HAVE_GLUE_MACRO_ARGUMENT
-				if (tpp_lexer_have(self, GLUE_MACRO_ARGUMENT)) {
+				if (tpp_lexer_has(self, GLUE_MACRO_ARGUMENT)) {
 					++start_of_comma; /* Keep the "," character itself! */
 					if (body_start < start_of_comma) {
 						tpp_macro_builder_append_copy(err_nomem, builder,
@@ -15978,7 +15997,7 @@ handle_not_varargs_argument_after_comma_glue:
 		case TPP_KWD___VA_COMMA__:
 			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
 				goto handle_keyword;
-			if (!tpp_lexer_have(self, VA_COMMA_IN_MACROS))
+			if (!tpp_lexer_has(self, VA_COMMA_IN_MACROS))
 				goto handle_keyword;
 #define WANT_handle_keyword
 			if (body_start < token->tt_start) {
@@ -16000,7 +16019,7 @@ handle_not_varargs_argument_after_comma_glue:
 		case TPP_KWD___VA_NARGS__:
 			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
 				goto handle_keyword;
-			if (!tpp_lexer_have(self, VA_NARGS_IN_MACROS))
+			if (!tpp_lexer_has(self, VA_NARGS_IN_MACROS))
 				goto handle_keyword;
 #define WANT_handle_keyword
 			if (body_start < token->tt_start) {
@@ -16026,7 +16045,7 @@ handle_not_varargs_argument_after_comma_glue:
 			unsigned int recursion;
 			if (!(builder->mab_flags & TPP_MACRO_FLAG_VARIADIC))
 				goto handle_keyword;
-			if (!tpp_lexer_have(self, VA_OPT_IN_MACROS))
+			if (!tpp_lexer_has(self, VA_OPT_IN_MACROS))
 				goto handle_keyword;
 #define WANT_handle_keyword
 			start_of_va_opt = token->tt_start;
@@ -16115,9 +16134,9 @@ found_va_opt_body_end:
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
 			tpp_macro_opcode opcode;
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
-			if (!tpp_lexer_have(self, STRINGIZE_MACRO_ARGUMENT) &&
-			    !tpp_lexer_have(self, CHARIZE_MACRO_ARGUMENT) &&
-			    !tpp_lexer_have(self, DONT_EXPAND_MACRO_ARGUMENT))
+			if (!tpp_lexer_has(self, STRINGIZE_MACRO_ARGUMENT) &&
+			    !tpp_lexer_has(self, CHARIZE_MACRO_ARGUMENT) &&
+			    !tpp_lexer_has(self, DONT_EXPAND_MACRO_ARGUMENT))
 				break;
 			start_of_pound = token->tt_start;
 			do {
@@ -16129,7 +16148,7 @@ found_va_opt_body_end:
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT
 			if (tok == '!') {
 				last_non_space_end = body_iter;
-				if (!tpp_lexer_have(self, DONT_EXPAND_MACRO_ARGUMENT))
+				if (!tpp_lexer_has(self, DONT_EXPAND_MACRO_ARGUMENT))
 					break;
 				do {
 					tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
@@ -16154,7 +16173,7 @@ found_va_opt_body_end:
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT */
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 			if (tok == '@') {
-				if (!tpp_lexer_have(self, CHARIZE_MACRO_ARGUMENT))
+				if (!tpp_lexer_has(self, CHARIZE_MACRO_ARGUMENT))
 					break;
 				opcode = TPP_MACRO_OPCODE_INS_CHR;
 				do {
@@ -16166,7 +16185,7 @@ found_va_opt_body_end:
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 			{
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
-				if (!tpp_lexer_have(self, STRINGIZE_MACRO_ARGUMENT))
+				if (!tpp_lexer_has(self, STRINGIZE_MACRO_ARGUMENT))
 					break;
 				opcode = TPP_MACRO_OPCODE_INS_STR;
 #else /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
@@ -16237,7 +16256,7 @@ found_va_opt_body_end:
 			/* Got a keyword that is actually a macro argument after "defined"
 			 * -> This is what this extension/warning is all about! */
 #if TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
-			if (tpp_lexer_have(self, DONT_EXPAND_DEFINED_IN_EXPR)) {
+			if (tpp_lexer_has(self, DONT_EXPAND_DEFINED_IN_EXPR)) {
 				if (body_start < token->tt_start) {
 					tpp_macro_builder_append_copy(err_nomem, builder,
 					                              (tpp_size)(token->tt_start - body_start));
@@ -16298,7 +16317,7 @@ handle_keyword_after_arg:
 				}
 
 #if TPP_HAVE_GLUE_MACRO_ARGUMENT
-				if (tpp_lexer_have(self, GLUE_MACRO_ARGUMENT)) {
+				if (tpp_lexer_has(self, GLUE_MACRO_ARGUMENT)) {
 					/* Must seek ahead to the next non-whitespace token. if it's the
 					 * ##-operator, then we have to insert the argument *WITHOUT* it
 					 * being expanded! */
@@ -16374,7 +16393,7 @@ tpp_macro_builder_compile(tpp_macro_builder *tpp_restrict builder,
                           tpp_lexer *tpp_restrict self,
                           tpp_char const *body_start,
                           tpp_char const *body_end) {
-	if (tpp_lexer_have(self, TRADITIONAL_MACROS))
+	if (tpp_lexer_has(self, TRADITIONAL_MACROS))
 		return tpp_macro_builder_compile_traditional(builder, self, body_start, body_end);
 	return tpp_macro_builder_compile_modern(builder, self, body_start, body_end);
 }
@@ -16489,7 +16508,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	case '[':
 	case '{':
 	case '<':
-		if (tpp_lexer_have(self, ALTERNATIVE_MACRO_PARENTHESIS))
+		if (tpp_lexer_has(self, ALTERNATIVE_MACRO_PARENTHESIS))
 			break;
 		TPP_FALLTHRU
 #endif /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
@@ -16549,11 +16568,11 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	tpp_macro_builder_init(&builder);
 #if TPP_HAVE_MACRO_FLAGS
 #if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
-	if (tpp_lexer_have(self, MACRO_ARGUMENT_WHITESPACE))
+	if (tpp_lexer_has(self, MACRO_ARGUMENT_WHITESPACE))
 		builder.mab_flags |= TPP_MACRO_FLAG_KEEPARGSPC;
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #if TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION)
-	if (tpp_lexer_have(self, MACRO_RECURSION))
+	if (tpp_lexer_has(self, MACRO_RECURSION))
 		builder.mab_flags |= TPP_MACRO_FLAG_SELFEXPAND;
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
@@ -17291,7 +17310,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_POISON
 	case TPP_KWD_poison:
-		if (!tpp_lexer_have(self, PRAGMA_GCC_POISON))
+		if (!tpp_lexer_has(self, PRAGMA_GCC_POISON))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_poison(self);
@@ -17299,7 +17318,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_WARNING
 	case TPP_KWD_warning:
-		if (!tpp_lexer_have(self, PRAGMA_GCC_WARNING))
+		if (!tpp_lexer_has(self, PRAGMA_GCC_WARNING))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_warning(self, TPP_W_WARNING);
@@ -17307,7 +17326,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_ERROR
 	case TPP_KWD_error:
-		if (!tpp_lexer_have(self, PRAGMA_GCC_ERROR))
+		if (!tpp_lexer_has(self, PRAGMA_GCC_ERROR))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_warning(self, TPP_W_ERROR);
@@ -17315,7 +17334,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
 	case TPP_KWD_system_header:
-		if (!tpp_lexer_have(self, PRAGMA_GCC_SYSTEM_HEADER))
+		if (!tpp_lexer_has(self, PRAGMA_GCC_SYSTEM_HEADER))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_system_header(self);
@@ -17323,7 +17342,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
 	case TPP_KWD_diagnostic:
-		if (!tpp_lexer_have(self, PRAGMA_GCC_DIAGNOSTIC))
+		if (!tpp_lexer_has(self, PRAGMA_GCC_DIAGNOSTIC))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_diagnostic(self);
@@ -17331,7 +17350,7 @@ tpp_lexer_process_pragma_GCC(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_GCC_DEPENDENCY
 	case TPP_KWD_dependency:
-		if (!tpp_lexer_have(self, PRAGMA_GCC_DEPENDENCY))
+		if (!tpp_lexer_has(self, PRAGMA_GCC_DEPENDENCY))
 			break;
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_GCC_dependency(self);
@@ -17425,49 +17444,49 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	case TPP_KWD_push_macro:
 	case TPP_KWD_pop_macro:
-		if (!tpp_lexer_have(self, PRAGMA_PUSH_MACRO))
+		if (!tpp_lexer_has(self, PRAGMA_PUSH_MACRO))
 			break;
 		return tpp_lexer_process_pragma_pushpop_macro(self, tok);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
 #if TPP_HAVE_PRAGMA_ONCE
 	case TPP_KWD_once:
-		if (!tpp_lexer_have(self, PRAGMA_ONCE))
+		if (!tpp_lexer_has(self, PRAGMA_ONCE))
 			break;
 		return tpp_lexer_process_pragma_once(self);
 #endif /* TPP_HAVE_PRAGMA_ONCE */
 
 #if TPP_HAVE_PRAGMA_DEPRECATED
 	case TPP_KWD_deprecated:
-		if (!tpp_lexer_have(self, PRAGMA_DEPRECATED))
+		if (!tpp_lexer_has(self, PRAGMA_DEPRECATED))
 			break;
 		return tpp_lexer_process_pragma_deprecated(self);
 #endif /* TPP_HAVE_PRAGMA_DEPRECATED */
 
 #if TPP_HAVE_PRAGMA_EXTENSION
 	case TPP_KWD_extension:
-		if (!tpp_lexer_have(self, PRAGMA_EXTENSION))
+		if (!tpp_lexer_has(self, PRAGMA_EXTENSION))
 			break;
 		return tpp_lexer_process_pragma_extension(self);
 #endif /* TPP_HAVE_PRAGMA_EXTENSION */
 
 #if TPP_HAVE_PRAGMA_WARNING
 	case TPP_KWD_warning:
-		if (!tpp_lexer_have(self, PRAGMA_WARNING))
+		if (!tpp_lexer_has(self, PRAGMA_WARNING))
 			break;
 		return tpp_lexer_process_pragma_warning(self);
 #endif /* TPP_HAVE_PRAGMA_WARNING */
 
 #if TPP_HAVE_PRAGMA_MESSAGE
 	case TPP_KWD_message:
-		if (!tpp_lexer_have(self, PRAGMA_MESSAGE))
+		if (!tpp_lexer_has(self, PRAGMA_MESSAGE))
 			break;
 		return tpp_lexer_process_pragma_message(self);
 #endif /* TPP_HAVE_PRAGMA_MESSAGE */
 
 #if TPP_HAVE_PRAGMA_ERROR
 	case TPP_KWD_error:
-		if (!tpp_lexer_have(self, PRAGMA_ERROR))
+		if (!tpp_lexer_has(self, PRAGMA_ERROR))
 			break;
 		return tpp_lexer_process_pragma_error(self);
 #endif /* TPP_HAVE_PRAGMA_ERROR */
@@ -17477,7 +17496,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 		 * >> #pragma endregion MY_REGION */
 	case TPP_KWD_region:
 	case TPP_KWD_endregion:
-		if (!tpp_lexer_have(self, PRAGMA_REGION))
+		if (!tpp_lexer_has(self, PRAGMA_REGION))
 			break;
 		/* These #pragma-s are no-ops, and the remainder of the #pragma-line should
 		 * just be ignored. Since (depending on how the #pragma is being generated),
@@ -17491,14 +17510,14 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_PRAGMA_TPP_TPP_EXEC
 	case TPP_KWD_tpp_exec:
-		if (!tpp_lexer_have(self, PRAGMA_TPP_EXEC))
+		if (!tpp_lexer_has(self, PRAGMA_TPP_EXEC))
 			break;
 		return tpp_lexer_process_pragma_tpp_exec(self);
 #endif /* TPP_HAVE_PRAGMA_TPP_TPP_EXEC */
 
 #if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 	case TPP_KWD_tpp_set_keyword_flags:
-		if (!tpp_lexer_have(self, PRAGMA_TPP_SET_KEYWORD_FLAGS))
+		if (!tpp_lexer_has(self, PRAGMA_TPP_SET_KEYWORD_FLAGS))
 			break;
 		return tpp_lexer_process_pragma_tpp_set_keyword_flags(self);
 #endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
@@ -17764,7 +17783,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
 		case 'b':
 		case 'B':
-			if (!tpp_lexer_have(self, BUILTIN_EXPR_BINARY_LITERALS))
+			if (!tpp_lexer_has(self, BUILTIN_EXPR_BINARY_LITERALS))
 				break;
 			if (start >= end)
 				goto handle_invalid;
@@ -17814,7 +17833,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
 	case 'i':
 	case 'I':
-		if (!tpp_lexer_have(self, BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS))
+		if (!tpp_lexer_has(self, BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS))
 			goto handle_invalid;
 		if (start >= end)
 			goto handle_invalid;
@@ -17862,7 +17881,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 	case 'u':
 	case 'U': {
 		if (start < end && (*start == 'i' || *start == 'I') &&
-		    tpp_lexer_have(self, BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)) {
+		    tpp_lexer_has(self, BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)) {
 			++start;
 			start = tpp_skipbse_fwd(start, end, tpp_lexer_getfile(self));
 			if (start >= end)
@@ -17926,7 +17945,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 	case 'L': {
 		unsigned int has_u = 0;
 		unsigned int has_l = 0;
-		if (!tpp_lexer_have(self, BUILTIN_EXPR_FIXED_TYPE_INTEGRALS))
+		if (!tpp_lexer_has(self, BUILTIN_EXPR_FIXED_TYPE_INTEGRALS))
 			break;
 		for (;;) {
 			if (ch == 'u' || ch == 'U') {
@@ -18620,14 +18639,14 @@ seek_next_lf:
 #if TPP_HAVE_CPP_ERROR
 		if (0) {
 	case TPP_KWD_error:
-			if (!tpp_lexer_have(self, CPP_ERROR))
+			if (!tpp_lexer_has(self, CPP_ERROR))
 				break;
 		}
 #endif /* TPP_HAVE_CPP_ERROR */
 #if TPP_HAVE_CPP_WARNING
 		if (0) {
 	case TPP_KWD_warning:
-			if (!tpp_lexer_have(self, CPP_WARNING))
+			if (!tpp_lexer_has(self, CPP_WARNING))
 				break;
 		}
 #endif /* TPP_HAVE_CPP_WARNING */
@@ -19107,7 +19126,7 @@ again_yield_directive_iter:
 		 * since they effective cap-off the directive via a commented line-feed */
 	case TPP_TOK_EOF:
 	case TPP_TOK_LF:
-		if (!tpp_lexer_have(self, CPP_BLANK))
+		if (!tpp_lexer_has(self, CPP_BLANK))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		result = TPP_TOK_EOF;
@@ -19123,7 +19142,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
 	case TPP_TOK_EXCLAIM_EXCLAIM:
 #endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
-		if (!tpp_lexer_have(self, CPP_EXCLAIM))
+		if (!tpp_lexer_has(self, CPP_EXCLAIM))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		goto seek_end_of_line;
@@ -19136,7 +19155,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_DIGIT_LINE
 	case TPP_TOK_INT:
-		if (!tpp_lexer_have(self, CPP_DIGIT_LINE))
+		if (!tpp_lexer_has(self, CPP_DIGIT_LINE))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -19152,7 +19171,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_LINE
 	case TPP_KWD_line:
-		if (!tpp_lexer_have(self, CPP_LINE))
+		if (!tpp_lexer_has(self, CPP_LINE))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -19170,14 +19189,14 @@ again_yield_directive_iter:
 	{
 #if TPP_HAVE_CPP_INCLUDE
 	case TPP_KWD_include:
-		if (!tpp_lexer_have(self, CPP_INCLUDE))
+		if (!tpp_lexer_has(self, CPP_INCLUDE))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 #endif /* TPP_HAVE_CPP_INCLUDE */
 #if TPP_HAVE_CPP_INCLUDE_NEXT
 		if (0) {
 	case TPP_KWD_include_next:
-			if (!tpp_lexer_have(self, CPP_INCLUDE_NEXT))
+			if (!tpp_lexer_has(self, CPP_INCLUDE_NEXT))
 				goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		}
@@ -19185,7 +19204,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_IMPORT
 		if (0) {
 	case TPP_KWD_import:
-			if (!tpp_lexer_have(self, CPP_IMPORT))
+			if (!tpp_lexer_has(self, CPP_IMPORT))
 				goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		}
@@ -19207,7 +19226,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_EMBED
 	case TPP_KWD_embed: {
-		if (!tpp_lexer_have(self, CPP_EMBED))
+		if (!tpp_lexer_has(self, CPP_EMBED))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -19225,7 +19244,7 @@ again_yield_directive_iter:
 	case TPP_KWD_ifndef:
 	case TPP_KWD_ifdef:
 	case TPP_KWD_if:
-		if (!tpp_lexer_have(self, CPP_IF_ELSE_ENDIF))
+		if (!tpp_lexer_has(self, CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		file->tf_pos = directive_iter;
@@ -19237,7 +19256,7 @@ again_yield_directive_iter:
 	case TPP_KWD_elifdef:
 	case TPP_KWD_elifndef:
 	case TPP_KWD_else:
-		if (!tpp_lexer_have(self, CPP_IF_ELSE_ENDIF))
+		if (!tpp_lexer_has(self, CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -19246,7 +19265,7 @@ again_yield_directive_iter:
 		break;
 
 	case TPP_KWD_endif:
-		if (!tpp_lexer_have(self, CPP_IF_ELSE_ENDIF))
+		if (!tpp_lexer_has(self, CPP_IF_ELSE_ENDIF))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		/*tpp_lexer_process_directive_set_noguard();*/ /* Not needed... */
@@ -19261,7 +19280,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_DEFINE
 	case TPP_KWD_define:
-		if (!tpp_lexer_have(self, CPP_DEFINE))
+		if (!tpp_lexer_has(self, CPP_DEFINE))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -19269,7 +19288,7 @@ again_yield_directive_iter:
 		result = tpp_lexer_handle_define_directive(self);
 		break;
 	case TPP_KWD_undef:
-		if (!tpp_lexer_have(self, CPP_DEFINE))
+		if (!tpp_lexer_has(self, CPP_DEFINE))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -19285,7 +19304,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_ASSERT
 	case TPP_KWD_assert:
 	case TPP_KWD_unassert:
-		if (!tpp_lexer_have(self, CPP_ASSERT))
+		if (!tpp_lexer_has(self, CPP_ASSERT))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -19301,14 +19320,14 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING
 #if TPP_HAVE_CPP_ERROR
 	case TPP_KWD_error:
-		if (!tpp_lexer_have(self, CPP_ERROR))
+		if (!tpp_lexer_has(self, CPP_ERROR))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 #endif /* TPP_HAVE_CPP_ERROR */
 #if TPP_HAVE_CPP_WARNING
 		if (0) {
 	case TPP_KWD_warning:
-			if (!tpp_lexer_have(self, CPP_WARNING))
+			if (!tpp_lexer_has(self, CPP_WARNING))
 				goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		}
@@ -19325,7 +19344,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_CPP_IDENT_SCCS
 	case TPP_KWD_ident:
 	case TPP_KWD_sccs:
-		if (!tpp_lexer_have(self, CPP_IDENT_SCCS))
+		if (!tpp_lexer_has(self, CPP_IDENT_SCCS))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -19340,7 +19359,7 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_PRAGMA
 	case TPP_KWD_pragma:
-		if (!tpp_lexer_have(self, CPP_PRAGMA))
+		if (!tpp_lexer_has(self, CPP_PRAGMA))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 		tpp_lexer_process_directive_set_noguard();
@@ -19360,7 +19379,7 @@ again_yield_directive_iter:
 handle_unknown_directive:
 #endif /* WANT_handle_unknown_directive */
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
-		if (tpp_lexer_have(self, TPP_TOK_SHELL_COMMENT)
+		if (tpp_lexer_has(self, TPP_TOK_SHELL_COMMENT)
 #if TPP_HAVE_DIGRAPHS
 		    && *file->tf_pos != '%' /* Digraph "%:" must never become a shell comment (since
 		                             * "%:" is a **TOKEN** substitution, but not a **CHARACTER**
@@ -19477,7 +19496,7 @@ again:
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_SPACE)
-		if (tpp_lexer_have(self, TPP_TOK_SPACE))
+		if (tpp_lexer_has(self, TPP_TOK_SPACE))
 			break; /* Enabled */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_SPACE) */
 		goto again;
@@ -19494,7 +19513,7 @@ again:
 	_TPP_CASE_TPP_TOK_SHELL_COMMENT
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_HAVE_CPP_DIRECTIVES
 		if (!(self->tl_state & TPP_LEXER_STATE_FLAG_NODIRECTIVES) &&
-			tpp_lexer_have(self, CPP_DIRECTIVES)) {
+			tpp_lexer_has(self, CPP_DIRECTIVES)) {
 			tpp_token *const token = tpp_lexer_gettoken(self);
 
 			/* Must re-parse comment as a preprocessor directive instead! */
@@ -19547,7 +19566,7 @@ again:
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_COMMENT)
-		if (tpp_lexer_have(self, TPP_TOK_COMMENT))
+		if (tpp_lexer_has(self, TPP_TOK_COMMENT))
 			break; /* Comments are enabled -> emit to caller */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_COMMENT) */
 		goto again;
@@ -19576,7 +19595,7 @@ again:
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_LF)
-		if (tpp_lexer_have(self, TPP_TOK_LF))
+		if (tpp_lexer_has(self, TPP_TOK_LF))
 			break; /* Enabled */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_LF) */
 		goto again;
@@ -19594,7 +19613,7 @@ again:
 	case '#':
 		if (self->tl_state & TPP_LEXER_STATE_FLAG_NODIRECTIVES)
 			break; /* Not allowed here... */
-		if (!tpp_lexer_have(self, CPP_DIRECTIVES))
+		if (!tpp_lexer_has(self, CPP_DIRECTIVES))
 			break; /* Directives are disabled. */
 		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 		result = tpp_lexer_process_directive(self);
@@ -19605,7 +19624,7 @@ again:
 		if (result != TPP_TOK_EOF) {
 			/* Emit as a shell-comment (if enabled). Otherwise, check next raw token. */
 			tpp_assert(result == TPP_TOK_SHELL_COMMENT);
-			if (tpp_lexer_have(self, TPP_TOK_COMMENT))
+			if (tpp_lexer_has(self, TPP_TOK_COMMENT))
 				break;
 		}
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
@@ -20689,7 +20708,7 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 		tpp_errno error;
 #if TPP_HAVE_CLANG_MACRO___has_extension
 		if (mode == TPP_KWD___has_extension &&
-		    !tpp_lexer_have(self, MACRO___has_extension))
+		    !tpp_lexer_has(self, MACRO___has_extension))
 			goto seek_end_of_macro;
 #define WANT_seek_end_of_macro
 #endif /* TPP_HAVE_CLANG_MACRO___has_extension */
@@ -20818,7 +20837,7 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 			case TPP_KWD___has_feature:
 				mask = TPP_KEYWORD_FLAG_HAS_FEATURE;
 #if TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES
-				if (tpp_lexer_have(self, CLANG_EXTENSIONS_ARE_FEATURES))
+				if (tpp_lexer_has(self, CLANG_EXTENSIONS_ARE_FEATURES))
 					mask |= TPP_KEYWORD_FLAG_HAS_EXTENSION;
 #endif /* TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES */
 				break;
@@ -21723,7 +21742,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 
 	/* Check if macros are runtime-configurable and currently disabled. */
 #if TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS)
-	if (!tpp_lexer_have(self, CPP_MACROS))
+	if (!tpp_lexer_has(self, CPP_MACROS))
 		return tok;
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS) */
 
@@ -22339,7 +22358,7 @@ again:
 	/* Decode trigraphs... */
 #if TPP_HAVE_TRIGRAPHS
 	if (ch == '?' && ((iter + 1) < end && iter[0] == '?') &&
-	    tpp_lexer_have(self, TRIGRAPHS)) {
+	    tpp_lexer_has(self, TRIGRAPHS)) {
 		switch (iter[1]) {
 		case '=': ch = '#'; break;
 		case '(': ch = '['; break;
@@ -22412,7 +22431,7 @@ not_trigraph:
 		/* Only '??/??/' is allowed (which is the same as \\; which is printed as \) */
 		if (iter[1] != '/')
 			goto handle_unknown_escape_sequence;
-		if (!tpp_lexer_have(self, TRIGRAPHS))
+		if (!tpp_lexer_has(self, TRIGRAPHS))
 			goto handle_unknown_escape_sequence;
 		iter += 2;
 		goto print_backslash_and_flush_at_iter;
@@ -22429,7 +22448,7 @@ not_trigraph:
 
 #if TPP_HAVE_ESCAPE_E_IN_STRINGS
 	case 'e':
-		if (!tpp_lexer_have(self, ESCAPE_E_IN_STRINGS))
+		if (!tpp_lexer_has(self, ESCAPE_E_IN_STRINGS))
 			goto handle_unknown_escape_sequence;
 		ch = 0x1b;
 		goto print_ch;
@@ -22437,7 +22456,7 @@ not_trigraph:
 
 #if TPP_HAVE_ESCAPE_S_IN_STRINGS
 	case 's':
-		if (!tpp_lexer_have(self, ESCAPE_S_IN_STRINGS))
+		if (!tpp_lexer_has(self, ESCAPE_S_IN_STRINGS))
 			goto handle_unknown_escape_sequence;
 		ch = 0x20;
 		goto print_ch;
@@ -22512,7 +22531,7 @@ print_ch:
 	case '\r':
 	case '\n':
 		/* Escaped line-feed */
-		if (!tpp_lexer_have(self, BSE))
+		if (!tpp_lexer_has(self, BSE))
 			goto handle_unknown_escape_sequence;
 		if (ch == '\r' && (iter < end) && *iter == '\n')
 			++iter;
@@ -22561,7 +22580,7 @@ print_ch:
 #if TPP_HAVE_BSE && TPP_HAVE_UNICODE
 		tpp_char const *bse_iter;
 		if (ch >= 0x80 && tpp_file_isutf8(tpp_lexer_getfile(self))) {
-			if (tpp_lexer_have(self, BSE)) {
+			if (tpp_lexer_has(self, BSE)) {
 				bse_iter = iter;
 				tpp_unichar uc;
 #if TPP_HAVE_BSE_WHITESPACE
@@ -22579,7 +22598,7 @@ again_read_unicode_whitespace_after_backslash:
 				} else
 #if TPP_HAVE_BSE_WHITESPACE
 				if (tpp_unicode_isspace(uc)) {
-					if (tpp_lexer_have(self, BSE_WHITESPACE))
+					if (tpp_lexer_has(self, BSE_WHITESPACE))
 						goto again_read_unicode_whitespace_after_backslash;
 				} else
 #endif /* TPP_HAVE_BSE_WHITESPACE */
@@ -22590,8 +22609,8 @@ again_read_unicode_whitespace_after_backslash:
 #endif /* TPP_HAVE_BSE && TPP_HAVE_UNICODE */
 #if TPP_HAVE_BSE_WHITESPACE
 		if (tpp_ascii_isspace_nolf(ch)) {
-			if (tpp_lexer_have(self, BSE) &&
-			    tpp_lexer_have(self, BSE_WHITESPACE)) {
+			if (tpp_lexer_has(self, BSE) &&
+			    tpp_lexer_has(self, BSE_WHITESPACE)) {
 				tpp_char wch;
 #if !TPP_HAVE_UNICODE
 				tpp_char const *bse_iter;
@@ -23719,7 +23738,7 @@ again:
 
 #if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS != 0
 	TPP_CASE_TPP_TOK_STRING_SQUOTE
-		if (tpp_lexer_have(self, BUILTIN_EXPR_CHARACTER_LITERALS)) {
+		if (tpp_lexer_has(self, BUILTIN_EXPR_CHARACTER_LITERALS)) {
 			if (result)
 				return tpp_lexer_parsecharacter_expr(self, result, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 			do {
@@ -23739,7 +23758,7 @@ again:
 	TPP_CASE_TPP_TOK_STRING_SQUOTE
 #endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS == 0 */
 	TPP_CASE_TPP_TOK_STRING_DQUOTE
-		if (!tpp_lexer_have(self, BUILTIN_EXPR_STRINGS))
+		if (!tpp_lexer_has(self, BUILTIN_EXPR_STRINGS))
 			break;
 		if (result)
 			return tpp_lexer_parsestring_expr(self, result, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
@@ -23754,14 +23773,14 @@ again:
 	case '#':
 		/* Preprocessor assertions */
 #if TPP_HAVE_CPP_ASSERT
-		if (tpp_lexer_have(self, CPP_ASSERT)) {
+		if (tpp_lexer_has(self, CPP_ASSERT)) {
 			/* TODO */
 		}
 #endif /* TPP_HAVE_CPP_ASSERT */
 
 		/* length-operator for string expressions */
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
-		if (tpp_lexer_have(self, BUILTIN_EXPR_STRINGS)) {
+		if (tpp_lexer_has(self, BUILTIN_EXPR_STRINGS)) {
 			/* TODO */
 		}
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
@@ -23774,7 +23793,7 @@ again:
 	case TPP_KWD_defined: {
 		bool is_defined;
 		bool has_paren;
-		if (!tpp_lexer_have(self, BUILTIN_EXPR_DEFINED))
+		if (!tpp_lexer_has(self, BUILTIN_EXPR_DEFINED))
 			goto handle_default;
 #define WANT_handle_default
 		tok = tpp_lexer_yield_forexpr(self);
@@ -23829,7 +23848,7 @@ again:
 	case TPP_KWD_if: {
 		tpp_errno error;
 		bool is_true;
-		if (!tpp_lexer_have(self, BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS))
+		if (!tpp_lexer_has(self, BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS))
 			goto handle_default;
 #define WANT_handle_default
 again_handle_if:
@@ -24541,7 +24560,7 @@ TPP_DEFINE_PX_PARSER(tpp_px_or, tpp_px_land, tpp_px_land_suffix, TPP_TEST_PX_LAN
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_px_lxor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value *result) {
 	tpp_assert(TPP_TEST_PX_LXOR_SUFFIX(tpp_lexer_gettok(self)));
-	if (!tpp_lexer_have(self, BUILTIN_EXPR_LOGICAL_XOR))
+	if (!tpp_lexer_has(self, BUILTIN_EXPR_LOGICAL_XOR))
 		return TPP_EOK;
 	do {
 		tpp_errno error;
@@ -24661,7 +24680,7 @@ tpp_px_question_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_v
 				goto err_result_tok;
 		}
 #if TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
-		if (tok == ':' && tpp_lexer_have(self, BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT)) {
+		if (tok == ':' && tpp_lexer_has(self, BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT)) {
 			tok = tpp_lexer_yield_forexpr(self);
 			if (TPP_TOK_ISERR(tok))
 				goto err_result_tok;

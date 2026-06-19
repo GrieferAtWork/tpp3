@@ -522,12 +522,15 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	                                tpp_file_and_line))
 #define tpp_print_file_and_line_at(at_file, at_pos) tpp_print_file_and_line(at_file, at_pos, tpp_lcinfo_of(-1, -1))
 #define tpp_print_file_and_line_lc(at_file, at_lc)  tpp_print_file_and_line(at_file, NULL, at_lc)
-#define tpp_warnf0(format)                 tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format))
-#define tpp_warnf1(format, a)              tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a))
-#define tpp_warnf2(format, a, b)           tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b))
-#define tpp_warnf3(format, a, b, c)        tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b, c))
-#define tpp_warnf4(format, a, b, c, d)     tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b, c, d))
-#define tpp_va_arg(T) va_arg(args, T)
+#define tpp_warnf0(format)             tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format))
+#define tpp_warnf1(format, a)          tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a))
+#define tpp_warnf2(format, a, b)       tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b))
+#define tpp_warnf3(format, a, b, c)    tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b, c))
+#define tpp_warnf4(format, a, b, c, d) tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a, b, c, d))
+#define tpp_current_va_arg(T)          va_arg(args, T)
+#define tpp_current_va_args()          args
+#define tpp_current_lexer()            self
+#define tpp_current_warning_id()       id
 /* ... */
 /************************************************************************/
 
@@ -549,6 +552,10 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 #undef tpp_warnf2
 #undef tpp_warnf3
 #undef tpp_warnf4
+#undef tpp_current_va_arg
+#undef tpp_current_va_args
+#undef tpp_current_lexer
+#undef tpp_current_warning_id
 /************************************************************************/
 		default:
 			printer_status = (*printer)(printer_arg, (tpp_char const *)"UNKNOWN WARNING\n", 16);
