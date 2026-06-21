@@ -91,14 +91,14 @@ again:
 		/* No need to warn about trigraph -- was already done in `tpp_lexer_yieldraw()' */
 
 		/* Print trigraph character (but also handle case where "??/" was encoded) */
-		temp = (*data_printer)(arg, start, (tpp_size)(iter - start));
+		temp = tpp_formatprinter_print(data_printer, arg, start, (tpp_size)(iter - start));
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
 		iter += 3;
 		start = iter;
 		if (ch != '\\') {
-			temp = (*data_printer)(arg, &ch, 1);
+			temp = tpp_formatprinter_print(data_printer, arg, &ch, 1);
 			if (temp < 0)
 				goto err_temp;
 			result += temp;
@@ -114,7 +114,7 @@ not_trigraph:
 			goto again;
 
 		/* Print everything up until the \-character */
-		temp = (*data_printer)(arg, start, (tpp_size)((iter - 1) - start));
+		temp = tpp_formatprinter_print(data_printer, arg, start, (tpp_size)((iter - 1) - start));
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -177,7 +177,7 @@ not_trigraph:
 #endif /* !TPP_HAVE_ESCAPE_S_IN_STRINGS */
 
 print_ch:
-		temp = (*data_printer)(arg, &ch, 1);
+		temp = tpp_formatprinter_print(data_printer, arg, &ch, 1);
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -284,7 +284,7 @@ print_ch:
 
 		/* Encode as utf-8 */
 		utf8_len = (tpp_size)(tpp_unicode_writeutf8(utf8_buf, uc) - utf8_buf);
-		temp = (*utf8_printer)(arg, utf8_buf, utf8_len);
+		temp = tpp_formatprinter_print(utf8_printer, arg, utf8_buf, utf8_len);
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -365,7 +365,7 @@ handle_unknown_escape_sequence:
 #if TPP_HAVE_TRIGRAPHS
 		if (iter[-1] != '\\') {
 print_backslash_and_flush_at_iter:
-			temp = (*data_printer)(arg, (tpp_char const *)"\\", 1);
+			temp = tpp_formatprinter_print(data_printer, arg, (tpp_char const *)"\\", 1);
 			if (temp < 0)
 				goto err_temp;
 			result += temp;
@@ -384,7 +384,7 @@ print_backslash_and_flush_at_iter:
 	goto again;
 done:
 	if (start < end) {
-		temp = (*data_printer)(arg, start, (tpp_size)(end - start));
+		temp = tpp_formatprinter_print(data_printer, arg, start, (tpp_size)(end - start));
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -443,12 +443,12 @@ tpp_token_decodestring_raw(tpp_lexer *tpp_restrict self,
 	tpp_assert(start <= end);
 	(void)self;
 	/* TODO: Print input as-is, but skip over BSE */
-	return (*data_printer)(arg, start, (tpp_size)(end - start));
+	return tpp_formatprinter_print(data_printer, arg, start, (tpp_size)(end - start));
 }
 #else
 #define tpp_token_decodestring_raw_SKIPS_BSE 0
 #define tpp_token_decodestring_raw(self, start, end, data_printer, arg) \
-	((*(data_printer))(arg, start, (tpp_size)((end) - (start))))
+	tpp_formatprinter_print(data_printer, arg, start, (tpp_size)((end) - (start)))
 #endif
 #endif /* ... */
 
@@ -830,8 +830,7 @@ err_builder:
 #define TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_NO    2 /* String has 2 or more (non-empty) chunks */
 
 #define TPP_LEXER_PARSESTRING_CHUNK_STOP ((tpp_ssize)(TPP_ELAST - 1))
-static tpp_ssize TPP_FORMATPRINTER_CC
-tpp_lexer_parsestring_chunk_count(void *arg, tpp_char const *text, tpp_size num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(tpp_lexer_parsestring_chunk_count, arg, text, num_bytes) {
 	unsigned int *p_count = (unsigned int *)arg;
 	(void)text;
 	if (num_bytes != 0) {
@@ -892,8 +891,7 @@ struct tpp_lexer_decodestring_as_single_chunk_data {
 	tpp_string         *tldsascd_chunk;
 };
 
-static tpp_ssize TPP_FORMATPRINTER_CC
-tpp_lexer_decodestring_as_single_chunk_cb(void *arg, tpp_char const *text, tpp_size num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_as_single_chunk_cb, arg, text, num_bytes) {
 	tpp_errno error;
 	struct tpp_lexer_decodestring_as_single_chunk_data *data;
 	if tpp_unlikely(num_bytes == 0)
@@ -1214,8 +1212,7 @@ struct tpp_lexer_decodecharacter_data {
 	tpp_intmax tldcd_value; /* Multichar value */
 };
 
-static tpp_ssize TPP_FORMATPRINTER_CC
-tpp_lexer_decodecharacter_cb(void *arg, tpp_char const *text, tpp_size num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_bytes) {
 	tpp_size i;
 	struct tpp_lexer_decodecharacter_data *data;
 	data = (struct tpp_lexer_decodecharacter_data *)arg;

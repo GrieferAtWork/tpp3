@@ -1206,7 +1206,7 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 	case _TPP_EXPR_VALUE_KIND_FLOAT: {
 		tpp_float value = _tpp_expr_value_getfloat(self);
 		tpp_size value_len = tpp_ftoa(value_buffer, value);
-		return (*printer)(arg, (tpp_char const *)value_buffer, value_len);
+		return tpp_formatprinter_print_cstr(printer, arg, value_buffer, value_len);
 	}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
@@ -1214,7 +1214,7 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 	case _TPP_EXPR_VALUE_KIND_STRING: {
 		tpp_ssize temp, result;
 		tpp_string const *const str = _tpp_expr_value_getstring(self);
-		result = (*printer)(arg, (tpp_char const *)"\"", 1);
+		result = tpp_formatprinter_print_cstr(printer, arg, "\"", 1);
 		if tpp_unlikely(result < 0)
 			return result;
 		temp = tpp_token_encodestring(printer, arg, tpp_string_str(str),
@@ -1222,7 +1222,7 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 		if tpp_unlikely(temp < 0)
 			return temp;
 		result += temp;
-		temp = (*printer)(arg, (tpp_char const *)"\"", 1);
+		temp = tpp_formatprinter_print_cstr(printer, arg, "\"", 1);
 		if tpp_unlikely(temp < 0)
 			return temp;
 		result += temp;
@@ -1234,8 +1234,10 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 	}
 #endif /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
 	value_ptr = tpp_itoa(value_buffer, _tpp_expr_value_getint(self));
-	return (*printer)(arg, (tpp_char const *)value_ptr,
-	                  (tpp_size)((value_buffer + TPP_ITOA_MAXLEN) - value_ptr));
+	return tpp_formatprinter_print_cstr(printer, arg, value_ptr,
+	                                    (tpp_size)((value_buffer +
+	                                                TPP_ITOA_MAXLEN) -
+	                                               value_ptr));
 }
 #endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
 

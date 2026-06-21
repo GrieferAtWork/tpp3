@@ -333,8 +333,7 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,
 /* Print "text" into "tpp_string_builder *self"
  * @return: num_bytes:            Success
  * @return: (tpp_size)TPP_ENOMEM: Out of memory */
-TPP_IMPL TPP_WUNUSED tpp_ssize TPP_FORMATPRINTER_CC
-tpp_string_builder_print(void *arg, tpp_char const *text, tpp_size num_bytes) {
+TPP_IMPL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes) {
 	tpp_string_builder *me = (tpp_string_builder *)arg;
 	tpp_char *dst = tpp_string_builder_alloc(me, num_bytes);
 	if tpp_unlikely(!dst)
@@ -3446,7 +3445,8 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
 	tpp_char ch;
 again:
 	if (iter >= end) {
-		temp = (*printer)(arg, (tpp_char const *)data, (tpp_size)(end - (tpp_char const *)data));
+		temp = tpp_formatprinter_print(printer, arg, (tpp_char const *)data,
+		                               (tpp_size)(end - (tpp_char const *)data));
 		if (temp < 0)
 			return temp;
 		result += temp;
@@ -3474,17 +3474,17 @@ again:
 #undef TPP_TOKEN_ENCODESTRING_CASE
 	default: goto again;
 	}
-	temp = (*printer)(arg, (tpp_char const *)data,
-	                  (tpp_size)((iter - 1) -
-	                             (tpp_char const *)data));
+	temp = tpp_formatprinter_print(printer, arg, (tpp_char const *)data,
+	                               (tpp_size)((iter - 1) -
+	                                          (tpp_char const *)data));
 	if (temp < 0)
 		return temp;
 	result += temp;
 #if TPP_HAVE_UNICODE
-	temp = (*printer)(arg, (tpp_char const *)output_repr, tpp_strlen(output_repr));
+	temp = tpp_formatprinter_print_cstr(printer, arg, output_repr, tpp_strlen(output_repr));
 #else /* TPP_HAVE_UNICODE */
 	/* All mandatory ASCII-escape-sequences are 2 bytes long! */
-	temp = (*printer)(arg, (tpp_char const *)output_repr, 2);
+	temp = tpp_formatprinter_print_cstr(printer, arg, output_repr, 2);
 #endif /* !TPP_HAVE_UNICODE */
 	if (temp < 0)
 		return temp;
@@ -4534,12 +4534,13 @@ tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
 #endif /* TPP_HAVE_CPP_MACROS */
 
 
-/* Return line/column information (1-based) for "pos" */
+/* Return line/column information (1-based) for "pos"
+ * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcinfo result;
 	if tpp_unlikely(!self->tf_chunk)
-		return tpp_lcinfo_of(0, 0);
+		return TPP_LCINFO_INVALID;
 	tpp_assert(pos >= tpp_string_str(self->tf_chunk));
 	tpp_assert(pos <= tpp_string_end(self->tf_chunk));
 
@@ -8434,16 +8435,14 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 #if TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER
-TPP_IMPL tpp_ssize TPP_FORMATPRINTER_CC
-_tpp_lexer_wrapped_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes) {
+TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_wrapped_warnprinter, arg, text, num_bytes) {
 	(void)arg;
 	return TPP_CONFIG_WARNPRINTER(text, num_bytes);
 }
 #endif /* TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER */
 
 #if TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER
-TPP_IMPL tpp_ssize TPP_FORMATPRINTER_CC
-_tpp_lexer_builtin_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes) {
+TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes) {
 	FILE *fp = stderr;
 	(void)arg;
 	fwrite(text, sizeof(tpp_char), num_bytes, fp);
@@ -8452,8 +8451,7 @@ _tpp_lexer_builtin_warnprinter(void *arg, tpp_char const *text, tpp_size num_byt
 #endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
 
 #if TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER
-TPP_IMPL tpp_ssize TPP_FORMATPRINTER_CC
-_tpp_lexer_noop_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes) {
+TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_noop_warnprinter, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	(void)num_bytes;
@@ -8509,33 +8507,33 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_print_uint(tpp_formatprinter printer, void *arg, tpp_uintmax value) {
 	char buf[TPP_UTOA_MAXLEN];
 	char const *start = tpp_utoa(buf, value);
-	return (*printer)(arg, (tpp_char const *)start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
+	return tpp_formatprinter_print_cstr(printer, arg, start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 	char buf[TPP_ITOA_MAXLEN];
 	char const *start = tpp_itoa(buf, value);
-	return (*printer)(arg, (tpp_char const *)start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
+	return tpp_formatprinter_print_cstr(printer, arg, start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_start(tpp_formatprinter printer, void *arg) {
 	/* TODO: Do something more interesting here! */
-	return (*printer)(arg, (tpp_char const *)"`", 1);
+	return tpp_formatprinter_print_cstr(printer, arg, "`", 1);
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_end(tpp_formatprinter printer, void *arg) {
 	/* TODO: Do something more interesting here! */
-	return (*printer)(arg, (tpp_char const *)"`", 1);
+	return tpp_formatprinter_print_cstr(printer, arg, "`", 1);
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_token_data(tpp_formatprinter printer, void *arg,
                       tpp_char const *start, tpp_size length) {
 	/* TODO: Escape line-feeds while printing token body */
-	return (*printer)(arg, start, length);
+	return tpp_formatprinter_print(printer, arg, start, length);
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 5, 7)) tpp_ssize TPPCALL
@@ -8553,8 +8551,8 @@ again:
 		if (ch == '\0') {
 handle_eof:
 			--iter;
-			temp = (*printer)(arg, (tpp_char const *)format,
-			                  (tpp_size)(iter - format));
+			temp = tpp_formatprinter_print_cstr(printer, arg, format,
+			                                    (tpp_size)(iter - format));
 			if tpp_unlikely(temp < 0)
 				goto err_temp;
 			result += temp;
@@ -8563,8 +8561,8 @@ handle_eof:
 		goto again;
 	}
 	if ((iter - 1) > format) {
-		temp = (*printer)(arg, (tpp_char const *)format,
-		                  (tpp_size)((iter - 1) - format));
+		temp = tpp_formatprinter_print_cstr(printer, arg, format,
+		                                    (tpp_size)((iter - 1) - format));
 		if tpp_unlikely(temp < 0)
 			goto err_temp;
 		result += temp;
@@ -8597,9 +8595,13 @@ handle_eof:
 				pos_lcinfo = tpp_file_lcinfo(file, pos);
 				lcinfo_loaded = true;
 			}
-			temp = tpp_format_print_int(printer, arg,
-			                            ch == 'l' ? (tpp_lcinfo_getline(pos_lcinfo) + 1)
-			                                      : (tpp_lcinfo_getcol(pos_lcinfo) + 1));
+			if (tpp_lcinfo_isvalid(pos_lcinfo)) {
+				temp = tpp_format_print_int(printer, arg,
+				                            ch == 'l' ? (tpp_lcinfo_getline(pos_lcinfo) + 1)
+				                                      : (tpp_lcinfo_getcol(pos_lcinfo) + 1));
+			} else {
+				temp = tpp_formatprinter_print_cstr(printer, arg, "?", 1);
+			}
 		}	break;
 
 		case 'f': {
@@ -8607,7 +8609,7 @@ handle_eof:
 			char const *filename = tpp_file_userfilename(file);
 			if (filename == NULL)
 				filename = "?";
-			temp = (*printer)(arg, (tpp_char const *)filename, tpp_strlen(filename));
+			temp = tpp_formatprinter_print_cstr(printer, arg, filename, tpp_strlen(filename));
 		}	break;
 
 		case 't': {
@@ -8625,7 +8627,7 @@ handle_eof:
 #if TPP_HAVE_LEXER_REPRTOKENID
 			if ((length == 0) &&
 			    (token_repr = tpp_lexer_reprtokenid(self, token->tt_id)) != NULL) {
-				temp = (*printer)(arg, (tpp_char const *)token_repr, tpp_strlen(token_repr));
+				temp = tpp_formatprinter_print_cstr(printer, arg, token_repr, tpp_strlen(token_repr));
 			} else
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */
 			{
@@ -8648,7 +8650,7 @@ handle_eof:
 		char const *s = va_arg(args, char const *);
 		if (s == NULL)
 			s = null_str;
-		temp = (*printer)(arg, (tpp_char const *)s, tpp_strlen(s));
+		temp = tpp_formatprinter_print_cstr(printer, arg, s, tpp_strlen(s));
 	}	break;
 
 	case '.': {
@@ -8665,7 +8667,7 @@ handle_eof:
 				char const *s = va_arg(args, char const *);
 				if (s == NULL)
 					s = null_str;
-				temp = (*printer)(arg, (tpp_char const *)s, (tpp_size)length);
+				temp = tpp_formatprinter_print_cstr(printer, arg, s, (tpp_size)length);
 			}	break;
 
 			default:
@@ -8701,7 +8703,7 @@ handle_eof:
 				char const *s = va_arg(args, char const *);
 				if (s == NULL)
 					s = null_str;
-				temp = (*printer)(arg, (tpp_char const *)s, (tpp_size)length);
+				temp = tpp_formatprinter_print_cstr(printer, arg, s, (tpp_size)length);
 			}	break;
 
 			case 'P': {
@@ -8762,7 +8764,7 @@ handle_eof:
 	case 'c': {
 		/* "%c"    As defined by stdc, using va_arg(args, int) */
 		tpp_char ord = (tpp_char)va_arg(args, unsigned int);
-		temp = (*printer)(arg, &ord, 1);
+		temp = tpp_formatprinter_print(printer, arg, &ord, 1);
 	}	break;
 
 	default:
@@ -8846,9 +8848,9 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 
 	/* Print what this is about... */
 	if (invokeinfo.twii_state == TPP_WSTATE_WARN) {
-		printer_status = (*printer)(printer_arg, (tpp_char const *)"warning[", 8);
+		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "warning[", 8);
 	} else {
-		printer_status = (*printer)(printer_arg, (tpp_char const *)"error[", 6);
+		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "error[", 6);
 	}
 	if (printer_status < 0)
 		goto err_printer;
@@ -8859,7 +8861,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(invokeinfo.twii_ctx_id);
 		unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
 		if tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID) {
-			printer_status = (*printer)(printer_arg, (tpp_char const *)"?", 1);
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "?", 1);
 		} else {
 			printer_status = tpp_format_print_uint(printer, printer_arg, number);
 		}
@@ -8869,17 +8871,17 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(invokeinfo.twii_ctx_id);
 		char const *group_name = tpp_warning_group_getnames(group_id);
 		if tpp_unlikely(group_name == NULL) {
-			printer_status = (*printer)(printer_arg, (tpp_char const *)"?", 1);
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "?", 1);
 		} else {
-			printer_status = (*printer)(printer_arg, (tpp_char const *)"-W", 2);
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "-W", 2);
 			if (printer_status < 0)
 				goto err_printer;
-			printer_status = (*printer)(printer_arg, (tpp_char const *)group_name, tpp_strlen(group_name));
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name));
 		}
 	}
 	if (printer_status < 0)
 		goto err_printer;
-	printer_status = (*printer)(printer_arg, (tpp_char const *)"]: ", 3);
+	printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "]: ", 3);
 	if (printer_status < 0)
 		goto err_printer;
 
@@ -8892,7 +8894,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		                                           warning_format, args);
 		if (printer_status < 0)
 			goto err_printer;
-		printer_status = (*printer)(printer_arg, (tpp_char const *)"\n", 1);
+		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "\n", 1);
 		if (printer_status < 0)
 			goto err_printer;
 	} else {
@@ -8949,7 +8951,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 #undef tpp_current_warning_id
 /************************************************************************/
 		default:
-			printer_status = (*printer)(printer_arg, (tpp_char const *)"UNKNOWN WARNING\n", 16);
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "UNKNOWN WARNING\n", 16);
 			if (printer_status < 0)
 				goto err_printer;
 			break;
@@ -8975,7 +8977,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			                                          tpp_file_and_line);
 			if (printer_status < 0)
 				goto err_printer;
-			printer_status = (*printer)(printer_arg, (tpp_char const *)"note: originating from here\n", 28);
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "note: originating from here\n", 28);
 			if (printer_status < 0)
 				goto err_printer;
 		}
@@ -10256,7 +10258,7 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 	case _TPP_EXPR_VALUE_KIND_FLOAT: {
 		tpp_float value = _tpp_expr_value_getfloat(self);
 		tpp_size value_len = tpp_ftoa(value_buffer, value);
-		return (*printer)(arg, (tpp_char const *)value_buffer, value_len);
+		return tpp_formatprinter_print_cstr(printer, arg, value_buffer, value_len);
 	}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
@@ -10264,7 +10266,7 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 	case _TPP_EXPR_VALUE_KIND_STRING: {
 		tpp_ssize temp, result;
 		tpp_string const *const str = _tpp_expr_value_getstring(self);
-		result = (*printer)(arg, (tpp_char const *)"\"", 1);
+		result = tpp_formatprinter_print_cstr(printer, arg, "\"", 1);
 		if tpp_unlikely(result < 0)
 			return result;
 		temp = tpp_token_encodestring(printer, arg, tpp_string_str(str),
@@ -10272,7 +10274,7 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 		if tpp_unlikely(temp < 0)
 			return temp;
 		result += temp;
-		temp = (*printer)(arg, (tpp_char const *)"\"", 1);
+		temp = tpp_formatprinter_print_cstr(printer, arg, "\"", 1);
 		if tpp_unlikely(temp < 0)
 			return temp;
 		result += temp;
@@ -10284,8 +10286,10 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 	}
 #endif /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
 	value_ptr = tpp_itoa(value_buffer, _tpp_expr_value_getint(self));
-	return (*printer)(arg, (tpp_char const *)value_ptr,
-	                  (tpp_size)((value_buffer + TPP_ITOA_MAXLEN) - value_ptr));
+	return tpp_formatprinter_print_cstr(printer, arg, value_ptr,
+	                                    (tpp_size)((value_buffer +
+	                                                TPP_ITOA_MAXLEN) -
+	                                               value_ptr));
 }
 #endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
 
@@ -19956,15 +19960,13 @@ tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
 
 
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-static tpp_ssize TPP_FORMATPRINTER_CC
-tpp_count_printer(void *arg, tpp_char const *text, tpp_size num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(tpp_count_printer, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	return (tpp_ssize)num_bytes;
 }
 
-static tpp_ssize TPP_FORMATPRINTER_CC
-tpp_buffer_printer(void *arg, tpp_char const *text, tpp_size num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(tpp_buffer_printer, arg, text, num_bytes) {
 	tpp_char **p_dst = (tpp_char **)arg;
 	tpp_char *dst = *p_dst;
 	tpp_memcpy(dst, text, num_bytes);
@@ -22389,14 +22391,14 @@ again:
 		/* No need to warn about trigraph -- was already done in `tpp_lexer_yieldraw()' */
 
 		/* Print trigraph character (but also handle case where "??/" was encoded) */
-		temp = (*data_printer)(arg, start, (tpp_size)(iter - start));
+		temp = tpp_formatprinter_print(data_printer, arg, start, (tpp_size)(iter - start));
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
 		iter += 3;
 		start = iter;
 		if (ch != '\\') {
-			temp = (*data_printer)(arg, &ch, 1);
+			temp = tpp_formatprinter_print(data_printer, arg, &ch, 1);
 			if (temp < 0)
 				goto err_temp;
 			result += temp;
@@ -22412,7 +22414,7 @@ not_trigraph:
 			goto again;
 
 		/* Print everything up until the \-character */
-		temp = (*data_printer)(arg, start, (tpp_size)((iter - 1) - start));
+		temp = tpp_formatprinter_print(data_printer, arg, start, (tpp_size)((iter - 1) - start));
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -22475,7 +22477,7 @@ not_trigraph:
 #endif /* !TPP_HAVE_ESCAPE_S_IN_STRINGS */
 
 print_ch:
-		temp = (*data_printer)(arg, &ch, 1);
+		temp = tpp_formatprinter_print(data_printer, arg, &ch, 1);
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -22582,7 +22584,7 @@ print_ch:
 
 		/* Encode as utf-8 */
 		utf8_len = (tpp_size)(tpp_unicode_writeutf8(utf8_buf, uc) - utf8_buf);
-		temp = (*utf8_printer)(arg, utf8_buf, utf8_len);
+		temp = tpp_formatprinter_print(utf8_printer, arg, utf8_buf, utf8_len);
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -22663,7 +22665,7 @@ handle_unknown_escape_sequence:
 #if TPP_HAVE_TRIGRAPHS
 		if (iter[-1] != '\\') {
 print_backslash_and_flush_at_iter:
-			temp = (*data_printer)(arg, (tpp_char const *)"\\", 1);
+			temp = tpp_formatprinter_print(data_printer, arg, (tpp_char const *)"\\", 1);
 			if (temp < 0)
 				goto err_temp;
 			result += temp;
@@ -22682,7 +22684,7 @@ print_backslash_and_flush_at_iter:
 	goto again;
 done:
 	if (start < end) {
-		temp = (*data_printer)(arg, start, (tpp_size)(end - start));
+		temp = tpp_formatprinter_print(data_printer, arg, start, (tpp_size)(end - start));
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -22741,12 +22743,12 @@ tpp_token_decodestring_raw(tpp_lexer *tpp_restrict self,
 	tpp_assert(start <= end);
 	(void)self;
 	/* TODO: Print input as-is, but skip over BSE */
-	return (*data_printer)(arg, start, (tpp_size)(end - start));
+	return tpp_formatprinter_print(data_printer, arg, start, (tpp_size)(end - start));
 }
 #else
 #define tpp_token_decodestring_raw_SKIPS_BSE 0
 #define tpp_token_decodestring_raw(self, start, end, data_printer, arg) \
-	((*(data_printer))(arg, start, (tpp_size)((end) - (start))))
+	tpp_formatprinter_print(data_printer, arg, start, (tpp_size)((end) - (start)))
 #endif
 #endif /* ... */
 
@@ -23128,8 +23130,7 @@ err_builder:
 #define TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_NO    2 /* String has 2 or more (non-empty) chunks */
 
 #define TPP_LEXER_PARSESTRING_CHUNK_STOP ((tpp_ssize)(TPP_ELAST - 1))
-static tpp_ssize TPP_FORMATPRINTER_CC
-tpp_lexer_parsestring_chunk_count(void *arg, tpp_char const *text, tpp_size num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(tpp_lexer_parsestring_chunk_count, arg, text, num_bytes) {
 	unsigned int *p_count = (unsigned int *)arg;
 	(void)text;
 	if (num_bytes != 0) {
@@ -23190,8 +23191,7 @@ struct tpp_lexer_decodestring_as_single_chunk_data {
 	tpp_string         *tldsascd_chunk;
 };
 
-static tpp_ssize TPP_FORMATPRINTER_CC
-tpp_lexer_decodestring_as_single_chunk_cb(void *arg, tpp_char const *text, tpp_size num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_as_single_chunk_cb, arg, text, num_bytes) {
 	tpp_errno error;
 	struct tpp_lexer_decodestring_as_single_chunk_data *data;
 	if tpp_unlikely(num_bytes == 0)
@@ -23512,8 +23512,7 @@ struct tpp_lexer_decodecharacter_data {
 	tpp_intmax tldcd_value; /* Multichar value */
 };
 
-static tpp_ssize TPP_FORMATPRINTER_CC
-tpp_lexer_decodecharacter_cb(void *arg, tpp_char const *text, tpp_size num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_bytes) {
 	tpp_size i;
 	struct tpp_lexer_decodecharacter_data *data;
 	data = (struct tpp_lexer_decodecharacter_data *)arg;

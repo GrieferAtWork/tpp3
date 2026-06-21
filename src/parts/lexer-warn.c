@@ -43,16 +43,14 @@
 TPP_DECL_BEGIN
 
 #if TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER
-TPP_IMPL tpp_ssize TPP_FORMATPRINTER_CC
-_tpp_lexer_wrapped_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes) {
+TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_wrapped_warnprinter, arg, text, num_bytes) {
 	(void)arg;
 	return TPP_CONFIG_WARNPRINTER(text, num_bytes);
 }
 #endif /* TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER */
 
 #if TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER
-TPP_IMPL tpp_ssize TPP_FORMATPRINTER_CC
-_tpp_lexer_builtin_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes) {
+TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes) {
 	FILE *fp = stderr;
 	(void)arg;
 	fwrite(text, sizeof(tpp_char), num_bytes, fp);
@@ -61,8 +59,7 @@ _tpp_lexer_builtin_warnprinter(void *arg, tpp_char const *text, tpp_size num_byt
 #endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
 
 #if TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER
-TPP_IMPL tpp_ssize TPP_FORMATPRINTER_CC
-_tpp_lexer_noop_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes) {
+TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_noop_warnprinter, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	(void)num_bytes;
@@ -118,33 +115,33 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_print_uint(tpp_formatprinter printer, void *arg, tpp_uintmax value) {
 	char buf[TPP_UTOA_MAXLEN];
 	char const *start = tpp_utoa(buf, value);
-	return (*printer)(arg, (tpp_char const *)start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
+	return tpp_formatprinter_print_cstr(printer, arg, start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 	char buf[TPP_ITOA_MAXLEN];
 	char const *start = tpp_itoa(buf, value);
-	return (*printer)(arg, (tpp_char const *)start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
+	return tpp_formatprinter_print_cstr(printer, arg, start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_start(tpp_formatprinter printer, void *arg) {
 	/* TODO: Do something more interesting here! */
-	return (*printer)(arg, (tpp_char const *)"`", 1);
+	return tpp_formatprinter_print_cstr(printer, arg, "`", 1);
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_end(tpp_formatprinter printer, void *arg) {
 	/* TODO: Do something more interesting here! */
-	return (*printer)(arg, (tpp_char const *)"`", 1);
+	return tpp_formatprinter_print_cstr(printer, arg, "`", 1);
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_token_data(tpp_formatprinter printer, void *arg,
                       tpp_char const *start, tpp_size length) {
 	/* TODO: Escape line-feeds while printing token body */
-	return (*printer)(arg, start, length);
+	return tpp_formatprinter_print(printer, arg, start, length);
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 5, 7)) tpp_ssize TPPCALL
@@ -162,8 +159,8 @@ again:
 		if (ch == '\0') {
 handle_eof:
 			--iter;
-			temp = (*printer)(arg, (tpp_char const *)format,
-			                  (tpp_size)(iter - format));
+			temp = tpp_formatprinter_print_cstr(printer, arg, format,
+			                                    (tpp_size)(iter - format));
 			if tpp_unlikely(temp < 0)
 				goto err_temp;
 			result += temp;
@@ -172,8 +169,8 @@ handle_eof:
 		goto again;
 	}
 	if ((iter - 1) > format) {
-		temp = (*printer)(arg, (tpp_char const *)format,
-		                  (tpp_size)((iter - 1) - format));
+		temp = tpp_formatprinter_print_cstr(printer, arg, format,
+		                                    (tpp_size)((iter - 1) - format));
 		if tpp_unlikely(temp < 0)
 			goto err_temp;
 		result += temp;
@@ -206,9 +203,13 @@ handle_eof:
 				pos_lcinfo = tpp_file_lcinfo(file, pos);
 				lcinfo_loaded = true;
 			}
-			temp = tpp_format_print_int(printer, arg,
-			                            ch == 'l' ? (tpp_lcinfo_getline(pos_lcinfo) + 1)
-			                                      : (tpp_lcinfo_getcol(pos_lcinfo) + 1));
+			if (tpp_lcinfo_isvalid(pos_lcinfo)) {
+				temp = tpp_format_print_int(printer, arg,
+				                            ch == 'l' ? (tpp_lcinfo_getline(pos_lcinfo) + 1)
+				                                      : (tpp_lcinfo_getcol(pos_lcinfo) + 1));
+			} else {
+				temp = tpp_formatprinter_print_cstr(printer, arg, "?", 1);
+			}
 		}	break;
 
 		case 'f': {
@@ -216,7 +217,7 @@ handle_eof:
 			char const *filename = tpp_file_userfilename(file);
 			if (filename == NULL)
 				filename = "?";
-			temp = (*printer)(arg, (tpp_char const *)filename, tpp_strlen(filename));
+			temp = tpp_formatprinter_print_cstr(printer, arg, filename, tpp_strlen(filename));
 		}	break;
 
 		case 't': {
@@ -234,7 +235,7 @@ handle_eof:
 #if TPP_HAVE_LEXER_REPRTOKENID
 			if ((length == 0) &&
 			    (token_repr = tpp_lexer_reprtokenid(self, token->tt_id)) != NULL) {
-				temp = (*printer)(arg, (tpp_char const *)token_repr, tpp_strlen(token_repr));
+				temp = tpp_formatprinter_print_cstr(printer, arg, token_repr, tpp_strlen(token_repr));
 			} else
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */
 			{
@@ -257,7 +258,7 @@ handle_eof:
 		char const *s = va_arg(args, char const *);
 		if (s == NULL)
 			s = null_str;
-		temp = (*printer)(arg, (tpp_char const *)s, tpp_strlen(s));
+		temp = tpp_formatprinter_print_cstr(printer, arg, s, tpp_strlen(s));
 	}	break;
 
 	case '.': {
@@ -274,7 +275,7 @@ handle_eof:
 				char const *s = va_arg(args, char const *);
 				if (s == NULL)
 					s = null_str;
-				temp = (*printer)(arg, (tpp_char const *)s, (tpp_size)length);
+				temp = tpp_formatprinter_print_cstr(printer, arg, s, (tpp_size)length);
 			}	break;
 
 			default:
@@ -310,7 +311,7 @@ handle_eof:
 				char const *s = va_arg(args, char const *);
 				if (s == NULL)
 					s = null_str;
-				temp = (*printer)(arg, (tpp_char const *)s, (tpp_size)length);
+				temp = tpp_formatprinter_print_cstr(printer, arg, s, (tpp_size)length);
 			}	break;
 
 			case 'P': {
@@ -371,7 +372,7 @@ handle_eof:
 	case 'c': {
 		/* "%c"    As defined by stdc, using va_arg(args, int) */
 		tpp_char ord = (tpp_char)va_arg(args, unsigned int);
-		temp = (*printer)(arg, &ord, 1);
+		temp = tpp_formatprinter_print(printer, arg, &ord, 1);
 	}	break;
 
 	default:
@@ -455,9 +456,9 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 
 	/* Print what this is about... */
 	if (invokeinfo.twii_state == TPP_WSTATE_WARN) {
-		printer_status = (*printer)(printer_arg, (tpp_char const *)"warning[", 8);
+		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "warning[", 8);
 	} else {
-		printer_status = (*printer)(printer_arg, (tpp_char const *)"error[", 6);
+		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "error[", 6);
 	}
 	if (printer_status < 0)
 		goto err_printer;
@@ -468,7 +469,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(invokeinfo.twii_ctx_id);
 		unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
 		if tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID) {
-			printer_status = (*printer)(printer_arg, (tpp_char const *)"?", 1);
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "?", 1);
 		} else {
 			printer_status = tpp_format_print_uint(printer, printer_arg, number);
 		}
@@ -478,17 +479,17 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(invokeinfo.twii_ctx_id);
 		char const *group_name = tpp_warning_group_getnames(group_id);
 		if tpp_unlikely(group_name == NULL) {
-			printer_status = (*printer)(printer_arg, (tpp_char const *)"?", 1);
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "?", 1);
 		} else {
-			printer_status = (*printer)(printer_arg, (tpp_char const *)"-W", 2);
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "-W", 2);
 			if (printer_status < 0)
 				goto err_printer;
-			printer_status = (*printer)(printer_arg, (tpp_char const *)group_name, tpp_strlen(group_name));
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name));
 		}
 	}
 	if (printer_status < 0)
 		goto err_printer;
-	printer_status = (*printer)(printer_arg, (tpp_char const *)"]: ", 3);
+	printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "]: ", 3);
 	if (printer_status < 0)
 		goto err_printer;
 
@@ -501,7 +502,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		                                           warning_format, args);
 		if (printer_status < 0)
 			goto err_printer;
-		printer_status = (*printer)(printer_arg, (tpp_char const *)"\n", 1);
+		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "\n", 1);
 		if (printer_status < 0)
 			goto err_printer;
 	} else {
@@ -520,7 +521,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	tpp_do(tpp_lexer_printf_warning(self, at_file, at_pos, at_lc, \
 	                                printer, printer_arg,         \
 	                                tpp_file_and_line))
-#define tpp_print_file_and_line_at(at_file, at_pos) tpp_print_file_and_line(at_file, at_pos, tpp_lcinfo_of(-1, -1))
+#define tpp_print_file_and_line_at(at_file, at_pos) tpp_print_file_and_line(at_file, at_pos, TPP_LCINFO_INVALID)
 #define tpp_print_file_and_line_lc(at_file, at_lc)  tpp_print_file_and_line(at_file, NULL, at_lc)
 #define tpp_warnf0(format)             tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format))
 #define tpp_warnf1(format, a)          tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a))
@@ -558,7 +559,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 #undef tpp_current_warning_id
 /************************************************************************/
 		default:
-			printer_status = (*printer)(printer_arg, (tpp_char const *)"UNKNOWN WARNING\n", 16);
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "UNKNOWN WARNING\n", 16);
 			if (printer_status < 0)
 				goto err_printer;
 			break;
@@ -579,12 +580,12 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			 * list, or the start of a #include-directive, to the trailing
 			 * line-feed) */
 			printer_status = tpp_lexer_printf_warning(self, caller, caller->tf_tpos,
-			                                          tpp_lcinfo_of(-1, -1),
+			                                          TPP_LCINFO_INVALID,
 			                                          printer, printer_arg,
 			                                          tpp_file_and_line);
 			if (printer_status < 0)
 				goto err_printer;
-			printer_status = (*printer)(printer_arg, (tpp_char const *)"note: originating from here\n", 28);
+			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "note: originating from here\n", 28);
 			if (printer_status < 0)
 				goto err_printer;
 		}
@@ -631,7 +632,7 @@ tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
                     tpp_warning_id id, va_list args) {
-	return tpp_lexer_vwarnf_impl(self, pos, tpp_lcinfo_of(-1, -1), id, args);
+	return tpp_lexer_vwarnf_impl(self, pos, TPP_LCINFO_INVALID, id, args);
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPVCALL
@@ -639,7 +640,7 @@ tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warnin
 	tpp_errno result;
 	va_list args;
 	va_start(args, id);
-	result = tpp_lexer_vwarnf_impl(self, pos, tpp_lcinfo_of(-1, -1), id, args);
+	result = tpp_lexer_vwarnf_impl(self, pos, TPP_LCINFO_INVALID, id, args);
 	va_end(args);
 	return result;
 }

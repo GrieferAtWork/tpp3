@@ -915,12 +915,13 @@ tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
 #endif /* TPP_HAVE_CPP_MACROS */
 
 
-/* Return line/column information (1-based) for "pos" */
+/* Return line/column information (1-based) for "pos"
+ * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcinfo result;
 	if tpp_unlikely(!self->tf_chunk)
-		return tpp_lcinfo_of(0, 0);
+		return TPP_LCINFO_INVALID;
 	tpp_assert(pos >= tpp_string_str(self->tf_chunk));
 	tpp_assert(pos <= tpp_string_end(self->tf_chunk));
 
@@ -959,6 +960,8 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT: {
 		result = self->tf_data.td_io.tff_start_lc;
+		if (!tpp_lcinfo_isvalid(result))
+			return result;
 		result = tpp_lcinfo_account(self, result, tpp_string_str(self->tf_chunk),
 		                            (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
 	}	break;
@@ -986,6 +989,8 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			goto done_nocache;
 		} else {
 			result = macro->tm_body_lc;
+			if (!tpp_lcinfo_isvalid(result))
+				return result;
 			result = tpp_lcinfo_account(self, result, macro->tm_body_start,
 			                            (tpp_size)(pos - macro->tm_body_start));
 		}

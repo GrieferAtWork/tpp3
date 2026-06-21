@@ -383,6 +383,10 @@ TPP_DECL_BEGIN
 typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
 #define tpp_formatprinter_print(printer, arg, text, num_bytes) \
 	((*printer)(arg, text, num_bytes))
+#define tpp_formatprinter_print_cstr(printer, arg, text, num_bytes) \
+	((*printer)(arg, (tpp_char const *)(text), num_bytes))
+#define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
+	tpp_ssize (TPP_FORMATPRINTER_CC name)(void *arg, tpp_char const *text, tpp_size num_bytes)
 #endif /* !tpp_formatprinter */
 
 #ifndef tpp_lcinfo
@@ -428,6 +432,21 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 	(tpp_lcinfo_getline(a) == tpp_lcinfo_getline(b) && \
 	 tpp_lcinfo_getcol(a) == tpp_lcinfo_getcol(b))
 #endif /* !tpp_lcinfo_equals */
+
+/* Specifies an invalid LC information object */
+#ifndef TPP_LCINFO_INVALID
+#define TPP_LCINFO_INVALID            tpp_lcinfo_of(-1, -1)
+#define tpp_lcinfo_isvalid(x)         (tpp_lcinfo_getcol(x) >= 0)
+#define tpp_lcinfo_init_invalid(self) tpp_lcinfo_init(self, -1, -1)
+#endif /* !TPP_LCINFO_INVALID */
+
+/* Check if "x" represents valid line/column information */
+#ifndef tpp_lcinfo_isvalid
+#define tpp_lcinfo_isvalid(x) (!tpp_lcinfo_equals(x, TPP_LCINFO_INVALID))
+#endif /* !tpp_lcinfo_isvalid */
+#ifndef tpp_lcinfo_init_invalid
+#define tpp_lcinfo_init_invalid(self) (void)((self) = TPP_LCINFO_INVALID)
+#endif /* !tpp_lcinfo_init_invalid */
 
 #ifndef tpp_refcnt
 /* NOTE: Multi-threaded applications can leave this alone: a single

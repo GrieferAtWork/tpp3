@@ -4647,8 +4647,7 @@ TPP_INLINE tpp_size TPPCALL TPP_SizeofFtos(tpp_float f) {
 }
 
 
-TPP_INLINE tpp_ssize TPP_FORMATPRINTER_CC
-_TPP_Escape_buffer_cb(void *arg, tpp_char const *text, tpp_size num_bytes) {
+TPP_INLINE TPP_FORMATPRINTER_DEFINE(_TPP_Escape_buffer_cb, arg, text, num_bytes) {
 	if (arg) {
 		char **p_buf = (char **)arg;
 		tpp_memcpy(*p_buf, text, num_bytes);
@@ -5145,7 +5144,7 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #define l_counter    TPP_INTERNAL(tl_builtin_counter)
 
 #define TPPLexer_Init(self) \
-	(tpp_lexer_init_text_ex(self, NULL, NULL, NULL, 0, tpp_lcinfo_of(-1, -1), TPP_FILE_ENCODING_UTF8), 1)
+	(tpp_lexer_init_text_ex(self, NULL, NULL, NULL, 0, TPP_LCINFO_INVALID, TPP_FILE_ENCODING_UTF8), 1)
 #define TPPLexer_Quit(self) tpp_lexer_fini(self)
 
 /* Clear the current ifdef-stack and warn about each entry.

@@ -67,7 +67,7 @@ tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
 	(void)expanded_text;
 	(void)pos;
 	/* TODO */
-	return tpp_lcinfo_of(0, 0);
+	return TPP_LCINFO_INVALID;
 }
 
 #endif /* TPP_HAVE_CPP_MACROS */

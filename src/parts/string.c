@@ -144,8 +144,7 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,
 /* Print "text" into "tpp_string_builder *self"
  * @return: num_bytes:            Success
  * @return: (tpp_size)TPP_ENOMEM: Out of memory */
-TPP_IMPL TPP_WUNUSED tpp_ssize TPP_FORMATPRINTER_CC
-tpp_string_builder_print(void *arg, tpp_char const *text, tpp_size num_bytes) {
+TPP_IMPL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes) {
 	tpp_string_builder *me = (tpp_string_builder *)arg;
 	tpp_char *dst = tpp_string_builder_alloc(me, num_bytes);
 	if tpp_unlikely(!dst)

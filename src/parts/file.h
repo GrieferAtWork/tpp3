@@ -203,7 +203,7 @@ typedef struct tpp_file {
 	union {
 		struct {
 			char const      *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
-			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
 #if TPP_HAVE_FILE_USER_FILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_io_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_user_filename) = NULL
@@ -260,7 +260,7 @@ typedef struct tpp_file {
 
 		struct {
 			char const *TPP_INTERNAL(tft_name);     /* [0..1][const] Filename for messages (if available) */
-			tpp_lcinfo  TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+			tpp_lcinfo  TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
 #if TPP_HAVE_FILE_USER_FILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tft_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_text_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename) = NULL
@@ -475,6 +475,72 @@ typedef struct tpp_file {
 
 
 
+#if 0 /* Push a temporary file onto the #include-stack (for tracebacks only) */
+#define tpp_file_tempfile_push(self)                                 \
+	do {                                                             \
+		tpp_file _tfptf_prev = *(self);                              \
+		(self)->TPP_INTERNAL(tf_prev) = NULL; /* Prevent file pop */ \
+		(self)->TPP_INTERNAL(tf_tprev) = &_tfptf_prev;               \
+		tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
+#if TPP_HAVE_CPP_MACROS
+#define _tpp_file_tempfile_setchunk(self, chunk)                                                                            \
+		((self)->TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_MACRO)                                                              \
+		? (void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name) =                               \
+		         _tfptf_prev.TPP_INTERNAL(tf_data).TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro)->TPP_INTERNAL(tm_deffile) \
+		         _tpp_file_init_text_user_filename(self))                                                                   \
+		: (void)0,                                                                                                          \
+		(self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT,                                                                 \
+		tpp_lcinfo_init_invalid((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)),            \
+		(self)->TPP_INTERNAL(tf_chunk) = (chunk)                                                                            \
+		_tpp_file_init_lcpos(self)
+#define _tpp_file_tempfile_restorechunk(self)                                                                                                             \
+		(self)->TPP_INTERNAL(tf_kind)  = _tfptf_prev.TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_IO ? TPP_FILE_KIND_TEXT : _tfptf_prev.TPP_INTERNAL(tf_kind),  \
+		(self)->TPP_INTERNAL(tf_chunk) = _tfptf_prev.TPP_INTERNAL(tf_chunk),                                                                              \
+		(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name)          = _tfptf_prev.TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name),          \
+		(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename) = _tfptf_prev.TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename), \
+		(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)      = _tfptf_prev.TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)
+#define _tpp_file_tempfile_setrange(self, pos, end) \
+		(self)->TPP_INTERNAL(tf_pos) = (pos),       \
+		(self)->TPP_INTERNAL(tf_end) = (end)
+#else /* TPP_HAVE_CPP_MACROS */
+#define _tpp_file_tempfile_setchunk(self, chunk)                                                                 \
+		tpp_lcinfo_init_invalid((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)), \
+		(self)->TPP_INTERNAL(tf_chunk) = (chunk)                                                                 \
+		_tpp_file_init_lcpos(self)
+#define _tpp_file_tempfile_restorechunk(self)                                \
+		(self)->TPP_INTERNAL(tf_chunk) = _tfptf_prev.TPP_INTERNAL(tf_chunk), \
+		(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = _tfptf_prev.TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)
+#define _tpp_file_tempfile_setrange(self, pos, end)         \
+		(self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT, \
+		(self)->TPP_INTERNAL(tf_pos) = (pos),               \
+		(self)->TPP_INTERNAL(tf_end) = (end)
+#endif /* !TPP_HAVE_CPP_MACROS */
+#define tpp_file_tempfile_setchunk(self, chunk, pos, end)         \
+		(void)((chunk) == _tfptf_prev.TPP_INTERNAL(tf_chunk)      \
+		       ? (void)(_tpp_file_tempfile_setchunk(self, chunk)) \
+		       : (void)(_tpp_file_tempfile_restorechunk(self)),   \
+		       _tpp_file_tempfile_setrange(self, pos, end))
+#define tpp_file_tempfile_setchunk_fromarg(self, arg) \
+		tpp_file_tempfile_setchunk(self, (arg)->tlai_chunk, (arg)->tlai_start, (arg)->tlai_end)
+#define tpp_file_tempfile_pushchunk(self, chunk, pos, end) \
+	tpp_file_tempfile_push(self);                          \
+		if (_tfptf_prev.TPP_INTERNAL(tf_chunk) != (chunk)) \
+			_tpp_file_tempfile_setchunk(self, chunk);      \
+		_tpp_file_tempfile_setrange(self, pos, end)
+#define tpp_file_tempfile_pushchunk_fromarg(self, chunk, pos, end) \
+		tpp_file_tempfile_pushchunk(self, (arg)->tlai_chunk, (arg)->tlai_start, (arg)->tlai_end)
+#define tpp_file_tempfile_break(self)                                 \
+		(void)(tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)), \
+		       *(self) = _tfptf_prev)
+#define tpp_file_tempfile_pop(self)                            \
+		tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)); \
+		*(self) = _tfptf_prev;                                 \
+	} while (0)
+#endif
+
+
+
+
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
  * @param: char const      *filename: [0..1] Filename (if known)
  * @param: tpp_io_handle    fp:       File descriptor (inherited)
@@ -503,7 +569,7 @@ typedef struct tpp_file {
  * @param: TPP_REF tpp_string *chunk:     File data chunk
  * @param: void const         *text:      File data base pointer
  * @param: tpp_size            text_size: File data size
- * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text"
+ * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text", or `TPP_LCINFO_INVALID'
  * @param: tpp_file_encoding   encoding:  File data encoding */
 #define tpp_file_init_text_ascii(self, filename, chunk, text, text_size, start_lc) \
 	tpp_file_init_text_ex(self, filename, chunk, text, start_lc, TPP_FILE_ENCODING_ASCII)
@@ -578,7 +644,8 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
 
 
 
-/* Return line/column information (1-based) for "pos" */
+/* Return line/column information (1-based) for "pos"
+ * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_lcinfo(tpp_file *tpp_restrict self,
                 tpp_char const *pos);

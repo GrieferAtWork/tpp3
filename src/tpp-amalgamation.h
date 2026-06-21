@@ -3496,6 +3496,10 @@ TPP_DECL_BEGIN
 typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
 #define tpp_formatprinter_print(printer, arg, text, num_bytes) \
 	((*printer)(arg, text, num_bytes))
+#define tpp_formatprinter_print_cstr(printer, arg, text, num_bytes) \
+	((*printer)(arg, (tpp_char const *)(text), num_bytes))
+#define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
+	tpp_ssize (TPP_FORMATPRINTER_CC name)(void *arg, tpp_char const *text, tpp_size num_bytes)
 #endif /* !tpp_formatprinter */
 
 #ifndef tpp_lcinfo
@@ -3541,6 +3545,17 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 	(tpp_lcinfo_getline(a) == tpp_lcinfo_getline(b) && \
 	 tpp_lcinfo_getcol(a) == tpp_lcinfo_getcol(b))
 #endif /* !tpp_lcinfo_equals */
+
+/* Specifies an invalid LC information object */
+#ifndef TPP_LCINFO_INVALID
+#define TPP_LCINFO_INVALID    tpp_lcinfo_of(-1, -1)
+#define tpp_lcinfo_isvalid(x) (tpp_lcinfo_getcol(x) >= 0)
+#endif /* !TPP_LCINFO_INVALID */
+
+/* Check if "x" represents valid line/column information */
+#ifndef tpp_lcinfo_isvalid(x)
+#define tpp_lcinfo_isvalid(x) (!tpp_lcinfo_equals(x, TPP_LCINFO_INVALID))
+#endif /* !tpp_lcinfo_isvalid(x) */
 
 #ifndef tpp_refcnt
 /* NOTE: Multi-threaded applications can leave this alone: a single
@@ -6537,8 +6552,7 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self, tpp_size num_byt
 /* Print "text" into "tpp_string_builder *self"
  * @return: num_bytes:            Success
  * @return: (tpp_size)TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_WUNUSED tpp_ssize TPP_FORMATPRINTER_CC
-tpp_string_builder_print(void *arg, tpp_char const *text, tpp_size num_bytes);
+TPP_DECL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes);
 
 TPP_DECL_END
 /************************************************************************/
@@ -10556,7 +10570,7 @@ typedef struct tpp_file {
 	union {
 		struct {
 			char const      *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
-			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
 #if TPP_HAVE_FILE_USER_FILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_io_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_user_filename) = NULL
@@ -10613,7 +10627,7 @@ typedef struct tpp_file {
 
 		struct {
 			char const *TPP_INTERNAL(tft_name);     /* [0..1][const] Filename for messages (if available) */
-			tpp_lcinfo  TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str' */
+			tpp_lcinfo  TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
 #if TPP_HAVE_FILE_USER_FILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tft_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_text_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename) = NULL
@@ -10856,7 +10870,7 @@ typedef struct tpp_file {
  * @param: TPP_REF tpp_string *chunk:     File data chunk
  * @param: void const         *text:      File data base pointer
  * @param: tpp_size            text_size: File data size
- * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text"
+ * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text", or `TPP_LCINFO_INVALID'
  * @param: tpp_file_encoding   encoding:  File data encoding */
 #define tpp_file_init_text_ascii(self, filename, chunk, text, text_size, start_lc) \
 	tpp_file_init_text_ex(self, filename, chunk, text, start_lc, TPP_FILE_ENCODING_ASCII)
@@ -10931,7 +10945,8 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
 
 
 
-/* Return line/column information (1-based) for "pos" */
+/* Return line/column information (1-based) for "pos"
+ * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_lcinfo(tpp_file *tpp_restrict self,
                 tpp_char const *pos);
@@ -13589,13 +13604,13 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok);
 #define TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER 0
 #endif /* !TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER */
 #if TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER
-TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_wrapped_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes);
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_wrapped_warnprinter, arg, text, num_bytes);
 #endif /* TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER */
 #if TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER
-TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_builtin_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes);
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes);
 #endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
 #if TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER
-TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_noop_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes);
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_noop_warnprinter, arg, text, num_bytes);
 #endif /* TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER */
 
 

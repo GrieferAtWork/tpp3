@@ -32,3 +32,5 @@
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) enum{warning_id};
 #define TPP_MACRO(keyword_id, if_expr)
 #define TPP_BUILTIN_MACRO(keyword_id, value)
+#define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
+	tpp_ssize (name)(void *arg, tpp_char const *text, tpp_size num_bytes)

@@ -1377,13 +1377,13 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok);
 #define TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER 0
 #endif /* !TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER */
 #if TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER
-TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_wrapped_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes);
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_wrapped_warnprinter, arg, text, num_bytes);
 #endif /* TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER */
 #if TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER
-TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_builtin_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes);
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes);
 #endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
 #if TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER
-TPP_DECL tpp_ssize TPP_FORMATPRINTER_CC _tpp_lexer_noop_warnprinter(void *arg, tpp_char const *text, tpp_size num_bytes);
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_noop_warnprinter, arg, text, num_bytes);
 #endif /* TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER */
 
 

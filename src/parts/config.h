@@ -1863,10 +1863,10 @@
 
 /* >> #define TPP_CONFIG_EXPRPARSER my_expr_parser
  * >> #if TPP_CONFIG_EXPRPARSER_NEEDS_ARG
- * >> static tpp_errno TPP_FORMATPRINTER_CC
+ * >> static tpp_errno TPPCALL
  * >> my_expr_parser(void *arg, tpp_lexer *self, tpp_expr_value *result)
  * >> #else // TPP_CONFIG_EXPRPARSER_NEEDS_ARG
- * >> static tpp_errno TPP_FORMATPRINTER_CC
+ * >> static tpp_errno TPPCALL
  * >> my_expr_parser(tpp_char const *self, tpp_expr_value *result)
  * >> #endif // !TPP_CONFIG_EXPRPARSER_NEEDS_ARG
  * >> {

@@ -80,7 +80,8 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
 	tpp_char ch;
 again:
 	if (iter >= end) {
-		temp = (*printer)(arg, (tpp_char const *)data, (tpp_size)(end - (tpp_char const *)data));
+		temp = tpp_formatprinter_print(printer, arg, (tpp_char const *)data,
+		                               (tpp_size)(end - (tpp_char const *)data));
 		if (temp < 0)
 			return temp;
 		result += temp;
@@ -108,17 +109,17 @@ again:
 #undef TPP_TOKEN_ENCODESTRING_CASE
 	default: goto again;
 	}
-	temp = (*printer)(arg, (tpp_char const *)data,
-	                  (tpp_size)((iter - 1) -
-	                             (tpp_char const *)data));
+	temp = tpp_formatprinter_print(printer, arg, (tpp_char const *)data,
+	                               (tpp_size)((iter - 1) -
+	                                          (tpp_char const *)data));
 	if (temp < 0)
 		return temp;
 	result += temp;
 #if TPP_HAVE_UNICODE
-	temp = (*printer)(arg, (tpp_char const *)output_repr, tpp_strlen(output_repr));
+	temp = tpp_formatprinter_print_cstr(printer, arg, output_repr, tpp_strlen(output_repr));
 #else /* TPP_HAVE_UNICODE */
 	/* All mandatory ASCII-escape-sequences are 2 bytes long! */
-	temp = (*printer)(arg, (tpp_char const *)output_repr, 2);
+	temp = tpp_formatprinter_print_cstr(printer, arg, output_repr, 2);
 #endif /* !TPP_HAVE_UNICODE */
 	if (temp < 0)
 		return temp;

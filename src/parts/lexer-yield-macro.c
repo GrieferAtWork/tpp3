@@ -315,15 +315,13 @@ tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
 
 
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-static tpp_ssize TPP_FORMATPRINTER_CC
-tpp_count_printer(void *arg, tpp_char const *text, tpp_size num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(tpp_count_printer, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	return (tpp_ssize)num_bytes;
 }
 
-static tpp_ssize TPP_FORMATPRINTER_CC
-tpp_buffer_printer(void *arg, tpp_char const *text, tpp_size num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(tpp_buffer_printer, arg, text, num_bytes) {
 	tpp_char **p_dst = (tpp_char **)arg;
 	tpp_char *dst = *p_dst;
 	tpp_memcpy(dst, text, num_bytes);
