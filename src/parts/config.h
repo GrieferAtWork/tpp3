@@ -2077,11 +2077,10 @@
 
 /* Enable support for `tpp_keywords_openfile_ex()' */
 #ifndef TPP_HAVE_KEYWORDS_OPENFILE_EX
-#if (TPP_HAVE_KEYWORDS_OPENFILE &&      \
-     (TPP_HAVE_CPP_IMPORT ||          \
-      ((TPP_HAVE_CPP_INCLUDE ||       \
-        TPP_HAVE_CPP_INCLUDE_NEXT) && \
-       TPP_HAVE_PRAGMA_ONCE)))
+#if (TPP_HAVE_KEYWORDS_OPENFILE && \
+     (TPP_HAVE_CPP_IMPORT ||       \
+      TPP_HAVE_CPP_INCLUDE_NEXT || \
+      (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
 #define TPP_HAVE_KEYWORDS_OPENFILE_EX 1
 #else /* ... */
 #define TPP_HAVE_KEYWORDS_OPENFILE_EX 0
@@ -2134,7 +2133,7 @@
 #define TPP_HAVE_LEXER_TRYSKIP_RAW (TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_LEXER_TRYSKIP_RAW */
 
- /* Provide a function "tpp_lexer_reprtokenid()" to
+/* Provide a function "tpp_lexer_reprtokenid()" to
  * return the string-representation of a given token ID */
 #ifndef TPP_HAVE_LEXER_REPRTOKENID
 #define TPP_HAVE_LEXER_REPRTOKENID (TPP_HAVE_LEXER_SKIP)
@@ -2184,6 +2183,21 @@
 #ifndef TPP_HAVE_LEXER_MANUALPOPFILE
 #define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS/* && TPP_HAVE_INCLUDE_STACK*/)
 #endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
+
+/* Provide a function "tpp_lexer_yield_include_string()" to
+ * do yield the next token with special handling if the next
+ * token's first character is '<' or '"', in which case the
+ * token is parsed as a #include-string */
+#ifndef TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
+#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING \
+	(TPP_HAVE_CPP_INCLUDE ||                \
+	 TPP_HAVE_CPP_INCLUDE_NEXT ||           \
+	 TPP_HAVE_CPP_IMPORT ||                 \
+	 TPP_HAVE_CPP_EMBED ||                  \
+	 TPP_HAVE_MACRO___has_include ||        \
+	 TPP_HAVE_MACRO___has_include_next ||   \
+	 TPP_HAVE_MACRO___has_embed)
+#endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 /* Provide a function "tpp_lexer_seek_rparen()" that can be used
  * to find the position of a matching ')'-token for the purpose
@@ -2318,21 +2332,22 @@
 #define TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH (TPP_HAVE_WARNINGS && TPP_HAVE_TRIGRAPHS)
 #endif /* !TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED                \
-	(TPP_HAVE_WARNINGS &&                                           \
-	 TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && \
-	 (TPP_HAVE_TPP_TOK_STRING ||                                  \
-	  TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||                 \
-	  TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||                 \
-	  TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||                \
-	  TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||                \
-	  TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||                      \
-	  TPP_HAVE_TPP_TOK_CHAR ||                                    \
-	  TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||                   \
-	  TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||                   \
-	  TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||                  \
-	  TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||                  \
-	  TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
+#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED        \
+	(TPP_HAVE_WARNINGS &&                                   \
+	 ((TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && \
+	   (TPP_HAVE_TPP_TOK_STRING ||                          \
+	    TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||         \
+	    TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||         \
+	    TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||        \
+	    TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||        \
+	    TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||              \
+	    TPP_HAVE_TPP_TOK_CHAR ||                            \
+	    TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||           \
+	    TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||           \
+	    TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||          \
+	    TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||          \
+	    TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)) ||              \
+	  TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
 #define TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED \
@@ -2352,7 +2367,8 @@
 	  TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE)
+#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_STRINGLIKE || TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 #ifndef TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 #define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE)

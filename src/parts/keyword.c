@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "keyword.h"
+#include "lexer.h"
 #include "macro.h"
 #include "string.h"
 #include "token.h"
@@ -1046,28 +1047,43 @@ done:
 	return dst_iter;
 }
 
-/* Construct the filename, open the file, and initialize "out_file" accordingly
+/* Construct the filename, open the file, and initialize "result" accordingly
  * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
  *                      in case "filename" is a relative path, in which case the
  *                      filename of the file to open should be relative to the
  *                      directory of "relative_to"
- * @param: out_file:    The file that should be initialized (as `TPP_FILE_KIND_IO')
+ * @param: result:      Open file information (pass along to "tpp_file_init_io()")
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Insufficient memory
  * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
+/* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
+ * included before, and its keyword has any of the bits specified by `mask_flags' set.
+ *
+ * A special case is made when "mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED",
+ * in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
+ * is currently considered to be `#if defined()'.
+ *
+ * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
+ *                     should be returned:
+ *                     - TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
+ *                     - TPP_LEXER_OPENFILE_FLAG_HDR_ONCE
+ *                     - TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ *                     - TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ *
+ * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
-tpp_keywords_openfile_ex(/*1..1*/ tpp_keywords *tpp_restrict self,
-                         /*0..1*/ char const *tpp_restrict relative_to,
-                         /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
-                         /*1..1*/ tpp_file *tpp_restrict out_file,
-                         tpp_keyword_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
-tpp_keywords_openfile(/*1..1*/ tpp_keywords *tpp_restrict self,
+tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       /*0..1*/ char const *tpp_restrict relative_to,
                       /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
-                      /*1..1*/ tpp_file *tpp_restrict out_file)
+                      /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
+                      tpp_lexer_openfile_flags mask_flags)
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
+                   /*0..1*/ char const *tpp_restrict relative_to,
+                   /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                   /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
 {
 	bool is_known_keyword = false;
@@ -1122,7 +1138,7 @@ without_relative_to:
 	/* Check if "result_kwd" is a known keyword... */
 	{
 		tpp_hash hash = tpp_hashof(result_kwd->tk_kwd, result_kwd->tk_len);
-		tpp_keyword *bucket = self->tks_bckv[hash & self->tks_bckm];
+		tpp_keyword *bucket = self->tl_kwds.tks_bckv[hash & self->tl_kwds.tks_bckm];
 		for (; bucket; bucket = bucket->tk_next) {
 			if (bucket->tk_hash != hash)
 				continue;
@@ -1140,8 +1156,40 @@ without_relative_to:
 			/* Check if the file should be marked out. */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
 			if ((result_kwd->tk_misc) != NULL &&
-			    (result_kwd->tk_misc->tkm_flags & mask_flags) != 0)
-				return TPP_EMASKED;
+			    (result_kwd->tk_misc->tkm_flags & mask_flags) != 0) {
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+				if (mask_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID) {
+					tpp_keyword const *file_guard = result_kwd->tk_misc->tkm_file_guard;
+					tpp_assert(file_guard != NULL && "'TPP_KEYWORD_FLAG_HDR_GUARD_VALID' is "
+					                                 "set, but 'tkm_file_guard == NULL'");
+					if ((result_kwd->tk_misc->tkm_flags & (mask_flags & ~TPP_KEYWORD_FLAG_HDR_GUARD_VALID)) != 0)
+						return TPP_EMASKED; /* File is masked even if it wasn't for the header guard. */
+					if (tpp_lexer_getkeyworddefined(self, file_guard))
+						return TPP_EMASKED; /* File guard is still defined -> don't include */
+				} else
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+				{
+					return TPP_EMASKED;
+				}
+			}
+#if TPP_HAVE_CPP_INCLUDE_NEXT
+			if (mask_flags & TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT) {
+				/* Check if this file is already being #include-ed */
+				tpp_file const *fp = tpp_lexer_getfile(self);
+				do {
+					if (fp->tf_kind == TPP_FILE_KIND_IO &&
+#if TPP_HAVE_FILE_NOKWD
+					    !(fp->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+#endif /* TPP_HAVE_FILE_NOKWD */
+					    fp->tf_data.td_io.tff_name != NULL) {
+						tpp_keyword const *kwd = (tpp_keyword const *)((char const *)fp->tf_data.td_io.tff_name -
+						                                               tpp_offsetof(tpp_keyword, tk_kwd));
+						if (kwd == result_kwd)
+							return TPP_EMASKED; /* File is already on #include-stack */
+					}
+				} while ((fp = fp->tf_tprev) != NULL);
+			}
+#endif /* TPP_HAVE_CPP_INCLUDE_NEXT */
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 
 			goto got_result_kwd;
@@ -1159,7 +1207,8 @@ got_result_kwd:
 
 	/* Initialize remaining fields of "result_kwd" and insert into keyword map */
 	if (!is_known_keyword) {
-		result_kwd->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
+		result_kwd->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN +
+		                                   self->tl_kwds.tks_kwdc);
 #if TPP_HAVE_CPP_MACROS
 		result_kwd->tk_macro = NULL;
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -1167,15 +1216,16 @@ got_result_kwd:
 		result_kwd->tk_misc = NULL;
 #endif /* TPP_HAVE_KEYWORD_MISC */
 		tpp_refcnt_init(&result_kwd->tk_refcnt, 1);
-		result_kwd = tpp_keywords_inskeyword(self, result_kwd);
+		result_kwd = tpp_keywords_inskeyword(&self->tl_kwds, result_kwd);
 		if tpp_unlikely(!result_kwd) {
 			tpp_io_close(handle);
 			goto err_nomem;
 		}
 	}
 
-	/* Initialize "out_file" */
-	tpp_file_init_io(out_file, (char const *)result_kwd->tk_kwd, handle);
+	/* Initialize "result" */
+	result->tlofr_filename = result_kwd;
+	result->tlofr_handle   = handle;
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;

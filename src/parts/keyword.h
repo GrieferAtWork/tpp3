@@ -25,6 +25,7 @@
 #include "config.h"
 #include "error.h"
 #include "file.h"
+#include "file-io.h"
 #include "string.h"
 #include "token.h"
 
@@ -483,49 +484,6 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
                          tpp_keyword const *tpp_restrict kwd);
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
-
-
-#if TPP_HAVE_KEYWORDS_OPENFILE
-/* Construct the filename, open the file, and initialize "out_file" accordingly
- * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
- *                      in case "filename" is a relative path, in which case the
- *                      filename of the file to open should be relative to the
- *                      directory of "relative_to"
- * @param: out_file:    The file that should be initialized (as `TPP_FILE_KIND_IO')
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Insufficient memory
- * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
-#define tpp_keywords_openfile(self, relative_to, filename, out_file) \
-	tpp_keywords_openfile_ex(self, relative_to, filename, out_file, 0)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
-tpp_keywords_openfile(/*1..1*/ tpp_keywords *tpp_restrict self,
-                      /*0..1*/ char const *tpp_restrict relative_to,
-                      /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
-                      /*1..1*/ tpp_file *tpp_restrict out_file);
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
-
-/* Same as `tpp_keywords_openfile', but return `TPP_EMASKED' if the file was already
- * included before, and its keyword has any of the bits specified by `mask_flags' set.
- * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set. */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
-tpp_keywords_openfile_ex(/*1..1*/ tpp_keywords *tpp_restrict self,
-                         /*0..1*/ char const *tpp_restrict relative_to,
-                         /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
-                         /*1..1*/ tpp_file *tpp_restrict out_file,
-                         tpp_keyword_flags mask_flags);
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-#define tpp_keywords_openfile_ex(self, relative_to, filename, out_file, mask_flags) \
-	tpp_keywords_openfile(self, relative_to, filename, out_file)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
-
-/* Allocate+return a filename keyword */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
-tpp_keywords_newkeyword_file(/*1..1*/ tpp_keywords *tpp_restrict self,
-                             /*1..1*/ /*utf-8*/ char const *tpp_restrict filename);
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

@@ -251,12 +251,19 @@ tpp_lexer_init_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filenam
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
                         /*utf-8*/ char const *tpp_restrict filename) {
-	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_errno error;
+	tpp_lexer_openfile_result ofr;
 	_tpp_lexer_init_common(self);
-	error = tpp_keywords_openfile(&self->tl_kwds, NULL, filename, file);
-	if tpp_unlikely(TPP_ISERR(error))
+	error = tpp_lexer_openfile(self, NULL, filename, &ofr);
+	if tpp_unlikely(TPP_ISERR(error)) {
 		_tpp_lexer_fini_common(self);
+	} else {
+		/* Initialize the lexer's I/O file */
+		tpp_file *const file = tpp_lexer_getfile(self);
+		tpp_file_init_io(file,
+		                 tpp_keyword_getkwdcstr(ofr.tlofr_filename),
+		                 ofr.tlofr_handle);
+	}
 	return error;
 }
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
@@ -301,13 +308,17 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *tpp_restrict filename) {
 	tpp_errno error;
+	tpp_lexer_openfile_result ofr;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
 	*prev_file = *file;
-	error = tpp_keywords_openfile(&self->tl_kwds, NULL, filename, file);
+	error = tpp_lexer_openfile(self, NULL, filename, &ofr);
 	if tpp_likely(!TPP_ISERR(error)) {
+		tpp_file_init_io(file,
+		                 tpp_keyword_getkwdcstr(ofr.tlofr_filename),
+		                 ofr.tlofr_handle);
 		file->tf_prev  = prev_file;
 		file->tf_tprev = prev_file;
 	} else {

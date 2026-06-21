@@ -5827,11 +5827,10 @@ TPP_DECL_END
 
 /* Enable support for `tpp_keywords_openfile_ex()' */
 #ifndef TPP_HAVE_KEYWORDS_OPENFILE_EX
-#if (TPP_HAVE_KEYWORDS_OPENFILE &&      \
-     (TPP_HAVE_CPP_IMPORT ||          \
-      ((TPP_HAVE_CPP_INCLUDE ||       \
-        TPP_HAVE_CPP_INCLUDE_NEXT) && \
-       TPP_HAVE_PRAGMA_ONCE)))
+#if (TPP_HAVE_KEYWORDS_OPENFILE && \
+     (TPP_HAVE_CPP_IMPORT ||       \
+      TPP_HAVE_CPP_INCLUDE_NEXT || \
+      (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
 #define TPP_HAVE_KEYWORDS_OPENFILE_EX 1
 #else /* ... */
 #define TPP_HAVE_KEYWORDS_OPENFILE_EX 0
@@ -5884,7 +5883,7 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_TRYSKIP_RAW (TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_LEXER_TRYSKIP_RAW */
 
- /* Provide a function "tpp_lexer_reprtokenid()" to
+/* Provide a function "tpp_lexer_reprtokenid()" to
  * return the string-representation of a given token ID */
 #ifndef TPP_HAVE_LEXER_REPRTOKENID
 #define TPP_HAVE_LEXER_REPRTOKENID (TPP_HAVE_LEXER_SKIP)
@@ -5934,6 +5933,21 @@ TPP_DECL_END
 #ifndef TPP_HAVE_LEXER_MANUALPOPFILE
 #define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS/* && TPP_HAVE_INCLUDE_STACK*/)
 #endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
+
+/* Provide a function "tpp_lexer_yield_include_string()" to
+ * do yield the next token with special handling if the next
+ * token's first character is '<' or '"', in which case the
+ * token is parsed as a #include-string */
+#ifndef TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
+#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING \
+	(TPP_HAVE_CPP_INCLUDE ||                \
+	 TPP_HAVE_CPP_INCLUDE_NEXT ||           \
+	 TPP_HAVE_CPP_IMPORT ||                 \
+	 TPP_HAVE_CPP_EMBED ||                  \
+	 TPP_HAVE_MACRO___has_include ||        \
+	 TPP_HAVE_MACRO___has_include_next ||   \
+	 TPP_HAVE_MACRO___has_embed)
+#endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 /* Provide a function "tpp_lexer_seek_rparen()" that can be used
  * to find the position of a matching ')'-token for the purpose
@@ -6068,21 +6082,22 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH (TPP_HAVE_WARNINGS && TPP_HAVE_TRIGRAPHS)
 #endif /* !TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED                \
-	(TPP_HAVE_WARNINGS &&                                           \
-	 TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && \
-	 (TPP_HAVE_TPP_TOK_STRING ||                                  \
-	  TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||                 \
-	  TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||                 \
-	  TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||                \
-	  TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||                \
-	  TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||                      \
-	  TPP_HAVE_TPP_TOK_CHAR ||                                    \
-	  TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||                   \
-	  TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||                   \
-	  TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||                  \
-	  TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||                  \
-	  TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
+#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED        \
+	(TPP_HAVE_WARNINGS &&                                   \
+	 ((TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && \
+	   (TPP_HAVE_TPP_TOK_STRING ||                          \
+	    TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||         \
+	    TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||         \
+	    TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||        \
+	    TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||        \
+	    TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||              \
+	    TPP_HAVE_TPP_TOK_CHAR ||                            \
+	    TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||           \
+	    TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||           \
+	    TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||          \
+	    TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||          \
+	    TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)) ||              \
+	  TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
 #define TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED \
@@ -6102,7 +6117,8 @@ TPP_DECL_END
 	  TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE)
+#define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_STRINGLIKE || TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 #ifndef TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 #define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE)
@@ -10771,37 +10787,6 @@ typedef struct tpp_file {
 	} while (0)
 
 
-/* Save/restore the chunk that tokens will be read from */
-#define tpp_file_pushchunk(self)                                             \
-	do {                                                                     \
-		tpp_char const *const _tfpchnk_pos = (self)->TPP_INTERNAL(tf_pos);   \
-		tpp_string *const _tfpchnk_chunk   = (self)->TPP_INTERNAL(tf_chunk); \
-		tpp_char const *const _tfpchnk_end = (self)->TPP_INTERNAL(tf_end);   \
-		tpp_file_kind const _tfpchnk_kind  = (self)->TPP_INTERNAL(tf_kind);  \
-		tpp_lcinfo const _tfpchnk_lcinfo   = (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc); \
-		_tpp_file_io2text(self)
-#define tpp_file_setchunk(self, chunk, pos, end, start_lc) \
-		(void)((self)->TPP_INTERNAL(tf_chunk) = (chunk),   \
-		       (self)->TPP_INTERNAL(tf_pos)   = (pos),     \
-		       (self)->TPP_INTERNAL(tf_end)   = (end),     \
-		       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = start_lc)
-#define tpp_file_setchunk_fromarg(self, arg)                                                                                    \
-		(void)((_tfpchnk_chunk) == (arg)->tlai_chunk                                                                            \
-		       ? (void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = _tfpchnk_lcinfo)       \
-		       : (void)tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc), -1, -1), \
-		       (self)->TPP_INTERNAL(tf_chunk) = (arg)->tlai_chunk,                                                              \
-		       (self)->TPP_INTERNAL(tf_pos)   = (arg)->tlai_start,                                                              \
-		       (self)->TPP_INTERNAL(tf_end)   = (arg)->tlai_end)
-#define tpp_file_breakchunk(self)                               \
-		(void)((self)->TPP_INTERNAL(tf_pos)   = _tfpchnk_pos,   \
-		       (self)->TPP_INTERNAL(tf_chunk) = _tfpchnk_chunk, \
-		       (self)->TPP_INTERNAL(tf_end)   = _tfpchnk_end,   \
-		       (self)->TPP_INTERNAL(tf_kind)  = _tfpchnk_kind,  \
-		       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = _tfpchnk_lcinfo)
-#define tpp_file_popchunk(self)    \
-		tpp_file_breakchunk(self); \
-	} while (0)
-
 /* Push (+clear) and later (clear+)restore the #ifdef-stack of a given file */
 #if TPP_HAVE_IFDEF_STACK
 #define tpp_file_pushifdef(self)                                             \
@@ -10861,11 +10846,14 @@ typedef struct tpp_file {
 #if TPP_HAVE_IFDEF_STACK
 #define _tpp_file_subtext_init_ifdef(self) , tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
 #define _tpp_file_subtext_fini_ifdef(self) tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)),
-#define _tpp_file_subtext_asno_ifdef(self) tpp_assert(tpp_ifdef_stack_isempty(&(self)->TPP_INTERNAL(tf_ifdef))),
+#define _tpp_file_subtext_fini_noifdef(self)                                                                                        \
+	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_alc) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_alc)), \
+	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt)), \
+	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_vec) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_vec)),
 #else /* TPP_HAVE_IFDEF_STACK */
-#define _tpp_file_subtext_init_ifdef(self) /* nothing */
-#define _tpp_file_subtext_fini_ifdef(self) /* nothing */
-#define _tpp_file_subtext_asno_ifdef(self) /* nothing */
+#define _tpp_file_subtext_init_ifdef(self)   /* nothing */
+#define _tpp_file_subtext_fini_ifdef(self)   /* nothing */
+#define _tpp_file_subtext_fini_noifdef(self) /* nothing */
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
 #define tpp_file_subtext_push(self)                                   \
@@ -10891,12 +10879,25 @@ typedef struct tpp_file {
 #define tpp_file_subtext_break(self)              \
 		(void)(_tpp_file_subtext_fini_ifdef(self) \
 		       _tpp_file_subtext_break_common(self))
-#define tpp_file_subtext_break_noifdef(self)      \
-		(void)(_tpp_file_subtext_asno_ifdef(self) \
-		       _tpp_file_subtext_break_common(self))
 #define tpp_file_subtext_pop(self)    \
 		tpp_file_subtext_break(self); \
 	} while (0)
+
+/* Same as above, but allowed to assume that wrapped code won't modify the #ifdef-stack */
+#define tpp_file_subtext_push_noifdef(self)                           \
+	do {                                                              \
+		tpp_file _tfptfnid_prev = *(self);                            \
+		(self)->TPP_INTERNAL(tf_prev)  = NULL; /* Prevent file pop */ \
+		(self)->TPP_INTERNAL(tf_tprev) = &_tfptfnid_prev;             \
+		(self)->TPP_INTERNAL(tf_kind)  = TPP_FILE_KIND_SUBTEXT        \
+		_tpp_file_init_lcpos(self)
+#define _tpp_file_subtext_break_common_noifdef(self)        \
+		tpp_assert((self)->TPP_INTERNAL(tf_prev) == NULL && \
+		           "Extra files were pushed"),              \
+		*(self) = _tfptfnid_prev
+#define tpp_file_subtext_break_noifdef(self)        \
+		(void)(_tpp_file_subtext_fini_noifdef(self) \
+		       _tpp_file_subtext_break_common_noifdef(self))
 #define tpp_file_subtext_pop_noifdef(self)    \
 		tpp_file_subtext_break_noifdef(self); \
 	} while (0)
@@ -11794,49 +11795,6 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
                          tpp_keyword const *tpp_restrict kwd);
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
-
-
-#if TPP_HAVE_KEYWORDS_OPENFILE
-/* Construct the filename, open the file, and initialize "out_file" accordingly
- * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
- *                      in case "filename" is a relative path, in which case the
- *                      filename of the file to open should be relative to the
- *                      directory of "relative_to"
- * @param: out_file:    The file that should be initialized (as `TPP_FILE_KIND_IO')
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Insufficient memory
- * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
-#define tpp_keywords_openfile(self, relative_to, filename, out_file) \
-	tpp_keywords_openfile_ex(self, relative_to, filename, out_file, 0)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
-tpp_keywords_openfile(/*1..1*/ tpp_keywords *tpp_restrict self,
-                      /*0..1*/ char const *tpp_restrict relative_to,
-                      /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
-                      /*1..1*/ tpp_file *tpp_restrict out_file);
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
-
-/* Same as `tpp_keywords_openfile', but return `TPP_EMASKED' if the file was already
- * included before, and its keyword has any of the bits specified by `mask_flags' set.
- * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set. */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
-tpp_keywords_openfile_ex(/*1..1*/ tpp_keywords *tpp_restrict self,
-                         /*0..1*/ char const *tpp_restrict relative_to,
-                         /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
-                         /*1..1*/ tpp_file *tpp_restrict out_file,
-                         tpp_keyword_flags mask_flags);
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-#define tpp_keywords_openfile_ex(self, relative_to, filename, out_file, mask_flags) \
-	tpp_keywords_openfile(self, relative_to, filename, out_file)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
-
-/* Allocate+return a filename keyword */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
-tpp_keywords_newkeyword_file(/*1..1*/ tpp_keywords *tpp_restrict self,
-                             /*1..1*/ /*utf-8*/ char const *tpp_restrict filename);
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
 
 TPP_DECL_END
 /************************************************************************/
@@ -12757,6 +12715,76 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
 
 
 
+#if TPP_HAVE_KEYWORDS_OPENFILE
+typedef struct tpp_lexer_openfile_result {
+	tpp_keyword  *tlofr_filename; /* [1..1] Keyword for filename */
+	tpp_io_handle tlofr_handle;   /* [1..1] I/O handle for requested file (must be inherited by caller) */
+} tpp_lexer_openfile_result;
+
+/* Construct the filename, open the file, and initialize "result" accordingly
+ * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
+ *                      in case "filename" is a relative path, in which case the
+ *                      filename of the file to open should be relative to the
+ *                      directory of "relative_to"
+ * @param: result:      Open file information (pass along to "tpp_file_init_io()")
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Insufficient memory
+ * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#define tpp_lexer_openfile(self, relative_to, filename, result) \
+	tpp_lexer_openfile_ex(self, relative_to, filename, result, 0)
+
+#define TPP_LEXER_OPENFILE_FLAG_NORMAL 0 /* Normal flags */
+#ifdef tpp_keyword_flags
+#define tpp_lexer_openfile_flags tpp_keyword_flags
+#if TPP_HAVE_CPP_IMPORT
+#define TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED TPP_KEYWORD_FLAG_HDR_IMPORTED    /* Filter out files that were already #import-ed */
+#endif /* TPP_HAVE_CPP_IMPORT */
+#if TPP_HAVE_PRAGMA_ONCE
+#define TPP_LEXER_OPENFILE_FLAG_HDR_ONCE     TPP_KEYWORD_FLAG_HDR_ONCE        /* Filter out files with "#pragma once" */
+#endif /* TPP_HAVE_PRAGMA_ONCE */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+#define TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED  TPP_KEYWORD_FLAG_HDR_GUARD_VALID /* Filter out files with a confirmed "#ifndef"-block of a macro that is current defined */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#else /* tpp_keyword_flags */
+#define tpp_lexer_openfile_flags uint_least32_t
+#endif /* !tpp_keyword_flags */
+#if TPP_HAVE_CPP_INCLUDE_NEXT
+#define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
+#endif /* TPP_HAVE_CPP_INCLUDE_NEXT */
+
+/* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
+ * included before, and its keyword has any of the bits specified by `mask_flags' set.
+ *
+ * A special case is made when "mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED",
+ * in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
+ * is currently considered to be `#if defined()'.
+ *
+ * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
+ *                     should be returned:
+ *                     - TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
+ *                     - TPP_LEXER_OPENFILE_FLAG_HDR_ONCE
+ *                     - TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ *                     - TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ *
+ * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
+                      /*0..1*/ char const *tpp_restrict relative_to,
+                      /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                      /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
+                      tpp_lexer_openfile_flags mask_flags);
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
+                   /*0..1*/ char const *tpp_restrict relative_to,
+                   /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                   /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+
+
+
 /* Read a single character (byte) whilst accounting for BSE (if enabled)
  * and automatically extending the current file if EOF is reached.
  * On true EOF:
@@ -13090,7 +13118,7 @@ tpp_lexer_yieldpp_blocking(tpp_lexer *tpp_restrict self);
 /* Same as `tpp_lexer_yieldraw()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
  * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
 #define tpp_lexer_yieldraw_blocking(self) \
-	tpp_lexer_yieldraw_at_blocking(self, &tpp_lexer_gettoken(self)->tt_end)
+	tpp_lexer_yieldraw_at_blocking(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
 
 /* Same as `tpp_lexer_yieldraw_at()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
  * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
@@ -13102,6 +13130,50 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
 #define tpp_lexer_yieldraw_blocking(self)           tpp_lexer_yieldraw(self)
 #define tpp_lexer_yieldraw_at_blocking(self, p_pos) tpp_lexer_yieldraw_at(self, p_pos)
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
+
+
+
+#if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
+/* (Mostly) the same as "tpp_lexer_yield()", except:
+ * - Never process preprocessor directives (but macros are still expanded)
+ * - If the next token starts with '"' or '<', parse it as a #include-string,
+ *   with the token's start/end bounds pointing at the string's bounds. In
+ *   this case, the token's ID (and return value) is:
+ *   - TPP_TOK_OFCHAR('"')  // For #include "foo.h"
+ *   - TPP_TOK_OFCHAR('<')  // For #include <foo.h>
+ * - WARNING: This function doesn't filter SPACE/LF/COMMENT tokens
+ *   (behaves as though 'TPP_LEXER_STATE_FLAG_ALLTOKENS' was set)
+ *
+ * @return: * : Some other token encountered (token was parsed like tpp_lexer_yieldraw())
+ * @return: TPP_TOK_OFCHAR('"'): #include-string parsed: "foo.h"
+ * @return: TPP_TOK_OFCHAR('<'): #include-string parsed: <foo.h>
+ * @return: TPP_TOK_ENOMEM:      Out of memory
+ * @return: TPP_TOK_EIO:         I/O error while trying to read from file
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_ELEXERROR:   Lexer error
+ * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_include_string(tpp_lexer *tpp_restrict self);
+
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+#define tpp_lexer_yieldraw_include_string(self) \
+	tpp_lexer_yieldraw_at_include_string(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
+
+/* TODO: API to decode a parsed #include-string (~ala "tpp_lexer_decodestring()") -- needs to remove BSE and trigraphs */
+/* TODO: API built on-top of the #include-string decoder that uses "tpp_lexer_openfile_ex()" combined with
+ *       filenames from the current #include-stack, as well as system include paths to (try to) open the
+ *       named file. -- This function must also take "tpp_keyword_flags mask_flags", allowing the caller
+ *       to selectively filter out certain files based on context:
+ *       #include ...             TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ *       __has_include(...)       TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ *       #include_next ...        TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ *       __has_include_next(...)  TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ *       #import ...              TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
+ *       #embed ...               TPP_LEXER_OPENFILE_FLAG_NORMAL
+ *       __has_embed(...)         TPP_LEXER_OPENFILE_FLAG_NORMAL
+ */
+#endif /* TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 
 
@@ -13299,7 +13371,11 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
                             tpp_keyword const *tpp_restrict kwd);
-#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+#elif TPP_HAVE_CPP_MACROS
+#define tpp_lexer_getkeyworddefined(self, kwd) tpp_keyword_canundef(kwd)
+#else /* ... */
+#define tpp_lexer_getkeyworddefined(self, kwd) 0
+#endif /* !... */
 
 
 #if TPP_HAVE_LEXER_DECODEINT

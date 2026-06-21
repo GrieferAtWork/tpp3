@@ -467,6 +467,76 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
 
 
 
+#if TPP_HAVE_KEYWORDS_OPENFILE
+typedef struct tpp_lexer_openfile_result {
+	tpp_keyword  *tlofr_filename; /* [1..1] Keyword for filename */
+	tpp_io_handle tlofr_handle;   /* [1..1] I/O handle for requested file (must be inherited by caller) */
+} tpp_lexer_openfile_result;
+
+/* Construct the filename, open the file, and initialize "result" accordingly
+ * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
+ *                      in case "filename" is a relative path, in which case the
+ *                      filename of the file to open should be relative to the
+ *                      directory of "relative_to"
+ * @param: result:      Open file information (pass along to "tpp_file_init_io()")
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Insufficient memory
+ * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#define tpp_lexer_openfile(self, relative_to, filename, result) \
+	tpp_lexer_openfile_ex(self, relative_to, filename, result, 0)
+
+#define TPP_LEXER_OPENFILE_FLAG_NORMAL 0 /* Normal flags */
+#ifdef tpp_keyword_flags
+#define tpp_lexer_openfile_flags tpp_keyword_flags
+#if TPP_HAVE_CPP_IMPORT
+#define TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED TPP_KEYWORD_FLAG_HDR_IMPORTED    /* Filter out files that were already #import-ed */
+#endif /* TPP_HAVE_CPP_IMPORT */
+#if TPP_HAVE_PRAGMA_ONCE
+#define TPP_LEXER_OPENFILE_FLAG_HDR_ONCE     TPP_KEYWORD_FLAG_HDR_ONCE        /* Filter out files with "#pragma once" */
+#endif /* TPP_HAVE_PRAGMA_ONCE */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+#define TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED  TPP_KEYWORD_FLAG_HDR_GUARD_VALID /* Filter out files with a confirmed "#ifndef"-block of a macro that is current defined */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#else /* tpp_keyword_flags */
+#define tpp_lexer_openfile_flags uint_least32_t
+#endif /* !tpp_keyword_flags */
+#if TPP_HAVE_CPP_INCLUDE_NEXT
+#define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
+#endif /* TPP_HAVE_CPP_INCLUDE_NEXT */
+
+/* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
+ * included before, and its keyword has any of the bits specified by `mask_flags' set.
+ *
+ * A special case is made when "mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED",
+ * in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
+ * is currently considered to be `#if defined()'.
+ *
+ * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
+ *                     should be returned:
+ *                     - TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
+ *                     - TPP_LEXER_OPENFILE_FLAG_HDR_ONCE
+ *                     - TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ *                     - TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ *
+ * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
+                      /*0..1*/ char const *tpp_restrict relative_to,
+                      /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                      /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
+                      tpp_lexer_openfile_flags mask_flags);
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
+                   /*0..1*/ char const *tpp_restrict relative_to,
+                   /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                   /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+
+
+
 /* Read a single character (byte) whilst accounting for BSE (if enabled)
  * and automatically extending the current file if EOF is reached.
  * On true EOF:
@@ -800,7 +870,7 @@ tpp_lexer_yieldpp_blocking(tpp_lexer *tpp_restrict self);
 /* Same as `tpp_lexer_yieldraw()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
  * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
 #define tpp_lexer_yieldraw_blocking(self) \
-	tpp_lexer_yieldraw_at_blocking(self, &tpp_lexer_gettoken(self)->tt_end)
+	tpp_lexer_yieldraw_at_blocking(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
 
 /* Same as `tpp_lexer_yieldraw_at()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
  * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
@@ -812,6 +882,50 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
 #define tpp_lexer_yieldraw_blocking(self)           tpp_lexer_yieldraw(self)
 #define tpp_lexer_yieldraw_at_blocking(self, p_pos) tpp_lexer_yieldraw_at(self, p_pos)
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
+
+
+
+#if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
+/* (Mostly) the same as "tpp_lexer_yield()", except:
+ * - Never process preprocessor directives (but macros are still expanded)
+ * - If the next token starts with '"' or '<', parse it as a #include-string,
+ *   with the token's start/end bounds pointing at the string's bounds. In
+ *   this case, the token's ID (and return value) is:
+ *   - TPP_TOK_OFCHAR('"')  // For #include "foo.h"
+ *   - TPP_TOK_OFCHAR('<')  // For #include <foo.h>
+ * - WARNING: This function doesn't filter SPACE/LF/COMMENT tokens
+ *   (behaves as though 'TPP_LEXER_STATE_FLAG_ALLTOKENS' was set)
+ *
+ * @return: * : Some other token encountered (token was parsed like tpp_lexer_yieldraw())
+ * @return: TPP_TOK_OFCHAR('"'): #include-string parsed: "foo.h"
+ * @return: TPP_TOK_OFCHAR('<'): #include-string parsed: <foo.h>
+ * @return: TPP_TOK_ENOMEM:      Out of memory
+ * @return: TPP_TOK_EIO:         I/O error while trying to read from file
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_ELEXERROR:   Lexer error
+ * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_include_string(tpp_lexer *tpp_restrict self);
+
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+#define tpp_lexer_yieldraw_include_string(self) \
+	tpp_lexer_yieldraw_at_include_string(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
+
+/* TODO: API to decode a parsed #include-string (~ala "tpp_lexer_decodestring()") -- needs to remove BSE and trigraphs */
+/* TODO: API built on-top of the #include-string decoder that uses "tpp_lexer_openfile_ex()" combined with
+ *       filenames from the current #include-stack, as well as system include paths to (try to) open the
+ *       named file. -- This function must also take "tpp_keyword_flags mask_flags", allowing the caller
+ *       to selectively filter out certain files based on context:
+ *       #include ...             TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ *       __has_include(...)       TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ *       #include_next ...        TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ *       __has_include_next(...)  TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ *       #import ...              TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
+ *       #embed ...               TPP_LEXER_OPENFILE_FLAG_NORMAL
+ *       __has_embed(...)         TPP_LEXER_OPENFILE_FLAG_NORMAL
+ */
+#endif /* TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 
 
@@ -1009,7 +1123,11 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
                             tpp_keyword const *tpp_restrict kwd);
-#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+#elif TPP_HAVE_CPP_MACROS
+#define tpp_lexer_getkeyworddefined(self, kwd) tpp_keyword_canundef(kwd)
+#else /* ... */
+#define tpp_lexer_getkeyworddefined(self, kwd) 0
+#endif /* !... */
 
 
 #if TPP_HAVE_LEXER_DECODEINT
