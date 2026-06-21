@@ -25,6 +25,8 @@
 
 /*[[[tpp-begin]]]*/
 
+/* If "tpp-amalgamation.h" was already included, re-define
+ * `TPP_INTERNAL()' identifers to their unescaped names. */
 /*[[[deemon
 import * from deemon;
 import fs;

@@ -36,7 +36,8 @@
  * While inside of this file, the following macros are pre-defined:
  *
  *
- * >> #define TPP_DEFS
+ * >> #undef GUARD_TPP_AMALGAMATION_H
+#define TPP_DEFS
  *    Defined, but no explicit meaning (for use in "#ifdef TPP_DEFS" to detect context)
  *    If you #include other files for "your/defs.h", you can use this macro prevent
  *    unexpected tokens from appearing within the definitions file.

@@ -90,6 +90,7 @@ typedef enum tpp_warning_state {
 /************************************************************************/
 
 typedef enum tpp_warning_group_id {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) wgroup_id,
 #include TPP_CONFIG_DEFS_FILENAME
@@ -121,6 +122,7 @@ tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen
 /************************************************************************/
 
 typedef enum tpp_warning_id {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) warning_id,
 #include TPP_CONFIG_DEFS_FILENAME
@@ -162,6 +164,7 @@ tpp_warning_getnumbers(tpp_warning_id warning_id);
 /* Warning context ID (used internally to keep track
  * of warning states for groups & numbered warnings) */
 typedef enum tpp_warning_context_id {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) TPP_WC_##wgroup_id,
 #include TPP_CONFIG_DEFS_FILENAME
@@ -224,6 +227,7 @@ tpp_warning_context_id_aswarning(tpp_warning_context_id ctx_id);
 /************************************************************************/
 typedef union tpp_warnings_state {
 	struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 	unsigned int TPP_INTERNAL(twsg_##wgroup_id): 2; /* One of `tpp_warning_state' */

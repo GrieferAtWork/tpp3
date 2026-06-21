@@ -18,11 +18,11 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /* clang-format off */
+#ifndef GUARD_TPP_AMALGAMATION_H
 #ifdef TPP_DEFS
 #include "parts/defs.h"
 #else /* TPP_DEFS */
-#ifndef GUARD_TPP_H
-#define GUARD_TPP_H 1
+#define GUARD_TPP_AMALGAMATION_H 1
 
 #include "parts/api.h"
 #include "parts/tuple.h"
@@ -42,6 +42,6 @@
 #include "parts/warnings.h"
 #include "parts/lexer.h"
 
-#endif /* !GUARD_TPP_H */
 #endif /* !TPP_DEFS */
+#endif /* !GUARD_TPP_AMALGAMATION_H */
 /* clang-format on */

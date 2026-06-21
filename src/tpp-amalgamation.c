@@ -18,21 +18,29 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /* clang-format off */
-#ifndef GUARD_TPP_C
-#define GUARD_TPP_C 1
-#undef TPP_BUILDING
-#define TPP_BUILDING 1
-
-#ifndef GUARD_TPP_H
+#ifndef GUARD_TPP_AMALGAMATION_C
+#define GUARD_TPP_AMALGAMATION_C 1
 #ifndef TPP_INTERN_DECL
 #define TPP_INTERN_DECL static
 #define TPP_INTERN_IMPL static
 #endif /* !TPP_INTERN_DECL */
-# include "tpp-amalgamation.h"
-#else /* !GUARD_TPP_H */
+#ifndef TPP_AMALGAMATION_H
+#define TPP_AMALGAMATION_H "tpp-amalgamation.h"
+#endif /* !TPP_AMALGAMATION_H */
+
+/* Include "tpp-amalgamation.h" header... */
+#ifndef GUARD_TPP_AMALGAMATION_H
+#undef TPP_BUILDING
+#define TPP_BUILDING 1
+#include TPP_AMALGAMATION_H
+#endif /* !GUARD_TPP_AMALGAMATION_H */
+
+#if !TPP_BUILDING
 /************************************************************************/
 /* File: parts/expose-internals.h                                       */
 /************************************************************************/
+/* If "tpp-amalgamation.h" was already included, re-define
+ * `TPP_INTERNAL()' identifers to their unescaped names. */
 #define lci_line                                         TPP_INTERNAL(lci_line)
 #define lci_col                                          TPP_INTERNAL(lci_col)
 #define tl_exts                                          TPP_INTERNAL(tl_exts)
@@ -634,7 +642,7 @@
 
 /************************************************************************/
 
-#endif /* GUARD_TPP_H */
+#endif /* !TPP_BUILDING */
 
 /************************************************************************/
 /* File: parts/error.c                                                  */
@@ -6699,22 +6707,25 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_EXTENSIONS
 static struct tpp_extension_names_struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) char ten_##id[sizeof(name) / sizeof(char)];
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 } const tpp_extension_names = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) /* .ten_##id = */ name,
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 };
 
 static tpp_size const tpp_extension_name_offsets_byid[TPP_EXT_COUNT] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) \
 	/* [id] = */ tpp_offsetof(struct tpp_extension_names_struct, ten_##id),
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 };
 #define tpp_extension_getname_fast(id) \
@@ -6726,32 +6737,35 @@ static tpp_size const tpp_extension_name_offsets_byid[TPP_EXT_COUNT] = {
 #if TPP_HAVE_WARNINGS
 
 static struct tpp_warning_group_names_struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
 	char twgn_##wgroup_id##_##index[sizeof(value) / sizeof(char)];
 #define TPP_WGROUP(wgroup_id, names, default)                                                  \
 	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id) \
 	char twgn_tail_##wgroup_id;
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef _TPP_EXPAND_WGROUP_NAMES
 #undef TPP_DEFS
 } const tpp_warning_group_names = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
 	/* .twgn_##wgroup_id##_##index = */ value,
 #define TPP_WGROUP(wgroup_id, names, default)                                                  \
 	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id) \
 	/* .twgn_tail_##wgroup_id = */ 0,
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef _TPP_EXPAND_WGROUP_NAMES
 #undef TPP_DEFS
 };
 
 static tpp_size const tpp_warning_group_name_offsets_byid[TPP_WG_COUNT] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 	/* [wgroup_id] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_0),
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 };
 #define tpp_warning_group_getname_fast(id) \
@@ -6770,6 +6784,7 @@ tpp_warning_group_getnames(tpp_warning_group_id id) {
 
 
 static struct tpp_warning_groups_struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WARNING_GROUP_IDS(warning_id, index, value) \
 	tpp_warning_group_id twig_##warning_id##_##index;
@@ -6778,11 +6793,12 @@ static struct tpp_warning_groups_struct {
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format)                             \
 	TPP_TUPLE_FOREACH(wgroup_ids, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WARNING_GROUP_IDS, warning_id) \
 	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_EXPAND_WARNING_GROUP_TAIL, warning_id)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef _TPP_EXPAND_WARNING_GROUP_IDS
 #undef _TPP_EXPAND_WARNING_GROUP_TAIL
 #undef TPP_DEFS
 } const tpp_warning_groups = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WARNING_GROUP_IDS(warning_id, index, value) \
 	/* .twig_##warning_id##_##index = */ value,
@@ -6791,13 +6807,14 @@ static struct tpp_warning_groups_struct {
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format)                             \
 	TPP_TUPLE_FOREACH(wgroup_ids, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WARNING_GROUP_IDS, warning_id) \
 	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_EXPAND_WARNING_GROUP_TAIL, warning_id)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef _TPP_EXPAND_WARNING_GROUP_IDS
 #undef _TPP_EXPAND_WARNING_GROUP_TAIL
 #undef TPP_DEFS
 };
 
 static tpp_size const tpp_warning_group_offsets_byid[TPP_W_COUNT] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_WARNING_GROUPS_NONEMPTY(warning_id) \
 	/* [warning_id] = */ tpp_offsetof(struct tpp_warning_groups_struct, twig_##warning_id##_0),
@@ -6806,7 +6823,7 @@ static tpp_size const tpp_warning_group_offsets_byid[TPP_W_COUNT] = {
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format)   \
 	TPP_TUPLE_IF_NONEMPTY(wgroup_ids, _TPP_WARNING_GROUPS_NONEMPTY, warning_id) \
 	TPP_TUPLE_IF_EMPTY(wgroup_ids, _TPP_WARNING_GROUPS_EMPTY, warning_id)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef _TPP_WARNING_GROUPS_NONEMPTY
 #undef _TPP_WARNING_GROUPS_EMPTY
 #undef TPP_DEFS
@@ -6829,16 +6846,17 @@ tpp_warning_getgroups(tpp_warning_id id) {
 
 TPP_IMPL tpp_warnings_state const tpp_warnings_state_default = {
 	/* .tws_state = */ {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 		/* .twsg_##wgroup_id  = */ (unsigned int)default,
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #if TPP_HAVE_WARNING_NUMBERS
 #define TPP_DECLARE_NUMBERED_WARNING(numbers_default) \
 		/* .twsn_##warning_id = */ (unsigned int)numbers_default,
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 		TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, numbers_default)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DECLARE_NUMBERED_WARNING
 #endif /* TPP_HAVE_WARNING_NUMBERS */
 #undef TPP_DEFS
@@ -6879,24 +6897,26 @@ static void tpp_init_extension_name_offsets_byname(void) {
 
 #if TPP_HAVE_WARNINGS
 enum {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
 	_TPP_WGN_##wgroup_id##_##index,
 #define TPP_WGROUP(wgroup_id, names, default) \
 	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef _TPP_EXPAND_WGROUP_NAMES
 #undef TPP_DEFS
 	TPP_WGN_COUNT
 };
 
 static tpp_size const tpp_warning_group_name_offsets_bynameid[TPP_WGN_COUNT] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
 	/* [_TPP_WGN_##wgroup_id##_##index] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_##index),
 #define TPP_WGROUP(wgroup_id, names, default) \
 	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef _TPP_EXPAND_WGROUP_NAMES
 #undef TPP_DEFS
 };
@@ -6981,17 +7001,19 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		/* .tk_kwd       = */ str                                \
 	};
 
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_KWD(id, string) \
 	TPP_DEFINE_BUILTIN_KEYWORD(id, string)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 
 #define tpp_builtin_keywords_list tpp_builtin_keywords_list
 static tpp_keyword *tpp_builtin_keywords_list[] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_KWD(id, string) (tpp_keyword *)&tpp_builtin_keyword_##id,
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 	NULL
 };
@@ -7182,13 +7204,14 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 	if (TPP_TOK_ISBUILTINKEYWORD(kwd->tk_id)) {
 		(void)self;
 		switch (kwd->tk_id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_KWD_FLAGS(id, flags_expr) \
 		case id: return flags_expr;
 #define tpp_current_lexer()      self
 #define tpp_current_keyword()    kwd
 #define tpp_current_keyword_id() kwd->tk_id
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef tpp_current_lexer
 #undef tpp_current_keyword
 #undef tpp_current_keyword_id
@@ -7221,13 +7244,14 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_BUILTIN_MACROS) */
 	(void)self;
 	switch (kwd->tk_id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_MACRO(id, if_expr) \
 	case id: return if_expr;
 #define tpp_current_lexer()      self
 #define tpp_current_keyword()    kwd
 #define tpp_current_keyword_id() kwd->tk_id
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef tpp_current_lexer
 #undef tpp_current_keyword
 #undef tpp_current_keyword_id
@@ -7313,28 +7337,31 @@ tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
 #if TPP_HAVE_WARNINGS
 
 static struct tpp_warning_format_strings_struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	char twf_##warning_id[sizeof(format) / sizeof(char)];
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 } const tpp_warning_format_strings = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	/* [twf_##warning_id] = */ format,
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 };
 
 static tpp_size const tpp_warning_format_string_offsets[TPP_W_COUNT] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	/* [warning_id] = */ tpp_offsetof(struct tpp_warning_format_strings_struct, twf_##warning_id),
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) \
 	/* [warning_id] = */ sizeof(struct tpp_warning_format_strings_struct) - 1,
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 };
 
@@ -7359,12 +7386,13 @@ tpp_warning_getformat(tpp_warning_id id) {
 TPP_IMPL TPP_WUNUSED tpp_warning_id TPPCALL
 tpp_warning_ofnumber(unsigned int number) {
 	switch (number) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING_NUMBER_CASE(_, index, value) \
 	case value: return _;
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_FOREACH(numbers, TPP_TUPLE_FOREACH_DUMMY_SEP, TPP_WARNING_NUMBER_CASE, warning_id)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_WARNING_NUMBER_CASE
 #undef TPP_DEFS
 	default: break;
@@ -7379,6 +7407,7 @@ TPP_IMPL TPP_RETNONNULL TPP_WUNUSED unsigned int const *TPPCALL
 tpp_warning_getnumbers(tpp_warning_id warning_id) {
 	static unsigned int const dummy_warning_numbers[1] = { TPP_WARNING_NUMBER_INVALID };
 	switch (warning_id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING_NUMBERS_CASE_ITEM(_, index, value) value,
 #define TPP_WARNING_NUMBERS_CASE_(warning_id, numbers)                                                \
@@ -7392,7 +7421,7 @@ tpp_warning_getnumbers(tpp_warning_id warning_id) {
 #define TPP_WARNING_NUMBERS_CASE(args) TPP_WARNING_NUMBERS_CASE_ args
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_WARNING_NUMBERS_CASE, (warning_id, numbers))
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_WARNING_NUMBERS_CASE
 #undef TPP_DEFS
 	default: break;
@@ -7407,12 +7436,13 @@ tpp_warning_getnumbers(tpp_warning_id warning_id) {
 TPP_IMPL TPP_WUNUSED tpp_warning_context_id TPPCALL
 tpp_warning_context_id_ofwarning(tpp_warning_id warning_id) {
 	switch (warning_id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_CASE_NUMBERED_WARNING(warning_id) \
 	case warning_id: return TPP_WC_##warning_id;
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, _TPP_CASE_NUMBERED_WARNING, warning_id)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef _TPP_CASE_NUMBERED_WARNING
 #undef TPP_DEFS
 	default: break;
@@ -7426,12 +7456,13 @@ tpp_warning_context_id_ofwarning(tpp_warning_id warning_id) {
 TPP_IMPL TPP_WUNUSED tpp_warning_id TPPCALL
 tpp_warning_context_id_aswarning(tpp_warning_context_id ctx_id) {
 	switch (ctx_id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_CASE_NUMBERED_WARNING(warning_id) \
 	case TPP_WC_##warning_id: return warning_id;
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, _TPP_CASE_NUMBERED_WARNING, warning_id)
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef _TPP_CASE_NUMBERED_WARNING
 #undef TPP_DEFS
 	default: break;
@@ -7510,13 +7541,14 @@ tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen
 TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
 tpp_macro_getbuiltin(tpp_token_id id) {
 	switch (id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_BUILTIN_MACRO(keyword_id, value)                          \
 	case keyword_id: {                                                \
 		static TPP_BUILTIN_MACRO_DEFINE(builtin_##keyword_id, value); \
 		return (tpp_builtin_macro const *)&builtin_##keyword_id;      \
 	}	break;
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 	default: break;
 	}
@@ -7586,9 +7618,10 @@ TPP_DECL_BEGIN
 /* Default extension state */
 TPP_CONST_IMPL tpp_extensions_state const tpp_extensions_state_default = {
 	/* .tes_flags = */ {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) /* .tef_##id = */ default,
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 	}
 };
@@ -9646,12 +9679,13 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 /* ... */
 /************************************************************************/
 
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) \
 		case warning_id: {                                                     \
 			expr;                                                              \
 		}	break;
-#include "tpp-amalgamation.h"
+#include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 
 /************************************************************************/
@@ -25722,5 +25756,5 @@ TPP_DECL_END
 /************************************************************************/
 
 
-#endif /* !GUARD_TPP_C */
+#endif /* !GUARD_TPP_AMALGAMATION_C */
 /* clang-format on */

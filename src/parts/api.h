@@ -436,8 +436,8 @@ typedef int_least64_t tpp_lcinfo;
 #define tpp_lcinfo tpp_lcinfo
 
 #define tpp_lcinfo_equals(a, b)  ((a) == (b))
-#define tpp_lcinfo_getline(self) ((tpp_line)((uint32_t)(self)))
-#define tpp_lcinfo_getcol(self)  ((tpp_column)((uint32_t)((self) >> 32)))
+#define tpp_lcinfo_getline(self) ((tpp_line)((int32_t)(uint32_t)(self)))
+#define tpp_lcinfo_getcol(self)  ((tpp_column)((int32_t)(uint32_t)((self) >> 32)))
 #define tpp_lcinfo_of(line, col)                  \
 	(((int_least64_t)(uint32_t)(int32_t)(line)) | \
 	 ((int_least64_t)(uint32_t)(int32_t)(col) << 32))

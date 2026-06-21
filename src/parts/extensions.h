@@ -29,6 +29,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_EXTENSIONS
 typedef enum tpp_extension_id {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) id,
 #include TPP_CONFIG_DEFS_FILENAME
@@ -39,6 +40,7 @@ typedef enum tpp_extension_id {
 /* Default extension state */
 typedef union tpp_extensions_state {
 	struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) unsigned int TPP_INTERNAL(tef_##id): 1;
 #include TPP_CONFIG_DEFS_FILENAME

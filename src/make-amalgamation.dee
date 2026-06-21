@@ -62,11 +62,10 @@ function getFile(filename: string): Bytes {
 	data = data.replace("/* clang-format on */\n", "");
 	data = data.replace("// clang-format off\n", "");
 	data = data.replace("// clang-format on\n", "");
-	data = data.replace("TPP_CONFIG_DEFS_FILENAME", '"tpp-amalgamation.h"');
 	return data;
 }
 
-function makeAmalgamation(inputFilename: string, outputFilename: string) {
+function makeAmalgamation(inputFilename: string, outputFilename: string, TPP_AMALGAMATION_H: string) {
 	local data: Bytes;
 	with (local fp = File.open(inputFilename, "rb"))
 		data = fp.readall();
@@ -85,7 +84,8 @@ function makeAmalgamation(inputFilename: string, outputFilename: string) {
 		writer.write(f"/************************************************************************/\n"
 		             f"/* File: {filename.ljust(63)}*/\n"
 		             f"/************************************************************************/\n");
-		writer.write(getFile(absFilename));
+		writer.write(getFile(absFilename)
+			.rereplace(r"\bTPP_CONFIG_DEFS_FILENAME\b", TPP_AMALGAMATION_H));
 		writer.write(f"\n/************************************************************************/\n"
 		             f"");
 		i = incEnd + 1;
@@ -100,7 +100,7 @@ function makeAmalgamation(inputFilename: string, outputFilename: string) {
 }
 
 
-makeAmalgamation("tpp.h", "tpp-amalgamation.h");
-makeAmalgamation("tpp.c", "tpp-amalgamation.c");
+makeAmalgamation("tpp.h", "tpp-amalgamation.h", TPP_AMALGAMATION_H: '"tpp-amalgamation.h"');
+makeAmalgamation("tpp.c", "tpp-amalgamation.c", TPP_AMALGAMATION_H: 'TPP_AMALGAMATION_H');
 
 

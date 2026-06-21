@@ -18,6 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /* clang-format off */
+#ifndef GUARD_TPP_AMALGAMATION_H
 #ifdef TPP_DEFS
 /************************************************************************/
 /* File: parts/defs.h                                                   */
@@ -34,7 +35,8 @@
  * While inside of this file, the following macros are pre-defined:
  *
  *
- * >> #define TPP_DEFS
+ * >> #undef GUARD_TPP_AMALGAMATION_H
+#define TPP_DEFS
  *    Defined, but no explicit meaning (for use in "#ifdef TPP_DEFS" to detect context)
  *    If you #include other files for "your/defs.h", you can use this macro prevent
  *    unexpected tokens from appearing within the definitions file.
@@ -3128,8 +3130,7 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 /************************************************************************/
 
 #else /* TPP_DEFS */
-#ifndef GUARD_TPP_H
-#define GUARD_TPP_H 1
+#define GUARD_TPP_AMALGAMATION_H 1
 
 /************************************************************************/
 /* File: parts/api.h                                                    */
@@ -3549,8 +3550,8 @@ typedef int_least64_t tpp_lcinfo;
 #define tpp_lcinfo tpp_lcinfo
 
 #define tpp_lcinfo_equals(a, b)  ((a) == (b))
-#define tpp_lcinfo_getline(self) ((tpp_line)((uint32_t)(self)))
-#define tpp_lcinfo_getcol(self)  ((tpp_column)((uint32_t)((self) >> 32)))
+#define tpp_lcinfo_getline(self) ((tpp_line)((int32_t)(uint32_t)(self)))
+#define tpp_lcinfo_getcol(self)  ((tpp_column)((int32_t)(uint32_t)((self) >> 32)))
 #define tpp_lcinfo_of(line, col)                  \
 	(((int_least64_t)(uint32_t)(int32_t)(line)) | \
 	 ((int_least64_t)(uint32_t)(int32_t)(col) << 32))
@@ -7911,6 +7912,7 @@ typedef enum tpp_token_id {
 	TPP_TOK_MULTICHAR_END, /* KEEP THIS THE LAST MULTICHAR TOKEN! */
 	TPP_TOK_KEYWORD_BEGIN = TPP_TOK_MULTICHAR_END, /* First builtin keyword */
 	TPP_INTERNAL(_TPP_TOK_KEYWORD_BEGIN) = TPP_TOK_KEYWORD_BEGIN - 1,
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_KWD(id, string) id,
 #include "tpp-amalgamation.h"
@@ -11846,6 +11848,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_EXTENSIONS
 typedef enum tpp_extension_id {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) id,
 #include "tpp-amalgamation.h"
@@ -11856,6 +11859,7 @@ typedef enum tpp_extension_id {
 /* Default extension state */
 typedef union tpp_extensions_state {
 	struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) unsigned int TPP_INTERNAL(tef_##id): 1;
 #include "tpp-amalgamation.h"
@@ -12007,6 +12011,7 @@ typedef enum tpp_warning_state {
 /************************************************************************/
 
 typedef enum tpp_warning_group_id {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) wgroup_id,
 #include "tpp-amalgamation.h"
@@ -12038,6 +12043,7 @@ tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen
 /************************************************************************/
 
 typedef enum tpp_warning_id {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) warning_id,
 #include "tpp-amalgamation.h"
@@ -12079,6 +12085,7 @@ tpp_warning_getnumbers(tpp_warning_id warning_id);
 /* Warning context ID (used internally to keep track
  * of warning states for groups & numbered warnings) */
 typedef enum tpp_warning_context_id {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) TPP_WC_##wgroup_id,
 #include "tpp-amalgamation.h"
@@ -12141,6 +12148,7 @@ tpp_warning_context_id_aswarning(tpp_warning_context_id ctx_id);
 /************************************************************************/
 typedef union tpp_warnings_state {
 	struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 	unsigned int TPP_INTERNAL(twsg_##wgroup_id): 2; /* One of `tpp_warning_state' */
@@ -13815,6 +13823,6 @@ TPP_DECL_END
 /************************************************************************/
 
 
-#endif /* !GUARD_TPP_H */
 #endif /* !TPP_DEFS */
+#endif /* !GUARD_TPP_AMALGAMATION_H */
 /* clang-format on */

@@ -33,6 +33,7 @@ TPP_DECL_BEGIN
 /* Default extension state */
 TPP_CONST_IMPL tpp_extensions_state const tpp_extensions_state_default = {
 	/* .tes_flags = */ {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) /* .tef_##id = */ default,
 #include TPP_CONFIG_DEFS_FILENAME

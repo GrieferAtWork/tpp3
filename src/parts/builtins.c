@@ -53,11 +53,13 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_EXTENSIONS
 static struct tpp_extension_names_struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) char ten_##id[sizeof(name) / sizeof(char)];
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS
 } const tpp_extension_names = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) /* .ten_##id = */ name,
 #include TPP_CONFIG_DEFS_FILENAME
@@ -65,6 +67,7 @@ static struct tpp_extension_names_struct {
 };
 
 static tpp_size const tpp_extension_name_offsets_byid[TPP_EXT_COUNT] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) \
 	/* [id] = */ tpp_offsetof(struct tpp_extension_names_struct, ten_##id),
@@ -80,6 +83,7 @@ static tpp_size const tpp_extension_name_offsets_byid[TPP_EXT_COUNT] = {
 #if TPP_HAVE_WARNINGS
 
 static struct tpp_warning_group_names_struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
 	char twgn_##wgroup_id##_##index[sizeof(value) / sizeof(char)];
@@ -90,6 +94,7 @@ static struct tpp_warning_group_names_struct {
 #undef _TPP_EXPAND_WGROUP_NAMES
 #undef TPP_DEFS
 } const tpp_warning_group_names = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
 	/* .twgn_##wgroup_id##_##index = */ value,
@@ -102,6 +107,7 @@ static struct tpp_warning_group_names_struct {
 };
 
 static tpp_size const tpp_warning_group_name_offsets_byid[TPP_WG_COUNT] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 	/* [wgroup_id] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_0),
@@ -124,6 +130,7 @@ tpp_warning_group_getnames(tpp_warning_group_id id) {
 
 
 static struct tpp_warning_groups_struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WARNING_GROUP_IDS(warning_id, index, value) \
 	tpp_warning_group_id twig_##warning_id##_##index;
@@ -137,6 +144,7 @@ static struct tpp_warning_groups_struct {
 #undef _TPP_EXPAND_WARNING_GROUP_TAIL
 #undef TPP_DEFS
 } const tpp_warning_groups = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WARNING_GROUP_IDS(warning_id, index, value) \
 	/* .twig_##warning_id##_##index = */ value,
@@ -152,6 +160,7 @@ static struct tpp_warning_groups_struct {
 };
 
 static tpp_size const tpp_warning_group_offsets_byid[TPP_W_COUNT] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_WARNING_GROUPS_NONEMPTY(warning_id) \
 	/* [warning_id] = */ tpp_offsetof(struct tpp_warning_groups_struct, twig_##warning_id##_0),
@@ -183,6 +192,7 @@ tpp_warning_getgroups(tpp_warning_id id) {
 
 TPP_IMPL tpp_warnings_state const tpp_warnings_state_default = {
 	/* .tws_state = */ {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 		/* .twsg_##wgroup_id  = */ (unsigned int)default,
@@ -233,6 +243,7 @@ static void tpp_init_extension_name_offsets_byname(void) {
 
 #if TPP_HAVE_WARNINGS
 enum {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
 	_TPP_WGN_##wgroup_id##_##index,
@@ -245,6 +256,7 @@ enum {
 };
 
 static tpp_size const tpp_warning_group_name_offsets_bynameid[TPP_WGN_COUNT] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
 	/* [_TPP_WGN_##wgroup_id##_##index] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_##index),
@@ -335,6 +347,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		/* .tk_kwd       = */ str                                \
 	};
 
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_KWD(id, string) \
 	TPP_DEFINE_BUILTIN_KEYWORD(id, string)
@@ -343,6 +356,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 
 #define tpp_builtin_keywords_list tpp_builtin_keywords_list
 static tpp_keyword *tpp_builtin_keywords_list[] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_KWD(id, string) (tpp_keyword *)&tpp_builtin_keyword_##id,
 #include TPP_CONFIG_DEFS_FILENAME
@@ -536,6 +550,7 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 	if (TPP_TOK_ISBUILTINKEYWORD(kwd->tk_id)) {
 		(void)self;
 		switch (kwd->tk_id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_KWD_FLAGS(id, flags_expr) \
 		case id: return flags_expr;
@@ -575,6 +590,7 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_BUILTIN_MACROS) */
 	(void)self;
 	switch (kwd->tk_id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_MACRO(id, if_expr) \
 	case id: return if_expr;
@@ -667,6 +683,7 @@ tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
 #if TPP_HAVE_WARNINGS
 
 static struct tpp_warning_format_strings_struct {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	char twf_##warning_id[sizeof(format) / sizeof(char)];
@@ -674,6 +691,7 @@ static struct tpp_warning_format_strings_struct {
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS
 } const tpp_warning_format_strings = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	/* [twf_##warning_id] = */ format,
@@ -683,6 +701,7 @@ static struct tpp_warning_format_strings_struct {
 };
 
 static tpp_size const tpp_warning_format_string_offsets[TPP_W_COUNT] = {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	/* [warning_id] = */ tpp_offsetof(struct tpp_warning_format_strings_struct, twf_##warning_id),
@@ -713,6 +732,7 @@ tpp_warning_getformat(tpp_warning_id id) {
 TPP_IMPL TPP_WUNUSED tpp_warning_id TPPCALL
 tpp_warning_ofnumber(unsigned int number) {
 	switch (number) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING_NUMBER_CASE(_, index, value) \
 	case value: return _;
@@ -733,6 +753,7 @@ TPP_IMPL TPP_RETNONNULL TPP_WUNUSED unsigned int const *TPPCALL
 tpp_warning_getnumbers(tpp_warning_id warning_id) {
 	static unsigned int const dummy_warning_numbers[1] = { TPP_WARNING_NUMBER_INVALID };
 	switch (warning_id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING_NUMBERS_CASE_ITEM(_, index, value) value,
 #define TPP_WARNING_NUMBERS_CASE_(warning_id, numbers)                                                \
@@ -761,6 +782,7 @@ tpp_warning_getnumbers(tpp_warning_id warning_id) {
 TPP_IMPL TPP_WUNUSED tpp_warning_context_id TPPCALL
 tpp_warning_context_id_ofwarning(tpp_warning_id warning_id) {
 	switch (warning_id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_CASE_NUMBERED_WARNING(warning_id) \
 	case warning_id: return TPP_WC_##warning_id;
@@ -780,6 +802,7 @@ tpp_warning_context_id_ofwarning(tpp_warning_id warning_id) {
 TPP_IMPL TPP_WUNUSED tpp_warning_id TPPCALL
 tpp_warning_context_id_aswarning(tpp_warning_context_id ctx_id) {
 	switch (ctx_id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define _TPP_CASE_NUMBERED_WARNING(warning_id) \
 	case TPP_WC_##warning_id: return warning_id;
@@ -864,6 +887,7 @@ tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen
 TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
 tpp_macro_getbuiltin(tpp_token_id id) {
 	switch (id) {
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_BUILTIN_MACRO(keyword_id, value)                          \
 	case keyword_id: {                                                \

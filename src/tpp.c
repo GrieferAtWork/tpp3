@@ -18,20 +18,26 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /* clang-format off */
-#ifndef GUARD_TPP_C
-#define GUARD_TPP_C 1
-#undef TPP_BUILDING
-#define TPP_BUILDING 1
-
-#ifndef GUARD_TPP_H
+#ifndef GUARD_TPP_AMALGAMATION_C
+#define GUARD_TPP_AMALGAMATION_C 1
 #ifndef TPP_INTERN_DECL
 #define TPP_INTERN_DECL static
 #define TPP_INTERN_IMPL static
 #endif /* !TPP_INTERN_DECL */
-# include "tpp-amalgamation.h"
-#else /* !GUARD_TPP_H */
+#ifndef TPP_AMALGAMATION_H
+#define TPP_AMALGAMATION_H "tpp-amalgamation.h"
+#endif /* !TPP_AMALGAMATION_H */
+
+/* Include "tpp-amalgamation.h" header... */
+#ifndef GUARD_TPP_AMALGAMATION_H
+#undef TPP_BUILDING
+#define TPP_BUILDING 1
+#include TPP_AMALGAMATION_H
+#endif /* !GUARD_TPP_AMALGAMATION_H */
+
+#if !TPP_BUILDING
 #include "parts/expose-internals.h"
-#endif /* GUARD_TPP_H */
+#endif /* !TPP_BUILDING */
 
 #include "parts/error.c"
 #include "parts/ctype.c"
@@ -62,5 +68,5 @@
 #include "parts/lexer-decodestring.c"
 #include "parts/lexer-parseexpr.c"
 
-#endif /* !GUARD_TPP_C */
+#endif /* !GUARD_TPP_AMALGAMATION_C */
 /* clang-format on */

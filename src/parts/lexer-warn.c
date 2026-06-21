@@ -535,6 +535,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 /* ... */
 /************************************************************************/
 
+#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) \
 		case warning_id: {                                                     \
