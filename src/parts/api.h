@@ -55,68 +55,6 @@
 #include <limits.h>
 #endif /* !TPP_NO_SYSTEM_INCLUDES */
 
-#ifndef __SIZEOF_POINTER__
-#ifdef __has_include
-#if __has_include(<hybrid/typecore.h>)
-#include <hybrid/typecore.h>
-#endif /* __has_include(<hybrid/typecore.h>) */
-#endif /* __has_include */
-#ifndef __SIZEOF_POINTER__
-#ifdef SIZE_MAX
-#if SIZE_MAX == UINT32_C(0xffffffff)
-#define __SIZEOF_POINTER__ 4
-#elif SIZE_MAX == UINT64_C(0xffffffffffffffff)
-#define __SIZEOF_POINTER__ 8
-#elif SIZE_MAX == UINT16_C(0xffff)
-#define __SIZEOF_POINTER__ 2
-#elif SIZE_MAX == UINT8_C(0xff)
-#define __SIZEOF_POINTER__ 1
-#endif /* ... */
-#endif /* SIZE_MAX */
-#ifndef __SIZEOF_POINTER__
-#if defined(_WIN64) || defined(WIN64)
-#define __SIZEOF_POINTER__ 8
-#elif defined(_WIN32) || defined(WIN32) || defined(__WIN32__)
-#define __SIZEOF_POINTER__ 4
-#endif /* !_WIN32 && __WIN32__ */
-#if !defined(__SIZEOF_POINTER__) && !defined(__DEEMON__)
-#error "No way to determine '__SIZEOF_POINTER__'"
-#endif /* !__SIZEOF_POINTER__ */
-#endif /* !__SIZEOF_POINTER__ */
-#endif /* !__SIZEOF_POINTER__ */
-#endif /* !__SIZEOF_POINTER__ */
-
-#ifndef __SIZEOF_SIZE_T__
-#define __SIZEOF_SIZE_T__ __SIZEOF_POINTER__
-#endif /* !__SIZEOF_SIZE_T__ */
-
-#ifndef __SIZEOF_INT__
-#ifdef __has_include
-#if __has_include(<hybrid/limitcore.h>)
-#include <hybrid/limitcore.h>
-#endif /* __has_include(<hybrid/limitcore.h>) */
-#if __has_include(<limits.h>)
-#include <limits.h>
-#endif /* __has_include(<limits.h>) */
-#endif /* __has_include */
-#ifndef __SIZEOF_INT__
-#ifdef INT_MAX
-#if INT_MAX == 127
-#define __SIZEOF_INT__ 1
-#elif INT_MAX == 32767
-#define __SIZEOF_INT__ 2
-#elif INT_MAX == 2147483647
-#define __SIZEOF_INT__ 4
-#elif INT_MAX == 9223372036854775807
-#define __SIZEOF_INT__ 8
-#endif /* ... */
-#endif /* INT_MAX */
-#ifndef __SIZEOF_INT__
-#define __SIZEOF_INT__ 4
-#endif /* !__SIZEOF_INT__ */
-#endif /* !__SIZEOF_INT__ */
-#endif /* !__SIZEOF_INT__ */
-
 #define TPP_PREPROCESSOR_VERSION     300 /* Preprocessor version. */
 #define TPP_API_VERSION              300 /* Api version (Version of this api). */
 #define TPP_PREPROCESSOR_VERSION_STR "300"
@@ -348,10 +286,24 @@
 #endif /* !tpp_unlikely */
 
 #ifndef tpp_size
-#define TPP_SIZEOF_tpp_size __SIZEOF_SIZE_T__
-#define TPP_SIZE_MAX SIZE_MAX
 #define tpp_size size_t
 #endif /* !tpp_size */
+#ifndef TPP_SIZE_MAX
+#define TPP_SIZE_MAX SIZE_MAX
+#endif /* !TPP_SIZE_MAX */
+#ifndef TPP_SIZEOF_tpp_size
+#if TPP_SIZE_MAX == UINT32_C(0xffffffff)
+#define TPP_SIZEOF_tpp_size 4
+#elif TPP_SIZE_MAX == UINT64_C(0xffffffffffffffff)
+#define TPP_SIZEOF_tpp_size 8
+#elif TPP_SIZE_MAX == UINT16_C(0xffff)
+#define TPP_SIZEOF_tpp_size 2
+#elif TPP_SIZE_MAX == UINT8_C(0xff)
+#define TPP_SIZEOF_tpp_size 1
+#else /* ... */
+#error "Unsupported 'TPP_SIZE_MAX' - Please provide your own '#define TPP_SIZEOF_tpp_size'"
+#endif /* !... */
+#endif /* !TPP_SIZEOF_tpp_size */
 #ifndef tpp_ssize
 #define tpp_ssize ptrdiff_t
 #endif /* !tpp_ssize */
