@@ -30,13 +30,13 @@
 #ifdef tpp_io_handle_IS_BUILTIN
 
 #ifdef tpp_io_handle_IS_HANDLE
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <Windows.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_HANDLE */
 
 #ifdef tpp_io_handle_IS_int
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <fcntl.h>
 #ifdef _MSC_VER
 #include <io.h>
@@ -46,13 +46,13 @@
 #include <sys/select.h>
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 #endif /* !_MSC_VER */
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_int */
 
 #ifdef tpp_io_handle_IS_FILE
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_FILE */
 
 TPP_DECL_BEGIN

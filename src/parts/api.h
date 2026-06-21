@@ -20,6 +20,15 @@
 #ifndef GUARD_TPP_API_H
 #define GUARD_TPP_API_H 1
 
+/* Declaration providers for internal functions used across multiple source files.
+ * HINT: These get hard-overwritten to "static" in "tpp-amalgamation.c" */
+#ifndef TPP_INTERN_DECL
+#define TPP_INTERN_DECL extern
+#endif /* !TPP_INTERN_DECL */
+#ifndef TPP_INTERN_IMPL
+#define TPP_INTERN_IMPL /* nothing */
+#endif /* !TPP_INTERN_IMPL */
+
 /*[[[tpp-begin]]]*/
 #ifndef TPP_BUILDING
 #define TPP_BUILDING 0
@@ -47,20 +56,17 @@
 #endif /* _MSC_VER */
 #endif /* TPP_BUILDING */
 
-#ifndef TPP_NO_SYSTEM_INCLUDES
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <limits.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+/************************************************************************/
+/* HOST COMPILER/SYSTEM/OS CONFIGURATION: TPP_HOST_*                    */
+/************************************************************************/
 
-#define TPP_PREPROCESSOR_VERSION     300 /* Preprocessor version. */
-#define TPP_API_VERSION              300 /* Api version (Version of this api). */
-#define TPP_PREPROCESSOR_VERSION_STR "300"
+/* >> #define TPP_HOST_NO_SYSTEM_INCLUDES 1
+ * Prevent TPP sources from doing `#include <foo.h>' -- instead, you must
+ * pre-include any dependencies yourself before #include-ing TPP sources */
+#ifndef TPP_HOST_NO_SYSTEM_INCLUDES
+#define TPP_HOST_NO_SYSTEM_INCLUDES 0
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
-
-/* Does the host preprocessor have support for __VA_ARGS__? */
 #ifndef TPP_HOST_HAS_ATTRIBUTE
 #ifdef __has_attribute
 #define TPP_HOST_HAS_ATTRIBUTE(x) __has_attribute(x)
@@ -83,11 +89,35 @@
 #endif /* !__has_cpp_attribute */
 #endif /* !TPP_HOST_HAS_CPP_ATTRIBUTE */
 
+/* Does the host preprocessor have support for __VA_ARGS__? */
 #ifndef TPP_HOST_HAVE_PP_VARARGS
 #define TPP_HOST_HAVE_PP_VARARGS 1
 #endif /* !TPP_HOST_HAVE_PP_VARARGS */
 
+/* These headers should always be available (even when -ffreestanding)
+ * Still: If "TPP_HOST_NO_SYSTEM_INCLUDES" is defined, don't include anything! */
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdarg.h>
+#include <limits.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
+
+
+/************************************************************************/
+/* TPP3 VERSION NUMBERS                                                 */
+/************************************************************************/
+#define TPP_API_VERSION              300   /* Api version (Version of this api). */
+#define TPP_PREPROCESSOR_VERSION     300   /* Preprocessor version. */
+#define TPP_PREPROCESSOR_VERSION_STR "300" /* str(TPP_PREPROCESSOR_VERSION) */
+
+
+
+/************************************************************************/
+/* TPP API CONFIGURATION                                                */
+/************************************************************************/
 
 /* The standard calling convention used by TPP APIs */
 #ifndef TPPCALL
@@ -111,12 +141,6 @@
 #ifndef TPP_CONST_IMPL
 #define TPP_CONST_IMPL TPP_IMPL
 #endif /* !TPP_CONST_IMPL */
-#ifndef TPP_INTERN_DECL
-#define TPP_INTERN_DECL extern
-#endif /* !TPP_INTERN_DECL */
-#ifndef TPP_INTERN_IMPL
-#define TPP_INTERN_IMPL /* nothing */
-#endif /* !TPP_INTERN_IMPL */
 #ifndef tpp_restrict
 #define tpp_restrict __restrict
 #endif /* !tpp_restrict */
@@ -180,11 +204,6 @@
 #define TPP_FALLTHRU /* @fallthrough@ */
 #endif /* !... */
 #endif /* !TPP_FALLTHRU */
-
-/* Does the host preprocessor have support for __VA_ARGS__? */
-#ifndef TPP_HOST_HAVE_PP_VARARGS
-#define TPP_HOST_HAVE_PP_VARARGS 1
-#endif /* !TPP_HOST_HAVE_PP_VARARGS */
 
 #ifndef TPP_CHAR_BIT
 #ifdef CHAR_BIT
@@ -258,7 +277,9 @@
 #endif /* !tpp_unreachable */
 
 #ifndef tpp_memcpy
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <string.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_strlen      strlen
 #define tpp_strnlen     strnlen
 #define tpp_strcmp      strcmp
@@ -360,7 +381,9 @@
 #endif /* !TPP_STATIC_ASSERT */
 
 #ifndef tpp_malloc
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdlib.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_trymalloc(s)     malloc(s)     /* tpp_trymalloc -- use when failure allows for re-try */
 #define tpp_malloc(s)        malloc(s)     /* tpp_malloc    -- use when failure means error-propagation */
 #define tpp_tryrealloc(p, s) realloc(p, s)
@@ -492,7 +515,9 @@ TPP_DECL_END
 
 
 #ifndef tpp_assert
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <assert.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_assert assert
 #endif /* !tpp_assert */
 /*[[[tpp-end]]]*/

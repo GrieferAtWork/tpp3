@@ -62,6 +62,8 @@ function getFile(filename: string): Bytes {
 	data = data.replace("/* clang-format on */\n", "");
 	data = data.replace("// clang-format off\n", "");
 	data = data.replace("// clang-format on\n", "");
+	data = data.rereplace(r"\bTPP_INTERN_(DECL|IMPL)\b([^\n]*)\\\n", "static\\2         \\\\\n");
+	data = data.rereplace(r"\bTPP_INTERN_(DECL|IMPL)\b", r"static");
 	return data;
 }
 

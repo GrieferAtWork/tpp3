@@ -27,9 +27,9 @@
 /*[[[tpp-begin]]]*/
 #if TPP_HAVE_TIME_API
 #ifndef tpp_time
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <time.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
 TPP_DECL_BEGIN
 

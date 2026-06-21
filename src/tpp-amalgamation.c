@@ -20,10 +20,6 @@
 /* clang-format off */
 #ifndef GUARD_TPP_AMALGAMATION_C
 #define GUARD_TPP_AMALGAMATION_C 1
-#ifndef TPP_INTERN_DECL
-#define TPP_INTERN_DECL static
-#define TPP_INTERN_IMPL static
-#endif /* !TPP_INTERN_DECL */
 #ifndef TPP_AMALGAMATION_H
 #define TPP_AMALGAMATION_H "tpp-amalgamation.h"
 #endif /* !TPP_AMALGAMATION_H */
@@ -4119,13 +4115,13 @@ TPP_DECL_END
 #ifdef tpp_io_handle_IS_BUILTIN
 
 #ifdef tpp_io_handle_IS_HANDLE
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <Windows.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_HANDLE */
 
 #ifdef tpp_io_handle_IS_int
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <fcntl.h>
 #ifdef _MSC_VER
 #include <io.h>
@@ -4135,13 +4131,13 @@ TPP_DECL_END
 #include <sys/select.h>
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 #endif /* !_MSC_VER */
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_int */
 
 #ifdef tpp_io_handle_IS_FILE
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_FILE */
 
 TPP_DECL_BEGIN
@@ -5148,7 +5144,7 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
 #if TPP_HAVE_CPP_MACROS
 /* Figure out the line/column of "pos" in "expanded_text", as produced
  * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL
 tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
                       tpp_string const *expanded_text,
                       tpp_char const *pos);
@@ -6985,7 +6981,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 
 /* Create definitions for builtin keywords */
 #define TPP_DEFINE_BUILTIN_KEYWORD(id, str)                      \
-	TPP_INTERN_DECL struct tpp_builtin_keyword_struct_##id {     \
+	static struct tpp_builtin_keyword_struct_##id {              \
 		tpp_token_id         tk_id;                              \
 		struct tpp_keyword  *tk_next;                            \
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                        \
@@ -6995,7 +6991,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		tpp_size             tk_len;                             \
 		char                 tk_kwd[sizeof(str) / sizeof(char)]; \
 	} tpp_builtin_keyword_##id;                                  \
-	TPP_INTERN_IMPL struct tpp_builtin_keyword_struct_##id       \
+	static struct tpp_builtin_keyword_struct_##id                \
 	tpp_builtin_keyword_##id = {                                 \
 		/* .tk_id        = */ id,                                \
 		/* .tk_next      = */ NULL,                              \
@@ -7058,7 +7054,7 @@ static void tpp_init_builtin_keywords(void) {
 #else /* !TPP_CONFIG_BUILTINS_FILENAME */
 
 #define TPP_BUILTIN_KEYWORD_DECL(id, kwd_len)                \
-	TPP_INTERN_DECL struct tpp_builtin_keyword_struct_##id { \
+	static struct tpp_builtin_keyword_struct_##id {          \
 		tpp_token_id         tk_id;                          \
 		struct tpp_keyword  *tk_next;                        \
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                    \
@@ -7075,7 +7071,7 @@ static void tpp_init_builtin_keywords(void) {
 #else /* TPP_SIZEOF_tpp_hash == ... */
 #endif /* TPP_SIZEOF_tpp_hash != ... */
 #define TPP_BUILTIN_KEYWORD_IMPL(id, kwd_len, kwd, next, hash_hi, hash_lo) \
-	TPP_INTERN_IMPL struct tpp_builtin_keyword_struct_##id                 \
+	static struct tpp_builtin_keyword_struct_##id                          \
 	tpp_builtin_keyword_##id = {                                           \
 		/* .tk_id        = */ id,                                          \
 		/* .tk_next      = */ (tpp_keyword *)next,                         \
@@ -7598,7 +7594,7 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs) {
 
 /* Figure out the line/column of "pos" in "expanded_text", as produced
  * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
-TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL
 tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
                       tpp_string const *expanded_text,
                       tpp_char const *pos) {
@@ -9185,9 +9181,9 @@ TPP_DECL_END
 /* File: parts/lexer-warn.c                                             */
 /************************************************************************/
 #if TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
 
 TPP_DECL_BEGIN
@@ -11971,11 +11967,11 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 /* Seek forward until *after* the next line-feed character (or true EOF)
  * Given `*p_pos' will be updated to point *after* the LF character (or *at* the EOF) */
 #if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM);
-TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM)
@@ -17411,7 +17407,7 @@ err_builder:
 /* Handle a "#define" directive, with "self" pointing at the macro's name-keyword
  * @return: TPP_TOK_ISERR: Error
  * @return: TPP_TOK_EOF: Success; caller should yield the next raw token */
-TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_token_id tok;
@@ -18205,9 +18201,9 @@ tpp_lexer_process_pragma_TPP(tpp_lexer *tpp_restrict self) {
  * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
  *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
  * @return: TPP_E*:     Error */
-TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
-TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
 	tpp_token_id tok = token->tt_id;
@@ -18851,7 +18847,7 @@ TPP_DECL_BEGIN
 #endif /* !TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
 
 /* From "./lexer-yieldraw.c" */
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM);
@@ -18887,7 +18883,7 @@ tpp_lexer_yieldraw_eol(tpp_lexer *tpp_restrict self) {
  * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
  *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
  * @return: TPP_E*:     Error */
-TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 
 /* Process a pragma directive, starting after the "TPP_KWD_pragma" keyword */
@@ -19041,7 +19037,7 @@ tpp_lexer_handle_error_directive(tpp_lexer *tpp_restrict self,
 /* Handle a "#define" directive, with "self" pointing at the macro's name-keyword
  * @return: TPP_TOK_ISERR: Error
  * @return: TPP_TOK_EOF: Success; caller should yield the next raw token */
-TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self);
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -21172,7 +21168,7 @@ err_tok:
  * @return: TPP_TOK_EOF: Success -- caller should yield again to load the
  *                                  first macro's first expansion token.
  * @return: TPP_TOK_ENOMEM: Out of memory */
-TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
                        tpp_macro *tpp_restrict macro) {
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -21230,7 +21226,7 @@ TPP_DECL_BEGIN
  * @return: TPP_TOK_EOF: Success -- caller should yield again to load the
  *                                  first macro's first expansion token.
  * @return: TPP_TOK_ENOMEM: Out of memory */
-TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
                        tpp_macro *tpp_restrict macro);
 
@@ -21681,7 +21677,7 @@ seek_end_of_macro:
  * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
  *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
  * @return: TPP_E*:     Error */
-TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 #endif /* TPP_HAVE_PRAGMA */
 

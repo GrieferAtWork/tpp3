@@ -51,6 +51,7 @@
     <ClInclude Include="..\src\parts\ctype.h" />
     <ClInclude Include="..\src\parts\defs.h" />
     <ClInclude Include="..\src\parts\error.h" />
+    <ClInclude Include="..\src\parts\expose-internals.h" />
     <ClInclude Include="..\src\parts\expr.h" />
     <ClInclude Include="..\src\parts\extensions.h" />
     <ClInclude Include="..\src\parts\features.h" />

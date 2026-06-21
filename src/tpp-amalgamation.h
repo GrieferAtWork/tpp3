@@ -3161,82 +3161,17 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #endif /* _MSC_VER */
 #endif /* TPP_BUILDING */
 
-#ifndef TPP_NO_SYSTEM_INCLUDES
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <limits.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+/************************************************************************/
+/* HOST COMPILER/SYSTEM/OS CONFIGURATION: TPP_HOST_*                    */
+/************************************************************************/
 
-#ifndef __SIZEOF_POINTER__
-#ifdef __has_include
-#if __has_include(<hybrid/typecore.h>)
-#include <hybrid/typecore.h>
-#endif /* __has_include(<hybrid/typecore.h>) */
-#endif /* __has_include */
-#ifndef __SIZEOF_POINTER__
-#ifdef SIZE_MAX
-#if SIZE_MAX == UINT32_C(0xffffffff)
-#define __SIZEOF_POINTER__ 4
-#elif SIZE_MAX == UINT64_C(0xffffffffffffffff)
-#define __SIZEOF_POINTER__ 8
-#elif SIZE_MAX == UINT16_C(0xffff)
-#define __SIZEOF_POINTER__ 2
-#elif SIZE_MAX == UINT8_C(0xff)
-#define __SIZEOF_POINTER__ 1
-#endif /* ... */
-#endif /* SIZE_MAX */
-#ifndef __SIZEOF_POINTER__
-#if defined(_WIN64) || defined(WIN64)
-#define __SIZEOF_POINTER__ 8
-#elif defined(_WIN32) || defined(WIN32) || defined(__WIN32__)
-#define __SIZEOF_POINTER__ 4
-#endif /* !_WIN32 && __WIN32__ */
-#if !defined(__SIZEOF_POINTER__) && !defined(__DEEMON__)
-#error "No way to determine '__SIZEOF_POINTER__'"
-#endif /* !__SIZEOF_POINTER__ */
-#endif /* !__SIZEOF_POINTER__ */
-#endif /* !__SIZEOF_POINTER__ */
-#endif /* !__SIZEOF_POINTER__ */
+/* >> #define TPP_HOST_NO_SYSTEM_INCLUDES 1
+ * Prevent TPP sources from doing `#include <foo.h>' -- instead, you must
+ * pre-include any dependencies yourself before #include-ing TPP sources */
+#ifndef TPP_HOST_NO_SYSTEM_INCLUDES
+#define TPP_HOST_NO_SYSTEM_INCLUDES 0
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
-#ifndef __SIZEOF_SIZE_T__
-#define __SIZEOF_SIZE_T__ __SIZEOF_POINTER__
-#endif /* !__SIZEOF_SIZE_T__ */
-
-#ifndef __SIZEOF_INT__
-#ifdef __has_include
-#if __has_include(<hybrid/limitcore.h>)
-#include <hybrid/limitcore.h>
-#endif /* __has_include(<hybrid/limitcore.h>) */
-#if __has_include(<limits.h>)
-#include <limits.h>
-#endif /* __has_include(<limits.h>) */
-#endif /* __has_include */
-#ifndef __SIZEOF_INT__
-#ifdef INT_MAX
-#if INT_MAX == 127
-#define __SIZEOF_INT__ 1
-#elif INT_MAX == 32767
-#define __SIZEOF_INT__ 2
-#elif INT_MAX == 2147483647
-#define __SIZEOF_INT__ 4
-#elif INT_MAX == 9223372036854775807
-#define __SIZEOF_INT__ 8
-#endif /* ... */
-#endif /* INT_MAX */
-#ifndef __SIZEOF_INT__
-#define __SIZEOF_INT__ 4
-#endif /* !__SIZEOF_INT__ */
-#endif /* !__SIZEOF_INT__ */
-#endif /* !__SIZEOF_INT__ */
-
-#define TPP_PREPROCESSOR_VERSION     300 /* Preprocessor version. */
-#define TPP_API_VERSION              300 /* Api version (Version of this api). */
-#define TPP_PREPROCESSOR_VERSION_STR "300"
-
-
-/* Does the host preprocessor have support for __VA_ARGS__? */
 #ifndef TPP_HOST_HAS_ATTRIBUTE
 #ifdef __has_attribute
 #define TPP_HOST_HAS_ATTRIBUTE(x) __has_attribute(x)
@@ -3259,11 +3194,35 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #endif /* !__has_cpp_attribute */
 #endif /* !TPP_HOST_HAS_CPP_ATTRIBUTE */
 
+/* Does the host preprocessor have support for __VA_ARGS__? */
 #ifndef TPP_HOST_HAVE_PP_VARARGS
 #define TPP_HOST_HAVE_PP_VARARGS 1
 #endif /* !TPP_HOST_HAVE_PP_VARARGS */
 
+/* These headers should always be available (even when -ffreestanding)
+ * Still: If "TPP_HOST_NO_SYSTEM_INCLUDES" is defined, don't include anything! */
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdarg.h>
+#include <limits.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
+
+
+/************************************************************************/
+/* TPP3 VERSION NUMBERS                                                 */
+/************************************************************************/
+#define TPP_API_VERSION              300   /* Api version (Version of this api). */
+#define TPP_PREPROCESSOR_VERSION     300   /* Preprocessor version. */
+#define TPP_PREPROCESSOR_VERSION_STR "300" /* str(TPP_PREPROCESSOR_VERSION) */
+
+
+
+/************************************************************************/
+/* TPP API CONFIGURATION                                                */
+/************************************************************************/
 
 /* The standard calling convention used by TPP APIs */
 #ifndef TPPCALL
@@ -3287,12 +3246,6 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #ifndef TPP_CONST_IMPL
 #define TPP_CONST_IMPL TPP_IMPL
 #endif /* !TPP_CONST_IMPL */
-#ifndef TPP_INTERN_DECL
-#define TPP_INTERN_DECL extern
-#endif /* !TPP_INTERN_DECL */
-#ifndef TPP_INTERN_IMPL
-#define TPP_INTERN_IMPL /* nothing */
-#endif /* !TPP_INTERN_IMPL */
 #ifndef tpp_restrict
 #define tpp_restrict __restrict
 #endif /* !tpp_restrict */
@@ -3356,11 +3309,6 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPP_FALLTHRU /* @fallthrough@ */
 #endif /* !... */
 #endif /* !TPP_FALLTHRU */
-
-/* Does the host preprocessor have support for __VA_ARGS__? */
-#ifndef TPP_HOST_HAVE_PP_VARARGS
-#define TPP_HOST_HAVE_PP_VARARGS 1
-#endif /* !TPP_HOST_HAVE_PP_VARARGS */
 
 #ifndef TPP_CHAR_BIT
 #ifdef CHAR_BIT
@@ -3434,7 +3382,9 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #endif /* !tpp_unreachable */
 
 #ifndef tpp_memcpy
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <string.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_strlen      strlen
 #define tpp_strnlen     strnlen
 #define tpp_strcmp      strcmp
@@ -3462,10 +3412,24 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #endif /* !tpp_unlikely */
 
 #ifndef tpp_size
-#define TPP_SIZEOF_tpp_size __SIZEOF_SIZE_T__
-#define TPP_SIZE_MAX SIZE_MAX
 #define tpp_size size_t
 #endif /* !tpp_size */
+#ifndef TPP_SIZE_MAX
+#define TPP_SIZE_MAX SIZE_MAX
+#endif /* !TPP_SIZE_MAX */
+#ifndef TPP_SIZEOF_tpp_size
+#if TPP_SIZE_MAX == UINT32_C(0xffffffff)
+#define TPP_SIZEOF_tpp_size 4
+#elif TPP_SIZE_MAX == UINT64_C(0xffffffffffffffff)
+#define TPP_SIZEOF_tpp_size 8
+#elif TPP_SIZE_MAX == UINT16_C(0xffff)
+#define TPP_SIZEOF_tpp_size 2
+#elif TPP_SIZE_MAX == UINT8_C(0xff)
+#define TPP_SIZEOF_tpp_size 1
+#else /* ... */
+#error "Unsupported 'TPP_SIZE_MAX' - Please provide your own '#define TPP_SIZEOF_tpp_size'"
+#endif /* !... */
+#endif /* !TPP_SIZEOF_tpp_size */
 #ifndef tpp_ssize
 #define tpp_ssize ptrdiff_t
 #endif /* !tpp_ssize */
@@ -3522,7 +3486,9 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #endif /* !TPP_STATIC_ASSERT */
 
 #ifndef tpp_malloc
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdlib.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_trymalloc(s)     malloc(s)     /* tpp_trymalloc -- use when failure allows for re-try */
 #define tpp_malloc(s)        malloc(s)     /* tpp_malloc    -- use when failure means error-propagation */
 #define tpp_tryrealloc(p, s) realloc(p, s)
@@ -3654,7 +3620,9 @@ TPP_DECL_END
 
 
 #ifndef tpp_assert
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <assert.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_assert assert
 #endif /* !tpp_assert */
 /************************************************************************/
@@ -6688,9 +6656,9 @@ TPP_DECL_END
 #ifndef tpp_io_handle
 #define tpp_io_handle_IS_BUILTIN
 #if TPP_OS_WINDOWS
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <Windows.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle HANDLE
 #define tpp_io_handle_IS_HANDLE
 #define tpp_io_handle_INVALID INVALID_HANDLE_VALUE
@@ -6699,9 +6667,9 @@ TPP_DECL_END
 #define tpp_io_handle_IS_int
 #define tpp_io_handle_INVALID (-1)
 #else /* ... */
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle FILE *
 #define tpp_io_handle_IS_FILE
 #define tpp_io_handle_INVALID NULL
@@ -6896,9 +6864,9 @@ TPP_DECL_END
 /************************************************************************/
 #if TPP_HAVE_TIME_API
 #ifndef tpp_time
-#ifndef TPP_NO_SYSTEM_INCLUDES
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <time.h>
-#endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
 TPP_DECL_BEGIN
 

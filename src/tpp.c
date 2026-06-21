@@ -20,10 +20,6 @@
 /* clang-format off */
 #ifndef GUARD_TPP_AMALGAMATION_C
 #define GUARD_TPP_AMALGAMATION_C 1
-#ifndef TPP_INTERN_DECL
-#define TPP_INTERN_DECL static
-#define TPP_INTERN_IMPL static
-#endif /* !TPP_INTERN_DECL */
 #ifndef TPP_AMALGAMATION_H
 #define TPP_AMALGAMATION_H "tpp-amalgamation.h"
 #endif /* !TPP_AMALGAMATION_H */
