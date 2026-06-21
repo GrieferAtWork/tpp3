@@ -69,21 +69,23 @@
 
 
 /* Misc utility macros... */
-#define token      (*tpp_lexer_gettoken(self))
-#define tok        tpp_lexer_gettok(self)
-#define yield      tpp_lexer_yield_blocking(self)
-#define WARN(...)  tpp_lexer_warnf(self, __VA_ARGS__)
-#define HAS(ext)   tpp_lexer_getextension(self, ext)
-#define CURRENT    (*self)
-#ifdef tpp_va_arg
+#define token      (*tpp_lexer_gettoken(tpp_current_lexer()))
+#define tok        tpp_lexer_gettok(tpp_current_lexer())
+#define yield      tpp_lexer_yield_blocking(tpp_current_lexer())
+#define WARN(...)  tpp_lexer_warnf(tpp_current_lexer(), __VA_ARGS__)
+#define HAS(ext)   tpp_lexer_getextension(tpp_current_lexer(), ext)
+#define CURRENT    (*tpp_current_lexer())
+#undef TPPLexer_Current
+#define TPPLexer_Current tpp_current_lexer()
+#ifdef tpp_current_va_arg
 #define Q(x)       "%[" x "%]"
-#define WARNF(...) tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, __VA_ARGS__))
+#define WARNF(...) tpp_do(tpp_lexer_printf_warning(tpp_current_lexer(), file, pos, pos_lcinfo, printer, printer_arg, __VA_ARGS__))
 #define TOK_S      "%[%.*s%]" /* Use "%Pt" instead! */
-#define TOK_A      (unsigned int)tpp_lexer_gettokenlen(self), tpp_lexer_gettokenstart(self)
-#define KWDNAME()  tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(self))
+#define TOK_A      (unsigned int)tpp_lexer_gettokenlen(tpp_current_lexer()), tpp_lexer_gettokenstart(tpp_current_lexer())
+#define KWDNAME()  tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(tpp_current_lexer()))
 #define FILENAME() tpp_file_userfilename(ARG(tpp_file *))
-#define ARG(T)     tpp_va_arg(T)
-#endif /* tpp_va_arg */
+#define ARG(T)     tpp_current_va_arg(T)
+#endif /* tpp_current_va_arg */
 
 
 /************************************************************************/
@@ -1082,6 +1084,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 
 
 /* Misc utility macros... */
+#undef TPPLexer_Current
+#define TPPLexer_Current TPP2_DEFAULT_Lexer_Current
 #undef HAS
 #undef token
 #undef tok
@@ -4496,18 +4500,19 @@ TPP_DECL_BEGIN
 
 #ifndef TPPLexer_Current
 #ifdef TPP2_LEXER
-#define TPPLexer_Current TPP2_LEXER
+#define TPP2_DEFAULT_Lexer_Current TPP2_LEXER
 #elif TPP_CONFIG_ONELEXER == 3
-#define TPPLexer_Current _current
+#define TPP2_DEFAULT_Lexer_Current _current
 #elif TPP_CONFIG_ONELEXER != 0
-#define TPPLexer_Current (&TPPLexer_Global)
+#define TPP2_DEFAULT_Lexer_Current (&TPPLexer_Global)
 extern tpp_lexer TPPLexer_Global;
 #else /* ... */
 /* [1..1] The currently selected lexer
  * >> When NULL, only certain parts of TPP can work without problems. */
 extern tpp_lexer *TPPLexer_Current;
-#define TPPLexer_Current TPPLexer_Current
+#define TPP2_DEFAULT_Lexer_Current TPPLexer_Current
 #endif /* !... */
+#define TPPLexer_Current TPP2_DEFAULT_Lexer_Current
 #endif /* !TPPLexer_Current */
 
 #ifndef TPP2_LEXER
