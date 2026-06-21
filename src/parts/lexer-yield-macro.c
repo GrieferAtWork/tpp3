@@ -150,8 +150,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	 *
 	 * HINT:
 	 * - Our caller has set-up a context as follows:
-	 *   >> tpp_file_pushchunk(file);
-	 *   >> tpp_file_pushifdef(file);
+	 *   >> tpp_file_subtext_push(file);
 	 *   >> tpp_lexer_alltokens_pushon(lexer);
 	 */
 	tpp_token const *const token = tpp_lexer_gettoken(lexer);
@@ -472,22 +471,18 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	 * This is also the part where arguments are recursively
 	 * expanded */
 	{
-		tpp_file_autopopfile_pushoff(file); /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
-		tpp_file_pushchunk(file);           /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
-		tpp_file_pushifdef(file);           /* tpp_macro_expinfo_init() needs this (to ensure no dangling #ifdef-blocks in arguments) */
+		tpp_file_subtext_push(file); /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
 		for (i = 0; i < macro_argc; ++i) {
 			tpp_macro_argument const *arg = &macro->tm_data.tmd_func.tmf_argv[i];
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[i];
 			if (arg->tma_ins_exp) {
 				tpp_errno error;
 				tpp_macro_expinfo *expand = &invoke_expinfo[i];
-				tpp_file_setchunk_fromarg(file, arginfo);
+				tpp_file_subtext_setchunk_fromarg(file, arginfo);
 				error = tpp_macro_expinfo_init(expand, arginfo, self);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
-					tpp_file_breakifdef(file);
-					tpp_file_breakchunk(file);
-					tpp_file_autopopfile_break(file);
+					tpp_file_subtext_break(file);
 					goto err_tok_macro_argbuf_rollback_arginfo_expinfo_i;
 				}
 
@@ -511,9 +506,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			}
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 		}
-		tpp_file_popifdef(file);
-		tpp_file_popchunk(file);
-		tpp_file_autopopfile_pop(file);
+		tpp_file_subtext_pop(file);
 	}
 
 	/* Allocate the perfectly-sized chunk that will describe the expanded macro's text */

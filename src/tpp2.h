@@ -1546,7 +1546,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 /* TPPLEXER_FLAG_EOF_ON_PAREN, TPPLexer::l_eof_paren:
  * - No longer needed by TPP3, which handles detection of (...)-pairs by
  *   doing an initial argument-list scan via "tpp_lexer_seekpp_rparen()",
- *   and then re-injecting data via "tpp_file_setchunk_fromarg()"
+ *   and then re-injecting data via "tpp_file_subtext_setchunk_fromarg()"
  */
 
 /* TPPLEXER_FLAG_RANDOM_INITIALIZED:
@@ -5049,7 +5049,7 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #undef TPPLEXER_FLAG_WANTCOMMENTS          /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COMMENT) */
 #undef TPPLEXER_FLAG_WANTSPACE             /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SPACE) */
 #undef TPPLEXER_FLAG_WANTLF                /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_LF) */
-#undef TPPLEXER_FLAG_NO_SEEK_ON_EOB        /* Use tpp_file_pusheof() or tpp_file_pushchunk() */
+#undef TPPLEXER_FLAG_NO_SEEK_ON_EOB        /* Use tpp_file_pusheof() or tpp_file_subtext_push() */
 #undef TPPLEXER_FLAG_NO_POP_ON_EOF         /* Use tpp_file_autopopfile_pushoff() */
 #undef TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE /* Use "TPP_EXT_MACRO_ARGUMENT_WHITESPACE" (global) or "TPP_MACRO_FLAG_KEEPARGSPC" (individual macro) */
 #undef TPPLEXER_FLAG_NONBLOCKING           /* Use "TPP_FILE_IOFLAGS_NONBLOCK" (per-file) */
@@ -5077,7 +5077,7 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #undef TPPLEXER_FLAG_NO_ENCODING           /* No longer supported; encoding detection can be disabled on a per-file basis, though */
 #undef TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA /* No longer supported; define your own hook that gets called for unknown pragmas */
 #undef TPPLEXER_FLAG_CHAR_UNSIGNED         /* No longer relevant since APIs were split */
-#undef TPPLEXER_FLAG_EOF_ON_PAREN          /* No longer supported; paren-tracking is now done by "tpp_lexer_seekpp_rparen()" + "tpp_file_setchunk_fromarg()" */
+#undef TPPLEXER_FLAG_EOF_ON_PAREN          /* No longer supported; paren-tracking is now done by "tpp_lexer_seekpp_rparen()" + "tpp_file_subtext_setchunk_fromarg()" */
 #undef TPPLEXER_FLAG_WILLRESTORE           /* No longer supported; TPP3 has no global restore-lexer-position API */
 #undef TPPLEXER_FLAG_RANDOM_INITIALIZED    /* No longer needed; TPP3 implements __TPP_RANDOM() differently */
 #undef TPPLEXER_FLAG_ERROR                 /* No longer relevant: TPP3 handles errors explicitly via return values */

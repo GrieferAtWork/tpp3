@@ -30,10 +30,13 @@
 TPP_DECL_BEGIN
 
 typedef enum tpp_file_kind {
-	TPP_FILE_KIND_IO,    /* File found on hard-disk */
-	TPP_FILE_KIND_TEXT,  /* Explicitly injected text (same as `TPP_FILE_KIND_IO', but single-chunk'd) */
+	TPP_FILE_KIND_IO,      /* File found on hard-disk */
+	TPP_FILE_KIND_TEXT,    /* Explicitly injected text (same as `TPP_FILE_KIND_IO', but single-chunk'd) */
+#if TPP_HAVE_FILE_SUBTEXT
+	TPP_FILE_KIND_SUBTEXT, /* Same as `TPP_FILE_KIND_TEXT', but used to describe temporary sub-chunk files */
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 #if TPP_HAVE_CPP_MACROS
-	TPP_FILE_KIND_MACRO, /* Expanded macro */
+	TPP_FILE_KIND_MACRO,   /* Expanded macro */
 #endif /* TPP_HAVE_CPP_MACROS */
 } tpp_file_kind;
 
@@ -388,37 +391,6 @@ typedef struct tpp_file {
 	} while (0)
 
 
-/* Save/restore the chunk that tokens will be read from */
-#define tpp_file_pushchunk(self)                                             \
-	do {                                                                     \
-		tpp_char const *const _tfpchnk_pos = (self)->TPP_INTERNAL(tf_pos);   \
-		tpp_string *const _tfpchnk_chunk   = (self)->TPP_INTERNAL(tf_chunk); \
-		tpp_char const *const _tfpchnk_end = (self)->TPP_INTERNAL(tf_end);   \
-		tpp_file_kind const _tfpchnk_kind  = (self)->TPP_INTERNAL(tf_kind);  \
-		tpp_lcinfo const _tfpchnk_lcinfo   = (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc); \
-		_tpp_file_io2text(self)
-#define tpp_file_setchunk(self, chunk, pos, end, start_lc) \
-		(void)((self)->TPP_INTERNAL(tf_chunk) = (chunk),   \
-		       (self)->TPP_INTERNAL(tf_pos)   = (pos),     \
-		       (self)->TPP_INTERNAL(tf_end)   = (end),     \
-		       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = start_lc)
-#define tpp_file_setchunk_fromarg(self, arg)                                                                                    \
-		(void)((_tfpchnk_chunk) == (arg)->tlai_chunk                                                                            \
-		       ? (void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = _tfpchnk_lcinfo)       \
-		       : (void)tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc), -1, -1), \
-		       (self)->TPP_INTERNAL(tf_chunk) = (arg)->tlai_chunk,                                                              \
-		       (self)->TPP_INTERNAL(tf_pos)   = (arg)->tlai_start,                                                              \
-		       (self)->TPP_INTERNAL(tf_end)   = (arg)->tlai_end)
-#define tpp_file_breakchunk(self)                               \
-		(void)((self)->TPP_INTERNAL(tf_pos)   = _tfpchnk_pos,   \
-		       (self)->TPP_INTERNAL(tf_chunk) = _tfpchnk_chunk, \
-		       (self)->TPP_INTERNAL(tf_end)   = _tfpchnk_end,   \
-		       (self)->TPP_INTERNAL(tf_kind)  = _tfpchnk_kind,  \
-		       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = _tfpchnk_lcinfo)
-#define tpp_file_popchunk(self)    \
-		tpp_file_breakchunk(self); \
-	} while (0)
-
 /* Push (+clear) and later (clear+)restore the #ifdef-stack of a given file */
 #if TPP_HAVE_IFDEF_STACK
 #define tpp_file_pushifdef(self)                                             \
@@ -474,69 +446,66 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
 
 
+#if TPP_HAVE_FILE_SUBTEXT
+#if TPP_HAVE_IFDEF_STACK
+#define _tpp_file_subtext_init_ifdef(self) , tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
+#define _tpp_file_subtext_fini_ifdef(self) tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)),
+#define _tpp_file_subtext_fini_noifdef(self)                                                                                        \
+	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_alc) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_alc)), \
+	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt)), \
+	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_vec) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_vec)),
+#else /* TPP_HAVE_IFDEF_STACK */
+#define _tpp_file_subtext_init_ifdef(self)   /* nothing */
+#define _tpp_file_subtext_fini_ifdef(self)   /* nothing */
+#define _tpp_file_subtext_fini_noifdef(self) /* nothing */
+#endif /* !TPP_HAVE_IFDEF_STACK */
 
-#if 0 /* Push a temporary file onto the #include-stack (for tracebacks only) */
-#define tpp_file_tempfile_push(self)                                 \
-	do {                                                             \
-		tpp_file _tfptf_prev = *(self);                              \
-		(self)->TPP_INTERNAL(tf_prev) = NULL; /* Prevent file pop */ \
-		(self)->TPP_INTERNAL(tf_tprev) = &_tfptf_prev;               \
-		tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
-#if TPP_HAVE_CPP_MACROS
-#define _tpp_file_tempfile_setchunk(self, chunk)                                                                            \
-		((self)->TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_MACRO)                                                              \
-		? (void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name) =                               \
-		         _tfptf_prev.TPP_INTERNAL(tf_data).TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro)->TPP_INTERNAL(tm_deffile) \
-		         _tpp_file_init_text_user_filename(self))                                                                   \
-		: (void)0,                                                                                                          \
-		(self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT,                                                                 \
-		tpp_lcinfo_init_invalid((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)),            \
-		(self)->TPP_INTERNAL(tf_chunk) = (chunk)                                                                            \
+#define tpp_file_subtext_push(self)                                   \
+	do {                                                              \
+		tpp_file _tfptf_prev = *(self);                               \
+		(self)->TPP_INTERNAL(tf_prev)  = NULL; /* Prevent file pop */ \
+		(self)->TPP_INTERNAL(tf_tprev) = &_tfptf_prev;                \
+		(self)->TPP_INTERNAL(tf_kind)  = TPP_FILE_KIND_SUBTEXT        \
+		_tpp_file_subtext_init_ifdef(self)                            \
 		_tpp_file_init_lcpos(self)
-#define _tpp_file_tempfile_restorechunk(self)                                                                                                             \
-		(self)->TPP_INTERNAL(tf_kind)  = _tfptf_prev.TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_IO ? TPP_FILE_KIND_TEXT : _tfptf_prev.TPP_INTERNAL(tf_kind),  \
-		(self)->TPP_INTERNAL(tf_chunk) = _tfptf_prev.TPP_INTERNAL(tf_chunk),                                                                              \
-		(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name)          = _tfptf_prev.TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name),          \
-		(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename) = _tfptf_prev.TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename), \
-		(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)      = _tfptf_prev.TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)
-#define _tpp_file_tempfile_setrange(self, pos, end) \
-		(self)->TPP_INTERNAL(tf_pos) = (pos),       \
-		(self)->TPP_INTERNAL(tf_end) = (end)
-#else /* TPP_HAVE_CPP_MACROS */
-#define _tpp_file_tempfile_setchunk(self, chunk)                                                                 \
-		tpp_lcinfo_init_invalid((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)), \
-		(self)->TPP_INTERNAL(tf_chunk) = (chunk)                                                                 \
-		_tpp_file_init_lcpos(self)
-#define _tpp_file_tempfile_restorechunk(self)                                \
-		(self)->TPP_INTERNAL(tf_chunk) = _tfptf_prev.TPP_INTERNAL(tf_chunk), \
-		(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = _tfptf_prev.TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)
-#define _tpp_file_tempfile_setrange(self, pos, end)         \
-		(self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT, \
-		(self)->TPP_INTERNAL(tf_pos) = (pos),               \
-		(self)->TPP_INTERNAL(tf_end) = (end)
-#endif /* !TPP_HAVE_CPP_MACROS */
-#define tpp_file_tempfile_setchunk(self, chunk, pos, end)         \
-		(void)((chunk) == _tfptf_prev.TPP_INTERNAL(tf_chunk)      \
-		       ? (void)(_tpp_file_tempfile_setchunk(self, chunk)) \
-		       : (void)(_tpp_file_tempfile_restorechunk(self)),   \
-		       _tpp_file_tempfile_setrange(self, pos, end))
-#define tpp_file_tempfile_setchunk_fromarg(self, arg) \
-		tpp_file_tempfile_setchunk(self, (arg)->tlai_chunk, (arg)->tlai_start, (arg)->tlai_end)
-#define tpp_file_tempfile_pushchunk(self, chunk, pos, end) \
-	tpp_file_tempfile_push(self);                          \
-		if (_tfptf_prev.TPP_INTERNAL(tf_chunk) != (chunk)) \
-			_tpp_file_tempfile_setchunk(self, chunk);      \
-		_tpp_file_tempfile_setrange(self, pos, end)
-#define tpp_file_tempfile_pushchunk_fromarg(self, chunk, pos, end) \
-		tpp_file_tempfile_pushchunk(self, (arg)->tlai_chunk, (arg)->tlai_start, (arg)->tlai_end)
-#define tpp_file_tempfile_break(self)                                 \
-		(void)(tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)), \
-		       *(self) = _tfptf_prev)
-#define tpp_file_tempfile_pop(self)                            \
-		tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)); \
-		*(self) = _tfptf_prev;                                 \
+#define tpp_file_subtext_setchunk(self, chunk, pos, end) \
+		(void)((self)->TPP_INTERNAL(tf_chunk) = (chunk), \
+		       (self)->TPP_INTERNAL(tf_pos)   = (pos),   \
+		       (self)->TPP_INTERNAL(tf_end)   = (end))
+#define tpp_file_subtext_setchunk_fromarg(self, arg) \
+		tpp_file_subtext_setchunk(self, (arg)->tlai_chunk, (arg)->tlai_start, (arg)->tlai_end)
+#define tpp_file_subtext_setchunk_fromstring(self, chunk, start, len) \
+		tpp_file_subtext_setchunk(self, chunk, start, (start) + (len))
+#define _tpp_file_subtext_break_common(self)                \
+		tpp_assert((self)->TPP_INTERNAL(tf_prev) == NULL && \
+		           "Extra files were pushed"),              \
+		*(self) = _tfptf_prev
+#define tpp_file_subtext_break(self)              \
+		(void)(_tpp_file_subtext_fini_ifdef(self) \
+		       _tpp_file_subtext_break_common(self))
+#define tpp_file_subtext_pop(self)    \
+		tpp_file_subtext_break(self); \
 	} while (0)
-#endif
+
+/* Same as above, but allowed to assume that wrapped code won't modify the #ifdef-stack */
+#define tpp_file_subtext_push_noifdef(self)                           \
+	do {                                                              \
+		tpp_file _tfptfnid_prev = *(self);                            \
+		(self)->TPP_INTERNAL(tf_prev)  = NULL; /* Prevent file pop */ \
+		(self)->TPP_INTERNAL(tf_tprev) = &_tfptfnid_prev;             \
+		(self)->TPP_INTERNAL(tf_kind)  = TPP_FILE_KIND_SUBTEXT        \
+		_tpp_file_init_lcpos(self)
+#define _tpp_file_subtext_break_common_noifdef(self)        \
+		tpp_assert((self)->TPP_INTERNAL(tf_prev) == NULL && \
+		           "Extra files were pushed"),              \
+		*(self) = _tfptfnid_prev
+#define tpp_file_subtext_break_noifdef(self)        \
+		(void)(_tpp_file_subtext_fini_noifdef(self) \
+		       _tpp_file_subtext_break_common_noifdef(self))
+#define tpp_file_subtext_pop_noifdef(self)    \
+		tpp_file_subtext_break_noifdef(self); \
+	} while (0)
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 
 
 

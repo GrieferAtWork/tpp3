@@ -3548,14 +3548,18 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 
 /* Specifies an invalid LC information object */
 #ifndef TPP_LCINFO_INVALID
-#define TPP_LCINFO_INVALID    tpp_lcinfo_of(-1, -1)
-#define tpp_lcinfo_isvalid(x) (tpp_lcinfo_getcol(x) >= 0)
+#define TPP_LCINFO_INVALID            tpp_lcinfo_of(-1, -1)
+#define tpp_lcinfo_isvalid(x)         (tpp_lcinfo_getcol(x) >= 0)
+#define tpp_lcinfo_init_invalid(self) tpp_lcinfo_init(self, -1, -1)
 #endif /* !TPP_LCINFO_INVALID */
 
 /* Check if "x" represents valid line/column information */
-#ifndef tpp_lcinfo_isvalid(x)
+#ifndef tpp_lcinfo_isvalid
 #define tpp_lcinfo_isvalid(x) (!tpp_lcinfo_equals(x, TPP_LCINFO_INVALID))
-#endif /* !tpp_lcinfo_isvalid(x) */
+#endif /* !tpp_lcinfo_isvalid */
+#ifndef tpp_lcinfo_init_invalid
+#define tpp_lcinfo_init_invalid(self) (void)((self) = TPP_LCINFO_INVALID)
+#endif /* !tpp_lcinfo_init_invalid */
 
 #ifndef tpp_refcnt
 /* NOTE: Multi-threaded applications can leave this alone: a single
@@ -5609,10 +5613,10 @@ TPP_DECL_END
 
 /* >> #define TPP_CONFIG_EXPRPARSER my_expr_parser
  * >> #if TPP_CONFIG_EXPRPARSER_NEEDS_ARG
- * >> static tpp_errno TPP_FORMATPRINTER_CC
+ * >> static tpp_errno TPPCALL
  * >> my_expr_parser(void *arg, tpp_lexer *self, tpp_expr_value *result)
  * >> #else // TPP_CONFIG_EXPRPARSER_NEEDS_ARG
- * >> static tpp_errno TPP_FORMATPRINTER_CC
+ * >> static tpp_errno TPPCALL
  * >> my_expr_parser(tpp_char const *self, tpp_expr_value *result)
  * >> #endif // !TPP_CONFIG_EXPRPARSER_NEEDS_ARG
  * >> {
@@ -5748,6 +5752,15 @@ TPP_DECL_END
 #ifndef TPP_HAVE_FILE_SYSHDR
 #define TPP_HAVE_FILE_SYSHDR (TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0)
 #endif /* !TPP_HAVE_FILE_SYSHDR */
+
+/* Enable support for `TPP_FILE_KIND_SUBTEXT' */
+#ifndef TPP_HAVE_FILE_SUBTEXT
+#if TPP_HAVE_CPP_MACROS
+#define TPP_HAVE_FILE_SUBTEXT 1
+#else /* ... */
+#define TPP_HAVE_FILE_SUBTEXT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_SUBTEXT */
 
 /* Enable support for `tpp_file::tf_prev' */
 #ifndef TPP_HAVE_INCLUDE_STACK
@@ -10397,10 +10410,13 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 typedef enum tpp_file_kind {
-	TPP_FILE_KIND_IO,    /* File found on hard-disk */
-	TPP_FILE_KIND_TEXT,  /* Explicitly injected text (same as `TPP_FILE_KIND_IO', but single-chunk'd) */
+	TPP_FILE_KIND_IO,      /* File found on hard-disk */
+	TPP_FILE_KIND_TEXT,    /* Explicitly injected text (same as `TPP_FILE_KIND_IO', but single-chunk'd) */
+#if TPP_HAVE_FILE_SUBTEXT
+	TPP_FILE_KIND_SUBTEXT, /* Same as `TPP_FILE_KIND_TEXT', but used to describe temporary sub-chunk files */
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 #if TPP_HAVE_CPP_MACROS
-	TPP_FILE_KIND_MACRO, /* Expanded macro */
+	TPP_FILE_KIND_MACRO,   /* Expanded macro */
 #endif /* TPP_HAVE_CPP_MACROS */
 } tpp_file_kind;
 
@@ -10839,6 +10855,53 @@ typedef struct tpp_file {
 #define tpp_file_popkeep(self)   } while (0)
 #define tpp_file_getkeep(self)   tpp_file_getpos(self)
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
+
+
+#if TPP_HAVE_FILE_SUBTEXT
+#if TPP_HAVE_IFDEF_STACK
+#define _tpp_file_subtext_init_ifdef(self) , tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
+#define _tpp_file_subtext_fini_ifdef(self) tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)),
+#define _tpp_file_subtext_asno_ifdef(self) tpp_assert(tpp_ifdef_stack_isempty(&(self)->TPP_INTERNAL(tf_ifdef))),
+#else /* TPP_HAVE_IFDEF_STACK */
+#define _tpp_file_subtext_init_ifdef(self) /* nothing */
+#define _tpp_file_subtext_fini_ifdef(self) /* nothing */
+#define _tpp_file_subtext_asno_ifdef(self) /* nothing */
+#endif /* !TPP_HAVE_IFDEF_STACK */
+
+#define tpp_file_subtext_push(self)                                   \
+	do {                                                              \
+		tpp_file _tfptf_prev = *(self);                               \
+		(self)->TPP_INTERNAL(tf_prev)  = NULL; /* Prevent file pop */ \
+		(self)->TPP_INTERNAL(tf_tprev) = &_tfptf_prev;                \
+		(self)->TPP_INTERNAL(tf_kind)  = TPP_FILE_KIND_SUBTEXT        \
+		_tpp_file_subtext_init_ifdef(self)                            \
+		_tpp_file_init_lcpos(self)
+#define tpp_file_subtext_setchunk(self, chunk, pos, end) \
+		(void)((self)->TPP_INTERNAL(tf_chunk) = (chunk), \
+		       (self)->TPP_INTERNAL(tf_pos)   = (pos),   \
+		       (self)->TPP_INTERNAL(tf_end)   = (end))
+#define tpp_file_subtext_setchunk_fromarg(self, arg) \
+		tpp_file_subtext_setchunk(self, (arg)->tlai_chunk, (arg)->tlai_start, (arg)->tlai_end)
+#define tpp_file_subtext_setchunk_fromstring(self, chunk, start, len) \
+		tpp_file_subtext_setchunk(self, chunk, start, (start) + (len))
+#define _tpp_file_subtext_break_common(self)                \
+		tpp_assert((self)->TPP_INTERNAL(tf_prev) == NULL && \
+		           "Extra files were pushed"),              \
+		*(self) = _tfptf_prev
+#define tpp_file_subtext_break(self)              \
+		(void)(_tpp_file_subtext_fini_ifdef(self) \
+		       _tpp_file_subtext_break_common(self))
+#define tpp_file_subtext_break_noifdef(self)      \
+		(void)(_tpp_file_subtext_asno_ifdef(self) \
+		       _tpp_file_subtext_break_common(self))
+#define tpp_file_subtext_pop(self)    \
+		tpp_file_subtext_break(self); \
+	} while (0)
+#define tpp_file_subtext_pop_noifdef(self)    \
+		tpp_file_subtext_break_noifdef(self); \
+	} while (0)
+#endif /* TPP_HAVE_FILE_SUBTEXT */
+
 
 
 

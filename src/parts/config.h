@@ -2003,6 +2003,15 @@
 #define TPP_HAVE_FILE_SYSHDR (TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0)
 #endif /* !TPP_HAVE_FILE_SYSHDR */
 
+/* Enable support for `TPP_FILE_KIND_SUBTEXT' */
+#ifndef TPP_HAVE_FILE_SUBTEXT
+#if TPP_HAVE_CPP_MACROS
+#define TPP_HAVE_FILE_SUBTEXT 1
+#else /* ... */
+#define TPP_HAVE_FILE_SUBTEXT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_SUBTEXT */
+
 /* Enable support for `tpp_file::tf_prev' */
 #ifndef TPP_HAVE_INCLUDE_STACK
 #if (TPP_HAVE_CPP_MACROS ||       \

@@ -966,6 +966,24 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 		                            (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
 	}	break;
 
+#if TPP_HAVE_FILE_SUBTEXT
+	case TPP_FILE_KIND_SUBTEXT: {
+		tpp_file *parent = self;
+		do {
+			tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+			parent = parent->tf_tprev;
+		} while (parent->tf_kind == TPP_FILE_KIND_SUBTEXT);
+		if (parent->tf_chunk == self->tf_chunk)
+			return tpp_file_lcinfo(parent, pos);
+#if 0 /* This would also be (kind-of) valid. But what would be event better, is if we could
+       * reverse-engineer how "self->tf_chunk" was constructed out of "parent->tf_chunk"... */
+		return tpp_file_lcinfo(parent, parent->tf_tpos);
+#else
+		return TPP_LCINFO_INVALID;
+#endif
+	}	break;
+#endif /* TPP_HAVE_FILE_SUBTEXT */
+
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
 		tpp_macro const *macro = self->tf_data.td_macro.tfm_macro;
@@ -1022,11 +1040,21 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_filename(tpp_file const *tpp_restrict self) {
+#if TPP_HAVE_FILE_SUBTEXT
+again:
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT:
 		return self->tf_data.td_io.tff_name;
+
+#if TPP_HAVE_FILE_SUBTEXT
+	case TPP_FILE_KIND_SUBTEXT:
+		tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+		self = self->tf_tprev;
+		goto again;
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO:
@@ -1041,6 +1069,9 @@ tpp_file_filename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_USER_FILENAME
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_userfilename(tpp_file const *tpp_restrict self) {
+#if TPP_HAVE_FILE_SUBTEXT
+again:
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO:
@@ -1051,6 +1082,13 @@ tpp_file_userfilename(tpp_file const *tpp_restrict self) {
 			return (char const *)user->ts_str;
 		return self->tf_data.td_io.tff_name;
 	}	break;
+
+#if TPP_HAVE_FILE_SUBTEXT
+	case TPP_FILE_KIND_SUBTEXT:
+		tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+		self = self->tf_tprev;
+		goto again;
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO:
@@ -1113,6 +1151,9 @@ tpp_file_setline(tpp_file *tpp_restrict self,
  * available, even when "tpp_file_filename()" returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
 tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
+#if TPP_HAVE_FILE_SUBTEXT
+again:
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO: {
@@ -1126,6 +1167,13 @@ tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
 			return NULL;
 		return (struct tpp_keyword *)(filename - offsetof(struct tpp_keyword, tk_kwd));
 	}	break;
+
+#if TPP_HAVE_FILE_SUBTEXT
+	case TPP_FILE_KIND_SUBTEXT:
+		tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+		self = self->tf_tprev;
+		goto again;
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 
 	case TPP_FILE_KIND_TEXT:
 #if TPP_HAVE_CPP_MACROS

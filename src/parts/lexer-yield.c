@@ -525,6 +525,10 @@ tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE */
 	{
 	}
+#if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+	if (!TPP_ISERR(result))
+		result = tpp_lexer_warn_nonempty_ifdef(self);
+#endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 	return result;
 }
 #endif /* TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma */
@@ -537,24 +541,8 @@ tpp_lexer_yield_handle__Pragma_string(void *arg, tpp_string *chunk,
 	tpp_errno result;
 	tpp_lexer *self = (tpp_lexer *)arg;
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_assert(file->tf_prev == NULL);
-	tpp_file_autopopfile_pushoff(file);
-	tpp_file_pushchunk(file);
-
-	/* (re-)configure "file" to point at "str" (and setup LC info as close as possible)
-	 * Really though: LC info will only be perfectly precise when "str" is actually still
-	 * part of the original buffer. Otherwise, it will be off. */
-	if (file->tf_chunk != chunk) {
-		tpp_lcinfo lc = tpp_file_lcinfo(file, file->tf_pos);
-		file->tf_chunk = chunk;
-		file->tf_kind = TPP_FILE_KIND_TEXT;
-		file->tf_data.td_text.tft_start_lc = lc;
-#if TPP_HAVE_FILE_LC_CACHE
-		file->tf_lcpos = NULL;
-#endif /* TPP_HAVE_FILE_LC_CACHE */
-	}
-	file->tf_pos = str;
-	file->tf_end = str + length;
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk_fromstring(file, chunk, str, length);
 
 	/* Yield decoded _Pragma-string as a token. */
 	do {
@@ -567,8 +555,7 @@ tpp_lexer_yield_handle__Pragma_string(void *arg, tpp_string *chunk,
 		result = tpp_lexer_process_pragma_until_eof(self);
 	}
 
-	tpp_file_popchunk(file);
-	tpp_file_autopopfile_pop(file);
+	tpp_file_subtext_pop(file);
 	return result;
 }
 
@@ -631,11 +618,10 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
-	tpp_file_autopopfile_pushoff(file);
-	tpp_file_pushchunk(file);
 
-	/* Setup file to (re-)parse the __pragma content */
-	tpp_file_setchunk_fromarg(file, &argv[0]);
+	/* Push a sub-text file to (re-)parse the __pragma content */
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
 	do {
 		tok = tpp_lexer_yieldpp_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
@@ -644,8 +630,7 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 		error = tpp_lexer_process_pragma_until_eof(self);
 		tok = TPP_TOK_OFERR_OR_EOF(error);
 	}
-	tpp_file_popchunk(file);
-	tpp_file_autopopfile_pop(file);
+	tpp_file_subtext_pop(file);
 	tpp_lexer_arginfo_fini(&argv[0]);
 	return tok;
 }
@@ -933,11 +918,10 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 	identifier_start = token->tt_start;
-	tpp_file_autopopfile_pushoff(file);
-	tpp_file_pushchunk(file);
 
 	/* Setup file to (re-)parse the identifier string */
-	tpp_file_setchunk_fromarg(file, &argv[0]);
+	tpp_file_subtext_push_noifdef(file);
+	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self);
 	data.tlhtid_lexer   = self;
 	data.tlhtid_keyword = NULL;
@@ -961,8 +945,8 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 		tok = TPP_TOK_OFERR_OR_EOF(error);
 	}
-	tpp_file_popchunk(file);
-	tpp_file_autopopfile_pop(file);
+	tpp_file_subtext_pop_noifdef(file);
+
 	if (!TPP_TOK_ISERR(tok)) {
 		tpp_assert(data.tlhtid_keyword);
 		/* Setup current token to refer to "data.tlhtid_keyword" */

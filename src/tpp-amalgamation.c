@@ -4579,9 +4579,29 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT: {
 		result = self->tf_data.td_io.tff_start_lc;
+		if (!tpp_lcinfo_isvalid(result))
+			return result;
 		result = tpp_lcinfo_account(self, result, tpp_string_str(self->tf_chunk),
 		                            (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
 	}	break;
+
+#if TPP_HAVE_FILE_SUBTEXT
+	case TPP_FILE_KIND_SUBTEXT: {
+		tpp_file *parent = self;
+		do {
+			tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+			parent = parent->tf_tprev;
+		} while (parent->tf_kind == TPP_FILE_KIND_SUBTEXT);
+		if (parent->tf_chunk == self->tf_chunk)
+			return tpp_file_lcinfo(parent, pos);
+#if 0 /* This would also be (kind-of) valid. But what would be event better, is if we could
+       * reverse-engineer how "self->tf_chunk" was constructed out of "parent->tf_chunk"... */
+		return tpp_file_lcinfo(parent, parent->tf_tpos);
+#else
+		return TPP_LCINFO_INVALID;
+#endif
+	}	break;
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
@@ -4606,6 +4626,8 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			goto done_nocache;
 		} else {
 			result = macro->tm_body_lc;
+			if (!tpp_lcinfo_isvalid(result))
+				return result;
 			result = tpp_lcinfo_account(self, result, macro->tm_body_start,
 			                            (tpp_size)(pos - macro->tm_body_start));
 		}
@@ -4637,11 +4659,21 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_filename(tpp_file const *tpp_restrict self) {
+#if TPP_HAVE_FILE_SUBTEXT
+again:
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT:
 		return self->tf_data.td_io.tff_name;
+
+#if TPP_HAVE_FILE_SUBTEXT
+	case TPP_FILE_KIND_SUBTEXT:
+		tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+		self = self->tf_tprev;
+		goto again;
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO:
@@ -4656,6 +4688,9 @@ tpp_file_filename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_USER_FILENAME
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_userfilename(tpp_file const *tpp_restrict self) {
+#if TPP_HAVE_FILE_SUBTEXT
+again:
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO:
@@ -4666,6 +4701,13 @@ tpp_file_userfilename(tpp_file const *tpp_restrict self) {
 			return (char const *)user->ts_str;
 		return self->tf_data.td_io.tff_name;
 	}	break;
+
+#if TPP_HAVE_FILE_SUBTEXT
+	case TPP_FILE_KIND_SUBTEXT:
+		tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+		self = self->tf_tprev;
+		goto again;
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO:
@@ -4728,6 +4770,9 @@ tpp_file_setline(tpp_file *tpp_restrict self,
  * available, even when "tpp_file_filename()" returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
 tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
+#if TPP_HAVE_FILE_SUBTEXT
+again:
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO: {
@@ -4741,6 +4786,13 @@ tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
 			return NULL;
 		return (struct tpp_keyword *)(filename - offsetof(struct tpp_keyword, tk_kwd));
 	}	break;
+
+#if TPP_HAVE_FILE_SUBTEXT
+	case TPP_FILE_KIND_SUBTEXT:
+		tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+		self = self->tf_tprev;
+		goto again;
+#endif /* TPP_HAVE_FILE_SUBTEXT */
 
 	case TPP_FILE_KIND_TEXT:
 #if TPP_HAVE_CPP_MACROS
@@ -6860,7 +6912,7 @@ tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
 	(void)expanded_text;
 	(void)pos;
 	/* TODO */
-	return tpp_lcinfo_of(0, 0);
+	return TPP_LCINFO_INVALID;
 }
 
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -8913,7 +8965,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	tpp_do(tpp_lexer_printf_warning(self, at_file, at_pos, at_lc, \
 	                                printer, printer_arg,         \
 	                                tpp_file_and_line))
-#define tpp_print_file_and_line_at(at_file, at_pos) tpp_print_file_and_line(at_file, at_pos, tpp_lcinfo_of(-1, -1))
+#define tpp_print_file_and_line_at(at_file, at_pos) tpp_print_file_and_line(at_file, at_pos, TPP_LCINFO_INVALID)
 #define tpp_print_file_and_line_lc(at_file, at_lc)  tpp_print_file_and_line(at_file, NULL, at_lc)
 #define tpp_warnf0(format)             tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format))
 #define tpp_warnf1(format, a)          tpp_do(tpp_lexer_printf_warning(self, file, pos, pos_lcinfo, printer, printer_arg, format, a))
@@ -8972,7 +9024,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			 * list, or the start of a #include-directive, to the trailing
 			 * line-feed) */
 			printer_status = tpp_lexer_printf_warning(self, caller, caller->tf_tpos,
-			                                          tpp_lcinfo_of(-1, -1),
+			                                          TPP_LCINFO_INVALID,
 			                                          printer, printer_arg,
 			                                          tpp_file_and_line);
 			if (printer_status < 0)
@@ -9024,7 +9076,7 @@ tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos,
                     tpp_warning_id id, va_list args) {
-	return tpp_lexer_vwarnf_impl(self, pos, tpp_lcinfo_of(-1, -1), id, args);
+	return tpp_lexer_vwarnf_impl(self, pos, TPP_LCINFO_INVALID, id, args);
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPVCALL
@@ -9032,7 +9084,7 @@ tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warnin
 	tpp_errno result;
 	va_list args;
 	va_start(args, id);
-	result = tpp_lexer_vwarnf_impl(self, pos, tpp_lcinfo_of(-1, -1), id, args);
+	result = tpp_lexer_vwarnf_impl(self, pos, TPP_LCINFO_INVALID, id, args);
 	va_end(args);
 	return result;
 }
@@ -19795,8 +19847,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	 *
 	 * HINT:
 	 * - Our caller has set-up a context as follows:
-	 *   >> tpp_file_pushchunk(file);
-	 *   >> tpp_file_pushifdef(file);
+	 *   >> tpp_file_subtext_push(file);
 	 *   >> tpp_lexer_alltokens_pushon(lexer);
 	 */
 	tpp_token const *const token = tpp_lexer_gettoken(lexer);
@@ -20117,22 +20168,18 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	 * This is also the part where arguments are recursively
 	 * expanded */
 	{
-		tpp_file_autopopfile_pushoff(file); /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
-		tpp_file_pushchunk(file);           /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
-		tpp_file_pushifdef(file);           /* tpp_macro_expinfo_init() needs this (to ensure no dangling #ifdef-blocks in arguments) */
+		tpp_file_subtext_push(file); /* tpp_macro_expinfo_init() needs this (to manually re-parse arguments) */
 		for (i = 0; i < macro_argc; ++i) {
 			tpp_macro_argument const *arg = &macro->tm_data.tmd_func.tmf_argv[i];
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[i];
 			if (arg->tma_ins_exp) {
 				tpp_errno error;
 				tpp_macro_expinfo *expand = &invoke_expinfo[i];
-				tpp_file_setchunk_fromarg(file, arginfo);
+				tpp_file_subtext_setchunk_fromarg(file, arginfo);
 				error = tpp_macro_expinfo_init(expand, arginfo, self);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
-					tpp_file_breakifdef(file);
-					tpp_file_breakchunk(file);
-					tpp_file_autopopfile_break(file);
+					tpp_file_subtext_break(file);
 					goto err_tok_macro_argbuf_rollback_arginfo_expinfo_i;
 				}
 
@@ -20156,9 +20203,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			}
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 		}
-		tpp_file_popifdef(file);
-		tpp_file_popchunk(file);
-		tpp_file_autopopfile_pop(file);
+		tpp_file_subtext_pop(file);
 	}
 
 	/* Allocate the perfectly-sized chunk that will describe the expanded macro's text */
@@ -20968,24 +21013,8 @@ tpp_lexer_yield_handle__Pragma_string(void *arg, tpp_string *chunk,
 	tpp_errno result;
 	tpp_lexer *self = (tpp_lexer *)arg;
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_assert(file->tf_prev == NULL);
-	tpp_file_autopopfile_pushoff(file);
-	tpp_file_pushchunk(file);
-
-	/* (re-)configure "file" to point at "str" (and setup LC info as close as possible)
-	 * Really though: LC info will only be perfectly precise when "str" is actually still
-	 * part of the original buffer. Otherwise, it will be off. */
-	if (file->tf_chunk != chunk) {
-		tpp_lcinfo lc = tpp_file_lcinfo(file, file->tf_pos);
-		file->tf_chunk = chunk;
-		file->tf_kind = TPP_FILE_KIND_TEXT;
-		file->tf_data.td_text.tft_start_lc = lc;
-#if TPP_HAVE_FILE_LC_CACHE
-		file->tf_lcpos = NULL;
-#endif /* TPP_HAVE_FILE_LC_CACHE */
-	}
-	file->tf_pos = str;
-	file->tf_end = str + length;
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk_fromstring(file, chunk, str, length);
 
 	/* Yield decoded _Pragma-string as a token. */
 	do {
@@ -20998,8 +21027,7 @@ tpp_lexer_yield_handle__Pragma_string(void *arg, tpp_string *chunk,
 		result = tpp_lexer_process_pragma_until_eof(self);
 	}
 
-	tpp_file_popchunk(file);
-	tpp_file_autopopfile_pop(file);
+	tpp_file_subtext_pop(file);
 	return result;
 }
 
@@ -21062,11 +21090,10 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
-	tpp_file_autopopfile_pushoff(file);
-	tpp_file_pushchunk(file);
 
-	/* Setup file to (re-)parse the __pragma content */
-	tpp_file_setchunk_fromarg(file, &argv[0]);
+	/* Push a sub-text file to (re-)parse the __pragma content */
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
 	do {
 		tok = tpp_lexer_yieldpp_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
@@ -21075,8 +21102,7 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 		error = tpp_lexer_process_pragma_until_eof(self);
 		tok = TPP_TOK_OFERR_OR_EOF(error);
 	}
-	tpp_file_popchunk(file);
-	tpp_file_autopopfile_pop(file);
+	tpp_file_subtext_pop(file);
 	tpp_lexer_arginfo_fini(&argv[0]);
 	return tok;
 }
@@ -21364,11 +21390,10 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 	identifier_start = token->tt_start;
-	tpp_file_autopopfile_pushoff(file);
-	tpp_file_pushchunk(file);
 
 	/* Setup file to (re-)parse the identifier string */
-	tpp_file_setchunk_fromarg(file, &argv[0]);
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self);
 	data.tlhtid_lexer   = self;
 	data.tlhtid_keyword = NULL;
@@ -21392,8 +21417,8 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 		tok = TPP_TOK_OFERR_OR_EOF(error);
 	}
-	tpp_file_popchunk(file);
-	tpp_file_autopopfile_pop(file);
+	tpp_file_subtext_pop_noifdef(file);
+
 	if (!TPP_TOK_ISERR(tok)) {
 		tpp_assert(data.tlhtid_keyword);
 		/* Setup current token to refer to "data.tlhtid_keyword" */
