@@ -1993,6 +1993,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_FILE_NONBLOCK 0
 #endif /* !TPP_CONFIG_NONBLOCKING_IO */
 
+#define TPP_PROFILE TPP_PROFILE_MINIMAL /* Disable anything not explicitly configured */
 #define TPP_HAVE_TPP2_COMPAT           1 /* Enable some extra TPP2 compatibility tweaks */
 #define TPP_BUILDING                   1 /* Not actually true, but needed to prevent internals from being escaped (TPP3 doesn't expose internals by default anymore) */
 #define TPP_HAVE_UNICODE               1 /* Always enable unicode support */
@@ -2010,8 +2011,6 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_FILE_NOCLOSE          0 /* TTP2 didn't have this */
 #define TPP_HAVE_FILE_NOKWD            0 /* TTP2 didn't have this */
 #define TPP_COMMON_HAVE_TPP_TOK        0 /* We want to configure tokens individually */
-#define TPP_COMMON_HAVE_CPP_DIRECTIVES 1
-#define TPP_COMMON_HAVE_PRAGMA         1
 
 #ifdef TPP_CONFIG_NO_PRECACHE_TEXTLINES
 #define TPP_HAVE_FILE_LC_CACHE 0
@@ -2057,8 +2056,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL     0              /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL     0              /* *ditto* */
 #define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL         0              /* *ditto* */
-#define TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE     TPP_CONF_FEAT1 /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)") */
-#define TPP_HAVE_TPP_TOK_STRING_WARN_MULTILINE      0              /* TPP2 offered no such warning */
+#define TPP_HAVE_STRING_ALLOW_MULTILINE     TPP_CONF_FEAT1 /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)") */
+#define TPP_HAVE_STRING_WARN_MULTILINE      0              /* TPP2 offered no such warning */
 #define TPP_HAVE_TPP_TOK_LANGLE_LANGLE              1              /* "<<" */
 #define TPP_HAVE_TPP_TOK_RANGLE_RANGLE              1              /* ">>" */
 #define TPP_HAVE_TPP_TOK_EQUAL_EQUAL                1              /* "==" */

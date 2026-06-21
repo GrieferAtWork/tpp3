@@ -1233,9 +1233,9 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 	for (;;) {
 		tpp_char ch;
 		tpp_errno error;
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE)
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
-#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE) */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) */
 		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			return error;
@@ -1250,12 +1250,12 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 			if (ch == 0 && (*p_pos) >= file->tf_end)
 				goto warn_premature_eof;
 		} else
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE)
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		if (tpp_ascii_islf(ch)) {
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
-			if (!tpp_lexer_has(self, TPP_TOK_STRING_ALLOW_MULTILINE)) {
+			if (!tpp_lexer_has(self, STRING_ALLOW_MULTILINE)) {
 				*p_pos = tpp_file_rel2ptr(file, old_pos);
 				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
@@ -1285,7 +1285,7 @@ handle_linefeed:
 				goto handle_linefeed;
 		} else
 #endif /* TPP_HAVE_UNICODE */
-#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE) */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) */
 		{
 		}
 	}
@@ -1455,9 +1455,9 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
 	for (;;) {
 		tpp_char ch;
 		tpp_errno error;
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE)
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
-#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE) */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) */
 		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			return error;
@@ -1465,12 +1465,12 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
 			break;
 		if (ch == 0 && (*p_pos) >= file->tf_end)
 			goto warn_premature_eof;
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE)
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		if (tpp_ascii_islf(ch)) {
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
-			if (!tpp_lexer_has(self, TPP_TOK_STRING_ALLOW_MULTILINE)) {
+			if (!tpp_lexer_has(self, STRING_ALLOW_MULTILINE)) {
 				*p_pos = tpp_file_rel2ptr(file, old_pos);
 				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
@@ -1500,7 +1500,7 @@ handle_linefeed:
 				goto handle_linefeed;
 		} else
 #endif /* TPP_HAVE_UNICODE */
-#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_STRING_ALLOW_MULTILINE) */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) */
 		{
 		}
 	}
