@@ -47,7 +47,11 @@ int main(int argc, char *argv[]) {
 		filename = *argv;
 	error = tpp_lexer_init_filename(&lexer, filename);
 	if (TPP_ISERR(error)) {
+#if TPP_HAVE_STRERROR
 		fprintf(stderr, "Initialization failed: %s\n", tpp_strerror(error));
+#else /* TPP_HAVE_STRERROR */
+		fprintf(stderr, "Initialization failed: %d\n", (int)error);
+#endif /* !TPP_HAVE_STRERROR */
 		return 1;
 	}
 
@@ -64,7 +68,11 @@ int main(int argc, char *argv[]) {
 				tok = TPP_TOK_OFERR(error);
 			break;
 		}
+#if TPP_HAVE_STRTOKENID
 		desc = tpp_strtokenid(tok);
+#else /* TPP_HAVE_STRTOKENID */
+		desc = NULL;
+#endif /* !TPP_HAVE_STRTOKENID */
 		if (desc == NULL && TPP_TOK_ISKEYWORD(tok))
 			desc = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(&lexer));
 		if (desc == NULL)
@@ -91,7 +99,11 @@ int main(int argc, char *argv[]) {
 #endif
 	}
 	if (TPP_TOK_ISERR(tok)) {
+#if TPP_HAVE_STRERROR
 		fprintf(stderr, "Yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
+#else /* TPP_HAVE_STRERROR */
+		fprintf(stderr, "Yield failed: %d\n", (int)TPP_TOK_ASERR(tok));
+#endif /* !TPP_HAVE_STRERROR */
 		goto out;
 	}
 	if (tpp_lexer_geterrorcount(&lexer)) {

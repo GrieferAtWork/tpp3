@@ -4614,8 +4614,8 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	}
 
 
-done:
 #if TPP_HAVE_FILE_LC_CACHE
+done:
 	self->tf_lcpos = pos;
 	self->tf_lcval = result;
 #endif /* TPP_HAVE_FILE_LC_CACHE */
@@ -6038,7 +6038,7 @@ static struct tpp_warning_group_names_struct {
 #undef TPP_DEFS
 };
 
-static tpp_size const tpp_warning_group_name_offsets_byid[TPP_EXT_COUNT] = {
+static tpp_size const tpp_warning_group_name_offsets_byid[TPP_WG_COUNT] = {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 	/* [wgroup_id] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_0),
@@ -6394,7 +6394,7 @@ static void tpp_init_builtin_keywords(void) {
 
 /* Assert that generated stuff is valid */
 TPP_STATIC_ASSERT(TPP_BUILTIN_KEYWORD_COUNT == (TPP_TOK_USERKEYWORD_BEGIN - TPP_TOK_KEYWORD_BEGIN));
-TPP_STATIC_ASSERT(TPP_BUILTIN_KEYWORD_MASK >= (TPP_BUILTIN_KEYWORD_COUNT + 1));
+TPP_STATIC_ASSERT((TPP_BUILTIN_KEYWORD_COUNT == 0) || TPP_BUILTIN_KEYWORD_MASK >= (TPP_BUILTIN_KEYWORD_COUNT + 1));
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_builtin_keyword_table) == (TPP_BUILTIN_KEYWORD_MASK + 1));
 
 
@@ -8015,17 +8015,21 @@ TPP_STATIC_ASSERT(TPP_CONF_MAYBE_0(TPP_CONF_FEAT0));
 
 TPP_STATIC_ASSERT(!TPP_CONF_IS_FEAT(TPP_CONF_1));
 TPP_STATIC_ASSERT(!TPP_CONF_IS_FEAT(TPP_CONF_0));
+#if TPP_HAVE_EXTENSIONS
 TPP_STATIC_ASSERT(!TPP_CONF_IS_FEAT(TPP_CONF_EXT1));
 TPP_STATIC_ASSERT(!TPP_CONF_IS_FEAT(TPP_CONF_EXT0));
+#endif /* TPP_HAVE_EXTENSIONS */
 TPP_STATIC_ASSERT(TPP_CONF_IS_FEAT(TPP_CONF_FEAT1));
 TPP_STATIC_ASSERT(TPP_CONF_IS_FEAT(TPP_CONF_FEAT0));
 
+#if TPP_HAVE_EXTENSIONS
 TPP_STATIC_ASSERT(!TPP_CONF_IS_EXT(TPP_CONF_1));
 TPP_STATIC_ASSERT(!TPP_CONF_IS_EXT(TPP_CONF_0));
 TPP_STATIC_ASSERT(TPP_CONF_IS_EXT(TPP_CONF_EXT1));
 TPP_STATIC_ASSERT(TPP_CONF_IS_EXT(TPP_CONF_EXT0));
 TPP_STATIC_ASSERT(!TPP_CONF_IS_EXT(TPP_CONF_FEAT1));
 TPP_STATIC_ASSERT(!TPP_CONF_IS_EXT(TPP_CONF_FEAT0));
+#endif /* TPP_HAVE_EXTENSIONS */
 
 TPP_STATIC_ASSERT(TPP_CONF_IS_CONST(TPP_CONF_1));
 TPP_STATIC_ASSERT(TPP_CONF_IS_CONST(TPP_CONF_0));
@@ -8050,8 +8054,10 @@ TPP_STATIC_ASSERT(!TPP_CONF_DEFAULT(TPP_CONF_FEAT0));
 
 TPP_STATIC_ASSERT(TPP_CONF_MAKEFEAT(0) == TPP_CONF_FEAT0);
 TPP_STATIC_ASSERT(TPP_CONF_MAKEFEAT(1) == TPP_CONF_FEAT1);
+#if TPP_HAVE_EXTENSIONS
 TPP_STATIC_ASSERT(TPP_CONF_MAKEEXT(0) == TPP_CONF_EXT0);
 TPP_STATIC_ASSERT(TPP_CONF_MAKEEXT(1) == TPP_CONF_EXT1);
+#endif /* TPP_HAVE_EXTENSIONS */
 
 
 /* Assert that token <=> error conversion works */
@@ -10190,6 +10196,7 @@ tpp_expr_value_div(struct tpp_lexer *tpp_restrict lexer,
 	tpp_errno error;
 	tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 	tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
+	(void)lexer;
 	if (rhs_value == 0) {
 #if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
 		error = tpp_lexer_warnf(lexer, TPP_W_DIVIDE_BY_ZERO);
@@ -11933,7 +11940,9 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	/* Relative offset from start of loaded area of file
 	 * (usually `0', unless a custom "p_pos" is used) */
 	tpp_size rel_start;
+#if TPP_HAVE_INCLUDE_STACK || TPP_HAVE_BSE
 again:
+#endif /* TPP_HAVE_INCLUDE_STACK || TPP_HAVE_BSE */
 	pos = *p_pos;
 	end = file->tf_end;
 	if tpp_unlikely(pos >= end)
@@ -19652,7 +19661,9 @@ again:
 
 	/* Delete a previously recognized #ifndef-guard keyword if
 	 * we're at the top-level #ifdef-block for the current file. */
+#if TPP_HAVE_CPP_DIRECTIVES
 	tpp_file_maybe_delete_include_guard_keyword(tpp_lexer_getfile(self));
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
 	return result;
 }
 
@@ -21717,6 +21728,7 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
 	tpp_keyword const *const keyword = token->tt_kwd;
+	(void)keyword;
 
 	/* Emit warnings for "deprecated" keywords. */
 #if TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED
@@ -24500,8 +24512,8 @@ TPP_DEFINE_PX_PARSER(tpp_px_xor, tpp_px_or, tpp_px_or_suffix, TPP_TEST_PX_OR_SUF
 /* LEVEL #10 : LAND                                                     */
 /************************************************************************/
 #undef TPP_HAVE_PX_LAND_SUFFIX
-#define TPP_HAVE_PX_LAND_SUFFIX 1
 #if TPP_HAVE_TPP_TOK_AMP_AMP
+#define TPP_HAVE_PX_LAND_SUFFIX      1
 #define TPP_CASE_PX_LAND_SUFFIX      case TPP_TOK_AMP_AMP:
 #define TPP_TEST_PX_LAND_SUFFIX(tok) ((tok) == TPP_TOK_AMP_AMP)
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -24540,21 +24552,21 @@ tpp_px_land_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 	return TPP_EOK;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_or, tpp_px_land, tpp_px_land_suffix, TPP_TEST_PX_LAND_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#else /* TPP_HAVE_TPP_TOK_AMP_AMP */
 #define TPP_HAVE_PX_LAND_SUFFIX          0
 #define TPP_CASE_PX_LAND_SUFFIX          /* nothing */
 #define TPP_TEST_PX_LAND_SUFFIX(tok)     0
 #define tpp_px_land_suffix(self, result) TPP_EOK
 #define tpp_px_land(self, result)        tpp_px_or(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL && !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* !TPP_HAVE_TPP_TOK_AMP_AMP */
 
 
 /************************************************************************/
 /* LEVEL #11 : LXOR                                                     */
 /************************************************************************/
 #undef TPP_HAVE_PX_LXOR_SUFFIX
-#define TPP_HAVE_PX_LXOR_SUFFIX 1
 #if TPP_HAVE_TPP_TOK_HAT_HAT
+#define TPP_HAVE_PX_LXOR_SUFFIX      1
 #define TPP_CASE_PX_LXOR_SUFFIX      case TPP_TOK_HAT_HAT:
 #define TPP_TEST_PX_LXOR_SUFFIX(tok) ((tok) == TPP_TOK_HAT_HAT)
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -24593,21 +24605,21 @@ tpp_px_lxor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 	return TPP_EOK;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_land, tpp_px_lxor, tpp_px_lxor_suffix, TPP_TEST_PX_LXOR_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#else /* TPP_HAVE_TPP_TOK_HAT_HAT */
 #define TPP_HAVE_PX_LXOR_SUFFIX          0
 #define TPP_CASE_PX_LXOR_SUFFIX          /* nothing */
 #define TPP_TEST_PX_LXOR_SUFFIX(tok)     0
 #define tpp_px_lxor_suffix(self, result) TPP_EOK
 #define tpp_px_lxor(self, result)        tpp_px_land(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL && !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* !TPP_HAVE_TPP_TOK_HAT_HAT */
 
 
 /************************************************************************/
 /* LEVEL #12 : LOR                                                      */
 /************************************************************************/
 #undef TPP_HAVE_PX_LOR_SUFFIX
-#define TPP_HAVE_PX_LOR_SUFFIX 1
 #if TPP_HAVE_TPP_TOK_PIPE_PIPE
+#define TPP_HAVE_PX_LOR_SUFFIX      1
 #define TPP_CASE_PX_LOR_SUFFIX      case TPP_TOK_PIPE_PIPE:
 #define TPP_TEST_PX_LOR_SUFFIX(tok) ((tok) == TPP_TOK_PIPE_PIPE)
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -24646,13 +24658,13 @@ tpp_px_lor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value 
 	return TPP_EOK;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_lxor, tpp_px_lor, tpp_px_lor_suffix, TPP_TEST_PX_LOR_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#else /* TPP_HAVE_TPP_TOK_PIPE_PIPE */
 #define TPP_HAVE_PX_LOR_SUFFIX          0
 #define TPP_CASE_PX_LOR_SUFFIX          /* nothing */
 #define TPP_TEST_PX_LOR_SUFFIX(tok)     0
 #define tpp_px_lor_suffix(self, result) TPP_EOK
 #define tpp_px_lor(self, result)        tpp_px_lxor(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL && !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* !TPP_HAVE_TPP_TOK_PIPE_PIPE */
 
 
 /************************************************************************/

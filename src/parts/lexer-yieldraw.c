@@ -1679,7 +1679,9 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	/* Relative offset from start of loaded area of file
 	 * (usually `0', unless a custom "p_pos" is used) */
 	tpp_size rel_start;
+#if TPP_HAVE_INCLUDE_STACK || TPP_HAVE_BSE
 again:
+#endif /* TPP_HAVE_INCLUDE_STACK || TPP_HAVE_BSE */
 	pos = *p_pos;
 	end = file->tf_end;
 	if tpp_unlikely(pos >= end)

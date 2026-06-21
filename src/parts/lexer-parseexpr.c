@@ -948,8 +948,8 @@ TPP_DEFINE_PX_PARSER(tpp_px_xor, tpp_px_or, tpp_px_or_suffix, TPP_TEST_PX_OR_SUF
 /* LEVEL #10 : LAND                                                     */
 /************************************************************************/
 #undef TPP_HAVE_PX_LAND_SUFFIX
-#define TPP_HAVE_PX_LAND_SUFFIX 1
 #if TPP_HAVE_TPP_TOK_AMP_AMP
+#define TPP_HAVE_PX_LAND_SUFFIX      1
 #define TPP_CASE_PX_LAND_SUFFIX      case TPP_TOK_AMP_AMP:
 #define TPP_TEST_PX_LAND_SUFFIX(tok) ((tok) == TPP_TOK_AMP_AMP)
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -988,21 +988,21 @@ tpp_px_land_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 	return TPP_EOK;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_or, tpp_px_land, tpp_px_land_suffix, TPP_TEST_PX_LAND_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#else /* TPP_HAVE_TPP_TOK_AMP_AMP */
 #define TPP_HAVE_PX_LAND_SUFFIX          0
 #define TPP_CASE_PX_LAND_SUFFIX          /* nothing */
 #define TPP_TEST_PX_LAND_SUFFIX(tok)     0
 #define tpp_px_land_suffix(self, result) TPP_EOK
 #define tpp_px_land(self, result)        tpp_px_or(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL && !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* !TPP_HAVE_TPP_TOK_AMP_AMP */
 
 
 /************************************************************************/
 /* LEVEL #11 : LXOR                                                     */
 /************************************************************************/
 #undef TPP_HAVE_PX_LXOR_SUFFIX
-#define TPP_HAVE_PX_LXOR_SUFFIX 1
 #if TPP_HAVE_TPP_TOK_HAT_HAT
+#define TPP_HAVE_PX_LXOR_SUFFIX      1
 #define TPP_CASE_PX_LXOR_SUFFIX      case TPP_TOK_HAT_HAT:
 #define TPP_TEST_PX_LXOR_SUFFIX(tok) ((tok) == TPP_TOK_HAT_HAT)
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -1041,21 +1041,21 @@ tpp_px_lxor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 	return TPP_EOK;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_land, tpp_px_lxor, tpp_px_lxor_suffix, TPP_TEST_PX_LXOR_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#else /* TPP_HAVE_TPP_TOK_HAT_HAT */
 #define TPP_HAVE_PX_LXOR_SUFFIX          0
 #define TPP_CASE_PX_LXOR_SUFFIX          /* nothing */
 #define TPP_TEST_PX_LXOR_SUFFIX(tok)     0
 #define tpp_px_lxor_suffix(self, result) TPP_EOK
 #define tpp_px_lxor(self, result)        tpp_px_land(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL && !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* !TPP_HAVE_TPP_TOK_HAT_HAT */
 
 
 /************************************************************************/
 /* LEVEL #12 : LOR                                                      */
 /************************************************************************/
 #undef TPP_HAVE_PX_LOR_SUFFIX
-#define TPP_HAVE_PX_LOR_SUFFIX 1
 #if TPP_HAVE_TPP_TOK_PIPE_PIPE
+#define TPP_HAVE_PX_LOR_SUFFIX      1
 #define TPP_CASE_PX_LOR_SUFFIX      case TPP_TOK_PIPE_PIPE:
 #define TPP_TEST_PX_LOR_SUFFIX(tok) ((tok) == TPP_TOK_PIPE_PIPE)
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -1094,13 +1094,13 @@ tpp_px_lor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value 
 	return TPP_EOK;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_lxor, tpp_px_lor, tpp_px_lor_suffix, TPP_TEST_PX_LOR_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#else /* TPP_HAVE_TPP_TOK_PIPE_PIPE */
 #define TPP_HAVE_PX_LOR_SUFFIX          0
 #define TPP_CASE_PX_LOR_SUFFIX          /* nothing */
 #define TPP_TEST_PX_LOR_SUFFIX(tok)     0
 #define tpp_px_lor_suffix(self, result) TPP_EOK
 #define tpp_px_lor(self, result)        tpp_px_lxor(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL && !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* !TPP_HAVE_TPP_TOK_PIPE_PIPE */
 
 
 /************************************************************************/

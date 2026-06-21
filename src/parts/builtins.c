@@ -101,7 +101,7 @@ static struct tpp_warning_group_names_struct {
 #undef TPP_DEFS
 };
 
-static tpp_size const tpp_warning_group_name_offsets_byid[TPP_EXT_COUNT] = {
+static tpp_size const tpp_warning_group_name_offsets_byid[TPP_WG_COUNT] = {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 	/* [wgroup_id] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_0),
@@ -457,7 +457,7 @@ static void tpp_init_builtin_keywords(void) {
 
 /* Assert that generated stuff is valid */
 TPP_STATIC_ASSERT(TPP_BUILTIN_KEYWORD_COUNT == (TPP_TOK_USERKEYWORD_BEGIN - TPP_TOK_KEYWORD_BEGIN));
-TPP_STATIC_ASSERT(TPP_BUILTIN_KEYWORD_MASK >= (TPP_BUILTIN_KEYWORD_COUNT + 1));
+TPP_STATIC_ASSERT((TPP_BUILTIN_KEYWORD_COUNT == 0) || TPP_BUILTIN_KEYWORD_MASK >= (TPP_BUILTIN_KEYWORD_COUNT + 1));
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_builtin_keyword_table) == (TPP_BUILTIN_KEYWORD_MASK + 1));
 
 

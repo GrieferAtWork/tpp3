@@ -1299,6 +1299,7 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
 	tpp_keyword const *const keyword = token->tt_kwd;
+	(void)keyword;
 
 	/* Emit warnings for "deprecated" keywords. */
 #if TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED

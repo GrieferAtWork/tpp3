@@ -995,8 +995,8 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	}
 
 
-done:
 #if TPP_HAVE_FILE_LC_CACHE
+done:
 	self->tf_lcpos = pos;
 	self->tf_lcval = result;
 #endif /* TPP_HAVE_FILE_LC_CACHE */

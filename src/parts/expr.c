@@ -1146,6 +1146,7 @@ tpp_expr_value_div(struct tpp_lexer *tpp_restrict lexer,
 	tpp_errno error;
 	tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 	tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
+	(void)lexer;
 	if (rhs_value == 0) {
 #if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
 		error = tpp_lexer_warnf(lexer, TPP_W_DIVIDE_BY_ZERO);

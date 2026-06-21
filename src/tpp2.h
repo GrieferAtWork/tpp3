@@ -1993,7 +1993,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_FILE_NONBLOCK 0
 #endif /* !TPP_CONFIG_NONBLOCKING_IO */
 
-#define TPP_PROFILE TPP_PROFILE_MINIMAL /* Disable anything not explicitly configured */
+#define TPP_PROFILE TPP_PROFILE_MINIMAL /* Disable anything not otherwise explicitly configured */
+
 #define TPP_HAVE_TPP2_COMPAT           1 /* Enable some extra TPP2 compatibility tweaks */
 #define TPP_BUILDING                   1 /* Not actually true, but needed to prevent internals from being escaped (TPP3 doesn't expose internals by default anymore) */
 #define TPP_HAVE_UNICODE               1 /* Always enable unicode support */

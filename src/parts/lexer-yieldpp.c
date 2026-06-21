@@ -1633,7 +1633,9 @@ again:
 
 	/* Delete a previously recognized #ifndef-guard keyword if
 	 * we're at the top-level #ifdef-block for the current file. */
+#if TPP_HAVE_CPP_DIRECTIVES
 	tpp_file_maybe_delete_include_guard_keyword(tpp_lexer_getfile(self));
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
 	return result;
 }
 
