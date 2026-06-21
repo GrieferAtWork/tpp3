@@ -3234,6 +3234,36 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPP_API_VERSION              300 /* Api version (Version of this api). */
 #define TPP_PREPROCESSOR_VERSION_STR "300"
 
+
+/* Does the host preprocessor have support for __VA_ARGS__? */
+#ifndef TPP_HOST_HAS_ATTRIBUTE
+#ifdef __has_attribute
+#define TPP_HOST_HAS_ATTRIBUTE(x) __has_attribute(x)
+#else /* __has_attribute */
+#define TPP_HOST_HAS_ATTRIBUTE(x) 0
+#endif /* !__has_attribute */
+#endif /* !TPP_HOST_HAS_ATTRIBUTE */
+#ifndef TPP_HOST_HAS_DECLSPEC_ATTRIBUTE
+#ifdef __has_declspec_attribute
+#define TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(x) __has_declspec_attribute(x)
+#else /* __has_declspec_attribute */
+#define TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(x) 0
+#endif /* !__has_declspec_attribute */
+#endif /* !TPP_HOST_HAS_DECLSPEC_ATTRIBUTE */
+#ifndef TPP_HOST_HAS_CPP_ATTRIBUTE
+#ifdef __has_cpp_attribute
+#define TPP_HOST_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
+#else /* __has_cpp_attribute */
+#define TPP_HOST_HAS_CPP_ATTRIBUTE(x) 0
+#endif /* !__has_cpp_attribute */
+#endif /* !TPP_HOST_HAS_CPP_ATTRIBUTE */
+
+#ifndef TPP_HOST_HAVE_PP_VARARGS
+#define TPP_HOST_HAVE_PP_VARARGS 1
+#endif /* !TPP_HOST_HAVE_PP_VARARGS */
+
+
+
 /* The standard calling convention used by TPP APIs */
 #ifndef TPPCALL
 #define TPPCALL /* nothing */
@@ -3266,25 +3296,47 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define tpp_restrict __restrict
 #endif /* !tpp_restrict */
 #ifndef TPP_NONNULL
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__nonnull__)
+#define TPP_NONNULL(x) __attribute__((__nonnull__ x))
+#else /* ... */
 #define TPP_NONNULL(x) /* nothing */
+#endif /* !... */
 #endif /* !TPP_NONNULL */
 #ifndef TPP_WUNUSED
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__warn_unused_result__)
+#define TPP_WUNUSED __attribute__((__warn_unused_result__))
+#else /* ... */
 #define TPP_WUNUSED /* nothing */
+#endif /* !... */
 #endif /* !TPP_WUNUSED */
 #ifndef TPP_RETNONNULL
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__returns_nonnull__)
+#define TPP_RETNONNULL __attribute__((__returns_nonnull__))
+#else /* ... */
 #define TPP_RETNONNULL /* nothing */
+#endif /* !... */
 #endif /* !TPP_RETNONNULL */
 #ifndef TPP_PURECALL
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__pure__)
+#define TPP_PURECALL __attribute__((__pure__))
+#elif defined(_MSC_VER) || TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(noalias)
+#define TPP_PURECALL __declspec(noalias)
+#else /* ... */
 #define TPP_PURECALL /* nothing */
+#endif /* !... */
 #endif /* !TPP_PURECALL */
 #ifndef TPP_CONSTCALL
-#define TPP_CONSTCALL /* nothing */
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__const__)
+#define TPP_CONSTCALL __attribute__((__const__))
+#else /* ... */
+#define TPP_CONSTCALL TPP_PURECALL
+#endif /* !... */
 #endif /* !TPP_CONSTCALL */
 #ifndef TPP_NOINLINE
-#ifdef _MSC_VER
-#define TPP_NOINLINE __declspec(noinline)
-#elif defined(__GNUC__)
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__noinline__)
 #define TPP_NOINLINE __attribute__((__noinline__))
+#elif defined(_MSC_VER) || TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(noinline)
+#define TPP_NOINLINE __declspec(noinline)
 #else /* ... */
 #define TPP_NOINLINE /* nothing */
 #endif /* !... */
@@ -3293,26 +3345,15 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPP_FLEX_ARRAY 4096
 #endif /* !TPP_FLEX_ARRAY */
 #ifndef TPP_FALLTHRU
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
+#if TPP_HOST_HAS_CPP_ATTRIBUTE(fallthrough)
 #define TPP_FALLTHRU [[fallthrough]];
-#endif /* __has_cpp_attribute(fallthrough) */
-#endif /* __has_cpp_attribute */
-#ifndef TPP_FALLTHRU
-#ifdef __has_attribute
-#if __has_attribute(fallthrough)
+#elif TPP_HOST_HAS_ATTRIBUTE(__fallthrough__)
 #define TPP_FALLTHRU __attribute__((__fallthrough__));
-#endif /* __has_attribute(fallthrough) */
-#endif /* __has_attribute */
-#ifndef TPP_FALLTHRU
-#if defined(__GNUC__) && (__GNUC__ > 6 || (__GNUC__ == 6 && __GNUC_MINOR__ >= 3))
+#elif defined(__GNUC__) && (__GNUC__ > 6 || (__GNUC__ == 6 && __GNUC_MINOR__ >= 3))
 #define TPP_FALLTHRU __attribute__((__fallthrough__));
-#endif /* ... */
-#ifndef TPP_FALLTHRU
+#else /* ... */
 #define TPP_FALLTHRU /* @fallthrough@ */
-#endif /* !TPP_FALLTHRU */
-#endif /* !TPP_FALLTHRU */
-#endif /* !TPP_FALLTHRU */
+#endif /* !... */
 #endif /* !TPP_FALLTHRU */
 
 /* Does the host preprocessor have support for __VA_ARGS__? */
@@ -3786,10 +3827,11 @@ TPP_DECL_END
 /************************************************************************/
 /************************************************************************/
 /*                                                                      */
-/* To learn how to supply your own keywords/warnings/extensions/etc.    */
+/* To learn how to supply your own keyword/warning/extension/etc.       */
 /* definitions to TPP3, see comment at start of "File: parts/defs.h"    */
 /*                                                                      */
 /************************************************************************/
+
 
 
 /************************************************************************/
@@ -3798,8 +3840,6 @@ TPP_DECL_END
  * - Negative: runtime configurable (with absolute value used as default)
  */
 /************************************************************************/
-
-
 
 /* TPP tab size.
  * when positive: compile-time hard-code
@@ -3872,7 +3912,7 @@ TPP_DECL_END
 /* Enable support for non-blocking I/O
  * Configure to "-1" to only enable compile-time support if supported by OS */
 #ifndef TPP_HAVE_FILE_NONBLOCK
-#define TPP_HAVE_FILE_NONBLOCK (TPP_PROFILE ? -1 : 0)
+#define TPP_HAVE_FILE_NONBLOCK (TPP_HAVE_PROFILE_NOT_MINIMAL ? -1 : 0)
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 /* Enable support for:
@@ -3888,12 +3928,12 @@ TPP_DECL_END
 
 /* Provide a function "tpp_strerror()" to get a description of a given "tpp_errno" error code. */
 #ifndef TPP_HAVE_STRERROR
-#define TPP_HAVE_STRERROR TPP_PROFILE
+#define TPP_HAVE_STRERROR TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_STRERROR */
 
 /* Provide a function "tpp_strtokenid()" to get the API name of a (non-keyword) token ID */
 #ifndef TPP_HAVE_STRTOKENID
-#define TPP_HAVE_STRTOKENID TPP_PROFILE
+#define TPP_HAVE_STRTOKENID TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_STRTOKENID */
 
 /* Enable support for storing custom user-data in keywords. */
@@ -3903,7 +3943,7 @@ TPP_DECL_END
 
 /* Enable support for runtime-configurable extensions */
 #ifndef TPP_HAVE_EXTENSIONS
-#define TPP_HAVE_EXTENSIONS TPP_PROFILE
+#define TPP_HAVE_EXTENSIONS TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_EXTENSIONS */
 
 /* Enable support to push/pop the extension state */
@@ -3913,7 +3953,7 @@ TPP_DECL_END
 
 /* Support for: compiler warnings (else: behave as though all warnings were being suppressed) */
 #ifndef TPP_HAVE_WARNINGS
-#define TPP_HAVE_WARNINGS TPP_PROFILE
+#define TPP_HAVE_WARNINGS TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_WARNINGS */
 
 /* Enable support to push/pop the warning state */
@@ -3948,14 +3988,14 @@ TPP_DECL_END
 
 /* Enable support for `TPP_FILE_IOFLAGS_NOKWD' */
 #ifndef TPP_HAVE_FILE_NOKWD
-#define TPP_HAVE_FILE_NOKWD TPP_PROFILE
+#define TPP_HAVE_FILE_NOKWD TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_FILE_NOKWD */
 
 /* Speed up calls to `tpp_file_lcinfo()' by caching the last-read
  * position and determining line/column information as a delta from
  * what was previously cached */
 #ifndef TPP_HAVE_FILE_LC_CACHE
-#define TPP_HAVE_FILE_LC_CACHE TPP_PROFILE
+#define TPP_HAVE_FILE_LC_CACHE TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_FILE_LC_CACHE */
 
 
@@ -7948,7 +7988,7 @@ typedef struct tpp_token {
  *                on its own, meaning that the meaning of
  *                *all* negative values is entirely up to the
  *                given "printer"! */
-TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((2)) tpp_ssize TPPCALL
+TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes);
 #endif /* TPP_HAVE_TOKEN_ENCODESTRING */
@@ -11033,7 +11073,7 @@ tpp_file_userfilename(tpp_file const *tpp_restrict self);
  * You may also pass "NULL" for `filename' to disable the override */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_file_setuserfilename(tpp_file *tpp_restrict self,
-                         tpp_string *tpp_restrict filename);
+                         tpp_string *filename);
 #else /* TPP_HAVE_FILE_USER_FILENAME */
 #define tpp_file_userfilename(self) tpp_file_filename(self)
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
@@ -11680,7 +11720,7 @@ tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword(tpp_char const *tpp_restrict kwd,
                        tpp_size len, tpp_hash hash);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
+TPP_DECL TPP_WUNUSED tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword_byid(enum tpp_token_id id);
 #if TPP_HAVE_ESCAPED_KEYWORDS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
@@ -11724,7 +11764,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
                          tpp_char const *tpp_restrict kwd,
                          tpp_size len, tpp_hash hash);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                               enum tpp_token_id id);
 #if TPP_HAVE_ESCAPED_KEYWORDS
@@ -11743,7 +11783,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
                         tpp_char const *tpp_restrict kwd,
                         tpp_size len, tpp_hash hash);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                              enum tpp_token_id id);
 #if TPP_HAVE_ESCAPED_KEYWORDS
@@ -12007,8 +12047,8 @@ typedef enum tpp_warning_id {
 
 /* Returns a TPP_WG_COUNT-terminated list of group IDs associated with the given warning "id".
  * When the given "id" is "TPP_W_COUNT" or invalid, return a pointer to an empty warning-group-id-list. */
-TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1))
-tpp_warning_group_id const *TPPCALL tpp_warning_getgroups(tpp_warning_id id);
+TPP_DECL TPP_RETNONNULL TPP_WUNUSED tpp_warning_group_id const *TPPCALL
+tpp_warning_getgroups(tpp_warning_id id);
 
 /* Returns the "tpp_lexer_printf_warning"-style format string assigned with "id".
  * When "id" is TPP_W_COUNT, invalid, or declared as "TPP_WARNING_EX", return "NULL" instead. */

@@ -1106,9 +1106,9 @@ again:
  *       >> self->tf_kind == TPP_FILE_KIND_TEXT;
  *
  * You may also pass "NULL" for `filename' to disable the override */
-TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_file_setuserfilename(tpp_file *tpp_restrict self,
-                         tpp_string *tpp_restrict filename) {
+                         tpp_string *filename) {
 	tpp_string *old_override;
 	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
 	           self->tf_kind == TPP_FILE_KIND_TEXT);

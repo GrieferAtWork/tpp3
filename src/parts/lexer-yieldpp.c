@@ -436,12 +436,12 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOENT: Directive evaluates to "false"
  * @return: * :         Error */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+#define tpp_lexer_parse_ifdef_directive(self, p_directive_start) \
+	tpp_lexer_parse_ifdef_directive_ex(self, p_directive_start, NULL)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_ifdef_directive_ex(tpp_lexer *tpp_restrict self,
                                    tpp_char const **p_directive_start,
                                    tpp_keyword const **p_macro_keyword)
-#define tpp_lexer_parse_ifdef_directive(self, p_directive_start) \
-	tpp_lexer_parse_ifdef_directive_ex(self, p_directive_start, NULL)
 #else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,

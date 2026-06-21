@@ -369,7 +369,7 @@ tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword(tpp_char const *tpp_restrict kwd,
                        tpp_size len, tpp_hash hash);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
+TPP_DECL TPP_WUNUSED tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword_byid(enum tpp_token_id id);
 #if TPP_HAVE_ESCAPED_KEYWORDS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
@@ -413,7 +413,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
                          tpp_char const *tpp_restrict kwd,
                          tpp_size len, tpp_hash hash);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                               enum tpp_token_id id);
 #if TPP_HAVE_ESCAPED_KEYWORDS
@@ -432,7 +432,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
                         tpp_char const *tpp_restrict kwd,
                         tpp_size len, tpp_hash hash);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                              enum tpp_token_id id);
 #if TPP_HAVE_ESCAPED_KEYWORDS

@@ -637,7 +637,7 @@ tpp_file_userfilename(tpp_file const *tpp_restrict self);
  * You may also pass "NULL" for `filename' to disable the override */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_file_setuserfilename(tpp_file *tpp_restrict self,
-                         tpp_string *tpp_restrict filename);
+                         tpp_string *filename);
 #else /* TPP_HAVE_FILE_USER_FILENAME */
 #define tpp_file_userfilename(self) tpp_file_filename(self)
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */

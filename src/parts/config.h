@@ -36,10 +36,11 @@
 
 /************************************************************************/
 /*                                                                      */
-/* To learn how to supply your own keywords/warnings/extensions/etc.    */
+/* To learn how to supply your own keyword/warning/extension/etc.       */
 /* definitions to TPP3, see comment at start of "File: parts/defs.h"    */
 /*                                                                      */
 /************************************************************************/
+
 
 
 /************************************************************************/
@@ -48,8 +49,6 @@
  * - Negative: runtime configurable (with absolute value used as default)
  */
 /************************************************************************/
-
-
 
 /* TPP tab size.
  * when positive: compile-time hard-code
@@ -122,7 +121,7 @@
 /* Enable support for non-blocking I/O
  * Configure to "-1" to only enable compile-time support if supported by OS */
 #ifndef TPP_HAVE_FILE_NONBLOCK
-#define TPP_HAVE_FILE_NONBLOCK (TPP_PROFILE ? -1 : 0)
+#define TPP_HAVE_FILE_NONBLOCK (TPP_HAVE_PROFILE_NOT_MINIMAL ? -1 : 0)
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 /* Enable support for:
@@ -138,12 +137,12 @@
 
 /* Provide a function "tpp_strerror()" to get a description of a given "tpp_errno" error code. */
 #ifndef TPP_HAVE_STRERROR
-#define TPP_HAVE_STRERROR TPP_PROFILE
+#define TPP_HAVE_STRERROR TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_STRERROR */
 
 /* Provide a function "tpp_strtokenid()" to get the API name of a (non-keyword) token ID */
 #ifndef TPP_HAVE_STRTOKENID
-#define TPP_HAVE_STRTOKENID TPP_PROFILE
+#define TPP_HAVE_STRTOKENID TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_STRTOKENID */
 
 /* Enable support for storing custom user-data in keywords. */
@@ -153,7 +152,7 @@
 
 /* Enable support for runtime-configurable extensions */
 #ifndef TPP_HAVE_EXTENSIONS
-#define TPP_HAVE_EXTENSIONS TPP_PROFILE
+#define TPP_HAVE_EXTENSIONS TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_EXTENSIONS */
 
 /* Enable support to push/pop the extension state */
@@ -163,7 +162,7 @@
 
 /* Support for: compiler warnings (else: behave as though all warnings were being suppressed) */
 #ifndef TPP_HAVE_WARNINGS
-#define TPP_HAVE_WARNINGS TPP_PROFILE
+#define TPP_HAVE_WARNINGS TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_WARNINGS */
 
 /* Enable support to push/pop the warning state */
@@ -198,14 +197,14 @@
 
 /* Enable support for `TPP_FILE_IOFLAGS_NOKWD' */
 #ifndef TPP_HAVE_FILE_NOKWD
-#define TPP_HAVE_FILE_NOKWD TPP_PROFILE
+#define TPP_HAVE_FILE_NOKWD TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_FILE_NOKWD */
 
 /* Speed up calls to `tpp_file_lcinfo()' by caching the last-read
  * position and determining line/column information as a delta from
  * what was previously cached */
 #ifndef TPP_HAVE_FILE_LC_CACHE
-#define TPP_HAVE_FILE_LC_CACHE TPP_PROFILE
+#define TPP_HAVE_FILE_LC_CACHE TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_FILE_LC_CACHE */
 
 

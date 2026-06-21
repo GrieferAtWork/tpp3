@@ -171,8 +171,8 @@ static tpp_size const tpp_warning_group_offsets_byid[TPP_W_COUNT] = {
 
 /* Returns a TPP_WG_COUNT-terminated list of group IDs associated with the given warning "id".
  * When the given "id" is "TPP_W_COUNT" or invalid, return a pointer to an empty warning-group-id-list. */
-TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1))
-tpp_warning_group_id const *TPPCALL tpp_warning_getgroups(tpp_warning_id id) {
+TPP_IMPL TPP_RETNONNULL TPP_WUNUSED tpp_warning_group_id const *TPPCALL
+tpp_warning_getgroups(tpp_warning_id id) {
 	if ((unsigned int)id >= (unsigned int)TPP_W_COUNT) {
 		return (tpp_warning_group_id const *)((char const *)&tpp_warning_groups +
 		                                      sizeof(tpp_warning_groups) -
@@ -479,7 +479,7 @@ tpp_builtin_getkeyword(tpp_char const *tpp_restrict kwd,
 	return result;
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
+TPP_IMPL TPP_WUNUSED tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword_byid(enum tpp_token_id id) {
 	tpp_init_builtin_keywords();
 	if (TPP_TOK_ISBUILTINKEYWORD(id)) {

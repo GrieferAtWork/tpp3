@@ -336,7 +336,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_buffer_printer, arg, text, num_bytes) {
  * @return: TPP_TOK_EOF: Success -- caller should yield again to load the
  *                                  first macro's first expansion token.
  * @return: TPP_TOK_ENOMEM: Out of memory */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
                                 tpp_macro *tpp_restrict macro) {
 	tpp_file *const file = tpp_lexer_getfile(self);

@@ -686,7 +686,7 @@ _tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
 	return result;
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                               enum tpp_token_id id) {
 	tpp_hash i;
@@ -736,7 +736,7 @@ tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
 	return result;
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                              enum tpp_token_id id) {
 	tpp_keyword const *result;

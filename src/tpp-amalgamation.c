@@ -3435,7 +3435,7 @@ TPP_DECL_BEGIN
  *                on its own, meaning that the meaning of
  *                *all* negative values is entirely up to the
  *                given "printer"! */
-TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((2)) tpp_ssize TPPCALL
+TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes) {
 	char const *output_repr;
@@ -4725,9 +4725,9 @@ again:
  *       >> self->tf_kind == TPP_FILE_KIND_TEXT;
  *
  * You may also pass "NULL" for `filename' to disable the override */
-TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_file_setuserfilename(tpp_file *tpp_restrict self,
-                         tpp_string *tpp_restrict filename) {
+                         tpp_string *filename) {
 	tpp_string *old_override;
 	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
 	           self->tf_kind == TPP_FILE_KIND_TEXT);
@@ -5519,7 +5519,7 @@ _tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
 	return result;
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                               enum tpp_token_id id) {
 	tpp_hash i;
@@ -5569,7 +5569,7 @@ tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
 	return result;
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword_byid(tpp_keywords const *tpp_restrict self,
                              enum tpp_token_id id) {
 	tpp_keyword const *result;
@@ -6210,8 +6210,8 @@ static tpp_size const tpp_warning_group_offsets_byid[TPP_W_COUNT] = {
 
 /* Returns a TPP_WG_COUNT-terminated list of group IDs associated with the given warning "id".
  * When the given "id" is "TPP_W_COUNT" or invalid, return a pointer to an empty warning-group-id-list. */
-TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1))
-tpp_warning_group_id const *TPPCALL tpp_warning_getgroups(tpp_warning_id id) {
+TPP_IMPL TPP_RETNONNULL TPP_WUNUSED tpp_warning_group_id const *TPPCALL
+tpp_warning_getgroups(tpp_warning_id id) {
 	if ((unsigned int)id >= (unsigned int)TPP_W_COUNT) {
 		return (tpp_warning_group_id const *)((char const *)&tpp_warning_groups +
 		                                      sizeof(tpp_warning_groups) -
@@ -6518,7 +6518,7 @@ tpp_builtin_getkeyword(tpp_char const *tpp_restrict kwd,
 	return result;
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
+TPP_IMPL TPP_WUNUSED tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword_byid(enum tpp_token_id id) {
 	tpp_init_builtin_keywords();
 	if (TPP_TOK_ISBUILTINKEYWORD(id)) {
@@ -18580,12 +18580,12 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOENT: Directive evaluates to "false"
  * @return: * :         Error */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+#define tpp_lexer_parse_ifdef_directive(self, p_directive_start) \
+	tpp_lexer_parse_ifdef_directive_ex(self, p_directive_start, NULL)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_ifdef_directive_ex(tpp_lexer *tpp_restrict self,
                                    tpp_char const **p_directive_start,
                                    tpp_keyword const **p_macro_keyword)
-#define tpp_lexer_parse_ifdef_directive(self, p_directive_start) \
-	tpp_lexer_parse_ifdef_directive_ex(self, p_directive_start, NULL)
 #else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
@@ -20093,7 +20093,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_buffer_printer, arg, text, num_bytes) {
  * @return: TPP_TOK_EOF: Success -- caller should yield again to load the
  *                                  first macro's first expansion token.
  * @return: TPP_TOK_ENOMEM: Out of memory */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_token_id TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
                                 tpp_macro *tpp_restrict macro) {
 	tpp_file *const file = tpp_lexer_getfile(self);

@@ -130,8 +130,8 @@ typedef enum tpp_warning_id {
 
 /* Returns a TPP_WG_COUNT-terminated list of group IDs associated with the given warning "id".
  * When the given "id" is "TPP_W_COUNT" or invalid, return a pointer to an empty warning-group-id-list. */
-TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1))
-tpp_warning_group_id const *TPPCALL tpp_warning_getgroups(tpp_warning_id id);
+TPP_DECL TPP_RETNONNULL TPP_WUNUSED tpp_warning_group_id const *TPPCALL
+tpp_warning_getgroups(tpp_warning_id id);
 
 /* Returns the "tpp_lexer_printf_warning"-style format string assigned with "id".
  * When "id" is TPP_W_COUNT, invalid, or declared as "TPP_WARNING_EX", return "NULL" instead. */

@@ -121,6 +121,36 @@
 #define TPP_API_VERSION              300 /* Api version (Version of this api). */
 #define TPP_PREPROCESSOR_VERSION_STR "300"
 
+
+/* Does the host preprocessor have support for __VA_ARGS__? */
+#ifndef TPP_HOST_HAS_ATTRIBUTE
+#ifdef __has_attribute
+#define TPP_HOST_HAS_ATTRIBUTE(x) __has_attribute(x)
+#else /* __has_attribute */
+#define TPP_HOST_HAS_ATTRIBUTE(x) 0
+#endif /* !__has_attribute */
+#endif /* !TPP_HOST_HAS_ATTRIBUTE */
+#ifndef TPP_HOST_HAS_DECLSPEC_ATTRIBUTE
+#ifdef __has_declspec_attribute
+#define TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(x) __has_declspec_attribute(x)
+#else /* __has_declspec_attribute */
+#define TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(x) 0
+#endif /* !__has_declspec_attribute */
+#endif /* !TPP_HOST_HAS_DECLSPEC_ATTRIBUTE */
+#ifndef TPP_HOST_HAS_CPP_ATTRIBUTE
+#ifdef __has_cpp_attribute
+#define TPP_HOST_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
+#else /* __has_cpp_attribute */
+#define TPP_HOST_HAS_CPP_ATTRIBUTE(x) 0
+#endif /* !__has_cpp_attribute */
+#endif /* !TPP_HOST_HAS_CPP_ATTRIBUTE */
+
+#ifndef TPP_HOST_HAVE_PP_VARARGS
+#define TPP_HOST_HAVE_PP_VARARGS 1
+#endif /* !TPP_HOST_HAVE_PP_VARARGS */
+
+
+
 /* The standard calling convention used by TPP APIs */
 #ifndef TPPCALL
 #define TPPCALL /* nothing */
@@ -153,25 +183,47 @@
 #define tpp_restrict __restrict
 #endif /* !tpp_restrict */
 #ifndef TPP_NONNULL
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__nonnull__)
+#define TPP_NONNULL(x) __attribute__((__nonnull__ x))
+#else /* ... */
 #define TPP_NONNULL(x) /* nothing */
+#endif /* !... */
 #endif /* !TPP_NONNULL */
 #ifndef TPP_WUNUSED
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__warn_unused_result__)
+#define TPP_WUNUSED __attribute__((__warn_unused_result__))
+#else /* ... */
 #define TPP_WUNUSED /* nothing */
+#endif /* !... */
 #endif /* !TPP_WUNUSED */
 #ifndef TPP_RETNONNULL
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__returns_nonnull__)
+#define TPP_RETNONNULL __attribute__((__returns_nonnull__))
+#else /* ... */
 #define TPP_RETNONNULL /* nothing */
+#endif /* !... */
 #endif /* !TPP_RETNONNULL */
 #ifndef TPP_PURECALL
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__pure__)
+#define TPP_PURECALL __attribute__((__pure__))
+#elif defined(_MSC_VER) || TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(noalias)
+#define TPP_PURECALL __declspec(noalias)
+#else /* ... */
 #define TPP_PURECALL /* nothing */
+#endif /* !... */
 #endif /* !TPP_PURECALL */
 #ifndef TPP_CONSTCALL
-#define TPP_CONSTCALL /* nothing */
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__const__)
+#define TPP_CONSTCALL __attribute__((__const__))
+#else /* ... */
+#define TPP_CONSTCALL TPP_PURECALL
+#endif /* !... */
 #endif /* !TPP_CONSTCALL */
 #ifndef TPP_NOINLINE
-#ifdef _MSC_VER
-#define TPP_NOINLINE __declspec(noinline)
-#elif defined(__GNUC__)
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__noinline__)
 #define TPP_NOINLINE __attribute__((__noinline__))
+#elif defined(_MSC_VER) || TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(noinline)
+#define TPP_NOINLINE __declspec(noinline)
 #else /* ... */
 #define TPP_NOINLINE /* nothing */
 #endif /* !... */
@@ -180,26 +232,15 @@
 #define TPP_FLEX_ARRAY 4096
 #endif /* !TPP_FLEX_ARRAY */
 #ifndef TPP_FALLTHRU
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
+#if TPP_HOST_HAS_CPP_ATTRIBUTE(fallthrough)
 #define TPP_FALLTHRU [[fallthrough]];
-#endif /* __has_cpp_attribute(fallthrough) */
-#endif /* __has_cpp_attribute */
-#ifndef TPP_FALLTHRU
-#ifdef __has_attribute
-#if __has_attribute(fallthrough)
+#elif TPP_HOST_HAS_ATTRIBUTE(__fallthrough__)
 #define TPP_FALLTHRU __attribute__((__fallthrough__));
-#endif /* __has_attribute(fallthrough) */
-#endif /* __has_attribute */
-#ifndef TPP_FALLTHRU
-#if defined(__GNUC__) && (__GNUC__ > 6 || (__GNUC__ == 6 && __GNUC_MINOR__ >= 3))
+#elif defined(__GNUC__) && (__GNUC__ > 6 || (__GNUC__ == 6 && __GNUC_MINOR__ >= 3))
 #define TPP_FALLTHRU __attribute__((__fallthrough__));
-#endif /* ... */
-#ifndef TPP_FALLTHRU
+#else /* ... */
 #define TPP_FALLTHRU /* @fallthrough@ */
-#endif /* !TPP_FALLTHRU */
-#endif /* !TPP_FALLTHRU */
-#endif /* !TPP_FALLTHRU */
+#endif /* !... */
 #endif /* !TPP_FALLTHRU */
 
 /* Does the host preprocessor have support for __VA_ARGS__? */
