@@ -6688,7 +6688,9 @@ TPP_DECL_END
 #ifndef tpp_io_handle
 #define tpp_io_handle_IS_BUILTIN
 #if TPP_OS_WINDOWS
+#ifndef TPP_NO_SYSTEM_INCLUDES
 #include <Windows.h>
+#endif /* !TPP_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle HANDLE
 #define tpp_io_handle_IS_HANDLE
 #define tpp_io_handle_INVALID INVALID_HANDLE_VALUE
@@ -6697,7 +6699,9 @@ TPP_DECL_END
 #define tpp_io_handle_IS_int
 #define tpp_io_handle_INVALID (-1)
 #else /* ... */
+#ifndef TPP_NO_SYSTEM_INCLUDES
 #include <stdio.h>
+#endif /* !TPP_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle FILE *
 #define tpp_io_handle_IS_FILE
 #define tpp_io_handle_INVALID NULL
@@ -6892,7 +6896,9 @@ TPP_DECL_END
 /************************************************************************/
 #if TPP_HAVE_TIME_API
 #ifndef tpp_time
+#ifndef TPP_NO_SYSTEM_INCLUDES
 #include <time.h>
+#endif /* !TPP_NO_SYSTEM_INCLUDES */
 
 TPP_DECL_BEGIN
 

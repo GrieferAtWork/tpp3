@@ -34,11 +34,11 @@
 #include "warnings.h"
 
 /*[[[tpp-begin]]]*/
-#ifndef TPP_NO_SYSTEM_INCLUDES
 #if TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER
+#ifndef TPP_NO_SYSTEM_INCLUDES
 #include <stdio.h>
-#endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
 #endif /* !TPP_NO_SYSTEM_INCLUDES */
+#endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
 
 TPP_DECL_BEGIN
 

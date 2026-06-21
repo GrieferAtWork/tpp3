@@ -82,7 +82,9 @@
 #ifndef tpp_io_handle
 #define tpp_io_handle_IS_BUILTIN
 #if TPP_OS_WINDOWS
+#ifndef TPP_NO_SYSTEM_INCLUDES
 #include <Windows.h>
+#endif /* !TPP_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle HANDLE
 #define tpp_io_handle_IS_HANDLE
 #define tpp_io_handle_INVALID INVALID_HANDLE_VALUE
@@ -91,7 +93,9 @@
 #define tpp_io_handle_IS_int
 #define tpp_io_handle_INVALID (-1)
 #else /* ... */
+#ifndef TPP_NO_SYSTEM_INCLUDES
 #include <stdio.h>
+#endif /* !TPP_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle FILE *
 #define tpp_io_handle_IS_FILE
 #define tpp_io_handle_INVALID NULL
