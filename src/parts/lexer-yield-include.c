@@ -115,11 +115,52 @@ handle_error:
 	return TPP_TOK_OFERR(error);
 }
 
-/* Handle a keyword-style macro.
- * @return: TPP_TOK_EOF: Caller should yield again.
- * @return: * : The new expansion token after keywords were handled */
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok);
+#if TPP_HAVE_FILE_NONBLOCK
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_yieldraw_at_include_string_blocking(tpp_lexer *tpp_restrict self,
+                                              tpp_char const **p_pos) {
+	tpp_token_id result;
+again:
+	result = tpp_lexer_yieldraw_at_include_string(self, p_pos);
+	if (result == TPP_TOK_EWOULDBLOCK) {
+		tpp_file *const file = tpp_lexer_getfile(self);
+		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
+		tpp_assert(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NONBLOCK);
+		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
+		tpp_lexer_autopopfile_pushoff(self);
+		result = tpp_lexer_yieldraw_at_include_string(self, p_pos);
+		tpp_lexer_autopopfile_pop(self);
+		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
+		if (result == TPP_TOK_EOF)
+			goto again; /* EOF was encountered after blocking... */
+		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
+	}
+	return result;
+}
+
+#if TPP_HAVE_CPP_MACROS
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_include_string_blocking(tpp_lexer *tpp_restrict self) {
+	tpp_token_id result;
+again:
+	result = tpp_lexer_yield_include_string(self);
+	if (result == TPP_TOK_EWOULDBLOCK) {
+		tpp_file *const file = tpp_lexer_getfile(self);
+		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
+		tpp_assert(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NONBLOCK);
+		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
+		tpp_lexer_autopopfile_pushoff(self);
+		result = tpp_lexer_yield_include_string(self);
+		tpp_lexer_autopopfile_pop(self);
+		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
+		if (result == TPP_TOK_EOF)
+			goto again; /* EOF was encountered after blocking... */
+		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
+	}
+	return result;
+}
+#endif /* TPP_HAVE_CPP_MACROS */
+#endif /* TPP_HAVE_FILE_NONBLOCK */
 
 
 /* (Mostly) the same as "tpp_lexer_yield()", except:
@@ -140,6 +181,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok);
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+#if TPP_HAVE_CPP_MACROS
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_include_string(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;
@@ -153,6 +195,7 @@ again:
 	}
 	return result;
 }
+#endif /* TPP_HAVE_CPP_MACROS */
 #endif /* TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 

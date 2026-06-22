@@ -1276,13 +1276,10 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 #endif /* TPP_HAVE_CPP_MACROS */
 
-/* Handle a keyword-style macro.
+/* Handle a keyword-style macro (used to implement "tpp_lexer_yield()").
  * @return: TPP_TOK_EOF: Caller should yield again.
  * @return: * : The new expansion token after keywords were handled */
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok);
-
-TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
 	tpp_keyword const *const keyword = token->tt_kwd;

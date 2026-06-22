@@ -867,6 +867,12 @@ tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield(tpp_lexer *tpp_restrict self);
 
+/* Handle a keyword-style macro (used to implement "tpp_lexer_yield()").
+ * @return: TPP_TOK_EOF: Caller should yield again.
+ * @return: * : The new expansion token after keywords were handled */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok);
+
 
 
 #if TPP_HAVE_FILE_NONBLOCK
@@ -917,10 +923,29 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+#if TPP_HAVE_CPP_MACROS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_include_string(tpp_lexer *tpp_restrict self);
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_lexer_yield_include_string(self) tpp_lexer_yieldraw_include_string(self)
+#endif /* !TPP_HAVE_CPP_MACROS */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+#if TPP_HAVE_FILE_NONBLOCK
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_yieldraw_at_include_string_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+#if TPP_HAVE_CPP_MACROS
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_include_string_blocking(tpp_lexer *tpp_restrict self);
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_lexer_yield_include_string_blocking(self) tpp_lexer_yieldraw_include_string_blocking(self)
+#endif /* !TPP_HAVE_CPP_MACROS */
+#else /* TPP_HAVE_FILE_NONBLOCK */
+#define tpp_lexer_yieldraw_at_include_string_blocking(self, p_pos) tpp_lexer_yieldraw_at_include_string(self, p_pos)
+#define tpp_lexer_yield_include_string_blocking(self)              tpp_lexer_yield_include_string(self)
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+#define tpp_lexer_yieldraw_include_string_blocking(self, p_pos) \
+	tpp_lexer_yieldraw_at_include_string_blocking(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
 #define tpp_lexer_yieldraw_include_string(self) \
 	tpp_lexer_yieldraw_at_include_string(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
 #endif /* TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */

@@ -116,7 +116,7 @@ typedef struct tpp_seek_rparen_state {
 	tpp_string_builder tsrps_curarg_prefix;
 #define tpp_seek_rparen_state_init_curarg(self) \
 	tpp_string_builder_init(&(self)->tsrps_curarg_prefix)
-#define tpp_seek_rparen_state_fini_curarg(self)               \
+#define tpp_seek_rparen_state_fini_curarg(self) \
 	tpp_string_builder_fini(&(self)->tsrps_curarg_prefix)
 #define tpp_seek_rparen_state_curarg_append(self, data, size) \
 	(tpp_string_builder_print(&(self)->tsrps_curarg_prefix, data, size) >= 0)

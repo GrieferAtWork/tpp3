@@ -2769,6 +2769,7 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||           \
 	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT ||             \
 	 TPP_HAVE_TPP_W_EXPECTED_STRING ||                          \
+	 TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING ||                  \
 	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF ||                         \
 	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE ||                  \
 	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF ||                  \
@@ -2848,6 +2849,12 @@ TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT, 1(TPP_WG_SYNTAX), 1(7615), TPP_W
 TPP_WARNING(TPP_W_EXPECTED_STRING, 1(TPP_WG_SYNTAX), 1(4081), TPP_WSTATE_UNDEFINED,
             "expected <string>, but got %Pt")
 #endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+
+#if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
+#define TPP_W_EXPECTED_INCLUDE_STRING TPP_W_EXPECTED_INCLUDE_STRING
+TPP_WARNING(TPP_W_EXPECTED_INCLUDE_STRING, 1(TPP_WG_SYNTAX), 1(2006), TPP_WSTATE_UNDEFINED,
+            "expected <include-string>, but got %Pt")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
 
 #if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
 #define TPP_W_EOF_BEFORE_ENDIF TPP_W_EOF_BEFORE_ENDIF
@@ -3193,6 +3200,25 @@ TPP_WARNING(TPP_W_CANNOT_POP_EXTENSIONS, 1(TPP_WG_EXTENSION), 0(), TPP_WSTATE_UN
 
 
 /************************************************************************/
+/* -Wenviron                                                            */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_ENVIRON
+#define TPP_HAVE_TPP_WG_ENVIRON \
+	(TPP_HAVE_TPP_W_NO_SUCH_FILE)
+#endif /* !TPP_HAVE_TPP_WG_ENVIRON */
+#if TPP_HAVE_TPP_WG_ENVIRON
+#define TPP_WG_ENVIRON TPP_WG_ENVIRON
+TPP_WGROUP(TPP_WG_ENVIRON, 1("environ"), TPP_WSTATE_ERROR_OR_FATAL) /* XXX: Some other warning name? */
+#endif /* TPP_HAVE_TPP_WG_ENVIRON */
+
+#if TPP_HAVE_TPP_W_NO_SUCH_FILE
+#define TPP_W_NO_SUCH_FILE TPP_W_NO_SUCH_FILE
+TPP_WARNING(TPP_W_NO_SUCH_FILE, 1(TPP_WG_ENVIRON), 1(1083), TPP_WSTATE_UNDEFINED,
+            "no such file: %Pt")
+#endif /* TPP_HAVE_TPP_W_NO_SUCH_FILE */
+
+
+/************************************************************************/
 /* Misc warnings...                                                     */
 /************************************************************************/
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -3251,7 +3277,6 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 
 //TODO:TPP_WGROUP(TPP_WG_USAGE, /*          */ 1("usage"),                TPP_WSTATE_FATAL)
 //TODO:TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
-//TODO:TPP_WGROUP(TPP_WG_ENVIRON, /*        */ 1("environ"),              TPP_WSTATE_FATAL)
 //TODO:TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
 //TODO:TPP_WGROUP(TPP_WG_QUALITY, /*        */ 1("quality"),              TPP_WSTATE_FATAL)
 //TODO:TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WARN)

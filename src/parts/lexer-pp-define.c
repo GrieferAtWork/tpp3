@@ -1450,9 +1450,7 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 		if (!TPP_TOK_ISUSERKEYWORD(keyword->tk_id) &&
 		    tpp_lexer_getkeyworddefined(self, keyword)) {
 			/* Warning if macro is builtin and defined */
-			error = tpp_lexer_warnf_at(self, token->tt_end,
-			                           TPP_W_DEFINE_BUILTIN_MACRO,
-			                           keyword->tk_kwd);
+			error = tpp_lexer_warnf(self, TPP_W_DEFINE_BUILTIN_MACRO, keyword->tk_kwd);
 			if (TPP_ISERR(error)) {
 				tpp_macro_decref(macro);
 				return TPP_TOK_OFERR(error);
@@ -1464,9 +1462,7 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_TPP_W_REDEFINE_MACRO
 		if (!tpp_macro_equals(keyword->tk_macro, macro)) {
 			/* Warning about macro redefinition */
-			error = tpp_lexer_warnf_at(self, token->tt_end,
-			                           TPP_W_REDEFINE_MACRO,
-			                           keyword);
+			error = tpp_lexer_warnf(self, TPP_W_REDEFINE_MACRO, keyword);
 			if (TPP_ISERR(error)) {
 				tpp_macro_decref(macro);
 				return TPP_TOK_OFERR(error);

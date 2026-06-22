@@ -117,9 +117,9 @@ typedef struct tpp_ifdef_stack {
 	tpp_ifdef_stack_entry *TPP_INTERNAL(tids_vec); /* [0..tids_cnt][owned] Vector of active #ifdef-stack entries */
 } tpp_ifdef_stack;
 
-#define tpp_ifdef_stack_init(self) \
-	(void)((self)->TPP_INTERNAL(tids_alc) = 0,   \
-	       (self)->TPP_INTERNAL(tids_cnt) = 0,   \
+#define tpp_ifdef_stack_init(self)             \
+	(void)((self)->TPP_INTERNAL(tids_alc) = 0, \
+	       (self)->TPP_INTERNAL(tids_cnt) = 0, \
 	       (self)->TPP_INTERNAL(tids_vec) = NULL)
 #define tpp_ifdef_stack_fini(self) \
 	tpp_free((self)->TPP_INTERNAL(tids_vec))
