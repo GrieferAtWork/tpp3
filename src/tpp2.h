@@ -1178,7 +1178,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *  - TPP3 no longer includes "builtin" function support, nor does it try to pre-
  *    define CPU-specific macros. As such, these config options (which used to
  *    configure which macros/builtins are available) are no longer needed.
- *  - Adding CPU-specific should be done by the API user in TPP3
+ *  - Adding CPU-specific should be done by the API user in TPP3, though this header
+ *    does continue to provide them (only if: #ifndef TPP2_NO_AUTOCONFIGURE_TPP3_DEFS)
  */
 
 /* TPP_UNESCAPE_MAXCHAR
@@ -2265,7 +2266,9 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS TPP_CONFIG_EXTENSION_MSVC_FIXED_INT    /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes in builtin lexer expressions */
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS     1                                      /* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
 
-/* Misc features */
+/* Include-path-related features */
+#define TPP_HAVE_INCLUDE_PATH_QUOTE             0 /* TPP2 only had a system-include-path list */
+#define TPP_HAVE_INCLUDE_PATH_AFTER             0 /* TPP2 only had a system-include-path list */
 #define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE 1 /* TPP2 used to do this unconditionally */
 
 /* Force extensions to use the names they'd been using in TPP2 */
@@ -2355,8 +2358,6 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_CONFIG_USERDEFS_FILENAME "tpp2.h"
 #endif /* !TPP_CONFIG_USERDEFS_FILENAME */
 #endif /* !__INTELLISENSE__ */
-
-// TODO: TPP_CONFIG_MINMACRO, TPP_CONFIG_GCCFUNC, TPP_CONFIG_MINGCCFUNC
 #endif /* !TPP2_NO_AUTOCONFIGURE_TPP3_DEFS */
 /************************************************************************/
 
@@ -2697,10 +2698,10 @@ alias("WG_UNDEF", "TPP_WG_UNDEF");
 alias("WG_TRIGRAPHS", "TPP_WG_TRIGRAPHS");
 alias("WG_EXPANSION_TO_DEFINED", "TPP_WG_EXPANSION_TO_DEFINED");
 alias("WG_DEPRECATED", "TPP_WG_DEPRECATED");
+alias("WG_ENVIRON", "TPP_WG_ENVIRON");
 
 //TODO:alias("WG_USAGE", "TPP_WG_USAGE");
 //TODO:alias("WG_BOOLVALUE", "TPP_WG_BOOLVALUE");
-//TODO:alias("WG_ENVIRON", "TPP_WG_ENVIRON");
 //TODO:alias("WG_LIMIT", "TPP_WG_LIMIT");
 //TODO:alias("WG_QUALITY", "TPP_WG_QUALITY");
 //TODO:alias("WG_DEPENDENCY", "TPP_WG_DEPENDENCY");
@@ -2769,6 +2770,13 @@ alias("W_EXPECTED_RBRACKET_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
 alias("W_EXPECTED_COMMA", "TPP_W_UNEXPECTED_TOKEN");
 alias("W_INTEGRAL_OVERFLOW", "TPP_W_INVALID_INTEGER");
 alias("W_EXPECTED_ELSE_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
+alias("W_EXPECTED_INCLUDE_STRING", "TPP_W_EXPECTED_INCLUDE_STRING");
+alias("W_FILE_NOT_FOUND", "TPP_W_NO_SUCH_FILE");
+alias("W_EXPECTED_STRING_AFTER_LINE", "TPP_W_EXPECTED_STRING");
+alias("W_EXPECTED_COLON_AFTER_WARNING", "TPP_W_UNEXPECTED_TOKEN");
+alias("W_EXPECTED_COLLON_AFTER_WARNING", "TPP_W_UNEXPECTED_TOKEN");
+alias("W_UNKNOWN_EXTENSION", "TPP_W_UNKNOWN_EXTENSION");
+alias("W_CANT_POP_EXTENSIONS", "TPP_W_CANNOT_POP_EXTENSIONS");
 ]]]*/
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_EOF TPP_TOK_EOF
@@ -3852,6 +3860,9 @@ alias("W_EXPECTED_ELSE_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_WG_DEPRECATED)
 #define WG_DEPRECATED TPP_WG_DEPRECATED
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_WG_DEPRECATED */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_WG_ENVIRON)
+#define WG_ENVIRON TPP_WG_ENVIRON
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_WG_ENVIRON */
 #ifdef TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #define TPP_W_EXPECTED_KEYWORD_AFTER_DEFINE TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -4194,6 +4205,42 @@ alias("W_EXPECTED_ELSE_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
 #define W_EXPECTED_ELSE_IN_EXPRESSION TPP_W_UNEXPECTED_TOKEN
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_W_UNEXPECTED_TOKEN */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_EXPECTED_INCLUDE_STRING)
+#define W_EXPECTED_INCLUDE_STRING TPP_W_EXPECTED_INCLUDE_STRING
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_EXPECTED_INCLUDE_STRING */
+#ifdef TPP_W_NO_SUCH_FILE
+#define TPP_W_FILE_NOT_FOUND TPP_W_NO_SUCH_FILE
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_FILE_NOT_FOUND TPP_W_NO_SUCH_FILE
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_NO_SUCH_FILE */
+#ifdef TPP_W_EXPECTED_STRING
+#define TPP_W_EXPECTED_STRING_AFTER_LINE TPP_W_EXPECTED_STRING
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_STRING_AFTER_LINE TPP_W_EXPECTED_STRING
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_EXPECTED_STRING */
+#ifdef TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_EXPECTED_COLON_AFTER_WARNING TPP_W_UNEXPECTED_TOKEN
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_COLON_AFTER_WARNING TPP_W_UNEXPECTED_TOKEN
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNEXPECTED_TOKEN */
+#ifdef TPP_W_UNEXPECTED_TOKEN
+#define TPP_W_EXPECTED_COLLON_AFTER_WARNING TPP_W_UNEXPECTED_TOKEN
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_COLLON_AFTER_WARNING TPP_W_UNEXPECTED_TOKEN
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNEXPECTED_TOKEN */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_UNKNOWN_EXTENSION)
+#define W_UNKNOWN_EXTENSION TPP_W_UNKNOWN_EXTENSION
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_UNKNOWN_EXTENSION */
+#ifdef TPP_W_CANNOT_POP_EXTENSIONS
+#define TPP_W_CANT_POP_EXTENSIONS TPP_W_CANNOT_POP_EXTENSIONS
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_CANT_POP_EXTENSIONS TPP_W_CANNOT_POP_EXTENSIONS
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_CANNOT_POP_EXTENSIONS */
 /*[[[end]]]*/
 
 //TODO: /* #define TPP_CONFIG_CALLBACK_WARNING          x // int x(int wnum, ...) { ... } -- A user-replacement for `TPPLexer_Warn' */
@@ -4209,11 +4256,7 @@ alias("W_EXPECTED_ELSE_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
 //TODO: /* #define TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE     1 */
 
 
-//TODO:/*14*/ DEF_WARNING(W_EXPECTED_INCLUDE_STRING, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected #include-string, but got " TOK_S, TOK_A))                                     /* OLD(TPPWarn_ExpectedIncludeString). */
-//TODO:/*15*/ DEF_WARNING(W_FILE_NOT_FOUND, (WG_ENVIRON), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("File not found: " Q("%.*s"), (int)ARG(size_t), temp); })           /* [char const *,size_t] OLD(TPPWarn_IncludeFileNotFound). */
-//TODO:/*35*/ DEF_WARNING(W_EXPECTED_STRING_AFTER_LINE, (WG_SYNTAX, WG_VALUE), WSTATE_ERROR, WARNF("Expected string after #line, but got " Q("%s"), CONST_STR())) /* [struct TPPConst *] OLD(TPPWarn_ExpectedStringAfterLine). */
 //TODO:/*36*/ DEF_WARNING(W_MACRO_NOT_DEFINED, (WG_MACROS), WSTATE_DISABLED, WARNF("Macro " Q("%s") " is not defined", KWDNAME()))                                /* [struct TPPKeyword *] OLD(TPPWarn_MacroDoesntExist). */
-
 //TODO:/*50*/ DEF_WARNING(W_INVALID_WARNING, (WG_VALUE), WSTATE_ERROR, {
 //TODO:	/* [struct TPPConst *] OLD(TPPWarn_InvalidWarning). */
 //TODO:	struct TPPConst *c = ARG(struct TPPConst *);
@@ -4258,18 +4301,14 @@ alias("W_EXPECTED_ELSE_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
 //TODO:DEF_WARNING(W_KEYWORD_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Keyword-style macro " Q("%s") " is already being expanded", FILENAME()))      /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_FUNCTION_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Function-style macro " Q("%s") " is expanded to the same text", FILENAME())) /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_INDEX_OUT_OF_BOUNDS, (WG_VALUE), WSTATE_DISABLED, { struct TPPString *s = ARG(struct TPPString *); WARNF("Index %ld is out-of-bounds of 0..%lu", (unsigned long)s->s_size, (unsigned long)ARG(ptrdiff_t)); })                                                                                            /* [struct TPPString *,ptrdiff_t]. */
-//TODO:DEF_WARNING(W_EXPECTED_COLON_AFTER_WARNING, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(":") " after #pragma warning, but got " TOK_S, TOK_A))                    /* . */
-//TODO:#define W_EXPECTED_COLLON_AFTER_WARNING W_EXPECTED_COLON_AFTER_WARNING
 //TODO:DEF_WARNING(W_MACRO_RECURSION_LIMIT_EXCEEDED, (WG_LIMIT), WSTATE_ERROR, WARNF("Macro recursion limit exceeded when expanding " Q("%s") " (Consider passing " Q("-fno-macro-recursion") ")", FILENAME())) /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_INCLUDE_RECURSION_LIMIT_EXCEEDED, (WG_LIMIT), WSTATE_ERROR, WARNF("Include recursion limit exceeded when including " Q("%s"), FILENAME()))                                                 /* [struct TPPFile *]. */
-//TODO:DEF_WARNING(W_UNKNOWN_EXTENSION, (WG_VALUE), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("Unknown extension " Q("%s") " (Did you mean " Q("%s") "?)", temp,find_most_likely_extension(temp)); })                                                                                                                                          /* [char const *]. */
 //TODO:DEF_WARNING(W_IDENT_SCCS_IGNORED, (WG_USAGE), WSTATE_WARN, WARNF("#ident/sccs with " Q("%s") " is ignored", CONST_STR())) /* [struct TPPConst *]. */
 //TODO:DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_ASSERT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword after #assert, but got " TOK_S, TOK_A))                                        /* . */
 //TODO:DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_PREDICATE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword after predicate " Q("%s") " in #assert, but got " TOK_S, KWDNAME(), TOK_A)) /* [struct TPPKeyword *]. */
 //TODO:DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_EXPR_HASH, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword after # in expression, but got " TOK_S, TOK_A)) /* . */
 //TODO:DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_EXPR_PRED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword after predicate " Q("%s") " in expression, but got " TOK_S, KWDNAME(), TOK_A)) /* . */
 //TODO:DEF_WARNING(W_UNKNOWN_ASSERTION, (WG_VALUE), WSTATE_DISABLED, { char const *temp = KWDNAME(); WARNF("Assertion " Q("%s") " does not contain a predicate " Q("%s"), temp, KWDNAME()); }) /* [struct TPPKeyword *,struct TPPKeyword *]. */
-//TODO:DEF_WARNING(W_CANT_POP_EXTENSIONS, (WG_VALUE), WSTATE_ERROR, WARNF("Can't pop extensions"))                                                                                     /* . */
 //TODO:DEF_WARNING(W_CANT_POP_INCLUDE_PATH, (WG_VALUE), WSTATE_ERROR, WARNF("Can't pop #include paths"))                                                                               /* . */
 //TODO:DEF_WARNING(W_CONSIDER_PAREN_AROUND_LAND, (WG_QUALITY), WSTATE_WARN, WARNF("Consider adding parenthesis around " Q("&&") " to prevent confusion with " Q("||")))                /* . */
 //TODO:DEF_WARNING(W_INTEGRAL_CLAMPED, (WG_VALUE), WSTATE_WARN, WARNF("Integral constant clamped to fit")) /* [tint_t,tint_t]. */
@@ -4859,43 +4898,37 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 }
 
 
-#if 0 /* TODO */
-//struct TPPIncludeList {
-//	/* List of sanitized #include paths. */
-//	struct TPPIncludeList    *il_prev;  /* [0..1][owned] Pointer to another m-allocated list of system #include-paths.
-//	                                     *                This field is used to implement system #include-path push/pop. */
-//	size_t                    il_pathc; /* Amount of elements in the vector below. */
-//	/*ref*/struct TPPString **il_pathv; /* [1..1][0..il_pathc][owned] Vector of sanitized #include path. */
-//};
-//
-///* Push/Pop the current system #include-path list.
-// * @return: 0: [TPPLexer_PushInclude] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
-// * @return: 0: [TPPLexer_PopInclude] No older #include-path list was available to restore.
-// * @return: 1: Successfully pushed/popped the system #include-path list. */
-//TPPFUN int TPPCALL TPPLexer_PushInclude_(TPP_LEXER_PARAM);
-//TPPFUN int TPPCALL TPPLexer_PopInclude_(TPP_LEXER_PARAM);
-//#define TPPLexer_PushInclude() TPPLexer_PushInclude_(TPP_LEXER_ARG)
-//#define TPPLexer_PopInclude()  TPPLexer_PopInclude_(TPP_LEXER_ARG)
-//
-///* Add/delete the given path from the list of system #include paths.
-// * WARNING: This function will modify the given path.
-// * WARNING: Be careful with absolute vs. relative paths!
-// *          TPP can not tell that they're the same and
-// *          `#pragma once' might break as a consequence!
-// *       >> As a solution, _always_ use either absolute
-// *          or relative paths for the same file/path.
-// *         (This also goes for #include directives)
-// * @return: 0: [TPPLexer_AddIncludePath] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
-// * @return: 1: [TPPLexer_AddIncludePath] The given path was successfully added.
-// * @return: 2: [TPPLexer_AddIncludePath] The given path had already been added before.
-// * @return: 0: [TPPLexer_DelIncludePath] The given path was not found.
-// * @return: 1: [TPPLexer_DelIncludePath] The given path was successfully removed. */
-//TPPFUN int TPPCALL TPPLexer_AddIncludePath_(TPP_LEXER_PARAM_ char *tpp_restrict path, size_t pathsize);
-//TPPFUN int TPPCALL TPPLexer_DelIncludePath_(TPP_LEXER_PARAM_ char *tpp_restrict path, size_t pathsize);
-//#define TPPLexer_AddIncludePath(path, pathsize) TPPLexer_AddIncludePath_(TPP_LEXER_ARG_ path, pathsize)
-//#define TPPLexer_DelIncludePath(path, pathsize) TPPLexer_DelIncludePath_(TPP_LEXER_ARG_ path, pathsize)
-#endif
+#define TPPIncludeList tpp_include_paths
+#define il_prev  TPP_INTERNAL(tip_prev)                                /* Use tpp_lexer_canpopincludes() */
+#define il_pathc TPP_INTERNAL(tip_system_list).TPP_INTERNAL(tipl_size) /* Use tpp_lexer_includes_numsystem() */
+#define il_pathv TPP_INTERNAL(tip_system_list).TPP_INTERNAL(tipl_list) /* Use tpp_lexer_includes_getsystem() */
 
+/* Push/Pop the current system #include-path list.
+ * @return: 0: [TPPLexer_PushInclude] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
+ * @return: 0: [TPPLexer_PopInclude] No older #include-path list was available to restore.
+ * @return: 1: Successfully pushed/popped the system #include-path list. */
+#define TPPLexer_PushInclude_(self) (tpp_lexer_pushincludes(self), 1)
+#define TPPLexer_PopInclude_(self)  (tpp_lexer_canpopincludes(self) ? (tpp_lexer_popincludes(self), 1) : 0)
+#define TPPLexer_PushInclude()      TPPLexer_PushInclude_(TPP2_LEXER)
+#define TPPLexer_PopInclude()       TPPLexer_PopInclude_(TPP2_LEXER)
+
+/* Add/delete the given path from the list of system #include paths.
+ * WARNING: This function will modify the given path.
+ * WARNING: Be careful with absolute vs. relative paths!
+ *          TPP can not tell that they're the same and
+ *          `#pragma once' might break as a consequence!
+ *       >> As a solution, _always_ use either absolute
+ *          or relative paths for the same file/path.
+ *          (This also goes for #include directives)
+ * @return: 0: [TPPLexer_AddIncludePath] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
+ * @return: 1: [TPPLexer_AddIncludePath] The given path was successfully added.
+ * @return: 2: [TPPLexer_AddIncludePath] The given path had already been added before.
+ * @return: 0: [TPPLexer_DelIncludePath] The given path was not found.
+ * @return: 1: [TPPLexer_DelIncludePath] The given path was successfully removed. */
+#define TPPLexer_AddIncludePath_(self, path, pathsize) (tpp_lexer_includes_addsystem(self, path, pathsize) == TPP_ENOMEM ? 0 : 1)
+#define TPPLexer_DelIncludePath_(self, path, pathsize) (tpp_lexer_includes_delsystem(self, path, pathsize) == TPP_ENOMEM ? 0 : 1)
+#define TPPLexer_AddIncludePath(path, pathsize)        TPPLexer_AddIncludePath_(TPP2_LEXER, path, pathsize)
+#define TPPLexer_DelIncludePath(path, pathsize)        TPPLexer_DelIncludePath_(TPP2_LEXER, path, pathsize)
 
 #if 0 /* TODO */
 //#ifndef TPP_CONFIG_NO_ASSERTIONS
@@ -5128,11 +5161,13 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #undef l_extokens    /* No longer exists: recognized tokens are controlled via "tpp_lexer_setfeat()" */
 #define l_extensions TPP_INTERNAL(tl_exts) /* Use tpp_lexer_getextension() / tpp_lexer_pushextensions() / ... */
 #define l_keywords   TPP_INTERNAL(tl_kwds) /* Use tpp_lexer_kwds_*() */
+#define l_syspaths   TPP_INTERNAL(tl_include_paths) /* Use tpp_lexer_includes_*() */
 #if 0 /* TODO */
-//	struct TPPIncludeList l_syspaths;   /* List of paths searched when looking for system #include files. */
 //	size_t                l_limit_mrec; /* Limit for how often a macro may recursively expand into itself. */
 //	size_t                l_limit_incl; /* Limit for how often the same text file may exist on the #include stack. */
-//	size_t                l_eof_paren;  /* Recursion counter used by the `TPPLEXER_FLAG_EOF_ON_PAREN' flag. */
+#endif
+#undef l_eof_paren   /* No longer supported; see `TPPLEXER_FLAG_EOF_ON_PAREN' */
+#if 0 /* TODO */
 //	size_t                l_warncount;  /* Amount of warnings that were invoked (including those that were dismissed). */
 //#ifdef TPP_CONFIG_DYN_CALLBACKS
 //	struct TPPCallbacks   l_callbacks;  /* User-defined lexer callbacks. */

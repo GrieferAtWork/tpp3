@@ -429,7 +429,7 @@ tpp_lexer_open_include_string_in_path(tpp_lexer *self,
 	tpp_size i;
 	for (i = 0; i < paths->tipl_size; ++i) {
 		tpp_include_path_entry const *entry = &paths->tipl_list[i];
-		char const *path = tpp_include_path_entry_getpath(entry);
+		char const *path = _tpp_include_path_entry_getpath(entry);
 		tpp_errno error = tpp_do_lexer_openfile(path);
 		if (error != TPP_ENOENT)
 			return error;

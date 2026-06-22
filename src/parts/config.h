@@ -1852,7 +1852,11 @@
  * is used to implement "#if" directive expressions
  * @detect: N/A */
 #ifndef TPP_HAVE_LEXER_PARSEEXPR
-#define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED)
+#define TPP_HAVE_LEXER_PARSEEXPR   \
+	(TPP_HAVE_CPP_IF_ELSE_ENDIF || \
+	 TPP_HAVE_MACRO___TPP_EVAL ||  \
+	 TPP_HAVE_CPP_EMBED ||         \
+	 TPP_HAVE_MACRO___has_embed)
 #endif /* !TPP_HAVE_LEXER_PARSEEXPR */
 
 /* Expression parser configuration */
@@ -2025,7 +2029,7 @@
 /* Support for: custom string list describing the available
  * "-I/usr/include-style" -> "#include <foo.h>" -paths */
 #ifndef TPP_HAVE_INCLUDE_PATH
-#define TPP_HAVE_INCLUDE_PATH TPP_HAVE_INCLUDE_STACK
+#define TPP_HAVE_INCLUDE_PATH (TPP_HAVE_INCLUDE_STACK)
 #endif /* !TPP_HAVE_INCLUDE_PATH */
 
 /* "tpp_include_paths" contains a secondary path-list that is only searched during "-strings */
@@ -2061,8 +2065,16 @@
 
 /* Enable support to push/pop the include-path state */
 #ifndef TPP_HAVE_INCLUDE_PATH_PUSH_POP
-#define TPP_HAVE_INCLUDE_PATH_PUSH_POP TPP_HAVE_INCLUDE_PATH
+#define TPP_HAVE_INCLUDE_PATH_PUSH_POP (TPP_HAVE_INCLUDE_PATH)
 #endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+
+/* Use "TPP_REF tpp_string *" instead of "char *" in #include-path lists.
+ * Doing so greatly reduces the overhead when #include-path lists are
+ * pushed/popped, since "tpp_string" can be incref'd, whereas "char"
+ * must be hard-copied. */
+#ifndef TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
+#define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING (TPP_HAVE_INCLUDE_PATH_PUSH_POP)
+#endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 
 /* Enable support for `tpp_file::tf_ifdef' */
 #ifndef TPP_HAVE_IFDEF_STACK

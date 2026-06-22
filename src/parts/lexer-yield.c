@@ -1406,18 +1406,6 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 /************************************************************************/
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
 	/* TODO: __TPP_LOAD_FILE */
-	/* TODO: Parsing the #include-filename can be done by checking of the next token
-	 *       starts with a '<' or '"' character. If it doesn't, but is instead a
-	 *       keyword, then call "tpp_lexer_yield_handle_keyword(self, result)"
-	 *       to (try to) expand said keyword. If that function then returns EOF
-	 *       (the case where the caller is normally expected to yield the next
-	 *       token), simply jump back to repeat the '<' / '"' check.
-	 *       If the next token's first char isn't '<' / '"', that's "-Wsyntax"
-	 *       If the next token doesn't start with '<' / '"', yield it so it is
-	 *       possible to skip SPACE/COMMENT tokens before trying again.
-	 * ^ An implementation like that is completely standard-confirming, since the
-	 *   standard only mandates that macros be expanded in #include-filenames
-	 *   before the '<' / '"' check is to-be repeated. */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
 #if TPP_HAVE_MACRO___TPP_RANDOM
 	/* TODO: __TPP_RANDOM */
@@ -2035,7 +2023,7 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 
 	if (tok == ',') {
-		/* TODO: Seek to the next ','-token, so-long as no unmatched ) ] } or > is found first */
+		/* XXX: Seek to the next ','-token, so-long as no unmatched ) ] } or > is found first */
 	}
 
 err_result_rollback:

@@ -600,6 +600,7 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_TPP_include_path(tpp_lexer *tpp_restrict self) {
 	/* TODO */
 	/* TODO: Only support push when "TPP_HAVE_INCLUDE_PATH_PUSH_POP" */
+	/* TODO: Expand this extension to allow modification of the quote- and after- path lists */
 	(void)self;
 	return TPP_ENOENT;
 }

@@ -292,15 +292,19 @@ typedef struct tpp_lexer {
  * When "TPP_HAVE_conf" is configured as "TPP_CONF_IS_CONST()", return that constant instead. */
 #define tpp_lexer_has(self, conf) _tpp_lexer_has_##conf(self)
 
-#define tpp_lexer_gettok(self)           ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
-#define tpp_lexer_gettoken(self)         (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
-#define tpp_lexer_gettokenkwd(self)      tpp_token_getkwd(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenstart(self)    tpp_token_getstart(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenend(self)      tpp_token_getend(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenlen(self)      tpp_token_getlen(tpp_lexer_gettoken(self))
-#define tpp_lexer_getfile(self)          (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
-#define tpp_lexer_getfilekind(self)      tpp_file_getkind(tpp_lexer_getfile(self))
+/* Current token */
+#define tpp_lexer_gettok(self)        ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
+#define tpp_lexer_gettoken(self)      (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
+#define tpp_lexer_gettokenkwd(self)   tpp_token_getkwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenstart(self) tpp_token_getstart(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenend(self)   tpp_token_getend(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenlen(self)   tpp_token_getlen(tpp_lexer_gettoken(self))
 
+/* Current file */
+#define tpp_lexer_getfile(self)     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
+#define tpp_lexer_getfilekind(self) tpp_file_getkind(tpp_lexer_getfile(self))
+
+/* Warnings... */
 #if TPP_HAVE_WARNINGS
 #if TPP_HAVE_WARNINGS_PUSH_POP
 #define tpp_lexer_pushwarnings(self)   tpp_warnings_push(&(self)->TPP_INTERNAL(tl_warn))
@@ -314,6 +318,7 @@ typedef struct tpp_lexer {
 #define tpp_lexer_invokewarning(self, warning_id, result) tpp_warnings_invoke(&(self)->TPP_INTERNAL(tl_warn), warning_id, result)
 #endif /* TPP_HAVE_WARNINGS */
 
+/* Extensions... */
 #if TPP_HAVE_EXTENSIONS
 #define tpp_lexer_getextension(self, TPP_EXT_x)          tpp_extensions_getid(&(self)->TPP_INTERNAL(tl_exts), TPP_EXT_x)
 #define tpp_lexer_setextension(self, TPP_EXT_x, enabled) tpp_extensions_setid(&(self)->TPP_INTERNAL(tl_exts), TPP_EXT_x, enabled)
@@ -326,6 +331,7 @@ typedef struct tpp_lexer {
 #endif /* TPP_HAVE_EXTENSIONS_PUSH_POP */
 #endif /* TPP_HAVE_EXTENSIONS */
 
+/* Features... */
 #if TPP_HAVE_FEATURES
 #define tpp_lexer_getfeature(self, TPP_FEAT_x)          tpp_features_getid(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
 #define tpp_lexer_setfeature(self, TPP_FEAT_x, enabled) tpp_features_setid(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x, enabled)
@@ -334,6 +340,34 @@ typedef struct tpp_lexer {
 #define tpp_lexer_resetfeatures(self)                   tpp_features_reset(&(self)->TPP_INTERNAL(tl_feat))
 #endif /* TPP_HAVE_FEATURES */
 
+
+/* Include path... */
+#if TPP_HAVE_INCLUDE_PATH
+#define tpp_lexer_includes_addsystem(self, path, path_maxlen)      tpp_include_paths_addsystem(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_addsystem_head(self, path, path_maxlen) tpp_include_paths_addsystem_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_delsystem(self, path, path_maxlen)      tpp_include_paths_delsystem(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_getsystem(self, i)                      tpp_include_paths_getsystem(&(self)->TPP_INTERNAL(tl_include_paths), i)
+#define tpp_lexer_includes_numsystem(self)                         tpp_include_paths_numsystem(&(self)->TPP_INTERNAL(tl_include_paths))
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+#define tpp_lexer_includes_addquote(self, path, path_maxlen)      tpp_include_paths_addquote(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_addquote_head(self, path, path_maxlen) tpp_include_paths_addquote_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_delquote(self, path, path_maxlen)      tpp_include_paths_delquote(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_getquote(self, i)                      tpp_include_paths_getquote(&(self)->TPP_INTERNAL(tl_include_paths), i)
+#define tpp_lexer_includes_numquote(self)                         tpp_include_paths_numquote(&(self)->TPP_INTERNAL(tl_include_paths))
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+#define tpp_lexer_includes_addafter(self, path, path_maxlen)      tpp_include_paths_addafter(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_addafter_head(self, path, path_maxlen) tpp_include_paths_addafter_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_delafter(self, path, path_maxlen)      tpp_include_paths_delafter(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_getafter(self, i)                      tpp_include_paths_getafter(&(self)->TPP_INTERNAL(tl_include_paths), i)
+#define tpp_lexer_includes_numafter(self)                         tpp_include_paths_numafter(&(self)->TPP_INTERNAL(tl_include_paths))
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+#define tpp_lexer_pushincludes(self)   tpp_include_paths_push(&(self)->TPP_INTERNAL(tl_include_paths))
+#define tpp_lexer_popincludes(self)    tpp_include_paths_pop(&(self)->TPP_INTERNAL(tl_include_paths))
+#define tpp_lexer_canpopincludes(self) tpp_include_paths_canpop(&(self)->TPP_INTERNAL(tl_include_paths))
+#endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#endif /* TPP_HAVE_INCLUDE_PATH */
 
 
 

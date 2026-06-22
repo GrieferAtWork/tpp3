@@ -951,7 +951,7 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,
 	}
 
 	tpp_assert(buffer || !num_bytes);
-	result = buffer->ts_str + self->tsb_len;
+	result = buffer->ts_str + self->tsb_len; /* Not a NULL dereference: "ts_str" is an *inline* array */
 	self->tsb_len += num_bytes;
 	return result;
 }
@@ -8857,7 +8857,7 @@ tpp_include_path_strlen(char const *path, tpp_size path_maxlen) {
 }
 
 #define tpp_include_path_entry_equals(entry, path, pathlen)                   \
-	tpp_include_path_entry_equals_impl(tpp_include_path_entry_getpath(entry), \
+	tpp_include_path_entry_equals_impl(_tpp_include_path_entry_getpath(entry), \
 	                                   path, pathlen)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_include_path_entry_equals_impl(char const *entry_path,
@@ -18567,6 +18567,7 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_TPP_include_path(tpp_lexer *tpp_restrict self) {
 	/* TODO */
 	/* TODO: Only support push when "TPP_HAVE_INCLUDE_PATH_PUSH_POP" */
+	/* TODO: Expand this extension to allow modification of the quote- and after- path lists */
 	(void)self;
 	return TPP_ENOENT;
 }
@@ -23945,18 +23946,6 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 /************************************************************************/
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
 	/* TODO: __TPP_LOAD_FILE */
-	/* TODO: Parsing the #include-filename can be done by checking of the next token
-	 *       starts with a '<' or '"' character. If it doesn't, but is instead a
-	 *       keyword, then call "tpp_lexer_yield_handle_keyword(self, result)"
-	 *       to (try to) expand said keyword. If that function then returns EOF
-	 *       (the case where the caller is normally expected to yield the next
-	 *       token), simply jump back to repeat the '<' / '"' check.
-	 *       If the next token's first char isn't '<' / '"', that's "-Wsyntax"
-	 *       If the next token doesn't start with '<' / '"', yield it so it is
-	 *       possible to skip SPACE/COMMENT tokens before trying again.
-	 * ^ An implementation like that is completely standard-confirming, since the
-	 *   standard only mandates that macros be expanded in #include-filenames
-	 *   before the '<' / '"' check is to-be repeated. */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
 #if TPP_HAVE_MACRO___TPP_RANDOM
 	/* TODO: __TPP_RANDOM */
@@ -24574,7 +24563,7 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 
 	if (tok == ',') {
-		/* TODO: Seek to the next ','-token, so-long as no unmatched ) ] } or > is found first */
+		/* XXX: Seek to the next ','-token, so-long as no unmatched ) ] } or > is found first */
 	}
 
 err_result_rollback:
@@ -25004,7 +24993,7 @@ tpp_lexer_open_include_string_in_path(tpp_lexer *self,
 	tpp_size i;
 	for (i = 0; i < paths->tipl_size; ++i) {
 		tpp_include_path_entry const *entry = &paths->tipl_list[i];
-		char const *path = tpp_include_path_entry_getpath(entry);
+		char const *path = _tpp_include_path_entry_getpath(entry);
 		tpp_errno error = tpp_do_lexer_openfile(path);
 		if (error != TPP_ENOENT)
 			return error;

@@ -52,7 +52,7 @@ tpp_include_path_strlen(char const *path, tpp_size path_maxlen) {
 }
 
 #define tpp_include_path_entry_equals(entry, path, pathlen)                   \
-	tpp_include_path_entry_equals_impl(tpp_include_path_entry_getpath(entry), \
+	tpp_include_path_entry_equals_impl(_tpp_include_path_entry_getpath(entry), \
 	                                   path, pathlen)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_include_path_entry_equals_impl(char const *entry_path,

@@ -29,27 +29,20 @@
 #if TPP_HAVE_INCLUDE_PATH
 TPP_DECL_BEGIN
 
-#undef TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
-#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
-#define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING 1
-#else /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
-#define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING 0
-#endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
-
 typedef struct tpp_include_path_entry {
 #if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
-	TPP_REF tpp_string *tipe_pathstr; /* [1..1] The path described by this entry (with a trailing TPP_FS_SEP_S). */
+	TPP_REF tpp_string *TPP_INTERNAL(tipe_pathstr); /* [1..1] The path described by this entry (with a trailing TPP_FS_SEP_S). */
 #else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
-	char               *tipe_path;    /* [1..1][owned] The path described by this entry (with a trailing TPP_FS_SEP_S). */
+	char               *TPP_INTERNAL(tipe_path);    /* [1..1][owned] The path described by this entry (with a trailing TPP_FS_SEP_S). */
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 } tpp_include_path_entry;
 
 #if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
-#define _tpp_include_path_entry_fini(self)   tpp_string_decref((self)->TPP_INTERNAL(tipe_pathstr))
-#define tpp_include_path_entry_getpath(self) tpp_string_cstr((self)->TPP_INTERNAL(tipe_pathstr))
+#define _tpp_include_path_entry_fini(self)    tpp_string_decref((self)->TPP_INTERNAL(tipe_pathstr))
+#define _tpp_include_path_entry_getpath(self) tpp_string_cstr((self)->TPP_INTERNAL(tipe_pathstr))
 #else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
-#define _tpp_include_path_entry_fini(self)   tpp_free((self)->TPP_INTERNAL(tipe_path))
-#define tpp_include_path_entry_getpath(self) ((char const *)(self)->TPP_INTERNAL(tipe_path))
+#define _tpp_include_path_entry_fini(self)    tpp_free((self)->TPP_INTERNAL(tipe_path))
+#define _tpp_include_path_entry_getpath(self) ((char const *)(self)->TPP_INTERNAL(tipe_path))
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 
 typedef struct tpp_include_path_list {
@@ -63,6 +56,14 @@ typedef struct tpp_include_path_list {
 	       (self)->TPP_INTERNAL(tipl_size) = 0)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_include_path_list_fini(tpp_include_path_list *tpp_restrict self);
+
+/* Return the # of paths described by "self" */
+#define tpp_include_path_list_getcount(self) \
+	(self)->TPP_INTERNAL(tipl_size)
+
+/* Return the i'th path as a NUL-terminated string. */
+#define tpp_include_path_list_getentry(self, i) \
+	_tpp_include_path_entry_getpath(&(self)->TPP_INTERNAL(tipl_list)[i])
 
 /* Append the given "path" to "self".
  * @param: path:        The path to append.
@@ -139,6 +140,18 @@ typedef struct tpp_include_paths {
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
 
+
+/* Access include paths */
+#define tpp_include_paths_numsystem(self)    tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_system_list))
+#define tpp_include_paths_getsystem(self, i) tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_system_list), i)
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+#define tpp_include_paths_numquote(self)     tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_quote_list))
+#define tpp_include_paths_getquote(self, i)  tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_quote_list), i)
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+#define tpp_include_paths_numafter(self)     tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_after_list))
+#define tpp_include_paths_getafter(self, i)  tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_after_list), i)
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 
 /* Helper methods to add/remove paths to different include path lists */
 #if TPP_HAVE_INCLUDE_PATH_PUSH_POP

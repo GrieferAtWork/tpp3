@@ -99,6 +99,12 @@
     <ClCompile Include="..\src\parts\expr.c">
       <Filter>src\parts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\lexer-yield-include.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parts\sysinclude.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">
@@ -159,6 +165,12 @@
       <Filter>src\parts</Filter>
     </ClInclude>
     <ClInclude Include="..\src\parts\time.h">
+      <Filter>src\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\expose-internals.h">
+      <Filter>src\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\sysinclude.h">
       <Filter>src\parts</Filter>
     </ClInclude>
   </ItemGroup>

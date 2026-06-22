@@ -136,7 +136,7 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,
 	}
 
 	tpp_assert(buffer || !num_bytes);
-	result = buffer->ts_str + self->tsb_len;
+	result = buffer->ts_str + self->tsb_len; /* Not a NULL dereference: "ts_str" is an *inline* array */
 	self->tsb_len += num_bytes;
 	return result;
 }
