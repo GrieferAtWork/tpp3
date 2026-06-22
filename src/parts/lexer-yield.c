@@ -1140,12 +1140,12 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 		return TPP_TOK_OFERR(ofr_error);
 
 	/* Parse extra parameters */
-	tok = tpp_lexer_yield_blocking(self);
 	for (;;) {
 		tpp_errno error;
 		/* Yield to the first parameter (or just straight to the trailing ')') */
-		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		do {
 			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			goto err_tok_ofr;
 		if (!TPP_TOK_ISKEYWORD(tok))
@@ -1155,7 +1155,6 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_ofr;
 		}
-		tok = tpp_lexer_gettok(self);
 	}
 
 	/* Determine result of test */

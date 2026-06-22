@@ -492,6 +492,7 @@
 #define tff_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS          TPP_INTERNAL(tff_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS)
 #define tff_BUILTIN_EXPR_LOGICAL_XOR                     TPP_INTERNAL(tff_BUILTIN_EXPR_LOGICAL_XOR)
 #define tff_BUILTIN_EXPR_BINARY_LITERALS                 TPP_INTERNAL(tff_BUILTIN_EXPR_BINARY_LITERALS)
+#define tff_BUILTIN_EXPR_OCTAL_LITERALS                  TPP_INTERNAL(tff_BUILTIN_EXPR_OCTAL_LITERALS)
 #define tff_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS            TPP_INTERNAL(tff_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS)
 #define tff_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS          TPP_INTERNAL(tff_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)
 #define tff_BUILTIN_EXPR_CHARACTER_LITERALS              TPP_INTERNAL(tff_BUILTIN_EXPR_CHARACTER_LITERALS)
@@ -4441,6 +4442,8 @@ tpp_lcinfo_account(tpp_file const *tpp_restrict self, tpp_lcinfo lc,
 	tpp_char const *endp = text + size;
 	tpp_line line  = tpp_lcinfo_getline(lc);
 	tpp_column col = tpp_lcinfo_getcol(lc);
+	if (!tpp_lcinfo_isvalid(lc))
+		return lc; /* Don't account for changes when LC is invalid */
 	(void)self;
 	while (text < endp) {
 		tpp_char ch = *text++;
@@ -4815,8 +4818,7 @@ again:
 		if (unused_head)
 #endif /* !__OPTIMIZE_SIZE__ */
 		{
-			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account(self,
-			                                                      self->tf_data.td_io.tff_start_lc,
+			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account(self, self->tf_data.td_io.tff_start_lc,
 			                                                      tpp_string_str(old_chunk), unused_head);
 			tpp_memmovedown(tpp_string_str(old_chunk), base, old_inuse);
 			base -= unused_head;
@@ -5272,8 +5274,6 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT: {
 		result = self->tf_data.td_io.tff_start_lc;
-		if (!tpp_lcinfo_isvalid(result))
-			return result;
 		result = tpp_lcinfo_account(self, result, tpp_string_str(self->tf_chunk),
 		                            (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
 	}	break;
@@ -5319,8 +5319,6 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			goto done_nocache;
 		} else {
 			result = macro->tm_body_lc;
-			if (!tpp_lcinfo_isvalid(result))
-				return result;
 			result = tpp_lcinfo_account(self, result, macro->tm_body_start,
 			                            (tpp_size)(pos - macro->tm_body_start));
 		}
@@ -18827,10 +18825,23 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	}	break;
 #endif /* TPP_HAVE_PRAGMA_TPP */
 
+	/* TODO: Builtin support for STDC pragmas:
+	 * >> #pragma STDC FENV_ACCESS ON/OFF/DEFAULT
+	 * >> #pragma STDC FP_CONTRACT ON/OFF/DEFAULT
+	 * >> #pragma STDC CX_LIMITED_RANGE ON/OFF/DEFAULT
+	 */
+
+	/* TODO: Builtin support #pragma pack(...) */
+	/* TODO: Builtin support #pragma GCC visibility ... */
 	/* TODO: #pragma clang diagnostic ... (identical to #pragma GCC diagnostic ...) */
-	/* TODO: #pragma clang system_header (identical to #pragma GCC system_header) */
-	/* TODO: #pragma comment(lib)  (MS extension; call into user-defined hook) */
-	/* TODO: #pragma export(name)  (clang extension; indicates that "name" should be exported from shlib) */
+	/* TODO: #pragma clang system_header  (identical to #pragma GCC system_header) */
+	/* TODO: #pragma comment(lib, "foo")  (MS extension; call into user-defined hook) */
+	/* TODO: #pragma export(name)         (clang extension; indicates that "name" should be exported from shlib) */
+	/* TODO: #pragma optimize("", off)    (MS extension) */
+	/* TODO: #pragma comment(copyright, "string") (clang extension) */
+	/* TODO: #pragma clang deprecated(MIN, "use std::min instead") (clang extension) */
+	/* TODO: #pragma clang restrict_expansion(MACRO_NAME, "<reason>") (clang extension) */
+	/* TODO: #pragma clang final(FINAL_MACRO) (clang extension) */
 
 	default: break;
 	}
@@ -19086,6 +19097,19 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 			radix = 2;
 			break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
+
+#if TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS
+		case 'o':
+		case 'O':
+			if (!tpp_lexer_has(self, BUILTIN_EXPR_OCTAL_LITERALS))
+				break;
+			if (start >= end)
+				goto handle_invalid;
+			ch    = *start++;
+			start = tpp_skipbse_fwd(start, end, tpp_lexer_getfile(self));
+			radix = 8;
+			break;
+#endif /* TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
 
 		default: break;
 		}
@@ -20708,7 +20732,7 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
 			tok = tpp_lexer_yield_blocking(lexer);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-		tok = tpp_lexer_skip(lexer, TPP_TOK_OFCHAR(')'));
+		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR(')'));
 		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
 
@@ -20729,6 +20753,8 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
 			return TPP_TOK_ASERR(tok);
 		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
 		                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
+		/* TODO: Control behavior of "TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC"
+		 *    -- Should either always be on, or depend on "-fmacro-argument-whitespace"; not sure */
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 #if TPP_HAVE_CPP_EMBED
@@ -20781,6 +20807,9 @@ continue_after_unknown_name:
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		tpp_lexer_arginfo_fini(&arg);
+	} else {
+		/* Re-parse current token */
+		tpp_lexer_gettoken(lexer)->tt_end = tpp_lexer_gettoken(lexer)->tt_start;
 	}
 	return TPP_EOK;
 }
@@ -21053,12 +21082,12 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 	 * We must now parse all those #embed parameters
 	 * NOTE: We may also be inside of a macro right now! */
 
-	tok = tpp_lexer_yield_blocking(lexer);
 	for (;;) {
 		tpp_errno error;
 		/* Yield to the first parameter (or just straight to the trailing LF) */
-		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		do {
 			tok = tpp_lexer_yield_blocking(lexer);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			goto err_tok_builder;
 		if (!TPP_TOK_ISKEYWORD(tok))
@@ -21068,7 +21097,6 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_builder;
 		}
-		tok = tpp_lexer_gettok(lexer);
 	}
 	return TPP_EOK;
 err_tok_builder:
@@ -23689,12 +23717,12 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 		return TPP_TOK_OFERR(ofr_error);
 
 	/* Parse extra parameters */
-	tok = tpp_lexer_yield_blocking(self);
 	for (;;) {
 		tpp_errno error;
 		/* Yield to the first parameter (or just straight to the trailing ')') */
-		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		do {
 			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			goto err_tok_ofr;
 		if (!TPP_TOK_ISKEYWORD(tok))
@@ -23704,7 +23732,6 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_ofr;
 		}
-		tok = tpp_lexer_gettok(self);
 	}
 
 	/* Determine result of test */

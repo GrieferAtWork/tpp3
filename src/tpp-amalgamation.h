@@ -5523,15 +5523,6 @@ TPP_DECL_END
 /* #PRAGMA DIRECTIVES                                                   */
 /************************************************************************/
 
-/* TODO: Builtin support for STDC pragmas:
- * >> #pragma STDC FENV_ACCESS ON/OFF/DEFAULT
- * >> #pragma STDC FP_CONTRACT ON/OFF/DEFAULT
- * >> #pragma STDC CX_LIMITED_RANGE ON/OFF/DEFAULT
- */
-
-/* TODO: Builtin support #pragma pack(...) */
-/* TODO: Builtin support #pragma GCC visibility ... */
-
 /* Support for: #pragma push_macro() / #pragma pop_macro()
  * @detect: #define FOO 42
  *          #pragma push_macro(undef, "FOO")

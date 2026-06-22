@@ -1395,7 +1395,7 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
 			tok = tpp_lexer_yield_blocking(lexer);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-		tok = tpp_lexer_skip(lexer, TPP_TOK_OFCHAR(')'));
+		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR(')'));
 		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
 
@@ -1416,6 +1416,8 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
 			return TPP_TOK_ASERR(tok);
 		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
 		                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
+		/* TODO: Control behavior of "TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC"
+		 *    -- Should either always be on, or depend on "-fmacro-argument-whitespace"; not sure */
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 #if TPP_HAVE_CPP_EMBED
@@ -1468,6 +1470,9 @@ continue_after_unknown_name:
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		tpp_lexer_arginfo_fini(&arg);
+	} else {
+		/* Re-parse current token */
+		tpp_lexer_gettoken(lexer)->tt_end = tpp_lexer_gettoken(lexer)->tt_start;
 	}
 	return TPP_EOK;
 }
@@ -1740,12 +1745,12 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 	 * We must now parse all those #embed parameters
 	 * NOTE: We may also be inside of a macro right now! */
 
-	tok = tpp_lexer_yield_blocking(lexer);
 	for (;;) {
 		tpp_errno error;
 		/* Yield to the first parameter (or just straight to the trailing LF) */
-		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		do {
 			tok = tpp_lexer_yield_blocking(lexer);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			goto err_tok_builder;
 		if (!TPP_TOK_ISKEYWORD(tok))
@@ -1755,7 +1760,6 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_builder;
 		}
-		tok = tpp_lexer_gettok(lexer);
 	}
 	return TPP_EOK;
 err_tok_builder:
