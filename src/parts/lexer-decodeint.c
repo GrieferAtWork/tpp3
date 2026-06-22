@@ -91,6 +91,19 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 			break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
 
+#if TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS
+		case 'o':
+		case 'O':
+			if (!tpp_lexer_has(self, BUILTIN_EXPR_OCTAL_LITERALS))
+				break;
+			if (start >= end)
+				goto handle_invalid;
+			ch    = *start++;
+			start = tpp_skipbse_fwd(start, end, tpp_lexer_getfile(self));
+			radix = 8;
+			break;
+#endif /* TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
+
 		default: break;
 		}
 	} else {

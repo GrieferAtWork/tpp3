@@ -1297,6 +1297,8 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 		/* TODO */
 	}	break;
 #endif /* TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ */
+	/* TODO: __FILE_NAME__ -- Same as "__FILE__", but only returns the basename()-
+	 *                        portion (i.e. everything after the last TPP_FS_ISSEP) */
 /************************************************************************/
 
 

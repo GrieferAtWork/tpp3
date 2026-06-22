@@ -1681,15 +1681,6 @@
 /* #PRAGMA DIRECTIVES                                                   */
 /************************************************************************/
 
-/* TODO: Builtin support for STDC pragmas:
- * >> #pragma STDC FENV_ACCESS ON/OFF/DEFAULT
- * >> #pragma STDC FP_CONTRACT ON/OFF/DEFAULT
- * >> #pragma STDC CX_LIMITED_RANGE ON/OFF/DEFAULT
- */
-
-/* TODO: Builtin support #pragma pack(...) */
-/* TODO: Builtin support #pragma GCC visibility ... */
-
 /* Support for: #pragma push_macro() / #pragma pop_macro()
  * @detect: #define FOO 42
  *          #pragma push_macro(undef, "FOO")
@@ -1940,6 +1931,12 @@
 #ifndef TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS (((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fbinary-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
+
+/* Enable support for "0o" literals in builtin lexer expressions
+ * @detect: TODO */
+#ifndef TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS
+#define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS (((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
+#endif /* !TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
 
 /* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes in builtin lexer expressions
  * @detect: TODO */

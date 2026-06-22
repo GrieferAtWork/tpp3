@@ -259,6 +259,7 @@
 #define tef_TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS  TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS)
 #define tef_TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR             TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR)
 #define tef_TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS         TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS)
+#define tef_TPP_EXT_BUILTIN_EXPR_OCTAL_LITERALS          TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_OCTAL_LITERALS)
 #define tef_TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS    TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS)
 #define tef_TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS  TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)
 #define tef_TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS      TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS)
@@ -8430,6 +8431,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS)
 		/* .tff_BUILTIN_EXPR_BINARY_LITERALS         = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS)
+		/* .tff_BUILTIN_EXPR_OCTAL_LITERALS          = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS)
 		/* .tff_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS    = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS) */
@@ -18823,6 +18827,11 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	}	break;
 #endif /* TPP_HAVE_PRAGMA_TPP */
 
+	/* TODO: #pragma clang diagnostic ... (identical to #pragma GCC diagnostic ...) */
+	/* TODO: #pragma clang system_header (identical to #pragma GCC system_header) */
+	/* TODO: #pragma comment(lib)  (MS extension; call into user-defined hook) */
+	/* TODO: #pragma export(name)  (clang extension; indicates that "name" should be exported from shlib) */
+
 	default: break;
 	}
 
@@ -23837,6 +23846,8 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 		/* TODO */
 	}	break;
 #endif /* TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ */
+	/* TODO: __FILE_NAME__ -- Same as "__FILE__", but only returns the basename()-
+	 *                        portion (i.e. everything after the last TPP_FS_ISSEP) */
 /************************************************************************/
 
 

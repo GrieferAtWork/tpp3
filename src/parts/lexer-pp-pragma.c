@@ -856,6 +856,24 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	}	break;
 #endif /* TPP_HAVE_PRAGMA_TPP */
 
+	/* TODO: Builtin support for STDC pragmas:
+	 * >> #pragma STDC FENV_ACCESS ON/OFF/DEFAULT
+	 * >> #pragma STDC FP_CONTRACT ON/OFF/DEFAULT
+	 * >> #pragma STDC CX_LIMITED_RANGE ON/OFF/DEFAULT
+	 */
+
+	/* TODO: Builtin support #pragma pack(...) */
+	/* TODO: Builtin support #pragma GCC visibility ... */
+	/* TODO: #pragma clang diagnostic ... (identical to #pragma GCC diagnostic ...) */
+	/* TODO: #pragma clang system_header  (identical to #pragma GCC system_header) */
+	/* TODO: #pragma comment(lib, "foo")  (MS extension; call into user-defined hook) */
+	/* TODO: #pragma export(name)         (clang extension; indicates that "name" should be exported from shlib) */
+	/* TODO: #pragma optimize("", off)    (MS extension) */
+	/* TODO: #pragma comment(copyright, "string") (clang extension) */
+	/* TODO: #pragma clang deprecated(MIN, "use std::min instead") (clang extension) */
+	/* TODO: #pragma clang restrict_expansion(MACRO_NAME, "<reason>") (clang extension) */
+	/* TODO: #pragma clang final(FINAL_MACRO) (clang extension) */
+
 	default: break;
 	}
 

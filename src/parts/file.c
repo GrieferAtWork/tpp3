@@ -189,6 +189,8 @@ tpp_lcinfo_account(tpp_file const *tpp_restrict self, tpp_lcinfo lc,
 	tpp_char const *endp = text + size;
 	tpp_line line  = tpp_lcinfo_getline(lc);
 	tpp_column col = tpp_lcinfo_getcol(lc);
+	if (!tpp_lcinfo_isvalid(lc))
+		return lc; /* Don't account for changes when LC is invalid */
 	(void)self;
 	while (text < endp) {
 		tpp_char ch = *text++;
@@ -563,8 +565,7 @@ again:
 		if (unused_head)
 #endif /* !__OPTIMIZE_SIZE__ */
 		{
-			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account(self,
-			                                                      self->tf_data.td_io.tff_start_lc,
+			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account(self, self->tf_data.td_io.tff_start_lc,
 			                                                      tpp_string_str(old_chunk), unused_head);
 			tpp_memmovedown(tpp_string_str(old_chunk), base, old_inuse);
 			base -= unused_head;
@@ -1020,8 +1021,6 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT: {
 		result = self->tf_data.td_io.tff_start_lc;
-		if (!tpp_lcinfo_isvalid(result))
-			return result;
 		result = tpp_lcinfo_account(self, result, tpp_string_str(self->tf_chunk),
 		                            (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
 	}	break;
@@ -1067,8 +1066,6 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			goto done_nocache;
 		} else {
 			result = macro->tm_body_lc;
-			if (!tpp_lcinfo_isvalid(result))
-				return result;
 			result = tpp_lcinfo_account(self, result, macro->tm_body_start,
 			                            (tpp_size)(pos - macro->tm_body_start));
 		}
