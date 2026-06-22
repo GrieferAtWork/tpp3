@@ -933,7 +933,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 
 
-#if NEED_tpp_lexer_seek_eol || (TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT)
+#if NEED_tpp_lexer_seek_eol || (TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED)
 #undef tpp_lexer_seek_eol__STYLE_PARAM
 #undef tpp_lexer_seek_eol__STYLE_ARG
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
@@ -946,7 +946,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 /* Seek forward until *after* the next line-feed character (or true EOF)
  * Given `*p_pos' will be updated to point *after* the LF character (or *at* the EOF) */
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
@@ -955,12 +955,12 @@ TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM)
-#else /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#else /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM)
-#endif /* !TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* !TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED */
 {
 	tpp_errno error = TPP_EOK;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -1216,7 +1216,7 @@ done:
 	*p_pos = pos;
 	return error;
 }
-#endif /* NEED_tpp_lexer_seek_eol || TPP_HAVE_CPP_DIRECTIVES */
+#endif /* NEED_tpp_lexer_seek_eol || ... */
 
 
 /* Find the end of a "foo" or 'foo' string

@@ -528,6 +528,22 @@ TPP_KWD(TPP_KWD___VA_OPT__, "__VA_OPT__")
 #define TPP_KWD_defined TPP_KWD_defined
 TPP_KWD(TPP_KWD_defined, "defined")
 #endif /* TPP_HAVE_BUILTIN_EXPR_DEFINED */
+#if TPP_HAVE_CPP_EMBED
+#define TPP_KWD_limit TPP_KWD_limit
+TPP_KWD(TPP_KWD_limit, "limit")
+#endif /* TPP_HAVE_CPP_EMBED */
+#if TPP_HAVE_CPP_EMBED
+#define TPP_KWD_prefix TPP_KWD_prefix
+TPP_KWD(TPP_KWD_prefix, "prefix")
+#endif /* TPP_HAVE_CPP_EMBED */
+#if TPP_HAVE_CPP_EMBED
+#define TPP_KWD_suffix TPP_KWD_suffix
+TPP_KWD(TPP_KWD_suffix, "suffix")
+#endif /* TPP_HAVE_CPP_EMBED */
+#if TPP_HAVE_CPP_EMBED
+#define TPP_KWD_if_empty TPP_KWD_if_empty
+TPP_KWD(TPP_KWD_if_empty, "if_empty")
+#endif /* TPP_HAVE_CPP_EMBED */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 #define TPP_KWD_push_macro TPP_KWD_push_macro
 TPP_KWD(TPP_KWD_push_macro, "push_macro")
@@ -2626,6 +2642,7 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF ||                \
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN ||                         \
 	 TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE ||                        \
+	 TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER ||                  \
 	 TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE ||         \
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST || \
 	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||           \
@@ -2675,6 +2692,12 @@ TPP_WARNING(TPP_W_UNEXPECTED_TOKEN, 1(TPP_WG_SYNTAX), 0(), ~,
 TPP_WARNING(TPP_W_UNKNOWN_DIRECTIVE, 1(TPP_WG_SYNTAX), 1(1021), TPP_WSTATE_UNDEFINED,
             "unknown preprocessor directive: %Pt")
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
+
+#if TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER
+#define TPP_W_UNKNOWN_EMBED_PARAMETER TPP_W_UNKNOWN_EMBED_PARAMETER
+TPP_WARNING(TPP_W_UNKNOWN_EMBED_PARAMETER, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_UNDEFINED,
+            "unknown %[#embed%] parameter: %Pt")
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER */
 
 #if TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #define TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
@@ -5645,7 +5668,7 @@ TPP_DECL_END
  * is used to implement "#if" directive expressions
  * @detect: N/A */
 #ifndef TPP_HAVE_LEXER_PARSEEXPR
-#define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL)
+#define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED)
 #endif /* !TPP_HAVE_LEXER_PARSEEXPR */
 
 /* Expression parser configuration */
@@ -5799,11 +5822,7 @@ TPP_DECL_END
 
 /* Enable support for `TPP_FILE_KIND_SUBTEXT' */
 #ifndef TPP_HAVE_FILE_SUBTEXT
-#if TPP_HAVE_CPP_MACROS
-#define TPP_HAVE_FILE_SUBTEXT 1
-#else /* ... */
-#define TPP_HAVE_FILE_SUBTEXT 0
-#endif /* !... */
+#define TPP_HAVE_FILE_SUBTEXT (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_EMBED)
 #endif /* !TPP_HAVE_FILE_SUBTEXT */
 
 /* Enable support for `tpp_file::tf_prev' */
@@ -5881,6 +5900,17 @@ TPP_DECL_END
 #ifndef TPP_HAVE_FILE_KEEPPOS
 #define TPP_HAVE_FILE_KEEPPOS (TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
+
+/* Provide a special "TPP_FILE_ENCODING_EMBED" file encoding
+ * to convert bytes into ,-separated decimals on-the-fly.
+ *
+ * NOTE: Even when this is disabled, #embed directives work,
+ *       but will have to pre-load the entire input file into
+ *       memory, rather than allowing the file to be streamed
+ *       by converting it on-the-fly. */
+#ifndef TPP_HAVE_FILE_ENCODING_EMBED
+#define TPP_HAVE_FILE_ENCODING_EMBED (TPP_HAVE_UNICODE && TPP_HAVE_CPP_EMBED && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
 
 /* Provide a secondary set of keyword APIs that include support for \-escape sequences */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
@@ -6329,6 +6359,10 @@ TPP_DECL_END
 	                       TPP_HAVE_CPP_EMBED ||        \
 	                       TPP_HAVE_MACRO___TPP_LOAD_FILE))
 #endif /* !TPP_HAVE_TPP_W_NO_SUCH_FILE */
+#ifndef TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER
+#define TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_EMBED)
+#endif /* !TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER */
 #ifndef TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
 #define TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_IFDEF_STACK)
@@ -10590,6 +10624,9 @@ typedef enum tpp_file_encoding {
 	TPP_FILE_ENCODING_UTF16_BE,   /* TPP_FILE_KIND_IO-only: Underlying file is in utf-16 (be) and auto-converted to utf-8 during reading */
 	TPP_FILE_ENCODING_UTF32_LE,   /* TPP_FILE_KIND_IO-only: Underlying file is in utf-32 (le) and auto-converted to utf-8 during reading */
 	TPP_FILE_ENCODING_UTF32_BE,   /* TPP_FILE_KIND_IO-only: Underlying file is in utf-32 (be) and auto-converted to utf-8 during reading */
+#if TPP_HAVE_FILE_ENCODING_EMBED
+	TPP_FILE_ENCODING_EMBED,      /* TPP_FILE_KIND_IO-only: Convert file bytes to sequence of ,-separated integers */
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 } tpp_file_encoding;
 #define TPP_FILE_ENCODING_ISUTF8(enc)  ((enc) != TPP_FILE_ENCODING_ASCII)
 #define TPP_FILE_ENCODING_ISASCII(enc) ((enc) == TPP_FILE_ENCODING_ASCII)
@@ -10795,8 +10832,15 @@ typedef struct tpp_file {
 			tpp_file_ioflags TPP_INTERNAL(tff_flags);    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 #if TPP_HAVE_UNICODE
-			uint_least8_t TPP_INTERNAL(tff_tailc);    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
-			unsigned char TPP_INTERNAL(tff_tailv)[3]; /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+			union {
+				struct {
+					uint_least8_t TPP_INTERNAL(tffu_tailc);    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+					unsigned char TPP_INTERNAL(tffu_tailv)[3]; /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+				} TPP_INTERNAL(tffed_unicode);
+#if TPP_HAVE_FILE_ENCODING_EMBED
+				tpp_uintmax TPP_INTERNAL(tffed_embedlimit); /* Max # of remaining bytes that may be embedded */
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+			} TPP_INTERNAL(tff_encdat);
 #endif /* TPP_HAVE_UNICODE */
 		} TPP_INTERNAL(td_io); /* [tf_kind == TPP_FILE_KIND_IO] */
 
@@ -11055,13 +11099,15 @@ typedef struct tpp_file {
  * @param: tpp_file_ioflags flags:    I/O file flags (set of `TPP_FILE_IOFLAGS_*') */
 #define tpp_file_init_io(self, filename, /*inherit*/ fp) \
 	tpp_file_init_io_ex(self, filename, fp, TPP_FILE_IOFLAGS_NORMAL)
-#define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags)                                             \
+#define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags) \
+	tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, TPP_FILE_ENCODING_UTF8)
+#define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                                             \
 	(void)((self)->TPP_INTERNAL(tf_pos)   = NULL,                                                              \
 	       (self)->TPP_INTERNAL(tf_chunk) = NULL,                                                              \
 	       (self)->TPP_INTERNAL(tf_end)   = NULL                                                               \
 	       _tpp_file_init_prev(self),                                                                          \
 	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                                    \
-	       _tpp_file_init_enc(self)                                                                            \
+	       _tpp_file_init_enc_ex(self, enc)                                                                            \
 	       _tpp_file_init_common(self),                                                                        \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename),              \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
@@ -11080,7 +11126,7 @@ typedef struct tpp_file {
  * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text", or `TPP_LCINFO_INVALID'
  * @param: tpp_file_encoding   encoding:  File data encoding */
 #define tpp_file_init_text_ascii(self, filename, chunk, text, text_size, start_lc) \
-	tpp_file_init_text_ex(self, filename, chunk, text, start_lc, TPP_FILE_ENCODING_ASCII)
+	tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_ASCII)
 #define tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, encoding)               \
 	(void)((self)->TPP_INTERNAL(tf_pos)   = (tpp_char const *)(text),                                   \
 	       (self)->TPP_INTERNAL(tf_chunk) = (chunk),                                                    \
@@ -13690,6 +13736,8 @@ typedef struct tpp_lexer_arginfo {
 	TPP_REF tpp_string *tlai_chunk;  /* [0..1] Chunk of text containing [tlai_start,tlai_end), or "NULL" if statically allocated */
 } tpp_lexer_arginfo;
 
+#define tpp_lexer_arginfo_init_empty(self) \
+	(void)((self)->tlai_chunk = NULL, (self)->tlai_start = (self)->tlai_end = NULL)
 #define tpp_lexer_arginfo_fini(self) \
 	(void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0))
 #define tpp_lexer_arginfo_copy(dst, src) \

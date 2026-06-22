@@ -1852,7 +1852,7 @@
  * is used to implement "#if" directive expressions
  * @detect: N/A */
 #ifndef TPP_HAVE_LEXER_PARSEEXPR
-#define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL)
+#define TPP_HAVE_LEXER_PARSEEXPR (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED)
 #endif /* !TPP_HAVE_LEXER_PARSEEXPR */
 
 /* Expression parser configuration */
@@ -2006,11 +2006,7 @@
 
 /* Enable support for `TPP_FILE_KIND_SUBTEXT' */
 #ifndef TPP_HAVE_FILE_SUBTEXT
-#if TPP_HAVE_CPP_MACROS
-#define TPP_HAVE_FILE_SUBTEXT 1
-#else /* ... */
-#define TPP_HAVE_FILE_SUBTEXT 0
-#endif /* !... */
+#define TPP_HAVE_FILE_SUBTEXT (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_EMBED)
 #endif /* !TPP_HAVE_FILE_SUBTEXT */
 
 /* Enable support for `tpp_file::tf_prev' */
@@ -2088,6 +2084,17 @@
 #ifndef TPP_HAVE_FILE_KEEPPOS
 #define TPP_HAVE_FILE_KEEPPOS (TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
+
+/* Provide a special "TPP_FILE_ENCODING_EMBED" file encoding
+ * to convert bytes into ,-separated decimals on-the-fly.
+ *
+ * NOTE: Even when this is disabled, #embed directives work,
+ *       but will have to pre-load the entire input file into
+ *       memory, rather than allowing the file to be streamed
+ *       by converting it on-the-fly. */
+#ifndef TPP_HAVE_FILE_ENCODING_EMBED
+#define TPP_HAVE_FILE_ENCODING_EMBED (TPP_HAVE_UNICODE && TPP_HAVE_CPP_EMBED && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
 
 /* Provide a secondary set of keyword APIs that include support for \-escape sequences */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
@@ -2536,6 +2543,10 @@
 	                       TPP_HAVE_CPP_EMBED ||        \
 	                       TPP_HAVE_MACRO___TPP_LOAD_FILE))
 #endif /* !TPP_HAVE_TPP_W_NO_SUCH_FILE */
+#ifndef TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER
+#define TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_EMBED)
+#endif /* !TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER */
 #ifndef TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
 #define TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_IFDEF_STACK)

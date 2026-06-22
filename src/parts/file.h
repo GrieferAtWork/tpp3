@@ -51,6 +51,9 @@ typedef enum tpp_file_encoding {
 	TPP_FILE_ENCODING_UTF16_BE,   /* TPP_FILE_KIND_IO-only: Underlying file is in utf-16 (be) and auto-converted to utf-8 during reading */
 	TPP_FILE_ENCODING_UTF32_LE,   /* TPP_FILE_KIND_IO-only: Underlying file is in utf-32 (le) and auto-converted to utf-8 during reading */
 	TPP_FILE_ENCODING_UTF32_BE,   /* TPP_FILE_KIND_IO-only: Underlying file is in utf-32 (be) and auto-converted to utf-8 during reading */
+#if TPP_HAVE_FILE_ENCODING_EMBED
+	TPP_FILE_ENCODING_EMBED,      /* TPP_FILE_KIND_IO-only: Convert file bytes to sequence of ,-separated integers */
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 } tpp_file_encoding;
 #define TPP_FILE_ENCODING_ISUTF8(enc)  ((enc) != TPP_FILE_ENCODING_ASCII)
 #define TPP_FILE_ENCODING_ISASCII(enc) ((enc) == TPP_FILE_ENCODING_ASCII)
@@ -256,8 +259,15 @@ typedef struct tpp_file {
 			tpp_file_ioflags TPP_INTERNAL(tff_flags);    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 #if TPP_HAVE_UNICODE
-			uint_least8_t TPP_INTERNAL(tff_tailc);    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
-			unsigned char TPP_INTERNAL(tff_tailv)[3]; /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+			union {
+				struct {
+					uint_least8_t TPP_INTERNAL(tffu_tailc);    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+					unsigned char TPP_INTERNAL(tffu_tailv)[3]; /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+				} TPP_INTERNAL(tffed_unicode);
+#if TPP_HAVE_FILE_ENCODING_EMBED
+				tpp_uintmax TPP_INTERNAL(tffed_embedlimit); /* Max # of remaining bytes that may be embedded */
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+			} TPP_INTERNAL(tff_encdat);
 #endif /* TPP_HAVE_UNICODE */
 		} TPP_INTERNAL(td_io); /* [tf_kind == TPP_FILE_KIND_IO] */
 
@@ -516,13 +526,15 @@ typedef struct tpp_file {
  * @param: tpp_file_ioflags flags:    I/O file flags (set of `TPP_FILE_IOFLAGS_*') */
 #define tpp_file_init_io(self, filename, /*inherit*/ fp) \
 	tpp_file_init_io_ex(self, filename, fp, TPP_FILE_IOFLAGS_NORMAL)
-#define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags)                                             \
+#define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags) \
+	tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, TPP_FILE_ENCODING_UTF8)
+#define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                                             \
 	(void)((self)->TPP_INTERNAL(tf_pos)   = NULL,                                                              \
 	       (self)->TPP_INTERNAL(tf_chunk) = NULL,                                                              \
 	       (self)->TPP_INTERNAL(tf_end)   = NULL                                                               \
 	       _tpp_file_init_prev(self),                                                                          \
 	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                                    \
-	       _tpp_file_init_enc(self)                                                                            \
+	       _tpp_file_init_enc_ex(self, enc)                                                                            \
 	       _tpp_file_init_common(self),                                                                        \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename),              \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
@@ -541,7 +553,7 @@ typedef struct tpp_file {
  * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text", or `TPP_LCINFO_INVALID'
  * @param: tpp_file_encoding   encoding:  File data encoding */
 #define tpp_file_init_text_ascii(self, filename, chunk, text, text_size, start_lc) \
-	tpp_file_init_text_ex(self, filename, chunk, text, start_lc, TPP_FILE_ENCODING_ASCII)
+	tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_ASCII)
 #define tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, encoding)               \
 	(void)((self)->TPP_INTERNAL(tf_pos)   = (tpp_char const *)(text),                                   \
 	       (self)->TPP_INTERNAL(tf_chunk) = (chunk),                                                    \

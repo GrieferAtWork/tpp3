@@ -297,9 +297,15 @@ tpp_lcinfo_count_linefeed(tpp_file const *tpp_restrict self,
 #define TPP_FILE_UTF16_IOSIZE(bufsize) (((bufsize) / 3) * 2) /* # of bytes to read from underlying UTF-16 file */
 #define TPP_FILE_UTF32_IOSIZE(bufsize) (((bufsize) / 7) * 4) /* # of bytes to read from underlying UTF-32 file */
 
+#if TPP_HAVE_FILE_ENCODING_EMBED
+#define TPP_UNICODE_EMBED_MAXBUF(num_chars) ((num_chars) * 4) /* Max # of bytes needed to convert EMBED to UTF-8 */
+#define TPP_FILE_EMBED_IOSIZE(bufsize)      ((bufsize) / 4)   /* # of bytes to read from underlying EMBED file */
+#define TPP_FILE_EMBED_MINEXTRA             4                 /* max(1, TPP_UNICODE_EMBED_MAXBUF(1)) */
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+
 #define TPP_FILE_UTF16_MINEXTRA 3  /* max(2, TPP_UNICODE_16TO8_MAXBUF(1)) */
 #define TPP_FILE_UTF32_MINEXTRA 7  /* max(4, TPP_UNICODE_32TO8_MAXBUF(1)) */
-#define TPP_FILE_MINEXTRA       10 /* max(1, TPP_FILE_UTF16_MINEXTRA, TPP_FILE_UTF32_MINEXTRA) + lengthof(tff_tailv) */
+#define TPP_FILE_MINEXTRA       10 /* max(1, TPP_FILE_UTF16_MINEXTRA, TPP_FILE_UTF32_MINEXTRA, TPP_FILE_EMBED_MINEXTRA) + lengthof(tff_encdat.tffed_unicode.tffu_tailv) */
 
 static tpp_char *TPPCALL
 tpp_writeutf8_rev(tpp_char *dst, tpp_unichar uc) {
@@ -465,6 +471,25 @@ tpp_utf32be_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst
 #undef TPP_IO_MINREAD
 #define TPP_IO_MINREAD TPP_FILE_MINEXTRA
 #endif /* TPP_IO_MINREAD < TPP_FILE_MINEXTRA */
+
+
+#if TPP_HAVE_FILE_ENCODING_EMBED
+static tpp_char *TPPCALL
+tpp_embed_to_utf8(unsigned char const *src, tpp_size src_count, tpp_char *dst_end) {
+	src += src_count;
+	while (src_count--) {
+		unsigned char b = *--src;
+		*--dst_end = '0' + (b % 10);
+		if (b >= 10) {
+			*--dst_end = '0' + ((b / 10) % 10);
+			if (b >= 100)
+				*--dst_end = '0' + (b / 100);
+		}
+		*--dst_end = ',';
+	}
+	return dst_end;
+}
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 
 
 
@@ -688,16 +713,27 @@ reuse_old_chunk:
 	case TPP_FILE_ENCODING_UTF16_BE:
 		io_size = TPP_FILE_UTF16_IOSIZE(io_size);
 amend_tail_data:
-		if (self->tf_data.td_io.tff_tailc) {
-			tpp_memcpy(io_dst, self->tf_data.td_io.tff_tailv, self->tf_data.td_io.tff_tailc);
-			io_dst += self->tf_data.td_io.tff_tailc;
-			io_size -= self->tf_data.td_io.tff_tailc;
+		if (self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc) {
+			tpp_memcpy(io_dst, self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc);
+			io_dst += self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
+			io_size -= self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
 		}
 		break;
 	case TPP_FILE_ENCODING_UTF32_LE:
 	case TPP_FILE_ENCODING_UTF32_BE:
 		io_size = TPP_FILE_UTF32_IOSIZE(io_size);
 		goto amend_tail_data;
+#if TPP_HAVE_FILE_ENCODING_EMBED
+	case TPP_FILE_ENCODING_EMBED:
+		io_size = TPP_FILE_EMBED_IOSIZE(io_size);
+		if ((tpp_uintmax)io_size > self->tf_data.td_io.tff_encdat.tffed_embedlimit) {
+			io_size = (tpp_size)self->tf_data.td_io.tff_encdat.tffed_embedlimit;
+			/* Check for special case: stop reading data from embedded file */
+			if tpp_unlikely(io_size == 0)
+				return TPP_EOK; /* EOF */
+		}
+		break;
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 	default: break;
 	}
 	tpp_assert(io_size >= 1 && "Value of 'TPP_FILE_MINEXTRA' should have ensured this");
@@ -724,7 +760,7 @@ amend_tail_data:
 	switch (self->tf_enc) {
 	case TPP_FILE_ENCODING_UTF8:
 		if (is_first_chunk) {
-			self->tf_data.td_io.tff_tailc = 0;
+			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = 0;
 
 			/* Detect BOM and multi-byte encodings */
 			if (read_status >= 3 && (io_dst[0] == 0xef && io_dst[1] == 0xbb && io_dst[2] == 0xbf)) {
@@ -796,10 +832,10 @@ amend_tail_data:
 convert_multiword_to_utf8:
 		if tpp_unlikely(read_status == 0)
 			return TPP_EOK; /* EOF */
-		if (self->tf_data.td_io.tff_tailc) {
-			io_dst -= self->tf_data.td_io.tff_tailc;
-			read_status += self->tf_data.td_io.tff_tailc;
-			self->tf_data.td_io.tff_tailc = 0;
+		if (self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc) {
+			io_dst -= self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
+			read_status += self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
+			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = 0;
 		}
 
 		/* Store unaligned tail data in out-of-band "tail" buffer */
@@ -812,8 +848,8 @@ convert_multiword_to_utf8:
 			tpp_char *tail_base;
 			read_status -= tail_size;
 			tail_base = io_dst + (tpp_size)read_status;
-			self->tf_data.td_io.tff_tailc = (uint_least8_t)tail_size;
-			tpp_memcpy(self->tf_data.td_io.tff_tailv, tail_base, tail_size);
+			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = (uint_least8_t)tail_size;
+			tpp_memcpy(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_base, tail_size);
 		}
 
 		dst_end = tpp_string_end(new_chunk);
@@ -839,11 +875,11 @@ convert_multiword_to_utf8:
 				/* Last word is a HIGH_UTF16 surrogate -> exclude from conversion
 				 * and add to tail (this character can only the next word has been
 				 * fully read, also, which should be the LOW_UTF16 surrogate) */
-				tpp_memmoveup(self->tf_data.td_io.tff_tailv + 2,
-				              self->tf_data.td_io.tff_tailv, tail_size);
-				self->tf_data.td_io.tff_tailv[0] = raw_last_word.w8[0];
-				self->tf_data.td_io.tff_tailv[1] = raw_last_word.w8[1];
-				self->tf_data.td_io.tff_tailc += 2;
+				tpp_memmoveup(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv + 2,
+				              self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_size);
+				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv[0] = raw_last_word.w8[0];
+				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv[1] = raw_last_word.w8[1];
+				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc += 2;
 				--words;
 			}
 			if (self->tf_enc == TPP_FILE_ENCODING_UTF16_LE) {
@@ -884,9 +920,33 @@ convert_multiword_to_utf8:
 		return TPP_EOK;
 	}	break;
 
+#if TPP_HAVE_FILE_ENCODING_EMBED
+	case TPP_FILE_ENCODING_EMBED: {
+		tpp_char *dst_base, *dst_end;
+		tpp_size out_size;
+		if ((tpp_uintmax)read_status > self->tf_data.td_io.tff_encdat.tffed_embedlimit)
+			read_status = (tpp_size)self->tf_data.td_io.tff_encdat.tffed_embedlimit;
+		self->tf_data.td_io.tff_encdat.tffed_embedlimit -= (tpp_size)read_status;
+		if tpp_unlikely(read_status == 0)
+			return TPP_EOK; /* EOF */
+		tpp_assert(io_dst == (tpp_char *)self->tf_end);
+		dst_end = tpp_string_end(new_chunk);
+		dst_base = tpp_embed_to_utf8((unsigned char const *)io_dst,
+		                             (tpp_size)read_status, dst_end);
+		if (is_first_chunk)
+			++dst_base; /* Skip over first leading "," in initial chunk */
+		out_size = (tpp_size)(dst_end - dst_base);
+		tpp_memmovedown(io_dst, dst_base, out_size);
+		self->tf_end += out_size;
+		return TPP_EOK;
+	}	break;
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+
 	default: tpp_unreachable();
 	}
-#endif /* TPP_HAVE_UNICODE */
+#elif TPP_HAVE_FILE_ENCODING_EMBED
+#error "'TPP_HAVE_FILE_ENCODING_EMBED' cannot be enabled without 'TPP_HAVE_UNICODE'"
+#endif /* ... */
 
 	/* Remember that more buffer space is now available! */
 	self->tf_end += (tpp_size)read_status;

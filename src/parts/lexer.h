@@ -1098,6 +1098,8 @@ typedef struct tpp_lexer_arginfo {
 	TPP_REF tpp_string *tlai_chunk;  /* [0..1] Chunk of text containing [tlai_start,tlai_end), or "NULL" if statically allocated */
 } tpp_lexer_arginfo;
 
+#define tpp_lexer_arginfo_init_empty(self) \
+	(void)((self)->tlai_chunk = NULL, (self)->tlai_start = (self)->tlai_end = NULL)
 #define tpp_lexer_arginfo_fini(self) \
 	(void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0))
 #define tpp_lexer_arginfo_copy(dst, src) \

@@ -520,8 +520,11 @@
 #define ttf_keep                                         TPP_INTERNAL(ttf_keep)
 #define tff_file                                         TPP_INTERNAL(tff_file)
 #define tff_flags                                        TPP_INTERNAL(tff_flags)
-#define tff_tailc                                        TPP_INTERNAL(tff_tailc)
-#define tff_tailv                                        TPP_INTERNAL(tff_tailv)
+#define tffu_tailc                                       TPP_INTERNAL(tffu_tailc)
+#define tffu_tailv                                       TPP_INTERNAL(tffu_tailv)
+#define tffed_unicode                                    TPP_INTERNAL(tffed_unicode)
+#define tffed_embedlimit                                 TPP_INTERNAL(tffed_embedlimit)
+#define tff_encdat                                       TPP_INTERNAL(tff_encdat)
 #define tft_name                                         TPP_INTERNAL(tft_name)
 #define tft_start_lc                                     TPP_INTERNAL(tft_start_lc)
 #define tft_user_filename                                TPP_INTERNAL(tft_user_filename)
@@ -4545,9 +4548,15 @@ tpp_lcinfo_count_linefeed(tpp_file const *tpp_restrict self,
 #define TPP_FILE_UTF16_IOSIZE(bufsize) (((bufsize) / 3) * 2) /* # of bytes to read from underlying UTF-16 file */
 #define TPP_FILE_UTF32_IOSIZE(bufsize) (((bufsize) / 7) * 4) /* # of bytes to read from underlying UTF-32 file */
 
+#if TPP_HAVE_FILE_ENCODING_EMBED
+#define TPP_UNICODE_EMBED_MAXBUF(num_chars) ((num_chars) * 4) /* Max # of bytes needed to convert EMBED to UTF-8 */
+#define TPP_FILE_EMBED_IOSIZE(bufsize)      ((bufsize) / 4)   /* # of bytes to read from underlying EMBED file */
+#define TPP_FILE_EMBED_MINEXTRA             4                 /* max(1, TPP_UNICODE_EMBED_MAXBUF(1)) */
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+
 #define TPP_FILE_UTF16_MINEXTRA 3  /* max(2, TPP_UNICODE_16TO8_MAXBUF(1)) */
 #define TPP_FILE_UTF32_MINEXTRA 7  /* max(4, TPP_UNICODE_32TO8_MAXBUF(1)) */
-#define TPP_FILE_MINEXTRA       10 /* max(1, TPP_FILE_UTF16_MINEXTRA, TPP_FILE_UTF32_MINEXTRA) + lengthof(tff_tailv) */
+#define TPP_FILE_MINEXTRA       10 /* max(1, TPP_FILE_UTF16_MINEXTRA, TPP_FILE_UTF32_MINEXTRA, TPP_FILE_EMBED_MINEXTRA) + lengthof(tff_encdat.tffed_unicode.tffu_tailv) */
 
 static tpp_char *TPPCALL
 tpp_writeutf8_rev(tpp_char *dst, tpp_unichar uc) {
@@ -4713,6 +4722,25 @@ tpp_utf32be_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst
 #undef TPP_IO_MINREAD
 #define TPP_IO_MINREAD TPP_FILE_MINEXTRA
 #endif /* TPP_IO_MINREAD < TPP_FILE_MINEXTRA */
+
+
+#if TPP_HAVE_FILE_ENCODING_EMBED
+static tpp_char *TPPCALL
+tpp_embed_to_utf8(unsigned char const *src, tpp_size src_count, tpp_char *dst_end) {
+	src += src_count;
+	while (src_count--) {
+		unsigned char b = *--src;
+		*--dst_end = '0' + (b % 10);
+		if (b >= 10) {
+			*--dst_end = '0' + ((b / 10) % 10);
+			if (b >= 100)
+				*--dst_end = '0' + (b / 100);
+		}
+		*--dst_end = ',';
+	}
+	return dst_end;
+}
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 
 
 
@@ -4936,16 +4964,27 @@ reuse_old_chunk:
 	case TPP_FILE_ENCODING_UTF16_BE:
 		io_size = TPP_FILE_UTF16_IOSIZE(io_size);
 amend_tail_data:
-		if (self->tf_data.td_io.tff_tailc) {
-			tpp_memcpy(io_dst, self->tf_data.td_io.tff_tailv, self->tf_data.td_io.tff_tailc);
-			io_dst += self->tf_data.td_io.tff_tailc;
-			io_size -= self->tf_data.td_io.tff_tailc;
+		if (self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc) {
+			tpp_memcpy(io_dst, self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc);
+			io_dst += self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
+			io_size -= self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
 		}
 		break;
 	case TPP_FILE_ENCODING_UTF32_LE:
 	case TPP_FILE_ENCODING_UTF32_BE:
 		io_size = TPP_FILE_UTF32_IOSIZE(io_size);
 		goto amend_tail_data;
+#if TPP_HAVE_FILE_ENCODING_EMBED
+	case TPP_FILE_ENCODING_EMBED:
+		io_size = TPP_FILE_EMBED_IOSIZE(io_size);
+		if ((tpp_uintmax)io_size > self->tf_data.td_io.tff_encdat.tffed_embedlimit) {
+			io_size = (tpp_size)self->tf_data.td_io.tff_encdat.tffed_embedlimit;
+			/* Check for special case: stop reading data from embedded file */
+			if tpp_unlikely(io_size == 0)
+				return TPP_EOK; /* EOF */
+		}
+		break;
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 	default: break;
 	}
 	tpp_assert(io_size >= 1 && "Value of 'TPP_FILE_MINEXTRA' should have ensured this");
@@ -4972,7 +5011,7 @@ amend_tail_data:
 	switch (self->tf_enc) {
 	case TPP_FILE_ENCODING_UTF8:
 		if (is_first_chunk) {
-			self->tf_data.td_io.tff_tailc = 0;
+			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = 0;
 
 			/* Detect BOM and multi-byte encodings */
 			if (read_status >= 3 && (io_dst[0] == 0xef && io_dst[1] == 0xbb && io_dst[2] == 0xbf)) {
@@ -5044,10 +5083,10 @@ amend_tail_data:
 convert_multiword_to_utf8:
 		if tpp_unlikely(read_status == 0)
 			return TPP_EOK; /* EOF */
-		if (self->tf_data.td_io.tff_tailc) {
-			io_dst -= self->tf_data.td_io.tff_tailc;
-			read_status += self->tf_data.td_io.tff_tailc;
-			self->tf_data.td_io.tff_tailc = 0;
+		if (self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc) {
+			io_dst -= self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
+			read_status += self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
+			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = 0;
 		}
 
 		/* Store unaligned tail data in out-of-band "tail" buffer */
@@ -5060,8 +5099,8 @@ convert_multiword_to_utf8:
 			tpp_char *tail_base;
 			read_status -= tail_size;
 			tail_base = io_dst + (tpp_size)read_status;
-			self->tf_data.td_io.tff_tailc = (uint_least8_t)tail_size;
-			tpp_memcpy(self->tf_data.td_io.tff_tailv, tail_base, tail_size);
+			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = (uint_least8_t)tail_size;
+			tpp_memcpy(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_base, tail_size);
 		}
 
 		dst_end = tpp_string_end(new_chunk);
@@ -5087,11 +5126,11 @@ convert_multiword_to_utf8:
 				/* Last word is a HIGH_UTF16 surrogate -> exclude from conversion
 				 * and add to tail (this character can only the next word has been
 				 * fully read, also, which should be the LOW_UTF16 surrogate) */
-				tpp_memmoveup(self->tf_data.td_io.tff_tailv + 2,
-				              self->tf_data.td_io.tff_tailv, tail_size);
-				self->tf_data.td_io.tff_tailv[0] = raw_last_word.w8[0];
-				self->tf_data.td_io.tff_tailv[1] = raw_last_word.w8[1];
-				self->tf_data.td_io.tff_tailc += 2;
+				tpp_memmoveup(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv + 2,
+				              self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_size);
+				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv[0] = raw_last_word.w8[0];
+				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv[1] = raw_last_word.w8[1];
+				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc += 2;
 				--words;
 			}
 			if (self->tf_enc == TPP_FILE_ENCODING_UTF16_LE) {
@@ -5132,9 +5171,33 @@ convert_multiword_to_utf8:
 		return TPP_EOK;
 	}	break;
 
+#if TPP_HAVE_FILE_ENCODING_EMBED
+	case TPP_FILE_ENCODING_EMBED: {
+		tpp_char *dst_base, *dst_end;
+		tpp_size out_size;
+		if ((tpp_uintmax)read_status > self->tf_data.td_io.tff_encdat.tffed_embedlimit)
+			read_status = (tpp_size)self->tf_data.td_io.tff_encdat.tffed_embedlimit;
+		self->tf_data.td_io.tff_encdat.tffed_embedlimit -= (tpp_size)read_status;
+		if tpp_unlikely(read_status == 0)
+			return TPP_EOK; /* EOF */
+		tpp_assert(io_dst == (tpp_char *)self->tf_end);
+		dst_end = tpp_string_end(new_chunk);
+		dst_base = tpp_embed_to_utf8((unsigned char const *)io_dst,
+		                             (tpp_size)read_status, dst_end);
+		if (is_first_chunk)
+			++dst_base; /* Skip over first leading "," in initial chunk */
+		out_size = (tpp_size)(dst_end - dst_base);
+		tpp_memmovedown(io_dst, dst_base, out_size);
+		self->tf_end += out_size;
+		return TPP_EOK;
+	}	break;
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+
 	default: tpp_unreachable();
 	}
-#endif /* TPP_HAVE_UNICODE */
+#elif TPP_HAVE_FILE_ENCODING_EMBED
+#error "'TPP_HAVE_FILE_ENCODING_EMBED' cannot be enabled without 'TPP_HAVE_UNICODE'"
+#endif /* ... */
 
 	/* Remember that more buffer space is now available! */
 	self->tf_end += (tpp_size)read_status;
@@ -12410,7 +12473,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 
 
-#if NEED_tpp_lexer_seek_eol || (TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT)
+#if NEED_tpp_lexer_seek_eol || (TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED)
 #undef tpp_lexer_seek_eol__STYLE_PARAM
 #undef tpp_lexer_seek_eol__STYLE_ARG
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
@@ -12423,7 +12486,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 /* Seek forward until *after* the next line-feed character (or true EOF)
  * Given `*p_pos' will be updated to point *after* the LF character (or *at* the EOF) */
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
@@ -12432,12 +12495,12 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM)
-#else /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#else /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM)
-#endif /* !TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* !TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED */
 {
 	tpp_errno error = TPP_EOK;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -12693,7 +12756,7 @@ done:
 	*p_pos = pos;
 	return error;
 }
-#endif /* NEED_tpp_lexer_seek_eol || TPP_HAVE_CPP_DIRECTIVES */
+#endif /* NEED_tpp_lexer_seek_eol || ... */
 
 
 /* Find the end of a "foo" or 'foo' string
@@ -19288,7 +19351,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_DIRECTIVES
 
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED
 #undef tpp_lexer_seek_eol__STYLE_PARAM
 #undef tpp_lexer_seek_eol__STYLE_ARG
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
@@ -19304,7 +19367,7 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM);
-#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED */
 
 
 #undef TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
@@ -20304,9 +20367,13 @@ tpp_lexer_handle_endif_directive(tpp_lexer *tpp_restrict self) {
 
 
 
-#if TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT
+#if TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED
 
 /* Parse the string with the current token pointing at the "include"-keyword
+ * Returns with the current token ending directly after the include-string (meaning
+ * that any trailing comments, or the trailing line-feed have *NOT* been parsed, yet,
+ * and that the lexer may even be inside of a nested macro right now)
+ *
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOENT:  No such file or directory (a warning was already emitted),
  *                       or file was marked according to "mask_flags"
@@ -20314,29 +20381,28 @@ tpp_lexer_handle_endif_directive(tpp_lexer *tpp_restrict self) {
  * @return: TPP_EIO:     I/O error */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_parse_include_directive_ex(tpp_lexer *tpp_restrict self,
-                                     tpp_lexer_openfile_result *tpp_restrict result,
-                                     tpp_lexer_openfile_flags mask_flags)
+tpp_lexer_parse_include_directive_impl_ex(tpp_lexer *tpp_restrict self,
+                                          tpp_lexer_openfile_result *tpp_restrict result,
+                                          tpp_lexer_openfile_flags mask_flags)
 #else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
-                                  tpp_lexer_openfile_result *tpp_restrict result)
-#define tpp_lexer_parse_include_directive_ex(self, mask_flags) tpp_lexer_parse_include_directive(self)
+tpp_lexer_parse_include_directive_impl(tpp_lexer *tpp_restrict self,
+                                       tpp_lexer_openfile_result *tpp_restrict result)
+#define tpp_lexer_parse_include_directive_impl_ex(self, mask_flags) tpp_lexer_parse_include_directive_impl(self)
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
 {
 	tpp_errno error;
 	tpp_token_id tok;
 	tpp_char const *directive_iter;
+	tpp_char const *token_start;
 	tpp_token *const token = tpp_lexer_gettoken(self);
-	tpp_file *directive_file = tpp_lexer_getfile(self);
-	tpp_char const *directive_start = directive_file->tf_tpos;
+	tpp_file *directive_file;
+	tpp_char const *directive_start;
 	tpp_size directive_rel_end;
-#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
-	bool did_warn_about_extra_tokens;
-	tpp_char const *directive_name = tpp_lexer_gettokenkwd(self)->tk_kwd;
-#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
-	tpp_assert(directive_file->tf_prev == NULL && "Caller must tpp_file_autopopfile_pushoff()");
+	tpp_assert(tpp_lexer_getfile(self)->tf_prev == NULL &&
+	           "Caller must tpp_file_autopopfile_pushoff()");
 again:
+	directive_file = tpp_lexer_getfile(self);
 #if TPP_HAVE_CPP_MACROS
 	while (directive_file->tf_prev)
 		directive_file = directive_file->tf_prev;
@@ -20344,10 +20410,13 @@ again:
 
 	/* Yield the next token (whilst keeping the start of the "include"-keyword loaded in memory) */
 	directive_iter = token->tt_end;
+	directive_start = directive_file->tf_tpos;
 	directive_rel_end = (tpp_size)(directive_file->tf_pos - directive_start);
 	directive_file->tf_pos = directive_start;
 	tok = tpp_lexer_yieldraw_at_include_string_blocking(self, &directive_iter);
+	token_start = token->tt_start;
 	directive_start = directive_file->tf_pos;
+	directive_file->tf_tpos = directive_start;
 	directive_file->tf_pos += directive_rel_end;
 	token->tt_end = directive_iter;
 
@@ -20360,29 +20429,33 @@ again:
 		rel_directive_start = tpp_file_keep_ptr2rel(directive_file, directive_start);
 
 		/* Do macro expansion... */
+		token->tt_start = token_start;
 		tok = tpp_lexer_yield_handle_keyword(self, tok);
 
 		directive_start = tpp_file_keep_rel2ptr(directive_file, rel_directive_start);
 		tpp_file_popkeep(directive_file);
+		directive_file->tf_tpos = directive_start;
 		if (tok == TPP_TOK_EOF)
 			goto again;
 	}
 #endif /* TPP_HAVE_CPP_MACROS */
 
-	/* Skip over whitespace and comments (but not line-feeds) */
-	if (TPP_TOK_ISSPACE_OR_COMMENT(tok))
+	/* Skip over leading whitespace and comments (but not line-feeds) */
+	if (TPP_TOK_ISSPACE_OR_COMMENT(tok)) /* TODO: Inside of __has_include() & friends, must also skip line-feeds here! */
 		goto again;
 
 	/* Propagate errors */
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 
+	token->tt_start = token_start;
 	if (tok == '"' || tok == '<') {
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
 		error = tpp_lexer_open_include_string_ex(self, result, mask_flags);
 #else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 		error = tpp_lexer_open_include_string(self, result);
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+
 #if TPP_HAVE_TPP_W_NO_SUCH_FILE
 		if (error == TPP_ENOENT) {
 			tpp_errno warn_error = tpp_lexer_warnf(self, TPP_W_NO_SUCH_FILE);
@@ -20406,6 +20479,7 @@ again:
 		error = TPP_ENOENT;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
 	}
+	directive_file->tf_tpos = directive_start;
 
 	/* Propagate errors. */
 	if (error != TPP_EOK && error != TPP_ENOENT) {
@@ -20416,32 +20490,85 @@ again:
 		return error;
 	}
 
-	/* Seek until EOF */
+	return error;
+}
+#endif /* TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED */
+
+#if TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT
+
+/* Parse the string with the current token pointing at the "include"-keyword
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOENT:  No such file or directory (a warning was already emitted),
+ *                       or file was marked according to "mask_flags"
+ * @return: TPP_ENOMEM:  Out of memory
+ * @return: TPP_EIO:     I/O error */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parse_include_directive_ex(tpp_lexer *tpp_restrict self,
+                                     tpp_lexer_openfile_result *tpp_restrict result,
+                                     tpp_lexer_openfile_flags mask_flags)
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
+                                  tpp_lexer_openfile_result *tpp_restrict result)
+#define tpp_lexer_parse_include_directive_ex(self, mask_flags) tpp_lexer_parse_include_directive(self)
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+{
+	tpp_errno error;
+	tpp_token_id tok;
+	tpp_token *const token = tpp_lexer_gettoken(self);
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
-	did_warn_about_extra_tokens = false;
+	bool did_warn_about_extra_tokens = false;
+	tpp_char const *directive_name = tpp_lexer_gettokenkwd(self)->tk_kwd;
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+
+	/* Call underlying include loader. */
+	error = tpp_lexer_parse_include_directive_impl_ex(self, result, mask_flags);
+	if (error != TPP_EOK && error != TPP_ENOENT)
+		return error;
+
+	/* Seek until EOF */
+	tok = tpp_lexer_gettok(self);
 	while (!TPP_TOK_ISLF_OR_COMMENT(tok)
 #if TPP_HAVE_CPP_MACROS
 	       || tpp_lexer_getfile(self)->tf_prev
 #endif /* TPP_HAVE_CPP_MACROS */
 	       ) {
+		tpp_size directive_rel_end;
+		tpp_file *file = tpp_lexer_getfile(self);
+		tpp_char const *directive_start;
+		tpp_char const *directive_iter;
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+		tpp_char const *token_start;
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 		if (tok == TPP_TOK_EOF) {
 #if TPP_HAVE_CPP_MACROS
 			if (tpp_lexer_getfile(self)->tf_prev) {
 				tpp_lexer_popfile(self);
-				directive_iter = tpp_lexer_getfile(self)->tf_pos;
 			} else
 #endif /* TPP_HAVE_CPP_MACROS */
 			{
 				break;
 			}
 		}
-		directive_rel_end = (tpp_size)(directive_file->tf_pos - directive_start);
-		directive_file->tf_pos = directive_start;
-		tok = tpp_lexer_yieldraw_at_include_string_blocking(self, &directive_iter);
-		directive_start = directive_file->tf_pos;
-		directive_file->tf_pos += directive_rel_end;
+
+#if TPP_HAVE_CPP_MACROS
+		while (file->tf_prev)
+			file = file->tf_prev;
+#endif /* TPP_HAVE_CPP_MACROS */
+		directive_iter = token->tt_end;
+		directive_start = file->tf_tpos;
+		directive_rel_end = (tpp_size)(file->tf_pos - directive_start);
+		file->tf_pos = directive_start;
+		tok = tpp_lexer_yieldraw_at_blocking(self, &directive_iter);
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+		token_start = token->tt_start;
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+		directive_start = file->tf_pos;
+		file->tf_tpos = directive_start;
+		file->tf_pos += directive_rel_end;
 		token->tt_end = directive_iter;
+
 		if (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT_OR_EOF(tok))
 			continue;
 		if (TPP_TOK_ISERR(tok)) {
@@ -20452,11 +20579,12 @@ again:
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
 		if (!did_warn_about_extra_tokens) {
 			tpp_errno warn_error;
+			tpp_char const *saved_start;
 			did_warn_about_extra_tokens = true;
-			directive_start = directive_file->tf_pos;
-			token->tt_end = directive_iter;
+			saved_start = token->tt_start;
+			token->tt_start = token_start;
 			warn_error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, directive_name);
-			directive_file->tf_pos = directive_start;
+			token->tt_start = saved_start;
 			if (TPP_ISERR(warn_error)) {
 				if (error == TPP_EOK)
 					tpp_io_close(result->tlofr_handle);
@@ -20466,9 +20594,6 @@ again:
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 	}
 
-	/* At this point, the current token's start/end bounds point at the entire #include-directive,
-	 * starting at the start of the "include" keyword, and ending at the end of the trailing linefeed */
-	tpp_lexer_gettoken(self)->tt_start = directive_start;
 #if TPP_HAVE_CPP_MACROS
 	tpp_assert(tpp_lexer_getfile(self)->tf_prev == NULL);
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -20520,13 +20645,457 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 }
 #endif /* TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT */
 
-//TODO:#if TPP_HAVE_CPP_EMBED
-//TODO:static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-//TODO:tpp_lexer_handle_embed_directive(tpp_lexer *tpp_restrict self,
-//TODO:                                 tpp_file *const _tfapfp_prev) {
-//TODO:	/* TODO */
-//TODO:}
-//TODO:#endif /* TPP_HAVE_CPP_EMBED */
+
+#if TPP_HAVE_CPP_EMBED
+
+typedef struct tpp_embed_builder {
+	tpp_lexer_openfile_result teb_ofr;       /* [valid_if(teb_ofr_error == TPP_EOK)] The file to embed */
+	tpp_errno                 teb_ofr_error; /* Error from opening "teb_ofr" (either TPP_EOK, or TPP_ENOENT) */
+	tpp_lexer_arginfo         teb_prefix;    /* Prefix to put before a non-empty file */
+	tpp_lexer_arginfo         teb_suffix;    /* Suffix to put after a non-empty file */
+	tpp_lexer_arginfo         teb_if_empty;  /* Replacement for an empty file */
+	tpp_uintmax               teb_limit;     /* Limit on how many bytes to embed */
+} tpp_embed_builder;
+
+static TPP_NONNULL((1)) void TPPCALL
+tpp_embed_builder_fini(tpp_embed_builder *tpp_restrict self) {
+	if (self->teb_ofr_error == TPP_EOK)
+		tpp_io_close(self->teb_ofr.tlofr_handle);
+	tpp_lexer_arginfo_fini(&self->teb_prefix);
+	tpp_lexer_arginfo_fini(&self->teb_suffix);
+	tpp_lexer_arginfo_fini(&self->teb_if_empty);
+}
+
+#if !TPP_HAVE_FILE_ENCODING_EMBED
+static tpp_errno TPPCALL
+tpp_string_builder_append_embed(tpp_string_builder *tpp_restrict self,
+                                tpp_io_handle ioh, tpp_uintmax limit) {
+	unsigned char buf[512];
+	tpp_size i, count;
+	tpp_ssize read_status;
+again:
+	count = sizeof(buf);
+	if ((tpp_uintmax)count > limit)
+		count = (tpp_size)limit;
+#if TPP_HAVE_FILE_NONBLOCK
+	read_status = tpp_io_read(ioh, buf, count, 0);
+#else /* TPP_HAVE_FILE_NONBLOCK */
+	read_status = tpp_io_read(ioh, buf, count;
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+	if (read_status < 0)
+		return (tpp_errno)read_status;
+	if (read_status == 0)
+		return TPP_EOK;
+	limit -= (tpp_size)read_status;
+	for (i = 0; i < (tpp_size)read_status; ++i) {
+		char repr[4], *p = repr + 4;
+		unsigned char b = buf[i];
+		*--p = '0' + (b % 10);
+		if (b >= 10)
+			*--p = '0' + ((b / 10) % 10);
+		if (b >= 100)
+			*--p = '0' + (b / 100);
+		*--p = ',';
+		if (tpp_string_builder_print(self, (tpp_char const *)p, (tpp_size)(repr + 4 - p)) < 0)
+			return TPP_ENOMEM;
+	}
+	goto again;
+}
+#endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
+
+
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
+                                    tpp_lexer *tpp_restrict lexer) {
+	tpp_string_builder embed_data;
+	tpp_token_id result;
+	tpp_ssize ofr_read_status;
+	unsigned char ofr_first_byte;
+	tpp_file *const file = tpp_lexer_getfile(lexer);
+	tpp_file *prev_file;
+	if (self->teb_limit == 0)
+		goto return_empty_file; /* Treat as an file... */
+	if (self->teb_ofr_error != TPP_EOK)
+		goto return_empty_file; /* Treat as an file... */
+#if TPP_HAVE_FILE_ENCODING_EMBED
+	if ((self->teb_if_empty.tlai_start >= self->teb_if_empty.tlai_end) &&
+	    (self->teb_prefix.tlai_start >= self->teb_prefix.tlai_end) &&
+	    (self->teb_suffix.tlai_start >= self->teb_suffix.tlai_end)) {
+		/* Simple case: simply push a "TPP_FILE_ENCODING_EMBED" file */
+		prev_file = tpp_file_alloc();
+		if tpp_unlikely(!prev_file)
+			goto err_nomem;
+		*prev_file = *file;
+		tpp_file_init_io_ex2(file, (char const *)self->teb_ofr.tlofr_filename->tk_kwd,
+		                     self->teb_ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL,
+		                     TPP_FILE_ENCODING_EMBED);
+		tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
+		file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
+		file->tf_prev  = prev_file;
+		file->tf_tprev = prev_file;
+		goto done_inherit_io_handle;
+	}
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+
+	/* Read the first by of the OFR file */
+#if TPP_HAVE_FILE_NONBLOCK
+	ofr_read_status = tpp_io_read(self->teb_ofr.tlofr_handle, &ofr_first_byte, 1, 0);
+#else /* TPP_HAVE_FILE_NONBLOCK */
+	ofr_read_status = tpp_io_read(self->teb_ofr.tlofr_handle, &ofr_first_byte, 1);
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+	if (ofr_read_status < 0) {
+		result = TPP_TOK_OFERR((tpp_errno)ofr_read_status);
+		goto return_result_and_fini;
+	}
+
+	/* Check if the file is actually empty... */
+	if (ofr_read_status == 0)
+		goto return_empty_file;
+	--self->teb_limit;
+
+	/* File is non-empty! */
+	if (self->teb_suffix.tlai_start < self->teb_suffix.tlai_end) {
+		/* Push a sub-text file for the suffix */
+		prev_file = tpp_file_alloc();
+		if tpp_unlikely(!prev_file)
+			goto err_nomem;
+		*prev_file = *file;
+		file->tf_kind  = TPP_FILE_KIND_SUBTEXT
+		_tpp_file_subtext_init_ifdef(file)
+		_tpp_file_init_lcpos(file);
+		file->tf_prev  = prev_file;
+		file->tf_tprev = prev_file;
+		file->tf_chunk = self->teb_suffix.tlai_chunk;
+		file->tf_pos   = self->teb_suffix.tlai_start;
+		file->tf_end   = self->teb_suffix.tlai_end;
+		self->teb_suffix.tlai_chunk = NULL;
+	}
+
+	/* Construct the (possibly only head)-data for the embedded file itself. */
+	tpp_string_builder_init(&embed_data);
+	if (self->teb_prefix.tlai_start < self->teb_prefix.tlai_end) {
+		if (tpp_string_builder_print(&embed_data, self->teb_prefix.tlai_start,
+		                             (tpp_size)(self->teb_prefix.tlai_end - self->teb_prefix.tlai_start)) < 0)
+			goto err_nomem_embed_data;
+	}
+	{
+		char ord[3], *p = ord + 3;
+		*--p = '0' + (ofr_first_byte % 10);
+		if (ofr_first_byte >= 10)
+			*--p = '0' + ((ofr_first_byte / 10) % 10);
+		if (ofr_first_byte >= 100)
+			*--p = '0' + (ofr_first_byte / 100);
+		if (tpp_string_builder_print(&embed_data, (tpp_char const *)p, (tpp_size)(ord + 3 - p)) < 0)
+			goto err_nomem_embed_data;
+	}
+
+	/* Convert remainder of embedded file into a byte-sequence */
+#if !TPP_HAVE_FILE_ENCODING_EMBED
+	{
+		tpp_errno error = tpp_string_builder_append_embed(&embed_data,
+		                                                  self->teb_ofr.tlofr_handle,
+		                                                  self->teb_limit);
+		if (TPP_ISERR(error)) {
+			result = TPP_TOK_OFERR(error);
+			tpp_string_builder_fini(&embed_data);
+			goto return_result_and_fini;
+		}
+	}
+#endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
+
+	/* Push a file for the #embed-ed file itself */
+	prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		goto err_nomem_embed_data;
+	*prev_file = *file;
+#if TPP_HAVE_FILE_ENCODING_EMBED
+	tpp_file_init_io_ex2(file, (char const *)self->teb_ofr.tlofr_filename->tk_kwd,
+	                     self->teb_ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL,
+	                     TPP_FILE_ENCODING_EMBED);
+	tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
+	file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
+	file->tf_chunk = tpp_string_builder_pack(&embed_data);
+	file->tf_pos   = tpp_string_str(file->tf_chunk);
+	file->tf_end   = tpp_string_end(file->tf_chunk);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+done_inherit_io_handle:
+	tpp_lexer_arginfo_fini(&self->teb_prefix);
+	tpp_lexer_arginfo_fini(&self->teb_suffix);
+	tpp_lexer_arginfo_fini(&self->teb_if_empty);
+#else /* TPP_HAVE_FILE_ENCODING_EMBED */
+	{
+		TPP_REF tpp_string *chunk = tpp_string_builder_pack(&embed_data);
+		tpp_file_init_text_ascii(file, (char const *)self->teb_ofr.tlofr_filename->tk_kwd,
+		                         chunk, tpp_string_str(chunk), tpp_string_len(chunk),
+		                         TPP_LCINFO_INVALID);
+	}
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	tpp_embed_builder_fini(self);
+#endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
+	return TPP_TOK_EOF;
+return_empty_file:
+	if (self->teb_if_empty.tlai_start < self->teb_if_empty.tlai_end) {
+		/* Return a sub-text file containing the if-empty text */
+		prev_file = tpp_file_alloc();
+		if tpp_unlikely(!prev_file)
+			goto err_nomem;
+		*prev_file = *file;
+		file->tf_kind  = TPP_FILE_KIND_SUBTEXT
+		_tpp_file_subtext_init_ifdef(file)
+		_tpp_file_init_lcpos(file);
+		file->tf_prev  = prev_file;
+		file->tf_tprev = prev_file;
+		file->tf_chunk = self->teb_if_empty.tlai_chunk;
+		file->tf_pos   = self->teb_if_empty.tlai_start;
+		file->tf_end   = self->teb_if_empty.tlai_end;
+		self->teb_if_empty.tlai_chunk = NULL;
+	}
+	result = TPP_TOK_EOF;
+return_result_and_fini:
+	tpp_embed_builder_fini(self);
+	return result;
+err_nomem_embed_data:
+	tpp_string_builder_fini(&embed_data);
+err_nomem:
+	result = TPP_TOK_ENOMEM;
+	goto return_result_and_fini;
+}
+
+/* Parse trailing parameters following a #embed directive */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
+                               tpp_lexer *tpp_restrict lexer,
+                               tpp_token_id param_kwd) {
+	tpp_token_id tok;
+	tpp_errno error;
+	char const *function_name = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(lexer));
+	switch (param_kwd) {
+
+	case TPP_KWD_limit: {
+		tpp_expr_value limit_value_expr;
+		do {
+			tok = tpp_lexer_yield_blocking(lexer);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR('('));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		error = tpp_lexer_parseexpr(lexer, &limit_value_expr);
+		if (TPP_ISERR(error))
+			return error;
+		if (tpp_expr_value_isint(&limit_value_expr)) {
+			error = tpp_expr_value_asint(&limit_value_expr, &self->teb_limit);
+		} else {
+			bool as_bool;
+			error = tpp_expr_value_asbool(lexer, &limit_value_expr, &as_bool);
+			self->teb_limit = as_bool ? 1 : 0;
+		}
+		tpp_expr_value_fini(&limit_value_expr);
+		if (TPP_ISERR(error))
+			return error;
+		tok = tpp_lexer_gettok(lexer);
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(lexer);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_skip(lexer, TPP_TOK_OFCHAR(')'));
+		return TPP_TOK_ASERR_OR_EOK(tok);
+	}	break;
+
+	case TPP_KWD_prefix:
+	case TPP_KWD_suffix:
+	case TPP_KWD_if_empty: {
+		tpp_lexer_arginfo arg;
+		tpp_lexer_arginfo *p_dst_arg;
+		do {
+			tok = tpp_lexer_yield_blocking(lexer);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR('('));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
+		                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		switch (param_kwd) {
+		case TPP_KWD_prefix: p_dst_arg = &self->teb_prefix; break;
+		case TPP_KWD_suffix: p_dst_arg = &self->teb_suffix; break;
+		case TPP_KWD_if_empty: p_dst_arg = &self->teb_if_empty; break;
+		default: tpp_unreachable();
+		}
+		tpp_lexer_arginfo_fini(p_dst_arg);
+		*p_dst_arg = arg;
+		return TPP_EOK;
+	}	break;
+
+	default: break;
+	}
+
+#if TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER
+	error = tpp_lexer_warnf(lexer, TPP_W_UNKNOWN_EMBED_PARAMETER);
+	if (TPP_TOK_ISERR(error))
+		return error;
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER */
+
+#if TPP_HAVE_TPP_TOK_COLON_COLON
+continue_after_unknown_name:
+#endif /* TPP_HAVE_TPP_TOK_COLON_COLON */
+	do {
+		tok = tpp_lexer_yield_blocking(lexer);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+#if TPP_HAVE_TPP_TOK_COLON_COLON
+	if (tok == TPP_TOK_COLON_COLON) {
+		do {
+			tok = tpp_lexer_yield_blocking(lexer);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		if (TPP_TOK_ISKEYWORD(tok))
+			goto continue_after_unknown_name;
+	}
+#endif /* TPP_HAVE_TPP_TOK_COLON_COLON */
+	if (tok == '(') {
+		tpp_lexer_arginfo arg;
+		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
+		                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tpp_lexer_arginfo_fini(&arg);
+	}
+	return TPP_EOK;
+}
+
+/* Must be called with "self" pointing at the token preceding the #include-string */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
+                             tpp_lexer *tpp_restrict lexer) {
+	tpp_token_id tok;
+
+	/* Call underlying include loader. */
+	self->teb_ofr_error = tpp_lexer_parse_include_directive_impl_ex(lexer, &self->teb_ofr,
+	                                                                   TPP_LEXER_OPENFILE_FLAG_NORMAL);
+	if (self->teb_ofr_error != TPP_EOK && self->teb_ofr_error != TPP_ENOENT)
+		return self->teb_ofr_error;
+
+	/* Initialize other pieces of the directive. */
+	tpp_lexer_arginfo_init_empty(&self->teb_prefix);
+	tpp_lexer_arginfo_init_empty(&self->teb_suffix);
+	tpp_lexer_arginfo_init_empty(&self->teb_if_empty);
+	self->teb_limit = (tpp_uintmax)-1;
+
+	/* At this point, the lexer looks like this:
+	 *           tf_tpos  tf_pos
+	 *           v        v
+	 * >> #embed "foo.dat" limit(DATA_LIMIT) if_empty(42, 10,) prefix(0xff,) suffix(,)
+	 * >> content-of-next-line
+	 *    ^
+	 *    EOF
+	 *
+	 * We must now parse all those #embed parameters
+	 * NOTE: We may also be inside of a macro right now! */
+
+	for (;;) {
+		tpp_errno error;
+		/* Yield to the first parameter (or just straight to the trailing LF) */
+		do {
+			tok = tpp_lexer_yield_blocking(lexer);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			goto err_tok_builder;
+		if (!TPP_TOK_ISKEYWORD(tok))
+			break;
+		error = tpp_embed_builder_handle_param(self, lexer, tok);
+		if (TPP_TOK_ISERR(error)) {
+			tok = TPP_TOK_OFERR(error);
+			goto err_tok_builder;
+		}
+	}
+	return TPP_EOK;
+err_tok_builder:
+	tpp_embed_builder_fini(self);
+	return TPP_TOK_ASERR(tok);
+}
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_handle_embed_directive(tpp_lexer *tpp_restrict self,
+                                 tpp_file *const _tfapfp_prev) {
+	tpp_errno error;
+	tpp_embed_builder builder;
+	tpp_size rel_filename;
+	tpp_char const *directive_start; /* Start of "embed" keyword in source */
+	tpp_char const *directive_eol;   /* End of line-feed at end of embed directive (or EOF in containing file) */
+	tpp_file *const file = tpp_lexer_getfile(self);
+
+
+	/* At this point, the lexer looks like this:
+	 * >> #embed ["foo.dat" limit(DATA_LIMIT) if_empty(42, 10,) prefix(0xff,) suffix(,)]
+	 *     ^    ^
+	 * tt_start tt_end
+	 *
+	 * (Everything in brackets may not have been loaded yet)
+	 *
+	 * We must now start by pre-loading the remainder of the current line, whilst
+	 * ensuring that the start of the directive remains loaded into memory! */
+	tpp_assert(file->tf_prev == NULL);
+	directive_eol = file->tf_pos;
+	file->tf_pos   = file->tf_tpos;
+	rel_filename   = (tpp_size)(directive_eol - file->tf_tpos);
+	error = tpp_lexer_seek_eol(self, &directive_eol tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_EOF));
+	file->tf_tpos  = file->tf_pos;
+	file->tf_pos += rel_filename;
+	if (TPP_ISERR(error)) {
+		tpp_lexer_autopopfile_break(self);
+		return TPP_TOK_OFERR(error);
+	}
+
+	/* At this point, the lexer looks like this:
+	 * tf_tpos  tf_pos
+	 *     v    v
+	 * >> #embed "foo.dat" limit(DATA_LIMIT) if_empty(42, 10,) prefix(0xff,) suffix(,)
+	 * >> content-of-next-line
+	 *    ^
+	 *    directive_eol */
+	directive_start = file->tf_tpos;
+	tpp_file_pusheof(file);
+	tpp_file_seteof(file, directive_eol);
+	error = tpp_embed_builder_init_parse(&builder, self);
+
+	/* Warn if there's anything after the directive that wasn't parsed */
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+	if (!TPP_ISERR(error) && tpp_lexer_gettok(self) != TPP_TOK_EOF) {
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tpp_lexer_gettok(self))) {
+			tpp_token_id tok = tpp_lexer_yield_blocking(self);
+			if (TPP_TOK_ISERR(tok)) {
+				error = TPP_TOK_ASERR(tok);
+				break;
+			}
+		}
+		if (!TPP_ISERR(error) && tpp_lexer_gettok(self) != TPP_TOK_EOF)
+			error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, "embed");
+	}
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+
+	/* Make sure the #include-stack is empty except for the file containing the #embed directive */
+	while (file->tf_prev)
+		tpp_lexer_popfile(self);
+	tpp_file_popeof(file);
+	file->tf_tpos = directive_start;
+	file->tf_pos  = directive_eol;
+	tpp_lexer_autopopfile_break(self);
+	if (TPP_ISERR(error))
+		return TPP_TOK_OFERR(error);
+
+	/* Pack the builder into an actual file */
+	return tpp_embed_builder_pack_and_pushfile(&builder, self);
+}
+#endif /* TPP_HAVE_CPP_EMBED */
 
 
 
@@ -20699,17 +21268,16 @@ again_yield_directive_iter:
 
 /************************************************************************/
 #if TPP_HAVE_CPP_EMBED
-	case TPP_KWD_embed: {
+	case TPP_KWD_embed:
 #if TPP_CONF_MAYBE_0(TPP_HAVE_CPP_EMBED)
 		if (!tpp_lexer_has(self, CPP_EMBED))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_EMBED) */
 		tpp_lexer_process_directive_set_noguard();
-		/* TODO: #embed  (https://en.cppreference.com/c/preprocessor/embed) */
-		goto seek_end_of_line;
-#define WANT_seek_end_of_line
-	}	break;
+		file->tf_pos = directive_iter;
+		/* #embed  (https://en.cppreference.com/c/preprocessor/embed) */
+		return tpp_lexer_handle_embed_directive(self, _tfapfp_prev);
 #endif /* TPP_HAVE_CPP_EMBED */
 /************************************************************************/
 
