@@ -40,6 +40,7 @@
 #include "parts/keyword.h"
 #include "parts/extensions.h"
 #include "parts/warnings.h"
+#include "parts/sysinclude.h"
 #include "parts/lexer.h"
 
 #endif /* !TPP_DEFS */

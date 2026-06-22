@@ -28,6 +28,7 @@
 #include "features.h"
 #include "file.h"
 #include "keyword.h"
+#include "sysinclude.h"
 #include "time.h"
 #include "token.h"
 #include "warnings.h"
@@ -105,9 +106,10 @@ typedef struct tpp_lexer {
 #endif /* !TPP_HAVE_LEXER_STATE_FLAGS */
 
 
+	/* system #include paths (/usr/include, ...) */
 #if TPP_HAVE_INCLUDE_PATH
-	/* TODO: system #include paths (/usr/include, ...) */
-#define _tpp_lexer_init_incpath(self) /* TODO */
+	tpp_include_paths TPP_INTERNAL(tl_include_paths);
+#define _tpp_lexer_init_incpath(self) , tpp_include_paths_init(&(self)->TPP_INTERNAL(tl_include_paths))
 #else /* TPP_HAVE_INCLUDE_PATH */
 #define _tpp_lexer_init_incpath(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH */
@@ -413,11 +415,15 @@ tpp_lexer_init_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filenam
 
 #if TPP_HAVE_LEXER_INIT_FILENAME
 /* Initialize a lexer such that it starts reading from "filename"
+ * @param: filename_maxlen: Max length of "filename" (in characters). You may
+ *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOENT: No such file or directory
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_init_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *tpp_restrict filename);
+tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
+                        /*utf-8*/ char const *tpp_restrict filename,
+                        tpp_size filename_maxlen);
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
 
 
@@ -443,11 +449,15 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 #if TPP_HAVE_LEXER_INIT_FILENAME
 /* Push another file onto the #include-stack:
  * After a call to this function, the caller is responsible to yield the first token!
+ * @param: filename_maxlen: Max length of "filename" (in characters). You may
+ *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOENT: No such file or directory
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *tpp_restrict filename);
+tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self,
+                            /*utf-8*/ char const *tpp_restrict filename,
+                            tpp_size filename_maxlen);
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
 
 /* Check if the current file can be popped. */
@@ -473,22 +483,10 @@ typedef struct tpp_lexer_openfile_result {
 	tpp_io_handle tlofr_handle;   /* [1..1] I/O handle for requested file (must be inherited by caller) */
 } tpp_lexer_openfile_result;
 
-/* Construct the filename, open the file, and initialize "result" accordingly
- * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
- *                      in case "filename" is a relative path, in which case the
- *                      filename of the file to open should be relative to the
- *                      directory of "relative_to"
- * @param: result:      Open file information (pass along to "tpp_file_init_io()")
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Insufficient memory
- * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
-#define tpp_lexer_openfile(self, relative_to, filename, result) \
-	tpp_lexer_openfile_ex(self, relative_to, filename, result, 0)
-
 #define TPP_LEXER_OPENFILE_FLAG_NORMAL 0 /* Normal flags */
 #ifdef tpp_keyword_flags
-#define tpp_lexer_openfile_flags tpp_keyword_flags
+#define tpp_lexer_openfile_flags tpp_keyword_flags /* Set of `TPP_LEXER_OPENFILE_FLAG_*' */
 #if TPP_HAVE_CPP_IMPORT
 #define TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED TPP_KEYWORD_FLAG_HDR_IMPORTED    /* Filter out files that were already #import-ed */
 #endif /* TPP_HAVE_CPP_IMPORT */
@@ -499,7 +497,7 @@ typedef struct tpp_lexer_openfile_result {
 #define TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED  TPP_KEYWORD_FLAG_HDR_GUARD_VALID /* Filter out files with a confirmed "#ifndef"-block of a macro that is current defined */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #else /* tpp_keyword_flags */
-#define tpp_lexer_openfile_flags uint_least32_t
+#define tpp_lexer_openfile_flags uint_least32_t /* Set of `TPP_LEXER_OPENFILE_FLAG_*' */
 #endif /* !tpp_keyword_flags */
 #if TPP_HAVE_CPP_INCLUDE_NEXT
 #define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
@@ -519,18 +517,33 @@ typedef struct tpp_lexer_openfile_result {
  *                     - TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
  *                     - TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
  *
- * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set. */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOMEM:  Insufficient memory
+ * @return: TPP_ENOENT:  No such file, or TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT was
+ *                       given, and the file is already located on the #include-stack.
+ * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
 tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       /*0..1*/ char const *tpp_restrict relative_to,
-                      /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                      /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                       /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                       tpp_lexer_openfile_flags mask_flags);
+#define tpp_lexer_openfile(self, relative_to, filename, filename_maxlen, result) \
+	tpp_lexer_openfile_ex(self, relative_to, filename, filename_maxlen, result, TPP_LEXER_OPENFILE_FLAG_NORMAL)
 #else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+/* Construct the filename, open the file, and initialize "result" accordingly
+ * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
+ *                      in case "filename" is a relative path, in which case the
+ *                      filename of the file to open should be relative to the
+ *                      directory of "relative_to"
+ * @param: result:      Open file information (pass along to "tpp_file_init_io()")
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Insufficient memory
+ * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
 tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*0..1*/ char const *tpp_restrict relative_to,
-                   /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                   /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE */
@@ -906,26 +919,67 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_include_string(tpp_lexer *tpp_restrict self);
-
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
 #define tpp_lexer_yieldraw_include_string(self) \
 	tpp_lexer_yieldraw_at_include_string(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
-
-/* TODO: API to decode a parsed #include-string (~ala "tpp_lexer_decodestring()") -- needs to remove BSE and trigraphs */
-/* TODO: API built on-top of the #include-string decoder that uses "tpp_lexer_openfile_ex()" combined with
- *       filenames from the current #include-stack, as well as system include paths to (try to) open the
- *       named file. -- This function must also take "tpp_keyword_flags mask_flags", allowing the caller
- *       to selectively filter out certain files based on context:
- *       #include ...             TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
- *       __has_include(...)       TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
- *       #include_next ...        TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
- *       __has_include_next(...)  TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
- *       #import ...              TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
- *       #embed ...               TPP_LEXER_OPENFILE_FLAG_NORMAL
- *       __has_embed(...)         TPP_LEXER_OPENFILE_FLAG_NORMAL
- */
 #endif /* TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
+
+#if TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
+/* Decode the current token as a #include-string. The caller is responsible to
+ * ensure that the current token was loaded by `tpp_lexer_yield_include_string()'
+ * and is either TPP_TOK_OFCHAR('<') or TPP_TOK_OFCHAR('"')
+ *
+ * @return: * :  Sum of positive return values from printers
+ * @return: < 0: First negative return value from printers */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
+                                tpp_formatprinter printer, void *arg);
+
+/* Same as `tpp_lexer_decode_include_string()', but the given "cb" is only
+ * invoked once whilst being passed the *entire* (decoded) #include-string.
+ *
+ * @return: * : Return value of the (singular) invocation of "cb"
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
+                                   tpp_errno (TPPCALL *cb)(void *arg, tpp_char const *str, tpp_size length),
+                                   void *arg);
+#endif /* TPP_HAVE_LEXER_DECODE_INCLUDE_STRING */
+
+
+#if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+/* Wrapper around `tpp_lexer_decode_include_string_cb()' that automatically
+ * does the necessary calls to `tpp_lexer_openfile_ex()'. It also handles
+ * the `TPP_ENOENT' (as far as possible) by continuing to search for other
+ * matching files. The specified "mask_flags" should be set depending on
+ * context like:
+ * - #include ...             TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ * - __has_include(...)       TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ * - #include_next ...        TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ * - __has_include_next(...)  TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ * - #import ...              TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
+ * - #embed ...               TPP_LEXER_OPENFILE_FLAG_NORMAL
+ * - __has_embed(...)         TPP_LEXER_OPENFILE_FLAG_NORMAL
+ *
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOMEM:  Insufficient memory
+ * @return: TPP_ENOENT:  No such file
+ * @return: TPP_EMASKED: (tpp_lexer_open_include_string_ex only): Flags
+ *                       specified by "mask_flags" were already set. */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_open_include_string_ex(tpp_lexer *tpp_restrict self,
+                                 /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
+                                 tpp_lexer_openfile_flags mask_flags);
+#define tpp_lexer_open_include_string(self, result) \
+	tpp_lexer_open_include_string_ex(self, result, 0)
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
+                              /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
 
 
 

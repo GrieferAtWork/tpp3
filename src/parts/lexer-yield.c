@@ -1279,7 +1279,10 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 /* Handle a keyword-style macro.
  * @return: TPP_TOK_EOF: Caller should yield again.
  * @return: * : The new expansion token after keywords were handled */
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok);
+
+TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
 	tpp_keyword const *const keyword = token->tt_kwd;
@@ -1372,119 +1375,6 @@ again:
 	}
 	return result;
 }
-
-
-
-#if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
-	tpp_file const *const file = tpp_lexer_getfile(self);
-	tpp_token *const token = tpp_lexer_gettoken(self);
-	tpp_char const *pos = *p_pos;
-	tpp_size const rel_start = tpp_file_ptr2rel(file, pos);
-	tpp_char ch;
-	tpp_errno error;
-	error = tpp_lexer_readchar(self, &pos, &ch);
-	if (TPP_ISERR(error))
-		goto handle_error;
-	if (ch == '<' || ch == '"') {
-		tpp_char const start_ch = ch;
-		tpp_char const end_ch = ch == '<' ? '>' : ch;
-		for (;;) {
-			tpp_size const rel_pos = tpp_file_ptr2rel(file, pos);
-			error = tpp_lexer_readchar(self, &pos, &ch);
-			if (TPP_ISERR(error))
-				goto handle_error;
-			if (ch == end_ch)
-				break;
-			if (ch == '\0' && pos >= file->tf_end) {
-				/* Warn about EOF in #include-string */
-#if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
-				                           TPP_W_STRING_TERMINATED_BY_EOF);
-				if (TPP_ISERR(error))
-					goto handle_error;
-#endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
-				pos = tpp_file_rel2ptr(file, rel_pos);
-				break;
-			}
-
-			if (tpp_ascii_islf(ch)) {
-#if TPP_HAVE_UNICODE
-warn_linefeed:
-#endif /* TPP_HAVE_UNICODE */
-				/* Warn about line-feed in #include-string */
-#if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
-				                           TPP_W_STRING_TERMINATED_BY_LINEFEED);
-				if (TPP_ISERR(error))
-					goto handle_error;
-#endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
-				pos = tpp_file_rel2ptr(file, rel_pos);
-				break;
-			} else
-#if TPP_HAVE_UNICODE
-			if (ch >= 0x80 && tpp_file_isutf8(file)) {
-				tpp_unichar uc;
-				--pos;
-				error = tpp_lexer_readunichar(self, &pos, &uc);
-				if (TPP_ISERR(error))
-					goto handle_error;
-				if (tpp_unicode_islf(uc))
-					goto warn_linefeed;
-			} else
-#endif /* TPP_HAVE_UNICODE */
-			{
-			}
-		}
-		/* Success -> setup token to describe the #include-string */
-		token->tt_id    = TPP_TOK_OFCHAR(start_ch);
-		token->tt_start = tpp_file_rel2ptr(file, rel_start);
-//		token->tt_end   = pos; /* Must be done by caller if that's what they want ... */
-		*p_pos = pos;          /* ... or done by this, in case "p_pos == &token->tt_end" */
-		return TPP_TOK_OFCHAR(start_ch);
-	}
-
-	/* Fallback: not an #include-string -> rewind and use "tpp_lexer_yieldraw_at()" to parse next token */
-	*p_pos = tpp_file_rel2ptr(file, rel_start);
-	return tpp_lexer_yieldraw_at(self, p_pos);
-handle_error:
-	*p_pos = tpp_file_rel2ptr(file, rel_start);
-	return TPP_TOK_OFERR(error);
-}
-
-/* (Mostly) the same as "tpp_lexer_yield()", except:
- * - Never process preprocessor directives (but macros are still expanded)
- * - If the next token starts with '"' or '<', parse it as a #include-string,
- *   with the token's start/end bounds pointing at the string's bounds. In
- *   this case, the token's ID (and return value) is:
- *   - TPP_TOK_OFCHAR('"')  // For #include "foo.h"
- *   - TPP_TOK_OFCHAR('<')  // For #include <foo.h>
- * - WARNING: This function doesn't filter SPACE/LF/COMMENT tokens
- *   (behaves as though 'TPP_LEXER_STATE_FLAG_ALLTOKENS' was set)
- *
- * @return: * : Some other token encountered (token was parsed like tpp_lexer_yieldraw())
- * @return: TPP_TOK_OFCHAR('"'): #include-string parsed: "foo.h"
- * @return: TPP_TOK_OFCHAR('<'): #include-string parsed: <foo.h>
- * @return: TPP_TOK_ENOMEM:      Out of memory
- * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
- * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield_include_string(tpp_lexer *tpp_restrict self) {
-	tpp_token_id result;
-again:
-	result = tpp_lexer_yieldraw_include_string(self);
-	if (TPP_TOK_ISKEYWORD(result)) {
-		/* Do macro expansion... */
-		result = tpp_lexer_yield_handle_keyword(self, result);
-		if (result == TPP_TOK_EOF)
-			goto again;
-	}
-	return result;
-}
-#endif /* TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 
 #if TPP_HAVE_FILE_NONBLOCK

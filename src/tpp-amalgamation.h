@@ -2556,6 +2556,14 @@ TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS, TPP_EXTNAME_BUILTIN_E
 TPP_EXTENSION(TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS, TPP_EXTNAME_BUILTIN_EXPR_CHARACTER_LITERALS, TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS))
 #define _tpp_lexer_has_BUILTIN_EXPR_CHARACTER_LITERALS(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
+#ifndef TPP_EXTNAME_INCLUDE_RELATIVE_TO_EVERY_FILE
+#define TPP_EXTNAME_INCLUDE_RELATIVE_TO_EVERY_FILE "include-relative-to-every-file"
+#endif /* !TPP_EXTNAME_INCLUDE_RELATIVE_TO_EVERY_FILE */
+#define TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE
+TPP_EXTENSION(TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE, TPP_EXTNAME_INCLUDE_RELATIVE_TO_EVERY_FILE, TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE))
+#define _tpp_lexer_has_INCLUDE_RELATIVE_TO_EVERY_FILE(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
 
 
 
@@ -3828,13 +3836,15 @@ TPP_DECL_END
 #define TPP_ERROR_LIMIT (-16)
 #endif /* !TPP_ERROR_LIMIT */
 
+/* TODO: -fmax-include-depth */
+
 
 
 /************************************************************************/
 /* CONFIGURATION PROFILE                                                */
 /************************************************************************/
 #define TPP_PROFILE_MINIMAL 0 /* Disable everything, except dependencies of explicitly enabled features */
-#define TPP_PROFILE_DEFAULT 1 /* Like "TPP_PROFILE_ALL", but only enable minimal multi-char tokens */
+#define TPP_PROFILE_DEFAULT 1 /* Default configuration for a pretty good compromise between "TPP_PROFILE_MINIMAL" and "TPP_PROFILE_ALL" */
 #define TPP_PROFILE_ALL     2 /* Enable (almost) all features, with everything configurable at runtime */
 #define TPP_PROFILE_C       3 /* Enable features needed for a C compiler (warning: subjective) */
 #define TPP_PROFILE_CXX     4 /* Enable features needed for a C++ compiler (warning: subjective) */
@@ -5790,6 +5800,37 @@ TPP_DECL_END
 #define TPP_HAVE_INCLUDE_PATH TPP_HAVE_INCLUDE_STACK
 #endif /* !TPP_HAVE_INCLUDE_PATH */
 
+/* "tpp_include_paths" contains a secondary path-list that is only searched during "-strings */
+#ifndef TPP_HAVE_INCLUDE_PATH_QUOTE
+#define TPP_HAVE_INCLUDE_PATH_QUOTE (TPP_HAVE_INCLUDE_STACK && (TPP_PROFILE == TPP_PROFILE_ALL))
+#endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
+
+/* "tpp_include_paths" contains a tertiary path-list that is searched after all other paths */
+#ifndef TPP_HAVE_INCLUDE_PATH_AFTER
+#define TPP_HAVE_INCLUDE_PATH_AFTER (TPP_HAVE_INCLUDE_STACK && (TPP_PROFILE == TPP_PROFILE_ALL))
+#endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
+
+/* A preprocessor tuple describing the built-in, hard-coded, system-include path.
+ * - The paths specified here are searched in order of specification.
+ * - For information on the full #include-path resolution order, see "tpp_include_paths"
+ * - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
+ *   trailing slashes in these strings, it will add those itself)
+ *
+ * Example:
+ * >> #define TPP_CONFIG_SYSTEM_INCLUDE_PATH  2("/usr/local/include", "/usr/include") */
+#ifndef TPP_CONFIG_SYSTEM_INCLUDE_PATH
+#define TPP_CONFIG_SYSTEM_INCLUDE_PATH 0()
+#endif /* !TPP_CONFIG_SYSTEM_INCLUDE_PATH */
+
+/* "-quoted #include-strings are searched relative to *every* I/O-file found on the
+ * #include-stack; not just the most-recent one. Doing this for all files is what TPP2
+ * always- and unconditionally did, but turns out that isn't actually something normally
+ * done by preprocessors. As such, TPP3 turns this behavior into an extension, but has
+ * it turned off by default. */
+#ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE
+#define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE ((TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_CONF_EXT0 : 0) /* "-finclude-relative-to-every-file" */
+#endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE */
+
 /* Enable support to push/pop the include-path state */
 #ifndef TPP_HAVE_INCLUDE_PATH_PUSH_POP
 #define TPP_HAVE_INCLUDE_PATH_PUSH_POP TPP_HAVE_INCLUDE_PATH
@@ -5821,12 +5862,40 @@ TPP_DECL_END
 #define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
 #endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
 
+/* Provide a function "tpp_lexer_open_include_string()"
+ * to open the file associated with an #include-string. */
+#ifndef TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#define TPP_HAVE_LEXER_OPEN_INCLUDE_STRING \
+	(TPP_HAVE_CPP_INCLUDE ||               \
+	 TPP_HAVE_CPP_INCLUDE_NEXT ||          \
+	 TPP_HAVE_CPP_IMPORT ||                \
+	 TPP_HAVE_CPP_EMBED ||                 \
+	 TPP_HAVE_MACRO___has_include ||       \
+	 TPP_HAVE_MACRO___has_include_next ||  \
+	 TPP_HAVE_MACRO___has_embed)
+#endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
+
+/* Provide a function "tpp_lexer_decode_include_string()"
+ * to decode the actual contents of an #include-string. */
+#ifndef TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
+#define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#endif /* !TPP_HAVE_LEXER_DECODE_INCLUDE_STRING */
+
+/* Provide a function "tpp_lexer_yield_include_string()" to
+ * do yield the next token with special handling if the next
+ * token's first character is '<' or '"', in which case the
+ * token is parsed as a #include-string */
+#ifndef TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
+#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
+
 /* Enable support for `tpp_keywords_openfile()' */
 #ifndef TPP_HAVE_KEYWORDS_OPENFILE
-#if (TPP_HAVE_CPP_INCLUDE ||      \
-     TPP_HAVE_CPP_INCLUDE_NEXT || \
-     TPP_HAVE_CPP_IMPORT ||       \
-     TPP_HAVE_CPP_EMBED ||        \
+#if (TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || \
+     TPP_HAVE_CPP_INCLUDE ||               \
+     TPP_HAVE_CPP_INCLUDE_NEXT ||          \
+     TPP_HAVE_CPP_IMPORT ||                \
+     TPP_HAVE_CPP_EMBED ||                 \
      1) /* Always enable by default */
 #define TPP_HAVE_KEYWORDS_OPENFILE 1
 #else /* ... */
@@ -5942,21 +6011,6 @@ TPP_DECL_END
 #ifndef TPP_HAVE_LEXER_MANUALPOPFILE
 #define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS/* && TPP_HAVE_INCLUDE_STACK*/)
 #endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
-
-/* Provide a function "tpp_lexer_yield_include_string()" to
- * do yield the next token with special handling if the next
- * token's first character is '<' or '"', in which case the
- * token is parsed as a #include-string */
-#ifndef TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
-#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING \
-	(TPP_HAVE_CPP_INCLUDE ||                \
-	 TPP_HAVE_CPP_INCLUDE_NEXT ||           \
-	 TPP_HAVE_CPP_IMPORT ||                 \
-	 TPP_HAVE_CPP_EMBED ||                  \
-	 TPP_HAVE_MACRO___has_include ||        \
-	 TPP_HAVE_MACRO___has_include_next ||   \
-	 TPP_HAVE_MACRO___has_embed)
-#endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 /* Provide a function "tpp_lexer_seek_rparen()" that can be used
  * to find the position of a matching ')'-token for the purpose
@@ -6588,8 +6642,8 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self, tpp_size num_bytes);
 
 /* Print "text" into "tpp_string_builder *self"
- * @return: num_bytes:            Success
- * @return: (tpp_size)TPP_ENOMEM: Out of memory */
+ * @return: num_bytes:             Success
+ * @return: (tpp_ssize)TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes);
 
 TPP_DECL_END
@@ -6625,7 +6679,8 @@ TPP_DECL_END
 #endif /* !TPP_FS_HAVE_ICASE */
 
 #ifndef TPP_FS_SEP
-#define TPP_FS_SEP '/'
+#define TPP_FS_SEP   '/'
+#define TPP_FS_SEP_S "/"
 #endif /* !TPP_FS_SEP */
 
 #ifndef TPP_FS_ALTSEP
@@ -6646,9 +6701,9 @@ TPP_DECL_END
 
 #ifndef TPP_FS_ISABS
 #if TPP_FS_HAVE_DRIVES
-#define TPP_FS_ISABS(filename) ((filename)[0] && (filename)[1] == ':')
+#define TPP_FS_ISABS(filename, filename_len) ((filename_len) >= 2 && (filename)[0] && (filename)[1] == ':')
 #else /* TPP_FS_HAVE_DRIVES */
-#define TPP_FS_ISABS(filename) TPP_FS_ISSEP((filename)[0])
+#define TPP_FS_ISABS(filename, filename_len) ((filename_len) >= 1 && TPP_FS_ISSEP((filename)[0]))
 #endif /* !TPP_FS_HAVE_DRIVES */
 #endif /* !TPP_FS_ISABS */
 
@@ -6723,6 +6778,25 @@ TPP_DECL_END
 /************************************************************************/
 TPP_DECL_BEGIN
 
+enum {
+	_TPP_ERRCODE_OK,
+	_TPP_ERRCODE_NOMEM,
+	_TPP_ERRCODE_IO,
+	_TPP_ERRCODE_NOENT,
+#if TPP_HAVE_FILE_NONBLOCK
+	_TPP_ERRCODE_WOULDBLOCK,
+#endif /* TPP_HAVE_FILE_NONBLOCK */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+	_TPP_ERRCODE_MASKED,
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#if TPP_HAVE_WARNINGS
+	_TPP_ERRCODE_LEXERROR,
+	_TPP_ERRCODE_WARNPRINT,
+#endif /* TPP_HAVE_WARNINGS */
+	_TPP_ERRCODE_COUNT,
+};
+
+
 /* NOTE: "[SOFT_ERROR]" are "temporary" errors that are intended to-be recovered from.
  *       These errors should be caught & dealt with at appropriate points in the code. */
 typedef enum tpp_errno {
@@ -6733,7 +6807,7 @@ typedef enum tpp_errno {
 	 * --------------------------------------------------------------------
 	 *
 	 * Success (operation completed without errors) */
-	TPP_EOK = 0,
+	TPP_EOK = -_TPP_ERRCODE_OK,
 
 
 
@@ -6745,7 +6819,7 @@ typedef enum tpp_errno {
 	 *
 	 * A call to `tpp_malloc()' or `tpp_realloc()' returned NULL, indicating
 	 * that the system is out of heap memory. */
-	TPP_ENOMEM = -1,
+	TPP_ENOMEM = -_TPP_ERRCODE_NOMEM,
 
 
 
@@ -6754,7 +6828,7 @@ typedef enum tpp_errno {
 	 * --------------------------------------------------------------------
 	 *
 	 * Filesystem I/O operation failed */
-	TPP_EIO = -2,
+	TPP_EIO = -_TPP_ERRCODE_IO,
 
 
 
@@ -6785,7 +6859,7 @@ typedef enum tpp_errno {
 	 * instead trigger the appropriate tpp_lexer_warnf() warning, which
 	 * might then return "TPP_ELEXERROR". And it will be **that** error
 	 * that will be propagated out of `tpp_lexer_yield()'; not TPP_ENOENT */
-	TPP_ENOENT = -3,
+	TPP_ENOENT = -_TPP_ERRCODE_NOENT,
 
 
 
@@ -6802,7 +6876,7 @@ typedef enum tpp_errno {
 	 *
 	 * -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
 	 * -> You will not see this error when not using the "TPP_FILE_IOFLAGS_NONBLOCK" flag */
-	TPP_EWOULDBLOCK = -4,
+	TPP_EWOULDBLOCK = -_TPP_ERRCODE_WOULDBLOCK,
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 
 
@@ -6816,7 +6890,7 @@ typedef enum tpp_errno {
 	 * describe a file that exists, but should not be included (again) due
 	 * to a `#pragma once', or because `#import' is being used (and had
 	 * already been used once before) */
-	TPP_EMASKED = -5,
+	TPP_EMASKED = -_TPP_ERRCODE_MASKED,
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 
 
@@ -6833,7 +6907,7 @@ typedef enum tpp_errno {
 	 * TPP itself, you *could* in theory also change lexer configuration
 	 * and re-try the failing operation (though if you do that, you will
 	 * probably run into the same error again) */
-	TPP_ELEXERROR = -6,
+	TPP_ELEXERROR = -_TPP_ERRCODE_LEXERROR,
 
 	/* --------------------------------------------------------------------
 	 * HARD_ERROR: TPP_EIO
@@ -6842,11 +6916,11 @@ typedef enum tpp_errno {
 	 * Printer registered for "tpp_lexer_warnf" returned an error.
 	 * Since this error is not related to TPP itself, this error should
 	 * be propagated. */
-	TPP_EWARNPRINT = -7,
+	TPP_EWARNPRINT = -_TPP_ERRCODE_WARNPRINT,
 #endif /* TPP_HAVE_WARNINGS */
 
 
-	TPP_ELAST = -7, /* Last defined error number */
+	TPP_ELAST = (-_TPP_ERRCODE_COUNT) + 1, /* Last defined error number */
 } tpp_errno;
 
 
@@ -8197,7 +8271,8 @@ TPP_DECL_BEGIN
      TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS) ||         \
      TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS) ||    \
      TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS) ||  \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS))
+     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) ||      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE))
 #define TPP_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_HAVE_FEATURES 0
@@ -8865,6 +8940,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
 	TPP_FEAT_BUILTIN_EXPR_CHARACTER_LITERALS,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
+	TPP_FEAT_INCLUDE_RELATIVE_TO_EVERY_FILE,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
 	TPP_FEAT_COUNT
 } tpp_feature_id;
 
@@ -9750,6 +9828,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_BUILTIN_EXPR_CHARACTER_LITERALS): 1;
 #define _tpp_lexer_has_BUILTIN_EXPR_CHARACTER_LITERALS(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_BUILTIN_EXPR_CHARACTER_LITERALS)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
+		unsigned int TPP_INTERNAL(tff_INCLUDE_RELATIVE_TO_EVERY_FILE): 1;
+#define _tpp_lexer_has_INCLUDE_RELATIVE_TO_EVERY_FILE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_INCLUDE_RELATIVE_TO_EVERY_FILE)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
 	} TPP_INTERNAL(tf_flags);
 	unsigned char TPP_INTERNAL(ttf_bitset)[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_features;
@@ -10432,6 +10514,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
 #define _tpp_lexer_has_BUILTIN_EXPR_CHARACTER_LITERALS(self) TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
+#define _tpp_lexer_has_INCLUDE_RELATIVE_TO_EVERY_FILE(self) TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
 
 TPP_DECL_END
 /************************************************************************/
@@ -12301,6 +12386,202 @@ TPP_DECL_END
 /************************************************************************/
 
 /************************************************************************/
+/* File: parts/sysinclude.h                                             */
+/************************************************************************/
+#if TPP_HAVE_INCLUDE_PATH
+TPP_DECL_BEGIN
+
+#undef TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+#define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING 1
+#else /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING 0
+#endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+
+typedef struct tpp_include_path_entry {
+#if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
+	TPP_REF tpp_string *tipe_pathstr; /* [1..1] The path described by this entry (with a trailing TPP_FS_SEP_S). */
+#else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+	char               *tipe_path;    /* [1..1][owned] The path described by this entry (with a trailing TPP_FS_SEP_S). */
+#endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+} tpp_include_path_entry;
+
+#if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
+#define _tpp_include_path_entry_fini(self)   tpp_string_decref((self)->TPP_INTERNAL(tipe_pathstr))
+#define tpp_include_path_entry_getpath(self) tpp_string_cstr((self)->TPP_INTERNAL(tipe_pathstr))
+#else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+#define _tpp_include_path_entry_fini(self)   tpp_free((self)->TPP_INTERNAL(tipe_path))
+#define tpp_include_path_entry_getpath(self) ((char const *)(self)->TPP_INTERNAL(tipe_path))
+#endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+
+typedef struct tpp_include_path_list {
+	tpp_include_path_entry *TPP_INTERNAL(tipl_list); /* [0..tipl_size][owned] List of include paths. */
+	tpp_size                TPP_INTERNAL(tipl_size); /* # of entries in `tipl_list' */
+} tpp_include_path_list;
+
+/* Initialize/finalize a given "tpp_include_path_list" */
+#define tpp_include_path_list_init(self)           \
+	(void)((self)->TPP_INTERNAL(tipl_list) = NULL, \
+	       (self)->TPP_INTERNAL(tipl_size) = 0)
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_include_path_list_fini(tpp_include_path_list *tpp_restrict self);
+
+/* Append the given "path" to "self".
+ * @param: path:        The path to append.
+ * @param: path_maxlen: The max length of "path". The actual length of the path that will
+ *                      be appended to the path list is "tpp_strnlen(path, path_maxlen)".
+ *
+ * @return: TPP_EOK:    Success, or path was already present and was moved to the end.
+ * @return: TPP_ENOMEM: Out of memory. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_path_list_pushtail(tpp_include_path_list *tpp_restrict self,
+                               char const *path, tpp_size path_maxlen);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_path_list_pushhead(tpp_include_path_list *tpp_restrict self,
+                               char const *path, tpp_size path_maxlen);
+
+/* Remove the given "path" from "self".
+ * @param: path:        The path to remove.
+ * @param: path_maxlen: The max length of "path". The actual length of the path that will
+ *                      be removed from the path list is "tpp_strnlen(path, path_maxlen)".
+ *
+ * @return: TPP_EOK:    Path was located and removed
+ * @return: TPP_ENOENT: Path could not be found */
+TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
+                             char const *path, tpp_size path_maxlen);
+
+
+
+/* Collective descriptor for defined include paths.
+ * The actual order of paths in TPP3 is as follows (this matches GCC):
+ *
+ * 1.  (#include "foo.h" only): Relative to the current I/O-file, or (when
+ *                              "TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE" is
+ *                              enabled): every I/O-file on the #include-stack
+ * 2.  (#include "foo.h" only): Paths specified in "tip_quote_list" (if available)
+ * 3.  Paths specified in "tip_system_list"
+ * 4.  Paths hard-coded using "TPP_CONFIG_SYSTEM_INCLUDE_PATH"
+ * 5.  Paths specified in "tip_after_list" (if available)
+ */
+typedef struct tpp_include_paths {
+	tpp_include_path_list TPP_INTERNAL(tip_system_list); /* System #include-path list */
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	tpp_include_path_list TPP_INTERNAL(tip_quote_list);  /* "-quote #include-path list */
+#define _tpp_include_paths_init_quote(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_quote_list))
+#define _tpp_include_paths_fini_quote(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_quote_list))
+#else /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#define _tpp_include_paths_init_quote(self) /* nothing */
+#define _tpp_include_paths_fini_quote(self) /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+	tpp_include_path_list TPP_INTERNAL(tip_after_list);  /* #include-path list searched after all others */
+#define _tpp_include_paths_init_after(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_after_list))
+#define _tpp_include_paths_fini_after(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_after_list))
+#else /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#define _tpp_include_paths_init_after(self) /* nothing */
+#define _tpp_include_paths_fini_after(self) /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
+
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+	tpp_size                  TPP_INTERNAL(tip_pushcnt); /* # of times paths pushed were since last modified */
+	struct tpp_include_paths *TPP_INTERNAL(tip_prev);    /* [0..1][owned] Old warning state. */
+#define _tpp_include_paths_init_push(self) , (self)->TPP_INTERNAL(tip_pushcnt) = 0, (self)->TPP_INTERNAL(tip_prev) = NULL
+#else /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#define _tpp_include_paths_init_push(self) /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+} tpp_include_paths;
+
+/* Initialize/finalize include paths. */
+#define tpp_include_paths_init(self)                                    \
+	(tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_system_list)) \
+	 _tpp_include_paths_init_quote(self)                                \
+	 _tpp_include_paths_init_after(self)                                \
+	 _tpp_include_paths_init_push(self))
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
+
+
+/* Helper methods to add/remove paths to different include path lists */
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addsystem(tpp_include_paths *tpp_restrict self,
+                            char const *path, tpp_size path_maxlen);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addsystem_head(tpp_include_paths *tpp_restrict self,
+                                 char const *path, tpp_size path_maxlen);
+
+/* @return: TPP_EOK:    Path was located and removed
+ * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_delsystem(tpp_include_paths *tpp_restrict self,
+                            char const *path, tpp_size path_maxlen);
+
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addquote(tpp_include_paths *tpp_restrict self,
+                           char const *path, tpp_size path_maxlen);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addquote_head(tpp_include_paths *tpp_restrict self,
+                                char const *path, tpp_size path_maxlen);
+/* @return: TPP_EOK:    Path was located and removed
+ * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_delquote(tpp_include_paths *tpp_restrict self,
+                           char const *path, tpp_size path_maxlen);
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addafter(tpp_include_paths *tpp_restrict self,
+                           char const *path, tpp_size path_maxlen);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addafter_head(tpp_include_paths *tpp_restrict self,
+                                char const *path, tpp_size path_maxlen);
+/* @return: TPP_EOK:    Path was located and removed
+ * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_delafter(tpp_include_paths *tpp_restrict self,
+                           char const *path, tpp_size path_maxlen);
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+
+/* Push the current include paths state */
+#define tpp_include_paths_push(self) (void)(++(self)->TPP_INTERNAL(tip_pushcnt))
+
+/* Pop the current include paths state (may only be called when `tpp_include_paths_canpop(self)') */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *tpp_restrict self);
+#define tpp_include_paths_canpop(self)         \
+	((self)->TPP_INTERNAL(tip_pushcnt) != 0 || \
+	 (self)->TPP_INTERNAL(tip_prev) != NULL)
+
+/* When true, `tpp_include_paths_setctx()' must first copy the extension
+ * state (which requires heap memory, and may thus fail) */
+#define tpp_include_paths_mustcopy(self) ((self)->TPP_INTERNAL(tip_pushcnt) != 0)
+
+#else /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#define tpp_include_paths_addsystem(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
+#define tpp_include_paths_addsystem_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
+#define tpp_include_paths_delsystem(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+#define tpp_include_paths_addquote(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_quote_list), path, path_maxlen)
+#define tpp_include_paths_addquote_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_quote_list), path, path_maxlen)
+#define tpp_include_paths_delquote(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_quote_list), path, path_maxlen)
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+#define tpp_include_paths_addafter(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_after_list), path, path_maxlen)
+#define tpp_include_paths_addafter_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_after_list), path, path_maxlen)
+#define tpp_include_paths_delafter(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_after_list), path, path_maxlen)
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+
+TPP_DECL_END
+#endif /* TPP_HAVE_INCLUDE_PATH */
+/************************************************************************/
+
+/************************************************************************/
 /* File: parts/lexer.h                                                  */
 /************************************************************************/
 TPP_DECL_BEGIN
@@ -12375,9 +12656,10 @@ typedef struct tpp_lexer {
 #endif /* !TPP_HAVE_LEXER_STATE_FLAGS */
 
 
+	/* system #include paths (/usr/include, ...) */
 #if TPP_HAVE_INCLUDE_PATH
-	/* TODO: system #include paths (/usr/include, ...) */
-#define _tpp_lexer_init_incpath(self) /* TODO */
+	tpp_include_paths TPP_INTERNAL(tl_include_paths);
+#define _tpp_lexer_init_incpath(self) , tpp_include_paths_init(&(self)->TPP_INTERNAL(tl_include_paths))
 #else /* TPP_HAVE_INCLUDE_PATH */
 #define _tpp_lexer_init_incpath(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH */
@@ -12683,11 +12965,15 @@ tpp_lexer_init_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filenam
 
 #if TPP_HAVE_LEXER_INIT_FILENAME
 /* Initialize a lexer such that it starts reading from "filename"
+ * @param: filename_maxlen: Max length of "filename" (in characters). You may
+ *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOENT: No such file or directory
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_init_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *tpp_restrict filename);
+tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
+                        /*utf-8*/ char const *tpp_restrict filename,
+                        tpp_size filename_maxlen);
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
 
 
@@ -12713,11 +12999,15 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 #if TPP_HAVE_LEXER_INIT_FILENAME
 /* Push another file onto the #include-stack:
  * After a call to this function, the caller is responsible to yield the first token!
+ * @param: filename_maxlen: Max length of "filename" (in characters). You may
+ *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOENT: No such file or directory
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *tpp_restrict filename);
+tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self,
+                            /*utf-8*/ char const *tpp_restrict filename,
+                            tpp_size filename_maxlen);
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
 
 /* Check if the current file can be popped. */
@@ -12743,22 +13033,10 @@ typedef struct tpp_lexer_openfile_result {
 	tpp_io_handle tlofr_handle;   /* [1..1] I/O handle for requested file (must be inherited by caller) */
 } tpp_lexer_openfile_result;
 
-/* Construct the filename, open the file, and initialize "result" accordingly
- * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
- *                      in case "filename" is a relative path, in which case the
- *                      filename of the file to open should be relative to the
- *                      directory of "relative_to"
- * @param: result:      Open file information (pass along to "tpp_file_init_io()")
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Insufficient memory
- * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
-#define tpp_lexer_openfile(self, relative_to, filename, result) \
-	tpp_lexer_openfile_ex(self, relative_to, filename, result, 0)
-
 #define TPP_LEXER_OPENFILE_FLAG_NORMAL 0 /* Normal flags */
 #ifdef tpp_keyword_flags
-#define tpp_lexer_openfile_flags tpp_keyword_flags
+#define tpp_lexer_openfile_flags tpp_keyword_flags /* Set of `TPP_LEXER_OPENFILE_FLAG_*' */
 #if TPP_HAVE_CPP_IMPORT
 #define TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED TPP_KEYWORD_FLAG_HDR_IMPORTED    /* Filter out files that were already #import-ed */
 #endif /* TPP_HAVE_CPP_IMPORT */
@@ -12769,7 +13047,7 @@ typedef struct tpp_lexer_openfile_result {
 #define TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED  TPP_KEYWORD_FLAG_HDR_GUARD_VALID /* Filter out files with a confirmed "#ifndef"-block of a macro that is current defined */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #else /* tpp_keyword_flags */
-#define tpp_lexer_openfile_flags uint_least32_t
+#define tpp_lexer_openfile_flags uint_least32_t /* Set of `TPP_LEXER_OPENFILE_FLAG_*' */
 #endif /* !tpp_keyword_flags */
 #if TPP_HAVE_CPP_INCLUDE_NEXT
 #define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
@@ -12789,18 +13067,33 @@ typedef struct tpp_lexer_openfile_result {
  *                     - TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
  *                     - TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
  *
- * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set. */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOMEM:  Insufficient memory
+ * @return: TPP_ENOENT:  No such file, or TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT was
+ *                       given, and the file is already located on the #include-stack.
+ * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
 tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       /*0..1*/ char const *tpp_restrict relative_to,
-                      /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                      /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                       /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                       tpp_lexer_openfile_flags mask_flags);
+#define tpp_lexer_openfile(self, relative_to, filename, filename_maxlen, result) \
+	tpp_lexer_openfile_ex(self, relative_to, filename, filename_maxlen, result, TPP_LEXER_OPENFILE_FLAG_NORMAL)
 #else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+/* Construct the filename, open the file, and initialize "result" accordingly
+ * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
+ *                      in case "filename" is a relative path, in which case the
+ *                      filename of the file to open should be relative to the
+ *                      directory of "relative_to"
+ * @param: result:      Open file information (pass along to "tpp_file_init_io()")
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Insufficient memory
+ * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
 tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*0..1*/ char const *tpp_restrict relative_to,
-                   /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                   /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE */
@@ -13176,26 +13469,67 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_include_string(tpp_lexer *tpp_restrict self);
-
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
 #define tpp_lexer_yieldraw_include_string(self) \
 	tpp_lexer_yieldraw_at_include_string(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
-
-/* TODO: API to decode a parsed #include-string (~ala "tpp_lexer_decodestring()") -- needs to remove BSE and trigraphs */
-/* TODO: API built on-top of the #include-string decoder that uses "tpp_lexer_openfile_ex()" combined with
- *       filenames from the current #include-stack, as well as system include paths to (try to) open the
- *       named file. -- This function must also take "tpp_keyword_flags mask_flags", allowing the caller
- *       to selectively filter out certain files based on context:
- *       #include ...             TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
- *       __has_include(...)       TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
- *       #include_next ...        TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
- *       __has_include_next(...)  TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
- *       #import ...              TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
- *       #embed ...               TPP_LEXER_OPENFILE_FLAG_NORMAL
- *       __has_embed(...)         TPP_LEXER_OPENFILE_FLAG_NORMAL
- */
 #endif /* TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
+
+#if TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
+/* Decode the current token as a #include-string. The caller is responsible to
+ * ensure that the current token was loaded by `tpp_lexer_yield_include_string()'
+ * and is either TPP_TOK_OFCHAR('<') or TPP_TOK_OFCHAR('"')
+ *
+ * @return: * :  Sum of positive return values from printers
+ * @return: < 0: First negative return value from printers */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
+                                tpp_formatprinter printer, void *arg);
+
+/* Same as `tpp_lexer_decode_include_string()', but the given "cb" is only
+ * invoked once whilst being passed the *entire* (decoded) #include-string.
+ *
+ * @return: * : Return value of the (singular) invocation of "cb"
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
+                                   tpp_errno (TPPCALL *cb)(void *arg, tpp_char const *str, tpp_size length),
+                                   void *arg);
+#endif /* TPP_HAVE_LEXER_DECODE_INCLUDE_STRING */
+
+
+#if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+/* Wrapper around `tpp_lexer_decode_include_string_cb()' that automatically
+ * does the necessary calls to `tpp_lexer_openfile_ex()'. It also handles
+ * the `TPP_ENOENT' (as far as possible) by continuing to search for other
+ * matching files. The specified "mask_flags" should be set depending on
+ * context like:
+ * - #include ...             TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ * - __has_include(...)       TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
+ * - #include_next ...        TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ * - __has_include_next(...)  TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ * - #import ...              TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
+ * - #embed ...               TPP_LEXER_OPENFILE_FLAG_NORMAL
+ * - __has_embed(...)         TPP_LEXER_OPENFILE_FLAG_NORMAL
+ *
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOMEM:  Insufficient memory
+ * @return: TPP_ENOENT:  No such file
+ * @return: TPP_EMASKED: (tpp_lexer_open_include_string_ex only): Flags
+ *                       specified by "mask_flags" were already set. */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_open_include_string_ex(tpp_lexer *tpp_restrict self,
+                                 /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
+                                 tpp_lexer_openfile_flags mask_flags);
+#define tpp_lexer_open_include_string(self, result) \
+	tpp_lexer_open_include_string_ex(self, result, 0)
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
+                              /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
 
 
 

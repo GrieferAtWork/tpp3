@@ -51,7 +51,8 @@
 #endif /* !TPP_FS_HAVE_ICASE */
 
 #ifndef TPP_FS_SEP
-#define TPP_FS_SEP '/'
+#define TPP_FS_SEP   '/'
+#define TPP_FS_SEP_S "/"
 #endif /* !TPP_FS_SEP */
 
 #ifndef TPP_FS_ALTSEP
@@ -72,9 +73,9 @@
 
 #ifndef TPP_FS_ISABS
 #if TPP_FS_HAVE_DRIVES
-#define TPP_FS_ISABS(filename) ((filename)[0] && (filename)[1] == ':')
+#define TPP_FS_ISABS(filename, filename_len) ((filename_len) >= 2 && (filename)[0] && (filename)[1] == ':')
 #else /* TPP_FS_HAVE_DRIVES */
-#define TPP_FS_ISABS(filename) TPP_FS_ISSEP((filename)[0])
+#define TPP_FS_ISABS(filename, filename_len) ((filename_len) >= 1 && TPP_FS_ISSEP((filename)[0]))
 #endif /* !TPP_FS_HAVE_DRIVES */
 #endif /* !TPP_FS_ISABS */
 

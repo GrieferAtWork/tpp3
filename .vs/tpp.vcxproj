@@ -29,6 +29,7 @@
     <ClCompile Include="..\src\parts\lexer-seek-rparen.c" />
     <ClCompile Include="..\src\parts\lexer-skipraw.c" />
     <ClCompile Include="..\src\parts\lexer-warn.c" />
+    <ClCompile Include="..\src\parts\lexer-yield-include.c" />
     <ClCompile Include="..\src\parts\lexer-yield-macro.c" />
     <ClCompile Include="..\src\parts\lexer-yield.c" />
     <ClCompile Include="..\src\parts\lexer-yieldpp.c" />
@@ -36,6 +37,7 @@
     <ClCompile Include="..\src\parts\lexer.c" />
     <ClCompile Include="..\src\parts\macro.c" />
     <ClCompile Include="..\src\parts\string.c" />
+    <ClCompile Include="..\src\parts\sysinclude.c" />
     <ClCompile Include="..\src\parts\token-encodestring.c" />
     <ClCompile Include="..\src\parts\token-reprtokenid.c" />
     <ClCompile Include="..\src\parts\token-strtokenid.c" />
@@ -61,6 +63,7 @@
     <ClInclude Include="..\src\parts\lexer.h" />
     <ClInclude Include="..\src\parts\macro.h" />
     <ClInclude Include="..\src\parts\string.h" />
+    <ClInclude Include="..\src\parts\sysinclude.h" />
     <ClInclude Include="..\src\parts\time.h" />
     <ClInclude Include="..\src\parts\token.h" />
     <ClInclude Include="..\src\parts\tuple.h" />

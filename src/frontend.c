@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
 	if (argc)
 		filename = *argv;
-	error = tpp_lexer_init_filename(&lexer, filename);
+	error = tpp_lexer_init_filename(&lexer, filename, TPP_SIZE_MAX);
 	if (TPP_ISERR(error)) {
 #if TPP_HAVE_STRERROR
 		fprintf(stderr, "Initialization failed: %s\n", tpp_strerror(error));

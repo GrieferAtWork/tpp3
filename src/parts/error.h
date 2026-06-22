@@ -27,6 +27,25 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
+enum {
+	_TPP_ERRCODE_OK,
+	_TPP_ERRCODE_NOMEM,
+	_TPP_ERRCODE_IO,
+	_TPP_ERRCODE_NOENT,
+#if TPP_HAVE_FILE_NONBLOCK
+	_TPP_ERRCODE_WOULDBLOCK,
+#endif /* TPP_HAVE_FILE_NONBLOCK */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+	_TPP_ERRCODE_MASKED,
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#if TPP_HAVE_WARNINGS
+	_TPP_ERRCODE_LEXERROR,
+	_TPP_ERRCODE_WARNPRINT,
+#endif /* TPP_HAVE_WARNINGS */
+	_TPP_ERRCODE_COUNT,
+};
+
+
 /* NOTE: "[SOFT_ERROR]" are "temporary" errors that are intended to-be recovered from.
  *       These errors should be caught & dealt with at appropriate points in the code. */
 typedef enum tpp_errno {
@@ -37,7 +56,7 @@ typedef enum tpp_errno {
 	 * --------------------------------------------------------------------
 	 *
 	 * Success (operation completed without errors) */
-	TPP_EOK = 0,
+	TPP_EOK = -_TPP_ERRCODE_OK,
 
 
 
@@ -49,7 +68,7 @@ typedef enum tpp_errno {
 	 *
 	 * A call to `tpp_malloc()' or `tpp_realloc()' returned NULL, indicating
 	 * that the system is out of heap memory. */
-	TPP_ENOMEM = -1,
+	TPP_ENOMEM = -_TPP_ERRCODE_NOMEM,
 
 
 
@@ -58,7 +77,7 @@ typedef enum tpp_errno {
 	 * --------------------------------------------------------------------
 	 *
 	 * Filesystem I/O operation failed */
-	TPP_EIO = -2,
+	TPP_EIO = -_TPP_ERRCODE_IO,
 
 
 
@@ -89,7 +108,7 @@ typedef enum tpp_errno {
 	 * instead trigger the appropriate tpp_lexer_warnf() warning, which
 	 * might then return "TPP_ELEXERROR". And it will be **that** error
 	 * that will be propagated out of `tpp_lexer_yield()'; not TPP_ENOENT */
-	TPP_ENOENT = -3,
+	TPP_ENOENT = -_TPP_ERRCODE_NOENT,
 
 
 
@@ -106,7 +125,7 @@ typedef enum tpp_errno {
 	 *
 	 * -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
 	 * -> You will not see this error when not using the "TPP_FILE_IOFLAGS_NONBLOCK" flag */
-	TPP_EWOULDBLOCK = -4,
+	TPP_EWOULDBLOCK = -_TPP_ERRCODE_WOULDBLOCK,
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 
 
@@ -120,7 +139,7 @@ typedef enum tpp_errno {
 	 * describe a file that exists, but should not be included (again) due
 	 * to a `#pragma once', or because `#import' is being used (and had
 	 * already been used once before) */
-	TPP_EMASKED = -5,
+	TPP_EMASKED = -_TPP_ERRCODE_MASKED,
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 
 
@@ -137,7 +156,7 @@ typedef enum tpp_errno {
 	 * TPP itself, you *could* in theory also change lexer configuration
 	 * and re-try the failing operation (though if you do that, you will
 	 * probably run into the same error again) */
-	TPP_ELEXERROR = -6,
+	TPP_ELEXERROR = -_TPP_ERRCODE_LEXERROR,
 
 	/* --------------------------------------------------------------------
 	 * HARD_ERROR: TPP_EIO
@@ -146,11 +165,11 @@ typedef enum tpp_errno {
 	 * Printer registered for "tpp_lexer_warnf" returned an error.
 	 * Since this error is not related to TPP itself, this error should
 	 * be propagated. */
-	TPP_EWARNPRINT = -7,
+	TPP_EWARNPRINT = -_TPP_ERRCODE_WARNPRINT,
 #endif /* TPP_HAVE_WARNINGS */
 
 
-	TPP_ELAST = -7, /* Last defined error number */
+	TPP_ELAST = (-_TPP_ERRCODE_COUNT) + 1, /* Last defined error number */
 } tpp_errno;
 
 

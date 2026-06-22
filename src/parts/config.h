@@ -68,13 +68,15 @@
 #define TPP_ERROR_LIMIT (-16)
 #endif /* !TPP_ERROR_LIMIT */
 
+/* TODO: -fmax-include-depth */
+
 
 
 /************************************************************************/
 /* CONFIGURATION PROFILE                                                */
 /************************************************************************/
 #define TPP_PROFILE_MINIMAL 0 /* Disable everything, except dependencies of explicitly enabled features */
-#define TPP_PROFILE_DEFAULT 1 /* Like "TPP_PROFILE_ALL", but only enable minimal multi-char tokens */
+#define TPP_PROFILE_DEFAULT 1 /* Default configuration for a pretty good compromise between "TPP_PROFILE_MINIMAL" and "TPP_PROFILE_ALL" */
 #define TPP_PROFILE_ALL     2 /* Enable (almost) all features, with everything configurable at runtime */
 #define TPP_PROFILE_C       3 /* Enable features needed for a C compiler (warning: subjective) */
 #define TPP_PROFILE_CXX     4 /* Enable features needed for a C++ compiler (warning: subjective) */
@@ -2030,6 +2032,37 @@
 #define TPP_HAVE_INCLUDE_PATH TPP_HAVE_INCLUDE_STACK
 #endif /* !TPP_HAVE_INCLUDE_PATH */
 
+/* "tpp_include_paths" contains a secondary path-list that is only searched during "-strings */
+#ifndef TPP_HAVE_INCLUDE_PATH_QUOTE
+#define TPP_HAVE_INCLUDE_PATH_QUOTE (TPP_HAVE_INCLUDE_STACK && (TPP_PROFILE == TPP_PROFILE_ALL))
+#endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
+
+/* "tpp_include_paths" contains a tertiary path-list that is searched after all other paths */
+#ifndef TPP_HAVE_INCLUDE_PATH_AFTER
+#define TPP_HAVE_INCLUDE_PATH_AFTER (TPP_HAVE_INCLUDE_STACK && (TPP_PROFILE == TPP_PROFILE_ALL))
+#endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
+
+/* A preprocessor tuple describing the built-in, hard-coded, system-include path.
+ * - The paths specified here are searched in order of specification.
+ * - For information on the full #include-path resolution order, see "tpp_include_paths"
+ * - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
+ *   trailing slashes in these strings, it will add those itself)
+ *
+ * Example:
+ * >> #define TPP_CONFIG_SYSTEM_INCLUDE_PATH  2("/usr/local/include", "/usr/include") */
+#ifndef TPP_CONFIG_SYSTEM_INCLUDE_PATH
+#define TPP_CONFIG_SYSTEM_INCLUDE_PATH 0()
+#endif /* !TPP_CONFIG_SYSTEM_INCLUDE_PATH */
+
+/* "-quoted #include-strings are searched relative to *every* I/O-file found on the
+ * #include-stack; not just the most-recent one. Doing this for all files is what TPP2
+ * always- and unconditionally did, but turns out that isn't actually something normally
+ * done by preprocessors. As such, TPP3 turns this behavior into an extension, but has
+ * it turned off by default. */
+#ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE
+#define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE ((TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_CONF_EXT0 : 0) /* "-finclude-relative-to-every-file" */
+#endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE */
+
 /* Enable support to push/pop the include-path state */
 #ifndef TPP_HAVE_INCLUDE_PATH_PUSH_POP
 #define TPP_HAVE_INCLUDE_PATH_PUSH_POP TPP_HAVE_INCLUDE_PATH
@@ -2061,12 +2094,40 @@
 #define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
 #endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
 
+/* Provide a function "tpp_lexer_open_include_string()"
+ * to open the file associated with an #include-string. */
+#ifndef TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#define TPP_HAVE_LEXER_OPEN_INCLUDE_STRING \
+	(TPP_HAVE_CPP_INCLUDE ||               \
+	 TPP_HAVE_CPP_INCLUDE_NEXT ||          \
+	 TPP_HAVE_CPP_IMPORT ||                \
+	 TPP_HAVE_CPP_EMBED ||                 \
+	 TPP_HAVE_MACRO___has_include ||       \
+	 TPP_HAVE_MACRO___has_include_next ||  \
+	 TPP_HAVE_MACRO___has_embed)
+#endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
+
+/* Provide a function "tpp_lexer_decode_include_string()"
+ * to decode the actual contents of an #include-string. */
+#ifndef TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
+#define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#endif /* !TPP_HAVE_LEXER_DECODE_INCLUDE_STRING */
+
+/* Provide a function "tpp_lexer_yield_include_string()" to
+ * do yield the next token with special handling if the next
+ * token's first character is '<' or '"', in which case the
+ * token is parsed as a #include-string */
+#ifndef TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
+#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
+
 /* Enable support for `tpp_keywords_openfile()' */
 #ifndef TPP_HAVE_KEYWORDS_OPENFILE
-#if (TPP_HAVE_CPP_INCLUDE ||      \
-     TPP_HAVE_CPP_INCLUDE_NEXT || \
-     TPP_HAVE_CPP_IMPORT ||       \
-     TPP_HAVE_CPP_EMBED ||        \
+#if (TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || \
+     TPP_HAVE_CPP_INCLUDE ||               \
+     TPP_HAVE_CPP_INCLUDE_NEXT ||          \
+     TPP_HAVE_CPP_IMPORT ||                \
+     TPP_HAVE_CPP_EMBED ||                 \
      1) /* Always enable by default */
 #define TPP_HAVE_KEYWORDS_OPENFILE 1
 #else /* ... */
@@ -2182,21 +2243,6 @@
 #ifndef TPP_HAVE_LEXER_MANUALPOPFILE
 #define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS/* && TPP_HAVE_INCLUDE_STACK*/)
 #endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
-
-/* Provide a function "tpp_lexer_yield_include_string()" to
- * do yield the next token with special handling if the next
- * token's first character is '<' or '"', in which case the
- * token is parsed as a #include-string */
-#ifndef TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
-#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING \
-	(TPP_HAVE_CPP_INCLUDE ||                \
-	 TPP_HAVE_CPP_INCLUDE_NEXT ||           \
-	 TPP_HAVE_CPP_IMPORT ||                 \
-	 TPP_HAVE_CPP_EMBED ||                  \
-	 TPP_HAVE_MACRO___has_include ||        \
-	 TPP_HAVE_MACRO___has_include_next ||   \
-	 TPP_HAVE_MACRO___has_embed)
-#endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 /* Provide a function "tpp_lexer_seek_rparen()" that can be used
  * to find the position of a matching ')'-token for the purpose

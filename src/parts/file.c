@@ -689,7 +689,7 @@ reuse_old_chunk:
 		io_size = TPP_FILE_UTF16_IOSIZE(io_size);
 amend_tail_data:
 		if (self->tf_data.td_io.tff_tailc) {
-			memcpy(io_dst, self->tf_data.td_io.tff_tailv, self->tf_data.td_io.tff_tailc);
+			tpp_memcpy(io_dst, self->tf_data.td_io.tff_tailv, self->tf_data.td_io.tff_tailc);
 			io_dst += self->tf_data.td_io.tff_tailc;
 			io_size -= self->tf_data.td_io.tff_tailc;
 		}

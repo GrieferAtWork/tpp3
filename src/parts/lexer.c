@@ -170,6 +170,11 @@ _tpp_lexer_fini_common(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_WARNINGS
 	tpp_warnings_fini(&self->tl_warn);
 #endif /* TPP_HAVE_WARNINGS */
+
+	/* Finalize include paths */
+#if TPP_HAVE_INCLUDE_PATH
+	tpp_include_paths_fini(&self->tl_include_paths);
+#endif /* TPP_HAVE_INCLUDE_PATH */
 }
 
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
@@ -246,15 +251,18 @@ tpp_lexer_init_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filenam
 
 #if TPP_HAVE_LEXER_INIT_FILENAME
 /* Initialize a lexer such that it starts reading from "filename"
+ * @param: filename_maxlen: Max length of "filename" (in characters). You may
+ *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
  * @return: TPP_ENOENT: No such file or directory
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
-                        /*utf-8*/ char const *tpp_restrict filename) {
+                        /*utf-8*/ char const *tpp_restrict filename,
+                        tpp_size filename_maxlen) {
 	tpp_errno error;
 	tpp_lexer_openfile_result ofr;
 	_tpp_lexer_init_common(self);
-	error = tpp_lexer_openfile(self, NULL, filename, &ofr);
+	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
 	if tpp_unlikely(TPP_ISERR(error)) {
 		_tpp_lexer_fini_common(self);
 	} else {
@@ -302,11 +310,15 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 #if TPP_HAVE_LEXER_INIT_FILENAME
 /* Push another file onto the #include-stack:
  * After a call to this function, the caller is responsible to yield the first token!
+ * @param: filename_maxlen: Max length of "filename" (in characters). You may
+ *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOENT: No such file or directory
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *tpp_restrict filename) {
+tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self,
+                            /*utf-8*/ char const *tpp_restrict filename,
+                            tpp_size filename_maxlen) {
 	tpp_errno error;
 	tpp_lexer_openfile_result ofr;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -314,7 +326,7 @@ tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
 	*prev_file = *file;
-	error = tpp_lexer_openfile(self, NULL, filename, &ofr);
+	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
 	if tpp_likely(!TPP_ISERR(error)) {
 		tpp_file_init_io(file,
 		                 tpp_keyword_getkwdcstr(ofr.tlofr_filename),

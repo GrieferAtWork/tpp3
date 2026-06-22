@@ -117,8 +117,8 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self, tpp_size num_bytes);
 
 /* Print "text" into "tpp_string_builder *self"
- * @return: num_bytes:            Success
- * @return: (tpp_size)TPP_ENOMEM: Out of memory */
+ * @return: num_bytes:             Success
+ * @return: (tpp_ssize)TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes);
 
 TPP_DECL_END

@@ -2265,6 +2265,9 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS TPP_CONFIG_EXTENSION_MSVC_FIXED_INT    /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes in builtin lexer expressions */
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS     1                                      /* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
 
+/* Misc features */
+#define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE 1 /*  */
+
 /* Force extensions to use the names they'd been using in TPP2 */
 #define TPP_EXTNAME_TRIGRAPHS                           "trigraphs"
 #define TPP_EXTNAME_DIGRAPHS                            "digraphs"

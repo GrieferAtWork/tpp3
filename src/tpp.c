@@ -49,6 +49,7 @@
 #include "parts/extensions.c"
 #include "parts/features.c"
 #include "parts/warnings.c"
+#include "parts/sysinclude.c"
 #include "parts/lexer.c"
 #include "parts/lexer-warn.c"
 #include "parts/expr.c"
@@ -61,6 +62,7 @@
 #include "parts/lexer-yieldpp.c"
 #include "parts/lexer-yield-macro.c"
 #include "parts/lexer-yield.c"
+#include "parts/lexer-yield-include.c"
 #include "parts/lexer-decodestring.c"
 #include "parts/lexer-parseexpr.c"
 

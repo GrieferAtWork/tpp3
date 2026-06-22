@@ -969,7 +969,7 @@ tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer
 #if TPP_FS_HAVE_DRIVES
 	if (src >= src_end)
 		goto done;
-	if (TPP_FS_ISABS(src)) {
+	if (TPP_FS_ISABS(src, srclen)) {
 		dst_iter = dst_base;
 		*dst_iter++ = *src++;
 		*dst_iter++ = *src++;
@@ -1047,16 +1047,19 @@ done:
 	return dst_iter;
 }
 
-/* Construct the filename, open the file, and initialize "result" accordingly
- * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
- *                      in case "filename" is a relative path, in which case the
- *                      filename of the file to open should be relative to the
- *                      directory of "relative_to"
- * @param: result:      Open file information (pass along to "tpp_file_init_io()")
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Insufficient memory
- * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_CPP_INCLUDE_NEXT
+#if TPP_HAVE_CPP_IMPORT
+TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT != TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED);
+#endif /* TPP_HAVE_CPP_IMPORT */
+#if TPP_HAVE_PRAGMA_ONCE
+TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT != TPP_LEXER_OPENFILE_FLAG_HDR_ONCE);
+#endif /* TPP_HAVE_PRAGMA_ONCE */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT != TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED);
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#endif /* TPP_HAVE_CPP_INCLUDE_NEXT */
+
 /* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
  * included before, and its keyword has any of the bits specified by `mask_flags' set.
  *
@@ -1071,26 +1074,39 @@ done:
  *                     - TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
  *                     - TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
  *
- * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set. */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOMEM:  Insufficient memory
+ * @return: TPP_ENOENT:  No such file, or TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT was
+ *                       given, and the file is already located on the #include-stack.
+ * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
 tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       /*0..1*/ char const *tpp_restrict relative_to,
-                      /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                      /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                       /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                       tpp_lexer_openfile_flags mask_flags)
 #else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 4)) tpp_errno TPPCALL
+/* Construct the filename, open the file, and initialize "result" accordingly
+ * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
+ *                      in case "filename" is a relative path, in which case the
+ *                      filename of the file to open should be relative to the
+ *                      directory of "relative_to"
+ * @param: result:      Open file information (pass along to "tpp_file_init_io()")
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Insufficient memory
+ * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
 tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*0..1*/ char const *tpp_restrict relative_to,
-                   /*1..1*/ /*utf-8*/ char const *tpp_restrict filename,
+                   /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
 {
 	bool is_known_keyword = false;
 	tpp_io_handle handle;
 	tpp_keyword *result_kwd;
-	tpp_size filename_len = tpp_strlen(filename);
-	if (TPP_FS_ISABS(filename) || !relative_to) {
+	tpp_size filename_len = tpp_strnlen(filename, filename_maxlen);
+	if (TPP_FS_ISABS(filename, filename_len) || !relative_to) {
 		tpp_keyword *new_result_kwd;
 		tpp_char *kwd_end;
 		tpp_size result_kwd_len;
@@ -1185,7 +1201,7 @@ without_relative_to:
 						tpp_keyword const *kwd = (tpp_keyword const *)((char const *)fp->tf_data.td_io.tff_name -
 						                                               tpp_offsetof(tpp_keyword, tk_kwd));
 						if (kwd == result_kwd)
-							return TPP_EMASKED; /* File is already on #include-stack */
+							return TPP_ENOENT; /* File is already on #include-stack */
 					}
 				} while ((fp = fp->tf_tprev) != NULL);
 			}
