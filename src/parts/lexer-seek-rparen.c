@@ -287,7 +287,7 @@ again_switch_tok:
 			if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
 				goto err_nomem;
 		}
-		for (;;) {
+		do {
 			if (!tpp_seek_rparen_state_curarg_append(&state,
 			                                         tpp_token_getstart(token),
 			                                         tpp_token_getlen(token)))

@@ -989,7 +989,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
  *
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOMEM:  Insufficient memory
- * @return: TPP_ENOENT:  No such file
+ * @return: TPP_ENOENT:  No such file (no warning printed, yet)
  * @return: TPP_EMASKED: (tpp_lexer_open_include_string_ex only): Flags
  *                       specified by "mask_flags" were already set. */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX

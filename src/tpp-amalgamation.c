@@ -15964,7 +15964,7 @@ again_switch_tok:
 			if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
 				goto err_nomem;
 		}
-		for (;;) {
+		do {
 			if (!tpp_seek_rparen_state_curarg_append(&state,
 			                                         tpp_token_getstart(token),
 			                                         tpp_token_getlen(token)))
@@ -20441,7 +20441,7 @@ again:
 #endif /* TPP_HAVE_CPP_MACROS */
 
 	/* Skip over leading whitespace and comments (but not line-feeds) */
-	if (TPP_TOK_ISSPACE_OR_COMMENT(tok)) /* TODO: Inside of __has_include() & friends, must also skip line-feeds here! */
+	if (TPP_TOK_ISSPACE_OR_COMMENT(tok))
 		goto again;
 
 	/* Propagate errors */
@@ -20646,17 +20646,167 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT */
 
 
-#if TPP_HAVE_CPP_EMBED
+#if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 
 typedef struct tpp_embed_builder {
-	tpp_lexer_openfile_result teb_ofr;       /* [valid_if(teb_ofr_error == TPP_EOK)] The file to embed */
-	tpp_errno                 teb_ofr_error; /* Error from opening "teb_ofr" (either TPP_EOK, or TPP_ENOENT) */
+	tpp_uintmax               teb_limit;     /* Limit on how many bytes to embed */
+#if TPP_HAVE_CPP_EMBED
 	tpp_lexer_arginfo         teb_prefix;    /* Prefix to put before a non-empty file */
 	tpp_lexer_arginfo         teb_suffix;    /* Suffix to put after a non-empty file */
 	tpp_lexer_arginfo         teb_if_empty;  /* Replacement for an empty file */
-	tpp_uintmax               teb_limit;     /* Limit on how many bytes to embed */
+	tpp_lexer_openfile_result teb_ofr;       /* [valid_if(teb_ofr_error == TPP_EOK)] The file to embed */
+	tpp_errno                 teb_ofr_error; /* Error from opening "teb_ofr" (either TPP_EOK, or TPP_ENOENT) */
+#endif /* TPP_HAVE_CPP_EMBED */
 } tpp_embed_builder;
 
+/* Parse trailing parameters following a #embed directive */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
+                               tpp_lexer *tpp_restrict lexer,
+                               tpp_token_id param_kwd) {
+	tpp_token_id tok;
+	tpp_errno error;
+	char const *function_name = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(lexer));
+	switch (param_kwd) {
+
+	case TPP_KWD_limit: {
+		tpp_expr_value limit_value_expr;
+		do {
+			tok = tpp_lexer_yield_blocking(lexer);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR('('));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		error = tpp_lexer_parseexpr(lexer, &limit_value_expr);
+		if (TPP_ISERR(error))
+			return error;
+		if (tpp_expr_value_isint(&limit_value_expr)) {
+			error = tpp_expr_value_asint(&limit_value_expr, &self->teb_limit);
+		} else {
+			bool as_bool;
+			error = tpp_expr_value_asbool(lexer, &limit_value_expr, &as_bool);
+			self->teb_limit = as_bool ? 1 : 0;
+		}
+		tpp_expr_value_fini(&limit_value_expr);
+		if (TPP_ISERR(error))
+			return error;
+		tok = tpp_lexer_gettok(lexer);
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(lexer);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_skip(lexer, TPP_TOK_OFCHAR(')'));
+		return TPP_TOK_ASERR_OR_EOK(tok);
+	}	break;
+
+	case TPP_KWD_prefix:
+	case TPP_KWD_suffix:
+	case TPP_KWD_if_empty: {
+		tpp_lexer_arginfo arg;
+#if TPP_HAVE_CPP_EMBED
+		tpp_lexer_arginfo *p_dst_arg;
+#endif /* TPP_HAVE_CPP_EMBED */
+		do {
+			tok = tpp_lexer_yield_blocking(lexer);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR('('));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
+		                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+#if TPP_HAVE_CPP_EMBED
+		switch (param_kwd) {
+		case TPP_KWD_prefix: p_dst_arg = &self->teb_prefix; break;
+		case TPP_KWD_suffix: p_dst_arg = &self->teb_suffix; break;
+		case TPP_KWD_if_empty: p_dst_arg = &self->teb_if_empty; break;
+		default: tpp_unreachable();
+		}
+		tpp_lexer_arginfo_fini(p_dst_arg);
+		*p_dst_arg = arg;
+#else /* TPP_HAVE_CPP_EMBED */
+		tpp_lexer_arginfo_fini(&arg);
+#endif /* !TPP_HAVE_CPP_EMBED */
+		return TPP_EOK;
+	}	break;
+
+	default: break;
+	}
+
+#if TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER
+	error = tpp_lexer_warnf(lexer, TPP_W_UNKNOWN_EMBED_PARAMETER);
+	if (TPP_TOK_ISERR(error))
+		return error;
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER */
+
+#if TPP_HAVE_TPP_TOK_COLON_COLON
+continue_after_unknown_name:
+#endif /* TPP_HAVE_TPP_TOK_COLON_COLON */
+	do {
+		tok = tpp_lexer_yield_blocking(lexer);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+#if TPP_HAVE_TPP_TOK_COLON_COLON
+	if (tok == TPP_TOK_COLON_COLON) {
+		do {
+			tok = tpp_lexer_yield_blocking(lexer);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		if (TPP_TOK_ISKEYWORD(tok))
+			goto continue_after_unknown_name;
+	}
+#endif /* TPP_HAVE_TPP_TOK_COLON_COLON */
+	if (tok == '(') {
+		tpp_lexer_arginfo arg;
+		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
+		                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tpp_lexer_arginfo_fini(&arg);
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+
+#if TPP_HAVE_MACRO___has_embed
+/* Minimal/adjusted parameter handler for __has_embed */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
+                                      tpp_lexer *tpp_restrict lexer,
+                                      tpp_token_id param_kwd);
+
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
+                                      tpp_lexer *tpp_restrict lexer,
+                                      tpp_token_id param_kwd) {
+	tpp_errno result;
+	tpp_embed_builder self;
+	self.teb_limit = TPP_UINTMAX_MAX;
+#if TPP_HAVE_CPP_EMBED
+	self.teb_ofr_error = TPP_ENOENT;
+	tpp_lexer_arginfo_init_empty(&self.teb_prefix);
+	tpp_lexer_arginfo_init_empty(&self.teb_suffix);
+	tpp_lexer_arginfo_init_empty(&self.teb_if_empty);
+#endif /* TPP_HAVE_CPP_EMBED */
+	result = tpp_embed_builder_handle_param(&self, lexer, param_kwd);
+#if TPP_HAVE_CPP_EMBED
+	tpp_lexer_arginfo_fini(&self.teb_prefix);
+	tpp_lexer_arginfo_fini(&self.teb_suffix);
+	tpp_lexer_arginfo_fini(&self.teb_if_empty);
+#endif /* TPP_HAVE_CPP_EMBED */
+	*p_limit = self.teb_limit;
+	return result;
+}
+#endif /* TPP_HAVE_MACRO___has_embed */
+
+#if TPP_HAVE_CPP_EMBED
 static TPP_NONNULL((1)) void TPPCALL
 tpp_embed_builder_fini(tpp_embed_builder *tpp_restrict self) {
 	if (self->teb_ofr_error == TPP_EOK)
@@ -20680,7 +20830,7 @@ again:
 #if TPP_HAVE_FILE_NONBLOCK
 	read_status = tpp_io_read(ioh, buf, count, 0);
 #else /* TPP_HAVE_FILE_NONBLOCK */
-	read_status = tpp_io_read(ioh, buf, count;
+	read_status = tpp_io_read(ioh, buf, count);
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 	if (read_status < 0)
 		return (tpp_errno)read_status;
@@ -20863,115 +21013,6 @@ err_nomem:
 	goto return_result_and_fini;
 }
 
-/* Parse trailing parameters following a #embed directive */
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
-                               tpp_lexer *tpp_restrict lexer,
-                               tpp_token_id param_kwd) {
-	tpp_token_id tok;
-	tpp_errno error;
-	char const *function_name = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(lexer));
-	switch (param_kwd) {
-
-	case TPP_KWD_limit: {
-		tpp_expr_value limit_value_expr;
-		do {
-			tok = tpp_lexer_yield_blocking(lexer);
-		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR('('));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		error = tpp_lexer_parseexpr(lexer, &limit_value_expr);
-		if (TPP_ISERR(error))
-			return error;
-		if (tpp_expr_value_isint(&limit_value_expr)) {
-			error = tpp_expr_value_asint(&limit_value_expr, &self->teb_limit);
-		} else {
-			bool as_bool;
-			error = tpp_expr_value_asbool(lexer, &limit_value_expr, &as_bool);
-			self->teb_limit = as_bool ? 1 : 0;
-		}
-		tpp_expr_value_fini(&limit_value_expr);
-		if (TPP_ISERR(error))
-			return error;
-		tok = tpp_lexer_gettok(lexer);
-		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
-			tok = tpp_lexer_yield_blocking(lexer);
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		tok = tpp_lexer_skip(lexer, TPP_TOK_OFCHAR(')'));
-		return TPP_TOK_ASERR_OR_EOK(tok);
-	}	break;
-
-	case TPP_KWD_prefix:
-	case TPP_KWD_suffix:
-	case TPP_KWD_if_empty: {
-		tpp_lexer_arginfo arg;
-		tpp_lexer_arginfo *p_dst_arg;
-		do {
-			tok = tpp_lexer_yield_blocking(lexer);
-		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR('('));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
-		                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		switch (param_kwd) {
-		case TPP_KWD_prefix: p_dst_arg = &self->teb_prefix; break;
-		case TPP_KWD_suffix: p_dst_arg = &self->teb_suffix; break;
-		case TPP_KWD_if_empty: p_dst_arg = &self->teb_if_empty; break;
-		default: tpp_unreachable();
-		}
-		tpp_lexer_arginfo_fini(p_dst_arg);
-		*p_dst_arg = arg;
-		return TPP_EOK;
-	}	break;
-
-	default: break;
-	}
-
-#if TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER
-	error = tpp_lexer_warnf(lexer, TPP_W_UNKNOWN_EMBED_PARAMETER);
-	if (TPP_TOK_ISERR(error))
-		return error;
-#endif /* TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER */
-
-#if TPP_HAVE_TPP_TOK_COLON_COLON
-continue_after_unknown_name:
-#endif /* TPP_HAVE_TPP_TOK_COLON_COLON */
-	do {
-		tok = tpp_lexer_yield_blocking(lexer);
-	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if (TPP_TOK_ISERR(tok))
-		return TPP_TOK_ASERR(tok);
-#if TPP_HAVE_TPP_TOK_COLON_COLON
-	if (tok == TPP_TOK_COLON_COLON) {
-		do {
-			tok = tpp_lexer_yield_blocking(lexer);
-		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		if (TPP_TOK_ISKEYWORD(tok))
-			goto continue_after_unknown_name;
-	}
-#endif /* TPP_HAVE_TPP_TOK_COLON_COLON */
-	if (tok == '(') {
-		tpp_lexer_arginfo arg;
-		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
-		                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
-		tpp_lexer_arginfo_fini(&arg);
-	}
-	return TPP_EOK;
-}
-
 /* Must be called with "self" pointing at the token preceding the #include-string */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
@@ -20988,7 +21029,7 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 	tpp_lexer_arginfo_init_empty(&self->teb_prefix);
 	tpp_lexer_arginfo_init_empty(&self->teb_suffix);
 	tpp_lexer_arginfo_init_empty(&self->teb_if_empty);
-	self->teb_limit = (tpp_uintmax)-1;
+	self->teb_limit = TPP_UINTMAX_MAX;
 
 	/* At this point, the lexer looks like this:
 	 *           tf_tpos  tf_pos
@@ -21001,12 +21042,12 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 	 * We must now parse all those #embed parameters
 	 * NOTE: We may also be inside of a macro right now! */
 
+	tok = tpp_lexer_yield_blocking(lexer);
 	for (;;) {
 		tpp_errno error;
 		/* Yield to the first parameter (or just straight to the trailing LF) */
-		do {
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 			tok = tpp_lexer_yield_blocking(lexer);
-		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
 			goto err_tok_builder;
 		if (!TPP_TOK_ISKEYWORD(tok))
@@ -21016,6 +21057,7 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_builder;
 		}
+		tok = tpp_lexer_gettok(lexer);
 	}
 	return TPP_EOK;
 err_tok_builder:
@@ -23486,6 +23528,113 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 #endif /* !TPP_HAVE_MACRO___TPP_EVAL */
 
 
+#if TPP_HAVE_MACRO___has_embed
+
+/* Minimal/adjusted parameter handler for __has_embed */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
+                                      tpp_lexer *tpp_restrict lexer,
+                                      tpp_token_id param_kwd);
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
+	tpp_lexer_openfile_result ofr;
+	tpp_errno ofr_error;
+	tpp_token_id tok;
+	char const *expansion_result;
+	tpp_uintmax param_limit = TPP_UINTMAX_MAX;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+
+	do {
+		tok = tpp_lexer_yield_include_string_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	if (tok == '"' || tok == '<') {
+		ofr_error = tpp_lexer_open_include_string(self, &ofr);
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+		if (ofr_error == TPP_EMASKED)
+			ofr_error = TPP_ENOENT; /* Shouldn't happen */
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+	} else {
+		ofr.tlofr_handle = tpp_io_handle_INVALID; /* To prevent compiler warnings; init here isn't actually necessary */
+#if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
+		ofr_error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INCLUDE_STRING);
+		if (!TPP_ISERR(ofr_error))
+			ofr_error = TPP_ENOENT;
+#else /* TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
+		ofr_error = TPP_ENOENT;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
+	}
+	if (ofr_error != TPP_EOK && ofr_error != TPP_ENOENT)
+		return TPP_TOK_OFERR(ofr_error);
+
+	/* Parse extra parameters */
+	tok = tpp_lexer_yield_blocking(self);
+	for (;;) {
+		tpp_errno error;
+		/* Yield to the first parameter (or just straight to the trailing ')') */
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			goto err_tok_ofr;
+		if (!TPP_TOK_ISKEYWORD(tok))
+			break;
+		error = tpp_embed_builder_handle_param_forhas(&param_limit, self, tok);
+		if (TPP_TOK_ISERR(error)) {
+			tok = TPP_TOK_OFERR(error);
+			goto err_tok_ofr;
+		}
+		tok = tpp_lexer_gettok(self);
+	}
+
+	/* Determine result of test */
+	if (ofr_error != TPP_EOK) {
+		expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND;
+	} else {
+		if (param_limit == 0) {
+			/* Always empty! */
+			expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY;
+		} else {
+			unsigned char first_byte;
+			tpp_ssize read_status;
+#if TPP_HAVE_FILE_NONBLOCK
+			read_status = tpp_io_read(ofr.tlofr_handle, &first_byte, 1, 0);
+#else  /* TPP_HAVE_FILE_NONBLOCK */
+			read_status = tpp_io_read(ofr.tlofr_handle, &first_byte, 1);
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+			if tpp_unlikely(read_status < 0) {
+				tok = TPP_TOK_OFERR((tpp_errno)read_status);
+				goto err_tok_ofr;
+			}
+			if (read_status == 0) {
+				expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY;
+			} else {
+				expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND;
+			}
+		}
+		tpp_io_close(ofr.tlofr_handle);
+	}
+
+	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	return tpp_lexer_push_textfile_inherited(self, (tpp_char const *)expansion_result,
+	                                         tpp_strlen(expansion_result), NULL);
+err_tok_ofr:
+	if (ofr_error == TPP_EOK)
+		tpp_io_close(ofr.tlofr_handle);
+	return tok;
+}
+#endif /* !TPP_HAVE_MACRO___has_embed */
+
+
 
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 /* Handle a builtin macro.
@@ -23551,24 +23700,27 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
-#if (TPP_HAVE_MACRO___has_include ||      \
-     TPP_HAVE_MACRO___has_include_next || \
-     TPP_HAVE_MACRO___has_embed)
+#if (TPP_HAVE_MACRO___has_include || \
+     TPP_HAVE_MACRO___has_include_next)
 #if TPP_HAVE_MACRO___has_include
 	case TPP_KWD___has_include:
 #endif /* TPP_HAVE_MACRO___has_include */
 #if TPP_HAVE_MACRO___has_include_next
 	case TPP_KWD___has_include_next:
 #endif /* TPP_HAVE_MACRO___has_include_next */
-#if TPP_HAVE_MACRO___has_embed
-	case TPP_KWD___has_embed:
-#endif /* TPP_HAVE_MACRO___has_embed */
 	{
 		/* TODO */
-		/* TODO: __has_embed (https://en.cppreference.com/c/preprocessor/embed)
-		 * >> __STDC_EMBED_NOT_FOUND__, __STDC_EMBED_FOUND__, __STDC_EMBED_EMPTY__ */
 	}	break;
 #endif /* ... */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#ifdef TPP_HAVE_MACRO___has_embed
+	case TPP_KWD___has_embed:
+		return tpp_lexer_yield_handle___has_embed(self);
+#endif /* TPP_HAVE_MACRO___has_embed */
 /************************************************************************/
 
 
@@ -24862,7 +25014,7 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
  *
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOMEM:  Insufficient memory
- * @return: TPP_ENOENT:  No such file
+ * @return: TPP_ENOENT:  No such file (no warning printed, yet)
  * @return: TPP_EMASKED: (tpp_lexer_open_include_string_ex only): Flags
  *                       specified by "mask_flags" were already set. */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX

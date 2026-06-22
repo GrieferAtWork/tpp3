@@ -528,22 +528,34 @@ TPP_KWD(TPP_KWD___VA_OPT__, "__VA_OPT__")
 #define TPP_KWD_defined TPP_KWD_defined
 TPP_KWD(TPP_KWD_defined, "defined")
 #endif /* TPP_HAVE_BUILTIN_EXPR_DEFINED */
-#if TPP_HAVE_CPP_EMBED
+#if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 #define TPP_KWD_limit TPP_KWD_limit
 TPP_KWD(TPP_KWD_limit, "limit")
-#endif /* TPP_HAVE_CPP_EMBED */
-#if TPP_HAVE_CPP_EMBED
+#endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 #define TPP_KWD_prefix TPP_KWD_prefix
 TPP_KWD(TPP_KWD_prefix, "prefix")
-#endif /* TPP_HAVE_CPP_EMBED */
-#if TPP_HAVE_CPP_EMBED
+#endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 #define TPP_KWD_suffix TPP_KWD_suffix
 TPP_KWD(TPP_KWD_suffix, "suffix")
-#endif /* TPP_HAVE_CPP_EMBED */
-#if TPP_HAVE_CPP_EMBED
+#endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 #define TPP_KWD_if_empty TPP_KWD_if_empty
 TPP_KWD(TPP_KWD_if_empty, "if_empty")
-#endif /* TPP_HAVE_CPP_EMBED */
+#endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_MACRO___has_embed
+#define TPP_KWD___STDC_EMBED_NOT_FOUND__ TPP_KWD___STDC_EMBED_NOT_FOUND__
+TPP_KWD(TPP_KWD___STDC_EMBED_NOT_FOUND__, "__STDC_EMBED_NOT_FOUND__")
+#endif /* TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_MACRO___has_embed
+#define TPP_KWD___STDC_EMBED_FOUND__ TPP_KWD___STDC_EMBED_FOUND__
+TPP_KWD(TPP_KWD___STDC_EMBED_FOUND__, "__STDC_EMBED_FOUND__")
+#endif /* TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_MACRO___has_embed
+#define TPP_KWD___STDC_EMBED_EMPTY__ TPP_KWD___STDC_EMBED_EMPTY__
+TPP_KWD(TPP_KWD___STDC_EMBED_EMPTY__, "__STDC_EMBED_EMPTY__")
+#endif /* TPP_HAVE_MACRO___has_embed */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 #define TPP_KWD_push_macro TPP_KWD_push_macro
 TPP_KWD(TPP_KWD_push_macro, "push_macro")
@@ -690,6 +702,12 @@ TPP_MACRO(TPP_KWD___has_include_next, tpp_lexer_has(tpp_current_lexer(), MACRO__
 #endif /* TPP_HAVE_MACRO___has_include_next */
 #if TPP_HAVE_MACRO___has_embed
 TPP_MACRO(TPP_KWD___has_embed, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
+TPP_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
+TPP_MACRO(TPP_KWD___STDC_EMBED_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
+TPP_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
+TPP_BUILTIN_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND)
+TPP_BUILTIN_MACRO(TPP_KWD___STDC_EMBED_FOUND__, TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND)
+TPP_BUILTIN_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY)
 #endif /* TPP_HAVE_MACRO___has_embed */
 #if TPP_HAVE_MACRO___FILE__
 TPP_MACRO(TPP_KWD___FILE__, tpp_lexer_has(tpp_current_lexer(), MACRO___FILE__))
@@ -6146,6 +6164,19 @@ TPP_DECL_END
 #define TPP_HAVE_FTOA (TPP_HAVE_EXPR_VALUE_PRINTREPR)
 #endif /* !TPP_HAVE_FTOA */
 
+/* String representations of what __has_embed() should expand to */
+#if TPP_HAVE_MACRO___has_embed
+#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND
+#define TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND "0"
+#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND */
+#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND
+#define TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND "1"
+#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND */
+#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY
+#define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
+#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
+#endif /* TPP_HAVE_MACRO___has_embed */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -6431,7 +6462,6 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION) && TPP_HAVE_EXTENSIONS_PUSH_POP)
 #endif /* !TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS */
-
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS
@@ -13627,7 +13657,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
  *
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOMEM:  Insufficient memory
- * @return: TPP_ENOENT:  No such file
+ * @return: TPP_ENOENT:  No such file (no warning printed, yet)
  * @return: TPP_EMASKED: (tpp_lexer_open_include_string_ex only): Flags
  *                       specified by "mask_flags" were already set. */
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX

@@ -2330,6 +2330,19 @@
 #define TPP_HAVE_FTOA (TPP_HAVE_EXPR_VALUE_PRINTREPR)
 #endif /* !TPP_HAVE_FTOA */
 
+/* String representations of what __has_embed() should expand to */
+#if TPP_HAVE_MACRO___has_embed
+#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND
+#define TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND "0"
+#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND */
+#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND
+#define TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND "1"
+#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND */
+#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY
+#define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
+#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
+#endif /* TPP_HAVE_MACRO___has_embed */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -2615,7 +2628,6 @@
 #define TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION) && TPP_HAVE_EXTENSIONS_PUSH_POP)
 #endif /* !TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS */
-
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS

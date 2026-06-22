@@ -1013,6 +1013,113 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 #endif /* !TPP_HAVE_MACRO___TPP_EVAL */
 
 
+#if TPP_HAVE_MACRO___has_embed
+
+/* Minimal/adjusted parameter handler for __has_embed */
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
+                                      tpp_lexer *tpp_restrict lexer,
+                                      tpp_token_id param_kwd);
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
+	tpp_lexer_openfile_result ofr;
+	tpp_errno ofr_error;
+	tpp_token_id tok;
+	char const *expansion_result;
+	tpp_uintmax param_limit = TPP_UINTMAX_MAX;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+
+	do {
+		tok = tpp_lexer_yield_include_string_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	if (tok == '"' || tok == '<') {
+		ofr_error = tpp_lexer_open_include_string(self, &ofr);
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+		if (ofr_error == TPP_EMASKED)
+			ofr_error = TPP_ENOENT; /* Shouldn't happen */
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+	} else {
+		ofr.tlofr_handle = tpp_io_handle_INVALID; /* To prevent compiler warnings; init here isn't actually necessary */
+#if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
+		ofr_error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INCLUDE_STRING);
+		if (!TPP_ISERR(ofr_error))
+			ofr_error = TPP_ENOENT;
+#else /* TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
+		ofr_error = TPP_ENOENT;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
+	}
+	if (ofr_error != TPP_EOK && ofr_error != TPP_ENOENT)
+		return TPP_TOK_OFERR(ofr_error);
+
+	/* Parse extra parameters */
+	tok = tpp_lexer_yield_blocking(self);
+	for (;;) {
+		tpp_errno error;
+		/* Yield to the first parameter (or just straight to the trailing ')') */
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			goto err_tok_ofr;
+		if (!TPP_TOK_ISKEYWORD(tok))
+			break;
+		error = tpp_embed_builder_handle_param_forhas(&param_limit, self, tok);
+		if (TPP_TOK_ISERR(error)) {
+			tok = TPP_TOK_OFERR(error);
+			goto err_tok_ofr;
+		}
+		tok = tpp_lexer_gettok(self);
+	}
+
+	/* Determine result of test */
+	if (ofr_error != TPP_EOK) {
+		expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND;
+	} else {
+		if (param_limit == 0) {
+			/* Always empty! */
+			expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY;
+		} else {
+			unsigned char first_byte;
+			tpp_ssize read_status;
+#if TPP_HAVE_FILE_NONBLOCK
+			read_status = tpp_io_read(ofr.tlofr_handle, &first_byte, 1, 0);
+#else  /* TPP_HAVE_FILE_NONBLOCK */
+			read_status = tpp_io_read(ofr.tlofr_handle, &first_byte, 1);
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+			if tpp_unlikely(read_status < 0) {
+				tok = TPP_TOK_OFERR((tpp_errno)read_status);
+				goto err_tok_ofr;
+			}
+			if (read_status == 0) {
+				expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY;
+			} else {
+				expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND;
+			}
+		}
+		tpp_io_close(ofr.tlofr_handle);
+	}
+
+	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	return tpp_lexer_push_textfile_inherited(self, (tpp_char const *)expansion_result,
+	                                         tpp_strlen(expansion_result), NULL);
+err_tok_ofr:
+	if (ofr_error == TPP_EOK)
+		tpp_io_close(ofr.tlofr_handle);
+	return tok;
+}
+#endif /* !TPP_HAVE_MACRO___has_embed */
+
+
 
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 /* Handle a builtin macro.
@@ -1078,24 +1185,27 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
-#if (TPP_HAVE_MACRO___has_include ||      \
-     TPP_HAVE_MACRO___has_include_next || \
-     TPP_HAVE_MACRO___has_embed)
+#if (TPP_HAVE_MACRO___has_include || \
+     TPP_HAVE_MACRO___has_include_next)
 #if TPP_HAVE_MACRO___has_include
 	case TPP_KWD___has_include:
 #endif /* TPP_HAVE_MACRO___has_include */
 #if TPP_HAVE_MACRO___has_include_next
 	case TPP_KWD___has_include_next:
 #endif /* TPP_HAVE_MACRO___has_include_next */
-#if TPP_HAVE_MACRO___has_embed
-	case TPP_KWD___has_embed:
-#endif /* TPP_HAVE_MACRO___has_embed */
 	{
 		/* TODO */
-		/* TODO: __has_embed (https://en.cppreference.com/c/preprocessor/embed)
-		 * >> __STDC_EMBED_NOT_FOUND__, __STDC_EMBED_FOUND__, __STDC_EMBED_EMPTY__ */
 	}	break;
 #endif /* ... */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#ifdef TPP_HAVE_MACRO___has_embed
+	case TPP_KWD___has_embed:
+		return tpp_lexer_yield_handle___has_embed(self);
+#endif /* TPP_HAVE_MACRO___has_embed */
 /************************************************************************/
 
 

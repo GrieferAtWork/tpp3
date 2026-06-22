@@ -307,10 +307,15 @@ local BUILTIN_KEYWORDS: {string: string} = {
 	"__VA_NARGS__": "TPP_HAVE_VA_NARGS_IN_MACROS",
 	"__VA_OPT__": "TPP_HAVE_VA_OPT_IN_MACROS",
 	"defined": "TPP_HAVE_BUILTIN_EXPR_DEFINED",
-	"limit": "TPP_HAVE_CPP_EMBED",
-	"prefix": "TPP_HAVE_CPP_EMBED",
-	"suffix": "TPP_HAVE_CPP_EMBED",
-	"if_empty": "TPP_HAVE_CPP_EMBED",
+
+	// For #embed and __has_embed
+	"limit": "TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed",
+	"prefix": "TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed",
+	"suffix": "TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed",
+	"if_empty": "TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed",
+	"__STDC_EMBED_NOT_FOUND__": "TPP_HAVE_MACRO___has_embed",
+	"__STDC_EMBED_FOUND__": "TPP_HAVE_MACRO___has_embed",
+	"__STDC_EMBED_EMPTY__": "TPP_HAVE_MACRO___has_embed",
 
 	// Pragmas....
 	"push_macro": "TPP_HAVE_PRAGMA_PUSH_MACRO",
@@ -646,22 +651,34 @@ TPP_KWD(TPP_KWD___VA_OPT__, "__VA_OPT__")
 #define TPP_KWD_defined TPP_KWD_defined
 TPP_KWD(TPP_KWD_defined, "defined")
 #endif /* TPP_HAVE_BUILTIN_EXPR_DEFINED */
-#if TPP_HAVE_CPP_EMBED
+#if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 #define TPP_KWD_limit TPP_KWD_limit
 TPP_KWD(TPP_KWD_limit, "limit")
-#endif /* TPP_HAVE_CPP_EMBED */
-#if TPP_HAVE_CPP_EMBED
+#endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 #define TPP_KWD_prefix TPP_KWD_prefix
 TPP_KWD(TPP_KWD_prefix, "prefix")
-#endif /* TPP_HAVE_CPP_EMBED */
-#if TPP_HAVE_CPP_EMBED
+#endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 #define TPP_KWD_suffix TPP_KWD_suffix
 TPP_KWD(TPP_KWD_suffix, "suffix")
-#endif /* TPP_HAVE_CPP_EMBED */
-#if TPP_HAVE_CPP_EMBED
+#endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 #define TPP_KWD_if_empty TPP_KWD_if_empty
 TPP_KWD(TPP_KWD_if_empty, "if_empty")
-#endif /* TPP_HAVE_CPP_EMBED */
+#endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_MACRO___has_embed
+#define TPP_KWD___STDC_EMBED_NOT_FOUND__ TPP_KWD___STDC_EMBED_NOT_FOUND__
+TPP_KWD(TPP_KWD___STDC_EMBED_NOT_FOUND__, "__STDC_EMBED_NOT_FOUND__")
+#endif /* TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_MACRO___has_embed
+#define TPP_KWD___STDC_EMBED_FOUND__ TPP_KWD___STDC_EMBED_FOUND__
+TPP_KWD(TPP_KWD___STDC_EMBED_FOUND__, "__STDC_EMBED_FOUND__")
+#endif /* TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_MACRO___has_embed
+#define TPP_KWD___STDC_EMBED_EMPTY__ TPP_KWD___STDC_EMBED_EMPTY__
+TPP_KWD(TPP_KWD___STDC_EMBED_EMPTY__, "__STDC_EMBED_EMPTY__")
+#endif /* TPP_HAVE_MACRO___has_embed */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 #define TPP_KWD_push_macro TPP_KWD_push_macro
 TPP_KWD(TPP_KWD_push_macro, "push_macro")
@@ -809,6 +826,12 @@ TPP_MACRO(TPP_KWD___has_include_next, tpp_lexer_has(tpp_current_lexer(), MACRO__
 #endif /* TPP_HAVE_MACRO___has_include_next */
 #if TPP_HAVE_MACRO___has_embed
 TPP_MACRO(TPP_KWD___has_embed, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
+TPP_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
+TPP_MACRO(TPP_KWD___STDC_EMBED_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
+TPP_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
+TPP_BUILTIN_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND)
+TPP_BUILTIN_MACRO(TPP_KWD___STDC_EMBED_FOUND__, TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND)
+TPP_BUILTIN_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY)
 #endif /* TPP_HAVE_MACRO___has_embed */
 #if TPP_HAVE_MACRO___FILE__
 TPP_MACRO(TPP_KWD___FILE__, tpp_lexer_has(tpp_current_lexer(), MACRO___FILE__))
