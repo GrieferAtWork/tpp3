@@ -544,6 +544,10 @@ typedef struct tpp_lexer_openfile_result {
  * in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
  * is currently considered to be `#if defined()'.
  *
+ * Another special case is made for "TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT", which
+ * causes "TPP_EMASKED" to be returned if the file's keyword is already included
+ * somewhere on the #include-stack.
+ *
  * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
  *                     should be returned:
  *                     - TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED

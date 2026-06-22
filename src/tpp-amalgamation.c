@@ -5432,7 +5432,8 @@ tpp_file_setuserfilename(tpp_file *tpp_restrict self,
 #endif /* TPP_HAVE_FILE_USER_FILENAME */
 
 
-/* Set the (0-based) line that applies to "pos" (as returned by "tpp_file_lcinfo") in "self"
+/* Set the (0-based) line that applies to "pos"
+ * (as returned by "tpp_file_lcinfo") in "self"
  *
  * NOTE: The caller must ensure that:
  *       >> self->tf_kind == TPP_FILE_KIND_IO ||
@@ -5518,13 +5519,14 @@ tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
 	return (tpp_file *)self;
 }
 
-/* Returns the first tf_kind!=TPP_FILE_KIND_MACRO file in the #include-stack (using "tf_tprev")
- * If no such file exists, returns "NULL" */
-#if TPP_HAVE_CPP_MACROS
+/* Returns the first tf_kind==TPP_FILE_KIND_IO || tf_kind==TPP_FILE_KIND_TEXT file
+ * in the #include-stack (using "tf_tprev"). If no such file exists, returns "NULL" */
+#if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_gettextfile(tpp_file const *tpp_restrict self) {
 	tpp_file *iter = (tpp_file *)self;
-	while (iter->tf_kind == TPP_FILE_KIND_MACRO) {
+	while (iter->tf_kind != TPP_FILE_KIND_IO &&
+	       iter->tf_kind != TPP_FILE_KIND_MACRO) {
 		iter = iter->tf_tprev;
 		if (iter == NULL)
 			break;
@@ -5540,7 +5542,7 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 	tpp_file *result = tpp_file_gettextfile(self);
 	return result ? result : (tpp_file *)self;
 }
-#endif /* TPP_HAVE_CPP_MACROS */
+#endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT */
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 
@@ -6590,6 +6592,10 @@ TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT != TPP_LEXER_OPENFILE_FLA
  * A special case is made when "mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED",
  * in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
  * is currently considered to be `#if defined()'.
+ *
+ * Another special case is made for "TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT", which
+ * causes "TPP_EMASKED" to be returned if the file's keyword is already included
+ * somewhere on the #include-stack.
  *
  * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
  *                     should be returned:

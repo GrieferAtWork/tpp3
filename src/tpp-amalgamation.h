@@ -10662,7 +10662,7 @@ TPP_DECL_BEGIN
 
 typedef enum tpp_file_kind {
 	TPP_FILE_KIND_IO,      /* File found on hard-disk */
-	TPP_FILE_KIND_TEXT,    /* Explicitly injected text (same as `TPP_FILE_KIND_IO', but single-chunk'd) */
+	TPP_FILE_KIND_TEXT,    /* Explicitly injected text (same as `TPP_FILE_KIND_IO', but single-chunk'd and non-expandable) */
 #if TPP_HAVE_FILE_SUBTEXT
 	TPP_FILE_KIND_SUBTEXT, /* Same as `TPP_FILE_KIND_TEXT', but used to describe temporary sub-chunk files */
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -10951,7 +10951,7 @@ typedef struct tpp_file {
 
 /* Returns a pointer to the start of the effectively relevant source.
  * - For the currently loaded file, this is the start of the current
- *   token If no tokens have been yielded yet, the value returned by
+ *   token. If no tokens have been yielded yet, the value returned by
  *   this macro is undefined.
  * - For macros further up the #include-stack, this (tries to) point
  *   to the start of the macro's name. However, if the macro's name
@@ -11087,6 +11087,60 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
 
 
+/* Push a (temporary) extra-file onto the #include-stack (replacing "self")
+ * whose contents can be overwritten to be a (sub-)text chunk of the actual
+ * current file. If that (sub-)text chunk is the same as the chunk currently
+ * loaded on the (then) parent-file, LC information remains available. Else,
+ * calls to "tpp_file_lcinfo()" return "TPP_LCINFO_INVALID" within the sub-
+ * text file.
+ *
+ * These functions are meant for:
+ * - tpp_file_subtext_setchunk_fromarg / tpp_lexer_seekpp_rparen:
+ *   Re-parsing text retrieved from "tpp_lexer_arginfo", as is necessary
+ *   when expanding the arguments of macros. Because macro arguments can
+ *   span across multiple files, and may contain (at that point removed)
+ *   preprocessor directives, such processing is done via sub-text files:
+ *   >> #define foo(a, b) a+b
+ *   >> #define bar       foo(10 _,_
+ *   >> bar 20)    // [10][ ][_][,][_][ ][20]
+ *   The second argument "b" is "_ 20", but those tokens are split across
+ *   2 different text locations: "_" and " 20". As such, there will be no
+ *   LC information for available within the sub-text of "b". On the other
+ *   hand, "a" is "10 _", which appears consecutive thus continues to have
+ *   LC information available
+ * - tpp_file_subtext_setchunk_fromstring / tpp_lexer_parsestring_cb:
+ *   Re-parsing text from a decoded string literal, as is necessary for
+ *   evaluation of the "_Pragma()" builtin, as well as "#pragma tpp_exec()"
+ *   Here, the same restrictions apply: if the contained string is single-
+ *   chunked (meaning it's decoded text can alias its source file), then
+ *   LC information is available. Otherwise, it isn't:
+ *   - LC information available in pragma:
+ *     >> _Pragma("push_macro('foo')")
+ *   - No LC information available in pragma:
+ *     >> _Pragma("push_macro(\"foo\")")
+ *     (because string decode doesn't map linearly to source file)
+ *
+ * Usage:
+ * >> tpp_errno TPPCALL my_parsestring_cb(void *arg, tpp_string *chunk,
+   >>                                     tpp_char const *str, tpp_size length) {
+ * >>     tpp_token_id tok;
+ * >>     tpp_lexer *lexer = (tpp_lexer *)arg;
+ * >>     tpp_file *file = tpp_lexer_getfile(lexer);
+ * >>     tpp_file_subtext_push(file);
+ * >>     tpp_file_subtext_setchunk_fromstring(file, chunk, str, length);
+ * >>     tok = tpp_lexer_yield(lexer);
+ * >>     ...
+ * >>     tpp_file_subtext_pop(file);
+ * >> }
+ *
+ * NOTES:
+ * - A call to "tpp_file_subtext_push()" is similar to the combination of:
+ *   - tpp_file_pusheof()
+ *   - tpp_file_pushifdef()
+ *   - tpp_file_autopopfile_pushoff()
+ * - A call to "tpp_file_subtext_setchunk()" automatically does:
+ *   - tpp_file_seteof()
+ */
 #if TPP_HAVE_FILE_SUBTEXT
 #if TPP_HAVE_IFDEF_STACK
 #define _tpp_file_subtext_init_ifdef(self) , tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
@@ -11241,12 +11295,23 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
 /* Encode/decode pointer<=>text-offset such that effective positions
  * are retained across calls to `tpp_file_expandchunk()'.
  *
- * NOTE: This needs to use "tf_pos" as relative base, since the start
- *       of the currently loaded chunk can change if another chunk is
- *       allocated that doesn't include the already-read buffer area
- *       located in [tf_chunk->ts_str,tf_pos) */
-#define tpp_file_ptr2rel(self, ptr) (tpp_size)((ptr) - (self)->TPP_INTERNAL(tf_pos))
-#define tpp_file_rel2ptr(self, rel) ((self)->TPP_INTERNAL(tf_pos) + (rel))
+ * WARNING: Any calls that modify "tf_pos", or "tpp_token::tt_end",
+ *          including "tpp_lexer_yieldraw()" will CLOBBER all relative
+ *          offsets within the current file. "tpp_lexer_yieldraw_at()"
+ *          however will not (since that one doesn't modify the file's
+ *          position as it uses the one given as argument instead).
+ *
+ * NOTES:
+ *  - This needs to use "tf_pos" as relative base, since the start
+ *    of the currently loaded chunk can change if another chunk is
+ *    allocated that doesn't include the already-read buffer area
+ *    located in [tf_chunk->ts_str,tf_pos)
+ *  - Use these functions to support memory relocation across calls
+ *    to `tpp_file_expandchunk()' (which may relocate the current
+ *    text chunk)
+ */
+#define tpp_file_ptr2rel(self, ptr) (tpp_size)((ptr) - tpp_file_getpos(self))
+#define tpp_file_rel2ptr(self, rel) (tpp_file_getpos(self) + (rel))
 
 /* Same as above, but pointers are relative to the file's keep-position */
 #if TPP_HAVE_FILE_KEEPPOS
@@ -11285,7 +11350,8 @@ tpp_file_setuserfilename(tpp_file *tpp_restrict self,
 #define tpp_file_userfilename(self) tpp_file_filename(self)
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
 
-/* Set the (0-based) line that applies to "pos" (as returned by "tpp_file_lcinfo") in "self"
+/* Set the (0-based) line that applies to "pos"
+ * (as returned by "tpp_file_lcinfo") in "self"
  *
  * NOTE: The caller must ensure that:
  *       >> self->tf_kind == TPP_FILE_KIND_IO ||
@@ -11311,9 +11377,9 @@ tpp_file_getiofile(tpp_file const *tpp_restrict self);
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getbasefile(tpp_file const *tpp_restrict self);
 
-#if TPP_HAVE_CPP_MACROS
-/* Returns the first tf_kind!=TPP_FILE_KIND_MACRO file in the #include-stack (using "tf_tprev")
- * If no such file exists, returns "NULL" */
+#if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT
+/* Returns the first tf_kind==TPP_FILE_KIND_IO || tf_kind==TPP_FILE_KIND_TEXT file
+ * in the #include-stack (using "tf_tprev"). If no such file exists, returns "NULL" */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_gettextfile(tpp_file const *tpp_restrict self);
 
@@ -11322,18 +11388,22 @@ tpp_file_gettextfile(tpp_file const *tpp_restrict self);
  * for the builtin __FILE__, __LINE__ and __COLUMN__ macros. */
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getlcfile(tpp_file const *tpp_restrict self);
-#else /* TPP_HAVE_CPP_MACROS */
+#else /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT */
 #define tpp_file_gettextfile(self) ((tpp_file *)(self))
 #define tpp_file_getlcfile(self)   ((tpp_file *)(self))
-#endif /* !TPP_HAVE_CPP_MACROS */
+#endif /* !TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT */
 #else /* TPP_HAVE_INCLUDE_STACK */
 #define tpp_file_getiofile(self) ((tpp_file *)(self))
 #define tpp_file_getlcfile(self) ((tpp_file *)(self))
-#if TPP_HAVE_CPP_MACROS
-#define tpp_file_gettextfile(self) ((self)->TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_MACRO ? NULL : ((tpp_file *)(self)))
-#else /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT
+#define tpp_file_gettextfile(self)                         \
+	(((self)->TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_IO || \
+	  (self)->TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_TEXT) \
+	 ? ((tpp_file *)(self))                                \
+	 : NULL)
+#else /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT */
 #define tpp_file_gettextfile(self) ((tpp_file *)(self))
-#endif /* !TPP_HAVE_CPP_MACROS */
+#endif /* !TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT */
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 
 
@@ -13252,6 +13322,10 @@ typedef struct tpp_lexer_openfile_result {
  * A special case is made when "mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED",
  * in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
  * is currently considered to be `#if defined()'.
+ *
+ * Another special case is made for "TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT", which
+ * causes "TPP_EMASKED" to be returned if the file's keyword is already included
+ * somewhere on the #include-stack.
  *
  * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
  *                     should be returned:
