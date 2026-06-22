@@ -1013,6 +1013,85 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 #endif /* !TPP_HAVE_MACRO___TPP_EVAL */
 
 
+#if TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___has_include(tpp_lexer *tpp_restrict self,
+                                     tpp_lexer_openfile_flags mask_flags)
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
+#define tpp_lexer_yield_handle___has_include(self, mask_flags) \
+	tpp_lexer_yield_handle_simple___has_include(self)
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+{
+	tpp_errno ofr_error;
+	tpp_token_id tok;
+	char const *expansion_result;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+
+	do {
+		tok = tpp_lexer_yield_include_string_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	if (tok == '"' || tok == '<') {
+		tpp_lexer_openfile_result ofr;
+#if !TPP_HAVE_KEYWORDS_OPENFILE_EX
+		ofr_error = tpp_lexer_open_include_string(self, &ofr);
+#else /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+		/* Enable all header-related flags: if the header has been included
+		 * in relation to one of these, then we know it exists without having
+		 * to check its file */
+#if TPP_HAVE_PRAGMA_ONCE
+		mask_flags |= TPP_LEXER_OPENFILE_FLAG_HDR_ONCE;
+#endif /* TPP_HAVE_PRAGMA_ONCE */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+		mask_flags |= TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED;
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if TPP_HAVE_CPP_IMPORT
+		mask_flags |= TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED;
+#endif /* TPP_HAVE_CPP_IMPORT */
+		ofr_error = tpp_lexer_open_include_string_ex(self, &ofr, mask_flags);
+		if (ofr_error == TPP_EMASKED) {
+			ofr_error = TPP_EOK;
+		} else
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+		{
+			if (ofr_error == TPP_EOK)
+				tpp_io_close(ofr.tlofr_handle);
+		}
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
+		ofr_error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INCLUDE_STRING);
+		if (!TPP_ISERR(ofr_error))
+			ofr_error = TPP_ENOENT;
+#else /* TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
+		ofr_error = TPP_ENOENT;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
+	}
+	if (ofr_error != TPP_EOK && ofr_error != TPP_ENOENT)
+		return TPP_TOK_OFERR(ofr_error);
+	do {
+		tok = tpp_lexer_yield_include_string_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	expansion_result = ofr_error == TPP_ENOENT ? "0" : "1";
+	return tpp_lexer_push_textfile_inherited(self, (tpp_char const *)expansion_result, 1, NULL);
+}
+#endif /* TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next */
+
+
 #if TPP_HAVE_MACRO___has_embed
 
 /* Minimal/adjusted parameter handler for __has_embed */
@@ -1185,18 +1264,14 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
-#if (TPP_HAVE_MACRO___has_include || \
-     TPP_HAVE_MACRO___has_include_next)
 #if TPP_HAVE_MACRO___has_include
 	case TPP_KWD___has_include:
+		return tpp_lexer_yield_handle___has_include(self, TPP_LEXER_OPENFILE_FLAG_NORMAL);
 #endif /* TPP_HAVE_MACRO___has_include */
 #if TPP_HAVE_MACRO___has_include_next
 	case TPP_KWD___has_include_next:
+		return tpp_lexer_yield_handle___has_include(self, TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT);
 #endif /* TPP_HAVE_MACRO___has_include_next */
-	{
-		/* TODO */
-	}	break;
-#endif /* ... */
 /************************************************************************/
 
 

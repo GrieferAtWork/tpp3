@@ -5978,9 +5978,9 @@ TPP_DECL_END
 
 /* Enable support for `tpp_keywords_openfile_ex()' */
 #ifndef TPP_HAVE_KEYWORDS_OPENFILE_EX
-#if (TPP_HAVE_KEYWORDS_OPENFILE && \
-     (TPP_HAVE_CPP_IMPORT ||       \
-      TPP_HAVE_CPP_INCLUDE_NEXT || \
+#if (TPP_HAVE_KEYWORDS_OPENFILE &&                                        \
+     (TPP_HAVE_CPP_IMPORT ||                                              \
+      (TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next) || \
       (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
 #define TPP_HAVE_KEYWORDS_OPENFILE_EX 1
 #else /* ... */
@@ -13167,9 +13167,9 @@ typedef struct tpp_lexer_openfile_result {
 #else /* tpp_keyword_flags */
 #define tpp_lexer_openfile_flags uint_least32_t /* Set of `TPP_LEXER_OPENFILE_FLAG_*' */
 #endif /* !tpp_keyword_flags */
-#if TPP_HAVE_CPP_INCLUDE_NEXT
+#if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
 #define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
-#endif /* TPP_HAVE_CPP_INCLUDE_NEXT */
+#endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
 
 /* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
  * included before, and its keyword has any of the bits specified by `mask_flags' set.

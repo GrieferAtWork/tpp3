@@ -2144,9 +2144,9 @@
 
 /* Enable support for `tpp_keywords_openfile_ex()' */
 #ifndef TPP_HAVE_KEYWORDS_OPENFILE_EX
-#if (TPP_HAVE_KEYWORDS_OPENFILE && \
-     (TPP_HAVE_CPP_IMPORT ||       \
-      TPP_HAVE_CPP_INCLUDE_NEXT || \
+#if (TPP_HAVE_KEYWORDS_OPENFILE &&                                        \
+     (TPP_HAVE_CPP_IMPORT ||                                              \
+      (TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next) || \
       (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
 #define TPP_HAVE_KEYWORDS_OPENFILE_EX 1
 #else /* ... */
