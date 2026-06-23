@@ -1753,7 +1753,7 @@ switch_on_ch:
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '%') {
 			if (tpp_lexer_has(self, DIGRAPHS)) {
-				result = (tpp_token_id)'{'; /* "<%" -> "{" */
+				result = TPP_TOK_OFCHAR('{'); /* "<%" -> "{" */
 				goto set_result;
 			}
 		} else if (ch2 == ':') {
@@ -1763,7 +1763,7 @@ switch_on_ch:
 				if (ch2 == ':')
 					break; /* "<::" -> "<", "::"  ("break" here to follow single-char path) */
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-				result = (tpp_token_id)'['; /* "<:" -> "[" */
+				result = TPP_TOK_OFCHAR('['); /* "<:" -> "[" */
 				goto set_result;
 			}
 		} else
@@ -2897,7 +2897,7 @@ switch_on_ch:
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '>') {
 			if (tpp_lexer_has(self, DIGRAPHS)) {
-				result = (tpp_token_id)'}'; /* "%>" -> "}" */
+				result = TPP_TOK_OFCHAR('}'); /* "%>" -> "}" */
 				goto set_result;
 			}
 		} else
@@ -2917,7 +2917,7 @@ switch_on_ch:
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
 				}
 #endif /* TPP_HAVE_TPP_TOK_POUND_POUND */
-				result = (tpp_token_id)'#'; /* "%:" -> "#" */
+				result = TPP_TOK_OFCHAR('#'); /* "%:" -> "#" */
 				goto set_result;
 			}
 		} else
@@ -3118,7 +3118,7 @@ switch_on_ch:
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '>') {
 			if (tpp_lexer_has(self, DIGRAPHS)) {
-				result = (tpp_token_id)']'; /* ":>" -> "]" */
+				result = TPP_TOK_OFCHAR(']'); /* ":>" -> "]" */
 				goto set_result;
 			}
 		} else
@@ -4101,7 +4101,7 @@ handle_digit:
 	}
 
 	/* Fallback: single-character token */
-	result = (tpp_token_id)ch;
+	result = TPP_TOK_OFCHAR(ch);
 	pos    = tpp_file_rel2ptr(file, rel_start + 1);
 set_result:
 	token->tt_id    = result;

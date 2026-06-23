@@ -37,7 +37,7 @@ TPP_DECL_BEGIN
 #define TPP_MACRO_KIND_KEYWORD      UINT8_C(0)
 #define TPP_MACRO_KIND_FUNC_PAREN   '('
 #define TPP_MACRO_KIND_ISFUNC(kind) ((kind) != TPP_MACRO_KIND_KEYWORD)
-#define TPP_MACRO_KIND_ASTOK(kind)  ((tpp_token_id)(kind))
+#define TPP_MACRO_KIND_ASTOK(kind)  TPP_TOK_OFCHAR(kind)
 #define TPP_MACRO_KIND_OFTOK(tok)   ((tpp_macro_kind)(unsigned int)(tok))
 #if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
 #define TPP_MACRO_KIND_FUNC_BRACKET '['

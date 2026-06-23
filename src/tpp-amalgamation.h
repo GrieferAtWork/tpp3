@@ -416,6 +416,10 @@ TPP_KWD(TPP_KWD___COLUMN__, "__COLUMN__")
 #define TPP_KWD___BASE_FILE__ TPP_KWD___BASE_FILE__
 TPP_KWD(TPP_KWD___BASE_FILE__, "__BASE_FILE__")
 #endif /* TPP_HAVE_MACRO___BASE_FILE__ */
+#if TPP_HAVE_MACRO___FILE_NAME__
+#define TPP_KWD___FILE_NAME__ TPP_KWD___FILE_NAME__
+TPP_KWD(TPP_KWD___FILE_NAME__, "__FILE_NAME__")
+#endif /* TPP_HAVE_MACRO___FILE_NAME__ */
 #if TPP_HAVE_MACRO___INCLUDE_LEVEL__
 #define TPP_KWD___INCLUDE_LEVEL__ TPP_KWD___INCLUDE_LEVEL__
 TPP_KWD(TPP_KWD___INCLUDE_LEVEL__, "__INCLUDE_LEVEL__")
@@ -727,6 +731,9 @@ TPP_MACRO(TPP_KWD___COLUMN__, tpp_lexer_has(tpp_current_lexer(), MACRO___COLUMN_
 #if TPP_HAVE_MACRO___BASE_FILE__
 TPP_MACRO(TPP_KWD___BASE_FILE__, tpp_lexer_has(tpp_current_lexer(), MACRO___BASE_FILE__))
 #endif /* TPP_HAVE_MACRO___BASE_FILE__ */
+#if TPP_HAVE_MACRO___FILE_NAME__
+TPP_MACRO(TPP_KWD___FILE_NAME__, tpp_lexer_has(tpp_current_lexer(), MACRO___FILE_NAME__))
+#endif /* TPP_HAVE_MACRO___FILE_NAME__ */
 #if TPP_HAVE_MACRO___INCLUDE_LEVEL__
 TPP_MACRO(TPP_KWD___INCLUDE_LEVEL__, tpp_lexer_has(tpp_current_lexer(), MACRO___INCLUDE_LEVEL__))
 #endif /* TPP_HAVE_MACRO___INCLUDE_LEVEL__ */
@@ -2126,6 +2133,14 @@ TPP_EXTENSION(TPP_EXT_MACRO___COLUMN__, TPP_EXTNAME_MACRO___COLUMN__, TPP_CONF_D
 TPP_EXTENSION(TPP_EXT_MACRO___BASE_FILE__, TPP_EXTNAME_MACRO___BASE_FILE__, TPP_CONF_DEFAULT(TPP_HAVE_MACRO___BASE_FILE__))
 #define _tpp_lexer_has_MACRO___BASE_FILE__(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_MACRO___BASE_FILE__)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO___BASE_FILE__) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO___FILE_NAME__)
+#ifndef TPP_EXTNAME_MACRO___FILE_NAME__
+#define TPP_EXTNAME_MACRO___FILE_NAME__ "__FILE_NAME__"
+#endif /* !TPP_EXTNAME_MACRO___FILE_NAME__ */
+#define TPP_EXT_MACRO___FILE_NAME__ TPP_EXT_MACRO___FILE_NAME__
+TPP_EXTENSION(TPP_EXT_MACRO___FILE_NAME__, TPP_EXTNAME_MACRO___FILE_NAME__, TPP_CONF_DEFAULT(TPP_HAVE_MACRO___FILE_NAME__))
+#define _tpp_lexer_has_MACRO___FILE_NAME__(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_MACRO___FILE_NAME__)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO___FILE_NAME__) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
 #ifndef TPP_EXTNAME_MACRO___INCLUDE_LEVEL__
 #define TPP_EXTNAME_MACRO___INCLUDE_LEVEL__ "include-level-macro"
@@ -5301,6 +5316,12 @@ TPP_DECL_END
 #define TPP_HAVE_MACRO___BASE_FILE__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fbasefile-macro" */
 #endif /* !TPP_HAVE_MACRO___BASE_FILE__ */
 
+/* __FILE_NAME__
+ * @detect: #ifdef __FILE_NAME__ */
+#ifndef TPP_HAVE_MACRO___FILE_NAME__
+#define TPP_HAVE_MACRO___FILE_NAME__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__FILE_NAME__" */
+#endif /* !TPP_HAVE_MACRO___FILE_NAME__ */
+
 /* __INCLUDE_LEVEL__
  * @detect: #ifdef __INCLUDE_LEVEL__ */
 #ifndef TPP_HAVE_MACRO___INCLUDE_LEVEL__
@@ -6134,7 +6155,8 @@ TPP_DECL_END
 #ifndef TPP_HAVE_TOKEN_ENCODESTRING
 #define TPP_HAVE_TOKEN_ENCODESTRING                                          \
 	(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || \
-	 (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS))
+	 (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS) ||     \
+	 (TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ || TPP_HAVE_MACRO___FILE_NAME__))
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
 /* Provide a function "tpp_lexer_decodeint_expr()" to parse an integer */
@@ -8137,6 +8159,15 @@ typedef struct tpp_token {
 #define tpp_token_getend(self)   ((self)->TPP_INTERNAL(tt_end))
 #define tpp_token_getlen(self)   ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
 
+/* Helpers to set the data-fields of "self" */
+#define tpp_token_setid(self, id) \
+	(void)((self)->TPP_INTERNAL(tt_id) = (id))
+#define tpp_token_setkwd(self, kwd) \
+	(void)((self)->TPP_INTERNAL(tt_id) = ((self)->TPP_INTERNAL(tt_kwd) = (kwd))->TPP_INTERNAL(tk_id))
+#define tpp_token_setrange(self, start, end)         \
+	(void)((self)->TPP_INTERNAL(tt_start) = (start), \
+	       (self)->TPP_INTERNAL(tt_end)   = (end))
+
 /* Convenience aliases */
 #define tpp_token_iseof(self)                    (tpp_token_getid(self) == TPP_TOK_EOF)
 #define tpp_token_isspace_or_comment(self)       TPP_TOK_ISSPACE_OR_COMMENT(tpp_token_getid(self))
@@ -8337,6 +8368,7 @@ TPP_DECL_BEGIN
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___DATE__) ||                       \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COLUMN__) ||                     \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__) ||                  \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__) ||              \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_DEPTH__) ||              \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COUNTER__) ||                    \
@@ -8890,6 +8922,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__)
 	TPP_FEAT_MACRO___BASE_FILE__,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__)
+	TPP_FEAT_MACRO___FILE_NAME__,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
 	TPP_FEAT_MACRO___INCLUDE_LEVEL__,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__) */
@@ -9723,6 +9758,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_MACRO___BASE_FILE__): 1;
 #define _tpp_lexer_has_MACRO___BASE_FILE__(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO___BASE_FILE__)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__)
+		unsigned int TPP_INTERNAL(tff_MACRO___FILE_NAME__): 1;
+#define _tpp_lexer_has_MACRO___FILE_NAME__(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO___FILE_NAME__)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
 		unsigned int TPP_INTERNAL(tff_MACRO___INCLUDE_LEVEL__): 1;
 #define _tpp_lexer_has_MACRO___INCLUDE_LEVEL__(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO___INCLUDE_LEVEL__)
@@ -10471,6 +10510,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_MACRO___BASE_FILE__)
 #define _tpp_lexer_has_MACRO___BASE_FILE__(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO___BASE_FILE__)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO___BASE_FILE__) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_MACRO___FILE_NAME__)
+#define _tpp_lexer_has_MACRO___FILE_NAME__(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO___FILE_NAME__)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO___FILE_NAME__) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
 #define _tpp_lexer_has_MACRO___INCLUDE_LEVEL__(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO___INCLUDE_LEVEL__) */
@@ -11430,7 +11472,7 @@ TPP_DECL_BEGIN
 #define TPP_MACRO_KIND_KEYWORD      UINT8_C(0)
 #define TPP_MACRO_KIND_FUNC_PAREN   '('
 #define TPP_MACRO_KIND_ISFUNC(kind) ((kind) != TPP_MACRO_KIND_KEYWORD)
-#define TPP_MACRO_KIND_ASTOK(kind)  ((tpp_token_id)(kind))
+#define TPP_MACRO_KIND_ASTOK(kind)  TPP_TOK_OFCHAR(kind)
 #define TPP_MACRO_KIND_OFTOK(tok)   ((tpp_macro_kind)(unsigned int)(tok))
 #if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
 #define TPP_MACRO_KIND_FUNC_BRACKET '['

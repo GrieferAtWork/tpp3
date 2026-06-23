@@ -78,6 +78,30 @@ err_nomem:
 	return TPP_TOK_ENOMEM;
 }
 
+#if (TPP_HAVE_MACRO___FILE__ ||      \
+     TPP_HAVE_MACRO___BASE_FILE__ || \
+     TPP_HAVE_MACRO___FILE_NAME__)
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_push_textfile_string_esc(tpp_lexer *tpp_restrict self,
+                                   tpp_char const *unescaped_text,
+                                   tpp_size unescaped_size) {
+	TPP_REF tpp_string *chunk;
+	tpp_string_builder builder;
+	tpp_string_builder_init(&builder);
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_builder;
+	if (tpp_token_encodestring(&tpp_string_builder_print, &builder, unescaped_text, unescaped_size) < 0)
+		goto err_builder;
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_builder;
+	chunk = tpp_string_builder_pack(&builder);
+	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk), tpp_string_len(chunk), chunk);
+err_builder:
+	tpp_string_builder_fini(&builder);
+	return TPP_TOK_ENOMEM;
+}
+#endif /* ... */
+
 /* Support for feature-test-style macros */
 #undef TPP_HAVE_KEYWORD_TEST_MACROS
 #define TPP_HAVE_KEYWORD_TEST_MACROS \
@@ -1285,19 +1309,45 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
-#if TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__
 #if TPP_HAVE_MACRO___FILE__
-	case TPP_KWD___FILE__: /* TODO: Use tpp_file_getlcfile() */
+	case TPP_KWD___FILE__: {
+		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
+		char const *filename = tpp_file_filename(file);
+		if (filename == NULL)
+			filename = "?";
+		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
+		                                          tpp_strlen(filename));
+	}	break;
 #endif /* TPP_HAVE_MACRO___FILE__ */
 #if TPP_HAVE_MACRO___BASE_FILE__
-	case TPP_KWD___BASE_FILE__: /* TODO: Use tpp_file_getbasefile() */
-#endif /* TPP_HAVE_MACRO___BASE_FILE__ */
-	{
-		/* TODO */
+	case TPP_KWD___BASE_FILE__: {
+		tpp_file const *file = tpp_file_getbasefile(tpp_lexer_getfile(self));
+		char const *filename = tpp_file_filename(file);
+		if (filename == NULL)
+			filename = "?";
+		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
+		                                          tpp_strlen(filename));
 	}	break;
-#endif /* TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ */
-	/* TODO: __FILE_NAME__ -- Same as "__FILE__", but only returns the basename()-
-	 *                        portion (i.e. everything after the last TPP_FS_ISSEP) */
+#endif /* TPP_HAVE_MACRO___BASE_FILE__ */
+#if TPP_HAVE_MACRO___FILE_NAME__
+	case TPP_KWD___FILE_NAME__: {
+		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
+		char const *basename;
+		char const *filename = tpp_file_filename(file);
+		if (filename == NULL)
+			filename = "?";
+		basename = filename;
+		for (;;) {
+			char ch = *filename++;
+			if (!ch)
+				break;
+			if (TPP_FS_ISSEP(ch))
+				basename = filename;
+		}
+		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)basename,
+		                                          tpp_strlen(basename));
+	}	break;
+#endif /* TPP_HAVE_MACRO___FILE_NAME__ */
 /************************************************************************/
 
 

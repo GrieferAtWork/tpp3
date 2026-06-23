@@ -2198,6 +2198,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_MACRO___DATE__                       1                                      /* __DATE__ */
 #define TPP_HAVE_MACRO___COLUMN__                     TPP_CONFIG_EXTENSION_COLUMN            /* __COLUMN__ */
 #define TPP_HAVE_MACRO___BASE_FILE__                  TPP_CONFIG_EXTENSION_BASEFILE          /* __BASE_FILE__ */
+#define TPP_HAVE_MACRO___FILE_NAME__                  0                                      /* __FILE_NAME__ */
 #define TPP_HAVE_MACRO___INCLUDE_LEVEL__              TPP_CONFIG_EXTENSION_INCLUDE_LEVEL     /* __INCLUDE_LEVEL__ */
 #define TPP_HAVE_MACRO___INCLUDE_DEPTH__              TPP_CONFIG_EXTENSION_INCLUDE_LEVEL     /* __INCLUDE_DEPTH__ */
 #define TPP_HAVE_MACRO___COUNTER__                    TPP_CONFIG_EXTENSION_COUNTER           /* __COUNTER__ */

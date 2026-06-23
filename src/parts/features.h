@@ -258,6 +258,7 @@ for (local CONF: configs) {
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___DATE__) ||                       \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COLUMN__) ||                     \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__) ||                  \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__) ||              \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_DEPTH__) ||              \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COUNTER__) ||                    \
@@ -811,6 +812,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__)
 	TPP_FEAT_MACRO___BASE_FILE__,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__)
+	TPP_FEAT_MACRO___FILE_NAME__,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
 	TPP_FEAT_MACRO___INCLUDE_LEVEL__,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__) */
@@ -1644,6 +1648,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_MACRO___BASE_FILE__): 1;
 #define _tpp_lexer_has_MACRO___BASE_FILE__(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO___BASE_FILE__)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__)
+		unsigned int TPP_INTERNAL(tff_MACRO___FILE_NAME__): 1;
+#define _tpp_lexer_has_MACRO___FILE_NAME__(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO___FILE_NAME__)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
 		unsigned int TPP_INTERNAL(tff_MACRO___INCLUDE_LEVEL__): 1;
 #define _tpp_lexer_has_MACRO___INCLUDE_LEVEL__(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO___INCLUDE_LEVEL__)
@@ -2392,6 +2400,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_MACRO___BASE_FILE__)
 #define _tpp_lexer_has_MACRO___BASE_FILE__(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO___BASE_FILE__)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO___BASE_FILE__) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_MACRO___FILE_NAME__)
+#define _tpp_lexer_has_MACRO___FILE_NAME__(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO___FILE_NAME__)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO___FILE_NAME__) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
 #define _tpp_lexer_has_MACRO___INCLUDE_LEVEL__(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO___INCLUDE_LEVEL__) */

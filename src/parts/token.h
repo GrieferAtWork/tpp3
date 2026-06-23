@@ -789,6 +789,15 @@ typedef struct tpp_token {
 #define tpp_token_getend(self)   ((self)->TPP_INTERNAL(tt_end))
 #define tpp_token_getlen(self)   ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
 
+/* Helpers to set the data-fields of "self" */
+#define tpp_token_setid(self, id) \
+	(void)((self)->TPP_INTERNAL(tt_id) = (id))
+#define tpp_token_setkwd(self, kwd) \
+	(void)((self)->TPP_INTERNAL(tt_id) = ((self)->TPP_INTERNAL(tt_kwd) = (kwd))->TPP_INTERNAL(tk_id))
+#define tpp_token_setrange(self, start, end)         \
+	(void)((self)->TPP_INTERNAL(tt_start) = (start), \
+	       (self)->TPP_INTERNAL(tt_end)   = (end))
+
 /* Convenience aliases */
 #define tpp_token_iseof(self)                    (tpp_token_getid(self) == TPP_TOK_EOF)
 #define tpp_token_isspace_or_comment(self)       TPP_TOK_ISSPACE_OR_COMMENT(tpp_token_getid(self))

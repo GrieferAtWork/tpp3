@@ -1292,7 +1292,7 @@ tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
 	}
 
 #if TPP_HAVE_CPP_MACROS
-	tpp_assert(tpp_lexer_getfile(self)->tf_prev == NULL);
+	tpp_assert(!tpp_lexer_canpopfile(self));
 #endif /* TPP_HAVE_CPP_MACROS */
 	return error;
 }
@@ -1364,7 +1364,11 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
                                tpp_token_id param_kwd) {
 	tpp_token_id tok;
 	tpp_errno error;
-	char const *function_name = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(lexer));
+	tpp_keyword const *function_name_kwd;
+	char const *function_name;
+again:
+	function_name_kwd = tpp_lexer_gettokenkwd(lexer);
+	function_name = tpp_keyword_getkwdcstr(function_name_kwd);
 	switch (param_kwd) {
 
 	case TPP_KWD_limit: {
@@ -1398,6 +1402,9 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
 		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR(')'));
 		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
+
+	/* TODO: gnu::offset */
+	/* TODO: gnu::base64 */
 
 	case TPP_KWD_prefix:
 	case TPP_KWD_suffix:
@@ -1435,7 +1442,25 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
 		return TPP_EOK;
 	}	break;
 
-	default: break;
+	default:
+		/* If current keyword starts/ends with _-characters,
+		 * strip those characters and try again */
+		if (*function_name == '_' || function_name[tpp_keyword_getkwdlen(function_name_kwd) - 1] == '_') {
+			tpp_size len = tpp_keyword_getkwdlen(function_name_kwd);
+			while (len && function_name[len - 1] == '_')
+				--len;
+			while (len && function_name[0] == '_')
+				++function_name, --len;
+			if (len) {
+				function_name_kwd = tpp_lexer_kwds_getkeyword(lexer, (tpp_char const *)function_name, len,
+				                                              tpp_hashof((tpp_char const *)function_name, len));
+				if (function_name_kwd) {
+					tpp_token_setkwd(tpp_lexer_gettoken(lexer), function_name_kwd);
+					goto again;
+				}
+			}
+		}
+		break;
 	}
 
 #if TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER
@@ -2245,7 +2270,7 @@ handle_unknown_directive:
 #endif /* TPP_HAVE_DIGRAPHS */
 				{
 				}
-				token->tt_id = (tpp_token_id)'#';
+				token->tt_id = TPP_TOK_OFCHAR('#');
 				self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 				result = TPP_TOK_OFERR(error);
 				goto return_result;
@@ -2349,7 +2374,7 @@ again:
 			tpp_token *const token = tpp_lexer_gettoken(self);
 
 			/* Must re-parse comment as a preprocessor directive instead! */
-			token->tt_id = (tpp_token_id)'#';
+			token->tt_id = TPP_TOK_OFCHAR('#');
 			tpp_assert(tpp_is_start_of_hash(*token->tt_start));
 			token->tt_end = token->tt_start + 1;
 #if TPP_HAVE_TRIGRAPHS

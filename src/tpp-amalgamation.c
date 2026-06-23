@@ -204,6 +204,7 @@
 #define tef_TPP_EXT_MACRO___DATE__                       TPP_INTERNAL(tef_TPP_EXT_MACRO___DATE__)
 #define tef_TPP_EXT_MACRO___COLUMN__                     TPP_INTERNAL(tef_TPP_EXT_MACRO___COLUMN__)
 #define tef_TPP_EXT_MACRO___BASE_FILE__                  TPP_INTERNAL(tef_TPP_EXT_MACRO___BASE_FILE__)
+#define tef_TPP_EXT_MACRO___FILE_NAME__                  TPP_INTERNAL(tef_TPP_EXT_MACRO___FILE_NAME__)
 #define tef_TPP_EXT_MACRO___INCLUDE_LEVEL__              TPP_INTERNAL(tef_TPP_EXT_MACRO___INCLUDE_LEVEL__)
 #define tef_TPP_EXT_MACRO___INCLUDE_DEPTH__              TPP_INTERNAL(tef_TPP_EXT_MACRO___INCLUDE_DEPTH__)
 #define tef_TPP_EXT_MACRO___COUNTER__                    TPP_INTERNAL(tef_TPP_EXT_MACRO___COUNTER__)
@@ -437,6 +438,7 @@
 #define tff_MACRO___DATE__                               TPP_INTERNAL(tff_MACRO___DATE__)
 #define tff_MACRO___COLUMN__                             TPP_INTERNAL(tff_MACRO___COLUMN__)
 #define tff_MACRO___BASE_FILE__                          TPP_INTERNAL(tff_MACRO___BASE_FILE__)
+#define tff_MACRO___FILE_NAME__                          TPP_INTERNAL(tff_MACRO___FILE_NAME__)
 #define tff_MACRO___INCLUDE_LEVEL__                      TPP_INTERNAL(tff_MACRO___INCLUDE_LEVEL__)
 #define tff_MACRO___INCLUDE_DEPTH__                      TPP_INTERNAL(tff_MACRO___INCLUDE_DEPTH__)
 #define tff_MACRO___COUNTER__                            TPP_INTERNAL(tff_MACRO___COUNTER__)
@@ -8270,6 +8272,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__)
 		/* .tff_MACRO___BASE_FILE__                  = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___BASE_FILE__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__)
+		/* .tff_MACRO___FILE_NAME__                  = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___FILE_NAME__),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
 		/* .tff_MACRO___INCLUDE_LEVEL__              = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___INCLUDE_LEVEL__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__) */
@@ -13301,7 +13306,7 @@ switch_on_ch:
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '%') {
 			if (tpp_lexer_has(self, DIGRAPHS)) {
-				result = (tpp_token_id)'{'; /* "<%" -> "{" */
+				result = TPP_TOK_OFCHAR('{'); /* "<%" -> "{" */
 				goto set_result;
 			}
 		} else if (ch2 == ':') {
@@ -13311,7 +13316,7 @@ switch_on_ch:
 				if (ch2 == ':')
 					break; /* "<::" -> "<", "::"  ("break" here to follow single-char path) */
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-				result = (tpp_token_id)'['; /* "<:" -> "[" */
+				result = TPP_TOK_OFCHAR('['); /* "<:" -> "[" */
 				goto set_result;
 			}
 		} else
@@ -14445,7 +14450,7 @@ switch_on_ch:
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '>') {
 			if (tpp_lexer_has(self, DIGRAPHS)) {
-				result = (tpp_token_id)'}'; /* "%>" -> "}" */
+				result = TPP_TOK_OFCHAR('}'); /* "%>" -> "}" */
 				goto set_result;
 			}
 		} else
@@ -14465,7 +14470,7 @@ switch_on_ch:
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
 				}
 #endif /* TPP_HAVE_TPP_TOK_POUND_POUND */
-				result = (tpp_token_id)'#'; /* "%:" -> "#" */
+				result = TPP_TOK_OFCHAR('#'); /* "%:" -> "#" */
 				goto set_result;
 			}
 		} else
@@ -14666,7 +14671,7 @@ switch_on_ch:
 #if TPP_HAVE_DIGRAPHS
 		if (ch2 == '>') {
 			if (tpp_lexer_has(self, DIGRAPHS)) {
-				result = (tpp_token_id)']'; /* ":>" -> "]" */
+				result = TPP_TOK_OFCHAR(']'); /* ":>" -> "]" */
 				goto set_result;
 			}
 		} else
@@ -15649,7 +15654,7 @@ handle_digit:
 	}
 
 	/* Fallback: single-character token */
-	result = (tpp_token_id)ch;
+	result = TPP_TOK_OFCHAR(ch);
 	pos    = tpp_file_rel2ptr(file, rel_start + 1);
 set_result:
 	token->tt_id    = result;
@@ -20635,7 +20640,7 @@ tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
 	}
 
 #if TPP_HAVE_CPP_MACROS
-	tpp_assert(tpp_lexer_getfile(self)->tf_prev == NULL);
+	tpp_assert(!tpp_lexer_canpopfile(self));
 #endif /* TPP_HAVE_CPP_MACROS */
 	return error;
 }
@@ -20707,7 +20712,11 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
                                tpp_token_id param_kwd) {
 	tpp_token_id tok;
 	tpp_errno error;
-	char const *function_name = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(lexer));
+	tpp_keyword const *function_name_kwd;
+	char const *function_name;
+again:
+	function_name_kwd = tpp_lexer_gettokenkwd(lexer);
+	function_name = tpp_keyword_getkwdcstr(function_name_kwd);
 	switch (param_kwd) {
 
 	case TPP_KWD_limit: {
@@ -20741,6 +20750,9 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
 		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR(')'));
 		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
+
+	/* TODO: gnu::offset */
+	/* TODO: gnu::base64 */
 
 	case TPP_KWD_prefix:
 	case TPP_KWD_suffix:
@@ -20778,7 +20790,25 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
 		return TPP_EOK;
 	}	break;
 
-	default: break;
+	default:
+		/* If current keyword starts/ends with _-characters,
+		 * strip those characters and try again */
+		if (*function_name == '_' || function_name[tpp_keyword_getkwdlen(function_name_kwd) - 1] == '_') {
+			tpp_size len = tpp_keyword_getkwdlen(function_name_kwd);
+			while (len && function_name[len - 1] == '_')
+				--len;
+			while (len && function_name[0] == '_')
+				++function_name, --len;
+			if (len) {
+				function_name_kwd = tpp_lexer_kwds_getkeyword(lexer, (tpp_char const *)function_name, len,
+				                                              tpp_hashof((tpp_char const *)function_name, len));
+				if (function_name_kwd) {
+					tpp_token_setkwd(tpp_lexer_gettoken(lexer), function_name_kwd);
+					goto again;
+				}
+			}
+		}
+		break;
 	}
 
 #if TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER
@@ -21588,7 +21618,7 @@ handle_unknown_directive:
 #endif /* TPP_HAVE_DIGRAPHS */
 				{
 				}
-				token->tt_id = (tpp_token_id)'#';
+				token->tt_id = TPP_TOK_OFCHAR('#');
 				self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 				result = TPP_TOK_OFERR(error);
 				goto return_result;
@@ -21692,7 +21722,7 @@ again:
 			tpp_token *const token = tpp_lexer_gettoken(self);
 
 			/* Must re-parse comment as a preprocessor directive instead! */
-			token->tt_id = (tpp_token_id)'#';
+			token->tt_id = TPP_TOK_OFCHAR('#');
 			tpp_assert(tpp_is_start_of_hash(*token->tt_start));
 			token->tt_end = token->tt_start + 1;
 #if TPP_HAVE_TRIGRAPHS
@@ -22660,6 +22690,30 @@ err_nomem:
 		tpp_string_decref(chunk);
 	return TPP_TOK_ENOMEM;
 }
+
+#if (TPP_HAVE_MACRO___FILE__ ||      \
+     TPP_HAVE_MACRO___BASE_FILE__ || \
+     TPP_HAVE_MACRO___FILE_NAME__)
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_push_textfile_string_esc(tpp_lexer *tpp_restrict self,
+                                   tpp_char const *unescaped_text,
+                                   tpp_size unescaped_size) {
+	TPP_REF tpp_string *chunk;
+	tpp_string_builder builder;
+	tpp_string_builder_init(&builder);
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_builder;
+	if (tpp_token_encodestring(&tpp_string_builder_print, &builder, unescaped_text, unescaped_size) < 0)
+		goto err_builder;
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_builder;
+	chunk = tpp_string_builder_pack(&builder);
+	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk), tpp_string_len(chunk), chunk);
+err_builder:
+	tpp_string_builder_fini(&builder);
+	return TPP_TOK_ENOMEM;
+}
+#endif /* ... */
 
 /* Support for feature-test-style macros */
 #undef TPP_HAVE_KEYWORD_TEST_MACROS
@@ -23868,19 +23922,45 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
-#if TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__
 #if TPP_HAVE_MACRO___FILE__
-	case TPP_KWD___FILE__: /* TODO: Use tpp_file_getlcfile() */
+	case TPP_KWD___FILE__: {
+		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
+		char const *filename = tpp_file_filename(file);
+		if (filename == NULL)
+			filename = "?";
+		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
+		                                          tpp_strlen(filename));
+	}	break;
 #endif /* TPP_HAVE_MACRO___FILE__ */
 #if TPP_HAVE_MACRO___BASE_FILE__
-	case TPP_KWD___BASE_FILE__: /* TODO: Use tpp_file_getbasefile() */
-#endif /* TPP_HAVE_MACRO___BASE_FILE__ */
-	{
-		/* TODO */
+	case TPP_KWD___BASE_FILE__: {
+		tpp_file const *file = tpp_file_getbasefile(tpp_lexer_getfile(self));
+		char const *filename = tpp_file_filename(file);
+		if (filename == NULL)
+			filename = "?";
+		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
+		                                          tpp_strlen(filename));
 	}	break;
-#endif /* TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ */
-	/* TODO: __FILE_NAME__ -- Same as "__FILE__", but only returns the basename()-
-	 *                        portion (i.e. everything after the last TPP_FS_ISSEP) */
+#endif /* TPP_HAVE_MACRO___BASE_FILE__ */
+#if TPP_HAVE_MACRO___FILE_NAME__
+	case TPP_KWD___FILE_NAME__: {
+		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
+		char const *basename;
+		char const *filename = tpp_file_filename(file);
+		if (filename == NULL)
+			filename = "?";
+		basename = filename;
+		for (;;) {
+			char ch = *filename++;
+			if (!ch)
+				break;
+			if (TPP_FS_ISSEP(ch))
+				basename = filename;
+		}
+		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)basename,
+		                                          tpp_strlen(basename));
+	}	break;
+#endif /* TPP_HAVE_MACRO___FILE_NAME__ */
 /************************************************************************/
 
 
