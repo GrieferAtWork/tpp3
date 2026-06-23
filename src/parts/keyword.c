@@ -1146,7 +1146,7 @@ without_relative_to:
 		dst_base = (char *)result_kwd->tk_kwd;
 		tpp_memcpy(dst_base, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
 		dst_iter = dst_base + rel_size;
-		dst_end = tpp_fs_normalize(dst_base, dst_iter, filename, filename_len);
+		dst_end = tpp_fs_normalize(dst_iter, dst_base, filename, filename_len);
 		*dst_end = '\0';
 		whole_size = (tpp_size)(dst_end - dst_base);
 		new_result_kwd = (tpp_keyword *)tpp_tryrealloc(result_kwd, tpp_keyword_sizeof(whole_size));

@@ -451,8 +451,8 @@
 #define tff_MACRO___TPP_COUNTER                          TPP_INTERNAL(tff_MACRO___TPP_COUNTER)
 #define tff_MACRO___TPP_RANDOM                           TPP_INTERNAL(tff_MACRO___TPP_RANDOM)
 #define tff_MACRO___TPP_STR_DECOMPILE                    TPP_INTERNAL(tff_MACRO___TPP_STR_DECOMPILE)
-#define tff_MACRO___TPP_STR_SUBSTR                       TPP_INTERNAL(tff_MACRO___TPP_STR_SUBSTR)
 #define tff_MACRO___TPP_STR_PACK                         TPP_INTERNAL(tff_MACRO___TPP_STR_PACK)
+#define tff_MACRO___TPP_STR_SUBSTR                       TPP_INTERNAL(tff_MACRO___TPP_STR_SUBSTR)
 #define tff_MACRO___TPP_STR_SIZE                         TPP_INTERNAL(tff_MACRO___TPP_STR_SIZE)
 #define tff_MACRO___TPP_COUNT_TOKENS                     TPP_INTERNAL(tff_MACRO___TPP_COUNT_TOKENS)
 #define tff_MACRO___TPP_IDENTIFIER                       TPP_INTERNAL(tff_MACRO___TPP_IDENTIFIER)
@@ -6674,7 +6674,7 @@ without_relative_to:
 		dst_base = (char *)result_kwd->tk_kwd;
 		tpp_memcpy(dst_base, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
 		dst_iter = dst_base + rel_size;
-		dst_end = tpp_fs_normalize(dst_base, dst_iter, filename, filename_len);
+		dst_end = tpp_fs_normalize(dst_iter, dst_base, filename, filename_len);
 		*dst_end = '\0';
 		whole_size = (tpp_size)(dst_end - dst_base);
 		new_result_kwd = (tpp_keyword *)tpp_tryrealloc(result_kwd, tpp_keyword_sizeof(whole_size));

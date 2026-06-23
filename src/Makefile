@@ -22,9 +22,9 @@
 all: tpp-amalgamation.h tpp-amalgamation.c
 .PHONY: all
 
-tpp-amalgamation.c: tpp.c $(wildcard parts/*.c)
+tpp-amalgamation.c: tpp.h tpp.c $(wildcard parts/*.c) $(wildcard parts/*.h)
 	deemon -Wno-usage -Wno-user -F parts/*.h parts/*.c
+#	This one must be run last because it depends on the generated contents of other files
+	deemon -Wno-usage -Wno-user -F parts/expose-internals.h
 	deemon make-amalgamation.dee
-tpp-amalgamation.h: tpp.h $(wildcard parts/*.h)
-	deemon -Wno-usage -Wno-user -F parts/*.h parts/*.c
-	deemon make-amalgamation.dee
+tpp-amalgamation.h: tpp-amalgamation.c
