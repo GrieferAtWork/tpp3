@@ -203,8 +203,10 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_
 #define tpp_expr_value_cmp_ge tpp_expr_value_cmp_ge
 
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_lengthof(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict self, /*out*/ tpp_expr_value *tpp_restrict result);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_getindex(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict index, /*out*/ tpp_expr_value *tpp_restrict result);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 5)) tpp_errno TPPCALL tpp_expr_value_getrange(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *lo, /*in*/ tpp_expr_value *hi, /*out*/ tpp_expr_value *tpp_restrict result);
+#define tpp_expr_value_lengthof tpp_expr_value_lengthof
 #define tpp_expr_value_getindex tpp_expr_value_getindex
 #define tpp_expr_value_getrange tpp_expr_value_getrange
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */

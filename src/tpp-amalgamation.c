@@ -217,8 +217,8 @@
 #define tef_TPP_EXT_MACRO___TPP_COUNTER                  TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_COUNTER)
 #define tef_TPP_EXT_MACRO___TPP_RANDOM                   TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_RANDOM)
 #define tef_TPP_EXT_MACRO___TPP_STR_DECOMPILE            TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_STR_DECOMPILE)
-#define tef_TPP_EXT_MACRO___TPP_STR_SUBSTR               TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_STR_SUBSTR)
 #define tef_TPP_EXT_MACRO___TPP_STR_PACK                 TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_STR_PACK)
+#define tef_TPP_EXT_MACRO___TPP_STR_SUBSTR               TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_STR_SUBSTR)
 #define tef_TPP_EXT_MACRO___TPP_STR_SIZE                 TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_STR_SIZE)
 #define tef_TPP_EXT_MACRO___TPP_COUNT_TOKENS             TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_COUNT_TOKENS)
 #define tef_TPP_EXT_MACRO___TPP_IDENTIFIER               TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_IDENTIFIER)
@@ -8311,12 +8311,12 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_DECOMPILE)
 		/* .tff_MACRO___TPP_STR_DECOMPILE            = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_DECOMPILE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_DECOMPILE) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SUBSTR)
-		/* .tff_MACRO___TPP_STR_SUBSTR               = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_SUBSTR),
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SUBSTR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_PACK)
 		/* .tff_MACRO___TPP_STR_PACK                 = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_PACK),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_PACK) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SUBSTR)
+		/* .tff_MACRO___TPP_STR_SUBSTR               = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_SUBSTR),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SUBSTR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SIZE)
 		/* .tff_MACRO___TPP_STR_SIZE                 = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_SIZE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SIZE) */
@@ -11367,6 +11367,23 @@ tpp_expr_value_cmp_ge(struct tpp_lexer *tpp_restrict lexer,
 
 
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_expr_value_lengthof(struct tpp_lexer *tpp_restrict lexer,
+                        /*in*/ tpp_expr_value *tpp_restrict self,
+                        /*out*/ tpp_expr_value *tpp_restrict result) {
+	tpp_string const *self_value;
+	tpp_size lengthof;
+	if (!tpp_expr_value_isstring(self)) {
+		tpp_errno error = tpp_warn_bad_operands_unary(lexer, "#", self);
+		if (TPP_ISERR(error))
+			return error;
+		return tpp_expr_value_copy(result, self);
+	}
+	self_value = _tpp_expr_value_getstring(self);
+	lengthof   = tpp_string_len(self_value);
+	return tpp_expr_value_init_int(result, lengthof);
+}
+
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_expr_value_getindex(struct tpp_lexer *tpp_restrict lexer,
                         /*in*/ tpp_expr_value *tpp_restrict lhs,
@@ -24076,15 +24093,16 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
 #if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
 	/* TODO: __TPP_STR_DECOMPILE */
+	/* TODO: Implement using "tpp_lexer_parsestring_cb" + TPP_FILE_KIND_SUBTEXT */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
-#if TPP_HAVE_MACRO___TPP_STR_SUBSTR
-	/* TODO: __TPP_STR_SUBSTR */
-#endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
 #if TPP_HAVE_MACRO___TPP_STR_PACK
 	/* TODO: __TPP_STR_PACK */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_PACK */
+#if TPP_HAVE_MACRO___TPP_STR_SUBSTR
+	/* TODO: #define __TPP_STR_SUBSTR(str, start, end) __TPP_EVAL((str)[(start):(end)]) */
+#endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
 #if TPP_HAVE_MACRO___TPP_STR_SIZE
-	/* TODO: __TPP_STR_SIZE */
+	/* TODO: #define __TPP_STR_SIZE(str) __TPP_EVAL(#(str)) */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SIZE */
 #if TPP_HAVE_MACRO___TPP_COUNT_TOKENS
 	/* TODO: __TPP_COUNT_TOKENS */
@@ -26562,7 +26580,16 @@ again:
 	switch (tpp_lexer_gettok(self)) {
 	case TPP_TOK_SPACE:
 	case TPP_TOK_LF:
-	TPP_CASE_TPP_TOK_COMMENT
+	TPP_CASE_TPP_TOK_COMMENT_NOLINE
+	_TPP_CASE_TPP_TOK_CXX_COMMENT
+	_TPP_CASE_TPP_TOK_SQL_COMMENT
+	_TPP_CASE_TPP_TOK_ASM_COMMENT
+#if !TPP_HAVE_BUILTIN_EXPR_STRINGS && !TPP_HAVE_CPP_ASSERT
+	_TPP_CASE_TPP_TOK_SHELL_COMMENT
+#endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS && !TPP_HAVE_CPP_ASSERT */
+#if (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && TPP_HAVE_TPP_TOK_SHELL_COMMENT
+handle_comment:
+#endif /* (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 		/* Skip over whitespace */
 		tok = tpp_lexer_yield_blocking(self); /* Doesn't have to be "tpp_lexer_yield_forexpr" */
 		if (TPP_TOK_ISERR(tok))
@@ -26706,6 +26733,29 @@ again:
 
 
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+	case TPP_TOK_SHELL_COMMENT: {
+		tpp_token *const token = tpp_lexer_gettoken(self);
+		if (!tpp_lexer_has(self, CPP_ASSERT) &&
+		    !tpp_lexer_has(self, BUILTIN_EXPR_STRINGS))
+			goto handle_comment;
+		/* Convert to '#'-token */
+		token->tt_id = TPP_TOK_OFCHAR('#');
+		token->tt_end = token->tt_start + 1;
+#if TPP_HAVE_TRIGRAPHS
+		if (*token->tt_start == '?') {
+			token->tt_end += 2;
+		} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+#if TPP_HAVE_DIGRAPHS
+		if (*token->tt_start == '%') {
+			token->tt_end += 1;
+		} else
+#endif /* TPP_HAVE_DIGRAPHS */
+		{
+		}
+	}	TPP_FALLTHRU
+#endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 	case '#':
 		/* Preprocessor assertions */
 #if TPP_HAVE_CPP_ASSERT
@@ -26717,7 +26767,21 @@ again:
 		/* length-operator for string expressions */
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 		if (tpp_lexer_has(self, BUILTIN_EXPR_STRINGS)) {
-			/* TODO */
+			tpp_errno error;
+			tok = tpp_lexer_yield_blocking(self); /* Doesn't have to be "tpp_lexer_yield_forexpr" */
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (!result)
+				return tpp_px_unary(self, NULL);
+			error = tpp_px_unary(self, result);
+			if (!TPP_ISERR(error)) {
+				tpp_expr_value lengthof;
+				error = tpp_expr_value_lengthof(self, result, &lengthof);
+				tpp_expr_value_fini(result);
+				if (!TPP_ISERR(error))
+					tpp_expr_value_move(result, &lengthof);
+			}
+			return error;
 		}
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 		goto handle_default;

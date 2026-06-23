@@ -74,7 +74,16 @@ again:
 	switch (tpp_lexer_gettok(self)) {
 	case TPP_TOK_SPACE:
 	case TPP_TOK_LF:
-	TPP_CASE_TPP_TOK_COMMENT
+	TPP_CASE_TPP_TOK_COMMENT_NOLINE
+	_TPP_CASE_TPP_TOK_CXX_COMMENT
+	_TPP_CASE_TPP_TOK_SQL_COMMENT
+	_TPP_CASE_TPP_TOK_ASM_COMMENT
+#if !TPP_HAVE_BUILTIN_EXPR_STRINGS && !TPP_HAVE_CPP_ASSERT
+	_TPP_CASE_TPP_TOK_SHELL_COMMENT
+#endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS && !TPP_HAVE_CPP_ASSERT */
+#if (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && TPP_HAVE_TPP_TOK_SHELL_COMMENT
+handle_comment:
+#endif /* (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 		/* Skip over whitespace */
 		tok = tpp_lexer_yield_blocking(self); /* Doesn't have to be "tpp_lexer_yield_forexpr" */
 		if (TPP_TOK_ISERR(tok))
@@ -218,6 +227,29 @@ again:
 
 
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+	case TPP_TOK_SHELL_COMMENT: {
+		tpp_token *const token = tpp_lexer_gettoken(self);
+		if (!tpp_lexer_has(self, CPP_ASSERT) &&
+		    !tpp_lexer_has(self, BUILTIN_EXPR_STRINGS))
+			goto handle_comment;
+		/* Convert to '#'-token */
+		token->tt_id = TPP_TOK_OFCHAR('#');
+		token->tt_end = token->tt_start + 1;
+#if TPP_HAVE_TRIGRAPHS
+		if (*token->tt_start == '?') {
+			token->tt_end += 2;
+		} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+#if TPP_HAVE_DIGRAPHS
+		if (*token->tt_start == '%') {
+			token->tt_end += 1;
+		} else
+#endif /* TPP_HAVE_DIGRAPHS */
+		{
+		}
+	}	TPP_FALLTHRU
+#endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 	case '#':
 		/* Preprocessor assertions */
 #if TPP_HAVE_CPP_ASSERT
@@ -229,7 +261,21 @@ again:
 		/* length-operator for string expressions */
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 		if (tpp_lexer_has(self, BUILTIN_EXPR_STRINGS)) {
-			/* TODO */
+			tpp_errno error;
+			tok = tpp_lexer_yield_blocking(self); /* Doesn't have to be "tpp_lexer_yield_forexpr" */
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (!result)
+				return tpp_px_unary(self, NULL);
+			error = tpp_px_unary(self, result);
+			if (!TPP_ISERR(error)) {
+				tpp_expr_value lengthof;
+				error = tpp_expr_value_lengthof(self, result, &lengthof);
+				tpp_expr_value_fini(result);
+				if (!TPP_ISERR(error))
+					tpp_expr_value_move(result, &lengthof);
+			}
+			return error;
 		}
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 		goto handle_default;

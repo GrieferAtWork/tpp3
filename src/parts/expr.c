@@ -1027,6 +1027,23 @@ tpp_expr_value_cmp_ge(struct tpp_lexer *tpp_restrict lexer,
 
 
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_expr_value_lengthof(struct tpp_lexer *tpp_restrict lexer,
+                        /*in*/ tpp_expr_value *tpp_restrict self,
+                        /*out*/ tpp_expr_value *tpp_restrict result) {
+	tpp_string const *self_value;
+	tpp_size lengthof;
+	if (!tpp_expr_value_isstring(self)) {
+		tpp_errno error = tpp_warn_bad_operands_unary(lexer, "#", self);
+		if (TPP_ISERR(error))
+			return error;
+		return tpp_expr_value_copy(result, self);
+	}
+	self_value = _tpp_expr_value_getstring(self);
+	lengthof   = tpp_string_len(self_value);
+	return tpp_expr_value_init_int(result, lengthof);
+}
+
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_expr_value_getindex(struct tpp_lexer *tpp_restrict lexer,
                         /*in*/ tpp_expr_value *tpp_restrict lhs,

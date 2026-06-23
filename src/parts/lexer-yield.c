@@ -1463,15 +1463,16 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
 #if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
 	/* TODO: __TPP_STR_DECOMPILE */
+	/* TODO: Implement using "tpp_lexer_parsestring_cb" + TPP_FILE_KIND_SUBTEXT */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
-#if TPP_HAVE_MACRO___TPP_STR_SUBSTR
-	/* TODO: __TPP_STR_SUBSTR */
-#endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
 #if TPP_HAVE_MACRO___TPP_STR_PACK
 	/* TODO: __TPP_STR_PACK */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_PACK */
+#if TPP_HAVE_MACRO___TPP_STR_SUBSTR
+	/* TODO: #define __TPP_STR_SUBSTR(str, start, end) __TPP_EVAL((str)[(start):(end)]) */
+#endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
 #if TPP_HAVE_MACRO___TPP_STR_SIZE
-	/* TODO: __TPP_STR_SIZE */
+	/* TODO: #define __TPP_STR_SIZE(str) __TPP_EVAL(#(str)) */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SIZE */
 #if TPP_HAVE_MACRO___TPP_COUNT_TOKENS
 	/* TODO: __TPP_COUNT_TOKENS */
