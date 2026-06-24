@@ -2062,8 +2062,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL     0              /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL     0              /* *ditto* */
 #define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL         0              /* *ditto* */
-#define TPP_HAVE_STRING_ALLOW_MULTILINE     TPP_CONF_FEAT1 /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)") */
-#define TPP_HAVE_STRING_WARN_MULTILINE      0              /* TPP2 offered no such warning */
+#define TPP_HAVE_STRING_ALLOW_MULTILINE             TPP_CONF_FEAT1 /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)") */
+#define TPP_HAVE_STRING_WARN_MULTILINE              0              /* TPP2 offered no such warning */
 #define TPP_HAVE_TPP_TOK_LANGLE_LANGLE              1              /* "<<" */
 #define TPP_HAVE_TPP_TOK_RANGLE_RANGLE              1              /* ">>" */
 #define TPP_HAVE_TPP_TOK_EQUAL_EQUAL                1              /* "==" */

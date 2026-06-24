@@ -576,6 +576,14 @@ seek_next_lf:
 		if (tok == TPP_TOK_SHELL_COMMENT) {
 			tpp_token *const token = tpp_lexer_gettoken(self);
 			token->tt_end = token->tt_start + 1;
+#if TPP_HAVE_TRIGRAPHS
+			if (*token->tt_end == '?') {
+				token->tt_end += 2;
+			} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+			{
+			}
+
 /*			token->tt_id = tok = TPP_TOK_OFCHAR('#'); * Not needed */
 		} else
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
@@ -2263,11 +2271,6 @@ handle_unknown_directive:
 					token->tt_end += 2;
 				} else
 #endif /* TPP_HAVE_TRIGRAPHS */
-#if TPP_HAVE_DIGRAPHS
-				if (*file->tf_pos == '%') {
-					token->tt_end += 1;
-				} else
-#endif /* TPP_HAVE_DIGRAPHS */
 				{
 				}
 				token->tt_id = TPP_TOK_OFCHAR('#');
@@ -2382,11 +2385,6 @@ again:
 				token->tt_end += 2;
 			} else
 #endif /* TPP_HAVE_TRIGRAPHS */
-#if TPP_HAVE_DIGRAPHS
-			if (*token->tt_start == '%') {
-				token->tt_end += 1;
-			} else
-#endif /* TPP_HAVE_DIGRAPHS */
 			{
 			}
 

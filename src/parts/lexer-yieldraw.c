@@ -2128,6 +2128,7 @@ switch_on_ch:
 	case '=': {
 #if (TPP_HAVE_TPP_TOK_EQUAL_EQUAL ||                \
      TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL ||          \
+     TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM ||        \
      TPP_HAVE_TPP_TOK_EQUAL_PLUS ||                 \
      TPP_HAVE_TPP_TOK_EQUAL_MINUS ||                \
      TPP_HAVE_TPP_TOK_EQUAL_STAR ||                 \
@@ -2148,7 +2149,6 @@ switch_on_ch:
      TPP_HAVE_TPP_TOK_EQUAL_TILDE ||                \
      TPP_HAVE_TPP_TOK_EQUAL_COLON ||                \
      TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM ||              \
-     TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM ||        \
      TPP_HAVE_TPP_TOK_EQUAL_QMARK)
 
 		if (!tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL) &&
@@ -2567,7 +2567,8 @@ switch_on_ch:
 
 /************************************************************************/
 	case '+': {
-#if TPP_HAVE_TPP_TOK_PLUS_EQUAL || TPP_HAVE_TPP_TOK_PLUS_PLUS
+#if (TPP_HAVE_TPP_TOK_PLUS_EQUAL || \
+     TPP_HAVE_TPP_TOK_PLUS_PLUS)
 		if (!tpp_lexer_has(self, TPP_TOK_PLUS_EQUAL) &&
 		    !tpp_lexer_has(self, TPP_TOK_PLUS_PLUS))
 			break;

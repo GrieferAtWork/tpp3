@@ -42,17 +42,8 @@ TPP_DECL_BEGIN
  * in which case "tok" is allowed to be some other token whose
  * first character is '<'. In that last case, "self" is updated
  * to describe '<' before "true" is returned. */
-#if (TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS &&       \
-     (TPP_HAVE_TPP_TOK_LANGLE_EQUAL ||               \
-      TPP_HAVE_TPP_TOK_LANGLE_LANGLE ||              \
-      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL ||        \
-      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE ||       \
-      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || \
-      TPP_HAVE_TPP_TOK_LANGLE_MINUS ||               \
-      TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE ||        \
-      TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE ||        \
-      TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE ||        \
-      TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE))
+#if (TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && \
+     TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE)
 static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_istok(tpp_lexer *tpp_restrict self,
                 tpp_token_id tok,
@@ -62,36 +53,7 @@ tpp_lexer_istok(tpp_lexer *tpp_restrict self,
 		return true;
 	if (expected == '<') {
 		switch (tok) {
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
-		case TPP_TOK_LANGLE_EQUAL: /* "<=" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
-		case TPP_TOK_LANGLE_LANGLE: /* "<<" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
-		case TPP_TOK_LANGLE_LANGLE_EQUAL: /* "<<=" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
-		case TPP_TOK_LANGLE_LANGLE_LANGLE: /* "<<<" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
-		case TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL: /* "<<<=" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
-		case TPP_TOK_LANGLE_MINUS: /* "<-" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS */
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
-		case TPP_TOK_LANGLE_EQUAL_RANGLE: /* "<=>" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
-		case TPP_TOK_LANGLE_MINUS_RANGLE: /* "<->" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
-		case TPP_TOK_LANGLE_EQUAL_LANGLE: /* "<=<" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
-		case TPP_TOK_LANGLE_MINUS_LANGLE: /* "<-<" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+		TPP_CASE_TPP_TOK_MC_STARTSWITH_LANGLE
 			/* Convert to "<" token */
 			tpp_assert(tpp_lexer_gettoken(self)->tt_start < (*p_pos));
 			tpp_assert(tpp_lexer_gettoken(self)->tt_start[0] == '<');

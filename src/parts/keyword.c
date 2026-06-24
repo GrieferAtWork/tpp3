@@ -1155,6 +1155,10 @@ without_relative_to:
 		result_kwd->tk_len = whole_size;
 	}
 
+	/* FIXME: Windows has a case-insensitive filesystem, but the filename hash used here
+	 *        is (and has to be for the sake of allowing us to re-use the keyword table)
+	 *        case-sensitive. */
+
 	/* Check if "result_kwd" is a known keyword... */
 	{
 		tpp_hash hash = tpp_hashof(result_kwd->tk_kwd, result_kwd->tk_len);
