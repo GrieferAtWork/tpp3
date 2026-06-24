@@ -560,6 +560,81 @@
 	(TPP_HAVE_STRING_ALLOW_MULTILINE && TPP_HAVE_WARNINGS)
 #endif /* !TPP_HAVE_STRING_WARN_MULTILINE */
 
+
+#undef TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE
+#if (TPP_HAVE_TPP_TOK_C_COMMENT || \
+     TPP_HAVE_TPP_TOK_PASCAL_COMMENT)
+#define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 0
+#endif /* !... */
+#undef TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE
+#if (TPP_HAVE_TPP_TOK_CXX_COMMENT ||   \
+     TPP_HAVE_TPP_TOK_SHELL_COMMENT || \
+     TPP_HAVE_TPP_TOK_ASM_COMMENT ||   \
+     TPP_HAVE_TPP_TOK_SQL_COMMENT)
+#define TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE 0
+#endif /* !... */
+#undef TPP_HAVE_TPP_TOK_COMMENTLIKE
+#if (TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE || \
+     TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE)
+#define TPP_HAVE_TPP_TOK_COMMENTLIKE 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_COMMENTLIKE 0
+#endif /* !... */
+#undef TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE
+#if (TPP_HAVE_TPP_TOK_CHAR ||                     \
+     TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL ||         \
+     TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE 0
+#endif /* !... */
+#undef TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE
+#if (TPP_HAVE_TPP_TOK_STRING ||                     \
+     TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||         \
+     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL)
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE 0
+#endif /* !... */
+#undef TPP_HAVE_TPP_TOK_STRINGLIKE
+#if (TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE || \
+     TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE)
+#define TPP_HAVE_TPP_TOK_STRINGLIKE 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_STRINGLIKE 0
+#endif /* !... */
+#undef TPP_HAVE_STRING_ESCAPE
+#if (TPP_HAVE_TPP_TOK_STRING ||                   \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
+     TPP_HAVE_TPP_TOK_CHAR ||                     \
+     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+     TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
+#define TPP_HAVE_STRING_ESCAPE 1
+#else /* ... */
+#define TPP_HAVE_STRING_ESCAPE 0
+#endif /* !... */
+
 /************************************************************************/
 /* Multi-char tokens                                                    */
 /************************************************************************/
@@ -586,6 +661,8 @@ local charNames = {
 	"@": "AT",
 	"~": "TILDE",
 };
+@@Master controller for available multi-char tokens (add
+@@stuff here and run "make" to get extra multi-char token)
 local MC_TOKENS = {
 	{ "<<", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
 	{ ">>", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
@@ -707,6 +784,12 @@ for (local firstChar: firstChars) {
 	print("#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_", charNames[firstChar], " 0");
 	print("#endif /" "* !... *" "/");
 }
+print("#undef TPP_HAVE_TPP_TOK_MC");
+print("#if ", " || ".join(for (local c: firstChars) f"TPP_HAVE_TPP_TOK_MC_STARTSWITH_{charNames[c]}"));
+print("#define TPP_HAVE_TPP_TOK_MC 1");
+print("#else /" "* ... *" "/");
+print("#define TPP_HAVE_TPP_TOK_MC 0");
+print("#endif /" "* !... *" "/");
 ]]]*/
 /* "!!"
  * @detect: #if __TPP_COUNT_TOKENS("!!") == 1 */
@@ -1308,83 +1391,14 @@ for (local firstChar: firstChars) {
 #else /* ... */
 #define TPP_HAVE_TPP_TOK_MC_STARTSWITH_TILDE 0
 #endif /* !... */
+#undef TPP_HAVE_TPP_TOK_MC
+#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_EXCLAIM || TPP_HAVE_TPP_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TPP_TOK_MC_STARTSWITH_PERCENT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_AMP || TPP_HAVE_TPP_TOK_MC_STARTSWITH_STAR || TPP_HAVE_TPP_TOK_MC_STARTSWITH_PLUS || TPP_HAVE_TPP_TOK_MC_STARTSWITH_MINUS || TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_SLASH || TPP_HAVE_TPP_TOK_MC_STARTSWITH_COLON || TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE || TPP_HAVE_TPP_TOK_MC_STARTSWITH_EQUAL || TPP_HAVE_TPP_TOK_MC_STARTSWITH_RANGLE || TPP_HAVE_TPP_TOK_MC_STARTSWITH_QMARK || TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_HAT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_PIPE || TPP_HAVE_TPP_TOK_MC_STARTSWITH_TILDE
+#define TPP_HAVE_TPP_TOK_MC 1
+#else /* ... */
+#define TPP_HAVE_TPP_TOK_MC 0
+#endif /* !... */
 /*[[[end]]]*/
 
-
-
-#undef TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE
-#if (TPP_HAVE_TPP_TOK_C_COMMENT || \
-     TPP_HAVE_TPP_TOK_PASCAL_COMMENT)
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 1
-#else /* ... */
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 0
-#endif /* !... */
-#undef TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE
-#if (TPP_HAVE_TPP_TOK_CXX_COMMENT ||   \
-     TPP_HAVE_TPP_TOK_SHELL_COMMENT || \
-     TPP_HAVE_TPP_TOK_ASM_COMMENT ||   \
-     TPP_HAVE_TPP_TOK_SQL_COMMENT)
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE 1
-#else /* ... */
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE 0
-#endif /* !... */
-#undef TPP_HAVE_TPP_TOK_COMMENTLIKE
-#if (TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE || \
-     TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE)
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE 1
-#else /* ... */
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE 0
-#endif /* !... */
-#undef TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE
-#if (TPP_HAVE_TPP_TOK_CHAR ||                     \
-     TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL ||     \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL ||         \
-     TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
-#define TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE 1
-#else /* ... */
-#define TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE 0
-#endif /* !... */
-#undef TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE
-#if (TPP_HAVE_TPP_TOK_STRING ||                     \
-     TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL ||     \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||         \
-     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL)
-#define TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE 1
-#else /* ... */
-#define TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE 0
-#endif /* !... */
-#undef TPP_HAVE_TPP_TOK_STRINGLIKE
-#if (TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE || \
-     TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE)
-#define TPP_HAVE_TPP_TOK_STRINGLIKE 1
-#else /* ... */
-#define TPP_HAVE_TPP_TOK_STRINGLIKE 0
-#endif /* !... */
-#undef TPP_HAVE_STRING_ESCAPE
-#if (TPP_HAVE_TPP_TOK_STRING ||                   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
-     TPP_HAVE_TPP_TOK_CHAR ||                     \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
-#define TPP_HAVE_STRING_ESCAPE 1
-#else /* ... */
-#define TPP_HAVE_STRING_ESCAPE 0
-#endif /* !... */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/

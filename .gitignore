@@ -10,3 +10,4 @@ lib/*
 *.out
 *.VC.db
 *.VC.opendb
+*.dec

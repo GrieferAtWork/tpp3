@@ -489,16 +489,8 @@ typedef enum tpp_token_id {
 	 * define "tok >= X && tok <= Y"-style checks for multi-char-starts-with-z */
 /*[[[deemon
 import * from deemon;
-local CONFIG_H = File.open("config.h", "rb").read();
-function getProperty(name: string) {
-	local start = CONFIG_H.reindex(name + r"\s*=\s*\{").last;
-	return exec("{" + CONFIG_H[start:CONFIG_H.indexmatch("{", "}", start)] + "}");
-}
-local charNames = getProperty("charNames");
-local MC_TOKENS = getProperty("MC_TOKENS");
-function tokenName(tok: string): string {
-	return "_".join(for (local ch: tok) charNames[ch]);
-}
+import * from ."lexer-yieldraw-mc";
+
 local firstChars = HashSet(MC_TOKENS.each.first.first).sorted();
 for (local firstChar: firstChars) {
 	local firstCharName = charNames[firstChar];

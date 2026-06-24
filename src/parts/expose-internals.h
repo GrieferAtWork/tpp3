@@ -34,6 +34,8 @@ local identifiers = [];
 for (local name: fs.dir(".").sorted()) {
 	if (name == "expose-internals.h")
 		continue;
+	if (!name.endswith(".h") && !name.endswith(".c"))
+		continue;
 	local data = File.open(name, "rb").read().decode("utf-8");
 	for (local match: data.reglocateall(r"TPP_INTERNAL\(\s*(\w+)\s*\)")) {
 		local ident = match[1];

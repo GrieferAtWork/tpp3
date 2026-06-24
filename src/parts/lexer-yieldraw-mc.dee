@@ -1,0 +1,293 @@
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+global final CONFIG_H = File.open("config.h", "rb").read();
+function getProperty(name: string) {
+	local start = CONFIG_H.reindex(name + r"\s*=\s*\{").last;
+	return exec("{" + CONFIG_H[start:CONFIG_H.indexmatch("{", "}", start)] + "}");
+}
+
+global final charNames: {string: string} = getProperty("charNames");
+global final MC_TOKENS: {(string, string, string)...} = getProperty("MC_TOKENS");
+
+function tokenName(tok: string): string {
+	return "_".join(for (local ch: tok) charNames[ch]);
+}
+
+global printDecoder;
+
+@@Call like: @printSwitchAfterReadCh2("<<", "\t\t")
+@@This will then generate code to select every multi-char token that starts with "<<",
+@@assuming that the token's third character is loaded in `ch2`
+@@@param useSwitch If true, generated code uses "case" instead of "if"-checks
+function printDecoderAfterReadCh2(prefix: string, indent: string = none,
+                                  useSwitch: bool = false) {
+	if (indent is none)
+		indent = "\t" * #prefix;
+	local tokens = (
+		for (local mc: MC_TOKENS)
+			if (mc.first.startswith(prefix))
+				mc.first
+	).sorted();
+	if (!tokens)
+		return;
+	local condition;
+	if (#prefix == 1) {
+		condition = f"TPP_HAVE_TPP_TOK_MC_STARTSWITH_{charNames[prefix.first]}";
+	} else {
+		condition = " || ".join(tokens.map(e -> f"TPP_HAVE_TPP_TOK_{tokenName(e)}"));
+	}
+	print("#if ", condition);
+	if (useSwitch) {
+		print(indent, "case '", prefix.last.encode("c-escape"), "': {");
+	} else {
+		print(indent, "if (ch2 == '", prefix.last.encode("c-escape"), "') {");
+	}
+	printDecoder(
+			prefix: prefix,
+			indent: indent + "\t",
+			printCondition: false
+	);
+	if (useSwitch) {
+		print(indent, "}	break;");
+	} else {
+		print(indent, "} else");
+	}
+	print("#endif /* ", condition, " */");
+}
+
+function printDecoderAfterReadCh2Each(prefix: string, exclude: string = "",
+                                      indent: string = none,
+                                      useSwitch: bool = false) {
+	for (local ord: [:256]) {
+		local chr = string.chr(ord);
+		if (chr !in exclude)
+			printDecoderAfterReadCh2(prefix + chr, indent, useSwitch);
+	}
+}
+
+function getHasPrefixCondition(prefix: string): string {
+	local tokens = (
+		for (local mc: MC_TOKENS)
+			if (mc.first.startswith(prefix))
+				mc.first
+	).sorted();
+	if (#prefix == 1 && #tokens != 1) {
+		return f"TPP_HAVE_TPP_TOK_MC_STARTSWITH_{charNames[prefix.first]}";
+	} else {
+		return " || ".join(for (local t: tokens) f"TPP_HAVE_TPP_TOK_{tokenName(t)}");
+	}
+}
+
+function printWarnIfCh2IsTrigraph(lastChar: string, indent: string = "") {
+	local charBefore = {
+		r"#": r"=",
+		r"[": r"(",
+		r"]": r")",
+		r"^": r"'",
+		r"{": r"<",
+		r"|": r"!",
+		r"}": r">",
+		r"~": r"-",
+		r"?": r"?",
+		r"\": r"/",
+	}.get(lastChar);
+	if (charBefore !is none)
+		print(indent, 'warn_if_ch2_is_trigraph(); /* "??', charBefore, '" -> "', lastChar, '" */');
+}
+function printPrefixExactMatch(prefix: string, indent: string | none = none) {
+	if (indent is none)
+		indent = "\t" * (#prefix + 1);
+	print("#if TPP_HAVE_TPP_TOK_", tokenName(prefix));
+	print(indent, "if (tpp_lexer_has(self, TPP_TOK_", tokenName(prefix), ")) {");
+	printWarnIfCh2IsTrigraph(prefix.last, indent + "\t");
+	print(indent, "	result = TPP_TOK_", tokenName(prefix), "; /* ", repr prefix, " */");
+	print(indent, "	goto set_result;");
+	print(indent, "}");
+	print("#endif /* TPP_HAVE_TPP_TOK_", tokenName(prefix), " */");
+}
+
+@@Wrapper around @printDecoderAfterReadCh2 that also generates code to
+@@invoke `read_ch2()` and match multi-char tokens.
+function printDecoder(prefix: string,
+                      indent: string | none = none,
+                      printCondition: bool = true,
+                      shouldPrintPrefixExactMatch: bool = true,
+                      extraRestoreCondition: string = "0",
+                      checkLexerFeature: bool = true) {
+	if (indent is none)
+		indent = "\t" * (#prefix + 1);
+	local tokens = (
+		for (local mc: MC_TOKENS)
+			if (mc.first.startswith(prefix))
+				mc.first
+	).sorted();
+	local prefixExists = prefix in tokens;
+	if (!tokens)
+		return;
+	local condition = none;
+	if (printCondition) {
+		condition = getHasPrefixCondition(prefix);
+		print("#if ", condition);
+	}
+	local nextChars = HashSet(for (local t: tokens) if (#t > #prefix) t[#prefix]).sorted();
+	local useSwitch = #nextChars >= 3;
+	if (#nextChars == 0) {
+		assert prefixExists;
+		if (checkLexerFeature) {
+			print(indent, "if (tpp_lexer_has(self, TPP_TOK_", tokenName(prefix), ")) {");
+			printWarnIfCh2IsTrigraph(prefix.last, indent + "\t");
+			print(indent, "	result = TPP_TOK_", tokenName(prefix), "; /* ", repr prefix, " */");
+			print(indent, "	goto set_result;");
+			print(indent, "}");
+		} else {
+			printWarnIfCh2IsTrigraph(prefix.last, indent);
+			print(indent, "result = TPP_TOK_", tokenName(prefix), "; /* ", repr prefix, " */");
+			print(indent, "goto set_result;");
+		}
+	} else if (prefixExists) {
+		local subTokensCondition = " || ".join(
+			for (local t: tokens)
+				if (t != prefix)
+					f"TPP_HAVE_TPP_TOK_{tokenName(t)}"
+		);
+		print("#if ", subTokensCondition);
+		if (checkLexerFeature) {
+			print(indent, "if (", f" ||\n{indent}    ".join(
+				for (local t: tokens)
+					if (t != prefix)
+						f"tpp_lexer_has(self, TPP_TOK_{tokenName(t)})"
+			), ") {");
+			indent = indent + "\t";
+		}
+		local restoreVarName = f"rel_end_of_{#prefix}char";
+		local restoreCondition = f"TPP_HAVE_TPP_TOK_{tokenName(prefix)}";
+		if (extraRestoreCondition != "0")
+			restoreCondition = f"{extraRestoreCondition} || {restoreCondition}";
+		print("#if ", restoreCondition);
+		print(indent, f"tpp_size {restoreVarName} = tpp_file_ptr2rel(file, pos);");
+		print("#endif /* ", restoreCondition, " */");
+		print(indent, "read_ch2();");
+		if (useSwitch) {
+			print(indent, "switch (ch2) {");
+			for (local nextChar: nextChars) {
+				printDecoderAfterReadCh2(
+						prefix: prefix + nextChar,
+						indent: indent,
+						useSwitch: true);
+			}
+			print(indent, "default: break;");
+			print(indent, "}");
+		} else {
+			for (local nextChar: nextChars) {
+				printDecoderAfterReadCh2(
+						prefix: prefix + nextChar,
+						indent: indent,
+						useSwitch: false);
+			}
+			print(indent, "{");
+			print(indent, "}");
+		}
+		print("#if ", restoreCondition);
+		print(indent, "pos = tpp_file_rel2ptr(file, ", restoreVarName, ");");
+		print("#endif /* ", restoreCondition, " */");
+		if (checkLexerFeature) {
+			indent = indent[:-1];
+			print(indent, "}");
+		}
+		print("#endif /* ", subTokensCondition, " */");
+		if (shouldPrintPrefixExactMatch)
+			printPrefixExactMatch(prefix, indent);
+	} else {
+		local restoreVarName = f"rel_end_of_{#prefix}char";
+		if (checkLexerFeature) {
+			print(indent, "if (", f" ||\n{indent}    ".join(
+				for (local t: tokens)
+					f"tpp_lexer_has(self, TPP_TOK_{tokenName(t)})"
+			), ") {");
+			indent = indent + "\t";
+		}
+		if (extraRestoreCondition != "0") {
+			print("#if ", extraRestoreCondition);
+			print(indent, f"tpp_size {restoreVarName} = tpp_file_ptr2rel(file, pos);");
+			print("#endif /* ", extraRestoreCondition, " */");
+		}
+		print(indent, "read_ch2();");
+		if (#nextChars == 1) {
+			print(indent, "if (ch2 == '", nextChars.first.encode("c-escape"), "') {");
+			printDecoder(
+					prefix: prefix + nextChars.first,
+					indent: indent + "\t",
+					checkLexerFeature: false,
+					printCondition: false);
+			print(indent, "}");
+		} else if (useSwitch) {
+			print(indent, "switch (ch2) {");
+			for (local nextChar: nextChars) {
+				printDecoderAfterReadCh2(
+						prefix: prefix + nextChar,
+						indent: indent,
+						useSwitch: true);
+			}
+			print(indent, "default: break;");
+			print(indent, "}");
+		} else {
+			for (local nextChar: nextChars) {
+				printDecoderAfterReadCh2(
+						prefix: prefix + nextChar,
+						indent: indent,
+						useSwitch: false);
+			}
+			print(indent, "{");
+			print(indent, "}");
+		}
+		if (extraRestoreCondition != "0") {
+			print("#if ", extraRestoreCondition);
+			print(indent, f"pos = tpp_file_rel2ptr(file, {restoreVarName});");
+			print("#endif /* ", extraRestoreCondition, " */");
+		}
+		if (checkLexerFeature)
+			print(indent[:-1], "}");
+	}
+	if (condition !is none)
+		print("#endif /* ", condition, " */");
+}
+
+function printHasNone(prefix: string,
+                      indent: string | none = none) {
+	if (indent is none)
+		indent = "\t" * (#prefix + 1);
+	local tokens = (
+		for (local mc: MC_TOKENS)
+			if (mc.first.startswith(prefix))
+				mc.first
+	).sorted();
+	local prefixExists = prefix in tokens;
+	if (!tokens)
+		return;
+	local condition = none;
+	print(indent, "    ", f" &&\n{indent}    ".join(
+		for (local t: tokens)
+			f"!tpp_lexer_has(self, TPP_TOK_{tokenName(t)})"
+	));
+}
+
