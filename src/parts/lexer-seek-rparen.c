@@ -493,54 +493,87 @@ again_switch_tok:
 		break;
 #endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_RANGLE */
 
-	/* Tokens where the first character is irrelevant, and need to be split into 2 */
-#if (TPP_HAVE_TPP_TOK_MINUS_RANGLE ||               \
-     TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR ||          \
-     TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS ||          \
-     TPP_HAVE_TPP_TOK_EQUAL_LANGLE ||               \
-     TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE ||        \
-     TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || \
-     TPP_HAVE_TPP_TOK_EQUAL_RANGLE ||               \
-     TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE ||        \
-     TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE || \
-     TPP_HAVE_TPP_TOK_MINUS_LANGLE)
+	/* Tokens where the first character is irrelevant, but do contain relevant characters somewhere further within */
+/*[[[deemon
+import MC_TOKENS, tokenName from ".lexer-yieldraw-mc";
+local splitTokens = [];
+for (local tok, none, none: MC_TOKENS) {
+	if (tok.startswith("<") || tok.startswith(">"))
+		continue; // Already handled above...
+	if ("<" !in tok[1:] && ">" !in tok[1:])
+		continue; // Token must contain < or > somewhere further up ahead!
+	// TODO: If token has balanced < and > with < coming first (e.g. a token
+	//       like "-<>-", but not "-><-"), then don't need to split it here!
+	splitTokens.append(tok);
+}
+splitTokens.sort();
+local cond = " || ".join(for (local tok: splitTokens) f"TPP_HAVE_TPP_TOK_{tokenName(tok)}");
+print("#if ", cond);
+for (local tok: splitTokens) {
+	local name = tokenName(tok);
+	print("#if TPP_HAVE_TPP_TOK_", tokenName(tok));
+	print("	case TPP_TOK_", tokenName(tok), ": /" "* ", repr tok, " *" "/");
+	print("#endif /" "* TPP_HAVE_TPP_TOK_", tokenName(tok), " *" "/");
+}
+print("		/" "* Convert to 1-char token *" "/");
+print("		tpp_assert(token->tt_start < token->tt_end);");
+print("		token->tt_end = token->tt_start + 1;");
+print("/" "*		result = TPP_TOK_OFCHAR(token->tt_start[0]); * Not necessary *" "/");
+print("/" "*		token->tt_id = result;                       * Not necessary *" "/");
+print("		break;");
+print("#endif /" "* ", cond, " *" "/");
+]]]*/
+#if TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS || TPP_HAVE_TPP_TOK_MINUS_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
+#if TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS
+	case TPP_TOK_STAR_LANGLE_MINUS: /* "*<-" */
+#endif /* TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+	case TPP_TOK_MINUS_LANGLE: /* "-<" */
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE
+	case TPP_TOK_MINUS_LANGLE_LANGLE: /* "-<<" */
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
+	case TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE: /* "-<<<" */
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE
 	case TPP_TOK_MINUS_RANGLE: /* "->" */
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
 	case TPP_TOK_MINUS_RANGLE_STAR: /* "->*" */
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
-#if TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS
-	case TPP_TOK_STAR_LANGLE_MINUS: /* "*<-" */
-#endif /* !TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE
+	case TPP_TOK_MINUS_RANGLE_RANGLE: /* "->>" */
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE */
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
+	case TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE: /* "->>>" */
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE
 	case TPP_TOK_EQUAL_LANGLE: /* "=<" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE */
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE */
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
 	case TPP_TOK_EQUAL_LANGLE_LANGLE: /* "=<<" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
 #if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
 	case TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE: /* "=<<<" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE
 	case TPP_TOK_EQUAL_RANGLE: /* "=>" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE */
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE */
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
 	case TPP_TOK_EQUAL_RANGLE_RANGLE: /* "=>>" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
 #if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 	case TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE: /* "=>>>" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
-	case TPP_TOK_MINUS_LANGLE: /* "-<" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 		/* Convert to 1-char token */
 		tpp_assert(token->tt_start < token->tt_end);
 		token->tt_end = token->tt_start + 1;
 /*		result = TPP_TOK_OFCHAR(token->tt_start[0]); * Not necessary */
 /*		token->tt_id = result;                       * Not necessary */
 		break;
-#endif /* ... */
+#endif /* TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS || TPP_HAVE_TPP_TOK_MINUS_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+/*[[[end]]]*/
 
 	case '<':
 #ifdef WANT_handle_langle

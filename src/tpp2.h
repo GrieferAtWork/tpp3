@@ -2146,6 +2146,20 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE        0              /* "<-<"  Completely unknown to TPP2 */
 #define TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE        0              /* ">=>"  Completely unknown to TPP2 */
 #define TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE        0              /* ">->"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_PERCENT_PERCENT            0              /* "%%"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL      0              /* "%%="  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT      0              /* "=%%"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_AT_AT                      0              /* "@@"   Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_AT_AT_EQUAL                0              /* "@@="  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_EQUAL_AT_AT                0              /* "=@@"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE        0              /* "->>"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE 0              /* "->>>" Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE        0              /* "-<<"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE 0              /* "-<<<" Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS        0              /* ">>-"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS 0              /* ">>>-" Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS        0              /* "<<-"  Completely unknown to TPP2 */
+#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS 0              /* "<<<-" Completely unknown to TPP2 */
 
 /* Features... */
 #define TPP_HAVE_BSE                                  1 /* TPP2 didn't even let you disable this */

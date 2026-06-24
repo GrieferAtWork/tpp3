@@ -1728,7 +1728,9 @@ switch_on_ch:
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_LANGLE) &&
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_RANGLE) &&
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_MINUS) &&
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS) &&
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) &&
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_EQUAL) &&
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL) &&
@@ -1798,24 +1800,44 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
 		} else
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
+#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
 		if (ch2 == '<') {
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
-			if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE) ||
+#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
+			if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_MINUS) ||
+			    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS) ||
 			    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) ||
 			    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
 				read_ch2();
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
-				if (ch2 == '<') {
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
-					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
+				switch (ch2) {
+#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS
+				case '-': {
+					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_MINUS)) {
+						result = TPP_TOK_LANGLE_LANGLE_MINUS; /* "<<-" */
+						goto set_result;
+					}
+				}	break;
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS */
+#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
+				case '<': {
+#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
+					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS) ||
+					    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
 						read_ch2();
+#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS
+						if (ch2 == '-') {
+							if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS)) {
+								result = TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS; /* "<<<-" */
+								goto set_result;
+							}
+						} else
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
 						if (ch2 == '=') {
 							if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
@@ -1830,30 +1852,30 @@ switch_on_ch:
 						pos = tpp_file_rel2ptr(file, rel_end_of_3char);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
 					}
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
 					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE)) {
 						result = TPP_TOK_LANGLE_LANGLE_LANGLE; /* "<<<" */
 						goto set_result;
 					}
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
-				} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
+				}	break;
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
-				if (ch2 == '=') {
+				case '=': {
 					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_EQUAL)) {
 						result = TPP_TOK_LANGLE_LANGLE_EQUAL; /* "<<=" */
 						goto set_result;
 					}
-				} else
+				}	break;
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
-				{
+				default: break;
 				}
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
 			}
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
 #if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
 			if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE)) {
 				result = TPP_TOK_LANGLE_LANGLE; /* "<<" */
@@ -1861,7 +1883,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
 		} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
 		if (ch2 == '=') {
 #if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
@@ -1926,9 +1948,13 @@ switch_on_ch:
 /*[[[deemon (printHasNone from ".lexer-yieldraw-mc")("-");]]]*/
 		    !tpp_lexer_has(self, TPP_TOK_MINUS_MINUS) &&
 		    !tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE) &&
 		    !tpp_lexer_has(self, TPP_TOK_MINUS_EQUAL) &&
 		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_STAR)
+		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_STAR) &&
+		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE) &&
+		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE)
 /*[[[end]]]*/
 		    )
 			break;
@@ -1956,14 +1982,61 @@ switch_on_ch:
 		}	break;
 #endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS || TPP_HAVE_TPP_TOK_SQL_COMMENT */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("-", "-", useSwitch: true);]]]*/
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
 		case '<': {
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
+			if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
+				if (ch2 == '<') {
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
+					if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE
+						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE */
+						read_ch2();
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
+						if (ch2 == '<') {
+							if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
+								result = TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE; /* "-<<<" */
+								goto set_result;
+							}
+						} else
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
+						{
+						}
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE
+						pos = tpp_file_rel2ptr(file, rel_end_of_3char);
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE */
+					}
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE
+					if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE)) {
+						result = TPP_TOK_MINUS_LANGLE_LANGLE; /* "-<<" */
+						goto set_result;
+					}
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE */
+				} else
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+			}
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
 			if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE)) {
 				result = TPP_TOK_MINUS_LANGLE; /* "-<" */
 				goto set_result;
 			}
-		}	break;
 #endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+		}	break;
+#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
 #if TPP_HAVE_TPP_TOK_MINUS_EQUAL
 		case '=': {
 			if (tpp_lexer_has(self, TPP_TOK_MINUS_EQUAL)) {
@@ -1972,10 +2045,12 @@ switch_on_ch:
 			}
 		}	break;
 #endif /* TPP_HAVE_TPP_TOK_MINUS_EQUAL */
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
 		case '>': {
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
-			if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_STAR)) {
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
+			if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_STAR) ||
+			    tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE) ||
+			    tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE)) {
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
@@ -1988,13 +2063,44 @@ switch_on_ch:
 					}
 				} else
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
+				if (ch2 == '>') {
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
+					if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE)) {
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE
+						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE */
+						read_ch2();
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
+						if (ch2 == '>') {
+							if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE)) {
+								result = TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE; /* "->>>" */
+								goto set_result;
+							}
+						} else
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
+						{
+						}
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE
+						pos = tpp_file_rel2ptr(file, rel_end_of_3char);
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE */
+					}
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE
+					if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE)) {
+						result = TPP_TOK_MINUS_RANGLE_RANGLE; /* "->>" */
+						goto set_result;
+					}
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE */
+				} else
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
 				{
 				}
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
 			}
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
 #if TPP_HAVE_TPP_TOK_MINUS_RANGLE
 			if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE)) {
 				result = TPP_TOK_MINUS_RANGLE; /* "->" */
@@ -2002,7 +2108,7 @@ switch_on_ch:
 			}
 #endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
 		}	break;
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
 /*[[[end]]]*/
 		default: break;
 		}
@@ -2162,6 +2268,8 @@ switch_on_ch:
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_PERCENT || TPP_HAVE_DIGRAPHS
 		if (!tpp_lexer_has(self, DIGRAPHS) &&
 /*[[[deemon (printHasNone from ".lexer-yieldraw-mc")("%");]]]*/
+		    !tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT) &&
+		    !tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT_EQUAL) &&
 		    !tpp_lexer_has(self, TPP_TOK_PERCENT_EQUAL)
 /*[[[end]]]*/
 		    )
@@ -2196,6 +2304,37 @@ switch_on_ch:
 		} else
 #endif /* TPP_HAVE_DIGRAPHS */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("%");]]]*/
+#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT || TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL
+		if (ch2 == '%') {
+#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL
+			if (tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT_EQUAL)) {
+#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL
+				if (ch2 == '=') {
+					if (tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT_EQUAL)) {
+						result = TPP_TOK_PERCENT_PERCENT_EQUAL; /* "%%=" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT */
+			}
+#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL */
+#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT
+			if (tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT)) {
+				result = TPP_TOK_PERCENT_PERCENT; /* "%%" */
+				goto set_result;
+			}
+#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT */
+		} else
+#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT || TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL */
 #if TPP_HAVE_TPP_TOK_PERCENT_EQUAL
 		if (ch2 == '=') {
 			if (tpp_lexer_has(self, TPP_TOK_PERCENT_EQUAL)) {
@@ -2608,6 +2747,7 @@ not_a_trigraph:
 	case '=': {
 		if (tpp_lexer_has(self, TPP_TOK_EQUAL_EXCLAIM) ||
 		    tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT) ||
+		    tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT_PERCENT) ||
 		    tpp_lexer_has(self, TPP_TOK_EQUAL_AMP) ||
 		    tpp_lexer_has(self, TPP_TOK_EQUAL_STAR) ||
 		    tpp_lexer_has(self, TPP_TOK_EQUAL_STAR_STAR) ||
@@ -2627,6 +2767,7 @@ not_a_trigraph:
 		    tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) ||
 		    tpp_lexer_has(self, TPP_TOK_EQUAL_QMARK) ||
 		    tpp_lexer_has(self, TPP_TOK_EQUAL_AT) ||
+		    tpp_lexer_has(self, TPP_TOK_EQUAL_AT_AT) ||
 		    tpp_lexer_has(self, TPP_TOK_EQUAL_HAT) ||
 		    tpp_lexer_has(self, TPP_TOK_EQUAL_PIPE) ||
 		    tpp_lexer_has(self, TPP_TOK_EQUAL_TILDE)) {
@@ -2640,14 +2781,37 @@ not_a_trigraph:
 				}
 			}	break;
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM */
-#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT
+#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT || TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT
 			case '%': {
+#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT
+				if (tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT_PERCENT)) {
+#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT
+					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT */
+					read_ch2();
+#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT
+					if (ch2 == '%') {
+						if (tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT_PERCENT)) {
+							result = TPP_TOK_EQUAL_PERCENT_PERCENT; /* "=%%" */
+							goto set_result;
+						}
+					} else
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT */
+					{
+					}
+#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT
+					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT */
+				}
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT */
+#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT
 				if (tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT)) {
 					result = TPP_TOK_EQUAL_PERCENT; /* "=%" */
 					goto set_result;
 				}
-			}	break;
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT */
+			}	break;
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT || TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT */
 #if TPP_HAVE_TPP_TOK_EQUAL_AMP
 			case '&': {
 				if (tpp_lexer_has(self, TPP_TOK_EQUAL_AMP)) {
@@ -2901,14 +3065,37 @@ not_a_trigraph:
 				}
 			}	break;
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_QMARK */
-#if TPP_HAVE_TPP_TOK_EQUAL_AT
+#if TPP_HAVE_TPP_TOK_EQUAL_AT || TPP_HAVE_TPP_TOK_EQUAL_AT_AT
 			case '@': {
+#if TPP_HAVE_TPP_TOK_EQUAL_AT_AT
+				if (tpp_lexer_has(self, TPP_TOK_EQUAL_AT_AT)) {
+#if TPP_HAVE_TPP_TOK_EQUAL_AT
+					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT */
+					read_ch2();
+#if TPP_HAVE_TPP_TOK_EQUAL_AT_AT
+					if (ch2 == '@') {
+						if (tpp_lexer_has(self, TPP_TOK_EQUAL_AT_AT)) {
+							result = TPP_TOK_EQUAL_AT_AT; /* "=@@" */
+							goto set_result;
+						}
+					} else
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT_AT */
+					{
+					}
+#if TPP_HAVE_TPP_TOK_EQUAL_AT
+					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT */
+				}
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT_AT */
+#if TPP_HAVE_TPP_TOK_EQUAL_AT
 				if (tpp_lexer_has(self, TPP_TOK_EQUAL_AT)) {
 					result = TPP_TOK_EQUAL_AT; /* "=@" */
 					goto set_result;
 				}
-			}	break;
 #endif /* TPP_HAVE_TPP_TOK_EQUAL_AT */
+			}	break;
+#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT || TPP_HAVE_TPP_TOK_EQUAL_AT_AT */
 #if TPP_HAVE_TPP_TOK_EQUAL_HAT
 			case '^': {
 				if (tpp_lexer_has(self, TPP_TOK_EQUAL_HAT)) {
@@ -2951,8 +3138,10 @@ not_a_trigraph:
 		    tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_LANGLE) ||
 		    tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_RANGLE) ||
 		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE) ||
+		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_MINUS) ||
 		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_EQUAL) ||
 		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE) ||
+		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS) ||
 		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
 			read_ch2();
 			switch (ch2) {
@@ -3044,32 +3233,52 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
 			}	break;
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 			case '>': {
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
-				if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_EQUAL) ||
+#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+				if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_MINUS) ||
+				    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_EQUAL) ||
 				    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE) ||
+				    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS) ||
 				    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
 					read_ch2();
+					switch (ch2) {
+#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS
+					case '-': {
+						if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_MINUS)) {
+							result = TPP_TOK_RANGLE_RANGLE_MINUS; /* ">>-" */
+							goto set_result;
+						}
+					}	break;
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL
-					if (ch2 == '=') {
+					case '=': {
 						if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_EQUAL)) {
 							result = TPP_TOK_RANGLE_RANGLE_EQUAL; /* ">>=" */
 							goto set_result;
 						}
-					} else
+					}	break;
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
-					if (ch2 == '>') {
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
-						if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
+#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+					case '>': {
+#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+						if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS) ||
+						    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
 							tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
 							read_ch2();
+#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS
+							if (ch2 == '-') {
+								if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS)) {
+									result = TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS; /* ">>>-" */
+									goto set_result;
+								}
+							} else
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 							if (ch2 == '=') {
 								if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
@@ -3084,22 +3293,22 @@ not_a_trigraph:
 							pos = tpp_file_rel2ptr(file, rel_end_of_3char);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
 						}
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
 						if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE)) {
 							result = TPP_TOK_RANGLE_RANGLE_RANGLE; /* ">>>" */
 							goto set_result;
 						}
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
-					} else
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
-					{
+					}	break;
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+					default: break;
 					}
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
 				}
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 #if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
 				if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE)) {
 					result = TPP_TOK_RANGLE_RANGLE; /* ">>" */
@@ -3107,7 +3316,7 @@ not_a_trigraph:
 				}
 #endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 			default: break;
 			}
 		}
@@ -3115,11 +3324,50 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_RANGLE */
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT
 	case '@': {
-		if (tpp_lexer_has(self, TPP_TOK_AT_EQUAL)) {
+		if (tpp_lexer_has(self, TPP_TOK_AT_EQUAL) ||
+		    tpp_lexer_has(self, TPP_TOK_AT_AT) ||
+		    tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
 			read_ch2();
+#if TPP_HAVE_TPP_TOK_AT_EQUAL
 			if (ch2 == '=') {
-				result = TPP_TOK_AT_EQUAL; /* "@=" */
-				goto set_result;
+				if (tpp_lexer_has(self, TPP_TOK_AT_EQUAL)) {
+					result = TPP_TOK_AT_EQUAL; /* "@=" */
+					goto set_result;
+				}
+			} else
+#endif /* TPP_HAVE_TPP_TOK_AT_EQUAL */
+#if TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_EQUAL
+			if (ch2 == '@') {
+#if TPP_HAVE_TPP_TOK_AT_AT_EQUAL
+				if (tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
+#if TPP_HAVE_TPP_TOK_AT_AT
+					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_AT_AT */
+					read_ch2();
+#if TPP_HAVE_TPP_TOK_AT_AT_EQUAL
+					if (ch2 == '=') {
+						if (tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
+							result = TPP_TOK_AT_AT_EQUAL; /* "@@=" */
+							goto set_result;
+						}
+					} else
+#endif /* TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
+					{
+					}
+#if TPP_HAVE_TPP_TOK_AT_AT
+					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_AT_AT */
+				}
+#endif /* TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
+#if TPP_HAVE_TPP_TOK_AT_AT
+				if (tpp_lexer_has(self, TPP_TOK_AT_AT)) {
+					result = TPP_TOK_AT_AT; /* "@@" */
+					goto set_result;
+				}
+#endif /* TPP_HAVE_TPP_TOK_AT_AT */
+			} else
+#endif /* TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
+			{
 			}
 		}
 	}	break;
