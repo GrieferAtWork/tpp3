@@ -553,6 +553,18 @@ tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
 	if (!TPP_ISERR(result))
 		result = tpp_lexer_warn_nonempty_ifdef(self);
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+
+	/* Make sure that absolutely *nothing* is left on the #include-stack!
+	 * This is important in case the pragma terminated *inside* of a macro,
+	 * or "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE" was emitted about a
+	 * trailing token
+	 *
+	 * This should only really be relevant when it comes to recovering from
+	 * faulty user-code... */
+#if TPP_HAVE_INCLUDE_STACK
+	while (tpp_lexer_canpopfile(self))
+		tpp_lexer_popfile(self);
+#endif /* TPP_HAVE_INCLUDE_STACK */
 	return result;
 }
 #endif /* TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma */
