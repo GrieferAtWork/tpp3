@@ -757,39 +757,54 @@ tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
                          tpp_formatprinter data_printer,
                          tpp_formatprinter utf8_printer,
                          void *arg, unsigned int flags) {
-	tpp_token_id tok;
-	tpp_ssize result = 0, temp;
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_AUTO_CONCAT)
+	if (!tpp_lexer_has(self, STRING_AUTO_CONCAT)) {
+		tpp_ssize result = tpp_lexer_decodestring(self, data_printer, utf8_printer, arg);
+		if (result >= 0) {
+			tpp_token_id tok = tpp_lexer_yield_blocking(self);
+			if (TPP_TOK_ISERR(tok))
+				result = (tpp_ssize)TPP_TOK_ASERR(tok);
+		}
+		return result;
+	} else
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
+#if TPP_HAVE_STRING_AUTO_CONCAT
+	{
+		tpp_token_id tok;
+		tpp_ssize result = 0, temp;
 again:
-	temp = tpp_lexer_decodestring(self, data_printer, utf8_printer, arg);
-	if tpp_unlikely(temp < 0)
-		return temp;
-	result += temp;
+		temp = tpp_lexer_decodestring(self, data_printer, utf8_printer, arg);
+		if tpp_unlikely(temp < 0)
+			return temp;
+		result += temp;
 
-	/* Yield to next token */
+		/* Yield to next token */
 again_yield:
-	tok = tpp_lexer_yield_blocking(self);
-	switch (tok) {
+		tok = tpp_lexer_yield_blocking(self);
+		switch (tok) {
 
-	TPP_CASE_TPP_TOK_STRING
-		goto again;
+		TPP_CASE_TPP_TOK_STRING
+			goto again;
 
-	case TPP_TOK_SPACE:
-	TPP_CASE_TPP_TOK_COMMENT_NOLINE
-		if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
-			goto again_yield;
-		break;
-	case TPP_TOK_LF:
-	TPP_CASE_TPP_TOK_COMMENT_LINE
-		if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
-			goto again_yield;
-		break;
+		case TPP_TOK_SPACE:
+		TPP_CASE_TPP_TOK_COMMENT_NOLINE
+			if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+				goto again_yield;
+			break;
+		case TPP_TOK_LF:
+		TPP_CASE_TPP_TOK_COMMENT_LINE
+			if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONLF))
+				goto again_yield;
+			break;
 
-	default:
-		if (TPP_TOK_ISERR(tok))
-			result = (tpp_ssize)TPP_TOK_ASERR(tok);
-		break;
+		default:
+			if (TPP_TOK_ISERR(tok))
+				result = (tpp_ssize)TPP_TOK_ASERR(tok);
+			break;
+		}
+		return result;
 	}
-	return result;
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
 }
 
 
@@ -825,31 +840,77 @@ err_builder:
 }
 
 
-#define TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY 0 /* String has 0 (non-empty) chunks */
-#define TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_YES   1 /* String has 1 (non-empty) chunk */
-#define TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_NO    2 /* String has 2 or more (non-empty) chunks */
+#define TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY 0 /* String has 0 (non-empty) chunks */
+#define TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_YES   1 /* String has 1 (non-empty) chunk */
+#define TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_NO    2 /* String has 2 or more (non-empty) chunks */
 
 #define TPP_LEXER_PARSESTRING_CHUNK_STOP ((tpp_ssize)(TPP_ELAST - 1))
-static TPP_FORMATPRINTER_DEFINE(tpp_lexer_parsestring_chunk_count, arg, text, num_bytes) {
-	unsigned int *p_count = (unsigned int *)arg;
+
+struct tpp_lexer_decodestring_chunk_count_data {
+	tpp_lexer const *tldsccd_lexer; /* [1..1] Current lexer (needed to see if text bounds lie within current token) */
+	unsigned int     tldsccd_count; /* # of chuniks (one of `TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_*') */
+#if TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
+	unsigned int     tldsccd_flags; /* Set of `TPP_LEXER_PARSESTRING_FLAG_*' */
+#endif /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
+};
+
+static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_chunk_count, arg, text, num_bytes) {
+	struct tpp_lexer_decodestring_chunk_count_data *data;
+	data = (struct tpp_lexer_decodestring_chunk_count_data *)arg;
 	(void)text;
 	if (num_bytes != 0) {
 		/* Update counter:
-		 * - TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY  ->  TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_YES
-		 * - TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_YES    ->  TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_NO
-		 *   TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_NO     ->  return TPP_LEXER_PARSESTRING_CHUNK_STOP */
-		++*p_count;
-		if (*p_count >= TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_NO)
+		 * - TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY  ->  TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_YES
+		 * - TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_YES    ->  TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_NO
+		 *   TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_NO     ->  return TPP_LEXER_PARSESTRING_CHUNK_STOP */
+		++data->tldsccd_count;
+		if (data->tldsccd_count >= TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_NO)
 			return TPP_LEXER_PARSESTRING_CHUNK_STOP;
+
+		/* Check if the given [text,+=num_bytes...) range is a sub-range of the current token.
+		 * It may not be in case of something like:
+		 * >> "\xFF"
+		 *
+		 * When decoding this string, it *will* yield a single-chunk string, however that chunk's
+		 * data will lie outside the currently loaded file (it lies on our thread's stack), meaning
+		 * our caller can't use direct-data-propagation (doing so would work if the string is only
+		 * used inside the callback given to "tpp_lexer_parsestring_cb", but not if that callback
+		 * wants to persist the string (which it's allowed to by tpp_string_incref'ing the given
+		 * chunk-pointer when it's non-null), as that string may be stored on the caller's stack)
+		 */
+#if TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
+		/* The "TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS" flag prevents the special-case check,
+		 * meaning that we're able to indicate a single-chunk string, even in case of a stack-
+		 * allocated string buffer. */
+		if (!(data->tldsccd_flags & TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS))
+#endif /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
+		{
+			tpp_token const *token = tpp_lexer_gettoken(data->tldsccd_lexer);
+			if ((text) < tpp_token_getstart(token) ||
+			    (text + num_bytes) > tpp_token_getend(token)) {
+				data->tldsccd_count = TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_NO;
+				return TPP_LEXER_PARSESTRING_CHUNK_STOP;
+			}
+		}
 	}
 	return 0;
+
 }
 
+#if TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
+#define tpp_lexer_decodestring_single_chunk_flags__param , unsigned int flags
+#define tpp_lexer_decodestring_single_chunk_flags__arg   , flags
+#else /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
+#define tpp_lexer_decodestring_single_chunk_flags__param /* nothing */
+#define tpp_lexer_decodestring_single_chunk_flags__arg   /* nothing */
+#endif /* !TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
+
 /* Check if the currently loaded string-token can be printed in 0/1 chunks
- * @return: * : One of `TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_*' */
+ * @return: * : One of `TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_*' */
 static TPP_NONNULL((1)) unsigned int TPPCALL
-tpp_lexer_parsestring_is_single_chunk(tpp_lexer *tpp_restrict self) {
-	unsigned int chunk_count = TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY;
+tpp_lexer_decodestring_is_single_chunk(tpp_lexer *tpp_restrict self
+                                       tpp_lexer_decodestring_single_chunk_flags__param) {
+	struct tpp_lexer_decodestring_chunk_count_data data;
 	tpp_ssize decode_status;
 #if TPP_HAVE_WARNINGS
 	tpp_lexer_state_flags old_state;
@@ -857,11 +918,16 @@ tpp_lexer_parsestring_is_single_chunk(tpp_lexer *tpp_restrict self) {
 	self->tl_state |= TPP_LEXER_STATE_FLAG_NOWARNINGS;
 #endif /* TPP_HAVE_WARNINGS */
 
+	data.tldsccd_lexer = self;
+	data.tldsccd_count = TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY;
+#if TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
+	data.tldsccd_flags = flags;
+#endif /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 	/* Try to decode the string and count how many chunks we encounter */
 	decode_status = tpp_lexer_decodestring(self,
-	                                       &tpp_lexer_parsestring_chunk_count,
-	                                       &tpp_lexer_parsestring_chunk_count,
-	                                       &chunk_count);
+	                                       &tpp_lexer_decodestring_chunk_count,
+	                                       &tpp_lexer_decodestring_chunk_count,
+	                                       &data);
 	tpp_assert(decode_status == 0 ||
 	           decode_status == TPP_LEXER_PARSESTRING_CHUNK_STOP);
 	(void)decode_status;
@@ -869,17 +935,18 @@ tpp_lexer_parsestring_is_single_chunk(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_WARNINGS
 	self->tl_state = old_state;
 #endif /* TPP_HAVE_WARNINGS */
-	return chunk_count;
+	return data.tldsccd_count;
 }
 
 static TPP_NONNULL((1)) unsigned int TPPCALL
-tpp_lexer_parsestring_is_single_chunk_at(tpp_lexer *tpp_restrict self,
-                                         tpp_char const *token_end) {
+tpp_lexer_decodestring_is_single_chunk_at(tpp_lexer *tpp_restrict self,
+                                          tpp_char const *token_end
+                                          tpp_lexer_decodestring_single_chunk_flags__param) {
 	unsigned int result;
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_char const *saved_token_end = token->tt_end;
 	token->tt_end = token_end;
-	result = tpp_lexer_parsestring_is_single_chunk(self);
+	result = tpp_lexer_decodestring_is_single_chunk(self tpp_lexer_decodestring_single_chunk_flags__arg);
 	token->tt_end = saved_token_end;
 	return result;
 }
@@ -956,9 +1023,35 @@ tpp_lexer_parsestring_cb(tpp_lexer *self,
                                                  tpp_char const *str, tpp_size length),
                          void *arg, unsigned int flags) {
 	unsigned int how;
+	/* Lexer feature to disable adjacent-string-token auto-concat
+	 * (C might have it, but not all languages do; so there should
+	 * be a way to disable it) */
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_AUTO_CONCAT)
+	if (!tpp_lexer_has(self, STRING_AUTO_CONCAT)) {
+		tpp_errno result;
+		(void)flags;
+		how = tpp_lexer_decodestring_is_single_chunk(self tpp_lexer_decodestring_single_chunk_flags__arg);
+		if (how == TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY) {
+			/* Indicate an empty chunk to the caller */
+			result = (*cb)(arg, tpp_lexer_getfile(self)->tf_chunk,
+			               tpp_lexer_getfile(self)->tf_pos, 0);
+		} else if (how == TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_YES) {
+			result = tpp_lexer_decodestring_as_single_chunk(self, cb, arg);
+		} else {
+			goto do_multi_chunk_string;
+		}
+		if (!TPP_TOK_ISERR(result)) {
+			tpp_token_id tok = tpp_lexer_yield_blocking(self);
+			if (TPP_TOK_ISERR(tok))
+				result = TPP_TOK_ASERR(tok);
+		}
+		return result;
+	}
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_AUTO_CONCAT) */
+#if TPP_HAVE_STRING_AUTO_CONCAT
 again:
-	how = tpp_lexer_parsestring_is_single_chunk(self);
-	if (how == TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY) {
+	how = tpp_lexer_decodestring_is_single_chunk(self tpp_lexer_decodestring_single_chunk_flags__arg);
+	if (how == TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY) {
 		tpp_token_id tok;
 again_yield_after_empty:
 		tok = tpp_lexer_yield_blocking(self);
@@ -974,7 +1067,7 @@ again_yield_after_empty:
 			break;
 		case TPP_TOK_LF:
 		TPP_CASE_TPP_TOK_COMMENT_LINE
-			if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+			if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONLF))
 				goto again_yield_after_empty;
 			break;
 
@@ -987,7 +1080,7 @@ again_yield_after_empty:
 		/* Indicate an empty chunk to the caller */
 		return (*cb)(arg, tpp_lexer_getfile(self)->tf_chunk,
 		             tpp_lexer_getfile(self)->tf_pos, 0);
-	} else if (how == TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_YES) {
+	} else if (how == TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_YES) {
 		tpp_lexer_seek_backup backup;
 		tpp_char const *pos;
 		tpp_token_id tok;
@@ -1001,8 +1094,8 @@ again_yield_after_single:
 		switch (tok) {
 
 		TPP_CASE_TPP_TOK_STRING {
-			how = tpp_lexer_parsestring_is_single_chunk_at(self, pos);
-			if (how == TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY)
+			how = tpp_lexer_decodestring_is_single_chunk_at(self, pos tpp_lexer_decodestring_single_chunk_flags__arg);
+			if (how == TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY)
 				goto again_yield_after_single;
 
 			/* Not possible using a single chunk... */
@@ -1021,7 +1114,7 @@ break_nowarnings_and_do_multi_chunk_string:
 			break;
 		case TPP_TOK_LF:
 		TPP_CASE_TPP_TOK_COMMENT_LINE
-			if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+			if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONLF))
 				goto again_yield_after_single;
 			break;
 
@@ -1039,8 +1132,8 @@ again_yield_after_eof:
 			switch (tok) {
 
 			TPP_CASE_TPP_TOK_STRING
-				how = tpp_lexer_parsestring_is_single_chunk_at(self, pos);
-				if (how == TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY)
+				how = tpp_lexer_decodestring_is_single_chunk_at(self, pos tpp_lexer_decodestring_single_chunk_flags__arg);
+				if (how == TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY)
 					goto again_yield_after_eof;
 #if TPP_HAVE_LEXER_GETKEYWORDDEFINED
 do_multi_chunk_string_after_eof:
@@ -1058,7 +1151,7 @@ do_multi_chunk_string_after_eof:
 
 			case TPP_TOK_LF:
 			TPP_CASE_TPP_TOK_COMMENT_LINE
-				if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+				if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONLF))
 					goto again_yield_after_eof;
 				break;
 
@@ -1092,8 +1185,8 @@ again_yield_after_eof_decoded:
 				switch (tok) {
 				TPP_CASE_TPP_TOK_STRING
 					/* Should be an empty string! */
-					tpp_assert(tpp_lexer_parsestring_is_single_chunk(self) ==
-					           TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY);
+					tpp_assert(tpp_lexer_decodestring_is_single_chunk(self tpp_lexer_decodestring_single_chunk_flags__arg) ==
+					           TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY);
 					goto again_yield_after_eof_decoded;
 				case TPP_TOK_SPACE:
 				TPP_CASE_TPP_TOK_COMMENT_NOLINE
@@ -1102,7 +1195,7 @@ again_yield_after_eof_decoded:
 					break;
 				case TPP_TOK_LF:
 				TPP_CASE_TPP_TOK_COMMENT_LINE
-					if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+					if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONLF))
 						goto again_yield_after_eof_decoded;
 					break;
 				default:
@@ -1163,7 +1256,9 @@ again_yield_after_eof_decoded:
 			}
 		}
 		return result;
-	} else {
+	} else
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
+	{
 		tpp_errno result;
 		TPP_REF tpp_string *string;
 do_multi_chunk_string:

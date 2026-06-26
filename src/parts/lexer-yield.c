@@ -323,7 +323,7 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 
 		/* Parse the string that the user entered. */
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_string_feature_test_cb,
-		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
 		tok = tpp_lexer_gettok(self);
@@ -608,7 +608,7 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
 	} else {
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_yield_handle__Pragma_string,
-		                                 self, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		                                 self, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 	}
 	if (TPP_ISERR(error))
 		return TPP_TOK_OFERR(error);
@@ -961,7 +961,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	} else {
 		tpp_errno error;
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_tpp_identifier_cb,
-		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
 		/* Warning if current token isn't EOF */
 		if (!TPP_ISERR(error) && tpp_lexer_gettoken(self)->tt_id != TPP_TOK_EOF)
@@ -1463,7 +1463,8 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
 #if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
 	/* TODO: __TPP_STR_DECOMPILE */
-	/* TODO: Implement using "tpp_lexer_parsestring_cb" + TPP_FILE_KIND_SUBTEXT */
+	/* TODO: Implement using "tpp_lexer_parsestring_cb" + TPP_FILE_KIND_SUBTEXT
+	 * NOTE: This is a case where "TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS" must NOT be set */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
 #if TPP_HAVE_MACRO___TPP_STR_PACK
 	/* TODO: __TPP_STR_PACK */

@@ -1355,8 +1355,21 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
 
 /* Flags for `tpp_lexer_parsestring()' & friends. */
 #define TPP_LEXER_PARSESTRING_FLAG_NORMAL      0x0000 /* Normal flags */
+#if TPP_HAVE_STRING_AUTO_CONCAT
 #define TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE 0x0001 /* Stop if a NOLINE-COMMENT or SPACE token is hit */
 #define TPP_LEXER_PARSESTRING_FLAG_STOPONLF    0x0002 /* Stop if a LINE-COMMENT or LF token is hit */
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
+#if TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
+#define TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS  0x0004 /* For "tpp_lexer_parsestring_cb()" only: allow "cb" to be called with a stack-allocated
+                                                       * buffers (and a valid, but unrelated, possibly NULL "chunk" argument) when decoding a
+                                                       * string like "\xFF". When this flag it's set, TPP will be forced to allocate a fresh
+                                                       * heap-tpp_string for such tokens, which will be passed to "cb" instead.
+                                                       *
+                                                       * This flag may be set to speed up callbacks that don't "tpp_string_incref()" the given
+                                                       * "chunk" argument, but is otherwise optional. */
+#else /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
+#define TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS  0x0000 /* No-op */
+#endif /* !TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 
 /* Same as "tpp_lexer_decodestring()", but also "tpp_lexer_yield()" to the next token.
  * Then, if that token is also string-like (TPP_TOK_ISSTRING()), decode it also,

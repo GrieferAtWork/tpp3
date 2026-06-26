@@ -136,7 +136,7 @@ again_parse_string:
 	if (TPP_TOK_ISSTRING(tok)) {
 		/* Parse+process string (using "tpp_lexer_parsestring_cb()") */
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_pushpopmacro_cb,
-		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 	} else {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
 		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
@@ -254,7 +254,7 @@ tpp_lexer_process_pragma_deprecated(tpp_lexer *tpp_restrict self) {
 again_parse_string:
 	if (TPP_TOK_ISSTRING(tok)) {
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_deprecated_cb,
-		                                 self, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		                                 self, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 	} else {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
 		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
@@ -365,7 +365,7 @@ again_parse_string:
 
 	TPP_CASE_TPP_TOK_STRING
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_extension_cb,
-		                                 self, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		                                 self, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 		break;
 
 	default:

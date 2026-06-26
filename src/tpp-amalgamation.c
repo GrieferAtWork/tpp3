@@ -73,6 +73,7 @@
 #define tef_TPP_EXT_TPP_TOK_BLOCK_STRING_LITERAL         TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_BLOCK_STRING_LITERAL)
 #define tef_TPP_EXT_TPP_TOK_BLOCK_CHAR_LITERAL           TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_BLOCK_CHAR_LITERAL)
 #define tef_TPP_EXT_STRING_ALLOW_MULTILINE               TPP_INTERNAL(tef_TPP_EXT_STRING_ALLOW_MULTILINE)
+#define tef_TPP_EXT_STRING_AUTO_CONCAT                   TPP_INTERNAL(tef_TPP_EXT_STRING_AUTO_CONCAT)
 #define tef_TPP_EXT_TPP_TOK_EXCLAIM_EXCLAIM              TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_EXCLAIM_EXCLAIM)
 #define tef_TPP_EXT_TPP_TOK_EXCLAIM_EQUAL                TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_EXCLAIM_EQUAL)
 #define tef_TPP_EXT_TPP_TOK_EXCLAIM_EQUAL_EQUAL          TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_EXCLAIM_EQUAL_EQUAL)
@@ -321,6 +322,7 @@
 #define tff_TPP_TOK_BLOCK_STRING_LITERAL                 TPP_INTERNAL(tff_TPP_TOK_BLOCK_STRING_LITERAL)
 #define tff_TPP_TOK_BLOCK_CHAR_LITERAL                   TPP_INTERNAL(tff_TPP_TOK_BLOCK_CHAR_LITERAL)
 #define tff_STRING_ALLOW_MULTILINE                       TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE)
+#define tff_STRING_AUTO_CONCAT                           TPP_INTERNAL(tff_STRING_AUTO_CONCAT)
 #define tff_TPP_TOK_EXCLAIM_EXCLAIM                      TPP_INTERNAL(tff_TPP_TOK_EXCLAIM_EXCLAIM)
 #define tff_TPP_TOK_EXCLAIM_EQUAL                        TPP_INTERNAL(tff_TPP_TOK_EXCLAIM_EQUAL)
 #define tff_TPP_TOK_EXCLAIM_EQUAL_EQUAL                  TPP_INTERNAL(tff_TPP_TOK_EXCLAIM_EQUAL_EQUAL)
@@ -8199,6 +8201,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		/* .tff_STRING_ALLOW_MULTILINE               = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ALLOW_MULTILINE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT)
+		/* .tff_STRING_AUTO_CONCAT                   = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_AUTO_CONCAT),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM)
 		/* .tff_TPP_TOK_EXCLAIM_EXCLAIM              = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM) */
@@ -26435,39 +26440,47 @@ tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
                          tpp_formatprinter data_printer,
                          tpp_formatprinter utf8_printer,
                          void *arg, unsigned int flags) {
-	tpp_token_id tok;
-	tpp_ssize result = 0, temp;
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_AUTO_CONCAT)
+	if (!tpp_lexer_has(self, STRING_AUTO_CONCAT)) {
+	} else
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
+#if TPP_HAVE_STRING_AUTO_CONCAT
+	{
+		tpp_token_id tok;
+		tpp_ssize result = 0, temp;
 again:
-	temp = tpp_lexer_decodestring(self, data_printer, utf8_printer, arg);
-	if tpp_unlikely(temp < 0)
-		return temp;
-	result += temp;
+		temp = tpp_lexer_decodestring(self, data_printer, utf8_printer, arg);
+		if tpp_unlikely(temp < 0)
+			return temp;
+		result += temp;
 
-	/* Yield to next token */
+		/* Yield to next token */
 again_yield:
-	tok = tpp_lexer_yield_blocking(self);
-	switch (tok) {
+		tok = tpp_lexer_yield_blocking(self);
+		switch (tok) {
 
-	TPP_CASE_TPP_TOK_STRING
-		goto again;
+		TPP_CASE_TPP_TOK_STRING
+			goto again;
 
-	case TPP_TOK_SPACE:
-	TPP_CASE_TPP_TOK_COMMENT_NOLINE
-		if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
-			goto again_yield;
-		break;
-	case TPP_TOK_LF:
-	TPP_CASE_TPP_TOK_COMMENT_LINE
-		if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
-			goto again_yield;
-		break;
+		case TPP_TOK_SPACE:
+		TPP_CASE_TPP_TOK_COMMENT_NOLINE
+			if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+				goto again_yield;
+			break;
+		case TPP_TOK_LF:
+		TPP_CASE_TPP_TOK_COMMENT_LINE
+			if (!(flags & TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE))
+				goto again_yield;
+			break;
 
-	default:
-		if (TPP_TOK_ISERR(tok))
-			result = (tpp_ssize)TPP_TOK_ASERR(tok);
-		break;
+		default:
+			if (TPP_TOK_ISERR(tok))
+				result = (tpp_ssize)TPP_TOK_ASERR(tok);
+			break;
+		}
+		return result;
 	}
-	return result;
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
 }
 
 
@@ -26635,6 +26648,9 @@ tpp_lexer_parsestring_cb(tpp_lexer *self,
                          void *arg, unsigned int flags) {
 	unsigned int how;
 again:
+	/* TODO: Lexer feature to disable adjacent-string-token auto-concat
+	 *       (C might have it, but not all languages do; so there should
+	 *       be a way to disable it) */
 	how = tpp_lexer_parsestring_is_single_chunk(self);
 	if (how == TPP_LEXER_PARSESTRING_IS_SINGLE_CHUNK_EMPTY) {
 		tpp_token_id tok;
