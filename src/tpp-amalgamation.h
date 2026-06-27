@@ -6222,7 +6222,12 @@ TPP_DECL_END
 #ifndef TPP_HAVE_FILE_SUBTEXT
 #define TPP_HAVE_FILE_SUBTEXT                     \
 	(TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_EMBED || \
-	 TPP_HAVE_MACRO___TPP_STR_DECOMPILE)
+	 TPP_HAVE_MACRO__Pragma ||                    \
+	 TPP_HAVE_MACRO___pragma ||                   \
+	 TPP_HAVE_MACRO___TPP_IDENTIFIER ||           \
+	 TPP_HAVE_MACRO___TPP_STR_DECOMPILE ||        \
+	 TPP_HAVE_MACRO___TPP_STR_PACK ||             \
+	 TPP_HAVE_MACRO___TPP_COUNT_TOKENS)
 #endif /* !TPP_HAVE_FILE_SUBTEXT */
 
 /* Enable support for `tpp_file::tf_prev' */
@@ -7873,7 +7878,14 @@ typedef enum tpp_token_id {
 #endif /* !TPP_HAVE_WARNINGS */
 
 /* Check if a given "tpp_token_id id" describes an error (rather than a token) */
-#define TPP_TOK_ISERR(id)  ((int)(id) < 0)
+#define TPP_TOK_ISERR(id) ((int)(id) < 0)
+
+/* Check if a given "tpp_token_id id" describes an error, or TPP_TOK_EOF */
+#if 1
+#define TPP_TOK_ISERR_OR_EOF(id) ((int)(id) <= 0)
+#else
+#define TPP_TOK_ISERR_OR_EOF(id) (TPP_TOK_ISERR(id) || (id) == TPP_TOK_EOF)
+#endif
 
 /* Return the "tpp_token_id" representation of "err".
  * The caller must ensure that "err" has an associated "TPP_TOK_E*" entry. */

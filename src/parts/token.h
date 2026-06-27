@@ -108,7 +108,14 @@ typedef enum tpp_token_id {
 #endif /* !TPP_HAVE_WARNINGS */
 
 /* Check if a given "tpp_token_id id" describes an error (rather than a token) */
-#define TPP_TOK_ISERR(id)  ((int)(id) < 0)
+#define TPP_TOK_ISERR(id) ((int)(id) < 0)
+
+/* Check if a given "tpp_token_id id" describes an error, or TPP_TOK_EOF */
+#if 1
+#define TPP_TOK_ISERR_OR_EOF(id) ((int)(id) <= 0)
+#else
+#define TPP_TOK_ISERR_OR_EOF(id) (TPP_TOK_ISERR(id) || (id) == TPP_TOK_EOF)
+#endif
 
 /* Return the "tpp_token_id" representation of "err".
  * The caller must ensure that "err" has an associated "TPP_TOK_E*" entry. */

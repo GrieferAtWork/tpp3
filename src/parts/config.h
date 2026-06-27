@@ -2385,7 +2385,12 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_FILE_SUBTEXT
 #define TPP_HAVE_FILE_SUBTEXT                     \
 	(TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_EMBED || \
-	 TPP_HAVE_MACRO___TPP_STR_DECOMPILE)
+	 TPP_HAVE_MACRO__Pragma ||                    \
+	 TPP_HAVE_MACRO___pragma ||                   \
+	 TPP_HAVE_MACRO___TPP_IDENTIFIER ||           \
+	 TPP_HAVE_MACRO___TPP_STR_DECOMPILE ||        \
+	 TPP_HAVE_MACRO___TPP_STR_PACK ||             \
+	 TPP_HAVE_MACRO___TPP_COUNT_TOKENS)
 #endif /* !TPP_HAVE_FILE_SUBTEXT */
 
 /* Enable support for `tpp_file::tf_prev' */
