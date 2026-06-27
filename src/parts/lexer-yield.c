@@ -1547,12 +1547,10 @@ tpp_lexer_yield_handle___TPP_COUNT_TOKENS(tpp_lexer *tpp_restrict self) {
 
 
 #if TPP_HAVE_MACRO___TPP_STR_SIZE
-static TPP_WUNUSED tpp_errno TPPCALL 
-tpp_lexer_handle_str_size(void *arg, tpp_string *chunk, tpp_char const *str, tpp_size length) {
-	(void)chunk;
+static TPP_FORMATPRINTER_DEFINE(tpp_lexer_handle_str_size, arg, str, length) {
+	(void)arg;
 	(void)str;
-	*(tpp_size *)arg = length;
-	return TPP_EOK;
+	return (tpp_ssize)length;
 }
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -1573,16 +1571,23 @@ tpp_lexer_yield_handle___TPP_STR_SIZE(tpp_lexer *tpp_restrict self) {
 	if tpp_unlikely(TPP_TOK_ISERR(tok))
 		return tok;
 
+	str_length = 0;
+	error = TPP_EOK;
 	if (!TPP_TOK_ISSTRING(tok)) {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
 		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
-#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
-		error = TPP_EOK;
-#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
-		str_length = 0;
+#endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 	} else {
-		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_str_size, &str_length,
-		                                 TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+		tpp_ssize status;
+		status = tpp_lexer_parsestring_ex(self,
+		                                  &tpp_lexer_handle_str_size,
+		                                  &tpp_lexer_handle_str_size, NULL,
+		                                  TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		if (status < 0) {
+			error = (tpp_errno)(int)status;
+		} else {
+			str_length = (tpp_size)status;
+		}
 	}
 	if (TPP_ISERR(error))
 		return TPP_TOK_OFERR(error);

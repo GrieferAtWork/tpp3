@@ -8263,7 +8263,9 @@ typedef enum tpp_token_id {
 #endif /* !TPP_HAVE_TPP_TOK_STRINGLIKE */
 
 	/* Sort multi-char tokens by their first character (to make it possible to
-	 * define "tok >= X && tok <= Y"-style checks for multi-char-starts-with-z */
+	 * define "tok >= X && tok <= Y"-style checks for multi-char-starts-with-z)
+	 *
+	 * As a matter of fact: multi-char tokens are sorted lexicographically! */
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_EXCLAIM
 	TPP_TOK_MC_STARTSWITH_EXCLAIM_MIN,
 	TPP_INTERNAL(_TPP_TOK_MC_STARTSWITH_EXCLAIM_MIN) = TPP_TOK_MC_STARTSWITH_EXCLAIM_MIN - 1,
@@ -9232,6 +9234,8 @@ typedef struct tpp_token {
 } tpp_token;
 
 /* Public API */
+#define tpp_token_move(self, other) \
+	(void)(*(self) = *(other))
 #define tpp_token_copy(self, other)             \
 	(void)(*(self) = *(other),                  \
 	       !((self)->TPP_INTERNAL(tt_chunk)) || \
@@ -9250,6 +9254,11 @@ typedef struct tpp_token {
 	(void)((self)->TPP_INTERNAL(tt_id) = (id))
 #define tpp_token_setkwd(self, kwd) \
 	(void)((self)->TPP_INTERNAL(tt_id) = ((self)->TPP_INTERNAL(tt_kwd) = (kwd))->TPP_INTERNAL(tk_id))
+
+/* Set the text-range of the token.
+ * WARNING: When used on tpp_lexer_gettoken(), the given "end" pointer
+ *          also specifies where the next call to tpp_lexer_yield() will
+ *          start scanning for tokens! */
 #define tpp_token_setrange(self, start, end)         \
 	(void)((self)->TPP_INTERNAL(tt_start) = (start), \
 	       (self)->TPP_INTERNAL(tt_end)   = (end))
