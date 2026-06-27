@@ -53,6 +53,40 @@ tpp_extensions_fini(tpp_extensions *tpp_restrict self) {
 	}
 }
 
+#if TPP_HAVE_LEXER_COPY
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_extensions_copy(tpp_extensions *tpp_restrict self,
+                    tpp_extensions const *tpp_restrict from) {
+	tpp_extensions *last = self;
+	self->te_state   = from->te_state;
+	self->te_pushcnt = from->te_pushcnt;
+	while (from->te_prev) {
+		tpp_extensions *from_prev_copy;
+		from = from->te_prev;
+		from_prev_copy = _tpp_extensions_alloc();
+		if tpp_unlikely(!from_prev_copy) {
+			if (self != last) {
+				tpp_extensions *iter = self->te_prev;
+				for (;;) {
+					tpp_extensions *iter_prev = iter->te_prev;
+					_tpp_extensions_free(iter);
+					if (iter == last)
+						break;
+					iter = iter_prev;
+				}
+			}
+			return TPP_ENOMEM;
+		}
+		last->te_prev = from_prev_copy;
+		from_prev_copy->te_state   = from->te_state;
+		from_prev_copy->te_pushcnt = from->te_pushcnt;
+		last = from_prev_copy;
+	}
+	last->te_prev = NULL;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
 /* Pop the current extensions state (may only be called when `tpp_extensions_canpop(self)') */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_extensions_pop(tpp_extensions *tpp_restrict self) {

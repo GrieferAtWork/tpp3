@@ -235,6 +235,92 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_PATH */
 }
 
+
+#if TPP_HAVE_LEXER_COPY
+/* Initialize "self" as a copy of "from". This will copy everything
+ * configured in "from" (features, extensions, allocated keyword IDs,
+ * macros, include paths, warnings, etc), into "self". The only thing
+ * that is not copied is the #include-stack, meaning that after a call
+ * to this function, the caller must still call `tpp_lexer_initfile_*'
+ *
+ * Additionally, the following properties are not copied:
+ * - tpp_keyword_misc_getuserdata_dtor()  (only "tpp_keyword_misc_getuserdata()"
+ *                                         is copied; dtors are set to "NULL")
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_copy(tpp_lexer *tpp_restrict self,
+               tpp_lexer const *tpp_restrict from) {
+	tpp_errno error;
+#if TPP_HAVE_LEXER_TIME
+	error = tpp_time_copy(&self->tl_time, &from->tl_time);
+	if (TPP_ISERR(error))
+		goto err;
+#endif /* TPP_HAVE_LEXER_TIME */
+#if TPP_HAVE_WARNINGS
+	tpp_warnings_init(&self->tl_warn);
+#endif /* TPP_HAVE_WARNINGS */
+#if TPP_HAVE_INCLUDE_PATH
+	error = tpp_include_paths_copy(&self->tl_include_paths,
+	                               &from->tl_include_paths);
+	if (TPP_ISERR(error))
+		goto err_warn;
+#endif /* TPP_HAVE_INCLUDE_PATH */
+#if TPP_HAVE_EXTENSIONS
+	error = tpp_extensions_copy(&self->tl_exts, &from->tl_exts);
+	if (TPP_ISERR(error))
+		goto err_warn_incl;
+#endif /* TPP_HAVE_EXTENSIONS */
+	error = tpp_keywords_copy(&self->tl_kwds, &from->tl_kwds);
+	if (TPP_ISERR(error))
+		goto err_warn_incl_exts;
+
+	/* Copy stuff that can't cause errors... */
+#if TPP_HAVE_FEATURES
+	self->tl_feat = from->tl_feat;
+#endif /* TPP_HAVE_FEATURES */
+#if TPP_HAVE_LEXER_STATE_FLAGS
+	self->tl_state = from->tl_state;
+#endif /* TPP_HAVE_LEXER_STATE_FLAGS */
+#if TPP_HAVE_WARNINGS
+#if !defined(TPP_CONFIG_WARNPRINTER) && TPP_HAVE_BUILTIN_WARNPRINTER <= 0
+	self->tl_warnprinter = from->tl_warnprinter;
+#endif /* !TPP_CONFIG_WARNPRINTER && TPP_HAVE_BUILTIN_WARNPRINTER <= 0 */
+#endif /* TPP_HAVE_WARNINGS */
+#if TPP_HAVE_LEXER_PARSEEXPR
+#if !defined(TPP_CONFIG_EXPRPARSER) && TPP_HAVE_BUILTIN_EXPRPARSER <= 0
+	self->tl_expr_parser_cb = from->tl_expr_parser_cb;
+#endif /* !TPP_CONFIG_EXPRPARSER && TPP_HAVE_BUILTIN_EXPRPARSER <= 0 */
+#endif /* TPP_HAVE_LEXER_PARSEEXPR */
+#if TPP_HAVE_WARNING_ERROR
+	self->tl_error_count = from->tl_error_count;
+#if TPP_ERROR_LIMIT < 0
+	self->tl_error_count = from->tl_error_limit;
+#endif /* TPP_ERROR_LIMIT < 0 */
+#endif /* TPP_HAVE_WARNING_ERROR */
+#if TPP_HAVE_MACRO___COUNTER__
+	self->tl_builtin_counter = from->tl_builtin_counter;
+#endif /* TPP_HAVE_MACRO___COUNTER__ */
+	return TPP_EOK;
+err_warn_incl_exts:
+#if TPP_HAVE_EXTENSIONS
+	tpp_extensions_fini(&self->tl_exts);
+err_warn_incl:
+#endif /* TPP_HAVE_EXTENSIONS */
+#if TPP_HAVE_INCLUDE_PATH
+	tpp_include_paths_fini(&self->tl_include_paths);
+err_warn:
+#endif /* TPP_HAVE_INCLUDE_PATH */
+#if TPP_HAVE_WARNINGS
+	tpp_warnings_fini(&self->tl_warn);
+#endif /* TPP_HAVE_WARNINGS */
+err:
+	return error;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
+
 /* Finalize the currently loaded file (including any extra files
  * found on the #include-stack, but that hadn't been popped yet)
  *

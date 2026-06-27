@@ -59,6 +59,38 @@ tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self) {
 	tpp_free(self->tmps_vec);
 }
 
+#if TPP_HAVE_LEXER_COPY
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_macro_pushstack_copy(tpp_macro_pushstack *tpp_restrict self,
+                         tpp_macro_pushstack const *tpp_restrict from) {
+	tpp_size i;
+	tpp_macro_pushent *vec;
+	self->tmps_cnt = from->tmps_cnt;
+	self->tmps_vec = NULL;
+	if (self->tmps_cnt == 0)
+		return TPP_EOK;
+	vec = (tpp_macro_pushent *)tpp_malloc(self->tmps_cnt * sizeof(tpp_macro_pushent));
+	if tpp_unlikely(!vec)
+		return TPP_ENOMEM;
+	self->tmps_vec = vec;
+	for (i = 0; i < self->tmps_cnt; ++i) {
+		tpp_macro_pushent const *src = &from->tmps_vec[i];
+		tpp_macro_pushent *dst = &vec[i];
+		dst->tmpe_count = src->tmpe_count;
+		dst->tmpe_macro = tpp_macro_copy(src->tmpe_macro);
+		if tpp_unlikely(!dst->tmpe_macro) {
+			while (i--) {
+				dst = &vec[i];
+				tpp_macro_decref(dst->tmpe_macro);
+			}
+			return TPP_ENOMEM;
+		}
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
+
 /* Allocate space for- and return a new (uninitialized) macro-push entry
  * @return: * :   The newly allocated macro-push entry.
  * @return: NULL: Out-of-memory (TPP_ENOMEM) */
@@ -645,6 +677,15 @@ tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
 	_tpp_keyword_free(self);
 }
 
+static TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_destroychain(tpp_keyword *tpp_restrict chain) {
+	do {
+		TPP_REF tpp_keyword *next = chain->tk_next;
+		tpp_keyword_destroy(chain);
+		chain = next;
+	} while (chain);
+}
+
 
 TPP_IMPL TPP_REF tpp_keyword *tpp_keywords_empty_map[1] = { NULL };
 
@@ -655,15 +696,202 @@ tpp_keywords_fini(tpp_keywords *tpp_restrict self) {
 		tpp_hash i;
 		for (i = 0; i <= self->tks_bckm; ++i) {
 			TPP_REF tpp_keyword *chain = bckv[i];
-			while (chain) {
-				TPP_REF tpp_keyword *next = chain->tk_next;
-				tpp_keyword_destroy(chain);
-				chain = next;
-			}
+			if (chain)
+				tpp_keyword_destroychain(chain);
 		}
 		tpp_free(bckv);
 	}
 }
+
+#if TPP_HAVE_LEXER_COPY
+#if TPP_HAVE_KEYWORD_MISC
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
+tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
+	tpp_keyword_misc *result = _tpp_keyword_misc_alloc();
+	if tpp_unlikely(!result)
+		return NULL;
+#if TPP_HAVE_KEYWORD_FLAGS
+	result->tkm_flags = self->tkm_flags;
+#endif /* TPP_HAVE_KEYWORD_FLAGS */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+	result->tkm_file_guard = self->tkm_file_guard; /* Relocated into the new keyword-table later */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+	{
+		tpp_errno error = tpp_macro_pushstack_copy(&result->tkm_macro_pushstack,
+		                                           &self->tkm_macro_pushstack);
+		tpp_assert(!TPP_ISERR(error) || error == TPP_ENOMEM);
+		if (TPP_ISERR(error)) {
+			_tpp_keyword_free(result);
+			return NULL;
+		}
+	}
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+	result->tkm_builtin_counter = self->tkm_builtin_counter;
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+#if TPP_HAVE_KEYWORD_USERDATA
+	result->tkm_userdata_ptr  = self->tkm_userdata_ptr;
+	result->tkm_userdata_dtor = NULL; /* Intentionally set to "NULL"! */
+#endif /* TPP_HAVE_KEYWORD_USERDATA */
+	return result;
+}
+#endif /* TPP_HAVE_KEYWORD_MISC */
+
+/* Copy+return "self", but leave "return->tk_next" undefined */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
+tpp_keyword_copy(tpp_keyword const *tpp_restrict self) {
+	tpp_keyword *result;
+	result = _tpp_keyword_alloc(self->tk_len);
+	if (result == NULL)
+		return NULL;
+#if TPP_HAVE_KEYWORD_MISC
+	result->tk_misc = NULL;
+	if (self->tk_misc) {
+		result->tk_misc = tpp_keyword_copymisc(self->tk_misc);
+		if tpp_unlikely(!result->tk_misc) {
+			_tpp_keyword_free(result);
+			return NULL;
+		}
+	}
+#endif /* TPP_HAVE_KEYWORD_MISC */
+	result->tk_id = self->tk_id;
+#if TPP_HAVE_CPP_MACROS
+	result->tk_macro = NULL;
+	if (self->tk_macro) {
+		result->tk_macro = tpp_macro_copy(self->tk_macro);
+		if tpp_unlikely(!result->tk_macro) {
+#if TPP_HAVE_KEYWORD_MISC
+			if (result->tk_misc)
+				tpp_keyword_misc_destroy(result->tk_misc);
+#endif /* TPP_HAVE_KEYWORD_MISC */
+			_tpp_keyword_free(result);
+			return NULL;
+		}
+	}
+#endif /* TPP_HAVE_CPP_MACROS */
+	result->tk_hash = self->tk_hash;
+	tpp_refcnt_init(&result->tk_refcnt, 1);
+	result->tk_len = self->tk_len;
+	tpp_memcpy(result->tk_kwd, self->tk_kwd, (self->tk_len + 1) * sizeof(tpp_char));
+	return result;
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
+tpp_keyword_copychain(tpp_keyword const *tpp_restrict self) {
+	tpp_keyword *result = tpp_keyword_copy(self);
+	tpp_keyword *last = result;
+	while (self->tk_next) {
+		tpp_keyword *next;
+		self = self->tk_next;
+		next = tpp_keyword_copy(self);
+		if tpp_unlikely(!next)
+			goto err_r;
+		last->tk_next = next;
+		last = next;
+	}
+	last->tk_next = NULL;
+	return result;
+err_r:
+	last->tk_next = NULL;
+	tpp_keyword_destroychain(result);
+	return NULL;
+}
+
+#if TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO
+/* Relocate "self->tm_deffile" in case it references a keyword */
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
+                           tpp_keywords const *tpp_restrict keywords) {
+	tpp_char const *deffile = (tpp_char const *)self->tm_deffile;
+	if (deffile) {
+		tpp_size deffile_len = tpp_strlen((char const *)deffile);
+		tpp_hash deffile_hash = tpp_hashof(deffile, deffile_len);
+		tpp_keyword const *deffile_kwd;
+		deffile_kwd = tpp_keywords_getkeyword(keywords, deffile,
+		                                      deffile_len, deffile_hash);
+		if (deffile_kwd)
+			self->tm_deffile = tpp_keyword_getkwdcstr(deffile_kwd);
+	}
+}
+#endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keywords_copy(tpp_keywords *tpp_restrict self,
+                  tpp_keywords const *tpp_restrict from) {
+	self->tks_kwdc = from->tks_kwdc;
+	self->tks_bckm = from->tks_bckm;
+	self->tks_bckv = from->tks_bckv;
+	if (self->tks_bckv != tpp_keywords_empty_map) {
+		TPP_REF tpp_keyword **bckv;
+		tpp_keyword const *const *src;
+		tpp_hash i;
+		bckv = (TPP_REF tpp_keyword **)tpp_malloc((self->tks_bckm + 1) *
+		                                          sizeof(TPP_REF tpp_keyword *));
+		if tpp_unlikely(!bckv)
+			return TPP_ENOMEM;
+		self->tks_bckv = bckv;
+		src = (tpp_keyword const *const *)from->tks_bckv;
+		for (i = 0; i <= self->tks_bckm; ++i) {
+			tpp_keyword const *chain = src[i];
+			bckv[i] = NULL;
+			if (chain) {
+				tpp_keyword *copy;
+				copy = tpp_keyword_copychain(chain);
+				if tpp_unlikely(!copy) {
+					while (i--) {
+						copy = bckv[i];
+						if (copy)
+							tpp_keyword_destroychain(copy);
+					}
+					tpp_free(bckv);
+					return TPP_ENOMEM;
+				}
+				bckv[i] = copy;
+			}
+		}
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_MACROS
+		for (i = 0; i <= self->tks_bckm; ++i) {
+			tpp_keyword *chain = bckv[i];
+			for (; chain; chain = chain->tk_next) {
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO)
+				tpp_keyword_misc *misc = chain->tk_misc;
+				if (misc) {
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+					tpp_keyword const *guard = misc->tkm_file_guard;
+					if (guard && !tpp_keyword_isbuiltin(guard)) {
+						guard = tpp_keywords_getkeyword(self,
+						                                guard->tk_kwd,
+						                                guard->tk_len,
+						                                guard->tk_hash);
+						tpp_assert(guard && "File guard keyword not found even "
+						                    "though it should have been copied");
+						misc->tkm_file_guard = guard;
+					}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO
+					{
+						tpp_size j;
+						for (j = 0; j < misc->tkm_macro_pushstack.tmps_cnt; ++j) {
+							tpp_macro_pushent *ent = &misc->tkm_macro_pushstack.tmps_vec[j];
+							tpp_macro_relocate_deffile(ent->tmpe_macro, self);
+						}
+					}
+#endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
+				}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO) */
+#if TPP_HAVE_CPP_MACROS
+				if (chain->tk_macro)
+					tpp_macro_relocate_deffile(chain->tk_macro, self);
+#endif /* TPP_HAVE_CPP_MACROS */
+			}
+		}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_MACROS */
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
 
 /* Lookup keywords within the given keywords-table **ONLY**
  * @return: * :   The keyword in question

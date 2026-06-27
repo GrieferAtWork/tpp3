@@ -4654,10 +4654,8 @@ extern tpp_lexer *TPPLexer_Current;
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 #define ai_ins_str tma_ins_str /* Don't access */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
-#if TPP_DEBUG
-#define ai_name tma_name /* Don't access */
-/*#define ai_namesize tma_namelen*/
-#endif /* TPP_DEBUG */
+#undef ai_name      /* Use tpp_keyword_getkwdcstr(tpp_lexer_kwds_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
+#undef ai_namesize  /* Use tpp_keyword_getkwdlen(tpp_lexer_kwds_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
 
 #define TPPLCInfo tpp_lcinfo
 #define lc_line   lci_line /* Use tpp_lcinfo_getline() */

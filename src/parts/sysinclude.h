@@ -140,6 +140,12 @@ typedef struct tpp_include_paths {
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
 
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_copy(tpp_include_paths *tpp_restrict self,
+                       tpp_include_paths const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
+
 
 /* Access include paths */
 #define tpp_include_paths_numsystem(self)    tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_system_list))

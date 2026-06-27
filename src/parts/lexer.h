@@ -368,15 +368,30 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self);
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_fini(tpp_lexer *tpp_restrict self);
 
+#if TPP_HAVE_LEXER_COPY
+/* Initialize "self" as a copy of "from". This will copy everything
+ * configured in "from" (features, extensions, allocated keyword IDs,
+ * macros, include paths, warnings, etc), into "self". The only thing
+ * that is not copied is the #include-stack, meaning that after a call
+ * to this function, the caller must still call `tpp_lexer_initfile_*'
+ *
+ * Additionally, the following properties are not copied:
+ * - tpp_keyword_misc_getuserdata_dtor()  (only "tpp_keyword_misc_getuserdata()"
+ *                                         is copied; dtors are set to "NULL")
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_copy(tpp_lexer *tpp_restrict self,
+               tpp_lexer const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
+
 /* Finalize the currently loaded file (including any extra files
  * found on the #include-stack, but that hadn't been popped yet)
  *
  * This function must be called after "tpp_lexer_initfile_*" has been */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
-
-
-/* TODO: tpp_lexer_copy() -- Copies everything about the lexer, except for its token/include-stack */
 
 
 /* Initialize a lexer's file to read the given [text,text+text_size) blob.

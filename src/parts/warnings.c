@@ -60,6 +60,88 @@ tpp_warnings_fini(tpp_warnings *tpp_restrict self) {
 	}
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 }
+
+#if TPP_HAVE_LEXER_COPY || TPP_HAVE_WARNINGS_PUSH_POP
+#if TPP_HAVE_WARNING_SUPPRESS
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_warning_suppressions_copy(tpp_warning_suppressions *tpp_restrict self,
+                              tpp_warning_suppressions const *tpp_restrict from) {
+	self->tws_ctxa = self->tws_ctxc = from->tws_ctxc;
+	self->tws_ctxv = NULL;
+	if (self->tws_ctxc) {
+		tpp_warning_suppress_item *vec;
+		vec = (tpp_warning_suppress_item *)tpp_malloc(self->tws_ctxc *
+		                                              sizeof(tpp_warning_suppress_item));
+		if tpp_unlikely(!vec)
+			return TPP_ENOMEM;
+		tpp_memcpy(vec, from->tws_ctxv, self->tws_ctxc * sizeof(tpp_warning_suppress_item));
+		self->tws_ctxv = vec;
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_WARNING_SUPPRESS */
+
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_warnings_copyone(tpp_warnings *tpp_restrict self,
+                     tpp_warnings const *tpp_restrict from) {
+	self->tw_state = from->tw_state;
+#if TPP_HAVE_WARNINGS_PUSH_POP
+	self->tw_pushcnt = from->tw_pushcnt;
+#endif /* TPP_HAVE_WARNINGS_PUSH_POP */
+#if TPP_HAVE_WARNING_SUPPRESS
+	return tpp_warning_suppressions_copy(&self->tw_suppressions,
+	                                     &from->tw_suppressions);
+#else /* TPP_HAVE_WARNING_SUPPRESS */
+	return TPP_EOK;
+#endif /* !TPP_HAVE_WARNING_SUPPRESS */
+}
+#endif /* TPP_HAVE_LEXER_COPY || TPP_HAVE_WARNINGS_PUSH_POP */
+
+#if TPP_HAVE_LEXER_COPY
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_warnings_copy(tpp_warnings *tpp_restrict self,
+                  tpp_warnings const *tpp_restrict from) {
+#if TPP_HAVE_WARNINGS_PUSH_POP
+	tpp_warnings *last = self;
+	tpp_errno error = tpp_warnings_copyone(self, from);
+	if (TPP_ISERR(error))
+		return error;
+	while (from->tw_prev) {
+		tpp_warnings *from_prev_copy;
+		from = from->tw_prev;
+		from_prev_copy = _tpp_warnings_alloc();
+		if tpp_unlikely(!from_prev_copy) {
+			error = TPP_ENOMEM;
+			goto destroy_copied_warning_states_and_return_error;
+		}
+		last->tw_prev = from_prev_copy;
+		error = tpp_warnings_copyone(from_prev_copy, from);
+		if (TPP_ISERR(error)) {
+			_tpp_warnings_free(from_prev_copy);
+destroy_copied_warning_states_and_return_error:
+			if (self != last) {
+				tpp_warnings *iter = self->tw_prev;
+				for (;;) {
+					tpp_warnings *iter_prev = iter->tw_prev;
+					tpp_warnings_fini(iter);
+					_tpp_warnings_free(iter);
+					if (iter == last)
+						break;
+					iter = iter_prev;
+				}
+			}
+			return error;
+		}
+		last = from_prev_copy;
+	}
+	last->tw_prev = NULL;
+	return TPP_EOK;
+#else /* TPP_HAVE_WARNINGS_PUSH_POP */
+	return tpp_warnings_copyone(self, from);
+#endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
 #endif /* TPP_HAVE_WARNINGS_FINI */
 
 
@@ -115,41 +197,18 @@ tpp_warnings_getctx(tpp_warnings const *tpp_restrict self,
  * @return: * :   The newly allocated copy
  * @return: NULL: Out of memory. */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_warnings *TPPCALL
-tpp_warnings_copy(tpp_warnings const *tpp_restrict self) {
+tpp_warnings_dup(tpp_warnings const *tpp_restrict self) {
 	tpp_warnings *result = _tpp_warnings_alloc();
 	if tpp_unlikely(!result)
 		goto err;
-
-	/* Duplicate suppressions */
-#if TPP_HAVE_WARNING_SUPPRESS
-	if (self->tw_suppressions.tws_ctxc) {
-		tpp_warning_suppress_item *suppress_copy;
-		suppress_copy = (tpp_warning_suppress_item *)tpp_malloc(self->tw_suppressions.tws_ctxc *
-		                                                        sizeof(tpp_warning_suppress_item));
-		if tpp_unlikely(!suppress_copy)
-			goto err_r;
-		tpp_memcpy(suppress_copy, self->tw_suppressions.tws_ctxv,
-		           self->tw_suppressions.tws_ctxc *
-		           sizeof(tpp_warning_suppress_item));
-		result->tw_suppressions.tws_ctxv = suppress_copy;
-		result->tw_suppressions.tws_ctxc = self->tw_suppressions.tws_ctxc;
-		result->tw_suppressions.tws_ctxa = self->tw_suppressions.tws_ctxc;
-	} else {
-		tpp_warning_suppressions_init(&result->tw_suppressions);
-	}
-#endif /* TPP_HAVE_WARNING_SUPPRESS */
-
-	/* Duplicate remaining data fields... */
-	result->tw_state = self->tw_state;
+	if (TPP_ISERR(tpp_warnings_copyone(result, self)))
+		goto err_r;
 #if TPP_HAVE_WARNINGS_PUSH_POP
-	result->tw_prev    = self->tw_prev;
-	result->tw_pushcnt = self->tw_pushcnt;
+	result->tw_prev = self->tw_prev; /* Hadn't been copied by "tpp_warnings_copyone()" */
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 	return result;
-#if TPP_HAVE_WARNING_SUPPRESS
 err_r:
 	_tpp_warnings_free(result);
-#endif /* TPP_HAVE_WARNING_SUPPRESS */
 err:
 	return NULL;
 }
@@ -249,7 +308,7 @@ tpp_warnings_setctx_(tpp_warnings *tpp_restrict self,
 		if (state == old_state)
 			return TPP_EOK;
 #endif /* !__OPTIMIZE_SIZE__ */
-		copy = tpp_warnings_copy(self);
+		copy = tpp_warnings_dup(self);
 		if tpp_unlikely(!copy)
 			return TPP_ENOMEM;
 		self->tw_prev = copy;
@@ -355,7 +414,7 @@ tpp_warnings_invoke_(tpp_warnings const *tpp_restrict self, tpp_warning_id warni
 #if TPP_HAVE_WARNINGS_PUSH_POP
 		if (tpp_warnings_mustcopy(self)) {
 			tpp_warnings *copy;
-			copy = tpp_warnings_copy(self);
+			copy = tpp_warnings_dup(self);
 			if tpp_unlikely(!copy)
 				return TPP_ENOMEM;
 			self->tw_prev = copy;

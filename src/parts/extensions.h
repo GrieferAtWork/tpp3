@@ -80,6 +80,12 @@ typedef struct tpp_extensions {
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_extensions_fini(tpp_extensions *tpp_restrict self);
 
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_extensions_copy(tpp_extensions *tpp_restrict self,
+                    tpp_extensions const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
+
 /* Push the current extensions state */
 #define tpp_extensions_push(self) (void)(++(self)->TPP_INTERNAL(te_pushcnt))
 
@@ -99,6 +105,9 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 #else /* TPP_HAVE_EXTENSIONS_PUSH_POP */
 #define tpp_extensions_init(self) (void)((self)->TPP_INTERNAL(te_state) = tpp_extensions_state_default)
 #define tpp_extensions_fini(self) (void)0
+#if TPP_HAVE_LEXER_COPY
+#define tpp_extensions_copy(self, from) (*(self) = *(from), TPP_EOK)
+#endif /* TPP_HAVE_LEXER_COPY */
 #define tpp_extensions_setid(self, id, enabled) \
 	(tpp_extensions_state_setid(&(self)->TPP_INTERNAL(te_state), id, enabled), TPP_EOK)
 #endif /* !TPP_HAVE_EXTENSIONS_PUSH_POP */

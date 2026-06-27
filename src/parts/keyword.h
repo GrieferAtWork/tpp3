@@ -50,6 +50,11 @@ typedef struct tpp_macro_pushstack {
 	       (self)->TPP_INTERNAL(tmps_vec) = NULL)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self);
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_macro_pushstack_copy(tpp_macro_pushstack *tpp_restrict self,
+                         tpp_macro_pushstack const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
 
 /* Allocate space for- and return a new (uninitialized) macro-push entry
  * @return: * :   The newly allocated macro-push entry.
@@ -225,6 +230,8 @@ typedef struct tpp_keyword {
 #endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
 /* Public API for accessing "tpp_keyword" internals */
+#define tpp_keyword_isuser(self)     TPP_TOK_ISUSERKEYWORD((self)->TPP_INTERNAL(tk_id))
+#define tpp_keyword_isbuiltin(self)  (!tpp_keyword_isuser(self))
 #define tpp_keyword_getid(self)      ((self)->TPP_INTERNAL(tk_id))
 #define tpp_keyword_getkwd(self)     ((self)->TPP_INTERNAL(tk_kwd))
 #define tpp_keyword_getkwdcstr(self) ((char const *)(self)->TPP_INTERNAL(tk_kwd))
@@ -411,6 +418,11 @@ TPP_DECL TPP_REF tpp_keyword *tpp_keywords_empty_map[1]; /* Consider this one TP
 	       (self)->TPP_INTERNAL(tks_bckv) = tpp_keywords_empty_map)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_fini(tpp_keywords *tpp_restrict self);
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keywords_copy(tpp_keywords *tpp_restrict self,
+                  tpp_keywords const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
 
 /* Lookup keywords within the given keywords-table **ONLY**
  * @return: * :   The keyword in question

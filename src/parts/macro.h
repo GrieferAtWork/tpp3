@@ -98,9 +98,6 @@ typedef struct tpp_macro_argument {
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
 	tpp_size        TPP_INTERNAL(tma_ins);     /* [const] Amount of times the argument is inserted without expansion. */
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
-#if TPP_DEBUG
-	tpp_char const *TPP_INTERNAL(tma_name);    /* [1..1][const] Name of this macro (aliases `struct tpp_keyword::tk_kwd'). */
-#endif /* TPP_DEBUG */
 } tpp_macro_argument;
 
 
@@ -164,28 +161,35 @@ typedef struct tpp_macro {
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
 			struct tpp_macro_argbuf
 			                   *TPP_INTERNAL(tmf_argbuf);     /* [0..1][owned] Internal cache used during macro expansion */
-			tpp_macro_opcode    TPP_INTERNAL(tmf_expand)[TPP_FLEX_ARRAY]; /* [const][1..1] Sequence of `TPP_MACRO_OPCODE_*'-opcodes, together with their operands */
+			tpp_macro_opcode    TPP_INTERNAL(tmf_expand)[TPP_FLEX_ARRAY]; /* [const][1..n] Sequence of `TPP_MACRO_OPCODE_*'-opcodes, together with their operands */
 		} TPP_INTERNAL(tmd_func); /* [TPP_MACRO_KIND_ISFUNC(tm_kind)] */
 	} TPP_INTERNAL(tm_data);
 } tpp_macro;
 
-#define tpp_macro_sizeof_keyword() \
+#define _tpp_macro_sizeof_keyword() \
 	tpp_offsetof(tpp_macro, TPP_INTERNAL(tm_data))
-#define tpp_macro_sizeof_function(expand_count)                                                       \
+#define _tpp_macro_sizeof_function(expand_count)                                                      \
 	(tpp_offsetof(tpp_macro, TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_expand)) + \
 	 ((expand_count) * sizeof(tpp_macro_opcode)))
 
-#define tpp_macro_malloc_keyword()                     ((tpp_macro *)tpp_malloc(tpp_macro_sizeof_keyword()))
-#define tpp_macro_malloc_function(expand_count)        ((tpp_macro *)tpp_malloc(tpp_macro_sizeof_function(expand_count)))
-#define tpp_macro_trymalloc_function(expand_count)     ((tpp_macro *)tpp_trymalloc(tpp_macro_sizeof_function(expand_count)))
-#define tpp_macro_realloc_function(p, expand_count)    ((tpp_macro *)tpp_realloc(p, tpp_macro_sizeof_function(expand_count)))
-#define tpp_macro_tryrealloc_function(p, expand_count) ((tpp_macro *)tpp_tryrealloc(p, tpp_macro_sizeof_function(expand_count)))
-#define tpp_macro_free(p)                              tpp_free(p)
+#define _tpp_macro_alloc_keyword()                      ((tpp_macro *)tpp_malloc(_tpp_macro_sizeof_keyword()))
+#define _tpp_macro_alloc_function(expand_count)         ((tpp_macro *)tpp_malloc(_tpp_macro_sizeof_function(expand_count)))
+#define _tpp_macro_tryalloc_function(expand_count)      ((tpp_macro *)tpp_trymalloc(_tpp_macro_sizeof_function(expand_count)))
+#define _tpp_macro_realloc_function(p, expand_count)    ((tpp_macro *)tpp_realloc(p, _tpp_macro_sizeof_function(expand_count)))
+#define _tpp_macro_tryrealloc_function(p, expand_count) ((tpp_macro *)tpp_tryrealloc(p, _tpp_macro_sizeof_function(expand_count)))
+#define _tpp_macro_free(p)                              tpp_free(p)
 
 TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_macro_destroy(tpp_macro *tpp_restrict self);
 #define tpp_macro_isshared(self) tpp_refcnt_isshared(&(self)->TPP_INTERNAL(tm_refcnt))
 #define tpp_macro_incref(self)   tpp_refcnt_inc(&(self)->TPP_INTERNAL(tm_refcnt))
 #define tpp_macro_decref(self)   (void)(tpp_refcnt_decfetch(&(self)->TPP_INTERNAL(tm_refcnt)) || (tpp_macro_destroy(self), 0))
+
+#if TPP_HAVE_LEXER_COPY
+/* Allocate+return a hard-copy of "self"
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_macro *TPPCALL
+tpp_macro_copy(tpp_macro const *tpp_restrict self);
+#endif /* TPP_HAVE_LEXER_COPY */
 
 #if TPP_HAVE_MACRO_EQUALS
 /* Compare 2 macro definitions to see if they are identical. */
@@ -194,7 +198,8 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #endif /* TPP_HAVE_MACRO_EQUALS */
 
 /* Public API */
-#define tpp_macro_isfunc(self)         TPP_MACRO_KIND_ISFUNC((self)->TPP_INTERNAL(tm_kind))
+#define tpp_macro_isfunction(self)     TPP_MACRO_KIND_ISFUNC((self)->TPP_INTERNAL(tm_kind))
+#define tpp_macro_iskeyword(self)      (!tpp_macro_isfunction(self))
 #define tpp_macro_getbodychunk(self)   ((self)->TPP_INTERNAL(tm_body_chunk))
 #define tpp_macro_getbodystart(self)   ((self)->TPP_INTERNAL(tm_body_start))
 #define tpp_macro_getbodyend(self)     ((self)->TPP_INTERNAL(tm_body_end))
@@ -210,7 +215,7 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #define tpp_macro_isbodyascii(self) 1
 #endif /* !TPP_HAVE_UNICODE */
 
-/* The following all require the caller to ensure that `tpp_macro_isfunc(self)' */
+/* The following all require the caller to ensure that `tpp_macro_isfunction(self)' */
 #define tpp_macro_getfuncargc(self)      ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argc))
 #define tpp_macro_getfuncargtok(self, i) ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argv)[i].TPP_INTERNAL(tma_id))
 #define tpp_macro_getfunclparen(self)    TPP_MACRO_KIND_ASTOK((self)->TPP_INTERNAL(tm_kind))

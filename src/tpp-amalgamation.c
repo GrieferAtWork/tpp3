@@ -615,7 +615,6 @@
 #define tma_ins_exp                                      TPP_INTERNAL(tma_ins_exp)
 #define tma_ins_str                                      TPP_INTERNAL(tma_ins_str)
 #define tma_ins                                          TPP_INTERNAL(tma_ins)
-#define tma_name                                         TPP_INTERNAL(tma_name)
 #define TPP_MACRO_OPCODE_END                             TPP_INTERNAL(TPP_MACRO_OPCODE_END)
 #define TPP_MACRO_OPCODE_SKIP                            TPP_INTERNAL(TPP_MACRO_OPCODE_SKIP)
 #define TPP_MACRO_OPCODE_COPY                            TPP_INTERNAL(TPP_MACRO_OPCODE_COPY)
@@ -5905,6 +5904,38 @@ tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self) {
 	tpp_free(self->tmps_vec);
 }
 
+#if TPP_HAVE_LEXER_COPY
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_macro_pushstack_copy(tpp_macro_pushstack *tpp_restrict self,
+                         tpp_macro_pushstack const *tpp_restrict from) {
+	tpp_size i;
+	tpp_macro_pushent *vec;
+	self->tmps_cnt = from->tmps_cnt;
+	self->tmps_vec = NULL;
+	if (self->tmps_cnt == 0)
+		return TPP_EOK;
+	vec = (tpp_macro_pushent *)tpp_malloc(self->tmps_cnt * sizeof(tpp_macro_pushent));
+	if tpp_unlikely(!vec)
+		return TPP_ENOMEM;
+	self->tmps_vec = vec;
+	for (i = 0; i < self->tmps_cnt; ++i) {
+		tpp_macro_pushent const *src = &from->tmps_vec[i];
+		tpp_macro_pushent *dst = &vec[i];
+		dst->tmpe_count = src->tmpe_count;
+		dst->tmpe_macro = tpp_macro_copy(src->tmpe_macro);
+		if tpp_unlikely(!dst->tmpe_macro) {
+			while (i--) {
+				dst = &vec[i];
+				tpp_macro_decref(dst->tmpe_macro);
+			}
+			return TPP_ENOMEM;
+		}
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
+
 /* Allocate space for- and return a new (uninitialized) macro-push entry
  * @return: * :   The newly allocated macro-push entry.
  * @return: NULL: Out-of-memory (TPP_ENOMEM) */
@@ -6491,6 +6522,15 @@ tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
 	_tpp_keyword_free(self);
 }
 
+static TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_destroychain(tpp_keyword *tpp_restrict chain) {
+	do {
+		TPP_REF tpp_keyword *next = chain->tk_next;
+		tpp_keyword_destroy(chain);
+		chain = next;
+	} while (chain);
+}
+
 
 TPP_IMPL TPP_REF tpp_keyword *tpp_keywords_empty_map[1] = { NULL };
 
@@ -6501,15 +6541,202 @@ tpp_keywords_fini(tpp_keywords *tpp_restrict self) {
 		tpp_hash i;
 		for (i = 0; i <= self->tks_bckm; ++i) {
 			TPP_REF tpp_keyword *chain = bckv[i];
-			while (chain) {
-				TPP_REF tpp_keyword *next = chain->tk_next;
-				tpp_keyword_destroy(chain);
-				chain = next;
-			}
+			if (chain)
+				tpp_keyword_destroychain(chain);
 		}
 		tpp_free(bckv);
 	}
 }
+
+#if TPP_HAVE_LEXER_COPY
+#if TPP_HAVE_KEYWORD_MISC
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
+tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
+	tpp_keyword_misc *result = _tpp_keyword_misc_alloc();
+	if tpp_unlikely(!result)
+		return NULL;
+#if TPP_HAVE_KEYWORD_FLAGS
+	result->tkm_flags = self->tkm_flags;
+#endif /* TPP_HAVE_KEYWORD_FLAGS */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+	result->tkm_file_guard = self->tkm_file_guard; /* Relocated into the new keyword-table later */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+	{
+		tpp_errno error = tpp_macro_pushstack_copy(&result->tkm_macro_pushstack,
+		                                           &self->tkm_macro_pushstack);
+		tpp_assert(!TPP_ISERR(error) || error == TPP_ENOMEM);
+		if (TPP_ISERR(error)) {
+			_tpp_keyword_free(result);
+			return NULL;
+		}
+	}
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+	result->tkm_builtin_counter = self->tkm_builtin_counter;
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+#if TPP_HAVE_KEYWORD_USERDATA
+	result->tkm_userdata_ptr  = self->tkm_userdata_ptr;
+	result->tkm_userdata_dtor = NULL; /* Intentionally set to "NULL"! */
+#endif /* TPP_HAVE_KEYWORD_USERDATA */
+	return result;
+}
+#endif /* TPP_HAVE_KEYWORD_MISC */
+
+/* Copy+return "self", but leave "return->tk_next" undefined */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
+tpp_keyword_copy(tpp_keyword const *tpp_restrict self) {
+	tpp_keyword *result;
+	result = _tpp_keyword_alloc(self->tk_len);
+	if (result == NULL)
+		return NULL;
+#if TPP_HAVE_KEYWORD_MISC
+	result->tk_misc = NULL;
+	if (self->tk_misc) {
+		result->tk_misc = tpp_keyword_copymisc(self->tk_misc);
+		if tpp_unlikely(!result->tk_misc) {
+			_tpp_keyword_free(result);
+			return NULL;
+		}
+	}
+#endif /* TPP_HAVE_KEYWORD_MISC */
+	result->tk_id = self->tk_id;
+#if TPP_HAVE_CPP_MACROS
+	result->tk_macro = NULL;
+	if (self->tk_macro) {
+		result->tk_macro = tpp_macro_copy(self->tk_macro);
+		if tpp_unlikely(!result->tk_macro) {
+#if TPP_HAVE_KEYWORD_MISC
+			if (result->tk_misc)
+				tpp_keyword_misc_destroy(result->tk_misc);
+#endif /* TPP_HAVE_KEYWORD_MISC */
+			_tpp_keyword_free(result);
+			return NULL;
+		}
+	}
+#endif /* TPP_HAVE_CPP_MACROS */
+	result->tk_hash = self->tk_hash;
+	tpp_refcnt_init(&result->tk_refcnt, 1);
+	result->tk_len = self->tk_len;
+	tpp_memcpy(result->tk_kwd, self->tk_kwd, (self->tk_len + 1) * sizeof(tpp_char));
+	return result;
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
+tpp_keyword_copychain(tpp_keyword const *tpp_restrict self) {
+	tpp_keyword *result = tpp_keyword_copy(self);
+	tpp_keyword *last = result;
+	while (self->tk_next) {
+		tpp_keyword *next;
+		self = self->tk_next;
+		next = tpp_keyword_copy(self);
+		if tpp_unlikely(!next)
+			goto err_r;
+		last->tk_next = next;
+		last = next;
+	}
+	last->tk_next = NULL;
+	return result;
+err_r:
+	last->tk_next = NULL;
+	tpp_keyword_destroychain(result);
+	return NULL;
+}
+
+#if TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO
+/* Relocate "self->tm_deffile" in case it references a keyword */
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
+                           tpp_keywords const *tpp_restrict keywords) {
+	tpp_char const *deffile = (tpp_char const *)self->tm_deffile;
+	if (deffile) {
+		tpp_size deffile_len = tpp_strlen((char const *)deffile);
+		tpp_hash deffile_hash = tpp_hashof(deffile, deffile_len);
+		tpp_keyword const *deffile_kwd;
+		deffile_kwd = tpp_keywords_getkeyword(keywords, deffile,
+		                                      deffile_len, deffile_hash);
+		if (deffile_kwd)
+			self->tm_deffile = tpp_keyword_getkwdcstr(deffile_kwd);
+	}
+}
+#endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keywords_copy(tpp_keywords *tpp_restrict self,
+                  tpp_keywords const *tpp_restrict from) {
+	self->tks_kwdc = from->tks_kwdc;
+	self->tks_bckm = from->tks_bckm;
+	self->tks_bckv = from->tks_bckv;
+	if (self->tks_bckv != tpp_keywords_empty_map) {
+		TPP_REF tpp_keyword **bckv;
+		tpp_keyword const *const *src;
+		tpp_hash i;
+		bckv = (TPP_REF tpp_keyword **)tpp_malloc((self->tks_bckm + 1) *
+		                                          sizeof(TPP_REF tpp_keyword *));
+		if tpp_unlikely(!bckv)
+			return TPP_ENOMEM;
+		self->tks_bckv = bckv;
+		src = (tpp_keyword const *const *)from->tks_bckv;
+		for (i = 0; i <= self->tks_bckm; ++i) {
+			tpp_keyword const *chain = src[i];
+			bckv[i] = NULL;
+			if (chain) {
+				tpp_keyword *copy;
+				copy = tpp_keyword_copychain(chain);
+				if tpp_unlikely(!copy) {
+					while (i--) {
+						copy = bckv[i];
+						if (copy)
+							tpp_keyword_destroychain(copy);
+					}
+					tpp_free(bckv);
+					return TPP_ENOMEM;
+				}
+				bckv[i] = copy;
+			}
+		}
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_MACROS
+		for (i = 0; i <= self->tks_bckm; ++i) {
+			tpp_keyword *chain = bckv[i];
+			for (; chain; chain = chain->tk_next) {
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO)
+				tpp_keyword_misc *misc = chain->tk_misc;
+				if (misc) {
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+					tpp_keyword const *guard = misc->tkm_file_guard;
+					if (guard && !tpp_keyword_isbuiltin(guard)) {
+						guard = tpp_keywords_getkeyword(self,
+						                                guard->tk_kwd,
+						                                guard->tk_len,
+						                                guard->tk_hash);
+						tpp_assert(guard && "File guard keyword not found even "
+						                    "though it should have been copied");
+						misc->tkm_file_guard = guard;
+					}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO
+					{
+						tpp_size j;
+						for (j = 0; j < misc->tkm_macro_pushstack.tmps_cnt; ++j) {
+							tpp_macro_pushent *ent = &misc->tkm_macro_pushstack.tmps_vec[j];
+							tpp_macro_relocate_deffile(ent->tmpe_macro, self);
+						}
+					}
+#endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
+				}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO) */
+#if TPP_HAVE_CPP_MACROS
+				if (chain->tk_macro)
+					tpp_macro_relocate_deffile(chain->tk_macro, self);
+#endif /* TPP_HAVE_CPP_MACROS */
+			}
+		}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_MACROS */
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
 
 /* Lookup keywords within the given keywords-table **ONLY**
  * @return: * :   The keyword in question
@@ -7997,9 +8224,107 @@ tpp_macro_destroy(tpp_macro *tpp_restrict self) {
 		tpp_free(self->tm_data.tmd_func.tmf_argv);
 		tpp_free(self->tm_data.tmd_func.tmf_argbuf);
 	}
-	tpp_macro_free(self);
+	_tpp_macro_free(self);
 }
 
+#if TPP_HAVE_LEXER_COPY
+static unsigned int const tpp_macro_opcode_length[] = {
+	/* [TPP_MACRO_OPCODE_END]      = */ 1 + 0,
+	/* [TPP_MACRO_OPCODE_SKIP]     = */ 1 + 1,
+	/* [TPP_MACRO_OPCODE_COPY]     = */ 1 + 1,
+	/* [TPP_MACRO_OPCODE_INS_EXP]  = */ 1 + 2,
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
+	/* [TPP_MACRO_OPCODE_INS_STR]  = */ 1 + 2,
+#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
+#if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+	/* [TPP_MACRO_OPCODE_INS_CHR]  = */ 1 + 2,
+#endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
+	/* [TPP_MACRO_OPCODE_INS]      = */ 1 + 2,
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
+#if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
+	/* [TPP_MACRO_OPCODE_VA_COMMA] = */ 1 + 1,
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS */
+#if TPP_HAVE_VA_OPT_IN_MACROS
+	/* [TPP_MACRO_OPCODE_VA_OPT]   = */ 1 + 3,
+#endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+	/* [TPP_MACRO_OPCODE_VA_NARGS] = */ 1 + 1,
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
+};
+
+static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_size TPPCALL
+tpp_macro_func_expand_count(tpp_macro const *tpp_restrict self) {
+	tpp_macro_opcode const *iter = self->tm_data.tmd_func.tmf_expand;
+	tpp_assert(tpp_macro_isfunction(self));
+	for (;;) {
+		tpp_macro_opcode op = *iter;
+		tpp_assert(op < tpp_lengthof(tpp_macro_opcode_length));
+		iter += tpp_macro_opcode_length[op];
+		if (op == TPP_MACRO_OPCODE_END)
+			break;
+	}
+	return (tpp_size)(iter - self->tm_data.tmd_func.tmf_expand);
+}
+
+/* Allocate+return a hard-copy of "self"
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_macro *TPPCALL
+tpp_macro_copy(tpp_macro const *tpp_restrict self) {
+	TPP_REF tpp_macro *result;
+	if (tpp_macro_iskeyword(self)) {
+		result = _tpp_macro_alloc_keyword();
+		if tpp_unlikely(!result)
+			return NULL;
+	} else {
+		tpp_macro_argument *argv_copy;
+		tpp_size expand_count = tpp_macro_func_expand_count(self);
+		result = _tpp_macro_alloc_function(expand_count);
+		if tpp_unlikely(!result)
+			return NULL;
+		tpp_memcpy(result->tm_data.tmd_func.tmf_expand,
+		           self->tm_data.tmd_func.tmf_expand,
+		           expand_count * sizeof(tpp_macro_opcode));
+		result->tm_data.tmd_func.tmf_argc = self->tm_data.tmd_func.tmf_argc;
+		argv_copy = (tpp_macro_argument *)tpp_malloc(result->tm_data.tmd_func.tmf_argc *
+		                                             sizeof(tpp_macro_argument));
+		if tpp_unlikely(!argv_copy) {
+			_tpp_macro_free(result);
+			return NULL;
+		}
+		tpp_memcpy(argv_copy, self->tm_data.tmd_func.tmf_argv,
+		           result->tm_data.tmd_func.tmf_argc *
+		           sizeof(tpp_macro_argument));
+		result->tm_data.tmd_func.tmf_argv    = argv_copy;
+		result->tm_data.tmd_func.tmf_expbase = self->tm_data.tmd_func.tmf_expbase;
+#if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
+		result->tm_data.tmd_func.tmf_n_vaopt = self->tm_data.tmd_func.tmf_n_vaopt;
+#endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
+#if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
+		result->tm_data.tmd_func.tmf_n_vanargs = self->tm_data.tmd_func.tmf_n_vanargs;
+#endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
+		result->tm_data.tmd_func.tmf_argbuf = NULL; /* Lazily allocated once needed */
+	}
+	tpp_refcnt_init(&result->tm_refcnt, 1);
+	result->tm_kind = self->tm_kind;
+#if TPP_HAVE_MACRO_FLAGS
+	result->tm_flags = self->tm_flags;
+#endif /* TPP_HAVE_MACRO_FLAGS */
+	result->tm_body_chunk = self->tm_body_chunk;
+	if (result->tm_body_chunk) /* Strings can be shared like this (even across threads) */
+		tpp_string_incref(result->tm_body_chunk);
+	result->tm_body_start = self->tm_body_start;
+	result->tm_body_end = self->tm_body_end;
+#if TPP_HAVE_UNICODE
+	result->tm_body_enc = self->tm_body_enc;
+#endif /* TPP_HAVE_UNICODE */
+	result->tm_expansions = 0;                /* New lexer has empty #include-stack, so reset this */
+	result->tm_deffile    = self->tm_deffile; /* Relocated later if it's a keyword filename */
+	result->tm_deflc      = self->tm_deflc;
+	result->tm_body_lc    = self->tm_body_lc;
+	return result;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
 
 #if TPP_HAVE_MACRO_EQUALS
 /* Compare 2 macro definitions to see if they are identical. */
@@ -8060,6 +8385,40 @@ tpp_extensions_fini(tpp_extensions *tpp_restrict self) {
 		iter = prev;
 	}
 }
+
+#if TPP_HAVE_LEXER_COPY
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_extensions_copy(tpp_extensions *tpp_restrict self,
+                    tpp_extensions const *tpp_restrict from) {
+	tpp_extensions *last = self;
+	self->te_state   = from->te_state;
+	self->te_pushcnt = from->te_pushcnt;
+	while (from->te_prev) {
+		tpp_extensions *from_prev_copy;
+		from = from->te_prev;
+		from_prev_copy = _tpp_extensions_alloc();
+		if tpp_unlikely(!from_prev_copy) {
+			if (self != last) {
+				tpp_extensions *iter = self->te_prev;
+				for (;;) {
+					tpp_extensions *iter_prev = iter->te_prev;
+					_tpp_extensions_free(iter);
+					if (iter == last)
+						break;
+					iter = iter_prev;
+				}
+			}
+			return TPP_ENOMEM;
+		}
+		last->te_prev = from_prev_copy;
+		from_prev_copy->te_state   = from->te_state;
+		from_prev_copy->te_pushcnt = from->te_pushcnt;
+		last = from_prev_copy;
+	}
+	last->te_prev = NULL;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
 
 /* Pop the current extensions state (may only be called when `tpp_extensions_canpop(self)') */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
@@ -8865,6 +9224,88 @@ tpp_warnings_fini(tpp_warnings *tpp_restrict self) {
 	}
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 }
+
+#if TPP_HAVE_LEXER_COPY || TPP_HAVE_WARNINGS_PUSH_POP
+#if TPP_HAVE_WARNING_SUPPRESS
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_warning_suppressions_copy(tpp_warning_suppressions *tpp_restrict self,
+                              tpp_warning_suppressions const *tpp_restrict from) {
+	self->tws_ctxa = self->tws_ctxc = from->tws_ctxc;
+	self->tws_ctxv = NULL;
+	if (self->tws_ctxc) {
+		tpp_warning_suppress_item *vec;
+		vec = (tpp_warning_suppress_item *)tpp_malloc(self->tws_ctxc *
+		                                              sizeof(tpp_warning_suppress_item));
+		if tpp_unlikely(!vec)
+			return TPP_ENOMEM;
+		tpp_memcpy(vec, from->tws_ctxv, self->tws_ctxc * sizeof(tpp_warning_suppress_item));
+		self->tws_ctxv = vec;
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_WARNING_SUPPRESS */
+
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_warnings_copyone(tpp_warnings *tpp_restrict self,
+                     tpp_warnings const *tpp_restrict from) {
+	self->tw_state = from->tw_state;
+#if TPP_HAVE_WARNINGS_PUSH_POP
+	self->tw_pushcnt = from->tw_pushcnt;
+#endif /* TPP_HAVE_WARNINGS_PUSH_POP */
+#if TPP_HAVE_WARNING_SUPPRESS
+	return tpp_warning_suppressions_copy(&self->tw_suppressions,
+	                                     &from->tw_suppressions);
+#else /* TPP_HAVE_WARNING_SUPPRESS */
+	return TPP_EOK;
+#endif /* !TPP_HAVE_WARNING_SUPPRESS */
+}
+#endif /* TPP_HAVE_LEXER_COPY || TPP_HAVE_WARNINGS_PUSH_POP */
+
+#if TPP_HAVE_LEXER_COPY
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_warnings_copy(tpp_warnings *tpp_restrict self,
+                  tpp_warnings const *tpp_restrict from) {
+#if TPP_HAVE_WARNINGS_PUSH_POP
+	tpp_warnings *last = self;
+	tpp_errno error = tpp_warnings_copyone(self, from);
+	if (TPP_ISERR(error))
+		return error;
+	while (from->tw_prev) {
+		tpp_warnings *from_prev_copy;
+		from = from->tw_prev;
+		from_prev_copy = _tpp_warnings_alloc();
+		if tpp_unlikely(!from_prev_copy) {
+			error = TPP_ENOMEM;
+			goto destroy_copied_warning_states_and_return_error;
+		}
+		last->tw_prev = from_prev_copy;
+		error = tpp_warnings_copyone(from_prev_copy, from);
+		if (TPP_ISERR(error)) {
+			_tpp_warnings_free(from_prev_copy);
+destroy_copied_warning_states_and_return_error:
+			if (self != last) {
+				tpp_warnings *iter = self->tw_prev;
+				for (;;) {
+					tpp_warnings *iter_prev = iter->tw_prev;
+					tpp_warnings_fini(iter);
+					_tpp_warnings_free(iter);
+					if (iter == last)
+						break;
+					iter = iter_prev;
+				}
+			}
+			return error;
+		}
+		last = from_prev_copy;
+	}
+	last->tw_prev = NULL;
+	return TPP_EOK;
+#else /* TPP_HAVE_WARNINGS_PUSH_POP */
+	return tpp_warnings_copyone(self, from);
+#endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
 #endif /* TPP_HAVE_WARNINGS_FINI */
 
 
@@ -8920,41 +9361,18 @@ tpp_warnings_getctx(tpp_warnings const *tpp_restrict self,
  * @return: * :   The newly allocated copy
  * @return: NULL: Out of memory. */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_warnings *TPPCALL
-tpp_warnings_copy(tpp_warnings const *tpp_restrict self) {
+tpp_warnings_dup(tpp_warnings const *tpp_restrict self) {
 	tpp_warnings *result = _tpp_warnings_alloc();
 	if tpp_unlikely(!result)
 		goto err;
-
-	/* Duplicate suppressions */
-#if TPP_HAVE_WARNING_SUPPRESS
-	if (self->tw_suppressions.tws_ctxc) {
-		tpp_warning_suppress_item *suppress_copy;
-		suppress_copy = (tpp_warning_suppress_item *)tpp_malloc(self->tw_suppressions.tws_ctxc *
-		                                                        sizeof(tpp_warning_suppress_item));
-		if tpp_unlikely(!suppress_copy)
-			goto err_r;
-		tpp_memcpy(suppress_copy, self->tw_suppressions.tws_ctxv,
-		           self->tw_suppressions.tws_ctxc *
-		           sizeof(tpp_warning_suppress_item));
-		result->tw_suppressions.tws_ctxv = suppress_copy;
-		result->tw_suppressions.tws_ctxc = self->tw_suppressions.tws_ctxc;
-		result->tw_suppressions.tws_ctxa = self->tw_suppressions.tws_ctxc;
-	} else {
-		tpp_warning_suppressions_init(&result->tw_suppressions);
-	}
-#endif /* TPP_HAVE_WARNING_SUPPRESS */
-
-	/* Duplicate remaining data fields... */
-	result->tw_state = self->tw_state;
+	if (TPP_ISERR(tpp_warnings_copyone(result, self)))
+		goto err_r;
 #if TPP_HAVE_WARNINGS_PUSH_POP
-	result->tw_prev    = self->tw_prev;
-	result->tw_pushcnt = self->tw_pushcnt;
+	result->tw_prev = self->tw_prev; /* Hadn't been copied by "tpp_warnings_copyone()" */
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 	return result;
-#if TPP_HAVE_WARNING_SUPPRESS
 err_r:
 	_tpp_warnings_free(result);
-#endif /* TPP_HAVE_WARNING_SUPPRESS */
 err:
 	return NULL;
 }
@@ -9054,7 +9472,7 @@ tpp_warnings_setctx_(tpp_warnings *tpp_restrict self,
 		if (state == old_state)
 			return TPP_EOK;
 #endif /* !__OPTIMIZE_SIZE__ */
-		copy = tpp_warnings_copy(self);
+		copy = tpp_warnings_dup(self);
 		if tpp_unlikely(!copy)
 			return TPP_ENOMEM;
 		self->tw_prev = copy;
@@ -9160,7 +9578,7 @@ tpp_warnings_invoke_(tpp_warnings const *tpp_restrict self, tpp_warning_id warni
 #if TPP_HAVE_WARNINGS_PUSH_POP
 		if (tpp_warnings_mustcopy(self)) {
 			tpp_warnings *copy;
-			copy = tpp_warnings_copy(self);
+			copy = tpp_warnings_dup(self);
 			if tpp_unlikely(!copy)
 				return TPP_ENOMEM;
 			self->tw_prev = copy;
@@ -9432,9 +9850,8 @@ tpp_include_paths_fini(tpp_include_paths *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 }
 
-
 /* Helper methods to add/remove paths to different include path lists */
-#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP || TPP_HAVE_LEXER_COPY
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_include_path_list_copy(tpp_include_path_list *tpp_restrict self,
                            tpp_include_path_list const *tpp_restrict other) {
@@ -9473,38 +9890,102 @@ tpp_include_path_list_copy(tpp_include_path_list *tpp_restrict self,
 	return TPP_EOK;
 }
 
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_copyone(tpp_include_paths *tpp_restrict self,
+                          tpp_include_paths const *tpp_restrict from) {
+	tpp_errno error;
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+	self->tip_pushcnt = from->tip_pushcnt;
+#endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+	error = tpp_include_path_list_copy(&self->tip_after_list,
+	                                   &from->tip_after_list);
+	if (TPP_ISERR(error))
+		goto err;
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	error = tpp_include_path_list_copy(&self->tip_quote_list,
+	                                   &from->tip_quote_list);
+	if (TPP_ISERR(error))
+		goto err_after;
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+	error = tpp_include_path_list_copy(&self->tip_system_list,
+	                                   &from->tip_system_list);
+	if (TPP_ISERR(error))
+		goto err_after_quote;
+	return error;
+err_after_quote:
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	tpp_include_path_list_fini(&self->tip_quote_list);
+err_after:
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+	tpp_include_path_list_fini(&self->tip_after_list);
+err:
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+	return error;
+}
+#endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP || TPP_HAVE_LEXER_COPY */
+
+
+#if TPP_HAVE_LEXER_COPY
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_copy(tpp_include_paths *tpp_restrict self,
+                       tpp_include_paths const *tpp_restrict from) {
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+	tpp_include_paths *last = self;
+	tpp_errno error = tpp_include_paths_copyone(self, from);
+	if (TPP_ISERR(error))
+		return error;
+	while (from->tip_prev) {
+		tpp_include_paths *from_prev_copy;
+		from = from->tip_prev;
+		from_prev_copy = _tpp_include_paths_alloc();
+		if tpp_unlikely(!from_prev_copy) {
+			error = TPP_ENOMEM;
+			goto destroy_copied_warning_states_and_return_error;
+		}
+		last->tip_prev = from_prev_copy;
+		error = tpp_include_paths_copyone(from_prev_copy, from);
+		if (TPP_ISERR(error)) {
+			_tpp_include_paths_free(from_prev_copy);
+destroy_copied_warning_states_and_return_error:
+			if (self != last) {
+				tpp_include_paths *iter = self->tip_prev;
+				for (;;) {
+					tpp_include_paths *iter_prev = iter->tip_prev;
+					tpp_include_paths_fini(iter);
+					_tpp_include_paths_free(iter);
+					if (iter == last)
+						break;
+					iter = iter_prev;
+				}
+			}
+			return error;
+		}
+		last = from_prev_copy;
+	}
+	last->tip_prev = NULL;
+	return TPP_EOK;
+#else /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+	return tpp_include_paths_copyone(self, from);
+#endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
+
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_include_paths *TPPCALL
-tpp_include_paths_copy(tpp_include_paths *tpp_restrict self) {
+tpp_include_paths_dupone(tpp_include_paths const *tpp_restrict self) {
 	tpp_include_paths *result = _tpp_include_paths_alloc();
 	if tpp_unlikely(!result)
 		goto err;
-	if tpp_unlikely(TPP_ISERR(tpp_include_path_list_copy(&result->tip_system_list, &self->tip_system_list)))
+	if (TPP_ISERR(tpp_include_paths_copyone(result, self)))
 		goto err_r;
-#if TPP_HAVE_INCLUDE_PATH_QUOTE
-	if tpp_unlikely(TPP_ISERR(tpp_include_path_list_copy(&result->tip_quote_list, &self->tip_quote_list)))
-		goto err_r_system;
-#endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
-#if TPP_HAVE_INCLUDE_PATH_AFTER
-	if tpp_unlikely(TPP_ISERR(tpp_include_path_list_copy(&result->tip_after_list, &self->tip_after_list)))
-		goto err_r_system_quote;
-#endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
-
-	/* Duplicate remaining data fields... */
 #if TPP_HAVE_WARNINGS_PUSH_POP
-	result->tip_prev    = self->tip_prev;
-	result->tip_pushcnt = self->tip_pushcnt;
+	result->tip_prev = self->tip_prev; /* Hadn't been copied by "tpp_include_paths_copyone()" */
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 	return result;
-#if TPP_HAVE_INCLUDE_PATH_AFTER
-err_r_system_quote:
-#endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
-#if TPP_HAVE_INCLUDE_PATH_QUOTE
-	tpp_include_path_list_fini(&result->tip_quote_list);
-err_r_system:
-#endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
-#if TPP_HAVE_INCLUDE_PATH_AFTER || TPP_HAVE_INCLUDE_PATH_QUOTE
-	tpp_include_path_list_fini(&result->tip_system_list);
-#endif /* TPP_HAVE_INCLUDE_PATH_AFTER || TPP_HAVE_INCLUDE_PATH_QUOTE */
 err_r:
 	_tpp_include_paths_free(result);
 err:
@@ -9515,7 +9996,7 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_include_paths_unshare(tpp_include_paths *tpp_restrict self) {
 	if (!tpp_include_paths_mustcopy(self)) {
 		/* Create a copy... */
-		tpp_include_paths *copy = tpp_include_paths_copy(self);
+		tpp_include_paths *copy = tpp_include_paths_dupone(self);
 		if tpp_unlikely(!copy)
 			return TPP_ENOMEM;
 
@@ -9831,6 +10312,92 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 	tpp_include_paths_fini(&self->tl_include_paths);
 #endif /* TPP_HAVE_INCLUDE_PATH */
 }
+
+
+#if TPP_HAVE_LEXER_COPY
+/* Initialize "self" as a copy of "from". This will copy everything
+ * configured in "from" (features, extensions, allocated keyword IDs,
+ * macros, include paths, warnings, etc), into "self". The only thing
+ * that is not copied is the #include-stack, meaning that after a call
+ * to this function, the caller must still call `tpp_lexer_initfile_*'
+ *
+ * Additionally, the following properties are not copied:
+ * - tpp_keyword_misc_getuserdata_dtor()  (only "tpp_keyword_misc_getuserdata()"
+ *                                         is copied; dtors are set to "NULL")
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_copy(tpp_lexer *tpp_restrict self,
+               tpp_lexer const *tpp_restrict from) {
+	tpp_errno error;
+#if TPP_HAVE_LEXER_TIME
+	error = tpp_time_copy(&self->tl_time, &from->tl_time);
+	if (TPP_ISERR(error))
+		goto err;
+#endif /* TPP_HAVE_LEXER_TIME */
+#if TPP_HAVE_WARNINGS
+	tpp_warnings_init(&self->tl_warn);
+#endif /* TPP_HAVE_WARNINGS */
+#if TPP_HAVE_INCLUDE_PATH
+	error = tpp_include_paths_copy(&self->tl_include_paths,
+	                               &from->tl_include_paths);
+	if (TPP_ISERR(error))
+		goto err_warn;
+#endif /* TPP_HAVE_INCLUDE_PATH */
+#if TPP_HAVE_EXTENSIONS
+	error = tpp_extensions_copy(&self->tl_exts, &from->tl_exts);
+	if (TPP_ISERR(error))
+		goto err_warn_incl;
+#endif /* TPP_HAVE_EXTENSIONS */
+	error = tpp_keywords_copy(&self->tl_kwds, &from->tl_kwds);
+	if (TPP_ISERR(error))
+		goto err_warn_incl_exts;
+
+	/* Copy stuff that can't cause errors... */
+#if TPP_HAVE_FEATURES
+	self->tl_feat = from->tl_feat;
+#endif /* TPP_HAVE_FEATURES */
+#if TPP_HAVE_LEXER_STATE_FLAGS
+	self->tl_state = from->tl_state;
+#endif /* TPP_HAVE_LEXER_STATE_FLAGS */
+#if TPP_HAVE_WARNINGS
+#if !defined(TPP_CONFIG_WARNPRINTER) && TPP_HAVE_BUILTIN_WARNPRINTER <= 0
+	self->tl_warnprinter = from->tl_warnprinter;
+#endif /* !TPP_CONFIG_WARNPRINTER && TPP_HAVE_BUILTIN_WARNPRINTER <= 0 */
+#endif /* TPP_HAVE_WARNINGS */
+#if TPP_HAVE_LEXER_PARSEEXPR
+#if !defined(TPP_CONFIG_EXPRPARSER) && TPP_HAVE_BUILTIN_EXPRPARSER <= 0
+	self->tl_expr_parser_cb = from->tl_expr_parser_cb;
+#endif /* !TPP_CONFIG_EXPRPARSER && TPP_HAVE_BUILTIN_EXPRPARSER <= 0 */
+#endif /* TPP_HAVE_LEXER_PARSEEXPR */
+#if TPP_HAVE_WARNING_ERROR
+	self->tl_error_count = from->tl_error_count;
+#if TPP_ERROR_LIMIT < 0
+	self->tl_error_count = from->tl_error_limit;
+#endif /* TPP_ERROR_LIMIT < 0 */
+#endif /* TPP_HAVE_WARNING_ERROR */
+#if TPP_HAVE_MACRO___COUNTER__
+	self->tl_builtin_counter = from->tl_builtin_counter;
+#endif /* TPP_HAVE_MACRO___COUNTER__ */
+	return TPP_EOK;
+err_warn_incl_exts:
+#if TPP_HAVE_EXTENSIONS
+	tpp_extensions_fini(&self->tl_exts);
+err_warn_incl:
+#endif /* TPP_HAVE_EXTENSIONS */
+#if TPP_HAVE_INCLUDE_PATH
+	tpp_include_paths_fini(&self->tl_include_paths);
+err_warn:
+#endif /* TPP_HAVE_INCLUDE_PATH */
+#if TPP_HAVE_WARNINGS
+	tpp_warnings_fini(&self->tl_warn);
+#endif /* TPP_HAVE_WARNINGS */
+err:
+	return error;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
 
 /* Finalize the currently loaded file (including any extra files
  * found on the #include-stack, but that hadn't been popped yet)
@@ -17161,7 +17728,7 @@ typedef struct tpp_macro_builder {
 	       (self)->mab_macro = NULL)
 #define tpp_macro_builder_fini(self) \
 	(tpp_free((self)->mab_argv),     \
-	 tpp_macro_free((self)->mab_macro))
+	 _tpp_macro_free((self)->mab_macro))
 
 #ifdef __OPTIMIZE_SIZE__
 #define tpp_macro_builder_truncate_argv(self) (void)0
@@ -17321,11 +17888,6 @@ again_yield_macro_argument_list:
 		if (!tpp_lexer_has(self, VA_ARGS_IN_MACROS))
 			break;
 		tok = TPP_KWD___VA_ARGS__;
-#if TPP_DEBUG
-		/* Needed for "tpp_macro_argument::tma_name" */
-		token->tt_kwd = tpp_builtin_getkeyword_byid(TPP_KWD___VA_ARGS__);
-		tpp_assert(token->tt_kwd != NULL);
-#endif /* TPP_DEBUG */
 		builder->mab_flags |= TPP_MACRO_FLAG_VARIADIC;
 		goto do_append_keyword_to_argument_list;
 #define WANT_do_append_keyword_to_argument_list
@@ -17382,10 +17944,6 @@ do_append_keyword_to_argument_list:
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
 		arg->tma_ins = 0;
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
-#if TPP_DEBUG
-		tpp_assert(token->tt_kwd);
-		arg->tma_name = token->tt_kwd->tk_kwd;
-#endif /* TPP_DEBUG */
 	}
 
 	/* Yield to next token (which should be one of ",", ")", or "...") */
@@ -17461,10 +18019,10 @@ tpp_macro_builder_requireop(tpp_macro_builder *tpp_restrict self,
 			new_alloc = 16;
 		if (new_alloc < min_alloc)
 			new_alloc = min_alloc;
-		new_macro = tpp_macro_tryrealloc_function(self->mab_macro, new_alloc);
+		new_macro = _tpp_macro_tryrealloc_function(self->mab_macro, new_alloc);
 		if tpp_unlikely(!new_macro) {
 			new_alloc = min_alloc;
-			new_macro = tpp_macro_realloc_function(self->mab_macro, new_alloc);
+			new_macro = _tpp_macro_realloc_function(self->mab_macro, new_alloc);
 			if tpp_unlikely(!new_macro)
 				return NULL;
 		}
@@ -18275,7 +18833,7 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 		tpp_assert(self->mab_tmf_expanda == 0);
 
 		/* Special case: this can happen if the macro's body is empty. */
-		result = tpp_macro_malloc_function(1); /* 1: TPP_MACRO_OPCODE_END */
+		result = _tpp_macro_alloc_function(1); /* 1: TPP_MACRO_OPCODE_END */
 		if tpp_unlikely(!result)
 			return NULL;
 		result->tm_data.tmd_func.tmf_expand[0] = TPP_MACRO_OPCODE_END;
@@ -18283,7 +18841,7 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 #ifndef __OPTIMIZE_SIZE__
 	if (self->mab_tmf_expandc < self->mab_tmf_expanda) {
 		TPP_REF tpp_macro *new_result;
-		new_result = tpp_macro_tryrealloc_function(result, self->mab_tmf_expandc);
+		new_result = _tpp_macro_tryrealloc_function(result, self->mab_tmf_expandc);
 		if tpp_likely(new_result)
 			result = new_result;
 	} else
@@ -18391,7 +18949,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 		}
 
 		/* Allocate keyword-style macro definition */
-		macro = tpp_macro_malloc_keyword();
+		macro = _tpp_macro_alloc_keyword();
 		if tpp_unlikely(!macro)
 			return TPP_ENOMEM;
 

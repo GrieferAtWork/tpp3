@@ -78,7 +78,7 @@ typedef struct tpp_macro_builder {
 	       (self)->mab_macro = NULL)
 #define tpp_macro_builder_fini(self) \
 	(tpp_free((self)->mab_argv),     \
-	 tpp_macro_free((self)->mab_macro))
+	 _tpp_macro_free((self)->mab_macro))
 
 #ifdef __OPTIMIZE_SIZE__
 #define tpp_macro_builder_truncate_argv(self) (void)0
@@ -238,11 +238,6 @@ again_yield_macro_argument_list:
 		if (!tpp_lexer_has(self, VA_ARGS_IN_MACROS))
 			break;
 		tok = TPP_KWD___VA_ARGS__;
-#if TPP_DEBUG
-		/* Needed for "tpp_macro_argument::tma_name" */
-		token->tt_kwd = tpp_builtin_getkeyword_byid(TPP_KWD___VA_ARGS__);
-		tpp_assert(token->tt_kwd != NULL);
-#endif /* TPP_DEBUG */
 		builder->mab_flags |= TPP_MACRO_FLAG_VARIADIC;
 		goto do_append_keyword_to_argument_list;
 #define WANT_do_append_keyword_to_argument_list
@@ -299,10 +294,6 @@ do_append_keyword_to_argument_list:
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
 		arg->tma_ins = 0;
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
-#if TPP_DEBUG
-		tpp_assert(token->tt_kwd);
-		arg->tma_name = token->tt_kwd->tk_kwd;
-#endif /* TPP_DEBUG */
 	}
 
 	/* Yield to next token (which should be one of ",", ")", or "...") */
@@ -378,10 +369,10 @@ tpp_macro_builder_requireop(tpp_macro_builder *tpp_restrict self,
 			new_alloc = 16;
 		if (new_alloc < min_alloc)
 			new_alloc = min_alloc;
-		new_macro = tpp_macro_tryrealloc_function(self->mab_macro, new_alloc);
+		new_macro = _tpp_macro_tryrealloc_function(self->mab_macro, new_alloc);
 		if tpp_unlikely(!new_macro) {
 			new_alloc = min_alloc;
-			new_macro = tpp_macro_realloc_function(self->mab_macro, new_alloc);
+			new_macro = _tpp_macro_realloc_function(self->mab_macro, new_alloc);
 			if tpp_unlikely(!new_macro)
 				return NULL;
 		}
@@ -1192,7 +1183,7 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 		tpp_assert(self->mab_tmf_expanda == 0);
 
 		/* Special case: this can happen if the macro's body is empty. */
-		result = tpp_macro_malloc_function(1); /* 1: TPP_MACRO_OPCODE_END */
+		result = _tpp_macro_alloc_function(1); /* 1: TPP_MACRO_OPCODE_END */
 		if tpp_unlikely(!result)
 			return NULL;
 		result->tm_data.tmd_func.tmf_expand[0] = TPP_MACRO_OPCODE_END;
@@ -1200,7 +1191,7 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 #ifndef __OPTIMIZE_SIZE__
 	if (self->mab_tmf_expandc < self->mab_tmf_expanda) {
 		TPP_REF tpp_macro *new_result;
-		new_result = tpp_macro_tryrealloc_function(result, self->mab_tmf_expandc);
+		new_result = _tpp_macro_tryrealloc_function(result, self->mab_tmf_expandc);
 		if tpp_likely(new_result)
 			result = new_result;
 	} else
@@ -1308,7 +1299,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 		}
 
 		/* Allocate keyword-style macro definition */
-		macro = tpp_macro_malloc_keyword();
+		macro = _tpp_macro_alloc_keyword();
 		if tpp_unlikely(!macro)
 			return TPP_ENOMEM;
 

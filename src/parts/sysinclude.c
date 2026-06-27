@@ -246,9 +246,8 @@ tpp_include_paths_fini(tpp_include_paths *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 }
 
-
 /* Helper methods to add/remove paths to different include path lists */
-#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP || TPP_HAVE_LEXER_COPY
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_include_path_list_copy(tpp_include_path_list *tpp_restrict self,
                            tpp_include_path_list const *tpp_restrict other) {
@@ -287,38 +286,102 @@ tpp_include_path_list_copy(tpp_include_path_list *tpp_restrict self,
 	return TPP_EOK;
 }
 
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_copyone(tpp_include_paths *tpp_restrict self,
+                          tpp_include_paths const *tpp_restrict from) {
+	tpp_errno error;
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+	self->tip_pushcnt = from->tip_pushcnt;
+#endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+	error = tpp_include_path_list_copy(&self->tip_after_list,
+	                                   &from->tip_after_list);
+	if (TPP_ISERR(error))
+		goto err;
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	error = tpp_include_path_list_copy(&self->tip_quote_list,
+	                                   &from->tip_quote_list);
+	if (TPP_ISERR(error))
+		goto err_after;
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+	error = tpp_include_path_list_copy(&self->tip_system_list,
+	                                   &from->tip_system_list);
+	if (TPP_ISERR(error))
+		goto err_after_quote;
+	return error;
+err_after_quote:
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	tpp_include_path_list_fini(&self->tip_quote_list);
+err_after:
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+	tpp_include_path_list_fini(&self->tip_after_list);
+err:
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+	return error;
+}
+#endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP || TPP_HAVE_LEXER_COPY */
+
+
+#if TPP_HAVE_LEXER_COPY
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_copy(tpp_include_paths *tpp_restrict self,
+                       tpp_include_paths const *tpp_restrict from) {
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+	tpp_include_paths *last = self;
+	tpp_errno error = tpp_include_paths_copyone(self, from);
+	if (TPP_ISERR(error))
+		return error;
+	while (from->tip_prev) {
+		tpp_include_paths *from_prev_copy;
+		from = from->tip_prev;
+		from_prev_copy = _tpp_include_paths_alloc();
+		if tpp_unlikely(!from_prev_copy) {
+			error = TPP_ENOMEM;
+			goto destroy_copied_warning_states_and_return_error;
+		}
+		last->tip_prev = from_prev_copy;
+		error = tpp_include_paths_copyone(from_prev_copy, from);
+		if (TPP_ISERR(error)) {
+			_tpp_include_paths_free(from_prev_copy);
+destroy_copied_warning_states_and_return_error:
+			if (self != last) {
+				tpp_include_paths *iter = self->tip_prev;
+				for (;;) {
+					tpp_include_paths *iter_prev = iter->tip_prev;
+					tpp_include_paths_fini(iter);
+					_tpp_include_paths_free(iter);
+					if (iter == last)
+						break;
+					iter = iter_prev;
+				}
+			}
+			return error;
+		}
+		last = from_prev_copy;
+	}
+	last->tip_prev = NULL;
+	return TPP_EOK;
+#else /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+	return tpp_include_paths_copyone(self, from);
+#endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
+
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_include_paths *TPPCALL
-tpp_include_paths_copy(tpp_include_paths *tpp_restrict self) {
+tpp_include_paths_dupone(tpp_include_paths const *tpp_restrict self) {
 	tpp_include_paths *result = _tpp_include_paths_alloc();
 	if tpp_unlikely(!result)
 		goto err;
-	if tpp_unlikely(TPP_ISERR(tpp_include_path_list_copy(&result->tip_system_list, &self->tip_system_list)))
+	if (TPP_ISERR(tpp_include_paths_copyone(result, self)))
 		goto err_r;
-#if TPP_HAVE_INCLUDE_PATH_QUOTE
-	if tpp_unlikely(TPP_ISERR(tpp_include_path_list_copy(&result->tip_quote_list, &self->tip_quote_list)))
-		goto err_r_system;
-#endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
-#if TPP_HAVE_INCLUDE_PATH_AFTER
-	if tpp_unlikely(TPP_ISERR(tpp_include_path_list_copy(&result->tip_after_list, &self->tip_after_list)))
-		goto err_r_system_quote;
-#endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
-
-	/* Duplicate remaining data fields... */
 #if TPP_HAVE_WARNINGS_PUSH_POP
-	result->tip_prev    = self->tip_prev;
-	result->tip_pushcnt = self->tip_pushcnt;
+	result->tip_prev = self->tip_prev; /* Hadn't been copied by "tpp_include_paths_copyone()" */
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 	return result;
-#if TPP_HAVE_INCLUDE_PATH_AFTER
-err_r_system_quote:
-#endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
-#if TPP_HAVE_INCLUDE_PATH_QUOTE
-	tpp_include_path_list_fini(&result->tip_quote_list);
-err_r_system:
-#endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
-#if TPP_HAVE_INCLUDE_PATH_AFTER || TPP_HAVE_INCLUDE_PATH_QUOTE
-	tpp_include_path_list_fini(&result->tip_system_list);
-#endif /* TPP_HAVE_INCLUDE_PATH_AFTER || TPP_HAVE_INCLUDE_PATH_QUOTE */
 err_r:
 	_tpp_include_paths_free(result);
 err:
@@ -329,7 +392,7 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_include_paths_unshare(tpp_include_paths *tpp_restrict self) {
 	if (!tpp_include_paths_mustcopy(self)) {
 		/* Create a copy... */
-		tpp_include_paths *copy = tpp_include_paths_copy(self);
+		tpp_include_paths *copy = tpp_include_paths_dupone(self);
 		if tpp_unlikely(!copy)
 			return TPP_ENOMEM;
 

@@ -34,10 +34,13 @@
 TPP_DECL_BEGIN
 
 /* Time API */
-#define tpp_time                 time_t
-#define tpp_time_now(p_time)     (time(p_time), TPP_EOK)
-#define tpp_time_empty(p_time)   (*(p_time) = 0)
-#define tpp_time_isempty(p_time) (*(p_time) == 0)
+#define tpp_time                      time_t
+#define tpp_time_now(p_time)          (time(p_time), TPP_EOK)
+#define tpp_time_empty(p_time)        (*(p_time) = 0)
+#define tpp_time_isempty(p_time)      (*(p_time) == 0)
+#if TPP_HAVE_LEXER_COPY
+#define tpp_time_copy(p_self, p_from) (*(p_self) = *(p_from), TPP_EOK)
+#endif /* TPP_HAVE_LEXER_COPY */
 
 /* Time -> tm conversion (splitting time into its individual components) */
 typedef struct tm tpp_tm;

@@ -313,8 +313,17 @@ typedef struct tpp_warnings {
 #if TPP_HAVE_WARNINGS_FINI
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_warnings_fini(tpp_warnings *tpp_restrict self);
+
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_warnings_copy(tpp_warnings *tpp_restrict self,
+                  tpp_warnings const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
 #else /* TPP_HAVE_WARNINGS_FINI */
 #define tpp_warnings_fini(self) (void)0
+#if TPP_HAVE_LEXER_COPY
+#define tpp_warnings_copy(self, from) (*(self) = *(from), TPP_EOK)
+#endif /* TPP_HAVE_LEXER_COPY */
 #endif /* !TPP_HAVE_WARNINGS_FINI */
 
 

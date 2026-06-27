@@ -4256,22 +4256,22 @@ TPP_DECL_END
 #define TPP_COMMON_HAVE_TPP_TOK_GENERIC TPP_COMMON_HAVE_TPP_TOK
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_GENERIC */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_C_STRING
-#define TPP_COMMON_HAVE_TPP_TOK_C_STRING (TPP_HAVE_PROFILE_DEFAULT ? TPP_COMMON_HAVE_TPP_TOK : TPP_HAVE_PROFILE_C_LIKE)
+#define TPP_COMMON_HAVE_TPP_TOK_C_STRING (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_FEAT0 : TPP_HAVE_PROFILE_C_LIKE)
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_C_STRING */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
-#define TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_HAVE_TPP_TOK : 0)
+#define TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
 #define TPP_COMMON_HAVE_TPP_TOK_C_TOKENS (TPP_HAVE_PROFILE_DEFAULT ? TPP_COMMON_HAVE_TPP_TOK : TPP_HAVE_PROFILE_C_LIKE)
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_C_TOKENS */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS
-#define TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_HAVE_TPP_TOK : (TPP_PROFILE == TPP_PROFILE_CXX))
+#define TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : (TPP_PROFILE == TPP_PROFILE_CXX))
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
-#define TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_HAVE_TPP_TOK : 0)
+#define TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_REVERSE_TOKENS
-#define TPP_COMMON_HAVE_TPP_TOK_REVERSE_TOKENS ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_HAVE_TPP_TOK : 0)
+#define TPP_COMMON_HAVE_TPP_TOK_REVERSE_TOKENS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_REVERSE_TOKENS */
 
 #ifndef TPP_COMMON_HAVE_CPP_DIRECTIVES_STD
@@ -6052,6 +6052,11 @@ TPP_DECL_END
 /* LEXER EXPRESSIONS                                                    */
 /************************************************************************/
 
+/* Provide a function "tpp_lexer_copy()" that can be used to duplicate a lexer. */
+#ifndef TPP_HAVE_LEXER_COPY
+#define TPP_HAVE_LEXER_COPY (TPP_PROFILE == TPP_PROFILE_ALL)
+#endif /* !TPP_HAVE_LEXER_COPY */
+
 /* Provide a function "tpp_lexer_parseexpr()" that
  * is used to implement "#if" directive expressions
  * @detect: N/A */
@@ -7488,10 +7493,13 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 /* Time API */
-#define tpp_time                 time_t
-#define tpp_time_now(p_time)     (time(p_time), TPP_EOK)
-#define tpp_time_empty(p_time)   (*(p_time) = 0)
-#define tpp_time_isempty(p_time) (*(p_time) == 0)
+#define tpp_time                      time_t
+#define tpp_time_now(p_time)          (time(p_time), TPP_EOK)
+#define tpp_time_empty(p_time)        (*(p_time) = 0)
+#define tpp_time_isempty(p_time)      (*(p_time) == 0)
+#if TPP_HAVE_LEXER_COPY
+#define tpp_time_copy(p_self, p_from) (*(p_self) = *(p_from), TPP_EOK)
+#endif /* TPP_HAVE_LEXER_COPY */
 
 /* Time -> tm conversion (splitting time into its individual components) */
 typedef struct tm tpp_tm;
@@ -12774,9 +12782,6 @@ typedef struct tpp_macro_argument {
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
 	tpp_size        TPP_INTERNAL(tma_ins);     /* [const] Amount of times the argument is inserted without expansion. */
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
-#if TPP_DEBUG
-	tpp_char const *TPP_INTERNAL(tma_name);    /* [1..1][const] Name of this macro (aliases `struct tpp_keyword::tk_kwd'). */
-#endif /* TPP_DEBUG */
 } tpp_macro_argument;
 
 
@@ -12840,28 +12845,35 @@ typedef struct tpp_macro {
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
 			struct tpp_macro_argbuf
 			                   *TPP_INTERNAL(tmf_argbuf);     /* [0..1][owned] Internal cache used during macro expansion */
-			tpp_macro_opcode    TPP_INTERNAL(tmf_expand)[TPP_FLEX_ARRAY]; /* [const][1..1] Sequence of `TPP_MACRO_OPCODE_*'-opcodes, together with their operands */
+			tpp_macro_opcode    TPP_INTERNAL(tmf_expand)[TPP_FLEX_ARRAY]; /* [const][1..n] Sequence of `TPP_MACRO_OPCODE_*'-opcodes, together with their operands */
 		} TPP_INTERNAL(tmd_func); /* [TPP_MACRO_KIND_ISFUNC(tm_kind)] */
 	} TPP_INTERNAL(tm_data);
 } tpp_macro;
 
-#define tpp_macro_sizeof_keyword() \
+#define _tpp_macro_sizeof_keyword() \
 	tpp_offsetof(tpp_macro, TPP_INTERNAL(tm_data))
-#define tpp_macro_sizeof_function(expand_count)                                                       \
+#define _tpp_macro_sizeof_function(expand_count)                                                      \
 	(tpp_offsetof(tpp_macro, TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_expand)) + \
 	 ((expand_count) * sizeof(tpp_macro_opcode)))
 
-#define tpp_macro_malloc_keyword()                     ((tpp_macro *)tpp_malloc(tpp_macro_sizeof_keyword()))
-#define tpp_macro_malloc_function(expand_count)        ((tpp_macro *)tpp_malloc(tpp_macro_sizeof_function(expand_count)))
-#define tpp_macro_trymalloc_function(expand_count)     ((tpp_macro *)tpp_trymalloc(tpp_macro_sizeof_function(expand_count)))
-#define tpp_macro_realloc_function(p, expand_count)    ((tpp_macro *)tpp_realloc(p, tpp_macro_sizeof_function(expand_count)))
-#define tpp_macro_tryrealloc_function(p, expand_count) ((tpp_macro *)tpp_tryrealloc(p, tpp_macro_sizeof_function(expand_count)))
-#define tpp_macro_free(p)                              tpp_free(p)
+#define _tpp_macro_alloc_keyword()                      ((tpp_macro *)tpp_malloc(_tpp_macro_sizeof_keyword()))
+#define _tpp_macro_alloc_function(expand_count)         ((tpp_macro *)tpp_malloc(_tpp_macro_sizeof_function(expand_count)))
+#define _tpp_macro_tryalloc_function(expand_count)      ((tpp_macro *)tpp_trymalloc(_tpp_macro_sizeof_function(expand_count)))
+#define _tpp_macro_realloc_function(p, expand_count)    ((tpp_macro *)tpp_realloc(p, _tpp_macro_sizeof_function(expand_count)))
+#define _tpp_macro_tryrealloc_function(p, expand_count) ((tpp_macro *)tpp_tryrealloc(p, _tpp_macro_sizeof_function(expand_count)))
+#define _tpp_macro_free(p)                              tpp_free(p)
 
 TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_macro_destroy(tpp_macro *tpp_restrict self);
 #define tpp_macro_isshared(self) tpp_refcnt_isshared(&(self)->TPP_INTERNAL(tm_refcnt))
 #define tpp_macro_incref(self)   tpp_refcnt_inc(&(self)->TPP_INTERNAL(tm_refcnt))
 #define tpp_macro_decref(self)   (void)(tpp_refcnt_decfetch(&(self)->TPP_INTERNAL(tm_refcnt)) || (tpp_macro_destroy(self), 0))
+
+#if TPP_HAVE_LEXER_COPY
+/* Allocate+return a hard-copy of "self"
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_macro *TPPCALL
+tpp_macro_copy(tpp_macro const *tpp_restrict self);
+#endif /* TPP_HAVE_LEXER_COPY */
 
 #if TPP_HAVE_MACRO_EQUALS
 /* Compare 2 macro definitions to see if they are identical. */
@@ -12870,7 +12882,8 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #endif /* TPP_HAVE_MACRO_EQUALS */
 
 /* Public API */
-#define tpp_macro_isfunc(self)         TPP_MACRO_KIND_ISFUNC((self)->TPP_INTERNAL(tm_kind))
+#define tpp_macro_isfunction(self)     TPP_MACRO_KIND_ISFUNC((self)->TPP_INTERNAL(tm_kind))
+#define tpp_macro_iskeyword(self)      (!tpp_macro_isfunction(self))
 #define tpp_macro_getbodychunk(self)   ((self)->TPP_INTERNAL(tm_body_chunk))
 #define tpp_macro_getbodystart(self)   ((self)->TPP_INTERNAL(tm_body_start))
 #define tpp_macro_getbodyend(self)     ((self)->TPP_INTERNAL(tm_body_end))
@@ -12886,7 +12899,7 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #define tpp_macro_isbodyascii(self) 1
 #endif /* !TPP_HAVE_UNICODE */
 
-/* The following all require the caller to ensure that `tpp_macro_isfunc(self)' */
+/* The following all require the caller to ensure that `tpp_macro_isfunction(self)' */
 #define tpp_macro_getfuncargc(self)      ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argc))
 #define tpp_macro_getfuncargtok(self, i) ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argv)[i].TPP_INTERNAL(tma_id))
 #define tpp_macro_getfunclparen(self)    TPP_MACRO_KIND_ASTOK((self)->TPP_INTERNAL(tm_kind))
@@ -12961,6 +12974,11 @@ typedef struct tpp_macro_pushstack {
 	       (self)->TPP_INTERNAL(tmps_vec) = NULL)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self);
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_macro_pushstack_copy(tpp_macro_pushstack *tpp_restrict self,
+                         tpp_macro_pushstack const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
 
 /* Allocate space for- and return a new (uninitialized) macro-push entry
  * @return: * :   The newly allocated macro-push entry.
@@ -13136,6 +13154,8 @@ typedef struct tpp_keyword {
 #endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
 /* Public API for accessing "tpp_keyword" internals */
+#define tpp_keyword_isuser(self)     TPP_TOK_ISUSERKEYWORD((self)->TPP_INTERNAL(tk_id))
+#define tpp_keyword_isbuiltin(self)  (!tpp_keyword_isuser(self))
 #define tpp_keyword_getid(self)      ((self)->TPP_INTERNAL(tk_id))
 #define tpp_keyword_getkwd(self)     ((self)->TPP_INTERNAL(tk_kwd))
 #define tpp_keyword_getkwdcstr(self) ((char const *)(self)->TPP_INTERNAL(tk_kwd))
@@ -13322,6 +13342,11 @@ TPP_DECL TPP_REF tpp_keyword *tpp_keywords_empty_map[1]; /* Consider this one TP
 	       (self)->TPP_INTERNAL(tks_bckv) = tpp_keywords_empty_map)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_fini(tpp_keywords *tpp_restrict self);
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keywords_copy(tpp_keywords *tpp_restrict self,
+                  tpp_keywords const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
 
 /* Lookup keywords within the given keywords-table **ONLY**
  * @return: * :   The keyword in question
@@ -13465,6 +13490,12 @@ typedef struct tpp_extensions {
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_extensions_fini(tpp_extensions *tpp_restrict self);
 
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_extensions_copy(tpp_extensions *tpp_restrict self,
+                    tpp_extensions const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
+
 /* Push the current extensions state */
 #define tpp_extensions_push(self) (void)(++(self)->TPP_INTERNAL(te_pushcnt))
 
@@ -13484,6 +13515,9 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 #else /* TPP_HAVE_EXTENSIONS_PUSH_POP */
 #define tpp_extensions_init(self) (void)((self)->TPP_INTERNAL(te_state) = tpp_extensions_state_default)
 #define tpp_extensions_fini(self) (void)0
+#if TPP_HAVE_LEXER_COPY
+#define tpp_extensions_copy(self, from) (*(self) = *(from), TPP_EOK)
+#endif /* TPP_HAVE_LEXER_COPY */
 #define tpp_extensions_setid(self, id, enabled) \
 	(tpp_extensions_state_setid(&(self)->TPP_INTERNAL(te_state), id, enabled), TPP_EOK)
 #endif /* !TPP_HAVE_EXTENSIONS_PUSH_POP */
@@ -13803,8 +13837,17 @@ typedef struct tpp_warnings {
 #if TPP_HAVE_WARNINGS_FINI
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_warnings_fini(tpp_warnings *tpp_restrict self);
+
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_warnings_copy(tpp_warnings *tpp_restrict self,
+                  tpp_warnings const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
 #else /* TPP_HAVE_WARNINGS_FINI */
 #define tpp_warnings_fini(self) (void)0
+#if TPP_HAVE_LEXER_COPY
+#define tpp_warnings_copy(self, from) (*(self) = *(from), TPP_EOK)
+#endif /* TPP_HAVE_LEXER_COPY */
 #endif /* !TPP_HAVE_WARNINGS_FINI */
 
 
@@ -14014,6 +14057,12 @@ typedef struct tpp_include_paths {
 	 _tpp_include_paths_init_push(self))
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
+
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_copy(tpp_include_paths *tpp_restrict self,
+                       tpp_include_paths const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
 
 
 /* Access include paths */
@@ -14447,15 +14496,30 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self);
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_fini(tpp_lexer *tpp_restrict self);
 
+#if TPP_HAVE_LEXER_COPY
+/* Initialize "self" as a copy of "from". This will copy everything
+ * configured in "from" (features, extensions, allocated keyword IDs,
+ * macros, include paths, warnings, etc), into "self". The only thing
+ * that is not copied is the #include-stack, meaning that after a call
+ * to this function, the caller must still call `tpp_lexer_initfile_*'
+ *
+ * Additionally, the following properties are not copied:
+ * - tpp_keyword_misc_getuserdata_dtor()  (only "tpp_keyword_misc_getuserdata()"
+ *                                         is copied; dtors are set to "NULL")
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_copy(tpp_lexer *tpp_restrict self,
+               tpp_lexer const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
+
 /* Finalize the currently loaded file (including any extra files
  * found on the #include-stack, but that hadn't been popped yet)
  *
  * This function must be called after "tpp_lexer_initfile_*" has been */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
-
-
-/* TODO: tpp_lexer_copy() -- Copies everything about the lexer, except for its token/include-stack */
 
 
 /* Initialize a lexer's file to read the given [text,text+text_size) blob.
