@@ -1439,7 +1439,7 @@ tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR */
 
 
-#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+#if TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
 struct tpp_lexer_decodecharacter_data {
 #if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
 	tpp_lexer *tldcd_lexer; /* [1..1] Active lexer */
@@ -1497,7 +1497,7 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
 	*p_result = data.tldcd_value;
 	return (tpp_errno)(int)status;
 }
-#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+#endif /* TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
 
 
 #if TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR

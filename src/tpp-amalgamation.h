@@ -2817,7 +2817,8 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION ||           \
 	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF ||          \
 	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED ||        \
-	 TPP_HAVE_TPP_W_INVALID_INTEGER)
+	 TPP_HAVE_TPP_W_INVALID_INTEGER ||                          \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #define TPP_WG_SYNTAX TPP_WG_SYNTAX
@@ -2957,6 +2958,17 @@ TPP_WARNING(TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED, 1(TPP_WG_SYNTAX), 1(2003), 
 TPP_WARNING(TPP_W_INVALID_INTEGER, 1(TPP_WG_SYNTAX), 1(3688), TPP_WSTATE_UNDEFINED,
             "invalid integer literal: %Pt")
 #endif /* TPP_HAVE_TPP_W_INVALID_INTEGER */
+
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK
+#define TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK
+#if TPP_HAVE_TPP_TOK_INT
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK, 1(TPP_WG_SYNTAX), 0(), ~,
+            "expected %[<integer>%], %[<string>%] or %[,%] in %[__TPP_STR_PACK%] but got %Pt")
+#else /* TPP_HAVE_TPP_TOK_INT */
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK, 1(TPP_WG_SYNTAX), 0(), ~,
+            "expected %[<integer>%] or %[,%] in %[__TPP_STR_PACK%] but got %Pt")
+#endif /* !TPP_HAVE_TPP_TOK_INT */
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK */
 
 
 
@@ -6524,7 +6536,8 @@ TPP_DECL_END
 #define TPP_HAVE_TOKEN_ENCODESTRING                                          \
 	(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || \
 	 (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS) ||     \
-	 (TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ || TPP_HAVE_MACRO___FILE_NAME__))
+	 TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ ||              \
+	 TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_STR_PACK)
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
 /* Provide a function "tpp_lexer_decodeint_expr()" to parse an integer */
@@ -6534,7 +6547,11 @@ TPP_DECL_END
 
 /* Provide a function "tpp_lexer_decodeint()" to parse an integer */
 #ifndef TPP_HAVE_LEXER_DECODEINT
-#define TPP_HAVE_LEXER_DECODEINT ((TPP_HAVE_LEXER_DECODEINT_EXPR || TPP_HAVE_CPP_LINE || TPP_HAVE_CPP_DIGIT_LINE) && TPP_HAVE_TPP_TOK_INT)
+#define TPP_HAVE_LEXER_DECODEINT                               \
+	(TPP_HAVE_TPP_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR || \
+	                          TPP_HAVE_CPP_LINE ||             \
+	                          TPP_HAVE_CPP_DIGIT_LINE ||       \
+	                          TPP_HAVE_MACRO___TPP_STR_PACK))
 #endif /* !TPP_HAVE_LEXER_DECODEINT */
 
 /* Provide a function "tpp_lexer_decodefloat_expr()" to parse a float */
@@ -6546,6 +6563,11 @@ TPP_DECL_END
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT
 #define TPP_HAVE_LEXER_DECODEFLOAT (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
+
+/* Provide a function "tpp_lexer_parsecharacter_literal()" to parse character literals */
+#ifndef TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
+#define TPP_HAVE_LEXER_PARSECHARACTER_LITERAL (TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
+#endif /* !TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
 
 /* Provide a function "tpp_lexer_parsestring_expr()" to parse a string */
 #ifndef TPP_HAVE_LEXER_PARSESTRING_EXPR
@@ -6682,6 +6704,9 @@ TPP_DECL_END
 #ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
 #define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SKIP)
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK (TPP_HAVE_WARNINGS && TPP_HAVE_MACRO___TPP_STR_PACK)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK */
 #ifndef TPP_HAVE_TPP_W_ERROR
 #define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_ERROR || TPP_HAVE_PRAGMA_ERROR || TPP_HAVE_PRAGMA_GCC_ERROR))
 #endif /* !TPP_HAVE_TPP_W_ERROR */
@@ -12401,14 +12426,9 @@ typedef struct tpp_file {
 #if TPP_HAVE_IFDEF_STACK
 #define _tpp_file_subtext_init_ifdef(self) , tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
 #define _tpp_file_subtext_fini_ifdef(self) tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)),
-#define _tpp_file_subtext_fini_noifdef(self)                                                                                        \
-	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_alc) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_alc)), \
-	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt)), \
-	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_vec) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_vec)),
 #else /* TPP_HAVE_IFDEF_STACK */
 #define _tpp_file_subtext_init_ifdef(self)   /* nothing */
 #define _tpp_file_subtext_fini_ifdef(self)   /* nothing */
-#define _tpp_file_subtext_fini_noifdef(self) /* nothing */
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
 #define tpp_file_subtext_push(self)                                   \
@@ -12436,25 +12456,6 @@ typedef struct tpp_file {
 		       _tpp_file_subtext_break_common(self))
 #define tpp_file_subtext_pop(self)    \
 		tpp_file_subtext_break(self); \
-	} while (0)
-
-/* Same as above, but allowed to assume that wrapped code won't modify the #ifdef-stack */
-#define tpp_file_subtext_push_noifdef(self)                           \
-	do {                                                              \
-		tpp_file _tfptfnid_prev = *(self);                            \
-		(self)->TPP_INTERNAL(tf_prev)  = NULL; /* Prevent file pop */ \
-		(self)->TPP_INTERNAL(tf_tprev) = &_tfptfnid_prev;             \
-		(self)->TPP_INTERNAL(tf_kind)  = TPP_FILE_KIND_SUBTEXT        \
-		_tpp_file_init_lcpos(self)
-#define _tpp_file_subtext_break_common_noifdef(self)        \
-		tpp_assert((self)->TPP_INTERNAL(tf_prev) == NULL && \
-		           "Extra files were pushed"),              \
-		*(self) = _tfptfnid_prev
-#define tpp_file_subtext_break_noifdef(self)        \
-		(void)(_tpp_file_subtext_fini_noifdef(self) \
-		       _tpp_file_subtext_break_common_noifdef(self))
-#define tpp_file_subtext_pop_noifdef(self)    \
-		tpp_file_subtext_break_noifdef(self); \
 	} while (0)
 #endif /* TPP_HAVE_FILE_SUBTEXT */
 
@@ -12488,7 +12489,7 @@ typedef struct tpp_file {
 
 /* Initialize "self " as a "TPP_FILE_KIND_TEXT" file
  * @param: char const         *filename:  [0..1] Filename (if known)
- * @param: TPP_REF tpp_string *chunk:     File data chunk
+ * @param: TPP_REF tpp_string *chunk:     [inherit(always)] File data chunk
  * @param: void const         *text:      File data base pointer
  * @param: tpp_size            text_size: File data size
  * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text", or `TPP_LCINFO_INVALID'
@@ -15470,7 +15471,7 @@ tpp_lexer_parsestring_cb(tpp_lexer *self,
                                                  tpp_char const *str, tpp_size length),
                          void *arg, unsigned int flags);
 
-#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+#if TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
 /* Convenience wrapper to parse a character integer literal
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
@@ -15485,7 +15486,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
                                  /*out*/ tpp_intmax *tpp_restrict p_result,
                                  unsigned int flags);
-#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+#endif /* TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
 #endif /* TPP_HAVE_LEXER_DECODESTRING */
 
 #undef TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR

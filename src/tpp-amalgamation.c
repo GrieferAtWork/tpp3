@@ -24010,6 +24010,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
+	data.tlhtid_keyword = token->tt_kwd;
 	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
 	if (tok != TPP_TOK_OFCHAR('(')) {
@@ -24023,32 +24024,29 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 		return tok;
 
 	/* Setup file to (re-)parse the identifier string */
-	tpp_file_subtext_push_noifdef(file);
+	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self);
-	data.tlhtid_lexer   = self;
-	data.tlhtid_keyword = NULL;
-	if (!TPP_TOK_ISSTRING(tok)) {
-		if (!TPP_TOK_ISERR(tok)) {
+	data.tlhtid_lexer = self;
+	if (TPP_TOK_ISSTRING(tok)) {
+		tpp_errno error;
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_tpp_identifier_cb,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+		tok = TPP_TOK_OFERR_OR_EOF(error);
+	}
+	if (!TPP_TOK_ISERR(tok)) {
+		if (tpp_lexer_gettok(self) != TPP_TOK_EOF) {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
 			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
 			tok = TPP_TOK_OFERR_OR_EOF(error);
 #else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 			tok = TPP_TOK_EOF;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+			while (tpp_lexer_canpopfile(self))
+				tpp_lexer_popfile(self);
 		}
-	} else {
-		tpp_errno error;
-		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_tpp_identifier_cb,
-		                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
-#if TPP_HAVE_TPP_W_EXPECTED_STRING
-		/* Warning if current token isn't EOF */
-		if (!TPP_ISERR(error) && tpp_lexer_gettoken(self)->tt_id != TPP_TOK_EOF)
-			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
-#endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
-		tok = TPP_TOK_OFERR_OR_EOF(error);
 	}
-	tpp_file_subtext_pop_noifdef(file);
+	tpp_file_subtext_pop(file);
 
 	if (!TPP_TOK_ISERR(tok)) {
 		tpp_assert(data.tlhtid_keyword);
@@ -24340,45 +24338,46 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 		return tok;
 
 	/* Setup file to (re-)parse the string that's being decompiled */
-	tpp_file_subtext_push_noifdef(file);
+	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self);
-	if (!TPP_TOK_ISSTRING(tok)) {
-		if (!TPP_TOK_ISERR(tok)) {
-#if TPP_HAVE_TPP_W_EXPECTED_STRING
-			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
-			tok = TPP_TOK_OFERR_OR_EOF(error);
-#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
-			tok = TPP_TOK_EOF;
-#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
-		}
-		if (file->tf_chunk && !TPP_TOK_ISERR(tok))
-			tpp_string_incref(file->tf_chunk);
-		data.tlhsdsd_chunk  = file->tf_chunk;
-		data.tlhsdsd_str    = NULL;
-		data.tlhsdsd_length = 0;
-	} else {
+	if (TPP_TOK_ISSTRING(tok)) {
 		tpp_errno error;
 		/* IMPORTANT: Don't set "TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS" here! */
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_str_decompile_string,
 		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
-#if TPP_HAVE_TPP_W_EXPECTED_STRING
-		/* Warning if current token isn't EOF */
-		if (!TPP_ISERR(error) && tpp_lexer_gettoken(self)->tt_id != TPP_TOK_EOF) {
-			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
-			if (TPP_ISERR(error) && data.tlhsdsd_chunk)
-				tpp_string_decref(data.tlhsdsd_chunk);
-		}
-#endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 		tok = TPP_TOK_OFERR_OR_EOF(error);
+	} else {
+		data.tlhsdsd_chunk  = NULL;
+		data.tlhsdsd_str    = NULL;
+		data.tlhsdsd_length = 0;
 	}
-	tpp_file_subtext_pop_noifdef(file);
+	if (!TPP_TOK_ISERR(tok)) {
+		if (tpp_lexer_gettok(self) != TPP_TOK_EOF) {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			if (TPP_ISERR(error)) {
+				if (data.tlhsdsd_chunk)
+					tpp_string_decref(data.tlhsdsd_chunk);
+				tok = TPP_TOK_OFERR(error);
+			}
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+			tok = TPP_TOK_EOF;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+			while (tpp_lexer_canpopfile(self))
+				tpp_lexer_popfile(self);
+		}
+	}
+	tpp_file_subtext_pop(file);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 
 	/* Check for special case: empty string -> don't have to decompile anything! */
-	if (data.tlhsdsd_length == 0)
+	if (data.tlhsdsd_length == 0) {
+		if (data.tlhsdsd_chunk)
+			tpp_string_decref(data.tlhsdsd_chunk);
 		return TPP_TOK_EOF;
+	}
 
 	/* Push a sub-text file describing the decoded contents of the string */
 	prev_file = tpp_file_alloc();
@@ -24399,6 +24398,123 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 	return TPP_TOK_EOF; /* Instruct caller to yield the first token from the subtext file */
 }
 #endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
+
+
+#if TPP_HAVE_MACRO___TPP_STR_PACK
+static TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print_encoded, arg, text, num_bytes) {
+	return tpp_token_encodestring(&tpp_string_builder_print, arg, text, num_bytes);
+}
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
+	tpp_string_builder builder;
+	TPP_REF tpp_string *string;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *prev_file;
+	tpp_lexer_arginfo argv[1];
+	tpp_token_id tok;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "__TPP_STR_PACK",
+	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL |
+	                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	tpp_string_builder_init(&builder);
+
+	/* Setup file to (re-)parse the string that's being decompiled */
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0) {
+err_tok_subtext_builder:
+		tpp_file_subtext_break(file);
+		tpp_string_builder_fini(&builder);
+		return tok;
+	}
+	for (;;) {
+		tpp_ssize status;
+		tok = tpp_lexer_yield(self);
+		switch (tok) {
+		case TPP_TOK_EOF:
+			goto done_inner_loop;
+
+		case TPP_TOK_SPACE:
+		case TPP_TOK_LF:
+		TPP_CASE_TPP_TOK_COMMENT
+		case ',': /* Ignore all ','-token in here! */
+			break;
+
+		TPP_CASE_TPP_TOK_STRING
+			status = tpp_lexer_decodestring(self,
+			                                &tpp_string_builder_print_encoded,
+			                                &tpp_string_builder_print_encoded,
+			                                &builder);
+handle_status:
+			if (status < 0) {
+				tok = TPP_TOK_OFERR((tpp_errno)status);
+				goto err_tok_subtext_builder;
+			}
+			break;
+
+#if TPP_HAVE_TPP_TOK_INT
+		case TPP_TOK_INT: {
+			tpp_intmax value;
+			tpp_char value_ch[1];
+			tpp_errno error = tpp_lexer_decodeint(self, &value);
+			if (TPP_ISERR(error)) {
+				tok = TPP_TOK_OFERR(error);
+				goto err_tok_subtext_builder;
+			}
+			value_ch[0] = (tpp_char)value;
+			status = tpp_string_builder_print_encoded(&builder, value_ch, 1);
+			goto handle_status;
+		}	break;
+#endif /* TPP_HAVE_TPP_TOK_INT */
+
+		default:
+			if (TPP_TOK_ISERR(tok))
+				goto err_tok_subtext_builder;
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK
+			{
+				tpp_errno error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK);
+				if (TPP_TOK_ISERR(error)) {
+					tok = TPP_TOK_OFERR(error);
+					goto err_tok_subtext_builder;
+				}
+			}
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK */
+			break;
+		}
+	}
+done_inner_loop:
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_tok_subtext_builder;
+	tpp_file_subtext_pop(file);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+
+	/* Push a sub-text file describing the decoded contents of the string */
+	prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file) {
+		tpp_string_builder_fini(&builder);
+		return TPP_TOK_ENOMEM;
+	}
+	*prev_file = *file;
+	string = tpp_string_builder_pack(&builder);
+	tpp_file_init_text_ex(file, NULL, string,
+	                      tpp_string_str(string),
+	                      tpp_string_len(string),
+	                      TPP_LCINFO_INVALID, file->tf_enc);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return TPP_TOK_EOF; /* Instruct caller to yield the first token from the subtext file */
+}
+#endif /* !TPP_HAVE_MACRO___TPP_STR_PACK */
 
 
 
@@ -24635,17 +24751,6 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
-#if TPP_HAVE_MACRO___TPP_LOAD_FILE
-	/* TODO: __TPP_LOAD_FILE */
-#endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
-#if TPP_HAVE_MACRO___TPP_RANDOM
-	/* TODO: __TPP_RANDOM */
-#endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
-/************************************************************************/
-
-
-
-/************************************************************************/
 #if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
 	case TPP_KWD___TPP_STR_DECOMPILE:
 		return tpp_lexer_yield_handle___TPP_STR_DECOMPILE(self);
@@ -24656,8 +24761,14 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 /************************************************************************/
 #if TPP_HAVE_MACRO___TPP_STR_PACK
-	/* TODO: __TPP_STR_PACK */
+	case TPP_KWD___TPP_STR_PACK:
+		return tpp_lexer_yield_handle___TPP_STR_PACK(self);
 #endif /* !TPP_HAVE_MACRO___TPP_STR_PACK */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_MACRO___TPP_STR_SUBSTR
 	/* TODO: #define __TPP_STR_SUBSTR(str, start, end) __TPP_EVAL((str)[(start):(end)]) */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
@@ -24667,6 +24778,12 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___TPP_COUNT_TOKENS
 	/* TODO: __TPP_COUNT_TOKENS */
 #endif /* !TPP_HAVE_MACRO___TPP_COUNT_TOKENS */
+#if TPP_HAVE_MACRO___TPP_LOAD_FILE
+	/* TODO: __TPP_LOAD_FILE */
+#endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
+#if TPP_HAVE_MACRO___TPP_RANDOM
+	/* TODO: __TPP_RANDOM */
+#endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
 /************************************************************************/
 
 
@@ -27243,7 +27360,7 @@ tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR */
 
 
-#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+#if TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
 struct tpp_lexer_decodecharacter_data {
 #if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
 	tpp_lexer *tldcd_lexer; /* [1..1] Active lexer */
@@ -27301,7 +27418,7 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
 	*p_result = data.tldcd_value;
 	return (tpp_errno)(int)status;
 }
-#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+#endif /* TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
 
 
 #if TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR

@@ -2699,7 +2699,8 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TOKEN_ENCODESTRING                                          \
 	(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || \
 	 (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS) ||     \
-	 (TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ || TPP_HAVE_MACRO___FILE_NAME__))
+	 TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ ||              \
+	 TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_STR_PACK)
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
 /* Provide a function "tpp_lexer_decodeint_expr()" to parse an integer */
@@ -2709,7 +2710,11 @@ print("#endif /" "* !... *" "/");
 
 /* Provide a function "tpp_lexer_decodeint()" to parse an integer */
 #ifndef TPP_HAVE_LEXER_DECODEINT
-#define TPP_HAVE_LEXER_DECODEINT ((TPP_HAVE_LEXER_DECODEINT_EXPR || TPP_HAVE_CPP_LINE || TPP_HAVE_CPP_DIGIT_LINE) && TPP_HAVE_TPP_TOK_INT)
+#define TPP_HAVE_LEXER_DECODEINT                               \
+	(TPP_HAVE_TPP_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR || \
+	                          TPP_HAVE_CPP_LINE ||             \
+	                          TPP_HAVE_CPP_DIGIT_LINE ||       \
+	                          TPP_HAVE_MACRO___TPP_STR_PACK))
 #endif /* !TPP_HAVE_LEXER_DECODEINT */
 
 /* Provide a function "tpp_lexer_decodefloat_expr()" to parse a float */
@@ -2721,6 +2726,11 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT
 #define TPP_HAVE_LEXER_DECODEFLOAT (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
+
+/* Provide a function "tpp_lexer_parsecharacter_literal()" to parse character literals */
+#ifndef TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
+#define TPP_HAVE_LEXER_PARSECHARACTER_LITERAL (TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
+#endif /* !TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
 
 /* Provide a function "tpp_lexer_parsestring_expr()" to parse a string */
 #ifndef TPP_HAVE_LEXER_PARSESTRING_EXPR
@@ -2857,6 +2867,9 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
 #define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SKIP)
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK (TPP_HAVE_WARNINGS && TPP_HAVE_MACRO___TPP_STR_PACK)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK */
 #ifndef TPP_HAVE_TPP_W_ERROR
 #define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_ERROR || TPP_HAVE_PRAGMA_ERROR || TPP_HAVE_PRAGMA_GCC_ERROR))
 #endif /* !TPP_HAVE_TPP_W_ERROR */

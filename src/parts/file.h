@@ -514,14 +514,9 @@ typedef struct tpp_file {
 #if TPP_HAVE_IFDEF_STACK
 #define _tpp_file_subtext_init_ifdef(self) , tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
 #define _tpp_file_subtext_fini_ifdef(self) tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)),
-#define _tpp_file_subtext_fini_noifdef(self)                                                                                        \
-	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_alc) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_alc)), \
-	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt)), \
-	tpp_assert((self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_vec) == _tfptfnid_prev.TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_vec)),
 #else /* TPP_HAVE_IFDEF_STACK */
 #define _tpp_file_subtext_init_ifdef(self)   /* nothing */
 #define _tpp_file_subtext_fini_ifdef(self)   /* nothing */
-#define _tpp_file_subtext_fini_noifdef(self) /* nothing */
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
 #define tpp_file_subtext_push(self)                                   \
@@ -549,25 +544,6 @@ typedef struct tpp_file {
 		       _tpp_file_subtext_break_common(self))
 #define tpp_file_subtext_pop(self)    \
 		tpp_file_subtext_break(self); \
-	} while (0)
-
-/* Same as above, but allowed to assume that wrapped code won't modify the #ifdef-stack */
-#define tpp_file_subtext_push_noifdef(self)                           \
-	do {                                                              \
-		tpp_file _tfptfnid_prev = *(self);                            \
-		(self)->TPP_INTERNAL(tf_prev)  = NULL; /* Prevent file pop */ \
-		(self)->TPP_INTERNAL(tf_tprev) = &_tfptfnid_prev;             \
-		(self)->TPP_INTERNAL(tf_kind)  = TPP_FILE_KIND_SUBTEXT        \
-		_tpp_file_init_lcpos(self)
-#define _tpp_file_subtext_break_common_noifdef(self)        \
-		tpp_assert((self)->TPP_INTERNAL(tf_prev) == NULL && \
-		           "Extra files were pushed"),              \
-		*(self) = _tfptfnid_prev
-#define tpp_file_subtext_break_noifdef(self)        \
-		(void)(_tpp_file_subtext_fini_noifdef(self) \
-		       _tpp_file_subtext_break_common_noifdef(self))
-#define tpp_file_subtext_pop_noifdef(self)    \
-		tpp_file_subtext_break_noifdef(self); \
 	} while (0)
 #endif /* TPP_HAVE_FILE_SUBTEXT */
 
@@ -601,7 +577,7 @@ typedef struct tpp_file {
 
 /* Initialize "self " as a "TPP_FILE_KIND_TEXT" file
  * @param: char const         *filename:  [0..1] Filename (if known)
- * @param: TPP_REF tpp_string *chunk:     File data chunk
+ * @param: TPP_REF tpp_string *chunk:     [inherit(always)] File data chunk
  * @param: void const         *text:      File data base pointer
  * @param: tpp_size            text_size: File data size
  * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text", or `TPP_LCINFO_INVALID'
