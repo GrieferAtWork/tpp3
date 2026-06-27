@@ -937,7 +937,6 @@ tpp_lexer_handle_tpp_identifier_cb(void *arg, tpp_string *chunk,
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	struct tpp_lexer_handle_tpp_identifier_data data;
-	tpp_char const *identifier_start;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_lexer_arginfo argv[1];
@@ -953,7 +952,6 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
-	identifier_start = token->tt_start;
 
 	/* Setup file to (re-)parse the identifier string */
 	tpp_file_subtext_push_noifdef(file);
@@ -988,7 +986,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 		/* Setup current token to refer to "data.tlhtid_keyword" */
 		token->tt_id    = tok = data.tlhtid_keyword->tk_id;
 		token->tt_kwd   = data.tlhtid_keyword;
-		token->tt_start = identifier_start;
+/*		token->tt_start = ...;  * Already correct (points at the '__TPP_IDENTIFIER'-keyword) */
 /*		token->tt_end   = ...;  * Already correct (points after the trailing ')'-token) */
 	}
 	return tok;
@@ -1234,6 +1232,107 @@ err_tok_ofr:
 #endif /* !TPP_HAVE_MACRO___has_embed */
 
 
+#if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
+struct tpp_lexer_handle_str_decompile_string_data {
+	TPP_REF tpp_string *tlhsdsd_chunk;   /* [0..1] Out: chunk containing string */
+	tpp_char const     *tlhsdsd_str;     /* String to decompile */
+	tpp_size            tlhsdsd_length;  /* Length of "tlhsdsd_str" */
+};
+static TPP_WUNUSED tpp_errno TPPCALL 
+tpp_lexer_handle_str_decompile_string(void *arg, tpp_string *chunk,
+                                      tpp_char const *str, tpp_size length) {
+	struct tpp_lexer_handle_str_decompile_string_data *data;
+	data = (struct tpp_lexer_handle_str_decompile_string_data *)arg;
+	if (chunk)
+		tpp_string_incref(chunk);
+	data->tlhsdsd_chunk  = chunk;
+	data->tlhsdsd_str    = str;
+	data->tlhsdsd_length = length;
+	return TPP_EOK;
+}
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
+	struct tpp_lexer_handle_str_decompile_string_data data;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *prev_file;
+	tpp_lexer_arginfo argv[1];
+	tpp_token_id tok;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "__TPP_STR_DECOMPILE",
+	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+
+	/* Setup file to (re-)parse the string that's being decompiled */
+	tpp_file_subtext_push_noifdef(file);
+	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
+	tok = tpp_lexer_yield(self);
+	if (!TPP_TOK_ISSTRING(tok)) {
+		if (!TPP_TOK_ISERR(tok)) {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			tok = TPP_TOK_OFERR_OR_EOF(error);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+			tok = TPP_TOK_EOF;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+		}
+		if (file->tf_chunk && !TPP_TOK_ISERR(tok))
+			tpp_string_incref(file->tf_chunk);
+		data.tlhsdsd_chunk  = file->tf_chunk;
+		data.tlhsdsd_str    = NULL;
+		data.tlhsdsd_length = 0;
+	} else {
+		tpp_errno error;
+		/* IMPORTANT: Don't set "TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS" here! */
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_str_decompile_string,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		/* Warning if current token isn't EOF */
+		if (!TPP_ISERR(error) && tpp_lexer_gettoken(self)->tt_id != TPP_TOK_EOF) {
+			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			if (TPP_ISERR(error) && data.tlhsdsd_chunk)
+				tpp_string_decref(data.tlhsdsd_chunk);
+		}
+#endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+		tok = TPP_TOK_OFERR_OR_EOF(error);
+	}
+	tpp_file_subtext_pop_noifdef(file);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+
+	/* Check for special case: empty string -> don't have to decompile anything! */
+	if (data.tlhsdsd_length == 0)
+		return TPP_TOK_EOF;
+
+	/* Push a sub-text file describing the decoded contents of the string */
+	prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file) {
+		if (data.tlhsdsd_chunk)
+			tpp_string_decref(data.tlhsdsd_chunk);
+		return TPP_TOK_ENOMEM;
+	}
+	*prev_file = *file;
+	file->tf_kind  = TPP_FILE_KIND_SUBTEXT
+	_tpp_file_subtext_init_ifdef(file)
+	_tpp_file_init_lcpos(file);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	file->tf_chunk = data.tlhsdsd_chunk; /* Inherit reference */
+	file->tf_pos   = data.tlhsdsd_str;
+	file->tf_end   = data.tlhsdsd_str + data.tlhsdsd_length;
+	return TPP_TOK_EOF; /* Instruct caller to yield the first token from the subtext file */
+}
+#endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
+
+
+
 
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 /* Handle a builtin macro.
@@ -1473,11 +1572,20 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___TPP_RANDOM
 	/* TODO: __TPP_RANDOM */
 #endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
-	/* TODO: __TPP_STR_DECOMPILE */
-	/* TODO: Implement using "tpp_lexer_parsestring_cb" + TPP_FILE_KIND_SUBTEXT
-	 * NOTE: This is a case where "TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS" must NOT be set */
+	case TPP_KWD___TPP_STR_DECOMPILE:
+		return tpp_lexer_yield_handle___TPP_STR_DECOMPILE(self);
 #endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_MACRO___TPP_STR_PACK
 	/* TODO: __TPP_STR_PACK */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_PACK */

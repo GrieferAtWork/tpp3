@@ -2394,7 +2394,8 @@ print("#endif /" "* !... *" "/");
      TPP_HAVE_CPP_INCLUDE ||      \
      TPP_HAVE_CPP_INCLUDE_NEXT || \
      TPP_HAVE_CPP_IMPORT ||       \
-     TPP_HAVE_CPP_EMBED)
+     TPP_HAVE_CPP_EMBED ||        \
+     TPP_HAVE_FILE_SUBTEXT)
 #define TPP_HAVE_INCLUDE_STACK 1
 #else /* ... */
 #define TPP_HAVE_INCLUDE_STACK 0
