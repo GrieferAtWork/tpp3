@@ -397,6 +397,108 @@ err_temp:
 
 
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
+struct tpp_block_string_prefix {
+	tpp_char const *tbsp_start;  /* [1..1] Prefix start */
+	tpp_char const *tbsp_end;    /* [1..1] Prefix end */
+};
+
+#define tpp_block_string_prefix_isempty(self) \
+	((self)->tbsp_start >= (self)->tbsp_end)
+
+
+/* Turn "lhs" into the union of "lhs" and "rhs" */
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_block_string_prefix_union(struct tpp_block_string_prefix *tpp_restrict lhs,
+                              struct tpp_block_string_prefix const *tpp_restrict rhs) {
+	tpp_size i;
+	tpp_size lhs_len = (tpp_size)(lhs->tbsp_end - lhs->tbsp_start);
+	tpp_size rhs_len = (tpp_size)(rhs->tbsp_end - rhs->tbsp_start);
+	tpp_size com_len = lhs_len < rhs_len ? lhs_len : rhs_len;
+	for (i = 0; i < com_len; ++i) {
+		tpp_char lhs_ch = lhs->tbsp_start[i];
+		tpp_char rhs_ch = rhs->tbsp_start[i];
+		if (lhs_ch != rhs_ch)
+			break;
+	}
+	lhs->tbsp_end = lhs->tbsp_start + i;
+}
+
+static TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_char const *TPPCALL
+tpp_block_string_loadprefix(tpp_lexer *tpp_restrict lexer,
+                            struct tpp_block_string_prefix *tpp_restrict self,
+                            tpp_char const *start, tpp_char const *end) {
+	tpp_char const *prefix_start = start;
+	tpp_char const *prefix_end = prefix_start;
+	tpp_assert(start <= end);
+	(void)lexer;
+	while (prefix_end < end) {
+		tpp_char ch = *prefix_end++;
+		if (tpp_ascii_islf(ch)) {
+			if (ch == '\r' && (prefix_end < end && *prefix_end == '\n'))
+				++prefix_end;
+			/* Whitespace in empty lines doesn't count */
+			prefix_start = prefix_end;
+			continue;
+		} else if (tpp_ascii_isspace(ch)) {
+			continue;
+		} else
+#if TPP_HAVE_UNICODE
+		if (ch >= 0x80 && tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
+			tpp_char const *next_prefix_end = prefix_end - 1;
+			tpp_unichar uc = tpp_unicode_readutf8(&next_prefix_end, end);
+			if (tpp_unicode_islf(uc)) {
+				/* Whitespace in empty lines doesn't count */
+				prefix_start = prefix_end = next_prefix_end;
+				continue;
+			} else if (tpp_unicode_isspace(uc)) {
+				prefix_end = next_prefix_end;
+				continue;
+			}
+		} else
+#endif /* TPP_HAVE_UNICODE */
+		{
+			--prefix_end; /* First non-whitespace character found */
+		}
+		break;
+	}
+	self->tbsp_start = prefix_start;
+	self->tbsp_end   = prefix_end;
+	return prefix_end;
+}
+
+/* Returns a pointer *after* the next linefeed character(-sequence), or at "end" */
+static TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
+tpp_block_string_seeklf(tpp_lexer *tpp_restrict lexer,
+                        tpp_char const *start, tpp_char const *end,
+                        tpp_char const **p_eol_start) {
+	while (start < end) {
+		tpp_char ch = *start++;
+		if (tpp_ascii_islf(ch)) {
+			if (p_eol_start)
+				*p_eol_start = start - 1;
+			if (ch == '\r' && (start < end && *start == '\n'))
+				++start;
+			return start;
+		} else
+#if TPP_HAVE_UNICODE
+		if (ch >= 0x80 && tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
+			tpp_char const *after_unicode = start - 1;
+			tpp_unichar uc = tpp_unicode_readutf8(&after_unicode, end);
+			if (tpp_unicode_islf(uc)) {
+				if (p_eol_start)
+					*p_eol_start = start - 1;
+				return after_unicode;
+			}
+		} else
+#endif /* TPP_HAVE_UNICODE */
+		{
+		}
+	}
+	if (p_eol_start)
+		*p_eol_start = start;
+	return start;
+}
+
 /* Decode string:
  * |"""
  * |.   foobar fdasudfad
@@ -411,26 +513,65 @@ tpp_token_decodestring_block(tpp_lexer *tpp_restrict self,
                              tpp_formatprinter data_printer,
                              tpp_formatprinter utf8_printer,
                              void *arg) {
-	tpp_assert(start <= end);
-	/* TODO: Find width of common line-prefix */
-	/* TODO: If common line-prefix is empty, can use "tpp_token_decodestring_basic()" to decode */
-	/* TODO: Decode each string-block line by passing it to "tpp_token_decodestring_basic()"
-	 *       Include the trailing line-feed of every line here (the last line may not have a
-	 *       trailing line-feed if the block-string ends with """ on the same line) */
-	(void)self;
-	(void)start;
-	(void)end;
-	(void)data_printer;
-	(void)utf8_printer;
-	(void)arg;
-	return 0;
+	tpp_ssize temp, result = 0;
+	struct tpp_block_string_prefix common_prefix;
+	tpp_size common_prefix_len;
+	tpp_char const *iter = start;
+	tpp_assert(iter <= end);
+	iter = tpp_block_string_loadprefix(self, &common_prefix, iter, end);
+	if (tpp_block_string_prefix_isempty(&common_prefix))
+		goto handle_empty_prefix;
+	while (iter < end) {
+		struct tpp_block_string_prefix next_prefix;
+		iter = tpp_block_string_seeklf(self, iter, end, NULL);
+		iter = tpp_block_string_loadprefix(self, &next_prefix, iter, end);
+		if (iter >= end)
+			break; /* Don't include prefix on last line! */
+		tpp_block_string_prefix_union(&common_prefix, &next_prefix);
+		if (tpp_block_string_prefix_isempty(&common_prefix))
+			goto handle_empty_prefix;
+	}
+
+	/* Common line prefix has been determined at this point
+	 * -> now to actually print the string. */
+	iter = start;
+	common_prefix_len = (tpp_size)(common_prefix.tbsp_end - common_prefix.tbsp_start);
+	while (iter < end) {
+		tpp_size line_length_without_eol, line_length_with_eol;
+		tpp_char const *eol_start, *eol_end;
+		eol_end = tpp_block_string_seeklf(self, iter, end, &eol_start);
+		line_length_without_eol = (tpp_size)(eol_start - iter);
+		line_length_with_eol    = (tpp_size)(eol_end - iter);
+		if (common_prefix_len < line_length_without_eol) {
+			temp = tpp_token_decodestring_basic(self,
+			                                    iter + common_prefix_len,
+			                                    iter + line_length_with_eol,
+			                                    data_printer, utf8_printer, arg);
+		} else {
+			/* Special case: blank line (without common prefix) -> only print EOL */
+			tpp_size eol_size = (tpp_size)(eol_end - eol_start);
+			temp = tpp_formatprinter_print(data_printer, arg, eol_start, eol_size);
+		}
+		if (temp < 0)
+			return temp;
+		result += temp;
+		iter = eol_end;
+	}
+	return result;
+handle_empty_prefix:
+	return tpp_token_decodestring_basic(self, start, end, data_printer, utf8_printer, arg);
 }
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
 
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
-#if TPP_HAVE_BSE && 1 /* XXX: Should BSE really be skipped here? I mean:
-                       *      this is ~supposed~ to be for *raw* strings,
-                       *      so you'd think BSE should be included... */
+#if TPP_HAVE_BSE && 1
+/* TODO: Behavior here should be controllable via a config. However, default
+ * should be disabled (no handling of BSE), since that's how GCC behaves:
+ * >> static char const foo[] =
+ * >> R"AB(a\
+ * >> b)AB";
+ * >> typedef int x[sizeof(foo) == 5 ? 1 : -1]; // 5: {'a','\\','\n','b',0}, as opposed to 3: {'a','b',0}
+ */
 #define tpp_token_decodestring_raw_SKIPS_BSE 1
 /* Decode string: R"FOO(bla bla bla)FOO"
 *                       ^start     ^end */

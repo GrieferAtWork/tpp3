@@ -5929,55 +5929,55 @@ TPP_DECL_END
 /* Support for: #pragma region,  #pragma endregion
  * @detect: #if __has_known_extension("-fpragma-region") */
 #ifndef TPP_HAVE_PRAGMA_REGION
-#define TPP_HAVE_PRAGMA_REGION (TPP_HAVE_PRAGMA ? TPP_HAVE_PROFILE_NOT_MINIMAL : 0) /* "-fpragma-region" */
+#define TPP_HAVE_PRAGMA_REGION (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-region" */
 #endif /* !TPP_HAVE_PRAGMA_REGION */
 
 /* Support for: #pragma tpp_exec("...")
  * @detect: #if __has_known_extension("-fpragma-tpp-exec") */
 #ifndef TPP_HAVE_PRAGMA_TPP_EXEC
-#define TPP_HAVE_PRAGMA_TPP_EXEC (TPP_HAVE_PRAGMA ? TPP_HAVE_PROFILE_NOT_MINIMAL : 0) /* "-fpragma-tpp-exec" */
+#define TPP_HAVE_PRAGMA_TPP_EXEC (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-tpp-exec" */
 #endif /* !TPP_HAVE_PRAGMA_TPP_EXEC */
 
 /* Support for: #pragma tpp_set_keyword_flags("foo", 0x7f)
  * @detect: #if __has_known_extension("-fpragma-tpp-set-keyword-flags") */
 #ifndef TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
-#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS (TPP_HAVE_PRAGMA ? TPP_HAVE_PROFILE_NOT_MINIMAL : 0) /* "-fpragma-tpp-set-keyword-flags" */
+#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-tpp-set-keyword-flags" */
 #endif /* !TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
 
 /* Support for: #pragma GCC poison foo
  * @detect: #if __has_known_extension("-fpragma-gcc-poison") */
 #ifndef TPP_HAVE_PRAGMA_GCC_POISON
-#define TPP_HAVE_PRAGMA_GCC_POISON (TPP_HAVE_PRAGMA ? TPP_HAVE_PROFILE_NOT_MINIMAL : 0) /* "-fpragma-gcc-poison" */
+#define TPP_HAVE_PRAGMA_GCC_POISON (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-poison" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_POISON */
 
 /* Support for: #pragma GCC warning "message"
  * @detect: #if __has_known_extension("-fpragma-gcc-warning") */
 #ifndef TPP_HAVE_PRAGMA_GCC_WARNING
-#define TPP_HAVE_PRAGMA_GCC_WARNING ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? TPP_HAVE_PROFILE_NOT_MINIMAL : 0) /* "-fpragma-gcc-warning" */
+#define TPP_HAVE_PRAGMA_GCC_WARNING ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-warning" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_WARNING */
 
 /* Support for: #pragma GCC error "message"
  * @detect: #if __has_known_extension("-fpragma-gcc-error") */
 #ifndef TPP_HAVE_PRAGMA_GCC_ERROR
-#define TPP_HAVE_PRAGMA_GCC_ERROR ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? TPP_HAVE_PROFILE_NOT_MINIMAL : 0) /* "-fpragma-gcc-error" */
+#define TPP_HAVE_PRAGMA_GCC_ERROR ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-error" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_ERROR */
 
 /* Support for: #pragma GCC system_header
  * @detect: #if __has_known_extension("-fpragma-gcc-system-header") */
 #ifndef TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
-#define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER (TPP_HAVE_PRAGMA ? TPP_HAVE_PROFILE_NOT_MINIMAL : 0) /* "-fpragma-gcc-system-header" */
+#define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-system-header" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
 
 /* Support for: #pragma GCC diagnostic
  * @detect: #if __has_known_extension("-fpragma-gcc-diagnostic") */
 #ifndef TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
-#define TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? TPP_HAVE_PROFILE_NOT_MINIMAL : 0) /* "-fpragma-gcc-diagnostic" */
+#define TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-diagnostic" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC */
 
 /* Support for: #pragma GCC dependency
  * @detect: #if __has_known_extension("-fpragma-gcc-dependency") */
 #ifndef TPP_HAVE_PRAGMA_GCC_DEPENDENCY
-#define TPP_HAVE_PRAGMA_GCC_DEPENDENCY (TPP_HAVE_PRAGMA ? TPP_HAVE_PROFILE_NOT_MINIMAL : 0) /* "-fpragma-gcc-dependency" */
+#define TPP_HAVE_PRAGMA_GCC_DEPENDENCY (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-dependency" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_DEPENDENCY */
 
 /* Support for: #pragma TPP warning(...)  (same as TPP_HAVE_PRAGMA_WARNING, but doesn't require "-fpragma-warning")
@@ -6504,6 +6504,14 @@ TPP_DECL_END
 #ifndef TPP_HAVE_LEXER_DECODESTRING
 #define TPP_HAVE_LEXER_DECODESTRING (TPP_HAVE_TPP_TOK_STRINGLIKE)
 #endif /* !TPP_HAVE_LEXER_DECODESTRING */
+
+/* Provide an optional performance-optimization flag "TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS"
+ * that may be passed to "tpp_lexer_parsestring_cb()" to speed up decoding of certain kinds
+ * of strings (by slightly weakening what callbacks are allowed to do when this flag is set) */
+#ifndef TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
+#define TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS \
+	(TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 
 /* Provide a function "tpp_expr_value_printrepr()" to construct the result of __TPP_EVAL */
 #ifndef TPP_HAVE_EXPR_VALUE_PRINTREPR
@@ -15381,8 +15389,21 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
 
 /* Flags for `tpp_lexer_parsestring()' & friends. */
 #define TPP_LEXER_PARSESTRING_FLAG_NORMAL      0x0000 /* Normal flags */
+#if TPP_HAVE_STRING_AUTO_CONCAT
 #define TPP_LEXER_PARSESTRING_FLAG_STOPONSPACE 0x0001 /* Stop if a NOLINE-COMMENT or SPACE token is hit */
 #define TPP_LEXER_PARSESTRING_FLAG_STOPONLF    0x0002 /* Stop if a LINE-COMMENT or LF token is hit */
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
+#if TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
+#define TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS  0x0004 /* For "tpp_lexer_parsestring_cb()" only: allow "cb" to be called with a stack-allocated
+                                                       * buffers (and a valid, but unrelated, possibly NULL "chunk" argument) when decoding a
+                                                       * string like "\xFF". When this flag it's set, TPP will be forced to allocate a fresh
+                                                       * heap-tpp_string for such tokens, which will be passed to "cb" instead.
+                                                       *
+                                                       * This flag may be set to speed up callbacks that don't "tpp_string_incref()" the given
+                                                       * "chunk" argument, but is otherwise optional. */
+#else /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
+#define TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS  0x0000 /* No-op */
+#endif /* !TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 
 /* Same as "tpp_lexer_decodestring()", but also "tpp_lexer_yield()" to the next token.
  * Then, if that token is also string-like (TPP_TOK_ISSTRING()), decode it also,
