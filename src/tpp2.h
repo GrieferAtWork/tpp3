@@ -1380,8 +1380,9 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *    are managed and pushed on the #include-stack
  *  - These functions don't exist in the same manner anymore
  *  - To migrate these functions, see the following:
- *    - tpp_lexer_init_filename()   (TPPFile_Open)
- *    - tpp_lexer_init_io_ex()      (TPPFile_OpenStream)
+ *                          First file                  Additional file
+ *    - TPPFile_Open:       tpp_lexer_initfile_open()   tpp_lexer_pushfile_open()
+ *    - TPPFile_OpenStream: tpp_lexer_initfile_io_ex()  tpp_lexer_pushfile_io_ex()
  */
 
 /* >> char *TPP_Unescape_(tpp_lexer *self, char *buf, char const *data, size_t size);
@@ -5199,8 +5200,10 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #define l_counter    TPP_INTERNAL(tl_builtin_counter)
 
 #define TPPLexer_Init(self) \
-	(tpp_lexer_init_text_ex(self, NULL, NULL, NULL, 0, TPP_LCINFO_INVALID, TPP_FILE_ENCODING_UTF8), 1)
-#define TPPLexer_Quit(self) tpp_lexer_fini(self)
+	(tpp_lexer_init(self),  \
+	 tpp_lexer_initfile_text_ascii(self, NULL, NULL, NULL, 0, TPP_LCINFO_INVALID), 1)
+#define TPPLexer_Quit(self) \
+	(tpp_lexer_finifile(self), tpp_lexer_fini(self))
 
 /* Clear the current ifdef-stack and warn about each entry.
  * @return: 1: Everything was ok, or no critical warning happened.
@@ -5212,8 +5215,7 @@ TPP_INLINE int TPPCALL TPPLexer_ClearIfdefStack_(tpp_lexer *self) {
 	if (TPP_ISERR(error))
 		return 0;
 	ifdef_stack = tpp_file_getifdef(tpp_lexer_getfile(self));
-	tpp_ifdef_stack_fini(ifdef_stack);
-	tpp_ifdef_stack_init(ifdef_stack);
+	tpp_ifdef_stack_clear(ifdef_stack);
 	return 1;
 }
 

@@ -9748,8 +9748,66 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_end) ==
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_chunk) ==
                   tpp_offsetof(tpp_lexer, tl_core.tlc_input.tli_file.tf_chunk));
 
+/* Initialize/finalize everything about "self", except for the
+ * currently loaded file; which the caller must still initialize
+ * using one of the "tpp_lexer_initfile_*" functions below. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-_tpp_lexer_fini_common(tpp_lexer *tpp_restrict self) {
+tpp_lexer_init(tpp_lexer *tpp_restrict self) {
+	tpp_keywords_init(&self->tl_kwds);
+
+#if TPP_HAVE_EXTENSIONS
+	tpp_extensions_init(&self->tl_exts);
+#endif /* TPP_HAVE_EXTENSIONS */
+
+#if TPP_HAVE_FEATURES
+	tpp_features_init(&self->tl_feat);
+#endif /* TPP_HAVE_FEATURES */
+
+#if TPP_HAVE_LEXER_STATE_FLAGS
+	self->tl_state = TPP_LEXER_STATE_FLAG_NORMAL;
+#endif /* TPP_HAVE_LEXER_STATE_FLAGS */
+
+#if TPP_HAVE_INCLUDE_PATH
+	tpp_include_paths_init(&self->tl_include_paths);
+#endif /* TPP_HAVE_INCLUDE_PATH */
+
+#if TPP_HAVE_WARNINGS
+	tpp_warnings_init(&self->tl_warn);
+#if !defined(TPP_CONFIG_WARNPRINTER) && TPP_HAVE_BUILTIN_WARNPRINTER <= 0
+	self->tl_warnprinter = NULL;
+#endif /* !TPP_CONFIG_WARNPRINTER && TPP_HAVE_BUILTIN_WARNPRINTER <= 0 */
+#endif /* TPP_HAVE_WARNINGS */
+
+#if TPP_HAVE_LEXER_PARSEEXPR
+#if !defined(TPP_CONFIG_EXPRPARSER) && TPP_HAVE_BUILTIN_EXPRPARSER <= 0
+	self->tl_expr_parser_cb = NULL;
+#endif /* !TPP_CONFIG_EXPRPARSER && TPP_HAVE_BUILTIN_EXPRPARSER <= 0 */
+#endif /* TPP_HAVE_LEXER_PARSEEXPR */
+
+#if TPP_HAVE_WARNING_ERROR
+	self->tl_error_count = 0;
+#if TPP_ERROR_LIMIT < 0
+	self->tl_error_limit = (tpp_size)(-TPP_ERROR_LIMIT);
+#endif /* TPP_ERROR_LIMIT < 0 */
+#endif /* TPP_HAVE_WARNING_ERROR */
+
+#if TPP_HAVE_MACRO___COUNTER__
+	self->tl_builtin_counter = 0;
+#endif /* TPP_HAVE_MACRO___COUNTER__ */
+
+#if TPP_HAVE_LEXER_TIME
+	tpp_time_empty(&self->tl_time);
+#endif /* TPP_HAVE_LEXER_TIME */
+}
+
+
+/* Finalize the lexer, except for the currently loaded file.
+ *
+ * If the caller made use of "tpp_lexer_initfile_*", then they
+ * must also (either before or after this function) call
+ * `tpp_lexer_finifile()' to finalize the currently loaded file. */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 	/* Finalize keywords */
 	tpp_keywords_fini(&self->tl_kwds);
 
@@ -9774,8 +9832,12 @@ _tpp_lexer_fini_common(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_PATH */
 }
 
+/* Finalize the currently loaded file (including any extra files
+ * found on the #include-stack, but that hadn't been popped yet)
+ *
+ * This function must be called after "tpp_lexer_initfile_*" has been */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
+tpp_lexer_finifile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 
 	/* Finalize whatever still remains of the #include-stack */
@@ -9791,33 +9853,30 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 
 	/* Finalize the top-most file of the #include-stack */
 	tpp_file_fini(file);
-
-	/* Finalize common data... */
-	_tpp_lexer_fini_common(self);
 }
 
 
-/* Initialize a lexer that simply reads the given [text,text+text_size) blob.
+/* Initialize a lexer's file to read the given [text,text+text_size) blob.
  * @param: start_lc: [valid_if(chunk != NULL)] */
 #if TPP_HAVE_UNICODE
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_init_text_ex(tpp_lexer *tpp_restrict self,
-                       /*utf-8*/ char const *filename,
-                       /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                       void const *text, tpp_size text_size,
-                       tpp_lcinfo start_lc, tpp_file_encoding encoding)
+tpp_lexer_initfile_text_ex(tpp_lexer *tpp_restrict self,
+                           /*utf-8*/ char const *filename,
+                           /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                           void const *text, tpp_size text_size,
+                           tpp_lcinfo start_lc, tpp_file_encoding encoding)
 #else /* TPP_HAVE_UNICODE */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_init_text_ascii(tpp_lexer *tpp_restrict self,
-                          /*utf-8*/ char const *filename,
-                          /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                          void const *text, tpp_size text_size,
-                          tpp_lcinfo start_lc)
+tpp_lexer_initfile_text_ascii(tpp_lexer *tpp_restrict self,
+                              /*utf-8*/ char const *filename,
+                              /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                              void const *text, tpp_size text_size,
+                              tpp_lcinfo start_lc)
 #endif /* !TPP_HAVE_UNICODE */
 {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
-	_tpp_lexer_init_common(self);
+	tpp_lexer_init(self);
 }
 
 
@@ -9829,18 +9888,18 @@ tpp_lexer_init_text_ascii(tpp_lexer *tpp_restrict self,
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
  * @param: ioflags:  Extra flags specifying how to interact with "handle":
  *                   - TPP_FILE_IOFLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
- *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_fini()' will not close "handle"
+ *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
  *                   - TPP_FILE_IOFLAGS_SYSHDR:   Do not emit warnings */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_init_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                     tpp_io_handle handle, tpp_file_ioflags ioflags) {
+tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
+                         tpp_io_handle handle, tpp_file_ioflags ioflags) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	/* It can never be a keyword, since the lexer is only being
 	 * initialized right now (and the keyword would have had to
 	 * be allocated by the lexer) */
 	ioflags |= TPP_FILE_IOFLAGS_NOKWD;
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
-	_tpp_lexer_init_common(self);
+	tpp_lexer_init(self);
 }
 #endif /* TPP_HAVE_LEXER_INIT_IO */
 
@@ -9853,15 +9912,15 @@ tpp_lexer_init_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filenam
  * @return: TPP_ENOENT: No such file or directory
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
+tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
                         /*utf-8*/ char const *tpp_restrict filename,
                         tpp_size filename_maxlen) {
 	tpp_errno error;
 	tpp_lexer_openfile_result ofr;
-	_tpp_lexer_init_common(self);
+	tpp_lexer_init(self);
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
 	if tpp_unlikely(TPP_ISERR(error)) {
-		_tpp_lexer_fini_common(self);
+		tpp_lexer_fini(self);
 	} else {
 		/* Initialize the lexer's I/O file */
 		tpp_file *const file = tpp_lexer_getfile(self);
@@ -9884,7 +9943,7 @@ tpp_lexer_init_filename(tpp_lexer *tpp_restrict self,
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
  * @param: ioflags:  Extra flags specifying how to interact with "handle":
  *                   - TPP_FILE_IOFLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
- *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_fini()' will not close "handle"
+ *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
  *                   - TPP_FILE_IOFLAGS_SYSHDR:   Do not emit warnings
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
@@ -9913,9 +9972,9 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
  * @return: TPP_ENOENT: No such file or directory
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_pushfile_filename(tpp_lexer *tpp_restrict self,
-                            /*utf-8*/ char const *tpp_restrict filename,
-                            tpp_size filename_maxlen) {
+tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
+                        /*utf-8*/ char const *tpp_restrict filename,
+                        tpp_size filename_maxlen) {
 	tpp_errno error;
 	tpp_lexer_openfile_result ofr;
 	tpp_file *const file = tpp_lexer_getfile(self);

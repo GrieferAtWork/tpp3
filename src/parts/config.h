@@ -2547,12 +2547,12 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
 
-/* Enable support for `tpp_lexer_init_io_ex()' */
+/* Enable support for `tpp_lexer_initfile_io_ex()' */
 #ifndef TPP_HAVE_LEXER_INIT_IO
 #define TPP_HAVE_LEXER_INIT_IO TPP_HAVE_FILE_NOKWD
 #endif /* !TPP_HAVE_LEXER_INIT_IO */
 
-/* Enable support for `tpp_lexer_init_filename()' */
+/* Enable support for `tpp_lexer_initfile_open()' */
 #ifndef TPP_HAVE_LEXER_INIT_FILENAME
 #define TPP_HAVE_LEXER_INIT_FILENAME TPP_HAVE_KEYWORDS_OPENFILE
 #endif /* !TPP_HAVE_LEXER_INIT_FILENAME */

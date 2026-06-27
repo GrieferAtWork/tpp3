@@ -87,9 +87,9 @@ typedef enum tpp_errno {
 	 *
 	 * No such file or directory
 	 *
-	 * WARNING: This is error _NOT_ return when a #include-directive fails!
+	 * WARNING: This error is _NOT_ returned when a #include-directive fails!
 	 *          As a matter of fact, this error is _NEVER_ returned by APIs
-	 *          such as `tpp_lexer_yield()'.
+	 *          such as `tpp_lexer_yield()' (there is no TPP_TOK_ENOENT).
 	 * Instead, this error is used internally to indicate that a file could
 	 * not be opened, however TPP may inherently handle this by trying to
 	 * use some other filename in order to open a file. e.g.: when you have

@@ -41,9 +41,11 @@ int main(int argc, char *argv[]) {
 
 	if (argc)
 		filename = *argv;
-	error = tpp_lexer_init_filename(&lexer, filename, TPP_SIZE_MAX);
+	tpp_lexer_init(&lexer);
+	error = tpp_lexer_initfile_open(&lexer, filename, TPP_SIZE_MAX);
 	if (error != TPP_EOK) {
 		fprintf(stderr, "Initialization failed: %s\n", tpp_strerror(error));
+		tpp_lexer_fini(&lexer);
 		return 1;
 	}
 
@@ -75,6 +77,7 @@ int main(int argc, char *argv[]) {
 	}
 	result = 0;
 out:
+	tpp_lexer_finifile(&lexer);
 	tpp_lexer_fini(&lexer);
 	return result;
 }

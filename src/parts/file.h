@@ -127,6 +127,11 @@ typedef struct tpp_ifdef_stack {
 #define tpp_ifdef_stack_fini(self) \
 	tpp_free((self)->TPP_INTERNAL(tids_vec))
 
+/* Clear the #ifdef-stack */
+#define tpp_ifdef_stack_clear(self) \
+	(tpp_ifdef_stack_fini(self),    \
+	 tpp_ifdef_stack_init(self))
+
 /* Check if the given #ifdef-stack is empty */
 #define tpp_ifdef_stack_isempty(self) \
 	((self)->TPP_INTERNAL(tids_cnt) == 0)
