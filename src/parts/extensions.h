@@ -70,6 +70,9 @@ typedef struct tpp_extensions {
 } tpp_extensions;
 
 #if TPP_HAVE_EXTENSIONS_PUSH_POP
+#define _tpp_extensions_alloc() ((tpp_extensions *)tpp_malloc(sizeof(tpp_extensions)))
+#define _tpp_extensions_free(p) tpp_free(p)
+
 #define tpp_extensions_init(self)                                           \
 	(void)((self)->TPP_INTERNAL(te_state)   = tpp_extensions_state_default, \
 	       (self)->TPP_INTERNAL(te_pushcnt) = 0,                            \

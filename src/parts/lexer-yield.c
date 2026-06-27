@@ -980,6 +980,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 		}
 	}
 	tpp_file_subtext_pop(file);
+	tpp_lexer_arginfo_fini(&argv[0]);
 
 	if (!TPP_TOK_ISERR(tok)) {
 		tpp_assert(data.tlhtid_keyword);
@@ -1302,6 +1303,7 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 		}
 	}
 	tpp_file_subtext_pop(file);
+	tpp_lexer_arginfo_fini(&argv[0]);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 
@@ -1367,6 +1369,7 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 err_tok_subtext_builder:
 		tpp_file_subtext_break(file);
 		tpp_string_builder_fini(&builder);
+		tpp_lexer_arginfo_fini(&argv[0]);
 		return tok;
 	}
 	for (;;) {
@@ -1428,6 +1431,7 @@ done_inner_loop:
 	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_tok_subtext_builder;
 	tpp_file_subtext_pop(file);
+	tpp_lexer_arginfo_fini(&argv[0]);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 

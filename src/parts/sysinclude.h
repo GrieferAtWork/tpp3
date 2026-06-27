@@ -155,6 +155,9 @@ tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
 
 /* Helper methods to add/remove paths to different include path lists */
 #if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+#define _tpp_include_paths_alloc() ((tpp_include_paths *)tpp_malloc(sizeof(tpp_include_paths)))
+#define _tpp_include_paths_free(p) tpp_free(p)
+
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_include_paths_addsystem(tpp_include_paths *tpp_restrict self,
                             char const *path, tpp_size path_maxlen);

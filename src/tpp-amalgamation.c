@@ -959,7 +959,7 @@ tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict sel
 
 	/* Deal with special case: empty string */
 	if (self->tsb_len == 0) {
-		tpp_free(self->tsb_buf);
+		_tpp_string_free(self->tsb_buf);
 		return tpp_string_newempty();
 	}
 
@@ -5933,7 +5933,7 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
 tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 	tpp_keyword_misc *result = self->tk_misc;
 	if tpp_unlikely(result == NULL) {
-		result = (tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc));
+		result = _tpp_keyword_misc_alloc();
 		if tpp_likely(result) {
 #if TPP_HAVE_KEYWORD_FLAGS
 			result->tkm_flags = TPP_KEYWORD_FLAG_NORMAL;
@@ -6471,7 +6471,7 @@ tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
 	if (self->tkm_userdata_dtor)
 		(*self->tkm_userdata_dtor)(self->tkm_userdata_ptr);
 #endif /* TPP_HAVE_KEYWORD_USERDATA */
-	tpp_free(self);
+	_tpp_keyword_misc_free(self);
 }
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
@@ -6488,7 +6488,7 @@ tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
 	if (self->tk_misc)
 		tpp_keyword_misc_destroy(self->tk_misc);
 #endif /* TPP_HAVE_KEYWORD_MISC */
-	tpp_free(self);
+	_tpp_keyword_free(self);
 }
 
 
@@ -6681,7 +6681,7 @@ tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
 		goto done;
 
 	/* Must allocate a new keyword... */
-	result = (tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(len));
+	result = _tpp_keyword_alloc(len);
 	if (result == NULL)
 		goto done;
 
@@ -6715,7 +6715,7 @@ tpp_keywords_newkeyword_esc_(tpp_keywords *tpp_restrict self,
 		goto done;
 
 	/* Must allocate a new keyword... */
-	result = (tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(len));
+	result = _tpp_keyword_alloc(len);
 	if (result == NULL)
 		goto done;
 
@@ -6733,7 +6733,7 @@ tpp_keywords_newkeyword_esc_(tpp_keywords *tpp_restrict self,
 	result->tk_len = len_without_esc;
 	if (len_without_esc < len) {
 		tpp_keyword *new_result;
-		new_result = (tpp_keyword *)tpp_realloc(result, tpp_keyword_sizeof(len_without_esc));
+		new_result = _tpp_keyword_tryrealloc(result, len_without_esc);
 		if tpp_likely(new_result)
 			result = new_result;
 	}
@@ -6779,7 +6779,7 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 	}
 
 	/* Yes: must copy "kwd" */
-	result = (tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(kwd->tk_len));
+	result = _tpp_keyword_alloc(kwd->tk_len);
 	if (result == NULL)
 		goto done;
 
@@ -6961,7 +6961,7 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
 		tpp_char *kwd_end;
 		tpp_size result_kwd_len;
 without_relative_to:
-		result_kwd = (tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(filename_len));
+		result_kwd = _tpp_keyword_alloc(filename_len);
 		if tpp_unlikely(!result_kwd)
 			goto err_nomem;
 		kwd_end = (tpp_char *)tpp_fs_normalize((char *)result_kwd->tk_kwd,
@@ -6970,7 +6970,7 @@ without_relative_to:
 		*kwd_end = (tpp_char)'\0';
 		result_kwd_len = (tpp_size)(kwd_end - result_kwd->tk_kwd);
 		tpp_assert(result_kwd_len <= filename_len);
-		new_result_kwd = (tpp_keyword *)tpp_tryrealloc(result_kwd, tpp_keyword_sizeof(result_kwd_len));
+		new_result_kwd = _tpp_keyword_tryrealloc(result_kwd, result_kwd_len);
 		if tpp_likely(new_result_kwd)
 			result_kwd = new_result_kwd;
 		result_kwd->tk_len = result_kwd_len;
@@ -6986,7 +6986,7 @@ without_relative_to:
 			goto without_relative_to;
 		rel_size   = (tpp_size)(last_sep - rel_base); /* Including trailing '/' */
 		whole_size = rel_size + filename_len;
-		result_kwd = (tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(whole_size));
+		result_kwd = _tpp_keyword_alloc(whole_size);
 		if tpp_unlikely(!result_kwd)
 			goto err_nomem;
 		dst_base = (char *)result_kwd->tk_kwd;
@@ -6995,7 +6995,7 @@ without_relative_to:
 		dst_end = tpp_fs_normalize(dst_iter, dst_base, filename, filename_len);
 		*dst_end = '\0';
 		whole_size = (tpp_size)(dst_end - dst_base);
-		new_result_kwd = (tpp_keyword *)tpp_tryrealloc(result_kwd, tpp_keyword_sizeof(whole_size));
+		new_result_kwd = _tpp_keyword_tryrealloc(result_kwd, whole_size);
 		if tpp_likely(new_result_kwd)
 			result_kwd = new_result_kwd;
 		result_kwd->tk_len = whole_size;
@@ -7019,7 +7019,7 @@ without_relative_to:
 				continue;
 
 			/* Keyword already exists */
-			tpp_free(result_kwd);
+			_tpp_keyword_free(result_kwd);
 			is_known_keyword = true;
 			result_kwd = bucket;
 
@@ -7071,7 +7071,7 @@ got_result_kwd:
 	/* Try to open the file */
 	handle = tpp_io_open((char const *)result_kwd->tk_kwd);
 	if (handle == tpp_io_handle_INVALID) {
-		tpp_free(result_kwd);
+		_tpp_keyword_free(result_kwd);
 		return TPP_ENOENT;
 	}
 
@@ -7997,6 +7997,7 @@ tpp_macro_destroy(tpp_macro *tpp_restrict self) {
 		tpp_free(self->tm_data.tmd_func.tmf_argv);
 		tpp_free(self->tm_data.tmd_func.tmf_argbuf);
 	}
+	tpp_macro_free(self);
 }
 
 
@@ -8055,7 +8056,7 @@ tpp_extensions_fini(tpp_extensions *tpp_restrict self) {
 	tpp_extensions *iter = self->te_prev;
 	while (iter != NULL) {
 		tpp_extensions *prev = iter->te_prev;
-		tpp_free(iter);
+		_tpp_extensions_free(iter);
 		iter = prev;
 	}
 }
@@ -8067,7 +8068,7 @@ tpp_extensions_pop(tpp_extensions *tpp_restrict self) {
 	if (self->te_pushcnt == 0) {
 		tpp_extensions *prev = self->te_prev;
 		tpp_memcpy(self, prev, sizeof(tpp_extensions));
-		tpp_free(prev);
+		_tpp_extensions_free(prev);
 		tpp_assert(self->te_pushcnt != 0);
 	}
 	--self->te_pushcnt;
@@ -8082,7 +8083,7 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 		tpp_extensions *copy;
 		if (!!tpp_extensions_state_getid(&self->te_state, id) == !!enabled)
 			return TPP_EOK; /* Unchanged -> no need to actually copy! */
-		copy = (tpp_extensions *)tpp_malloc(sizeof(tpp_extensions));
+		copy = _tpp_extensions_alloc();
 		if tpp_unlikely(!copy)
 			goto err_nomem;
 		tpp_memcpy(copy, self, sizeof(tpp_extensions));
@@ -8858,7 +8859,7 @@ tpp_warnings_fini(tpp_warnings *tpp_restrict self) {
 		while (prev) {
 			tpp_warnings *pprev = prev->tw_prev;
 			_tpp_warnings_fini_common(prev);
-			tpp_free(prev);
+			_tpp_warnings_free(prev);
 			prev = pprev;
 		}
 	}
@@ -8876,7 +8877,7 @@ tpp_warnings_pop(tpp_warnings *tpp_restrict self) {
 		tpp_warnings *prev = self->tw_prev;
 		_tpp_warnings_fini_common(self);
 		tpp_memcpy(self, prev, sizeof(tpp_warnings));
-		tpp_free(prev);
+		_tpp_warnings_free(prev);
 		tpp_assert(self->tw_pushcnt != 0);
 	}
 	--self->tw_pushcnt;
@@ -8920,7 +8921,7 @@ tpp_warnings_getctx(tpp_warnings const *tpp_restrict self,
  * @return: NULL: Out of memory. */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_warnings *TPPCALL
 tpp_warnings_copy(tpp_warnings const *tpp_restrict self) {
-	tpp_warnings *result = (tpp_warnings *)tpp_malloc(sizeof(tpp_warnings));
+	tpp_warnings *result = _tpp_warnings_alloc();
 	if tpp_unlikely(!result)
 		goto err;
 
@@ -8952,7 +8953,7 @@ tpp_warnings_copy(tpp_warnings const *tpp_restrict self) {
 	return result;
 #if TPP_HAVE_WARNING_SUPPRESS
 err_r:
-	tpp_free(result);
+	_tpp_warnings_free(result);
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 err:
 	return NULL;
@@ -9424,7 +9425,7 @@ tpp_include_paths_fini(tpp_include_paths *tpp_restrict self) {
 		while (prev) {
 			tpp_include_paths *pprev = prev->tip_prev;
 			tpp_include_paths_fini_common(prev);
-			tpp_free(prev);
+			_tpp_include_paths_free(prev);
 			prev = pprev;
 		}
 	}
@@ -9474,7 +9475,7 @@ tpp_include_path_list_copy(tpp_include_path_list *tpp_restrict self,
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_include_paths *TPPCALL
 tpp_include_paths_copy(tpp_include_paths *tpp_restrict self) {
-	tpp_include_paths *result = (tpp_include_paths *)tpp_malloc(sizeof(tpp_include_paths));
+	tpp_include_paths *result = _tpp_include_paths_alloc();
 	if tpp_unlikely(!result)
 		goto err;
 	if tpp_unlikely(TPP_ISERR(tpp_include_path_list_copy(&result->tip_system_list, &self->tip_system_list)))
@@ -9505,7 +9506,7 @@ err_r_system:
 	tpp_include_path_list_fini(&result->tip_system_list);
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER || TPP_HAVE_INCLUDE_PATH_QUOTE */
 err_r:
-	tpp_free(result);
+	_tpp_include_paths_free(result);
 err:
 	return NULL;
 }
@@ -24049,6 +24050,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 		}
 	}
 	tpp_file_subtext_pop(file);
+	tpp_lexer_arginfo_fini(&argv[0]);
 
 	if (!TPP_TOK_ISERR(tok)) {
 		tpp_assert(data.tlhtid_keyword);
@@ -24371,6 +24373,7 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 		}
 	}
 	tpp_file_subtext_pop(file);
+	tpp_lexer_arginfo_fini(&argv[0]);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 
@@ -24436,6 +24439,7 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 err_tok_subtext_builder:
 		tpp_file_subtext_break(file);
 		tpp_string_builder_fini(&builder);
+		tpp_lexer_arginfo_fini(&argv[0]);
 		return tok;
 	}
 	for (;;) {
@@ -24497,6 +24501,7 @@ done_inner_loop:
 	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_tok_subtext_builder;
 	tpp_file_subtext_pop(file);
+	tpp_lexer_arginfo_fini(&argv[0]);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 

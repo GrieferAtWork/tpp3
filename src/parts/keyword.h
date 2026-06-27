@@ -169,6 +169,9 @@ typedef struct tpp_keyword_misc {
 #define tpp_keyword_misc_getuserdata_dtor(self) ((void (TPPCALL *)(void *))NULL)
 #endif /* !TPP_HAVE_KEYWORD_USERDATA */
 } tpp_keyword_misc;
+
+#define _tpp_keyword_misc_alloc() ((tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc)))
+#define _tpp_keyword_misc_free(p) tpp_free(p)
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
 
@@ -197,6 +200,11 @@ typedef struct tpp_keyword {
 
 #define tpp_keyword_sizeof(len) \
 	(tpp_offsetof(tpp_keyword, TPP_INTERNAL(tk_kwd)) + ((len) + 1) * sizeof(tpp_char))
+#define _tpp_keyword_alloc(len)         ((tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(len)))
+#define _tpp_keyword_tryalloc(len)      ((tpp_keyword *)tpp_trymalloc(tpp_keyword_sizeof(len)))
+#define _tpp_keyword_realloc(p, len)    ((tpp_keyword *)tpp_realloc(p, tpp_keyword_sizeof(len)))
+#define _tpp_keyword_tryrealloc(p, len) ((tpp_keyword *)tpp_tryrealloc(p, tpp_keyword_sizeof(len)))
+#define _tpp_keyword_free(p)            tpp_free(p)
 
 /* When true, there are certain actions that require builtin keywords
  * to be copied into the current lexer's keyword table. These include

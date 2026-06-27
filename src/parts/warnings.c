@@ -54,7 +54,7 @@ tpp_warnings_fini(tpp_warnings *tpp_restrict self) {
 		while (prev) {
 			tpp_warnings *pprev = prev->tw_prev;
 			_tpp_warnings_fini_common(prev);
-			tpp_free(prev);
+			_tpp_warnings_free(prev);
 			prev = pprev;
 		}
 	}
@@ -72,7 +72,7 @@ tpp_warnings_pop(tpp_warnings *tpp_restrict self) {
 		tpp_warnings *prev = self->tw_prev;
 		_tpp_warnings_fini_common(self);
 		tpp_memcpy(self, prev, sizeof(tpp_warnings));
-		tpp_free(prev);
+		_tpp_warnings_free(prev);
 		tpp_assert(self->tw_pushcnt != 0);
 	}
 	--self->tw_pushcnt;
@@ -116,7 +116,7 @@ tpp_warnings_getctx(tpp_warnings const *tpp_restrict self,
  * @return: NULL: Out of memory. */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_warnings *TPPCALL
 tpp_warnings_copy(tpp_warnings const *tpp_restrict self) {
-	tpp_warnings *result = (tpp_warnings *)tpp_malloc(sizeof(tpp_warnings));
+	tpp_warnings *result = _tpp_warnings_alloc();
 	if tpp_unlikely(!result)
 		goto err;
 
@@ -148,7 +148,7 @@ tpp_warnings_copy(tpp_warnings const *tpp_restrict self) {
 	return result;
 #if TPP_HAVE_WARNING_SUPPRESS
 err_r:
-	tpp_free(result);
+	_tpp_warnings_free(result);
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 err:
 	return NULL;

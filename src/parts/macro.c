@@ -42,6 +42,7 @@ tpp_macro_destroy(tpp_macro *tpp_restrict self) {
 		tpp_free(self->tm_data.tmd_func.tmf_argv);
 		tpp_free(self->tm_data.tmd_func.tmf_argbuf);
 	}
+	tpp_macro_free(self);
 }
 
 

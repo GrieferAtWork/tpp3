@@ -29,6 +29,13 @@
 #define TPP_INTERN_IMPL /* nothing */
 #endif /* !TPP_INTERN_IMPL */
 
+/* Not for amalgamation: enable memory leak debugger */
+#ifdef _MSC_VER
+#define _CRTDBG_MAP_ALLOC 1
+#include <crtdbg.h>
+#endif /* _MSC_VER */
+
+
 /*[[[tpp-begin]]]*/
 #ifndef TPP_BUILDING
 #define TPP_BUILDING 0

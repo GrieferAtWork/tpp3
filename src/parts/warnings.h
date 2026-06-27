@@ -319,6 +319,9 @@ tpp_warnings_fini(tpp_warnings *tpp_restrict self);
 
 
 #if TPP_HAVE_WARNINGS_PUSH_POP
+#define _tpp_warnings_alloc() ((tpp_warnings *)tpp_malloc(sizeof(tpp_warnings)))
+#define _tpp_warnings_free(p) tpp_free(p)
+
 /* Push the current warnings state */
 #define tpp_warnings_push(self) (void)(++(self)->TPP_INTERNAL(tw_pushcnt))
 

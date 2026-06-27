@@ -113,6 +113,10 @@ int main(int argc, char *argv[]) {
 	result = 0;
 out:
 	tpp_lexer_fini(&lexer);
+
+#ifdef _MSC_VER
+	_CrtDumpMemoryLeaks();
+#endif /* _MSC_VER */
 	return result;
 }
 

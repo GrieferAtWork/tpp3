@@ -13066,6 +13066,9 @@ typedef struct tpp_keyword_misc {
 #define tpp_keyword_misc_getuserdata_dtor(self) ((void (TPPCALL *)(void *))NULL)
 #endif /* !TPP_HAVE_KEYWORD_USERDATA */
 } tpp_keyword_misc;
+
+#define _tpp_keyword_misc_alloc() ((tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc)))
+#define _tpp_keyword_misc_free(p) tpp_free(p)
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
 
@@ -13094,6 +13097,11 @@ typedef struct tpp_keyword {
 
 #define tpp_keyword_sizeof(len) \
 	(tpp_offsetof(tpp_keyword, TPP_INTERNAL(tk_kwd)) + ((len) + 1) * sizeof(tpp_char))
+#define _tpp_keyword_alloc(len)         ((tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(len)))
+#define _tpp_keyword_tryalloc(len)      ((tpp_keyword *)tpp_trymalloc(tpp_keyword_sizeof(len)))
+#define _tpp_keyword_realloc(p, len)    ((tpp_keyword *)tpp_realloc(p, tpp_keyword_sizeof(len)))
+#define _tpp_keyword_tryrealloc(p, len) ((tpp_keyword *)tpp_tryrealloc(p, tpp_keyword_sizeof(len)))
+#define _tpp_keyword_free(p)            tpp_free(p)
 
 /* When true, there are certain actions that require builtin keywords
  * to be copied into the current lexer's keyword table. These include
@@ -13433,6 +13441,9 @@ typedef struct tpp_extensions {
 } tpp_extensions;
 
 #if TPP_HAVE_EXTENSIONS_PUSH_POP
+#define _tpp_extensions_alloc() ((tpp_extensions *)tpp_malloc(sizeof(tpp_extensions)))
+#define _tpp_extensions_free(p) tpp_free(p)
+
 #define tpp_extensions_init(self)                                           \
 	(void)((self)->TPP_INTERNAL(te_state)   = tpp_extensions_state_default, \
 	       (self)->TPP_INTERNAL(te_pushcnt) = 0,                            \
@@ -13784,6 +13795,9 @@ tpp_warnings_fini(tpp_warnings *tpp_restrict self);
 
 
 #if TPP_HAVE_WARNINGS_PUSH_POP
+#define _tpp_warnings_alloc() ((tpp_warnings *)tpp_malloc(sizeof(tpp_warnings)))
+#define _tpp_warnings_free(p) tpp_free(p)
+
 /* Push the current warnings state */
 #define tpp_warnings_push(self) (void)(++(self)->TPP_INTERNAL(tw_pushcnt))
 
@@ -14002,6 +14016,9 @@ tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
 
 /* Helper methods to add/remove paths to different include path lists */
 #if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+#define _tpp_include_paths_alloc() ((tpp_include_paths *)tpp_malloc(sizeof(tpp_include_paths)))
+#define _tpp_include_paths_free(p) tpp_free(p)
+
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_include_paths_addsystem(tpp_include_paths *tpp_restrict self,
                             char const *path, tpp_size path_maxlen);

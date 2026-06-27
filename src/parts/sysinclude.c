@@ -239,7 +239,7 @@ tpp_include_paths_fini(tpp_include_paths *tpp_restrict self) {
 		while (prev) {
 			tpp_include_paths *pprev = prev->tip_prev;
 			tpp_include_paths_fini_common(prev);
-			tpp_free(prev);
+			_tpp_include_paths_free(prev);
 			prev = pprev;
 		}
 	}
@@ -289,7 +289,7 @@ tpp_include_path_list_copy(tpp_include_path_list *tpp_restrict self,
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_include_paths *TPPCALL
 tpp_include_paths_copy(tpp_include_paths *tpp_restrict self) {
-	tpp_include_paths *result = (tpp_include_paths *)tpp_malloc(sizeof(tpp_include_paths));
+	tpp_include_paths *result = _tpp_include_paths_alloc();
 	if tpp_unlikely(!result)
 		goto err;
 	if tpp_unlikely(TPP_ISERR(tpp_include_path_list_copy(&result->tip_system_list, &self->tip_system_list)))
@@ -320,7 +320,7 @@ err_r_system:
 	tpp_include_path_list_fini(&result->tip_system_list);
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER || TPP_HAVE_INCLUDE_PATH_QUOTE */
 err_r:
-	tpp_free(result);
+	_tpp_include_paths_free(result);
 err:
 	return NULL;
 }

@@ -74,7 +74,7 @@ tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict sel
 
 	/* Deal with special case: empty string */
 	if (self->tsb_len == 0) {
-		tpp_free(self->tsb_buf);
+		_tpp_string_free(self->tsb_buf);
 		return tpp_string_newempty();
 	}
 

@@ -48,7 +48,7 @@ tpp_extensions_fini(tpp_extensions *tpp_restrict self) {
 	tpp_extensions *iter = self->te_prev;
 	while (iter != NULL) {
 		tpp_extensions *prev = iter->te_prev;
-		tpp_free(iter);
+		_tpp_extensions_free(iter);
 		iter = prev;
 	}
 }
@@ -60,7 +60,7 @@ tpp_extensions_pop(tpp_extensions *tpp_restrict self) {
 	if (self->te_pushcnt == 0) {
 		tpp_extensions *prev = self->te_prev;
 		tpp_memcpy(self, prev, sizeof(tpp_extensions));
-		tpp_free(prev);
+		_tpp_extensions_free(prev);
 		tpp_assert(self->te_pushcnt != 0);
 	}
 	--self->te_pushcnt;
@@ -75,7 +75,7 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 		tpp_extensions *copy;
 		if (!!tpp_extensions_state_getid(&self->te_state, id) == !!enabled)
 			return TPP_EOK; /* Unchanged -> no need to actually copy! */
-		copy = (tpp_extensions *)tpp_malloc(sizeof(tpp_extensions));
+		copy = _tpp_extensions_alloc();
 		if tpp_unlikely(!copy)
 			goto err_nomem;
 		tpp_memcpy(copy, self, sizeof(tpp_extensions));
