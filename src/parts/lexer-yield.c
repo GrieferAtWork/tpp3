@@ -1542,6 +1542,59 @@ tpp_lexer_yield_handle___TPP_COUNT_TOKENS(tpp_lexer *tpp_restrict self) {
 #endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
 
 
+#if TPP_HAVE_MACRO___TPP_STR_SIZE
+static TPP_WUNUSED tpp_errno TPPCALL 
+tpp_lexer_handle_str_size(void *arg, tpp_string *chunk, tpp_char const *str, tpp_size length) {
+	(void)chunk;
+	(void)str;
+	*(tpp_size *)arg = length;
+	return TPP_EOK;
+}
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TPP_STR_SIZE(tpp_lexer *tpp_restrict self) {
+	tpp_size str_length;
+	tpp_token_id tok;
+	tpp_errno error;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+	do {
+		tok = tpp_lexer_yieldpp_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if tpp_unlikely(TPP_TOK_ISERR(tok))
+		return tok;
+
+	if (!TPP_TOK_ISSTRING(tok)) {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+		error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+		str_length = 0;
+	} else {
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_str_size, &str_length,
+		                                 TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+	}
+	if (TPP_ISERR(error))
+		return TPP_TOK_OFERR(error);
+	tok = tpp_lexer_gettok(self);
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	return tpp_lexer_push_textfile_int(self, (tpp_intmax)(tpp_uintmax)str_length);
+}
+#endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
+
+
 
 
 #if TPP_HAVE_CPP_BUILTIN_MACROS
@@ -1803,12 +1856,18 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
+#if TPP_HAVE_MACRO___TPP_STR_SIZE
+	case TPP_KWD___TPP_STR_SIZE:
+		return tpp_lexer_yield_handle___TPP_STR_SIZE(self);
+#endif /* !TPP_HAVE_MACRO___TPP_STR_SIZE */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_MACRO___TPP_STR_SUBSTR
 	/* TODO: #define __TPP_STR_SUBSTR(str, start, end) __TPP_EVAL((str)[(start):(end)]) */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
-#if TPP_HAVE_MACRO___TPP_STR_SIZE
-	/* TODO: #define __TPP_STR_SIZE(str) __TPP_EVAL(#(str)) */
-#endif /* !TPP_HAVE_MACRO___TPP_STR_SIZE */
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
 	/* TODO: __TPP_LOAD_FILE */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
