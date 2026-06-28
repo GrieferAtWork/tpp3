@@ -860,11 +860,60 @@ tpp_lexer_process_pragma_GCC_dependency(tpp_lexer *tpp_restrict self) {
 /* #pragma tpp_exec("...")                                              */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_TPP_EXEC || TPP_HAVE_PRAGMA_TPP_TPP_EXEC
+static tpp_errno TPPCALL
+tpp_lexer_pragma_tpp_exec_cb(void *arg, tpp_string *chunk,
+                             tpp_char const *str, tpp_size length) {
+	tpp_token_id tok;
+	tpp_lexer *const self = (tpp_lexer *)arg;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk_fromstring(file, chunk, str, length);
+	/* Parse contents of string, but discard all tokens. */
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (!TPP_TOK_ISERR_OR_EOF(tok));
+
+	/* Force cleanup in case of error, and warn about unclosed #if-blocks */
+	for (;;) {
+#if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+		if (!TPP_TOK_ISERR(tok)) {
+			tpp_errno error = tpp_lexer_warn_nonempty_ifdef(self);
+			if (TPP_ISERR(error))
+				tok = TPP_TOK_OFERR(error);
+		}
+#endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
+		if (!tpp_lexer_canpopfile(self))
+			break;
+		tpp_lexer_popfile(self);
+	}
+	tpp_file_subtext_pop(file);
+	return TPP_TOK_ASERR_OR_EOK(tok);
+}
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_tpp_exec(tpp_lexer *tpp_restrict self) {
-	/* TODO */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_errno error;
+	tpp_token_id tok;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Skip leading '(' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Parse string to execute */
+	error = tpp_lexer_parsestring_cb(self, &tpp_lexer_pragma_tpp_exec_cb,
+	                                 self, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+	if (TPP_ISERR(error))
+		return error;
+
+	/* Skip trailing ')' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+	return TPP_TOK_ASERR_OR_EOK(tok);
 }
 #endif /* TPP_HAVE_PRAGMA_TPP_EXEC || TPP_HAVE_PRAGMA_TPP_TPP_EXEC */
 

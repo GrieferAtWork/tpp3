@@ -6378,7 +6378,9 @@ TPP_DECL_END
 	 TPP_HAVE_MACRO___TPP_IDENTIFIER ||           \
 	 TPP_HAVE_MACRO___TPP_STR_DECOMPILE ||        \
 	 TPP_HAVE_MACRO___TPP_STR_PACK ||             \
-	 TPP_HAVE_MACRO___TPP_COUNT_TOKENS)
+	 TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
+	 TPP_HAVE_PRAGMA_TPP_EXEC ||                  \
+	 TPP_HAVE_PRAGMA_TPP_TPP_EXEC)
 #endif /* !TPP_HAVE_FILE_SUBTEXT */
 
 /* Enable support for `tpp_file::tf_prev' */

@@ -1555,6 +1555,28 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * - TPP3 implements __TPP_RANDOM on a per-lexer basis, thus producing reproducible
  *   results that are based on actual input data, rather than the current time.
  */
+
+/* >Expression evaluation is no longer used everywhere<:
+ * - TPP2 used to accept code like:
+ *   >> #pragma warning("foo-Wmy-warning"[4:])
+ *   This worked because TPP2 used to accept expressions in many more places
+ *   than are strictly necessary, primarily since its API design meant that
+ *   doing so was simpler than the alternative
+ * - Due to its much more modular design, TPP3 no longer does this (instead,
+ *   it directly decodes string tokens when it expects to find strings, rather
+ *   than parse an expression first, and operate on the resulting string only
+ *   after having already done so.
+ *   If TPP2 behavior would be preserved in such cases, this would cause lots
+ *   of features to implicitly require "tpp_lexer_parseexpr()" (which is quote
+ *   the big function that should only be required for "__TPP_EVAL" and "#if")
+ * - If your code actually relied on this behavior, the recommendation is to
+ *   migrate it as following:
+ *   >> #pragma warning(__TPP_EVAL("foo-Wmy-warning"[4:]))
+ *   By wrapping the offending expression with "__TPP_EVAL", the construct
+ *   will continue to work in TPP2, whilst behaving identically in TPP3, with
+ *   the added bonus of making the requirement of expression evaluation more
+ *   clear.
+ */
 /************************************************************************/
 
 
