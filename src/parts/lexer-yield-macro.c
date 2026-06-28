@@ -287,9 +287,9 @@ tpp_macro_acquire_argbuf(tpp_macro *tpp_restrict macro) {
 }
 
 /* Release an argument buffer back to a macro. */
-static TPP_NONNULL((1, 2)) void TPPCALL
+TPP_INTERN_IMPL TPP_NONNULL((1, 2)) void TPPCALL
 tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
-                         tpp_macro_argbuf *tpp_restrict buffer) {
+                         struct tpp_macro_argbuf *tpp_restrict buffer) {
 	if (macro->tm_data.tmd_func.tmf_argbuf == NULL) {
 		/* Likely case (when there was no recursion): can cache buffer in macro */
 		macro->tm_data.tmd_func.tmf_argbuf = buffer;
@@ -660,11 +660,15 @@ next_op:
 			tpp_macro_expinfo *expand = &invoke_expinfo[i];
 			tpp_macro_expinfo_fini(expand, arginfo);
 		}
+#if !TPP_HAVE_FILE_MACRO_TRACKARGS
 		tpp_lexer_arginfo_fini(arginfo);
+#endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
 	}
 
 	/* Release argument buffer back to macro */
+#if !TPP_HAVE_FILE_MACRO_TRACKARGS
 	tpp_macro_release_argbuf(macro, argbuf);
+#endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
 
 #if TPP_HAVE_MACRO_RECURSION
 	if (macro->tm_expansions > 0) {
@@ -679,6 +683,13 @@ next_op:
 				if (tpp_string_equals(existing_chunk, result_chunk)) {
 					/* Duplicate chunk!!! -> Mustn't expand (else: would result in infinite loop) */
 					tpp_string_destroy(result_chunk);
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+					for (i = 0; i < macro_argc; ++i) {
+						tpp_lexer_arginfo *arginfo = &invoke_arginfo[i];
+						tpp_lexer_arginfo_fini(arginfo);
+					}
+					tpp_macro_release_argbuf(macro, argbuf);
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 					tpp_macro_decref(macro);
 					goto done_rollback;
 				}
@@ -692,6 +703,13 @@ next_op:
 	tpp_lexer_alltokens_break(self);
 	if tpp_unlikely(!prev_file) {
 		tpp_lexer_manualpopfile_break_rollback(self);
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+		for (i = 0; i < macro_argc; ++i) {
+			tpp_lexer_arginfo *arginfo = &invoke_arginfo[i];
+			tpp_lexer_arginfo_fini(arginfo);
+		}
+		tpp_macro_release_argbuf(macro, argbuf);
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 		tpp_string_decref(result_chunk);
 		tok = TPP_TOK_ENOMEM;
 		goto err_tok_macro;
@@ -711,6 +729,9 @@ next_op:
 	file->tf_enc = macro->tm_body_enc;
 #endif /* TPP_HAVE_UNICODE */
 	file->tf_data.td_macro.tfm_macro = macro; /* Inherit the reference created at the very start */
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+	file->tf_data.td_macro.tfm_args = invoke_arginfo;
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 	++macro->tm_expansions;
 	return TPP_TOK_EOF;
 #if TPP_HAVE_MACRO_RECURSION

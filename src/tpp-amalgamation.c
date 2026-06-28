@@ -564,6 +564,7 @@
 #define tft_user_filename                                TPP_INTERNAL(tft_user_filename)
 #define td_text                                          TPP_INTERNAL(td_text)
 #define tfm_macro                                        TPP_INTERNAL(tfm_macro)
+#define tfm_args                                         TPP_INTERNAL(tfm_args)
 #define td_macro                                         TPP_INTERNAL(td_macro)
 #define tmpe_macro                                       TPP_INTERNAL(tmpe_macro)
 #define tmpe_count                                       TPP_INTERNAL(tmpe_count)
@@ -4785,6 +4786,14 @@ tpp_ifdef_stack_remove(tpp_ifdef_stack *tpp_restrict self) {
 }
 #endif /* TPP_HAVE_IFDEF_STACK */
 
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+struct tpp_macro_argbuf;
+
+/* Release an argument buffer back to a macro. */
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
+                         struct tpp_macro_argbuf *tpp_restrict buffer);
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 
 /* Finalize the given file. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
@@ -4831,6 +4840,17 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
 		tpp_macro *macro = self->tf_data.td_macro.tfm_macro;
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+		if (tpp_macro_isfunction(macro)) {
+			tpp_size i, macro_argc = macro->tm_data.tmd_func.tmf_argc;
+			tpp_lexer_arginfo *argv = self->tf_data.td_macro.tfm_args;
+			for (i = 0; i < macro_argc; ++i) {
+				tpp_lexer_arginfo *arginfo = &argv[i];
+				tpp_lexer_arginfo_fini(arginfo);
+			}
+			tpp_macro_release_argbuf(macro, (struct tpp_macro_argbuf *)argv);
+		}
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 		tpp_assert(macro->tm_expansions != 0);
 		--macro->tm_expansions;
 		tpp_macro_decref(macro);
@@ -4841,15 +4861,20 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 }
 
 /* Update "self" according to text-data from [text,text+size) */
-static TPP_WUNUSED tpp_lcinfo TPPCALL
-tpp_lcinfo_account(tpp_file const *tpp_restrict self, tpp_lcinfo lc,
-                   tpp_char const *text, tpp_size size) {
+#if TPP_HAVE_UNICODE
+TPP_IMPL TPP_WUNUSED tpp_lcinfo TPPCALL
+tpp_lcinfo_account_ex(tpp_lcinfo lc, tpp_char const *text,
+                      tpp_size size, tpp_file_encoding enc)
+#else /* TPP_HAVE_UNICODE */
+TPP_IMPL TPP_WUNUSED tpp_lcinfo TPPCALL
+tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size)
+#endif /* !TPP_HAVE_UNICODE */
+{
 	tpp_char const *endp = text + size;
 	tpp_line line  = tpp_lcinfo_getline(lc);
 	tpp_column col = tpp_lcinfo_getcol(lc);
 	if (!tpp_lcinfo_isvalid(lc))
 		return lc; /* Don't account for changes when LC is invalid */
-	(void)self;
 	while (text < endp) {
 		tpp_char ch = *text++;
 		switch (ch) {
@@ -4875,7 +4900,7 @@ handle_linefeed:
 
 		default:
 #if TPP_HAVE_UNICODE
-			if (tpp_file_isutf8(self) && ch >= 0x80) {
+			if (TPP_FILE_ENCODING_ISUTF8(enc) && ch >= 0x80) {
 				/* Check for unicode linefeed characters */
 				tpp_unichar uch;
 				--text;
@@ -5223,8 +5248,9 @@ again:
 		if (unused_head)
 #endif /* !__OPTIMIZE_SIZE__ */
 		{
-			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account(self, self->tf_data.td_io.tff_start_lc,
-			                                                      tpp_string_str(old_chunk), unused_head);
+			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account_ex(self->tf_data.td_io.tff_start_lc,
+			                                                         tpp_string_str(old_chunk),
+			                                                         unused_head, self->tf_enc);
 			tpp_memmovedown(tpp_string_str(old_chunk), base, old_inuse);
 			base -= unused_head;
 			self->tf_pos -= unused_head;
@@ -5310,9 +5336,9 @@ reuse_old_chunk:
 			ps_rel = (tpp_size)(self->tf_pos - base);
 			kp_rel = (tpp_size)(self->tf_data.td_io.ttf_keep - base);
 #endif /* TPP_HAVE_FILE_KEEPPOS */
-			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account(self,
-			                                                      self->tf_data.td_io.tff_start_lc,
-			                                                      tpp_string_str(old_chunk), unused_head);
+			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account_ex(self->tf_data.td_io.tff_start_lc,
+			                                                         tpp_string_str(old_chunk),
+			                                                         unused_head, self->tf_enc);
 			tpp_assert(tpp_string_isshared(old_chunk));
 			tpp_string_decref_nokill(old_chunk);
 #if TPP_HAVE_UNICODE
@@ -5627,14 +5653,16 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
 #if TPP_HAVE_CPP_MACROS
 /* Figure out the line/column of "pos" in "expanded_text", as produced
  * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL
-tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
+static TPP_NONNULL((1, 2, 3, 4, 5)) void TPPCALL
+tpp_macro_func_lcinfo(tpp_macro const *self,
+                      tpp_file const *expanded_text_file,
                       tpp_string const *expanded_text,
-                      tpp_char const *pos);
+                      tpp_char const *pos,
+                      tpp_lcinfo_ex *tpp_restrict result);
 #endif /* TPP_HAVE_CPP_MACROS */
 
 
-/* Return line/column information (1-based) for "pos"
+/* Return line/column information (0-based) for "pos"
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
@@ -5651,8 +5679,9 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 		tpp_size delta_from_lcpos;
 		if (pos >= self->tf_lcpos) {
 			result = self->tf_lcval;
-			result = tpp_lcinfo_account(self, result, self->tf_lcpos,
-			                            (tpp_size)(pos - self->tf_lcpos));
+			result = tpp_lcinfo_account_ex(result, self->tf_lcpos,
+			                               (tpp_size)(pos - self->tf_lcpos),
+			                               self->tf_enc);
 			goto done;
 		}
 		delta_from_chunk = (tpp_size)(pos - tpp_string_str(self->tf_chunk));
@@ -5665,8 +5694,9 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 				tpp_line num_lf = tpp_lcinfo_count_linefeed(self, last_linefeed, self->tf_lcpos);
 				tpp_line last_linefeed_lno = tpp_lcinfo_getline(self->tf_lcval) - num_lf;
 				tpp_lcinfo_init(result, last_linefeed_lno, 0);
-				result = tpp_lcinfo_account(self, result, last_linefeed,
-				                            (tpp_size)(pos - last_linefeed));
+				result = tpp_lcinfo_account_ex(result, last_linefeed,
+				                               (tpp_size)(pos - last_linefeed),
+				                               self->tf_enc);
 				goto done;
 			}
 		}
@@ -5679,8 +5709,9 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT: {
 		result = self->tf_data.td_io.tff_start_lc;
-		result = tpp_lcinfo_account(self, result, tpp_string_str(self->tf_chunk),
-		                            (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
+		result = tpp_lcinfo_account_ex(result, tpp_string_str(self->tf_chunk),
+		                               (tpp_size)(pos - tpp_string_str(self->tf_chunk)),
+		                               self->tf_enc);
 	}	break;
 
 #if TPP_HAVE_FILE_SUBTEXT
@@ -5719,13 +5750,16 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			 * >> foo   // line=1, col=18
 			 * >> +     // line=1, col=19
 			 * >> bar   // line=1, col=20 */
+			tpp_lcinfo_ex info;
 			tpp_assert(TPP_MACRO_KIND_ISFUNC(macro->tm_kind));
-			result = tpp_macro_func_lcinfo(macro, self->tf_chunk, pos);
+			tpp_macro_func_lcinfo(macro, self, self->tf_chunk, pos, &info);
+			result = info.tlcix_info;
 			goto done_nocache;
 		} else {
 			result = macro->tm_body_lc;
-			result = tpp_lcinfo_account(self, result, macro->tm_body_start,
-			                            (tpp_size)(pos - macro->tm_body_start));
+			result = tpp_lcinfo_account_ex(result, macro->tm_body_start,
+			                               (tpp_size)(pos - macro->tm_body_start),
+			                               self->tf_enc);
 		}
 	}	break;
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -5743,6 +5777,42 @@ done_nocache:
 #endif /* TPP_HAVE_CPP_MACROS */
 	return result;
 }
+
+/* Same as "tpp_file_getlcinfo()", but if the current file is an expanded macro, see if
+ * the specified "pos" points into the expanded portion of a macro argument, in which
+ * case this function also (tries to) include information on where that argument was
+ * projected from. */
+#if TPP_HAVE_CPP_MACROS
+TPP_IMPL TPP_NONNULL((1, 2, 3)) void TPPCALL
+tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
+                      tpp_lcinfo_ex *tpp_restrict result) {
+#if TPP_HAVE_FILE_SUBTEXT
+	if (self->tf_kind == TPP_FILE_KIND_SUBTEXT) {
+		tpp_file *parent = self;
+		do {
+			tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+			parent = parent->tf_tprev;
+		} while (parent->tf_kind == TPP_FILE_KIND_SUBTEXT);
+		if (parent->tf_chunk == self->tf_chunk)
+			self = parent;
+	}
+#endif /* TPP_HAVE_FILE_SUBTEXT */
+
+	if (self->tf_chunk && self->tf_kind == TPP_FILE_KIND_MACRO) {
+		tpp_macro const *macro = self->tf_data.td_macro.tfm_macro;
+		tpp_assert(pos >= tpp_string_str(self->tf_chunk));
+		tpp_assert(pos <= tpp_string_end(self->tf_chunk));
+		if (self->tf_chunk != macro->tm_body_chunk) {
+			tpp_assert(TPP_MACRO_KIND_ISFUNC(macro->tm_kind));
+			tpp_macro_func_lcinfo(macro, self, self->tf_chunk, pos, result);
+			return;
+		}
+	}
+	result->tlcix_projfile = NULL;
+	result->tlcix_info = tpp_file_getlcinfo(self, pos);
+}
+#endif /* TPP_HAVE_CPP_MACROS */
+
 
 
 /* These are needed for the shared
@@ -8501,17 +8571,574 @@ nope:
 #endif /* TPP_HAVE_MACRO_EQUALS */
 
 
+typedef struct tpp_macro_func_lcscan_vars {
+	tpp_macro_opcode const *tmflcsv_pc;           /* [1..1] Macro expansion program counter */
+	tpp_char const         *tmflcsv_expand_start; /* [1..1] Start of macro expansion */
+	tpp_char const         *tmflcsv_expand_end;   /* [1..1] End of macro expansion */
+	tpp_char const         *tmflcsv_expand_pos;   /* [1..1] Position to find in macro expansion */
+	tpp_char const         *tmflcsv_body_start;   /* [1..1] Start of macro body */
+	tpp_char const         *tmflcsv_body_end;     /* [1..1] End of macro body */
+	tpp_macro_opcode const *tmflcsv_argopcode;    /* [0..1][out] When non-null on success, "pos" is located within text expanded by this opcode.
+	                                               * In this case, tmflcsv_expand_start/tmflcsv_body_start describe the state at the start of
+	                                               * the argument insertion:
+	                                               * - TPP_MACRO_OPCODE_INS_EXP
+	                                               * - TPP_MACRO_OPCODE_INS_STR
+	                                               * - TPP_MACRO_OPCODE_INS_CHR
+	                                               * - TPP_MACRO_OPCODE_INS
+	                                               * NOTES:
+	                                               * - argument_index = tmflcsv_argopcode[1]
+	                                               * - offset_into_expansion_of_argument = tmflcsv_expand_pos - tmflcsv_expand_start
+	                                               * - start_of_argument = tmflcsv_expand_start  (gets overwritten to location where argument is known to terminate)
+	                                               * - end_of_argument = tmflcsv_expand_end      (gets overwritten to location where argument is known to terminate)
+	                                               * - length_of_argument_in_body = tmflcsv_argopcode[2] */
+} tpp_macro_func_lcscan_vars;
+
+#ifndef tpp_memmem
+static TPP_PURECALL TPP_WUNUSED void *
+tpp_memmem(void const *haystack, size_t haystack_length,
+           void const *needle, size_t needle_length) {
+	unsigned char *candidate, marker;
+	if tpp_unlikely(!needle_length)
+		return (void *)haystack;
+	if tpp_unlikely(needle_length > haystack_length)
+		return NULL;
+	haystack_length -= (needle_length - 1);
+	marker = *(unsigned char const *)needle;
+	while ((candidate = (unsigned char *)tpp_memchr(haystack, marker, haystack_length)) != NULL) {
+		if (tpp_memcmp(candidate, needle, needle_length) == 0)
+			return (void *)candidate;
+		++candidate;
+		haystack_length = ((unsigned char const *)haystack + haystack_length) - candidate;
+		haystack        = (void const *)candidate;
+	}
+	return NULL;
+}
+#endif /* !tpp_memmem */
+
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+/* Return a pointer *after* the next unescaped "quote_ch", or re-return "end" */
+static TPP_PURECALL TPP_RETNONNULL TPP_WUNUSED tpp_char const *TPPCALL
+tpp_find_next_unescaped_quote(tpp_char const *text, tpp_char const *end, tpp_char quote_ch) {
+	while (text < end) {
+		tpp_char ch = *text++;
+		if (ch == quote_ch)
+			break;
+		/* No need to handle ??/-trigraphs here: only used to scan output
+		 * of "tpp_token_encodestring", which doesn't emit trigraphs! */
+		if (ch == '\\' && text < end)
+			++text; /* Skip next character */
+	}
+	return text;
+}
+#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+
+static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+tpp_macro_func_lcscan(tpp_macro_func_lcscan_vars *tpp_restrict self) {
+	tpp_macro_opcode opcode;
+	tpp_macro_func_lcscan_vars nested_vars;
+	tpp_macro_opcode const *p_align_opcode = NULL; /* Pointer to TPP_MACRO_OPCODE_INS*-like opcode required for alignment */
+	tpp_char const *p_align_body_start = NULL;     /* Macro body start pointer for "p_align_opcode" */
+again_read_opcode:
+	opcode = *self->tmflcsv_pc++;
+	switch (opcode) {
+
+	case TPP_MACRO_OPCODE_END:
+		if (p_align_opcode) {
+			/* Position is within an argument */
+			self->tmflcsv_body_start = p_align_body_start;
+			self->tmflcsv_argopcode  = p_align_opcode;
+			return true;
+		}
+		if (self->tmflcsv_expand_start >= self->tmflcsv_expand_pos) {
+			self->tmflcsv_argopcode = NULL;
+			return true; /* Location found! */
+		}
+		/* End of body before match could be found */
+		return false;
+
+	case TPP_MACRO_OPCODE_SKIP:
+		self->tmflcsv_body_start += *self->tmflcsv_pc++;
+		break;
+
+	case TPP_MACRO_OPCODE_COPY: {
+		tpp_size template_size = *self->tmflcsv_pc++;
+		tpp_char const *template_base = self->tmflcsv_body_start;
+		self->tmflcsv_body_start += template_size;
+		tpp_assert(self->tmflcsv_body_start <= self->tmflcsv_body_end);
+		if (!template_size)
+			break;
+		if (p_align_opcode) {
+			/* After argument -> seek match */
+			tpp_char const *scanner = self->tmflcsv_expand_start;
+			for (;;) {
+				tpp_char const *candidate;
+				tpp_assert(scanner <= self->tmflcsv_expand_end);
+				candidate = (tpp_char const *)tpp_memmem(scanner, (tpp_size)(self->tmflcsv_expand_end - scanner),
+				                                         template_base, template_size);
+				if (!candidate)
+					return false;
+				if (candidate > self->tmflcsv_expand_pos) {
+					/* Requested position is within preceding "p_align_opcode" */
+					self->tmflcsv_body_start = p_align_body_start;
+					self->tmflcsv_argopcode  = p_align_opcode;
+					self->tmflcsv_expand_end = candidate;
+					return true;
+				}
+				candidate += template_size;
+				if (candidate > self->tmflcsv_expand_pos) {
+					/* Requested position is after preceding "p_align_opcode" */
+					tpp_size rewind = (tpp_size)(candidate - self->tmflcsv_expand_pos);
+					self->tmflcsv_body_start -= rewind;
+					self->tmflcsv_argopcode  = NULL;
+					return true;
+				}
+				nested_vars = *self;
+				nested_vars.tmflcsv_expand_start = candidate;
+				if (tpp_macro_func_lcscan(&nested_vars)) {
+					*self = nested_vars;
+					return true;
+				}
+				scanner = candidate + 1;
+			}
+			tpp_unreachable();
+		}
+		/* Immediate text -> output must match */
+		if (tpp_memcmp(self->tmflcsv_expand_start, template_base, template_size) != 0)
+			return false;
+		self->tmflcsv_expand_start += template_size;
+		tpp_assert(self->tmflcsv_expand_start <= self->tmflcsv_expand_end);
+		if (self->tmflcsv_expand_start > self->tmflcsv_expand_pos) {
+			tpp_size rewind = (tpp_size)(self->tmflcsv_expand_start - self->tmflcsv_expand_pos);
+			self->tmflcsv_body_start -= rewind;
+			self->tmflcsv_argopcode = NULL;
+			return true; /* Location found! */
+		}
+	}	break;
+
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
+	case TPP_MACRO_OPCODE_INS:
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
+	case TPP_MACRO_OPCODE_INS_EXP: {
+		/* NOTE: If "p_align_opcode != NULL" at this point, the given "pos" (may) actually be
+		 *       part of multiple arguments:
+		 * >> #define cat(a, b) a##b
+		 * >> cat(10, 20)
+		 *
+		 * The produced "1020" token has 2 projection arguments: "10" and "20",
+		 * with "10" already being located in "p_align_opcode" when we get here,
+		 * and "20" being described by the the currently-read opcode.
+		 *
+		 * Too keep things simple, we only ever return info about "20" if we
+		 */
+#if 0 /* Set to "1" to return info about "10" in the above example; else, info about "20" is returned */
+		if (p_align_opcode == NULL)
+#endif
+		{
+			p_align_opcode     = self->tmflcsv_pc - 1;
+			p_align_body_start = self->tmflcsv_body_start;
+		}
+		++self->tmflcsv_pc; /* Argument index */
+		self->tmflcsv_body_start += *self->tmflcsv_pc++;
+	}	break;
+
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
+	case TPP_MACRO_OPCODE_INS_STR:
+#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
+#if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+	case TPP_MACRO_OPCODE_INS_CHR:
+#endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+	{
+		tpp_char const *string_end;
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT && TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+		tpp_char const quote_ch = opcode == TPP_MACRO_OPCODE_INS_STR ? '"' : '\'';
+#elif TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
+		tpp_char const quote_ch = '"';
+#elif TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+		tpp_char const quote_ch = '\'';
+#endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+		if (p_align_opcode) {
+			tpp_char const *scanner = self->tmflcsv_expand_start;
+			for (;;) {
+				tpp_char const *candidate;
+				tpp_assert(scanner <= self->tmflcsv_expand_end);
+				candidate = (tpp_char const *)tpp_memchr(scanner, quote_ch,
+				                                         (tpp_size)(self->tmflcsv_expand_end - scanner));
+				if (!candidate)
+					return false;
+				if (candidate > self->tmflcsv_expand_pos) {
+					/* Requested position is within preceding "p_align_opcode" */
+					self->tmflcsv_body_start = p_align_body_start;
+					self->tmflcsv_argopcode  = p_align_opcode;
+					self->tmflcsv_expand_end = candidate;
+					return true;
+				}
+				candidate = tpp_find_next_unescaped_quote(candidate, self->tmflcsv_expand_end, quote_ch);
+				if (candidate > self->tmflcsv_expand_pos) {
+					/* Requested position is within this stringized argument */
+					self->tmflcsv_argopcode = self->tmflcsv_pc - 1;
+					return true;
+				}
+				nested_vars = *self;
+				nested_vars.tmflcsv_expand_start = candidate;
+				if (tpp_macro_func_lcscan(&nested_vars)) {
+					*self = nested_vars;
+					return true;
+				}
+				scanner = candidate + 1;
+			}
+			tpp_unreachable();
+		}
+		if (*self->tmflcsv_expand_start != quote_ch)
+			return false;
+		string_end = self->tmflcsv_expand_start + 1;
+		string_end = tpp_find_next_unescaped_quote(string_end, self->tmflcsv_expand_end, quote_ch);
+		if (string_end > self->tmflcsv_expand_pos) {
+			/* Found it within this argument! */
+			self->tmflcsv_argopcode  = self->tmflcsv_pc - 1;
+			self->tmflcsv_expand_end = string_end;
+			return true;
+		}
+	}	break;
+#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+
+#if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS || TPP_HAVE_VA_OPT_IN_MACROS
+	{
+		tpp_char const *va_opt_text_base;
+		tpp_size va_opt_text_size;
+#if TPP_HAVE_VA_OPT_IN_MACROS
+	case TPP_MACRO_OPCODE_VA_OPT:
+		self->tmflcsv_body_start += *self->tmflcsv_pc++; /* Head */
+		va_opt_text_base = self->tmflcsv_body_start;
+		va_opt_text_size = *self->tmflcsv_pc++;          /* Body */
+#endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+#if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
+		if (0) {
+	case TPP_MACRO_OPCODE_VA_COMMA:
+			va_opt_text_base = (tpp_char const *)",";
+			va_opt_text_size = 1;
+		}
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS */
+		self->tmflcsv_body_start += *self->tmflcsv_pc++; /* Tail */
+		if (p_align_opcode) {
+			/* If there is *already* an argument pending, then we have no
+			 * was of determining if a trailing "," (or whatever) is part of
+			 * that argument's expansion, or was generated by __VA_COMMA__:
+			 * >> #define wtf(a, ...) a##__VA_COMMA__
+			 * >> wtf(10, 20, 30);  // Expands to "10,", but we can't know if that
+			 * >>                   // "," is from "__VA_COMMA__" or from arguments */
+			break;
+		}
+		if ((tpp_size)(self->tmflcsv_expand_end - self->tmflcsv_expand_start) >= va_opt_text_size &&
+			tpp_memcmp(self->tmflcsv_expand_start, va_opt_text_base, va_opt_text_size) == 0) {
+			self->tmflcsv_expand_start += va_opt_text_size;
+			if (self->tmflcsv_expand_start > self->tmflcsv_expand_pos) {
+				self->tmflcsv_body_start -= *--self->tmflcsv_pc; /* Undo tail */
+#if TPP_HAVE_VA_OPT_IN_MACROS
+#if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
+				if (opcode == TPP_MACRO_OPCODE_VA_OPT)
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS */
+				{
+					tpp_size rewind = (tpp_size)(self->tmflcsv_expand_start - self->tmflcsv_expand_pos);
+					/* Found position in va-opt text */
+					self->tmflcsv_body_start -= rewind;
+				}
+#endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+				self->tmflcsv_argopcode = NULL;
+				return true;
+			}
+
+			/* Check if we can resolve the position with the VA_OPT text skipped */
+			nested_vars = *self;
+			if (tpp_macro_func_lcscan(&nested_vars)) {
+				*self = nested_vars;
+				return true;
+			}
+			self->tmflcsv_expand_start -= va_opt_text_size;
+		}
+
+		/* Continue parsing under the assuming that there were no variable arguments... */
+	}	break;
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS || TPP_HAVE_VA_OPT_IN_MACROS */
+
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+	case TPP_MACRO_OPCODE_VA_NARGS: {
+		tpp_char nargs_ch;
+		self->tmflcsv_body_start += *self->tmflcsv_pc++;
+		if (p_align_opcode) {
+			tpp_char const *scanner = self->tmflcsv_expand_start;
+			for (;;) {
+				tpp_assert(scanner <= self->tmflcsv_expand_end);
+				for (;;) {
+					if (scanner >= self->tmflcsv_expand_end)
+						return false;
+					nargs_ch = *scanner;
+					if (nargs_ch >= '0' && nargs_ch <= '9')
+						break;
+					++scanner;
+				}
+				if (scanner > self->tmflcsv_expand_pos) {
+					/* Requested position is within preceding "p_align_opcode" */
+					self->tmflcsv_body_start = p_align_body_start;
+					self->tmflcsv_argopcode  = p_align_opcode;
+					self->tmflcsv_expand_end = scanner;
+					return true;
+				}
+				++scanner;
+				if (scanner > self->tmflcsv_expand_pos) {
+					self->tmflcsv_argopcode = NULL;
+					return true; /* Requested position is within this __VA_NARGS__ argument */
+				}
+				nested_vars = *self;
+				nested_vars.tmflcsv_expand_start = scanner;
+				if (tpp_macro_func_lcscan(&nested_vars)) {
+					*self = nested_vars;
+					return true;
+				}
+			}
+			tpp_unreachable();
+		}
+		if (self->tmflcsv_expand_start >= self->tmflcsv_expand_pos) { /* ">=" because __VA_NARGS__ is always non-empty */
+			self->tmflcsv_argopcode = NULL;
+			return true; /* Location found! */
+		}
+		/* Scan decimals and try to match what comes after... */
+		for (;;) {
+			nargs_ch = *self->tmflcsv_expand_start;
+			if (!(nargs_ch >= '0' && nargs_ch <= '9'))
+				return false;
+			++self->tmflcsv_expand_start;
+			nested_vars = *self;
+			if (tpp_macro_func_lcscan(&nested_vars)) {
+				*self = nested_vars;
+				return true;
+			}
+			if (self->tmflcsv_expand_start > self->tmflcsv_expand_pos) {
+				self->tmflcsv_argopcode = NULL;
+				return true; /* Location found! */
+			}
+		}
+	}	break;
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
+
+	default: tpp_unreachable();
+	}
+	goto again_read_opcode;
+}
+
+/* Return "(tpp_size)(argument_pos - argument_start)", but do special handling when
+ * "TPP_MACRO_OPCODE_INS_STR" / "TPP_MACRO_OPCODE_INS_CHR", where the offset into
+ * the text that was originally encoded (via tpp_token_encodestring()) is returned
+ * instead. */
+static tpp_size TPPCALL
+tpp_macro_determine_argument_offset(tpp_macro_opcode argument_opcode,
+                                    tpp_char const *argument_start,
+                                    tpp_char const *argument_pos) {
+	switch (argument_opcode) {
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
+	case TPP_MACRO_OPCODE_INS_STR:
+#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
+#if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+	case TPP_MACRO_OPCODE_INS_CHR:
+#endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+	{
+		tpp_size result = 0;
+		++argument_start; /* Skip over leading " or ' character (which was added during encoding) */
+		while (argument_start < argument_pos) {
+			tpp_char ch = *argument_start++;
+			++result;
+			if (ch == '\\') {
+#if TPP_HAVE_UNICODE
+				ch = *argument_start++;
+				/* Deal with 4-byte encoding of "\xc2" and "\xe2"
+				 * All other encodings are 2-byte (which is the
+				 * offset already within "argument_start") */
+				if (ch == 'x')
+					argument_start += 2;
+#else /* TPP_HAVE_UNICODE */
+				/* Without unicode, tpp_token_encodestring() always emits 1 extra byte after \ */
+				++argument_start;
+#endif /* !TPP_HAVE_UNICODE */
+			}
+		}
+		return result;
+	}	break;
+#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+	default: break;
+	}
+	return (tpp_size)(argument_pos - argument_start);
+}
+
+
 /* Figure out the line/column of "pos" in "expanded_text", as produced
  * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL
-tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
+static TPP_NONNULL((1, 2, 3, 4, 5)) void TPPCALL
+tpp_macro_func_lcinfo(tpp_macro const *self,
+                      tpp_file const *expanded_text_file,
                       tpp_string const *expanded_text,
-                      tpp_char const *pos) {
-	(void)self;
-	(void)expanded_text;
-	(void)pos;
-	/* TODO */
-	return TPP_LCINFO_INVALID;
+                      tpp_char const *pos,
+                      tpp_lcinfo_ex *tpp_restrict result) {
+	tpp_macro_func_lcscan_vars vars;
+	tpp_assert(tpp_macro_isfunction(self));
+	tpp_assert(expanded_text != self->tm_body_chunk);
+	tpp_assert(expanded_text_file->tf_chunk == expanded_text);
+	tpp_assert(expanded_text_file->tf_kind == TPP_FILE_KIND_MACRO);
+	tpp_assert(expanded_text_file->tf_data.td_macro.tfm_macro == self);
+	result->tlcix_info = TPP_LCINFO_INVALID;
+	result->tlcix_projfile = NULL;
+
+	vars.tmflcsv_pc           = self->tm_data.tmd_func.tmf_expand;
+	vars.tmflcsv_expand_start = tpp_string_str(expanded_text);
+	vars.tmflcsv_expand_end   = tpp_string_end(expanded_text);
+	vars.tmflcsv_expand_pos   = pos;
+	vars.tmflcsv_body_start   = self->tm_body_start;
+	vars.tmflcsv_body_end     = self->tm_body_end;
+	if (!tpp_macro_func_lcscan(&vars))
+		return; /* Unable to translate pointers */
+
+	/* Encode LC info as position within the macro's body. */
+	tpp_assert(vars.tmflcsv_body_start >= self->tm_body_start);
+	tpp_assert(vars.tmflcsv_body_start <= self->tm_body_end);
+	result->tlcix_info = tpp_lcinfo_account_ex(self->tm_body_lc, self->tm_body_start,
+	                                           (tpp_size)(vars.tmflcsv_body_start - self->tm_body_start),
+	                                           self->tm_body_enc);
+
+	/* Check if position belongs to a macro argument */
+	if (vars.tmflcsv_argopcode != NULL && expanded_text_file->tf_tprev) {
+		tpp_macro_opcode const argument_opcode = vars.tmflcsv_argopcode[0];
+		tpp_size const argument_index          = vars.tmflcsv_argopcode[1];
+		tpp_file *const invocation_file        = expanded_text_file->tf_tprev;
+		tpp_size const argument_offset = tpp_macro_determine_argument_offset(argument_opcode, vars.tmflcsv_expand_start, pos);
+		tpp_assert(argument_index < self->tm_data.tmd_func.tmf_argc);
+
+		/* At this point, the state looks like this:
+		 * >> #define foo(a, b) 10+a+20+b+30
+		 * >> foo(11, "a\x22") END
+		 *
+		 * --- Assuming requesting info on the \ in "a\x22":
+		 *
+		 * expanded_text_file: 10+11+20+"a\x22"+30
+		 *                              ^ ^    ^
+		 *                              | |    vars.tmflcsv_expand_end
+		 *                              | pos
+		 *                              vars.tmflcsv_expand_start
+		 *
+		 * invocation_file:    foo(11, "a\x22") END
+		 *                     ^               ^
+		 *                     |               invocation_file->tf_pos
+		 *                     invocation_file->tf_tpos
+		 * argument_index:     1  (second argument)
+		 * argument_offset:    2  (0: <">, 1: <a>, 2: <\>)
+		 *
+		 * Of course, there are (lots of) cases where we'll be unable
+		 * to *actually* determine the origin of a projection (such as
+		 * when the argument's text is in a file that has already been
+		 * popped, or we're unable to determine the macro argument list:
+		 * >> #define bar foo(11,
+		 * >> bar "a\x22") */
+		{
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+			tpp_lexer_arginfo const *const argv = expanded_text_file->tf_data.td_macro.tfm_args;
+			tpp_lexer_arginfo const *const arg = &argv[argument_index];
+			if (!arg->tlai_chunk) {
+				/* No chunk -> no LC info */
+			} else if (arg->tlai_chunk == invocation_file->tf_chunk) {
+				/* Same chunk as invocation file! */
+				if (argument_opcode == TPP_MACRO_OPCODE_INS_EXP) {
+					/* Special (but sadly most likely) case: argument (may have) gotten expanded
+					 * -> Because of this, we have to ensure that the argument content (at least
+					 *    up to the requested position) doesn't differ between its expanded and
+					 *    non-expanded forms. */
+					tpp_char const *const expanded_argument_start = vars.tmflcsv_expand_start;
+/*					tpp_char const *const expanded_argument_end   = vars.tmflcsv_expand_end; */
+					tpp_char const *const orig_argument_start     = arg->tlai_start;
+					tpp_char const *const orig_argument_end       = arg->tlai_end;
+					tpp_size const orig_argument_size = (tpp_size)(orig_argument_end - orig_argument_start);
+					tpp_assert(argument_offset <= (tpp_size)(vars.tmflcsv_expand_end - expanded_argument_start));
+
+					/* XXX: It'd be great if there was some way for us to be smarter about this:
+					 * >> #define MAC1(x)
+					 * >> #define MAC2(x) x
+					 * >> #define foo(a) 10+a+20
+					 * >> foo(MAC1(3) MAC2(3))
+					 *
+					 * When requesting debug info about the "3" token, we're unable to satisfy
+					 * the request because we have no way of knowing which "3" the caller is
+					 * actually talking about
+					 *
+					 * The only way this could really be done is by saving LC info for every
+					 * token when expanding a macro's arguments (but that's wholly overkill)
+					 */
+					if (argument_offset > orig_argument_size)
+						return; /* Expansion did happen, and it happened *big* time (offset) */
+					if (tpp_memcmp(orig_argument_start, expanded_argument_start, argument_offset) != 0)
+						return;
+				}
+
+				/* Was able to determine projected (argument) code location */
+				result->tlcix_projfile = invocation_file;
+				result->tlcix_projpos  = arg->tlai_start + argument_offset;
+				tpp_assert(arg->tlai_start >= tpp_string_str(arg->tlai_chunk));
+				tpp_assert(arg->tlai_start <= arg->tlai_end);
+				tpp_assert(arg->tlai_end <= tpp_string_end(arg->tlai_chunk));
+				tpp_assert(result->tlcix_projpos >= arg->tlai_start);
+				tpp_assert(result->tlcix_projpos <= arg->tlai_end);
+			} else {
+				/* XXX: LC information could still be retrieved from "tpp_lexer_arginfo",
+				 *      once that "smart way of tracking debug info" has been implemented. */
+			}
+#else /* TPP_HAVE_FILE_MACRO_TRACKARGS */
+			tpp_char const *const argument_start   = vars.tmflcsv_expand_start;
+			tpp_char const *const argument_end     = vars.tmflcsv_expand_end;
+			tpp_char const lparen_ch = (tpp_char)tpp_macro_getfunclparen(self);
+			tpp_char const rparen_ch = (tpp_char)tpp_macro_getfuncrparen(self);
+			tpp_char const *macro_args_start = invocation_file->tf_tpos;
+			tpp_char const *macro_args_end   = invocation_file->tf_pos;
+			tpp_size arg_iter;
+
+			/* WARNING: This is completely imprecise: the ( and ) tokens can be in comments
+			 *          or strings, in which case we can easily get the wrong ones here!
+			 * -> This is why "TPP_HAVE_FILE_MACRO_TRACKARGS" needs to be enabled for
+			 *    improved projection tracking */
+			while (macro_args_start < macro_args_end && *macro_args_start != lparen_ch)
+				++macro_args_start;
+			if (macro_args_start < macro_args_end && *macro_args_start == lparen_ch)
+				++macro_args_start;
+			while (macro_args_end > macro_args_start && macro_args_end[-1] != rparen_ch)
+				--macro_args_end;
+			if (macro_args_end > macro_args_start && macro_args_end[-1] == rparen_ch)
+				--macro_args_end;
+			for (arg_iter = 0; arg_iter < argument_index; ++arg_iter) {
+				macro_args_start = (tpp_char const *)tpp_memchr(macro_args_start, ',',
+				                                                (tpp_size)(macro_args_end -
+				                                                           macro_args_start));
+				if (!macro_args_start)
+					return;
+				++macro_args_start;
+			}
+			if (macro_args_start < macro_args_end) {
+				tpp_char const *projection_pos;
+				projection_pos = (tpp_char const *)tpp_memmem(macro_args_start, (tpp_size)(macro_args_end - macro_args_start),
+				                                              argument_start, (tpp_size)(argument_end - argument_start));
+				if (projection_pos) {
+					projection_pos += argument_offset;
+					if (projection_pos >= macro_args_start && projection_pos <= macro_args_end) {
+						/* This one's ~probably~ it (but there's no way to guaranty that. Even if
+						 * we tried to re-parse tokens here, and ignoring the fact that we don't
+						 * have direct access to the lexer, the lexer's config may have changed
+						 * since the macro was called, in which case the same problems would arise
+						 * once again (e.g.: (*pascal-comments*) were enabled during the initial
+						 * parse, but are now disabled, meaning we might think the projected macro
+						 * argument is a piece of text located within said pascal comment)) */
+						result->tlcix_projfile = invocation_file;
+						result->tlcix_projpos  = projection_pos;
+					}
+				}
+			}
+#endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
+		}
+	}
 }
 
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -11004,13 +11631,13 @@ tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_start(tpp_formatprinter printer, void *arg) {
 	/* TODO: Do something more interesting here! */
-	return tpp_formatprinter_print_cstr(printer, arg, "`", 1);
+	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_end(tpp_formatprinter printer, void *arg) {
 	/* TODO: Do something more interesting here! */
-	return tpp_formatprinter_print_cstr(printer, arg, "`", 1);
+	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
@@ -11332,9 +11959,9 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 
 	/* Print what this is about... */
 	if (invokeinfo.twii_state == TPP_WSTATE_WARN) {
-		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "warning[", 8);
+		printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "warning[");
 	} else {
-		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "error[", 6);
+		printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "error[");
 	}
 	if (printer_status < 0)
 		goto err_printer;
@@ -11345,7 +11972,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(invokeinfo.twii_ctx_id);
 		unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
 		if tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID) {
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "?", 1);
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "?");
 		} else {
 			printer_status = tpp_format_print_uint(printer, printer_arg, number);
 		}
@@ -11355,9 +11982,9 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(invokeinfo.twii_ctx_id);
 		char const *group_name = tpp_warning_group_getnames(group_id);
 		if tpp_unlikely(group_name == NULL) {
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "?", 1);
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "?");
 		} else {
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "-W", 2);
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "-W");
 			if (printer_status < 0)
 				goto err_printer;
 			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name));
@@ -11365,7 +11992,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	}
 	if (printer_status < 0)
 		goto err_printer;
-	printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "]: ", 3);
+	printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "]: ");
 	if (printer_status < 0)
 		goto err_printer;
 
@@ -11378,7 +12005,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		                                           warning_format, args);
 		if (printer_status < 0)
 			goto err_printer;
-		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "\n", 1);
+		printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "\n");
 		if (printer_status < 0)
 			goto err_printer;
 	} else {
@@ -11436,12 +12063,32 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 #undef tpp_current_warning_id
 /************************************************************************/
 		default:
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "UNKNOWN WARNING\n", 16);
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "UNKNOWN WARNING\n");
 			if (printer_status < 0)
 				goto err_printer;
 			break;
 		}
 	}
+
+	/* Print projection origin */
+#if TPP_HAVE_CPP_MACROS
+	if (pos) {
+		tpp_lcinfo_ex lcx;
+		tpp_file_getlcinfo_ex(file, pos, &lcx);
+		while (lcx.tlcix_projfile) {
+			tpp_lcinfo_ex nlcx;
+			tpp_file_getlcinfo_ex(lcx.tlcix_projfile, lcx.tlcix_projpos, &nlcx);
+			printer_status = tpp_lexer_printf_warning(self, lcx.tlcix_projfile, lcx.tlcix_projpos, nlcx.tlcix_info,
+			                                          printer, printer_arg, tpp_file_and_line);
+			if (printer_status < 0)
+				goto err_printer;
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "note: projected from here\n");
+			if (printer_status < 0)
+				goto err_printer;
+			lcx = nlcx;
+		}
+	}
+#endif /* TPP_HAVE_CPP_MACROS */
 
 	/* Print origin traceback */
 #if TPP_HAVE_INCLUDE_STACK
@@ -11462,7 +12109,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			                                          tpp_file_and_line);
 			if (printer_status < 0)
 				goto err_printer;
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "note: originating from here\n", 28);
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "note: originating from here\n");
 			if (printer_status < 0)
 				goto err_printer;
 		}
@@ -17187,25 +17834,6 @@ typedef struct tpp_seek_rparen_state {
 
 	/* Already-parsed text that must be prepended before the current argument. */
 
-	/* TODO: Come up with a smart way of tracking debug info for custom printed arguments
-	 *       -> need to be able to track lcinfo for custom char ranges (any range of chars
-	 *          from this string must be able to map to its own file/line/col triple)
-	 *       -> also must adjust tpp_file_getlcinfo() to support this, and somehow also
-	 *          incorporate tpp_file_getfilename()/tpp_file_getuserfilename() to support
-	 *          different filenames based on char position
-	 * where this is necessary:
-	 * >> #define foo(a) a a
-	 * >> foo(
-	 * >> #include "file1.txt"   // Contains 10
-	 * >> #include "file2.txt"   // Contains 20
-	 * >> )
-	 *
-	 * Must result in 4 tokens (not accounting for whitespace/linefeed tokens):
-	 * - file1.txt:1:1: 10
-	 * - file2.txt:1:1: 20
-	 * - file1.txt:1:1: 10
-	 * - file2.txt:1:1: 20
-	 */
 	tpp_string_builder tsrps_curarg_prefix;
 #define tpp_seek_rparen_state_init_curarg(self) \
 	tpp_string_builder_init(&(self)->tsrps_curarg_prefix)
@@ -20129,6 +20757,7 @@ tpp_lexer_process_pragma_GCC_poison(tpp_lexer *tpp_restrict self) {
 	 *      check where the keyword originates from:
 	 *      - If it's not from a macro: emit warning
 	 *      - If it's from a macro:
+	 *        - If the macro was created after the keyword was poisoned: emit warning
 	 *        - If it's a keyword-macro: don't emit warning
 	 *        - If it's a function-macro:
 	 *          - If the keyword originates from the macro's source body: don't emit warning
@@ -23780,7 +24409,7 @@ tpp_macro_acquire_argbuf(tpp_macro *tpp_restrict macro) {
 /* Release an argument buffer back to a macro. */
 static TPP_NONNULL((1, 2)) void TPPCALL
 tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
-                         tpp_macro_argbuf *tpp_restrict buffer) {
+                         struct tpp_macro_argbuf *tpp_restrict buffer) {
 	if (macro->tm_data.tmd_func.tmf_argbuf == NULL) {
 		/* Likely case (when there was no recursion): can cache buffer in macro */
 		macro->tm_data.tmd_func.tmf_argbuf = buffer;
@@ -24151,11 +24780,15 @@ next_op:
 			tpp_macro_expinfo *expand = &invoke_expinfo[i];
 			tpp_macro_expinfo_fini(expand, arginfo);
 		}
+#if !TPP_HAVE_FILE_MACRO_TRACKARGS
 		tpp_lexer_arginfo_fini(arginfo);
+#endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
 	}
 
 	/* Release argument buffer back to macro */
+#if !TPP_HAVE_FILE_MACRO_TRACKARGS
 	tpp_macro_release_argbuf(macro, argbuf);
+#endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
 
 #if TPP_HAVE_MACRO_RECURSION
 	if (macro->tm_expansions > 0) {
@@ -24170,6 +24803,13 @@ next_op:
 				if (tpp_string_equals(existing_chunk, result_chunk)) {
 					/* Duplicate chunk!!! -> Mustn't expand (else: would result in infinite loop) */
 					tpp_string_destroy(result_chunk);
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+					for (i = 0; i < macro_argc; ++i) {
+						tpp_lexer_arginfo *arginfo = &invoke_arginfo[i];
+						tpp_lexer_arginfo_fini(arginfo);
+					}
+					tpp_macro_release_argbuf(macro, argbuf);
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 					tpp_macro_decref(macro);
 					goto done_rollback;
 				}
@@ -24183,6 +24823,13 @@ next_op:
 	tpp_lexer_alltokens_break(self);
 	if tpp_unlikely(!prev_file) {
 		tpp_lexer_manualpopfile_break_rollback(self);
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+		for (i = 0; i < macro_argc; ++i) {
+			tpp_lexer_arginfo *arginfo = &invoke_arginfo[i];
+			tpp_lexer_arginfo_fini(arginfo);
+		}
+		tpp_macro_release_argbuf(macro, argbuf);
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 		tpp_string_decref(result_chunk);
 		tok = TPP_TOK_ENOMEM;
 		goto err_tok_macro;
@@ -24202,6 +24849,9 @@ next_op:
 	file->tf_enc = macro->tm_body_enc;
 #endif /* TPP_HAVE_UNICODE */
 	file->tf_data.td_macro.tfm_macro = macro; /* Inherit the reference created at the very start */
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+	file->tf_data.td_macro.tfm_args = invoke_arginfo;
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 	++macro->tm_expansions;
 	return TPP_TOK_EOF;
 #if TPP_HAVE_MACRO_RECURSION

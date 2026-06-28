@@ -832,6 +832,7 @@ tpp_lexer_process_pragma_GCC_poison(tpp_lexer *tpp_restrict self) {
 	 *      check where the keyword originates from:
 	 *      - If it's not from a macro: emit warning
 	 *      - If it's from a macro:
+	 *        - If the macro was created after the keyword was poisoned: emit warning
 	 *        - If it's a keyword-macro: don't emit warning
 	 *        - If it's a function-macro:
 	 *          - If the keyword originates from the macro's source body: don't emit warning

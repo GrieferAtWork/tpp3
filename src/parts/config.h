@@ -2494,6 +2494,14 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_FILE_KEEPPOS (TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
 
+/* Keep track of the original "tpp_lexer_arginfo" used during macro invocation,
+ * in order to improve "tpp_file_getlcinfo_ex()"'s "tlcix_proj*" return values,
+ * to make them less error-prone. */
+#ifndef TPP_HAVE_FILE_MACRO_TRACKARGS
+#define TPP_HAVE_FILE_MACRO_TRACKARGS \
+	(TPP_HAVE_CPP_MACROS && TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
+
 /* Provide a special "TPP_FILE_ENCODING_EMBED" file encoding
  * to convert bytes into ,-separated decimals on-the-fly.
  *

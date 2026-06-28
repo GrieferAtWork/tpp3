@@ -3750,9 +3750,13 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define tpp_memcmp      memcmp
 #define tpp_memcpy      memcpy
 #define tpp_memset      memset
+#define tpp_memchr      memchr
 #define tpp_memmove     memmove
 #define tpp_memmoveup   memmove
 #define tpp_memmovedown memmove
+#if 0
+#define tpp_memmem      memmem
+#endif
 #endif /* !tpp_memcpy */
 
 #ifndef tpp_expect
@@ -3879,6 +3883,8 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 	((*printer)(arg, text, num_bytes))
 #define tpp_formatprinter_print_cstr(printer, arg, text, num_bytes) \
 	((*printer)(arg, (tpp_char const *)(text), num_bytes))
+#define tpp_formatprinter_print_conststr(printer, arg, STR) \
+	((*printer)(arg, (tpp_char const *)(STR), sizeof(STR) - sizeof(char)))
 #define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
 	tpp_ssize (TPP_FORMATPRINTER_CC name)(void *arg, tpp_char const *text, tpp_size num_bytes)
 #endif /* !tpp_formatprinter */
@@ -6467,6 +6473,14 @@ TPP_DECL_END
 #ifndef TPP_HAVE_FILE_KEEPPOS
 #define TPP_HAVE_FILE_KEEPPOS (TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
+
+/* Keep track of the original "tpp_lexer_arginfo" used during macro invocation,
+ * in order to improve "tpp_file_getlcinfo_ex()"'s "tlcix_proj*" return values,
+ * to make them less error-prone. */
+#ifndef TPP_HAVE_FILE_MACRO_TRACKARGS
+#define TPP_HAVE_FILE_MACRO_TRACKARGS \
+	(TPP_HAVE_CPP_MACROS && TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
 
 /* Provide a special "TPP_FILE_ENCODING_EMBED" file encoding
  * to convert bytes into ,-separated decimals on-the-fly.
@@ -12313,6 +12327,9 @@ struct tpp_keyword;
 #if TPP_HAVE_CPP_MACROS
 struct tpp_macro;
 #endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+struct tpp_lexer_arginfo;
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 
 typedef struct tpp_file {
 	tpp_char const     *TPP_INTERNAL(tf_tpos);  /* [?..?][valid_if(DID_CALL(tpp_lexer_yieldraw))]
@@ -12437,6 +12454,11 @@ typedef struct tpp_file {
 			/* [1..1][const] The macro definition that produced this file
 			 * as its expansion (also holds a reference to "tm_expansions") */
 			TPP_REF struct tpp_macro *TPP_INTERNAL(tfm_macro);
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+			/* [1..1][valid_if(tpp_macro_isfunction(tfm_macro))][owned][const]
+			 * Arguments passed during macro invocation */
+			struct tpp_lexer_arginfo *TPP_INTERNAL(tfm_args);
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 		} TPP_INTERNAL(td_macro); /* [tf_kind == TPP_FILE_KIND_MACRO] */
 #endif /* TPP_HAVE_CPP_MACROS */
 	} TPP_INTERNAL(tf_data);
@@ -12815,8 +12837,7 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
 #endif /* TPP_HAVE_FILE_KEEPPOS */
 
 
-
-/* Return line/column information (1-based) for "pos"
+/* Return line/column information (0-based) for "pos"
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
@@ -12843,6 +12864,46 @@ tpp_file_setuserfilename(tpp_file *tpp_restrict self,
 #else /* TPP_HAVE_FILE_USER_FILENAME */
 #define tpp_file_getuserfilename(self) tpp_file_getfilename(self)
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
+
+typedef struct tpp_lcinfo_ex {
+	tpp_lcinfo      tlcix_info;     /* Line/column information, or "TPP_LCINFO_INVALID" if unknown */
+#if TPP_HAVE_CPP_MACROS
+	/* Projection (source) file:
+	 * >> #define foo(x) 10+x+20
+	 * >> foo(15)
+	 *
+	 * When requesting lcinfo about the "15" token in the expanded
+	 * file, "tlcix_projfile" points at the file containing "foo(15)",
+	 * and "tlcix_projpos" points at the "15". Meanwhile, "tlcix_info"
+	 * will point at the "x" token in the definition of "foo".
+	 *
+	 * There are many reasons why projection can fail, even when you
+	 * might think that there isn't a reason why it should. This is
+	 * because there are some edge-cases where TPP3 is unable to
+	 * retroactively determine the correct position of tokens, such
+	 * as use of "##"-operators, or changing lexer features between
+	 * the macro being expanded, and "tpp_file_getlcinfo_ex" being
+	 * called. */
+	tpp_file       *tlcix_projfile; /* [0..1] Projection source file, or NULL if queried position wasn't projected */
+	tpp_char const *tlcix_projpos;  /* [1..1][valid_if(tlcix_fromfile)] Position in "tlcix_projfile" */
+#endif /* TPP_HAVE_CPP_MACROS */
+} tpp_lcinfo_ex;
+
+/* Same as "tpp_file_getlcinfo()", but if the current file is an expanded macro, see if
+ * the specified "pos" points into the expanded portion of a macro argument, in which
+ * case this function also (tries to) include information on where that argument was
+ * projected from. */
+#if TPP_HAVE_CPP_MACROS
+TPP_DECL TPP_NONNULL((1, 2, 3)) void TPPCALL
+tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
+                      tpp_lcinfo_ex *tpp_restrict result);
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_file_getlcinfo_ex(self, pos, result) \
+	(void)((result)->tlcix_info = tpp_file_getlcinfo(self, pos))
+#endif /* !TPP_HAVE_CPP_MACROS */
+
+
+
 
 /* Set the (0-based) line that applies to "pos"
  * (as returned by "tpp_file_getlcinfo") in "self"
@@ -12910,6 +12971,20 @@ TPP_DECL tpp_column tpp_tabsize;
 #define tpp_settabsize(v) (void)(tpp_tabsize = (v))
 #endif /* TPP_TABSIZE < 0 */
 
+
+/* Update "self" according to text-data from [text,text+size) */
+#if TPP_HAVE_UNICODE
+TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
+tpp_lcinfo_account_ex(tpp_lcinfo lc, tpp_char const *text,
+                      tpp_size size, tpp_file_encoding enc);
+#else /* TPP_HAVE_UNICODE */
+TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
+tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size);
+#define tpp_lcinfo_account_ex(lc, text, size, enc) \
+	tpp_lcinfo_account(lc, text, size)
+#endif /* !TPP_HAVE_UNICODE */
+
+
 TPP_DECL_END
 /************************************************************************/
 
@@ -12930,7 +13005,10 @@ TPP_DECL_BEGIN
 #define TPP_MACRO_KIND_FUNC_BRACKET '['
 #define TPP_MACRO_KIND_FUNC_BRACE   '{'
 #define TPP_MACRO_KIND_FUNC_ANGLE   '<'
-#endif /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
+#define TPP_MACRO_KIND_ASTOK_RPAREN(kind) ((kind) == '(' ? ')' : ((kind) == '[' ? ']' : ((kind) == '{' ? '}' : '>')))
+#else /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
+#define TPP_MACRO_KIND_ASTOK_RPAREN(kind) ')'
+#endif /* !TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
 
 #undef TPP_HAVE_MACRO_FLAGS
 #if (TPP_HAVE_NAMED_VARARGS_IN_MACROS || \
@@ -13106,6 +13184,7 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #define tpp_macro_getfuncargc(self)      ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argc))
 #define tpp_macro_getfuncargtok(self, i) ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argv)[i].TPP_INTERNAL(tma_id))
 #define tpp_macro_getfunclparen(self)    TPP_MACRO_KIND_ASTOK((self)->TPP_INTERNAL(tm_kind))
+#define tpp_macro_getfuncrparen(self)    TPP_MACRO_KIND_ASTOK_RPAREN((self)->TPP_INTERNAL(tm_kind))
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS
 #define tpp_macro_isvarargs(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_VARIADIC)
 #else /* TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS */
@@ -15458,6 +15537,25 @@ typedef struct tpp_lexer_arginfo {
 	tpp_char const     *tlai_start;  /* [1..1][<= tlai_end] Pointer to argument start text data */
 	tpp_char const     *tlai_end;    /* [1..1][>= tlai_start] Pointer to argument end text data */
 	TPP_REF tpp_string *tlai_chunk;  /* [0..1] Chunk of text containing [tlai_start,tlai_end), or "NULL" if statically allocated */
+	/* TODO: Come up with a smart way of tracking debug info for custom printed arguments
+	 *       -> need to be able to track lcinfo for custom char ranges (any range of chars
+	 *          from this string must be able to map to its own file/line/col triple)
+	 *       -> also must adjust tpp_file_getlcinfo() to support this, and somehow also
+	 *          incorporate tpp_file_getfilename()/tpp_file_getuserfilename() to support
+	 *          different filenames based on char position
+	 * where this is necessary:
+	 * >> #define foo(a) a a
+	 * >> foo(
+	 * >> #include "file1.txt"   // Contains 10
+	 * >> #include "file2.txt"   // Contains 20
+	 * >> )
+	 *
+	 * Must result in 4 tokens (not accounting for whitespace/linefeed tokens):
+	 * - file1.txt:1:1: 10
+	 * - file2.txt:1:1: 20
+	 * - file1.txt:1:1: 10
+	 * - file2.txt:1:1: 20
+	 */
 } tpp_lexer_arginfo;
 
 #define tpp_lexer_arginfo_init_empty(self) \

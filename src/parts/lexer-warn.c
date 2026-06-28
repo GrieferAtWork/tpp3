@@ -128,13 +128,13 @@ tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_start(tpp_formatprinter printer, void *arg) {
 	/* TODO: Do something more interesting here! */
-	return tpp_formatprinter_print_cstr(printer, arg, "`", 1);
+	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_end(tpp_formatprinter printer, void *arg) {
 	/* TODO: Do something more interesting here! */
-	return tpp_formatprinter_print_cstr(printer, arg, "`", 1);
+	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
@@ -456,9 +456,9 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 
 	/* Print what this is about... */
 	if (invokeinfo.twii_state == TPP_WSTATE_WARN) {
-		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "warning[", 8);
+		printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "warning[");
 	} else {
-		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "error[", 6);
+		printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "error[");
 	}
 	if (printer_status < 0)
 		goto err_printer;
@@ -469,7 +469,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(invokeinfo.twii_ctx_id);
 		unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
 		if tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID) {
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "?", 1);
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "?");
 		} else {
 			printer_status = tpp_format_print_uint(printer, printer_arg, number);
 		}
@@ -479,9 +479,9 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(invokeinfo.twii_ctx_id);
 		char const *group_name = tpp_warning_group_getnames(group_id);
 		if tpp_unlikely(group_name == NULL) {
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "?", 1);
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "?");
 		} else {
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "-W", 2);
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "-W");
 			if (printer_status < 0)
 				goto err_printer;
 			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name));
@@ -489,7 +489,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 	}
 	if (printer_status < 0)
 		goto err_printer;
-	printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "]: ", 3);
+	printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "]: ");
 	if (printer_status < 0)
 		goto err_printer;
 
@@ -502,7 +502,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 		                                           warning_format, args);
 		if (printer_status < 0)
 			goto err_printer;
-		printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "\n", 1);
+		printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "\n");
 		if (printer_status < 0)
 			goto err_printer;
 	} else {
@@ -560,12 +560,32 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 #undef tpp_current_warning_id
 /************************************************************************/
 		default:
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "UNKNOWN WARNING\n", 16);
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "UNKNOWN WARNING\n");
 			if (printer_status < 0)
 				goto err_printer;
 			break;
 		}
 	}
+
+	/* Print projection origin */
+#if TPP_HAVE_CPP_MACROS
+	if (pos) {
+		tpp_lcinfo_ex lcx;
+		tpp_file_getlcinfo_ex(file, pos, &lcx);
+		while (lcx.tlcix_projfile) {
+			tpp_lcinfo_ex nlcx;
+			tpp_file_getlcinfo_ex(lcx.tlcix_projfile, lcx.tlcix_projpos, &nlcx);
+			printer_status = tpp_lexer_printf_warning(self, lcx.tlcix_projfile, lcx.tlcix_projpos, nlcx.tlcix_info,
+			                                          printer, printer_arg, tpp_file_and_line);
+			if (printer_status < 0)
+				goto err_printer;
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "note: projected from here\n");
+			if (printer_status < 0)
+				goto err_printer;
+			lcx = nlcx;
+		}
+	}
+#endif /* TPP_HAVE_CPP_MACROS */
 
 	/* Print origin traceback */
 #if TPP_HAVE_INCLUDE_STACK
@@ -586,7 +606,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self, tpp_char const *pos,
 			                                          tpp_file_and_line);
 			if (printer_status < 0)
 				goto err_printer;
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, "note: originating from here\n", 28);
+			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "note: originating from here\n");
 			if (printer_status < 0)
 				goto err_printer;
 		}

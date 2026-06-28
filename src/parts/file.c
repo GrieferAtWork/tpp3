@@ -29,6 +29,7 @@
 #include "file-io.h"
 #include "file.h"
 #include "keyword.h"
+#include "lexer.h"
 #include "macro.h"
 #include "string.h"
 
@@ -127,6 +128,14 @@ tpp_ifdef_stack_remove(tpp_ifdef_stack *tpp_restrict self) {
 }
 #endif /* TPP_HAVE_IFDEF_STACK */
 
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+struct tpp_macro_argbuf;
+
+/* Release an argument buffer back to a macro. */
+TPP_INTERN_DECL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
+                         struct tpp_macro_argbuf *tpp_restrict buffer);
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 
 /* Finalize the given file. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
@@ -173,6 +182,17 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
 		tpp_macro *macro = self->tf_data.td_macro.tfm_macro;
+#if TPP_HAVE_FILE_MACRO_TRACKARGS
+		if (tpp_macro_isfunction(macro)) {
+			tpp_size i, macro_argc = macro->tm_data.tmd_func.tmf_argc;
+			tpp_lexer_arginfo *argv = self->tf_data.td_macro.tfm_args;
+			for (i = 0; i < macro_argc; ++i) {
+				tpp_lexer_arginfo *arginfo = &argv[i];
+				tpp_lexer_arginfo_fini(arginfo);
+			}
+			tpp_macro_release_argbuf(macro, (struct tpp_macro_argbuf *)argv);
+		}
+#endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 		tpp_assert(macro->tm_expansions != 0);
 		--macro->tm_expansions;
 		tpp_macro_decref(macro);
@@ -183,15 +203,20 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 }
 
 /* Update "self" according to text-data from [text,text+size) */
-static TPP_WUNUSED tpp_lcinfo TPPCALL
-tpp_lcinfo_account(tpp_file const *tpp_restrict self, tpp_lcinfo lc,
-                   tpp_char const *text, tpp_size size) {
+#if TPP_HAVE_UNICODE
+TPP_IMPL TPP_WUNUSED tpp_lcinfo TPPCALL
+tpp_lcinfo_account_ex(tpp_lcinfo lc, tpp_char const *text,
+                      tpp_size size, tpp_file_encoding enc)
+#else /* TPP_HAVE_UNICODE */
+TPP_IMPL TPP_WUNUSED tpp_lcinfo TPPCALL
+tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size)
+#endif /* !TPP_HAVE_UNICODE */
+{
 	tpp_char const *endp = text + size;
 	tpp_line line  = tpp_lcinfo_getline(lc);
 	tpp_column col = tpp_lcinfo_getcol(lc);
 	if (!tpp_lcinfo_isvalid(lc))
 		return lc; /* Don't account for changes when LC is invalid */
-	(void)self;
 	while (text < endp) {
 		tpp_char ch = *text++;
 		switch (ch) {
@@ -217,7 +242,7 @@ handle_linefeed:
 
 		default:
 #if TPP_HAVE_UNICODE
-			if (tpp_file_isutf8(self) && ch >= 0x80) {
+			if (TPP_FILE_ENCODING_ISUTF8(enc) && ch >= 0x80) {
 				/* Check for unicode linefeed characters */
 				tpp_unichar uch;
 				--text;
@@ -565,8 +590,9 @@ again:
 		if (unused_head)
 #endif /* !__OPTIMIZE_SIZE__ */
 		{
-			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account(self, self->tf_data.td_io.tff_start_lc,
-			                                                      tpp_string_str(old_chunk), unused_head);
+			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account_ex(self->tf_data.td_io.tff_start_lc,
+			                                                         tpp_string_str(old_chunk),
+			                                                         unused_head, self->tf_enc);
 			tpp_memmovedown(tpp_string_str(old_chunk), base, old_inuse);
 			base -= unused_head;
 			self->tf_pos -= unused_head;
@@ -652,9 +678,9 @@ reuse_old_chunk:
 			ps_rel = (tpp_size)(self->tf_pos - base);
 			kp_rel = (tpp_size)(self->tf_data.td_io.ttf_keep - base);
 #endif /* TPP_HAVE_FILE_KEEPPOS */
-			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account(self,
-			                                                      self->tf_data.td_io.tff_start_lc,
-			                                                      tpp_string_str(old_chunk), unused_head);
+			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account_ex(self->tf_data.td_io.tff_start_lc,
+			                                                         tpp_string_str(old_chunk),
+			                                                         unused_head, self->tf_enc);
 			tpp_assert(tpp_string_isshared(old_chunk));
 			tpp_string_decref_nokill(old_chunk);
 #if TPP_HAVE_UNICODE
@@ -969,14 +995,16 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
 #if TPP_HAVE_CPP_MACROS
 /* Figure out the line/column of "pos" in "expanded_text", as produced
  * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_lcinfo TPPCALL
-tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
+TPP_INTERN_DECL TPP_NONNULL((1, 2, 3, 4, 5)) void TPPCALL
+tpp_macro_func_lcinfo(tpp_macro const *self,
+                      tpp_file const *expanded_text_file,
                       tpp_string const *expanded_text,
-                      tpp_char const *pos);
+                      tpp_char const *pos,
+                      tpp_lcinfo_ex *tpp_restrict result);
 #endif /* TPP_HAVE_CPP_MACROS */
 
 
-/* Return line/column information (1-based) for "pos"
+/* Return line/column information (0-based) for "pos"
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
@@ -993,8 +1021,9 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 		tpp_size delta_from_lcpos;
 		if (pos >= self->tf_lcpos) {
 			result = self->tf_lcval;
-			result = tpp_lcinfo_account(self, result, self->tf_lcpos,
-			                            (tpp_size)(pos - self->tf_lcpos));
+			result = tpp_lcinfo_account_ex(result, self->tf_lcpos,
+			                               (tpp_size)(pos - self->tf_lcpos),
+			                               self->tf_enc);
 			goto done;
 		}
 		delta_from_chunk = (tpp_size)(pos - tpp_string_str(self->tf_chunk));
@@ -1007,8 +1036,9 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 				tpp_line num_lf = tpp_lcinfo_count_linefeed(self, last_linefeed, self->tf_lcpos);
 				tpp_line last_linefeed_lno = tpp_lcinfo_getline(self->tf_lcval) - num_lf;
 				tpp_lcinfo_init(result, last_linefeed_lno, 0);
-				result = tpp_lcinfo_account(self, result, last_linefeed,
-				                            (tpp_size)(pos - last_linefeed));
+				result = tpp_lcinfo_account_ex(result, last_linefeed,
+				                               (tpp_size)(pos - last_linefeed),
+				                               self->tf_enc);
 				goto done;
 			}
 		}
@@ -1021,8 +1051,9 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT: {
 		result = self->tf_data.td_io.tff_start_lc;
-		result = tpp_lcinfo_account(self, result, tpp_string_str(self->tf_chunk),
-		                            (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
+		result = tpp_lcinfo_account_ex(result, tpp_string_str(self->tf_chunk),
+		                               (tpp_size)(pos - tpp_string_str(self->tf_chunk)),
+		                               self->tf_enc);
 	}	break;
 
 #if TPP_HAVE_FILE_SUBTEXT
@@ -1061,13 +1092,16 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			 * >> foo   // line=1, col=18
 			 * >> +     // line=1, col=19
 			 * >> bar   // line=1, col=20 */
+			tpp_lcinfo_ex info;
 			tpp_assert(TPP_MACRO_KIND_ISFUNC(macro->tm_kind));
-			result = tpp_macro_func_lcinfo(macro, self->tf_chunk, pos);
+			tpp_macro_func_lcinfo(macro, self, self->tf_chunk, pos, &info);
+			result = info.tlcix_info;
 			goto done_nocache;
 		} else {
 			result = macro->tm_body_lc;
-			result = tpp_lcinfo_account(self, result, macro->tm_body_start,
-			                            (tpp_size)(pos - macro->tm_body_start));
+			result = tpp_lcinfo_account_ex(result, macro->tm_body_start,
+			                               (tpp_size)(pos - macro->tm_body_start),
+			                               self->tf_enc);
 		}
 	}	break;
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -1085,6 +1119,42 @@ done_nocache:
 #endif /* TPP_HAVE_CPP_MACROS */
 	return result;
 }
+
+/* Same as "tpp_file_getlcinfo()", but if the current file is an expanded macro, see if
+ * the specified "pos" points into the expanded portion of a macro argument, in which
+ * case this function also (tries to) include information on where that argument was
+ * projected from. */
+#if TPP_HAVE_CPP_MACROS
+TPP_IMPL TPP_NONNULL((1, 2, 3)) void TPPCALL
+tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
+                      tpp_lcinfo_ex *tpp_restrict result) {
+#if TPP_HAVE_FILE_SUBTEXT
+	if (self->tf_kind == TPP_FILE_KIND_SUBTEXT) {
+		tpp_file *parent = self;
+		do {
+			tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+			parent = parent->tf_tprev;
+		} while (parent->tf_kind == TPP_FILE_KIND_SUBTEXT);
+		if (parent->tf_chunk == self->tf_chunk)
+			self = parent;
+	}
+#endif /* TPP_HAVE_FILE_SUBTEXT */
+
+	if (self->tf_chunk && self->tf_kind == TPP_FILE_KIND_MACRO) {
+		tpp_macro const *macro = self->tf_data.td_macro.tfm_macro;
+		tpp_assert(pos >= tpp_string_str(self->tf_chunk));
+		tpp_assert(pos <= tpp_string_end(self->tf_chunk));
+		if (self->tf_chunk != macro->tm_body_chunk) {
+			tpp_assert(TPP_MACRO_KIND_ISFUNC(macro->tm_kind));
+			tpp_macro_func_lcinfo(macro, self, self->tf_chunk, pos, result);
+			return;
+		}
+	}
+	result->tlcix_projfile = NULL;
+	result->tlcix_info = tpp_file_getlcinfo(self, pos);
+}
+#endif /* TPP_HAVE_CPP_MACROS */
+
 
 
 /* These are needed for the shared

@@ -311,9 +311,13 @@
 #define tpp_memcmp      memcmp
 #define tpp_memcpy      memcpy
 #define tpp_memset      memset
+#define tpp_memchr      memchr
 #define tpp_memmove     memmove
 #define tpp_memmoveup   memmove
 #define tpp_memmovedown memmove
+#if 0
+#define tpp_memmem      memmem
+#endif
 #endif /* !tpp_memcpy */
 
 #ifndef tpp_expect
@@ -440,6 +444,8 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 	((*printer)(arg, text, num_bytes))
 #define tpp_formatprinter_print_cstr(printer, arg, text, num_bytes) \
 	((*printer)(arg, (tpp_char const *)(text), num_bytes))
+#define tpp_formatprinter_print_conststr(printer, arg, STR) \
+	((*printer)(arg, (tpp_char const *)(STR), sizeof(STR) - sizeof(char)))
 #define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
 	tpp_ssize (TPP_FORMATPRINTER_CC name)(void *arg, tpp_char const *text, tpp_size num_bytes)
 #endif /* !tpp_formatprinter */
