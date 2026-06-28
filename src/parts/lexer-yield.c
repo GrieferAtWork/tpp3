@@ -564,10 +564,7 @@ tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
 	 *
 	 * This should only really be relevant when it comes to recovering from
 	 * faulty user-code... */
-#if TPP_HAVE_INCLUDE_STACK
-	while (tpp_lexer_canpopfile(self))
-		tpp_lexer_popfile(self);
-#endif /* TPP_HAVE_INCLUDE_STACK */
+	tpp_lexer_popallfiles(self);
 	return result;
 }
 #endif /* TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma */
@@ -980,8 +977,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 #else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 			tok = TPP_TOK_EOF;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
-			while (tpp_lexer_canpopfile(self))
-				tpp_lexer_popfile(self);
+			tpp_lexer_popallfiles(self);
 		}
 	}
 	tpp_file_subtext_pop(file);
@@ -1303,8 +1299,7 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 #else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 			tok = TPP_TOK_EOF;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
-			while (tpp_lexer_canpopfile(self))
-				tpp_lexer_popfile(self);
+			tpp_lexer_popallfiles(self);
 		}
 	}
 	tpp_file_subtext_pop(file);

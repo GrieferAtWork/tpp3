@@ -482,9 +482,11 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 				error = tpp_macro_expinfo_init(expand, arginfo, self);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
+					tpp_lexer_popallfiles(self);
 					tpp_file_subtext_break(file);
 					goto err_tok_macro_argbuf_rollback_arginfo_expinfo_i;
 				}
+				tpp_assert(!tpp_lexer_canpopfile(self));
 
 				/* Account for expanded text */
 				result_chunk_size += (arg->tma_ins_exp * tpp_macro_expinfo_getsize(expand));

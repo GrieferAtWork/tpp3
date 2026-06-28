@@ -495,7 +495,14 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
  *       this function in order to warn about unterminated #ifdef-blocks. */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
-#endif /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_lexer_popallfiles(self)        \
+	do {                                   \
+		while (tpp_lexer_canpopfile(self)) \
+			tpp_lexer_popfile(self);       \
+	} while (0)
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_lexer_popallfiles(self) (void)0
+#endif /* !TPP_HAVE_INCLUDE_STACK */
 
 
 
