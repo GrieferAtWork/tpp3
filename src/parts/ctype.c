@@ -188,6 +188,92 @@ tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc) {
 }
 #endif /* TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
 
+#if TPP_HAVE_TPP_FUZZY_MEMCMP
+/* Quantify the "fuzziness" of how close 2 memory-blocks are to each
+ * other (less means closer to each other, and "0" means identical)
+ *
+ * #ifndef tpp_alloca
+ * @return: TPP_SIZE_MAX: Cannot compare strings (insufficient memory,
+ *                        and no tpp_alloca() function available to
+ *                        supplement).
+ *                        The implementation uses "tpp_trymalloc", so
+ *                        this shouldn't be considered a fatal error
+ * #endif // !tpp_alloca */
+TPP_IMPL TPP_WUNUSED tpp_size TPPCALL
+tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
+                 tpp_char const *rhs, tpp_size rhs_len) {
+	tpp_size *v0, *v1, i, j, cost, temp;
+#ifdef tpp_alloca
+	bool isheap;
+#endif /* tpp_alloca */
+	if tpp_unlikely(!lhs_len)
+		return rhs_len;
+	if tpp_unlikely(!rhs_len)
+		return lhs_len;
+#ifdef tpp_alloca
+	if (rhs_len > (128 + 1) * sizeof(tpp_size))
+#endif /* tpp_alloca */
+	{
+		v0 = (tpp_size *)tpp_trymalloc((rhs_len + 1) * sizeof(tpp_size));
+		if tpp_unlikely(!v0) {
+#ifdef tpp_alloca
+			goto allocate_stack;
+#else /* tpp_alloca */
+			return TPP_SIZE_MAX;
+#endif /* !tpp_alloca */
+		}
+		v1 = (tpp_size *)tpp_trymalloc((rhs_len + 1) * sizeof(tpp_size));
+		if tpp_unlikely(!v1) {
+			free(v0);
+#ifdef tpp_alloca
+			goto allocate_stack;
+#else /* tpp_alloca */
+			return TPP_SIZE_MAX;
+#endif /* !tpp_alloca */
+		}
+#ifdef tpp_alloca
+		isheap = true;
+#endif /* tpp_alloca */
+	}
+#ifdef tpp_alloca
+	else {
+allocate_stack:
+		v0     = (tpp_size *)tpp_alloca((rhs_len + 1) * sizeof(tpp_size));
+		v1     = (tpp_size *)tpp_alloca((rhs_len + 1) * sizeof(tpp_size));
+		isheap = false;
+	}
+#endif /* tpp_alloca */
+	for (i = 0; i < rhs_len; ++i)
+		v0[i] = i;
+	for (i = 0; i < lhs_len; ++i) {
+		v1[0] = i + 1;
+		for (j = 0; j < rhs_len; ++j) {
+			tpp_char lhs_ch = lhs[i];
+			tpp_char rhs_ch = rhs[j];
+			cost = (lhs_ch == rhs_ch) ? 0 : 1;
+			cost += v0[j];
+			temp = v1[j] + 1;
+			if (temp < cost)
+				cost = temp;
+			temp = v0[j + 1] + 1;
+			if (temp < cost)
+				cost = temp;
+			v1[j + 1] = cost;
+		}
+		tpp_memcpy(v0, v1, rhs_len * sizeof(tpp_size));
+	}
+	temp = v1[rhs_len];
+#ifdef tpp_alloca
+	if (isheap)
+#endif /* tpp_alloca */
+	{
+		tpp_free(v0);
+		tpp_free(v1);
+	}
+	return temp;
+}
+#endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

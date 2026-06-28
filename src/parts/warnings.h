@@ -109,11 +109,13 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
 tpp_warning_group_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 #define tpp_warning_group_byname(name) tpp_warning_group_byname_ex(name, TPP_SIZE_MAX)
 
+#if TPP_HAVE_TPP_WARNING_GROUP_NEAREST
 /* Returns the ID of the warning group with the name that is closest to "name"
  * When no warning groups are defined (at all), this will return "TPP_WG_COUNT" */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
 tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 #define tpp_warning_group_nearest(name) tpp_warning_group_nearest_ex(name, TPP_SIZE_MAX)
+#endif /* TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
 
 
 

@@ -667,15 +667,29 @@ tpp_extension_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
 	return TPP_EXT_COUNT;
 }
 
+#if TPP_HAVE_TPP_EXTENSION_NEAREST
 /* Returns the ID of the extension with the name that is closest to "name"
  * When no extensions are defined (at all), this will return "TPP_EXT_COUNT" */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
 tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
-	(void)name;
-	(void)name_maxlen;
-	/* TODO */
-	return TPP_EXT_COUNT;
+	tpp_extension_id xid;
+	tpp_extension_id result = TPP_EXT_COUNT;
+	tpp_size result_fuzzy = TPP_SIZE_MAX;
+	tpp_size name_len = tpp_strnlen(name, name_maxlen);
+	for (xid = (tpp_extension_id)0; (unsigned int)xid < (unsigned int)TPP_EXT_COUNT;
+	     xid = (tpp_extension_id)((unsigned int)xid + 1)) {
+		char const *xname = tpp_extension_getname_fast(xid);
+		tpp_size xlen = tpp_strlen(xname);
+		tpp_size fuzzy = tpp_fuzzy_memcmp((tpp_char const *)name, name_len,
+		                                  (tpp_char const *)xname, xlen);
+		if (result_fuzzy > fuzzy) {
+			result_fuzzy = fuzzy;
+			result       = xid;
+		}
+	}
+	return result;
 }
+#endif /* TPP_HAVE_TPP_EXTENSION_NEAREST */
 #endif /* TPP_HAVE_EXTENSIONS */
 
 
@@ -868,15 +882,32 @@ tpp_warning_group_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen)
 }
 
 
+#if TPP_HAVE_TPP_WARNING_GROUP_NEAREST
 /* Returns the ID of the warning group with the name that is closest to "name"
  * When no warning groups are defined (at all), this will return "TPP_WG_COUNT" */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
 tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
-	(void)name;
-	(void)name_maxlen;
-	/* TODO */
-	return TPP_WG_COUNT;
+	tpp_warning_group_id gid;
+	tpp_warning_group_id result = TPP_WG_COUNT;
+	tpp_size result_fuzzy = TPP_SIZE_MAX;
+	tpp_size name_len = tpp_strnlen(name, name_maxlen);
+	for (gid = (tpp_warning_group_id)0; (unsigned int)gid < (unsigned int)TPP_WG_COUNT;
+	     gid = (tpp_warning_group_id)((unsigned int)gid + 1)) {
+		char const *names = tpp_warning_group_getname_fast(gid);
+		do {
+			tpp_size len = tpp_strlen(names);
+			tpp_size fuzzy = tpp_fuzzy_memcmp((tpp_char const *)name, name_len,
+			                                  (tpp_char const *)names, len);
+			if (result_fuzzy > fuzzy) {
+				result_fuzzy = fuzzy;
+				result       = gid;
+			}
+			names += len + 1;
+		} while (*names);
+	}
+	return result;
 }
+#endif /* TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
 #endif /* TPP_HAVE_WARNINGS */
 
 

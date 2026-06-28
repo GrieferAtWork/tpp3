@@ -81,6 +81,7 @@
 #define TPP_HOST_HAS_ATTRIBUTE(x) 0
 #endif /* !__has_attribute */
 #endif /* !TPP_HOST_HAS_ATTRIBUTE */
+
 #ifndef TPP_HOST_HAS_DECLSPEC_ATTRIBUTE
 #ifdef __has_declspec_attribute
 #define TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(x) __has_declspec_attribute(x)
@@ -88,6 +89,7 @@
 #define TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(x) 0
 #endif /* !__has_declspec_attribute */
 #endif /* !TPP_HOST_HAS_DECLSPEC_ATTRIBUTE */
+
 #ifndef TPP_HOST_HAS_CPP_ATTRIBUTE
 #ifdef __has_cpp_attribute
 #define TPP_HOST_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
@@ -95,6 +97,22 @@
 #define TPP_HOST_HAS_CPP_ATTRIBUTE(x) 0
 #endif /* !__has_cpp_attribute */
 #endif /* !TPP_HOST_HAS_CPP_ATTRIBUTE */
+
+#ifndef TPP_HOST_HAS_INCLUDE
+#ifdef __has_include
+#define TPP_HOST_HAS_INCLUDE(x) __has_include(x)
+#else /* __has_include */
+#define TPP_HOST_HAS_INCLUDE(x) 0
+#endif /* !__has_include */
+#endif /* !TPP_HOST_HAS_INCLUDE */
+
+#ifndef TPP_HOST_HAS_BUILTIN
+#ifdef __has_builtin
+#define TPP_HOST_HAS_BUILTIN(x) __has_builtin(x)
+#else /* __has_builtin */
+#define TPP_HOST_HAS_BUILTIN(x) 0
+#endif /* !__has_builtin */
+#endif /* !TPP_HOST_HAS_BUILTIN */
 
 /* Does the host preprocessor have support for __VA_ARGS__? */
 #ifndef TPP_HOST_HAVE_PP_VARARGS
@@ -397,6 +415,20 @@
 #define tpp_realloc(p, s)    realloc(p, s)
 #define tpp_free(p)          free(p)
 #endif /* !tpp_malloc */
+
+#ifndef tpp_alloca
+#if TPP_HOST_HAS_BUILTIN(__builtin_alloca)
+#define tpp_alloca __builtin_alloca
+#elif defined(_MSC_VER)
+#include <malloc.h>
+#define tpp_alloca _alloca
+#elif TPP_HOST_HAS_INCLUDE(<alloca.h>)
+#include <alloca.h>
+#ifdef alloca
+#define tpp_alloca alloca
+#endif /* alloca */
+#endif /* ... */
+#endif /* !tpp_alloca */
 
 TPP_DECL_BEGIN
 

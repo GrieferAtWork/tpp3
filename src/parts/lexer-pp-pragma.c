@@ -311,10 +311,15 @@ tpp_lexer_process_pragma_extension_cb(void *arg, tpp_string *chunk,
 	id = tpp_extension_byname_ex((char const *)str, length);
 	if ((unsigned int)id >= (unsigned int)TPP_EXT_COUNT) {
 #if TPP_HAVE_TPP_W_UNKNOWN_EXTENSION
+#if TPP_HAVE_TPP_EXTENSION_NEAREST
 		tpp_extension_id nearest = tpp_extension_nearest_ex((char const *)str, length);
 		char const *nearest_name = tpp_extension_getname(nearest);
 		error = tpp_lexer_warnf(lexer, TPP_W_UNKNOWN_EXTENSION,
 		                        (unsigned int)length, str, nearest_name);
+#else /* TPP_HAVE_TPP_EXTENSION_NEAREST */
+		error = tpp_lexer_warnf(lexer, TPP_W_UNKNOWN_EXTENSION,
+		                        (unsigned int)length, str);
+#endif /* !TPP_HAVE_TPP_EXTENSION_NEAREST */
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_EXTENSION */
 	} else {
 		error = tpp_lexer_setextension(lexer, id, enable_extension);

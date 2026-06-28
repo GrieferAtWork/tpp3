@@ -171,6 +171,23 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc);
 #endif /* TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
 
+
+#if TPP_HAVE_TPP_FUZZY_MEMCMP
+/* Quantify the "fuzziness" of how close 2 memory-blocks are to each
+ * other (less means closer to each other, and "0" means identical)
+ *
+ * #ifndef tpp_alloca
+ * @return: TPP_SIZE_MAX: Cannot compare strings (insufficient memory,
+ *                        and no tpp_alloca() function available to
+ *                        supplement).
+ *                        The implementation uses "tpp_trymalloc", so
+ *                        this shouldn't be considered a fatal error
+ * #endif // !tpp_alloca */
+TPP_DECL TPP_WUNUSED tpp_size TPPCALL
+tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
+                 tpp_char const *rhs, tpp_size rhs_len);
+#endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

@@ -2775,6 +2775,25 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_FTOA (TPP_HAVE_EXPR_VALUE_PRINTREPR)
 #endif /* !TPP_HAVE_FTOA */
 
+/* Provide a function "tpp_extension_nearest()" */
+#ifndef TPP_HAVE_TPP_EXTENSION_NEAREST
+#define TPP_HAVE_TPP_EXTENSION_NEAREST \
+	(TPP_HAVE_TPP_W_UNKNOWN_EXTENSION && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_TPP_EXTENSION_NEAREST */
+
+/* Provide a function "tpp_warning_group_nearest()" */
+#ifndef TPP_HAVE_TPP_WARNING_GROUP_NEAREST
+#define TPP_HAVE_TPP_WARNING_GROUP_NEAREST \
+	(/*TODO:TPP_HAVE_TPP_W_UNKNOWN_WARNING*/1 && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
+
+/* Provide a function "tpp_fuzzy_memcmp()" to quantify the
+ * "fuzziness" of how close 2 memory-blocks are to each other */
+#ifndef TPP_HAVE_TPP_FUZZY_MEMCMP
+#define TPP_HAVE_TPP_FUZZY_MEMCMP \
+	(TPP_HAVE_TPP_EXTENSION_NEAREST || TPP_HAVE_TPP_WARNING_GROUP_NEAREST)
+#endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
+
 /* String representations of what __has_embed() should expand to */
 #if TPP_HAVE_MACRO___has_embed
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND

@@ -3246,8 +3246,13 @@ TPP_WGROUP(TPP_WG_EXTENSION, 1("extension"), TPP_WSTATE_WARN)
 
 #if TPP_HAVE_TPP_W_UNKNOWN_EXTENSION
 #define TPP_W_UNKNOWN_EXTENSION TPP_W_UNKNOWN_EXTENSION
+#if TPP_HAVE_TPP_EXTENSION_NEAREST
 TPP_WARNING(TPP_W_UNKNOWN_EXTENSION, 1(TPP_WG_EXTENSION), 0(), TPP_WSTATE_UNDEFINED,
             "unknown extension %[-f%.*s%], did you mean %[-f%s%]")
+#else /* TPP_HAVE_TPP_EXTENSION_NEAREST */
+TPP_WARNING(TPP_W_UNKNOWN_EXTENSION, 1(TPP_WG_EXTENSION), 0(), TPP_WSTATE_UNDEFINED,
+            "unknown extension %[-f%.*s%]")
+#endif /* !TPP_HAVE_TPP_EXTENSION_NEAREST */
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_EXTENSION */
 
 #if TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS
@@ -3408,6 +3413,7 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPP_HOST_HAS_ATTRIBUTE(x) 0
 #endif /* !__has_attribute */
 #endif /* !TPP_HOST_HAS_ATTRIBUTE */
+
 #ifndef TPP_HOST_HAS_DECLSPEC_ATTRIBUTE
 #ifdef __has_declspec_attribute
 #define TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(x) __has_declspec_attribute(x)
@@ -3415,6 +3421,7 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(x) 0
 #endif /* !__has_declspec_attribute */
 #endif /* !TPP_HOST_HAS_DECLSPEC_ATTRIBUTE */
+
 #ifndef TPP_HOST_HAS_CPP_ATTRIBUTE
 #ifdef __has_cpp_attribute
 #define TPP_HOST_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
@@ -3422,6 +3429,22 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPP_HOST_HAS_CPP_ATTRIBUTE(x) 0
 #endif /* !__has_cpp_attribute */
 #endif /* !TPP_HOST_HAS_CPP_ATTRIBUTE */
+
+#ifndef TPP_HOST_HAS_INCLUDE
+#ifdef __has_include
+#define TPP_HOST_HAS_INCLUDE(x) __has_include(x)
+#else /* __has_include */
+#define TPP_HOST_HAS_INCLUDE(x) 0
+#endif /* !__has_include */
+#endif /* !TPP_HOST_HAS_INCLUDE */
+
+#ifndef TPP_HOST_HAS_BUILTIN
+#ifdef __has_builtin
+#define TPP_HOST_HAS_BUILTIN(x) __has_builtin(x)
+#else /* __has_builtin */
+#define TPP_HOST_HAS_BUILTIN(x) 0
+#endif /* !__has_builtin */
+#endif /* !TPP_HOST_HAS_BUILTIN */
 
 /* Does the host preprocessor have support for __VA_ARGS__? */
 #ifndef TPP_HOST_HAVE_PP_VARARGS
@@ -3724,6 +3747,20 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define tpp_realloc(p, s)    realloc(p, s)
 #define tpp_free(p)          free(p)
 #endif /* !tpp_malloc */
+
+#ifndef tpp_alloca
+#if TPP_HOST_HAS_BUILTIN(__builtin_alloca)
+#define tpp_alloca __builtin_alloca
+#elif defined(_MSC_VER)
+#include <malloc.h>
+#define tpp_alloca _alloca
+#elif TPP_HOST_HAS_INCLUDE(<alloca.h>)
+#include <alloca.h>
+#ifdef alloca
+#define tpp_alloca alloca
+#endif /* alloca */
+#endif /* ... */
+#endif /* !tpp_alloca */
 
 TPP_DECL_BEGIN
 
@@ -6605,6 +6642,25 @@ TPP_DECL_END
 #define TPP_HAVE_FTOA (TPP_HAVE_EXPR_VALUE_PRINTREPR)
 #endif /* !TPP_HAVE_FTOA */
 
+/* Provide a function "tpp_extension_nearest()" */
+#ifndef TPP_HAVE_TPP_EXTENSION_NEAREST
+#define TPP_HAVE_TPP_EXTENSION_NEAREST \
+	(TPP_HAVE_TPP_W_UNKNOWN_EXTENSION && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_TPP_EXTENSION_NEAREST */
+
+/* Provide a function "tpp_warning_group_nearest()" */
+#ifndef TPP_HAVE_TPP_WARNING_GROUP_NEAREST
+#define TPP_HAVE_TPP_WARNING_GROUP_NEAREST \
+	(/*TODO:TPP_HAVE_TPP_W_UNKNOWN_WARNING*/1 && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
+
+/* Provide a function "tpp_fuzzy_memcmp()" to quantify the
+ * "fuzziness" of how close 2 memory-blocks are to each other */
+#ifndef TPP_HAVE_TPP_FUZZY_MEMCMP
+#define TPP_HAVE_TPP_FUZZY_MEMCMP \
+	(TPP_HAVE_TPP_EXTENSION_NEAREST || TPP_HAVE_TPP_WARNING_GROUP_NEAREST)
+#endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
+
 /* String representations of what __has_embed() should expand to */
 #if TPP_HAVE_MACRO___has_embed
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND
@@ -7092,6 +7148,23 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_size TPPCALL tpp_ftoa(char buf[TPP_FTO
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc);
 #endif /* TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
+
+
+#if TPP_HAVE_TPP_FUZZY_MEMCMP
+/* Quantify the "fuzziness" of how close 2 memory-blocks are to each
+ * other (less means closer to each other, and "0" means identical)
+ *
+ * #ifndef tpp_alloca
+ * @return: TPP_SIZE_MAX: Cannot compare strings (insufficient memory,
+ *                        and no tpp_alloca() function available to
+ *                        supplement).
+ *                        The implementation uses "tpp_trymalloc", so
+ *                        this shouldn't be considered a fatal error
+ * #endif // !tpp_alloca */
+TPP_DECL TPP_WUNUSED tpp_size TPPCALL
+tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
+                 tpp_char const *rhs, tpp_size rhs_len);
+#endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
 
 TPP_DECL_END
 /************************************************************************/
@@ -13536,11 +13609,14 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
 tpp_extension_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 #define tpp_extension_byname(name) tpp_extension_byname_ex(name, TPP_SIZE_MAX)
 
+#if TPP_HAVE_TPP_EXTENSION_NEAREST
 /* Returns the ID of the extension with the name that is closest to "name"
  * When no extensions are defined (at all), this will return "TPP_EXT_COUNT" */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
 tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 #define tpp_extension_nearest(name) tpp_extension_nearest_ex(name, TPP_SIZE_MAX)
+#endif /* TPP_HAVE_TPP_EXTENSION_NEAREST */
+
 #else /* TPP_HAVE_EXTENSIONS */
 #define tpp_extensions_state_get(self, id) 1
 #define tpp_extensions_get(self, id)       1
@@ -13635,11 +13711,13 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
 tpp_warning_group_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 #define tpp_warning_group_byname(name) tpp_warning_group_byname_ex(name, TPP_SIZE_MAX)
 
+#if TPP_HAVE_TPP_WARNING_GROUP_NEAREST
 /* Returns the ID of the warning group with the name that is closest to "name"
  * When no warning groups are defined (at all), this will return "TPP_WG_COUNT" */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
 tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 #define tpp_warning_group_nearest(name) tpp_warning_group_nearest_ex(name, TPP_SIZE_MAX)
+#endif /* TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
 
 
 

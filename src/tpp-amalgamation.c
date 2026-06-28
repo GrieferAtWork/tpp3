@@ -906,6 +906,92 @@ tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc) {
 }
 #endif /* TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
 
+#if TPP_HAVE_TPP_FUZZY_MEMCMP
+/* Quantify the "fuzziness" of how close 2 memory-blocks are to each
+ * other (less means closer to each other, and "0" means identical)
+ *
+ * #ifndef tpp_alloca
+ * @return: TPP_SIZE_MAX: Cannot compare strings (insufficient memory,
+ *                        and no tpp_alloca() function available to
+ *                        supplement).
+ *                        The implementation uses "tpp_trymalloc", so
+ *                        this shouldn't be considered a fatal error
+ * #endif // !tpp_alloca */
+TPP_IMPL TPP_WUNUSED tpp_size TPPCALL
+tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
+                 tpp_char const *rhs, tpp_size rhs_len) {
+	tpp_size *v0, *v1, i, j, cost, temp;
+#ifdef tpp_alloca
+	bool isheap;
+#endif /* tpp_alloca */
+	if tpp_unlikely(!lhs_len)
+		return rhs_len;
+	if tpp_unlikely(!rhs_len)
+		return lhs_len;
+#ifdef tpp_alloca
+	if (rhs_len > (128 + 1) * sizeof(tpp_size))
+#endif /* tpp_alloca */
+	{
+		v0 = (tpp_size *)tpp_trymalloc((rhs_len + 1) * sizeof(tpp_size));
+		if tpp_unlikely(!v0) {
+#ifdef tpp_alloca
+			goto allocate_stack;
+#else /* tpp_alloca */
+			return TPP_SIZE_MAX;
+#endif /* !tpp_alloca */
+		}
+		v1 = (tpp_size *)tpp_trymalloc((rhs_len + 1) * sizeof(tpp_size));
+		if tpp_unlikely(!v1) {
+			free(v0);
+#ifdef tpp_alloca
+			goto allocate_stack;
+#else /* tpp_alloca */
+			return TPP_SIZE_MAX;
+#endif /* !tpp_alloca */
+		}
+#ifdef tpp_alloca
+		isheap = true;
+#endif /* tpp_alloca */
+	}
+#ifdef tpp_alloca
+	else {
+allocate_stack:
+		v0     = (tpp_size *)tpp_alloca((rhs_len + 1) * sizeof(tpp_size));
+		v1     = (tpp_size *)tpp_alloca((rhs_len + 1) * sizeof(tpp_size));
+		isheap = false;
+	}
+#endif /* tpp_alloca */
+	for (i = 0; i < rhs_len; ++i)
+		v0[i] = i;
+	for (i = 0; i < lhs_len; ++i) {
+		v1[0] = i + 1;
+		for (j = 0; j < rhs_len; ++j) {
+			tpp_char lhs_ch = lhs[i];
+			tpp_char rhs_ch = rhs[j];
+			cost = (lhs_ch == rhs_ch) ? 0 : 1;
+			cost += v0[j];
+			temp = v1[j] + 1;
+			if (temp < cost)
+				cost = temp;
+			temp = v0[j + 1] + 1;
+			if (temp < cost)
+				cost = temp;
+			v1[j + 1] = cost;
+		}
+		tpp_memcpy(v0, v1, rhs_len * sizeof(tpp_size));
+	}
+	temp = v1[rhs_len];
+#ifdef tpp_alloca
+	if (isheap)
+#endif /* tpp_alloca */
+	{
+		tpp_free(v0);
+		tpp_free(v1);
+	}
+	return temp;
+}
+#endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
+
 TPP_DECL_END
 /************************************************************************/
 
@@ -7970,15 +8056,29 @@ tpp_extension_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
 	return TPP_EXT_COUNT;
 }
 
+#if TPP_HAVE_TPP_EXTENSION_NEAREST
 /* Returns the ID of the extension with the name that is closest to "name"
  * When no extensions are defined (at all), this will return "TPP_EXT_COUNT" */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
 tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
-	(void)name;
-	(void)name_maxlen;
-	/* TODO */
-	return TPP_EXT_COUNT;
+	tpp_extension_id xid;
+	tpp_extension_id result = TPP_EXT_COUNT;
+	tpp_size result_fuzzy = TPP_SIZE_MAX;
+	tpp_size name_len = tpp_strnlen(name, name_maxlen);
+	for (xid = (tpp_extension_id)0; (unsigned int)xid < (unsigned int)TPP_EXT_COUNT;
+	     xid = (tpp_extension_id)((unsigned int)xid + 1)) {
+		char const *xname = tpp_extension_getname_fast(xid);
+		tpp_size xlen = tpp_strlen(xname);
+		tpp_size fuzzy = tpp_fuzzy_memcmp((tpp_char const *)name, name_len,
+		                                  (tpp_char const *)xname, xlen);
+		if (result_fuzzy > fuzzy) {
+			result_fuzzy = fuzzy;
+			result       = xid;
+		}
+	}
+	return result;
 }
+#endif /* TPP_HAVE_TPP_EXTENSION_NEAREST */
 #endif /* TPP_HAVE_EXTENSIONS */
 
 
@@ -8171,15 +8271,32 @@ tpp_warning_group_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen)
 }
 
 
+#if TPP_HAVE_TPP_WARNING_GROUP_NEAREST
 /* Returns the ID of the warning group with the name that is closest to "name"
  * When no warning groups are defined (at all), this will return "TPP_WG_COUNT" */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
 tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen) {
-	(void)name;
-	(void)name_maxlen;
-	/* TODO */
-	return TPP_WG_COUNT;
+	tpp_warning_group_id gid;
+	tpp_warning_group_id result = TPP_WG_COUNT;
+	tpp_size result_fuzzy = TPP_SIZE_MAX;
+	tpp_size name_len = tpp_strnlen(name, name_maxlen);
+	for (gid = (tpp_warning_group_id)0; (unsigned int)gid < (unsigned int)TPP_WG_COUNT;
+	     gid = (tpp_warning_group_id)((unsigned int)gid + 1)) {
+		char const *names = tpp_warning_group_getname_fast(gid);
+		do {
+			tpp_size len = tpp_strlen(names);
+			tpp_size fuzzy = tpp_fuzzy_memcmp((tpp_char const *)name, name_len,
+			                                  (tpp_char const *)names, len);
+			if (result_fuzzy > fuzzy) {
+				result_fuzzy = fuzzy;
+				result       = gid;
+			}
+			names += len + 1;
+		} while (*names);
+	}
+	return result;
 }
+#endif /* TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
 #endif /* TPP_HAVE_WARNINGS */
 
 
@@ -19449,10 +19566,15 @@ tpp_lexer_process_pragma_extension_cb(void *arg, tpp_string *chunk,
 	id = tpp_extension_byname_ex((char const *)str, length);
 	if ((unsigned int)id >= (unsigned int)TPP_EXT_COUNT) {
 #if TPP_HAVE_TPP_W_UNKNOWN_EXTENSION
+#if TPP_HAVE_TPP_EXTENSION_NEAREST
 		tpp_extension_id nearest = tpp_extension_nearest_ex((char const *)str, length);
 		char const *nearest_name = tpp_extension_getname(nearest);
 		error = tpp_lexer_warnf(lexer, TPP_W_UNKNOWN_EXTENSION,
 		                        (unsigned int)length, str, nearest_name);
+#else /* TPP_HAVE_TPP_EXTENSION_NEAREST */
+		error = tpp_lexer_warnf(lexer, TPP_W_UNKNOWN_EXTENSION,
+		                        (unsigned int)length, str);
+#endif /* !TPP_HAVE_TPP_EXTENSION_NEAREST */
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_EXTENSION */
 	} else {
 		error = tpp_lexer_setextension(lexer, id, enable_extension);
