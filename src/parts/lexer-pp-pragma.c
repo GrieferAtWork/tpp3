@@ -182,7 +182,7 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 	tpp_file const *iofile;
 	tpp_keyword *iofile_kwd;
 	iofile     = tpp_file_getiofile(tpp_lexer_getfile(self));
-	iofile_kwd = tpp_file_filename_kwd(iofile);
+	iofile_kwd = tpp_file_getfilenamekwd(iofile);
 	if (iofile_kwd) {
 		tpp_keyword_misc *misc;
 		misc = tpp_keyword_requiremisc(iofile_kwd);
@@ -813,6 +813,38 @@ tpp_lexer_process_pragma_GCC_diagnostic(tpp_lexer *tpp_restrict self) {
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_GCC_poison(tpp_lexer *tpp_restrict self) {
 	/* TODO */
+	/* TODO: Do this one right in TPP3:
+	 * >> #define my_strcpy strcpy
+	 * >> #define my_wrapper(x) x
+	 * >> #pragma GCC poison strcpy
+	 * >>
+	 * >> ...
+	 * >>
+	 * >> strcpy(buf, "foo");              // Warning here...
+	 * >> my_strcpy(buf, "foo");           // ... but not here
+	 * >> my_wrapper(strcpy(buf, "foo"));  // Warning here, too (complicated)
+	 *
+	 * iow: only warn if the poisoned token appears *after* "#pragma GCC poison".
+	 *      This will require replacing the "TPP_KEYWORD_FLAG_IS_POISONED" flag
+	 *      with a version-counter which is allocated whenever a keyword is poisoned.
+	 *      Additionally, macros will need to store the most-recent poison version,
+	 *      and whenever a poisoned keyword is encountered, tpp_lexer_yield() must
+	 *      check where the keyword originates from:
+	 *      - If it's not from a macro: emit warning
+	 *      - If it's from a macro:
+	 *        - If it's a keyword-macro: don't emit warning
+	 *        - If it's a function-macro:
+	 *          - If the keyword originates from the macro's source body: don't emit warning
+	 *          - If the keyword originates from macro arguments:
+	 *            - Restart check based on location of macro argument call site
+	 *              Re-determining that location at this point will also be complicated,
+	 *              but the same functionality is also needed in "tpp_macro_func_lcinfo()"
+	 *              - If the macro argument call site cannot be determined (which can be
+	 *                the case when the argument call site is no longer on the #include-
+	 *                stack): emit warning
+	 *          - If the keyword appeared because of something else (e.g. token concat): emit warning
+	 */
+	
 	(void)self;
 	return TPP_ENOENT;
 }

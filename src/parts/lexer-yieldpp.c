@@ -678,7 +678,7 @@ again:
 		/* Skip over nested block */
 		tpp_ifdef_stack_entry temp_entry;
 		temp_entry.tidse_mode    = TPP_IFDEF_MODE_IFDEF;
-		temp_entry.tidse_created = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+		temp_entry.tidse_created = tpp_file_getlcinfo(file, tpp_lexer_gettokenstart(self));
 		temp_entry.tidse_updated = temp_entry.tidse_created;
 		error = tpp_lexer_seek_end_of_next_unmatched_endif(self, &temp_entry);
 		if (TPP_ISERR(error))
@@ -699,7 +699,7 @@ again:
 #endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
 		if (tok == TPP_KWD_else)
 			ifdef_entry->tidse_mode = TPP_IFDEF_MODE_ELSE;
-		ifdef_entry->tidse_updated = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+		ifdef_entry->tidse_updated = tpp_file_getlcinfo(file, tpp_lexer_gettokenstart(self));
 	}	break;
 
 	case TPP_KWD_endif:
@@ -764,7 +764,7 @@ again:
 		/* Skip over nested block */
 		tpp_ifdef_stack_entry temp_entry;
 		temp_entry.tidse_mode    = TPP_IFDEF_MODE_IFDEF;
-		temp_entry.tidse_created = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+		temp_entry.tidse_created = tpp_file_getlcinfo(file, tpp_lexer_gettokenstart(self));
 		temp_entry.tidse_updated = temp_entry.tidse_created;
 		error = tpp_lexer_seek_end_of_next_unmatched_endif(self, &temp_entry);
 		if (TPP_ISERR(error))
@@ -793,14 +793,14 @@ handle_pp_if_error:
 			return TPP_ENOMEM;
 		ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_IFDEF;
 		ifdef_entry->tidse_created = ifdef_location;
-		ifdef_entry->tidse_updated = tpp_file_lcinfo(file, directive_start);
+		ifdef_entry->tidse_updated = tpp_file_getlcinfo(file, directive_start);
 		return TPP_EOK;
 	}	break;
 
 
 	case TPP_KWD_else: {
 		tpp_ifdef_stack_entry *ifdef_entry;
-		tpp_lcinfo updated_at = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+		tpp_lcinfo updated_at = tpp_file_getlcinfo(file, tpp_lexer_gettokenstart(self));
 
 		/* Check for -Wendif-labels */
 #if TPP_HAVE_TPP_W_ENDIF_LABELS
@@ -929,7 +929,7 @@ tpp_lexer_handle_if_directive(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 do_seek_end_of_ifdef_block:
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
-		created_at = tpp_file_lcinfo(file, directive_start);
+		created_at = tpp_file_getlcinfo(file, directive_start);
 		error = tpp_lexer_seek_end_of_inactive_ifdef(self, created_at);
 		return TPP_TOK_OFERR_OR_EOF(error);
 	}
@@ -943,7 +943,7 @@ do_append_to_ifdef_stack:
 	if tpp_unlikely(!ifdef_entry)
 		return TPP_TOK_ENOMEM;
 	ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_IFDEF;
-	ifdef_entry->tidse_created = tpp_file_lcinfo(file, directive_start);
+	ifdef_entry->tidse_created = tpp_file_getlcinfo(file, directive_start);
 	ifdef_entry->tidse_updated = ifdef_entry->tidse_created;
 	return TPP_TOK_EOF;
 }
@@ -955,7 +955,7 @@ tpp_lexer_handle_else_directive(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lcinfo lc_update;
 	tpp_ifdef_stack_entry *ifdef_entry;
-	lc_update = tpp_file_lcinfo(file, token->tt_start);
+	lc_update = tpp_file_getlcinfo(file, token->tt_start);
 
 	/* Check for error-case: #ifdef-stack is empty */
 	if (tpp_ifdef_stack_isempty(tpp_file_getifdef(file))) {

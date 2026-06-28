@@ -80,8 +80,8 @@ int main(int argc, char *argv[]) {
 		if (desc == NULL)
 			desc = "?";
 		file = tpp_lexer_getfile(&lexer);
-		lexer_filename = tpp_file_filename(file);
-		lc = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(&lexer));
+		lexer_filename = tpp_file_getfilename(file);
+		lc = tpp_file_getlcinfo(file, tpp_lexer_gettokenstart(&lexer));
 #if 0
 		printf("%.*s",
 		       (int)tpp_lexer_gettokenlen(&lexer),

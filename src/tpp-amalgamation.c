@@ -5617,7 +5617,7 @@ convert_multiword_to_utf8:
 /* These are needed for the shared
  * >> case TPP_FILE_KIND_IO:
  * >> case TPP_FILE_KIND_TEXT: {
- * in "tpp_file_lcinfo()" */
+ * in "tpp_file_getlcinfo()" */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
@@ -5637,7 +5637,7 @@ tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
 /* Return line/column information (1-based) for "pos"
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
-tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
+tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcinfo result;
 	if tpp_unlikely(!self->tf_chunk)
 		return TPP_LCINFO_INVALID;
@@ -5691,10 +5691,10 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			parent = parent->tf_tprev;
 		} while (parent->tf_kind == TPP_FILE_KIND_SUBTEXT);
 		if (parent->tf_chunk == self->tf_chunk)
-			return tpp_file_lcinfo(parent, pos);
+			return tpp_file_getlcinfo(parent, pos);
 #if 0 /* This would also be (kind-of) valid. But what would be event better, is if we could
        * reverse-engineer how "self->tf_chunk" was constructed out of "parent->tf_chunk"... */
-		return tpp_file_lcinfo(parent, parent->tf_tpos);
+		return tpp_file_getlcinfo(parent, parent->tf_tpos);
 #else
 		return TPP_LCINFO_INVALID;
 #endif
@@ -5748,13 +5748,13 @@ done_nocache:
 /* These are needed for the shared
  * >> case TPP_FILE_KIND_IO:
  * >> case TPP_FILE_KIND_TEXT:
- * in "tpp_file_filename()" */
+ * in "tpp_file_getfilename()" */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_filename(tpp_file const *tpp_restrict self) {
+tpp_file_getfilename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -5780,10 +5780,10 @@ again:
 	}
 }
 
-/* Same as `tpp_file_filename()', but may be overwritten by "#line" directives */
+/* Same as `tpp_file_getfilename()', but may be overwritten by "#line" directives */
 #if TPP_HAVE_FILE_USER_FILENAME
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_userfilename(tpp_file const *tpp_restrict self) {
+tpp_file_getuserfilename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -5838,7 +5838,7 @@ tpp_file_setuserfilename(tpp_file *tpp_restrict self,
 
 
 /* Set the (0-based) line that applies to "pos"
- * (as returned by "tpp_file_lcinfo") in "self"
+ * (as returned by "tpp_file_getlcinfo") in "self"
  *
  * NOTE: The caller must ensure that:
  *       >> self->tf_kind == TPP_FILE_KIND_IO ||
@@ -5852,7 +5852,9 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 	tpp_column start_col;
 	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
 	           self->tf_kind == TPP_FILE_KIND_TEXT);
-	cur_info   = tpp_file_lcinfo(self, pos);
+	cur_info = tpp_file_getlcinfo(self, pos);
+	if (!tpp_lcinfo_isvalid(cur_info))
+		return;
 	cur_line   = tpp_lcinfo_getline(cur_info);
 	delta      = line - cur_line;
 	start_line = tpp_lcinfo_getline(self->tf_data.td_text.tft_start_lc) + delta;
@@ -5864,9 +5866,9 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 
 
 /* Returns the filename "keyword" (which may not always be
- * available, even when "tpp_file_filename()" returns non-NULL) */
+ * available, even when "tpp_file_getfilename()" returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
-tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
+tpp_file_getfilenamekwd(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -5951,7 +5953,7 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 
-/* Size of \t as reported by `tpp_file_lcinfo()' */
+/* Size of \t as reported by `tpp_file_getlcinfo()' */
 #if TPP_TABSIZE < 0
 TPP_IMPL tpp_column tpp_tabsize = -TPP_TABSIZE;
 #endif /* TPP_TABSIZE < 0 */
@@ -10650,7 +10652,7 @@ tpp_lexer_initfile_text_ascii(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_LEXER_INIT_IO
 /* Initialize a lexer such that it starts reading from "handle"
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_filename()')
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getfilename()')
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
@@ -10705,7 +10707,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_LEXER_INIT_IO
 /* Push another file onto the #include-stack:
  * After a call to this function, the caller is responsible to yield the first token!
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_filename()')
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getfilename()')
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
@@ -11074,7 +11076,7 @@ handle_eof:
 		{
 			/* Lazily load line/column information (if not already loaded) */
 			if (!lcinfo_loaded) {
-				pos_lcinfo = tpp_file_lcinfo(file, pos);
+				pos_lcinfo = tpp_file_getlcinfo(file, pos);
 				lcinfo_loaded = true;
 			}
 			if (tpp_lcinfo_isvalid(pos_lcinfo)) {
@@ -11088,7 +11090,7 @@ handle_eof:
 
 		case 'f': {
 			/* "%Pf"   Filename of given "file" */
-			char const *filename = tpp_file_userfilename(file);
+			char const *filename = tpp_file_getuserfilename(file);
 			if (filename == NULL)
 				filename = "?";
 			temp = tpp_formatprinter_print_cstr(printer, arg, filename, tpp_strlen(filename));
@@ -17188,8 +17190,8 @@ typedef struct tpp_seek_rparen_state {
 	/* TODO: Come up with a smart way of tracking debug info for custom printed arguments
 	 *       -> need to be able to track lcinfo for custom char ranges (any range of chars
 	 *          from this string must be able to map to its own file/line/col triple)
-	 *       -> also must adjust tpp_file_lcinfo() to support this, and somehow also
-	 *          incorporate tpp_file_filename()/tpp_file_userfilename() to support
+	 *       -> also must adjust tpp_file_getlcinfo() to support this, and somehow also
+	 *          incorporate tpp_file_getfilename()/tpp_file_getuserfilename() to support
 	 *          different filenames based on char position
 	 * where this is necessary:
 	 * >> #define foo(a) a a
@@ -19065,10 +19067,10 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 	result->tm_body_enc = file->tf_enc;
 #endif /* TPP_HAVE_UNICODE */
 	result->tm_expansions = 0;
-	result->tm_deffile    = tpp_file_filename(file);
+	result->tm_deffile    = tpp_file_getfilename(file);
 	if (result->tm_deffile) {
 		result->tm_deflc   = deflc;
-		result->tm_body_lc = tpp_file_lcinfo(file, body_start);
+		result->tm_body_lc = tpp_file_getlcinfo(file, body_start);
 	}
 	result->tm_data.tmd_func.tmf_argc    = self->mab_argc;
 	result->tm_data.tmd_func.tmf_argv    = self->mab_argv; /* Inherit data */
@@ -19169,10 +19171,10 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 		macro->tm_body_enc = file->tf_enc;
 #endif /* TPP_HAVE_UNICODE */
 		macro->tm_expansions = 0;
-		macro->tm_deffile = tpp_file_filename(file);
+		macro->tm_deffile = tpp_file_getfilename(file);
 		if (macro->tm_deffile) {
 			macro->tm_deflc   = deflc;
-			macro->tm_body_lc = tpp_file_lcinfo(file, macro->tm_body_start);
+			macro->tm_body_lc = tpp_file_getlcinfo(file, macro->tm_body_start);
 		}
 		*p_macro = macro;
 		return TPP_EOK;
@@ -19264,7 +19266,7 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_keyword *const keyword = tpp_keywords_copybuiltin(&self->tl_kwds, token->tt_kwd);
 	tpp_char const *pos = token->tt_end;
-	tpp_lcinfo deflc = tpp_file_lcinfo(file, pos);
+	tpp_lcinfo deflc = tpp_file_getlcinfo(file, pos);
 	if tpp_unlikely(!keyword)
 		goto err_nomem;
 	token->tt_end = token->tt_start; /* Ensure that the macro's name stays loaded */
@@ -19477,7 +19479,7 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 	tpp_file const *iofile;
 	tpp_keyword *iofile_kwd;
 	iofile     = tpp_file_getiofile(tpp_lexer_getfile(self));
-	iofile_kwd = tpp_file_filename_kwd(iofile);
+	iofile_kwd = tpp_file_getfilenamekwd(iofile);
 	if (iofile_kwd) {
 		tpp_keyword_misc *misc;
 		misc = tpp_keyword_requiremisc(iofile_kwd);
@@ -20108,6 +20110,38 @@ tpp_lexer_process_pragma_GCC_diagnostic(tpp_lexer *tpp_restrict self) {
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_GCC_poison(tpp_lexer *tpp_restrict self) {
 	/* TODO */
+	/* TODO: Do this one right in TPP3:
+	 * >> #define my_strcpy strcpy
+	 * >> #define my_wrapper(x) x
+	 * >> #pragma GCC poison strcpy
+	 * >>
+	 * >> ...
+	 * >>
+	 * >> strcpy(buf, "foo");              // Warning here...
+	 * >> my_strcpy(buf, "foo");           // ... but not here
+	 * >> my_wrapper(strcpy(buf, "foo"));  // Warning here, too (complicated)
+	 *
+	 * iow: only warn if the poisoned token appears *after* "#pragma GCC poison".
+	 *      This will require replacing the "TPP_KEYWORD_FLAG_IS_POISONED" flag
+	 *      with a version-counter which is allocated whenever a keyword is poisoned.
+	 *      Additionally, macros will need to store the most-recent poison version,
+	 *      and whenever a poisoned keyword is encountered, tpp_lexer_yield() must
+	 *      check where the keyword originates from:
+	 *      - If it's not from a macro: emit warning
+	 *      - If it's from a macro:
+	 *        - If it's a keyword-macro: don't emit warning
+	 *        - If it's a function-macro:
+	 *          - If the keyword originates from the macro's source body: don't emit warning
+	 *          - If the keyword originates from macro arguments:
+	 *            - Restart check based on location of macro argument call site
+	 *              Re-determining that location at this point will also be complicated,
+	 *              but the same functionality is also needed in "tpp_macro_func_lcinfo()"
+	 *              - If the macro argument call site cannot be determined (which can be
+	 *                the case when the argument call site is no longer on the #include-
+	 *                stack): emit warning
+	 *          - If the keyword appeared because of something else (e.g. token concat): emit warning
+	 */
+	
 	(void)self;
 	return TPP_ENOENT;
 }
@@ -21651,7 +21685,7 @@ again:
 		/* Skip over nested block */
 		tpp_ifdef_stack_entry temp_entry;
 		temp_entry.tidse_mode    = TPP_IFDEF_MODE_IFDEF;
-		temp_entry.tidse_created = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+		temp_entry.tidse_created = tpp_file_getlcinfo(file, tpp_lexer_gettokenstart(self));
 		temp_entry.tidse_updated = temp_entry.tidse_created;
 		error = tpp_lexer_seek_end_of_next_unmatched_endif(self, &temp_entry);
 		if (TPP_ISERR(error))
@@ -21672,7 +21706,7 @@ again:
 #endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
 		if (tok == TPP_KWD_else)
 			ifdef_entry->tidse_mode = TPP_IFDEF_MODE_ELSE;
-		ifdef_entry->tidse_updated = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+		ifdef_entry->tidse_updated = tpp_file_getlcinfo(file, tpp_lexer_gettokenstart(self));
 	}	break;
 
 	case TPP_KWD_endif:
@@ -21737,7 +21771,7 @@ again:
 		/* Skip over nested block */
 		tpp_ifdef_stack_entry temp_entry;
 		temp_entry.tidse_mode    = TPP_IFDEF_MODE_IFDEF;
-		temp_entry.tidse_created = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+		temp_entry.tidse_created = tpp_file_getlcinfo(file, tpp_lexer_gettokenstart(self));
 		temp_entry.tidse_updated = temp_entry.tidse_created;
 		error = tpp_lexer_seek_end_of_next_unmatched_endif(self, &temp_entry);
 		if (TPP_ISERR(error))
@@ -21766,14 +21800,14 @@ handle_pp_if_error:
 			return TPP_ENOMEM;
 		ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_IFDEF;
 		ifdef_entry->tidse_created = ifdef_location;
-		ifdef_entry->tidse_updated = tpp_file_lcinfo(file, directive_start);
+		ifdef_entry->tidse_updated = tpp_file_getlcinfo(file, directive_start);
 		return TPP_EOK;
 	}	break;
 
 
 	case TPP_KWD_else: {
 		tpp_ifdef_stack_entry *ifdef_entry;
-		tpp_lcinfo updated_at = tpp_file_lcinfo(file, tpp_lexer_gettokenstart(self));
+		tpp_lcinfo updated_at = tpp_file_getlcinfo(file, tpp_lexer_gettokenstart(self));
 
 		/* Check for -Wendif-labels */
 #if TPP_HAVE_TPP_W_ENDIF_LABELS
@@ -21902,7 +21936,7 @@ tpp_lexer_handle_if_directive(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 do_seek_end_of_ifdef_block:
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
-		created_at = tpp_file_lcinfo(file, directive_start);
+		created_at = tpp_file_getlcinfo(file, directive_start);
 		error = tpp_lexer_seek_end_of_inactive_ifdef(self, created_at);
 		return TPP_TOK_OFERR_OR_EOF(error);
 	}
@@ -21916,7 +21950,7 @@ do_append_to_ifdef_stack:
 	if tpp_unlikely(!ifdef_entry)
 		return TPP_TOK_ENOMEM;
 	ifdef_entry->tidse_mode    = TPP_IFDEF_MODE_IFDEF;
-	ifdef_entry->tidse_created = tpp_file_lcinfo(file, directive_start);
+	ifdef_entry->tidse_created = tpp_file_getlcinfo(file, directive_start);
 	ifdef_entry->tidse_updated = ifdef_entry->tidse_created;
 	return TPP_TOK_EOF;
 }
@@ -21928,7 +21962,7 @@ tpp_lexer_handle_else_directive(tpp_lexer *tpp_restrict self) {
 	tpp_errno error;
 	tpp_lcinfo lc_update;
 	tpp_ifdef_stack_entry *ifdef_entry;
-	lc_update = tpp_file_lcinfo(file, token->tt_start);
+	lc_update = tpp_file_getlcinfo(file, token->tt_start);
 
 	/* Check for error-case: #ifdef-stack is empty */
 	if (tpp_ifdef_stack_isempty(tpp_file_getifdef(file))) {
@@ -24932,7 +24966,7 @@ tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
 	 *
 	 * For the sake of being pretty, we use "tf_tpos" since that's the location of the
 	 * name of the macro that's currently being expanded. */
-	info = tpp_file_lcinfo(lcfile, lcfile->tf_tpos);
+	info = tpp_file_getlcinfo(lcfile, lcfile->tf_tpos);
 	switch (what) {
 #if TPP_HAVE_MACRO___LINE__
 	case TPP_KWD___LINE__:
@@ -25931,7 +25965,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___FILE__
 	case TPP_KWD___FILE__: {
 		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
-		char const *filename = tpp_file_filename(file);
+		char const *filename = tpp_file_getfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
@@ -25941,7 +25975,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___BASE_FILE__
 	case TPP_KWD___BASE_FILE__: {
 		tpp_file const *file = tpp_file_getbasefile(tpp_lexer_getfile(self));
-		char const *filename = tpp_file_filename(file);
+		char const *filename = tpp_file_getfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
@@ -25952,7 +25986,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	case TPP_KWD___FILE_NAME__: {
 		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
 		char const *basename;
-		char const *filename = tpp_file_filename(file);
+		char const *filename = tpp_file_getfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		basename = filename;

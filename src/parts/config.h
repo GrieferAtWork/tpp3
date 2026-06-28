@@ -211,7 +211,7 @@
 #define TPP_HAVE_FILE_NOKWD TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_FILE_NOKWD */
 
-/* Speed up calls to `tpp_file_lcinfo()' by caching the last-read
+/* Speed up calls to `tpp_file_getlcinfo()' by caching the last-read
  * position and determining line/column information as a delta from
  * what was previously cached */
 #ifndef TPP_HAVE_FILE_LC_CACHE

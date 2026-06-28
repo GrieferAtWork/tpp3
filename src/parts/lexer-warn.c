@@ -200,7 +200,7 @@ handle_eof:
 		{
 			/* Lazily load line/column information (if not already loaded) */
 			if (!lcinfo_loaded) {
-				pos_lcinfo = tpp_file_lcinfo(file, pos);
+				pos_lcinfo = tpp_file_getlcinfo(file, pos);
 				lcinfo_loaded = true;
 			}
 			if (tpp_lcinfo_isvalid(pos_lcinfo)) {
@@ -214,7 +214,7 @@ handle_eof:
 
 		case 'f': {
 			/* "%Pf"   Filename of given "file" */
-			char const *filename = tpp_file_userfilename(file);
+			char const *filename = tpp_file_getuserfilename(file);
 			if (filename == NULL)
 				filename = "?";
 			temp = tpp_formatprinter_print_cstr(printer, arg, filename, tpp_strlen(filename));

@@ -1214,10 +1214,10 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 	result->tm_body_enc = file->tf_enc;
 #endif /* TPP_HAVE_UNICODE */
 	result->tm_expansions = 0;
-	result->tm_deffile    = tpp_file_filename(file);
+	result->tm_deffile    = tpp_file_getfilename(file);
 	if (result->tm_deffile) {
 		result->tm_deflc   = deflc;
-		result->tm_body_lc = tpp_file_lcinfo(file, body_start);
+		result->tm_body_lc = tpp_file_getlcinfo(file, body_start);
 	}
 	result->tm_data.tmd_func.tmf_argc    = self->mab_argc;
 	result->tm_data.tmd_func.tmf_argv    = self->mab_argv; /* Inherit data */
@@ -1318,10 +1318,10 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 		macro->tm_body_enc = file->tf_enc;
 #endif /* TPP_HAVE_UNICODE */
 		macro->tm_expansions = 0;
-		macro->tm_deffile = tpp_file_filename(file);
+		macro->tm_deffile = tpp_file_getfilename(file);
 		if (macro->tm_deffile) {
 			macro->tm_deflc   = deflc;
-			macro->tm_body_lc = tpp_file_lcinfo(file, macro->tm_body_start);
+			macro->tm_body_lc = tpp_file_getlcinfo(file, macro->tm_body_start);
 		}
 		*p_macro = macro;
 		return TPP_EOK;
@@ -1413,7 +1413,7 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_keyword *const keyword = tpp_keywords_copybuiltin(&self->tl_kwds, token->tt_kwd);
 	tpp_char const *pos = token->tt_end;
-	tpp_lcinfo deflc = tpp_file_lcinfo(file, pos);
+	tpp_lcinfo deflc = tpp_file_getlcinfo(file, pos);
 	if tpp_unlikely(!keyword)
 		goto err_nomem;
 	token->tt_end = token->tt_start; /* Ensure that the macro's name stays loaded */

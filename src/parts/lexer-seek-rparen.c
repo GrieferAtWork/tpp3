@@ -97,8 +97,8 @@ typedef struct tpp_seek_rparen_state {
 	/* TODO: Come up with a smart way of tracking debug info for custom printed arguments
 	 *       -> need to be able to track lcinfo for custom char ranges (any range of chars
 	 *          from this string must be able to map to its own file/line/col triple)
-	 *       -> also must adjust tpp_file_lcinfo() to support this, and somehow also
-	 *          incorporate tpp_file_filename()/tpp_file_userfilename() to support
+	 *       -> also must adjust tpp_file_getlcinfo() to support this, and somehow also
+	 *          incorporate tpp_file_getfilename()/tpp_file_getuserfilename() to support
 	 *          different filenames based on char position
 	 * where this is necessary:
 	 * >> #define foo(a) a a

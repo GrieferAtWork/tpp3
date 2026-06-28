@@ -64,8 +64,8 @@ int main(int argc, char *argv[]) {
 			desc = (char const *)tpp_lexer_gettoken(&lexer)->tt_kwd->tk_kwd;
 		if (desc == NULL)
 			desc = "?";
-		lexer_filename = tpp_file_filename(tpp_lexer_getfile(&lexer));
-		lc = tpp_file_lcinfo(tpp_lexer_getfile(&lexer), tpp_lexer_gettoken(&lexer)->tt_start);
+		lexer_filename = tpp_file_getfilename(tpp_lexer_getfile(&lexer));
+		lc = tpp_file_getlcinfo(tpp_lexer_getfile(&lexer), tpp_lexer_gettoken(&lexer)->tt_start);
 		printf("[%s:%d:%d:%s(%d):%.*s]\n",
 		       lexer_filename ? lexer_filename : "?",
 		       (int)tpp_lcinfo_getline(lc) + 1,

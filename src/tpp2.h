@@ -83,7 +83,7 @@
 #define TOK_S      "%[%.*s%]" /* Use "%Pt" instead! */
 #define TOK_A      (unsigned int)tpp_lexer_gettokenlen(tpp_current_lexer()), tpp_lexer_gettokenstart(tpp_current_lexer())
 #define KWDNAME()  tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(tpp_current_lexer()))
-#define FILENAME() tpp_file_userfilename(ARG(tpp_file *))
+#define FILENAME() tpp_file_getuserfilename(ARG(tpp_file *))
 #define ARG(T)     tpp_current_va_arg(T)
 #endif /* tpp_current_va_arg */
 
@@ -4690,28 +4690,28 @@ extern tpp_lexer *TPPLexer_Current;
 #define TPPFILE_KIND_MACRO    TPP_FILE_KIND_MACRO
 #define f_kind                TPP_INTERNAL(tf_kind)  /* Use tpp_file_getkind() */
 #define f_prev                TPP_INTERNAL(tf_tprev) /* Don't access */ /* Or maybe "tf_prev"... */
-#define f_name                TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) /* Use tpp_file_filename() */
+#define f_name                TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) /* Use tpp_file_getfilename() */
 #define f_text                TPP_INTERNAL(tf_chunk) /* Use tpp_file_getchunk() */
 #define f_begin               TPP_INTERNAL(tf_chunk)->TPP_INTERNAL(ts_str) /* Shouldn't be used */
 #define f_end                 TPP_INTERNAL(tf_end)   /* Use tpp_file_getend() */
 #define f_pos                 TPP_INTERNAL(tf_pos)   /* Use tpp_file_getpos() */
 
 #define TPPFile_LCAt(self, info, text_pointer) \
-	(void)(*(info) = tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
+	(void)(*(info) = tpp_file_getlcinfo(self, (tpp_char const *)(text_pointer)))
 #define TPPFile_LineAt(self, text_pointer) \
-	tpp_lcinfo_getline(tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
+	tpp_lcinfo_getline(tpp_file_getlcinfo(self, (tpp_char const *)(text_pointer)))
 #define TPPFile_ColumnAt(self, text_pointer) \
-	tpp_lcinfo_getcol(tpp_file_lcinfo(self, (tpp_char const *)(text_pointer)))
-#define TPPFile_Filename(self, opt_filename_length)                                         \
-	((opt_filename_length)                                                                  \
-	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_userfilename(self))) \
-	 : (void)0,                                                                             \
-	 tpp_file_userfilename(self))
-#define TPPFile_RealFilename(self, opt_filename_length)                                 \
-	((opt_filename_length)                                                              \
-	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_filename(self))) \
-	 : (void)0,                                                                         \
-	 tpp_file_filename(self))
+	tpp_lcinfo_getcol(tpp_file_getlcinfo(self, (tpp_char const *)(text_pointer)))
+#define TPPFile_Filename(self, opt_filename_length)                                            \
+	((opt_filename_length)                                                                     \
+	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_getuserfilename(self))) \
+	 : (void)0,                                                                                \
+	 tpp_file_getuserfilename(self))
+#define TPPFile_RealFilename(self, opt_filename_length)                                    \
+	((opt_filename_length)                                                                 \
+	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_getfilename(self))) \
+	 : (void)0,                                                                            \
+	 tpp_file_getfilename(self))
 
 
 #define TPP_Itos(buf, i) tpp_itoa(buf, i)

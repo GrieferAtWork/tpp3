@@ -465,7 +465,7 @@ typedef struct tpp_file {
  * whose contents can be overwritten to be a (sub-)text chunk of the actual
  * current file. If that (sub-)text chunk is the same as the chunk currently
  * loaded on the (then) parent-file, LC information remains available. Else,
- * calls to "tpp_file_lcinfo()" return "TPP_LCINFO_INVALID" within the sub-
+ * calls to "tpp_file_getlcinfo()" return "TPP_LCINFO_INVALID" within the sub-
  * text file.
  *
  * These functions are meant for:
@@ -674,17 +674,16 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
 /* Return line/column information (1-based) for "pos"
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
-tpp_file_lcinfo(tpp_file *tpp_restrict self,
-                tpp_char const *pos);
+tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_filename(tpp_file const *tpp_restrict self);
+tpp_file_getfilename(tpp_file const *tpp_restrict self);
 
-/* Same as `tpp_file_filename()', but may be overwritten by "#line" directives */
+/* Same as `tpp_file_getfilename()', but may be overwritten by "#line" directives */
 #if TPP_HAVE_FILE_USER_FILENAME
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_userfilename(tpp_file const *tpp_restrict self);
+tpp_file_getuserfilename(tpp_file const *tpp_restrict self);
 
 /* Sets the user-filename override of "self" to "filename"
  *
@@ -697,11 +696,11 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_file_setuserfilename(tpp_file *tpp_restrict self,
                          tpp_string *filename);
 #else /* TPP_HAVE_FILE_USER_FILENAME */
-#define tpp_file_userfilename(self) tpp_file_filename(self)
+#define tpp_file_getuserfilename(self) tpp_file_getfilename(self)
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
 
 /* Set the (0-based) line that applies to "pos"
- * (as returned by "tpp_file_lcinfo") in "self"
+ * (as returned by "tpp_file_getlcinfo") in "self"
  *
  * NOTE: The caller must ensure that:
  *       >> self->tf_kind == TPP_FILE_KIND_IO ||
@@ -713,9 +712,9 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 #endif /* TPP_HAVE_FILE_SETLINE */
 
 /* Returns the filename "keyword" (which may not always be
- * available, even when "tpp_file_filename()" returns non-NULL) */
+ * available, even when "tpp_file_getfilename()" returns non-NULL) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
-tpp_file_filename_kwd(tpp_file const *tpp_restrict self);
+tpp_file_getfilenamekwd(tpp_file const *tpp_restrict self);
 
 #if TPP_HAVE_INCLUDE_STACK
 /* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_tprev")
@@ -757,7 +756,7 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self);
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 
 
-/* Size of \t as reported by `tpp_file_lcinfo()' */
+/* Size of \t as reported by `tpp_file_getlcinfo()' */
 #if TPP_TABSIZE >= 0
 #define tpp_gettabsize() TPP_TABSIZE
 #else /* TPP_TABSIZE >= 0 */

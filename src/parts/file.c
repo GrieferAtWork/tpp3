@@ -959,7 +959,7 @@ convert_multiword_to_utf8:
 /* These are needed for the shared
  * >> case TPP_FILE_KIND_IO:
  * >> case TPP_FILE_KIND_TEXT: {
- * in "tpp_file_lcinfo()" */
+ * in "tpp_file_getlcinfo()" */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
@@ -979,7 +979,7 @@ tpp_macro_func_lcinfo(tpp_macro const *tpp_restrict self,
 /* Return line/column information (1-based) for "pos"
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
-tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
+tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcinfo result;
 	if tpp_unlikely(!self->tf_chunk)
 		return TPP_LCINFO_INVALID;
@@ -1033,10 +1033,10 @@ tpp_file_lcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			parent = parent->tf_tprev;
 		} while (parent->tf_kind == TPP_FILE_KIND_SUBTEXT);
 		if (parent->tf_chunk == self->tf_chunk)
-			return tpp_file_lcinfo(parent, pos);
+			return tpp_file_getlcinfo(parent, pos);
 #if 0 /* This would also be (kind-of) valid. But what would be event better, is if we could
        * reverse-engineer how "self->tf_chunk" was constructed out of "parent->tf_chunk"... */
-		return tpp_file_lcinfo(parent, parent->tf_tpos);
+		return tpp_file_getlcinfo(parent, parent->tf_tpos);
 #else
 		return TPP_LCINFO_INVALID;
 #endif
@@ -1090,13 +1090,13 @@ done_nocache:
 /* These are needed for the shared
  * >> case TPP_FILE_KIND_IO:
  * >> case TPP_FILE_KIND_TEXT:
- * in "tpp_file_filename()" */
+ * in "tpp_file_getfilename()" */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_filename(tpp_file const *tpp_restrict self) {
+tpp_file_getfilename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -1122,10 +1122,10 @@ again:
 	}
 }
 
-/* Same as `tpp_file_filename()', but may be overwritten by "#line" directives */
+/* Same as `tpp_file_getfilename()', but may be overwritten by "#line" directives */
 #if TPP_HAVE_FILE_USER_FILENAME
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_userfilename(tpp_file const *tpp_restrict self) {
+tpp_file_getuserfilename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -1180,7 +1180,7 @@ tpp_file_setuserfilename(tpp_file *tpp_restrict self,
 
 
 /* Set the (0-based) line that applies to "pos"
- * (as returned by "tpp_file_lcinfo") in "self"
+ * (as returned by "tpp_file_getlcinfo") in "self"
  *
  * NOTE: The caller must ensure that:
  *       >> self->tf_kind == TPP_FILE_KIND_IO ||
@@ -1194,7 +1194,9 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 	tpp_column start_col;
 	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
 	           self->tf_kind == TPP_FILE_KIND_TEXT);
-	cur_info   = tpp_file_lcinfo(self, pos);
+	cur_info = tpp_file_getlcinfo(self, pos);
+	if (!tpp_lcinfo_isvalid(cur_info))
+		return;
 	cur_line   = tpp_lcinfo_getline(cur_info);
 	delta      = line - cur_line;
 	start_line = tpp_lcinfo_getline(self->tf_data.td_text.tft_start_lc) + delta;
@@ -1206,9 +1208,9 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 
 
 /* Returns the filename "keyword" (which may not always be
- * available, even when "tpp_file_filename()" returns non-NULL) */
+ * available, even when "tpp_file_getfilename()" returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
-tpp_file_filename_kwd(tpp_file const *tpp_restrict self) {
+tpp_file_getfilenamekwd(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -1293,7 +1295,7 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 
-/* Size of \t as reported by `tpp_file_lcinfo()' */
+/* Size of \t as reported by `tpp_file_getlcinfo()' */
 #if TPP_TABSIZE < 0
 TPP_IMPL tpp_column tpp_tabsize = -TPP_TABSIZE;
 #endif /* TPP_TABSIZE < 0 */
