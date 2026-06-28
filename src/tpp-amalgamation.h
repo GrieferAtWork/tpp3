@@ -3593,18 +3593,32 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPPVCALL /* nothing */
 #endif /* !TPPVCALL */
 
-#ifndef TPP_DECL
-#define TPP_DECL extern
-#endif /* !TPP_DECL */
+/* Declaration providers for internal functions used across multiple source files.
+ * HINT: These get hard-overwritten to "static" in "tpp-amalgamation.c" */
 #ifndef TPP_IMPL
+#if (defined(_WIN64) || defined(WIN64) || \
+     defined(_WIN32) || defined(WIN32) || \
+     defined(__WIN32__) || defined(__CYGWIN__))
 #define TPP_IMPL /* nothing */
+#elif TPP_HOST_HAS_ATTRIBUTE(__visibility__)
+#define TPP_IMPL __attribute__((__visibility__("hidden")))
+#else /* ... */
+#define TPP_IMPL /* nothing */
+#endif /* !... */
 #endif /* !TPP_IMPL */
+#ifndef TPP_DECL
+#define TPP_DECL extern TPP_IMPL
+#endif /* !TPP_DECL */
+#ifndef TPP_CONST_IMPL
+#ifdef __cplusplus
+#define TPP_CONST_IMPL extern TPP_IMPL
+#else /* __cplusplus */
+#define TPP_CONST_IMPL TPP_IMPL
+#endif /* !__cplusplus */
+#endif /* !TPP_CONST_IMPL */
 #ifndef TPP_CONST_DECL
 #define TPP_CONST_DECL TPP_DECL
 #endif /* !TPP_CONST_DECL */
-#ifndef TPP_CONST_IMPL
-#define TPP_CONST_IMPL TPP_IMPL
-#endif /* !TPP_CONST_IMPL */
 #ifndef tpp_restrict
 #define tpp_restrict __restrict
 #endif /* !tpp_restrict */

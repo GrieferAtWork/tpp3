@@ -148,20 +148,25 @@ for (local string, id: kwds)
 
 print("/* GENERATED FILE -- DO NOT EDIT */");
 print;
-for (local string, id: kwds)
-	print(f"TPP_BUILTIN_KEYWORD_DECL({id}, {#string})");
+for (local i: [:kwdsTable.mask + 1]) {
+	local items = [];
+	local bucket = kwdsTable.table[i];
+	while (bucket !is none) {
+		items.append(bucket);
+		bucket = bucket.next;
+	}
+	items.reverse();
+	for (local kwd: items) {
+		print(f"TPP_BUILTIN_KEYWORD({kwd.value}, {#kwd.key}, {repr kwd.key}, {
+			kwd.next is none ? "NULL" : f"&tpp_builtin_keyword_{kwd.next.value}"}, "
+			f"{((kwd.hash >> 32) & 0xffffffff).tostr(16, 8, "X")}, "
+			f"{((kwd.hash) & 0xffffffff).tostr(16, 8, "X")})");
+	}
+}
 print;
+
 print(f"#define TPP_BUILTIN_KEYWORD_COUNT {kwdsTable.size}");
 print(f"#define TPP_BUILTIN_KEYWORD_MASK  {kwdsTable.mask}");
-for (local string, id: kwds) {
-	local kwd = kwdsTable.get(string);
-	assert kwd !is none;
-	print(f"TPP_BUILTIN_KEYWORD_IMPL({id}, {#string}, {repr string}, {
-		kwd.next is none ? "NULL" : f"&tpp_builtin_keyword_{kwd.next.value}"}, "
-		f"{((kwd.hash >> 32) & 0xffffffff).tostr(16, 8, "X")}, "
-		f"{((kwd.hash) & 0xffffffff).tostr(16, 8, "X")})");
-}
-
 print(f"TPP_BUILTIN_KEYWORD_TABLE(");
 for (local i: [:kwdsTable.mask + 1]) {
 	local bucket = kwdsTable.table[i];
