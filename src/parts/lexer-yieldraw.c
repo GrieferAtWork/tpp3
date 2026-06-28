@@ -1033,6 +1033,14 @@ handle_backslash:
 			++pos;
 			goto again; /* Not a BSE sequence */
 		}
+#if TPP_HAVE_TRIGRAPHS && TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
+		if (ch != '\\') {
+			tpp_char const *trigraph_pos = tpp_file_rel2ptr(file, rel_before_bse);
+			error = tpp_lexer_warnf_at(self, trigraph_pos, TPP_W_ENCOUNTERED_TRIGRAPH);
+			if (TPP_ISERR(error))
+				goto done;
+		}
+#endif /* TPP_HAVE_TRIGRAPHS && TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
 		/* Emit warning if we don't encounter a start-of-line matching "comment_style":
@@ -1208,11 +1216,6 @@ handle_backslash:
 		}
 		if (pos[1] != '/')
 			goto again;
-#if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
-		error = tpp_lexer_warnf_at(self, pos - 1, TPP_W_ENCOUNTERED_TRIGRAPH);
-		if (TPP_ISERR(error))
-			goto done;
-#endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 		goto handle_backslash;
 	} else
 #endif /* TPP_HAVE_TRIGRAPHS */
