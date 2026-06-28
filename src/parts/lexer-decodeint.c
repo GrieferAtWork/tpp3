@@ -136,7 +136,9 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 			return TPP_EOK;
 		ch    = *start++;
 		start = tpp_skipbse_fwd(start, end, tpp_lexer_getfile(self));
-	} while (tpp_ascii_isdigit(ch));
+	} while (tpp_ascii_isdigit(ch) ||
+	         (ch >= 'a' && ch <= 'f') ||
+	         (ch >= 'A' && ch <= 'F'));
 
 #if TPP_HAVE_INTEGER_SUFFIX_KIND
 	switch (ch) {
