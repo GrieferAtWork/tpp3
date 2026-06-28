@@ -411,7 +411,8 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 				strip_hash = tpp_hashof(strip, strip_len);
 				feature_keyword = tpp_keywords_getkeyword(&self->tl_kwds, strip,
 				                                          strip_len, strip_hash);
-				flags |= tpp_lexer_getkeywordflags(self, feature_keyword);
+				if (feature_keyword)
+					flags |= tpp_lexer_getkeywordflags(self, feature_keyword);
 			}
 
 			/* Determine expansion based on "mode" and "flags" */
