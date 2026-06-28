@@ -7496,7 +7496,7 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_MACROS
-#define _TPP_BUILTIN_KEYWORD_tk_macro_DEF  struct tpp_macro *tk_macro;
+#define _TPP_BUILTIN_KEYWORD_tk_macro_DEF  tpp_macro *tk_macro;
 #define _TPP_BUILTIN_KEYWORD_tk_macro_INIT NULL,
 #else /* TPP_HAVE_CPP_MACROS */
 #define _TPP_BUILTIN_KEYWORD_tk_macro_DEF  /* nothing */
@@ -7789,7 +7789,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 #define TPP_DEFINE_BUILTIN_KEYWORD(id, str)                      \
 	static struct tpp_builtin_keyword_struct_##id {              \
 		tpp_token_id         tk_id;                              \
-		struct tpp_keyword  *tk_next;                            \
+		tpp_keyword  *tk_next;                                   \
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                        \
 		_TPP_BUILTIN_KEYWORD_tk_misc_DEF                         \
 		tpp_hash             tk_hash;                            \
@@ -7866,7 +7866,7 @@ static void tpp_init_builtin_keywords(void) {
 #define TPP_BUILTIN_KEYWORD(id, kwd_len, kwd, next, hash_hi, hash_lo) \
 	static struct tpp_builtin_keyword_struct_##id {                   \
 		tpp_token_id         tk_id;                                   \
-		struct tpp_keyword  *tk_next;                                 \
+		tpp_keyword         *tk_next;                                 \
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                             \
 		_TPP_BUILTIN_KEYWORD_tk_misc_DEF                              \
 		tpp_hash             tk_hash;                                 \

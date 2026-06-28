@@ -329,14 +329,20 @@
 #ifndef tpp_unreachable
 #ifdef _MSC_VER
 #define tpp_unreachable() __assume(0)
-#else /* _MSC_VER */
+#elif TPP_HOST_HAS_BUILTIN(__builtin_unreachable)
 #define tpp_unreachable() __builtin_unreachable()
-#endif /* !_MSC_VER */
+#else /* ... */
+#define tpp_unreachable() do{}while(1)
+#endif /* !... */
 #endif /* !tpp_unreachable */
 
 #ifndef tpp_expect
+#if TPP_HOST_HAS_BUILTIN(__builtin_expect)
+#define tpp_expect(expr, expected) __builtin_expect(expr, expected)
+#else /* TPP_HOST_HAS_BUILTIN(__builtin_expect) */
 #define tpp_expect(expr, expected) expr
 #define tpp_expect_IS_NOOP
+#endif /* !TPP_HOST_HAS_BUILTIN(__builtin_expect) */
 #endif /* !tpp_expect */
 
 #ifndef tpp_likely
@@ -344,8 +350,8 @@
 #define tpp_likely   /* nothing */
 #define tpp_unlikely /* nothing */
 #else /* tpp_expect_IS_NOOP */
-#define tpp_likely(expr)   tpp_expect(!!(expr), 1)
-#define tpp_unlikely(expr) tpp_expect(!!(expr), 0)
+#define tpp_likely(expr)   (tpp_expect(!!(expr), 1))
+#define tpp_unlikely(expr) (tpp_expect(!!(expr), 0))
 #endif /* !tpp_expect_IS_NOOP */
 #endif /* !tpp_unlikely */
 
