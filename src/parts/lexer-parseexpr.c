@@ -290,10 +290,15 @@ handle_comment:
 		if (!tpp_lexer_has(self, BUILTIN_EXPR_DEFINED))
 			goto handle_default;
 #define WANT_handle_default
-		tok = tpp_lexer_yield_forexpr(self);
+		do {
+			tok = tpp_lexer_yieldraw_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		has_paren = tok == '(';
-		if (has_paren)
-			tok = tpp_lexer_yield_forexpr(self);
+		if (has_paren) {
+			do {
+				tok = tpp_lexer_yieldraw_blocking(self);
+			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		}
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		if (TPP_TOK_ISKEYWORD(tok)) {
