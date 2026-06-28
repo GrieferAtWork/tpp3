@@ -644,6 +644,8 @@ seek_next_lf:
 		                           tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_EOF));
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
+		/* Because of the seek, we're now at an LF token */
+		tok = TPP_TOK_LF;
 		break;
 	}
 #endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING */
