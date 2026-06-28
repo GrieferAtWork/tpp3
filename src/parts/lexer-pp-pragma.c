@@ -427,12 +427,307 @@ again_parse_string:
 /* #pragma warning(pop)                                                 */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING
+struct tpp_lexer_pragma_warning_state_data {
+	tpp_lexer        *tlpwsd_lexer; /* [1..1] Lexer */
+	tpp_warning_state tlpwsd_state; /* State to assign to warning */
+};
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pragma_warning_setstate_impl(tpp_lexer *self,
+                                       tpp_char const *str, tpp_size length,
+                                       tpp_warning_state state) {
+	tpp_warning_group_id gid;
+	tpp_warning_context_id ctx_id;
+	gid = tpp_warning_group_byname_ex((char const *)str, length);
+	if ((unsigned int)gid >= (unsigned int)TPP_WG_COUNT) {
+#if TPP_HAVE_TPP_W_UNKNOWN_WARNING
+#if TPP_HAVE_TPP_WARNING_GROUP_NEAREST
+		tpp_warning_group_id nearest = tpp_warning_group_nearest_ex((char const *)str, length);
+		char const *nearest_name = tpp_warning_group_getnames(nearest);
+		return tpp_lexer_warnf(self, TPP_W_UNKNOWN_WARNING,
+		                       (unsigned int)length, str, nearest_name);
+#else /* TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
+		return tpp_lexer_warnf(self, TPP_W_UNKNOWN_WARNING,
+		                       (unsigned int)length, str, nearest_name);
+#endif /* !TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
+#else /* TPP_HAVE_TPP_W_UNKNOWN_WARNING */
+		return TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_UNKNOWN_WARNING */
+	}
+	ctx_id = tpp_warning_context_id_ofgroup(gid);
+	return tpp_lexer_setwarningctx(self, ctx_id, state);
+}
+
+static tpp_errno TPPCALL
+tpp_lexer_pragma_warning_state_cb(void *arg, tpp_string *chunk,
+                                  tpp_char const *str, tpp_size length) {
+	struct tpp_lexer_pragma_warning_state_data *data;
+	(void)chunk;
+	data = (struct tpp_lexer_pragma_warning_state_data *)arg;
+	if (length >= 2 && str[0] == '-' && str[1] == 'W')
+		str += 2, length -= 2;
+	return tpp_lexer_pragma_warning_setstate_impl(data->tlpwsd_lexer, str, length,
+	                                              data->tlpwsd_state);
+}
+
+static tpp_errno TPPCALL
+tpp_lexer_pragma_warning_raw_cb(void *arg, tpp_string *chunk,
+                                tpp_char const *str, tpp_size length) {
+	tpp_lexer *const self = (tpp_lexer *)arg;
+	tpp_warning_state state = TPP_WSTATE_WARN;
+	(void)chunk;
+	if (length >= 2 && str[0] == '-' && str[1] == 'W')
+		str += 2, length -= 2;
+	if (length >= 3 && str[0] == 'n' && str[1] == 'o' && str[2] == '-') {
+		state = TPP_WSTATE_DISABLED;
+		length -= 3;
+		str += 3;
+	} else
+#if TPP_HAVE_WARNING_DEFAULT
+	if (length >= 4 && str[0] == 'd' && str[1] == 'e' && str[2] == 'f' && str[3] == '-') {
+		state = TPP_WSTATE_DEFAULT;
+		length -= 4;
+		str += 4;
+	} else
+#endif /* TPP_HAVE_WARNING_DEFAULT */
+#if TPP_HAVE_WARNING_SUPPRESS
+	if (length >= 4 && str[0] == 's' && str[1] == 'u' && str[2] == 'p' && str[3] == '-') {
+		state = TPP_WSTATE_SUPPRESS;
+		length -= 4;
+		str += 4;
+	} else if (length >= 9 &&
+	           str[0] == 's' && str[1] == 'u' &&
+	           str[2] == 'p' && str[3] == 'p' &&
+	           str[4] == 'r' && str[5] == 'e' &&
+	           str[6] == 's' && str[7] == 's' &&
+	           str[8] == '-') {
+		state = TPP_WSTATE_SUPPRESS;
+		length -= 9;
+		str += 9;
+	} else
+#endif /* TPP_HAVE_WARNING_SUPPRESS */
+	{
+	}
+	return tpp_lexer_pragma_warning_setstate_impl(self, str, length, state);
+}
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_warning(tpp_lexer *tpp_restrict self) {
-	/* TODO */
-	/* TODO: Only support push when "TPP_HAVE_WARNINGS_PUSH_POP" */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_errno error;
+	tpp_token_id tok;
+	tpp_warning_state new_state;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Skip leading '(' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
+again_handle:
+	switch (tok) {
+	case TPP_TOK_SPACE:
+	case TPP_TOK_LF:
+	TPP_CASE_TPP_TOK_COMMENT
+again_yield_and_handle:
+		tok = tpp_lexer_yield_blocking(self);
+		goto again_handle;
+
+#if TPP_HAVE_WARNINGS_PUSH_POP
+	case TPP_KWD_push:
+		tpp_lexer_pushwarnings(self);
+		tok = tpp_lexer_yield_blocking(self);
+		break;
+	case TPP_KWD_pop:
+		if (tpp_lexer_canpopwarnings(self)) {
+			tpp_lexer_popwarnings(self);
+		} else {
+#if TPP_HAVE_TPP_W_CANNOT_POP_WARNINGS
+			error = tpp_lexer_warnf(self, TPP_W_CANNOT_POP_WARNINGS);
+			if (TPP_ISERR(error)) {
+				tok = TPP_TOK_OFERR(error);
+				break;
+			}
+#endif /* TPP_HAVE_TPP_W_CANNOT_POP_WARNINGS */
+		}
+		tok = tpp_lexer_yield_blocking(self);
+		break;
+#endif /* TPP_HAVE_WARNINGS_PUSH_POP */
+
+#if TPP_HAVE_TPP_TOK_INT
+	{
+		tpp_intmax mode;
+		bool negative;
+	case TPP_TOK_INT:
+		negative = false;
+		if (0) {
+	case '-':
+			negative = true;
+			do {
+				tok = tpp_lexer_yield_blocking(self);
+			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			tok = tpp_lexer_require(self, TPP_TOK_INT);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (tok != TPP_TOK_INT)
+				break;
+		}
+		error = tpp_lexer_decodeint(self, &mode);
+		if (TPP_ISERR(error)) {
+			tok = TPP_TOK_OFERR(error);
+			break;
+		}
+		if (negative)
+			mode = -mode;
+		/* Mirror behavior of TPP2 */
+		if (mode < 0) {
+			new_state = TPP_WSTATE_FATAL;
+		} else if (mode == 0) {
+			new_state = TPP_WSTATE_WARN;
+		} else if (mode == 1) {
+			new_state = TPP_WSTATE_DISABLED;
+		} else {
+			new_state = TPP_WSTATE_SUPPRESS;
+		}
+		goto set_warning_state;
+	}	break;
+#endif /* TPP_HAVE_TPP_TOK_INT */
+	case TPP_KWD_disable:
+		new_state = TPP_WSTATE_DISABLED;
+		goto set_warning_state;
+	case TPP_KWD_enable:
+		new_state = TPP_WSTATE_WARN;
+		goto set_warning_state;
+	case TPP_KWD_error:
+		new_state = TPP_WSTATE_ERROR_OR_FATAL;
+		goto set_warning_state;
+#if TPP_HAVE_WARNING_SUPPRESS
+	case TPP_KWD_suppress:
+		new_state = TPP_WSTATE_SUPPRESS;
+		goto set_warning_state;
+#endif /* TPP_HAVE_WARNING_SUPPRESS */
+#if TPP_HAVE_WARNING_DEFAULT
+	case TPP_KWD_default:
+		new_state = TPP_WSTATE_DEFAULT;
+		goto set_warning_state;
+#endif /* TPP_HAVE_WARNING_DEFAULT */
+	case TPP_KWD_fatal: {
+		new_state = TPP_WSTATE_FATAL;
+set_warning_state:
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(':'));
+again_handle_set_warning_state:
+		switch (tok) {
+		case TPP_TOK_SPACE:
+		case TPP_TOK_LF:
+		TPP_CASE_TPP_TOK_COMMENT
+			tok = tpp_lexer_yield_blocking(self);
+			goto again_handle_set_warning_state;
+
+#if TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS
+		case TPP_TOK_INT: {
+			tpp_intmax warning_number;
+			tpp_warning_id warning_id;
+			error = tpp_lexer_decodeint(self, &warning_number);
+			if (TPP_ISERR(error)) {
+				tok = TPP_TOK_OFERR(error);
+				break;
+			}
+			warning_id = TPP_W_COUNT;
+#ifdef UINT_MAX
+			if (warning_number >= 0 && warning_number <= (tpp_intmax)(tpp_uintmax)UINT_MAX)
+#else /* UINT_MAX */
+			if (warning_number >= 0 && warning_number <= (tpp_intmax)(tpp_uintmax)(unsigned int)-1)
+#endif /* !UINT_MAX */
+			{
+				warning_id = tpp_warning_ofnumber((unsigned int)warning_number);
+			}
+			if ((unsigned int)warning_id >= (unsigned int)TPP_W_COUNT) {
+#if TPP_HAVE_TPP_W_UNKNOWN_WARNING_NUMBER
+				error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_WARNING_NUMBER, (int)warning_number);
+#else /* TPP_HAVE_TPP_W_UNKNOWN_WARNING_NUMBER */
+				error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_UNKNOWN_WARNING_NUMBER */
+			} else {
+				tpp_warning_context_id ctx_id;
+				ctx_id = tpp_warning_context_id_ofwarning(warning_id);
+				error = tpp_lexer_setwarningctx(self, ctx_id, new_state);
+			}
+			if (TPP_ISERR(error))
+				return error;
+			tok = tpp_lexer_yield_blocking(self);
+		}	break;
+#endif /* TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS */
+
+		TPP_CASE_TPP_TOK_STRING {
+			struct tpp_lexer_pragma_warning_state_data data;
+			data.tlpwsd_lexer = self;
+			data.tlpwsd_state = new_state;
+			error = tpp_lexer_parsestring_cb(self, &tpp_lexer_pragma_warning_state_cb, &data,
+			                                 TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+			if (TPP_ISERR(error))
+				return error;
+			tok = tpp_lexer_gettok(self);
+		}	break;
+
+		default:
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON
+			if (!TPP_TOK_ISERR(tok)) {
+				error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON);
+				if (TPP_ISERR(error))
+					return error;
+			}
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON */
+			break;
+		}
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+#if TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS
+		if (tok == TPP_TOK_INT)
+			goto again_handle_set_warning_state;
+#endif /* TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS */
+		if (TPP_TOK_ISSTRING(tok))
+			goto again_handle_set_warning_state;
+	}	break;
+
+	TPP_CASE_TPP_TOK_STRING
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_pragma_warning_raw_cb, self,
+		                                 TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+		tok = TPP_TOK_OFERR_OR_EOF(error);
+		break;
+
+	default:
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING
+		error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING);
+#else /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING */
+		error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING */
+		tok = TPP_TOK_OFERR_OR_EOF(error);
+		break;
+	}
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	tok = tpp_lexer_gettok(self);
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	if (tok == ',')
+		goto again_yield_and_handle;
+
+	/* Skip trailing ')' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+	return TPP_TOK_ASERR_OR_EOK(tok);
 }
 #endif /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
 
@@ -760,8 +1055,7 @@ TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
-	tpp_token const *const token = tpp_lexer_gettoken(self);
-	tpp_token_id tok = token->tt_id;
+	tpp_token_id tok = tpp_lexer_gettok(self);
 	switch (tok) {
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO

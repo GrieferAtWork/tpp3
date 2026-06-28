@@ -216,6 +216,26 @@ err:
 
 
 #if TPP_HAVE_WARNING_SUPPRESS
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_suppress_item *TPPCALL
+tpp_warnings_find_suppress(tpp_warnings *tpp_restrict self,
+                           tpp_warning_context_id ctx_id) {
+	tpp_size lo = 0, hi = self->tw_suppressions.tws_ctxc;
+	tpp_warning_suppress_item *result;
+	while (lo < hi) {
+		tpp_size mid = (lo + hi) / 2;
+		result = &self->tw_suppressions.tws_ctxv[mid];
+		if (ctx_id < result->twsi_ctx_id) {
+			hi = mid;
+		} else if (ctx_id > result->twsi_ctx_id) {
+			lo = mid + 1;
+		} else {
+			/* Found existing entry! */
+			return result;
+		}
+	}
+	return NULL;
+}
+
 /* Ensure that an entry for "ctx_id" is allocated in `&self->tw_suppressions'
  * @return: * :   The suppression entry for "ctx_id"
  * @return: NULL: Out of memory. */
@@ -263,8 +283,9 @@ tpp_warnings_require_suppress(tpp_warnings *tpp_restrict self,
 	tpp_assert(self->tw_suppressions.tws_ctxc < self->tw_suppressions.tws_ctxa);
 	tpp_memmoveup(&self->tw_suppressions.tws_ctxv[lo + 1],
 	              &self->tw_suppressions.tws_ctxv[lo],
-	              (self->tw_suppressions.tws_ctxa - lo) *
+	              (self->tw_suppressions.tws_ctxc - lo) *
 	              sizeof(tpp_warning_suppress_item));
+	++self->tw_suppressions.tws_ctxc;
 	result = &self->tw_suppressions.tws_ctxv[lo];
 	result->twsi_count  = 0;
 	result->twsi_ctx_id = ctx_id;
@@ -334,6 +355,25 @@ tpp_warnings_setctx_(tpp_warnings *tpp_restrict self,
 	} else
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 	{
+#if TPP_HAVE_WARNING_SUPPRESS
+		/* Delete suppression entry (if there is one) */
+		if (tpp_warnings_state_get(&self->tw_state, ctx_id) == TPP_WSTATE_FATAL) {
+			tpp_warning_suppress_item *item;
+			item = tpp_warnings_find_suppress(self, ctx_id);
+			if (item) {
+				tpp_size index = (tpp_size)(item - self->tw_suppressions.tws_ctxv);
+				--self->tw_suppressions.tws_ctxc;
+				tpp_memmovedown(item, item + 1,
+				                (self->tw_suppressions.tws_ctxc - index) *
+				                sizeof(tpp_warning_suppress_item));
+			}
+		} else {
+			tpp_assert(tpp_warnings_find_suppress(self, ctx_id) == NULL &&
+			           "Suppression entry present, but internal "
+			           "state isn't 'TPP_WSTATE_FATAL'");
+		}
+#endif /* TPP_HAVE_WARNING_SUPPRESS */
+
 		/* Regular case: set warning state in state-bitset. */
 		tpp_assert(state == TPP_WSTATE_DISABLED ||
 		           state == TPP_WSTATE_WARN ||
