@@ -1214,7 +1214,7 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 	result->tm_body_enc = file->tf_enc;
 #endif /* TPP_HAVE_UNICODE */
 	result->tm_expansions = 0;
-	result->tm_deffile    = tpp_file_getfilename(file);
+	result->tm_deffile    = tpp_file_getrealfilename(file);
 	if (result->tm_deffile) {
 		result->tm_deflc   = deflc;
 		result->tm_body_lc = tpp_file_getlcinfo(file, body_start);
@@ -1318,7 +1318,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 		macro->tm_body_enc = file->tf_enc;
 #endif /* TPP_HAVE_UNICODE */
 		macro->tm_expansions = 0;
-		macro->tm_deffile = tpp_file_getfilename(file);
+		macro->tm_deffile = tpp_file_getrealfilename(file);
 		if (macro->tm_deffile) {
 			macro->tm_deflc   = deflc;
 			macro->tm_body_lc = tpp_file_getlcinfo(file, macro->tm_body_start);

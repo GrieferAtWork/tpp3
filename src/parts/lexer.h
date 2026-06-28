@@ -418,7 +418,7 @@ tpp_lexer_initfile_text_ascii(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_LEXER_INIT_IO
 /* Initialize a lexer such that it starts reading from "handle"
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getfilename()')
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()')
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
@@ -451,7 +451,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_LEXER_INIT_IO
 /* Push another file onto the #include-stack:
  * After a call to this function, the caller is responsible to yield the first token!
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getfilename()')
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()')
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
@@ -1126,7 +1126,7 @@ typedef struct tpp_lexer_arginfo {
 	 *       -> need to be able to track lcinfo for custom char ranges (any range of chars
 	 *          from this string must be able to map to its own file/line/col triple)
 	 *       -> also must adjust tpp_file_getlcinfo() to support this, and somehow also
-	 *          incorporate tpp_file_getfilename()/tpp_file_getuserfilename() to support
+	 *          incorporate tpp_file_getrealfilename()/tpp_file_getfilename() to support
 	 *          different filenames based on char position
 	 * where this is necessary:
 	 * >> #define foo(a) a a

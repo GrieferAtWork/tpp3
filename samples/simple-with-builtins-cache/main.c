@@ -52,8 +52,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	for (;;) {
-		char const *desc, *lexer_filename;
-		tpp_lcinfo lc;
+		tpp_lcinfo_ex lc;
+		tpp_file *file             = tpp_lexer_getfile(&lexer);
+		char const *lexer_filename = tpp_file_getfilename(file);
+		char const *desc;
 		tok = tpp_lexer_yield(&lexer);
 		if (TPP_TOK_ISERR(tok)) {
 			fprintf(stderr, "\nYield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
@@ -66,16 +68,30 @@ int main(int argc, char *argv[]) {
 			desc = (char const *)tpp_lexer_gettoken(&lexer)->tt_kwd->tk_kwd;
 		if (desc == NULL)
 			desc = "?";
-		lexer_filename = tpp_file_getfilename(tpp_lexer_getfile(&lexer));
-		lc = tpp_file_getlcinfo(tpp_lexer_getfile(&lexer), tpp_lexer_gettoken(&lexer)->tt_start);
-		printf("[%s:%d:%d:%s(%d):%.*s]\n",
+		file           = tpp_lexer_getfile(&lexer);
+		lexer_filename = tpp_file_getfilename(file);
+		desc = tpp_strtokenid(tok);
+		if (desc == NULL && TPP_TOK_ISKEYWORD(tok))
+			desc = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(&lexer));
+		if (desc == NULL)
+			desc = "?";
+		tpp_file_getlcinfo_ex(file, tpp_lexer_gettokenstart(&lexer), &lc);
+		printf("[%s:%d:%d:%s(%d):%.*s",
 		       lexer_filename ? lexer_filename : "?",
-		       (int)tpp_lcinfo_getline(lc) + 1,
-		       (int)tpp_lcinfo_getcol(lc) + 1,
+		       (int)(tpp_lcinfo_getline(lc.tlcix_info) + 1),
+		       (int)(tpp_lcinfo_getcol(lc.tlcix_info) + 1),
 		       desc, tok,
-		       (int)(tpp_lexer_gettoken(&lexer)->tt_end -
-		             tpp_lexer_gettoken(&lexer)->tt_start),
-		       tpp_lexer_gettoken(&lexer)->tt_start);
+		       (int)tpp_lexer_gettokenlen(&lexer),
+		       tpp_lexer_gettokenstart(&lexer));
+		while (lc.tlcix_projfile) {
+			tpp_file_getlcinfo_ex(lc.tlcix_projfile, lc.tlcix_projpos, &lc);
+			lexer_filename = tpp_file_getfilename(file);
+			printf(" --- %s:%d:%d",
+			       lexer_filename ? lexer_filename : "?",
+			       (int)(tpp_lcinfo_getline(lc.tlcix_info) + 1),
+			       (int)(tpp_lcinfo_getcol(lc.tlcix_info) + 1));
+		}
+		printf("]\n");
 	}
 	result = 0;
 out:

@@ -182,7 +182,7 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 	tpp_file const *iofile;
 	tpp_keyword *iofile_kwd;
 	iofile     = tpp_file_getiofile(tpp_lexer_getfile(self));
-	iofile_kwd = tpp_file_getfilenamekwd(iofile);
+	iofile_kwd = tpp_file_getrealfilenamekwd(iofile);
 	if (iofile_kwd) {
 		tpp_keyword_misc *misc;
 		misc = tpp_keyword_requiremisc(iofile_kwd);

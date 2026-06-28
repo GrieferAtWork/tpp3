@@ -214,7 +214,7 @@ handle_eof:
 
 		case 'f': {
 			/* "%Pf"   Filename of given "file" */
-			char const *filename = tpp_file_getuserfilename(file);
+			char const *filename = tpp_file_getfilename(file);
 			if (filename == NULL)
 				filename = "?";
 			temp = tpp_formatprinter_print_cstr(printer, arg, filename, tpp_strlen(filename));

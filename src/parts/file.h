@@ -685,12 +685,17 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_getfilename(tpp_file const *tpp_restrict self);
+tpp_file_getrealfilename(tpp_file const *tpp_restrict self);
 
-/* Same as `tpp_file_getfilename()', but may be overwritten by "#line" directives */
+/* Returns the filename "keyword" (which may not always be available,
+ * even when "tpp_file_getrealfilename()" returns non-NULL) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
+tpp_file_getrealfilenamekwd(tpp_file const *tpp_restrict self);
+
+/* Same as `tpp_file_getrealfilename()', but may be overwritten by "#line" directives */
 #if TPP_HAVE_FILE_USER_FILENAME
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_getuserfilename(tpp_file const *tpp_restrict self);
+tpp_file_getfilename(tpp_file const *tpp_restrict self);
 
 /* Sets the user-filename override of "self" to "filename"
  *
@@ -700,11 +705,22 @@ tpp_file_getuserfilename(tpp_file const *tpp_restrict self);
  *
  * You may also pass "NULL" for `filename' to disable the override */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_file_setuserfilename(tpp_file *tpp_restrict self,
-                         tpp_string *filename);
+tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename);
 #else /* TPP_HAVE_FILE_USER_FILENAME */
-#define tpp_file_getuserfilename(self) tpp_file_getfilename(self)
+#define tpp_file_getfilename(self) tpp_file_getrealfilename(self)
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
+
+/* Set the (0-based) line that applies to "pos"
+ * (as returned by "tpp_file_getlcinfo") in "self"
+ *
+ * NOTE: The caller must ensure that:
+ *       >> self->tf_kind == TPP_FILE_KIND_IO ||
+ *       >> self->tf_kind == TPP_FILE_KIND_TEXT; */
+#if TPP_HAVE_FILE_SETLINE
+TPP_DECL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_file_setline(tpp_file *tpp_restrict self,
+                 tpp_char const *pos, tpp_line line);
+#endif /* TPP_HAVE_FILE_SETLINE */
 
 typedef struct tpp_lcinfo_ex {
 	tpp_lcinfo      tlcix_info;     /* Line/column information, or "TPP_LCINFO_INVALID" if unknown */
@@ -745,23 +761,6 @@ tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
 
 
 
-
-/* Set the (0-based) line that applies to "pos"
- * (as returned by "tpp_file_getlcinfo") in "self"
- *
- * NOTE: The caller must ensure that:
- *       >> self->tf_kind == TPP_FILE_KIND_IO ||
- *       >> self->tf_kind == TPP_FILE_KIND_TEXT; */
-#if TPP_HAVE_FILE_SETLINE
-TPP_DECL TPP_NONNULL((1, 2)) void TPPCALL
-tpp_file_setline(tpp_file *tpp_restrict self,
-                 tpp_char const *pos, tpp_line line);
-#endif /* TPP_HAVE_FILE_SETLINE */
-
-/* Returns the filename "keyword" (which may not always be
- * available, even when "tpp_file_getfilename()" returns non-NULL) */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
-tpp_file_getfilenamekwd(tpp_file const *tpp_restrict self);
 
 #if TPP_HAVE_INCLUDE_STACK
 /* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_tprev")

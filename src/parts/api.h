@@ -301,25 +301,6 @@
 #endif /* !_MSC_VER */
 #endif /* !tpp_unreachable */
 
-#ifndef tpp_memcpy
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
-#include <string.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
-#define tpp_strlen      strlen
-#define tpp_strnlen     strnlen
-#define tpp_strcmp      strcmp
-#define tpp_memcmp      memcmp
-#define tpp_memcpy      memcpy
-#define tpp_memset      memset
-#define tpp_memchr      memchr
-#define tpp_memmove     memmove
-#define tpp_memmoveup   memmove
-#define tpp_memmovedown memmove
-#if 0
-#define tpp_memmem      memmem
-#endif
-#endif /* !tpp_memcpy */
-
 #ifndef tpp_expect
 #define tpp_expect(expr, expected) expr
 #define tpp_expect_IS_NOOP
@@ -409,6 +390,31 @@
 #define TPP_STATIC_ASSERT(expr) typedef int _TPP_STATIC_ASSERT_ID(__LINE__)[(expr) ? 1 : -1]
 #endif /* !TPP_STATIC_ASSERT */
 
+
+
+/* String API */
+#ifndef tpp_memcpy
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+#include <string.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
+#define tpp_strlen      strlen
+#define tpp_strnlen     strnlen
+#define tpp_strcmp      strcmp
+#define tpp_memcmp      memcmp
+#define tpp_memcpy      memcpy
+#define tpp_memset      memset
+#define tpp_memchr      memchr
+#define tpp_memmove     memmove
+#define tpp_memmoveup   memmove /* Same as "tpp_memmove", but guaranties that "dst >= src" */
+#define tpp_memmovedown memmove /* Same as "tpp_memmove", but guaranties that "dst <= src" */
+#if 0 /* Define if available; else, TPP will provide its own */
+#define tpp_memmem      memmem
+#endif
+#endif /* !tpp_memcpy */
+
+
+
+/* Heap API */
 #ifndef tpp_malloc
 #if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdlib.h>
@@ -434,8 +440,24 @@
 #endif /* ... */
 #endif /* !tpp_alloca */
 
+
+/* Assertions API */
+#ifndef tpp_assert
+#if TPP_DEBUG
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+#include <assert.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
+#define tpp_assert assert
+#else /* TPP_DEBUG */
+#define tpp_assert(expr) (void)0
+#endif /* !TPP_DEBUG */
+#endif /* !tpp_assert */
+
+
+
 TPP_DECL_BEGIN
 
+/* Format-printer API */
 #ifndef tpp_formatprinter
 #define tpp_formatprinter tpp_formatprinter
 #define TPP_FORMATPRINTER_CC TPPCALL
@@ -450,6 +472,9 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 	tpp_ssize (TPP_FORMATPRINTER_CC name)(void *arg, tpp_char const *text, tpp_size num_bytes)
 #endif /* !tpp_formatprinter */
 
+
+
+/* Line/Column-information API */
 #ifndef tpp_lcinfo
 #if defined(INT_LEAST64_MAX) && defined(UINT32_MAX) && !TPP_HAVE_TPP2_COMPAT
 typedef int_least64_t tpp_lcinfo;
@@ -509,6 +534,9 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 #define tpp_lcinfo_init_invalid(self) (void)((self) = TPP_LCINFO_INVALID)
 #endif /* !tpp_lcinfo_init_invalid */
 
+
+
+/* Non-atomic reference counter API */
 #ifndef tpp_refcnt
 /* NOTE: Multi-threaded applications can leave this alone: a single
  *       TPP lexer can only ever be used by a single thread, meaning
@@ -528,6 +556,9 @@ typedef struct {
 #define tpp_refcnt_dec(p) (void)tpp_refcnt_decfetch(p)
 #endif /* !tpp_refcnt_dec */
 
+
+
+/* Atomic reference counter API */
 #ifndef tpp_refcnt_atomic
 /* WARNING: Multi-threaded applications must override this: this kind of
  *          reference counter is used in places where the linked component
@@ -546,8 +577,11 @@ typedef struct {
 #define tpp_refcnt_atomic_dec(p) (void)tpp_refcnt_atomic_decfetch(p)
 #endif /* !tpp_refcnt_atomic_dec */
 
-/* WARNING: Multi-threaded applications must override this */
+
+
+/* Execute-once block */
 #ifndef tpp_once
+/* WARNING: Multi-threaded applications must override this */
 #define tpp_once(expr)             \
 	do {                           \
 		static int _to_didrun = 0; \
@@ -559,14 +593,6 @@ typedef struct {
 #endif /* !tpp_once */
 
 TPP_DECL_END
-
-
-#ifndef tpp_assert
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
-#include <assert.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
-#define tpp_assert assert
-#endif /* !tpp_assert */
 /*[[[tpp-end]]]*/
 
 #endif /* !GUARD_TPP_API_H */

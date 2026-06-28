@@ -1699,7 +1699,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___FILE__
 	case TPP_KWD___FILE__: {
 		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
-		char const *filename = tpp_file_getfilename(file);
+		char const *filename = tpp_file_getrealfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
@@ -1709,7 +1709,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___BASE_FILE__
 	case TPP_KWD___BASE_FILE__: {
 		tpp_file const *file = tpp_file_getbasefile(tpp_lexer_getfile(self));
-		char const *filename = tpp_file_getfilename(file);
+		char const *filename = tpp_file_getrealfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
@@ -1720,7 +1720,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	case TPP_KWD___FILE_NAME__: {
 		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
 		char const *basename;
-		char const *filename = tpp_file_getfilename(file);
+		char const *filename = tpp_file_getrealfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		basename = filename;

@@ -5818,13 +5818,13 @@ tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
 /* These are needed for the shared
  * >> case TPP_FILE_KIND_IO:
  * >> case TPP_FILE_KIND_TEXT:
- * in "tpp_file_getfilename()" */
+ * in "tpp_file_getrealfilename()" */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_getfilename(tpp_file const *tpp_restrict self) {
+tpp_file_getrealfilename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -5850,10 +5850,10 @@ again:
 	}
 }
 
-/* Same as `tpp_file_getfilename()', but may be overwritten by "#line" directives */
+/* Same as `tpp_file_getrealfilename()', but may be overwritten by "#line" directives */
 #if TPP_HAVE_FILE_USER_FILENAME
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_getuserfilename(tpp_file const *tpp_restrict self) {
+tpp_file_getfilename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -5892,8 +5892,7 @@ again:
  *
  * You may also pass "NULL" for `filename' to disable the override */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_file_setuserfilename(tpp_file *tpp_restrict self,
-                         tpp_string *filename) {
+tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename) {
 	tpp_string *old_override;
 	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
 	           self->tf_kind == TPP_FILE_KIND_TEXT);
@@ -5935,10 +5934,10 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 
 
 
-/* Returns the filename "keyword" (which may not always be
- * available, even when "tpp_file_getfilename()" returns non-NULL) */
+/* Returns the filename "keyword" (which may not always be available,
+ * even when "tpp_file_getrealfilename()" returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
-tpp_file_getfilenamekwd(tpp_file const *tpp_restrict self) {
+tpp_file_getrealfilenamekwd(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -8594,6 +8593,7 @@ typedef struct tpp_macro_func_lcscan_vars {
 } tpp_macro_func_lcscan_vars;
 
 #ifndef tpp_memmem
+#define tpp_memmem tpp_memmem
 static TPP_PURECALL TPP_WUNUSED void *
 tpp_memmem(void const *haystack, size_t haystack_length,
            void const *needle, size_t needle_length) {
@@ -9065,11 +9065,16 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 					 * >> #define MAC1(x)
 					 * >> #define MAC2(x) x
 					 * >> #define foo(a) 10+a+20
-					 * >> foo(MAC1(3) MAC2(3))
+					 * >> foo(MAC1(3) MAC2(3)
+					 * >> #undef MAC1
+					 * >> #undef MAC2
+					 * >> )
 					 *
 					 * When requesting debug info about the "3" token, we're unable to satisfy
 					 * the request because we have no way of knowing which "3" the caller is
-					 * actually talking about
+					 * actually talking about (it'd be the one inside "MAC2"), but there's
+					 * absolutely no way of knowing. Even if we had the lexer, we'd still be
+					 * unable to tell, since MAC1+MAC2 have been #undef'd since.
 					 *
 					 * The only way this could really be done is by saving LC info for every
 					 * token when expanding a macro's arguments (but that's wholly overkill)
@@ -9093,8 +9098,8 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 				 *      once that "smart way of tracking debug info" has been implemented. */
 			}
 #else /* TPP_HAVE_FILE_MACRO_TRACKARGS */
-			tpp_char const *const argument_start   = vars.tmflcsv_expand_start;
-			tpp_char const *const argument_end     = vars.tmflcsv_expand_end;
+			tpp_char const *const argument_start = vars.tmflcsv_expand_start;
+			tpp_char const *const argument_end   = vars.tmflcsv_expand_end;
 			tpp_char const lparen_ch = (tpp_char)tpp_macro_getfunclparen(self);
 			tpp_char const rparen_ch = (tpp_char)tpp_macro_getfuncrparen(self);
 			tpp_char const *macro_args_start = invocation_file->tf_tpos;
@@ -11283,7 +11288,7 @@ tpp_lexer_initfile_text_ascii(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_LEXER_INIT_IO
 /* Initialize a lexer such that it starts reading from "handle"
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getfilename()')
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()')
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
@@ -11338,7 +11343,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_LEXER_INIT_IO
 /* Push another file onto the #include-stack:
  * After a call to this function, the caller is responsible to yield the first token!
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getfilename()')
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()')
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
@@ -11721,7 +11726,7 @@ handle_eof:
 
 		case 'f': {
 			/* "%Pf"   Filename of given "file" */
-			char const *filename = tpp_file_getuserfilename(file);
+			char const *filename = tpp_file_getfilename(file);
 			if (filename == NULL)
 				filename = "?";
 			temp = tpp_formatprinter_print_cstr(printer, arg, filename, tpp_strlen(filename));
@@ -19699,7 +19704,7 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 	result->tm_body_enc = file->tf_enc;
 #endif /* TPP_HAVE_UNICODE */
 	result->tm_expansions = 0;
-	result->tm_deffile    = tpp_file_getfilename(file);
+	result->tm_deffile    = tpp_file_getrealfilename(file);
 	if (result->tm_deffile) {
 		result->tm_deflc   = deflc;
 		result->tm_body_lc = tpp_file_getlcinfo(file, body_start);
@@ -19803,7 +19808,7 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 		macro->tm_body_enc = file->tf_enc;
 #endif /* TPP_HAVE_UNICODE */
 		macro->tm_expansions = 0;
-		macro->tm_deffile = tpp_file_getfilename(file);
+		macro->tm_deffile = tpp_file_getrealfilename(file);
 		if (macro->tm_deffile) {
 			macro->tm_deflc   = deflc;
 			macro->tm_body_lc = tpp_file_getlcinfo(file, macro->tm_body_start);
@@ -20111,7 +20116,7 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 	tpp_file const *iofile;
 	tpp_keyword *iofile_kwd;
 	iofile     = tpp_file_getiofile(tpp_lexer_getfile(self));
-	iofile_kwd = tpp_file_getfilenamekwd(iofile);
+	iofile_kwd = tpp_file_getrealfilenamekwd(iofile);
 	if (iofile_kwd) {
 		tpp_keyword_misc *misc;
 		misc = tpp_keyword_requiremisc(iofile_kwd);
@@ -26623,7 +26628,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___FILE__
 	case TPP_KWD___FILE__: {
 		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
-		char const *filename = tpp_file_getfilename(file);
+		char const *filename = tpp_file_getrealfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
@@ -26633,7 +26638,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___BASE_FILE__
 	case TPP_KWD___BASE_FILE__: {
 		tpp_file const *file = tpp_file_getbasefile(tpp_lexer_getfile(self));
-		char const *filename = tpp_file_getfilename(file);
+		char const *filename = tpp_file_getrealfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
@@ -26644,7 +26649,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	case TPP_KWD___FILE_NAME__: {
 		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
 		char const *basename;
-		char const *filename = tpp_file_getfilename(file);
+		char const *filename = tpp_file_getrealfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		basename = filename;

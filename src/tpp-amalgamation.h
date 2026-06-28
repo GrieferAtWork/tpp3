@@ -3740,25 +3740,6 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #endif /* !_MSC_VER */
 #endif /* !tpp_unreachable */
 
-#ifndef tpp_memcpy
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
-#include <string.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
-#define tpp_strlen      strlen
-#define tpp_strnlen     strnlen
-#define tpp_strcmp      strcmp
-#define tpp_memcmp      memcmp
-#define tpp_memcpy      memcpy
-#define tpp_memset      memset
-#define tpp_memchr      memchr
-#define tpp_memmove     memmove
-#define tpp_memmoveup   memmove
-#define tpp_memmovedown memmove
-#if 0
-#define tpp_memmem      memmem
-#endif
-#endif /* !tpp_memcpy */
-
 #ifndef tpp_expect
 #define tpp_expect(expr, expected) expr
 #define tpp_expect_IS_NOOP
@@ -3848,6 +3829,31 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPP_STATIC_ASSERT(expr) typedef int _TPP_STATIC_ASSERT_ID(__LINE__)[(expr) ? 1 : -1]
 #endif /* !TPP_STATIC_ASSERT */
 
+
+
+/* String API */
+#ifndef tpp_memcpy
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+#include <string.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
+#define tpp_strlen      strlen
+#define tpp_strnlen     strnlen
+#define tpp_strcmp      strcmp
+#define tpp_memcmp      memcmp
+#define tpp_memcpy      memcpy
+#define tpp_memset      memset
+#define tpp_memchr      memchr
+#define tpp_memmove     memmove
+#define tpp_memmoveup   memmove /* Same as "tpp_memmove", but guaranties that "dst >= src" */
+#define tpp_memmovedown memmove /* Same as "tpp_memmove", but guaranties that "dst <= src" */
+#if 0 /* Define if available; else, TPP will provide its own */
+#define tpp_memmem      memmem
+#endif
+#endif /* !tpp_memcpy */
+
+
+
+/* Heap API */
 #ifndef tpp_malloc
 #if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdlib.h>
@@ -3873,8 +3879,24 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #endif /* ... */
 #endif /* !tpp_alloca */
 
+
+/* Assertions API */
+#ifndef tpp_assert
+#if TPP_DEBUG
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+#include <assert.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
+#define tpp_assert assert
+#else /* TPP_DEBUG */
+#define tpp_assert(expr) (void)0
+#endif /* !TPP_DEBUG */
+#endif /* !tpp_assert */
+
+
+
 TPP_DECL_BEGIN
 
+/* Format-printer API */
 #ifndef tpp_formatprinter
 #define tpp_formatprinter tpp_formatprinter
 #define TPP_FORMATPRINTER_CC TPPCALL
@@ -3889,6 +3911,9 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 	tpp_ssize (TPP_FORMATPRINTER_CC name)(void *arg, tpp_char const *text, tpp_size num_bytes)
 #endif /* !tpp_formatprinter */
 
+
+
+/* Line/Column-information API */
 #ifndef tpp_lcinfo
 #if defined(INT_LEAST64_MAX) && defined(UINT32_MAX) && !TPP_HAVE_TPP2_COMPAT
 typedef int_least64_t tpp_lcinfo;
@@ -3948,6 +3973,9 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 #define tpp_lcinfo_init_invalid(self) (void)((self) = TPP_LCINFO_INVALID)
 #endif /* !tpp_lcinfo_init_invalid */
 
+
+
+/* Non-atomic reference counter API */
 #ifndef tpp_refcnt
 /* NOTE: Multi-threaded applications can leave this alone: a single
  *       TPP lexer can only ever be used by a single thread, meaning
@@ -3967,6 +3995,9 @@ typedef struct {
 #define tpp_refcnt_dec(p) (void)tpp_refcnt_decfetch(p)
 #endif /* !tpp_refcnt_dec */
 
+
+
+/* Atomic reference counter API */
 #ifndef tpp_refcnt_atomic
 /* WARNING: Multi-threaded applications must override this: this kind of
  *          reference counter is used in places where the linked component
@@ -3985,8 +4016,11 @@ typedef struct {
 #define tpp_refcnt_atomic_dec(p) (void)tpp_refcnt_atomic_decfetch(p)
 #endif /* !tpp_refcnt_atomic_dec */
 
-/* WARNING: Multi-threaded applications must override this */
+
+
+/* Execute-once block */
 #ifndef tpp_once
+/* WARNING: Multi-threaded applications must override this */
 #define tpp_once(expr)             \
 	do {                           \
 		static int _to_didrun = 0; \
@@ -3998,14 +4032,6 @@ typedef struct {
 #endif /* !tpp_once */
 
 TPP_DECL_END
-
-
-#ifndef tpp_assert
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
-#include <assert.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
-#define tpp_assert assert
-#endif /* !tpp_assert */
 /************************************************************************/
 
 /************************************************************************/
@@ -12844,12 +12870,17 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_getfilename(tpp_file const *tpp_restrict self);
+tpp_file_getrealfilename(tpp_file const *tpp_restrict self);
 
-/* Same as `tpp_file_getfilename()', but may be overwritten by "#line" directives */
+/* Returns the filename "keyword" (which may not always be available,
+ * even when "tpp_file_getrealfilename()" returns non-NULL) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
+tpp_file_getrealfilenamekwd(tpp_file const *tpp_restrict self);
+
+/* Same as `tpp_file_getrealfilename()', but may be overwritten by "#line" directives */
 #if TPP_HAVE_FILE_USER_FILENAME
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_getuserfilename(tpp_file const *tpp_restrict self);
+tpp_file_getfilename(tpp_file const *tpp_restrict self);
 
 /* Sets the user-filename override of "self" to "filename"
  *
@@ -12859,11 +12890,22 @@ tpp_file_getuserfilename(tpp_file const *tpp_restrict self);
  *
  * You may also pass "NULL" for `filename' to disable the override */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_file_setuserfilename(tpp_file *tpp_restrict self,
-                         tpp_string *filename);
+tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename);
 #else /* TPP_HAVE_FILE_USER_FILENAME */
-#define tpp_file_getuserfilename(self) tpp_file_getfilename(self)
+#define tpp_file_getfilename(self) tpp_file_getrealfilename(self)
 #endif /* !TPP_HAVE_FILE_USER_FILENAME */
+
+/* Set the (0-based) line that applies to "pos"
+ * (as returned by "tpp_file_getlcinfo") in "self"
+ *
+ * NOTE: The caller must ensure that:
+ *       >> self->tf_kind == TPP_FILE_KIND_IO ||
+ *       >> self->tf_kind == TPP_FILE_KIND_TEXT; */
+#if TPP_HAVE_FILE_SETLINE
+TPP_DECL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_file_setline(tpp_file *tpp_restrict self,
+                 tpp_char const *pos, tpp_line line);
+#endif /* TPP_HAVE_FILE_SETLINE */
 
 typedef struct tpp_lcinfo_ex {
 	tpp_lcinfo      tlcix_info;     /* Line/column information, or "TPP_LCINFO_INVALID" if unknown */
@@ -12904,23 +12946,6 @@ tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
 
 
 
-
-/* Set the (0-based) line that applies to "pos"
- * (as returned by "tpp_file_getlcinfo") in "self"
- *
- * NOTE: The caller must ensure that:
- *       >> self->tf_kind == TPP_FILE_KIND_IO ||
- *       >> self->tf_kind == TPP_FILE_KIND_TEXT; */
-#if TPP_HAVE_FILE_SETLINE
-TPP_DECL TPP_NONNULL((1, 2)) void TPPCALL
-tpp_file_setline(tpp_file *tpp_restrict self,
-                 tpp_char const *pos, tpp_line line);
-#endif /* TPP_HAVE_FILE_SETLINE */
-
-/* Returns the filename "keyword" (which may not always be
- * available, even when "tpp_file_getfilename()" returns non-NULL) */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
-tpp_file_getfilenamekwd(tpp_file const *tpp_restrict self);
 
 #if TPP_HAVE_INCLUDE_STACK
 /* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_tprev")
@@ -14833,7 +14858,7 @@ tpp_lexer_initfile_text_ascii(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_LEXER_INIT_IO
 /* Initialize a lexer such that it starts reading from "handle"
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getfilename()')
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()')
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
@@ -14866,7 +14891,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_LEXER_INIT_IO
 /* Push another file onto the #include-stack:
  * After a call to this function, the caller is responsible to yield the first token!
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getfilename()')
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()')
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
@@ -15541,7 +15566,7 @@ typedef struct tpp_lexer_arginfo {
 	 *       -> need to be able to track lcinfo for custom char ranges (any range of chars
 	 *          from this string must be able to map to its own file/line/col triple)
 	 *       -> also must adjust tpp_file_getlcinfo() to support this, and somehow also
-	 *          incorporate tpp_file_getfilename()/tpp_file_getuserfilename() to support
+	 *          incorporate tpp_file_getrealfilename()/tpp_file_getfilename() to support
 	 *          different filenames based on char position
 	 * where this is necessary:
 	 * >> #define foo(a) a a

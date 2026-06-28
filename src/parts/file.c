@@ -1160,13 +1160,13 @@ tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
 /* These are needed for the shared
  * >> case TPP_FILE_KIND_IO:
  * >> case TPP_FILE_KIND_TEXT:
- * in "tpp_file_getfilename()" */
+ * in "tpp_file_getrealfilename()" */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_getfilename(tpp_file const *tpp_restrict self) {
+tpp_file_getrealfilename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -1192,10 +1192,10 @@ again:
 	}
 }
 
-/* Same as `tpp_file_getfilename()', but may be overwritten by "#line" directives */
+/* Same as `tpp_file_getrealfilename()', but may be overwritten by "#line" directives */
 #if TPP_HAVE_FILE_USER_FILENAME
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
-tpp_file_getuserfilename(tpp_file const *tpp_restrict self) {
+tpp_file_getfilename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
@@ -1234,8 +1234,7 @@ again:
  *
  * You may also pass "NULL" for `filename' to disable the override */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_file_setuserfilename(tpp_file *tpp_restrict self,
-                         tpp_string *filename) {
+tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename) {
 	tpp_string *old_override;
 	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
 	           self->tf_kind == TPP_FILE_KIND_TEXT);
@@ -1277,10 +1276,10 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 
 
 
-/* Returns the filename "keyword" (which may not always be
- * available, even when "tpp_file_getfilename()" returns non-NULL) */
+/* Returns the filename "keyword" (which may not always be available,
+ * even when "tpp_file_getrealfilename()" returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
-tpp_file_getfilenamekwd(tpp_file const *tpp_restrict self) {
+tpp_file_getrealfilenamekwd(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
 again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */

@@ -92,8 +92,8 @@ int main(int argc, char *argv[]) {
 			tpp_file_getlcinfo_ex(file, tpp_lexer_gettokenstart(&lexer), &lc);
 			printf("[%s:%d:%d:%s(%d):%.*s",
 			       lexer_filename ? lexer_filename : "?",
-			       tpp_lcinfo_getline(lc.tlcix_info) + 1,
-			       tpp_lcinfo_getcol(lc.tlcix_info) + 1,
+			       (int)(tpp_lcinfo_getline(lc.tlcix_info) + 1),
+			       (int)(tpp_lcinfo_getcol(lc.tlcix_info) + 1),
 			       desc, tok,
 			       (int)tpp_lexer_gettokenlen(&lexer),
 			       tpp_lexer_gettokenstart(&lexer));
@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
 				lexer_filename = tpp_file_getfilename(file);
 				printf(" --- %s:%d:%d",
 				       lexer_filename ? lexer_filename : "?",
-				       tpp_lcinfo_getline(lc.tlcix_info) + 1,
-				       tpp_lcinfo_getcol(lc.tlcix_info) + 1);
+				       (int)(tpp_lcinfo_getline(lc.tlcix_info) + 1),
+				       (int)(tpp_lcinfo_getcol(lc.tlcix_info) + 1));
 			}
 #endif /* TPP_HAVE_CPP_MACROS */
 		}

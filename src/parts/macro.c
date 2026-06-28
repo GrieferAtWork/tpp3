@@ -224,6 +224,7 @@ typedef struct tpp_macro_func_lcscan_vars {
 } tpp_macro_func_lcscan_vars;
 
 #ifndef tpp_memmem
+#define tpp_memmem tpp_memmem
 static TPP_PURECALL TPP_WUNUSED void *
 tpp_memmem(void const *haystack, size_t haystack_length,
            void const *needle, size_t needle_length) {
@@ -695,11 +696,16 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 					 * >> #define MAC1(x)
 					 * >> #define MAC2(x) x
 					 * >> #define foo(a) 10+a+20
-					 * >> foo(MAC1(3) MAC2(3))
+					 * >> foo(MAC1(3) MAC2(3)
+					 * >> #undef MAC1
+					 * >> #undef MAC2
+					 * >> )
 					 *
 					 * When requesting debug info about the "3" token, we're unable to satisfy
 					 * the request because we have no way of knowing which "3" the caller is
-					 * actually talking about
+					 * actually talking about (it'd be the one inside "MAC2"), but there's
+					 * absolutely no way of knowing. Even if we had the lexer, we'd still be
+					 * unable to tell, since MAC1+MAC2 have been #undef'd since.
 					 *
 					 * The only way this could really be done is by saving LC info for every
 					 * token when expanding a macro's arguments (but that's wholly overkill)
@@ -723,8 +729,8 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 				 *      once that "smart way of tracking debug info" has been implemented. */
 			}
 #else /* TPP_HAVE_FILE_MACRO_TRACKARGS */
-			tpp_char const *const argument_start   = vars.tmflcsv_expand_start;
-			tpp_char const *const argument_end     = vars.tmflcsv_expand_end;
+			tpp_char const *const argument_start = vars.tmflcsv_expand_start;
+			tpp_char const *const argument_end   = vars.tmflcsv_expand_end;
 			tpp_char const lparen_ch = (tpp_char)tpp_macro_getfunclparen(self);
 			tpp_char const rparen_ch = (tpp_char)tpp_macro_getfuncrparen(self);
 			tpp_char const *macro_args_start = invocation_file->tf_tpos;
