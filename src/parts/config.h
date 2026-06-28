@@ -35,11 +35,16 @@
 /* Configure such that all tokens are enabled by default (different from
  * regular "TPP_PROFILE_ALL" where only tokens needed somewhere within
  * the preprocessor itself are enabled by default) */
-#define TPP_COMMON_HAVE_TPP_TOK_C_STRING       TPP_CONF_FEAT1
-#define TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING  TPP_CONF_FEAT1
-#define TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS     TPP_CONF_FEAT1
-#define TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS    TPP_CONF_FEAT1
-#define TPP_COMMON_HAVE_TPP_TOK_REVERSE_TOKENS TPP_CONF_FEAT1
+#define TPP_COMMON_HAVE_TPP_TOK                TPP_CONF_EXT1
+#define TPP_COMMON_HAVE_TPP_TOK_SPACE          TPP_CONF_EXT1
+#define TPP_COMMON_HAVE_TPP_TOK_COMMENT        TPP_CONF_EXT1
+#define TPP_COMMON_HAVE_TPP_TOK_GENERIC        TPP_CONF_EXT1
+#define TPP_COMMON_HAVE_TPP_TOK_C_STRING       TPP_CONF_EXT1
+#define TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING  TPP_CONF_EXT1
+#define TPP_COMMON_HAVE_TPP_TOK_C_TOKENS       TPP_CONF_EXT1
+#define TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS     TPP_CONF_EXT1
+#define TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS    TPP_CONF_EXT1
+#define TPP_COMMON_HAVE_TPP_TOK_REVERSE_TOKENS TPP_CONF_EXT1
 
 /*[[[tpp-begin]]]*/
 
@@ -437,6 +442,8 @@
 /* TODO: Support for sql-style "-string literals ("" is escape for ", and line-feeds are allowed) */
 /* TODO: Support for sql-style E'foo'-string literals (line-feeds are allowed, and \-escape sequences are handled) */
 /* TODO: Support for sql-style E"foo"-string literals (line-feeds are allowed, and \-escape sequences are handled) */
+/* TODO: Support for javascript-style `foo` format string literals */
+/* TODO: Support for deemon-style f"foo" / F"foo" format string literals */
 
 /* 'foo'
  * @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1 */
