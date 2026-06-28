@@ -297,7 +297,9 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 #define TPP_PRIVATE_PP_CAT2(a,b) a##b
 #define TPP_PRIVATE_PP_CAT(a,b) TPP_PRIVATE_PP_CAT2(a,b)
 #define TPP_PRIVATE_HASHOF_0(result,str) result
+#if __TPP_VERSION__ < 300
 #pragma warning(disable: 108) /* Index out-of-bounds in `__TPP_EVAL' */
+#endif /* __TPP_VERSION__ < 300 */
 
 /* Using some sick-a$$ TPP extensions, we can actually
  * calculate keyword hashes within the preprocessor! */
