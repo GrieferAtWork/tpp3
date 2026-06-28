@@ -667,7 +667,10 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 		 * popped, or when the argument list in "invocation_file" uses
 		 * macros that have since been expanded in expanded_text_file:
 		 * >> #define bar foo(11,
-		 * >> bar "a\x22") */
+		 * >> bar "a\x22")
+		 * ^ Here, the "11" token cannot be traced into the definition
+		 *   of "bar"
+		 */
 		{
 #if TPP_HAVE_FILE_MACRO_TRACKARGS
 			tpp_lexer_arginfo const *const argv = expanded_text_file->tf_data.td_macro.tfm_args;
