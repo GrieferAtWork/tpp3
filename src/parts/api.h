@@ -285,7 +285,9 @@
 #endif /* !__cplusplus */
 
 #ifndef tpp_offsetof
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stddef.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_offsetof offsetof
 #endif /* !tpp_offsetof */
 
