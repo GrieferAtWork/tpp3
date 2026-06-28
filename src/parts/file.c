@@ -42,7 +42,7 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_user_filename) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_user_filename));
 #endif /* TPP_HAVE_FILE_USER_FILENAME */
 
-#if TPP_DEBUG && 1
+#if TPP_DEBUG && 0
 #ifndef TPP_IO_CHUNKSIZE
 #define TPP_IO_CHUNKSIZE 1
 #endif /* !TPP_IO_CHUNKSIZE */

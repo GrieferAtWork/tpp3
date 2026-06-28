@@ -347,6 +347,11 @@
 #error "Unrecognized 'UINT_FAST32_MAX'"
 #endif /* UINT_FAST32_MAX != ... */
 #define tpp_hash uint_fast32_t
+#ifdef UINT32_C
+#define TPP_HASH_C UINT32_C
+#else /* UINT32_C */
+#define TPP_HASH_C(x) x
+#endif /* !UINT32_C */
 #endif /* !tpp_hash */
 #ifndef tpp_line
 #if UINT_FAST32_MAX == UINT32_C(0xffffffff)

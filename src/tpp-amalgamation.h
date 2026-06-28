@@ -3786,6 +3786,11 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #error "Unrecognized 'UINT_FAST32_MAX'"
 #endif /* UINT_FAST32_MAX != ... */
 #define tpp_hash uint_fast32_t
+#ifdef UINT32_C
+#define TPP_HASH_C UINT32_C
+#else /* UINT32_C */
+#define TPP_HASH_C(x) x
+#endif /* !UINT32_C */
 #endif /* !tpp_hash */
 #ifndef tpp_line
 #if UINT_FAST32_MAX == UINT32_C(0xffffffff)
@@ -4595,6 +4600,8 @@ TPP_DECL_END
 /* TODO: Support for sql-style "-string literals ("" is escape for ", and line-feeds are allowed) */
 /* TODO: Support for sql-style E'foo'-string literals (line-feeds are allowed, and \-escape sequences are handled) */
 /* TODO: Support for sql-style E"foo"-string literals (line-feeds are allowed, and \-escape sequences are handled) */
+/* TODO: Support for javascript-style `foo` format string literals */
+/* TODO: Support for deemon-style f"foo" / F"foo" format string literals */
 
 /* 'foo'
  * @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1 */
@@ -14935,7 +14942,14 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
  *       this function in order to warn about unterminated #ifdef-blocks. */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
-#endif /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_lexer_popallfiles(self)        \
+	do {                                   \
+		while (tpp_lexer_canpopfile(self)) \
+			tpp_lexer_popfile(self);       \
+	} while (0)
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_lexer_popallfiles(self) (void)0
+#endif /* !TPP_HAVE_INCLUDE_STACK */
 
 
 

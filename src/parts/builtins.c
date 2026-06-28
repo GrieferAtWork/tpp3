@@ -303,23 +303,23 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
  * calculate keyword hashes within the preprocessor! */
 #pragma extension(push,"-fmacro-recursion")
 #if TPP_SIZEOF_tpp_hash == 4
-#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&0xfffffffful),__TPP_EVAL(str[1:]))
+#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&TPP_HASH_C(0xffffffff)),__TPP_EVAL(str[1:]))
 #elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&0xffffffffffffffffull),__TPP_EVAL(str[1:]))
+#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&TPP_HASH_C(0xffffffffffffffff)),__TPP_EVAL(str[1:]))
 #endif
 #define TPP_PRIVATE_HASHOF2(result,str) TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF_,__TPP_EVAL(!!str))(result,str)
 #pragma extension(pop)
 #if TPP_SIZEOF_tpp_hash == 4
-#define TPP_HASHOF(str) TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF2(1,str),ul)
+#define TPP_HASHOF(str) TPP_HASH_C(TPP_PRIVATE_HASHOF2(1,str))
 #elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_HASHOF(str) TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF2(1,str),ull)
+#define TPP_HASHOF(str) TPP_HASH_C(TPP_PRIVATE_HASHOF2(1,str))
 #endif
 #endif /* __TPP_VERSION__ && (TPP_SIZEOF_tpp_hash == 4 || TPP_SIZEOF_tpp_hash == 8) */
 
 #ifdef TPP_HASHOF
 #define TPP_MAYBE_HASHOF(s) TPP_HASHOF(s)
 #else /* TPP_HASHOF */
-#define TPP_MAYBE_HASHOF(s) 0
+#define TPP_MAYBE_HASHOF(s) TPP_HASH_C(0)
 #endif /* !TPP_HASHOF */
 
 

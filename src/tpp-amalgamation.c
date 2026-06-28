@@ -4700,7 +4700,7 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_user_filename) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_user_filename));
 #endif /* TPP_HAVE_FILE_USER_FILENAME */
 
-#if TPP_DEBUG && 1
+#if TPP_DEBUG && 0
 #ifndef TPP_IO_CHUNKSIZE
 #define TPP_IO_CHUNKSIZE 1
 #endif /* !TPP_IO_CHUNKSIZE */
@@ -7763,23 +7763,23 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
  * calculate keyword hashes within the preprocessor! */
 #pragma extension(push,"-fmacro-recursion")
 #if TPP_SIZEOF_tpp_hash == 4
-#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&0xfffffffful),__TPP_EVAL(str[1:]))
+#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&TPP_HASH_C(0xffffffff)),__TPP_EVAL(str[1:]))
 #elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&0xffffffffffffffffull),__TPP_EVAL(str[1:]))
+#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&TPP_HASH_C(0xffffffffffffffff)),__TPP_EVAL(str[1:]))
 #endif
 #define TPP_PRIVATE_HASHOF2(result,str) TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF_,__TPP_EVAL(!!str))(result,str)
 #pragma extension(pop)
 #if TPP_SIZEOF_tpp_hash == 4
-#define TPP_HASHOF(str) TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF2(1,str),ul)
+#define TPP_HASHOF(str) TPP_HASH_C(TPP_PRIVATE_HASHOF2(1,str))
 #elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_HASHOF(str) TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF2(1,str),ull)
+#define TPP_HASHOF(str) TPP_HASH_C(TPP_PRIVATE_HASHOF2(1,str))
 #endif
 #endif /* __TPP_VERSION__ && (TPP_SIZEOF_tpp_hash == 4 || TPP_SIZEOF_tpp_hash == 8) */
 
 #ifdef TPP_HASHOF
 #define TPP_MAYBE_HASHOF(s) TPP_HASHOF(s)
 #else /* TPP_HASHOF */
-#define TPP_MAYBE_HASHOF(s) 0
+#define TPP_MAYBE_HASHOF(s) TPP_HASH_C(0)
 #endif /* !TPP_HASHOF */
 
 
@@ -22302,6 +22302,8 @@ seek_next_lf:
 		                           tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_EOF));
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
+		/* Because of the seek, we're now at an LF token */
+		tok = TPP_TOK_LF;
 		break;
 	}
 #endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING */
@@ -24625,9 +24627,11 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 				error = tpp_macro_expinfo_init(expand, arginfo, self);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
+					tpp_lexer_popallfiles(self);
 					tpp_file_subtext_break(file);
 					goto err_tok_macro_argbuf_rollback_arginfo_expinfo_i;
 				}
+				tpp_assert(!tpp_lexer_canpopfile(self));
 
 				/* Account for expanded text */
 				result_chunk_size += (arg->tma_ins_exp * tpp_macro_expinfo_getsize(expand));
@@ -25507,10 +25511,7 @@ tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
 	 *
 	 * This should only really be relevant when it comes to recovering from
 	 * faulty user-code... */
-#if TPP_HAVE_INCLUDE_STACK
-	while (tpp_lexer_canpopfile(self))
-		tpp_lexer_popfile(self);
-#endif /* TPP_HAVE_INCLUDE_STACK */
+	tpp_lexer_popallfiles(self);
 	return result;
 }
 #endif /* TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma */
@@ -25923,8 +25924,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 #else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 			tok = TPP_TOK_EOF;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
-			while (tpp_lexer_canpopfile(self))
-				tpp_lexer_popfile(self);
+			tpp_lexer_popallfiles(self);
 		}
 	}
 	tpp_file_subtext_pop(file);
@@ -26246,8 +26246,7 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 #else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 			tok = TPP_TOK_EOF;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
-			while (tpp_lexer_canpopfile(self))
-				tpp_lexer_popfile(self);
+			tpp_lexer_popallfiles(self);
 		}
 	}
 	tpp_file_subtext_pop(file);
@@ -29757,10 +29756,15 @@ handle_comment:
 		if (!tpp_lexer_has(self, BUILTIN_EXPR_DEFINED))
 			goto handle_default;
 #define WANT_handle_default
-		tok = tpp_lexer_yield_forexpr(self);
+		do {
+			tok = tpp_lexer_yieldraw_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 		has_paren = tok == '(';
-		if (has_paren)
-			tok = tpp_lexer_yield_forexpr(self);
+		if (has_paren) {
+			do {
+				tok = tpp_lexer_yieldraw_blocking(self);
+			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		}
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 		if (TPP_TOK_ISKEYWORD(tok)) {
@@ -29875,10 +29879,33 @@ handle_default:
 	default: {
 		tpp_errno error = TPP_EOK;
 		if (TPP_TOK_ISKEYWORD(tok)) {
+			unsigned int nesting;
 #if TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
 			if (result != NULL)
 				error = tpp_lexer_warnf(self, TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION);
 #endif /* TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION */
+
+			/* Be smart if the next token is '(' */
+			tok = tpp_lexer_yield_forexpr(self);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (tok != '(')
+				goto done;
+			nesting = 0;
+			for (;;) {
+				tok = tpp_lexer_yield_forexpr(self);
+				if (TPP_TOK_ISERR(tok))
+					return TPP_TOK_ASERR(tok);
+				if (tok == '(') {
+					++nesting;
+				} else if (tok == ')') {
+					if (nesting == 0)
+						break;
+					--nesting;
+				} else if (tok == TPP_TOK_EOF) {
+					break;
+				}
+			}
 		} else {
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION
 			error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION);
@@ -29894,6 +29921,7 @@ handle_default:
 	tok = tpp_lexer_yield_forexpr(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
+done:
 	if (result == NULL)
 		return TPP_EOK;
 	return tpp_expr_value_init_zero(result);
