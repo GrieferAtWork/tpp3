@@ -413,10 +413,33 @@ handle_default:
 	default: {
 		tpp_errno error = TPP_EOK;
 		if (TPP_TOK_ISKEYWORD(tok)) {
+			unsigned int nesting;
 #if TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
 			if (result != NULL)
 				error = tpp_lexer_warnf(self, TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION);
 #endif /* TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION */
+
+			/* Be smart if the next token is '(' */
+			tok = tpp_lexer_yield_forexpr(self);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (tok != '(')
+				goto done;
+			nesting = 0;
+			for (;;) {
+				tok = tpp_lexer_yield_forexpr(self);
+				if (TPP_TOK_ISERR(tok))
+					return TPP_TOK_ASERR(tok);
+				if (tok == '(') {
+					++nesting;
+				} else if (tok == ')') {
+					if (nesting == 0)
+						break;
+					--nesting;
+				} else if (tok == TPP_TOK_EOF) {
+					break;
+				}
+			}
 		} else {
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION
 			error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION);
@@ -432,6 +455,7 @@ handle_default:
 	tok = tpp_lexer_yield_forexpr(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
+done:
 	if (result == NULL)
 		return TPP_EOK;
 	return tpp_expr_value_init_zero(result);
