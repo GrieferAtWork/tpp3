@@ -1042,6 +1042,15 @@ handle_backslash:
 		 * >> // foo \    .
 		 * >> // bar      << Do not warn here */
 		if (comment_style != TPP_TOK_EOF) {
+#if TPP_HAVE_CPP_DIRECTIVES
+			if (comment_style == TPP_TOK_SHELL_COMMENT) {
+				/* Special case: don't warn about line-continuation in "shell" comments
+				 *               when CPP directives are enabled. Else, we'd be warning
+				 *               about every #define or similar that uses a trialing \ */
+				if (tpp_lexer_has(self, CPP_DIRECTIVES))
+					goto again;
+			}
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
 			for (;;) {
 				if (pos >= file->tf_end) {
 					tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
@@ -1101,7 +1110,7 @@ handle_backslash:
 					}
 					break;
 #endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT */
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES)
 				case TPP_TOK_SHELL_COMMENT:
 					if (ch == '#')
 						goto again;
@@ -1139,7 +1148,7 @@ handle_backslash:
 					}
 #endif /* TPP_HAVE_TRIGRAPHS */
 					break;
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES) */
 #if TPP_HAVE_TPP_TOK_ASM_COMMENT
 				case TPP_TOK_ASM_COMMENT:
 					if (ch == '/')

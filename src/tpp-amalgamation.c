@@ -14465,6 +14465,15 @@ handle_backslash:
 		 * >> // foo \    .
 		 * >> // bar      << Do not warn here */
 		if (comment_style != TPP_TOK_EOF) {
+#if TPP_HAVE_CPP_DIRECTIVES
+			if (comment_style == TPP_TOK_SHELL_COMMENT) {
+				/* Special case: don't warn about line-continuation in "shell" comments
+				 *               when CPP directives are enabled. Else, we'd be warning
+				 *               about every #define or similar that uses a trialing \ */
+				if (tpp_lexer_has(self, CPP_DIRECTIVES))
+					goto again;
+			}
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
 			for (;;) {
 				if (pos >= file->tf_end) {
 					tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
@@ -14524,7 +14533,7 @@ handle_backslash:
 					}
 					break;
 #endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT */
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES)
 				case TPP_TOK_SHELL_COMMENT:
 					if (ch == '#')
 						goto again;
@@ -14562,7 +14571,7 @@ handle_backslash:
 					}
 #endif /* TPP_HAVE_TRIGRAPHS */
 					break;
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES) */
 #if TPP_HAVE_TPP_TOK_ASM_COMMENT
 				case TPP_TOK_ASM_COMMENT:
 					if (ch == '/')
@@ -15600,6 +15609,7 @@ switch_on_ch:
 			if (tpp_lexer_has(self, TPP_TOK_C_COMMENT)) {
 				for (;;) {
 					read_ch2();
+continue_c_comment_with_ch2:
 					if (ch2 == 0 && pos >= file->tf_end) {
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 						error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
@@ -15629,6 +15639,7 @@ switch_on_ch:
 					read_ch2();
 					if (ch2 == '/')
 						break;
+					goto continue_c_comment_with_ch2;
 				}
 				result = TPP_TOK_C_COMMENT; /* like this one! */
 				goto set_result;
@@ -16848,6 +16859,7 @@ not_a_trigraph:
 			break;
 		for (;;) {
 			read_ch2();
+continue_pascal_comment_with_ch2:
 			if (ch2 == 0 && pos >= file->tf_end) {
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
@@ -16862,6 +16874,7 @@ not_a_trigraph:
 			read_ch2();
 			if (ch2 == ')')
 				break;
+			goto continue_pascal_comment_with_ch2;
 		}
 		result = TPP_TOK_PASCAL_COMMENT;
 		goto set_result;
@@ -25340,7 +25353,8 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 				strip_hash = tpp_hashof(strip, strip_len);
 				feature_keyword = tpp_keywords_getkeyword(&self->tl_kwds, strip,
 				                                          strip_len, strip_hash);
-				flags |= tpp_lexer_getkeywordflags(self, feature_keyword);
+				if (feature_keyword)
+					flags |= tpp_lexer_getkeywordflags(self, feature_keyword);
 			}
 
 			/* Determine expansion based on "mode" and "flags" */
