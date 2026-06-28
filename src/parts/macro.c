@@ -46,7 +46,7 @@ tpp_macro_destroy(tpp_macro *tpp_restrict self) {
 }
 
 #if TPP_HAVE_LEXER_COPY
-static unsigned int const tpp_macro_opcode_length[] = {
+static uint_fast8_t const tpp_macro_opcode_length[] = {
 	/* [TPP_MACRO_OPCODE_END]      = */ 1 + 0,
 	/* [TPP_MACRO_OPCODE_SKIP]     = */ 1 + 1,
 	/* [TPP_MACRO_OPCODE_COPY]     = */ 1 + 1,
@@ -148,9 +148,53 @@ tpp_macro_copy(tpp_macro const *tpp_restrict self) {
 /* Compare 2 macro definitions to see if they are identical. */
 TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs) {
-	(void)lhs;
-	(void)rhs;
-	/* TODO */
+	if (lhs->tm_kind != rhs->tm_kind)
+		goto nope;
+#if TPP_HAVE_MACRO_FLAGS
+	if (lhs->tm_flags != rhs->tm_flags)
+		goto nope;
+#endif /* TPP_HAVE_MACRO_FLAGS */
+#if TPP_HAVE_UNICODE
+	if (lhs->tm_body_enc != rhs->tm_body_enc)
+		goto nope;
+#endif /* TPP_HAVE_UNICODE */
+
+	/* Compare bodies */
+	{
+		tpp_size lhs_body_len = (tpp_size)(lhs->tm_body_end - lhs->tm_body_start);
+		tpp_size rhs_body_len = (tpp_size)(rhs->tm_body_end - rhs->tm_body_start);
+		if (lhs_body_len != rhs_body_len)
+			goto nope;
+		if (tpp_memcmp(lhs->tm_body_start, rhs->tm_body_start, lhs_body_len) != 0)
+			goto nope;
+	}
+
+	/* In case of function-like macro, also compare parameters
+	 * (we already compared "kind", so if one's a function, we
+	 * know that both of them are) */
+	if (tpp_macro_isfunction(lhs)) {
+		if (lhs->tm_data.tmd_func.tmf_argc != rhs->tm_data.tmd_func.tmf_argc)
+			goto nope;
+		if (lhs->tm_data.tmd_func.tmf_expbase != rhs->tm_data.tmd_func.tmf_expbase)
+			goto nope;
+#if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
+		if (lhs->tm_data.tmd_func.tmf_n_vaopt != rhs->tm_data.tmd_func.tmf_n_vaopt)
+			goto nope;
+#endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
+#if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
+		if (lhs->tm_data.tmd_func.tmf_n_vanargs != rhs->tm_data.tmd_func.tmf_n_vanargs)
+			goto nope;
+#endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
+		if (tpp_memcmp(lhs->tm_data.tmd_func.tmf_argv,
+		               rhs->tm_data.tmd_func.tmf_argv,
+		               lhs->tm_data.tmd_func.tmf_argc *
+		               sizeof(tpp_macro_argument)) != 0)
+			goto nope;
+		/* No need to compare "tmf_expand" -- if everything until here is equal
+		 * (especially the bodies), we can assume that expansion opcodes are, too */
+	}
+	return true;
+nope:
 	return false;
 }
 #endif /* TPP_HAVE_MACRO_EQUALS */

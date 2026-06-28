@@ -491,7 +491,9 @@ typedef struct {
 #endif /* !tpp_refcnt_dec */
 
 #ifndef tpp_refcnt_atomic
-/* WARNING: Multi-threaded applications must override this */
+/* WARNING: Multi-threaded applications must override this: this kind of
+ *          reference counter is used in places where the linked component
+ *          may be shared between multiple lexers (and thus: threads) */
 typedef struct {
 	uint_fast32_t trca_count; /* Reference counter */
 } tpp_refcnt_atomic;

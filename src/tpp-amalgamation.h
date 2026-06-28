@@ -3818,7 +3818,9 @@ typedef struct {
 #endif /* !tpp_refcnt_dec */
 
 #ifndef tpp_refcnt_atomic
-/* WARNING: Multi-threaded applications must override this */
+/* WARNING: Multi-threaded applications must override this: this kind of
+ *          reference counter is used in places where the linked component
+ *          may be shared between multiple lexers (and thus: threads) */
 typedef struct {
 	uint_fast32_t trca_count; /* Reference counter */
 } tpp_refcnt_atomic;
@@ -4200,7 +4202,7 @@ TPP_DECL_END
 
 
 
-/* All TPP_HAVE_* options (those with "-f*"-style comments) can be configured as:
+/* All TPP_HAVE_* options (with "-f*"-style comments) can be configured as:
  * - TPP_CONF_1     : Compile-time enabled  (always on; no #pragma extension("-f...") / TPP_FEAT_* available)
  * - TPP_CONF_0     : Compile-time disabled
  * - TPP_CONF_EXT1  : Runtime-configurable (via #pragma extension("-f...") / TPP_EXT_*, default = true)
