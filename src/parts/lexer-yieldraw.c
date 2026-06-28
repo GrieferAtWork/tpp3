@@ -2200,6 +2200,7 @@ switch_on_ch:
 			if (tpp_lexer_has(self, TPP_TOK_C_COMMENT)) {
 				for (;;) {
 					read_ch2();
+continue_c_comment_with_ch2:
 					if (ch2 == 0 && pos >= file->tf_end) {
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 						error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
@@ -2229,6 +2230,7 @@ switch_on_ch:
 					read_ch2();
 					if (ch2 == '/')
 						break;
+					goto continue_c_comment_with_ch2;
 				}
 				result = TPP_TOK_C_COMMENT; /* like this one! */
 				goto set_result;
@@ -3468,6 +3470,7 @@ not_a_trigraph:
 			break;
 		for (;;) {
 			read_ch2();
+continue_pascal_comment_with_ch2:
 			if (ch2 == 0 && pos >= file->tf_end) {
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
@@ -3482,6 +3485,7 @@ not_a_trigraph:
 			read_ch2();
 			if (ch2 == ')')
 				break;
+			goto continue_pascal_comment_with_ch2;
 		}
 		result = TPP_TOK_PASCAL_COMMENT;
 		goto set_result;
