@@ -58,9 +58,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	for (;;) {
-		char const *desc, *lexer_filename;
-		tpp_lcinfo_ex lc;
-		tpp_file *file;
 		tok = tpp_lexer_yield(&lexer);
 		if (TPP_TOK_ISERR(tok))
 			break;
@@ -70,44 +67,47 @@ int main(int argc, char *argv[]) {
 				tok = TPP_TOK_OFERR(error);
 			break;
 		}
-#if TPP_HAVE_STRTOKENID
-		desc = tpp_strtokenid(tok);
-#else /* TPP_HAVE_STRTOKENID */
-		desc = NULL;
-#endif /* !TPP_HAVE_STRTOKENID */
-		if (desc == NULL && TPP_TOK_ISKEYWORD(tok))
-			desc = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(&lexer));
-		if (desc == NULL)
-			desc = "?";
-		file = tpp_lexer_getfile(&lexer);
-		lexer_filename = tpp_file_getfilename(file);
-		tpp_file_getlcinfo_ex(file, tpp_lexer_gettokenstart(&lexer), &lc);
 #if 0
 		printf("%.*s",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
-#elif 0
+#elif 1
 		printf("[%.*s]",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
 #else
-		printf("[%s:%d:%d:%s(%d):%.*s",
-		       lexer_filename ? lexer_filename : "?",
-		       tpp_lcinfo_getline(lc.tlcix_info) + 1,
-		       tpp_lcinfo_getcol(lc.tlcix_info) + 1,
-		       desc, tok,
-		       (int)tpp_lexer_gettokenlen(&lexer),
-		       tpp_lexer_gettokenstart(&lexer));
-#if TPP_HAVE_CPP_MACROS
-		while (lc.tlcix_projfile) {
-			tpp_file_getlcinfo_ex(lc.tlcix_projfile, lc.tlcix_projpos, &lc);
-			lexer_filename = tpp_file_getfilename(file);
-			printf(" --- %s:%d:%d",
+		{
+			tpp_lcinfo_ex lc;
+			tpp_file *file = tpp_lexer_getfile(&lexer);
+			char const *lexer_filename = tpp_file_getfilename(file);
+#if TPP_HAVE_STRTOKENID
+			char const *desc = tpp_strtokenid(tok);
+#else  /* TPP_HAVE_STRTOKENID */
+			char const *desc = NULL;
+#endif /* !TPP_HAVE_STRTOKENID */
+			if (desc == NULL && TPP_TOK_ISKEYWORD(tok))
+				desc = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(&lexer));
+			if (desc == NULL)
+				desc = "?";
+			tpp_file_getlcinfo_ex(file, tpp_lexer_gettokenstart(&lexer), &lc);
+			printf("[%s:%d:%d:%s(%d):%.*s",
 			       lexer_filename ? lexer_filename : "?",
 			       tpp_lcinfo_getline(lc.tlcix_info) + 1,
-			       tpp_lcinfo_getcol(lc.tlcix_info) + 1);
-		}
+			       tpp_lcinfo_getcol(lc.tlcix_info) + 1,
+			       desc, tok,
+			       (int)tpp_lexer_gettokenlen(&lexer),
+			       tpp_lexer_gettokenstart(&lexer));
+#if TPP_HAVE_CPP_MACROS
+			while (lc.tlcix_projfile) {
+				tpp_file_getlcinfo_ex(lc.tlcix_projfile, lc.tlcix_projpos, &lc);
+				lexer_filename = tpp_file_getfilename(file);
+				printf(" --- %s:%d:%d",
+				       lexer_filename ? lexer_filename : "?",
+				       tpp_lcinfo_getline(lc.tlcix_info) + 1,
+				       tpp_lcinfo_getcol(lc.tlcix_info) + 1);
+			}
 #endif /* TPP_HAVE_CPP_MACROS */
+		}
 		printf("]\n");
 #endif
 	}

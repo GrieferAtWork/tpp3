@@ -9034,7 +9034,8 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 		 * Of course, there are (lots of) cases where we'll be unable
 		 * to *actually* determine the origin of a projection (such as
 		 * when the argument's text is in a file that has already been
-		 * popped, or we're unable to determine the macro argument list:
+		 * popped, or when the argument list in "invocation_file" uses
+		 * macros that have since been expanded in expanded_text_file:
 		 * >> #define bar foo(11,
 		 * >> bar "a\x22") */
 		{
@@ -25704,16 +25705,20 @@ tpp_lexer_yield_handle___TIME__(tpp_lexer *tpp_restrict self, tpp_tm const *cur)
 #if TPP_HAVE_MACRO___DATE__
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___DATE__(tpp_lexer *tpp_restrict self, tpp_tm const *cur) {
-	char buf[tpp_lengthof("\"00:00:00\"") - 1], *p = buf;
+	char buf[tpp_lengthof("\"Jan 10 2000\"") - 1], *p = buf;
+	char const *mon = tpp_date_month_names[(tpp_tm_getmon(cur) - 1) % 12];
 	*p++ = '"';
-	*p++ = (char)('0' + (tpp_tm_gethour(cur) / 10));
-	*p++ = (char)('0' + (tpp_tm_gethour(cur) % 10));
-	*p++ = ':';
-	*p++ = (char)('0' + (tpp_tm_getmin(cur) / 10));
-	*p++ = (char)('0' + (tpp_tm_getmin(cur) % 10));
-	*p++ = ':';
-	*p++ = (char)('0' + (tpp_tm_getsec(cur) / 10));
-	*p++ = (char)('0' + (tpp_tm_getsec(cur) % 10));
+	*p++ = mon[0];
+	*p++ = mon[1];
+	*p++ = mon[2];
+	*p++ = ' ';
+	*p++ = (tpp_tm_getmday(cur) >= 10) ? (char)('0' + (tpp_tm_getmday(cur) / 10)) : ' ';
+	*p++ = (char)('0' + (tpp_tm_getmday(cur) % 10));
+	*p++ = ' ';
+	*p++ = (char)('0' + ((tpp_tm_getyear(cur) / 1000) % 10));
+	*p++ = (char)('0' + ((tpp_tm_getyear(cur) / 100) % 10));
+	*p++ = (char)('0' + ((tpp_tm_getyear(cur) / 10) % 10));
+	*p++ = (char)('0' + (tpp_tm_getyear(cur) % 10));
 	*p++ = '"';
 	tpp_assert(p == (buf + tpp_lengthof(buf)));
 	return tpp_lexer_push_textfile(self, (tpp_char const *)buf, (tpp_size)(p - buf));

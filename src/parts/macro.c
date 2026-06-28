@@ -664,7 +664,8 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 		 * Of course, there are (lots of) cases where we'll be unable
 		 * to *actually* determine the origin of a projection (such as
 		 * when the argument's text is in a file that has already been
-		 * popped, or we're unable to determine the macro argument list:
+		 * popped, or when the argument list in "invocation_file" uses
+		 * macros that have since been expanded in expanded_text_file:
 		 * >> #define bar foo(11,
 		 * >> bar "a\x22") */
 		{
