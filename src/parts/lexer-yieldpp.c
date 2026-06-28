@@ -371,7 +371,7 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
                              tpp_char const **p_directive_start) {
 	tpp_errno result;
 	tpp_token_id tok;
-	tpp_token const *const token = tpp_lexer_gettoken(self);
+	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_char const *trailing_lf_start;
 	tpp_char const *trailing_lf_end;
@@ -426,6 +426,7 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 	file->tf_pos = trailing_lf_end; /* Tell caller to continue parsing *after* EOL */
 	tpp_file_popeof(file);
 	tpp_file_popifdef(file);
+	token->tt_id = TPP_TOK_LF; /* Tell caller that currently loaded token is LF */
 	return result;
 }
 

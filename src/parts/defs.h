@@ -3090,7 +3090,7 @@ TPP_WARNING_EX(TPP_W_ELIF_OR_ELSE_AFTER_ELSE, 1(TPP_WG_SYNTAX), 1(1022), TPP_WST
 	tpp_ifdef_stack_entry const *const entry = tpp_current_va_arg(tpp_ifdef_stack_entry const *);
 	tpp_file *const current_file = tpp_lexer_getfile(self);
 	char const *directive_name = tpp_current_va_arg(char const *);
-	tpp_warnf1("%[%s%]-directive after %[#else%]\n", directive_name);
+	tpp_warnf1("%[#%s%]-directive after %[#else%]\n", directive_name);
 	tpp_print_file_and_line_lc(current_file, tpp_ifdef_stack_entry_getupdated(entry));
 	tpp_warnf0("note: see associated %[#else%]\n");
 	tpp_print_file_and_line_lc(current_file, tpp_ifdef_stack_entry_getcreated(entry));
