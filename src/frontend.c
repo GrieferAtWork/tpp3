@@ -123,17 +123,18 @@ int main(int argc, char *argv[]) {
 #endif /* !TPP_HAVE_STRERROR */
 		goto out;
 	}
+#if TPP_HAVE_LEXER_DUMP_DEFINITIONS
+	tpp_lexer_dump_definitions(&lexer, &dump_defs_printer, NULL,
+	                           TPP_LEXER_DUMP_DEFINITIONS_ALL |
+	                           TPP_LEXER_DUMP_DEFINITIONS_SORTED);
+#endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
+
 	if (tpp_lexer_geterrorcount(&lexer)) {
 		fprintf(stderr, "There were lexer errors\n");
 		goto out;
 	}
 	result = 0;
 
-#if TPP_HAVE_LEXER_DUMP_DEFINITIONS
-	tpp_lexer_dump_definitions(&lexer, &dump_defs_printer, NULL,
-	                           TPP_LEXER_DUMP_DEFINITIONS_ALL |
-	                           TPP_LEXER_DUMP_DEFINITIONS_SORTED);
-#endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 out:
 	tpp_lexer_finifile(&lexer);
 	tpp_lexer_fini(&lexer);

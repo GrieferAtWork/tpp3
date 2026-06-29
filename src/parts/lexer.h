@@ -1594,8 +1594,8 @@ tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
 typedef struct tpp_lexer_printf_info {
 	tpp_file       *tlpfi_file;     /* [0..1] Current file (source for filename, and basis for "tlpfi_pos") */
 	tpp_char const *tlpfi_pos;      /* [0..1][valid_if(tlpfi_file != NULL)] Current position in "tlpfi_file" */
-	char const     *tlpfi_filename; /* [0..1] Filename used by "%Pf", or "NULL" if "tlpfi_file" should be used */
-	tpp_lcinfo      tlpfi_lc;       /* L/C info to use, or "TPP_LCINFO_INVALID" if tlpfi_pos should be used */
+	char const     *tlpfi_filename; /* [0..1] Filename used by "%Pf", or "NULL" if "tlpfi_file" must be used */
+	tpp_lcinfo      tlpfi_lc;       /* L/C info to use, or "TPP_LCINFO_INVALID" if "tlpfi_pos" must be used */
 } tpp_lexer_printf_info;
 
 #define tpp_lexer_printf_info_init_at(self, file, pos) \
@@ -1636,10 +1636,12 @@ typedef struct tpp_lexer_printf_info {
  *                  "tpp_lexer_warnf" API returns "TPP_EWARNPRINT" in this case. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
 tpp_lexer_printf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
-                         tpp_formatprinter printer, void *arg, char const *format, ...);
+                         tpp_formatprinter printer, void *arg,
+                         char const *format, ...);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
 tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
-                          tpp_formatprinter printer, void *arg, char const *format, va_list args);
+                          tpp_formatprinter printer, void *arg,
+                          char const *format, va_list args);
 
 /* Emits the specified lexer warning at the start of the current token.
  * @param: args: Format arguments specific to "id" (see '%'-sequences in warning expressions)

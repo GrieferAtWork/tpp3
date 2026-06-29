@@ -98,7 +98,8 @@ TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_noop_warnprinter, arg, text, num_by
  *                  "tpp_lexer_warnf" API returns "TPP_EWARNPRINT" in this case. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
 tpp_lexer_printf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
-                         tpp_formatprinter printer, void *arg, char const *format, ...) {
+                         tpp_formatprinter printer, void *arg,
+                         char const *format, ...) {
 	tpp_ssize result;
 	va_list args;
 	va_start(args, format);
@@ -143,7 +144,8 @@ tpp_format_token_data(tpp_formatprinter printer, void *arg,
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
 tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
-                          tpp_formatprinter printer, void *arg, char const *format, va_list args) {
+                          tpp_formatprinter printer, void *arg,
+                          char const *format, va_list args) {
 	static char const null_str[] = "(null)";
 	tpp_ssize temp, result = 0;
 	char const *iter = format;
@@ -606,8 +608,12 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 		tpp_errno error;
 		error = tpp_lexer_vwarnf_impl_custom(self, info, printer,
 		                                     printer_arg, id, args);
-		if (TPP_ISERR(error))
+		if (TPP_ISERR(error)) {
+			tpp_assert((error == TPP_ENOMEM || error == TPP_EIO ||
+			            error == TPP_ELEXERROR || error == TPP_EWARNPRINT) &&
+			           "Custom warning callbacks may only return one of these errors");
 			return error;
+		}
 	}
 
 	/* Print projection origin */

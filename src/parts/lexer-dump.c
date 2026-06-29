@@ -414,7 +414,7 @@ tpp_lexer_dumper_printwarnings(tpp_lexer_dumper *tpp_restrict self,
 				tpp_lexer_dumper_do_print_conststr(self, "#pragma TPP warning(");
 #endif /* ... */
 				tpp_lexer_dumper_do_print_cstr(self, mode_prefix, tpp_strlen(mode_prefix));
-				tpp_lexer_dumper_do_print_cstr(self, p, (tpp_size)(buf - tpp_lengthof(buf) - p));
+				tpp_lexer_dumper_do_print_cstr(self, p, (tpp_size)(buf + tpp_lengthof(buf) - p));
 				tpp_lexer_dumper_do_print_conststr(self, ")\n");
 			} else
 #endif /* TPP_HAVE_WARNING_NUMBERS */

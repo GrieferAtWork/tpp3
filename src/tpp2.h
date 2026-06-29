@@ -79,7 +79,7 @@
 #define TPPLexer_Current tpp_current_lexer()
 #ifdef tpp_current_va_arg
 #define Q(x)       "%[" x "%]"
-#define WARNF(...) tpp_do(tpp_lexer_printf_warning(tpp_current_lexer(), file, pos, pos_lcinfo, printer, printer_arg, __VA_ARGS__))
+#define WARNF(...) tpp_do(tpp_lexer_printf_warning(tpp_current_lexer(), tpp_current_info(), tpp_current_printer(), tpp_current_printer_arg(), __VA_ARGS__))
 #define TOK_S      "%[%.*s%]" /* Use "%Pt" instead! */
 #define TOK_A      (unsigned int)tpp_lexer_gettokenlen(tpp_current_lexer()), tpp_lexer_gettokenstart(tpp_current_lexer())
 #define KWDNAME()  tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(tpp_current_lexer()))
