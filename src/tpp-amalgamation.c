@@ -11984,7 +11984,8 @@ TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_noop_warnprinter, arg, text, num_by
  *                  "tpp_lexer_warnf" API returns "TPP_EWARNPRINT" in this case. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
 tpp_lexer_printf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
-                         tpp_formatprinter printer, void *arg, char const *format, ...) {
+                         tpp_formatprinter printer, void *arg,
+                         char const *format, ...) {
 	tpp_ssize result;
 	va_list args;
 	va_start(args, format);
@@ -12029,7 +12030,8 @@ tpp_format_token_data(tpp_formatprinter printer, void *arg,
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
 tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
-                          tpp_formatprinter printer, void *arg, char const *format, va_list args) {
+                          tpp_formatprinter printer, void *arg,
+                          char const *format, va_list args) {
 	static char const null_str[] = "(null)";
 	tpp_ssize temp, result = 0;
 	char const *iter = format;
@@ -12492,8 +12494,12 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 		tpp_errno error;
 		error = tpp_lexer_vwarnf_impl_custom(self, info, printer,
 		                                     printer_arg, id, args);
-		if (TPP_ISERR(error))
+		if (TPP_ISERR(error)) {
+			tpp_assert((error == TPP_ENOMEM || error == TPP_EIO ||
+			            error == TPP_ELEXERROR || error == TPP_EWARNPRINT) &&
+			           "Custom warning callbacks may only return one of these errors");
 			return error;
+		}
 	}
 
 	/* Print projection origin */
@@ -20250,7 +20256,9 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 
 		/* Find end of body */
 		while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
-			rel_body_end = tpp_file_ptr2rel(file, *p_pos);
+			/* Only update body on non-space tokens (thereby trimming trailing space/comments from macros) */
+			if (!TPP_TOK_ISSPACE_OR_COMMENT(tok))
+				rel_body_end = tpp_file_ptr2rel(file, *p_pos);
 			tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
@@ -20316,7 +20324,9 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
 again_scan_end_of_macro_body:
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
-		rel_body_end = tpp_file_ptr2rel(file, *p_pos);
+		/* Only update body on non-space tokens (thereby trimming trailing space/comments from macros) */
+		if (!TPP_TOK_ISSPACE_OR_COMMENT(tok))
+			rel_body_end = tpp_file_ptr2rel(file, *p_pos);
 		tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 		if (TPP_TOK_ISERR(tok)) {
 			error = TPP_TOK_ASERR(tok);
@@ -24789,7 +24799,8 @@ typedef struct tpp_string_buffer {
 	       (self)->tsb_alloc = 0,    \
 	       (self)->tsb_data  = NULL)
 #define tpp_string_buffer_fini(self) \
-	tpp_free((self)->tsb_data)
+	(tpp_free((self)->tsb_data),     \
+	 tpp_dbg_memset(self, sizeof(tpp_string_buffer)))
 
 #ifndef TPP_MACRO_ARGUMENT_BUFFER_MINSIZE
 #define TPP_MACRO_ARGUMENT_BUFFER_MINSIZE 64
@@ -29992,6 +30003,9 @@ do_multi_chunk_string:
 	}
 	tpp_unreachable();
 }
+
+#undef tpp_lexer_decodestring_single_chunk_flags__param
+#undef tpp_lexer_decodestring_single_chunk_flags__arg
 #endif /* TPP_HAVE_LEXER_DECODESTRING */
 
 #if TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR
@@ -31384,6 +31398,7 @@ err_result:
 
 
 
+#undef TPP_DEFINE_PX_PARSER
 
 
 
@@ -31595,6 +31610,37 @@ typedef struct tpp_lexer_dumper {
 
 #define tpp_lexer_dumper_getprinter(self) (self)->tld_printer
 #define tpp_lexer_dumper_getarg(self)     (self)->tld_arg
+
+#if 1 /* Extract common functions to stand-along functions to prevent code bloat */
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_dumper_do_print_conststr(tpp_lexer_dumper *tpp_restrict self,
+                                   char const *const_STR) {
+	tpp_lexer_dumper_do(
+	self, tpp_formatprinter_print_cstr(tpp_lexer_dumper_getprinter(self),
+	                                   tpp_lexer_dumper_getarg(self),
+	                                   const_STR, tpp_strlen(const_STR)));
+}
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_dumper_do_print(tpp_lexer_dumper *tpp_restrict self,
+                          tpp_char const *text, tpp_size num_bytes) {
+	tpp_lexer_dumper_do(
+	self, tpp_formatprinter_print(tpp_lexer_dumper_getprinter(self),
+	                              tpp_lexer_dumper_getarg(self),
+	                              text, num_bytes));
+}
+
+#ifdef tpp_formatprinter_print_cstr_IS_DEFAULT
+#define tpp_lexer_dumper_do_print_cstr tpp_lexer_dumper_do_print_cstr
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_dumper_do_print_cstr(tpp_lexer_dumper *tpp_restrict self,
+                               char const *text, tpp_size num_bytes) {
+	tpp_lexer_dumper_do(
+	self, tpp_formatprinter_print_cstr(tpp_lexer_dumper_getprinter(self),
+	                                   tpp_lexer_dumper_getarg(self),
+	                                   text, num_bytes));
+}
+#endif /* tpp_formatprinter_print_cstr_IS_DEFAULT */
+#else
 #define tpp_lexer_dumper_do_print_conststr(self, STR)                         \
 	tpp_lexer_dumper_do(                                                      \
 	self, tpp_formatprinter_print_conststr(tpp_lexer_dumper_getprinter(self), \
@@ -31605,11 +31651,14 @@ typedef struct tpp_lexer_dumper {
 	self, tpp_formatprinter_print(tpp_lexer_dumper_getprinter(self), \
 	                              tpp_lexer_dumper_getarg(self),     \
 	                              text, num_bytes))
+#endif
+#ifndef tpp_lexer_dumper_do_print_cstr
 #define tpp_lexer_dumper_do_print_cstr(self, text, num_bytes)             \
 	tpp_lexer_dumper_do(                                                  \
 	self, tpp_formatprinter_print_cstr(tpp_lexer_dumper_getprinter(self), \
 	                                   tpp_lexer_dumper_getarg(self),     \
 	                                   text, num_bytes))
+#endif /* !tpp_lexer_dumper_do_print_cstr */
 
 #if TPP_HAVE_PRAGMA_EXTENSION
 #define tpp_lexer_dumper_do_print_enable_extension(self, extname) \
@@ -31653,6 +31702,53 @@ tpp_lexer_dumper_printmacro(tpp_lexer_dumper *tpp_restrict self,
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
 
+#if TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO
+#ifndef TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_START /* #ifndef: allow for user-overrides */
+#if TPP_HAVE_TPP_TOK_C_COMMENT
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_START "/*"
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_END   "*/"
+#elif TPP_HAVE_TPP_TOK_PASCAL_COMMENT
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_START "(*"
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_END   "*)"
+#elif TPP_HAVE_TPP_TOK_CXX_COMMENT
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_START "//"
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_END   "\n"
+#elif TPP_HAVE_TPP_TOK_SQL_COMMENT
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_START "--"
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_END   "\n"
+#elif TPP_HAVE_TPP_TOK_ASM_COMMENT
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_START "/"
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_END   "\n"
+#elif TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_START "#"
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_END   "\n"
+#else /* ... */
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_START "["
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_END   "]\n"
+#endif /* !... */
+#endif /* !TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_START */
+	{
+		char ubuf[TPP_UTOA_MAXLEN];
+		char const *p = tpp_utoa(ubuf, (tpp_uintmax)keyword->tk_id);
+		tpp_lexer_dumper_do_print_conststr(self, TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_START);
+		tpp_lexer_dumper_do_print_cstr(self, p, (tpp_size)(ubuf + tpp_lengthof(ubuf) - p));
+		if (macro->tm_deffile) {
+			tpp_lexer_dumper_do_print_conststr(self, "@");
+			tpp_lexer_dumper_do_print_cstr(self, macro->tm_deffile, tpp_strlen(macro->tm_deffile));
+			if (tpp_lcinfo_isvalid(macro->tm_deflc)) {
+				char ibuf[TPP_ITOA_MAXLEN];
+				tpp_lexer_dumper_do_print_conststr(self, ":");
+				p = tpp_itoa(ibuf, (tpp_intmax)tpp_lcinfo_getline(macro->tm_deflc) + 1);
+				tpp_lexer_dumper_do_print_cstr(self, p, (tpp_size)(ibuf + tpp_lengthof(ibuf) - p));
+				tpp_lexer_dumper_do_print_conststr(self, ":");
+				p = tpp_itoa(ibuf, (tpp_intmax)tpp_lcinfo_getcol(macro->tm_deflc) + 1);
+				tpp_lexer_dumper_do_print_cstr(self, p, (tpp_size)(ibuf + tpp_lengthof(ibuf) - p));
+			}
+		}
+		tpp_lexer_dumper_do_print_conststr(self, TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO_END);
+	}
+#endif /* TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
+
 	tpp_lexer_dumper_do_print_conststr(self, "#define ");
 	tpp_lexer_dumper_do_print(self, tpp_keyword_getkwd(keyword), tpp_keyword_getkwdlen(keyword));
 	if (tpp_macro_isfunction(macro)) {
@@ -31688,7 +31784,7 @@ tpp_lexer_dumper_printmacro(tpp_lexer_dumper *tpp_restrict self,
 
 #if TPP_HAVE_CPP_ASSERT
 /* Find the keyword with the smallest token id that is ">= min_token_id" */
-#ifdef TPP_LEXER_DUMP_DEFINITIONS_SORTED
+#if TPP_LEXER_DUMP_DEFINITIONS_SORTED
 static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_assertions_find_nextafter(tpp_assertions const *tpp_restrict self,
                               tpp_token_id min_token_id) {
@@ -31727,7 +31823,7 @@ tpp_lexer_dumper_printasserts(tpp_lexer_dumper *tpp_restrict self,
 	tpp_hash i;
 	if (!assertions->tass_assc)
 		return;
-#ifdef TPP_LEXER_DUMP_DEFINITIONS_SORTED
+#if TPP_LEXER_DUMP_DEFINITIONS_SORTED
 	if (self->tld_what & TPP_LEXER_DUMP_DEFINITIONS_SORTED) {
 		tpp_token_id id = TPP_TOK_KEYWORD_BEGIN;
 		for (;;) {
@@ -31776,7 +31872,7 @@ tpp_lexer_dumper_printkeyword(tpp_lexer_dumper *tpp_restrict self,
 }
 
 /* Find the keyword with the smallest token id that is ">= min_token_id" */
-#ifdef TPP_LEXER_DUMP_DEFINITIONS_SORTED
+#if TPP_LEXER_DUMP_DEFINITIONS_SORTED
 static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_keywords_find_nextafter(tpp_keywords const *tpp_restrict self,
                             tpp_token_id min_token_id) {
@@ -31802,7 +31898,7 @@ tpp_keywords_find_nextafter(tpp_keywords const *tpp_restrict self,
 static TPP_NONNULL((1, 2)) void TPPCALL
 tpp_lexer_dumper_printkeywords(tpp_lexer_dumper *tpp_restrict self,
                                tpp_keywords const *tpp_restrict keywords) {
-#ifdef TPP_LEXER_DUMP_DEFINITIONS_SORTED
+#if TPP_LEXER_DUMP_DEFINITIONS_SORTED
 	if (self->tld_what & TPP_LEXER_DUMP_DEFINITIONS_SORTED) {
 		tpp_token_id id = TPP_TOK_KEYWORD_BEGIN;
 		for (;;) {
@@ -31933,7 +32029,7 @@ tpp_lexer_dumper_printwarnings(tpp_lexer_dumper *tpp_restrict self,
 				tpp_lexer_dumper_do_print_conststr(self, "#pragma TPP warning(");
 #endif /* ... */
 				tpp_lexer_dumper_do_print_cstr(self, mode_prefix, tpp_strlen(mode_prefix));
-				tpp_lexer_dumper_do_print_cstr(self, p, (tpp_size)(buf - tpp_lengthof(buf) - p));
+				tpp_lexer_dumper_do_print_cstr(self, p, (tpp_size)(buf + tpp_lengthof(buf) - p));
 				tpp_lexer_dumper_do_print_conststr(self, ")\n");
 			} else
 #endif /* TPP_HAVE_WARNING_NUMBERS */

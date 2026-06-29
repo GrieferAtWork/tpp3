@@ -1740,11 +1740,11 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #else /* TPP_HAVE_CPP_ASSERT */
 #define TPP_LEXER_DUMP_DEFINITIONS_ASSERTS    0x0000 /* no-op */
 #endif /* !TPP_HAVE_CPP_ASSERT */
-#if TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT
-#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x1000 /* Sort macros/assertion-keys based on their keyword's token ID */
-#else /* TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT */
+#if TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT)
+#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x1000 /* Sort macros/assertion-keys based on their name's first appearance */
+#else /* TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT) */
 #define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x0000 /* no-op */
-#endif /* !TPP_HAVE_CPP_MACROS && !TPP_HAVE_CPP_ASSERT */
+#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED || (!TPP_HAVE_CPP_MACROS && !TPP_HAVE_CPP_ASSERT) */
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
 #define TPP_LEXER_DUMP_DEFINITIONS_EXTENSIONS 0x0004 /* #pragma TPP extension("-ffoo") // Where different from default */
 #else /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
@@ -1755,6 +1755,11 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #else /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
 #define TPP_LEXER_DUMP_DEFINITIONS_WARNINGS   0x0000 /* no-op */
 #endif /* !TPP_HAVE_PRAGMA_WARNING && !TPP_HAVE_PRAGMA_TPP_WARNING */
+#if TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO  0x8000 /* Include comments containing some extra info on macro definitions */
+#else /* TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO  0x0000 /* no-op */
+#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
 #define TPP_LEXER_DUMP_DEFINITIONS_ALL        0x0fff
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 

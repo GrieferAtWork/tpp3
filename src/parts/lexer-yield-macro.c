@@ -55,7 +55,8 @@ typedef struct tpp_string_buffer {
 	       (self)->tsb_alloc = 0,    \
 	       (self)->tsb_data  = NULL)
 #define tpp_string_buffer_fini(self) \
-	tpp_free((self)->tsb_data)
+	(tpp_free((self)->tsb_data),     \
+	 tpp_dbg_memset(self, sizeof(tpp_string_buffer)))
 
 #ifndef TPP_MACRO_ARGUMENT_BUFFER_MINSIZE
 #define TPP_MACRO_ARGUMENT_BUFFER_MINSIZE 64

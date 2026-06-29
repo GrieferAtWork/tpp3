@@ -1305,6 +1305,7 @@ err_result:
 
 
 
+#undef TPP_DEFINE_PX_PARSER
 
 
 

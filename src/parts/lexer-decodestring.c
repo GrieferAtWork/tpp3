@@ -1422,6 +1422,9 @@ do_multi_chunk_string:
 	}
 	tpp_unreachable();
 }
+
+#undef tpp_lexer_decodestring_single_chunk_flags__param
+#undef tpp_lexer_decodestring_single_chunk_flags__arg
 #endif /* TPP_HAVE_LEXER_DECODESTRING */
 
 #if TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR
