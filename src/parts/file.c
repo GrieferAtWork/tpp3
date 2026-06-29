@@ -303,17 +303,23 @@ tpp_lcinfo_count_linefeed(tpp_file const *tpp_restrict self,
 	if (tpp_file_isutf8(self)) {
 		while (ptr < end) {
 			tpp_unichar uc;
-			uc = tpp_unicode_readutf8_rev(&end, ptr);
-			if (tpp_unicode_islf(uc))
+			uc = tpp_unicode_readutf8(&ptr, end);
+			if (tpp_unicode_islf(uc)) {
 				++result;
+				if (uc == '\r' && (ptr < end && *ptr == '\n'))
+					++ptr;
+			}
 		}
 	} else
 #endif /* TPP_HAVE_UNICODE */
 	{
 		while (ptr < end) {
 			tpp_char ch = *ptr++;
-			if (tpp_ascii_islf(ch))
+			if (tpp_ascii_islf(ch)) {
 				++result;
+				if (ch == '\r' && (ptr < end && *ptr == '\n'))
+					++ptr;
+			}
 		}
 	}
 	return result;
