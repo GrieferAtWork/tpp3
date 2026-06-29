@@ -2832,6 +2832,8 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE ||                        \
 	 TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER ||                  \
 	 TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE ||         \
+	 TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE ||      \
+	 TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE ||    \
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST || \
 	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||           \
 	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT ||             \
@@ -2898,6 +2900,18 @@ TPP_WARNING(TPP_W_UNKNOWN_EMBED_PARAMETER, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_UND
 TPP_WARNING(TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE, 1(TPP_WG_SYNTAX), 1(4006), TPP_WSTATE_UNDEFINED,
             "no macro name given in %[#%s%] directive")
 #endif /* TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE */
+
+#if TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
+#define TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
+TPP_WARNING(TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_UNDEFINED,
+            "no assertion key given in %[#%s%] directive")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE */
+
+#if TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
+#define TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
+TPP_WARNING(TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_UNDEFINED,
+            "expected <keyword> after %[#%s %s(%], but got %Pt")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE */
 
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST
 #define TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST
@@ -3934,6 +3948,9 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define tpp_memmem      memmem
 #endif
 #endif /* !tpp_memcpy */
+#ifndef tpp_bzero
+#define tpp_bzero(p, n) (void)tpp_memset(p, 0, n)
+#endif /* !tpp_bzero */
 
 
 
@@ -4675,6 +4692,7 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_CPP_DEFINE */
 
 /* Support for: #assert, #unassert
+ * @see: https://gcc.gnu.org/onlinedocs/cpp/Obsolete-Features.html
  * @detect: #if __has_known_extension("-fassertions") */
 #ifndef TPP_HAVE_CPP_ASSERT
 #define TPP_HAVE_CPP_ASSERT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fassertions" */
@@ -7121,6 +7139,14 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_DEFINE))
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
+#define TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_ASSERT)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
+#define TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_ASSERT)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE      \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_IF_ELSE_ENDIF || \
@@ -7128,7 +7154,8 @@ TPP_DECL_END
 	                       TPP_HAVE_CPP_INCLUDE ||       \
 	                       TPP_HAVE_CPP_INCLUDE_NEXT ||  \
 	                       TPP_HAVE_CPP_IMPORT ||        \
-	                       TPP_HAVE_CPP_EMBED))
+	                       TPP_HAVE_CPP_EMBED ||         \
+	                       TPP_HAVE_CPP_ASSERT))
 #endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
 #define TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO \
@@ -13511,6 +13538,7 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 
 #undef TPP_HAVE_KEYWORD_MISC
 #if (TPP_HAVE_KEYWORD_FLAGS ||         \
+     TPP_HAVE_CPP_ASSERT ||            \
      TPP_HAVE_IFNDEF_INCLUDE_GUARDS || \
      TPP_HAVE_PRAGMA_PUSH_MACRO ||     \
      TPP_HAVE_MACRO___TPP_COUNTER ||   \
@@ -13574,10 +13602,72 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
 
 struct tpp_keyword;
+
+#if TPP_HAVE_CPP_ASSERT
+typedef struct tpp_assertion {
+	struct tpp_keyword const *TPP_INTERNAL(tas_value); /* [0..1] Assertion value, or "NULL" if entry is unused */
+} tpp_assertion;
+
+typedef struct tpp_assertions {
+	tpp_size       TPP_INTERNAL(tass_assc); /* Amount of assertions made. */
+	tpp_hash       TPP_INTERNAL(tass_bckm); /* Allocated bucket mask. */
+	tpp_assertion *TPP_INTERNAL(tass_bckv); /* [0..tass_bckm+1][owned] Hash-map of assertions */
+} tpp_assertions;
+
+#define tpp_assertions_init(self)               \
+	(void)((self)->TPP_INTERNAL(tass_assc) = 0, \
+	       (self)->TPP_INTERNAL(tass_bckm) = 0, \
+	       (self)->TPP_INTERNAL(tass_bckv) = NULL)
+#define tpp_assertions_fini(self) \
+	tpp_free((self)->TPP_INTERNAL(tass_bckv))
+
+/* Check if *any* keywords have been asserted within the given assertion-set "self" */
+#define tpp_assertions_containsany(self) \
+	((self)->TPP_INTERNAL(tass_assc) != 0)
+
+/* Delete *all* assertions made within "self" */
+#define tpp_assertions_unassertall(self) \
+	(void)(tpp_assertions_fini(self),    \
+	       tpp_assertions_init(self))
+
+#if TPP_HAVE_LEXER_COPY
+/* Copy the given set of assertions
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_assertions_copy(tpp_assertions *tpp_restrict self,
+                    tpp_assertions const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
+
+/* Check if a given "value" is being asserted by "self" */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_assertions_contains(tpp_assertions *tpp_restrict self,
+                        struct tpp_keyword const *tpp_restrict value);
+
+/* Assert a given "value" within "self".
+ * @return: TPP_EOK:    Assertion was added
+ * @return: TPP_ENOENT: Assertion was already added before (SOFT_ERROR)
+ * @return: TPP_ENOMEM: Out of memory (HARD_ERROR) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_assertions_assert(tpp_assertions *tpp_restrict self,
+                      struct tpp_keyword const *tpp_restrict value);
+
+/* Unassert a given "value" within "self".
+ * @return: true:  Assertion was removed
+ * @return: false: Assertion didn't exist in the first place */
+TPP_DECL TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
+                        struct tpp_keyword const *tpp_restrict value);
+#endif /* TPP_HAVE_CPP_ASSERT */
+
+
 typedef struct tpp_keyword_misc {
 #if TPP_HAVE_KEYWORD_FLAGS
 	tpp_keyword_flags TPP_INTERNAL(tkm_flags); /* Set of `TPP_KEYWORD_FLAG_*' */
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
+#if TPP_HAVE_CPP_ASSERT
+	tpp_assertions TPP_INTERNAL(tkm_assertions); /* Assertions made for the associated keyword */
+#endif /* TPP_HAVE_CPP_ASSERT */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 	struct tpp_keyword const *TPP_INTERNAL(tkm_file_guard); /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */

@@ -69,7 +69,7 @@ tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
 
 #undef TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
 #define TPP_HAVE_TPP_LEXER_YIELDRAW_EOL \
-	(TPP_HAVE_CPP_DEFINE || TPP_HAVE_CPP_IF_ELSE_ENDIF)
+	(TPP_HAVE_CPP_DEFINE || TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_ASSERT)
 
 #if TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
 /* Skip until EOL and return TPP_TOK_EOF */
@@ -327,6 +327,115 @@ tpp_lexer_handle_undef_directive(tpp_lexer *tpp_restrict self) {
 	return tpp_lexer_yieldraw_eol(self);
 }
 #endif /* TPP_HAVE_CPP_DEFINE */
+
+
+
+/************************************************************************/
+#if TPP_HAVE_CPP_ASSERT
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_handle_assert_directive(tpp_lexer *tpp_restrict self, tpp_token_id mode) {
+	tpp_token_id result;
+	tpp_keyword const *mode_kwd = tpp_lexer_gettokenkwd(self);
+	tpp_assert(mode == TPP_KWD_assert || mode == TPP_KWD_unassert);
+	(void)mode_kwd;
+	do {
+		result = tpp_lexer_yieldraw_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
+	if (TPP_TOK_ISERR(result))
+		return result;
+	if (!TPP_TOK_ISKEYWORD(result)) {
+#if TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
+		tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE,
+		                                  tpp_keyword_getkwdcstr(mode_kwd));
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+#endif /* TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE */
+	} else {
+		/* Delete keyword definition */
+		tpp_keyword const *ro_keyword = tpp_lexer_gettoken(self)->tt_kwd;
+		do {
+			result = tpp_lexer_yieldraw_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
+		if (TPP_TOK_ISERR(result))
+			return result;
+		if (mode == TPP_KWD_assert) {
+			result = tpp_lexer_require(self, TPP_TOK_OFCHAR('('));
+			if (TPP_TOK_ISERR(result))
+				return result;
+		}
+		if (result == '(') {
+			/* Assertion with specific value */
+again_yield_and_handle_after_lparen:
+			do {
+				result = tpp_lexer_yieldraw_blocking(self);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
+			if (TPP_TOK_ISERR(result))
+				return result;
+			if (TPP_TOK_ISKEYWORD(result)) {
+				tpp_keyword const *value = tpp_lexer_gettokenkwd(self);
+				tpp_keyword_misc *misc;
+				tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
+				if tpp_unlikely(!keyword)
+					return TPP_TOK_ENOMEM;
+				misc = tpp_keyword_requiremisc(keyword);
+				if tpp_unlikely(!misc)
+					return TPP_TOK_ENOMEM;
+				if (mode == TPP_KWD_assert) {
+					tpp_errno error = tpp_assertions_assert(&misc->tkm_assertions, value);
+					if (TPP_ISERR(error))
+						return TPP_TOK_OFERR(error);
+				} else {
+					(void)tpp_assertions_unassert(&misc->tkm_assertions, value);
+				}
+				result = tpp_lexer_yieldraw_blocking(self);
+				if (TPP_TOK_ISERR(result))
+					return result;
+			} else {
+#if TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
+				tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE,
+				                                  tpp_keyword_getkwdcstr(mode_kwd),
+				                                  tpp_keyword_getkwdcstr(ro_keyword));
+				if (TPP_ISERR(error))
+					return TPP_TOK_OFERR(error);
+#endif /* TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE */
+			}
+			if (result == ',')
+				goto again_yield_and_handle_after_lparen;
+			result = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
+			if (result == ')')
+				result = tpp_lexer_yieldraw_blocking(self);
+			if (TPP_TOK_ISERR(result))
+				return result;
+		} else if (mode == TPP_KWD_unassert) {
+			tpp_keyword_misc *misc;
+			tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
+			if tpp_unlikely(!keyword)
+				return TPP_TOK_ENOMEM;
+			misc = keyword->tk_misc;
+			if (misc != NULL)
+				tpp_assertions_unassertall(&misc->tkm_assertions);
+		}
+
+		/* Seek to next token (which should be a line-feed) */
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+		while (TPP_TOK_ISSPACE_OR_COMMENT(result))
+			result = tpp_lexer_yieldraw_blocking(self);
+		if (TPP_TOK_ISERR(result))
+			return result;
+		if (TPP_TOK_ISLF_OR_COMMENT_OR_EOF(result)) {
+			return TPP_TOK_EOF;
+		} else {
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE,
+			                                  tpp_keyword_getkwdcstr(mode_kwd));
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
+		}
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+	}
+	return tpp_lexer_yieldraw_eol(self);
+}
+#endif /* TPP_HAVE_CPP_ASSERT */
+/************************************************************************/
 
 
 
@@ -2181,9 +2290,9 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_ASSERT) */
 		tpp_lexer_process_directive_set_noguard();
-		/* TODO */
-		goto seek_end_of_line;
-#define WANT_seek_end_of_line
+		token->tt_end = directive_iter;
+		result = tpp_lexer_handle_assert_directive(self, result);
+		break;
 #endif /* TPP_HAVE_CPP_ASSERT */
 /************************************************************************/
 

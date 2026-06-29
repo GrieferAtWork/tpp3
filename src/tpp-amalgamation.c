@@ -572,7 +572,12 @@
 #define tmpe_count                                       TPP_INTERNAL(tmpe_count)
 #define tmps_cnt                                         TPP_INTERNAL(tmps_cnt)
 #define tmps_vec                                         TPP_INTERNAL(tmps_vec)
+#define tas_value                                        TPP_INTERNAL(tas_value)
+#define tass_assc                                        TPP_INTERNAL(tass_assc)
+#define tass_bckm                                        TPP_INTERNAL(tass_bckm)
+#define tass_bckv                                        TPP_INTERNAL(tass_bckv)
 #define tkm_flags                                        TPP_INTERNAL(tkm_flags)
+#define tkm_assertions                                   TPP_INTERNAL(tkm_assertions)
 #define tkm_file_guard                                   TPP_INTERNAL(tkm_file_guard)
 #define tkm_macro_pushstack                              TPP_INTERNAL(tkm_macro_pushstack)
 #define tkm_builtin_counter                              TPP_INTERNAL(tkm_builtin_counter)
@@ -4972,17 +4977,23 @@ tpp_lcinfo_count_linefeed(tpp_file const *tpp_restrict self,
 	if (tpp_file_isutf8(self)) {
 		while (ptr < end) {
 			tpp_unichar uc;
-			uc = tpp_unicode_readutf8_rev(&end, ptr);
-			if (tpp_unicode_islf(uc))
+			uc = tpp_unicode_readutf8(&ptr, end);
+			if (tpp_unicode_islf(uc)) {
 				++result;
+				if (uc == '\r' && (ptr < end && *ptr == '\n'))
+					++ptr;
+			}
 		}
 	} else
 #endif /* TPP_HAVE_UNICODE */
 	{
 		while (ptr < end) {
 			tpp_char ch = *ptr++;
-			if (tpp_ascii_islf(ch))
+			if (tpp_ascii_islf(ch)) {
 				++result;
+				if (ch == '\r' && (ptr < end && *ptr == '\n'))
+					++ptr;
+			}
 		}
 	}
 	return result;
@@ -6134,6 +6145,172 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self) {
 }
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
+
+#if TPP_HAVE_CPP_ASSERT
+#define tpp_assertions_hashinit(p_hs, p_perturb, hash, HMASK) \
+	(void)(*(p_hs) = (*(p_perturb) = (hash)) & (HMASK))
+#define tpp_assertions_hashnext(p_hs, p_perturb, hash, HMASK) \
+	(void)(*(p_hs) = (*(p_hs) << 2) + *(p_hs) + *(p_perturb) + 1, *(p_perturb) >>= 5)
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_assertions_insert(tpp_assertions *tpp_restrict self,
+                      tpp_keyword const *tpp_restrict value) {
+	tpp_hash const hash = value->tk_hash;
+	tpp_hash hs, perturb;
+	for (tpp_assertions_hashinit(&hs, &perturb, hash, self->tass_bckm);;
+	     tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm)) {
+		tpp_assertion *ent = &self->tass_bckv[hs & self->tass_bckm];
+		tpp_assert(ent->tas_value != value && "Already inserted");
+		if (ent->tas_value == NULL) {
+			ent->tas_value = value;
+			break;
+		}
+	}
+}
+
+#if TPP_HAVE_LEXER_COPY
+static TPP_CONSTCALL TPP_WUNUSED tpp_hash TPPCALL
+tpp_assertions_maskfor(tpp_size count) {
+	tpp_hash result = 0;
+	while (result < count)
+		result = (result << 1) | 1;
+	return result;
+}
+
+/* Copy the given set of assertions
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_assertions_copy(tpp_assertions *tpp_restrict self,
+                    tpp_assertions const *tpp_restrict from) {
+	tpp_assert(from->tass_assc <= from->tass_bckm);
+	self->tass_assc = from->tass_assc;
+	self->tass_bckm = 0;
+	self->tass_bckv = NULL;
+	if (self->tass_assc) {
+		tpp_hash usemask = tpp_assertions_maskfor(self->tass_assc);
+		tpp_hash mapsize = (usemask + 1) * sizeof(tpp_assertion);
+		tpp_assertion *vec = (tpp_assertion *)tpp_malloc(mapsize);
+		if tpp_unlikely(!vec)
+			return TPP_ENOMEM;
+		self->tass_bckm = usemask;
+		self->tass_bckv = vec;
+		if (from->tass_bckm == usemask) {
+			tpp_memcpy(vec, from->tass_bckv, mapsize);
+		} else {
+			tpp_hash i;
+			tpp_bzero(vec, mapsize);
+			for (i = 0; i <= from->tass_bckm; ++i) {
+				tpp_keyword const *kwd = from->tass_bckv[i].tas_value;
+				if (kwd)
+					tpp_assertions_insert(self, kwd);
+			}
+		}
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
+/* Check if a given "value" is being asserted by "self" */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_assertions_contains(tpp_assertions *tpp_restrict self,
+                        struct tpp_keyword const *tpp_restrict value) {
+	tpp_hash const hash = value->tk_hash;
+	tpp_hash hs, perturb;
+	for (tpp_assertions_hashinit(&hs, &perturb, hash, self->tass_bckm);;
+	     tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm)) {
+		tpp_assertion *ent = &self->tass_bckv[hs & self->tass_bckm];
+		if (ent->tas_value == NULL)
+			break;
+		if (ent->tas_value == value)
+			return true;
+	}
+	return false;
+}
+
+
+/* Assert a given "value" within "self".
+ * @return: TPP_EOK:    Assertion was added
+ * @return: TPP_ENOENT: Assertion was already added before (SOFT_ERROR)
+ * @return: TPP_ENOMEM: Out of memory (HARD_ERROR) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_assertions_assert(tpp_assertions *tpp_restrict self,
+                      struct tpp_keyword const *tpp_restrict value) {
+	if (self->tass_bckv) {
+		tpp_hash const hash = value->tk_hash;
+		tpp_hash hs, perturb;
+		for (tpp_assertions_hashinit(&hs, &perturb, hash, self->tass_bckm);;
+		     tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm)) {
+			tpp_assertion const *ent = &self->tass_bckv[hs & self->tass_bckm];
+			if (ent->tas_value == NULL)
+				break;
+			if (ent->tas_value == value)
+				return TPP_ENOENT; /* Already contained */
+		}
+	}
+	if (self->tass_assc >= self->tass_bckm) {
+		/* Must rehash */
+		tpp_assertion *oldmap = self->tass_bckv;
+		tpp_hash oldmask = self->tass_bckm;
+		tpp_hash newmask = (oldmask << 1) | 1;
+		tpp_hash mapsize = (newmask + 1) * sizeof(tpp_assertion);
+		tpp_assertion *newmap = (tpp_assertion *)tpp_malloc(mapsize);
+		if tpp_unlikely(!newmap)
+			return TPP_ENOMEM;
+		tpp_bzero(newmap, mapsize);
+		self->tass_bckm = newmask;
+		self->tass_bckv = newmap;
+		if (oldmap) {
+			tpp_hash i;
+			for (i = 0; i <= oldmask; ++i) {
+				tpp_keyword const *v = oldmap[i].tas_value;
+				if (v)
+					tpp_assertions_insert(self, v);
+			}
+			tpp_free(oldmap);
+		}
+	}
+	tpp_assertions_insert(self, value);
+	++self->tass_assc;
+	return TPP_EOK;
+}
+
+/* Unassert a given "value" within "self".
+ * @return: true:  Assertion was removed
+ * @return: false: Assertion didn't exist in the first place */
+TPP_IMPL TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
+                        struct tpp_keyword const *tpp_restrict value) {
+	tpp_assertion *ent;
+	tpp_hash const hash = value->tk_hash;
+	tpp_hash hs, perturb;
+	if (!self->tass_assc)
+		return false;
+	tpp_assert(self->tass_bckv);
+	for (tpp_assertions_hashinit(&hs, &perturb, hash, self->tass_bckm);;
+	     tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm)) {
+		ent = &self->tass_bckv[hs & self->tass_bckm];
+		if (ent->tas_value == NULL)
+			return false;
+		if (ent->tas_value == value)
+			break; /* Found it! */
+	}
+
+	/* Down-shift all entries that come after "ent" */
+	do {
+		tpp_assertion *next;
+		tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm);
+		next = &self->tass_bckv[hs & self->tass_bckm];
+		*ent = *next;
+		ent = next;
+	} while (ent->tas_value);
+
+	/* Update assertion counter */
+	--self->tass_assc;
+	return true;
+}
+#endif /* TPP_HAVE_CPP_ASSERT */
+
+
 #if TPP_HAVE_KEYWORD_MISC
 /* Ensure that `self->tk_misc' has been allocated and return it.
  * If it isn't already allocated, allocate+return it lazily.
@@ -6150,6 +6327,9 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 #if TPP_HAVE_KEYWORD_FLAGS
 			result->tkm_flags = TPP_KEYWORD_FLAG_NORMAL;
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
+#if TPP_HAVE_CPP_ASSERT
+			tpp_assertions_init(&result->tkm_assertions);
+#endif /* TPP_HAVE_CPP_ASSERT */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 			result->tkm_file_guard = NULL;
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
@@ -6676,6 +6856,9 @@ tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
 #if TPP_HAVE_KEYWORD_MISC
 static TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
+#if TPP_HAVE_CPP_ASSERT
+	tpp_assertions_fini(&self->tkm_assertions);
+#endif /* TPP_HAVE_CPP_ASSERT */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	tpp_macro_pushstack_fini(&self->tkm_macro_pushstack);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
@@ -6739,12 +6922,6 @@ tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
 	tpp_keyword_misc *result = _tpp_keyword_misc_alloc();
 	if tpp_unlikely(!result)
 		return NULL;
-#if TPP_HAVE_KEYWORD_FLAGS
-	result->tkm_flags = self->tkm_flags;
-#endif /* TPP_HAVE_KEYWORD_FLAGS */
-#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-	result->tkm_file_guard = self->tkm_file_guard; /* Relocated into the new keyword-table later */
-#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	{
 		tpp_errno error = tpp_macro_pushstack_copy(&result->tkm_macro_pushstack,
@@ -6756,6 +6933,26 @@ tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
 		}
 	}
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_CPP_ASSERT
+	{
+		tpp_errno error = tpp_assertions_copy(&result->tkm_assertions,
+		                                      &self->tkm_assertions);
+		tpp_assert(!TPP_ISERR(error) || error == TPP_ENOMEM);
+		if (TPP_ISERR(error)) {
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+			tpp_macro_pushstack_fini(&result->tkm_macro_pushstack);
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+			_tpp_keyword_free(result);
+			return NULL;
+		}
+	}
+#endif /* TPP_HAVE_CPP_ASSERT */
+#if TPP_HAVE_KEYWORD_FLAGS
+	result->tkm_flags = self->tkm_flags;
+#endif /* TPP_HAVE_KEYWORD_FLAGS */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+	result->tkm_file_guard = self->tkm_file_guard; /* Relocated into the new keyword-table later */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_MACRO___TPP_COUNTER
 	result->tkm_builtin_counter = self->tkm_builtin_counter;
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
@@ -6845,6 +7042,23 @@ tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
 }
 #endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
 
+#if TPP_HAVE_CPP_ASSERT
+/* Relocate "self->tm_deffile" in case it references a keyword */
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_assertion_relocate_keyword(tpp_assertion *tpp_restrict self,
+                               tpp_keywords const *tpp_restrict keywords) {
+	tpp_keyword const *keyword = self->tas_value;
+	if (keyword) {
+		keyword = _tpp_keywords_getkeyword(keywords,
+		                                   tpp_keyword_getkwd(keyword),
+		                                   tpp_keyword_getkwdlen(keyword),
+		                                   tpp_keyword_getkwdhash(keyword));
+		if (keyword)
+			self->tas_value = keyword;
+	}
+}
+#endif /* TPP_HAVE_CPP_ASSERT */
+
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_keywords_copy(tpp_keywords *tpp_restrict self,
                   tpp_keywords const *tpp_restrict from) {
@@ -6879,11 +7093,11 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
 				bckv[i] = copy;
 			}
 		}
-#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_MACROS
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_ASSERT || TPP_HAVE_CPP_MACROS
 		for (i = 0; i <= self->tks_bckm; ++i) {
 			tpp_keyword *chain = bckv[i];
 			for (; chain; chain = chain->tk_next) {
-#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO)
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_ASSERT || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO)
 				tpp_keyword_misc *misc = chain->tk_misc;
 				if (misc) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
@@ -6907,15 +7121,24 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
 						}
 					}
 #endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_CPP_ASSERT
+					if (misc->tkm_assertions.tass_assc) {
+						tpp_hash j;
+						for (j = 0; j <= misc->tkm_assertions.tass_bckm; ++j) {
+							tpp_assertion *ass = &misc->tkm_assertions.tass_bckv[j];
+							tpp_assertion_relocate_keyword(ass, self);
+						}
+					}
+#endif /* TPP_HAVE_CPP_ASSERT */
 				}
-#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO) */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_ASSERT || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO) */
 #if TPP_HAVE_CPP_MACROS
 				if (chain->tk_macro)
 					tpp_macro_relocate_deffile(chain->tk_macro, self);
 #endif /* TPP_HAVE_CPP_MACROS */
 			}
 		}
-#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_MACROS */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_ASSERT || TPP_HAVE_CPP_MACROS */
 	}
 	return TPP_EOK;
 }
@@ -21886,7 +22109,7 @@ tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
 
 #undef TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
 #define TPP_HAVE_TPP_LEXER_YIELDRAW_EOL \
-	(TPP_HAVE_CPP_DEFINE || TPP_HAVE_CPP_IF_ELSE_ENDIF)
+	(TPP_HAVE_CPP_DEFINE || TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_ASSERT)
 
 #if TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
 /* Skip until EOL and return TPP_TOK_EOF */
@@ -22144,6 +22367,115 @@ tpp_lexer_handle_undef_directive(tpp_lexer *tpp_restrict self) {
 	return tpp_lexer_yieldraw_eol(self);
 }
 #endif /* TPP_HAVE_CPP_DEFINE */
+
+
+
+/************************************************************************/
+#if TPP_HAVE_CPP_ASSERT
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_handle_assert_directive(tpp_lexer *tpp_restrict self, tpp_token_id mode) {
+	tpp_token_id result;
+	tpp_keyword const *mode_kwd = tpp_lexer_gettokenkwd(self);
+	tpp_assert(mode == TPP_KWD_assert || mode == TPP_KWD_unassert);
+	(void)mode_kwd;
+	do {
+		result = tpp_lexer_yieldraw_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
+	if (TPP_TOK_ISERR(result))
+		return result;
+	if (!TPP_TOK_ISKEYWORD(result)) {
+#if TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
+		tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE,
+		                                  tpp_keyword_getkwdcstr(mode_kwd));
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+#endif /* TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE */
+	} else {
+		/* Delete keyword definition */
+		tpp_keyword const *ro_keyword = tpp_lexer_gettoken(self)->tt_kwd;
+		do {
+			result = tpp_lexer_yieldraw_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
+		if (TPP_TOK_ISERR(result))
+			return result;
+		if (mode == TPP_KWD_assert) {
+			result = tpp_lexer_require(self, TPP_TOK_OFCHAR('('));
+			if (TPP_TOK_ISERR(result))
+				return result;
+		}
+		if (result == '(') {
+			/* Assertion with specific value */
+again_yield_and_handle_after_lparen:
+			do {
+				result = tpp_lexer_yieldraw_blocking(self);
+			} while (TPP_TOK_ISSPACE_OR_COMMENT(result));
+			if (TPP_TOK_ISERR(result))
+				return result;
+			if (TPP_TOK_ISKEYWORD(result)) {
+				tpp_keyword const *value = tpp_lexer_gettokenkwd(self);
+				tpp_keyword_misc *misc;
+				tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
+				if tpp_unlikely(!keyword)
+					return TPP_TOK_ENOMEM;
+				misc = tpp_keyword_requiremisc(keyword);
+				if tpp_unlikely(!misc)
+					return TPP_TOK_ENOMEM;
+				if (mode == TPP_KWD_assert) {
+					tpp_errno error = tpp_assertions_assert(&misc->tkm_assertions, value);
+					if (TPP_ISERR(error))
+						return TPP_TOK_OFERR(error);
+				} else {
+					(void)tpp_assertions_unassert(&misc->tkm_assertions, value);
+				}
+				result = tpp_lexer_yieldraw_blocking(self);
+				if (TPP_TOK_ISERR(result))
+					return result;
+			} else {
+#if TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
+				tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE,
+				                                  tpp_keyword_getkwdcstr(mode_kwd),
+				                                  tpp_keyword_getkwdcstr(ro_keyword));
+				if (TPP_ISERR(error))
+					return TPP_TOK_OFERR(error);
+#endif /* TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE */
+			}
+			if (result == ',')
+				goto again_yield_and_handle_after_lparen;
+			result = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
+			if (result == ')')
+				result = tpp_lexer_yieldraw_blocking(self);
+			if (TPP_TOK_ISERR(result))
+				return result;
+		} else if (mode == TPP_KWD_unassert) {
+			tpp_keyword_misc *misc;
+			tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
+			if tpp_unlikely(!keyword)
+				return TPP_TOK_ENOMEM;
+			misc = keyword->tk_misc;
+			if (misc != NULL)
+				tpp_assertions_unassertall(&misc->tkm_assertions);
+		}
+
+		/* Seek to next token (which should be a line-feed) */
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+		while (TPP_TOK_ISSPACE_OR_COMMENT(result))
+			result = tpp_lexer_yieldraw_blocking(self);
+		if (TPP_TOK_ISERR(result))
+			return result;
+		if (TPP_TOK_ISLF_OR_COMMENT_OR_EOF(result)) {
+			return TPP_TOK_EOF;
+		} else {
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE,
+			                                  tpp_keyword_getkwdcstr(mode_kwd));
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
+		}
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+	}
+	return tpp_lexer_yieldraw_eol(self);
+}
+#endif /* TPP_HAVE_CPP_ASSERT */
+/************************************************************************/
 
 
 
@@ -23998,9 +24330,9 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_ASSERT) */
 		tpp_lexer_process_directive_set_noguard();
-		/* TODO */
-		goto seek_end_of_line;
-#define WANT_seek_end_of_line
+		token->tt_end = directive_iter;
+		result = tpp_lexer_handle_assert_directive(self, result);
+		break;
 #endif /* TPP_HAVE_CPP_ASSERT */
 /************************************************************************/
 

@@ -439,6 +439,7 @@
 #endif /* !TPP_HAVE_CPP_DEFINE */
 
 /* Support for: #assert, #unassert
+ * @see: https://gcc.gnu.org/onlinedocs/cpp/Obsolete-Features.html
  * @detect: #if __has_known_extension("-fassertions") */
 #ifndef TPP_HAVE_CPP_ASSERT
 #define TPP_HAVE_CPP_ASSERT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fassertions" */
@@ -3037,6 +3038,14 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_DEFINE))
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
+#define TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_ASSERT)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
+#define TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_ASSERT)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE      \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_IF_ELSE_ENDIF || \
@@ -3044,7 +3053,8 @@ print("#endif /" "* !... *" "/");
 	                       TPP_HAVE_CPP_INCLUDE ||       \
 	                       TPP_HAVE_CPP_INCLUDE_NEXT ||  \
 	                       TPP_HAVE_CPP_IMPORT ||        \
-	                       TPP_HAVE_CPP_EMBED))
+	                       TPP_HAVE_CPP_EMBED ||         \
+	                       TPP_HAVE_CPP_ASSERT))
 #endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
 #define TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO \

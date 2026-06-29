@@ -85,6 +85,7 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 
 #undef TPP_HAVE_KEYWORD_MISC
 #if (TPP_HAVE_KEYWORD_FLAGS ||         \
+     TPP_HAVE_CPP_ASSERT ||            \
      TPP_HAVE_IFNDEF_INCLUDE_GUARDS || \
      TPP_HAVE_PRAGMA_PUSH_MACRO ||     \
      TPP_HAVE_MACRO___TPP_COUNTER ||   \
@@ -148,10 +149,72 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
 
 struct tpp_keyword;
+
+#if TPP_HAVE_CPP_ASSERT
+typedef struct tpp_assertion {
+	struct tpp_keyword const *TPP_INTERNAL(tas_value); /* [0..1] Assertion value, or "NULL" if entry is unused */
+} tpp_assertion;
+
+typedef struct tpp_assertions {
+	tpp_size       TPP_INTERNAL(tass_assc); /* Amount of assertions made. */
+	tpp_hash       TPP_INTERNAL(tass_bckm); /* Allocated bucket mask. */
+	tpp_assertion *TPP_INTERNAL(tass_bckv); /* [0..tass_bckm+1][owned] Hash-map of assertions */
+} tpp_assertions;
+
+#define tpp_assertions_init(self)               \
+	(void)((self)->TPP_INTERNAL(tass_assc) = 0, \
+	       (self)->TPP_INTERNAL(tass_bckm) = 0, \
+	       (self)->TPP_INTERNAL(tass_bckv) = NULL)
+#define tpp_assertions_fini(self) \
+	tpp_free((self)->TPP_INTERNAL(tass_bckv))
+
+/* Check if *any* keywords have been asserted within the given assertion-set "self" */
+#define tpp_assertions_containsany(self) \
+	((self)->TPP_INTERNAL(tass_assc) != 0)
+
+/* Delete *all* assertions made within "self" */
+#define tpp_assertions_unassertall(self) \
+	(void)(tpp_assertions_fini(self),    \
+	       tpp_assertions_init(self))
+
+#if TPP_HAVE_LEXER_COPY
+/* Copy the given set of assertions
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_assertions_copy(tpp_assertions *tpp_restrict self,
+                    tpp_assertions const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
+
+/* Check if a given "value" is being asserted by "self" */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_assertions_contains(tpp_assertions *tpp_restrict self,
+                        struct tpp_keyword const *tpp_restrict value);
+
+/* Assert a given "value" within "self".
+ * @return: TPP_EOK:    Assertion was added
+ * @return: TPP_ENOENT: Assertion was already added before (SOFT_ERROR)
+ * @return: TPP_ENOMEM: Out of memory (HARD_ERROR) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_assertions_assert(tpp_assertions *tpp_restrict self,
+                      struct tpp_keyword const *tpp_restrict value);
+
+/* Unassert a given "value" within "self".
+ * @return: true:  Assertion was removed
+ * @return: false: Assertion didn't exist in the first place */
+TPP_DECL TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
+                        struct tpp_keyword const *tpp_restrict value);
+#endif /* TPP_HAVE_CPP_ASSERT */
+
+
 typedef struct tpp_keyword_misc {
 #if TPP_HAVE_KEYWORD_FLAGS
 	tpp_keyword_flags TPP_INTERNAL(tkm_flags); /* Set of `TPP_KEYWORD_FLAG_*' */
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
+#if TPP_HAVE_CPP_ASSERT
+	tpp_assertions TPP_INTERNAL(tkm_assertions); /* Assertions made for the associated keyword */
+#endif /* TPP_HAVE_CPP_ASSERT */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 	struct tpp_keyword const *TPP_INTERNAL(tkm_file_guard); /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
