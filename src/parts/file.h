@@ -61,11 +61,12 @@ typedef enum tpp_file_encoding {
 
 
 #undef TPP_HAVE_FILE_IOFLAGS
-#if (TPP_HAVE_FILE_NONBLOCK || \
-     TPP_HAVE_FILE_NOCLOSE ||  \
-     TPP_HAVE_FILE_SYSHDR ||   \
-     TPP_HAVE_FILE_NOKWD ||    \
-     TPP_HAVE_IFNDEF_INCLUDE_GUARDS)
+#if (TPP_HAVE_FILE_NONBLOCK ||         \
+     TPP_HAVE_FILE_NOCLOSE ||          \
+     TPP_HAVE_FILE_SYSHDR ||           \
+     TPP_HAVE_FILE_NOKWD ||            \
+     TPP_HAVE_IFNDEF_INCLUDE_GUARDS || \
+     (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE))
 #define TPP_HAVE_FILE_IOFLAGS 1
 #else /* ... */
 #define TPP_HAVE_FILE_IOFLAGS 0
@@ -90,6 +91,9 @@ typedef enum tpp_file_encoding {
 #define TPP_FILE_IOFLAGS_NOGUARD  UINT8_C(0x10) /* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
                                                  * file. A #ifndef-directive encountered at this point can never count as a #include-guard. */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
+#define TPP_FILE_IOFLAGS_FREENAME UINT8_C(0x20) /* Must tpp_free(tff_name) when the file is finalized */
+#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 
 
@@ -586,6 +590,25 @@ typedef struct tpp_file {
 	       _tpp_file_init_io_keep(self)                                                                        \
 	       _tpp_file_init_ioflags(self, flags))
 
+/* Initialize "self" from a given "tpp_lexer_openfile_result" */
+#if TPP_HAVE_KEYWORDS_OPENFILE
+#define tpp_file_init_io_from_ofr(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr) \
+	tpp_file_init_io_from_ofr2(self, ofr, TPP_FILE_ENCODING_UTF8)
+#if TPP_HAVE_USER_KEYWORDS
+#define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
+	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
+	                     (ofr)->tlofr_handle, TPP_FILE_IOFLAGS_NORMAL, enc)
+#elif TPP_HAVE_FILE_NOKWD
+#define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
+	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
+	                     (ofr)->tlofr_handle, TPP_FILE_IOFLAGS_NOKWD | TPP_FILE_IOFLAGS_FREENAME, enc)
+#else /* ... */
+#define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
+	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
+	                     (ofr)->tlofr_handle, TPP_FILE_IOFLAGS_FREENAME, enc)
+#endif /* !... */
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+
 
 
 /* Initialize "self " as a "TPP_FILE_KIND_TEXT" file
@@ -687,10 +710,12 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_getrealfilename(tpp_file const *tpp_restrict self);
 
+#if TPP_HAVE_FILE_GETREALFILENAMEKWD
 /* Returns the filename "keyword" (which may not always be available,
  * even when "tpp_file_getrealfilename()" returns non-NULL) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
 tpp_file_getrealfilenamekwd(tpp_file const *tpp_restrict self);
+#endif /* TPP_HAVE_FILE_GETREALFILENAMEKWD */
 
 /* Same as `tpp_file_getrealfilename()', but may be overwritten by "#line" directives */
 #if TPP_HAVE_FILE_USER_FILENAME

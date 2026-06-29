@@ -4282,17 +4282,33 @@ handle_keyword_with_esc:
 #if TPP_HAVE_ESCAPED_KEYWORDS
 			if (uses_esc) {
 				kwd_hash = tpp_hashof_esc(kwd_start, kwd_len, file);
-				kwd = tpp_keywords_newkeyword_esc(&self->tl_kwds, kwd_start, kwd_len, kwd_hash, file);
+#if TPP_HAVE_USER_KEYWORDS
+				kwd = tpp_lexer_kwds_newkeyword_esc(self, kwd_start, kwd_len, kwd_hash, file);
+#else /* TPP_HAVE_USER_KEYWORDS */
+				kwd = tpp_lexer_kwds_getkeyword_esc(self, kwd_start, kwd_len, kwd_hash, file);
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 			} else
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 			{
 				kwd_hash = tpp_hashof(kwd_start, kwd_len);
-				kwd = tpp_keywords_newkeyword(&self->tl_kwds, kwd_start, kwd_len, kwd_hash);
+#if TPP_HAVE_USER_KEYWORDS
+				kwd = tpp_lexer_kwds_newkeyword(self, kwd_start, kwd_len, kwd_hash);
+#else /* TPP_HAVE_USER_KEYWORDS */
+				kwd = tpp_lexer_kwds_getkeyword(self, kwd_start, kwd_len, kwd_hash);
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 			}
+#if TPP_HAVE_USER_KEYWORDS
 			if tpp_unlikely(!kwd) {
 				error = TPP_ENOMEM;
 				goto return_error;
 			}
+#else /* TPP_HAVE_USER_KEYWORDS */
+			if (!kwd) {
+				token->tt_kwd = NULL;
+				result = TPP_TOK_USERKEYWORD;
+				goto set_result;
+			}
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 			token->tt_kwd = kwd;
 			result = kwd->tk_id;
 			goto set_result;

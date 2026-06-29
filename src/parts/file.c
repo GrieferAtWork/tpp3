@@ -172,6 +172,10 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
+#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
+		if (self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_FREENAME)
+			tpp_free((char *)self->tf_data.td_io.tff_name);
+#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
 #if TPP_HAVE_FILE_USER_FILENAME
 		TPP_FALLTHRU
 	case TPP_FILE_KIND_TEXT:
@@ -1276,6 +1280,7 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 
 
 
+#if TPP_HAVE_FILE_GETREALFILENAMEKWD
 /* Returns the filename "keyword" (which may not always be available,
  * even when "tpp_file_getrealfilename()" returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
@@ -1313,6 +1318,7 @@ again:
 	default: tpp_unreachable();
 	}
 }
+#endif /* TPP_HAVE_FILE_GETREALFILENAMEKWD */
 
 
 /* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_tprev")

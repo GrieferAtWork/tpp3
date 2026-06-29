@@ -67,11 +67,11 @@ int main(int argc, char *argv[]) {
 				tok = TPP_TOK_OFERR(error);
 			break;
 		}
-#if 1
+#if 0
 		printf("%.*s",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
-#elif 1
+#elif 0
 		printf("[%.*s]",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
@@ -80,13 +80,9 @@ int main(int argc, char *argv[]) {
 			tpp_lcinfo_ex lc;
 			tpp_file *file = tpp_lexer_getfile(&lexer);
 			char const *lexer_filename = tpp_file_getfilename(file);
-#if TPP_HAVE_STRTOKENID
 			char const *desc = tpp_strtokenid(tok);
-#else  /* TPP_HAVE_STRTOKENID */
-			char const *desc = NULL;
-#endif /* !TPP_HAVE_STRTOKENID */
-			if (desc == NULL && TPP_TOK_ISKEYWORD(tok))
-				desc = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(&lexer));
+			if (desc == NULL && tpp_lexer_hastokenkwd(&lexer))
+				desc = tpp_lexer_gettokenkwdcstr(&lexer);
 			if (desc == NULL)
 				desc = "?";
 			tpp_file_getlcinfo_ex(file, tpp_lexer_gettokenstart(&lexer), &lc);

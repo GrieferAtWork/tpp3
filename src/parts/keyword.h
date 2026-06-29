@@ -162,7 +162,7 @@ typedef struct tpp_keyword_misc {
 	tpp_size TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
 #if TPP_HAVE_KEYWORD_USERDATA
-	void    *TPP_INTERNAL(tkm_userdata_ptr); /* [?..?] User-data pointer (initialize to "NULL") */
+	void          *TPP_INTERNAL(tkm_userdata_ptr); /* [?..?] User-data pointer (initialize to "NULL") */
 	void (TPPCALL *TPP_INTERNAL(tkm_userdata_dtor))(void *ptr); /* [0..1] Optional finalizer for user-data */
 #define tpp_keyword_misc_setuserdata(self, ptr, dtor) \
 	(void)((self)->tkm_userdata_ptr  = (ptr),         \
@@ -205,6 +205,7 @@ typedef struct tpp_keyword {
 /*	tpp_char                  TPP_INTERNAL(tk_nul);                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
 } tpp_keyword;
 
+#if TPP_HAVE_USER_KEYWORDS
 #define tpp_keyword_sizeof(len) \
 	(tpp_offsetof(tpp_keyword, TPP_INTERNAL(tk_kwd)) + ((len) + 1) * sizeof(tpp_char))
 #define _tpp_keyword_alloc(len)         ((tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(len)))
@@ -212,6 +213,7 @@ typedef struct tpp_keyword {
 #define _tpp_keyword_realloc(p, len)    ((tpp_keyword *)tpp_realloc(p, tpp_keyword_sizeof(len)))
 #define _tpp_keyword_tryrealloc(p, len) ((tpp_keyword *)tpp_tryrealloc(p, tpp_keyword_sizeof(len)))
 #define _tpp_keyword_free(p)            tpp_free(p)
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 /* When true, there are certain actions that require builtin keywords
  * to be copied into the current lexer's keyword table. These include
@@ -402,6 +404,7 @@ tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
 
 
 /* Custom keywords table */
+#if TPP_HAVE_USER_KEYWORDS
 typedef struct tpp_keywords {
 	unsigned int          TPP_INTERNAL(tks_kwdc); /* Amount of keyword entries stored. */
 	tpp_hash              TPP_INTERNAL(tks_bckm); /* Allocated bucket mask. */
@@ -508,6 +511,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
                          tpp_keyword const *tpp_restrict kwd);
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

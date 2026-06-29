@@ -36,15 +36,14 @@
  * While inside of this file, the following macros are pre-defined:
  *
  *
- * >> #undef GUARD_TPP_AMALGAMATION_H
-#define TPP_DEFS
+ * >> #define TPP_DEFS
  *    Defined, but no explicit meaning (for use in "#ifdef TPP_DEFS" to detect context)
  *    If you #include other files for "your/defs.h", you can use this macro prevent
  *    unexpected tokens from appearing within the definitions file.
  *
  *
  * >> #define TPP_KWD(id, string)  <magic>
- *    Define an additional keyword "tpp_token_id" by the name "id".
+ *    Define an additional keyword within "tpp_token_id" by the name "id".
  *    This keyword token is returned when an identifier equal to "string" was parsed.
  *    Example:
  *       >> TPP_KWD(KWD_function, "function")
@@ -949,7 +948,7 @@ TPP_MACRO(TPP_KWD___TPP_IDENTIFIER, tpp_lexer_has(tpp_current_lexer(), MACRO___T
 /* TODO: Feature-test macros (for __has_extension()) */
 #if 0
 HAS_EXTENSION_IF(tpp_dollar_is_alpha,              HAVE_EXTENSION_DOLLAR_IS_ALPHA)
-HAS_EXTENSION_IF(tpp_current_va_args,                      HAVE_EXTENSION_VA_ARGS)
+HAS_EXTENSION_IF(tpp_va_args,                      HAVE_EXTENSION_VA_ARGS)
 HAS_EXTENSION_IF(tpp_named_va_args,                HAVE_EXTENSION_GCC_VA_ARGS)
 HAS_EXTENSION_IF(tpp_va_comma,                     HAVE_EXTENSION_VA_COMMA)
 HAS_EXTENSION_IF(tpp_msvc_integer_suffix,          HAVE_EXTENSION_MSVC_FIXED_INT)

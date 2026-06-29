@@ -1101,7 +1101,7 @@ tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 		{
 			if (ofr_error == TPP_EOK)
-				tpp_io_close(ofr.tlofr_handle);
+				tpp_lexer_openfile_result_fini(&ofr);
 		}
 	} else {
 #if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
@@ -1218,7 +1218,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 				expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND;
 			}
 		}
-		tpp_io_close(ofr.tlofr_handle);
+		tpp_lexer_openfile_result_fini(&ofr);
 	}
 
 	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
@@ -1228,7 +1228,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 	                                         tpp_strlen(expansion_result), NULL);
 err_tok_ofr:
 	if (ofr_error == TPP_EOK)
-		tpp_io_close(ofr.tlofr_handle);
+		tpp_lexer_openfile_result_fini(&ofr);
 	return tok;
 }
 #endif /* !TPP_HAVE_MACRO___has_embed */

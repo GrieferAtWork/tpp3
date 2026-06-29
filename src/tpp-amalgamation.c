@@ -2635,7 +2635,9 @@ static uint_least16_t const tpp_token_str_offsets[] = {
 };
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_token_str_offsets) == TPP_TOK_MULTICHAR_END);
 
-/* Returns the "*" in "TPP_TOK_*" of "id", which must be a (non-keyword and non-error) token ID */
+/* Returns the "*" in "TPP_TOK_*" of "id", which must be a (non-keyword and non-error) token ID
+ * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // "EQUAL_EQUAL"
+ * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // "==" */
 TPP_IMPL TPP_WUNUSED char const *TPPCALL
 tpp_strtokenid(tpp_token_id id) {
 	if ((unsigned int)id < TPP_TOK_MULTICHAR_END) {
@@ -4433,12 +4435,19 @@ static uint_least16_t const tpp_token_repr_offsets[] = {
 };
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_token_repr_offsets) == TPP_TOK_MULTICHAR_END);
 
-/* Similar to `tpp_strtokenid()', but returns a (canonical) representation of "id" */
+/* Similar to `tpp_strtokenid()', but returns a (canonical) representation of "id":
+ * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // "EQUAL_EQUAL"
+ * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // "==" */
 TPP_IMPL TPP_WUNUSED char const *TPPCALL
 tpp_reprtokenid(tpp_token_id id) {
 	if ((unsigned int)id < (unsigned int)TPP_TOK_MULTICHAR_END)
 		return (char const *)&tpp_token_repr_strings + tpp_token_repr_offsets[(unsigned int)id];
-	if ((unsigned int)id < (unsigned int)TPP_TOK_USERKEYWORD_BEGIN) {
+#if TPP_HAVE_USER_KEYWORDS
+	if ((unsigned int)id < (unsigned int)TPP_TOK_USERKEYWORD_BEGIN)
+#else /* TPP_HAVE_USER_KEYWORDS */
+	if ((unsigned int)id < (unsigned int)TPP_TOK_USERKEYWORD)
+#endif /* !TPP_HAVE_USER_KEYWORDS */
+	{
 		tpp_keyword const *kwd = tpp_builtin_getkeyword_byid(id);
 		if (kwd)
 			return (char const *)kwd->tk_kwd;
@@ -4832,6 +4841,10 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
+#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
+		if (self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_FREENAME)
+			tpp_free((char *)self->tf_data.td_io.tff_name);
+#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
 #if TPP_HAVE_FILE_USER_FILENAME
 		TPP_FALLTHRU
 	case TPP_FILE_KIND_TEXT:
@@ -5936,6 +5949,7 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 
 
 
+#if TPP_HAVE_FILE_GETREALFILENAMEKWD
 /* Returns the filename "keyword" (which may not always be available,
  * even when "tpp_file_getrealfilename()" returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
@@ -5973,6 +5987,7 @@ again:
 	default: tpp_unreachable();
 	}
 }
+#endif /* TPP_HAVE_FILE_GETREALFILENAMEKWD */
 
 
 /* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_tprev")
@@ -6672,6 +6687,7 @@ tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
 }
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
+#if TPP_HAVE_USER_KEYWORDS
 static TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
 #if TPP_HAVE_KEYWORD_ASSTRING
@@ -7196,7 +7212,7 @@ done:
 	return result;
 }
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
-
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 
 #if TPP_HAVE_KEYWORDS_OPENFILE
@@ -7366,30 +7382,45 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
 {
+#if TPP_HAVE_USER_KEYWORDS
 	bool is_known_keyword = false;
+#define tpp_lexer_openfile_keyword                    tpp_keyword
+#define tpp_lexer_openfile_keyword_cstr(p)            ((char *)(p)->tk_kwd)
+#define tpp_lexer_openfile_keyword_setlen(p, v)       (void)((p)->tk_len = (v))
+#define tpp_lexer_openfile_keyword_alloc(len)         _tpp_keyword_alloc(len)
+#define tpp_lexer_openfile_keyword_tryrealloc(p, len) _tpp_keyword_tryrealloc(p, len)
+#define tpp_lexer_openfile_keyword_free(p)            _tpp_keyword_free(p)
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define tpp_lexer_openfile_keyword                    char
+#define tpp_lexer_openfile_keyword_cstr(p)            p
+#define tpp_lexer_openfile_keyword_setlen(p, v)       (void)0
+#define tpp_lexer_openfile_keyword_alloc(len)         ((char *)tpp_malloc(((len) + 1) * sizeof(char)))
+#define tpp_lexer_openfile_keyword_tryrealloc(p, len) ((char *)tpp_tryrealloc(p, ((len) + 1) * sizeof(char)))
+#define tpp_lexer_openfile_keyword_free(p)            tpp_free(p)
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 	tpp_io_handle handle;
-	tpp_keyword *result_kwd;
+	tpp_lexer_openfile_keyword *result_kwd;
 	tpp_size filename_len = tpp_strnlen(filename, filename_maxlen);
 	if (TPP_FS_ISABS(filename, filename_len) || !relative_to) {
-		tpp_keyword *new_result_kwd;
-		tpp_char *kwd_end;
+		tpp_lexer_openfile_keyword *new_result_kwd;
+		char *kwd_end;
 		tpp_size result_kwd_len;
 without_relative_to:
-		result_kwd = _tpp_keyword_alloc(filename_len);
+		result_kwd = tpp_lexer_openfile_keyword_alloc(filename_len);
 		if tpp_unlikely(!result_kwd)
 			goto err_nomem;
-		kwd_end = (tpp_char *)tpp_fs_normalize((char *)result_kwd->tk_kwd,
-		                                       (char *)result_kwd->tk_kwd,
-		                                       filename, filename_len);
-		*kwd_end = (tpp_char)'\0';
-		result_kwd_len = (tpp_size)(kwd_end - result_kwd->tk_kwd);
+		kwd_end = tpp_fs_normalize(tpp_lexer_openfile_keyword_cstr(result_kwd),
+		                           tpp_lexer_openfile_keyword_cstr(result_kwd),
+		                           filename, filename_len);
+		*kwd_end = '\0';
+		result_kwd_len = (tpp_size)(kwd_end - tpp_lexer_openfile_keyword_cstr(result_kwd));
 		tpp_assert(result_kwd_len <= filename_len);
-		new_result_kwd = _tpp_keyword_tryrealloc(result_kwd, result_kwd_len);
+		new_result_kwd = tpp_lexer_openfile_keyword_tryrealloc(result_kwd, result_kwd_len);
 		if tpp_likely(new_result_kwd)
 			result_kwd = new_result_kwd;
-		result_kwd->tk_len = result_kwd_len;
+		tpp_lexer_openfile_keyword_setlen(result_kwd, result_kwd_len);
 	} else {
-		tpp_keyword *new_result_kwd;
+		tpp_lexer_openfile_keyword *new_result_kwd;
 		tpp_size rel_size, whole_size;
 		char const *rel_base = relative_to;
 		char const *last_sep = rel_base + tpp_strlen(relative_to);
@@ -7400,19 +7431,19 @@ without_relative_to:
 			goto without_relative_to;
 		rel_size   = (tpp_size)(last_sep - rel_base); /* Including trailing '/' */
 		whole_size = rel_size + filename_len;
-		result_kwd = _tpp_keyword_alloc(whole_size);
+		result_kwd = tpp_lexer_openfile_keyword_alloc(whole_size);
 		if tpp_unlikely(!result_kwd)
 			goto err_nomem;
-		dst_base = (char *)result_kwd->tk_kwd;
+		dst_base = tpp_lexer_openfile_keyword_cstr(result_kwd);
 		tpp_memcpy(dst_base, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
 		dst_iter = dst_base + rel_size;
 		dst_end = tpp_fs_normalize(dst_iter, dst_base, filename, filename_len);
 		*dst_end = '\0';
 		whole_size = (tpp_size)(dst_end - dst_base);
-		new_result_kwd = _tpp_keyword_tryrealloc(result_kwd, whole_size);
+		new_result_kwd = tpp_lexer_openfile_keyword_tryrealloc(result_kwd, whole_size);
 		if tpp_likely(new_result_kwd)
 			result_kwd = new_result_kwd;
-		result_kwd->tk_len = whole_size;
+		tpp_lexer_openfile_keyword_setlen(result_kwd, whole_size);
 	}
 
 	/* FIXME: Windows has a case-insensitive filesystem, but the filename hash used here
@@ -7420,6 +7451,8 @@ without_relative_to:
 	 *        case-sensitive. */
 
 	/* Check if "result_kwd" is a known keyword... */
+	(void)self;
+#if TPP_HAVE_USER_KEYWORDS
 	{
 		tpp_hash hash = tpp_hashof(result_kwd->tk_kwd, result_kwd->tk_len);
 		tpp_keyword *bucket = self->tl_kwds.tks_bckv[hash & self->tl_kwds.tks_bckm];
@@ -7433,7 +7466,7 @@ without_relative_to:
 				continue;
 
 			/* Keyword already exists */
-			_tpp_keyword_free(result_kwd);
+			tpp_lexer_openfile_keyword_free(result_kwd);
 			is_known_keyword = true;
 			result_kwd = bucket;
 
@@ -7481,15 +7514,17 @@ without_relative_to:
 		result_kwd->tk_hash = hash;
 	}
 got_result_kwd:
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 	/* Try to open the file */
-	handle = tpp_io_open((char const *)result_kwd->tk_kwd);
+	handle = tpp_io_open(tpp_lexer_openfile_keyword_cstr(result_kwd));
 	if (handle == tpp_io_handle_INVALID) {
-		_tpp_keyword_free(result_kwd);
+		tpp_lexer_openfile_keyword_free(result_kwd);
 		return TPP_ENOENT;
 	}
 
 	/* Initialize remaining fields of "result_kwd" and insert into keyword map */
+#if TPP_HAVE_USER_KEYWORDS
 	if (!is_known_keyword) {
 		result_kwd->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN +
 		                                   self->tl_kwds.tks_kwdc);
@@ -7506,13 +7541,24 @@ got_result_kwd:
 			goto err_nomem;
 		}
 	}
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 	/* Initialize "result" */
+#if TPP_HAVE_USER_KEYWORDS
+	result->tlofr_filename_kwd = result_kwd;
+#else /* TPP_HAVE_USER_KEYWORDS */
 	result->tlofr_filename = result_kwd;
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 	result->tlofr_handle   = handle;
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;
+#undef tpp_lexer_openfile_keyword
+#undef tpp_lexer_openfile_keyword_cstr
+#undef tpp_lexer_openfile_keyword_setlen
+#undef tpp_lexer_openfile_keyword_alloc
+#undef tpp_lexer_openfile_keyword_tryrealloc
+#undef tpp_lexer_openfile_keyword_free
 }
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE */
 
@@ -7861,7 +7907,11 @@ static tpp_keyword *tpp_builtin_keywords_list[] = {
 	NULL
 };
 
+#if TPP_HAVE_USER_KEYWORDS
 #define TPP_BUILTIN_KEYWORD_COUNT  (TPP_TOK_USERKEYWORD_BEGIN - TPP_TOK_KEYWORD_BEGIN)
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define TPP_BUILTIN_KEYWORD_COUNT  (TPP_TOK_USERKEYWORD - TPP_TOK_KEYWORD_BEGIN)
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 #define TPP_BUILTIN_KEYWORD_MASK_1 (TPP_BUILTIN_KEYWORD_COUNT | (TPP_BUILTIN_KEYWORD_COUNT >> 16))
 #define TPP_BUILTIN_KEYWORD_MASK_2 (TPP_BUILTIN_KEYWORD_MASK_1 | (TPP_BUILTIN_KEYWORD_MASK_1 >> 8))
 #define TPP_BUILTIN_KEYWORD_MASK_3 (TPP_BUILTIN_KEYWORD_MASK_2 | (TPP_BUILTIN_KEYWORD_MASK_2 >> 4))
@@ -7963,7 +8013,11 @@ static void tpp_init_builtin_keywords(void) {
 
 
 /* Assert that generated stuff is valid */
+#if TPP_HAVE_USER_KEYWORDS
 TPP_STATIC_ASSERT(TPP_BUILTIN_KEYWORD_COUNT == (TPP_TOK_USERKEYWORD_BEGIN - TPP_TOK_KEYWORD_BEGIN));
+#else /* TPP_HAVE_USER_KEYWORDS */
+TPP_STATIC_ASSERT(TPP_BUILTIN_KEYWORD_COUNT == (TPP_TOK_USERKEYWORD - TPP_TOK_KEYWORD_BEGIN));
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 TPP_STATIC_ASSERT((TPP_BUILTIN_KEYWORD_COUNT == 0) || TPP_BUILTIN_KEYWORD_MASK >= (TPP_BUILTIN_KEYWORD_COUNT + 1));
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_builtin_keyword_table) == (TPP_BUILTIN_KEYWORD_MASK + 1));
 
@@ -11109,7 +11163,9 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_chunk) ==
  * using one of the "tpp_lexer_initfile_*" functions below. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init(tpp_lexer *tpp_restrict self) {
+#if TPP_HAVE_USER_KEYWORDS
 	tpp_keywords_init(&self->tl_kwds);
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 #if TPP_HAVE_EXTENSIONS
 	tpp_extensions_init(&self->tl_exts);
@@ -11164,8 +11220,12 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
  * `tpp_lexer_finifile()' to finalize the currently loaded file. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
+	(void)self;
+
 	/* Finalize keywords */
+#if TPP_HAVE_USER_KEYWORDS
 	tpp_keywords_fini(&self->tl_kwds);
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 	/* Finalize extension states */
 #if TPP_HAVE_EXTENSIONS
@@ -11225,9 +11285,11 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 	if (TPP_ISERR(error))
 		goto err_warn_incl;
 #endif /* TPP_HAVE_EXTENSIONS */
+#if TPP_HAVE_USER_KEYWORDS
 	error = tpp_keywords_copy(&self->tl_kwds, &from->tl_kwds);
 	if (TPP_ISERR(error))
 		goto err_warn_incl_exts;
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 	/* Copy stuff that can't cause errors... */
 #if TPP_HAVE_FEATURES
@@ -11256,17 +11318,25 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 	self->tl_builtin_counter = from->tl_builtin_counter;
 #endif /* TPP_HAVE_MACRO___COUNTER__ */
 	return TPP_EOK;
+#if TPP_HAVE_USER_KEYWORDS
 err_warn_incl_exts:
+#endif /* TPP_HAVE_USER_KEYWORDS */
 #if TPP_HAVE_EXTENSIONS
+#if TPP_HAVE_USER_KEYWORDS
 	tpp_extensions_fini(&self->tl_exts);
+#endif /* TPP_HAVE_USER_KEYWORDS */
 err_warn_incl:
 #endif /* TPP_HAVE_EXTENSIONS */
 #if TPP_HAVE_INCLUDE_PATH
+#if TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS
 	tpp_include_paths_fini(&self->tl_include_paths);
+#endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS */
 err_warn:
 #endif /* TPP_HAVE_INCLUDE_PATH */
 #if TPP_HAVE_WARNINGS
+#if TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH
 	tpp_warnings_fini(&self->tl_warn);
+#endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH */
 #endif /* TPP_HAVE_WARNINGS */
 err:
 	return error;
@@ -11366,9 +11436,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 	} else {
 		/* Initialize the lexer's I/O file */
 		tpp_file *const file = tpp_lexer_getfile(self);
-		tpp_file_init_io(file,
-		                 tpp_keyword_getkwdcstr(ofr.tlofr_filename),
-		                 ofr.tlofr_handle);
+		tpp_file_init_io_from_ofr(file, &ofr);
 	}
 	return error;
 }
@@ -11426,9 +11494,7 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 	*prev_file = *file;
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
 	if tpp_likely(!TPP_ISERR(error)) {
-		tpp_file_init_io(file,
-		                 tpp_keyword_getkwdcstr(ofr.tlofr_filename),
-		                 ofr.tlofr_handle);
+		tpp_file_init_io_from_ofr(file, &ofr);
 		file->tf_prev  = prev_file;
 		file->tf_tprev = prev_file;
 	} else {
@@ -11490,7 +11556,6 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 	*file = *prev;
 	tpp_file_free(prev);
 }
-
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 
@@ -11498,6 +11563,7 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 /* Return the (canonical) string-representation of a given token ID */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) char const *TPPCALL
 tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok) {
+#if TPP_HAVE_USER_KEYWORDS
 	char const *result = tpp_reprtokenid(tok);
 	if (result)
 		return result;
@@ -11508,6 +11574,10 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok) {
 			return (char const *)kwd->tk_kwd;
 	}
 	return NULL;
+#else /* TPP_HAVE_USER_KEYWORDS */
+	(void)self;
+	return tpp_reprtokenid(tok);
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 }
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */
 
@@ -17730,17 +17800,33 @@ handle_keyword_with_esc:
 #if TPP_HAVE_ESCAPED_KEYWORDS
 			if (uses_esc) {
 				kwd_hash = tpp_hashof_esc(kwd_start, kwd_len, file);
-				kwd = tpp_keywords_newkeyword_esc(&self->tl_kwds, kwd_start, kwd_len, kwd_hash, file);
+#if TPP_HAVE_USER_KEYWORDS
+				kwd = tpp_lexer_kwds_newkeyword_esc(self, kwd_start, kwd_len, kwd_hash, file);
+#else /* TPP_HAVE_USER_KEYWORDS */
+				kwd = tpp_lexer_kwds_getkeyword_esc(self, kwd_start, kwd_len, kwd_hash, file);
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 			} else
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 			{
 				kwd_hash = tpp_hashof(kwd_start, kwd_len);
-				kwd = tpp_keywords_newkeyword(&self->tl_kwds, kwd_start, kwd_len, kwd_hash);
+#if TPP_HAVE_USER_KEYWORDS
+				kwd = tpp_lexer_kwds_newkeyword(self, kwd_start, kwd_len, kwd_hash);
+#else /* TPP_HAVE_USER_KEYWORDS */
+				kwd = tpp_lexer_kwds_getkeyword(self, kwd_start, kwd_len, kwd_hash);
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 			}
+#if TPP_HAVE_USER_KEYWORDS
 			if tpp_unlikely(!kwd) {
 				error = TPP_ENOMEM;
 				goto return_error;
 			}
+#else /* TPP_HAVE_USER_KEYWORDS */
+			if (!kwd) {
+				token->tt_kwd = NULL;
+				result = TPP_TOK_USERKEYWORD;
+				goto set_result;
+			}
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 			token->tt_kwd = kwd;
 			result = kwd->tk_id;
 			goto set_result;
@@ -23012,7 +23098,7 @@ tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
 			continue;
 		if (TPP_TOK_ISERR(tok)) {
 			if (error == TPP_EOK)
-				tpp_io_close(result->tlofr_handle);
+				tpp_lexer_openfile_result_fini(result);
 			return TPP_TOK_ASERR(tok);
 		}
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
@@ -23026,7 +23112,7 @@ tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
 			token->tt_start = saved_start;
 			if (TPP_ISERR(warn_error)) {
 				if (error == TPP_EOK)
-					tpp_io_close(result->tlofr_handle);
+					tpp_lexer_openfile_result_fini(result);
 				return warn_error;
 			}
 		}
@@ -23073,11 +23159,11 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 	/* Push a new file */
 	prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file) {
-		tpp_io_close(ofr.tlofr_handle);
+		tpp_lexer_openfile_result_fini(&ofr);
 		return TPP_TOK_ENOMEM;
 	}
 	*prev_file = *file;
-	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename),
+	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename_kwd),
 	                    ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -23280,7 +23366,7 @@ tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
 static TPP_NONNULL((1)) void TPPCALL
 tpp_embed_builder_fini(tpp_embed_builder *tpp_restrict self) {
 	if (self->teb_ofr_error == TPP_EOK)
-		tpp_io_close(self->teb_ofr.tlofr_handle);
+		tpp_lexer_openfile_result_fini(&self->teb_ofr);
 	tpp_lexer_arginfo_fini(&self->teb_prefix);
 	tpp_lexer_arginfo_fini(&self->teb_suffix);
 	tpp_lexer_arginfo_fini(&self->teb_if_empty);
@@ -23346,9 +23432,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		if tpp_unlikely(!prev_file)
 			goto err_nomem;
 		*prev_file = *file;
-		tpp_file_init_io_ex2(file, (char const *)self->teb_ofr.tlofr_filename->tk_kwd,
-		                     self->teb_ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL,
-		                     TPP_FILE_ENCODING_EMBED);
+		tpp_file_init_io_from_ofr2(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
 		tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
 		file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 		file->tf_prev  = prev_file;
@@ -23429,9 +23513,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		goto err_nomem_embed_data;
 	*prev_file = *file;
 #if TPP_HAVE_FILE_ENCODING_EMBED
-	tpp_file_init_io_ex2(file, (char const *)self->teb_ofr.tlofr_filename->tk_kwd,
-	                     self->teb_ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL,
-	                     TPP_FILE_ENCODING_EMBED);
+	tpp_file_init_io_from_ofr2(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
 	tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
 	file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 	file->tf_chunk = tpp_string_builder_pack(&embed_data);
@@ -23446,9 +23528,26 @@ done_inherit_io_handle:
 #else /* TPP_HAVE_FILE_ENCODING_EMBED */
 	{
 		TPP_REF tpp_string *chunk = tpp_string_builder_pack(&embed_data);
-		tpp_file_init_text_ascii(file, (char const *)self->teb_ofr.tlofr_filename->tk_kwd,
+#if TPP_HAVE_USER_KEYWORDS
+		tpp_file_init_text_ascii(file, tpp_lexer_openfile_result_getfilename(&self->teb_ofr),
 		                         chunk, tpp_string_str(chunk), tpp_string_len(chunk),
 		                         TPP_LCINFO_INVALID);
+#else /* TPP_HAVE_USER_KEYWORDS */
+		/* Must initialize as an I/O file (even though the file handle is at EOF),
+		 * because that's the only way a file is able to free its filename upon
+		 * being finalized. Once "chunk" has been read, the file will simply try
+		 * to read once again, which should yield EOF and cause it to stop
+		 *
+		 * FIXME: This breaks when a custom "limit" was used! -- if that's the case,
+		 *        must read+discard all remaining data within the file before we can
+		 *        return here! */
+		tpp_file_init_io_from_ofr(file, &self->teb_ofr);
+		file->tf_data.td_io.tff_start_lc = TPP_LCINFO_INVALID;
+		file->tf_chunk = chunk;
+		file->tf_pos = tpp_string_str(chunk);
+		file->tf_end = tpp_string_end(chunk);
+		self->teb_ofr_error = TPP_ENOENT; /* Anything other than "TPP_EOK" to prevent closure in "tpp_embed_builder_fini()" */
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 	}
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -26121,7 +26220,7 @@ tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 		{
 			if (ofr_error == TPP_EOK)
-				tpp_io_close(ofr.tlofr_handle);
+				tpp_lexer_openfile_result_fini(&ofr);
 		}
 	} else {
 #if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
@@ -26238,7 +26337,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 				expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND;
 			}
 		}
-		tpp_io_close(ofr.tlofr_handle);
+		tpp_lexer_openfile_result_fini(&ofr);
 	}
 
 	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
@@ -26248,7 +26347,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 	                                         tpp_strlen(expansion_result), NULL);
 err_tok_ofr:
 	if (ofr_error == TPP_EOK)
-		tpp_io_close(ofr.tlofr_handle);
+		tpp_lexer_openfile_result_fini(&ofr);
 	return tok;
 }
 #endif /* !TPP_HAVE_MACRO___has_embed */
@@ -28952,8 +29051,12 @@ tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
                          tpp_formatprinter data_printer,
                          tpp_formatprinter utf8_printer,
                          void *arg, unsigned int flags) {
+	(void)flags;
 #if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_AUTO_CONCAT)
-	if (!tpp_lexer_has(self, STRING_AUTO_CONCAT)) {
+#if TPP_HAVE_STRING_AUTO_CONCAT
+	if (!tpp_lexer_has(self, STRING_AUTO_CONCAT))
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
+	{
 		tpp_ssize result = tpp_lexer_decodestring(self, data_printer, utf8_printer, arg);
 		if (result >= 0) {
 			tpp_token_id tok = tpp_lexer_yield_blocking(self);
@@ -28961,7 +29064,10 @@ tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
 				result = (tpp_ssize)TPP_TOK_ASERR(tok);
 		}
 		return result;
-	} else
+	}
+#if TPP_HAVE_STRING_AUTO_CONCAT
+	else
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
 #endif /* TPP_HAVE_STRING_AUTO_CONCAT */
 #if TPP_HAVE_STRING_AUTO_CONCAT
 	{
@@ -29133,6 +29239,7 @@ tpp_lexer_decodestring_is_single_chunk(tpp_lexer *tpp_restrict self
 	return data.tldsccd_count;
 }
 
+#if TPP_HAVE_STRING_AUTO_CONCAT
 static TPP_NONNULL((1)) unsigned int TPPCALL
 tpp_lexer_decodestring_is_single_chunk_at(tpp_lexer *tpp_restrict self,
                                           tpp_char const *token_end
@@ -29145,6 +29252,7 @@ tpp_lexer_decodestring_is_single_chunk_at(tpp_lexer *tpp_restrict self,
 	token->tt_end = saved_token_end;
 	return result;
 }
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
 
 struct tpp_lexer_decodestring_as_single_chunk_data {
 	tpp_errno (TPPCALL *tldsascd_cb)(void *arg, tpp_string *chunk,

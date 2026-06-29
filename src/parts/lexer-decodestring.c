@@ -898,8 +898,12 @@ tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
                          tpp_formatprinter data_printer,
                          tpp_formatprinter utf8_printer,
                          void *arg, unsigned int flags) {
+	(void)flags;
 #if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_AUTO_CONCAT)
-	if (!tpp_lexer_has(self, STRING_AUTO_CONCAT)) {
+#if TPP_HAVE_STRING_AUTO_CONCAT
+	if (!tpp_lexer_has(self, STRING_AUTO_CONCAT))
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
+	{
 		tpp_ssize result = tpp_lexer_decodestring(self, data_printer, utf8_printer, arg);
 		if (result >= 0) {
 			tpp_token_id tok = tpp_lexer_yield_blocking(self);
@@ -907,7 +911,10 @@ tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
 				result = (tpp_ssize)TPP_TOK_ASERR(tok);
 		}
 		return result;
-	} else
+	}
+#if TPP_HAVE_STRING_AUTO_CONCAT
+	else
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
 #endif /* TPP_HAVE_STRING_AUTO_CONCAT */
 #if TPP_HAVE_STRING_AUTO_CONCAT
 	{
@@ -1079,6 +1086,7 @@ tpp_lexer_decodestring_is_single_chunk(tpp_lexer *tpp_restrict self
 	return data.tldsccd_count;
 }
 
+#if TPP_HAVE_STRING_AUTO_CONCAT
 static TPP_NONNULL((1)) unsigned int TPPCALL
 tpp_lexer_decodestring_is_single_chunk_at(tpp_lexer *tpp_restrict self,
                                           tpp_char const *token_end
@@ -1091,6 +1099,7 @@ tpp_lexer_decodestring_is_single_chunk_at(tpp_lexer *tpp_restrict self,
 	token->tt_end = saved_token_end;
 	return result;
 }
+#endif /* TPP_HAVE_STRING_AUTO_CONCAT */
 
 struct tpp_lexer_decodestring_as_single_chunk_data {
 	tpp_errno (TPPCALL *tldsascd_cb)(void *arg, tpp_string *chunk,

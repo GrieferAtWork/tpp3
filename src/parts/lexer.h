@@ -76,7 +76,9 @@ typedef struct tpp_lexer {
 
 
 	/* Custom keywords table. */
+#if TPP_HAVE_USER_KEYWORDS
 	tpp_keywords TPP_INTERNAL(tl_kwds);
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 
 	/* Lexer extensions. */
@@ -259,12 +261,14 @@ typedef struct tpp_lexer {
 #define tpp_lexer_has(self, conf) _tpp_lexer_has_##conf(self)
 
 /* Current token */
-#define tpp_lexer_gettok(self)        ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
-#define tpp_lexer_gettoken(self)      (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
-#define tpp_lexer_gettokenkwd(self)   tpp_token_getkwd(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenstart(self) tpp_token_getstart(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenend(self)   tpp_token_getend(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenlen(self)   tpp_token_getlen(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettok(self)          ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
+#define tpp_lexer_gettoken(self)        (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
+#define tpp_lexer_hastokenkwd(self)     tpp_token_haskwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwd(self)     tpp_token_getkwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwdcstr(self) tpp_token_getkwdcstr(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenstart(self)   tpp_token_getstart(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenend(self)     tpp_token_getend(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenlen(self)     tpp_token_getlen(tpp_lexer_gettoken(self))
 
 /* Current file */
 #define tpp_lexer_getfile(self)     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
@@ -338,19 +342,27 @@ typedef struct tpp_lexer {
 
 
 /* Wrappers for keywords API */
+#if TPP_HAVE_USER_KEYWORDS
 #define _tpp_lexer_kwds_getkeyword(self, kwd, len, hash) _tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
 #define _tpp_lexer_kwds_getkeyword_byid(self, id)        _tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
 #define tpp_lexer_kwds_getkeyword(self, kwd, len, hash)  tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
 #define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
 #define tpp_lexer_kwds_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
-#if TPP_HAVE_BSE
-#define _tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
-#define tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
-#define tpp_lexer_kwds_newkeyword_bse(self, kwd, len, hash, file) tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
-#endif /* TPP_HAVE_BSE */
+#if TPP_HAVE_ESCAPED_KEYWORDS
+#define _tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash, file) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
+#define tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash, file) tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
+#define tpp_lexer_kwds_newkeyword_esc(self, kwd, len, hash, file) tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 #define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->TPP_INTERNAL(tl_kwds), kwd)
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define tpp_lexer_kwds_getkeyword(self, kwd, len, hash)  tpp_builtin_getkeyword(kwd, len, hash)
+#define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_builtin_getkeyword_byid(id)
+#if TPP_HAVE_ESCAPED_KEYWORDS
+#define tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash, file) tpp_builtin_getkeyword_esc(kwd, len, hash, file)
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 
 
 
@@ -534,9 +546,25 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
 
 #if TPP_HAVE_KEYWORDS_OPENFILE
 typedef struct tpp_lexer_openfile_result {
-	tpp_keyword  *tlofr_filename; /* [1..1] Keyword for filename */
-	tpp_io_handle tlofr_handle;   /* [1..1] I/O handle for requested file (must be inherited by caller) */
+	tpp_io_handle tlofr_handle;       /* [1..1][owned] I/O handle for requested file (must be inherited by caller) */
+#if TPP_HAVE_USER_KEYWORDS
+	tpp_keyword  *tlofr_filename_kwd; /* [1..1] Keyword for filename */
+#define tpp_lexer_openfile_result_getfilename(self) tpp_keyword_getkwdcstr((self)->tlofr_filename_kwd)
+#else /* TPP_HAVE_USER_KEYWORDS */
+	char         *tlofr_filename;     /* [1..1][owned] Filename string */
+#define tpp_lexer_openfile_result_getfilename(self) ((char const *)(self)->tlofr_filename)
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 } tpp_lexer_openfile_result;
+
+
+#if TPP_HAVE_USER_KEYWORDS
+#define tpp_lexer_openfile_result_fini(self) \
+	tpp_io_close((self)->tlofr_handle)
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define tpp_lexer_openfile_result_fini(self) \
+	(tpp_io_close((self)->tlofr_handle),     \
+	 tpp_free((self)->tlofr_filename))
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
 #define TPP_LEXER_OPENFILE_FLAG_NORMAL 0 /* Normal flags */

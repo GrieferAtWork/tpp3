@@ -35,15 +35,14 @@
  * While inside of this file, the following macros are pre-defined:
  *
  *
- * >> #undef GUARD_TPP_AMALGAMATION_H
-#define TPP_DEFS
+ * >> #define TPP_DEFS
  *    Defined, but no explicit meaning (for use in "#ifdef TPP_DEFS" to detect context)
  *    If you #include other files for "your/defs.h", you can use this macro prevent
  *    unexpected tokens from appearing within the definitions file.
  *
  *
  * >> #define TPP_KWD(id, string)  <magic>
- *    Define an additional keyword "tpp_token_id" by the name "id".
+ *    Define an additional keyword within "tpp_token_id" by the name "id".
  *    This keyword token is returned when an identifier equal to "string" was parsed.
  *    Example:
  *       >> TPP_KWD(KWD_function, "function")
@@ -819,7 +818,7 @@ TPP_MACRO(TPP_KWD___TPP_IDENTIFIER, tpp_lexer_has(tpp_current_lexer(), MACRO___T
 /* TODO: Feature-test macros (for __has_extension()) */
 #if 0
 HAS_EXTENSION_IF(tpp_dollar_is_alpha,              HAVE_EXTENSION_DOLLAR_IS_ALPHA)
-HAS_EXTENSION_IF(tpp_current_va_args,                      HAVE_EXTENSION_VA_ARGS)
+HAS_EXTENSION_IF(tpp_va_args,                      HAVE_EXTENSION_VA_ARGS)
 HAS_EXTENSION_IF(tpp_named_va_args,                HAVE_EXTENSION_GCC_VA_ARGS)
 HAS_EXTENSION_IF(tpp_va_comma,                     HAVE_EXTENSION_VA_COMMA)
 HAS_EXTENSION_IF(tpp_msvc_integer_suffix,          HAVE_EXTENSION_MSVC_FIXED_INT)
@@ -6618,6 +6617,11 @@ TPP_DECL_END
 #define TPP_HAVE_FILE_ENCODING_EMBED (TPP_HAVE_UNICODE && TPP_HAVE_CPP_EMBED && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
 
+/* Provide a function "tpp_file_getrealfilenamekwd()" */
+#ifndef TPP_HAVE_FILE_GETREALFILENAMEKWD
+#define TPP_HAVE_FILE_GETREALFILENAMEKWD (TPP_HAVE_PRAGMA_ONCE)
+#endif /* !TPP_HAVE_FILE_GETREALFILENAMEKWD */
+
 /* Provide a secondary set of keyword APIs that include support for \-escape sequences */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
 #define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
@@ -6923,6 +6927,40 @@ TPP_DECL_END
 #define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
+
+/* Enable support for TPP generating new `tpp_keyword' definitions
+ * on-the-fly, as keywords are parsed (the first time any unique
+ * keyword is parsed, "tpp_keywords_newkeyword()" is used to give
+ * it a unique ID and `tpp_keyword' structure). This is also needed
+ * for macros and a number of other features that need to store some
+ * kind of state alongside keywords. */
+#ifndef TPP_HAVE_USER_KEYWORDS
+#if (TPP_HAVE_PROFILE_NOT_MINIMAL ||                  \
+     TPP_HAVE_FILE_GETREALFILENAMEKWD ||              \
+     TPP_HAVE_CPP_MACROS ||                           \
+     TPP_HAVE_PRAGMA_ONCE ||                          \
+     TPP_HAVE_CPP_IMPORT ||                           \
+     TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+     TPP_HAVE_CLANG_MACRO___has_extension ||          \
+     TPP_HAVE_CLANG_MACRO___has_feature ||            \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
+     TPP_HAVE_MACRO___is_deprecated ||                \
+     TPP_HAVE_MACRO___is_poisoned ||                  \
+     TPP_HAVE_PRAGMA_DEPRECATED ||                    \
+     TPP_HAVE_PRAGMA_GCC_POISON ||                    \
+     TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||         \
+     TPP_HAVE_IFNDEF_INCLUDE_GUARDS ||                \
+     TPP_HAVE_PRAGMA_PUSH_MACRO ||                    \
+     TPP_HAVE_MACRO___TPP_COUNTER ||                  \
+     TPP_HAVE_KEYWORD_USERDATA)
+#define TPP_HAVE_USER_KEYWORDS 1
+#else /* ... */
+#define TPP_HAVE_USER_KEYWORDS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 
 /************************************************************************/
 /************************************************************************/
@@ -9549,7 +9587,11 @@ typedef enum tpp_token_id {
 #define TPP_KWD(id, string) id,
 #include "tpp-amalgamation.h"
 #undef TPP_DEFS
+#if TPP_HAVE_USER_KEYWORDS
 	TPP_TOK_USERKEYWORD_BEGIN, /* First user-defined (non-builtin) keyword */
+#else /* TPP_HAVE_USER_KEYWORDS */
+	TPP_TOK_USERKEYWORD, /* Some user-defined (non-builtin) keyword */
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 } tpp_token_id;
 
 /* Helper macros to easily detect certain types of whitespace. */
@@ -9562,23 +9604,35 @@ typedef enum tpp_token_id {
 
 /* Helper macros to determine which (and what kind of) keyword is described by a given `id' */
 #define TPP_TOK_ISKEYWORD(id)        ((int)(id) >= (int)TPP_TOK_KEYWORD_BEGIN)
+#if TPP_HAVE_USER_KEYWORDS
 #define TPP_TOK_ISUSERKEYWORD(id)    ((int)(id) >= (int)TPP_TOK_USERKEYWORD_BEGIN)
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define TPP_TOK_ISUSERKEYWORD(id)    ((id) == TPP_TOK_USERKEYWORD)
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 #define TPP_TOK_ISBUILTINKEYWORD(id) (TPP_TOK_ISKEYWORD(id) && !TPP_TOK_ISUSERKEYWORD(id))
 
 #if TPP_HAVE_STRTOKENID
-/* Returns the "*" in "TPP_TOK_*" of "id", which must be a (non-keyword and non-error) token ID */
+/* Returns the "*" in "TPP_TOK_*" of "id", which must be a (non-keyword and non-error) token ID
+ * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // "EQUAL_EQUAL"
+ * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // "==" */
 TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_strtokenid(tpp_token_id id);
-#endif /* TPP_HAVE_STRTOKENID */
+#else /* TPP_HAVE_STRTOKENID */
+#define tpp_strtokenid(id) ((char const *)NULL)
+#endif /* !TPP_HAVE_STRTOKENID */
 
 #if TPP_HAVE_REPRTOKENID
-/* Similar to `tpp_strtokenid()', but returns a (canonical) representation of "id" */
+/* Similar to `tpp_strtokenid()', but returns a (canonical) representation of "id":
+ * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // "EQUAL_EQUAL"
+ * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // "==" */
 TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_reprtokenid(tpp_token_id id);
-#endif /* TPP_HAVE_REPRTOKENID */
+#else /* TPP_HAVE_STRTOKENID */
+#define tpp_reprtokenid(id) ((char const *)NULL)
+#endif /* !TPP_HAVE_REPRTOKENID */
 
 struct tpp_keyword;
 typedef struct tpp_token {
 	tpp_token_id              TPP_INTERNAL(tt_id);    /* Token ID (never set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF) */
-	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tt_id))] Keyword identified by `tt_id' */
+	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(tpp_token_haskwd(self))] Keyword identified by `tt_id' */
 	tpp_char const           *TPP_INTERNAL(tt_start); /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
 	tpp_char const           *TPP_INTERNAL(tt_end);   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
 	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing "tt_start" and "tt_end" (or "NULL" if not needed) */
@@ -9594,11 +9648,17 @@ typedef struct tpp_token {
 #define tpp_token_fini(self)                    \
 	(void)(!((self)->TPP_INTERNAL(tt_chunk)) || \
 	       (tpp_string_decref((self)->TPP_INTERNAL(tt_chunk)), 1))
-#define tpp_token_getid(self)    ((self)->TPP_INTERNAL(tt_id))
-#define tpp_token_getkwd(self)   ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "TPP_TOK_ISKEYWORD(tpp_token_getid(self))" */
-#define tpp_token_getstart(self) ((self)->TPP_INTERNAL(tt_start))
-#define tpp_token_getend(self)   ((self)->TPP_INTERNAL(tt_end))
-#define tpp_token_getlen(self)   ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
+#if TPP_HAVE_USER_KEYWORDS
+#define tpp_token_haskwd(self)   TPP_TOK_ISKEYWORD(tpp_token_getid(self))
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define tpp_token_haskwd(self)   TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(self))
+#endif /* !TPP_HAVE_USER_KEYWORDS */
+#define tpp_token_getid(self)      ((self)->TPP_INTERNAL(tt_id))
+#define tpp_token_getkwd(self)     ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "tpp_token_haskwd(self)" */
+#define tpp_token_getstart(self)   ((self)->TPP_INTERNAL(tt_start))
+#define tpp_token_getend(self)     ((self)->TPP_INTERNAL(tt_end))
+#define tpp_token_getlen(self)     ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
+#define tpp_token_getkwdcstr(self) tpp_keyword_getkwdcstr(tpp_token_getkwd(self))
 
 /* Helpers to set the data-fields of "self" */
 #define tpp_token_setid(self, id) \
@@ -12356,11 +12416,12 @@ typedef enum tpp_file_encoding {
 
 
 #undef TPP_HAVE_FILE_IOFLAGS
-#if (TPP_HAVE_FILE_NONBLOCK || \
-     TPP_HAVE_FILE_NOCLOSE ||  \
-     TPP_HAVE_FILE_SYSHDR ||   \
-     TPP_HAVE_FILE_NOKWD ||    \
-     TPP_HAVE_IFNDEF_INCLUDE_GUARDS)
+#if (TPP_HAVE_FILE_NONBLOCK ||         \
+     TPP_HAVE_FILE_NOCLOSE ||          \
+     TPP_HAVE_FILE_SYSHDR ||           \
+     TPP_HAVE_FILE_NOKWD ||            \
+     TPP_HAVE_IFNDEF_INCLUDE_GUARDS || \
+     (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE))
 #define TPP_HAVE_FILE_IOFLAGS 1
 #else /* ... */
 #define TPP_HAVE_FILE_IOFLAGS 0
@@ -12385,6 +12446,9 @@ typedef enum tpp_file_encoding {
 #define TPP_FILE_IOFLAGS_NOGUARD  UINT8_C(0x10) /* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
                                                  * file. A #ifndef-directive encountered at this point can never count as a #include-guard. */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
+#define TPP_FILE_IOFLAGS_FREENAME UINT8_C(0x20) /* Must tpp_free(tff_name) when the file is finalized */
+#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
 
 
@@ -12881,6 +12945,25 @@ typedef struct tpp_file {
 	       _tpp_file_init_io_keep(self)                                                                        \
 	       _tpp_file_init_ioflags(self, flags))
 
+/* Initialize "self" from a given "tpp_lexer_openfile_result" */
+#if TPP_HAVE_KEYWORDS_OPENFILE
+#define tpp_file_init_io_from_ofr(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr) \
+	tpp_file_init_io_from_ofr2(self, ofr, TPP_FILE_ENCODING_UTF8)
+#if TPP_HAVE_USER_KEYWORDS
+#define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
+	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
+	                     (ofr)->tlofr_handle, TPP_FILE_IOFLAGS_NORMAL, enc)
+#elif TPP_HAVE_FILE_NOKWD
+#define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
+	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
+	                     (ofr)->tlofr_handle, TPP_FILE_IOFLAGS_NOKWD | TPP_FILE_IOFLAGS_FREENAME, enc)
+#else /* ... */
+#define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
+	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
+	                     (ofr)->tlofr_handle, TPP_FILE_IOFLAGS_FREENAME, enc)
+#endif /* !... */
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+
 
 
 /* Initialize "self " as a "TPP_FILE_KIND_TEXT" file
@@ -12982,10 +13065,12 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_getrealfilename(tpp_file const *tpp_restrict self);
 
+#if TPP_HAVE_FILE_GETREALFILENAMEKWD
 /* Returns the filename "keyword" (which may not always be available,
  * even when "tpp_file_getrealfilename()" returns non-NULL) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
 tpp_file_getrealfilenamekwd(tpp_file const *tpp_restrict self);
+#endif /* TPP_HAVE_FILE_GETREALFILENAMEKWD */
 
 /* Same as `tpp_file_getrealfilename()', but may be overwritten by "#line" directives */
 #if TPP_HAVE_FILE_USER_FILENAME
@@ -13503,7 +13588,7 @@ typedef struct tpp_keyword_misc {
 	tpp_size TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
 #if TPP_HAVE_KEYWORD_USERDATA
-	void    *TPP_INTERNAL(tkm_userdata_ptr); /* [?..?] User-data pointer (initialize to "NULL") */
+	void          *TPP_INTERNAL(tkm_userdata_ptr); /* [?..?] User-data pointer (initialize to "NULL") */
 	void (TPPCALL *TPP_INTERNAL(tkm_userdata_dtor))(void *ptr); /* [0..1] Optional finalizer for user-data */
 #define tpp_keyword_misc_setuserdata(self, ptr, dtor) \
 	(void)((self)->tkm_userdata_ptr  = (ptr),         \
@@ -13546,6 +13631,7 @@ typedef struct tpp_keyword {
 /*	tpp_char                  TPP_INTERNAL(tk_nul);                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
 } tpp_keyword;
 
+#if TPP_HAVE_USER_KEYWORDS
 #define tpp_keyword_sizeof(len) \
 	(tpp_offsetof(tpp_keyword, TPP_INTERNAL(tk_kwd)) + ((len) + 1) * sizeof(tpp_char))
 #define _tpp_keyword_alloc(len)         ((tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(len)))
@@ -13553,6 +13639,7 @@ typedef struct tpp_keyword {
 #define _tpp_keyword_realloc(p, len)    ((tpp_keyword *)tpp_realloc(p, tpp_keyword_sizeof(len)))
 #define _tpp_keyword_tryrealloc(p, len) ((tpp_keyword *)tpp_tryrealloc(p, tpp_keyword_sizeof(len)))
 #define _tpp_keyword_free(p)            tpp_free(p)
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 /* When true, there are certain actions that require builtin keywords
  * to be copied into the current lexer's keyword table. These include
@@ -13743,6 +13830,7 @@ tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
 
 
 /* Custom keywords table */
+#if TPP_HAVE_USER_KEYWORDS
 typedef struct tpp_keywords {
 	unsigned int          TPP_INTERNAL(tks_kwdc); /* Amount of keyword entries stored. */
 	tpp_hash              TPP_INTERNAL(tks_bckm); /* Allocated bucket mask. */
@@ -13849,6 +13937,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
                          tpp_keyword const *tpp_restrict kwd);
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 TPP_DECL_END
 /************************************************************************/
@@ -14630,7 +14719,9 @@ typedef struct tpp_lexer {
 
 
 	/* Custom keywords table. */
+#if TPP_HAVE_USER_KEYWORDS
 	tpp_keywords TPP_INTERNAL(tl_kwds);
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 
 	/* Lexer extensions. */
@@ -14813,12 +14904,14 @@ typedef struct tpp_lexer {
 #define tpp_lexer_has(self, conf) _tpp_lexer_has_##conf(self)
 
 /* Current token */
-#define tpp_lexer_gettok(self)        ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
-#define tpp_lexer_gettoken(self)      (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
-#define tpp_lexer_gettokenkwd(self)   tpp_token_getkwd(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenstart(self) tpp_token_getstart(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenend(self)   tpp_token_getend(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenlen(self)   tpp_token_getlen(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettok(self)          ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
+#define tpp_lexer_gettoken(self)        (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
+#define tpp_lexer_hastokenkwd(self)     tpp_token_haskwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwd(self)     tpp_token_getkwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwdcstr(self) tpp_token_getkwdcstr(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenstart(self)   tpp_token_getstart(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenend(self)     tpp_token_getend(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenlen(self)     tpp_token_getlen(tpp_lexer_gettoken(self))
 
 /* Current file */
 #define tpp_lexer_getfile(self)     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
@@ -14892,19 +14985,27 @@ typedef struct tpp_lexer {
 
 
 /* Wrappers for keywords API */
+#if TPP_HAVE_USER_KEYWORDS
 #define _tpp_lexer_kwds_getkeyword(self, kwd, len, hash) _tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
 #define _tpp_lexer_kwds_getkeyword_byid(self, id)        _tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
 #define tpp_lexer_kwds_getkeyword(self, kwd, len, hash)  tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
 #define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
 #define tpp_lexer_kwds_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
-#if TPP_HAVE_BSE
-#define _tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
-#define tpp_lexer_kwds_getkeyword_bse(self, kwd, len, hash, file) tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
-#define tpp_lexer_kwds_newkeyword_bse(self, kwd, len, hash, file) tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
-#endif /* TPP_HAVE_BSE */
+#if TPP_HAVE_ESCAPED_KEYWORDS
+#define _tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash, file) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
+#define tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash, file) tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
+#define tpp_lexer_kwds_newkeyword_esc(self, kwd, len, hash, file) tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 #define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->TPP_INTERNAL(tl_kwds), kwd)
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define tpp_lexer_kwds_getkeyword(self, kwd, len, hash)  tpp_builtin_getkeyword(kwd, len, hash)
+#define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_builtin_getkeyword_byid(id)
+#if TPP_HAVE_ESCAPED_KEYWORDS
+#define tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash, file) tpp_builtin_getkeyword_esc(kwd, len, hash, file)
+#endif /* TPP_HAVE_ESCAPED_KEYWORDS */
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 
 
 
@@ -15088,9 +15189,25 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
 
 #if TPP_HAVE_KEYWORDS_OPENFILE
 typedef struct tpp_lexer_openfile_result {
-	tpp_keyword  *tlofr_filename; /* [1..1] Keyword for filename */
-	tpp_io_handle tlofr_handle;   /* [1..1] I/O handle for requested file (must be inherited by caller) */
+	tpp_io_handle tlofr_handle;       /* [1..1][owned] I/O handle for requested file (must be inherited by caller) */
+#if TPP_HAVE_USER_KEYWORDS
+	tpp_keyword  *tlofr_filename_kwd; /* [1..1] Keyword for filename */
+#define tpp_lexer_openfile_result_getfilename(self) tpp_keyword_getkwdcstr((self)->tlofr_filename_kwd)
+#else /* TPP_HAVE_USER_KEYWORDS */
+	char         *tlofr_filename;     /* [1..1][owned] Filename string */
+#define tpp_lexer_openfile_result_getfilename(self) ((char const *)(self)->tlofr_filename)
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 } tpp_lexer_openfile_result;
+
+
+#if TPP_HAVE_USER_KEYWORDS
+#define tpp_lexer_openfile_result_fini(self) \
+	tpp_io_close((self)->tlofr_handle)
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define tpp_lexer_openfile_result_fini(self) \
+	(tpp_io_close((self)->tlofr_handle),     \
+	 tpp_free((self)->tlofr_filename))
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
 #define TPP_LEXER_OPENFILE_FLAG_NORMAL 0 /* Normal flags */

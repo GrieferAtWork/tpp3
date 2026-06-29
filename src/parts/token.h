@@ -1467,7 +1467,11 @@ for (local firstChar: firstChars) {
 #define TPP_KWD(id, string) id,
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS
+#if TPP_HAVE_USER_KEYWORDS
 	TPP_TOK_USERKEYWORD_BEGIN, /* First user-defined (non-builtin) keyword */
+#else /* TPP_HAVE_USER_KEYWORDS */
+	TPP_TOK_USERKEYWORD, /* Some user-defined (non-builtin) keyword */
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 } tpp_token_id;
 
 /* Helper macros to easily detect certain types of whitespace. */
@@ -1480,23 +1484,35 @@ for (local firstChar: firstChars) {
 
 /* Helper macros to determine which (and what kind of) keyword is described by a given `id' */
 #define TPP_TOK_ISKEYWORD(id)        ((int)(id) >= (int)TPP_TOK_KEYWORD_BEGIN)
+#if TPP_HAVE_USER_KEYWORDS
 #define TPP_TOK_ISUSERKEYWORD(id)    ((int)(id) >= (int)TPP_TOK_USERKEYWORD_BEGIN)
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define TPP_TOK_ISUSERKEYWORD(id)    ((id) == TPP_TOK_USERKEYWORD)
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 #define TPP_TOK_ISBUILTINKEYWORD(id) (TPP_TOK_ISKEYWORD(id) && !TPP_TOK_ISUSERKEYWORD(id))
 
 #if TPP_HAVE_STRTOKENID
-/* Returns the "*" in "TPP_TOK_*" of "id", which must be a (non-keyword and non-error) token ID */
+/* Returns the "*" in "TPP_TOK_*" of "id", which must be a (non-keyword and non-error) token ID
+ * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // "EQUAL_EQUAL"
+ * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // "==" */
 TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_strtokenid(tpp_token_id id);
-#endif /* TPP_HAVE_STRTOKENID */
+#else /* TPP_HAVE_STRTOKENID */
+#define tpp_strtokenid(id) ((char const *)NULL)
+#endif /* !TPP_HAVE_STRTOKENID */
 
 #if TPP_HAVE_REPRTOKENID
-/* Similar to `tpp_strtokenid()', but returns a (canonical) representation of "id" */
+/* Similar to `tpp_strtokenid()', but returns a (canonical) representation of "id":
+ * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // "EQUAL_EQUAL"
+ * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // "==" */
 TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_reprtokenid(tpp_token_id id);
-#endif /* TPP_HAVE_REPRTOKENID */
+#else /* TPP_HAVE_STRTOKENID */
+#define tpp_reprtokenid(id) ((char const *)NULL)
+#endif /* !TPP_HAVE_REPRTOKENID */
 
 struct tpp_keyword;
 typedef struct tpp_token {
 	tpp_token_id              TPP_INTERNAL(tt_id);    /* Token ID (never set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF) */
-	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tt_id))] Keyword identified by `tt_id' */
+	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(tpp_token_haskwd(self))] Keyword identified by `tt_id' */
 	tpp_char const           *TPP_INTERNAL(tt_start); /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
 	tpp_char const           *TPP_INTERNAL(tt_end);   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
 	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing "tt_start" and "tt_end" (or "NULL" if not needed) */
@@ -1512,11 +1528,17 @@ typedef struct tpp_token {
 #define tpp_token_fini(self)                    \
 	(void)(!((self)->TPP_INTERNAL(tt_chunk)) || \
 	       (tpp_string_decref((self)->TPP_INTERNAL(tt_chunk)), 1))
-#define tpp_token_getid(self)    ((self)->TPP_INTERNAL(tt_id))
-#define tpp_token_getkwd(self)   ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "TPP_TOK_ISKEYWORD(tpp_token_getid(self))" */
-#define tpp_token_getstart(self) ((self)->TPP_INTERNAL(tt_start))
-#define tpp_token_getend(self)   ((self)->TPP_INTERNAL(tt_end))
-#define tpp_token_getlen(self)   ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
+#if TPP_HAVE_USER_KEYWORDS
+#define tpp_token_haskwd(self)   TPP_TOK_ISKEYWORD(tpp_token_getid(self))
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define tpp_token_haskwd(self)   TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(self))
+#endif /* !TPP_HAVE_USER_KEYWORDS */
+#define tpp_token_getid(self)      ((self)->TPP_INTERNAL(tt_id))
+#define tpp_token_getkwd(self)     ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "tpp_token_haskwd(self)" */
+#define tpp_token_getstart(self)   ((self)->TPP_INTERNAL(tt_start))
+#define tpp_token_getend(self)     ((self)->TPP_INTERNAL(tt_end))
+#define tpp_token_getlen(self)     ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
+#define tpp_token_getkwdcstr(self) tpp_keyword_getkwdcstr(tpp_token_getkwd(self))
 
 /* Helpers to set the data-fields of "self" */
 #define tpp_token_setid(self, id) \

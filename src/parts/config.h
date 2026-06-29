@@ -2533,6 +2533,11 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_FILE_ENCODING_EMBED (TPP_HAVE_UNICODE && TPP_HAVE_CPP_EMBED && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
 
+/* Provide a function "tpp_file_getrealfilenamekwd()" */
+#ifndef TPP_HAVE_FILE_GETREALFILENAMEKWD
+#define TPP_HAVE_FILE_GETREALFILENAMEKWD (TPP_HAVE_PRAGMA_ONCE)
+#endif /* !TPP_HAVE_FILE_GETREALFILENAMEKWD */
+
 /* Provide a secondary set of keyword APIs that include support for \-escape sequences */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
 #define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
@@ -2838,6 +2843,40 @@ print("#endif /" "* !... *" "/");
 #define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
+
+/* Enable support for TPP generating new `tpp_keyword' definitions
+ * on-the-fly, as keywords are parsed (the first time any unique
+ * keyword is parsed, "tpp_keywords_newkeyword()" is used to give
+ * it a unique ID and `tpp_keyword' structure). This is also needed
+ * for macros and a number of other features that need to store some
+ * kind of state alongside keywords. */
+#ifndef TPP_HAVE_USER_KEYWORDS
+#if (TPP_HAVE_PROFILE_NOT_MINIMAL ||                  \
+     TPP_HAVE_FILE_GETREALFILENAMEKWD ||              \
+     TPP_HAVE_CPP_MACROS ||                           \
+     TPP_HAVE_PRAGMA_ONCE ||                          \
+     TPP_HAVE_CPP_IMPORT ||                           \
+     TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+     TPP_HAVE_CLANG_MACRO___has_extension ||          \
+     TPP_HAVE_CLANG_MACRO___has_feature ||            \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
+     TPP_HAVE_MACRO___is_deprecated ||                \
+     TPP_HAVE_MACRO___is_poisoned ||                  \
+     TPP_HAVE_PRAGMA_DEPRECATED ||                    \
+     TPP_HAVE_PRAGMA_GCC_POISON ||                    \
+     TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||         \
+     TPP_HAVE_IFNDEF_INCLUDE_GUARDS ||                \
+     TPP_HAVE_PRAGMA_PUSH_MACRO ||                    \
+     TPP_HAVE_MACRO___TPP_COUNTER ||                  \
+     TPP_HAVE_KEYWORD_USERDATA)
+#define TPP_HAVE_USER_KEYWORDS 1
+#else /* ... */
+#define TPP_HAVE_USER_KEYWORDS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 
 /************************************************************************/
 /************************************************************************/

@@ -62,8 +62,8 @@ int main(int argc, char *argv[]) {
 		if (tok == TPP_TOK_EOF)
 			break;
 		desc = tpp_strtokenid(tok);
-		if (desc == NULL && TPP_TOK_ISKEYWORD(tok))
-			desc = (char const *)tpp_lexer_gettoken(&lexer)->tt_kwd->tk_kwd;
+		if (desc == NULL && tpp_lexer_hastokenkwd(&lexer))
+			desc = tpp_lexer_gettokenkwdcstr(&lexer);
 		if (desc == NULL)
 			desc = "?";
 		file           = tpp_lexer_getfile(&lexer);

@@ -668,6 +668,7 @@ tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
 }
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
+#if TPP_HAVE_USER_KEYWORDS
 static TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
 #if TPP_HAVE_KEYWORD_ASSTRING
@@ -1192,7 +1193,7 @@ done:
 	return result;
 }
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
-
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 
 #if TPP_HAVE_KEYWORDS_OPENFILE
@@ -1362,30 +1363,45 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
 {
+#if TPP_HAVE_USER_KEYWORDS
 	bool is_known_keyword = false;
+#define tpp_lexer_openfile_keyword                    tpp_keyword
+#define tpp_lexer_openfile_keyword_cstr(p)            ((char *)(p)->tk_kwd)
+#define tpp_lexer_openfile_keyword_setlen(p, v)       (void)((p)->tk_len = (v))
+#define tpp_lexer_openfile_keyword_alloc(len)         _tpp_keyword_alloc(len)
+#define tpp_lexer_openfile_keyword_tryrealloc(p, len) _tpp_keyword_tryrealloc(p, len)
+#define tpp_lexer_openfile_keyword_free(p)            _tpp_keyword_free(p)
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define tpp_lexer_openfile_keyword                    char
+#define tpp_lexer_openfile_keyword_cstr(p)            p
+#define tpp_lexer_openfile_keyword_setlen(p, v)       (void)0
+#define tpp_lexer_openfile_keyword_alloc(len)         ((char *)tpp_malloc(((len) + 1) * sizeof(char)))
+#define tpp_lexer_openfile_keyword_tryrealloc(p, len) ((char *)tpp_tryrealloc(p, ((len) + 1) * sizeof(char)))
+#define tpp_lexer_openfile_keyword_free(p)            tpp_free(p)
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 	tpp_io_handle handle;
-	tpp_keyword *result_kwd;
+	tpp_lexer_openfile_keyword *result_kwd;
 	tpp_size filename_len = tpp_strnlen(filename, filename_maxlen);
 	if (TPP_FS_ISABS(filename, filename_len) || !relative_to) {
-		tpp_keyword *new_result_kwd;
-		tpp_char *kwd_end;
+		tpp_lexer_openfile_keyword *new_result_kwd;
+		char *kwd_end;
 		tpp_size result_kwd_len;
 without_relative_to:
-		result_kwd = _tpp_keyword_alloc(filename_len);
+		result_kwd = tpp_lexer_openfile_keyword_alloc(filename_len);
 		if tpp_unlikely(!result_kwd)
 			goto err_nomem;
-		kwd_end = (tpp_char *)tpp_fs_normalize((char *)result_kwd->tk_kwd,
-		                                       (char *)result_kwd->tk_kwd,
-		                                       filename, filename_len);
-		*kwd_end = (tpp_char)'\0';
-		result_kwd_len = (tpp_size)(kwd_end - result_kwd->tk_kwd);
+		kwd_end = tpp_fs_normalize(tpp_lexer_openfile_keyword_cstr(result_kwd),
+		                           tpp_lexer_openfile_keyword_cstr(result_kwd),
+		                           filename, filename_len);
+		*kwd_end = '\0';
+		result_kwd_len = (tpp_size)(kwd_end - tpp_lexer_openfile_keyword_cstr(result_kwd));
 		tpp_assert(result_kwd_len <= filename_len);
-		new_result_kwd = _tpp_keyword_tryrealloc(result_kwd, result_kwd_len);
+		new_result_kwd = tpp_lexer_openfile_keyword_tryrealloc(result_kwd, result_kwd_len);
 		if tpp_likely(new_result_kwd)
 			result_kwd = new_result_kwd;
-		result_kwd->tk_len = result_kwd_len;
+		tpp_lexer_openfile_keyword_setlen(result_kwd, result_kwd_len);
 	} else {
-		tpp_keyword *new_result_kwd;
+		tpp_lexer_openfile_keyword *new_result_kwd;
 		tpp_size rel_size, whole_size;
 		char const *rel_base = relative_to;
 		char const *last_sep = rel_base + tpp_strlen(relative_to);
@@ -1396,19 +1412,19 @@ without_relative_to:
 			goto without_relative_to;
 		rel_size   = (tpp_size)(last_sep - rel_base); /* Including trailing '/' */
 		whole_size = rel_size + filename_len;
-		result_kwd = _tpp_keyword_alloc(whole_size);
+		result_kwd = tpp_lexer_openfile_keyword_alloc(whole_size);
 		if tpp_unlikely(!result_kwd)
 			goto err_nomem;
-		dst_base = (char *)result_kwd->tk_kwd;
+		dst_base = tpp_lexer_openfile_keyword_cstr(result_kwd);
 		tpp_memcpy(dst_base, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
 		dst_iter = dst_base + rel_size;
 		dst_end = tpp_fs_normalize(dst_iter, dst_base, filename, filename_len);
 		*dst_end = '\0';
 		whole_size = (tpp_size)(dst_end - dst_base);
-		new_result_kwd = _tpp_keyword_tryrealloc(result_kwd, whole_size);
+		new_result_kwd = tpp_lexer_openfile_keyword_tryrealloc(result_kwd, whole_size);
 		if tpp_likely(new_result_kwd)
 			result_kwd = new_result_kwd;
-		result_kwd->tk_len = whole_size;
+		tpp_lexer_openfile_keyword_setlen(result_kwd, whole_size);
 	}
 
 	/* FIXME: Windows has a case-insensitive filesystem, but the filename hash used here
@@ -1416,6 +1432,8 @@ without_relative_to:
 	 *        case-sensitive. */
 
 	/* Check if "result_kwd" is a known keyword... */
+	(void)self;
+#if TPP_HAVE_USER_KEYWORDS
 	{
 		tpp_hash hash = tpp_hashof(result_kwd->tk_kwd, result_kwd->tk_len);
 		tpp_keyword *bucket = self->tl_kwds.tks_bckv[hash & self->tl_kwds.tks_bckm];
@@ -1429,7 +1447,7 @@ without_relative_to:
 				continue;
 
 			/* Keyword already exists */
-			_tpp_keyword_free(result_kwd);
+			tpp_lexer_openfile_keyword_free(result_kwd);
 			is_known_keyword = true;
 			result_kwd = bucket;
 
@@ -1477,15 +1495,17 @@ without_relative_to:
 		result_kwd->tk_hash = hash;
 	}
 got_result_kwd:
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 	/* Try to open the file */
-	handle = tpp_io_open((char const *)result_kwd->tk_kwd);
+	handle = tpp_io_open(tpp_lexer_openfile_keyword_cstr(result_kwd));
 	if (handle == tpp_io_handle_INVALID) {
-		_tpp_keyword_free(result_kwd);
+		tpp_lexer_openfile_keyword_free(result_kwd);
 		return TPP_ENOENT;
 	}
 
 	/* Initialize remaining fields of "result_kwd" and insert into keyword map */
+#if TPP_HAVE_USER_KEYWORDS
 	if (!is_known_keyword) {
 		result_kwd->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN +
 		                                   self->tl_kwds.tks_kwdc);
@@ -1502,13 +1522,24 @@ got_result_kwd:
 			goto err_nomem;
 		}
 	}
+#endif /* TPP_HAVE_USER_KEYWORDS */
 
 	/* Initialize "result" */
+#if TPP_HAVE_USER_KEYWORDS
+	result->tlofr_filename_kwd = result_kwd;
+#else /* TPP_HAVE_USER_KEYWORDS */
 	result->tlofr_filename = result_kwd;
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 	result->tlofr_handle   = handle;
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;
+#undef tpp_lexer_openfile_keyword
+#undef tpp_lexer_openfile_keyword_cstr
+#undef tpp_lexer_openfile_keyword_setlen
+#undef tpp_lexer_openfile_keyword_alloc
+#undef tpp_lexer_openfile_keyword_tryrealloc
+#undef tpp_lexer_openfile_keyword_free
 }
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE */
 

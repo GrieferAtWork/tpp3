@@ -1959,12 +1959,19 @@ static uint_least16_t const tpp_token_repr_offsets[] = {
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_token_repr_offsets) == TPP_TOK_MULTICHAR_END);
 /*[[[end]]]*/
 
-/* Similar to `tpp_strtokenid()', but returns a (canonical) representation of "id" */
+/* Similar to `tpp_strtokenid()', but returns a (canonical) representation of "id":
+ * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // "EQUAL_EQUAL"
+ * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // "==" */
 TPP_IMPL TPP_WUNUSED char const *TPPCALL
 tpp_reprtokenid(tpp_token_id id) {
 	if ((unsigned int)id < (unsigned int)TPP_TOK_MULTICHAR_END)
 		return (char const *)&tpp_token_repr_strings + tpp_token_repr_offsets[(unsigned int)id];
-	if ((unsigned int)id < (unsigned int)TPP_TOK_USERKEYWORD_BEGIN) {
+#if TPP_HAVE_USER_KEYWORDS
+	if ((unsigned int)id < (unsigned int)TPP_TOK_USERKEYWORD_BEGIN)
+#else /* TPP_HAVE_USER_KEYWORDS */
+	if ((unsigned int)id < (unsigned int)TPP_TOK_USERKEYWORD)
+#endif /* !TPP_HAVE_USER_KEYWORDS */
+	{
 		tpp_keyword const *kwd = tpp_builtin_getkeyword_byid(id);
 		if (kwd)
 			return (char const *)kwd->tk_kwd;

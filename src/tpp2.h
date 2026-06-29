@@ -5375,8 +5375,8 @@ TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
 	((create_missing) ? tpp_lexer_kwds_newkeyword(self, name, namelen, tpp_hashof(name, namelen)) \
 	                  : tpp_lexer_kwds_getkeyword(self, name, namelen, tpp_hashof(name, namelen)))
 #define TPPLexer_LookupEscapedKeyword_(self, name, namelen, create_missing)                           \
-	((create_missing) ? tpp_lexer_kwds_newkeyword_bse(self, name, namelen, tpp_hashof(name, namelen)) \
-	                  : tpp_lexer_kwds_getkeyword_bse(self, name, namelen, tpp_hashof(name, namelen)))
+	((create_missing) ? tpp_lexer_kwds_newkeyword_esc(self, name, namelen, tpp_hashof(name, namelen)) \
+	                  : tpp_lexer_kwds_getkeyword_esc(self, name, namelen, tpp_hashof(name, namelen)))
 #define TPPLexer_LookupKeyword(name, namelen, create_missing) \
 	TPPLexer_LookupKeyword_(TPP2_LEXER, name, namelen, create_missing)
 #define TPPLexer_LookupEscapedKeyword(name, namelen, create_missing) \

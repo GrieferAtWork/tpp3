@@ -1281,7 +1281,7 @@ tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
 			continue;
 		if (TPP_TOK_ISERR(tok)) {
 			if (error == TPP_EOK)
-				tpp_io_close(result->tlofr_handle);
+				tpp_lexer_openfile_result_fini(result);
 			return TPP_TOK_ASERR(tok);
 		}
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
@@ -1295,7 +1295,7 @@ tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
 			token->tt_start = saved_start;
 			if (TPP_ISERR(warn_error)) {
 				if (error == TPP_EOK)
-					tpp_io_close(result->tlofr_handle);
+					tpp_lexer_openfile_result_fini(result);
 				return warn_error;
 			}
 		}
@@ -1342,11 +1342,11 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 	/* Push a new file */
 	prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file) {
-		tpp_io_close(ofr.tlofr_handle);
+		tpp_lexer_openfile_result_fini(&ofr);
 		return TPP_TOK_ENOMEM;
 	}
 	*prev_file = *file;
-	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename),
+	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename_kwd),
 	                    ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -1549,7 +1549,7 @@ tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
 static TPP_NONNULL((1)) void TPPCALL
 tpp_embed_builder_fini(tpp_embed_builder *tpp_restrict self) {
 	if (self->teb_ofr_error == TPP_EOK)
-		tpp_io_close(self->teb_ofr.tlofr_handle);
+		tpp_lexer_openfile_result_fini(&self->teb_ofr);
 	tpp_lexer_arginfo_fini(&self->teb_prefix);
 	tpp_lexer_arginfo_fini(&self->teb_suffix);
 	tpp_lexer_arginfo_fini(&self->teb_if_empty);
@@ -1615,9 +1615,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		if tpp_unlikely(!prev_file)
 			goto err_nomem;
 		*prev_file = *file;
-		tpp_file_init_io_ex2(file, (char const *)self->teb_ofr.tlofr_filename->tk_kwd,
-		                     self->teb_ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL,
-		                     TPP_FILE_ENCODING_EMBED);
+		tpp_file_init_io_from_ofr2(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
 		tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
 		file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 		file->tf_prev  = prev_file;
@@ -1698,9 +1696,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		goto err_nomem_embed_data;
 	*prev_file = *file;
 #if TPP_HAVE_FILE_ENCODING_EMBED
-	tpp_file_init_io_ex2(file, (char const *)self->teb_ofr.tlofr_filename->tk_kwd,
-	                     self->teb_ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL,
-	                     TPP_FILE_ENCODING_EMBED);
+	tpp_file_init_io_from_ofr2(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
 	tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
 	file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 	file->tf_chunk = tpp_string_builder_pack(&embed_data);
@@ -1715,9 +1711,26 @@ done_inherit_io_handle:
 #else /* TPP_HAVE_FILE_ENCODING_EMBED */
 	{
 		TPP_REF tpp_string *chunk = tpp_string_builder_pack(&embed_data);
-		tpp_file_init_text_ascii(file, (char const *)self->teb_ofr.tlofr_filename->tk_kwd,
+#if TPP_HAVE_USER_KEYWORDS
+		tpp_file_init_text_ascii(file, tpp_lexer_openfile_result_getfilename(&self->teb_ofr),
 		                         chunk, tpp_string_str(chunk), tpp_string_len(chunk),
 		                         TPP_LCINFO_INVALID);
+#else /* TPP_HAVE_USER_KEYWORDS */
+		/* Must initialize as an I/O file (even though the file handle is at EOF),
+		 * because that's the only way a file is able to free its filename upon
+		 * being finalized. Once "chunk" has been read, the file will simply try
+		 * to read once again, which should yield EOF and cause it to stop
+		 *
+		 * FIXME: This breaks when a custom "limit" was used! -- if that's the case,
+		 *        must read+discard all remaining data within the file before we can
+		 *        return here! */
+		tpp_file_init_io_from_ofr(file, &self->teb_ofr);
+		file->tf_data.td_io.tff_start_lc = TPP_LCINFO_INVALID;
+		file->tf_chunk = chunk;
+		file->tf_pos = tpp_string_str(chunk);
+		file->tf_end = tpp_string_end(chunk);
+		self->teb_ofr_error = TPP_ENOENT; /* Anything other than "TPP_EOK" to prevent closure in "tpp_embed_builder_fini()" */
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 	}
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
