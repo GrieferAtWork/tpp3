@@ -457,7 +457,11 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
 		/* Try to open files relative to the current #include-stack */
 		tpp_file const *file = tpp_lexer_getfile(self);
 		do {
-			if (file->tf_kind == TPP_FILE_KIND_IO) {
+#if TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS
+			if (file->tf_kind == TPP_FILE_KIND_IO ||
+			    file->tf_kind == TPP_FILE_KIND_TEXT)
+#endif /* TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS */
+			{
 				char const *filename = file->tf_data.td_io.tff_name;
 				if (filename) {
 					error = tpp_do_lexer_openfile(filename);
