@@ -84,9 +84,6 @@ print("	((enabled) ? tpp_features_enable(self, id) : tpp_features_disable(self, 
 print("#define tpp_features_init(self)            (void)(*(self) = tpp_features_default)");
 print("#define tpp_features_reset(self)           (void)(*(self) = tpp_features_default)");
 print("#define tpp_features_fini(self)            (void)0");
-print("#define tpp_features_get(self, TPP_FEAT_x) _tpp_features_get_##TPP_FEAT_x(self)");
-print("#else /" "* TPP_HAVE_FEATURES *" "/");
-print("#define tpp_features_get(self, TPP_FEAT_x) 1");
 print("#endif /" "* TPP_HAVE_FEATURES *" "/");
 print;
 for (local CONF: configs) {
@@ -2037,9 +2034,6 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #define tpp_features_init(self)            (void)(*(self) = tpp_features_default)
 #define tpp_features_reset(self)           (void)(*(self) = tpp_features_default)
 #define tpp_features_fini(self)            (void)0
-#define tpp_features_get(self, TPP_FEAT_x) _tpp_features_get_##TPP_FEAT_x(self)
-#else /* TPP_HAVE_FEATURES */
-#define tpp_features_get(self, TPP_FEAT_x) 1
 #endif /* TPP_HAVE_FEATURES */
 
 #if TPP_CONF_IS_CONST(TPP_HAVE_BSE)

@@ -2832,6 +2832,12 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_TPP_EXTENSION_NEAREST || TPP_HAVE_TPP_WARNING_GROUP_NEAREST)
 #endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
 
+/* Provide a function "tpp_lexer_dump_definitions()" that can be
+ * used to re-print all user-defined macro definitions and asserts. */
+#ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS (TPP_PROFILE == TPP_PROFILE_ALL)
+#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS */
+
 /* String representations of what __has_embed() should expand to */
 #if TPP_HAVE_MACRO___has_embed
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND

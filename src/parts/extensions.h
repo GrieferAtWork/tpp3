@@ -52,7 +52,6 @@ TPP_CONST_DECL tpp_extensions_state const tpp_extensions_state_default;
 
 #define tpp_extensions_state_getid(self, id) \
 	((self)->TPP_INTERNAL(tes_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
-#define tpp_extensions_state_get(self, id) _tpp_extensions_state_get_##id(self)
 #define tpp_extensions_state_enable(self, id) \
 	(void)((self)->TPP_INTERNAL(tes_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_extensions_state_disable(self, id) \
@@ -111,8 +110,8 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 #define tpp_extensions_setid(self, id, enabled) \
 	(tpp_extensions_state_setid(&(self)->TPP_INTERNAL(te_state), id, enabled), TPP_EOK)
 #endif /* !TPP_HAVE_EXTENSIONS_PUSH_POP */
-#define tpp_extensions_get(self, id)   tpp_extensions_state_get(&(self)->TPP_INTERNAL(te_state), id)
-#define tpp_extensions_getid(self, id) tpp_extensions_state_getid(&(self)->TPP_INTERNAL(te_state), id)
+#define tpp_extensions_getid(self, id) \
+	tpp_extensions_state_getid(&(self)->TPP_INTERNAL(te_state), id)
 
 
 /* Convert between extension IDs and their human-readable names. */

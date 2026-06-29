@@ -28,6 +28,14 @@
 
 TPP_DECL_BEGIN
 
+#if TPP_HAVE_LEXER_DUMP_DEFINITIONS
+static TPP_FORMATPRINTER_DEFINE(dump_defs_printer, arg, text, num_bytes) {
+	(void)arg;
+	fwrite(text, 1, num_bytes, stderr);
+	return 0;
+}
+#endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
+
 int main(int argc, char *argv[]) {
 	int result = 1;
 	tpp_lexer lexer;
@@ -67,7 +75,7 @@ int main(int argc, char *argv[]) {
 				tok = TPP_TOK_OFERR(error);
 			break;
 		}
-#if 0
+#if 1
 		printf("%.*s",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
@@ -120,6 +128,12 @@ int main(int argc, char *argv[]) {
 		goto out;
 	}
 	result = 0;
+
+#if TPP_HAVE_LEXER_DUMP_DEFINITIONS
+	tpp_lexer_dump_definitions(&lexer, &dump_defs_printer, NULL,
+	                           TPP_LEXER_DUMP_DEFINITIONS_ALL |
+	                           TPP_LEXER_DUMP_DEFINITIONS_SORTED);
+#endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 out:
 	tpp_lexer_finifile(&lexer);
 	tpp_lexer_fini(&lexer);

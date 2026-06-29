@@ -6933,6 +6933,12 @@ TPP_DECL_END
 	(TPP_HAVE_TPP_EXTENSION_NEAREST || TPP_HAVE_TPP_WARNING_GROUP_NEAREST)
 #endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
 
+/* Provide a function "tpp_lexer_dump_definitions()" that can be
+ * used to re-print all user-defined macro definitions and asserts. */
+#ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS (TPP_PROFILE == TPP_PROFILE_ALL)
+#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS */
+
 /* String representations of what __has_embed() should expand to */
 #if TPP_HAVE_MACRO___has_embed
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND
@@ -11680,9 +11686,6 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #define tpp_features_init(self)            (void)(*(self) = tpp_features_default)
 #define tpp_features_reset(self)           (void)(*(self) = tpp_features_default)
 #define tpp_features_fini(self)            (void)0
-#define tpp_features_get(self, TPP_FEAT_x) _tpp_features_get_##TPP_FEAT_x(self)
-#else /* TPP_HAVE_FEATURES */
-#define tpp_features_get(self, TPP_FEAT_x) 1
 #endif /* TPP_HAVE_FEATURES */
 
 #if TPP_CONF_IS_CONST(TPP_HAVE_BSE)
@@ -14062,7 +14065,6 @@ TPP_CONST_DECL tpp_extensions_state const tpp_extensions_state_default;
 
 #define tpp_extensions_state_getid(self, id) \
 	((self)->TPP_INTERNAL(tes_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
-#define tpp_extensions_state_get(self, id) _tpp_extensions_state_get_##id(self)
 #define tpp_extensions_state_enable(self, id) \
 	(void)((self)->TPP_INTERNAL(tes_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_extensions_state_disable(self, id) \
@@ -14121,8 +14123,8 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 #define tpp_extensions_setid(self, id, enabled) \
 	(tpp_extensions_state_setid(&(self)->TPP_INTERNAL(te_state), id, enabled), TPP_EOK)
 #endif /* !TPP_HAVE_EXTENSIONS_PUSH_POP */
-#define tpp_extensions_get(self, id)   tpp_extensions_state_get(&(self)->TPP_INTERNAL(te_state), id)
-#define tpp_extensions_getid(self, id) tpp_extensions_state_getid(&(self)->TPP_INTERNAL(te_state), id)
+#define tpp_extensions_getid(self, id) \
+	tpp_extensions_state_getid(&(self)->TPP_INTERNAL(te_state), id)
 
 
 /* Convert between extension IDs and their human-readable names. */
@@ -16422,6 +16424,45 @@ tpp_lexer_warn_nonempty_ifdef(tpp_lexer *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char const *TPPCALL
 tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok);
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */
+
+
+
+/* Dump all user-defined macros and assertions to "printer"
+ * @param: what: Set of `TPP_LEXER_DUMP_DEFINITIONS_*'
+ * @return: * :  Sum of return values of "printer"
+ * @return: < 0: First negative return value of "printer" */
+#if TPP_HAVE_LEXER_DUMP_DEFINITIONS
+TPP_DECL TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
+                           tpp_formatprinter printer, void *arg,
+                           unsigned int what);
+#if TPP_HAVE_CPP_MACROS
+#define TPP_LEXER_DUMP_DEFINITIONS_MACROS     0x0001 /* #define foo bar */
+#else /* TPP_HAVE_CPP_MACROS */
+#define TPP_LEXER_DUMP_DEFINITIONS_MACROS     0x0000 /* no-op */
+#endif /* !TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_CPP_ASSERT
+#define TPP_LEXER_DUMP_DEFINITIONS_ASSERTS    0x0002 /* #assert foo(bar) */
+#else /* TPP_HAVE_CPP_ASSERT */
+#define TPP_LEXER_DUMP_DEFINITIONS_ASSERTS    0x0000 /* no-op */
+#endif /* !TPP_HAVE_CPP_ASSERT */
+#if TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT
+#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x1000 /* Sort macros/assertion-keys based on their keyword's token ID */
+#else /* TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT */
+#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x0000 /* no-op */
+#endif /* !TPP_HAVE_CPP_MACROS && !TPP_HAVE_CPP_ASSERT */
+#if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTENSIONS 0x0004 /* #pragma TPP extension("-ffoo") // Where different from default */
+#else /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTENSIONS 0x0000 /* no-op */
+#endif /* !TPP_HAVE_PRAGMA_EXTENSION && !TPP_HAVE_PRAGMA_TPP_EXTENSION */
+#if TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING
+#define TPP_LEXER_DUMP_DEFINITIONS_WARNINGS   0x0008 /* #pragma TPP warning("-Wfoo") // Where different from default */
+#else /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
+#define TPP_LEXER_DUMP_DEFINITIONS_WARNINGS   0x0000 /* no-op */
+#endif /* !TPP_HAVE_PRAGMA_WARNING && !TPP_HAVE_PRAGMA_TPP_WARNING */
+#define TPP_LEXER_DUMP_DEFINITIONS_ALL        0x0fff
+#endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
 
 

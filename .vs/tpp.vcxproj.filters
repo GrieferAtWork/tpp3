@@ -105,6 +105,9 @@
     <ClCompile Include="..\src\parts\sysinclude.c">
       <Filter>src\parts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\lexer-dump.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">
