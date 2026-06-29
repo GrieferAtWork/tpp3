@@ -197,9 +197,9 @@ typedef struct tpp_keyword {
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_KEYWORD_MISC */
 	tpp_hash                  TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd' */
-	/* TODO: "tk_refcnt" isn't actually needed, except for the (unnecessary) "tpp_keyword_asstring" API
-	 *       -> Have a config option to disable this binary compatibility layer. */
+#if TPP_HAVE_KEYWORD_ASSTRING
 	tpp_refcnt_atomic         TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with "tpp_string") */
+#endif /* TPP_HAVE_KEYWORD_ASSTRING */
 	tpp_size                  TPP_INTERNAL(tk_len);                 /* [const] # of bytes (char-s) in `tk_kwd' (excluding trailing \0) */
 	tpp_char                  TPP_INTERNAL(tk_kwd)[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; \0-terminated; never contains \-escaped linefeeds) */
 /*	tpp_char                  TPP_INTERNAL(tk_nul);                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
@@ -216,7 +216,7 @@ typedef struct tpp_keyword {
 /* When true, there are certain actions that require builtin keywords
  * to be copied into the current lexer's keyword table. These include
  * user-defined macros (with built-in identifiers as names), as well
- * as any other "misc"-related, custom data being assigned ot keywords */
+ * as any other "misc"-related, custom data being assigned to keywords */
 #ifndef TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 0
 #endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
@@ -243,16 +243,18 @@ typedef struct tpp_keyword {
 #define tpp_keyword_getmacro(self) ((self)->TPP_INTERNAL(tk_macro))
 #endif /* TPP_HAVE_CPP_MACROS */
 
-
-/* Convert back-and-forth between keywords and strings */
-#define _TPP_KEYWORD_STRING_ABI_START TPP_INTERNAL(tk_refcnt)
-#define tpp_keyword_asstring(self) ((tpp_string *)&(self)->_TPP_KEYWORD_STRING_ABI_START)
-#define tpp_string_askeyword(self) ((tpp_keyword *)((char *)(self) - tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)))
-
 /* Check if "self" matches the C, constant string literal "cstr" */
 #define tpp_keyword_equals_cstr(self, cstr)                               \
 	((self)->TPP_INTERNAL(tk_len) == (sizeof(cstr) / sizeof(char)) - 1 && \
 	 tpp_memcmp((self)->TPP_INTERNAL(tk_kwd), cstr, sizeof(cstr) - sizeof(char)) == 0)
+
+
+/* Convert back-and-forth between keywords and strings */
+#if TPP_HAVE_KEYWORD_ASSTRING
+#define _TPP_KEYWORD_STRING_ABI_START TPP_INTERNAL(tk_refcnt)
+#define tpp_keyword_asstring(self) ((tpp_string *)&(self)->_TPP_KEYWORD_STRING_ABI_START)
+#define tpp_string_askeyword(self) ((tpp_keyword *)((char *)(self) - tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)))
+#endif /* TPP_HAVE_KEYWORD_ASSTRING */
 
 #if TPP_HAVE_KEYWORD_MISC
 /* Ensure that `self->tk_misc' has been allocated and return it.

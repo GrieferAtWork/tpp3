@@ -2029,6 +2029,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_STRERROR              0
 #define TPP_HAVE_STRTOKENID            0
 #define TPP_HAVE_KEYWORD_USERDATA      1 /* To emulate "kr_user" */
+#define TPP_HAVE_KEYWORD_ASSTRING      0 /* Not needed for anything */
 #define TPP_HAVE_EXTENSIONS            1
 #define TPP_HAVE_EXTENSIONS_PUSH_POP   1
 #define TPP_HAVE_WARNINGS              1

@@ -49,6 +49,13 @@ TPP_DECL_BEGIN
 #define _TPP_BUILTIN_KEYWORD_tk_misc_DEF  /* nothing */
 #define _TPP_BUILTIN_KEYWORD_tk_misc_INIT /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_MISC */
+#if TPP_HAVE_KEYWORD_ASSTRING
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_DEF  tpp_refcnt_atomic tk_refcnt;
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_INIT TPP_REFCNT_ATOMIC_INIT(1),
+#else /* TPP_HAVE_KEYWORD_ASSTRING */
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_DEF  /* nothing */
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_INIT /* nothing */
+#endif /* !TPP_HAVE_KEYWORD_ASSTRING */
 
 
 #if TPP_HAVE_EXTENSIONS
@@ -333,7 +340,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                        \
 		_TPP_BUILTIN_KEYWORD_tk_misc_DEF                         \
 		tpp_hash             tk_hash;                            \
-		tpp_refcnt_atomic    tk_refcnt;                          \
+		_TPP_BUILTIN_KEYWORD_tk_refcnt_DEF                       \
 		tpp_size             tk_len;                             \
 		char                 tk_kwd[sizeof(str) / sizeof(char)]; \
 	} tpp_builtin_keyword_##id = {                               \
@@ -342,7 +349,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_INIT                       \
 		_TPP_BUILTIN_KEYWORD_tk_misc_INIT                        \
 		/* .tk_hash      = */ TPP_MAYBE_HASHOF(str),             \
-		/* .tk_refcnt    = */ TPP_REFCNT_ATOMIC_INIT(1),         \
+		_TPP_BUILTIN_KEYWORD_tk_refcnt_INIT                      \
 		/* .tk_len       = */ (sizeof(str) / sizeof(char)) - 1,  \
 		/* .tk_kwd       = */ str                                \
 	};
@@ -410,7 +417,7 @@ static void tpp_init_builtin_keywords(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                             \
 		_TPP_BUILTIN_KEYWORD_tk_misc_DEF                              \
 		tpp_hash             tk_hash;                                 \
-		tpp_refcnt_atomic    tk_refcnt;                               \
+		_TPP_BUILTIN_KEYWORD_tk_refcnt_DEF                            \
 		tpp_size             tk_len;                                  \
 		char                 tk_kwd[kwd_len + 1];                     \
 	} tpp_builtin_keyword_##id = {                                    \
@@ -419,7 +426,7 @@ static void tpp_init_builtin_keywords(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_INIT                            \
 		_TPP_BUILTIN_KEYWORD_tk_misc_INIT                             \
 		/* .tk_hash      = */ TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo), \
-		/* .tk_refcnt    = */ TPP_REFCNT_ATOMIC_INIT(1),              \
+		_TPP_BUILTIN_KEYWORD_tk_refcnt_INIT                           \
 		/* .tk_len       = */ kwd_len,                                \
 		/* .tk_kwd       = */ kwd                                     \
 	};

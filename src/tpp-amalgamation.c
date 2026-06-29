@@ -6036,6 +6036,7 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 /* Assert that "tpp_keyword" and "tpp_string" are binary-compatible. */
+#if TPP_HAVE_KEYWORD_ASSTRING
 TPP_STATIC_ASSERT((tpp_offsetof(tpp_keyword, tk_refcnt) -
                    tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)) ==
                   (tpp_offsetof(tpp_string, ts_refcnt)));
@@ -6045,7 +6046,13 @@ TPP_STATIC_ASSERT((tpp_offsetof(tpp_keyword, tk_len) -
 TPP_STATIC_ASSERT((tpp_offsetof(tpp_keyword, tk_kwd) -
                    tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)) ==
                   (tpp_offsetof(tpp_string, ts_str)));
+#endif /* TPP_HAVE_KEYWORD_ASSTRING */
 
+#if TPP_HAVE_KEYWORD_ASSTRING
+#define tpp_keyword_init_refcnt(self) tpp_refcnt_atomic_init(&(self)->tk_refcnt, 1)
+#else /* TPP_HAVE_KEYWORD_ASSTRING */
+#define tpp_keyword_init_refcnt(self) (void)0
+#endif /* !TPP_HAVE_KEYWORD_ASSTRING */
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 /* Initialize/finalize a given macro-push stack */
@@ -6665,7 +6672,9 @@ tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
 
 static TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
-	tpp_assert(!tpp_refcnt_isshared(&self->tk_refcnt) && "Keyword still in use");
+#if TPP_HAVE_KEYWORD_ASSTRING
+	tpp_assert(!tpp_refcnt_atomic_isshared(&self->tk_refcnt) && "Keyword still in use");
+#endif /* TPP_HAVE_KEYWORD_ASSTRING */
 #if TPP_HAVE_CPP_MACROS
 	if (self->tk_macro) {
 		tpp_assert(self->tk_macro->tm_expansions == 0 && "Macro still part of #include-stack?");
@@ -6773,7 +6782,7 @@ tpp_keyword_copy(tpp_keyword const *tpp_restrict self) {
 	}
 #endif /* TPP_HAVE_CPP_MACROS */
 	result->tk_hash = self->tk_hash;
-	tpp_refcnt_init(&result->tk_refcnt, 1);
+	tpp_keyword_init_refcnt(result);
 	result->tk_len = self->tk_len;
 	tpp_memcpy(result->tk_kwd, self->tk_kwd, (self->tk_len + 1) * sizeof(tpp_char));
 	return result;
@@ -7077,7 +7086,7 @@ tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
 	result->tk_misc = NULL;
 #endif /* TPP_HAVE_KEYWORD_MISC */
 	result->tk_hash = hash;
-	tpp_refcnt_init(&result->tk_refcnt, 1);
+	tpp_keyword_init_refcnt(result);
 	result->tk_len = len;
 	tpp_memcpy(result->tk_kwd, kwd, len * sizeof(tpp_char));
 	result->tk_kwd[len] = (tpp_char)'\0';
@@ -7111,7 +7120,7 @@ tpp_keywords_newkeyword_esc_(tpp_keywords *tpp_restrict self,
 	result->tk_misc = NULL;
 #endif /* TPP_HAVE_KEYWORD_MISC */
 	result->tk_hash = hash;
-	tpp_refcnt_init(&result->tk_refcnt, 1);
+	tpp_keyword_init_refcnt(result);
 	len_without_esc = tpp_without_esc(result->tk_kwd, kwd, len, file);
 	tpp_assert(len_without_esc <= len);
 	result->tk_len = len_without_esc;
@@ -7177,7 +7186,7 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 		tpp_macro_incref(result->tk_macro);
 #endif /* TPP_HAVE_CPP_MACROS */
 	result->tk_hash = kwd->tk_hash;
-	tpp_refcnt_init(&result->tk_refcnt, 1);
+	tpp_keyword_init_refcnt(result);
 	result->tk_len = kwd->tk_len;
 	tpp_memcpy(result->tk_kwd, kwd->tk_kwd, (kwd->tk_len + 1) * sizeof(tpp_char));
 	result = tpp_keywords_inskeyword(self, result);
@@ -7469,7 +7478,7 @@ got_result_kwd:
 #if TPP_HAVE_KEYWORD_MISC
 		result_kwd->tk_misc = NULL;
 #endif /* TPP_HAVE_KEYWORD_MISC */
-		tpp_refcnt_init(&result_kwd->tk_refcnt, 1);
+		tpp_keyword_init_refcnt(result_kwd);
 		result_kwd = tpp_keywords_inskeyword(&self->tl_kwds, result_kwd);
 		if tpp_unlikely(!result_kwd) {
 			tpp_io_close(handle);
@@ -7509,6 +7518,13 @@ TPP_DECL_BEGIN
 #define _TPP_BUILTIN_KEYWORD_tk_misc_DEF  /* nothing */
 #define _TPP_BUILTIN_KEYWORD_tk_misc_INIT /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_MISC */
+#if TPP_HAVE_KEYWORD_ASSTRING
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_DEF  tpp_refcnt_atomic tk_refcnt;
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_INIT TPP_REFCNT_ATOMIC_INIT(1),
+#else /* TPP_HAVE_KEYWORD_ASSTRING */
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_DEF  /* nothing */
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_INIT /* nothing */
+#endif /* !TPP_HAVE_KEYWORD_ASSTRING */
 
 
 #if TPP_HAVE_EXTENSIONS
@@ -7793,7 +7809,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                        \
 		_TPP_BUILTIN_KEYWORD_tk_misc_DEF                         \
 		tpp_hash             tk_hash;                            \
-		tpp_refcnt           tk_refcnt;                          \
+		_TPP_BUILTIN_KEYWORD_tk_refcnt_DEF                       \
 		tpp_size             tk_len;                             \
 		char                 tk_kwd[sizeof(str) / sizeof(char)]; \
 	} tpp_builtin_keyword_##id = {                               \
@@ -7802,7 +7818,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_INIT                       \
 		_TPP_BUILTIN_KEYWORD_tk_misc_INIT                        \
 		/* .tk_hash      = */ TPP_MAYBE_HASHOF(str),             \
-		/* .tk_refcnt    = */ TPP_REFCNT_INIT(1),                \
+		_TPP_BUILTIN_KEYWORD_tk_refcnt_INIT                      \
 		/* .tk_len       = */ (sizeof(str) / sizeof(char)) - 1,  \
 		/* .tk_kwd       = */ str                                \
 	};
@@ -7870,7 +7886,7 @@ static void tpp_init_builtin_keywords(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                             \
 		_TPP_BUILTIN_KEYWORD_tk_misc_DEF                              \
 		tpp_hash             tk_hash;                                 \
-		tpp_refcnt           tk_refcnt;                               \
+		_TPP_BUILTIN_KEYWORD_tk_refcnt_DEF                            \
 		tpp_size             tk_len;                                  \
 		char                 tk_kwd[kwd_len + 1];                     \
 	} tpp_builtin_keyword_##id = {                                    \
@@ -7879,7 +7895,7 @@ static void tpp_init_builtin_keywords(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_INIT                            \
 		_TPP_BUILTIN_KEYWORD_tk_misc_INIT                             \
 		/* .tk_hash      = */ TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo), \
-		/* .tk_refcnt    = */ TPP_REFCNT_INIT(1),                     \
+		_TPP_BUILTIN_KEYWORD_tk_refcnt_INIT                           \
 		/* .tk_len       = */ kwd_len,                                \
 		/* .tk_kwd       = */ kwd                                     \
 	};

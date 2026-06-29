@@ -166,6 +166,12 @@
 #define TPP_HAVE_KEYWORD_USERDATA (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_KEYWORD_USERDATA */
 
+/* Provide support for `tpp_keyword_asstring()' that allows
+ * keywords to be binary-compatible with "tpp_string". */
+#ifndef TPP_HAVE_KEYWORD_ASSTRING
+#define TPP_HAVE_KEYWORD_ASSTRING (TPP_PROFILE == TPP_PROFILE_ALL)
+#endif /* !TPP_HAVE_KEYWORD_ASSTRING */
+
 /* Enable support for runtime-configurable extensions */
 #ifndef TPP_HAVE_EXTENSIONS
 #define TPP_HAVE_EXTENSIONS TPP_HAVE_PROFILE_NOT_MINIMAL
