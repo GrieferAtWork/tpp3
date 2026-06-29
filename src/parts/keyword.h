@@ -197,7 +197,9 @@ typedef struct tpp_keyword {
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_KEYWORD_MISC */
 	tpp_hash                  TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd' */
-	tpp_refcnt                TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with "tpp_string") */
+	/* TODO: "tk_refcnt" isn't actually needed, except for the (unnecessary) "tpp_keyword_asstring" API
+	 *       -> Have a config option to disable this binary compatibility layer. */
+	tpp_refcnt_atomic         TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with "tpp_string") */
 	tpp_size                  TPP_INTERNAL(tk_len);                 /* [const] # of bytes (char-s) in `tk_kwd' (excluding trailing \0) */
 	tpp_char                  TPP_INTERNAL(tk_kwd)[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; \0-terminated; never contains \-escaped linefeeds) */
 /*	tpp_char                  TPP_INTERNAL(tk_nul);                  * [const][== 0] Ensure ZERO-termination of the keyword name. */

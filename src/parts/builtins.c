@@ -333,7 +333,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                        \
 		_TPP_BUILTIN_KEYWORD_tk_misc_DEF                         \
 		tpp_hash             tk_hash;                            \
-		tpp_refcnt           tk_refcnt;                          \
+		tpp_refcnt_atomic    tk_refcnt;                          \
 		tpp_size             tk_len;                             \
 		char                 tk_kwd[sizeof(str) / sizeof(char)]; \
 	} tpp_builtin_keyword_##id = {                               \
@@ -342,7 +342,7 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_INIT                       \
 		_TPP_BUILTIN_KEYWORD_tk_misc_INIT                        \
 		/* .tk_hash      = */ TPP_MAYBE_HASHOF(str),             \
-		/* .tk_refcnt    = */ TPP_REFCNT_INIT(1),                \
+		/* .tk_refcnt    = */ TPP_REFCNT_ATOMIC_INIT(1),         \
 		/* .tk_len       = */ (sizeof(str) / sizeof(char)) - 1,  \
 		/* .tk_kwd       = */ str                                \
 	};
@@ -410,7 +410,7 @@ static void tpp_init_builtin_keywords(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                             \
 		_TPP_BUILTIN_KEYWORD_tk_misc_DEF                              \
 		tpp_hash             tk_hash;                                 \
-		tpp_refcnt           tk_refcnt;                               \
+		tpp_refcnt_atomic    tk_refcnt;                               \
 		tpp_size             tk_len;                                  \
 		char                 tk_kwd[kwd_len + 1];                     \
 	} tpp_builtin_keyword_##id = {                                    \
@@ -419,7 +419,7 @@ static void tpp_init_builtin_keywords(void) {
 		_TPP_BUILTIN_KEYWORD_tk_macro_INIT                            \
 		_TPP_BUILTIN_KEYWORD_tk_misc_INIT                             \
 		/* .tk_hash      = */ TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo), \
-		/* .tk_refcnt    = */ TPP_REFCNT_INIT(1),                     \
+		/* .tk_refcnt    = */ TPP_REFCNT_ATOMIC_INIT(1),              \
 		/* .tk_len       = */ kwd_len,                                \
 		/* .tk_kwd       = */ kwd                                     \
 	};
