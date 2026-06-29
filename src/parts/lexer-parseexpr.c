@@ -252,9 +252,56 @@ handle_comment:
 #endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 	case '#':
 		/* Preprocessor assertions */
+		if (!tpp_lexer_has(self, CPP_ASSERT) &&
+		    !tpp_lexer_has(self, BUILTIN_EXPR_STRINGS))
+			goto handle_default;
+#define WANT_handle_default
+		/* XXX: This probably shouldn't expand macros if it ends up being an assertion...
+		 *      But if it ends up being a string, then we *must* expand macros...
+		 * However: TPP2 also used to expand macros here, so there's that excuse I
+		 *          needed. Just follow whatt TPP2 did and always expand macros here! */
+		tok = tpp_lexer_yield_forexpr(self);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+
 #if TPP_HAVE_CPP_ASSERT
-		if (tpp_lexer_has(self, CPP_ASSERT)) {
-			/* TODO */
+		if (tpp_lexer_has(self, CPP_ASSERT) && TPP_TOK_ISKEYWORD(tok)) {
+			tpp_keyword const *assertion_key = tpp_lexer_gettokenkwd(self);
+			tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+			                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+			if (tok == TPP_TOK_OFCHAR('(')) {
+				bool is_asserted = false;
+				/* Assertion */
+				do {
+					tok = tpp_lexer_yieldraw_blocking(self);
+				} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+				if (TPP_TOK_ISERR(tok))
+					return TPP_TOK_ASERR(tok);
+				if (TPP_TOK_ISKEYWORD(tok)) {
+					tpp_keyword const *assertion_value = tpp_lexer_gettokenkwd(self);
+					tpp_keyword_misc const *misc = assertion_key->tk_misc;
+					if (misc != NULL)
+						is_asserted = tpp_assertions_contains(&misc->tkm_assertions, assertion_value);
+					tok = tpp_lexer_yield_forexpr(self);
+					if (TPP_TOK_ISERR(tok))
+						return TPP_TOK_ASERR(tok);
+				} else {
+#if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION
+					tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION,
+					                                  tpp_keyword_getkwdcstr(assertion_key));
+					if (TPP_ISERR(error))
+						return error;
+#endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION */
+				}
+				tok = tpp_lexer_skip_forexpr(self, TPP_TOK_OFCHAR(')'));
+				if (TPP_TOK_ISERR(tok))
+					return TPP_TOK_ASERR(tok);
+				if (is_asserted && result)
+					return tpp_expr_value_init_one(result);
+				goto done;
+			}
 		}
 #endif /* TPP_HAVE_CPP_ASSERT */
 
@@ -262,9 +309,6 @@ handle_comment:
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 		if (tpp_lexer_has(self, BUILTIN_EXPR_STRINGS)) {
 			tpp_errno error;
-			tok = tpp_lexer_yield_blocking(self); /* Doesn't have to be "tpp_lexer_yield_forexpr" */
-			if (TPP_TOK_ISERR(tok))
-				return TPP_TOK_ASERR(tok);
 			if (!result)
 				return tpp_px_unary(self, NULL);
 			error = tpp_px_unary(self, result);

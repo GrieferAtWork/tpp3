@@ -2846,6 +2846,7 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION ||           \
 	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF ||          \
 	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED ||        \
+	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION ||      \
 	 TPP_HAVE_TPP_W_INVALID_INTEGER ||                          \
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK ||         \
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING ||       \
@@ -2998,6 +2999,12 @@ TPP_WARNING(TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF, 1(TPP_WG_SYNTAX), 1(1016), TP
 TPP_WARNING(TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED, 1(TPP_WG_SYNTAX), 1(2003), TPP_WSTATE_UNDEFINED,
             "expected <keyword> after %[defined%] in expression, but got %Pt")
 #endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
+
+#if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION
+#define TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION
+TPP_WARNING(TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_UNDEFINED,
+            "expected <keyword> in %[#%s(<here>)%], but got %Pt")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION */
 
 #if TPP_HAVE_TPP_W_INVALID_INTEGER
 #define TPP_W_INVALID_INTEGER TPP_W_INVALID_INTEGER
@@ -7264,6 +7271,10 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_DEFINED)
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION
+#define TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_CPP_ASSERT))
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION */
 #ifndef TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS
 #define TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_BUILTIN_EXPR_STRINGS)
@@ -13656,7 +13667,7 @@ tpp_assertions_copy(tpp_assertions *tpp_restrict self,
 
 /* Check if a given "value" is being asserted by "self" */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
-tpp_assertions_contains(tpp_assertions *tpp_restrict self,
+tpp_assertions_contains(tpp_assertions const *tpp_restrict self,
                         struct tpp_keyword const *tpp_restrict value);
 
 /* Assert a given "value" within "self".
@@ -15970,9 +15981,9 @@ typedef struct tpp_lexer_arginfo {
 
 #define tpp_lexer_arginfo_init_empty(self) \
 	(void)((self)->tlai_chunk = NULL, (self)->tlai_start = (self)->tlai_end = NULL)
-#define tpp_lexer_arginfo_fini(self)                                          \
-	(void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0), \
-	       tpp_dbg_memset(self, sizeof(*(self))))
+#define tpp_lexer_arginfo_fini(self)                                            \
+	((void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0)), \
+	 tpp_dbg_memset(self, sizeof(*(self))))
 #define tpp_lexer_arginfo_copy(dst, src) \
 	(void)(*(dst) = *(src), (!(self)->tlai_chunk || (tpp_string_incref((self)->tlai_chunk), 0)))
 #define tpp_lexer_arginfo_move(dst, src) \

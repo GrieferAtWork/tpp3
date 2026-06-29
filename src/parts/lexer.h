@@ -1216,9 +1216,9 @@ typedef struct tpp_lexer_arginfo {
 
 #define tpp_lexer_arginfo_init_empty(self) \
 	(void)((self)->tlai_chunk = NULL, (self)->tlai_start = (self)->tlai_end = NULL)
-#define tpp_lexer_arginfo_fini(self)                                          \
-	(void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0), \
-	       tpp_dbg_memset(self, sizeof(*(self))))
+#define tpp_lexer_arginfo_fini(self)                                            \
+	((void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0)), \
+	 tpp_dbg_memset(self, sizeof(*(self))))
 #define tpp_lexer_arginfo_copy(dst, src) \
 	(void)(*(dst) = *(src), (!(self)->tlai_chunk || (tpp_string_incref((self)->tlai_chunk), 0)))
 #define tpp_lexer_arginfo_move(dst, src) \

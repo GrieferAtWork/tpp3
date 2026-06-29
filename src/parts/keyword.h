@@ -189,7 +189,7 @@ tpp_assertions_copy(tpp_assertions *tpp_restrict self,
 
 /* Check if a given "value" is being asserted by "self" */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
-tpp_assertions_contains(tpp_assertions *tpp_restrict self,
+tpp_assertions_contains(tpp_assertions const *tpp_restrict self,
                         struct tpp_keyword const *tpp_restrict value);
 
 /* Assert a given "value" within "self".
