@@ -899,17 +899,22 @@ tpp_lexer_pragma_tpp_exec_cb(void *arg, tpp_string *chunk,
 	tpp_token_id tok;
 	tpp_lexer *const self = (tpp_lexer *)arg;
 	tpp_file *const file = tpp_lexer_getfile(self);
-#if TPP_HAVE_CPP_DIRECTIVES
+#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	tpp_lexer_state_flags saved_state;
-#endif /* TPP_HAVE_CPP_DIRECTIVES */
+#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromstring(file, chunk, str, length);
 
 	/* Allow directive parsing starting with the first token */
-#if TPP_HAVE_CPP_DIRECTIVES
+#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	saved_state = self->tl_state;
+#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#if TPP_HAVE_CPP_DIRECTIVES
 	self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+	self->tl_state &= ~TPP_LEXER_STATE_FLAG_ALLTOKENS;
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 
 	/* Parse contents of string, but discard all tokens. */
 	do {
@@ -929,9 +934,9 @@ tpp_lexer_pragma_tpp_exec_cb(void *arg, tpp_string *chunk,
 			break;
 		tpp_lexer_popfile(self);
 	}
-#if TPP_HAVE_CPP_DIRECTIVES
+#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	self->tl_state = saved_state;
-#endif /* TPP_HAVE_CPP_DIRECTIVES */
+#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 	tpp_file_subtext_pop(file);
 	return TPP_TOK_ASERR_OR_EOK(tok);
 }

@@ -1446,7 +1446,8 @@ done_inner_loop:
 	tpp_file_init_text_ex(file, NULL, string,
 	                      tpp_string_str(string),
 	                      tpp_string_len(string),
-	                      TPP_LCINFO_INVALID, file->tf_enc);
+	                      TPP_LCINFO_INVALID,
+	                      file->tf_enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return TPP_TOK_EOF; /* Instruct caller to yield the first token from the subtext file */
@@ -1543,7 +1544,7 @@ tpp_lexer_yield_handle___TPP_COUNT_TOKENS(tpp_lexer *tpp_restrict self) {
 		return tok;
 	return tpp_lexer_push_textfile_int(self, data.tlhctd_count);
 }
-#endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
+#endif /* !TPP_HAVE_MACRO___TPP_COUNT_TOKENS */
 
 
 #if TPP_HAVE_MACRO___TPP_STR_SIZE
@@ -1601,7 +1602,131 @@ tpp_lexer_yield_handle___TPP_STR_SIZE(tpp_lexer *tpp_restrict self) {
 		return tok;
 	return tpp_lexer_push_textfile_int(self, (tpp_intmax)(tpp_uintmax)str_length);
 }
-#endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
+#endif /* !TPP_HAVE_MACRO___TPP_STR_SIZE */
+
+
+
+
+#if TPP_HAVE_MACRO___TPP_EXEC
+struct tpp_lexer_handle_exec_data {
+	tpp_string_builder tlhed_builder; /* Expansion string builder */
+	tpp_lexer         *tlhed_lexer;   /* [1..1] Lexer */
+};
+static TPP_WUNUSED tpp_errno TPPCALL 
+tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
+                         tpp_char const *str, tpp_size length) {
+	tpp_token_id tok;
+	struct tpp_lexer_handle_exec_data *const data = (struct tpp_lexer_handle_exec_data *)arg;
+	tpp_lexer *const self = data->tlhed_lexer;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_token const *const token = tpp_lexer_gettoken(self);
+#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+	tpp_lexer_state_flags saved_state;
+#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk_fromstring(file, chunk, str, length);
+
+	/* Allow directive parsing starting with the first token */
+#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+	saved_state = self->tl_state;
+#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#if TPP_HAVE_CPP_DIRECTIVES
+	self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+	self->tl_state |= TPP_LEXER_STATE_FLAG_ALLTOKENS;
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+
+	/* Pretty much the same as "tpp_lexer_pragma_tpp_exec_cb()", but gather token reprs */
+	for (;;) {
+		tpp_ssize print_status;
+		tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR_OR_EOF(tok))
+			break;
+		print_status = tpp_string_builder_print(&data->tlhed_builder,
+		                                        tpp_token_getstart(token),
+		                                        tpp_token_getlen(token));
+		if tpp_unlikely(print_status < 0) {
+			tok = TPP_TOK_OFERR((tpp_errno)(int)print_status);
+			break;
+		}
+	}
+
+#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+	self->tl_state = saved_state;
+#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+	tpp_file_subtext_pop(file);
+	return TPP_TOK_ASERR_OR_EOK(tok);
+}
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
+	struct tpp_lexer_handle_exec_data data;
+	TPP_REF tpp_string *exec_result;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *prev_file;
+	tpp_lexer_arginfo argv[1];
+	tpp_token_id tok;
+
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "__TPP_EXEC",
+	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+
+	/* Setup file to (re-)parse the string that's being execd */
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
+	tok = tpp_lexer_yield(self);
+
+	tpp_string_builder_init(&data.tlhed_builder);
+	data.tlhed_lexer = self;
+	if (TPP_TOK_ISSTRING(tok)) {
+		tpp_errno error;
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_exec_cb,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+		tok = TPP_TOK_OFERR_OR_EOF(error);
+	}
+	if (!TPP_TOK_ISERR(tok)) {
+		if (tpp_lexer_gettok(self) != TPP_TOK_EOF) {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			tok = TPP_TOK_OFERR_OR_EOF(error);
+#endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+			tpp_lexer_popallfiles(self);
+		}
+	}
+	tpp_file_subtext_pop(file);
+	tpp_lexer_arginfo_fini(&argv[0]);
+	if (TPP_TOK_ISERR(tok)) {
+		tpp_string_builder_fini(&data.tlhed_builder);
+		return tok;
+	}
+
+	/* Push a sub-text file describing the decoded contents of the string */
+	prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file) {
+		tpp_string_builder_fini(&data.tlhed_builder);
+		return TPP_TOK_ENOMEM;
+	}
+	*prev_file = *file;
+	exec_result = tpp_string_builder_pack(&data.tlhed_builder);
+	tpp_file_init_text_ex(file, NULL, exec_result,
+	                      tpp_string_str(exec_result),
+	                      tpp_string_len(exec_result),
+	                      TPP_LCINFO_INVALID,
+	                      file->tf_enc);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return TPP_TOK_EOF;
+}
+#endif /* !TPP_HAVE_MACRO___TPP_EXEC */
 
 
 
@@ -1874,6 +1999,15 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
+#if TPP_HAVE_MACRO___TPP_EXEC
+	case TPP_KWD___TPP_EXEC:
+		return tpp_lexer_yield_handle___TPP_EXEC(self);
+#endif /* !TPP_HAVE_MACRO___TPP_EXEC */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_MACRO___TPP_STR_SUBSTR
 	/* TODO: #define __TPP_STR_SUBSTR(str, start, end) __TPP_EVAL((str)[(start):(end)]) */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
@@ -1884,12 +2018,6 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	/* TODO: __TPP_RANDOM */
 #endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
 /************************************************************************/
-
-
-	/* TODO: New macro __TPP_EXEC("code")
-	 * Same as __pragma(tpp_exec("code")), but rather than discarding produced
-	 * tokens, "__TPP_EXEC" expands to those tokens */
-
 
 
 

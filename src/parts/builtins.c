@@ -287,9 +287,46 @@ TPP_IMPL tpp_warnings_state const tpp_warnings_state_default = {
 #define tpp_init_extension_name_offsets_byname()     (void)0
 #define tpp_init_warning_group_name_offsets_byname() (void)0
 #elif defined(__TPP_VERSION__) && __TPP_VERSION__ >= 300 && 0
-/* TODO: Using a combination of __TPP_EVAL + #pragma tpp_exec() + __TPP_STR_DECOMPILE,
- *       it should be possible to do pretty much anything within the preprocessor,
- *       including generating builtin tables right. */
+/* Using a combination of __TPP_EVAL + #pragma tpp_exec() + __TPP_EXEC + __TPP_STR_DECOMPILE,
+ * it should be possible to do pretty much anything within the preprocessor, including
+ * generating builtin tables right. */
+
+#define _TPP_EXEC_INCLUDE2(x) __TPP_EXEC("#include " #x)
+#define _TPP_EXEC_INCLUDE(x) _TPP_EXEC_INCLUDE2(x)
+#define _TPP_STR2(x) #x
+#define _TPP_STR(x) _TPP_STR2(x)
+
+/* Define a macro "TPP_BUILTIN_KEYWORD_COUNT" as a singular decimal token
+ * representing the # of times the "TPP_KWD" is used in TPP_CONFIG_DEFS_FILENAME */
+#define TPP_DEFS
+#define TPP_KWD(id, string) +1
+__pragma(tpp_exec("#define TPP_BUILTIN_KEYWORD_COUNT " _TPP_STR(__TPP_EVAL(
+	_TPP_EXEC_INCLUDE(TPP_CONFIG_DEFS_FILENAME)
+))))
+#undef TPP_DEFS
+
+/* TODO: Calculate "TPP_BUILTIN_KEYWORD_MASK" */
+/* TODO: For every TPP_KWD, calculate its hash masked by "TPP_BUILTIN_KEYWORD_MASK".
+ *       Then, define a macro "TPP_BUILTIN_KEYWORD_H_<MASKED_HASH>" that points to
+ *       the keyword that should appear in the keyword table at offset <MASKED_HASH>
+ *       In those places where that macro has already been defined, override the
+ *       macro, but use its own definition as the "tk_next" pointer of the keyword
+ *       that is overriding it */
+/* TODO: Generate keyword structures, but in those places where the keyword's "tk_next"
+ *       is non-NULL, make sure that the pointed-to keyword is generated first. */
+/* TODO: Emit the hash-table, using "TPP_BUILTIN_KEYWORD_H_<I>" for index "I". If
+ *       no such macro is defined, that index's bucket must be initialized as "NULL"
+ *       instead */
+
+/* TODO: For extension/warning names, need some kind of mechanism by which TPP is
+ *       able to sort an array of strings. I'm sure it's possible somehow, but I'm not
+ *       quite certain on how this can be done most elegantly (an in O(N*log(N)) time) */
+
+#undef _TPP_EXEC_INCLUDE2
+#undef _TPP_EXEC_INCLUDE
+#undef _TPP_STR2
+#undef _TPP_STR
+
 #else /* ... */
 
 #if TPP_HAVE_EXTENSIONS

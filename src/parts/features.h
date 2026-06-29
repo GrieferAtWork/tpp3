@@ -150,6 +150,7 @@ for (local CONF: configs) {
      TPP_CONF_IS_FEAT(TPP_HAVE_NUMERIC_DATE_MACROS) ||                  \
      TPP_CONF_IS_FEAT(TPP_HAVE_NUMERIC_TIME_MACROS) ||                  \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EVAL) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EXEC) ||                     \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_UNIQUE) ||                   \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_LOAD_FILE) ||                \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_COUNTER) ||                  \
@@ -510,6 +511,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EVAL)
 	TPP_FEAT_MACRO___TPP_EVAL,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EVAL) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EXEC)
+	TPP_FEAT_MACRO___TPP_EXEC,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EXEC) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_UNIQUE)
 	TPP_FEAT_MACRO___TPP_UNIQUE,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_UNIQUE) */
@@ -1289,6 +1293,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_MACRO___TPP_EVAL): 1;
 #define _tpp_lexer_has_MACRO___TPP_EVAL(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO___TPP_EVAL)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EVAL) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EXEC)
+		unsigned int TPP_INTERNAL(tff_MACRO___TPP_EXEC): 1;
+#define _tpp_lexer_has_MACRO___TPP_EXEC(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO___TPP_EXEC)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EXEC) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_UNIQUE)
 		unsigned int TPP_INTERNAL(tff_MACRO___TPP_UNIQUE): 1;
 #define _tpp_lexer_has_MACRO___TPP_UNIQUE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO___TPP_UNIQUE)
@@ -2207,6 +2215,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_MACRO___TPP_EVAL)
 #define _tpp_lexer_has_MACRO___TPP_EVAL(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_EVAL)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO___TPP_EVAL) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_MACRO___TPP_EXEC)
+#define _tpp_lexer_has_MACRO___TPP_EXEC(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_EXEC)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO___TPP_EXEC) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_MACRO___TPP_UNIQUE)
 #define _tpp_lexer_has_MACRO___TPP_UNIQUE(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_UNIQUE)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO___TPP_UNIQUE) */
