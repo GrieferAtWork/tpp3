@@ -1252,11 +1252,29 @@ tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer
 			break;
 		case 2:
 			if (src[0] == '.' && src[1] == '.' && dst_iter > dst_base) {
-				/* Parent-directory-segment -> delete 1 up-ref in "dst" */
-				while (dst_iter > dst_base && dst_iter[-1] == TPP_FS_SEP)
-					--dst_iter;
-				while (dst_iter > dst_base && dst_iter[-1] != TPP_FS_SEP)
-					--dst_iter;
+				/* Parent-directory-segment -> delete 1 up-ref in "dst", but
+				 * only if that up-ref isn't another ".." (or ".") sequence. */
+				char *dst_seq_start;
+				char *dst_seq_end = dst_iter;
+				tpp_size dst_seq_len;
+				while (dst_seq_end > dst_base && dst_seq_end[-1] == TPP_FS_SEP)
+					--dst_seq_end;
+				dst_seq_start = dst_seq_end;
+				while (dst_seq_start > dst_base && dst_seq_start[-1] != TPP_FS_SEP)
+					--dst_seq_start;
+				dst_seq_len = (tpp_size)(dst_seq_end - dst_seq_start);
+				switch (dst_seq_len) {
+				case 1:
+					if (dst_seq_start[0] == '.')
+						goto append_to_dst_iter; /* Can't delete "." */
+					break;
+				case 2:
+					if (dst_seq_start[0] == '.' && dst_seq_start[1] == '.')
+						goto append_to_dst_iter; /* Can't delete ".." */
+					break;
+				default: break;
+				}
+				dst_iter = dst_seq_start;
 				goto continue_with_next_sep;
 			}
 			break;
@@ -1264,6 +1282,7 @@ tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer
 		}
 
 		/* Copy segment into "dst_iter" */
+append_to_dst_iter:
 		tpp_memcpy(dst_iter, src, segment_len * sizeof(char));
 		dst_iter += segment_len;
 		if (next_sep >= src_end)
