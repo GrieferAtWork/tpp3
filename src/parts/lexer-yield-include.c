@@ -40,7 +40,7 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
-	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_char const *pos = *p_pos;
 	tpp_size const rel_start = tpp_file_ptr2rel(file, pos);
@@ -62,7 +62,7 @@ tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char cons
 			if (ch == '\0' && pos >= file->tf_end) {
 				/* Warn about EOF in #include-string */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
 				                           TPP_W_STRING_TERMINATED_BY_EOF);
 				if (TPP_ISERR(error))
 					goto handle_error;
@@ -77,7 +77,7 @@ warn_linefeed:
 #endif /* TPP_HAVE_UNICODE */
 				/* Warn about line-feed in #include-string */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
 				                           TPP_W_STRING_TERMINATED_BY_LINEFEED);
 				if (TPP_ISERR(error))
 					goto handle_error;

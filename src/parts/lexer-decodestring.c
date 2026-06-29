@@ -357,7 +357,8 @@ handle_unknown_escape_sequence:
 		--iter;
 #if TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
 		{
-			tpp_errno error = tpp_lexer_warnf_at(self, iter, TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, ch);
+			tpp_errno error = tpp_lexer_warnf_at(self, tpp_lexer_getfile(self), iter,
+			                                     TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, ch);
 			if (TPP_ISERR(error))
 				return (tpp_ssize)error;
 		}

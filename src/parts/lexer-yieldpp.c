@@ -778,7 +778,9 @@ again:
 	switch (tok) {
 	case TPP_TOK_EOF:
 #if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
-		error = tpp_lexer_warnf_lc(self, ifdef_entry->tidse_created, TPP_W_EOF_BEFORE_ENDIF);
+		error = tpp_lexer_warnf_lc(self, tpp_file_getfilename(file),
+		                           tpp_ifdef_stack_entry_getcreated(ifdef_entry),
+		                           TPP_W_EOF_BEFORE_ENDIF);
 		if (TPP_ISERR(error))
 			return error;
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
@@ -864,7 +866,8 @@ again:
 	switch (tok) {
 	case TPP_TOK_EOF:
 #if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
-		error = tpp_lexer_warnf_lc(self, ifdef_location, TPP_W_EOF_BEFORE_ENDIF);
+		error = tpp_lexer_warnf_lc(self, tpp_file_getfilename(file),
+		                           ifdef_location, TPP_W_EOF_BEFORE_ENDIF);
 		if (TPP_ISERR(error))
 			return error;
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
@@ -1533,6 +1536,7 @@ again:
 #if TPP_HAVE_CPP_EMBED
 		tpp_lexer_arginfo *p_dst_arg;
 #endif /* TPP_HAVE_CPP_EMBED */
+		unsigned int seek_flags;
 		do {
 			tok = tpp_lexer_yield_blocking(lexer);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
@@ -1541,10 +1545,16 @@ again:
 		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR('('));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
-		                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
-		/* TODO: Control behavior of "TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC"
-		 *    -- Should either always be on, or depend on "-fmacro-argument-whitespace"; not sure */
+
+		/* Seek to )-token and capture arguments */
+		seek_flags = TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS;
+		/* Control behavior of "TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC"
+		 * -- Should depend on "-fmacro-argument-whitespace" */
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+		if (tpp_lexer_has(lexer, MACRO_ARGUMENT_WHITESPACE))
+			seek_flags |= TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC;
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name, seek_flags);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 #if TPP_HAVE_CPP_EMBED

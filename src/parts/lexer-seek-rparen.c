@@ -379,7 +379,7 @@ again_switch_tok:
 		if (!(flags & TPP_LEXER_SEEK_RPAREN_FLAG_NOWARNEOF)) {
 			tpp_errno error;
 			tpp_char const *pos = file->tf_data.td_io.ttf_keep + state.tsrps_curfile_saved_tpos_rel;
-			error = tpp_lexer_warnf_at(self, pos, TPP_W_EOF_IN_ARGUMENT_LIST,
+			error = tpp_lexer_warnf_at(self, file, pos, TPP_W_EOF_IN_ARGUMENT_LIST,
 			                           opt_function_name_for_messages);
 			if (TPP_ISERR(error)) {
 				result = TPP_TOK_OFERR(error);
@@ -478,13 +478,30 @@ again_switch_tok:
 /*[[[deemon
 import MC_TOKENS, tokenName from ".lexer-yieldraw-mc";
 local splitTokens = [];
+function hasBalancedAngles(tok) {
+	local count = 0;
+	for (local ch: tok) {
+		if (ch == '<') {
+			++count;
+		} else if (ch == '>') {
+			--count;
+			if (count < 0)
+				return false;
+		}
+	}
+	return count == 0;
+}
+
 for (local tok, none, none: MC_TOKENS) {
 	if (tok.startswith("<") || tok.startswith(">"))
 		continue; // Already handled above...
 	if ("<" !in tok[1:] && ">" !in tok[1:])
 		continue; // Token must contain < or > somewhere further up ahead!
-	// TODO: If token has balanced < and > with < coming first (e.g. a token
-	//       like "-<>-", but not "-><-"), then don't need to split it here!
+	// If token has balanced < and > with < coming first (e.g. a token
+	// like "-<>-", but not "-><-"), then don't need to split it here!
+	if (hasBalancedAngles(tok[1:]))
+		continue;
+
 	splitTokens.append(tok);
 }
 splitTokens.sort();
@@ -698,7 +715,7 @@ done_after_last_arg:
 	if (argc > argv_bufsize && !(flags & TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS)) {
 		tpp_errno error;
 		tpp_char const *pos = file->tf_data.td_io.ttf_keep + state.tsrps_curfile_saved_tpos_rel;
-		error = tpp_lexer_warnf_at(self, pos, TPP_W_TOO_MANY_ARGUMENTS,
+		error = tpp_lexer_warnf_at(self, file, pos, TPP_W_TOO_MANY_ARGUMENTS,
 		                           opt_function_name_for_messages,
 		                           (unsigned int)argv_bufsize,
 		                           (unsigned int)argc);

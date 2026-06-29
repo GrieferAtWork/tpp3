@@ -133,25 +133,33 @@
  *    that instead of directly specifying a "format" string literal, an "expr" is supplied,
  *    that is executed (as a block-statement) when the warning is emitted. When this happens,
  *    "expr" has access to the following functions:
- *       >> tpp_lexer *tpp_current_lexer(void);          // The current lext
- *       >> tpp_warning_id tpp_current_warning_id(void); // The warning that is being invoked
- *       >> va_list tpp_current_va_args(void);                   // Variable arguments supplied to warning
- *       >> T tpp_current_va_arg(T);                             // Convenience wrapper for "va_arg(tpp_current_va_arg(), T)"
- *       >> void tpp_print_file_and_line(tpp_file *at_file, tpp_char const *at_pos, tpp_lcinfo at_lc);
- *       >> void tpp_print_file_and_line_at(tpp_file *at_file, tpp_char const *at_pos);
- *       >> void tpp_print_file_and_line_lc(tpp_file *at_file, tpp_lcinfo at_lc);
- *       >> void tpp_warnf0(char const *format);
- *       >> void tpp_warnf1(char const *format, A a);
- *       >> void tpp_warnf2(char const *format, A a, B b);
- *       >> void tpp_warnf3(char const *format, A a, B b, C c);
- *       >> void tpp_warnf4(char const *format, A a, B b, C c, D d);
+ *       >> tpp_lexer *tpp_current_lexer(void);            // The current lext
+ *       >> tpp_lexer_printf_info *tpp_current_info(void); // Warning emission info
+ *       >> tpp_warning_id tpp_current_warning_id(void);   // The warning that is being invoked
+ *       >> tpp_formatprinter tpp_current_printer(void);   // Warning output printer
+ *       >> void *tpp_current_printer_arg(void);           // Cookie for tpp_current_printer()
+ *       >> va_list tpp_current_va_args(void);             // Variable arguments supplied to warning
+ *       >> T tpp_current_va_arg(T);                       // Convenience wrapper for "va_arg(tpp_current_va_arg(), T)"
+ *       >> void tpp_do(tpp_ssize expr_returning_error);   // Handle the return value of an invocation of "*tpp_current_printer()"
+ *    The following convenience functions are provided (100% implementable using API exposed above):
+ *       >> void tpp_warn_print_file_and_line(tpp_lexer_printf_info *info);
+ *       >> void tpp_warn_print_file_and_line_at(tpp_file *file, tpp_char const *pos);
+ *       >> void tpp_warn_print_file_and_line_lc(char const *filename, tpp_lcinfo lc);
+ *       >> void tpp_warn_print(tpp_char const *text, tpp_size num_bytes);
+ *       >> void tpp_warn_print_cstr(char const *text, tpp_size num_bytes);
+ *       >> void tpp_warn_print_conststr(char STR[]);
+ *       >> void tpp_warn_printf0(tpp_lexer_printf_info *info, char const *format);
+ *       >> void tpp_warn_printf1(tpp_lexer_printf_info *info, char const *format, A a);
+ *       >> void tpp_warn_printf2(tpp_lexer_printf_info *info, char const *format, A a, B b);
+ *       >> void tpp_warn_printf3(tpp_lexer_printf_info *info, char const *format, A a, B b, C c);
+ *       >> void tpp_warn_printf4(tpp_lexer_printf_info *info, char const *format, A a, B b, C c, D d);
  *       - Any "return" statement executed must specify some "tpp_errno", and causes
  *         the associated `tpp_lexer_warnf()' to immediately return with that value.
  *    Example:
  *       >> TPP_WARNING(W_BAD_THING_HAPPEND, 1(WG_BAD_THING_HAPPEND), 2(100, 101), "bad thing happened: %s")
  *       >> TPP_WARNING_EX(W_BAD_THING_HAPPEND, 1(WG_BAD_THING_HAPPEND), 2(100, 101), {
  *       >>     char const *message = tpp_current_va_arg(char const *);
- *       >>     tpp_warnf1("same bad thing happened: %s", message);
+ *       >>     tpp_warn_printf1("same bad thing happened: %s", message);
  *       >> });
  *    During compilation, you can emit this warning like:
  *       >> tpp_errno error = tpp_lexer_warnf(LEXER, W_BAD_THING_HAPPEND, "uh'oh");
@@ -3113,13 +3121,20 @@ TPP_WARNING(TPP_W_EOF_BEFORE_ENDIF, 1(TPP_WG_SYNTAX), 1(1070), TPP_WSTATE_UNDEFI
 #define TPP_W_ELIF_OR_ELSE_AFTER_ELSE TPP_W_ELIF_OR_ELSE_AFTER_ELSE
 TPP_WARNING_EX(TPP_W_ELIF_OR_ELSE_AFTER_ELSE, 1(TPP_WG_SYNTAX), 1(1022), TPP_WSTATE_UNDEFINED, {
 	tpp_ifdef_stack_entry const *const entry = tpp_current_va_arg(tpp_ifdef_stack_entry const *);
-	tpp_file *const current_file = tpp_lexer_getfile(self);
-	char const *directive_name = tpp_current_va_arg(char const *);
-	tpp_warnf1("%[#%s%]-directive after %[#else%]\n", directive_name);
-	tpp_print_file_and_line_lc(current_file, tpp_ifdef_stack_entry_getupdated(entry));
-	tpp_warnf0("note: see associated %[#else%]\n");
-	tpp_print_file_and_line_lc(current_file, tpp_ifdef_stack_entry_getcreated(entry));
-	tpp_warnf0("note: see associated %[#if%], %[#ifdef%] or %[#ifndef%]\n");
+	char const *const directive_name = tpp_current_va_arg(char const *);
+	tpp_lexer_printf_info *const info = tpp_current_info();
+	tpp_lcinfo const saved_lc = info->tlpfi_lc;
+	tpp_warn_printf1(info, "%[#%s%]-directive after %[#else%]\n", directive_name);
+
+	info->tlpfi_lc = tpp_ifdef_stack_entry_getupdated(entry);
+	tpp_warn_print_file_and_line(info);
+	tpp_warn_printf0(info, "note: see associated %[#else%]\n");
+
+	info->tlpfi_lc = tpp_ifdef_stack_entry_getcreated(entry);
+	tpp_warn_print_file_and_line(info);
+	tpp_warn_printf0(info, "note: see associated %[#if%], %[#ifdef%] or %[#ifndef%]\n");
+
+	info->tlpfi_lc = saved_lc;
 })
 #endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
 
@@ -3651,13 +3666,11 @@ TPP_WARNING(TPP_W_DEFINE_BUILTIN_MACRO, 0(), 1(4118), TPP_WSTATE_WARN,
 TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
 	tpp_keyword const *keyword = tpp_current_va_arg(tpp_keyword const *);
 	tpp_macro const *const old_definition = tpp_keyword_getmacro(keyword);
-	tpp_warnf1("macro %[%s%] redefined\n", tpp_keyword_getkwdcstr(keyword));
+	tpp_warn_printf1(tpp_current_info(), "macro %[%s%] redefined\n", tpp_keyword_getkwdcstr(keyword));
 	if (tpp_macro_getdeffilename(old_definition)) {
-		/* TODO: must use "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT" */
-		tpp_warnf3("%s(%d, %d): note: see previous definition\n",
-		           tpp_macro_getdeffilename(old_definition),
-		           (int)tpp_lcinfo_getline(tpp_macro_getdeflcinfo(old_definition)) + 1,
-		           (int)tpp_lcinfo_getcol(tpp_macro_getdeflcinfo(old_definition)) + 1);
+		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(old_definition),
+		                           tpp_macro_getdeflcinfo(old_definition));
+		tpp_warn_printf0(tpp_current_info(), "note: see previous definition\n");
 	}
 })
 #endif /* TPP_HAVE_TPP_W_REDEFINE_MACRO */

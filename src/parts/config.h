@@ -355,13 +355,13 @@
 #endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 
 /* Support for "\e" (for U+001B) escape sequences
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_ESCAPE_E_IN_STRINGS
 #define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1: 0) /* "-fescape-e-in-strings" */
 #endif /* !TPP_HAVE_ESCAPE_E_IN_STRINGS */
 
 /* Support for "\s" (for U+0020) escape sequences
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_ESCAPE_S_IN_STRINGS
 #define TPP_HAVE_ESCAPE_S_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fescape-s-in-strings" */
 #endif /* !TPP_HAVE_ESCAPE_S_IN_STRINGS */
@@ -391,19 +391,19 @@
 #endif /* !TPP_HAVE_CPP_EXCLAIM */
 
 /* Support for: #  (blank line)
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_CPP_BLANK
 #define TPP_HAVE_CPP_BLANK (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fblank-directives" */
 #endif /* !TPP_HAVE_CPP_BLANK */
 
 /* Support for: # 42 ...  (similar to #line)
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_CPP_DIGIT_LINE
 #define TPP_HAVE_CPP_DIGIT_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fdigit-directives" */
 #endif /* !TPP_HAVE_CPP_DIGIT_LINE */
 
 /* Support for: #line ...
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_CPP_LINE
 #define TPP_HAVE_CPP_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fline-directives" */
 #endif /* !TPP_HAVE_CPP_LINE */
@@ -464,13 +464,13 @@
 #endif /* !TPP_HAVE_CPP_IDENT_SCCS */
 
 /* Support for: #pragma
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_CPP_PRAGMA
 #define TPP_HAVE_CPP_PRAGMA (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fpragma-directives" */
 #endif /* !TPP_HAVE_CPP_PRAGMA */
 
 /* Support for: #embed
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_CPP_EMBED
 #define TPP_HAVE_CPP_EMBED (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fembed-directives" */
 #endif /* !TPP_HAVE_CPP_EMBED */
@@ -1119,7 +1119,7 @@
 #define TPP_HAVE_TPP_TOK_SQL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sql-comment" */
 #endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
 
-/* TODO: Support for deemon-style "@@doc-string" comments */
+/* XXX: Support for deemon-style "@@doc-string" comments */
 
 /************************************************************************/
 /* Single-char tokens                                                   */
@@ -1151,12 +1151,12 @@
 /* String tokens                                                        */
 /************************************************************************/
 
-/* TODO: Support for sql-style '-string literals ('' is escape for ', and line-feeds are allowed) */
-/* TODO: Support for sql-style "-string literals ("" is escape for ", and line-feeds are allowed) */
-/* TODO: Support for sql-style E'foo'-string literals (line-feeds are allowed, and \-escape sequences are handled) */
-/* TODO: Support for sql-style E"foo"-string literals (line-feeds are allowed, and \-escape sequences are handled) */
-/* TODO: Support for javascript-style `foo` format string literals */
-/* TODO: Support for deemon-style f"foo" / F"foo" format string literals */
+/* XXX: Support for sql-style '-string literals ('' is escape for ', and line-feeds are allowed) */
+/* XXX: Support for sql-style "-string literals ("" is escape for ", and line-feeds are allowed) */
+/* XXX: Support for sql-style E'foo'-string literals (line-feeds are allowed, and \-escape sequences are handled) */
+/* XXX: Support for sql-style E"foo"-string literals (line-feeds are allowed, and \-escape sequences are handled) */
+/* XXX: Support for javascript-style `foo` format string literals */
+/* XXX: Support for deemon-style f"foo" / F"foo" format string literals */
 
 /* 'foo'
  * @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1 */
@@ -2302,61 +2302,61 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR */
 
 /* Enable support for string operations in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_STRINGS
 #define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_STRINGLIKE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fstrings-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 /* Enable support for floats in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_FLOATS
 #define TPP_HAVE_BUILTIN_EXPR_FLOATS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffloats-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
 /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar")
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fif-else-optional-true" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
 
 /* Enable support for "if (foo) bar else baz" in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fifelse-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 
 /* Enable support for "^^" in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR
 #define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-flogical-xor-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR */
 
 /* Enable support for "0b" literals in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS (((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fbinary-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
 
 /* Enable support for "0o" literals in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS (((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
 
 /* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
 #define TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffixed-type-integrals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
 
 /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
 #define TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffixed-length-integrals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
 
 /* Treat 'a' as an integer, rather than as a string (in C, this is always the case)
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : 0) /* "-fcharacter-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
@@ -2822,7 +2822,7 @@ print("#endif /" "* !... *" "/");
 /* Provide a function "tpp_warning_group_nearest()" */
 #ifndef TPP_HAVE_TPP_WARNING_GROUP_NEAREST
 #define TPP_HAVE_TPP_WARNING_GROUP_NEAREST \
-	(/*TODO:TPP_HAVE_TPP_W_UNKNOWN_WARNING*/1 && TPP_HAVE_PROFILE_NOT_MINIMAL)
+	(TPP_HAVE_TPP_W_UNKNOWN_WARNING && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
 
 /* Provide a function "tpp_fuzzy_memcmp()" to quantify the
@@ -2899,34 +2899,12 @@ print("#endif /" "* !... *" "/");
 
 /* Format to use for file+line+column log messages */
 #ifndef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT
-#if defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#elif defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#else /* !... */
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
 #ifdef _MSC_VER
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 1
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
-#else /* _MSC_VER */
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  1
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
-#endif /* !_MSC_VER */
-#endif /* ... */
-#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
 #define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
-#elif TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#else /* _MSC_VER */
 #define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf:%Pl:%Pc: "
-#else /* ... */
-#error "Invalid configuration of 'TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT'"
-#endif /* !... */
-#else /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
-#endif /* TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
+#endif /* !_MSC_VER */
+#endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
 
 /* Configurations for individual warnings */
 #ifndef TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT

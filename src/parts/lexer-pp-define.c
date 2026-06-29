@@ -214,7 +214,7 @@ tpp_macro_builder_parse_params(tpp_macro_builder *tpp_restrict builder,
                                tpp_char const **p_pos) {
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_token_id const lparen_token = token->tt_id;
-	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
 	tpp_token_id tok;
 	(void)rel_start;
@@ -343,7 +343,7 @@ warn_unexpected_parameter_list_token:
 		tpp_errno error;
 		tpp_char const *saved_end = token->tt_end;
 		token->tt_end = *p_pos;
-		error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+		error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
 		                           TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST);
 		token->tt_end = saved_end;
 		return error;
@@ -826,7 +826,8 @@ handle_not_varargs_argument_after_comma_glue:
 				tpp_errno error;
 				tpp_char const *saved_end = token->tt_end;
 				token->tt_end = body_iter;
-				error = tpp_lexer_warnf_at(self, start_of_va_opt, TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT);
+				error = tpp_lexer_warnf_at(self, tpp_lexer_getfile(self), start_of_va_opt,
+				                           TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT);
 				token->tt_end = saved_end;
 				if (TPP_ISERR(error))
 					return error;
@@ -845,7 +846,8 @@ handle_not_varargs_argument_after_comma_glue:
 					tpp_errno error;
 					tpp_char const *saved_end = token->tt_end;
 					token->tt_end = body_iter;
-					error = tpp_lexer_warnf_at(self, start_of_va_opt, TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT);
+					error = tpp_lexer_warnf_at(self, tpp_lexer_getfile(self), start_of_va_opt,
+					                           TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT);
 					token->tt_end = saved_end;
 					if (TPP_ISERR(error))
 						return error;
@@ -1040,7 +1042,8 @@ found_va_opt_body_end:
 				tpp_errno error;
 				tpp_char const *saved_end = token->tt_end;
 				token->tt_end = body_iter;
-				error = tpp_lexer_warnf_at(self, start_of_defined, TPP_W_EXPANSION_TO_DEFINED);
+				error = tpp_lexer_warnf_at(self, tpp_lexer_getfile(self), start_of_defined,
+				                           TPP_W_EXPANSION_TO_DEFINED);
 				token->tt_end = saved_end;
 				if (TPP_ISERR(error))
 					return error;
@@ -1433,7 +1436,7 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	token->tt_start = token->tt_end;
 	token->tt_end   = pos;
 
-	/* TODO: -Wkeyword-macro */
+	/* XXX: -Wkeyword-macro  (warn about #define-ing builtin keywords) */
 
 	/* Store the macro definition within the keyword. */
 	if (!keyword->tk_macro) {

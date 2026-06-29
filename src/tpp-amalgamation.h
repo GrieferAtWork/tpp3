@@ -132,25 +132,33 @@
  *    that instead of directly specifying a "format" string literal, an "expr" is supplied,
  *    that is executed (as a block-statement) when the warning is emitted. When this happens,
  *    "expr" has access to the following functions:
- *       >> tpp_lexer *tpp_current_lexer(void);          // The current lext
- *       >> tpp_warning_id tpp_current_warning_id(void); // The warning that is being invoked
- *       >> va_list tpp_current_va_args(void);                   // Variable arguments supplied to warning
- *       >> T tpp_current_va_arg(T);                             // Convenience wrapper for "va_arg(tpp_current_va_arg(), T)"
- *       >> void tpp_print_file_and_line(tpp_file *at_file, tpp_char const *at_pos, tpp_lcinfo at_lc);
- *       >> void tpp_print_file_and_line_at(tpp_file *at_file, tpp_char const *at_pos);
- *       >> void tpp_print_file_and_line_lc(tpp_file *at_file, tpp_lcinfo at_lc);
- *       >> void tpp_warnf0(char const *format);
- *       >> void tpp_warnf1(char const *format, A a);
- *       >> void tpp_warnf2(char const *format, A a, B b);
- *       >> void tpp_warnf3(char const *format, A a, B b, C c);
- *       >> void tpp_warnf4(char const *format, A a, B b, C c, D d);
+ *       >> tpp_lexer *tpp_current_lexer(void);            // The current lext
+ *       >> tpp_lexer_printf_info *tpp_current_info(void); // Warning emission info
+ *       >> tpp_warning_id tpp_current_warning_id(void);   // The warning that is being invoked
+ *       >> tpp_formatprinter tpp_current_printer(void);   // Warning output printer
+ *       >> void *tpp_current_printer_arg(void);           // Cookie for tpp_current_printer()
+ *       >> va_list tpp_current_va_args(void);             // Variable arguments supplied to warning
+ *       >> T tpp_current_va_arg(T);                       // Convenience wrapper for "va_arg(tpp_current_va_arg(), T)"
+ *       >> void tpp_do(tpp_ssize expr_returning_error);   // Handle the return value of an invocation of "*tpp_current_printer()"
+ *    The following convenience functions are provided (100% implementable using API exposed above):
+ *       >> void tpp_warn_print_file_and_line(tpp_lexer_printf_info *info);
+ *       >> void tpp_warn_print_file_and_line_at(tpp_file *file, tpp_char const *pos);
+ *       >> void tpp_warn_print_file_and_line_lc(char const *filename, tpp_lcinfo lc);
+ *       >> void tpp_warn_print(tpp_char const *text, tpp_size num_bytes);
+ *       >> void tpp_warn_print_cstr(char const *text, tpp_size num_bytes);
+ *       >> void tpp_warn_print_conststr(char STR[]);
+ *       >> void tpp_warn_printf0(tpp_lexer_printf_info *info, char const *format);
+ *       >> void tpp_warn_printf1(tpp_lexer_printf_info *info, char const *format, A a);
+ *       >> void tpp_warn_printf2(tpp_lexer_printf_info *info, char const *format, A a, B b);
+ *       >> void tpp_warn_printf3(tpp_lexer_printf_info *info, char const *format, A a, B b, C c);
+ *       >> void tpp_warn_printf4(tpp_lexer_printf_info *info, char const *format, A a, B b, C c, D d);
  *       - Any "return" statement executed must specify some "tpp_errno", and causes
  *         the associated `tpp_lexer_warnf()' to immediately return with that value.
  *    Example:
  *       >> TPP_WARNING(W_BAD_THING_HAPPEND, 1(WG_BAD_THING_HAPPEND), 2(100, 101), "bad thing happened: %s")
  *       >> TPP_WARNING_EX(W_BAD_THING_HAPPEND, 1(WG_BAD_THING_HAPPEND), 2(100, 101), {
  *       >>     char const *message = tpp_current_va_arg(char const *);
- *       >>     tpp_warnf1("same bad thing happened: %s", message);
+ *       >>     tpp_warn_printf1("same bad thing happened: %s", message);
  *       >> });
  *    During compilation, you can emit this warning like:
  *       >> tpp_errno error = tpp_lexer_warnf(LEXER, W_BAD_THING_HAPPEND, "uh'oh");
@@ -2960,13 +2968,20 @@ TPP_WARNING(TPP_W_EOF_BEFORE_ENDIF, 1(TPP_WG_SYNTAX), 1(1070), TPP_WSTATE_UNDEFI
 #define TPP_W_ELIF_OR_ELSE_AFTER_ELSE TPP_W_ELIF_OR_ELSE_AFTER_ELSE
 TPP_WARNING_EX(TPP_W_ELIF_OR_ELSE_AFTER_ELSE, 1(TPP_WG_SYNTAX), 1(1022), TPP_WSTATE_UNDEFINED, {
 	tpp_ifdef_stack_entry const *const entry = tpp_current_va_arg(tpp_ifdef_stack_entry const *);
-	tpp_file *const current_file = tpp_lexer_getfile(self);
-	char const *directive_name = tpp_current_va_arg(char const *);
-	tpp_warnf1("%[#%s%]-directive after %[#else%]\n", directive_name);
-	tpp_print_file_and_line_lc(current_file, tpp_ifdef_stack_entry_getupdated(entry));
-	tpp_warnf0("note: see associated %[#else%]\n");
-	tpp_print_file_and_line_lc(current_file, tpp_ifdef_stack_entry_getcreated(entry));
-	tpp_warnf0("note: see associated %[#if%], %[#ifdef%] or %[#ifndef%]\n");
+	char const *const directive_name = tpp_current_va_arg(char const *);
+	tpp_lexer_printf_info *const info = tpp_current_info();
+	tpp_lcinfo const saved_lc = info->tlpfi_lc;
+	tpp_warn_printf1(info, "%[#%s%]-directive after %[#else%]\n", directive_name);
+
+	info->tlpfi_lc = tpp_ifdef_stack_entry_getupdated(entry);
+	tpp_warn_print_file_and_line(info);
+	tpp_warn_printf0(info, "note: see associated %[#else%]\n");
+
+	info->tlpfi_lc = tpp_ifdef_stack_entry_getcreated(entry);
+	tpp_warn_print_file_and_line(info);
+	tpp_warn_printf0(info, "note: see associated %[#if%], %[#ifdef%] or %[#ifndef%]\n");
+
+	info->tlpfi_lc = saved_lc;
 })
 #endif /* TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE */
 
@@ -3498,13 +3513,11 @@ TPP_WARNING(TPP_W_DEFINE_BUILTIN_MACRO, 0(), 1(4118), TPP_WSTATE_WARN,
 TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
 	tpp_keyword const *keyword = tpp_current_va_arg(tpp_keyword const *);
 	tpp_macro const *const old_definition = tpp_keyword_getmacro(keyword);
-	tpp_warnf1("macro %[%s%] redefined\n", tpp_keyword_getkwdcstr(keyword));
+	tpp_warn_printf1(tpp_current_info(), "macro %[%s%] redefined\n", tpp_keyword_getkwdcstr(keyword));
 	if (tpp_macro_getdeffilename(old_definition)) {
-		/* TODO: must use "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT" */
-		tpp_warnf3("%s(%d, %d): note: see previous definition\n",
-		           tpp_macro_getdeffilename(old_definition),
-		           (int)tpp_lcinfo_getline(tpp_macro_getdeflcinfo(old_definition)) + 1,
-		           (int)tpp_lcinfo_getcol(tpp_macro_getdeflcinfo(old_definition)) + 1);
+		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(old_definition),
+		                           tpp_macro_getdeflcinfo(old_definition));
+		tpp_warn_printf0(tpp_current_info(), "note: see previous definition\n");
 	}
 })
 #endif /* TPP_HAVE_TPP_W_REDEFINE_MACRO */
@@ -4622,13 +4635,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 
 /* Support for "\e" (for U+001B) escape sequences
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_ESCAPE_E_IN_STRINGS
 #define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1: 0) /* "-fescape-e-in-strings" */
 #endif /* !TPP_HAVE_ESCAPE_E_IN_STRINGS */
 
 /* Support for "\s" (for U+0020) escape sequences
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_ESCAPE_S_IN_STRINGS
 #define TPP_HAVE_ESCAPE_S_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fescape-s-in-strings" */
 #endif /* !TPP_HAVE_ESCAPE_S_IN_STRINGS */
@@ -4658,19 +4671,19 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_CPP_EXCLAIM */
 
 /* Support for: #  (blank line)
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_CPP_BLANK
 #define TPP_HAVE_CPP_BLANK (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fblank-directives" */
 #endif /* !TPP_HAVE_CPP_BLANK */
 
 /* Support for: # 42 ...  (similar to #line)
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_CPP_DIGIT_LINE
 #define TPP_HAVE_CPP_DIGIT_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fdigit-directives" */
 #endif /* !TPP_HAVE_CPP_DIGIT_LINE */
 
 /* Support for: #line ...
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_CPP_LINE
 #define TPP_HAVE_CPP_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fline-directives" */
 #endif /* !TPP_HAVE_CPP_LINE */
@@ -4731,13 +4744,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_CPP_IDENT_SCCS */
 
 /* Support for: #pragma
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_CPP_PRAGMA
 #define TPP_HAVE_CPP_PRAGMA (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fpragma-directives" */
 #endif /* !TPP_HAVE_CPP_PRAGMA */
 
 /* Support for: #embed
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_CPP_EMBED
 #define TPP_HAVE_CPP_EMBED (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fembed-directives" */
 #endif /* !TPP_HAVE_CPP_EMBED */
@@ -5386,7 +5399,7 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_TOK_SQL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sql-comment" */
 #endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
 
-/* TODO: Support for deemon-style "@@doc-string" comments */
+/* XXX: Support for deemon-style "@@doc-string" comments */
 
 /************************************************************************/
 /* Single-char tokens                                                   */
@@ -5418,12 +5431,12 @@ TPP_DECL_END
 /* String tokens                                                        */
 /************************************************************************/
 
-/* TODO: Support for sql-style '-string literals ('' is escape for ', and line-feeds are allowed) */
-/* TODO: Support for sql-style "-string literals ("" is escape for ", and line-feeds are allowed) */
-/* TODO: Support for sql-style E'foo'-string literals (line-feeds are allowed, and \-escape sequences are handled) */
-/* TODO: Support for sql-style E"foo"-string literals (line-feeds are allowed, and \-escape sequences are handled) */
-/* TODO: Support for javascript-style `foo` format string literals */
-/* TODO: Support for deemon-style f"foo" / F"foo" format string literals */
+/* XXX: Support for sql-style '-string literals ('' is escape for ', and line-feeds are allowed) */
+/* XXX: Support for sql-style "-string literals ("" is escape for ", and line-feeds are allowed) */
+/* XXX: Support for sql-style E'foo'-string literals (line-feeds are allowed, and \-escape sequences are handled) */
+/* XXX: Support for sql-style E"foo"-string literals (line-feeds are allowed, and \-escape sequences are handled) */
+/* XXX: Support for javascript-style `foo` format string literals */
+/* XXX: Support for deemon-style f"foo" / F"foo" format string literals */
 
 /* 'foo'
  * @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1 */
@@ -6417,61 +6430,61 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR */
 
 /* Enable support for string operations in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_STRINGS
 #define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_STRINGLIKE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fstrings-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 /* Enable support for floats in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_FLOATS
 #define TPP_HAVE_BUILTIN_EXPR_FLOATS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffloats-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
 /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar")
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fif-else-optional-true" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
 
 /* Enable support for "if (foo) bar else baz" in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fifelse-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 
 /* Enable support for "^^" in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR
 #define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-flogical-xor-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR */
 
 /* Enable support for "0b" literals in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS (((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fbinary-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
 
 /* Enable support for "0o" literals in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS (((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
 
 /* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
 #define TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffixed-type-integrals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
 
 /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes in builtin lexer expressions
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
 #define TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffixed-length-integrals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
 
 /* Treat 'a' as an integer, rather than as a string (in C, this is always the case)
- * @detect: TODO */
+ * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : 0) /* "-fcharacter-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
@@ -6937,7 +6950,7 @@ TPP_DECL_END
 /* Provide a function "tpp_warning_group_nearest()" */
 #ifndef TPP_HAVE_TPP_WARNING_GROUP_NEAREST
 #define TPP_HAVE_TPP_WARNING_GROUP_NEAREST \
-	(/*TODO:TPP_HAVE_TPP_W_UNKNOWN_WARNING*/1 && TPP_HAVE_PROFILE_NOT_MINIMAL)
+	(TPP_HAVE_TPP_W_UNKNOWN_WARNING && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
 
 /* Provide a function "tpp_fuzzy_memcmp()" to quantify the
@@ -7014,34 +7027,12 @@ TPP_DECL_END
 
 /* Format to use for file+line+column log messages */
 #ifndef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT
-#if defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#elif defined(TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC) && TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#else /* !... */
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
 #ifdef _MSC_VER
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 1
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
-#else /* _MSC_VER */
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  1
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
-#endif /* !_MSC_VER */
-#endif /* ... */
-#if TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
 #define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
-#elif TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
+#else /* _MSC_VER */
 #define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf:%Pl:%Pc: "
-#else /* ... */
-#error "Invalid configuration of 'TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT'"
-#endif /* !... */
-#else /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC
-#undef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_MSCV 0
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT_IS_GCC  0
-#endif /* TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
+#endif /* !_MSC_VER */
+#endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
 
 /* Configurations for individual warnings */
 #ifndef TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT
@@ -7414,8 +7405,8 @@ TPP_CONST_DECL uint_least8_t const tpp_ctype[256]; /* Don't access directly! (co
 #endif /* !tpp_ascii_isspace_nolf */
 #endif /* TPP_HAVE_BUILTIN_CTYPE */
 
-/* TODO: "tpp_ascii_islfornascii()" could also be replaced with "tpp_ascii_islf_or_maybe_utf8_lf()",
- *       which would just also return true of the first byte of a utf-8 sequence that evaluates to a
+/* TODO: "tpp_ascii_islfornascii()" could also be replaced with "tpp_ascii_islforutf8()", which
+ *       would just also return true of the first byte of a utf-8 sequence that evaluates to a
  *       unicode linefeed character */
 #ifndef tpp_ascii_islfornascii
 #define tpp_ascii_islfornascii(ch) (tpp_ascii_islf(ch) || (ch) >= 0x80)
@@ -16360,41 +16351,55 @@ tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
 
 
 #if TPP_HAVE_WARNINGS
+typedef struct tpp_lexer_printf_info {
+	tpp_file       *tlpfi_file;     /* [0..1] Current file (source for filename, and basis for "tlpfi_pos") */
+	tpp_char const *tlpfi_pos;      /* [0..1][valid_if(tlpfi_file != NULL)] Current position in "tlpfi_file" */
+	char const     *tlpfi_filename; /* [0..1] Filename used by "%Pf", or "NULL" if "tlpfi_file" should be used */
+	tpp_lcinfo      tlpfi_lc;       /* L/C info to use, or "TPP_LCINFO_INVALID" if tlpfi_pos should be used */
+} tpp_lexer_printf_info;
+
+#define tpp_lexer_printf_info_init_at(self, file, pos) \
+	(void)((self)->tlpfi_file     = (file),            \
+	       (self)->tlpfi_pos      = (pos),             \
+	       (self)->tlpfi_filename = NULL,              \
+	       tpp_lcinfo_init_invalid((self)->tlpfi_lc))
+#define tpp_lexer_printf_info_init_lc(self, filename, lc) \
+	(void)((self)->tlpfi_file     = NULL,                 \
+	       (self)->tlpfi_filename = (filename),           \
+	       (self)->tlpfi_lc       = (lc))
+
 /* Interpret + print a warning-message "format" string.
  * The following %-encoded escape sequences are recognized:
  * - "%["    Start quoting text
  * - "%]"    Stop quoting text
- * - "%Pl"   1-based line of "pos" in "file"
- * - "%Pc"   1-based column of "pos" in "file"
- * - "%Pf"   Filename of given "file"
- * - "%Pt"   "%[current-token%]"
+ * - "%Pl"   1-based line described by "info"
+ * - "%Pc"   1-based column described by "info"
+ * - "%Pf"   Filename described by "info"
+ * - "%Pt"   "%[current-token%]"   (based on tpp_lexer_gettoken(self))
  * - "%s"    As defined by stdc, using va_arg(args, char *)
  * - "%.*s"  As defined by stdc, using va_arg(args, int) + va_arg(args, char *)
  * - "%.Ns"  As defined by stdc, using va_arg(args, char *)
- * - "%.NPt" "%[<N bytes starting at "pos">%]"
+ * - "%.NPt" "%[<N bytes starting at "info->tlpfi_pos">%]"   (clamped if too big)
  * - "%d"    As defined by stdc, using va_arg(args, int)
  * - "%u"    As defined by stdc, using va_arg(args, unsigned int)
  * - "%c"    As defined by stdc, using va_arg(args, int)
  * - "%%"    "%" (emit a singular %-character)
  *
- * @param: pos:        [0..1] Lexer position used by certain format-patterns.
- * @param: pos_lcinfo: Lexer position used when "pos == NULL"
- * @param: file:       The file containing "pos"
- * @param: printer:    Output printer for formatted text
- * @param: arg:        Cookie argument for "printer"
- * @param: format:     Format pattern (see above)
- * @param: args:       Extra varargs-arguments for "format"
- * @return: >= 0:      Sum of return values of "printer".
- * @return: < 0:       First negative return value of "printer". The more high-level
- *                     "tpp_lexer_warnf" API returns "TPP_EWARNPRINT" in this case. */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 5, 7)) tpp_ssize TPPVCALL
-tpp_lexer_printf_warning(tpp_lexer const *self, tpp_file *file, tpp_char const *pos,
-                         tpp_lcinfo pos_lcinfo, tpp_formatprinter printer, void *arg,
-                         char const *format, ...);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 5, 7)) tpp_ssize TPPCALL
-tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_file *file, tpp_char const *pos,
-                          tpp_lcinfo pos_lcinfo, tpp_formatprinter printer, void *arg,
-                          char const *format, va_list args);
+ * @param: info:    Information for special format descriptors
+ *                  (unpopulated parts may be populated lazily)
+ * @param: printer: Output printer for formatted text
+ * @param: arg:     Cookie argument for "printer"
+ * @param: format:  Format pattern (see above)
+ * @param: args:    Extra varargs-arguments for "format"
+ * @return: >= 0:   Sum of return values of "printer".
+ * @return: < 0:    First negative return value of "printer". The more high-level
+ *                  "tpp_lexer_warnf" API returns "TPP_EWARNPRINT" in this case. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
+tpp_lexer_printf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
+                         tpp_formatprinter printer, void *arg, char const *format, ...);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
+tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
+                          tpp_formatprinter printer, void *arg, char const *format, va_list args);
 
 /* Emits the specified lexer warning at the start of the current token.
  * @param: args: Format arguments specific to "id" (see '%'-sequences in warning expressions)
@@ -16405,22 +16410,26 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, va_list args);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
 tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warning_id id, va_list args);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPVCALL
-tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warning_id id, ...);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_vwarnf_lc(tpp_lexer *tpp_restrict self, tpp_lcinfo lc, tpp_warning_id id, va_list args);
+tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
+                    tpp_char const *pos, tpp_warning_id id, va_list args);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
-tpp_lexer_warnf_lc(tpp_lexer *tpp_restrict self, tpp_lcinfo lc, tpp_warning_id id, ...);
+tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
+                   tpp_char const *pos, tpp_warning_id id, ...);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_vwarnf_lc(tpp_lexer *tpp_restrict self, char const *filename,
+                    tpp_lcinfo lc, tpp_warning_id id, va_list args);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
+tpp_lexer_warnf_lc(tpp_lexer *tpp_restrict self, char const *filename,
+                   tpp_lcinfo lc, tpp_warning_id id, ...);
 #else /* TPP_HAVE_WARNINGS */
-#define tpp_lexer_vwarnf(self, id, args)         TPP_EOK
-#define tpp_lexer_vwarnf_at(self, pos, id, args) TPP_EOK
-#define tpp_lexer_vwarnf_lc(self, lc, id, args)  TPP_EOK
+#define tpp_lexer_vwarnf(self, id, args)                  TPP_EOK
+#define tpp_lexer_vwarnf_at(self, file, pos, id, args)    TPP_EOK
+#define tpp_lexer_vwarnf_lc(self, filename, lc, id, args) TPP_EOK
 #if TPP_HOST_HAVE_PP_VARARGS
-#define tpp_lexer_warnf(self, id, ...)           TPP_EOK
-#define tpp_lexer_warnf_at(self, pos, id, ...)   TPP_EOK
-#define tpp_lexer_warnf_lc(self, lc, id, ...)    TPP_EOK
+#define tpp_lexer_warnf(self, id, ...)                    TPP_EOK
+#define tpp_lexer_warnf_at(self, file, pos, id, ...)      TPP_EOK
+#define tpp_lexer_warnf_lc(self, filename, lc, id, ...)   TPP_EOK
 #else /* TPP_HOST_HAVE_PP_VARARGS */
 TPP_INLINE tpp_errno TPPVCALL
 tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
@@ -16430,16 +16439,20 @@ tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
 }
 
 TPP_INLINE tpp_errno TPPVCALL
-tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_char const *pos, tpp_warning_id id, ...) {
+tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
+                   tpp_char const *pos, tpp_warning_id id, ...) {
 	(void)self;
+	(void)file;
 	(void)pos;
 	(void)id;
 	return TPP_EOK;
 }
 
 TPP_INLINE tpp_errno TPPVCALL
-tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_lcinfo lc, tpp_warning_id id, ...) {
+tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, char const *filename,
+                   tpp_lcinfo lc, tpp_warning_id id, ...) {
 	(void)self;
+	(void)filename;
 	(void)lc;
 	(void)id;
 	return TPP_EOK;

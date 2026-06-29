@@ -528,7 +528,7 @@ got_bse_after_linefeed:
 #endif /* TPP_HAVE_UNICODE */
 #if TPP_HAVE_TRIGRAPHS && TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 		if (is_trigraph) {
-			error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_pos),
+			error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_pos),
 			                           TPP_W_ENCOUNTERED_TRIGRAPH);
 			if (TPP_ISERR(error))
 				goto return_error;
@@ -1036,7 +1036,7 @@ handle_backslash:
 #if TPP_HAVE_TRIGRAPHS && TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 		if (ch != '\\') {
 			tpp_char const *trigraph_pos = tpp_file_rel2ptr(file, rel_before_bse);
-			error = tpp_lexer_warnf_at(self, trigraph_pos, TPP_W_ENCOUNTERED_TRIGRAPH);
+			error = tpp_lexer_warnf_at(self, file, trigraph_pos, TPP_W_ENCOUNTERED_TRIGRAPH);
 			if (TPP_ISERR(error))
 				goto done;
 		}
@@ -1071,7 +1071,7 @@ handle_backslash:
 				}
 				ch = *pos++;
 				if (tpp_ascii_islf(ch)) {
-					error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_before_bse),
+					error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_before_bse),
 					                           TPP_W_LINE_COMMENT_CONTINUED);
 					if (TPP_ISERR(error))
 						goto done;
@@ -1088,7 +1088,7 @@ handle_backslash:
 					if (TPP_ISERR(error))
 						goto done;
 					if (tpp_unicode_islf(uc)) {
-						error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_before_bse),
+						error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_before_bse),
 						                           TPP_W_LINE_COMMENT_CONTINUED);
 						goto done;
 					}
@@ -1145,7 +1145,7 @@ handle_backslash:
 							}
 							if (pos[1] == '=') {
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
-								error = tpp_lexer_warnf_at(self, pos - 1, TPP_W_ENCOUNTERED_TRIGRAPH);
+								error = tpp_lexer_warnf_at(self, file, pos - 1, TPP_W_ENCOUNTERED_TRIGRAPH);
 								if (TPP_ISERR(error))
 									goto done;
 #endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
@@ -1182,7 +1182,7 @@ handle_backslash:
 #endif /* TPP_HAVE_TPP_TOK_SQL_COMMENT */
 				default: tpp_unreachable();
 				}
-				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_before_bse),
+				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_before_bse),
 				                           TPP_W_LINE_COMMENT_CONTINUED);
 				if (TPP_ISERR(error))
 					goto done;
@@ -1238,7 +1238,7 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
                              tpp_char const **tpp_restrict p_pos,
                              tpp_char quote_char) {
-	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
@@ -1271,14 +1271,14 @@ handle_linefeed:
 				*p_pos = tpp_file_rel2ptr(file, old_pos);
 				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-				return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+				return tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
 				                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
 #else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 				break;
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 			} else {
 #if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
-				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, old_pos),
+				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
 				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
 				if (TPP_ISERR(error))
 					return error;
@@ -1304,7 +1304,7 @@ handle_linefeed:
 	return TPP_EOK;
 warn_premature_eof:
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-	return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+	return tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
 	                          TPP_W_STRING_TERMINATED_BY_EOF);
 #else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 	return TPP_EOK;
@@ -1322,7 +1322,7 @@ tpp_lexer_seek_end_of_block_string(tpp_lexer *tpp_restrict self,
                                    tpp_char quote_char) {
 	/* NOTE: """triple quote \""" and string continues"""
 	 * iow: \-escape sequences still exist in block-strings! */
-	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
 	tpp_size const rel_start = tpp_file_ptr2rel(file, *p_pos);
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
@@ -1357,7 +1357,7 @@ tpp_lexer_seek_end_of_block_string(tpp_lexer *tpp_restrict self,
 	return TPP_EOK;
 warn_premature_eof:
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-	return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+	return tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
 	                          TPP_W_STRING_TERMINATED_BY_EOF);
 #else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 	return TPP_EOK;
@@ -1372,7 +1372,7 @@ warn_premature_eof:
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_cxx_raw_string(tpp_lexer *tpp_restrict self,
                                      tpp_char const **tpp_restrict p_pos) {
-	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_size rel_pattern_start = tpp_file_ptr2rel(file, *p_pos);
 	tpp_size rel_pattern_end, delim_len;
 	tpp_char ch;
@@ -1444,7 +1444,7 @@ continue_string:
 	return TPP_EOK;
 warn_premature_eof:
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-	return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_pattern_start),
+	return tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_pattern_start),
 	                          TPP_W_STRING_TERMINATED_BY_EOF);
 #else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 	return TPP_EOK;
@@ -1460,7 +1460,7 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
                                  tpp_char const **tpp_restrict p_pos,
                                  tpp_char quote_char) {
-	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_file *const file = tpp_lexer_getfile(self);
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
@@ -1486,14 +1486,14 @@ handle_linefeed:
 				*p_pos = tpp_file_rel2ptr(file, old_pos);
 				/* Warning if a line-feed is encountered */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
-				return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+				return tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
 				                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
 #else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 				break;
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 			} else {
 #if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
-				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, old_pos),
+				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
 				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
 				if (TPP_ISERR(error))
 					return error;
@@ -1519,7 +1519,7 @@ handle_linefeed:
 	return TPP_EOK;
 warn_premature_eof:
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-	return tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+	return tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
 	                          TPP_W_STRING_TERMINATED_BY_EOF);
 #else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 	return TPP_EOK;
@@ -1721,7 +1721,7 @@ switch_on_ch:
 #define warn_if_ch2_is_trigraph()                                                  \
 	do {                                                                           \
 		if (pos[-1] != ch2) {                                                      \
-			error = tpp_lexer_warnf_at(self, pos - 3, TPP_W_ENCOUNTERED_TRIGRAPH); \
+			error = tpp_lexer_warnf_at(self, file, pos - 3, TPP_W_ENCOUNTERED_TRIGRAPH); \
 			if (TPP_ISERR(error))                                                  \
 				goto return_error;                                                 \
 		}                                                                          \
@@ -2215,7 +2215,7 @@ switch_on_ch:
 continue_c_comment_with_ch2:
 					if (ch2 == 0 && pos >= file->tf_end) {
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
-						error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+						error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
 						                           TPP_W_COMMENT_TERMINATED_BY_EOF);
 						if (TPP_ISERR(error))
 							goto return_error;
@@ -2229,7 +2229,7 @@ continue_c_comment_with_ch2:
 							read_ch2();
 							if (ch2 != '*')
 								continue;
-							error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, slash_pos),
+							error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, slash_pos),
 							                           TPP_W_SLASHSTAR_INSIDE_OF_COMMENT);
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -2485,7 +2485,7 @@ continue_c_comment_with_ch2:
 						goto not_a_trigraph;
 					}
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
-					error = tpp_lexer_warnf_at(self, pos - 3, TPP_W_ENCOUNTERED_TRIGRAPH);
+					error = tpp_lexer_warnf_at(self, file, pos - 3, TPP_W_ENCOUNTERED_TRIGRAPH);
 					if (TPP_ISERR(error))
 						goto return_error;
 #endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
@@ -3485,7 +3485,7 @@ not_a_trigraph:
 continue_pascal_comment_with_ch2:
 			if (ch2 == 0 && pos >= file->tf_end) {
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
-				error = tpp_lexer_warnf_at(self, tpp_file_rel2ptr(file, rel_start),
+				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
 				                           TPP_W_COMMENT_TERMINATED_BY_EOF);
 				if (TPP_ISERR(error))
 					goto return_error;
