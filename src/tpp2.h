@@ -2818,6 +2818,13 @@ alias("W_EXPECTED_COLON_AFTER_WARNING", "TPP_W_UNEXPECTED_TOKEN");
 alias("W_EXPECTED_COLLON_AFTER_WARNING", "TPP_W_UNEXPECTED_TOKEN");
 alias("W_UNKNOWN_EXTENSION", "TPP_W_UNKNOWN_EXTENSION");
 alias("W_CANT_POP_EXTENSIONS", "TPP_W_CANNOT_POP_EXTENSIONS");
+alias("W_CANT_POP_WARNINGS", "TPP_W_CANNOT_POP_WARNINGS");
+alias("W_INVALID_WARNING", "TPP_W_UNKNOWN_WARNING");                              // or: TPP_W_UNKNOWN_WARNING_NUMBER
+alias("W_EXPECTED_WARNING_NAMEORID", "TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING"); // or: TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON
+alias("W_EXPECTED_KEYWORD_AFTER_ASSERT", "TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE");
+alias("W_EXPECTED_KEYWORD_AFTER_PREDICATE", "TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE");
+alias("W_EXPECTED_KEYWORD_AFTER_EXPR_HASH", "TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION");
+alias("W_EXPECTED_KEYWORD_AFTER_EXPR_PRED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION");
 ]]]*/
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_EOF TPP_TOK_EOF
@@ -4282,6 +4289,48 @@ alias("W_CANT_POP_EXTENSIONS", "TPP_W_CANNOT_POP_EXTENSIONS");
 #define W_CANT_POP_EXTENSIONS TPP_W_CANNOT_POP_EXTENSIONS
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_W_CANNOT_POP_EXTENSIONS */
+#ifdef TPP_W_CANNOT_POP_WARNINGS
+#define TPP_W_CANT_POP_WARNINGS TPP_W_CANNOT_POP_WARNINGS
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_CANT_POP_WARNINGS TPP_W_CANNOT_POP_WARNINGS
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_CANNOT_POP_WARNINGS */
+#ifdef TPP_W_UNKNOWN_WARNING
+#define TPP_W_INVALID_WARNING TPP_W_UNKNOWN_WARNING
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_INVALID_WARNING TPP_W_UNKNOWN_WARNING
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNKNOWN_WARNING */
+#ifdef TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING
+#define TPP_W_EXPECTED_WARNING_NAMEORID TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_WARNING_NAMEORID TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING */
+#ifdef TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
+#define TPP_W_EXPECTED_KEYWORD_AFTER_ASSERT TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_KEYWORD_AFTER_ASSERT TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE */
+#ifdef TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
+#define TPP_W_EXPECTED_KEYWORD_AFTER_PREDICATE TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_KEYWORD_AFTER_PREDICATE TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE */
+#ifdef TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+#define TPP_W_EXPECTED_KEYWORD_AFTER_EXPR_HASH TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_KEYWORD_AFTER_EXPR_HASH TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION */
+#ifdef TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION
+#define TPP_W_EXPECTED_KEYWORD_AFTER_EXPR_PRED TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_EXPECTED_KEYWORD_AFTER_EXPR_PRED TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION */
 /*[[[end]]]*/
 
 //TODO: /* #define TPP_CONFIG_CALLBACK_WARNING          x // int x(int wnum, ...) { ... } -- A user-replacement for `TPPLexer_Warn' */
@@ -4296,29 +4345,7 @@ alias("W_CANT_POP_EXTENSIONS", "TPP_W_CANNOT_POP_EXTENSIONS");
 //TODO: /* #define TPP_CONFIG_NO_CALLBACK_NEW_TEXTFILE     1 */
 //TODO: /* #define TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE     1 */
 
-
 //TODO:/*36*/ DEF_WARNING(W_MACRO_NOT_DEFINED, (WG_MACROS), WSTATE_DISABLED, WARNF("Macro " Q("%s") " is not defined", KWDNAME()))                                /* [struct TPPKeyword *] OLD(TPPWarn_MacroDoesntExist). */
-//TODO:/*50*/ DEF_WARNING(W_INVALID_WARNING, (WG_VALUE), WSTATE_ERROR, {
-//TODO:	/* [struct TPPConst *] OLD(TPPWarn_InvalidWarning). */
-//TODO:	struct TPPConst *c = ARG(struct TPPConst *);
-//TODO:	if (c->c_kind == TPP_CONST_STRING) {
-//TODO:		char const *wname = c->c_data.c_string->s_text;
-//TODO:		if (*wname == '-')
-//TODO:			++wname;
-//TODO:		if (*wname == 'W')
-//TODO:			++wname;
-//TODO:		if (!memcmp(wname, "no-", 3))
-//TODO:			wname += 3;
-//TODO:		WARNF("Invalid warning " Q("%s") " (Did you mean " Q("%s") ")", wname, find_most_likely_warning(wname));
-//TODO:	} else if (c->c_kind == TPP_CONST_FLOAT) {
-//TODO:		WARNF("Invalid warning " Q("%f"), (double)c->c_data.c_float);
-//TODO:	} else if (c->c_kind == TPP_CONST_INTEGRAL) {
-//TODO:		WARNF("Invalid warning " Q("%ld"), (long)c->c_data.c_int);
-//TODO:	} else {
-//TODO:		WARNF("Invalid warning");
-//TODO:	}
-//TODO:})
-//TODO:/*51*/ DEF_WARNING(W_CANT_POP_WARNINGS, (WG_VALUE), WSTATE_ERROR, WARNF("Can't pop warnings"))                                                                       /* OLD(TPPWarn_CantPopWarnings). */
 //TODO:/*61*/ DEF_WARNING(W_NONPARTABLE_FILENAME_CASING, (WG_ENVIRON), WSTATE_WARN, {
 //TODO:	/* [char const *,char const *,size_t,char const *]. (path,wrong_begin,wrong_size,corrent_begin)
 //TODO:	 *  OLD(TPPWarn_InvalidPathCasing). */
@@ -4345,10 +4372,6 @@ alias("W_CANT_POP_EXTENSIONS", "TPP_W_CANNOT_POP_EXTENSIONS");
 //TODO:DEF_WARNING(W_MACRO_RECURSION_LIMIT_EXCEEDED, (WG_LIMIT), WSTATE_ERROR, WARNF("Macro recursion limit exceeded when expanding " Q("%s") " (Consider passing " Q("-fno-macro-recursion") ")", FILENAME())) /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_INCLUDE_RECURSION_LIMIT_EXCEEDED, (WG_LIMIT), WSTATE_ERROR, WARNF("Include recursion limit exceeded when including " Q("%s"), FILENAME()))                                                 /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_IDENT_SCCS_IGNORED, (WG_USAGE), WSTATE_WARN, WARNF("#ident/sccs with " Q("%s") " is ignored", CONST_STR())) /* [struct TPPConst *]. */
-//TODO:DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_ASSERT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword after #assert, but got " TOK_S, TOK_A))                                        /* . */
-//TODO:DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_PREDICATE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword after predicate " Q("%s") " in #assert, but got " TOK_S, KWDNAME(), TOK_A)) /* [struct TPPKeyword *]. */
-//TODO:DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_EXPR_HASH, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword after # in expression, but got " TOK_S, TOK_A)) /* . */
-//TODO:DEF_WARNING(W_EXPECTED_KEYWORD_AFTER_EXPR_PRED, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected keyword after predicate " Q("%s") " in expression, but got " TOK_S, KWDNAME(), TOK_A)) /* . */
 //TODO:DEF_WARNING(W_UNKNOWN_ASSERTION, (WG_VALUE), WSTATE_DISABLED, { char const *temp = KWDNAME(); WARNF("Assertion " Q("%s") " does not contain a predicate " Q("%s"), temp, KWDNAME()); }) /* [struct TPPKeyword *,struct TPPKeyword *]. */
 //TODO:DEF_WARNING(W_CANT_POP_INCLUDE_PATH, (WG_VALUE), WSTATE_ERROR, WARNF("Can't pop #include paths"))                                                                               /* . */
 //TODO:DEF_WARNING(W_CONSIDER_PAREN_AROUND_LAND, (WG_QUALITY), WSTATE_WARN, WARNF("Consider adding parenthesis around " Q("&&") " to prevent confusion with " Q("||")))                /* . */
@@ -4359,7 +4382,6 @@ alias("W_CANT_POP_EXTENSIONS", "TPP_W_CANNOT_POP_EXTENSIONS");
 //TODO:DEF_WARNING(W_TYPECAST_IN_EXPRESSION, (WG_USAGE, WG_SYNTAX), WSTATE_WARN, WARNF("C-style type cast " TOK_S " in expression is not understood (Consider using bit-masks to narrow integral types)", TOK_A)) /* . */
 //TODO:DEF_WARNING(W_EXPECTED_RPAREN_AFTER_CAST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(")") " after casting type, but got " TOK_S, TOK_A))                                                               /* . */
 //TODO:DEF_WARNING(W_EXPECTED_RBRACE_AFTER_STATEMENT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q("}") " after statement, but got " TOK_S, TOK_A))                                                             /* . */
-//TODO:DEF_WARNING(W_EXPECTED_WARNING_NAMEORID, (WG_SYNTAX, WG_VALUE), WSTATE_ERROR, WARNF("Expected warning name or id, but got " Q("%s"), CONST_STR()))                                                         /* [struct TPPConst *]. */
 //TODO:DEF_WARNING(W_INVALID_FLOAT_SUFFIX, (WG_SYNTAX), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("Invalid floating point suffix " Q("%.*s"), (int)ARG(size_t), temp); }) /* [char const *,size_t] */
 //TODO:DEF_WARNING(W_DEPENDENCY_CHANGED, (WG_DEPENDENCY), WSTATE_ERROR, {
 //TODO:	char *depnam         = ARG(char *);
@@ -4703,15 +4725,15 @@ extern tpp_lexer *TPPLexer_Current;
 	tpp_lcinfo_getline(tpp_file_getlcinfo(self, (tpp_char const *)(text_pointer)))
 #define TPPFile_ColumnAt(self, text_pointer) \
 	tpp_lcinfo_getcol(tpp_file_getlcinfo(self, (tpp_char const *)(text_pointer)))
-#define TPPFile_Filename(self, opt_filename_length)                                            \
-	((opt_filename_length)                                                                     \
-	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_getfilename(self))) \
-	 : (void)0,                                                                                \
-	 tpp_file_getfilename(self))
-#define TPPFile_RealFilename(self, opt_filename_length)                                    \
+#define TPPFile_Filename(self, opt_filename_length)                                        \
 	((opt_filename_length)                                                                 \
-	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_getrealfilename(self))) \
+	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_getfilename(self))) \
 	 : (void)0,                                                                            \
+	 tpp_file_getfilename(self))
+#define TPPFile_RealFilename(self, opt_filename_length)                                        \
+	((opt_filename_length)                                                                     \
+	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_getrealfilename(self))) \
+	 : (void)0,                                                                                \
 	 tpp_file_getrealfilename(self))
 
 
@@ -4920,6 +4942,8 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 #undef TPPFILE_NEXTCHUNK_FLAG_EXTEND
 #undef TPPFILE_NEXTCHUNK_FLAG_BINARY
 #undef TPPFILE_NEXTCHUNK_FLAG_NOBLCK
+#define TPPFile_NextChunk_(lexer, self, flags) TPPFile_NextChunk_impl(self)
+#define TPPFile_NextChunk(self, flags)         TPPFile_NextChunk_impl(self)
 TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 	tpp_errno error = tpp_file_expandchunk(self);
 #if TPP_HAVE_FILE_NONBLOCK
@@ -4969,20 +4993,16 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define TPPLexer_AddIncludePath(path, pathsize)        TPPLexer_AddIncludePath_(TPP2_LEXER, path, pathsize)
 #define TPPLexer_DelIncludePath(path, pathsize)        TPPLexer_DelIncludePath_(TPP2_LEXER, path, pathsize)
 
-#if 0 /* TODO */
-//#ifndef TPP_CONFIG_NO_ASSERTIONS
-//struct TPPAssertion {
-//	struct TPPAssertion *as_next; /* [0..1][owned] Next assertion. */
-//	struct TPPKeyword   *as_kwd;  /* [1..1][const] Keyword associated with this assertion. */
-//};
-//struct TPPAssertions {
-//	/* s.a.: `https://gcc.gnu.org/onlinedocs/cpp/Obsolete-Features.html' */
-//	size_t                as_assc; /* Amount of defined assertions. */
-//	size_t                as_assa; /* Allocated amount of assertions. */
-//	struct TPPAssertion **as_assv; /* [0..1][owned][0..as_alloc][owned] Hash-map of existing assertions. */
-//};
-//#endif /* !TPP_CONFIG_NO_ASSERTIONS */
-#endif
+#if TPP_HAVE_CPP_ASSERT
+#define TPPAssertion tpp_assertion
+#undef as_next /* TPP3 uses a different hash structure (one without next-pointers) */
+#define as_kwd TPP_INTERNAL(tas_value) /* Use tpp_assertions_contains() */
+
+#define TPPAssertions tpp_assertions
+#define as_assc TPP_INTERNAL(tass_assc) /* Use tpp_assertions_getcount() */
+#define as_assa TPP_INTERNAL(tass_bckm) /* Internal detail; there's no reason to use this */
+#define as_assv TPP_INTERNAL(tass_bckv) /* Internal detail; there's no reason to use this */
+#endif /* TPP_HAVE_CPP_ASSERT */
 
 
 
@@ -5005,14 +5025,12 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #undef kr_file     /* Replaced with "tkm_file_guard" (which has a slightly different meaning) */
 #undef kr_oldmacro /* Replaced with "tkm_macro_pushstack" (which has a slightly different meaning) */
 #undef kr_defmacro /* Builtin macros are now handled by `tpp_macro_getbuiltin()' */
-#define kr_flags   tkm_flags /* Use tpp_lexer_getkeywordflags() */
-#define kr_counter tkm_builtin_counter /* Don't access */
-#if 0 /* TODO */
-//#ifndef TPP_CONFIG_NO_ASSERTIONS
-//	struct TPPAssertions      kr_asserts;  /* Assertions (aka. #assert/#unassert associated with this keyword) */
-//#endif /* !TPP_CONFIG_NO_ASSERTIONS */
-#endif
-#define kr_user tkm_userdata_ptr /* Use tpp_keyword_getuserdata() / tpp_keyword_setuserdata() / tpp_keyword_misc_getuserdata() / tpp_keyword_misc_setuserdata() */
+#define kr_flags   TPP_INTERNAL(tkm_flags) /* Use tpp_lexer_getkeywordflags() */
+#define kr_counter TPP_INTERNAL(tkm_builtin_counter) /* Don't access */
+#if TPP_HAVE_CPP_ASSERT
+#define kr_asserts TPP_INTERNAL(tkm_assertions) /* Don't access */
+#endif /* TPP_HAVE_CPP_ASSERT */
+#define kr_user    TPP_INTERNAL(tkm_userdata_ptr) /* Use tpp_keyword_getuserdata() / tpp_keyword_setuserdata() / tpp_keyword_misc_getuserdata() / tpp_keyword_misc_setuserdata() */
 
 
 #define TPPKeyword tpp_keyword

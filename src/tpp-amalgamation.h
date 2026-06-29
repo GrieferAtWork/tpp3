@@ -13647,6 +13647,10 @@ typedef struct tpp_assertions {
 	(tpp_free((self)->TPP_INTERNAL(tass_bckv)), \
 	 tpp_dbg_memset(self, sizeof(tpp_assertions)))
 
+/* Return the # of assertions made */
+#define tpp_assertions_getcount(self) \
+	((self)->TPP_INTERNAL(tass_assc))
+
 /* Check if *any* keywords have been asserted within the given assertion-set "self" */
 #define tpp_assertions_containsany(self) \
 	((self)->TPP_INTERNAL(tass_assc) != 0)
