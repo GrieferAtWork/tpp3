@@ -59,6 +59,8 @@ tpp_warnings_fini(tpp_warnings *tpp_restrict self) {
 		}
 	}
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
+
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 #if TPP_HAVE_LEXER_COPY || TPP_HAVE_WARNINGS_PUSH_POP

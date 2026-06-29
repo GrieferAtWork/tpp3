@@ -3951,6 +3951,13 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #ifndef tpp_bzero
 #define tpp_bzero(p, n) (void)tpp_memset(p, 0, n)
 #endif /* !tpp_bzero */
+#ifndef tpp_dbg_memset
+#if TPP_DEBUG
+#define tpp_dbg_memset(p, n) (void)tpp_memset(p, 0xcc, n)
+#else /* TPP_DEBUG */
+#define tpp_dbg_memset(p, n) (void)0
+#endif /* !TPP_DEBUG */
+#endif /* !tpp_dbg_memset */
 
 
 
@@ -8025,7 +8032,8 @@ typedef struct tpp_expr_value {
 	(*(dst) = *(src)_tpp_expr_value_incref(dst), TPP_EOK)
 
 /* Finalize "self" (never fails) */
-#define tpp_expr_value_fini(self) (void)((void)0 _tpp_expr_value_decref(self))
+#define tpp_expr_value_fini(self) \
+	((void)0 _tpp_expr_value_decref(self), tpp_dbg_memset(self, sizeof(*(self))))
 
 /* Check which native representation is used by "self" (never fails) */
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE
@@ -9672,15 +9680,16 @@ typedef struct tpp_token {
 } tpp_token;
 
 /* Public API */
-#define tpp_token_move(self, other) \
-	(void)(*(self) = *(other))
-#define tpp_token_copy(self, other)             \
-	(void)(*(self) = *(other),                  \
+#define tpp_token_move(self, from) \
+	(void)(*(self) = *(from), tpp_dbg_memset(from, sizeof(tpp_token)))
+#define tpp_token_copy(self, from)              \
+	(void)(*(self) = *(from),                   \
 	       !((self)->TPP_INTERNAL(tt_chunk)) || \
 	       (tpp_string_incref((self)->TPP_INTERNAL(tt_chunk)), 1))
-#define tpp_token_fini(self)                    \
-	(void)(!((self)->TPP_INTERNAL(tt_chunk)) || \
-	       (tpp_string_decref((self)->TPP_INTERNAL(tt_chunk)), 1))
+#define tpp_token_fini(self)                                       \
+	(void)(!((self)->TPP_INTERNAL(tt_chunk)) ||                    \
+	       (tpp_string_decref((self)->TPP_INTERNAL(tt_chunk)), 1), \
+	       tpp_dbg_memset(self, sizeof(tpp_token)))
 #if TPP_HAVE_USER_KEYWORDS
 #define tpp_token_haskwd(self)   TPP_TOK_ISKEYWORD(tpp_token_getid(self))
 #else /* TPP_HAVE_USER_KEYWORDS */
@@ -11685,7 +11694,7 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 	((enabled) ? tpp_features_enable(self, id) : tpp_features_disable(self, id))
 #define tpp_features_init(self)            (void)(*(self) = tpp_features_default)
 #define tpp_features_reset(self)           (void)(*(self) = tpp_features_default)
-#define tpp_features_fini(self)            (void)0
+#define tpp_features_fini(self)            tpp_dbg_memset(self, sizeof(tpp_features))
 #endif /* TPP_HAVE_FEATURES */
 
 #if TPP_CONF_IS_CONST(TPP_HAVE_BSE)
@@ -12696,6 +12705,8 @@ typedef struct tpp_file {
 
 #define tpp_file_alloc() ((tpp_file *)tpp_malloc(sizeof(tpp_file)))
 #define tpp_file_free(p) tpp_free(p)
+#define tpp_file_move(dst, src) \
+	(void)(*(dst) = *(src), tpp_dbg_memset(src, sizeof(tpp_file)))
 
 #if TPP_HAVE_FILE_IOFLAGS
 #define _tpp_file_init_ioflags(self, flags) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_flags) = (flags)
@@ -13621,8 +13632,9 @@ typedef struct tpp_assertions {
 	(void)((self)->TPP_INTERNAL(tass_assc) = 0, \
 	       (self)->TPP_INTERNAL(tass_bckm) = 0, \
 	       (self)->TPP_INTERNAL(tass_bckv) = NULL)
-#define tpp_assertions_fini(self) \
-	tpp_free((self)->TPP_INTERNAL(tass_bckv))
+#define tpp_assertions_fini(self)               \
+	(tpp_free((self)->TPP_INTERNAL(tass_bckv)), \
+	 tpp_dbg_memset(self, sizeof(tpp_assertions)))
 
 /* Check if *any* keywords have been asserted within the given assertion-set "self" */
 #define tpp_assertions_containsany(self) \
@@ -14407,8 +14419,9 @@ typedef struct tpp_warning_suppressions {
 	(void)((self)->TPP_INTERNAL(tws_ctxc) = 0, \
 	       (self)->TPP_INTERNAL(tws_ctxa) = 0, \
 	       (self)->TPP_INTERNAL(tws_ctxv) = NULL)
-#define tpp_warning_suppressions_fini(self) \
-	(void)tpp_free((self)->TPP_INTERNAL(tws_ctxv))
+#define tpp_warning_suppressions_fini(self)    \
+	(tpp_free((self)->TPP_INTERNAL(tws_ctxv)), \
+	 tpp_dbg_memset(self, sizeof(tpp_warning_suppressions)))
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 
 
@@ -14451,7 +14464,7 @@ tpp_warnings_copy(tpp_warnings *tpp_restrict self,
                   tpp_warnings const *tpp_restrict from);
 #endif /* TPP_HAVE_LEXER_COPY */
 #else /* TPP_HAVE_WARNINGS_FINI */
-#define tpp_warnings_fini(self) (void)0
+#define tpp_warnings_fini(self) tpp_dbg_memset(self, sizeof(tpp_warnings))
 #if TPP_HAVE_LEXER_COPY
 #define tpp_warnings_copy(self, from) (*(self) = *(from), TPP_EOK)
 #endif /* TPP_HAVE_LEXER_COPY */
@@ -14563,11 +14576,17 @@ typedef struct tpp_include_path_entry {
 } tpp_include_path_entry;
 
 #if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
-#define _tpp_include_path_entry_fini(self)    tpp_string_decref((self)->TPP_INTERNAL(tipe_pathstr))
-#define _tpp_include_path_entry_getpath(self) tpp_string_cstr((self)->TPP_INTERNAL(tipe_pathstr))
+#define _tpp_include_path_entry_fini(self)                  \
+	(tpp_string_decref((self)->TPP_INTERNAL(tipe_pathstr)), \
+	 tpp_dbg_memset(self, sizeof(tpp_include_path_entry)))
+#define _tpp_include_path_entry_getpath(self) \
+	tpp_string_cstr((self)->TPP_INTERNAL(tipe_pathstr))
 #else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
-#define _tpp_include_path_entry_fini(self)    tpp_free((self)->TPP_INTERNAL(tipe_path))
-#define _tpp_include_path_entry_getpath(self) ((char const *)(self)->TPP_INTERNAL(tipe_path))
+#define _tpp_include_path_entry_fini(self)      \
+	(tpp_free((self)->TPP_INTERNAL(tipe_path)), \
+	 tpp_dbg_memset(self, sizeof(tpp_include_path_entry)))
+#define _tpp_include_path_entry_getpath(self) \
+	((char const *)(self)->TPP_INTERNAL(tipe_path))
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 
 typedef struct tpp_include_path_list {
@@ -15294,11 +15313,13 @@ typedef struct tpp_lexer_openfile_result {
 
 #if TPP_HAVE_USER_KEYWORDS
 #define tpp_lexer_openfile_result_fini(self) \
-	tpp_io_close((self)->tlofr_handle)
+	(tpp_io_close((self)->tlofr_handle),     \
+	 tpp_dbg_memset(self, sizeof(*(self))))
 #else /* TPP_HAVE_USER_KEYWORDS */
 #define tpp_lexer_openfile_result_fini(self) \
 	(tpp_io_close((self)->tlofr_handle),     \
-	 tpp_free((self)->tlofr_filename))
+	 tpp_free((self)->tlofr_filename),       \
+	 tpp_dbg_memset(self, sizeof(*(self))))
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
@@ -15949,10 +15970,13 @@ typedef struct tpp_lexer_arginfo {
 
 #define tpp_lexer_arginfo_init_empty(self) \
 	(void)((self)->tlai_chunk = NULL, (self)->tlai_start = (self)->tlai_end = NULL)
-#define tpp_lexer_arginfo_fini(self) \
-	(void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0))
+#define tpp_lexer_arginfo_fini(self)                                          \
+	(void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0), \
+	       tpp_dbg_memset(self, sizeof(*(self))))
 #define tpp_lexer_arginfo_copy(dst, src) \
 	(void)(*(dst) = *(src), (!(self)->tlai_chunk || (tpp_string_incref((self)->tlai_chunk), 0)))
+#define tpp_lexer_arginfo_move(dst, src) \
+	(void)(*(dst) = *(src), tpp_dbg_memset(src, sizeof(*(src))))
 
 /* Seek the first unmatched ')'-token, whilst collecting information
  * about every ','-separated text-area encountered until then.

@@ -204,6 +204,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 #endif /* TPP_HAVE_CPP_MACROS */
 	default: break;
 	}
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 /* Update "self" according to text-data from [text,text+size) */

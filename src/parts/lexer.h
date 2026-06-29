@@ -559,11 +559,13 @@ typedef struct tpp_lexer_openfile_result {
 
 #if TPP_HAVE_USER_KEYWORDS
 #define tpp_lexer_openfile_result_fini(self) \
-	tpp_io_close((self)->tlofr_handle)
+	(tpp_io_close((self)->tlofr_handle),     \
+	 tpp_dbg_memset(self, sizeof(*(self))))
 #else /* TPP_HAVE_USER_KEYWORDS */
 #define tpp_lexer_openfile_result_fini(self) \
 	(tpp_io_close((self)->tlofr_handle),     \
-	 tpp_free((self)->tlofr_filename))
+	 tpp_free((self)->tlofr_filename),       \
+	 tpp_dbg_memset(self, sizeof(*(self))))
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
@@ -1214,10 +1216,13 @@ typedef struct tpp_lexer_arginfo {
 
 #define tpp_lexer_arginfo_init_empty(self) \
 	(void)((self)->tlai_chunk = NULL, (self)->tlai_start = (self)->tlai_end = NULL)
-#define tpp_lexer_arginfo_fini(self) \
-	(void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0))
+#define tpp_lexer_arginfo_fini(self)                                          \
+	(void)(!(self)->tlai_chunk || (tpp_string_decref((self)->tlai_chunk), 0), \
+	       tpp_dbg_memset(self, sizeof(*(self))))
 #define tpp_lexer_arginfo_copy(dst, src) \
 	(void)(*(dst) = *(src), (!(self)->tlai_chunk || (tpp_string_incref((self)->tlai_chunk), 0)))
+#define tpp_lexer_arginfo_move(dst, src) \
+	(void)(*(dst) = *(src), tpp_dbg_memset(src, sizeof(*(src))))
 
 /* Seek the first unmatched ')'-token, whilst collecting information
  * about every ','-separated text-area encountered until then.

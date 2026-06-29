@@ -41,6 +41,7 @@ tpp_include_path_list_fini(tpp_include_path_list *tpp_restrict self) {
 		_tpp_include_path_entry_fini(entry);
 	}
 	tpp_free(self->tipl_list);
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 static TPP_WUNUSED tpp_size TPPCALL
@@ -244,6 +245,7 @@ tpp_include_paths_fini(tpp_include_paths *tpp_restrict self) {
 		}
 	}
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 /* Helper methods to add/remove paths to different include path lists */

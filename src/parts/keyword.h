@@ -165,8 +165,9 @@ typedef struct tpp_assertions {
 	(void)((self)->TPP_INTERNAL(tass_assc) = 0, \
 	       (self)->TPP_INTERNAL(tass_bckm) = 0, \
 	       (self)->TPP_INTERNAL(tass_bckv) = NULL)
-#define tpp_assertions_fini(self) \
-	tpp_free((self)->TPP_INTERNAL(tass_bckv))
+#define tpp_assertions_fini(self)               \
+	(tpp_free((self)->TPP_INTERNAL(tass_bckv)), \
+	 tpp_dbg_memset(self, sizeof(tpp_assertions)))
 
 /* Check if *any* keywords have been asserted within the given assertion-set "self" */
 #define tpp_assertions_containsany(self) \

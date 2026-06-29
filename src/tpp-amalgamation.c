@@ -4878,6 +4878,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 #endif /* TPP_HAVE_CPP_MACROS */
 	default: break;
 	}
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 /* Update "self" according to text-data from [text,text+size) */
@@ -6094,6 +6095,7 @@ tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self) {
 			tpp_macro_decref(mac);
 	}
 	tpp_free(self->tmps_vec);
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 #if TPP_HAVE_LEXER_COPY
@@ -6120,6 +6122,7 @@ tpp_macro_pushstack_copy(tpp_macro_pushstack *tpp_restrict self,
 				dst = &vec[i];
 				tpp_macro_decref(dst->tmpe_macro);
 			}
+			tpp_free(vec);
 			return TPP_ENOMEM;
 		}
 	}
@@ -6218,7 +6221,7 @@ tpp_assertions_contains(tpp_assertions *tpp_restrict self,
 	tpp_hash hs, perturb;
 	for (tpp_assertions_hashinit(&hs, &perturb, hash, self->tass_bckm);;
 	     tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm)) {
-		tpp_assertion *ent = &self->tass_bckv[hs & self->tass_bckm];
+		tpp_assertion const *ent = &self->tass_bckv[hs & self->tass_bckm];
 		if (ent->tas_value == NULL)
 			break;
 		if (ent->tas_value == value)
@@ -6913,6 +6916,7 @@ tpp_keywords_fini(tpp_keywords *tpp_restrict self) {
 		}
 		tpp_free(bckv);
 	}
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 #if TPP_HAVE_LEXER_COPY
@@ -6928,7 +6932,7 @@ tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
 		                                           &self->tkm_macro_pushstack);
 		tpp_assert(!TPP_ISERR(error) || error == TPP_ENOMEM);
 		if (TPP_ISERR(error)) {
-			_tpp_keyword_free(result);
+			_tpp_keyword_misc_free(result);
 			return NULL;
 		}
 	}
@@ -6942,7 +6946,7 @@ tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 			tpp_macro_pushstack_fini(&result->tkm_macro_pushstack);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
-			_tpp_keyword_free(result);
+			_tpp_keyword_misc_free(result);
 			return NULL;
 		}
 	}
@@ -9493,6 +9497,7 @@ tpp_extensions_fini(tpp_extensions *tpp_restrict self) {
 		_tpp_extensions_free(iter);
 		iter = prev;
 	}
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 #if TPP_HAVE_LEXER_COPY
@@ -10335,6 +10340,8 @@ tpp_warnings_fini(tpp_warnings *tpp_restrict self) {
 		}
 	}
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
+
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 #if TPP_HAVE_LEXER_COPY || TPP_HAVE_WARNINGS_PUSH_POP
@@ -10797,6 +10804,7 @@ tpp_include_path_list_fini(tpp_include_path_list *tpp_restrict self) {
 		_tpp_include_path_entry_fini(entry);
 	}
 	tpp_free(self->tipl_list);
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 static TPP_WUNUSED tpp_size TPPCALL
@@ -11000,6 +11008,7 @@ tpp_include_paths_fini(tpp_include_paths *tpp_restrict self) {
 		}
 	}
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 /* Helper methods to add/remove paths to different include path lists */
@@ -11469,6 +11478,9 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_INCLUDE_PATH
 	tpp_include_paths_fini(&self->tl_include_paths);
 #endif /* TPP_HAVE_INCLUDE_PATH */
+
+	tpp_dbg_memset((char *)&self->tl_core + sizeof(self->tl_core),
+	               sizeof(*self) - sizeof(self->tl_core));
 }
 
 
@@ -11588,6 +11600,7 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self) {
 
 	/* Finalize the top-most file of the #include-stack */
 	tpp_file_fini(file);
+	tpp_dbg_memset(&self->tl_core, sizeof(self->tl_core));
 }
 
 
@@ -11687,7 +11700,7 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	ioflags |= TPP_FILE_IOFLAGS_NOKWD;
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
 	file->tf_prev  = prev_file;
@@ -11714,14 +11727,14 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
 	if tpp_likely(!TPP_ISERR(error)) {
 		tpp_file_init_io_from_ofr(file, &ofr);
 		file->tf_prev  = prev_file;
 		file->tf_tprev = prev_file;
 	} else {
-		*file = *prev_file;
+		tpp_file_move(file, prev_file);
 		tpp_file_free(prev_file);
 	}
 	return TPP_EOK;
@@ -11756,7 +11769,7 @@ tpp_lexer_pushfile_text_ascii(tpp_lexer *tpp_restrict self,
 			tpp_string_decref(chunk); /* Reference must *always* be inherited! */
 		return TPP_ENOMEM;
 	}
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -11776,7 +11789,7 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev = file->tf_prev;
 	tpp_file_fini(file);
-	*file = *prev;
+	tpp_file_move(file, prev);
 	tpp_file_free(prev);
 }
 #endif /* TPP_HAVE_INCLUDE_STACK */
@@ -23494,7 +23507,7 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 		tpp_lexer_openfile_result_fini(&ofr);
 		return TPP_TOK_ENOMEM;
 	}
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename_kwd),
 	                    ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL);
 	file->tf_prev  = prev_file;
@@ -23763,7 +23776,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		prev_file = tpp_file_alloc();
 		if tpp_unlikely(!prev_file)
 			goto err_nomem;
-		*prev_file = *file;
+		tpp_file_move(prev_file, file);
 		tpp_file_init_io_from_ofr2(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
 		tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
 		file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
@@ -23843,7 +23856,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		goto err_nomem_embed_data;
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 #if TPP_HAVE_FILE_ENCODING_EMBED
 	tpp_file_init_io_from_ofr2(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
 	tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
@@ -25366,7 +25379,7 @@ next_op:
 		goto err_tok_macro;
 	}
 	tpp_lexer_manualpopfile_break_commit(self);
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	prev_file->tf_tpos = macro_call_start_pos;
 
 	file->tf_pos   = tpp_string_str(result_chunk);
@@ -25454,7 +25467,7 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
 	prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	file->tf_pos   = macro->tm_body_start;
 	file->tf_chunk = macro->tm_body_chunk;
 	file->tf_end   = macro->tm_body_end;
@@ -25510,7 +25523,7 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 	tpp_file *prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	file->tf_pos   = text;
 	file->tf_chunk = chunk; /* Inherit reference */
 	file->tf_end   = text + textsize;
@@ -26892,7 +26905,7 @@ done_inner_loop:
 		tpp_string_builder_fini(&builder);
 		return TPP_TOK_ENOMEM;
 	}
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	string = tpp_string_builder_pack(&builder);
 	tpp_file_init_text_ex(file, NULL, string,
 	                      tpp_string_str(string),

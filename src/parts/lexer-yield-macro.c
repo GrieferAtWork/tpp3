@@ -717,7 +717,7 @@ next_op:
 		goto err_tok_macro;
 	}
 	tpp_lexer_manualpopfile_break_commit(self);
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	prev_file->tf_tpos = macro_call_start_pos;
 
 	file->tf_pos   = tpp_string_str(result_chunk);
@@ -805,7 +805,7 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
 	prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	file->tf_pos   = macro->tm_body_start;
 	file->tf_chunk = macro->tm_body_chunk;
 	file->tf_end   = macro->tm_body_end;

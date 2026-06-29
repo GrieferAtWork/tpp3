@@ -278,8 +278,9 @@ typedef struct tpp_warning_suppressions {
 	(void)((self)->TPP_INTERNAL(tws_ctxc) = 0, \
 	       (self)->TPP_INTERNAL(tws_ctxa) = 0, \
 	       (self)->TPP_INTERNAL(tws_ctxv) = NULL)
-#define tpp_warning_suppressions_fini(self) \
-	(void)tpp_free((self)->TPP_INTERNAL(tws_ctxv))
+#define tpp_warning_suppressions_fini(self)    \
+	(tpp_free((self)->TPP_INTERNAL(tws_ctxv)), \
+	 tpp_dbg_memset(self, sizeof(tpp_warning_suppressions)))
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 
 
@@ -322,7 +323,7 @@ tpp_warnings_copy(tpp_warnings *tpp_restrict self,
                   tpp_warnings const *tpp_restrict from);
 #endif /* TPP_HAVE_LEXER_COPY */
 #else /* TPP_HAVE_WARNINGS_FINI */
-#define tpp_warnings_fini(self) (void)0
+#define tpp_warnings_fini(self) tpp_dbg_memset(self, sizeof(tpp_warnings))
 #if TPP_HAVE_LEXER_COPY
 #define tpp_warnings_copy(self, from) (*(self) = *(from), TPP_EOK)
 #endif /* TPP_HAVE_LEXER_COPY */

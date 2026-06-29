@@ -239,6 +239,9 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_INCLUDE_PATH
 	tpp_include_paths_fini(&self->tl_include_paths);
 #endif /* TPP_HAVE_INCLUDE_PATH */
+
+	tpp_dbg_memset((char *)&self->tl_core + sizeof(self->tl_core),
+	               sizeof(*self) - sizeof(self->tl_core));
 }
 
 
@@ -358,6 +361,7 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self) {
 
 	/* Finalize the top-most file of the #include-stack */
 	tpp_file_fini(file);
+	tpp_dbg_memset(&self->tl_core, sizeof(self->tl_core));
 }
 
 
@@ -457,7 +461,7 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	ioflags |= TPP_FILE_IOFLAGS_NOKWD;
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
 	file->tf_prev  = prev_file;
@@ -484,14 +488,14 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
 	if tpp_likely(!TPP_ISERR(error)) {
 		tpp_file_init_io_from_ofr(file, &ofr);
 		file->tf_prev  = prev_file;
 		file->tf_tprev = prev_file;
 	} else {
-		*file = *prev_file;
+		tpp_file_move(file, prev_file);
 		tpp_file_free(prev_file);
 	}
 	return TPP_EOK;
@@ -526,7 +530,7 @@ tpp_lexer_pushfile_text_ascii(tpp_lexer *tpp_restrict self,
 			tpp_string_decref(chunk); /* Reference must *always* be inherited! */
 		return TPP_ENOMEM;
 	}
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -546,7 +550,7 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev = file->tf_prev;
 	tpp_file_fini(file);
-	*file = *prev;
+	tpp_file_move(file, prev);
 	tpp_file_free(prev);
 }
 #endif /* TPP_HAVE_INCLUDE_STACK */

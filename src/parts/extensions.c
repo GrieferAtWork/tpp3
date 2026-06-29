@@ -51,6 +51,7 @@ tpp_extensions_fini(tpp_extensions *tpp_restrict self) {
 		_tpp_extensions_free(iter);
 		iter = prev;
 	}
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 #if TPP_HAVE_LEXER_COPY

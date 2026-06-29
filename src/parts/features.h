@@ -83,7 +83,7 @@ print("#define tpp_features_setid(self, id, enabled) \\");
 print("	((enabled) ? tpp_features_enable(self, id) : tpp_features_disable(self, id))");
 print("#define tpp_features_init(self)            (void)(*(self) = tpp_features_default)");
 print("#define tpp_features_reset(self)           (void)(*(self) = tpp_features_default)");
-print("#define tpp_features_fini(self)            (void)0");
+print("#define tpp_features_fini(self)            tpp_dbg_memset(self, sizeof(tpp_features))");
 print("#endif /" "* TPP_HAVE_FEATURES *" "/");
 print;
 for (local CONF: configs) {
@@ -2033,7 +2033,7 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 	((enabled) ? tpp_features_enable(self, id) : tpp_features_disable(self, id))
 #define tpp_features_init(self)            (void)(*(self) = tpp_features_default)
 #define tpp_features_reset(self)           (void)(*(self) = tpp_features_default)
-#define tpp_features_fini(self)            (void)0
+#define tpp_features_fini(self)            tpp_dbg_memset(self, sizeof(tpp_features))
 #endif /* TPP_HAVE_FEATURES */
 
 #if TPP_CONF_IS_CONST(TPP_HAVE_BSE)

@@ -97,7 +97,8 @@ typedef struct tpp_expr_value {
 	(*(dst) = *(src)_tpp_expr_value_incref(dst), TPP_EOK)
 
 /* Finalize "self" (never fails) */
-#define tpp_expr_value_fini(self) (void)((void)0 _tpp_expr_value_decref(self))
+#define tpp_expr_value_fini(self) \
+	((void)0 _tpp_expr_value_decref(self), tpp_dbg_memset(self, sizeof(*(self))))
 
 /* Check which native representation is used by "self" (never fails) */
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE

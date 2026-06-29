@@ -311,6 +311,8 @@ typedef struct tpp_file {
 
 #define tpp_file_alloc() ((tpp_file *)tpp_malloc(sizeof(tpp_file)))
 #define tpp_file_free(p) tpp_free(p)
+#define tpp_file_move(dst, src) \
+	(void)(*(dst) = *(src), tpp_dbg_memset(src, sizeof(tpp_file)))
 
 #if TPP_HAVE_FILE_IOFLAGS
 #define _tpp_file_init_ioflags(self, flags) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_flags) = (flags)

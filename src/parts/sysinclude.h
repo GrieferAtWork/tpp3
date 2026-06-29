@@ -38,11 +38,17 @@ typedef struct tpp_include_path_entry {
 } tpp_include_path_entry;
 
 #if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
-#define _tpp_include_path_entry_fini(self)    tpp_string_decref((self)->TPP_INTERNAL(tipe_pathstr))
-#define _tpp_include_path_entry_getpath(self) tpp_string_cstr((self)->TPP_INTERNAL(tipe_pathstr))
+#define _tpp_include_path_entry_fini(self)                  \
+	(tpp_string_decref((self)->TPP_INTERNAL(tipe_pathstr)), \
+	 tpp_dbg_memset(self, sizeof(tpp_include_path_entry)))
+#define _tpp_include_path_entry_getpath(self) \
+	tpp_string_cstr((self)->TPP_INTERNAL(tipe_pathstr))
 #else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
-#define _tpp_include_path_entry_fini(self)    tpp_free((self)->TPP_INTERNAL(tipe_path))
-#define _tpp_include_path_entry_getpath(self) ((char const *)(self)->TPP_INTERNAL(tipe_path))
+#define _tpp_include_path_entry_fini(self)      \
+	(tpp_free((self)->TPP_INTERNAL(tipe_path)), \
+	 tpp_dbg_memset(self, sizeof(tpp_include_path_entry)))
+#define _tpp_include_path_entry_getpath(self) \
+	((char const *)(self)->TPP_INTERNAL(tipe_path))
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 
 typedef struct tpp_include_path_list {

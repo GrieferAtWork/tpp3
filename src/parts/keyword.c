@@ -64,6 +64,7 @@ tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self) {
 			tpp_macro_decref(mac);
 	}
 	tpp_free(self->tmps_vec);
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 #if TPP_HAVE_LEXER_COPY
@@ -90,6 +91,7 @@ tpp_macro_pushstack_copy(tpp_macro_pushstack *tpp_restrict self,
 				dst = &vec[i];
 				tpp_macro_decref(dst->tmpe_macro);
 			}
+			tpp_free(vec);
 			return TPP_ENOMEM;
 		}
 	}
@@ -188,7 +190,7 @@ tpp_assertions_contains(tpp_assertions *tpp_restrict self,
 	tpp_hash hs, perturb;
 	for (tpp_assertions_hashinit(&hs, &perturb, hash, self->tass_bckm);;
 	     tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm)) {
-		tpp_assertion *ent = &self->tass_bckv[hs & self->tass_bckm];
+		tpp_assertion const *ent = &self->tass_bckv[hs & self->tass_bckm];
 		if (ent->tas_value == NULL)
 			break;
 		if (ent->tas_value == value)
@@ -883,6 +885,7 @@ tpp_keywords_fini(tpp_keywords *tpp_restrict self) {
 		}
 		tpp_free(bckv);
 	}
+	tpp_dbg_memset(self, sizeof(*self));
 }
 
 #if TPP_HAVE_LEXER_COPY
@@ -898,7 +901,7 @@ tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
 		                                           &self->tkm_macro_pushstack);
 		tpp_assert(!TPP_ISERR(error) || error == TPP_ENOMEM);
 		if (TPP_ISERR(error)) {
-			_tpp_keyword_free(result);
+			_tpp_keyword_misc_free(result);
 			return NULL;
 		}
 	}
@@ -912,7 +915,7 @@ tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 			tpp_macro_pushstack_fini(&result->tkm_macro_pushstack);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
-			_tpp_keyword_free(result);
+			_tpp_keyword_misc_free(result);
 			return NULL;
 		}
 	}

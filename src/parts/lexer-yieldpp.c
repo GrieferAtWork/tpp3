@@ -1454,7 +1454,7 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 		tpp_lexer_openfile_result_fini(&ofr);
 		return TPP_TOK_ENOMEM;
 	}
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename_kwd),
 	                    ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL);
 	file->tf_prev  = prev_file;
@@ -1723,7 +1723,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		prev_file = tpp_file_alloc();
 		if tpp_unlikely(!prev_file)
 			goto err_nomem;
-		*prev_file = *file;
+		tpp_file_move(prev_file, file);
 		tpp_file_init_io_from_ofr2(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
 		tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
 		file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
@@ -1803,7 +1803,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		goto err_nomem_embed_data;
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 #if TPP_HAVE_FILE_ENCODING_EMBED
 	tpp_file_init_io_from_ofr2(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
 	tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);

@@ -59,7 +59,7 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 	tpp_file *prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	file->tf_pos   = text;
 	file->tf_chunk = chunk; /* Inherit reference */
 	file->tf_end   = text + textsize;
@@ -1441,7 +1441,7 @@ done_inner_loop:
 		tpp_string_builder_fini(&builder);
 		return TPP_TOK_ENOMEM;
 	}
-	*prev_file = *file;
+	tpp_file_move(prev_file, file);
 	string = tpp_string_builder_pack(&builder);
 	tpp_file_init_text_ex(file, NULL, string,
 	                      tpp_string_str(string),

@@ -1519,15 +1519,16 @@ typedef struct tpp_token {
 } tpp_token;
 
 /* Public API */
-#define tpp_token_move(self, other) \
-	(void)(*(self) = *(other))
-#define tpp_token_copy(self, other)             \
-	(void)(*(self) = *(other),                  \
+#define tpp_token_move(self, from) \
+	(void)(*(self) = *(from), tpp_dbg_memset(from, sizeof(tpp_token)))
+#define tpp_token_copy(self, from)              \
+	(void)(*(self) = *(from),                   \
 	       !((self)->TPP_INTERNAL(tt_chunk)) || \
 	       (tpp_string_incref((self)->TPP_INTERNAL(tt_chunk)), 1))
-#define tpp_token_fini(self)                    \
-	(void)(!((self)->TPP_INTERNAL(tt_chunk)) || \
-	       (tpp_string_decref((self)->TPP_INTERNAL(tt_chunk)), 1))
+#define tpp_token_fini(self)                                       \
+	(void)(!((self)->TPP_INTERNAL(tt_chunk)) ||                    \
+	       (tpp_string_decref((self)->TPP_INTERNAL(tt_chunk)), 1), \
+	       tpp_dbg_memset(self, sizeof(tpp_token)))
 #if TPP_HAVE_USER_KEYWORDS
 #define tpp_token_haskwd(self)   TPP_TOK_ISKEYWORD(tpp_token_getid(self))
 #else /* TPP_HAVE_USER_KEYWORDS */

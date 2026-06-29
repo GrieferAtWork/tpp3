@@ -458,6 +458,13 @@
 #ifndef tpp_bzero
 #define tpp_bzero(p, n) (void)tpp_memset(p, 0, n)
 #endif /* !tpp_bzero */
+#ifndef tpp_dbg_memset
+#if TPP_DEBUG
+#define tpp_dbg_memset(p, n) (void)tpp_memset(p, 0xcc, n)
+#else /* TPP_DEBUG */
+#define tpp_dbg_memset(p, n) (void)0
+#endif /* !TPP_DEBUG */
+#endif /* !tpp_dbg_memset */
 
 
 
