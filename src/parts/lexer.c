@@ -486,9 +486,41 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 }
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
 
-/* Check if the current file can be popped. */
-#define tpp_lexer_canpopfile(self) \
-	(tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev) != NULL)
+/* Push another file onto the #include-stack: [text,text+text_size) blob.
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @param: start_lc: [valid_if(chunk != NULL)]
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HAVE_UNICODE
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pushfile_text_ex(tpp_lexer *tpp_restrict self,
+                           /*utf-8*/ char const *filename,
+                           /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                           void const *text, tpp_size text_size,
+                           tpp_lcinfo start_lc, tpp_file_encoding encoding)
+#else /* TPP_HAVE_UNICODE */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pushfile_text_ascii(tpp_lexer *tpp_restrict self,
+                              /*utf-8*/ char const *filename,
+                              /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                              void const *text, tpp_size text_size,
+                              tpp_lcinfo start_lc)
+#endif /* !TPP_HAVE_UNICODE */
+{
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *const prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file) {
+		if (chunk)
+			tpp_string_decref(chunk); /* Reference must *always* be inherited! */
+		return TPP_ENOMEM;
+	}
+	*prev_file = *file;
+	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return TPP_EOK;
+}
+
 
 /* Pop the current file off the #include-stack.
  * The caller is responsible to ensure that "tpp_lexer_canpopfile(self) == true"

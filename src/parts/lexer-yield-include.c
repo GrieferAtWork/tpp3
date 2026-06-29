@@ -458,6 +458,12 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
 		tpp_file const *file = tpp_lexer_getfile(self);
 		do {
 #if TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS
+			/* Must also accept TEXT-files as base:
+			 * - The API user may have explicitly pushed a file using `tpp_lexer_pushfile_text_*'
+			 * - We might be inside of a "tpp_file_pusheof()"-block (actually, this is *highly*
+			 *   likely, since regular #if and #embed directives are usually parsed within such
+			 *   a block to ensure they don't span past EOL, meaning that __has_include and the
+			 *   filename taken by #embed originate from a TEXT-file at that point) */
 			if (file->tf_kind == TPP_FILE_KIND_IO ||
 			    file->tf_kind == TPP_FILE_KIND_TEXT)
 #endif /* TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS */

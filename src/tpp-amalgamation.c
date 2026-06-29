@@ -7254,11 +7254,29 @@ tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer
 			break;
 		case 2:
 			if (src[0] == '.' && src[1] == '.' && dst_iter > dst_base) {
-				/* Parent-directory-segment -> delete 1 up-ref in "dst" */
-				while (dst_iter > dst_base && dst_iter[-1] == TPP_FS_SEP)
-					--dst_iter;
-				while (dst_iter > dst_base && dst_iter[-1] != TPP_FS_SEP)
-					--dst_iter;
+				/* Parent-directory-segment -> delete 1 up-ref in "dst", but
+				 * only if that up-ref isn't another ".." (or ".") sequence. */
+				char *dst_seq_start;
+				char *dst_seq_end = dst_iter;
+				tpp_size dst_seq_len;
+				while (dst_seq_end > dst_base && dst_seq_end[-1] == TPP_FS_SEP)
+					--dst_seq_end;
+				dst_seq_start = dst_seq_end;
+				while (dst_seq_start > dst_base && dst_seq_start[-1] != TPP_FS_SEP)
+					--dst_seq_start;
+				dst_seq_len = (tpp_size)(dst_seq_end - dst_seq_start);
+				switch (dst_seq_len) {
+				case 1:
+					if (dst_seq_start[0] == '.')
+						goto append_to_dst_iter; /* Can't delete "." */
+					break;
+				case 2:
+					if (dst_seq_start[0] == '.' && dst_seq_start[1] == '.')
+						goto append_to_dst_iter; /* Can't delete ".." */
+					break;
+				default: break;
+				}
+				dst_iter = dst_seq_start;
 				goto continue_with_next_sep;
 			}
 			break;
@@ -7266,6 +7284,7 @@ tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer
 		}
 
 		/* Copy segment into "dst_iter" */
+append_to_dst_iter:
 		tpp_memcpy(dst_iter, src, segment_len * sizeof(char));
 		dst_iter += segment_len;
 		if (next_sep >= src_end)
@@ -11415,9 +11434,41 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 }
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
 
-/* Check if the current file can be popped. */
-#define tpp_lexer_canpopfile(self) \
-	(tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev) != NULL)
+/* Push another file onto the #include-stack: [text,text+text_size) blob.
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @param: start_lc: [valid_if(chunk != NULL)]
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HAVE_UNICODE
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pushfile_text_ex(tpp_lexer *tpp_restrict self,
+                           /*utf-8*/ char const *filename,
+                           /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                           void const *text, tpp_size text_size,
+                           tpp_lcinfo start_lc, tpp_file_encoding encoding)
+#else /* TPP_HAVE_UNICODE */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pushfile_text_ascii(tpp_lexer *tpp_restrict self,
+                              /*utf-8*/ char const *filename,
+                              /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                              void const *text, tpp_size text_size,
+                              tpp_lcinfo start_lc)
+#endif /* !TPP_HAVE_UNICODE */
+{
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *const prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file) {
+		if (chunk)
+			tpp_string_decref(chunk); /* Reference must *always* be inherited! */
+		return TPP_ENOMEM;
+	}
+	*prev_file = *file;
+	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return TPP_EOK;
+}
+
 
 /* Pop the current file off the #include-stack.
  * The caller is responsible to ensure that "tpp_lexer_canpopfile(self) == true"
@@ -27904,7 +27955,17 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
 		/* Try to open files relative to the current #include-stack */
 		tpp_file const *file = tpp_lexer_getfile(self);
 		do {
-			if (file->tf_kind == TPP_FILE_KIND_IO) {
+#if TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS
+			/* Must also accept TEXT-files as base:
+			 * - The API user may have explicitly pushed a file using `tpp_lexer_pushfile_text_*'
+			 * - We might be inside of a "tpp_file_pusheof()"-block (actually, this is *highly*
+			 *   likely, since regular #if and #embed directives are usually parsed within such
+			 *   a block to ensure they don't span past EOL, meaning that __has_include and the
+			 *   filename taken by #embed originate from a TEXT-file at that point) */
+			if (file->tf_kind == TPP_FILE_KIND_IO ||
+			    file->tf_kind == TPP_FILE_KIND_TEXT)
+#endif /* TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS */
+			{
 				char const *filename = file->tf_data.td_io.tff_name;
 				if (filename) {
 					error = tpp_do_lexer_openfile(filename);

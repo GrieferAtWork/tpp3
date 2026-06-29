@@ -14961,6 +14961,32 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
                         tpp_size filename_maxlen);
 #endif /* TPP_HAVE_LEXER_INIT_FILENAME */
 
+/* Push another file onto the #include-stack: [text,text+text_size) blob.
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @param: start_lc: [valid_if(chunk != NULL)]
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HAVE_UNICODE
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pushfile_text_ex(tpp_lexer *tpp_restrict self,
+                           /*utf-8*/ char const *filename,
+                           /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                           void const *text, tpp_size text_size,
+                           tpp_lcinfo start_lc, tpp_file_encoding encoding);
+#define tpp_lexer_pushfile_text_ascii(self, filename, chunk, text, text_size, start_lc) \
+	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_ASCII)
+#define tpp_lexer_pushfile_text_utf8(self, filename, chunk, text, text_size, start_lc) \
+	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_FORCE_UTF8)
+#else /* TPP_HAVE_UNICODE */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pushfile_text_ascii(tpp_lexer *tpp_restrict self,
+                              /*utf-8*/ char const *filename,
+                              /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                              void const *text, tpp_size text_size,
+                              tpp_lcinfo start_lc);
+#endif /* !TPP_HAVE_UNICODE */
+
+
 /* Check if the current file can be popped. */
 #define tpp_lexer_canpopfile(self) \
 	(tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev) != NULL)
