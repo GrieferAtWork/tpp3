@@ -1295,7 +1295,9 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 
 		/* Find end of body */
 		while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
-			rel_body_end = tpp_file_ptr2rel(file, *p_pos);
+			/* Only update body on non-space tokens (thereby trimming trailing space/comments from macros) */
+			if (!TPP_TOK_ISSPACE_OR_COMMENT(tok))
+				rel_body_end = tpp_file_ptr2rel(file, *p_pos);
 			tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
@@ -1361,7 +1363,9 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
 again_scan_end_of_macro_body:
 #endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
-		rel_body_end = tpp_file_ptr2rel(file, *p_pos);
+		/* Only update body on non-space tokens (thereby trimming trailing space/comments from macros) */
+		if (!TPP_TOK_ISSPACE_OR_COMMENT(tok))
+			rel_body_end = tpp_file_ptr2rel(file, *p_pos);
 		tok = tpp_lexer_yieldraw_at_blocking(self, p_pos);
 		if (TPP_TOK_ISERR(tok)) {
 			error = TPP_TOK_ASERR(tok);
