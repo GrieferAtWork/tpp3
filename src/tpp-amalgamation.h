@@ -3711,7 +3711,15 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPP_CONST_DECL TPP_DECL
 #endif /* !TPP_CONST_DECL */
 #ifndef tpp_restrict
+#ifdef restrict
+#define tpp_restrict restrict
+#elif defined(_MSC_VER) || defined(__GNUC__)
 #define tpp_restrict __restrict
+#elif defined(__STDC__)
+#define tpp_restrict restrict /* C99 */
+#else /* ... */
+#define tpp_restrict /* nothing */
+#endif /* !... */
 #endif /* !tpp_restrict */
 #ifndef TPP_NONNULL
 #if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__nonnull__)

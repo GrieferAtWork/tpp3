@@ -1886,6 +1886,12 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 /************************************************************************/
 
 
+	/* TODO: New macro __TPP_EXEC("code")
+	 * Same as __pragma(tpp_exec("code")), but rather than discarding produced
+	 * tokens, "__TPP_EXEC" expands to those tokens */
+
+
+
 
 	default: {
 		/* Check for a pre-defined, builtin macro expansion */

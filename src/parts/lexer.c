@@ -549,6 +549,42 @@ TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev = file->tf_prev;
+#if TPP_HAVE_CPP_DIRECTIVES
+	/* Deal with special case: a text-file is being popped, and the last-loaded token in
+	 * the file we're returning to ends with a trailing line-feed, yet the NODIRECTIVE
+	 * flag is set. This can happen in code like this:
+	 * >> #include "some/file.h"        // If "some/file.h" does not end with a trailing LF...
+	 * >> #include "some/other/file.h"  // ... this wouldn't be handled as a directive.
+	 *
+	 * To make sure that the following #include in the above example is always treated
+	 * handled as a directive, we must clear the flag in this very specific situation */
+	if ((file->tf_kind == TPP_FILE_KIND_IO || file->tf_kind == TPP_FILE_KIND_TEXT) &&
+	    (prev->tf_chunk != NULL) &&
+	    (prev->tf_tpos >= tpp_string_str(prev->tf_chunk) &&
+	     prev->tf_pos <= tpp_string_end(prev->tf_chunk)) &&
+	    (prev->tf_tpos < prev->tf_pos)) {
+		bool ends_with_lf;
+#if TPP_HAVE_UNICODE
+		if (tpp_file_isutf8(prev)) {
+			tpp_char const *iter = prev->tf_pos;
+			tpp_unichar uc = tpp_unicode_readutf8_rev(&iter, prev->tf_tpos);
+			ends_with_lf = tpp_unicode_islf(uc);
+		} else
+#endif /* TPP_HAVE_UNICODE */
+		{
+			tpp_char ch = prev->tf_pos[-1];
+			ends_with_lf = tpp_ascii_islf(ch);
+		}
+		if (ends_with_lf) {
+			self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		} else {
+			self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		}
+	} else {
+		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+	}
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
+
 	tpp_file_fini(file);
 	tpp_file_move(file, prev);
 	tpp_file_free(prev);
