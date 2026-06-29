@@ -21,6 +21,7 @@
 #define GUARD_TPP_CONFIG_H 1
 
 #include "api.h"
+#include "tuple.h"
 
 /* Multi-file TPP needs to use its own "defs.h" for dynamic definitions
  * -- The amalgamation hard-overrides this macro with its own filename. */
@@ -2463,6 +2464,12 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_CONFIG_SYSTEM_INCLUDE_PATH
 #define TPP_CONFIG_SYSTEM_INCLUDE_PATH 0()
 #endif /* !TPP_CONFIG_SYSTEM_INCLUDE_PATH */
+
+/* Config option to skip searching `TPP_CONFIG_SYSTEM_INCLUDE_PATH'.
+ * Can (and should) be used to implement "-nostdinc" */
+#ifndef TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
+#define TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH (TPP_TUPLE_NONEMPTY(TPP_CONFIG_SYSTEM_INCLUDE_PATH) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstdinc" */
+#endif /* !TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
 
 /* "-quoted #include-strings are searched relative to *every* I/O-file found on the
  * #include-stack; not just the most-recent one. Doing this for all files is what TPP2

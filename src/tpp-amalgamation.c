@@ -279,6 +279,7 @@
 #define tef_TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS    TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS)
 #define tef_TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS  TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)
 #define tef_TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS      TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS)
+#define tef_TPP_EXT_SEARCH_SYSTEM_INCLUDE_PATH           TPP_INTERNAL(tef_TPP_EXT_SEARCH_SYSTEM_INCLUDE_PATH)
 #define tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE       TPP_INTERNAL(tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #define xv_kind                                          TPP_INTERNAL(xv_kind)
 #define xd_int                                           TPP_INTERNAL(xd_int)
@@ -528,6 +529,7 @@
 #define tff_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS            TPP_INTERNAL(tff_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS)
 #define tff_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS          TPP_INTERNAL(tff_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)
 #define tff_BUILTIN_EXPR_CHARACTER_LITERALS              TPP_INTERNAL(tff_BUILTIN_EXPR_CHARACTER_LITERALS)
+#define tff_SEARCH_SYSTEM_INCLUDE_PATH                   TPP_INTERNAL(tff_SEARCH_SYSTEM_INCLUDE_PATH)
 #define tff_INCLUDE_RELATIVE_TO_EVERY_FILE               TPP_INTERNAL(tff_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #define tidse_mode                                       TPP_INTERNAL(tidse_mode)
 #define tidse_created                                    TPP_INTERNAL(tidse_created)
@@ -10009,6 +10011,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
 		/* .tff_BUILTIN_EXPR_CHARACTER_LITERALS      = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH)
+		/* .tff_SEARCH_SYSTEM_INCLUDE_PATH           = */ TPP_CONF_DEFAULT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
 		/* .tff_INCLUDE_RELATIVE_TO_EVERY_FILE       = */ TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
@@ -28010,13 +28015,17 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
 	/* Check hard-coded system include paths... */
-#define tpp_handle_system_include_path(_, index, value) \
-	error = tpp_do_lexer_openfile(value TPP_FS_SEP_S);  \
-	if (error != TPP_ENOENT)                            \
-		return error;
-	TPP_TUPLE_FOREACH(TPP_CONFIG_SYSTEM_INCLUDE_PATH, TPP_TUPLE_FOREACH_DUMMY_SEP,
-	                  tpp_handle_system_include_path, ~)
+#if TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
+	if (tpp_lexer_has(self, SEARCH_SYSTEM_INCLUDE_PATH)) {
+#define tpp_handle_system_include_path(_, index, value)    \
+		error = tpp_do_lexer_openfile(value TPP_FS_SEP_S); \
+		if (error != TPP_ENOENT)                           \
+			return error;
+		TPP_TUPLE_FOREACH(TPP_CONFIG_SYSTEM_INCLUDE_PATH, TPP_TUPLE_FOREACH_DUMMY_SEP,
+		                  tpp_handle_system_include_path, ~)
 #undef tpp_handle_system_include_path
+	}
+#endif /* TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
 
 	/* Check "after" system include paths... */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER

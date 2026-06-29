@@ -609,6 +609,14 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
 
 
 
+/* TODO: API to manually define/undef macros
+ * TODO: Unlike TPP2's, this API should also (implicitly) be able to define
+ *       function-like macros if the macro name given to the function contains
+ *       a '('-token. iow: GCC accepts this: `-DFOO(x)=1+x+2` for `#define FOO(x) 1+x+2`
+ */
+
+
+
 /* Read a single character (byte) whilst accounting for BSE (if enabled)
  * and automatically extending the current file if EOF is reached.
  * On true EOF:

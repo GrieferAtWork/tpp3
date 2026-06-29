@@ -512,13 +512,17 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
 	/* Check hard-coded system include paths... */
-#define tpp_handle_system_include_path(_, index, value) \
-	error = tpp_do_lexer_openfile(value TPP_FS_SEP_S);  \
-	if (error != TPP_ENOENT)                            \
-		return error;
-	TPP_TUPLE_FOREACH(TPP_CONFIG_SYSTEM_INCLUDE_PATH, TPP_TUPLE_FOREACH_DUMMY_SEP,
-	                  tpp_handle_system_include_path, ~)
+#if TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
+	if (tpp_lexer_has(self, SEARCH_SYSTEM_INCLUDE_PATH)) {
+#define tpp_handle_system_include_path(_, index, value)    \
+		error = tpp_do_lexer_openfile(value TPP_FS_SEP_S); \
+		if (error != TPP_ENOENT)                           \
+			return error;
+		TPP_TUPLE_FOREACH(TPP_CONFIG_SYSTEM_INCLUDE_PATH, TPP_TUPLE_FOREACH_DUMMY_SEP,
+		                  tpp_handle_system_include_path, ~)
 #undef tpp_handle_system_include_path
+	}
+#endif /* TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
 
 	/* Check "after" system include paths... */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
