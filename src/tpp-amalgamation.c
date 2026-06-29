@@ -8085,7 +8085,17 @@ __pragma(tpp_exec("#define TPP_BUILTIN_KEYWORD_COUNT " _TPP_STR(__TPP_EVAL(
 
 /* TODO: For extension/warning names, need some kind of mechanism by which TPP is
  *       able to sort an array of strings. I'm sure it's possible somehow, but I'm not
- *       quite certain on how this can be done most elegantly (an in O(N*log(N)) time) */
+ *       quite certain on how this can be done most elegantly (an in O(N*log(N)) time)
+ * -> I feel like it should be possible to implement MergeSort using macros:
+ *    - Can split items in half using __TPP_EVAL(__VA_NARGS__ / 2)
+ *    - Once there are <=2 items, can sort inplace
+ *    - To re-merge sorted arrays, can use 2 sets of CURRENT_ITEM+ADVANCE_ITEM macros
+ * With this, it should be possible to get a macro:
+ * >> #define TPP_QSORT(items, pred_lo) ...
+ * >>
+ * >> #define my_prev_lo(a, b) __TPP_EVAL((a) < (b))
+ * >> TPP_QSORT((20, 10, (11+2), 99, 14), my_prev_lo) // Expands to 10,(11+2),14,20,99
+ */
 
 #undef _TPP_EXEC_INCLUDE2
 #undef _TPP_EXEC_INCLUDE
@@ -21414,19 +21424,7 @@ tpp_lexer_pragma_tpp_exec_cb(void *arg, tpp_string *chunk,
 		tok = tpp_lexer_yield_blocking(self);
 	} while (!TPP_TOK_ISERR_OR_EOF(tok));
 
-	/* Force cleanup in case of error, and warn about unclosed #if-blocks */
-	for (;;) {
-#if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
-		if (!TPP_TOK_ISERR(tok)) {
-			tpp_errno error = tpp_lexer_warn_nonempty_ifdef(self);
-			if (TPP_ISERR(error))
-				tok = TPP_TOK_OFERR(error);
-		}
-#endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
-		if (!tpp_lexer_canpopfile(self))
-			break;
-		tpp_lexer_popfile(self);
-	}
+	tpp_lexer_popallfiles(self);
 #if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	self->tl_state = saved_state;
 #endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
@@ -27298,6 +27296,7 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 		}
 	}
 
+	tpp_lexer_popallfiles(self);
 #if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	self->tl_state = saved_state;
 #endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
@@ -27326,7 +27325,7 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 
-	/* Setup file to (re-)parse the string that's being execd */
+	/* Setup file to (re-)parse the string that's being exec'd */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self);
@@ -27658,7 +27657,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	/* TODO: #define __TPP_STR_SUBSTR(str, start, end) __TPP_EVAL((str)[(start):(end)]) */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
-	/* TODO: __TPP_LOAD_FILE */
+	/* TODO: #define __TPP_LOAD_FILE(filename) __TPP_STR_PACK(__TPP_EXEC("#embed " #filename)) */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
 #if TPP_HAVE_MACRO___TPP_RANDOM
 	/* TODO: __TPP_RANDOM */

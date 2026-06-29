@@ -921,19 +921,7 @@ tpp_lexer_pragma_tpp_exec_cb(void *arg, tpp_string *chunk,
 		tok = tpp_lexer_yield_blocking(self);
 	} while (!TPP_TOK_ISERR_OR_EOF(tok));
 
-	/* Force cleanup in case of error, and warn about unclosed #if-blocks */
-	for (;;) {
-#if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
-		if (!TPP_TOK_ISERR(tok)) {
-			tpp_errno error = tpp_lexer_warn_nonempty_ifdef(self);
-			if (TPP_ISERR(error))
-				tok = TPP_TOK_OFERR(error);
-		}
-#endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
-		if (!tpp_lexer_canpopfile(self))
-			break;
-		tpp_lexer_popfile(self);
-	}
+	tpp_lexer_popallfiles(self);
 #if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	self->tl_state = saved_state;
 #endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */

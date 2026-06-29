@@ -320,7 +320,17 @@ __pragma(tpp_exec("#define TPP_BUILTIN_KEYWORD_COUNT " _TPP_STR(__TPP_EVAL(
 
 /* TODO: For extension/warning names, need some kind of mechanism by which TPP is
  *       able to sort an array of strings. I'm sure it's possible somehow, but I'm not
- *       quite certain on how this can be done most elegantly (an in O(N*log(N)) time) */
+ *       quite certain on how this can be done most elegantly (an in O(N*log(N)) time)
+ * -> I feel like it should be possible to implement MergeSort using macros:
+ *    - Can split items in half using __TPP_EVAL(__VA_NARGS__ / 2)
+ *    - Once there are <=2 items, can sort inplace
+ *    - To re-merge sorted arrays, can use 2 sets of CURRENT_ITEM+ADVANCE_ITEM macros
+ * With this, it should be possible to get a macro:
+ * >> #define TPP_QSORT(items, pred_lo) ...
+ * >>
+ * >> #define my_prev_lo(a, b) __TPP_EVAL((a) < (b))
+ * >> TPP_QSORT((20, 10, (11+2), 99, 14), my_prev_lo) // Expands to 10,(11+2),14,20,99
+ */
 
 #undef _TPP_EXEC_INCLUDE2
 #undef _TPP_EXEC_INCLUDE

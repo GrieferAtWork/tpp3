@@ -1652,6 +1652,7 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 		}
 	}
 
+	tpp_lexer_popallfiles(self);
 #if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	self->tl_state = saved_state;
 #endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
@@ -1680,7 +1681,7 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 
-	/* Setup file to (re-)parse the string that's being execd */
+	/* Setup file to (re-)parse the string that's being exec'd */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self);
@@ -2012,7 +2013,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 	/* TODO: #define __TPP_STR_SUBSTR(str, start, end) __TPP_EVAL((str)[(start):(end)]) */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
-	/* TODO: __TPP_LOAD_FILE */
+	/* TODO: #define __TPP_LOAD_FILE(filename) __TPP_STR_PACK(__TPP_EXEC("#embed " #filename)) */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
 #if TPP_HAVE_MACRO___TPP_RANDOM
 	/* TODO: __TPP_RANDOM */
