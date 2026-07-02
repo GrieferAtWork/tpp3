@@ -150,7 +150,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 		if (self->tf_pos >= self->tf_end &&
 #if TPP_HAVE_FILE_NOKWD
-		    !(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+		    !(self->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
 #endif /* TPP_HAVE_FILE_NOKWD */
 		    self->tf_data.td_io.tff_name) {
 			/* If the file's keyword still has a valid "tkm_file_guard",
@@ -167,13 +167,13 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		}
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_FILE_NOCLOSE
-		if (!(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOCLOSE))
+		if (!(self->tf_flags & TPP_FILE_FLAGS_NOCLOSE))
 #endif /* TPP_HAVE_FILE_NOCLOSE */
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
-		if (self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_FREENAME)
+		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME)
 			tpp_free((char *)self->tf_data.td_io.tff_name);
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
 #if TPP_HAVE_FILE_USER_FILENAME
@@ -803,13 +803,10 @@ amend_tail_data:
 
 	/* Do an I/O read from the underlying file */
 #if TPP_HAVE_FILE_NONBLOCK
-	read_status = tpp_io_read(self->tf_data.td_io.tff_file,
-	                          io_dst, io_size,
-	                          self->tf_data.td_io.tff_flags &
-	                          TPP_FILE_IOFLAGS_NONBLOCK);
+	read_status = tpp_io_read(self->tf_data.td_io.tff_file, io_dst, io_size,
+	                          self->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
 #else /* TPP_HAVE_FILE_NONBLOCK */
-	read_status = tpp_io_read(self->tf_data.td_io.tff_file,
-	                          io_dst, io_size);
+	read_status = tpp_io_read(self->tf_data.td_io.tff_file, io_dst, io_size);
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 	/* Check for errors that may have happened during the read */
@@ -1323,7 +1320,7 @@ again:
 	case TPP_FILE_KIND_IO: {
 		char const *filename;
 #if TPP_HAVE_FILE_NOKWD
-		if (self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD)
+		if (self->tf_flags & TPP_FILE_FLAGS_NOKWD)
 			return NULL; /* Name isn't actually a keyword... */
 #endif /* TPP_HAVE_FILE_NOKWD */
 		filename = self->tf_data.td_io.tff_name;

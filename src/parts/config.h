@@ -225,12 +225,12 @@
 #define TPP_HAVE_WARNING_DEFAULT TPP_HAVE_WARNINGS
 #endif /* !TPP_HAVE_WARNING_DEFAULT */
 
-/* Enable support for `TPP_FILE_IOFLAGS_NOCLOSE' */
+/* Enable support for `TPP_FILE_FLAGS_NOCLOSE' */
 #ifndef TPP_HAVE_FILE_NOCLOSE
 #define TPP_HAVE_FILE_NOCLOSE (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_FILE_NOCLOSE */
 
-/* Enable support for `TPP_FILE_IOFLAGS_NOKWD' */
+/* Enable support for `TPP_FILE_FLAGS_NOKWD' */
 #ifndef TPP_HAVE_FILE_NOKWD
 #define TPP_HAVE_FILE_NOKWD TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_FILE_NOKWD */
@@ -2427,7 +2427,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_TIME_API */
 
-/* Enable support for `TPP_FILE_IOFLAGS_SYSHDR' */
+/* Enable support for `TPP_FILE_FLAGS_SYSHDR' */
 #ifndef TPP_HAVE_FILE_SYSHDR
 #define TPP_HAVE_FILE_SYSHDR (TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0)
 #endif /* !TPP_HAVE_FILE_SYSHDR */

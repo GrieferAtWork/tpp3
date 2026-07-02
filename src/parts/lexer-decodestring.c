@@ -899,7 +899,7 @@ do_decode_basic:
  * error happens, or one of the printers returned a negative value.
  *
  * HINT: This function automatically handles "TPP_EWOULDBLOCK" during
- *       yield by trying again with TPP_FILE_IOFLAGS_NONBLOCK disabled.
+ *       yield by trying again with TPP_FILE_FLAGS_NONBLOCK disabled.
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
  *

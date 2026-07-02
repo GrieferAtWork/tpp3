@@ -720,22 +720,14 @@ next_op:
 	tpp_lexer_manualpopfile_break_commit(self);
 	tpp_file_move(prev_file, file);
 	prev_file->tf_tpos = macro_call_start_pos;
-
-	file->tf_pos   = tpp_string_str(result_chunk);
-	file->tf_chunk = result_chunk; /* Inherit reference */
-	file->tf_end   = tpp_string_end(result_chunk);
-	(void)0 _tpp_file_init_common(file);
-	file->tf_prev  = prev_file;
-	file->tf_tprev = prev_file;
-	file->tf_kind  = TPP_FILE_KIND_MACRO;
-#if TPP_HAVE_UNICODE
-	file->tf_enc = macro->tm_body_enc;
-#endif /* TPP_HAVE_UNICODE */
-	file->tf_data.td_macro.tfm_macro = macro; /* Inherit the reference created at the very start */
+	_tpp_file_init_macro(file, prev_file,
+	                     macro,        /* Inherit the reference created at the very start */
+	                     result_chunk, /* Inherit reference */
+	                     tpp_string_str(result_chunk),
+	                     tpp_string_end(result_chunk));
 #if TPP_HAVE_FILE_MACRO_TRACKARGS
 	file->tf_data.td_macro.tfm_args = invoke_arginfo;
 #endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
-	++macro->tm_expansions;
 	return TPP_TOK_EOF;
 #if TPP_HAVE_MACRO_RECURSION
 done_rollback:
@@ -807,24 +799,14 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
 	tpp_file_move(prev_file, file);
-	file->tf_pos   = macro->tm_body_start;
-	file->tf_chunk = macro->tm_body_chunk;
-	file->tf_end   = macro->tm_body_end;
-	if (file->tf_chunk)
-		tpp_string_incref(file->tf_chunk);
-
-	(void)0 _tpp_file_init_common(file);
-	file->tf_prev  = prev_file;
-	file->tf_tprev = prev_file;
-	file->tf_kind  = TPP_FILE_KIND_MACRO;
-#if TPP_HAVE_UNICODE
-	file->tf_enc = macro->tm_body_enc;
-#endif /* TPP_HAVE_UNICODE */
-	file->tf_data.td_macro.tfm_macro = macro;
+	if (macro->tm_body_chunk)
+		tpp_string_incref(macro->tm_body_chunk);
 	tpp_macro_incref(macro);
-	++macro->tm_expansions;
-
-	(void)macro;
+	_tpp_file_init_macro(file, prev_file,
+	                     macro,                /* Inherit reference */
+	                     macro->tm_body_chunk, /* Inherit reference */
+	                     macro->tm_body_start,
+	                     macro->tm_body_end);
 	return TPP_TOK_EOF;
 err_nomem:
 	return TPP_TOK_ENOMEM;

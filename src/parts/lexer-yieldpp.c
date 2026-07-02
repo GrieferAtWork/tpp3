@@ -451,7 +451,7 @@ tpp_file_maybe_delete_include_guard_keyword(tpp_file *tpp_restrict self) {
 	if (tpp_ifdef_stack_isempty(tpp_file_getifdef(self)) &&
 	    self->tf_kind == TPP_FILE_KIND_IO &&
 #if TPP_HAVE_FILE_NOKWD
-	    !(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+	    !(self->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
 #endif /* TPP_HAVE_FILE_NOKWD */
 	    self->tf_data.td_io.tff_name != NULL) {
 		tpp_keyword *kwd;
@@ -650,13 +650,13 @@ tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
  * by seeking the next newline, then scanning for directives from
  * there on...)
  *
- * @return: TPP_KWD_ifdef:    Found an #ifdef-directive (current token points at like "# [ifdef] foo")
- * @return: TPP_KWD_ifndef:   Found an #ifdef-directive (current token points at like "# [ifndef] foo")
- * @return: TPP_KWD_elif:     Found an #ifdef-directive (current token points at like "# [elif] foo")
- * @return: TPP_KWD_elifdef:  Found an #ifdef-directive (current token points at like "# [elifdef] foo")
- * @return: TPP_KWD_elifndef: Found an #ifdef-directive (current token points at like "# [elifndef] foo")
- * @return: TPP_KWD_else:     Found an #ifdef-directive (current token points at like "# [else]")
- * @return: TPP_KWD_endif:    Found an #ifdef-directive (current token points at like "# [endif]")
+ * @return: TPP_KWD_ifdef:    Found an #ifdef-directive    (current token is [...] in: "# [ifdef] foo")
+ * @return: TPP_KWD_ifndef:   Found an #ifndef-directive   (current token is [...] in: "# [ifndef] foo")
+ * @return: TPP_KWD_elif:     Found an #elif-directive     (current token is [...] in: "# [elif] foo")
+ * @return: TPP_KWD_elifdef:  Found an #elifdef-directive  (current token is [...] in: "# [elifdef] foo")
+ * @return: TPP_KWD_elifndef: Found an #elifndef-directive (current token is [...] in: "# [elifndef] foo")
+ * @return: TPP_KWD_else:     Found an #else-directive     (current token is [...] in: "# [else]")
+ * @return: TPP_KWD_endif:    Found an #endif-directive    (current token is [...] in: "# [endif]")
  * @return: TPP_TOK_EOF:      End-of-file (no warning issued, yet)
  * @return: TPP_TOK_ISERR(*): Error
  */
@@ -1003,11 +1003,11 @@ tpp_lexer_handle_if_directive(tpp_lexer *tpp_restrict self) {
 	case TPP_KWD_ifndef: {
 		tpp_keyword const *ifndef_keyword = NULL;
 		error = tpp_lexer_parse_ifdef_directive_ex(self, &directive_start, &ifndef_keyword);
-		if (!(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOGUARD) &&
+		if (!(file->tf_flags & TPP_FILE_FLAGS_NOGUARD) &&
 		    (error == TPP_EOK || error == TPP_ENOENT) && ifndef_keyword != NULL &&
 		    file->tf_kind == TPP_FILE_KIND_IO && tpp_ifdef_stack_isempty(tpp_file_getifdef(file)) &&
 #if TPP_HAVE_FILE_NOKWD
-		    !(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+		    !(file->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
 #endif /* TPP_HAVE_FILE_NOKWD */
 		    file->tf_data.td_io.tff_name != NULL) {
 			tpp_keyword *kwd;
@@ -1459,7 +1459,7 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 	}
 	tpp_file_move(prev_file, file);
 	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename_kwd),
-	                    ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL);
+	                    ofr.tlofr_handle, TPP_FILE_FLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return TPP_TOK_EOF; /* Continue parsing in newly pushed file */
@@ -2019,7 +2019,7 @@ tpp_lexer_handle_embed_directive(tpp_lexer *tpp_restrict self,
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_directive(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-#define tpp_lexer_process_directive_set_noguard() (file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NOGUARD)
+#define tpp_lexer_process_directive_set_noguard() (file->tf_flags |= TPP_FILE_FLAGS_NOGUARD)
 #else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #define tpp_lexer_process_directive_set_noguard() (void)0
 #endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
@@ -2409,7 +2409,7 @@ handle_unknown_directive:
 				{
 				}
 				token->tt_id = TPP_TOK_OFCHAR('#');
-				self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+				file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 				result = TPP_TOK_OFERR(error);
 				goto return_result;
 			}
@@ -2472,12 +2472,14 @@ return_result:
  * @return: * :                  The newly read token (after accounting for preprocessor directives)
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	(void)file;
 again:
 	result = tpp_lexer_yieldraw(self);
 	switch (result) {
@@ -2507,7 +2509,7 @@ again:
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE
 	_TPP_CASE_TPP_TOK_SHELL_COMMENT
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_HAVE_CPP_DIRECTIVES
-		if (!(self->tl_state & TPP_LEXER_STATE_FLAG_NODIRECTIVES) &&
+		if (tpp_file_getallowdirectives(file) &&
 			tpp_lexer_has(self, CPP_DIRECTIVES)) {
 			tpp_token *const token = tpp_lexer_gettoken(self);
 
@@ -2523,9 +2525,9 @@ again:
 			{
 			}
 
-			self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+			file->tf_flags |= TPP_FILE_FLAGS_NODIRECTIVES;
 			result = tpp_lexer_process_directive(self);
-			self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+			file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 			if (TPP_TOK_ISERR(result))
 				break;
 			if (result == TPP_TOK_EOF)
@@ -2545,7 +2547,7 @@ again:
 	_TPP_CASE_TPP_TOK_SQL_COMMENT
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES
 		/* Remember that we've seen a linefeed. */
-		self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 		TPP_FALLTHRU
 #endif /* TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES */
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE
@@ -2575,7 +2577,7 @@ again:
 	case TPP_TOK_LF: {
 #if TPP_HAVE_CPP_DIRECTIVES
 		/* Remember that we've seen a linefeed. */
-		self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF) /* Never, or conditionally enabled */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
@@ -2599,13 +2601,13 @@ again:
 /************************************************************************/
 #if TPP_HAVE_CPP_DIRECTIVES
 	case '#':
-		if (self->tl_state & TPP_LEXER_STATE_FLAG_NODIRECTIVES)
+		if (!tpp_file_getallowdirectives(file))
 			break; /* Not allowed here... */
 		if (!tpp_lexer_has(self, CPP_DIRECTIVES))
 			break; /* Directives are disabled. */
-		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		file->tf_flags |= TPP_FILE_FLAGS_NODIRECTIVES;
 		result = tpp_lexer_process_directive(self);
-		self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 		if (TPP_TOK_ISERR(result))
 			break;
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
@@ -2626,7 +2628,7 @@ again:
 	default:
 		/* Remember that we've seen something that will prevent CPP directives */
 #if TPP_HAVE_CPP_DIRECTIVES
-		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		file->tf_flags |= TPP_FILE_FLAGS_NODIRECTIVES;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 		break;
 /************************************************************************/
@@ -2635,13 +2637,13 @@ again:
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 	/* Remember that #include-guards are no longer possible at this
 	 * point (because a relevant token "result" was hit first) */
-	tpp_lexer_getfile(self)->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NOGUARD;
+	file->tf_flags |= TPP_FILE_FLAGS_NOGUARD;
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 
 	/* Delete a previously recognized #ifndef-guard keyword if
 	 * we're at the top-level #ifdef-block for the current file. */
 #if TPP_HAVE_CPP_DIRECTIVES
-	tpp_file_maybe_delete_include_guard_keyword(tpp_lexer_getfile(self));
+	tpp_file_maybe_delete_include_guard_keyword(file);
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 	return result;
 }

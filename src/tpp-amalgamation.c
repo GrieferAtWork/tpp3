@@ -557,7 +557,6 @@
 #define td_io                                            TPP_INTERNAL(td_io)
 #define ttf_keep                                         TPP_INTERNAL(ttf_keep)
 #define tff_file                                         TPP_INTERNAL(tff_file)
-#define tff_flags                                        TPP_INTERNAL(tff_flags)
 #define tffu_tailc                                       TPP_INTERNAL(tffu_tailc)
 #define tffu_tailv                                       TPP_INTERNAL(tffu_tailv)
 #define tffed_unicode                                    TPP_INTERNAL(tffed_unicode)
@@ -6001,7 +6000,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 		if (self->tf_pos >= self->tf_end &&
 #if TPP_HAVE_FILE_NOKWD
-		    !(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+		    !(self->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
 #endif /* TPP_HAVE_FILE_NOKWD */
 		    self->tf_data.td_io.tff_name) {
 			/* If the file's keyword still has a valid "tkm_file_guard",
@@ -6018,13 +6017,13 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		}
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_FILE_NOCLOSE
-		if (!(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOCLOSE))
+		if (!(self->tf_flags & TPP_FILE_FLAGS_NOCLOSE))
 #endif /* TPP_HAVE_FILE_NOCLOSE */
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
-		if (self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_FREENAME)
+		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME)
 			tpp_free((char *)self->tf_data.td_io.tff_name);
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
 #if TPP_HAVE_FILE_USER_FILENAME
@@ -6654,13 +6653,10 @@ amend_tail_data:
 
 	/* Do an I/O read from the underlying file */
 #if TPP_HAVE_FILE_NONBLOCK
-	read_status = tpp_io_read(self->tf_data.td_io.tff_file,
-	                          io_dst, io_size,
-	                          self->tf_data.td_io.tff_flags &
-	                          TPP_FILE_IOFLAGS_NONBLOCK);
+	read_status = tpp_io_read(self->tf_data.td_io.tff_file, io_dst, io_size,
+	                          self->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
 #else /* TPP_HAVE_FILE_NONBLOCK */
-	read_status = tpp_io_read(self->tf_data.td_io.tff_file,
-	                          io_dst, io_size);
+	read_status = tpp_io_read(self->tf_data.td_io.tff_file, io_dst, io_size);
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 	/* Check for errors that may have happened during the read */
@@ -7174,7 +7170,7 @@ again:
 	case TPP_FILE_KIND_IO: {
 		char const *filename;
 #if TPP_HAVE_FILE_NOKWD
-		if (self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD)
+		if (self->tf_flags & TPP_FILE_FLAGS_NOKWD)
 			return NULL; /* Name isn't actually a keyword... */
 #endif /* TPP_HAVE_FILE_NOKWD */
 		filename = self->tf_data.td_io.tff_name;
@@ -8964,7 +8960,7 @@ without_relative_to:
 				do {
 					if (fp->tf_kind == TPP_FILE_KIND_IO &&
 #if TPP_HAVE_FILE_NOKWD
-					    !(fp->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+					    !(fp->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
 #endif /* TPP_HAVE_FILE_NOKWD */
 					    fp->tf_data.td_io.tff_name != NULL) {
 						tpp_keyword const *kwd = (tpp_keyword const *)((char const *)fp->tf_data.td_io.tff_name -
@@ -12933,17 +12929,17 @@ tpp_lexer_initfile_text_ascii(tpp_lexer *tpp_restrict self,
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
  * @param: ioflags:  Extra flags specifying how to interact with "handle":
- *                   - TPP_FILE_IOFLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
- *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
- *                   - TPP_FILE_IOFLAGS_SYSHDR:   Do not emit warnings */
+ *                   - TPP_FILE_FLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
+ *                   - TPP_FILE_FLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
+ *                   - TPP_FILE_FLAGS_SYSHDR:   Do not emit warnings */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_ioflags ioflags) {
+                         tpp_io_handle handle, tpp_file_flags ioflags) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	/* It can never be a keyword, since the lexer is only being
 	 * initialized right now (and the keyword would have had to
 	 * be allocated by the lexer) */
-	ioflags |= TPP_FILE_IOFLAGS_NOKWD;
+	ioflags |= TPP_FILE_FLAGS_NOKWD;
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
 	tpp_lexer_init(self);
 }
@@ -12986,20 +12982,20 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
  * @param: ioflags:  Extra flags specifying how to interact with "handle":
- *                   - TPP_FILE_IOFLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
- *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
- *                   - TPP_FILE_IOFLAGS_SYSHDR:   Do not emit warnings
+ *                   - TPP_FILE_FLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
+ *                   - TPP_FILE_FLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
+ *                   - TPP_FILE_FLAGS_SYSHDR:   Do not emit warnings
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_ioflags ioflags) {
+                         tpp_io_handle handle, tpp_file_flags ioflags) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
 	tpp_file_move(prev_file, file);
-	ioflags |= TPP_FILE_IOFLAGS_NOKWD;
+	ioflags |= TPP_FILE_FLAGS_NOKWD;
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -13086,42 +13082,6 @@ TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev = file->tf_prev;
-#if TPP_HAVE_CPP_DIRECTIVES
-	/* Deal with special case: a text-file is being popped, and the last-loaded token in
-	 * the file we're returning to ends with a trailing line-feed, yet the NODIRECTIVE
-	 * flag is set. This can happen in code like this:
-	 * >> #include "some/file.h"        // If "some/file.h" does not end with a trailing LF...
-	 * >> #include "some/other/file.h"  // ... this wouldn't be handled as a directive.
-	 *
-	 * To make sure that the following #include in the above example is always treated
-	 * handled as a directive, we must clear the flag in this very specific situation */
-	if ((file->tf_kind == TPP_FILE_KIND_IO || file->tf_kind == TPP_FILE_KIND_TEXT) &&
-	    (prev->tf_chunk != NULL) &&
-	    (prev->tf_tpos >= tpp_string_str(prev->tf_chunk) &&
-	     prev->tf_pos <= tpp_string_end(prev->tf_chunk)) &&
-	    (prev->tf_tpos < prev->tf_pos)) {
-		bool ends_with_lf;
-#if TPP_HAVE_UNICODE
-		if (tpp_file_isutf8(prev)) {
-			tpp_char const *iter = prev->tf_pos;
-			tpp_unichar uc = tpp_unicode_readutf8_rev(&iter, prev->tf_tpos);
-			ends_with_lf = tpp_unicode_islf(uc);
-		} else
-#endif /* TPP_HAVE_UNICODE */
-		{
-			tpp_char ch = prev->tf_pos[-1];
-			ends_with_lf = tpp_ascii_islf(ch);
-		}
-		if (ends_with_lf) {
-			self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
-		} else {
-			self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
-		}
-	} else {
-		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
-	}
-#endif /* TPP_HAVE_CPP_DIRECTIVES */
-
 	tpp_file_fini(file);
 	tpp_file_move(file, prev);
 	tpp_file_free(prev);
@@ -13743,7 +13703,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 		tpp_file const *const file = info->tlpfi_file ? info->tlpfi_file : tpp_lexer_getfile(self);
 		tpp_file const *const iofile = tpp_file_getiofile(file);
 		if (iofile->tf_kind == TPP_FILE_KIND_IO &&
-		    iofile->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_SYSHDR)
+		    iofile->tf_flags & TPP_FILE_FLAGS_SYSHDR)
 			return TPP_EOK; /* Suppress warnings in this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 	}	break;
@@ -16827,7 +16787,7 @@ done:
  * @return: * :                  The newly read token
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -22678,7 +22638,7 @@ tpp_lexer_process_pragma_GCC_system_header(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_FILE_SYSHDR
 	tpp_file *iofile = tpp_file_getiofile(tpp_lexer_getfile(self));
 	if (iofile->tf_kind == TPP_FILE_KIND_IO)
-		iofile->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_SYSHDR;
+		iofile->tf_flags |= TPP_FILE_FLAGS_SYSHDR;
 #endif /* TPP_HAVE_FILE_SYSHDR */
 	do {
 		tok = tpp_lexer_yield_blocking(self);
@@ -22935,20 +22895,22 @@ tpp_lexer_pragma_tpp_exec_cb(void *arg, tpp_string *chunk,
 	tpp_token_id tok;
 	tpp_lexer *const self = (tpp_lexer *)arg;
 	tpp_file *const file = tpp_lexer_getfile(self);
-#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+#if TPP_HAVE_CPP_DIRECTIVES
+	tpp_file_flags saved_flags;
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	tpp_lexer_state_flags saved_state;
-#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromstring(file, chunk, str, length);
 
 	/* Allow directive parsing starting with the first token */
-#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
-	saved_state = self->tl_state;
-#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_HAVE_CPP_DIRECTIVES
-	self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+	saved_flags = file->tf_flags;
+	file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+	saved_state = self->tl_state;
 	self->tl_state &= ~TPP_LEXER_STATE_FLAG_ALLTOKENS;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 
@@ -22958,9 +22920,12 @@ tpp_lexer_pragma_tpp_exec_cb(void *arg, tpp_string *chunk,
 	} while (!TPP_TOK_ISERR_OR_EOF(tok));
 
 	tpp_lexer_popallfiles(self);
-#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	self->tl_state = saved_state;
-#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#if TPP_HAVE_CPP_DIRECTIVES
+	file->tf_flags |= (saved_flags & TPP_FILE_FLAGS_NODIRECTIVES);
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
 	tpp_file_subtext_pop(file);
 	return TPP_TOK_ASERR_OR_EOK(tok);
 }
@@ -24206,7 +24171,7 @@ tpp_file_maybe_delete_include_guard_keyword(tpp_file *tpp_restrict self) {
 	if (tpp_ifdef_stack_isempty(tpp_file_getifdef(self)) &&
 	    self->tf_kind == TPP_FILE_KIND_IO &&
 #if TPP_HAVE_FILE_NOKWD
-	    !(self->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+	    !(self->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
 #endif /* TPP_HAVE_FILE_NOKWD */
 	    self->tf_data.td_io.tff_name != NULL) {
 		tpp_keyword *kwd;
@@ -24405,13 +24370,13 @@ tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
  * by seeking the next newline, then scanning for directives from
  * there on...)
  *
- * @return: TPP_KWD_ifdef:    Found an #ifdef-directive (current token points at like "# [ifdef] foo")
- * @return: TPP_KWD_ifndef:   Found an #ifdef-directive (current token points at like "# [ifndef] foo")
- * @return: TPP_KWD_elif:     Found an #ifdef-directive (current token points at like "# [elif] foo")
- * @return: TPP_KWD_elifdef:  Found an #ifdef-directive (current token points at like "# [elifdef] foo")
- * @return: TPP_KWD_elifndef: Found an #ifdef-directive (current token points at like "# [elifndef] foo")
- * @return: TPP_KWD_else:     Found an #ifdef-directive (current token points at like "# [else]")
- * @return: TPP_KWD_endif:    Found an #ifdef-directive (current token points at like "# [endif]")
+ * @return: TPP_KWD_ifdef:    Found an #ifdef-directive    (current token is [...] in: "# [ifdef] foo")
+ * @return: TPP_KWD_ifndef:   Found an #ifndef-directive   (current token is [...] in: "# [ifndef] foo")
+ * @return: TPP_KWD_elif:     Found an #elif-directive     (current token is [...] in: "# [elif] foo")
+ * @return: TPP_KWD_elifdef:  Found an #elifdef-directive  (current token is [...] in: "# [elifdef] foo")
+ * @return: TPP_KWD_elifndef: Found an #elifndef-directive (current token is [...] in: "# [elifndef] foo")
+ * @return: TPP_KWD_else:     Found an #else-directive     (current token is [...] in: "# [else]")
+ * @return: TPP_KWD_endif:    Found an #endif-directive    (current token is [...] in: "# [endif]")
  * @return: TPP_TOK_EOF:      End-of-file (no warning issued, yet)
  * @return: TPP_TOK_ISERR(*): Error
  */
@@ -24758,11 +24723,11 @@ tpp_lexer_handle_if_directive(tpp_lexer *tpp_restrict self) {
 	case TPP_KWD_ifndef: {
 		tpp_keyword const *ifndef_keyword = NULL;
 		error = tpp_lexer_parse_ifdef_directive_ex(self, &directive_start, &ifndef_keyword);
-		if (!(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOGUARD) &&
+		if (!(file->tf_flags & TPP_FILE_FLAGS_NOGUARD) &&
 		    (error == TPP_EOK || error == TPP_ENOENT) && ifndef_keyword != NULL &&
 		    file->tf_kind == TPP_FILE_KIND_IO && tpp_ifdef_stack_isempty(tpp_file_getifdef(file)) &&
 #if TPP_HAVE_FILE_NOKWD
-		    !(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+		    !(file->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
 #endif /* TPP_HAVE_FILE_NOKWD */
 		    file->tf_data.td_io.tff_name != NULL) {
 			tpp_keyword *kwd;
@@ -25214,7 +25179,7 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 	}
 	tpp_file_move(prev_file, file);
 	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename_kwd),
-	                    ofr.tlofr_handle, TPP_FILE_IOFLAGS_NORMAL);
+	                    ofr.tlofr_handle, TPP_FILE_FLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return TPP_TOK_EOF; /* Continue parsing in newly pushed file */
@@ -25774,7 +25739,7 @@ tpp_lexer_handle_embed_directive(tpp_lexer *tpp_restrict self,
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_directive(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-#define tpp_lexer_process_directive_set_noguard() (file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NOGUARD)
+#define tpp_lexer_process_directive_set_noguard() (file->tf_flags |= TPP_FILE_FLAGS_NOGUARD)
 #else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #define tpp_lexer_process_directive_set_noguard() (void)0
 #endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
@@ -26164,7 +26129,7 @@ handle_unknown_directive:
 				{
 				}
 				token->tt_id = TPP_TOK_OFCHAR('#');
-				self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+				file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 				result = TPP_TOK_OFERR(error);
 				goto return_result;
 			}
@@ -26227,12 +26192,14 @@ return_result:
  * @return: * :                  The newly read token (after accounting for preprocessor directives)
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	(void)file;
 again:
 	result = tpp_lexer_yieldraw(self);
 	switch (result) {
@@ -26262,7 +26229,7 @@ again:
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE
 	_TPP_CASE_TPP_TOK_SHELL_COMMENT
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_HAVE_CPP_DIRECTIVES
-		if (!(self->tl_state & TPP_LEXER_STATE_FLAG_NODIRECTIVES) &&
+		if (tpp_file_getallowdirectives(file) &&
 			tpp_lexer_has(self, CPP_DIRECTIVES)) {
 			tpp_token *const token = tpp_lexer_gettoken(self);
 
@@ -26278,9 +26245,9 @@ again:
 			{
 			}
 
-			self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+			file->tf_flags |= TPP_FILE_FLAGS_NODIRECTIVES;
 			result = tpp_lexer_process_directive(self);
-			self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+			file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 			if (TPP_TOK_ISERR(result))
 				break;
 			if (result == TPP_TOK_EOF)
@@ -26300,7 +26267,7 @@ again:
 	_TPP_CASE_TPP_TOK_SQL_COMMENT
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES
 		/* Remember that we've seen a linefeed. */
-		self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 		TPP_FALLTHRU
 #endif /* TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES */
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE
@@ -26330,7 +26297,7 @@ again:
 	case TPP_TOK_LF: {
 #if TPP_HAVE_CPP_DIRECTIVES
 		/* Remember that we've seen a linefeed. */
-		self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF) /* Never, or conditionally enabled */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
@@ -26354,13 +26321,13 @@ again:
 /************************************************************************/
 #if TPP_HAVE_CPP_DIRECTIVES
 	case '#':
-		if (self->tl_state & TPP_LEXER_STATE_FLAG_NODIRECTIVES)
+		if (!tpp_file_getallowdirectives(file))
 			break; /* Not allowed here... */
 		if (!tpp_lexer_has(self, CPP_DIRECTIVES))
 			break; /* Directives are disabled. */
-		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		file->tf_flags |= TPP_FILE_FLAGS_NODIRECTIVES;
 		result = tpp_lexer_process_directive(self);
-		self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 		if (TPP_TOK_ISERR(result))
 			break;
 #if TPP_HAVE_TPP_TOK_SHELL_COMMENT
@@ -26381,7 +26348,7 @@ again:
 	default:
 		/* Remember that we've seen something that will prevent CPP directives */
 #if TPP_HAVE_CPP_DIRECTIVES
-		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+		file->tf_flags |= TPP_FILE_FLAGS_NODIRECTIVES;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 		break;
 /************************************************************************/
@@ -26390,13 +26357,13 @@ again:
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 	/* Remember that #include-guards are no longer possible at this
 	 * point (because a relevant token "result" was hit first) */
-	tpp_lexer_getfile(self)->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NOGUARD;
+	file->tf_flags |= TPP_FILE_FLAGS_NOGUARD;
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 
 	/* Delete a previously recognized #ifndef-guard keyword if
 	 * we're at the top-level #ifdef-block for the current file. */
 #if TPP_HAVE_CPP_DIRECTIVES
-	tpp_file_maybe_delete_include_guard_keyword(tpp_lexer_getfile(self));
+	tpp_file_maybe_delete_include_guard_keyword(file);
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 	return result;
 }
@@ -27094,22 +27061,14 @@ next_op:
 	tpp_lexer_manualpopfile_break_commit(self);
 	tpp_file_move(prev_file, file);
 	prev_file->tf_tpos = macro_call_start_pos;
-
-	file->tf_pos   = tpp_string_str(result_chunk);
-	file->tf_chunk = result_chunk; /* Inherit reference */
-	file->tf_end   = tpp_string_end(result_chunk);
-	(void)0 _tpp_file_init_common(file);
-	file->tf_prev  = prev_file;
-	file->tf_tprev = prev_file;
-	file->tf_kind  = TPP_FILE_KIND_MACRO;
-#if TPP_HAVE_UNICODE
-	file->tf_enc = macro->tm_body_enc;
-#endif /* TPP_HAVE_UNICODE */
-	file->tf_data.td_macro.tfm_macro = macro; /* Inherit the reference created at the very start */
+	_tpp_file_init_macro(file, prev_file,
+	                     macro,        /* Inherit the reference created at the very start */
+	                     result_chunk, /* Inherit reference */
+	                     tpp_string_str(result_chunk),
+	                     tpp_string_end(result_chunk));
 #if TPP_HAVE_FILE_MACRO_TRACKARGS
 	file->tf_data.td_macro.tfm_args = invoke_arginfo;
 #endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
-	++macro->tm_expansions;
 	return TPP_TOK_EOF;
 #if TPP_HAVE_MACRO_RECURSION
 done_rollback:
@@ -27181,24 +27140,14 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
 	tpp_file_move(prev_file, file);
-	file->tf_pos   = macro->tm_body_start;
-	file->tf_chunk = macro->tm_body_chunk;
-	file->tf_end   = macro->tm_body_end;
-	if (file->tf_chunk)
-		tpp_string_incref(file->tf_chunk);
-
-	(void)0 _tpp_file_init_common(file);
-	file->tf_prev  = prev_file;
-	file->tf_tprev = prev_file;
-	file->tf_kind  = TPP_FILE_KIND_MACRO;
-#if TPP_HAVE_UNICODE
-	file->tf_enc = macro->tm_body_enc;
-#endif /* TPP_HAVE_UNICODE */
-	file->tf_data.td_macro.tfm_macro = macro;
+	if (macro->tm_body_chunk)
+		tpp_string_incref(macro->tm_body_chunk);
 	tpp_macro_incref(macro);
-	++macro->tm_expansions;
-
-	(void)macro;
+	_tpp_file_init_macro(file, prev_file,
+	                     macro,                /* Inherit reference */
+	                     macro->tm_body_chunk, /* Inherit reference */
+	                     macro->tm_body_start,
+	                     macro->tm_body_end);
 	return TPP_TOK_EOF;
 err_nomem:
 	return TPP_TOK_ENOMEM;
@@ -27237,17 +27186,11 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
 	tpp_file_move(prev_file, file);
-	file->tf_pos   = text;
-	file->tf_chunk = chunk; /* Inherit reference */
-	file->tf_end   = text + textsize;
+	tpp_file_init_text_ex(file, NULL, chunk, text, textsize,
+	                      TPP_LCINFO_INVALID,
+	                      TPP_FILE_ENCODING_FORCE_UTF8);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	file->tf_kind  = TPP_FILE_KIND_TEXT;
-	(void)0 _tpp_file_init_enc_ex(file, TPP_FILE_ENCODING_FORCE_UTF8);
-	(void)0 _tpp_file_init_common(file);
-	(void)0 _tpp_file_init_text_user_filename(file);
-	file->tf_data.td_text.tft_name     = NULL;
-	tpp_lcinfo_init(file->tf_data.td_text.tft_start_lc, -1, -1);
 	return TPP_TOK_EOF;
 err_nomem:
 	if (chunk)
@@ -28797,21 +28740,23 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 	tpp_lexer *const self = data->tlhed_lexer;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token const *const token = tpp_lexer_gettoken(self);
-#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+#if TPP_HAVE_CPP_DIRECTIVES
+	tpp_file_flags saved_flags;
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	tpp_lexer_state_flags saved_state;
-#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromstring(file, chunk, str, length);
 
 	/* Allow directive parsing starting with the first token */
-#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
-	saved_state = self->tl_state;
-#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_HAVE_CPP_DIRECTIVES
-	self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
+	saved_flags = file->tf_flags;
+	file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
-	self->tl_state |= TPP_LEXER_STATE_FLAG_ALLTOKENS;
+	saved_state = self->tl_state;
+	self->tl_state &= ~TPP_LEXER_STATE_FLAG_ALLTOKENS;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 
 	/* Pretty much the same as "tpp_lexer_pragma_tpp_exec_cb()", but gather token reprs */
@@ -28830,9 +28775,12 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 	}
 
 	tpp_lexer_popallfiles(self);
-#if TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 	self->tl_state = saved_state;
-#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#if TPP_HAVE_CPP_DIRECTIVES
+	file->tf_flags |= (saved_flags & TPP_FILE_FLAGS_NODIRECTIVES);
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
 	tpp_file_subtext_pop(file);
 	return TPP_TOK_ASERR_OR_EOK(tok);
 }
@@ -29299,7 +29247,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
  * @return: * :                  The newly read token (after accounting for macros)
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -29320,7 +29268,7 @@ again:
 #if TPP_HAVE_FILE_NONBLOCK
 
 /* Same as `tpp_lexer_yield()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
- * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
+ * clearing the "TPP_FILE_FLAGS_NONBLOCK" flag, and re-attempting the yield. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_blocking(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;
@@ -29329,12 +29277,12 @@ again:
 	if (result == TPP_TOK_EWOULDBLOCK) {
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
-		tpp_assert(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NONBLOCK);
-		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
-		tpp_lexer_autopopfile_pushoff(self);
+		tpp_assert(file->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
+		file->tf_flags &= ~TPP_FILE_FLAGS_NONBLOCK;
+		tpp_file_autopopfile_pushoff(file);
 		result = tpp_lexer_yield(self);
-		tpp_lexer_autopopfile_pop(self);
-		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
+		tpp_file_autopopfile_pop(file);
+		file->tf_flags |= TPP_FILE_FLAGS_NONBLOCK;
 		if (result == TPP_TOK_EOF)
 			goto again; /* EOF was encountered after blocking... */
 		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
@@ -29343,7 +29291,7 @@ again:
 }
 
 /* Same as `tpp_lexer_yieldpp()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
- * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
+ * clearing the "TPP_FILE_FLAGS_NONBLOCK" flag, and re-attempting the yield. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yieldpp_blocking(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;
@@ -29352,12 +29300,12 @@ again:
 	if (result == TPP_TOK_EWOULDBLOCK) {
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
-		tpp_assert(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NONBLOCK);
-		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
-		tpp_lexer_autopopfile_pushoff(self);
+		tpp_assert(file->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
+		file->tf_flags &= ~TPP_FILE_FLAGS_NONBLOCK;
+		tpp_file_autopopfile_pushoff(file);
 		result = tpp_lexer_yieldpp(self);
-		tpp_lexer_autopopfile_pop(self);
-		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
+		tpp_file_autopopfile_pop(file);
+		file->tf_flags |= TPP_FILE_FLAGS_NONBLOCK;
 		if (result == TPP_TOK_EOF)
 			goto again; /* EOF was encountered after blocking... */
 		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
@@ -29366,7 +29314,7 @@ again:
 }
 
 /* Same as `tpp_lexer_yieldraw_at()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
- * clearing the "TPP_FILE_IOFLAGS_NONBLOCK" flag, and re-attempting the yield. */
+ * clearing the "TPP_FILE_FLAGS_NONBLOCK" flag, and re-attempting the yield. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	tpp_token_id result;
@@ -29375,12 +29323,12 @@ again:
 	if (result == TPP_TOK_EWOULDBLOCK) {
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
-		tpp_assert(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NONBLOCK);
-		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
-		tpp_lexer_autopopfile_pushoff(self);
+		tpp_assert(file->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
+		file->tf_flags &= ~TPP_FILE_FLAGS_NONBLOCK;
+		tpp_file_autopopfile_pushoff(file);
 		result = tpp_lexer_yieldraw_at(self, p_pos);
-		tpp_lexer_autopopfile_pop(self);
-		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
+		tpp_file_autopopfile_pop(file);
+		file->tf_flags |= TPP_FILE_FLAGS_NONBLOCK;
 		if (result == TPP_TOK_EOF)
 			goto again; /* EOF was encountered after blocking... */
 		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
@@ -29920,12 +29868,12 @@ again:
 	if (result == TPP_TOK_EWOULDBLOCK) {
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
-		tpp_assert(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NONBLOCK);
-		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
-		tpp_lexer_autopopfile_pushoff(self);
+		tpp_assert(file->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
+		file->tf_flags &= ~TPP_FILE_FLAGS_NONBLOCK;
+		tpp_file_autopopfile_pushoff(file);
 		result = tpp_lexer_yieldraw_at_include_string(self, p_pos);
-		tpp_lexer_autopopfile_pop(self);
-		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
+		tpp_file_autopopfile_pop(file);
+		file->tf_flags |= TPP_FILE_FLAGS_NONBLOCK;
 		if (result == TPP_TOK_EOF)
 			goto again; /* EOF was encountered after blocking... */
 		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
@@ -29942,12 +29890,12 @@ again:
 	if (result == TPP_TOK_EWOULDBLOCK) {
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
-		tpp_assert(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NONBLOCK);
-		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
-		tpp_lexer_autopopfile_pushoff(self);
+		tpp_assert(file->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
+		file->tf_flags &= ~TPP_FILE_FLAGS_NONBLOCK;
+		tpp_file_autopopfile_pushoff(file);
 		result = tpp_lexer_yield_include_string(self);
-		tpp_lexer_autopopfile_pop(self);
-		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
+		tpp_file_autopopfile_pop(file);
+		file->tf_flags |= TPP_FILE_FLAGS_NONBLOCK;
 		if (result == TPP_TOK_EOF)
 			goto again; /* EOF was encountered after blocking... */
 		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
@@ -29973,7 +29921,7 @@ again:
  * @return: TPP_TOK_INCPATH_LANGLE: #include-string parsed: <foo.h>
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 #if TPP_HAVE_CPP_MACROS
@@ -31255,7 +31203,7 @@ do_decode_basic:
  * error happens, or one of the printers returned a negative value.
  *
  * HINT: This function automatically handles "TPP_EWOULDBLOCK" during
- *       yield by trying again with TPP_FILE_IOFLAGS_NONBLOCK disabled.
+ *       yield by trying again with TPP_FILE_FLAGS_NONBLOCK disabled.
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
  *

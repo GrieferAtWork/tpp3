@@ -1733,7 +1733,7 @@ without_relative_to:
 				do {
 					if (fp->tf_kind == TPP_FILE_KIND_IO &&
 #if TPP_HAVE_FILE_NOKWD
-					    !(fp->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NOKWD) &&
+					    !(fp->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
 #endif /* TPP_HAVE_FILE_NOKWD */
 					    fp->tf_data.td_io.tff_name != NULL) {
 						tpp_keyword const *kwd = (tpp_keyword const *)((char const *)fp->tf_data.td_io.tff_name -

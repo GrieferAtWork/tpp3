@@ -60,41 +60,46 @@ typedef enum tpp_file_encoding {
 #endif /* TPP_HAVE_UNICODE */
 
 
-#undef TPP_HAVE_FILE_IOFLAGS
+#undef TPP_HAVE_FILE_FLAGS
 #if (TPP_HAVE_FILE_NONBLOCK ||         \
      TPP_HAVE_FILE_NOCLOSE ||          \
      TPP_HAVE_FILE_SYSHDR ||           \
      TPP_HAVE_FILE_NOKWD ||            \
+     TPP_HAVE_CPP_DIRECTIVES ||        \
      TPP_HAVE_IFNDEF_INCLUDE_GUARDS || \
      (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE))
-#define TPP_HAVE_FILE_IOFLAGS 1
+#define TPP_HAVE_FILE_FLAGS 1
 #else /* ... */
-#define TPP_HAVE_FILE_IOFLAGS 0
+#define TPP_HAVE_FILE_FLAGS 0
 #endif /* !... */
 
-#if TPP_HAVE_FILE_IOFLAGS
-#define tpp_file_ioflags uint_least8_t /* Set of `TPP_FILE_IOFLAGS_*' */
-#define TPP_FILE_IOFLAGS_NORMAL   UINT8_C(0x00) /* Normal flags */
+#if TPP_HAVE_FILE_FLAGS
+#define tpp_file_flags uint_least8_t /* Set of `TPP_FILE_FLAGS_*' */
+#define TPP_FILE_FLAGS_NORMAL       UINT8_C(0x00) /* Normal flags */
 #if TPP_HAVE_FILE_NONBLOCK
-#define TPP_FILE_IOFLAGS_NONBLOCK UINT8_C(0x01) /* Do non-blocking I/O */
+#define TPP_FILE_FLAGS_NONBLOCK     UINT8_C(0x01) /* TPP_FILE_KIND_IO: Do non-blocking I/O */
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 #if TPP_HAVE_FILE_NOCLOSE
-#define TPP_FILE_IOFLAGS_NOCLOSE  UINT8_C(0x02) /* Don't `tpp_io_close(tff_file)' on destruction */
+#define TPP_FILE_FLAGS_NOCLOSE      UINT8_C(0x02) /* TPP_FILE_KIND_IO: Don't `tpp_io_close(tff_file)' on destruction */
 #endif /* TPP_HAVE_FILE_NOCLOSE */
 #if TPP_HAVE_FILE_SYSHDR
-#define TPP_FILE_IOFLAGS_SYSHDR   UINT8_C(0x04) /* Suppress all warnings produced in the context of this file */
+#define TPP_FILE_FLAGS_SYSHDR       UINT8_C(0x04) /* TPP_FILE_KIND_IO: Suppress all warnings produced in the context of this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 #if TPP_HAVE_FILE_NOKWD
-#define TPP_FILE_IOFLAGS_NOKWD    UINT8_C(0x08) /* The file's "tff_name" field isn't actually a "tpp_keyword::tk_kwd", but rather a raw \0-terminated C string. */
+#define TPP_FILE_FLAGS_NOKWD        UINT8_C(0x08) /* TPP_FILE_KIND_IO: The file's "tff_name" field isn't actually a "tpp_keyword::tk_kwd", but rather a raw \0-terminated C string. */
 #endif /* TPP_HAVE_FILE_NOKWD */
-#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-#define TPP_FILE_IOFLAGS_NOGUARD  UINT8_C(0x10) /* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
-                                                 * file. A #ifndef-directive encountered at this point can never count as a #include-guard. */
-#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
-#define TPP_FILE_IOFLAGS_FREENAME UINT8_C(0x20) /* Must tpp_free(tff_name) when the file is finalized */
+#define TPP_FILE_FLAGS_FREENAME     UINT8_C(0x10) /* TPP_FILE_KIND_IO: Must tpp_free(tff_name) when the file is finalized */
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
-#endif /* TPP_HAVE_FILE_IOFLAGS */
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+#define TPP_FILE_FLAGS_NOGUARD      UINT8_C(0x40) /* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
+                                                   * file. A #ifndef-directive encountered at this point can never count as a #include-guard. */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if TPP_HAVE_CPP_DIRECTIVES
+#define TPP_FILE_FLAGS_NODIRECTIVES UINT8_C(0x80) /* A non-COMMENT/SPACE token was encountered since the last
+                                                   * TPP_TOK_LF, meaning PP-directives may not be parsed. */
+#endif /* TPP_HAVE_CPP_DIRECTIVES */
+#endif /* TPP_HAVE_FILE_FLAGS */
 
 
 
@@ -212,12 +217,18 @@ typedef struct tpp_file {
 	tpp_file_kind       TPP_INTERNAL(tf_kind);  /* [const] File kind */
 #if TPP_HAVE_UNICODE
 	tpp_file_encoding   TPP_INTERNAL(tf_enc);   /* File encoding */
-#define _tpp_file_init_enc(self)       , (self)->TPP_INTERNAL(tf_enc) = TPP_FILE_ENCODING_UTF8
 #define _tpp_file_init_enc_ex(self, v) , (self)->TPP_INTERNAL(tf_enc) = v
 #else /* TPP_HAVE_UNICODE */
 #define _tpp_file_init_enc(self)       /* nothing */
-#define _tpp_file_init_enc_ex(self, v) /* nothing */
 #endif /* !TPP_HAVE_UNICODE */
+#if TPP_HAVE_FILE_FLAGS
+	tpp_file_flags      TPP_INTERNAL(tf_flags); /* File flags (set of `TPP_FILE_FLAGS_*') */
+#define _tpp_file_init_flags_ex(self, v) , (self)->TPP_INTERNAL(tf_flags) = (v)
+#else /* TPP_HAVE_FILE_FLAGS */
+#define _tpp_file_init_flags_ex(self, v) /* nothing */
+#endif /* !TPP_HAVE_FILE_FLAGS */
+#define _tpp_file_init_enc(self)   _tpp_file_init_enc_ex(self, TPP_FILE_ENCODING_UTF8)
+#define _tpp_file_init_flags(self) _tpp_file_init_flags_ex(self, TPP_FILE_FLAGS_NORMAL)
 	union {
 		struct {
 			char const      *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
@@ -266,10 +277,7 @@ typedef struct tpp_file {
 #else /* TPP_HAVE_FILE_KEEPPOS */
 #define _tpp_file_init_io_keep(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
-			tpp_io_handle    TPP_INTERNAL(tff_file);     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file */
-#if TPP_HAVE_FILE_IOFLAGS
-			tpp_file_ioflags TPP_INTERNAL(tff_flags);    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
-#endif /* TPP_HAVE_FILE_IOFLAGS */
+			tpp_io_handle    TPP_INTERNAL(tff_file);     /* [owned_if(!TPP_FILE_FLAGS_NOCLOSE)] Underlying I/O file */
 #if TPP_HAVE_UNICODE
 			union {
 				struct {
@@ -314,12 +322,6 @@ typedef struct tpp_file {
 #define tpp_file_move(dst, src) \
 	(void)(*(dst) = *(src), tpp_dbg_memset(src, sizeof(tpp_file)))
 
-#if TPP_HAVE_FILE_IOFLAGS
-#define _tpp_file_init_ioflags(self, flags) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_flags) = (flags)
-#else /* TPP_HAVE_FILE_SYSHDR */
-#define _tpp_file_init_ioflags(self, flags) /* nothing */
-#endif /* !TPP_HAVE_FILE_SYSHDR */
-
 #if TPP_HAVE_UNICODE
 #define tpp_file_isutf8(self)  TPP_FILE_ENCODING_ISUTF8((self)->TPP_INTERNAL(tf_enc))
 #define tpp_file_isascii(self) TPP_FILE_ENCODING_ISASCII((self)->TPP_INTERNAL(tf_enc))
@@ -354,6 +356,20 @@ typedef struct tpp_file {
  *      tpp_file_getlastpos()             file of the one containing the expanded "10+20" text)
  */
 #define tpp_file_getlastpos(self) ((self)->TPP_INTERNAL(tf_tpos))
+
+
+
+/* Check if the next "tpp_lexer_yieldpp()" done in the context of this file is
+ * allowed to parse directives. Since directives are only allowed to appear
+ * directly following a line-feed within the same file, or at the start of some
+ * file, this function allows you to check if the file is in a scenario where
+ * the lexer yielding tokens from it is allowed to parse directives.  */
+#if TPP_HAVE_CPP_DIRECTIVES
+#define tpp_file_getallowdirectives(self) \
+	(!((self)->TPP_INTERNAL(tf_flags) & TPP_FILE_FLAGS_NODIRECTIVES))
+#else /* TPP_HAVE_CPP_DIRECTIVES */
+#define tpp_file_getallowdirectives(self) 0
+#endif /* !TPP_HAVE_CPP_DIRECTIVES */
 
 
 /* Initialize common fields of "self" */
@@ -572,25 +588,25 @@ typedef struct tpp_file {
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
  * @param: char const      *filename: [0..1] Filename (if known)
  * @param: tpp_io_handle    fp:       File descriptor (inherited)
- * @param: tpp_file_ioflags flags:    I/O file flags (set of `TPP_FILE_IOFLAGS_*') */
+ * @param: tpp_file_flags flags:    I/O file flags (set of `TPP_FILE_FLAGS_*') */
 #define tpp_file_init_io(self, filename, /*inherit*/ fp) \
-	tpp_file_init_io_ex(self, filename, fp, TPP_FILE_IOFLAGS_NORMAL)
+	tpp_file_init_io_ex(self, filename, fp, TPP_FILE_FLAGS_NORMAL)
 #define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags) \
 	tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, TPP_FILE_ENCODING_UTF8)
-#define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                                             \
+#define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                                       \
 	(void)((self)->TPP_INTERNAL(tf_pos)   = NULL,                                                              \
 	       (self)->TPP_INTERNAL(tf_chunk) = NULL,                                                              \
 	       (self)->TPP_INTERNAL(tf_end)   = NULL                                                               \
 	       _tpp_file_init_prev(self),                                                                          \
 	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                                    \
-	       _tpp_file_init_enc_ex(self, enc)                                                                            \
+	       _tpp_file_init_enc_ex(self, enc)                                                                    \
+	       _tpp_file_init_flags_ex(self, flags)                                                                \
 	       _tpp_file_init_common(self),                                                                        \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename),              \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
 	       tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc), 0, 0) \
 	       _tpp_file_init_io_user_filename(self)                                                               \
-	       _tpp_file_init_io_keep(self)                                                                        \
-	       _tpp_file_init_ioflags(self, flags))
+	       _tpp_file_init_io_keep(self))
 
 /* Initialize "self" from a given "tpp_lexer_openfile_result" */
 #if TPP_HAVE_KEYWORDS_OPENFILE
@@ -599,15 +615,15 @@ typedef struct tpp_file {
 #if TPP_HAVE_USER_KEYWORDS
 #define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
 	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
-	                     (ofr)->tlofr_handle, TPP_FILE_IOFLAGS_NORMAL, enc)
+	                     (ofr)->tlofr_handle, TPP_FILE_FLAGS_NORMAL, enc)
 #elif TPP_HAVE_FILE_NOKWD
 #define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
 	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
-	                     (ofr)->tlofr_handle, TPP_FILE_IOFLAGS_NOKWD | TPP_FILE_IOFLAGS_FREENAME, enc)
+	                     (ofr)->tlofr_handle, TPP_FILE_FLAGS_NOKWD | TPP_FILE_FLAGS_FREENAME, enc)
 #else /* ... */
 #define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
 	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
-	                     (ofr)->tlofr_handle, TPP_FILE_IOFLAGS_FREENAME, enc)
+	                     (ofr)->tlofr_handle, TPP_FILE_FLAGS_FREENAME, enc)
 #endif /* !... */
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE */
 
@@ -629,10 +645,32 @@ typedef struct tpp_file {
 	       _tpp_file_init_prev(self),                                                                   \
 	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT                                           \
 	       _tpp_file_init_enc_ex(self, encoding)                                                        \
+	       _tpp_file_init_flags(self)                                                                   \
 	       _tpp_file_init_common(self)                                                                  \
 	       _tpp_file_init_text_user_filename(self),                                                     \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name)     = (filename), \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = (start_lc))
+
+
+/* Initialize "self" as a macro expansion file (internal API) */
+#if TPP_HAVE_CPP_MACROS
+#define _tpp_file_init_macro(self, prev_file, /*inherit(always)*/ macro, \
+                             /*inherit(always)*/ chunk, start, end)      \
+	(void)((self)->tf_pos   = (start),                                   \
+	       (self)->tf_chunk = (chunk),                                   \
+	       (self)->tf_end   = (end)                                      \
+	       _tpp_file_init_common(file),                                  \
+	       (self)->tf_prev = (self)->tf_tprev = (prev_file),             \
+	       (self)->tf_kind                    = TPP_FILE_KIND_MACRO      \
+	       _tpp_file_init_enc_ex(self, (macro)->tm_body_enc)             \
+	       _tpp_file_init_macro_flags(self),                             \
+	       ++((self)->tf_data.td_macro.tfm_macro = macro)->tm_expansions)
+#if TPP_HAVE_CPP_DIRECTIVES
+#define _tpp_file_init_macro_flags(self) _tpp_file_init_flags_ex(self, TPP_FILE_FLAGS_NODIRECTIVES)
+#else /* TPP_HAVE_CPP_DIRECTIVES */
+#define _tpp_file_init_macro_flags(self) _tpp_file_init_flags_ex(self, TPP_FILE_FLAGS_NORMAL)
+#endif /* !TPP_HAVE_CPP_DIRECTIVES */
+#endif /* TPP_HAVE_CPP_MACROS */
 
 
 
@@ -757,9 +795,10 @@ typedef struct tpp_lcinfo_ex {
 	 * >> foo(15)
 	 *
 	 * When requesting lcinfo about the "15" token in the expanded
-	 * file, "tlcix_projfile" points at the file containing "foo(15)",
-	 * and "tlcix_projpos" points at the "15". Meanwhile, "tlcix_info"
-	 * will point at the "x" token in the definition of "foo".
+	 * file ("10+15+20"), "tlcix_projfile" points at the file containing
+	 * "foo(15)", and "tlcix_projpos" points at the "15" in "foo(15)".
+	 * Meanwhile, "tlcix_info" will point at the "x" token in the
+	 * definition of "foo".
 	 *
 	 * There are many reasons why projection can fail, even when you
 	 * might think that there isn't a reason why it should. This is
@@ -767,7 +806,8 @@ typedef struct tpp_lcinfo_ex {
 	 * retroactively determine the correct position of tokens, such
 	 * as use of "##"-operators, or changing lexer features between
 	 * the macro being expanded, and "tpp_file_getlcinfo_ex" being
-	 * called. */
+	 * called. Depending on configuration (and especially changes
+	 * thereof), the projection location might even be wrong. */
 	tpp_file       *tlcix_projfile; /* [0..1] Projection source file, or NULL if queried position wasn't projected */
 	tpp_char const *tlcix_projpos;  /* [1..1][valid_if(tlcix_fromfile)] Position in "tlcix_projfile" */
 #endif /* TPP_HAVE_CPP_MACROS */

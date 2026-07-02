@@ -69,7 +69,7 @@ typedef enum tpp_token_id {
 	 * *right now* because reading from the underlying I/O file would block.
 	 *
 	 * -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
-	 * -> You will not see this error when not using the "TPP_FILE_IOFLAGS_NONBLOCK" flag */
+	 * -> You will not see this error when not using the "TPP_FILE_FLAGS_NONBLOCK" flag */
 	TPP_TOK_EWOULDBLOCK = (int)TPP_EWOULDBLOCK, /* [SOFT_ERROR] */
 #define _TPP_CASE_TPP_TOK_EWOULDBLOCK case TPP_TOK_EWOULDBLOCK:
 #else /* TPP_HAVE_FILE_NONBLOCK */

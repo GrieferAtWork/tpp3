@@ -1350,7 +1350,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *    that means that the next token cannot be read *right now* because
  *    reading from the underlying I/O file would block.
  *    -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
- *    -> You will not see this error when not using the "TPP_FILE_IOFLAGS_NONBLOCK" flag
+ *    -> You will not see this error when not using the "TPP_FILE_FLAGS_NONBLOCK" flag
  */
 
 /* TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT,
@@ -1510,7 +1510,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 /* TPPLEXER_FLAG_NO_LEGACY_GUARDS:
  * - In TPP3, detection of #ifndef-style #include-guards cannot be disabled
  *   at runtime, though you can disable for some specific file at the time
- *   when that file is pushed by setting "TPP_FILE_IOFLAGS_NOGUARD".
+ *   when that file is pushed by setting "TPP_FILE_FLAGS_NOGUARD".
  * - TPP3 does however let you compile-time disable this feature by building
  *   with "#define TPP_HAVE_IFNDEF_INCLUDE_GUARDS 0"
  */
@@ -4936,7 +4936,7 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
  * - TPPFILE_NEXTCHUNK_FLAG_BINARY: Not available anymore (if you want to do binary
  *                                  read, you must directly use "tpp_io_read()")
  * - TPPFILE_NEXTCHUNK_FLAG_NOBLCK: Not available anymore: non-blocking is controlled on
- *                                  a per-file basis (s.a. "TPP_FILE_IOFLAGS_NONBLOCK")
+ *                                  a per-file basis (s.a. "TPP_FILE_FLAGS_NONBLOCK")
  */
 #define TPPFILE_NEXTCHUNK_FLAG_NONE   0 /* No special behavior modification. */
 #undef TPPFILE_NEXTCHUNK_FLAG_EXTEND
@@ -5145,7 +5145,7 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #undef TPPLEXER_FLAG_NO_SEEK_ON_EOB        /* Use tpp_file_pusheof() or tpp_file_subtext_push() */
 #undef TPPLEXER_FLAG_NO_POP_ON_EOF         /* Use tpp_file_autopopfile_pushoff() */
 #undef TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE /* Use "TPP_EXT_MACRO_ARGUMENT_WHITESPACE" (global) or "TPP_MACRO_FLAG_KEEPARGSPC" (individual macro) */
-#undef TPPLEXER_FLAG_NONBLOCKING           /* Use "TPP_FILE_IOFLAGS_NONBLOCK" (per-file) */
+#undef TPPLEXER_FLAG_NONBLOCKING           /* Use "TPP_FILE_FLAGS_NONBLOCK" (per-file) */
 #undef TPPLEXER_FLAG_TERMINATE_STRING_LF   /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE) (inverted meaning) */
 #undef TPPLEXER_FLAG_NO_DIRECTIVES         /* Use tpp_lexer_setfeat(TPP_FEAT_CPP_DIRECTIVES) */
 #undef TPPLEXER_FLAG_NO_MACROS             /* Use tpp_lexer_setfeat(TPP_FEAT_CPP_MACROS) */
@@ -5479,7 +5479,7 @@ TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
 
 /* Return non-ZERO if the current token is the first of the current input line.
  * Return ZERO otherwise. */
-#define TPPLexer_AtStartOfLine_(self) (!((self)->TPP_INTERNAL(tl_state) & TPP_LEXER_STATE_FLAG_NODIRECTIVES))
+#define TPPLexer_AtStartOfLine_(self) tpp_lexer_yieldpp_getallowdirectives(self)
 #define TPPLexer_AtStartOfLine()      TPPLexer_AtStartOfLine_(TPP2_LEXER)
 
 /* Emit a given warning.

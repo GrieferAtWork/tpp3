@@ -123,7 +123,7 @@ typedef enum tpp_errno {
 	 * *right now* because reading from the underlying I/O file would block.
 	 *
 	 * -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
-	 * -> You will not see this error when not using the "TPP_FILE_IOFLAGS_NONBLOCK" flag */
+	 * -> You will not see this error when not using the "TPP_FILE_FLAGS_NONBLOCK" flag */
 	TPP_EWOULDBLOCK = -_TPP_ERRCODE_WOULDBLOCK,
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 

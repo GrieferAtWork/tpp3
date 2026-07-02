@@ -125,12 +125,12 @@ again:
 	if (result == TPP_TOK_EWOULDBLOCK) {
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
-		tpp_assert(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NONBLOCK);
-		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
-		tpp_lexer_autopopfile_pushoff(self);
+		tpp_assert(file->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
+		file->tf_flags &= ~TPP_FILE_FLAGS_NONBLOCK;
+		tpp_file_autopopfile_pushoff(file);
 		result = tpp_lexer_yieldraw_at_include_string(self, p_pos);
-		tpp_lexer_autopopfile_pop(self);
-		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
+		tpp_file_autopopfile_pop(file);
+		file->tf_flags |= TPP_FILE_FLAGS_NONBLOCK;
 		if (result == TPP_TOK_EOF)
 			goto again; /* EOF was encountered after blocking... */
 		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
@@ -147,12 +147,12 @@ again:
 	if (result == TPP_TOK_EWOULDBLOCK) {
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
-		tpp_assert(file->tf_data.td_io.tff_flags & TPP_FILE_IOFLAGS_NONBLOCK);
-		file->tf_data.td_io.tff_flags &= ~TPP_FILE_IOFLAGS_NONBLOCK;
-		tpp_lexer_autopopfile_pushoff(self);
+		tpp_assert(file->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
+		file->tf_flags &= ~TPP_FILE_FLAGS_NONBLOCK;
+		tpp_file_autopopfile_pushoff(file);
 		result = tpp_lexer_yield_include_string(self);
-		tpp_lexer_autopopfile_pop(self);
-		file->tf_data.td_io.tff_flags |= TPP_FILE_IOFLAGS_NONBLOCK;
+		tpp_file_autopopfile_pop(file);
+		file->tf_flags |= TPP_FILE_FLAGS_NONBLOCK;
 		if (result == TPP_TOK_EOF)
 			goto again; /* EOF was encountered after blocking... */
 		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
@@ -178,7 +178,7 @@ again:
  * @return: TPP_TOK_INCPATH_LANGLE: #include-string parsed: <foo.h>
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 #if TPP_HAVE_CPP_MACROS

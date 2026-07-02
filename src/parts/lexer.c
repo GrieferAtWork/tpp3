@@ -396,17 +396,17 @@ tpp_lexer_initfile_text_ascii(tpp_lexer *tpp_restrict self,
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
  * @param: ioflags:  Extra flags specifying how to interact with "handle":
- *                   - TPP_FILE_IOFLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
- *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
- *                   - TPP_FILE_IOFLAGS_SYSHDR:   Do not emit warnings */
+ *                   - TPP_FILE_FLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
+ *                   - TPP_FILE_FLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
+ *                   - TPP_FILE_FLAGS_SYSHDR:   Do not emit warnings */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_ioflags ioflags) {
+                         tpp_io_handle handle, tpp_file_flags ioflags) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	/* It can never be a keyword, since the lexer is only being
 	 * initialized right now (and the keyword would have had to
 	 * be allocated by the lexer) */
-	ioflags |= TPP_FILE_IOFLAGS_NOKWD;
+	ioflags |= TPP_FILE_FLAGS_NOKWD;
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
 	tpp_lexer_init(self);
 }
@@ -449,20 +449,20 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
  *                                   allocated and valid until "self" is finalized.
  * @param: handle:   The I/O handle to read from in order to retrieve text data.
  * @param: ioflags:  Extra flags specifying how to interact with "handle":
- *                   - TPP_FILE_IOFLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
- *                   - TPP_FILE_IOFLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
- *                   - TPP_FILE_IOFLAGS_SYSHDR:   Do not emit warnings
+ *                   - TPP_FILE_FLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
+ *                   - TPP_FILE_FLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
+ *                   - TPP_FILE_FLAGS_SYSHDR:   Do not emit warnings
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_ioflags ioflags) {
+                         tpp_io_handle handle, tpp_file_flags ioflags) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
 	tpp_file_move(prev_file, file);
-	ioflags |= TPP_FILE_IOFLAGS_NOKWD;
+	ioflags |= TPP_FILE_FLAGS_NOKWD;
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -549,42 +549,6 @@ TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev = file->tf_prev;
-#if TPP_HAVE_CPP_DIRECTIVES
-	/* Deal with special case: a text-file is being popped, and the last-loaded token in
-	 * the file we're returning to ends with a trailing line-feed, yet the NODIRECTIVE
-	 * flag is set. This can happen in code like this:
-	 * >> #include "some/file.h"        // If "some/file.h" does not end with a trailing LF...
-	 * >> #include "some/other/file.h"  // ... this wouldn't be handled as a directive.
-	 *
-	 * To make sure that the following #include in the above example is always treated
-	 * handled as a directive, we must clear the flag in this very specific situation */
-	if ((file->tf_kind == TPP_FILE_KIND_IO || file->tf_kind == TPP_FILE_KIND_TEXT) &&
-	    (prev->tf_chunk != NULL) &&
-	    (prev->tf_tpos >= tpp_string_str(prev->tf_chunk) &&
-	     prev->tf_pos <= tpp_string_end(prev->tf_chunk)) &&
-	    (prev->tf_tpos < prev->tf_pos)) {
-		bool ends_with_lf;
-#if TPP_HAVE_UNICODE
-		if (tpp_file_isutf8(prev)) {
-			tpp_char const *iter = prev->tf_pos;
-			tpp_unichar uc = tpp_unicode_readutf8_rev(&iter, prev->tf_tpos);
-			ends_with_lf = tpp_unicode_islf(uc);
-		} else
-#endif /* TPP_HAVE_UNICODE */
-		{
-			tpp_char ch = prev->tf_pos[-1];
-			ends_with_lf = tpp_ascii_islf(ch);
-		}
-		if (ends_with_lf) {
-			self->tl_state &= ~TPP_LEXER_STATE_FLAG_NODIRECTIVES;
-		} else {
-			self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
-		}
-	} else {
-		self->tl_state |= TPP_LEXER_STATE_FLAG_NODIRECTIVES;
-	}
-#endif /* TPP_HAVE_CPP_DIRECTIVES */
-
 	tpp_file_fini(file);
 	tpp_file_move(file, prev);
 	tpp_file_free(prev);
