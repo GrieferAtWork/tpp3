@@ -266,7 +266,7 @@ typedef struct tpp_file {
 #else /* TPP_HAVE_FILE_KEEPPOS */
 #define _tpp_file_init_io_keep(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
-			tpp_io_handle    TPP_INTERNAL(tff_file);     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
+			tpp_io_handle    TPP_INTERNAL(tff_file);     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file */
 #if TPP_HAVE_FILE_IOFLAGS
 			tpp_file_ioflags TPP_INTERNAL(tff_flags);    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
 #endif /* TPP_HAVE_FILE_IOFLAGS */

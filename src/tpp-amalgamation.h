@@ -2847,33 +2847,34 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 /* -Wsyntax                                                             */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_SYNTAX
-#define TPP_HAVE_TPP_WG_SYNTAX                                  \
-	(TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED ||            \
-	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF ||                 \
-	 TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF ||                \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN ||                         \
-	 TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE ||                        \
-	 TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER ||                  \
-	 TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE ||         \
-	 TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE ||      \
-	 TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE ||    \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST || \
-	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||           \
-	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT ||             \
-	 TPP_HAVE_TPP_W_EXPECTED_STRING ||                          \
-	 TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING ||                  \
-	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF ||                         \
-	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE ||                  \
-	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF ||                  \
-	 TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF ||                         \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION ||           \
-	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF ||          \
-	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED ||        \
-	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION ||      \
-	 TPP_HAVE_TPP_W_INVALID_INTEGER ||                          \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK ||         \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING ||       \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON)
+#define TPP_HAVE_TPP_WG_SYNTAX                                        \
+	(TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED ||                  \
+	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF ||                       \
+	 TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF ||                      \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN ||                               \
+	 TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE ||                              \
+	 TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER ||                        \
+	 TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE ||               \
+	 TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE ||            \
+	 TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE ||          \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST ||       \
+	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||                 \
+	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT ||                   \
+	 TPP_HAVE_TPP_W_EXPECTED_STRING ||                                \
+	 TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING ||                        \
+	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF ||                               \
+	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE ||                        \
+	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF ||                        \
+	 TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF ||                               \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION ||                 \
+	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF ||                \
+	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED ||              \
+	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION ||            \
+	 TPP_HAVE_TPP_W_INVALID_INTEGER ||                                \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK ||               \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING ||             \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON || \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #ifndef TPP_WGNAME_SYNTAX
@@ -3099,6 +3100,17 @@ TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON, 1(TPP_WG_SYNTA
             "expected %[<int>%] or %[<string>%] after %[#pragma warning(<mode>:%] but got %Pt")
 #endif /* !TPP_HAVE_WARNING_NUMBERS || !TPP_HAVE_TPP_TOK_INT */
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON */
+
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC
+#define TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC
+#if TPP_HAVE_WARNINGS_PUSH_POP
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC, 1(TPP_WG_SYNTAX), 0(), ~,
+            "expected %[push%], %[pop%], %[warning%], %[error%] or %[ignored%] after %[#pragma GCC diagnostic%] but got %Pt")
+#else /* TPP_HAVE_WARNINGS_PUSH_POP */
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC, 1(TPP_WG_SYNTAX), 0(), ~,
+            "expected %[warning%], %[error%] or %[ignored%] after %[#pragma GCC diagnostic%] but got %Pt")
+#endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC */
 
 
 
@@ -3611,6 +3623,26 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 /************************************************************************/
 /* HOST COMPILER/SYSTEM/OS CONFIGURATION: TPP_HOST_*                    */
 /************************************************************************/
+
+/* Define if host OS is like windows */
+#ifndef TPP_OS_WINDOWS
+#if (defined(_WIN64) || defined(WIN64) || \
+     defined(_WIN32) || defined(WIN32) || defined(__WIN32__))
+#define TPP_OS_WINDOWS 1
+#else /* ... */
+#define TPP_OS_WINDOWS 0
+#endif /* !... */
+#endif /* !TPP_OS_WINDOWS */
+
+/* Define if host OS is like unix */
+#ifndef TPP_OS_UNIX
+#if (defined(__unix__) || defined(__unix) || defined(unix) || \
+     defined(__posix__) || defined(__posix) || defined(posix))
+#define TPP_OS_UNIX 1
+#else /* ... */
+#define TPP_OS_UNIX 0
+#endif /* !... */
+#endif /* !TPP_OS_UNIX */
 
 /* >> #define TPP_HOST_NO_SYSTEM_INCLUDES 1
  * Prevent TPP sources from doing `#include <foo.h>' -- instead, you must
@@ -4441,10 +4473,9 @@ TPP_DECL_END
  * -1: Enable if possible (re-defined to `0' if unsupported) */
 /************************************************************************/
 
-/* Enable support for non-blocking I/O
- * Configure to "-1" to only enable compile-time support if supported by OS */
+/* Enable support for non-blocking I/O */
 #ifndef TPP_HAVE_FILE_NONBLOCK
-#define TPP_HAVE_FILE_NONBLOCK (TPP_HAVE_PROFILE_NOT_MINIMAL ? -1 : 0)
+#define TPP_HAVE_FILE_NONBLOCK (TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_OS_WINDOWS || TPP_OS_UNIX))
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 /* Enable support for:
@@ -6714,7 +6745,8 @@ TPP_DECL_END
 	 TPP_HAVE_CPP_EMBED ||                 \
 	 TPP_HAVE_MACRO___has_include ||       \
 	 TPP_HAVE_MACRO___has_include_next ||  \
-	 TPP_HAVE_MACRO___has_embed)
+	 TPP_HAVE_MACRO___has_embed ||         \
+	 TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
 #endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
 
 /* Provide a function "tpp_lexer_decode_include_string()"
@@ -7136,6 +7168,9 @@ TPP_DECL_END
 #ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON
 #define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON (TPP_HAVE_WARNINGS && (TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING))
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC */
 #ifndef TPP_HAVE_TPP_W_ERROR
 #define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_ERROR || TPP_HAVE_PRAGMA_ERROR || TPP_HAVE_PRAGMA_GCC_ERROR))
 #endif /* !TPP_HAVE_TPP_W_ERROR */
@@ -7240,13 +7275,9 @@ TPP_DECL_END
 	 TPP_CONF_MAYBE_0(TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR))
 #endif /* !TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_STRING
-#if 1
-#define TPP_HAVE_TPP_W_EXPECTED_STRING \
-	(TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE)
-#else
-#define TPP_HAVE_TPP_W_EXPECTED_STRING \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_PRAGMA_PUSH_MACRO || ...))
-#endif
+#define TPP_HAVE_TPP_W_EXPECTED_STRING                   \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE && \
+	 (TPP_HAVE_PRAGMA_PUSH_MACRO || 1 /*TODO*/))
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
 #define TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING \
@@ -7383,6 +7414,185 @@ TPP_DECL_END
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
+/************************************************************************/
+
+/************************************************************************/
+/* File: parts/error.h                                                  */
+/************************************************************************/
+TPP_DECL_BEGIN
+
+enum {
+	_TPP_ERRCODE_OK,
+	_TPP_ERRCODE_NOMEM,
+	_TPP_ERRCODE_IO,
+	_TPP_ERRCODE_NOENT,
+#if TPP_HAVE_FILE_NONBLOCK
+	_TPP_ERRCODE_WOULDBLOCK,
+#endif /* TPP_HAVE_FILE_NONBLOCK */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+	_TPP_ERRCODE_MASKED,
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#if TPP_HAVE_WARNINGS
+	_TPP_ERRCODE_LEXERROR,
+	_TPP_ERRCODE_WARNPRINT,
+#endif /* TPP_HAVE_WARNINGS */
+	_TPP_ERRCODE_COUNT,
+};
+
+
+/* NOTE: "[SOFT_ERROR]" are "temporary" errors that are intended to-be recovered from.
+ *       These errors should be caught & dealt with at appropriate points in the code. */
+typedef enum tpp_errno {
+#define TPP_ISERR(error)     ((error) != TPP_EOK)
+
+	/* --------------------------------------------------------------------
+	 * NO_ERROR: TPP_EOK
+	 * --------------------------------------------------------------------
+	 *
+	 * Success (operation completed without errors) */
+	TPP_EOK = -_TPP_ERRCODE_OK,
+
+
+
+	/* --------------------------------------------------------------------
+	 * HARD_ERROR: TPP_ENOMEM
+	 * --------------------------------------------------------------------
+	 *
+	 * Out of memory
+	 *
+	 * A call to `tpp_malloc()' or `tpp_realloc()' returned NULL, indicating
+	 * that the system is out of heap memory. */
+	TPP_ENOMEM = -_TPP_ERRCODE_NOMEM,
+
+
+
+	/* --------------------------------------------------------------------
+	 * HARD_ERROR: TPP_EIO
+	 * --------------------------------------------------------------------
+	 *
+	 * Filesystem I/O operation failed */
+	TPP_EIO = -_TPP_ERRCODE_IO,
+
+
+
+	/* --------------------------------------------------------------------
+	 * SOFT_ERROR: TPP_ENOENT
+	 * --------------------------------------------------------------------
+	 *
+	 * No such file or directory
+	 *
+	 * WARNING: This error is _NOT_ returned when a #include-directive fails!
+	 *          As a matter of fact, this error is _NEVER_ returned by APIs
+	 *          such as `tpp_lexer_yield()' (there is no TPP_TOK_ENOENT).
+	 * Instead, this error is used internally to indicate that a file could
+	 * not be opened, however TPP may inherently handle this by trying to
+	 * use some other filename in order to open a file. e.g.: when you have
+	 * specified multiple system include paths, and TPP is parsing a line
+	 * such as:
+	 * >> #include <stdio.h>
+	 *
+	 * When it will try to open the following files (in order) and stop the
+	 * first time one of these open calls succeeds:
+	 * - tpp_io_open("/home/me/projects/tpp/stdio.h")
+	 * - tpp_io_open("/usr/local/include/stdio.h")
+	 * - tpp_io_open("/usr/include/stdio.h")
+	 *
+	 * Even if all of those calls fail, you will NOT see this error escape
+	 * out of the handler for #include-directives. At that point, TPP will
+	 * instead trigger the appropriate tpp_lexer_warnf() warning, which
+	 * might then return "TPP_ELEXERROR". And it will be **that** error
+	 * that will be propagated out of `tpp_lexer_yield()'; not TPP_ENOENT */
+	TPP_ENOENT = -_TPP_ERRCODE_NOENT,
+
+
+
+#if TPP_HAVE_FILE_NONBLOCK
+	/* --------------------------------------------------------------------
+	 * SOFT_ERROR: TPP_EWOULDBLOCK
+	 * --------------------------------------------------------------------
+	 *
+	 * Operation would block, but non-blocking was requested
+	 *
+	 * You will only see this error if you made use of "TPP_HAVE_FILE_NONBLOCK"
+	 * This is a temporary error that means that the next token cannot be read
+	 * *right now* because reading from the underlying I/O file would block.
+	 *
+	 * -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
+	 * -> You will not see this error when not using the "TPP_FILE_IOFLAGS_NONBLOCK" flag */
+	TPP_EWOULDBLOCK = -_TPP_ERRCODE_WOULDBLOCK,
+#endif /* TPP_HAVE_FILE_NONBLOCK */
+
+
+
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+	/* --------------------------------------------------------------------
+	 * SOFT_ERROR: TPP_EMASKED
+	 * --------------------------------------------------------------------
+	 *
+	 * File cannot be opened because it has been masked. Used internally to
+	 * describe a file that exists, but should not be included (again) due
+	 * to a `#pragma once', or because `#import' is being used (and had
+	 * already been used once before) */
+	TPP_EMASKED = -_TPP_ERRCODE_MASKED,
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+
+
+
+#if TPP_HAVE_WARNINGS
+	/* --------------------------------------------------------------------
+	 * SOFT_ERROR / HARD_ERROR: TPP_ELEXERROR
+	 * --------------------------------------------------------------------
+	 *
+	 * Hard lexer error (usually when too many -Werror were emitted)
+	 *
+	 * This error should be treated as a HARD_ERROR in most cases, in that
+	 * it should be propagated. However, since it is always generated by
+	 * TPP itself, you *could* in theory also change lexer configuration
+	 * and re-try the failing operation (though if you do that, you will
+	 * probably run into the same error again) */
+	TPP_ELEXERROR = -_TPP_ERRCODE_LEXERROR,
+
+	/* --------------------------------------------------------------------
+	 * HARD_ERROR: TPP_EWARNPRINT
+	 * --------------------------------------------------------------------
+	 *
+	 * Printer registered for "tpp_lexer_warnf" returned an error.
+	 * Since this error is not related to TPP itself, this error should
+	 * be propagated. */
+	TPP_EWARNPRINT = -_TPP_ERRCODE_WARNPRINT,
+#endif /* TPP_HAVE_WARNINGS */
+
+
+	TPP_ELAST = (-_TPP_ERRCODE_COUNT) + 1, /* Last defined error number */
+} tpp_errno;
+
+
+/* Helper macros for embedding error codes in "tpp_ssize" values. */
+#define /*tpp_ssize*/ TPP_SSIZE_OFERR(/*tpp_errno*/ e) ((tpp_ssize)(int)(e))
+#define /*tpp_errno*/ TPP_SSIZE_ASERR(/*tpp_ssize*/ v) ((tpp_errno)(int)(v))
+#if 1
+#define /*tpp_errno*/ TPP_SSIZE_ASERR_OR_EOK(/*tpp_ssize*/ v) ((tpp_errno)(int)(v))
+#else
+#define /*tpp_errno*/ TPP_SSIZE_ASERR_OR_EOK(/*tpp_ssize*/ v) ((v) == 0 ? TPP_EOK : (tpp_errno)(int)(v))
+#endif
+#if TPP_DEBUG
+#define /*bool*/ TPP_SSIZE_ISERR(/*tpp_ssize*/ v) \
+	(((v) < 0) ? (tpp_assert((tpp_size)(v) >= (tpp_size)TPP_SSIZE_OFERR(TPP_ELAST)), 1) : 0)
+#define /*bool*/ TPP_SSIZE_ISERR_OR_EOK(/*tpp_ssize*/ v) \
+	((v) <= 0 ? (tpp_assert((v) >= TPP_SSIZE_OFERR(TPP_ELAST)), 1) : 0)
+#else /* TPP_DEBUG */
+#define /*bool*/ TPP_SSIZE_ISERR(/*tpp_ssize*/ v) ((v) < 0)
+#define /*bool*/ TPP_SSIZE_ISERR_OR_EOK(/*tpp_ssize*/ v) ((v) <= 0)
+#endif /* !TPP_DEBUG */
+
+
+
+#if TPP_HAVE_STRERROR
+/* Return a human-readable descriptor of "error" */
+TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_strerror(tpp_errno error);
+#endif /* TPP_HAVE_STRERROR */
+
+TPP_DECL_END
 /************************************************************************/
 
 /************************************************************************/
@@ -7651,8 +7861,8 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self, tpp_size num_bytes);
 
 /* Print "text" into "tpp_string_builder *self"
- * @return: num_bytes:             Success
- * @return: (tpp_ssize)TPP_ENOMEM: Out of memory */
+ * @return: num_bytes:                   Success
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
 TPP_DECL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes);
 
 TPP_DECL_END
@@ -7661,24 +7871,6 @@ TPP_DECL_END
 /************************************************************************/
 /* File: parts/file-io.h                                                */
 /************************************************************************/
-#ifndef TPP_OS_WINDOWS
-#if (defined(_WIN64) || defined(WIN64) || \
-     defined(_WIN32) || defined(WIN32) || defined(__WIN32__))
-#define TPP_OS_WINDOWS 1
-#else /* ... */
-#define TPP_OS_WINDOWS 0
-#endif /* !... */
-#endif /* !TPP_OS_WINDOWS */
-
-#ifndef TPP_OS_UNIX
-#if (defined(__unix__) || defined(__unix) || defined(unix) || \
-     defined(__posix__) || defined(__posix) || defined(posix))
-#define TPP_OS_UNIX 1
-#else /* ... */
-#define TPP_OS_UNIX 0
-#endif /* !... */
-#endif /* !TPP_OS_UNIX */
-
 #ifndef TPP_FS_HAVE_DRIVES
 #define TPP_FS_HAVE_DRIVES TPP_OS_WINDOWS
 #endif /* !TPP_FS_HAVE_DRIVES */
@@ -7725,25 +7917,18 @@ TPP_DECL_END
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle HANDLE
 #define tpp_io_handle_IS_HANDLE
-#define tpp_io_handle_INVALID INVALID_HANDLE_VALUE
 #elif TPP_OS_UNIX
 #define tpp_io_handle int
 #define tpp_io_handle_IS_int
-#define tpp_io_handle_INVALID (-1)
 #else /* ... */
 #if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle FILE *
 #define tpp_io_handle_IS_FILE
-#define tpp_io_handle_INVALID NULL
-
-#if TPP_HAVE_FILE_NONBLOCK < 0
-#undef TPP_HAVE_FILE_NONBLOCK
-#define TPP_HAVE_FILE_NONBLOCK 0
-#elif TPP_HAVE_FILE_NONBLOCK
+#if TPP_HAVE_FILE_NONBLOCK
 #error "No way to implement 'TPP_HAVE_FILE_NONBLOCK' on this OS"
-#endif /* ... */
+#endif /* TPP_HAVE_FILE_NONBLOCK */
 #endif /* !... */
 #endif /* !tpp_io_handle */
 
@@ -7762,184 +7947,29 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 /* Open a file for reading
- * @return: tpp_io_handle_INVALID: No such file or directory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_io_handle TPPCALL
-tpp_io_open(/*utf-8*/ char const *filename);
+ * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
+            tpp_io_handle *tpp_restrict p_result);
 
 /* Close a file previously opened by `tpp_io_open()' */
 TPP_DECL void TPPCALL tpp_io_close(tpp_io_handle file);
 
 /* Read data from a given `file' into `buf'
  * @return: * : The # of bytes read into `buf' (at most `bufsize')
- * @return: (tpp_ssize)TPP_EIO:         I/O error
+ *              NOTE: Use "TPP_SSIZE_ISERR()" to detect error conditions!
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):         I/O error
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):      Out of memory
  * #if TPP_HAVE_FILE_NONBLOCK
- * @return: (tpp_ssize)TPP_EWOULDBLOCK: `nonblock' was given, but operation would block
+ * @return: TPP_SSIZE_OFERR(TPP_EWOULDBLOCK): `nonblock' was given, but operation would block
  * #endif // TPP_HAVE_FILE_NONBLOCK */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_io_read(tpp_io_handle file, void *buf, tpp_size bufsize tpp_io_nonblock__PARAM);
 
 TPP_DECL_END
 #endif /* tpp_io_handle_IS_BUILTIN */
-/************************************************************************/
-
-/************************************************************************/
-/* File: parts/error.h                                                  */
-/************************************************************************/
-TPP_DECL_BEGIN
-
-enum {
-	_TPP_ERRCODE_OK,
-	_TPP_ERRCODE_NOMEM,
-	_TPP_ERRCODE_IO,
-	_TPP_ERRCODE_NOENT,
-#if TPP_HAVE_FILE_NONBLOCK
-	_TPP_ERRCODE_WOULDBLOCK,
-#endif /* TPP_HAVE_FILE_NONBLOCK */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
-	_TPP_ERRCODE_MASKED,
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-#if TPP_HAVE_WARNINGS
-	_TPP_ERRCODE_LEXERROR,
-	_TPP_ERRCODE_WARNPRINT,
-#endif /* TPP_HAVE_WARNINGS */
-	_TPP_ERRCODE_COUNT,
-};
-
-
-/* NOTE: "[SOFT_ERROR]" are "temporary" errors that are intended to-be recovered from.
- *       These errors should be caught & dealt with at appropriate points in the code. */
-typedef enum tpp_errno {
-#define TPP_ISERR(error) ((error) != TPP_EOK)
-
-	/* --------------------------------------------------------------------
-	 * NO_ERROR: TPP_EOK
-	 * --------------------------------------------------------------------
-	 *
-	 * Success (operation completed without errors) */
-	TPP_EOK = -_TPP_ERRCODE_OK,
-
-
-
-	/* --------------------------------------------------------------------
-	 * HARD_ERROR: TPP_ENOMEM
-	 * --------------------------------------------------------------------
-	 *
-	 * Out of memory
-	 *
-	 * A call to `tpp_malloc()' or `tpp_realloc()' returned NULL, indicating
-	 * that the system is out of heap memory. */
-	TPP_ENOMEM = -_TPP_ERRCODE_NOMEM,
-
-
-
-	/* --------------------------------------------------------------------
-	 * HARD_ERROR: TPP_EIO
-	 * --------------------------------------------------------------------
-	 *
-	 * Filesystem I/O operation failed */
-	TPP_EIO = -_TPP_ERRCODE_IO,
-
-
-
-	/* --------------------------------------------------------------------
-	 * SOFT_ERROR: TPP_ENOENT
-	 * --------------------------------------------------------------------
-	 *
-	 * No such file or directory
-	 *
-	 * WARNING: This error is _NOT_ returned when a #include-directive fails!
-	 *          As a matter of fact, this error is _NEVER_ returned by APIs
-	 *          such as `tpp_lexer_yield()' (there is no TPP_TOK_ENOENT).
-	 * Instead, this error is used internally to indicate that a file could
-	 * not be opened, however TPP may inherently handle this by trying to
-	 * use some other filename in order to open a file. e.g.: when you have
-	 * specified multiple system include paths, and TPP is parsing a line
-	 * such as:
-	 * >> #include <stdio.h>
-	 *
-	 * When it will try to open the following files (in order) and stop the
-	 * first time one of these open calls succeeds:
-	 * - tpp_io_open("/home/me/projects/tpp/stdio.h")
-	 * - tpp_io_open("/usr/local/include/stdio.h")
-	 * - tpp_io_open("/usr/include/stdio.h")
-	 *
-	 * Even if all of those calls fail, you will NOT see this error escape
-	 * out of the handler for #include-directives. At that point, TPP will
-	 * instead trigger the appropriate tpp_lexer_warnf() warning, which
-	 * might then return "TPP_ELEXERROR". And it will be **that** error
-	 * that will be propagated out of `tpp_lexer_yield()'; not TPP_ENOENT */
-	TPP_ENOENT = -_TPP_ERRCODE_NOENT,
-
-
-
-#if TPP_HAVE_FILE_NONBLOCK
-	/* --------------------------------------------------------------------
-	 * SOFT_ERROR: TPP_EWOULDBLOCK
-	 * --------------------------------------------------------------------
-	 *
-	 * Operation would block, but non-blocking was requested
-	 *
-	 * You will only see this error if you made use of "TPP_HAVE_FILE_NONBLOCK"
-	 * This is a temporary error that means that the next token cannot be read
-	 * *right now* because reading from the underlying I/O file would block.
-	 *
-	 * -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
-	 * -> You will not see this error when not using the "TPP_FILE_IOFLAGS_NONBLOCK" flag */
-	TPP_EWOULDBLOCK = -_TPP_ERRCODE_WOULDBLOCK,
-#endif /* TPP_HAVE_FILE_NONBLOCK */
-
-
-
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
-	/* --------------------------------------------------------------------
-	 * SOFT_ERROR: TPP_EMASKED
-	 * --------------------------------------------------------------------
-	 *
-	 * File cannot be opened because it has been masked. Used internally to
-	 * describe a file that exists, but should not be included (again) due
-	 * to a `#pragma once', or because `#import' is being used (and had
-	 * already been used once before) */
-	TPP_EMASKED = -_TPP_ERRCODE_MASKED,
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-
-
-
-#if TPP_HAVE_WARNINGS
-	/* --------------------------------------------------------------------
-	 * SOFT_ERROR / HARD_ERROR: TPP_ELEXERROR
-	 * --------------------------------------------------------------------
-	 *
-	 * Hard lexer error (usually when too many -Werror were emitted)
-	 *
-	 * This error should be treated as a HARD_ERROR in most cases, in that
-	 * it should be propagated. However, since it is always generated by
-	 * TPP itself, you *could* in theory also change lexer configuration
-	 * and re-try the failing operation (though if you do that, you will
-	 * probably run into the same error again) */
-	TPP_ELEXERROR = -_TPP_ERRCODE_LEXERROR,
-
-	/* --------------------------------------------------------------------
-	 * HARD_ERROR: TPP_EIO
-	 * --------------------------------------------------------------------
-	 *
-	 * Printer registered for "tpp_lexer_warnf" returned an error.
-	 * Since this error is not related to TPP itself, this error should
-	 * be propagated. */
-	TPP_EWARNPRINT = -_TPP_ERRCODE_WARNPRINT,
-#endif /* TPP_HAVE_WARNINGS */
-
-
-	TPP_ELAST = (-_TPP_ERRCODE_COUNT) + 1, /* Last defined error number */
-} tpp_errno;
-
-
-
-#if TPP_HAVE_STRERROR
-/* Return a human-readable descriptor of "error" */
-TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_strerror(tpp_errno error);
-#endif /* TPP_HAVE_STRERROR */
-
-TPP_DECL_END
 /************************************************************************/
 
 /************************************************************************/
@@ -8225,8 +8255,8 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
 
 /* Print the representation of "self" to "printer" (used to implement __TPP_EVAL)
- * @return: * : Sum of positive return value of `printer'
- * @return: (tpp_ssize)TPP_ISERR(*): An error was thrown, or `printer' returned this value */
+ * @return: *  : Sum of positive return value of `printer'
+ * @return: < 0: An error was thrown (TPP_SSIZE_ISERR), or `printer' returned this value */
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
@@ -12711,7 +12741,7 @@ typedef struct tpp_file {
 #else /* TPP_HAVE_FILE_KEEPPOS */
 #define _tpp_file_init_io_keep(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
-			tpp_io_handle    TPP_INTERNAL(tff_file);     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file (set to tpp_io_handle_INVALID after EOF) */
+			tpp_io_handle    TPP_INTERNAL(tff_file);     /* [owned_if(!TPP_FILE_IOFLAGS_NOCLOSE)] Underlying I/O file */
 #if TPP_HAVE_FILE_IOFLAGS
 			tpp_file_ioflags TPP_INTERNAL(tff_flags);    /* File flags (set of `TPP_FILE_IOFLAGS_*') */
 #endif /* TPP_HAVE_FILE_IOFLAGS */
@@ -15811,19 +15841,23 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
 
 
 #if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
+/* Special token IDs for include paths */
+#define TPP_TOK_INCPATH_DQUOTE TPP_TOK_OFCHAR('"') /* #include "foo.h" */
+#define TPP_TOK_INCPATH_LANGLE TPP_TOK_OFCHAR('<') /* #include <foo.h> */
+
 /* (Mostly) the same as "tpp_lexer_yield()", except:
  * - Never process preprocessor directives (but macros are still expanded)
  * - If the next token starts with '"' or '<', parse it as a #include-string,
  *   with the token's start/end bounds pointing at the string's bounds. In
  *   this case, the token's ID (and return value) is:
- *   - TPP_TOK_OFCHAR('"')  // For #include "foo.h"
- *   - TPP_TOK_OFCHAR('<')  // For #include <foo.h>
+ *   - TPP_TOK_INCPATH_DQUOTE  // For #include "foo.h"
+ *   - TPP_TOK_INCPATH_LANGLE  // For #include <foo.h>
  * - WARNING: This function doesn't filter SPACE/LF/COMMENT tokens
  *   (behaves as though 'TPP_LEXER_STATE_FLAG_ALLTOKENS' was set)
  *
  * @return: * : Some other token encountered (token was parsed like tpp_lexer_yieldraw())
- * @return: TPP_TOK_OFCHAR('"'): #include-string parsed: "foo.h"
- * @return: TPP_TOK_OFCHAR('<'): #include-string parsed: <foo.h>
+ * @return: TPP_TOK_INCPATH_DQUOTE: #include-string parsed: "foo.h"
+ * @return: TPP_TOK_INCPATH_LANGLE: #include-string parsed: <foo.h>
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
@@ -15856,10 +15890,11 @@ tpp_lexer_yield_include_string_blocking(tpp_lexer *tpp_restrict self);
 	tpp_lexer_yieldraw_at_include_string(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
 #endif /* TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
+
 #if TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
 /* Decode the current token as a #include-string. The caller is responsible to
  * ensure that the current token was loaded by `tpp_lexer_yield_include_string()'
- * and is either TPP_TOK_OFCHAR('<') or TPP_TOK_OFCHAR('"')
+ * and is either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers */
@@ -15874,12 +15909,26 @@ tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
-                                   tpp_errno (TPPCALL *cb)(void *arg, tpp_char const *str, tpp_size length),
+                                   tpp_errno (TPPCALL *cb)(void *arg, char const *str, tpp_size length),
                                    void *arg);
 #endif /* TPP_HAVE_LEXER_DECODE_INCLUDE_STRING */
 
 
 #if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+/* Enumerate #include-paths according to "mode"
+ * @param: mode: #include-mode (either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE)
+ * @param: cb:   Callback invoked for each available #include-path. The first time
+ *               this callback returns something other than TPP_ENOENT, that return
+ *               value is propagated.
+ * @param: arg:  Cookie for "cb"
+ * @return: * :  The first non-TPP_ENOENT return value of "cb"
+ * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
+ *                      invocations of "cb" returned "TPP_ENOENT".  */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id mode,
+                               tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
+                               void *arg);
+
 /* Wrapper around `tpp_lexer_decode_include_string_cb()' that automatically
  * does the necessary calls to `tpp_lexer_openfile_ex()'. It also handles
  * the `TPP_ENOENT' (as far as possible) by continuing to search for other
@@ -16233,10 +16282,10 @@ tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
- * @return: (tpp_ssize)TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                                     a lexer error happened (s.a. `tpp_lexer_warnf()').
- * @return: (tpp_ssize)TPP_ENOMEM:     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
- * @return: (tpp_ssize)TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
+ *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
+ * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
 tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
                        tpp_formatprinter data_printer,
@@ -16273,11 +16322,11 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
- * @return: (tpp_ssize)TPP_ELEXERROR:   Either one of the printers returned this value, or
- *                                      a lexer error happened (s.a. `tpp_lexer_warnf()').
- * @return: (tpp_ssize)TPP_ENOMEM:      Out of memory
- * @return: (tpp_ssize)TPP_EIO:         I/O error while yielding to next token
- * @return: (tpp_ssize)TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
+ *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
+ * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
 tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
                          tpp_formatprinter data_printer,

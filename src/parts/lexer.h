@@ -1002,19 +1002,23 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
 
 
 #if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
+/* Special token IDs for include paths */
+#define TPP_TOK_INCPATH_DQUOTE TPP_TOK_OFCHAR('"') /* #include "foo.h" */
+#define TPP_TOK_INCPATH_LANGLE TPP_TOK_OFCHAR('<') /* #include <foo.h> */
+
 /* (Mostly) the same as "tpp_lexer_yield()", except:
  * - Never process preprocessor directives (but macros are still expanded)
  * - If the next token starts with '"' or '<', parse it as a #include-string,
  *   with the token's start/end bounds pointing at the string's bounds. In
  *   this case, the token's ID (and return value) is:
- *   - TPP_TOK_OFCHAR('"')  // For #include "foo.h"
- *   - TPP_TOK_OFCHAR('<')  // For #include <foo.h>
+ *   - TPP_TOK_INCPATH_DQUOTE  // For #include "foo.h"
+ *   - TPP_TOK_INCPATH_LANGLE  // For #include <foo.h>
  * - WARNING: This function doesn't filter SPACE/LF/COMMENT tokens
  *   (behaves as though 'TPP_LEXER_STATE_FLAG_ALLTOKENS' was set)
  *
  * @return: * : Some other token encountered (token was parsed like tpp_lexer_yieldraw())
- * @return: TPP_TOK_OFCHAR('"'): #include-string parsed: "foo.h"
- * @return: TPP_TOK_OFCHAR('<'): #include-string parsed: <foo.h>
+ * @return: TPP_TOK_INCPATH_DQUOTE: #include-string parsed: "foo.h"
+ * @return: TPP_TOK_INCPATH_LANGLE: #include-string parsed: <foo.h>
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
@@ -1047,10 +1051,11 @@ tpp_lexer_yield_include_string_blocking(tpp_lexer *tpp_restrict self);
 	tpp_lexer_yieldraw_at_include_string(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
 #endif /* TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
+
 #if TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
 /* Decode the current token as a #include-string. The caller is responsible to
  * ensure that the current token was loaded by `tpp_lexer_yield_include_string()'
- * and is either TPP_TOK_OFCHAR('<') or TPP_TOK_OFCHAR('"')
+ * and is either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers */
@@ -1065,12 +1070,26 @@ tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
-                                   tpp_errno (TPPCALL *cb)(void *arg, tpp_char const *str, tpp_size length),
+                                   tpp_errno (TPPCALL *cb)(void *arg, char const *str, tpp_size length),
                                    void *arg);
 #endif /* TPP_HAVE_LEXER_DECODE_INCLUDE_STRING */
 
 
 #if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+/* Enumerate #include-paths according to "mode"
+ * @param: mode: #include-mode (either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE)
+ * @param: cb:   Callback invoked for each available #include-path. The first time
+ *               this callback returns something other than TPP_ENOENT, that return
+ *               value is propagated.
+ * @param: arg:  Cookie for "cb"
+ * @return: * :  The first non-TPP_ENOENT return value of "cb"
+ * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
+ *                      invocations of "cb" returned "TPP_ENOENT".  */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id mode,
+                               tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
+                               void *arg);
+
 /* Wrapper around `tpp_lexer_decode_include_string_cb()' that automatically
  * does the necessary calls to `tpp_lexer_openfile_ex()'. It also handles
  * the `TPP_ENOENT' (as far as possible) by continuing to search for other
@@ -1424,10 +1443,10 @@ tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
- * @return: (tpp_ssize)TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                                     a lexer error happened (s.a. `tpp_lexer_warnf()').
- * @return: (tpp_ssize)TPP_ENOMEM:     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
- * @return: (tpp_ssize)TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
+ *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
+ * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
 tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
                        tpp_formatprinter data_printer,
@@ -1464,11 +1483,11 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
- * @return: (tpp_ssize)TPP_ELEXERROR:   Either one of the printers returned this value, or
- *                                      a lexer error happened (s.a. `tpp_lexer_warnf()').
- * @return: (tpp_ssize)TPP_ENOMEM:      Out of memory
- * @return: (tpp_ssize)TPP_EIO:         I/O error while yielding to next token
- * @return: (tpp_ssize)TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
+ *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
+ * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
 tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
                          tpp_formatprinter data_printer,

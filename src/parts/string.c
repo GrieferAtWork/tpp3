@@ -142,8 +142,8 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,
 }
 
 /* Print "text" into "tpp_string_builder *self"
- * @return: num_bytes:             Success
- * @return: (tpp_ssize)TPP_ENOMEM: Out of memory */
+ * @return: num_bytes:                   Success
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes) {
 	tpp_string_builder *me = (tpp_string_builder *)arg;
 	tpp_char *dst = tpp_string_builder_alloc(me, num_bytes);
@@ -152,7 +152,7 @@ TPP_IMPL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, tex
 	tpp_memcpy(dst, text, num_bytes);
 	return (tpp_ssize)num_bytes;
 err_nomem:
-	return (tpp_ssize)TPP_ENOMEM;
+	return TPP_SSIZE_OFERR(TPP_ENOMEM);
 }
 
 

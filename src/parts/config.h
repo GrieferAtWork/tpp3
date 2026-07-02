@@ -135,10 +135,9 @@
  * -1: Enable if possible (re-defined to `0' if unsupported) */
 /************************************************************************/
 
-/* Enable support for non-blocking I/O
- * Configure to "-1" to only enable compile-time support if supported by OS */
+/* Enable support for non-blocking I/O */
 #ifndef TPP_HAVE_FILE_NONBLOCK
-#define TPP_HAVE_FILE_NONBLOCK (TPP_HAVE_PROFILE_NOT_MINIMAL ? -1 : 0)
+#define TPP_HAVE_FILE_NONBLOCK (TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_OS_WINDOWS || TPP_OS_UNIX))
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 /* Enable support for:
@@ -2560,7 +2559,8 @@ print("#endif /" "* !... *" "/");
 	 TPP_HAVE_CPP_EMBED ||                 \
 	 TPP_HAVE_MACRO___has_include ||       \
 	 TPP_HAVE_MACRO___has_include_next ||  \
-	 TPP_HAVE_MACRO___has_embed)
+	 TPP_HAVE_MACRO___has_embed ||         \
+	 TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
 #endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
 
 /* Provide a function "tpp_lexer_decode_include_string()"
@@ -2982,6 +2982,9 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON
 #define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON (TPP_HAVE_WARNINGS && (TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING))
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC */
 #ifndef TPP_HAVE_TPP_W_ERROR
 #define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_ERROR || TPP_HAVE_PRAGMA_ERROR || TPP_HAVE_PRAGMA_GCC_ERROR))
 #endif /* !TPP_HAVE_TPP_W_ERROR */
@@ -3086,13 +3089,9 @@ print("#endif /" "* !... *" "/");
 	 TPP_CONF_MAYBE_0(TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR))
 #endif /* !TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_STRING
-#if 1
-#define TPP_HAVE_TPP_W_EXPECTED_STRING \
-	(TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE)
-#else
-#define TPP_HAVE_TPP_W_EXPECTED_STRING \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_PRAGMA_PUSH_MACRO || ...))
-#endif
+#define TPP_HAVE_TPP_W_EXPECTED_STRING                   \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE && \
+	 (TPP_HAVE_PRAGMA_PUSH_MACRO || 1 /*TODO*/))
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
 #define TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING \

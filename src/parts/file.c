@@ -790,8 +790,8 @@ amend_tail_data:
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 	/* Check for errors that may have happened during the read */
-	if (read_status < 0)
-		return (tpp_errno)read_status;
+	if (TPP_SSIZE_ISERR(read_status))
+		return TPP_SSIZE_ASERR(read_status);
 
 	/* Detect codec + convert to utf-8 */
 #if TPP_HAVE_UNICODE
@@ -801,53 +801,53 @@ amend_tail_data:
 			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = 0;
 
 			/* Detect BOM and multi-byte encodings */
-			if (read_status >= 3 && (io_dst[0] == 0xef && io_dst[1] == 0xbb && io_dst[2] == 0xbf)) {
+			if ((tpp_size)read_status >= 3 && (io_dst[0] == 0xef && io_dst[1] == 0xbb && io_dst[2] == 0xbf)) {
 				read_status -= 3; /* UTF-8-BOM */
 				tpp_memmovedown(io_dst, io_dst + 3, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_FORCE_UTF8;
 				if tpp_unlikely(read_status == 0)
 					goto again;
-			} else if (read_status >= 4 && (io_dst[0] == 0x00 && io_dst[1] == 0x00 &&
-			                                io_dst[2] == 0xfe && io_dst[3] == 0xff)) {
+			} else if ((tpp_size)read_status >= 4 && (io_dst[0] == 0x00 && io_dst[1] == 0x00 &&
+			                                          io_dst[2] == 0xfe && io_dst[3] == 0xff)) {
 				read_status -= 4; /* UTF-32-BE-BOM */
 				tpp_memmovedown(io_dst, io_dst + 4, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF32_BE;
 				goto convert_multiword_to_utf8;
-			} else if (read_status >= 4 && (io_dst[0] == 0xff && io_dst[1] == 0xfe &&
-			                                io_dst[2] == 0x00 && io_dst[3] == 0x00)) {
+			} else if ((tpp_size)read_status >= 4 && (io_dst[0] == 0xff && io_dst[1] == 0xfe &&
+			                                          io_dst[2] == 0x00 && io_dst[3] == 0x00)) {
 				read_status -= 4; /* UTF-32-LE-BOM */
 				tpp_memmovedown(io_dst, io_dst + 4, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF32_LE;
 				goto convert_multiword_to_utf8;
-			} else if (read_status >= 2 && (io_dst[0] == 0xfe && io_dst[1] == 0xff)) {
+			} else if ((tpp_size)read_status >= 2 && (io_dst[0] == 0xfe && io_dst[1] == 0xff)) {
 				read_status -= 2; /* UTF-16-BE-BOM */
 				tpp_memmovedown(io_dst, io_dst + 2, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF16_BE;
 				goto convert_multiword_to_utf8;
-			} else if (read_status >= 2 && (io_dst[0] == 0xff && io_dst[1] == 0xfe)) {
+			} else if ((tpp_size)read_status >= 2 && (io_dst[0] == 0xff && io_dst[1] == 0xfe)) {
 				read_status -= 2; /* UTF-16-LE-BOM */
 				tpp_memmovedown(io_dst, io_dst + 2, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF16_LE;
 				goto convert_multiword_to_utf8;
 			} else {
 				/* Guess multi-byte encodings based on present 0-bytes in first 2 characters */
-				if (read_status >= 8 && (io_dst[0] && !io_dst[1] && !io_dst[2] && !io_dst[3] &&
-				                         io_dst[4] && !io_dst[5] && !io_dst[6] && !io_dst[7])) {
+				if ((tpp_size)read_status >= 8 && (io_dst[0] && !io_dst[1] && !io_dst[2] && !io_dst[3] &&
+				                                   io_dst[4] && !io_dst[5] && !io_dst[6] && !io_dst[7])) {
 					self->tf_enc = TPP_FILE_ENCODING_UTF32_LE;
 					goto convert_multiword_to_utf8;
 				}
-				if (read_status >= 8 && (!io_dst[0] && !io_dst[1] && !io_dst[2] && io_dst[3] &&
-				                         !io_dst[4] && !io_dst[5] && !io_dst[6] && io_dst[7])) {
+				if ((tpp_size)read_status >= 8 && (!io_dst[0] && !io_dst[1] && !io_dst[2] && io_dst[3] &&
+				                                   !io_dst[4] && !io_dst[5] && !io_dst[6] && io_dst[7])) {
 					self->tf_enc = TPP_FILE_ENCODING_UTF32_BE;
 					goto convert_multiword_to_utf8;
 				}
-				if (read_status >= 4 && (io_dst[0] && !io_dst[1] &&
-				                         io_dst[2] && !io_dst[3])) {
+				if ((tpp_size)read_status >= 4 && (io_dst[0] && !io_dst[1] &&
+				                                   io_dst[2] && !io_dst[3])) {
 					self->tf_enc = TPP_FILE_ENCODING_UTF16_LE;
 					goto convert_multiword_to_utf8;
 				}
-				if (read_status >= 4 && (!io_dst[0] && io_dst[1] &&
-				                         !io_dst[2] && io_dst[3])) {
+				if ((tpp_size)read_status >= 4 && (!io_dst[0] && io_dst[1] &&
+				                                   !io_dst[2] && io_dst[3])) {
 					self->tf_enc = TPP_FILE_ENCODING_UTF16_BE;
 					goto convert_multiword_to_utf8;
 				}
@@ -962,7 +962,7 @@ convert_multiword_to_utf8:
 	case TPP_FILE_ENCODING_EMBED: {
 		tpp_char *dst_base, *dst_end;
 		tpp_size out_size;
-		if ((tpp_uintmax)read_status > self->tf_data.td_io.tff_encdat.tffed_embedlimit)
+		if ((tpp_uintmax)(tpp_size)read_status > self->tf_data.td_io.tff_encdat.tffed_embedlimit)
 			read_status = (tpp_size)self->tf_data.td_io.tff_encdat.tffed_embedlimit;
 		self->tf_data.td_io.tff_encdat.tffed_embedlimit -= (tpp_size)read_status;
 		if tpp_unlikely(read_status == 0)

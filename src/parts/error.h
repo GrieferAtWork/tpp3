@@ -22,7 +22,6 @@
 
 #include "api.h"
 #include "config.h"
-#include "file-io.h" /* Needed for "TPP_HAVE_FILE_NONBLOCK == -1" override */
 
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
@@ -49,7 +48,7 @@ enum {
 /* NOTE: "[SOFT_ERROR]" are "temporary" errors that are intended to-be recovered from.
  *       These errors should be caught & dealt with at appropriate points in the code. */
 typedef enum tpp_errno {
-#define TPP_ISERR(error) ((error) != TPP_EOK)
+#define TPP_ISERR(error)     ((error) != TPP_EOK)
 
 	/* --------------------------------------------------------------------
 	 * NO_ERROR: TPP_EOK
@@ -159,7 +158,7 @@ typedef enum tpp_errno {
 	TPP_ELEXERROR = -_TPP_ERRCODE_LEXERROR,
 
 	/* --------------------------------------------------------------------
-	 * HARD_ERROR: TPP_EIO
+	 * HARD_ERROR: TPP_EWARNPRINT
 	 * --------------------------------------------------------------------
 	 *
 	 * Printer registered for "tpp_lexer_warnf" returned an error.
@@ -173,10 +172,30 @@ typedef enum tpp_errno {
 } tpp_errno;
 
 
+/* Helper macros for embedding error codes in "tpp_ssize" values. */
+#define /*tpp_ssize*/ TPP_SSIZE_OFERR(/*tpp_errno*/ e) ((tpp_ssize)(int)(e))
+#define /*tpp_errno*/ TPP_SSIZE_ASERR(/*tpp_ssize*/ v) ((tpp_errno)(int)(v))
+#if 1
+#define /*tpp_errno*/ TPP_SSIZE_ASERR_OR_EOK(/*tpp_ssize*/ v) ((tpp_errno)(int)(v))
+#else
+#define /*tpp_errno*/ TPP_SSIZE_ASERR_OR_EOK(/*tpp_ssize*/ v) ((v) == 0 ? TPP_EOK : (tpp_errno)(int)(v))
+#endif
+#if TPP_DEBUG
+#define /*bool*/ TPP_SSIZE_ISERR(/*tpp_ssize*/ v) \
+	(((v) < 0) ? (tpp_assert((tpp_size)(v) >= (tpp_size)TPP_SSIZE_OFERR(TPP_ELAST)), 1) : 0)
+#define /*bool*/ TPP_SSIZE_ISERR_OR_EOK(/*tpp_ssize*/ v) \
+	((v) <= 0 ? (tpp_assert((v) >= TPP_SSIZE_OFERR(TPP_ELAST)), 1) : 0)
+#else /* TPP_DEBUG */
+#define /*bool*/ TPP_SSIZE_ISERR(/*tpp_ssize*/ v) ((v) < 0)
+#define /*bool*/ TPP_SSIZE_ISERR_OR_EOK(/*tpp_ssize*/ v) ((v) <= 0)
+#endif /* !TPP_DEBUG */
+
+
 
 #if TPP_HAVE_STRERROR
 /* Return a human-readable descriptor of "error" */
-TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_strerror(tpp_errno error);
+TPP_DECL TPP_CONSTCALL TPP_RETNONNULL TPP_WUNUSED
+char const *TPPCALL tpp_strerror(tpp_errno error);
 #endif /* TPP_HAVE_STRERROR */
 
 TPP_DECL_END

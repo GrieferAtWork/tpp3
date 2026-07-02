@@ -84,6 +84,26 @@
 /* HOST COMPILER/SYSTEM/OS CONFIGURATION: TPP_HOST_*                    */
 /************************************************************************/
 
+/* Define if host OS is like windows */
+#ifndef TPP_OS_WINDOWS
+#if (defined(_WIN64) || defined(WIN64) || \
+     defined(_WIN32) || defined(WIN32) || defined(__WIN32__))
+#define TPP_OS_WINDOWS 1
+#else /* ... */
+#define TPP_OS_WINDOWS 0
+#endif /* !... */
+#endif /* !TPP_OS_WINDOWS */
+
+/* Define if host OS is like unix */
+#ifndef TPP_OS_UNIX
+#if (defined(__unix__) || defined(__unix) || defined(unix) || \
+     defined(__posix__) || defined(__posix) || defined(posix))
+#define TPP_OS_UNIX 1
+#else /* ... */
+#define TPP_OS_UNIX 0
+#endif /* !... */
+#endif /* !TPP_OS_UNIX */
+
 /* >> #define TPP_HOST_NO_SYSTEM_INCLUDES 1
  * Prevent TPP sources from doing `#include <foo.h>' -- instead, you must
  * pre-include any dependencies yourself before #include-ing TPP sources */

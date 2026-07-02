@@ -246,6 +246,34 @@ tpp_assertions_assert(tpp_assertions *tpp_restrict self,
 	return TPP_EOK;
 }
 
+static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+tpp_assertions_fixtable(tpp_assertions *tpp_restrict self) {
+	tpp_hash i;
+	bool result = false;
+	for (i = 0; i <= self->tass_bckm; ++i) {
+		tpp_assertion *ent = &self->tass_bckv[i];
+		tpp_keyword const *kwd = ent->tas_value;
+		if (kwd) {
+			tpp_hash const hash = kwd->tk_hash;
+			tpp_hash hs, perturb;
+			for (tpp_assertions_hashinit(&hs, &perturb, hash, self->tass_bckm);;
+				 tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm)) {
+				tpp_assertion *ent2 = &self->tass_bckv[hs & self->tass_bckm];
+				tpp_assert((ent2->tas_value == ent->tas_value) == (ent2 == ent));
+				if (ent2->tas_value == NULL) {
+					ent2->tas_value = kwd;
+					ent->tas_value = NULL;
+					result = true;
+					break;
+				} else if (ent2 == ent) {
+					break;
+				}
+			}
+		}
+	}
+	return result;
+}
+
 /* Unassert a given "value" within "self".
  * @return: true:  Assertion was removed
  * @return: false: Assertion didn't exist in the first place */
@@ -275,6 +303,10 @@ tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
 		*ent = *next;
 		ent = next;
 	} while (ent->tas_value);
+
+	/* Fix hash table errors until there are no more. */
+	while (tpp_assertions_fixtable(self))
+		;
 
 	/* Update assertion counter */
 	--self->tass_assc;
@@ -1713,10 +1745,12 @@ got_result_kwd:
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
 	/* Try to open the file */
-	handle = tpp_io_open(tpp_lexer_openfile_keyword_cstr(result_kwd));
-	if (handle == tpp_io_handle_INVALID) {
-		tpp_lexer_openfile_keyword_free(result_kwd);
-		return TPP_ENOENT;
+	{
+		tpp_errno error = tpp_io_open(tpp_lexer_openfile_keyword_cstr(result_kwd), &handle);
+		if (TPP_ISERR(error)) {
+			tpp_lexer_openfile_keyword_free(result_kwd);
+			return error; /* Probably TPP_ENOENT */
+		}
 	}
 
 	/* Initialize remaining fields of "result_kwd" and insert into keyword map */
@@ -1736,6 +1770,8 @@ got_result_kwd:
 			tpp_io_close(handle);
 			goto err_nomem;
 		}
+
+		/* TODO: Call a user-defined callback to keep track of dependencies (for -MF) */
 	}
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
@@ -1745,7 +1781,7 @@ got_result_kwd:
 #else /* TPP_HAVE_USER_KEYWORDS */
 	result->tlofr_filename = result_kwd;
 #endif /* !TPP_HAVE_USER_KEYWORDS */
-	result->tlofr_handle   = handle;
+	result->tlofr_handle = handle;
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;

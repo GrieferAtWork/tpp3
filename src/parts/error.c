@@ -30,8 +30,8 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_STRERROR
 /* Return a human-readable descriptor of "error" */
-TPP_IMPL TPP_WUNUSED char const *TPPCALL
-tpp_strerror(tpp_errno error) {
+TPP_IMPL TPP_CONSTCALL TPP_RETNONNULL TPP_WUNUSED
+char const *TPPCALL tpp_strerror(tpp_errno error) {
 	switch (error) {
 	case TPP_EOK:
 		return "Success";

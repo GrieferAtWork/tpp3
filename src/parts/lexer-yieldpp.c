@@ -1690,8 +1690,8 @@ again:
 #else /* TPP_HAVE_FILE_NONBLOCK */
 	read_status = tpp_io_read(ioh, buf, count);
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
-	if (read_status < 0)
-		return (tpp_errno)read_status;
+	if (TPP_SSIZE_ISERR(read_status))
+		return TPP_SSIZE_ASERR(read_status);
 	if (read_status == 0)
 		return TPP_EOK;
 	limit -= (tpp_size)read_status;
@@ -1749,8 +1749,8 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 #else /* TPP_HAVE_FILE_NONBLOCK */
 	ofr_read_status = tpp_io_read(self->teb_ofr.tlofr_handle, &ofr_first_byte, 1);
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
-	if (ofr_read_status < 0) {
-		result = TPP_TOK_OFERR((tpp_errno)ofr_read_status);
+	if (TPP_SSIZE_ISERR(ofr_read_status)) {
+		result = TPP_TOK_OFERR(TPP_SSIZE_ASERR(ofr_read_status));
 		goto return_result_and_fini;
 	}
 

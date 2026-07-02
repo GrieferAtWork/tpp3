@@ -168,14 +168,14 @@ again:
  * - If the next token starts with '"' or '<', parse it as a #include-string,
  *   with the token's start/end bounds pointing at the string's bounds. In
  *   this case, the token's ID (and return value) is:
- *   - TPP_TOK_OFCHAR('"')  // For #include "foo.h"
- *   - TPP_TOK_OFCHAR('<')  // For #include <foo.h>
+ *   - TPP_TOK_INCPATH_DQUOTE  // For #include "foo.h"
+ *   - TPP_TOK_INCPATH_LANGLE  // For #include <foo.h>
  * - WARNING: This function doesn't filter SPACE/LF/COMMENT tokens
  *   (behaves as though 'TPP_LEXER_STATE_FLAG_ALLTOKENS' was set)
  *
  * @return: * : Some other token encountered (token was parsed like tpp_lexer_yieldraw())
- * @return: TPP_TOK_OFCHAR('"'): #include-string parsed: "foo.h"
- * @return: TPP_TOK_OFCHAR('<'): #include-string parsed: <foo.h>
+ * @return: TPP_TOK_INCPATH_DQUOTE: #include-string parsed: "foo.h"
+ * @return: TPP_TOK_INCPATH_LANGLE: #include-string parsed: <foo.h>
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_IOFLAGS_NONBLOCK" and operation would have blocked
@@ -202,7 +202,7 @@ again:
 #if TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
 /* Decode the current token as a #include-string. The caller is responsible to
  * ensure that the current token was loaded by `tpp_lexer_yield_include_string()'
- * and is either TPP_TOK_OFCHAR('<') or TPP_TOK_OFCHAR('"')
+ * and is either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers */
@@ -320,7 +320,7 @@ err_temp:
 }
 
 struct tpp_lexer_decode_include_string_cb_single_data {
-	tpp_errno (TPPCALL *tldiscsd_cb)(void *arg, tpp_char const *str, tpp_size length);
+	tpp_errno (TPPCALL *tldiscsd_cb)(void *arg, char const *str, tpp_size length);
 	void               *tldiscsd_arg;
 };
 
@@ -329,7 +329,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decode_include_string_cb_single, arg, 
 	struct tpp_lexer_decode_include_string_cb_single_data *data;
 	data = (struct tpp_lexer_decode_include_string_cb_single_data *)arg;
 	tpp_assert(data->tldiscsd_cb && "Multiple invocations, or no callback given");
-	result = (*data->tldiscsd_cb)(data->tldiscsd_arg, text, num_bytes);
+	result = (*data->tldiscsd_cb)(data->tldiscsd_arg, (char const *)text, num_bytes);
 #if TPP_DEBUG
 	data->tldiscsd_cb = NULL;
 #endif /* TPP_DEBUG */
@@ -352,13 +352,13 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decode_include_string_count_cb, arg, t
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
-                                   tpp_errno (TPPCALL *cb)(void *arg, tpp_char const *str, tpp_size length),
+                                   tpp_errno (TPPCALL *cb)(void *arg, char const *str, tpp_size length),
                                    void *arg) {
 #if (TPP_CONF_MAYBE_1(TPP_HAVE_BSE) || TPP_CONF_MAYBE_1(TPP_HAVE_TRIGRAPHS))
 	tpp_ssize count = tpp_lexer_decode_include_string(self, &tpp_lexer_decode_include_string_count_cb, NULL);
 	tpp_assert(count >= 0);
 	if tpp_unlikely(count == 0)
-		return (*cb)(arg, (tpp_char const *)"", 0);
+		return (*cb)(arg, "", 0);
 	if tpp_unlikely(count > 1) {
 		/* Complicated case: multi-chunk #include-string */
 		tpp_errno result;
@@ -367,12 +367,12 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 		TPP_REF tpp_string *string;
 		tpp_string_builder_init(&builder);
 		status = tpp_lexer_decode_include_string(self, &tpp_string_builder_print, &builder);
-		if tpp_unlikely(status < 0) {
+		if tpp_unlikely(TPP_SSIZE_ISERR(status)) {
 			tpp_string_builder_fini(&builder);
-			return (tpp_errno)status;
+			return TPP_SSIZE_ASERR(status);
 		}
 		string = tpp_string_builder_pack(&builder);
-		result = (*cb)(arg, tpp_string_str(string), tpp_string_len(string));
+		result = (*cb)(arg, tpp_string_cstr(string), tpp_string_len(string));
 		tpp_string_decref(string);
 		return result;
 	} else
@@ -384,74 +384,48 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 		data.tldiscsd_cb  = cb;
 		data.tldiscsd_arg = arg;
 		result = tpp_lexer_decode_include_string(self, &tpp_lexer_decode_include_string_cb_single, &data);
-		return (tpp_errno)result;
+		tpp_assert(TPP_SSIZE_ISERR_OR_EOK(result));
+		return TPP_SSIZE_ASERR_OR_EOK(result);
 	}
 }
 #endif /* TPP_HAVE_LEXER_DECODE_INCLUDE_STRING */
 
 
 #if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
-struct tpp_lexer_open_include_string_data {
-	tpp_lexer                 *tloisd_lexer;      /* [1..1] lexer */
-	tpp_lexer_openfile_result *tloisd_result;     /* [1..1] Openfile result */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
-	tpp_lexer_openfile_flags   tloisd_mask_flags; /* Mask flags */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-};
-
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
-#define tpp_do_lexer_openfile(relative_to) \
-	tpp_lexer_openfile_ex(self, relative_to, (char const *)str, length, result, mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-#define tpp_do_lexer_openfile(relative_to) \
-	tpp_lexer_openfile(self, relative_to, (char const *)str, length, result)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
 
 #if TPP_HAVE_INCLUDE_PATH
 /* Try to open "str" in "paths"; returns TPP_ENOENT if not found */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_open_include_string_in_path_ex(tpp_lexer *self,
-                                         tpp_include_path_list const *paths,
-                                         tpp_char const *str, tpp_size length,
-                                         tpp_lexer_openfile_result *result,
-                                         tpp_lexer_openfile_flags mask_flags)
-#define tpp_lexer_open_include_string_in_path(self, paths, str, length, result) \
-	tpp_lexer_open_include_string_in_path_ex(self, paths, str, length, result, mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_open_include_string_in_path(tpp_lexer *self,
-                                      tpp_include_path_list const *paths,
-                                      tpp_char const *str, tpp_size length,
-                                      tpp_lexer_openfile_result *result)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
-{
+tpp_lexer_foreach_include_path_in_list(tpp_include_path_list const *paths,
+                                       tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
+                                       void *arg) {
 	tpp_size i;
+	tpp_errno result = TPP_ENOENT;
 	for (i = 0; i < paths->tipl_size; ++i) {
 		tpp_include_path_entry const *entry = &paths->tipl_list[i];
 		char const *path = _tpp_include_path_entry_getpath(entry);
-		tpp_errno error = tpp_do_lexer_openfile(path);
-		if (error != TPP_ENOENT)
-			return error;
+		result = (*cb)(arg, path);
+		if (result != TPP_ENOENT)
+			break;
 	}
-	return TPP_ENOENT;
+	return result;
 }
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
-static tpp_errno TPPCALL
-tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length) {
+/* Enumerate #include-paths according to "mode"
+ * @param: mode: #include-mode (either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE)
+ * @param: cb:   Callback invoked for each available #include-path. The first time
+ *               this callback returns something other than TPP_ENOENT, that return
+ *               value is propagated.
+ * @param: arg:  Cookie for "cb"
+ * @return: * :  The first non-TPP_ENOENT return value of "cb"
+ * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
+ *                      invocations of "cb" returned "TPP_ENOENT".  */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id mode,
+                               tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
+                               void *arg) {
 	tpp_errno error;
-	struct tpp_lexer_open_include_string_data *const data = (struct tpp_lexer_open_include_string_data *)arg;
-	tpp_lexer *const self = data->tloisd_lexer;
-	tpp_token_id const mode = tpp_lexer_gettok(self);
-	tpp_lexer_openfile_result *const result = data->tloisd_result;
-	tpp_lexer_openfile_flags const mask_flags = data->tloisd_mask_flags;
-
-	/* Check for special case: if the given filename is absolute,
-	 * then we can skip all the include-path resolution! */
-	if (TPP_FS_ISABS(str, length))
-		return tpp_do_lexer_openfile(NULL);
-
 	tpp_assert(mode == '<' || mode == '"');
 	if (mode == '"') {
 		/* Try to open files relative to the current #include-stack */
@@ -470,13 +444,9 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
 			{
 				char const *filename = file->tf_data.td_io.tff_name;
 				if (filename) {
-					error = tpp_do_lexer_openfile(filename);
-					if (error != TPP_ENOENT) {
-						tpp_assert(error == TPP_EOK ||
-						           error == TPP_ENOMEM ||
-						           error == TPP_EMASKED);
+					error = (*cb)(arg, filename);
+					if (error != TPP_ENOENT)
 						return error;
-					}
 				}
 #if TPP_CONF_MAYBE_0(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
 				if (!tpp_lexer_has(self, INCLUDE_RELATIVE_TO_EVERY_FILE))
@@ -492,8 +462,7 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
 
 		/* Search the quote-include path */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE
-		error = tpp_lexer_open_include_string_in_path(self, &self->tl_include_paths.tip_quote_list,
-		                                              str, length, result);
+		error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_quote_list, cb, arg);
 		if (error != TPP_ENOENT)
 			return error;
 #endif /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE */
@@ -505,8 +474,7 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
 
 	/* Search the system-include path */
 #if TPP_HAVE_INCLUDE_PATH
-	error = tpp_lexer_open_include_string_in_path(self, &self->tl_include_paths.tip_system_list,
-	                                              str, length, result);
+	error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_system_list, cb, arg);
 	if (error != TPP_ENOENT)
 		return error;
 #endif /* TPP_HAVE_INCLUDE_PATH */
@@ -514,9 +482,9 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
 	/* Check hard-coded system include paths... */
 #if TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
 	if (tpp_lexer_has(self, SEARCH_SYSTEM_INCLUDE_PATH)) {
-#define tpp_handle_system_include_path(_, index, value)    \
-		error = tpp_do_lexer_openfile(value TPP_FS_SEP_S); \
-		if (error != TPP_ENOENT)                           \
+#define tpp_handle_system_include_path(_, index, value) \
+		error = (*cb)(arg, value TPP_FS_SEP_S);         \
+		if (error != TPP_ENOENT)                        \
 			return error;
 		TPP_TUPLE_FOREACH(TPP_CONFIG_SYSTEM_INCLUDE_PATH, TPP_TUPLE_FOREACH_DUMMY_SEP,
 		                  tpp_handle_system_include_path, ~)
@@ -526,14 +494,56 @@ tpp_lexer_open_include_string_cb(void *arg, tpp_char const *str, tpp_size length
 
 	/* Check "after" system include paths... */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
-	return tpp_lexer_open_include_string_in_path(self, &self->tl_include_paths.tip_after_list,
-	                                             str, length, result);
+	return tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_after_list, cb, arg);
 #else /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER */
 	/* File not found :( */
 	return TPP_ENOENT;
 #endif /* !TPP_HAVE_INCLUDE_PATH || !TPP_HAVE_INCLUDE_PATH_AFTER */
-#undef tpp_do_lexer_openfile
-#undef tpp_lexer_open_include_string_in_path
+}
+
+
+struct tpp_lexer_open_include_string_data {
+	tpp_lexer                 *tloisd_lexer;      /* [1..1] lexer */
+	tpp_lexer_openfile_result *tloisd_result;     /* [1..1] Openfile result */
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+	tpp_lexer_openfile_flags   tloisd_mask_flags; /* Mask flags */
+#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+	char const                *tloisd_str;        /* #include-string (used during callback) */
+	tpp_size                   tloisd_length;     /* #include-string length (used during callback) */
+};
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_open_include_string_path_cb(void *arg, char const *relative_to) {
+	struct tpp_lexer_open_include_string_data *data;
+	data = (struct tpp_lexer_open_include_string_data *)arg;
+#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+	return tpp_lexer_openfile_ex(data->tloisd_lexer, relative_to,
+	                             data->tloisd_str, data->tloisd_length,
+	                             data->tloisd_result, data->tloisd_mask_flags);
+#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+	return tpp_lexer_openfile(data->tloisd_lexer, relative_to,
+	                          data->tloisd_str, data->tloisd_length,
+	                          data->tloisd_result);
+#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+}
+
+
+static tpp_errno TPPCALL
+tpp_lexer_open_include_string_cb(void *arg, char const *str, tpp_size length) {
+	tpp_token_id mode;
+	struct tpp_lexer_open_include_string_data *data;
+	data = (struct tpp_lexer_open_include_string_data *)arg;
+	data->tloisd_str    = str;
+	data->tloisd_length = length;
+	/* Check for special case: if the given filename is absolute,
+	 * then we must skip all the include-path resolution! */
+	if (TPP_FS_ISABS(str, length))
+		return tpp_lexer_open_include_string_path_cb(data, NULL);
+	mode = tpp_lexer_gettok(data->tloisd_lexer);
+	tpp_assert(mode == '<' || mode == '"');
+	return tpp_lexer_foreach_include_path(data->tloisd_lexer, mode,
+	                                      &tpp_lexer_open_include_string_path_cb,
+	                                      data);
 }
 
 

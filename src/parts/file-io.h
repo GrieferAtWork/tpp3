@@ -24,24 +24,6 @@
 #include "config.h"
 
 /*[[[tpp-begin]]]*/
-#ifndef TPP_OS_WINDOWS
-#if (defined(_WIN64) || defined(WIN64) || \
-     defined(_WIN32) || defined(WIN32) || defined(__WIN32__))
-#define TPP_OS_WINDOWS 1
-#else /* ... */
-#define TPP_OS_WINDOWS 0
-#endif /* !... */
-#endif /* !TPP_OS_WINDOWS */
-
-#ifndef TPP_OS_UNIX
-#if (defined(__unix__) || defined(__unix) || defined(unix) || \
-     defined(__posix__) || defined(__posix) || defined(posix))
-#define TPP_OS_UNIX 1
-#else /* ... */
-#define TPP_OS_UNIX 0
-#endif /* !... */
-#endif /* !TPP_OS_UNIX */
-
 #ifndef TPP_FS_HAVE_DRIVES
 #define TPP_FS_HAVE_DRIVES TPP_OS_WINDOWS
 #endif /* !TPP_FS_HAVE_DRIVES */
@@ -88,25 +70,18 @@
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle HANDLE
 #define tpp_io_handle_IS_HANDLE
-#define tpp_io_handle_INVALID INVALID_HANDLE_VALUE
 #elif TPP_OS_UNIX
 #define tpp_io_handle int
 #define tpp_io_handle_IS_int
-#define tpp_io_handle_INVALID (-1)
 #else /* ... */
 #if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle FILE *
 #define tpp_io_handle_IS_FILE
-#define tpp_io_handle_INVALID NULL
-
-#if TPP_HAVE_FILE_NONBLOCK < 0
-#undef TPP_HAVE_FILE_NONBLOCK
-#define TPP_HAVE_FILE_NONBLOCK 0
-#elif TPP_HAVE_FILE_NONBLOCK
+#if TPP_HAVE_FILE_NONBLOCK
 #error "No way to implement 'TPP_HAVE_FILE_NONBLOCK' on this OS"
-#endif /* ... */
+#endif /* TPP_HAVE_FILE_NONBLOCK */
 #endif /* !... */
 #endif /* !tpp_io_handle */
 
@@ -125,18 +100,23 @@
 TPP_DECL_BEGIN
 
 /* Open a file for reading
- * @return: tpp_io_handle_INVALID: No such file or directory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_io_handle TPPCALL
-tpp_io_open(/*utf-8*/ char const *filename);
+ * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
+            tpp_io_handle *tpp_restrict p_result);
 
 /* Close a file previously opened by `tpp_io_open()' */
 TPP_DECL void TPPCALL tpp_io_close(tpp_io_handle file);
 
 /* Read data from a given `file' into `buf'
  * @return: * : The # of bytes read into `buf' (at most `bufsize')
- * @return: (tpp_ssize)TPP_EIO:         I/O error
+ *              NOTE: Use "TPP_SSIZE_ISERR()" to detect error conditions!
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):         I/O error
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):      Out of memory
  * #if TPP_HAVE_FILE_NONBLOCK
- * @return: (tpp_ssize)TPP_EWOULDBLOCK: `nonblock' was given, but operation would block
+ * @return: TPP_SSIZE_OFERR(TPP_EWOULDBLOCK): `nonblock' was given, but operation would block
  * #endif // TPP_HAVE_FILE_NONBLOCK */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_io_read(tpp_io_handle file, void *buf, tpp_size bufsize tpp_io_nonblock__PARAM);

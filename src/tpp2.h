@@ -2371,10 +2371,10 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 /* CUSTOM HOOKS                                                         */
 /************************************************************************/
 #ifdef TPP_CONFIG_USERSTREAMS
-#define tpp_io_handle         TPP_USERSTREAM_TYPE
-#define tpp_io_handle_INVALID TPP_USERSTREAM_INVALID
-#define tpp_io_open(filename) TPP_USERSTREAM_FOPEN(filename)
-#define tpp_io_close(file)  TPP_USERSTREAM_FCLOSE(file)
+#define tpp_io_handle TPP_USERSTREAM_TYPE
+#define tpp_io_open(filename, p_result) \
+	((*(p_result) = TPP_USERSTREAM_FOPEN(filename)) == TPP_USERSTREAM_INVALID ? TPP_ENOENT : TPP_EOK)
+#define tpp_io_close(file) TPP_USERSTREAM_FCLOSE(file)
 #if TPP_HAVE_FILE_NONBLOCK
 #define tpp_io_read(file, buf, bufsize, nonblock)                   \
 	((nonblock) ? TPP_USERSTREAM_FREAD_NONBLOCK(file, buf, bufsize) \

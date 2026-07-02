@@ -3001,33 +3001,34 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 /* -Wsyntax                                                             */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_SYNTAX
-#define TPP_HAVE_TPP_WG_SYNTAX                                  \
-	(TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED ||            \
-	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF ||                 \
-	 TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF ||                \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN ||                         \
-	 TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE ||                        \
-	 TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER ||                  \
-	 TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE ||         \
-	 TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE ||      \
-	 TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE ||    \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST || \
-	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||           \
-	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT ||             \
-	 TPP_HAVE_TPP_W_EXPECTED_STRING ||                          \
-	 TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING ||                  \
-	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF ||                         \
-	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE ||                  \
-	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF ||                  \
-	 TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF ||                         \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION ||           \
-	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF ||          \
-	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED ||        \
-	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION ||      \
-	 TPP_HAVE_TPP_W_INVALID_INTEGER ||                          \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK ||         \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING ||       \
-	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON)
+#define TPP_HAVE_TPP_WG_SYNTAX                                        \
+	(TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED ||                  \
+	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF ||                       \
+	 TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF ||                      \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN ||                               \
+	 TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE ||                              \
+	 TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER ||                        \
+	 TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE ||               \
+	 TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE ||            \
+	 TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE ||          \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST ||       \
+	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||                 \
+	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT ||                   \
+	 TPP_HAVE_TPP_W_EXPECTED_STRING ||                                \
+	 TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING ||                        \
+	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF ||                               \
+	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE ||                        \
+	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF ||                        \
+	 TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF ||                               \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION ||                 \
+	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF ||                \
+	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED ||              \
+	 TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION ||            \
+	 TPP_HAVE_TPP_W_INVALID_INTEGER ||                                \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK ||               \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING ||             \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON || \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
 #ifndef TPP_WGNAME_SYNTAX
@@ -3253,6 +3254,17 @@ TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON, 1(TPP_WG_SYNTA
             "expected %[<int>%] or %[<string>%] after %[#pragma warning(<mode>:%] but got %Pt")
 #endif /* !TPP_HAVE_WARNING_NUMBERS || !TPP_HAVE_TPP_TOK_INT */
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON */
+
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC
+#define TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC
+#if TPP_HAVE_WARNINGS_PUSH_POP
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC, 1(TPP_WG_SYNTAX), 0(), ~,
+            "expected %[push%], %[pop%], %[warning%], %[error%] or %[ignored%] after %[#pragma GCC diagnostic%] but got %Pt")
+#else /* TPP_HAVE_WARNINGS_PUSH_POP */
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC, 1(TPP_WG_SYNTAX), 0(), ~,
+            "expected %[warning%], %[error%] or %[ignored%] after %[#pragma GCC diagnostic%] but got %Pt")
+#endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC */
 
 
 

@@ -360,7 +360,7 @@ handle_unknown_escape_sequence:
 			tpp_errno error = tpp_lexer_warnf_at(self, tpp_lexer_getfile(self), iter,
 			                                     TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, ch);
 			if (TPP_ISERR(error))
-				return (tpp_ssize)error;
+				return TPP_SSIZE_OFERR(error);
 		}
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 #if TPP_HAVE_TRIGRAPHS
@@ -613,10 +613,10 @@ tpp_token_decodestring_raw(tpp_lexer *tpp_restrict self,
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
- * @return: (tpp_ssize)TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                                     a lexer error happened (s.a. `tpp_lexer_warnf()').
- * @return: (tpp_ssize)TPP_ENOMEM:     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
- * @return: (tpp_ssize)TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
+ *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
+ * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
 tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
                        tpp_formatprinter data_printer,
@@ -889,11 +889,11 @@ do_decode_basic:
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
- * @return: (tpp_ssize)TPP_ELEXERROR:   Either one of the printers returned this value, or
- *                                      a lexer error happened (s.a. `tpp_lexer_warnf()').
- * @return: (tpp_ssize)TPP_ENOMEM:      Out of memory
- * @return: (tpp_ssize)TPP_EIO:         I/O error while yielding to next token
- * @return: (tpp_ssize)TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
+ *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
+ * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
 tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
                          tpp_formatprinter data_printer,
@@ -909,7 +909,7 @@ tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
 		if (result >= 0) {
 			tpp_token_id tok = tpp_lexer_yield_blocking(self);
 			if (TPP_TOK_ISERR(tok))
-				result = (tpp_ssize)TPP_TOK_ASERR(tok);
+				result = TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
 		}
 		return result;
 	}
@@ -948,7 +948,7 @@ again_yield:
 
 		default:
 			if (TPP_TOK_ISERR(tok))
-				result = (tpp_ssize)TPP_TOK_ASERR(tok);
+				result = TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
 			break;
 		}
 		return result;
@@ -979,13 +979,13 @@ tpp_lexer_parsestring(tpp_lexer *tpp_restrict self,
 	                                  &tpp_string_builder_print,
 	                                  &tpp_string_builder_print,
 	                                  &builder, flags);
-	if (status < 0)
+	if (TPP_SSIZE_ISERR(status))
 		goto err_builder;
 	*p_result = tpp_string_builder_pack(&builder);
 	return TPP_EOK;
 err_builder:
 	tpp_string_builder_fini(&builder);
-	return (tpp_errno)status;
+	return TPP_SSIZE_ASERR(status);
 }
 
 
@@ -993,7 +993,7 @@ err_builder:
 #define TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_YES   1 /* String has 1 (non-empty) chunk */
 #define TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_NO    2 /* String has 2 or more (non-empty) chunks */
 
-#define TPP_LEXER_PARSESTRING_CHUNK_STOP ((tpp_ssize)(TPP_ELAST - 1))
+#define TPP_LEXER_PARSESTRING_CHUNK_STOP (TPP_SSIZE_OFERR(TPP_ELAST - 1))
 
 struct tpp_lexer_decodestring_chunk_count_data {
 	tpp_lexer const *tldsccd_lexer; /* [1..1] Current lexer (needed to see if text bounds lie within current token) */
@@ -1124,7 +1124,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_as_single_chunk_cb, arg, 
 	if (!TPP_ISERR(error))
 		return TPP_LEXER_PARSESTRING_CHUNK_STOP;
 #endif /* !__OPTIMIZE_SIZE__ */
-	return (tpp_ssize)error;
+	return TPP_SSIZE_OFERR(error);
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -1144,9 +1144,10 @@ tpp_lexer_decodestring_as_single_chunk(tpp_lexer *tpp_restrict self,
 	                                &data);
 #ifndef __OPTIMIZE_SIZE__
 	if (status == TPP_LEXER_PARSESTRING_CHUNK_STOP)
-		status = (tpp_ssize)TPP_EOK;
+		status = TPP_SSIZE_OFERR(TPP_EOK);
 #endif /* !__OPTIMIZE_SIZE__ */
-	return (tpp_errno)status;
+	tpp_assert(TPP_SSIZE_ISERR_OR_EOK(status));
+	return TPP_SSIZE_ASERR_OR_EOK(status);
 }
 
 /* Wrapper around `tpp_lexer_parsestring()' that passes the actual string data
@@ -1471,7 +1472,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_byt
 		/* Emit warning about multi-char literals being used */
 		tpp_errno error = tpp_lexer_warnf(data->tldcd_lexer, TPP_W_MULTICHAR_LITERAL);
 		if (TPP_ISERR(error))
-			return (tpp_ssize)(int)error;
+			return TPP_SSIZE_OFERR(error);
 	}
 	data->tldcd_count += num_bytes;
 #endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
@@ -1508,7 +1509,8 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
 	                                  &tpp_lexer_decodecharacter_cb,
 	                                  &data, flags);
 	*p_result = data.tldcd_value;
-	return (tpp_errno)(int)status;
+	tpp_assert(TPP_SSIZE_ISERR_OR_EOK(status));
+	return TPP_SSIZE_ASERR_OR_EOK(status);
 }
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
 

@@ -1032,9 +1032,9 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 	                                                  &tpp_string_builder_print,
 	                                                  &eval_repr_builder);
 	tpp_expr_value_fini(&eval_result);
-	if tpp_unlikely(eval_repr_print_status < 0) {
+	if tpp_unlikely(TPP_SSIZE_ISERR(eval_repr_print_status)) {
 		tpp_string_builder_fini(&eval_repr_builder);
-		error = (tpp_errno)(int)eval_repr_print_status;
+		error = TPP_SSIZE_ASERR(eval_repr_print_status);
 		return TPP_TOK_OFERR(error);
 	}
 
@@ -1115,7 +1115,7 @@ tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
 	if (ofr_error != TPP_EOK && ofr_error != TPP_ENOENT)
 		return TPP_TOK_OFERR(ofr_error);
 	do {
-		tok = tpp_lexer_yield_include_string_blocking(self);
+		tok = tpp_lexer_yield_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return tok;
@@ -1163,7 +1163,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 			ofr_error = TPP_ENOENT; /* Shouldn't happen */
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
 	} else {
-		ofr.tlofr_handle = tpp_io_handle_INVALID; /* To prevent compiler warnings; init here isn't actually necessary */
+		tpp_bzero(&ofr, sizeof(ofr)); /* To prevent compiler warnings; init here isn't actually necessary */
 #if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
 		ofr_error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INCLUDE_STRING);
 		if (!TPP_ISERR(ofr_error))
@@ -1208,8 +1208,8 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 #else  /* TPP_HAVE_FILE_NONBLOCK */
 			read_status = tpp_io_read(ofr.tlofr_handle, &first_byte, 1);
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
-			if tpp_unlikely(read_status < 0) {
-				tok = TPP_TOK_OFERR((tpp_errno)read_status);
+			if tpp_unlikely(TPP_SSIZE_ISERR(read_status)) {
+				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(read_status));
 				goto err_tok_ofr;
 			}
 			if (read_status == 0) {
@@ -1391,8 +1391,8 @@ err_tok_subtext_builder:
 			                                &tpp_string_builder_print_encoded,
 			                                &builder);
 handle_status:
-			if (status < 0) {
-				tok = TPP_TOK_OFERR((tpp_errno)status);
+			if (TPP_SSIZE_ISERR(status)) {
+				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(status));
 				goto err_tok_subtext_builder;
 			}
 			break;
@@ -1584,8 +1584,8 @@ tpp_lexer_yield_handle___TPP_STR_SIZE(tpp_lexer *tpp_restrict self) {
 		                                  &tpp_lexer_handle_str_size,
 		                                  &tpp_lexer_handle_str_size, NULL,
 		                                  TPP_LEXER_PARSESTRING_FLAG_NORMAL);
-		if (status < 0) {
-			error = (tpp_errno)(int)status;
+		if (TPP_SSIZE_ISERR(status)) {
+			error = TPP_SSIZE_ASERR(status);
 		} else {
 			str_length = (tpp_size)status;
 		}
@@ -1646,8 +1646,8 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 		print_status = tpp_string_builder_print(&data->tlhed_builder,
 		                                        tpp_token_getstart(token),
 		                                        tpp_token_getlen(token));
-		if tpp_unlikely(print_status < 0) {
-			tok = TPP_TOK_OFERR((tpp_errno)(int)print_status);
+		if tpp_unlikely(TPP_SSIZE_ISERR(print_status)) {
+			tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
 			break;
 		}
 	}

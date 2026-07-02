@@ -54,7 +54,7 @@ TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num
 	FILE *fp = stderr;
 	(void)arg;
 	fwrite(text, sizeof(tpp_char), num_bytes, fp);
-	return ferror(fp) ? (tpp_ssize)TPP_EIO : 0;
+	return ferror(fp) ? TPP_SSIZE_OFERR(TPP_EIO) : 0;
 }
 #endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
 

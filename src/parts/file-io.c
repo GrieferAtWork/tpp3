@@ -58,9 +58,12 @@
 TPP_DECL_BEGIN
 
 /* Open a file for reading
- * @return: tpp_io_handle_INVALID: No such file or directory */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_io_handle TPPCALL
-tpp_io_open(/*utf-8*/ char const *filename) {
+ * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
+            tpp_io_handle *tpp_restrict p_result) {
 #ifdef tpp_io_handle_IS_HANDLE
 	DWORD const dwDesiredAccess       = FILE_GENERIC_READ;
 	DWORD const dwShareMode           = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
@@ -70,10 +73,13 @@ tpp_io_open(/*utf-8*/ char const *filename) {
 
 	hFile = CreateFileA(filename, dwDesiredAccess, dwShareMode, NULL,
 	                    dwCreationDisposition, dwFlagsAndAttributes, NULL);
-	if (hFile != NULL && hFile != INVALID_HANDLE_VALUE)
-		return hFile;
+	if (hFile != NULL && hFile != INVALID_HANDLE_VALUE) {
+		*p_result = hFile;
+		return TPP_EOK;
+	}
+
 	/* TODO: Convert utf-8 to wide, then pre-pend \\.\ to work around UNC limitations */
-	return tpp_io_handle_INVALID;
+	return TPP_ENOENT;
 #endif /* tpp_io_handle_IS_HANDLE */
 
 #ifdef tpp_io_handle_IS_int
@@ -85,7 +91,11 @@ tpp_io_open(/*utf-8*/ char const *filename) {
 	                 O_CLOEXEC |
 #endif /* O_CLOEXEC */
 	                 0;
-	return open(filename, mode, 0);
+	int fd = open(filename, mode, 0);
+	if (fd == -1)
+		return TPP_ENOENT;
+	*p_result = fd;
+	return TPP_EOK;
 #endif /* tpp_io_handle_IS_int */
 
 #ifdef tpp_io_handle_IS_FILE
@@ -110,9 +120,11 @@ TPP_IMPL void TPPCALL tpp_io_close(tpp_io_handle file) {
 
 /* Read data from a given `file' into `buf'
  * @return: * : The # of bytes read into `buf' (at most `bufsize')
- * @return: (tpp_ssize)TPP_EIO:         I/O error
+ *              NOTE: Use "TPP_SSIZE_ISERR()" to detect error conditions!
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):         I/O error
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):      Out of memory
  * #if TPP_HAVE_FILE_NONBLOCK
- * @return: (tpp_ssize)TPP_EWOULDBLOCK: `nonblock' was given, but operation would block
+ * @return: TPP_SSIZE_OFERR(TPP_EWOULDBLOCK): `nonblock' was given, but operation would block
  * #endif // TPP_HAVE_FILE_NONBLOCK */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_io_read(tpp_io_handle file, void *buf,
@@ -129,7 +141,7 @@ tpp_io_read(tpp_io_handle file, void *buf,
 	if (nonblock) {
 		DWORD dwFileType = GetFileType(file);
 		if (dwFileType == FILE_TYPE_UNKNOWN)
-			return (tpp_ssize)TPP_EIO;
+			return TPP_SSIZE_OFERR(TPP_EIO);
 		if (dwFileType == FILE_TYPE_PIPE) {
 			BYTE temp_buffer[1];
 			/* `WaitForSingleObject()' doesn't work on pipes (for some reason...) */
@@ -137,17 +149,17 @@ tpp_io_read(tpp_io_handle file, void *buf,
 			if (PeekNamedPipe(file, temp_buffer, sizeof(temp_buffer),
 			                  &dwResult, NULL, NULL) &&
 			    dwResult == 0)
-				return (tpp_ssize)TPP_EWOULDBLOCK;
+				return TPP_SSIZE_OFERR(TPP_EWOULDBLOCK);
 		} else {
 			dwResult = WaitForSingleObject(file, 0);
 			if (dwResult == WAIT_TIMEOUT)
-				return (tpp_ssize)TPP_EWOULDBLOCK;
+				return TPP_SSIZE_OFERR(TPP_EWOULDBLOCK);
 		}
 	}
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 	if (!ReadFile(file, buf, dwBufsize, &dwResult, NULL))
-		return TPP_EIO;
+		return TPP_SSIZE_OFERR(TPP_EIO);
 	return (tpp_ssize)dwResult;
 #endif /* tpp_io_handle_IS_HANDLE */
 
@@ -161,9 +173,9 @@ tpp_io_read(tpp_io_handle file, void *buf,
 		FD_SET(file, &read_fds);
 		result = select(file + 1, &read_fds, NULL, NULL, &timeout);
 		if (result < 0)
-			return (tpp_ssize)TPP_EIO;
+			return TPP_SSIZE_OFERR(TPP_EIO);
 		if (!FD_ISSET(fd, &read_fds))
-			return (tpp_ssize)TPP_EWOULDBLOCK;
+			return TPP_SSIZE_OFERR(TPP_EWOULDBLOCK);
 	}
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 	return (tpp_ssize)read(file, buf, bufsize);
@@ -172,7 +184,7 @@ tpp_io_read(tpp_io_handle file, void *buf,
 #ifdef tpp_io_handle_IS_FILE
 	tpp_size result = (tpp_size)fread(buf, 1, bufsize, file);
 	if (result == 0 && ferror(file))
-		return (tpp_ssize)TPP_EIO;
+		return TPP_SSIZE_OFERR(TPP_EIO);
 	return (tpp_ssize)result;
 #endif /* tpp_io_handle_IS_FILE */
 }

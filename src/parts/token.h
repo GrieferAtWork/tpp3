@@ -90,16 +90,16 @@ typedef enum tpp_token_id {
 	 * TPP itself, you *could* in theory also change lexer configuration
 	 * and re-try the failing operation (though if you do that, you will
 	 * probably run into the same error again) */
-	TPP_TOK_ELEXERROR   = (int)TPP_ELEXERROR,
+	TPP_TOK_ELEXERROR = (int)TPP_ELEXERROR,
 
 	/* --------------------------------------------------------------------
-	 * HARD_ERROR: TPP_EIO
+	 * HARD_ERROR: TPP_EWARNPRINT
 	 * --------------------------------------------------------------------
 	 *
 	 * Printer registered for "tpp_lexer_warnf" returned an error.
 	 * Since this error is not related to TPP itself, this error should
 	 * be propagated. */
-	TPP_TOK_EWARNPRINT  = (int)TPP_EWARNPRINT,
+	TPP_TOK_EWARNPRINT = (int)TPP_EWARNPRINT,
 #define _TPP_CASE_TPP_TOK_ELEXERROR  case TPP_TOK_ELEXERROR:
 #define _TPP_CASE_TPP_TOK_EWARNPRINT case TPP_TOK_EWARNPRINT:
 #else /* TPP_HAVE_WARNINGS */
@@ -141,7 +141,7 @@ typedef enum tpp_token_id {
 	_TPP_CASE_TPP_TOK_ELEXERROR   \
 	_TPP_CASE_TPP_TOK_EWARNPRINT
 
-/* Return the token ID used to describe a given byte-code "ch" */
+/* Return the token ID used to describe the single-character token of "ch" */
 #define TPP_TOK_OFCHAR(ch) ((tpp_token_id)(unsigned int)(tpp_char)(ch))
 #define TPP_TOK_ISCHAR(id) ((unsigned int)(id) <= 0xff)
 
