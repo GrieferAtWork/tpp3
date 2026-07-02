@@ -114,12 +114,12 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 	do {
 		tpp_intmax new_value, old_value;
 		unsigned int digit;
-		if (ch >= '0' && ch <= '9') {
-			digit = (unsigned int)(ch - '0');
-		} else if (ch >= 'a' && ch <= 'z') {
-			digit = 10 + (unsigned int)(ch - 'a');
-		} else if (ch >= 'A' && ch <= 'Z') {
-			digit = 10 + (unsigned int)(ch - 'A');
+		if (tpp_ascii_isdigit(ch)) {
+			digit = (unsigned int)tpp_ascii_asdigit(ch);
+		} else if (tpp_ascii_islwrxdigit(ch)) {
+			digit = (unsigned int)tpp_ascii_aslwrxdigit(ch);
+		} else if (tpp_ascii_isuprxdigit(ch)) {
+			digit = (unsigned int)tpp_ascii_asuprxdigit(ch);
 		} else {
 			break;
 		}

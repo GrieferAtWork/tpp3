@@ -192,16 +192,16 @@ print_ch:
 	case '6':
 	case '7': {
 		/* Octal escape sequence */
-		tpp_char word = (tpp_char)(ch - '0');
-		if (iter < end && (*iter >= '0' && *iter <= '7')) {
+		tpp_char word = (tpp_char)tpp_ascii_asoctdigit(ch);
+		if (iter < end && tpp_ascii_isoctdigit(*iter)) {
 			ch = *iter++;
 			word <<= 3;
-			word |= (tpp_char)(ch - '0');
+			word |= (tpp_char)tpp_ascii_asoctdigit(ch);
 		}
-		if (iter < end && (*iter >= '0' && *iter <= '7') && (word <= 037)) {
+		if (iter < end && tpp_ascii_isoctdigit(*iter) && (word <= 037)) {
 			ch = *iter++;
 			word <<= 3;
-			word |= (tpp_char)(ch - '0');
+			word |= (tpp_char)tpp_ascii_asoctdigit(ch);
 		}
 		ch = word;
 		goto print_ch;
@@ -212,45 +212,34 @@ print_ch:
 		if (iter >= end)
 			goto handle_unknown_escape_sequence;
 		ch = *iter++;
-		if (ch >= '0' && ch <= '9') {
-			word = (tpp_char)(ch - '0');
-		} else if (ch >= 'a' && ch <= 'f') {
-			word = 10 + (tpp_char)(ch - 'a');
-		} else if (ch >= 'A' && ch <= 'F') {
-			word = 10 + (tpp_char)(ch - 'A');
+		if (tpp_ascii_isdigit(ch)) {
+			word = (tpp_char)tpp_ascii_asdigit(ch);
+		} else if (tpp_ascii_islwrxdigit(ch)) {
+			word = (tpp_char)tpp_ascii_aslwrxdigit(ch);
+		} else if (tpp_ascii_isuprxdigit(ch)) {
+			word = (tpp_char)tpp_ascii_asuprxdigit(ch);
 		} else {
 			goto handle_unknown_escape_sequence;
 		}
 		if (iter < end) {
 			ch = *iter;
-			if (ch >= '0' && ch <= '9') {
+			if (tpp_ascii_isdigit(ch)) {
 				word <<= 4;
-				word |= (tpp_char)(ch - '0');
+				word |= (tpp_char)tpp_ascii_asdigit(ch);
 				++iter;
-			} else if (ch >= 'a' && ch <= 'f') {
+			} else if (tpp_ascii_islwrxdigit(ch)) {
 				word <<= 4;
-				word |= 10 + (tpp_char)(ch - 'a');
+				word |= (tpp_char)tpp_ascii_aslwrxdigit(ch);
 				++iter;
-			} else if (ch >= 'A' && ch <= 'F') {
+			} else if (tpp_ascii_isuprxdigit(ch)) {
 				word <<= 4;
-				word |= 10 + (tpp_char)(ch - 'A');
+				word |= (tpp_char)tpp_ascii_asuprxdigit(ch);
 				++iter;
 			}
 		}
 		ch = word;
 		goto print_ch;
 	}	break;
-
-#if TPP_HAVE_BSE
-	case '\r':
-	case '\n':
-		/* Escaped line-feed */
-		if (!tpp_lexer_has(self, BSE))
-			goto handle_unknown_escape_sequence;
-		if (ch == '\r' && (iter < end) && *iter == '\n')
-			++iter;
-		break;
-#endif /* TPP_HAVE_BSE */
 
 	case 'u':
 	case 'U': {
@@ -264,13 +253,13 @@ print_ch:
 		do {
 			tpp_char nibble;
 			ch = *iter++;
-			if (ch >= '0' && ch <= '9') {
-				nibble = (tpp_char)(ch - '0');
-			} else if (ch >= 'a' && ch <= 'f') {
-				nibble = 10 + (tpp_char)(ch - 'a');
+			if (tpp_ascii_isdigit(ch)) {
+				nibble = (tpp_char)tpp_ascii_asdigit(ch);
+			} else if (tpp_ascii_islwrxdigit(ch)) {
+				nibble = (tpp_char)tpp_ascii_aslwrxdigit(ch);
 				++iter;
-			} else if (ch >= 'A' && ch <= 'F') {
-				nibble = 10 + (tpp_char)(ch - 'A');
+			} else if (tpp_ascii_isuprxdigit(ch)) {
+				nibble = (tpp_char)tpp_ascii_asuprxdigit(ch);
 			} else {
 				if (cur_nibble == 0)
 					goto handle_unknown_escape_sequence;
@@ -293,7 +282,7 @@ print_ch:
 	default: {
 #if TPP_HAVE_BSE && TPP_HAVE_UNICODE
 		tpp_char const *bse_iter;
-		if (ch >= 0x80 && tpp_file_isutf8(tpp_lexer_getfile(self))) {
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(self))) {
 			if (tpp_lexer_has(self, BSE)) {
 				bse_iter = iter;
 				tpp_unichar uc;
@@ -304,10 +293,10 @@ again_read_unicode_whitespace_after_backslash:
 				if (tpp_unicode_islf(uc)) {
 					/* Escaped unicode linefeed. */
 					iter = bse_iter;
-#if TPP_HAVE_BSE_WHITESPACE
-					if (uc == '\r' && (iter < end) && *iter == '\n')
+#if TPP_HAVE_BSE_WHITESPACE && TPP_HAVE_CR_LF_DETECTION
+					if (uc == TPP_ASCII_CR && (iter < end) && *iter == TPP_ASCII_LF)
 						++iter;
-#endif /* TPP_HAVE_BSE_WHITESPACE */
+#endif /* TPP_HAVE_BSE_WHITESPACE && TPP_HAVE_CR_LF_DETECTION */
 					break;
 				} else
 #if TPP_HAVE_BSE_WHITESPACE
@@ -336,20 +325,41 @@ again_read_unicode_whitespace_after_backslash:
 					wch = *bse_iter++;
 				} while (tpp_ascii_isspace_nolf(wch));
 #if TPP_HAVE_UNICODE
-				if (wch >= 0x80 && tpp_file_isutf8(tpp_lexer_getfile(self))) {
+				if (tpp_ascii_ismb(wch) && tpp_file_isutf8(tpp_lexer_getfile(self))) {
 					--bse_iter;
 					goto again_read_unicode_whitespace_after_backslash;
 				}
 #endif /* TPP_HAVE_UNICODE */
 				if (tpp_ascii_islf(wch)) {
 					iter = bse_iter; /* Escaped linefeed. */
-					if (wch == '\r' && (iter < end) && *iter == '\n')
+#if TPP_HAVE_CR_LF_DETECTION
+					if (wch == TPP_ASCII_CR && (iter < end) && *iter == TPP_ASCII_LF)
 						++iter;
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 					break;
 				}
 			}
 		} else
 #endif /* TPP_HAVE_BSE_WHITESPACE */
+#if TPP_HAVE_BSE
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+		if (0)
+	case TPP_ASCII_CR:
+	case TPP_ASCII_LF:
+#else /* TPP_HAVE_ASSUME_ASCII_CTYPE */
+		if (tpp_ascii_islf(ch))
+#endif /* !TPP_HAVE_ASSUME_ASCII_CTYPE */
+		{
+			/* Escaped line-feed */
+			if (!tpp_lexer_has(self, BSE))
+				goto handle_unknown_escape_sequence;
+#if TPP_HAVE_CR_LF_DETECTION
+			if (ch == TPP_ASCII_CR && (iter < end) && *iter == TPP_ASCII_LF)
+				++iter;
+#endif /* TPP_HAVE_CR_LF_DETECTION */
+			break;
+		} else
+#endif /* TPP_HAVE_BSE */
 		{
 		}
 
@@ -435,8 +445,10 @@ tpp_block_string_loadprefix(tpp_lexer *tpp_restrict lexer,
 	while (prefix_end < end) {
 		tpp_char ch = *prefix_end++;
 		if (tpp_ascii_islf(ch)) {
-			if (ch == '\r' && (prefix_end < end && *prefix_end == '\n'))
+#if TPP_HAVE_CR_LF_DETECTION
+			if (ch == TPP_ASCII_CR && (prefix_end < end && *prefix_end == TPP_ASCII_LF))
 				++prefix_end;
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 			/* Whitespace in empty lines doesn't count */
 			prefix_start = prefix_end;
 			continue;
@@ -444,7 +456,7 @@ tpp_block_string_loadprefix(tpp_lexer *tpp_restrict lexer,
 			continue;
 		} else
 #if TPP_HAVE_UNICODE
-		if (ch >= 0x80 && tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
 			tpp_char const *next_prefix_end = prefix_end - 1;
 			tpp_unichar uc = tpp_unicode_readutf8(&next_prefix_end, end);
 			if (tpp_unicode_islf(uc)) {
@@ -477,12 +489,14 @@ tpp_block_string_seeklf(tpp_lexer *tpp_restrict lexer,
 		if (tpp_ascii_islf(ch)) {
 			if (p_eol_start)
 				*p_eol_start = start - 1;
-			if (ch == '\r' && (start < end && *start == '\n'))
+#if TPP_HAVE_CR_LF_DETECTION
+			if (ch == TPP_ASCII_CR && (start < end && *start == TPP_ASCII_LF))
 				++start;
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 			return start;
 		} else
 #if TPP_HAVE_UNICODE
-		if (ch >= 0x80 && tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
 			tpp_char const *after_unicode = start - 1;
 			tpp_unichar uc = tpp_unicode_readutf8(&after_unicode, end);
 			if (tpp_unicode_islf(uc)) {
@@ -839,12 +853,14 @@ cxx_raw_string_common:
 		lf_ch = *start;
 		if (tpp_ascii_islf(lf_ch)) {
 			++start;
-			if (lf_ch == '\r' && start < end && *start == '\n')
+#if TPP_HAVE_CR_LF_DETECTION
+			if (lf_ch == TPP_ASCII_CR && start < end && *start == TPP_ASCII_LF)
 				++start; /* Treat \r\n as a single line-feed */
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 		} else
 #if TPP_HAVE_UNICODE
 		/* Support for unicode line-feeds... */
-		if (lf_ch >= 0x80 && tpp_file_isutf8(tpp_lexer_getfile(self))) {
+		if (tpp_ascii_ismb(lf_ch) && tpp_file_isutf8(tpp_lexer_getfile(self))) {
 			tpp_char const *nstart = start;
 			tpp_unichar uc = tpp_unicode_readutf8(&nstart, end);
 			if (!tpp_unicode_islf(uc))

@@ -1698,11 +1698,11 @@ again:
 	for (i = 0; i < (tpp_size)read_status; ++i) {
 		char repr[4], *p = repr + 4;
 		unsigned char b = buf[i];
-		*--p = '0' + (b % 10);
+		*--p = (char)tpp_ascii_ofdigit(b % 10);
 		if (b >= 10)
-			*--p = '0' + ((b / 10) % 10);
+			*--p = (char)tpp_ascii_ofdigit((b / 10) % 10);
 		if (b >= 100)
-			*--p = '0' + (b / 100);
+			*--p = (char)tpp_ascii_ofdigit(b / 100);
 		*--p = ',';
 		if (tpp_string_builder_print(self, (tpp_char const *)p, (tpp_size)(repr + 4 - p)) < 0)
 			return TPP_ENOMEM;
@@ -1786,11 +1786,11 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	}
 	{
 		char ord[3], *p = ord + 3;
-		*--p = '0' + (ofr_first_byte % 10);
+		*--p = (char)tpp_ascii_ofdigit(ofr_first_byte % 10);
 		if (ofr_first_byte >= 10)
-			*--p = '0' + ((ofr_first_byte / 10) % 10);
+			*--p = (char)tpp_ascii_ofdigit((ofr_first_byte / 10) % 10);
 		if (ofr_first_byte >= 100)
-			*--p = '0' + (ofr_first_byte / 100);
+			*--p = (char)tpp_ascii_ofdigit(ofr_first_byte / 100);
 		if (tpp_string_builder_print(&embed_data, (tpp_char const *)p, (tpp_size)(ord + 3 - p)) < 0)
 			goto err_nomem_embed_data;
 	}

@@ -1,0 +1,347 @@
+global final COPYRIGHT =
+"/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */";
+
+import * from deemon;
+
+@@Mapping of uni_ord: flags
+global TRAITS: {int: int} = Dict();
+
+@@Read lines from the given file, but skip comments and empty lines
+function readLines(filename: string): {Bytes...} {
+	print File.stderr: ("Parsing file: ", repr filename);
+	with (local fp = File.open(filename, "rb")) {
+		for (local line: fp) {
+			local com = line.find("#");
+			if (com >= 0)
+				line = line[:com];
+			line = line.strip();
+			if (line)
+				yield line;
+		}
+	}
+}
+
+function cTypeForSizeof(sizeof: int): string {
+	if (sizeof >= 8)
+		return "uint_least64_t";
+	if (sizeof >= 4)
+		return "uint_least32_t";
+	if (sizeof >= 2)
+		return "uint_least16_t";
+	return "uint_least8_t";
+}
+
+function cTypeForInteger(maxIntVal: int): string {
+	if (maxIntVal > 0xffffffff)
+		return "uint_least64_t";
+	if (maxIntVal > 0xffff)
+		return "uint_least32_t";
+	if (maxIntVal > 0xff)
+		return "uint_least16_t";
+	return "uint_least8_t";
+}
+
+function sizeofGreatestIntegerInBytes(values: {int...}): int {
+	local maxIntVal = values ? (values > ...) : 0;
+	if (maxIntVal > 0xffffffff)
+		return 8;
+	if (maxIntVal > 0xffff)
+		return 4;
+	if (maxIntVal > 0xff)
+		return 2;
+	return 1;
+}
+
+@@Split a sequence of ints into two smaller ones + a shift (int)
+@@that  can be used to store the original values more compactly,
+@@while   accessing    the   original    values   as    follows:
+@@>> local a, b, shift = return...;
+@@>> tab[i] == b[(a[(unsigned)i >> shift] << shift) + (i & ((1 << shift)-1))];
+@@HINT: If  no  mapping exists  to optimize  for this,  shift will  equal `0'
+function splitTables(tab: {int: int}, errorValue: int): ({int...}, {int...}, int) {
+	local maxShift = 0;
+	local table = List();
+	for (local key, value: tab) {
+		if (key >= #table)
+			table.resize(key + 1, errorValue);
+		table[key] = value;
+	}
+	assert table;
+	{
+		local len = #table - 1;
+		while (len) {
+			len >>= 1;
+			++maxShift;
+		}
+	}
+	local result = ([], [], 0);
+	local resultScore = 0xffffffff;
+	for (local shift: [:maxShift]) {
+		print File.stderr: ("Testing shift ", shift, "..."),;
+		File.stderr.sync();
+		local size = 2 ** shift;
+		local a = [];
+		local b = [];
+		local cache = Dict();
+		for (local i: [:#table, size]) {
+			local part = table[i:i + size];
+			local offset = cache.get(part);
+			if (offset is none) {
+				/* Add a new section. */
+				offset = #b;
+				cache[part] = offset;
+				b.extend(part);
+			}
+			a.append(offset >> shift);
+		}
+		local score = (sizeofGreatestIntegerInBytes(a) * #a) +
+		              (sizeofGreatestIntegerInBytes(b) * #b);
+		if (score < resultScore) {
+			/* Better fit. */
+			result = (a, b, shift);
+			resultScore = score;
+		}
+		print File.stderr: (" done (Score: ", score, "; a: ", #a, "; b: ", #b, ")");
+	}
+	return result;
+}
+
+#define _TPP_CTYPE_ISSYMSTRT  0x01 /* Symbol start character */
+#define _TPP_CTYPE_ISSYMCONT  0x02 /* Symbol continuation character */
+#define _TPP_CTYPE_ISSPACE    0x04 /* Space character (excluding \r and \n) */
+#define _TPP_CTYPE_ISLF       0x08 /* Linefeed character (\r and \n) */
+
+
+global final FLAG_NAMES = {
+	(_TPP_CTYPE_ISSYMSTRT, "TSYMSTRT"),
+	(_TPP_CTYPE_ISSYMCONT, "TSYMCONT"),
+	(_TPP_CTYPE_ISSPACE,   "TSPACE"),
+	(_TPP_CTYPE_ISLF,      "TLF"),
+};
+
+function getAsciiFlags(): {int...} {
+	/* ASCII traits */
+	local result = List([0] * 0x80);
+	for (local i: [:0x80]) {
+		local flags = 0;
+		if ((i >= 'a'.ord() && i <= 'z'.ord()) ||
+			(i >= 'A'.ord() && i <= 'Z'.ord()) ||
+			i == '_'.ord() || i == '$'.ord())
+			flags |= _TPP_CTYPE_ISSYMSTRT | _TPP_CTYPE_ISSYMCONT;
+		if (i >= '0'.ord() && i <= '9'.ord())
+			flags |= _TPP_CTYPE_ISSYMCONT;
+		if (i in ['\r'.ord(), '\n'.ord()]) {
+			flags |= _TPP_CTYPE_ISLF;
+		} else if (i <= 32) {
+			flags |= _TPP_CTYPE_ISSPACE;
+		}
+		result[i] = flags;
+	}
+	return result;
+}
+
+function loadTraits(baseDir: string) {
+
+	/* Parse UnicodeData.txt
+	 * Source: https://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt
+	 * Format: https://www.unicode.org/L2/L1999/UnicodeData.html
+	 *
+	 * ';'-separated unicode traits database
+	 * Each line has 15 fields, with the following meaning:
+	 * - 0:  Code value                       "0061"
+	 * - 1:  Character name                   "LATIN SMALL LETTER A"
+	 * - 2:  General category                 "Ll"
+	 * - 3:  Canonical combining classes      "0"
+	 * - 4:  Bidirectional category           "L"
+	 * - 5:  Character decomposition mapping  ""
+	 * - 6:  Decimal digit value              ""
+	 * - 7:  Digit value                      ""
+	 * - 8:  Numeric value                    ""
+	 * - 9:  Mirrored                         "N"
+	 * - 10: Unicode 1.0 Name                 ""
+	 * - 11: 10646 comment field              ""
+	 * - 12: Uppercase mapping                "0041"
+	 * - 13: Lowercase mapping                ""
+	 * - 14: Titlecase mapping                "0041"
+	 */
+	for (local line: readLines(baseDir + "/UnicodeData.txt")) {
+		local fields = line.split(";");
+		local ord    = int(fields[0], 16);
+		if (ord <= 0x7f)
+			continue; /* ASCII is encoded manually to guaranty <ctype.h> compatibility. */
+		local flags  = 0;
+		local generalCategory = fields[2];
+		local biDiCategory    = fields[4];
+
+		if (biDiCategory == "B" || generalCategory in ["Zl", "Zp"]) {
+			flags |= _TPP_CTYPE_ISLF;
+		} else {
+			if (generalCategory in ["Cc", "Cf", "Cs", /*"Co",*/ "Cn"])
+				flags |= _TPP_CTYPE_ISSPACE;
+			if (biDiCategory in ["WS", "S"] || generalCategory == "Zs")
+				flags |= _TPP_CTYPE_ISSPACE;
+		}
+
+		if (generalCategory in ["Ll", "Lu", "Lt", "Lo", "Lm", "Sc"])
+			flags |= _TPP_CTYPE_ISSYMSTRT | _TPP_CTYPE_ISSYMCONT;
+		if (fields[6] || fields[7] || fields[8])
+			flags |= _TPP_CTYPE_ISSYMCONT;
+
+		/* By default, symstrt/symcont are defined like this: */
+		if (flags & _TPP_CTYPE_ISSYMSTRT)
+			flags |= _TPP_CTYPE_ISSYMSTRT;
+		if (flags & _TPP_CTYPE_ISSYMSTRT)
+			flags |= _TPP_CTYPE_ISSYMCONT;
+
+		/* Save in our database */
+		if (flags)
+			TRAITS[ord] = flags;
+	}
+
+
+	/* Parse DerivedCoreProperties.txt
+	 * Source: https://ftp.unicode.org/Public/UNIDATA/DerivedCoreProperties.txt */
+	local DerivedCoreProperties: {int: HashSet with string} = Dict();
+	for (local line: readLines(baseDir + "/DerivedCoreProperties.txt")) {
+		local a, none, b = line.partition(";")...;
+		a = a.rstrip();
+		b = b.lstrip().decode("utf-8");
+		local lo, hi;
+		if (".." in a) {
+			lo, none, hi = a.partition("..")...;
+			lo = int(lo.rstrip(), 16);
+			hi = int(hi.lstrip(), 16);
+		} else {
+			lo = hi = int(a, 16);
+		}
+		if (lo < 0x80)
+			lo = 0x80; /* Skip ASCII */
+		if (lo > hi)
+			continue;
+		for (local ord: [lo:hi+1]) {
+			local prop = DerivedCoreProperties.get(ord);
+			if (prop is none)
+				DerivedCoreProperties[ord] = prop = HashSet();
+			prop.insert(b);
+		}
+	}
+	for (local ord, prop: DerivedCoreProperties) {
+		local oldFlags = TRAITS.get(ord, 0);
+		local newFlags = oldFlags;
+		if ("Lowercase" in prop || "Uppercase" in prop || "Alphabetic" in prop)
+			newFlags |= _TPP_CTYPE_ISSYMCONT | _TPP_CTYPE_ISSYMSTRT;
+		if ("XID_Start" in prop)
+			newFlags |= _TPP_CTYPE_ISSYMSTRT;
+		if ("XID_Continue" in prop)
+			newFlags |= _TPP_CTYPE_ISSYMCONT;
+		if (newFlags != oldFlags)
+			TRAITS[ord] = newFlags;
+	}
+	del DerivedCoreProperties;
+
+
+	/* ASCII traits */
+	for (local i, flags: getAsciiFlags().enumerate()) {
+		if (flags) {
+			TRAITS[i] = flags;
+		} else {
+			del TRAITS[i];
+		}
+	}
+
+	/* Traits overrides */
+	TRAITS[0x200B] = _TPP_CTYPE_ISSPACE; /* ZERO WIDTH SPACE */
+	TRAITS[0xFEFF] = _TPP_CTYPE_ISSPACE; /* ZERO WIDTH NO-BREAK SPACE */
+}
+
+
+
+function generateUnicodeDatabase() {
+	/* Figure out how best to encode the translation matrix for ORD -> DESC_INDEX */
+	local unicode_tab1, unicode_tab2, shift = splitTables(TRAITS, 0)...;
+	function printTable(name: string, tab: {int...}) {
+		print("static ",
+			cTypeForSizeof(sizeofGreatestIntegerInBytes(tab)),
+			" const ", name, "[", #tab, "] = {");
+		for (local line: tab.segments(32)) {
+			print("	", ",".join(line), ",");
+		}
+		print("};");
+	}
+
+	local tab1_mask = ((1 << shift) - 1);
+	local maxOrd = (TRAITS.keys > ...);
+
+	function lookup(ord) {
+		return unicode_tab2[(unicode_tab1[ord >> shift] << shift) + (ord & tab1_mask)];
+	}
+
+	/* For testing, assert that behavior of some ordinals. */
+	assert lookup('1'.ord()) == (_TPP_CTYPE_ISSYMCONT);
+	assert lookup('a'.ord()) == (_TPP_CTYPE_ISSYMSTRT | _TPP_CTYPE_ISSYMCONT);
+	assert lookup('ß'.ord()) == (_TPP_CTYPE_ISSYMSTRT | _TPP_CTYPE_ISSYMCONT);
+
+	print(COPYRIGHT);
+	print("#ifndef GUARD_TPP_CTYPE_UNICODE_C");
+	print("#define GUARD_TPP_CTYPE_UNICODE_C 1");
+	print("#define TPP_BUILDING 1");
+	print;
+	print('#include "api.h"');
+	print('#include "config.h"');
+	print('#include "ctype.h"');
+	print;
+	print("/*[[[tpp-begin]]]*/");
+	print("TPP_DECL_BEGIN");
+	print("");
+	print("#if TPP_HAVE_BUILTIN_CTYPE_UNICODE");
+	printTable("tpp_unicode_tab1", unicode_tab1);
+	printTable("tpp_unicode_tab2", unicode_tab2);
+	print;
+	print("TPP_IMPL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL");
+	print("_tpp_unicode_traits(tpp_unichar uch) {");
+	print("	if (uch >= ", (maxOrd + 1).hex(), ")");
+	print("		return 0;");
+	print("	return tpp_unicode_tab2[(tpp_unicode_tab1[(",
+		cTypeForInteger(maxOrd), ")(uch) >> ", shift, "] << ", shift,
+		") + ((", cTypeForInteger(tab1_mask), ")(uch) & ", tab1_mask.hex(), ")];");
+	print("}");
+	print("#endif /* TPP_HAVE_BUILTIN_CTYPE_UNICODE */");
+	print;
+	print("TPP_DECL_END");
+	print("/*[[[tpp-end]]]*/");
+	print;
+	print("#endif /* !GUARD_TPP_CTYPE_UNICODE_C */");
+}
+
+
+
+#ifdef __MAIN__
+loadTraits(".");
+with (local fp = File.open("../ctype-unicode.c", "wb")) {
+	local oldStdout = File.stdout;
+	try {
+		File.stdout = fp;
+		generateUnicodeDatabase();
+	} finally {
+		File.stdout = oldStdout;
+	}
+}
+#endif /* __MAIN__ */

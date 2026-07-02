@@ -249,7 +249,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_asb
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_div(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
 
-/* Print the representation of "self" to "printer" (used to implement __TPP_EVAL)
+/* Print the representation of "self" to "printer" (in target encoding; used to implement __TPP_EVAL)
  * @return: *  : Sum of positive return value of `printer'
  * @return: < 0: An error was thrown (TPP_SSIZE_ISERR), or `printer' returned this value */
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR

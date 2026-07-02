@@ -226,36 +226,55 @@ tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size)
 		tpp_char ch = *text++;
 		switch (ch) {
 
-		case '\t': {
+		case TPP_ASCII_TAB: {
 			tpp_column ts = tpp_gettabsize();
 			col += ts;
 			col -= col % ts;
 		}	break;
 
-		case '\r':
-			if (text < endp && *text == '\n')
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+		case TPP_ASCII_CR:
+#if TPP_HAVE_CR_LF_DETECTION
+			if (text < endp && *text == TPP_ASCII_LF)
 				++text;
 			TPP_FALLTHRU
-		case '\n': {
+#endif /* TPP_HAVE_CR_LF_DETECTION */
+		case TPP_ASCII_LF: {
 #if TPP_HAVE_UNICODE
 handle_linefeed:
 #endif /* TPP_HAVE_UNICODE */
 			++line;
 			col = 0;
-
 		}	break;
+#endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
 
 		default:
 #if TPP_HAVE_UNICODE
-			if (TPP_FILE_ENCODING_ISUTF8(enc) && ch >= 0x80) {
+			if (TPP_FILE_ENCODING_ISUTF8(enc) && tpp_ascii_ismb(ch)) {
 				/* Check for unicode linefeed characters */
 				tpp_unichar uch;
 				--text;
 				uch = tpp_unicode_readutf8(&text, endp);
 				if (tpp_unicode_islf(uch))
 					goto handle_linefeed;
-			}
+			} else
 #endif /* TPP_HAVE_UNICODE */
+#if !TPP_HAVE_ASSUME_ASCII_CTYPE
+			if (tpp_ascii_islf(ch)) {
+#if TPP_HAVE_CR_LF_DETECTION
+				if (ch == TPP_ASCII_CR && text < endp && *text == TPP_ASCII_LF)
+					++text;
+#endif /* TPP_HAVE_CR_LF_DETECTION */
+#if TPP_HAVE_UNICODE
+handle_linefeed:
+#endif /* TPP_HAVE_UNICODE */
+				++line;
+				col = 0;
+				break;
+			} else
+#endif /* !TPP_HAVE_ASSUME_ASCII_CTYPE */
+			{
+			}
 			++col;
 			break;
 		}
@@ -307,8 +326,10 @@ tpp_lcinfo_count_linefeed(tpp_file const *tpp_restrict self,
 			uc = tpp_unicode_readutf8(&ptr, end);
 			if (tpp_unicode_islf(uc)) {
 				++result;
-				if (uc == '\r' && (ptr < end && *ptr == '\n'))
+#if TPP_HAVE_CR_LF_DETECTION
+				if (uc == TPP_ASCII_CR && (ptr < end && *ptr == TPP_ASCII_LF))
 					++ptr;
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 			}
 		}
 	} else
@@ -318,8 +339,10 @@ tpp_lcinfo_count_linefeed(tpp_file const *tpp_restrict self,
 			tpp_char ch = *ptr++;
 			if (tpp_ascii_islf(ch)) {
 				++result;
-				if (ch == '\r' && (ptr < end && *ptr == '\n'))
+#if TPP_HAVE_CR_LF_DETECTION
+				if (ch == TPP_ASCII_CR && (ptr < end && *ptr == TPP_ASCII_LF))
 					++ptr;
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 			}
 		}
 	}
@@ -517,11 +540,11 @@ tpp_embed_to_utf8(unsigned char const *src, tpp_size src_count, tpp_char *dst_en
 	src += src_count;
 	while (src_count--) {
 		unsigned char b = *--src;
-		*--dst_end = '0' + (b % 10);
+		*--dst_end = (char)tpp_ascii_ofdigit(b % 10);
 		if (b >= 10) {
-			*--dst_end = '0' + ((b / 10) % 10);
+			*--dst_end = (char)tpp_ascii_ofdigit((b / 10) % 10);
 			if (b >= 100)
-				*--dst_end = '0' + (b / 100);
+				*--dst_end = (char)tpp_ascii_ofdigit(b / 100);
 		}
 		*--dst_end = ',';
 	}

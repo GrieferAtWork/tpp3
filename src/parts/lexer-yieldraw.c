@@ -240,7 +240,7 @@ tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base) {
  * Caller must ensure:
  * - That `tpp_file_isutf8(tpp_lexer_getfile(self))'
  * - That `*p_pos < tpp_lexer_getfile(self)->tf_end'
- * - That `**p_pos >= 0x80'
+ * - That `tpp_ascii_ismb(**p_pos)'
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
@@ -254,7 +254,7 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 	tpp_assert(tpp_file_isutf8(file));
 	tpp_assert(pos < end);
 	uc = *pos;
-	tpp_assert(uc >= 0x80);
+	tpp_assert(tpp_ascii_ismb(uc));
 	len = tpp_unicode_utf8seqlen[uc & 0x7f];
 	if tpp_unlikely(len == 0)
 		goto handle_ilseq;
@@ -426,7 +426,7 @@ again:
 	}
 
 #if TPP_HAVE_UNICODE
-	if (tpp_file_isutf8(file) && ch >= 0x80) {
+	if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 		tpp_unichar uc;
 		tpp_char const *npos = pos;
 		error = tpp_lexer_readutf8(self, &npos, &uc);
@@ -511,7 +511,8 @@ again_scan:
 	ch = *scan;
 	if (tpp_ascii_islf(ch)) {
 		++scan;
-		if (ch == '\r') {
+#if TPP_HAVE_CR_LF_DETECTION
+		if (ch == TPP_ASCII_CR) {
 			if tpp_unlikely(scan >= file->tf_end) {
 				/* Must extend file! */
 				tpp_size rel_scan = tpp_file_ptr2rel(file, scan);
@@ -520,9 +521,10 @@ again_scan:
 					goto return_error;
 				scan = tpp_file_rel2ptr(file, rel_scan);
 			}
-			if (scan < file->tf_end && *scan == '\n')
+			if (scan < file->tf_end && *scan == TPP_ASCII_LF)
 				++scan;
 		}
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 #if TPP_HAVE_UNICODE
 got_bse_after_linefeed:
 #endif /* TPP_HAVE_UNICODE */
@@ -576,7 +578,7 @@ got_bse_after_linefeed:
 		return TPP_EOK;
 	}
 #if TPP_HAVE_UNICODE
-	if (ch >= 0x80 && tpp_file_isutf8(file)) {
+	if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 		tpp_unichar uc;
 		tpp_char const *nscan = scan;
 		error = tpp_lexer_readutf8(self, &nscan, &uc);
@@ -634,7 +636,7 @@ again:
 	}
 
 #if TPP_HAVE_UNICODE
-	if (tpp_file_isutf8(file) && ch >= 0x80) {
+	if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 		tpp_unichar uc;
 		tpp_char const *npos = pos;
 		error = tpp_lexer_readutf8(self, &npos, &uc);
@@ -918,7 +920,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
                       tpp_unichar *tpp_restrict p_result) {
 	tpp_char ch;
 	tpp_errno error = tpp_lexer_readchar(self, p_pos, &ch);
-	if (!TPP_ISERR(error) && ch >= 0x80) {
+	if (!TPP_ISERR(error) && tpp_ascii_ismb(ch)) {
 		tpp_file const *const file = tpp_lexer_getfile(self);
 		if (tpp_file_isutf8(file)) {
 			--(*p_pos);
@@ -984,7 +986,8 @@ again:
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
 handle_ascii_lf:
 #endif /* TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
-		if (ch == '\r') {
+#if TPP_HAVE_CR_LF_DETECTION
+		if (ch == TPP_ASCII_CR) {
 			if (pos >= file->tf_end) {
 				tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 				error = tpp_file_expandchunk(file);
@@ -992,13 +995,14 @@ handle_ascii_lf:
 				if (TPP_ISERR(error))
 					goto done;
 			}
-			if (pos < file->tf_end && *pos == '\n')
+			if (pos < file->tf_end && *pos == TPP_ASCII_LF)
 				++pos;
 		}
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 		goto done;
 	} else
 #if TPP_HAVE_UNICODE
-	if (ch >= 0x80 && tpp_file_isutf8(file)) {
+	if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 		tpp_unichar uc;
 		--pos;
 		error = tpp_lexer_readutf8(self, &pos, &uc);
@@ -1080,7 +1084,7 @@ handle_backslash:
 					continue;
 				} else
 #if TPP_HAVE_UNICODE
-				if (ch >= 0x80 && tpp_file_isutf8(file)) {
+				if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 					tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
 					tpp_unichar uc;
 					--pos;
@@ -1286,7 +1290,7 @@ handle_linefeed:
 			}
 		} else
 #if TPP_HAVE_UNICODE
-		if (ch >= 0x80 && tpp_file_isutf8(file)) {
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 			/* Check for unicode linefeed */
 			tpp_unichar uc;
 			*p_pos = tpp_file_rel2ptr(file, old_pos);
@@ -1501,7 +1505,7 @@ handle_linefeed:
 			}
 		} else
 #if TPP_HAVE_UNICODE
-		if (ch >= 0x80 && tpp_file_isutf8(file)) {
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 			/* Check for unicode linefeed */
 			tpp_unichar uc;
 			*p_pos = tpp_file_rel2ptr(file, old_pos);
@@ -1588,11 +1592,11 @@ tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 					break;
 			}
 			nibble_ch = scan[cur_digit + 1];
-			if (nibble_ch >= '0' && nibble_ch <= '9') {
+			if (tpp_ascii_isdigit(nibble_ch)) {
 				/* ... */
-			} else if (nibble_ch >= 'a' && nibble_ch <= 'f') {
+			} else if (tpp_ascii_islwrxdigit(nibble_ch)) {
 				/* ... */
-			} else if (nibble_ch >= 'A' && nibble_ch <= 'F') {
+			} else if (tpp_ascii_isuprxdigit(nibble_ch)) {
 				/* ... */
 			} else {
 				break;
@@ -4062,39 +4066,77 @@ continue_pascal_comment_with_ch2:
 #endif /* TPP_HAVE_TPP_TOK_DOLLAR */
 /************************************************************************/
 
-	default: {
-#if TPP_HAVE_UNICODE
+
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+#define tpp_ascii_maybe_test(x) 0
+#else /* TPP_HAVE_ASSUME_ASCII_CTYPE */
+#define tpp_ascii_maybe_test(x) x
+	default:
+#endif /* !TPP_HAVE_ASSUME_ASCII_CTYPE */
+	{
 		/* Check for utf-8 sequence */
-		if (tpp_file_isutf8(file) && ch >= 0x80) {
-			tpp_unichar uc;
-			--pos;
-			error = tpp_lexer_readutf8(self, &pos, &uc);
-			if (TPP_ISERR(error))
-				goto return_error;
-			if tpp_unlikely(uc == 0 && !tpp_file_isutf8(file)) {
-				++pos; /* Malformed utf-8 sequence caused unicode to be disabled */
-			} else {
-				/* Handle unicode character traits */
-				if (tpp_unicode_islf(uc))
-					goto do_set_linefeed;
-				if (tpp_unicode_isspace(uc))
-					goto handle_space;
-				if (tpp_unicode_issymstrt(uc))
-					goto handle_keyword;
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_maybe_test(tpp_ascii_ismb(ch))) {
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+#if tpp_ascii_ismb(0x80)
+	case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+	case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
+	case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
+	case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
+	case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
+	case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
+	case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
+	case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
+#else /* tpp_ascii_ismb(0x80) */
+#if tpp_ascii_ismb(0xbf)
+#error "Unsupported 'tpp_ascii_ismb' configuration. Try re-building with -DTPP_HAVE_ASSUME_ASCII_CTYPE=0"
+#endif /* tpp_ascii_ismb(0xbf) */
+#endif /* !tpp_ascii_ismb(0x80) */
+	case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
+	case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
+	case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
+	case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
+	case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
+	case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef:
+	case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7:
+	case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff:
+#endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
+			if (tpp_file_isutf8(file)) {
+				tpp_unichar uc;
+				--pos;
+				error = tpp_lexer_readutf8(self, &pos, &uc);
+				if (TPP_ISERR(error))
+					goto return_error;
+				if tpp_unlikely (uc == 0 && !tpp_file_isutf8(file)) {
+					++pos; /* Malformed utf-8 sequence caused unicode to be disabled */
+				} else {
+					/* Handle unicode character traits */
+					if (tpp_unicode_islf(uc))
+						goto handle_linefeed;
+#define WANT_handle_linefeed
+					if (tpp_unicode_isspace(uc))
+						goto handle_space;
+#define WANT_handle_space
+					if (tpp_unicode_issymstrt(uc))
+						goto handle_keyword;
 #define WANT_handle_keyword
-#if TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT
-				if (tpp_unicode_isdigit(uc))
-					goto handle_digit;
-#endif /* TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT */
-				result = TPP_TOK_UNICHAR;
-				goto set_result;
+					result = TPP_TOK_UNICHAR;
+					goto set_result;
+				}
 			}
 		}
 #endif /* TPP_HAVE_UNICODE */
 
-		if (tpp_ascii_islf(ch)) {
+		if (tpp_ascii_maybe_test(tpp_ascii_islf(ch))) {
 			/* Deal with \r\n linefeed sequences */
-			if (ch == '\r') {
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+	case TPP_ASCII_CR:
+#endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
+#if TPP_HAVE_CR_LF_DETECTION
+#if !TPP_HAVE_ASSUME_ASCII_CTYPE
+			if (ch == TPP_ASCII_CR)
+#endif /* !TPP_HAVE_ASSUME_ASCII_CTYPE */
+			{
 				if tpp_unlikely(pos >= end) {
 					error = tpp_file_expandchunk(file);
 					if (TPP_ISERR(error))
@@ -4102,21 +4144,49 @@ continue_pascal_comment_with_ch2:
 					pos = tpp_file_rel2ptr(file, rel_start + 1);
 					end = file->tf_end;
 					if (pos >= end)
-						goto do_set_linefeed; /* \r followed by EOF */
+						goto handle_linefeed; /* \r followed by EOF */
+#define WANT_handle_linefeed
 				}
-				if (*pos == '\n')
+				if (*pos == TPP_ASCII_LF)
 					++pos; /* 2-byte linefeed sequence */
 			}
-do_set_linefeed:
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+			TPP_FALLTHRU
+#endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
+#endif /* TPP_HAVE_CR_LF_DETECTION */
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+	case TPP_ASCII_LF:
+#endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
+#ifdef WANT_handle_linefeed
+#undef WANT_handle_linefeed
+handle_linefeed:
+#endif /* WANT_handle_linefeed */
 			result = TPP_TOK_LF;
 			goto set_result;
 		}
 
 		/* Check for space */
-		if (tpp_ascii_isspace(ch)) {
-#if TPP_HAVE_UNICODE
+		if (tpp_ascii_maybe_test(tpp_ascii_isspace(ch))) {
+	case (tpp_char)0: /* Important: 0 must *always* be treated as whitespace. Else, we must accidentally indicate EOF */
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+	case (tpp_char)1: case (tpp_char)2: case (tpp_char)3:
+	case (tpp_char)4: case (tpp_char)5: case (tpp_char)6:
+	case (tpp_char)7: case (tpp_char)8: case (tpp_char)9:
+/*	case (tpp_char)10: * TPP_ASCII_LF */
+	case (tpp_char)11: case (tpp_char)12:
+/*	case (tpp_char)13: * TPP_ASCII_CR */
+	case (tpp_char)14: case (tpp_char)15: case (tpp_char)16:
+	case (tpp_char)17: case (tpp_char)18: case (tpp_char)19:
+	case (tpp_char)20: case (tpp_char)21: case (tpp_char)22:
+	case (tpp_char)23: case (tpp_char)24: case (tpp_char)25:
+	case (tpp_char)26: case (tpp_char)27: case (tpp_char)28:
+	case (tpp_char)29: case (tpp_char)30: case (tpp_char)31:
+	case (tpp_char)32:
+#endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
+#ifdef WANT_handle_space
+#undef WANT_handle_space
 handle_space:
-#endif /* TPP_HAVE_UNICODE */
+#endif /* WANT_handle_space */
 			error = tpp_lexer_skipspace_nolf(self, &pos);
 			if (TPP_ISERR(error))
 				goto return_error;
@@ -4147,7 +4217,7 @@ handle_space:
 		}
 
 		/* Check for keywords... */
-		if (tpp_ascii_issymstrt(ch)) {
+		if (tpp_ascii_maybe_test(tpp_ascii_issymstrt(ch))) {
 			tpp_char const *kwd_start;
 			tpp_size kwd_len;
 			tpp_hash kwd_hash;
@@ -4156,6 +4226,42 @@ handle_space:
 			bool uses_esc;
 			tpp_size rel_kwd_end;
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+		case 'a': case 'b': case 'c': case 'd': case 'e':
+		case 'f': case 'g': case 'h': case 'i': case 'j':
+		case 'k': case 'l': case 'm': case 'n': case 'o':
+		case 'p': case 'q':
+#if !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+		case 'r':
+#endif /* !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+		case 's': case 't':
+#if (!TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && !TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && \
+     !TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && !TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL)
+		case 'u':
+#endif /* ... */
+		case 'v': case 'w': case 'x': case 'y': case 'z':
+		case 'A': case 'B': case 'C': case 'D': case 'E':
+		case 'F': case 'G': case 'H': case 'I': case 'J':
+		case 'K':
+#if !TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && !TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+		case 'L':
+#endif /* !TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && !TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
+		case 'M': case 'N': case 'O': case 'P': case 'Q':
+#if (!TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL && !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL && \
+     !TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL && !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)
+		case 'R':
+#endif /* ... */
+		case 'S': case 'T':
+#if !TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && !TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+		case 'U':
+#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && !TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+		case 'V': case 'W': case 'X': case 'Y': case 'Z':
+		case '_':
+#if !TPP_HAVE_TPP_TOK_DOLLAR
+		case '$':
+#endif /* !TPP_HAVE_TPP_TOK_DOLLAR */
+#endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
+
 #ifdef WANT_handle_keyword
 #undef WANT_handle_keyword
 handle_keyword:
@@ -4316,25 +4422,13 @@ handle_keyword_with_esc:
 
 		/* Check for digits */
 #if TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT
-		if (tpp_ascii_isdigit(ch) && (tpp_lexer_has(self, TPP_TOK_FLOAT) ||
-		                              tpp_lexer_has(self, TPP_TOK_INT))) {
-#if TPP_HAVE_UNICODE
-handle_digit:
-#endif /* TPP_HAVE_UNICODE */
-			error = tpp_lexer_seek_end_of_keyword(self, &pos);
-			if (TPP_ISERR(error))
-				goto return_error;
-#if TPP_HAVE_BSE
-			error = tpp_lexer_skip_bse_after_keyword(self, &pos);
-			if (TPP_ISERR(error))
-				goto return_error;
-#endif /* TPP_HAVE_BSE */
-
-#if TPP_HAVE_TPP_TOK_FLOAT
-			if (pos < file->tf_end && *pos == '.' &&
-			    tpp_lexer_has(self, TPP_TOK_FLOAT)) {
-				/* Floating point token... */
-				++pos;
+		if (tpp_ascii_maybe_test(tpp_ascii_isdigit(ch))) {
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+	case '0': case '1': case '2': case '3': case '4':
+	case '5': case '6': case '7': case '8': case '9':
+#endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
+			if (tpp_lexer_has(self, TPP_TOK_FLOAT) ||
+			    tpp_lexer_has(self, TPP_TOK_INT)) {
 				error = tpp_lexer_seek_end_of_keyword(self, &pos);
 				if (TPP_ISERR(error))
 					goto return_error;
@@ -4343,25 +4437,45 @@ handle_digit:
 				if (TPP_ISERR(error))
 					goto return_error;
 #endif /* TPP_HAVE_BSE */
-				/* TODO: 1.0E+1 */
-				/* TODO: 1E+1 */
-				/* TODO: .1E+1 */
-				result = TPP_TOK_FLOAT;
-				goto set_result;
-			}
+
+#if TPP_HAVE_TPP_TOK_FLOAT
+				if (pos < file->tf_end && *pos == '.' &&
+				    tpp_lexer_has(self, TPP_TOK_FLOAT)) {
+					/* Floating point token... */
+					++pos;
+					error = tpp_lexer_seek_end_of_keyword(self, &pos);
+					if (TPP_ISERR(error))
+						goto return_error;
+#if TPP_HAVE_BSE
+					error = tpp_lexer_skip_bse_after_keyword(self, &pos);
+					if (TPP_ISERR(error))
+						goto return_error;
+#endif /* TPP_HAVE_BSE */
+					/* TODO: 1.0E+1 */
+					/* TODO: 1E+1 */
+					/* TODO: .1E+1 */
+					result = TPP_TOK_FLOAT;
+					goto set_result;
+				}
 #endif /* TPP_HAVE_TPP_TOK_FLOAT */
 
 #if TPP_HAVE_TPP_TOK_INT
-			if (tpp_lexer_has(self, TPP_TOK_INT)) {
-				result = TPP_TOK_INT;
-				goto set_result;
-			}
+				if (tpp_lexer_has(self, TPP_TOK_INT)) {
+					result = TPP_TOK_INT;
+					goto set_result;
+				}
 #endif /* TPP_HAVE_TPP_TOK_INT */
+			}
 		}
 #endif /* TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT */
 
+		/* Other trait-based character checks would go here... */
 	}	break;
 
+#if TPP_HAVE_ASSUME_ASCII_CTYPE
+	default: break; /* Everything else is a single-character token */
+#endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
+#undef tpp_ascii_maybe_test
 	}
 
 	/* Fallback: single-character token */

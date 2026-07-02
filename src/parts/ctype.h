@@ -26,91 +26,174 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
+/* You can override the builtin ctype matrix if you already have your own.
+ * however yours should match ASCII expectations, especially when it comes
+ * to control characters. If this is not the case */
 #undef TPP_HAVE_BUILTIN_CTYPE
 #if (!defined(tpp_ascii_issymstrt) ||    \
      !defined(tpp_ascii_issymcont) ||    \
      !defined(tpp_ascii_isdigit) ||      \
      !defined(tpp_ascii_isspace) ||      \
      !defined(tpp_ascii_islf) ||         \
-     !defined(tpp_ascii_isspaceornul) || \
-     !defined(tpp_ascii_islfornul) ||    \
+     !defined(tpp_ascii_islf_or_mblf) || \
      !defined(tpp_ascii_isspace_nolf))
 #define TPP_HAVE_BUILTIN_CTYPE 1
 #else /* ... */
 #define TPP_HAVE_BUILTIN_CTYPE 0
 #endif /* !... */
 
+/* Assume that all "tpp_ascii_is*" macros are ascii-compatible
+ * This allows for some additional optimizations when it comes
+ * to routing character bytes to token decoders.
+ *
+ * iow: When this is enabled, "tpp_ascii_islf()" in a switch can
+ *      be replaced with "case TPP_ASCII_LF: case TPP_ASCII_CR:"
+ */
+#ifndef TPP_HAVE_ASSUME_ASCII_CTYPE
+#define TPP_HAVE_ASSUME_ASCII_CTYPE (TPP_HAVE_BUILTIN_CTYPE || 1)
+#endif /* !TPP_HAVE_ASSUME_ASCII_CTYPE */
+
+
+/* Ordinals for special character with special meaning */
+#define TPP_ASCII_TAB 9
+#define TPP_ASCII_LF  10
+#define TPP_ASCII_CR  13
+
 
 #if TPP_HAVE_BUILTIN_CTYPE
 #define _TPP_CTYPE_ISSYMSTRT  0x01 /* Symbol start character */
 #define _TPP_CTYPE_ISSYMCONT  0x02 /* Symbol continuation character */
-#define _TPP_CTYPE_ISSPACE    0x04 /* Space character */
-#define _TPP_CTYPE_ISDIGIT    0x08 /* Space character */
-#define _TPP_CTYPE_ISLF       0x10 /* Linefeed character (\r and \n) */
-#define _TPP_CTYPE_ISNONASCII 0x20 /* 128+ */
+#define _TPP_CTYPE_ISSPACE    0x04 /* Space character (excluding \r and \n) */
+#define _TPP_CTYPE_ISLF       0x08 /* Linefeed character (\r and \n) */
+#define _TPP_CTYPE_ISDIGIT    0x10 /* 0-9 */
+#define _TPP_CTYPE_ISMBLF     0x20 /* First byte of utf8-encoded unicode linefeed character sequence (0xc2 + 0xe2 right now) */
 
-TPP_CONST_DECL uint_least8_t const tpp_ctype[256]; /* Don't access directly! (considered TPP_INTERNAL) */
 #if UINT_LEAST8_MAX == 0xff
 #define _tpp_ascii_mask(ch) ((uint_least8_t)(ch))
 #else /* UINT_LEAST8_MAX == 0xff */
 #define _tpp_ascii_mask(ch) ((ch) & 0xff)
 #endif /* UINT_LEAST8_MAX != 0xff */
-
-#ifndef tpp_ascii_issymstrt
-#define tpp_ascii_issymstrt(ch)    (tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMSTRT)
-#endif /* !tpp_ascii_issymstrt */
-#ifndef tpp_ascii_issymcont
-#define tpp_ascii_issymcont(ch)    (tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMCONT)
-#endif /* !tpp_ascii_issymcont */
-#ifndef tpp_ascii_isdigit
-#define tpp_ascii_isdigit(ch)      (tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISDIGIT)
-#endif /* !tpp_ascii_isdigit */
-#ifndef tpp_ascii_isspace
-#define tpp_ascii_isspace(ch)      (tpp_ctype[_tpp_ascii_mask(ch)] & (_TPP_CTYPE_ISSPACE | _TPP_CTYPE_ISLF))
-#endif /* !tpp_ascii_isspace */
-#ifndef tpp_ascii_islf
-#define tpp_ascii_islf(ch)         (tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISLF)
-#endif /* !tpp_ascii_islf */
-#ifndef tpp_ascii_islfornascii
-#define tpp_ascii_islfornascii(ch) (tpp_ctype[_tpp_ascii_mask(ch)] & (_TPP_CTYPE_ISLF | _TPP_CTYPE_ISNONASCII))
-#endif /* !tpp_ascii_islfornascii */
-#ifndef tpp_ascii_isspace_nolf
-#define tpp_ascii_isspace_nolf(ch) (tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSPACE)
-#endif /* !tpp_ascii_isspace_nolf */
+TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (considered TPP_INTERNAL) */
+#define tpp_ascii_issymstrt(ch)    (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMSTRT)
+#define tpp_ascii_issymcont(ch)    (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMCONT)
+#define tpp_ascii_isdigit(ch)      (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISDIGIT)
+#define tpp_ascii_isspace(ch)      (_tpp_ctype[_tpp_ascii_mask(ch)] & (_TPP_CTYPE_ISSPACE | _TPP_CTYPE_ISLF))
+#define tpp_ascii_islf(ch)         (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISLF)
+#define tpp_ascii_islf_or_mblf(ch) (_tpp_ctype[_tpp_ascii_mask(ch)] & (_TPP_CTYPE_ISLF | _TPP_CTYPE_ISMBLF))
+#define tpp_ascii_isspace_nolf(ch) (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSPACE)
 #endif /* TPP_HAVE_BUILTIN_CTYPE */
 
-/* TODO: "tpp_ascii_islfornascii()" could also be replaced with "tpp_ascii_islforutf8()", which
- *       would just also return true of the first byte of a utf-8 sequence that evaluates to a
- *       unicode linefeed character */
-#ifndef tpp_ascii_islfornascii
-#define tpp_ascii_islfornascii(ch) (tpp_ascii_islf(ch) || (ch) >= 0x80)
-#endif /* !tpp_ascii_islfornascii */
+/* Check if "ch" is the first byte of a multi-byte UTF-8 sequence */
+#ifndef tpp_ascii_ismb
+#if 0 /* Setting "1" here reduces the chances of unicode encoding errors being detected */
+#define tpp_ascii_ismb(ch) ((ch) >= 0xc0)
+#else
+#define tpp_ascii_ismb(ch) ((ch) >= 0x80)
+#endif
+#endif /* !tpp_ascii_ismb */
+
 #ifndef tpp_ascii_isspace_nolf
 #define tpp_ascii_isspace_nolf(ch) (tpp_ascii_isspace(ch) && !tpp_ascii_islf(ch))
 #endif /* !tpp_ascii_isspace_nolf */
+/*[[[deemon
+import UTF8_LF_FIRST_BYTES from ".token-encodestring-mblf";
+print("#ifndef tpp_ascii_islf_or_mblf");
+print("#define tpp_ascii_islf_or_mblf(ch) (tpp_ascii_islf(ch)",
+	"".join(for (local b: UTF8_LF_FIRST_BYTES) f" || (ch) == {b.hex()}"),
+	")");
+print("#endif /" "* !tpp_ascii_islf_or_mblf *" "/");
+]]]*/
+#ifndef tpp_ascii_islf_or_mblf
+#define tpp_ascii_islf_or_mblf(ch) (tpp_ascii_islf(ch) || (ch) == 0xc2 || (ch) == 0xe2)
+#endif /* !tpp_ascii_islf_or_mblf */
+/*[[[end]]]*/
+
+
+/* Macros used to implement integer conversion */
+#ifndef tpp_ascii_asdigit
+#define tpp_ascii_asdigit(ch) ((ch) - '0') /* tpp_ascii_isdigit-ch => value */
+#define tpp_ascii_ofdigit(v)  ('0' + (v))  /* value => tpp_ascii_isdigit-ch */
+#endif /* !tpp_ascii_ofdigit */
+#ifndef tpp_ascii_isoctdigit
+#define tpp_ascii_isoctdigit(ch) ((ch) >= '0' && (ch) <= '7')
+#define tpp_ascii_asoctdigit(ch) tpp_ascii_asdigit(ch)
+#define tpp_ascii_ofoctdigit(v)  tpp_ascii_ofdigit(v)
+#endif /* !tpp_ascii_isoctdigit */
+#ifndef tpp_ascii_islwrxdigit
+#define tpp_ascii_islwrxdigit(ch) ((ch) >= 'a' && (ch) <= 'f')
+#define tpp_ascii_aslwrxdigit(ch) (10 + ((ch) - 'a')) /* tpp_ascii_islwrxdigit-ch => value */
+#define tpp_ascii_oflwrxdigit(v)  ('a' + ((v) - 10))  /* value => tpp_ascii_islwrxdigit-ch */
+#endif /* !tpp_ascii_islwrxdigit */
+#ifndef tpp_ascii_isuprxdigit
+#define tpp_ascii_isuprxdigit(ch) ((ch) >= 'A' && (ch) <= 'F')
+#define tpp_ascii_asuprxdigit(ch) (10 + ((ch) - 'A')) /* tpp_ascii_isuprxdigit-ch => value */
+#define tpp_ascii_ofuprxdigit(v)  ('A' + ((v) - 10))  /* value => tpp_ascii_isuprxdigit-ch */
+#endif /* !tpp_ascii_isuprxdigit */
 
 
 #if TPP_HAVE_UNICODE
 
-/* Unicode character traits (all of these take "tpp_unichar ord") */
+/* Built-in unicode character traits database */
+#if TPP_HAVE_BUILTIN_CTYPE_UNICODE
+#if (defined(tpp_unicode_isspace_nolf) || \
+     defined(tpp_unicode_issymstrt) ||    \
+     defined(tpp_unicode_issymcont) ||    \
+     defined(tpp_unicode_isspace) ||      \
+     defined(tpp_unicode_islf))
+#define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* So your compiler shows you where the definition comes from */
+#error "User-supplied unicode trait functions defined, but 'TPP_HAVE_BUILTIN_CTYPE_UNICODE=1'. Please use 'TPP_HAVE_BUILTIN_CTYPE_UNICODE=0' when providing your own traits"
+#endif /* ... */
+
+#ifndef _TPP_CTYPE_ISSYMSTRT
+#define _TPP_CTYPE_ISSYMSTRT  0x01 /* Symbol start character */
+#define _TPP_CTYPE_ISSYMCONT  0x02 /* Symbol continuation character */
+#define _TPP_CTYPE_ISSPACE    0x04 /* Space character (excluding \r and \n) */
+#define _TPP_CTYPE_ISLF       0x08 /* Linefeed character (\r and \n) */
+#endif /* !_TPP_CTYPE_ISSYMSTRT */
+
+TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp_unichar uch); /* Don't access directly! (considered TPP_INTERNAL) */
+#define tpp_unicode_isspace_nolf(ord) (_tpp_unicode_traits(ord) & _TPP_CTYPE_ISSPACE)
+#define tpp_unicode_issymstrt(ord)    (_tpp_unicode_traits(ord) & _TPP_CTYPE_ISSYMSTRT)
+#define tpp_unicode_issymcont(ord)    (_tpp_unicode_traits(ord) & _TPP_CTYPE_ISSYMCONT)
+#define tpp_unicode_isspace(ord)      (_tpp_unicode_traits(ord) & (_TPP_CTYPE_ISSPACE | _TPP_CTYPE_ISLF))
+#define tpp_unicode_islf(ord)         (_tpp_unicode_traits(ord) & _TPP_CTYPE_ISLF)
+#endif /* TPP_HAVE_BUILTIN_CTYPE_UNICODE */
+
+
+
+/* Unicode character traits (all of these take "tpp_unichar ord")
+ *
+ * If you want TPP to understand character traits across the full
+ * unicode character range, you must define (at least) the following
+ * macros prior to including any TPP header/source:
+ * >> #define tpp_unicode_isspace(ord)    <"ord" is a unicode SPACE or LF character>
+ * >> #define tpp_unicode_islf(ord)       <"ord" is a unicode LF character>
+ * >> #define tpp_unicode_issymstrt(ord)  <"ord" may be the first character of a keyword>
+ * >> #define tpp_unicode_issymcont(ord)  <"ord" may be the 2nd+ character of a keyword>
+ *
+ * These macros are then used by "tpp_lexer_yieldraw_at()" to determine
+ * the meaning of unicode characters encountered as part of input text,
+ * with any character not satisfying at least one of the above traits
+ * being yielded as a "TPP_TOK_UNICHAR" token. */
+#ifndef tpp_unicode_isspace_nolf
+#if defined(tpp_unicode_isspace) && defined(tpp_unicode_islf)
+#define tpp_unicode_isspace_nolf(ord) (tpp_unicode_isspace(ord) && !tpp_unicode_islf(ord))
+#else /* tpp_unicode_isspace && tpp_unicode_islf */
+#define tpp_unicode_isspace_nolf(ord) ((ord) <= 0xff && tpp_ascii_isspace_nolf(ord))
+#endif /* !tpp_unicode_isspace || !tpp_unicode_islf */
+#endif /* !tpp_unicode_isspace_nolf */
 #ifndef tpp_unicode_issymstrt
-#define tpp_unicode_issymstrt(ord)    ((ord) >= 0x80 || tpp_ascii_issymstrt(ord))
+#define tpp_unicode_issymstrt(ord) ((ord) >= 0x80 || tpp_ascii_issymstrt(ord))
 #endif /* !tpp_unicode_issymstrt */
 #ifndef tpp_unicode_issymcont
-#define tpp_unicode_issymcont(ord)    ((ord) >= 0x80 || tpp_ascii_issymcont(ord))
+#define tpp_unicode_issymcont(ord) ((ord) >= 0x80 || tpp_ascii_issymcont(ord))
 #endif /* !tpp_unicode_issymcont */
-#ifndef tpp_unicode_isdigit
-#define tpp_unicode_isdigit(ord)      ((ord) < 0x80 && tpp_ascii_isdigit(ord))
-#endif /* !tpp_unicode_isdigit */
 #ifndef tpp_unicode_isspace
-#define tpp_unicode_isspace(ord)      ((ord) <= 0xff && tpp_ascii_isspace(ord))
+#define tpp_unicode_isspace(ord) ((ord) <= 0xff && tpp_ascii_isspace(ord))
 #endif /* !tpp_unicode_isspace */
 #ifndef tpp_unicode_islf
-#define tpp_unicode_islf(ord)         ((ord) <= 0xff && tpp_ascii_islf(ord))
+#define tpp_unicode_islf(ord) ((ord) <= 0xff && tpp_ascii_islf(ord))
 #endif /* !tpp_unicode_islf */
-#ifndef tpp_unicode_isspace_nolf
-#define tpp_unicode_isspace_nolf(ord) ((ord) <= 0xff && tpp_ascii_isspace_nolf(ord))
-#endif /* !tpp_unicode_isspace_nolf */
 
 /* Read a single unicode character from a given utf-8 blob.
  * WARNING: This function doesn't do any validity checking,
@@ -123,6 +206,7 @@ tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
 tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base);
 #endif /* TPP_HAVE_UNICODE */
+
 
 #ifndef TPP_UTOA_MAXLEN
 #if TPP_UINTMAX_MAX <= TPP_UINTMAX_C(255)

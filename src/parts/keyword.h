@@ -407,7 +407,7 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 
 /* Check if "ch" may be the first byte of a LF-style character */
 #if TPP_HAVE_UNICODE
-#define _tpp_maybe_islf(ch) tpp_ascii_islfornascii(ch)
+#define _tpp_maybe_islf(ch) tpp_ascii_islf_or_mblf(ch)
 #else /* TPP_HAVE_UNICODE */
 #define _tpp_maybe_islf(ch) tpp_ascii_islf(ch)
 #endif /* !TPP_HAVE_UNICODE */

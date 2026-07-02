@@ -1,0 +1,47 @@
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import * from deemon;
+
+function getUnicodeLinefeedCharacters(): {int...} {
+#if 1 /* Cached (since enumerating all of unicode is pretty slow) */
+	return { 0x85, 0x2028, 0x2029 };
+#else
+	local result = [];
+	for (local ord: [0x80: 0x10ffff+1]) {
+		if (string.chr(ord).islf())
+			result.append(ord);
+	}
+	print ", ".join(result.map(e -> e.hex())); /* To update cache above */
+	return result.frozen;
+#endif
+}
+
+global final UNICODE_LF_CHARACTERS = getUnicodeLinefeedCharacters();
+
+function getUtf8LineFeedFirstBytes(): {int...} {
+	local result = HashSet();
+	for (local ord: UNICODE_LF_CHARACTERS) {
+		local b = string.chr(ord).encode("utf-8").first;
+		result.insert(b);
+	}
+	return result.sorted().frozen;
+}
+
+global final UTF8_LF_FIRST_BYTES = getUtf8LineFeedFirstBytes();

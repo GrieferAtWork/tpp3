@@ -1036,6 +1036,7 @@ tpp_lexer_process_pragma_GCC_warning(tpp_lexer *tpp_restrict self, tpp_warning_i
 #if TPP_HAVE_PRAGMA_GCC_DEPENDENCY
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_GCC_dependency(tpp_lexer *tpp_restrict self) {
+#if 0 /* TODO */
 	tpp_token_id tok;
 	tpp_errno error;
 	do {
@@ -1052,6 +1053,7 @@ tpp_lexer_process_pragma_GCC_dependency(tpp_lexer *tpp_restrict self) {
 		error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
 	}
+#endif
 
 	/* TODO */
 	(void)self;

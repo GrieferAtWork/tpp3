@@ -297,12 +297,12 @@ handle_eof:
 		case '8':
 		case '9': {
 			char const *block_start = iter - 3;
-			unsigned int length = (unsigned int)(ch - '0');
+			unsigned int length = (unsigned int)tpp_ascii_asdigit(ch);
 			for (;;) {
 				ch = *iter++;
-				if (ch >= '0' && ch <= '9') {
+				if (tpp_ascii_isdigit(ch)) {
 					length *= 10;
-					length += (unsigned int)(ch - '0');
+					length += (unsigned int)tpp_ascii_asdigit(ch);
 				} else {
 					break;
 				}

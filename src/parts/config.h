@@ -151,6 +151,19 @@
 #define TPP_HAVE_UNICODE 1
 #endif /* !TPP_HAVE_UNICODE */
 
+/* Supply a built-in unicode character traits database (adds ~36KiB data to final executable) */
+#ifndef TPP_HAVE_BUILTIN_CTYPE_UNICODE
+#if (defined(tpp_unicode_isspace_nolf) || \
+     defined(tpp_unicode_issymstrt) ||    \
+     defined(tpp_unicode_issymcont) ||    \
+     defined(tpp_unicode_isspace) ||      \
+     defined(tpp_unicode_islf))
+#define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* There are user-supplied unicode trait functions */
+#else /* ... */
+#define TPP_HAVE_BUILTIN_CTYPE_UNICODE (TPP_HAVE_UNICODE && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !... */
+#endif /* !TPP_HAVE_BUILTIN_CTYPE_UNICODE */
+
 /* Provide a function "tpp_strerror()" to get a description of a given "tpp_errno" error code. */
 #ifndef TPP_HAVE_STRERROR
 #define TPP_HAVE_STRERROR TPP_HAVE_PROFILE_NOT_MINIMAL
@@ -229,6 +242,10 @@
 #define TPP_HAVE_FILE_LC_CACHE TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_FILE_LC_CACHE */
 
+/* Enable support for detecting "\r\n" as a singular line-feed */
+#ifndef TPP_HAVE_CR_LF_DETECTION
+#define TPP_HAVE_CR_LF_DETECTION 1
+#endif /* !TPP_HAVE_CR_LF_DETECTION */
 
 
 /* All TPP_HAVE_* options (with "-f*"-style comments) can be configured as:
@@ -1131,7 +1148,7 @@
 /************************************************************************/
 
 /* "$" (treat as its own token, rather than as part of identifiers/keywords)
- * @detect: #if __TPP_COUNT_TOKENS("a$b") == 1 */
+ * @detect: #if __TPP_COUNT_TOKENS("a$b") == 3 */
 #ifndef TPP_HAVE_TPP_TOK_DOLLAR
 #define TPP_HAVE_TPP_TOK_DOLLAR TPP_COMMON_HAVE_TPP_TOK_1CHAR /* "-ftok-dollar" */
 #endif /* !TPP_HAVE_TPP_TOK_DOLLAR */

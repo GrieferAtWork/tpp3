@@ -504,7 +504,7 @@ again_read_opcode:
 					if (scanner >= self->tmflcsv_expand_end)
 						return false;
 					nargs_ch = *scanner;
-					if (nargs_ch >= '0' && nargs_ch <= '9')
+					if (tpp_ascii_isdigit(nargs_ch))
 						break;
 					++scanner;
 				}
@@ -536,7 +536,7 @@ again_read_opcode:
 		/* Scan decimals and try to match what comes after... */
 		for (;;) {
 			nargs_ch = *self->tmflcsv_expand_start;
-			if (!(nargs_ch >= '0' && nargs_ch <= '9'))
+			if (!tpp_ascii_isdigit(nargs_ch))
 				return false;
 			++self->tmflcsv_expand_start;
 			nested_vars = *self;

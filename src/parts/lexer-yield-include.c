@@ -86,7 +86,7 @@ warn_linefeed:
 				break;
 			} else
 #if TPP_HAVE_UNICODE
-			if (ch >= 0x80 && tpp_file_isutf8(file)) {
+			if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 				tpp_unichar uc;
 				--pos;
 				error = tpp_lexer_readunichar(self, &pos, &uc);

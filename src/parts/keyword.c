@@ -543,8 +543,10 @@ again:
 		if (!tpp_unicode_islf(*iter))
 			goto not_bse;
 #endif /* !TPP_HAVE_BSE_WHITESPACE */
-		if (uc == '\r' && iter < end && *iter == '\n')
+#if TPP_HAVE_CR_LF_DETECTION
+		if (uc == TPP_ASCII_CR && iter < end && *iter == TPP_ASCII_LF)
 			++iter;
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 	} else
 #endif /* TPP_HAVE_UNICODE */
 	{
@@ -559,11 +561,14 @@ again:
 #endif /* TPP_HAVE_BSE_WHITESPACE */
 		if (!tpp_ascii_islf(*iter))
 			goto not_bse;
-		if (*iter == '\r') {
+#if TPP_HAVE_CR_LF_DETECTION
+		if (*iter == TPP_ASCII_CR) {
 			++iter;
-			if (iter < end && *iter == '\n')
+			if (iter < end && *iter == TPP_ASCII_LF)
 				++iter;
-		} else {
+		} else
+#endif /* TPP_HAVE_CR_LF_DETECTION */
+		{
 			++iter;
 		}
 	}
@@ -583,14 +588,16 @@ tpp_skipbse_bck_(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM)
 again:
 	tpp_assert(iter > start);
 #if TPP_HAVE_UNICODE
-	tpp_assert(tpp_ascii_islfornascii(iter[-1]));
+	tpp_assert(tpp_ascii_islf_or_mblf(iter[-1]));
 	if (tpp_file_isutf8(file)) {
 		tpp_unichar uc;
 		uc = tpp_unicode_readutf8_rev(&iter, start);
 		if (!tpp_unicode_islf(uc))
 			goto not_bse;
-		if (uc == '\n' && iter > start && iter[-1] == '\r')
+#if TPP_HAVE_CR_LF_DETECTION
+		if (uc == TPP_ASCII_LF && iter > start && iter[-1] == TPP_ASCII_CR)
 			--iter;
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 #if TPP_HAVE_BSE_WHITESPACE
 		for (;;) {
 			uc = tpp_unicode_readutf8_rev(&iter, start);
@@ -639,11 +646,13 @@ again:
 	--iter;
 	if (iter <= start)
 		goto not_bse;
-	if (iter[-1] == '\r' && *iter == '\n') {
+#if TPP_HAVE_CR_LF_DETECTION
+	if (iter[-1] == TPP_ASCII_CR && *iter == TPP_ASCII_LF) {
 		--iter;
 		if (iter <= start)
 			goto not_bse;
 	}
+#endif /* TPP_HAVE_CR_LF_DETECTION */
 #if TPP_HAVE_BSE_WHITESPACE
 	for (;;) {
 		if (iter <= start)
@@ -732,12 +741,12 @@ tpp_decode_bsi(tpp_char buf[TPP_UTF8_MAXLEN], tpp_char const **p_iter, tpp_char 
 	cur_digit = 0;
 	for (;;) {
 		uint_least8_t nibble;
-		if (ch >= '0' && ch <= '9') {
-			nibble = (uint_least8_t)(ch - '0');
-		} else if (ch >= 'a' && ch <= 'f') {
-			nibble = 10 + (uint_least8_t)(ch - 'a');
-		} else if (ch >= 'A' && ch <= 'F') {
-			nibble = 10 + (uint_least8_t)(ch - 'A');
+		if (tpp_ascii_isdigit(ch)) {
+			nibble = (uint_least8_t)tpp_ascii_asdigit(ch);
+		} else if (tpp_ascii_islwrxdigit(ch)) {
+			nibble = (uint_least8_t)tpp_ascii_aslwrxdigit(ch);
+		} else if (tpp_ascii_isuprxdigit(ch)) {
+			nibble = (uint_least8_t)tpp_ascii_asuprxdigit(ch);
 		} else {
 			if (cur_digit == 0)
 				goto nope;
