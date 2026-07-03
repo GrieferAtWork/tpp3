@@ -151,7 +151,17 @@
 #define TPP_HAVE_UNICODE 1
 #endif /* !TPP_HAVE_UNICODE */
 
-/* Supply a built-in unicode character traits database (adds ~36KiB data to final executable) */
+/* Supply a built-in unicode character traits database (adds ~36KiB data to final executable):
+ * Some examples of stuff that is supported when this is enabled:
+ * - U+0085 (NEL)  will be treated like U+000A (LF \n)
+ * - U+00A0 (NBSP) will be treated like U+0020 (space \s)
+ * - U+00DF (ß)    will be treated accepted as part of an identifier
+ *
+ * As such, TPP3 follows [C23,)-specifications, in that the builtin unicode
+ * database is set-up to accept identifiers made up of XID_Start/XID_Cont.
+ *
+ * XXX: Config where [C99,C23)-compliant identifiers are recognized (i.e.: where 🐱 is an identifier)
+ *      https://en.cppreference.com/c/language/identifier */
 #ifndef TPP_HAVE_BUILTIN_CTYPE_UNICODE
 #if (defined(tpp_unicode_isspace_nolf) || \
      defined(tpp_unicode_issymstrt) ||    \
