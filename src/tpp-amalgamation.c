@@ -20002,6 +20002,8 @@ eof:
 	if (pos < end)
 		goto again_read_from_pos;
 
+	/* XXX: Warning if current file is a IO/TEXT file and doesn't end with a trailing linefeed */
+
 	/* Check if we can pop to another file */
 #if TPP_HAVE_INCLUDE_STACK
 	if (file->tf_prev && p_pos == &file->tf_pos) {

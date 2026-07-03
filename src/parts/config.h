@@ -377,7 +377,7 @@
  * replaced with effective UTF-8 encodings when translated to keywords)
  * @detect: #if __TPP_COUNT_TOKENS("a\\u1234b") == 1 */
 #ifndef TPP_HAVE_ESCAPE_IN_IDENTIFIERS
-#define TPP_HAVE_ESCAPE_IN_IDENTIFIERS (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fescape-in-identifiers" */
+#define TPP_HAVE_ESCAPE_IN_IDENTIFIERS (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
 #endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 
 /* Support for "\e" (for U+001B) escape sequences
