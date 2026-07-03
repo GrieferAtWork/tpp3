@@ -1168,23 +1168,23 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *  - TPP3 now only supports the multi-lexer configuration (TPP_CONFIG_ONELEXER=3)
  *    where the lexer is passed as an argument to various APIs. This has been done
  *    intentionally in order to allow multi-threaded API usage, where every thread
- *    has its own "tpp_lexer", which are all able to operate individually.
+ *    has its own "tpp_lexer", which are all able to operate independently.
  *  - For global/one-lexer configurations, this compatibility header uses a new
  *    configuration macro "TPP2_LEXER", which is used in place for the current
  *    lexer. When transitioning to TPP3, this can be used as a stop-gap measure.
  */
 
-/* TPP_CONFIG_MINMACRO, TPP_CONFIG_GCCFUNC, TPP_CONFIG_MINGCCFUNC
+/* TPP_CONFIG_MINMACRO, TPP_CONFIG_GCCFUNC, TPP_CONFIG_MINGCCFUNC, __has_tpp_builtin
  *  - TPP3 no longer includes "builtin" function support, nor does it try to pre-
  *    define CPU-specific macros. As such, these config options (which used to
  *    configure which macros/builtins are available) are no longer needed.
- *  - Adding CPU-specific should be done by the API user in TPP3, though this header
+ *  - If you use TPP3, you should define your own CPU-specific macros, though this header
  *    does continue to provide them (only if: #ifndef TPP2_NO_AUTOCONFIGURE_TPP3_DEFS)
  */
 
 /* TPP_UNESCAPE_MAXCHAR
  *  - TPP3 operates entirely on unicode/utf-8. As such, you can no longer configure
- *    the width of your designed USC-character type.
+ *    the width of your designated USC-character type.
  *  - To decode multi-char characters, you must supply your own utf-8 decoder when
  *    calling "tpp_lexer_parsestring_ex()", which you can then use to transform
  *    input into whichever encoding you wish to use (though I recommend you just
@@ -1193,7 +1193,9 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 
 /* TPP_UNESCAPE_ENDIAN, TPP_BYTEORDER
  *  - TPP3 is written to be agnostic to CPU endian at runtime
- *  - The only place TPP2 (and TPP3) need the endian is for decoding UTF-16
+ *  - The only place TPP2 (and TPP3) need the endian is for decoding UTF-16,
+ *    though TPP3 doesn't need some pre-defined macro specifying the endian
+ *    at compile-time in order to do this.
  */
 
 /* TPP_CONFIG_EXPORT
@@ -1205,8 +1207,6 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *    - TPP_IMPL
  *    - TPP_CONST_DECL
  *    - TPP_CONST_IMPL
- *    - TPP_INTERN_DECL
- *    - TPP_INTERN_IMPL
  */
 
 /* EXT_CLANG_FEATURES: "-fhas-feature-macros"
@@ -1223,17 +1223,19 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *    -> TPP_EXT_MACRO___is_poisoned:                  "-f__is_poisoned"
  */
 
-/* EXT_HAS_INCLUDE: "has-include-macros"
+/* EXT_HAS_INCLUDE: "-fhas-include-macros"
  *  - This extension has been split into its individual components:
  *    -> TPP_EXT_MACRO___has_include:                  "-f__has_include"
  *    -> TPP_EXT_MACRO___has_include_next:             "-f__has_include_next"
  */
 
-/* EXT_EXTENDED_IDENTS: "extended-identifiers"
+/* EXT_EXTENDED_IDENTS: "-fextended-identifiers"
  *  - TPP3 no longer includes ANSI support. Instead, TPP3 supports proper unicode
  *    and utf-8. As such, there is no extension to enable/disable ANSI identifiers.
  *    Instead, you can pre-define macros like "tpp_unicode_issymstrt()" to supply
- *    TPP with a unicode character traits database, which it will happly use.
+ *    TPP with a unicode character traits database, which it will happily use, or
+ *    you can use "-DTPP_HAVE_BUILTIN_CTYPE_UNICODE=1" (default) to have TPP3 use
+ *    its own builtin unicode character traits database.
  *  - Decoding input files from (certain) codecs into utf-8 is done automatically
  *  - TPP unicode support is enabled with "TPP_HAVE_UNICODE"
  *  - For compatibility with TPP2's (flaky) attempts at decoding (e.g.) utf-16
@@ -2763,12 +2765,12 @@ alias("WG_TRIGRAPHS", "TPP_WG_TRIGRAPHS");
 alias("WG_EXPANSION_TO_DEFINED", "TPP_WG_EXPANSION_TO_DEFINED");
 alias("WG_DEPRECATED", "TPP_WG_DEPRECATED");
 alias("WG_ENVIRON", "TPP_WG_ENVIRON");
+alias("WG_DEPENDENCY", "TPP_WG_DEPENDENCY");
 
 //TODO:alias("WG_USAGE", "TPP_WG_USAGE");
 //TODO:alias("WG_BOOLVALUE", "TPP_WG_BOOLVALUE");
 //TODO:alias("WG_LIMIT", "TPP_WG_LIMIT");
 //TODO:alias("WG_QUALITY", "TPP_WG_QUALITY");
-//TODO:alias("WG_DEPENDENCY", "TPP_WG_DEPENDENCY");
 
 // Warnings
 alias("W_EXPECTED_KEYWORD_AFTER_DEFINE", "TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE");
@@ -2848,6 +2850,7 @@ alias("W_EXPECTED_KEYWORD_AFTER_ASSERT", "TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECT
 alias("W_EXPECTED_KEYWORD_AFTER_PREDICATE", "TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE");
 alias("W_EXPECTED_KEYWORD_AFTER_EXPR_HASH", "TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION");
 alias("W_EXPECTED_KEYWORD_AFTER_EXPR_PRED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION");
+alias("W_DEPENDENCY_CHANGED", "TPP_W_DEPENDENCY_CHANGED");
 ]]]*/
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_EOF TPP_TOK_EOF
@@ -3934,6 +3937,9 @@ alias("W_EXPECTED_KEYWORD_AFTER_EXPR_PRED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_ASS
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_WG_ENVIRON)
 #define WG_ENVIRON TPP_WG_ENVIRON
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_WG_ENVIRON */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_WG_DEPENDENCY)
+#define WG_DEPENDENCY TPP_WG_DEPENDENCY
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_WG_DEPENDENCY */
 #ifdef TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #define TPP_W_EXPECTED_KEYWORD_AFTER_DEFINE TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -4354,6 +4360,9 @@ alias("W_EXPECTED_KEYWORD_AFTER_EXPR_PRED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_ASS
 #define W_EXPECTED_KEYWORD_AFTER_EXPR_PRED TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_DEPENDENCY_CHANGED)
+#define W_DEPENDENCY_CHANGED TPP_W_DEPENDENCY_CHANGED
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_DEPENDENCY_CHANGED */
 /*[[[end]]]*/
 
 //TODO: /* #define TPP_CONFIG_CALLBACK_WARNING          x // int x(int wnum, ...) { ... } -- A user-replacement for `TPPLexer_Warn' */
@@ -4406,15 +4415,6 @@ alias("W_EXPECTED_KEYWORD_AFTER_EXPR_PRED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_ASS
 //TODO:DEF_WARNING(W_EXPECTED_RPAREN_AFTER_CAST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(")") " after casting type, but got " TOK_S, TOK_A))                                                               /* . */
 //TODO:DEF_WARNING(W_EXPECTED_RBRACE_AFTER_STATEMENT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q("}") " after statement, but got " TOK_S, TOK_A))                                                             /* . */
 //TODO:DEF_WARNING(W_INVALID_FLOAT_SUFFIX, (WG_SYNTAX), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("Invalid floating point suffix " Q("%.*s"), (int)ARG(size_t), temp); }) /* [char const *,size_t] */
-//TODO:DEF_WARNING(W_DEPENDENCY_CHANGED, (WG_DEPENDENCY), WSTATE_ERROR, {
-//TODO:	char *depnam         = ARG(char *);
-//TODO:	char *srcnam         = ARG(char *);
-//TODO:	char *reason         = ARG(char *);
-//TODO:	size_t reason_length = ARG(size_t);
-//TODO:	WARNF("Dependency " Q("%s") " changed after " Q("%s"), depnam, srcnam);
-//TODO:	if (reason_length)
-//TODO:		WARNF(" (" Q("%.*s") ")", (unsigned int)reason_length, reason);
-//TODO:})
 
 
 
