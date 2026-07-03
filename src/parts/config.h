@@ -2623,30 +2623,40 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 /* Enable support for `tpp_keywords_openfile()' */
-#ifndef TPP_HAVE_KEYWORDS_OPENFILE
+#ifndef TPP_HAVE_LEXER_OPENFILE
 #if (TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || \
      TPP_HAVE_CPP_INCLUDE ||               \
      TPP_HAVE_CPP_INCLUDE_NEXT ||          \
      TPP_HAVE_CPP_IMPORT ||                \
      TPP_HAVE_CPP_EMBED ||                 \
      1) /* Always enable by default */
-#define TPP_HAVE_KEYWORDS_OPENFILE 1
+#define TPP_HAVE_LEXER_OPENFILE 1
 #else /* ... */
-#define TPP_HAVE_KEYWORDS_OPENFILE 0
+#define TPP_HAVE_LEXER_OPENFILE 0
 #endif /* !... */
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* !TPP_HAVE_LEXER_OPENFILE */
 
 /* Enable support for `tpp_keywords_openfile_ex()' */
-#ifndef TPP_HAVE_KEYWORDS_OPENFILE_EX
-#if (TPP_HAVE_KEYWORDS_OPENFILE &&                                        \
+#ifndef TPP_HAVE_LEXER_OPENFILE_EX
+#if (TPP_HAVE_LEXER_OPENFILE &&                                           \
      (TPP_HAVE_CPP_IMPORT ||                                              \
       (TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next) || \
       (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
-#define TPP_HAVE_KEYWORDS_OPENFILE_EX 1
+#define TPP_HAVE_LEXER_OPENFILE_EX 1
 #else /* ... */
-#define TPP_HAVE_KEYWORDS_OPENFILE_EX 0
+#define TPP_HAVE_LEXER_OPENFILE_EX 0
 #endif /* !... */
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
+
+/* Enable support for `tpp_io_compare_mtime()' */
+#ifndef TPP_HAVE_IO_COMPARE_MTIME
+#define TPP_HAVE_IO_COMPARE_MTIME (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
+#endif /* !TPP_HAVE_IO_COMPARE_MTIME */
+
+/* Enable support for `tpp_joinpath()' */
+#ifndef TPP_HAVE_JOINPATH
+#define TPP_HAVE_JOINPATH (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
+#endif /* !TPP_HAVE_JOINPATH */
 
 /* Enable support for `tpp_lexer_initfile_io_ex()' */
 #ifndef TPP_HAVE_LEXER_INIT_IO
@@ -2655,7 +2665,7 @@ print("#endif /" "* !... *" "/");
 
 /* Enable support for `tpp_lexer_initfile_open()' */
 #ifndef TPP_HAVE_LEXER_INIT_FILENAME
-#define TPP_HAVE_LEXER_INIT_FILENAME TPP_HAVE_KEYWORDS_OPENFILE
+#define TPP_HAVE_LEXER_INIT_FILENAME TPP_HAVE_LEXER_OPENFILE
 #endif /* !TPP_HAVE_LEXER_INIT_FILENAME */
 
 /* Enable support for detecting #ifndef-style #include-guards
@@ -3244,6 +3254,10 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_LINE)
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE */
+#ifndef TPP_HAVE_TPP_W_DEPENDENCY_CHANGED
+#define TPP_HAVE_TPP_W_DEPENDENCY_CHANGED \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
+#endif /* !TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS

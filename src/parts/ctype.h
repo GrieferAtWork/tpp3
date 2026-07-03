@@ -141,7 +141,9 @@ print("#endif /" "* !tpp_ascii_islf_or_mblf *" "/");
      defined(tpp_unicode_isspace) ||      \
      defined(tpp_unicode_islf))
 #define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* So your compiler shows you where the definition comes from */
+#ifndef TPP_IGNORE_INVALID_CONFIGURATION
 #error "User-supplied unicode trait functions defined, but 'TPP_HAVE_BUILTIN_CTYPE_UNICODE=1'. Please use 'TPP_HAVE_BUILTIN_CTYPE_UNICODE=0' when providing your own traits"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #endif /* ... */
 
 #ifndef _TPP_CTYPE_ISSYMSTRT

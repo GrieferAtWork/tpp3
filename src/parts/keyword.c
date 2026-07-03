@@ -1452,7 +1452,7 @@ done:
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
 
-#if TPP_HAVE_KEYWORDS_OPENFILE
+#if TPP_HAVE_LEXER_OPENFILE || TPP_HAVE_JOINPATH
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) /*utf-8*/char *TPPCALL
 tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer (with at least "srclen" char-s of space) */
                  /*utf-8*/ char *dst_base,  /* Base pointer of destination buffer (start of destination filename string) */
@@ -1559,8 +1559,11 @@ done:
 		--dst_iter;
 	return dst_iter;
 }
+#endif /* TPP_HAVE_LEXER_OPENFILE || TPP_HAVE_JOINPATH */
 
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+
+#if TPP_HAVE_LEXER_OPENFILE
+#if TPP_HAVE_LEXER_OPENFILE_EX
 #if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
 #if TPP_HAVE_CPP_IMPORT
 TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT != TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED);
@@ -1607,7 +1610,7 @@ tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                       /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                       tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 /* Construct the filename, open the file, and initialize "result" accordingly
  * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
  *                      in case "filename" is a relative path, in which case the
@@ -1622,7 +1625,7 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*0..1*/ char const *tpp_restrict relative_to,
                    /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 #if TPP_HAVE_USER_KEYWORDS
 	bool is_known_keyword = false;
@@ -1713,7 +1716,7 @@ without_relative_to:
 			result_kwd = bucket;
 
 			/* Check if the file should be marked out. */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 			if ((result_kwd->tk_misc) != NULL &&
 			    (result_kwd->tk_misc->tkm_flags & mask_flags) != 0) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
@@ -1749,7 +1752,7 @@ without_relative_to:
 				} while ((fp = fp->tf_tprev) != NULL);
 			}
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 
 			goto got_result_kwd;
 		}
@@ -1809,7 +1812,61 @@ err_nomem:
 #undef tpp_lexer_openfile_keyword_tryrealloc
 #undef tpp_lexer_openfile_keyword_free
 }
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* TPP_HAVE_LEXER_OPENFILE */
+
+
+#if TPP_HAVE_JOINPATH
+/* Form an absolute filename by combining "relative_to" with "filename"
+ * @return: * :   The absolute path (must be free'd by caller using "tpp_free()")
+ * @return: NULL: Out of memory. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) char *TPPCALL
+tpp_joinpath(/*0..1*/ char const *tpp_restrict relative_to,
+             /*1..1*/ /*utf-8*/ char const *filename,
+             tpp_size filename_maxlen) {
+	char *result;
+	tpp_size filename_len = tpp_strnlen(filename, filename_maxlen);
+	if (TPP_FS_ISABS(filename, filename_len) || !relative_to) {
+		char *new_result;
+		char *kwd_end;
+		tpp_size result_kwd_len;
+without_relative_to:
+		result = (char *)tpp_malloc((filename_len + 1) * sizeof(char));
+		if tpp_unlikely(!result)
+			return NULL;
+		kwd_end = tpp_fs_normalize(result, result, filename, filename_len);
+		*kwd_end = '\0';
+		result_kwd_len = (tpp_size)(kwd_end - result);
+		tpp_assert(result_kwd_len <= filename_len);
+		new_result = (char *)tpp_tryrealloc(result, (result_kwd_len + 1) * sizeof(char));
+		if tpp_likely(new_result)
+			result = new_result;
+	} else {
+		char *new_result;
+		tpp_size rel_size, whole_size;
+		char const *rel_base = relative_to;
+		char const *last_sep = rel_base + tpp_strlen(relative_to);
+		char *dst_iter, *dst_end;
+		while (last_sep > rel_base && last_sep[-1] != TPP_FS_SEP)
+			--last_sep;
+		if (last_sep <= rel_base)
+			goto without_relative_to;
+		rel_size   = (tpp_size)(last_sep - rel_base); /* Including trailing '/' */
+		whole_size = rel_size + filename_len;
+		result = (char *)tpp_malloc((whole_size + 1) * sizeof(char));
+		if tpp_unlikely(!result)
+			return NULL;
+		tpp_memcpy(result, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
+		dst_iter = result + rel_size;
+		dst_end = tpp_fs_normalize(dst_iter, result, filename, filename_len);
+		*dst_end = '\0';
+		whole_size = (tpp_size)(dst_end - result);
+		new_result = (char *)tpp_tryrealloc(result, (whole_size + 1) * sizeof(char));
+		if tpp_likely(new_result)
+			result = new_result;
+	}
+	return result;
+}
+#endif /* TPP_HAVE_JOINPATH */
 
 
 TPP_DECL_END

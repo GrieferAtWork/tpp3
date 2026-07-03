@@ -45,10 +45,10 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 	case TPP_ENOENT:
 		return "No such file or directory";
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	case TPP_EMASKED:
 		return "File cannot be opened because it has been masked";
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
 	case TPP_ELEXERROR:
 		return "User compilation/lexer error";

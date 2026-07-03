@@ -1231,17 +1231,17 @@ tpp_lexer_handle_endif_directive(tpp_lexer *tpp_restrict self) {
  *                       or file was marked according to "mask_flags"
  * @return: TPP_ENOMEM:  Out of memory
  * @return: TPP_EIO:     I/O error */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_include_directive_impl_ex(tpp_lexer *tpp_restrict self,
                                           tpp_lexer_openfile_result *tpp_restrict result,
                                           tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_include_directive_impl(tpp_lexer *tpp_restrict self,
                                        tpp_lexer_openfile_result *tpp_restrict result)
 #define tpp_lexer_parse_include_directive_impl_ex(self, mask_flags) tpp_lexer_parse_include_directive_impl(self)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 	tpp_errno error;
 	tpp_token_id tok;
@@ -1302,11 +1302,11 @@ again:
 
 	token->tt_start = token_start;
 	if (tok == '"' || tok == '<') {
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 		error = tpp_lexer_open_include_string_ex(self, result, mask_flags);
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 		error = tpp_lexer_open_include_string(self, result);
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 
 #if TPP_HAVE_TPP_W_NO_SUCH_FILE
 		if (error == TPP_ENOENT) {
@@ -1315,11 +1315,11 @@ again:
 				error = warn_error;
 		} else
 #endif /* TPP_HAVE_TPP_W_NO_SUCH_FILE */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 		if (error == TPP_EMASKED) {
 			error = TPP_ENOENT;
 		} else
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 		{
 		}
 	} else {
@@ -1358,17 +1358,17 @@ again:
  *                       or file was marked according to "mask_flags"
  * @return: TPP_ENOMEM:  Out of memory
  * @return: TPP_EIO:     I/O error */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_include_directive_ex(tpp_lexer *tpp_restrict self,
                                      tpp_lexer_openfile_result *tpp_restrict result,
                                      tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
                                   tpp_lexer_openfile_result *tpp_restrict result)
 #define tpp_lexer_parse_include_directive_ex(self, mask_flags) tpp_lexer_parse_include_directive(self)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 	tpp_errno error;
 	tpp_token_id tok;
@@ -1456,18 +1456,18 @@ tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
 	return error;
 }
 
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_include_directive_ex(tpp_lexer *tpp_restrict self,
                                       tpp_file *const _tfapfp_prev,
                                       tpp_lexer_openfile_flags flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
                                    tpp_file *const _tfapfp_prev)
 #define tpp_lexer_handle_include_directive_ex(self, _tfapfp_prev, flags) \
 	tpp_lexer_handle_include_directive(self, _tfapfp_prev)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 	tpp_file *prev_file;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -2444,9 +2444,9 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_INCLUDE
 	case TPP_KWD_include: {
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 		tpp_lexer_openfile_flags flags;
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_CPP_INCLUDE)
 		if (!tpp_lexer_has(self, CPP_INCLUDE))
 			goto handle_unknown_directive;
@@ -2454,7 +2454,7 @@ again_yield_directive_iter:
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_INCLUDE) */
 		tpp_lexer_process_directive_set_noguard();
 		file->tf_pos = directive_iter;
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 		flags = TPP_LEXER_OPENFILE_FLAG_NORMAL;
 #if TPP_HAVE_PRAGMA_ONCE
 		flags |= TPP_LEXER_OPENFILE_FLAG_HDR_ONCE; /* Mask if header has "#pragma once" */
@@ -2462,7 +2462,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 		flags |= TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED; /* Mask if header has an active "#ifndef" guard */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 		return tpp_lexer_handle_include_directive_ex(self, _tfapfp_prev, flags);
 	}	break;
 #endif /* TPP_HAVE_CPP_INCLUDE */

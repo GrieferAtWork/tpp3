@@ -67,7 +67,7 @@ typedef enum tpp_file_encoding {
 #if (TPP_HAVE_FILE_NONBLOCK ||                                  \
      TPP_HAVE_FILE_NOCLOSE ||                                   \
      TPP_HAVE_FILE_NOKWD ||                                     \
-     (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE) || \
+     (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || \
      TPP_HAVE_FILE_SYSHDR ||                                    \
      TPP_HAVE_FILE_EXTERN_C ||                                  \
      TPP_HAVE_IFNDEF_INCLUDE_GUARDS ||                          \
@@ -89,9 +89,9 @@ typedef enum tpp_file_encoding {
 #if TPP_HAVE_FILE_NOKWD
 #define TPP_FILE_FLAGS_NOKWD        UINT8_C(0x04) /* TPP_FILE_KIND_IO: The file's "tff_name" field isn't actually a "tpp_keyword::tk_kwd", but rather a raw \0-terminated C string. */
 #endif /* TPP_HAVE_FILE_NOKWD */
-#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
+#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
 #define TPP_FILE_FLAGS_FREENAME     UINT8_C(0x08) /* TPP_FILE_KIND_IO: Must tpp_free(tff_name) when the file is finalized */
-#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
 #if TPP_HAVE_FILE_SYSHDR
 #define TPP_FILE_FLAGS_SYSHDR       UINT8_C(0x10) /* TPP_FILE_KIND_IO + TPP_FILE_KIND_TEXT: Suppress all warnings produced in the context of this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
@@ -657,7 +657,7 @@ typedef struct tpp_file {
 	       _tpp_file_init_io_keep(self))
 
 /* Initialize "self" from a given "tpp_lexer_openfile_result" */
-#if TPP_HAVE_KEYWORDS_OPENFILE
+#if TPP_HAVE_LEXER_OPENFILE
 #define tpp_file_init_io_from_ofr(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr) \
 	tpp_file_init_io_from_ofr2(self, ofr, TPP_FILE_ENCODING_UTF8)
 #if TPP_HAVE_USER_KEYWORDS
@@ -673,7 +673,7 @@ typedef struct tpp_file {
 	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
 	                     (ofr)->tlofr_handle, tpp_lexer_openfile_result_getfileflags(ofr) | TPP_FILE_FLAGS_FREENAME, enc)
 #endif /* !... */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* TPP_HAVE_LEXER_OPENFILE */
 
 
 

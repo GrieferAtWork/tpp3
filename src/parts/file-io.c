@@ -46,6 +46,9 @@
 #include <sys/select.h>
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 #endif /* !_MSC_VER */
+#if !defined(tpp_io_compare_mtime) && TPP_HAVE_IO_COMPARE_MTIME
+#include <sys/stat.h>
+#endif /* !tpp_io_compare_mtime && TPP_HAVE_IO_COMPARE_MTIME */
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_int */
 
@@ -188,6 +191,141 @@ tpp_io_read(tpp_io_handle file, void *buf,
 	return (tpp_ssize)result;
 #endif /* tpp_io_handle_IS_FILE */
 }
+
+
+#if TPP_HAVE_IO_COMPARE_MTIME
+/* Compare the last-modified timestamp of "lhs_handle" with the last-
+ * modified timestamp of "rhs_filename". If available, "lhs_filename"
+ * specifies the filename linked to "lhs_handle", though this may be
+ * "NULL" if unknown.
+ *
+ * This function is used to implement "#pragma GCC dependency"
+ *
+ * @param: lhs_filename: Filename of "lhs_handle" (or "NULL" if unknown)
+ * @param: lhs_handle:   File handle for left file (only valid if "lhs_handle_valid")
+ * @param: rhs_filename: Filename of right file (always non-NULL)
+ * @param: p_cmp_result: Set according to compare result on TPP_EOK:
+ *                        *p_cmp_result <  0  <=>  fstat(lhs_handle).st_mtime <  stat(rhs_filename).st_mtime
+ *                        *p_cmp_result == 0  <=>  fstat(lhs_handle).st_mtime == stat(rhs_filename).st_mtime
+ *                        *p_cmp_result >  0  <=>  fstat(lhs_handle).st_mtime >  stat(rhs_filename).st_mtime
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOENT:  No such file "rhs_filename" (SOFT_ERROR)
+ * @return: TPP_EIO:     I/O error (HARD_ERROR)
+ * @return: TPP_ENOMEM:  Out of memory (HARD_ERROR)
+ * @return: TPP_ELAST:   Unable to fstat(lhs_handle) / stat(lhs_filename)
+ *                       [os-specific: or "lhs_filename == NULL" or doesn't exist], or unable
+ *                       to implement function and "TPP_IGNORE_INVALID_CONFIGURATION" is enabled. */
+#ifndef tpp_io_compare_mtime
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((4, 5)) tpp_errno TPPCALL
+tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lhs_handle_valid,
+                     char const *rhs_filename, int *tpp_restrict p_cmp_result) {
+#ifdef tpp_io_handle_IS_HANDLE
+	BY_HANDLE_FILE_INFORMATION lhsInfo;
+	BY_HANDLE_FILE_INFORMATION rhsInfo;
+	WIN32_FILE_ATTRIBUTE_DATA temp;
+	FILETIME ftLastAccessed;
+	tpp_io_handle temp_handle;
+	(void)lhs_filename;
+	if (lhs_handle_valid && GetFileInformationByHandle(lhs_handle, &lhsInfo)) {
+		/* Got lhs info! */
+	} else if (lhs_filename) {
+		if (GetFileAttributesExA(lhs_filename, GetFileExInfoStandard, &temp)) {
+			lhsInfo.ftLastWriteTime = temp.ftLastWriteTime;
+		} else {
+			/* Try to properly open to deal with UNC path errors */
+			BOOL bHasLhsInfo;
+			tpp_errno error = tpp_io_open(rhs_filename, &temp_handle);
+			if (TPP_ISERR(error))
+				return error; /* Probably TPP_ENOENT */
+			/* (try to) prevent this open from counting towards rhs_filename's last-accessed timestamp */
+			ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
+			ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
+			(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
+
+			/* Query info on "temp_handle" */
+			bHasLhsInfo = GetFileInformationByHandle(temp_handle, &lhsInfo);
+			tpp_io_close(temp_handle);
+			if (!bHasLhsInfo)
+				return TPP_ELAST; /* Cannot compare */
+		}
+	} else {
+		return TPP_ENOENT; /* Cannot compare */
+	}
+
+	if (GetFileAttributesExA(rhs_filename, GetFileExInfoStandard, &temp)) {
+		rhsInfo.ftLastWriteTime = temp.ftLastWriteTime;
+	} else {
+		/* Try to properly open to deal with UNC path errors */
+		BOOL bHasRhsInfo2;
+		tpp_errno error = tpp_io_open(rhs_filename, &temp_handle);
+		if (TPP_ISERR(error))
+			return error; /* Probably TPP_ENOENT */
+
+		/* (try to) prevent this open from counting towards rhs_filename's last-accessed timestamp */
+		ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
+		ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
+		(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
+
+		/* Query info on "rhs_handle" */
+		bHasRhsInfo2 = GetFileInformationByHandle(temp_handle, &rhsInfo);
+		tpp_io_close(temp_handle);
+		if (!bHasRhsInfo2)
+			return TPP_ELAST; /* Cannot compare */
+	}
+
+	/* Compare timestamps */
+	if (lhsInfo.ftLastWriteTime.dwHighDateTime < rhsInfo.ftLastWriteTime.dwHighDateTime) {
+		*p_cmp_result = -1;
+	} else if (lhsInfo.ftLastWriteTime.dwHighDateTime > rhsInfo.ftLastWriteTime.dwHighDateTime) {
+		*p_cmp_result = 1;
+	} else if (lhsInfo.ftLastWriteTime.dwLowDateTime < rhsInfo.ftLastWriteTime.dwLowDateTime) {
+		*p_cmp_result = -1;
+	} else if (lhsInfo.ftLastWriteTime.dwLowDateTime > rhsInfo.ftLastWriteTime.dwLowDateTime) {
+		*p_cmp_result = 1;
+	} else {
+		*p_cmp_result = 0;
+	}
+	return TPP_EOK;
+#endif /* tpp_io_handle_IS_HANDLE */
+
+#ifdef tpp_io_handle_IS_int
+	struct stat lhs_st;
+	struct stat rhs_st;
+	if (lhs_handle_valid) {
+		if (fstat(lhs_handle, &lhs_st) != 0)
+			return TPP_ELAST; /* Cannot compare */
+	} else {
+		if (stat(lhs_filename, &lhs_st) != 0)
+			return TPP_ELAST; /* Cannot compare */
+	}
+	if (stat(rhs_filename, &lhs_st) != 0)
+		return TPP_ENOENT;
+	if (lhs_st.st_mtime < rhs_st.st_mtime) {
+		*p_cmp_result = -1;
+	} else if (lhs_st.st_mtime > rhs_st.st_mtime) {
+		*p_cmp_result = 1;
+	} else {
+		/* XXX: Look at "st_mtim" / "st_mtimes" / "st_mtimensec" */
+		*p_cmp_result = 0;
+	}
+	return TPP_EOK;
+#endif /* tpp_io_handle_IS_int */
+
+#ifdef tpp_io_handle_IS_FILE
+#ifndef TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_IO_COMPARE_MTIME' is enabled, but no way to implement on this OS. Supply your own definition, or build with '-DTPP_HAVE_IO_COMPARE_MTIME=0' + '-DTPP_HAVE_PRAGMA_GCC_DEPENDENCY=0'"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+	(void)lhs_filename;
+	(void)lhs_handle;
+	(void)lhs_handle_valid;
+	(void)rhs_filename;
+	(void)p_cmp_result;
+	return TPP_ELAST;
+#endif /* tpp_io_handle_IS_FILE */
+}
+#endif /* !tpp_io_compare_mtime */
+#endif /* TPP_HAVE_IO_COMPARE_MTIME */
+
 
 TPP_DECL_END
 #endif /* tpp_io_handle_IS_BUILTIN */

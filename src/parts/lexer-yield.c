@@ -1044,16 +1044,16 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 
 
 #if TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___has_include(tpp_lexer *tpp_restrict self,
                                      tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
 #define tpp_lexer_yield_handle___has_include(self, mask_flags) \
 	tpp_lexer_yield_handle_simple___has_include(self)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 	tpp_errno ofr_error;
 	tpp_token_id tok;
@@ -1073,9 +1073,9 @@ tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
 		return tok;
 	if (tok == '"' || tok == '<') {
 		tpp_lexer_openfile_result ofr;
-#if !TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if !TPP_HAVE_LEXER_OPENFILE_EX
 		ofr_error = tpp_lexer_open_include_string(self, &ofr);
-#else /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* !TPP_HAVE_LEXER_OPENFILE_EX */
 		/* Enable all header-related flags: if the header has been included
 		 * in relation to one of these, then we know it exists without having
 		 * to check its file */
@@ -1092,7 +1092,7 @@ tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
 		if (ofr_error == TPP_EMASKED) {
 			ofr_error = TPP_EOK;
 		} else
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 		{
 			if (ofr_error == TPP_EOK)
 				tpp_lexer_openfile_result_fini(&ofr);
@@ -1152,10 +1152,10 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 		return tok;
 	if (tok == '"' || tok == '<') {
 		ofr_error = tpp_lexer_open_include_string(self, &ofr);
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 		if (ofr_error == TPP_EMASKED)
 			ofr_error = TPP_ENOENT; /* Shouldn't happen */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 	} else {
 		tpp_bzero(&ofr, sizeof(ofr)); /* To prevent compiler warnings; init here isn't actually necessary */
 #if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING

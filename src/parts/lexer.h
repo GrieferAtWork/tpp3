@@ -269,6 +269,14 @@ typedef struct tpp_lexer {
 #define tpp_lexer_getfile(self)     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
 #define tpp_lexer_getfilekind(self) tpp_file_getkind(tpp_lexer_getfile(self))
 
+/* L/C information helpers */
+#define tpp_lexer_getlcinfo(self, pos)                  tpp_file_getlcinfo(tpp_lexer_getfile(self), pos)
+#define tpp_lexer_getlcinfo_ex(self, pos, result)       tpp_file_getlcinfo_ex(tpp_lexer_getfile(self), pos, result)
+#define tpp_lexer_gettokenstart_lcinfo(self)            tpp_lexer_getlcinfo(self, tpp_lexer_gettokenstart(self))
+#define tpp_lexer_gettokenstart_lcinfo_ex(self, result) tpp_lexer_getlcinfo_ex(self, tpp_lexer_gettokenstart(self), result)
+#define tpp_lexer_gettokenend_lcinfo(self)              tpp_lexer_getlcinfo(self, tpp_lexer_gettokenend(self))
+#define tpp_lexer_gettokenend_lcinfo_ex(self, result)   tpp_lexer_getlcinfo_ex(self, tpp_lexer_gettokenend(self), result)
+
 /* Warnings... */
 #if TPP_HAVE_WARNINGS
 #if TPP_HAVE_WARNINGS_PUSH_POP
@@ -548,7 +556,7 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
 
 
 
-#if TPP_HAVE_KEYWORDS_OPENFILE
+#if TPP_HAVE_LEXER_OPENFILE
 typedef struct tpp_lexer_openfile_result {
 	tpp_io_handle  tlofr_handle;       /* [1..1][owned] I/O handle for requested file (must be inherited by caller) */
 #if TPP_HAVE_USER_KEYWORDS
@@ -578,7 +586,7 @@ typedef struct tpp_lexer_openfile_result {
 	 tpp_dbg_memset(self, sizeof(*(self))))
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 #define TPP_LEXER_OPENFILE_FLAG_NORMAL 0 /* Normal flags */
 #ifdef tpp_keyword_flags
 #define tpp_lexer_openfile_flags tpp_keyword_flags /* Set of `TPP_LEXER_OPENFILE_FLAG_*' */
@@ -634,7 +642,7 @@ tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       tpp_lexer_openfile_flags mask_flags);
 #define tpp_lexer_openfile(self, relative_to, filename, filename_maxlen, result) \
 	tpp_lexer_openfile_ex(self, relative_to, filename, filename_maxlen, result, TPP_LEXER_OPENFILE_FLAG_NORMAL)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 /* Construct the filename, open the file, and initialize "result" accordingly
  * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
  *                      in case "filename" is a relative path, in which case the
@@ -649,8 +657,18 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*0..1*/ char const *tpp_restrict relative_to,
                    /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE */
+
+#if TPP_HAVE_JOINPATH
+/* Form an absolute filename by combining "relative_to" with "filename"
+ * @return: * :   The absolute path (must be free'd by caller using "tpp_free()")
+ * @return: NULL: Out of memory. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((2)) char *TPPCALL
+tpp_joinpath(/*0..1*/ char const *tpp_restrict relative_to,
+             /*1..1*/ /*utf-8*/ char const *filename,
+             tpp_size filename_maxlen);
+#endif /* TPP_HAVE_JOINPATH */
 
 
 
@@ -1136,18 +1154,18 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
  * @return: TPP_ENOENT:  No such file (no warning printed, yet)
  * @return: TPP_EMASKED: (tpp_lexer_open_include_string_ex only): Flags
  *                       specified by "mask_flags" were already set. */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_open_include_string_ex(tpp_lexer *tpp_restrict self,
                                  /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                                  tpp_lexer_openfile_flags mask_flags);
 #define tpp_lexer_open_include_string(self, result) \
 	tpp_lexer_open_include_string_ex(self, result, 0)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
                               /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 #endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
 
 

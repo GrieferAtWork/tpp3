@@ -1034,9 +1034,85 @@ tpp_lexer_process_pragma_GCC_warning(tpp_lexer *tpp_restrict self, tpp_warning_i
 /* #pragma GCC dependency <file> [<message>]                            */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_GCC_DEPENDENCY
+struct tpp_lexer_process_pragma_GCC_dependency_data {
+	tpp_lexer      *tlppgdd_lexer;    /* [1..1] Current lexer */
+	tpp_file const *tlppgdd_textfile; /* [1..1] The current tpp_file_gettextfile()-file */
+	int             tlppgdd_cmpres;   /* Result of last-modified comparison (lhs: current file, rhs: dependency)
+	                                   * Set to "0" if the comparison failed for some non-fatal reason. */
+	char const     *tlppgdd_str;      /* #include-string (used during callback) */
+	tpp_size        tlppgdd_length;   /* #include-string length (used during callback) */
+	char           *tlppgdd_depfile;  /* [1..1][OUT][owned][valid_if(tlppgdd_cmpres < 0)] Filename of changed dependency. */
+};
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_dependency_path_cb(void *arg, char const *relative_to
+                                                tpp_lexer_foreach_include_path_flags__PARAM) {
+	tpp_errno cmp_error;
+	char *rhs_filename;
+	struct tpp_lexer_process_pragma_GCC_dependency_data *data;
+	tpp_file const *textfile;
+	data = (struct tpp_lexer_process_pragma_GCC_dependency_data *)arg;
+	textfile = data->tlppgdd_textfile;
+	tpp_assert(textfile);
+	tpp_assert(textfile->tf_kind == TPP_FILE_KIND_IO ||
+	           textfile->tf_kind == TPP_FILE_KIND_TEXT);
+#if TPP_HAVE_FILE_SYSHDR
+	(void)flags;
+#endif /* TPP_HAVE_FILE_SYSHDR */
+	rhs_filename = tpp_joinpath(relative_to, data->tlppgdd_str, data->tlppgdd_length);
+	if tpp_unlikely(!rhs_filename)
+		return TPP_ENOMEM;
+	cmp_error = tpp_io_compare_mtime(textfile->tf_data.td_io.tff_name,
+	                                 textfile->tf_data.td_io.tff_file,
+	                                 textfile->tf_kind == TPP_FILE_KIND_IO,
+	                                 rhs_filename, &data->tlppgdd_cmpres);
+	if (cmp_error == TPP_ELAST) { /* Unable to compare */
+		data->tlppgdd_cmpres = 0;
+		cmp_error = TPP_EOK;
+	}
+	if (TPP_ISERR(cmp_error) || data->tlppgdd_cmpres >= 0) {
+		tpp_free(rhs_filename);
+	} else {
+		data->tlppgdd_depfile = rhs_filename;
+	}
+	return cmp_error;
+}
+
+static tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_dependency_cb(void *arg, char const *str, tpp_size length) {
+	tpp_token_id mode;
+	struct tpp_lexer_process_pragma_GCC_dependency_data *data;
+	data = (struct tpp_lexer_process_pragma_GCC_dependency_data *)arg;
+	data->tlppgdd_str    = str;
+	data->tlppgdd_length = length;
+	/* Check for special case: if the given filename is absolute,
+	 * then we must skip all the include-path resolution! */
+	if (TPP_FS_ISABS(str, length))
+		return tpp_lexer_process_pragma_GCC_dependency_path_cb(data, NULL tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
+	mode = tpp_lexer_gettok(data->tlppgdd_lexer);
+	tpp_assert(mode == '<' || mode == '"');
+	return tpp_lexer_foreach_include_path(data->tlppgdd_lexer, mode,
+	                                      &tpp_lexer_process_pragma_GCC_dependency_path_cb,
+	                                      data);
+}
+
+#if TPP_HAVE_TPP_W_DEPENDENCY_CHANGED
+static tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_dependency_changed_cb(void *arg, tpp_string *chunk,
+                                                   tpp_char const *str, tpp_size length) {
+	struct tpp_lexer_process_pragma_GCC_dependency_data *data;
+	data = (struct tpp_lexer_process_pragma_GCC_dependency_data *)arg;
+	(void)chunk;
+	/* XXX: It's be nicer if the warning position pointed *at* the include-string */
+	return tpp_lexer_warnf(data->tlppgdd_lexer, TPP_W_DEPENDENCY_CHANGED,
+	                       data->tlppgdd_depfile, ": ",
+	                       (unsigned int)length, str);
+}
+#endif /* TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_GCC_dependency(tpp_lexer *tpp_restrict self) {
-#if 0 /* TODO */
+	struct tpp_lexer_process_pragma_GCC_dependency_data data;
 	tpp_token_id tok;
 	tpp_errno error;
 	do {
@@ -1044,8 +1120,22 @@ tpp_lexer_process_pragma_GCC_dependency(tpp_lexer *tpp_restrict self) {
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
+	data.tlppgdd_lexer   = self;
+	data.tlppgdd_cmpres  = 0;
+	data.tlppgdd_depfile = NULL;
 	if (tok == '"' || tok == '<') {
-		//error = tpp_lexer_decode_include_string_cb();
+		error = TPP_EOK;
+		data.tlppgdd_textfile = tpp_file_gettextfile(tpp_lexer_getfile(self));
+		if (data.tlppgdd_textfile) {
+			error = tpp_lexer_decode_include_string_cb(self, &tpp_lexer_process_pragma_GCC_dependency_cb, &data);
+			if (error == TPP_ENOENT) {
+#if TPP_HAVE_TPP_W_NO_SUCH_FILE
+				error = tpp_lexer_warnf(self, TPP_W_NO_SUCH_FILE);
+#else /* TPP_HAVE_TPP_W_NO_SUCH_FILE */
+				error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_NO_SUCH_FILE */
+			}
+		}
 	} else {
 #if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
 		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INCLUDE_STRING);
@@ -1053,11 +1143,47 @@ tpp_lexer_process_pragma_GCC_dependency(tpp_lexer *tpp_restrict self) {
 		error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
 	}
-#endif
-
-	/* TODO */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_assert(error != TPP_ENOENT);
+	tpp_assert(error != TPP_ELAST);
+	if (TPP_ISERR(error))
+		return error;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok)) {
+err_tok_data_depfile:
+		if (data.tlppgdd_cmpres < 0)
+			tpp_free(data.tlppgdd_depfile);
+		return TPP_TOK_ASERR(tok);
+	}
+	if (TPP_TOK_ISSTRING(tok)) {
+#if TPP_HAVE_TPP_W_DEPENDENCY_CHANGED
+		if (data.tlppgdd_cmpres < 0) {
+			error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_GCC_dependency_changed_cb,
+			                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+		} else
+#endif /* TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
+		{
+			do {
+				tok = tpp_lexer_yield_blocking(self);
+			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok) ||
+			         TPP_TOK_ISSTRING(tok));
+			if (TPP_TOK_ISERR(tok))
+				goto err_tok_data_depfile;
+		}
+	} else
+#if TPP_HAVE_TPP_W_DEPENDENCY_CHANGED
+	if (data.tlppgdd_cmpres < 0) {
+		/* XXX: It's be nicer if the warning position pointed *at* the include-string */
+		error = tpp_lexer_warnf(self, TPP_W_DEPENDENCY_CHANGED, data.tlppgdd_depfile, "", 0, "");
+	} else
+#endif /* TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
+	{
+		error = TPP_EOK;
+	}
+	if (data.tlppgdd_cmpres < 0)
+		tpp_free(data.tlppgdd_depfile);
+	return error;
 }
 #endif /* TPP_HAVE_PRAGMA_GCC_DEPENDENCY */
 

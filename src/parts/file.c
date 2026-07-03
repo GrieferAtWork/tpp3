@@ -172,7 +172,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
-#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
+#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
 		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME) {
 #if TPP_HAVE_FILE_DUMMY
 			tpp_file *prev;
@@ -195,7 +195,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 
 			tpp_free((char *)self->tf_data.td_io.tff_name);
 		}
-#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
 #if TPP_HAVE_FILE_USER_FILENAME
 		TPP_FALLTHRU
 	case TPP_FILE_KIND_TEXT:

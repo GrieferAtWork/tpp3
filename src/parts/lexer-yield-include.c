@@ -530,9 +530,9 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 struct tpp_lexer_open_include_string_data {
 	tpp_lexer                 *tloisd_lexer;      /* [1..1] lexer */
 	tpp_lexer_openfile_result *tloisd_result;     /* [1..1] Openfile result */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	tpp_lexer_openfile_flags   tloisd_mask_flags; /* Mask flags */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 	char const                *tloisd_str;        /* #include-string (used during callback) */
 	tpp_size                   tloisd_length;     /* #include-string length (used during callback) */
 };
@@ -543,15 +543,15 @@ tpp_lexer_open_include_string_path_cb(void *arg, char const *relative_to
 	tpp_errno result;
 	struct tpp_lexer_open_include_string_data *data;
 	data = (struct tpp_lexer_open_include_string_data *)arg;
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	result = tpp_lexer_openfile_ex(data->tloisd_lexer, relative_to,
 	                               data->tloisd_str, data->tloisd_length,
 	                               data->tloisd_result, data->tloisd_mask_flags);
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 	result = tpp_lexer_openfile(data->tloisd_lexer, relative_to,
 	                            data->tloisd_str, data->tloisd_length,
 	                            data->tloisd_result);
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_HAVE_FILE_SYSHDR
 	data->tloisd_result->tlofr_fileflags |= flags; /* Add "TPP_FILE_FLAGS_SYSHDR" + "TPP_FILE_FLAGS_EXTERN_C" flags if necessary */
 #endif /* TPP_HAVE_FILE_SYSHDR */
@@ -596,23 +596,23 @@ tpp_lexer_open_include_string_cb(void *arg, char const *str, tpp_size length) {
  * @return: TPP_ENOENT:  No such file (no warning printed, yet)
  * @return: TPP_EMASKED: (tpp_lexer_open_include_string_ex only): Flags
  *                       specified by "mask_flags" were already set. */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_open_include_string_ex(tpp_lexer *tpp_restrict self,
                                  /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                                  tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
                               /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 	struct tpp_lexer_open_include_string_data data;
 	data.tloisd_lexer  = self;
 	data.tloisd_result = result;
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	data.tloisd_mask_flags = mask_flags;
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 	return tpp_lexer_decode_include_string_cb(self, &tpp_lexer_open_include_string_cb, &data);
 }
 #endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */

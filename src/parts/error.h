@@ -34,9 +34,9 @@ enum {
 #if TPP_HAVE_FILE_NONBLOCK
 	_TPP_ERRCODE_WOULDBLOCK,
 #endif /* TPP_HAVE_FILE_NONBLOCK */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	_TPP_ERRCODE_MASKED,
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
 	_TPP_ERRCODE_LEXERROR,
 	_TPP_ERRCODE_WARNPRINT,
@@ -129,7 +129,7 @@ typedef enum tpp_errno {
 
 
 
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	/* --------------------------------------------------------------------
 	 * SOFT_ERROR: TPP_EMASKED
 	 * --------------------------------------------------------------------
@@ -139,7 +139,7 @@ typedef enum tpp_errno {
 	 * to a `#pragma once', or because `#import' is being used (and had
 	 * already been used once before) */
 	TPP_EMASKED = -_TPP_ERRCODE_MASKED,
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 
 
 

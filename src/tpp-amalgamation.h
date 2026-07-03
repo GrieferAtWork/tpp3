@@ -3524,6 +3524,28 @@ TPP_WARNING(TPP_W_NO_SUCH_FILE, 1(TPP_WG_ENVIRON), 1(1083), TPP_WSTATE_UNDEFINED
 
 
 /************************************************************************/
+/* -Wdependency                                                         */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_DEPENDENCY
+#define TPP_HAVE_TPP_WG_DEPENDENCY \
+	(TPP_HAVE_TPP_W_DEPENDENCY_CHANGED)
+#endif /* !TPP_HAVE_TPP_WG_DEPENDENCY */
+#if TPP_HAVE_TPP_WG_DEPENDENCY
+#ifndef TPP_WGNAME_DEPENDENCY
+#define TPP_WGNAME_DEPENDENCY 1("dependency")
+#endif /* !TPP_WGNAME_DEPENDENCY */
+#define TPP_WG_DEPENDENCY TPP_WG_DEPENDENCY
+TPP_WGROUP(TPP_WG_DEPENDENCY, TPP_WGNAME_DEPENDENCY, TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_DEPENDENCY */
+
+#if TPP_HAVE_TPP_W_DEPENDENCY_CHANGED
+#define TPP_W_DEPENDENCY_CHANGED TPP_W_DEPENDENCY_CHANGED
+TPP_WARNING(TPP_W_DEPENDENCY_CHANGED, 1(TPP_WG_DEPENDENCY), 0(), ~,
+            "dependency changed: %[%s%]%s%.*s")
+#endif /* TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
+
+
+/************************************************************************/
 /* Misc warnings...                                                     */
 /************************************************************************/
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -3582,7 +3604,6 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 //TODO:TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
 //TODO:TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
 //TODO:TPP_WGROUP(TPP_WG_QUALITY, /*        */ 1("quality"),              TPP_WSTATE_FATAL)
-//TODO:TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WARN)
 
 
 /* Pull in user definitions (if defined) */
@@ -6824,30 +6845,40 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 /* Enable support for `tpp_keywords_openfile()' */
-#ifndef TPP_HAVE_KEYWORDS_OPENFILE
+#ifndef TPP_HAVE_LEXER_OPENFILE
 #if (TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || \
      TPP_HAVE_CPP_INCLUDE ||               \
      TPP_HAVE_CPP_INCLUDE_NEXT ||          \
      TPP_HAVE_CPP_IMPORT ||                \
      TPP_HAVE_CPP_EMBED ||                 \
      1) /* Always enable by default */
-#define TPP_HAVE_KEYWORDS_OPENFILE 1
+#define TPP_HAVE_LEXER_OPENFILE 1
 #else /* ... */
-#define TPP_HAVE_KEYWORDS_OPENFILE 0
+#define TPP_HAVE_LEXER_OPENFILE 0
 #endif /* !... */
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* !TPP_HAVE_LEXER_OPENFILE */
 
 /* Enable support for `tpp_keywords_openfile_ex()' */
-#ifndef TPP_HAVE_KEYWORDS_OPENFILE_EX
-#if (TPP_HAVE_KEYWORDS_OPENFILE &&                                        \
+#ifndef TPP_HAVE_LEXER_OPENFILE_EX
+#if (TPP_HAVE_LEXER_OPENFILE &&                                           \
      (TPP_HAVE_CPP_IMPORT ||                                              \
       (TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next) || \
       (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
-#define TPP_HAVE_KEYWORDS_OPENFILE_EX 1
+#define TPP_HAVE_LEXER_OPENFILE_EX 1
 #else /* ... */
-#define TPP_HAVE_KEYWORDS_OPENFILE_EX 0
+#define TPP_HAVE_LEXER_OPENFILE_EX 0
 #endif /* !... */
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
+
+/* Enable support for `tpp_io_compare_mtime()' */
+#ifndef TPP_HAVE_IO_COMPARE_MTIME
+#define TPP_HAVE_IO_COMPARE_MTIME (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
+#endif /* !TPP_HAVE_IO_COMPARE_MTIME */
+
+/* Enable support for `tpp_joinpath()' */
+#ifndef TPP_HAVE_JOINPATH
+#define TPP_HAVE_JOINPATH (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
+#endif /* !TPP_HAVE_JOINPATH */
 
 /* Enable support for `tpp_lexer_initfile_io_ex()' */
 #ifndef TPP_HAVE_LEXER_INIT_IO
@@ -6856,7 +6887,7 @@ TPP_DECL_END
 
 /* Enable support for `tpp_lexer_initfile_open()' */
 #ifndef TPP_HAVE_LEXER_INIT_FILENAME
-#define TPP_HAVE_LEXER_INIT_FILENAME TPP_HAVE_KEYWORDS_OPENFILE
+#define TPP_HAVE_LEXER_INIT_FILENAME TPP_HAVE_LEXER_OPENFILE
 #endif /* !TPP_HAVE_LEXER_INIT_FILENAME */
 
 /* Enable support for detecting #ifndef-style #include-guards
@@ -7445,6 +7476,10 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_LINE)
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE */
+#ifndef TPP_HAVE_TPP_W_DEPENDENCY_CHANGED
+#define TPP_HAVE_TPP_W_DEPENDENCY_CHANGED \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
+#endif /* !TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS
@@ -7495,9 +7530,9 @@ enum {
 #if TPP_HAVE_FILE_NONBLOCK
 	_TPP_ERRCODE_WOULDBLOCK,
 #endif /* TPP_HAVE_FILE_NONBLOCK */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	_TPP_ERRCODE_MASKED,
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
 	_TPP_ERRCODE_LEXERROR,
 	_TPP_ERRCODE_WARNPRINT,
@@ -7590,7 +7625,7 @@ typedef enum tpp_errno {
 
 
 
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	/* --------------------------------------------------------------------
 	 * SOFT_ERROR: TPP_EMASKED
 	 * --------------------------------------------------------------------
@@ -7600,7 +7635,7 @@ typedef enum tpp_errno {
 	 * to a `#pragma once', or because `#import' is being used (and had
 	 * already been used once before) */
 	TPP_EMASKED = -_TPP_ERRCODE_MASKED,
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 
 
 
@@ -7773,7 +7808,9 @@ TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (c
      defined(tpp_unicode_isspace) ||      \
      defined(tpp_unicode_islf))
 #define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* So your compiler shows you where the definition comes from */
+#ifndef TPP_IGNORE_INVALID_CONFIGURATION
 #error "User-supplied unicode trait functions defined, but 'TPP_HAVE_BUILTIN_CTYPE_UNICODE=1'. Please use 'TPP_HAVE_BUILTIN_CTYPE_UNICODE=0' when providing your own traits"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #endif /* ... */
 
 #ifndef _TPP_CTYPE_ISSYMSTRT
@@ -8068,9 +8105,9 @@ TPP_DECL_END
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle FILE *
 #define tpp_io_handle_IS_FILE
-#if TPP_HAVE_FILE_NONBLOCK
+#if !defined(TPP_IGNORE_INVALID_CONFIGURATION) && TPP_HAVE_FILE_NONBLOCK
 #error "No way to implement 'TPP_HAVE_FILE_NONBLOCK' on this OS"
-#endif /* TPP_HAVE_FILE_NONBLOCK */
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HAVE_FILE_NONBLOCK */
 #endif /* !... */
 #endif /* !tpp_io_handle */
 
@@ -8109,6 +8146,35 @@ TPP_DECL void TPPCALL tpp_io_close(tpp_io_handle file);
  * #endif // TPP_HAVE_FILE_NONBLOCK */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_io_read(tpp_io_handle file, void *buf, tpp_size bufsize tpp_io_nonblock__PARAM);
+
+#if TPP_HAVE_IO_COMPARE_MTIME
+/* Compare the last-modified timestamp of "lhs_handle" with the last-
+ * modified timestamp of "rhs_filename". If available, "lhs_filename"
+ * specifies the filename linked to "lhs_handle", though this may be
+ * "NULL" if unknown.
+ *
+ * This function is used to implement "#pragma GCC dependency"
+ *
+ * @param: lhs_filename: Filename of "lhs_handle" (or "NULL" if unknown)
+ * @param: lhs_handle:   File handle for left file (only valid if "lhs_handle_valid")
+ * @param: rhs_filename: Filename of right file (always non-NULL)
+ * @param: p_cmp_result: Set according to compare result on TPP_EOK:
+ *                        *p_cmp_result <  0  <=>  fstat(lhs_handle).st_mtime <  stat(rhs_filename).st_mtime
+ *                        *p_cmp_result == 0  <=>  fstat(lhs_handle).st_mtime == stat(rhs_filename).st_mtime
+ *                        *p_cmp_result >  0  <=>  fstat(lhs_handle).st_mtime >  stat(rhs_filename).st_mtime
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOENT:  No such file "rhs_filename" (SOFT_ERROR)
+ * @return: TPP_EIO:     I/O error (HARD_ERROR)
+ * @return: TPP_ENOMEM:  Out of memory (HARD_ERROR)
+ * @return: TPP_ELAST:   Unable to fstat(lhs_handle) / stat(lhs_filename)
+ *                       [os-specific: or "lhs_filename == NULL" or doesn't exist], or unable
+ *                       to implement function and "TPP_IGNORE_INVALID_CONFIGURATION" is enabled. */
+#ifndef tpp_io_compare_mtime
+TPP_DECL TPP_WUNUSED TPP_NONNULL((4, 5)) tpp_errno TPPCALL
+tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lhs_handle_valid,
+                     char const *rhs_filename, int *tpp_restrict p_cmp_result);
+#endif /* !tpp_io_compare_mtime */
+#endif /* TPP_HAVE_IO_COMPARE_MTIME */
 
 TPP_DECL_END
 #endif /* tpp_io_handle_IS_BUILTIN */
@@ -12695,7 +12761,7 @@ typedef enum tpp_file_encoding {
 #if (TPP_HAVE_FILE_NONBLOCK ||                                  \
      TPP_HAVE_FILE_NOCLOSE ||                                   \
      TPP_HAVE_FILE_NOKWD ||                                     \
-     (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE) || \
+     (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || \
      TPP_HAVE_FILE_SYSHDR ||                                    \
      TPP_HAVE_FILE_EXTERN_C ||                                  \
      TPP_HAVE_IFNDEF_INCLUDE_GUARDS ||                          \
@@ -12717,9 +12783,9 @@ typedef enum tpp_file_encoding {
 #if TPP_HAVE_FILE_NOKWD
 #define TPP_FILE_FLAGS_NOKWD        UINT8_C(0x04) /* TPP_FILE_KIND_IO: The file's "tff_name" field isn't actually a "tpp_keyword::tk_kwd", but rather a raw \0-terminated C string. */
 #endif /* TPP_HAVE_FILE_NOKWD */
-#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
+#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
 #define TPP_FILE_FLAGS_FREENAME     UINT8_C(0x08) /* TPP_FILE_KIND_IO: Must tpp_free(tff_name) when the file is finalized */
-#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
 #if TPP_HAVE_FILE_SYSHDR
 #define TPP_FILE_FLAGS_SYSHDR       UINT8_C(0x10) /* TPP_FILE_KIND_IO + TPP_FILE_KIND_TEXT: Suppress all warnings produced in the context of this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
@@ -13285,7 +13351,7 @@ typedef struct tpp_file {
 	       _tpp_file_init_io_keep(self))
 
 /* Initialize "self" from a given "tpp_lexer_openfile_result" */
-#if TPP_HAVE_KEYWORDS_OPENFILE
+#if TPP_HAVE_LEXER_OPENFILE
 #define tpp_file_init_io_from_ofr(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr) \
 	tpp_file_init_io_from_ofr2(self, ofr, TPP_FILE_ENCODING_UTF8)
 #if TPP_HAVE_USER_KEYWORDS
@@ -13301,7 +13367,7 @@ typedef struct tpp_file {
 	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
 	                     (ofr)->tlofr_handle, tpp_lexer_openfile_result_getfileflags(ofr) | TPP_FILE_FLAGS_FREENAME, enc)
 #endif /* !... */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* TPP_HAVE_LEXER_OPENFILE */
 
 
 
@@ -15416,6 +15482,14 @@ typedef struct tpp_lexer {
 #define tpp_lexer_getfile(self)     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
 #define tpp_lexer_getfilekind(self) tpp_file_getkind(tpp_lexer_getfile(self))
 
+/* L/C information helpers */
+#define tpp_lexer_getlcinfo(self, pos)                  tpp_file_getlcinfo(tpp_lexer_getfile(self), pos)
+#define tpp_lexer_getlcinfo_ex(self, pos, result)       tpp_file_getlcinfo_ex(tpp_lexer_getfile(self), pos, result)
+#define tpp_lexer_gettokenstart_lcinfo(self)            tpp_lexer_getlcinfo(self, tpp_lexer_gettokenstart(self))
+#define tpp_lexer_gettokenstart_lcinfo_ex(self, result) tpp_lexer_getlcinfo_ex(self, tpp_lexer_gettokenstart(self), result)
+#define tpp_lexer_gettokenend_lcinfo(self)              tpp_lexer_getlcinfo(self, tpp_lexer_gettokenend(self))
+#define tpp_lexer_gettokenend_lcinfo_ex(self, result)   tpp_lexer_getlcinfo_ex(self, tpp_lexer_gettokenend(self), result)
+
 /* Warnings... */
 #if TPP_HAVE_WARNINGS
 #if TPP_HAVE_WARNINGS_PUSH_POP
@@ -15695,7 +15769,7 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
 
 
 
-#if TPP_HAVE_KEYWORDS_OPENFILE
+#if TPP_HAVE_LEXER_OPENFILE
 typedef struct tpp_lexer_openfile_result {
 	tpp_io_handle  tlofr_handle;       /* [1..1][owned] I/O handle for requested file (must be inherited by caller) */
 #if TPP_HAVE_USER_KEYWORDS
@@ -15725,7 +15799,7 @@ typedef struct tpp_lexer_openfile_result {
 	 tpp_dbg_memset(self, sizeof(*(self))))
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 #define TPP_LEXER_OPENFILE_FLAG_NORMAL 0 /* Normal flags */
 #ifdef tpp_keyword_flags
 #define tpp_lexer_openfile_flags tpp_keyword_flags /* Set of `TPP_LEXER_OPENFILE_FLAG_*' */
@@ -15781,7 +15855,7 @@ tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       tpp_lexer_openfile_flags mask_flags);
 #define tpp_lexer_openfile(self, relative_to, filename, filename_maxlen, result) \
 	tpp_lexer_openfile_ex(self, relative_to, filename, filename_maxlen, result, TPP_LEXER_OPENFILE_FLAG_NORMAL)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 /* Construct the filename, open the file, and initialize "result" accordingly
  * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
  *                      in case "filename" is a relative path, in which case the
@@ -15796,8 +15870,18 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*0..1*/ char const *tpp_restrict relative_to,
                    /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE */
+
+#if TPP_HAVE_JOINPATH
+/* Form an absolute filename by combining "relative_to" with "filename"
+ * @return: * :   The absolute path (must be free'd by caller using "tpp_free()")
+ * @return: NULL: Out of memory. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((2)) char *TPPCALL
+tpp_joinpath(/*0..1*/ char const *tpp_restrict relative_to,
+             /*1..1*/ /*utf-8*/ char const *filename,
+             tpp_size filename_maxlen);
+#endif /* TPP_HAVE_JOINPATH */
 
 
 
@@ -16283,18 +16367,18 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
  * @return: TPP_ENOENT:  No such file (no warning printed, yet)
  * @return: TPP_EMASKED: (tpp_lexer_open_include_string_ex only): Flags
  *                       specified by "mask_flags" were already set. */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_open_include_string_ex(tpp_lexer *tpp_restrict self,
                                  /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                                  tpp_lexer_openfile_flags mask_flags);
 #define tpp_lexer_open_include_string(self, result) \
 	tpp_lexer_open_include_string_ex(self, result, 0)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
                               /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 #endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
 
 

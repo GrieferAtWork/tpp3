@@ -3678,6 +3678,28 @@ TPP_WARNING(TPP_W_NO_SUCH_FILE, 1(TPP_WG_ENVIRON), 1(1083), TPP_WSTATE_UNDEFINED
 
 
 /************************************************************************/
+/* -Wdependency                                                         */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_DEPENDENCY
+#define TPP_HAVE_TPP_WG_DEPENDENCY \
+	(TPP_HAVE_TPP_W_DEPENDENCY_CHANGED)
+#endif /* !TPP_HAVE_TPP_WG_DEPENDENCY */
+#if TPP_HAVE_TPP_WG_DEPENDENCY
+#ifndef TPP_WGNAME_DEPENDENCY
+#define TPP_WGNAME_DEPENDENCY 1("dependency")
+#endif /* !TPP_WGNAME_DEPENDENCY */
+#define TPP_WG_DEPENDENCY TPP_WG_DEPENDENCY
+TPP_WGROUP(TPP_WG_DEPENDENCY, TPP_WGNAME_DEPENDENCY, TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_DEPENDENCY */
+
+#if TPP_HAVE_TPP_W_DEPENDENCY_CHANGED
+#define TPP_W_DEPENDENCY_CHANGED TPP_W_DEPENDENCY_CHANGED
+TPP_WARNING(TPP_W_DEPENDENCY_CHANGED, 1(TPP_WG_DEPENDENCY), 0(), ~,
+            "dependency changed: %[%s%]%s%.*s")
+#endif /* TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
+
+
+/************************************************************************/
 /* Misc warnings...                                                     */
 /************************************************************************/
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -3736,7 +3758,6 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 //TODO:TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
 //TODO:TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
 //TODO:TPP_WGROUP(TPP_WG_QUALITY, /*        */ 1("quality"),              TPP_WSTATE_FATAL)
-//TODO:TPP_WGROUP(TPP_WG_DEPENDENCY, /*     */ 1("dependency"),           TPP_WSTATE_WARN)
 
 
 /* Pull in user definitions (if defined) */

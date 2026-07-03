@@ -762,10 +762,10 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 	case TPP_ENOENT:
 		return "No such file or directory";
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	case TPP_EMASKED:
 		return "File cannot be opened because it has been masked";
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
 	case TPP_ELEXERROR:
 		return "User compilation/lexer error";
@@ -5741,6 +5741,9 @@ TPP_DECL_END
 #include <sys/select.h>
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 #endif /* !_MSC_VER */
+#if !defined(tpp_io_compare_mtime) && TPP_HAVE_IO_COMPARE_MTIME
+#include <sys/stat.h>
+#endif /* !tpp_io_compare_mtime && TPP_HAVE_IO_COMPARE_MTIME */
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_int */
 
@@ -5883,6 +5886,141 @@ tpp_io_read(tpp_io_handle file, void *buf,
 	return (tpp_ssize)result;
 #endif /* tpp_io_handle_IS_FILE */
 }
+
+
+#if TPP_HAVE_IO_COMPARE_MTIME
+/* Compare the last-modified timestamp of "lhs_handle" with the last-
+ * modified timestamp of "rhs_filename". If available, "lhs_filename"
+ * specifies the filename linked to "lhs_handle", though this may be
+ * "NULL" if unknown.
+ *
+ * This function is used to implement "#pragma GCC dependency"
+ *
+ * @param: lhs_filename: Filename of "lhs_handle" (or "NULL" if unknown)
+ * @param: lhs_handle:   File handle for left file (only valid if "lhs_handle_valid")
+ * @param: rhs_filename: Filename of right file (always non-NULL)
+ * @param: p_cmp_result: Set according to compare result on TPP_EOK:
+ *                        *p_cmp_result <  0  <=>  fstat(lhs_handle).st_mtime <  stat(rhs_filename).st_mtime
+ *                        *p_cmp_result == 0  <=>  fstat(lhs_handle).st_mtime == stat(rhs_filename).st_mtime
+ *                        *p_cmp_result >  0  <=>  fstat(lhs_handle).st_mtime >  stat(rhs_filename).st_mtime
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOENT:  No such file "rhs_filename" (SOFT_ERROR)
+ * @return: TPP_EIO:     I/O error (HARD_ERROR)
+ * @return: TPP_ENOMEM:  Out of memory (HARD_ERROR)
+ * @return: TPP_ELAST:   Unable to fstat(lhs_handle) / stat(lhs_filename)
+ *                       [os-specific: or "lhs_filename == NULL" or doesn't exist], or unable
+ *                       to implement function and "TPP_IGNORE_INVALID_CONFIGURATION" is enabled. */
+#ifndef tpp_io_compare_mtime
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((4, 5)) tpp_errno TPPCALL
+tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lhs_handle_valid,
+                     char const *rhs_filename, int *tpp_restrict p_cmp_result) {
+#ifdef tpp_io_handle_IS_HANDLE
+	BY_HANDLE_FILE_INFORMATION lhsInfo;
+	BY_HANDLE_FILE_INFORMATION rhsInfo;
+	WIN32_FILE_ATTRIBUTE_DATA temp;
+	FILETIME ftLastAccessed;
+	tpp_io_handle temp_handle;
+	(void)lhs_filename;
+	if (lhs_handle_valid && GetFileInformationByHandle(lhs_handle, &lhsInfo)) {
+		/* Got lhs info! */
+	} else if (lhs_filename) {
+		if (GetFileAttributesExA(lhs_filename, GetFileExInfoStandard, &temp)) {
+			lhsInfo.ftLastWriteTime = temp.ftLastWriteTime;
+		} else {
+			/* Try to properly open to deal with UNC path errors */
+			BOOL bHasLhsInfo;
+			tpp_errno error = tpp_io_open(rhs_filename, &temp_handle);
+			if (TPP_ISERR(error))
+				return error; /* Probably TPP_ENOENT */
+			/* (try to) prevent this open from counting towards rhs_filename's last-accessed timestamp */
+			ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
+			ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
+			(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
+
+			/* Query info on "temp_handle" */
+			bHasLhsInfo = GetFileInformationByHandle(temp_handle, &lhsInfo);
+			tpp_io_close(temp_handle);
+			if (!bHasLhsInfo)
+				return TPP_ELAST; /* Cannot compare */
+		}
+	} else {
+		return TPP_ENOENT; /* Cannot compare */
+	}
+
+	if (GetFileAttributesExA(rhs_filename, GetFileExInfoStandard, &temp)) {
+		rhsInfo.ftLastWriteTime = temp.ftLastWriteTime;
+	} else {
+		/* Try to properly open to deal with UNC path errors */
+		BOOL bHasRhsInfo2;
+		tpp_errno error = tpp_io_open(rhs_filename, &temp_handle);
+		if (TPP_ISERR(error))
+			return error; /* Probably TPP_ENOENT */
+
+		/* (try to) prevent this open from counting towards rhs_filename's last-accessed timestamp */
+		ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
+		ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
+		(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
+
+		/* Query info on "rhs_handle" */
+		bHasRhsInfo2 = GetFileInformationByHandle(temp_handle, &rhsInfo);
+		tpp_io_close(temp_handle);
+		if (!bHasRhsInfo2)
+			return TPP_ELAST; /* Cannot compare */
+	}
+
+	/* Compare timestamps */
+	if (lhsInfo.ftLastWriteTime.dwHighDateTime < rhsInfo.ftLastWriteTime.dwHighDateTime) {
+		*p_cmp_result = -1;
+	} else if (lhsInfo.ftLastWriteTime.dwHighDateTime > rhsInfo.ftLastWriteTime.dwHighDateTime) {
+		*p_cmp_result = 1;
+	} else if (lhsInfo.ftLastWriteTime.dwLowDateTime < rhsInfo.ftLastWriteTime.dwLowDateTime) {
+		*p_cmp_result = -1;
+	} else if (lhsInfo.ftLastWriteTime.dwLowDateTime > rhsInfo.ftLastWriteTime.dwLowDateTime) {
+		*p_cmp_result = 1;
+	} else {
+		*p_cmp_result = 0;
+	}
+	return TPP_EOK;
+#endif /* tpp_io_handle_IS_HANDLE */
+
+#ifdef tpp_io_handle_IS_int
+	struct stat lhs_st;
+	struct stat rhs_st;
+	if (lhs_handle_valid) {
+		if (fstat(lhs_handle, &lhs_st) != 0)
+			return TPP_ELAST; /* Cannot compare */
+	} else {
+		if (stat(lhs_filename, &lhs_st) != 0)
+			return TPP_ELAST; /* Cannot compare */
+	}
+	if (stat(rhs_filename, &lhs_st) != 0)
+		return TPP_ENOENT;
+	if (lhs_st.st_mtime < rhs_st.st_mtime) {
+		*p_cmp_result = -1;
+	} else if (lhs_st.st_mtime > rhs_st.st_mtime) {
+		*p_cmp_result = 1;
+	} else {
+		/* XXX: Look at "st_mtim" / "st_mtimes" / "st_mtimensec" */
+		*p_cmp_result = 0;
+	}
+	return TPP_EOK;
+#endif /* tpp_io_handle_IS_int */
+
+#ifdef tpp_io_handle_IS_FILE
+#ifndef TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_IO_COMPARE_MTIME' is enabled, but no way to implement on this OS. Supply your own definition, or build with '-DTPP_HAVE_IO_COMPARE_MTIME=0' + '-DTPP_HAVE_PRAGMA_GCC_DEPENDENCY=0'"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+	(void)lhs_filename;
+	(void)lhs_handle;
+	(void)lhs_handle_valid;
+	(void)rhs_filename;
+	(void)p_cmp_result;
+	return TPP_ELAST;
+#endif /* tpp_io_handle_IS_FILE */
+}
+#endif /* !tpp_io_compare_mtime */
+#endif /* TPP_HAVE_IO_COMPARE_MTIME */
+
 
 TPP_DECL_END
 #endif /* tpp_io_handle_IS_BUILTIN */
@@ -6029,7 +6167,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
-#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
+#if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
 		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME) {
 #if TPP_HAVE_FILE_DUMMY
 			tpp_file *prev;
@@ -6052,7 +6190,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 
 			tpp_free((char *)self->tf_data.td_io.tff_name);
 		}
-#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
 #if TPP_HAVE_FILE_USER_FILENAME
 		TPP_FALLTHRU
 	case TPP_FILE_KIND_TEXT:
@@ -8819,7 +8957,7 @@ done:
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
 
-#if TPP_HAVE_KEYWORDS_OPENFILE
+#if TPP_HAVE_LEXER_OPENFILE || TPP_HAVE_JOINPATH
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) /*utf-8*/char *TPPCALL
 tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer (with at least "srclen" char-s of space) */
                  /*utf-8*/ char *dst_base,  /* Base pointer of destination buffer (start of destination filename string) */
@@ -8926,8 +9064,11 @@ done:
 		--dst_iter;
 	return dst_iter;
 }
+#endif /* TPP_HAVE_LEXER_OPENFILE || TPP_HAVE_JOINPATH */
 
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+
+#if TPP_HAVE_LEXER_OPENFILE
+#if TPP_HAVE_LEXER_OPENFILE_EX
 #if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
 #if TPP_HAVE_CPP_IMPORT
 TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT != TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED);
@@ -8974,7 +9115,7 @@ tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                       /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                       tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 /* Construct the filename, open the file, and initialize "result" accordingly
  * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
  *                      in case "filename" is a relative path, in which case the
@@ -8989,7 +9130,7 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*0..1*/ char const *tpp_restrict relative_to,
                    /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 #if TPP_HAVE_USER_KEYWORDS
 	bool is_known_keyword = false;
@@ -9080,7 +9221,7 @@ without_relative_to:
 			result_kwd = bucket;
 
 			/* Check if the file should be marked out. */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 			if ((result_kwd->tk_misc) != NULL &&
 			    (result_kwd->tk_misc->tkm_flags & mask_flags) != 0) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
@@ -9116,7 +9257,7 @@ without_relative_to:
 				} while ((fp = fp->tf_tprev) != NULL);
 			}
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 
 			goto got_result_kwd;
 		}
@@ -9176,7 +9317,61 @@ err_nomem:
 #undef tpp_lexer_openfile_keyword_tryrealloc
 #undef tpp_lexer_openfile_keyword_free
 }
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE */
+#endif /* TPP_HAVE_LEXER_OPENFILE */
+
+
+#if TPP_HAVE_JOINPATH
+/* Form an absolute filename by combining "relative_to" with "filename"
+ * @return: * :   The absolute path (must be free'd by caller using "tpp_free()")
+ * @return: NULL: Out of memory. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) char *TPPCALL
+tpp_joinpath(/*0..1*/ char const *tpp_restrict relative_to,
+             /*1..1*/ /*utf-8*/ char const *filename,
+             tpp_size filename_maxlen) {
+	char *result;
+	tpp_size filename_len = tpp_strnlen(filename, filename_maxlen);
+	if (TPP_FS_ISABS(filename, filename_len) || !relative_to) {
+		char *new_result;
+		char *kwd_end;
+		tpp_size result_kwd_len;
+without_relative_to:
+		result = (char *)tpp_malloc((filename_len + 1) * sizeof(char));
+		if tpp_unlikely(!result)
+			return NULL;
+		kwd_end = tpp_fs_normalize(result, result, filename, filename_len);
+		*kwd_end = '\0';
+		result_kwd_len = (tpp_size)(kwd_end - result);
+		tpp_assert(result_kwd_len <= filename_len);
+		new_result = (char *)tpp_tryrealloc(result, (result_kwd_len + 1) * sizeof(char));
+		if tpp_likely(new_result)
+			result = new_result;
+	} else {
+		char *new_result;
+		tpp_size rel_size, whole_size;
+		char const *rel_base = relative_to;
+		char const *last_sep = rel_base + tpp_strlen(relative_to);
+		char *dst_iter, *dst_end;
+		while (last_sep > rel_base && last_sep[-1] != TPP_FS_SEP)
+			--last_sep;
+		if (last_sep <= rel_base)
+			goto without_relative_to;
+		rel_size   = (tpp_size)(last_sep - rel_base); /* Including trailing '/' */
+		whole_size = rel_size + filename_len;
+		result = (char *)tpp_malloc((whole_size + 1) * sizeof(char));
+		if tpp_unlikely(!result)
+			return NULL;
+		tpp_memcpy(result, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
+		dst_iter = result + rel_size;
+		dst_end = tpp_fs_normalize(dst_iter, result, filename, filename_len);
+		*dst_end = '\0';
+		whole_size = (tpp_size)(dst_end - result);
+		new_result = (char *)tpp_tryrealloc(result, (whole_size + 1) * sizeof(char));
+		if tpp_likely(new_result)
+			result = new_result;
+	}
+	return result;
+}
+#endif /* TPP_HAVE_JOINPATH */
 
 
 TPP_DECL_END
@@ -19398,9 +19593,9 @@ continue_pascal_comment_with_ch2:
 	case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
 	case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
 #else /* tpp_ascii_ismb(0x80) */
-#if tpp_ascii_ismb(0xbf)
+#if !defined(TPP_IGNORE_INVALID_CONFIGURATION) && tpp_ascii_ismb(0xbf)
 #error "Unsupported 'tpp_ascii_ismb' configuration. Try re-building with -DTPP_HAVE_ASSUME_ASCII_CTYPE=0"
-#endif /* tpp_ascii_ismb(0xbf) */
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && tpp_ascii_ismb(0xbf) */
 #endif /* !tpp_ascii_ismb(0x80) */
 	case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
 	case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
@@ -23051,9 +23246,85 @@ tpp_lexer_process_pragma_GCC_warning(tpp_lexer *tpp_restrict self, tpp_warning_i
 /* #pragma GCC dependency <file> [<message>]                            */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_GCC_DEPENDENCY
+struct tpp_lexer_process_pragma_GCC_dependency_data {
+	tpp_lexer      *tlppgdd_lexer;    /* [1..1] Current lexer */
+	tpp_file const *tlppgdd_textfile; /* [1..1] The current tpp_file_gettextfile()-file */
+	int             tlppgdd_cmpres;   /* Result of last-modified comparison (lhs: current file, rhs: dependency)
+	                                   * Set to "0" if the comparison failed for some non-fatal reason. */
+	char const     *tlppgdd_str;      /* #include-string (used during callback) */
+	tpp_size        tlppgdd_length;   /* #include-string length (used during callback) */
+	char           *tlppgdd_depfile;  /* [1..1][OUT][owned][valid_if(tlppgdd_cmpres < 0)] Filename of changed dependency. */
+};
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_dependency_path_cb(void *arg, char const *relative_to
+                                                tpp_lexer_foreach_include_path_flags__PARAM) {
+	tpp_errno cmp_error;
+	char *rhs_filename;
+	struct tpp_lexer_process_pragma_GCC_dependency_data *data;
+	tpp_file const *textfile;
+	data = (struct tpp_lexer_process_pragma_GCC_dependency_data *)arg;
+	textfile = data->tlppgdd_textfile;
+	tpp_assert(textfile);
+	tpp_assert(textfile->tf_kind == TPP_FILE_KIND_IO ||
+	           textfile->tf_kind == TPP_FILE_KIND_TEXT);
+#if TPP_HAVE_FILE_SYSHDR
+	(void)flags;
+#endif /* TPP_HAVE_FILE_SYSHDR */
+	rhs_filename = tpp_joinpath(relative_to, data->tlppgdd_str, data->tlppgdd_length);
+	if tpp_unlikely(!rhs_filename)
+		return TPP_ENOMEM;
+	cmp_error = tpp_io_compare_mtime(textfile->tf_data.td_io.tff_name,
+	                                 textfile->tf_data.td_io.tff_file,
+	                                 textfile->tf_kind == TPP_FILE_KIND_IO,
+	                                 rhs_filename, &data->tlppgdd_cmpres);
+	if (cmp_error == TPP_ELAST) { /* Unable to compare */
+		data->tlppgdd_cmpres = 0;
+		cmp_error = TPP_EOK;
+	}
+	if (TPP_ISERR(cmp_error) || data->tlppgdd_cmpres >= 0) {
+		tpp_free(rhs_filename);
+	} else {
+		data->tlppgdd_depfile = rhs_filename;
+	}
+	return cmp_error;
+}
+
+static tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_dependency_cb(void *arg, char const *str, tpp_size length) {
+	tpp_token_id mode;
+	struct tpp_lexer_process_pragma_GCC_dependency_data *data;
+	data = (struct tpp_lexer_process_pragma_GCC_dependency_data *)arg;
+	data->tlppgdd_str    = str;
+	data->tlppgdd_length = length;
+	/* Check for special case: if the given filename is absolute,
+	 * then we must skip all the include-path resolution! */
+	if (TPP_FS_ISABS(str, length))
+		return tpp_lexer_process_pragma_GCC_dependency_path_cb(data, NULL tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
+	mode = tpp_lexer_gettok(data->tlppgdd_lexer);
+	tpp_assert(mode == '<' || mode == '"');
+	return tpp_lexer_foreach_include_path(data->tlppgdd_lexer, mode,
+	                                      &tpp_lexer_process_pragma_GCC_dependency_path_cb,
+	                                      data);
+}
+
+#if TPP_HAVE_TPP_W_DEPENDENCY_CHANGED
+static tpp_errno TPPCALL
+tpp_lexer_process_pragma_GCC_dependency_changed_cb(void *arg, tpp_string *chunk,
+                                                   tpp_char const *str, tpp_size length) {
+	struct tpp_lexer_process_pragma_GCC_dependency_data *data;
+	data = (struct tpp_lexer_process_pragma_GCC_dependency_data *)arg;
+	(void)chunk;
+	/* XXX: It's be nicer if the warning position pointed *at* the include-string */
+	return tpp_lexer_warnf(data->tlppgdd_lexer, TPP_W_DEPENDENCY_CHANGED,
+	                       data->tlppgdd_depfile, ": ",
+	                       (unsigned int)length, str);
+}
+#endif /* TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_GCC_dependency(tpp_lexer *tpp_restrict self) {
-#if 0 /* TODO */
+	struct tpp_lexer_process_pragma_GCC_dependency_data data;
 	tpp_token_id tok;
 	tpp_errno error;
 	do {
@@ -23061,8 +23332,22 @@ tpp_lexer_process_pragma_GCC_dependency(tpp_lexer *tpp_restrict self) {
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
+	data.tlppgdd_lexer   = self;
+	data.tlppgdd_cmpres  = 0;
+	data.tlppgdd_depfile = NULL;
 	if (tok == '"' || tok == '<') {
-		//error = tpp_lexer_decode_include_string_cb();
+		error = TPP_EOK;
+		data.tlppgdd_textfile = tpp_file_gettextfile(tpp_lexer_getfile(self));
+		if (data.tlppgdd_textfile) {
+			error = tpp_lexer_decode_include_string_cb(self, &tpp_lexer_process_pragma_GCC_dependency_cb, &data);
+			if (error == TPP_ENOENT) {
+#if TPP_HAVE_TPP_W_NO_SUCH_FILE
+				error = tpp_lexer_warnf(self, TPP_W_NO_SUCH_FILE);
+#else /* TPP_HAVE_TPP_W_NO_SUCH_FILE */
+				error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_NO_SUCH_FILE */
+			}
+		}
 	} else {
 #if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
 		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INCLUDE_STRING);
@@ -23070,11 +23355,47 @@ tpp_lexer_process_pragma_GCC_dependency(tpp_lexer *tpp_restrict self) {
 		error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
 	}
-#endif
-
-	/* TODO */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_assert(error != TPP_ENOENT);
+	tpp_assert(error != TPP_ELAST);
+	if (TPP_ISERR(error))
+		return error;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok)) {
+err_tok_data_depfile:
+		if (data.tlppgdd_cmpres < 0)
+			tpp_free(data.tlppgdd_depfile);
+		return TPP_TOK_ASERR(tok);
+	}
+	if (TPP_TOK_ISSTRING(tok)) {
+#if TPP_HAVE_TPP_W_DEPENDENCY_CHANGED
+		if (data.tlppgdd_cmpres < 0) {
+			error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_GCC_dependency_changed_cb,
+			                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+		} else
+#endif /* TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
+		{
+			do {
+				tok = tpp_lexer_yield_blocking(self);
+			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok) ||
+			         TPP_TOK_ISSTRING(tok));
+			if (TPP_TOK_ISERR(tok))
+				goto err_tok_data_depfile;
+		}
+	} else
+#if TPP_HAVE_TPP_W_DEPENDENCY_CHANGED
+	if (data.tlppgdd_cmpres < 0) {
+		/* XXX: It's be nicer if the warning position pointed *at* the include-string */
+		error = tpp_lexer_warnf(self, TPP_W_DEPENDENCY_CHANGED, data.tlppgdd_depfile, "", 0, "");
+	} else
+#endif /* TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
+	{
+		error = TPP_EOK;
+	}
+	if (data.tlppgdd_cmpres < 0)
+		tpp_free(data.tlppgdd_depfile);
+	return error;
 }
 #endif /* TPP_HAVE_PRAGMA_GCC_DEPENDENCY */
 
@@ -25148,17 +25469,17 @@ tpp_lexer_handle_endif_directive(tpp_lexer *tpp_restrict self) {
  *                       or file was marked according to "mask_flags"
  * @return: TPP_ENOMEM:  Out of memory
  * @return: TPP_EIO:     I/O error */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_include_directive_impl_ex(tpp_lexer *tpp_restrict self,
                                           tpp_lexer_openfile_result *tpp_restrict result,
                                           tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_include_directive_impl(tpp_lexer *tpp_restrict self,
                                        tpp_lexer_openfile_result *tpp_restrict result)
 #define tpp_lexer_parse_include_directive_impl_ex(self, mask_flags) tpp_lexer_parse_include_directive_impl(self)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 	tpp_errno error;
 	tpp_token_id tok;
@@ -25219,11 +25540,11 @@ again:
 
 	token->tt_start = token_start;
 	if (tok == '"' || tok == '<') {
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 		error = tpp_lexer_open_include_string_ex(self, result, mask_flags);
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 		error = tpp_lexer_open_include_string(self, result);
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 
 #if TPP_HAVE_TPP_W_NO_SUCH_FILE
 		if (error == TPP_ENOENT) {
@@ -25232,11 +25553,11 @@ again:
 				error = warn_error;
 		} else
 #endif /* TPP_HAVE_TPP_W_NO_SUCH_FILE */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 		if (error == TPP_EMASKED) {
 			error = TPP_ENOENT;
 		} else
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 		{
 		}
 	} else {
@@ -25275,17 +25596,17 @@ again:
  *                       or file was marked according to "mask_flags"
  * @return: TPP_ENOMEM:  Out of memory
  * @return: TPP_EIO:     I/O error */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_include_directive_ex(tpp_lexer *tpp_restrict self,
                                      tpp_lexer_openfile_result *tpp_restrict result,
                                      tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
                                   tpp_lexer_openfile_result *tpp_restrict result)
 #define tpp_lexer_parse_include_directive_ex(self, mask_flags) tpp_lexer_parse_include_directive(self)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 	tpp_errno error;
 	tpp_token_id tok;
@@ -25373,18 +25694,18 @@ tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
 	return error;
 }
 
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_include_directive_ex(tpp_lexer *tpp_restrict self,
                                       tpp_file *const _tfapfp_prev,
                                       tpp_lexer_openfile_flags flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
                                    tpp_file *const _tfapfp_prev)
 #define tpp_lexer_handle_include_directive_ex(self, _tfapfp_prev, flags) \
 	tpp_lexer_handle_include_directive(self, _tfapfp_prev)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 	tpp_file *prev_file;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -26361,9 +26682,9 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_INCLUDE
 	case TPP_KWD_include: {
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 		tpp_lexer_openfile_flags flags;
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_CPP_INCLUDE)
 		if (!tpp_lexer_has(self, CPP_INCLUDE))
 			goto handle_unknown_directive;
@@ -26371,7 +26692,7 @@ again_yield_directive_iter:
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_INCLUDE) */
 		tpp_lexer_process_directive_set_noguard();
 		file->tf_pos = directive_iter;
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 		flags = TPP_LEXER_OPENFILE_FLAG_NORMAL;
 #if TPP_HAVE_PRAGMA_ONCE
 		flags |= TPP_LEXER_OPENFILE_FLAG_HDR_ONCE; /* Mask if header has "#pragma once" */
@@ -26379,7 +26700,7 @@ again_yield_directive_iter:
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 		flags |= TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED; /* Mask if header has an active "#ifndef" guard */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 		return tpp_lexer_handle_include_directive_ex(self, _tfapfp_prev, flags);
 	}	break;
 #endif /* TPP_HAVE_CPP_INCLUDE */
@@ -27095,10 +27416,10 @@ typedef struct tpp_macro_argbuf {
 #define tpp_lexer_seek_rparen_flags_frommacro(macro) TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL
 #else /* !TPP_HAVE_MACRO_FLAGS */
 #if defined(TPP_MACRO_FLAG_VARIADIC) && !defined(TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS)
-#error "Invalid configuration: macros require varargs support, but 'TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS' isn't available"
+#error "Invalid internal configuration: macros require varargs support, but 'TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS' isn't available"
 #endif /* !TPP_MACRO_FLAG_VARIADIC && !TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS */
 #if defined(TPP_MACRO_FLAG_KEEPARGSPC) && !defined(TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC)
-#error "Invalid configuration: macros require keep-argument-space support, but 'TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC' isn't available"
+#error "Invalid internal configuration: macros require keep-argument-space support, but 'TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC' isn't available"
 #endif /* !TPP_MACRO_FLAG_KEEPARGSPC && !TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC */
 #undef TPP_LEXER_SEEK_RPAREN_FLAGS_FROMMACRO_COMMON
 #if ((defined(TPP_MACRO_FLAG_VARIADIC) && TPP_MACRO_FLAG_VARIADIC == TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS) && \
@@ -28686,16 +29007,16 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 
 
 #if TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___has_include(tpp_lexer *tpp_restrict self,
                                      tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
 #define tpp_lexer_yield_handle___has_include(self, mask_flags) \
 	tpp_lexer_yield_handle_simple___has_include(self)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 	tpp_errno ofr_error;
 	tpp_token_id tok;
@@ -28715,9 +29036,9 @@ tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
 		return tok;
 	if (tok == '"' || tok == '<') {
 		tpp_lexer_openfile_result ofr;
-#if !TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if !TPP_HAVE_LEXER_OPENFILE_EX
 		ofr_error = tpp_lexer_open_include_string(self, &ofr);
-#else /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* !TPP_HAVE_LEXER_OPENFILE_EX */
 		/* Enable all header-related flags: if the header has been included
 		 * in relation to one of these, then we know it exists without having
 		 * to check its file */
@@ -28734,7 +29055,7 @@ tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
 		if (ofr_error == TPP_EMASKED) {
 			ofr_error = TPP_EOK;
 		} else
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 		{
 			if (ofr_error == TPP_EOK)
 				tpp_lexer_openfile_result_fini(&ofr);
@@ -28794,10 +29115,10 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 		return tok;
 	if (tok == '"' || tok == '<') {
 		ofr_error = tpp_lexer_open_include_string(self, &ofr);
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 		if (ofr_error == TPP_EMASKED)
 			ofr_error = TPP_ENOENT; /* Shouldn't happen */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 	} else {
 		tpp_bzero(&ofr, sizeof(ofr)); /* To prevent compiler warnings; init here isn't actually necessary */
 #if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
@@ -30789,9 +31110,9 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 struct tpp_lexer_open_include_string_data {
 	tpp_lexer                 *tloisd_lexer;      /* [1..1] lexer */
 	tpp_lexer_openfile_result *tloisd_result;     /* [1..1] Openfile result */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	tpp_lexer_openfile_flags   tloisd_mask_flags; /* Mask flags */
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 	char const                *tloisd_str;        /* #include-string (used during callback) */
 	tpp_size                   tloisd_length;     /* #include-string length (used during callback) */
 };
@@ -30802,15 +31123,15 @@ tpp_lexer_open_include_string_path_cb(void *arg, char const *relative_to
 	tpp_errno result;
 	struct tpp_lexer_open_include_string_data *data;
 	data = (struct tpp_lexer_open_include_string_data *)arg;
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	result = tpp_lexer_openfile_ex(data->tloisd_lexer, relative_to,
 	                               data->tloisd_str, data->tloisd_length,
 	                               data->tloisd_result, data->tloisd_mask_flags);
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 	result = tpp_lexer_openfile(data->tloisd_lexer, relative_to,
 	                            data->tloisd_str, data->tloisd_length,
 	                            data->tloisd_result);
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_HAVE_FILE_SYSHDR
 	data->tloisd_result->tlofr_fileflags |= flags; /* Add "TPP_FILE_FLAGS_SYSHDR" + "TPP_FILE_FLAGS_EXTERN_C" flags if necessary */
 #endif /* TPP_HAVE_FILE_SYSHDR */
@@ -30855,23 +31176,23 @@ tpp_lexer_open_include_string_cb(void *arg, char const *str, tpp_size length) {
  * @return: TPP_ENOENT:  No such file (no warning printed, yet)
  * @return: TPP_EMASKED: (tpp_lexer_open_include_string_ex only): Flags
  *                       specified by "mask_flags" were already set. */
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_open_include_string_ex(tpp_lexer *tpp_restrict self,
                                  /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                                  tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
                               /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
-#endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 {
 	struct tpp_lexer_open_include_string_data data;
 	data.tloisd_lexer  = self;
 	data.tloisd_result = result;
-#if TPP_HAVE_KEYWORDS_OPENFILE_EX
+#if TPP_HAVE_LEXER_OPENFILE_EX
 	data.tloisd_mask_flags = mask_flags;
-#endif /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 	return tpp_lexer_decode_include_string_cb(self, &tpp_lexer_open_include_string_cb, &data);
 }
 #endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */

@@ -4092,9 +4092,9 @@ continue_pascal_comment_with_ch2:
 	case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
 	case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
 #else /* tpp_ascii_ismb(0x80) */
-#if tpp_ascii_ismb(0xbf)
+#if !defined(TPP_IGNORE_INVALID_CONFIGURATION) && tpp_ascii_ismb(0xbf)
 #error "Unsupported 'tpp_ascii_ismb' configuration. Try re-building with -DTPP_HAVE_ASSUME_ASCII_CTYPE=0"
-#endif /* tpp_ascii_ismb(0xbf) */
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && tpp_ascii_ismb(0xbf) */
 #endif /* !tpp_ascii_ismb(0x80) */
 	case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
 	case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
