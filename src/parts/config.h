@@ -3098,7 +3098,9 @@ print("#endif /" "* !... *" "/");
 	                       TPP_HAVE_CPP_INCLUDE_NEXT ||  \
 	                       TPP_HAVE_CPP_IMPORT ||        \
 	                       TPP_HAVE_CPP_EMBED ||         \
-	                       TPP_HAVE_CPP_ASSERT))
+	                       TPP_HAVE_CPP_ASSERT ||        \
+	                       TPP_HAVE_CPP_DIGIT_LINE ||    \
+	                       TPP_HAVE_CPP_LINE))
 #endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
 #define TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO \
@@ -3238,6 +3240,10 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_CANNOT_POP_WARNINGS \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING) && TPP_HAVE_WARNINGS_PUSH_POP)
 #endif /* !TPP_HAVE_TPP_W_CANNOT_POP_WARNINGS */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE
+#define TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_LINE)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS
