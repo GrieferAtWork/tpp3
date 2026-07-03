@@ -48,7 +48,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_DIRECTIVES
 
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED
+#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE
 #undef tpp_lexer_seek_eol__STYLE_PARAM
 #undef tpp_lexer_seek_eol__STYLE_ARG
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
@@ -64,13 +64,14 @@ TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM);
-#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED */
+#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE */
 
 
 #undef TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
 #define TPP_HAVE_TPP_LEXER_YIELDRAW_EOL \
 	(TPP_HAVE_CPP_DEFINE || TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_ASSERT)
 
+/************************************************************************/
 #if TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
 /* Skip until EOL and return TPP_TOK_EOF */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -84,8 +85,11 @@ tpp_lexer_yieldraw_eol(tpp_lexer *tpp_restrict self) {
 	return TPP_TOK_EOF;
 }
 #endif /* TPP_HAVE_TPP_LEXER_YIELDRAW_EOL */
+/************************************************************************/
 
 
+
+/************************************************************************/
 #if TPP_HAVE_PRAGMA
 /* Process a #pragma directive, start at the first token that comes after
  * the leading "#pragma" (i.e.: the first token of the actual directive
@@ -170,8 +174,11 @@ tpp_lexer_handle_pragma_directive(tpp_lexer *tpp_restrict self) {
 	return TPP_TOK_OFERR_OR_EOF(error);
 }
 #endif /* TPP_HAVE_PRAGMA */
+/************************************************************************/
 
 
+
+/************************************************************************/
 #if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_handle_error_directive(tpp_lexer *tpp_restrict self,
@@ -244,8 +251,11 @@ tpp_lexer_handle_error_directive(tpp_lexer *tpp_restrict self,
 	return TPP_TOK_OFERR_OR_EOF(error);
 }
 #endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING */
+/************************************************************************/
 
 
+
+/************************************************************************/
 #if TPP_HAVE_CPP_DEFINE
 /* Handle a "#define" directive, with "self" pointing at the macro's name-keyword
  * @return: TPP_TOK_ISERR: Error
@@ -327,6 +337,7 @@ tpp_lexer_handle_undef_directive(tpp_lexer *tpp_restrict self) {
 	return tpp_lexer_yieldraw_eol(self);
 }
 #endif /* TPP_HAVE_CPP_DEFINE */
+/************************************************************************/
 
 
 
@@ -439,6 +450,7 @@ again_yield_and_handle_after_lparen:
 
 
 
+/************************************************************************/
 /* Delete "tpp_keyword_misc::tkm_file_guard" for the current file if appropriate
  * - Must be called just before calling "tpp_ifdef_stack_append()", to deal with
  *   the case of a file having multiple top-level #if-blocks (in which case the
@@ -467,7 +479,11 @@ tpp_file_maybe_delete_include_guard_keyword(tpp_file *tpp_restrict self) {
 #else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #define tpp_file_maybe_delete_include_guard_keyword(self) (void)0
 #endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+/************************************************************************/
 
+
+
+/************************************************************************/
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF
 /* Call with the current token loaded as "if" or "elif"
  * @param: p_directive_start: [out] On success (TPP_EOK or TPP_ENOENT), set
@@ -1184,9 +1200,11 @@ tpp_lexer_handle_endif_directive(tpp_lexer *tpp_restrict self) {
 	return tpp_lexer_yieldraw_eol(self);
 }
 #endif /* TPP_HAVE_CPP_IF_ELSE_ENDIF */
+/************************************************************************/
 
 
 
+/************************************************************************/
 #if TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED
 
 /* Parse the string with the current token pointing at the "include"-keyword
@@ -1313,7 +1331,11 @@ again:
 	return error;
 }
 #endif /* TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED */
+/************************************************************************/
 
+
+
+/************************************************************************/
 #if TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT
 
 /* Parse the string with the current token pointing at the "include"-keyword
@@ -1465,10 +1487,12 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 	return TPP_TOK_EOF; /* Continue parsing in newly pushed file */
 }
 #endif /* TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT */
+/************************************************************************/
 
 
+
+/************************************************************************/
 #if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
-
 typedef struct tpp_embed_builder {
 	tpp_uintmax               teb_limit;     /* Limit on how many bytes to embed */
 #if TPP_HAVE_CPP_EMBED
@@ -1632,7 +1656,11 @@ continue_after_unknown_name:
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+/************************************************************************/
 
+
+
+/************************************************************************/
 #if TPP_HAVE_MACRO___has_embed
 /* Minimal/adjusted parameter handler for __has_embed */
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
@@ -1663,7 +1691,11 @@ tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
 	return result;
 }
 #endif /* TPP_HAVE_MACRO___has_embed */
+/************************************************************************/
 
+
+
+/************************************************************************/
 #if TPP_HAVE_CPP_EMBED
 static TPP_NONNULL((1)) void TPPCALL
 tpp_embed_builder_fini(tpp_embed_builder *tpp_restrict self) {
@@ -1957,10 +1989,10 @@ tpp_lexer_handle_embed_directive(tpp_lexer *tpp_restrict self,
 	 * ensuring that the start of the directive remains loaded into memory! */
 	tpp_assert(file->tf_prev == NULL);
 	directive_eol = file->tf_pos;
-	file->tf_pos   = file->tf_tpos;
-	rel_filename   = (tpp_size)(directive_eol - file->tf_tpos);
+	file->tf_pos  = file->tf_tpos;
+	rel_filename  = (tpp_size)(directive_eol - file->tf_tpos);
 	error = tpp_lexer_seek_eol(self, &directive_eol tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_EOF));
-	file->tf_tpos  = file->tf_pos;
+	file->tf_tpos = file->tf_pos;
 	file->tf_pos += rel_filename;
 	if (TPP_ISERR(error)) {
 		tpp_lexer_autopopfile_break(self);
@@ -1993,10 +2025,7 @@ tpp_lexer_handle_embed_directive(tpp_lexer *tpp_restrict self,
 			error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, "embed");
 	}
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
-
-	/* Make sure the #include-stack is empty except for the file containing the #embed directive */
-	while (file->tf_prev)
-		tpp_lexer_popfile(self);
+	tpp_lexer_popallfiles(self);
 	tpp_file_popeof(file);
 	file->tf_tpos = directive_start;
 	file->tf_pos  = directive_eol;
@@ -2008,6 +2037,177 @@ tpp_lexer_handle_embed_directive(tpp_lexer *tpp_restrict self,
 	return tpp_embed_builder_pack_and_pushfile(&builder, self);
 }
 #endif /* TPP_HAVE_CPP_EMBED */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_CPP_DIGIT_LINE
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_token_id TPPCALL
+tpp_lexer_handle_digit_directive(tpp_lexer *tpp_restrict self,
+                                 tpp_file *_tfapfp_prev,
+                                 tpp_char const *directive_iter) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *const textfile = (file->tf_kind != TPP_FILE_KIND_IO &&
+	                            file->tf_kind != TPP_FILE_KIND_TEXT)
+	                           ? tpp_file_gettextfile(_tfapfp_prev)
+	                           : file;
+	tpp_char const *directive_start;
+	tpp_char const *directive_eol;
+	tpp_errno error;
+	tpp_size rel_digit_loc;
+	tpp_intmax new_linenumber;
+	TPP_REF tpp_string *new_filename = NULL;
+	tpp_token_id tok;
+	directive_start = file->tf_pos;
+	file->tf_pos = directive_iter;
+	error = tpp_lexer_decodeint(self, &new_linenumber);
+	if (TPP_ISERR(error)) {
+err_autopopfile_break_error:
+		tpp_file_autopopfile_break(file);
+		return TPP_TOK_OFERR(error);
+	}
+
+	/* Load the remainder of the directive. */
+	tpp_assert(file->tf_prev == NULL);
+	directive_eol = file->tf_pos;
+	file->tf_pos  = directive_start;
+	rel_digit_loc = (tpp_size)(directive_eol - directive_start);
+	error = tpp_lexer_seek_eol(self, &directive_eol tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_EOF));
+	file->tf_tpos = file->tf_pos;
+	file->tf_pos += rel_digit_loc;
+	if (TPP_ISERR(error))
+		goto err_autopopfile_break_error;
+	directive_start = file->tf_tpos; /* Location used by "tpp_file_pushdummy()", and used during rollback */
+	tpp_file_pusheof(file);
+	tpp_file_seteof(file, directive_eol);
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok)) {
+err_tok_rollback:
+		tpp_lexer_popallfiles(self);
+		tpp_file_breakeof(file);
+		file->tf_pos = directive_start;
+		tpp_file_autopopfile_break(file);
+		return tok;
+	}
+
+	/* If there's a string, use it as the new filename */
+	if (TPP_TOK_ISSTRING(tok)) {
+		error = tpp_lexer_parsestring(self, &new_filename, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		if (TPP_ISERR(error)) {
+			tok = TPP_TOK_OFERR(error);
+			goto err_tok_rollback;
+		}
+		tok = tpp_lexer_gettok(self);
+	}
+
+	/* Process flags. */
+#if TPP_HAVE_FILE_SYSHDR || TPP_HAVE_FILE_EXTERN_C
+	if (textfile) {
+#if TPP_HAVE_FILE_SYSHDR
+		textfile->tf_flags &= ~TPP_FILE_FLAGS_SYSHDR; /* Must be set anew every time */
+#endif /* TPP_HAVE_FILE_SYSHDR */
+#if TPP_HAVE_FILE_EXTERN_C
+		textfile->tf_flags &= ~TPP_FILE_FLAGS_EXTERN_C; /* Must be set anew every time */
+#endif /* TPP_HAVE_FILE_EXTERN_C */
+	}
+#endif /* TPP_HAVE_FILE_SYSHDR || TPP_HAVE_FILE_EXTERN_C */
+
+	for (;;) {
+		tpp_intmax user_flag;
+		while (TPP_TOK_ISSPACE_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(self);
+		if (tok != TPP_TOK_INT)
+			break;
+		error = tpp_lexer_decodeint(self, &user_flag);
+		if (TPP_ISERR(error)) {
+#if TPP_HAVE_FILE_DUMMY
+err_error_rollback_new_filename:
+#endif /* TPP_HAVE_FILE_DUMMY */
+			tok = TPP_TOK_OFERR(error);
+			goto err_tok_rollback_new_filename;
+		}
+		switch (user_flag) {
+
+		case 1:
+#if TPP_HAVE_FILE_DUMMY
+			if (textfile) {
+				file->tf_tpos = directive_start;  /* In case "textfile == file" */
+				tpp_file_autopopfile_break(file); /* *ditto* */
+				error = tpp_file_pushdummy(textfile, textfile->tf_tpos);
+				_tfapfp_prev  = file->tf_prev; /* Undo actions from above */
+				file->tf_prev = NULL;          /* *ditto* */
+				if (TPP_ISERR(error))
+					goto err_error_rollback_new_filename;
+			}
+#endif /* TPP_HAVE_FILE_DUMMY */
+			break;
+
+		case 2:
+#if TPP_HAVE_FILE_DUMMY
+			if (textfile) {
+				tpp_file_autopopfile_break(file); /* In case "textfile == file" */
+				tpp_file_popdummy(textfile);
+				_tfapfp_prev  = file->tf_prev; /* Undo actions from above */
+				file->tf_prev = NULL;          /* *ditto* */
+			}
+#endif /* TPP_HAVE_FILE_DUMMY */
+			break;
+
+		case 3:
+#if TPP_HAVE_FILE_SYSHDR
+			if (textfile)
+				textfile->tf_flags |= TPP_FILE_FLAGS_SYSHDR;
+#endif /* TPP_HAVE_FILE_SYSHDR */
+			break;
+
+		case 4:
+#if TPP_HAVE_FILE_EXTERN_C
+			if (textfile)
+				textfile->tf_flags |= TPP_FILE_FLAGS_EXTERN_C;
+#endif /* TPP_HAVE_FILE_EXTERN_C */
+			break;
+
+		default:
+			/* XXX: Warning? */
+			break;
+		}
+		tok = tpp_lexer_yield_blocking(self);
+	}
+	if (TPP_TOK_ISERR(tok)) {
+err_tok_rollback_new_filename:
+		if (new_filename)
+			tpp_string_decref(new_filename);
+		goto err_tok_rollback;
+	}
+
+	tpp_lexer_popallfiles(self);
+	tpp_file_popeof(file);
+	file->tf_pos = directive_eol;
+	tpp_file_autopopfile_break(file);
+
+	if (textfile) {
+		/* Apply line number override (at directive EOL)
+		 * If "textfile != file", then the file's current position should point
+		 * at wherever it will parse its next token, which should be the start
+		 * of the next effective line (this can happen e.g. if we get here from
+		 * within a "#pragma tpp_exec()" directive) */
+		--new_linenumber; /* "tpp_file_setline()" is 0-based, but user-supplied number is 1-based */
+		tpp_file_setline(textfile, tpp_file_getpos(textfile), (tpp_line)new_linenumber);
+
+		/* Apply filename override */
+		if (new_filename != NULL)
+			tpp_file_setfilename(textfile, new_filename);
+	}
+	if (new_filename)
+		tpp_string_decref(new_filename);
+	return TPP_TOK_EOF;
+}
+#endif /* TPP_HAVE_CPP_DIGIT_LINE */
+/************************************************************************/
+
 
 
 
@@ -2095,14 +2295,7 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIGIT_LINE) */
 		tpp_lexer_process_directive_set_noguard();
-		/* TODO: tpp_file_setline(tpp_file_gettextfile()) */
-		/* TODO: tpp_file_setfilename(tpp_file_gettextfile()) */
-		/* TODO: tpp_file_pushdummy(tpp_file_gettextfile())                  for flag "1" */
-		/* TODO: tpp_file_popdummy(tpp_file_gettextfile())                   for flag "2" */
-		/* TODO: tpp_file_gettextfile()->tf_flags & TPP_FILE_FLAGS_SYSHDR    for flag "3" */
-		/* TODO: tpp_file_gettextfile()->tf_flags & TPP_FILE_FLAGS_EXTERN_C  for flag "4" */
-		goto seek_end_of_line;
-#define WANT_seek_end_of_line
+		return tpp_lexer_handle_digit_directive(self, _tfapfp_prev, directive_iter);
 #endif /* TPP_HAVE_CPP_DIGIT_LINE */
 /************************************************************************/
 

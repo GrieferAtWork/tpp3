@@ -13399,7 +13399,7 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
 
 /* Return line/column information (0-based) for "pos"
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
 
 /* Returns the filename of "self", or "NULL" if unknown. */

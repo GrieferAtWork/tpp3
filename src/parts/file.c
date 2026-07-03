@@ -1066,7 +1066,7 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 
 /* Return line/column information (0-based) for "pos"
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcinfo result;
 	if tpp_unlikely(!self->tf_chunk) {
@@ -1351,6 +1351,11 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 	start_line = tpp_lcinfo_getline(self->tf_data.td_text.tft_start_lc) + delta;
 	start_col  = tpp_lcinfo_getcol(self->tf_data.td_text.tft_start_lc);
 	tpp_lcinfo_init(self->tf_data.td_text.tft_start_lc, start_line, start_col);
+
+	/* Invalidate cache */
+#if TPP_HAVE_FILE_LC_CACHE
+	self->tf_lcpos = NULL;
+#endif /* TPP_HAVE_FILE_LC_CACHE */
 }
 #endif /* TPP_HAVE_FILE_SETLINE */
 
@@ -1463,16 +1468,17 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_file_pushdummy(tpp_file *tpp_restrict self, tpp_char const *pos) {
+	tpp_char const dummy_text[] = { 0 };
 	tpp_file *const dummy = tpp_file_alloc();
 	if tpp_unlikely(!dummy)
 		return TPP_ENOMEM;
 	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
 	           self->tf_kind == TPP_FILE_KIND_TEXT);
 	tpp_dbg_memset(dummy, sizeof(*dummy));
-	dummy->tf_tpos  = NULL;
-	dummy->tf_pos   = NULL;
+	dummy->tf_tpos  = dummy_text;
+	dummy->tf_pos   = dummy_text;
 	dummy->tf_chunk = NULL;
-	dummy->tf_end   = NULL;
+	dummy->tf_end   = dummy_text;
 	dummy->tf_prev  = self->tf_prev;
 	dummy->tf_tprev = self->tf_tprev;
 	self->tf_prev   = dummy;
