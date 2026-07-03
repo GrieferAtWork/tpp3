@@ -226,6 +226,7 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 #define tpp_include_paths_fini_common(self)                             \
 	(tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_system_list)) \
 	 _tpp_include_paths_fini_quote(self)                                \
+	 _tpp_include_paths_fini_syshdr(self)                               \
 	 _tpp_include_paths_fini_after(self))
 
 
@@ -301,22 +302,32 @@ tpp_include_paths_copyone(tpp_include_paths *tpp_restrict self,
 	if (TPP_ISERR(error))
 		goto err;
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	error = tpp_include_path_list_copy(&self->tip_syshdr_list,
+	                                   &from->tip_syshdr_list);
+	if (TPP_ISERR(error))
+		goto err_after;
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 	error = tpp_include_path_list_copy(&self->tip_quote_list,
 	                                   &from->tip_quote_list);
 	if (TPP_ISERR(error))
-		goto err_after;
+		goto err_after_syshdr;
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
 	error = tpp_include_path_list_copy(&self->tip_system_list,
 	                                   &from->tip_system_list);
 	if (TPP_ISERR(error))
-		goto err_after_quote;
+		goto err_after_syshdr_quote;
 	return error;
-err_after_quote:
+err_after_syshdr_quote:
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 	tpp_include_path_list_fini(&self->tip_quote_list);
-err_after:
+err_after_syshdr:
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	tpp_include_path_list_fini(&self->tip_syshdr_list);
+err_after:
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 	tpp_include_path_list_fini(&self->tip_after_list);
 err:
@@ -467,6 +478,38 @@ tpp_include_paths_delquote(tpp_include_paths *tpp_restrict self,
 	return error;
 }
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addsyshdr(tpp_include_paths *tpp_restrict self,
+                            char const *path, tpp_size path_maxlen) {
+	tpp_errno error = tpp_include_paths_unshare(self);
+	if (!TPP_ISERR(error))
+		error = tpp_include_path_list_pushhead(&self->tip_syshdr_list, path, path_maxlen);
+	return error;
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addsyshdr_head(tpp_include_paths *tpp_restrict self,
+                                 char const *path, tpp_size path_maxlen) {
+	tpp_errno error = tpp_include_paths_unshare(self);
+	if (!TPP_ISERR(error))
+		error = tpp_include_path_list_pushtail(&self->tip_syshdr_list, path, path_maxlen);
+	return error;
+}
+
+/* @return: TPP_EOK:    Path was located and removed
+ * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_delsyshdr(tpp_include_paths *tpp_restrict self,
+                            char const *path, tpp_size path_maxlen) {
+	tpp_errno error = tpp_include_paths_unshare(self);
+	if (!TPP_ISERR(error))
+		error = tpp_include_path_list_remove(&self->tip_syshdr_list, path, path_maxlen);
+	return error;
+}
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL

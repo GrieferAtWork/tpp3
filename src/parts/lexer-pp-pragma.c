@@ -816,9 +816,9 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_GCC_system_header(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok;
 #if TPP_HAVE_FILE_SYSHDR
-	tpp_file *iofile = tpp_file_getiofile(tpp_lexer_getfile(self));
-	if (iofile->tf_kind == TPP_FILE_KIND_IO)
-		iofile->tf_flags |= TPP_FILE_FLAGS_SYSHDR;
+	tpp_file *textfile = tpp_file_gettextfile(tpp_lexer_getfile(self));
+	if (textfile != NULL)
+		textfile->tf_flags |= TPP_FILE_FLAGS_SYSHDR;
 #endif /* TPP_HAVE_FILE_SYSHDR */
 	do {
 		tok = tpp_lexer_yield_blocking(self);

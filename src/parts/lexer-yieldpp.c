@@ -2113,8 +2113,9 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_LINE) */
 		tpp_lexer_process_directive_set_noguard();
-
-		/* TODO */
+		file->tf_pos = directive_iter;
+		/* TODO: tpp_file_setline(tpp_file_gettextfile()) */
+		/* TODO: tpp_file_setfilename(tpp_file_gettextfile()) */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
 #endif /* TPP_HAVE_CPP_LINE */

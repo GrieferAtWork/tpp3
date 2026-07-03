@@ -2466,12 +2466,17 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_INCLUDE_PATH (TPP_HAVE_INCLUDE_STACK)
 #endif /* !TPP_HAVE_INCLUDE_PATH */
 
-/* "tpp_include_paths" contains a secondary path-list that is only searched during "-strings */
+/* "tpp_include_paths" contains a 2nd path-list that is only searched during "-strings */
 #ifndef TPP_HAVE_INCLUDE_PATH_QUOTE
 #define TPP_HAVE_INCLUDE_PATH_QUOTE (TPP_HAVE_INCLUDE_STACK && (TPP_PROFILE == TPP_PROFILE_ALL))
 #endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
 
-/* "tpp_include_paths" contains a tertiary path-list that is searched after all other paths */
+/* "tpp_include_paths" contains a 3rd path-list whose files are treated as "TPP_FILE_FLAGS_SYSHDR" */
+#ifndef TPP_HAVE_INCLUDE_PATH_SYSHDR
+#define TPP_HAVE_INCLUDE_PATH_SYSHDR (TPP_HAVE_INCLUDE_STACK && TPP_HAVE_FILE_SYSHDR && (TPP_PROFILE == TPP_PROFILE_ALL))
+#endif /* !TPP_HAVE_INCLUDE_PATH_SYSHDR */
+
+/* "tpp_include_paths" contains a 4th path-list that is searched after all other paths */
 #ifndef TPP_HAVE_INCLUDE_PATH_AFTER
 #define TPP_HAVE_INCLUDE_PATH_AFTER (TPP_HAVE_INCLUDE_STACK && (TPP_PROFILE == TPP_PROFILE_ALL))
 #endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */

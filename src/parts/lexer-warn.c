@@ -521,9 +521,8 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 		/* Display as a warning */
 #if TPP_HAVE_FILE_SYSHDR
 		tpp_file const *const file = info->tlpfi_file ? info->tlpfi_file : tpp_lexer_getfile(self);
-		tpp_file const *const iofile = tpp_file_getiofile(file);
-		if (iofile->tf_kind == TPP_FILE_KIND_IO &&
-		    iofile->tf_flags & TPP_FILE_FLAGS_SYSHDR)
+		tpp_file const *const textfile = tpp_file_gettextfile(file);
+		if (textfile && textfile->tf_flags & TPP_FILE_FLAGS_SYSHDR)
 			return TPP_EOK; /* Suppress warnings in this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 	}	break;

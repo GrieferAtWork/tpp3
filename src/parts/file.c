@@ -1377,7 +1377,7 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_gettextfile(tpp_file const *tpp_restrict self) {
 	tpp_file *iter = (tpp_file *)self;
 	while (iter->tf_kind != TPP_FILE_KIND_IO &&
-	       iter->tf_kind != TPP_FILE_KIND_MACRO) {
+	       iter->tf_kind != TPP_FILE_KIND_TEXT) {
 		iter = iter->tf_tprev;
 		if (iter == NULL)
 			break;

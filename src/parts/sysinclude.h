@@ -106,8 +106,9 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
  *                              enabled): every I/O-file on the #include-stack
  * 2.  (#include "foo.h" only): Paths specified in "tip_quote_list" (if available)
  * 3.  Paths specified in "tip_system_list"
- * 4.  Paths hard-coded using "TPP_CONFIG_SYSTEM_INCLUDE_PATH"
- * 5.  Paths specified in "tip_after_list" (if available)
+ * 4.  Paths specified in "tip_syshdr_list"
+ * 5.  Paths hard-coded using "TPP_CONFIG_SYSTEM_INCLUDE_PATH"
+ * 6.  Paths specified in "tip_after_list" (if available)
  */
 typedef struct tpp_include_paths {
 	tpp_include_path_list TPP_INTERNAL(tip_system_list); /* System #include-path list */
@@ -119,6 +120,14 @@ typedef struct tpp_include_paths {
 #define _tpp_include_paths_init_quote(self) /* nothing */
 #define _tpp_include_paths_fini_quote(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	tpp_include_path_list TPP_INTERNAL(tip_syshdr_list);  /* #include-paths treated as TPP_FILE_FLAGS_SYSHDR */
+#define _tpp_include_paths_init_syshdr(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_syshdr_list))
+#define _tpp_include_paths_fini_syshdr(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_syshdr_list))
+#else /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
+#define _tpp_include_paths_init_syshdr(self) /* nothing */
+#define _tpp_include_paths_fini_syshdr(self) /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 	tpp_include_path_list TPP_INTERNAL(tip_after_list);  /* #include-path list searched after all others */
 #define _tpp_include_paths_init_after(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_after_list))
@@ -141,6 +150,7 @@ typedef struct tpp_include_paths {
 #define tpp_include_paths_init(self)                                    \
 	(tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_system_list)) \
 	 _tpp_include_paths_init_quote(self)                                \
+	 _tpp_include_paths_init_syshdr(self)                               \
 	 _tpp_include_paths_init_after(self)                                \
 	 _tpp_include_paths_init_push(self))
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
@@ -160,6 +170,10 @@ tpp_include_paths_copy(tpp_include_paths *tpp_restrict self,
 #define tpp_include_paths_numquote(self)     tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_quote_list))
 #define tpp_include_paths_getquote(self, i)  tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_quote_list), i)
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+#define tpp_include_paths_numsyshdr(self)    tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_syshdr_list))
+#define tpp_include_paths_getsyshdr(self, i) tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_syshdr_list), i)
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 #define tpp_include_paths_numafter(self)     tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_after_list))
 #define tpp_include_paths_getafter(self, i)  tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_after_list), i)
@@ -199,6 +213,21 @@ tpp_include_paths_delquote(tpp_include_paths *tpp_restrict self,
                            char const *path, tpp_size path_maxlen);
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
 
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addsyshdr(tpp_include_paths *tpp_restrict self,
+                            char const *path, tpp_size path_maxlen);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addsyshdr_head(tpp_include_paths *tpp_restrict self,
+                                 char const *path, tpp_size path_maxlen);
+/* @return: TPP_EOK:    Path was located and removed
+ * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_delsyshdr(tpp_include_paths *tpp_restrict self,
+                            char const *path, tpp_size path_maxlen);
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
+
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_include_paths_addafter(tpp_include_paths *tpp_restrict self,
@@ -236,6 +265,11 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *
 #define tpp_include_paths_addquote_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_quote_list), path, path_maxlen)
 #define tpp_include_paths_delquote(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_quote_list), path, path_maxlen)
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+#define tpp_include_paths_addsyshdr(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_syshdr_list), path, path_maxlen)
+#define tpp_include_paths_addsyshdr_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_syshdr_list), path, path_maxlen)
+#define tpp_include_paths_delsyshdr(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_syshdr_list), path, path_maxlen)
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 #define tpp_include_paths_addafter(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_after_list), path, path_maxlen)
 #define tpp_include_paths_addafter_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_after_list), path, path_maxlen)

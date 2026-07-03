@@ -83,7 +83,7 @@ typedef enum tpp_file_encoding {
 #define TPP_FILE_FLAGS_NOCLOSE      UINT8_C(0x02) /* TPP_FILE_KIND_IO: Don't `tpp_io_close(tff_file)' on destruction */
 #endif /* TPP_HAVE_FILE_NOCLOSE */
 #if TPP_HAVE_FILE_SYSHDR
-#define TPP_FILE_FLAGS_SYSHDR       UINT8_C(0x04) /* TPP_FILE_KIND_IO: Suppress all warnings produced in the context of this file */
+#define TPP_FILE_FLAGS_SYSHDR       UINT8_C(0x04) /* TPP_FILE_KIND_IO + TPP_FILE_KIND_TEXT: Suppress all warnings produced in the context of this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 #if TPP_HAVE_FILE_NOKWD
 #define TPP_FILE_FLAGS_NOKWD        UINT8_C(0x08) /* TPP_FILE_KIND_IO: The file's "tff_name" field isn't actually a "tpp_keyword::tk_kwd", but rather a raw \0-terminated C string. */
@@ -615,15 +615,15 @@ typedef struct tpp_file {
 #if TPP_HAVE_USER_KEYWORDS
 #define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
 	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
-	                     (ofr)->tlofr_handle, TPP_FILE_FLAGS_NORMAL, enc)
+	                     (ofr)->tlofr_handle, tpp_lexer_openfile_result_getfileflags(ofr), enc)
 #elif TPP_HAVE_FILE_NOKWD
 #define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
 	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
-	                     (ofr)->tlofr_handle, TPP_FILE_FLAGS_NOKWD | TPP_FILE_FLAGS_FREENAME, enc)
+	                     (ofr)->tlofr_handle, tpp_lexer_openfile_result_getfileflags(ofr) | TPP_FILE_FLAGS_NOKWD | TPP_FILE_FLAGS_FREENAME, enc)
 #else /* ... */
 #define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
 	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
-	                     (ofr)->tlofr_handle, TPP_FILE_FLAGS_FREENAME, enc)
+	                     (ofr)->tlofr_handle, tpp_lexer_openfile_result_getfileflags(ofr) | TPP_FILE_FLAGS_FREENAME, enc)
 #endif /* !... */
 #endif /* TPP_HAVE_KEYWORDS_OPENFILE */
 

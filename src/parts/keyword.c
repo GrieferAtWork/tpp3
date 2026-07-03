@@ -1584,6 +1584,11 @@ TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT != TPP_LEXER_OPENFILE_FLA
  * causes "TPP_EMASKED" to be returned if the file's keyword is already included
  * somewhere on the #include-stack.
  *
+ * NOTE: This function always sets "tlofr_fileflags = TPP_FILE_FLAGS_NORMAL".
+ *       If the given "relative_to" belongs to a system header, then it is up
+ *       to the caller to set that flag. "tpp_lexer_open_include_string_ex()"
+ *       will do so automatically after calling this function.
+ *
  * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
  *                     should be returned:
  *                     - TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
@@ -1791,6 +1796,9 @@ got_result_kwd:
 	result->tlofr_filename = result_kwd;
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 	result->tlofr_handle = handle;
+#if TPP_HAVE_FILE_SYSHDR
+	result->tlofr_fileflags = TPP_FILE_FLAGS_NORMAL; /* Overwritten by caller (if necessary) */
+#endif /* !TPP_HAVE_FILE_SYSHDR */
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;

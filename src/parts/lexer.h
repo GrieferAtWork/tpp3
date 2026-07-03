@@ -550,14 +550,20 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
 
 #if TPP_HAVE_KEYWORDS_OPENFILE
 typedef struct tpp_lexer_openfile_result {
-	tpp_io_handle tlofr_handle;       /* [1..1][owned] I/O handle for requested file (must be inherited by caller) */
+	tpp_io_handle  tlofr_handle;       /* [1..1][owned] I/O handle for requested file (must be inherited by caller) */
 #if TPP_HAVE_USER_KEYWORDS
-	tpp_keyword  *tlofr_filename_kwd; /* [1..1] Keyword for filename */
+	tpp_keyword   *tlofr_filename_kwd; /* [1..1] Keyword for filename */
 #define tpp_lexer_openfile_result_getfilename(self) tpp_keyword_getkwdcstr((self)->tlofr_filename_kwd)
 #else /* TPP_HAVE_USER_KEYWORDS */
-	char         *tlofr_filename;     /* [1..1][owned] Filename string */
+	char          *tlofr_filename;     /* [1..1][owned] Filename string */
 #define tpp_lexer_openfile_result_getfilename(self) ((char const *)(self)->tlofr_filename)
 #endif /* !TPP_HAVE_USER_KEYWORDS */
+#if TPP_HAVE_FILE_SYSHDR
+	tpp_file_flags tlofr_fileflags;    /* Either "TPP_FILE_FLAGS_NORMAL" or "TPP_FILE_FLAGS_SYSHDR" */
+#define tpp_lexer_openfile_result_getfileflags(self) ((self)->tlofr_fileflags)
+#else /* TPP_HAVE_FILE_SYSHDR */
+#define tpp_lexer_openfile_result_getfileflags(self) TPP_FILE_FLAGS_NORMAL
+#endif /* !TPP_HAVE_FILE_SYSHDR */
 } tpp_lexer_openfile_result;
 
 
@@ -602,6 +608,11 @@ typedef struct tpp_lexer_openfile_result {
  * Another special case is made for "TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT", which
  * causes "TPP_EMASKED" to be returned if the file's keyword is already included
  * somewhere on the #include-stack.
+ *
+ * NOTE: This function always sets "tlofr_fileflags = TPP_FILE_FLAGS_NORMAL".
+ *       If the given "relative_to" belongs to a system header, then it is up
+ *       to the caller to set that flag. "tpp_lexer_open_include_string_ex()"
+ *       will do so automatically after calling this function.
  *
  * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
  *                     should be returned:
@@ -1080,18 +1091,29 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 
 
 #if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#if TPP_HAVE_FILE_SYSHDR
+#define tpp_lexer_foreach_include_path_flags__PARAM  , tpp_file_flags flags
+#define tpp_lexer_foreach_include_path_flags__ARG(x) , x
+#else /* TPP_HAVE_FILE_SYSHDR */
+#define tpp_lexer_foreach_include_path_flags__PARAM  /* nothing */
+#define tpp_lexer_foreach_include_path_flags__ARG(x) /* nothing */
+#endif /* !TPP_HAVE_FILE_SYSHDR */
+
 /* Enumerate #include-paths according to "mode"
  * @param: mode: #include-mode (either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE)
  * @param: cb:   Callback invoked for each available #include-path. The first time
  *               this callback returns something other than TPP_ENOENT, that return
  *               value is propagated.
+ * @param: cb.flags: Either "TPP_FILE_FLAGS_NORMAL" or "TPP_FILE_FLAGS_SYSHDR",
+ *                   depending where "relative_to" originates from.
  * @param: arg:  Cookie for "cb"
  * @return: * :  The first non-TPP_ENOENT return value of "cb"
  * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
  *                      invocations of "cb" returned "TPP_ENOENT".  */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id mode,
-                               tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
+                               tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
+                                                       tpp_lexer_foreach_include_path_flags__PARAM),
                                void *arg);
 
 /* Wrapper around `tpp_lexer_decode_include_string_cb()' that automatically
