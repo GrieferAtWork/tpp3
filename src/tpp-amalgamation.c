@@ -280,6 +280,7 @@
 #define tef_TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS    TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS)
 #define tef_TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS  TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)
 #define tef_TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS      TPP_INTERNAL(tef_TPP_EXT_BUILTIN_EXPR_CHARACTER_LITERALS)
+#define tef_TPP_EXT_EXTERN_C_FOR_SYSHDR                  TPP_INTERNAL(tef_TPP_EXT_EXTERN_C_FOR_SYSHDR)
 #define tef_TPP_EXT_SEARCH_SYSTEM_INCLUDE_PATH           TPP_INTERNAL(tef_TPP_EXT_SEARCH_SYSTEM_INCLUDE_PATH)
 #define tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE       TPP_INTERNAL(tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #define xv_kind                                          TPP_INTERNAL(xv_kind)
@@ -531,6 +532,7 @@
 #define tff_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS            TPP_INTERNAL(tff_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS)
 #define tff_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS          TPP_INTERNAL(tff_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)
 #define tff_BUILTIN_EXPR_CHARACTER_LITERALS              TPP_INTERNAL(tff_BUILTIN_EXPR_CHARACTER_LITERALS)
+#define tff_EXTERN_C_FOR_SYSHDR                          TPP_INTERNAL(tff_EXTERN_C_FOR_SYSHDR)
 #define tff_SEARCH_SYSTEM_INCLUDE_PATH                   TPP_INTERNAL(tff_SEARCH_SYSTEM_INCLUDE_PATH)
 #define tff_INCLUDE_RELATIVE_TO_EVERY_FILE               TPP_INTERNAL(tff_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #define tidse_mode                                       TPP_INTERNAL(tidse_mode)
@@ -569,6 +571,10 @@
 #define tfm_macro                                        TPP_INTERNAL(tfm_macro)
 #define tfm_args                                         TPP_INTERNAL(tfm_args)
 #define td_macro                                         TPP_INTERNAL(td_macro)
+#define tfd_name                                         TPP_INTERNAL(tfd_name)
+#define tfd_start_lc                                     TPP_INTERNAL(tfd_start_lc)
+#define tfd_user_filename                                TPP_INTERNAL(tfd_user_filename)
+#define td_dummy                                         TPP_INTERNAL(td_dummy)
 #define tmpe_macro                                       TPP_INTERNAL(tmpe_macro)
 #define tmpe_count                                       TPP_INTERNAL(tmpe_count)
 #define tmps_cnt                                         TPP_INTERNAL(tmps_cnt)
@@ -668,6 +674,7 @@
 #define tipl_list                                        TPP_INTERNAL(tipl_list)
 #define tipl_size                                        TPP_INTERNAL(tipl_size)
 #define tip_quote_list                                   TPP_INTERNAL(tip_quote_list)
+#define tip_syshdr_list                                  TPP_INTERNAL(tip_syshdr_list)
 #define tip_after_list                                   TPP_INTERNAL(tip_after_list)
 #define tip_pushcnt                                      TPP_INTERNAL(tip_pushcnt)
 #define tip_prev                                         TPP_INTERNAL(tip_prev)
@@ -6023,12 +6030,35 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
-		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME)
+		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME) {
+#if TPP_HAVE_FILE_DUMMY
+			tpp_file *prev;
+			/* Must also clear filename out of any dummy file that had been pushed
+			 * Note that this shouldn't matter for properly generated code, since
+			 * any dummy file pushed should be popped explicitly before the file
+			 * that declared the dummy file ends.
+			 *
+			 * However, we might still get here during error recovery, or when the
+			 * user was making use of manually written "# <linenum>" directives.
+			 */
+			for (prev = self->tf_prev;
+			     prev && prev->tf_kind == TPP_FILE_KIND_DUMMY;
+			     prev = prev->tf_prev) {
+				if (prev->tf_data.td_dummy.tfd_name != self->tf_data.td_io.tff_name)
+					break;
+				prev->tf_data.td_dummy.tfd_name = NULL;
+			}
+#endif /* TPP_HAVE_FILE_DUMMY */
+
 			tpp_free((char *)self->tf_data.td_io.tff_name);
+		}
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
 #if TPP_HAVE_FILE_USER_FILENAME
 		TPP_FALLTHRU
 	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
 		if (self->tf_data.td_text.tft_user_filename)
 			tpp_string_decref(self->tf_data.td_text.tft_user_filename);
 		break;
@@ -6871,6 +6901,12 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_start_lc));
+#if TPP_HAVE_FILE_DUMMY
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
+                  tpp_offsetof(tpp_file, tf_data.td_dummy.tfd_name));
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
+                  tpp_offsetof(tpp_file, tf_data.td_dummy.tfd_start_lc));
+#endif /* TPP_HAVE_FILE_DUMMY */
 
 
 #if TPP_HAVE_CPP_MACROS
@@ -6890,8 +6926,13 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcinfo result;
-	if tpp_unlikely(!self->tf_chunk)
+	if tpp_unlikely(!self->tf_chunk) {
+#if TPP_HAVE_FILE_DUMMY
+		if (self->tf_kind == TPP_FILE_KIND_DUMMY)
+			return self->tf_data.td_dummy.tfd_start_lc;
+#endif /* TPP_HAVE_FILE_DUMMY */
 		return TPP_LCINFO_INVALID;
+	}
 	tpp_assert(pos >= tpp_string_str(self->tf_chunk));
 	tpp_assert(pos <= tpp_string_end(self->tf_chunk));
 
@@ -6930,7 +6971,11 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO:
-	case TPP_FILE_KIND_TEXT: {
+	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
+	{
 		result = self->tf_data.td_io.tff_start_lc;
 		result = tpp_lcinfo_account_ex(result, tpp_string_str(self->tf_chunk),
 		                               (tpp_size)(pos - tpp_string_str(self->tf_chunk)),
@@ -7044,6 +7089,10 @@ tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
  * in "tpp_file_getrealfilename()" */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
+#if TPP_HAVE_FILE_DUMMY
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
+                  tpp_offsetof(tpp_file, tf_data.td_dummy.tfd_name));
+#endif /* TPP_HAVE_FILE_DUMMY */
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
@@ -7055,6 +7104,9 @@ again:
 
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
 		return self->tf_data.td_io.tff_name;
 
 #if TPP_HAVE_FILE_SUBTEXT
@@ -7083,7 +7135,11 @@ again:
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO:
-	case TPP_FILE_KIND_TEXT: {
+	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
+	{
 		TPP_REF tpp_string *user;
 		user = self->tf_data.td_io.tff_user_filename;
 		if (user != NULL)
@@ -7187,6 +7243,9 @@ again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
 
 	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO:
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -7220,14 +7279,14 @@ tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
 	return (tpp_file *)self;
 }
 
+#if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY
 /* Returns the first tf_kind==TPP_FILE_KIND_IO || tf_kind==TPP_FILE_KIND_TEXT file
  * in the #include-stack (using "tf_tprev"). If no such file exists, returns "NULL" */
-#if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_gettextfile(tpp_file const *tpp_restrict self) {
 	tpp_file *iter = (tpp_file *)self;
 	while (iter->tf_kind != TPP_FILE_KIND_IO &&
-	       iter->tf_kind != TPP_FILE_KIND_MACRO) {
+	       iter->tf_kind != TPP_FILE_KIND_TEXT) {
 		iter = iter->tf_tprev;
 		if (iter == NULL)
 			break;
@@ -7243,7 +7302,82 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 	tpp_file *result = tpp_file_gettextfile(self);
 	return result ? result : (tpp_file *)self;
 }
-#endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT */
+#endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY */
+
+#if TPP_HAVE_FILE_DUMMY
+/* Push/pop a so-called "dummy-file" that goes between "self" and parent, which
+ * is a copy of "self", but with all file/chunk-data stripped, except that the
+ * current values for the following are preserved (for tracebacks):
+ * - tpp_file_getfilename(self)
+ * - tpp_file_getlcinfo(self, pos)   (returned by tpp_file_getlcinfo() for any pointer)
+ *
+ * NOTES:
+ * - The caller must ensure that self->tf_kind == TPP_FILE_KIND_IO ||
+ *                               self->tf_kind == TPP_FILE_KIND_TEXT
+ * - Used to implement gcc's "# <linenum> <filename> 1" directive
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_file_pushdummy(tpp_file *tpp_restrict self, tpp_char const *pos) {
+	tpp_file *const dummy = tpp_file_alloc();
+	if tpp_unlikely(!dummy)
+		return TPP_ENOMEM;
+	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
+	           self->tf_kind == TPP_FILE_KIND_TEXT);
+	tpp_dbg_memset(dummy, sizeof(*dummy));
+	dummy->tf_tpos  = NULL;
+	dummy->tf_pos   = NULL;
+	dummy->tf_chunk = NULL;
+	dummy->tf_end   = NULL;
+	dummy->tf_prev  = self->tf_prev;
+	dummy->tf_tprev = self->tf_tprev;
+	self->tf_prev   = dummy;
+	self->tf_tprev  = dummy;
+	(void)0 _tpp_file_init_lcpos(dummy);
+	(void)0 _tpp_file_init_ifdef(dummy);
+	dummy->tf_kind = TPP_FILE_KIND_DUMMY;
+	(void)0 _tpp_file_init_enc(dummy);
+	(void)0 _tpp_file_init_flags(dummy);
+	dummy->tf_data.td_dummy.tfd_name     = self->tf_data.td_io.tff_name;
+	dummy->tf_data.td_dummy.tfd_start_lc = tpp_file_getlcinfo(self, pos);
+#if TPP_HAVE_FILE_USER_FILENAME
+	dummy->tf_data.td_dummy.tfd_user_filename = self->tf_data.td_text.tft_user_filename;
+	if (dummy->tf_data.td_dummy.tfd_user_filename)
+		tpp_string_incref(dummy->tf_data.td_dummy.tfd_user_filename);
+#endif /* TPP_HAVE_FILE_USER_FILENAME */
+	return TPP_EOK;
+}
+
+
+/* Check if "self" has a parent, and if so: if that parent is a "dummy"
+ * file. If that is the case, unlink that dummy file from the #include-
+ * stack and free it. Otherwise, do nothing
+ *
+ * NOTES:
+ * - The caller must ensure that self->tf_kind == TPP_FILE_KIND_IO ||
+ *                               self->tf_kind == TPP_FILE_KIND_TEXT
+ * - Used to implement gcc's "# <linenum> <filename> 2" directive
+ *
+ * @return: true:  Success (a dummy file was popped)
+ * @return: false: Failure (there was no dummy file to pop) */
+TPP_IMPL TPP_NONNULL((1)) bool TPPCALL
+tpp_file_popdummy(tpp_file *tpp_restrict self) {
+	tpp_file *const prev = self->tf_prev;
+	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
+	           self->tf_kind == TPP_FILE_KIND_TEXT);
+	if (prev == NULL)
+		return false; /* No predecessor */
+	if (prev->tf_kind != TPP_FILE_KIND_DUMMY)
+		return false; /* Not a dummy file */
+	self->tf_prev  = prev->tf_prev;
+	self->tf_tprev = prev->tf_tprev;
+	tpp_file_fini(prev);
+	tpp_file_free(prev);
+	return true;
+}
+#endif /* TPP_HAVE_FILE_DUMMY */
+
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 
@@ -8811,6 +8945,11 @@ TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT != TPP_LEXER_OPENFILE_FLA
  * causes "TPP_EMASKED" to be returned if the file's keyword is already included
  * somewhere on the #include-stack.
  *
+ * NOTE: This function always sets "tlofr_fileflags = TPP_FILE_FLAGS_NORMAL".
+ *       If the given "relative_to" belongs to a system header, then it is up
+ *       to the caller to set that flag. "tpp_lexer_open_include_string_ex()"
+ *       will do so automatically after calling this function.
+ *
  * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
  *                     should be returned:
  *                     - TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
@@ -9018,6 +9157,9 @@ got_result_kwd:
 	result->tlofr_filename = result_kwd;
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 	result->tlofr_handle = handle;
+#if TPP_HAVE_FILE_SYSHDR
+	result->tlofr_fileflags = TPP_FILE_FLAGS_NORMAL; /* Overwritten by caller (if necessary) */
+#endif /* !TPP_HAVE_FILE_SYSHDR */
 	return TPP_EOK;
 err_nomem:
 	return TPP_ENOMEM;
@@ -11587,6 +11729,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
 		/* .tff_BUILTIN_EXPR_CHARACTER_LITERALS      = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_EXTERN_C_FOR_SYSHDR)
+		/* .tff_EXTERN_C_FOR_SYSHDR                  = */ TPP_CONF_DEFAULT(TPP_HAVE_EXTERN_C_FOR_SYSHDR),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_EXTERN_C_FOR_SYSHDR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH)
 		/* .tff_SEARCH_SYSTEM_INCLUDE_PATH           = */ TPP_CONF_DEFAULT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH) */
@@ -12283,6 +12428,7 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 #define tpp_include_paths_fini_common(self)                             \
 	(tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_system_list)) \
 	 _tpp_include_paths_fini_quote(self)                                \
+	 _tpp_include_paths_fini_syshdr(self)                               \
 	 _tpp_include_paths_fini_after(self))
 
 
@@ -12358,22 +12504,32 @@ tpp_include_paths_copyone(tpp_include_paths *tpp_restrict self,
 	if (TPP_ISERR(error))
 		goto err;
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	error = tpp_include_path_list_copy(&self->tip_syshdr_list,
+	                                   &from->tip_syshdr_list);
+	if (TPP_ISERR(error))
+		goto err_after;
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 	error = tpp_include_path_list_copy(&self->tip_quote_list,
 	                                   &from->tip_quote_list);
 	if (TPP_ISERR(error))
-		goto err_after;
+		goto err_after_syshdr;
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
 	error = tpp_include_path_list_copy(&self->tip_system_list,
 	                                   &from->tip_system_list);
 	if (TPP_ISERR(error))
-		goto err_after_quote;
+		goto err_after_syshdr_quote;
 	return error;
-err_after_quote:
+err_after_syshdr_quote:
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 	tpp_include_path_list_fini(&self->tip_quote_list);
-err_after:
+err_after_syshdr:
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	tpp_include_path_list_fini(&self->tip_syshdr_list);
+err_after:
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 	tpp_include_path_list_fini(&self->tip_after_list);
 err:
@@ -12524,6 +12680,38 @@ tpp_include_paths_delquote(tpp_include_paths *tpp_restrict self,
 	return error;
 }
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addsyshdr(tpp_include_paths *tpp_restrict self,
+                            char const *path, tpp_size path_maxlen) {
+	tpp_errno error = tpp_include_paths_unshare(self);
+	if (!TPP_ISERR(error))
+		error = tpp_include_path_list_pushhead(&self->tip_syshdr_list, path, path_maxlen);
+	return error;
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_addsyshdr_head(tpp_include_paths *tpp_restrict self,
+                                 char const *path, tpp_size path_maxlen) {
+	tpp_errno error = tpp_include_paths_unshare(self);
+	if (!TPP_ISERR(error))
+		error = tpp_include_path_list_pushtail(&self->tip_syshdr_list, path, path_maxlen);
+	return error;
+}
+
+/* @return: TPP_EOK:    Path was located and removed
+ * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_include_paths_delsyshdr(tpp_include_paths *tpp_restrict self,
+                            char const *path, tpp_size path_maxlen) {
+	tpp_errno error = tpp_include_paths_unshare(self);
+	if (!TPP_ISERR(error))
+		error = tpp_include_path_list_remove(&self->tip_syshdr_list, path, path_maxlen);
+	return error;
+}
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
@@ -13701,9 +13889,8 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 		/* Display as a warning */
 #if TPP_HAVE_FILE_SYSHDR
 		tpp_file const *const file = info->tlpfi_file ? info->tlpfi_file : tpp_lexer_getfile(self);
-		tpp_file const *const iofile = tpp_file_getiofile(file);
-		if (iofile->tf_kind == TPP_FILE_KIND_IO &&
-		    iofile->tf_flags & TPP_FILE_FLAGS_SYSHDR)
+		tpp_file const *const textfile = tpp_file_gettextfile(file);
+		if (textfile && tpp_file_getsystemheader(textfile))
 			return TPP_EOK; /* Suppress warnings in this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 	}	break;
@@ -22636,9 +22823,9 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_GCC_system_header(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok;
 #if TPP_HAVE_FILE_SYSHDR
-	tpp_file *iofile = tpp_file_getiofile(tpp_lexer_getfile(self));
-	if (iofile->tf_kind == TPP_FILE_KIND_IO)
-		iofile->tf_flags |= TPP_FILE_FLAGS_SYSHDR;
+	tpp_file *textfile = tpp_file_gettextfile(tpp_lexer_getfile(self));
+	if (textfile != NULL)
+		textfile->tf_flags |= TPP_FILE_FLAGS_SYSHDR;
 #endif /* TPP_HAVE_FILE_SYSHDR */
 	do {
 		tok = tpp_lexer_yield_blocking(self);
@@ -25815,8 +26002,12 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIGIT_LINE) */
 		tpp_lexer_process_directive_set_noguard();
-
-		/* TODO */
+		/* TODO: tpp_file_setline(tpp_file_gettextfile()) */
+		/* TODO: tpp_file_setfilename(tpp_file_gettextfile()) */
+		/* TODO: tpp_file_pushdummy(tpp_file_gettextfile())                  for flag "1" */
+		/* TODO: tpp_file_popdummy(tpp_file_gettextfile())                   for flag "2" */
+		/* TODO: tpp_file_gettextfile()->tf_flags & TPP_FILE_FLAGS_SYSHDR    for flag "3" */
+		/* TODO: tpp_file_gettextfile()->tf_flags & TPP_FILE_FLAGS_EXTERN_C  for flag "4" */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
 #endif /* TPP_HAVE_CPP_DIGIT_LINE */
@@ -25833,8 +26024,9 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_LINE) */
 		tpp_lexer_process_directive_set_noguard();
-
-		/* TODO */
+		file->tf_pos = directive_iter;
+		/* TODO: tpp_file_setline(tpp_file_gettextfile()) */
+		/* TODO: tpp_file_setfilename(tpp_file_gettextfile()) */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
 #endif /* TPP_HAVE_CPP_LINE */
@@ -30140,14 +30332,15 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 /* Try to open "str" in "paths"; returns TPP_ENOENT if not found */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_foreach_include_path_in_list(tpp_include_path_list const *paths,
-                                       tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
-                                       void *arg) {
+                                       tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
+                                                  tpp_lexer_foreach_include_path_flags__PARAM),
+                                       void *arg tpp_lexer_foreach_include_path_flags__PARAM) {
 	tpp_size i;
 	tpp_errno result = TPP_ENOENT;
 	for (i = 0; i < paths->tipl_size; ++i) {
 		tpp_include_path_entry const *entry = &paths->tipl_list[i];
 		char const *path = _tpp_include_path_entry_getpath(entry);
-		result = (*cb)(arg, path);
+		result = (*cb)(arg, path tpp_lexer_foreach_include_path_flags__ARG(flags));
 		if (result != TPP_ENOENT)
 			break;
 	}
@@ -30160,14 +30353,28 @@ tpp_lexer_foreach_include_path_in_list(tpp_include_path_list const *paths,
  * @param: cb:   Callback invoked for each available #include-path. The first time
  *               this callback returns something other than TPP_ENOENT, that return
  *               value is propagated.
+ * @param: cb.flags: Either "TPP_FILE_FLAGS_NORMAL" or "TPP_FILE_FLAGS_SYSHDR",
+ *                   possibly or'd with "TPP_FILE_FLAGS_EXTERN_C" depending on
+ *                   where "relative_to" originates from, and how "self" has been
+ *                   configured (see "TPP_HAVE_EXTERN_C_FOR_SYSHDR")
  * @param: arg:  Cookie for "cb"
  * @return: * :  The first non-TPP_ENOENT return value of "cb"
  * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
- *                      invocations of "cb" returned "TPP_ENOENT".  */
+ *                      invocations of "cb" returned "TPP_ENOENT". */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id mode,
-                               tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
+                               tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
+                                                       tpp_lexer_foreach_include_path_flags__PARAM),
                                void *arg) {
+#if TPP_HAVE_EXTERN_C_FOR_SYSHDR == 0
+#define TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS (TPP_FILE_FLAGS_SYSHDR)
+#elif !TPP_CONF_MAYBE_0(TPP_HAVE_EXTERN_C_FOR_SYSHDR)
+#define TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS (TPP_FILE_FLAGS_SYSHDR | TPP_FILE_FLAGS_EXTERN_C)
+#else /* TPP_HAVE_EXTERN_C_FOR_SYSHDR */
+#define TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS                                               \
+	(tpp_lexer_has(self, EXTERN_C_FOR_SYSHDR) ? (TPP_FILE_FLAGS_SYSHDR | TPP_FILE_FLAGS_EXTERN_C) \
+	                                          : (TPP_FILE_FLAGS_SYSHDR))
+#endif /* !TPP_HAVE_EXTERN_C_FOR_SYSHDR */
 	tpp_errno error;
 	tpp_assert(mode == '<' || mode == '"');
 	if (mode == '"') {
@@ -30187,7 +30394,7 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 			{
 				char const *filename = file->tf_data.td_io.tff_name;
 				if (filename) {
-					error = (*cb)(arg, filename);
+					error = (*cb)(arg, filename tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
 					if (error != TPP_ENOENT)
 						return error;
 				}
@@ -30205,7 +30412,8 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 
 		/* Search the quote-include path */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE
-		error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_quote_list, cb, arg);
+		error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_quote_list, cb, arg
+		                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
 		if (error != TPP_ENOENT)
 			return error;
 #endif /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE */
@@ -30217,17 +30425,24 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 
 	/* Search the system-include path */
 #if TPP_HAVE_INCLUDE_PATH
-	error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_system_list, cb, arg);
+	error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_system_list, cb, arg
+	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
 	if (error != TPP_ENOENT)
 		return error;
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_syshdr_list, cb, arg
+	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS));
+	if (error != TPP_ENOENT)
+		return error;
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
 	/* Check hard-coded system include paths... */
 #if TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
 	if (tpp_lexer_has(self, SEARCH_SYSTEM_INCLUDE_PATH)) {
-#define tpp_handle_system_include_path(_, index, value) \
-		error = (*cb)(arg, value TPP_FS_SEP_S);         \
-		if (error != TPP_ENOENT)                        \
+#define tpp_handle_system_include_path(_, index, value)                                                                                \
+		error = (*cb)(arg, value TPP_FS_SEP_S tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS)); \
+		if (error != TPP_ENOENT)                                                                                                       \
 			return error;
 		TPP_TUPLE_FOREACH(TPP_CONFIG_SYSTEM_INCLUDE_PATH, TPP_TUPLE_FOREACH_DUMMY_SEP,
 		                  tpp_handle_system_include_path, ~)
@@ -30237,11 +30452,13 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 
 	/* Check "after" system include paths... */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
-	return tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_after_list, cb, arg);
+	return tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_after_list, cb, arg
+	                                              tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS));
 #else /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER */
 	/* File not found :( */
 	return TPP_ENOENT;
 #endif /* !TPP_HAVE_INCLUDE_PATH || !TPP_HAVE_INCLUDE_PATH_AFTER */
+#undef TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS
 }
 
 
@@ -30256,18 +30473,24 @@ struct tpp_lexer_open_include_string_data {
 };
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_open_include_string_path_cb(void *arg, char const *relative_to) {
+tpp_lexer_open_include_string_path_cb(void *arg, char const *relative_to
+                                      tpp_lexer_foreach_include_path_flags__PARAM) {
+	tpp_errno result;
 	struct tpp_lexer_open_include_string_data *data;
 	data = (struct tpp_lexer_open_include_string_data *)arg;
 #if TPP_HAVE_KEYWORDS_OPENFILE_EX
-	return tpp_lexer_openfile_ex(data->tloisd_lexer, relative_to,
-	                             data->tloisd_str, data->tloisd_length,
-	                             data->tloisd_result, data->tloisd_mask_flags);
+	result = tpp_lexer_openfile_ex(data->tloisd_lexer, relative_to,
+	                               data->tloisd_str, data->tloisd_length,
+	                               data->tloisd_result, data->tloisd_mask_flags);
 #else /* TPP_HAVE_KEYWORDS_OPENFILE_EX */
-	return tpp_lexer_openfile(data->tloisd_lexer, relative_to,
-	                          data->tloisd_str, data->tloisd_length,
-	                          data->tloisd_result);
+	result = tpp_lexer_openfile(data->tloisd_lexer, relative_to,
+	                            data->tloisd_str, data->tloisd_length,
+	                            data->tloisd_result);
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
+#if TPP_HAVE_FILE_SYSHDR
+	data->tloisd_result->tlofr_fileflags |= flags; /* Add "TPP_FILE_FLAGS_SYSHDR" + "TPP_FILE_FLAGS_EXTERN_C" flags if necessary */
+#endif /* TPP_HAVE_FILE_SYSHDR */
+	return result;
 }
 
 
@@ -30281,7 +30504,7 @@ tpp_lexer_open_include_string_cb(void *arg, char const *str, tpp_size length) {
 	/* Check for special case: if the given filename is absolute,
 	 * then we must skip all the include-path resolution! */
 	if (TPP_FS_ISABS(str, length))
-		return tpp_lexer_open_include_string_path_cb(data, NULL);
+		return tpp_lexer_open_include_string_path_cb(data, NULL tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
 	mode = tpp_lexer_gettok(data->tloisd_lexer);
 	tpp_assert(mode == '<' || mode == '"');
 	return tpp_lexer_foreach_include_path(data->tloisd_lexer, mode,

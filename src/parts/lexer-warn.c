@@ -522,7 +522,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_FILE_SYSHDR
 		tpp_file const *const file = info->tlpfi_file ? info->tlpfi_file : tpp_lexer_getfile(self);
 		tpp_file const *const textfile = tpp_file_gettextfile(file);
-		if (textfile && textfile->tf_flags & TPP_FILE_FLAGS_SYSHDR)
+		if (textfile && tpp_file_getsystemheader(textfile))
 			return TPP_EOK; /* Suppress warnings in this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 	}	break;

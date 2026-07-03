@@ -2446,6 +2446,28 @@ print("#endif /" "* !... *" "/");
 	 TPP_HAVE_PRAGMA_TPP_TPP_EXEC)
 #endif /* !TPP_HAVE_FILE_SUBTEXT */
 
+/* Enable support for `TPP_FILE_KIND_DUMMY', which is
+ * needed to support gcc's "# <linenum>" -> 1/2 flags
+ *
+ * These flags push so-called "dummy" files onto the
+ * #include-stack (without altering the actual current
+ * file), with those dummy files acting as additional
+ * entries for #include tracebacks. */
+#ifndef TPP_HAVE_FILE_DUMMY
+#define TPP_HAVE_FILE_DUMMY (TPP_HAVE_CPP_DIGIT_LINE)
+#endif /* !TPP_HAVE_FILE_DUMMY */
+
+/* Enable support for `TPP_FILE_FLAGS_EXTERN_C' */
+#ifndef TPP_HAVE_FILE_EXTERN_C
+#define TPP_HAVE_FILE_EXTERN_C (TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_CPP_DIGIT_LINE)
+#endif /* !TPP_HAVE_FILE_EXTERN_C */
+
+/* When "TPP_FILE_FLAGS_SYSHDR" is set during "#include" (i.e. *NOT* via "#pragma GCC system_header"),
+ * then the "TPP_FILE_FLAGS_EXTERN_C" flag should be set alongside "TPP_FILE_FLAGS_SYSHDR". */
+#ifndef TPP_HAVE_EXTERN_C_FOR_SYSHDR
+#define TPP_HAVE_EXTERN_C_FOR_SYSHDR (TPP_HAVE_FILE_SYSHDR && TPP_HAVE_FILE_EXTERN_C ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT0 : TPP_CONF_FEAT0) : 0) /* "-fextern-c-for-syshdr" */
+#endif /* !TPP_HAVE_EXTERN_C_FOR_SYSHDR */
+
 /* Enable support for `tpp_file::tf_prev' */
 #ifndef TPP_HAVE_INCLUDE_STACK
 #if (TPP_HAVE_CPP_MACROS ||       \
@@ -2453,7 +2475,8 @@ print("#endif /" "* !... *" "/");
      TPP_HAVE_CPP_INCLUDE_NEXT || \
      TPP_HAVE_CPP_IMPORT ||       \
      TPP_HAVE_CPP_EMBED ||        \
-     TPP_HAVE_FILE_SUBTEXT)
+     TPP_HAVE_FILE_SUBTEXT ||     \
+     TPP_HAVE_FILE_DUMMY)
 #define TPP_HAVE_INCLUDE_STACK 1
 #else /* ... */
 #define TPP_HAVE_INCLUDE_STACK 0

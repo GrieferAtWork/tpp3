@@ -173,12 +173,35 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE
-		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME)
+		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME) {
+#if TPP_HAVE_FILE_DUMMY
+			tpp_file *prev;
+			/* Must also clear filename out of any dummy file that had been pushed
+			 * Note that this shouldn't matter for properly generated code, since
+			 * any dummy file pushed should be popped explicitly before the file
+			 * that declared the dummy file ends.
+			 *
+			 * However, we might still get here during error recovery, or when the
+			 * user was making use of manually written "# <linenum>" directives.
+			 */
+			for (prev = self->tf_prev;
+			     prev && prev->tf_kind == TPP_FILE_KIND_DUMMY;
+			     prev = prev->tf_prev) {
+				if (prev->tf_data.td_dummy.tfd_name != self->tf_data.td_io.tff_name)
+					break;
+				prev->tf_data.td_dummy.tfd_name = NULL;
+			}
+#endif /* TPP_HAVE_FILE_DUMMY */
+
 			tpp_free((char *)self->tf_data.td_io.tff_name);
+		}
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_KEYWORDS_OPENFILE */
 #if TPP_HAVE_FILE_USER_FILENAME
 		TPP_FALLTHRU
 	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
 		if (self->tf_data.td_text.tft_user_filename)
 			tpp_string_decref(self->tf_data.td_text.tft_user_filename);
 		break;
@@ -1021,6 +1044,12 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_start_lc));
+#if TPP_HAVE_FILE_DUMMY
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
+                  tpp_offsetof(tpp_file, tf_data.td_dummy.tfd_name));
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
+                  tpp_offsetof(tpp_file, tf_data.td_dummy.tfd_start_lc));
+#endif /* TPP_HAVE_FILE_DUMMY */
 
 
 #if TPP_HAVE_CPP_MACROS
@@ -1040,8 +1069,13 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcinfo result;
-	if tpp_unlikely(!self->tf_chunk)
+	if tpp_unlikely(!self->tf_chunk) {
+#if TPP_HAVE_FILE_DUMMY
+		if (self->tf_kind == TPP_FILE_KIND_DUMMY)
+			return self->tf_data.td_dummy.tfd_start_lc;
+#endif /* TPP_HAVE_FILE_DUMMY */
 		return TPP_LCINFO_INVALID;
+	}
 	tpp_assert(pos >= tpp_string_str(self->tf_chunk));
 	tpp_assert(pos <= tpp_string_end(self->tf_chunk));
 
@@ -1080,7 +1114,11 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO:
-	case TPP_FILE_KIND_TEXT: {
+	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
+	{
 		result = self->tf_data.td_io.tff_start_lc;
 		result = tpp_lcinfo_account_ex(result, tpp_string_str(self->tf_chunk),
 		                               (tpp_size)(pos - tpp_string_str(self->tf_chunk)),
@@ -1194,6 +1232,10 @@ tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
  * in "tpp_file_getrealfilename()" */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
+#if TPP_HAVE_FILE_DUMMY
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
+                  tpp_offsetof(tpp_file, tf_data.td_dummy.tfd_name));
+#endif /* TPP_HAVE_FILE_DUMMY */
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
@@ -1205,6 +1247,9 @@ again:
 
 	case TPP_FILE_KIND_IO:
 	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
 		return self->tf_data.td_io.tff_name;
 
 #if TPP_HAVE_FILE_SUBTEXT
@@ -1233,7 +1278,11 @@ again:
 	switch (self->tf_kind) {
 
 	case TPP_FILE_KIND_IO:
-	case TPP_FILE_KIND_TEXT: {
+	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
+	{
 		TPP_REF tpp_string *user;
 		user = self->tf_data.td_io.tff_user_filename;
 		if (user != NULL)
@@ -1337,6 +1386,9 @@ again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
 
 	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO:
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -1370,9 +1422,9 @@ tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
 	return (tpp_file *)self;
 }
 
+#if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY
 /* Returns the first tf_kind==TPP_FILE_KIND_IO || tf_kind==TPP_FILE_KIND_TEXT file
  * in the #include-stack (using "tf_tprev"). If no such file exists, returns "NULL" */
-#if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_gettextfile(tpp_file const *tpp_restrict self) {
 	tpp_file *iter = (tpp_file *)self;
@@ -1393,7 +1445,82 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 	tpp_file *result = tpp_file_gettextfile(self);
 	return result ? result : (tpp_file *)self;
 }
-#endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT */
+#endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY */
+
+#if TPP_HAVE_FILE_DUMMY
+/* Push/pop a so-called "dummy-file" that goes between "self" and parent, which
+ * is a copy of "self", but with all file/chunk-data stripped, except that the
+ * current values for the following are preserved (for tracebacks):
+ * - tpp_file_getfilename(self)
+ * - tpp_file_getlcinfo(self, pos)   (returned by tpp_file_getlcinfo() for any pointer)
+ *
+ * NOTES:
+ * - The caller must ensure that self->tf_kind == TPP_FILE_KIND_IO ||
+ *                               self->tf_kind == TPP_FILE_KIND_TEXT
+ * - Used to implement gcc's "# <linenum> <filename> 1" directive
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_file_pushdummy(tpp_file *tpp_restrict self, tpp_char const *pos) {
+	tpp_file *const dummy = tpp_file_alloc();
+	if tpp_unlikely(!dummy)
+		return TPP_ENOMEM;
+	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
+	           self->tf_kind == TPP_FILE_KIND_TEXT);
+	tpp_dbg_memset(dummy, sizeof(*dummy));
+	dummy->tf_tpos  = NULL;
+	dummy->tf_pos   = NULL;
+	dummy->tf_chunk = NULL;
+	dummy->tf_end   = NULL;
+	dummy->tf_prev  = self->tf_prev;
+	dummy->tf_tprev = self->tf_tprev;
+	self->tf_prev   = dummy;
+	self->tf_tprev  = dummy;
+	(void)0 _tpp_file_init_lcpos(dummy);
+	(void)0 _tpp_file_init_ifdef(dummy);
+	dummy->tf_kind = TPP_FILE_KIND_DUMMY;
+	(void)0 _tpp_file_init_enc(dummy);
+	(void)0 _tpp_file_init_flags(dummy);
+	dummy->tf_data.td_dummy.tfd_name     = self->tf_data.td_io.tff_name;
+	dummy->tf_data.td_dummy.tfd_start_lc = tpp_file_getlcinfo(self, pos);
+#if TPP_HAVE_FILE_USER_FILENAME
+	dummy->tf_data.td_dummy.tfd_user_filename = self->tf_data.td_text.tft_user_filename;
+	if (dummy->tf_data.td_dummy.tfd_user_filename)
+		tpp_string_incref(dummy->tf_data.td_dummy.tfd_user_filename);
+#endif /* TPP_HAVE_FILE_USER_FILENAME */
+	return TPP_EOK;
+}
+
+
+/* Check if "self" has a parent, and if so: if that parent is a "dummy"
+ * file. If that is the case, unlink that dummy file from the #include-
+ * stack and free it. Otherwise, do nothing
+ *
+ * NOTES:
+ * - The caller must ensure that self->tf_kind == TPP_FILE_KIND_IO ||
+ *                               self->tf_kind == TPP_FILE_KIND_TEXT
+ * - Used to implement gcc's "# <linenum> <filename> 2" directive
+ *
+ * @return: true:  Success (a dummy file was popped)
+ * @return: false: Failure (there was no dummy file to pop) */
+TPP_IMPL TPP_NONNULL((1)) bool TPPCALL
+tpp_file_popdummy(tpp_file *tpp_restrict self) {
+	tpp_file *const prev = self->tf_prev;
+	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO ||
+	           self->tf_kind == TPP_FILE_KIND_TEXT);
+	if (prev == NULL)
+		return false; /* No predecessor */
+	if (prev->tf_kind != TPP_FILE_KIND_DUMMY)
+		return false; /* Not a dummy file */
+	self->tf_prev  = prev->tf_prev;
+	self->tf_tprev = prev->tf_tprev;
+	tpp_file_fini(prev);
+	tpp_file_free(prev);
+	return true;
+}
+#endif /* TPP_HAVE_FILE_DUMMY */
+
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 

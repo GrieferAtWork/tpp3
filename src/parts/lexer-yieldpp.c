@@ -2095,8 +2095,12 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIGIT_LINE) */
 		tpp_lexer_process_directive_set_noguard();
-
-		/* TODO */
+		/* TODO: tpp_file_setline(tpp_file_gettextfile()) */
+		/* TODO: tpp_file_setfilename(tpp_file_gettextfile()) */
+		/* TODO: tpp_file_pushdummy(tpp_file_gettextfile())                  for flag "1" */
+		/* TODO: tpp_file_popdummy(tpp_file_gettextfile())                   for flag "2" */
+		/* TODO: tpp_file_gettextfile()->tf_flags & TPP_FILE_FLAGS_SYSHDR    for flag "3" */
+		/* TODO: tpp_file_gettextfile()->tf_flags & TPP_FILE_FLAGS_EXTERN_C  for flag "4" */
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
 #endif /* TPP_HAVE_CPP_DIGIT_LINE */
@@ -2113,7 +2117,6 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_LINE) */
 		tpp_lexer_process_directive_set_noguard();
-		file->tf_pos = directive_iter;
 		/* TODO: tpp_file_setline(tpp_file_gettextfile()) */
 		/* TODO: tpp_file_setfilename(tpp_file_gettextfile()) */
 		goto seek_end_of_line;

@@ -418,15 +418,28 @@ tpp_lexer_foreach_include_path_in_list(tpp_include_path_list const *paths,
  * @param: cb:   Callback invoked for each available #include-path. The first time
  *               this callback returns something other than TPP_ENOENT, that return
  *               value is propagated.
+ * @param: cb.flags: Either "TPP_FILE_FLAGS_NORMAL" or "TPP_FILE_FLAGS_SYSHDR",
+ *                   possibly or'd with "TPP_FILE_FLAGS_EXTERN_C" depending on
+ *                   where "relative_to" originates from, and how "self" has been
+ *                   configured (see "TPP_HAVE_EXTERN_C_FOR_SYSHDR")
  * @param: arg:  Cookie for "cb"
  * @return: * :  The first non-TPP_ENOENT return value of "cb"
  * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
- *                      invocations of "cb" returned "TPP_ENOENT".  */
+ *                      invocations of "cb" returned "TPP_ENOENT". */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id mode,
                                tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
                                                        tpp_lexer_foreach_include_path_flags__PARAM),
                                void *arg) {
+#if TPP_HAVE_EXTERN_C_FOR_SYSHDR == 0
+#define TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS (TPP_FILE_FLAGS_SYSHDR)
+#elif !TPP_CONF_MAYBE_0(TPP_HAVE_EXTERN_C_FOR_SYSHDR)
+#define TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS (TPP_FILE_FLAGS_SYSHDR | TPP_FILE_FLAGS_EXTERN_C)
+#else /* TPP_HAVE_EXTERN_C_FOR_SYSHDR */
+#define TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS                                               \
+	(tpp_lexer_has(self, EXTERN_C_FOR_SYSHDR) ? (TPP_FILE_FLAGS_SYSHDR | TPP_FILE_FLAGS_EXTERN_C) \
+	                                          : (TPP_FILE_FLAGS_SYSHDR))
+#endif /* !TPP_HAVE_EXTERN_C_FOR_SYSHDR */
 	tpp_errno error;
 	tpp_assert(mode == '<' || mode == '"');
 	if (mode == '"') {
@@ -483,7 +496,7 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 		return error;
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
 	error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_syshdr_list, cb, arg
-	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_SYSHDR));
+	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS));
 	if (error != TPP_ENOENT)
 		return error;
 #endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
@@ -492,9 +505,9 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 	/* Check hard-coded system include paths... */
 #if TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
 	if (tpp_lexer_has(self, SEARCH_SYSTEM_INCLUDE_PATH)) {
-#define tpp_handle_system_include_path(_, index, value)                                                          \
-		error = (*cb)(arg, value TPP_FS_SEP_S tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_SYSHDR)); \
-		if (error != TPP_ENOENT)                                                                                 \
+#define tpp_handle_system_include_path(_, index, value)                                                                                \
+		error = (*cb)(arg, value TPP_FS_SEP_S tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS)); \
+		if (error != TPP_ENOENT)                                                                                                       \
 			return error;
 		TPP_TUPLE_FOREACH(TPP_CONFIG_SYSTEM_INCLUDE_PATH, TPP_TUPLE_FOREACH_DUMMY_SEP,
 		                  tpp_handle_system_include_path, ~)
@@ -505,11 +518,12 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 	/* Check "after" system include paths... */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
 	return tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_after_list, cb, arg
-	                                              tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_SYSHDR));
+	                                              tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS));
 #else /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER */
 	/* File not found :( */
 	return TPP_ENOENT;
 #endif /* !TPP_HAVE_INCLUDE_PATH || !TPP_HAVE_INCLUDE_PATH_AFTER */
+#undef TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS
 }
 
 
@@ -539,7 +553,7 @@ tpp_lexer_open_include_string_path_cb(void *arg, char const *relative_to
 	                            data->tloisd_result);
 #endif /* !TPP_HAVE_KEYWORDS_OPENFILE_EX */
 #if TPP_HAVE_FILE_SYSHDR
-	data->tloisd_result->tlofr_fileflags |= flags; /* Add "TPP_FILE_FLAGS_SYSHDR" flag if necessary */
+	data->tloisd_result->tlofr_fileflags |= flags; /* Add "TPP_FILE_FLAGS_SYSHDR" + "TPP_FILE_FLAGS_EXTERN_C" flags if necessary */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 	return result;
 }

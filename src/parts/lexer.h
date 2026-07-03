@@ -559,7 +559,7 @@ typedef struct tpp_lexer_openfile_result {
 #define tpp_lexer_openfile_result_getfilename(self) ((char const *)(self)->tlofr_filename)
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 #if TPP_HAVE_FILE_SYSHDR
-	tpp_file_flags tlofr_fileflags;    /* Either "TPP_FILE_FLAGS_NORMAL" or "TPP_FILE_FLAGS_SYSHDR" */
+	tpp_file_flags tlofr_fileflags;    /* Either "TPP_FILE_FLAGS_NORMAL" or "TPP_FILE_FLAGS_SYSHDR" or "TPP_FILE_FLAGS_EXTERN_C" */
 #define tpp_lexer_openfile_result_getfileflags(self) ((self)->tlofr_fileflags)
 #else /* TPP_HAVE_FILE_SYSHDR */
 #define tpp_lexer_openfile_result_getfileflags(self) TPP_FILE_FLAGS_NORMAL
@@ -1105,11 +1105,13 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
  *               this callback returns something other than TPP_ENOENT, that return
  *               value is propagated.
  * @param: cb.flags: Either "TPP_FILE_FLAGS_NORMAL" or "TPP_FILE_FLAGS_SYSHDR",
- *                   depending where "relative_to" originates from.
+ *                   possibly or'd with "TPP_FILE_FLAGS_EXTERN_C" depending on
+ *                   where "relative_to" originates from, and how "self" has been
+ *                   configured (see "TPP_HAVE_EXTERN_C_FOR_SYSHDR")
  * @param: arg:  Cookie for "cb"
  * @return: * :  The first non-TPP_ENOENT return value of "cb"
  * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
- *                      invocations of "cb" returned "TPP_ENOENT".  */
+ *                      invocations of "cb" returned "TPP_ENOENT". */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id mode,
                                tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
