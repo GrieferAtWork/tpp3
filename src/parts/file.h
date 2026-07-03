@@ -357,6 +357,13 @@ typedef struct tpp_file {
 #define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef))
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
+
+/* Access macro information */
+#if TPP_HAVE_CPP_MACROS
+#define tpp_file_ismacro(self)  (tpp_file_getkind(self) == TPP_FILE_KIND_MACRO)
+#define tpp_file_getmacro(self) ((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro))
+#endif /* TPP_HAVE_CPP_MACROS */
+
 /* Returns a pointer to the start of the effectively relevant source.
  * - For the currently loaded file, this is the start of the current
  *   token. If no tokens have been yielded yet, the value returned by

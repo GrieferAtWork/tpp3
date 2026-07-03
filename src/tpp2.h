@@ -1646,6 +1646,28 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #endif /* !TPP2_VA_NARGS */
 
 
+#if defined(_MSC_VER)
+#define TPP_HAVE_UNNAMED_UNION 1
+#pragma warning(disable : 4201)
+#elif defined(__DCC_VERSION__)
+#define TPP_HAVE_UNNAMED_UNION 1
+#elif ((defined(__GNUC__) && /* Anonymous unions support starts with gcc 2.96/g++ 2.95 */          \
+        (__GNUC__ < 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ < 95 ||                                 \
+                                            (__GNUC_MINOR__ == 95 && !defined(__cplusplus)))))) || \
+       defined(__SUNPRO_C) || defined(__SUNPRO_CC))
+#define TPP_HAVE_UNNAMED_UNION 0
+#else /* ... */
+#define TPP_HAVE_UNNAMED_UNION 1
+#endif /* !... */
+
+#if TPP_HAVE_UNNAMED_UNION
+#define TPP_UNNAMED_UNION_DEF(name) /* nothing */
+#else /* TPP_HAVE_UNNAMED_UNION */
+#define TPP_UNNAMED_UNION_DEF(name) name
+#endif /* !TPP_HAVE_UNNAMED_UNION */
+
+
+
 #ifndef TPP_CONFIG_MINMACRO
 #define TPP_CONFIG_MINMACRO 0
 #endif /* !TPP_CONFIG_MINMACRO */
@@ -2041,6 +2063,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_FILE_NOCLOSE          0 /* TTP2 didn't have this */
 #define TPP_HAVE_FILE_NOKWD            0 /* TTP2 didn't have this */
 #define TPP_COMMON_HAVE_TPP_TOK        0 /* We want to configure tokens individually */
+#define TPP_HAVE_IFNDEF_INCLUDE_GUARDS 1 /* TPP2 also used to have this, and even let you disable it at runtime via "TPPLEXER_FLAG_NO_LEGACY_GUARDS" (something that TPP3 no longer supports) */
 
 #ifdef TPP_CONFIG_NO_PRECACHE_TEXTLINES
 #define TPP_HAVE_FILE_LC_CACHE 0
@@ -4398,60 +4421,7 @@ alias("W_EXPECTED_KEYWORD_AFTER_EXPR_PRED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_ASS
 
 /* API Compatibility */
 
-#if 0 /* TODO: Not directly portable (write migration notes for this stuff) */
-//struct TPPTextFile {
-//	/* [owned((:f_name) = true]
-//	 * HINT: `:f_name' usually is the string passed to the
-//	 *        system for opening a stream for this file.
-//	 *        Though this doesn't necessarily have to hold up,
-//	 *        as pipe text files don't need to follow this rule. */
-//	/*ref*/struct TPPFile   *f_cacheentry;  /* [0..1] Used when the copy of a file is loaded onto the #include-stack (points to the original version of the file)
-//	                                         * NOTE: When non-NULL, always a textfile and this pointer also owns a reference to the associated textfile's `f_cacheinc' field. */
-//	/*ref*/struct TPPString *f_usedname;    /* [0..1] When non-NULL, an override to the used filename (as set by `#line') */
-//	TPP(line_t)              f_lineoff;     /* Offset of `f_begin' from the original start of the file in lines. */
-//	TPP(stream_t)            f_stream;      /* Stream handle for reading more data. */
-//	TPP(stream_t)            f_ownedstream; /* Usually equal to `f_stream', the stream that should be closed when it's EOF is reached (set to `TPP_STREAM_INVALID' if TPP shouldn't close the stream). */
-//	/* NOTE: `:f_end' may not be equal to the end of `:f_text'.
-//	 *        The difference between the two should be prefixed to the next chunk. */
-//	struct TPPKeyword       *f_guard;       /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
-//	size_t                   f_cacheinc;    /* Used to track how often a given file is loaded onto the #include-stack.
-//	                                         * (Only used for cached entires themself; aka. when `f_cacheentry == NULL'). */
-//	size_t                   f_rdata;       /* (In bytes) The amount of data already read from the stream. */
-//	char                     f_prefixdel;   /* The original character at `:f_end' that was overwritten with a `\0'. */
-//#define TPP_TEXTFILE_FLAG_NONE         0x00 /* No special flags. */
-//#define TPP_TEXTFILE_FLAG_NOGUARD      0x01 /* Set after a secondary #ifdef block was detected at the top level of this file:
-//                                             * >> // File: "myfile.h"
-//                                             * >> #ifndef foo // Potential include-guard?
-//                                             * >> #endif
-//                                             * >> #ifndef bar // This #ifndef will set `TPP_TEXTFILE_FLAG_NOGUARD'
-//                                             * >> #endif */
-//#define TPP_TEXTFILE_FLAG_SYSHEADER    0x02 /* This file is a system-header and all non-error warnings are suppressed. */
-//#ifdef TPP_CONFIG_NONBLOCKING_IO
-//#define TPP_TEXTFILE_FLAG_NONBLOCK     0x40 /* Do not block when reading file data.
-//                                             * NOTE: Still block if waiting for the end of a non-escaped
-//                                             *       linefeed, of the end of a comment, or string. */
-//#endif /* TPP_CONFIG_NONBLOCKING_IO */
-//#define TPP_TEXTFILE_FLAG_INTERNAL     0x80 /* This file is internal, meaning it shouldn't ~really~ represent a line/col number. */
-//	unsigned char            f_flags;       /* A set of `TPP_TEXTFILE_FLAG_*' */
-//	TPP(encoding_t)          f_encoding;    /* Encoding determined to-be used by this file. */
-//	char                     f_padding[1];  /* Padding data... */
-//	struct TPPKeyword       *f_newguard;    /* [0..1] The keyword of the #ifndef block that was determined to be located at
-//	                                         *        the start of the file. When the file is popped from the #include-stack,
-//	                                         *        this is non-NULL and `TPP_TEXTFILE_FLAG_NOGUARD' isn't set, this keyword
-//	                                         *        will be copied into the `f_guard' field if not already set. */
-//#ifndef TPP_CONFIG_NO_PRECACHE_TEXTLINES
-//	char const              *f_lfpos;       /* [?..?] Cached line-feed counter pointer.
-//	                                         * This pointer is only valid if it points
-//	                                         * into the file's current text-block. */
-//	size_t                   f_lfcnt;       /* [valid_if(is_valid(f_lfpos))] Number of line-feeds
-//	                                         * that can be found between the file's start and `f_lfpos'. */
-//#endif /* TPP_CONFIG_NO_PRECACHE_TEXTLINES */
-//#ifdef TPP_USERTEXTDATA
-//	TPP_USERTEXTDATA /* Optional user-defined data memory (when present, initialized to ZERO) */
-//#endif /* TPP_USERTEXTDATA */
-//};
-//
-
+#if 0 /* TODO */
 ///* Without the ident/sccs extension, disable the insert-comment callback. */
 //#if (defined(TPP_CONFIG_EXTENSION_IDENT_SCCS) && !TPP_CONFIG_EXTENSION_IDENT_SCCS)
 //#undef TPP_CONFIG_NO_CALLBACK_INS_COMMENT
@@ -4558,7 +4528,6 @@ alias("W_EXPECTED_KEYWORD_AFTER_EXPR_PRED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_ASS
 ///* Return value by `c_unknown_file' to indicate that the open should be re-attempted. */
 //#define TPP_UNKNOWN_FILE_RETRY ((struct TPPFile *)-1)
 //#endif /* !TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE */
-
 #endif
 
 #define TPP_SYMARRAY_SIZE TPP_FLEX_ARRAY
@@ -4661,11 +4630,12 @@ extern tpp_lexer *TPPLexer_Current;
 #define TPP_ENCODING_UTF32_BE TPP_FILE_ENCODING_UTF32_BE
 #define TPP_ENCODING_UTF32_LE TPP_FILE_ENCODING_UTF32_LE
 
-#define TPPKeyword tpp_keyword
-#define TPPString  tpp_string
-#define s_refcnt   ts_refcnt /* Use tpp_string_isshared() */
-#define s_size     ts_len    /* Use tpp_string_len() */
-#define s_text     ts_str    /* Use tpp_string_str() */
+/* struct TPPString { */
+#define TPPString tpp_string
+#define s_refcnt  ts_refcnt /* Use tpp_string_isshared() */
+#define s_size    ts_len    /* Use tpp_string_len() */
+#define s_text    ts_str    /* Use tpp_string_str() */
+/* }; */
 
 #define TPPString_TEXT(x)   ((char *)tpp_string_str(x))
 #define TPPString_SIZE(x)   tpp_string_len(x)
@@ -4678,19 +4648,26 @@ extern tpp_lexer *TPPLexer_Current;
 #define TPPString_NewSized(size) tpp_string_malloc(size)
 #define TPPString_NewEmpty()     tpp_string_newempty()
 
+
+
 #define TPP_funop_t   tpp_macro_opcode
 #define TPP_tint_t    tpp_intmax
 #define TPP_tuint_t   tpp_uintmax
 #define TPP_tfloat_t  tpp_float
-#define TPP_arginfo_t tpp_macro_argument
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define funop_t   tpp_macro_opcode
 #define tint_t    tpp_intmax
 #define tuint_t   tpp_uintmax
 #define tfloat_t  tpp_float
-#define arginfo_t tpp_macro_argument
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 
+
+
+/* struct TPP(arginfo_t) { */
+#define TPP_arginfo_t tpp_macro_argument
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define arginfo_t tpp_macro_argument
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #define ai_id tma_id /* Use tpp_macro_getfuncargtok() */
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
 #define ai_ins tma_ins /* Don't access */
@@ -4701,23 +4678,119 @@ extern tpp_lexer *TPPLexer_Current;
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 #undef ai_name      /* Use tpp_keyword_getkwdcstr(tpp_lexer_kwds_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
 #undef ai_namesize  /* Use tpp_keyword_getkwdlen(tpp_lexer_kwds_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
+/* }; */
 
+
+
+/* struct TPPLCInfo { */
 #define TPPLCInfo tpp_lcinfo
 #define lc_line   lci_line /* Use tpp_lcinfo_getline() */
 #define lc_col    lci_col  /* Use tpp_lcinfo_getcol() */
+/* }; */
 
-#define TPPMacroFile          tpp_macro
+
+
+/* struct TPPMacroFile { */
+#define TPPMacroFile tpp_macro
+#undef TPP_MACROFILE_KIND                  /* Is its own field in TPP3 */
+#undef TPP_MACROFILE_KIND_HASCOMMON        /* Macro definition and expansion are different structures in TPP3 */
+#define TPP_MACROFILE_KIND_KEYWORD         TPP_MACRO_KIND_KEYWORD
+#undef TPP_MACROFILE_KIND_FUNCTION         /* Use 'TPP_MACRO_KIND_ISFUNC()' */
+#define TPP_MACROFILE_FLAG_FUNC_VARIADIC   TPP_MACRO_FLAG_VARIADIC   /* Use `tpp_macro_isvarargs()' */
+#define TPP_MACROFILE_FLAG_FUNC_SELFEXPAND TPP_MACRO_FLAG_SELFEXPAND /* Use `tpp_macro_allowsselfexpansion()' */
+#define TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC TPP_MACRO_FLAG_KEEPARGSPC /* Use `tpp_macro_keepsargspc()' */
+#undef TPP_MACROFILE_FLAG_OWNSNAME         /* TPP3 macros don't know their own name */
+#undef TPP_MACROFILE_MASK_FUNC_STARTCH     /* Use TPP_MACRO_KIND_ASTOK() */
+#define TPP_MACROFILE_FUNC_START_LPAREN    TPP_MACRO_KIND_FUNC_PAREN
+#define TPP_MACROFILE_FUNC_START_LBRACKET  TPP_MACRO_KIND_FUNC_BRACKET
+#define TPP_MACROFILE_FUNC_START_LBRACE    TPP_MACRO_KIND_FUNC_BRACE
+#define TPP_MACROFILE_FUNC_START_LANGLE    TPP_MACRO_KIND_FUNC_ANGLE
+#undef TPP_MACROFILE_FUNC_START            /* Use TPP_MACRO_KIND_OFTOK() */
+#undef TPP_MACROFILE_KIND_EXPANDED         /* Macro definition and expansion are different structures in TPP3 */
+#define m_flags TPP_INTERNAL(tm_flags)     /* WARNING: TPP3 splits this field in 2: tm_kind, tm_flags */
+#undef m_deffile                           /* Use `tpp_macro_getdeffilename()' */
+#define m_defloc TPP_INTERNAL(tm_body_lc)  /* Use `tpp_macro_getbodylcinfo()' */
+#undef m_pushprev                          /* TPP3 stores this elsewhere: tpp_keyword_misc::tkm_macro_pushstack */
+#undef m_pushcount                         /* TPP3 stores this elsewhere: tpp_keyword_misc::tkm_macro_pushstack */
+#if TPP_HAVE_UNNAMED_UNION
+#define m_function  TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func)
+#else /* TPP_HAVE_UNNAMED_UNION */
+#define m_specific  TPP_INTERNAL(tm_data)
+#define m_function  TPP_INTERNAL(tmd_func)
+#endif /* !TPP_HAVE_UNNAMED_UNION */
+#define f_argc      TPP_INTERNAL(tmf_argc)      /* Use `tpp_macro_getfuncargc()' */
+#undef f_expansions                             /* Replaced by `tpp_macro::tm_expansions' */
+#define f_expand    TPP_INTERNAL(tmf_expand)    /* Don't access */
+#define f_arginfo   TPP_INTERNAL(tmf_argv)      /* Use `tpp_macro_getfuncargtok()' */
+#undef f_deltotal                               /* Replaced by `tmf_expbase' */
+#define f_n_vacomma TPP_INTERNAL(tmf_n_vaopt)   /* Don't access */
+#define f_n_vanargs TPP_INTERNAL(tmf_n_vanargs) /* Don't access */
+#define f_argbuf    TPP_INTERNAL(tmf_argbuf)    /* Don't access */
+#undef m_expand                                 /* Macro definition and expansion are different structures in TPP3 */
+#undef e_expand_origin                          /* Macro definition and expansion are different structures in TPP3 */
+/* }; */
+
+
+
+/* struct TPPFile { */
 #define TPPFile               tpp_file
 #define TPPFILE_KIND_TEXT     TPP_FILE_KIND_IO
 #define TPPFILE_KIND_EXPLICIT TPP_FILE_KIND_TEXT
 #define TPPFILE_KIND_MACRO    TPP_FILE_KIND_MACRO
+#undef f_refcnt                                      /* Files are no longer reference-counted in TPP3 */
 #define f_kind                TPP_INTERNAL(tf_kind)  /* Use tpp_file_getkind() */
 #define f_prev                TPP_INTERNAL(tf_tprev) /* Don't access */ /* Or maybe "tf_prev"... */
 #define f_name                TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) /* Use tpp_file_getrealfilename() */
+#undef f_namesize                                    /* Use tpp_strlen(tpp_file_getrealfilename()) */
+#undef f_namehash                                    /* Why do you need this? Do you want to access `tpp_file_getrealfilenamekwd()'? */
 #define f_text                TPP_INTERNAL(tf_chunk) /* Use tpp_file_getchunk() */
 #define f_begin               TPP_INTERNAL(tf_chunk)->TPP_INTERNAL(ts_str) /* Shouldn't be used */
 #define f_end                 TPP_INTERNAL(tf_end)   /* Use tpp_file_getend() */
 #define f_pos                 TPP_INTERNAL(tf_pos)   /* Use tpp_file_getpos() */
+#if TPP_HAVE_UNNAMED_UNION
+#define f_textfile            TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io)
+#define f_macro               TPP_INTERNAL(tf_data).TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro)[0] /* Don't access */
+#else /* TPP_HAVE_UNNAMED_UNION */
+#define f_specific            TPP_INTERNAL(tf_data)
+#define f_textfile            TPP_INTERNAL(td_io)
+#define f_macro               TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro)[0] /* Use `tpp_file_getmacro()' */
+#endif /* !TPP_HAVE_UNNAMED_UNION */
+/* }; */
+
+
+
+/* struct TPPTextFile { */
+#undef TPPTextFile    /* TPP3 has this as an unnamed struct under "tpp_file::tf_data::td_io" */
+#undef f_cacheentry   /* TPP3 no longer caches copies of files so-as to (greatly) reduce memory consumption */
+#define f_usedname    TPP_INTERNAL(tff_user_filename)                   /* Use `tpp_file_getfilename()' */
+#define f_lineoff     TPP_INTERNAL(tff_start_lc).TPP_INTERNAL(lci_line) /* Use `tpp_file_getlcinfo()' -- also note that "f_begin" (aka.: the current chunk's start) no longer necessarily lines up with the start of a line */
+#define f_stream      TPP_INTERNAL(tff_file)                            /* Don't access directly! */
+#define f_ownedstream TPP_INTERNAL(tff_file)                            /* Don't access directly; also: TPP3 uses "TPP_FILE_FLAGS_NOCLOSE" to know if the file should be closed */
+#undef f_guard        /* TPP3 stores this in "tpp_keyword_misc::tkm_file_guard" */
+#undef f_cacheinc     /* TPP3 no longer tracks how often some specific file was #include-ed */
+#undef f_rdata        /* TPP3 no longer tracks how much file-data has already been processed; you can use "tpp_file_setkeep" + "tpp_file_keep_ptr2rel" for markers */
+#undef f_prefixdel    /* TPP3 no longer guaranties that the currently loaded chunk ends with a '\0'-character. File chunks in TPP3 can end arbitrarily! */
+#define TPP_TEXTFILE_FLAG_NONE      TPP_FILE_FLAGS_NORMAL
+#define TPP_TEXTFILE_FLAG_NOGUARD   TPP_FILE_FLAGS_NOGUARD
+#define TPP_TEXTFILE_FLAG_SYSHEADER TPP_FILE_FLAGS_SYSHDR
+#if TPP_HAVE_FILE_NONBLOCK
+#define TPP_TEXTFILE_FLAG_NONBLOCK  TPP_FILE_FLAGS_NONBLOCK
+#endif /* TPP_HAVE_FILE_NONBLOCK */
+#undef TPP_TEXTFILE_FLAG_INTERNAL /* No longer exists in TPP3; similar behavior can be facilitated through "TPP_FILE_KIND_TEXT" */
+#undef f_flags     /* Replaced with tpp_file::tf_flags           -- Don't access directly; use helper functions/macros */
+#undef f_encoding  /* Replaced with tpp_file::tf_enc             -- Use `tpp_file_isutf8()' */
+#undef f_padding   /* ... */
+#undef f_newguard  /* TPP3 stores this in "tpp_keyword_misc::tkm_file_guard" */
+#if TPP_HAVE_FILE_LC_CACHE
+#undef f_lfpos     /* Replaced with tpp_file::tf_lcpos           -- Don't access directly; just use `tpp_file_getlcinfo()' */
+#undef f_lfcnt     /* Replaced with tpp_file::tf_lcval.lci_line  -- Don't access directly; just use `tpp_file_getlcinfo()' */
+#endif /* TPP_HAVE_FILE_LC_CACHE */
+#ifdef TPP_USERTEXTDATA
+#error "TPP3 no longer supports custom 'TPP_USERTEXTDATA' -- You could in theory use `tpp_keyword_setuserdata(tpp_file_getrealfilenamekwd())'"
+#endif /* TPP_USERTEXTDATA */
+/* }; */
+
+
 
 #define TPPFile_LCAt(self, info, text_pointer) \
 	(void)(*(info) = tpp_file_getlcinfo(self, (tpp_char const *)(text_pointer)))
@@ -4792,6 +4865,7 @@ TPP_Escape(char *tpp_restrict buf, char const *tpp_restrict data, size_t size) {
 #define W_COUNT  TPP_W_COUNT
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 
+/* struct TPPWarningStateEx { */
 #define TPPWarningStateEx      tpp_warning_suppress_item
 #define wse_wid                TPP_INTERNAL(twsi_ctx_id)  /* Don't access */
 #define wse_suppress           TPP_INTERNAL(twsi_count)   /* Don't access */
@@ -4804,6 +4878,7 @@ TPP_Escape(char *tpp_restrict buf, char const *tpp_restrict data, size_t size) {
 #define ws_extendeda           TPP_INTERNAL(tw_suppressions).TPP_INTERNAL(tws_ctxc) /* Don't access */
 #define ws_extendedv           TPP_INTERNAL(tw_suppressions).TPP_INTERNAL(tws_ctxv) /* Don't access */
 #define ws_prev                TPP_INTERNAL(tw_prev)                                /* Don't access */
+/* }; */
 
 #define TPPLexer_PushWarnings_(lexer) (tpp_lexer_pushwarnings(lexer), 1)
 #define TPPLexer_PopWarnings_(lexer)  (tpp_lexer_canpopwarnings(lexer) && (tpp_lexer_pushwarnings(lexer), 1))
@@ -4899,22 +4974,31 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 
 
 
+/* struct TPPIfdefStackSlot { */
 #define TPPIfdefStackSlot tpp_ifdef_stack_entry
 /*#define TPP_IFDEFMODE_FALSE 0 * Status doesn't exist in TPP3 anymore */
-#define TPP_IFDEFMODE_TRUE  TPP_IFDEF_MODE_IFDEF /* The block is enabled. */
-#define TPP_IFDEFMODE_ELSE  TPP_IFDEF_MODE_ELSE  /* The block follows an #else. */
-#define iss_mode            TPP_INTERNAL(tidse_mode)
-#define iss_line            TPP_INTERNAL(tidse_updated).TPP_INTERNAL(lci_line)
-#define iss_file            tpp3_ifdef_stack_is_per_file_so_there_is_no_file_property
-#define TPPIfdefStack       tpp_ifdef_stack
-#define is_slotc            TPP_INTERNAL(tids_cnt) /* Don't access */
-#define is_slota            TPP_INTERNAL(tids_alc) /* Don't access */
-#define is_slotv            TPP_INTERNAL(tids_vec) /* Don't access */
+#define TPP_IFDEFMODE_TRUE TPP_IFDEF_MODE_IFDEF /* The block is enabled. */
+#define TPP_IFDEFMODE_ELSE TPP_IFDEF_MODE_ELSE  /* The block follows an #else. */
+#define iss_mode TPP_INTERNAL(tidse_mode)                           /* Use tpp_ifdef_stack_isafterelse() */
+#define iss_line TPP_INTERNAL(tidse_updated).TPP_INTERNAL(lci_line) /* Use tpp_ifdef_stack_entry_getupdated() */
+#undef iss_file /* TPP3 #ifdef-stack is per file so there is no file property */
+/* }; */
+
+
+/* struct TPPIfdefStackSlot { */
+#define TPPIfdefStack tpp_ifdef_stack
+#define is_slotc      TPP_INTERNAL(tids_cnt) /* Don't access */
+#define is_slota      TPP_INTERNAL(tids_alc) /* Don't access */
+#define is_slotv      TPP_INTERNAL(tids_vec) /* Don't access */
+/* }; */
 
 #define TPP_EXTENSIONS_BITSETSIZE (TPP_EXT_COUNT ? (TPP_EXT_COUNT + 7) / 8 : 1)
-#define TPPExtState               tpp_extensions
-#define es_prev                   TPP_INTERNAL(te_prev)                           /* Don't access */
-#define es_bitset                 TPP_INTERNAL(te_state).TPP_INTERNAL(tes_bitset) /* Don't access */
+
+/* struct TPPExtState { */
+#define TPPExtState tpp_extensions
+#define es_prev     TPP_INTERNAL(te_prev)                           /* Don't access */
+#define es_bitset   TPP_INTERNAL(te_state).TPP_INTERNAL(tes_bitset) /* Don't access */
+/* }; */
 
 /* Check if a given extension `ext' is currently enabled.
  * @return: 0: The extension is disabled.
@@ -4961,10 +5045,12 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 }
 
 
+/* struct TPPIncludeList { */
 #define TPPIncludeList tpp_include_paths
 #define il_prev  TPP_INTERNAL(tip_prev)                                /* Use tpp_lexer_canpopincludes() */
 #define il_pathc TPP_INTERNAL(tip_system_list).TPP_INTERNAL(tipl_size) /* Use tpp_lexer_includes_numsystem() */
 #define il_pathv TPP_INTERNAL(tip_system_list).TPP_INTERNAL(tipl_list) /* Use tpp_lexer_includes_getsystem() */
+/* }; */
 
 /* Push/Pop the current system #include-path list.
  * @return: 0: [TPPLexer_PushInclude] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
@@ -4994,14 +5080,18 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define TPPLexer_DelIncludePath(path, pathsize)        TPPLexer_DelIncludePath_(TPP2_LEXER, path, pathsize)
 
 #if TPP_HAVE_CPP_ASSERT
+/* struct TPPAssertion { */
 #define TPPAssertion tpp_assertion
 #undef as_next /* TPP3 uses a different hash structure (one without next-pointers) */
 #define as_kwd TPP_INTERNAL(tas_value) /* Use tpp_assertions_contains() */
+/* }; */
 
+/* struct TPPAssertions { */
 #define TPPAssertions tpp_assertions
 #define as_assc TPP_INTERNAL(tass_assc) /* Use tpp_assertions_getcount() */
 #define as_assa TPP_INTERNAL(tass_bckm) /* Internal detail; there's no reason to use this */
 #define as_assv TPP_INTERNAL(tass_bckv) /* Internal detail; there's no reason to use this */
+/* }; */
 #endif /* TPP_HAVE_CPP_ASSERT */
 
 
@@ -5021,6 +5111,7 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #undef TPP_KEYWORDFLAG_HAS_TPP_BUILTIN /* TPP builtins (and consequently "__has_tpp_builtin") are no longer supported */
 #define TPP_KEYWORDFLAG_USERMASK TPP_KEYWORD_FLAG_USERMASK
 
+/* struct TPPRareKeyword { */
 #define TPPRareKeyword tpp_keyword_misc
 #undef kr_file     /* Replaced with "tkm_file_guard" (which has a slightly different meaning) */
 #undef kr_oldmacro /* Replaced with "tkm_macro_pushstack" (which has a slightly different meaning) */
@@ -5031,8 +5122,10 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define kr_asserts TPP_INTERNAL(tkm_assertions) /* Don't access */
 #endif /* TPP_HAVE_CPP_ASSERT */
 #define kr_user    TPP_INTERNAL(tkm_userdata_ptr) /* Use tpp_keyword_getuserdata() / tpp_keyword_setuserdata() / tpp_keyword_misc_getuserdata() / tpp_keyword_misc_setuserdata() */
+/* }; */
 
 
+/* struct TPPKeyword { */
 #define TPPKeyword tpp_keyword
 #define k_next     TPP_INTERNAL(tk_next)  /* Don't access */
 #define k_macro    TPP_INTERNAL(tk_macro) /* Use tpp_keyword_getmacro() */
@@ -5041,6 +5134,7 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define k_size     TPP_INTERNAL(tk_len)   /* Use tpp_keyword_getkwdlen() */
 #define k_hash     TPP_INTERNAL(tk_hash)  /* Use tpp_keyword_getkwdhash() */
 #define k_name     TPP_INTERNAL(tk_kwd)   /* Use tpp_keyword_getkwdcstr() */
+/* }; */
 
 #define TPPKeyword_ISDEFINED(self) ((self)->k_macro != NULL || TPP_ISBUILTINMACRO((self)->k_id))
 #define TPPKeyword_MAKERARE(self)  (tpp_keyword_requiremisc(self) != NULL)
@@ -5075,14 +5169,17 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 }
 
 
+/* struct TPPKeywordMap { */
 #define TPPKeywordMap tpp_keywords
 #define km_entryc     TPP_INTERNAL(tks_kwdc)
 #define km_bucketc    TPP_INTERNAL(tks_bckm)+1 /* Not really the same (km_bucketc == tks_bckm+1), but close enough... */
 #define km_bucketv    TPP_INTERNAL(tks_bckv)
 #define TPPKeywordMap_SHOULDHASH(self) \
 	((self)->km_entryc >= (self)->km_bucketc * 2)
+/* }; */
 
 
+/* struct TPPToken { */
 #define TPPToken tpp_token
 #define t_id TPP_INTERNAL(tt_id)
 #undef t_num  /* Not supported by TPP3 */
@@ -5092,6 +5189,7 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 #define t_begin TPP_INTERNAL(tt_start)
 #define t_end   TPP_INTERNAL(tt_end)
 #define t_kwd   TPP_INTERNAL(tt_kwd)
+/* }; */
 
 /* Returns the top-level source locations (in-macro & everything)
  * NOTE: These are _not_ what you're probably looking for.
@@ -5210,6 +5308,7 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #undef TPPLEXER_TOKEN_LANG_DEEMON
 
 
+/* struct TPPLexer { */
 #define TPPLexer tpp_lexer
 #define l_token      TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok) /* Use tpp_lexer_gettoken() */
 #undef l_eob_file    /* No longer exists because "TPPLEXER_FLAG_NO_SEEK_ON_EOB" no longer exists */
@@ -5237,6 +5336,7 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #define l_warnings   TPP_INTERNAL(tl_warn)
 #undef l_noerror     /* No longer relevant since errors are now handled via return values */
 #define l_counter    TPP_INTERNAL(tl_builtin_counter)
+/* }; */
 
 #define TPPLexer_Init(self) \
 	(tpp_lexer_init(self),  \
