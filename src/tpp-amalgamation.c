@@ -24594,14 +24594,14 @@ tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
  * @return: TPP_TOK_ISERR(*): Error
  */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_seek_next_ifdef_directive(tpp_lexer *tpp_restrict self) {
+tpp_lexer_seek_next_ifdef_directive_impl(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok = tpp_lexer_gettok(self);
 
 	/* Seek until next line-feed */
 seek_next_lf:
 	while (!TPP_TOK_ISLF_OR_COMMENT(tok)) {
 		tok = tpp_lexer_yieldraw_blocking(self);
-		if (TPP_TOK_ISERR(tok) || tok == TPP_TOK_EOF)
+		if (TPP_TOK_ISERR_OR_EOF(tok))
 			return tok;
 	}
 
@@ -24695,6 +24695,20 @@ seek_next_lf:
 	default: break;
 	}
 	goto seek_next_lf;
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_seek_next_ifdef_directive(tpp_lexer *tpp_restrict self) {
+	tpp_token_id result;
+	/* Don't emit warnings whilst inside of an inactive #if-block
+	 * This is needed to prevent warnings in cases like this:
+	 * >> #if 0
+	 * >> Incomplete"string
+	 * >> #endif */
+	tpp_lexer_nowarnings_pushon(self);
+	result = tpp_lexer_seek_next_ifdef_directive_impl(self);
+	tpp_lexer_nowarnings_pop(self);
+	return result;
 }
 
 /* Seek end of an inactive "#if 1 ... #else"-style block.
@@ -25467,8 +25481,8 @@ again:
 		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
 
-	/* TODO: gnu::offset */
-	/* TODO: gnu::base64 */
+	/* XXX: gnu::offset */
+	/* XXX: gnu::base64 */
 
 	case TPP_KWD_prefix:
 	case TPP_KWD_suffix:
