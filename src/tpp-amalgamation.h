@@ -7233,7 +7233,7 @@ TPP_DECL_END
 #define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #endif /* !TPP_HAVE_MACRO_EQUALS */
 
-/* Provide a function "TPP_HAVE_TPP_TOK_STRINGLIKE()" to perform \-escaping of arbitrary data */
+/* Provide a function "tpp_lexer_decodestring()" to decode the data contained within strings */
 #ifndef TPP_HAVE_LEXER_DECODESTRING
 #define TPP_HAVE_LEXER_DECODESTRING (TPP_HAVE_TPP_TOK_STRINGLIKE)
 #endif /* !TPP_HAVE_LEXER_DECODESTRING */
@@ -16858,12 +16858,12 @@ typedef struct tpp_lexer_arginfo {
 	tpp_char const     *tlai_start;  /* [1..1][<= tlai_end] Pointer to argument start text data */
 	tpp_char const     *tlai_end;    /* [1..1][>= tlai_start] Pointer to argument end text data */
 	TPP_REF tpp_string *tlai_chunk;  /* [0..1] Chunk of text containing [tlai_start,tlai_end), or "NULL" if statically allocated */
-	/* TODO: Come up with a smart way of tracking debug info for custom printed arguments
-	 *       -> need to be able to track lcinfo for custom char ranges (any range of chars
-	 *          from this string must be able to map to its own file/line/col triple)
-	 *       -> also must adjust tpp_file_getlcinfo() to support this, and somehow also
-	 *          incorporate tpp_file_getrealfilename()/tpp_file_getfilename() to support
-	 *          different filenames based on char position
+	/* XXX: Come up with a smart way of tracking debug info for custom printed arguments
+	 *      -> need to be able to track lcinfo for custom char ranges (any range of chars
+	 *         from this string must be able to map to its own file/line/col triple)
+	 *      -> also must adjust tpp_file_getlcinfo() to support this, and somehow also
+	 *         incorporate tpp_file_getrealfilename()/tpp_file_getfilename() to support
+	 *         different filenames based on char position
 	 * where this is necessary:
 	 * >> #define foo(a) a a
 	 * >> foo(

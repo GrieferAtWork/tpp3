@@ -2324,18 +2324,21 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH          1 /* Support for: #pragma TPP include_path(...) */
 
 /* Lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_DEFINED                1                                      /* Enable support for "defined(MACRO)" in builtin lexer expressions */
-#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR         TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED /* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
-#define TPP_HAVE_BUILTIN_EXPR_STRINGS                TPP_CONFIG_EXTENSION_STRINGOPS         /* Enable support for string operations in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_FLOATS                 1                                      /* Enable support for floats in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    TPP_CONFIG_EXTENSION_GCC_IFELSE        /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
-#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    /* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR            TPP_CONFIG_EXTENSION_LXOR              /* Enable support for "^^" in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS        TPP_CONFIG_EXTENSION_BININTEGRAL       /* Enable support for "0b" literals in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS         0                                      /* Enable support for "0o" literals in builtin lexer expressions */
-#define TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX   1                                      /* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes */
-#define TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX TPP_CONFIG_EXTENSION_MSVC_FIXED_INT    /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes */
-#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS     1                                      /* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
+#define TPP_HAVE_BUILTIN_EXPR_DEFINED                  1                                      /* Enable support for "defined(MACRO)" in builtin lexer expressions */
+#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR           TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED /* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
+#define TPP_HAVE_BUILTIN_EXPR_STRINGS                  TPP_CONFIG_EXTENSION_STRINGOPS         /* Enable support for string operations in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_FLOATS                   1                                      /* Enable support for floats in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT      TPP_CONFIG_EXTENSION_GCC_IFELSE        /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS   TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    /* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR              TPP_CONFIG_EXTENSION_LXOR              /* Enable support for "^^" in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS          TPP_CONFIG_EXTENSION_BININTEGRAL       /* Enable support for "0b" literals in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS           0                                      /* Enable support for "0o" literals in builtin lexer expressions */
+#define TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX     1                                      /* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes */
+#define TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX   TPP_CONFIG_EXTENSION_MSVC_FIXED_INT    /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes */
+#define TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX   1                                      /* Enable support for "f", "F", "l", "L" float suffixes */
+#define TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX  0                                      /* Enable support for "d", "D" float suffixes */
+#define TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX 0                                      /* Enable support for "df", "DF", "dd", "DD", "dl", "DL" float suffixes */
+#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS       1                                      /* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
 
 /* Include-path-related features */
 #define TPP_HAVE_INCLUDE_PATH_QUOTE             0 /* TPP2 only had a system-include-path list */
@@ -5869,24 +5872,47 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 	tpp_unreachable();
 }
 
-#if 0 /* TODO */
-///* Transform the current token (which must be `TOK_FLOAT') into a
-// * floating point value, storing that value in `*pfloat' and returning
-// * a set of `TPP_ATOF_*' flags, indicating typing and success.
-// * NOTE: This function does _NOT_ yield the current token once finished.
-// *       If intended, the caller is responsible for advancing it upon success.
-// * @return: TPP_ATOF_ERR: Emiting a warning caused the lexer to error out (TPPLexer_SetErr() was set).
-// * @return: * :           A set of `TPP_ATOF_*' (see below) */
-//TPPFUN int TPPCALL TPP_Atof_(TPP_LEXER_PARAM_ TPP(tfloat_t) *tpp_restrict pfloat);
-//#define TPP_Atof(pfloat) TPP_Atof_(TPP_LEXER_ARG_ pfloat)
-//#define TPP_ATOF_ERR             0x00 /* NOTE: Never used with any flags (indicates failure). */
-//#define TPP_ATOF_OK              0x01 /* Always set on success. */
-//#define TPP_ATOF_TYPE_MASK       0xf0 /* Mask of the float's typing. */
-//#define TPP_ATOF_TYPE_DOUBLE     0x00 /* `double' (default typing without suffix). */
-//#define TPP_ATOF_TYPE_FLOAT      0x10 /* `float' (float-suffix `f') */
-//#define TPP_ATOF_TYPE_LONGDOUBLE 0x20 /* `long double' (long-double-suffix `L'). */
-#endif
+#define TPP_ATOF_ERR             0x00 /* NOTE: Never used with any flags (indicates failure). */
+#define TPP_ATOF_OK              0x01 /* Always set on success. */
+#define TPP_ATOF_TYPE_MASK       0xf0 /* Mask of the float's typing. */
+#define TPP_ATOF_TYPE_DOUBLE     0x00 /* `double' (default typing without suffix). */
+#define TPP_ATOF_TYPE_FLOAT      0x10 /* `float' (float-suffix `f') */
+#define TPP_ATOF_TYPE_LONGDOUBLE 0x20 /* `long double' (long-double-suffix `L'). */
 
+/* Transform the current token (which must be `TOK_FLOAT') into a
+ * floating point value, storing that value in `*pfloat' and returning
+ * a set of `TPP_ATOF_*' flags, indicating typing and success.
+ * NOTE: This function does _NOT_ yield the current token once finished.
+ *       If intended, the caller is responsible for advancing it upon success.
+ * @return: TPP_ATOF_ERR: Emiting a warning caused the lexer to error out (TPPLexer_SetErr() was set).
+ * @return: * :           A set of `TPP_ATOF_*' (see below) */
+#define TPP_Atof(pfloat) TPP_Atof_(TPP2_LEXER, pfloat)
+TPP_INLINE int TPPCALL TPP_Atof_(tpp_lexer *self, TPP_tfloat_t *tpp_restrict pfloat) {
+	tpp_errno error;
+	tpp_token_id tok = tpp_lexer_gettok(self);
+	tpp_float_suffix_kind kind;
+	error = tpp_lexer_decodefloat_ex(self, pfloat, &kind);
+	if (TPP_ISERR(error))
+		return TPP_ATOF_ERR;
+	switch (kind) {
+	case TPP_FLOAT_SUFFIX_KIND_DEFAULT:
+#if TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX
+	case TPP_FLOAT_SUFFIX_KIND_DOUBLE:
+#endif /* TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX */
+		return TPP_ATOF_OK | TPP_ATOF_TYPE_DOUBLE;
+#if TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX
+	case TPP_FLOAT_SUFFIX_KIND_FLOAT:
+		return TPP_ATOF_OK | TPP_ATOF_TYPE_FLOAT;
+	case TPP_FLOAT_SUFFIX_KIND_LONG_DOUBLE:
+		return TPP_ATOF_OK | TPP_ATOF_TYPE_LONGDOUBLE;
+#endif /* TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX */
+#if TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX
+#error "These didn't exist in TPP2; please upgrade to TPP3"
+#endif /* TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX */
+	default: tpp_unreachable();
+	}
+	tpp_unreachable();
+}
 
 #if 0 /* TODO */
 ///* Prints the text contained within the current token, automatically

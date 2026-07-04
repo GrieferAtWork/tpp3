@@ -13483,6 +13483,7 @@ tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 /* Initialize a lexer such that it starts reading from "filename"
  * @param: filename_maxlen: Max length of "filename" (in characters). You may
  *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
+ * @return: TPP_EOK:    Success
  * @return: TPP_ENOENT: No such file or directory
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL

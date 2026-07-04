@@ -2924,7 +2924,7 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #endif /* !TPP_HAVE_MACRO_EQUALS */
 
-/* Provide a function "TPP_HAVE_TPP_TOK_STRINGLIKE()" to perform \-escaping of arbitrary data */
+/* Provide a function "tpp_lexer_decodestring()" to decode the data contained within strings */
 #ifndef TPP_HAVE_LEXER_DECODESTRING
 #define TPP_HAVE_LEXER_DECODESTRING (TPP_HAVE_TPP_TOK_STRINGLIKE)
 #endif /* !TPP_HAVE_LEXER_DECODESTRING */
