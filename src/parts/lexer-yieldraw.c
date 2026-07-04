@@ -949,6 +949,7 @@ handle_ascii_lf:
 			goto done;
 		if (tpp_unicode_islf(uc))
 			goto done;
+		goto again;
 	} else
 #endif /* TPP_HAVE_UNICODE */
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
