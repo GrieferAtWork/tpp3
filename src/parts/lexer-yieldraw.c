@@ -656,71 +656,6 @@ return_error:
 	return error;
 }
 
-#if TPP_HAVE_BSE
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_skip_bse_after_keyword(tpp_lexer *self, tpp_char const **p_pos) {
-	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_char const *pos = *p_pos;
-	while (pos < file->tf_end) {
-		tpp_errno error;
-		tpp_char const *npos;
-		tpp_size rel_before, rel_after;
-		if (*pos == '\\') {
-			/* Backslash */
-		} else
-#if TPP_HAVE_TRIGRAPHS
-		if (*pos == '?' && tpp_lexer_has(self, TRIGRAPHS)) {
-			if ((pos + 1) >= file->tf_end) {
-				tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
-				error = tpp_file_expandchunk(file);
-				if (TPP_ISERR(error))
-					return error;
-				pos = tpp_file_rel2ptr(file, rel_pos);
-			}
-			if ((pos + 1) < file->tf_end && pos[1] == '?') {
-				if ((pos + 2) >= file->tf_end) {
-					tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
-					error = tpp_file_expandchunk(file);
-					if (TPP_ISERR(error))
-						return error;
-					pos = tpp_file_rel2ptr(file, rel_pos);
-				}
-				if ((pos + 2) < file->tf_end && pos[2] == '/') {
-					/* Trigraph backslash */
-				} else {
-					break;
-				}
-			} else {
-				break;
-			}
-		} else
-#endif /* TPP_HAVE_TRIGRAPHS */
-		{
-			break;
-		}
-
-		npos  = pos;
-		error = tpp_lexer_skip_bse(self, &npos);
-		if (TPP_ISERR(error))
-			return error;
-		if (npos == pos)
-			break;
-		rel_before = tpp_file_ptr2rel(file, npos);
-		error = tpp_lexer_seek_end_of_keyword(self, &npos);
-		if (TPP_ISERR(error))
-			return error;
-		rel_after = tpp_file_ptr2rel(file, npos);
-		tpp_assert(rel_before <= rel_after);
-		if (rel_before >= rel_after)
-			break;
-		pos = npos;
-	}
-	*p_pos = pos;
-	return TPP_EOK;
-}
-#endif /* TPP_HAVE_BSE */
-
-
 #undef NEED_tpp_lexer_seek_eol
 #if (TPP_HAVE_TPP_TOK_SQL_COMMENT ||   \
      TPP_HAVE_TPP_TOK_ASM_COMMENT ||   \
@@ -1621,6 +1556,257 @@ done:
 #endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 
 
+#if TPP_HAVE_TPP_TOK_FLOAT
+/* Seek the end of a TPP_TOK_FLOAT (or TPP_TOK_INT) token
+ * @param: result:               Token mode: TPP_TOK_FLOAT if a "." was already encountered;
+ *                               else TPP_TOK_INT (or TPP_TOK_EOF if int-tokens are disabled).
+ * @return: TPP_TOK_FLOAT:       Success; this is a float token
+ * @return: TPP_TOK_INT:         Nothing found that would qualify as a float, so it's an int
+ * @return: TPP_TOK_ENOMEM:      Out of memory
+ * @return: TPP_TOK_EIO:         I/O error while trying to read from file
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_ELEXERROR:   Lexer error
+ * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_seek_end_of_float(tpp_lexer *tpp_restrict self,
+                            tpp_char const **p_pos,
+                            tpp_token_id result) {
+	tpp_errno error;
+	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_char const *pos = *p_pos;
+	tpp_size rel_end;
+	tpp_char ch;
+	bool allow_hex_chars = false;
+#if TPP_HAVE_SMART_FLOAT_TOKENS
+	bool has_exponent = false;
+#endif /* TPP_HAVE_SMART_FLOAT_TOKENS */
+
+	/* Number tokens are anything matching the regex:
+	 * r"[.]?\d([\w\d_.]|[eEpP][-+])*"
+	 *         ^
+	 *         We get called with *p_pos already here
+	 *
+	 * #if TPP_HAVE_SMART_FLOAT_TOKENS
+	 * NOTE: One of <<. e+ e- E+ E- p+ p- P+ P->> can only
+	 *       be encountered at most once. When an additional
+	 *       instance is encountered, the "." or trailing "+"
+	 *       or "-" will *NOT* be part of the number token.
+	 * #endif // TPP_HAVE_SMART_FLOAT_TOKENS
+	 *
+	 * Additionally, one of those tokens being encountered
+	 * causes the resulting token to become a "TPP_TOK_FLOAT"
+	 */
+again:
+	rel_end = tpp_file_ptr2rel(file, pos);
+	error   = tpp_lexer_readchar(self, &pos, &ch);
+	if (TPP_ISERR(error))
+		return TPP_TOK_OFERR(error);
+again_ch:
+	if (ch == '.') {
+#if TPP_HAVE_SMART_FLOAT_TOKENS
+		if (tpp_lexer_has(self, SMART_FLOAT_TOKENS)) {
+			tpp_token_id old_result = result;
+			if (result == TPP_TOK_FLOAT)
+				goto done;
+			result = TPP_TOK_FLOAT;
+
+			/* Make sure that next token is one of:
+			 *   [0-9]          Digit
+			 *   [a-fA-F]       hex digit (only if "allow_hex_chars == true")
+			 *   [eEpP][+-]     Exponent
+			 *
+			 * If it isn't then, the result is a TPP_TOK_INT,
+			 * and ends just before the '.' character. */
+			error = tpp_lexer_readchar(self, &pos, &ch);
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
+			if (tpp_ascii_isdigit(ch))
+				goto again;
+			if ((tpp_ascii_islwrxdigit(ch) || tpp_ascii_isuprxdigit(ch)) && allow_hex_chars) {
+				rel_end = tpp_file_ptr2rel(file, pos);
+				goto again_ch;
+			}
+			if ((allow_hex_chars ? (ch == 'p' || ch == 'P')
+			                     : (ch == 'e' || ch == 'E')) &&
+			    !has_exponent) {
+				tpp_size saved_pos = tpp_file_ptr2rel(file, pos);
+				tpp_char after_exp_ch;
+				error = tpp_lexer_readchar(self, &pos, &after_exp_ch);
+				if (TPP_ISERR(error))
+					return TPP_TOK_OFERR(error);
+				if (after_exp_ch == '+' || after_exp_ch == '-' || tpp_ascii_isdigit(after_exp_ch)) {
+					has_exponent = true;
+					goto again; /* Exponent directly after decimal -> allowed */
+				}
+				pos = tpp_file_rel2ptr(file, saved_pos);
+			}
+
+			/* If enabled, allow strings that would qualify as float type suffixes here:
+			 * >> 1.F;    // Must always be [FLOAT:1.F], rather than [INT:1][DOT:.][F:F]
+			 *
+			 * NOTE: Intentionally do this "#ifdef tpp_lexer_isfloatsuffix_char", rather
+			 *       that "#if TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX", so-as to allow users
+			 *       to simply "#define tpp_lexer_isfloatsuffix_char" to add special
+			 *       handling here, without "TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX" needing
+			 *       to be enabled also! */
+#ifdef tpp_lexer_isfloatsuffix_char
+			if (tpp_lexer_isfloatsuffix_char(self, ch))
+				goto again;
+#endif /* tpp_lexer_isfloatsuffix_char */
+
+			/* End the token before the "." as whatever it was at the time. */
+			result = old_result;
+			goto done;
+		}
+#endif /* TPP_HAVE_SMART_FLOAT_TOKENS */
+		result = TPP_TOK_FLOAT; /* It's a floating-point token */
+		goto again;
+	} else if (tpp_ascii_issymcont(ch)) { /* SYMCONT matches [\w\d_] */
+#if TPP_CONF_MAYBE_0(TPP_HAVE_SMART_FLOAT_TOKENS)
+		if (tpp_lexer_has(self, SMART_FLOAT_TOKENS)
+		    ? (allow_hex_chars ? (ch == 'p' || ch == 'P')
+		                       : (ch == 'e' || ch == 'E'))
+		    : (ch == 'e' || ch == 'E' || ch == 'p' || ch == 'P'))
+#elif TPP_HAVE_SMART_FLOAT_TOKENS
+		if (allow_hex_chars ? (ch == 'p' || ch == 'P')
+		                    : (ch == 'e' || ch == 'E'))
+#else /* TPP_HAVE_SMART_FLOAT_TOKENS */
+		if (ch == 'e' || ch == 'E' || ch == 'p' || ch == 'P')
+#endif /* !TPP_HAVE_SMART_FLOAT_TOKENS */
+		{
+			tpp_char exp_ch = ch;
+			rel_end = tpp_file_ptr2rel(file, pos);
+			error   = tpp_lexer_readchar(self, &pos, &ch);
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
+			if (ch == '+' || ch == '-') {
+#if TPP_HAVE_SMART_FLOAT_TOKENS
+				if (tpp_lexer_has(self, SMART_FLOAT_TOKENS)) {
+					if (has_exponent)
+						goto done;
+					has_exponent = true;
+				}
+#endif /* TPP_HAVE_SMART_FLOAT_TOKENS */
+				result = TPP_TOK_FLOAT;
+				goto again;
+			} else if (tpp_ascii_isdigit(ch)) {
+				/* Special case to we detect the correct typing for:
+				 * -   1E2    (TPP_TOK_FLOAT)
+				 * -   1P2    (TPP_TOK_INT)
+				 * - 0x1E2    (TPP_TOK_INT)
+				 * - 0x1P2    (TPP_TOK_FLOAT)
+				 */
+				if (allow_hex_chars ? (exp_ch == 'p' || exp_ch == 'P')
+				                    : (exp_ch == 'e' || exp_ch == 'E'))
+					result = TPP_TOK_FLOAT;
+#if TPP_HAVE_SMART_FLOAT_TOKENS
+				if (tpp_lexer_has(self, SMART_FLOAT_TOKENS)) {
+					if (result == TPP_TOK_FLOAT) {
+						if (has_exponent)
+							goto done;
+						has_exponent = true;
+					}
+				}
+#endif /* TPP_HAVE_SMART_FLOAT_TOKENS */
+				goto again;
+			}
+			goto again_ch;
+		}
+		if (ch == 'x' || ch == 'X') {
+#if TPP_HAVE_SMART_FLOAT_TOKENS
+			if (tpp_lexer_has(self, SMART_FLOAT_TOKENS)) {
+				if (result == TPP_TOK_FLOAT) {
+					/* The "x" cannot appear after a construct that indicates a float.
+					 * If it does anyways, it can't be used to indicate a hex-float! */
+					goto again;
+				}
+				if (!allow_hex_chars) {
+					allow_hex_chars = true;
+	
+					/* If what comes next is a hex-exponent: "0xP+12", then we mustn't
+					 * parse that as a float-token (but as [0xP][+][12]). strtof requires
+					 * that there be at least 1 hex-digit before a potential exponent! */
+					rel_end = tpp_file_ptr2rel(file, pos);
+					error   = tpp_lexer_readchar(self, &pos, &ch);
+					if (TPP_ISERR(error))
+						return TPP_TOK_OFERR(error);
+					if (ch == 'p' || ch == 'P')
+						goto again; /* Skip over character -- don't allow processing as exponent */
+					goto again_ch;
+				}
+			} else {
+				allow_hex_chars = true;
+			}
+#else /* TPP_HAVE_SMART_FLOAT_TOKENS */
+			allow_hex_chars = true;
+#endif /* !TPP_HAVE_SMART_FLOAT_TOKENS */
+		}
+		goto again;
+	} else
+#if TPP_HAVE_UNICODE
+	if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
+		tpp_unichar uc;
+		--pos;
+		error = tpp_lexer_readutf8(self, &pos, &uc);
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+		if (tpp_unicode_issymcont(uc))
+			goto again;
+	} else
+#endif /* TPP_HAVE_UNICODE */
+	{
+	}
+
+done:
+	*p_pos = tpp_file_rel2ptr(file, rel_end);
+	return result;
+}
+#endif /* TPP_HAVE_TPP_TOK_FLOAT */
+
+
+#if TPP_HAVE_TPP_TOK_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_FLOAT)
+/* Seek the end of a TPP_TOK_INT token
+ * @return: TPP_EOK:         Success
+ * @return: TPP_ENOMEM:      Out of memory
+ * @return: TPP_EIO:         I/O error while trying to read from file
+ * @return: TPP_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_ELEXERROR:   Lexer error
+ * @return: TPP_EWARNPRINT:  Error while printing a warning */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_seek_end_of_int(tpp_lexer *tpp_restrict self,
+                          tpp_char const **p_pos) {
+	tpp_errno error;
+	tpp_file const *const file = tpp_lexer_getfile(self);
+	tpp_char const *pos = *p_pos;
+	tpp_size rel_end;
+	tpp_char ch;
+again:
+	rel_end = tpp_file_ptr2rel(file, pos);
+	error   = tpp_lexer_readchar(self, &pos, &ch);
+	if (TPP_ISERR(error))
+		return error;
+	if (tpp_ascii_issymcont(ch)) {
+		goto again;
+	} else
+#if TPP_HAVE_UNICODE
+	if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
+		tpp_unichar uc;
+		--pos;
+		error = tpp_lexer_readutf8(self, &pos, &uc);
+		if (TPP_ISERR(error))
+			return error;
+		if (tpp_unicode_issymcont(uc))
+			goto again;
+	} else
+#endif /* TPP_HAVE_UNICODE */
+	{
+	}
+	*p_pos = tpp_file_rel2ptr(file, rel_end);
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_TPP_TOK_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_FLOAT) */
+
+
 
 /* Do a raw yield and update `self->tl_tok' in the process, then return `tl_tok.tt_id'.
  * - On EOF, automatically pop `tl_file->tf_prev' and continue reading from there
@@ -1726,13 +1912,13 @@ switch_on_ch:
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 	/* Call this after 'read_ch2()' returned a
 	 * (used) character that is one of: #[]^{|}~?\ */
-#define warn_if_ch2_is_trigraph()                                                  \
-	do {                                                                           \
-		if (pos[-1] != ch2) {                                                      \
+#define warn_if_ch2_is_trigraph()                                                        \
+	do {                                                                                 \
+		if (pos[-1] != ch2) {                                                            \
 			error = tpp_lexer_warnf_at(self, file, pos - 3, TPP_W_ENCOUNTERED_TRIGRAPH); \
-			if (TPP_ISERR(error))                                                  \
-				goto return_error;                                                 \
-		}                                                                          \
+			if (TPP_ISERR(error))                                                        \
+				goto return_error;                                                       \
+		}                                                                                \
 	} while (0)
 #else /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 #define warn_if_ch2_is_trigraph() (void)0
@@ -2537,8 +2723,82 @@ not_a_trigraph:
 
 
 /************************************************************************/
+	case '.': {
+#if (TPP_HAVE_TPP_TOK_FLOAT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT)
+		if (!tpp_lexer_has(self, TPP_TOK_FLOAT) &&
+/*[[[deemon (printHasNone from ".lexer-yieldraw-mc")(".");]]]*/
+		    !tpp_lexer_has(self, TPP_TOK_DOT_STAR) &&
+		    !tpp_lexer_has(self, TPP_TOK_DOT_DOT) &&
+		    !tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)
+/*[[[end]]]*/
+		    )
+			break;
+		read_ch2();
+#if TPP_HAVE_TPP_TOK_FLOAT
+		if (tpp_ascii_isdigit(ch2)) {
+			if (tpp_lexer_has(self, TPP_TOK_FLOAT)) {
+				result = tpp_lexer_seek_end_of_float(self, &pos, TPP_TOK_FLOAT);
+				if (TPP_TOK_ISERR(result)) {
+					error = TPP_TOK_ASERR(result);
+					goto return_error;
+				}
+				tpp_assert(result == TPP_TOK_FLOAT);
+				goto set_result;
+			}
+		} else
+#endif /* TPP_HAVE_TPP_TOK_FLOAT */
+/*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")(".", "0123456789");]]]*/
+#if TPP_HAVE_TPP_TOK_DOT_STAR
+		if (ch2 == '*') {
+			if (tpp_lexer_has(self, TPP_TOK_DOT_STAR)) {
+				result = TPP_TOK_DOT_STAR; /* ".*" */
+				goto set_result;
+			}
+		} else
+#endif /* TPP_HAVE_TPP_TOK_DOT_STAR */
+#if TPP_HAVE_TPP_TOK_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT_DOT
+		if (ch2 == '.') {
+#if TPP_HAVE_TPP_TOK_DOT_DOT_DOT
+			if (tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)) {
+#if TPP_HAVE_TPP_TOK_DOT_DOT
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_DOT_DOT_DOT
+				if (ch2 == '.') {
+					if (tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)) {
+						result = TPP_TOK_DOT_DOT_DOT; /* "..." */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_DOT_DOT
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
+			}
+#endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
+#if TPP_HAVE_TPP_TOK_DOT_DOT
+			if (tpp_lexer_has(self, TPP_TOK_DOT_DOT)) {
+				result = TPP_TOK_DOT_DOT; /* ".." */
+				goto set_result;
+			}
+#endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
+		} else
+#endif /* TPP_HAVE_TPP_TOK_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
+/*[[[end]]]*/
+		{
+		}
+#endif /* ... */
+	}	break;
+/************************************************************************/
+
+
+
+/************************************************************************/
 /*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("",
-	"<-/%#:?", // first-token-characters that require custom case-es above
+	"<-/%#:?.", // first-token-characters that require custom case-es above
 	useSwitch: true
 );]]]*/
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_EXCLAIM
@@ -2715,56 +2975,6 @@ not_a_trigraph:
 		}
 	}	break;
 #endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_PLUS */
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT
-	case '.': {
-		if (tpp_lexer_has(self, TPP_TOK_DOT_STAR) ||
-		    tpp_lexer_has(self, TPP_TOK_DOT_DOT) ||
-		    tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)) {
-			read_ch2();
-#if TPP_HAVE_TPP_TOK_DOT_STAR
-			if (ch2 == '*') {
-				if (tpp_lexer_has(self, TPP_TOK_DOT_STAR)) {
-					result = TPP_TOK_DOT_STAR; /* ".*" */
-					goto set_result;
-				}
-			} else
-#endif /* TPP_HAVE_TPP_TOK_DOT_STAR */
-#if TPP_HAVE_TPP_TOK_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT_DOT
-			if (ch2 == '.') {
-#if TPP_HAVE_TPP_TOK_DOT_DOT_DOT
-				if (tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)) {
-#if TPP_HAVE_TPP_TOK_DOT_DOT
-					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
-					read_ch2();
-#if TPP_HAVE_TPP_TOK_DOT_DOT_DOT
-					if (ch2 == '.') {
-						if (tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)) {
-							result = TPP_TOK_DOT_DOT_DOT; /* "..." */
-							goto set_result;
-						}
-					} else
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
-					{
-					}
-#if TPP_HAVE_TPP_TOK_DOT_DOT
-					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
-				}
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
-#if TPP_HAVE_TPP_TOK_DOT_DOT
-				if (tpp_lexer_has(self, TPP_TOK_DOT_DOT)) {
-					result = TPP_TOK_DOT_DOT; /* ".." */
-					goto set_result;
-				}
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
-			} else
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
-			{
-			}
-		}
-	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT */
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_EQUAL
 	case '=': {
 		if (tpp_lexer_has(self, TPP_TOK_EQUAL_EXCLAIM) ||
@@ -4431,44 +4641,41 @@ handle_keyword_with_esc:
 	case '0': case '1': case '2': case '3': case '4':
 	case '5': case '6': case '7': case '8': case '9':
 #endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
-			if (tpp_lexer_has(self, TPP_TOK_FLOAT) ||
-			    tpp_lexer_has(self, TPP_TOK_INT)) {
-				error = tpp_lexer_seek_end_of_keyword(self, &pos);
-				if (TPP_ISERR(error))
-					goto return_error;
-#if TPP_HAVE_BSE
-				error = tpp_lexer_skip_bse_after_keyword(self, &pos);
-				if (TPP_ISERR(error))
-					goto return_error;
-#endif /* TPP_HAVE_BSE */
-
 #if TPP_HAVE_TPP_TOK_FLOAT
-				if (pos < file->tf_end && *pos == '.' &&
-				    tpp_lexer_has(self, TPP_TOK_FLOAT)) {
-					/* Floating point token... */
-					++pos;
-					error = tpp_lexer_seek_end_of_keyword(self, &pos);
-					if (TPP_ISERR(error))
-						goto return_error;
-#if TPP_HAVE_BSE
-					error = tpp_lexer_skip_bse_after_keyword(self, &pos);
-					if (TPP_ISERR(error))
-						goto return_error;
-#endif /* TPP_HAVE_BSE */
-					/* TODO: 1.0E+1 */
-					/* TODO: 1E+1 */
-					/* TODO: .1E+1 */
-					result = TPP_TOK_FLOAT;
-					goto set_result;
-				}
-#endif /* TPP_HAVE_TPP_TOK_FLOAT */
-
+			if (tpp_lexer_has(self, TPP_TOK_FLOAT)) {
 #if TPP_HAVE_TPP_TOK_INT
-				if (tpp_lexer_has(self, TPP_TOK_INT)) {
-					result = TPP_TOK_INT;
-					goto set_result;
+				result = TPP_TOK_INT;
+#else /* TPP_HAVE_TPP_TOK_INT */
+				result = TPP_TOK_EOF;
+#endif /* !TPP_HAVE_TPP_TOK_INT */
+				result = tpp_lexer_seek_end_of_float(self, &pos, result);
+				if (TPP_TOK_ISERR(result)) {
+					error = TPP_TOK_ASERR(result);
+					goto return_error;
 				}
-#endif /* TPP_HAVE_TPP_TOK_INT */
+#if TPP_HAVE_TPP_TOK_INT
+				tpp_assert(result == TPP_TOK_INT || result == TPP_TOK_FLOAT);
+#if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_INT)
+				if (!tpp_lexer_has(self, TPP_TOK_INT))
+					result = TPP_TOK_FLOAT;
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_INT) */
+#else /* TPP_HAVE_TPP_TOK_INT */
+				tpp_assert(result == TPP_TOK_EOF || result == TPP_TOK_FLOAT);
+				result = TPP_TOK_FLOAT;
+#endif /* !TPP_HAVE_TPP_TOK_INT */
+				goto set_result;
+			} else
+#endif /* TPP_HAVE_TPP_TOK_FLOAT */
+#if TPP_HAVE_TPP_TOK_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_FLOAT)
+			if (tpp_lexer_has(self, TPP_TOK_INT)) {
+				error = tpp_lexer_seek_end_of_int(self, &pos);
+				if (TPP_ISERR(error))
+					goto return_error;
+				result = TPP_TOK_INT;
+				goto set_result;
+			} else
+#endif /* TPP_HAVE_TPP_TOK_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_FLOAT) */
+			{
 			}
 		}
 #endif /* TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT */

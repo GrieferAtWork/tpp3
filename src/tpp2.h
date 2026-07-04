@@ -1241,6 +1241,10 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *  - For compatibility with TPP2's (flaky) attempts at decoding (e.g.) utf-16
  *    into utf-8, this compatibility header force-enables unicode support, even
  *    though that (somewhat) conflicts with TPP2's ANSI support.
+ *  - Note that TPP3 has an (entirely different) extension "-fextended-identifiers"
+ *    that enables use of \u and \U escape sequences in identifier names. This name
+ *    was chosen as default for that extension since GCC uses the same name to mean
+ *    the same thing.
  */
 
 /* TPPLEXER_TOKEN_NONE, TPPLEXER_TOKEN_DEFAULT:
@@ -2328,8 +2332,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR            TPP_CONFIG_EXTENSION_LXOR              /* Enable support for "^^" in builtin lexer expressions */
 #define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS        TPP_CONFIG_EXTENSION_BININTEGRAL       /* Enable support for "0b" literals in builtin lexer expressions */
 #define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS         0                                      /* Enable support for "0o" literals in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS   1                                      /* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS TPP_CONFIG_EXTENSION_MSVC_FIXED_INT    /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes in builtin lexer expressions */
+#define TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX   1                                      /* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes */
+#define TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX TPP_CONFIG_EXTENSION_MSVC_FIXED_INT    /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes */
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS     1                                      /* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
 
 /* Include-path-related features */
@@ -5823,7 +5827,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 	switch (kind) {
 	case TPP_INTEGER_SUFFIX_KIND_INT:
 		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT;
-#if TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
 	case TPP_INTEGER_SUFFIX_KIND_UNSIGNED:
 		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT | TPP_ATOI_UNSIGNED;
 	case TPP_INTEGER_SUFFIX_KIND_LONG:
@@ -5834,8 +5838,8 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 		return TPP_ATOI_OK | TPP_ATOI_TYPE_LONGLONG;
 	case TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG_LONG:
 		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_LONGLONG;
-#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
-#if TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
 	case TPP_INTEGER_SUFFIX_KIND_INT8:
 		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT8;
 	case TPP_INTEGER_SUFFIX_KIND_INT16:
@@ -5852,7 +5856,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT32;
 	case TPP_INTEGER_SUFFIX_KIND_UINT64:
 		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT64;
-#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
 	default: tpp_unreachable();
 	}
 	tpp_unreachable();

@@ -83,6 +83,17 @@ int main(int argc, char *argv[]) {
 		printf("[%.*s]",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
+#elif 1
+		{
+			char const *desc = tpp_strtokenid(tok);
+			if (desc == NULL && tpp_lexer_hastokenkwd(&lexer))
+				desc = tpp_lexer_gettokenkwdcstr(&lexer);
+			if (desc == NULL)
+				desc = "?";
+			printf("[%s:%.*s]", desc,
+			       (int)tpp_lexer_gettokenlen(&lexer),
+			       tpp_lexer_gettokenstart(&lexer));
+		}
 #else
 		{
 			tpp_lcinfo_ex lc;

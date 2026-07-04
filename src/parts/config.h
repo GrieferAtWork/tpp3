@@ -1179,6 +1179,71 @@
 #define TPP_HAVE_TPP_TOK_FLOAT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-float" */
 #endif /* !TPP_HAVE_TPP_TOK_FLOAT */
 
+/* (Try to) be smarter regarding how float tokens are detected.
+ * This tries to detect some syntax-error floating point tokens
+ * and terminates them in those places where you must have wanted
+ * them to terminate (even though standards say that they should
+ * keep going):
+ *
+ * Input     Standard parsing              Smart parsing                        Comment
+ * "1E2"       [FLOAT:1E2]                   [FLOAT:1E2]                         -
+ * "1P2"       [INT:1P2]                     [INT:1P2]                           -
+ * "0x1E2"     [INT:0x1E2]                   [INT:0x1E2]                         -
+ * "0x1P2"     [FLOAT:0x1P2]                 [FLOAT:0x1P2]                       -
+ * "0xE12"     [INT:0xE12]                   [INT:0xE12]                         -
+ * "0xE+12"    [FLOAT:0xE+12]                [INT:0xE][PLUS:+][INT:12]           Exponent after "x" / "X" must use "p" or "P"
+ * "0x1E+12"   [FLOAT:0x1E+12]               [INT:0x1E][PLUS:+][INT:12]          Exponent after "x" / "X" must use "p" or "P"
+ * "0E+12"     [FLOAT:0E+12]                 [FLOAT:0E+12]                       -
+ * "0xP12"     [FLOAT:0xP12]                 [INT:0xP12]                         Exponent cannot directly appear after "x" / "X"
+ * "0xP+12"    [FLOAT:0xP+12]                [INT:0xP][PLUS:+][INT:12]           Exponent cannot directly appear after "x" / "X"
+ * "0x1P12"    [FLOAT:0x1P12]                [FLOAT:0x1P12]                      -
+ * "0x1P+12"   [FLOAT:0x1P+12]               [FLOAT:0x1P+12]                     -
+ * "0P+12"     [FLOAT:0P+12]                 [INT:0P][PLUS:+][INT:12]            Without "x" / "X", must use "e" or "E" for exponents
+ * "0xA12"     [INT:0xA12]                   [INT:0xA12]                         -
+ * "0xA+12"    [INT:0xA][PLUS:+][INT:12]     [INT:0xA][PLUS:+][INT:12]           -
+ * "0x1A+12"   [INT:0x1A][PLUS:+][INT:12]    [INT:0x1A][PLUS:+][INT:12]          -
+ * "0A+12"     [INT:0A][PLUS:+][INT:12]      [INT:0A][PLUS:+][INT:12]            -
+ * "0x0.P12"   [FLOAT:0x0.P12]               [FLOAT:0x0.P12]                     -
+ * "0x0.P+12"  [FLOAT:0x0.P+12]              [FLOAT:0x0.P+12]                    -
+ * "0x0.1P+12" [FLOAT:0x0.1P+12]             [FLOAT:0x0.1P+12]                   -
+ * "0x.P12"    [FLOAT:0x.P12]                [FLOAT:0x.P12]                      -
+ * "0x.P+12"   [FLOAT:0x.P+12]               [FLOAT:0x.P+12]                     -
+ * "0x.1P+12"  [FLOAT:0x.1P+12]              [FLOAT:0x.1P+12]                    -
+ * "0.P+12"    [FLOAT:0.P+12]                [INT:0][DOT:.][P:P][PLUS:+][INT:12] Without "x" / "X", must use "e" or "E" for exponents
+ * "0x.A12"    [FLOAT:0x.A12]                [FLOAT:0x.A12]                      -
+ * "0x.A+12"   [FLOAT:0x.A][PLUS:+][INT:12]  [FLOAT:0x.A][PLUS:+][INT:12]        -
+ * "0x.1A+12"  [FLOAT:0x.1A][PLUS:+][INT:12] [FLOAT:0x.1A][PLUS:+][INT:12]       -
+ * "0.A+12"    [FLOAT:0.A][PLUS:+][INT:12]   [INT:0][DOT:.][A:A][PLUS:+][INT:12] Without "x" / "X", first character after "." must be 0-9
+ * "012"       [INT:012]                     [INT:012]                           -
+ * "0.12"      [FLOAT:0.12]                  [FLOAT:0.12]                        -
+ * "0..12"     [FLOAT:0..12]                 [INT:0][DOT_DOT:..][INT:12]         There can be at most 1 decimal-"."
+ * "0foo"      [INT:0foo]                    [INT:0foo]                          -
+ * "0.foo"     [FLOAT:0.foo]                 [INT:0][DOT:.][foo:foo]             Hex-character "f" after "." requires "x" / "X"
+ * "0..foo"    [FLOAT:0..foo]                [INT:0][DOT_DOT:..][foo:foo]        There can be at most 1 decimal-"."
+ * "0xfoo"     [INT:0xfoo]                   [INT:0xfoo]                         -
+ * "0x.foo"    [FLOAT:0x.foo]                [FLOAT:0x.foo]                      -
+ * "0x..foo"   [FLOAT:0x..foo]               [INT:0x][DOT_DOT:..][foo:foo]       There can be at most 1 decimal-"."
+ * "0x1foo"    [INT:0x1foo]                  [INT:0x1foo]                        -
+ * "0x1.foo"   [FLOAT:0x1.foo]               [FLOAT:0x1.foo]                     -
+ * "0x1..foo"  [FLOAT:0x1..foo]              [INT:0x1][DOT_DOT:..][foo:foo]      There can be at most 1 decimal-"."
+ * "0luz"      [INT:0luz]                    [INT:0luz]                          -
+ * "0.luz"     [FLOAT:0.luz]                 [INT:0][DOT:.][luz:luz]             Character after "." must be decimal
+ * "0..luz"    [FLOAT:0..luz]                [INT:0][DOT_DOT:..][luz:luz]        There can be at most 1 decimal-"."
+ * "0xluz"     [INT:0xluz]                   [INT:0xluz]                         -
+ * "0x.luz"    [FLOAT:0x.luz]                [INT:0x][DOT:.][luz:luz]            Character after "." must be hexa-decimal
+ * "0x..luz"   [FLOAT:0x..luz]               [INT:0x][DOT_DOT:..][luz:luz]       There can be at most 1 decimal-"."
+ * "0x1luz"    [INT:0x1luz]                  [INT:0x1luz]                        -
+ * "0x1.luz"   [FLOAT:0x1.luz]               [INT:0x1][DOT:.][luz:luz]           Character after "." must be hexa-decimal
+ * "0x1..luz"  [FLOAT:0x1..luz]              [INT:0x1][DOT_DOT:..][luz:luz]      There can be at most 1 decimal-"."
+ * "12"        [INT:12]                      [INT:12]                            -
+ * ".12"       [FLOAT:.12]                   [FLOAT:.12]                         -
+ * "..12"      [DOT_DOT:..][INT:12]          [DOT_DOT:..][INT:12]                There can be at most 1 decimal-"."
+ *
+ * @detect: #if __TPP_COUNT_TOKENS("0x1P+12") == 1 && __TPP_COUNT_TOKENS("0xE+12") == 3 */
+#ifndef TPP_HAVE_SMART_FLOAT_TOKENS
+#define TPP_HAVE_SMART_FLOAT_TOKENS ((TPP_HAVE_PROFILE_DEFAULT && TPP_HAVE_TPP_TOK_FLOAT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_CONF_FEAT1) : 0) /* "-fsmart-float-tokens" */
+#endif /* !TPP_HAVE_SMART_FLOAT_TOKENS */
+
 /************************************************************************/
 /* String tokens                                                        */
 /************************************************************************/
@@ -2375,17 +2440,35 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS (((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
 
-/* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes in builtin lexer expressions
+/* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes
  * @detect: N/A */
-#ifndef TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
-#define TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffixed-type-integrals" */
-#endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
+#ifndef TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
+#define TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-integrals" */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
 
-/* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes in builtin lexer expressions
+/* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes
  * @detect: N/A */
-#ifndef TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
-#define TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS ((TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffixed-length-integrals" */
-#endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+#ifndef TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
+#define TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX ((TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-length-integrals" */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
+
+/* Enable support for "f", "F", "l", "L" float suffixes
+ * @detect: N/A */
+#ifndef TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX
+#define TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-float" */
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX */
+
+/* Enable support for "d", "D" float suffixes
+ * @detect: N/A */
+#ifndef TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX
+#define TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 0) : 0) /* "-fdouble-type-float" */
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX */
+
+/* Enable support for "df", "DF", "dd", "DD", "dl", "DL" float suffixes
+ * @detect: N/A */
+#ifndef TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX
+#define TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fdecimal-type-float" */
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX */
 
 /* Treat 'a' as an integer, rather than as a string (in C, this is always the case)
  * @detect: N/A */
@@ -2845,6 +2928,11 @@ print("#endif /" "* !... *" "/");
 	                          TPP_HAVE_PRAGMA_TPP_WARNING))
 #endif /* !TPP_HAVE_LEXER_DECODEINT */
 
+/* Add API support for integer type suffixes */
+#ifndef TPP_HAVE_LEXER_DECODEINT_SUFFIX
+#define TPP_HAVE_LEXER_DECODEINT_SUFFIX (TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX)
+#endif /* !TPP_HAVE_LEXER_DECODEINT_SUFFIX */
+
 /* Provide a function "tpp_lexer_decodefloat_expr()" to parse a float */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_EXPR
 #define TPP_HAVE_LEXER_DECODEFLOAT_EXPR (TPP_HAVE_BUILTIN_EXPRPARSER && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TPP_TOK_FLOAT)
@@ -2854,6 +2942,11 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT
 #define TPP_HAVE_LEXER_DECODEFLOAT (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
+
+/* Add API support for float type suffixes */
+#ifndef TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX
+#define TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX (TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX)
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
 
 /* Provide a function "tpp_lexer_parsecharacter_literal()" to parse character literals */
 #ifndef TPP_HAVE_LEXER_PARSECHARACTER_LITERAL

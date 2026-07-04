@@ -37,26 +37,26 @@ TPP_DECL_BEGIN
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_EWARNPRINT: Error while printing a warning */
 #if TPP_HAVE_LEXER_DECODEINT
-#if TPP_HAVE_INTEGER_SUFFIX_KIND
+#if TPP_HAVE_LEXER_DECODEINT_SUFFIX
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
                        tpp_intmax *tpp_restrict result,
                        tpp_integer_suffix_kind *p_suffix_kind)
-#else /* TPP_HAVE_INTEGER_SUFFIX_KIND */
+#else /* TPP_HAVE_LEXER_DECODEINT_SUFFIX */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
                     tpp_intmax *tpp_restrict result)
-#endif /* !TPP_HAVE_INTEGER_SUFFIX_KIND */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_SUFFIX */
 {
 	unsigned int radix = 10;
 	tpp_char const *start = tpp_lexer_gettokenstart(self);
 	tpp_char const *end   = tpp_lexer_gettokenend(self);
 	tpp_char ch;
 	*result = 0;
-#if TPP_HAVE_INTEGER_SUFFIX_KIND
+#if TPP_HAVE_LEXER_DECODEINT_SUFFIX
 #define tpp_set_suffix_kind(kind) (void)(!(p_suffix_kind) || (*(p_suffix_kind) = (kind), 1))
 	tpp_set_suffix_kind(TPP_INTEGER_SUFFIX_KIND_INT);
-#endif /* TPP_HAVE_INTEGER_SUFFIX_KIND */
+#endif /* TPP_HAVE_LEXER_DECODEINT_SUFFIX */
 	if (start >= end)
 		goto handle_invalid;
 	ch = *start++;
@@ -140,13 +140,13 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 	         (ch >= 'a' && ch <= 'f') ||
 	         (ch >= 'A' && ch <= 'F'));
 
-#if TPP_HAVE_INTEGER_SUFFIX_KIND
+#if TPP_HAVE_LEXER_DECODEINT_SUFFIX
 	switch (ch) {
 
-#if TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
 	case 'i':
 	case 'I':
-		if (!tpp_lexer_has(self, BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS))
+		if (!tpp_lexer_has(self, LEXER_DECODEINT_FIXED_LENGTH_SUFFIX))
 			goto handle_invalid;
 		if (start >= end)
 			goto handle_invalid;
@@ -194,7 +194,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 	case 'u':
 	case 'U': {
 		if (start < end && (*start == 'i' || *start == 'I') &&
-		    tpp_lexer_has(self, BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS)) {
+		    tpp_lexer_has(self, LEXER_DECODEINT_FIXED_LENGTH_SUFFIX)) {
 			++start;
 			start = tpp_skipbse_fwd(start, end, tpp_lexer_getfile(self));
 			if (start >= end)
@@ -241,24 +241,24 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 			return TPP_EOK;
 		}
 	}
-#if TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
 		TPP_FALLTHRU
-#else /* TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
+#else /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
 		break;
-#endif /* !TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
-#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
 
 
-#if TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS
-#if !TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
+#if !TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
 	case 'u':
 	case 'U':
-#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS */
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
 	case 'l':
 	case 'L': {
 		unsigned int has_u = 0;
 		unsigned int has_l = 0;
-		if (!tpp_lexer_has(self, BUILTIN_EXPR_FIXED_TYPE_INTEGRALS))
+		if (!tpp_lexer_has(self, LEXER_DECODEINT_FIXED_LENGTH_SUFFIX))
 			break;
 		for (;;) {
 			if (ch == 'u' || ch == 'U') {
@@ -292,12 +292,12 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 		}
 		return TPP_EOK;
 	}	break;
-#endif /* TPP_HAVE_BUILTIN_EXPR_FIXED_TYPE_INTEGRALS */
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
 
 	default: break;
 	}
 #undef tpp_set_suffix_kind
-#endif /* TPP_HAVE_INTEGER_SUFFIX_KIND */
+#endif /* TPP_HAVE_LEXER_DECODEINT_SUFFIX */
 
 handle_invalid:
 #if TPP_HAVE_TPP_W_INVALID_INTEGER
@@ -314,11 +314,23 @@ handle_invalid:
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_EWARNPRINT: Error while printing a warning */
 #if TPP_HAVE_LEXER_DECODEFLOAT
+#if TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
+                         tpp_float *tpp_restrict result,
+                         tpp_float_suffix_kind *p_suffix_kind)
+#else /* TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat(tpp_lexer *tpp_restrict self,
-                      tpp_float *tpp_restrict result) {
+                      tpp_float *tpp_restrict result)
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
+{
 	/* TODO */
 	(void)self;
+#if TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX
+	if (p_suffix_kind)
+		*p_suffix_kind = TPP_FLOAT_SUFFIX_KIND_DEFAULT;
+#endif /* TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
 	*result = 0.0;
 	return TPP_EOK;
 }
