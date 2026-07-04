@@ -1493,6 +1493,7 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 		tpp_lexer_openfile_result_fini(&ofr);
 		return TPP_TOK_ENOMEM;
 	}
+	file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES; /* Allow more directives immediately upon return from file */
 	tpp_file_move(prev_file, file);
 	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename_kwd),
 	                    ofr.tlofr_handle, TPP_FILE_FLAGS_NORMAL);
@@ -1767,6 +1768,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	unsigned char ofr_first_byte;
 	tpp_file *const file = tpp_lexer_getfile(lexer);
 	tpp_file *prev_file;
+	file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES; /* Allow more directives immediately upon return from file */
 	if (self->teb_limit == 0)
 		goto return_empty_file; /* Treat as an file... */
 	if (self->teb_ofr_error != TPP_EOK)
