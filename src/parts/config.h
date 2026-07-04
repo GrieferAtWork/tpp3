@@ -94,6 +94,25 @@
 #define TPP_MAX_INCLUDE_DEPTH (TPP_HAVE_INCLUDE_STACK ? (TPP_HAVE_PROFILE_NOT_MINIMAL ? -64 : 64) : 0)
 #endif /* !TPP_MAX_INCLUDE_DEPTH */
 
+/* Max # of times that the same (self-recursive; see TPP_HAVE_MACRO_RECURSION)
+ * macro may appear on the #include-stack (with each instance's body having a
+ * different expansion) before the macro will be treated as though its body
+ * didn't change, causing it to not be expanded (anymore). At the same time
+ * that this limit is reached, a warning TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
+ * will be emitted.
+ *
+ * NOTE: When "TPP_HAVE_MACRO_RECURSION" can never be enabled, this limit is
+ *       entirely pointless, since the C standard (which we followed whenever
+ *       "TPP_HAVE_MACRO_RECURSION" isn't enabled) essentially requires that
+ *       this limit be "1"
+ *
+ * - 0:  Disable depth checks entirely
+ * - N:  Limit is hard-coded to "N" and cannot be overwritten at runtime
+ * - -N: Limit can be overwritten at runtime, with "N" being used as the default */
+#ifndef TPP_MAX_RECURSIVE_MACRO_DEPTH
+#define TPP_MAX_RECURSIVE_MACRO_DEPTH (TPP_HAVE_MACRO_RECURSION ? (TPP_HAVE_PROFILE_NOT_MINIMAL ? -4096 : 4096) : 0)
+#endif /* !TPP_MAX_RECURSIVE_MACRO_DEPTH */
+
 
 
 /************************************************************************/
@@ -3386,6 +3405,10 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED \
 	(TPP_HAVE_WARNINGS && TPP_MAX_INCLUDE_DEPTH != 0)
 #endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+#ifndef TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
+#define TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED \
+	(TPP_HAVE_WARNINGS && TPP_MAX_RECURSIVE_MACRO_DEPTH != 0)
+#endif /* !TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS

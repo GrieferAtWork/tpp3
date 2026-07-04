@@ -3589,8 +3589,9 @@ TPP_WARNING(TPP_W_DEPENDENCY_CHANGED, 1(TPP_WG_DEPENDENCY), 0(), ~,
 /* -Wlimit                                                         */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_LIMIT
-#define TPP_HAVE_TPP_WG_LIMIT \
-	(TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED)
+#define TPP_HAVE_TPP_WG_LIMIT                           \
+	(TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED || \
+	 TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED)
 #endif /* !TPP_HAVE_TPP_WG_LIMIT */
 #if TPP_HAVE_TPP_WG_LIMIT
 #ifndef TPP_WGNAME_LIMIT
@@ -3605,6 +3606,29 @@ TPP_WGROUP(TPP_WG_LIMIT, TPP_WGNAME_LIMIT, TPP_WSTATE_FATAL)
 TPP_WARNING(TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 1(1014), TPP_WSTATE_UNDEFINED,
             "file included too many times: %[%s%]")
 #endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+
+#if TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
+#define TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
+#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION)
+#define _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT "%[-f" TPP_EXTNAME_MACRO_RECURSION "%]: "
+#else /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION) */
+#define _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT /* nothing */
+#endif /* !TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION) */
+TPP_WARNING_EX(TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 0(), ~, {
+	tpp_keyword const *const macro_keyword = tpp_current_va_arg(tpp_keyword const *);
+	tpp_macro const *const macro = tpp_current_va_arg(tpp_macro const *);
+	tpp_warn_printf1(tpp_current_info(), _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT
+	                                     "self-recursive macro %[%s%] expanded to itself too many times",
+	                 tpp_keyword_getkwdcstr(macro_keyword));
+	if (tpp_macro_getdeffilename(macro)) {
+		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(macro),
+		                                tpp_macro_getdeflcinfo(macro));
+		tpp_warn_printf1(tpp_current_info(), "note: see definition of %[%s%]\n",
+		                 tpp_keyword_getkwdcstr(macro_keyword));
+	}
+})
+#undef _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT
+#endif /* TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED */
 
 
 /************************************************************************/
@@ -3643,7 +3667,8 @@ TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
 	if (tpp_macro_getdeffilename(old_definition)) {
 		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(old_definition),
 		                           tpp_macro_getdeflcinfo(old_definition));
-		tpp_warn_printf0(tpp_current_info(), "note: see previous definition\n");
+		tpp_warn_printf1(tpp_current_info(), "note: see previous definition of %[%s%]\n",
+		                 tpp_keyword_getkwdcstr(keyword));
 	}
 })
 #endif /* TPP_HAVE_TPP_W_REDEFINE_MACRO */
@@ -4529,6 +4554,25 @@ TPP_DECL_END
 #ifndef TPP_MAX_INCLUDE_DEPTH
 #define TPP_MAX_INCLUDE_DEPTH (TPP_HAVE_INCLUDE_STACK ? (TPP_HAVE_PROFILE_NOT_MINIMAL ? -64 : 64) : 0)
 #endif /* !TPP_MAX_INCLUDE_DEPTH */
+
+/* Max # of times that the same (self-recursive; see TPP_HAVE_MACRO_RECURSION)
+ * macro may appear on the #include-stack (with each instance's body having a
+ * different expansion) before the macro will be treated as though its body
+ * didn't change, causing it to not be expanded (anymore). At the same time
+ * that this limit is reached, a warning TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
+ * will be emitted.
+ *
+ * NOTE: When "TPP_HAVE_MACRO_RECURSION" can never be enabled, this limit is
+ *       entirely pointless, since the C standard (which we followed whenever
+ *       "TPP_HAVE_MACRO_RECURSION" isn't enabled) essentially requires that
+ *       this limit be "1"
+ *
+ * - 0:  Disable depth checks entirely
+ * - N:  Limit is hard-coded to "N" and cannot be overwritten at runtime
+ * - -N: Limit can be overwritten at runtime, with "N" being used as the default */
+#ifndef TPP_MAX_RECURSIVE_MACRO_DEPTH
+#define TPP_MAX_RECURSIVE_MACRO_DEPTH (TPP_HAVE_MACRO_RECURSION ? (TPP_HAVE_PROFILE_NOT_MINIMAL ? -4096 : 4096) : 0)
+#endif /* !TPP_MAX_RECURSIVE_MACRO_DEPTH */
 
 
 
@@ -7670,6 +7714,10 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED \
 	(TPP_HAVE_WARNINGS && TPP_MAX_INCLUDE_DEPTH != 0)
 #endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+#ifndef TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
+#define TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED \
+	(TPP_HAVE_WARNINGS && TPP_MAX_RECURSIVE_MACRO_DEPTH != 0)
+#endif /* !TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS
@@ -15757,6 +15805,30 @@ typedef struct tpp_lexer {
 #else /* ... */
 #define tpp_lexer_getinclusionlimit(self) TPP_MAX_INCLUDE_DEPTH
 #endif /* !... */
+
+
+	/* Lexer recursive macro limit */
+#if TPP_HAVE_MACRO_RECURSION
+#if TPP_MAX_RECURSIVE_MACRO_DEPTH < 0
+	tpp_size TPP_INTERNAL(tl_recursive_macro_limit); /* How many times the same recursive macro can  */
+#define tpp_lexer_getrecursivemacrolimit(self)    ((self)->TPP_INTERNAL(tl_recursive_macro_limit))
+#define tpp_lexer_setrecursivemacrolimit(self, v) (void)((self)->TPP_INTERNAL(tl_recursive_macro_limit) = (v))
+#else /* TPP_MAX_RECURSIVE_MACRO_DEPTH < 0 */
+#define tpp_lexer_getrecursivemacrolimit(self) TPP_MAX_RECURSIVE_MACRO_DEPTH
+#endif /* TPP_MAX_RECURSIVE_MACRO_DEPTH >= 0 */
+#elif TPP_MAX_RECURSIVE_MACRO_DEPTH < 0
+#define tpp_lexer_getrecursivemacrolimit(self) (-TPP_MAX_RECURSIVE_MACRO_DEPTH)
+#else /* ... */
+#define tpp_lexer_getrecursivemacrolimit(self) TPP_MAX_RECURSIVE_MACRO_DEPTH
+#endif /* !... */
+#ifndef TPP_IGNORE_INVALID_CONFIGURATION
+#if TPP_MAX_RECURSIVE_MACRO_DEPTH != 0 && !TPP_HAVE_MACRO_RECURSION
+#error "Invalid configuration: 'TPP_MAX_RECURSIVE_MACRO_DEPTH' can only take effect when 'TPP_HAVE_MACRO_RECURSION' is enabled"
+#elif TPP_MAX_RECURSIVE_MACRO_DEPTH == 1 && TPP_HAVE_MACRO_RECURSION
+#error "Invalid configuration: when 'TPP_MAX_RECURSIVE_MACRO_DEPTH=1' is hardcoded, 'TPP_HAVE_MACRO_RECURSION' being on/off makes no difference"
+#endif /* ... */
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+
 
 
 	/* Next value for __COUNTER__ */

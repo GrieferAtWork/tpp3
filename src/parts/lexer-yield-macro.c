@@ -685,6 +685,9 @@ next_op:
 				tpp_string const *existing_chunk = iter->tf_chunk;
 				if (tpp_string_equals(existing_chunk, result_chunk)) {
 					/* Duplicate chunk!!! -> Mustn't expand (else: would result in infinite loop) */
+#if TPP_MAX_RECURSIVE_MACRO_DEPTH != 0
+handle_duplicate_chunk:
+#endif /* TPP_MAX_RECURSIVE_MACRO_DEPTH != 0 */
 					tpp_string_destroy(result_chunk);
 #if TPP_HAVE_FILE_MACRO_TRACKARGS
 					for (i = 0; i < macro_argc; ++i) {
@@ -698,6 +701,22 @@ next_op:
 				}
 			}
 		} while ((iter = iter->tf_tprev) != NULL);
+#if TPP_MAX_RECURSIVE_MACRO_DEPTH != 0
+		if (macro->tm_expansions > tpp_lexer_getrecursivemacrolimit(self)) {
+			/* Emit a warning and disallow expansion if the
+			 * macro's recursion limit has been exceeded */
+#if TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED,
+			                                  macro_keyword, macro);
+			if (TPP_ISERR(error)) {
+				tok = TPP_TOK_OFERR(error);
+				goto err_tok_macro_result_chunk_argbuf_rollback;
+#define WANT_err_tok_macro_result_chunk_argbuf_rollback
+			}
+#endif /* TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED */
+			goto handle_duplicate_chunk;
+		}
+#endif /* TPP_MAX_RECURSIVE_MACRO_DEPTH != 0 */
 	}
 #endif /* TPP_HAVE_MACRO_RECURSION */
 
@@ -705,6 +724,11 @@ next_op:
 	prev_file = tpp_file_alloc();
 	tpp_lexer_alltokens_break(self);
 	if tpp_unlikely(!prev_file) {
+		tok = TPP_TOK_ENOMEM;
+#ifdef WANT_err_tok_macro_result_chunk_argbuf_rollback
+#undef WANT_err_tok_macro_result_chunk_argbuf_rollback
+err_tok_macro_result_chunk_argbuf_rollback:
+#endif /* WANT_err_tok_macro_result_chunk_argbuf_rollback */
 		tpp_lexer_manualpopfile_break_rollback(self);
 #if TPP_HAVE_FILE_MACRO_TRACKARGS
 		for (i = 0; i < macro_argc; ++i) {
@@ -714,7 +738,6 @@ next_op:
 		tpp_macro_release_argbuf(macro, argbuf);
 #endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 		tpp_string_decref(result_chunk);
-		tok = TPP_TOK_ENOMEM;
 		goto err_tok_macro;
 	}
 	tpp_lexer_manualpopfile_break_commit(self);

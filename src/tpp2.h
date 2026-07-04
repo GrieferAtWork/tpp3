@@ -2025,23 +2025,22 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #undef TPP_TABSIZE
 #define TPP_TABSIZE TPPLEXER_DEFAULT_TABSIZE
 
-#if 0 /* TODO */
-//#ifndef TPPLEXER_DEFAULT_LIMIT_MREC
-//#define TPPLEXER_DEFAULT_LIMIT_MREC 512 /* Even when generated text differs from previous version, don't allow more self-recursion per macro than this. */
-//#endif /* !TPPLEXER_DEFAULT_LIMIT_MREC */
-#endif
-
-/* Inherit legacy error limit configuration */
+/* Inherit legacy limit configuration */
 #ifndef TPPLEXER_DEFAULT_LIMIT_ECNT
 #define TPPLEXER_DEFAULT_LIMIT_ECNT 16
 #endif /* !TPPLEXER_DEFAULT_LIMIT_ECNT */
 #ifndef TPPLEXER_DEFAULT_LIMIT_INCL
 #define TPPLEXER_DEFAULT_LIMIT_INCL 64  /* User attempts to #include a file more often that file will fail with an error message. */
 #endif /* !TPPLEXER_DEFAULT_LIMIT_INCL */
+#ifndef TPPLEXER_DEFAULT_LIMIT_MREC
+#define TPPLEXER_DEFAULT_LIMIT_MREC 512 /* Even when generated text differs from previous version, don't allow more self-recursion per macro than this. */
+#endif /* !TPPLEXER_DEFAULT_LIMIT_MREC */
 #undef TPP_ERROR_LIMIT
 #define TPP_ERROR_LIMIT TPPLEXER_DEFAULT_LIMIT_ECNT
 #undef TPP_MAX_INCLUDE_DEPTH
 #define TPP_MAX_INCLUDE_DEPTH TPPLEXER_DEFAULT_LIMIT_INCL
+#undef TPP_MAX_RECURSIVE_MACRO_DEPTH
+#define TPP_MAX_RECURSIVE_MACRO_DEPTH TPPLEXER_DEFAULT_LIMIT_MREC
 
 /* Inherit legacy non-blocking I/O configuration */
 #undef TPP_HAVE_FILE_NONBLOCK
@@ -2772,10 +2771,10 @@ alias("WG_EXPANSION_TO_DEFINED", "TPP_WG_EXPANSION_TO_DEFINED");
 alias("WG_DEPRECATED", "TPP_WG_DEPRECATED");
 alias("WG_ENVIRON", "TPP_WG_ENVIRON");
 alias("WG_DEPENDENCY", "TPP_WG_DEPENDENCY");
+alias("WG_LIMIT", "TPP_WG_LIMIT");
 
 //TODO:alias("WG_USAGE", "TPP_WG_USAGE");
 //TODO:alias("WG_BOOLVALUE", "TPP_WG_BOOLVALUE");
-//TODO:alias("WG_LIMIT", "TPP_WG_LIMIT");
 //TODO:alias("WG_QUALITY", "TPP_WG_QUALITY");
 
 // Warnings
@@ -2857,6 +2856,7 @@ alias("W_EXPECTED_KEYWORD_AFTER_PREDICATE", "TPP_W_EXPECTED_ASSERTION_VALUE_IN_D
 alias("W_EXPECTED_KEYWORD_AFTER_EXPR_HASH", "TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION");
 alias("W_EXPECTED_KEYWORD_AFTER_EXPR_PRED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION");
 alias("W_DEPENDENCY_CHANGED", "TPP_W_DEPENDENCY_CHANGED");
+alias("W_INCLUDE_RECURSION_LIMIT_EXCEEDED", "TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED");
 ]]]*/
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_EOF TPP_TOK_EOF
@@ -3946,6 +3946,9 @@ alias("W_DEPENDENCY_CHANGED", "TPP_W_DEPENDENCY_CHANGED");
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_WG_DEPENDENCY)
 #define WG_DEPENDENCY TPP_WG_DEPENDENCY
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_WG_DEPENDENCY */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_WG_LIMIT)
+#define WG_LIMIT TPP_WG_LIMIT
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_WG_LIMIT */
 #ifdef TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #define TPP_W_EXPECTED_KEYWORD_AFTER_DEFINE TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -4369,6 +4372,9 @@ alias("W_DEPENDENCY_CHANGED", "TPP_W_DEPENDENCY_CHANGED");
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_DEPENDENCY_CHANGED)
 #define W_DEPENDENCY_CHANGED TPP_W_DEPENDENCY_CHANGED
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_DEPENDENCY_CHANGED */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED)
+#define W_INCLUDE_RECURSION_LIMIT_EXCEEDED TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 /*[[[end]]]*/
 
 //TODO: /* #define TPP_CONFIG_CALLBACK_WARNING          x // int x(int wnum, ...) { ... } -- A user-replacement for `TPPLexer_Warn' */
@@ -4408,7 +4414,6 @@ alias("W_DEPENDENCY_CHANGED", "TPP_W_DEPENDENCY_CHANGED");
 //TODO:DEF_WARNING(W_FUNCTION_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Function-style macro " Q("%s") " is expanded to the same text", FILENAME())) /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_INDEX_OUT_OF_BOUNDS, (WG_VALUE), WSTATE_DISABLED, { struct TPPString *s = ARG(struct TPPString *); WARNF("Index %ld is out-of-bounds of 0..%lu", (unsigned long)s->s_size, (unsigned long)ARG(ptrdiff_t)); })                                                                                            /* [struct TPPString *,ptrdiff_t]. */
 //TODO:DEF_WARNING(W_MACRO_RECURSION_LIMIT_EXCEEDED, (WG_LIMIT), WSTATE_ERROR, WARNF("Macro recursion limit exceeded when expanding " Q("%s") " (Consider passing " Q("-fno-macro-recursion") ")", FILENAME())) /* [struct TPPFile *]. */
-//TODO:DEF_WARNING(W_INCLUDE_RECURSION_LIMIT_EXCEEDED, (WG_LIMIT), WSTATE_ERROR, WARNF("Include recursion limit exceeded when including " Q("%s"), FILENAME()))                                                 /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_IDENT_SCCS_IGNORED, (WG_USAGE), WSTATE_WARN, WARNF("#ident/sccs with " Q("%s") " is ignored", CONST_STR())) /* [struct TPPConst *]. */
 //TODO:DEF_WARNING(W_UNKNOWN_ASSERTION, (WG_VALUE), WSTATE_DISABLED, { char const *temp = KWDNAME(); WARNF("Assertion " Q("%s") " does not contain a predicate " Q("%s"), temp, KWDNAME()); }) /* [struct TPPKeyword *,struct TPPKeyword *]. */
 //TODO:DEF_WARNING(W_CANT_POP_INCLUDE_PATH, (WG_VALUE), WSTATE_ERROR, WARNF("Can't pop #include paths"))                                                                               /* . */

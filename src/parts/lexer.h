@@ -252,6 +252,30 @@ typedef struct tpp_lexer {
 #endif /* !... */
 
 
+	/* Lexer recursive macro limit */
+#if TPP_HAVE_MACRO_RECURSION
+#if TPP_MAX_RECURSIVE_MACRO_DEPTH < 0
+	tpp_size TPP_INTERNAL(tl_recursive_macro_limit); /* How many times the same recursive macro can  */
+#define tpp_lexer_getrecursivemacrolimit(self)    ((self)->TPP_INTERNAL(tl_recursive_macro_limit))
+#define tpp_lexer_setrecursivemacrolimit(self, v) (void)((self)->TPP_INTERNAL(tl_recursive_macro_limit) = (v))
+#else /* TPP_MAX_RECURSIVE_MACRO_DEPTH < 0 */
+#define tpp_lexer_getrecursivemacrolimit(self) TPP_MAX_RECURSIVE_MACRO_DEPTH
+#endif /* TPP_MAX_RECURSIVE_MACRO_DEPTH >= 0 */
+#elif TPP_MAX_RECURSIVE_MACRO_DEPTH < 0
+#define tpp_lexer_getrecursivemacrolimit(self) (-TPP_MAX_RECURSIVE_MACRO_DEPTH)
+#else /* ... */
+#define tpp_lexer_getrecursivemacrolimit(self) TPP_MAX_RECURSIVE_MACRO_DEPTH
+#endif /* !... */
+#ifndef TPP_IGNORE_INVALID_CONFIGURATION
+#if TPP_MAX_RECURSIVE_MACRO_DEPTH != 0 && !TPP_HAVE_MACRO_RECURSION
+#error "Invalid configuration: 'TPP_MAX_RECURSIVE_MACRO_DEPTH' can only take effect when 'TPP_HAVE_MACRO_RECURSION' is enabled"
+#elif TPP_MAX_RECURSIVE_MACRO_DEPTH == 1 && TPP_HAVE_MACRO_RECURSION
+#error "Invalid configuration: when 'TPP_MAX_RECURSIVE_MACRO_DEPTH=1' is hardcoded, 'TPP_HAVE_MACRO_RECURSION' being on/off makes no difference"
+#endif /* ... */
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+
+
+
 	/* Next value for __COUNTER__ */
 #if TPP_HAVE_MACRO___COUNTER__
 	tpp_size TPP_INTERNAL(tl_builtin_counter); /* Next value for __COUNTER__ */

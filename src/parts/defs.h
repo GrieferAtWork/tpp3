@@ -3743,8 +3743,9 @@ TPP_WARNING(TPP_W_DEPENDENCY_CHANGED, 1(TPP_WG_DEPENDENCY), 0(), ~,
 /* -Wlimit                                                         */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_LIMIT
-#define TPP_HAVE_TPP_WG_LIMIT \
-	(TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED)
+#define TPP_HAVE_TPP_WG_LIMIT                           \
+	(TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED || \
+	 TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED)
 #endif /* !TPP_HAVE_TPP_WG_LIMIT */
 #if TPP_HAVE_TPP_WG_LIMIT
 #ifndef TPP_WGNAME_LIMIT
@@ -3759,6 +3760,29 @@ TPP_WGROUP(TPP_WG_LIMIT, TPP_WGNAME_LIMIT, TPP_WSTATE_FATAL)
 TPP_WARNING(TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 1(1014), TPP_WSTATE_UNDEFINED,
             "file included too many times: %[%s%]")
 #endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+
+#if TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
+#define TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
+#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION)
+#define _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT "%[-f" TPP_EXTNAME_MACRO_RECURSION "%]: "
+#else /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION) */
+#define _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT /* nothing */
+#endif /* !TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION) */
+TPP_WARNING_EX(TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 0(), ~, {
+	tpp_keyword const *const macro_keyword = tpp_current_va_arg(tpp_keyword const *);
+	tpp_macro const *const macro = tpp_current_va_arg(tpp_macro const *);
+	tpp_warn_printf1(tpp_current_info(), _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT
+	                                     "self-recursive macro %[%s%] expanded to itself too many times",
+	                 tpp_keyword_getkwdcstr(macro_keyword));
+	if (tpp_macro_getdeffilename(macro)) {
+		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(macro),
+		                                tpp_macro_getdeflcinfo(macro));
+		tpp_warn_printf1(tpp_current_info(), "note: see definition of %[%s%]\n",
+		                 tpp_keyword_getkwdcstr(macro_keyword));
+	}
+})
+#undef _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT
+#endif /* TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED */
 
 
 /************************************************************************/
@@ -3797,7 +3821,8 @@ TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
 	if (tpp_macro_getdeffilename(old_definition)) {
 		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(old_definition),
 		                           tpp_macro_getdeflcinfo(old_definition));
-		tpp_warn_printf0(tpp_current_info(), "note: see previous definition\n");
+		tpp_warn_printf1(tpp_current_info(), "note: see previous definition of %[%s%]\n",
+		                 tpp_keyword_getkwdcstr(keyword));
 	}
 })
 #endif /* TPP_HAVE_TPP_W_REDEFINE_MACRO */

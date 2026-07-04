@@ -200,6 +200,10 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	self->tl_inclusion_limit = -TPP_MAX_INCLUDE_DEPTH;
 #endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED && TPP_MAX_INCLUDE_DEPTH < 0 */
 
+#if TPP_HAVE_MACRO_RECURSION && TPP_MAX_RECURSIVE_MACRO_DEPTH < 0
+	self->tl_recursive_macro_limit = -TPP_MAX_RECURSIVE_MACRO_DEPTH;
+#endif /* TPP_HAVE_MACRO_RECURSION && TPP_MAX_RECURSIVE_MACRO_DEPTH < 0 */
+
 #if TPP_HAVE_MACRO___COUNTER__
 	self->tl_builtin_counter = 0;
 #endif /* TPP_HAVE_MACRO___COUNTER__ */
@@ -295,31 +299,42 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_FEATURES
 	self->tl_feat = from->tl_feat;
 #endif /* TPP_HAVE_FEATURES */
+
 #if TPP_HAVE_LEXER_STATE_FLAGS
 	self->tl_state = from->tl_state;
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
+
 #if TPP_HAVE_WARNINGS
 #if !defined(TPP_CONFIG_WARNPRINTER) && TPP_HAVE_BUILTIN_WARNPRINTER <= 0
 	self->tl_warnprinter = from->tl_warnprinter;
 #endif /* !TPP_CONFIG_WARNPRINTER && TPP_HAVE_BUILTIN_WARNPRINTER <= 0 */
 #endif /* TPP_HAVE_WARNINGS */
+
 #if TPP_HAVE_LEXER_PARSEEXPR
 #if !defined(TPP_CONFIG_EXPRPARSER) && TPP_HAVE_BUILTIN_EXPRPARSER <= 0
 	self->tl_expr_parser_cb = from->tl_expr_parser_cb;
 #endif /* !TPP_CONFIG_EXPRPARSER && TPP_HAVE_BUILTIN_EXPRPARSER <= 0 */
 #endif /* TPP_HAVE_LEXER_PARSEEXPR */
+
 #if TPP_HAVE_WARNING_ERROR
 	self->tl_error_count = from->tl_error_count;
 #if TPP_ERROR_LIMIT < 0
 	self->tl_error_count = from->tl_error_limit;
 #endif /* TPP_ERROR_LIMIT < 0 */
 #endif /* TPP_HAVE_WARNING_ERROR */
+
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED && TPP_MAX_INCLUDE_DEPTH < 0
 	self->tl_inclusion_limit = from->tl_inclusion_limit;
 #endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED && TPP_MAX_INCLUDE_DEPTH < 0 */
+
+#if TPP_HAVE_MACRO_RECURSION && TPP_MAX_RECURSIVE_MACRO_DEPTH < 0
+	self->tl_recursive_macro_limit = from->tl_recursive_macro_limit;
+#endif /* TPP_HAVE_MACRO_RECURSION && TPP_MAX_RECURSIVE_MACRO_DEPTH < 0 */
+
 #if TPP_HAVE_MACRO___COUNTER__
 	self->tl_builtin_counter = from->tl_builtin_counter;
 #endif /* TPP_HAVE_MACRO___COUNTER__ */
+
 	return TPP_EOK;
 #if TPP_HAVE_USER_KEYWORDS
 err_warn_incl_exts:
