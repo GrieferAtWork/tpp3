@@ -249,24 +249,50 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
 
 
-#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX
 #if !TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
 	case 'u':
 	case 'U':
 #endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
 	case 'l':
-	case 'L': {
+	case 'L':
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
+#if TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX
+	case 'z':
+	case 'Z':
+#endif /* TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX */
+	{
 		unsigned int has_u = 0;
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
 		unsigned int has_l = 0;
-		if (!tpp_lexer_has(self, LEXER_DECODEINT_FIXED_LENGTH_SUFFIX))
-			break;
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
+#if TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX
+		unsigned int has_z = 0;
+#endif /* TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX */
 		for (;;) {
-			if (ch == 'u' || ch == 'U') {
+			switch (ch) {
+			case 'u':
+			case 'U':
 				++has_u;
-			} else if (ch == 'l' || ch == 'L') {
+				break;
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
+			case 'l':
+			case 'L':
+				if (!tpp_lexer_has(self, LEXER_DECODEINT_FIXED_LENGTH_SUFFIX))
+					goto handle_invalid;
 				++has_l;
-			} else {
-				goto handle_invalid;
+				break;
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
+#if TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX
+			case 'z':
+			case 'Z':
+				if (!tpp_lexer_has(self, LEXER_DECODEINT_SIZE_TYPE_SUFFIX))
+					goto handle_invalid;
+				++has_z;
+				break;
+#endif /* TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX */
+			default: goto handle_invalid;
 			}
 			if (start >= end)
 				break;
@@ -275,24 +301,40 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 		}
 		if (has_u > 1)
 			goto handle_invalid;
-		switch (has_l) {
-		case 0:
-			tpp_assert(has_u == 1);
-			tpp_set_suffix_kind(TPP_INTEGER_SUFFIX_KIND_UNSIGNED);
-			break;
-		case 1:
-			tpp_set_suffix_kind(has_u ? TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG
-			                          : TPP_INTEGER_SUFFIX_KIND_LONG);
-			break;
-		case 2:
-			tpp_set_suffix_kind(has_u ? TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG_LONG
-			                          : TPP_INTEGER_SUFFIX_KIND_LONG_LONG);
-			break;
-		default: goto handle_invalid;
+#if TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX
+		if (has_z != 0) {
+			if (has_z != 1)
+				goto handle_invalid;
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
+			if (has_l != 0)
+				goto handle_invalid;
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
+			tpp_set_suffix_kind(has_u ? TPP_INTEGER_SUFFIX_KIND_UNSIGNED_SIZE
+			                          : TPP_INTEGER_SUFFIX_KIND_SIZE);
+		} else
+#endif /* TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX */
+		{
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
+			switch (has_l) {
+			case 0:
+				tpp_assert(has_u == 1);
+				tpp_set_suffix_kind(TPP_INTEGER_SUFFIX_KIND_UNSIGNED);
+				break;
+			case 1:
+				tpp_set_suffix_kind(has_u ? TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG
+				                          : TPP_INTEGER_SUFFIX_KIND_LONG);
+				break;
+			case 2:
+				tpp_set_suffix_kind(has_u ? TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG_LONG
+				                          : TPP_INTEGER_SUFFIX_KIND_LONG_LONG);
+				break;
+			default: goto handle_invalid;
+			}
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
 		}
 		return TPP_EOK;
 	}	break;
-#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX */
 
 	default: break;
 	}

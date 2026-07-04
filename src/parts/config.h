@@ -2486,6 +2486,12 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-integrals" */
 #endif /* !TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
 
+/* Enable support for "z", "uz" integer suffixes
+ * @detect: N/A */
+#ifndef TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX
+#define TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fsize-type-integrals" */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX */
+
 /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes
  * @detect: N/A */
 #ifndef TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
@@ -2970,7 +2976,7 @@ print("#endif /" "* !... *" "/");
 
 /* Add API support for integer type suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEINT_SUFFIX
-#define TPP_HAVE_LEXER_DECODEINT_SUFFIX (TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX)
+#define TPP_HAVE_LEXER_DECODEINT_SUFFIX (TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX)
 #endif /* !TPP_HAVE_LEXER_DECODEINT_SUFFIX */
 
 /* Provide a function "tpp_lexer_decodefloat_expr()" to parse a float */
