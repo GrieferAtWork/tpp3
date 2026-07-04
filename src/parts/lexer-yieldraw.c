@@ -4381,7 +4381,7 @@ handle_linefeed:
 
 		/* Check for space */
 		if (tpp_ascii_maybe_test(tpp_ascii_isspace(ch))) {
-	case (tpp_char)0: /* Important: 0 must *always* be treated as whitespace. Else, we must accidentally indicate EOF */
+	case (tpp_char)(unsigned int)TPP_TOK_EOF: /* Important: 0 must *always* be treated as whitespace. Else, we might accidentally indicate EOF */
 #if TPP_HAVE_ASSUME_ASCII_CTYPE
 	case (tpp_char)1: case (tpp_char)2: case (tpp_char)3:
 	case (tpp_char)4: case (tpp_char)5: case (tpp_char)6:
