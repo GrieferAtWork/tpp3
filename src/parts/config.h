@@ -69,7 +69,7 @@
  * when positive: compile-time hard-code
  * when negative: runtime-configurable, with absolute value being used as default */
 #ifndef TPP_TABSIZE
-#define TPP_TABSIZE (-4)
+#define TPP_TABSIZE ((TPP_PROFILE == TPP_PROFILE_ALL) ? -4 : 4)
 #endif /* !TPP_TABSIZE */
 
 /* Max # of "TPP_WSTATE_ERROR" warnings that can be emitted
@@ -225,7 +225,8 @@
 
 /* Include a counter for how often a specific I/O-file appears on the
  * #include-stack, with that counter being stored within its filename
- * keyword (needed to implement max-include-depth-like error checks) */
+ * keyword (used to speed up max-include-depth-like error checks, though
+ * those checks can also function without this per-keyword counter) */
 #ifndef TPP_HAVE_KEYWORD_INCLCOUNT
 #define TPP_HAVE_KEYWORD_INCLCOUNT (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_MAX_INCLUDE_DEPTH != 0)
 #endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */

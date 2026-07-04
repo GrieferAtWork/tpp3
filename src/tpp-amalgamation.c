@@ -6056,6 +6056,11 @@ TPP_DECL_END
 /************************************************************************/
 TPP_DECL_BEGIN
 
+/* Width of \t as reported by `tpp_file_getlcinfo()' */
+#if TPP_TABSIZE < 0
+TPP_IMPL tpp_column _tpp_tabsize = -TPP_TABSIZE;
+#endif /* TPP_TABSIZE < 0 */
+
 
 #if TPP_HAVE_FILE_USER_FILENAME
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_user_filename) ==
@@ -6158,7 +6163,7 @@ tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
 #endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 
 
-/* Tell the file that it has been initialized, causing its associated
+/* Tell an I/O file that it has been initialized, causing its associated
  * keyword's "tkm_file_inclcount" to be updated if necessary. */
 #if TPP_HAVE_KEYWORD_INCLCOUNT
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
@@ -7586,11 +7591,6 @@ tpp_file_popdummy(tpp_file *tpp_restrict self) {
 
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
-
-/* Size of \t as reported by `tpp_file_getlcinfo()' */
-#if TPP_TABSIZE < 0
-TPP_IMPL tpp_column tpp_tabsize = -TPP_TABSIZE;
-#endif /* TPP_TABSIZE < 0 */
 
 TPP_DECL_END
 /************************************************************************/
