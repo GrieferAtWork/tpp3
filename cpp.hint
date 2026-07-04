@@ -15,6 +15,7 @@
 #define TPP_INLINE static
 #define TPP_PURECALL
 #define TPP_CONSTCALL
+#define TPP_COLDCALL
 #define TPP_DECL_BEGIN extern "C" {
 #define TPP_DECL_END }
 #define TPP_REF

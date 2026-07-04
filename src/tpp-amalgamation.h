@@ -3928,6 +3928,13 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPP_CONSTCALL TPP_PURECALL
 #endif /* !... */
 #endif /* !TPP_CONSTCALL */
+#ifndef TPP_COLDCALL
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__cold__)
+#define TPP_COLDCALL __attribute__((__cold__))
+#else /* ... */
+#define TPP_COLDCALL /* nothing */
+#endif /* !... */
+#endif /* !TPP_COLDCALL */
 #ifndef TPP_NOINLINE
 #if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__noinline__)
 #define TPP_NOINLINE __attribute__((__noinline__))
@@ -17358,20 +17365,20 @@ tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
  * @return: TPP_EOK:        Warning was emitted, but you may proceed
  * @return: TPP_ELEXERROR:  Warning was emitted, but was configured as an error
  * @return: TPP_EWARNPRINT: Error while printing warning */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+TPP_DECL TPP_COLDCALL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, va_list args);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
+TPP_DECL TPP_COLDCALL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
 tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+TPP_DECL TPP_COLDCALL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
                     tpp_char const *pos, tpp_warning_id id, va_list args);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
+TPP_DECL TPP_COLDCALL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
 tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
                    tpp_char const *pos, tpp_warning_id id, ...);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+TPP_DECL TPP_COLDCALL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_lc(tpp_lexer *tpp_restrict self, char const *filename,
                     tpp_lcinfo lc, tpp_warning_id id, va_list args);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
+TPP_DECL TPP_COLDCALL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
 tpp_lexer_warnf_lc(tpp_lexer *tpp_restrict self, char const *filename,
                    tpp_lcinfo lc, tpp_warning_id id, ...);
 #else /* TPP_HAVE_WARNINGS */
@@ -17383,14 +17390,14 @@ tpp_lexer_warnf_lc(tpp_lexer *tpp_restrict self, char const *filename,
 #define tpp_lexer_warnf_at(self, file, pos, id, ...)      TPP_EOK
 #define tpp_lexer_warnf_lc(self, filename, lc, id, ...)   TPP_EOK
 #else /* TPP_HOST_HAVE_PP_VARARGS */
-TPP_INLINE tpp_errno TPPVCALL
+TPP_INLINE TPP_COLDCALL tpp_errno TPPVCALL
 tpp_lexer_warnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
 	(void)self;
 	(void)id;
 	return TPP_EOK;
 }
 
-TPP_INLINE tpp_errno TPPVCALL
+TPP_INLINE TPP_COLDCALL tpp_errno TPPVCALL
 tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
                    tpp_char const *pos, tpp_warning_id id, ...) {
 	(void)self;
@@ -17400,7 +17407,7 @@ tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
 	return TPP_EOK;
 }
 
-TPP_INLINE tpp_errno TPPVCALL
+TPP_INLINE TPP_COLDCALL tpp_errno TPPVCALL
 tpp_lexer_warnf_at(tpp_lexer *tpp_restrict self, char const *filename,
                    tpp_lcinfo lc, tpp_warning_id id, ...) {
 	(void)self;

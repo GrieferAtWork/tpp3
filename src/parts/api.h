@@ -265,6 +265,13 @@
 #define TPP_CONSTCALL TPP_PURECALL
 #endif /* !... */
 #endif /* !TPP_CONSTCALL */
+#ifndef TPP_COLDCALL
+#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__cold__)
+#define TPP_COLDCALL __attribute__((__cold__))
+#else /* ... */
+#define TPP_COLDCALL /* nothing */
+#endif /* !... */
+#endif /* !TPP_COLDCALL */
 #ifndef TPP_NOINLINE
 #if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__noinline__)
 #define TPP_NOINLINE __attribute__((__noinline__))
