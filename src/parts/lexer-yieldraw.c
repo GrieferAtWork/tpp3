@@ -657,9 +657,10 @@ return_error:
 }
 
 #undef NEED_tpp_lexer_seek_eol
-#if (TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT ||   \
-     TPP_HAVE_TPP_TOK_SLASH_COMMENT ||   \
-     TPP_HAVE_TPP_TOK_POUND_COMMENT || \
+#if (TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT || \
+     TPP_HAVE_TPP_TOK_AT_AT_COMMENT ||       \
+     TPP_HAVE_TPP_TOK_SLASH_COMMENT ||       \
+     TPP_HAVE_TPP_TOK_POUND_COMMENT ||       \
      TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
 #define NEED_tpp_lexer_seek_eol 1
 #else /* ... */
@@ -1124,6 +1125,23 @@ handle_backslash:
 					}
 					break;
 #endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT */
+#if TPP_HAVE_TPP_TOK_AT_AT_COMMENT
+				case TPP_TOK_AT_AT_COMMENT:
+					if (ch == '@') {
+						if (pos >= file->tf_end) {
+							tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
+							error = tpp_file_expandchunk(file);
+							pos = tpp_file_rel2ptr(file, rel_pos);
+							if (TPP_ISERR(error))
+								goto done;
+						}
+						if (pos[0] == '@') {
+							++pos;
+							goto again;
+						}
+					}
+					break;
+#endif /* TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
 				default: tpp_unreachable();
 				}
 				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_before_bse),
@@ -2326,10 +2344,85 @@ switch_on_ch:
 
 
 /************************************************************************/
+	case '@': {
+#if (TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT || TPP_HAVE_TPP_TOK_AT_AT_COMMENT)
+		if (!tpp_lexer_has(self, TPP_TOK_AT_AT_COMMENT) &&
+/*[[[deemon (printHasNone from ".lexer-yieldraw-mc")("@");]]]*/
+		    !tpp_lexer_has(self, TPP_TOK_AT_EQUAL) &&
+		    !tpp_lexer_has(self, TPP_TOK_AT_AT) &&
+		    !tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)
+/*[[[end]]]*/
+		    )
+			break;
+		read_ch2();
+		switch (ch2) {
+#if TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_COMMENT
+		case '@': {
+#if TPP_HAVE_TPP_TOK_AT_AT_COMMENT
+			if (tpp_lexer_has(self, TPP_TOK_AT_AT_COMMENT)) {
+				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_AT_AT_COMMENT));
+				if (TPP_ISERR(error))
+					goto return_error;
+				result = TPP_TOK_AT_AT_COMMENT; // "@@ like this one!"
+				goto set_result;
+			}
+#endif /* TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
+/*[[[deemon (printDecoder from ".lexer-yieldraw-mc")("@@");]]]*/
+#if TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_EQUAL
+#if TPP_HAVE_TPP_TOK_AT_AT_EQUAL
+			if (tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
+#if TPP_HAVE_TPP_TOK_AT_AT
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TPP_TOK_AT_AT */
+				read_ch2();
+#if TPP_HAVE_TPP_TOK_AT_AT_EQUAL
+				if (ch2 == '=') {
+					if (tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
+						result = TPP_TOK_AT_AT_EQUAL; /* "@@=" */
+						goto set_result;
+					}
+				} else
+#endif /* TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
+				{
+				}
+#if TPP_HAVE_TPP_TOK_AT_AT
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+#endif /* TPP_HAVE_TPP_TOK_AT_AT */
+			}
+#endif /* TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
+#if TPP_HAVE_TPP_TOK_AT_AT
+			if (tpp_lexer_has(self, TPP_TOK_AT_AT)) {
+				result = TPP_TOK_AT_AT; /* "@@" */
+				goto set_result;
+			}
+#endif /* TPP_HAVE_TPP_TOK_AT_AT */
+#endif /* TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
+/*[[[end]]]*/
+		}	break;
+#endif /* TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
+/*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("@", "@", useSwitch: true);]]]*/
+#if TPP_HAVE_TPP_TOK_AT_EQUAL
+		case '=': {
+			if (tpp_lexer_has(self, TPP_TOK_AT_EQUAL)) {
+				result = TPP_TOK_AT_EQUAL; /* "@=" */
+				goto set_result;
+			}
+		}	break;
+#endif /* TPP_HAVE_TPP_TOK_AT_EQUAL */
+/*[[[end]]]*/
+		default: break;
+		}
+#endif /* ... */
+	}	break;
+/************************************************************************/
+
+
+
+/************************************************************************/
 	case '/': {
-#if (TPP_HAVE_TPP_TOK_SLASH_COMMENT || \
-     TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT || \
-     TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH ||   \
+#if (TPP_HAVE_TPP_TOK_SLASH_COMMENT ||                 \
+     TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT ||           \
+     TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH || \
      TPP_HAVE_TPP_TOK_MC_STARTSWITH_SLASH)
 #if TPP_HAVE_TPP_TOK_SLASH_COMMENT
 		tpp_size rel_end_of_1char;
@@ -2799,7 +2892,7 @@ not_a_trigraph:
 
 /************************************************************************/
 /*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("",
-	"<-/%#:?.", // first-token-characters that require custom case-es above
+	"<-/%#:?.@", // first-token-characters that require custom case-es above
 	useSwitch: true
 );]]]*/
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_EXCLAIM
@@ -3555,56 +3648,6 @@ not_a_trigraph:
 		}
 	}	break;
 #endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_RANGLE */
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT
-	case '@': {
-		if (tpp_lexer_has(self, TPP_TOK_AT_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_AT_AT) ||
-		    tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
-			read_ch2();
-#if TPP_HAVE_TPP_TOK_AT_EQUAL
-			if (ch2 == '=') {
-				if (tpp_lexer_has(self, TPP_TOK_AT_EQUAL)) {
-					result = TPP_TOK_AT_EQUAL; /* "@=" */
-					goto set_result;
-				}
-			} else
-#endif /* TPP_HAVE_TPP_TOK_AT_EQUAL */
-#if TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_EQUAL
-			if (ch2 == '@') {
-#if TPP_HAVE_TPP_TOK_AT_AT_EQUAL
-				if (tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_AT_AT
-					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_AT_AT */
-					read_ch2();
-#if TPP_HAVE_TPP_TOK_AT_AT_EQUAL
-					if (ch2 == '=') {
-						if (tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
-							result = TPP_TOK_AT_AT_EQUAL; /* "@@=" */
-							goto set_result;
-						}
-					} else
-#endif /* TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
-					{
-					}
-#if TPP_HAVE_TPP_TOK_AT_AT
-					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_AT_AT */
-				}
-#endif /* TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
-#if TPP_HAVE_TPP_TOK_AT_AT
-				if (tpp_lexer_has(self, TPP_TOK_AT_AT)) {
-					result = TPP_TOK_AT_AT; /* "@@" */
-					goto set_result;
-				}
-#endif /* TPP_HAVE_TPP_TOK_AT_AT */
-			} else
-#endif /* TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
-			{
-			}
-		}
-	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT */
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_HAT
 	case '^': {
 		if (tpp_lexer_has(self, TPP_TOK_HAT_EQUAL) ||

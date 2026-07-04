@@ -1151,7 +1151,11 @@
 #define TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-minus-minus-comment" */
 #endif /* !TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT */
 
-/* XXX: Support for deemon-style "@@doc-string" comments */
+/* Enable support for recognizing deemon-doc-like comments: "@@ like this one!"
+ * @detect: #if __TPP_COUNT_TOKENS("@@ a b c") <= 1 */
+#ifndef TPP_HAVE_TPP_TOK_AT_AT_COMMENT
+#define TPP_HAVE_TPP_TOK_AT_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-at-at-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
 
 /************************************************************************/
 /* Single-char tokens                                                   */
