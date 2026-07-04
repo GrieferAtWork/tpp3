@@ -2029,17 +2029,19 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 //#ifndef TPPLEXER_DEFAULT_LIMIT_MREC
 //#define TPPLEXER_DEFAULT_LIMIT_MREC 512 /* Even when generated text differs from previous version, don't allow more self-recursion per macro than this. */
 //#endif /* !TPPLEXER_DEFAULT_LIMIT_MREC */
-//#ifndef TPPLEXER_DEFAULT_LIMIT_INCL
-//#define TPPLEXER_DEFAULT_LIMIT_INCL 64  /* User attempts to #include a file more often that file will fail with an error message. */
-//#endif /* !TPPLEXER_DEFAULT_LIMIT_INCL */
 #endif
 
 /* Inherit legacy error limit configuration */
 #ifndef TPPLEXER_DEFAULT_LIMIT_ECNT
 #define TPPLEXER_DEFAULT_LIMIT_ECNT 16
 #endif /* !TPPLEXER_DEFAULT_LIMIT_ECNT */
+#ifndef TPPLEXER_DEFAULT_LIMIT_INCL
+#define TPPLEXER_DEFAULT_LIMIT_INCL 64  /* User attempts to #include a file more often that file will fail with an error message. */
+#endif /* !TPPLEXER_DEFAULT_LIMIT_INCL */
 #undef TPP_ERROR_LIMIT
 #define TPP_ERROR_LIMIT TPPLEXER_DEFAULT_LIMIT_ECNT
+#undef TPP_MAX_INCLUDE_DEPTH
+#define TPP_MAX_INCLUDE_DEPTH TPPLEXER_DEFAULT_LIMIT_INCL
 
 /* Inherit legacy non-blocking I/O configuration */
 #undef TPP_HAVE_FILE_NONBLOCK

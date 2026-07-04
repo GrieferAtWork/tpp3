@@ -83,7 +83,16 @@
 #define TPP_ERROR_LIMIT (-16)
 #endif /* !TPP_ERROR_LIMIT */
 
-/* TODO: -fmax-include-depth */
+/* -fmax-include-depth: Max # of times that the same file is allowed to appear
+ * on the #include-stack before a warning TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+ * (which is default-configured to be an error) is emitted.
+ *
+ * - 0:  Disable include depth checks entirely
+ * - N:  Limit is hard-coded to "N" and cannot be overwritten at runtime
+ * - -N: Limit can be overwritten at runtime, with "N" being used as the default */
+#ifndef TPP_MAX_INCLUDE_DEPTH
+#define TPP_MAX_INCLUDE_DEPTH (TPP_HAVE_INCLUDE_STACK ? (TPP_HAVE_PROFILE_NOT_MINIMAL ? -64 : 64) : 0)
+#endif /* !TPP_MAX_INCLUDE_DEPTH */
 
 
 
@@ -194,6 +203,13 @@
 #ifndef TPP_HAVE_KEYWORD_ASSTRING
 #define TPP_HAVE_KEYWORD_ASSTRING (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_KEYWORD_ASSTRING */
+
+/* Include a counter for how often a specific I/O-file appears on the
+ * #include-stack, with that counter being stored within its filename
+ * keyword (needed to implement max-include-depth-like error checks) */
+#ifndef TPP_HAVE_KEYWORD_INCLCOUNT
+#define TPP_HAVE_KEYWORD_INCLCOUNT (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_MAX_INCLUDE_DEPTH != 0)
+#endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */
 
 /* Enable support for runtime-configurable extensions */
 #ifndef TPP_HAVE_EXTENSIONS
@@ -2798,7 +2814,7 @@ print("#endif /" "* !... *" "/");
 
 /* Enable support for `tpp_lexer_skip()' */
 #ifndef TPP_HAVE_LEXER_SKIP
-#if (TPP_HAVE_PRAGMA_PUSH_MACRO || 1) /* TODO: List all features that use this function */
+#if (TPP_HAVE_PRAGMA_PUSH_MACRO || 1) /* XXX: List all features that use this function */
 #define TPP_HAVE_LEXER_SKIP 1
 #else /* ... */
 #define TPP_HAVE_LEXER_SKIP 0
@@ -3050,6 +3066,7 @@ print("#endif /" "* !... *" "/");
      TPP_HAVE_PRAGMA_GCC_POISON ||                    \
      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||         \
      TPP_HAVE_IFNDEF_INCLUDE_GUARDS ||                \
+     TPP_HAVE_KEYWORD_INCLCOUNT ||                    \
      TPP_HAVE_PRAGMA_PUSH_MACRO ||                    \
      TPP_HAVE_MACRO___TPP_COUNTER ||                  \
      TPP_HAVE_KEYWORD_USERDATA)
@@ -3255,7 +3272,7 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_TPP_W_EXPECTED_STRING
 #define TPP_HAVE_TPP_W_EXPECTED_STRING                   \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE && \
-	 (TPP_HAVE_PRAGMA_PUSH_MACRO || 1 /*TODO*/))
+	 (TPP_HAVE_PRAGMA_PUSH_MACRO || 1 /*XXX:List all features that use this warning*/))
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
 #define TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING \
@@ -3365,6 +3382,10 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_DEPENDENCY_CHANGED \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
 #endif /* !TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
+#ifndef TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+#define TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED \
+	(TPP_HAVE_WARNINGS && TPP_MAX_INCLUDE_DEPTH != 0)
+#endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS

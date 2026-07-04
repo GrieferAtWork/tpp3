@@ -328,25 +328,7 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 	if tpp_unlikely(result == NULL) {
 		result = _tpp_keyword_misc_alloc();
 		if tpp_likely(result) {
-#if TPP_HAVE_KEYWORD_FLAGS
-			result->tkm_flags = TPP_KEYWORD_FLAG_NORMAL;
-#endif /* TPP_HAVE_KEYWORD_FLAGS */
-#if TPP_HAVE_CPP_ASSERT
-			tpp_assertions_init(&result->tkm_assertions);
-#endif /* TPP_HAVE_CPP_ASSERT */
-#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-			result->tkm_file_guard = NULL;
-#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
-#if TPP_HAVE_PRAGMA_PUSH_MACRO
-			tpp_macro_pushstack_init(&result->tkm_macro_pushstack);
-#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
-#if TPP_HAVE_MACRO___TPP_COUNTER
-			result->tkm_builtin_counter = 0;
-#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
-#if TPP_HAVE_KEYWORD_USERDATA
-			result->tkm_userdata_ptr  = NULL;
-			result->tkm_userdata_dtor = NULL;
-#endif /* TPP_HAVE_KEYWORD_USERDATA */
+			_tpp_keyword_misc_init(result);
 			self->tk_misc = result;
 		}
 	}
@@ -967,6 +949,9 @@ tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 	result->tkm_file_guard = self->tkm_file_guard; /* Relocated into the new keyword-table later */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if TPP_HAVE_KEYWORD_INCLCOUNT
+	result->tkm_file_inclcount = 0; /* The #include-stack isn't copied, to this becomes "0" for everything */
+#endif /* TPP_HAVE_KEYWORD_INCLCOUNT */
 #if TPP_HAVE_MACRO___TPP_COUNTER
 	result->tkm_builtin_counter = self->tkm_builtin_counter;
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
@@ -1789,8 +1774,67 @@ got_result_kwd:
 		}
 
 		/* TODO: Call a user-defined callback to keep track of dependencies (for -MF) */
-	}
+	} else
 #endif /* TPP_HAVE_USER_KEYWORDS */
+	{
+#if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+		if (!(mask_flags & TPP_LEXER_OPENFILE_FLAG_IGNORE_LIMIT)) {
+			tpp_size include_count;
+#if TPP_HAVE_KEYWORD_INCLCOUNT
+			include_count = TPP_SIZE_MAX;
+			if (result_kwd->tk_misc)
+				include_count = result_kwd->tk_misc->tkm_file_inclcount;
+			if (include_count == TPP_SIZE_MAX)
+#endif /* TPP_HAVE_KEYWORD_INCLCOUNT */
+			{
+				/* Manually count the # of inclusions */
+				tpp_file const *fp = tpp_lexer_getfile(self);
+				include_count = 0;
+				do {
+					if (fp->tf_kind == TPP_FILE_KIND_IO &&
+#if TPP_HAVE_FILE_NOKWD
+					    !(fp->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
+#endif /* TPP_HAVE_FILE_NOKWD */
+					    fp->tf_data.td_io.tff_name != NULL) {
+#if TPP_HAVE_USER_KEYWORDS
+						tpp_keyword const *kwd = (tpp_keyword const *)((char const *)fp->tf_data.td_io.tff_name -
+						                                               tpp_offsetof(tpp_keyword, tk_kwd));
+						if (kwd == result_kwd)
+#else /* TPP_HAVE_USER_KEYWORDS */
+						if (tpp_strcmp(fp->tf_data.td_io.tff_name, result_kwd) == 0)
+#endif /* TPP_HAVE_USER_KEYWORDS */
+						{
+							++include_count;
+						}
+					}
+				} while ((fp = fp->tf_tprev) != NULL);
+#if TPP_HAVE_KEYWORD_INCLCOUNT
+				if (result_kwd->tk_misc == NULL) {
+					/* Try to cache the result */
+					tpp_keyword_misc *misc = _tpp_keyword_misc_tryalloc();
+					if tpp_likely(misc) {
+						_tpp_keyword_misc_init(misc);
+						misc->tkm_file_inclcount = include_count;
+						result_kwd->tk_misc = misc;
+					}
+				}
+#endif /* TPP_HAVE_KEYWORD_INCLCOUNT */
+			}
+
+			if (include_count >= tpp_lexer_getinclusionlimit(self)) {
+				tpp_errno error = tpp_lexer_warnf(self, TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED,
+				                                  tpp_lexer_openfile_keyword_cstr(result_kwd));
+				if (TPP_ISERR(error)) {
+					tpp_io_close(handle);
+#if !TPP_HAVE_USER_KEYWORDS
+					tpp_lexer_openfile_keyword_free(result_kwd);
+#endif /* !TPP_HAVE_USER_KEYWORDS */
+					return error;
+				}
+			}
+		}
+#endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+	}
 
 	/* Initialize "result" */
 #if TPP_HAVE_USER_KEYWORDS

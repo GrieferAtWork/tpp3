@@ -137,6 +137,34 @@ tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
                          struct tpp_macro_argbuf *tpp_restrict buffer);
 #endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 
+
+/* Tell the file that it has been initialized, causing its associated
+ * keyword's "tkm_file_inclcount" to be updated if necessary. */
+#if TPP_HAVE_KEYWORD_INCLCOUNT
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+_tpp_file_io_notify_initialized(tpp_file *tpp_restrict self) {
+	tpp_assert(self->tf_kind == TPP_FILE_KIND_IO);
+#if TPP_HAVE_FILE_NOKWD
+	if (!(self->tf_flags & TPP_FILE_FLAGS_NOKWD) && self->tf_data.td_io.tff_name)
+#else /* TPP_HAVE_FILE_NOKWD */
+	if (self->tf_data.td_io.tff_name)
+#endif /* !TPP_HAVE_FILE_NOKWD */
+	{
+		tpp_keyword *kwd;
+		tpp_keyword_misc *misc;
+		kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
+		                      tpp_offsetof(tpp_keyword, tk_kwd));
+		misc = tpp_keyword_getmisc(kwd);
+		if (misc) {
+			/* Update inclusion counter (if allocated and initialized) */
+			if (misc->tkm_file_inclcount != TPP_SIZE_MAX)
+				++misc->tkm_file_inclcount;
+		}
+	}
+}
+#endif /* TPP_HAVE_KEYWORD_INCLCOUNT */
+
+
 /* Finalize the given file. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_file_fini(tpp_file *tpp_restrict self) {
@@ -147,12 +175,13 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 #endif /* TPP_HAVE_IFDEF_STACK */
 	switch (self->tf_kind) {
 	case TPP_FILE_KIND_IO:
-#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-		if (self->tf_pos >= self->tf_end &&
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_KEYWORD_INCLCOUNT
 #if TPP_HAVE_FILE_NOKWD
-		    !(self->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
-#endif /* TPP_HAVE_FILE_NOKWD */
-		    self->tf_data.td_io.tff_name) {
+		if (!(self->tf_flags & TPP_FILE_FLAGS_NOKWD) && self->tf_data.td_io.tff_name)
+#else /* TPP_HAVE_FILE_NOKWD */
+		if (self->tf_data.td_io.tff_name)
+#endif /* !TPP_HAVE_FILE_NOKWD */
+		{
 			/* If the file's keyword still has a valid "tkm_file_guard",
 			 * then we can set its "TPP_KEYWORD_FLAG_HDR_GUARD_VALID" flag. */
 			tpp_keyword *kwd;
@@ -160,12 +189,20 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 			kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
 			                      tpp_offsetof(tpp_keyword, tk_kwd));
 			misc = tpp_keyword_getmisc(kwd);
-			if (misc && misc->tkm_file_guard) {
-				/* Yes! We got a #ifndef-style #include-guard for this file now! */
-				misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_GUARD_VALID;
+			if (misc) {
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+				if (self->tf_pos >= self->tf_end && misc->tkm_file_guard) {
+					/* Yes! We got a #ifndef-style #include-guard for this file now! */
+					misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_GUARD_VALID;
+				}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if TPP_HAVE_KEYWORD_INCLCOUNT
+				if (misc->tkm_file_inclcount != TPP_SIZE_MAX)
+					--misc->tkm_file_inclcount;
+#endif /* TPP_HAVE_KEYWORD_INCLCOUNT */
 			}
 		}
-#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_KEYWORD_INCLCOUNT */
 #if TPP_HAVE_FILE_NOCLOSE
 		if (!(self->tf_flags & TPP_FILE_FLAGS_NOCLOSE))
 #endif /* TPP_HAVE_FILE_NOCLOSE */

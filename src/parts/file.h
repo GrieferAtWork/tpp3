@@ -632,6 +632,14 @@ typedef struct tpp_file {
 
 
 
+/* Tell the file that it has been initialized, causing its associated
+ * keyword's "tkm_file_inclcount" to be updated if necessary. */
+#if TPP_HAVE_KEYWORD_INCLCOUNT
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+_tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
+#else /* TPP_HAVE_KEYWORD_INCLCOUNT */
+#define _tpp_file_io_notify_initialized(self) (void)0
+#endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */
 
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
  * @param: char const      *filename: [0..1] Filename (if known)
@@ -654,7 +662,8 @@ typedef struct tpp_file {
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
 	       tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc), 0, 0) \
 	       _tpp_file_init_io_user_filename(self)                                                               \
-	       _tpp_file_init_io_keep(self))
+	       _tpp_file_init_io_keep(self),                                                                       \
+	       _tpp_file_io_notify_initialized(self))
 
 /* Initialize "self" from a given "tpp_lexer_openfile_result" */
 #if TPP_HAVE_LEXER_OPENFILE

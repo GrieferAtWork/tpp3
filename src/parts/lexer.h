@@ -236,6 +236,22 @@ typedef struct tpp_lexer {
 #endif /* !TPP_HAVE_WARNING_ERROR */
 
 
+	/* Lexer inclusion limit */
+#if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+#if TPP_MAX_INCLUDE_DEPTH < 0
+	tpp_size TPP_INTERNAL(tl_inclusion_limit); /* How many times the same file can be #include-ed before "TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED" is emitted */
+#define tpp_lexer_getinclusionlimit(self)    ((self)->TPP_INTERNAL(tl_inclusion_limit))
+#define tpp_lexer_setinclusionlimit(self, v) (void)((self)->TPP_INTERNAL(tl_inclusion_limit) = (v))
+#else /* TPP_MAX_INCLUDE_DEPTH < 0 */
+#define tpp_lexer_getinclusionlimit(self) TPP_MAX_INCLUDE_DEPTH
+#endif /* TPP_MAX_INCLUDE_DEPTH >= 0 */
+#elif TPP_MAX_INCLUDE_DEPTH < 0
+#define tpp_lexer_getinclusionlimit(self) (-TPP_MAX_INCLUDE_DEPTH)
+#else /* ... */
+#define tpp_lexer_getinclusionlimit(self) TPP_MAX_INCLUDE_DEPTH
+#endif /* !... */
+
+
 	/* Next value for __COUNTER__ */
 #if TPP_HAVE_MACRO___COUNTER__
 	tpp_size TPP_INTERNAL(tl_builtin_counter); /* Next value for __COUNTER__ */
@@ -605,6 +621,11 @@ typedef struct tpp_lexer_openfile_result {
 #if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
 #define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
+#if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+#define TPP_LEXER_OPENFILE_FLAG_IGNORE_LIMIT UINT32_C(0x08000000) /* Do not emit a warning if the file already appears too often on the #include-stack */
+#else /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+#define TPP_LEXER_OPENFILE_FLAG_IGNORE_LIMIT UINT32_C(0x00000000) /* no-op */
+#endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 
 /* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
  * included before, and its keyword has any of the bits specified by `mask_flags' set.

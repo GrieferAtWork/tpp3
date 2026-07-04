@@ -3740,6 +3740,28 @@ TPP_WARNING(TPP_W_DEPENDENCY_CHANGED, 1(TPP_WG_DEPENDENCY), 0(), ~,
 
 
 /************************************************************************/
+/* -Wlimit                                                         */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_LIMIT
+#define TPP_HAVE_TPP_WG_LIMIT \
+	(TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED)
+#endif /* !TPP_HAVE_TPP_WG_LIMIT */
+#if TPP_HAVE_TPP_WG_LIMIT
+#ifndef TPP_WGNAME_LIMIT
+#define TPP_WGNAME_LIMIT 1("limit")
+#endif /* !TPP_WGNAME_LIMIT */
+#define TPP_WG_LIMIT TPP_WG_LIMIT
+TPP_WGROUP(TPP_WG_LIMIT, TPP_WGNAME_LIMIT, TPP_WSTATE_FATAL)
+#endif /* TPP_HAVE_TPP_WG_LIMIT */
+
+#if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+#define TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+TPP_WARNING(TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 1(1014), TPP_WSTATE_UNDEFINED,
+            "file included too many times: %[%s%]")
+#endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+
+
+/************************************************************************/
 /* Misc warnings...                                                     */
 /************************************************************************/
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK

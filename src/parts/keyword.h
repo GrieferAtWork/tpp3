@@ -87,6 +87,7 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #if (TPP_HAVE_KEYWORD_FLAGS ||         \
      TPP_HAVE_CPP_ASSERT ||            \
      TPP_HAVE_IFNDEF_INCLUDE_GUARDS || \
+     TPP_HAVE_KEYWORD_INCLCOUNT ||     \
      TPP_HAVE_PRAGMA_PUSH_MACRO ||     \
      TPP_HAVE_MACRO___TPP_COUNTER ||   \
      TPP_HAVE_KEYWORD_USERDATA)
@@ -216,19 +217,40 @@ tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
 typedef struct tpp_keyword_misc {
 #if TPP_HAVE_KEYWORD_FLAGS
 	tpp_keyword_flags TPP_INTERNAL(tkm_flags); /* Set of `TPP_KEYWORD_FLAG_*' */
-#endif /* TPP_HAVE_KEYWORD_FLAGS */
+#define _tpp_keyword_misc_init_flags(self) , (self)->TPP_INTERNAL(tkm_flags) = TPP_KEYWORD_FLAG_NORMAL
+#else /* TPP_HAVE_KEYWORD_FLAGS */
+#define _tpp_keyword_misc_init_flags(self) /* nothing */
+#endif /* !TPP_HAVE_KEYWORD_FLAGS */
 #if TPP_HAVE_CPP_ASSERT
 	tpp_assertions TPP_INTERNAL(tkm_assertions); /* Assertions made for the associated keyword */
-#endif /* TPP_HAVE_CPP_ASSERT */
+#define _tpp_keyword_misc_init_assertions(self) , tpp_assertions_init(&(self)->TPP_INTERNAL(tkm_assertions))
+#else /* TPP_HAVE_CPP_ASSERT */
+#define _tpp_keyword_misc_init_assertions(self) /* nothing */
+#endif /* !TPP_HAVE_CPP_ASSERT */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 	struct tpp_keyword const *TPP_INTERNAL(tkm_file_guard); /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
-#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#define _tpp_keyword_misc_init_file_guard(self) , (self)->TPP_INTERNAL(tkm_file_guard) = NULL
+#else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#define _tpp_keyword_misc_init_file_guard(self) /* nothing */
+#endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if TPP_HAVE_KEYWORD_INCLCOUNT
+	tpp_size TPP_INTERNAL(tkm_file_inclcount); /* # of times that this file exists on the #include-stack (or "TPP_SIZE_MAX" if unknown) */
+#define _tpp_keyword_misc_init_file_inclcount(self) , (self)->TPP_INTERNAL(tkm_file_inclcount) = TPP_SIZE_MAX
+#else /* TPP_HAVE_KEYWORD_INCLCOUNT */
+#define _tpp_keyword_misc_init_file_inclcount(self) /* nothing */
+#endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	tpp_macro_pushstack TPP_INTERNAL(tkm_macro_pushstack); /* For `#pragma push_macro()' */
-#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#define _tpp_keyword_misc_init_macro_pushstack(self) , tpp_macro_pushstack_init(&(self)->TPP_INTERNAL(tkm_macro_pushstack))
+#else /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#define _tpp_keyword_misc_init_macro_pushstack(self) /* nothing */
+#endif /* !TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_MACRO___TPP_COUNTER
 	tpp_size TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
-#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+#define _tpp_keyword_misc_init_builtin_counter(self) , (self)->TPP_INTERNAL(tkm_builtin_counter) = 0
+#else /* TPP_HAVE_MACRO___TPP_COUNTER */
+#define _tpp_keyword_misc_init_builtin_counter(self) /* nothing */
+#endif /* !TPP_HAVE_MACRO___TPP_COUNTER */
 #if TPP_HAVE_KEYWORD_USERDATA
 	void          *TPP_INTERNAL(tkm_userdata_ptr); /* [?..?] User-data pointer (initialize to "NULL") */
 	void (TPPCALL *TPP_INTERNAL(tkm_userdata_dtor))(void *ptr); /* [0..1] Optional finalizer for user-data */
@@ -237,14 +259,25 @@ typedef struct tpp_keyword_misc {
 	       (self)->tkm_userdata_dtor = (dtor))
 #define tpp_keyword_misc_getuserdata(self)      ((self)->tkm_userdata_ptr)
 #define tpp_keyword_misc_getuserdata_dtor(self) ((self)->tkm_userdata_dtor)
+#define _tpp_keyword_misc_init_userdata(self)   , (self)->TPP_INTERNAL(tkm_userdata_ptr) = NULL, (self)->TPP_INTERNAL(tkm_userdata_dtor) = NULL
 #else /* TPP_HAVE_KEYWORD_USERDATA */
 #define tpp_keyword_misc_getuserdata(self)      ((void *)NULL)
 #define tpp_keyword_misc_getuserdata_dtor(self) ((void (TPPCALL *)(void *))NULL)
+#define _tpp_keyword_misc_init_userdata(self)   /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_USERDATA */
 } tpp_keyword_misc;
 
-#define _tpp_keyword_misc_alloc() ((tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc)))
-#define _tpp_keyword_misc_free(p) tpp_free(p)
+#define _tpp_keyword_misc_init(self)                    \
+	(void)((void)0 _tpp_keyword_misc_init_flags(self)   \
+	       _tpp_keyword_misc_init_assertions(self)      \
+	       _tpp_keyword_misc_init_file_guard(self)      \
+	       _tpp_keyword_misc_init_file_inclcount(self)  \
+	       _tpp_keyword_misc_init_macro_pushstack(self) \
+	       _tpp_keyword_misc_init_builtin_counter(self) \
+	       _tpp_keyword_misc_init_userdata(self))
+#define _tpp_keyword_misc_alloc()    ((tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc)))
+#define _tpp_keyword_misc_tryalloc() ((tpp_keyword_misc *)tpp_trymalloc(sizeof(tpp_keyword_misc)))
+#define _tpp_keyword_misc_free(p)    tpp_free(p)
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
 

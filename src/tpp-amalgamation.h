@@ -3586,6 +3586,28 @@ TPP_WARNING(TPP_W_DEPENDENCY_CHANGED, 1(TPP_WG_DEPENDENCY), 0(), ~,
 
 
 /************************************************************************/
+/* -Wlimit                                                         */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_LIMIT
+#define TPP_HAVE_TPP_WG_LIMIT \
+	(TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED)
+#endif /* !TPP_HAVE_TPP_WG_LIMIT */
+#if TPP_HAVE_TPP_WG_LIMIT
+#ifndef TPP_WGNAME_LIMIT
+#define TPP_WGNAME_LIMIT 1("limit")
+#endif /* !TPP_WGNAME_LIMIT */
+#define TPP_WG_LIMIT TPP_WG_LIMIT
+TPP_WGROUP(TPP_WG_LIMIT, TPP_WGNAME_LIMIT, TPP_WSTATE_FATAL)
+#endif /* TPP_HAVE_TPP_WG_LIMIT */
+
+#if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+#define TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+TPP_WARNING(TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 1(1014), TPP_WSTATE_UNDEFINED,
+            "file included too many times: %[%s%]")
+#endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+
+
+/************************************************************************/
 /* Misc warnings...                                                     */
 /************************************************************************/
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -4497,7 +4519,16 @@ TPP_DECL_END
 #define TPP_ERROR_LIMIT (-16)
 #endif /* !TPP_ERROR_LIMIT */
 
-/* TODO: -fmax-include-depth */
+/* -fmax-include-depth: Max # of times that the same file is allowed to appear
+ * on the #include-stack before a warning TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+ * (which is default-configured to be an error) is emitted.
+ *
+ * - 0:  Disable include depth checks entirely
+ * - N:  Limit is hard-coded to "N" and cannot be overwritten at runtime
+ * - -N: Limit can be overwritten at runtime, with "N" being used as the default */
+#ifndef TPP_MAX_INCLUDE_DEPTH
+#define TPP_MAX_INCLUDE_DEPTH (TPP_HAVE_INCLUDE_STACK ? (TPP_HAVE_PROFILE_NOT_MINIMAL ? -64 : 64) : 0)
+#endif /* !TPP_MAX_INCLUDE_DEPTH */
 
 
 
@@ -4608,6 +4639,13 @@ TPP_DECL_END
 #ifndef TPP_HAVE_KEYWORD_ASSTRING
 #define TPP_HAVE_KEYWORD_ASSTRING (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_KEYWORD_ASSTRING */
+
+/* Include a counter for how often a specific I/O-file appears on the
+ * #include-stack, with that counter being stored within its filename
+ * keyword (needed to implement max-include-depth-like error checks) */
+#ifndef TPP_HAVE_KEYWORD_INCLCOUNT
+#define TPP_HAVE_KEYWORD_INCLCOUNT (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_MAX_INCLUDE_DEPTH != 0)
+#endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */
 
 /* Enable support for runtime-configurable extensions */
 #ifndef TPP_HAVE_EXTENSIONS
@@ -7060,7 +7098,7 @@ TPP_DECL_END
 
 /* Enable support for `tpp_lexer_skip()' */
 #ifndef TPP_HAVE_LEXER_SKIP
-#if (TPP_HAVE_PRAGMA_PUSH_MACRO || 1) /* TODO: List all features that use this function */
+#if (TPP_HAVE_PRAGMA_PUSH_MACRO || 1) /* XXX: List all features that use this function */
 #define TPP_HAVE_LEXER_SKIP 1
 #else /* ... */
 #define TPP_HAVE_LEXER_SKIP 0
@@ -7312,6 +7350,7 @@ TPP_DECL_END
      TPP_HAVE_PRAGMA_GCC_POISON ||                    \
      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||         \
      TPP_HAVE_IFNDEF_INCLUDE_GUARDS ||                \
+     TPP_HAVE_KEYWORD_INCLCOUNT ||                    \
      TPP_HAVE_PRAGMA_PUSH_MACRO ||                    \
      TPP_HAVE_MACRO___TPP_COUNTER ||                  \
      TPP_HAVE_KEYWORD_USERDATA)
@@ -7517,7 +7556,7 @@ TPP_DECL_END
 #ifndef TPP_HAVE_TPP_W_EXPECTED_STRING
 #define TPP_HAVE_TPP_W_EXPECTED_STRING                   \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE && \
-	 (TPP_HAVE_PRAGMA_PUSH_MACRO || 1 /*TODO*/))
+	 (TPP_HAVE_PRAGMA_PUSH_MACRO || 1 /*XXX:List all features that use this warning*/))
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
 #define TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING \
@@ -7627,6 +7666,10 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_DEPENDENCY_CHANGED \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
 #endif /* !TPP_HAVE_TPP_W_DEPENDENCY_CHANGED */
+#ifndef TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+#define TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED \
+	(TPP_HAVE_WARNINGS && TPP_MAX_INCLUDE_DEPTH != 0)
+#endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS
@@ -13535,6 +13578,14 @@ typedef struct tpp_file {
 
 
 
+/* Tell the file that it has been initialized, causing its associated
+ * keyword's "tkm_file_inclcount" to be updated if necessary. */
+#if TPP_HAVE_KEYWORD_INCLCOUNT
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+_tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
+#else /* TPP_HAVE_KEYWORD_INCLCOUNT */
+#define _tpp_file_io_notify_initialized(self) (void)0
+#endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */
 
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
  * @param: char const      *filename: [0..1] Filename (if known)
@@ -13557,7 +13608,8 @@ typedef struct tpp_file {
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
 	       tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc), 0, 0) \
 	       _tpp_file_init_io_user_filename(self)                                                               \
-	       _tpp_file_init_io_keep(self))
+	       _tpp_file_init_io_keep(self),                                                                       \
+	       _tpp_file_io_notify_initialized(self))
 
 /* Initialize "self" from a given "tpp_lexer_openfile_result" */
 #if TPP_HAVE_LEXER_OPENFILE
@@ -14184,6 +14236,7 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #if (TPP_HAVE_KEYWORD_FLAGS ||         \
      TPP_HAVE_CPP_ASSERT ||            \
      TPP_HAVE_IFNDEF_INCLUDE_GUARDS || \
+     TPP_HAVE_KEYWORD_INCLCOUNT ||     \
      TPP_HAVE_PRAGMA_PUSH_MACRO ||     \
      TPP_HAVE_MACRO___TPP_COUNTER ||   \
      TPP_HAVE_KEYWORD_USERDATA)
@@ -14313,19 +14366,40 @@ tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
 typedef struct tpp_keyword_misc {
 #if TPP_HAVE_KEYWORD_FLAGS
 	tpp_keyword_flags TPP_INTERNAL(tkm_flags); /* Set of `TPP_KEYWORD_FLAG_*' */
-#endif /* TPP_HAVE_KEYWORD_FLAGS */
+#define _tpp_keyword_misc_init_flags(self) , (self)->TPP_INTERNAL(tkm_flags) = TPP_KEYWORD_FLAG_NORMAL
+#else /* TPP_HAVE_KEYWORD_FLAGS */
+#define _tpp_keyword_misc_init_flags(self) /* nothing */
+#endif /* !TPP_HAVE_KEYWORD_FLAGS */
 #if TPP_HAVE_CPP_ASSERT
 	tpp_assertions TPP_INTERNAL(tkm_assertions); /* Assertions made for the associated keyword */
-#endif /* TPP_HAVE_CPP_ASSERT */
+#define _tpp_keyword_misc_init_assertions(self) , tpp_assertions_init(&(self)->TPP_INTERNAL(tkm_assertions))
+#else /* TPP_HAVE_CPP_ASSERT */
+#define _tpp_keyword_misc_init_assertions(self) /* nothing */
+#endif /* !TPP_HAVE_CPP_ASSERT */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 	struct tpp_keyword const *TPP_INTERNAL(tkm_file_guard); /* [0..1] Name of the #include guard for this file, or NULL if unknown. */
-#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#define _tpp_keyword_misc_init_file_guard(self) , (self)->TPP_INTERNAL(tkm_file_guard) = NULL
+#else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#define _tpp_keyword_misc_init_file_guard(self) /* nothing */
+#endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#if TPP_HAVE_KEYWORD_INCLCOUNT
+	tpp_size TPP_INTERNAL(tkm_file_inclcount); /* # of times that this file exists on the #include-stack (or "TPP_SIZE_MAX" if unknown) */
+#define _tpp_keyword_misc_init_file_inclcount(self) , (self)->TPP_INTERNAL(tkm_file_inclcount) = TPP_SIZE_MAX
+#else /* TPP_HAVE_KEYWORD_INCLCOUNT */
+#define _tpp_keyword_misc_init_file_inclcount(self) /* nothing */
+#endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	tpp_macro_pushstack TPP_INTERNAL(tkm_macro_pushstack); /* For `#pragma push_macro()' */
-#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#define _tpp_keyword_misc_init_macro_pushstack(self) , tpp_macro_pushstack_init(&(self)->TPP_INTERNAL(tkm_macro_pushstack))
+#else /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#define _tpp_keyword_misc_init_macro_pushstack(self) /* nothing */
+#endif /* !TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_MACRO___TPP_COUNTER
 	tpp_size TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
-#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+#define _tpp_keyword_misc_init_builtin_counter(self) , (self)->TPP_INTERNAL(tkm_builtin_counter) = 0
+#else /* TPP_HAVE_MACRO___TPP_COUNTER */
+#define _tpp_keyword_misc_init_builtin_counter(self) /* nothing */
+#endif /* !TPP_HAVE_MACRO___TPP_COUNTER */
 #if TPP_HAVE_KEYWORD_USERDATA
 	void          *TPP_INTERNAL(tkm_userdata_ptr); /* [?..?] User-data pointer (initialize to "NULL") */
 	void (TPPCALL *TPP_INTERNAL(tkm_userdata_dtor))(void *ptr); /* [0..1] Optional finalizer for user-data */
@@ -14334,14 +14408,25 @@ typedef struct tpp_keyword_misc {
 	       (self)->tkm_userdata_dtor = (dtor))
 #define tpp_keyword_misc_getuserdata(self)      ((self)->tkm_userdata_ptr)
 #define tpp_keyword_misc_getuserdata_dtor(self) ((self)->tkm_userdata_dtor)
+#define _tpp_keyword_misc_init_userdata(self)   , (self)->TPP_INTERNAL(tkm_userdata_ptr) = NULL, (self)->TPP_INTERNAL(tkm_userdata_dtor) = NULL
 #else /* TPP_HAVE_KEYWORD_USERDATA */
 #define tpp_keyword_misc_getuserdata(self)      ((void *)NULL)
 #define tpp_keyword_misc_getuserdata_dtor(self) ((void (TPPCALL *)(void *))NULL)
+#define _tpp_keyword_misc_init_userdata(self)   /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_USERDATA */
 } tpp_keyword_misc;
 
-#define _tpp_keyword_misc_alloc() ((tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc)))
-#define _tpp_keyword_misc_free(p) tpp_free(p)
+#define _tpp_keyword_misc_init(self)                    \
+	(void)((void)0 _tpp_keyword_misc_init_flags(self)   \
+	       _tpp_keyword_misc_init_assertions(self)      \
+	       _tpp_keyword_misc_init_file_guard(self)      \
+	       _tpp_keyword_misc_init_file_inclcount(self)  \
+	       _tpp_keyword_misc_init_macro_pushstack(self) \
+	       _tpp_keyword_misc_init_builtin_counter(self) \
+	       _tpp_keyword_misc_init_userdata(self))
+#define _tpp_keyword_misc_alloc()    ((tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc)))
+#define _tpp_keyword_misc_tryalloc() ((tpp_keyword_misc *)tpp_trymalloc(sizeof(tpp_keyword_misc)))
+#define _tpp_keyword_misc_free(p)    tpp_free(p)
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
 
@@ -15658,6 +15743,22 @@ typedef struct tpp_lexer {
 #endif /* !TPP_HAVE_WARNING_ERROR */
 
 
+	/* Lexer inclusion limit */
+#if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+#if TPP_MAX_INCLUDE_DEPTH < 0
+	tpp_size TPP_INTERNAL(tl_inclusion_limit); /* How many times the same file can be #include-ed before "TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED" is emitted */
+#define tpp_lexer_getinclusionlimit(self)    ((self)->TPP_INTERNAL(tl_inclusion_limit))
+#define tpp_lexer_setinclusionlimit(self, v) (void)((self)->TPP_INTERNAL(tl_inclusion_limit) = (v))
+#else /* TPP_MAX_INCLUDE_DEPTH < 0 */
+#define tpp_lexer_getinclusionlimit(self) TPP_MAX_INCLUDE_DEPTH
+#endif /* TPP_MAX_INCLUDE_DEPTH >= 0 */
+#elif TPP_MAX_INCLUDE_DEPTH < 0
+#define tpp_lexer_getinclusionlimit(self) (-TPP_MAX_INCLUDE_DEPTH)
+#else /* ... */
+#define tpp_lexer_getinclusionlimit(self) TPP_MAX_INCLUDE_DEPTH
+#endif /* !... */
+
+
 	/* Next value for __COUNTER__ */
 #if TPP_HAVE_MACRO___COUNTER__
 	tpp_size TPP_INTERNAL(tl_builtin_counter); /* Next value for __COUNTER__ */
@@ -16027,6 +16128,11 @@ typedef struct tpp_lexer_openfile_result {
 #if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
 #define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
+#if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
+#define TPP_LEXER_OPENFILE_FLAG_IGNORE_LIMIT UINT32_C(0x08000000) /* Do not emit a warning if the file already appears too often on the #include-stack */
+#else /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+#define TPP_LEXER_OPENFILE_FLAG_IGNORE_LIMIT UINT32_C(0x00000000) /* no-op */
+#endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 
 /* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
  * included before, and its keyword has any of the bits specified by `mask_flags' set.
