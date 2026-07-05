@@ -2036,7 +2036,16 @@ got_result_kwd2:;
 			goto err_nomem;
 		}
 
-		/* TODO: Call a user-defined callback to keep track of dependencies (for -MF) */
+		/* Call a user-defined callback to keep track of dependencies (for -MF) */
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK
+		{
+			tpp_errno error = tpp_lexer_callhook_new_dependency(self, result_kwd);
+			if (TPP_ISERR(error)) {
+				tpp_io_close(handle);
+				return error;
+			}
+		}
+#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK */
 	} else
 #endif /* TPP_HAVE_USER_KEYWORDS */
 	{

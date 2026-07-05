@@ -33,7 +33,6 @@
 #include "parts/file-io.h"
 #include "parts/time.h"
 #include "parts/expr.h"
-#include "parts/hooks.h"
 #include "parts/token.h"
 #include "parts/features.h"
 #include "parts/file.h"
@@ -42,6 +41,7 @@
 #include "parts/extensions.h"
 #include "parts/warnings.h"
 #include "parts/sysinclude.h"
+#include "parts/hooks.h"
 #include "parts/lexer.h"
 
 #endif /* !TPP_DEFS */

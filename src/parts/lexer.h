@@ -404,6 +404,18 @@ for (local doc, name,
 #define tpp_lexer_sethook_unknown_pragma(self, v) tpp_hooks_set_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_unknown_pragma(self)  tpp_hooks_reset_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_unknown_pragma */
+
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_new_dependency)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+ * Called whenever some file is #include-ed for the first time
+ * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
+ *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+#define tpp_lexer_callhook_new_dependency(self, filename_kwd) \
+	tpp_hooks_call_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self, filename_kwd)
+#ifdef tpp_hooks_set_new_dependency
+#define tpp_lexer_gethook_new_dependency(self)    tpp_hooks_get_new_dependency(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_new_dependency(self, v) tpp_hooks_set_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_new_dependency(self)  tpp_hooks_reset_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_new_dependency */
 /*[[[end]]]*/
 
 

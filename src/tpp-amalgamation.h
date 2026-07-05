@@ -7079,6 +7079,40 @@ TPP_DECL_END
 #error "Invalid configuration: 'TPP_HOOK_UNKNOWN_PRAGMA' is defined, but 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_PRAGMA && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 
+/* >> tpp_errno (TPPCALL *TPP_HOOK_NEW_DEPENDENCY)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+ * Called whenever some file is #include-ed for the first time
+ * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
+ *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+#ifndef TPP_HAVE_NEW_DEPENDENCY_HOOK
+#ifdef TPP_HOOK_NEW_DEPENDENCY
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_NEW_DEPENDENCY */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_NEW_DEPENDENCY */
+#endif /* !TPP_HAVE_NEW_DEPENDENCY_HOOK */
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_NEW_DEPENDENCY)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_NEW_DEPENDENCY_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_NEW_DEPENDENCY' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_NEW_DEPENDENCY)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_NEW_DEPENDENCY_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_NEW_DEPENDENCY' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK /* There is no builtin version */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK /* There is no builtin version */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_NEW_DEPENDENCY) && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_NEW_DEPENDENCY' is defined, but 'TPP_HAVE_NEW_DEPENDENCY_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_NEW_DEPENDENCY && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -9023,218 +9057,6 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 #ifndef tpp_expr_value_pos
 #define tpp_expr_value_pos(lexer, self, result) tpp_expr_value_copy(result, self)
 #endif /* !tpp_expr_value_pos */
-
-
-TPP_DECL_END
-/************************************************************************/
-
-/************************************************************************/
-/* File: parts/hooks.h                                                  */
-/************************************************************************/
-TPP_DECL_BEGIN
-
-#undef TPP_HAVE_HOOKS
-#if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK))
-#define TPP_HAVE_HOOKS 1
-#else /* ... */
-#define TPP_HAVE_HOOKS 0
-#endif /* !... */
-
-#if TPP_HAVE_HOOKS
-struct tpp_lexer;
-typedef struct tpp_hooks {
-	/* >> tpp_formatprinter th_warnprinter;
-	 * Called by `tpp_lexer_warnf()' to print warning messages
-	 * @param: arg: The current lexer (tpp_lexer *) */
-#if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
-#if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
-	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [1..1] */
-#else /* TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP */
-	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [0..1] */
-#endif /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_NOOP */
-#endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
-
-	/* >> tpp_errno (TPPCALL *th_parseexpr)(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
-	 * User-defined callback for parsing "#if"-style expressions
-	 * - This callback is invoked in a context where "self" points
-	 *   before the expression's first token (meaning that this
-	 *   callback is responsible to do the initial yield using
-	 *   whatever method it wants to use).
-	 * - When it is known that the expression has finite length,
-	 *   as in: it has to end before EOF, or at the next unmatched
-	 *   ')'-token, the caller will have configured the lexer's
-	 *   current EOF accordingly (and disabled file-popping)
-	 * - When this function returns an error, the caller will rewind
-	 *   back to the start of the expression (or even further, if
-	 *   applicable; meaning this callback doesn't need to concern
-	 *   itself with rollback)
-	 * 
-	 * @return: TPP_EOK:         Success (*result was initialized)
-	 * @return: TPP_ENOMEM:      Out of memory
-	 * @return: TPP_EIO:         Filesystem I/O operation failed
-	 * @return: TPP_EWOULDBLOCK: Operation would block
-	 * @return: TPP_ELEXERROR:   A lexer error happened
-	 * @return: TPP_EWARNPRINT:  Error while printing a warning */
-#if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
-#if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
-	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result); /* [1..1] */
-#else /* TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP */
-	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result); /* [0..1] */
-#endif /* TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_NOOP */
-#endif /* TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */
-
-	/* >> tpp_errno (TPPCALL *th_unknown_pragma)(struct tpp_lexer *tpp_restrict self);
-	 * Called whenever a #pragma is encountered that is not recognized.
-	 * When called, the lexer is set-up to point at the first token after the #pragma.
-	 * @return: TPP_EOK:    Pragma has been handled
-	 * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
-	 * @return: TPP_EIO:    I/O error
-	 * @return: TPP_ENOMEM: Out of memory */
-#if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
-	tpp_errno (TPPCALL *TPP_INTERNAL(th_unknown_pragma))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
-#endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
-} tpp_hooks;
-#endif /* TPP_HAVE_HOOKS */
-
-/* Called by `tpp_lexer_warnf()' to print warning messages
- * @param: arg: The current lexer (tpp_lexer *) */
-#if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
-#if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
-#define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
-	tpp_formatprinter_print((self)->TPP_INTERNAL(th_warnprinter), lexer, text, num_bytes)
-#else /* TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP */
-#define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
-	((self)->TPP_INTERNAL(th_warnprinter) ? tpp_formatprinter_print((self)->TPP_INTERNAL(th_warnprinter), lexer, text, num_bytes) : 0)
-#endif /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_NOOP */
-#define tpp_hooks_get_warnprinter(self)    (self)->TPP_INTERNAL(th_warnprinter)
-#define tpp_hooks_set_warnprinter(self, v) (void)((self)->TPP_INTERNAL(th_warnprinter) = (v))
-#define tpp_hooks_reset_warnprinter(self)  (void)((self)->TPP_INTERNAL(th_warnprinter) = _TPP_HOOKS_DEFAULT_WARNPRINTER)
-#define _tpp_hooks_init_warnprinter(self)  , (self)->TPP_INTERNAL(th_warnprinter) = _TPP_HOOKS_DEFAULT_WARNPRINTER
-#if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_WARNPRINTER)
-#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&TPP_HOOK_WARNPRINTER)
-#elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_BUILTIN
-#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&_tpp_lexer_builtin_warnprinter)
-#else /* ... */
-#define _TPP_HOOKS_DEFAULT_WARNPRINTER NULL
-#endif /* !... */
-#else /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
-#if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_USER
-#define tpp_hooks_get_warnprinter(self) (&TPP_HOOK_WARNPRINTER)
-#define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
-	TPP_HOOK_WARNPRINTER(lexer, text, num_bytes)
-#elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
-#define tpp_hooks_get_warnprinter(self) (&_tpp_lexer_builtin_warnprinter)
-#define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
-	_tpp_lexer_builtin_warnprinter(lexer, text, num_bytes)
-#else /*  */
-#define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) 0
-#endif /* ... */
-#define _tpp_hooks_init_warnprinter(self) /* nothing */
-#endif /* !TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
-
-/* User-defined callback for parsing "#if"-style expressions
- * - This callback is invoked in a context where "self" points
- *   before the expression's first token (meaning that this
- *   callback is responsible to do the initial yield using
- *   whatever method it wants to use).
- * - When it is known that the expression has finite length,
- *   as in: it has to end before EOF, or at the next unmatched
- *   ')'-token, the caller will have configured the lexer's
- *   current EOF accordingly (and disabled file-popping)
- * - When this function returns an error, the caller will rewind
- *   back to the start of the expression (or even further, if
- *   applicable; meaning this callback doesn't need to concern
- *   itself with rollback)
- * 
- * @return: TPP_EOK:         Success (*result was initialized)
- * @return: TPP_ENOMEM:      Out of memory
- * @return: TPP_EIO:         Filesystem I/O operation failed
- * @return: TPP_EWOULDBLOCK: Operation would block
- * @return: TPP_ELEXERROR:   A lexer error happened
- * @return: TPP_EWARNPRINT:  Error while printing a warning */
-#if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
-#if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
-#define tpp_hooks_call_parseexpr(self, lexer, result) \
-	(*(self)->TPP_INTERNAL(th_parseexpr))(lexer, result)
-#else /* TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP */
-#define tpp_hooks_call_parseexpr(self, lexer, result) \
-	((self)->TPP_INTERNAL(th_parseexpr) ? (*(self)->TPP_INTERNAL(th_parseexpr))(lexer, result) : 0)
-#endif /* TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_NOOP */
-#define tpp_hooks_get_parseexpr(self)    (self)->TPP_INTERNAL(th_parseexpr)
-#define tpp_hooks_set_parseexpr(self, v) (void)((self)->TPP_INTERNAL(th_parseexpr) = (v))
-#define tpp_hooks_reset_parseexpr(self)  (void)((self)->TPP_INTERNAL(th_parseexpr) = _TPP_HOOKS_DEFAULT_PARSEEXPR)
-#define _tpp_hooks_init_parseexpr(self)  , (self)->TPP_INTERNAL(th_parseexpr) = _TPP_HOOKS_DEFAULT_PARSEEXPR
-#if TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_PARSEEXPR)
-#define _TPP_HOOKS_DEFAULT_PARSEEXPR (&TPP_HOOK_PARSEEXPR)
-#elif TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_BUILTIN
-#define _TPP_HOOKS_DEFAULT_PARSEEXPR (&_tpp_lexer_builtin_parseexpr)
-#else /* ... */
-#define _TPP_HOOKS_DEFAULT_PARSEEXPR NULL
-#endif /* !... */
-#else /* TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */
-#if TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_CONST_USER
-#define tpp_hooks_call_parseexpr(self, lexer, result) \
-	TPP_HOOK_PARSEEXPR(lexer, result)
-#elif TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_CONST_BUILTIN
-#define tpp_hooks_call_parseexpr(self, lexer, result) \
-	_tpp_lexer_builtin_parseexpr(lexer, result)
-#else /*  */
-#define tpp_hooks_call_parseexpr(self, lexer, result) 0
-#endif /* ... */
-#define _tpp_hooks_init_parseexpr(self) /* nothing */
-#endif /* !TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */
-
-/* Called whenever a #pragma is encountered that is not recognized.
- * When called, the lexer is set-up to point at the first token after the #pragma.
- * @return: TPP_EOK:    Pragma has been handled
- * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
- * @return: TPP_EIO:    I/O error
- * @return: TPP_ENOMEM: Out of memory */
-#if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
-#define tpp_hooks_call_unknown_pragma(self, lexer) \
-	((self)->TPP_INTERNAL(th_unknown_pragma) ? (*(self)->TPP_INTERNAL(th_unknown_pragma))(lexer) : TPP_ENOENT)
-#define tpp_hooks_get_unknown_pragma(self)    (self)->TPP_INTERNAL(th_unknown_pragma)
-#define tpp_hooks_set_unknown_pragma(self, v) (void)((self)->TPP_INTERNAL(th_unknown_pragma) = (v))
-#define tpp_hooks_reset_unknown_pragma(self)  (void)((self)->TPP_INTERNAL(th_unknown_pragma) = _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA)
-#define _tpp_hooks_init_unknown_pragma(self)  , (self)->TPP_INTERNAL(th_unknown_pragma) = _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA
-#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_UNKNOWN_PRAGMA)
-#define _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA (&TPP_HOOK_UNKNOWN_PRAGMA)
-#else /* ... */
-#define _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA NULL
-#endif /* !... */
-#else /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
-#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_CONST_USER
-#define tpp_hooks_call_unknown_pragma(self, lexer) \
-	TPP_HOOK_UNKNOWN_PRAGMA(lexer)
-#else /*  */
-#define tpp_hooks_call_unknown_pragma(self, lexer) TPP_ENOENT
-#endif /* ... */
-#define _tpp_hooks_init_unknown_pragma(self) /* nothing */
-#endif /* !TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
-
-/* Initialize lexer hooks */
-#define tpp_hooks_init(self) \
-	(void)(0 _tpp_hooks_init_warnprinter(self) \
-	       _tpp_hooks_init_parseexpr(self) \
-	       _tpp_hooks_init_unknown_pragma(self))
-
-
-
-/************************************************************************/
-/* Builtin hooks...                                                     */
-/************************************************************************/
-#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
-TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes);
-#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
-
-#if TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_lexer_builtin_parseexpr(struct tpp_lexer *tpp_restrict self,
-                             tpp_expr_value *tpp_restrict result);
-#endif /* TPP_HAVE_BUILTIN_PARSEEXPR_HOOK */
-/************************************************************************/
 
 
 TPP_DECL_END
@@ -16088,6 +15910,253 @@ TPP_DECL_END
 /************************************************************************/
 
 /************************************************************************/
+/* File: parts/hooks.h                                                  */
+/************************************************************************/
+TPP_DECL_BEGIN
+
+#undef TPP_HAVE_HOOKS
+#if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) || \
+     TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) || \
+     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) || \
+     TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK))
+#define TPP_HAVE_HOOKS 1
+#else /* ... */
+#define TPP_HAVE_HOOKS 0
+#endif /* !... */
+
+#if TPP_HAVE_HOOKS
+struct tpp_lexer;
+typedef struct tpp_hooks {
+	/* >> tpp_formatprinter th_warnprinter;
+	 * Called by `tpp_lexer_warnf()' to print warning messages
+	 * @param: arg: The current lexer (tpp_lexer *) */
+#if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
+#if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
+	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [1..1] */
+#else /* TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [0..1] */
+#endif /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_parseexpr)(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
+	 * User-defined callback for parsing "#if"-style expressions
+	 * - This callback is invoked in a context where "self" points
+	 *   before the expression's first token (meaning that this
+	 *   callback is responsible to do the initial yield using
+	 *   whatever method it wants to use).
+	 * - When it is known that the expression has finite length,
+	 *   as in: it has to end before EOF, or at the next unmatched
+	 *   ')'-token, the caller will have configured the lexer's
+	 *   current EOF accordingly (and disabled file-popping)
+	 * - When this function returns an error, the caller will rewind
+	 *   back to the start of the expression (or even further, if
+	 *   applicable; meaning this callback doesn't need to concern
+	 *   itself with rollback)
+	 * 
+	 * @return: TPP_EOK:         Success (*result was initialized)
+	 * @return: TPP_ENOMEM:      Out of memory
+	 * @return: TPP_EIO:         Filesystem I/O operation failed
+	 * @return: TPP_EWOULDBLOCK: Operation would block
+	 * @return: TPP_ELEXERROR:   A lexer error happened
+	 * @return: TPP_EWARNPRINT:  Error while printing a warning */
+#if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
+#if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result); /* [1..1] */
+#else /* TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP */
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result); /* [0..1] */
+#endif /* TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_unknown_pragma)(struct tpp_lexer *tpp_restrict self);
+	 * Called whenever a #pragma is encountered that is not recognized.
+	 * When called, the lexer is set-up to point at the first token after the #pragma.
+	 * @return: TPP_EOK:    Pragma has been handled
+	 * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
+	 * @return: TPP_EIO:    I/O error
+	 * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_unknown_pragma))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_new_dependency)(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+	 * Called whenever some file is #include-ed for the first time
+	 * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
+	 *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+#if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_new_dependency))(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+} tpp_hooks;
+#endif /* TPP_HAVE_HOOKS */
+
+/* Called by `tpp_lexer_warnf()' to print warning messages
+ * @param: arg: The current lexer (tpp_lexer *) */
+#if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
+#if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
+#define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
+	tpp_formatprinter_print((self)->TPP_INTERNAL(th_warnprinter), lexer, text, num_bytes)
+#else /* TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+#define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
+	((self)->TPP_INTERNAL(th_warnprinter) ? tpp_formatprinter_print((self)->TPP_INTERNAL(th_warnprinter), lexer, text, num_bytes) : 0)
+#endif /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_NOOP */
+#define tpp_hooks_get_warnprinter(self)    (self)->TPP_INTERNAL(th_warnprinter)
+#define tpp_hooks_set_warnprinter(self, v) (void)((self)->TPP_INTERNAL(th_warnprinter) = (v))
+#define tpp_hooks_reset_warnprinter(self)  (void)((self)->TPP_INTERNAL(th_warnprinter) = _TPP_HOOKS_DEFAULT_WARNPRINTER)
+#define _tpp_hooks_init_warnprinter(self)  , (self)->TPP_INTERNAL(th_warnprinter) = _TPP_HOOKS_DEFAULT_WARNPRINTER
+#if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_WARNPRINTER)
+#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&TPP_HOOK_WARNPRINTER)
+#elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_BUILTIN
+#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&_tpp_lexer_builtin_warnprinter)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_WARNPRINTER NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
+#if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_get_warnprinter(self) (&TPP_HOOK_WARNPRINTER)
+#define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
+	TPP_HOOK_WARNPRINTER(lexer, text, num_bytes)
+#elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
+#define tpp_hooks_get_warnprinter(self) (&_tpp_lexer_builtin_warnprinter)
+#define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
+	_tpp_lexer_builtin_warnprinter(lexer, text, num_bytes)
+#else /*  */
+#define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) 0
+#endif /* ... */
+#define _tpp_hooks_init_warnprinter(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
+
+/* User-defined callback for parsing "#if"-style expressions
+ * - This callback is invoked in a context where "self" points
+ *   before the expression's first token (meaning that this
+ *   callback is responsible to do the initial yield using
+ *   whatever method it wants to use).
+ * - When it is known that the expression has finite length,
+ *   as in: it has to end before EOF, or at the next unmatched
+ *   ')'-token, the caller will have configured the lexer's
+ *   current EOF accordingly (and disabled file-popping)
+ * - When this function returns an error, the caller will rewind
+ *   back to the start of the expression (or even further, if
+ *   applicable; meaning this callback doesn't need to concern
+ *   itself with rollback)
+ * 
+ * @return: TPP_EOK:         Success (*result was initialized)
+ * @return: TPP_ENOMEM:      Out of memory
+ * @return: TPP_EIO:         Filesystem I/O operation failed
+ * @return: TPP_EWOULDBLOCK: Operation would block
+ * @return: TPP_ELEXERROR:   A lexer error happened
+ * @return: TPP_EWARNPRINT:  Error while printing a warning */
+#if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
+#if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
+#define tpp_hooks_call_parseexpr(self, lexer, result) \
+	(*(self)->TPP_INTERNAL(th_parseexpr))(lexer, result)
+#else /* TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP */
+#define tpp_hooks_call_parseexpr(self, lexer, result) \
+	((self)->TPP_INTERNAL(th_parseexpr) ? (*(self)->TPP_INTERNAL(th_parseexpr))(lexer, result) : 0)
+#endif /* TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_NOOP */
+#define tpp_hooks_get_parseexpr(self)    (self)->TPP_INTERNAL(th_parseexpr)
+#define tpp_hooks_set_parseexpr(self, v) (void)((self)->TPP_INTERNAL(th_parseexpr) = (v))
+#define tpp_hooks_reset_parseexpr(self)  (void)((self)->TPP_INTERNAL(th_parseexpr) = _TPP_HOOKS_DEFAULT_PARSEEXPR)
+#define _tpp_hooks_init_parseexpr(self)  , (self)->TPP_INTERNAL(th_parseexpr) = _TPP_HOOKS_DEFAULT_PARSEEXPR
+#if TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_PARSEEXPR)
+#define _TPP_HOOKS_DEFAULT_PARSEEXPR (&TPP_HOOK_PARSEEXPR)
+#elif TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_BUILTIN
+#define _TPP_HOOKS_DEFAULT_PARSEEXPR (&_tpp_lexer_builtin_parseexpr)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_PARSEEXPR NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */
+#if TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_parseexpr(self, lexer, result) \
+	TPP_HOOK_PARSEEXPR(lexer, result)
+#elif TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_CONST_BUILTIN
+#define tpp_hooks_call_parseexpr(self, lexer, result) \
+	_tpp_lexer_builtin_parseexpr(lexer, result)
+#else /*  */
+#define tpp_hooks_call_parseexpr(self, lexer, result) 0
+#endif /* ... */
+#define _tpp_hooks_init_parseexpr(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */
+
+/* Called whenever a #pragma is encountered that is not recognized.
+ * When called, the lexer is set-up to point at the first token after the #pragma.
+ * @return: TPP_EOK:    Pragma has been handled
+ * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
+#define tpp_hooks_call_unknown_pragma(self, lexer) \
+	((self)->TPP_INTERNAL(th_unknown_pragma) ? (*(self)->TPP_INTERNAL(th_unknown_pragma))(lexer) : TPP_ENOENT)
+#define tpp_hooks_get_unknown_pragma(self)    (self)->TPP_INTERNAL(th_unknown_pragma)
+#define tpp_hooks_set_unknown_pragma(self, v) (void)((self)->TPP_INTERNAL(th_unknown_pragma) = (v))
+#define tpp_hooks_reset_unknown_pragma(self)  (void)((self)->TPP_INTERNAL(th_unknown_pragma) = _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA)
+#define _tpp_hooks_init_unknown_pragma(self)  , (self)->TPP_INTERNAL(th_unknown_pragma) = _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA
+#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_UNKNOWN_PRAGMA)
+#define _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA (&TPP_HOOK_UNKNOWN_PRAGMA)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
+#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_unknown_pragma(self, lexer) \
+	TPP_HOOK_UNKNOWN_PRAGMA(lexer)
+#else /*  */
+#define tpp_hooks_call_unknown_pragma(self, lexer) TPP_ENOENT
+#endif /* ... */
+#define _tpp_hooks_init_unknown_pragma(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
+
+/* Called whenever some file is #include-ed for the first time
+ * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
+ *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+#if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+#define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) \
+	((self)->TPP_INTERNAL(th_new_dependency) ? (*(self)->TPP_INTERNAL(th_new_dependency))(lexer, filename_kwd) : TPP_EOK)
+#define tpp_hooks_get_new_dependency(self)    (self)->TPP_INTERNAL(th_new_dependency)
+#define tpp_hooks_set_new_dependency(self, v) (void)((self)->TPP_INTERNAL(th_new_dependency) = (v))
+#define tpp_hooks_reset_new_dependency(self)  (void)((self)->TPP_INTERNAL(th_new_dependency) = _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY)
+#define _tpp_hooks_init_new_dependency(self)  , (self)->TPP_INTERNAL(th_new_dependency) = _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_NEW_DEPENDENCY)
+#define _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY (&TPP_HOOK_NEW_DEPENDENCY)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) \
+	TPP_HOOK_NEW_DEPENDENCY(lexer, filename_kwd)
+#else /*  */
+#define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) TPP_EOK
+#endif /* ... */
+#define _tpp_hooks_init_new_dependency(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+
+/* Initialize lexer hooks */
+#define tpp_hooks_init(self) \
+	(void)(0 _tpp_hooks_init_warnprinter(self) \
+	       _tpp_hooks_init_parseexpr(self) \
+	       _tpp_hooks_init_unknown_pragma(self) \
+	       _tpp_hooks_init_new_dependency(self))
+
+
+
+/************************************************************************/
+/* Builtin hooks...                                                     */
+/************************************************************************/
+#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes);
+#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+
+#if TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_lexer_builtin_parseexpr(struct tpp_lexer *tpp_restrict self,
+                             tpp_expr_value *tpp_restrict result);
+#endif /* TPP_HAVE_BUILTIN_PARSEEXPR_HOOK */
+/************************************************************************/
+
+
+TPP_DECL_END
+/************************************************************************/
+
+/************************************************************************/
 /* File: parts/lexer.h                                                  */
 /************************************************************************/
 TPP_DECL_BEGIN
@@ -16426,6 +16495,18 @@ typedef struct tpp_lexer {
 #define tpp_lexer_sethook_unknown_pragma(self, v) tpp_hooks_set_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_unknown_pragma(self)  tpp_hooks_reset_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_unknown_pragma */
+
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_new_dependency)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+ * Called whenever some file is #include-ed for the first time
+ * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
+ *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+#define tpp_lexer_callhook_new_dependency(self, filename_kwd) \
+	tpp_hooks_call_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self, filename_kwd)
+#ifdef tpp_hooks_set_new_dependency
+#define tpp_lexer_gethook_new_dependency(self)    tpp_hooks_get_new_dependency(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_new_dependency(self, v) tpp_hooks_set_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_new_dependency(self)  tpp_hooks_reset_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_new_dependency */
 
 
 

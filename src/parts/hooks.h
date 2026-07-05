@@ -25,6 +25,7 @@
 #include "config.h"
 #include "error.h"
 #include "expr.h"
+#include "keyword.h"
 
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
@@ -161,7 +162,8 @@ print(")");
 #undef TPP_HAVE_HOOKS
 #if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK))
+     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) || \
+     TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK))
 #define TPP_HAVE_HOOKS 1
 #else /* ... */
 #define TPP_HAVE_HOOKS 0
@@ -220,6 +222,14 @@ typedef struct tpp_hooks {
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_unknown_pragma))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_new_dependency)(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+	 * Called whenever some file is #include-ed for the first time
+	 * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
+	 *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+#if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_new_dependency))(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 } tpp_hooks;
 #endif /* TPP_HAVE_HOOKS */
 
@@ -339,11 +349,37 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_unknown_pragma(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 
+/* Called whenever some file is #include-ed for the first time
+ * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
+ *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+#if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+#define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) \
+	((self)->TPP_INTERNAL(th_new_dependency) ? (*(self)->TPP_INTERNAL(th_new_dependency))(lexer, filename_kwd) : TPP_EOK)
+#define tpp_hooks_get_new_dependency(self)    (self)->TPP_INTERNAL(th_new_dependency)
+#define tpp_hooks_set_new_dependency(self, v) (void)((self)->TPP_INTERNAL(th_new_dependency) = (v))
+#define tpp_hooks_reset_new_dependency(self)  (void)((self)->TPP_INTERNAL(th_new_dependency) = _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY)
+#define _tpp_hooks_init_new_dependency(self)  , (self)->TPP_INTERNAL(th_new_dependency) = _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_NEW_DEPENDENCY)
+#define _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY (&TPP_HOOK_NEW_DEPENDENCY)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) \
+	TPP_HOOK_NEW_DEPENDENCY(lexer, filename_kwd)
+#else /*  */
+#define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) TPP_EOK
+#endif /* ... */
+#define _tpp_hooks_init_new_dependency(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
 	(void)(0 _tpp_hooks_init_warnprinter(self) \
 	       _tpp_hooks_init_parseexpr(self) \
-	       _tpp_hooks_init_unknown_pragma(self))
+	       _tpp_hooks_init_unknown_pragma(self) \
+	       _tpp_hooks_init_new_dependency(self))
 /*[[[end]]]*/
 
 

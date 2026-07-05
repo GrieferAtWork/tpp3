@@ -590,6 +590,7 @@
 #define th_warnprinter                                      TPP_INTERNAL(th_warnprinter)
 #define th_parseexpr                                        TPP_INTERNAL(th_parseexpr)
 #define th_unknown_pragma                                   TPP_INTERNAL(th_unknown_pragma)
+#define th_new_dependency                                   TPP_INTERNAL(th_new_dependency)
 #define tmpe_macro                                          TPP_INTERNAL(tmpe_macro)
 #define tmpe_count                                          TPP_INTERNAL(tmpe_count)
 #define tmps_cnt                                            TPP_INTERNAL(tmps_cnt)
@@ -9734,7 +9735,16 @@ got_result_kwd2:;
 			goto err_nomem;
 		}
 
-		/* TODO: Call a user-defined callback to keep track of dependencies (for -MF) */
+		/* Call a user-defined callback to keep track of dependencies (for -MF) */
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK
+		{
+			tpp_errno error = tpp_lexer_callhook_new_dependency(self, result_kwd);
+			if (TPP_ISERR(error)) {
+				tpp_io_close(handle);
+				return error;
+			}
+		}
+#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK */
 	} else
 #endif /* TPP_HAVE_USER_KEYWORDS */
 	{
@@ -24544,8 +24554,8 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	default: break;
 	}
 
-#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK
 	/* User-defined callback hook to parse pragmas not known to TPP itself */
+#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK
 	{
 		tpp_errno error;
 		error = tpp_lexer_callhook_unknown_pragma(self);

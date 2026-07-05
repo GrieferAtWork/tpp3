@@ -2633,14 +2633,16 @@ local HOOKS = {
 		"TPP_ENOENT"
 	},
 
-	//TODO:{
-	//TODO:	"Called whenever some file is #include-ed for the first time",
-	//TODO:	"NEW_DEPENDENCY",
-	//TODO:	"(TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL)",
-	//TODO:	"", // No builtin default
-	//TODO:	"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, char const *filename)", { "lexer", "filename" },
-	//TODO:	"TPP_EOK"
-	//TODO:},
+	{
+		"Called whenever some file is #include-ed for the first time\n" +
+		"@param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual\n" +
+		"                      filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'.",
+		"NEW_DEPENDENCY",
+		"(TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL)",
+		"", // No builtin default
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd)", { "lexer", "filename_kwd" },
+		"TPP_EOK"
+	},
 };
 
 for (local doc, name,
@@ -2806,6 +2808,40 @@ for (local doc, name,
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_PRAGMA) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_UNKNOWN_PRAGMA' is defined, but 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_PRAGMA && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
+
+/* >> tpp_errno (TPPCALL *TPP_HOOK_NEW_DEPENDENCY)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+ * Called whenever some file is #include-ed for the first time
+ * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
+ *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+#ifndef TPP_HAVE_NEW_DEPENDENCY_HOOK
+#ifdef TPP_HOOK_NEW_DEPENDENCY
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_NEW_DEPENDENCY */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_NEW_DEPENDENCY */
+#endif /* !TPP_HAVE_NEW_DEPENDENCY_HOOK */
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_NEW_DEPENDENCY)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_NEW_DEPENDENCY_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_NEW_DEPENDENCY' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_NEW_DEPENDENCY)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_NEW_DEPENDENCY_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_NEW_DEPENDENCY' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK /* There is no builtin version */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK /* There is no builtin version */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_NEW_DEPENDENCY) && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_NEW_DEPENDENCY' is defined, but 'TPP_HAVE_NEW_DEPENDENCY_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_NEW_DEPENDENCY && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 /*[[[end]]]*/
 
 /************************************************************************/
