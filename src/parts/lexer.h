@@ -389,6 +389,21 @@ for (local doc, name,
 #define tpp_lexer_sethook_parseexpr(self, v) tpp_hooks_set_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_parseexpr(self)  tpp_hooks_reset_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_parseexpr */
+
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_unknown_pragma)(tpp_lexer *tpp_restrict self);
+ * Called whenever a #pragma is encountered that is not recognized.
+ * When called, the lexer is set-up to point at the first token after the #pragma.
+ * @return: TPP_EOK:    Pragma has been handled
+ * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#define tpp_lexer_callhook_unknown_pragma(self) \
+	tpp_hooks_call_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), self)
+#ifdef tpp_hooks_set_unknown_pragma
+#define tpp_lexer_gethook_unknown_pragma(self)    tpp_hooks_get_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_unknown_pragma(self, v) tpp_hooks_set_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_unknown_pragma(self)  tpp_hooks_reset_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_unknown_pragma */
 /*[[[end]]]*/
 
 

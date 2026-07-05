@@ -589,6 +589,7 @@
 #define td_dummy                                            TPP_INTERNAL(td_dummy)
 #define th_warnprinter                                      TPP_INTERNAL(th_warnprinter)
 #define th_parseexpr                                        TPP_INTERNAL(th_parseexpr)
+#define th_unknown_pragma                                   TPP_INTERNAL(th_unknown_pragma)
 #define tmpe_macro                                          TPP_INTERNAL(tmpe_macro)
 #define tmpe_count                                          TPP_INTERNAL(tmpe_count)
 #define tmps_cnt                                            TPP_INTERNAL(tmps_cnt)
@@ -24543,7 +24544,15 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	default: break;
 	}
 
-	/* TODO: User-defined callback hook to parse pragmas not known to TPP itself */
+#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK
+	/* User-defined callback hook to parse pragmas not known to TPP itself */
+	{
+		tpp_errno error;
+		error = tpp_lexer_callhook_unknown_pragma(self);
+		if (error != TPP_ENOENT)
+			return error;
+	}
+#endif /* TPP_HAVE_UNKNOWN_PRAGMA_HOOK */
 
 #if TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS
 	{

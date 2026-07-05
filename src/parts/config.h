@@ -2553,6 +2553,9 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HOOK_DEFAULT_USER
 #define TPP_HOOK_DEFAULT_USER ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_RT_BUILTIN : TPP_HOOK_CONST_BUILTIN)
 #endif /* !TPP_HOOK_DEFAULT_USER */
+#ifndef TPP_HOOK_DEFAULT_NOOP
+#define TPP_HOOK_DEFAULT_NOOP ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_RT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_DEFAULT_NOOP */
 
 
 /*[[[deemon
@@ -2616,20 +2619,20 @@ local HOOKS = {
 		"0"
 	},
 
-	//TODO:{
-	//TODO:	"Called whenever a #pragma is encountered that is not recognized.\n" +
-	//TODO:	"When called, the lexer is set-up to point at the first token after the #pragma.\n" +
-	//TODO:	"@return: TPP_EOK:    Pragma has been handled\n" +
-	//TODO:	"@return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted\n" +
-	//TODO:	"@return: TPP_EIO:    I/O error\n" +
-	//TODO:	"@return: TPP_ENOMEM: Out of memory",
-	//TODO:	"UNKNOWN_PRAGMA",
-	//TODO:	"(TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL)",
-	//TODO:	"", // No builtin default
-	//TODO:	"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self)", { "lexer" },
-	//TODO:	"TPP_ENOENT"
-	//TODO:},
-	//TODO:
+	{
+		"Called whenever a #pragma is encountered that is not recognized.\n" +
+		"When called, the lexer is set-up to point at the first token after the #pragma.\n" +
+		"@return: TPP_EOK:    Pragma has been handled\n" +
+		"@return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted\n" +
+		"@return: TPP_EIO:    I/O error\n" +
+		"@return: TPP_ENOMEM: Out of memory",
+		"UNKNOWN_PRAGMA",
+		"(TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL)",
+		"", // No builtin default
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self)", { "lexer" },
+		"TPP_ENOENT"
+	},
+
 	//TODO:{
 	//TODO:	"Called whenever some file is #include-ed for the first time",
 	//TODO:	"NEW_DEPENDENCY",
@@ -2653,7 +2656,8 @@ for (local doc, name,
 	print("#ifdef TPP_HOOK_", name);
 	print("#define TPP_HAVE_", name, "_HOOK (", default_TPP_HAVE_FOO_HOOK, " ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)");
 	print("#else /" "* TPP_HOOK_", name, " *" "/");
-	print("#define TPP_HAVE_", name, "_HOOK (", default_TPP_HAVE_FOO_HOOK, " ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)");
+	print("#define TPP_HAVE_", name, "_HOOK (", default_TPP_HAVE_FOO_HOOK, " ? ",
+		builtin_FOO_HOOK ? "TPP_HOOK_DEFAULT_BUILTIN" : "TPP_HOOK_DEFAULT_NOOP", " : TPP_HOOK_DISABLED)");
 	print("#endif /" "* !TPP_HOOK_", name, " *" "/");
 	print("#endif /" "* !TPP_HAVE_", name, "_HOOK *" "/");
 	print("#if TPP_HAVE_", name, "_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_", name, ")");
@@ -2765,6 +2769,43 @@ for (local doc, name,
 #ifndef TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
 #define TPP_HAVE_BUILTIN_PARSEEXPR_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_PARSEEXPR_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_PARSEEXPR_HOOK */
+
+/* >> tpp_errno (TPPCALL *TPP_HOOK_UNKNOWN_PRAGMA)(tpp_lexer *tpp_restrict self);
+ * Called whenever a #pragma is encountered that is not recognized.
+ * When called, the lexer is set-up to point at the first token after the #pragma.
+ * @return: TPP_EOK:    Pragma has been handled
+ * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
+#ifdef TPP_HOOK_UNKNOWN_PRAGMA
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK ((TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_UNKNOWN_PRAGMA */
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK ((TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_UNKNOWN_PRAGMA */
+#endif /* !TPP_HAVE_UNKNOWN_PRAGMA_HOOK */
+#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_UNKNOWN_PRAGMA)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_UNKNOWN_PRAGMA' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_UNKNOWN_PRAGMA)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_UNKNOWN_PRAGMA' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK /* There is no builtin version */
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK /* There is no builtin version */
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_PRAGMA) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_UNKNOWN_PRAGMA' is defined, but 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_PRAGMA && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 /*[[[end]]]*/
 
 /************************************************************************/
