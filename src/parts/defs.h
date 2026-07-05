@@ -3826,7 +3826,7 @@ TPP_WARNING_EX(TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 0(), ~, {
 #endif /* !TPP_HAVE_TPP_WG_QUALITY */
 #if TPP_HAVE_TPP_WG_QUALITY
 #ifndef TPP_WGNAME_QUALITY
-#define TPP_WGNAME_QUALITY 1("non-portable-casing")
+#define TPP_WGNAME_QUALITY 1("quality")
 #endif /* !TPP_WGNAME_QUALITY */
 #define TPP_WG_QUALITY TPP_WG_QUALITY
 TPP_WGROUP(TPP_WG_QUALITY, TPP_WGNAME_QUALITY, TPP_WSTATE_WARN)
@@ -3899,7 +3899,6 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 //TODO:TPP_WGROUP(TPP_WG_USAGE, /*          */ 1("usage"),                TPP_WSTATE_FATAL)
 //TODO:TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
 //TODO:TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
-//TODO:TPP_WGROUP(TPP_WG_QUALITY, /*        */ 1("quality"),              TPP_WSTATE_FATAL)
 
 
 /* Pull in user definitions (if defined) */

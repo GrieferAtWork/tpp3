@@ -460,25 +460,39 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
 
 /* Initialize a lexer's file to read the given [text,text+text_size) blob.
  * @param: start_lc: [valid_if(chunk != NULL)] */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+_tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
+                         /*utf-8*/ char const *filename,
+                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                         void const *text, tpp_size text_size,
+                         tpp_lcinfo start_lc
+#if TPP_HAVE_FILE_FLAGS
+                         , tpp_file_flags flags
+#endif /* TPP_HAVE_FILE_FLAGS */
 #if TPP_HAVE_UNICODE
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_initfile_text_ex(tpp_lexer *tpp_restrict self,
-                           /*utf-8*/ char const *filename,
-                           /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                           void const *text, tpp_size text_size,
-                           tpp_lcinfo start_lc, tpp_file_encoding encoding);
-#define tpp_lexer_initfile_text_ascii(self, filename, chunk, text, text_size, start_lc) \
-	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_ASCII)
-#define tpp_lexer_initfile_text_utf8(self, filename, chunk, text, text_size, start_lc) \
-	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_FORCE_UTF8)
-#else /* TPP_HAVE_UNICODE */
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_initfile_text_ascii(tpp_lexer *tpp_restrict self,
-                              /*utf-8*/ char const *filename,
-                              /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                              void const *text, tpp_size text_size,
-                              tpp_lcinfo start_lc);
-#endif /* !TPP_HAVE_UNICODE */
+                         , tpp_file_encoding encoding
+#endif /* TPP_HAVE_UNICODE */
+                         );
+#if TPP_HAVE_FILE_FLAGS && TPP_HAVE_UNICODE
+#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags, encoding)
+#elif TPP_HAVE_FILE_FLAGS
+#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags)
+#elif TPP_HAVE_UNICODE
+#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, encoding)
+#else /* ... */
+#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc)
+#endif /* !... */
+#define tpp_lexer_initfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
+#if TPP_HAVE_UNICODE
+#define tpp_lexer_initfile_text_utf8(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_FORCE_UTF8)
+#endif /* TPP_HAVE_UNICODE */
+
 
 #if TPP_HAVE_LEXER_INIT_IO
 /* Initialize a lexer such that it starts reading from "handle"
@@ -551,25 +565,39 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
  * @param: start_lc: [valid_if(chunk != NULL)]
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
+                         /*utf-8*/ char const *filename,
+                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                         void const *text, tpp_size text_size,
+                         tpp_lcinfo start_lc
+#if TPP_HAVE_FILE_FLAGS
+                         , tpp_file_flags flags
+#endif /* TPP_HAVE_FILE_FLAGS */
 #if TPP_HAVE_UNICODE
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_text_ex(tpp_lexer *tpp_restrict self,
-                           /*utf-8*/ char const *filename,
-                           /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                           void const *text, tpp_size text_size,
-                           tpp_lcinfo start_lc, tpp_file_encoding encoding);
-#define tpp_lexer_pushfile_text_ascii(self, filename, chunk, text, text_size, start_lc) \
-	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_ASCII)
-#define tpp_lexer_pushfile_text_utf8(self, filename, chunk, text, text_size, start_lc) \
-	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_FORCE_UTF8)
-#else /* TPP_HAVE_UNICODE */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_text_ascii(tpp_lexer *tpp_restrict self,
-                              /*utf-8*/ char const *filename,
-                              /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                              void const *text, tpp_size text_size,
-                              tpp_lcinfo start_lc);
-#endif /* !TPP_HAVE_UNICODE */
+                         , tpp_file_encoding encoding
+#endif /* TPP_HAVE_UNICODE */
+                         );
+#if TPP_HAVE_FILE_FLAGS && TPP_HAVE_UNICODE
+#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, flags, encoding)
+#elif TPP_HAVE_FILE_FLAGS
+#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, flags)
+#elif TPP_HAVE_UNICODE
+#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, encoding)
+#else /* ... */
+#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc)
+#endif /* !... */
+#define tpp_lexer_pushfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
+#if TPP_HAVE_UNICODE
+#define tpp_lexer_pushfile_text_utf8(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_FORCE_UTF8)
+#endif /* TPP_HAVE_UNICODE */
+
 
 
 /* Check if the current file can be popped. */
@@ -608,10 +636,17 @@ typedef struct tpp_lexer_openfile_result {
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 #if TPP_HAVE_FILE_SYSHDR
 	tpp_file_flags tlofr_fileflags;    /* Either "TPP_FILE_FLAGS_NORMAL" or "TPP_FILE_FLAGS_SYSHDR" or "TPP_FILE_FLAGS_EXTERN_C" */
-#define tpp_lexer_openfile_result_getfileflags(self) ((self)->tlofr_fileflags)
+#define _tpp_lexer_openfile_result_getfileflags(self) ((self)->tlofr_fileflags)
 #else /* TPP_HAVE_FILE_SYSHDR */
-#define tpp_lexer_openfile_result_getfileflags(self) TPP_FILE_FLAGS_NORMAL
+#define _tpp_lexer_openfile_result_getfileflags(self) TPP_FILE_FLAGS_NORMAL
 #endif /* !TPP_HAVE_FILE_SYSHDR */
+#if TPP_HAVE_USER_KEYWORDS
+#define tpp_lexer_openfile_result_getfileflags(self) _tpp_lexer_openfile_result_getfileflags(self)
+#elif TPP_HAVE_FILE_NOKWD
+#define tpp_lexer_openfile_result_getfileflags(self) (_tpp_lexer_openfile_result_getfileflags(self) | TPP_FILE_FLAGS_FREENAME | TPP_FILE_FLAGS_NOKWD)
+#else /* ... */
+#define tpp_lexer_openfile_result_getfileflags(self) (_tpp_lexer_openfile_result_getfileflags(self) | TPP_FILE_FLAGS_FREENAME)
+#endif /* !... */
 } tpp_lexer_openfile_result;
 
 

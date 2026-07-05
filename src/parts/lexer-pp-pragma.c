@@ -179,20 +179,20 @@ again_parse_string:
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok;
-	tpp_file const *iofile;
-	tpp_keyword *iofile_kwd;
-	iofile     = tpp_file_getiofile(tpp_lexer_getfile(self));
-	iofile_kwd = tpp_file_getrealfilenamekwd(iofile);
-	if (iofile_kwd) {
+	tpp_file const *textfile;
+	tpp_keyword *textfile_kwd;
+	textfile     = tpp_file_gettextfile(tpp_lexer_getfile(self));
+	textfile_kwd = tpp_file_getrealfilenamekwd(textfile);
+	if (textfile_kwd) {
 		tpp_keyword_misc *misc;
-		misc = tpp_keyword_requiremisc(iofile_kwd);
+		misc = tpp_keyword_requiremisc(textfile_kwd);
 		if tpp_unlikely(!misc)
 			return TPP_ENOMEM;
 		misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_ONCE;
 	}
 #if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
 #if TPP_HAVE_INCLUDE_STACK
-	if (iofile->tf_prev == NULL)
+	if (textfile->tf_tprev == NULL)
 #endif /* TPP_HAVE_INCLUDE_STACK */
 	{
 		tpp_errno error = tpp_lexer_warnf(self, TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER);

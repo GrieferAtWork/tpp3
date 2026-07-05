@@ -1569,7 +1569,7 @@ tpp_lexer_openfile_ex_check_mask_flags(/*1..1*/ tpp_lexer *tpp_restrict self,
 	if ((result_kwd->tk_misc) != NULL &&
 	    (result_kwd->tk_misc->tkm_flags & mask_flags) != 0) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-		if (mask_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID) {
+		if (result_kwd->tk_misc->tkm_flags & mask_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID) {
 			tpp_keyword const *file_guard = result_kwd->tk_misc->tkm_file_guard;
 			tpp_assert(file_guard != NULL && "'TPP_KEYWORD_FLAG_HDR_GUARD_VALID' is "
 			                                 "set, but 'tkm_file_guard == NULL'");

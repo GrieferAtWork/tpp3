@@ -389,24 +389,21 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self) {
 
 /* Initialize a lexer's file to read the given [text,text+text_size) blob.
  * @param: start_lc: [valid_if(chunk != NULL)] */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+_tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
+                         /*utf-8*/ char const *filename,
+                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                         void const *text, tpp_size text_size,
+                         tpp_lcinfo start_lc
+#if TPP_HAVE_FILE_FLAGS
+                         , tpp_file_flags flags
+#endif /* TPP_HAVE_FILE_FLAGS */
 #if TPP_HAVE_UNICODE
-TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_initfile_text_ex(tpp_lexer *tpp_restrict self,
-                           /*utf-8*/ char const *filename,
-                           /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                           void const *text, tpp_size text_size,
-                           tpp_lcinfo start_lc, tpp_file_encoding encoding)
-#else /* TPP_HAVE_UNICODE */
-TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_initfile_text_ascii(tpp_lexer *tpp_restrict self,
-                              /*utf-8*/ char const *filename,
-                              /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                              void const *text, tpp_size text_size,
-                              tpp_lcinfo start_lc)
-#endif /* !TPP_HAVE_UNICODE */
-{
+                         , tpp_file_encoding encoding
+#endif /* TPP_HAVE_UNICODE */
+                         ) {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
+	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, flags, encoding);
 	tpp_lexer_init(self);
 }
 
@@ -530,22 +527,19 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
  * @param: start_lc: [valid_if(chunk != NULL)]
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
+                         /*utf-8*/ char const *filename,
+                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                         void const *text, tpp_size text_size,
+                         tpp_lcinfo start_lc
+#if TPP_HAVE_FILE_FLAGS
+                         , tpp_file_flags flags
+#endif /* TPP_HAVE_FILE_FLAGS */
 #if TPP_HAVE_UNICODE
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_text_ex(tpp_lexer *tpp_restrict self,
-                           /*utf-8*/ char const *filename,
-                           /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                           void const *text, tpp_size text_size,
-                           tpp_lcinfo start_lc, tpp_file_encoding encoding)
-#else /* TPP_HAVE_UNICODE */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_text_ascii(tpp_lexer *tpp_restrict self,
-                              /*utf-8*/ char const *filename,
-                              /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                              void const *text, tpp_size text_size,
-                              tpp_lcinfo start_lc)
-#endif /* !TPP_HAVE_UNICODE */
-{
+                         , tpp_file_encoding encoding
+#endif /* TPP_HAVE_UNICODE */
+                         ) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file) {
@@ -554,7 +548,7 @@ tpp_lexer_pushfile_text_ascii(tpp_lexer *tpp_restrict self,
 		return TPP_ENOMEM;
 	}
 	tpp_file_move(prev_file, file);
-	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
+	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, flags, encoding);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return TPP_EOK;
@@ -579,6 +573,7 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 
+
 #if TPP_HAVE_LEXER_REPRTOKENID
 /* Return the (canonical) string-representation of a given token ID */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) char const *TPPCALL
@@ -601,8 +596,9 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok) {
 }
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */
 
-#if TPP_HAVE_LEXER_MANUALPOPFILE
 
+
+#if TPP_HAVE_LEXER_MANUALPOPFILE
 /* Example of the data-layout (also demonstrating how data is backed up)
  * when using the `tpp_lexer_manualpopfile_*()' set of functions:
  *
@@ -652,7 +648,7 @@ tpp_swapmem(void *a, void *b, tpp_size num_bytes) {
 	}
 }
 
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_manualpopfile_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *const prev = file->TPP_INTERNAL(tf_prev);
@@ -661,7 +657,7 @@ tpp_lexer_manualpopfile_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_swapmem(file, prev, sizeof(tpp_file)); /* NOTE: This could skip "tf_prev", since that's equal in both */
 }
 
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
                                         tpp_file *tpp_restrict orig_prev) {
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -682,7 +678,7 @@ _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
 	}
 }
 
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
                                       tpp_file *tpp_restrict orig_prev) {
 	tpp_file const *const file = tpp_lexer_getfile(self);

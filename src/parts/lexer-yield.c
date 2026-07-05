@@ -61,7 +61,7 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 		goto err_nomem;
 	tpp_file_move(prev_file, file);
 	tpp_file_init_text_ex(file, NULL, chunk, text, textsize,
-	                      TPP_LCINFO_INVALID,
+	                      TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL,
 	                      TPP_FILE_ENCODING_FORCE_UTF8);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -1445,6 +1445,7 @@ done_inner_loop:
 	                      tpp_string_str(string),
 	                      tpp_string_len(string),
 	                      TPP_LCINFO_INVALID,
+	                      TPP_FILE_FLAGS_NORMAL,
 	                      file->tf_enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -1725,6 +1726,7 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	                      tpp_string_str(exec_result),
 	                      tpp_string_len(exec_result),
 	                      TPP_LCINFO_INVALID,
+	                      TPP_FILE_FLAGS_NORMAL,
 	                      file->tf_enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;

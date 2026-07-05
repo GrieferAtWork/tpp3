@@ -6371,6 +6371,10 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
+#if (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || TPP_HAVE_FILE_USER_FILENAME
+		TPP_FALLTHRU
+#endif /* (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || TPP_HAVE_FILE_USER_FILENAME */
+	case TPP_FILE_KIND_TEXT:
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
 		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME) {
 #if TPP_HAVE_FILE_DUMMY
@@ -6394,10 +6398,11 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 
 			tpp_free((char *)self->tf_data.td_io.tff_name);
 		}
+#if TPP_HAVE_FILE_USER_FILENAME && TPP_HAVE_FILE_DUMMY
+		TPP_FALLTHRU
+#endif /* TPP_HAVE_FILE_USER_FILENAME && TPP_HAVE_FILE_DUMMY */
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
 #if TPP_HAVE_FILE_USER_FILENAME
-		TPP_FALLTHRU
-	case TPP_FILE_KIND_TEXT:
 #if TPP_HAVE_FILE_DUMMY
 	case TPP_FILE_KIND_DUMMY:
 #endif /* TPP_HAVE_FILE_DUMMY */
@@ -6405,6 +6410,8 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 			tpp_string_decref(self->tf_data.td_text.tft_user_filename);
 		break;
 #endif /* TPP_HAVE_FILE_USER_FILENAME */
+
+
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
 		tpp_macro *macro = self->tf_data.td_macro.tfm_macro;
@@ -7570,7 +7577,8 @@ again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
 	switch (self->tf_kind) {
 
-	case TPP_FILE_KIND_IO: {
+	case TPP_FILE_KIND_IO:
+	case TPP_FILE_KIND_TEXT: {
 		char const *filename;
 #if TPP_HAVE_FILE_NOKWD
 		if (self->tf_flags & TPP_FILE_FLAGS_NOKWD)
@@ -7589,7 +7597,6 @@ again:
 		goto again;
 #endif /* TPP_HAVE_FILE_SUBTEXT */
 
-	case TPP_FILE_KIND_TEXT:
 #if TPP_HAVE_FILE_DUMMY
 	case TPP_FILE_KIND_DUMMY:
 #endif /* TPP_HAVE_FILE_DUMMY */
@@ -7604,20 +7611,7 @@ again:
 #endif /* TPP_HAVE_FILE_GETREALFILENAMEKWD */
 
 
-/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_tprev")
- * If no such file exists, simply re-return "self". This function never returns "NULL" */
 #if TPP_HAVE_INCLUDE_STACK
-TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
-tpp_file_getiofile(tpp_file const *tpp_restrict self) {
-	tpp_file *iter = (tpp_file *)self;
-	while (iter->tf_kind != TPP_FILE_KIND_IO) {
-		iter = iter->tf_tprev;
-		if (iter == NULL)
-			return (tpp_file *)self;
-	}
-	return iter;
-}
-
 /* Returns the last file in the #include-stack (using "tf_tprev") */
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
@@ -7686,7 +7680,7 @@ tpp_file_pushdummy(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	(void)0 _tpp_file_init_ifdef(dummy);
 	dummy->tf_kind = TPP_FILE_KIND_DUMMY;
 	(void)0 _tpp_file_init_enc(dummy);
-	(void)0 _tpp_file_init_flags(dummy);
+	(void)0 _tpp_file_init_flags(dummy, TPP_FILE_FLAGS_NORMAL);
 	dummy->tf_data.td_dummy.tfd_name     = self->tf_data.td_io.tff_name;
 	dummy->tf_data.td_dummy.tfd_start_lc = tpp_file_getlcinfo(self, pos);
 #if TPP_HAVE_FILE_USER_FILENAME
@@ -9273,7 +9267,7 @@ tpp_lexer_openfile_ex_check_mask_flags(/*1..1*/ tpp_lexer *tpp_restrict self,
 	if ((result_kwd->tk_misc) != NULL &&
 	    (result_kwd->tk_misc->tkm_flags & mask_flags) != 0) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-		if (mask_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID) {
+		if (result_kwd->tk_misc->tkm_flags & mask_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID) {
 			tpp_keyword const *file_guard = result_kwd->tk_misc->tkm_file_guard;
 			tpp_assert(file_guard != NULL && "'TPP_KEYWORD_FLAG_HDR_GUARD_VALID' is "
 			                                 "set, but 'tkm_file_guard == NULL'");
@@ -13784,24 +13778,21 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self) {
 
 /* Initialize a lexer's file to read the given [text,text+text_size) blob.
  * @param: start_lc: [valid_if(chunk != NULL)] */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+_tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
+                         /*utf-8*/ char const *filename,
+                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                         void const *text, tpp_size text_size,
+                         tpp_lcinfo start_lc
+#if TPP_HAVE_FILE_FLAGS
+                         , tpp_file_flags flags
+#endif /* TPP_HAVE_FILE_FLAGS */
 #if TPP_HAVE_UNICODE
-TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_initfile_text_ex(tpp_lexer *tpp_restrict self,
-                           /*utf-8*/ char const *filename,
-                           /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                           void const *text, tpp_size text_size,
-                           tpp_lcinfo start_lc, tpp_file_encoding encoding)
-#else /* TPP_HAVE_UNICODE */
-TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_initfile_text_ascii(tpp_lexer *tpp_restrict self,
-                              /*utf-8*/ char const *filename,
-                              /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                              void const *text, tpp_size text_size,
-                              tpp_lcinfo start_lc)
-#endif /* !TPP_HAVE_UNICODE */
-{
+                         , tpp_file_encoding encoding
+#endif /* TPP_HAVE_UNICODE */
+                         ) {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
+	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, flags, encoding);
 	tpp_lexer_init(self);
 }
 
@@ -13925,22 +13916,19 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
  * @param: start_lc: [valid_if(chunk != NULL)]
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
+                         /*utf-8*/ char const *filename,
+                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                         void const *text, tpp_size text_size,
+                         tpp_lcinfo start_lc
+#if TPP_HAVE_FILE_FLAGS
+                         , tpp_file_flags flags
+#endif /* TPP_HAVE_FILE_FLAGS */
 #if TPP_HAVE_UNICODE
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_text_ex(tpp_lexer *tpp_restrict self,
-                           /*utf-8*/ char const *filename,
-                           /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                           void const *text, tpp_size text_size,
-                           tpp_lcinfo start_lc, tpp_file_encoding encoding)
-#else /* TPP_HAVE_UNICODE */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_text_ascii(tpp_lexer *tpp_restrict self,
-                              /*utf-8*/ char const *filename,
-                              /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                              void const *text, tpp_size text_size,
-                              tpp_lcinfo start_lc)
-#endif /* !TPP_HAVE_UNICODE */
-{
+                         , tpp_file_encoding encoding
+#endif /* TPP_HAVE_UNICODE */
+                         ) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file) {
@@ -13949,7 +13937,7 @@ tpp_lexer_pushfile_text_ascii(tpp_lexer *tpp_restrict self,
 		return TPP_ENOMEM;
 	}
 	tpp_file_move(prev_file, file);
-	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, encoding);
+	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, flags, encoding);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return TPP_EOK;
@@ -13974,6 +13962,7 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 
+
 #if TPP_HAVE_LEXER_REPRTOKENID
 /* Return the (canonical) string-representation of a given token ID */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) char const *TPPCALL
@@ -13996,8 +13985,9 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok) {
 }
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */
 
-#if TPP_HAVE_LEXER_MANUALPOPFILE
 
+
+#if TPP_HAVE_LEXER_MANUALPOPFILE
 /* Example of the data-layout (also demonstrating how data is backed up)
  * when using the `tpp_lexer_manualpopfile_*()' set of functions:
  *
@@ -14047,7 +14037,7 @@ tpp_swapmem(void *a, void *b, tpp_size num_bytes) {
 	}
 }
 
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_manualpopfile_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *const prev = file->TPP_INTERNAL(tf_prev);
@@ -14056,7 +14046,7 @@ tpp_lexer_manualpopfile_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_swapmem(file, prev, sizeof(tpp_file)); /* NOTE: This could skip "tf_prev", since that's equal in both */
 }
 
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
                                         tpp_file *tpp_restrict orig_prev) {
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -14077,7 +14067,7 @@ _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
 	}
 }
 
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
                                       tpp_file *tpp_restrict orig_prev) {
 	tpp_file const *const file = tpp_lexer_getfile(self);
@@ -23130,20 +23120,20 @@ again_parse_string:
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok;
-	tpp_file const *iofile;
-	tpp_keyword *iofile_kwd;
-	iofile     = tpp_file_getiofile(tpp_lexer_getfile(self));
-	iofile_kwd = tpp_file_getrealfilenamekwd(iofile);
-	if (iofile_kwd) {
+	tpp_file const *textfile;
+	tpp_keyword *textfile_kwd;
+	textfile     = tpp_file_gettextfile(tpp_lexer_getfile(self));
+	textfile_kwd = tpp_file_getrealfilenamekwd(textfile);
+	if (textfile_kwd) {
 		tpp_keyword_misc *misc;
-		misc = tpp_keyword_requiremisc(iofile_kwd);
+		misc = tpp_keyword_requiremisc(textfile_kwd);
 		if tpp_unlikely(!misc)
 			return TPP_ENOMEM;
 		misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_ONCE;
 	}
 #if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
 #if TPP_HAVE_INCLUDE_STACK
-	if (iofile->tf_prev == NULL)
+	if (textfile->tf_tprev == NULL)
 #endif /* TPP_HAVE_INCLUDE_STACK */
 	{
 		tpp_errno error = tpp_lexer_warnf(self, TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER);
@@ -26813,7 +26803,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		if tpp_unlikely(!prev_file)
 			goto err_nomem;
 		tpp_file_move(prev_file, file);
-		tpp_file_init_io_from_ofr2(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
+		tpp_file_init_io_from_ofr_ex(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
 		tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
 		file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 		file->tf_prev  = prev_file;
@@ -26894,7 +26884,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		goto err_nomem_embed_data;
 	tpp_file_move(prev_file, file);
 #if TPP_HAVE_FILE_ENCODING_EMBED
-	tpp_file_init_io_from_ofr2(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
+	tpp_file_init_io_from_ofr_ex(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
 	tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
 	file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 	file->tf_chunk = tpp_string_builder_pack(&embed_data);
@@ -26909,26 +26899,10 @@ done_inherit_io_handle:
 #else /* TPP_HAVE_FILE_ENCODING_EMBED */
 	{
 		TPP_REF tpp_string *chunk = tpp_string_builder_pack(&embed_data);
-#if TPP_HAVE_USER_KEYWORDS
 		tpp_file_init_text_ascii(file, tpp_lexer_openfile_result_getfilename(&self->teb_ofr),
 		                         chunk, tpp_string_str(chunk), tpp_string_len(chunk),
+		                         tpp_lexer_openfile_result_getfileflags(&self->teb_ofr),
 		                         TPP_LCINFO_INVALID);
-#else /* TPP_HAVE_USER_KEYWORDS */
-		/* Must initialize as an I/O file (even though the file handle is at EOF),
-		 * because that's the only way a file is able to free its filename upon
-		 * being finalized. Once "chunk" has been read, the file will simply try
-		 * to read once again, which should yield EOF and cause it to stop
-		 *
-		 * FIXME: This breaks when a custom "limit" was used! -- if that's the case,
-		 *        must read+discard all remaining data within the file before we can
-		 *        return here! */
-		tpp_file_init_io_from_ofr(file, &self->teb_ofr);
-		file->tf_data.td_io.tff_start_lc = TPP_LCINFO_INVALID;
-		file->tf_chunk = chunk;
-		file->tf_pos = tpp_string_str(chunk);
-		file->tf_end = tpp_string_end(chunk);
-		self->teb_ofr_error = TPP_ENOENT; /* Anything other than "TPP_EOK" to prevent closure in "tpp_embed_builder_fini()" */
-#endif /* !TPP_HAVE_USER_KEYWORDS */
 	}
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -27587,8 +27561,8 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_IF_ELSE_ENDIF) */
 		file->tf_pos = directive_iter;
-		tpp_lexer_process_directive_set_noguard();
 		result = tpp_lexer_handle_if_directive(self);
+		tpp_lexer_process_directive_set_noguard(); /* Important! Set the NOGUARD flag *afterwards* */
 		break;
 
 	case TPP_KWD_elif:
@@ -28848,7 +28822,7 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 		goto err_nomem;
 	tpp_file_move(prev_file, file);
 	tpp_file_init_text_ex(file, NULL, chunk, text, textsize,
-	                      TPP_LCINFO_INVALID,
+	                      TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL,
 	                      TPP_FILE_ENCODING_FORCE_UTF8);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -30232,6 +30206,7 @@ done_inner_loop:
 	                      tpp_string_str(string),
 	                      tpp_string_len(string),
 	                      TPP_LCINFO_INVALID,
+	                      TPP_FILE_FLAGS_NORMAL,
 	                      file->tf_enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -30512,6 +30487,7 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	                      tpp_string_str(exec_result),
 	                      tpp_string_len(exec_result),
 	                      TPP_LCINFO_INVALID,
+	                      TPP_FILE_FLAGS_NORMAL,
 	                      file->tf_enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;

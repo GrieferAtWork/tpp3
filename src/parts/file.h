@@ -64,13 +64,13 @@ typedef enum tpp_file_encoding {
 
 
 #undef TPP_HAVE_FILE_FLAGS
-#if (TPP_HAVE_FILE_NONBLOCK ||                                  \
-     TPP_HAVE_FILE_NOCLOSE ||                                   \
-     TPP_HAVE_FILE_NOKWD ||                                     \
+#if (TPP_HAVE_FILE_NONBLOCK ||                               \
+     TPP_HAVE_FILE_NOCLOSE ||                                \
+     TPP_HAVE_FILE_NOKWD ||                                  \
      (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || \
-     TPP_HAVE_FILE_SYSHDR ||                                    \
-     TPP_HAVE_FILE_EXTERN_C ||                                  \
-     TPP_HAVE_IFNDEF_INCLUDE_GUARDS ||                          \
+     TPP_HAVE_FILE_SYSHDR ||                                 \
+     TPP_HAVE_FILE_EXTERN_C ||                               \
+     TPP_HAVE_IFNDEF_INCLUDE_GUARDS ||                       \
      TPP_HAVE_CPP_DIRECTIVES)
 #define TPP_HAVE_FILE_FLAGS 1
 #else /* ... */
@@ -87,10 +87,10 @@ typedef enum tpp_file_encoding {
 #define TPP_FILE_FLAGS_NOCLOSE      UINT8_C(0x02) /* TPP_FILE_KIND_IO: Don't `tpp_io_close(tff_file)' on destruction */
 #endif /* TPP_HAVE_FILE_NOCLOSE */
 #if TPP_HAVE_FILE_NOKWD
-#define TPP_FILE_FLAGS_NOKWD        UINT8_C(0x04) /* TPP_FILE_KIND_IO: The file's "tff_name" field isn't actually a "tpp_keyword::tk_kwd", but rather a raw \0-terminated C string. */
+#define TPP_FILE_FLAGS_NOKWD        UINT8_C(0x04) /* TPP_FILE_KIND_IO + TPP_FILE_KIND_TEXT: The file's "tff_name" field isn't actually a "tpp_keyword::tk_kwd", but rather a raw \0-terminated C string. */
 #endif /* TPP_HAVE_FILE_NOKWD */
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
-#define TPP_FILE_FLAGS_FREENAME     UINT8_C(0x08) /* TPP_FILE_KIND_IO: Must tpp_free(tff_name) when the file is finalized */
+#define TPP_FILE_FLAGS_FREENAME     UINT8_C(0x08) /* TPP_FILE_KIND_IO + TPP_FILE_KIND_TEXT: Must tpp_free(tff_name) when the file is finalized */
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
 #if TPP_HAVE_FILE_SYSHDR
 #define TPP_FILE_FLAGS_SYSHDR       UINT8_C(0x10) /* TPP_FILE_KIND_IO + TPP_FILE_KIND_TEXT: Suppress all warnings produced in the context of this file */
@@ -230,12 +230,11 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_UNICODE */
 #if TPP_HAVE_FILE_FLAGS
 	tpp_file_flags      TPP_INTERNAL(tf_flags); /* File flags (set of `TPP_FILE_FLAGS_*') */
-#define _tpp_file_init_flags_ex(self, v) , (self)->TPP_INTERNAL(tf_flags) = (v)
+#define _tpp_file_init_flags(self, v) , (self)->TPP_INTERNAL(tf_flags) = (v)
 #else /* TPP_HAVE_FILE_FLAGS */
-#define _tpp_file_init_flags_ex(self, v) /* nothing */
+#define _tpp_file_init_flags(self, v) /* nothing */
 #endif /* !TPP_HAVE_FILE_FLAGS */
 #define _tpp_file_init_enc(self)   _tpp_file_init_enc_ex(self, TPP_FILE_ENCODING_UTF8)
-#define _tpp_file_init_flags(self) _tpp_file_init_flags_ex(self, TPP_FILE_FLAGS_NORMAL)
 	union {
 		struct {
 			char const      *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
@@ -642,11 +641,14 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 #endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */
 
 /* Initialize "self " as a "TPP_FILE_KIND_IO" file
- * @param: char const      *filename: [0..1] Filename (if known)
- * @param: tpp_io_handle    fp:       File descriptor (inherited)
- * @param: tpp_file_flags flags:    I/O file flags (set of `TPP_FILE_FLAGS_*') */
-#define tpp_file_init_io(self, filename, /*inherit*/ fp) \
-	tpp_file_init_io_ex(self, filename, fp, TPP_FILE_FLAGS_NORMAL)
+ * @param: char const    *filename: [0..1] Filename (if known)
+ * @param: tpp_io_handle  fp:       File descriptor (inherited)
+ * @param: tpp_file_flags flags:    File flags (set of `TPP_FILE_FLAGS_*') */
+#if TPP_HAVE_FILE_NOKWD
+#define tpp_file_init_io(self, filename, /*inherit*/ fp) tpp_file_init_io_ex(self, filename, fp, TPP_FILE_FLAGS_NOKWD)
+#else /* TPP_HAVE_FILE_NOKWD */
+#define tpp_file_init_io(self, filename, /*inherit*/ fp) tpp_file_init_io_ex(self, filename, fp, TPP_FILE_FLAGS_NORMAL)
+#endif /* !TPP_HAVE_FILE_NOKWD */
 #define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags) \
 	tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, TPP_FILE_ENCODING_UTF8)
 #define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                                       \
@@ -656,7 +658,7 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 	       _tpp_file_init_prev(self),                                                                          \
 	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                                    \
 	       _tpp_file_init_enc_ex(self, enc)                                                                    \
-	       _tpp_file_init_flags_ex(self, flags)                                                                \
+	       _tpp_file_init_flags(self, flags)                                                                \
 	       _tpp_file_init_common(self),                                                                        \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename),              \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
@@ -668,20 +670,10 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 /* Initialize "self" from a given "tpp_lexer_openfile_result" */
 #if TPP_HAVE_LEXER_OPENFILE
 #define tpp_file_init_io_from_ofr(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr) \
-	tpp_file_init_io_from_ofr2(self, ofr, TPP_FILE_ENCODING_UTF8)
-#if TPP_HAVE_USER_KEYWORDS
-#define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
-	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
+	tpp_file_init_io_from_ofr_ex(self, ofr, TPP_FILE_ENCODING_UTF8)
+#define tpp_file_init_io_from_ofr_ex(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
+	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                       \
 	                     (ofr)->tlofr_handle, tpp_lexer_openfile_result_getfileflags(ofr), enc)
-#elif TPP_HAVE_FILE_NOKWD
-#define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
-	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
-	                     (ofr)->tlofr_handle, tpp_lexer_openfile_result_getfileflags(ofr) | TPP_FILE_FLAGS_NOKWD | TPP_FILE_FLAGS_FREENAME, enc)
-#else /* ... */
-#define tpp_file_init_io_from_ofr2(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
-	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                     \
-	                     (ofr)->tlofr_handle, tpp_lexer_openfile_result_getfileflags(ofr) | TPP_FILE_FLAGS_FREENAME, enc)
-#endif /* !... */
 #endif /* TPP_HAVE_LEXER_OPENFILE */
 
 
@@ -692,17 +684,22 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
  * @param: void const         *text:      File data base pointer
  * @param: tpp_size            text_size: File data size
  * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text", or `TPP_LCINFO_INVALID'
- * @param: tpp_file_encoding   encoding:  File data encoding */
-#define tpp_file_init_text_ascii(self, filename, chunk, text, text_size, start_lc) \
-	tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, TPP_FILE_ENCODING_ASCII)
-#define tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, encoding)               \
+ * @param: tpp_file_encoding   encoding:  File data encoding
+ * @param: tpp_file_flags      flags:     File flags (set of `TPP_FILE_FLAGS_*') */
+#define tpp_file_init_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
+#if TPP_HAVE_UNICODE
+#define tpp_file_init_text_utf8(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_FORCE_UTF8)
+#endif /* TPP_HAVE_UNICODE */
+#define tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding)        \
 	(void)((self)->TPP_INTERNAL(tf_pos)   = (tpp_char const *)(text),                                   \
 	       (self)->TPP_INTERNAL(tf_chunk) = (chunk),                                                    \
 	       (self)->TPP_INTERNAL(tf_end)   = (tpp_char const *)(text) + (text_size)                      \
 	       _tpp_file_init_prev(self),                                                                   \
 	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT                                           \
 	       _tpp_file_init_enc_ex(self, encoding)                                                        \
-	       _tpp_file_init_flags(self)                                                                   \
+	       _tpp_file_init_flags(self, flags)                                                            \
 	       _tpp_file_init_common(self)                                                                  \
 	       _tpp_file_init_text_user_filename(self),                                                     \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name)     = (filename), \
@@ -723,9 +720,9 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 	       _tpp_file_init_macro_flags(self),                             \
 	       ++((self)->tf_data.td_macro.tfm_macro = macro)->tm_expansions)
 #if TPP_HAVE_CPP_DIRECTIVES
-#define _tpp_file_init_macro_flags(self) _tpp_file_init_flags_ex(self, TPP_FILE_FLAGS_NODIRECTIVES)
+#define _tpp_file_init_macro_flags(self) _tpp_file_init_flags(self, TPP_FILE_FLAGS_NODIRECTIVES)
 #else /* TPP_HAVE_CPP_DIRECTIVES */
-#define _tpp_file_init_macro_flags(self) _tpp_file_init_flags_ex(self, TPP_FILE_FLAGS_NORMAL)
+#define _tpp_file_init_macro_flags(self) _tpp_file_init_flags(self, TPP_FILE_FLAGS_NORMAL)
 #endif /* !TPP_HAVE_CPP_DIRECTIVES */
 #endif /* TPP_HAVE_CPP_MACROS */
 
@@ -887,11 +884,6 @@ tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
 
 
 #if TPP_HAVE_INCLUDE_STACK
-/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_tprev")
- * If no such file exists, simply re-return "self". This function never returns "NULL" */
-TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
-tpp_file_getiofile(tpp_file const *tpp_restrict self);
-
 /* Returns the last file in the #include-stack (using "tf_tprev") */
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getbasefile(tpp_file const *tpp_restrict self);
@@ -945,7 +937,6 @@ tpp_file_popdummy(tpp_file *tpp_restrict self);
 #endif /* TPP_HAVE_FILE_DUMMY */
 
 #else /* TPP_HAVE_INCLUDE_STACK */
-#define tpp_file_getiofile(self) ((tpp_file *)(self))
 #define tpp_file_getlcfile(self) ((tpp_file *)(self))
 #if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY
 #define tpp_file_gettextfile(self)                         \

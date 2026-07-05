@@ -214,6 +214,10 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
+#if (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || TPP_HAVE_FILE_USER_FILENAME
+		TPP_FALLTHRU
+#endif /* (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || TPP_HAVE_FILE_USER_FILENAME */
+	case TPP_FILE_KIND_TEXT:
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
 		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME) {
 #if TPP_HAVE_FILE_DUMMY
@@ -237,10 +241,11 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 
 			tpp_free((char *)self->tf_data.td_io.tff_name);
 		}
+#if TPP_HAVE_FILE_USER_FILENAME && TPP_HAVE_FILE_DUMMY
+		TPP_FALLTHRU
+#endif /* TPP_HAVE_FILE_USER_FILENAME && TPP_HAVE_FILE_DUMMY */
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
 #if TPP_HAVE_FILE_USER_FILENAME
-		TPP_FALLTHRU
-	case TPP_FILE_KIND_TEXT:
 #if TPP_HAVE_FILE_DUMMY
 	case TPP_FILE_KIND_DUMMY:
 #endif /* TPP_HAVE_FILE_DUMMY */
@@ -248,6 +253,8 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 			tpp_string_decref(self->tf_data.td_text.tft_user_filename);
 		break;
 #endif /* TPP_HAVE_FILE_USER_FILENAME */
+
+
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
 		tpp_macro *macro = self->tf_data.td_macro.tfm_macro;
@@ -1413,7 +1420,8 @@ again:
 #endif /* TPP_HAVE_FILE_SUBTEXT */
 	switch (self->tf_kind) {
 
-	case TPP_FILE_KIND_IO: {
+	case TPP_FILE_KIND_IO:
+	case TPP_FILE_KIND_TEXT: {
 		char const *filename;
 #if TPP_HAVE_FILE_NOKWD
 		if (self->tf_flags & TPP_FILE_FLAGS_NOKWD)
@@ -1432,7 +1440,6 @@ again:
 		goto again;
 #endif /* TPP_HAVE_FILE_SUBTEXT */
 
-	case TPP_FILE_KIND_TEXT:
 #if TPP_HAVE_FILE_DUMMY
 	case TPP_FILE_KIND_DUMMY:
 #endif /* TPP_HAVE_FILE_DUMMY */
@@ -1447,20 +1454,7 @@ again:
 #endif /* TPP_HAVE_FILE_GETREALFILENAMEKWD */
 
 
-/* Returns the first tf_kind=TPP_FILE_KIND_IO file in the #include-stack (using "tf_tprev")
- * If no such file exists, simply re-return "self". This function never returns "NULL" */
 #if TPP_HAVE_INCLUDE_STACK
-TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
-tpp_file_getiofile(tpp_file const *tpp_restrict self) {
-	tpp_file *iter = (tpp_file *)self;
-	while (iter->tf_kind != TPP_FILE_KIND_IO) {
-		iter = iter->tf_tprev;
-		if (iter == NULL)
-			return (tpp_file *)self;
-	}
-	return iter;
-}
-
 /* Returns the last file in the #include-stack (using "tf_tprev") */
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
@@ -1529,7 +1523,7 @@ tpp_file_pushdummy(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	(void)0 _tpp_file_init_ifdef(dummy);
 	dummy->tf_kind = TPP_FILE_KIND_DUMMY;
 	(void)0 _tpp_file_init_enc(dummy);
-	(void)0 _tpp_file_init_flags(dummy);
+	(void)0 _tpp_file_init_flags(dummy, TPP_FILE_FLAGS_NORMAL);
 	dummy->tf_data.td_dummy.tfd_name     = self->tf_data.td_io.tff_name;
 	dummy->tf_data.td_dummy.tfd_start_lc = tpp_file_getlcinfo(self, pos);
 #if TPP_HAVE_FILE_USER_FILENAME
