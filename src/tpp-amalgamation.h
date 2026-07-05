@@ -3573,7 +3573,7 @@ TPP_WARNING(TPP_W_NO_SUCH_FILE, 1(TPP_WG_ENVIRON), 1(1083), TPP_WSTATE_UNDEFINED
 
 
 /************************************************************************/
-/* -Wenviron                                                            */
+/* -Wnon-portable-casing                                                */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_NON_PORTABLE_CASING
 #define TPP_HAVE_TPP_WG_NON_PORTABLE_CASING \
@@ -3661,6 +3661,29 @@ TPP_WARNING_EX(TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 0(), ~, {
 })
 #undef _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT
 #endif /* TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED */
+
+
+/************************************************************************/
+/* -Wquality                                                            */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_QUALITY
+#define TPP_HAVE_TPP_WG_QUALITY \
+	(TPP_HAVE_TPP_W_PAREN_AROUND_LAND)
+#endif /* !TPP_HAVE_TPP_WG_QUALITY */
+#if TPP_HAVE_TPP_WG_QUALITY
+#ifndef TPP_WGNAME_QUALITY
+#define TPP_WGNAME_QUALITY 1("non-portable-casing")
+#endif /* !TPP_WGNAME_QUALITY */
+#define TPP_WG_QUALITY TPP_WG_QUALITY
+TPP_WGROUP(TPP_WG_QUALITY, TPP_WGNAME_QUALITY, TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_QUALITY */
+
+#if TPP_HAVE_TPP_W_PAREN_AROUND_LAND
+#define TPP_W_PAREN_AROUND_LAND TPP_W_PAREN_AROUND_LAND
+TPP_WARNING(TPP_W_PAREN_AROUND_LAND, 1(TPP_WG_QUALITY), 0(), ~,
+            "Consider adding %[()%] around preceding %[&&%] to prevent confusion with %[||%]")
+#endif /* TPP_HAVE_TPP_W_PAREN_AROUND_LAND */
+
 
 
 /************************************************************************/
@@ -7526,6 +7549,11 @@ TPP_DECL_END
 #endif /* !_MSC_VER */
 #endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
 
+/* General config for -Wquality warnings */
+#ifndef TPP_HAVE_QUALITY_WARNINGS
+#define TPP_HAVE_QUALITY_WARNINGS (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_QUALITY_WARNINGS */
+
 /* Configurations for individual warnings */
 #ifndef TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT
 #define TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT TPP_HAVE_WARNINGS
@@ -7823,6 +7851,11 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_IO_NORMALIZE_FILENAME)
 #endif /* !TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
+#ifndef TPP_HAVE_TPP_W_PAREN_AROUND_LAND
+#define TPP_HAVE_TPP_W_PAREN_AROUND_LAND                                              \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_QUALITY_WARNINGS && TPP_HAVE_BUILTIN_EXPRPARSER && \
+	 TPP_HAVE_TPP_TOK_PIPE_PIPE && TPP_HAVE_TPP_TOK_AMP_AMP)
+#endif /* !TPP_HAVE_TPP_W_PAREN_AROUND_LAND */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS

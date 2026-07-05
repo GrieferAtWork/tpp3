@@ -2860,6 +2860,9 @@ alias("W_EXPECTED_KEYWORD_AFTER_EXPR_HASH", "TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSI
 alias("W_EXPECTED_KEYWORD_AFTER_EXPR_PRED", "TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION");
 alias("W_DEPENDENCY_CHANGED", "TPP_W_DEPENDENCY_CHANGED");
 alias("W_INCLUDE_RECURSION_LIMIT_EXCEEDED", "TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED");
+alias("W_NONPARTABLE_FILENAME_CASING", "TPP_W_NONPORTABLE_FILENAME_CASING");
+alias("W_MACRO_RECURSION_LIMIT_EXCEEDED", "TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED");
+alias("W_CONSIDER_PAREN_AROUND_LAND", "TPP_W_PAREN_AROUND_LAND");
 ]]]*/
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_EOF TPP_TOK_EOF
@@ -4378,6 +4381,21 @@ alias("W_INCLUDE_RECURSION_LIMIT_EXCEEDED", "TPP_W_INCLUDE_RECURSION_LIMIT_EXCEE
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED)
 #define W_INCLUDE_RECURSION_LIMIT_EXCEEDED TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+#ifdef TPP_W_NONPORTABLE_FILENAME_CASING
+#define TPP_W_NONPARTABLE_FILENAME_CASING TPP_W_NONPORTABLE_FILENAME_CASING
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_NONPARTABLE_FILENAME_CASING TPP_W_NONPORTABLE_FILENAME_CASING
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_NONPORTABLE_FILENAME_CASING */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED)
+#define W_MACRO_RECURSION_LIMIT_EXCEEDED TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED */
+#ifdef TPP_W_PAREN_AROUND_LAND
+#define TPP_W_CONSIDER_PAREN_AROUND_LAND TPP_W_PAREN_AROUND_LAND
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_CONSIDER_PAREN_AROUND_LAND TPP_W_PAREN_AROUND_LAND
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_PAREN_AROUND_LAND */
 /*[[[end]]]*/
 
 //TODO: /* #define TPP_CONFIG_CALLBACK_WARNING          x // int x(int wnum, ...) { ... } -- A user-replacement for `TPPLexer_Warn' */
@@ -4393,18 +4411,6 @@ alias("W_INCLUDE_RECURSION_LIMIT_EXCEEDED", "TPP_W_INCLUDE_RECURSION_LIMIT_EXCEE
 //TODO: /* #define TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE     1 */
 
 //TODO:/*36*/ DEF_WARNING(W_MACRO_NOT_DEFINED, (WG_MACROS), WSTATE_DISABLED, WARNF("Macro " Q("%s") " is not defined", KWDNAME()))                                /* [struct TPPKeyword *] OLD(TPPWarn_MacroDoesntExist). */
-//TODO:/*61*/ DEF_WARNING(W_NONPARTABLE_FILENAME_CASING, (WG_ENVIRON), WSTATE_WARN, {
-//TODO:	/* [char const *,char const *,size_t,char const *]. (path,wrong_begin,wrong_size,corrent_begin)
-//TODO:	 *  OLD(TPPWarn_InvalidPathCasing). */
-//TODO:	char *temp;
-//TODO:	char *temp2;
-//TODO:	size_t temp3;
-//TODO:	temp  = ARG(char *);
-//TODO:	temp2 = ARG(char *);
-//TODO:	temp3 = ARG(size_t);
-//TODO:	WARNF("Non-portable casing in " Q("%s") ": " Q("%.*s") " should be " Q("%s") " instead",
-//TODO:	      temp, (int)temp3, temp2, ARG(char *));
-//TODO:})
 //TODO:/*64*/ DEF_WARNING(W_SPECIAL_ARGUMENT_NAME, (WG_MACROS), WSTATE_WARN, WARNF("Special keyword " Q("%s") " used as argument name", KWDNAME())) /* [struct TPPKeyword *] OLD(TPPWarn_VaArgsUsedAsMacroParameter). */
 //TODO:/*68*/ WARNING(W_EXPECTED_BOOL, (WG_BOOLVALUE, WG_VALUE), WSTATE_DISABLED)            /* [struct TPPConst *] OLD(TPPWarn_ExpectedBoolExpression). */
 //TODO:/*69*/ WARNING(W_EXPECTED_BOOL_UNARY, (WG_BOOLVALUE, WG_VALUE), WSTATE_DISABLED)      /* [struct TPPConst *] OLD(TPPWarn_ExpectedBoolExpressionNot). */
@@ -4416,11 +4422,9 @@ alias("W_INCLUDE_RECURSION_LIMIT_EXCEEDED", "TPP_W_INCLUDE_RECURSION_LIMIT_EXCEE
 //TODO:DEF_WARNING(W_KEYWORD_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Keyword-style macro " Q("%s") " is already being expanded", FILENAME()))      /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_FUNCTION_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Function-style macro " Q("%s") " is expanded to the same text", FILENAME())) /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_INDEX_OUT_OF_BOUNDS, (WG_VALUE), WSTATE_DISABLED, { struct TPPString *s = ARG(struct TPPString *); WARNF("Index %ld is out-of-bounds of 0..%lu", (unsigned long)s->s_size, (unsigned long)ARG(ptrdiff_t)); })                                                                                            /* [struct TPPString *,ptrdiff_t]. */
-//TODO:DEF_WARNING(W_MACRO_RECURSION_LIMIT_EXCEEDED, (WG_LIMIT), WSTATE_ERROR, WARNF("Macro recursion limit exceeded when expanding " Q("%s") " (Consider passing " Q("-fno-macro-recursion") ")", FILENAME())) /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_IDENT_SCCS_IGNORED, (WG_USAGE), WSTATE_WARN, WARNF("#ident/sccs with " Q("%s") " is ignored", CONST_STR())) /* [struct TPPConst *]. */
 //TODO:DEF_WARNING(W_UNKNOWN_ASSERTION, (WG_VALUE), WSTATE_DISABLED, { char const *temp = KWDNAME(); WARNF("Assertion " Q("%s") " does not contain a predicate " Q("%s"), temp, KWDNAME()); }) /* [struct TPPKeyword *,struct TPPKeyword *]. */
 //TODO:DEF_WARNING(W_CANT_POP_INCLUDE_PATH, (WG_VALUE), WSTATE_ERROR, WARNF("Can't pop #include paths"))                                                                               /* . */
-//TODO:DEF_WARNING(W_CONSIDER_PAREN_AROUND_LAND, (WG_QUALITY), WSTATE_WARN, WARNF("Consider adding parenthesis around " Q("&&") " to prevent confusion with " Q("||")))                /* . */
 //TODO:DEF_WARNING(W_INTEGRAL_CLAMPED, (WG_VALUE), WSTATE_WARN, WARNF("Integral constant clamped to fit")) /* [tint_t,tint_t]. */
 //TODO:DEF_WARNING(W_UNKNOWN_INCLUDE_PATH, (WG_VALUE), WSTATE_WARN, { char *temp = ARG(char *); WARNF("Unknown system #include-path " Q("%.*s"), (int)ARG(size_t), temp); })                                   /* [char const *,size_t]. */
 //TODO:DEF_WARNING(W_INCLUDE_PATH_ALREADY_EXISTS, (WG_VALUE), WSTATE_WARN, { char *temp = ARG(char *); WARNF("System #include-path " Q("%.*s") " already exists", (int)ARG(size_t), temp); })                            /* [char const *,size_t]. */

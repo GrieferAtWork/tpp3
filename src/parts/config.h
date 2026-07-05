@@ -3142,6 +3142,11 @@ print("#endif /" "* !... *" "/");
 #endif /* !_MSC_VER */
 #endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
 
+/* General config for -Wquality warnings */
+#ifndef TPP_HAVE_QUALITY_WARNINGS
+#define TPP_HAVE_QUALITY_WARNINGS (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_QUALITY_WARNINGS */
+
 /* Configurations for individual warnings */
 #ifndef TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT
 #define TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT TPP_HAVE_WARNINGS
@@ -3439,6 +3444,11 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_IO_NORMALIZE_FILENAME)
 #endif /* !TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
+#ifndef TPP_HAVE_TPP_W_PAREN_AROUND_LAND
+#define TPP_HAVE_TPP_W_PAREN_AROUND_LAND                                              \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_QUALITY_WARNINGS && TPP_HAVE_BUILTIN_EXPRPARSER && \
+	 TPP_HAVE_TPP_TOK_PIPE_PIPE && TPP_HAVE_TPP_TOK_AMP_AMP)
+#endif /* !TPP_HAVE_TPP_W_PAREN_AROUND_LAND */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS

@@ -1104,6 +1104,16 @@ tpp_px_land_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 		if (TPP_ISERR(error))
 			return error;
 	} while (TPP_TEST_PX_LAND_SUFFIX(tpp_lexer_gettok(self)));
+#if TPP_HAVE_TPP_W_PAREN_AROUND_LAND && TPP_HAVE_TPP_TOK_PIPE_PIPE
+	if (tpp_lexer_gettok(self) == TPP_TOK_PIPE_PIPE) {
+		tpp_errno error = tpp_lexer_warnf(self, TPP_W_PAREN_AROUND_LAND);
+		if (TPP_ISERR(error)) {
+			if (result)
+				tpp_expr_value_fini(result);
+			return error;
+		}
+	}
+#endif /* TPP_HAVE_TPP_W_PAREN_AROUND_LAND && TPP_HAVE_TPP_TOK_PIPE_PIPE */
 	return TPP_EOK;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_or, tpp_px_land, tpp_px_land_suffix, TPP_TEST_PX_LAND_SUFFIX)
