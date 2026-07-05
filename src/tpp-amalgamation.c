@@ -9262,38 +9262,63 @@ TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT != TPP_LEXER_OPENFILE_FLA
 #if TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE_EX
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_openfile_ex_check_mask_flags(/*1..1*/ tpp_lexer *tpp_restrict self,
-                                       tpp_keyword *result_kwd,
+                                       tpp_keyword *file_kwd,
                                        tpp_lexer_openfile_flags mask_flags) {
-	if ((result_kwd->tk_misc) != NULL &&
-	    (result_kwd->tk_misc->tkm_flags & mask_flags) != 0) {
+	tpp_keyword_misc *misc = tpp_keyword_getmisc(file_kwd);
+	if (misc != NULL) {
+		tpp_keyword_flags flags_union = misc->tkm_flags & mask_flags;
+		if (flags_union != 0) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-		if (result_kwd->tk_misc->tkm_flags & mask_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID) {
-			tpp_keyword const *file_guard = result_kwd->tk_misc->tkm_file_guard;
-			tpp_assert(file_guard != NULL && "'TPP_KEYWORD_FLAG_HDR_GUARD_VALID' is "
-			                                 "set, but 'tkm_file_guard == NULL'");
-			if ((result_kwd->tk_misc->tkm_flags & (mask_flags & ~TPP_KEYWORD_FLAG_HDR_GUARD_VALID)) != 0)
-				return TPP_EMASKED; /* File is masked even if it wasn't for the header guard. */
-			if (tpp_lexer_getkeyworddefined(self, file_guard))
-				return TPP_EMASKED; /* File guard is still defined -> don't include */
-		} else
+			if (flags_union == TPP_KEYWORD_FLAG_HDR_GUARD_VALID) {
+				/* Special case when the only thing being masked is an #ifndef guard */
+				tpp_keyword const *file_guard = misc->tkm_file_guard;
+				tpp_assert(file_guard != NULL && "'TPP_KEYWORD_FLAG_HDR_GUARD_VALID' is "
+				                                 "set, but 'tkm_file_guard == NULL'");
+				if ((misc->tkm_flags & (mask_flags & ~TPP_KEYWORD_FLAG_HDR_GUARD_VALID)) != 0)
+					return TPP_EMASKED; /* File is masked even if it wasn't for the header guard. */
+				if (tpp_lexer_getkeyworddefined(self, file_guard))
+					return TPP_EMASKED; /* File guard is still defined -> don't include */
+			} else
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+			{
+				return TPP_EMASKED;
+			}
+		} else
+#if TPP_HAVE_CPP_IMPORT
+		if (mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED) {
+			/* Set the "TPP_KEYWORD_FLAG_HDR_IMPORTED" flag in the keyword */
+			misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_IMPORTED;
+		} else
+#endif /* TPP_HAVE_CPP_IMPORT */
 		{
-			return TPP_EMASKED;
 		}
+	} else
+#if TPP_HAVE_CPP_IMPORT
+	if (mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED) {
+		/* Must allocate misc data for "result_kwd" so we can remember that this file was #import-ed */
+		misc = tpp_keyword_requiremisc(file_kwd);
+		if tpp_unlikely(!misc)
+			return TPP_ENOMEM;
+		misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_IMPORTED;
+	} else
+#endif /* TPP_HAVE_CPP_IMPORT */
+	{
 	}
+
 #if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
 	if (mask_flags & TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT) {
 		/* Check if this file is already being #include-ed */
 		tpp_file const *fp = tpp_lexer_getfile(self);
 		do {
-			if (fp->tf_kind == TPP_FILE_KIND_IO &&
+			if ((fp->tf_kind == TPP_FILE_KIND_IO ||
+			     fp->tf_kind == TPP_FILE_KIND_TEXT) &&
 #if TPP_HAVE_FILE_NOKWD
 			    !(fp->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
 #endif /* TPP_HAVE_FILE_NOKWD */
 			    fp->tf_data.td_io.tff_name != NULL) {
 				tpp_keyword const *kwd = (tpp_keyword const *)((char const *)fp->tf_data.td_io.tff_name -
 				                                               tpp_offsetof(tpp_keyword, tk_kwd));
-				if (kwd == result_kwd)
+				if (kwd == file_kwd)
 					return TPP_ENOENT; /* File is already on #include-stack */
 			}
 		} while ((fp = fp->tf_tprev) != NULL);
@@ -9307,18 +9332,21 @@ tpp_lexer_openfile_ex_check_mask_flags(/*1..1*/ tpp_lexer *tpp_restrict self,
 /* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
  * included before, and its keyword has any of the bits specified by `mask_flags' set.
  *
- * A special case is made when "mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED",
- * in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
- * is currently considered to be `#if defined()'.
- *
- * Another special case is made for "TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT", which
- * causes "TPP_EMASKED" to be returned if the file's keyword is already included
- * somewhere on the #include-stack.
- *
- * NOTE: This function always sets "tlofr_fileflags = TPP_FILE_FLAGS_NORMAL".
- *       If the given "relative_to" belongs to a system header, then it is up
- *       to the caller to set that flag. "tpp_lexer_open_include_string_ex()"
- *       will do so automatically after calling this function.
+ * NOTES:
+ * - A special case is made when "mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED",
+ *   in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
+ *   is currently considered to be `#if defined()'.
+ * - Another special case is made for "TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT", which
+ *   causes "TPP_EMASKED" to be returned if the file's keyword is already included
+ *   somewhere on the #include-stack.
+ * - Also: when "mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED", and the file's keyword
+ *   doesn't already have the "TPP_KEYWORD_FLAG_HDR_IMPORTED" flag set, the open will
+ *   succeed, and the "TPP_KEYWORD_FLAG_HDR_IMPORTED" flag will become set (so-as to
+ *   implement the include-once semantics of "#import")
+ * - This function always sets "tlofr_fileflags = TPP_FILE_FLAGS_NORMAL".
+ *   If the given "relative_to" belongs to a system header, then it is up
+ *   to the caller to set that flag. "tpp_lexer_open_include_string_ex()"
+ *   will do so automatically after calling this function.
  *
  * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
  *                     should be returned:
@@ -9447,7 +9475,7 @@ without_relative_to:
 #if TPP_HAVE_LEXER_OPENFILE_EX
 			{
 				tpp_errno mask_error = tpp_lexer_openfile_ex_check_mask_flags(self, result_kwd, mask_flags);
-				if (mask_error != TPP_EOK)
+				if (TPP_ISERR(mask_error))
 					return mask_error;
 			}
 #endif /* TPP_HAVE_LEXER_OPENFILE_EX */
@@ -9647,7 +9675,7 @@ done_normalize:
 #if TPP_HAVE_LEXER_OPENFILE_EX
 					{
 						tpp_errno mask_error = tpp_lexer_openfile_ex_check_mask_flags(self, result_kwd, mask_flags);
-						if (mask_error != TPP_EOK) {
+						if (TPP_ISERR(mask_error)) {
 							tpp_io_close(handle);
 							return mask_error;
 						}
@@ -9675,6 +9703,18 @@ got_result_kwd2:;
 		result_kwd->tk_misc = NULL;
 #endif /* TPP_HAVE_KEYWORD_MISC */
 		tpp_keyword_init_refcnt(result_kwd);
+#if TPP_HAVE_CPP_IMPORT
+		if (mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED) {
+			/* Must allocate misc data for "result_kwd" so we can remember that this file was #import-ed */
+			tpp_keyword_misc *misc = tpp_keyword_requiremisc(result_kwd);
+			if tpp_unlikely(!misc) {
+				tpp_keyword_destroy(result_kwd);
+				tpp_io_close(handle);
+				goto err_nomem;
+			}
+			misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_IMPORTED;
+		}
+#endif /* TPP_HAVE_CPP_IMPORT */
 		result_kwd = tpp_keywords_inskeyword(&self->tl_kwds, result_kwd);
 		if tpp_unlikely(!result_kwd) {
 			tpp_io_close(handle);
@@ -9699,7 +9739,8 @@ got_result_kwd2:;
 				tpp_file const *fp = tpp_lexer_getfile(self);
 				include_count = 0;
 				do {
-					if (fp->tf_kind == TPP_FILE_KIND_IO &&
+					if ((fp->tf_kind == TPP_FILE_KIND_IO ||
+					     fp->tf_kind == TPP_FILE_KIND_TEXT) &&
 #if TPP_HAVE_FILE_NOKWD
 					    !(fp->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
 #endif /* TPP_HAVE_FILE_NOKWD */

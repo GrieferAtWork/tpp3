@@ -16415,18 +16415,21 @@ typedef struct tpp_lexer_openfile_result {
 /* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
  * included before, and its keyword has any of the bits specified by `mask_flags' set.
  *
- * A special case is made when "mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED",
- * in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
- * is currently considered to be `#if defined()'.
- *
- * Another special case is made for "TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT", which
- * causes "TPP_EMASKED" to be returned if the file's keyword is already included
- * somewhere on the #include-stack.
- *
- * NOTE: This function always sets "tlofr_fileflags = TPP_FILE_FLAGS_NORMAL".
- *       If the given "relative_to" belongs to a system header, then it is up
- *       to the caller to set that flag. "tpp_lexer_open_include_string_ex()"
- *       will do so automatically after calling this function.
+ * NOTES:
+ * - A special case is made when "mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED",
+ *   in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
+ *   is currently considered to be `#if defined()'.
+ * - Another special case is made for "TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT", which
+ *   causes "TPP_EMASKED" to be returned if the file's keyword is already included
+ *   somewhere on the #include-stack.
+ * - Also: when "mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED", and the file's keyword
+ *   doesn't already have the "TPP_KEYWORD_FLAG_HDR_IMPORTED" flag set, the open will
+ *   succeed, and the "TPP_KEYWORD_FLAG_HDR_IMPORTED" flag will become set (so-as to
+ *   implement the include-once semantics of "#import")
+ * - This function always sets "tlofr_fileflags = TPP_FILE_FLAGS_NORMAL".
+ *   If the given "relative_to" belongs to a system header, then it is up
+ *   to the caller to set that flag. "tpp_lexer_open_include_string_ex()"
+ *   will do so automatically after calling this function.
  *
  * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
  *                     should be returned:
