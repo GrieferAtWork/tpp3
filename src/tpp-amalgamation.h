@@ -7192,6 +7192,48 @@ TPP_DECL_END
 #error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
 
+/* >> tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+ * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
+ * points during the process of enumerating include paths. This callback is
+ * then allowed to enumerate some additional include paths that may exist, but
+ * for one reason or another (mainly: speed) aren't known to TPP via its system
+ * include path APIs (`tpp_lexer_includes_add*')
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*': describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()'.
+ * @return: * :         First non-TPP_ENOENT return value of `cb'
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+#ifdef TPP_HOOK_SYSTEM_INCLUDE_PATH
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_SYSTEM_INCLUDE_PATH */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_SYSTEM_INCLUDE_PATH */
+#endif /* !TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
+#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_SYSTEM_INCLUDE_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_SYSTEM_INCLUDE_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK /* There is no builtin version */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK /* There is no builtin version */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -16030,13 +16072,26 @@ TPP_DECL_END
 /************************************************************************/
 TPP_DECL_BEGIN
 
+#if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
+#ifndef tpp_lexer_foreach_include_path_flags__PARAM
+#if TPP_HAVE_FILE_SYSHDR
+#define tpp_lexer_foreach_include_path_flags__PARAM  , tpp_file_flags flags
+#define tpp_lexer_foreach_include_path_flags__ARG(x) , x
+#else /* TPP_HAVE_FILE_SYSHDR */
+#define tpp_lexer_foreach_include_path_flags__PARAM  /* nothing */
+#define tpp_lexer_foreach_include_path_flags__ARG(x) /* nothing */
+#endif /* !TPP_HAVE_FILE_SYSHDR */
+#endif /* !tpp_lexer_foreach_include_path_flags__PARAM */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
 #undef TPP_HAVE_HOOKS
 #if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK))
+     TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) || \
+     TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK))
 #define TPP_HAVE_HOOKS 1
 #else /* ... */
 #define TPP_HAVE_HOOKS 0
@@ -16130,6 +16185,22 @@ typedef struct tpp_hooks {
 #if TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_ident_sccs))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_system_include_path)(struct tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+	 * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
+	 * points during the process of enumerating include paths. This callback is
+	 * then allowed to enumerate some additional include paths that may exist, but
+	 * for one reason or another (mainly: speed) aren't known to TPP via its system
+	 * include path APIs (`tpp_lexer_includes_add*')
+	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*': describes the
+	 *               caller's position in `tpp_lexer_foreach_include_path()'.
+	 * @return: * :         First non-TPP_ENOENT return value of `cb'
+	 * @return: TPP_ENOENT: File still not found
+	 * @return: TPP_EIO:    I/O error
+	 * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_include_path))(struct tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 } tpp_hooks;
 #endif /* TPP_HAVE_HOOKS */
 
@@ -16343,6 +16414,39 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_ident_sccs(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
 
+/* Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
+ * points during the process of enumerating include paths. This callback is
+ * then allowed to enumerate some additional include paths that may exist, but
+ * for one reason or another (mainly: speed) aren't known to TPP via its system
+ * include path APIs (`tpp_lexer_includes_add*')
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*': describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()'.
+ * @return: * :         First non-TPP_ENOENT return value of `cb'
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
+#define tpp_hooks_call_system_include_path(self, lexer, mode, when, cb, arg) \
+	((self)->TPP_INTERNAL(th_system_include_path) ? (*(self)->TPP_INTERNAL(th_system_include_path))(lexer, mode, when, cb, arg) : TPP_ENOENT)
+#define tpp_hooks_get_system_include_path(self)    (self)->TPP_INTERNAL(th_system_include_path)
+#define tpp_hooks_set_system_include_path(self, v) (void)((self)->TPP_INTERNAL(th_system_include_path) = (v))
+#define tpp_hooks_reset_system_include_path(self)  (void)((self)->TPP_INTERNAL(th_system_include_path) = _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH)
+#define _tpp_hooks_init_system_include_path(self)  , (self)->TPP_INTERNAL(th_system_include_path) = _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH
+#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
+#define _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH (&TPP_HOOK_SYSTEM_INCLUDE_PATH)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_system_include_path(self, lexer, mode, when, cb, arg) \
+	TPP_HOOK_SYSTEM_INCLUDE_PATH(lexer, mode, when, cb, arg)
+#else /*  */
+#define tpp_hooks_call_system_include_path(self, lexer, mode, when, cb, arg) TPP_ENOENT
+#endif /* ... */
+#define _tpp_hooks_init_system_include_path(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
 	(void)(0 _tpp_hooks_init_warnprinter(self) \
@@ -16350,7 +16454,32 @@ typedef struct tpp_hooks {
 	       _tpp_hooks_init_parseexpr(self) \
 	       _tpp_hooks_init_unknown_pragma(self) \
 	       _tpp_hooks_init_new_dependency(self) \
-	       _tpp_hooks_init_ident_sccs(self))
+	       _tpp_hooks_init_ident_sccs(self) \
+	       _tpp_hooks_init_system_include_path(self))
+
+
+/* Possible values for `tpp_hooks_call_system_include_path(when)' */
+#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+enum {
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_FIRST,         /* Called at the very start */
+#if TPP_HAVE_INCLUDE_PATH
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_QUOTE,  /* Called for '"'-paths after trying to import relative to current file, but before "tip_quote_list" is checked */
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSTEM, /* Called before "tip_system_list" is checked */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSHDR, /* Called before "tip_syshdr_list" is checked */
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
+#endif /* TPP_HAVE_INCLUDE_PATH */
+#if TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_CONFIG, /* Called before "TPP_CONFIG_SYSTEM_INCLUDE_PATH" is checked */
+#endif /* TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
+#if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_AFTER,  /* Called before "tip_after_list" is checked */
+#endif /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER */
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_LAST,          /* Called at the very end */
+};
+#endif /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
 
 
 
@@ -16760,6 +16889,26 @@ typedef struct tpp_lexer {
 #define tpp_lexer_sethook_ident_sccs(self, v) tpp_hooks_set_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_ident_sccs */
+
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_system_include_path)(tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+ * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
+ * points during the process of enumerating include paths. This callback is
+ * then allowed to enumerate some additional include paths that may exist, but
+ * for one reason or another (mainly: speed) aren't known to TPP via its system
+ * include path APIs (`tpp_lexer_includes_add*')
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*': describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()'.
+ * @return: * :         First non-TPP_ENOENT return value of `cb'
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#define tpp_lexer_callhook_system_include_path(self, mode, when, cb, arg) \
+	tpp_hooks_call_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self, mode, when, cb, arg)
+#ifdef tpp_hooks_set_system_include_path
+#define tpp_lexer_gethook_system_include_path(self)    tpp_hooks_get_system_include_path(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_system_include_path(self, v) tpp_hooks_set_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_system_include_path */
 
 
 
@@ -17542,6 +17691,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 
 
 #if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#ifndef tpp_lexer_foreach_include_path_flags__PARAM
 #if TPP_HAVE_FILE_SYSHDR
 #define tpp_lexer_foreach_include_path_flags__PARAM  , tpp_file_flags flags
 #define tpp_lexer_foreach_include_path_flags__ARG(x) , x
@@ -17549,6 +17699,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 #define tpp_lexer_foreach_include_path_flags__PARAM  /* nothing */
 #define tpp_lexer_foreach_include_path_flags__ARG(x) /* nothing */
 #endif /* !TPP_HAVE_FILE_SYSHDR */
+#endif /* !tpp_lexer_foreach_include_path_flags__PARAM */
 
 /* Enumerate #include-paths according to "mode"
  * @param: mode: #include-mode (either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE)

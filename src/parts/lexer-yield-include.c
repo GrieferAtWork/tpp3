@@ -440,8 +440,17 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 	(tpp_lexer_has(self, EXTERN_C_FOR_SYSHDR) ? (TPP_FILE_FLAGS_SYSHDR | TPP_FILE_FLAGS_EXTERN_C) \
 	                                          : (TPP_FILE_FLAGS_SYSHDR))
 #endif /* !TPP_HAVE_EXTERN_C_FOR_SYSHDR */
+#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+#define tpp_lexer_foreach_include_path_hook(when)                              \
+	error = tpp_lexer_callhook_system_include_path(self, mode, when, cb, arg); \
+	if (error != TPP_ENOENT)                                                   \
+		return error;
+#else /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
+#define tpp_lexer_foreach_include_path_hook(when) /* nothing */
+#endif /* !TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
 	tpp_errno error;
 	tpp_assert(mode == '<' || mode == '"');
+	tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_FIRST);
 	if (mode == '"') {
 		/* Try to open files relative to the current #include-stack */
 		tpp_file const *file = tpp_lexer_getfile(self);
@@ -477,6 +486,7 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 
 		/* Search the quote-include path */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE
+		tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_QUOTE);
 		error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_quote_list, cb, arg
 		                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
 		if (error != TPP_ENOENT)
@@ -490,11 +500,13 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 
 	/* Search the system-include path */
 #if TPP_HAVE_INCLUDE_PATH
+	tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSTEM);
 	error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_system_list, cb, arg
 	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
 	if (error != TPP_ENOENT)
 		return error;
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSHDR);
 	error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_syshdr_list, cb, arg
 	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS));
 	if (error != TPP_ENOENT)
@@ -505,6 +517,7 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 	/* Check hard-coded system include paths... */
 #if TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
 	if (tpp_lexer_has(self, SEARCH_SYSTEM_INCLUDE_PATH)) {
+		tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_CONFIG);
 #define tpp_handle_system_include_path(_, index, value)                                                                                \
 		error = (*cb)(arg, value TPP_FS_SEP_S tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS)); \
 		if (error != TPP_ENOENT)                                                                                                       \
@@ -515,14 +528,21 @@ tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id 
 	}
 #endif /* TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
 
+
 	/* Check "after" system include paths... */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
-	return tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_after_list, cb, arg
-	                                              tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS));
-#else /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER */
+	tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_AFTER);
+	error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_after_list, cb, arg
+	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS));
+	if (error != TPP_ENOENT)
+		return error;
+#endif /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER */
+
+	/* Invoke the final system include path hook */
+	tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_LAST);
+
 	/* File not found :( */
 	return TPP_ENOENT;
-#endif /* !TPP_HAVE_INCLUDE_PATH || !TPP_HAVE_INCLUDE_PATH_AFTER */
 #undef TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS
 }
 

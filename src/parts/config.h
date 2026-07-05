@@ -2662,6 +2662,25 @@ local HOOKS = {
 		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len)", { "lexer", "mode", "chunk", "comment_str", "comment_len" },
 		"TPP_EOK"
 	},
+
+	{
+		"Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent\n" +
+		"points during the process of enumerating include paths. This callback is\n" +
+		"then allowed to enumerate some additional include paths that may exist, but\n" +
+		"for one reason or another (mainly: speed) aren't known to TPP via its system\n" +
+		"include path APIs (`tpp_lexer_includes_add*')\n" +
+		"@param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*': describes the\n" +
+		"              caller's position in `tpp_lexer_foreach_include_path()'.\n" +
+		"@return: * :         First non-TPP_ENOENT return value of `cb'\n" +
+		"@return: TPP_ENOENT: File still not found\n" +
+		"@return: TPP_EIO:    I/O error\n" +
+		"@return: TPP_ENOMEM: Out of memory",
+		"SYSTEM_INCLUDE_PATH",
+		"(TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL)",
+		"", // No builtin default
+		"tpp_errno (TPPCALL *", ")(tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg)", { "lexer", "mode", "when", "cb", "arg" },
+		"TPP_ENOENT"
+	},
 };
 
 for (local doc, name,
@@ -2933,6 +2952,48 @@ for (local doc, name,
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_IDENT_SCCS) && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
+
+/* >> tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+ * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
+ * points during the process of enumerating include paths. This callback is
+ * then allowed to enumerate some additional include paths that may exist, but
+ * for one reason or another (mainly: speed) aren't known to TPP via its system
+ * include path APIs (`tpp_lexer_includes_add*')
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*': describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()'.
+ * @return: * :         First non-TPP_ENOENT return value of `cb'
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+#ifdef TPP_HOOK_SYSTEM_INCLUDE_PATH
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_SYSTEM_INCLUDE_PATH */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_SYSTEM_INCLUDE_PATH */
+#endif /* !TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
+#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_SYSTEM_INCLUDE_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_SYSTEM_INCLUDE_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK /* There is no builtin version */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK /* There is no builtin version */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 /*[[[end]]]*/
 
 /************************************************************************/

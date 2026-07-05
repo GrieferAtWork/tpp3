@@ -449,6 +449,26 @@ for (local doc, name,
 #define tpp_lexer_sethook_ident_sccs(self, v) tpp_hooks_set_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_ident_sccs */
+
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_system_include_path)(tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+ * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
+ * points during the process of enumerating include paths. This callback is
+ * then allowed to enumerate some additional include paths that may exist, but
+ * for one reason or another (mainly: speed) aren't known to TPP via its system
+ * include path APIs (`tpp_lexer_includes_add*')
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*': describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()'.
+ * @return: * :         First non-TPP_ENOENT return value of `cb'
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#define tpp_lexer_callhook_system_include_path(self, mode, when, cb, arg) \
+	tpp_hooks_call_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self, mode, when, cb, arg)
+#ifdef tpp_hooks_set_system_include_path
+#define tpp_lexer_gethook_system_include_path(self)    tpp_hooks_get_system_include_path(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_system_include_path(self, v) tpp_hooks_set_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_system_include_path */
 /*[[[end]]]*/
 
 
@@ -1232,6 +1252,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 
 
 #if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#ifndef tpp_lexer_foreach_include_path_flags__PARAM
 #if TPP_HAVE_FILE_SYSHDR
 #define tpp_lexer_foreach_include_path_flags__PARAM  , tpp_file_flags flags
 #define tpp_lexer_foreach_include_path_flags__ARG(x) , x
@@ -1239,6 +1260,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 #define tpp_lexer_foreach_include_path_flags__PARAM  /* nothing */
 #define tpp_lexer_foreach_include_path_flags__ARG(x) /* nothing */
 #endif /* !TPP_HAVE_FILE_SYSHDR */
+#endif /* !tpp_lexer_foreach_include_path_flags__PARAM */
 
 /* Enumerate #include-paths according to "mode"
  * @param: mode: #include-mode (either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE)
