@@ -681,9 +681,9 @@ typedef struct tpp_lexer_openfile_result {
 #define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT UINT32_C(0x08000000) /* Emit a warning if the file already appears too often on the #include-stack */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT32_C(0x08000000) /* Emit a warning if the file already appears too often on the #include-stack */
 #else /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT UINT32_C(0x00000000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT32_C(0x00000000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 #if TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
 #define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT32_C(0x04000000) /* Emit a warning "TPP_W_NONPORTABLE_FILENAME_CASING" if the file's casing is bad */

@@ -366,13 +366,13 @@ typedef struct tpp_file {
 /* Returns a pointer to the start of the effectively relevant source.
  * - For the currently loaded file, this is the start of the current
  *   token. If no tokens have been yielded yet, the value returned by
- *   this macro is undefined.
+ *   this function is undefined.
  * - For macros further up the #include-stack, this (tries to) point
  *   to the start of the macro's name. However, if the macro's name
  *   was located in a file that has since been popped, this will
  *   instead be the start of whatever macro-invocation originally
- *   caused whatever file to be pushed that then contains the current
- *   macro-call:
+ *   caused whatever file to be pushed which then eventually contained
+ *   the start of the current macro-call:
  *   >> #define foo(a, b) a+b
  *   >> #define bar       foo(10
  *   >> bar,20)
@@ -658,7 +658,7 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 	       _tpp_file_init_prev(self),                                                                          \
 	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                                    \
 	       _tpp_file_init_enc_ex(self, enc)                                                                    \
-	       _tpp_file_init_flags(self, flags)                                                                \
+	       _tpp_file_init_flags(self, flags)                                                                   \
 	       _tpp_file_init_common(self),                                                                        \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename),              \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \

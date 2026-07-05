@@ -13535,13 +13535,13 @@ typedef struct tpp_file {
 /* Returns a pointer to the start of the effectively relevant source.
  * - For the currently loaded file, this is the start of the current
  *   token. If no tokens have been yielded yet, the value returned by
- *   this macro is undefined.
+ *   this function is undefined.
  * - For macros further up the #include-stack, this (tries to) point
  *   to the start of the macro's name. However, if the macro's name
  *   was located in a file that has since been popped, this will
  *   instead be the start of whatever macro-invocation originally
- *   caused whatever file to be pushed that then contains the current
- *   macro-call:
+ *   caused whatever file to be pushed which then eventually contained
+ *   the start of the current macro-call:
  *   >> #define foo(a, b) a+b
  *   >> #define bar       foo(10
  *   >> bar,20)
@@ -13827,7 +13827,7 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 	       _tpp_file_init_prev(self),                                                                          \
 	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                                    \
 	       _tpp_file_init_enc_ex(self, enc)                                                                    \
-	       _tpp_file_init_flags(self, flags)                                                                \
+	       _tpp_file_init_flags(self, flags)                                                                   \
 	       _tpp_file_init_common(self),                                                                        \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename),              \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
@@ -16402,9 +16402,9 @@ typedef struct tpp_lexer_openfile_result {
 #define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT UINT32_C(0x08000000) /* Emit a warning if the file already appears too often on the #include-stack */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT32_C(0x08000000) /* Emit a warning if the file already appears too often on the #include-stack */
 #else /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT UINT32_C(0x00000000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT32_C(0x00000000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 #if TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
 #define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT32_C(0x04000000) /* Emit a warning "TPP_W_NONPORTABLE_FILENAME_CASING" if the file's casing is bad */
