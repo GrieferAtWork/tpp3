@@ -297,7 +297,7 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 
 	do {
 		tok = tpp_lexer_yieldpp_blocking(self);
-		if tpp_unlikely(TPP_TOK_ISERR(tok))
+		if (TPP_TOK_ISERR(tok))
 			return tok;
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 
@@ -473,7 +473,7 @@ after_expansion_mode_assignment:
 			do {
 				tok = tpp_lexer_yieldpp_blocking(self);
 			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-			if tpp_unlikely(TPP_TOK_ISERR(tok))
+			if (TPP_TOK_ISERR(tok))
 				return tok;
 		}
 #endif /* TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS || TPP_HAVE_KEYWORD_TEST_MACROS */
@@ -499,7 +499,7 @@ seek_end_of_macro:
 		if (tok == TPP_TOK_EOF)
 			break;
 		tok = tpp_lexer_yieldpp_blocking(self);
-		if tpp_unlikely(TPP_TOK_ISERR(tok))
+		if (TPP_TOK_ISERR(tok))
 			return tok;
 	}
 	return tpp_lexer_push_textfile(self, tpp_feature_test_macro_expansion,
@@ -604,7 +604,7 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 	do {
 		tok = tpp_lexer_yieldpp_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok))
 		return tok;
 
 	if (!TPP_TOK_ISSTRING(tok)) {
@@ -1517,7 +1517,7 @@ tpp_lexer_yield_handle___TPP_COUNT_TOKENS(tpp_lexer *tpp_restrict self) {
 	do {
 		tok = tpp_lexer_yieldpp_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok))
 		return tok;
 
 	data.tlhctd_lexer = self;
@@ -1569,7 +1569,7 @@ tpp_lexer_yield_handle___TPP_STR_SIZE(tpp_lexer *tpp_restrict self) {
 	do {
 		tok = tpp_lexer_yieldpp_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok))
 		return tok;
 
 	str_length = 0;

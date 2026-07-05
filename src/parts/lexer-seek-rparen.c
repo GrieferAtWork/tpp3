@@ -727,7 +727,7 @@ err_result:
 	*p_argc = argc;
 	if (argc > argv_bufsize)
 		argc = argv_bufsize;
-	if tpp_unlikely(TPP_TOK_ISERR(result)) {
+	if (TPP_TOK_ISERR(result)) {
 		tpp_size i;
 		if (argc)
 			--argc; /* Last argument is initialized at the very end */

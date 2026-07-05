@@ -111,9 +111,9 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
  * 6.  Paths specified in "tip_after_list" (if available)
  */
 typedef struct tpp_include_paths {
-	tpp_include_path_list TPP_INTERNAL(tip_system_list); /* System #include-path list */
+	tpp_include_path_list TPP_INTERNAL(tip_system_list); /* System #include-path list: #pragma TPP include_path("/usr/include") */
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
-	tpp_include_path_list TPP_INTERNAL(tip_quote_list);  /* "-quote #include-path list */
+	tpp_include_path_list TPP_INTERNAL(tip_quote_list);  /* "-quote #include-path list: #pragma TPP include_path(quote: "/usr/include") */
 #define _tpp_include_paths_init_quote(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_quote_list))
 #define _tpp_include_paths_fini_quote(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_quote_list))
 #else /* TPP_HAVE_INCLUDE_PATH_QUOTE */
@@ -121,7 +121,7 @@ typedef struct tpp_include_paths {
 #define _tpp_include_paths_fini_quote(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
-	tpp_include_path_list TPP_INTERNAL(tip_syshdr_list);  /* #include-paths treated as TPP_FILE_FLAGS_SYSHDR */
+	tpp_include_path_list TPP_INTERNAL(tip_syshdr_list);  /* #include-paths treated as TPP_FILE_FLAGS_SYSHDR: #pragma TPP include_path(system: "/usr/include") */
 #define _tpp_include_paths_init_syshdr(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_syshdr_list))
 #define _tpp_include_paths_fini_syshdr(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_syshdr_list))
 #else /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
@@ -129,7 +129,7 @@ typedef struct tpp_include_paths {
 #define _tpp_include_paths_fini_syshdr(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
-	tpp_include_path_list TPP_INTERNAL(tip_after_list);  /* #include-path list searched after all others */
+	tpp_include_path_list TPP_INTERNAL(tip_after_list);  /* #include-path list searched after all others: #pragma TPP include_path(dirafter: "/usr/include") */
 #define _tpp_include_paths_init_after(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_after_list))
 #define _tpp_include_paths_fini_after(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_after_list))
 #else /* TPP_HAVE_INCLUDE_PATH_AFTER */

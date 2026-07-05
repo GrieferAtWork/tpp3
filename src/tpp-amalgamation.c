@@ -7624,7 +7624,7 @@ again:
 /* Returns the last file in the #include-stack (using "tf_tprev") */
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
-	while (self->tf_tprev)
+	while (!tpp_file_isbasefile(self))
 		self = self->tf_tprev;
 	return (tpp_file *)self;
 }
@@ -21573,7 +21573,7 @@ err_result:
 	*p_argc = argc;
 	if (argc > argv_bufsize)
 		argc = argv_bufsize;
-	if tpp_unlikely(TPP_TOK_ISERR(result)) {
+	if (TPP_TOK_ISERR(result)) {
 		tpp_size i;
 		if (argc)
 			--argc; /* Last argument is initialized at the very end */
@@ -23279,10 +23279,7 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 
 	/* Emit -Wpragma-once-outside-header if appropriate */
 #if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
-#if TPP_HAVE_INCLUDE_STACK
-	if (textfile->tf_tprev == NULL)
-#endif /* TPP_HAVE_INCLUDE_STACK */
-	{
+	if (tpp_file_isbasefile(textfile)) {
 		tpp_errno error = tpp_lexer_warnf(self, TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER);
 		if (TPP_ISERR(error))
 			return error;
@@ -24413,10 +24410,23 @@ tpp_lexer_process_pragma_tpp_exec(tpp_lexer *tpp_restrict self) {
 		return TPP_TOK_ASERR(tok);
 
 	/* Parse string to execute */
-	error = tpp_lexer_parsestring_cb(self, &tpp_lexer_pragma_tpp_exec_cb,
-	                                 self, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+	if (TPP_TOK_ISSTRING(tok)) {
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_pragma_tpp_exec_cb,
+		                                 self, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+		error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+	}
 	if (TPP_ISERR(error))
 		return error;
+	tok = tpp_lexer_gettok(self);
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
 
 	/* Skip trailing ')' */
 	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
@@ -24432,11 +24442,107 @@ tpp_lexer_process_pragma_tpp_exec(tpp_lexer *tpp_restrict self) {
 /* #pragma tpp_set_keyword_flags("foo", 0x7f)                           */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS || TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
+#ifndef TPP_SET_KEYWORD_FLAGS_MASK
+#define TPP_SET_KEYWORD_FLAGS_MASK 0x7f /* Historical constant (s.a. how keyword flags are assigned) */
+#endif /* !TPP_SET_KEYWORD_FLAGS_MASK */
+
+struct tpp_lexer_process_pragma_tpp_set_keyword_flags_data {
+	tpp_lexer   *tlpptskfd_lexer;   /* [1..1] The current lexer */
+	tpp_keyword *tlpptskfd_keyword; /* [1..1][out] The keyword whose flags should be set */
+};
+
+static tpp_errno TPPCALL
+tpp_lexer_process_pragma_tpp_set_keyword_flags_cb(void *arg, tpp_string *chunk,
+                                                  tpp_char const *str, tpp_size length) {
+	tpp_keyword const *ro_keyword;
+	tpp_keyword *rw_keyword;
+	struct tpp_lexer_process_pragma_tpp_set_keyword_flags_data *data;
+	data = (struct tpp_lexer_process_pragma_tpp_set_keyword_flags_data *)arg;
+	(void)chunk;
+	ro_keyword = tpp_lexer_kwds_newkeyword(data->tlpptskfd_lexer, str, length, tpp_hashof(str, length));
+	if tpp_unlikely(!ro_keyword)
+		return TPP_ENOMEM;
+	rw_keyword = tpp_lexer_kwds_copybuiltin(data->tlpptskfd_lexer, ro_keyword);
+	if tpp_unlikely(!rw_keyword)
+		return TPP_ENOMEM;
+	data->tlpptskfd_keyword = rw_keyword;
+	return TPP_EOK;
+}
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
-	/* TODO */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_errno error;
+	tpp_token_id tok;
+	tpp_intmax value;
+	struct tpp_lexer_process_pragma_tpp_set_keyword_flags_data data;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Skip leading '(' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Parse string naming the keyword */
+	data.tlpptskfd_lexer   = self;
+	data.tlpptskfd_keyword = NULL;
+	if (TPP_TOK_ISSTRING(tok)) {
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_tpp_set_keyword_flags_cb,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+		error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+	}
+	if (TPP_ISERR(error))
+		return error;
+	tok = tpp_lexer_gettok(self);
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Skip ',' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(','));
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Next token must be an integer */
+	tok = tpp_lexer_require(self, TPP_TOK_INT);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	if (tok == TPP_TOK_INT) {
+		error = tpp_lexer_decodeint(self, &value);
+		if (TPP_ISERR(error))
+			return error;
+		value &= TPP_SET_KEYWORD_FLAGS_MASK;
+		if (data.tlpptskfd_keyword) {
+			/* Modify keyword flags */
+			tpp_keyword_flags old_flags = tpp_keyword_getflags(data.tlpptskfd_keyword);
+			tpp_keyword_flags new_flags = (old_flags & ~TPP_SET_KEYWORD_FLAGS_MASK) | (tpp_keyword_flags)value;
+			if (old_flags != new_flags) {
+				error = tpp_keyword_setflags(data.tlpptskfd_keyword, new_flags);
+				if (TPP_ISERR(error))
+					return error;
+			}
+		}
+	}
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Skip trailing ')' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+	return TPP_TOK_ASERR_OR_EOK(tok);
 }
 #endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS || TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS */
 
@@ -24448,15 +24554,20 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 /* #pragma TPP include_path(push, + "/usr/include")                     */
 /* #pragma TPP include_path("/usr/local/include")   // same as '+'      */
 /* #pragma TPP include_path(- "/usr/include")                           */
+/* #pragma TPP include_path(quote: "/usr/include")    // Added in TPP3  */
+/* #pragma TPP include_path(system: "/usr/include")   // Added in TPP3  */
+/* #pragma TPP include_path(dirafter: "/usr/include") // Added in TPP3  */
 /* #pragma TPP include_path(pop)                                        */
-/* #pragma TPP include_path(clear)                                      */
+/* #pragma TPP include_path(clear)     // Only clears "tip_system_list" */
+/* #pragma TPP include_path(quote: clear)             // Added in TPP3  */
+/* #pragma TPP include_path(system: clear)            // Added in TPP3  */
+/* #pragma TPP include_path(dirafter: clear)          // Added in TPP3  */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_TPP_include_path(tpp_lexer *tpp_restrict self) {
 	/* TODO */
 	/* TODO: Only support push when "TPP_HAVE_INCLUDE_PATH_PUSH_POP" */
-	/* TODO: Expand this extension to allow modification of the quote- and after- path lists */
 	(void)self;
 	return TPP_ENOENT;
 }
@@ -28431,7 +28542,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 
 next_tok:
 	tok = tpp_lexer_yield(lexer);
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	if (tok == TPP_TOK_EOF) {
 		/* Simple case: it's a "simple" argument (that doesn't do anything when expanded) */
@@ -28469,7 +28580,7 @@ again_print_token:
 	                                         token->tt_start)))
 		goto err_builder_nomem;
 	tok = tpp_lexer_yield(lexer);
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	if (tok != TPP_TOK_EOF)
 		goto again_print_token;
@@ -29373,7 +29484,7 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 
 	do {
 		tok = tpp_lexer_yieldpp_blocking(self);
-		if tpp_unlikely(TPP_TOK_ISERR(tok))
+		if (TPP_TOK_ISERR(tok))
 			return tok;
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 
@@ -29549,7 +29660,7 @@ after_expansion_mode_assignment:
 			do {
 				tok = tpp_lexer_yieldpp_blocking(self);
 			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-			if tpp_unlikely(TPP_TOK_ISERR(tok))
+			if (TPP_TOK_ISERR(tok))
 				return tok;
 		}
 #endif /* TPP_HAVE_KEYWORD_FEATURE_FLAG_TEST_MACROS || TPP_HAVE_KEYWORD_TEST_MACROS */
@@ -29575,7 +29686,7 @@ seek_end_of_macro:
 		if (tok == TPP_TOK_EOF)
 			break;
 		tok = tpp_lexer_yieldpp_blocking(self);
-		if tpp_unlikely(TPP_TOK_ISERR(tok))
+		if (TPP_TOK_ISERR(tok))
 			return tok;
 	}
 	return tpp_lexer_push_textfile(self, tpp_feature_test_macro_expansion,
@@ -29680,7 +29791,7 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 	do {
 		tok = tpp_lexer_yieldpp_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok))
 		return tok;
 
 	if (!TPP_TOK_ISSTRING(tok)) {
@@ -30593,7 +30704,7 @@ tpp_lexer_yield_handle___TPP_COUNT_TOKENS(tpp_lexer *tpp_restrict self) {
 	do {
 		tok = tpp_lexer_yieldpp_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok))
 		return tok;
 
 	data.tlhctd_lexer = self;
@@ -30645,7 +30756,7 @@ tpp_lexer_yield_handle___TPP_STR_SIZE(tpp_lexer *tpp_restrict self) {
 	do {
 		tok = tpp_lexer_yieldpp_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok))
 		return tok;
 
 	str_length = 0;

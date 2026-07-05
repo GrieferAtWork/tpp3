@@ -163,7 +163,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 
 next_tok:
 	tok = tpp_lexer_yield(lexer);
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	if (tok == TPP_TOK_EOF) {
 		/* Simple case: it's a "simple" argument (that doesn't do anything when expanded) */
@@ -201,7 +201,7 @@ again_print_token:
 	                                         token->tt_start)))
 		goto err_builder_nomem;
 	tok = tpp_lexer_yield(lexer);
-	if tpp_unlikely(TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	if (tok != TPP_TOK_EOF)
 		goto again_print_token;
