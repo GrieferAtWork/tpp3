@@ -419,6 +419,16 @@ typedef struct tpp_file {
 #endif /* TPP_HAVE_FILE_EXTERN_C */
 
 
+/* Check if "self" is the "base"-file (that is: the file that
+ * doesn't have a parent, meaning that EOF here *will* result
+ * in the lexer having to indicate TPP_TOK_EOF on all fronts) */
+#if TPP_HAVE_INCLUDE_STACK
+#define tpp_file_isbasefile(self) ((self)->TPP_INTERNAL(tf_tprev) == NULL)
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_file_isbasefile(self) 1
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+
+
 /* Initialize common fields of "self" */
 #define _tpp_file_init_common(self) \
 	_tpp_file_init_lcpos(self)      \

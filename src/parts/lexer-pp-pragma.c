@@ -194,10 +194,7 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 
 	/* Emit -Wpragma-once-outside-header if appropriate */
 #if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
-#if TPP_HAVE_INCLUDE_STACK
-	if (textfile->tf_tprev == NULL)
-#endif /* TPP_HAVE_INCLUDE_STACK */
-	{
+	if (tpp_file_isbasefile(textfile)) {
 		tpp_errno error = tpp_lexer_warnf(self, TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER);
 		if (TPP_ISERR(error))
 			return error;

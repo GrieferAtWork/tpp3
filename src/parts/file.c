@@ -1458,7 +1458,7 @@ again:
 /* Returns the last file in the #include-stack (using "tf_tprev") */
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
-	while (self->tf_tprev)
+	while (!tpp_file_isbasefile(self))
 		self = self->tf_tprev;
 	return (tpp_file *)self;
 }
