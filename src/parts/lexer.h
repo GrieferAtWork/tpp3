@@ -272,22 +272,40 @@ typedef struct tpp_lexer {
 
 /* Include path... */
 #if TPP_HAVE_INCLUDE_PATH
+#define tpp_lexer_includes_addbykind(self, kind, path, path_maxlen)      tpp_include_paths_addbykind(&(self)->TPP_INTERNAL(tl_include_paths), kind, path, path_maxlen)
+#define tpp_lexer_includes_addbykind_head(self, kind, path, path_maxlen) tpp_include_paths_addbykind_head(&(self)->TPP_INTERNAL(tl_include_paths), kind, path, path_maxlen)
+#define tpp_lexer_includes_delbykind(self, kind, path, path_maxlen)      tpp_include_paths_delbykind(&(self)->TPP_INTERNAL(tl_include_paths), kind, path, path_maxlen)
+#define tpp_lexer_includes_clearbykind(self, kind)                       tpp_include_paths_clearbykind(&(self)->TPP_INTERNAL(tl_include_paths), kind)
+#define tpp_lexer_includes_getbykind(self, kind, i)                      tpp_include_paths_getbykind(&(self)->TPP_INTERNAL(tl_include_paths), kind, i)
+#define tpp_lexer_includes_numbykind(self, kind)                         tpp_include_paths_numbykind(&(self)->TPP_INTERNAL(tl_include_paths), kind)
+
 #define tpp_lexer_includes_addsystem(self, path, path_maxlen)      tpp_include_paths_addsystem(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_addsystem_head(self, path, path_maxlen) tpp_include_paths_addsystem_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_delsystem(self, path, path_maxlen)      tpp_include_paths_delsystem(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_clearsystem(self)                       tpp_include_paths_clearsystem(&(self)->TPP_INTERNAL(tl_include_paths))
 #define tpp_lexer_includes_getsystem(self, i)                      tpp_include_paths_getsystem(&(self)->TPP_INTERNAL(tl_include_paths), i)
 #define tpp_lexer_includes_numsystem(self)                         tpp_include_paths_numsystem(&(self)->TPP_INTERNAL(tl_include_paths))
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 #define tpp_lexer_includes_addquote(self, path, path_maxlen)      tpp_include_paths_addquote(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_addquote_head(self, path, path_maxlen) tpp_include_paths_addquote_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_delquote(self, path, path_maxlen)      tpp_include_paths_delquote(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_clearquote(self)                       tpp_include_paths_clearquote(&(self)->TPP_INTERNAL(tl_include_paths))
 #define tpp_lexer_includes_getquote(self, i)                      tpp_include_paths_getquote(&(self)->TPP_INTERNAL(tl_include_paths), i)
 #define tpp_lexer_includes_numquote(self)                         tpp_include_paths_numquote(&(self)->TPP_INTERNAL(tl_include_paths))
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+#define tpp_lexer_includes_addsyshdr(self, path, path_maxlen)      tpp_include_paths_addsyshdr(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_addsyshdr_head(self, path, path_maxlen) tpp_include_paths_addsyshdr_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_delsyshdr(self, path, path_maxlen)      tpp_include_paths_delsyshdr(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_clearsyshdr(self)                       tpp_include_paths_clearsyshdr(&(self)->TPP_INTERNAL(tl_include_paths))
+#define tpp_lexer_includes_getsyshdr(self, i)                      tpp_include_paths_getsyshdr(&(self)->TPP_INTERNAL(tl_include_paths), i)
+#define tpp_lexer_includes_numsyshdr(self)                         tpp_include_paths_numsyshdr(&(self)->TPP_INTERNAL(tl_include_paths))
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 #define tpp_lexer_includes_addafter(self, path, path_maxlen)      tpp_include_paths_addafter(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_addafter_head(self, path, path_maxlen) tpp_include_paths_addafter_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_delafter(self, path, path_maxlen)      tpp_include_paths_delafter(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_clearafter(self)                       tpp_include_paths_clearafter(&(self)->TPP_INTERNAL(tl_include_paths))
 #define tpp_lexer_includes_getafter(self, i)                      tpp_include_paths_getafter(&(self)->TPP_INTERNAL(tl_include_paths), i)
 #define tpp_lexer_includes_numafter(self)                         tpp_include_paths_numafter(&(self)->TPP_INTERNAL(tl_include_paths))
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
@@ -940,7 +958,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self);
+tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see if "tpp_lexer_yieldraw_blocking" should be used instead */
 
 /* Same as `tpp_lexer_yieldraw()', but populate the token from a custom `*p_pos',
  * and don't pop files from the current #include-stack (unless `p_pos' is the top-
@@ -969,7 +987,7 @@ tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self);
  *
  * @return: * : See `tpp_lexer_yieldraw()' */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos); /* TODO: Check all uses to see if "tpp_lexer_yieldraw_at_blocking" should be used instead */
 
 
 typedef struct tpp_lexer_seek_backup {
@@ -1137,7 +1155,7 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL _tpp_lexer_manualpopfile_break_commit(tpp
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self);
+tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see if "tpp_lexer_yieldpp_blocking" should be used instead */
 
 
 /* Wrapper around `tpp_lexer_yieldpp()' that adds handling for macro expansion.
@@ -1148,7 +1166,7 @@ tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self);
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield(tpp_lexer *tpp_restrict self);
+tpp_lexer_yield(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see if "tpp_lexer_yield_blocking" should be used instead */
 
 /* Handle a keyword-style macro (used to implement "tpp_lexer_yield()").
  * @return: TPP_TOK_EOF: Caller should yield again.
@@ -2024,6 +2042,11 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #else /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
 #define TPP_LEXER_DUMP_DEFINITIONS_WARNINGS   0x0000 /* no-op */
 #endif /* !TPP_HAVE_PRAGMA_WARNING && !TPP_HAVE_PRAGMA_TPP_WARNING */
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+#define TPP_LEXER_DUMP_DEFINITIONS_INCLUDES   0x0010 /* #pragma TPP include_path("/usr/include") */
+#else /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+#define TPP_LEXER_DUMP_DEFINITIONS_INCLUDES   0x0000 /* no-op */
+#endif /* !TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO
 #define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO  0x8000 /* Include comments containing some extra info on macro definitions */
 #else /* TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */

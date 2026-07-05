@@ -3220,17 +3220,22 @@ for (local doc, name,
 
 /* "tpp_include_paths" contains a 2nd path-list that is only searched during "-strings */
 #ifndef TPP_HAVE_INCLUDE_PATH_QUOTE
-#define TPP_HAVE_INCLUDE_PATH_QUOTE (TPP_HAVE_INCLUDE_STACK && (TPP_PROFILE == TPP_PROFILE_ALL))
+#define TPP_HAVE_INCLUDE_PATH_QUOTE \
+	(TPP_HAVE_INCLUDE_STACK && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
 
 /* "tpp_include_paths" contains a 3rd path-list whose files are treated as "TPP_FILE_FLAGS_SYSHDR" */
 #ifndef TPP_HAVE_INCLUDE_PATH_SYSHDR
-#define TPP_HAVE_INCLUDE_PATH_SYSHDR (TPP_HAVE_INCLUDE_STACK && TPP_HAVE_FILE_SYSHDR && (TPP_PROFILE == TPP_PROFILE_ALL))
+#define TPP_HAVE_INCLUDE_PATH_SYSHDR \
+	(TPP_HAVE_INCLUDE_STACK && TPP_HAVE_FILE_SYSHDR && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_INCLUDE_PATH_SYSHDR */
 
 /* "tpp_include_paths" contains a 4th path-list that is searched after all other paths */
 #ifndef TPP_HAVE_INCLUDE_PATH_AFTER
-#define TPP_HAVE_INCLUDE_PATH_AFTER (TPP_HAVE_INCLUDE_STACK && (TPP_PROFILE == TPP_PROFILE_ALL))
+#define TPP_HAVE_INCLUDE_PATH_AFTER                                 \
+	(TPP_HAVE_INCLUDE_STACK && ((TPP_PROFILE == TPP_PROFILE_ALL) || \
+	                            (TPP_HAVE_PROFILE_NOT_MINIMAL &&    \
+	                             TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH)))
 #endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
 
 /* A preprocessor tuple describing the built-in, hard-coded, system-include path.
@@ -3460,7 +3465,8 @@ for (local doc, name,
 	(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || \
 	 (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS) ||     \
 	 TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ ||              \
-	 TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_STR_PACK)
+	 TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_STR_PACK ||        \
+	 (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_LEXER_DUMP_DEFINITIONS))
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
 /* Provide a function "tpp_lexer_decodeint_expr()" to parse an integer */
@@ -3679,6 +3685,9 @@ for (local doc, name,
 #ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC
 #define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC)
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH */
 #ifndef TPP_HAVE_TPP_W_ERROR
 #define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_ERROR || TPP_HAVE_PRAGMA_ERROR || TPP_HAVE_PRAGMA_GCC_ERROR))
 #endif /* !TPP_HAVE_TPP_W_ERROR */
@@ -3915,6 +3924,10 @@ for (local doc, name,
 	(TPP_HAVE_WARNINGS && TPP_HAVE_QUALITY_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && \
 	 TPP_HAVE_TPP_TOK_PIPE_PIPE && TPP_HAVE_TPP_TOK_AMP_AMP)
 #endif /* !TPP_HAVE_TPP_W_PAREN_AROUND_LAND */
+#ifndef TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
+#define TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_PUSH_POP)
+#endif /* !TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/

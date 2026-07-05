@@ -632,10 +632,10 @@ TPP_KWD(TPP_KWD_enable, "enable")
 #define TPP_KWD_suppress TPP_KWD_suppress
 TPP_KWD(TPP_KWD_suppress, "suppress")
 #endif /* (TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING) && TPP_HAVE_WARNING_SUPPRESS */
-#if (TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING) && TPP_HAVE_WARNING_DEFAULT
+#if ((TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING) && TPP_HAVE_WARNING_DEFAULT) || (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER)
 #define TPP_KWD_default TPP_KWD_default
 TPP_KWD(TPP_KWD_default, "default")
-#endif /* (TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING) && TPP_HAVE_WARNING_DEFAULT */
+#endif /* ((TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING) && TPP_HAVE_WARNING_DEFAULT) || (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER) */
 #if TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING
 #define TPP_KWD_fatal TPP_KWD_fatal
 TPP_KWD(TPP_KWD_fatal, "fatal")
@@ -676,6 +676,18 @@ TPP_KWD(TPP_KWD_include_path, "include_path")
 #define TPP_KWD_clear TPP_KWD_clear
 TPP_KWD(TPP_KWD_clear, "clear")
 #endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE
+#define TPP_KWD_quote TPP_KWD_quote
+TPP_KWD(TPP_KWD_quote, "quote")
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR
+#define TPP_KWD_system TPP_KWD_system
+TPP_KWD(TPP_KWD_system, "system")
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR */
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
+#define TPP_KWD_dirafter TPP_KWD_dirafter
+TPP_KWD(TPP_KWD_dirafter, "dirafter")
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER */
 
 
 /* Pre-defined macros... */
@@ -2907,6 +2919,7 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING ||             \
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON || \
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC ||      \
+	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH ||    \
 	 TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE)
 #endif /* !TPP_HAVE_TPP_WG_SYNTAX */
 #if TPP_HAVE_TPP_WG_SYNTAX
@@ -3144,6 +3157,41 @@ TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC, 1(TPP_WG_SYNTAX), 0
             "expected %[warning%], %[error%] or %[ignored%] after %[#pragma GCC diagnostic%] but got %Pt")
 #endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC */
+
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+#define _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_PUSHPOP ", %[push%], %[pop%]"
+#else /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#define _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_PUSHPOP /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+#define _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_QUOTE ", %[quote%]"
+#else /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#define _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_QUOTE /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+#define _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_SYSTEM ", %[system%]"
+#else /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
+#define _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_SYSTEM /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH_SYSHDR */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+#define _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_DIRAFTER ", %[dirafter%]"
+#else /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#define _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_DIRAFTER /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
+#define TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH, 1(TPP_WG_SYNTAX), 0(), ~,
+            "expected %[default%], %[clear%]"
+            _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_PUSHPOP
+            _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_QUOTE
+            _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_SYSTEM
+            _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_DIRAFTER
+            " or %[<string>%] in %[#pragma TPP include_path(...)%] but got %Pt")
+#undef _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_PUSHPOP
+#undef _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_QUOTE
+#undef _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_SYSTEM
+#undef _TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH_DIRAFTER
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH */
 
 #if TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE
 #define TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE
@@ -3480,7 +3528,7 @@ TPP_WARNING(TPP_W_UNKNOWN_EXTENSION, 1(TPP_WG_EXTENSION), 0(), ~,
 #if TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS
 #define TPP_W_CANNOT_POP_EXTENSIONS TPP_W_CANNOT_POP_EXTENSIONS
 TPP_WARNING(TPP_W_CANNOT_POP_EXTENSIONS, 1(TPP_WG_EXTENSION), 0(), ~,
-            "cannot %[#pragma extension(pop)%] no preceding %[push%]")
+            "cannot %[#pragma extension(pop)%]: no preceding %[push%]")
 #endif /* TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS */
 
 
@@ -3521,7 +3569,7 @@ TPP_WARNING(TPP_W_UNKNOWN_WARNING_NUMBER, 1(TPP_WG_WARNING), 1(4616), TPP_WSTATE
 #if TPP_HAVE_TPP_W_CANNOT_POP_WARNINGS
 #define TPP_W_CANNOT_POP_WARNINGS TPP_W_CANNOT_POP_WARNINGS
 TPP_WARNING(TPP_W_CANNOT_POP_WARNINGS, 1(TPP_WG_WARNING), 1(4193), TPP_WSTATE_UNDEFINED,
-            "cannot %[#pragma warning(pop)%] no preceding %[push%]")
+            "cannot %[#pragma warning(pop)%]: no preceding %[push%]")
 #endif /* TPP_HAVE_TPP_W_CANNOT_POP_WARNINGS */
 
 
@@ -3593,7 +3641,7 @@ TPP_WARNING(TPP_W_DEPENDENCY_CHANGED, 1(TPP_WG_DEPENDENCY), 0(), ~,
 
 
 /************************************************************************/
-/* -Wlimit                                                         */
+/* -Wlimit                                                              */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_LIMIT
 #define TPP_HAVE_TPP_WG_LIMIT                           \
@@ -3714,6 +3762,12 @@ TPP_WARNING(TPP_W_BAD_EXPRESSION_OPERANDS, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
             "division by zero")
 #endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
+
+#if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
+#define TPP_W_CANNOT_POP_INCLUDE_PATHS TPP_W_CANNOT_POP_INCLUDE_PATHS
+TPP_WARNING(TPP_W_CANNOT_POP_INCLUDE_PATHS, 1(TPP_WG_WARNING), 0(), ~,
+            "cannot %[#pragma TPP include_path(pop)%]: no preceding %[push%]")
+#endif /* TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS */
 
 
 /* Pull in user definitions (if defined) */
@@ -7425,17 +7479,22 @@ TPP_DECL_END
 
 /* "tpp_include_paths" contains a 2nd path-list that is only searched during "-strings */
 #ifndef TPP_HAVE_INCLUDE_PATH_QUOTE
-#define TPP_HAVE_INCLUDE_PATH_QUOTE (TPP_HAVE_INCLUDE_STACK && (TPP_PROFILE == TPP_PROFILE_ALL))
+#define TPP_HAVE_INCLUDE_PATH_QUOTE \
+	(TPP_HAVE_INCLUDE_STACK && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
 
 /* "tpp_include_paths" contains a 3rd path-list whose files are treated as "TPP_FILE_FLAGS_SYSHDR" */
 #ifndef TPP_HAVE_INCLUDE_PATH_SYSHDR
-#define TPP_HAVE_INCLUDE_PATH_SYSHDR (TPP_HAVE_INCLUDE_STACK && TPP_HAVE_FILE_SYSHDR && (TPP_PROFILE == TPP_PROFILE_ALL))
+#define TPP_HAVE_INCLUDE_PATH_SYSHDR \
+	(TPP_HAVE_INCLUDE_STACK && TPP_HAVE_FILE_SYSHDR && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_INCLUDE_PATH_SYSHDR */
 
 /* "tpp_include_paths" contains a 4th path-list that is searched after all other paths */
 #ifndef TPP_HAVE_INCLUDE_PATH_AFTER
-#define TPP_HAVE_INCLUDE_PATH_AFTER (TPP_HAVE_INCLUDE_STACK && (TPP_PROFILE == TPP_PROFILE_ALL))
+#define TPP_HAVE_INCLUDE_PATH_AFTER                                 \
+	(TPP_HAVE_INCLUDE_STACK && ((TPP_PROFILE == TPP_PROFILE_ALL) || \
+	                            (TPP_HAVE_PROFILE_NOT_MINIMAL &&    \
+	                             TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH)))
 #endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
 
 /* A preprocessor tuple describing the built-in, hard-coded, system-include path.
@@ -7665,7 +7724,8 @@ TPP_DECL_END
 	(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || \
 	 (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS) ||     \
 	 TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ ||              \
-	 TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_STR_PACK)
+	 TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_STR_PACK ||        \
+	 (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_LEXER_DUMP_DEFINITIONS))
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
 /* Provide a function "tpp_lexer_decodeint_expr()" to parse an integer */
@@ -7884,6 +7944,9 @@ TPP_DECL_END
 #ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC
 #define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC)
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH
+#define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH */
 #ifndef TPP_HAVE_TPP_W_ERROR
 #define TPP_HAVE_TPP_W_ERROR (TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_ERROR || TPP_HAVE_PRAGMA_ERROR || TPP_HAVE_PRAGMA_GCC_ERROR))
 #endif /* !TPP_HAVE_TPP_W_ERROR */
@@ -8120,6 +8183,10 @@ TPP_DECL_END
 	(TPP_HAVE_WARNINGS && TPP_HAVE_QUALITY_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && \
 	 TPP_HAVE_TPP_TOK_PIPE_PIPE && TPP_HAVE_TPP_TOK_AMP_AMP)
 #endif /* !TPP_HAVE_TPP_W_PAREN_AROUND_LAND */
+#ifndef TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
+#define TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_PUSH_POP)
+#endif /* !TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -15895,6 +15962,11 @@ tpp_include_path_list_fini(tpp_include_path_list *tpp_restrict self);
 #define tpp_include_path_list_getentry(self, i) \
 	_tpp_include_path_entry_getpath(&(self)->TPP_INTERNAL(tipl_list)[i])
 
+/* Clear this include-path list. */
+#define tpp_include_path_list_clear(self) \
+	(tpp_include_path_list_fini(self),    \
+	 tpp_include_path_list_init(self))
+
 /* Append the given "path" to "self".
  * @param: path:        The path to append.
  * @param: path_maxlen: The max length of "path". The actual length of the path that will
@@ -15986,6 +16058,33 @@ tpp_include_paths_copy(tpp_include_paths *tpp_restrict self,
                        tpp_include_paths const *tpp_restrict from);
 #endif /* TPP_HAVE_LEXER_COPY */
 
+#undef TPP_HAVE_INCLUDE_PATH_MULTIPLE
+typedef enum tpp_include_path_kind {
+	TPP_INCLUDE_PATH_KIND_SYSTEM = tpp_offsetof(tpp_include_paths, TPP_INTERNAL(tip_system_list)),
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	TPP_INCLUDE_PATH_KIND_QUOTE = tpp_offsetof(tpp_include_paths, TPP_INTERNAL(tip_quote_list)),
+#define TPP_HAVE_INCLUDE_PATH_MULTIPLE 1
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	TPP_INCLUDE_PATH_KIND_SYSHDR = tpp_offsetof(tpp_include_paths, TPP_INTERNAL(tip_syshdr_list)),
+#define TPP_HAVE_INCLUDE_PATH_MULTIPLE 1
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+	TPP_INCLUDE_PATH_KIND_AFTER = tpp_offsetof(tpp_include_paths, TPP_INTERNAL(tip_after_list)),
+#define TPP_HAVE_INCLUDE_PATH_MULTIPLE 1
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+} tpp_include_path_kind;
+#ifndef TPP_HAVE_INCLUDE_PATH_MULTIPLE
+#define TPP_HAVE_INCLUDE_PATH_MULTIPLE 0
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+#define _tpp_include_paths_bykind(self, kind) \
+	((tpp_include_path_list *)((char *)(self) + (tpp_size)(unsigned int)(kind)))
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+#define _tpp_include_paths_bykind(self, kind) (&(self)->TPP_INTERNAL(tip_system_list))
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+
 
 /* Access include paths */
 #define tpp_include_paths_numsystem(self)    tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_system_list))
@@ -16002,69 +16101,88 @@ tpp_include_paths_copy(tpp_include_paths *tpp_restrict self,
 #define tpp_include_paths_numafter(self)     tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_after_list))
 #define tpp_include_paths_getafter(self, i)  tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_after_list), i)
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#define tpp_include_paths_numbykind(self, kind)    tpp_include_path_list_getcount(_tpp_include_paths_bykind(self, kind))
+#define tpp_include_paths_getbykind(self, kind, i) tpp_include_path_list_getentry(_tpp_include_paths_bykind(self, kind), i)
 
 /* Helper methods to add/remove paths to different include path lists */
 #if TPP_HAVE_INCLUDE_PATH_PUSH_POP
 #define _tpp_include_paths_alloc() ((tpp_include_paths *)tpp_malloc(sizeof(tpp_include_paths)))
 #define _tpp_include_paths_free(p) tpp_free(p)
 
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsystem(tpp_include_paths *tpp_restrict self,
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_include_paths_addbykind(tpp_include_paths *tpp_restrict self,
+                            tpp_include_path_kind kind,
                             char const *path, tpp_size path_maxlen);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsystem_head(tpp_include_paths *tpp_restrict self,
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_include_paths_addbykind_head(tpp_include_paths *tpp_restrict self,
+                                 tpp_include_path_kind kind,
                                  char const *path, tpp_size path_maxlen);
 
 /* @return: TPP_EOK:    Path was located and removed
  * @return: TPP_ENOENT: Path could not be found 
  * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delsystem(tpp_include_paths *tpp_restrict self,
+TPP_DECL TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_include_paths_delbykind(tpp_include_paths *tpp_restrict self,
+                            tpp_include_path_kind kind,
                             char const *path, tpp_size path_maxlen);
 
+/* @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_include_paths_clearbykind(tpp_include_paths *tpp_restrict self,
+                              tpp_include_path_kind kind);
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_include_paths_addbykind(tpp_include_paths *tpp_restrict self,
+                             char const *path, tpp_size path_maxlen);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_include_paths_addbykind_head(tpp_include_paths *tpp_restrict self,
+                                  char const *path, tpp_size path_maxlen);
+
+/* @return: TPP_EOK:    Path was located and removed
+ * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_include_paths_delbykind(tpp_include_paths *tpp_restrict self,
+                             char const *path, tpp_size path_maxlen);
+
+/* @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_include_paths_clearbykind(tpp_include_paths *tpp_restrict self);
+#define tpp_include_paths_addbykind(self, kind, path, path_maxlen) \
+	_tpp_include_paths_addbykind(self, path, path_maxlen)
+#define tpp_include_paths_addbykind_head(self, kind, path, path_maxlen) \
+	_tpp_include_paths_addbykind_head(self, path, path_maxlen)
+#define tpp_include_paths_delbykind(self, kind, path, path_maxlen) \
+	_tpp_include_paths_delbykind(self, path, path_maxlen)
+#define tpp_include_paths_clearbykind(self, kind) \
+	_tpp_include_paths_clearbykind(self)
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+
+
+#define tpp_include_paths_addsystem(self, path, path_maxlen)      tpp_include_paths_addbykind(self, TPP_INCLUDE_PATH_KIND_SYSTEM, path, path_maxlen)
+#define tpp_include_paths_addsystem_head(self, path, path_maxlen) tpp_include_paths_addbykind_head(self, TPP_INCLUDE_PATH_KIND_SYSTEM, path, path_maxlen)
+#define tpp_include_paths_delsystem(self, path, path_maxlen)      tpp_include_paths_delbykind(self, TPP_INCLUDE_PATH_KIND_SYSTEM, path, path_maxlen)
+#define tpp_include_paths_clearsystem(self)                       tpp_include_paths_clearbykind(self, TPP_INCLUDE_PATH_KIND_SYSTEM)
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addquote(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addquote_head(tpp_include_paths *tpp_restrict self,
-                                char const *path, tpp_size path_maxlen);
-/* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
- * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delquote(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen);
+#define tpp_include_paths_addquote(self, path, path_maxlen)      tpp_include_paths_addbykind(self, TPP_INCLUDE_PATH_KIND_QUOTE, path, path_maxlen)
+#define tpp_include_paths_addquote_head(self, path, path_maxlen) tpp_include_paths_addbykind_head(self, TPP_INCLUDE_PATH_KIND_QUOTE, path, path_maxlen)
+#define tpp_include_paths_delquote(self, path, path_maxlen)      tpp_include_paths_delbykind(self, TPP_INCLUDE_PATH_KIND_QUOTE, path, path_maxlen)
+#define tpp_include_paths_clearquote(self)                       tpp_include_paths_clearbykind(self, TPP_INCLUDE_PATH_KIND_QUOTE)
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
-
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsyshdr(tpp_include_paths *tpp_restrict self,
-                            char const *path, tpp_size path_maxlen);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsyshdr_head(tpp_include_paths *tpp_restrict self,
-                                 char const *path, tpp_size path_maxlen);
-/* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
- * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delsyshdr(tpp_include_paths *tpp_restrict self,
-                            char const *path, tpp_size path_maxlen);
+#define tpp_include_paths_addsyshdr(self, path, path_maxlen)      tpp_include_paths_addbykind(self, TPP_INCLUDE_PATH_KIND_SYSHDR, path, path_maxlen)
+#define tpp_include_paths_addsyshdr_head(self, path, path_maxlen) tpp_include_paths_addbykind_head(self, TPP_INCLUDE_PATH_KIND_SYSHDR, path, path_maxlen)
+#define tpp_include_paths_delsyshdr(self, path, path_maxlen)      tpp_include_paths_delbykind(self, TPP_INCLUDE_PATH_KIND_SYSHDR, path, path_maxlen)
+#define tpp_include_paths_clearsyshdr(self)                       tpp_include_paths_clearbykind(self, TPP_INCLUDE_PATH_KIND_SYSHDR)
 #endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
-
 #if TPP_HAVE_INCLUDE_PATH_AFTER
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addafter(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addafter_head(tpp_include_paths *tpp_restrict self,
-                                char const *path, tpp_size path_maxlen);
-/* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
- * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delafter(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen);
+#define tpp_include_paths_addafter(self, path, path_maxlen)      tpp_include_paths_addbykind(self, TPP_INCLUDE_PATH_KIND_AFTER, path, path_maxlen)
+#define tpp_include_paths_addafter_head(self, path, path_maxlen) tpp_include_paths_addbykind_head(self, TPP_INCLUDE_PATH_KIND_AFTER, path, path_maxlen)
+#define tpp_include_paths_delafter(self, path, path_maxlen)      tpp_include_paths_delbykind(self, TPP_INCLUDE_PATH_KIND_AFTER, path, path_maxlen)
+#define tpp_include_paths_clearafter(self)                       tpp_include_paths_clearbykind(self, TPP_INCLUDE_PATH_KIND_AFTER)
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 
 /* Push the current include paths state */
@@ -16084,20 +16202,24 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *
 #define tpp_include_paths_addsystem(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
 #define tpp_include_paths_addsystem_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
 #define tpp_include_paths_delsystem(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
+#define tpp_include_paths_clearsystem(self)                       tpp_include_path_list_clear(&(self)->TPP_INTERNAL(tip_system_list))
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 #define tpp_include_paths_addquote(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_quote_list), path, path_maxlen)
 #define tpp_include_paths_addquote_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_quote_list), path, path_maxlen)
 #define tpp_include_paths_delquote(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_quote_list), path, path_maxlen)
+#define tpp_include_paths_clearquote(self)                       tpp_include_path_list_clear(&(self)->TPP_INTERNAL(tip_quote_list))
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
 #define tpp_include_paths_addsyshdr(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_syshdr_list), path, path_maxlen)
 #define tpp_include_paths_addsyshdr_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_syshdr_list), path, path_maxlen)
 #define tpp_include_paths_delsyshdr(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_syshdr_list), path, path_maxlen)
+#define tpp_include_paths_clearsyshdr(self)                       tpp_include_path_list_clear(&(self)->TPP_INTERNAL(tip_syshdr_list))
 #endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 #define tpp_include_paths_addafter(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_after_list), path, path_maxlen)
 #define tpp_include_paths_addafter_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_after_list), path, path_maxlen)
 #define tpp_include_paths_delafter(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_after_list), path, path_maxlen)
+#define tpp_include_paths_clearafter(self)                       tpp_include_path_list_clear(&(self)->TPP_INTERNAL(tip_after_list))
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 #endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 
@@ -16783,22 +16905,40 @@ typedef struct tpp_lexer {
 
 /* Include path... */
 #if TPP_HAVE_INCLUDE_PATH
+#define tpp_lexer_includes_addbykind(self, kind, path, path_maxlen)      tpp_include_paths_addbykind(&(self)->TPP_INTERNAL(tl_include_paths), kind, path, path_maxlen)
+#define tpp_lexer_includes_addbykind_head(self, kind, path, path_maxlen) tpp_include_paths_addbykind_head(&(self)->TPP_INTERNAL(tl_include_paths), kind, path, path_maxlen)
+#define tpp_lexer_includes_delbykind(self, kind, path, path_maxlen)      tpp_include_paths_delbykind(&(self)->TPP_INTERNAL(tl_include_paths), kind, path, path_maxlen)
+#define tpp_lexer_includes_clearbykind(self, kind)                       tpp_include_paths_clearbykind(&(self)->TPP_INTERNAL(tl_include_paths), kind)
+#define tpp_lexer_includes_getbykind(self, kind, i)                      tpp_include_paths_getbykind(&(self)->TPP_INTERNAL(tl_include_paths), kind, i)
+#define tpp_lexer_includes_numbykind(self, kind)                         tpp_include_paths_numbykind(&(self)->TPP_INTERNAL(tl_include_paths), kind)
+
 #define tpp_lexer_includes_addsystem(self, path, path_maxlen)      tpp_include_paths_addsystem(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_addsystem_head(self, path, path_maxlen) tpp_include_paths_addsystem_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_delsystem(self, path, path_maxlen)      tpp_include_paths_delsystem(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_clearsystem(self)                       tpp_include_paths_clearsystem(&(self)->TPP_INTERNAL(tl_include_paths))
 #define tpp_lexer_includes_getsystem(self, i)                      tpp_include_paths_getsystem(&(self)->TPP_INTERNAL(tl_include_paths), i)
 #define tpp_lexer_includes_numsystem(self)                         tpp_include_paths_numsystem(&(self)->TPP_INTERNAL(tl_include_paths))
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 #define tpp_lexer_includes_addquote(self, path, path_maxlen)      tpp_include_paths_addquote(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_addquote_head(self, path, path_maxlen) tpp_include_paths_addquote_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_delquote(self, path, path_maxlen)      tpp_include_paths_delquote(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_clearquote(self)                       tpp_include_paths_clearquote(&(self)->TPP_INTERNAL(tl_include_paths))
 #define tpp_lexer_includes_getquote(self, i)                      tpp_include_paths_getquote(&(self)->TPP_INTERNAL(tl_include_paths), i)
 #define tpp_lexer_includes_numquote(self)                         tpp_include_paths_numquote(&(self)->TPP_INTERNAL(tl_include_paths))
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+#define tpp_lexer_includes_addsyshdr(self, path, path_maxlen)      tpp_include_paths_addsyshdr(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_addsyshdr_head(self, path, path_maxlen) tpp_include_paths_addsyshdr_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_delsyshdr(self, path, path_maxlen)      tpp_include_paths_delsyshdr(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_clearsyshdr(self)                       tpp_include_paths_clearsyshdr(&(self)->TPP_INTERNAL(tl_include_paths))
+#define tpp_lexer_includes_getsyshdr(self, i)                      tpp_include_paths_getsyshdr(&(self)->TPP_INTERNAL(tl_include_paths), i)
+#define tpp_lexer_includes_numsyshdr(self)                         tpp_include_paths_numsyshdr(&(self)->TPP_INTERNAL(tl_include_paths))
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 #define tpp_lexer_includes_addafter(self, path, path_maxlen)      tpp_include_paths_addafter(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_addafter_head(self, path, path_maxlen) tpp_include_paths_addafter_head(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
 #define tpp_lexer_includes_delafter(self, path, path_maxlen)      tpp_include_paths_delafter(&(self)->TPP_INTERNAL(tl_include_paths), path, path_maxlen)
+#define tpp_lexer_includes_clearafter(self)                       tpp_include_paths_clearafter(&(self)->TPP_INTERNAL(tl_include_paths))
 #define tpp_lexer_includes_getafter(self, i)                      tpp_include_paths_getafter(&(self)->TPP_INTERNAL(tl_include_paths), i)
 #define tpp_lexer_includes_numafter(self)                         tpp_include_paths_numafter(&(self)->TPP_INTERNAL(tl_include_paths))
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
@@ -17417,7 +17557,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self);
+tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see if "tpp_lexer_yieldraw_blocking" should be used instead */
 
 /* Same as `tpp_lexer_yieldraw()', but populate the token from a custom `*p_pos',
  * and don't pop files from the current #include-stack (unless `p_pos' is the top-
@@ -17446,7 +17586,7 @@ tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self);
  *
  * @return: * : See `tpp_lexer_yieldraw()' */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos); /* TODO: Check all uses to see if "tpp_lexer_yieldraw_at_blocking" should be used instead */
 
 
 typedef struct tpp_lexer_seek_backup {
@@ -17614,7 +17754,7 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL _tpp_lexer_manualpopfile_break_commit(tpp
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self);
+tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see if "tpp_lexer_yieldpp_blocking" should be used instead */
 
 
 /* Wrapper around `tpp_lexer_yieldpp()' that adds handling for macro expansion.
@@ -17625,7 +17765,7 @@ tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self);
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield(tpp_lexer *tpp_restrict self);
+tpp_lexer_yield(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see if "tpp_lexer_yield_blocking" should be used instead */
 
 /* Handle a keyword-style macro (used to implement "tpp_lexer_yield()").
  * @return: TPP_TOK_EOF: Caller should yield again.
@@ -18501,6 +18641,11 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #else /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
 #define TPP_LEXER_DUMP_DEFINITIONS_WARNINGS   0x0000 /* no-op */
 #endif /* !TPP_HAVE_PRAGMA_WARNING && !TPP_HAVE_PRAGMA_TPP_WARNING */
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+#define TPP_LEXER_DUMP_DEFINITIONS_INCLUDES   0x0010 /* #pragma TPP include_path("/usr/include") */
+#else /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+#define TPP_LEXER_DUMP_DEFINITIONS_INCLUDES   0x0000 /* no-op */
+#endif /* !TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO
 #define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO  0x8000 /* Include comments containing some extra info on macro definitions */
 #else /* TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */

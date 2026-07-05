@@ -13071,7 +13071,7 @@ tpp_include_path_strlen(char const *path, tpp_size path_maxlen) {
 	return result;
 }
 
-#define tpp_include_path_entry_equals(entry, path, pathlen)                   \
+#define tpp_include_path_entry_equals(entry, path, pathlen)                    \
 	tpp_include_path_entry_equals_impl(_tpp_include_path_entry_getpath(entry), \
 	                                   path, pathlen)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
@@ -13229,7 +13229,7 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 			/* Remove this entry */
 			tpp_include_path_entry temp = *entry;
 			--self->tipl_size;
-			tpp_memmovedown(entry + 1, entry + 0,
+			tpp_memmovedown(entry + 0, entry + 1,
 			                (self->tipl_size - i) *
 			                sizeof(tpp_include_path_entry));
 			_tpp_include_path_entry_fini(&temp);
@@ -13422,7 +13422,7 @@ err:
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_include_paths_unshare(tpp_include_paths *tpp_restrict self) {
-	if (!tpp_include_paths_mustcopy(self)) {
+	if (tpp_include_paths_mustcopy(self)) {
 		/* Create a copy... */
 		tpp_include_paths *copy = tpp_include_paths_dupone(self);
 		if tpp_unlikely(!copy)
@@ -13436,131 +13436,98 @@ tpp_include_paths_unshare(tpp_include_paths *tpp_restrict self) {
 	return TPP_EOK;
 }
 
+
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_include_paths_addbykind(tpp_include_paths *tpp_restrict self,
+                            tpp_include_path_kind kind,
+                            char const *path, tpp_size path_maxlen)
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsystem(tpp_include_paths *tpp_restrict self,
-                            char const *path, tpp_size path_maxlen) {
+_tpp_include_paths_addbykind(tpp_include_paths *tpp_restrict self,
+                             char const *path, tpp_size path_maxlen)
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+{
 	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushhead(&self->tip_system_list, path, path_maxlen);
+	if (!TPP_ISERR(error)) {
+		error = tpp_include_path_list_pushtail(_tpp_include_paths_bykind(self, kind),
+		                                       path, path_maxlen);
+	}
 	return error;
 }
 
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_include_paths_addbykind_head(tpp_include_paths *tpp_restrict self,
+                                 tpp_include_path_kind kind,
+                                 char const *path, tpp_size path_maxlen)
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsystem_head(tpp_include_paths *tpp_restrict self,
-                                 char const *path, tpp_size path_maxlen) {
+_tpp_include_paths_addbykind_head(tpp_include_paths *tpp_restrict self,
+                                  char const *path, tpp_size path_maxlen)
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+{
 	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushtail(&self->tip_system_list, path, path_maxlen);
+	if (!TPP_ISERR(error)) {
+		error = tpp_include_path_list_pushhead(_tpp_include_paths_bykind(self, kind),
+		                                       path, path_maxlen);
+	}
 	return error;
 }
 
 /* @return: TPP_EOK:    Path was located and removed
  * @return: TPP_ENOENT: Path could not be found 
  * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+TPP_IMPL TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_include_paths_delbykind(tpp_include_paths *tpp_restrict self,
+                            tpp_include_path_kind kind,
+                            char const *path, tpp_size path_maxlen)
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
 TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delsystem(tpp_include_paths *tpp_restrict self,
-                            char const *path, tpp_size path_maxlen) {
+_tpp_include_paths_delbykind(tpp_include_paths *tpp_restrict self,
+                             char const *path, tpp_size path_maxlen)
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+{
 	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_remove(&self->tip_system_list, path, path_maxlen);
+	if (!TPP_ISERR(error)) {
+		error = tpp_include_path_list_remove(_tpp_include_paths_bykind(self, kind),
+		                                     path, path_maxlen);
+	}
 	return error;
 }
 
-#if TPP_HAVE_INCLUDE_PATH_QUOTE
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addquote(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushhead(&self->tip_quote_list, path, path_maxlen);
-	return error;
-}
-
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addquote_head(tpp_include_paths *tpp_restrict self,
-                                char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushtail(&self->tip_quote_list, path, path_maxlen);
-	return error;
-}
-
-/* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
+/* @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
-TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delquote(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen) {
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+TPP_IMPL TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_include_paths_clearbykind(tpp_include_paths *tpp_restrict self,
+                              tpp_include_path_kind kind)
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+TPP_IMPL TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_include_paths_clearbykind(tpp_include_paths *tpp_restrict self)
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+{
 	tpp_errno error = tpp_include_paths_unshare(self);
 	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_remove(&self->tip_quote_list, path, path_maxlen);
-	return error;
-}
-#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
-
-#if TPP_HAVE_INCLUDE_PATH_SYSHDR
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsyshdr(tpp_include_paths *tpp_restrict self,
-                            char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushhead(&self->tip_syshdr_list, path, path_maxlen);
+		tpp_include_path_list_clear(_tpp_include_paths_bykind(self, kind));
 	return error;
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsyshdr_head(tpp_include_paths *tpp_restrict self,
-                                 char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushtail(&self->tip_syshdr_list, path, path_maxlen);
-	return error;
+/* Pop the current include paths state (may only be called when `tpp_include_paths_canpop(self)') */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_include_paths_pop(tpp_include_paths *tpp_restrict self) {
+	tpp_assert(tpp_include_paths_canpop(self));
+	if (self->tip_pushcnt == 0) {
+		tpp_include_paths *prev = self->tip_prev;
+		tpp_include_paths_fini_common(self);
+		tpp_memcpy(self, prev, sizeof(tpp_include_paths));
+		_tpp_include_paths_free(prev);
+		tpp_assert(self->tip_pushcnt != 0);
+	}
+	--self->tip_pushcnt;
 }
 
-/* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
- * @return: TPP_ENOMEM: Out of memory */
-TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delsyshdr(tpp_include_paths *tpp_restrict self,
-                            char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_remove(&self->tip_syshdr_list, path, path_maxlen);
-	return error;
-}
-#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
-
-#if TPP_HAVE_INCLUDE_PATH_AFTER
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addafter(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushhead(&self->tip_after_list, path, path_maxlen);
-	return error;
-}
-
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addafter_head(tpp_include_paths *tpp_restrict self,
-                                char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushtail(&self->tip_after_list, path, path_maxlen);
-	return error;
-}
-
-/* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
- * @return: TPP_ENOMEM: Out of memory */
-TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delafter(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_remove(&self->tip_after_list, path, path_maxlen);
-	return error;
-}
-#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 
 TPP_DECL_END
@@ -24552,24 +24519,247 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 
 /************************************************************************/
 /* #pragma TPP include_path(push, + "/usr/include")                     */
-/* #pragma TPP include_path("/usr/local/include")   // same as '+'      */
+/* #pragma TPP include_path(push, ++ "/usr/include")  // pushhead       */
+/* #pragma TPP include_path("/usr/local/include")     // same as '+'    */
 /* #pragma TPP include_path(- "/usr/include")                           */
+/* #pragma TPP include_path(default: "/usr/include")  // same as direct */
 /* #pragma TPP include_path(quote: "/usr/include")    // Added in TPP3  */
 /* #pragma TPP include_path(system: "/usr/include")   // Added in TPP3  */
 /* #pragma TPP include_path(dirafter: "/usr/include") // Added in TPP3  */
 /* #pragma TPP include_path(pop)                                        */
 /* #pragma TPP include_path(clear)     // Only clears "tip_system_list" */
+/* #pragma TPP include_path(default: clear)           // same as direct */
 /* #pragma TPP include_path(quote: clear)             // Added in TPP3  */
 /* #pragma TPP include_path(system: clear)            // Added in TPP3  */
 /* #pragma TPP include_path(dirafter: clear)          // Added in TPP3  */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+typedef enum tpp_lexer_process_pragma_TPP_include_path_mode {
+	TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_DEFAULT,  /* Default mode (same as "TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_TAIL") */
+	TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_TAIL, /* tpp_include_path_list_pushtail */
+	TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_HEAD, /* tpp_include_path_list_pushhead */
+	TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_REMOVE,   /* tpp_include_path_list_remove */
+} tpp_lexer_process_pragma_TPP_include_path_mode;
+
+struct tpp_lexer_process_pragma_TPP_include_path_data {
+	tpp_lexer                                     *tlpptipd_lexer; /* [1..1] Current lexer */
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+	tpp_include_path_kind                          tlpptipd_kind;  /* Path kind */
+#endif /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+	tpp_lexer_process_pragma_TPP_include_path_mode tlpptipd_mode;  /* How to operate */
+};
+
+static tpp_errno TPPCALL
+tpp_lexer_process_pragma_TPP_include_path_cb(void *arg, tpp_string *chunk,
+                                             tpp_char const *str, tpp_size length) {
+	tpp_errno result;
+	struct tpp_lexer_process_pragma_TPP_include_path_data *data;
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+#define tpp_local_pragma_include_path_kind data->tlpptipd_kind
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+#define tpp_local_pragma_include_path_kind TPP_INCLUDE_PATH_KIND_SYSTEM
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+	data = (struct tpp_lexer_process_pragma_TPP_include_path_data *)arg;
+	(void)chunk;
+	switch (data->tlpptipd_mode) {
+	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_DEFAULT:
+	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_TAIL:
+		result = tpp_lexer_includes_addbykind(data->tlpptipd_lexer,
+		                                      tpp_local_pragma_include_path_kind,
+		                                      (char const *)str, length);
+		break;
+	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_HEAD:
+		result = tpp_lexer_includes_addbykind_head(data->tlpptipd_lexer,
+		                                           tpp_local_pragma_include_path_kind,
+		                                           (char const *)str, length);
+		break;
+	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_REMOVE:
+		result = tpp_lexer_includes_delbykind(data->tlpptipd_lexer,
+		                                      tpp_local_pragma_include_path_kind,
+		                                      (char const *)str, length);
+		if (result == TPP_ENOENT) {
+			/* XXX: Warning? */
+			result = TPP_EOK;
+		}
+		break;
+	default: tpp_unreachable();
+	}
+	return result;
+#undef tpp_local_pragma_include_path_kind
+}
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_TPP_include_path(tpp_lexer *tpp_restrict self) {
-	/* TODO */
-	/* TODO: Only support push when "TPP_HAVE_INCLUDE_PATH_PUSH_POP" */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_errno error;
+	tpp_token_id tok;
+	struct tpp_lexer_process_pragma_TPP_include_path_data data;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+
+	/* Skip leading '(' */
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	data.tlpptipd_lexer = self;
+again_switch:
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+	data.tlpptipd_kind = TPP_INCLUDE_PATH_KIND_SYSTEM;
+#endif /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+	data.tlpptipd_mode = TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_DEFAULT;
+	switch (tok) {
+
+	case TPP_TOK_SPACE:
+	case TPP_TOK_LF:
+	TPP_CASE_TPP_TOK_COMMENT
+again_yield:
+		tok = tpp_lexer_yield_blocking(self);
+		goto again_switch;
+
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+	case TPP_KWD_push:
+		tpp_lexer_pushincludes(self);
+		tok = tpp_lexer_yield_blocking(self);
+		break;
+
+	case TPP_KWD_pop:
+		if (tpp_lexer_canpopincludes(self)) {
+			tpp_lexer_popincludes(self);
+		} else {
+#if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
+			error = tpp_lexer_warnf(self, TPP_W_CANNOT_POP_INCLUDE_PATHS);
+			if (TPP_ISERR(error))
+				return error;
+#endif /* TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS */
+		}
+		tok = tpp_lexer_yield_blocking(self);
+		break;
+#endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	case TPP_KWD_quote:
+		data.tlpptipd_kind = TPP_INCLUDE_PATH_KIND_QUOTE;
+		goto skip_colon_and_andle_for_pathlist;
+#define WANT_skip_colon_and_andle_for_pathlist
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	case TPP_KWD_system:
+		data.tlpptipd_kind = TPP_INCLUDE_PATH_KIND_SYSHDR;
+		goto skip_colon_and_andle_for_pathlist;
+#define WANT_skip_colon_and_andle_for_pathlist
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
+
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+	case TPP_KWD_dirafter:
+		data.tlpptipd_kind = TPP_INCLUDE_PATH_KIND_AFTER;
+		goto skip_colon_and_andle_for_pathlist;
+#define WANT_skip_colon_and_andle_for_pathlist
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+
+	case TPP_KWD_default:
+#ifdef WANT_skip_colon_and_andle_for_pathlist
+#undef WANT_skip_colon_and_andle_for_pathlist
+skip_colon_and_andle_for_pathlist:
+#endif /* WANT_skip_colon_and_andle_for_pathlist */
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(':'));
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		TPP_FALLTHRU
+	case '+':
+	case '-':
+#if TPP_HAVE_TPP_TOK_PLUS_PLUS
+	case TPP_TOK_PLUS_PLUS:
+#endif /* TPP_HAVE_TPP_TOK_PLUS_PLUS */
+		/* Consume add-mode token */
+		switch (tok) {
+		case '-':
+			data.tlpptipd_mode = TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_REMOVE;
+			tok = tpp_lexer_yield_blocking(self);
+			break;
+		case '+':
+			data.tlpptipd_mode = TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_TAIL;
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_PLUS_PLUS)
+			if (!tpp_lexer_has(self, TPP_TOK_PLUS_PLUS)) {
+				tpp_file *const file = tpp_lexer_getfile(self);
+				tpp_char const *pos = file->tf_pos;
+				tpp_char ch;
+				error = tpp_lexer_readchar(self, &pos, &ch);
+				if (TPP_ISERR(error))
+					return error;
+				if (ch == '+') {
+					data.tlpptipd_mode = TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_HEAD;
+					file->tf_pos = pos;
+				}
+			}
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_PLUS_PLUS) */
+			tok = tpp_lexer_yield_blocking(self);
+			break;
+#if TPP_HAVE_TPP_TOK_PLUS_PLUS
+		case TPP_TOK_PLUS_PLUS:
+			data.tlpptipd_mode = TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_HEAD;
+			tok = tpp_lexer_yield_blocking(self);
+			break;
+#endif /* TPP_HAVE_TPP_TOK_PLUS_PLUS */
+		default: break;
+		}
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		if (data.tlpptipd_mode == TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_DEFAULT &&
+			tpp_lexer_gettok(self) == TPP_KWD_clear) {
+	case TPP_KWD_clear:
+			error = tpp_lexer_includes_clearbykind(self, data.tlpptipd_kind);
+			if (TPP_ISERR(error))
+				return error;
+			tok = tpp_lexer_yield_blocking(self);
+			break;
+		}
+		if (TPP_TOK_ISSTRING(tok)) {
+	TPP_CASE_TPP_TOK_STRING
+			error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_TPP_include_path_cb,
+			                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+		} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else  /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+			error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+		}
+		if (TPP_ISERR(error))
+			return error;
+		tok = tpp_lexer_gettok(self);
+		break;
+
+	default:
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+#ifdef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH
+		error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH);
+		if (TPP_ISERR(error))
+			return error;
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH */
+		break;
+	}
+
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	if (tok == ',')
+		goto again_yield;
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+	return TPP_TOK_ASERR_OR_EOK(tok);
 }
 #endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 
@@ -31241,8 +31431,9 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
-	tpp_keyword const *const keyword = token->tt_kwd;
+	tpp_keyword const *const keyword = tpp_token_getkwd(token);
 	(void)keyword;
+	tpp_assert(TPP_TOK_ISKEYWORD(tok));
 
 	/* Emit warnings for "deprecated" keywords. */
 #if TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED
@@ -31251,7 +31442,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		if (misc->tkm_flags & TPP_KEYWORD_FLAG_IS_DEPRECATED) {
 #if TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS
 			if ((misc->tkm_flags & TPP_KEYWORD_FLAG_IS_POISONED) &&
-			    (tpp_lexer_getfile(self)->tf_kind == TPP_FILE_KIND_MACRO)) {
+			    (tpp_lexer_getfilekind(self) == TPP_FILE_KIND_MACRO)) {
 				/* Don't emit warning */
 			} else
 #endif /* TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS */
@@ -35513,6 +35704,23 @@ tpp_lexer_dumper_do_print_cstr(tpp_lexer_dumper *tpp_restrict self,
 	                                   text, num_bytes))
 #endif /* !tpp_lexer_dumper_do_print_cstr */
 
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+#if TPP_HAVE_TOKEN_ENCODESTRING
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_dumper_do_print_escaped(tpp_lexer_dumper *tpp_restrict self,
+                                  tpp_char const *text, tpp_size num_bytes) {
+	tpp_lexer_dumper_do(
+	self, tpp_token_encodestring(tpp_lexer_dumper_getprinter(self),
+	                             tpp_lexer_dumper_getarg(self),
+	                             text, num_bytes));
+}
+#else /* TPP_HAVE_TOKEN_ENCODESTRING */
+#define tpp_lexer_dumper_do_print_escaped(self, text, num_bytes) \
+	tpp_lexer_dumper_do_print(self, text, num_bytes)
+#endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+
+
 #if TPP_HAVE_PRAGMA_EXTENSION
 #define tpp_lexer_dumper_do_print_enable_extension(self, extname) \
 	tpp_lexer_dumper_do_print_conststr(self, "#pragma extension(\"-f" extname "\")\n")
@@ -35954,6 +36162,60 @@ tpp_lexer_dumper_printwarnings(tpp_lexer_dumper *tpp_restrict self,
 #endif /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
 
 
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_dumper_printincludes_list(tpp_lexer_dumper *tpp_restrict self,
+                                    tpp_include_path_list const *tpp_restrict paths
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+                                    , char const *prefix
+                                    , tpp_size prefix_len
+#endif /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+                                    ) {
+	tpp_size i;
+	for (i = 0; i < paths->tipl_size; ++i) {
+		tpp_include_path_entry const *entry = &paths->tipl_list[i];
+		tpp_lexer_dumper_do_print_conststr(self, "#pragma TPP include_path(");
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+		tpp_lexer_dumper_do_print_cstr(self, prefix, prefix_len);
+#endif /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+		tpp_lexer_dumper_do_print_conststr(self, "\"");
+#if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
+		tpp_lexer_dumper_do_print_escaped(self,
+		                                  tpp_string_str(entry->tipe_pathstr),
+		                                  tpp_string_len(entry->tipe_pathstr));
+#else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+		tpp_lexer_dumper_do_print_escaped(self, entry->tipe_path, tpp_strlen(entry->tipe_path));
+#endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+		tpp_lexer_dumper_do_print_conststr(self, "\")\n");
+		if (tpp_lexer_dumper_haserr(self))
+			break;
+	}
+}
+
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_dumper_printincludes(tpp_lexer_dumper *tpp_restrict self,
+                               tpp_include_paths const *tpp_restrict includes) {
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+	tpp_lexer_dumper_printincludes_list(self, &includes->tip_system_list, "", 0);
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	if (!tpp_lexer_dumper_haserr(self))
+		tpp_lexer_dumper_printincludes_list(self, &includes->tip_quote_list, "quote: ", 7);
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	if (!tpp_lexer_dumper_haserr(self))
+		tpp_lexer_dumper_printincludes_list(self, &includes->tip_syshdr_list, "system: ", 8);
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+	if (!tpp_lexer_dumper_haserr(self))
+		tpp_lexer_dumper_printincludes_list(self, &includes->tip_after_list, "dirafter: ", 10);
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+	tpp_lexer_dumper_printincludes_list(self, &includes->tip_system_list);
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+}
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+
+
 /* Dump all user-defined macros and assertions to "printer"
  * @param: what: Set of `TPP_LEXER_DUMP_DEFINITIONS_*'
  * @return: * :  Sum of return values of "printer"
@@ -35999,6 +36261,12 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 	    !tpp_lexer_dumper_haserr(&dumper))
 		tpp_lexer_dumper_printwarnings(&dumper, &self->tl_warn);
 #endif /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
+
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+	if ((what & TPP_LEXER_DUMP_DEFINITIONS_INCLUDES) &&
+	    !tpp_lexer_dumper_haserr(&dumper))
+		tpp_lexer_dumper_printincludes(&dumper, &self->tl_include_paths);
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 
 	return dumper.tld_result;
 }

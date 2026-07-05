@@ -2054,8 +2054,9 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);
-	tpp_keyword const *const keyword = token->tt_kwd;
+	tpp_keyword const *const keyword = tpp_token_getkwd(token);
 	(void)keyword;
+	tpp_assert(TPP_TOK_ISKEYWORD(tok));
 
 	/* Emit warnings for "deprecated" keywords. */
 #if TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED
@@ -2064,7 +2065,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		if (misc->tkm_flags & TPP_KEYWORD_FLAG_IS_DEPRECATED) {
 #if TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS
 			if ((misc->tkm_flags & TPP_KEYWORD_FLAG_IS_POISONED) &&
-			    (tpp_lexer_getfile(self)->tf_kind == TPP_FILE_KIND_MACRO)) {
+			    (tpp_lexer_getfilekind(self) == TPP_FILE_KIND_MACRO)) {
 				/* Don't emit warning */
 			} else
 #endif /* TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS */

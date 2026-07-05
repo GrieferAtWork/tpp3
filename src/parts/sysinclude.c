@@ -52,7 +52,7 @@ tpp_include_path_strlen(char const *path, tpp_size path_maxlen) {
 	return result;
 }
 
-#define tpp_include_path_entry_equals(entry, path, pathlen)                   \
+#define tpp_include_path_entry_equals(entry, path, pathlen)                    \
 	tpp_include_path_entry_equals_impl(_tpp_include_path_entry_getpath(entry), \
 	                                   path, pathlen)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
@@ -210,7 +210,7 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 			/* Remove this entry */
 			tpp_include_path_entry temp = *entry;
 			--self->tipl_size;
-			tpp_memmovedown(entry + 1, entry + 0,
+			tpp_memmovedown(entry + 0, entry + 1,
 			                (self->tipl_size - i) *
 			                sizeof(tpp_include_path_entry));
 			_tpp_include_path_entry_fini(&temp);
@@ -403,7 +403,7 @@ err:
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_include_paths_unshare(tpp_include_paths *tpp_restrict self) {
-	if (!tpp_include_paths_mustcopy(self)) {
+	if (tpp_include_paths_mustcopy(self)) {
 		/* Create a copy... */
 		tpp_include_paths *copy = tpp_include_paths_dupone(self);
 		if tpp_unlikely(!copy)
@@ -417,131 +417,98 @@ tpp_include_paths_unshare(tpp_include_paths *tpp_restrict self) {
 	return TPP_EOK;
 }
 
+
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_include_paths_addbykind(tpp_include_paths *tpp_restrict self,
+                            tpp_include_path_kind kind,
+                            char const *path, tpp_size path_maxlen)
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsystem(tpp_include_paths *tpp_restrict self,
-                            char const *path, tpp_size path_maxlen) {
+_tpp_include_paths_addbykind(tpp_include_paths *tpp_restrict self,
+                             char const *path, tpp_size path_maxlen)
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+{
 	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushhead(&self->tip_system_list, path, path_maxlen);
+	if (!TPP_ISERR(error)) {
+		error = tpp_include_path_list_pushtail(_tpp_include_paths_bykind(self, kind),
+		                                       path, path_maxlen);
+	}
 	return error;
 }
 
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_include_paths_addbykind_head(tpp_include_paths *tpp_restrict self,
+                                 tpp_include_path_kind kind,
+                                 char const *path, tpp_size path_maxlen)
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsystem_head(tpp_include_paths *tpp_restrict self,
-                                 char const *path, tpp_size path_maxlen) {
+_tpp_include_paths_addbykind_head(tpp_include_paths *tpp_restrict self,
+                                  char const *path, tpp_size path_maxlen)
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+{
 	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushtail(&self->tip_system_list, path, path_maxlen);
+	if (!TPP_ISERR(error)) {
+		error = tpp_include_path_list_pushhead(_tpp_include_paths_bykind(self, kind),
+		                                       path, path_maxlen);
+	}
 	return error;
 }
 
 /* @return: TPP_EOK:    Path was located and removed
  * @return: TPP_ENOENT: Path could not be found 
  * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+TPP_IMPL TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_include_paths_delbykind(tpp_include_paths *tpp_restrict self,
+                            tpp_include_path_kind kind,
+                            char const *path, tpp_size path_maxlen)
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
 TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delsystem(tpp_include_paths *tpp_restrict self,
-                            char const *path, tpp_size path_maxlen) {
+_tpp_include_paths_delbykind(tpp_include_paths *tpp_restrict self,
+                             char const *path, tpp_size path_maxlen)
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+{
 	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_remove(&self->tip_system_list, path, path_maxlen);
+	if (!TPP_ISERR(error)) {
+		error = tpp_include_path_list_remove(_tpp_include_paths_bykind(self, kind),
+		                                     path, path_maxlen);
+	}
 	return error;
 }
 
-#if TPP_HAVE_INCLUDE_PATH_QUOTE
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addquote(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushhead(&self->tip_quote_list, path, path_maxlen);
-	return error;
-}
-
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addquote_head(tpp_include_paths *tpp_restrict self,
-                                char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushtail(&self->tip_quote_list, path, path_maxlen);
-	return error;
-}
-
-/* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
+/* @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
-TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delquote(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen) {
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+TPP_IMPL TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_include_paths_clearbykind(tpp_include_paths *tpp_restrict self,
+                              tpp_include_path_kind kind)
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+TPP_IMPL TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_include_paths_clearbykind(tpp_include_paths *tpp_restrict self)
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+{
 	tpp_errno error = tpp_include_paths_unshare(self);
 	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_remove(&self->tip_quote_list, path, path_maxlen);
-	return error;
-}
-#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
-
-#if TPP_HAVE_INCLUDE_PATH_SYSHDR
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsyshdr(tpp_include_paths *tpp_restrict self,
-                            char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushhead(&self->tip_syshdr_list, path, path_maxlen);
+		tpp_include_path_list_clear(_tpp_include_paths_bykind(self, kind));
 	return error;
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addsyshdr_head(tpp_include_paths *tpp_restrict self,
-                                 char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushtail(&self->tip_syshdr_list, path, path_maxlen);
-	return error;
+/* Pop the current include paths state (may only be called when `tpp_include_paths_canpop(self)') */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_include_paths_pop(tpp_include_paths *tpp_restrict self) {
+	tpp_assert(tpp_include_paths_canpop(self));
+	if (self->tip_pushcnt == 0) {
+		tpp_include_paths *prev = self->tip_prev;
+		tpp_include_paths_fini_common(self);
+		tpp_memcpy(self, prev, sizeof(tpp_include_paths));
+		_tpp_include_paths_free(prev);
+		tpp_assert(self->tip_pushcnt != 0);
+	}
+	--self->tip_pushcnt;
 }
 
-/* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
- * @return: TPP_ENOMEM: Out of memory */
-TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delsyshdr(tpp_include_paths *tpp_restrict self,
-                            char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_remove(&self->tip_syshdr_list, path, path_maxlen);
-	return error;
-}
-#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
-
-#if TPP_HAVE_INCLUDE_PATH_AFTER
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addafter(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushhead(&self->tip_after_list, path, path_maxlen);
-	return error;
-}
-
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_addafter_head(tpp_include_paths *tpp_restrict self,
-                                char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_pushtail(&self->tip_after_list, path, path_maxlen);
-	return error;
-}
-
-/* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
- * @return: TPP_ENOMEM: Out of memory */
-TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_include_paths_delafter(tpp_include_paths *tpp_restrict self,
-                           char const *path, tpp_size path_maxlen) {
-	tpp_errno error = tpp_include_paths_unshare(self);
-	if (!TPP_ISERR(error))
-		error = tpp_include_path_list_remove(&self->tip_after_list, path, path_maxlen);
-	return error;
-}
-#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 
 TPP_DECL_END

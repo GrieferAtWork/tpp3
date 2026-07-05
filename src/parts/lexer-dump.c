@@ -126,6 +126,23 @@ tpp_lexer_dumper_do_print_cstr(tpp_lexer_dumper *tpp_restrict self,
 	                                   text, num_bytes))
 #endif /* !tpp_lexer_dumper_do_print_cstr */
 
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+#if TPP_HAVE_TOKEN_ENCODESTRING
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_dumper_do_print_escaped(tpp_lexer_dumper *tpp_restrict self,
+                                  tpp_char const *text, tpp_size num_bytes) {
+	tpp_lexer_dumper_do(
+	self, tpp_token_encodestring(tpp_lexer_dumper_getprinter(self),
+	                             tpp_lexer_dumper_getarg(self),
+	                             text, num_bytes));
+}
+#else /* TPP_HAVE_TOKEN_ENCODESTRING */
+#define tpp_lexer_dumper_do_print_escaped(self, text, num_bytes) \
+	tpp_lexer_dumper_do_print(self, text, num_bytes)
+#endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+
+
 #if TPP_HAVE_PRAGMA_EXTENSION
 #define tpp_lexer_dumper_do_print_enable_extension(self, extname) \
 	tpp_lexer_dumper_do_print_conststr(self, "#pragma extension(\"-f" extname "\")\n")
@@ -567,6 +584,60 @@ tpp_lexer_dumper_printwarnings(tpp_lexer_dumper *tpp_restrict self,
 #endif /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
 
 
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_dumper_printincludes_list(tpp_lexer_dumper *tpp_restrict self,
+                                    tpp_include_path_list const *tpp_restrict paths
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+                                    , char const *prefix
+                                    , tpp_size prefix_len
+#endif /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+                                    ) {
+	tpp_size i;
+	for (i = 0; i < paths->tipl_size; ++i) {
+		tpp_include_path_entry const *entry = &paths->tipl_list[i];
+		tpp_lexer_dumper_do_print_conststr(self, "#pragma TPP include_path(");
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+		tpp_lexer_dumper_do_print_cstr(self, prefix, prefix_len);
+#endif /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+		tpp_lexer_dumper_do_print_conststr(self, "\"");
+#if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
+		tpp_lexer_dumper_do_print_escaped(self,
+		                                  tpp_string_str(entry->tipe_pathstr),
+		                                  tpp_string_len(entry->tipe_pathstr));
+#else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+		tpp_lexer_dumper_do_print_escaped(self, entry->tipe_path, tpp_strlen(entry->tipe_path));
+#endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+		tpp_lexer_dumper_do_print_conststr(self, "\")\n");
+		if (tpp_lexer_dumper_haserr(self))
+			break;
+	}
+}
+
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_dumper_printincludes(tpp_lexer_dumper *tpp_restrict self,
+                               tpp_include_paths const *tpp_restrict includes) {
+#if TPP_HAVE_INCLUDE_PATH_MULTIPLE
+	tpp_lexer_dumper_printincludes_list(self, &includes->tip_system_list, "", 0);
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	if (!tpp_lexer_dumper_haserr(self))
+		tpp_lexer_dumper_printincludes_list(self, &includes->tip_quote_list, "quote: ", 7);
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	if (!tpp_lexer_dumper_haserr(self))
+		tpp_lexer_dumper_printincludes_list(self, &includes->tip_syshdr_list, "system: ", 8);
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
+	if (!tpp_lexer_dumper_haserr(self))
+		tpp_lexer_dumper_printincludes_list(self, &includes->tip_after_list, "dirafter: ", 10);
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+	tpp_lexer_dumper_printincludes_list(self, &includes->tip_system_list);
+#endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
+}
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+
+
 /* Dump all user-defined macros and assertions to "printer"
  * @param: what: Set of `TPP_LEXER_DUMP_DEFINITIONS_*'
  * @return: * :  Sum of return values of "printer"
@@ -612,6 +683,12 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 	    !tpp_lexer_dumper_haserr(&dumper))
 		tpp_lexer_dumper_printwarnings(&dumper, &self->tl_warn);
 #endif /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
+
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+	if ((what & TPP_LEXER_DUMP_DEFINITIONS_INCLUDES) &&
+	    !tpp_lexer_dumper_haserr(&dumper))
+		tpp_lexer_dumper_printincludes(&dumper, &self->tl_include_paths);
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 
 	return dumper.tld_result;
 }
