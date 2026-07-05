@@ -596,6 +596,7 @@
 #define th_parseexpr                                        TPP_INTERNAL(th_parseexpr)
 #define th_unknown_pragma                                   TPP_INTERNAL(th_unknown_pragma)
 #define th_new_dependency                                   TPP_INTERNAL(th_new_dependency)
+#define th_ident_sccs                                       TPP_INTERNAL(th_ident_sccs)
 #define tmpe_macro                                          TPP_INTERNAL(tmpe_macro)
 #define tmpe_count                                          TPP_INTERNAL(tmpe_count)
 #define tmps_cnt                                            TPP_INTERNAL(tmps_cnt)
@@ -10170,22 +10171,22 @@ __pragma(tpp_exec("#define TPP_BUILTIN_KEYWORD_COUNT " _TPP_STR(__TPP_EVAL(
 ))))
 #undef TPP_DEFS
 
-/* TODO: Calculate "TPP_BUILTIN_KEYWORD_MASK" */
-/* TODO: For every TPP_KWD, calculate its hash masked by "TPP_BUILTIN_KEYWORD_MASK".
- *       Then, define a macro "TPP_BUILTIN_KEYWORD_H_<MASKED_HASH>" that points to
- *       the keyword that should appear in the keyword table at offset <MASKED_HASH>
- *       In those places where that macro has already been defined, override the
- *       macro, but use its own definition as the "tk_next" pointer of the keyword
- *       that is overriding it */
-/* TODO: Generate keyword structures, but in those places where the keyword's "tk_next"
- *       is non-NULL, make sure that the pointed-to keyword is generated first. */
-/* TODO: Emit the hash-table, using "TPP_BUILTIN_KEYWORD_H_<I>" for index "I". If
- *       no such macro is defined, that index's bucket must be initialized as "NULL"
- *       instead */
+/* XXX: Calculate "TPP_BUILTIN_KEYWORD_MASK" */
+/* XXX: For every TPP_KWD, calculate its hash masked by "TPP_BUILTIN_KEYWORD_MASK".
+ *      Then, define a macro "TPP_BUILTIN_KEYWORD_H_<MASKED_HASH>" that points to
+ *      the keyword that should appear in the keyword table at offset <MASKED_HASH>
+ *      In those places where that macro has already been defined, override the
+ *      macro, but use its own definition as the "tk_next" pointer of the keyword
+ *      that is overriding it */
+/* XXX: Generate keyword structures, but in those places where the keyword's "tk_next"
+ *      is non-NULL, make sure that the pointed-to keyword is generated first. */
+/* XXX: Emit the hash-table, using "TPP_BUILTIN_KEYWORD_H_<I>" for index "I". If
+ *      no such macro is defined, that index's bucket must be initialized as "NULL"
+ *      instead */
 
-/* TODO: For extension/warning names, need some kind of mechanism by which TPP is
- *       able to sort an array of strings. I'm sure it's possible somehow, but I'm not
- *       quite certain on how this can be done most elegantly (an in O(N*log(N)) time)
+/* XXX: For extension/warning names, need some kind of mechanism by which TPP is
+ *      able to sort an array of strings. I'm sure it's possible somehow, but I'm not
+ *      quite certain on how this can be done most elegantly (an in O(N*log(N)) time)
  * -> I feel like it should be possible to implement MergeSort using macros:
  *    - Can split items in half using __TPP_EVAL(__VA_NARGS__ / 2)
  *    - Once there are <=2 items, can sort inplace
@@ -14226,13 +14227,13 @@ tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_start(tpp_formatprinter printer, void *arg) {
-	/* TODO: Do something more interesting here! */
+	/* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_end(tpp_formatprinter printer, void *arg) {
-	/* TODO: Do something more interesting here! */
+	/* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
@@ -24010,7 +24011,6 @@ tpp_lexer_process_pragma_GCC_diagnostic(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_GCC_POISON
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_GCC_poison(tpp_lexer *tpp_restrict self) {
-	/* TODO */
 	/* TODO: Do this one right in TPP3:
 	 * >> #define my_strcpy strcpy
 	 * >> #define my_wrapper(x) x
@@ -25660,7 +25660,6 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
                              tpp_char const **p_directive_start) {
 	tpp_errno result;
 	tpp_token_id tok;
-	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_char const *trailing_lf_start;
 	tpp_char const *trailing_lf_end;
@@ -25668,10 +25667,10 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 	tpp_expr_value expr_value;
 	tpp_size directive_keyword_len;
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
-	char const *directive_name = (char const *)token->tt_kwd->tk_kwd;
+	char const *const directive_name = tpp_lexer_gettokenkwdcstr(self);
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 	directive_iter = file->tf_pos;
-	file->tf_pos = token->tt_start; /* Retain start of "if" / "elif" keyword */
+	file->tf_pos = file->tf_tpos; /* Retain start of "if" / "elif" keyword */
 	directive_keyword_len = (tpp_size)(directive_iter - file->tf_pos);
 
 	/* Seek end-of-line */
@@ -25683,7 +25682,7 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 		}
 	} while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok));
 
-	trailing_lf_start = token->tt_start;
+	trailing_lf_start = file->tf_tpos;
 	trailing_lf_end   = directive_iter;
 	tpp_file_pushifdef(file);
 	tpp_file_pusheof(file);
@@ -25715,7 +25714,7 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 	file->tf_pos = trailing_lf_end; /* Tell caller to continue parsing *after* EOL */
 	tpp_file_popeof(file);
 	tpp_file_popifdef(file);
-	token->tt_id = TPP_TOK_LF; /* Tell caller that currently loaded token is LF */
+	tpp_lexer_gettoken(self)->tt_id = TPP_TOK_LF; /* Tell caller that currently loaded token is LF */
 	return result;
 }
 
@@ -25740,16 +25739,15 @@ tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
 {
 	tpp_errno result;
 	tpp_token_id tok;
-	tpp_token const *const token = tpp_lexer_gettoken(self);
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_char const *directive_iter;
-	tpp_token_id const mode = token->tt_id;
+	tpp_token_id const mode = tpp_lexer_gettok(self);
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
-	char const *directive_name = (char const *)token->tt_kwd->tk_kwd;
+	char const *const directive_name = tpp_lexer_gettokenkwdcstr(self);
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 	bool is_keyword_defined;
 	directive_iter = file->tf_pos;
-	file->tf_pos = token->tt_start; /* Retain start of "ifdef" / "ifndef" keyword */
+	file->tf_pos = file->tf_tpos; /* Retain start of "ifdef" / "ifndef" keyword */
 
 	/* Skip over space tokens to find the (presumably) keyword to test for being defined. */
 	do {
@@ -26539,7 +26537,7 @@ tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
 	tpp_token *const token = tpp_lexer_gettoken(self);
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
 	bool did_warn_about_extra_tokens = false;
-	tpp_char const *directive_name = tpp_lexer_gettokenkwd(self)->tk_kwd;
+	char const *const directive_name = tpp_lexer_gettokenkwdcstr(self);
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 
 	/* Call underlying include loader. */
@@ -27484,6 +27482,99 @@ tpp_lexer_handle_line_directive(tpp_lexer *tpp_restrict self,
 
 
 
+/************************************************************************/
+#if TPP_HAVE_CPP_IDENT_SCCS
+#if TPP_HAVE_IDENT_SCCS_HOOK
+struct tpp_lexer_handle_ident_sccs_directive_data {
+	tpp_lexer   *tlhisdd_lexer;
+	tpp_token_id tlhisdd_mode;
+};
+static tpp_errno TPPCALL
+tpp_lexer_handle_ident_sccs_directive_cb(void *arg, tpp_string *chunk,
+                                         tpp_char const *str, tpp_size length) {
+	struct tpp_lexer_handle_ident_sccs_directive_data *data;
+	data = (struct tpp_lexer_handle_ident_sccs_directive_data *)arg;
+	tpp_assert(data->tlhisdd_mode == TPP_KWD_ident ||
+	           data->tlhisdd_mode == TPP_KWD_sccs);
+	(void)chunk;
+	(void)str;
+	(void)length;
+	return tpp_lexer_callhook_ident_sccs(data->tlhisdd_lexer,
+	                                     data->tlhisdd_mode,
+	                                     chunk, str, length);
+}
+#endif /* TPP_HAVE_IDENT_SCCS_HOOK */
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_handle_ident_sccs_directive(tpp_lexer *tpp_restrict self) {
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+	char const *const directive_name = tpp_lexer_gettokenkwdcstr(self);
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+	tpp_token_id tok;
+	tpp_errno error;
+#if TPP_HAVE_IDENT_SCCS_HOOK
+	struct tpp_lexer_handle_ident_sccs_directive_data data;
+	data.tlhisdd_lexer = self;
+	data.tlhisdd_mode  = tpp_lexer_gettok(self);
+#endif /* TPP_HAVE_IDENT_SCCS_HOOK */
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+
+	/* Apply filename override if one is defined */
+	if (TPP_TOK_ISSTRING(tok)) {
+#if TPP_HAVE_IDENT_SCCS_HOOK
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_ident_sccs_directive_cb,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
+#else /* TPP_HAVE_IDENT_SCCS_HOOK */
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok) || TPP_TOK_ISSTRING(tok));
+		error = TPP_TOK_ASERR_OR_EOK(tok);
+#endif /* !TPP_HAVE_IDENT_SCCS_HOOK */
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+		error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+	}
+	if (TPP_ISERR(error))
+		return TPP_TOK_OFERR(error);
+	tok = tpp_lexer_gettok(self);
+
+	/* Warn about extra tokens after the #ident/#sccs-directive */
+#if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
+	while (TPP_TOK_ISSPACE_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
+	if (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
+		if (TPP_TOK_ISERR(tok))
+			return tok;
+		error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, directive_name);
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+			if (TPP_TOK_ISERR(tok))
+				return tok;
+		} while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok));
+	}
+#else /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+	while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
+		tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			return tok;
+	}
+#endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+	return TPP_TOK_EOF;
+}
+#endif /* TPP_HAVE_CPP_IDENT_SCCS */
+/************************************************************************/
+
+
+
 
 /* Process a preprocessor directive, with the currently loaded token being the leading '#'
  * Upon successful return (!TPP_TOK_ISERR(return)), the caller will yield another raw token
@@ -27821,9 +27912,9 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_IDENT_SCCS) */
 		tpp_lexer_process_directive_set_noguard();
-		/* TODO */
-		goto seek_end_of_line;
-#define WANT_seek_end_of_line
+		token->tt_end = directive_iter;
+		result = tpp_lexer_handle_ident_sccs_directive(self);
+		break;
 #endif /* TPP_HAVE_CPP_IDENT_SCCS */
 /************************************************************************/
 

@@ -972,7 +972,6 @@ HAS_EXTENSION_IF(tpp_msvc_integer_suffix,          HAVE_EXTENSION_MSVC_FIXED_INT
 HAS_EXTENSION_IF(tpp_charize_operator,             HAVE_EXTENSION_HASH_AT)
 HAS_EXTENSION_IF(tpp_trigraphs,                    HAVE_FEATURE_TRIGRAPHS)
 HAS_EXTENSION_IF(tpp_digraphs,                     HAVE_FEATURE_DIGRAPHS)
-HAS_EXTENSION_IF(tpp_reemit_unknown_pragmas,       (TPPLexer_Current->l_flags & TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA))
 HAS_EXTENSION_IF(tpp_pragma_push_macro,            TPP_PREPROCESSOR_VERSION >= 200)
 HAS_EXTENSION_IF(tpp_pragma_pop_macro,             TPP_PREPROCESSOR_VERSION >= 200)
 HAS_EXTENSION_IF(tpp_pragma_region,                TPP_PREPROCESSOR_VERSION >= 200)
@@ -997,8 +996,6 @@ HAS_EXTENSION_IF(tpp_token_colon_colon,            TPPLexer_Current->l_extokens 
 HAS_EXTENSION_IF(tpp_macro_calling_conventions,    HAVE_EXTENSION_ALTMAC)
 HAS_EXTENSION_IF(tpp_strict_whitespace,            HAVE_EXTENSION_ARGSPACE)
 HAS_EXTENSION_IF(tpp_strict_integer_overflow,      TPP_WSTATE_ISENABLED(TPPLexer_GetWarning(W_INTEGRAL_OVERFLOW)) || TPP_WSTATE_ISENABLED(TPPLexer_GetWarning(W_INTEGRAL_CLAMPED)))
-HAS_EXTENSION_IF(tpp_support_ansi_characters,      0) /* TODO: (Re-)add support for this. */
-HAS_EXTENSION_IF(tpp_emit_lf_after_directive,      TPPLexer_Current->l_flags & TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF)
 HAS_EXTENSION_IF(tpp_if_cond_expression,           HAVE_EXTENSION_IFELSE_IN_EXPR)
 HAS_EXTENSION_IF(tpp_debug,                        TPP_CONFIG_DEBUG)
 #endif
@@ -3909,12 +3906,6 @@ TPP_WARNING(TPP_W_BAD_EXPRESSION_OPERANDS, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
             "division by zero")
 #endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
-
-
-
-//TODO:TPP_WGROUP(TPP_WG_USAGE, /*          */ 1("usage"),                TPP_WSTATE_FATAL)
-//TODO:TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
-//TODO:TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
 
 
 /* Pull in user definitions (if defined) */

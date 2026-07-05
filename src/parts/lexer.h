@@ -429,6 +429,26 @@ for (local doc, name,
 #define tpp_lexer_sethook_new_dependency(self, v) tpp_hooks_set_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_new_dependency(self)  tpp_hooks_reset_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_new_dependency */
+
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_ident_sccs)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+ * Called to handle `#ident' and `#sccs' directives
+ * @param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'
+ * @param: chunk:       If non-NULL a string that must be tpp_string_incref()'d
+ *                      if you want to keep `comment_str' alive. If NULL, then the
+ *                      given `comment_str' is statically allocated and doesn't need
+ *                      any chunk to stay alive
+ * @param: comment_str: The source comment that should be inserted
+ * @param: comment_len: Length of `comment_str' in bytes
+ * @return: TPP_EOK:    Success
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#define tpp_lexer_callhook_ident_sccs(self, mode, chunk, comment_str, comment_len) \
+	tpp_hooks_call_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self, mode, chunk, comment_str, comment_len)
+#ifdef tpp_hooks_set_ident_sccs
+#define tpp_lexer_gethook_ident_sccs(self)    tpp_hooks_get_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_ident_sccs(self, v) tpp_hooks_set_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_ident_sccs */
 /*[[[end]]]*/
 
 

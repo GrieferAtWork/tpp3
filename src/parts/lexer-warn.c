@@ -110,13 +110,13 @@ tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_start(tpp_formatprinter printer, void *arg) {
-	/* TODO: Do something more interesting here! */
+	/* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_end(tpp_formatprinter printer, void *arg) {
-	/* TODO: Do something more interesting here! */
+	/* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 

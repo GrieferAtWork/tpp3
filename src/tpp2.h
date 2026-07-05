@@ -1463,7 +1463,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *    - TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK
  */
 
-/* TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF, TPPLEXER_FLAG_COMMENT_NOOWN_LF:
+/* TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF, __has_extension(tpp_emit_lf_after_directive),
+ * TPPLEXER_FLAG_COMMENT_NOOWN_LF:
  *  - These flags are no longer supported in TPP3 (in TPP3, line-like comment tokens
  *    *always* include the trailing line-feed (if any) as part of the comment itself)
  *  - If line-feeds have special meaning in your programming language, I recommend
@@ -1535,7 +1536,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   - TPP_FILE_ENCODING_UTF32_BE:   Treat time data as UTF-32 (BE)
  */
 
-/* TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA:
+/* TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA, __has_extension(tpp_reemit_unknown_pragmas):
  * - TPP3 does no longer support re-emission of unknown #pragma-directives
  * - Instead, you should define you own, custom #pragma-hook (TODO: API for
  *   this) that will be called whenever TPP encounters an unknown pragma.
@@ -2775,10 +2776,10 @@ alias("WG_DEPRECATED", "TPP_WG_DEPRECATED");
 alias("WG_ENVIRON", "TPP_WG_ENVIRON");
 alias("WG_DEPENDENCY", "TPP_WG_DEPENDENCY");
 alias("WG_LIMIT", "TPP_WG_LIMIT");
+alias("WG_QUALITY", "TPP_WG_QUALITY");
 
 //TODO:alias("WG_USAGE", "TPP_WG_USAGE");
 //TODO:alias("WG_BOOLVALUE", "TPP_WG_BOOLVALUE");
-//TODO:alias("WG_QUALITY", "TPP_WG_QUALITY");
 
 // Warnings
 alias("W_EXPECTED_KEYWORD_AFTER_DEFINE", "TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE");

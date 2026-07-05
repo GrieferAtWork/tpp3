@@ -2643,6 +2643,25 @@ local HOOKS = {
 		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd)", { "lexer", "filename_kwd" },
 		"TPP_EOK"
 	},
+
+	{
+		"Called to handle `#ident' and `#sccs' directives\n" +
+		"@param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'\n" +
+		"@param: chunk:       If non-NULL a string that must be tpp_string_incref()'d\n" +
+		"                     if you want to keep `comment_str' alive. If NULL, then the\n" +
+		"                     given `comment_str' is statically allocated and doesn't need\n" +
+		"                     any chunk to stay alive\n" +
+		"@param: comment_str: The source comment that should be inserted\n" +
+		"@param: comment_len: Length of `comment_str' in bytes\n" +
+		"@return: TPP_EOK:    Success\n" +
+		"@return: TPP_EIO:    I/O error\n" +
+		"@return: TPP_ENOMEM: Out of memory",
+		"IDENT_SCCS",
+		"TPP_HAVE_CPP_IDENT_SCCS",
+		"", // No builtin default
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len)", { "lexer", "mode", "chunk", "comment_str", "comment_len" },
+		"TPP_EOK"
+	},
 };
 
 for (local doc, name,
@@ -2872,6 +2891,48 @@ for (local doc, name,
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_NEW_DEPENDENCY) && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_NEW_DEPENDENCY' is defined, but 'TPP_HAVE_NEW_DEPENDENCY_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_NEW_DEPENDENCY && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+
+/* >> tpp_errno (TPPCALL *TPP_HOOK_IDENT_SCCS)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+ * Called to handle `#ident' and `#sccs' directives
+ * @param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'
+ * @param: chunk:       If non-NULL a string that must be tpp_string_incref()'d
+ *                      if you want to keep `comment_str' alive. If NULL, then the
+ *                      given `comment_str' is statically allocated and doesn't need
+ *                      any chunk to stay alive
+ * @param: comment_str: The source comment that should be inserted
+ * @param: comment_len: Length of `comment_str' in bytes
+ * @return: TPP_EOK:    Success
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_IDENT_SCCS_HOOK
+#ifdef TPP_HOOK_IDENT_SCCS
+#define TPP_HAVE_IDENT_SCCS_HOOK (TPP_HAVE_CPP_IDENT_SCCS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_IDENT_SCCS */
+#define TPP_HAVE_IDENT_SCCS_HOOK (TPP_HAVE_CPP_IDENT_SCCS ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_IDENT_SCCS */
+#endif /* !TPP_HAVE_IDENT_SCCS_HOOK */
+#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_IDENT_SCCS)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_IDENT_SCCS_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_IDENT_SCCS' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_IDENT_SCCS_HOOK
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_IDENT_SCCS)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_IDENT_SCCS_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_IDENT_SCCS' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_IDENT_SCCS_HOOK
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_IDENT_SCCS_HOOK /* There is no builtin version */
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_IDENT_SCCS_HOOK /* There is no builtin version */
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_IDENT_SCCS) && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
 /*[[[end]]]*/
 
 /************************************************************************/
@@ -3622,7 +3683,8 @@ for (local doc, name,
 	                       TPP_HAVE_CPP_EMBED ||         \
 	                       TPP_HAVE_CPP_ASSERT ||        \
 	                       TPP_HAVE_CPP_DIGIT_LINE ||    \
-	                       TPP_HAVE_CPP_LINE))
+	                       TPP_HAVE_CPP_LINE ||          \
+	                       TPP_HAVE_CPP_IDENT_SCCS))
 #endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
 #define TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO \

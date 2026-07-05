@@ -841,7 +841,6 @@ HAS_EXTENSION_IF(tpp_msvc_integer_suffix,          HAVE_EXTENSION_MSVC_FIXED_INT
 HAS_EXTENSION_IF(tpp_charize_operator,             HAVE_EXTENSION_HASH_AT)
 HAS_EXTENSION_IF(tpp_trigraphs,                    HAVE_FEATURE_TRIGRAPHS)
 HAS_EXTENSION_IF(tpp_digraphs,                     HAVE_FEATURE_DIGRAPHS)
-HAS_EXTENSION_IF(tpp_reemit_unknown_pragmas,       (TPPLexer_Current->l_flags & TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA))
 HAS_EXTENSION_IF(tpp_pragma_push_macro,            TPP_PREPROCESSOR_VERSION >= 200)
 HAS_EXTENSION_IF(tpp_pragma_pop_macro,             TPP_PREPROCESSOR_VERSION >= 200)
 HAS_EXTENSION_IF(tpp_pragma_region,                TPP_PREPROCESSOR_VERSION >= 200)
@@ -866,8 +865,6 @@ HAS_EXTENSION_IF(tpp_token_colon_colon,            TPPLexer_Current->l_extokens 
 HAS_EXTENSION_IF(tpp_macro_calling_conventions,    HAVE_EXTENSION_ALTMAC)
 HAS_EXTENSION_IF(tpp_strict_whitespace,            HAVE_EXTENSION_ARGSPACE)
 HAS_EXTENSION_IF(tpp_strict_integer_overflow,      TPP_WSTATE_ISENABLED(TPPLexer_GetWarning(W_INTEGRAL_OVERFLOW)) || TPP_WSTATE_ISENABLED(TPPLexer_GetWarning(W_INTEGRAL_CLAMPED)))
-HAS_EXTENSION_IF(tpp_support_ansi_characters,      0) /* TODO: (Re-)add support for this. */
-HAS_EXTENSION_IF(tpp_emit_lf_after_directive,      TPPLexer_Current->l_flags & TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF)
 HAS_EXTENSION_IF(tpp_if_cond_expression,           HAVE_EXTENSION_IFELSE_IN_EXPR)
 HAS_EXTENSION_IF(tpp_debug,                        TPP_CONFIG_DEBUG)
 #endif
@@ -3755,12 +3752,6 @@ TPP_WARNING(TPP_W_BAD_EXPRESSION_OPERANDS, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
             "division by zero")
 #endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
-
-
-
-//TODO:TPP_WGROUP(TPP_WG_USAGE, /*          */ 1("usage"),                TPP_WSTATE_FATAL)
-//TODO:TPP_WGROUP(TPP_WG_BOOLVALUE, /*      */ 1("boolean-value"),        TPP_WSTATE_FATAL)
-//TODO:TPP_WGROUP(TPP_WG_LIMIT, /*          */ 1("limit"),                TPP_WSTATE_FATAL)
 
 
 /* Pull in user definitions (if defined) */
@@ -7159,6 +7150,48 @@ TPP_DECL_END
 #error "Invalid configuration: 'TPP_HOOK_NEW_DEPENDENCY' is defined, but 'TPP_HAVE_NEW_DEPENDENCY_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_NEW_DEPENDENCY && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
+/* >> tpp_errno (TPPCALL *TPP_HOOK_IDENT_SCCS)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+ * Called to handle `#ident' and `#sccs' directives
+ * @param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'
+ * @param: chunk:       If non-NULL a string that must be tpp_string_incref()'d
+ *                      if you want to keep `comment_str' alive. If NULL, then the
+ *                      given `comment_str' is statically allocated and doesn't need
+ *                      any chunk to stay alive
+ * @param: comment_str: The source comment that should be inserted
+ * @param: comment_len: Length of `comment_str' in bytes
+ * @return: TPP_EOK:    Success
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_IDENT_SCCS_HOOK
+#ifdef TPP_HOOK_IDENT_SCCS
+#define TPP_HAVE_IDENT_SCCS_HOOK (TPP_HAVE_CPP_IDENT_SCCS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_IDENT_SCCS */
+#define TPP_HAVE_IDENT_SCCS_HOOK (TPP_HAVE_CPP_IDENT_SCCS ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_IDENT_SCCS */
+#endif /* !TPP_HAVE_IDENT_SCCS_HOOK */
+#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_IDENT_SCCS)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_IDENT_SCCS_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_IDENT_SCCS' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_IDENT_SCCS_HOOK
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_IDENT_SCCS)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_IDENT_SCCS_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_IDENT_SCCS' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_IDENT_SCCS_HOOK
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_IDENT_SCCS_HOOK /* There is no builtin version */
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_IDENT_SCCS_HOOK /* There is no builtin version */
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_IDENT_SCCS) && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -7907,7 +7940,8 @@ TPP_DECL_END
 	                       TPP_HAVE_CPP_EMBED ||         \
 	                       TPP_HAVE_CPP_ASSERT ||        \
 	                       TPP_HAVE_CPP_DIGIT_LINE ||    \
-	                       TPP_HAVE_CPP_LINE))
+	                       TPP_HAVE_CPP_LINE ||          \
+	                       TPP_HAVE_CPP_IDENT_SCCS))
 #endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
 #define TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO \
@@ -16001,7 +16035,8 @@ TPP_DECL_BEGIN
      TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK))
+     TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) || \
+     TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK))
 #define TPP_HAVE_HOOKS 1
 #else /* ... */
 #define TPP_HAVE_HOOKS 0
@@ -16079,6 +16114,22 @@ typedef struct tpp_hooks {
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_new_dependency))(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_ident_sccs)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+	 * Called to handle `#ident' and `#sccs' directives
+	 * @param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'
+	 * @param: chunk:       If non-NULL a string that must be tpp_string_incref()'d
+	 *                      if you want to keep `comment_str' alive. If NULL, then the
+	 *                      given `comment_str' is statically allocated and doesn't need
+	 *                      any chunk to stay alive
+	 * @param: comment_str: The source comment that should be inserted
+	 * @param: comment_len: Length of `comment_str' in bytes
+	 * @return: TPP_EOK:    Success
+	 * @return: TPP_EIO:    I/O error
+	 * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_ident_sccs))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
 } tpp_hooks;
 #endif /* TPP_HAVE_HOOKS */
 
@@ -16259,13 +16310,47 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_new_dependency(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
+/* Called to handle `#ident' and `#sccs' directives
+ * @param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'
+ * @param: chunk:       If non-NULL a string that must be tpp_string_incref()'d
+ *                      if you want to keep `comment_str' alive. If NULL, then the
+ *                      given `comment_str' is statically allocated and doesn't need
+ *                      any chunk to stay alive
+ * @param: comment_str: The source comment that should be inserted
+ * @param: comment_len: Length of `comment_str' in bytes
+ * @return: TPP_EOK:    Success
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
+#define tpp_hooks_call_ident_sccs(self, lexer, mode, chunk, comment_str, comment_len) \
+	((self)->TPP_INTERNAL(th_ident_sccs) ? (*(self)->TPP_INTERNAL(th_ident_sccs))(lexer, mode, chunk, comment_str, comment_len) : TPP_EOK)
+#define tpp_hooks_get_ident_sccs(self)    (self)->TPP_INTERNAL(th_ident_sccs)
+#define tpp_hooks_set_ident_sccs(self, v) (void)((self)->TPP_INTERNAL(th_ident_sccs) = (v))
+#define tpp_hooks_reset_ident_sccs(self)  (void)((self)->TPP_INTERNAL(th_ident_sccs) = _TPP_HOOKS_DEFAULT_IDENT_SCCS)
+#define _tpp_hooks_init_ident_sccs(self)  , (self)->TPP_INTERNAL(th_ident_sccs) = _TPP_HOOKS_DEFAULT_IDENT_SCCS
+#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_IDENT_SCCS)
+#define _TPP_HOOKS_DEFAULT_IDENT_SCCS (&TPP_HOOK_IDENT_SCCS)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_IDENT_SCCS NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
+#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_ident_sccs(self, lexer, mode, chunk, comment_str, comment_len) \
+	TPP_HOOK_IDENT_SCCS(lexer, mode, chunk, comment_str, comment_len)
+#else /*  */
+#define tpp_hooks_call_ident_sccs(self, lexer, mode, chunk, comment_str, comment_len) TPP_EOK
+#endif /* ... */
+#define _tpp_hooks_init_ident_sccs(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
+
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
 	(void)(0 _tpp_hooks_init_warnprinter(self) \
 	       _tpp_hooks_init_mesgprinter(self) \
 	       _tpp_hooks_init_parseexpr(self) \
 	       _tpp_hooks_init_unknown_pragma(self) \
-	       _tpp_hooks_init_new_dependency(self))
+	       _tpp_hooks_init_new_dependency(self) \
+	       _tpp_hooks_init_ident_sccs(self))
 
 
 
@@ -16655,6 +16740,26 @@ typedef struct tpp_lexer {
 #define tpp_lexer_sethook_new_dependency(self, v) tpp_hooks_set_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_new_dependency(self)  tpp_hooks_reset_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_new_dependency */
+
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_ident_sccs)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+ * Called to handle `#ident' and `#sccs' directives
+ * @param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'
+ * @param: chunk:       If non-NULL a string that must be tpp_string_incref()'d
+ *                      if you want to keep `comment_str' alive. If NULL, then the
+ *                      given `comment_str' is statically allocated and doesn't need
+ *                      any chunk to stay alive
+ * @param: comment_str: The source comment that should be inserted
+ * @param: comment_len: Length of `comment_str' in bytes
+ * @return: TPP_EOK:    Success
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#define tpp_lexer_callhook_ident_sccs(self, mode, chunk, comment_str, comment_len) \
+	tpp_hooks_call_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self, mode, chunk, comment_str, comment_len)
+#ifdef tpp_hooks_set_ident_sccs
+#define tpp_lexer_gethook_ident_sccs(self)    tpp_hooks_get_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_ident_sccs(self, v) tpp_hooks_set_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_ident_sccs */
 
 
 

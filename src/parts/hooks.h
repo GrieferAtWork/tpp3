@@ -164,7 +164,8 @@ print(")");
      TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK))
+     TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) || \
+     TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK))
 #define TPP_HAVE_HOOKS 1
 #else /* ... */
 #define TPP_HAVE_HOOKS 0
@@ -242,6 +243,22 @@ typedef struct tpp_hooks {
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_new_dependency))(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_ident_sccs)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+	 * Called to handle `#ident' and `#sccs' directives
+	 * @param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'
+	 * @param: chunk:       If non-NULL a string that must be tpp_string_incref()'d
+	 *                      if you want to keep `comment_str' alive. If NULL, then the
+	 *                      given `comment_str' is statically allocated and doesn't need
+	 *                      any chunk to stay alive
+	 * @param: comment_str: The source comment that should be inserted
+	 * @param: comment_len: Length of `comment_str' in bytes
+	 * @return: TPP_EOK:    Success
+	 * @return: TPP_EIO:    I/O error
+	 * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_ident_sccs))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
 } tpp_hooks;
 #endif /* TPP_HAVE_HOOKS */
 
@@ -422,13 +439,47 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_new_dependency(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
+/* Called to handle `#ident' and `#sccs' directives
+ * @param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'
+ * @param: chunk:       If non-NULL a string that must be tpp_string_incref()'d
+ *                      if you want to keep `comment_str' alive. If NULL, then the
+ *                      given `comment_str' is statically allocated and doesn't need
+ *                      any chunk to stay alive
+ * @param: comment_str: The source comment that should be inserted
+ * @param: comment_len: Length of `comment_str' in bytes
+ * @return: TPP_EOK:    Success
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
+#define tpp_hooks_call_ident_sccs(self, lexer, mode, chunk, comment_str, comment_len) \
+	((self)->TPP_INTERNAL(th_ident_sccs) ? (*(self)->TPP_INTERNAL(th_ident_sccs))(lexer, mode, chunk, comment_str, comment_len) : TPP_EOK)
+#define tpp_hooks_get_ident_sccs(self)    (self)->TPP_INTERNAL(th_ident_sccs)
+#define tpp_hooks_set_ident_sccs(self, v) (void)((self)->TPP_INTERNAL(th_ident_sccs) = (v))
+#define tpp_hooks_reset_ident_sccs(self)  (void)((self)->TPP_INTERNAL(th_ident_sccs) = _TPP_HOOKS_DEFAULT_IDENT_SCCS)
+#define _tpp_hooks_init_ident_sccs(self)  , (self)->TPP_INTERNAL(th_ident_sccs) = _TPP_HOOKS_DEFAULT_IDENT_SCCS
+#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_IDENT_SCCS)
+#define _TPP_HOOKS_DEFAULT_IDENT_SCCS (&TPP_HOOK_IDENT_SCCS)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_IDENT_SCCS NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
+#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_ident_sccs(self, lexer, mode, chunk, comment_str, comment_len) \
+	TPP_HOOK_IDENT_SCCS(lexer, mode, chunk, comment_str, comment_len)
+#else /*  */
+#define tpp_hooks_call_ident_sccs(self, lexer, mode, chunk, comment_str, comment_len) TPP_EOK
+#endif /* ... */
+#define _tpp_hooks_init_ident_sccs(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
+
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
 	(void)(0 _tpp_hooks_init_warnprinter(self) \
 	       _tpp_hooks_init_mesgprinter(self) \
 	       _tpp_hooks_init_parseexpr(self) \
 	       _tpp_hooks_init_unknown_pragma(self) \
-	       _tpp_hooks_init_new_dependency(self))
+	       _tpp_hooks_init_new_dependency(self) \
+	       _tpp_hooks_init_ident_sccs(self))
 /*[[[end]]]*/
 
 

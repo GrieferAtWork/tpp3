@@ -305,22 +305,22 @@ __pragma(tpp_exec("#define TPP_BUILTIN_KEYWORD_COUNT " _TPP_STR(__TPP_EVAL(
 ))))
 #undef TPP_DEFS
 
-/* TODO: Calculate "TPP_BUILTIN_KEYWORD_MASK" */
-/* TODO: For every TPP_KWD, calculate its hash masked by "TPP_BUILTIN_KEYWORD_MASK".
- *       Then, define a macro "TPP_BUILTIN_KEYWORD_H_<MASKED_HASH>" that points to
- *       the keyword that should appear in the keyword table at offset <MASKED_HASH>
- *       In those places where that macro has already been defined, override the
- *       macro, but use its own definition as the "tk_next" pointer of the keyword
- *       that is overriding it */
-/* TODO: Generate keyword structures, but in those places where the keyword's "tk_next"
- *       is non-NULL, make sure that the pointed-to keyword is generated first. */
-/* TODO: Emit the hash-table, using "TPP_BUILTIN_KEYWORD_H_<I>" for index "I". If
- *       no such macro is defined, that index's bucket must be initialized as "NULL"
- *       instead */
+/* XXX: Calculate "TPP_BUILTIN_KEYWORD_MASK" */
+/* XXX: For every TPP_KWD, calculate its hash masked by "TPP_BUILTIN_KEYWORD_MASK".
+ *      Then, define a macro "TPP_BUILTIN_KEYWORD_H_<MASKED_HASH>" that points to
+ *      the keyword that should appear in the keyword table at offset <MASKED_HASH>
+ *      In those places where that macro has already been defined, override the
+ *      macro, but use its own definition as the "tk_next" pointer of the keyword
+ *      that is overriding it */
+/* XXX: Generate keyword structures, but in those places where the keyword's "tk_next"
+ *      is non-NULL, make sure that the pointed-to keyword is generated first. */
+/* XXX: Emit the hash-table, using "TPP_BUILTIN_KEYWORD_H_<I>" for index "I". If
+ *      no such macro is defined, that index's bucket must be initialized as "NULL"
+ *      instead */
 
-/* TODO: For extension/warning names, need some kind of mechanism by which TPP is
- *       able to sort an array of strings. I'm sure it's possible somehow, but I'm not
- *       quite certain on how this can be done most elegantly (an in O(N*log(N)) time)
+/* XXX: For extension/warning names, need some kind of mechanism by which TPP is
+ *      able to sort an array of strings. I'm sure it's possible somehow, but I'm not
+ *      quite certain on how this can be done most elegantly (an in O(N*log(N)) time)
  * -> I feel like it should be possible to implement MergeSort using macros:
  *    - Can split items in half using __TPP_EVAL(__VA_NARGS__ / 2)
  *    - Once there are <=2 items, can sort inplace

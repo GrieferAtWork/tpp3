@@ -1010,7 +1010,6 @@ tpp_lexer_process_pragma_GCC_diagnostic(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_PRAGMA_GCC_POISON
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_GCC_poison(tpp_lexer *tpp_restrict self) {
-	/* TODO */
 	/* TODO: Do this one right in TPP3:
 	 * >> #define my_strcpy strcpy
 	 * >> #define my_wrapper(x) x
