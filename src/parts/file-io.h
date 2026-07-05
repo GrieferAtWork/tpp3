@@ -55,7 +55,7 @@
 
 #ifndef TPP_FS_ISABS
 #if TPP_FS_HAVE_DRIVES
-#define TPP_FS_ISABS(filename, filename_len) ((filename_len) >= 2 && (filename)[0] && (filename)[1] == ':')
+#define TPP_FS_ISABS(filename, filename_len) ((filename_len) >= 2 && /*(filename)[0] &&*/ (filename)[1] == ':')
 #else /* TPP_FS_HAVE_DRIVES */
 #define TPP_FS_ISABS(filename, filename_len) ((filename_len) >= 1 && TPP_FS_ISSEP((filename)[0]))
 #endif /* !TPP_FS_HAVE_DRIVES */
@@ -79,8 +79,8 @@
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle FILE *
 #define tpp_io_handle_IS_FILE
-#if !defined(TPP_IGNORE_INVALID_CONFIGURATION) && TPP_HAVE_FILE_NONBLOCK
-#error "No way to implement 'TPP_HAVE_FILE_NONBLOCK' on this OS"
+#if !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HAVE_FILE_NONBLOCK
+#error "Invalid configuration: No way to implement 'TPP_HAVE_FILE_NONBLOCK' on this OS. Supply your own 'tpp_io_handle', or build with '-DTPP_HAVE_FILE_NONBLOCK=0'"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HAVE_FILE_NONBLOCK */
 #endif /* !... */
 #endif /* !tpp_io_handle */
@@ -96,9 +96,9 @@
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 
-#ifdef tpp_io_handle_IS_BUILTIN
 TPP_DECL_BEGIN
 
+#ifdef tpp_io_handle_IS_BUILTIN
 /* Open a file for reading
  * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
  * @return: TPP_ENOENT: No such file or directory
@@ -149,9 +149,36 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
                      char const *rhs_filename, int *tpp_restrict p_cmp_result);
 #endif /* !tpp_io_compare_mtime */
 #endif /* TPP_HAVE_IO_COMPARE_MTIME */
+#endif /* tpp_io_handle_IS_BUILTIN */
+
+#if TPP_HAVE_IO_NORMALIZE_FILENAME
+#ifndef tpp_io_normalize_filename
+/* Given pointers to a string like this:
+ * >> r"C:\Users\me\Desktop\0[unused-buffer-space]"
+ *      ^           ^                             ^
+ *      filename    after_last_sep                after_last_sep+after_last_sep_bufsize
+ *
+ * Check that the casing of the last part of the filename (here: "Desktop")
+ * is correct. If it is, do nothing and return "0". If it isn't, check the
+ * length of the correctly cased filename. If it's "<= after_last_sep_bufsize",
+ * copy it to "after_last_sep" (without a trailing \0-character) and return
+ * the number of copied bytes (here: return <= after_last_sep_bufsize). If
+ * it's "> after_last_sep_bufsize", don't copy anything to "after_last_sep"
+ * and return the required buffer size (here: return > after_last_sep_bufsize)
+ *
+ * @return: 0 :                          Casing is correct
+ * @return: <= after_last_sep_bufsize:   Casing was fixed by copying "return" bytes to "after_last_sep"
+ * @return: > after_last_sep_bufsize:    Casing is incorrect, and you must supply a larger buffer
+ * @return: TPP_SSIZE_OFERR(TPP_ENOENT): [SOFT_ERROR] No such file or directory (you can stop checking casing)
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): [HARD_ERROR] Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_ENOIO):  [HARD_ERROR] I/O error */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_io_normalize_filename(char *filename, char *after_last_sep,
+                          tpp_size after_last_sep_bufsize);
+#endif /* !tpp_io_normalize_filename */
+#endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
 
 TPP_DECL_END
-#endif /* tpp_io_handle_IS_BUILTIN */
 /*[[[tpp-end]]]*/
 
 #endif /* !GUARD_TPP_FILE_IO_H */

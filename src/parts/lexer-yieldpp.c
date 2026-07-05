@@ -1940,7 +1940,8 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 
 	/* Call underlying include loader. */
 	self->teb_ofr_error = tpp_lexer_parse_include_directive_impl_ex(lexer, &self->teb_ofr,
-	                                                                   TPP_LEXER_OPENFILE_FLAG_NORMAL);
+	                                                                /* Warn about bad casing */
+	                                                                TPP_LEXER_OPENFILE_FLAG_WARN_CASING);
 	if (self->teb_ofr_error != TPP_EOK && self->teb_ofr_error != TPP_ENOENT)
 		return self->teb_ofr_error;
 
@@ -2457,7 +2458,8 @@ again_yield_directive_iter:
 		tpp_lexer_process_directive_set_noguard();
 		file->tf_pos = directive_iter;
 #if TPP_HAVE_LEXER_OPENFILE_EX
-		flags = TPP_LEXER_OPENFILE_FLAG_NORMAL;
+		flags = TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT | /* Check include limit */
+		        TPP_LEXER_OPENFILE_FLAG_WARN_CASING;  /* Warn about bad casing */
 #if TPP_HAVE_PRAGMA_ONCE
 		flags |= TPP_LEXER_OPENFILE_FLAG_HDR_ONCE; /* Mask if header has "#pragma once" */
 #endif /* TPP_HAVE_PRAGMA_ONCE */
@@ -2483,7 +2485,9 @@ again_yield_directive_iter:
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_INCLUDE_NEXT) */
 		tpp_lexer_process_directive_set_noguard();
 		file->tf_pos = directive_iter;
-		flags = TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT; /* Use #include_next-semantics */
+		flags = TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT | /* Use #include_next-semantics */
+		        TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT |  /* Check include limit */
+		        TPP_LEXER_OPENFILE_FLAG_WARN_CASING;   /* Warn about bad casing */
 #if TPP_HAVE_PRAGMA_ONCE
 		flags |= TPP_LEXER_OPENFILE_FLAG_HDR_ONCE; /* Mask if header has "#pragma once" */
 #endif /* TPP_HAVE_PRAGMA_ONCE */
@@ -2508,7 +2512,9 @@ again_yield_directive_iter:
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_IMPORT) */
 		tpp_lexer_process_directive_set_noguard();
 		file->tf_pos = directive_iter;
-		flags = TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED; /* Use #import-semantics */
+		flags = TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED | /* Use #import-semantics */
+		        TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT |  /* Check include limit */
+		        TPP_LEXER_OPENFILE_FLAG_WARN_CASING;   /* Warn about bad casing */
 #if TPP_HAVE_PRAGMA_ONCE
 		flags |= TPP_LEXER_OPENFILE_FLAG_HDR_ONCE; /* Mask if header has "#pragma once" */
 #endif /* TPP_HAVE_PRAGMA_ONCE */

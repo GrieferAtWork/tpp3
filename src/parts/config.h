@@ -163,6 +163,18 @@
  * -1: Enable if possible (re-defined to `0' if unsupported) */
 /************************************************************************/
 
+/* When defined to non-zero, disable checks for invalid/nonsensical configurations.
+ * Such configurations may still be able to compile, but will include definitely
+ * redundant code, or other features that are meaningless in relation to some other
+ * configuration.
+ *
+ * You should only enable this if you "need TPP to build *NOW*" and one of those
+ * internal checks stands in your way. You should not leave this enabled, as every
+ * one of the errors this disables is there for a reason! */
+#ifndef TPP_IGNORE_INVALID_CONFIGURATION
+#define TPP_IGNORE_INVALID_CONFIGURATION 0
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+
 /* Enable support for non-blocking I/O */
 #ifndef TPP_HAVE_FILE_NONBLOCK
 #define TPP_HAVE_FILE_NONBLOCK (TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_OS_WINDOWS || TPP_OS_UNIX))
@@ -306,6 +318,8 @@
  * "-f..." comment, but can be overwritten via #define TPP_EXTNAME_<name> "my-name":
  * >> #define TPP_HAVE_TRIGRAPHS    TPP_CONF_EXT1
  * >> #define TPP_EXTNAME_TRIGRAPHS "the-cool-trigraphs"
+ * User-code can then control the feature using:
+ * >> #pragma extension("-fthe-cool-trigraphs")
  *
  * WARNING: Use of "TPP_CONF_EXT1" / "TPP_CONF_EXT0" requires "#define TPP_HAVE_EXTENSIONS 1"
  */
@@ -2792,6 +2806,11 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_IO_COMPARE_MTIME (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
 #endif /* !TPP_HAVE_IO_COMPARE_MTIME */
 
+/* Enable support for `tpp_io_normalize_filename()' */
+#ifndef TPP_HAVE_IO_NORMALIZE_FILENAME
+#define TPP_HAVE_IO_NORMALIZE_FILENAME (TPP_OS_WINDOWS && (TPP_HAVE_USER_KEYWORDS || TPP_HAVE_PROFILE_NOT_MINIMAL))
+#endif /* !TPP_HAVE_IO_NORMALIZE_FILENAME */
+
 /* Enable support for `tpp_joinpath()' */
 #ifndef TPP_HAVE_JOINPATH
 #define TPP_HAVE_JOINPATH (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
@@ -3416,6 +3435,10 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED \
 	(TPP_HAVE_WARNINGS && TPP_MAX_RECURSIVE_MACRO_DEPTH != 0)
 #endif /* !TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED */
+#ifndef TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
+#define TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_IO_NORMALIZE_FILENAME)
+#endif /* !TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS

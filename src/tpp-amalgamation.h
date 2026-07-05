@@ -153,7 +153,8 @@
  *       >> void tpp_warn_printf3(tpp_lexer_printf_info *info, char const *format, A a, B b, C c);
  *       >> void tpp_warn_printf4(tpp_lexer_printf_info *info, char const *format, A a, B b, C c, D d);
  *       - Any "return" statement executed must specify some "tpp_errno", and causes
- *         the associated `tpp_lexer_warnf()' to immediately return with that value.
+ *         the associated `tpp_lexer_warnf()' to eventually return with that value.
+ *         In case "TPP_EOK" is returned, trailing notes are still printed.
  *    Example:
  *       >> TPP_WARNING(W_BAD_THING_HAPPEND, 1(WG_BAD_THING_HAPPEND), 2(100, 101), "bad thing happened: %s")
  *       >> TPP_WARNING_EX(W_BAD_THING_HAPPEND, 1(WG_BAD_THING_HAPPEND), 2(100, 101), {
@@ -3572,6 +3573,29 @@ TPP_WARNING(TPP_W_NO_SUCH_FILE, 1(TPP_WG_ENVIRON), 1(1083), TPP_WSTATE_UNDEFINED
 
 
 /************************************************************************/
+/* -Wenviron                                                            */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_NON_PORTABLE_CASING
+#define TPP_HAVE_TPP_WG_NON_PORTABLE_CASING \
+	(TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING)
+#endif /* !TPP_HAVE_TPP_WG_NON_PORTABLE_CASING */
+#if TPP_HAVE_TPP_WG_NON_PORTABLE_CASING
+#ifndef TPP_WGNAME_NON_PORTABLE_CASING
+#define TPP_WGNAME_NON_PORTABLE_CASING 1("non-portable-casing")
+#endif /* !TPP_WGNAME_NON_PORTABLE_CASING */
+#define TPP_WG_NON_PORTABLE_CASING TPP_WG_NON_PORTABLE_CASING
+TPP_WGROUP(TPP_WG_NON_PORTABLE_CASING, TPP_WGNAME_NON_PORTABLE_CASING, TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_NON_PORTABLE_CASING */
+
+#if TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
+#define TPP_W_NONPORTABLE_FILENAME_CASING TPP_W_NONPORTABLE_FILENAME_CASING
+TPP_WARNING(TPP_W_NONPORTABLE_FILENAME_CASING, 1(TPP_WG_NON_PORTABLE_CASING), 0(), ~,
+            "non-portable filename casing in %Pt should be %[%s%]")
+#endif /* TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
+
+
+
+/************************************************************************/
 /* -Wdependency                                                         */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_DEPENDENCY
@@ -4126,7 +4150,7 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #endif /* !tpp_intmax */
 
 #ifndef tpp_float
-#define tpp_float double
+#define tpp_float long double
 #endif /* !tpp_float */
 
 #ifndef TPP_REF
@@ -4148,6 +4172,7 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #include <string.h>
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_strlen      strlen
+#define tpp_strchr      strchr
 #define tpp_strnlen     strnlen
 #define tpp_strcmp      strcmp
 #define tpp_memcmp      memcmp
@@ -4213,6 +4238,41 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #endif /* !TPP_DEBUG */
 #endif /* !tpp_assert */
 
+
+
+/* Wrapper that is placed around every system call that TPP may make.
+ * You can override this to inject additional checks before/after each system call.
+ * @param: return_error: A macro "#define return_error(error) <...>" that may be
+ *                       called from within the body of "TPP_SYSCALL". It's effect
+ *                       is that the associated function will return with the "error"
+ *                       specified. You should only use this with "TPP_EIO" or
+ *                       "TPP_ENOMEM", which will then be propagated accordingly.
+ *                       Trying to return other errors may cause undefined behavior
+ *
+ * Example:
+ * >> #define TPP_SYSCALL(expr, return_error) \
+ * >>     do {                                \
+ * >>         if (CHECK_FOR_INTERRUPTS())     \
+ * >>             return_error(TPP_EIO);      \
+ * >>         BEGIN_BLOCKING;                 \
+ * >>         expr;                           \
+ * >>         END_BLOCKING;                   \
+ * >>     } while (0)
+ */
+#ifndef TPP_SYSCALL
+#define TPP_SYSCALL(expr, return_error) \
+	do {                                \
+		TPP_SYSCALL_NOFAIL(expr);       \
+	} while (0)
+#endif /* !TPP_SYSCALL */
+/* Same as "TPP_SYSCALL()", but used in places where there's
+ * no way to indicate errors (e.g. "tpp_io_close()") */
+#ifndef TPP_SYSCALL_NOFAIL
+#define TPP_SYSCALL_NOFAIL(expr) \
+	do {                         \
+		expr;                    \
+	} while (0)
+#endif /* !TPP_SYSCALL_NOFAIL */
 
 
 TPP_DECL_BEGIN
@@ -4639,6 +4699,18 @@ TPP_DECL_END
  * -1: Enable if possible (re-defined to `0' if unsupported) */
 /************************************************************************/
 
+/* When defined to non-zero, disable checks for invalid/nonsensical configurations.
+ * Such configurations may still be able to compile, but will include definitely
+ * redundant code, or other features that are meaningless in relation to some other
+ * configuration.
+ *
+ * You should only enable this if you "need TPP to build *NOW*" and one of those
+ * internal checks stands in your way. You should not leave this enabled, as every
+ * one of the errors this disables is there for a reason! */
+#ifndef TPP_IGNORE_INVALID_CONFIGURATION
+#define TPP_IGNORE_INVALID_CONFIGURATION 0
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+
 /* Enable support for non-blocking I/O */
 #ifndef TPP_HAVE_FILE_NONBLOCK
 #define TPP_HAVE_FILE_NONBLOCK (TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_OS_WINDOWS || TPP_OS_UNIX))
@@ -4782,6 +4854,8 @@ TPP_DECL_END
  * "-f..." comment, but can be overwritten via #define TPP_EXTNAME_<name> "my-name":
  * >> #define TPP_HAVE_TRIGRAPHS    TPP_CONF_EXT1
  * >> #define TPP_EXTNAME_TRIGRAPHS "the-cool-trigraphs"
+ * User-code can then control the feature using:
+ * >> #pragma extension("-fthe-cool-trigraphs")
  *
  * WARNING: Use of "TPP_CONF_EXT1" / "TPP_CONF_EXT0" requires "#define TPP_HAVE_EXTENSIONS 1"
  */
@@ -7116,6 +7190,11 @@ TPP_DECL_END
 #define TPP_HAVE_IO_COMPARE_MTIME (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
 #endif /* !TPP_HAVE_IO_COMPARE_MTIME */
 
+/* Enable support for `tpp_io_normalize_filename()' */
+#ifndef TPP_HAVE_IO_NORMALIZE_FILENAME
+#define TPP_HAVE_IO_NORMALIZE_FILENAME (TPP_OS_WINDOWS && (TPP_HAVE_USER_KEYWORDS || TPP_HAVE_PROFILE_NOT_MINIMAL))
+#endif /* !TPP_HAVE_IO_NORMALIZE_FILENAME */
+
 /* Enable support for `tpp_joinpath()' */
 #ifndef TPP_HAVE_JOINPATH
 #define TPP_HAVE_JOINPATH (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
@@ -7740,6 +7819,10 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED \
 	(TPP_HAVE_WARNINGS && TPP_MAX_RECURSIVE_MACRO_DEPTH != 0)
 #endif /* !TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED */
+#ifndef TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
+#define TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_IO_NORMALIZE_FILENAME)
+#endif /* !TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
 
 /* Warning printer configuration */
 #if TPP_HAVE_WARNINGS
@@ -8068,7 +8151,7 @@ TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (c
      defined(tpp_unicode_isspace) ||      \
      defined(tpp_unicode_islf))
 #define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* So your compiler shows you where the definition comes from */
-#ifndef TPP_IGNORE_INVALID_CONFIGURATION
+#if !TPP_IGNORE_INVALID_CONFIGURATION
 #error "User-supplied unicode trait functions defined, but 'TPP_HAVE_BUILTIN_CTYPE_UNICODE=1'. Please use 'TPP_HAVE_BUILTIN_CTYPE_UNICODE=0' when providing your own traits"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #endif /* ... */
@@ -8341,7 +8424,7 @@ TPP_DECL_END
 
 #ifndef TPP_FS_ISABS
 #if TPP_FS_HAVE_DRIVES
-#define TPP_FS_ISABS(filename, filename_len) ((filename_len) >= 2 && (filename)[0] && (filename)[1] == ':')
+#define TPP_FS_ISABS(filename, filename_len) ((filename_len) >= 2 && /*(filename)[0] &&*/ (filename)[1] == ':')
 #else /* TPP_FS_HAVE_DRIVES */
 #define TPP_FS_ISABS(filename, filename_len) ((filename_len) >= 1 && TPP_FS_ISSEP((filename)[0]))
 #endif /* !TPP_FS_HAVE_DRIVES */
@@ -8365,8 +8448,8 @@ TPP_DECL_END
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_io_handle FILE *
 #define tpp_io_handle_IS_FILE
-#if !defined(TPP_IGNORE_INVALID_CONFIGURATION) && TPP_HAVE_FILE_NONBLOCK
-#error "No way to implement 'TPP_HAVE_FILE_NONBLOCK' on this OS"
+#if !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HAVE_FILE_NONBLOCK
+#error "Invalid configuration: No way to implement 'TPP_HAVE_FILE_NONBLOCK' on this OS. Supply your own 'tpp_io_handle', or build with '-DTPP_HAVE_FILE_NONBLOCK=0'"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HAVE_FILE_NONBLOCK */
 #endif /* !... */
 #endif /* !tpp_io_handle */
@@ -8382,9 +8465,9 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 
-#ifdef tpp_io_handle_IS_BUILTIN
 TPP_DECL_BEGIN
 
+#ifdef tpp_io_handle_IS_BUILTIN
 /* Open a file for reading
  * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
  * @return: TPP_ENOENT: No such file or directory
@@ -8435,9 +8518,36 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
                      char const *rhs_filename, int *tpp_restrict p_cmp_result);
 #endif /* !tpp_io_compare_mtime */
 #endif /* TPP_HAVE_IO_COMPARE_MTIME */
+#endif /* tpp_io_handle_IS_BUILTIN */
+
+#if TPP_HAVE_IO_NORMALIZE_FILENAME
+#ifndef tpp_io_normalize_filename
+/* Given pointers to a string like this:
+ * >> r"C:\Users\me\Desktop\0[unused-buffer-space]"
+ *      ^           ^                             ^
+ *      filename    after_last_sep                after_last_sep+after_last_sep_bufsize
+ *
+ * Check that the casing of the last part of the filename (here: "Desktop")
+ * is correct. If it is, do nothing and return "0". If it isn't, check the
+ * length of the correctly cased filename. If it's "<= after_last_sep_bufsize",
+ * copy it to "after_last_sep" (without a trailing \0-character) and return
+ * the number of copied bytes (here: return <= after_last_sep_bufsize). If
+ * it's "> after_last_sep_bufsize", don't copy anything to "after_last_sep"
+ * and return the required buffer size (here: return > after_last_sep_bufsize)
+ *
+ * @return: 0 :                          Casing is correct
+ * @return: <= after_last_sep_bufsize:   Casing was fixed by copying "return" bytes to "after_last_sep"
+ * @return: > after_last_sep_bufsize:    Casing is incorrect, and you must supply a larger buffer
+ * @return: TPP_SSIZE_OFERR(TPP_ENOENT): [SOFT_ERROR] No such file or directory (you can stop checking casing)
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): [HARD_ERROR] Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_ENOIO):  [HARD_ERROR] I/O error */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_io_normalize_filename(char *filename, char *after_last_sep,
+                          tpp_size after_last_sep_bufsize);
+#endif /* !tpp_io_normalize_filename */
+#endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
 
 TPP_DECL_END
-#endif /* tpp_io_handle_IS_BUILTIN */
 /************************************************************************/
 
 /************************************************************************/
@@ -15854,7 +15964,7 @@ typedef struct tpp_lexer {
 #else /* ... */
 #define tpp_lexer_getrecursivemacrolimit(self) TPP_MAX_RECURSIVE_MACRO_DEPTH
 #endif /* !... */
-#ifndef TPP_IGNORE_INVALID_CONFIGURATION
+#if !TPP_IGNORE_INVALID_CONFIGURATION
 #if TPP_MAX_RECURSIVE_MACRO_DEPTH != 0 && !TPP_HAVE_MACRO_RECURSION
 #error "Invalid configuration: 'TPP_MAX_RECURSIVE_MACRO_DEPTH' can only take effect when 'TPP_HAVE_MACRO_RECURSION' is enabled"
 #elif TPP_MAX_RECURSIVE_MACRO_DEPTH == 1 && TPP_HAVE_MACRO_RECURSION
@@ -16234,10 +16344,15 @@ typedef struct tpp_lexer_openfile_result {
 #define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
-#define TPP_LEXER_OPENFILE_FLAG_IGNORE_LIMIT UINT32_C(0x08000000) /* Do not emit a warning if the file already appears too often on the #include-stack */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT UINT32_C(0x08000000) /* Emit a warning if the file already appears too often on the #include-stack */
 #else /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
-#define TPP_LEXER_OPENFILE_FLAG_IGNORE_LIMIT UINT32_C(0x00000000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT UINT32_C(0x00000000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
+#if TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
+#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT32_C(0x04000000) /* Emit a warning "TPP_W_NONPORTABLE_FILENAME_CASING" if the file's casing is bad */
+#else /* TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
+#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT32_C(0x00000000) /* no-op */
+#endif /* !TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
 
 /* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
  * included before, and its keyword has any of the bits specified by `mask_flags' set.

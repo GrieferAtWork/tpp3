@@ -455,7 +455,7 @@
 #endif /* !tpp_intmax */
 
 #ifndef tpp_float
-#define tpp_float double
+#define tpp_float long double
 #endif /* !tpp_float */
 
 #ifndef TPP_REF
@@ -477,6 +477,7 @@
 #include <string.h>
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_strlen      strlen
+#define tpp_strchr      strchr
 #define tpp_strnlen     strnlen
 #define tpp_strcmp      strcmp
 #define tpp_memcmp      memcmp
@@ -542,6 +543,41 @@
 #endif /* !TPP_DEBUG */
 #endif /* !tpp_assert */
 
+
+
+/* Wrapper that is placed around every system call that TPP may make.
+ * You can override this to inject additional checks before/after each system call.
+ * @param: return_error: A macro "#define return_error(error) <...>" that may be
+ *                       called from within the body of "TPP_SYSCALL". It's effect
+ *                       is that the associated function will return with the "error"
+ *                       specified. You should only use this with "TPP_EIO" or
+ *                       "TPP_ENOMEM", which will then be propagated accordingly.
+ *                       Trying to return other errors may cause undefined behavior
+ *
+ * Example:
+ * >> #define TPP_SYSCALL(expr, return_error) \
+ * >>     do {                                \
+ * >>         if (CHECK_FOR_INTERRUPTS())     \
+ * >>             return_error(TPP_EIO);      \
+ * >>         BEGIN_BLOCKING;                 \
+ * >>         expr;                           \
+ * >>         END_BLOCKING;                   \
+ * >>     } while (0)
+ */
+#ifndef TPP_SYSCALL
+#define TPP_SYSCALL(expr, return_error) \
+	do {                                \
+		TPP_SYSCALL_NOFAIL(expr);       \
+	} while (0)
+#endif /* !TPP_SYSCALL */
+/* Same as "TPP_SYSCALL()", but used in places where there's
+ * no way to indicate errors (e.g. "tpp_io_close()") */
+#ifndef TPP_SYSCALL_NOFAIL
+#define TPP_SYSCALL_NOFAIL(expr) \
+	do {                         \
+		expr;                    \
+	} while (0)
+#endif /* !TPP_SYSCALL_NOFAIL */
 
 
 TPP_DECL_BEGIN

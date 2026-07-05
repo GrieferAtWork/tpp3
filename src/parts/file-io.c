@@ -58,6 +58,10 @@
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_FILE */
 
+#if TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !TPP_HOST_NO_SYSTEM_INCLUDES && !defined(tpp_io_normalize_filename)
+#include <Windows.h>
+#endif /* TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !TPP_HOST_NO_SYSTEM_INCLUDES && !tpp_io_normalize_filename */
+
 TPP_DECL_BEGIN
 
 /* Open a file for reading
@@ -74,8 +78,10 @@ tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
 	DWORD const dwCreationDisposition = OPEN_EXISTING;
 	HANDLE hFile;
 
-	hFile = CreateFileA(filename, dwDesiredAccess, dwShareMode, NULL,
-	                    dwCreationDisposition, dwFlagsAndAttributes, NULL);
+	TPP_SYSCALL({
+		hFile = CreateFileA(filename, dwDesiredAccess, dwShareMode, NULL,
+		                    dwCreationDisposition, dwFlagsAndAttributes, NULL);
+	}, return);
 	if (hFile != NULL && hFile != INVALID_HANDLE_VALUE) {
 		*p_result = hFile;
 		return TPP_EOK;
@@ -94,7 +100,10 @@ tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
 	                 O_CLOEXEC |
 #endif /* O_CLOEXEC */
 	                 0;
-	int fd = open(filename, mode, 0);
+	int fd;
+	TPP_SYSCALL({
+		fd = open(filename, mode, 0);
+	}, return);
 	if (fd == -1)
 		return TPP_ENOENT;
 	*p_result = fd;
@@ -102,22 +111,32 @@ tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
 #endif /* tpp_io_handle_IS_int */
 
 #ifdef tpp_io_handle_IS_FILE
-	return fopen(filename, "rb");
+	FILE *result;
+	TPP_SYSCALL({
+		result = fopen(filename, "rb");
+	}, return);
+	return result;
 #endif /* tpp_io_handle_IS_FILE */
 }
 
 /* Close a file previously opened by `tpp_io_open()' */
 TPP_IMPL void TPPCALL tpp_io_close(tpp_io_handle file) {
 #ifdef tpp_io_handle_IS_HANDLE
-	(void)CloseHandle(file);
+	TPP_SYSCALL_NOFAIL({
+		(void)CloseHandle(file);
+	});
 #endif /* tpp_io_handle_IS_HANDLE */
 
 #ifdef tpp_io_handle_IS_int
-	(void)close(file);
+	TPP_SYSCALL_NOFAIL({
+		(void)close(file);
+	});
 #endif /* tpp_io_handle_IS_int */
 
 #ifdef tpp_io_handle_IS_FILE
-	(void)fclose(file);
+	TPP_SYSCALL_NOFAIL({
+		(void)fclose(file);
+	});
 #endif /* tpp_io_handle_IS_FILE */
 }
 
@@ -132,7 +151,9 @@ TPP_IMPL void TPPCALL tpp_io_close(tpp_io_handle file) {
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_io_read(tpp_io_handle file, void *buf,
             tpp_size bufsize tpp_io_nonblock__PARAM) {
+#define tpp_io_read_return_error(error) return TPP_SSIZE_OFERR(error)
 #ifdef tpp_io_handle_IS_HANDLE
+	BOOL bRead;
 	DWORD dwResult;
 	DWORD dwBufsize = (DWORD)bufsize;
 #if TPP_SIZEOF_tpp_size > 4
@@ -142,31 +163,42 @@ tpp_io_read(tpp_io_handle file, void *buf,
 
 #if TPP_HAVE_FILE_NONBLOCK
 	if (nonblock) {
-		DWORD dwFileType = GetFileType(file);
+		DWORD dwFileType;
+		TPP_SYSCALL({
+			dwFileType = GetFileType(file);
+		}, tpp_io_read_return_error);
 		if (dwFileType == FILE_TYPE_UNKNOWN)
 			return TPP_SSIZE_OFERR(TPP_EIO);
 		if (dwFileType == FILE_TYPE_PIPE) {
 			BYTE temp_buffer[1];
+			BOOL bPeek;
 			/* `WaitForSingleObject()' doesn't work on pipes (for some reason...) */
 			dwResult = 0;
-			if (PeekNamedPipe(file, temp_buffer, sizeof(temp_buffer),
-			                  &dwResult, NULL, NULL) &&
-			    dwResult == 0)
+			TPP_SYSCALL({
+				bPeek = PeekNamedPipe(file, temp_buffer, sizeof(temp_buffer), &dwResult, NULL, NULL);
+			}, tpp_io_read_return_error);
+			if (bPeek && dwResult == 0)
 				return TPP_SSIZE_OFERR(TPP_EWOULDBLOCK);
 		} else {
-			dwResult = WaitForSingleObject(file, 0);
+			TPP_SYSCALL({
+				dwResult = WaitForSingleObject(file, 0);
+			}, tpp_io_read_return_error);
 			if (dwResult == WAIT_TIMEOUT)
 				return TPP_SSIZE_OFERR(TPP_EWOULDBLOCK);
 		}
 	}
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
-	if (!ReadFile(file, buf, dwBufsize, &dwResult, NULL))
+	TPP_SYSCALL({
+		bRead = ReadFile(file, buf, dwBufsize, &dwResult, NULL);
+	}, tpp_io_read_return_error);
+	if (!bRead)
 		return TPP_SSIZE_OFERR(TPP_EIO);
 	return (tpp_ssize)dwResult;
 #endif /* tpp_io_handle_IS_HANDLE */
 
 #ifdef tpp_io_handle_IS_int
+	tpp_ssize result;
 #if TPP_HAVE_FILE_NONBLOCK
 	if (nonblock) {
 		fd_set read_fds;
@@ -174,22 +206,33 @@ tpp_io_read(tpp_io_handle file, void *buf,
 		int result;
 		FD_ZERO(&read_fds);
 		FD_SET(file, &read_fds);
-		result = select(file + 1, &read_fds, NULL, NULL, &timeout);
+		TPP_SYSCALL({
+			result = select(file + 1, &read_fds, NULL, NULL, &timeout);
+		}, tpp_io_read_return_error);
 		if (result < 0)
 			return TPP_SSIZE_OFERR(TPP_EIO);
 		if (!FD_ISSET(fd, &read_fds))
 			return TPP_SSIZE_OFERR(TPP_EWOULDBLOCK);
 	}
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
-	return (tpp_ssize)read(file, buf, bufsize);
+	TPP_SYSCALL({
+		result = (tpp_ssize)read(file, buf, bufsize);
+	}, tpp_io_read_return_error);
+	if (result < 0)
+		return TPP_SSIZE_OFERR(TPP_EIO);
+	return result;
 #endif /* tpp_io_handle_IS_int */
 
 #ifdef tpp_io_handle_IS_FILE
-	tpp_size result = (tpp_size)fread(buf, 1, bufsize, file);
+	tpp_size result;
+	TPP_SYSCALL({
+		result = (tpp_size)fread(buf, 1, bufsize, file);
+	}, tpp_io_read_return_error);
 	if (result == 0 && ferror(file))
 		return TPP_SSIZE_OFERR(TPP_EIO);
 	return (tpp_ssize)result;
 #endif /* tpp_io_handle_IS_FILE */
+#undef tpp_io_read_return_error
 }
 
 
@@ -225,11 +268,20 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 	WIN32_FILE_ATTRIBUTE_DATA temp;
 	FILETIME ftLastAccessed;
 	tpp_io_handle temp_handle;
+	BOOL bOK;
 	(void)lhs_filename;
-	if (lhs_handle_valid && GetFileInformationByHandle(lhs_handle, &lhsInfo)) {
-		/* Got lhs info! */
-	} else if (lhs_filename) {
-		if (GetFileAttributesExA(lhs_filename, GetFileExInfoStandard, &temp)) {
+	if (lhs_handle_valid) {
+		TPP_SYSCALL({
+			bOK = GetFileInformationByHandle(lhs_handle, &lhsInfo);
+		}, return);
+		if (bOK)
+			goto got_lhs_info; /* Got lhs info! */
+	}
+	if (lhs_filename) {
+		TPP_SYSCALL({
+			bOK = GetFileAttributesExA(lhs_filename, GetFileExInfoStandard, &temp);
+		}, return);
+		if (bOK) {
 			lhsInfo.ftLastWriteTime = temp.ftLastWriteTime;
 		} else {
 			/* Try to properly open to deal with UNC path errors */
@@ -240,10 +292,16 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 			/* (try to) prevent this open from counting towards rhs_filename's last-accessed timestamp */
 			ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
 			ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
-			(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
+#define tpp_close_temp_handle_and_return(error) return (tpp_io_close(temp_handle), error)
+			TPP_SYSCALL({
+				(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
+			}, tpp_close_temp_handle_and_return);
 
 			/* Query info on "temp_handle" */
-			bHasLhsInfo = GetFileInformationByHandle(temp_handle, &lhsInfo);
+			TPP_SYSCALL({
+				bHasLhsInfo = GetFileInformationByHandle(temp_handle, &lhsInfo);
+			}, tpp_close_temp_handle_and_return);
+#undef tpp_close_temp_handle_and_return
 			tpp_io_close(temp_handle);
 			if (!bHasLhsInfo)
 				return TPP_ELAST; /* Cannot compare */
@@ -251,8 +309,11 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 	} else {
 		return TPP_ENOENT; /* Cannot compare */
 	}
-
-	if (GetFileAttributesExA(rhs_filename, GetFileExInfoStandard, &temp)) {
+got_lhs_info:
+	TPP_SYSCALL({
+		bOK = GetFileAttributesExA(rhs_filename, GetFileExInfoStandard, &temp);
+	}, return);
+	if (bOK) {
 		rhsInfo.ftLastWriteTime = temp.ftLastWriteTime;
 	} else {
 		/* Try to properly open to deal with UNC path errors */
@@ -262,12 +323,18 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 			return error; /* Probably TPP_ENOENT */
 
 		/* (try to) prevent this open from counting towards rhs_filename's last-accessed timestamp */
+#define tpp_close_temp_handle_and_return(error) return (tpp_io_close(temp_handle), error)
 		ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
 		ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
-		(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
+		TPP_SYSCALL({
+			(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
+		}, tpp_close_temp_handle_and_return);
 
 		/* Query info on "rhs_handle" */
-		bHasRhsInfo2 = GetFileInformationByHandle(temp_handle, &rhsInfo);
+		TPP_SYSCALL({
+			bHasRhsInfo2 = GetFileInformationByHandle(temp_handle, &rhsInfo);
+		}, tpp_close_temp_handle_and_return);
+#undef tpp_close_temp_handle_and_return
 		tpp_io_close(temp_handle);
 		if (!bHasRhsInfo2)
 			return TPP_ELAST; /* Cannot compare */
@@ -291,14 +358,24 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 #ifdef tpp_io_handle_IS_int
 	struct stat lhs_st;
 	struct stat rhs_st;
+	int status;
 	if (lhs_handle_valid) {
-		if (fstat(lhs_handle, &lhs_st) != 0)
+		TPP_SYSCALL({
+			status = fstat(lhs_handle, &lhs_st);
+		}, return);
+		if (status != 0)
 			return TPP_ELAST; /* Cannot compare */
 	} else {
-		if (stat(lhs_filename, &lhs_st) != 0)
+		TPP_SYSCALL({
+			status = stat(lhs_filename, &lhs_st);
+		}, return);
+		if (status != 0)
 			return TPP_ELAST; /* Cannot compare */
 	}
-	if (stat(rhs_filename, &lhs_st) != 0)
+	TPP_SYSCALL({
+		status = stat(rhs_filename, &lhs_st);
+	}, return);
+	if (status != 0)
 		return TPP_ENOENT;
 	if (lhs_st.st_mtime < rhs_st.st_mtime) {
 		*p_cmp_result = -1;
@@ -312,7 +389,7 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 #endif /* tpp_io_handle_IS_int */
 
 #ifdef tpp_io_handle_IS_FILE
-#ifndef TPP_IGNORE_INVALID_CONFIGURATION
+#if !TPP_IGNORE_INVALID_CONFIGURATION
 #error "Invalid configuration: 'TPP_HAVE_IO_COMPARE_MTIME' is enabled, but no way to implement on this OS. Supply your own definition, or build with '-DTPP_HAVE_IO_COMPARE_MTIME=0' + '-DTPP_HAVE_PRAGMA_GCC_DEPENDENCY=0'"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 	(void)lhs_filename;
@@ -325,6 +402,64 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 }
 #endif /* !tpp_io_compare_mtime */
 #endif /* TPP_HAVE_IO_COMPARE_MTIME */
+
+
+#if TPP_HAVE_IO_NORMALIZE_FILENAME
+#ifndef tpp_io_normalize_filename
+/* Given pointers to a string like this:
+ * >> r"C:\Users\me\Desktop\0[unused-buffer-space]"
+ *      ^           ^                             ^
+ *      filename    after_last_sep                after_last_sep+after_last_sep_bufsize
+ *
+ * Check that the casing of the last part of the filename (here: "Desktop")
+ * is correct. If it is, do nothing and return "0". If it isn't, check the
+ * length of the correctly cased filename. If it's "<= after_last_sep_bufsize",
+ * copy it to "after_last_sep" (without a trailing \0-character) and return
+ * the number of copied bytes (here: return <= after_last_sep_bufsize). If
+ * it's "> after_last_sep_bufsize", don't copy anything to "after_last_sep"
+ * and return the required buffer size (here: return > after_last_sep_bufsize)
+ *
+ * @return: 0 :                          Casing is correct
+ * @return: <= after_last_sep_bufsize:   Casing was fixed by copying "return" bytes to "after_last_sep"
+ * @return: > after_last_sep_bufsize:    Casing is incorrect, and you must supply a larger buffer
+ * @return: TPP_SSIZE_OFERR(TPP_ENOENT): [SOFT_ERROR] No such file or directory (you can stop checking casing)
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): [HARD_ERROR] Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_ENOIO):  [HARD_ERROR] I/O error */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_io_normalize_filename(char *filename, char *after_last_sep,
+                          tpp_size after_last_sep_bufsize) {
+#define tpp_io_normalize_filename_return_error(error) return TPP_SSIZE_OFERR(error)
+#if TPP_OS_WINDOWS
+	HANDLE hFind;
+	WIN32_FIND_DATAA fData;
+	tpp_size szCorrectSize;
+	TPP_SYSCALL({
+		hFind = FindFirstFileA(filename, &fData);
+	}, tpp_io_normalize_filename_return_error);
+	if (!hFind || hFind == INVALID_HANDLE_VALUE)
+		return TPP_SSIZE_OFERR(TPP_ENOENT);
+	TPP_SYSCALL({
+		(void)FindClose(hFind);
+	}, tpp_io_normalize_filename_return_error);
+	if (tpp_strcmp(fData.cFileName, after_last_sep) == 0)
+		return 0; /* Nothing changed! */
+	szCorrectSize = tpp_strlen(fData.cFileName);
+	if (szCorrectSize <= after_last_sep_bufsize)
+		tpp_memcpy(after_last_sep, fData.cFileName, szCorrectSize * sizeof(char));
+	return (tpp_ssize)szCorrectSize;
+#else /* TPP_OS_WINDOWS */
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_IO_NORMALIZE_FILENAME' is enabled, but no way to implement on this OS. Supply your own definition, or build with '-DTPP_HAVE_IO_NORMALIZE_FILENAME=0'"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+	(void)filename;
+	(void)after_last_sep;
+	(void)after_last_sep_bufsize;
+	return 0;
+#endif /* !TPP_OS_WINDOWS */
+#undef tpp_io_normalize_filename_return_error
+}
+#endif /* !tpp_io_normalize_filename */
+#endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
 
 
 TPP_DECL_END

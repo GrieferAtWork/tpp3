@@ -79,11 +79,11 @@ int main(int argc, char *argv[]) {
 		printf("%.*s",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
-#elif 1
+#elif 0
 		printf("[%.*s]",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
-#elif 1
+#elif 0
 		{
 			char const *desc = tpp_strtokenid(tok);
 			if (desc == NULL && tpp_lexer_hastokenkwd(&lexer))

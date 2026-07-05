@@ -1561,6 +1561,51 @@ TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT != TPP_LEXER_OPENFILE_FLA
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
 
+#if TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE_EX
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_openfile_ex_check_mask_flags(/*1..1*/ tpp_lexer *tpp_restrict self,
+                                       tpp_keyword *result_kwd,
+                                       tpp_lexer_openfile_flags mask_flags) {
+	if ((result_kwd->tk_misc) != NULL &&
+	    (result_kwd->tk_misc->tkm_flags & mask_flags) != 0) {
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+		if (mask_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID) {
+			tpp_keyword const *file_guard = result_kwd->tk_misc->tkm_file_guard;
+			tpp_assert(file_guard != NULL && "'TPP_KEYWORD_FLAG_HDR_GUARD_VALID' is "
+			                                 "set, but 'tkm_file_guard == NULL'");
+			if ((result_kwd->tk_misc->tkm_flags & (mask_flags & ~TPP_KEYWORD_FLAG_HDR_GUARD_VALID)) != 0)
+				return TPP_EMASKED; /* File is masked even if it wasn't for the header guard. */
+			if (tpp_lexer_getkeyworddefined(self, file_guard))
+				return TPP_EMASKED; /* File guard is still defined -> don't include */
+		} else
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+		{
+			return TPP_EMASKED;
+		}
+	}
+#if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
+	if (mask_flags & TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT) {
+		/* Check if this file is already being #include-ed */
+		tpp_file const *fp = tpp_lexer_getfile(self);
+		do {
+			if (fp->tf_kind == TPP_FILE_KIND_IO &&
+#if TPP_HAVE_FILE_NOKWD
+			    !(fp->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
+#endif /* TPP_HAVE_FILE_NOKWD */
+			    fp->tf_data.td_io.tff_name != NULL) {
+				tpp_keyword const *kwd = (tpp_keyword const *)((char const *)fp->tf_data.td_io.tff_name -
+				                                               tpp_offsetof(tpp_keyword, tk_kwd));
+				if (kwd == result_kwd)
+					return TPP_ENOENT; /* File is already on #include-stack */
+			}
+		} while ((fp = fp->tf_tprev) != NULL);
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
+#endif /* TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE_EX */
+
+
 /* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
  * included before, and its keyword has any of the bits specified by `mask_flags' set.
  *
@@ -1617,15 +1662,19 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
 #define tpp_lexer_openfile_keyword                    tpp_keyword
 #define tpp_lexer_openfile_keyword_cstr(p)            ((char *)(p)->tk_kwd)
 #define tpp_lexer_openfile_keyword_setlen(p, v)       (void)((p)->tk_len = (v))
+#define tpp_lexer_openfile_keyword_getlen(p)          (p)->tk_len
 #define tpp_lexer_openfile_keyword_alloc(len)         _tpp_keyword_alloc(len)
 #define tpp_lexer_openfile_keyword_tryrealloc(p, len) _tpp_keyword_tryrealloc(p, len)
+#define tpp_lexer_openfile_keyword_realloc(p, len)    _tpp_keyword_realloc(p, len)
 #define tpp_lexer_openfile_keyword_free(p)            _tpp_keyword_free(p)
 #else /* TPP_HAVE_USER_KEYWORDS */
 #define tpp_lexer_openfile_keyword                    char
 #define tpp_lexer_openfile_keyword_cstr(p)            p
 #define tpp_lexer_openfile_keyword_setlen(p, v)       (void)0
+#define tpp_lexer_openfile_keyword_getlen(p)          tpp_strlen(p)
 #define tpp_lexer_openfile_keyword_alloc(len)         ((char *)tpp_malloc(((len) + 1) * sizeof(char)))
 #define tpp_lexer_openfile_keyword_tryrealloc(p, len) ((char *)tpp_tryrealloc(p, ((len) + 1) * sizeof(char)))
+#define tpp_lexer_openfile_keyword_realloc(p, len)    ((char *)tpp_realloc(p, ((len) + 1) * sizeof(char)))
 #define tpp_lexer_openfile_keyword_free(p)            tpp_free(p)
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 	tpp_io_handle handle;
@@ -1676,10 +1725,6 @@ without_relative_to:
 		tpp_lexer_openfile_keyword_setlen(result_kwd, whole_size);
 	}
 
-	/* FIXME: Windows has a case-insensitive filesystem, but the filename hash used here
-	 *        is (and has to be for the sake of allowing us to re-use the keyword table)
-	 *        case-sensitive. */
-
 	/* Check if "result_kwd" is a known keyword... */
 	(void)self;
 #if TPP_HAVE_USER_KEYWORDS
@@ -1702,41 +1747,11 @@ without_relative_to:
 
 			/* Check if the file should be marked out. */
 #if TPP_HAVE_LEXER_OPENFILE_EX
-			if ((result_kwd->tk_misc) != NULL &&
-			    (result_kwd->tk_misc->tkm_flags & mask_flags) != 0) {
-#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-				if (mask_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID) {
-					tpp_keyword const *file_guard = result_kwd->tk_misc->tkm_file_guard;
-					tpp_assert(file_guard != NULL && "'TPP_KEYWORD_FLAG_HDR_GUARD_VALID' is "
-					                                 "set, but 'tkm_file_guard == NULL'");
-					if ((result_kwd->tk_misc->tkm_flags & (mask_flags & ~TPP_KEYWORD_FLAG_HDR_GUARD_VALID)) != 0)
-						return TPP_EMASKED; /* File is masked even if it wasn't for the header guard. */
-					if (tpp_lexer_getkeyworddefined(self, file_guard))
-						return TPP_EMASKED; /* File guard is still defined -> don't include */
-				} else
-#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
-				{
-					return TPP_EMASKED;
-				}
+			{
+				tpp_errno mask_error = tpp_lexer_openfile_ex_check_mask_flags(self, result_kwd, mask_flags);
+				if (mask_error != TPP_EOK)
+					return mask_error;
 			}
-#if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
-			if (mask_flags & TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT) {
-				/* Check if this file is already being #include-ed */
-				tpp_file const *fp = tpp_lexer_getfile(self);
-				do {
-					if (fp->tf_kind == TPP_FILE_KIND_IO &&
-#if TPP_HAVE_FILE_NOKWD
-					    !(fp->tf_flags & TPP_FILE_FLAGS_NOKWD) &&
-#endif /* TPP_HAVE_FILE_NOKWD */
-					    fp->tf_data.td_io.tff_name != NULL) {
-						tpp_keyword const *kwd = (tpp_keyword const *)((char const *)fp->tf_data.td_io.tff_name -
-						                                               tpp_offsetof(tpp_keyword, tk_kwd));
-						if (kwd == result_kwd)
-							return TPP_ENOENT; /* File is already on #include-stack */
-					}
-				} while ((fp = fp->tf_tprev) != NULL);
-			}
-#endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
 #endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 
 			goto got_result_kwd;
@@ -1754,6 +1769,201 @@ got_result_kwd:
 			return error; /* Probably TPP_ENOENT */
 		}
 	}
+
+#if TPP_HAVE_IO_NORMALIZE_FILENAME
+#if TPP_HAVE_USER_KEYWORDS
+	if (!is_known_keyword)
+#endif /* TPP_HAVE_USER_KEYWORDS */
+	{
+		/* Windows has a case-insensitive filesystem, but the filename hash used here is
+		 * (and has to be for the sake of allowing us to re-use the keyword table) case-
+		 * sensitive.
+		 *
+		 * -> Solve this by essentially doing what TPP2 used to do, and validating that a
+		 *    call to "FindFirstFileA()" returns with the same casing as our custom keyword
+		 *    for every path segment not shared with "relative_to". Any segments where our
+		 *    path contains a different casing than would be canonical must then be replaced
+		 *    with its canonical equivalent.
+		 * -> If at the end at least one path segment was modified:
+		 *    - Emit a warning TPP_W_NONPORTABLE_FILENAME_CASING
+		 * #if TPP_HAVE_USER_KEYWORDS
+		 *    - Repeat the 'Check if "result_kwd" is a known keyword...' block above so
+		 *      it can re-check if the file is known whilst considering the fixed casing
+		 * #endif // TPP_HAVE_USER_KEYWORDS */
+		bool did_fix_something = false;
+#if TPP_HAVE_LEXER_OPENFILE_EX && TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
+		tpp_size relevant_base_offset;
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX && TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
+		char *iter = tpp_lexer_openfile_keyword_cstr(result_kwd);
+		if (relative_to) {
+			char const *relative_to_iter = relative_to;
+			char const *last_sep = relative_to_iter + tpp_strlen(relative_to);
+			while (last_sep > relative_to_iter && last_sep[-1] != TPP_FS_SEP)
+				--last_sep;
+			while (*iter == *relative_to_iter && relative_to_iter < last_sep)
+				++iter, ++relative_to_iter;
+		}
+#if TPP_FS_HAVE_DRIVES
+		if (iter == tpp_lexer_openfile_keyword_cstr(result_kwd) &&
+		    iter[0] != '\0' && iter[1] == ':')
+			iter += 2;
+#endif /* TPP_FS_HAVE_DRIVES */
+#if TPP_HAVE_LEXER_OPENFILE_EX && TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
+		relevant_base_offset = (tpp_size)(iter - tpp_lexer_openfile_keyword_cstr(result_kwd));
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX && TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
+		while (*iter) {
+			char *next_sep;
+			tpp_size partlen;
+			tpp_ssize normalize_status;
+			while (*iter == TPP_FS_SEP)
+				++iter;
+			next_sep = tpp_strchr(iter, TPP_FS_SEP);
+			if (next_sep) {
+				*next_sep = '\0';
+				partlen   = (tpp_size)(next_sep - iter);
+			} else {
+				partlen = tpp_strlen(iter);
+			}
+			if (iter[0] == '.' && (iter[1] == '\0' || (iter[1] == '.' && iter[2] == '\0')))
+				goto continue_with_next_part; /* Skip "." and ".." path references */
+			normalize_status = tpp_io_normalize_filename(tpp_lexer_openfile_keyword_cstr(result_kwd),
+			                                             iter, partlen);
+			if (normalize_status != 0) {
+				/* Something has to change here! */
+				if (TPP_SSIZE_ISERR(normalize_status)) {
+					if (normalize_status == TPP_SSIZE_OFERR(TPP_ENOENT))
+						goto done_normalize;
+err_free_close_normalize_status:
+					tpp_io_close(handle);
+					tpp_lexer_openfile_keyword_free(result_kwd);
+					return TPP_SSIZE_ASERR(normalize_status);
+				}
+				if ((tpp_size)normalize_status > partlen) {
+					/* Need a larger buffer! */
+					tpp_lexer_openfile_keyword *new_result_kwd;
+					tpp_size old_size = tpp_lexer_openfile_keyword_getlen(result_kwd);
+					tpp_size delta    = (tpp_size)normalize_status - partlen;
+					tpp_size new_size = old_size + delta;
+					tpp_size iter_off = (tpp_size)(iter - tpp_lexer_openfile_keyword_cstr(result_kwd));
+					tpp_size next_off;
+					tpp_assert(delta != 0);
+					if (next_sep) {
+						*next_sep = TPP_FS_SEP;
+					} else {
+						next_sep = tpp_lexer_openfile_keyword_cstr(result_kwd) + old_size;
+					}
+resize_to_new_size:
+					next_off = (tpp_size)(next_sep - tpp_lexer_openfile_keyword_cstr(result_kwd));
+					new_result_kwd = tpp_lexer_openfile_keyword_realloc(result_kwd, new_size);
+					if tpp_unlikely(!new_result_kwd) {
+						normalize_status = TPP_SSIZE_OFERR(TPP_ENOMEM);
+						goto err_free_close_normalize_status;
+					}
+					result_kwd = new_result_kwd;
+					tpp_lexer_openfile_keyword_setlen(result_kwd, new_size);
+					iter     = tpp_lexer_openfile_keyword_cstr(result_kwd) + iter_off;
+					next_sep = tpp_lexer_openfile_keyword_cstr(result_kwd) + next_off;
+					tpp_memmoveup(next_sep + delta, next_sep, (old_size - next_off) * sizeof(char));
+					next_off += delta;
+					*next_sep = '\0';
+					next_sep += delta;
+					partlen = (tpp_size)normalize_status;
+					normalize_status = tpp_io_normalize_filename(tpp_lexer_openfile_keyword_cstr(result_kwd),
+					                                             iter, partlen);
+					if (TPP_SSIZE_ISERR(normalize_status)) {
+						if (normalize_status == TPP_SSIZE_OFERR(TPP_ENOENT)) {
+							normalize_status = 0; /* Shouldn't happen... */
+						} else {
+							goto err_free_close_normalize_status;
+						}
+					}
+					if ((tpp_size)normalize_status == 0)
+						normalize_status = (tpp_ssize)partlen; /* Shouldn't happen... */
+					if ((tpp_size)normalize_status > partlen) {
+						delta    = (tpp_size)normalize_status - partlen;
+						new_size = old_size + delta;
+						goto resize_to_new_size;
+					}
+					if (*next_sep == '\0')
+						next_sep = NULL;
+				}
+				if ((tpp_size)normalize_status < partlen) {
+					/* Shrink buffer */
+					tpp_size old_size = tpp_lexer_openfile_keyword_getlen(result_kwd);
+					if (next_sep) {
+						tpp_size beyond_len = old_size - (tpp_size)(next_sep - tpp_lexer_openfile_keyword_cstr(result_kwd));
+						next_sep = (char *)tpp_memmovedown(iter + (tpp_size)normalize_status, next_sep,
+						                                   (beyond_len + 1) * sizeof(char));
+					} else {
+						iter[(tpp_size)normalize_status] = '\0';
+					}
+					tpp_lexer_openfile_keyword_setlen(result_kwd, old_size - partlen +
+					                                              (tpp_size)normalize_status);
+				}
+				did_fix_something = true;
+			}
+continue_with_next_part:
+			if (!next_sep)
+				break;
+			*next_sep = TPP_FS_SEP;
+			iter = next_sep + 1;
+		}
+done_normalize:
+		if (did_fix_something) {
+			/* Emit a warning */
+#if TPP_HAVE_LEXER_OPENFILE_EX && TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
+			if (mask_flags & TPP_LEXER_OPENFILE_FLAG_WARN_CASING) {
+				tpp_errno error;
+				char *correct_casing_base = tpp_lexer_openfile_keyword_cstr(result_kwd) + relevant_base_offset;
+				while (*correct_casing_base == TPP_FS_SEP)
+					++correct_casing_base;
+				error = tpp_lexer_warnf(self, TPP_W_NONPORTABLE_FILENAME_CASING, correct_casing_base);
+				if (TPP_ISERR(error)) {
+					tpp_io_close(handle);
+					tpp_lexer_openfile_keyword_free(result_kwd);
+					return error;
+				}
+			}
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX && TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
+
+			/* Do another check for the keyword (now that it's path's casing has been fixed) */
+#if TPP_HAVE_USER_KEYWORDS
+			{
+				tpp_hash hash = tpp_hashof(result_kwd->tk_kwd, result_kwd->tk_len);
+				tpp_keyword *bucket = self->tl_kwds.tks_bckv[hash & self->tl_kwds.tks_bckm];
+				for (; bucket; bucket = bucket->tk_next) {
+					if (bucket->tk_hash != hash)
+						continue;
+					if (bucket->tk_len != result_kwd->tk_len)
+						continue;
+					if (tpp_memcmp(bucket->tk_kwd, result_kwd->tk_kwd,
+					               result_kwd->tk_len * sizeof(tpp_char)) != 0)
+						continue;
+
+					/* Keyword already exists */
+					tpp_lexer_openfile_keyword_free(result_kwd);
+					is_known_keyword = true;
+					result_kwd       = bucket;
+
+					/* Check if the file should be marked out. */
+#if TPP_HAVE_LEXER_OPENFILE_EX
+					{
+						tpp_errno mask_error = tpp_lexer_openfile_ex_check_mask_flags(self, result_kwd, mask_flags);
+						if (mask_error != TPP_EOK) {
+							tpp_io_close(handle);
+							return mask_error;
+						}
+					}
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
+					goto got_result_kwd2;
+				}
+				result_kwd->tk_hash = hash;
+			}
+got_result_kwd2:;
+#endif /* TPP_HAVE_USER_KEYWORDS */
+		}
+	}
+#endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
 
 	/* Initialize remaining fields of "result_kwd" and insert into keyword map */
 #if TPP_HAVE_USER_KEYWORDS
@@ -1778,7 +1988,7 @@ got_result_kwd:
 #endif /* TPP_HAVE_USER_KEYWORDS */
 	{
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
-		if (!(mask_flags & TPP_LEXER_OPENFILE_FLAG_IGNORE_LIMIT)) {
+		if (!(mask_flags & TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT)) {
 			tpp_size include_count;
 #if TPP_HAVE_KEYWORD_INCLCOUNT
 			include_count = TPP_SIZE_MAX;
@@ -1852,8 +2062,10 @@ err_nomem:
 #undef tpp_lexer_openfile_keyword
 #undef tpp_lexer_openfile_keyword_cstr
 #undef tpp_lexer_openfile_keyword_setlen
+#undef tpp_lexer_openfile_keyword_getlen
 #undef tpp_lexer_openfile_keyword_alloc
 #undef tpp_lexer_openfile_keyword_tryrealloc
+#undef tpp_lexer_openfile_keyword_realloc
 #undef tpp_lexer_openfile_keyword_free
 }
 #endif /* TPP_HAVE_LEXER_OPENFILE */

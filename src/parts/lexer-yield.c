@@ -1151,7 +1151,11 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 	if (tok == '"' || tok == '<') {
+#if TPP_HAVE_LEXER_OPENFILE_EX
+		ofr_error = tpp_lexer_open_include_string_ex(self, &ofr, TPP_LEXER_OPENFILE_FLAG_WARN_CASING);
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
 		ofr_error = tpp_lexer_open_include_string(self, &ofr);
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_HAVE_LEXER_OPENFILE_EX
 		if (ofr_error == TPP_EMASKED)
 			ofr_error = TPP_ENOENT; /* Shouldn't happen */
@@ -1797,11 +1801,11 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 /************************************************************************/
 #if TPP_HAVE_MACRO___has_include
 	case TPP_KWD___has_include:
-		return tpp_lexer_yield_handle___has_include(self, TPP_LEXER_OPENFILE_FLAG_NORMAL);
+		return tpp_lexer_yield_handle___has_include(self, TPP_LEXER_OPENFILE_FLAG_WARN_CASING);
 #endif /* TPP_HAVE_MACRO___has_include */
 #if TPP_HAVE_MACRO___has_include_next
 	case TPP_KWD___has_include_next:
-		return tpp_lexer_yield_handle___has_include(self, TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT);
+		return tpp_lexer_yield_handle___has_include(self, TPP_LEXER_OPENFILE_FLAG_WARN_CASING | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT);
 #endif /* TPP_HAVE_MACRO___has_include_next */
 /************************************************************************/
 

@@ -154,7 +154,8 @@
  *       >> void tpp_warn_printf3(tpp_lexer_printf_info *info, char const *format, A a, B b, C c);
  *       >> void tpp_warn_printf4(tpp_lexer_printf_info *info, char const *format, A a, B b, C c, D d);
  *       - Any "return" statement executed must specify some "tpp_errno", and causes
- *         the associated `tpp_lexer_warnf()' to immediately return with that value.
+ *         the associated `tpp_lexer_warnf()' to eventually return with that value.
+ *         In case "TPP_EOK" is returned, trailing notes are still printed.
  *    Example:
  *       >> TPP_WARNING(W_BAD_THING_HAPPEND, 1(WG_BAD_THING_HAPPEND), 2(100, 101), "bad thing happened: %s")
  *       >> TPP_WARNING_EX(W_BAD_THING_HAPPEND, 1(WG_BAD_THING_HAPPEND), 2(100, 101), {
@@ -3723,6 +3724,29 @@ TPP_WGROUP(TPP_WG_ENVIRON, TPP_WGNAME_ENVIRON, TPP_WSTATE_ERROR_OR_FATAL) /* XXX
 TPP_WARNING(TPP_W_NO_SUCH_FILE, 1(TPP_WG_ENVIRON), 1(1083), TPP_WSTATE_UNDEFINED,
             "no such file: %Pt")
 #endif /* TPP_HAVE_TPP_W_NO_SUCH_FILE */
+
+
+/************************************************************************/
+/* -Wenviron                                                            */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_NON_PORTABLE_CASING
+#define TPP_HAVE_TPP_WG_NON_PORTABLE_CASING \
+	(TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING)
+#endif /* !TPP_HAVE_TPP_WG_NON_PORTABLE_CASING */
+#if TPP_HAVE_TPP_WG_NON_PORTABLE_CASING
+#ifndef TPP_WGNAME_NON_PORTABLE_CASING
+#define TPP_WGNAME_NON_PORTABLE_CASING 1("non-portable-casing")
+#endif /* !TPP_WGNAME_NON_PORTABLE_CASING */
+#define TPP_WG_NON_PORTABLE_CASING TPP_WG_NON_PORTABLE_CASING
+TPP_WGROUP(TPP_WG_NON_PORTABLE_CASING, TPP_WGNAME_NON_PORTABLE_CASING, TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_NON_PORTABLE_CASING */
+
+#if TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
+#define TPP_W_NONPORTABLE_FILENAME_CASING TPP_W_NONPORTABLE_FILENAME_CASING
+TPP_WARNING(TPP_W_NONPORTABLE_FILENAME_CASING, 1(TPP_WG_NON_PORTABLE_CASING), 0(), ~,
+            "non-portable filename casing in %Pt should be %[%s%]")
+#endif /* TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
+
 
 
 /************************************************************************/
