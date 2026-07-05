@@ -1584,6 +1584,30 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   the added bonus of making the requirement of expression evaluation more
  *   clear.
  */
+
+/* TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE, TPP_CONFIG_CALLBACK_UNKNOWN_FILE,
+ * TPP_CONFIG_DYN_CALLBACK_UNKNOWN_FILE, TPPCallbacks::c_unknown_file,
+ * TPP_UNKNOWN_FILE_RETRY:
+ * - TPP3 no longer has a callback hook that could be used to implement some
+ *   last-chance lookup code when it comes to opening a file. Instead, it
+ *   provides a much more granular hook "TPP_HOOK_SYSTEM_INCLUDE_PATH" that
+ *   can be used to dynamically inject additional include paths at various
+ *   different points in the include-path resolver hierarchy.
+ * - As such, when migrating from TPP2, an unknown-file hook that was used
+ *   to search a custom set of paths for an otherwise unknown filename
+ *   should be replaced with a "TPP_HOOK_SYSTEM_INCLUDE_PATH" hook.
+ */
+
+/* TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA_GCC, TPP_CONFIG_CALLBACK_PARSE_PRAGMA_GCC,
+ * TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA_GCC, TPPCallbacks::c_parse_pragma_gcc:
+ * - TPP3 still has a hook that gets called when an unknown pragma is encountered,
+ *   but unlike TPP2, it only has one such hook, namely "TPP_HOOK_UNKNOWN_PRAGMA",
+ *   which TPP2 used to call "TPP_CONFIG_CALLBACK_PARSE_PRAGMA"
+ * - If you want to specifically handle unknown GCC pragmas, you'll still need to
+ *   define a "TPP_HOOK_UNKNOWN_PRAGMA"-hook, and simply check if the currently
+ *   loaded token is "TPP_KWD_GCC", and if so: "tpp_lexer_yieldraw()" to the next
+ *   token in order to start parsing a "#pragma GCC" directive.
+ */
 /************************************************************************/
 
 
@@ -2005,6 +2029,61 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #ifndef TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO
 #define TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO */
+
+
+/* Legacy hooks */
+#if !TPP_HAVE_CPP_IDENT_SCCS
+#undef TPP_CONFIG_NO_CALLBACK_INS_COMMENT
+#undef TPP_CONFIG_CALLBACK_INS_COMMENT
+#undef TPP_CONFIG_DYN_CALLBACK_INS_COMMENT
+#define TPP_CONFIG_NO_CALLBACK_INS_COMMENT 1
+#endif /* !TPP_HAVE_CPP_IDENT_SCCS */
+
+/* Figure out which callbacks should be dynamically linked at runtime. */
+#undef TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA
+#undef TPP_CONFIG_DYN_CALLBACK_INS_COMMENT
+#undef TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE
+#if (!defined(TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA) && \
+     !defined(TPP_CONFIG_CALLBACK_PARSE_PRAGMA))
+#define TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA 1
+#endif /* ... */
+#if (!defined(TPP_CONFIG_NO_CALLBACK_INS_COMMENT) && \
+     !defined(TPP_CONFIG_CALLBACK_INS_COMMENT))
+#define TPP_CONFIG_DYN_CALLBACK_INS_COMMENT 1
+#endif /* ... */
+#if (!defined(TPP_CONFIG_NO_CALLBACK_NEW_TEXTFILE) && \
+     !defined(TPP_CONFIG_CALLBACK_NEW_TEXTFILE))
+#define TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE 1
+#endif /* ... */
+
+/* Configure hooks */
+#ifdef TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_DISABLED
+#elif defined(TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA)
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_RT_NOOP
+#else /* TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA */
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_CONST_USER
+#define TPP_HOOK_UNKNOWN_PRAGMA      TPP_CONFIG_CALLBACK_PARSE_PRAGMA
+#endif /* !TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA */
+
+#ifdef TPP_CONFIG_NO_CALLBACK_INS_COMMENT
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_DISABLED
+#elif defined(TPP_CONFIG_DYN_CALLBACK_INS_COMMENT)
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
+#else /* TPP_CONFIG_DYN_CALLBACK_INS_COMMENT */
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_CONST_USER
+#define TPP_HOOK_IDENT_SCCS      TPP_CONFIG_CALLBACK_INS_COMMENT
+#endif /* !TPP_CONFIG_DYN_CALLBACK_INS_COMMENT */
+
+#ifdef TPP_CONFIG_NO_CALLBACK_NEW_TEXTFILE
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_DISABLED
+#elif defined(TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE)
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
+#else /* TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_CONST_USER
+#define TPP_HOOK_NEW_DEPENDENCY      TPP_CONFIG_CALLBACK_NEW_TEXTFILE
+#endif /* !TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE */
+
 
 
 #ifdef TPP_CONFIG_DEBUG
@@ -4440,115 +4519,6 @@ alias("W_CONSIDER_PAREN_AROUND_LAND", "TPP_W_PAREN_AROUND_LAND");
 
 /* API Compatibility */
 
-#if 0 /* TODO */
-///* Without the ident/sccs extension, disable the insert-comment callback. */
-//#if (defined(TPP_CONFIG_EXTENSION_IDENT_SCCS) && !TPP_CONFIG_EXTENSION_IDENT_SCCS)
-//#undef TPP_CONFIG_NO_CALLBACK_INS_COMMENT
-//#undef TPP_CONFIG_CALLBACK_INS_COMMENT
-//#undef TPP_CONFIG_DYN_CALLBACK_INS_COMMENT
-//#define TPP_CONFIG_NO_CALLBACK_INS_COMMENT 1
-//#endif
-//
-//
-///* Figure out which callbacks should be dynamically linked at runtime. */
-//#undef TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA
-//#undef TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA_GCC
-//#undef TPP_CONFIG_DYN_CALLBACK_INS_COMMENT
-//#undef TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE
-//#undef TPP_CONFIG_DYN_CALLBACK_UNKNOWN_FILE
-//#if (!defined(TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA) && \
-//     !defined(TPP_CONFIG_CALLBACK_PARSE_PRAGMA))
-//#define TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA 1
-//#endif /* ... */
-//#if (!defined(TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA_GCC) && \
-//     !defined(TPP_CONFIG_CALLBACK_PARSE_PRAGMA_GCC))
-//#define TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA_GCC 1
-//#endif /* ... */
-//#if (!defined(TPP_CONFIG_NO_CALLBACK_INS_COMMENT) && \
-//     !defined(TPP_CONFIG_CALLBACK_INS_COMMENT))
-//#define TPP_CONFIG_DYN_CALLBACK_INS_COMMENT 1
-//#endif /* ... */
-//#if (!defined(TPP_CONFIG_NO_CALLBACK_NEW_TEXTFILE) && \
-//     !defined(TPP_CONFIG_CALLBACK_NEW_TEXTFILE))
-//#define TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE 1
-//#endif /* ... */
-//#if (!defined(TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE) && \
-//     !defined(TPP_CONFIG_CALLBACK_UNKNOWN_FILE))
-//#define TPP_CONFIG_DYN_CALLBACK_UNKNOWN_FILE 1
-//#endif /* ... */
-//#if (defined(TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA) ||     \
-//     defined(TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA_GCC) || \
-//     defined(TPP_CONFIG_DYN_CALLBACK_INS_COMMENT) ||      \
-//     defined(TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE) ||     \
-//     defined(TPP_CONFIG_DYN_CALLBACK_UNKNOWN_FILE))
-//#define TPP_CONFIG_DYN_CALLBACKS 1
-//#endif /* ... */
-//
-//
-//#ifdef TPP_CONFIG_DYN_CALLBACKS
-//struct TPPCallbacks {
-//	/* Optional user-hooks for implementing special preprocessor behavior.
-//	 * NOTE: Any function pointer in here may be specified as NULL. */
-//#ifdef TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA
-//	/* Handle an unknown pragma.
-//	 *  - The lexer currently points to the pragma's first token
-//	 *    and is configured not to continue yielding tokens once
-//	 *    the pragma's effective end is reached, as well as
-//	 *    to ignore comment, space and LF tokens:
-//	 *    >> #pragma foo bar   // [foo][bar][EOF]
-//	 *    >> _Pragma("baz(2)") // [baz][(][2][)][EOF]
-//	 *    >> __pragma(x*y)     // [x][*][y][EOF]
-//	 * @return: 0: Unknown/errorous pragma.
-//	 * @return: 1: Successfully parsed the given pragma. */
-//	int (TPPCALL *c_parse_pragma)(void);
-//#endif /* TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA */
-//
-//#ifdef TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA_GCC
-//	/* Same as `c_parse_pragma', but invoked for unknown GCC-namespace pragmas
-//	 * >> #pragma GCC visibility(push)
-//	 *                ^^^^^^^^^^ Invoked on this token */
-//	int (TPPCALL *c_parse_pragma_gcc)(void);
-//#endif /* TPP_CONFIG_DYN_CALLBACK_PARSE_PRAGMA_GCC */
-//
-//#ifdef TPP_CONFIG_DYN_CALLBACK_INS_COMMENT
-//	/* Insert the given text into the ".comment" section of the current object file.
-//	 * @return: 0: Error occurred (Set a lexer error if not already set)
-//	 * @return: 1: Successfully inserted the given text. */
-//	int (TPPCALL *c_ins_comment)(struct TPPString *tpp_restrict comment);
-//#endif /* TPP_CONFIG_DYN_CALLBACK_INS_COMMENT */
-//
-//#ifdef TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE
-//	/* Event-callback invoked when a textfile is included the first time.
-//	 * >> Very useful for generating dependency trees.
-//	 * NOTE: This function will only ever be called once
-//	 *       for any given file within the same lexer.
-//	 * @return: 0: Error occurred (Set a lexer error if not already set)
-//	 * @return: 1: Continue parsing (same as not filling in this member). */
-//	int (TPPCALL *c_new_textfile)(struct TPPFile *tpp_restrict file, int is_system_header);
-//#endif /* TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE */
-//
-//#if TPP_CONFIG_DYN_CALLBACK_UNKNOWN_FILE
-//	/* Called when a given filename could not be found, allowing this
-//	 * function to attempt more voodoo-magic in an attempt to locate it.
-//	 * @param: mode:                    Set of `TPPLEXER_OPENFILE_FLAG_*' that are being used to open the file.
-//	 * @return: NULL:                   Still failed to find the file (unless a lexer error was set, only emit a warning)
-//	 * @return: * :                     The file we now managed to successfully open.
-//	 * @return: TPP_UNKNOWN_FILE_RETRY: Instruct the file loader to try again (without invoking this function on that try)
-//	 * WARNING: This callback is responsible to caching the file in a keyword entry!
-//	 */
-//	struct TPPFile *(TPPCALL *c_unknown_file)(int mode, char *tpp_restrict filename,
-//	                                          size_t filename_size,
-//	                                          struct TPPKeyword **pkeyword_entry);
-//#endif /* TPP_CONFIG_DYN_CALLBACK_UNKNOWN_FILE */
-//};
-//#endif /* TPP_CONFIG_DYN_CALLBACKS */
-//
-//#ifndef TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE
-///* Return value by `c_unknown_file' to indicate that the open should be re-attempted. */
-//#define TPP_UNKNOWN_FILE_RETRY ((struct TPPFile *)-1)
-//#endif /* !TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE */
-#endif
-
 #define TPP_SYMARRAY_SIZE TPP_FLEX_ARRAY
 
 #ifndef TPP_CONFIG_ONELEXER
@@ -4613,6 +4583,22 @@ extern tpp_lexer *TPPLexer_Current;
 #endif /* !TPP2_LEXER */
 
 
+#undef TPP_CONFIG_DYN_CALLBACKS
+#if TPP_HAVE_HOOKS
+/* struct TPPCallbacks { */
+#define TPP_CONFIG_DYN_CALLBACKS 1
+#define TPPCallbacks tpp_hooks
+#if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
+#define c_parse_pragma TPP_INTERNAL(th_unknown_pragma)
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
+#if TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
+#define c_ins_comment TPP_INTERNAL(th_ident_sccs)
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
+#if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+#define c_new_textfile TPP_INTERNAL(th_new_dependency)
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+/* }; */
+#endif /* TPP_HAVE_HOOKS */
 
 
 
@@ -5335,19 +5321,17 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #define l_extensions TPP_INTERNAL(tl_exts) /* Use tpp_lexer_getextension() / tpp_lexer_pushextensions() / ... */
 #define l_keywords   TPP_INTERNAL(tl_kwds) /* Use tpp_lexer_kwds_*() */
 #define l_syspaths   TPP_INTERNAL(tl_include_paths) /* Use tpp_lexer_includes_*() */
-#if 0 /* TODO */
-//	size_t                l_limit_mrec; /* Limit for how often a macro may recursively expand into itself. */
-//	size_t                l_limit_incl; /* Limit for how often the same text file may exist on the #include stack. */
-#endif
+#define l_limit_mrec TPP_INTERNAL(tl_recursive_macro_limit) /* Use tpp_lexer_getrecursivemacrolimit() / tpp_lexer_setrecursivemacrolimit() */
+#define l_limit_incl TPP_INTERNAL(tl_inclusion_limit) /* Use tpp_lexer_getinclusionlimit() / tpp_lexer_setinclusionlimit() */
 #undef l_eof_paren   /* No longer supported; see `TPPLEXER_FLAG_EOF_ON_PAREN' */
 #if 0 /* TODO */
 //	size_t                l_warncount;  /* Amount of warnings that were invoked (including those that were dismissed). */
-//#ifdef TPP_CONFIG_DYN_CALLBACKS
-//	struct TPPCallbacks   l_callbacks;  /* User-defined lexer callbacks. */
-//#endif /* TPP_CONFIG_DYN_CALLBACKS */
 #endif
-#define l_errorcount TPP_INTERNAL(tl_error_count)
-#define l_maxerrors  TPP_INTERNAL(tl_error_limit)
+#if TPP_HAVE_HOOKS
+#define l_callbacks  TPP_INTERNAL(tl_hooks) /* Use tpp_lexer_callhook_*(), tpp_lexer_gethook_*(), tpp_lexer_sethook_*(), tpp_lexer_resethook_*() */
+#endif /* TPP_HAVE_HOOKS */
+#define l_errorcount TPP_INTERNAL(tl_error_count) /* Use tpp_lexer_geterrorcount() / tpp_lexer_seterrorcount() */
+#define l_maxerrors  TPP_INTERNAL(tl_error_limit) /* Use tpp_lexer_geterrorlimit() / tpp_lexer_seterrorlimit() */
 #undef l_tabsize     /* This is now one of the very few *global* configs in TPP3: use tpp_gettabsize() / tpp_settabsize() */
 #define l_ifdef      TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file).TPP_INTERNAL(tf_ifdef) /* WARNING: ifdef-stacks are configured on a per-file basis in TPP3! */
 #define l_warnings   TPP_INTERNAL(tl_warn)
