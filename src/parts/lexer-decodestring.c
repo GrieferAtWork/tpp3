@@ -53,7 +53,7 @@ TPP_DECL_BEGIN
  *                 ^start          ^end
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 5)) tpp_ssize TPPCALL
-tpp_token_decodestring_basic(tpp_lexer *tpp_restrict self,
+tpp_token_decodestring_basic(tpp_lexer *self,
                              tpp_char const *start,
                              tpp_char const *end,
                              tpp_formatprinter data_printer,
@@ -522,7 +522,7 @@ tpp_block_string_seeklf(tpp_lexer *tpp_restrict lexer,
  *  ^ start@.
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 5)) tpp_ssize TPPCALL
-tpp_token_decodestring_block(tpp_lexer *tpp_restrict self,
+tpp_token_decodestring_block(tpp_lexer *self,
                              tpp_char const *start,
                              tpp_char const *end,
                              tpp_formatprinter data_printer,
@@ -591,7 +591,7 @@ handle_empty_prefix:
 /* Decode string: R"FOO(bla bla bla)FOO"
 *                       ^start     ^end */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 5)) tpp_ssize TPPCALL
-tpp_token_decodestring_raw(tpp_lexer *tpp_restrict self,
+tpp_token_decodestring_raw(tpp_lexer *self,
                            tpp_char const *start,
                            tpp_char const *end,
                            tpp_formatprinter data_printer,
@@ -632,7 +632,7 @@ tpp_token_decodestring_raw(tpp_lexer *tpp_restrict self,
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
-tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
+tpp_lexer_decodestring(tpp_lexer *self,
                        tpp_formatprinter data_printer,
                        tpp_formatprinter utf8_printer,
                        void *arg) {
@@ -911,7 +911,7 @@ do_decode_basic:
  * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
-tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
+tpp_lexer_parsestring_ex(tpp_lexer *self,
                          tpp_formatprinter data_printer,
                          tpp_formatprinter utf8_printer,
                          void *arg, unsigned int flags) {
@@ -1144,7 +1144,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_as_single_chunk_cb, arg, 
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_decodestring_as_single_chunk(tpp_lexer *tpp_restrict self,
+tpp_lexer_decodestring_as_single_chunk(tpp_lexer *self,
                                        tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
                                                                tpp_char const *str, tpp_size length),
                                        void *arg) {

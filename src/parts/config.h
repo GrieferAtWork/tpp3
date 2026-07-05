@@ -2576,20 +2576,20 @@ local HOOKS = {
 		"@param: arg: The current lexer (tpp_lexer *)",
 		"WARNPRINTER",
 		"TPP_HAVE_WARNINGS",
-		"_tpp_lexer_builtin_warnprinter",
+		"_tpp_lexer_builtin_warn_or_mesg_printer",
 		"tpp_formatprinter ", "", { "lexer", "text", "num_bytes" },
 		"0"
 	},
 
-	//TODO:{
-	//TODO:	"Used by `#pragma message' to print messages\n" +
-	//TODO:	"@param: arg: The current lexer (tpp_lexer *)",
-	//TODO:	"MESGPRINTER",
-	//TODO:	"TPP_HAVE_PRAGMA_MESSAGE",
-	//TODO:	"_tpp_lexer_builtin_mesgprinter",
-	//TODO:	"tpp_formatprinter ", "", { "lexer", "text", "num_bytes" },
-	//TODO:	"0"
-	//TODO:},
+	{
+		"Used by `#pragma message' to print messages\n" +
+		"@param: arg: The current lexer (tpp_lexer *)",
+		"MESGPRINTER",
+		"TPP_HAVE_PRAGMA_MESSAGE",
+		"_tpp_lexer_builtin_warn_or_mesg_printer",
+		"tpp_formatprinter ", "", { "lexer", "text", "num_bytes" },
+		"0"
+	},
 
 	{
 		"User-defined callback for parsing \"#if\"-style expressions\n" +
@@ -2723,6 +2723,36 @@ for (local doc, name,
 #ifndef TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
 #define TPP_HAVE_BUILTIN_WARNPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNPRINTER_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+
+/* >> tpp_formatprinter TPP_HOOK_MESGPRINTER;
+ * Used by `#pragma message' to print messages
+ * @param: arg: The current lexer (tpp_lexer *) */
+#ifndef TPP_HAVE_MESGPRINTER_HOOK
+#ifdef TPP_HOOK_MESGPRINTER
+#define TPP_HAVE_MESGPRINTER_HOOK (TPP_HAVE_PRAGMA_MESSAGE ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_MESGPRINTER */
+#define TPP_HAVE_MESGPRINTER_HOOK (TPP_HAVE_PRAGMA_MESSAGE ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_MESGPRINTER */
+#endif /* !TPP_HAVE_MESGPRINTER_HOOK */
+#if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_MESGPRINTER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_MESGPRINTER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_MESGPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MESGPRINTER_HOOK
+#define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_MESGPRINTER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_MESGPRINTER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_MESGPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MESGPRINTER_HOOK
+#define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_MESGPRINTER) && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_MESGPRINTER' is defined, but 'TPP_HAVE_MESGPRINTER_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MESGPRINTER && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK) */
+#ifndef TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
+#define TPP_HAVE_BUILTIN_MESGPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_MESGPRINTER_HOOK)
+#endif /* !TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 /* >> tpp_errno (TPPCALL *TPP_HOOK_PARSEEXPR)(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
  * User-defined callback for parsing "#if"-style expressions
@@ -3415,6 +3445,18 @@ for (local doc, name,
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
 
+/* Extra configuration for "#pragma message": print a leading
+ * "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT" using the values
+ * that would also be printed by __FILE__, __LINE__, __COLUMN__ */
+#ifndef TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
+#define TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION (TPP_HAVE_PROFILE_NOT_MINIMAL ? TPP_CONF_EXT0 : 0) /* "-fpragma-message-prints-location" */
+#endif /* !TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
+
+/* Extra configuration for "#pragma message": print a trailing "\n" */
+#ifndef TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
+#define TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED (TPP_HAVE_PROFILE_NOT_MINIMAL ? TPP_CONF_EXT0 : 0) /* "-fpragma-message-omits-trailing-linefeed" */
+#endif /* !TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -3428,6 +3470,8 @@ for (local doc, name,
 /************************************************************************/
 
 /* Format to use for file+line+column log messages */
+/* XXX: Configuration where "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT"
+ *      can be overwritten at runtime on a per-lexer basis */
 #ifndef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT
 #ifdef _MSC_VER
 #define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "

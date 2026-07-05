@@ -742,11 +742,87 @@ again_handle_set_warning_state:
 /* #pragma message "..."                                                */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_MESSAGE
+#ifndef tpp_lexer_gethook_mesgprinter
+#define tpp_lexer_gethook_mesgprinter(self) (&tpp_dummy_printer)
+#ifndef tpp_dummy_printer
+#define tpp_dummy_printer tpp_dummy_printer
+static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
+	(void)arg;
+	(void)text;
+	(void)num_bytes;
+	return 0;
+}
+#endif /* !tpp_dummy_printer */
+#endif /* !tpp_lexer_gethook_mesgprinter */
+
+#if TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
+#ifndef tpp_file_and_line
+#define tpp_file_and_line tpp_file_and_line
+static char const tpp_file_and_line[] = TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT;
+#endif /* !tpp_file_and_line */
+#endif /* TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
+
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_message(tpp_lexer *tpp_restrict self) {
-	/* TODO: Need another user-overwritable output printer (similar to the lexer's warning printer) */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_token_id tok;
+	bool has_lparen;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	has_lparen = tok == '(';
+	if (has_lparen) {
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+	}
+
+	if (TPP_TOK_ISSTRING(tok)) {
+		tpp_ssize status;
+		tpp_formatprinter const printer = tpp_lexer_gethook_mesgprinter(self);
+#if TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
+		if (tpp_lexer_has(self, PRAGMA_MESSAGE_PRINTS_LOCATION)) {
+			tpp_lexer_printf_info info;
+			tpp_file *const lcfile = tpp_file_getlcfile(tpp_lexer_getfile(self));
+			tpp_lexer_printf_info_init_at(&info, lcfile, tpp_file_getlastpos(lcfile));
+			status = tpp_lexer_printf_warning(self, &info, printer, self, tpp_file_and_line);
+			if (TPP_SSIZE_ISERR(status))
+				return TPP_SSIZE_ASERR(status);
+		}
+#endif /* TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
+		status = tpp_lexer_parsestring_ex(self, printer, printer, self,
+		                                  TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+#if TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
+		if (tpp_lexer_has(self, PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)) {
+			if (status >= 0)
+				status = tpp_formatprinter_print_conststr(printer, self, "\n");
+		}
+#endif /* TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED */
+		if (TPP_SSIZE_ISERR(status))
+			return TPP_SSIZE_ASERR(status);
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+		if (TPP_ISERR(error))
+			return error;
+#endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+	}
+
+	if (has_lparen) {
+		tok = tpp_lexer_gettok(self);
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+	}
+	return TPP_EOK;
 }
 #endif /* TPP_HAVE_PRAGMA_MESSAGE */
 

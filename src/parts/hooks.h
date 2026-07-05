@@ -161,6 +161,7 @@ print(")");
 ]]]*/
 #undef TPP_HAVE_HOOKS
 #if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) || \
+     TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK))
@@ -182,6 +183,17 @@ typedef struct tpp_hooks {
 	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [0..1] */
 #endif /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_NOOP */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
+
+	/* >> tpp_formatprinter th_mesgprinter;
+	 * Used by `#pragma message' to print messages
+	 * @param: arg: The current lexer (tpp_lexer *) */
+#if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
+#if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
+	tpp_formatprinter TPP_INTERNAL(th_mesgprinter); /* [1..1] */
+#else /* TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+	tpp_formatprinter TPP_INTERNAL(th_mesgprinter); /* [0..1] */
+#endif /* TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_parseexpr)(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
 	 * User-defined callback for parsing "#if"-style expressions
@@ -250,7 +262,7 @@ typedef struct tpp_hooks {
 #if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_WARNPRINTER)
 #define _TPP_HOOKS_DEFAULT_WARNPRINTER (&TPP_HOOK_WARNPRINTER)
 #elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_BUILTIN
-#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&_tpp_lexer_builtin_warnprinter)
+#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&_tpp_lexer_builtin_warn_or_mesg_printer)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_WARNPRINTER NULL
 #endif /* !... */
@@ -260,14 +272,50 @@ typedef struct tpp_hooks {
 #define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
 	TPP_HOOK_WARNPRINTER(lexer, text, num_bytes)
 #elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
-#define tpp_hooks_get_warnprinter(self) (&_tpp_lexer_builtin_warnprinter)
+#define tpp_hooks_get_warnprinter(self) (&_tpp_lexer_builtin_warn_or_mesg_printer)
 #define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
-	_tpp_lexer_builtin_warnprinter(lexer, text, num_bytes)
+	_tpp_lexer_builtin_warn_or_mesg_printer(lexer, text, num_bytes)
 #else /*  */
 #define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) 0
 #endif /* ... */
 #define _tpp_hooks_init_warnprinter(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
+
+/* Used by `#pragma message' to print messages
+ * @param: arg: The current lexer (tpp_lexer *) */
+#if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
+#if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
+#define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
+	tpp_formatprinter_print((self)->TPP_INTERNAL(th_mesgprinter), lexer, text, num_bytes)
+#else /* TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+#define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
+	((self)->TPP_INTERNAL(th_mesgprinter) ? tpp_formatprinter_print((self)->TPP_INTERNAL(th_mesgprinter), lexer, text, num_bytes) : 0)
+#endif /* TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_NOOP */
+#define tpp_hooks_get_mesgprinter(self)    (self)->TPP_INTERNAL(th_mesgprinter)
+#define tpp_hooks_set_mesgprinter(self, v) (void)((self)->TPP_INTERNAL(th_mesgprinter) = (v))
+#define tpp_hooks_reset_mesgprinter(self)  (void)((self)->TPP_INTERNAL(th_mesgprinter) = _TPP_HOOKS_DEFAULT_MESGPRINTER)
+#define _tpp_hooks_init_mesgprinter(self)  , (self)->TPP_INTERNAL(th_mesgprinter) = _TPP_HOOKS_DEFAULT_MESGPRINTER
+#if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_MESGPRINTER)
+#define _TPP_HOOKS_DEFAULT_MESGPRINTER (&TPP_HOOK_MESGPRINTER)
+#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_BUILTIN
+#define _TPP_HOOKS_DEFAULT_MESGPRINTER (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_MESGPRINTER NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
+#if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_get_mesgprinter(self) (&TPP_HOOK_MESGPRINTER)
+#define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
+	TPP_HOOK_MESGPRINTER(lexer, text, num_bytes)
+#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
+#define tpp_hooks_get_mesgprinter(self) (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
+	_tpp_lexer_builtin_warn_or_mesg_printer(lexer, text, num_bytes)
+#else /*  */
+#define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) 0
+#endif /* ... */
+#define _tpp_hooks_init_mesgprinter(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
 
 /* User-defined callback for parsing "#if"-style expressions
  * - This callback is invoked in a context where "self" points
@@ -377,6 +425,7 @@ typedef struct tpp_hooks {
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
 	(void)(0 _tpp_hooks_init_warnprinter(self) \
+	       _tpp_hooks_init_mesgprinter(self) \
 	       _tpp_hooks_init_parseexpr(self) \
 	       _tpp_hooks_init_unknown_pragma(self) \
 	       _tpp_hooks_init_new_dependency(self))
@@ -387,9 +436,13 @@ typedef struct tpp_hooks {
 /************************************************************************/
 /* Builtin hooks...                                                     */
 /************************************************************************/
-#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
-TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes);
-#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes);
+#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
+
+#if TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_mesgprinter, arg, text, num_bytes);
+#endif /* TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 #if TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL

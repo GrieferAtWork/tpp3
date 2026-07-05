@@ -361,6 +361,19 @@ for (local doc, name,
 #define tpp_lexer_resethook_warnprinter(self)  tpp_hooks_reset_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_warnprinter */
 
+/* >> tpp_formatprinter tpp_lexer_callhook_mesgprinter;
+ * Used by `#pragma message' to print messages
+ * @param: arg: The current lexer (tpp_lexer *) */
+#define tpp_lexer_callhook_mesgprinter(self, text, num_bytes) \
+	tpp_hooks_call_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), self, text, num_bytes)
+#ifdef tpp_hooks_get_mesgprinter
+#define tpp_lexer_gethook_mesgprinter(self) tpp_hooks_get_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks))
+#endif /* tpp_hooks_get_mesgprinter */
+#ifdef tpp_hooks_set_mesgprinter
+#define tpp_lexer_sethook_mesgprinter(self, v) tpp_hooks_set_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_mesgprinter(self)  tpp_hooks_reset_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_mesgprinter */
+
 /* >> tpp_errno (TPPCALL *tpp_lexer_callhook_parseexpr)(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
  * User-defined callback for parsing "#if"-style expressions
  * - This callback is invoked in a context where "self" points
@@ -1674,7 +1687,7 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
  * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
-tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
+tpp_lexer_parsestring_ex(tpp_lexer *self,
                          tpp_formatprinter data_printer,
                          tpp_formatprinter utf8_printer,
                          void *arg, unsigned int flags);

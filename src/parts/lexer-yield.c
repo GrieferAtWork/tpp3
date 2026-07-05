@@ -674,21 +674,21 @@ tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
 	tpp_lcinfo info;
 	tpp_intmax value;
 
-	/* HINT: Meaning of "tf_tpos" / "tf_pos" here:
+	/* HINT: Meaning of "tpp_file_getlastpos" / "tpp_file_getpos" here:
 	 * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
 	 * >> ...
 	 * >> 
 	 * >> if (x)
 	 * >>     assert(y);
-	 *        ^        ^
-	 *        tf_tpos  tf_pos
+	 *        ^        ^ tpp_file_getpos
+	 *        tpp_file_getlastpos
 	 *
-	 * iow: "tf_tpos" position for tracebacks (points at what "caused" a macro/file push)
-	 *      "tf_pos" position of next byte to-be parsed once lexer returns to this file
+	 * iow: "tpp_file_getlastpos" position for tracebacks (points at what "caused" a macro/file push)
+	 *      "tpp_file_getpos" position of next byte to-be parsed once lexer returns to this file.
 	 *
-	 * For the sake of being pretty, we use "tf_tpos" since that's the location of the
+	 * For the sake of being pretty, we use "tpp_file_getlastpos" since that's the location of the
 	 * name of the macro that's currently being expanded. */
-	info = tpp_file_getlcinfo(lcfile, lcfile->tf_tpos);
+	info = tpp_file_getlcinfo(lcfile, tpp_file_getlastpos(lcfile));
 	switch (what) {
 #if TPP_HAVE_MACRO___LINE__
 	case TPP_KWD___LINE__:

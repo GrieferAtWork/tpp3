@@ -289,6 +289,8 @@
 #define tef_TPP_EXT_EXTERN_C_FOR_SYSHDR                     TPP_INTERNAL(tef_TPP_EXT_EXTERN_C_FOR_SYSHDR)
 #define tef_TPP_EXT_SEARCH_SYSTEM_INCLUDE_PATH              TPP_INTERNAL(tef_TPP_EXT_SEARCH_SYSTEM_INCLUDE_PATH)
 #define tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE          TPP_INTERNAL(tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE)
+#define tef_TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION          TPP_INTERNAL(tef_TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#define tef_TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED  TPP_INTERNAL(tef_TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
 #define xv_kind                                             TPP_INTERNAL(xv_kind)
 #define xd_int                                              TPP_INTERNAL(xd_int)
 #define xv_data                                             TPP_INTERNAL(xv_data)
@@ -547,6 +549,8 @@
 #define tff_EXTERN_C_FOR_SYSHDR                             TPP_INTERNAL(tff_EXTERN_C_FOR_SYSHDR)
 #define tff_SEARCH_SYSTEM_INCLUDE_PATH                      TPP_INTERNAL(tff_SEARCH_SYSTEM_INCLUDE_PATH)
 #define tff_INCLUDE_RELATIVE_TO_EVERY_FILE                  TPP_INTERNAL(tff_INCLUDE_RELATIVE_TO_EVERY_FILE)
+#define tff_PRAGMA_MESSAGE_PRINTS_LOCATION                  TPP_INTERNAL(tff_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#define tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED          TPP_INTERNAL(tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
 #define tidse_mode                                          TPP_INTERNAL(tidse_mode)
 #define tidse_created                                       TPP_INTERNAL(tidse_created)
 #define tidse_updated                                       TPP_INTERNAL(tidse_updated)
@@ -588,6 +592,7 @@
 #define tfd_user_filename                                   TPP_INTERNAL(tfd_user_filename)
 #define td_dummy                                            TPP_INTERNAL(td_dummy)
 #define th_warnprinter                                      TPP_INTERNAL(th_warnprinter)
+#define th_mesgprinter                                      TPP_INTERNAL(th_mesgprinter)
 #define th_parseexpr                                        TPP_INTERNAL(th_parseexpr)
 #define th_unknown_pragma                                   TPP_INTERNAL(th_unknown_pragma)
 #define th_new_dependency                                   TPP_INTERNAL(th_new_dependency)
@@ -12470,6 +12475,12 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
 		/* .tff_INCLUDE_RELATIVE_TO_EVERY_FILE          = */ TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+		/* .tff_PRAGMA_MESSAGE_PRINTS_LOCATION          = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+		/* .tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED  = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 	}
 };
 #endif /* TPP_HAVE_FEATURES */
@@ -14140,22 +14151,22 @@ TPP_DECL_END
 /************************************************************************/
 /* File: parts/lexer-warn.c                                             */
 /************************************************************************/
-#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
+#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
 #if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
-#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 TPP_DECL_BEGIN
 
-#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
-TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes) {
+#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
+TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes) {
 	FILE *fp = stderr;
 	(void)arg;
 	fwrite(text, sizeof(tpp_char), num_bytes, fp);
 	return ferror(fp) ? TPP_SSIZE_OFERR(TPP_EIO) : 0;
 }
-#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 
 
@@ -14483,7 +14494,10 @@ err_temp:
 	return temp;
 }
 
+#ifndef tpp_file_and_line
+#define tpp_file_and_line tpp_file_and_line
 static char const tpp_file_and_line[] = TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT;
+#endif /* !tpp_file_and_line */
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
@@ -14580,13 +14594,16 @@ _err_printer:
 }
 
 #ifndef tpp_lexer_gethook_warnprinter
-#define tpp_lexer_gethook_warnprinter(self) (&_tpp_lexer_dummy_warnprinter)
-static TPP_FORMATPRINTER_DEFINE(_tpp_lexer_dummy_warnprinter, arg, text, num_bytes) {
+#define tpp_lexer_gethook_warnprinter(self) (&tpp_dummy_printer)
+#ifndef tpp_dummy_printer
+#define tpp_dummy_printer tpp_dummy_printer
+static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	(void)num_bytes;
 	return 0;
 }
+#endif /* !tpp_dummy_printer */
 #endif /* !tpp_lexer_gethook_warnprinter */
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -23725,11 +23742,87 @@ again_handle_set_warning_state:
 /* #pragma message "..."                                                */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_MESSAGE
+#ifndef tpp_lexer_gethook_mesgprinter
+#define tpp_lexer_gethook_mesgprinter(self) (&tpp_dummy_printer)
+#ifndef tpp_dummy_printer
+#define tpp_dummy_printer tpp_dummy_printer
+static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
+	(void)arg;
+	(void)text;
+	(void)num_bytes;
+	return 0;
+}
+#endif /* !tpp_dummy_printer */
+#endif /* !tpp_lexer_gethook_mesgprinter */
+
+#if TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
+#ifndef tpp_file_and_line
+#define tpp_file_and_line tpp_file_and_line
+static char const tpp_file_and_line[] = TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT;
+#endif /* !tpp_file_and_line */
+#endif /* TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
+
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma_message(tpp_lexer *tpp_restrict self) {
-	/* TODO: Need another user-overwritable output printer (similar to the lexer's warning printer) */
-	(void)self;
-	return TPP_ENOENT;
+	tpp_token_id tok;
+	bool has_lparen;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	has_lparen = tok == '(';
+	if (has_lparen) {
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+	}
+
+	if (TPP_TOK_ISSTRING(tok)) {
+		tpp_ssize status;
+		tpp_formatprinter const printer = tpp_lexer_gethook_mesgprinter(self);
+#if TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
+		if (tpp_lexer_has(self, PRAGMA_MESSAGE_PRINTS_LOCATION)) {
+			tpp_lexer_printf_info info;
+			tpp_file *const lcfile = tpp_file_getlcfile(tpp_lexer_getfile(self));
+			tpp_lexer_printf_info_init_at(&info, lcfile, tpp_file_getlastpos(lcfile));
+			status = tpp_lexer_printf_warning(self, &info, printer, self, tpp_file_and_line);
+			if (TPP_SSIZE_ISERR(status))
+				return TPP_SSIZE_ASERR(status);
+		}
+#endif /* TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
+		status = tpp_lexer_parsestring_ex(self, printer, printer, self,
+		                                  TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+#if TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
+		if (tpp_lexer_has(self, PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)) {
+			if (status >= 0)
+				status = tpp_formatprinter_print_conststr(printer, self, "\n");
+		}
+#endif /* TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED */
+		if (TPP_SSIZE_ISERR(status))
+			return TPP_SSIZE_ASERR(status);
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+		if (TPP_ISERR(error))
+			return error;
+#endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+	}
+
+	if (has_lparen) {
+		tok = tpp_lexer_gettok(self);
+		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+			tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+	}
+	return TPP_EOK;
 }
 #endif /* TPP_HAVE_PRAGMA_MESSAGE */
 
@@ -29485,21 +29578,21 @@ tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
 	tpp_lcinfo info;
 	tpp_intmax value;
 
-	/* HINT: Meaning of "tf_tpos" / "tf_pos" here:
+	/* HINT: Meaning of "tpp_file_getlastpos" / "tpp_file_getpos" here:
 	 * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
 	 * >> ...
 	 * >> 
 	 * >> if (x)
 	 * >>     assert(y);
-	 *        ^        ^
-	 *        tf_tpos  tf_pos
+	 *        ^        ^ tpp_file_getpos
+	 *        tpp_file_getlastpos
 	 *
-	 * iow: "tf_tpos" position for tracebacks (points at what "caused" a macro/file push)
-	 *      "tf_pos" position of next byte to-be parsed once lexer returns to this file
+	 * iow: "tpp_file_getlastpos" position for tracebacks (points at what "caused" a macro/file push)
+	 *      "tpp_file_getpos" position of next byte to-be parsed once lexer returns to this file.
 	 *
-	 * For the sake of being pretty, we use "tf_tpos" since that's the location of the
+	 * For the sake of being pretty, we use "tpp_file_getlastpos" since that's the location of the
 	 * name of the macro that's currently being expanded. */
-	info = tpp_file_getlcinfo(lcfile, lcfile->tf_tpos);
+	info = tpp_file_getlcinfo(lcfile, tpp_file_getlastpos(lcfile));
 	switch (what) {
 #if TPP_HAVE_MACRO___LINE__
 	case TPP_KWD___LINE__:
@@ -32079,7 +32172,7 @@ TPP_DECL_BEGIN
  *                 ^start          ^end
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 5)) tpp_ssize TPPCALL
-tpp_token_decodestring_basic(tpp_lexer *tpp_restrict self,
+tpp_token_decodestring_basic(tpp_lexer *self,
                              tpp_char const *start,
                              tpp_char const *end,
                              tpp_formatprinter data_printer,
@@ -32548,7 +32641,7 @@ tpp_block_string_seeklf(tpp_lexer *tpp_restrict lexer,
  *  ^ start@.
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 5)) tpp_ssize TPPCALL
-tpp_token_decodestring_block(tpp_lexer *tpp_restrict self,
+tpp_token_decodestring_block(tpp_lexer *self,
                              tpp_char const *start,
                              tpp_char const *end,
                              tpp_formatprinter data_printer,
@@ -32617,7 +32710,7 @@ handle_empty_prefix:
 /* Decode string: R"FOO(bla bla bla)FOO"
 *                       ^start     ^end */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 5)) tpp_ssize TPPCALL
-tpp_token_decodestring_raw(tpp_lexer *tpp_restrict self,
+tpp_token_decodestring_raw(tpp_lexer *self,
                            tpp_char const *start,
                            tpp_char const *end,
                            tpp_formatprinter data_printer,
@@ -32658,7 +32751,7 @@ tpp_token_decodestring_raw(tpp_lexer *tpp_restrict self,
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
-tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
+tpp_lexer_decodestring(tpp_lexer *self,
                        tpp_formatprinter data_printer,
                        tpp_formatprinter utf8_printer,
                        void *arg) {
@@ -32937,7 +33030,7 @@ do_decode_basic:
  * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
-tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
+tpp_lexer_parsestring_ex(tpp_lexer *self,
                          tpp_formatprinter data_printer,
                          tpp_formatprinter utf8_printer,
                          void *arg, unsigned int flags) {
@@ -33170,7 +33263,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_as_single_chunk_cb, arg, 
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_decodestring_as_single_chunk(tpp_lexer *tpp_restrict self,
+tpp_lexer_decodestring_as_single_chunk(tpp_lexer *self,
                                        tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
                                                                tpp_char const *str, tpp_size length),
                                        void *arg) {

@@ -5269,10 +5269,8 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #undef TPPLEXER_FLAG_ASM_COMMENTS          /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_POUND_COMMENT) */
 #undef TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF    /* No longer supported; in TPP3, preprocessor directives *always* include the trailing line-feed */
 #undef TPPLEXER_FLAG_COMMENT_NOOWN_LF      /* No longer supported; in TPP3, line-comments *always* include the trailing line-feed */
-#if 0 /* TODO */
-//#define TPPLEXER_FLAG_MESSAGE_LOCATION       0x00004000 /* Print the file+line location in messages from `#pragma message'. */
-//#define TPPLEXER_FLAG_MESSAGE_NOLINEFEED     0x00008000 /* Don't print a linefeed following the user-provided message in `#pragma message'. */
-#endif
+#undef TPPLEXER_FLAG_MESSAGE_LOCATION      /* Use tpp_lexer_setextension(TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION) */
+#undef TPPLEXER_FLAG_MESSAGE_NOLINEFEED    /* Use tpp_lexer_setextension(TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 #undef TPPLEXER_FLAG_INCLUDESTRING         /* No longer supported; in TPP3, #include-strings parsing bypasses regular tokenization done by "tpp_lexer_yieldraw()" */
 #undef TPPLEXER_FLAG_EXTENDFILE            /* Use tpp_file_pushkeep() + tpp_file_setkeep() to keep certain file data loaded into memory */
 #undef TPPLEXER_FLAG_NO_LEGACY_GUARDS      /* No longer supported; in TPP3, this can only be compile-time configured via "TPP_HAVE_IFNDEF_INCLUDE_GUARDS" */

@@ -2848,6 +2848,22 @@ TPP_EXTENSION(TPP_EXT_SEARCH_SYSTEM_INCLUDE_PATH, TPP_EXTNAME_SEARCH_SYSTEM_INCL
 TPP_EXTENSION(TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE, TPP_EXTNAME_INCLUDE_RELATIVE_TO_EVERY_FILE, TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE))
 #define _tpp_lexer_has_INCLUDE_RELATIVE_TO_EVERY_FILE(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#ifndef TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION
+#define TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION "pragma-message-prints-location"
+#endif /* !TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION */
+#define TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION
+TPP_EXTENSION(TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION, TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION, TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION))
+#define _tpp_lexer_has_PRAGMA_MESSAGE_PRINTS_LOCATION(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+#ifndef TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
+#define TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED "pragma-message-omits-trailing-linefeed"
+#endif /* !TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED */
+#define TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
+TPP_EXTENSION(TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED, TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED, TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED))
+#define _tpp_lexer_has_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 
 
 
@@ -6994,6 +7010,36 @@ TPP_DECL_END
 #define TPP_HAVE_BUILTIN_WARNPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNPRINTER_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
 
+/* >> tpp_formatprinter TPP_HOOK_MESGPRINTER;
+ * Used by `#pragma message' to print messages
+ * @param: arg: The current lexer (tpp_lexer *) */
+#ifndef TPP_HAVE_MESGPRINTER_HOOK
+#ifdef TPP_HOOK_MESGPRINTER
+#define TPP_HAVE_MESGPRINTER_HOOK (TPP_HAVE_PRAGMA_MESSAGE ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_MESGPRINTER */
+#define TPP_HAVE_MESGPRINTER_HOOK (TPP_HAVE_PRAGMA_MESSAGE ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_MESGPRINTER */
+#endif /* !TPP_HAVE_MESGPRINTER_HOOK */
+#if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_MESGPRINTER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_MESGPRINTER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_MESGPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MESGPRINTER_HOOK
+#define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_MESGPRINTER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_MESGPRINTER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_MESGPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MESGPRINTER_HOOK
+#define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_MESGPRINTER) && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_MESGPRINTER' is defined, but 'TPP_HAVE_MESGPRINTER_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MESGPRINTER && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK) */
+#ifndef TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
+#define TPP_HAVE_BUILTIN_MESGPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_MESGPRINTER_HOOK)
+#endif /* !TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
+
 /* >> tpp_errno (TPPCALL *TPP_HOOK_PARSEEXPR)(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
  * User-defined callback for parsing "#if"-style expressions
  * - This callback is invoked in a context where "self" points
@@ -7684,6 +7730,18 @@ TPP_DECL_END
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
 
+/* Extra configuration for "#pragma message": print a leading
+ * "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT" using the values
+ * that would also be printed by __FILE__, __LINE__, __COLUMN__ */
+#ifndef TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
+#define TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION (TPP_HAVE_PROFILE_NOT_MINIMAL ? TPP_CONF_EXT0 : 0) /* "-fpragma-message-prints-location" */
+#endif /* !TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
+
+/* Extra configuration for "#pragma message": print a trailing "\n" */
+#ifndef TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
+#define TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED (TPP_HAVE_PROFILE_NOT_MINIMAL ? TPP_CONF_EXT0 : 0) /* "-fpragma-message-omits-trailing-linefeed" */
+#endif /* !TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -7697,6 +7755,8 @@ TPP_DECL_END
 /************************************************************************/
 
 /* Format to use for file+line+column log messages */
+/* XXX: Configuration where "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT"
+ *      can be overwritten at runtime on a per-lexer basis */
 #ifndef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT
 #ifdef _MSC_VER
 #define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
@@ -10844,7 +10904,9 @@ TPP_DECL_BEGIN
      TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) ||         \
      TPP_CONF_IS_FEAT(TPP_HAVE_EXTERN_C_FOR_SYSHDR) ||                     \
      TPP_CONF_IS_FEAT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH) ||              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE))
+     TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) ||          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) ||          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED))
 #define TPP_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_HAVE_FEATURES 0
@@ -11593,6 +11655,12 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
 	TPP_FEAT_INCLUDE_RELATIVE_TO_EVERY_FILE,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+	TPP_FEAT_PRAGMA_MESSAGE_PRINTS_LOCATION,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+	TPP_FEAT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 	TPP_FEAT_COUNT
 } tpp_feature_id;
 
@@ -12586,6 +12654,14 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_INCLUDE_RELATIVE_TO_EVERY_FILE): 1;
 #define _tpp_lexer_has_INCLUDE_RELATIVE_TO_EVERY_FILE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+		unsigned int TPP_INTERNAL(tff_PRAGMA_MESSAGE_PRINTS_LOCATION): 1;
+#define _tpp_lexer_has_PRAGMA_MESSAGE_PRINTS_LOCATION(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+		unsigned int TPP_INTERNAL(tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED): 1;
+#define _tpp_lexer_has_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 	} TPP_INTERNAL(tf_flags);
 	unsigned char TPP_INTERNAL(ttf_bitset)[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_features;
@@ -13346,6 +13422,12 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #define _tpp_lexer_has_INCLUDE_RELATIVE_TO_EVERY_FILE(self) TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#define _tpp_lexer_has_PRAGMA_MESSAGE_PRINTS_LOCATION(self) TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+#define _tpp_lexer_has_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED(self) TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 
 TPP_DECL_END
 /************************************************************************/
@@ -15916,6 +15998,7 @@ TPP_DECL_BEGIN
 
 #undef TPP_HAVE_HOOKS
 #if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) || \
+     TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK))
@@ -15937,6 +16020,17 @@ typedef struct tpp_hooks {
 	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [0..1] */
 #endif /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_NOOP */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
+
+	/* >> tpp_formatprinter th_mesgprinter;
+	 * Used by `#pragma message' to print messages
+	 * @param: arg: The current lexer (tpp_lexer *) */
+#if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
+#if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
+	tpp_formatprinter TPP_INTERNAL(th_mesgprinter); /* [1..1] */
+#else /* TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+	tpp_formatprinter TPP_INTERNAL(th_mesgprinter); /* [0..1] */
+#endif /* TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_parseexpr)(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
 	 * User-defined callback for parsing "#if"-style expressions
@@ -16005,7 +16099,7 @@ typedef struct tpp_hooks {
 #if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_WARNPRINTER)
 #define _TPP_HOOKS_DEFAULT_WARNPRINTER (&TPP_HOOK_WARNPRINTER)
 #elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_BUILTIN
-#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&_tpp_lexer_builtin_warnprinter)
+#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&_tpp_lexer_builtin_warn_or_mesg_printer)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_WARNPRINTER NULL
 #endif /* !... */
@@ -16015,14 +16109,50 @@ typedef struct tpp_hooks {
 #define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
 	TPP_HOOK_WARNPRINTER(lexer, text, num_bytes)
 #elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
-#define tpp_hooks_get_warnprinter(self) (&_tpp_lexer_builtin_warnprinter)
+#define tpp_hooks_get_warnprinter(self) (&_tpp_lexer_builtin_warn_or_mesg_printer)
 #define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
-	_tpp_lexer_builtin_warnprinter(lexer, text, num_bytes)
+	_tpp_lexer_builtin_warn_or_mesg_printer(lexer, text, num_bytes)
 #else /*  */
 #define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) 0
 #endif /* ... */
 #define _tpp_hooks_init_warnprinter(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
+
+/* Used by `#pragma message' to print messages
+ * @param: arg: The current lexer (tpp_lexer *) */
+#if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
+#if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
+#define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
+	tpp_formatprinter_print((self)->TPP_INTERNAL(th_mesgprinter), lexer, text, num_bytes)
+#else /* TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+#define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
+	((self)->TPP_INTERNAL(th_mesgprinter) ? tpp_formatprinter_print((self)->TPP_INTERNAL(th_mesgprinter), lexer, text, num_bytes) : 0)
+#endif /* TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_NOOP */
+#define tpp_hooks_get_mesgprinter(self)    (self)->TPP_INTERNAL(th_mesgprinter)
+#define tpp_hooks_set_mesgprinter(self, v) (void)((self)->TPP_INTERNAL(th_mesgprinter) = (v))
+#define tpp_hooks_reset_mesgprinter(self)  (void)((self)->TPP_INTERNAL(th_mesgprinter) = _TPP_HOOKS_DEFAULT_MESGPRINTER)
+#define _tpp_hooks_init_mesgprinter(self)  , (self)->TPP_INTERNAL(th_mesgprinter) = _TPP_HOOKS_DEFAULT_MESGPRINTER
+#if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_MESGPRINTER)
+#define _TPP_HOOKS_DEFAULT_MESGPRINTER (&TPP_HOOK_MESGPRINTER)
+#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_BUILTIN
+#define _TPP_HOOKS_DEFAULT_MESGPRINTER (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_MESGPRINTER NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
+#if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_get_mesgprinter(self) (&TPP_HOOK_MESGPRINTER)
+#define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
+	TPP_HOOK_MESGPRINTER(lexer, text, num_bytes)
+#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
+#define tpp_hooks_get_mesgprinter(self) (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
+	_tpp_lexer_builtin_warn_or_mesg_printer(lexer, text, num_bytes)
+#else /*  */
+#define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) 0
+#endif /* ... */
+#define _tpp_hooks_init_mesgprinter(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
 
 /* User-defined callback for parsing "#if"-style expressions
  * - This callback is invoked in a context where "self" points
@@ -16132,6 +16262,7 @@ typedef struct tpp_hooks {
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
 	(void)(0 _tpp_hooks_init_warnprinter(self) \
+	       _tpp_hooks_init_mesgprinter(self) \
 	       _tpp_hooks_init_parseexpr(self) \
 	       _tpp_hooks_init_unknown_pragma(self) \
 	       _tpp_hooks_init_new_dependency(self))
@@ -16141,9 +16272,13 @@ typedef struct tpp_hooks {
 /************************************************************************/
 /* Builtin hooks...                                                     */
 /************************************************************************/
-#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
-TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes);
-#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes);
+#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
+
+#if TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_mesgprinter, arg, text, num_bytes);
+#endif /* TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 #if TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
@@ -16451,6 +16586,19 @@ typedef struct tpp_lexer {
 #define tpp_lexer_sethook_warnprinter(self, v) tpp_hooks_set_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_warnprinter(self)  tpp_hooks_reset_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_warnprinter */
+
+/* >> tpp_formatprinter tpp_lexer_callhook_mesgprinter;
+ * Used by `#pragma message' to print messages
+ * @param: arg: The current lexer (tpp_lexer *) */
+#define tpp_lexer_callhook_mesgprinter(self, text, num_bytes) \
+	tpp_hooks_call_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), self, text, num_bytes)
+#ifdef tpp_hooks_get_mesgprinter
+#define tpp_lexer_gethook_mesgprinter(self) tpp_hooks_get_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks))
+#endif /* tpp_hooks_get_mesgprinter */
+#ifdef tpp_hooks_set_mesgprinter
+#define tpp_lexer_sethook_mesgprinter(self, v) tpp_hooks_set_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_mesgprinter(self)  tpp_hooks_reset_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_mesgprinter */
 
 /* >> tpp_errno (TPPCALL *tpp_lexer_callhook_parseexpr)(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
  * User-defined callback for parsing "#if"-style expressions
@@ -17764,7 +17912,7 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
  * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
-tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
+tpp_lexer_parsestring_ex(tpp_lexer *self,
                          tpp_formatprinter data_printer,
                          tpp_formatprinter utf8_printer,
                          void *arg, unsigned int flags);

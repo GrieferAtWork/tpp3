@@ -35,22 +35,22 @@
 #include "warnings.h"
 
 /*[[[tpp-begin]]]*/
-#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
+#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
 #if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
-#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 TPP_DECL_BEGIN
 
-#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
-TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes) {
+#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
+TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes) {
 	FILE *fp = stderr;
 	(void)arg;
 	fwrite(text, sizeof(tpp_char), num_bytes, fp);
 	return ferror(fp) ? TPP_SSIZE_OFERR(TPP_EIO) : 0;
 }
-#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 
 
@@ -378,7 +378,10 @@ err_temp:
 	return temp;
 }
 
+#ifndef tpp_file_and_line
+#define tpp_file_and_line tpp_file_and_line
 static char const tpp_file_and_line[] = TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT;
+#endif /* !tpp_file_and_line */
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
@@ -475,13 +478,16 @@ _err_printer:
 }
 
 #ifndef tpp_lexer_gethook_warnprinter
-#define tpp_lexer_gethook_warnprinter(self) (&_tpp_lexer_dummy_warnprinter)
-static TPP_FORMATPRINTER_DEFINE(_tpp_lexer_dummy_warnprinter, arg, text, num_bytes) {
+#define tpp_lexer_gethook_warnprinter(self) (&tpp_dummy_printer)
+#ifndef tpp_dummy_printer
+#define tpp_dummy_printer tpp_dummy_printer
+static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	(void)num_bytes;
 	return 0;
 }
+#endif /* !tpp_dummy_printer */
 #endif /* !tpp_lexer_gethook_warnprinter */
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
