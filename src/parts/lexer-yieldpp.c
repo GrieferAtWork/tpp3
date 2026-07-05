@@ -2556,8 +2556,8 @@ again_yield_directive_iter:
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_IF_ELSE_ENDIF) */
 		file->tf_pos = directive_iter;
-		tpp_lexer_process_directive_set_noguard();
 		result = tpp_lexer_handle_if_directive(self);
+		tpp_lexer_process_directive_set_noguard(); /* Important! Set the NOGUARD flag *afterwards* */
 		break;
 
 	case TPP_KWD_elif:
