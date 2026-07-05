@@ -310,6 +310,11 @@
 #define TPP_HAVE_LEXER_COPY (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_LEXER_COPY */
 
+/* Lexers keep track of the # of warnings they've emitted over their lifetime */
+#ifndef TPP_HAVE_LEXER_WARNING_COUNT
+#define TPP_HAVE_LEXER_WARNING_COUNT (TPP_HAVE_WARNINGS && (TPP_PROFILE == TPP_PROFILE_ALL))
+#endif /* !TPP_HAVE_LEXER_WARNING_COUNT */
+
 
 /* All TPP_HAVE_* options (with "-f*"-style comments) can be configured as:
  * - TPP_CONF_1     : Compile-time enabled  (always on; no #pragma extension("-f...") / TPP_FEAT_* available)

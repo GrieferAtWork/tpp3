@@ -2539,7 +2539,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE 1 /* TPP2 used to do this unconditionally */
 
 /* Misc. features */
-#define TPP_HAVE_QUALITY_WARNINGS 1 /* General config for -Wquality warnings */
+#define TPP_HAVE_QUALITY_WARNINGS    1 /* General config for -Wquality warnings */
+#define TPP_HAVE_LEXER_WARNING_COUNT 1 /* Needed to emulate "l_warncount" */
 
 /* Force extensions to use the names they'd been using in TPP2 */
 #define TPP_EXTNAME_TRIGRAPHS                           "trigraphs"
@@ -5432,9 +5433,7 @@ TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
 #define l_limit_mrec TPP_INTERNAL(tl_recursive_macro_limit) /* Use tpp_lexer_getrecursivemacrolimit() / tpp_lexer_setrecursivemacrolimit() */
 #define l_limit_incl TPP_INTERNAL(tl_inclusion_limit) /* Use tpp_lexer_getinclusionlimit() / tpp_lexer_setinclusionlimit() */
 #undef l_eof_paren   /* No longer supported; see `TPPLEXER_FLAG_EOF_ON_PAREN' */
-#if 0 /* TODO */
-//	size_t                l_warncount;  /* Amount of warnings that were invoked (including those that were dismissed). */
-#endif
+#define l_warncount  TPP_INTERNAL(tl_warning_count) /* Use tpp_lexer_getwarningcount() / tpp_lexer_setwarningcount() */
 #if TPP_HAVE_HOOKS
 #define l_callbacks  TPP_INTERNAL(tl_hooks) /* Use tpp_lexer_callhook_*(), tpp_lexer_gethook_*(), tpp_lexer_sethook_*(), tpp_lexer_resethook_*() */
 #endif /* TPP_HAVE_HOOKS */

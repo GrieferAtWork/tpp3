@@ -133,6 +133,14 @@ typedef struct tpp_lexer {
 #endif /* !TPP_HAVE_WARNING_ERROR */
 
 
+	/* Lexer warning counter */
+#if TPP_HAVE_LEXER_WARNING_COUNT
+	tpp_size TPP_INTERNAL(tl_warning_count); /* # of times "TPP_WSTATE_WARN" was emitted. */
+#define tpp_lexer_getwarningcount(self)    (self)->TPP_INTERNAL(tl_warning_count)
+#define tpp_lexer_setwarningcount(self, v) (void)((self)->TPP_INTERNAL(tl_warning_count) = (v))
+#endif /* TPP_HAVE_LEXER_WARNING_COUNT */
+
+
 	/* Lexer inclusion limit */
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
 #if TPP_MAX_INCLUDE_DEPTH < 0

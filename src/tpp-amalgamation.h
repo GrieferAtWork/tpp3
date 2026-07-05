@@ -4842,6 +4842,11 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_COPY (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_LEXER_COPY */
 
+/* Lexers keep track of the # of warnings they've emitted over their lifetime */
+#ifndef TPP_HAVE_LEXER_WARNING_COUNT
+#define TPP_HAVE_LEXER_WARNING_COUNT (TPP_HAVE_WARNINGS && (TPP_PROFILE == TPP_PROFILE_ALL))
+#endif /* !TPP_HAVE_LEXER_WARNING_COUNT */
+
 
 /* All TPP_HAVE_* options (with "-f*"-style comments) can be configured as:
  * - TPP_CONF_1     : Compile-time enabled  (always on; no #pragma extension("-f...") / TPP_FEAT_* available)
@@ -10606,9 +10611,9 @@ typedef struct tpp_token {
 	       (tpp_string_decref((self)->TPP_INTERNAL(tt_chunk)), 1), \
 	       tpp_dbg_memset(self, sizeof(tpp_token)))
 #if TPP_HAVE_USER_KEYWORDS
-#define tpp_token_haskwd(self)   TPP_TOK_ISKEYWORD(tpp_token_getid(self))
+#define tpp_token_haskwd(self)     TPP_TOK_ISKEYWORD(tpp_token_getid(self))
 #else /* TPP_HAVE_USER_KEYWORDS */
-#define tpp_token_haskwd(self)   TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(self))
+#define tpp_token_haskwd(self)     TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(self))
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 #define tpp_token_getid(self)      ((self)->TPP_INTERNAL(tt_id))
 #define tpp_token_getkwd(self)     ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "tpp_token_haskwd(self)" */
@@ -16627,6 +16632,14 @@ typedef struct tpp_lexer {
 #else /* TPP_HAVE_WARNING_ERROR */
 #define tpp_lexer_geterrorcount(self) 0
 #endif /* !TPP_HAVE_WARNING_ERROR */
+
+
+	/* Lexer warning counter */
+#if TPP_HAVE_LEXER_WARNING_COUNT
+	tpp_size TPP_INTERNAL(tl_warning_count); /* # of times "TPP_WSTATE_WARN" was emitted. */
+#define tpp_lexer_getwarningcount(self)    (self)->TPP_INTERNAL(tl_warning_count)
+#define tpp_lexer_setwarningcount(self, v) (void)((self)->TPP_INTERNAL(tl_warning_count) = (v))
+#endif /* TPP_HAVE_LEXER_WARNING_COUNT */
 
 
 	/* Lexer inclusion limit */

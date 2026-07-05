@@ -526,6 +526,9 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 		if (textfile && tpp_file_getsystemheader(textfile))
 			return TPP_EOK; /* Suppress warnings in this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
+#if TPP_HAVE_LEXER_WARNING_COUNT
+		++self->tl_warning_count;
+#endif /* TPP_HAVE_LEXER_WARNING_COUNT */
 	}	break;
 
 #if TPP_HAVE_WARNING_ERROR

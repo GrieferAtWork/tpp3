@@ -1537,9 +1537,9 @@ typedef struct tpp_token {
 	       (tpp_string_decref((self)->TPP_INTERNAL(tt_chunk)), 1), \
 	       tpp_dbg_memset(self, sizeof(tpp_token)))
 #if TPP_HAVE_USER_KEYWORDS
-#define tpp_token_haskwd(self)   TPP_TOK_ISKEYWORD(tpp_token_getid(self))
+#define tpp_token_haskwd(self)     TPP_TOK_ISKEYWORD(tpp_token_getid(self))
 #else /* TPP_HAVE_USER_KEYWORDS */
-#define tpp_token_haskwd(self)   TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(self))
+#define tpp_token_haskwd(self)     TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(self))
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 #define tpp_token_getid(self)      ((self)->TPP_INTERNAL(tt_id))
 #define tpp_token_getkwd(self)     ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "tpp_token_haskwd(self)" */

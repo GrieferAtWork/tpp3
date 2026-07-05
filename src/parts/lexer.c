@@ -191,6 +191,10 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_ERROR_LIMIT < 0 */
 #endif /* TPP_HAVE_WARNING_ERROR */
 
+#if TPP_HAVE_LEXER_WARNING_COUNT
+	self->tl_warning_count = 0;
+#endif /* TPP_HAVE_LEXER_WARNING_COUNT */
+
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED && TPP_MAX_INCLUDE_DEPTH < 0
 	self->tl_inclusion_limit = -TPP_MAX_INCLUDE_DEPTH;
 #endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED && TPP_MAX_INCLUDE_DEPTH < 0 */
@@ -309,6 +313,10 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 	self->tl_error_count = from->tl_error_limit;
 #endif /* TPP_ERROR_LIMIT < 0 */
 #endif /* TPP_HAVE_WARNING_ERROR */
+
+#if TPP_HAVE_LEXER_WARNING_COUNT
+	self->tl_warning_count = from->tl_warning_count;
+#endif /* TPP_HAVE_LEXER_WARNING_COUNT */
 
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED && TPP_MAX_INCLUDE_DEPTH < 0
 	self->tl_inclusion_limit = from->tl_inclusion_limit;
