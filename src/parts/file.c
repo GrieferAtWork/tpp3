@@ -159,7 +159,7 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self) {
 		tpp_keyword_misc *misc;
 		kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
 		                      tpp_offsetof(tpp_keyword, tk_kwd));
-		misc = tpp_keyword_getmisc(kwd);
+		misc = kwd->tk_misc;
 		if (misc) {
 			/* Update inclusion counter (if allocated and initialized) */
 			if (misc->tkm_file_inclcount != TPP_SIZE_MAX)
@@ -193,7 +193,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 			tpp_keyword_misc *misc;
 			kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
 			                      tpp_offsetof(tpp_keyword, tk_kwd));
-			misc = tpp_keyword_getmisc(kwd);
+			misc = kwd->tk_misc;
 			if (misc) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 				if (self->tf_pos >= self->tf_end && misc->tkm_file_guard) {

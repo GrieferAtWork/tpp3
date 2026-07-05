@@ -1433,7 +1433,7 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 
 	/* Parse+compile the actual macro */
 	error = tpp_lexer_parse_macro_definition(self, &macro, &pos, deflc);
-	if tpp_unlikely(TPP_ISERR(error))
+	if (TPP_ISERR(error))
 		return TPP_TOK_OFERR(error);
 
 	/* Setup token such that it describes the entire macro definition (for messages) */

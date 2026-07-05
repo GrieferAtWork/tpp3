@@ -454,6 +454,11 @@
 #define TPP_UINTMAX_C   UINTMAX_C
 #endif /* !tpp_intmax */
 
+/* Counter type used to implement __COUNTER__ and __TPP_COUNTER */
+#ifndef tpp_counter
+#define tpp_counter tpp_size
+#endif /* !tpp_counter */
+
 #ifndef tpp_float
 #define tpp_float long double
 #endif /* !tpp_float */

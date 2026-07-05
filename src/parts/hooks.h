@@ -252,7 +252,7 @@ typedef struct tpp_hooks {
 	/* >> tpp_errno (TPPCALL *th_new_dependency)(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
 	 * Called whenever some file is #include-ed for the first time
 	 * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
-	 *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+	 *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)'. */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_new_dependency))(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
@@ -445,7 +445,7 @@ typedef struct tpp_hooks {
 
 /* Called whenever some file is #include-ed for the first time
  * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
- *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+ *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)'. */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) \
 	((self)->TPP_INTERNAL(th_new_dependency) ? (*(self)->TPP_INTERNAL(th_new_dependency))(lexer, filename_kwd) : TPP_EOK)

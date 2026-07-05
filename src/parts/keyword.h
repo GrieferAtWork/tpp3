@@ -246,7 +246,7 @@ typedef struct tpp_keyword_misc {
 #define _tpp_keyword_misc_init_macro_pushstack(self) /* nothing */
 #endif /* !TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_MACRO___TPP_COUNTER
-	tpp_size TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
+	tpp_counter TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
 #define _tpp_keyword_misc_init_builtin_counter(self) , (self)->TPP_INTERNAL(tkm_builtin_counter) = 0
 #else /* TPP_HAVE_MACRO___TPP_COUNTER */
 #define _tpp_keyword_misc_init_builtin_counter(self) /* nothing */
@@ -335,21 +335,30 @@ typedef struct tpp_keyword {
 #endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
 /* Public API for accessing "tpp_keyword" internals */
-#define tpp_keyword_isuser(self)     TPP_TOK_ISUSERKEYWORD((self)->TPP_INTERNAL(tk_id))
-#define tpp_keyword_isbuiltin(self)  (!tpp_keyword_isuser(self))
-#define tpp_keyword_getid(self)      ((self)->TPP_INTERNAL(tk_id))
-#define tpp_keyword_getkwd(self)     ((self)->TPP_INTERNAL(tk_kwd))
-#define tpp_keyword_getkwdcstr(self) ((char const *)(self)->TPP_INTERNAL(tk_kwd))
-#define tpp_keyword_getkwdlen(self)  ((self)->TPP_INTERNAL(tk_len))
-#define tpp_keyword_getkwdhash(self) ((self)->TPP_INTERNAL(tk_hash))
+#define tpp_keyword_isuser(self)    TPP_TOK_ISUSERKEYWORD((self)->TPP_INTERNAL(tk_id))
+#define tpp_keyword_isbuiltin(self) (!tpp_keyword_isuser(self))
+#define tpp_keyword_getid(self)     ((self)->TPP_INTERNAL(tk_id))
+#define tpp_keyword_getstr(self)    ((self)->TPP_INTERNAL(tk_kwd))
+#define tpp_keyword_getcstr(self)   ((char const *)(self)->TPP_INTERNAL(tk_kwd))
+#define tpp_keyword_getlen(self)    ((self)->TPP_INTERNAL(tk_len))
+#define tpp_keyword_gethash(self)   ((self)->TPP_INTERNAL(tk_hash))
 #if TPP_HAVE_CPP_MACROS
-#define tpp_keyword_getmacro(self) ((self)->TPP_INTERNAL(tk_macro))
+#define tpp_keyword_getmacro(self)  ((self)->TPP_INTERNAL(tk_macro))
 #endif /* TPP_HAVE_CPP_MACROS */
 
-/* Check if "self" matches the C, constant string literal "cstr" */
-#define tpp_keyword_equals_cstr(self, cstr)                               \
-	((self)->TPP_INTERNAL(tk_len) == (sizeof(cstr) / sizeof(char)) - 1 && \
-	 tpp_memcmp((self)->TPP_INTERNAL(tk_kwd), cstr, sizeof(cstr) - sizeof(char)) == 0)
+/* Check if "self" matches the C, constant string literal "STR" */
+#define tpp_keyword_equals_conststr(self, STR)                       \
+	(tpp_keyword_getlen(self) == (sizeof(STR) / sizeof(char)) - 1 && \
+	 tpp_memcmp(tpp_keyword_getstr(self), STR, sizeof(STR) - sizeof(char)) == 0)
+
+/* Check if "self" matches "str...+=len" */
+#define tpp_keyword_equals_str(self, /*tpp_char const **/ str, len) \
+	(tpp_keyword_getlen(self) == (len) &&                           \
+	 tpp_memcmp(tpp_keyword_getstr(self), str, (len) * sizeof(char)) == 0)
+
+/* Check if "self" matches "cstr...+=len" */
+#define tpp_keyword_equals_cstr(self, /*char const **/ cstr, len) \
+	tpp_keyword_equals_str(self, (tpp_char const *)(cstr), len)
 
 
 /* Convert back-and-forth between keywords and strings */
@@ -358,21 +367,6 @@ typedef struct tpp_keyword {
 #define tpp_keyword_asstring(self) ((tpp_string *)&(self)->_TPP_KEYWORD_STRING_ABI_START)
 #define tpp_string_askeyword(self) ((tpp_keyword *)((char *)(self) - tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)))
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */
-
-#if TPP_HAVE_KEYWORD_MISC
-/* Ensure that `self->tk_misc' has been allocated and return it.
- * If it isn't already allocated, allocate+return it lazily.
- * WARNING: Only call this function on a "writable" keyword (s.a. `tpp_keywords_copybuiltin()')
- *
- * @return: * :   The "misc" data of "self" (freshly allocated)
- * @return: NULL: Out of memory (TPP_ENOMEM) */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
-tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self); /* TODO: This function shouldn't be part of the public API! */
-
-/* Same as "tpp_keyword_requiremisc()", but don't lazily allocate,
- * and simply return "NULL" if "self" doesn't have misc-data, yet. */
-#define tpp_keyword_getmisc(self) ((self)->TPP_INTERNAL(tk_misc))
-#endif /* TPP_HAVE_KEYWORD_MISC */
 
 #if TPP_HAVE_KEYWORD_USERDATA
 /* Get the user-data pointer for "self"
@@ -412,6 +406,96 @@ tpp_keyword_popmacro(tpp_keyword *tpp_restrict self);
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undef(tpp_keyword *tpp_restrict self);
 #endif /* TPP_HAVE_CPP_MACROS */
+
+
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+/* Return the keyword registered as #ifndef-guard of
+ * the given (should-be) filename-keyword "self"
+ *
+ * If no keyword has been registered for this purpose,
+ * return "NULL" instead. */
+#define tpp_keyword_get_file_guard(self)                           \
+	((self)->TPP_INTERNAL(tk_misc)                                 \
+	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_file_guard) \
+	 : NULL)
+
+/* Set the keyword registered as #ifndef-guard of
+ * the given (should-be) filename-keyword "self"
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard);
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+
+
+
+#if TPP_HAVE_MACRO___TPP_COUNTER
+/* Return the next value that will be returned by __TPP_COUNTER() for this keyword */
+#define tpp_keyword_get_builtin_counter(self)                           \
+	((self)->TPP_INTERNAL(tk_misc)                                      \
+	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_builtin_counter) \
+	 : 0)
+
+/* Fetch+increment the __TPP_COUNTER() value of this keyword
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
+                                tpp_counter *tpp_restrict p_result);
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+
+
+
+#if TPP_HAVE_KEYWORD_FLAGS
+/* Return the flags (set of `TPP_KEYWORD_FLAG_*') linked to "self" */
+#define tpp_keyword_getflags(self)                            \
+	((self)->TPP_INTERNAL(tk_misc)                            \
+	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_flags) \
+	 : 0)
+
+/* Set the flags (set of `TPP_KEYWORD_FLAG_*') linked to "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_setflags(tpp_keyword *tpp_restrict self,
+                     tpp_keyword_flags flags);
+#endif /* TPP_HAVE_KEYWORD_FLAGS */
+
+
+
+#if TPP_HAVE_CPP_ASSERT
+/* Return the # of assertions made */
+#define tpp_keyword_getassertcount(self) \
+	((self)->TPP_INTERNAL(tk_misc) ? tpp_assertions_getcount((self)->TPP_INTERNAL(tk_misc)) : 0)
+
+/* Check if *any* keywords have been asserted within the given assertion-set "self" */
+#define tpp_keyword_containsanyassert(self) \
+	((self)->TPP_INTERNAL(tk_misc) && tpp_assertions_containsany(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_assertions)))
+
+/* Delete *all* assertions made within "self" */
+#define tpp_keyword_unassertall(self)                                                           \
+	((self)->TPP_INTERNAL(tk_misc)                                                              \
+	 ? tpp_assertions_unassertall(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_assertions)) \
+	 : (void)0)
+
+/* Check if a given "value" is being asserted by "self" */
+#define tpp_keyword_containsassert(self, value) \
+	((self)->TPP_INTERNAL(tk_misc) && tpp_assertions_contains(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_assertions), value))
+
+/* Assert a given "value" within "self".
+ * @return: TPP_EOK:    Assertion was added
+ * @return: TPP_ENOENT: Assertion was already added before (SOFT_ERROR)
+ * @return: TPP_ENOMEM: Out of memory (HARD_ERROR) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_addassert(tpp_keyword *self, tpp_keyword const *value);
+
+/* Unassert a given "value" within "self".
+ * @return: true:  Assertion was removed
+ * @return: false: Assertion didn't exist in the first place */
+#define tpp_keyword_unassert(self, value) \
+	((self)->TPP_INTERNAL(tk_misc) && tpp_assertions_unassert(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_assertions), value))
+#endif /* TPP_HAVE_CPP_ASSERT */
 
 
 

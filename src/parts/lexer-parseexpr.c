@@ -290,7 +290,7 @@ handle_comment:
 				} else {
 #if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION
 					tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION,
-					                                  tpp_keyword_getkwdcstr(assertion_key));
+					                                  tpp_keyword_getcstr(assertion_key));
 					if (TPP_ISERR(error))
 						return error;
 #endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION */

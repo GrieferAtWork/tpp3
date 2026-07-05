@@ -435,7 +435,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 	tpp_lexer_openfile_result ofr;
 	tpp_lexer_init(self);
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
-	if tpp_unlikely(TPP_ISERR(error)) {
+	if (TPP_ISERR(error)) {
 		tpp_lexer_fini(self);
 	} else {
 		/* Initialize the lexer's I/O file */

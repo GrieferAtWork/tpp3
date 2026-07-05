@@ -3626,12 +3626,12 @@ TPP_WARNING_EX(TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 0(), ~, {
 	tpp_macro const *const macro = tpp_current_va_arg(tpp_macro const *);
 	tpp_warn_printf1(tpp_current_info(), _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT
 	                                     "self-recursive macro %[%s%] expanded to itself too many times",
-	                 tpp_keyword_getkwdcstr(macro_keyword));
+	                 tpp_keyword_getcstr(macro_keyword));
 	if (tpp_macro_getdeffilename(macro)) {
 		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(macro),
 		                                tpp_macro_getdeflcinfo(macro));
 		tpp_warn_printf1(tpp_current_info(), "note: see definition of %[%s%]\n",
-		                 tpp_keyword_getkwdcstr(macro_keyword));
+		                 tpp_keyword_getcstr(macro_keyword));
 	}
 })
 #undef _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT
@@ -3693,12 +3693,12 @@ TPP_WARNING(TPP_W_DEFINE_BUILTIN_MACRO, 0(), 1(4118), TPP_WSTATE_WARN,
 TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
 	tpp_keyword const *keyword = tpp_current_va_arg(tpp_keyword const *);
 	tpp_macro const *const old_definition = tpp_keyword_getmacro(keyword);
-	tpp_warn_printf1(tpp_current_info(), "macro %[%s%] redefined\n", tpp_keyword_getkwdcstr(keyword));
+	tpp_warn_printf1(tpp_current_info(), "macro %[%s%] redefined\n", tpp_keyword_getcstr(keyword));
 	if (tpp_macro_getdeffilename(old_definition)) {
 		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(old_definition),
 		                           tpp_macro_getdeflcinfo(old_definition));
 		tpp_warn_printf1(tpp_current_info(), "note: see previous definition of %[%s%]\n",
-		                 tpp_keyword_getkwdcstr(keyword));
+		                 tpp_keyword_getcstr(keyword));
 	}
 })
 #endif /* TPP_HAVE_TPP_W_REDEFINE_MACRO */
@@ -4139,6 +4139,11 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 #define TPP_UINTMAX_MAX UINTMAX_MAX
 #define TPP_UINTMAX_C   UINTMAX_C
 #endif /* !tpp_intmax */
+
+/* Counter type used to implement __COUNTER__ and __TPP_COUNTER */
+#ifndef tpp_counter
+#define tpp_counter tpp_size
+#endif /* !tpp_counter */
 
 #ifndef tpp_float
 #define tpp_float long double
@@ -6905,7 +6910,7 @@ TPP_DECL_END
 
 
 /************************************************************************/
-/* LEXER CALLBACK CONFIGURATION                                         */
+/* LEXER HOOK CONFIGURATION                                             */
 /************************************************************************/
 
 /* Possible values for "TPP_HAVE_*_HOOK" feature macros */
@@ -7081,7 +7086,7 @@ TPP_DECL_END
 /* >> tpp_errno (TPPCALL *TPP_HOOK_NEW_DEPENDENCY)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
  * Called whenever some file is #include-ed for the first time
  * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
- *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+ *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)'. */
 #ifndef TPP_HAVE_NEW_DEPENDENCY_HOOK
 #ifdef TPP_HOOK_NEW_DEPENDENCY
 #define TPP_HAVE_NEW_DEPENDENCY_HOOK ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
@@ -8058,7 +8063,7 @@ TPP_DECL_END
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
 #endif /* !TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
 #ifndef TPP_HAVE_TPP_W_DATE_TIME
-#define TPP_HAVE_TPP_W_DATE_TIME                             \
+#define TPP_HAVE_TPP_W_DATE_TIME                           \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_MACRO___TIME__ ||      \
 	                       TPP_HAVE_MACRO___DATE__ ||      \
 	                       TPP_HAVE_MACRO___TIMESTAMP__ || \
@@ -8110,38 +8115,6 @@ TPP_DECL_END
 	(TPP_HAVE_WARNINGS && TPP_HAVE_QUALITY_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && \
 	 TPP_HAVE_TPP_TOK_PIPE_PIPE && TPP_HAVE_TPP_TOK_AMP_AMP)
 #endif /* !TPP_HAVE_TPP_W_PAREN_AROUND_LAND */
-
-/* Warning printer configuration */
-#if TPP_HAVE_WARNINGS
-#ifdef TPP_CONFIG_WARNPRINTER
-#ifndef TPP_CONFIG_WARNPRINTER_NEEDS_ARG
-#define TPP_CONFIG_WARNPRINTER_NEEDS_ARG 1
-#endif /* !TPP_CONFIG_WARNPRINTER_NEEDS_ARG */
-
-/* >> #define TPP_CONFIG_WARNPRINTER my_warning_printer
- * >> #if TPP_CONFIG_WARNPRINTER_NEEDS_ARG
- * >> static tpp_ssize TPP_FORMATPRINTER_CC
- * >> my_warning_printer(void *arg, tpp_char const *text, tpp_size num_bytes)
- * >> #else // TPP_CONFIG_WARNPRINTER_NEEDS_ARG
- * >> static tpp_ssize TPP_FORMATPRINTER_CC
- * >> my_warning_printer(tpp_char const *text, tpp_size num_bytes)
- * >> #endif // !TPP_CONFIG_WARNPRINTER_NEEDS_ARG
- * >> {
- * >>    ...
- * >> } */
-#else /* TPP_CONFIG_WARNPRINTER */
-/* Supply a built-in printer (that uses "fwrite(stderr)")
- * when no user-defined printer was configured for a lexer.
- *
- * -1: Provide builtin, but allow users to override
- *  1: Provide+hard-wire builtin
- *  0: Don't provide builtin, but allow users to override
- */
-#ifndef TPP_HAVE_BUILTIN_WARNPRINTER
-#define TPP_HAVE_BUILTIN_WARNPRINTER (-1)
-#endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */
-#endif /* !TPP_CONFIG_WARNPRINTER */
-#endif /* TPP_HAVE_WARNINGS */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -8174,7 +8147,7 @@ enum {
 /* NOTE: "[SOFT_ERROR]" are "temporary" errors that are intended to-be recovered from.
  *       These errors should be caught & dealt with at appropriate points in the code. */
 typedef enum tpp_errno {
-#define TPP_ISERR(error)     ((error) != TPP_EOK)
+#define TPP_ISERR(error) tpp_unlikely((error) != TPP_EOK)
 
 	/* --------------------------------------------------------------------
 	 * NO_ERROR: TPP_EOK
@@ -9282,7 +9255,7 @@ typedef enum tpp_token_id {
 
 
 
-	TPP_TOK_EOF   = '\0', /* "<eof>" END-OF-FILE (will always be ZERO) */
+	TPP_TOK_EOF   = '\0', /* "<eof>" END-OF-FILE (will always be ZERO; an actual \0-byte in input is treated as `TPP_TOK_SPACE') */
 	TPP_TOK_LF    = '\n', /* "<linefeed>" Line-feed (always generated by `tpp_lexer_yieldraw()', filtered later if disabled) */
 	TPP_TOK_SPACE = ' ',  /* "<space>" Whitespace (always generated by `tpp_lexer_yieldraw()', filtered later if disabled) */
 
@@ -10642,7 +10615,7 @@ typedef struct tpp_token {
 #define tpp_token_getstart(self)   ((self)->TPP_INTERNAL(tt_start))
 #define tpp_token_getend(self)     ((self)->TPP_INTERNAL(tt_end))
 #define tpp_token_getlen(self)     ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
-#define tpp_token_getkwdcstr(self) tpp_keyword_getkwdcstr(tpp_token_getkwd(self))
+#define tpp_token_getkwdcstr(self) tpp_keyword_getcstr(tpp_token_getkwd(self))
 
 /* Helpers to set the data-fields of "self" */
 #define tpp_token_setid(self, id) \
@@ -14886,7 +14859,7 @@ typedef struct tpp_keyword_misc {
 #define _tpp_keyword_misc_init_macro_pushstack(self) /* nothing */
 #endif /* !TPP_HAVE_PRAGMA_PUSH_MACRO */
 #if TPP_HAVE_MACRO___TPP_COUNTER
-	tpp_size TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
+	tpp_counter TPP_INTERNAL(tkm_builtin_counter); /* Next value for __TPP_COUNTER */
 #define _tpp_keyword_misc_init_builtin_counter(self) , (self)->TPP_INTERNAL(tkm_builtin_counter) = 0
 #else /* TPP_HAVE_MACRO___TPP_COUNTER */
 #define _tpp_keyword_misc_init_builtin_counter(self) /* nothing */
@@ -14975,21 +14948,30 @@ typedef struct tpp_keyword {
 #endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
 /* Public API for accessing "tpp_keyword" internals */
-#define tpp_keyword_isuser(self)     TPP_TOK_ISUSERKEYWORD((self)->TPP_INTERNAL(tk_id))
-#define tpp_keyword_isbuiltin(self)  (!tpp_keyword_isuser(self))
-#define tpp_keyword_getid(self)      ((self)->TPP_INTERNAL(tk_id))
-#define tpp_keyword_getkwd(self)     ((self)->TPP_INTERNAL(tk_kwd))
-#define tpp_keyword_getkwdcstr(self) ((char const *)(self)->TPP_INTERNAL(tk_kwd))
-#define tpp_keyword_getkwdlen(self)  ((self)->TPP_INTERNAL(tk_len))
-#define tpp_keyword_getkwdhash(self) ((self)->TPP_INTERNAL(tk_hash))
+#define tpp_keyword_isuser(self)    TPP_TOK_ISUSERKEYWORD((self)->TPP_INTERNAL(tk_id))
+#define tpp_keyword_isbuiltin(self) (!tpp_keyword_isuser(self))
+#define tpp_keyword_getid(self)     ((self)->TPP_INTERNAL(tk_id))
+#define tpp_keyword_getstr(self)    ((self)->TPP_INTERNAL(tk_kwd))
+#define tpp_keyword_getcstr(self)   ((char const *)(self)->TPP_INTERNAL(tk_kwd))
+#define tpp_keyword_getlen(self)    ((self)->TPP_INTERNAL(tk_len))
+#define tpp_keyword_gethash(self)   ((self)->TPP_INTERNAL(tk_hash))
 #if TPP_HAVE_CPP_MACROS
-#define tpp_keyword_getmacro(self) ((self)->TPP_INTERNAL(tk_macro))
+#define tpp_keyword_getmacro(self)  ((self)->TPP_INTERNAL(tk_macro))
 #endif /* TPP_HAVE_CPP_MACROS */
 
-/* Check if "self" matches the C, constant string literal "cstr" */
-#define tpp_keyword_equals_cstr(self, cstr)                               \
-	((self)->TPP_INTERNAL(tk_len) == (sizeof(cstr) / sizeof(char)) - 1 && \
-	 tpp_memcmp((self)->TPP_INTERNAL(tk_kwd), cstr, sizeof(cstr) - sizeof(char)) == 0)
+/* Check if "self" matches the C, constant string literal "STR" */
+#define tpp_keyword_equals_conststr(self, STR)                       \
+	(tpp_keyword_getlen(self) == (sizeof(STR) / sizeof(char)) - 1 && \
+	 tpp_memcmp(tpp_keyword_getstr(self), STR, sizeof(STR) - sizeof(char)) == 0)
+
+/* Check if "self" matches "str...+=len" */
+#define tpp_keyword_equals_str(self, /*tpp_char const **/ str, len) \
+	(tpp_keyword_getlen(self) == (len) &&                           \
+	 tpp_memcmp(tpp_keyword_getstr(self), str, (len) * sizeof(char)) == 0)
+
+/* Check if "self" matches "cstr...+=len" */
+#define tpp_keyword_equals_cstr(self, /*char const **/ cstr, len) \
+	tpp_keyword_equals_str(self, (tpp_char const *)(cstr), len)
 
 
 /* Convert back-and-forth between keywords and strings */
@@ -14998,21 +14980,6 @@ typedef struct tpp_keyword {
 #define tpp_keyword_asstring(self) ((tpp_string *)&(self)->_TPP_KEYWORD_STRING_ABI_START)
 #define tpp_string_askeyword(self) ((tpp_keyword *)((char *)(self) - tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)))
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */
-
-#if TPP_HAVE_KEYWORD_MISC
-/* Ensure that `self->tk_misc' has been allocated and return it.
- * If it isn't already allocated, allocate+return it lazily.
- * WARNING: Only call this function on a "writable" keyword (s.a. `tpp_keywords_copybuiltin()')
- *
- * @return: * :   The "misc" data of "self" (freshly allocated)
- * @return: NULL: Out of memory (TPP_ENOMEM) */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
-tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self); /* TODO: This function shouldn't be part of the public API! */
-
-/* Same as "tpp_keyword_requiremisc()", but don't lazily allocate,
- * and simply return "NULL" if "self" doesn't have misc-data, yet. */
-#define tpp_keyword_getmisc(self) ((self)->TPP_INTERNAL(tk_misc))
-#endif /* TPP_HAVE_KEYWORD_MISC */
 
 #if TPP_HAVE_KEYWORD_USERDATA
 /* Get the user-data pointer for "self"
@@ -15052,6 +15019,96 @@ tpp_keyword_popmacro(tpp_keyword *tpp_restrict self);
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undef(tpp_keyword *tpp_restrict self);
 #endif /* TPP_HAVE_CPP_MACROS */
+
+
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+/* Return the keyword registered as #ifndef-guard of
+ * the given (should-be) filename-keyword "self"
+ *
+ * If no keyword has been registered for this purpose,
+ * return "NULL" instead. */
+#define tpp_keyword_get_file_guard(self)                           \
+	((self)->TPP_INTERNAL(tk_misc)                                 \
+	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_file_guard) \
+	 : NULL)
+
+/* Set the keyword registered as #ifndef-guard of
+ * the given (should-be) filename-keyword "self"
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard);
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+
+
+
+#if TPP_HAVE_MACRO___TPP_COUNTER
+/* Return the next value that will be returned by __TPP_COUNTER() for this keyword */
+#define tpp_keyword_get_builtin_counter(self)                           \
+	((self)->TPP_INTERNAL(tk_misc)                                      \
+	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_builtin_counter) \
+	 : 0)
+
+/* Fetch+increment the __TPP_COUNTER() value of this keyword
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
+                                tpp_counter *tpp_restrict p_result);
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+
+
+
+#if TPP_HAVE_KEYWORD_FLAGS
+/* Return the flags (set of `TPP_KEYWORD_FLAG_*') linked to "self" */
+#define tpp_keyword_getflags(self)                            \
+	((self)->TPP_INTERNAL(tk_misc)                            \
+	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_flags) \
+	 : 0)
+
+/* Set the flags (set of `TPP_KEYWORD_FLAG_*') linked to "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_setflags(tpp_keyword *tpp_restrict self,
+                     tpp_keyword_flags flags);
+#endif /* TPP_HAVE_KEYWORD_FLAGS */
+
+
+
+#if TPP_HAVE_CPP_ASSERT
+/* Return the # of assertions made */
+#define tpp_keyword_getassertcount(self) \
+	((self)->TPP_INTERNAL(tk_misc) ? tpp_assertions_getcount((self)->TPP_INTERNAL(tk_misc)) : 0)
+
+/* Check if *any* keywords have been asserted within the given assertion-set "self" */
+#define tpp_keyword_containsanyassert(self) \
+	((self)->TPP_INTERNAL(tk_misc) && tpp_assertions_containsany(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_assertions)))
+
+/* Delete *all* assertions made within "self" */
+#define tpp_keyword_unassertall(self)                                                           \
+	((self)->TPP_INTERNAL(tk_misc)                                                              \
+	 ? tpp_assertions_unassertall(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_assertions)) \
+	 : (void)0)
+
+/* Check if a given "value" is being asserted by "self" */
+#define tpp_keyword_containsassert(self, value) \
+	((self)->TPP_INTERNAL(tk_misc) && tpp_assertions_contains(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_assertions), value))
+
+/* Assert a given "value" within "self".
+ * @return: TPP_EOK:    Assertion was added
+ * @return: TPP_ENOENT: Assertion was already added before (SOFT_ERROR)
+ * @return: TPP_ENOMEM: Out of memory (HARD_ERROR) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_addassert(tpp_keyword *self, tpp_keyword const *value);
+
+/* Unassert a given "value" within "self".
+ * @return: true:  Assertion was removed
+ * @return: false: Assertion didn't exist in the first place */
+#define tpp_keyword_unassert(self, value) \
+	((self)->TPP_INTERNAL(tk_misc) && tpp_assertions_unassert(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_assertions), value))
+#endif /* TPP_HAVE_CPP_ASSERT */
 
 
 
@@ -16131,7 +16188,7 @@ typedef struct tpp_hooks {
 	/* >> tpp_errno (TPPCALL *th_new_dependency)(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
 	 * Called whenever some file is #include-ed for the first time
 	 * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
-	 *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+	 *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)'. */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_new_dependency))(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
@@ -16324,7 +16381,7 @@ typedef struct tpp_hooks {
 
 /* Called whenever some file is #include-ed for the first time
  * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
- *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+ *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)'. */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) \
 	((self)->TPP_INTERNAL(th_new_dependency) ? (*(self)->TPP_INTERNAL(th_new_dependency))(lexer, filename_kwd) : TPP_EOK)
@@ -16614,7 +16671,9 @@ typedef struct tpp_lexer {
 
 	/* Next value for __COUNTER__ */
 #if TPP_HAVE_MACRO___COUNTER__
-	tpp_size TPP_INTERNAL(tl_builtin_counter); /* Next value for __COUNTER__ */
+	tpp_counter TPP_INTERNAL(tl_builtin_counter); /* Next value for __COUNTER__ */
+#define tpp_lexer_getnextcounter(self)    ((self)->TPP_INTERNAL(tl_builtin_counter))
+#define tpp_lexer_setnextcounter(self, v) (void)((self)->TPP_INTERNAL(tl_builtin_counter) = (v))
 #endif /* TPP_HAVE_MACRO___COUNTER__ */
 
 
@@ -16827,7 +16886,7 @@ typedef struct tpp_lexer {
 /* >> tpp_errno (TPPCALL *tpp_lexer_callhook_new_dependency)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
  * Called whenever some file is #include-ed for the first time
  * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
- *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+ *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)'. */
 #define tpp_lexer_callhook_new_dependency(self, filename_kwd) \
 	tpp_hooks_call_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self, filename_kwd)
 #ifdef tpp_hooks_set_new_dependency
@@ -17089,7 +17148,7 @@ typedef struct tpp_lexer_openfile_result {
 	tpp_io_handle  tlofr_handle;       /* [1..1][owned] I/O handle for requested file (must be inherited by caller) */
 #if TPP_HAVE_USER_KEYWORDS
 	tpp_keyword   *tlofr_filename_kwd; /* [1..1] Keyword for filename */
-#define tpp_lexer_openfile_result_getfilename(self) tpp_keyword_getkwdcstr((self)->tlofr_filename_kwd)
+#define tpp_lexer_openfile_result_getfilename(self) tpp_keyword_getcstr((self)->tlofr_filename_kwd)
 #else /* TPP_HAVE_USER_KEYWORDS */
 	char          *tlofr_filename;     /* [1..1][owned] Filename string */
 #define tpp_lexer_openfile_result_getfilename(self) ((char const *)(self)->tlofr_filename)

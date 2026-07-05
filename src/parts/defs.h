@@ -3780,12 +3780,12 @@ TPP_WARNING_EX(TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 0(), ~, {
 	tpp_macro const *const macro = tpp_current_va_arg(tpp_macro const *);
 	tpp_warn_printf1(tpp_current_info(), _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT
 	                                     "self-recursive macro %[%s%] expanded to itself too many times",
-	                 tpp_keyword_getkwdcstr(macro_keyword));
+	                 tpp_keyword_getcstr(macro_keyword));
 	if (tpp_macro_getdeffilename(macro)) {
 		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(macro),
 		                                tpp_macro_getdeflcinfo(macro));
 		tpp_warn_printf1(tpp_current_info(), "note: see definition of %[%s%]\n",
-		                 tpp_keyword_getkwdcstr(macro_keyword));
+		                 tpp_keyword_getcstr(macro_keyword));
 	}
 })
 #undef _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT
@@ -3847,12 +3847,12 @@ TPP_WARNING(TPP_W_DEFINE_BUILTIN_MACRO, 0(), 1(4118), TPP_WSTATE_WARN,
 TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
 	tpp_keyword const *keyword = tpp_current_va_arg(tpp_keyword const *);
 	tpp_macro const *const old_definition = tpp_keyword_getmacro(keyword);
-	tpp_warn_printf1(tpp_current_info(), "macro %[%s%] redefined\n", tpp_keyword_getkwdcstr(keyword));
+	tpp_warn_printf1(tpp_current_info(), "macro %[%s%] redefined\n", tpp_keyword_getcstr(keyword));
 	if (tpp_macro_getdeffilename(old_definition)) {
 		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(old_definition),
 		                           tpp_macro_getdeflcinfo(old_definition));
 		tpp_warn_printf1(tpp_current_info(), "note: see previous definition of %[%s%]\n",
-		                 tpp_keyword_getkwdcstr(keyword));
+		                 tpp_keyword_getcstr(keyword));
 	}
 })
 #endif /* TPP_HAVE_TPP_W_REDEFINE_MACRO */

@@ -2530,7 +2530,7 @@ print("#endif /" "* !... *" "/");
 
 
 /************************************************************************/
-/* LEXER CALLBACK CONFIGURATION                                         */
+/* LEXER HOOK CONFIGURATION                                             */
 /************************************************************************/
 
 /* Possible values for "TPP_HAVE_*_HOOK" feature macros */
@@ -2636,7 +2636,7 @@ local HOOKS = {
 	{
 		"Called whenever some file is #include-ed for the first time\n" +
 		"@param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual\n" +
-		"                      filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'.",
+		"                      filename can be queried as `tpp_keyword_getcstr(filename_kwd)'.",
 		"NEW_DEPENDENCY",
 		"(TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL)",
 		"", // No builtin default
@@ -2880,7 +2880,7 @@ for (local doc, name,
 /* >> tpp_errno (TPPCALL *TPP_HOOK_NEW_DEPENDENCY)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
  * Called whenever some file is #include-ed for the first time
  * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
- *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+ *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)'. */
 #ifndef TPP_HAVE_NEW_DEPENDENCY_HOOK
 #ifdef TPP_HOOK_NEW_DEPENDENCY
 #define TPP_HAVE_NEW_DEPENDENCY_HOOK ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
@@ -3858,7 +3858,7 @@ for (local doc, name,
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
 #endif /* !TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
 #ifndef TPP_HAVE_TPP_W_DATE_TIME
-#define TPP_HAVE_TPP_W_DATE_TIME                             \
+#define TPP_HAVE_TPP_W_DATE_TIME                           \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_MACRO___TIME__ ||      \
 	                       TPP_HAVE_MACRO___DATE__ ||      \
 	                       TPP_HAVE_MACRO___TIMESTAMP__ || \
@@ -3910,38 +3910,6 @@ for (local doc, name,
 	(TPP_HAVE_WARNINGS && TPP_HAVE_QUALITY_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && \
 	 TPP_HAVE_TPP_TOK_PIPE_PIPE && TPP_HAVE_TPP_TOK_AMP_AMP)
 #endif /* !TPP_HAVE_TPP_W_PAREN_AROUND_LAND */
-
-/* Warning printer configuration */
-#if TPP_HAVE_WARNINGS
-#ifdef TPP_CONFIG_WARNPRINTER
-#ifndef TPP_CONFIG_WARNPRINTER_NEEDS_ARG
-#define TPP_CONFIG_WARNPRINTER_NEEDS_ARG 1
-#endif /* !TPP_CONFIG_WARNPRINTER_NEEDS_ARG */
-
-/* >> #define TPP_CONFIG_WARNPRINTER my_warning_printer
- * >> #if TPP_CONFIG_WARNPRINTER_NEEDS_ARG
- * >> static tpp_ssize TPP_FORMATPRINTER_CC
- * >> my_warning_printer(void *arg, tpp_char const *text, tpp_size num_bytes)
- * >> #else // TPP_CONFIG_WARNPRINTER_NEEDS_ARG
- * >> static tpp_ssize TPP_FORMATPRINTER_CC
- * >> my_warning_printer(tpp_char const *text, tpp_size num_bytes)
- * >> #endif // !TPP_CONFIG_WARNPRINTER_NEEDS_ARG
- * >> {
- * >>    ...
- * >> } */
-#else /* TPP_CONFIG_WARNPRINTER */
-/* Supply a built-in printer (that uses "fwrite(stderr)")
- * when no user-defined printer was configured for a lexer.
- *
- * -1: Provide builtin, but allow users to override
- *  1: Provide+hard-wire builtin
- *  0: Don't provide builtin, but allow users to override
- */
-#ifndef TPP_HAVE_BUILTIN_WARNPRINTER
-#define TPP_HAVE_BUILTIN_WARNPRINTER (-1)
-#endif /* !TPP_HAVE_BUILTIN_WARNPRINTER */
-#endif /* !TPP_CONFIG_WARNPRINTER */
-#endif /* TPP_HAVE_WARNINGS */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/

@@ -181,15 +181,18 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok;
 	tpp_file const *textfile;
 	tpp_keyword *textfile_kwd;
+
+	/* Set the "TPP_KEYWORD_FLAG_HDR_ONCE" flag for the current text file */
 	textfile     = tpp_file_gettextfile(tpp_lexer_getfile(self));
 	textfile_kwd = tpp_file_getrealfilenamekwd(textfile);
 	if (textfile_kwd) {
-		tpp_keyword_misc *misc;
-		misc = tpp_keyword_requiremisc(textfile_kwd);
-		if tpp_unlikely(!misc)
-			return TPP_ENOMEM;
-		misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_ONCE;
+		tpp_keyword_flags flags = tpp_keyword_getflags(textfile_kwd);
+		tpp_errno error = tpp_keyword_setflags(textfile_kwd, flags | TPP_KEYWORD_FLAG_HDR_ONCE);
+		if (TPP_ISERR(error))
+			return error;
 	}
+
+	/* Emit -Wpragma-once-outside-header if appropriate */
 #if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
 #if TPP_HAVE_INCLUDE_STACK
 	if (textfile->tf_tprev == NULL)
@@ -200,6 +203,7 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 			return error;
 	}
 #endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
+
 	tok = tpp_lexer_yieldraw_blocking(self);
 	return TPP_TOK_ASERR_OR_EOK(tok);
 }
@@ -216,23 +220,20 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 static tpp_errno TPPCALL
 tpp_lexer_process_pragma_deprecated_cb(void *arg, tpp_string *chunk,
                                        tpp_char const *str, tpp_size length) {
-	tpp_lexer *lexer = (tpp_lexer *)arg;
+	tpp_lexer *const lexer = (tpp_lexer *)arg;
 	tpp_keyword const *ro_keyword;
 	tpp_keyword *keyword;
-	tpp_keyword_misc *misc;
+	tpp_keyword_flags flags;
 	tpp_hash hash = tpp_hashof(str, length);
 	(void)chunk;
-	ro_keyword = tpp_keywords_newkeyword(&lexer->tl_kwds, str, length, hash);
+	ro_keyword = tpp_lexer_kwds_newkeyword(lexer, str, length, hash);
 	if tpp_unlikely(!ro_keyword)
 		return TPP_ENOMEM;
-	keyword = tpp_keywords_copybuiltin(&lexer->tl_kwds, ro_keyword);
+	keyword = tpp_lexer_kwds_copybuiltin(lexer, ro_keyword);
 	if tpp_unlikely(!keyword)
 		return TPP_ENOMEM;
-	misc = tpp_keyword_requiremisc(keyword);
-	if tpp_unlikely(!misc)
-		return TPP_ENOMEM;
-	misc->tkm_flags |= TPP_KEYWORD_FLAG_IS_DEPRECATED;
-	return TPP_EOK;
+	flags = tpp_keyword_getflags(keyword);
+	return tpp_keyword_setflags(keyword, flags | TPP_KEYWORD_FLAG_IS_DEPRECATED);
 }
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL

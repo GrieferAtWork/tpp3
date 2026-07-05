@@ -6324,7 +6324,7 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self) {
 		tpp_keyword_misc *misc;
 		kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
 		                      tpp_offsetof(tpp_keyword, tk_kwd));
-		misc = tpp_keyword_getmisc(kwd);
+		misc = kwd->tk_misc;
 		if (misc) {
 			/* Update inclusion counter (if allocated and initialized) */
 			if (misc->tkm_file_inclcount != TPP_SIZE_MAX)
@@ -6358,7 +6358,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 			tpp_keyword_misc *misc;
 			kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
 			                      tpp_offsetof(tpp_keyword, tk_kwd));
-			misc = tpp_keyword_getmisc(kwd);
+			misc = kwd->tk_misc;
 			if (misc) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 				if (self->tf_pos >= self->tf_end && misc->tkm_file_guard) {
@@ -8028,7 +8028,7 @@ tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
  *
  * @return: * :   The "misc" data of "self" (freshly allocated)
  * @return: NULL: Out of memory (TPP_ENOMEM) */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
 tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 	tpp_keyword_misc *result = self->tk_misc;
 	if tpp_unlikely(result == NULL) {
@@ -8158,6 +8158,8 @@ err_empty:
 }
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
+
+
 #if TPP_HAVE_CPP_MACROS
 /* Delete the macro definition of `self'.
  * The caller must ensure that `tpp_keyword_canundef(self)' */
@@ -8170,6 +8172,75 @@ tpp_keyword_undef(tpp_keyword *tpp_restrict self) {
 	tpp_macro_decref(old_macro);
 }
 #endif /* TPP_HAVE_CPP_MACROS */
+
+
+
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+/* Set the keyword registered as #ifndef-guard of
+ * the given (should-be) filename-keyword "self"
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard) {
+	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	misc->tkm_file_guard = guard;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+
+
+
+#if TPP_HAVE_MACRO___TPP_COUNTER
+/* Fetch+increment the __TPP_COUNTER() value of this keyword
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
+                                tpp_counter *tpp_restrict p_result) {
+	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	*p_result = misc->tkm_builtin_counter++;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+
+
+
+#if TPP_HAVE_KEYWORD_FLAGS
+/* Set the flags (set of `TPP_KEYWORD_FLAG_*') linked to "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_setflags(tpp_keyword *tpp_restrict self,
+                     tpp_keyword_flags flags) {
+	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	misc->tkm_flags = flags;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_KEYWORD_FLAGS */
+
+
+
+#if TPP_HAVE_CPP_ASSERT
+/* Assert a given "value" within "self".
+ * @return: TPP_EOK:    Assertion was added
+ * @return: TPP_ENOENT: Assertion was already added before (SOFT_ERROR)
+ * @return: TPP_ENOMEM: Out of memory (HARD_ERROR) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_addassert(tpp_keyword *self, tpp_keyword const *value) {
+	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	return tpp_assertions_assert(&misc->tkm_assertions, value);
+}
+#endif /* TPP_HAVE_CPP_ASSERT */
+
 
 
 
@@ -8742,7 +8813,7 @@ tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
 		deffile_kwd = tpp_keywords_getkeyword(keywords, deffile,
 		                                      deffile_len, deffile_hash);
 		if (deffile_kwd)
-			self->tm_deffile = tpp_keyword_getkwdcstr(deffile_kwd);
+			self->tm_deffile = tpp_keyword_getcstr(deffile_kwd);
 	}
 }
 #endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
@@ -8755,9 +8826,9 @@ tpp_assertion_relocate_keyword(tpp_assertion *tpp_restrict self,
 	tpp_keyword const *keyword = self->tas_value;
 	if (keyword) {
 		keyword = _tpp_keywords_getkeyword(keywords,
-		                                   tpp_keyword_getkwd(keyword),
-		                                   tpp_keyword_getkwdlen(keyword),
-		                                   tpp_keyword_getkwdhash(keyword));
+		                                   tpp_keyword_getstr(keyword),
+		                                   tpp_keyword_getlen(keyword),
+		                                   tpp_keyword_gethash(keyword));
 		if (keyword)
 			self->tas_value = keyword;
 	}
@@ -9285,7 +9356,7 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_openfile_ex_check_mask_flags(/*1..1*/ tpp_lexer *tpp_restrict self,
                                        tpp_keyword *file_kwd,
                                        tpp_lexer_openfile_flags mask_flags) {
-	tpp_keyword_misc *misc = tpp_keyword_getmisc(file_kwd);
+	tpp_keyword_misc *misc = file_kwd->tk_misc;
 	if (misc != NULL) {
 		tpp_keyword_flags flags_union = misc->tkm_flags & mask_flags;
 		if (flags_union != 0) {
@@ -13901,7 +13972,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 	tpp_lexer_openfile_result ofr;
 	tpp_lexer_init(self);
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
-	if tpp_unlikely(TPP_ISERR(error)) {
+	if (TPP_ISERR(error)) {
 		tpp_lexer_fini(self);
 	} else {
 		/* Initialize the lexer's I/O file */
@@ -22984,7 +23055,7 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 
 	/* Parse+compile the actual macro */
 	error = tpp_lexer_parse_macro_definition(self, &macro, &pos, deflc);
-	if tpp_unlikely(TPP_ISERR(error))
+	if (TPP_ISERR(error))
 		return TPP_TOK_OFERR(error);
 
 	/* Setup token such that it describes the entire macro definition (for messages) */
@@ -23183,15 +23254,18 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok;
 	tpp_file const *textfile;
 	tpp_keyword *textfile_kwd;
+
+	/* Set the "TPP_KEYWORD_FLAG_HDR_ONCE" flag for the current text file */
 	textfile     = tpp_file_gettextfile(tpp_lexer_getfile(self));
 	textfile_kwd = tpp_file_getrealfilenamekwd(textfile);
 	if (textfile_kwd) {
-		tpp_keyword_misc *misc;
-		misc = tpp_keyword_requiremisc(textfile_kwd);
-		if tpp_unlikely(!misc)
-			return TPP_ENOMEM;
-		misc->tkm_flags |= TPP_KEYWORD_FLAG_HDR_ONCE;
+		tpp_keyword_flags flags = tpp_keyword_getflags(textfile_kwd);
+		tpp_errno error = tpp_keyword_setflags(textfile_kwd, flags | TPP_KEYWORD_FLAG_HDR_ONCE);
+		if (TPP_ISERR(error))
+			return error;
 	}
+
+	/* Emit -Wpragma-once-outside-header if appropriate */
 #if TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER
 #if TPP_HAVE_INCLUDE_STACK
 	if (textfile->tf_tprev == NULL)
@@ -23202,6 +23276,7 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 			return error;
 	}
 #endif /* TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER */
+
 	tok = tpp_lexer_yieldraw_blocking(self);
 	return TPP_TOK_ASERR_OR_EOK(tok);
 }
@@ -23218,23 +23293,20 @@ tpp_lexer_process_pragma_once(tpp_lexer *tpp_restrict self) {
 static tpp_errno TPPCALL
 tpp_lexer_process_pragma_deprecated_cb(void *arg, tpp_string *chunk,
                                        tpp_char const *str, tpp_size length) {
-	tpp_lexer *lexer = (tpp_lexer *)arg;
+	tpp_lexer *const lexer = (tpp_lexer *)arg;
 	tpp_keyword const *ro_keyword;
 	tpp_keyword *keyword;
-	tpp_keyword_misc *misc;
+	tpp_keyword_flags flags;
 	tpp_hash hash = tpp_hashof(str, length);
 	(void)chunk;
-	ro_keyword = tpp_keywords_newkeyword(&lexer->tl_kwds, str, length, hash);
+	ro_keyword = tpp_lexer_kwds_newkeyword(lexer, str, length, hash);
 	if tpp_unlikely(!ro_keyword)
 		return TPP_ENOMEM;
-	keyword = tpp_keywords_copybuiltin(&lexer->tl_kwds, ro_keyword);
+	keyword = tpp_lexer_kwds_copybuiltin(lexer, ro_keyword);
 	if tpp_unlikely(!keyword)
 		return TPP_ENOMEM;
-	misc = tpp_keyword_requiremisc(keyword);
-	if tpp_unlikely(!misc)
-		return TPP_ENOMEM;
-	misc->tkm_flags |= TPP_KEYWORD_FLAG_IS_DEPRECATED;
-	return TPP_EOK;
+	flags = tpp_keyword_getflags(keyword);
+	return tpp_keyword_setflags(keyword, flags | TPP_KEYWORD_FLAG_IS_DEPRECATED);
 }
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -25522,7 +25594,7 @@ tpp_lexer_handle_assert_directive(tpp_lexer *tpp_restrict self, tpp_token_id mod
 	if (!TPP_TOK_ISKEYWORD(result)) {
 #if TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
 		tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE,
-		                                  tpp_keyword_getkwdcstr(mode_kwd));
+		                                  tpp_keyword_getcstr(mode_kwd));
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE */
@@ -25549,19 +25621,15 @@ again_yield_and_handle_after_lparen:
 				return result;
 			if (TPP_TOK_ISKEYWORD(result)) {
 				tpp_keyword const *value = tpp_lexer_gettokenkwd(self);
-				tpp_keyword_misc *misc;
 				tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
 				if tpp_unlikely(!keyword)
 					return TPP_TOK_ENOMEM;
-				misc = tpp_keyword_requiremisc(keyword);
-				if tpp_unlikely(!misc)
-					return TPP_TOK_ENOMEM;
 				if (mode == TPP_KWD_assert) {
-					tpp_errno error = tpp_assertions_assert(&misc->tkm_assertions, value);
+					tpp_errno error = tpp_keyword_addassert(keyword, value);
 					if (TPP_ISERR(error))
 						return TPP_TOK_OFERR(error);
 				} else {
-					(void)tpp_assertions_unassert(&misc->tkm_assertions, value);
+					(void)tpp_keyword_unassert(keyword, value);
 				}
 				result = tpp_lexer_yieldraw_blocking(self);
 				if (TPP_TOK_ISERR(result))
@@ -25569,8 +25637,8 @@ again_yield_and_handle_after_lparen:
 			} else {
 #if TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
 				tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE,
-				                                  tpp_keyword_getkwdcstr(mode_kwd),
-				                                  tpp_keyword_getkwdcstr(ro_keyword));
+				                                  tpp_keyword_getcstr(mode_kwd),
+				                                  tpp_keyword_getcstr(ro_keyword));
 				if (TPP_ISERR(error))
 					return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE */
@@ -25583,13 +25651,14 @@ again_yield_and_handle_after_lparen:
 			if (TPP_TOK_ISERR(result))
 				return result;
 		} else if (mode == TPP_KWD_unassert) {
-			tpp_keyword_misc *misc;
+#if 1 /* This is actually OK (but don't tell the public API users) */
+			tpp_keyword_unassertall(ro_keyword);
+#else
 			tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
 			if tpp_unlikely(!keyword)
 				return TPP_TOK_ENOMEM;
-			misc = keyword->tk_misc;
-			if (misc != NULL)
-				tpp_assertions_unassertall(&misc->tkm_assertions);
+			tpp_keyword_unassertall(keyword);
+#endif
 		}
 
 		/* Seek to next token (which should be a line-feed) */
@@ -25602,7 +25671,7 @@ again_yield_and_handle_after_lparen:
 			return TPP_TOK_EOF;
 		} else {
 			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE,
-			                                  tpp_keyword_getkwdcstr(mode_kwd));
+			                                  tpp_keyword_getcstr(mode_kwd));
 			if (TPP_ISERR(error))
 				return TPP_TOK_OFERR(error);
 		}
@@ -25635,7 +25704,7 @@ tpp_file_maybe_delete_include_guard_keyword(tpp_file *tpp_restrict self) {
 		tpp_keyword_misc *misc;
 		kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
 		                      tpp_offsetof(tpp_keyword, tk_kwd));
-		misc = tpp_keyword_getmisc(kwd);
+		misc = kwd->tk_misc;
 		if (misc && misc->tkm_file_guard &&
 		    !(misc->tkm_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID))
 			misc->tkm_file_guard = NULL;
@@ -26204,16 +26273,15 @@ tpp_lexer_handle_if_directive(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_FILE_NOKWD */
 		    file->tf_data.td_io.tff_name != NULL) {
 			tpp_keyword *kwd;
-			tpp_keyword_misc *misc;
+			tpp_errno setkwd_error;
 			kwd = (tpp_keyword *)((char const *)file->tf_data.td_io.tff_name -
 			                      tpp_offsetof(tpp_keyword, tk_kwd));
 			kwd = tpp_keywords_copybuiltin(&self->tl_kwds, kwd);
 			if tpp_unlikely(!kwd)
 				return TPP_TOK_ENOMEM;
-			misc = tpp_keyword_requiremisc(kwd);
-			if tpp_unlikely(!misc)
-				return TPP_TOK_ENOMEM;
-			misc->tkm_file_guard = ifndef_keyword;
+			setkwd_error = tpp_keyword_set_file_guard(kwd, ifndef_keyword);
+			if (TPP_ISERR(setkwd_error))
+				return TPP_TOK_OFERR(setkwd_error);
 			if (error == TPP_ENOENT)
 				goto do_seek_end_of_ifdef_block;
 			/* XXX: -Wheader-guard */
@@ -26658,7 +26726,7 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 	}
 	file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES; /* Allow more directives immediately upon return from file */
 	tpp_file_move(prev_file, file);
-	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename_kwd),
+	tpp_file_init_io_ex(file, tpp_keyword_getcstr(ofr.tlofr_filename_kwd),
 	                    ofr.tlofr_handle, TPP_FILE_FLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -26693,7 +26761,7 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
 	char const *function_name;
 again:
 	function_name_kwd = tpp_lexer_gettokenkwd(lexer);
-	function_name = tpp_keyword_getkwdcstr(function_name_kwd);
+	function_name = tpp_keyword_getcstr(function_name_kwd);
 	switch (param_kwd) {
 
 	case TPP_KWD_limit: {
@@ -26777,8 +26845,8 @@ again:
 	default:
 		/* If current keyword starts/ends with _-characters,
 		 * strip those characters and try again */
-		if (*function_name == '_' || function_name[tpp_keyword_getkwdlen(function_name_kwd) - 1] == '_') {
-			tpp_size len = tpp_keyword_getkwdlen(function_name_kwd);
+		if (*function_name == '_' || function_name[tpp_keyword_getlen(function_name_kwd) - 1] == '_') {
+			tpp_size len = tpp_keyword_getlen(function_name_kwd);
 			while (len && function_name[len - 1] == '_')
 				--len;
 			while (len && function_name[0] == '_')
@@ -29353,16 +29421,17 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 #endif /* TPP_HAVE_MACRO___TPP_UNIQUE */
 #if TPP_HAVE_MACRO___TPP_COUNTER
 				if(0) {
-					tpp_keyword_misc *misc;
+					tpp_errno error;
 					tpp_keyword *rw_keyword;
+					tpp_counter counter;
 			case TPP_KWD___TPP_COUNTER:
 					rw_keyword = tpp_keywords_copybuiltin(&self->tl_kwds, feature_keyword);
 					if tpp_unlikely(!rw_keyword)
 						return TPP_TOK_ENOMEM;
-					misc = tpp_keyword_requiremisc(rw_keyword);
-					if tpp_unlikely(!misc)
-						return TPP_TOK_ENOMEM;
-					expansion_value = misc->tkm_builtin_counter++;
+					error = tpp_keyword_inc_builtin_counter(rw_keyword, &counter);
+					if (TPP_ISERR(error))
+						return TPP_TOK_OFERR(error);
+					expansion_value = (tpp_intmax)counter;
 				}
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
 				expansion_dst = tpp_itoa((char *)tpp_feature_test_macro_expansion, expansion_value);
@@ -34052,7 +34121,7 @@ handle_comment:
 				} else {
 #if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION
 					tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION,
-					                                  tpp_keyword_getkwdcstr(assertion_key));
+					                                  tpp_keyword_getcstr(assertion_key));
 					if (TPP_ISERR(error))
 						return error;
 #endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION */
@@ -35414,7 +35483,7 @@ tpp_lexer_dumper_printmacro(tpp_lexer_dumper *tpp_restrict self,
 #endif /* TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
 
 	tpp_lexer_dumper_do_print_conststr(self, "#define ");
-	tpp_lexer_dumper_do_print(self, tpp_keyword_getkwd(keyword), tpp_keyword_getkwdlen(keyword));
+	tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(keyword), tpp_keyword_getlen(keyword));
 	if (tpp_macro_isfunction(macro)) {
 		tpp_char lparen = (tpp_char)tpp_macro_getfunclparen(macro);
 		tpp_char rparen = (tpp_char)tpp_macro_getfuncrparen(macro);
@@ -35429,7 +35498,7 @@ tpp_lexer_dumper_printmacro(tpp_lexer_dumper *tpp_restrict self,
 #endif /* TPP_HAVE_VA_ARGS_IN_MACROS */
 			{
 				tpp_keyword const *arg_kwd = tpp_keywords_getkeyword_byid(&self->tld_lexer->tl_kwds, arg_tok);
-				char const *arg_name = arg_kwd ? tpp_keyword_getkwdcstr(arg_kwd) : "?";
+				char const *arg_name = arg_kwd ? tpp_keyword_getcstr(arg_kwd) : "?";
 				tpp_lexer_dumper_do_print_cstr(self, arg_name, tpp_strlen(arg_name));
 			}
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS
@@ -35474,9 +35543,9 @@ tpp_lexer_dumper_printassert(tpp_lexer_dumper *tpp_restrict self,
                              tpp_keyword const *keyword,
                              tpp_keyword const *value) {
 	tpp_lexer_dumper_do_print_conststr(self, "#assert ");
-	tpp_lexer_dumper_do_print(self, tpp_keyword_getkwd(keyword), tpp_keyword_getkwdlen(keyword));
+	tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(keyword), tpp_keyword_getlen(keyword));
 	tpp_lexer_dumper_do_print_conststr(self, "(");
-	tpp_lexer_dumper_do_print(self, tpp_keyword_getkwd(value), tpp_keyword_getkwdlen(value));
+	tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(value), tpp_keyword_getlen(value));
 	tpp_lexer_dumper_do_print_conststr(self, ")\n");
 }
 

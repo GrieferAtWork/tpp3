@@ -219,7 +219,7 @@ tpp_lexer_dumper_printmacro(tpp_lexer_dumper *tpp_restrict self,
 #endif /* TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
 
 	tpp_lexer_dumper_do_print_conststr(self, "#define ");
-	tpp_lexer_dumper_do_print(self, tpp_keyword_getkwd(keyword), tpp_keyword_getkwdlen(keyword));
+	tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(keyword), tpp_keyword_getlen(keyword));
 	if (tpp_macro_isfunction(macro)) {
 		tpp_char lparen = (tpp_char)tpp_macro_getfunclparen(macro);
 		tpp_char rparen = (tpp_char)tpp_macro_getfuncrparen(macro);
@@ -234,7 +234,7 @@ tpp_lexer_dumper_printmacro(tpp_lexer_dumper *tpp_restrict self,
 #endif /* TPP_HAVE_VA_ARGS_IN_MACROS */
 			{
 				tpp_keyword const *arg_kwd = tpp_keywords_getkeyword_byid(&self->tld_lexer->tl_kwds, arg_tok);
-				char const *arg_name = arg_kwd ? tpp_keyword_getkwdcstr(arg_kwd) : "?";
+				char const *arg_name = arg_kwd ? tpp_keyword_getcstr(arg_kwd) : "?";
 				tpp_lexer_dumper_do_print_cstr(self, arg_name, tpp_strlen(arg_name));
 			}
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS
@@ -279,9 +279,9 @@ tpp_lexer_dumper_printassert(tpp_lexer_dumper *tpp_restrict self,
                              tpp_keyword const *keyword,
                              tpp_keyword const *value) {
 	tpp_lexer_dumper_do_print_conststr(self, "#assert ");
-	tpp_lexer_dumper_do_print(self, tpp_keyword_getkwd(keyword), tpp_keyword_getkwdlen(keyword));
+	tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(keyword), tpp_keyword_getlen(keyword));
 	tpp_lexer_dumper_do_print_conststr(self, "(");
-	tpp_lexer_dumper_do_print(self, tpp_keyword_getkwd(value), tpp_keyword_getkwdlen(value));
+	tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(value), tpp_keyword_getlen(value));
 	tpp_lexer_dumper_do_print_conststr(self, ")\n");
 }
 

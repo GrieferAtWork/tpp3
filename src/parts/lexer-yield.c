@@ -357,16 +357,17 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 #endif /* TPP_HAVE_MACRO___TPP_UNIQUE */
 #if TPP_HAVE_MACRO___TPP_COUNTER
 				if(0) {
-					tpp_keyword_misc *misc;
+					tpp_errno error;
 					tpp_keyword *rw_keyword;
+					tpp_counter counter;
 			case TPP_KWD___TPP_COUNTER:
 					rw_keyword = tpp_keywords_copybuiltin(&self->tl_kwds, feature_keyword);
 					if tpp_unlikely(!rw_keyword)
 						return TPP_TOK_ENOMEM;
-					misc = tpp_keyword_requiremisc(rw_keyword);
-					if tpp_unlikely(!misc)
-						return TPP_TOK_ENOMEM;
-					expansion_value = misc->tkm_builtin_counter++;
+					error = tpp_keyword_inc_builtin_counter(rw_keyword, &counter);
+					if (TPP_ISERR(error))
+						return TPP_TOK_OFERR(error);
+					expansion_value = (tpp_intmax)counter;
 				}
 #endif /* TPP_HAVE_MACRO___TPP_COUNTER */
 				expansion_dst = tpp_itoa((char *)tpp_feature_test_macro_expansion, expansion_value);

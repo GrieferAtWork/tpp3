@@ -68,11 +68,6 @@ int main(int argc, char *argv[]) {
 			desc = "?";
 		file           = tpp_lexer_getfile(&lexer);
 		lexer_filename = tpp_file_getfilename(file);
-		desc = tpp_strtokenid(tok);
-		if (desc == NULL && TPP_TOK_ISKEYWORD(tok))
-			desc = tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(&lexer));
-		if (desc == NULL)
-			desc = "?";
 		tpp_file_getlcinfo_ex(file, tpp_lexer_gettokenstart(&lexer), &lc);
 		printf("[%s:%d:%d:%s(%d):%.*s",
 		       lexer_filename ? lexer_filename : "?",

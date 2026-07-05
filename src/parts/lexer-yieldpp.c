@@ -357,7 +357,7 @@ tpp_lexer_handle_assert_directive(tpp_lexer *tpp_restrict self, tpp_token_id mod
 	if (!TPP_TOK_ISKEYWORD(result)) {
 #if TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE
 		tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE,
-		                                  tpp_keyword_getkwdcstr(mode_kwd));
+		                                  tpp_keyword_getcstr(mode_kwd));
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE */
@@ -384,19 +384,15 @@ again_yield_and_handle_after_lparen:
 				return result;
 			if (TPP_TOK_ISKEYWORD(result)) {
 				tpp_keyword const *value = tpp_lexer_gettokenkwd(self);
-				tpp_keyword_misc *misc;
 				tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
 				if tpp_unlikely(!keyword)
 					return TPP_TOK_ENOMEM;
-				misc = tpp_keyword_requiremisc(keyword);
-				if tpp_unlikely(!misc)
-					return TPP_TOK_ENOMEM;
 				if (mode == TPP_KWD_assert) {
-					tpp_errno error = tpp_assertions_assert(&misc->tkm_assertions, value);
+					tpp_errno error = tpp_keyword_addassert(keyword, value);
 					if (TPP_ISERR(error))
 						return TPP_TOK_OFERR(error);
 				} else {
-					(void)tpp_assertions_unassert(&misc->tkm_assertions, value);
+					(void)tpp_keyword_unassert(keyword, value);
 				}
 				result = tpp_lexer_yieldraw_blocking(self);
 				if (TPP_TOK_ISERR(result))
@@ -404,8 +400,8 @@ again_yield_and_handle_after_lparen:
 			} else {
 #if TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE
 				tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE,
-				                                  tpp_keyword_getkwdcstr(mode_kwd),
-				                                  tpp_keyword_getkwdcstr(ro_keyword));
+				                                  tpp_keyword_getcstr(mode_kwd),
+				                                  tpp_keyword_getcstr(ro_keyword));
 				if (TPP_ISERR(error))
 					return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE */
@@ -418,13 +414,14 @@ again_yield_and_handle_after_lparen:
 			if (TPP_TOK_ISERR(result))
 				return result;
 		} else if (mode == TPP_KWD_unassert) {
-			tpp_keyword_misc *misc;
+#if 1 /* This is actually OK (but don't tell the public API users) */
+			tpp_keyword_unassertall(ro_keyword);
+#else
 			tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
 			if tpp_unlikely(!keyword)
 				return TPP_TOK_ENOMEM;
-			misc = keyword->tk_misc;
-			if (misc != NULL)
-				tpp_assertions_unassertall(&misc->tkm_assertions);
+			tpp_keyword_unassertall(keyword);
+#endif
 		}
 
 		/* Seek to next token (which should be a line-feed) */
@@ -437,7 +434,7 @@ again_yield_and_handle_after_lparen:
 			return TPP_TOK_EOF;
 		} else {
 			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE,
-			                                  tpp_keyword_getkwdcstr(mode_kwd));
+			                                  tpp_keyword_getcstr(mode_kwd));
 			if (TPP_ISERR(error))
 				return TPP_TOK_OFERR(error);
 		}
@@ -470,7 +467,7 @@ tpp_file_maybe_delete_include_guard_keyword(tpp_file *tpp_restrict self) {
 		tpp_keyword_misc *misc;
 		kwd = (tpp_keyword *)((char const *)self->tf_data.td_io.tff_name -
 		                      tpp_offsetof(tpp_keyword, tk_kwd));
-		misc = tpp_keyword_getmisc(kwd);
+		misc = kwd->tk_misc;
 		if (misc && misc->tkm_file_guard &&
 		    !(misc->tkm_flags & TPP_KEYWORD_FLAG_HDR_GUARD_VALID))
 			misc->tkm_file_guard = NULL;
@@ -1039,16 +1036,15 @@ tpp_lexer_handle_if_directive(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_FILE_NOKWD */
 		    file->tf_data.td_io.tff_name != NULL) {
 			tpp_keyword *kwd;
-			tpp_keyword_misc *misc;
+			tpp_errno setkwd_error;
 			kwd = (tpp_keyword *)((char const *)file->tf_data.td_io.tff_name -
 			                      tpp_offsetof(tpp_keyword, tk_kwd));
 			kwd = tpp_keywords_copybuiltin(&self->tl_kwds, kwd);
 			if tpp_unlikely(!kwd)
 				return TPP_TOK_ENOMEM;
-			misc = tpp_keyword_requiremisc(kwd);
-			if tpp_unlikely(!misc)
-				return TPP_TOK_ENOMEM;
-			misc->tkm_file_guard = ifndef_keyword;
+			setkwd_error = tpp_keyword_set_file_guard(kwd, ifndef_keyword);
+			if (TPP_ISERR(setkwd_error))
+				return TPP_TOK_OFERR(setkwd_error);
 			if (error == TPP_ENOENT)
 				goto do_seek_end_of_ifdef_block;
 			/* XXX: -Wheader-guard */
@@ -1493,7 +1489,7 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 	}
 	file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES; /* Allow more directives immediately upon return from file */
 	tpp_file_move(prev_file, file);
-	tpp_file_init_io_ex(file, tpp_keyword_getkwdcstr(ofr.tlofr_filename_kwd),
+	tpp_file_init_io_ex(file, tpp_keyword_getcstr(ofr.tlofr_filename_kwd),
 	                    ofr.tlofr_handle, TPP_FILE_FLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
@@ -1528,7 +1524,7 @@ tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
 	char const *function_name;
 again:
 	function_name_kwd = tpp_lexer_gettokenkwd(lexer);
-	function_name = tpp_keyword_getkwdcstr(function_name_kwd);
+	function_name = tpp_keyword_getcstr(function_name_kwd);
 	switch (param_kwd) {
 
 	case TPP_KWD_limit: {
@@ -1612,8 +1608,8 @@ again:
 	default:
 		/* If current keyword starts/ends with _-characters,
 		 * strip those characters and try again */
-		if (*function_name == '_' || function_name[tpp_keyword_getkwdlen(function_name_kwd) - 1] == '_') {
-			tpp_size len = tpp_keyword_getkwdlen(function_name_kwd);
+		if (*function_name == '_' || function_name[tpp_keyword_getlen(function_name_kwd) - 1] == '_') {
+			tpp_size len = tpp_keyword_getlen(function_name_kwd);
 			while (len && function_name[len - 1] == '_')
 				--len;
 			while (len && function_name[0] == '_')

@@ -175,7 +175,9 @@ typedef struct tpp_lexer {
 
 	/* Next value for __COUNTER__ */
 #if TPP_HAVE_MACRO___COUNTER__
-	tpp_size TPP_INTERNAL(tl_builtin_counter); /* Next value for __COUNTER__ */
+	tpp_counter TPP_INTERNAL(tl_builtin_counter); /* Next value for __COUNTER__ */
+#define tpp_lexer_getnextcounter(self)    ((self)->TPP_INTERNAL(tl_builtin_counter))
+#define tpp_lexer_setnextcounter(self, v) (void)((self)->TPP_INTERNAL(tl_builtin_counter) = (v))
 #endif /* TPP_HAVE_MACRO___COUNTER__ */
 
 
@@ -421,7 +423,7 @@ for (local doc, name,
 /* >> tpp_errno (TPPCALL *tpp_lexer_callhook_new_dependency)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
  * Called whenever some file is #include-ed for the first time
  * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
- *                       filename can be queried as `tpp_keyword_getkwdcstr(filename_kwd)'. */
+ *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)'. */
 #define tpp_lexer_callhook_new_dependency(self, filename_kwd) \
 	tpp_hooks_call_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self, filename_kwd)
 #ifdef tpp_hooks_set_new_dependency
@@ -684,7 +686,7 @@ typedef struct tpp_lexer_openfile_result {
 	tpp_io_handle  tlofr_handle;       /* [1..1][owned] I/O handle for requested file (must be inherited by caller) */
 #if TPP_HAVE_USER_KEYWORDS
 	tpp_keyword   *tlofr_filename_kwd; /* [1..1] Keyword for filename */
-#define tpp_lexer_openfile_result_getfilename(self) tpp_keyword_getkwdcstr((self)->tlofr_filename_kwd)
+#define tpp_lexer_openfile_result_getfilename(self) tpp_keyword_getcstr((self)->tlofr_filename_kwd)
 #else /* TPP_HAVE_USER_KEYWORDS */
 	char          *tlofr_filename;     /* [1..1][owned] Filename string */
 #define tpp_lexer_openfile_result_getfilename(self) ((char const *)(self)->tlofr_filename)

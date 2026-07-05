@@ -322,7 +322,7 @@ tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
  *
  * @return: * :   The "misc" data of "self" (freshly allocated)
  * @return: NULL: Out of memory (TPP_ENOMEM) */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
 tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 	tpp_keyword_misc *result = self->tk_misc;
 	if tpp_unlikely(result == NULL) {
@@ -452,6 +452,8 @@ err_empty:
 }
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
+
+
 #if TPP_HAVE_CPP_MACROS
 /* Delete the macro definition of `self'.
  * The caller must ensure that `tpp_keyword_canundef(self)' */
@@ -464,6 +466,75 @@ tpp_keyword_undef(tpp_keyword *tpp_restrict self) {
 	tpp_macro_decref(old_macro);
 }
 #endif /* TPP_HAVE_CPP_MACROS */
+
+
+
+#if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+/* Set the keyword registered as #ifndef-guard of
+ * the given (should-be) filename-keyword "self"
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard) {
+	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	misc->tkm_file_guard = guard;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+
+
+
+#if TPP_HAVE_MACRO___TPP_COUNTER
+/* Fetch+increment the __TPP_COUNTER() value of this keyword
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
+                                tpp_counter *tpp_restrict p_result) {
+	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	*p_result = misc->tkm_builtin_counter++;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+
+
+
+#if TPP_HAVE_KEYWORD_FLAGS
+/* Set the flags (set of `TPP_KEYWORD_FLAG_*') linked to "self"
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_setflags(tpp_keyword *tpp_restrict self,
+                     tpp_keyword_flags flags) {
+	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	misc->tkm_flags = flags;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_KEYWORD_FLAGS */
+
+
+
+#if TPP_HAVE_CPP_ASSERT
+/* Assert a given "value" within "self".
+ * @return: TPP_EOK:    Assertion was added
+ * @return: TPP_ENOENT: Assertion was already added before (SOFT_ERROR)
+ * @return: TPP_ENOMEM: Out of memory (HARD_ERROR) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_addassert(tpp_keyword *self, tpp_keyword const *value) {
+	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	return tpp_assertions_assert(&misc->tkm_assertions, value);
+}
+#endif /* TPP_HAVE_CPP_ASSERT */
+
 
 
 
@@ -1036,7 +1107,7 @@ tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
 		deffile_kwd = tpp_keywords_getkeyword(keywords, deffile,
 		                                      deffile_len, deffile_hash);
 		if (deffile_kwd)
-			self->tm_deffile = tpp_keyword_getkwdcstr(deffile_kwd);
+			self->tm_deffile = tpp_keyword_getcstr(deffile_kwd);
 	}
 }
 #endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
@@ -1049,9 +1120,9 @@ tpp_assertion_relocate_keyword(tpp_assertion *tpp_restrict self,
 	tpp_keyword const *keyword = self->tas_value;
 	if (keyword) {
 		keyword = _tpp_keywords_getkeyword(keywords,
-		                                   tpp_keyword_getkwd(keyword),
-		                                   tpp_keyword_getkwdlen(keyword),
-		                                   tpp_keyword_getkwdhash(keyword));
+		                                   tpp_keyword_getstr(keyword),
+		                                   tpp_keyword_getlen(keyword),
+		                                   tpp_keyword_gethash(keyword));
 		if (keyword)
 			self->tas_value = keyword;
 	}
@@ -1579,7 +1650,7 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_openfile_ex_check_mask_flags(/*1..1*/ tpp_lexer *tpp_restrict self,
                                        tpp_keyword *file_kwd,
                                        tpp_lexer_openfile_flags mask_flags) {
-	tpp_keyword_misc *misc = tpp_keyword_getmisc(file_kwd);
+	tpp_keyword_misc *misc = file_kwd->tk_misc;
 	if (misc != NULL) {
 		tpp_keyword_flags flags_union = misc->tkm_flags & mask_flags;
 		if (flags_union != 0) {

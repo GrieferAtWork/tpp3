@@ -48,7 +48,7 @@ enum {
 /* NOTE: "[SOFT_ERROR]" are "temporary" errors that are intended to-be recovered from.
  *       These errors should be caught & dealt with at appropriate points in the code. */
 typedef enum tpp_errno {
-#define TPP_ISERR(error)     ((error) != TPP_EOK)
+#define TPP_ISERR(error) tpp_unlikely((error) != TPP_EOK)
 
 	/* --------------------------------------------------------------------
 	 * NO_ERROR: TPP_EOK

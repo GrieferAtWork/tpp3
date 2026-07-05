@@ -82,7 +82,7 @@
 #define WARNF(...) tpp_do(tpp_lexer_printf_warning(tpp_current_lexer(), tpp_current_info(), tpp_current_printer(), tpp_current_printer_arg(), __VA_ARGS__))
 #define TOK_S      "%[%.*s%]" /* Use "%Pt" instead! */
 #define TOK_A      (unsigned int)tpp_lexer_gettokenlen(tpp_current_lexer()), tpp_lexer_gettokenstart(tpp_current_lexer())
-#define KWDNAME()  tpp_keyword_getkwdcstr(tpp_lexer_gettokenkwd(tpp_current_lexer()))
+#define KWDNAME()  tpp_keyword_getcstr(tpp_lexer_gettokenkwd(tpp_current_lexer()))
 #define FILENAME() tpp_file_getfilename(ARG(tpp_file *))
 #define ARG(T)     tpp_current_va_arg(T)
 #endif /* tpp_current_va_arg */
@@ -4787,8 +4787,8 @@ extern tpp_lexer *TPPLexer_Current;
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 #define ai_ins_str tma_ins_str /* Don't access */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
-#undef ai_name      /* Use tpp_keyword_getkwdcstr(tpp_lexer_kwds_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
-#undef ai_namesize  /* Use tpp_keyword_getkwdlen(tpp_lexer_kwds_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
+#undef ai_name      /* Use tpp_keyword_getcstr(tpp_lexer_kwds_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
+#undef ai_namesize  /* Use tpp_keyword_getlen(tpp_lexer_kwds_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
 /* }; */
 
 
@@ -5240,17 +5240,19 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define TPPKeyword tpp_keyword
 #define k_next     TPP_INTERNAL(tk_next)  /* Don't access */
 #define k_macro    TPP_INTERNAL(tk_macro) /* Use tpp_keyword_getmacro() */
-#define k_rare     TPP_INTERNAL(tk_misc)  /* Use tpp_keyword_getmisc() / tpp_keyword_requiremisc() */
+#define k_rare     TPP_INTERNAL(tk_misc)  /* Don't access directly; use direct functions like "tpp_keyword_pushmacro()" */
 #define k_id       TPP_INTERNAL(tk_id)    /* Use tpp_keyword_getid() */
-#define k_size     TPP_INTERNAL(tk_len)   /* Use tpp_keyword_getkwdlen() */
-#define k_hash     TPP_INTERNAL(tk_hash)  /* Use tpp_keyword_getkwdhash() */
-#define k_name     TPP_INTERNAL(tk_kwd)   /* Use tpp_keyword_getkwdcstr() */
+#define k_size     TPP_INTERNAL(tk_len)   /* Use tpp_keyword_getlen() */
+#define k_hash     TPP_INTERNAL(tk_hash)  /* Use tpp_keyword_gethash() */
+#define k_name     TPP_INTERNAL(tk_kwd)   /* Use tpp_keyword_getcstr() */
 /* }; */
 
 #define TPPKeyword_ISDEFINED(self) ((self)->k_macro != NULL || TPP_ISBUILTINMACRO((self)->k_id))
+#if 0 /* Functionality still exists in TPP3, but no longer part of public API */
 #define TPPKeyword_MAKERARE(self)  (tpp_keyword_requiremisc(self) != NULL)
+#endif
 #define TPPKeyword_EQUALS(self, constant_string) \
-	tpp_keyword_equals_cstr(self, constant_string)
+	tpp_keyword_equals_conststr(self, constant_string)
 
 /* Returns the effective keyword flags of `self'.
  * @return: A set of `TPP_KEYWORDFLAG_*' */
@@ -5262,13 +5264,13 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
                      int check_without_underscores) {
 	tpp_keyword_flags result = tpp_lexer_getkeywordflags(lexer, self);
 	if (check_without_underscores) {
-		tpp_char const *without_underscore_start = tpp_keyword_getkwd(self);
-		tpp_size without_underscore_len          = tpp_keyword_getkwdlen(self);
+		tpp_char const *without_underscore_start = tpp_keyword_getstr(self);
+		tpp_size without_underscore_len          = tpp_keyword_getlen(self);
 		while (without_underscore_len && *without_underscore_start == '_')
 			++without_underscore_start, --without_underscore_len;
 		while (without_underscore_len && without_underscore_start[without_underscore_len - 1] == '_')
 			--without_underscore_len;
-		if (without_underscore_len < tpp_keyword_getkwdlen(self)) {
+		if (without_underscore_len < tpp_keyword_getlen(self)) {
 			tpp_hash hash = tpp_hashof(without_underscore_start, without_underscore_len);
 			tpp_keyword const *without_underscore = tpp_lexer_kwds_getkeyword(lexer, without_underscore_start,
 			                                                                  without_underscore_len, hash);
