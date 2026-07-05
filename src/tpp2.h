@@ -88,6 +88,119 @@
 #endif /* tpp_current_va_arg */
 
 
+/* Legacy feature-test keywords */
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_DOLLAR)
+HAS_EXTENSION_IF(tpp_dollar_is_alpha, !tpp_lexer_has(tpp_current_lexer(), TPP_TOK_DOLLAR))
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_DOLLAR) */
+#if TPP_HAVE_VA_ARGS_IN_MACROS
+HAS_EXTENSION_IF(tpp_va_args, tpp_lexer_has(tpp_current_lexer(), VA_ARGS_IN_MACROS))
+#endif /* TPP_HAVE_VA_ARGS_IN_MACROS */
+#if TPP_HAVE_NAMED_VARARGS_IN_MACROS
+HAS_EXTENSION_IF(tpp_named_va_args, tpp_lexer_has(tpp_current_lexer(), NAMED_VARARGS_IN_MACROS))
+#endif /* TPP_HAVE_NAMED_VARARGS_IN_MACROS */
+#if TPP_HAVE_VA_COMMA_IN_MACROS
+HAS_EXTENSION_IF(tpp_va_comma, tpp_lexer_has(tpp_current_lexer(), VA_COMMA_IN_MACROS))
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS */
+#if TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
+HAS_EXTENSION_IF(tpp_msvc_integer_suffix, tpp_lexer_has(tpp_current_lexer(), LEXER_DECODEINT_FIXED_LENGTH_SUFFIX))
+#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
+#if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+HAS_EXTENSION_IF(tpp_charize_operator, tpp_lexer_has(tpp_current_lexer(), CHARIZE_MACRO_ARGUMENT))
+#endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+#if TPP_HAVE_TRIGRAPHS
+HAS_EXTENSION_IF(tpp_trigraphs, tpp_lexer_has(tpp_current_lexer(), TRIGRAPHS))
+#endif /* TPP_HAVE_TRIGRAPHS */
+#if TPP_HAVE_DIGRAPHS
+HAS_EXTENSION_IF(tpp_digraphs, tpp_lexer_has(tpp_current_lexer(), DIGRAPHS))
+#endif /* TPP_HAVE_DIGRAPHS */
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+HAS_EXTENSION_IF(tpp_pragma_push_macro, tpp_lexer_has(tpp_current_lexer(), PRAGMA_PUSH_MACRO))
+HAS_EXTENSION_IF(tpp_pragma_pop_macro, tpp_lexer_has(tpp_current_lexer(), PRAGMA_PUSH_MACRO))
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+#if TPP_HAVE_PRAGMA_REGION
+HAS_EXTENSION_IF(tpp_pragma_region, tpp_lexer_has(tpp_current_lexer(), PRAGMA_REGION))
+HAS_EXTENSION_IF(tpp_pragma_endregion, tpp_lexer_has(tpp_current_lexer(), PRAGMA_REGION))
+#endif /* TPP_HAVE_PRAGMA_REGION */
+#if TPP_HAVE_PRAGMA_WARNING
+HAS_EXTENSION_IF(tpp_pragma_warning, tpp_lexer_has(tpp_current_lexer(), PRAGMA_WARNING))
+#endif /* TPP_HAVE_PRAGMA_WARNING */
+#if TPP_HAVE_PRAGMA_MESSAGE
+HAS_EXTENSION_IF(tpp_pragma_message, tpp_lexer_has(tpp_current_lexer(), PRAGMA_MESSAGE))
+#endif /* TPP_HAVE_PRAGMA_MESSAGE */
+#if TPP_HAVE_PRAGMA_ERROR
+HAS_EXTENSION_IF(tpp_pragma_error, tpp_lexer_has(tpp_current_lexer(), PRAGMA_ERROR))
+#endif /* TPP_HAVE_PRAGMA_ERROR */
+#if TPP_HAVE_PRAGMA_ONCE
+HAS_EXTENSION_IF(tpp_pragma_once, tpp_lexer_has(tpp_current_lexer(), PRAGMA_ONCE))
+#endif /* TPP_HAVE_PRAGMA_ONCE */
+#if TPP_HAVE_PRAGMA_TPP_EXEC
+HAS_EXTENSION_IF(tpp_pragma_tpp_exec, tpp_lexer_has(tpp_current_lexer(), PRAGMA_TPP_EXEC))
+#endif /* TPP_HAVE_PRAGMA_TPP_EXEC */
+#if TPP_HAVE_PRAGMA_DEPRECATED
+HAS_EXTENSION_IF(tpp_pragma_deprecated, tpp_lexer_has(tpp_current_lexer(), PRAGMA_DEPRECATED))
+#endif /* TPP_HAVE_PRAGMA_DEPRECATED */
+#if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
+HAS_EXTENSION_IF(tpp_pragma_tpp_set_keyword_flags, tpp_lexer_has(tpp_current_lexer(), PRAGMA_TPP_SET_KEYWORD_FLAGS))
+#endif /* TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
+#if TPP_HAVE_CPP_INCLUDE_NEXT
+HAS_EXTENSION_IF(tpp_directive_include_next, tpp_lexer_has(tpp_current_lexer(), CPP_INCLUDE_NEXT))
+#endif /* TPP_HAVE_CPP_INCLUDE_NEXT */
+#if TPP_HAVE_CPP_IMPORT
+HAS_EXTENSION_IF(tpp_directive_import, tpp_lexer_has(tpp_current_lexer(), CPP_IMPORT))
+#endif /* TPP_HAVE_CPP_IMPORT */
+#if TPP_HAVE_CPP_WARNING
+HAS_EXTENSION_IF(tpp_directive_warning, tpp_lexer_has(tpp_current_lexer(), CPP_WARNING))
+#endif /* TPP_HAVE_CPP_WARNING */
+#if TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR
+HAS_EXTENSION_IF(tpp_lxor, tpp_lexer_has(tpp_current_lexer(), BUILTIN_EXPR_LOGICAL_XOR))
+#endif /* TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR */
+#if TPP_HAVE_TPP_TOK_TILDE_TILDE
+HAS_EXTENSION_IF(tpp_token_tilde_tilde, tpp_lexer_has(tpp_current_lexer(), TPP_TOK_TILDE_TILDE))
+#endif /* TPP_HAVE_TPP_TOK_TILDE_TILDE */
+#if TPP_HAVE_TPP_TOK_STAR_STAR
+HAS_EXTENSION_IF(tpp_token_pow, tpp_lexer_has(tpp_current_lexer(), TPP_TOK_STAR_STAR))
+#endif /* TPP_HAVE_TPP_TOK_STAR_STAR */
+#if TPP_HAVE_TPP_TOK_PIPE_PIPE
+HAS_EXTENSION_IF(tpp_token_lxor, tpp_lexer_has(tpp_current_lexer(), TPP_TOK_PIPE_PIPE))
+#endif /* TPP_HAVE_TPP_TOK_PIPE_PIPE */
+#if TPP_HAVE_TPP_TOK_MINUS_RANGLE
+HAS_EXTENSION_IF(tpp_token_arrow, tpp_lexer_has(tpp_current_lexer(), TPP_TOK_MINUS_RANGLE))
+#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_COLON_EQUAL
+HAS_EXTENSION_IF(tpp_token_colon_assign, tpp_lexer_has(tpp_current_lexer(), TPP_TOK_COLON_EQUAL))
+#endif /* TPP_HAVE_TPP_TOK_COLON_EQUAL */
+#if TPP_HAVE_TPP_TOK_COLON_COLON
+HAS_EXTENSION_IF(tpp_token_colon_colon, tpp_lexer_has(tpp_current_lexer(), TPP_TOK_COLON_COLON))
+#endif /* TPP_HAVE_TPP_TOK_COLON_COLON */
+#if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
+HAS_EXTENSION_IF(tpp_macro_calling_conventions, tpp_lexer_has(tpp_current_lexer(), ALTERNATIVE_MACRO_PARENTHESIS))
+#endif /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
+#if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
+HAS_EXTENSION_IF(tpp_strict_whitespace, tpp_lexer_has(tpp_current_lexer(), MACRO_ARGUMENT_WHITESPACE))
+#endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
+#if TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
+HAS_EXTENSION_IF(tpp_if_cond_expression, tpp_lexer_has(tpp_current_lexer(), BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS))
+#endif /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
+#if TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_TPP_W_INVALID_INTEGER
+#if TPP_HAVE_WARNING_NUMBERS
+HAS_EXTENSION_IF(
+	tpp_strict_integer_overflow, /* TPP3 emits "TPP_W_INVALID_INTEGER" on integer overflow */
+	tpp_warning_state_willemit(tpp_lexer_getwarningctx(tpp_current_lexer(), TPP_WC_TPP_WG_SYNTAX)) &&
+	tpp_warning_state_willemit(tpp_lexer_getwarningctx(tpp_current_lexer(), TPP_WC_TPP_W_INVALID_INTEGER))
+)
+#else /* TPP_HAVE_WARNING_NUMBERS */
+HAS_EXTENSION_IF(
+	tpp_strict_integer_overflow,
+	tpp_warning_state_willemit(tpp_lexer_getwarningctx(tpp_current_lexer(), TPP_WC_TPP_WG_SYNTAX))
+)
+#endif /* !TPP_HAVE_WARNING_NUMBERS */
+#endif /* TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_TPP_W_INVALID_INTEGER */
+#if TPP_DEBUG
+HAS_EXTENSION_IF(tpp_debug, TPP_DEBUG)
+#endif /* TPP_DEBUG */
+
+
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -1538,8 +1651,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 
 /* TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA, __has_extension(tpp_reemit_unknown_pragmas):
  * - TPP3 does no longer support re-emission of unknown #pragma-directives
- * - Instead, you should define you own, custom #pragma-hook (TODO: API for
- *   this) that will be called whenever TPP encounters an unknown pragma.
+ * - Instead, you should define you own, custom #pragma-hook `TPP_HOOK_UNKNOWN_PRAGMA'
+ *   that will be called whenever TPP encounters an unknown pragma.
  */
 
 /* TPPLEXER_FLAG_CHAR_UNSIGNED:
@@ -2424,6 +2537,9 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_INCLUDE_PATH_QUOTE             0 /* TPP2 only had a system-include-path list */
 #define TPP_HAVE_INCLUDE_PATH_AFTER             0 /* TPP2 only had a system-include-path list */
 #define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE 1 /* TPP2 used to do this unconditionally */
+
+/* Misc. features */
+#define TPP_HAVE_QUALITY_WARNINGS 1 /* General config for -Wquality warnings */
 
 /* Force extensions to use the names they'd been using in TPP2 */
 #define TPP_EXTNAME_TRIGRAPHS                           "trigraphs"
@@ -4479,16 +4595,6 @@ alias("W_CONSIDER_PAREN_AROUND_LAND", "TPP_W_PAREN_AROUND_LAND");
 /*[[[end]]]*/
 
 //TODO: /* #define TPP_CONFIG_CALLBACK_WARNING          x // int x(int wnum, ...) { ... } -- A user-replacement for `TPPLexer_Warn' */
-//TODO: /* #define TPP_CONFIG_CALLBACK_PARSE_PRAGMA     x // int TPPCALL x(void) { ... } */
-//TODO: /* #define TPP_CONFIG_CALLBACK_PARSE_PRAGMA_GCC x // int TPPCALL x(void) { ... } */
-//TODO: /* #define TPP_CONFIG_CALLBACK_INS_COMMENT      x // int TPPCALL x(struct TPPString *tpp_restrict comment) { ... } */
-//TODO: /* #define TPP_CONFIG_CALLBACK_NEW_TEXTFILE     x // int TPPCALL x(struct TPPFile *tpp_restrict file, int is_system_header) { ... } */
-//TODO: /* #define TPP_CONFIG_CALLBACK_UNKNOWN_FILE     x // struct TPPFile *TPPCALL x(int mode, char *tpp_restrict filename, size_t filename_size, struct TPPKeyword **pkeyword_entry) */
-//TODO: /* #define TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA     1 */
-//TODO: /* #define TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA_GCC 1 */
-//TODO: /* #define TPP_CONFIG_NO_CALLBACK_INS_COMMENT      1 */
-//TODO: /* #define TPP_CONFIG_NO_CALLBACK_NEW_TEXTFILE     1 */
-//TODO: /* #define TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE     1 */
 
 //TODO:/*36*/ DEF_WARNING(W_MACRO_NOT_DEFINED, (WG_MACROS), WSTATE_DISABLED, WARNF("Macro " Q("%s") " is not defined", KWDNAME()))                                /* [struct TPPKeyword *] OLD(TPPWarn_MacroDoesntExist). */
 //TODO:/*64*/ DEF_WARNING(W_SPECIAL_ARGUMENT_NAME, (WG_MACROS), WSTATE_WARN, WARNF("Special keyword " Q("%s") " used as argument name", KWDNAME())) /* [struct TPPKeyword *] OLD(TPPWarn_VaArgsUsedAsMacroParameter). */

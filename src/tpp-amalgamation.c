@@ -31236,7 +31236,7 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	}
 
 	/* Handle stuff like "tok == '>>' && CURRENT_TOKEN == '>>>'", etc. */
-	/* TODO: The code here should be generated! */
+	/* XXX: The code here should be generated! */
 	switch (token->tt_id) {
 
 #if TPP_HAVE_TPP_TOK_DOT_DOT_DOT && TPP_HAVE_TPP_TOK_DOT_DOT

@@ -831,44 +831,6 @@ TPP_MACRO(TPP_KWD___TPP_IDENTIFIER, tpp_lexer_has(tpp_current_lexer(), MACRO___T
 
 
 
-/* TODO: Feature-test macros (for __has_extension()) */
-#if 0
-HAS_EXTENSION_IF(tpp_dollar_is_alpha,              HAVE_EXTENSION_DOLLAR_IS_ALPHA)
-HAS_EXTENSION_IF(tpp_va_args,                      HAVE_EXTENSION_VA_ARGS)
-HAS_EXTENSION_IF(tpp_named_va_args,                HAVE_EXTENSION_GCC_VA_ARGS)
-HAS_EXTENSION_IF(tpp_va_comma,                     HAVE_EXTENSION_VA_COMMA)
-HAS_EXTENSION_IF(tpp_msvc_integer_suffix,          HAVE_EXTENSION_MSVC_FIXED_INT)
-HAS_EXTENSION_IF(tpp_charize_operator,             HAVE_EXTENSION_HASH_AT)
-HAS_EXTENSION_IF(tpp_trigraphs,                    HAVE_FEATURE_TRIGRAPHS)
-HAS_EXTENSION_IF(tpp_digraphs,                     HAVE_FEATURE_DIGRAPHS)
-HAS_EXTENSION_IF(tpp_pragma_push_macro,            TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_pragma_pop_macro,             TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_pragma_region,                TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_pragma_endregion,             TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_pragma_warning,               TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_pragma_message,               TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_pragma_error,                 TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_pragma_once,                  TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_pragma_tpp_exec,              TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_pragma_deprecated,            TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_pragma_tpp_set_keyword_flags, TPP_PREPROCESSOR_VERSION >= 200)
-HAS_EXTENSION_IF(tpp_directive_include_next,       HAVE_EXTENSION_INCLUDE_NEXT)
-HAS_EXTENSION_IF(tpp_directive_import,             HAVE_EXTENSION_IMPORT)
-HAS_EXTENSION_IF(tpp_directive_warning,            HAVE_EXTENSION_WARNING)
-HAS_EXTENSION_IF(tpp_lxor,                         HAVE_EXTENSION_LXOR)
-HAS_EXTENSION_IF(tpp_token_tilde_tilde,            TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_TILDETILDE)
-HAS_EXTENSION_IF(tpp_token_pow,                    TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_STARSTAR)
-HAS_EXTENSION_IF(tpp_token_lxor,                   TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_ROOFROOF)
-HAS_EXTENSION_IF(tpp_token_arrow,                  TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_ARROW)
-HAS_EXTENSION_IF(tpp_token_colon_assign,           TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_COLONASSIGN)
-HAS_EXTENSION_IF(tpp_token_colon_colon,            TPPLexer_Current->l_extokens & TPPLEXER_TOKEN_COLONCOLON)
-HAS_EXTENSION_IF(tpp_macro_calling_conventions,    HAVE_EXTENSION_ALTMAC)
-HAS_EXTENSION_IF(tpp_strict_whitespace,            HAVE_EXTENSION_ARGSPACE)
-HAS_EXTENSION_IF(tpp_strict_integer_overflow,      TPP_WSTATE_ISENABLED(TPPLexer_GetWarning(W_INTEGRAL_OVERFLOW)) || TPP_WSTATE_ISENABLED(TPPLexer_GetWarning(W_INTEGRAL_CLAMPED)))
-HAS_EXTENSION_IF(tpp_if_cond_expression,           HAVE_EXTENSION_IFELSE_IN_EXPR)
-HAS_EXTENSION_IF(tpp_debug,                        TPP_CONFIG_DEBUG)
-#endif
-
 #if TPP_CONF_IS_EXT(TPP_HAVE_BSE)
 #ifndef TPP_EXTNAME_BSE
 #define TPP_EXTNAME_BSE "bse"
@@ -7876,18 +7838,18 @@ TPP_DECL_END
 #ifndef TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
 #define TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED \
 	(TPP_HAVE_WARNINGS &&                              \
-	 TPP_HAVE_STRING_WARN_MULTILINE &&         \
-	 (TPP_HAVE_TPP_TOK_STRING ||                     \
-	  TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||    \
-	  TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||    \
-	  TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||   \
-	  TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||   \
-	  TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||         \
-	  TPP_HAVE_TPP_TOK_CHAR ||                       \
-	  TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||      \
-	  TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||      \
-	  TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||     \
-	  TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||     \
+	 TPP_HAVE_STRING_WARN_MULTILINE &&                 \
+	 (TPP_HAVE_TPP_TOK_STRING ||                       \
+	  TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||      \
+	  TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||      \
+	  TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||     \
+	  TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||     \
+	  TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||           \
+	  TPP_HAVE_TPP_TOK_CHAR ||                         \
+	  TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||        \
+	  TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||        \
+	  TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||       \
+	  TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||       \
 	  TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
@@ -15465,8 +15427,12 @@ typedef enum tpp_warning_state {
 
 /* Check if the warning state specified by "self" will cause something to be emitted. */
 #if TPP_HAVE_WARNING_SUPPRESS
+#if 1
+#define tpp_warning_state_willemit(self) ((int)(self) > 0)
+#else
 #define tpp_warning_state_willemit(self) \
 	((self) != TPP_WSTATE_DISABLED && (self) != TPP_WSTATE_SUPPRESS)
+#endif
 #else /* TPP_HAVE_WARNING_SUPPRESS */
 #define tpp_warning_state_willemit(self) \
 	((self) != TPP_WSTATE_DISABLED)
