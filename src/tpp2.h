@@ -1573,7 +1573,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   than parse an expression first, and operate on the resulting string only
  *   after having already done so.
  *   If TPP2 behavior would be preserved in such cases, this would cause lots
- *   of features to implicitly require "tpp_lexer_parseexpr()" (which is quote
+ *   of features to implicitly require "tpp_lexer_callhook_parseexpr()" (which is quote
  *   the big function that should only be required for "__TPP_EVAL" and "#if")
  * - If your code actually relied on this behavior, the recommendation is to
  *   migrate it as following:
@@ -5781,7 +5781,7 @@ TPP_INLINE int TPPCALL TPPLexer_Eval_(tpp_lexer *self, tpp_expr_value *result) {
 	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file_setpos(file, tpp_lexer_gettokenstart(self)); /* Rewind so current token gets yielded again */
-	error = tpp_lexer_parseexpr(self, result);
+	error = tpp_lexer_callhook_parseexpr(self, result);
 	return TPP_ISERR(error) ? 0 : 1;
 }
 

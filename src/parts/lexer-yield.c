@@ -1008,7 +1008,7 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 	}
 
 	/* Setup file to (re-)parse the eval expression */
-	error = tpp_lexer_parseexpr(self, &eval_result);
+	error = tpp_lexer_callhook_parseexpr(self, &eval_result);
 	if (TPP_ISERR(error))
 		return TPP_TOK_OFERR(error);
 	tok = tpp_lexer_gettok(self);

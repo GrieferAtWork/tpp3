@@ -528,7 +528,7 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 	file->tf_pos += directive_keyword_len; /* Skip over leading keyword */
 
 	/* Parse expression */
-	result = tpp_lexer_parseexpr(self, &expr_value);
+	result = tpp_lexer_callhook_parseexpr(self, &expr_value);
 
 	/* Evaluate expression result (and warn about trailing tokens) */
 	if (!TPP_ISERR(result)) {
@@ -1543,7 +1543,7 @@ again:
 		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR('('));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-		error = tpp_lexer_parseexpr(lexer, &limit_value_expr);
+		error = tpp_lexer_callhook_parseexpr(lexer, &limit_value_expr);
 		if (TPP_ISERR(error))
 			return error;
 		if (tpp_expr_value_isint(&limit_value_expr)) {

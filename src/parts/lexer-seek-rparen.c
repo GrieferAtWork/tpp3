@@ -476,7 +476,7 @@ again_switch_tok:
 
 	/* Tokens where the first character is irrelevant, but do contain relevant characters somewhere further within */
 /*[[[deemon
-import MC_TOKENS, tokenName from ".lexer-yieldraw-mc";
+import MC_TOKENS, tokenName from ".config";
 local splitTokens = [];
 function hasBalancedAngles(tok) {
 	local count = 0;

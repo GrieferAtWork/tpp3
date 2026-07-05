@@ -61,6 +61,7 @@
     <ClInclude Include="..\src\parts\features.h" />
     <ClInclude Include="..\src\parts\file-io.h" />
     <ClInclude Include="..\src\parts\file.h" />
+    <ClInclude Include="..\src\parts\hooks.h" />
     <ClInclude Include="..\src\parts\keyword.h" />
     <ClInclude Include="..\src\parts\lexer.h" />
     <ClInclude Include="..\src\parts\macro.h" />

@@ -27,6 +27,7 @@
 #include "extensions.h"
 #include "features.h"
 #include "file.h"
+#include "hooks.h"
 #include "keyword.h"
 #include "lexer.h"
 #include "macro.h"
@@ -34,38 +35,22 @@
 #include "warnings.h"
 
 /*[[[tpp-begin]]]*/
-#if TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER
+#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
 #if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
-#endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
+#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
 
 TPP_DECL_BEGIN
 
-#if TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER
-TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_wrapped_warnprinter, arg, text, num_bytes) {
-	(void)arg;
-	return TPP_CONFIG_WARNPRINTER(text, num_bytes);
-}
-#endif /* TPP_HAVE__TPP_LEXER_WRAPPED_WARNPRINTER */
-
-#if TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER
+#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
 TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warnprinter, arg, text, num_bytes) {
 	FILE *fp = stderr;
 	(void)arg;
 	fwrite(text, sizeof(tpp_char), num_bytes, fp);
 	return ferror(fp) ? TPP_SSIZE_OFERR(TPP_EIO) : 0;
 }
-#endif /* TPP_HAVE__TPP_LEXER_BUILTIN_WARNPRINTER */
-
-#if TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER
-TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_noop_warnprinter, arg, text, num_bytes) {
-	(void)arg;
-	(void)text;
-	(void)num_bytes;
-	return 0;
-}
-#endif /* TPP_HAVE__TPP_LEXER_NOOP_WARNPRINTER */
+#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
 
 
 
@@ -489,6 +474,16 @@ _err_printer:
 	return TPP_EWARNPRINT;
 }
 
+#ifndef tpp_lexer_gethook_warnprinter
+#define tpp_lexer_gethook_warnprinter(self) (&_tpp_lexer_dummy_warnprinter)
+static TPP_FORMATPRINTER_DEFINE(_tpp_lexer_dummy_warnprinter, arg, text, num_bytes) {
+	(void)arg;
+	(void)text;
+	(void)num_bytes;
+	return 0;
+}
+#endif /* !tpp_lexer_gethook_warnprinter */
+
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
                       tpp_lexer_printf_info *tpp_restrict info,
@@ -497,8 +492,8 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 	tpp_ssize printer_status;
 	char const *warning_format;
 	tpp_warning_invokeinfo invokeinfo;
-	tpp_formatprinter printer;
-	void *printer_arg;
+	tpp_formatprinter const printer = tpp_lexer_gethook_warnprinter(self);
+	void *const printer_arg = self;
 
 	/* Quick check: are warnings disabled? */
 	if (self->tl_state & TPP_LEXER_STATE_FLAG_NOWARNINGS)
@@ -542,9 +537,6 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 
 	default: tpp_unreachable();
 	}
-
-	printer     = tpp_lexer_getwarnprinter(self);
-	printer_arg = tpp_lexer_getwarnprinterarg(self);
 
 	/* Print file-and-line prefix */
 	printer_status = tpp_lexer_printf_warning(self, info, printer, printer_arg, tpp_file_and_line);

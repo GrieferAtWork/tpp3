@@ -505,7 +505,7 @@ typedef enum tpp_token_id {
 	 * As a matter of fact: multi-char tokens are sorted lexicographically! */
 /*[[[deemon
 import * from deemon;
-import * from ."lexer-yieldraw-mc";
+import * from .config;
 
 local firstChars = HashSet(MC_TOKENS.each.first.first).sorted();
 for (local firstChar: firstChars) {

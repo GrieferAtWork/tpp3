@@ -160,6 +160,10 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	tpp_keywords_init(&self->tl_kwds);
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
+#if TPP_HAVE_LEXER_STATE_FLAGS
+	self->tl_state = TPP_LEXER_STATE_FLAG_NORMAL;
+#endif /* TPP_HAVE_LEXER_STATE_FLAGS */
+
 #if TPP_HAVE_EXTENSIONS
 	tpp_extensions_init(&self->tl_exts);
 #endif /* TPP_HAVE_EXTENSIONS */
@@ -168,26 +172,17 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	tpp_features_init(&self->tl_feat);
 #endif /* TPP_HAVE_FEATURES */
 
-#if TPP_HAVE_LEXER_STATE_FLAGS
-	self->tl_state = TPP_LEXER_STATE_FLAG_NORMAL;
-#endif /* TPP_HAVE_LEXER_STATE_FLAGS */
-
 #if TPP_HAVE_INCLUDE_PATH
 	tpp_include_paths_init(&self->tl_include_paths);
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
+#if TPP_HAVE_HOOKS
+	tpp_hooks_init(&self->tl_hooks);
+#endif /* TPP_HAVE_HOOKS */
+
 #if TPP_HAVE_WARNINGS
 	tpp_warnings_init(&self->tl_warn);
-#if !defined(TPP_CONFIG_WARNPRINTER) && TPP_HAVE_BUILTIN_WARNPRINTER <= 0
-	self->tl_warnprinter = NULL;
-#endif /* !TPP_CONFIG_WARNPRINTER && TPP_HAVE_BUILTIN_WARNPRINTER <= 0 */
 #endif /* TPP_HAVE_WARNINGS */
-
-#if TPP_HAVE_LEXER_PARSEEXPR
-#if !defined(TPP_CONFIG_EXPRPARSER) && TPP_HAVE_BUILTIN_EXPRPARSER <= 0
-	self->tl_expr_parser_cb = NULL;
-#endif /* !TPP_CONFIG_EXPRPARSER && TPP_HAVE_BUILTIN_EXPRPARSER <= 0 */
-#endif /* TPP_HAVE_LEXER_PARSEEXPR */
 
 #if TPP_HAVE_WARNING_ERROR
 	self->tl_error_count = 0;
@@ -296,25 +291,17 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
 	/* Copy stuff that can't cause errors... */
-#if TPP_HAVE_FEATURES
-	self->tl_feat = from->tl_feat;
-#endif /* TPP_HAVE_FEATURES */
-
 #if TPP_HAVE_LEXER_STATE_FLAGS
 	self->tl_state = from->tl_state;
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
-#if TPP_HAVE_WARNINGS
-#if !defined(TPP_CONFIG_WARNPRINTER) && TPP_HAVE_BUILTIN_WARNPRINTER <= 0
-	self->tl_warnprinter = from->tl_warnprinter;
-#endif /* !TPP_CONFIG_WARNPRINTER && TPP_HAVE_BUILTIN_WARNPRINTER <= 0 */
-#endif /* TPP_HAVE_WARNINGS */
+#if TPP_HAVE_FEATURES
+	self->tl_feat = from->tl_feat;
+#endif /* TPP_HAVE_FEATURES */
 
-#if TPP_HAVE_LEXER_PARSEEXPR
-#if !defined(TPP_CONFIG_EXPRPARSER) && TPP_HAVE_BUILTIN_EXPRPARSER <= 0
-	self->tl_expr_parser_cb = from->tl_expr_parser_cb;
-#endif /* !TPP_CONFIG_EXPRPARSER && TPP_HAVE_BUILTIN_EXPRPARSER <= 0 */
-#endif /* TPP_HAVE_LEXER_PARSEEXPR */
+#if TPP_HAVE_HOOKS
+	self->tl_hooks = from->tl_hooks;
+#endif /* TPP_HAVE_HOOKS */
 
 #if TPP_HAVE_WARNING_ERROR
 	self->tl_error_count = from->tl_error_count;

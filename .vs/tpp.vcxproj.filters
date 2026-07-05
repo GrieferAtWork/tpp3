@@ -179,6 +179,9 @@
     <ClInclude Include="..\src\parts\sysinclude.h">
       <Filter>src\parts</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\parts\hooks.h">
+      <Filter>src\parts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\cpp.hint" />

@@ -29,6 +29,19 @@ function getProperty(name: string) {
 global final charNames: {string: string} = getProperty("charNames");
 global final MC_TOKENS: {(string, string, string)...} = getProperty("MC_TOKENS");
 
+@@Defined callbacks:
+@@for (local doc, name,           // Doc string and name of hook
+@@     default_TPP_HAVE_FOO_HOOK, // Default value for "TPP_HAVE_FOO_HOOK"
+@@     builtin_FOO_HOOK,          // Name of builtin to use when "TPP_HOOK_USESBUILTIN". If there is none, leave empty
+@@     prototypePrefix,           // Prefix for function-pointer-prototype
+@@     prototypeSuffix,           // Suffix for function-pointer-prototype
+@@     prototypeArgs,             // names of arguments taken by hook
+@@     disabled_RETURN_VALUE:     // Return value of hook when configured as "TPP_HOOK_DISABLED"
+@@     HOOKS) {
+@@    ...
+@@}
+global final HOOKS: {(string, string, string, string, string, string, string)...} = getProperty("HOOKS");
+
 function tokenName(tok: string): string {
 	return "_".join(for (local ch: tok) charNames[ch]);
 }

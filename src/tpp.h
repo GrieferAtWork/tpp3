@@ -33,6 +33,7 @@
 #include "parts/file-io.h"
 #include "parts/time.h"
 #include "parts/expr.h"
+#include "parts/hooks.h"
 #include "parts/token.h"
 #include "parts/features.h"
 #include "parts/file.h"

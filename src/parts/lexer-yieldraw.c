@@ -1948,7 +1948,7 @@ switch_on_ch:
 	case '<': {
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE || TPP_HAVE_DIGRAPHS
 		if (!tpp_lexer_has(self, DIGRAPHS) &&
-/*[[[deemon (printHasNone from ".lexer-yieldraw-mc")("<");]]]*/
+/*[[[deemon (printHasNone from ".config")("<");]]]*/
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS) &&
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_LANGLE) &&
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_RANGLE) &&
@@ -1984,7 +1984,7 @@ switch_on_ch:
 			}
 		} else
 #endif /* TPP_HAVE_DIGRAPHS */
-/*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("<");]]]*/
+/*[[[deemon (printDecoderAfterReadCh2Each from ".config")("<");]]]*/
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
 		if (ch2 == '-') {
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
@@ -2170,7 +2170,7 @@ switch_on_ch:
 	case '-': {
 #if (TPP_HAVE_TPP_TOK_MC_STARTSWITH_MINUS || TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
 		if (!tpp_lexer_has(self, TPP_TOK_MINUS_MINUS_COMMENT) &&
-/*[[[deemon (printHasNone from ".lexer-yieldraw-mc")("-");]]]*/
+/*[[[deemon (printHasNone from ".config")("-");]]]*/
 		    !tpp_lexer_has(self, TPP_TOK_MINUS_MINUS) &&
 		    !tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE) &&
 		    !tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE) &&
@@ -2196,7 +2196,7 @@ switch_on_ch:
 				goto set_result;
 			}
 #endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT */
-/*[[[deemon (printDecoder from ".lexer-yieldraw-mc")("--");]]]*/
+/*[[[deemon (printDecoder from ".config")("--");]]]*/
 #if TPP_HAVE_TPP_TOK_MINUS_MINUS
 			if (tpp_lexer_has(self, TPP_TOK_MINUS_MINUS)) {
 				result = TPP_TOK_MINUS_MINUS; /* "--" */
@@ -2206,7 +2206,7 @@ switch_on_ch:
 /*[[[end]]]*/
 		}	break;
 #endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS || TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT */
-/*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("-", "-", useSwitch: true);]]]*/
+/*[[[deemon (printDecoderAfterReadCh2Each from ".config")("-", "-", useSwitch: true);]]]*/
 #if TPP_HAVE_TPP_TOK_MINUS_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
 		case '<': {
 #if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
@@ -2347,7 +2347,7 @@ switch_on_ch:
 	case '@': {
 #if (TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT || TPP_HAVE_TPP_TOK_AT_AT_COMMENT)
 		if (!tpp_lexer_has(self, TPP_TOK_AT_AT_COMMENT) &&
-/*[[[deemon (printHasNone from ".lexer-yieldraw-mc")("@");]]]*/
+/*[[[deemon (printHasNone from ".config")("@");]]]*/
 		    !tpp_lexer_has(self, TPP_TOK_AT_EQUAL) &&
 		    !tpp_lexer_has(self, TPP_TOK_AT_AT) &&
 		    !tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)
@@ -2367,7 +2367,7 @@ switch_on_ch:
 				goto set_result;
 			}
 #endif /* TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
-/*[[[deemon (printDecoder from ".lexer-yieldraw-mc")("@@");]]]*/
+/*[[[deemon (printDecoder from ".config")("@@");]]]*/
 #if TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_EQUAL
 #if TPP_HAVE_TPP_TOK_AT_AT_EQUAL
 			if (tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
@@ -2400,7 +2400,7 @@ switch_on_ch:
 /*[[[end]]]*/
 		}	break;
 #endif /* TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
-/*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("@", "@", useSwitch: true);]]]*/
+/*[[[deemon (printDecoderAfterReadCh2Each from ".config")("@", "@", useSwitch: true);]]]*/
 #if TPP_HAVE_TPP_TOK_AT_EQUAL
 		case '=': {
 			if (tpp_lexer_has(self, TPP_TOK_AT_EQUAL)) {
@@ -2430,7 +2430,7 @@ switch_on_ch:
 		if (!tpp_lexer_has(self, TPP_TOK_SLASH_SLASH_COMMENT) &&
 		    !tpp_lexer_has(self, TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH) &&
 		    !tpp_lexer_has(self, TPP_TOK_SLASH_COMMENT) &&
-/*[[[deemon (printHasNone from ".lexer-yieldraw-mc")("/");]]]*/
+/*[[[deemon (printHasNone from ".config")("/");]]]*/
 		    !tpp_lexer_has(self, TPP_TOK_SLASH_SLASH) &&
 		    !tpp_lexer_has(self, TPP_TOK_SLASH_SLASH_EQUAL) &&
 		    !tpp_lexer_has(self, TPP_TOK_SLASH_EQUAL)
@@ -2442,11 +2442,11 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_SLASH_COMMENT */
 		read_ch2();
 
-/*[[[deemon print "#if TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT ||", (getHasPrefixCondition from ".lexer-yieldraw-mc")("//");]]]*/
+/*[[[deemon print "#if TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT ||", (getHasPrefixCondition from ".config")("//");]]]*/
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH || TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
 /*[[[end]]]*/
 		if (ch2 == '/') {
-/*[[[deemon (printDecoder from ".lexer-yieldraw-mc")("//",
+/*[[[deemon (printDecoder from ".config")("//",
 	extraRestoreCondition: "TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT",
 	shouldPrintPrefixExactMatch: false,
 );]]]*/
@@ -2483,7 +2483,7 @@ switch_on_ch:
 				goto set_result;
 			}
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT */
-/*[[[deemon (printPrefixExactMatch from ".lexer-yieldraw-mc")("//");]]]*/
+/*[[[deemon (printPrefixExactMatch from ".config")("//");]]]*/
 #if TPP_HAVE_TPP_TOK_SLASH_SLASH
 			if (tpp_lexer_has(self, TPP_TOK_SLASH_SLASH)) {
 				result = TPP_TOK_SLASH_SLASH; /* "//" */
@@ -2492,7 +2492,7 @@ switch_on_ch:
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH */
 /*[[[end]]]*/
 		} else
-/*[[[deemon print "#endif /" "* TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT ||", (getHasPrefixCondition from ".lexer-yieldraw-mc")("//"), "*" "/";]]]*/
+/*[[[deemon print "#endif /" "* TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT ||", (getHasPrefixCondition from ".config")("//"), "*" "/";]]]*/
 #endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH || TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
 /*[[[end]]]*/
 #if TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH
@@ -2537,7 +2537,7 @@ continue_c_comment_with_ch2:
 			}
 		} else
 #endif /* TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH */
-/*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("/", "/");]]]*/
+/*[[[deemon (printDecoderAfterReadCh2Each from ".config")("/", "/");]]]*/
 #if TPP_HAVE_TPP_TOK_SLASH_EQUAL
 		if (ch2 == '=') {
 			if (tpp_lexer_has(self, TPP_TOK_SLASH_EQUAL)) {
@@ -2569,7 +2569,7 @@ continue_c_comment_with_ch2:
 	case '%': {
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_PERCENT || TPP_HAVE_DIGRAPHS
 		if (!tpp_lexer_has(self, DIGRAPHS) &&
-/*[[[deemon (printHasNone from ".lexer-yieldraw-mc")("%");]]]*/
+/*[[[deemon (printHasNone from ".config")("%");]]]*/
 		    !tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT) &&
 		    !tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT_EQUAL) &&
 		    !tpp_lexer_has(self, TPP_TOK_PERCENT_EQUAL)
@@ -2605,7 +2605,7 @@ continue_c_comment_with_ch2:
 			}
 		} else
 #endif /* TPP_HAVE_DIGRAPHS */
-/*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("%");]]]*/
+/*[[[deemon (printDecoderAfterReadCh2Each from ".config")("%");]]]*/
 #if TPP_HAVE_TPP_TOK_PERCENT_PERCENT || TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL
 		if (ch2 == '%') {
 #if TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL
@@ -2657,7 +2657,7 @@ continue_c_comment_with_ch2:
 /************************************************************************/
 	case '#': {
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TPP_TOK_POUND_COMMENT
-/*[[[deemon (printDecoder from ".lexer-yieldraw-mc")("#",
+/*[[[deemon (printDecoder from ".config")("#",
 	extraRestoreCondition: "TPP_HAVE_TPP_TOK_POUND_COMMENT");]]]*/
 #if TPP_HAVE_TPP_TOK_POUND_POUND
 		if (tpp_lexer_has(self, TPP_TOK_POUND_POUND)) {
@@ -2695,7 +2695,7 @@ continue_c_comment_with_ch2:
 	case ':': {
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_COLON || TPP_HAVE_DIGRAPHS
 		if (!tpp_lexer_has(self, DIGRAPHS) &&
-/*[[[deemon (printHasNone from ".lexer-yieldraw-mc")(":");]]]*/
+/*[[[deemon (printHasNone from ".config")(":");]]]*/
 		    !tpp_lexer_has(self, TPP_TOK_COLON_COLON) &&
 		    !tpp_lexer_has(self, TPP_TOK_COLON_EQUAL)
 /*[[[end]]]*/
@@ -2710,7 +2710,7 @@ continue_c_comment_with_ch2:
 			}
 		} else
 #endif /* TPP_HAVE_DIGRAPHS */
-/*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")(":");]]]*/
+/*[[[deemon (printDecoderAfterReadCh2Each from ".config")(":");]]]*/
 #if TPP_HAVE_TPP_TOK_COLON_COLON
 		if (ch2 == ':') {
 			if (tpp_lexer_has(self, TPP_TOK_COLON_COLON)) {
@@ -2785,7 +2785,7 @@ continue_c_comment_with_ch2:
 		}
 not_a_trigraph:
 #endif /* TPP_HAVE_TRIGRAPHS */
-/*[[[deemon (printDecoder from ".lexer-yieldraw-mc")("?", printCondition: false);]]]*/
+/*[[[deemon (printDecoder from ".config")("?", printCondition: false);]]]*/
 		if (tpp_lexer_has(self, TPP_TOK_QMARK_EQUAL) ||
 		    tpp_lexer_has(self, TPP_TOK_QMARK_QMARK)) {
 			read_ch2();
@@ -2820,7 +2820,7 @@ not_a_trigraph:
 	case '.': {
 #if (TPP_HAVE_TPP_TOK_FLOAT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT)
 		if (!tpp_lexer_has(self, TPP_TOK_FLOAT) &&
-/*[[[deemon (printHasNone from ".lexer-yieldraw-mc")(".");]]]*/
+/*[[[deemon (printHasNone from ".config")(".");]]]*/
 		    !tpp_lexer_has(self, TPP_TOK_DOT_STAR) &&
 		    !tpp_lexer_has(self, TPP_TOK_DOT_DOT) &&
 		    !tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)
@@ -2841,7 +2841,7 @@ not_a_trigraph:
 			}
 		} else
 #endif /* TPP_HAVE_TPP_TOK_FLOAT */
-/*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")(".", "0123456789");]]]*/
+/*[[[deemon (printDecoderAfterReadCh2Each from ".config")(".", "0123456789");]]]*/
 #if TPP_HAVE_TPP_TOK_DOT_STAR
 		if (ch2 == '*') {
 			if (tpp_lexer_has(self, TPP_TOK_DOT_STAR)) {
@@ -2891,7 +2891,7 @@ not_a_trigraph:
 
 
 /************************************************************************/
-/*[[[deemon (printDecoderAfterReadCh2Each from ".lexer-yieldraw-mc")("",
+/*[[[deemon (printDecoderAfterReadCh2Each from ".config")("",
 	"<-/%#:?.@", // first-token-characters that require custom case-es above
 	useSwitch: true
 );]]]*/
