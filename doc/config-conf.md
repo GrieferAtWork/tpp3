@@ -19,12 +19,14 @@ that that linefeed is never yielded, and a potential multi-character token is
 continued:
 
 ```c
-"foo\\\nbar" -- Produces a single token "foobar"
-"+\\\n=" -- Produces a single token "+="
+foo\
+bar // Produces a single token "foobar"
++\
+=   // Produces a single token "+="
 ```
 
-This DOES affect the line-continuation features of C++ // comments,
-and multi-line macro definitions. When this is disabled, \-escaped
+This DOES affect the line-continuation features of C++ `//` comments,
+and multi-line macro definitions. When this is disabled, `\`-escaped
 line continuation won't work for those use-cases, either.
 @detect: `#if __TPP_COUNT_TOKENS("a\\\nb") == 1`
 
@@ -711,8 +713,11 @@ Extension:
 When enabled, clang's `__has_feature()` also
 expands to `1` when `__has_extension()` would.
 
-@see: TPP_HAVE_CLANG_MACRO___has_feature
-@see: TPP_HAVE_CLANG_MACRO___has_extension
+See also:
+
+- [`TPP_HAVE_CLANG_MACRO___has_feature`](config-conf.md#tpp_have_clang_macro___has_feature)
+- [`TPP_HAVE_CLANG_MACRO___has_extension`](config-conf.md#tpp_have_clang_macro___has_extension)
+
 @detect: #if __has_known_extension("-fclang-extensions-are-features")
 
 <details><summary>Details</summary>
@@ -1608,6 +1613,7 @@ Support for alternative parenthesis pairs in macros:
 #define point<T>        struct { T x; T y; }
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #if __has_known_extension("-falternative-macro-parenthesis")
 
 <details><summary>Details</summary>
@@ -1638,6 +1644,7 @@ STR1(  foo  ) // "foo"
 STR2(  foo  ) // "  foo  "
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #if __has_known_extension("-fmacro-argument-whitespace")
 
 <details><summary>Details</summary>
@@ -1728,9 +1735,10 @@ Extension:
 Support for variable-argument macros with named varargs:
 
 ```c
-#define printf(format, args...) args`
+#define printf(format, args...) args
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #if __has_known_extension("-fnamed-varargs-in-macros")
 
 <details><summary>Details</summary>
@@ -1756,6 +1764,7 @@ Support for variable-argument macros:
 #define printf(format, ...) __VA_ARGS__
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #if __has_known_extension("-fva-args-in-macros")
 
 <details><summary>Details</summary>
@@ -1784,6 +1793,7 @@ printf("foo\n");         // fprintf(stderr, "foo\n");
 printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #define test1(a, b, ...) __VA_ARGS__+0
          #define test2(...) test1(__VA_COMMA__ 0, 1)
          #if test2(~)
@@ -1815,6 +1825,7 @@ printf("foo\n");         // fprintf(stderr, "foo\n");
 printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #define test1(a, b, ...) __VA_ARGS__+0
          #define test2(...) test1(__VA_OPT__(,) 0, 1)
          #if test2(~)
@@ -1851,6 +1862,7 @@ min(10)      // Expands to: "10"
 min(10, 20)  // Expands to: "((10) < (20) ? (10) : (20))"
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #define test___VA_NARGS__ 0
          #define test_1            1
          #define test(...) test_##__VA_NARGS__
@@ -1885,6 +1897,7 @@ printf("foo\n");         // fprintf(stderr, "foo\n");
 printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #define test1(a, b, ...) __VA_ARGS__+0
          #define test2(...) test1(,##__VA_ARGS__, 1)
          #if test2() == 0
@@ -1924,6 +1937,7 @@ str(foo)    // Expands to: "foo"
 str("foo")  // Expands to: ""foo"" -- oops; traditional macros can't do this
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #define str(x) #x
          #if __TPP_COUNT_TOKENS(str(a b)) == 1
 
@@ -1962,6 +1976,7 @@ chr(foo)    // Expands to: 'foo'
 chr('foo')  // Expands to: ''foo'' -- oops; traditional macros can't do this
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 Support for: #define chr(x) #@x
 @detect: #define str(x) #@x
          #if __TPP_COUNT_TOKENS(str(a b)) == 1
@@ -1996,6 +2011,7 @@ STR2(FOO) // "42"
 STR3(FOO) // "FOO"
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #define test1(x) #x
          #define test2(x) test1(#!x)
          #define test3    42
@@ -2026,6 +2042,7 @@ in order to form a new token:
 cat(+, +)  // Expands to a single token "++" (assuming that TPP_HAVE_TPP_TOK_PLUS_PLUS is enabled)
 ```
 
+NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #define test(a, b) a##b
          #define str2(x) #x
          #define str(x) str2(x)

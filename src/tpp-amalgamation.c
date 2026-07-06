@@ -13414,7 +13414,7 @@ _tpp_include_paths_addbykind_head(tpp_include_paths *tpp_restrict self,
 }
 
 /* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOENT: Path could not be found
  * @return: TPP_ENOMEM: Out of memory */
 #if TPP_HAVE_INCLUDE_PATH_MULTIPLE
 TPP_IMPL TPP_NONNULL((1, 3)) tpp_errno TPPCALL
@@ -14041,7 +14041,7 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok) {
  * >> #define bar       foo
  * >> #define baz       bar
  * >> #define exo       baz
- * >> 
+ * >>
  * >> bot:  exo[10, 20]
  *
  * Data-layout:
@@ -17806,7 +17806,7 @@ again_ch:
 				}
 				if (!allow_hex_chars) {
 					allow_hex_chars = true;
-	
+
 					/* If what comes next is a hex-exponent: "0xP+12", then we mustn't
 					 * parse that as a float-token (but as [0xP][+][12]). strtof requires
 					 * that there be at least 1 hex-digit before a potential exponent! */
@@ -19814,7 +19814,7 @@ continue_pascal_comment_with_ch2:
 			tpp_assert(rel_before <= rel_after);
 			if (rel_before >= rel_after)
 				break; /* No BSE -> regular backslash */
-	
+
 			/* BSE was skipped -> read whatever comes after... */
 			*p_pos = npos;
 			goto again;
@@ -24004,7 +24004,7 @@ tpp_lexer_process_pragma_GCC_poison(tpp_lexer *tpp_restrict self) {
 	 *                stack): emit warning
 	 *          - If the keyword appeared because of something else (e.g. token concat): emit warning
 	 */
-	
+
 	(void)self;
 	return TPP_ENOENT;
 }
@@ -25767,7 +25767,7 @@ tpp_lexer_handle_undef_directive(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
 		{
 		}
-	
+
 		/* Seek to next token (which should be a line-feed) */
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
 		do {
@@ -28284,7 +28284,7 @@ handle_unknown_directive:
 			}
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_POUND_COMMENT) */
-	
+
 			/* Seek until we hit LF or EOF. Caller has disabled "autopopfile",
 			 * so this'll always stay within the file currently being processed. */
 #ifdef WANT_seek_end_of_line
@@ -29795,7 +29795,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 
 
 #if TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
 	tpp_errno result = tpp_lexer_process_pragma(self);
 	if (result == TPP_ENOENT) {
@@ -29834,7 +29834,7 @@ tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma */
 
 #if TPP_HAVE_MACRO__Pragma
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_yield_handle__Pragma_string(void *arg, tpp_string *chunk,
                                       tpp_char const *str, tpp_size length) {
 	tpp_token_id tok;
@@ -30170,7 +30170,7 @@ struct tpp_lexer_handle_tpp_identifier_data {
 	tpp_keyword const *tlhtid_keyword; /* [1..1] The identified keyword */
 };
 
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_handle_tpp_identifier_cb(void *arg, tpp_string *chunk,
                                    tpp_char const *str, tpp_size length) {
 	tpp_keyword const *kwd;
@@ -30491,7 +30491,7 @@ struct tpp_lexer_handle_str_decompile_string_data {
 	tpp_char const     *tlhsdsd_str;     /* String to decompile */
 	tpp_size            tlhsdsd_length;  /* Length of "tlhsdsd_str" */
 };
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_handle_str_decompile_string(void *arg, tpp_string *chunk,
                                       tpp_char const *str, tpp_size length) {
 	struct tpp_lexer_handle_str_decompile_string_data *data;
@@ -30713,7 +30713,7 @@ struct tpp_lexer_handle_count_tokens_data {
 	tpp_intmax tlhctd_count; /* Token count */
 };
 
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_handle_count_tokens(void *arg, tpp_string *chunk, tpp_char const *str, tpp_size length) {
 	tpp_token_id tok;
 	struct tpp_lexer_handle_count_tokens_data *const data = (struct tpp_lexer_handle_count_tokens_data *)arg;
@@ -30864,7 +30864,7 @@ struct tpp_lexer_handle_exec_data {
 	tpp_string_builder tlhed_builder; /* Expansion string builder */
 	tpp_lexer         *tlhed_lexer;   /* [1..1] Lexer */
 };
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
                          tpp_char const *str, tpp_size length) {
 	tpp_token_id tok;
@@ -32179,7 +32179,7 @@ tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
 			{
 			}
 		} /* while (iter < end) */
-		
+
 		/* Flush remainder */
 		if (start < end) {
 			temp = tpp_formatprinter_print(printer, arg, start, (tpp_size)(end - start));

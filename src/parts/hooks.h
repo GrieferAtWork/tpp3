@@ -102,7 +102,7 @@ for (local doc, name,
 		print;
 	isFirst = false;
 	print("	/" "* >> ", fixProto(prototypePrefix), "th_", name.lower(), fixProto(prototypeSuffix), ";");
-	print("	 * ", doc.strip().replace("\n", "\n\t * "), " *" "/");
+	print("	 * ", doc.strip().replace("\n", "\n\t * ").rstriplines(), " *" "/");
 	print("#if TPP_HOOK_ISRT(TPP_HAVE_", name, "_HOOK)");
 	if (builtin_FOO_HOOK) {
 		print("#if TPP_HAVE_", name, "_HOOK != TPP_HOOK_RT_NOOP");
@@ -124,7 +124,7 @@ for (local doc, name,
      prototypeSuffix,
      prototypeArgs,
      disabled_RETURN_VALUE: HOOKS) {
-	print("/" "* ", doc.strip().replace("\n", "\n * "), " *" "/");
+	print("/" "* ", doc.strip().replace("\n", "\n * ").rstriplines(), " *" "/");
 	print("#if TPP_HOOK_ISRT(TPP_HAVE_", name, "_HOOK)");
 	local isFormatPrinter = prototypePrefix.strip() == "tpp_formatprinter" && !prototypeSuffix;
 	local hookMustBeFunctionPointer = isFormatPrinter;
@@ -252,7 +252,7 @@ typedef struct tpp_hooks {
 	 *   back to the start of the expression (or even further, if
 	 *   applicable; meaning this callback doesn't need to concern
 	 *   itself with rollback)
-	 * 
+	 *
 	 * @return: TPP_EOK:         Success (`*result` was initialized)
 	 * @return: TPP_ENOMEM:      Out of memory
 	 * @return: TPP_EIO:         Filesystem I/O operation failed
@@ -428,7 +428,7 @@ typedef struct tpp_hooks {
  *   back to the start of the expression (or even further, if
  *   applicable; meaning this callback doesn't need to concern
  *   itself with rollback)
- * 
+ *
  * @return: TPP_EOK:         Success (`*result` was initialized)
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed

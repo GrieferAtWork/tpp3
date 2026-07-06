@@ -26,9 +26,9 @@ global final CONFIG_H = File
 	.open("./parts/config.h", "rb")
 	.read()
 	.unifylines()
-	.rstriplines()
 	.replace("\\\n", "")
 	.decode("utf-8")
+	.rstriplines()
 	/* Convert
 	 * >> #if COND
 	 * >> #define FOO 1
@@ -277,6 +277,7 @@ function formatDoc(currentFile: string, doc: string): string {
 	doc = doc
 		.replace(":\n-", ":\n\n-")
 		.replace(":\n```", ":\n\n```");
+	/* TODO: Deal with those `@detect` annotations -- those should go into the "Details" block */
 	for (local i = 0;;) {
 		local tick = doc.find("`", i);
 		if (tick < 0)

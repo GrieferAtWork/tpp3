@@ -37,7 +37,7 @@ all: tpp-amalgamation.h tpp-amalgamation.c $(CONFIG_MD)
 $(CONFIG_MD): parts/config.h make-config-doc.dee
 	deemon make-config-doc.dee
 
-tpp-amalgamation.c: tpp.h tpp.c $(wildcard parts/*.c) $(wildcard parts/*.h)
+tpp-amalgamation.c: tpp.h tpp.c make-amalgamation.dee $(wildcard parts/*.c) $(wildcard parts/*.h)
 	deemon -Wno-usage -Wno-user -F parts/*.h parts/*.c
 #	This one must be run last because it depends on the generated contents of other files
 	deemon -Wno-usage -Wno-user -F parts/expose-internals.h

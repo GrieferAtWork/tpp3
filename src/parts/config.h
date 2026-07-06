@@ -479,12 +479,14 @@
  * that that linefeed is never yielded, and a potential multi-character token is
  * continued:
  * ```c
- * "foo\\\nbar" -- Produces a single token "foobar"
- * "+\\\n=" -- Produces a single token "+="
+ * foo\ 
+ * bar // Produces a single token "foobar"
+ * +\ 
+ * =   // Produces a single token "+="
  * ```
  *
- * This DOES affect the line-continuation features of C++ // comments,
- * and multi-line macro definitions. When this is disabled, \-escaped
+ * This DOES affect the line-continuation features of C++ `//` comments,
+ * and multi-line macro definitions. When this is disabled, `\`-escaped
  * line continuation won't work for those use-cases, either.
  * @detect: `#if __TPP_COUNT_TOKENS("a\\\nb") == 1` */
 #ifndef TPP_HAVE_BSE
@@ -709,7 +711,7 @@
  *       don't conflict with each other though (both can safely be
  *       enabled at the same time), since TPP's `__has_extension()`
  *       takes a string, whilst this one takes a keyword/identifier.
- * 
+ *
  * @detect: #ifdef __has_extension */
 #ifndef TPP_HAVE_CLANG_MACRO___has_extension
 #define TPP_HAVE_CLANG_MACRO___has_extension (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fclang-__has_extension" */
@@ -734,8 +736,10 @@
 /* When enabled, clang's `__has_feature()` also
  * expands to `1` when `__has_extension()` would.
  *
- * @see: TPP_HAVE_CLANG_MACRO___has_feature
- * @see: TPP_HAVE_CLANG_MACRO___has_extension
+ * See also:
+ * - `TPP_HAVE_CLANG_MACRO___has_feature`
+ * - `TPP_HAVE_CLANG_MACRO___has_extension`
+ *
  * @detect: #if __has_known_extension("-fclang-extensions-are-features") */
 #ifndef TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES
 #define TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES ((TPP_HAVE_CLANG_MACRO___has_extension && TPP_HAVE_CLANG_MACRO___has_feature) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fclang-extensions-are-features" */
@@ -1116,6 +1120,7 @@
  * #define point<T>        struct { T x; T y; }
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #if __has_known_extension("-falternative-macro-parenthesis") */
 #ifndef TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
 #define TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS (TPP_HAVE_CPP_MACROS ? TPP_CONF_EXT1 : 0) /* "-falternative-macro-parenthesis" */
@@ -1131,6 +1136,7 @@
  * STR2(  foo  ) // "  foo  "
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #if __has_known_extension("-fmacro-argument-whitespace") */
 #ifndef TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
 #define TPP_HAVE_MACRO_ARGUMENT_WHITESPACE ((TPP_HAVE_CPP_MACROS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : 0) /* "-fmacro-argument-whitespace" */
@@ -1176,9 +1182,10 @@
 
 /* Support for variable-argument macros with named varargs:
  * ```c
- * #define printf(format, args...) args`
+ * #define printf(format, args...) args
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #if __has_known_extension("-fnamed-varargs-in-macros") */
 #ifndef TPP_HAVE_NAMED_VARARGS_IN_MACROS
 #define TPP_HAVE_NAMED_VARARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fnamed-varargs-in-macros" */
@@ -1189,6 +1196,7 @@
  * #define printf(format, ...) __VA_ARGS__
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #if __has_known_extension("-fva-args-in-macros") */
 #ifndef TPP_HAVE_VA_ARGS_IN_MACROS
 #define TPP_HAVE_VA_ARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fva-args-in-macros" */
@@ -1202,6 +1210,7 @@
  * printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #define test1(a, b, ...) __VA_ARGS__+0
  *          #define test2(...) test1(__VA_COMMA__ 0, 1)
  *          #if test2(~) */
@@ -1218,6 +1227,7 @@
  * printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #define test1(a, b, ...) __VA_ARGS__+0
  *          #define test2(...) test1(__VA_OPT__(,) 0, 1)
  *          #if test2(~) */
@@ -1239,6 +1249,7 @@
  * min(10, 20)  // Expands to: "((10) < (20) ? (10) : (20))"
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #define test___VA_NARGS__ 0
  *          #define test_1            1
  *          #define test(...) test_##__VA_NARGS__
@@ -1252,13 +1263,14 @@
  * variable-length argument when `TPP_HAVE_NAMED_VARARGS_IN_MACROS`
  * is enabled), then the `,` is deleted during expansion whenever
  * the there are no variable arguments:
- * 
+ *
  * ```c
  * #define printf(format, ...) fprintf(stderr, format, ##__VA_ARGS__)
  * printf("foo\n");         // fprintf(stderr, "foo\n");
  * printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #define test1(a, b, ...) __VA_ARGS__+0
  *          #define test2(...) test1(,##__VA_ARGS__, 1)
  *          #if test2() == 0 */
@@ -1282,6 +1294,7 @@
  * str("foo")  // Expands to: ""foo"" -- oops; traditional macros can't do this
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #define str(x) #x
  *          #if __TPP_COUNT_TOKENS(str(a b)) == 1 */
 #ifndef TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
@@ -1304,6 +1317,7 @@
  * chr('foo')  // Expands to: ''foo'' -- oops; traditional macros can't do this
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * Support for: #define chr(x) #@x
  * @detect: #define str(x) #@x
  *          #if __TPP_COUNT_TOKENS(str(a b)) == 1 */
@@ -1323,6 +1337,7 @@
  * STR3(FOO) // "FOO"
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #define test1(x) #x
  *          #define test2(x) test1(#!x)
  *          #define test3    42
@@ -1338,6 +1353,7 @@
  * cat(+, +)  // Expands to a single token "++" (assuming that TPP_HAVE_TPP_TOK_PLUS_PLUS is enabled)
  * ```
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  * @detect: #define test(a, b) a##b
  *          #define str2(x) #x
  *          #define str(x) str2(x)
@@ -3142,7 +3158,7 @@ for (local doc, name,
      prototypeArgs,
      disabled_RETURN_VALUE: HOOKS) {
 	print("/" "* >> ", prototypePrefix, "TPP_HOOK_", name, prototypeSuffix, ";");
-	print(" * ", doc.strip().replace("\n", "\n * "), " *" "/");
+	print(" * ", doc.strip().replace("\n", "\n * ").rstriplines(), " *" "/");
 	print("#ifndef TPP_HAVE_", name, "_HOOK");
 	print("#ifdef TPP_HOOK_", name);
 	print("#define TPP_HAVE_", name, "_HOOK (", default_TPP_HAVE_FOO_HOOK, " ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)");
@@ -3257,7 +3273,7 @@ for (local doc, name,
  *   back to the start of the expression (or even further, if
  *   applicable; meaning this callback doesn't need to concern
  *   itself with rollback)
- * 
+ *
  * @return: TPP_EOK:         Success (`*result` was initialized)
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed

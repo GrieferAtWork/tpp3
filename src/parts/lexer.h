@@ -365,7 +365,7 @@ for (local doc, name,
      prototypeArgs,
      disabled_RETURN_VALUE: HOOKS) {
 	print("/" "* >> ", prototypePrefix, "tpp_lexer_callhook_", name.lower(), prototypeSuffix, ";");
-	print(" * ", doc.strip().replace("\n", "\n * "), " *" "/");
+	print(" * ", doc.strip().replace("\n", "\n * ").rstriplines(), " *" "/");
 	local isFormatPrinter = prototypePrefix.strip() == "tpp_formatprinter" && !prototypeSuffix;
 	local hookMustBeFunctionPointer = isFormatPrinter;
 	print("#define tpp_lexer_callhook_", name.lower(), "(self",
@@ -427,7 +427,7 @@ for (local doc, name,
  *   back to the start of the expression (or even further, if
  *   applicable; meaning this callback doesn't need to concern
  *   itself with rollback)
- * 
+ *
  * @return: TPP_EOK:         Success (`*result` was initialized)
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed
