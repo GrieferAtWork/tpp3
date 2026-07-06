@@ -671,25 +671,8 @@ tpp_lexer_yield_handle___pragma(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_MACRO___LINE__ || TPP_HAVE_MACRO___COLUMN__
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_lcinfo(tpp_lexer *tpp_restrict self, tpp_token_id what) {
-	tpp_file *const lcfile = tpp_file_getlcfile(tpp_lexer_getfile(self));
-	tpp_lcinfo info;
 	tpp_intmax value;
-
-	/* HINT: Meaning of "tpp_file_getlastpos" / "tpp_file_getpos" here:
-	 * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
-	 * >> ...
-	 * >> 
-	 * >> if (x)
-	 * >>     assert(y);
-	 *        ^        ^ tpp_file_getpos
-	 *        tpp_file_getlastpos
-	 *
-	 * iow: "tpp_file_getlastpos" position for tracebacks (points at what "caused" a macro/file push)
-	 *      "tpp_file_getpos" position of next byte to-be parsed once lexer returns to this file.
-	 *
-	 * For the sake of being pretty, we use "tpp_file_getlastpos" since that's the location of the
-	 * name of the macro that's currently being expanded. */
-	info = tpp_file_getlcinfo(lcfile, tpp_file_getlastpos(lcfile));
+	tpp_lcinfo info = tpp_lexer_getlcinfo(self);
 	switch (what) {
 #if TPP_HAVE_MACRO___LINE__
 	case TPP_KWD___LINE__:
@@ -1826,8 +1809,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 /************************************************************************/
 #if TPP_HAVE_MACRO___FILE__
 	case TPP_KWD___FILE__: {
-		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
-		char const *filename = tpp_file_getrealfilename(file);
+		char const *filename = tpp_lexer_getlcfilename(self);
 		if (filename == NULL)
 			filename = "?";
 		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
@@ -1837,7 +1819,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #if TPP_HAVE_MACRO___BASE_FILE__
 	case TPP_KWD___BASE_FILE__: {
 		tpp_file const *file = tpp_file_getbasefile(tpp_lexer_getfile(self));
-		char const *filename = tpp_file_getrealfilename(file);
+		char const *filename = tpp_file_getfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		return tpp_lexer_push_textfile_string_esc(self, (tpp_char const *)filename,
@@ -1846,9 +1828,9 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #endif /* TPP_HAVE_MACRO___BASE_FILE__ */
 #if TPP_HAVE_MACRO___FILE_NAME__
 	case TPP_KWD___FILE_NAME__: {
-		tpp_file const *file = tpp_file_getlcfile(tpp_lexer_getfile(self));
+		tpp_file const *file = tpp_lexer_getlcfile(self);
 		char const *basename;
-		char const *filename = tpp_file_getrealfilename(file);
+		char const *filename = tpp_file_getfilename(file);
 		if (filename == NULL)
 			filename = "?";
 		basename = filename;

@@ -5322,29 +5322,21 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 
 /* Returns the top-most text file associated with the current lexer.
  * NOTE: These functions never returns NULL. */
-#define TPPLexer_Textfile_(lexer) tpp_file_getlcfile(tpp_lexer_getfile(lexer))
-#define TPPLexer_Basefile_(lexer) tpp_file_getbasefile(tpp_lexer_getfile(lexer))
-#define TPPLexer_Textfile()       TPPLexer_Textfile_(TPP_LEXER_ARG)
-#define TPPLexer_Basefile()       TPPLexer_Basefile_(TPP_LEXER_ARG)
+#define TPPLexer_Textfile_(self) tpp_file_getlcfile(tpp_lexer_getfile(self))
+#define TPPLexer_Basefile_(self) tpp_file_getbasefile(tpp_lexer_getfile(self))
+#define TPPLexer_Textfile()      TPPLexer_Textfile_(TPP2_LEXER)
+#define TPPLexer_Basefile()      TPPLexer_Basefile_(TPP2_LEXER)
 
-#define TPPLexer_FILE(plength)     TPPFile_Filename(TPPLexer_Textfile(), plength)
-#define TPPLexer_BASEFILE(plength) TPPFile_Filename(TPPLexer_Basefile(), plength)
-#define TPPLexer_LC(info)          TPPLexer_LC_(TPP_LEXER_ARG_ info)
-#define TPPLexer_LINE()            TPPLexer_LINE_(TPP_LEXER_ARG)
-#define TPPLexer_COLUMN()          TPPLexer_COLUMN_(TPP_LEXER_ARG)
-
-TPP_INLINE void TPPCALL TPPLexer_LC_(tpp_lexer *self, tpp_lcinfo *tpp_restrict info) {
-	struct TPPFile *f = TPPLexer_Textfile_(self);
-	TPPFile_LCAt(f, info, f->f_pos);
-}
-TPP_INLINE tpp_line TPPCALL TPPLexer_LINE_(tpp_lexer *self) {
-	struct TPPFile *f = TPPLexer_Textfile_(self);
-	return TPPFile_LineAt(f, f->f_pos);
-}
-TPP_INLINE tpp_column TPPCALL TPPLexer_COLUMN_(tpp_lexer *self) {
-	struct TPPFile *f = TPPLexer_Textfile_(self);
-	return TPPFile_ColumnAt(f, f->f_pos);
-}
+#define TPPLexer_FILE_(self, plength)     TPPFile_Filename(TPPLexer_Textfile_(self), plength)
+#define TPPLexer_BASEFILE_(self, plength) TPPFile_Filename(TPPLexer_Basefile_(self), plength)
+#define TPPLexer_FILE(plength)            TPPLexer_FILE_(TPP2_LEXER, plength)
+#define TPPLexer_BASEFILE(plength)        TPPLexer_BASEFILE_(TPP2_LEXER, plength)
+#define TPPLexer_LC_(self, info)          (void)(*(info) = tpp_lexer_getendlcinfo(self))
+#define TPPLexer_LINE_(self)              tpp_lcinfo_getline(tpp_lexer_getendlcinfo(self))
+#define TPPLexer_COLUMN_(self)            tpp_lcinfo_getcol(tpp_lexer_getendlcinfo(self))
+#define TPPLexer_LC(info)                 TPPLexer_LC_(TPP2_LEXER, info)
+#define TPPLexer_LINE()                   TPPLexer_LINE_(TPP2_LEXER)
+#define TPPLexer_COLUMN()                 TPPLexer_COLUMN_(TPP2_LEXER)
 
 
 

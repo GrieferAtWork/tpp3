@@ -215,14 +215,25 @@ typedef struct tpp_lexer {
 /* Current file */
 #define tpp_lexer_getfile(self)     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
 #define tpp_lexer_getfilekind(self) tpp_file_getkind(tpp_lexer_getfile(self))
+#define tpp_lexer_getlcfile(self)   tpp_file_getlcfile(tpp_lexer_getfile(self))   /* [1..1] Returns the file that is used to determine __LINE__ and __COLUMN__ */
+#define tpp_lexer_getbasefile(self) tpp_file_getbasefile(tpp_lexer_getfile(self)) /* [1..1] Return the "base" file (that is: the last one in the #include-stack) */
+#define tpp_lexer_gettextfile(self) tpp_file_gettextfile(tpp_lexer_getfile(self)) /* [0..1] Return the last I/O or TEXT file */
 
 /* L/C information helpers */
-#define tpp_lexer_getlcinfo(self, pos)                  tpp_file_getlcinfo(tpp_lexer_getfile(self), pos)
-#define tpp_lexer_getlcinfo_ex(self, pos, result)       tpp_file_getlcinfo_ex(tpp_lexer_getfile(self), pos, result)
-#define tpp_lexer_gettokenstart_lcinfo(self)            tpp_lexer_getlcinfo(self, tpp_lexer_gettokenstart(self))
-#define tpp_lexer_gettokenstart_lcinfo_ex(self, result) tpp_lexer_getlcinfo_ex(self, tpp_lexer_gettokenstart(self), result)
-#define tpp_lexer_gettokenend_lcinfo(self)              tpp_lexer_getlcinfo(self, tpp_lexer_gettokenend(self))
-#define tpp_lexer_gettokenend_lcinfo_ex(self, result)   tpp_lexer_getlcinfo_ex(self, tpp_lexer_gettokenend(self), result)
+#define tpp_lexer_getlcinfoat(self, pos)                 tpp_file_getlcinfo(tpp_lexer_getfile(self), pos)
+#define tpp_lexer_getlcinfoat_ex(self, pos, result)      tpp_file_getlcinfo_ex(tpp_lexer_getfile(self), pos, result)
+#define tpp_lexer_getlcinfoattokenstart(self)            tpp_lexer_getlcinfoat(self, tpp_lexer_gettokenstart(self))
+#define tpp_lexer_getlcinfoattokenstart_ex(self, result) tpp_lexer_getlcinfoat_ex(self, tpp_lexer_gettokenstart(self), result)
+#define tpp_lexer_getlcinfoattokenend(self)              tpp_lexer_getlcinfoat(self, tpp_lexer_gettokenend(self))
+#define tpp_lexer_getlcinfoattokenend_ex(self, result)   tpp_lexer_getlcinfoat_ex(self, tpp_lexer_gettokenend(self), result)
+
+/* Convenience L/C information helpers.
+ * If you don't want to bother learning what all the above does, then it's these that
+ * you want to use -- these return the values as reported by __LINE__ and __COLUMN__. */
+#define tpp_lexer_getlcfilename(self)  tpp_file_getfilename(tpp_lexer_getlcfile(self))    /* [0..1] Value of __FILE__ */
+#define tpp_lexer_getstartlcinfo(self) tpp_file_getstartlcinfo(tpp_lexer_getlcfile(self)) /* Value of __LINE__ / __COLUMN__ */
+#define tpp_lexer_getendlcinfo(self)   tpp_file_getendlcinfo(tpp_lexer_getlcfile(self))   /* Theoretical value of `__LINE__ / __COLUMN__' at end of current token */
+#define tpp_lexer_getlcinfo(self)      tpp_lexer_getstartlcinfo(self)                     /* Convenience alias to make it clear what you want to use */
 
 /* Warnings... */
 #if TPP_HAVE_WARNINGS

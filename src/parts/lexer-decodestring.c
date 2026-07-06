@@ -365,6 +365,7 @@ again_read_unicode_whitespace_after_backslash:
 
 handle_unknown_escape_sequence:
 		--iter;
+		/* TODO: Hook here to allow user-code to define custom string escape sequences */
 #if TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
 		{
 			tpp_errno error = tpp_lexer_warnf_at(self, tpp_lexer_getfile(self), iter,

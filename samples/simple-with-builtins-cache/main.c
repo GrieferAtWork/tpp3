@@ -52,9 +52,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	for (;;) {
-		tpp_lcinfo_ex lc;
-		tpp_file *file             = tpp_lexer_getfile(&lexer);
-		char const *lexer_filename = tpp_file_getfilename(file);
+		char const *fn;
+		tpp_lcinfo lc;
 		char const *desc;
 		tok = tpp_lexer_yield(&lexer);
 		if (TPP_TOK_ISERR(tok)) {
@@ -68,24 +67,15 @@ int main(int argc, char *argv[]) {
 			desc = tpp_lexer_gettokenkwdcstr(&lexer);
 		if (desc == NULL)
 			desc = "?";
-		file           = tpp_lexer_getfile(&lexer);
-		lexer_filename = tpp_file_getfilename(file);
-		tpp_file_getlcinfo_ex(file, tpp_lexer_gettokenstart(&lexer), &lc);
+		fn = tpp_lexer_getlcfilename(&lexer);
+		lc = tpp_lexer_getlcinfo(&lexer);
 		printf("[%s:%d:%d:%s(%d):%.*s",
-		       lexer_filename ? lexer_filename : "?",
-		       (int)(tpp_lcinfo_getline(lc.tlcix_info) + 1),
-		       (int)(tpp_lcinfo_getcol(lc.tlcix_info) + 1),
+		       fn ? fn : "?",
+		       (int)(tpp_lcinfo_getline(lc) + 1),
+		       (int)(tpp_lcinfo_getcol(lc) + 1),
 		       desc, tok,
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
-		while (lc.tlcix_projfile) {
-			tpp_file_getlcinfo_ex(lc.tlcix_projfile, lc.tlcix_projpos, &lc);
-			lexer_filename = tpp_file_getfilename(file);
-			printf(" --- %s:%d:%d",
-			       lexer_filename ? lexer_filename : "?",
-			       (int)(tpp_lcinfo_getline(lc.tlcix_info) + 1),
-			       (int)(tpp_lcinfo_getcol(lc.tlcix_info) + 1));
-		}
 		printf("]\n");
 	}
 	result = 0;

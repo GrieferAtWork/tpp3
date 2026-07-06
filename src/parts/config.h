@@ -1249,7 +1249,7 @@
  * them to terminate (even though standards say that they should
  * keep going):
  *
- * Input     Standard parsing              Smart parsing                        Comment
+ * Input     Standard parsing              Smart parsing                       Comment
  * "1E2"       [FLOAT:1E2]                   [FLOAT:1E2]                         -
  * "1P2"       [INT:1P2]                     [INT:1P2]                           -
  * "0x1E2"     [INT:0x1E2]                   [INT:0x1E2]                         -
@@ -1294,10 +1294,10 @@
  * "0.luz"     [FLOAT:0.luz]                 [INT:0][DOT:.][luz:luz]             Character after "." must be decimal
  * "0..luz"    [FLOAT:0..luz]                [INT:0][DOT_DOT:..][luz:luz]        There can be at most 1 decimal-"."
  * "0xluz"     [INT:0xluz]                   [INT:0xluz]                         -
- * "0x.luz"    [FLOAT:0x.luz]                [INT:0x][DOT:.][luz:luz]            Character after "." must be hexa-decimal
+ * "0x.luz"    [FLOAT:0x.luz]                [INT:0x][DOT:.][luz:luz]            Character after "." must be hexadecimal
  * "0x..luz"   [FLOAT:0x..luz]               [INT:0x][DOT_DOT:..][luz:luz]       There can be at most 1 decimal-"."
  * "0x1luz"    [INT:0x1luz]                  [INT:0x1luz]                        -
- * "0x1.luz"   [FLOAT:0x1.luz]               [INT:0x1][DOT:.][luz:luz]           Character after "." must be hexa-decimal
+ * "0x1.luz"   [FLOAT:0x1.luz]               [INT:0x1][DOT:.][luz:luz]           Character after "." must be hexadecimal
  * "0x1..luz"  [FLOAT:0x1..luz]              [INT:0x1][DOT_DOT:..][luz:luz]      There can be at most 1 decimal-"."
  * "12"        [INT:12]                      [INT:12]                            -
  * ".12"       [FLOAT:.12]                   [FLOAT:.12]                         -

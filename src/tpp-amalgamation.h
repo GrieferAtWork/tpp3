@@ -5835,7 +5835,7 @@ TPP_DECL_END
  * them to terminate (even though standards say that they should
  * keep going):
  *
- * Input     Standard parsing              Smart parsing                        Comment
+ * Input     Standard parsing              Smart parsing                       Comment
  * "1E2"       [FLOAT:1E2]                   [FLOAT:1E2]                         -
  * "1P2"       [INT:1P2]                     [INT:1P2]                           -
  * "0x1E2"     [INT:0x1E2]                   [INT:0x1E2]                         -
@@ -5880,10 +5880,10 @@ TPP_DECL_END
  * "0.luz"     [FLOAT:0.luz]                 [INT:0][DOT:.][luz:luz]             Character after "." must be decimal
  * "0..luz"    [FLOAT:0..luz]                [INT:0][DOT_DOT:..][luz:luz]        There can be at most 1 decimal-"."
  * "0xluz"     [INT:0xluz]                   [INT:0xluz]                         -
- * "0x.luz"    [FLOAT:0x.luz]                [INT:0x][DOT:.][luz:luz]            Character after "." must be hexa-decimal
+ * "0x.luz"    [FLOAT:0x.luz]                [INT:0x][DOT:.][luz:luz]            Character after "." must be hexadecimal
  * "0x..luz"   [FLOAT:0x..luz]               [INT:0x][DOT_DOT:..][luz:luz]       There can be at most 1 decimal-"."
  * "0x1luz"    [INT:0x1luz]                  [INT:0x1luz]                        -
- * "0x1.luz"   [FLOAT:0x1.luz]               [INT:0x1][DOT:.][luz:luz]           Character after "." must be hexa-decimal
+ * "0x1.luz"   [FLOAT:0x1.luz]               [INT:0x1][DOT:.][luz:luz]           Character after "." must be hexadecimal
  * "0x1..luz"  [FLOAT:0x1..luz]              [INT:0x1][DOT_DOT:..][luz:luz]      There can be at most 1 decimal-"."
  * "12"        [INT:12]                      [INT:12]                            -
  * ".12"       [FLOAT:.12]                   [FLOAT:.12]                         -
@@ -13910,6 +13910,15 @@ typedef struct tpp_file {
 #endif /* TPP_HAVE_FILE_EXTERN_C */
 
 
+/* Return the predecessor of "self" for the purposes of #include tracebacks.
+ * If "self" has no precessor (see `tpp_file_isbasefile()'), return "NULL". */
+#if TPP_HAVE_INCLUDE_STACK
+#define tpp_file_getprev(self) (self)->TPP_INTERNAL(tf_tprev)
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_file_getprev(self) ((tpp_file *)NULL)
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+
+
 /* Check if "self" is the "base"-file (that is: the file that
  * doesn't have a parent, meaning that EOF here *will* result
  * in the lexer having to indicate TPP_TOK_EOF on all fronts) */
@@ -14300,6 +14309,43 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
+
+/* Helpers to return line/column information (0-based) for the
+ * start/end positions of the last thing read from the file "self":
+ * - For the current file, this describes the start/end of the
+ *   currently loaded token
+ * - If the current file is a macro (tpp_file_ismacro()), and
+ *   this function is called on its parent (tpp_file_getprev()),
+ *   then this returns the bounds of the token sequence that was
+ *   used to make the macro call
+ * - If the current file is an I/O or TEXT file, and this function
+ *   is called on its parent (tpp_file_getprev()), then this returns
+ *   the bounds of the "#include"-directive that was used to include
+ *   the child-file.
+ * - When passed file returned by `tpp_file_getlcfile()', this will
+ *   return the line/column values associated with the "__LINE__"
+ *   macro (and it's TPP "__COLUMN__" extension). This last case is
+ *   what you probably want to use.
+ *
+ * Examples:
+ * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
+ * >> ...
+ * >> 
+ * >> if (x)
+ * >>     assert(y);
+ *        ^        ^ tpp_file_getpos / tpp_file_getendlcinfo
+ *        tpp_file_getlastpos / tpp_file_getstartlcinfo
+ *
+ * iow: "tpp_file_getlastpos" position for tracebacks (points at what "caused" a macro/file push)
+ *      "tpp_file_getpos" position of next byte to-be parsed once lexer returns to this file. */
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
+tpp_file_getstartlcinfo(tpp_file *tpp_restrict self) {
+	return tpp_file_getlcinfo(self, tpp_file_getlastpos(self));
+}
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
+tpp_file_getendlcinfo(tpp_file *tpp_restrict self) {
+	return tpp_file_getlcinfo(self, tpp_file_getpos(self));
+}
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
@@ -16848,14 +16894,25 @@ typedef struct tpp_lexer {
 /* Current file */
 #define tpp_lexer_getfile(self)     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
 #define tpp_lexer_getfilekind(self) tpp_file_getkind(tpp_lexer_getfile(self))
+#define tpp_lexer_getlcfile(self)   tpp_file_getlcfile(tpp_lexer_getfile(self))   /* [1..1] Returns the file that is used to determine __LINE__ and __COLUMN__ */
+#define tpp_lexer_getbasefile(self) tpp_file_getbasefile(tpp_lexer_getfile(self)) /* [1..1] Return the "base" file (that is: the last one in the #include-stack) */
+#define tpp_lexer_gettextfile(self) tpp_file_gettextfile(tpp_lexer_getfile(self)) /* [0..1] Return the last I/O or TEXT file */
 
 /* L/C information helpers */
-#define tpp_lexer_getlcinfo(self, pos)                  tpp_file_getlcinfo(tpp_lexer_getfile(self), pos)
-#define tpp_lexer_getlcinfo_ex(self, pos, result)       tpp_file_getlcinfo_ex(tpp_lexer_getfile(self), pos, result)
-#define tpp_lexer_gettokenstart_lcinfo(self)            tpp_lexer_getlcinfo(self, tpp_lexer_gettokenstart(self))
-#define tpp_lexer_gettokenstart_lcinfo_ex(self, result) tpp_lexer_getlcinfo_ex(self, tpp_lexer_gettokenstart(self), result)
-#define tpp_lexer_gettokenend_lcinfo(self)              tpp_lexer_getlcinfo(self, tpp_lexer_gettokenend(self))
-#define tpp_lexer_gettokenend_lcinfo_ex(self, result)   tpp_lexer_getlcinfo_ex(self, tpp_lexer_gettokenend(self), result)
+#define tpp_lexer_getlcinfoat(self, pos)                 tpp_file_getlcinfo(tpp_lexer_getfile(self), pos)
+#define tpp_lexer_getlcinfoat_ex(self, pos, result)      tpp_file_getlcinfo_ex(tpp_lexer_getfile(self), pos, result)
+#define tpp_lexer_getlcinfoattokenstart(self)            tpp_lexer_getlcinfoat(self, tpp_lexer_gettokenstart(self))
+#define tpp_lexer_getlcinfoattokenstart_ex(self, result) tpp_lexer_getlcinfoat_ex(self, tpp_lexer_gettokenstart(self), result)
+#define tpp_lexer_getlcinfoattokenend(self)              tpp_lexer_getlcinfoat(self, tpp_lexer_gettokenend(self))
+#define tpp_lexer_getlcinfoattokenend_ex(self, result)   tpp_lexer_getlcinfoat_ex(self, tpp_lexer_gettokenend(self), result)
+
+/* Convenience L/C information helpers.
+ * If you don't want to bother learning what all the above does, then it's these that
+ * you want to use -- these return the values as reported by __LINE__ and __COLUMN__. */
+#define tpp_lexer_getlcfilename(self)  tpp_file_getfilename(tpp_lexer_getlcfile(self))    /* [0..1] Value of __FILE__ */
+#define tpp_lexer_getstartlcinfo(self) tpp_file_getstartlcinfo(tpp_lexer_getlcfile(self)) /* Value of __LINE__ / __COLUMN__ */
+#define tpp_lexer_getendlcinfo(self)   tpp_file_getendlcinfo(tpp_lexer_getlcfile(self))   /* Theoretical value of `__LINE__ / __COLUMN__' at end of current token */
+#define tpp_lexer_getlcinfo(self)      tpp_lexer_getstartlcinfo(self)                     /* Convenience alias to make it clear what you want to use */
 
 /* Warnings... */
 #if TPP_HAVE_WARNINGS

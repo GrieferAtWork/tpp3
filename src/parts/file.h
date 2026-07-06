@@ -419,6 +419,15 @@ typedef struct tpp_file {
 #endif /* TPP_HAVE_FILE_EXTERN_C */
 
 
+/* Return the predecessor of "self" for the purposes of #include tracebacks.
+ * If "self" has no precessor (see `tpp_file_isbasefile()'), return "NULL". */
+#if TPP_HAVE_INCLUDE_STACK
+#define tpp_file_getprev(self) (self)->TPP_INTERNAL(tf_tprev)
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_file_getprev(self) ((tpp_file *)NULL)
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+
+
 /* Check if "self" is the "base"-file (that is: the file that
  * doesn't have a parent, meaning that EOF here *will* result
  * in the lexer having to indicate TPP_TOK_EOF on all fronts) */
@@ -809,6 +818,43 @@ tpp_file_expandchunk(tpp_file *tpp_restrict self);
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
+
+/* Helpers to return line/column information (0-based) for the
+ * start/end positions of the last thing read from the file "self":
+ * - For the current file, this describes the start/end of the
+ *   currently loaded token
+ * - If the current file is a macro (tpp_file_ismacro()), and
+ *   this function is called on its parent (tpp_file_getprev()),
+ *   then this returns the bounds of the token sequence that was
+ *   used to make the macro call
+ * - If the current file is an I/O or TEXT file, and this function
+ *   is called on its parent (tpp_file_getprev()), then this returns
+ *   the bounds of the "#include"-directive that was used to include
+ *   the child-file.
+ * - When passed file returned by `tpp_file_getlcfile()', this will
+ *   return the line/column values associated with the "__LINE__"
+ *   macro (and it's TPP "__COLUMN__" extension). This last case is
+ *   what you probably want to use.
+ *
+ * Examples:
+ * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
+ * >> ...
+ * >> 
+ * >> if (x)
+ * >>     assert(y);
+ *        ^        ^ tpp_file_getpos / tpp_file_getendlcinfo
+ *        tpp_file_getlastpos / tpp_file_getstartlcinfo
+ *
+ * iow: "tpp_file_getlastpos" position for tracebacks (points at what "caused" a macro/file push)
+ *      "tpp_file_getpos" position of next byte to-be parsed once lexer returns to this file. */
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
+tpp_file_getstartlcinfo(tpp_file *tpp_restrict self) {
+	return tpp_file_getlcinfo(self, tpp_file_getlastpos(self));
+}
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
+tpp_file_getendlcinfo(tpp_file *tpp_restrict self) {
+	return tpp_file_getlcinfo(self, tpp_file_getpos(self));
+}
 
 /* Returns the filename of "self", or "NULL" if unknown. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
