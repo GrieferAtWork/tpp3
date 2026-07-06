@@ -408,15 +408,15 @@ function updateConfigMd(filename: string) {
 
 
 #ifdef __MAIN__
-updateConfigMd("config.md");
-updateConfigMd("config-limit.md");
-updateConfigMd("config-core.md");
-updateConfigMd("config-conf.md");
-updateConfigMd("config-token.md");
-updateConfigMd("config-value.md");
-updateConfigMd("config-warn.md");
-updateConfigMd("config-hook.md");
-updateConfigMd("config-common.md");
+updateConfigMd("../doc/config.md");
+updateConfigMd("../doc/config-limit.md");
+updateConfigMd("../doc/config-core.md");
+updateConfigMd("../doc/config-conf.md");
+updateConfigMd("../doc/config-token.md");
+updateConfigMd("../doc/config-value.md");
+updateConfigMd("../doc/config-warn.md");
+updateConfigMd("../doc/config-hook.md");
+updateConfigMd("../doc/config-common.md");
 #endif /* __MAIN__ */
 
 

@@ -38,7 +38,7 @@ If this is what you want, you just need to download the following 2 files (this 
 - [tpp-amalgamation.h](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.h)
 - [tpp-amalgamation.c](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.c)
 
-... And add them to your C project. Examples for a simple integration setup can be found in [samples](./samples) and available configuration options (and the features they control) are listed in [src/config.md](src/config.md).
+... And add them to your C project. Examples for a simple integration setup can be found in [samples](./samples) and available configuration options (and the features they control) are listed in [doc/config.md](doc/config.md).
 
 
 (((WIP: Secondly, TPP provides a CLI "frontend" that implements a (mostly) GCC/CPP-compatible commandline utility. This one's mainly there as a proof-of-concept, since such a tool alone doesn't warrant the degree of customization offered by TPP)))
@@ -46,12 +46,12 @@ If this is what you want, you just need to download the following 2 files (this 
 
 ### Configuration
 
-- [src/config.md](src/config.md)
+- [doc/config.md](doc/config.md)
 
 
 ## Features (abbr.)
 
-NOTE: A full list of configuration options and their meaning can be found in [src/config.md](src/config.md)
+NOTE: A full list of configuration options and their meaning can be found in [doc/config.md](doc/config.md)
 
 | Feature | Origin | Configuration (`TPP_HAVE_*`) | Extension name (default) | Description |
 | ------- | ------ | ------------- | ------------------------ | ----------- |
@@ -127,7 +127,7 @@ NOTE: A full list of configuration options and their meaning can be found in [sr
 | `__TPP_STR_DECOMPILE()` | TPP | `MACRO___TPP_STR_DECOMPILE` | `-ftpp-str-decompile-macro` | Very similar to `__TPP_EXEC`, except that `__TPP_EXEC` will expand other macros and directives, this one doesn't: it simply takes a string and expands to its decoded form *without* expansion (however: expansion may still occur as returned tokens are read). In practice this usually only means: `__TPP_EXEC` accepts preprocessor directives, `__TPP_STR_DECOMPILE` only does basic string-to-token conversion |
 | `__TPP_STR_PACK()` | TPP | `MACRO___TPP_STR_PACK` | `-ftpp-str-pack-macro` | Expands to a string literal that is made up of the arguments taken by this macro. There can be any number of arguments (and arguments don't even have to be separated by `,`), but every argument must be:<ul><li>Another string (that is added to the result after being decoded and re-encoded)</li><li>An INT token (that must evaluate to a value in range `[0,0xFF]`)</li></ul> |
 
-Lots more extensions (especially supported `#pragma` directives) exist and are document in [src/config.md](src/config.md)
+Lots more extensions (especially supported `#pragma` directives) exist and are document in [doc/config.md](doc/config.md)
 
 ## Migrating from TPP2
 

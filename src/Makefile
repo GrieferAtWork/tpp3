@@ -20,15 +20,15 @@
 .DELETE_ON_ERROR:
 
 CONFIG_MD := \
-	config.md \
-	config-limit.md \
-	config-core.md \
-	config-conf.md \
-	config-token.md \
-	config-value.md \
-	config-warn.md \
-	config-hook.md \
-	config-common.md
+	../doc/config.md \
+	../doc/config-limit.md \
+	../doc/config-core.md \
+	../doc/config-conf.md \
+	../doc/config-token.md \
+	../doc/config-value.md \
+	../doc/config-warn.md \
+	../doc/config-hook.md \
+	../doc/config-common.md
 
 
 all: tpp-amalgamation.h tpp-amalgamation.c $(CONFIG_MD)
