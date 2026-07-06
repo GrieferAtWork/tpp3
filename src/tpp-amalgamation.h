@@ -3786,6 +3786,7 @@ TPP_WARNING(TPP_W_CANNOT_POP_INCLUDE_PATHS, 1(TPP_WG_WARNING), 0(), ~,
 #undef TPP_WARNING_WITH_NUMBER_EX
 #undef TPP_MACRO
 #undef TPP_BUILTIN_MACRO
+
 #else /* TPP_DEFS */
 #define GUARD_TPP_AMALGAMATION_H 1
 
@@ -4463,10 +4464,10 @@ typedef struct {
 	} while (0)
 #endif /* !tpp_once */
 
-TPP_DECL_END
 /************************************************************************/
 /* File: parts/tuple.h                                                  */
 /************************************************************************/
+
 /* Preprocessor tuples:
  * >> 0()                  // Empty tuple
  * >> 1(VALUE)             // 1-element tuple
@@ -4626,6 +4627,9 @@ TPP_DECL_END
 #define _TPP_TUPLE_FOREACH_(tuple, size, sep, item, _) _TPP_TUPLE_FOREACH_##size(tuple, sep, item, _)
 
 #define TPP_TUPLE_FOREACH_DUMMY_SEP(_, prev_index, prev_value, next_index, next_value) /* nothing */
+
+TPP_DECL_END
+
 /************************************************************************/
 /* File: parts/config.h                                                 */
 /************************************************************************/
@@ -8230,6 +8234,7 @@ TPP_DECL_END
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
+
 /************************************************************************/
 /* File: parts/error.h                                                  */
 /************************************************************************/
@@ -8750,6 +8755,7 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self, tpp_size num_byt
 TPP_DECL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes);
 
 TPP_DECL_END
+
 /************************************************************************/
 /* File: parts/file-io.h                                                */
 /************************************************************************/
@@ -8907,17 +8913,17 @@ tpp_io_normalize_filename(char *filename, char *after_last_sep,
 #endif /* !tpp_io_normalize_filename */
 #endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
 
-TPP_DECL_END
 /************************************************************************/
 /* File: parts/time.h                                                   */
 /************************************************************************/
+
 #if TPP_HAVE_TIME_API
 #ifndef tpp_time
 #if !TPP_HOST_NO_SYSTEM_INCLUDES
+TPP_DECL_END
 #include <time.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
-
 TPP_DECL_BEGIN
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
 /* Time API */
 #define tpp_time                      time_t
@@ -8960,13 +8966,12 @@ TPP_INLINE tpp_errno TPPCALL tpp_tm_fromtime(tpp_tm *self, tpp_time *p_time) {
 #define tpp_tm_getwday(self) ((self)->tm_wday)        /* [0, 6] */
 #define tpp_tm_getyday(self) ((self)->tm_yday)        /* [0, 365] */
 
-TPP_DECL_END
 #endif /* !tpp_time */
 #endif /* TPP_HAVE_TIME_API */
+
 /************************************************************************/
 /* File: parts/expr.h                                                   */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_BUILTIN_EXPR_VALUE
 #undef _TPP_EXPR_VALUE_KIND_MULTIPLE
@@ -15953,13 +15958,11 @@ tpp_warnings_invoke_nofail(tpp_warnings const *tpp_restrict self, tpp_warning_id
 
 #endif /* TPP_HAVE_WARNINGS */
 
-TPP_DECL_END
 /************************************************************************/
 /* File: parts/sysinclude.h                                             */
 /************************************************************************/
-#if TPP_HAVE_INCLUDE_PATH
-TPP_DECL_BEGIN
 
+#if TPP_HAVE_INCLUDE_PATH
 typedef struct tpp_include_path_entry {
 #if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
 	TPP_REF tpp_string *TPP_INTERNAL(tipe_pathstr); /* [1..1] The path described by this entry (with a trailing TPP_FS_SEP_S). */
@@ -16262,13 +16265,11 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *
 #define tpp_include_paths_clearafter(self)                       tpp_include_path_list_clear(&(self)->TPP_INTERNAL(tip_after_list))
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 #endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
-
-TPP_DECL_END
 #endif /* TPP_HAVE_INCLUDE_PATH */
+
 /************************************************************************/
 /* File: parts/hooks.h                                                  */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 #ifndef tpp_lexer_foreach_include_path_flags__PARAM

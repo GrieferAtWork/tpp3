@@ -36132,5 +36132,6 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
 TPP_DECL_END
+
 #endif /* !GUARD_TPP_AMALGAMATION_C */
 /* clang-format on */

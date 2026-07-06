@@ -23,6 +23,7 @@
 #include "api.h"
 
 /*[[[tpp-begin]]]*/
+TPP_DECL_BEGIN
 
 /* Preprocessor tuples:
  * >> 0()                  // Empty tuple
@@ -207,6 +208,8 @@ for (local n: [:N]) {
 #define _TPP_TUPLE_FOREACH_(tuple, size, sep, item, _) _TPP_TUPLE_FOREACH_##size(tuple, sep, item, _)
 
 #define TPP_TUPLE_FOREACH_DUMMY_SEP(_, prev_index, prev_value, next_index, next_value) /* nothing */
-/*[[[tpp-end]]]*/
+
+TPP_DECL_END
+ /*[[[tpp-end]]]*/
 
 #endif /* !GUARD_TPP_TUPLE_H */

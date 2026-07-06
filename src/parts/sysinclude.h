@@ -26,9 +26,9 @@
 #include "string.h"
 
 /*[[[tpp-begin]]]*/
-#if TPP_HAVE_INCLUDE_PATH
 TPP_DECL_BEGIN
 
+#if TPP_HAVE_INCLUDE_PATH
 typedef struct tpp_include_path_entry {
 #if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
 	TPP_REF tpp_string *TPP_INTERNAL(tipe_pathstr); /* [1..1] The path described by this entry (with a trailing TPP_FS_SEP_S). */
@@ -331,9 +331,9 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *
 #define tpp_include_paths_clearafter(self)                       tpp_include_path_list_clear(&(self)->TPP_INTERNAL(tip_after_list))
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 #endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#endif /* TPP_HAVE_INCLUDE_PATH */
 
 TPP_DECL_END
-#endif /* TPP_HAVE_INCLUDE_PATH */
 /*[[[tpp-end]]]*/
 
 #endif /* !GUARD_TPP_SYSINCLUDE_H */

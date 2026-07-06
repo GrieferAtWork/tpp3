@@ -25,13 +25,15 @@
 #include "error.h"
 
 /*[[[tpp-begin]]]*/
+TPP_DECL_BEGIN
+
 #if TPP_HAVE_TIME_API
 #ifndef tpp_time
 #if !TPP_HOST_NO_SYSTEM_INCLUDES
+TPP_DECL_END
 #include <time.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
-
 TPP_DECL_BEGIN
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
 /* Time API */
 #define tpp_time                      time_t
@@ -74,9 +76,10 @@ TPP_INLINE tpp_errno TPPCALL tpp_tm_fromtime(tpp_tm *self, tpp_time *p_time) {
 #define tpp_tm_getwday(self) ((self)->tm_wday)        /* [0, 6] */
 #define tpp_tm_getyday(self) ((self)->tm_yday)        /* [0, 365] */
 
-TPP_DECL_END
 #endif /* !tpp_time */
 #endif /* TPP_HAVE_TIME_API */
+
+TPP_DECL_END
 /*[[[tpp-end]]]*/
 
 #endif /* !GUARD_TPP_TIME_H */

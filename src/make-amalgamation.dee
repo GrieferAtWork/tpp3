@@ -128,7 +128,9 @@ function makeAmalgamation(inputFilename: string, outputFilename: string, TPP_AMA
 		             f"/* File: {filename.ljust(63)}*/\n"
 		             f"/************************************************************************/\n");
 		writer.write(getFile(absFilename)
-			.rereplace(r"\bTPP_CONFIG_DEFS_FILENAME\b", TPP_AMALGAMATION_H));
+			.rereplace(r"\bTPP_CONFIG_DEFS_FILENAME\b", TPP_AMALGAMATION_H)
+			.strip());
+		writer.write("\n");
 		i = incEnd + 1;
 	}
 	writer.write(data[i:]);
