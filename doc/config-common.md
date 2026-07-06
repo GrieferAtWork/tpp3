@@ -31,8 +31,8 @@ Default:
 
 ## TPP_COMMON_HAVE_TPP_TOK_SPACE
 
-Default configuration for <a href="config-conf.md#tpp_have_tpp_tok_lf">`TPP_HAVE_TPP_TOK_LF`</a>, <a href="config-conf.md#tpp_have_tpp_tok_space">`TPP_HAVE_TPP_TOK_SPACE`</a>,
-<a href="config-conf.md#tpp_have_tpp_tok_comment">`TPP_HAVE_TPP_TOK_COMMENT`</a>, indicating if tokens that are normally through
+Default configuration for [`TPP_HAVE_TPP_TOK_LF`](config-conf.md#tpp_have_tpp_tok_lf), [`TPP_HAVE_TPP_TOK_SPACE`](config-conf.md#tpp_have_tpp_tok_space),
+[`TPP_HAVE_TPP_TOK_COMMENT`](config-conf.md#tpp_have_tpp_tok_comment), indicating if tokens that are normally through
 of as no-ops should be emitted by `tpp_lexer_yieldpp()`
 
 <details><summary>Details</summary>
@@ -61,10 +61,10 @@ Default:
 
 Default configuration for:
 
-- <a href="config-conf.md#tpp_have_tpp_tok_int">`TPP_HAVE_TPP_TOK_INT`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_float">`TPP_HAVE_TPP_TOK_FLOAT`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_char">`TPP_HAVE_TPP_TOK_CHAR`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_string">`TPP_HAVE_TPP_TOK_STRING`</a>
+- [`TPP_HAVE_TPP_TOK_INT`](config-conf.md#tpp_have_tpp_tok_int)
+- [`TPP_HAVE_TPP_TOK_FLOAT`](config-conf.md#tpp_have_tpp_tok_float)
+- [`TPP_HAVE_TPP_TOK_CHAR`](config-conf.md#tpp_have_tpp_tok_char)
+- [`TPP_HAVE_TPP_TOK_STRING`](config-conf.md#tpp_have_tpp_tok_string)
 
 <details><summary>Details</summary>
 
@@ -79,16 +79,16 @@ TPP_COMMON_HAVE_TPP_TOK
 
 Default configuration for extended C/C++ string tokens:
 
-- <a href="config-conf.md#tpp_have_tpp_tok_cxx_raw_string_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_cxx_wide_string_literal">`TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_cxx_utf8_string_literal">`TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_cxx_utf16_string_literal">`TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_cxx_utf32_string_literal">`TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_cxx_raw_char_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_cxx_wide_char_literal">`TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_cxx_utf8_char_literal">`TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_cxx_utf16_char_literal">`TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_cxx_utf32_char_literal">`TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL`</a>
+- [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_wide_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf8_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf16_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf32_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_char_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_wide_char_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf8_char_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf16_char_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf32_char_literal)
 
 <details><summary>Details</summary>
 
@@ -103,10 +103,10 @@ Default:
 
 Default configuration for deemon-specific string tokens:
 
-- <a href="config-conf.md#tpp_have_tpp_tok_raw_string_literal">`TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_raw_char_literal">`TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_block_string_literal">`TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL`</a>
-- <a href="config-conf.md#tpp_have_tpp_tok_block_char_literal">`TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL`</a>
+- [`TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_raw_string_literal)
+- [`TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_raw_char_literal)
+- [`TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_block_string_literal)
+- [`TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_block_char_literal)
 
 <details><summary>Details</summary>
 

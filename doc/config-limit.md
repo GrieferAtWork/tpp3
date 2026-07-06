@@ -11,7 +11,7 @@ These are numeric config options, meaning that when overwritten, they must expan
 
 TPP tab size: number of columns to assign to `U+0008` (`\t`) characters.
 Used when calculating line/column information for messages, as well as
-the builtin `__COLUMN__` macro (see <a href="config-conf.md#tpp_have_macro___column__">`TPP_HAVE_MACRO___COLUMN__`</a>)
+the builtin `__COLUMN__` macro (see [`TPP_HAVE_MACRO___COLUMN__`](config-conf.md#tpp_have_macro___column__))
 
 - when positive: compile-time hard-code
 - when negative: runtime-configurable, with absolute value being used as default
@@ -74,16 +74,16 @@ TPP_HAVE_INCLUDE_STACK ? ((TPP_PROFILE != TPP_PROFILE_MINIMAL) ? -64 : 64) : 0
 
 ## TPP_MAX_RECURSIVE_MACRO_DEPTH
 
-Max # of times that the same (self-recursive; see <a href="config-conf.md#tpp_have_macro_recursion">`TPP_HAVE_MACRO_RECURSION`</a>)
+Max # of times that the same (self-recursive; see [`TPP_HAVE_MACRO_RECURSION`](config-conf.md#tpp_have_macro_recursion))
 macro may appear on the `#include`-stack (with each instance's body having a
 different expansion) before the macro will be treated as though its body
 didn't change, causing it to not be expanded (anymore). At the same time
 that this limit is reached, a warning `TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED`
 will be emitted.
 
-NOTE: When <a href="config-conf.md#tpp_have_macro_recursion">`TPP_HAVE_MACRO_RECURSION`</a> can never be enabled, this limit is
+NOTE: When [`TPP_HAVE_MACRO_RECURSION`](config-conf.md#tpp_have_macro_recursion) can never be enabled, this limit is
       entirely pointless, since the C standard (which we followed whenever
-      <a href="config-conf.md#tpp_have_macro_recursion">`TPP_HAVE_MACRO_RECURSION`</a> isn't enabled) essentially requires that
+      [`TPP_HAVE_MACRO_RECURSION`](config-conf.md#tpp_have_macro_recursion) isn't enabled) essentially requires that
       this limit be `1`.
 
 - `0`:  Disable depth checks entirely (limit becomes *infinite*)

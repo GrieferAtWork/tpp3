@@ -14,11 +14,14 @@ Every one of these config macros can be defined as one of the following values:
 ## TPP_HAVE_BSE
 
 Support for `\`-escaped line continuation: when a line ends with a `\` character
-that is immediately (but see <a href="#tpp_have_bse_whitespace">`TPP_HAVE_BSE_WHITESPACE`</a>) followed by a linefeed,
+that is immediately (but see [`TPP_HAVE_BSE_WHITESPACE`](config-conf.md#tpp_have_bse_whitespace)) followed by a linefeed,
 that that linefeed is never yielded, and a potential multi-character token is
 continued:
->> "foo\\\nbar" -- Produces a single token "foobar"
->> "+\\\n=" -- Produces a single token "+="
+
+```c
+"foo\\\nbar" -- Produces a single token "foobar"
+"+\\\n=" -- Produces a single token "+="
+```
 
 This DOES affect the line-continuation features of C++ // comments,
 and multi-line macro definitions. When this is disabled, \-escaped
@@ -42,7 +45,7 @@ Extension:
 
 ## TPP_HAVE_BSE_WHITESPACE
 
-Extension to <a href="#tpp_have_bse">`TPP_HAVE_BSE`</a>: the `\` backslash is allowed to be followed by extra
+Extension to [`TPP_HAVE_BSE`](config-conf.md#tpp_have_bse): the `\` backslash is allowed to be followed by extra
 whitespace preceding the actual linefeed
 
 This DOES affect the line-continuation features of C++ `//` comments, and
@@ -167,7 +170,7 @@ Extension:
 
 ## TPP_HAVE_CPP_BUILTIN_MACROS
 
-Support for builtin C-style macros (require <a href="#tpp_have_cpp_macros">`TPP_HAVE_CPP_MACROS`</a> to be enabled, too)
+Support for builtin C-style macros (require [`TPP_HAVE_CPP_MACROS`](config-conf.md#tpp_have_cpp_macros) to be enabled, too)
 @detect: N/A
 
 <details><summary>Details</summary>
@@ -234,16 +237,16 @@ the filename, a number of additional "flags" can be specified:
 
 - `1`: Push a dummy-file containing the old file/line/column onto the `#include`-stack,
        before applying the new line/filename. After being pushed, said last position will
-       be displayed as part of warning messages. This flag require <a href="config-core.md#tpp_have_file_dummy">`TPP_HAVE_FILE_DUMMY`</a>
+       be displayed as part of warning messages. This flag require [`TPP_HAVE_FILE_DUMMY`](config-core.md#tpp_have_file_dummy)
        to be enabled, otherwise it is ignored.
 - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack. Like the
-       `1` flag, this flag require <a href="config-core.md#tpp_have_file_dummy">`TPP_HAVE_FILE_DUMMY`</a> to be enabled, otherwise it is
+       `1` flag, this flag require [`TPP_HAVE_FILE_DUMMY`](config-core.md#tpp_have_file_dummy) to be enabled, otherwise it is
        ignored.
 - `3`: Set `TPP_FILE_FLAGS_SYSHDR` for the current text-file. When this flag is not
        supplied, `TPP_FILE_FLAGS_SYSHDR` is instead cleared for the current text-file.
-       This flag requires <a href="config-core.md#tpp_have_file_syshdr">`TPP_HAVE_FILE_SYSHDR`</a> to be enabled, otherwise it is ignored.
+       This flag requires [`TPP_HAVE_FILE_SYSHDR`](config-core.md#tpp_have_file_syshdr) to be enabled, otherwise it is ignored.
 - `4`: Same as flag `3`, except for the `TPP_FILE_FLAGS_EXTERN_C` flag. Similarly, this
-       flag requires <a href="config-core.md#tpp_have_file_extern_c">`TPP_HAVE_FILE_EXTERN_C`</a> to be enabled, otherwise it is ignored.
+       flag requires [`TPP_HAVE_FILE_EXTERN_C`](config-core.md#tpp_have_file_extern_c) to be enabled, otherwise it is ignored.
 
 @detect: N/A
 
@@ -637,7 +640,7 @@ Support for clang `__has_extension()`
 Check support of compiler extensions
 
 NOTE: Another builtin macro of the same name exists and can be
-      enabled via <a href="#tpp_have_macro___has_extension">`TPP_HAVE_MACRO___has_extension`</a>. The 2 macros
+      enabled via [`TPP_HAVE_MACRO___has_extension`](config-conf.md#tpp_have_macro___has_extension). The 2 macros
       don't conflict with each other though (both can safely be
       enabled at the same time), since TPP's `__has_extension()`
       takes a string, whilst this one takes a keyword/identifier.
@@ -1136,7 +1139,7 @@ Extension:
 ## TPP_HAVE_MACRO___INCLUDE_DEPTH__
 
 Support for the builtin macro `__INCLUDE_DEPTH__`
-Alias for `__INCLUDE_LEVEL__` (see <a href="#tpp_have_macro___include_level__">`TPP_HAVE_MACRO___INCLUDE_LEVEL__`</a>)
+Alias for `__INCLUDE_LEVEL__` (see [`TPP_HAVE_MACRO___INCLUDE_LEVEL__`](config-conf.md#tpp_have_macro___include_level__))
 
 @detect: #ifdef __INCLUDE_DEPTH__
 
@@ -1247,7 +1250,7 @@ Support for the builtin macro `__TPP_EVAL()`
 
 Evaluate an expression like in `#if`, then expand to its result
 in the form of 1-2 tokens: `[opt:MINUS][INT]` (or a `"string"`
-if <a href="#tpp_have_builtin_expr_strings">`TPP_HAVE_BUILTIN_EXPR_STRINGS`</a> is enabled):
+if [`TPP_HAVE_BUILTIN_EXPR_STRINGS`](config-conf.md#tpp_have_builtin_expr_strings) is enabled):
 
 ```c
 __TPP_EVAL(10 + 20) // Expands to a single token: 30
@@ -1362,7 +1365,7 @@ Extension:
 ## TPP_HAVE_MACRO___TPP_COUNTER
 
 Support for the builtin macro `__TPP_COUNTER()`
-Called the same way as `__TPP_UNIQUE` (see <a href="#tpp_have_macro___tpp_unique">`TPP_HAVE_MACRO___TPP_UNIQUE`</a>),
+Called the same way as `__TPP_UNIQUE` (see [`TPP_HAVE_MACRO___TPP_UNIQUE`](config-conf.md#tpp_have_macro___tpp_unique)),
 but returns an ever-increasing value starting at `0` (same as `__COUNTER__`),
 but that counter is specific to the given keyword. i.e.: `__TPP_COUNTER(foo)`
 and `__TPP_COUNTER(bar)` increment different counters
@@ -1416,7 +1419,7 @@ Extension:
 ## TPP_HAVE_MACRO___TPP_STR_DECOMPILE
 
 Support for the builtin macro `__TPP_STR_DECOMPILE()`
-Very similar to `__TPP_EXEC()` (see <a href="#tpp_have_macro___tpp_exec">`TPP_HAVE_MACRO___TPP_EXEC`</a>), except
+Very similar to `__TPP_EXEC()` (see [`TPP_HAVE_MACRO___TPP_EXEC`](config-conf.md#tpp_have_macro___tpp_exec)), except
 that `__TPP_EXEC()` will expand other macros and directives, while
 `__TPP_STR_DECOMPILE()` doesn't: it simply takes a string and expands to
 its decoded form *without* expansion (however: expansion may still
@@ -1473,8 +1476,8 @@ Extension:
 ## TPP_HAVE_MACRO___TPP_STR_SUBSTR
 
 Support for the builtin macro `__TPP_STR_SUBSTR()`
-Stand-alone macro that takes 3 arguments and (assuming <a href="#tpp_have_builtin_expr_strings">`TPP_HAVE_BUILTIN_EXPR_STRINGS`</a>
-and <a href="#tpp_have_macro___tpp_eval">`TPP_HAVE_MACRO___TPP_EVAL`</a> are enabled) can be implemented as follows:
+Stand-alone macro that takes 3 arguments and (assuming [`TPP_HAVE_BUILTIN_EXPR_STRINGS`](config-conf.md#tpp_have_builtin_expr_strings)
+and [`TPP_HAVE_MACRO___TPP_EVAL`](config-conf.md#tpp_have_macro___tpp_eval) are enabled) can be implemented as follows:
 
 ```c
 #define __TPP_STR_SUBSTR(str, lo, hi) __TPP_EVAL((str)[(lo):(hi)])
@@ -1500,8 +1503,8 @@ Extension:
 ## TPP_HAVE_MACRO___TPP_STR_SIZE
 
 Support for the builtin macro `__TPP_STR_SIZE()`
-Stand-alone macro that takes 1 arguments and (assuming <a href="#tpp_have_builtin_expr_strings">`TPP_HAVE_BUILTIN_EXPR_STRINGS`</a>
-and <a href="#tpp_have_macro___tpp_eval">`TPP_HAVE_MACRO___TPP_EVAL`</a> are enabled) can be implemented as follows:
+Stand-alone macro that takes 1 arguments and (assuming [`TPP_HAVE_BUILTIN_EXPR_STRINGS`](config-conf.md#tpp_have_builtin_expr_strings)
+and [`TPP_HAVE_MACRO___TPP_EVAL`](config-conf.md#tpp_have_macro___tpp_eval) are enabled) can be implemented as follows:
 
 ```c
 #define __TPP_STR_SIZE(str) __TPP_EVAL(#(str))
@@ -1872,7 +1875,7 @@ Extension:
 
 Support for GCC-style va-comma: when a variable-argument macro
 contains a construct like `, ## __VA_ARGS__` (or the name of the
-variable-length argument when <a href="#tpp_have_named_varargs_in_macros">`TPP_HAVE_NAMED_VARARGS_IN_MACROS`</a>
+variable-length argument when [`TPP_HAVE_NAMED_VARARGS_IN_MACROS`](config-conf.md#tpp_have_named_varargs_in_macros)
 is enabled), then the `,` is deleted during expansion whenever
 the there are no variable arguments:
 
@@ -1912,7 +1915,7 @@ str("foo")  // Expands to: "\"foo\""
 ```
 
 Note that this operator only takes effect during modern macro
-compilation. When <a href="#tpp_have_traditional_macros">`TPP_HAVE_TRADITIONAL_MACROS`</a> is enabled,
+compilation. When [`TPP_HAVE_TRADITIONAL_MACROS`](config-conf.md#tpp_have_traditional_macros) is enabled,
 then stringization works differently and must be done like so:
 
 ```c
@@ -1950,7 +1953,7 @@ str('foo')  // Expands to: '\'foo\''
 ```
 
 Note that this operator only takes effect during modern macro
-compilation. When <a href="#tpp_have_traditional_macros">`TPP_HAVE_TRADITIONAL_MACROS`</a> is enabled,
+compilation. When [`TPP_HAVE_TRADITIONAL_MACROS`](config-conf.md#tpp_have_traditional_macros) is enabled,
 then charization works differently and must be done like so:
 
 ```c
@@ -2407,8 +2410,8 @@ Support for digraph token aliases:
 | `%>`    | `}` |
 | `:>`    | `]` |
 | `%:`    | `#` |
-| `%:%:`  | `##` (requires <a href="config-token.md#tpp_have_tpp_tok_pound_pound">`TPP_HAVE_TPP_TOK_POUND_POUND`</a>) |
-| `<::`   | `<`, `::` (requires <a href="config-token.md#tpp_have_tpp_tok_colon_colon">`TPP_HAVE_TPP_TOK_COLON_COLON`</a>) |
+| `%:%:`  | `##` (requires [`TPP_HAVE_TPP_TOK_POUND_POUND`](config-token.md#tpp_have_tpp_tok_pound_pound)) |
+| `<::`   | `<`, `::` (requires [`TPP_HAVE_TPP_TOK_COLON_COLON`](config-token.md#tpp_have_tpp_tok_colon_colon)) |
 
 @detect: #if __TPP_COUNT_TOKENS("%:") == 1
 
@@ -2707,14 +2710,14 @@ keep going):
 | `0x1E2`     | `[INT:0x1E2]`                   | `[INT:0x1E2]`                         | - |
 | `0x1P2`     | `[FLOAT:0x1P2]`                 | `[FLOAT:0x1P2]`                       | - |
 | `0xE12`     | `[INT:0xE12]`                   | `[INT:0xE12]`                         | - |
-| `0xE+12`    | `[FLOAT:0xE+12]`                | `[INT:0xE][PLUS:+][INT:12]`           | Exponent after "x" / "X" must use "p" or "P" |
-| `0x1E+12`   | `[FLOAT:0x1E+12]`               | `[INT:0x1E][PLUS:+][INT:12]`          | Exponent after "x" / "X" must use "p" or "P" |
+| `0xE+12`    | `[FLOAT:0xE+12]`                | `[INT:0xE][PLUS:+][INT:12]`           | Exponent after `x` / `X` must use `p` or `P` |
+| `0x1E+12`   | `[FLOAT:0x1E+12]`               | `[INT:0x1E][PLUS:+][INT:12]`          | Exponent after `x` / `X` must use `p` or `P` |
 | `0E+12`     | `[FLOAT:0E+12]`                 | `[FLOAT:0E+12]`                       | - |
-| `0xP12`     | `[FLOAT:0xP12]`                 | `[INT:0xP12]`                         | Exponent cannot directly appear after "x" / "X" |
-| `0xP+12`    | `[FLOAT:0xP+12]`                | `[INT:0xP][PLUS:+][INT:12]`           | Exponent cannot directly appear after "x" / "X" |
+| `0xP12`     | `[FLOAT:0xP12]`                 | `[INT:0xP12]`                         | Exponent cannot directly appear after `x` / `X` |
+| `0xP+12`    | `[FLOAT:0xP+12]`                | `[INT:0xP][PLUS:+][INT:12]`           | Exponent cannot directly appear after `x` / `X` |
 | `0x1P12`    | `[FLOAT:0x1P12]`                | `[FLOAT:0x1P12]`                      | - |
 | `0x1P+12`   | `[FLOAT:0x1P+12]`               | `[FLOAT:0x1P+12]`                     | - |
-| `0P+12`     | `[FLOAT:0P+12]`                 | `[INT:0P][PLUS:+][INT:12]`            | Without "x" / "X", must use "e" or "E" for exponents |
+| `0P+12`     | `[FLOAT:0P+12]`                 | `[INT:0P][PLUS:+][INT:12]`            | Without `x` / `X`, must use `e` or `E` for exponents |
 | `0xA12`     | `[INT:0xA12]`                   | `[INT:0xA12]`                         | - |
 | `0xA+12`    | `[INT:0xA][PLUS:+][INT:12]`     | `[INT:0xA][PLUS:+][INT:12]`           | - |
 | `0x1A+12`   | `[INT:0x1A][PLUS:+][INT:12]`    | `[INT:0x1A][PLUS:+][INT:12]`          | - |
@@ -2725,35 +2728,35 @@ keep going):
 | `0x.P12`    | `[FLOAT:0x.P12]`                | `[FLOAT:0x.P12]`                      | - |
 | `0x.P+12`   | `[FLOAT:0x.P+12]`               | `[FLOAT:0x.P+12]`                     | - |
 | `0x.1P+12`  | `[FLOAT:0x.1P+12]`              | `[FLOAT:0x.1P+12]`                    | - |
-| `0.P+12`    | `[FLOAT:0.P+12]`                | `[INT:0][DOT:.][P:P][PLUS:+][INT:12]` | Without "x" / "X", must use "e" or "E" for exponents |
+| `0.P+12`    | `[FLOAT:0.P+12]`                | `[INT:0][DOT:.][P:P][PLUS:+][INT:12]` | Without `x` / `X`, must use `e` or `E` for exponents |
 | `0x.A12`    | `[FLOAT:0x.A12]`                | `[FLOAT:0x.A12]`                      | - |
 | `0x.A+12`   | `[FLOAT:0x.A][PLUS:+][INT:12]`  | `[FLOAT:0x.A][PLUS:+][INT:12]`        | - |
 | `0x.1A+12`  | `[FLOAT:0x.1A][PLUS:+][INT:12]` | `[FLOAT:0x.1A][PLUS:+][INT:12]`       | - |
-| `0.A+12`    | `[FLOAT:0.A][PLUS:+][INT:12]`   | `[INT:0][DOT:.][A:A][PLUS:+][INT:12]` | Without "x" / "X", first character after "." must be 0-9 |
+| `0.A+12`    | `[FLOAT:0.A][PLUS:+][INT:12]`   | `[INT:0][DOT:.][A:A][PLUS:+][INT:12]` | Without `x` / `X`, first character after `.` must be 0-9 |
 | `012`       | `[INT:012]`                     | `[INT:012]`                           | - |
 | `0.12`      | `[FLOAT:0.12]`                  | `[FLOAT:0.12]`                        | - |
-| `0..12`     | `[FLOAT:0..12]`                 | `[INT:0][DOT_DOT:..][INT:12]`         | There can be at most 1 decimal-"." |
+| `0..12`     | `[FLOAT:0..12]`                 | `[INT:0][DOT_DOT:..][INT:12]`         | There can be at most 1 decimal-`.` |
 | `0foo`      | `[INT:0foo]`                    | `[INT:0foo]`                          | - |
-| `0.foo`     | `[FLOAT:0.foo]`                 | `[INT:0][DOT:.][foo:foo]`             | Hex-character "f" after "." requires "x" / "X" |
-| `0..foo`    | `[FLOAT:0..foo]`                | `[INT:0][DOT_DOT:..][foo:foo]`        | There can be at most 1 decimal-"." |
+| `0.foo`     | `[FLOAT:0.foo]`                 | `[INT:0][DOT:.][foo:foo]`             | Hex-character `f` after `.` requires `x` / `X` |
+| `0..foo`    | `[FLOAT:0..foo]`                | `[INT:0][DOT_DOT:..][foo:foo]`        | There can be at most 1 decimal-`.` |
 | `0xfoo`     | `[INT:0xfoo]`                   | `[INT:0xfoo]`                         | - |
 | `0x.foo`    | `[FLOAT:0x.foo]`                | `[FLOAT:0x.foo]`                      | - |
-| `0x..foo`   | `[FLOAT:0x..foo]`               | `[INT:0x][DOT_DOT:..][foo:foo]`       | There can be at most 1 decimal-"." |
+| `0x..foo`   | `[FLOAT:0x..foo]`               | `[INT:0x][DOT_DOT:..][foo:foo]`       | There can be at most 1 decimal-`.` |
 | `0x1foo`    | `[INT:0x1foo]`                  | `[INT:0x1foo]`                        | - |
 | `0x1.foo`   | `[FLOAT:0x1.foo]`               | `[FLOAT:0x1.foo]`                     | - |
-| `0x1..foo`  | `[FLOAT:0x1..foo]`              | `[INT:0x1][DOT_DOT:..][foo:foo]`      | There can be at most 1 decimal-"." |
+| `0x1..foo`  | `[FLOAT:0x1..foo]`              | `[INT:0x1][DOT_DOT:..][foo:foo]`      | There can be at most 1 decimal-`.` |
 | `0luz`      | `[INT:0luz]`                    | `[INT:0luz]`                          | - |
-| `0.luz`     | `[FLOAT:0.luz]`                 | `[INT:0][DOT:.][luz:luz]`             | Character after "." must be decimal |
-| `0..luz`    | `[FLOAT:0..luz]`                | `[INT:0][DOT_DOT:..][luz:luz]`        | There can be at most 1 decimal-"." |
+| `0.luz`     | `[FLOAT:0.luz]`                 | `[INT:0][DOT:.][luz:luz]`             | Character after `.` must be decimal |
+| `0..luz`    | `[FLOAT:0..luz]`                | `[INT:0][DOT_DOT:..][luz:luz]`        | There can be at most 1 decimal-`.` |
 | `0xluz`     | `[INT:0xluz]`                   | `[INT:0xluz]`                         | - |
-| `0x.luz`    | `[FLOAT:0x.luz]`                | `[INT:0x][DOT:.][luz:luz]`            | Character after "." must be hexadecimal |
-| `0x..luz`   | `[FLOAT:0x..luz]`               | `[INT:0x][DOT_DOT:..][luz:luz]`       | There can be at most 1 decimal-"." |
+| `0x.luz`    | `[FLOAT:0x.luz]`                | `[INT:0x][DOT:.][luz:luz]`            | Character after `.` must be hexadecimal |
+| `0x..luz`   | `[FLOAT:0x..luz]`               | `[INT:0x][DOT_DOT:..][luz:luz]`       | There can be at most 1 decimal-`.` |
 | `0x1luz`    | `[INT:0x1luz]`                  | `[INT:0x1luz]`                        | - |
-| `0x1.luz`   | `[FLOAT:0x1.luz]`               | `[INT:0x1][DOT:.][luz:luz]`           | Character after "." must be hexadecimal |
-| `0x1..luz`  | `[FLOAT:0x1..luz]`              | `[INT:0x1][DOT_DOT:..][luz:luz]`      | There can be at most 1 decimal-"." |
+| `0x1.luz`   | `[FLOAT:0x1.luz]`               | `[INT:0x1][DOT:.][luz:luz]`           | Character after `.` must be hexadecimal |
+| `0x1..luz`  | `[FLOAT:0x1..luz]`              | `[INT:0x1][DOT_DOT:..][luz:luz]`      | There can be at most 1 decimal-`.` |
 | `12`        | `[INT:12]`                      | `[INT:12]`                            | - |
 | `.12`       | `[FLOAT:.12]`                   | `[FLOAT:.12]`                         | - |
-| `..12`      | `[DOT_DOT:..][INT:12]`          | `[DOT_DOT:..][INT:12]`                | There can be at most 1 decimal-"." |
+| `..12`      | `[DOT_DOT:..][INT:12]`          | `[DOT_DOT:..][INT:12]`                | There can be at most 1 decimal-`.` |
 
 @detect: #if __TPP_COUNT_TOKENS("0x1P+12") == 1 && __TPP_COUNT_TOKENS("0xE+12") == 3
 
@@ -2835,7 +2838,7 @@ Extension:
 ## TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 
 Support for string literals: `L"foo"`
-When <a href="#tpp_have_tpp_tok_cxx_raw_string_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`</a> is also enabled, also support `LR"AB(foo)AB")`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `LR"AB(foo)AB")`
 @detect: #if __TPP_COUNT_TOKENS('L"foo"') == 1
 
 <details><summary>Details</summary>
@@ -2856,7 +2859,7 @@ Extension:
 ## TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 
 Support for string literals: `u8"foo"`
-When <a href="#tpp_have_tpp_tok_cxx_raw_string_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`</a> is also enabled, also support `u8R"AB(foo)AB"`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `u8R"AB(foo)AB"`
 @detect: #if __TPP_COUNT_TOKENS('u8"foo"') == 1
 
 <details><summary>Details</summary>
@@ -2877,7 +2880,7 @@ Extension:
 ## TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 
 Support for string literals: `u"foo"`
-When <a href="#tpp_have_tpp_tok_cxx_raw_string_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`</a> is also enabled, also support `uR"AB(foo)AB"`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `uR"AB(foo)AB"`
 @detect: #if __TPP_COUNT_TOKENS('u"foo"') == 1
 
 <details><summary>Details</summary>
@@ -2898,7 +2901,7 @@ Extension:
 ## TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
 
 Support for string literals: `U"foo"`
-When <a href="#tpp_have_tpp_tok_cxx_raw_string_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`</a> is also enabled, also support `UR"AB(foo)AB"`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `UR"AB(foo)AB"`
 @detect: #if __TPP_COUNT_TOKENS('U"foo"') == 1
 
 <details><summary>Details</summary>
@@ -2939,7 +2942,7 @@ Extension:
 ## TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
 
 Support for string literals: `L'f'`
-When <a href="#tpp_have_tpp_tok_cxx_raw_char_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`</a> is also enabled, also support `LR'AB(f)AB'`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `LR'AB(f)AB'`
 @detect: #if __TPP_COUNT_TOKENS("L'f'") == 1
 
 <details><summary>Details</summary>
@@ -2960,7 +2963,7 @@ Extension:
 ## TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 
 Support for string literals: `u8'f'`
-When <a href="#tpp_have_tpp_tok_cxx_raw_char_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`</a> is also enabled, also support `u8R'AB(f)AB'`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `u8R'AB(f)AB'`
 @detect: #if __TPP_COUNT_TOKENS("u8'f'") == 1
 
 <details><summary>Details</summary>
@@ -2981,7 +2984,7 @@ Extension:
 ## TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
 
 Support for string literals: `u'f'`
-When <a href="#tpp_have_tpp_tok_cxx_raw_char_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`</a> is also enabled, also support `uR'AB(f)AB'`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `uR'AB(f)AB'`
 @detect: #if __TPP_COUNT_TOKENS("u'f'") == 1
 
 <details><summary>Details</summary>
@@ -3002,7 +3005,7 @@ Extension:
 ## TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
 
 Support for string literals: `U'f'`
-When <a href="#tpp_have_tpp_tok_cxx_raw_char_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`</a> is also enabled, also support `UR'AB(f)AB'`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `UR'AB(f)AB'`
 @detect: #if __TPP_COUNT_TOKENS("U'f'") == 1
 
 <details><summary>Details</summary>
@@ -3104,18 +3107,18 @@ Extension:
 
 Feature-flag: treat line-feeds like any regular character in string tokens:
 
-- <a href="#tpp_have_tpp_tok_string">`TPP_HAVE_TPP_TOK_STRING`</a>
-- <a href="#tpp_have_tpp_tok_cxx_wide_string_literal">`TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL`</a>
-- <a href="#tpp_have_tpp_tok_cxx_utf8_string_literal">`TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL`</a>
-- <a href="#tpp_have_tpp_tok_cxx_utf16_string_literal">`TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL`</a>
-- <a href="#tpp_have_tpp_tok_cxx_utf32_string_literal">`TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL`</a>
-- <a href="#tpp_have_tpp_tok_raw_string_literal">`TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL`</a>
-- <a href="#tpp_have_tpp_tok_char">`TPP_HAVE_TPP_TOK_CHAR`</a>
-- <a href="#tpp_have_tpp_tok_cxx_wide_char_literal">`TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL`</a>
-- <a href="#tpp_have_tpp_tok_cxx_utf8_char_literal">`TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL`</a>
-- <a href="#tpp_have_tpp_tok_cxx_utf16_char_literal">`TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL`</a>
-- <a href="#tpp_have_tpp_tok_cxx_utf32_char_literal">`TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL`</a>
-- <a href="#tpp_have_tpp_tok_raw_char_literal">`TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL`</a>
+- [`TPP_HAVE_TPP_TOK_STRING`](config-conf.md#tpp_have_tpp_tok_string)
+- [`TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_wide_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf8_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf16_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf32_string_literal)
+- [`TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_raw_string_literal)
+- [`TPP_HAVE_TPP_TOK_CHAR`](config-conf.md#tpp_have_tpp_tok_char)
+- [`TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_wide_char_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf8_char_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf16_char_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf32_char_literal)
+- [`TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_raw_char_literal)
 
 When this flag is disabled, line-feeds in such string tokens will instead
 terminate the string, and cause a `TPP_W_STRING_TERMINATED_BY_LINEFEED`
@@ -3513,7 +3516,7 @@ Extension:
 
 ## TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
 
-Config option to skip searching <a href="config-value.md#tpp_config_system_include_path">`TPP_CONFIG_SYSTEM_INCLUDE_PATH`</a>.
+Config option to skip searching [`TPP_CONFIG_SYSTEM_INCLUDE_PATH`](config-value.md#tpp_config_system_include_path).
 Can (and should) be used to implement `-nostdinc`
 
 <details><summary>Details</summary>
@@ -3557,7 +3560,7 @@ Extension:
 ## TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
 
 Extra configuration for `#pragma message`: print a leading
-<a href="config-value.md#tpp_config_warning_file_and_line_format">`TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT`</a> using the values
+[`TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT`](config-value.md#tpp_config_warning_file_and_line_format) using the values
 that would also be printed by `__FILE__`, `__LINE__`, `__COLUMN__`
 
 <details><summary>Details</summary>

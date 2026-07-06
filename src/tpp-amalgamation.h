@@ -4931,10 +4931,15 @@ TPP_DECL_END
  *
  * In the case of "TPP_CONF_EXT1" / "TPP_CONF_EXT0", the extension's name will be the
  * "-f..." comment, but can be overwritten via #define TPP_EXTNAME_<name> "my-name":
- * >> #define TPP_HAVE_TRIGRAPHS    TPP_CONF_EXT1
- * >> #define TPP_EXTNAME_TRIGRAPHS "the-cool-trigraphs"
+ * ```c
+ * #define TPP_HAVE_TRIGRAPHS    TPP_CONF_EXT1
+ * #define TPP_EXTNAME_TRIGRAPHS "the-cool-trigraphs"
+ * ```
+ *
  * User-code can then control the feature using:
- * >> #pragma extension("-fthe-cool-trigraphs")
+ * ```c
+ * #pragma extension("-fthe-cool-trigraphs")
+ * ```
  *
  * WARNING: Use of "TPP_CONF_EXT1" / "TPP_CONF_EXT0" requires "#define TPP_HAVE_EXTENSIONS 1"
  */
@@ -5058,8 +5063,10 @@ TPP_DECL_END
  * that is immediately (but see `TPP_HAVE_BSE_WHITESPACE`) followed by a linefeed,
  * that that linefeed is never yielded, and a potential multi-character token is
  * continued:
- * >> "foo\\\nbar" -- Produces a single token "foobar"
- * >> "+\\\n=" -- Produces a single token "+="
+ * ```c
+ * "foo\\\nbar" -- Produces a single token "foobar"
+ * "+\\\n=" -- Produces a single token "+="
+ * ```
  *
  * This DOES affect the line-continuation features of C++ // comments,
  * and multi-line macro definitions. When this is disabled, \-escaped
@@ -6238,14 +6245,14 @@ TPP_DECL_END
  * | `0x1E2`     | `[INT:0x1E2]`                   | `[INT:0x1E2]`                         | - |
  * | `0x1P2`     | `[FLOAT:0x1P2]`                 | `[FLOAT:0x1P2]`                       | - |
  * | `0xE12`     | `[INT:0xE12]`                   | `[INT:0xE12]`                         | - |
- * | `0xE+12`    | `[FLOAT:0xE+12]`                | `[INT:0xE][PLUS:+][INT:12]`           | Exponent after "x" / "X" must use "p" or "P" |
- * | `0x1E+12`   | `[FLOAT:0x1E+12]`               | `[INT:0x1E][PLUS:+][INT:12]`          | Exponent after "x" / "X" must use "p" or "P" |
+ * | `0xE+12`    | `[FLOAT:0xE+12]`                | `[INT:0xE][PLUS:+][INT:12]`           | Exponent after `x` / `X` must use `p` or `P` |
+ * | `0x1E+12`   | `[FLOAT:0x1E+12]`               | `[INT:0x1E][PLUS:+][INT:12]`          | Exponent after `x` / `X` must use `p` or `P` |
  * | `0E+12`     | `[FLOAT:0E+12]`                 | `[FLOAT:0E+12]`                       | - |
- * | `0xP12`     | `[FLOAT:0xP12]`                 | `[INT:0xP12]`                         | Exponent cannot directly appear after "x" / "X" |
- * | `0xP+12`    | `[FLOAT:0xP+12]`                | `[INT:0xP][PLUS:+][INT:12]`           | Exponent cannot directly appear after "x" / "X" |
+ * | `0xP12`     | `[FLOAT:0xP12]`                 | `[INT:0xP12]`                         | Exponent cannot directly appear after `x` / `X` |
+ * | `0xP+12`    | `[FLOAT:0xP+12]`                | `[INT:0xP][PLUS:+][INT:12]`           | Exponent cannot directly appear after `x` / `X` |
  * | `0x1P12`    | `[FLOAT:0x1P12]`                | `[FLOAT:0x1P12]`                      | - |
  * | `0x1P+12`   | `[FLOAT:0x1P+12]`               | `[FLOAT:0x1P+12]`                     | - |
- * | `0P+12`     | `[FLOAT:0P+12]`                 | `[INT:0P][PLUS:+][INT:12]`            | Without "x" / "X", must use "e" or "E" for exponents |
+ * | `0P+12`     | `[FLOAT:0P+12]`                 | `[INT:0P][PLUS:+][INT:12]`            | Without `x` / `X`, must use `e` or `E` for exponents |
  * | `0xA12`     | `[INT:0xA12]`                   | `[INT:0xA12]`                         | - |
  * | `0xA+12`    | `[INT:0xA][PLUS:+][INT:12]`     | `[INT:0xA][PLUS:+][INT:12]`           | - |
  * | `0x1A+12`   | `[INT:0x1A][PLUS:+][INT:12]`    | `[INT:0x1A][PLUS:+][INT:12]`          | - |
@@ -6256,35 +6263,35 @@ TPP_DECL_END
  * | `0x.P12`    | `[FLOAT:0x.P12]`                | `[FLOAT:0x.P12]`                      | - |
  * | `0x.P+12`   | `[FLOAT:0x.P+12]`               | `[FLOAT:0x.P+12]`                     | - |
  * | `0x.1P+12`  | `[FLOAT:0x.1P+12]`              | `[FLOAT:0x.1P+12]`                    | - |
- * | `0.P+12`    | `[FLOAT:0.P+12]`                | `[INT:0][DOT:.][P:P][PLUS:+][INT:12]` | Without "x" / "X", must use "e" or "E" for exponents |
+ * | `0.P+12`    | `[FLOAT:0.P+12]`                | `[INT:0][DOT:.][P:P][PLUS:+][INT:12]` | Without `x` / `X`, must use `e` or `E` for exponents |
  * | `0x.A12`    | `[FLOAT:0x.A12]`                | `[FLOAT:0x.A12]`                      | - |
  * | `0x.A+12`   | `[FLOAT:0x.A][PLUS:+][INT:12]`  | `[FLOAT:0x.A][PLUS:+][INT:12]`        | - |
  * | `0x.1A+12`  | `[FLOAT:0x.1A][PLUS:+][INT:12]` | `[FLOAT:0x.1A][PLUS:+][INT:12]`       | - |
- * | `0.A+12`    | `[FLOAT:0.A][PLUS:+][INT:12]`   | `[INT:0][DOT:.][A:A][PLUS:+][INT:12]` | Without "x" / "X", first character after "." must be 0-9 |
+ * | `0.A+12`    | `[FLOAT:0.A][PLUS:+][INT:12]`   | `[INT:0][DOT:.][A:A][PLUS:+][INT:12]` | Without `x` / `X`, first character after `.` must be 0-9 |
  * | `012`       | `[INT:012]`                     | `[INT:012]`                           | - |
  * | `0.12`      | `[FLOAT:0.12]`                  | `[FLOAT:0.12]`                        | - |
- * | `0..12`     | `[FLOAT:0..12]`                 | `[INT:0][DOT_DOT:..][INT:12]`         | There can be at most 1 decimal-"." |
+ * | `0..12`     | `[FLOAT:0..12]`                 | `[INT:0][DOT_DOT:..][INT:12]`         | There can be at most 1 decimal-`.` |
  * | `0foo`      | `[INT:0foo]`                    | `[INT:0foo]`                          | - |
- * | `0.foo`     | `[FLOAT:0.foo]`                 | `[INT:0][DOT:.][foo:foo]`             | Hex-character "f" after "." requires "x" / "X" |
- * | `0..foo`    | `[FLOAT:0..foo]`                | `[INT:0][DOT_DOT:..][foo:foo]`        | There can be at most 1 decimal-"." |
+ * | `0.foo`     | `[FLOAT:0.foo]`                 | `[INT:0][DOT:.][foo:foo]`             | Hex-character `f` after `.` requires `x` / `X` |
+ * | `0..foo`    | `[FLOAT:0..foo]`                | `[INT:0][DOT_DOT:..][foo:foo]`        | There can be at most 1 decimal-`.` |
  * | `0xfoo`     | `[INT:0xfoo]`                   | `[INT:0xfoo]`                         | - |
  * | `0x.foo`    | `[FLOAT:0x.foo]`                | `[FLOAT:0x.foo]`                      | - |
- * | `0x..foo`   | `[FLOAT:0x..foo]`               | `[INT:0x][DOT_DOT:..][foo:foo]`       | There can be at most 1 decimal-"." |
+ * | `0x..foo`   | `[FLOAT:0x..foo]`               | `[INT:0x][DOT_DOT:..][foo:foo]`       | There can be at most 1 decimal-`.` |
  * | `0x1foo`    | `[INT:0x1foo]`                  | `[INT:0x1foo]`                        | - |
  * | `0x1.foo`   | `[FLOAT:0x1.foo]`               | `[FLOAT:0x1.foo]`                     | - |
- * | `0x1..foo`  | `[FLOAT:0x1..foo]`              | `[INT:0x1][DOT_DOT:..][foo:foo]`      | There can be at most 1 decimal-"." |
+ * | `0x1..foo`  | `[FLOAT:0x1..foo]`              | `[INT:0x1][DOT_DOT:..][foo:foo]`      | There can be at most 1 decimal-`.` |
  * | `0luz`      | `[INT:0luz]`                    | `[INT:0luz]`                          | - |
- * | `0.luz`     | `[FLOAT:0.luz]`                 | `[INT:0][DOT:.][luz:luz]`             | Character after "." must be decimal |
- * | `0..luz`    | `[FLOAT:0..luz]`                | `[INT:0][DOT_DOT:..][luz:luz]`        | There can be at most 1 decimal-"." |
+ * | `0.luz`     | `[FLOAT:0.luz]`                 | `[INT:0][DOT:.][luz:luz]`             | Character after `.` must be decimal |
+ * | `0..luz`    | `[FLOAT:0..luz]`                | `[INT:0][DOT_DOT:..][luz:luz]`        | There can be at most 1 decimal-`.` |
  * | `0xluz`     | `[INT:0xluz]`                   | `[INT:0xluz]`                         | - |
- * | `0x.luz`    | `[FLOAT:0x.luz]`                | `[INT:0x][DOT:.][luz:luz]`            | Character after "." must be hexadecimal |
- * | `0x..luz`   | `[FLOAT:0x..luz]`               | `[INT:0x][DOT_DOT:..][luz:luz]`       | There can be at most 1 decimal-"." |
+ * | `0x.luz`    | `[FLOAT:0x.luz]`                | `[INT:0x][DOT:.][luz:luz]`            | Character after `.` must be hexadecimal |
+ * | `0x..luz`   | `[FLOAT:0x..luz]`               | `[INT:0x][DOT_DOT:..][luz:luz]`       | There can be at most 1 decimal-`.` |
  * | `0x1luz`    | `[INT:0x1luz]`                  | `[INT:0x1luz]`                        | - |
- * | `0x1.luz`   | `[FLOAT:0x1.luz]`               | `[INT:0x1][DOT:.][luz:luz]`           | Character after "." must be hexadecimal |
- * | `0x1..luz`  | `[FLOAT:0x1..luz]`              | `[INT:0x1][DOT_DOT:..][luz:luz]`      | There can be at most 1 decimal-"." |
+ * | `0x1.luz`   | `[FLOAT:0x1.luz]`               | `[INT:0x1][DOT:.][luz:luz]`           | Character after `.` must be hexadecimal |
+ * | `0x1..luz`  | `[FLOAT:0x1..luz]`              | `[INT:0x1][DOT_DOT:..][luz:luz]`      | There can be at most 1 decimal-`.` |
  * | `12`        | `[INT:12]`                      | `[INT:12]`                            | - |
  * | `.12`       | `[FLOAT:.12]`                   | `[FLOAT:.12]`                         | - |
- * | `..12`      | `[DOT_DOT:..][INT:12]`          | `[DOT_DOT:..][INT:12]`                | There can be at most 1 decimal-"." |
+ * | `..12`      | `[DOT_DOT:..][INT:12]`          | `[DOT_DOT:..][INT:12]`                | There can be at most 1 decimal-`.` |
  *
  * @detect: #if __TPP_COUNT_TOKENS("0x1P+12") == 1 && __TPP_COUNT_TOKENS("0xE+12") == 3 */
 #ifndef TPP_HAVE_SMART_FLOAT_TOKENS
@@ -7304,7 +7311,7 @@ TPP_DECL_END
  * Has no effect on semantics/behavior, but tends to speed up
  * processing of files with many (repeated) includes:
  *
- * foo.h:
+ * `foo.h`:
  * ```c
  * #ifndef FOO_H
  * #define FOO_H
@@ -7312,12 +7319,12 @@ TPP_DECL_END
  * #endif // !FOO_H
  * ```
  *
- * bar.h:
+ * `bar.h`:
  * ```c
  * #include "foo.h"
  * ```
  *
- * bar.c:
+ * `bar.c`:
  * ```c
  * #include "bar.h" // Already includes "foo.h"
  * #include "foo.h" // This one's a no-op (won't even try to open("foo.h"))

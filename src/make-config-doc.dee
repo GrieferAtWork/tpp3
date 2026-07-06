@@ -288,9 +288,9 @@ function formatDoc(currentFile: string, doc: string): string {
 		local conf: Config | none = getAvailableConfigsByName().get(content);
 		if (conf !is none) {
 			local refFile = conf.refFile;
-			local newContent = f'<a href="{
+			local newContent = f'[`{content}`]({
 				refFile == currentFile ? "" : refFile
-			}#{conf.name.lower()}">`{content}`</a>';
+			}#{conf.name.lower()})';
 			doc = doc[:tick] + newContent + doc[nextTick+1:];
 			nextTick += #newContent - #content;
 		}
