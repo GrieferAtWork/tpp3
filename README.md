@@ -44,6 +44,11 @@ If this is what you want, you just need to download the following 2 files (this 
 (((WIP: Secondly, TPP provides a CLI "frontend" that implements a (mostly) GCC/CPP-compatible commandline utility. This one's mainly there as a proof-of-concept, since such a tool alone doesn't warrant the degree of customization offered by TPP)))
 
 
+### Configuration
+
+- [src/config.md](src/config.md)
+
+
 ## Features (abbr.)
 
 NOTE: A full list of configuration options and their meaning can be found in [src/config.md](src/config.md)

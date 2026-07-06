@@ -68,11 +68,11 @@
  * Used when calculating line/column information for messages, as well as
  * the builtin `__COLUMN__` macro (see `TPP_HAVE_MACRO___COLUMN__`)
  *
- * when positive: compile-time hard-code
- * when negative: runtime-configurable, with absolute value being used as default
+ * - when positive: compile-time hard-code
+ * - when negative: runtime-configurable, with absolute value being used as default
  *
- * Getter: `tpp_gettabsize()`
- * Setter: `tpp_settabsize(v)`
+ * **Getter**: `tpp_gettabsize()`<br/>
+ * **Setter**: `tpp_settabsize(v)`
  */
 #ifndef TPP_TABSIZE
 #define TPP_TABSIZE ((TPP_PROFILE == TPP_PROFILE_ALL) ? -4 : 4)
@@ -82,12 +82,12 @@
  * can be emitted before the next one will be treated as `TPP_WSTATE_FATAL` (fail
  * immediately)
  *
- * - `0`:  Set limit to `0`(when not also overwritten, causes `TPP_HAVE_WARNING_ERROR=0`)
+ * - `0`:  Set limit to `0` (when not also overwritten, causes `TPP_HAVE_WARNING_ERROR=0`)
  * - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
  * - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
  *
- * Getter: `tpp_lexer_geterrorlimit(lexer)`
- * Setter: `tpp_lexer_seterrorlimit(lexer, v)`
+ * **Getter**: `tpp_lexer_geterrorlimit(lexer)`<br/>
+ * **Setter**: `tpp_lexer_seterrorlimit(lexer, v)`
  */
 #ifndef TPP_ERROR_LIMIT
 #define TPP_ERROR_LIMIT (-16)
@@ -97,14 +97,12 @@
  * appear on the `#include`-stack before a warning `TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED`
  * (which is default-configured to be an error) is emitted.
  *
- * When configured as `0`, the limit becomes *infinite*
- *
- * - `0`:  Disable include depth checks entirely
+ * - `0`:  Disable include depth checks entirely (limit becomes *infinite*)
  * - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
  * - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
  *
- * Getter: `tpp_lexer_getinclusionlimit(lexer)`
- * Setter: `tpp_lexer_setinclusionlimit(lexer, v)`
+ * **Getter**: `tpp_lexer_getinclusionlimit(lexer)`<br/>
+ * **Setter**: `tpp_lexer_setinclusionlimit(lexer, v)`
  */
 #ifndef TPP_MAX_INCLUDE_DEPTH
 #define TPP_MAX_INCLUDE_DEPTH (TPP_HAVE_INCLUDE_STACK ? (TPP_HAVE_PROFILE_NOT_MINIMAL ? -64 : 64) : 0)
@@ -122,12 +120,12 @@
  *       `TPP_HAVE_MACRO_RECURSION` isn't enabled) essentially requires that
  *       this limit be `1`.
  *
- * - `0`:  Disable depth checks entirely
+ * - `0`:  Disable depth checks entirely (limit becomes *infinite*)
  * - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
  * - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
  *
- * Getter: `tpp_lexer_getrecursivemacrolimit(lexer)`
- * Setter: `tpp_lexer_setrecursivemacrolimit(lexer, v)`
+ * **Getter**: `tpp_lexer_getrecursivemacrolimit(lexer)`<br/>
+ * **Setter**: `tpp_lexer_setrecursivemacrolimit(lexer, v)`
  */
 #ifndef TPP_MAX_RECURSIVE_MACRO_DEPTH
 #define TPP_MAX_RECURSIVE_MACRO_DEPTH (TPP_HAVE_MACRO_RECURSION ? (TPP_HAVE_PROFILE_NOT_MINIMAL ? -4096 : 4096) : 0)

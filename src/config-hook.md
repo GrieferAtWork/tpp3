@@ -57,7 +57,7 @@ TPP_HOOK_SOMEEVENT == TPP_HOOK_RT_BUILTIN
 The following hooks exist and can each be overwritten individually:
 
 <!--BEGIN:hooks-->
-### TPP_HAVE_WARNPRINTER_HOOK
+## TPP_HAVE_WARNPRINTER_HOOK
 
 ```c
 tpp_formatprinter TPP_HOOK_WARNPRINTER;
@@ -65,12 +65,15 @@ tpp_formatprinter TPP_HOOK_WARNPRINTER;
 
 Called by `tpp_lexer_warnf()` to print warning messages
 
-User-hook: `TPP_HOOK_WARNPRINTER`
-Default:   `TPP_HAVE_WARNINGS`
-Builtin:   `_tpp_lexer_builtin_warn_or_mesg_printer`
+<details><summary>Default</summary>
+
+```c
+TPP_HAVE_WARNINGS
+```
+</details>
 
 
-### TPP_HAVE_MESGPRINTER_HOOK
+## TPP_HAVE_MESGPRINTER_HOOK
 
 ```c
 tpp_formatprinter TPP_HOOK_MESGPRINTER;
@@ -78,12 +81,15 @@ tpp_formatprinter TPP_HOOK_MESGPRINTER;
 
 Used by `#pragma message` to print messages
 
-User-hook: `TPP_HOOK_MESGPRINTER`
-Default:   `TPP_HAVE_PRAGMA_MESSAGE`
-Builtin:   `_tpp_lexer_builtin_warn_or_mesg_printer`
+<details><summary>Default</summary>
+
+```c
+TPP_HAVE_PRAGMA_MESSAGE
+```
+</details>
 
 
-### TPP_HAVE_PARSEEXPR_HOOK
+## TPP_HAVE_PARSEEXPR_HOOK
 
 ```c
 tpp_errno (TPPCALL *TPP_HOOK_PARSEEXPR)(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
@@ -104,12 +110,15 @@ User-defined callback for parsing `#if`-style expressions
   itself with rollback)
 
 
-User-hook: `TPP_HOOK_PARSEEXPR`
-Default:   `(TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed)`
-Builtin:   `_tpp_lexer_builtin_parseexpr`
+<details><summary>Default</summary>
+
+```c
+TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
+```
+</details>
 
 
-### TPP_HAVE_UNKNOWN_PRAGMA_HOOK
+## TPP_HAVE_UNKNOWN_PRAGMA_HOOK
 
 ```c
 tpp_errno (TPPCALL *TPP_HOOK_UNKNOWN_PRAGMA)(tpp_lexer *tpp_restrict self);
@@ -118,12 +127,15 @@ tpp_errno (TPPCALL *TPP_HOOK_UNKNOWN_PRAGMA)(tpp_lexer *tpp_restrict self);
 Called whenever a `#pragma` is encountered that is not recognized.
 When called, the lexer is set-up to point at the first token after the `#pragma`.
 
-User-hook: `TPP_HOOK_UNKNOWN_PRAGMA`
-Default:   `(TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL)`
-Builtin:   `N/A`
+<details><summary>Default</summary>
+
+```c
+TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL
+```
+</details>
 
 
-### TPP_HAVE_NEW_DEPENDENCY_HOOK
+## TPP_HAVE_NEW_DEPENDENCY_HOOK
 
 ```c
 tpp_errno (TPPCALL *TPP_HOOK_NEW_DEPENDENCY)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
@@ -131,12 +143,15 @@ tpp_errno (TPPCALL *TPP_HOOK_NEW_DEPENDENCY)(tpp_lexer *tpp_restrict self, tpp_k
 
 Called whenever some file is `#include`-ed for the first time
 
-User-hook: `TPP_HOOK_NEW_DEPENDENCY`
-Default:   `(TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL)`
-Builtin:   `N/A`
+<details><summary>Default</summary>
+
+```c
+TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL
+```
+</details>
 
 
-### TPP_HAVE_IDENT_SCCS_HOOK
+## TPP_HAVE_IDENT_SCCS_HOOK
 
 ```c
 tpp_errno (TPPCALL *TPP_HOOK_IDENT_SCCS)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
@@ -144,12 +159,15 @@ tpp_errno (TPPCALL *TPP_HOOK_IDENT_SCCS)(tpp_lexer *tpp_restrict self, tpp_token
 
 Called to handle `#ident` and `#sccs` directives
 
-User-hook: `TPP_HOOK_IDENT_SCCS`
-Default:   `TPP_HAVE_CPP_IDENT_SCCS`
-Builtin:   `N/A`
+<details><summary>Default</summary>
+
+```c
+TPP_HAVE_CPP_IDENT_SCCS
+```
+</details>
 
 
-### TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+## TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
 
 ```c
 tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
@@ -161,12 +179,15 @@ then allowed to enumerate some additional include paths that may exist, but
 for one reason or another (mainly: speed) aren't known to TPP via its system
 include path APIs (`tpp_lexer_includes_add*`)
 
-User-hook: `TPP_HOOK_SYSTEM_INCLUDE_PATH`
-Default:   `(TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL)`
-Builtin:   `N/A`
+<details><summary>Default</summary>
+
+```c
+TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL
+```
+</details>
 
 
-### TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+## TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
 
 ```c
 tpp_ssize (TPPCALL *TPP_HOOK_UNKNOWN_STRING_ESCAPE)(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
@@ -179,9 +200,12 @@ On entry, `*p_pos` points at the first (unrecognized) character after the leadin
 if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
 it before returning
 
-User-hook: `TPP_HOOK_UNKNOWN_STRING_ESCAPE`
-Default:   `(TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL)`
-Builtin:   `N/A`
+<details><summary>Default</summary>
+
+```c
+TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL
+```
+</details>
 
 
 <!--END:hooks-->

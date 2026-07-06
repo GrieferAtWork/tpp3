@@ -92,6 +92,23 @@ function formatDoc(doc: string): string {
 		;
 }
 
+function normalizePpExpr(expr: string): string {
+	expr = expr
+		.rereplace(r"/\*.*?\*/", "")
+		.rereplace(r"\s+", " ")
+		.rereplace(r"\bTPP_HAVE_PROFILE_NOT_MINIMAL\b",
+			"(TPP_PROFILE != TPP_PROFILE_MINIMAL)")
+		.rereplace(r"\bTPP_HAVE_PROFILE_C_LIKE\b",
+			"(TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)")
+		.rereplace(r"\bTPP_HAVE_PROFILE_DEFAULT\b",
+			"(TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT)")
+		.strip();
+	while (expr.startswith("(") && expr.endswith(")") &&
+	       expr.findmatch("(", ")", 1) == #expr - 1)
+		expr = expr[1:-1].strip();
+	return expr;
+}
+
 class Config {
 	this = default;
 
@@ -136,7 +153,7 @@ class Config {
 
 	public operator str(): string {
 		return
-			f"### {name}\n"
+			f"## {name}\n"
 			f"\n"
 			f"{formatDoc(doc)}\n"
 			f"\n"
@@ -148,8 +165,12 @@ class Config {
 				}`)\n"
 				: ""
 			}"
-			f"Default: `{defaultValue}`\n"
+			f"<details><summary>Default</summary>\n"
 			f"\n"
+			f"```c\n"
+			f"{defaultValue}\n"
+			f"```\n"
+			f"</details>\n"
 			f"\n"
 			;
 	}
@@ -175,16 +196,7 @@ function _getAvailableConfigs(): {Config...} {
 				lo is none ? none : CONFIG_H[lo:hi]
 		).frozen;
 		local featureName = parts[0];
-		local featureExpr = parts[1]
-			.rereplace(r"/\*.*?\*/", "")
-			.rereplace(r"\s+", " ")
-			.rereplace(r"\bTPP_HAVE_PROFILE_NOT_MINIMAL\b",
-				"(TPP_PROFILE != TPP_PROFILE_MINIMAL)")
-			.rereplace(r"\bTPP_HAVE_PROFILE_C_LIKE\b",
-				"(TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)")
-			.rereplace(r"\bTPP_HAVE_PROFILE_DEFAULT\b",
-				"(TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT)")
-			.strip();
+		local featureExpr = normalizePpExpr(parts[1]);
 		local extensionName = parts[2].strip();
 		local commentEnd = match.first.first;
 		while (commentEnd && CONFIG_H.isspace(commentEnd - 1))
@@ -220,9 +232,6 @@ function _getAvailableConfigs(): {Config...} {
 			}
 		}
 
-		while (featureExpr.startswith("(") && featureExpr.endswith(")") &&
-		       featureExpr.findmatch("(", ")", 1) == #featureExpr - 1)
-			featureExpr = featureExpr[1:-1].strip();
 		local matchIndex = match.first.first;
 		if (featureName !in [
 			"TPP_PROFILE"
@@ -305,7 +314,7 @@ function updatePartsConfigMd(filename: string) {
 			     disabled_RETURN_VALUE:
 			     config.HOOKS) {
 				print newData:
-					f"### TPP_HAVE_{name}_HOOK\n"
+					f"## TPP_HAVE_{name}_HOOK\n"
 					f"\n"
 					f"```c\n"
 					f"{prototypePrefix}TPP_HOOK_{name}{prototypeSuffix};\n"
@@ -313,9 +322,13 @@ function updatePartsConfigMd(filename: string) {
 					f"\n"
 					f"{formatDoc(doc.partition("\n@").first)}\n"
 					f"\n"
-					f"User-hook: `TPP_HOOK_{name}`\n"
-					f"Default:   `{default_TPP_HAVE_FOO_HOOK}`\n"
-					f"Builtin:   `{builtin_FOO_HOOK ?: "N/A"}`\n"
+					f"<details><summary>Default</summary>\n"
+					f"\n"
+					f"```c\n"
+					f"{normalizePpExpr(default_TPP_HAVE_FOO_HOOK)}\n"
+					f"```\n"
+					f"</details>\n"
+//					f"Builtin:   `{builtin_FOO_HOOK ?: "N/A"}`\n"
 					f"\n"
 					f"\n"
 					,;
