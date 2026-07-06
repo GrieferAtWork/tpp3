@@ -124,6 +124,19 @@ NOTE: A full list of configuration options and their meaning can be found in [((
 
 Lots more extensions (especially supported `#pragma` directives) exist and are document in [(((TODO: src/parts/config.md)))](src/parts/config.md)
 
+## Migrating from TPP2
+
+In order to migrate from TPP2, an additional compatibility-file [src/tpp2.h](./src/tpp2.h) is provided. As an initial step to migrating, you must:
+
+- Add [src/tpp2.h](./src/tpp2.h), as well as `tpp-amalgamation.h` and `tpp-amalgamation.c` to your project
+- Remove TPP2 files from your project: `tpp.c`, `tpp.h`, `tpp-defs.inl` (and, if used: `tpp-gcc-defs.inl`)
+- Replace all includes of TPP2's `tpp.h` with the `tpp2.h` from this repository
+	- This is primarily meant as a stop-gap measure to easy in transitioning.
+	- Eventually, you should remove this file again and include `tpp-amalgamation.h` instead
+- Replace all includes of TPP2's `tpp.c` with `tpp-amalgamation.c`, but make sure that `tpp2.h` has also been included (first) at all of those instances
+- Try to build your project and handle compilation errors as they appear.
+	- Hints on how to migrate some of TPP2's internal constructs that didn't make the cut can be found in `tpp2.h`
+
 
 ## Older versions
 
