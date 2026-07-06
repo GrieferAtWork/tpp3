@@ -19,7 +19,9 @@ the builtin `__COLUMN__` macro (see <a href="config-conf.md#tpp_have_macro___col
 **Getter**: `tpp_gettabsize()`<br/>
 **Setter**: `tpp_settabsize(v)`
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_ALL) ? -4 : 4
@@ -39,7 +41,9 @@ immediately)
 **Getter**: `tpp_lexer_geterrorlimit(lexer)`<br/>
 **Setter**: `tpp_lexer_seterrorlimit(lexer, v)`
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 -16
@@ -59,7 +63,9 @@ appear on the `#include`-stack before a warning `TPP_W_INCLUDE_RECURSION_LIMIT_E
 **Getter**: `tpp_lexer_getinclusionlimit(lexer)`<br/>
 **Setter**: `tpp_lexer_setinclusionlimit(lexer, v)`
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_INCLUDE_STACK ? ((TPP_PROFILE != TPP_PROFILE_MINIMAL) ? -64 : 64) : 0
@@ -87,7 +93,9 @@ NOTE: When <a href="config-conf.md#tpp_have_macro_recursion">`TPP_HAVE_MACRO_REC
 **Getter**: `tpp_lexer_getrecursivemacrolimit(lexer)`<br/>
 **Setter**: `tpp_lexer_setrecursivemacrolimit(lexer, v)`
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_MACRO_RECURSION ? ((TPP_PROFILE != TPP_PROFILE_MINIMAL) ? -4096 : 4096) : 0

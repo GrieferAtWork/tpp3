@@ -17,7 +17,9 @@ Example:
 #define TPP_CONFIG_SYSTEM_INCLUDE_PATH  2("/usr/local/include", "/usr/include")
 ```
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 0()
@@ -29,7 +31,9 @@ Example:
 String representations of what `__has_embed()`
 should expand to when the file wasn't found
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 "0"
@@ -41,7 +45,9 @@ should expand to when the file wasn't found
 String representations of what `__has_embed()` should
 expand to when the file was found and is non-empty
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 "1"
@@ -53,7 +59,9 @@ expand to when the file was found and is non-empty
 String representations of what `__has_embed()` should
 expand to when the file was found, but is empty
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 "2"
@@ -66,7 +74,9 @@ Format to use for file+line+column log messages
 XXX: Configuration where "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT"
      can be overwritten at runtime on a per-lexer basis
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 defined(_MSC_VER) ? "%Pf(%Pl, %Pc): " : "%Pf:%Pl:%Pc: "

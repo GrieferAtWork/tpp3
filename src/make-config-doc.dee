@@ -165,19 +165,21 @@ class Config {
 			f"\n"
 			f"{formatDoc(currentFile, doc)}\n"
 			f"\n"
-			f"{defaultExtensionName
-				? f"extension name: `{
-					defaultExtensionName
-				}` (`TPP_EXTNAME_{
-					name.lsstrip("TPP_HAVE_")
-				}`)\n"
-				: ""
-			}"
-			f"<details><summary>Default</summary>\n"
+			f"<details><summary>Details</summary>\n"
+			f"\n"
+			f"Default:\n"
 			f"\n"
 			f"```c\n"
 			f"{defaultValue}\n"
 			f"```\n"
+			f"{!defaultExtensionName ? "" :
+				f"\n"
+				f"Extension:\n"
+				f"\n"
+				f"```c\n"
+				f"#define TPP_EXTNAME_{name.lsstrip("TPP_HAVE_")} {repr defaultExtensionName[2:]}\n"
+				f"```\n"
+			}"
 			f"</details>\n"
 			f"\n"
 			;

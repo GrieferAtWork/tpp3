@@ -25,11 +25,18 @@ and multi-line macro definitions. When this is disabled, \-escaped
 line continuation won't work for those use-cases, either.
 @detect: `#if __TPP_COUNT_TOKENS("a\\\nb") == 1`
 
-extension name: `-fbse` (`TPP_EXTNAME_BSE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BSE "bse"
 ```
 </details>
 
@@ -42,11 +49,18 @@ This DOES affect the line-continuation features of C++ `//` comments, and
 multi-line macro definitions.
 @detect: `#if __TPP_COUNT_TOKENS("a\\ \nb") == 1`
 
-extension name: `-fbse-whitespace` (`TPP_EXTNAME_BSE_WHITESPACE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_BSE ? TPP_CONF_EXT1 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BSE_WHITESPACE "bse-whitespace"
 ```
 </details>
 
@@ -56,11 +70,18 @@ Support for `\uABCD` and `\U01234567` in identifier names (will be
 replaced with effective UTF-8 encodings when translated to keywords)
 @detect: `#if __TPP_COUNT_TOKENS("a\\u1234b") == 1`
 
-extension name: `-fextended-identifiers` (`TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS "extended-identifiers"
 ```
 </details>
 
@@ -69,11 +90,18 @@ extension name: `-fextended-identifiers` (`TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS`)
 Support for `\e` (for `U+001B`) escape sequences
 @detect: N/A
 
-extension name: `-fescape-e-in-strings` (`TPP_EXTNAME_ESCAPE_E_IN_STRINGS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1: 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_ESCAPE_E_IN_STRINGS "escape-e-in-strings"
 ```
 </details>
 
@@ -82,11 +110,18 @@ TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1: 0
 Support for `\s` (for `U+0020`) escape sequences
 @detect: N/A
 
-extension name: `-fescape-s-in-strings` (`TPP_EXTNAME_ESCAPE_S_IN_STRINGS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_ESCAPE_S_IN_STRINGS "escape-s-in-strings"
 ```
 </details>
 
@@ -95,11 +130,18 @@ TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0
 Specifies if *any* CPP directives are supported
 @detect: N/A
 
-extension name: `-fcpp-directives` (`TPP_EXTNAME_CPP_DIRECTIVES`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL))
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_DIRECTIVES "cpp-directives"
 ```
 </details>
 
@@ -108,11 +150,18 @@ extension name: `-fcpp-directives` (`TPP_EXTNAME_CPP_DIRECTIVES`)
 Support for C-style macros
 @detect: N/A
 
-extension name: `-fcpp-macros` (`TPP_EXTNAME_CPP_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_MACROS "cpp-macros"
 ```
 </details>
 
@@ -121,11 +170,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
 Support for builtin C-style macros (require <a href="#tpp_have_cpp_macros">`TPP_HAVE_CPP_MACROS`</a> to be enabled, too)
 @detect: N/A
 
-extension name: `-fcpp-builtin-macros` (`TPP_EXTNAME_CPP_BUILTIN_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_MACROS ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_BUILTIN_MACROS "cpp-builtin-macros"
 ```
 </details>
 
@@ -134,11 +190,18 @@ TPP_HAVE_CPP_MACROS ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
 Support for `#!foobar`-directives (which are treated as comments)
 @detect: #if __has_known_extension("-fshebang-directives")
 
-extension name: `-fshebang-directives` (`TPP_EXTNAME_CPP_EXCLAIM`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_EXCLAIM "shebang-directives"
 ```
 </details>
 
@@ -147,11 +210,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
 Support for `#`-directives (blank directives), which are ignored
 @detect: N/A
 
-extension name: `-fblank-directives` (`TPP_EXTNAME_CPP_BLANK`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_BLANK "blank-directives"
 ```
 </details>
 
@@ -177,11 +247,18 @@ the filename, a number of additional "flags" can be specified:
 
 @detect: N/A
 
-extension name: `-fdigit-directives` (`TPP_EXTNAME_CPP_DIGIT_LINE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_DIGIT_LINE "digit-directives"
 ```
 </details>
 
@@ -190,11 +267,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
 Support for `#line 42 "foo.h"`-directives
 @detect: N/A
 
-extension name: `-fline-directives` (`TPP_EXTNAME_CPP_LINE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_LINE "line-directives"
 ```
 </details>
 
@@ -203,11 +287,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
 Support for `#include <stdio.h>`-directives
 @detect: #if __has_known_extension("-finclude-directives")
 
-extension name: `-finclude-directives` (`TPP_EXTNAME_CPP_INCLUDE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_INCLUDE "include-directives"
 ```
 </details>
 
@@ -216,11 +307,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
 Support for `#include_next <stdio.h>`-directives
 @detect: #if __has_known_extension("-finclude-next-directives")
 
-extension name: `-finclude-next-directives` (`TPP_EXTNAME_CPP_INCLUDE_NEXT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_INCLUDE_NEXT "include-next-directives"
 ```
 </details>
 
@@ -229,11 +327,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
 Support for `#import <stdio.h>`-directives
 @detect: #if __has_known_extension("-fimport-directives")
 
-extension name: `-fimport-directives` (`TPP_EXTNAME_CPP_IMPORT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_IMPORT "import-directives"
 ```
 </details>
 
@@ -242,11 +347,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
 Support for: `#if`, `#ifdef`, `#ifndef`, `#elif`, `#elifdef`, `#elifndef`, `#else`, `#endif`
 @detect: N/A
 
-extension name: `-fif-directives` (`TPP_EXTNAME_CPP_IF_ELSE_ENDIF`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_DIRECTIVES) ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_IF_ELSE_ENDIF "if-directives"
 ```
 </details>
 
@@ -255,11 +367,18 @@ extension name: `-fif-directives` (`TPP_EXTNAME_CPP_IF_ELSE_ENDIF`)
 Support for: `#define`, `#undef`
 @detect: N/A
 
-extension name: `-fdefine-directives` (`TPP_EXTNAME_CPP_DEFINE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_DIRECTIVES) ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_DEFINE "define-directives"
 ```
 </details>
 
@@ -269,11 +388,18 @@ Support for: `#assert`, `#unassert`
 @see: https://gcc.gnu.org/onlinedocs/cpp/Obsolete-Features.html
 @detect: #if __has_known_extension("-fassertions")
 
-extension name: `-fassertions` (`TPP_EXTNAME_CPP_ASSERT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_ASSERT "assertions"
 ```
 </details>
 
@@ -282,11 +408,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
 Support for: `#error`
 @detect: #if __has_known_extension("-ferror-directives")
 
-extension name: `-ferror-directives` (`TPP_EXTNAME_CPP_ERROR`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_ERROR "error-directives"
 ```
 </details>
 
@@ -295,11 +428,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
 Support for: `#warning`
 @detect: #if __has_known_extension("-fwarning-directives")
 
-extension name: `-fwarning-directives` (`TPP_EXTNAME_CPP_WARNING`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_WARNING "warning-directives"
 ```
 </details>
 
@@ -308,11 +448,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
 Support for: `#ident`, `#sccs`
 @detect: #if __has_known_extension("-fident-directives")
 
-extension name: `-fident-directives` (`TPP_EXTNAME_CPP_IDENT_SCCS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_IDENT_SCCS "ident-directives"
 ```
 </details>
 
@@ -321,11 +468,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
 Support for: `#pragma`
 @detect: N/A
 
-extension name: `-fpragma-directives` (`TPP_EXTNAME_CPP_PRAGMA`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_PRAGMA "pragma-directives"
 ```
 </details>
 
@@ -334,11 +488,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
 Support for: `#embed`
 @detect: N/A
 
-extension name: `-fembed-directives` (`TPP_EXTNAME_CPP_EMBED`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CPP_EMBED "embed-directives"
 ```
 </details>
 
@@ -347,11 +508,18 @@ TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
 Support for: `_Pragma("foo")`
 @detect: #ifdef _Pragma
 
-extension name: `-f_Pragma` (`TPP_EXTNAME_MACRO__Pragma`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO__Pragma "_Pragma"
 ```
 </details>
 
@@ -360,11 +528,18 @@ TPP_HAVE_CPP_BUILTIN_MACROS ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0
 Support for: `__pragma(foo)`
 @detect: #ifdef __pragma
 
-extension name: `-f__pragma` (`TPP_EXTNAME_MACRO___pragma`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___pragma "__pragma"
 ```
 </details>
 
@@ -375,11 +550,18 @@ Check support of `__attribute__((foo))`
 
 @detect: #ifdef __has_attribute
 
-extension name: `-fclang-__has_attribute` (`TPP_EXTNAME_CLANG_MACRO___has_attribute`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CLANG_MACRO___has_attribute "clang-__has_attribute"
 ```
 </details>
 
@@ -390,11 +572,18 @@ Check support of `__builtin_foo()`
 
 @detect: #ifdef __has_builtin
 
-extension name: `-fclang-__has_builtin` (`TPP_EXTNAME_CLANG_MACRO___has_builtin`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CLANG_MACRO___has_builtin "clang-__has_builtin"
 ```
 </details>
 
@@ -405,11 +594,18 @@ Check support of `[[foo]]`
 
 @detect: #ifdef __has_cpp_attribute
 
-extension name: `-fclang-__has_cpp_attribute` (`TPP_EXTNAME_CLANG_MACRO___has_cpp_attribute`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CLANG_MACRO___has_cpp_attribute "clang-__has_cpp_attribute"
 ```
 </details>
 
@@ -420,11 +616,18 @@ Check support of `__declspec(foo)`
 
 @detect: #ifdef __has_declspec_attribute
 
-extension name: `-fclang-__has_declspec_attribute` (`TPP_EXTNAME_CLANG_MACRO___has_declspec_attribute`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CLANG_MACRO___has_declspec_attribute "clang-__has_declspec_attribute"
 ```
 </details>
 
@@ -441,11 +644,18 @@ NOTE: Another builtin macro of the same name exists and can be
 
 @detect: #ifdef __has_extension
 
-extension name: `-fclang-__has_extension` (`TPP_EXTNAME_CLANG_MACRO___has_extension`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CLANG_MACRO___has_extension "clang-__has_extension"
 ```
 </details>
 
@@ -456,11 +666,18 @@ Check support of compiler features
 
 @detect: #ifdef __has_feature
 
-extension name: `-fclang-__has_feature` (`TPP_EXTNAME_CLANG_MACRO___has_feature`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CLANG_MACRO___has_feature "clang-__has_feature"
 ```
 </details>
 
@@ -471,11 +688,18 @@ Check support of `[[foo]]`
 
 @detect: #ifdef __has_c_attribute
 
-extension name: `-fclang-__has_c_attribute` (`TPP_EXTNAME_CLANG_MACRO___has_c_attribute`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CLANG_MACRO___has_c_attribute "clang-__has_c_attribute"
 ```
 </details>
 
@@ -488,11 +712,18 @@ expands to `1` when `__has_extension()` would.
 @see: TPP_HAVE_CLANG_MACRO___has_extension
 @detect: #if __has_known_extension("-fclang-extensions-are-features")
 
-extension name: `-fclang-extensions-are-features` (`TPP_EXTNAME_CLANG_EXTENSIONS_ARE_FEATURES`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CLANG_MACRO___has_extension && TPP_HAVE_CLANG_MACRO___has_feature) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CLANG_EXTENSIONS_ARE_FEATURES "clang-extensions-are-features"
 ```
 </details>
 
@@ -511,11 +742,18 @@ A keyword is considered to be an "identifier" if `TPP_TOK_ISBUILTINKEYWORD()`
 
 @detect: #ifdef __is_identifier
 
-extension name: `-f__is_identifier` (`TPP_EXTNAME_MACRO___is_identifier`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___is_identifier "__is_identifier"
 ```
 </details>
 
@@ -526,11 +764,18 @@ Check if an identifier has been `#pragma deprecated("foo")`-ed
 
 @detect: #ifdef __is_deprecated
 
-extension name: `-f__is_deprecated` (`TPP_EXTNAME_MACRO___is_deprecated`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___is_deprecated "__is_deprecated"
 ```
 </details>
 
@@ -541,11 +786,18 @@ Check if an identifier has been `#pragma GCC poison foo`-ed
 
 @detect: #ifdef __is_poisoned
 
-extension name: `-f__is_poisoned` (`TPP_EXTNAME_MACRO___is_poisoned`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___is_poisoned "__is_poisoned"
 ```
 </details>
 
@@ -556,11 +808,18 @@ Check if a TPP extension is known + enabled: `#if __has_extension("-ftrigraphs")
 
 @detect: #ifdef __has_extension
 
-extension name: `-f__has_extension` (`TPP_EXTNAME_MACRO___has_extension`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_EXTENSIONS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___has_extension "__has_extension"
 ```
 </details>
 
@@ -571,11 +830,18 @@ Check if a TPP extension is known: `#if __has_known_extension("-ftrigraphs")`
 
 @detect: #ifdef __has_known_extension
 
-extension name: `-f__has_known_extension` (`TPP_EXTNAME_MACRO___has_known_extension`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_EXTENSIONS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___has_known_extension "__has_known_extension"
 ```
 </details>
 
@@ -586,11 +852,18 @@ Check if a TPP warning is known + enabled: `#if __has_warning("-Wmultiline-strin
 
 @detect: #ifdef __has_warning
 
-extension name: `-f__has_warning` (`TPP_EXTNAME_MACRO___has_warning`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___has_warning "__has_warning"
 ```
 </details>
 
@@ -601,11 +874,18 @@ Check if a TPP warning is known: `#if __has_known_extension("-Wmultiline-string"
 
 @detect: #ifdef __has_known_warning
 
-extension name: `-f__has_known_warning` (`TPP_EXTNAME_MACRO___has_known_warning`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___has_known_warning "__has_known_warning"
 ```
 </details>
 
@@ -616,11 +896,18 @@ Check if `#include` exists: `#if __has_include(<stdio.h>)`
 
 @detect: #ifdef __has_include
 
-extension name: `-f__has_include` (`TPP_EXTNAME_MACRO___has_include`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 ((TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_IMPORT) && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___has_include "__has_include"
 ```
 </details>
 
@@ -631,11 +918,18 @@ Check if `#include_next` exists: `#if __has_include_next(<stdio.h>)`
 
 @detect: #ifdef __has_include_next
 
-extension name: `-f__has_include_next` (`TPP_EXTNAME_MACRO___has_include_next`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_INCLUDE_NEXT && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___has_include_next "__has_include_next"
 ```
 </details>
 
@@ -646,11 +940,18 @@ Check if `#embed` exists: `#if __has_embed("resource.dat" limit(10))`
 
 @detect: #ifdef __has_embed
 
-extension name: `-f__has_embed` (`TPP_EXTNAME_MACRO___has_embed`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_EMBED && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___has_embed "__has_embed"
 ```
 </details>
 
@@ -661,11 +962,18 @@ Expand to current file's name
 
 @detect: #ifdef __FILE__
 
-extension name: `-f__FILE__` (`TPP_EXTNAME_MACRO___FILE__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___FILE__ "__FILE__"
 ```
 </details>
 
@@ -676,11 +984,18 @@ Expand to current line number
 
 @detect: #ifdef __LINE__
 
-extension name: `-f__LINE__` (`TPP_EXTNAME_MACRO___LINE__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___LINE__ "__LINE__"
 ```
 </details>
 
@@ -691,11 +1006,18 @@ Expand to something like `"12:37:58"`
 
 @detect: #ifdef __TIME__
 
-extension name: `-f__TIME__` (`TPP_EXTNAME_MACRO___TIME__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TIME__ "__TIME__"
 ```
 </details>
 
@@ -706,11 +1028,18 @@ Expand to something like `"Jul  6 2026"`
 
 @detect: #ifdef __DATE__
 
-extension name: `-f__DATE__` (`TPP_EXTNAME_MACRO___DATE__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___DATE__ "__DATE__"
 ```
 </details>
 
@@ -721,11 +1050,18 @@ Expand to current column number
 
 @detect: #ifdef __COLUMN__
 
-extension name: `-fcolumn-macro` (`TPP_EXTNAME_MACRO___COLUMN__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___COLUMN__ "column-macro"
 ```
 </details>
 
@@ -736,11 +1072,18 @@ Expand to base file's name
 
 @detect: #ifdef __BASE_FILE__
 
-extension name: `-fbasefile-macro` (`TPP_EXTNAME_MACRO___BASE_FILE__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___BASE_FILE__ "basefile-macro"
 ```
 </details>
 
@@ -752,11 +1095,18 @@ Expand to current file's name, without its leading path components.
 @see: TPP_HAVE_MACRO___FILE__
 @detect: #ifdef __FILE_NAME__
 
-extension name: `-f__FILE_NAME__` (`TPP_EXTNAME_MACRO___FILE_NAME__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___FILE_NAME__ "__FILE_NAME__"
 ```
 </details>
 
@@ -768,11 +1118,18 @@ Whilst inside the "base"-file, it expands to `0`
 
 @detect: #ifdef __INCLUDE_LEVEL__
 
-extension name: `-finclude-level-macro` (`TPP_EXTNAME_MACRO___INCLUDE_LEVEL__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___INCLUDE_LEVEL__ "include-level-macro"
 ```
 </details>
 
@@ -783,11 +1140,18 @@ Alias for `__INCLUDE_LEVEL__` (see <a href="#tpp_have_macro___include_level__">`
 
 @detect: #ifdef __INCLUDE_DEPTH__
 
-extension name: `-finclude-depth-macro` (`TPP_EXTNAME_MACRO___INCLUDE_DEPTH__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___INCLUDE_DEPTH__ "include-depth-macro"
 ```
 </details>
 
@@ -799,11 +1163,18 @@ this macro is used, it expands to `0`
 
 @detect: #ifdef __COUNTER__
 
-extension name: `-fcounter-macro` (`TPP_EXTNAME_MACRO___COUNTER__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___COUNTER__ "counter-macro"
 ```
 </details>
 
@@ -813,11 +1184,18 @@ Support for the builtin macro `__TIMESTAMP__`
 Expand to something like `"Mon Jul  6 12:37:58 2026"`
 @detect: #ifdef __TIMESTAMP__
 
-extension name: `-ftimestamp-macro` (`TPP_EXTNAME_MACRO___TIMESTAMP__`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TIMESTAMP__ "timestamp-macro"
 ```
 </details>
 
@@ -827,11 +1205,18 @@ Support for the builtin macros `__DATE_DAY__`, `__DATE_WDAY__`, `__DATE_YDAY__`,
 Precise date/time macros (behave like `__LINE__`, but expand to components of `__DATE__`)
 @detect: #ifdef __DATE_DAY__, ...
 
-extension name: `-fnumeric-date-macros` (`TPP_EXTNAME_NUMERIC_DATE_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_NUMERIC_DATE_MACROS "numeric-date-macros"
 ```
 </details>
 
@@ -841,11 +1226,18 @@ Support for the builtin macros `__TIME_SEC__`, `__TIME_MIN__`, `__TIME_HOUR__`
 Precise date/time macros (behave like `__LINE__`, but expand to components of `__TIME__`)
 @detect: #ifdef __TIME_SEC__, ...
 
-extension name: `-fnumeric-time-macros` (`TPP_EXTNAME_NUMERIC_TIME_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_NUMERIC_TIME_MACROS "numeric-time-macros"
 ```
 </details>
 
@@ -863,11 +1255,18 @@ __TPP_EVAL(10 + 20) // Expands to a single token: 30
 
 @detect: #ifdef __TPP_EVAL
 
-extension name: `-ftpp-eval-macro` (`TPP_EXTNAME_MACRO___TPP_EVAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_EVAL "tpp-eval-macro"
 ```
 </details>
 
@@ -892,11 +1291,18 @@ NOTE: If you just want to execute code but discard whatever it expands
 
 @detect: #ifdef __TPP_EXEC
 
-extension name: `-ftpp-exec-macro` (`TPP_EXTNAME_MACRO___TPP_EXEC`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_EXEC "tpp-exec-macro"
 ```
 </details>
 
@@ -911,11 +1317,18 @@ this is not a hash-function)
 
 @detect: #ifdef __TPP_UNIQUE
 
-extension name: `-ftpp-unique-macro` (`TPP_EXTNAME_MACRO___TPP_UNIQUE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_UNIQUE "tpp-unique-macro"
 ```
 </details>
 
@@ -931,11 +1344,18 @@ Could be implemented as:
 
 @detect: #ifdef __TPP_LOAD_FILE
 
-extension name: `-ftpp-load-file-macro` (`TPP_EXTNAME_MACRO___TPP_LOAD_FILE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_LOAD_FILE "tpp-load-file-macro"
 ```
 </details>
 
@@ -949,11 +1369,18 @@ and `__TPP_COUNTER(bar)` increment different counters
 
 @detect: #ifdef __TPP_COUNTER
 
-extension name: `-ftpp-counter-macro` (`TPP_EXTNAME_MACRO___TPP_COUNTER`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_COUNTER "tpp-counter-macro"
 ```
 </details>
 
@@ -971,11 +1398,18 @@ code is altered:
 
 @detect: #ifdef __TPP_RANDOM
 
-extension name: `-ftpp-random-macro` (`TPP_EXTNAME_MACRO___TPP_RANDOM`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_RANDOM "tpp-random-macro"
 ```
 </details>
 
@@ -994,11 +1428,18 @@ In practice this usually only means:
 
 @detect: #ifdef __TPP_STR_DECOMPILE
 
-extension name: `-ftpp-str-decompile-macro` (`TPP_EXTNAME_MACRO___TPP_STR_DECOMPILE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_STR_DECOMPILE "tpp-str-decompile-macro"
 ```
 </details>
 
@@ -1014,11 +1455,18 @@ even have to be separated by `,`), but every argument must be:
 
 @detect: #ifdef __TPP_STR_PACK
 
-extension name: `-ftpp-str-pack-macro` (`TPP_EXTNAME_MACRO___TPP_STR_PACK`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_STR_PACK "tpp-str-pack-macro"
 ```
 </details>
 
@@ -1034,11 +1482,18 @@ and <a href="#tpp_have_macro___tpp_eval">`TPP_HAVE_MACRO___TPP_EVAL`</a> are ena
 
 @detect: #ifdef __TPP_STR_SUBSTR
 
-extension name: `-ftpp-str-substr-macro` (`TPP_EXTNAME_MACRO___TPP_STR_SUBSTR`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_STR_SUBSTR "tpp-str-substr-macro"
 ```
 </details>
 
@@ -1054,11 +1509,18 @@ and <a href="#tpp_have_macro___tpp_eval">`TPP_HAVE_MACRO___TPP_EVAL`</a> are ena
 
 @detect: #ifdef __TPP_STR_SIZE
 
-extension name: `-ftpp-str-size-macro` (`TPP_EXTNAME_MACRO___TPP_STR_SIZE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_STR_SIZE "tpp-str-size-macro"
 ```
 </details>
 
@@ -1082,11 +1544,18 @@ affect the behavior of `tpp_lexer_yieldraw()`
 
 @detect: #ifdef __TPP_COUNT_TOKENS
 
-extension name: `-ftpp-count-tokens-macro` (`TPP_EXTNAME_MACRO___TPP_COUNT_TOKENS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_COUNT_TOKENS "tpp-count-tokens-macro"
 ```
 </details>
 
@@ -1110,11 +1579,18 @@ __TPP_IDENTIFIER("a\0b")  // Compilers probably won't like this: NUL-character i
 
 @detect: #ifdef __TPP_IDENTIFIER
 
-extension name: `-ftpp-identifier-macro` (`TPP_EXTNAME_MACRO___TPP_IDENTIFIER`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO___TPP_IDENTIFIER "tpp-identifier-macro"
 ```
 </details>
 
@@ -1131,11 +1607,18 @@ Support for alternative parenthesis pairs in macros:
 
 @detect: #if __has_known_extension("-falternative-macro-parenthesis")
 
-extension name: `-falternative-macro-parenthesis` (`TPP_EXTNAME_ALTERNATIVE_MACRO_PARENTHESIS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_MACROS ? TPP_CONF_EXT1 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_ALTERNATIVE_MACRO_PARENTHESIS "alternative-macro-parenthesis"
 ```
 </details>
 
@@ -1154,11 +1637,18 @@ STR2(  foo  ) // "  foo  "
 
 @detect: #if __has_known_extension("-fmacro-argument-whitespace")
 
-extension name: `-fmacro-argument-whitespace` (`TPP_EXTNAME_MACRO_ARGUMENT_WHITESPACE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO_ARGUMENT_WHITESPACE "macro-argument-whitespace"
 ```
 </details>
 
@@ -1180,11 +1670,18 @@ REPEAT(42, HELLO_WORLD)
 NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #if __has_known_extension("-fmacro-recursion")
 
-extension name: `-fmacro-recursion` (`TPP_EXTNAME_MACRO_RECURSION`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? TPP_CONF_EXT0 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_MACRO_RECURSION "macro-recursion"
 ```
 </details>
 
@@ -1208,11 +1705,18 @@ T_STR(10)     // "10"
 NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 @detect: #if __has_known_extension("-ftraditional-macro")
 
-extension name: `-ftraditional-macro` (`TPP_EXTNAME_TRADITIONAL_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? TPP_CONF_EXT0 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TRADITIONAL_MACROS "traditional-macro"
 ```
 </details>
 
@@ -1226,11 +1730,18 @@ Support for variable-argument macros with named varargs:
 
 @detect: #if __has_known_extension("-fnamed-varargs-in-macros")
 
-extension name: `-fnamed-varargs-in-macros` (`TPP_EXTNAME_NAMED_VARARGS_IN_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_NAMED_VARARGS_IN_MACROS "named-varargs-in-macros"
 ```
 </details>
 
@@ -1244,11 +1755,18 @@ Support for variable-argument macros:
 
 @detect: #if __has_known_extension("-fva-args-in-macros")
 
-extension name: `-fva-args-in-macros` (`TPP_EXTNAME_VA_ARGS_IN_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_VA_ARGS_IN_MACROS "va-args-in-macros"
 ```
 </details>
 
@@ -1267,11 +1785,18 @@ printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
          #define test2(...) test1(__VA_COMMA__ 0, 1)
          #if test2(~)
 
-extension name: `-fva-comma-in-macros` (`TPP_EXTNAME_VA_COMMA_IN_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_VA_COMMA_IN_MACROS "va-comma-in-macros"
 ```
 </details>
 
@@ -1291,11 +1816,18 @@ printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
          #define test2(...) test1(__VA_OPT__(,) 0, 1)
          #if test2(~)
 
-extension name: `-fva-opt-in-macros` (`TPP_EXTNAME_VA_OPT_IN_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_VA_OPT_IN_MACROS "va-opt-in-macros"
 ```
 </details>
 
@@ -1321,11 +1853,18 @@ min(10, 20)  // Expands to: "((10) < (20) ? (10) : (20))"
          #define test(...) test_##__VA_NARGS__
          #if test2(~)
 
-extension name: `-fva-nargs-in-macros` (`TPP_EXTNAME_VA_NARGS_IN_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_VA_NARGS_IN_MACROS "va-nargs-in-macros"
 ```
 </details>
 
@@ -1347,11 +1886,18 @@ printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
          #define test2(...) test1(,##__VA_ARGS__, 1)
          #if test2() == 0
 
-extension name: `-fglue-comma-in-macros` (`TPP_EXTNAME_VA_GLUE_COMMA_IN_MACROS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_VA_GLUE_COMMA_IN_MACROS "glue-comma-in-macros"
 ```
 </details>
 
@@ -1378,11 +1924,18 @@ str("foo")  // Expands to: ""foo"" -- oops; traditional macros can't do this
 @detect: #define str(x) #x
          #if __TPP_COUNT_TOKENS(str(a b)) == 1
 
-extension name: `-fstringize-macro-argument` (`TPP_EXTNAME_STRINGIZE_MACRO_ARGUMENT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_STRINGIZE_MACRO_ARGUMENT "stringize-macro-argument"
 ```
 </details>
 
@@ -1410,11 +1963,18 @@ Support for: #define chr(x) #@x
 @detect: #define str(x) #@x
          #if __TPP_COUNT_TOKENS(str(a b)) == 1
 
-extension name: `-fcharize-macro-argument` (`TPP_EXTNAME_CHARIZE_MACRO_ARGUMENT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_CHARIZE_MACRO_ARGUMENT "charize-macro-argument"
 ```
 </details>
 
@@ -1438,11 +1998,18 @@ STR3(FOO) // "FOO"
          #define test3    42
          #if __TPP_STR_SIZE(__TPP_COUNT_TOKENS(test3)) == 5
 
-extension name: `-fdont-expand-macro-argument` (`TPP_EXTNAME_DONT_EXPAND_MACRO_ARGUMENT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_DONT_EXPAND_MACRO_ARGUMENT "dont-expand-macro-argument"
 ```
 </details>
 
@@ -1461,11 +2028,18 @@ cat(+, +)  // Expands to a single token "++" (assuming that TPP_HAVE_TPP_TOK_PLU
          #define str(x) str2(x)
          #if __TPP_COUNT_TOKENS(str(test(10, 20))) == 1
 
-extension name: `-fglue-macro-argument` (`TPP_EXTNAME_GLUE_MACRO_ARGUMENT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_GLUE_MACRO_ARGUMENT "glue-macro-argument"
 ```
 </details>
 
@@ -1476,11 +2050,18 @@ Support for: #pragma push_macro() / #pragma pop_macro()
          #pragma push_macro(undef, "FOO")
          #ifndef FOO
 
-extension name: `-fpragma-push-macro` (`TPP_EXTNAME_PRAGMA_PUSH_MACRO`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_PUSH_MACRO "pragma-push-macro"
 ```
 </details>
 
@@ -1489,11 +2070,18 @@ extension name: `-fpragma-push-macro` (`TPP_EXTNAME_PRAGMA_PUSH_MACRO`)
 Support for: #pragma once
 @detect: #if __has_known_extension("-fpragma-once")
 
-extension name: `-fpragma-once` (`TPP_EXTNAME_PRAGMA_ONCE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 ((TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_HAVE_PRAGMA) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_ONCE "pragma-once"
 ```
 </details>
 
@@ -1502,11 +2090,18 @@ extension name: `-fpragma-once` (`TPP_EXTNAME_PRAGMA_ONCE`)
 Support for: #pragma deprecated("foo")
 @detect: #if __has_known_extension("-fpragma-deprecated")
 
-extension name: `-fpragma-deprecated` (`TPP_EXTNAME_PRAGMA_DEPRECATED`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_DEPRECATED "pragma-deprecated"
 ```
 </details>
 
@@ -1515,11 +2110,18 @@ TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFI
 Support for: #pragma extension(...)
 @detect: #if __has_known_extension("-fpragma-extension")
 
-extension name: `-fpragma-extension` (`TPP_EXTNAME_PRAGMA_EXTENSION`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_PRAGMA && TPP_HAVE_EXTENSIONS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_EXTENSION "pragma-extension"
 ```
 </details>
 
@@ -1528,11 +2130,18 @@ extension name: `-fpragma-extension` (`TPP_EXTNAME_PRAGMA_EXTENSION`)
 Support for: #pragma warning(...)
 @detect: #if __has_known_extension("-fpragma-warning")
 
-extension name: `-fpragma-warning` (`TPP_EXTNAME_PRAGMA_WARNING`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_WARNING "pragma-warning"
 ```
 </details>
 
@@ -1541,11 +2150,18 @@ extension name: `-fpragma-warning` (`TPP_EXTNAME_PRAGMA_WARNING`)
 Support for: #pragma message("...")
 @detect: #if __has_known_extension("-fpragma-message")
 
-extension name: `-fpragma-message` (`TPP_EXTNAME_PRAGMA_MESSAGE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_MESSAGE "pragma-message"
 ```
 </details>
 
@@ -1554,11 +2170,18 @@ TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFI
 Support for: #pragma error("...")
 @detect: #if __has_known_extension("-fpragma-error")
 
-extension name: `-fpragma-error` (`TPP_EXTNAME_PRAGMA_ERROR`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_ERROR "pragma-error"
 ```
 </details>
 
@@ -1567,11 +2190,18 @@ TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFI
 Support for: #pragma region,  #pragma endregion
 @detect: #if __has_known_extension("-fpragma-region")
 
-extension name: `-fpragma-region` (`TPP_EXTNAME_PRAGMA_REGION`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_REGION "pragma-region"
 ```
 </details>
 
@@ -1580,11 +2210,18 @@ TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROF
 Support for: #pragma tpp_exec("...")
 @detect: #if __has_known_extension("-fpragma-tpp-exec")
 
-extension name: `-fpragma-tpp-exec` (`TPP_EXTNAME_PRAGMA_TPP_EXEC`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_TPP_EXEC "pragma-tpp-exec"
 ```
 </details>
 
@@ -1593,11 +2230,18 @@ TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROF
 Support for: #pragma tpp_set_keyword_flags("foo", 0x7f)
 @detect: #if __has_known_extension("-fpragma-tpp-set-keyword-flags")
 
-extension name: `-fpragma-tpp-set-keyword-flags` (`TPP_EXTNAME_PRAGMA_TPP_SET_KEYWORD_FLAGS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_TPP_SET_KEYWORD_FLAGS "pragma-tpp-set-keyword-flags"
 ```
 </details>
 
@@ -1606,11 +2250,18 @@ TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROF
 Support for: #pragma GCC poison foo
 @detect: #if __has_known_extension("-fpragma-gcc-poison")
 
-extension name: `-fpragma-gcc-poison` (`TPP_EXTNAME_PRAGMA_GCC_POISON`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_GCC_POISON "pragma-gcc-poison"
 ```
 </details>
 
@@ -1619,11 +2270,18 @@ TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROF
 Support for: #pragma GCC warning "message"
 @detect: #if __has_known_extension("-fpragma-gcc-warning")
 
-extension name: `-fpragma-gcc-warning` (`TPP_EXTNAME_PRAGMA_GCC_WARNING`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_GCC_WARNING "pragma-gcc-warning"
 ```
 </details>
 
@@ -1632,11 +2290,18 @@ extension name: `-fpragma-gcc-warning` (`TPP_EXTNAME_PRAGMA_GCC_WARNING`)
 Support for: #pragma GCC error "message"
 @detect: #if __has_known_extension("-fpragma-gcc-error")
 
-extension name: `-fpragma-gcc-error` (`TPP_EXTNAME_PRAGMA_GCC_ERROR`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_GCC_ERROR "pragma-gcc-error"
 ```
 </details>
 
@@ -1645,11 +2310,18 @@ extension name: `-fpragma-gcc-error` (`TPP_EXTNAME_PRAGMA_GCC_ERROR`)
 Support for: #pragma GCC system_header
 @detect: #if __has_known_extension("-fpragma-gcc-system-header")
 
-extension name: `-fpragma-gcc-system-header` (`TPP_EXTNAME_PRAGMA_GCC_SYSTEM_HEADER`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_GCC_SYSTEM_HEADER "pragma-gcc-system-header"
 ```
 </details>
 
@@ -1658,11 +2330,18 @@ TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROF
 Support for: #pragma GCC diagnostic
 @detect: #if __has_known_extension("-fpragma-gcc-diagnostic")
 
-extension name: `-fpragma-gcc-diagnostic` (`TPP_EXTNAME_PRAGMA_GCC_DIAGNOSTIC`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_GCC_DIAGNOSTIC "pragma-gcc-diagnostic"
 ```
 </details>
 
@@ -1671,11 +2350,18 @@ extension name: `-fpragma-gcc-diagnostic` (`TPP_EXTNAME_PRAGMA_GCC_DIAGNOSTIC`)
 Support for: #pragma GCC dependency
 @detect: #if __has_known_extension("-fpragma-gcc-dependency")
 
-extension name: `-fpragma-gcc-dependency` (`TPP_EXTNAME_PRAGMA_GCC_DEPENDENCY`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_GCC_DEPENDENCY "pragma-gcc-dependency"
 ```
 </details>
 
@@ -1696,11 +2382,18 @@ Support for trigraph character aliases:
 | `??-` | `~` |
 | `???` | `?` |
 
-extension name: `-ftrigraphs` (`TPP_EXTNAME_TRIGRAPHS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TRIGRAPHS "trigraphs"
 ```
 </details>
 
@@ -1719,11 +2412,18 @@ Support for digraph token aliases:
 
 @detect: #if __TPP_COUNT_TOKENS("%:") == 1
 
-extension name: `-fdigraphs` (`TPP_EXTNAME_DIGRAPHS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_DIGRAPHS "digraphs"
 ```
 </details>
 
@@ -1732,11 +2432,18 @@ extension name: `-fdigraphs` (`TPP_EXTNAME_DIGRAPHS`)
 Configures if line-feed tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()`
 @detect: #if __TPP_COUNT_TOKENS("\n") != 0
 
-extension name: `-ftok-lf` (`TPP_EXTNAME_TPP_TOK_LF`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_SPACE
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_LF "tok-lf"
 ```
 </details>
 
@@ -1745,11 +2452,18 @@ TPP_COMMON_HAVE_TPP_TOK_SPACE
 Configures if whitespace tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()`
 @detect: #if __TPP_COUNT_TOKENS(" ") != 0
 
-extension name: `-ftok-space` (`TPP_EXTNAME_TPP_TOK_SPACE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_SPACE
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_SPACE "tok-space"
 ```
 </details>
 
@@ -1758,11 +2472,18 @@ TPP_COMMON_HAVE_TPP_TOK_SPACE
 Configures if comment tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()`
 @detect: #if __TPP_COUNT_TOKENS("// a b c") == 1
 
-extension name: `-ftok-comment` (`TPP_EXTNAME_TPP_TOK_COMMENT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_SPACE
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_COMMENT "tok-comment"
 ```
 </details>
 
@@ -1771,11 +2492,18 @@ TPP_COMMON_HAVE_TPP_TOK_SPACE
 Enable support for recognizing c++-like comments: "// like this one!"
 @detect: #if __TPP_COUNT_TOKENS("// a b c") <= 1
 
-extension name: `-ftok-cxx-comment` (`TPP_EXTNAME_TPP_TOK_SLASH_SLASH_COMMENT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_DEFAULT || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_SLASH_SLASH_COMMENT "tok-cxx-comment"
 ```
 </details>
 
@@ -1784,11 +2512,18 @@ extension name: `-ftok-cxx-comment` (`TPP_EXTNAME_TPP_TOK_SLASH_SLASH_COMMENT`)
 Enable support for recognizing c-like comments: "/* like this one! */"
 @detect: #if __TPP_COUNT_TOKENS("/* a b c */") <= 1
 
-extension name: `-ftok-slash-star-comment-star-slash` (`TPP_EXTNAME_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_DEFAULT || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH "tok-slash-star-comment-star-slash"
 ```
 </details>
 
@@ -1797,11 +2532,18 @@ extension name: `-ftok-slash-star-comment-star-slash` (`TPP_EXTNAME_TPP_TOK_SLAS
 Enable support for recognizing pascal-like comments: "(* like this one! *)"
 @detect: #if __TPP_COUNT_TOKENS("(* a b c *)") <= 1
 
-extension name: `-ftok-lparen-star-comment-star-rparen` (`TPP_EXTNAME_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_COMMENT
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN "tok-lparen-star-comment-star-rparen"
 ```
 </details>
 
@@ -1815,11 +2557,18 @@ and shell comments that don't appear at the start of lines are not
 even processed as CPP directives.
 @detect: #if __TPP_COUNT_TOKENS("# a b c") <= 1
 
-extension name: `-ftok-pound-comment` (`TPP_EXTNAME_TPP_TOK_POUND_COMMENT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_COMMENT
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_POUND_COMMENT "tok-pound-comment"
 ```
 </details>
 
@@ -1828,11 +2577,18 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Enable support for recognizing ASM-like comments: "/ like this one!"
 @detect: #if __TPP_COUNT_TOKENS("/ a b c") <= 1
 
-extension name: `-ftok-slash-comment` (`TPP_EXTNAME_TPP_TOK_SLASH_COMMENT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_COMMENT
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_SLASH_COMMENT "tok-slash-comment"
 ```
 </details>
 
@@ -1841,11 +2597,18 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Enable support for recognizing SQL-like comments: "-- like this one!"
 @detect: #if __TPP_COUNT_TOKENS("-- a b c") <= 1
 
-extension name: `-ftok-minus-minus-comment` (`TPP_EXTNAME_TPP_TOK_MINUS_MINUS_COMMENT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_COMMENT
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_MINUS_MINUS_COMMENT "tok-minus-minus-comment"
 ```
 </details>
 
@@ -1854,11 +2617,18 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Enable support for recognizing deemon-doc-like comments: "@@ like this one!"
 @detect: #if __TPP_COUNT_TOKENS("@@ a b c") <= 1
 
-extension name: `-ftok-at-at-comment` (`TPP_EXTNAME_TPP_TOK_AT_AT_COMMENT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_COMMENT
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_AT_AT_COMMENT "tok-at-at-comment"
 ```
 </details>
 
@@ -1867,11 +2637,18 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 "$" (treat as its own token, rather than as part of identifiers/keywords)
 @detect: #if __TPP_COUNT_TOKENS("a$b") == 3
 
-extension name: `-ftok-dollar` (`TPP_EXTNAME_TPP_TOK_DOLLAR`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_1CHAR
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_DOLLAR "tok-dollar"
 ```
 </details>
 
@@ -1880,11 +2657,18 @@ TPP_COMMON_HAVE_TPP_TOK_1CHAR
 123
 @detect: #if __TPP_COUNT_TOKENS("123") == 1
 
-extension name: `-ftok-int` (`TPP_EXTNAME_TPP_TOK_INT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_GENERIC
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_INT "tok-int"
 ```
 </details>
 
@@ -1893,11 +2677,18 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 123.0
 @detect: #if __TPP_COUNT_TOKENS("123.0") == 1
 
-extension name: `-ftok-float` (`TPP_EXTNAME_TPP_TOK_FLOAT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_GENERIC
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_FLOAT "tok-float"
 ```
 </details>
 
@@ -1966,11 +2757,18 @@ keep going):
 
 @detect: #if __TPP_COUNT_TOKENS("0x1P+12") == 1 && __TPP_COUNT_TOKENS("0xE+12") == 3
 
-extension name: `-fsmart-float-tokens` (`TPP_EXTNAME_SMART_FLOAT_TOKENS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) && TPP_HAVE_TPP_TOK_FLOAT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_CONF_FEAT1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_SMART_FLOAT_TOKENS "smart-float-tokens"
 ```
 </details>
 
@@ -1979,11 +2777,18 @@ extension name: `-fsmart-float-tokens` (`TPP_EXTNAME_SMART_FLOAT_TOKENS`)
 Support for string literals: `'foo'`
 @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1
 
-extension name: `-ftok-char` (`TPP_EXTNAME_TPP_TOK_CHAR`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_GENERIC
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CHAR "tok-char"
 ```
 </details>
 
@@ -1992,11 +2797,18 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 Support for string literals: `"foo"`
 @detect: #if __TPP_COUNT_TOKENS('"foo"') == 1
 
-extension name: `-ftok-string` (`TPP_EXTNAME_TPP_TOK_STRING`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_GENERIC
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_STRING "tok-string"
 ```
 </details>
 
@@ -2005,11 +2817,18 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 Support for string literals: `R"AB(foo)AB"`
 @detect: #if __TPP_COUNT_TOKENS('R"AB(foo)AB"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 3
 
-extension name: `-ftok-cxx-raw-string-literal` (`TPP_EXTNAME_TPP_TOK_CXX_RAW_STRING_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_C_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CXX_RAW_STRING_LITERAL "tok-cxx-raw-string-literal"
 ```
 </details>
 
@@ -2019,11 +2838,18 @@ Support for string literals: `L"foo"`
 When <a href="#tpp_have_tpp_tok_cxx_raw_string_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`</a> is also enabled, also support `LR"AB(foo)AB")`
 @detect: #if __TPP_COUNT_TOKENS('L"foo"') == 1
 
-extension name: `-ftok-cxx-wide-string-literal` (`TPP_EXTNAME_TPP_TOK_CXX_WIDE_STRING_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_C_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CXX_WIDE_STRING_LITERAL "tok-cxx-wide-string-literal"
 ```
 </details>
 
@@ -2033,11 +2859,18 @@ Support for string literals: `u8"foo"`
 When <a href="#tpp_have_tpp_tok_cxx_raw_string_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`</a> is also enabled, also support `u8R"AB(foo)AB"`
 @detect: #if __TPP_COUNT_TOKENS('u8"foo"') == 1
 
-extension name: `-ftok-cxx-utf8-string-literal` (`TPP_EXTNAME_TPP_TOK_CXX_UTF8_STRING_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_C_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CXX_UTF8_STRING_LITERAL "tok-cxx-utf8-string-literal"
 ```
 </details>
 
@@ -2047,11 +2880,18 @@ Support for string literals: `u"foo"`
 When <a href="#tpp_have_tpp_tok_cxx_raw_string_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`</a> is also enabled, also support `uR"AB(foo)AB"`
 @detect: #if __TPP_COUNT_TOKENS('u"foo"') == 1
 
-extension name: `-ftok-cxx-utf16-string-literal` (`TPP_EXTNAME_TPP_TOK_CXX_UTF16_STRING_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_C_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CXX_UTF16_STRING_LITERAL "tok-cxx-utf16-string-literal"
 ```
 </details>
 
@@ -2061,11 +2901,18 @@ Support for string literals: `U"foo"`
 When <a href="#tpp_have_tpp_tok_cxx_raw_string_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`</a> is also enabled, also support `UR"AB(foo)AB"`
 @detect: #if __TPP_COUNT_TOKENS('U"foo"') == 1
 
-extension name: `-ftok-cxx-utf32-string-literal` (`TPP_EXTNAME_TPP_TOK_CXX_UTF32_STRING_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_C_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CXX_UTF32_STRING_LITERAL "tok-cxx-utf32-string-literal"
 ```
 </details>
 
@@ -2074,11 +2921,18 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Support for string literals: `R'AB(f)AB'`
 @detect: #if __TPP_COUNT_TOKENS("R'AB(foo)AB'") == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 3
 
-extension name: `-ftok-cxx-raw-char-literal` (`TPP_EXTNAME_TPP_TOK_CXX_RAW_CHAR_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_C_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CXX_RAW_CHAR_LITERAL "tok-cxx-raw-char-literal"
 ```
 </details>
 
@@ -2088,11 +2942,18 @@ Support for string literals: `L'f'`
 When <a href="#tpp_have_tpp_tok_cxx_raw_char_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`</a> is also enabled, also support `LR'AB(f)AB'`
 @detect: #if __TPP_COUNT_TOKENS("L'f'") == 1
 
-extension name: `-ftok-cxx-wide-char-literal` (`TPP_EXTNAME_TPP_TOK_CXX_WIDE_CHAR_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_C_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CXX_WIDE_CHAR_LITERAL "tok-cxx-wide-char-literal"
 ```
 </details>
 
@@ -2102,11 +2963,18 @@ Support for string literals: `u8'f'`
 When <a href="#tpp_have_tpp_tok_cxx_raw_char_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`</a> is also enabled, also support `u8R'AB(f)AB'`
 @detect: #if __TPP_COUNT_TOKENS("u8'f'") == 1
 
-extension name: `-ftok-cxx-utf8-char-literal` (`TPP_EXTNAME_TPP_TOK_CXX_UTF8_CHAR_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_C_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CXX_UTF8_CHAR_LITERAL "tok-cxx-utf8-char-literal"
 ```
 </details>
 
@@ -2116,11 +2984,18 @@ Support for string literals: `u'f'`
 When <a href="#tpp_have_tpp_tok_cxx_raw_char_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`</a> is also enabled, also support `uR'AB(f)AB'`
 @detect: #if __TPP_COUNT_TOKENS("u'f'") == 1
 
-extension name: `-ftok-cxx-utf16-char-literal` (`TPP_EXTNAME_TPP_TOK_CXX_UTF16_CHAR_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_C_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CXX_UTF16_CHAR_LITERAL "tok-cxx-utf16-char-literal"
 ```
 </details>
 
@@ -2130,11 +3005,18 @@ Support for string literals: `U'f'`
 When <a href="#tpp_have_tpp_tok_cxx_raw_char_literal">`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`</a> is also enabled, also support `UR'AB(f)AB'`
 @detect: #if __TPP_COUNT_TOKENS("U'f'") == 1
 
-extension name: `-ftok-cxx-utf32-char-literal` (`TPP_EXTNAME_TPP_TOK_CXX_UTF32_CHAR_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_C_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_CXX_UTF32_CHAR_LITERAL "tok-cxx-utf32-char-literal"
 ```
 </details>
 
@@ -2143,11 +3025,18 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Support for string literals: `R"foo"` and `r"foo"`
 @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 9
 
-extension name: `-ftok-raw-string-literal` (`TPP_EXTNAME_TPP_TOK_RAW_STRING_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_RAW_STRING_LITERAL "tok-raw-string-literal"
 ```
 </details>
 
@@ -2156,11 +3045,18 @@ TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
 Support for string literals: `R'bar'` and `r'bar'`
 @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 9
 
-extension name: `-ftok-raw-char-literal` (`TPP_EXTNAME_TPP_TOK_RAW_CHAR_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_RAW_CHAR_LITERAL "tok-raw-char-literal"
 ```
 </details>
 
@@ -2169,11 +3065,18 @@ TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
 Support for java-style block string literals: `"""foo"""`
 @detect: #if __TPP_COUNT_TOKENS('"""\n a\n b"""') == 1
 
-extension name: `-ftok-block-string-literal` (`TPP_EXTNAME_TPP_TOK_BLOCK_STRING_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_BLOCK_STRING_LITERAL "tok-block-string-literal"
 ```
 </details>
 
@@ -2182,11 +3085,18 @@ TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
 Support for java-style block string literals (but with single-ticks): `'''foo'''`
 @detect: #if __TPP_COUNT_TOKENS("'''\n a\n b'''") == 1
 
-extension name: `-ftok-block-char-literal` (`TPP_EXTNAME_TPP_TOK_BLOCK_CHAR_LITERAL`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_BLOCK_CHAR_LITERAL "tok-block-char-literal"
 ```
 </details>
 
@@ -2213,11 +3123,18 @@ warning to be emitted.
 
 @detect: #if __TPP_COUNT_TOKENS("\"\n\"") == 1
 
-extension name: `-fstring-allow-multiline` (`TPP_EXTNAME_STRING_ALLOW_MULTILINE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE != TPP_PROFILE_MINIMAL) ? TPP_CONF_FEAT0 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_STRING_ALLOW_MULTILINE "string-allow-multiline"
 ```
 </details>
 
@@ -2237,11 +3154,18 @@ WARNING: TPP will automatically join any type of string-like-token with any
          other when this feature is enabled (e.g. `"FOO" 'BAR' R"AB(BAZ)AB"`
          becomes a single string literal `"FOOBARBAZ"`)
 
-extension name: `-fstring-auto-concat` (`TPP_EXTNAME_STRING_AUTO_CONCAT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_STRING_AUTO_CONCAT "string-auto-concat"
 ```
 </details>
 
@@ -2250,11 +3174,18 @@ extension name: `-fstring-auto-concat` (`TPP_EXTNAME_STRING_AUTO_CONCAT`)
 Enable support for `defined(MACRO)` in builtin lexer expressions
 @detect: N/A
 
-extension name: `-fdefined-in-expressions` (`TPP_EXTNAME_BUILTIN_EXPR_DEFINED`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BUILTIN_EXPR_DEFINED "defined-in-expressions"
 ```
 </details>
 
@@ -2265,11 +3196,18 @@ Enable special handling in `#define foo(x) defined(x)` such that `x` is not expa
          #define test2   test1
          #if test(test2)
 
-extension name: `-fdont-expand-defined` (`TPP_EXTNAME_DONT_EXPAND_DEFINED_IN_EXPR`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_BUILTIN_EXPR_DEFINED && TPP_HAVE_CPP_MACROS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? TPP_CONF_EXT0 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_DONT_EXPAND_DEFINED_IN_EXPR "dont-expand-defined"
 ```
 </details>
 
@@ -2278,11 +3216,18 @@ extension name: `-fdont-expand-defined` (`TPP_EXTNAME_DONT_EXPAND_DEFINED_IN_EXP
 Enable support for string operations in builtin lexer expressions
 @detect: N/A
 
-extension name: `-fstrings-in-expressions` (`TPP_EXTNAME_BUILTIN_EXPR_STRINGS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_STRINGLIKE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BUILTIN_EXPR_STRINGS "strings-in-expressions"
 ```
 </details>
 
@@ -2291,11 +3236,18 @@ extension name: `-fstrings-in-expressions` (`TPP_EXTNAME_BUILTIN_EXPR_STRINGS`)
 Enable support for floats in builtin lexer expressions
 @detect: N/A
 
-extension name: `-ffloats-in-expressions` (`TPP_EXTNAME_BUILTIN_EXPR_FLOATS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BUILTIN_EXPR_FLOATS "floats-in-expressions"
 ```
 </details>
 
@@ -2304,11 +3256,18 @@ extension name: `-ffloats-in-expressions` (`TPP_EXTNAME_BUILTIN_EXPR_FLOATS`)
 Enable support for `foo ?: bar` in builtin lexer expressions (same as `foo ? foo : bar`)
 @detect: N/A
 
-extension name: `-fif-else-optional-true` (`TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT "if-else-optional-true"
 ```
 </details>
 
@@ -2317,11 +3276,18 @@ extension name: `-fif-else-optional-true` (`TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPT
 Enable support for `if (foo) bar else baz` in builtin lexer expressions
 @detect: N/A
 
-extension name: `-fifelse-in-expressions` (`TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS "ifelse-in-expressions"
 ```
 </details>
 
@@ -2330,11 +3296,18 @@ extension name: `-fifelse-in-expressions` (`TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_
 Enable support for `^^` in builtin lexer expressions
 @detect: N/A
 
-extension name: `-flogical-xor-in-expressions` (`TPP_EXTNAME_BUILTIN_EXPR_LOGICAL_XOR`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BUILTIN_EXPR_LOGICAL_XOR "logical-xor-in-expressions"
 ```
 </details>
 
@@ -2343,11 +3316,18 @@ extension name: `-flogical-xor-in-expressions` (`TPP_EXTNAME_BUILTIN_EXPR_LOGICA
 Enable support for `0b` literals in builtin lexer expressions
 @detect: N/A
 
-extension name: `-fbinary-literals` (`TPP_EXTNAME_BUILTIN_EXPR_BINARY_LITERALS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BUILTIN_EXPR_BINARY_LITERALS "binary-literals"
 ```
 </details>
 
@@ -2356,11 +3336,18 @@ extension name: `-fbinary-literals` (`TPP_EXTNAME_BUILTIN_EXPR_BINARY_LITERALS`)
 Enable support for `0o` literals in builtin lexer expressions
 @detect: N/A
 
-extension name: `-foctal-literals` (`TPP_EXTNAME_BUILTIN_EXPR_OCTAL_LITERALS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BUILTIN_EXPR_OCTAL_LITERALS "octal-literals"
 ```
 </details>
 
@@ -2369,11 +3356,18 @@ extension name: `-foctal-literals` (`TPP_EXTNAME_BUILTIN_EXPR_OCTAL_LITERALS`)
 Enable support for `u`, `l`, `ul`, `ll`, `ull` integer suffixes
 @detect: N/A
 
-extension name: `-ffixed-type-integrals` (`TPP_EXTNAME_LEXER_DECODEINT_FIXED_TYPE_SUFFIX`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_TPP_TOK_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_LEXER_DECODEINT_FIXED_TYPE_SUFFIX "fixed-type-integrals"
 ```
 </details>
 
@@ -2382,11 +3376,18 @@ extension name: `-ffixed-type-integrals` (`TPP_EXTNAME_LEXER_DECODEINT_FIXED_TYP
 Enable support for `z`, `uz` integer suffixes
 @detect: N/A
 
-extension name: `-fsize-type-integrals` (`TPP_EXTNAME_LEXER_DECODEINT_SIZE_TYPE_SUFFIX`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_TPP_TOK_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_LEXER_DECODEINT_SIZE_TYPE_SUFFIX "size-type-integrals"
 ```
 </details>
 
@@ -2395,11 +3396,18 @@ extension name: `-fsize-type-integrals` (`TPP_EXTNAME_LEXER_DECODEINT_SIZE_TYPE_
 Enable support for `i8`, `i16`, `i32`, `i64`, `ui8`, `ui16`, `ui32`, `ui64` integer suffixes
 @detect: N/A
 
-extension name: `-ffixed-length-integrals` (`TPP_EXTNAME_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_TPP_TOK_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX "fixed-length-integrals"
 ```
 </details>
 
@@ -2408,11 +3416,18 @@ extension name: `-ffixed-length-integrals` (`TPP_EXTNAME_LEXER_DECODEINT_FIXED_L
 Enable support for `f`, `F`, `l`, `L` float suffixes
 @detect: N/A
 
-extension name: `-ffixed-type-float` (`TPP_EXTNAME_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_TPP_TOK_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX "fixed-type-float"
 ```
 </details>
 
@@ -2421,11 +3436,18 @@ extension name: `-ffixed-type-float` (`TPP_EXTNAME_LEXER_DECODEFLOAT_FIXED_TYPE_
 Enable support for `d`, `D` float suffixes
 @detect: N/A
 
-extension name: `-fdouble-type-float` (`TPP_EXTNAME_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_TPP_TOK_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 0) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX "double-type-float"
 ```
 </details>
 
@@ -2434,11 +3456,18 @@ extension name: `-fdouble-type-float` (`TPP_EXTNAME_LEXER_DECODEFLOAT_DOUBLE_TYP
 Enable support for `df`, `DF`, `dd`, `DD`, `dl`, `DL` float suffixes
 @detect: N/A
 
-extension name: `-fdecimal-type-float` (`TPP_EXTNAME_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_TPP_TOK_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX "decimal-type-float"
 ```
 </details>
 
@@ -2447,11 +3476,18 @@ extension name: `-fdecimal-type-float` (`TPP_EXTNAME_LEXER_DECODEFLOAT_DECIMAL_T
 Treat `'a'` in expressions as an integer, rather than as a string (in C, this is always the case)
 @detect: N/A
 
-extension name: `-fcharacter-literals` (`TPP_EXTNAME_BUILTIN_EXPR_CHARACTER_LITERALS`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_BUILTIN_EXPR_CHARACTER_LITERALS "character-literals"
 ```
 </details>
 
@@ -2460,11 +3496,18 @@ extension name: `-fcharacter-literals` (`TPP_EXTNAME_BUILTIN_EXPR_CHARACTER_LITE
 When `TPP_FILE_FLAGS_SYSHDR` is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
 then the `TPP_FILE_FLAGS_EXTERN_C` flag should be set alongside `TPP_FILE_FLAGS_SYSHDR`.
 
-extension name: `-fextern-c-for-syshdr` (`TPP_EXTNAME_EXTERN_C_FOR_SYSHDR`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_FILE_SYSHDR && TPP_HAVE_FILE_EXTERN_C ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT0 : TPP_CONF_FEAT0) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_EXTERN_C_FOR_SYSHDR "extern-c-for-syshdr"
 ```
 </details>
 
@@ -2473,11 +3516,18 @@ TPP_HAVE_FILE_SYSHDR && TPP_HAVE_FILE_EXTERN_C ? (TPP_PROFILE == TPP_PROFILE_ALL
 Config option to skip searching <a href="config-value.md#tpp_config_system_include_path">`TPP_CONFIG_SYSTEM_INCLUDE_PATH`</a>.
 Can (and should) be used to implement `-nostdinc`
 
-extension name: `-fstdinc` (`TPP_EXTNAME_SEARCH_SYSTEM_INCLUDE_PATH`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_TUPLE_NONEMPTY(TPP_CONFIG_SYSTEM_INCLUDE_PATH) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_SEARCH_SYSTEM_INCLUDE_PATH "stdinc"
 ```
 </details>
 
@@ -2489,11 +3539,18 @@ always- and unconditionally did, but turns out that isn't actually something nor
 done by preprocessors. As such, TPP3 turns this behavior into an extension, but has
 it turned off by default.
 
-extension name: `-finclude-relative-to-every-file` (`TPP_EXTNAME_INCLUDE_RELATIVE_TO_EVERY_FILE`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_CONF_EXT0 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_INCLUDE_RELATIVE_TO_EVERY_FILE "include-relative-to-every-file"
 ```
 </details>
 
@@ -2503,11 +3560,18 @@ Extra configuration for `#pragma message`: print a leading
 <a href="config-value.md#tpp_config_warning_file_and_line_format">`TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT`</a> using the values
 that would also be printed by `__FILE__`, `__LINE__`, `__COLUMN__`
 
-extension name: `-fpragma-message-prints-location` (`TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE != TPP_PROFILE_MINIMAL) ? TPP_CONF_EXT0 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION "pragma-message-prints-location"
 ```
 </details>
 
@@ -2515,11 +3579,18 @@ extension name: `-fpragma-message-prints-location` (`TPP_EXTNAME_PRAGMA_MESSAGE_
 
 Extra configuration for `#pragma message`: print a trailing `\n`
 
-extension name: `-fpragma-message-omits-trailing-linefeed` (`TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED`)
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 (TPP_PROFILE != TPP_PROFILE_MINIMAL) ? TPP_CONF_EXT0 : 0
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED "pragma-message-omits-trailing-linefeed"
 ```
 </details>
 
