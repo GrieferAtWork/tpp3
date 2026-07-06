@@ -36,18 +36,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_DECODESTRING
 
-#if (TPP_HAVE_TPP_TOK_STRING ||                   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
-     TPP_HAVE_TPP_TOK_CHAR ||                     \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
+#if TPP_HAVE_STRING_ESCAPE
 
 /* Decode string: "foobar fdasudfad"
  *                 ^start          ^end
@@ -365,7 +354,18 @@ again_read_unicode_whitespace_after_backslash:
 
 handle_unknown_escape_sequence:
 		--iter;
-		/* TODO: Hook here to allow user-code to define custom string escape sequences */
+#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+		/* Hook here to allow user-code to define custom string escape sequences */
+		temp = tpp_lexer_callhook_unknown_string_escape(self, &iter, end, data_printer, utf8_printer, arg);
+		if (temp >= 0) {
+			/* Successfully handled via hook. */
+			result += temp;
+			start = iter;
+			goto again;
+		}
+		if (temp != TPP_SSIZE_OFERR(TPP_ENOENT))
+			goto err_temp; /* Error/abort from printer callback */
+#endif /* TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK */
 #if TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
 		{
 			tpp_errno error = tpp_lexer_warnf_at(self, tpp_lexer_getfile(self), iter,
@@ -405,7 +405,7 @@ done:
 err_temp:
 	return temp;
 }
-#endif /* ... */
+#endif /* TPP_HAVE_STRING_ESCAPE */
 
 
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL

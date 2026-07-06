@@ -5817,6 +5817,13 @@ TPP_DECL_END
 /* Number tokens                                                        */
 /************************************************************************/
 
+/* XXX: Support for intel-assembler-style hex literals to be treated as TPP_TOK_INT:
+ *  - FFh  (same as 0xFF)
+ *  - ffh  (same as 0xff)
+ *  - FFH  (XXX: Check if uppercase "H" is also accepted by intel asm)
+ *  - ffH  (XXX: Check if uppercase "H" is also accepted by intel asm) */
+/* XXX: Feature to disable support for C-style "0x" radix prefixes in tpp_lexer_decodeint() */
+
 /* 123
  * @detect: #if __TPP_COUNT_TOKENS("123") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_INT
@@ -7218,7 +7225,7 @@ TPP_DECL_END
 #error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
 
-/* >> tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+/* >> tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but
@@ -7259,6 +7266,55 @@ TPP_DECL_END
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
+/* >> tpp_ssize (TPPCALL *TPP_HOOK_UNKNOWN_STRING_ESCAPE)(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+ * Called by `tpp_lexer_decodestring()' when an unknown \-escape sequence is encountered
+ * This hook can be used to define additional, user-defined escape sequences, or any other
+ * arbitrary behavior to-be performed when specific escape-sequences are found.
+ * On entry, `*p_pos' points at the first (unrecognized) character after the leading \, and
+ * if the hook was able to parse said escape sequence, it should update `*p_pos' to point after
+ * it before returning
+ * @param: p_pos: [in]  Pointer to start of unrecognized \-escape sequence
+ *                [out] First character no longer part of \-escape sequence (if recognized)
+ *                [out] Unchanged (if not recognized)
+ * @param: end:   The of containing string sequence
+ * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()'
+ * @param: utf8_printer: *ditto*
+ * @param: arg:          *ditto*
+ * @return: * :   Sum of positive return values of `data_printer' and `utf8_printer'
+ * @return: < 0:  First negative return value of `data_printer' or `utf8_printer'
+ * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
+ *                (please leave `*p_pos' unchanged in this case). The caller will
+ *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE' */
+#ifndef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+#ifdef TPP_HOOK_UNKNOWN_STRING_ESCAPE
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_UNKNOWN_STRING_ESCAPE */
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_UNKNOWN_STRING_ESCAPE */
+#endif /* !TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK */
+#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK /* There is no builtin version */
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK /* There is no builtin version */
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' is defined, but 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_STRING_ESCAPE && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 
 /************************************************************************/
 /************************************************************************/
@@ -7972,19 +8028,8 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_PUSH_MACRO)
 #endif /* !TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
-#define TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE                     \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_STRING ||                   \
-	                       TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-	                       TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
-	                       TPP_HAVE_TPP_TOK_CHAR ||                     \
-	                       TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-	                       TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL))
+#define TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
 #define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
@@ -16291,13 +16336,14 @@ TPP_DECL_BEGIN
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
 #undef TPP_HAVE_HOOKS
-#if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK))
+#if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) ||          \
+     TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) ||          \
+     TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) ||            \
+     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) ||       \
+     TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) ||       \
+     TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) ||           \
+     TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) ||  \
+     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK))
 #define TPP_HAVE_HOOKS 1
 #else /* ... */
 #define TPP_HAVE_HOOKS 0
@@ -16392,7 +16438,7 @@ typedef struct tpp_hooks {
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_ident_sccs))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
 
-	/* >> tpp_errno (TPPCALL *th_system_include_path)(struct tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+	/* >> tpp_errno (TPPCALL *th_system_include_path)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
 	 * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
 	 * points during the process of enumerating include paths. This callback is
 	 * then allowed to enumerate some additional include paths that may exist, but
@@ -16405,8 +16451,31 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:    I/O error
 	 * @return: TPP_ENOMEM: Out of memory */
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
-	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_include_path))(struct tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg); /* [0..1] */
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_include_path))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
+	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+	 * Called by `tpp_lexer_decodestring()' when an unknown \-escape sequence is encountered
+	 * This hook can be used to define additional, user-defined escape sequences, or any other
+	 * arbitrary behavior to-be performed when specific escape-sequences are found.
+	 * On entry, `*p_pos' points at the first (unrecognized) character after the leading \, and
+	 * if the hook was able to parse said escape sequence, it should update `*p_pos' to point after
+	 * it before returning
+	 * @param: p_pos: [in]  Pointer to start of unrecognized \-escape sequence
+	 *                [out] First character no longer part of \-escape sequence (if recognized)
+	 *                [out] Unchanged (if not recognized)
+	 * @param: end:   The of containing string sequence
+	 * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()'
+	 * @param: utf8_printer: *ditto*
+	 * @param: arg:          *ditto*
+	 * @return: * :   Sum of positive return values of `data_printer' and `utf8_printer'
+	 * @return: < 0:  First negative return value of `data_printer' or `utf8_printer'
+	 * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
+	 *                (please leave `*p_pos' unchanged in this case). The caller will
+	 *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE' */
+#if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
+	tpp_ssize (TPPCALL *TPP_INTERNAL(th_unknown_string_escape))(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 } tpp_hooks;
 #endif /* TPP_HAVE_HOOKS */
 
@@ -16653,6 +16722,46 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_system_include_path(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
+/* Called by `tpp_lexer_decodestring()' when an unknown \-escape sequence is encountered
+ * This hook can be used to define additional, user-defined escape sequences, or any other
+ * arbitrary behavior to-be performed when specific escape-sequences are found.
+ * On entry, `*p_pos' points at the first (unrecognized) character after the leading \, and
+ * if the hook was able to parse said escape sequence, it should update `*p_pos' to point after
+ * it before returning
+ * @param: p_pos: [in]  Pointer to start of unrecognized \-escape sequence
+ *                [out] First character no longer part of \-escape sequence (if recognized)
+ *                [out] Unchanged (if not recognized)
+ * @param: end:   The of containing string sequence
+ * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()'
+ * @param: utf8_printer: *ditto*
+ * @param: arg:          *ditto*
+ * @return: * :   Sum of positive return values of `data_printer' and `utf8_printer'
+ * @return: < 0:  First negative return value of `data_printer' or `utf8_printer'
+ * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
+ *                (please leave `*p_pos' unchanged in this case). The caller will
+ *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE' */
+#if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
+#define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, data_printer, utf8_printer, arg) \
+	((self)->TPP_INTERNAL(th_unknown_string_escape) ? (*(self)->TPP_INTERNAL(th_unknown_string_escape))(lexer, p_pos, end, data_printer, utf8_printer, arg) : TPP_SSIZE_OFERR(TPP_ENOENT))
+#define tpp_hooks_get_unknown_string_escape(self)    (self)->TPP_INTERNAL(th_unknown_string_escape)
+#define tpp_hooks_set_unknown_string_escape(self, v) (void)((self)->TPP_INTERNAL(th_unknown_string_escape) = (v))
+#define tpp_hooks_reset_unknown_string_escape(self)  (void)((self)->TPP_INTERNAL(th_unknown_string_escape) = _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE)
+#define _tpp_hooks_init_unknown_string_escape(self)  , (self)->TPP_INTERNAL(th_unknown_string_escape) = _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE
+#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
+#define _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE (&TPP_HOOK_UNKNOWN_STRING_ESCAPE)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
+#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, data_printer, utf8_printer, arg) \
+	TPP_HOOK_UNKNOWN_STRING_ESCAPE(lexer, p_pos, end, data_printer, utf8_printer, arg)
+#else /*  */
+#define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, data_printer, utf8_printer, arg) TPP_SSIZE_OFERR(TPP_ENOENT)
+#endif /* ... */
+#define _tpp_hooks_init_unknown_string_escape(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
+
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
 	(void)(0 _tpp_hooks_init_warnprinter(self) \
@@ -16661,7 +16770,8 @@ typedef struct tpp_hooks {
 	       _tpp_hooks_init_unknown_pragma(self) \
 	       _tpp_hooks_init_new_dependency(self) \
 	       _tpp_hooks_init_ident_sccs(self) \
-	       _tpp_hooks_init_system_include_path(self))
+	       _tpp_hooks_init_system_include_path(self) \
+	       _tpp_hooks_init_unknown_string_escape(self))
 
 
 /* Possible values for `tpp_hooks_call_system_include_path(when)' */
@@ -17135,7 +17245,7 @@ typedef struct tpp_lexer {
 #define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_ident_sccs */
 
-/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_system_include_path)(tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_system_include_path)(tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but
@@ -17154,6 +17264,33 @@ typedef struct tpp_lexer {
 #define tpp_lexer_sethook_system_include_path(self, v) tpp_hooks_set_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_system_include_path */
+
+/* >> tpp_ssize (TPPCALL *tpp_lexer_callhook_unknown_string_escape)(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+ * Called by `tpp_lexer_decodestring()' when an unknown \-escape sequence is encountered
+ * This hook can be used to define additional, user-defined escape sequences, or any other
+ * arbitrary behavior to-be performed when specific escape-sequences are found.
+ * On entry, `*p_pos' points at the first (unrecognized) character after the leading \, and
+ * if the hook was able to parse said escape sequence, it should update `*p_pos' to point after
+ * it before returning
+ * @param: p_pos: [in]  Pointer to start of unrecognized \-escape sequence
+ *                [out] First character no longer part of \-escape sequence (if recognized)
+ *                [out] Unchanged (if not recognized)
+ * @param: end:   The of containing string sequence
+ * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()'
+ * @param: utf8_printer: *ditto*
+ * @param: arg:          *ditto*
+ * @return: * :   Sum of positive return values of `data_printer' and `utf8_printer'
+ * @return: < 0:  First negative return value of `data_printer' or `utf8_printer'
+ * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
+ *                (please leave `*p_pos' unchanged in this case). The caller will
+ *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE' */
+#define tpp_lexer_callhook_unknown_string_escape(self, p_pos, end, data_printer, utf8_printer, arg) \
+	tpp_hooks_call_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, p_pos, end, data_printer, utf8_printer, arg)
+#ifdef tpp_hooks_set_unknown_string_escape
+#define tpp_lexer_gethook_unknown_string_escape(self)    tpp_hooks_get_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_unknown_string_escape(self, v) tpp_hooks_set_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_unknown_string_escape(self)  tpp_hooks_reset_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_unknown_string_escape */
 
 
 
@@ -17960,7 +18097,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
  * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
  *                      invocations of "cb" returned "TPP_ENOENT". */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
-tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id mode,
+tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
                                tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
                                                        tpp_lexer_foreach_include_path_flags__PARAM),
                                void *arg);

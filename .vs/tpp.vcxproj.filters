@@ -185,5 +185,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\cpp.hint" />
+    <None Include="..\README.md" />
+    <None Include="..\LICENSE" />
+    <None Include="..\CONTRIBUTING.md" />
+    <None Include="..\.clang-format" />
+    <None Include="..\.gitattributes" />
+    <None Include="..\.gitignore" />
   </ItemGroup>
 </Project>

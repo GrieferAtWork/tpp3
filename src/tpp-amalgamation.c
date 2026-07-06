@@ -598,6 +598,7 @@
 #define th_new_dependency                                   TPP_INTERNAL(th_new_dependency)
 #define th_ident_sccs                                       TPP_INTERNAL(th_ident_sccs)
 #define th_system_include_path                              TPP_INTERNAL(th_system_include_path)
+#define th_unknown_string_escape                            TPP_INTERNAL(th_unknown_string_escape)
 #define tmpe_macro                                          TPP_INTERNAL(tmpe_macro)
 #define tmpe_count                                          TPP_INTERNAL(tmpe_count)
 #define tmps_cnt                                            TPP_INTERNAL(tmps_cnt)
@@ -31382,6 +31383,9 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
 #if TPP_HAVE_MACRO___TPP_RANDOM
 	/* TODO: __TPP_RANDOM */
+	/* TODO: The value this expands to must RREMAIN THE SAME during multiple compilations!
+	 *       It must only change if *anything* about the lexer's input is changed. iow: this
+	 *       needs to be a PRNG that uses the input text processed thus far as seed. */
 #endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
 /************************************************************************/
 
@@ -32411,7 +32415,7 @@ tpp_lexer_foreach_include_path_in_list(tpp_include_path_list const *paths,
  * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
  *                      invocations of "cb" returned "TPP_ENOENT". */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
-tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id mode,
+tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
                                tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
                                                        tpp_lexer_foreach_include_path_flags__PARAM),
                                void *arg) {
@@ -32632,18 +32636,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_DECODESTRING
 
-#if (TPP_HAVE_TPP_TOK_STRING ||                   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
-     TPP_HAVE_TPP_TOK_CHAR ||                     \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
+#if TPP_HAVE_STRING_ESCAPE
 
 /* Decode string: "foobar fdasudfad"
  *                 ^start          ^end
@@ -32961,7 +32954,18 @@ again_read_unicode_whitespace_after_backslash:
 
 handle_unknown_escape_sequence:
 		--iter;
-		/* TODO: Hook here to allow user-code to define custom string escape sequences */
+#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+		/* Hook here to allow user-code to define custom string escape sequences */
+		temp = tpp_lexer_callhook_unknown_string_escape(self, &iter, end, data_printer, utf8_printer, arg);
+		if (temp >= 0) {
+			/* Successfully handled via hook. */
+			result += temp;
+			start = iter;
+			goto again;
+		}
+		if (temp != TPP_SSIZE_OFERR(TPP_ENOENT))
+			goto err_temp; /* Error/abort from printer callback */
+#endif /* TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK */
 #if TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
 		{
 			tpp_errno error = tpp_lexer_warnf_at(self, tpp_lexer_getfile(self), iter,
@@ -33001,7 +33005,7 @@ done:
 err_temp:
 	return temp;
 }
-#endif /* ... */
+#endif /* TPP_HAVE_STRING_ESCAPE */
 
 
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL

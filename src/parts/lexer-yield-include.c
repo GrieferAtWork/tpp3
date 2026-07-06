@@ -427,7 +427,7 @@ tpp_lexer_foreach_include_path_in_list(tpp_include_path_list const *paths,
  * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
  *                      invocations of "cb" returned "TPP_ENOENT". */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
-tpp_lexer_foreach_include_path(tpp_lexer const *tpp_restrict self, tpp_token_id mode,
+tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
                                tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
                                                        tpp_lexer_foreach_include_path_flags__PARAM),
                                void *arg) {

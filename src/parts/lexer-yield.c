@@ -2005,6 +2005,9 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
 #if TPP_HAVE_MACRO___TPP_RANDOM
 	/* TODO: __TPP_RANDOM */
+	/* TODO: The value this expands to must RREMAIN THE SAME during multiple compilations!
+	 *       It must only change if *anything* about the lexer's input is changed. iow: this
+	 *       needs to be a PRNG that uses the input text processed thus far as seed. */
 #endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
 /************************************************************************/
 

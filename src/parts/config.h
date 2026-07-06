@@ -1231,6 +1231,13 @@
 /* Number tokens                                                        */
 /************************************************************************/
 
+/* XXX: Support for intel-assembler-style hex literals to be treated as TPP_TOK_INT:
+ *  - FFh  (same as 0xFF)
+ *  - ffh  (same as 0xff)
+ *  - FFH  (XXX: Check if uppercase "H" is also accepted by intel asm)
+ *  - ffH  (XXX: Check if uppercase "H" is also accepted by intel asm) */
+/* XXX: Feature to disable support for C-style "0x" radix prefixes in tpp_lexer_decodeint() */
+
 /* 123
  * @detect: #if __TPP_COUNT_TOKENS("123") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_INT
@@ -2683,8 +2690,34 @@ local HOOKS = {
 		"SYSTEM_INCLUDE_PATH",
 		"(TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg)", { "lexer", "mode", "when", "cb", "arg" },
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg)", { "lexer", "mode", "when", "cb", "arg" },
 		"TPP_ENOENT"
+	},
+
+	{
+		"Called by `tpp_lexer_decodestring()' when an unknown \\-escape sequence is encountered\n" +
+		"This hook can be used to define additional, user-defined escape sequences, or any other\n" +
+		"arbitrary behavior to-be performed when specific escape-sequences are found.\n" +
+		"On entry, `*p_pos' points at the first (unrecognized) character after the leading \\, and\n" +
+		"if the hook was able to parse said escape sequence, it should update `*p_pos' to point after\n" +
+		"it before returning\n" +
+		"@param: p_pos: [in]  Pointer to start of unrecognized \\-escape sequence\n" +
+		"               [out] First character no longer part of \\-escape sequence (if recognized)\n" +
+		"               [out] Unchanged (if not recognized)\n" +
+		"@param: end:   The of containing string sequence\n" +
+		"@param: data_printer: Identically-named argument of `tpp_lexer_decodestring()'\n" +
+		"@param: utf8_printer: *ditto*\n" +
+		"@param: arg:          *ditto*\n" +
+		"@return: * :   Sum of positive return values of `data_printer' and `utf8_printer'\n" +
+		"@return: < 0:  First negative return value of `data_printer' or `utf8_printer'\n" +
+		"@return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized\n" +
+		"               (please leave `*p_pos' unchanged in this case). The caller will\n" +
+		"               proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE'",
+		"UNKNOWN_STRING_ESCAPE",
+		"(TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL)",
+		"", // No builtin default
+		"tpp_ssize (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg)", { "lexer", "p_pos", "end", "data_printer", "utf8_printer", "arg" },
+		"TPP_SSIZE_OFERR(TPP_ENOENT)"
 	},
 };
 
@@ -2958,7 +2991,7 @@ for (local doc, name,
 #error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
 
-/* >> tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer const *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+/* >> tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but
@@ -2999,6 +3032,55 @@ for (local doc, name,
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
+/* >> tpp_ssize (TPPCALL *TPP_HOOK_UNKNOWN_STRING_ESCAPE)(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+ * Called by `tpp_lexer_decodestring()' when an unknown \-escape sequence is encountered
+ * This hook can be used to define additional, user-defined escape sequences, or any other
+ * arbitrary behavior to-be performed when specific escape-sequences are found.
+ * On entry, `*p_pos' points at the first (unrecognized) character after the leading \, and
+ * if the hook was able to parse said escape sequence, it should update `*p_pos' to point after
+ * it before returning
+ * @param: p_pos: [in]  Pointer to start of unrecognized \-escape sequence
+ *                [out] First character no longer part of \-escape sequence (if recognized)
+ *                [out] Unchanged (if not recognized)
+ * @param: end:   The of containing string sequence
+ * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()'
+ * @param: utf8_printer: *ditto*
+ * @param: arg:          *ditto*
+ * @return: * :   Sum of positive return values of `data_printer' and `utf8_printer'
+ * @return: < 0:  First negative return value of `data_printer' or `utf8_printer'
+ * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
+ *                (please leave `*p_pos' unchanged in this case). The caller will
+ *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE' */
+#ifndef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+#ifdef TPP_HOOK_UNKNOWN_STRING_ESCAPE
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_UNKNOWN_STRING_ESCAPE */
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_UNKNOWN_STRING_ESCAPE */
+#endif /* !TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK */
+#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK /* There is no builtin version */
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK /* There is no builtin version */
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' is defined, but 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_STRING_ESCAPE && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 /*[[[end]]]*/
 
 /************************************************************************/
@@ -3713,19 +3795,8 @@ for (local doc, name,
 #define TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_PUSH_MACRO)
 #endif /* !TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
-#define TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE                     \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_STRING ||                   \
-	                       TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-	                       TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
-	                       TPP_HAVE_TPP_TOK_CHAR ||                     \
-	                       TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-	                       TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-	                       TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL))
+#define TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
 #define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
