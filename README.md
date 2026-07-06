@@ -38,7 +38,7 @@ If this is what you want, you just need to download the following 2 files (this 
 - [tpp-amalgamation.h](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.h)
 - [tpp-amalgamation.c](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.c)
 
-... And add them to your C project. Examples for a simple integration setup can be found in [samples](./samples) and available configuration options (and the features they control) are listed below.
+... And add them to your C project. Examples for a simple integration setup can be found in [samples](./samples) and available configuration options (and the features they control) are listed in [src/config.md](src/config.md).
 
 
 (((WIP: Secondly, TPP provides a CLI "frontend" that implements a (mostly) GCC/CPP-compatible commandline utility. This one's mainly there as a proof-of-concept, since such a tool alone doesn't warrant the degree of customization offered by TPP)))
@@ -46,7 +46,7 @@ If this is what you want, you just need to download the following 2 files (this 
 
 ## Features (abbr.)
 
-NOTE: A full list of configuration options and their meaning can be found in [(((TODO: src/parts/config.md)))](src/parts/config.md)
+NOTE: A full list of configuration options and their meaning can be found in [src/config.md](src/config.md)
 
 | Feature | Origin | Configuration (`TPP_HAVE_*`) | Extension name (default) | Description |
 | ------- | ------ | ------------- | ------------------------ | ----------- |
@@ -75,12 +75,12 @@ NOTE: A full list of configuration options and their meaning can be found in [((
 | `#ident`, `#sccs` | pre_stdc | `CPP_IDENT_SCCS` | `-fident-directives` | Ancient compiler insert-comment-into-`.p`-file directive |
 | `__FILE__` | C | `MACRO___FILE__` | `-f__FILE__` | Expand to current file's name |
 | `__LINE__` | C | `MACRO___LINE__` | `-f__LINE__` | Expand to current line number |
-| `__TIME__` | C | `MACRO___TIME__` | `-f__TIME__` | Expand to `"12:37:58"` |
-| `__DATE__` | C | `MACRO___DATE__` | `-f__DATE__` | Expand to `"Jul  6 2026"` |
+| `__TIME__` | C | `MACRO___TIME__` | `-f__TIME__` | Expand to something like `"12:37:58"` |
+| `__DATE__` | C | `MACRO___DATE__` | `-f__DATE__` | Expand to something like `"Jul  6 2026"` |
 | `__BASE_FILE__` | GCC | `MACRO___BASE_FILE__` | `-fbasefile-macro` | Expand to base file's name |
 | `__INCLUDE_LEVEL__` | GCC | `MACRO___INCLUDE_LEVEL__` | `-finclude-level-macro` | Expand to numerical representation of include depth |
-| `__COUNTER__` | GCC | `MACRO___COUNTER__` | `-fcounter-macro` | Expand to 1+ its previous expansion |
-| `__TIMESTAMP__` | GCC | `MACRO___TIMESTAMP__` | `-ftimestamp-macro` | Expand to `"Mon Jul  6 12:37:58 2026"` |
+| `__COUNTER__` | GCC | `MACRO___COUNTER__` | `-fcounter-macro` | Expand to `1+` its previous expansion |
+| `__TIMESTAMP__` | GCC | `MACRO___TIMESTAMP__` | `-ftimestamp-macro` | Expand to something like `"Mon Jul  6 12:37:58 2026"` |
 | `__COLUMN__` | TPP | `MACRO___COLUMN__` | `-fcolumn-macro` | Expand to current column number |
 | `__has_embed()` | C23 / C++26 | `MACRO___has_embed` | `-f__has_embed` | Check if `#embed` exists: `#if __has_embed("resource.dat" limit(10))` |
 | `__has_include()` | Clang / C23 / C++17 | `MACRO___has_include` | `-f__has_include` | Check if `#include` exists: `#if __has_include(<stdio.h>)` |
@@ -113,16 +113,16 @@ NOTE: A full list of configuration options and their meaning can be found in [((
 | `#!` | TPP | `DONT_EXPAND_MACRO_ARGUMENT` | `-fdont-expand-macro-argument` | Insert macro argument without expanding it<details><summary>Example</summary><pre><code>#define STR1(x) #x</code><br/><code>#define STR2(x) STR1(x)</code><br/><code>#define STR3(x) STR1(#!x)</code><br/><code>#define FOO 42</code><br/><code>STR1(FOO) // "FOO"</code><br/><code>STR2(FOO) // "42"</code><br/><code>STR3(FOO) // "FOO"</code></pre></details> |
 | `__DATE_DAY__`, `__DATE_WDAY__`, `__DATE_YDAY__`, `__DATE_MONTH__`, `__DATE_YEAR__` | TPP | `NUMERIC_DATE_MACROS` | `-fnumeric-date-macros` | Precise date/time macros (behave like `__LINE__`, but expand to components of `__DATE__`) |
 | `__TIME_SEC__`, `__TIME_MIN__`, `__TIME_HOUR__` | TPP | `NUMERIC_TIME_MACROS` | `-fnumeric-time-macros` | Precise date/time macros (behave like `__LINE__`, but expand to components of `__TIME__`) |
-| `__TPP_EVAL()` | TPP | `MACRO___TPP_EVAL` | `-ftpp-eval-macro` | Evaluate an expression like in `#if`, then expand to its result in the form of 1-2 tokens: `[opt:MINUS][INT]` (or a `"string"` if `TPP_HAVE_BUILTIN_EXPR_STRINGS` is enabled):</code><br/><code>Example: `__TPP_EVAL(10 + 20)` expands to `30` |
+| `__TPP_EVAL()` | TPP | `MACRO___TPP_EVAL` | `-ftpp-eval-macro` | Evaluate an expression like in `#if`, then expand to its result in the form of 1-2 tokens: `[opt:MINUS][INT]` (or a `"string"` if `TPP_HAVE_BUILTIN_EXPR_STRINGS` is enabled)<br/>Example: `__TPP_EVAL(10 + 20)` expands to `30` |
 | `__TPP_EXEC()` | TPP | `MACRO___TPP_EXEC` | `-ftpp-exec-macro` | Takes a string that is then re-interpreted as preprocessor input, and expands to whatever that string expands to. Note that the string may contain any kind of directive<details><summary>Example</summary><pre><code>#define RESOURCE\_SIZE2(...) \_\_VA_NARGS\_\_</code><br/><code>#define RESOURCE\_SIZE1(x)   RESOURCE\_SIZE2(x)</code><br/><code>#define RESOURCE\_SIZE(name) RESOURCE\_SIZE1(\_\_TPP_EXEC("#embed " #name))</code><br/><code>RESOURCE\_SIZE("resource.dat") // Expands to file size in bytes</code></pre>NOTE: If you just want to execute code but discard whatever it expands to, use `#pragma tpp_exec()` instead</details> |
-| `__TPP_UNIQUE()` | TPP | `MACRO___TPP_UNIQUE` | `-ftpp-unique-macro` | Called with some keyword/identifier, this macro expands a unique INT-token representative of the given keyword/identifier. The value of that INT-token is distinct from any other keyword/identifier and remains the same for the remaining of input (though it will differ if re-run with different input; this is now a hash-function) |
+| `__TPP_UNIQUE()` | TPP | `MACRO___TPP_UNIQUE` | `-ftpp-unique-macro` | Called with some keyword/identifier, this macro expands a unique INT-token representative of the given keyword/identifier. The value of that INT-token is distinct from any other keyword/identifier and remains the same for the remaining of input (though it will differ if re-run with different input; this is not a hash-function) |
 | `__TPP_LOAD_FILE()` | TPP | `MACRO___TPP_LOAD_FILE` | `-ftpp-load-file-macro` | Same as `#include`, but package the file's entire contents into a string. Could be implemented as:</code><br/><code>`#define __TPP_LOAD_FILE(filename) __TPP_STR_PACK(__TPP_EXEC("#embed " #filename))` |
 | `__TPP_COUNTER()` | TPP | `MACRO___TPP_COUNTER` | `-ftpp-counter-macro` | Called the same way as `__TPP_UNIQUE`, but returns an ever-increasing value starting at `0` (same as `__COUNTER__`), but that counter is specific to the given keyword. i.e.: `__TPP_COUNTER(foo)` and `__TPP_COUNTER(bar)` increment different counters |
 | `__TPP_RANDOM()` | TPP | `MACRO___TPP_RANDOM` | `-ftpp-random-macro` | Overloaded macro taking 1 or 2 arguments, and expanding to a random number that stays the same during repeated compilations, only changing if source code is altered.<br><ul><li>The single-argument form `__TPP_RANDOM(hi)` expands to a pseudo-random integer token in the range `[0,hi)`</li><li>The 2-argument form `__TPP_RANDOM(lo, hi)` expands to a pseudo-random integer token in the range `[lo,hi)`</li></ul> |
-| `__TPP_STR_DECOMPILE()` | TPP | `MACRO___TPP_STR_DECOMPILE` | `-ftpp-str-decompile-macro` | Very similar to `__TPP_EXEC`, except that this where `__TPP_EXEC` will expand other macros and directives, this one doesn't: it simply takes a string and expands to its decoded form *without* expansion (however: expansion may still occur as returned tokens are read). In practice this usually only means: `__TPP_EXEC` accepts preprocessor directives, `__TPP_STR_DECOMPILE` only does basic string-to-token conversion |
+| `__TPP_STR_DECOMPILE()` | TPP | `MACRO___TPP_STR_DECOMPILE` | `-ftpp-str-decompile-macro` | Very similar to `__TPP_EXEC`, except that `__TPP_EXEC` will expand other macros and directives, this one doesn't: it simply takes a string and expands to its decoded form *without* expansion (however: expansion may still occur as returned tokens are read). In practice this usually only means: `__TPP_EXEC` accepts preprocessor directives, `__TPP_STR_DECOMPILE` only does basic string-to-token conversion |
 | `__TPP_STR_PACK()` | TPP | `MACRO___TPP_STR_PACK` | `-ftpp-str-pack-macro` | Expands to a string literal that is made up of the arguments taken by this macro. There can be any number of arguments (and arguments don't even have to be separated by `,`), but every argument must be:<ul><li>Another string (that is added to the result after being decoded and re-encoded)</li><li>An INT token (that must evaluate to a value in range `[0,0xFF]`)</li></ul> |
 
-Lots more extensions (especially supported `#pragma` directives) exist and are document in [(((TODO: src/parts/config.md)))](src/parts/config.md)
+Lots more extensions (especially supported `#pragma` directives) exist and are document in [src/config.md](src/config.md)
 
 ## Migrating from TPP2
 

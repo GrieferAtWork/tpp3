@@ -19,8 +19,23 @@
 
 .DELETE_ON_ERROR:
 
-all: tpp-amalgamation.h tpp-amalgamation.c
+CONFIG_MD := \
+	config.md \
+	config-limits.md \
+	config-core.md \
+	config-conf.md \
+	config-tokens.md \
+	config-value.md \
+	config-warn.md \
+	config-hook.md \
+	config-common.md
+
+
+all: tpp-amalgamation.h tpp-amalgamation.c $(CONFIG_MD)
 .PHONY: all
+
+$(CONFIG_MD): parts/config.h make-config-doc.dee
+	deemon make-config-doc.dee
 
 tpp-amalgamation.c: tpp.h tpp.c $(wildcard parts/*.c) $(wildcard parts/*.h)
 	deemon -Wno-usage -Wno-user -F parts/*.h parts/*.c

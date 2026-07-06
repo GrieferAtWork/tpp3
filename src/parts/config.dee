@@ -19,8 +19,11 @@
  */
 
 import * from deemon;
+import posix;
 
-global final CONFIG_H = File.open("config.h", "rb").read();
+global final CONFIG_H = File.open(
+	posix.joinpath(posix.headof(__FILE__), "config.h"),
+	"rb").read();
 function getProperty(name: string) {
 	local start = CONFIG_H.reindex(name + r"\s*=\s*\{").last;
 	return exec("{" + CONFIG_H[start:CONFIG_H.indexmatch("{", "}", start)] + "}");

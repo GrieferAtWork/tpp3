@@ -14630,8 +14630,10 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 	case TPP_WSTATE_ERROR: {
 		tpp_size errors = tpp_lexer_geterrorcount(self);
 		tpp_lexer_seterrorcount(self, errors + 1);
+#if TPP_ERROR_LIMIT != 0
 		if (errors >= tpp_lexer_geterrorlimit(self))
 			result = TPP_ELEXERROR;
+#endif /* TPP_ERROR_LIMIT != 0 */
 	}	break;
 #endif /* TPP_HAVE_WARNING_ERROR */
 
@@ -14768,6 +14770,7 @@ done:
 	if (result == TPP_ELEXERROR) {
 		/* Allow users to define a hook to do additional
 		 * processing when a lexer error should be raised */
+		/* TODO: This should be standard hook instead of this weird #ifdef-macro! */
 		TPP_CONFIG_RAISE_LEXERROR;
 	}
 #endif /* TPP_CONFIG_RAISE_LEXERROR */

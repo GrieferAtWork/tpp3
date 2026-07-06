@@ -19,15 +19,343 @@
  */
 
 import * from deemon;
+import .parts.config;
 import posix;
 
-/* TODO: Generate a .md file for "config.h" that has a bit table where
- *       every available config is listed, alongside its default under
- *       every `TPP_PROFILE` (these defaults can be determined by pre-
- *       processing `config.h` once for every possible "TPP_PROFILE")
- *
- * For this purpose, list *all* "#define TPP_*" macros from "config.h"
- * that aren't preceded by a "#undef TPP_*" (since those ones are only
- * there as internal aliases / short-cuts)
- */
+global final CONFIG_H = File
+	.open("./parts/config.h", "rb")
+	.read()
+	.unifylines()
+	.rstriplines()
+	.replace("\\\n", "")
+	.decode("utf-8")
+	/* Convert
+	 * >> #if COND
+	 * >> #define FOO 1
+	 * >> #else
+	 * >> #define FOO 0
+	 * >> #endif
+	 *
+	 * To:
+	 * >> #define FOO COND
+	 */
+	.rereplace(
+		r"\n"
+		r"\s*#\s*if\b([^\n]+)\n"
+		r"\s*#\s*define\s+(\w+)\s+1\s*\n"
+		r"\s*#\s*else\b[^\n]*\n"
+		r"\s*#\s*define\s+(\2)\s+0\s*\n"
+		r"\s*#\s*endif\b[^\n]*\n",
+		"\n#define \\2 \\1\n",
+	)
+	/* Convert
+	 * >> #if COND
+	 * >> #define FOO X
+	 * >> #else
+	 * >> #define FOO Y
+	 * >> #endif
+	 *
+	 * To:
+	 * >> #define FOO COND ? X : Y
+	 */
+	.rereplace(
+		r"\n"
+		r"\s*#\s*if\b([^\n]+)\n"
+		r"\s*#\s*define\s+(\w+)\s+([^\n]+)\n"
+		r"\s*#\s*else\b[^\n]*\n"
+		r"\s*#\s*define\s+\2\s+([^\n]+)\n"
+		r"\s*#\s*endif\b[^\n]*\n",
+		"\n#define \\2 \\1 ? \\3 : \\4\n",
+	)
+;
+
+global final MC_TOKEN_CONFIG_MACROS: {string...} = HashSet.Frozen(
+	for (local mc: config.MC_TOKENS)
+		f"TPP_HAVE_TPP_TOK_{config.tokenName(mc.first)}"
+);
+
+
+global final CONFIG_KIND_CORE = "core"; // Core config
+global final CONFIG_KIND_CONF = "conf"; // Overwritable config
+global final CONFIG_KIND_WARN = "warn"; // TPP_HAVE_TPP_W_*
+global final CONFIG_KIND_COMMON = "common"; // TPP_COMMON_HAVE_*
+global final CONFIG_KIND_VALUE = "value"; // TPP_CONFIG_*
+global final CONFIG_KIND_TOKEN = "token"; // TPP_HAVE_TPP_TOK_*
+global final CONFIG_KIND_HOOK_DEFAULT = "hook_default"; // TPP_HOOK_DEFAULT_*
+global final CONFIG_KIND_BUILTIN_HOOK = "builtin_hook"; // TPP_HAVE_BUILTIN_*_HOOK
+global final CONFIG_KIND_LIMIT = "limit"; // Special API limits config
+
+function formatDoc(doc: string): string {
+	return doc
+		.replace(":\n-", ":\n\n-")
+		.replace(":\n```", ":\n\n```")
+		;
+}
+
+class Config {
+	this = default;
+
+	@@Config name (e.g. @"TPP_HAVE_BSE")
+	public member name: string;
+
+	@@Config doc string
+	public member doc: string;
+
+	@@Config default value
+	public member defaultValue: string;
+
+	@@Default extension name of this feature. Also qualifies features
+	@@that can be configured as one of `TPP_CONF_*`
+	public member defaultExtensionName: string | none;
+
+	@@True if defined inside of "API limits:"-block
+	public member isApiLimit: bool;
+
+	public property kind: string = {
+		get(): string {
+			if (defaultExtensionName !is none) {
+				if (name in MC_TOKEN_CONFIG_MACROS)
+					return CONFIG_KIND_TOKEN;
+				return CONFIG_KIND_CONF;
+			}
+			if (isApiLimit)
+				return CONFIG_KIND_LIMIT;
+			if (name.startswith("TPP_HAVE_TPP_W_"))
+				return CONFIG_KIND_WARN;
+			if (name.startswith("TPP_COMMON_HAVE_"))
+				return CONFIG_KIND_COMMON;
+			if (name.startswith("TPP_CONFIG_"))
+				return CONFIG_KIND_VALUE;
+			if (name.startswith("TPP_HOOK_DEFAULT_"))
+				return CONFIG_KIND_HOOK_DEFAULT;
+			if (name.wmatch("TPP_HAVE_BUILTIN_*_HOOK"))
+				return CONFIG_KIND_BUILTIN_HOOK;
+			return CONFIG_KIND_CORE;
+		}
+	}
+
+	public operator str(): string {
+		return
+			f"### {name}\n"
+			f"\n"
+			f"{formatDoc(doc)}\n"
+			f"\n"
+			f"{defaultExtensionName
+				? f"extension name: `{
+					defaultExtensionName
+				}` (`TPP_EXTNAME_{
+					name.lsstrip("TPP_HAVE_")
+				}`)\n"
+				: ""
+			}"
+			f"Default: `{defaultValue}`\n"
+			f"\n"
+			f"\n"
+			;
+	}
+}
+
+function _getAvailableConfigs(): {Config...} {
+	local i = 0, len = #CONFIG_H;
+	final local REGION_SEPARATOR = "/************************************************************************/";
+	local apiLimitsStart = CONFIG_H.index(REGION_SEPARATOR,
+		CONFIG_H.index("API limits:")) + #REGION_SEPARATOR;
+	local apiLimitsEnd = CONFIG_H.index(REGION_SEPARATOR, apiLimitsStart);
+	while (i < len) {
+		local match = CONFIG_H
+			.regfind(
+				r'\s*#\s*ifndef\s*(TPP_\w*)\b\s*\n+'
+				r'\s*#\s*define\s*\1\b([^\n]*/\*\s*"(-f[^"\n]+)"\s*\*/|[^\n]*)\n+'
+				r'\s*#\s*endif\b[^\n]*\n+'
+				, i);
+		if (!match)
+			break;
+		local parts = (
+			for (local lo, hi: match[1:])
+				lo is none ? none : CONFIG_H[lo:hi]
+		).frozen;
+		local featureName = parts[0];
+		local featureExpr = parts[1]
+			.rereplace(r"/\*.*?\*/", "")
+			.rereplace(r"\s+", " ")
+			.rereplace(r"\bTPP_HAVE_PROFILE_NOT_MINIMAL\b",
+				"(TPP_PROFILE != TPP_PROFILE_MINIMAL)")
+			.rereplace(r"\bTPP_HAVE_PROFILE_C_LIKE\b",
+				"(TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)")
+			.rereplace(r"\bTPP_HAVE_PROFILE_DEFAULT\b",
+				"(TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT)")
+			.strip();
+		local extensionName = parts[2].strip();
+		local commentEnd = match.first.first;
+		while (commentEnd && CONFIG_H.isspace(commentEnd - 1))
+			--commentEnd;
+		local comment = "";
+		if (CONFIG_H.endswith("*/", 0, commentEnd)) {
+			local commentStart = CONFIG_H.rindex("/*", 0, commentEnd - 2);
+			if (!CONFIG_H.reendswith(r"#\s*endif\s*", 0, commentStart)) {
+				comment = CONFIG_H[commentStart + 2:commentEnd - 2]
+					.replace("\n * ", "\n")
+					.replace("\n *\n", "\n\n")
+					.strip();
+			}
+		} else {
+			local origCommentEnd = commentEnd;
+			for (;;) {
+				local sol = CONFIG_H.rfind("\n", 0, commentEnd) + 1;
+				local soc = sol;
+				while (soc < commentEnd && CONFIG_H.isspace(soc))
+					++soc;
+				if (!CONFIG_H.startswith("//", soc))
+					break;
+				commentEnd = sol;
+				while (commentEnd && CONFIG_H.isspace(commentEnd - 1))
+					--commentEnd;
+			}
+			if (commentEnd < origCommentEnd) {
+				comment = CONFIG_H[commentEnd:origCommentEnd]
+					.striplines()
+					.replace("\n// ", "\n")
+					.replace("\n//", "\n")
+					.strip();
+			}
+		}
+
+		while (featureExpr.startswith("(") && featureExpr.endswith(")") &&
+		       featureExpr.findmatch("(", ")", 1) == #featureExpr - 1)
+			featureExpr = featureExpr[1:-1].strip();
+		local matchIndex = match.first.first;
+		if (featureName !in [
+			"TPP_PROFILE"
+		])  {
+			yield Config(
+					name: featureName,
+					doc: comment,
+					defaultValue: featureExpr,
+					defaultExtensionName: extensionName,
+					isApiLimit: matchIndex >= apiLimitsStart && matchIndex < apiLimitsEnd
+			);
+		}
+		i = match.first.last;
+	}
+}
+
+function getAvailableConfigs(): {Config...} {
+	static local result = _getAvailableConfigs().cached;
+	return result;
+}
+
+
+function updatePartsConfigMd(filename: string) {
+	print("Updating ", repr filename);
+	local oldData = File.open(filename, "rb").read();
+	local i = 0, len = #oldData;
+	local newData = File.Writer(hint: "bytes");
+	while (i < len) {
+		local match = oldData.regfind(r"<!--BEGIN:([\w---]+)-->", i);
+		if (!match)
+			break;
+		local tag = oldData[match[1].first: match[1].last];
+		local endTag = oldData.find(f"<!--END:{tag}-->", i);
+		if (endTag < 0)
+			break;
+		newData.write(oldData[i:match.first.last]);
+		newData.write("\n");
+		switch (tag) {
+
+		// Custom handling for specific tags
+		case "token":
+			newData << "| Token | Config | Extension |\n"
+			           "| ----- | ------ | --------- |\n";
+			for (local conf: getAvailableConfigs()) {
+				if (conf.kind == "token") {
+					local mcReprFull = conf.name.lsstrip("TPP_HAVE_TPP_TOK_");
+					local mcRepr = config.MC_TOKENS
+						.filter(e -> mcReprFull == config.tokenName(e.first))
+						.first.first;
+					print newData: f"| `{mcRepr.replace("|", "\\|")}` | `{conf.name}` | `{
+						conf.defaultExtensionName
+					}` (`TPP_EXTNAME_{
+						conf.name.lsstrip("TPP_HAVE_")
+					}`) |";
+				}
+			}
+			break;
+
+		case "warn":
+			for (local conf: getAvailableConfigs()) {
+				if (conf.kind == "warn")
+					print newData: f"- `{conf.name}`";
+			}
+			break;
+
+		case "builtin_hook":
+			for (local conf: getAvailableConfigs()) {
+				if (conf.kind == "builtin_hook")
+					print newData: f"- `{conf.name}`";
+			}
+			break;
+
+		case "hooks":
+			for (local doc, name,
+			     default_TPP_HAVE_FOO_HOOK,
+			     builtin_FOO_HOOK,
+			     prototypePrefix,
+			     prototypeSuffix,
+			     prototypeArgs,
+			     disabled_RETURN_VALUE:
+			     config.HOOKS) {
+				print newData:
+					f"### TPP_HAVE_{name}_HOOK\n"
+					f"\n"
+					f"```c\n"
+					f"{prototypePrefix}TPP_HOOK_{name}{prototypeSuffix};\n"
+					f"```\n"
+					f"\n"
+					f"{formatDoc(doc.partition("\n@").first)}\n"
+					f"\n"
+					f"User-hook: `TPP_HOOK_{name}`\n"
+					f"Default:   `{default_TPP_HAVE_FOO_HOOK}`\n"
+					f"Builtin:   `{builtin_FOO_HOOK ?: "N/A"}`\n"
+					f"\n"
+					f"\n"
+					,;
+			}
+			break;
+
+		default: {
+			local foundAny = false;
+			for (local conf: getAvailableConfigs()) {
+				if (conf.kind == tag) {
+					newData << conf;
+					foundAny = true;
+				}
+			}
+			if (!foundAny)
+				throw Error(f"Unknown tag: {repr tag}");
+		}	break;
+
+		}
+		i = endTag;
+	}
+	newData.write(oldData[i:]);
+
+	/* Always write newData so "make" won't try to re-run for every file */
+	newData = newData.bytes;
+	with (local fp = File.open(filename, "wb"))
+		fp.write(newData);
+}
+
+
+#ifdef __MAIN__
+updatePartsConfigMd("config.md");
+updatePartsConfigMd("config-limits.md");
+updatePartsConfigMd("config-core.md");
+updatePartsConfigMd("config-conf.md");
+updatePartsConfigMd("config-tokens.md");
+updatePartsConfigMd("config-value.md");
+updatePartsConfigMd("config-warn.md");
+updatePartsConfigMd("config-hook.md");
+updatePartsConfigMd("config-common.md");
+#endif /* __MAIN__ */
+
 

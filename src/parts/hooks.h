@@ -217,8 +217,8 @@ print(")");
 struct tpp_lexer;
 typedef struct tpp_hooks {
 	/* >> tpp_formatprinter th_warnprinter;
-	 * Called by `tpp_lexer_warnf()' to print warning messages
-	 * @param: arg: The current lexer (tpp_lexer *) */
+	 * Called by `tpp_lexer_warnf()` to print warning messages
+	 * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
 #if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
 	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [1..1] */
@@ -228,8 +228,8 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
 
 	/* >> tpp_formatprinter th_mesgprinter;
-	 * Used by `#pragma message' to print messages
-	 * @param: arg: The current lexer (tpp_lexer *) */
+	 * Used by `#pragma message` to print messages
+	 * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
 #if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
 	tpp_formatprinter TPP_INTERNAL(th_mesgprinter); /* [1..1] */
@@ -239,21 +239,21 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_parseexpr)(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
-	 * User-defined callback for parsing "#if"-style expressions
-	 * - This callback is invoked in a context where "self" points
+	 * User-defined callback for parsing `#if`-style expressions
+	 * - This callback is invoked in a context where `self` points
 	 *   before the expression's first token (meaning that this
 	 *   callback is responsible to do the initial yield using
 	 *   whatever method it wants to use).
 	 * - When it is known that the expression has finite length,
 	 *   as in: it has to end before EOF, or at the next unmatched
-	 *   ')'-token, the caller will have configured the lexer's
+	 *   `)`-token, the caller will have configured the lexer's
 	 *   current EOF accordingly (and disabled file-popping)
 	 * - When this function returns an error, the caller will rewind
 	 *   back to the start of the expression (or even further, if
 	 *   applicable; meaning this callback doesn't need to concern
 	 *   itself with rollback)
 	 * 
-	 * @return: TPP_EOK:         Success (*result was initialized)
+	 * @return: TPP_EOK:         Success (`*result` was initialized)
 	 * @return: TPP_ENOMEM:      Out of memory
 	 * @return: TPP_EIO:         Filesystem I/O operation failed
 	 * @return: TPP_EWOULDBLOCK: Operation would block
@@ -268,8 +268,8 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_unknown_pragma)(struct tpp_lexer *tpp_restrict self);
-	 * Called whenever a #pragma is encountered that is not recognized.
-	 * When called, the lexer is set-up to point at the first token after the #pragma.
+	 * Called whenever a `#pragma` is encountered that is not recognized.
+	 * When called, the lexer is set-up to point at the first token after the `#pragma`.
 	 * @return: TPP_EOK:    Pragma has been handled
 	 * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
 	 * @return: TPP_EIO:    I/O error
@@ -279,22 +279,22 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_new_dependency)(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
-	 * Called whenever some file is #include-ed for the first time
-	 * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
-	 *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)'. */
+	 * Called whenever some file is `#include`-ed for the first time
+	 * @param: filename_kwd: Then `tpp_keyword` used to describe the file's name. The actual
+	 *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`. */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_new_dependency))(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_ident_sccs)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
-	 * Called to handle `#ident' and `#sccs' directives
-	 * @param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'
-	 * @param: chunk:       If non-NULL a string that must be tpp_string_incref()'d
-	 *                      if you want to keep `comment_str' alive. If NULL, then the
-	 *                      given `comment_str' is statically allocated and doesn't need
+	 * Called to handle `#ident` and `#sccs` directives
+	 * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
+	 * @param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d
+	 *                      if you want to keep `comment_str` alive. If NULL, then the
+	 *                      given `comment_str` is statically allocated and doesn't need
 	 *                      any chunk to stay alive
 	 * @param: comment_str: The source comment that should be inserted
-	 * @param: comment_len: Length of `comment_str' in bytes
+	 * @param: comment_len: Length of `comment_str` in bytes
 	 * @return: TPP_EOK:    Success
 	 * @return: TPP_EIO:    I/O error
 	 * @return: TPP_ENOMEM: Out of memory */
@@ -303,14 +303,14 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_system_include_path)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
-	 * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
+	 * Extra callback invoked by `tpp_lexer_foreach_include_path()` at diffrent
 	 * points during the process of enumerating include paths. This callback is
 	 * then allowed to enumerate some additional include paths that may exist, but
 	 * for one reason or another (mainly: speed) aren't known to TPP via its system
-	 * include path APIs (`tpp_lexer_includes_add*')
-	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*': describes the
-	 *               caller's position in `tpp_lexer_foreach_include_path()'.
-	 * @return: * :         First non-TPP_ENOENT return value of `cb'
+	 * include path APIs (`tpp_lexer_includes_add*`)
+	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+	 *               caller's position in `tpp_lexer_foreach_include_path()`.
+	 * @return: * :         First non-TPP_ENOENT return value of `cb`
 	 * @return: TPP_ENOENT: File still not found
 	 * @return: TPP_EIO:    I/O error
 	 * @return: TPP_ENOMEM: Out of memory */
@@ -319,32 +319,32 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
 	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
-	 * Called by `tpp_lexer_decodestring()' when an unknown \-escape sequence is encountered
+	 * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
 	 * This hook can be used to define additional, user-defined escape sequences, or any other
 	 * arbitrary behavior to-be performed when specific escape-sequences are found.
-	 * On entry, `*p_pos' points at the first (unrecognized) character after the leading \, and
-	 * if the hook was able to parse said escape sequence, it should update `*p_pos' to point after
+	 * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
+	 * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
 	 * it before returning
-	 * @param: p_pos: [in]  Pointer to start of unrecognized \-escape sequence
-	 *                [out] First character no longer part of \-escape sequence (if recognized)
+	 * @param: p_pos: [in]  Pointer to start of unrecognized `\`-escape sequence
+	 *                [out] First character no longer part of `\`-escape sequence (if recognized)
 	 *                [out] Unchanged (if not recognized)
 	 * @param: end:   The of containing string sequence
-	 * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()'
+	 * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()`
 	 * @param: utf8_printer: *ditto*
 	 * @param: arg:          *ditto*
-	 * @return: * :   Sum of positive return values of `data_printer' and `utf8_printer'
-	 * @return: < 0:  First negative return value of `data_printer' or `utf8_printer'
+	 * @return: * :   Sum of positive return values of `data_printer` and `utf8_printer`
+	 * @return: < 0:  First negative return value of `data_printer` or `utf8_printer`
 	 * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
-	 *                (please leave `*p_pos' unchanged in this case). The caller will
-	 *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE' */
+	 *                (please leave `*p_pos` unchanged in this case). The caller will
+	 *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 	tpp_ssize (TPPCALL *TPP_INTERNAL(th_unknown_string_escape))(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 } tpp_hooks;
 #endif /* TPP_HAVE_HOOKS */
 
-/* Called by `tpp_lexer_warnf()' to print warning messages
- * @param: arg: The current lexer (tpp_lexer *) */
+/* Called by `tpp_lexer_warnf()` to print warning messages
+ * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
 #if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
 #define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
@@ -379,8 +379,8 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_warnprinter(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
 
-/* Used by `#pragma message' to print messages
- * @param: arg: The current lexer (tpp_lexer *) */
+/* Used by `#pragma message` to print messages
+ * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
 #if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
 #define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
@@ -415,21 +415,21 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_mesgprinter(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
 
-/* User-defined callback for parsing "#if"-style expressions
- * - This callback is invoked in a context where "self" points
+/* User-defined callback for parsing `#if`-style expressions
+ * - This callback is invoked in a context where `self` points
  *   before the expression's first token (meaning that this
  *   callback is responsible to do the initial yield using
  *   whatever method it wants to use).
  * - When it is known that the expression has finite length,
  *   as in: it has to end before EOF, or at the next unmatched
- *   ')'-token, the caller will have configured the lexer's
+ *   `)`-token, the caller will have configured the lexer's
  *   current EOF accordingly (and disabled file-popping)
  * - When this function returns an error, the caller will rewind
  *   back to the start of the expression (or even further, if
  *   applicable; meaning this callback doesn't need to concern
  *   itself with rollback)
  * 
- * @return: TPP_EOK:         Success (*result was initialized)
+ * @return: TPP_EOK:         Success (`*result` was initialized)
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed
  * @return: TPP_EWOULDBLOCK: Operation would block
@@ -467,8 +467,8 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_parseexpr(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */
 
-/* Called whenever a #pragma is encountered that is not recognized.
- * When called, the lexer is set-up to point at the first token after the #pragma.
+/* Called whenever a `#pragma` is encountered that is not recognized.
+ * When called, the lexer is set-up to point at the first token after the `#pragma`.
  * @return: TPP_EOK:    Pragma has been handled
  * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
  * @return: TPP_EIO:    I/O error
@@ -495,9 +495,9 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_unknown_pragma(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 
-/* Called whenever some file is #include-ed for the first time
- * @param: filename_kwd: Then 'tpp_keyword' used to describe the file's name. The actual
- *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)'. */
+/* Called whenever some file is `#include`-ed for the first time
+ * @param: filename_kwd: Then `tpp_keyword` used to describe the file's name. The actual
+ *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`. */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) \
 	((self)->TPP_INTERNAL(th_new_dependency) ? (*(self)->TPP_INTERNAL(th_new_dependency))(lexer, filename_kwd) : TPP_EOK)
@@ -520,14 +520,14 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_new_dependency(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
-/* Called to handle `#ident' and `#sccs' directives
- * @param: mode:        Either `TPP_KWD_ident' or `TPP_KWD_sccs'
- * @param: chunk:       If non-NULL a string that must be tpp_string_incref()'d
- *                      if you want to keep `comment_str' alive. If NULL, then the
- *                      given `comment_str' is statically allocated and doesn't need
+/* Called to handle `#ident` and `#sccs` directives
+ * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
+ * @param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d
+ *                      if you want to keep `comment_str` alive. If NULL, then the
+ *                      given `comment_str` is statically allocated and doesn't need
  *                      any chunk to stay alive
  * @param: comment_str: The source comment that should be inserted
- * @param: comment_len: Length of `comment_str' in bytes
+ * @param: comment_len: Length of `comment_str` in bytes
  * @return: TPP_EOK:    Success
  * @return: TPP_EIO:    I/O error
  * @return: TPP_ENOMEM: Out of memory */
@@ -553,14 +553,14 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_ident_sccs(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
 
-/* Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
+/* Extra callback invoked by `tpp_lexer_foreach_include_path()` at diffrent
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but
  * for one reason or another (mainly: speed) aren't known to TPP via its system
- * include path APIs (`tpp_lexer_includes_add*')
- * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*': describes the
- *               caller's position in `tpp_lexer_foreach_include_path()'.
- * @return: * :         First non-TPP_ENOENT return value of `cb'
+ * include path APIs (`tpp_lexer_includes_add*`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * @return: * :         First non-TPP_ENOENT return value of `cb`
  * @return: TPP_ENOENT: File still not found
  * @return: TPP_EIO:    I/O error
  * @return: TPP_ENOMEM: Out of memory */
@@ -586,24 +586,24 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_system_include_path(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
-/* Called by `tpp_lexer_decodestring()' when an unknown \-escape sequence is encountered
+/* Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
- * On entry, `*p_pos' points at the first (unrecognized) character after the leading \, and
- * if the hook was able to parse said escape sequence, it should update `*p_pos' to point after
+ * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
+ * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
  * it before returning
- * @param: p_pos: [in]  Pointer to start of unrecognized \-escape sequence
- *                [out] First character no longer part of \-escape sequence (if recognized)
+ * @param: p_pos: [in]  Pointer to start of unrecognized `\`-escape sequence
+ *                [out] First character no longer part of `\`-escape sequence (if recognized)
  *                [out] Unchanged (if not recognized)
  * @param: end:   The of containing string sequence
- * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()'
+ * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()`
  * @param: utf8_printer: *ditto*
  * @param: arg:          *ditto*
- * @return: * :   Sum of positive return values of `data_printer' and `utf8_printer'
- * @return: < 0:  First negative return value of `data_printer' or `utf8_printer'
+ * @return: * :   Sum of positive return values of `data_printer` and `utf8_printer`
+ * @return: < 0:  First negative return value of `data_printer` or `utf8_printer`
  * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
- *                (please leave `*p_pos' unchanged in this case). The caller will
- *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE' */
+ *                (please leave `*p_pos` unchanged in this case). The caller will
+ *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 #define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, data_printer, utf8_printer, arg) \
 	((self)->TPP_INTERNAL(th_unknown_string_escape) ? (*(self)->TPP_INTERNAL(th_unknown_string_escape))(lexer, p_pos, end, data_printer, utf8_printer, arg) : TPP_SSIZE_OFERR(TPP_ENOENT))
