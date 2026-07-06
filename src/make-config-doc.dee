@@ -85,12 +85,7 @@ global final CONFIG_KIND_HOOK_DEFAULT = "hook_default"; // TPP_HOOK_DEFAULT_*
 global final CONFIG_KIND_BUILTIN_HOOK = "builtin_hook"; // TPP_HAVE_BUILTIN_*_HOOK
 global final CONFIG_KIND_LIMIT = "limit"; // Special API limits config
 
-function formatDoc(doc: string): string {
-	return doc
-		.replace(":\n-", ":\n\n-")
-		.replace(":\n```", ":\n\n```")
-		;
-}
+global formatDoc;
 
 function normalizePpExpr(expr: string): string {
 	expr = expr
@@ -151,11 +146,24 @@ class Config {
 		}
 	}
 
-	public operator str(): string {
-		return
-			f"## {name}\n"
+	@@The file that contains the documentation for this config
+	public property refFile: string = {
+		get(): string {
+			local kind = this.kind;
+			switch (kind) {
+			case CONFIG_KIND_HOOK_DEFAULT:
+			case CONFIG_KIND_BUILTIN_HOOK:
+				return f"config-hook.md";
+			default: break;
+			}
+			return f"config-{kind}.md";
+		}
+	}
+
+	public printDesc(currentFile: string, fp: File): string {
+		fp << f"## {name}\n"
 			f"\n"
-			f"{formatDoc(doc)}\n"
+			f"{formatDoc(currentFile, doc)}\n"
 			f"\n"
 			f"{defaultExtensionName
 				? f"extension name: `{
@@ -253,8 +261,45 @@ function getAvailableConfigs(): {Config...} {
 	return result;
 }
 
+function getAvailableConfigsByName(): {string: Config} {
+	static local result = Dict.Frozen(
+		for (local conf: getAvailableConfigs())
+			{conf.name, conf}
+	);
+	return result;
+}
 
-function updatePartsConfigMd(filename: string) {
+
+
+function formatDoc(currentFile: string, doc: string): string {
+	doc = doc
+		.replace(":\n-", ":\n\n-")
+		.replace(":\n```", ":\n\n```");
+	for (local i = 0;;) {
+		local tick = doc.find("`", i);
+		if (tick < 0)
+			break;
+		local nextTick = doc.find("`", tick + 1);
+		if (nextTick < 0)
+			break;
+		local content = doc[tick + 1:nextTick];
+		local conf: Config | none = getAvailableConfigsByName().get(content);
+		if (conf !is none) {
+			local refFile = conf.refFile;
+			local newContent = f'<a href="{
+				refFile == currentFile ? "" : refFile
+			}#{conf.name.lower()}">`{content}`</a>';
+			doc = doc[:tick] + newContent + doc[nextTick+1:];
+			nextTick += #newContent - #content;
+		}
+		i = nextTick + 1;
+	}
+	return doc;
+}
+
+
+
+function updateConfigMd(filename: string) {
 	print("Updating ", repr filename);
 	local oldData = File.open(filename, "rb").read();
 	local i = 0, len = #oldData;
@@ -281,7 +326,8 @@ function updatePartsConfigMd(filename: string) {
 					local mcRepr = config.MC_TOKENS
 						.filter(e -> mcReprFull == config.tokenName(e.first))
 						.first.first;
-					print newData: f"| `{mcRepr.replace("|", "\\|")}` | `{conf.name}` | `{
+					print newData: f"| `{mcRepr.replace("|", "\\|")}` | <a name=\"{
+						conf.name.lower()}\"></a>`{conf.name}` | `{
 						conf.defaultExtensionName
 					}` (`TPP_EXTNAME_{
 						conf.name.lsstrip("TPP_HAVE_")
@@ -320,7 +366,7 @@ function updatePartsConfigMd(filename: string) {
 					f"{prototypePrefix}TPP_HOOK_{name}{prototypeSuffix};\n"
 					f"```\n"
 					f"\n"
-					f"{formatDoc(doc.partition("\n@").first)}\n"
+					f"{formatDoc(filename, doc.partition("\n@").first)}\n"
 					f"\n"
 					f"<details><summary>Default</summary>\n"
 					f"\n"
@@ -339,7 +385,7 @@ function updatePartsConfigMd(filename: string) {
 			local foundAny = false;
 			for (local conf: getAvailableConfigs()) {
 				if (conf.kind == tag) {
-					newData << conf;
+					conf.printDesc(filename, newData);
 					foundAny = true;
 				}
 			}
@@ -360,15 +406,15 @@ function updatePartsConfigMd(filename: string) {
 
 
 #ifdef __MAIN__
-updatePartsConfigMd("config.md");
-updatePartsConfigMd("config-limits.md");
-updatePartsConfigMd("config-core.md");
-updatePartsConfigMd("config-conf.md");
-updatePartsConfigMd("config-tokens.md");
-updatePartsConfigMd("config-value.md");
-updatePartsConfigMd("config-warn.md");
-updatePartsConfigMd("config-hook.md");
-updatePartsConfigMd("config-common.md");
+updateConfigMd("config.md");
+updateConfigMd("config-limit.md");
+updateConfigMd("config-core.md");
+updateConfigMd("config-conf.md");
+updateConfigMd("config-token.md");
+updateConfigMd("config-value.md");
+updateConfigMd("config-warn.md");
+updateConfigMd("config-hook.md");
+updateConfigMd("config-common.md");
 #endif /* __MAIN__ */
 
 

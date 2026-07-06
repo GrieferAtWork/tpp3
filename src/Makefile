@@ -21,10 +21,10 @@
 
 CONFIG_MD := \
 	config.md \
-	config-limits.md \
+	config-limit.md \
 	config-core.md \
 	config-conf.md \
-	config-tokens.md \
+	config-token.md \
 	config-value.md \
 	config-warn.md \
 	config-hook.md \

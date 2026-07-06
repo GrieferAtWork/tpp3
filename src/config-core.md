@@ -41,7 +41,7 @@ Unicode support:
 
 - Use of a unicode traits database that is either user-supplied,
   a dummy (where all unicode character are allows in identifiers),
-  or built-in when `TPP_HAVE_BUILTIN_CTYPE_UNICODE` is enabled.
+  or built-in when <a href="#tpp_have_builtin_ctype_unicode">`TPP_HAVE_BUILTIN_CTYPE_UNICODE`</a> is enabled.
 - Automatic detection of `utf-8`, `utf-8-bom`, `utf-16[le/be]`, `utf-32[le/be]` in input files.<br/>
   NOTE: The Lexer assumes `utf-8` by default, unless it encounters an invalid `utf-8`
         byte sequence, at which point it will automatically downgrade to `ASCII`-only
@@ -352,7 +352,7 @@ TPP_HAVE_PRAGMA && TPP_HAVE_INCLUDE_PATH
 
 ## TPP_HAVE_STRING_WARN_MULTILINE
 
-Alter behavior of `TPP_HAVE_STRING_ALLOW_MULTILINE`
+Alter behavior of <a href="config-conf.md#tpp_have_string_allow_multiline">`TPP_HAVE_STRING_ALLOW_MULTILINE`</a>
 (that only takes effect when that feature is enabled):
 
 - Multi-line strings continue to be allowed (does not affect behavior)

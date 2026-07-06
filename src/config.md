@@ -22,14 +22,11 @@ The `TPP_PROFILE` itself has no impact on individual features. It merely defines
 
 Due to the large number of available configurations, they have been grouped onto the following categories:
 
-- [API Limits / Numeric configs](./config-limits.md)
+- [API Limits / Numeric configs](./config-limit.md)
 - [CORE API/System/Lexer Features](./config-core.md)
 - [Common configuration groups](./config-common.md)
 - [Feature configs](./config-conf.md)
-- [Token configs](./config-tokens.md)
+- [Token configs](./config-token.md)
 - [Value Configurations](./config-value.md)
 - [Warning configuration](./config-warn.md)
 - [Hook configuration](./config-hook.md)
-
-
-
