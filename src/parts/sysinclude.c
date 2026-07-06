@@ -29,8 +29,9 @@
 #include "sysinclude.h"
 
 /*[[[tpp-begin]]]*/
-#if TPP_HAVE_INCLUDE_PATH
 TPP_DECL_BEGIN
+
+#if TPP_HAVE_INCLUDE_PATH
 
 /* Initialize/finalize a given "tpp_include_path_list" */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
@@ -510,9 +511,9 @@ tpp_include_paths_pop(tpp_include_paths *tpp_restrict self) {
 }
 
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#endif /* TPP_HAVE_INCLUDE_PATH */
 
 TPP_DECL_END
-#endif /* TPP_HAVE_INCLUDE_PATH */
 /*[[[tpp-end]]]*/
 
 #endif /* !GUARD_TPP_SYSINCLUDE_C */

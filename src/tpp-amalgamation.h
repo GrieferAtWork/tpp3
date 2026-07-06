@@ -3786,8 +3786,6 @@ TPP_WARNING(TPP_W_CANNOT_POP_INCLUDE_PATHS, 1(TPP_WG_WARNING), 0(), ~,
 #undef TPP_WARNING_WITH_NUMBER_EX
 #undef TPP_MACRO
 #undef TPP_BUILTIN_MACRO
-/************************************************************************/
-
 #else /* TPP_DEFS */
 #define GUARD_TPP_AMALGAMATION_H 1
 
@@ -4467,8 +4465,6 @@ typedef struct {
 
 TPP_DECL_END
 /************************************************************************/
-
-/************************************************************************/
 /* File: parts/tuple.h                                                  */
 /************************************************************************/
 /* Preprocessor tuples:
@@ -4630,8 +4626,6 @@ TPP_DECL_END
 #define _TPP_TUPLE_FOREACH_(tuple, size, sep, item, _) _TPP_TUPLE_FOREACH_##size(tuple, sep, item, _)
 
 #define TPP_TUPLE_FOREACH_DUMMY_SEP(_, prev_index, prev_value, next_index, next_value) /* nothing */
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/config.h                                                 */
 /************************************************************************/
@@ -5002,8 +4996,9 @@ TPP_DECL_END
  * >> "foo\\\nbar" -- Produces a single token "foobar"
  * >> "+\\\n=" -- Produces a single token "+="
  *
- * This does NOT affect the line-continuation features of C++ // comments,
- * and multi-line macro definitions.
+ * This DOES affect the line-continuation features of C++ // comments,
+ * and multi-line macro definitions. When this is disabled, \-escaped
+ * line continuation won't work for those use-cases, either.
  * @detect: #if __TPP_COUNT_TOKENS("a\\\nb") == 1 */
 #ifndef TPP_HAVE_BSE
 #define TPP_HAVE_BSE (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fbse" */
@@ -8236,8 +8231,6 @@ TPP_DECL_END
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
-
-/************************************************************************/
 /* File: parts/error.h                                                  */
 /************************************************************************/
 TPP_DECL_BEGIN
@@ -8414,13 +8407,9 @@ TPP_DECL TPP_CONSTCALL TPP_RETNONNULL TPP_WUNUSED
 char const *TPPCALL tpp_strerror(tpp_errno error);
 #endif /* TPP_HAVE_STRERROR */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/ctype.h                                                  */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 /* You can override the builtin ctype matrix if you already have your own.
  * however yours should match ASCII expectations, especially when it comes
@@ -8661,13 +8650,9 @@ tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
                  tpp_char const *rhs, tpp_size rhs_len);
 #endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/string.h                                                 */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 typedef struct tpp_string {
 	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt);              /* Reference counter (must be atomic because of "_tpp_string_empty") */
@@ -8765,8 +8750,6 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self, tpp_size num_byt
 TPP_DECL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes);
 
 TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/file-io.h                                                */
 /************************************************************************/
@@ -8926,8 +8909,6 @@ tpp_io_normalize_filename(char *filename, char *after_last_sep,
 
 TPP_DECL_END
 /************************************************************************/
-
-/************************************************************************/
 /* File: parts/time.h                                                   */
 /************************************************************************/
 #if TPP_HAVE_TIME_API
@@ -8982,8 +8963,6 @@ TPP_INLINE tpp_errno TPPCALL tpp_tm_fromtime(tpp_tm *self, tpp_time *p_time) {
 TPP_DECL_END
 #endif /* !tpp_time */
 #endif /* TPP_HAVE_TIME_API */
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/expr.h                                                   */
 /************************************************************************/
@@ -9247,13 +9226,9 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 #endif /* !tpp_expr_value_pos */
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/token.h                                                  */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 
 typedef enum tpp_token_id {
@@ -10777,13 +10752,9 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes);
 #endif /* TPP_HAVE_TOKEN_ENCODESTRING */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/features.h                                               */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #undef TPP_HAVE_FEATURES
 #if (TPP_CONF_IS_FEAT(TPP_HAVE_BSE) ||                                     \
@@ -13557,13 +13528,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #define _tpp_lexer_has_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED(self) TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/file.h                                                   */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 typedef enum tpp_file_kind {
 	TPP_FILE_KIND_IO,      /* File found on hard-disk */
@@ -14565,13 +14532,9 @@ tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size);
 #endif /* !TPP_HAVE_UNICODE */
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/macro.h                                                  */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_MACROS
 
@@ -14810,13 +14773,9 @@ tpp_macro_getbuiltin(tpp_token_id id);
 
 #endif /* TPP_HAVE_CPP_MACROS */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/keyword.h                                                */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 struct tpp_macro;
@@ -15484,13 +15443,9 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/extensions.h                                             */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_EXTENSIONS
 typedef enum tpp_extension_id {
@@ -15601,13 +15556,9 @@ tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 #define tpp_extensions_get(self, id)       1
 #endif /* !TPP_HAVE_EXTENSIONS */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/warnings.h                                               */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_WARNING_NUMBERS
 #define TPP_WARNING_NUMBER_INVALID UINT_MAX
@@ -16004,8 +15955,6 @@ tpp_warnings_invoke_nofail(tpp_warnings const *tpp_restrict self, tpp_warning_id
 
 TPP_DECL_END
 /************************************************************************/
-
-/************************************************************************/
 /* File: parts/sysinclude.h                                             */
 /************************************************************************/
 #if TPP_HAVE_INCLUDE_PATH
@@ -16316,8 +16265,6 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *
 
 TPP_DECL_END
 #endif /* TPP_HAVE_INCLUDE_PATH */
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/hooks.h                                                  */
 /************************************************************************/
@@ -16818,13 +16765,9 @@ _tpp_lexer_builtin_parseexpr(struct tpp_lexer *tpp_restrict self,
 /************************************************************************/
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer.h                                                  */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #undef TPP_HAVE_LEXER_STATE_FLAGS
 #if (TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS || \
@@ -18849,8 +18792,6 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
 TPP_DECL_END
-/************************************************************************/
-
 
 #endif /* !TPP_DEFS */
 #endif /* !GUARD_TPP_AMALGAMATION_H */

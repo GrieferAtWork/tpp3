@@ -761,8 +761,6 @@
 #define tw_pushcnt                                          TPP_INTERNAL(tw_pushcnt)
 #define tw_prev                                             TPP_INTERNAL(tw_prev)
 
-/************************************************************************/
-
 #endif /* !TPP_BUILDING */
 
 /************************************************************************/
@@ -803,13 +801,9 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 }
 #endif /* TPP_HAVE_STRERROR */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/ctype.c                                                  */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_BUILTIN_CTYPE
 TPP_CONST_IMPL uint_least8_t const _tpp_ctype[256] = {
@@ -1033,13 +1027,9 @@ allocate_stack:
 }
 #endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/ctype-unicode.c                                          */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_BUILTIN_CTYPE_UNICODE
 static uint_least8_t const tpp_unicode_tab1[7172] = {
@@ -2180,13 +2170,9 @@ _tpp_unicode_traits(tpp_unichar uch) {
 }
 #endif /* TPP_HAVE_BUILTIN_CTYPE_UNICODE */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/string.c                                                 */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 TPP_IMPL TPP_WUNUSED tpp_string *TPPCALL
 tpp_string_trymalloc(tpp_size len) {
@@ -2314,13 +2300,9 @@ err_nomem:
 }
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/token-strtokenid.c                                       */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_STRTOKENID
 
@@ -3845,13 +3827,9 @@ tpp_strtokenid(tpp_token_id id) {
 }
 #endif /* TPP_HAVE_STRTOKENID */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/token-reprtokenid.c                                      */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_REPRTOKENID
 
@@ -5653,13 +5631,9 @@ tpp_reprtokenid(tpp_token_id id) {
 }
 #endif /* TPP_HAVE_REPRTOKENID */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/token-encodestring.c                                     */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_TOKEN_ENCODESTRING
 
@@ -5753,22 +5727,19 @@ again:
 #endif /* TPP_HAVE_TOKEN_ENCODESTRING */
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/file-io.c                                                */
 /************************************************************************/
+
 #ifdef tpp_io_handle_IS_BUILTIN
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+TPP_DECL_END
 
 #ifdef tpp_io_handle_IS_HANDLE
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <Windows.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_HANDLE */
 
 #ifdef tpp_io_handle_IS_int
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <fcntl.h>
 #ifdef _MSC_VER
 #include <io.h>
@@ -5781,20 +5752,18 @@ TPP_DECL_END
 #if !defined(tpp_io_compare_mtime) && TPP_HAVE_IO_COMPARE_MTIME
 #include <sys/stat.h>
 #endif /* !tpp_io_compare_mtime && TPP_HAVE_IO_COMPARE_MTIME */
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_int */
 
 #ifdef tpp_io_handle_IS_FILE
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_FILE */
 
-#if TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !TPP_HOST_NO_SYSTEM_INCLUDES && !defined(tpp_io_normalize_filename)
+#if TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !defined(tpp_io_normalize_filename)
 #include <Windows.h>
-#endif /* TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !TPP_HOST_NO_SYSTEM_INCLUDES && !tpp_io_normalize_filename */
+#endif /* TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !tpp_io_normalize_filename */
 
 TPP_DECL_BEGIN
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
 /* Open a file for reading
  * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
@@ -6192,16 +6161,11 @@ tpp_io_normalize_filename(char *filename, char *after_last_sep,
 }
 #endif /* !tpp_io_normalize_filename */
 #endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
-
-
-TPP_DECL_END
 #endif /* tpp_io_handle_IS_BUILTIN */
-/************************************************************************/
 
 /************************************************************************/
 /* File: parts/file.c                                                   */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 /* Width of \t as reported by `tpp_file_getlcinfo()' */
 #if TPP_TABSIZE < 0
@@ -7733,13 +7697,9 @@ tpp_file_popdummy(tpp_file *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/keyword.c                                                */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 /* Assert that "tpp_keyword" and "tpp_string" are binary-compatible. */
 #if TPP_HAVE_KEYWORD_ASSTRING
@@ -9967,13 +9927,9 @@ without_relative_to:
 #endif /* TPP_HAVE_JOINPATH */
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/builtins.c                                               */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_MACROS
 #define _TPP_BUILTIN_KEYWORD_tk_macro_DEF  tpp_macro *tk_macro;
@@ -10935,13 +10891,9 @@ tpp_macro_getbuiltin(tpp_token_id id) {
 #endif /* TPP_HAVE_CPP_MACROS */
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/macro.c                                                  */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_MACROS
 
@@ -11693,13 +11645,9 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 
 #endif /* TPP_HAVE_CPP_MACROS */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/extensions.c                                             */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_EXTENSIONS
 
@@ -11798,13 +11746,9 @@ err_nomem:
 #endif /* TPP_HAVE_EXTENSIONS_PUSH_POP */
 #endif /* TPP_HAVE_EXTENSIONS */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/features.c                                               */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_FEATURES
 TPP_CONST_IMPL tpp_features const tpp_features_default = {
@@ -12560,13 +12504,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 };
 #endif /* TPP_HAVE_FEATURES */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/warnings.c                                               */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_WARNINGS
 
@@ -13043,14 +12983,11 @@ tpp_warnings_invoke_nofail(tpp_warnings const *tpp_restrict self, tpp_warning_id
 
 #endif /* TPP_HAVE_WARNINGS */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/sysinclude.c                                             */
 /************************************************************************/
+
 #if TPP_HAVE_INCLUDE_PATH
-TPP_DECL_BEGIN
 
 /* Initialize/finalize a given "tpp_include_path_list" */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
@@ -13530,15 +13467,11 @@ tpp_include_paths_pop(tpp_include_paths *tpp_restrict self) {
 }
 
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
-
-TPP_DECL_END
 #endif /* TPP_HAVE_INCLUDE_PATH */
-/************************************************************************/
 
 /************************************************************************/
 /* File: parts/lexer.c                                                  */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 /* Assert that config macros work */
 TPP_STATIC_ASSERT(TPP_CONF_1 && TPP_CONF_MAYBE_1(TPP_CONF_1));
@@ -14195,19 +14128,15 @@ _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-warn.c                                             */
 /************************************************************************/
-#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
-#include <stdio.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
-#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
+#if !TPP_HOST_NO_SYSTEM_INCLUDES && (TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK)
+TPP_DECL_END
+#include <stdio.h>
 TPP_DECL_BEGIN
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES && (TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK) */
 
 #if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
 TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes) {
@@ -14935,14 +14864,9 @@ tpp_lexer_warn_nonempty_ifdef(tpp_lexer *tpp_restrict self) {
 }
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 
-
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/expr.c                                                   */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_BUILTIN_EXPR_VALUE
 
@@ -16172,13 +16096,9 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 
 #endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-yieldraw.c                                         */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_UNICODE
 
@@ -20886,13 +20806,9 @@ return_error:
 #undef NEED_tpp_lexer_seek_end_of_cxx_raw_string
 #undef NEED_tpp_lexer_seek_end_of_raw_string
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-seek-rparen.c                                      */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_SEEKPP_RPAREN
 
@@ -21629,13 +21545,9 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
 
 #endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-pp-define.c                                        */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_DIRECTIVES && TPP_HAVE_CPP_DEFINE
 
@@ -23080,13 +22992,9 @@ err_nomem:
 
 #endif /* TPP_HAVE_CPP_DIRECTIVES && TPP_HAVE_CPP_DEFINE */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-pp-pragma.c                                        */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_PRAGMA
 
@@ -25058,13 +24966,9 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 }
 #endif /* TPP_HAVE_PRAGMA */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-skipraw.c                                          */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_TRYSKIP_RAW
 
@@ -25189,13 +25093,9 @@ again_yield_nextfile:
 #endif /* TPP_HAVE_LEXER_TRYSKIP_RAW */
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-decodeint.c                                        */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 /* Decode the current token (which should be TPP_TOK_INT) into an integer
  * @return: TPP_EOK:        Success
@@ -25579,13 +25479,9 @@ tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
 }
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-yieldpp.c                                          */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_TRIGRAPHS && TPP_HAVE_DIGRAPHS
 #define tpp_is_start_of_hash(ch) ((ch) == '#' || (ch) == '?' || (ch) == '%')
@@ -28597,13 +28493,9 @@ again:
 	return result;
 }
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-yield-macro.c                                      */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_MACROS
 
@@ -29406,13 +29298,9 @@ err_nomem:
 }
 #endif /* TPP_HAVE_CPP_MACROS */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-yield.c                                            */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_MACROS
 
@@ -32017,13 +31905,9 @@ tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 
 #endif /* TPP_HAVE_LEXER_SKIP */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-yield-include.c                                    */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
@@ -32626,13 +32510,9 @@ tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-decodestring.c                                     */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_DECODESTRING
 
@@ -34158,13 +34038,9 @@ tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR */
 
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-parseexpr.c                                        */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -35589,13 +35465,9 @@ _tpp_lexer_builtin_parseexpr(struct tpp_lexer *tpp_restrict self,
 }
 #endif /* TPP_HAVE_BUILTIN_PARSEEXPR_HOOK */
 
-TPP_DECL_END
-/************************************************************************/
-
 /************************************************************************/
 /* File: parts/lexer-dump.c                                             */
 /************************************************************************/
-TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS
 
@@ -36259,10 +36131,6 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 }
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
-
 TPP_DECL_END
-/************************************************************************/
-
-
 #endif /* !GUARD_TPP_AMALGAMATION_C */
 /* clang-format on */

@@ -67,6 +67,47 @@ function getFile(filename: string): Bytes {
 	return data;
 }
 
+function removeUnnecessaryDeclBlocks(bytes: Bytes): Bytes {
+	local i = 0;
+	for (;;) {
+		local probe, probeEnd = bytes.refind(r"\bTPP_DECL_END\b", i)...;
+		if (probe is none)
+			break;
+		local nextBegin, nextEnd = bytes.refind(r"\bTPP_DECL_BEGIN\b", probeEnd)...;
+		if (nextBegin is none)
+			break;
+		local between = bytes[probeEnd:nextBegin];
+		while (between) {
+			between = between.strip();
+			if (between.startswith("//")) {
+				local end = between.find("\n");
+				if (end < 0)
+					break;
+				between = between[end + 1:];
+			} else if (between.startswith("/*")) {
+				local end = between.find("*/", 2);
+				if (end < 0)
+					break;
+				between = between[end + 2:];
+			} else {
+				break;
+			}
+		}
+		if (!between) {
+			while (bytes.isspace(probeEnd))
+				++probeEnd;
+			while (bytes.isspace(nextBegin - 1))
+				--nextBegin;
+			bytes = bytes[:nextBegin] + bytes[nextEnd:];
+			bytes = bytes[:probe] + bytes[probeEnd:];
+			nextBegin += nextEnd - nextBegin;
+			nextBegin += probeEnd - probe;
+		}
+		i = nextBegin;
+	}
+	return bytes;
+}
+
 function makeAmalgamation(inputFilename: string, outputFilename: string, TPP_AMALGAMATION_H: string) {
 	local data: Bytes;
 	with (local fp = File.open(inputFilename, "rb"))
@@ -88,15 +129,11 @@ function makeAmalgamation(inputFilename: string, outputFilename: string, TPP_AMA
 		             f"/************************************************************************/\n");
 		writer.write(getFile(absFilename)
 			.rereplace(r"\bTPP_CONFIG_DEFS_FILENAME\b", TPP_AMALGAMATION_H));
-		writer.write(f"\n/************************************************************************/\n"
-		             f"");
 		i = incEnd + 1;
 	}
 	writer.write(data[i:]);
 	local outData = writer.bytes;
-	/* TODO: Remove "TPP_DECL_END ... TPP_DECL_BEGIN" blocks such that only the
-	 *       "..." part is kept (so-long as the "..." part contains only comments) */
-
+	outData = removeUnnecessaryDeclBlocks(outData);
 	with (local fp = File.open(outputFilename, "wb"))
 		fp.write(outData);
 }

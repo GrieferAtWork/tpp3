@@ -27,16 +27,17 @@
 #include "file-io.h"
 
 /*[[[tpp-begin]]]*/
+TPP_DECL_BEGIN
+
 #ifdef tpp_io_handle_IS_BUILTIN
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+TPP_DECL_END
 
 #ifdef tpp_io_handle_IS_HANDLE
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <Windows.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_HANDLE */
 
 #ifdef tpp_io_handle_IS_int
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <fcntl.h>
 #ifdef _MSC_VER
 #include <io.h>
@@ -49,20 +50,18 @@
 #if !defined(tpp_io_compare_mtime) && TPP_HAVE_IO_COMPARE_MTIME
 #include <sys/stat.h>
 #endif /* !tpp_io_compare_mtime && TPP_HAVE_IO_COMPARE_MTIME */
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_int */
 
 #ifdef tpp_io_handle_IS_FILE
-#if !TPP_HOST_NO_SYSTEM_INCLUDES
 #include <stdio.h>
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #endif /* tpp_io_handle_IS_FILE */
 
-#if TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !TPP_HOST_NO_SYSTEM_INCLUDES && !defined(tpp_io_normalize_filename)
+#if TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !defined(tpp_io_normalize_filename)
 #include <Windows.h>
-#endif /* TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !TPP_HOST_NO_SYSTEM_INCLUDES && !tpp_io_normalize_filename */
+#endif /* TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !tpp_io_normalize_filename */
 
 TPP_DECL_BEGIN
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
 /* Open a file for reading
  * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
@@ -460,10 +459,9 @@ tpp_io_normalize_filename(char *filename, char *after_last_sep,
 }
 #endif /* !tpp_io_normalize_filename */
 #endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
-
+#endif /* tpp_io_handle_IS_BUILTIN */
 
 TPP_DECL_END
-#endif /* tpp_io_handle_IS_BUILTIN */
 /*[[[tpp-end]]]*/
 
 #endif /* !GUARD_TPP_FILE_IO_C */

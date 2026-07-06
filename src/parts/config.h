@@ -416,8 +416,9 @@
  * >> "foo\\\nbar" -- Produces a single token "foobar"
  * >> "+\\\n=" -- Produces a single token "+="
  *
- * This does NOT affect the line-continuation features of C++ // comments,
- * and multi-line macro definitions.
+ * This DOES affect the line-continuation features of C++ // comments,
+ * and multi-line macro definitions. When this is disabled, \-escaped
+ * line continuation won't work for those use-cases, either.
  * @detect: #if __TPP_COUNT_TOKENS("a\\\nb") == 1 */
 #ifndef TPP_HAVE_BSE
 #define TPP_HAVE_BSE (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fbse" */

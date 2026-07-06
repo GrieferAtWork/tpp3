@@ -36,6 +36,8 @@ static TPP_FORMATPRINTER_DEFINE(dump_defs_printer, arg, text, num_bytes) {
 }
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
+/* TODO: Properly write this one out (with all the bells n' whistles of GCC's CPP) */
+
 int main(int argc, char *argv[]) {
 	int result = 1;
 	tpp_lexer lexer;
@@ -75,7 +77,7 @@ int main(int argc, char *argv[]) {
 				tok = TPP_TOK_OFERR(error);
 			break;
 		}
-#if 0
+#if 1
 		printf("%.*s",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
