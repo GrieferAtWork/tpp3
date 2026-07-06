@@ -42,6 +42,32 @@ TPP_DECL_BEGIN
 #endif /* !tpp_lexer_foreach_include_path_flags__PARAM */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
+/* Possible values for `tpp_hooks_call_system_include_path(when)' */
+#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+typedef enum tpp_hook_system_include_path_when {
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_FIRST,         /* Called at the very start */
+#if TPP_HAVE_INCLUDE_PATH
+#if TPP_HAVE_INCLUDE_PATH_QUOTE
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_QUOTE,  /* Called for '"'-paths after trying to import relative to current file, but before "tip_quote_list" is checked */
+#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSTEM, /* Called before "tip_system_list" is checked */
+#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSHDR, /* Called before "tip_syshdr_list" is checked */
+#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
+#endif /* TPP_HAVE_INCLUDE_PATH */
+#if TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_CONFIG, /* Called before "TPP_CONFIG_SYSTEM_INCLUDE_PATH" is checked */
+#endif /* TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
+#if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_AFTER,  /* Called before "tip_after_list" is checked */
+#endif /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER */
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_LAST,          /* Called at the very end */
+} tpp_hook_system_include_path_when;
+#endif /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
+
+
+
+
 /*[[[deemon
 import HOOKS from .config;
 
@@ -276,7 +302,7 @@ typedef struct tpp_hooks {
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_ident_sccs))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
 
-	/* >> tpp_errno (TPPCALL *th_system_include_path)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+	/* >> tpp_errno (TPPCALL *th_system_include_path)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
 	 * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
 	 * points during the process of enumerating include paths. This callback is
 	 * then allowed to enumerate some additional include paths that may exist, but
@@ -289,7 +315,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:    I/O error
 	 * @return: TPP_ENOMEM: Out of memory */
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
-	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_include_path))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg); /* [0..1] */
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_include_path))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
 	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
@@ -611,31 +637,6 @@ typedef struct tpp_hooks {
 	       _tpp_hooks_init_system_include_path(self) \
 	       _tpp_hooks_init_unknown_string_escape(self))
 /*[[[end]]]*/
-
-
-/* Possible values for `tpp_hooks_call_system_include_path(when)' */
-#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
-enum {
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_FIRST,         /* Called at the very start */
-#if TPP_HAVE_INCLUDE_PATH
-#if TPP_HAVE_INCLUDE_PATH_QUOTE
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_QUOTE,  /* Called for '"'-paths after trying to import relative to current file, but before "tip_quote_list" is checked */
-#endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSTEM, /* Called before "tip_system_list" is checked */
-#if TPP_HAVE_INCLUDE_PATH_SYSHDR
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSHDR, /* Called before "tip_syshdr_list" is checked */
-#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
-#endif /* TPP_HAVE_INCLUDE_PATH */
-#if TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_CONFIG, /* Called before "TPP_CONFIG_SYSTEM_INCLUDE_PATH" is checked */
-#endif /* TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
-#if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_AFTER,  /* Called before "tip_after_list" is checked */
-#endif /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER */
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_LAST,          /* Called at the very end */
-};
-#endif /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
-
 
 
 /************************************************************************/

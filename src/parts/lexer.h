@@ -489,7 +489,7 @@ for (local doc, name,
 #define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_ident_sccs */
 
-/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_system_include_path)(tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_system_include_path)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but

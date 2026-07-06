@@ -2691,7 +2691,7 @@ local HOOKS = {
 		"SYSTEM_INCLUDE_PATH",
 		"(TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg)", { "lexer", "mode", "when", "cb", "arg" },
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg)", { "lexer", "mode", "when", "cb", "arg" },
 		"TPP_ENOENT"
 	},
 
@@ -2992,7 +2992,7 @@ for (local doc, name,
 #error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
 
-/* >> tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer *tpp_restrict self, tpp_token_id mode, unsigned int when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+/* >> tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_include_path()' at diffrent
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but
