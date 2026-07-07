@@ -208,4 +208,22 @@ TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROF
 </details>
 
 
+## TPP_HAVE_RAISE_LEXERROR_HOOK
+
+```c
+tpp_errno (TPPCALL *TPP_HOOK_RAISE_LEXERROR)(tpp_lexer *tpp_restrict self);
+```
+
+Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
+This hook can be used to do additional state changes that may be necessary by the
+hosting application in order to handle the resulting `TPP_ELEXERROR`
+
+<details><summary>Default</summary>
+
+```c
+TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL
+```
+</details>
+
+
 <!--END:hooks-->

@@ -5903,7 +5903,6 @@ TPP_DECL_END
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
- * Support for: #define chr(x) #@x
  * @detect: #define str(x) #@x
  *          #if __TPP_COUNT_TOKENS(str(a b)) == 1 */
 #ifndef TPP_HAVE_CHARIZE_MACRO_ARGUMENT
@@ -5959,9 +5958,11 @@ TPP_DECL_END
 /************************************************************************/
 
 /* Support for: #pragma push_macro() / #pragma pop_macro()
- * @detect: #define FOO 42
- *          #pragma push_macro(undef, "FOO")
- *          #ifndef FOO */
+ * @detect: #define TEST 42
+ *          #pragma push_macro("TEST")
+ *          #undef TEST
+ *          #pragma pop_macro("TEST")
+ *          #ifdef TEST */
 #ifndef TPP_HAVE_PRAGMA_PUSH_MACRO
 #define TPP_HAVE_PRAGMA_PUSH_MACRO ((TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-push-macro" */
 #endif /* !TPP_HAVE_PRAGMA_PUSH_MACRO */
@@ -7743,6 +7744,42 @@ TPP_DECL_END
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' is defined, but 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_STRING_ESCAPE && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
+
+/* >> tpp_errno (TPPCALL *TPP_HOOK_RAISE_LEXERROR)(tpp_lexer *tpp_restrict self);
+ * Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
+ * This hook can be used to do additional state changes that may be necessary by the
+ * hosting application in order to handle the resulting `TPP_ELEXERROR`
+ * @return: TPP_EOK: Have `tpp_lexer_warnf()` still return `TPP_ELEXERROR`
+ * @return: * :      Make `tpp_lexer_warnf()` return this instead of `TPP_ELEXERROR` */
+#ifndef TPP_HAVE_RAISE_LEXERROR_HOOK
+#ifdef TPP_HOOK_RAISE_LEXERROR
+#define TPP_HAVE_RAISE_LEXERROR_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_RAISE_LEXERROR */
+#define TPP_HAVE_RAISE_LEXERROR_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_RAISE_LEXERROR */
+#endif /* !TPP_HAVE_RAISE_LEXERROR_HOOK */
+#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_RAISE_LEXERROR)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_RAISE_LEXERROR_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_RAISE_LEXERROR' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_RAISE_LEXERROR_HOOK
+#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_RAISE_LEXERROR)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_RAISE_LEXERROR_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_RAISE_LEXERROR' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_RAISE_LEXERROR_HOOK
+#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_RAISE_LEXERROR_HOOK /* There is no builtin version */
+#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_RAISE_LEXERROR_HOOK /* There is no builtin version */
+#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_RAISE_LEXERROR) && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_RAISE_LEXERROR' is defined, but 'TPP_HAVE_RAISE_LEXERROR_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_RAISE_LEXERROR && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 
 /************************************************************************/
 /************************************************************************/
@@ -16748,14 +16785,15 @@ typedef enum tpp_hook_system_include_path_when {
 
 
 #undef TPP_HAVE_HOOKS
-#if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) ||          \
-     TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) ||          \
-     TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) ||            \
-     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) ||       \
-     TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) ||       \
-     TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) ||           \
-     TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) ||  \
-     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK))
+#if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) ||           \
+     TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) ||           \
+     TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) ||             \
+     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) ||        \
+     TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) ||        \
+     TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) ||            \
+     TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) ||   \
+     TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) || \
+     TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK))
 #define TPP_HAVE_HOOKS 1
 #else /* ... */
 #define TPP_HAVE_HOOKS 0
@@ -16888,6 +16926,16 @@ typedef struct tpp_hooks {
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 	tpp_ssize (TPPCALL *TPP_INTERNAL(th_unknown_string_escape))(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_raise_lexerror)(struct tpp_lexer *tpp_restrict self);
+	 * Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
+	 * This hook can be used to do additional state changes that may be necessary by the
+	 * hosting application in order to handle the resulting `TPP_ELEXERROR`
+	 * @return: TPP_EOK: Have `tpp_lexer_warnf()` still return `TPP_ELEXERROR`
+	 * @return: * :      Make `tpp_lexer_warnf()` return this instead of `TPP_ELEXERROR` */
+#if TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_raise_lexerror))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 } tpp_hooks;
 #endif /* TPP_HAVE_HOOKS */
 
@@ -17174,6 +17222,33 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_unknown_string_escape(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 
+/* Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
+ * This hook can be used to do additional state changes that may be necessary by the
+ * hosting application in order to handle the resulting `TPP_ELEXERROR`
+ * @return: TPP_EOK: Have `tpp_lexer_warnf()` still return `TPP_ELEXERROR`
+ * @return: * :      Make `tpp_lexer_warnf()` return this instead of `TPP_ELEXERROR` */
+#if TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK)
+#define tpp_hooks_call_raise_lexerror(self, lexer) \
+	((self)->TPP_INTERNAL(th_raise_lexerror) ? (*(self)->TPP_INTERNAL(th_raise_lexerror))(lexer) : TPP_ELEXERROR)
+#define tpp_hooks_get_raise_lexerror(self)    (self)->TPP_INTERNAL(th_raise_lexerror)
+#define tpp_hooks_set_raise_lexerror(self, v) (void)((self)->TPP_INTERNAL(th_raise_lexerror) = (v))
+#define tpp_hooks_reset_raise_lexerror(self)  (void)((self)->TPP_INTERNAL(th_raise_lexerror) = _TPP_HOOKS_DEFAULT_RAISE_LEXERROR)
+#define _tpp_hooks_init_raise_lexerror(self)  , (self)->TPP_INTERNAL(th_raise_lexerror) = _TPP_HOOKS_DEFAULT_RAISE_LEXERROR
+#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_RAISE_LEXERROR)
+#define _TPP_HOOKS_DEFAULT_RAISE_LEXERROR (&TPP_HOOK_RAISE_LEXERROR)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_RAISE_LEXERROR NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK) */
+#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_raise_lexerror(self, lexer) \
+	TPP_HOOK_RAISE_LEXERROR(lexer)
+#else /*  */
+#define tpp_hooks_call_raise_lexerror(self, lexer) TPP_ELEXERROR
+#endif /* ... */
+#define _tpp_hooks_init_raise_lexerror(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK) */
+
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
 	(void)(0 _tpp_hooks_init_warnprinter(self) \
@@ -17183,7 +17258,8 @@ typedef struct tpp_hooks {
 	       _tpp_hooks_init_new_dependency(self) \
 	       _tpp_hooks_init_ident_sccs(self) \
 	       _tpp_hooks_init_system_include_path(self) \
-	       _tpp_hooks_init_unknown_string_escape(self))
+	       _tpp_hooks_init_unknown_string_escape(self) \
+	       _tpp_hooks_init_raise_lexerror(self))
 
 
 /************************************************************************/
@@ -17674,6 +17750,20 @@ typedef struct tpp_lexer {
 #define tpp_lexer_sethook_unknown_string_escape(self, v) tpp_hooks_set_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_unknown_string_escape(self)  tpp_hooks_reset_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_unknown_string_escape */
+
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_raise_lexerror)(tpp_lexer *tpp_restrict self);
+ * Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
+ * This hook can be used to do additional state changes that may be necessary by the
+ * hosting application in order to handle the resulting `TPP_ELEXERROR`
+ * @return: TPP_EOK: Have `tpp_lexer_warnf()` still return `TPP_ELEXERROR`
+ * @return: * :      Make `tpp_lexer_warnf()` return this instead of `TPP_ELEXERROR` */
+#define tpp_lexer_callhook_raise_lexerror(self) \
+	tpp_hooks_call_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self)
+#ifdef tpp_hooks_set_raise_lexerror
+#define tpp_lexer_gethook_raise_lexerror(self)    tpp_hooks_get_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_raise_lexerror(self, v) tpp_hooks_set_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_raise_lexerror(self)  tpp_hooks_reset_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_raise_lexerror */
 
 
 

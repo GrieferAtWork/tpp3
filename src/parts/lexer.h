@@ -535,6 +535,20 @@ for (local doc, name,
 #define tpp_lexer_sethook_unknown_string_escape(self, v) tpp_hooks_set_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_unknown_string_escape(self)  tpp_hooks_reset_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_unknown_string_escape */
+
+/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_raise_lexerror)(tpp_lexer *tpp_restrict self);
+ * Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
+ * This hook can be used to do additional state changes that may be necessary by the
+ * hosting application in order to handle the resulting `TPP_ELEXERROR`
+ * @return: TPP_EOK: Have `tpp_lexer_warnf()` still return `TPP_ELEXERROR`
+ * @return: * :      Make `tpp_lexer_warnf()` return this instead of `TPP_ELEXERROR` */
+#define tpp_lexer_callhook_raise_lexerror(self) \
+	tpp_hooks_call_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self)
+#ifdef tpp_hooks_set_raise_lexerror
+#define tpp_lexer_gethook_raise_lexerror(self)    tpp_hooks_get_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_raise_lexerror(self, v) tpp_hooks_set_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_raise_lexerror(self)  tpp_hooks_reset_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_raise_lexerror */
 /*[[[end]]]*/
 
 

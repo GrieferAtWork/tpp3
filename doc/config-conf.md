@@ -1977,7 +1977,6 @@ chr('foo')  // Expands to: ''foo'' -- oops; traditional macros can't do this
 ```
 
 NOTE: affects behavior of macros at the *TIME OF DEFINITION*
-Support for: #define chr(x) #@x
 @detect: #define str(x) #@x
          #if __TPP_COUNT_TOKENS(str(a b)) == 1
 
@@ -2066,9 +2065,11 @@ Extension:
 ## TPP_HAVE_PRAGMA_PUSH_MACRO
 
 Support for: #pragma push_macro() / #pragma pop_macro()
-@detect: #define FOO 42
-         #pragma push_macro(undef, "FOO")
-         #ifndef FOO
+@detect: #define TEST 42
+         #pragma push_macro("TEST")
+         #undef TEST
+         #pragma pop_macro("TEST")
+         #ifdef TEST
 
 <details><summary>Details</summary>
 

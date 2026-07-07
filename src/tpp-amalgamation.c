@@ -599,6 +599,7 @@
 #define th_ident_sccs                                       TPP_INTERNAL(th_ident_sccs)
 #define th_system_include_path                              TPP_INTERNAL(th_system_include_path)
 #define th_unknown_string_escape                            TPP_INTERNAL(th_unknown_string_escape)
+#define th_raise_lexerror                                   TPP_INTERNAL(th_raise_lexerror)
 #define tmpe_macro                                          TPP_INTERNAL(tmpe_macro)
 #define tmpe_count                                          TPP_INTERNAL(tmpe_count)
 #define tmps_cnt                                            TPP_INTERNAL(tmps_cnt)
@@ -14766,14 +14767,15 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
 done:
-#ifdef TPP_CONFIG_RAISE_LEXERROR
+#if TPP_HAVE_RAISE_LEXERROR_HOOK
 	if (result == TPP_ELEXERROR) {
 		/* Allow users to define a hook to do additional
 		 * processing when a lexer error should be raised */
-		/* TODO: This should be standard hook instead of this weird #ifdef-macro! */
-		TPP_CONFIG_RAISE_LEXERROR;
+		result = tpp_lexer_callhook_raise_lexerror(self);
+		if (result == TPP_EOK)
+			result = TPP_ELEXERROR;
 	}
-#endif /* TPP_CONFIG_RAISE_LEXERROR */
+#endif /* TPP_HAVE_RAISE_LEXERROR_HOOK */
 	return result;
 err_printer:
 	return TPP_EWARNPRINT;
