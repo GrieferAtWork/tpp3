@@ -476,7 +476,7 @@
 
 /* Support for `\`-escaped line continuation: when a line ends with a `\` character
  * that is immediately (but see `TPP_HAVE_BSE_WHITESPACE`) followed by a linefeed,
- * that that linefeed is never yielded, and a potential multi-character token is
+ * then that linefeed is never yielded, and a potential multi-character token is
  * continued:
  * ```c
  * foo\ 
@@ -485,19 +485,20 @@
  * =   // Produces a single token "+="
  * ```
  *
- * This DOES affect the line-continuation features of C++ `//` comments,
- * and multi-line macro definitions. When this is disabled, `\`-escaped
- * line continuation won't work for those use-cases, either.
+ * This DOES affect the line-continuation features of `#define` macro definitions.
+ * When this is disabled, `\`-escaped line continuation can't be used there, either.
  * @detect: `#if __TPP_COUNT_TOKENS("a\\\nb") == 1` */
 #ifndef TPP_HAVE_BSE
 #define TPP_HAVE_BSE (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fbse" */
 #endif /* !TPP_HAVE_BSE */
 
-/* Extension to `TPP_HAVE_BSE`: the `\` backslash is allowed to be followed by extra
- * whitespace preceding the actual linefeed
+/* Extension to `TPP_HAVE_BSE`: the `\` character is allowed to be followed by extra
+ * whitespace preceding the actual linefeed:
+ * ```c
+ * #define multi_line line1 \␣␣␣
+ *                    line2
+ * ```
  *
- * This DOES affect the line-continuation features of C++ `//` comments, and
- * multi-line macro definitions.
  * @detect: `#if __TPP_COUNT_TOKENS("a\\ \nb") == 1` */
 #ifndef TPP_HAVE_BSE_WHITESPACE
 #define TPP_HAVE_BSE_WHITESPACE (TPP_HAVE_BSE ? TPP_CONF_EXT1 : 0) /* "-fbse-whitespace" */
@@ -505,18 +506,33 @@
 
 /* Support for `\uABCD` and `\U01234567` in identifier names (will be
  * replaced with effective UTF-8 encodings when translated to keywords)
+ * ```c
+ * int identifier\u0020with\u0020whitespace = 42;
+ * // Same as:
+ * int __TPP_IDENTIFIER("identifier with whitespace") = 42;
+ * ```
+ * 
  * @detect: `#if __TPP_COUNT_TOKENS("a\\u1234b") == 1` */
 #ifndef TPP_HAVE_ESCAPE_IN_IDENTIFIERS
 #define TPP_HAVE_ESCAPE_IN_IDENTIFIERS (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
 #endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 
-/* Support for `\e` (for `U+001B`) escape sequences
+/* Support for `\e` (for `U+001B`) escape sequences:
+ * ```c
+ * printf("Error: \e[31m%d\e[0m");
+ * ```
+ *
  * @detect: N/A */
 #ifndef TPP_HAVE_ESCAPE_E_IN_STRINGS
 #define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1: 0) /* "-fescape-e-in-strings" */
 #endif /* !TPP_HAVE_ESCAPE_E_IN_STRINGS */
 
-/* Support for `\s` (for `U+0020`) escape sequences
+/* Support for `\s` (for `U+0020`) escape sequences:
+ * ```java
+ * System.out.println("""
+ *     This line has visible trailing whitespace:    \s
+ *     """);
+ * ```
  * @detect: N/A */
 #ifndef TPP_HAVE_ESCAPE_S_IN_STRINGS
 #define TPP_HAVE_ESCAPE_S_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fescape-s-in-strings" */

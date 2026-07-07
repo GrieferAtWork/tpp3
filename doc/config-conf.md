@@ -15,7 +15,7 @@ Every one of these config macros can be defined as one of the following values:
 
 Support for `\`-escaped line continuation: when a line ends with a `\` character
 that is immediately (but see [`TPP_HAVE_BSE_WHITESPACE`](config-conf.md#tpp_have_bse_whitespace)) followed by a linefeed,
-that that linefeed is never yielded, and a potential multi-character token is
+then that linefeed is never yielded, and a potential multi-character token is
 continued:
 
 ```c
@@ -25,9 +25,8 @@ bar // Produces a single token "foobar"
 =   // Produces a single token "+="
 ```
 
-This DOES affect the line-continuation features of C++ `//` comments,
-and multi-line macro definitions. When this is disabled, `\`-escaped
-line continuation won't work for those use-cases, either.
+This DOES affect the line-continuation features of `#define` macro definitions.
+When this is disabled, `\`-escaped line continuation can't be used there, either.
 @detect: `#if __TPP_COUNT_TOKENS("a\\\nb") == 1`
 
 <details><summary>Details</summary>
@@ -47,11 +46,14 @@ Extension:
 
 ## TPP_HAVE_BSE_WHITESPACE
 
-Extension to [`TPP_HAVE_BSE`](config-conf.md#tpp_have_bse): the `\` backslash is allowed to be followed by extra
-whitespace preceding the actual linefeed
+Extension to [`TPP_HAVE_BSE`](config-conf.md#tpp_have_bse): the `\` character is allowed to be followed by extra
+whitespace preceding the actual linefeed:
 
-This DOES affect the line-continuation features of C++ `//` comments, and
-multi-line macro definitions.
+```c
+#define multi_line line1 \␣␣␣
+                   line2
+```
+
 @detect: `#if __TPP_COUNT_TOKENS("a\\ \nb") == 1`
 
 <details><summary>Details</summary>
@@ -73,6 +75,12 @@ Extension:
 
 Support for `\uABCD` and `\U01234567` in identifier names (will be
 replaced with effective UTF-8 encodings when translated to keywords)
+```c
+int identifier\u0020with\u0020whitespace = 42;
+// Same as:
+int __TPP_IDENTIFIER("identifier with whitespace") = 42;
+```
+
 @detect: `#if __TPP_COUNT_TOKENS("a\\u1234b") == 1`
 
 <details><summary>Details</summary>
@@ -92,7 +100,12 @@ Extension:
 
 ## TPP_HAVE_ESCAPE_E_IN_STRINGS
 
-Support for `\e` (for `U+001B`) escape sequences
+Support for `\e` (for `U+001B`) escape sequences:
+
+```c
+printf("Error: \e[31m%d\e[0m");
+```
+
 @detect: N/A
 
 <details><summary>Details</summary>
@@ -112,7 +125,13 @@ Extension:
 
 ## TPP_HAVE_ESCAPE_S_IN_STRINGS
 
-Support for `\s` (for `U+0020`) escape sequences
+Support for `\s` (for `U+0020`) escape sequences:
+
+```java
+System.out.println("""
+    This line has visible trailing whitespace:    \s
+    """);
+```
 @detect: N/A
 
 <details><summary>Details</summary>

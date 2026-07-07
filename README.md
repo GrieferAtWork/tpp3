@@ -4,9 +4,9 @@ TPP is a tiny (single source file) C Preprocessor, meant as a low-level backend 
 
 ## Basic design
 
-TPP is a **TEXT-BASED** preprocessor (as opposed to token-based). If you want, it also lets you disable pretty much everything that makes it a preprocessor in the conventional sense, allowing you to strip it down to a fairly basic tokenizer -- **EVERYTHING IS CONFIGURABLE**.
+TPP is a *text-based* preprocessor (as opposed to token-based). If you want, it also lets you disable pretty much everything that makes it a preprocessor in the conventional sense, allowing you to strip it down to a fairly basic tokenizer -- *everything* is configurable.
 
-TPP is **NOT** exclusive to C/C++ -- it has builtin support for lots of different token types normally only found in other languages (e.g. java `""" block strings """`, or SQL `-- comments`). Like all other features, every supported token can be individually configured at compile-time and/or runtime.
+TPP is *not* exclusive to C/C++ -- it has builtin support for lots of different token types normally only found in other languages (e.g. java `""" block strings """`, or SQL `-- comments`). Like all other features, every supported token can be individually configured at compile-time and/or runtime.
 
 TPP includes fully unicode support (and not just in strings), based on `XID_Start` and `XID_Continue`:
 
