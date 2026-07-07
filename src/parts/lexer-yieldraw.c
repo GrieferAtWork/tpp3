@@ -1948,6 +1948,7 @@ switch_on_ch:
 	case '<': {
 #if TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE || TPP_HAVE_DIGRAPHS
 		if (!tpp_lexer_has(self, DIGRAPHS) &&
+		    !tpp_lexer_has(self, TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE) &&
 /*[[[deemon (printHasNone from ".config")("<");]]]*/
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS) &&
 		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_LANGLE) &&
@@ -1984,6 +1985,42 @@ switch_on_ch:
 			}
 		} else
 #endif /* TPP_HAVE_DIGRAPHS */
+#if TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE
+		if (ch2 == '!') {
+			if (tpp_lexer_has(self, TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)) {
+				read_ch2();
+				if (ch2 != '-')
+					break;
+				read_ch2();
+				if (ch2 != '-')
+					break;
+				for (;;) {
+					read_ch2();
+continue_html_comment_with_ch2:
+					if (ch2 == 0 && pos >= file->tf_end) {
+#if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
+						error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
+						                           TPP_W_COMMENT_TERMINATED_BY_EOF);
+						if (TPP_ISERR(error))
+							goto return_error;
+#endif /* TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
+						break;
+					}
+					if (ch2 != '-')
+						continue;
+					read_ch2();
+					if (ch2 != '-')
+						goto continue_html_comment_with_ch2;
+					read_ch2();
+					if (ch2 != '>')
+						goto continue_html_comment_with_ch2;
+					break;
+				}
+				result = TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE; /* "<!-- like this one! -->" */
+				goto set_result;
+			}
+		} else
+#endif /* TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")("<");]]]*/
 #if TPP_HAVE_TPP_TOK_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
 		if (ch2 == '-') {

@@ -1536,16 +1536,16 @@
  *
  * | Trigraph | Replacement |
  * | -------- | ----------- |
- * | `??=` | `#` |
- * | `??(` | `[` |
- * | `??/` | `\` |
- * | `??)` | `]` |
- * | `??'` | `^` |
- * | `??<` | `{` |
- * | `??!` | `|` |
- * | `??>` | `}` |
- * | `??-` | `~` |
- * | `???` | `?` | */
+ * | `??=`    | `#`         |
+ * | `??(`    | `[`         |
+ * | `??/`    | `\`         |
+ * | `??)`    | `]`         |
+ * | `??'`    | `^`         |
+ * | `??<`    | `{`         |
+ * | `??!`    | `|`         |
+ * | `??>`    | `}`         |
+ * | `??-`    | `~`         |
+ * | `???`    | `?`         | */
 #ifndef TPP_HAVE_TRIGRAPHS
 #define TPP_HAVE_TRIGRAPHS (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-ftrigraphs" */
 #endif /* !TPP_HAVE_TRIGRAPHS */
@@ -1553,11 +1553,11 @@
 /* Support for digraph token aliases:
  * | Digraph | Replacement |
  * | ------- | ----------- |
- * | `<%`    | `{` |
- * | `<:`    | `[` |
- * | `%>`    | `}` |
- * | `:>`    | `]` |
- * | `%:`    | `#` |
+ * | `<%`    | `{`         |
+ * | `<:`    | `[`         |
+ * | `%>`    | `}`         |
+ * | `:>`    | `]`         |
+ * | `%:`    | `#`         |
  * | `%:%:`  | `##` (requires `TPP_HAVE_TPP_TOK_POUND_POUND`) |
  * | `<::`   | `<`, `::` (requires `TPP_HAVE_TPP_TOK_COLON_COLON`) |
  *
@@ -1584,25 +1584,31 @@
 #define TPP_HAVE_TPP_TOK_COMMENT TPP_COMMON_HAVE_TPP_TOK_SPACE /* "-ftok-comment" */
 #endif /* !TPP_HAVE_TPP_TOK_COMMENT */
 
-/* Enable support for recognizing c++-like comments: "// like this one!"
+/* Enable support for recognizing c++-like comments: `// like this one!`
  * @detect: #if __TPP_COUNT_TOKENS("// a b c") <= 1 */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT
-#define TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-cxx-comment" */
+#define TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-slash-slash-comment" */
 #endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT */
 
-// Enable support for recognizing c-like comments: "/* like this one! */"
+// Enable support for recognizing c-like comments: `/* like this one! */`
 // @detect: #if __TPP_COUNT_TOKENS("/* a b c */") <= 1
 #ifndef TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH
 #define TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-slash-star-comment-star-slash" */
 #endif /* !TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH */
 
-/* Enable support for recognizing pascal-like comments: "(* like this one! *)"
+/* Enable support for recognizing pascal-like comments: `(* like this one! *)`
  * @detect: #if __TPP_COUNT_TOKENS("(* a b c *)") <= 1 */
 #ifndef TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN
 #define TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-lparen-star-comment-star-rparen" */
 #endif /* !TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN */
 
-/* Enable support for recognizing shell-like comments: "# like this one!"
+/* Enable support for recognizing html-like comments: `<!-- like this one -->`
+ * @detect: #if __TPP_COUNT_TOKENS("<!-- a b c -->") <= 1 */
+#ifndef TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE
+#define TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-langle-exclaim-minus-minus-comment-minus-minus-rangle" */
+#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE */
+
+/* Enable support for recognizing shell-like comments: `# like this one!`
  *
  * This still works in conjunction with "TPP_HAVE_CPP_DIRECTIVES", in
  * that unknown directives will simply be re-emit as shell comments,
@@ -1613,19 +1619,19 @@
 #define TPP_HAVE_TPP_TOK_POUND_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pound-comment" */
 #endif /* !TPP_HAVE_TPP_TOK_POUND_COMMENT */
 
-/* Enable support for recognizing ASM-like comments: "/ like this one!"
+/* Enable support for recognizing ASM-like comments: `/ like this one!`
  * @detect: #if __TPP_COUNT_TOKENS("/ a b c") <= 1 */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_COMMENT
 #define TPP_HAVE_TPP_TOK_SLASH_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-slash-comment" */
 #endif /* !TPP_HAVE_TPP_TOK_SLASH_COMMENT */
 
-/* Enable support for recognizing SQL-like comments: "-- like this one!"
+/* Enable support for recognizing SQL-like comments: `-- like this one!`
  * @detect: #if __TPP_COUNT_TOKENS("-- a b c") <= 1 */
 #ifndef TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT
 #define TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-minus-minus-comment" */
 #endif /* !TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT */
 
-/* Enable support for recognizing deemon-doc-like comments: "@@ like this one!"
+/* Enable support for recognizing deemon-doc-like comments: `@@ like this one!`
  * @detect: #if __TPP_COUNT_TOKENS("@@ a b c") <= 1 */
 #ifndef TPP_HAVE_TPP_TOK_AT_AT_COMMENT
 #define TPP_HAVE_TPP_TOK_AT_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-at-at-comment" */
@@ -1646,10 +1652,19 @@
 /************************************************************************/
 
 /* XXX: Support for intel-assembler-style hex literals to be treated as TPP_TOK_INT:
+ * https://en.wikipedia.org/wiki/Hexadecimal#Intel
  *  - FFh  (same as 0xFF)
  *  - ffh  (same as 0xff)
- *  - FFH  (XXX: Check if uppercase "H" is also accepted by intel asm)
- *  - ffH  (XXX: Check if uppercase "H" is also accepted by intel asm) */
+ *  - FFH  (same as 0xFF)
+ *  - ffH  (same as 0xFF)
+ */
+
+/* XXX: Support for Pascal-style hex numbers; could be made to co-exist with
+ *      TPP_HAVE_TPP_TOK_DOLLAR such that hex is only detected when the next
+ *      character is 0-9, a-f, A-F:
+ *  - $FF  (same as 0xFF)
+ */
+
 /* XXX: Feature to disable support for C-style "0x" radix prefixes in tpp_lexer_decodeint() */
 
 /* 123
@@ -1695,7 +1710,11 @@
  * | `0x.P12`    | `[FLOAT:0x.P12]`                | `[FLOAT:0x.P12]`                      | - |
  * | `0x.P+12`   | `[FLOAT:0x.P+12]`               | `[FLOAT:0x.P+12]`                     | - |
  * | `0x.1P+12`  | `[FLOAT:0x.1P+12]`              | `[FLOAT:0x.1P+12]`                    | - |
+ * | `0x.E12`    | `[FLOAT:0x.E12]`                | `[FLOAT:0x.E12]`                      | - |
+ * | `0x.E+12`   | `[FLOAT:0x.E+12]`               | `[FLOAT:0x.E][PLUS:+][INT:12]`        | With `x` / `X`, must use `p` or `P` for exponents |
+ * | `0x.1E+12`  | `[FLOAT:0x.1E+12]`              | `[FLOAT:0x.1E][PLUS:+][INT:12]`       | With `x` / `X`, must use `p` or `P` for exponents |
  * | `0.P+12`    | `[FLOAT:0.P+12]`                | `[INT:0][DOT:.][P:P][PLUS:+][INT:12]` | Without `x` / `X`, must use `e` or `E` for exponents |
+ * | `0.E+12`    | `[FLOAT:0.E+12]`                | `[FLOAT:0.E+12]`                      | - |
  * | `0x.A12`    | `[FLOAT:0x.A12]`                | `[FLOAT:0x.A12]`                      | - |
  * | `0x.A+12`   | `[FLOAT:0x.A][PLUS:+][INT:12]`  | `[FLOAT:0x.A][PLUS:+][INT:12]`        | - |
  * | `0x.1A+12`  | `[FLOAT:0x.1A][PLUS:+][INT:12]` | `[FLOAT:0x.1A][PLUS:+][INT:12]`       | - |
@@ -1738,9 +1757,8 @@
 /* XXX: Support for sql-style "-string literals ("" is escape for ", and line-feeds are allowed) */
 /* XXX: Support for sql-style E'foo'-string literals (line-feeds are allowed, and \-escape sequences are handled) */
 /* XXX: Support for sql-style E"foo"-string literals (line-feeds are allowed, and \-escape sequences are handled) */
-/* XXX: Support for javascript-style `foo` format string literals */
-/* XXX: Support for deemon-style f"foo" / F"foo" format string literals */
-/* XXX: Support for HTML-style comments: <!-- comment here --> */
+/* XXX: Support for javascript-style `foo` format string literals (use a hook for implementing `${expr}`) */
+/* XXX: Support for deemon-style f"foo" / F"foo" format string literals (use a hook for implementing `{expr}`) */
 
 /* Support for string literals: `'foo'`
  * @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1 */
@@ -1901,8 +1919,9 @@
 
 
 #undef TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE
-#if (TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH || \
-     TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN)
+#if (TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH ||   \
+     TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN || \
+     TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 1
 #else /* ... */
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 0

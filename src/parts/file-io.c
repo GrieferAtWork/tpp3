@@ -63,6 +63,18 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
+#ifdef tpp_io_handle_IS_HANDLE
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_fix_unc_path(/*utf-8*/ char const *tpp_restrict sFilename,
+                 LPWSTR *tpp_restrict plpwFixedFilename) {
+	/* TODO */
+	(void)sFilename;
+	(void)plpwFixedFilename;
+	return TPP_ENOENT;
+}
+#endif /* tpp_io_handle_IS_HANDLE */
+
+
 /* Open a file for reading
  * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
  * @return: TPP_ENOENT: No such file or directory
@@ -76,6 +88,8 @@ tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
 	DWORD const dwFlagsAndAttributes  = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS;
 	DWORD const dwCreationDisposition = OPEN_EXISTING;
 	HANDLE hFile;
+	LPWSTR lpwFixedFilename;
+	tpp_errno error;
 
 	TPP_SYSCALL({
 		hFile = CreateFileA(filename, dwDesiredAccess, dwShareMode, NULL,
@@ -86,7 +100,22 @@ tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
 		return TPP_EOK;
 	}
 
-	/* TODO: Convert utf-8 to wide, then pre-pend \\.\ to work around UNC limitations */
+	/* Convert utf-8 to wide, then pre-pend \\.\ to work around UNC limitations */
+	error = tpp_fix_unc_path(filename, &lpwFixedFilename);
+	if (TPP_ISERR(error))
+		return error;
+#define tpp_io_open_return_error(err) return (tpp_free(lpwFilename), err)
+	TPP_SYSCALL({
+		hFile = CreateFileW(lpwFixedFilename, dwDesiredAccess, dwShareMode, NULL,
+		                    dwCreationDisposition, dwFlagsAndAttributes, NULL);
+	}, tpp_io_open_return_error);
+#undef tpp_io_open_return_error
+	tpp_free(lpwFixedFilename);
+	if (hFile != NULL && hFile != INVALID_HANDLE_VALUE) {
+		*p_result = hFile;
+		return TPP_EOK;
+	}
+
 	return TPP_ENOENT;
 #endif /* tpp_io_handle_IS_HANDLE */
 

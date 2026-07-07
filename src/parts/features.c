@@ -60,751 +60,754 @@ print("#endif /" "* TPP_HAVE_FEATURES *" "/");
 TPP_CONST_IMPL tpp_features const tpp_features_default = {
 	/* .tf_flags = */ {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BSE)
-		/* .tff_BSE                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_BSE),
+		/* .tff_BSE                                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_BSE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BSE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BSE_WHITESPACE)
-		/* .tff_BSE_WHITESPACE                          = */ TPP_CONF_DEFAULT(TPP_HAVE_BSE_WHITESPACE),
+		/* .tff_BSE_WHITESPACE                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_BSE_WHITESPACE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BSE_WHITESPACE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
-		/* .tff_ESCAPE_IN_IDENTIFIERS                   = */ TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS),
+		/* .tff_ESCAPE_IN_IDENTIFIERS                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_E_IN_STRINGS)
-		/* .tff_ESCAPE_E_IN_STRINGS                     = */ TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_E_IN_STRINGS),
+		/* .tff_ESCAPE_E_IN_STRINGS                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_E_IN_STRINGS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_E_IN_STRINGS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_S_IN_STRINGS)
-		/* .tff_ESCAPE_S_IN_STRINGS                     = */ TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_S_IN_STRINGS),
+		/* .tff_ESCAPE_S_IN_STRINGS                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_S_IN_STRINGS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_S_IN_STRINGS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES)
-		/* .tff_CPP_DIRECTIVES                          = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_DIRECTIVES),
+		/* .tff_CPP_DIRECTIVES                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_DIRECTIVES),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS)
-		/* .tff_CPP_MACROS                              = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_MACROS),
+		/* .tff_CPP_MACROS                                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS)
-		/* .tff_CPP_BUILTIN_MACROS                      = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_BUILTIN_MACROS),
+		/* .tff_CPP_BUILTIN_MACROS                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_BUILTIN_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EXCLAIM)
-		/* .tff_CPP_EXCLAIM                             = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_EXCLAIM),
+		/* .tff_CPP_EXCLAIM                                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_EXCLAIM),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EXCLAIM) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BLANK)
-		/* .tff_CPP_BLANK                               = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_BLANK),
+		/* .tff_CPP_BLANK                                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_BLANK),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BLANK) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIGIT_LINE)
-		/* .tff_CPP_DIGIT_LINE                          = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_DIGIT_LINE),
+		/* .tff_CPP_DIGIT_LINE                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_DIGIT_LINE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIGIT_LINE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_LINE)
-		/* .tff_CPP_LINE                                = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_LINE),
+		/* .tff_CPP_LINE                                                      = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_LINE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_LINE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_INCLUDE)
-		/* .tff_CPP_INCLUDE                             = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_INCLUDE),
+		/* .tff_CPP_INCLUDE                                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_INCLUDE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_INCLUDE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_INCLUDE_NEXT)
-		/* .tff_CPP_INCLUDE_NEXT                        = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_INCLUDE_NEXT),
+		/* .tff_CPP_INCLUDE_NEXT                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_INCLUDE_NEXT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_INCLUDE_NEXT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IMPORT)
-		/* .tff_CPP_IMPORT                              = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_IMPORT),
+		/* .tff_CPP_IMPORT                                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_IMPORT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IMPORT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IF_ELSE_ENDIF)
-		/* .tff_CPP_IF_ELSE_ENDIF                       = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_IF_ELSE_ENDIF),
+		/* .tff_CPP_IF_ELSE_ENDIF                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_IF_ELSE_ENDIF),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IF_ELSE_ENDIF) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DEFINE)
-		/* .tff_CPP_DEFINE                              = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_DEFINE),
+		/* .tff_CPP_DEFINE                                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_DEFINE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DEFINE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_ASSERT)
-		/* .tff_CPP_ASSERT                              = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_ASSERT),
+		/* .tff_CPP_ASSERT                                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_ASSERT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_ASSERT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_ERROR)
-		/* .tff_CPP_ERROR                               = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_ERROR),
+		/* .tff_CPP_ERROR                                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_ERROR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_ERROR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_WARNING)
-		/* .tff_CPP_WARNING                             = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_WARNING),
+		/* .tff_CPP_WARNING                                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_WARNING),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_WARNING) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IDENT_SCCS)
-		/* .tff_CPP_IDENT_SCCS                          = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_IDENT_SCCS),
+		/* .tff_CPP_IDENT_SCCS                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_IDENT_SCCS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IDENT_SCCS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_PRAGMA)
-		/* .tff_CPP_PRAGMA                              = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_PRAGMA),
+		/* .tff_CPP_PRAGMA                                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_PRAGMA),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_PRAGMA) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED)
-		/* .tff_CPP_EMBED                               = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED),
+		/* .tff_CPP_EMBED                                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma)
-		/* .tff_MACRO__Pragma                           = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO__Pragma),
+		/* .tff_MACRO__Pragma                                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO__Pragma),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___pragma)
-		/* .tff_MACRO___pragma                          = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___pragma),
+		/* .tff_MACRO___pragma                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___pragma),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___pragma) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_attribute)
-		/* .tff_CLANG_MACRO___has_attribute             = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_attribute),
+		/* .tff_CLANG_MACRO___has_attribute                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_attribute),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_attribute) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_builtin)
-		/* .tff_CLANG_MACRO___has_builtin               = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_builtin),
+		/* .tff_CLANG_MACRO___has_builtin                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_builtin),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_builtin) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_cpp_attribute)
-		/* .tff_CLANG_MACRO___has_cpp_attribute         = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_cpp_attribute),
+		/* .tff_CLANG_MACRO___has_cpp_attribute                               = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_cpp_attribute),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_cpp_attribute) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_declspec_attribute)
-		/* .tff_CLANG_MACRO___has_declspec_attribute    = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_declspec_attribute),
+		/* .tff_CLANG_MACRO___has_declspec_attribute                          = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_declspec_attribute),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_declspec_attribute) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_extension)
-		/* .tff_CLANG_MACRO___has_extension             = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_extension),
+		/* .tff_CLANG_MACRO___has_extension                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_extension),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_extension) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_feature)
-		/* .tff_CLANG_MACRO___has_feature               = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_feature),
+		/* .tff_CLANG_MACRO___has_feature                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_feature),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_feature) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_c_attribute)
-		/* .tff_CLANG_MACRO___has_c_attribute           = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_c_attribute),
+		/* .tff_CLANG_MACRO___has_c_attribute                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_MACRO___has_c_attribute),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_c_attribute) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES)
-		/* .tff_CLANG_EXTENSIONS_ARE_FEATURES           = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES),
+		/* .tff_CLANG_EXTENSIONS_ARE_FEATURES                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_identifier)
-		/* .tff_MACRO___is_identifier                   = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___is_identifier),
+		/* .tff_MACRO___is_identifier                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___is_identifier),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_identifier) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_deprecated)
-		/* .tff_MACRO___is_deprecated                   = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___is_deprecated),
+		/* .tff_MACRO___is_deprecated                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___is_deprecated),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_deprecated) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_poisoned)
-		/* .tff_MACRO___is_poisoned                     = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___is_poisoned),
+		/* .tff_MACRO___is_poisoned                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___is_poisoned),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_poisoned) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_extension)
-		/* .tff_MACRO___has_extension                   = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_extension),
+		/* .tff_MACRO___has_extension                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_extension),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_extension) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_known_extension)
-		/* .tff_MACRO___has_known_extension             = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_known_extension),
+		/* .tff_MACRO___has_known_extension                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_known_extension),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_known_extension) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_warning)
-		/* .tff_MACRO___has_warning                     = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_warning),
+		/* .tff_MACRO___has_warning                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_warning),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_warning) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_known_warning)
-		/* .tff_MACRO___has_known_warning               = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_known_warning),
+		/* .tff_MACRO___has_known_warning                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_known_warning),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_known_warning) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_include)
-		/* .tff_MACRO___has_include                     = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_include),
+		/* .tff_MACRO___has_include                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_include),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_include) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_include_next)
-		/* .tff_MACRO___has_include_next                = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_include_next),
+		/* .tff_MACRO___has_include_next                                      = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_include_next),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_include_next) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_embed)
-		/* .tff_MACRO___has_embed                       = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_embed),
+		/* .tff_MACRO___has_embed                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___has_embed),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_embed) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE__)
-		/* .tff_MACRO___FILE__                          = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___FILE__),
+		/* .tff_MACRO___FILE__                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___FILE__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___LINE__)
-		/* .tff_MACRO___LINE__                          = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___LINE__),
+		/* .tff_MACRO___LINE__                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___LINE__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___LINE__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TIME__)
-		/* .tff_MACRO___TIME__                          = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TIME__),
+		/* .tff_MACRO___TIME__                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TIME__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TIME__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___DATE__)
-		/* .tff_MACRO___DATE__                          = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___DATE__),
+		/* .tff_MACRO___DATE__                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___DATE__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___DATE__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COLUMN__)
-		/* .tff_MACRO___COLUMN__                        = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___COLUMN__),
+		/* .tff_MACRO___COLUMN__                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___COLUMN__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COLUMN__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__)
-		/* .tff_MACRO___BASE_FILE__                     = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___BASE_FILE__),
+		/* .tff_MACRO___BASE_FILE__                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___BASE_FILE__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__)
-		/* .tff_MACRO___FILE_NAME__                     = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___FILE_NAME__),
+		/* .tff_MACRO___FILE_NAME__                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___FILE_NAME__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__)
-		/* .tff_MACRO___INCLUDE_LEVEL__                 = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___INCLUDE_LEVEL__),
+		/* .tff_MACRO___INCLUDE_LEVEL__                                       = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___INCLUDE_LEVEL__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_DEPTH__)
-		/* .tff_MACRO___INCLUDE_DEPTH__                 = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___INCLUDE_DEPTH__),
+		/* .tff_MACRO___INCLUDE_DEPTH__                                       = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___INCLUDE_DEPTH__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_DEPTH__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COUNTER__)
-		/* .tff_MACRO___COUNTER__                       = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___COUNTER__),
+		/* .tff_MACRO___COUNTER__                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___COUNTER__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COUNTER__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TIMESTAMP__)
-		/* .tff_MACRO___TIMESTAMP__                     = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TIMESTAMP__),
+		/* .tff_MACRO___TIMESTAMP__                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TIMESTAMP__),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TIMESTAMP__) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_NUMERIC_DATE_MACROS)
-		/* .tff_NUMERIC_DATE_MACROS                     = */ TPP_CONF_DEFAULT(TPP_HAVE_NUMERIC_DATE_MACROS),
+		/* .tff_NUMERIC_DATE_MACROS                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_NUMERIC_DATE_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_NUMERIC_DATE_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_NUMERIC_TIME_MACROS)
-		/* .tff_NUMERIC_TIME_MACROS                     = */ TPP_CONF_DEFAULT(TPP_HAVE_NUMERIC_TIME_MACROS),
+		/* .tff_NUMERIC_TIME_MACROS                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_NUMERIC_TIME_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_NUMERIC_TIME_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EVAL)
-		/* .tff_MACRO___TPP_EVAL                        = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_EVAL),
+		/* .tff_MACRO___TPP_EVAL                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_EVAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EVAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EXEC)
-		/* .tff_MACRO___TPP_EXEC                        = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_EXEC),
+		/* .tff_MACRO___TPP_EXEC                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_EXEC),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EXEC) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_UNIQUE)
-		/* .tff_MACRO___TPP_UNIQUE                      = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_UNIQUE),
+		/* .tff_MACRO___TPP_UNIQUE                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_UNIQUE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_UNIQUE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_LOAD_FILE)
-		/* .tff_MACRO___TPP_LOAD_FILE                   = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_LOAD_FILE),
+		/* .tff_MACRO___TPP_LOAD_FILE                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_LOAD_FILE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_LOAD_FILE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_COUNTER)
-		/* .tff_MACRO___TPP_COUNTER                     = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_COUNTER),
+		/* .tff_MACRO___TPP_COUNTER                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_COUNTER),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_COUNTER) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_RANDOM)
-		/* .tff_MACRO___TPP_RANDOM                      = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_RANDOM),
+		/* .tff_MACRO___TPP_RANDOM                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_RANDOM),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_RANDOM) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_DECOMPILE)
-		/* .tff_MACRO___TPP_STR_DECOMPILE               = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_DECOMPILE),
+		/* .tff_MACRO___TPP_STR_DECOMPILE                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_DECOMPILE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_DECOMPILE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_PACK)
-		/* .tff_MACRO___TPP_STR_PACK                    = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_PACK),
+		/* .tff_MACRO___TPP_STR_PACK                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_PACK),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_PACK) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SUBSTR)
-		/* .tff_MACRO___TPP_STR_SUBSTR                  = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_SUBSTR),
+		/* .tff_MACRO___TPP_STR_SUBSTR                                        = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_SUBSTR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SUBSTR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SIZE)
-		/* .tff_MACRO___TPP_STR_SIZE                    = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_SIZE),
+		/* .tff_MACRO___TPP_STR_SIZE                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_STR_SIZE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SIZE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_COUNT_TOKENS)
-		/* .tff_MACRO___TPP_COUNT_TOKENS                = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_COUNT_TOKENS),
+		/* .tff_MACRO___TPP_COUNT_TOKENS                                      = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_COUNT_TOKENS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_COUNT_TOKENS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_IDENTIFIER)
-		/* .tff_MACRO___TPP_IDENTIFIER                  = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_IDENTIFIER),
+		/* .tff_MACRO___TPP_IDENTIFIER                                        = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_IDENTIFIER),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_IDENTIFIER) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
-		/* .tff_ALTERNATIVE_MACRO_PARENTHESIS           = */ TPP_CONF_DEFAULT(TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS),
+		/* .tff_ALTERNATIVE_MACRO_PARENTHESIS                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
-		/* .tff_MACRO_ARGUMENT_WHITESPACE               = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE),
+		/* .tff_MACRO_ARGUMENT_WHITESPACE                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO_RECURSION)
-		/* .tff_MACRO_RECURSION                         = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO_RECURSION),
+		/* .tff_MACRO_RECURSION                                               = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO_RECURSION),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO_RECURSION) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TRADITIONAL_MACROS)
-		/* .tff_TRADITIONAL_MACROS                      = */ TPP_CONF_DEFAULT(TPP_HAVE_TRADITIONAL_MACROS),
+		/* .tff_TRADITIONAL_MACROS                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TRADITIONAL_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TRADITIONAL_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_NAMED_VARARGS_IN_MACROS)
-		/* .tff_NAMED_VARARGS_IN_MACROS                 = */ TPP_CONF_DEFAULT(TPP_HAVE_NAMED_VARARGS_IN_MACROS),
+		/* .tff_NAMED_VARARGS_IN_MACROS                                       = */ TPP_CONF_DEFAULT(TPP_HAVE_NAMED_VARARGS_IN_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_NAMED_VARARGS_IN_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_VA_ARGS_IN_MACROS)
-		/* .tff_VA_ARGS_IN_MACROS                       = */ TPP_CONF_DEFAULT(TPP_HAVE_VA_ARGS_IN_MACROS),
+		/* .tff_VA_ARGS_IN_MACROS                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_VA_ARGS_IN_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_VA_ARGS_IN_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_VA_COMMA_IN_MACROS)
-		/* .tff_VA_COMMA_IN_MACROS                      = */ TPP_CONF_DEFAULT(TPP_HAVE_VA_COMMA_IN_MACROS),
+		/* .tff_VA_COMMA_IN_MACROS                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_VA_COMMA_IN_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_VA_COMMA_IN_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_VA_OPT_IN_MACROS)
-		/* .tff_VA_OPT_IN_MACROS                        = */ TPP_CONF_DEFAULT(TPP_HAVE_VA_OPT_IN_MACROS),
+		/* .tff_VA_OPT_IN_MACROS                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_VA_OPT_IN_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_VA_OPT_IN_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_VA_NARGS_IN_MACROS)
-		/* .tff_VA_NARGS_IN_MACROS                      = */ TPP_CONF_DEFAULT(TPP_HAVE_VA_NARGS_IN_MACROS),
+		/* .tff_VA_NARGS_IN_MACROS                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_VA_NARGS_IN_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_VA_NARGS_IN_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_VA_GLUE_COMMA_IN_MACROS)
-		/* .tff_VA_GLUE_COMMA_IN_MACROS                 = */ TPP_CONF_DEFAULT(TPP_HAVE_VA_GLUE_COMMA_IN_MACROS),
+		/* .tff_VA_GLUE_COMMA_IN_MACROS                                       = */ TPP_CONF_DEFAULT(TPP_HAVE_VA_GLUE_COMMA_IN_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_VA_GLUE_COMMA_IN_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT)
-		/* .tff_STRINGIZE_MACRO_ARGUMENT                = */ TPP_CONF_DEFAULT(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT),
+		/* .tff_STRINGIZE_MACRO_ARGUMENT                                      = */ TPP_CONF_DEFAULT(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CHARIZE_MACRO_ARGUMENT)
-		/* .tff_CHARIZE_MACRO_ARGUMENT                  = */ TPP_CONF_DEFAULT(TPP_HAVE_CHARIZE_MACRO_ARGUMENT),
+		/* .tff_CHARIZE_MACRO_ARGUMENT                                        = */ TPP_CONF_DEFAULT(TPP_HAVE_CHARIZE_MACRO_ARGUMENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CHARIZE_MACRO_ARGUMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT)
-		/* .tff_DONT_EXPAND_MACRO_ARGUMENT              = */ TPP_CONF_DEFAULT(TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT),
+		/* .tff_DONT_EXPAND_MACRO_ARGUMENT                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_GLUE_MACRO_ARGUMENT)
-		/* .tff_GLUE_MACRO_ARGUMENT                     = */ TPP_CONF_DEFAULT(TPP_HAVE_GLUE_MACRO_ARGUMENT),
+		/* .tff_GLUE_MACRO_ARGUMENT                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_GLUE_MACRO_ARGUMENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_GLUE_MACRO_ARGUMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_PUSH_MACRO)
-		/* .tff_PRAGMA_PUSH_MACRO                       = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_PUSH_MACRO),
+		/* .tff_PRAGMA_PUSH_MACRO                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_PUSH_MACRO),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_PUSH_MACRO) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ONCE)
-		/* .tff_PRAGMA_ONCE                             = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_ONCE),
+		/* .tff_PRAGMA_ONCE                                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_ONCE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ONCE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_DEPRECATED)
-		/* .tff_PRAGMA_DEPRECATED                       = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_DEPRECATED),
+		/* .tff_PRAGMA_DEPRECATED                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_DEPRECATED),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_DEPRECATED) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_EXTENSION)
-		/* .tff_PRAGMA_EXTENSION                        = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_EXTENSION),
+		/* .tff_PRAGMA_EXTENSION                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_EXTENSION),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_EXTENSION) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_WARNING)
-		/* .tff_PRAGMA_WARNING                          = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_WARNING),
+		/* .tff_PRAGMA_WARNING                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_WARNING),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_WARNING) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE)
-		/* .tff_PRAGMA_MESSAGE                          = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE),
+		/* .tff_PRAGMA_MESSAGE                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ERROR)
-		/* .tff_PRAGMA_ERROR                            = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_ERROR),
+		/* .tff_PRAGMA_ERROR                                                  = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_ERROR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ERROR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_REGION)
-		/* .tff_PRAGMA_REGION                           = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_REGION),
+		/* .tff_PRAGMA_REGION                                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_REGION),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_REGION) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_TPP_EXEC)
-		/* .tff_PRAGMA_TPP_EXEC                         = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_TPP_EXEC),
+		/* .tff_PRAGMA_TPP_EXEC                                               = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_TPP_EXEC),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_TPP_EXEC) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS)
-		/* .tff_PRAGMA_TPP_SET_KEYWORD_FLAGS            = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS),
+		/* .tff_PRAGMA_TPP_SET_KEYWORD_FLAGS                                  = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_POISON)
-		/* .tff_PRAGMA_GCC_POISON                       = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_POISON),
+		/* .tff_PRAGMA_GCC_POISON                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_POISON),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_POISON) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_WARNING)
-		/* .tff_PRAGMA_GCC_WARNING                      = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_WARNING),
+		/* .tff_PRAGMA_GCC_WARNING                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_WARNING),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_WARNING) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_ERROR)
-		/* .tff_PRAGMA_GCC_ERROR                        = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_ERROR),
+		/* .tff_PRAGMA_GCC_ERROR                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_ERROR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_ERROR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER)
-		/* .tff_PRAGMA_GCC_SYSTEM_HEADER                = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER),
+		/* .tff_PRAGMA_GCC_SYSTEM_HEADER                                      = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC)
-		/* .tff_PRAGMA_GCC_DIAGNOSTIC                   = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC),
+		/* .tff_PRAGMA_GCC_DIAGNOSTIC                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
-		/* .tff_PRAGMA_GCC_DEPENDENCY                   = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_DEPENDENCY),
+		/* .tff_PRAGMA_GCC_DEPENDENCY                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_GCC_DEPENDENCY),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_DEPENDENCY) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TRIGRAPHS)
-		/* .tff_TRIGRAPHS                               = */ TPP_CONF_DEFAULT(TPP_HAVE_TRIGRAPHS),
+		/* .tff_TRIGRAPHS                                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TRIGRAPHS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TRIGRAPHS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_DIGRAPHS)
-		/* .tff_DIGRAPHS                                = */ TPP_CONF_DEFAULT(TPP_HAVE_DIGRAPHS),
+		/* .tff_DIGRAPHS                                                      = */ TPP_CONF_DEFAULT(TPP_HAVE_DIGRAPHS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_DIGRAPHS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LF)
-		/* .tff_TPP_TOK_LF                              = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LF),
+		/* .tff_TPP_TOK_LF                                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LF),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LF) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SPACE)
-		/* .tff_TPP_TOK_SPACE                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SPACE),
+		/* .tff_TPP_TOK_SPACE                                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SPACE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SPACE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COMMENT)
-		/* .tff_TPP_TOK_COMMENT                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_COMMENT),
+		/* .tff_TPP_TOK_COMMENT                                               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_COMMENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
-		/* .tff_TPP_TOK_SLASH_SLASH_COMMENT             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT),
+		/* .tff_TPP_TOK_SLASH_SLASH_COMMENT                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH)
-		/* .tff_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH),
+		/* .tff_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN)
-		/* .tff_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN),
+		/* .tff_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
+		/* .tff_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_COMMENT)
-		/* .tff_TPP_TOK_POUND_COMMENT                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_POUND_COMMENT),
+		/* .tff_TPP_TOK_POUND_COMMENT                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_POUND_COMMENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_COMMENT)
-		/* .tff_TPP_TOK_SLASH_COMMENT                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_COMMENT),
+		/* .tff_TPP_TOK_SLASH_COMMENT                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_COMMENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
-		/* .tff_TPP_TOK_MINUS_MINUS_COMMENT             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT),
+		/* .tff_TPP_TOK_MINUS_MINUS_COMMENT                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT)
-		/* .tff_TPP_TOK_AT_AT_COMMENT                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT),
+		/* .tff_TPP_TOK_AT_AT_COMMENT                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOLLAR)
-		/* .tff_TPP_TOK_DOLLAR                          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_DOLLAR),
+		/* .tff_TPP_TOK_DOLLAR                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_DOLLAR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOLLAR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_INT)
-		/* .tff_TPP_TOK_INT                             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_INT),
+		/* .tff_TPP_TOK_INT                                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_INT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_INT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_FLOAT)
-		/* .tff_TPP_TOK_FLOAT                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_FLOAT),
+		/* .tff_TPP_TOK_FLOAT                                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_FLOAT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_FLOAT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_SMART_FLOAT_TOKENS)
-		/* .tff_SMART_FLOAT_TOKENS                      = */ TPP_CONF_DEFAULT(TPP_HAVE_SMART_FLOAT_TOKENS),
+		/* .tff_SMART_FLOAT_TOKENS                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_SMART_FLOAT_TOKENS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_SMART_FLOAT_TOKENS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CHAR)
-		/* .tff_TPP_TOK_CHAR                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CHAR),
+		/* .tff_TPP_TOK_CHAR                                                  = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CHAR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CHAR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STRING)
-		/* .tff_TPP_TOK_STRING                          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STRING),
+		/* .tff_TPP_TOK_STRING                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STRING),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STRING) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL)
-		/* .tff_TPP_TOK_CXX_RAW_STRING_LITERAL          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL),
+		/* .tff_TPP_TOK_CXX_RAW_STRING_LITERAL                                = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL)
-		/* .tff_TPP_TOK_CXX_WIDE_STRING_LITERAL         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL),
+		/* .tff_TPP_TOK_CXX_WIDE_STRING_LITERAL                               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL)
-		/* .tff_TPP_TOK_CXX_UTF8_STRING_LITERAL         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL),
+		/* .tff_TPP_TOK_CXX_UTF8_STRING_LITERAL                               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL)
-		/* .tff_TPP_TOK_CXX_UTF16_STRING_LITERAL        = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL),
+		/* .tff_TPP_TOK_CXX_UTF16_STRING_LITERAL                              = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL)
-		/* .tff_TPP_TOK_CXX_UTF32_STRING_LITERAL        = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL),
+		/* .tff_TPP_TOK_CXX_UTF32_STRING_LITERAL                              = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL)
-		/* .tff_TPP_TOK_CXX_RAW_CHAR_LITERAL            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL),
+		/* .tff_TPP_TOK_CXX_RAW_CHAR_LITERAL                                  = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL)
-		/* .tff_TPP_TOK_CXX_WIDE_CHAR_LITERAL           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL),
+		/* .tff_TPP_TOK_CXX_WIDE_CHAR_LITERAL                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL)
-		/* .tff_TPP_TOK_CXX_UTF8_CHAR_LITERAL           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL),
+		/* .tff_TPP_TOK_CXX_UTF8_CHAR_LITERAL                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL)
-		/* .tff_TPP_TOK_CXX_UTF16_CHAR_LITERAL          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL),
+		/* .tff_TPP_TOK_CXX_UTF16_CHAR_LITERAL                                = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL)
-		/* .tff_TPP_TOK_CXX_UTF32_CHAR_LITERAL          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL),
+		/* .tff_TPP_TOK_CXX_UTF32_CHAR_LITERAL                                = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL)
-		/* .tff_TPP_TOK_RAW_STRING_LITERAL              = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL),
+		/* .tff_TPP_TOK_RAW_STRING_LITERAL                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)
-		/* .tff_TPP_TOK_RAW_CHAR_LITERAL                = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL),
+		/* .tff_TPP_TOK_RAW_CHAR_LITERAL                                      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL)
-		/* .tff_TPP_TOK_BLOCK_STRING_LITERAL            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL),
+		/* .tff_TPP_TOK_BLOCK_STRING_LITERAL                                  = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
-		/* .tff_TPP_TOK_BLOCK_CHAR_LITERAL              = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL),
+		/* .tff_TPP_TOK_BLOCK_CHAR_LITERAL                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
-		/* .tff_STRING_ALLOW_MULTILINE                  = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ALLOW_MULTILINE),
+		/* .tff_STRING_ALLOW_MULTILINE                                        = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ALLOW_MULTILINE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT)
-		/* .tff_STRING_AUTO_CONCAT                      = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_AUTO_CONCAT),
+		/* .tff_STRING_AUTO_CONCAT                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_AUTO_CONCAT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM)
-		/* .tff_TPP_TOK_EXCLAIM_EXCLAIM                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM),
+		/* .tff_TPP_TOK_EXCLAIM_EXCLAIM                                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL)
-		/* .tff_TPP_TOK_EXCLAIM_EQUAL                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL),
+		/* .tff_TPP_TOK_EXCLAIM_EQUAL                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL)
-		/* .tff_TPP_TOK_EXCLAIM_EQUAL_EQUAL             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL),
+		/* .tff_TPP_TOK_EXCLAIM_EQUAL_EQUAL                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_POUND)
-		/* .tff_TPP_TOK_POUND_POUND                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_POUND_POUND),
+		/* .tff_TPP_TOK_POUND_POUND                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_POUND_POUND),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_POUND) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT)
-		/* .tff_TPP_TOK_PERCENT_PERCENT                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT),
+		/* .tff_TPP_TOK_PERCENT_PERCENT                                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL)
-		/* .tff_TPP_TOK_PERCENT_PERCENT_EQUAL           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL),
+		/* .tff_TPP_TOK_PERCENT_PERCENT_EQUAL                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_EQUAL)
-		/* .tff_TPP_TOK_PERCENT_EQUAL                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PERCENT_EQUAL),
+		/* .tff_TPP_TOK_PERCENT_EQUAL                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PERCENT_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AMP_AMP)
-		/* .tff_TPP_TOK_AMP_AMP                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AMP_AMP),
+		/* .tff_TPP_TOK_AMP_AMP                                               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AMP_AMP),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AMP_AMP) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AMP_EQUAL)
-		/* .tff_TPP_TOK_AMP_EQUAL                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AMP_EQUAL),
+		/* .tff_TPP_TOK_AMP_EQUAL                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AMP_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AMP_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_STAR)
-		/* .tff_TPP_TOK_STAR_STAR                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STAR_STAR),
+		/* .tff_TPP_TOK_STAR_STAR                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STAR_STAR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_STAR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL)
-		/* .tff_TPP_TOK_STAR_STAR_EQUAL                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL),
+		/* .tff_TPP_TOK_STAR_STAR_EQUAL                                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_DOT)
-		/* .tff_TPP_TOK_STAR_DOT                        = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STAR_DOT),
+		/* .tff_TPP_TOK_STAR_DOT                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STAR_DOT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_DOT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS)
-		/* .tff_TPP_TOK_STAR_LANGLE_MINUS               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS),
+		/* .tff_TPP_TOK_STAR_LANGLE_MINUS                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_EQUAL)
-		/* .tff_TPP_TOK_STAR_EQUAL                      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STAR_EQUAL),
+		/* .tff_TPP_TOK_STAR_EQUAL                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_STAR_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PLUS_PLUS)
-		/* .tff_TPP_TOK_PLUS_PLUS                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PLUS_PLUS),
+		/* .tff_TPP_TOK_PLUS_PLUS                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PLUS_PLUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PLUS_PLUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PLUS_EQUAL)
-		/* .tff_TPP_TOK_PLUS_EQUAL                      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PLUS_EQUAL),
+		/* .tff_TPP_TOK_PLUS_EQUAL                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PLUS_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PLUS_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS)
-		/* .tff_TPP_TOK_MINUS_MINUS                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_MINUS),
+		/* .tff_TPP_TOK_MINUS_MINUS                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_MINUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE)
-		/* .tff_TPP_TOK_MINUS_LANGLE                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_LANGLE),
+		/* .tff_TPP_TOK_MINUS_LANGLE                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE)
-		/* .tff_TPP_TOK_MINUS_LANGLE_LANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE),
+		/* .tff_TPP_TOK_MINUS_LANGLE_LANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE)
-		/* .tff_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE),
+		/* .tff_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_EQUAL)
-		/* .tff_TPP_TOK_MINUS_EQUAL                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_EQUAL),
+		/* .tff_TPP_TOK_MINUS_EQUAL                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE)
-		/* .tff_TPP_TOK_MINUS_RANGLE                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_RANGLE),
+		/* .tff_TPP_TOK_MINUS_RANGLE                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR)
-		/* .tff_TPP_TOK_MINUS_RANGLE_STAR               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR),
+		/* .tff_TPP_TOK_MINUS_RANGLE_STAR                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE)
-		/* .tff_TPP_TOK_MINUS_RANGLE_RANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE),
+		/* .tff_TPP_TOK_MINUS_RANGLE_RANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE)
-		/* .tff_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE),
+		/* .tff_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_STAR)
-		/* .tff_TPP_TOK_DOT_STAR                        = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_DOT_STAR),
+		/* .tff_TPP_TOK_DOT_STAR                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_DOT_STAR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_STAR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_DOT)
-		/* .tff_TPP_TOK_DOT_DOT                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_DOT_DOT),
+		/* .tff_TPP_TOK_DOT_DOT                                               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_DOT_DOT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_DOT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_DOT_DOT)
-		/* .tff_TPP_TOK_DOT_DOT_DOT                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_DOT_DOT_DOT),
+		/* .tff_TPP_TOK_DOT_DOT_DOT                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_DOT_DOT_DOT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_DOT_DOT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH)
-		/* .tff_TPP_TOK_SLASH_SLASH                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_SLASH),
+		/* .tff_TPP_TOK_SLASH_SLASH                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_SLASH),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL)
-		/* .tff_TPP_TOK_SLASH_SLASH_EQUAL               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL),
+		/* .tff_TPP_TOK_SLASH_SLASH_EQUAL                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_EQUAL)
-		/* .tff_TPP_TOK_SLASH_EQUAL                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_EQUAL),
+		/* .tff_TPP_TOK_SLASH_EQUAL                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COLON_COLON)
-		/* .tff_TPP_TOK_COLON_COLON                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_COLON_COLON),
+		/* .tff_TPP_TOK_COLON_COLON                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_COLON_COLON),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COLON_COLON) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COLON_EQUAL)
-		/* .tff_TPP_TOK_COLON_EQUAL                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_COLON_EQUAL),
+		/* .tff_TPP_TOK_COLON_EQUAL                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_COLON_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COLON_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS)
-		/* .tff_TPP_TOK_LANGLE_MINUS                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_MINUS),
+		/* .tff_TPP_TOK_LANGLE_MINUS                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_MINUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE)
-		/* .tff_TPP_TOK_LANGLE_MINUS_LANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE),
+		/* .tff_TPP_TOK_LANGLE_MINUS_LANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE)
-		/* .tff_TPP_TOK_LANGLE_MINUS_RANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE),
+		/* .tff_TPP_TOK_LANGLE_MINUS_RANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE)
-		/* .tff_TPP_TOK_LANGLE_LANGLE                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE),
+		/* .tff_TPP_TOK_LANGLE_LANGLE                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS)
-		/* .tff_TPP_TOK_LANGLE_LANGLE_MINUS             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS),
+		/* .tff_TPP_TOK_LANGLE_LANGLE_MINUS                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE)
-		/* .tff_TPP_TOK_LANGLE_LANGLE_LANGLE            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE),
+		/* .tff_TPP_TOK_LANGLE_LANGLE_LANGLE                                  = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS)
-		/* .tff_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS),
+		/* .tff_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)
-		/* .tff_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL),
+		/* .tff_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL)
-		/* .tff_TPP_TOK_LANGLE_LANGLE_EQUAL             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL),
+		/* .tff_TPP_TOK_LANGLE_LANGLE_EQUAL                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL)
-		/* .tff_TPP_TOK_LANGLE_EQUAL                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL),
+		/* .tff_TPP_TOK_LANGLE_EQUAL                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE)
-		/* .tff_TPP_TOK_LANGLE_EQUAL_LANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE),
+		/* .tff_TPP_TOK_LANGLE_EQUAL_LANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE)
-		/* .tff_TPP_TOK_LANGLE_EQUAL_RANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE),
+		/* .tff_TPP_TOK_LANGLE_EQUAL_RANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_RANGLE)
-		/* .tff_TPP_TOK_LANGLE_RANGLE                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_RANGLE),
+		/* .tff_TPP_TOK_LANGLE_RANGLE                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM)
-		/* .tff_TPP_TOK_EQUAL_EXCLAIM                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM),
+		/* .tff_TPP_TOK_EQUAL_EXCLAIM                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT)
-		/* .tff_TPP_TOK_EQUAL_PERCENT                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT),
+		/* .tff_TPP_TOK_EQUAL_PERCENT                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT)
-		/* .tff_TPP_TOK_EQUAL_PERCENT_PERCENT           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT),
+		/* .tff_TPP_TOK_EQUAL_PERCENT_PERCENT                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AMP)
-		/* .tff_TPP_TOK_EQUAL_AMP                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_AMP),
+		/* .tff_TPP_TOK_EQUAL_AMP                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_AMP),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AMP) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_STAR)
-		/* .tff_TPP_TOK_EQUAL_STAR                      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_STAR),
+		/* .tff_TPP_TOK_EQUAL_STAR                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_STAR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_STAR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR)
-		/* .tff_TPP_TOK_EQUAL_STAR_STAR                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR),
+		/* .tff_TPP_TOK_EQUAL_STAR_STAR                                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PLUS)
-		/* .tff_TPP_TOK_EQUAL_PLUS                      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_PLUS),
+		/* .tff_TPP_TOK_EQUAL_PLUS                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_PLUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PLUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_MINUS)
-		/* .tff_TPP_TOK_EQUAL_MINUS                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_MINUS),
+		/* .tff_TPP_TOK_EQUAL_MINUS                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_MINUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_MINUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_SLASH)
-		/* .tff_TPP_TOK_EQUAL_SLASH                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_SLASH),
+		/* .tff_TPP_TOK_EQUAL_SLASH                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_SLASH),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_SLASH) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH)
-		/* .tff_TPP_TOK_EQUAL_SLASH_SLASH               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH),
+		/* .tff_TPP_TOK_EQUAL_SLASH_SLASH                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_COLON)
-		/* .tff_TPP_TOK_EQUAL_COLON                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_COLON),
+		/* .tff_TPP_TOK_EQUAL_COLON                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_COLON),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_COLON) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE)
-		/* .tff_TPP_TOK_EQUAL_LANGLE                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE),
+		/* .tff_TPP_TOK_EQUAL_LANGLE                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE)
-		/* .tff_TPP_TOK_EQUAL_LANGLE_LANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE),
+		/* .tff_TPP_TOK_EQUAL_LANGLE_LANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)
-		/* .tff_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE),
+		/* .tff_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL)
-		/* .tff_TPP_TOK_EQUAL_EQUAL                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL),
+		/* .tff_TPP_TOK_EQUAL_EQUAL                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM)
-		/* .tff_TPP_TOK_EQUAL_EQUAL_EXCLAIM             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM),
+		/* .tff_TPP_TOK_EQUAL_EQUAL_EXCLAIM                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL)
-		/* .tff_TPP_TOK_EQUAL_EQUAL_EQUAL               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL),
+		/* .tff_TPP_TOK_EQUAL_EQUAL_EQUAL                                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE)
-		/* .tff_TPP_TOK_EQUAL_RANGLE                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE),
+		/* .tff_TPP_TOK_EQUAL_RANGLE                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE)
-		/* .tff_TPP_TOK_EQUAL_RANGLE_RANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE),
+		/* .tff_TPP_TOK_EQUAL_RANGLE_RANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)
-		/* .tff_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE),
+		/* .tff_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_QMARK)
-		/* .tff_TPP_TOK_EQUAL_QMARK                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_QMARK),
+		/* .tff_TPP_TOK_EQUAL_QMARK                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_QMARK),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_QMARK) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AT)
-		/* .tff_TPP_TOK_EQUAL_AT                        = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_AT),
+		/* .tff_TPP_TOK_EQUAL_AT                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_AT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AT_AT)
-		/* .tff_TPP_TOK_EQUAL_AT_AT                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_AT_AT),
+		/* .tff_TPP_TOK_EQUAL_AT_AT                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_AT_AT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AT_AT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_HAT)
-		/* .tff_TPP_TOK_EQUAL_HAT                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_HAT),
+		/* .tff_TPP_TOK_EQUAL_HAT                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_HAT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_HAT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PIPE)
-		/* .tff_TPP_TOK_EQUAL_PIPE                      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_PIPE),
+		/* .tff_TPP_TOK_EQUAL_PIPE                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_PIPE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PIPE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_TILDE)
-		/* .tff_TPP_TOK_EQUAL_TILDE                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_TILDE),
+		/* .tff_TPP_TOK_EQUAL_TILDE                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_EQUAL_TILDE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_TILDE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS)
-		/* .tff_TPP_TOK_RANGLE_MINUS                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_MINUS),
+		/* .tff_TPP_TOK_RANGLE_MINUS                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_MINUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE)
-		/* .tff_TPP_TOK_RANGLE_MINUS_LANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE),
+		/* .tff_TPP_TOK_RANGLE_MINUS_LANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE)
-		/* .tff_TPP_TOK_RANGLE_MINUS_RANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE),
+		/* .tff_TPP_TOK_RANGLE_MINUS_RANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_LANGLE)
-		/* .tff_TPP_TOK_RANGLE_LANGLE                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_LANGLE),
+		/* .tff_TPP_TOK_RANGLE_LANGLE                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL)
-		/* .tff_TPP_TOK_RANGLE_EQUAL                    = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL),
+		/* .tff_TPP_TOK_RANGLE_EQUAL                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE)
-		/* .tff_TPP_TOK_RANGLE_EQUAL_LANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE),
+		/* .tff_TPP_TOK_RANGLE_EQUAL_LANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE)
-		/* .tff_TPP_TOK_RANGLE_EQUAL_RANGLE             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE),
+		/* .tff_TPP_TOK_RANGLE_EQUAL_RANGLE                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE)
-		/* .tff_TPP_TOK_RANGLE_RANGLE                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE),
+		/* .tff_TPP_TOK_RANGLE_RANGLE                                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS)
-		/* .tff_TPP_TOK_RANGLE_RANGLE_MINUS             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS),
+		/* .tff_TPP_TOK_RANGLE_RANGLE_MINUS                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL)
-		/* .tff_TPP_TOK_RANGLE_RANGLE_EQUAL             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL),
+		/* .tff_TPP_TOK_RANGLE_RANGLE_EQUAL                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE)
-		/* .tff_TPP_TOK_RANGLE_RANGLE_RANGLE            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE),
+		/* .tff_TPP_TOK_RANGLE_RANGLE_RANGLE                                  = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS)
-		/* .tff_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS),
+		/* .tff_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)
-		/* .tff_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL),
+		/* .tff_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_QMARK_EQUAL)
-		/* .tff_TPP_TOK_QMARK_EQUAL                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_QMARK_EQUAL),
+		/* .tff_TPP_TOK_QMARK_EQUAL                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_QMARK_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_QMARK_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_QMARK_QMARK)
-		/* .tff_TPP_TOK_QMARK_QMARK                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_QMARK_QMARK),
+		/* .tff_TPP_TOK_QMARK_QMARK                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_QMARK_QMARK),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_QMARK_QMARK) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_EQUAL)
-		/* .tff_TPP_TOK_AT_EQUAL                        = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AT_EQUAL),
+		/* .tff_TPP_TOK_AT_EQUAL                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AT_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT)
-		/* .tff_TPP_TOK_AT_AT                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AT_AT),
+		/* .tff_TPP_TOK_AT_AT                                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AT_AT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_EQUAL)
-		/* .tff_TPP_TOK_AT_AT_EQUAL                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AT_AT_EQUAL),
+		/* .tff_TPP_TOK_AT_AT_EQUAL                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AT_AT_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HAT_EQUAL)
-		/* .tff_TPP_TOK_HAT_EQUAL                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_HAT_EQUAL),
+		/* .tff_TPP_TOK_HAT_EQUAL                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_HAT_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HAT_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HAT_HAT)
-		/* .tff_TPP_TOK_HAT_HAT                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_HAT_HAT),
+		/* .tff_TPP_TOK_HAT_HAT                                               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_HAT_HAT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HAT_HAT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PIPE_EQUAL)
-		/* .tff_TPP_TOK_PIPE_EQUAL                      = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PIPE_EQUAL),
+		/* .tff_TPP_TOK_PIPE_EQUAL                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PIPE_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PIPE_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PIPE_PIPE)
-		/* .tff_TPP_TOK_PIPE_PIPE                       = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PIPE_PIPE),
+		/* .tff_TPP_TOK_PIPE_PIPE                                             = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PIPE_PIPE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PIPE_PIPE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_TILDE_EQUAL)
-		/* .tff_TPP_TOK_TILDE_EQUAL                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_TILDE_EQUAL),
+		/* .tff_TPP_TOK_TILDE_EQUAL                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_TILDE_EQUAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_TILDE_EQUAL) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_TILDE_TILDE)
-		/* .tff_TPP_TOK_TILDE_TILDE                     = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_TILDE_TILDE),
+		/* .tff_TPP_TOK_TILDE_TILDE                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_TILDE_TILDE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_TILDE_TILDE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_DEFINED)
-		/* .tff_BUILTIN_EXPR_DEFINED                    = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_DEFINED),
+		/* .tff_BUILTIN_EXPR_DEFINED                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_DEFINED),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_DEFINED) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR)
-		/* .tff_DONT_EXPAND_DEFINED_IN_EXPR             = */ TPP_CONF_DEFAULT(TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR),
+		/* .tff_DONT_EXPAND_DEFINED_IN_EXPR                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_STRINGS)
-		/* .tff_BUILTIN_EXPR_STRINGS                    = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_STRINGS),
+		/* .tff_BUILTIN_EXPR_STRINGS                                          = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_STRINGS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_STRINGS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_FLOATS)
-		/* .tff_BUILTIN_EXPR_FLOATS                     = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_FLOATS),
+		/* .tff_BUILTIN_EXPR_FLOATS                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_FLOATS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_FLOATS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT)
-		/* .tff_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT        = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT),
+		/* .tff_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT                              = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS)
-		/* .tff_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS     = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS),
+		/* .tff_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS                           = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR)
-		/* .tff_BUILTIN_EXPR_LOGICAL_XOR                = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR),
+		/* .tff_BUILTIN_EXPR_LOGICAL_XOR                                      = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS)
-		/* .tff_BUILTIN_EXPR_BINARY_LITERALS            = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS),
+		/* .tff_BUILTIN_EXPR_BINARY_LITERALS                                  = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS)
-		/* .tff_BUILTIN_EXPR_OCTAL_LITERALS             = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS),
+		/* .tff_BUILTIN_EXPR_OCTAL_LITERALS                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX)
-		/* .tff_LEXER_DECODEINT_FIXED_TYPE_SUFFIX       = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX),
+		/* .tff_LEXER_DECODEINT_FIXED_TYPE_SUFFIX                             = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX)
-		/* .tff_LEXER_DECODEINT_SIZE_TYPE_SUFFIX        = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX),
+		/* .tff_LEXER_DECODEINT_SIZE_TYPE_SUFFIX                              = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX)
-		/* .tff_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX     = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX),
+		/* .tff_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX                           = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX)
-		/* .tff_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX     = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX),
+		/* .tff_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX                           = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX)
-		/* .tff_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX    = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX),
+		/* .tff_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX                          = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX)
-		/* .tff_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX   = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX),
+		/* .tff_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX                         = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
-		/* .tff_BUILTIN_EXPR_CHARACTER_LITERALS         = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS),
+		/* .tff_BUILTIN_EXPR_CHARACTER_LITERALS                               = */ TPP_CONF_DEFAULT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_EXTERN_C_FOR_SYSHDR)
-		/* .tff_EXTERN_C_FOR_SYSHDR                     = */ TPP_CONF_DEFAULT(TPP_HAVE_EXTERN_C_FOR_SYSHDR),
+		/* .tff_EXTERN_C_FOR_SYSHDR                                           = */ TPP_CONF_DEFAULT(TPP_HAVE_EXTERN_C_FOR_SYSHDR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_EXTERN_C_FOR_SYSHDR) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH)
-		/* .tff_SEARCH_SYSTEM_INCLUDE_PATH              = */ TPP_CONF_DEFAULT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH),
+		/* .tff_SEARCH_SYSTEM_INCLUDE_PATH                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
-		/* .tff_INCLUDE_RELATIVE_TO_EVERY_FILE          = */ TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE),
+		/* .tff_INCLUDE_RELATIVE_TO_EVERY_FILE                                = */ TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
-		/* .tff_PRAGMA_MESSAGE_PRINTS_LOCATION          = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION),
+		/* .tff_PRAGMA_MESSAGE_PRINTS_LOCATION                                = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
-		/* .tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED  = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED),
+		/* .tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED                        = */ TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 	}
 };

@@ -2392,16 +2392,16 @@ Support for trigraph character aliases:
 
 | Trigraph | Replacement |
 | -------- | ----------- |
-| `??=` | `#` |
-| `??(` | `[` |
-| `??/` | `\` |
-| `??)` | `]` |
-| `??'` | `^` |
-| `??<` | `{` |
-| `??!` | `|` |
-| `??>` | `}` |
-| `??-` | `~` |
-| `???` | `?` |
+| `??=`    | `#`         |
+| `??(`    | `[`         |
+| `??/`    | `\`         |
+| `??)`    | `]`         |
+| `??'`    | `^`         |
+| `??<`    | `{`         |
+| `??!`    | `|`         |
+| `??>`    | `}`         |
+| `??-`    | `~`         |
+| `???`    | `?`         |
 
 <details><summary>Details</summary>
 
@@ -2423,11 +2423,11 @@ Extension:
 Support for digraph token aliases:
 | Digraph | Replacement |
 | ------- | ----------- |
-| `<%`    | `{` |
-| `<:`    | `[` |
-| `%>`    | `}` |
-| `:>`    | `]` |
-| `%:`    | `#` |
+| `<%`    | `{`         |
+| `<:`    | `[`         |
+| `%>`    | `}`         |
+| `:>`    | `]`         |
+| `%:`    | `#`         |
 | `%:%:`  | `##` (requires [`TPP_HAVE_TPP_TOK_POUND_POUND`](config-token.md#tpp_have_tpp_tok_pound_pound)) |
 | `<::`   | `<`, `::` (requires [`TPP_HAVE_TPP_TOK_COLON_COLON`](config-token.md#tpp_have_tpp_tok_colon_colon)) |
 
@@ -2510,7 +2510,7 @@ Extension:
 
 ## TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT
 
-Enable support for recognizing c++-like comments: "// like this one!"
+Enable support for recognizing c++-like comments: `// like this one!`
 @detect: #if __TPP_COUNT_TOKENS("// a b c") <= 1
 
 <details><summary>Details</summary>
@@ -2524,13 +2524,13 @@ Default:
 Extension:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_SLASH_SLASH_COMMENT "tok-cxx-comment"
+#define TPP_EXTNAME_TPP_TOK_SLASH_SLASH_COMMENT "tok-slash-slash-comment"
 ```
 </details>
 
 ## TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH
 
-Enable support for recognizing c-like comments: "/* like this one! */"
+Enable support for recognizing c-like comments: `/* like this one! */`
 @detect: #if __TPP_COUNT_TOKENS("/* a b c */") <= 1
 
 <details><summary>Details</summary>
@@ -2550,7 +2550,7 @@ Extension:
 
 ## TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN
 
-Enable support for recognizing pascal-like comments: "(* like this one! *)"
+Enable support for recognizing pascal-like comments: `(* like this one! *)`
 @detect: #if __TPP_COUNT_TOKENS("(* a b c *)") <= 1
 
 <details><summary>Details</summary>
@@ -2568,9 +2568,29 @@ Extension:
 ```
 </details>
 
+## TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE
+
+Enable support for recognizing html-like comments: `<!-- like this one -->`
+@detect: #if __TPP_COUNT_TOKENS("<!-- a b c -->") <= 1
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_COMMON_HAVE_TPP_TOK_COMMENT
+```
+
+Extension:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE "tok-langle-exclaim-minus-minus-comment-minus-minus-rangle"
+```
+</details>
+
 ## TPP_HAVE_TPP_TOK_POUND_COMMENT
 
-Enable support for recognizing shell-like comments: "# like this one!"
+Enable support for recognizing shell-like comments: `# like this one!`
 
 This still works in conjunction with "TPP_HAVE_CPP_DIRECTIVES", in
 that unknown directives will simply be re-emit as shell comments,
@@ -2595,7 +2615,7 @@ Extension:
 
 ## TPP_HAVE_TPP_TOK_SLASH_COMMENT
 
-Enable support for recognizing ASM-like comments: "/ like this one!"
+Enable support for recognizing ASM-like comments: `/ like this one!`
 @detect: #if __TPP_COUNT_TOKENS("/ a b c") <= 1
 
 <details><summary>Details</summary>
@@ -2615,7 +2635,7 @@ Extension:
 
 ## TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT
 
-Enable support for recognizing SQL-like comments: "-- like this one!"
+Enable support for recognizing SQL-like comments: `-- like this one!`
 @detect: #if __TPP_COUNT_TOKENS("-- a b c") <= 1
 
 <details><summary>Details</summary>
@@ -2635,7 +2655,7 @@ Extension:
 
 ## TPP_HAVE_TPP_TOK_AT_AT_COMMENT
 
-Enable support for recognizing deemon-doc-like comments: "@@ like this one!"
+Enable support for recognizing deemon-doc-like comments: `@@ like this one!`
 @detect: #if __TPP_COUNT_TOKENS("@@ a b c") <= 1
 
 <details><summary>Details</summary>
@@ -2746,7 +2766,11 @@ keep going):
 | `0x.P12`    | `[FLOAT:0x.P12]`                | `[FLOAT:0x.P12]`                      | - |
 | `0x.P+12`   | `[FLOAT:0x.P+12]`               | `[FLOAT:0x.P+12]`                     | - |
 | `0x.1P+12`  | `[FLOAT:0x.1P+12]`              | `[FLOAT:0x.1P+12]`                    | - |
+| `0x.E12`    | `[FLOAT:0x.E12]`                | `[FLOAT:0x.E12]`                      | - |
+| `0x.E+12`   | `[FLOAT:0x.E+12]`               | `[FLOAT:0x.E][PLUS:+][INT:12]`        | With `x` / `X`, must use `p` or `P` for exponents |
+| `0x.1E+12`  | `[FLOAT:0x.1E+12]`              | `[FLOAT:0x.1E][PLUS:+][INT:12]`       | With `x` / `X`, must use `p` or `P` for exponents |
 | `0.P+12`    | `[FLOAT:0.P+12]`                | `[INT:0][DOT:.][P:P][PLUS:+][INT:12]` | Without `x` / `X`, must use `e` or `E` for exponents |
+| `0.E+12`    | `[FLOAT:0.E+12]`                | `[FLOAT:0.E+12]`                      | - |
 | `0x.A12`    | `[FLOAT:0x.A12]`                | `[FLOAT:0x.A12]`                      | - |
 | `0x.A+12`   | `[FLOAT:0x.A][PLUS:+][INT:12]`  | `[FLOAT:0x.A][PLUS:+][INT:12]`        | - |
 | `0x.1A+12`  | `[FLOAT:0x.1A][PLUS:+][INT:12]` | `[FLOAT:0x.1A][PLUS:+][INT:12]`       | - |

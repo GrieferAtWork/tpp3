@@ -2289,6 +2289,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT             TPP_CONF_FEAT1 /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_CPP_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SLASH_SLASH_COMMENT)") */
 #define TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH   TPP_CONF_FEAT1 /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_C_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH)") */
 #define TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN 0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE 0 /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TPP_TOK_POUND_COMMENT                   TPP_CONF_FEAT0 /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_ASM_COMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_POUND_COMMENT)") */
 #define TPP_HAVE_TPP_TOK_SLASH_COMMENT                   0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT             0              /* TPP2 only recognized C/C++-like comments */
