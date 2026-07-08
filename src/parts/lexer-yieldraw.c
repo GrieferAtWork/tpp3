@@ -668,12 +668,12 @@ return_error:
 #endif /* !... */
 
 #undef NEED_tpp_lexer_seek_end_of_string
-#if (TPP_HAVE_TPP_TOK_STRING ||                   \
+#if (TPP_HAVE_TPP_TOK_C_STRING ||                 \
      TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
      TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
      TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
      TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CHAR ||                     \
+     TPP_HAVE_TPP_TOK_C_CHAR ||                   \
      TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
      TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
      TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
@@ -1333,7 +1333,8 @@ warn_premature_eof:
 #if NEED_tpp_lexer_seek_end_of_cxx_raw_string
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_cxx_raw_string(tpp_lexer *tpp_restrict self,
-                                     tpp_char const **tpp_restrict p_pos) {
+                                     tpp_char const **tpp_restrict p_pos,
+                                     tpp_char quote_ch) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_size rel_pattern_start = tpp_file_ptr2rel(file, *p_pos);
 	tpp_size rel_pattern_end, delim_len;
@@ -1365,7 +1366,7 @@ tpp_lexer_seek_end_of_cxx_raw_string(tpp_lexer *tpp_restrict self,
 	for (;;) {
 		tpp_size rel_pattern_iter;
 		tpp_char const *pos2;
-continue_string:
+		tpp_size rel_continue;
 		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			return error;
@@ -1374,6 +1375,7 @@ continue_string:
 				goto warn_premature_eof;
 			continue;
 		}
+		rel_continue = tpp_file_ptr2rel(file, *p_pos); /* Rewind to here on pattern missmatch */
 		for (rel_pattern_iter = rel_pattern_start;
 		     rel_pattern_iter < rel_pattern_end;) {
 			tpp_char pattern_ch;
@@ -1400,8 +1402,10 @@ continue_string:
 		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			return error;
-		if (ch == '"')
+		if (ch == quote_ch)
 			break;
+continue_string:
+		*p_pos = tpp_file_rel2ptr(file, rel_continue);
 	}
 	return TPP_EOK;
 warn_premature_eof:
@@ -3852,12 +3856,12 @@ continue_pascal_comment_with_ch2:
 
 /************************************************************************/
 	case '\'': {
-#if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CHAR
+#if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL || TPP_HAVE_TPP_TOK_C_CHAR
 #if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
 		if (tpp_lexer_has(self, TPP_TOK_BLOCK_CHAR_LITERAL)) {
-#if TPP_HAVE_TPP_TOK_CHAR
+#if TPP_HAVE_TPP_TOK_C_CHAR
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_CHAR */
+#endif /* TPP_HAVE_TPP_TOK_C_CHAR */
 			read_ch2();
 			if (ch2 == '\'') {
 				read_ch2();
@@ -3869,20 +3873,20 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			}
-#if TPP_HAVE_TPP_TOK_CHAR
+#if TPP_HAVE_TPP_TOK_C_CHAR
 			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
-#endif /* TPP_HAVE_TPP_TOK_CHAR */
+#endif /* TPP_HAVE_TPP_TOK_C_CHAR */
 		}
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
-#if TPP_HAVE_TPP_TOK_CHAR
-		if (tpp_lexer_has(self, TPP_TOK_CHAR)) {
+#if TPP_HAVE_TPP_TOK_C_CHAR
+		if (tpp_lexer_has(self, TPP_TOK_C_CHAR)) {
 			error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 			if (TPP_ISERR(error))
 				goto return_error;
-			result = TPP_TOK_CHAR; /* 'foo' */
+			result = TPP_TOK_C_CHAR; /* 'foo' */
 			goto set_result;
 		}
-#endif /* TPP_HAVE_TPP_TOK_CHAR */
+#endif /* TPP_HAVE_TPP_TOK_C_CHAR */
 #endif /* ... */
 	}	break;
 /************************************************************************/
@@ -3891,12 +3895,12 @@ continue_pascal_comment_with_ch2:
 
 /************************************************************************/
 	case '"': {
-#if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_STRING
+#if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_C_STRING
 #if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL
 		if (tpp_lexer_has(self, TPP_TOK_BLOCK_STRING_LITERAL)) {
-#if TPP_HAVE_TPP_TOK_STRING
+#if TPP_HAVE_TPP_TOK_C_STRING
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_STRING */
+#endif /* TPP_HAVE_TPP_TOK_C_STRING */
 			read_ch2();
 			if (ch2 == '"') {
 				read_ch2();
@@ -3908,20 +3912,20 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			}
-#if TPP_HAVE_TPP_TOK_STRING
+#if TPP_HAVE_TPP_TOK_C_STRING
 			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
-#endif /* TPP_HAVE_TPP_TOK_STRING */
+#endif /* TPP_HAVE_TPP_TOK_C_STRING */
 		}
 #endif /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_STRING
-		if (tpp_lexer_has(self, TPP_TOK_STRING)) {
+#if TPP_HAVE_TPP_TOK_C_STRING
+		if (tpp_lexer_has(self, TPP_TOK_C_STRING)) {
 			error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 			if (TPP_ISERR(error))
 				goto return_error;
-			result = TPP_TOK_STRING; /* "foo" */
+			result = TPP_TOK_C_STRING; /* "foo" */
 			goto set_result;
 		}
-#endif /* TPP_HAVE_TPP_TOK_STRING */
+#endif /* TPP_HAVE_TPP_TOK_C_STRING */
 #endif /* ... */
 	}	break;
 /************************************************************************/
@@ -3943,7 +3947,7 @@ continue_pascal_comment_with_ch2:
 			if (ch2 == '"') {
 #if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
 				if (tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
-					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_CXX_RAW_STRING_LITERAL; /* R"AB(foo)AB" */
@@ -3965,7 +3969,7 @@ continue_pascal_comment_with_ch2:
 			if (ch2 == '\'') {
 #if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
 				if (tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
-					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_CXX_RAW_CHAR_LITERAL; /* R'AB(f)AB' */
@@ -4077,7 +4081,7 @@ continue_pascal_comment_with_ch2:
 					if (ch2 == '"') {
 						if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
 						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
-							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 							if (TPP_ISERR(error))
 								goto return_error;
 							result = TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL; /* LR"AB(foo)AB" */
@@ -4086,10 +4090,10 @@ continue_pascal_comment_with_ch2:
 					} else
 #endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
-					if (ch2 == '"') {
+					if (ch2 == '\'') {
 						if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
 						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
-							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 							if (TPP_ISERR(error))
 								goto return_error;
 							result = TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL; /* LR'AB(f)AB' */
@@ -4165,7 +4169,7 @@ continue_pascal_comment_with_ch2:
 							if (ch2 == '"') {
 								if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
 								    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
-									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 									if (TPP_ISERR(error))
 										goto return_error;
 									result = TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL; /* u8R"AB(foo)AB" */
@@ -4174,10 +4178,10 @@ continue_pascal_comment_with_ch2:
 							} else
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
-							if (ch2 == '"') {
+							if (ch2 == '\'') {
 								if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
 								    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
-									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 									if (TPP_ISERR(error))
 										goto return_error;
 									result = TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL; /* u8R'AB(f)AB' */
@@ -4230,7 +4234,7 @@ continue_pascal_comment_with_ch2:
 					if (ch2 == '"') {
 						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
 						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
-							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 							if (TPP_ISERR(error))
 								goto return_error;
 							result = TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL; /* uR"AB(foo)AB" */
@@ -4239,10 +4243,10 @@ continue_pascal_comment_with_ch2:
 					} else
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
-					if (ch2 == '"') {
+					if (ch2 == '\'') {
 						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
 						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
-							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 							if (TPP_ISERR(error))
 								goto return_error;
 							result = TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL; /* uR'AB(f)AB' */
@@ -4309,7 +4313,7 @@ continue_pascal_comment_with_ch2:
 					if (ch2 == '"') {
 						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
 						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
-							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 							if (TPP_ISERR(error))
 								goto return_error;
 							result = TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL; /* UR"AB(foo)AB" */
@@ -4318,10 +4322,10 @@ continue_pascal_comment_with_ch2:
 					} else
 #endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
-					if (ch2 == '"') {
+					if (ch2 == '\'') {
 						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
 						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
-							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos);
+							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 							if (TPP_ISERR(error))
 								goto return_error;
 							result = TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL; /* UR'AB(f)AB' */
