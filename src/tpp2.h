@@ -2627,7 +2627,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 /* Configure the user's custom "defs.h" file                            */
 /************************************************************************/
 #ifndef TPP2_NO_AUTOCONFIGURE_TPP3_DEFS
-#ifndef __INTELLISENSE__
+#ifndef __INTELLISENSE__ /* Prevent VC++ IDE from seeing this, as it tends to ruin syntax highlighting */
 #ifndef TPP_CONFIG_USERDEFS_FILENAME
 #define TPP_CONFIG_USERDEFS_FILENAME "tpp2.h"
 #endif /* !TPP_CONFIG_USERDEFS_FILENAME */

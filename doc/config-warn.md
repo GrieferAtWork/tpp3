@@ -3,72 +3,72 @@
 Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) by pre-defining one of the following macros during compilation:
 
 <!--BEGIN:warn-->
-- `TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT`
-- `TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED`
-- `TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH`
-- `TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED`
-- `TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED`
-- `TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF`
-- `TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF`
-- `TPP_HAVE_TPP_W_UNEXPECTED_TOKEN`
-- `TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK`
-- `TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING`
-- `TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON`
-- `TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC`
-- `TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH`
-- `TPP_HAVE_TPP_W_ERROR`
-- `TPP_HAVE_TPP_W_WARNING`
-- `TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS`
-- `TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE`
-- `TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE`
-- `TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER`
-- `TPP_HAVE_TPP_W_DEPRECATED_KEYWORD`
-- `TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK`
-- `TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE`
-- `TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST`
-- `TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS`
-- `TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS`
-- `TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE`
-- `TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE`
-- `TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE`
-- `TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE`
-- `TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO`
-- `TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO`
-- `TPP_HAVE_TPP_W_REDEFINE_MACRO`
-- `TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST`
-- `TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME`
-- `TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT`
-- `TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT`
-- `TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED`
-- `TPP_HAVE_TPP_W_EXPECTED_STRING`
-- `TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING`
-- `TPP_HAVE_TPP_W_NO_SUCH_FILE`
-- `TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER`
-- `TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF`
-- `TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF`
-- `TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE`
-- `TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF`
-- `TPP_HAVE_TPP_W_ENDIF_LABELS`
-- `TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF`
-- `TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION`
-- `TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION`
-- `TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED`
-- `TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION`
-- `TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS`
-- `TPP_HAVE_TPP_W_DIVIDE_BY_ZERO`
-- `TPP_HAVE_TPP_W_INVALID_INTEGER`
-- `TPP_HAVE_TPP_W_MULTICHAR_LITERAL`
-- `TPP_HAVE_TPP_W_DATE_TIME`
-- `TPP_HAVE_TPP_W_UNKNOWN_EXTENSION`
-- `TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS`
-- `TPP_HAVE_TPP_W_UNKNOWN_WARNING`
-- `TPP_HAVE_TPP_W_UNKNOWN_WARNING_NUMBER`
-- `TPP_HAVE_TPP_W_CANNOT_POP_WARNINGS`
-- `TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE`
-- `TPP_HAVE_TPP_W_DEPENDENCY_CHANGED`
-- `TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED`
-- `TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED`
-- `TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING`
-- `TPP_HAVE_TPP_W_PAREN_AROUND_LAND`
-- `TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS`
+- <a name="tpp_have_tpp_w_slashstar_inside_of_comment"></a>`TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT`
+- <a name="tpp_have_tpp_w_line_comment_continued"></a>`TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED`
+- <a name="tpp_have_tpp_w_encountered_trigraph"></a>`TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH`
+- <a name="tpp_have_tpp_w_string_terminated_by_linefeed"></a>`TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED`
+- <a name="tpp_have_tpp_w_string_continued_after_linefeed"></a>`TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED`
+- <a name="tpp_have_tpp_w_string_terminated_by_eof"></a>`TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF`
+- <a name="tpp_have_tpp_w_comment_terminated_by_eof"></a>`TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF`
+- <a name="tpp_have_tpp_w_unexpected_token"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN`
+- <a name="tpp_have_tpp_w_unexpected_token_in_tpp_str_pack"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK`
+- <a name="tpp_have_tpp_w_unexpected_token_in_pragma_warning"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING`
+- <a name="tpp_have_tpp_w_unexpected_token_in_pragma_warning_after_colon"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON`
+- <a name="tpp_have_tpp_w_unexpected_token_in_pragma_gcc_diagnostic"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_GCC_DIAGNOSTIC`
+- <a name="tpp_have_tpp_w_unexpected_token_in_pragma_tpp_include_path"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH`
+- <a name="tpp_have_tpp_w_error"></a>`TPP_HAVE_TPP_W_ERROR`
+- <a name="tpp_have_tpp_w_warning"></a>`TPP_HAVE_TPP_W_WARNING`
+- <a name="tpp_have_tpp_w_unknown_pragmas"></a>`TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS`
+- <a name="tpp_have_tpp_w_unknown_directive"></a>`TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE`
+- <a name="tpp_have_tpp_w_extra_tokens_after_pragma_directive"></a>`TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE`
+- <a name="tpp_have_tpp_w_pragma_once_outside_header"></a>`TPP_HAVE_TPP_W_PRAGMA_ONCE_OUTSIDE_HEADER`
+- <a name="tpp_have_tpp_w_deprecated_keyword"></a>`TPP_HAVE_TPP_W_DEPRECATED_KEYWORD`
+- <a name="tpp_have_tpp_w_pop_macro_empty_stack"></a>`TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK`
+- <a name="tpp_have_tpp_w_unknown_string_escape_sequence"></a>`TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE`
+- <a name="tpp_have_tpp_w_eof_in_argument_list"></a>`TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST`
+- <a name="tpp_have_tpp_w_too_many_arguments"></a>`TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS`
+- <a name="tpp_have_tpp_w_too_few_arguments"></a>`TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS`
+- <a name="tpp_have_tpp_w_expected_macro_name_in_directive"></a>`TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE`
+- <a name="tpp_have_tpp_w_expected_assertion_key_in_directive"></a>`TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE`
+- <a name="tpp_have_tpp_w_expected_assertion_value_in_directive"></a>`TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE`
+- <a name="tpp_have_tpp_w_extra_tokens_after_directive"></a>`TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE`
+- <a name="tpp_have_tpp_w_cannot_undef_builtin_macro"></a>`TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO`
+- <a name="tpp_have_tpp_w_define_builtin_macro"></a>`TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO`
+- <a name="tpp_have_tpp_w_redefine_macro"></a>`TPP_HAVE_TPP_W_REDEFINE_MACRO`
+- <a name="tpp_have_tpp_w_unexpected_token_in_macro_parameter_list"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST`
+- <a name="tpp_have_tpp_w_duplicate_macro_parameter_name"></a>`TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME`
+- <a name="tpp_have_tpp_w_expected_lparen_after_va_opt"></a>`TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT`
+- <a name="tpp_have_tpp_w_expected_rparen_after_va_opt"></a>`TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT`
+- <a name="tpp_have_tpp_w_expansion_to_defined"></a>`TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED`
+- <a name="tpp_have_tpp_w_expected_string"></a>`TPP_HAVE_TPP_W_EXPECTED_STRING`
+- <a name="tpp_have_tpp_w_expected_include_string"></a>`TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING`
+- <a name="tpp_have_tpp_w_no_such_file"></a>`TPP_HAVE_TPP_W_NO_SUCH_FILE`
+- <a name="tpp_have_tpp_w_unknown_embed_parameter"></a>`TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER`
+- <a name="tpp_have_tpp_w_eof_before_endif"></a>`TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF`
+- <a name="tpp_have_tpp_w_elif_or_else_without_if"></a>`TPP_HAVE_TPP_W_ELIF_OR_ELSE_WITHOUT_IF`
+- <a name="tpp_have_tpp_w_elif_or_else_after_else"></a>`TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE`
+- <a name="tpp_have_tpp_w_endif_without_if"></a>`TPP_HAVE_TPP_W_ENDIF_WITHOUT_IF`
+- <a name="tpp_have_tpp_w_endif_labels"></a>`TPP_HAVE_TPP_W_ENDIF_LABELS`
+- <a name="tpp_have_tpp_w_expected_identifier_after_ifdef"></a>`TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_IFDEF`
+- <a name="tpp_have_tpp_w_unexpected_token_in_expression"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION`
+- <a name="tpp_have_tpp_w_undefined_keyword_in_expression"></a>`TPP_HAVE_TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION`
+- <a name="tpp_have_tpp_w_expected_identifier_after_defined"></a>`TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED`
+- <a name="tpp_have_tpp_w_expected_identifier_after_assertion"></a>`TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION`
+- <a name="tpp_have_tpp_w_bad_expression_operands"></a>`TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS`
+- <a name="tpp_have_tpp_w_divide_by_zero"></a>`TPP_HAVE_TPP_W_DIVIDE_BY_ZERO`
+- <a name="tpp_have_tpp_w_invalid_integer"></a>`TPP_HAVE_TPP_W_INVALID_INTEGER`
+- <a name="tpp_have_tpp_w_multichar_literal"></a>`TPP_HAVE_TPP_W_MULTICHAR_LITERAL`
+- <a name="tpp_have_tpp_w_date_time"></a>`TPP_HAVE_TPP_W_DATE_TIME`
+- <a name="tpp_have_tpp_w_unknown_extension"></a>`TPP_HAVE_TPP_W_UNKNOWN_EXTENSION`
+- <a name="tpp_have_tpp_w_cannot_pop_extensions"></a>`TPP_HAVE_TPP_W_CANNOT_POP_EXTENSIONS`
+- <a name="tpp_have_tpp_w_unknown_warning"></a>`TPP_HAVE_TPP_W_UNKNOWN_WARNING`
+- <a name="tpp_have_tpp_w_unknown_warning_number"></a>`TPP_HAVE_TPP_W_UNKNOWN_WARNING_NUMBER`
+- <a name="tpp_have_tpp_w_cannot_pop_warnings"></a>`TPP_HAVE_TPP_W_CANNOT_POP_WARNINGS`
+- <a name="tpp_have_tpp_w_expected_int_after_line_directive"></a>`TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE`
+- <a name="tpp_have_tpp_w_dependency_changed"></a>`TPP_HAVE_TPP_W_DEPENDENCY_CHANGED`
+- <a name="tpp_have_tpp_w_include_recursion_limit_exceeded"></a>`TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED`
+- <a name="tpp_have_tpp_w_macro_recursion_limit_exceeded"></a>`TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED`
+- <a name="tpp_have_tpp_w_nonportable_filename_casing"></a>`TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING`
+- <a name="tpp_have_tpp_w_paren_around_land"></a>`TPP_HAVE_TPP_W_PAREN_AROUND_LAND`
+- <a name="tpp_have_tpp_w_cannot_pop_include_paths"></a>`TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS`
 <!--END:warn-->

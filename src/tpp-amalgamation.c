@@ -6217,10 +6217,10 @@ TPP_IMPL tpp_column _tpp_tabsize = -TPP_TABSIZE;
 #endif /* TPP_TABSIZE < 0 */
 
 
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_user_filename) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_user_filename));
-#endif /* TPP_HAVE_FILE_USER_FILENAME */
+#endif /* TPP_HAVE_FILE_SETFILENAME */
 
 #if TPP_DEBUG && 0
 #ifndef TPP_IO_CHUNKSIZE
@@ -6389,9 +6389,9 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		{
 			tpp_io_close(self->tf_data.td_io.tff_file);
 		}
-#if (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || TPP_HAVE_FILE_USER_FILENAME
+#if (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || TPP_HAVE_FILE_SETFILENAME
 		TPP_FALLTHRU
-#endif /* (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || TPP_HAVE_FILE_USER_FILENAME */
+#endif /* (!TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE) || TPP_HAVE_FILE_SETFILENAME */
 	case TPP_FILE_KIND_TEXT:
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
 		if (self->tf_flags & TPP_FILE_FLAGS_FREENAME) {
@@ -6416,18 +6416,18 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 
 			tpp_free((char *)self->tf_data.td_io.tff_name);
 		}
-#if TPP_HAVE_FILE_USER_FILENAME && TPP_HAVE_FILE_DUMMY
+#if TPP_HAVE_FILE_SETFILENAME && TPP_HAVE_FILE_DUMMY
 		TPP_FALLTHRU
-#endif /* TPP_HAVE_FILE_USER_FILENAME && TPP_HAVE_FILE_DUMMY */
+#endif /* TPP_HAVE_FILE_SETFILENAME && TPP_HAVE_FILE_DUMMY */
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 #if TPP_HAVE_FILE_DUMMY
 	case TPP_FILE_KIND_DUMMY:
 #endif /* TPP_HAVE_FILE_DUMMY */
 		if (self->tf_data.td_text.tft_user_filename)
 			tpp_string_decref(self->tf_data.td_text.tft_user_filename);
 		break;
-#endif /* TPP_HAVE_FILE_USER_FILENAME */
+#endif /* TPP_HAVE_FILE_SETFILENAME */
 
 
 #if TPP_HAVE_CPP_MACROS
@@ -7493,7 +7493,7 @@ again:
 }
 
 /* Same as `tpp_file_getrealfilename()', but may be overwritten by "#line" directives */
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_getfilename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
@@ -7549,7 +7549,7 @@ tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename) {
 	if (old_override)
 		tpp_string_decref(old_override);
 }
-#endif /* TPP_HAVE_FILE_USER_FILENAME */
+#endif /* TPP_HAVE_FILE_SETFILENAME */
 
 
 /* Set the (0-based) line that applies to "pos"
@@ -7701,11 +7701,11 @@ tpp_file_pushdummy(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	(void)0 _tpp_file_init_flags(dummy, TPP_FILE_FLAGS_NORMAL);
 	dummy->tf_data.td_dummy.tfd_name     = self->tf_data.td_io.tff_name;
 	dummy->tf_data.td_dummy.tfd_start_lc = tpp_file_getlcinfo(self, pos);
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 	dummy->tf_data.td_dummy.tfd_user_filename = self->tf_data.td_text.tft_user_filename;
 	if (dummy->tf_data.td_dummy.tfd_user_filename)
 		tpp_string_incref(dummy->tf_data.td_dummy.tfd_user_filename);
-#endif /* TPP_HAVE_FILE_USER_FILENAME */
+#endif /* TPP_HAVE_FILE_SETFILENAME */
 	return TPP_EOK;
 }
 

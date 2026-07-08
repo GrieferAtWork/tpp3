@@ -46,9 +46,9 @@ TPP_HOOK_SOMEEVENT == TPP_HOOK_RT_BUILTIN
 ```
 
 <!--BEGIN:builtin_hook-->
-- `TPP_HAVE_BUILTIN_WARNPRINTER_HOOK`
-- `TPP_HAVE_BUILTIN_MESGPRINTER_HOOK`
-- `TPP_HAVE_BUILTIN_PARSEEXPR_HOOK`
+- <a name="tpp_have_builtin_warnprinter_hook"></a>`TPP_HAVE_BUILTIN_WARNPRINTER_HOOK`
+- <a name="tpp_have_builtin_mesgprinter_hook"></a>`TPP_HAVE_BUILTIN_MESGPRINTER_HOOK`
+- <a name="tpp_have_builtin_parseexpr_hook"></a>`TPP_HAVE_BUILTIN_PARSEEXPR_HOOK`
 <!--END:builtin_hook-->
 
 

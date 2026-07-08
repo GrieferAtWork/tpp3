@@ -174,7 +174,7 @@ class Config {
 			f"```\n"
 			f"{!defaultExtensionName ? "" :
 				f"\n"
-				f"Extension:\n"
+				f"Extension name:\n"
 				f"\n"
 				f"```c\n"
 				f"#define TPP_EXTNAME_{name.lsstrip("TPP_HAVE_")} {repr defaultExtensionName[2:]}\n"
@@ -294,6 +294,14 @@ function formatDoc(currentFile: string, doc: string): string {
 			}#{conf.name.lower()})';
 			doc = doc[:tick] + newContent + doc[nextTick+1:];
 			nextTick += #newContent - #content;
+		} else {
+			/* TODO: When it's the name of a function/macro from the C API,
+			 *       then encode a link to `tpp-amalgamation.h#L<lineno>`
+			 *       here -- since that file is also generated, we can easily
+			 *       rig "Makefile" to re-generate config docs whenever the
+			 *       amalgamation is changed, and the online docs will be
+			 *       easier to navigate in terms of linking between feature
+			 *       documentation and associated source code. */
 		}
 		i = nextTick + 1;
 	}
@@ -342,14 +350,14 @@ function updateConfigMd(filename: string) {
 		case "warn":
 			for (local conf: getAvailableConfigs()) {
 				if (conf.kind == "warn")
-					print newData: f"- `{conf.name}`";
+					print newData: f"- <a name=\"{conf.name.lower()}\"></a>`{conf.name}`";
 			}
 			break;
 
 		case "builtin_hook":
 			for (local conf: getAvailableConfigs()) {
 				if (conf.kind == "builtin_hook")
-					print newData: f"- `{conf.name}`";
+					print newData: f"- <a name=\"{conf.name.lower()}\"></a>`{conf.name}`";
 			}
 			break;
 

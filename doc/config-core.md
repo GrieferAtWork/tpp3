@@ -28,7 +28,11 @@ Default:
 
 ## TPP_HAVE_FILE_NONBLOCK
 
-API support for non-blocking I/O
+API support for non-blocking I/O. Must also be enabled on a per-file basis
+by setting the file's `TPP_FILE_FLAGS_NONBLOCK` flag. Also: calls made to
+`tpp_lexer_yield_blocking()` & friends can be used to force calls to become
+blocking, even when enabled for the current file (s.a. `TPP_EWOULDBLOCK`
+and `TPP_TOK_EWOULDBLOCK`)
 
 <details><summary>Details</summary>
 
@@ -62,7 +66,7 @@ Default:
 
 ## TPP_HAVE_BUILTIN_CTYPE_UNICODE
 
-Supply a built-in unicode character traits database (adds ~36KiB data to final executable):
+Supply a built-in unicode character traits database (adds ~36KiB data to final executable).
 Some examples of stuff that is supported when this is enabled:
 
 - `U+0085` (`NEL`)  will be treated like `U+000A` (`LF` `\n`)
@@ -93,7 +97,7 @@ Provide a function `tpp_strerror()` to get a description of a given `tpp_errno` 
 Default:
 
 ```c
-TPP_PROFILE != TPP_PROFILE_MINIMAL
+TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
@@ -106,7 +110,7 @@ Provide a function `tpp_strtokenid()` to get the API name of a (non-keyword) tok
 Default:
 
 ```c
-TPP_PROFILE != TPP_PROFILE_MINIMAL
+TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
@@ -141,8 +145,8 @@ TPP_PROFILE == TPP_PROFILE_ALL
 
 Include a counter for how often a specific I/O-file appears on the
 `#include`-stack, with that counter being stored within its filename
-keyword (used to speed up max-include-depth-like error checks, though
-those checks can also function without this per-keyword counter)
+keyword (used to speed up [`TPP_MAX_INCLUDE_DEPTH`](config-limit.md#tpp_max_include_depth) error checks, though
+those checks also work without this feature)
 
 <details><summary>Details</summary>
 
@@ -175,7 +179,7 @@ Enable support to push/pop the extension state
 Default:
 
 ```c
-TPP_HAVE_EXTENSIONS
+TPP_HAVE_EXTENSIONS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 ```
 </details>
 
@@ -201,26 +205,26 @@ Enable support to push/pop the warning state
 Default:
 
 ```c
-TPP_HAVE_WARNINGS
+TPP_HAVE_WARNINGS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 ```
 </details>
 
 ## TPP_HAVE_WARNING_NUMBERS
 
-Support for: tpp_warning_id_fromnumber()
+Support for: `tpp_warning_id_fromnumber()`
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-TPP_HAVE_WARNINGS
+TPP_HAVE_WARNINGS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 ```
 </details>
 
 ## TPP_HAVE_WARNING_ERROR
 
-Support for: TPP_WSTATE_ERROR (else: only `TPP_WSTATE_FATAL` is available)
+Support for: `TPP_WSTATE_ERROR` (else: only `TPP_WSTATE_FATAL` is available)
 
 <details><summary>Details</summary>
 
@@ -233,27 +237,27 @@ TPP_HAVE_WARNINGS && TPP_ERROR_LIMIT != 0
 
 ## TPP_HAVE_WARNING_SUPPRESS
 
-Support for: TPP_WSTATE_SUPPRESS
+Support for: `TPP_WSTATE_SUPPRESS`
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-TPP_HAVE_WARNINGS
+TPP_HAVE_WARNINGS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 ```
 </details>
 
 ## TPP_HAVE_WARNING_DEFAULT
 
-Support for: TPP_WSTATE_DEFAULT
+Support for: `TPP_WSTATE_DEFAULT`
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-TPP_HAVE_WARNINGS
+TPP_HAVE_WARNINGS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 ```
 </details>
 
@@ -326,7 +330,8 @@ TPP_PROFILE == TPP_PROFILE_ALL
 
 ## TPP_HAVE_LEXER_WARNING_COUNT
 
-Lexers keep track of the # of warnings they've emitted over their lifetime
+Lexers keep track of the # of warnings they've emitted over their lifetime. Not
+actually used for anything, but can be read using `tpp_lexer_getwarningcount()`
 
 <details><summary>Details</summary>
 
@@ -339,7 +344,7 @@ TPP_HAVE_WARNINGS && (TPP_PROFILE == TPP_PROFILE_ALL)
 
 ## TPP_HAVE_PRAGMA_TPP_WARNING
 
-Support for: #pragma TPP warning(...)  (same as TPP_HAVE_PRAGMA_WARNING, but doesn't require "-fpragma-warning")
+Support for: `#pragma TPP warning(...)`  (same as [`TPP_HAVE_PRAGMA_WARNING`](config-conf.md#tpp_have_pragma_warning), but doesn't require `"-fpragma-warning"`)
 @detect: #if __has_known_extension("-fpragma-warning")
 
 <details><summary>Details</summary>
@@ -353,7 +358,7 @@ TPP_HAVE_PRAGMA_WARNING
 
 ## TPP_HAVE_PRAGMA_TPP_EXTENSION
 
-Support for: #pragma TPP extension(...)  (same as TPP_HAVE_PRAGMA_EXTENSION, but doesn't require "-fpragma-extension")
+Support for: `#pragma TPP extension(...)`  (same as [`TPP_HAVE_PRAGMA_EXTENSION`](config-conf.md#tpp_have_pragma_extension), but doesn't require `"-fpragma-extension"`)
 @detect: #if __has_known_extension("-fpragma-extension")
 
 <details><summary>Details</summary>
@@ -367,7 +372,7 @@ TPP_HAVE_PRAGMA_EXTENSION
 
 ## TPP_HAVE_PRAGMA_TPP_TPP_EXEC
 
-Support for: #pragma TPP tpp_exec(...)  (same as TPP_HAVE_PRAGMA_TPP_EXEC, but doesn't require "-fpragma-tpp-exec")
+Support for: `#pragma TPP tpp_exec(...)`  (same as [`TPP_HAVE_PRAGMA_TPP_EXEC`](config-conf.md#tpp_have_pragma_tpp_exec), but doesn't require `"-fpragma-tpp-exec"`)
 @detect: #if __has_known_extension("-fpragma-tpp-exec")
 
 <details><summary>Details</summary>
@@ -381,7 +386,7 @@ TPP_HAVE_PRAGMA_TPP_EXEC
 
 ## TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
 
-Support for: #pragma TPP tpp_set_keyword_flags("foo", 0x7f)  (same as TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS, but doesn't require "-fpragma-tpp-set-keyword-flags")
+Support for: `#pragma TPP tpp_set_keyword_flags("foo", 0x7f)`  (same as [`TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS`](config-conf.md#tpp_have_pragma_tpp_set_keyword_flags), but doesn't require `"-fpragma-tpp-set-keyword-flags"`)
 @detect: #if __has_known_extension("-fpragma-tpp-set-keyword-flags")
 
 <details><summary>Details</summary>
@@ -395,7 +400,7 @@ TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 
 ## TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
 
-Support for: #pragma TPP include_path(...)
+Support for: `#pragma TPP include_path(...)`
 
 <details><summary>Details</summary>
 
@@ -414,6 +419,7 @@ Alter behavior of [`TPP_HAVE_STRING_ALLOW_MULTILINE`](config-conf.md#tpp_have_st
 - Multi-line strings continue to be allowed (does not affect behavior)
 - When a multi-line string is encountered, emit a
   warning `TPP_W_STRING_CONTINUED_AFTER_LINEFEED`
+  (see [`TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED`](config-warn.md#tpp_have_tpp_w_string_continued_after_linefeed))
 
 If this warning isn't wanted, it can be disabled by `-Wno-multiline-string`
 
@@ -758,9 +764,9 @@ TPP_HAVE_CPP_IF_ELSE_ENDIF
 ```
 </details>
 
-## TPP_HAVE_FILE_USER_FILENAME
+## TPP_HAVE_FILE_SETFILENAME
 
-Enable support for `tpp_file::tf_data.td_io.tff_user_filename`
+Enable support for `tpp_file_setfilename()`
 
 <details><summary>Details</summary>
 
@@ -874,7 +880,7 @@ times with different path casing:
 
 ```c
 #include <stdio.h>
-#include <Stdio.h> // `TPP_HAVE_IO_NORMALIZE_FILENAME` saves the day
+#include <STDIO.H> // `TPP_HAVE_IO_NORMALIZE_FILENAME` saves the day
 ```
 
 <details><summary>Details</summary>
@@ -946,7 +952,7 @@ Default:
 
 ## TPP_HAVE_LEXER_TIME
 
-Enable support for storing a time value in "tpp_lexer"
+Enable support for storing a time value in `tpp_lexer`
 
 <details><summary>Details</summary>
 
@@ -1007,10 +1013,10 @@ TPP_HAVE_LEXER_REPRTOKENID
 
 ## TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 
-Provide a lexer state flag `TPP_LEXER_STATE_FLAG_ALLTOKENS`
-that forces `tpp_lexer_yieldpp()` to always re-emit *all*
-tokens (rather than skip over space/lf/comment tokens based
-on `TPP_HAVE_TPP_TOK_*` and `TPP_FEAT_TPP_TOK_*`)
+Provide a lexer state flag `TPP_LEXER_STATE_FLAG_ALLTOKENS` that forces
+`tpp_lexer_yieldpp()` to always re-emit *all* tokens (rather than skip
+over space/lf/comment tokens based on [`TPP_HAVE_TPP_TOK_SPACE`](config-conf.md#tpp_have_tpp_tok_space),
+[`TPP_HAVE_TPP_TOK_LF`](config-conf.md#tpp_have_tpp_tok_lf) and [`TPP_HAVE_TPP_TOK_COMMENT`](config-conf.md#tpp_have_tpp_tok_comment))
 
 This flag is also needed internally when TPP needs to expand
 the arguments supplied to a user-defined macro
@@ -1056,7 +1062,7 @@ TPP_HAVE_CPP_MACROS
 
 ## TPP_HAVE_LEXER_SEEKPP_RPAREN
 
-Provide a function `tpp_lexer_seek_rparen()` that can be used
+Provide a function `tpp_lexer_seekpp_rparen()` that can be used
 to find the position of a matching `)`-token for the purpose
 of macro argument lists.
 
@@ -1071,8 +1077,9 @@ TPP_HAVE_CPP_MACROS
 
 ## TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 
-Same as `tpp_lexer_seek_rparen()`, but also able to deal with
-alternate parenthesis pairs: `[ ]` `{ }` `< >`
+Provide a function `tpp_lexer_seekpp_rparen_ex()` that is pretty much
+the same as `tpp_lexer_seekpp_rparen()`, but is also able to deal with
+alternate parenthesis pairs: `[ ]` `{ }` `< >` in addition to `( )`
 
 <details><summary>Details</summary>
 

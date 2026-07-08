@@ -77,11 +77,11 @@ int main(int argc, char *argv[]) {
 				tok = TPP_TOK_OFERR(error);
 			break;
 		}
-#if 0
+#if 1
 		printf("%.*s",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));
-#elif 0
+#elif 1
 		printf("[%.*s]",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));

@@ -4783,7 +4783,11 @@ TPP_DECL_END
 #define TPP_IGNORE_INVALID_CONFIGURATION 0
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 
-/* API support for non-blocking I/O */
+/* API support for non-blocking I/O. Must also be enabled on a per-file basis
+ * by setting the file's `TPP_FILE_FLAGS_NONBLOCK` flag. Also: calls made to
+ * `tpp_lexer_yield_blocking()` & friends can be used to force calls to become
+ * blocking, even when enabled for the current file (s.a. `TPP_EWOULDBLOCK`
+ * and `TPP_TOK_EWOULDBLOCK`) */
 #ifndef TPP_HAVE_FILE_NONBLOCK
 #define TPP_HAVE_FILE_NONBLOCK (TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_OS_WINDOWS || TPP_OS_UNIX))
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
@@ -4809,7 +4813,7 @@ TPP_DECL_END
 #define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* There are user-supplied unicode trait functions */
 #endif /* !... */
 
-/* Supply a built-in unicode character traits database (adds ~36KiB data to final executable):
+/* Supply a built-in unicode character traits database (adds ~36KiB data to final executable).
  * Some examples of stuff that is supported when this is enabled:
  * - `U+0085` (`NEL`)  will be treated like `U+000A` (`LF` `\n`)
  * - `U+00A0` (`NBSP`) will be treated like `U+0020` (`space` `\s`)
@@ -4826,12 +4830,12 @@ TPP_DECL_END
 
 /* Provide a function `tpp_strerror()` to get a description of a given `tpp_errno` error code */
 #ifndef TPP_HAVE_STRERROR
-#define TPP_HAVE_STRERROR TPP_HAVE_PROFILE_NOT_MINIMAL
+#define TPP_HAVE_STRERROR (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_STRERROR */
 
 /* Provide a function `tpp_strtokenid()` to get the API name of a (non-keyword) token ID */
 #ifndef TPP_HAVE_STRTOKENID
-#define TPP_HAVE_STRTOKENID TPP_HAVE_PROFILE_NOT_MINIMAL
+#define TPP_HAVE_STRTOKENID (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_STRTOKENID */
 
 /* Enable support for storing custom user-data in keywords */
@@ -4847,8 +4851,8 @@ TPP_DECL_END
 
 /* Include a counter for how often a specific I/O-file appears on the
  * `#include`-stack, with that counter being stored within its filename
- * keyword (used to speed up max-include-depth-like error checks, though
- * those checks can also function without this per-keyword counter) */
+ * keyword (used to speed up `TPP_MAX_INCLUDE_DEPTH` error checks, though
+ * those checks also work without this feature) */
 #ifndef TPP_HAVE_KEYWORD_INCLCOUNT
 #define TPP_HAVE_KEYWORD_INCLCOUNT (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_MAX_INCLUDE_DEPTH != 0)
 #endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */
@@ -4860,7 +4864,7 @@ TPP_DECL_END
 
 /* Enable support to push/pop the extension state */
 #ifndef TPP_HAVE_EXTENSIONS_PUSH_POP
-#define TPP_HAVE_EXTENSIONS_PUSH_POP TPP_HAVE_EXTENSIONS
+#define TPP_HAVE_EXTENSIONS_PUSH_POP (TPP_HAVE_EXTENSIONS && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_EXTENSIONS_PUSH_POP */
 
 /* Support for: compiler warnings (else: behave as though all warnings were being suppressed) */
@@ -4870,27 +4874,27 @@ TPP_DECL_END
 
 /* Enable support to push/pop the warning state */
 #ifndef TPP_HAVE_WARNINGS_PUSH_POP
-#define TPP_HAVE_WARNINGS_PUSH_POP TPP_HAVE_WARNINGS
+#define TPP_HAVE_WARNINGS_PUSH_POP (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
 
-/* Support for: tpp_warning_id_fromnumber() */
+/* Support for: `tpp_warning_id_fromnumber()` */
 #ifndef TPP_HAVE_WARNING_NUMBERS
-#define TPP_HAVE_WARNING_NUMBERS TPP_HAVE_WARNINGS
+#define TPP_HAVE_WARNING_NUMBERS (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_WARNING_NUMBERS */
 
-/* Support for: TPP_WSTATE_ERROR (else: only `TPP_WSTATE_FATAL` is available) */
+/* Support for: `TPP_WSTATE_ERROR` (else: only `TPP_WSTATE_FATAL` is available) */
 #ifndef TPP_HAVE_WARNING_ERROR
 #define TPP_HAVE_WARNING_ERROR (TPP_HAVE_WARNINGS && TPP_ERROR_LIMIT != 0)
 #endif /* !TPP_HAVE_WARNING_ERROR */
 
-/* Support for: TPP_WSTATE_SUPPRESS */
+/* Support for: `TPP_WSTATE_SUPPRESS` */
 #ifndef TPP_HAVE_WARNING_SUPPRESS
-#define TPP_HAVE_WARNING_SUPPRESS TPP_HAVE_WARNINGS
+#define TPP_HAVE_WARNING_SUPPRESS (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_WARNING_SUPPRESS */
 
-/* Support for: TPP_WSTATE_DEFAULT */
+/* Support for: `TPP_WSTATE_DEFAULT` */
 #ifndef TPP_HAVE_WARNING_DEFAULT
-#define TPP_HAVE_WARNING_DEFAULT TPP_HAVE_WARNINGS
+#define TPP_HAVE_WARNING_DEFAULT (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_WARNING_DEFAULT */
 
 /* Enable support for `TPP_FILE_FLAGS_NOCLOSE` */
@@ -4920,7 +4924,8 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_COPY (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_LEXER_COPY */
 
-/* Lexers keep track of the # of warnings they've emitted over their lifetime */
+/* Lexers keep track of the # of warnings they've emitted over their lifetime. Not
+ * actually used for anything, but can be read using `tpp_lexer_getwarningcount()` */
 #ifndef TPP_HAVE_LEXER_WARNING_COUNT
 #define TPP_HAVE_LEXER_WARNING_COUNT (TPP_HAVE_WARNINGS && (TPP_PROFILE == TPP_PROFILE_ALL))
 #endif /* !TPP_HAVE_LEXER_WARNING_COUNT */
@@ -5112,7 +5117,7 @@ TPP_DECL_END
 
 /* Support for `\e` (for `U+001B`) escape sequences:
  * ```c
- * printf("Error: \e[31m%d\e[0m");
+ * printf("Error: \e[31m%d\e[0m", errno);
  * ```
  *
  * @detect: N/A */
@@ -5548,7 +5553,7 @@ TPP_DECL_END
 /* Support for the builtin macro `__TPP_EVAL()`
  *
  * Evaluate an expression like in `#if`, then expand to its result
- * in the form of 1-2 tokens: `[opt:MINUS][INT]` (or a `"string"`
+ * in the form of 1-2 tokens: `[<int>]` or `[-][<int>]` (or `[<string>]`
  * if `TPP_HAVE_BUILTIN_EXPR_STRINGS` is enabled):
  * ```c
  * __TPP_EVAL(10 + 20) // Expands to a single token: 30
@@ -5684,8 +5689,8 @@ TPP_DECL_END
  * A token-feature probing macro that lets you count the # of
  * tokens that are contained within a given string. For this
  * purpose, no macro expansion or directive processing is done:
- * ```
- * __TPP_COUNT_TOKENS("++")  // 1 if "TPP_HAVE_TPP_TOK_PLUS_PLUS" is enabled, else 2
+ * ```c
+ * __TPP_COUNT_TOKENS("++")         // 1 if "TPP_HAVE_TPP_TOK_PLUS_PLUS" is enabled, else 2
  * #define FOO 10 20 30
  * __TPP_COUNT_TOKENS("FOO")        // 1 because macros aren't expanded
  * __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TPP_TOK_SPACE) because directives aren't parsed
@@ -5727,6 +5732,11 @@ TPP_DECL_END
  * #define array[index]    get_ident(ARRAY, index)
  * #define block{...}      do { __VA_ARGS__ } while (should_continue())
  * #define point<T>        struct { T x; T y; }
+ *
+ * normal_macro(foo) // you_should("know this", foo)
+ * array[42]         // get_ident(ARRAY, 42)
+ * block { body }    // do { body } while (should_continue())
+ * point<int>        // struct { int x; int y; }
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -5760,7 +5770,7 @@ TPP_DECL_END
  * #define REPEAT_(v, n, x) REPEAT__(v, n, #!x)
  * #define REPEAT(n, x) REPEAT_(__TPP_EVAL((n) > 0), __TPP_EVAL((n)-1), #!x)
  * #pragma extension(pop)
- * REPEAT(42, HELLO_WORLD)
+ * REPEAT(42, HELLO_WORLD) // HELLO_WORLD HELLO_WORLD HELLO_WORLD [...] (42 times)
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -5791,7 +5801,7 @@ TPP_DECL_END
 
 /* Support for variable-argument macros with named varargs:
  * ```c
- * #define printf(format, args...) args
+ * #define printf(format, args...) fprintf(stdout, format, args)
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -5802,7 +5812,7 @@ TPP_DECL_END
 
 /* Support for variable-argument macros:
  * ```c
- * #define printf(format, ...) __VA_ARGS__
+ * #define printf(format, ...) fprintf(stdout, format, __VA_ARGS__)
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -5814,9 +5824,9 @@ TPP_DECL_END
 /* Support for special keyword `__VA_COMMA__` inside of variable-argument macros.
  * When varargs are non-empty, replaced with `,`. Otherwise, replaced with nothing:
  * ```c
- * #define printf(format, ...) fprintf(stderr, format __VA_COMMA__ __VA_ARGS__)
- * printf("foo\n");         // fprintf(stderr, "foo\n");
- * printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
+ * #define printf(format, ...) fprintf(stdout, format __VA_COMMA__ __VA_ARGS__)
+ * printf("foo\n");         // fprintf(stdout, "foo\n");
+ * printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n", 10);
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -5831,9 +5841,9 @@ TPP_DECL_END
  * When varargs are non-empty, the content within parenthesis is kept. Otherwise,
  * replaced said content is removed alongside the `__VA_OPT__()` call itself:
  * ```c
- * #define printf(format, ...) fprintf(stderr, format __VA_OPT__(,) __VA_ARGS__)
- * printf("foo\n");         // fprintf(stderr, "foo\n");
- * printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
+ * #define printf(format, ...) fprintf(stdout, format __VA_OPT__(,) __VA_ARGS__)
+ * printf("foo\n");         // fprintf(stdout, "foo\n");
+ * printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n", 10);
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -5874,9 +5884,9 @@ TPP_DECL_END
  * the there are no variable arguments:
  *
  * ```c
- * #define printf(format, ...) fprintf(stderr, format, ##__VA_ARGS__)
- * printf("foo\n");         // fprintf(stderr, "foo\n");
- * printf("i = %d\n", 10);  // fprintf(stderr, "i = %d\n", 10);
+ * #define printf(format, ...) fprintf(stdout, format, ##__VA_ARGS__)
+ * printf("foo\n");         // fprintf(stdout, "foo\n");
+ * printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n", 10);
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -5981,7 +5991,7 @@ TPP_DECL_END
 /* #PRAGMA DIRECTIVES                                                   */
 /************************************************************************/
 
-/* Support for: #pragma push_macro() / #pragma pop_macro()
+/* Support for: `#pragma push_macro()` / `#pragma pop_macro()`
  * @detect: #define TEST 42
  *          #pragma push_macro("TEST")
  *          #undef TEST
@@ -5991,121 +6001,121 @@ TPP_DECL_END
 #define TPP_HAVE_PRAGMA_PUSH_MACRO ((TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-push-macro" */
 #endif /* !TPP_HAVE_PRAGMA_PUSH_MACRO */
 
-/* Support for: #pragma once
+/* Support for: `#pragma once`
  * @detect: #if __has_known_extension("-fpragma-once") */
 #ifndef TPP_HAVE_PRAGMA_ONCE
 #define TPP_HAVE_PRAGMA_ONCE (((TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_HAVE_PRAGMA) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-once" */
 #endif /* !TPP_HAVE_PRAGMA_ONCE */
 
-/* Support for: #pragma deprecated("foo")
+/* Support for: `#pragma deprecated("foo")`
  * @detect: #if __has_known_extension("-fpragma-deprecated") */
 #ifndef TPP_HAVE_PRAGMA_DEPRECATED
 #define TPP_HAVE_PRAGMA_DEPRECATED (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-deprecated" */
 #endif /* !TPP_HAVE_PRAGMA_DEPRECATED */
 
-/* Support for: #pragma extension(...)
+/* Support for: `#pragma extension(...)`
  * @detect: #if __has_known_extension("-fpragma-extension") */
 #ifndef TPP_HAVE_PRAGMA_EXTENSION
 #define TPP_HAVE_PRAGMA_EXTENSION ((TPP_HAVE_PRAGMA && TPP_HAVE_EXTENSIONS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-extension" */
 #endif /* !TPP_HAVE_PRAGMA_EXTENSION */
 
-/* Support for: #pragma warning(...)
+/* Support for: `#pragma warning(...)`
  * @detect: #if __has_known_extension("-fpragma-warning") */
 #ifndef TPP_HAVE_PRAGMA_WARNING
 #define TPP_HAVE_PRAGMA_WARNING ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-warning" */
 #endif /* !TPP_HAVE_PRAGMA_WARNING */
 
-/* Support for: #pragma message("...")
+/* Support for: `#pragma message("...")`
  * @detect: #if __has_known_extension("-fpragma-message") */
 #ifndef TPP_HAVE_PRAGMA_MESSAGE
 #define TPP_HAVE_PRAGMA_MESSAGE (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-message" */
 #endif /* !TPP_HAVE_PRAGMA_MESSAGE */
 
-/* Support for: #pragma error("...")
+/* Support for: `#pragma error("...")`
  * @detect: #if __has_known_extension("-fpragma-error") */
 #ifndef TPP_HAVE_PRAGMA_ERROR
 #define TPP_HAVE_PRAGMA_ERROR (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-error" */
 #endif /* !TPP_HAVE_PRAGMA_ERROR */
 
-/* Support for: #pragma region,  #pragma endregion
+/* Support for: `#pragma region` + `#pragma endregion`
  * @detect: #if __has_known_extension("-fpragma-region") */
 #ifndef TPP_HAVE_PRAGMA_REGION
 #define TPP_HAVE_PRAGMA_REGION (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-region" */
 #endif /* !TPP_HAVE_PRAGMA_REGION */
 
-/* Support for: #pragma tpp_exec("...")
+/* Support for: `#pragma tpp_exec("...")`
  * @detect: #if __has_known_extension("-fpragma-tpp-exec") */
 #ifndef TPP_HAVE_PRAGMA_TPP_EXEC
 #define TPP_HAVE_PRAGMA_TPP_EXEC (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-tpp-exec" */
 #endif /* !TPP_HAVE_PRAGMA_TPP_EXEC */
 
-/* Support for: #pragma tpp_set_keyword_flags("foo", 0x7f)
+/* Support for: `#pragma tpp_set_keyword_flags("foo", 0x7f)`
  * @detect: #if __has_known_extension("-fpragma-tpp-set-keyword-flags") */
 #ifndef TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 #define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-tpp-set-keyword-flags" */
 #endif /* !TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
 
-/* Support for: #pragma GCC poison foo
+/* Support for: `#pragma GCC poison foo`
  * @detect: #if __has_known_extension("-fpragma-gcc-poison") */
 #ifndef TPP_HAVE_PRAGMA_GCC_POISON
 #define TPP_HAVE_PRAGMA_GCC_POISON (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-poison" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_POISON */
 
-/* Support for: #pragma GCC warning "message"
+/* Support for: `#pragma GCC warning "message"`
  * @detect: #if __has_known_extension("-fpragma-gcc-warning") */
 #ifndef TPP_HAVE_PRAGMA_GCC_WARNING
 #define TPP_HAVE_PRAGMA_GCC_WARNING ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-warning" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_WARNING */
 
-/* Support for: #pragma GCC error "message"
+/* Support for: `#pragma GCC error "message"`
  * @detect: #if __has_known_extension("-fpragma-gcc-error") */
 #ifndef TPP_HAVE_PRAGMA_GCC_ERROR
 #define TPP_HAVE_PRAGMA_GCC_ERROR ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-error" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_ERROR */
 
-/* Support for: #pragma GCC system_header
+/* Support for: `#pragma GCC system_header`
  * @detect: #if __has_known_extension("-fpragma-gcc-system-header") */
 #ifndef TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
 #define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-system-header" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
 
-/* Support for: #pragma GCC diagnostic
+/* Support for: `#pragma GCC diagnostic`
  * @detect: #if __has_known_extension("-fpragma-gcc-diagnostic") */
 #ifndef TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
 #define TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-diagnostic" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC */
 
-/* Support for: #pragma GCC dependency
+/* Support for: `#pragma GCC dependency`
  * @detect: #if __has_known_extension("-fpragma-gcc-dependency") */
 #ifndef TPP_HAVE_PRAGMA_GCC_DEPENDENCY
 #define TPP_HAVE_PRAGMA_GCC_DEPENDENCY (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-dependency" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_DEPENDENCY */
 
-/* Support for: #pragma TPP warning(...)  (same as TPP_HAVE_PRAGMA_WARNING, but doesn't require "-fpragma-warning")
+/* Support for: `#pragma TPP warning(...)`  (same as `TPP_HAVE_PRAGMA_WARNING`, but doesn't require `"-fpragma-warning"`)
  * @detect: #if __has_known_extension("-fpragma-warning") */
 #ifndef TPP_HAVE_PRAGMA_TPP_WARNING
 #define TPP_HAVE_PRAGMA_TPP_WARNING TPP_HAVE_PRAGMA_WARNING
 #endif /* !TPP_HAVE_PRAGMA_TPP_WARNING */
 
-/* Support for: #pragma TPP extension(...)  (same as TPP_HAVE_PRAGMA_EXTENSION, but doesn't require "-fpragma-extension")
+/* Support for: `#pragma TPP extension(...)`  (same as `TPP_HAVE_PRAGMA_EXTENSION`, but doesn't require `"-fpragma-extension"`)
  * @detect: #if __has_known_extension("-fpragma-extension") */
 #ifndef TPP_HAVE_PRAGMA_TPP_EXTENSION
 #define TPP_HAVE_PRAGMA_TPP_EXTENSION TPP_HAVE_PRAGMA_EXTENSION
 #endif /* !TPP_HAVE_PRAGMA_TPP_EXTENSION */
 
-/* Support for: #pragma TPP tpp_exec(...)  (same as TPP_HAVE_PRAGMA_TPP_EXEC, but doesn't require "-fpragma-tpp-exec")
+/* Support for: `#pragma TPP tpp_exec(...)`  (same as `TPP_HAVE_PRAGMA_TPP_EXEC`, but doesn't require `"-fpragma-tpp-exec"`)
  * @detect: #if __has_known_extension("-fpragma-tpp-exec") */
 #ifndef TPP_HAVE_PRAGMA_TPP_TPP_EXEC
 #define TPP_HAVE_PRAGMA_TPP_TPP_EXEC TPP_HAVE_PRAGMA_TPP_EXEC
 #endif /* !TPP_HAVE_PRAGMA_TPP_TPP_EXEC */
 
-/* Support for: #pragma TPP tpp_set_keyword_flags("foo", 0x7f)  (same as TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS, but doesn't require "-fpragma-tpp-set-keyword-flags")
+/* Support for: `#pragma TPP tpp_set_keyword_flags("foo", 0x7f)`  (same as `TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS`, but doesn't require `"-fpragma-tpp-set-keyword-flags"`)
  * @detect: #if __has_known_extension("-fpragma-tpp-set-keyword-flags") */
 #ifndef TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
 #define TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 #endif /* !TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS */
 
-/* Support for: #pragma TPP include_path(...) */
+/* Support for: `#pragma TPP include_path(...)` */
 #ifndef TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
 #define TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH (TPP_HAVE_PRAGMA && TPP_HAVE_INCLUDE_PATH)
 #endif /* !TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
@@ -6151,7 +6161,7 @@ TPP_DECL_END
  * | `??)`    | `]`         |
  * | `??'`    | `^`         |
  * | `??<`    | `{`         |
- * | `??!`    | `|`         |
+ * | `??!`    | `\|`        |
  * | `??>`    | `}`         |
  * | `??-`    | `~`         |
  * | `???`    | `?`         | */
@@ -6250,7 +6260,7 @@ TPP_DECL_END
 /* Single-char tokens                                                   */
 /************************************************************************/
 
-/* "$" (treat as its own token, rather than as part of identifiers/keywords)
+/* When enabled, `$` is treated as its own token, rather than as part of identifiers/keywords.
  * @detect: #if __TPP_COUNT_TOKENS("a$b") == 3 */
 #ifndef TPP_HAVE_TPP_TOK_DOLLAR
 #define TPP_HAVE_TPP_TOK_DOLLAR TPP_COMMON_HAVE_TPP_TOK_1CHAR /* "-ftok-dollar" */
@@ -6276,13 +6286,13 @@ TPP_DECL_END
 
 /* XXX: Feature to disable support for C-style "0x" radix prefixes in tpp_lexer_decodeint() */
 
-/* 123
+/* `123`
  * @detect: #if __TPP_COUNT_TOKENS("123") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_INT
 #define TPP_HAVE_TPP_TOK_INT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-int" */
 #endif /* !TPP_HAVE_TPP_TOK_INT */
 
-/* 123.0
+/* `123.0`
  * @detect: #if __TPP_COUNT_TOKENS("123.0") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_FLOAT
 #define TPP_HAVE_TPP_TOK_FLOAT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-float" */
@@ -6449,13 +6459,13 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf32-char-literal" */
 #endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
 
-/* Support for string literals: `R"foo"` and `r"foo"`
+/* Support for deemon-style raw string literals: `R"foo"` and `r"foo"`
  * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 9 */
 #ifndef TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
 #define TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-raw-string-literal" */
 #endif /* !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
 
-/* Support for string literals: `R'bar'` and `r'bar'`
+/* Support for deemon-style raw string literals: `R'bar'` and `r'bar'`
  * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 9 */
 #ifndef TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
 #define TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-raw-char-literal" */
@@ -6501,6 +6511,7 @@ TPP_DECL_END
  * - Multi-line strings continue to be allowed (does not affect behavior)
  * - When a multi-line string is encountered, emit a
  *   warning `TPP_W_STRING_CONTINUED_AFTER_LINEFEED`
+ *   (see `TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED`)
  *
  * If this warning isn't wanted, it can be disabled by `-Wno-multiline-string` */
 #ifndef TPP_HAVE_STRING_WARN_MULTILINE
@@ -7843,15 +7854,38 @@ TPP_DECL_END
 #define TPP_HAVE_BUILTIN_EXPR_DEFINED ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fdefined-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_DEFINED */
 
-/* Enable special handling in `#define foo(x) defined(x)` such that `x` is not expanded
+/* Enable special handling in `#define foo(x) defined(x)` such that `x` is not expanded.
+ * Irregardless of this feature being enabled or not, a warning `TPP_W_EXPANSION_TO_DEFINED`
+ * is emitted whenever a construct `defined(<param>)` or `defined <param>` is encountered
+ * within the body of a function-style macro definition, where `<param>` is the name of one
+ * of the macro's parameters (see `TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED`).
+ *
  * @detect: #define test(x) defined(x)
- *          #define test2   test1
+ *          #define test2   NOT_DEFINED
  *          #if test(test2) */
 #ifndef TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
 #define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR ((TPP_HAVE_BUILTIN_EXPR_DEFINED && TPP_HAVE_CPP_MACROS && TPP_HAVE_PROFILE_NOT_MINIMAL) ? TPP_CONF_EXT0 : 0) /* "-fdont-expand-defined" */
 #endif /* !TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR */
 
-/* Enable support for string operations in builtin lexer expressions
+/* Enable support for strings in builtin lexer expressions, as well as some new operators:
+ * ```c
+ * #if "FOO" != "BAR"
+ * ...
+ * #endif
+ *
+ * #if "FOO"[0] == 'F'
+ * ...
+ * #endif
+ *
+ * #if "FOO"[1:] == "OO"
+ * ...
+ * #endif
+ *
+ * #if #"FOO" == 3
+ * ...
+ * #endif
+ * ```
+ *
  * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_STRINGS
 #define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_STRINGLIKE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fstrings-in-expressions" */
@@ -7869,11 +7903,16 @@ TPP_DECL_END
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fif-else-optional-true" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
 
-/* Enable support for `if (foo) bar else baz` in builtin lexer expressions
+/* Enable support for `if (foo) bar else baz` in builtin
+ * lexer expressions, as alias for `foo ? bar : baz`.
  * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fifelse-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
+
+/* XXX: Also have an extension for python's `tt if cond else ff`
+ *      syntax, though TPP won't be able to guaranty that `tt`
+ *      is only evaluated when `cond` evaluates to true! */
 
 /* Enable support for `^^` in builtin lexer expressions
  * @detect: N/A */
@@ -7929,10 +7968,10 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fdecimal-type-float" */
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX */
 
-/* Treat `'a'` in expressions as an integer, rather than as a string (in C, this is always the case)
+/* Treat `'a'` in expressions as an integer, rather than as a string (in C/C++, this is always the case)
  * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
-#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_STRINGLIKE_SQUOTE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : 0) /* "-fcharacter-literals" */
+#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : (TPP_HAVE_PROFILE_C_LIKE ? 1 : 0)) : 0) /* "-fcharacter-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
 /************************************************************************/
 /************************************************************************/
@@ -8109,10 +8148,10 @@ TPP_DECL_END
 #define TPP_HAVE_IFDEF_STACK (TPP_HAVE_CPP_IF_ELSE_ENDIF)
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
-/* Enable support for `tpp_file::tf_data.td_io.tff_user_filename` */
-#ifndef TPP_HAVE_FILE_USER_FILENAME
-#define TPP_HAVE_FILE_USER_FILENAME (TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE)
-#endif /* !TPP_HAVE_FILE_USER_FILENAME */
+/* Enable support for `tpp_file_setfilename()` */
+#ifndef TPP_HAVE_FILE_SETFILENAME
+#define TPP_HAVE_FILE_SETFILENAME (TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE)
+#endif /* !TPP_HAVE_FILE_SETFILENAME */
 
 /* Enable support for `tpp_file_setline()` */
 #ifndef TPP_HAVE_FILE_SETLINE
@@ -8167,7 +8206,7 @@ TPP_DECL_END
  * times with different path casing:
  * ```c
  * #include <stdio.h>
- * #include <Stdio.h> // `TPP_HAVE_IO_NORMALIZE_FILENAME` saves the day
+ * #include <STDIO.H> // `TPP_HAVE_IO_NORMALIZE_FILENAME` saves the day
  * ```
  */
 #ifndef TPP_HAVE_IO_NORMALIZE_FILENAME
@@ -8227,7 +8266,7 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_SKIP */
 
-/* Enable support for storing a time value in "tpp_lexer" */
+/* Enable support for storing a time value in `tpp_lexer` */
 #ifndef TPP_HAVE_LEXER_TIME
 #define TPP_HAVE_LEXER_TIME TPP_HAVE_TIME_API
 #endif /* !TPP_HAVE_LEXER_TIME */
@@ -8256,10 +8295,10 @@ TPP_DECL_END
 #define TPP_HAVE_REPRTOKENID (TPP_HAVE_LEXER_REPRTOKENID)
 #endif /* !TPP_HAVE_REPRTOKENID */
 
-/* Provide a lexer state flag `TPP_LEXER_STATE_FLAG_ALLTOKENS`
- * that forces `tpp_lexer_yieldpp()` to always re-emit *all*
- * tokens (rather than skip over space/lf/comment tokens based
- * on `TPP_HAVE_TPP_TOK_*` and `TPP_FEAT_TPP_TOK_*`)
+/* Provide a lexer state flag `TPP_LEXER_STATE_FLAG_ALLTOKENS` that forces
+ * `tpp_lexer_yieldpp()` to always re-emit *all* tokens (rather than skip
+ * over space/lf/comment tokens based on `TPP_HAVE_TPP_TOK_SPACE`,
+ * `TPP_HAVE_TPP_TOK_LF` and `TPP_HAVE_TPP_TOK_COMMENT`)
  *
  * This flag is also needed internally when TPP needs to expand
  * the arguments supplied to a user-defined macro */
@@ -8293,15 +8332,16 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS/* && TPP_HAVE_INCLUDE_STACK*/)
 #endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
 
-/* Provide a function `tpp_lexer_seek_rparen()` that can be used
+/* Provide a function `tpp_lexer_seekpp_rparen()` that can be used
  * to find the position of a matching `)`-token for the purpose
  * of macro argument lists. */
 #ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN
 #define TPP_HAVE_LEXER_SEEKPP_RPAREN (TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN */
 
-/* Same as `tpp_lexer_seek_rparen()`, but also able to deal with
- * alternate parenthesis pairs: `[ ]` `{ }` `< >` */
+/* Provide a function `tpp_lexer_seekpp_rparen_ex()` that is pretty much
+ * the same as `tpp_lexer_seekpp_rparen()`, but is also able to deal with
+ * alternate parenthesis pairs: `[ ]` `{ }` `< >` in addition to `( )` */
 #ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 #define TPP_HAVE_LEXER_SEEKPP_RPAREN_EX (TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
@@ -14351,12 +14391,12 @@ typedef struct tpp_file {
 		struct {
 			char const      *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
 			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_io_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_user_filename) = NULL
-#else /* TPP_HAVE_FILE_USER_FILENAME */
+#else /* TPP_HAVE_FILE_SETFILENAME */
 #define _tpp_file_init_io_user_filename(self) /* nothing */
-#endif /* !TPP_HAVE_FILE_USER_FILENAME */
+#endif /* !TPP_HAVE_FILE_SETFILENAME */
 #if TPP_HAVE_FILE_KEEPPOS
 			/* Need an additional "tpp_char const *ttf_keep" here whose only purpose
 			 * is to set an extra, lower-bound of effective text-data to always
@@ -14412,12 +14452,12 @@ typedef struct tpp_file {
 		struct {
 			char const *TPP_INTERNAL(tft_name);     /* [0..1][const] Filename for messages (if available) */
 			tpp_lcinfo  TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tft_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_text_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename) = NULL
-#else /* TPP_HAVE_FILE_USER_FILENAME */
+#else /* TPP_HAVE_FILE_SETFILENAME */
 #define _tpp_file_init_text_user_filename(self) /* nothing */
-#endif /* !TPP_HAVE_FILE_USER_FILENAME */
+#endif /* !TPP_HAVE_FILE_SETFILENAME */
 		} TPP_INTERNAL(td_text); /* [tf_kind == TPP_FILE_KIND_TEXT] */
 
 #if TPP_HAVE_CPP_MACROS
@@ -14437,9 +14477,9 @@ typedef struct tpp_file {
 		struct {
 			char const *TPP_INTERNAL(tfd_name);     /* [0..1][const] Filename for messages (if available) */
 			tpp_lcinfo  TPP_INTERNAL(tfd_start_lc); /* Line/Column numbers (0-based), or `TPP_LCINFO_INVALID' */
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tfd_user_filename); /* [0..1] User-defined override for name of this file */
-#endif /* TPP_HAVE_FILE_USER_FILENAME */
+#endif /* TPP_HAVE_FILE_SETFILENAME */
 		} TPP_INTERNAL(td_dummy); /* [tf_kind == TPP_FILE_KIND_DUMMY] */
 #endif /* TPP_HAVE_FILE_DUMMY */
 
@@ -14980,7 +15020,7 @@ tpp_file_getrealfilenamekwd(tpp_file const *tpp_restrict self);
 #endif /* TPP_HAVE_FILE_GETREALFILENAMEKWD */
 
 /* Same as `tpp_file_getrealfilename()', but may be overwritten by "#line" directives */
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_getfilename(tpp_file const *tpp_restrict self);
 
@@ -14993,9 +15033,9 @@ tpp_file_getfilename(tpp_file const *tpp_restrict self);
  * You may also pass "NULL" for `filename' to disable the override */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename);
-#else /* TPP_HAVE_FILE_USER_FILENAME */
+#else /* TPP_HAVE_FILE_SETFILENAME */
 #define tpp_file_getfilename(self) tpp_file_getrealfilename(self)
-#endif /* !TPP_HAVE_FILE_USER_FILENAME */
+#endif /* !TPP_HAVE_FILE_SETFILENAME */
 
 /* Set the (0-based) line that applies to "pos"
  * (as returned by "tpp_file_getlcinfo") in "self"

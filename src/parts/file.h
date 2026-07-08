@@ -239,12 +239,12 @@ typedef struct tpp_file {
 		struct {
 			char const      *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
 			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_io_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_user_filename) = NULL
-#else /* TPP_HAVE_FILE_USER_FILENAME */
+#else /* TPP_HAVE_FILE_SETFILENAME */
 #define _tpp_file_init_io_user_filename(self) /* nothing */
-#endif /* !TPP_HAVE_FILE_USER_FILENAME */
+#endif /* !TPP_HAVE_FILE_SETFILENAME */
 #if TPP_HAVE_FILE_KEEPPOS
 			/* Need an additional "tpp_char const *ttf_keep" here whose only purpose
 			 * is to set an extra, lower-bound of effective text-data to always
@@ -300,12 +300,12 @@ typedef struct tpp_file {
 		struct {
 			char const *TPP_INTERNAL(tft_name);     /* [0..1][const] Filename for messages (if available) */
 			tpp_lcinfo  TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tft_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_text_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename) = NULL
-#else /* TPP_HAVE_FILE_USER_FILENAME */
+#else /* TPP_HAVE_FILE_SETFILENAME */
 #define _tpp_file_init_text_user_filename(self) /* nothing */
-#endif /* !TPP_HAVE_FILE_USER_FILENAME */
+#endif /* !TPP_HAVE_FILE_SETFILENAME */
 		} TPP_INTERNAL(td_text); /* [tf_kind == TPP_FILE_KIND_TEXT] */
 
 #if TPP_HAVE_CPP_MACROS
@@ -325,9 +325,9 @@ typedef struct tpp_file {
 		struct {
 			char const *TPP_INTERNAL(tfd_name);     /* [0..1][const] Filename for messages (if available) */
 			tpp_lcinfo  TPP_INTERNAL(tfd_start_lc); /* Line/Column numbers (0-based), or `TPP_LCINFO_INVALID' */
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tfd_user_filename); /* [0..1] User-defined override for name of this file */
-#endif /* TPP_HAVE_FILE_USER_FILENAME */
+#endif /* TPP_HAVE_FILE_SETFILENAME */
 		} TPP_INTERNAL(td_dummy); /* [tf_kind == TPP_FILE_KIND_DUMMY] */
 #endif /* TPP_HAVE_FILE_DUMMY */
 
@@ -868,7 +868,7 @@ tpp_file_getrealfilenamekwd(tpp_file const *tpp_restrict self);
 #endif /* TPP_HAVE_FILE_GETREALFILENAMEKWD */
 
 /* Same as `tpp_file_getrealfilename()', but may be overwritten by "#line" directives */
-#if TPP_HAVE_FILE_USER_FILENAME
+#if TPP_HAVE_FILE_SETFILENAME
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_getfilename(tpp_file const *tpp_restrict self);
 
@@ -881,9 +881,9 @@ tpp_file_getfilename(tpp_file const *tpp_restrict self);
  * You may also pass "NULL" for `filename' to disable the override */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename);
-#else /* TPP_HAVE_FILE_USER_FILENAME */
+#else /* TPP_HAVE_FILE_SETFILENAME */
 #define tpp_file_getfilename(self) tpp_file_getrealfilename(self)
-#endif /* !TPP_HAVE_FILE_USER_FILENAME */
+#endif /* !TPP_HAVE_FILE_SETFILENAME */
 
 /* Set the (0-based) line that applies to "pos"
  * (as returned by "tpp_file_getlcinfo") in "self"
