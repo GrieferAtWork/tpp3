@@ -472,7 +472,7 @@ TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
 
 ## TPP_HAVE_LEXER_OPENFILE
 
-Enable support for `tpp_keywords_openfile()`
+Enable support for `tpp_lexer_openfile()`
 
 <details><summary>Details</summary>
 
@@ -485,7 +485,7 @@ TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLU
 
 ## TPP_HAVE_LEXER_OPENFILE_EX
 
-Enable support for `tpp_keywords_openfile_ex()`
+Enable support for `tpp_lexer_openfile_ex()`
 
 <details><summary>Details</summary>
 
@@ -575,7 +575,7 @@ Provide an API function `tpp_unicode_writeutf8()`
 Default:
 
 ```c
-TPP_HAVE_TPP_TOK_STRING || TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_CHAR || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL || TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+TPP_HAVE_TPP_TOK_C_STRING || TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_C_CHAR || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL || TPP_HAVE_ESCAPE_IN_IDENTIFIERS
 ```
 </details>
 
@@ -816,7 +816,7 @@ TPP_HAVE_CPP_MACROS && TPP_HAVE_LEXER_SEEKPP_RPAREN && (TPP_PROFILE != TPP_PROFI
 ## TPP_HAVE_FILE_ENCODING_EMBED
 
 Provide a special `TPP_FILE_ENCODING_EMBED` file encoding
-to convert bytes into ,-separated decimals on-the-fly.
+to convert bytes into `,`-separated decimals on-the-fly.
 
 NOTE: Even when this is disabled, `#embed` directives work,
       but will have to pre-load the entire input file into
@@ -834,7 +834,8 @@ TPP_HAVE_UNICODE && TPP_HAVE_CPP_EMBED && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 ## TPP_HAVE_ESCAPED_KEYWORDS
 
-Provide a secondary set of keyword APIs that include support for `\`-escape sequences
+Provide a secondary set of keyword APIs that include support for `\`-escape sequences.
+Needed to implement [`TPP_HAVE_BSE`](config-conf.md#tpp_have_bse) and [`TPP_HAVE_ESCAPE_IN_IDENTIFIERS`](config-conf.md#tpp_have_escape_in_identifiers)
 
 <details><summary>Details</summary>
 
@@ -847,7 +848,9 @@ TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS
 
 ## TPP_HAVE_IO_COMPARE_MTIME
 
-Enable support for `tpp_io_compare_mtime()`
+Enable support for `tpp_io_compare_mtime()`.
+This is the underlying system function needed for
+`#pragma GCC dependency` (see [`TPP_HAVE_PRAGMA_GCC_DEPENDENCY`](config-conf.md#tpp_have_pragma_gcc_dependency))
 
 <details><summary>Details</summary>
 
@@ -860,7 +863,19 @@ TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY
 
 ## TPP_HAVE_IO_NORMALIZE_FILENAME
 
-Enable support for `tpp_io_normalize_filename()`
+Enable support for `tpp_io_normalize_filename()`.
+This function is needed to detect+fix (see [`TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING`](config-warn.md#tpp_have_tpp_w_nonportable_filename_casing))
+incorrect casing in `#include`-paths on host platforms with case-insensitive filenames
+(i.e.: windows).
+
+In particular, this function is necessary such that `#pragma once` in a header file
+`<stdio.h>` will still prevent multiple inclusion if that file is included multiple
+times with different path casing:
+
+```c
+#include <stdio.h>
+#include <Stdio.h> // `TPP_HAVE_IO_NORMALIZE_FILENAME` saves the day
+```
 
 <details><summary>Details</summary>
 
@@ -873,7 +888,12 @@ TPP_OS_WINDOWS && (TPP_HAVE_USER_KEYWORDS || (TPP_PROFILE != TPP_PROFILE_MINIMAL
 
 ## TPP_HAVE_JOINPATH
 
-Enable support for `tpp_joinpath()`
+Enable support for `tpp_joinpath()`, a wrapper around another internal function
+used to implement `tpp_lexer_openfile()` (see [`TPP_HAVE_LEXER_OPENFILE`](config-core.md#tpp_have_lexer_openfile)) and is also
+needed to implement `#pragma GCC dependency` (see [`TPP_HAVE_PRAGMA_GCC_DEPENDENCY`](config-conf.md#tpp_have_pragma_gcc_dependency))
+
+This function takes 2 paths, resolves `.` and `..` path references between them,
+whilst pasting them onto each other in order to form a singular, normalized path
 
 <details><summary>Details</summary>
 
@@ -886,7 +906,7 @@ TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY
 
 ## TPP_HAVE_LEXER_INIT_IO
 
-Enable support for `tpp_lexer_initfile_io_ex()`
+Enable support for `tpp_lexer_initfile_io()` and `tpp_lexer_initfile_io_ex()`
 
 <details><summary>Details</summary>
 
@@ -899,7 +919,8 @@ TPP_HAVE_FILE_NOKWD
 
 ## TPP_HAVE_LEXER_INIT_FILENAME
 
-Enable support for `tpp_lexer_initfile_open()`
+Enable support for `tpp_lexer_initfile_open()`, a function that lets you directly
+initialize the lexer by passing in a filename that should be opened as input.
 
 <details><summary>Details</summary>
 
@@ -912,14 +933,14 @@ TPP_HAVE_LEXER_OPENFILE
 
 ## TPP_HAVE_LEXER_SKIP
 
-Enable support for `tpp_lexer_skip()`
+Enable support for `tpp_lexer_skip()` and `tpp_lexer_require()`
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-TPP_HAVE_PRAGMA_PUSH_MACRO || 1
+(TPP_PROFILE != TPP_PROFILE_MINIMAL) || TPP_HAVE_PRAGMA_PUSH_MACRO || TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_PRAGMA_MESSAGE || TPP_HAVE_PRAGMA_ERROR || TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_WARNING || TPP_HAVE_PRAGMA_TPP_EXTENSION || TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS || TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS || TPP_HAVE_PRAGMA_TPP_EXEC || TPP_HAVE_PRAGMA_TPP_TPP_EXEC || TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH || TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next || TPP_HAVE_MACRO___has_embed || TPP_HAVE_MACRO___TPP_COUNT_TOKENS || TPP_HAVE_MACRO___TPP_STR_SIZE || TPP_HAVE_CPP_ASSERT || TPP_HAVE_CPP_EMBED || TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
 ```
 </details>
 
@@ -1084,7 +1105,7 @@ Provide a function `tpp_lexer_decodestring()` to decode the data contained withi
 Default:
 
 ```c
-TPP_HAVE_TPP_TOK_STRINGLIKE
+TPP_HAVE_TPP_TOK_C_STRINGLIKE
 ```
 </details>
 

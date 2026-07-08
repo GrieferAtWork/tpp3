@@ -63,8 +63,8 @@ Default configuration for:
 
 - [`TPP_HAVE_TPP_TOK_INT`](config-conf.md#tpp_have_tpp_tok_int)
 - [`TPP_HAVE_TPP_TOK_FLOAT`](config-conf.md#tpp_have_tpp_tok_float)
-- [`TPP_HAVE_TPP_TOK_CHAR`](config-conf.md#tpp_have_tpp_tok_char)
-- [`TPP_HAVE_TPP_TOK_STRING`](config-conf.md#tpp_have_tpp_tok_string)
+- [`TPP_HAVE_TPP_TOK_C_CHAR`](config-conf.md#tpp_have_tpp_tok_c_char)
+- [`TPP_HAVE_TPP_TOK_C_STRING`](config-conf.md#tpp_have_tpp_tok_c_string)
 
 <details><summary>Details</summary>
 

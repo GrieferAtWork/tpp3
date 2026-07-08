@@ -194,7 +194,7 @@ handle_comment:
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TPP_TOK_FLOAT */
 
 #if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS != 0
-	TPP_CASE_TPP_TOK_STRING_SQUOTE
+	TPP_CASE_TPP_TOK_C_STRING_SQUOTE
 		if (tpp_lexer_has(self, BUILTIN_EXPR_CHARACTER_LITERALS)) {
 			if (result)
 				return tpp_lexer_parsecharacter_expr(self, result, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
@@ -212,9 +212,9 @@ handle_comment:
 
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 #if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS == 0
-	TPP_CASE_TPP_TOK_STRING_SQUOTE
+	TPP_CASE_TPP_TOK_C_STRING_SQUOTE
 #endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS == 0 */
-	TPP_CASE_TPP_TOK_STRING_DQUOTE
+	TPP_CASE_TPP_TOK_C_STRING_DQUOTE
 		if (!tpp_lexer_has(self, BUILTIN_EXPR_STRINGS))
 			break;
 		if (result)
@@ -359,9 +359,9 @@ handle_comment:
 #endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
 			is_defined = false;
 			/* Be smart about stuff that should still be consumed here */
-#if TPP_HAVE_TPP_TOK_STRINGLIKE || TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT
+#if TPP_HAVE_TPP_TOK_C_STRINGLIKE || TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT
 			switch (tok) {
-			TPP_CASE_TPP_TOK_STRING
+			TPP_CASE_TPP_TOK_C_STRING
 #if TPP_HAVE_TPP_TOK_INT
 			case TPP_TOK_INT:
 #endif /* TPP_HAVE_TPP_TOK_INT */
@@ -374,7 +374,7 @@ handle_comment:
 				break;
 			default: break;
 			}
-#endif /* TPP_HAVE_TPP_TOK_STRINGLIKE || TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT */
+#endif /* TPP_HAVE_TPP_TOK_C_STRINGLIKE || TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT */
 		}
 		if (has_paren) {
 			tok = tpp_lexer_skip_forexpr(self, TPP_TOK_OFCHAR(')'));

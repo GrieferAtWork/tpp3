@@ -366,7 +366,7 @@ again_parse_string:
 		break;
 #endif /* TPP_HAVE_EXTENSIONS_PUSH_POP */
 
-	TPP_CASE_TPP_TOK_STRING
+	TPP_CASE_TPP_TOK_C_STRING
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_extension_cb,
 		                                 self, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 		break;
@@ -665,7 +665,7 @@ again_handle_set_warning_state:
 		}	break;
 #endif /* TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS */
 
-		TPP_CASE_TPP_TOK_STRING {
+		TPP_CASE_TPP_TOK_C_STRING {
 			struct tpp_lexer_pragma_warning_state_data data;
 			data.tlpwsd_lexer = self;
 			data.tlpwsd_state = new_state;
@@ -698,7 +698,7 @@ again_handle_set_warning_state:
 			goto again_handle_set_warning_state;
 	}	break;
 
-	TPP_CASE_TPP_TOK_STRING
+	TPP_CASE_TPP_TOK_C_STRING
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_pragma_warning_raw_cb, self,
 		                                 TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 		tok = TPP_TOK_OFERR_OR_EOF(error);
@@ -1674,7 +1674,7 @@ skip_colon_and_andle_for_pathlist:
 			break;
 		}
 		if (TPP_TOK_ISSTRING(tok)) {
-	TPP_CASE_TPP_TOK_STRING
+	TPP_CASE_TPP_TOK_C_STRING
 			error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_TPP_include_path_cb,
 			                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 		} else {

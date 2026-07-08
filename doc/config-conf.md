@@ -2836,9 +2836,9 @@ Extension:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CHAR
+## TPP_HAVE_TPP_TOK_C_CHAR
 
-Support for string literals: `'foo'`
+Support for C character literals: `'foo'`
 @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1
 
 <details><summary>Details</summary>
@@ -2852,13 +2852,13 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 Extension:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CHAR "tok-char"
+#define TPP_EXTNAME_TPP_TOK_C_CHAR "tok-char"
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_STRING
+## TPP_HAVE_TPP_TOK_C_STRING
 
-Support for string literals: `"foo"`
+Support for C string literals: `"foo"`
 @detect: #if __TPP_COUNT_TOKENS('"foo"') == 1
 
 <details><summary>Details</summary>
@@ -2872,7 +2872,7 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 Extension:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_STRING "tok-string"
+#define TPP_EXTNAME_TPP_TOK_C_STRING "tok-string"
 ```
 </details>
 
@@ -3168,13 +3168,13 @@ Extension:
 
 Feature-flag: treat line-feeds like any regular character in string tokens:
 
-- [`TPP_HAVE_TPP_TOK_STRING`](config-conf.md#tpp_have_tpp_tok_string)
+- [`TPP_HAVE_TPP_TOK_C_STRING`](config-conf.md#tpp_have_tpp_tok_c_string)
 - [`TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_wide_string_literal)
 - [`TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf8_string_literal)
 - [`TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf16_string_literal)
 - [`TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf32_string_literal)
 - [`TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_raw_string_literal)
-- [`TPP_HAVE_TPP_TOK_CHAR`](config-conf.md#tpp_have_tpp_tok_char)
+- [`TPP_HAVE_TPP_TOK_C_CHAR`](config-conf.md#tpp_have_tpp_tok_c_char)
 - [`TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_wide_char_literal)
 - [`TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf8_char_literal)
 - [`TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf16_char_literal)
@@ -3285,7 +3285,7 @@ Enable support for string operations in builtin lexer expressions
 Default:
 
 ```c
-(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_STRINGLIKE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_STRINGLIKE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
 ```
 
 Extension:
@@ -3545,7 +3545,7 @@ Treat `'a'` in expressions as an integer, rather than as a string (in C, this is
 Default:
 
 ```c
-(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : 0
+(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_STRINGLIKE_SQUOTE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : 0
 ```
 
 Extension:

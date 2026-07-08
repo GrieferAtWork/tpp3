@@ -1213,7 +1213,7 @@ err_tok_ofr:
 		tpp_lexer_openfile_result_fini(&ofr);
 	return tok;
 }
-#endif /* !TPP_HAVE_MACRO___has_embed */
+#endif /* TPP_HAVE_MACRO___has_embed */
 
 
 #if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
@@ -1367,7 +1367,7 @@ err_tok_subtext_builder:
 		case ',': /* Ignore all ','-token in here! */
 			break;
 
-		TPP_CASE_TPP_TOK_STRING
+		TPP_CASE_TPP_TOK_C_STRING
 			status = tpp_lexer_decodestring(self,
 			                                &tpp_string_builder_print_encoded,
 			                                &tpp_string_builder_print_encoded,

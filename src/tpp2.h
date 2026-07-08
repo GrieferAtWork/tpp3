@@ -1412,16 +1412,16 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *    Additionally, you may take a look at `tpp_fs_normalize()'
  */
 
-/* TOK_CHAR, TPP_TOK_CHAR, TOK_STRING, TPP_TOK_STRING:
+/* TOK_CHAR, TPP_TOK_C_CHAR, TOK_STRING, TPP_TOK_C_STRING:
  *  - TPP3 has individual tokens for every type of string, whereas
  *    TPP2 used to have only 2 token types describing string and
  *    char tokens
  *  - Because of this, you should migrate code as follows:
  *    ```diff
- *    - case TPP_TOK_CHAR:
- *    - case TPP_TOK_STRING:
- *    +     if (tok == TPP_TOK_CHAR || tok == TPP_TOK_STRING) {
- *    + TPP_CASE_TPP_TOK_STRING
+ *    - case TPP_TOK_C_CHAR:
+ *    - case TPP_TOK_C_STRING:
+ *    +     if (tok == TPP_TOK_C_CHAR || tok == TPP_TOK_C_STRING) {
+ *    + TPP_CASE_TPP_TOK_C_STRING
  *    +     if (TPP_TOK_ISSTRING(tok)) {
  *    ```
  */
@@ -1657,12 +1657,14 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 
 /* TPPLEXER_FLAG_CHAR_UNSIGNED:
  * - This flag no longer has any meaning. In TPP2, this flag used to control
- *   if calls to "TPP_Atoi()" with TPP_TOK_CHAR-tokens would return with or
+ *   if calls to "TPP_Atoi()" with TPP_TOK_C_CHAR-tokens would return with or
  *   without the "TPP_ATOI_UNSIGNED" flag set.
- * - In TPP3, parsing or 'TPP_TOK_CHAR' is delegated to a separate function
+ * - In TPP3, parsing a 'TPP_TOK_C_CHAR' is delegated to a separate function
  *   "tpp_lexer_parsecharacter_literal()" that expects to be called with a
  *   string-like token. Additionally, the C standard specifies that 'x'-like
- *   character literals have "int" typing, meaning they are never signed.
+ *   character literals have "int" typing, meaning they are never unsigned.
+ *   Meanwhile, the typing of `char` in a C-compiler is entirely out of the
+ *   hands of TPP, meaning such behavior must be implemented elsewhere.
  */
 
 /* TPPLEXER_FLAG_EOF_ON_PAREN, TPPLexer::l_eof_paren:
@@ -2296,8 +2298,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TPP_TOK_DOLLAR                          TPP_CONF_FEAT0 /* "$" Configurable, default=false (TPP2 used to configure this via "TPPLEXER_TOKEN_DOLLAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOLLAR)") */
 #define TPP_HAVE_TPP_TOK_INT                             1              /* ... */
 #define TPP_HAVE_TPP_TOK_FLOAT                           1              /* ... */
-#define TPP_HAVE_TPP_TOK_STRING                          1              /* TPP2 only supported C character/string literals */
-#define TPP_HAVE_TPP_TOK_CHAR                            1              /* *ditto* */
+#define TPP_HAVE_TPP_TOK_C_STRING                        1              /* TPP2 only supported C character/string literals */
+#define TPP_HAVE_TPP_TOK_C_CHAR                          1              /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL          0              /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL         0              /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL         0              /* *ditto* */
@@ -2310,7 +2312,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL          0              /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL          0              /* *ditto* */
 #define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL              0              /* *ditto* */
-#define TPP_HAVE_STRING_ALLOW_MULTILINE                  TPP_CONF_FEAT1 /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE)") */
+#define TPP_HAVE_STRING_ALLOW_MULTILINE                  TPP_CONF_FEAT1 /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_STRING_ALLOW_MULTILINE)") */
 #define TPP_HAVE_STRING_WARN_MULTILINE                   0              /* TPP2 offered no such warning */
 #define TPP_HAVE_STRING_AUTO_CONCAT                      1              /* TPP2 had this always-enabled */
 #define TPP_HAVE_TPP_TOK_LANGLE_LANGLE                   1              /* "<<" */
@@ -2692,8 +2694,8 @@ function alias(tpp2Name, tpp3Name, onlyIfDefined = true, condition: string = "")
 // Token IDs
 alias("TOK_EOF", "TPP_TOK_EOF", onlyIfDefined: false);
 
-alias("TOK_CHAR",      "TPP_TOK_CHAR",      condition: "TPP_HAVE_TPP_TOK_CHAR");
-alias("TOK_STRING",    "TPP_TOK_STRING",    condition: "TPP_HAVE_TPP_TOK_STRING");
+alias("TOK_CHAR",      "TPP_TOK_C_CHAR",      condition: "TPP_HAVE_TPP_TOK_C_CHAR");
+alias("TOK_STRING",    "TPP_TOK_C_STRING",    condition: "TPP_HAVE_TPP_TOK_C_STRING");
 alias("TOK_INT",       "TPP_TOK_INT",       condition: "TPP_HAVE_TPP_TOK_INT");
 alias("TOK_FLOAT",     "TPP_TOK_FLOAT",     condition: "TPP_HAVE_TPP_TOK_FLOAT");
 alias("TOK_LF",        "TPP_TOK_LF",        onlyIfDefined: false);
@@ -3065,12 +3067,12 @@ alias("W_CONSIDER_PAREN_AROUND_LAND", "TPP_W_PAREN_AROUND_LAND");
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_EOF TPP_TOK_EOF
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_CHAR
-#define TOK_CHAR TPP_TOK_CHAR
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_CHAR */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_STRING
-#define TOK_STRING TPP_TOK_STRING
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_STRING */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_C_CHAR
+#define TOK_CHAR TPP_TOK_C_CHAR
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_C_CHAR */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_C_STRING
+#define TOK_STRING TPP_TOK_C_STRING
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_C_STRING */
 #if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_INT
 #define TOK_INT TPP_TOK_INT
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_INT */
@@ -5351,7 +5353,7 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 #undef TPPLEXER_FLAG_NO_POP_ON_EOF         /* Use tpp_file_autopopfile_pushoff() */
 #undef TPPLEXER_FLAG_KEEP_MACRO_WHITESPACE /* Use "TPP_EXT_MACRO_ARGUMENT_WHITESPACE" (global) or "TPP_MACRO_FLAG_KEEPARGSPC" (individual macro) */
 #undef TPPLEXER_FLAG_NONBLOCKING           /* Use "TPP_FILE_FLAGS_NONBLOCK" (per-file) */
-#undef TPPLEXER_FLAG_TERMINATE_STRING_LF   /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_STRING_ALLOW_MULTILINE) (inverted meaning) */
+#undef TPPLEXER_FLAG_TERMINATE_STRING_LF   /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_STRING_ALLOW_MULTILINE) (inverted meaning) */
 #undef TPPLEXER_FLAG_NO_DIRECTIVES         /* Use tpp_lexer_setfeat(TPP_FEAT_CPP_DIRECTIVES) */
 #undef TPPLEXER_FLAG_NO_MACROS             /* Use tpp_lexer_setfeat(TPP_FEAT_CPP_MACROS) */
 #undef TPPLEXER_FLAG_NO_BUILTIN_MACROS     /* Use tpp_lexer_setfeat(TPP_FEAT_CPP_BUILTIN_MACROS) */
