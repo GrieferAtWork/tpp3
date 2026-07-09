@@ -370,6 +370,8 @@ function updateConfigMd(filename: string) {
 			     prototypeArgs,
 			     disabled_RETURN_VALUE:
 			     config.HOOKS) {
+				prototypePrefix, prototypeSuffix = config
+					.unPointerizeHook(prototypePrefix, prototypeSuffix)...;
 				print newData:
 					f"## TPP_HAVE_{name}_HOOK\n"
 					f"\n"

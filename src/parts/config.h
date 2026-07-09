@@ -3047,6 +3047,8 @@ print("#endif /" "* !... *" "/");
 
 
 /*[[[deemon
+import unPointerizeHook from ".config";
+
 @@Defined callbacks:
 @@for (local doc, name,           // Doc string and name of hook
 @@     default_TPP_HAVE_FOO_HOOK, // Default value for "TPP_HAVE_FOO_HOOK"
@@ -3217,6 +3219,7 @@ for (local doc, name,
      prototypeSuffix,
      prototypeArgs,
      disabled_RETURN_VALUE: HOOKS) {
+	prototypePrefix, prototypeSuffix = unPointerizeHook(prototypePrefix, prototypeSuffix)...;
 	print("/" "* >> ", prototypePrefix, "TPP_HOOK_", name, prototypeSuffix, ";");
 	print(" * ", doc.strip().replace("\n", "\n * ").rstriplines(), " *" "/");
 	print("#ifndef TPP_HAVE_", name, "_HOOK");
@@ -3259,7 +3262,7 @@ for (local doc, name,
 	print;
 }
 ]]]*/
-/* >> tpp_formatprinter TPP_HOOK_WARNPRINTER;
+/* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
  * Called by `tpp_lexer_warnf()` to print warning messages
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #ifndef TPP_HAVE_WARNPRINTER_HOOK
@@ -3289,7 +3292,7 @@ for (local doc, name,
 #define TPP_HAVE_BUILTIN_WARNPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNPRINTER_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
 
-/* >> tpp_formatprinter TPP_HOOK_MESGPRINTER;
+/* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_MESGPRINTER, arg, text, num_bytes);
  * Used by `#pragma message` to print messages
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #ifndef TPP_HAVE_MESGPRINTER_HOOK
@@ -3319,7 +3322,7 @@ for (local doc, name,
 #define TPP_HAVE_BUILTIN_MESGPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_MESGPRINTER_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
-/* >> tpp_errno (TPPCALL *TPP_HOOK_PARSEEXPR)(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
+/* >> tpp_errno TPP_HOOK_PARSEEXPR(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
  * User-defined callback for parsing `#if`-style expressions
  * - This callback is invoked in a context where `self` points
  *   before the expression's first token (meaning that this
@@ -3367,7 +3370,7 @@ for (local doc, name,
 #define TPP_HAVE_BUILTIN_PARSEEXPR_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_PARSEEXPR_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_PARSEEXPR_HOOK */
 
-/* >> tpp_errno (TPPCALL *TPP_HOOK_UNKNOWN_PRAGMA)(tpp_lexer *tpp_restrict self);
+/* >> tpp_errno TPP_HOOK_UNKNOWN_PRAGMA(tpp_lexer *tpp_restrict self);
  * Called whenever a `#pragma` is encountered that is not recognized.
  * When called, the lexer is set-up to point at the first token after the `#pragma`.
  * @return: TPP_EOK:    Pragma has been handled
@@ -3404,7 +3407,7 @@ for (local doc, name,
 #error "Invalid configuration: 'TPP_HOOK_UNKNOWN_PRAGMA' is defined, but 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_PRAGMA && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 
-/* >> tpp_errno (TPPCALL *TPP_HOOK_NEW_DEPENDENCY)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+/* >> tpp_errno TPP_HOOK_NEW_DEPENDENCY(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
  * Called whenever some file is `#include`-ed for the first time
  * @param: filename_kwd: Then `tpp_keyword` used to describe the file's name. The actual
  *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`. */
@@ -3438,7 +3441,7 @@ for (local doc, name,
 #error "Invalid configuration: 'TPP_HOOK_NEW_DEPENDENCY' is defined, but 'TPP_HAVE_NEW_DEPENDENCY_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_NEW_DEPENDENCY && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
-/* >> tpp_errno (TPPCALL *TPP_HOOK_IDENT_SCCS)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+/* >> tpp_errno TPP_HOOK_IDENT_SCCS(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
  * Called to handle `#ident` and `#sccs` directives
  * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
  * @param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d
@@ -3480,7 +3483,7 @@ for (local doc, name,
 #error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
 
-/* >> tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+/* >> tpp_errno TPP_HOOK_SYSTEM_INCLUDE_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_include_path()` at diffrent
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but
@@ -3522,7 +3525,7 @@ for (local doc, name,
 #error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
-/* >> tpp_ssize (TPPCALL *TPP_HOOK_UNKNOWN_STRING_ESCAPE)(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -3571,7 +3574,7 @@ for (local doc, name,
 #error "Invalid configuration: 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' is defined, but 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_STRING_ESCAPE && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 
-/* >> tpp_errno (TPPCALL *TPP_HOOK_RAISE_LEXERROR)(tpp_lexer *tpp_restrict self);
+/* >> tpp_errno TPP_HOOK_RAISE_LEXERROR(tpp_lexer *tpp_restrict self);
  * Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
  * This hook can be used to do additional state changes that may be necessary by the
  * hosting application in order to handle the resulting `TPP_ELEXERROR`

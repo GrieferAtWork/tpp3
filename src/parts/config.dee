@@ -45,6 +45,15 @@ global final MC_TOKENS: {(string, string, string)...} = getProperty("MC_TOKENS")
 @@}
 global final HOOKS: {(string, string, string, string, string, string, string)...} = getProperty("HOOKS");
 
+
+function unPointerizeHook(prototypePrefix: string, prototypeSuffix: string): (string, string) {
+	if (prototypePrefix.strip() == "tpp_formatprinter" && !prototypeSuffix)
+		return ("TPP_FORMATPRINTER_DEFINE(", ", arg, text, num_bytes)");
+	if (prototypePrefix.endswith("(TPPCALL *") && prototypeSuffix.startswith(")("))
+		return (prototypePrefix[:-10], prototypeSuffix[1:]);
+	return (prototypePrefix, prototypeSuffix);
+}
+
 function tokenName(tok: string): string {
 	return "_".join(for (local ch: tok) charNames[ch]);
 }

@@ -60,7 +60,7 @@ The following hooks exist and can each be overwritten individually:
 ## TPP_HAVE_WARNPRINTER_HOOK
 
 ```c
-tpp_formatprinter TPP_HOOK_WARNPRINTER;
+TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
 ```
 
 Called by `tpp_lexer_warnf()` to print warning messages
@@ -76,7 +76,7 @@ TPP_HAVE_WARNINGS
 ## TPP_HAVE_MESGPRINTER_HOOK
 
 ```c
-tpp_formatprinter TPP_HOOK_MESGPRINTER;
+TPP_FORMATPRINTER_DEFINE(TPP_HOOK_MESGPRINTER, arg, text, num_bytes);
 ```
 
 Used by `#pragma message` to print messages
@@ -92,7 +92,7 @@ TPP_HAVE_PRAGMA_MESSAGE
 ## TPP_HAVE_PARSEEXPR_HOOK
 
 ```c
-tpp_errno (TPPCALL *TPP_HOOK_PARSEEXPR)(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
+tpp_errno TPP_HOOK_PARSEEXPR(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
 ```
 
 User-defined callback for parsing `#if`-style expressions
@@ -121,7 +121,7 @@ TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED ||
 ## TPP_HAVE_UNKNOWN_PRAGMA_HOOK
 
 ```c
-tpp_errno (TPPCALL *TPP_HOOK_UNKNOWN_PRAGMA)(tpp_lexer *tpp_restrict self);
+tpp_errno TPP_HOOK_UNKNOWN_PRAGMA(tpp_lexer *tpp_restrict self);
 ```
 
 Called whenever a `#pragma` is encountered that is not recognized.
@@ -138,7 +138,7 @@ TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL
 ## TPP_HAVE_NEW_DEPENDENCY_HOOK
 
 ```c
-tpp_errno (TPPCALL *TPP_HOOK_NEW_DEPENDENCY)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+tpp_errno TPP_HOOK_NEW_DEPENDENCY(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
 ```
 
 Called whenever some file is `#include`-ed for the first time
@@ -154,7 +154,7 @@ TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_
 ## TPP_HAVE_IDENT_SCCS_HOOK
 
 ```c
-tpp_errno (TPPCALL *TPP_HOOK_IDENT_SCCS)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+tpp_errno TPP_HOOK_IDENT_SCCS(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
 ```
 
 Called to handle `#ident` and `#sccs` directives
@@ -170,7 +170,7 @@ TPP_HAVE_CPP_IDENT_SCCS
 ## TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
 
 ```c
-tpp_errno (TPPCALL *TPP_HOOK_SYSTEM_INCLUDE_PATH)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+tpp_errno TPP_HOOK_SYSTEM_INCLUDE_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
 ```
 
 Extra callback invoked by `tpp_lexer_foreach_include_path()` at diffrent
@@ -190,7 +190,7 @@ TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL
 ## TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
 
 ```c
-tpp_ssize (TPPCALL *TPP_HOOK_UNKNOWN_STRING_ESCAPE)(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
 ```
 
 Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
@@ -211,7 +211,7 @@ TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROF
 ## TPP_HAVE_RAISE_LEXERROR_HOOK
 
 ```c
-tpp_errno (TPPCALL *TPP_HOOK_RAISE_LEXERROR)(tpp_lexer *tpp_restrict self);
+tpp_errno TPP_HOOK_RAISE_LEXERROR(tpp_lexer *tpp_restrict self);
 ```
 
 Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`

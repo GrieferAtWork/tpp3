@@ -355,7 +355,7 @@ typedef struct tpp_lexer {
 
 /* Invocation of hooks */
 /*[[[deemon
-import HOOKS from .config;
+import HOOKS, unPointerizeHook from .config;
 
 for (local doc, name,
      default_TPP_HAVE_FOO_HOOK,
@@ -364,10 +364,11 @@ for (local doc, name,
      prototypeSuffix,
      prototypeArgs,
      disabled_RETURN_VALUE: HOOKS) {
-	print("/" "* >> ", prototypePrefix, "tpp_lexer_callhook_", name.lower(), prototypeSuffix, ";");
-	print(" * ", doc.strip().replace("\n", "\n * ").rstriplines(), " *" "/");
 	local isFormatPrinter = prototypePrefix.strip() == "tpp_formatprinter" && !prototypeSuffix;
 	local hookMustBeFunctionPointer = isFormatPrinter;
+	prototypePrefix, prototypeSuffix = unPointerizeHook(prototypePrefix, prototypeSuffix)...;
+	print("/" "* >> ", prototypePrefix, "tpp_lexer_callhook_", name.lower(), prototypeSuffix, ";");
+	print(" * ", doc.strip().replace("\n", "\n * ").rstriplines(), " *" "/");
 	print("#define tpp_lexer_callhook_", name.lower(), "(self",
 		"".join(for (local x: prototypeArgs)
 			if (x != "lexer") f", {x}"), ") \\");
@@ -387,7 +388,7 @@ for (local doc, name,
 	print;
 }
 ]]]*/
-/* >> tpp_formatprinter tpp_lexer_callhook_warnprinter;
+/* >> TPP_FORMATPRINTER_DEFINE(tpp_lexer_callhook_warnprinter, arg, text, num_bytes);
  * Called by `tpp_lexer_warnf()` to print warning messages
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #define tpp_lexer_callhook_warnprinter(self, text, num_bytes) \
@@ -400,7 +401,7 @@ for (local doc, name,
 #define tpp_lexer_resethook_warnprinter(self)  tpp_hooks_reset_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_warnprinter */
 
-/* >> tpp_formatprinter tpp_lexer_callhook_mesgprinter;
+/* >> TPP_FORMATPRINTER_DEFINE(tpp_lexer_callhook_mesgprinter, arg, text, num_bytes);
  * Used by `#pragma message` to print messages
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #define tpp_lexer_callhook_mesgprinter(self, text, num_bytes) \
@@ -413,7 +414,7 @@ for (local doc, name,
 #define tpp_lexer_resethook_mesgprinter(self)  tpp_hooks_reset_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_mesgprinter */
 
-/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_parseexpr)(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
+/* >> tpp_errno tpp_lexer_callhook_parseexpr(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
  * User-defined callback for parsing `#if`-style expressions
  * - This callback is invoked in a context where `self` points
  *   before the expression's first token (meaning that this
@@ -442,7 +443,7 @@ for (local doc, name,
 #define tpp_lexer_resethook_parseexpr(self)  tpp_hooks_reset_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_parseexpr */
 
-/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_unknown_pragma)(tpp_lexer *tpp_restrict self);
+/* >> tpp_errno tpp_lexer_callhook_unknown_pragma(tpp_lexer *tpp_restrict self);
  * Called whenever a `#pragma` is encountered that is not recognized.
  * When called, the lexer is set-up to point at the first token after the `#pragma`.
  * @return: TPP_EOK:    Pragma has been handled
@@ -457,7 +458,7 @@ for (local doc, name,
 #define tpp_lexer_resethook_unknown_pragma(self)  tpp_hooks_reset_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_unknown_pragma */
 
-/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_new_dependency)(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+/* >> tpp_errno tpp_lexer_callhook_new_dependency(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
  * Called whenever some file is `#include`-ed for the first time
  * @param: filename_kwd: Then `tpp_keyword` used to describe the file's name. The actual
  *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`. */
@@ -469,7 +470,7 @@ for (local doc, name,
 #define tpp_lexer_resethook_new_dependency(self)  tpp_hooks_reset_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_new_dependency */
 
-/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_ident_sccs)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+/* >> tpp_errno tpp_lexer_callhook_ident_sccs(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
  * Called to handle `#ident` and `#sccs` directives
  * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
  * @param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d
@@ -489,7 +490,7 @@ for (local doc, name,
 #define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_ident_sccs */
 
-/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_system_include_path)(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+/* >> tpp_errno tpp_lexer_callhook_system_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_include_path()` at diffrent
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but
@@ -509,7 +510,7 @@ for (local doc, name,
 #define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_system_include_path */
 
-/* >> tpp_ssize (TPPCALL *tpp_lexer_callhook_unknown_string_escape)(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+/* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -536,7 +537,7 @@ for (local doc, name,
 #define tpp_lexer_resethook_unknown_string_escape(self)  tpp_hooks_reset_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_unknown_string_escape */
 
-/* >> tpp_errno (TPPCALL *tpp_lexer_callhook_raise_lexerror)(tpp_lexer *tpp_restrict self);
+/* >> tpp_errno tpp_lexer_callhook_raise_lexerror(tpp_lexer *tpp_restrict self);
  * Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
  * This hook can be used to do additional state changes that may be necessary by the
  * hosting application in order to handle the resulting `TPP_ELEXERROR`
