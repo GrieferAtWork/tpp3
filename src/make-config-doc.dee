@@ -392,6 +392,26 @@ function updateConfigMd(filename: string) {
 			}
 			break;
 
+		case "glossary": {
+			local knownFiles = HashSet();
+			local isFirst = true;
+			for (local conf: getAvailableConfigs()) {
+				if (!isFirst)
+					print newData: " ",;
+				isFirst = false;
+				local refFile = conf.refFile;
+				if (refFile !in knownFiles) {
+					if (posix.stat.isreg(f"../doc/{refFile}")) {
+						knownFiles.insert(refFile);
+					} else {
+						print newData: f"<!-- ?: {conf.name} -->",;
+					}
+				}
+				if (refFile in knownFiles)
+					print newData: f"[`{conf.name}`]({refFile}#{conf.name.lower()})",;
+			}
+		}	break;
+
 		default: {
 			local foundAny = false;
 			for (local conf: getAvailableConfigs()) {

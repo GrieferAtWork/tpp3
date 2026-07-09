@@ -837,9 +837,9 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
  *   what you probably want to use.
  *
  * Examples:
- * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
+ * >> #define assert(x) (void)((x) || (_assert(#x, __FILE__, __LINE__, __COLUMN__), 0))
  * >> ...
- * >> 
+ * >>
  * >> if (x)
  * >>     assert(y);
  *        ^        ^ tpp_file_getpos / tpp_file_getendlcinfo

@@ -567,6 +567,14 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self);
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_fini(tpp_lexer *tpp_restrict self);
 
+/* Move-construct "self" out of "from"
+ * Use this function instead of directly assigning one lexer on-to
+ * another: even though the later would currently work to do so,
+ * that might change in the future so use of this macro gives you
+ * that forward-compatibility. */
+#define tpp_lexer_move(self, from) \
+	(void)(*(self) = *(from), tpp_dbg_memset(from, sizeof(tpp_lexer)))
+
 #if TPP_HAVE_LEXER_COPY
 /* Initialize "self" as a copy of "from". This will copy everything
  * configured in "from" (features, extensions, allocated keyword IDs,

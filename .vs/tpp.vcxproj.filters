@@ -7,6 +7,9 @@
     <Filter Include="src\parts">
       <UniqueIdentifier>{2023c03d-ff74-40ae-b0cc-90e22dea73d2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="doc">
+      <UniqueIdentifier>{aea669ce-e031-49a9-b131-3c27e8b05da3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\frontend.c">
@@ -191,5 +194,44 @@
     <None Include="..\.clang-format" />
     <None Include="..\.gitattributes" />
     <None Include="..\.gitignore" />
+    <None Include="..\doc\config-core.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\doc\config-hook.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\doc\config-limit.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\doc\config-token.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\doc\config-value.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\doc\config-warn.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\doc\config.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\doc\config-common.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\doc\config-conf.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\src\make-config-doc.dee">
+      <Filter>src</Filter>
+    </None>
+    <None Include="..\src\Makefile">
+      <Filter>src</Filter>
+    </None>
+    <None Include="..\src\make-amalgamation.dee">
+      <Filter>src</Filter>
+    </None>
+    <None Include="..\src\make-amalgamation-builtins.dee">
+      <Filter>src</Filter>
+    </None>
   </ItemGroup>
 </Project>

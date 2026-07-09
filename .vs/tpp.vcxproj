@@ -80,8 +80,21 @@
     <None Include="..\.gitignore" />
     <None Include="..\CONTRIBUTING.md" />
     <None Include="..\cpp.hint" />
+    <None Include="..\doc\config-common.md" />
+    <None Include="..\doc\config-conf.md" />
+    <None Include="..\doc\config-core.md" />
+    <None Include="..\doc\config-hook.md" />
+    <None Include="..\doc\config-limit.md" />
+    <None Include="..\doc\config-token.md" />
+    <None Include="..\doc\config-value.md" />
+    <None Include="..\doc\config-warn.md" />
+    <None Include="..\doc\config.md" />
     <None Include="..\LICENSE" />
     <None Include="..\README.md" />
+    <None Include="..\src\make-amalgamation-builtins.dee" />
+    <None Include="..\src\make-amalgamation.dee" />
+    <None Include="..\src\make-config-doc.dee" />
+    <None Include="..\src\Makefile" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{86D226C5-EF62-4562-AC06-E6A753DFA7CF}</ProjectGuid>

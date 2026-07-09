@@ -14989,7 +14989,7 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos);
  *   what you probably want to use.
  *
  * Examples:
- * >> #define assert(x) (... || (_assert(x, __FILE__, __LINE__, __COLUMN__)))
+ * >> #define assert(x) (void)((x) || (_assert(#x, __FILE__, __LINE__, __COLUMN__), 0))
  * >> ...
  * >>
  * >> if (x)
@@ -17949,6 +17949,14 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self);
  * `tpp_lexer_finifile()' to finalize the currently loaded file. */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_fini(tpp_lexer *tpp_restrict self);
+
+/* Move-construct "self" out of "from"
+ * Use this function instead of directly assigning one lexer on-to
+ * another: even though the later would currently work to do so,
+ * that might change in the future so use of this macro gives you
+ * that forward-compatibility. */
+#define tpp_lexer_move(self, from) \
+	(void)(*(self) = *(from), tpp_dbg_memset(from, sizeof(tpp_lexer)))
 
 #if TPP_HAVE_LEXER_COPY
 /* Initialize "self" as a copy of "from". This will copy everything
