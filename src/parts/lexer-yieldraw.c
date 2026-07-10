@@ -297,6 +297,7 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 		if tpp_unlikely(uc <= TPP_UTF8_3BYTE_MAX)
 			goto handle_ilseq; /* under-long utf-8 sequence */
 		break;
+	/* 5+ doesn't appear in `tpp_unicode_utf8seqlen' */
 	default: tpp_unreachable();
 	}
 
@@ -4406,22 +4407,23 @@ continue_pascal_comment_with_ch2:
 				error = tpp_lexer_readutf8(self, &pos, &uc);
 				if (TPP_ISERR(error))
 					goto return_error;
-				if tpp_unlikely (uc == 0 && !tpp_file_isutf8(file)) {
+				if tpp_unlikely(uc == 0 && !tpp_file_isutf8(file)) {
 					++pos; /* Malformed utf-8 sequence caused unicode to be disabled */
-				} else {
-					/* Handle unicode character traits */
-					if (tpp_unicode_islf(uc))
-						goto handle_linefeed;
-#define WANT_handle_linefeed
-					if (tpp_unicode_isspace(uc))
-						goto handle_space;
-#define WANT_handle_space
-					if (tpp_unicode_issymstrt(uc))
-						goto handle_keyword;
-#define WANT_handle_keyword
-					result = TPP_TOK_UNICHAR;
-					goto set_result;
+					break;
 				}
+
+				/* Handle unicode character traits */
+				if (tpp_unicode_islf(uc))
+					goto handle_linefeed;
+#define WANT_handle_linefeed
+				if (tpp_unicode_isspace(uc))
+					goto handle_space;
+#define WANT_handle_space
+				if (tpp_unicode_issymstrt(uc))
+					goto handle_keyword;
+#define WANT_handle_keyword
+				result = TPP_TOK_UNICHAR;
+				goto set_result;
 			}
 		}
 #endif /* TPP_HAVE_UNICODE */

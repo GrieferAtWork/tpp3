@@ -1,6 +1,6 @@
 # Token configs
 
-Like [Feature configs](./config-conf.md), every multi-char token can be configured using one of `TPP_CONF_*`
+Like [Feature configs](./config-conf.md), every multi-char token can be configured as one of `TPP_CONF_*`
 
 <!--BEGIN:token-->
 | Token | Config | Extension |

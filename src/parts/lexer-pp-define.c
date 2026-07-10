@@ -389,7 +389,7 @@ tpp_macro_builder_requireop(tpp_macro_builder *tpp_restrict self,
 #define _tpp_macro_builder_appendops(err_nomem, self, n_ops, init)                  \
 	do {                                                                            \
 		tpp_macro_opcode *const opcodes = tpp_macro_builder_requireop(self, n_ops); \
-		if tpp_unlikely (!opcodes)                                                  \
+		if tpp_unlikely(!opcodes)                                                   \
 			goto err_nomem;                                                         \
 		(init);                                                                     \
 	} while (0)

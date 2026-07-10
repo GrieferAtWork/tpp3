@@ -3375,7 +3375,7 @@ lexer expressions, as alias for `foo ? bar : baz`.
 Default:
 
 ```c
-(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0
 ```
 
 Extension name:

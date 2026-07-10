@@ -294,7 +294,7 @@ function generateUnicodeDatabase() {
 		return unicode_tab2[(unicode_tab1[ord >> shift] << shift) + (ord & tab1_mask)];
 	}
 
-	/* For testing, assert that behavior of some ordinals. */
+	/* To ensure that the database was loaded correctly, assert behavior of some ordinals. */
 	assert lookup('1'.ord()) == (_TPP_CTYPE_ISSYMCONT);
 	assert lookup('a'.ord()) == (_TPP_CTYPE_ISSYMSTRT | _TPP_CTYPE_ISSYMCONT);
 	assert lookup('ß'.ord()) == (_TPP_CTYPE_ISSYMSTRT | _TPP_CTYPE_ISSYMCONT);

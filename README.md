@@ -8,7 +8,7 @@ TPP is a *text-based* preprocessor (as opposed to token-based). If you want, it 
 
 TPP is *not* exclusive to C/C++ -- it has builtin support for lots of different token types normally only found in other languages (e.g. java `""" block strings """`, or SQL `-- comments`). Like all other features, every supported token can be individually configured at compile-time and/or runtime.
 
-TPP includes fully unicode support (and not just in strings), based on `XID_Start` and `XID_Continue`:
+TPP includes full Unicode support (and not just in strings), based on `XID_Start` and `XID_Continue`:
 
 ```c
 #define ㄒ卩卩(ᗪㄖ乇丂) ㄩ几丨匚ㄖᗪ乇•ᗪㄖ乇丂•山ㄖ尺Ҝ

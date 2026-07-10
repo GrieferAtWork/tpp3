@@ -34,8 +34,9 @@
 #define TPP_PROFILE TPP_PROFILE_ALL
 
 /* Configure such that all tokens are enabled by default (different from
- * regular "TPP_PROFILE_ALL" where only tokens needed somewhere within
- * the preprocessor itself are enabled by default) */
+ * regular "TPP_PROFILE_ALL" where all tokens are still available, but
+ * only tokens needed somewhere within the preprocessor itself are enabled
+ * by default) */
 #define TPP_COMMON_HAVE_TPP_TOK                TPP_CONF_EXT1
 #define TPP_COMMON_HAVE_TPP_TOK_SPACE          TPP_CONF_EXT1
 #define TPP_COMMON_HAVE_TPP_TOK_COMMENT        TPP_CONF_EXT1
@@ -45,6 +46,7 @@
 #define TPP_COMMON_HAVE_TPP_TOK_C_TOKENS       TPP_CONF_EXT1
 #define TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS     TPP_CONF_EXT1
 #define TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS    TPP_CONF_EXT1
+#define TPP_HAVE_BUILTIN_EXPR_TT_IF_ELSE_IN_EXPRESSIONS TPP_CONF_EXT1
 
 /*[[[tpp-begin]]]*/
 
@@ -3683,7 +3685,7 @@ for (local doc, name,
  * lexer expressions, as alias for `foo ? bar : baz`.
  * @detect: N/A */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
-#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fifelse-in-expressions" */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) /* "-fifelse-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 
 /* XXX: Also have an extension for python's `tt if cond else ff`
@@ -4625,7 +4627,7 @@ for (local doc, name,
 	(TPP_HAVE_WARNINGS && TPP_HAVE_IO_NORMALIZE_FILENAME)
 #endif /* !TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
 #ifndef TPP_HAVE_TPP_W_PAREN_AROUND_LAND
-#define TPP_HAVE_TPP_W_PAREN_AROUND_LAND                                              \
+#define TPP_HAVE_TPP_W_PAREN_AROUND_LAND                                                  \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_QUALITY_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && \
 	 TPP_HAVE_TPP_TOK_PIPE_PIPE && TPP_HAVE_TPP_TOK_AMP_AMP)
 #endif /* !TPP_HAVE_TPP_W_PAREN_AROUND_LAND */

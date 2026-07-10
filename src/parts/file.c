@@ -91,7 +91,7 @@ tpp_ifdef_stack_append(tpp_ifdef_stack *tpp_restrict self) {
 			new_vec = (tpp_ifdef_stack_entry *)tpp_realloc(self->tids_vec,
 			                                               new_alloc *
 			                                               sizeof(tpp_ifdef_stack_entry));
-			if tpp_unlikely (!new_vec)
+			if tpp_unlikely(!new_vec)
 				return NULL;
 		}
 		self->tids_vec = new_vec;

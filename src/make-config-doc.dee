@@ -161,7 +161,7 @@ class Config {
 	}
 
 	public printDesc(currentFile: string, fp: File): string {
-		fp << f"## {name}\n"
+		print fp: f"## {name}\n"
 			f"\n"
 			f"{formatDoc(currentFile, doc)}\n"
 			f"\n"
@@ -182,7 +182,7 @@ class Config {
 			}"
 			f"</details>\n"
 			f"\n"
-			;
+		,;
 	}
 }
 
@@ -431,10 +431,14 @@ function updateConfigMd(filename: string) {
 	}
 	newData.write(oldData[i:]);
 
-	/* Always write newData so "make" won't try to re-run for every file */
 	newData = newData.bytes;
-	with (local fp = File.open(filename, "wb"))
-		fp.write(newData);
+#if 0 /* Always write newData so "make" won't try to re-run for every file */
+	if (newData != oldData)
+#endif
+	{
+		with (local fp = File.open(filename, "wb"))
+			fp.write(newData);
+	}
 }
 
 
