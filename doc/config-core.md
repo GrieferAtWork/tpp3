@@ -1157,6 +1157,21 @@ TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || (TPP_HAV
 ```
 </details>
 
+## TPP_HAVE_TOKEN_REQUIRE_WHITESPACE
+
+Provide a function `tpp_token_require_whitespace()` to check if 2 tokens,
+when written directly adjacent to each other, *might* produce a different
+(set of) token(s) when re-parsed.
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_MAGIC_WHITESPACE
+```
+</details>
+
 ## TPP_HAVE_LEXER_DECODEINT_EXPR
 
 Provide a function `tpp_lexer_decodeint_expr()` to parse an integer

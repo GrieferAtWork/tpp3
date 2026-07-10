@@ -189,6 +189,41 @@ Extension name:
 ```
 </details>
 
+## TPP_HAVE_MAGIC_WHITESPACE
+
+Enable support for magic whitespace insertions where failure
+to do so would result in accidental token concatenation:
+
+```c
+#define FOO() foo
+#define BAR   bar
+#define SCAN(x) x
+FOO()BAR          // OK: Expands to [foo][bar] (works independent of `TPP_HAVE_MAGIC_WHITESPACE`)
+SCAN(FOO()BAR)    // Expands to [foo][ ][bar]  (or [foobar] when `TPP_HAVE_MAGIC_WHITESPACE` is disabled)
+```
+
+The extra space (U+0020) character in `SCAN(FOO()BAR)` gets added
+during macro argument substitution in the call to `SCAN`, and is
+necessary because TPP is a text-based preprocessor. Trying to get
+L/C information on the associated `TPP_TOK_SPACE` will fail.
+
+@detect: N/A
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+(TPP_HAVE_CPP_MACROS || TPP_HAVE_MACRO___TPP_EXEC) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+```
+
+Extension name:
+
+```c
+#define TPP_EXTNAME_MAGIC_WHITESPACE "magic-whitespace"
+```
+</details>
+
 ## TPP_HAVE_CPP_BUILTIN_MACROS
 
 Support for builtin C-style macros (require [`TPP_HAVE_CPP_MACROS`](config-conf.md#tpp_have_cpp_macros) to be enabled, too)

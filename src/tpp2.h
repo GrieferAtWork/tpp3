@@ -2422,6 +2422,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_ESCAPE_S_IN_STRINGS                  0                                      /* Support for "\s" (for U+0020) escape sequences */
 #define TPP_HAVE_CPP_DIRECTIVES                       1                                      /* Specifies if *any* CPP directives are supported */
 #define TPP_HAVE_CPP_MACROS                           1                                      /* Support for C-style macros */
+#define TPP_HAVE_MAGIC_WHITESPACE                     0                                      /* TPP2 didn't have "magic whitespace". As such, it suffered from accidental token pasting in certain situations */
 #define TPP_HAVE_CPP_EXCLAIM                          TPP_CONFIG_EXTENSION_SHEBANG           /* Support for: #!foobar  (comments) */
 #define TPP_HAVE_CPP_BLANK                            1                                      /* Support for: #  (blank line) */
 #define TPP_HAVE_CPP_DIGIT_LINE                       1                                      /* Support for: # 42 ...  (similar to #line) */

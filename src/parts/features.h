@@ -100,6 +100,7 @@ for (local CONF: configs) {
      TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_S_IN_STRINGS) ||                                           \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES) ||                                                \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) ||                                                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) ||                                              \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS) ||                                            \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EXCLAIM) ||                                                   \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BLANK) ||                                                     \
@@ -371,6 +372,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS)
 	TPP_FEAT_CPP_MACROS,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE)
+	TPP_FEAT_MAGIC_WHITESPACE,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS)
 	TPP_FEAT_CPP_BUILTIN_MACROS,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS) */
@@ -1133,6 +1137,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_CPP_MACROS): 1;
 #define _tpp_lexer_has_CPP_MACROS(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_CPP_MACROS)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE)
+		unsigned int TPP_INTERNAL(tff_MAGIC_WHITESPACE): 1;
+#define _tpp_lexer_has_MAGIC_WHITESPACE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MAGIC_WHITESPACE)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS)
 		unsigned int TPP_INTERNAL(tff_CPP_BUILTIN_MACROS): 1;
 #define _tpp_lexer_has_CPP_BUILTIN_MACROS(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_CPP_BUILTIN_MACROS)
@@ -2145,6 +2153,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_CPP_MACROS)
 #define _tpp_lexer_has_CPP_MACROS(self) TPP_CONF_DEFAULT(TPP_HAVE_CPP_MACROS)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_CPP_MACROS) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_MAGIC_WHITESPACE)
+#define _tpp_lexer_has_MAGIC_WHITESPACE(self) TPP_CONF_DEFAULT(TPP_HAVE_MAGIC_WHITESPACE)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_CPP_BUILTIN_MACROS)
 #define _tpp_lexer_has_CPP_BUILTIN_MACROS(self) TPP_CONF_DEFAULT(TPP_HAVE_CPP_BUILTIN_MACROS)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_CPP_BUILTIN_MACROS) */

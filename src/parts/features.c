@@ -80,6 +80,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS)
 		/* .tff_CPP_MACROS                                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE)
+		/* .tff_MAGIC_WHITESPACE                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_MAGIC_WHITESPACE),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS)
 		/* .tff_CPP_BUILTIN_MACROS                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_BUILTIN_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS) */

@@ -49,6 +49,7 @@
 #define tef_TPP_EXT_ESCAPE_S_IN_STRINGS                                           TPP_INTERNAL(tef_TPP_EXT_ESCAPE_S_IN_STRINGS)
 #define tef_TPP_EXT_CPP_DIRECTIVES                                                TPP_INTERNAL(tef_TPP_EXT_CPP_DIRECTIVES)
 #define tef_TPP_EXT_CPP_MACROS                                                    TPP_INTERNAL(tef_TPP_EXT_CPP_MACROS)
+#define tef_TPP_EXT_MAGIC_WHITESPACE                                              TPP_INTERNAL(tef_TPP_EXT_MAGIC_WHITESPACE)
 #define tef_TPP_EXT_CPP_BUILTIN_MACROS                                            TPP_INTERNAL(tef_TPP_EXT_CPP_BUILTIN_MACROS)
 #define tef_TPP_EXT_CPP_EXCLAIM                                                   TPP_INTERNAL(tef_TPP_EXT_CPP_EXCLAIM)
 #define tef_TPP_EXT_CPP_BLANK                                                     TPP_INTERNAL(tef_TPP_EXT_CPP_BLANK)
@@ -310,6 +311,7 @@
 #define tff_ESCAPE_S_IN_STRINGS                                                   TPP_INTERNAL(tff_ESCAPE_S_IN_STRINGS)
 #define tff_CPP_DIRECTIVES                                                        TPP_INTERNAL(tff_CPP_DIRECTIVES)
 #define tff_CPP_MACROS                                                            TPP_INTERNAL(tff_CPP_MACROS)
+#define tff_MAGIC_WHITESPACE                                                      TPP_INTERNAL(tff_MAGIC_WHITESPACE)
 #define tff_CPP_BUILTIN_MACROS                                                    TPP_INTERNAL(tff_CPP_BUILTIN_MACROS)
 #define tff_CPP_EXCLAIM                                                           TPP_INTERNAL(tff_CPP_EXCLAIM)
 #define tff_CPP_BLANK                                                             TPP_INTERNAL(tff_CPP_BLANK)
@@ -2344,6 +2346,36 @@ static struct tpp_token_str_strings_struct {
 	char ttr_TPP_TOK_PIPE[5];
 	char ttr_TPP_TOK_RBRACE[7];
 	char ttr_TPP_TOK_TILDE[6];
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_0[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_1[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_2[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_3[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_4[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_5[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_6[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_7[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_8[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_9[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 #if TPP_HAVE_UNICODE
 	char ttr_TPP_TOK_UNICHAR[8];
 #endif /* TPP_HAVE_UNICODE */
@@ -2772,6 +2804,36 @@ static struct tpp_token_str_strings_struct {
 	/* .ttr_TPP_TOK_PIPE = */ "PIPE",
 	/* .ttr_TPP_TOK_RBRACE = */ "RBRACE",
 	/* .ttr_TPP_TOK_TILDE = */ "TILDE",
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_0 = */ "0",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_1 = */ "1",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_2 = */ "2",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_3 = */ "3",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_4 = */ "4",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_5 = */ "5",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_6 = */ "6",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_7 = */ "7",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_8 = */ "8",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_9 = */ "9",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 #if TPP_HAVE_UNICODE
 	/* .ttr_TPP_TOK_UNICHAR = */ "UNICHAR",
 #endif /* TPP_HAVE_UNICODE */
@@ -3219,16 +3281,56 @@ static uint_least16_t const tpp_token_str_offsets[] = {
 	/* [TPP_TOK_MINUS] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_MINUS),
 	/* [TPP_TOK_DOT] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_DOT),
 	/* [TPP_TOK_SLASH] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_SLASH),
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_0] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_0),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x30] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_1] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_1),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x31] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_2] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_2),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x32] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_3] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_3),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x33] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_4] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_4),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x34] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_5] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_5),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x35] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_6] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_6),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x36] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_7] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_7),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x37] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_8] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_8),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x38] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_9] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_9),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x39] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [TPP_TOK_COLON] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_COLON),
 	/* [TPP_TOK_SEMICOLON] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_SEMICOLON),
 	/* [TPP_TOK_LANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_LANGLE),
@@ -5740,6 +5842,124 @@ again:
 	goto again;
 }
 #endif /* TPP_HAVE_TOKEN_ENCODESTRING */
+
+
+#if TPP_HAVE_TOKEN_REQUIRE_WHITESPACE
+static TPP_CONSTCALL TPP_WUNUSED bool TPPCALL
+tpp_token_is_keyword_like(tpp_token_id tok) {
+	switch (tok) {
+
+#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+	case TPP_TOK_CXX_RAW_STRING_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
+	case TPP_TOK_CXX_WIDE_STRING_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+	case TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
+	case TPP_TOK_CXX_UTF8_STRING_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+	case TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
+	case TPP_TOK_CXX_UTF16_STRING_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+	case TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
+	case TPP_TOK_CXX_UTF32_STRING_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+	case TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
+	case TPP_TOK_RAW_STRING_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	case TPP_TOK_CXX_RAW_CHAR_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+	case TPP_TOK_CXX_WIDE_CHAR_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	case TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+	case TPP_TOK_CXX_UTF8_CHAR_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	case TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+	case TPP_TOK_CXX_UTF16_CHAR_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	case TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+	case TPP_TOK_CXX_UTF32_CHAR_LITERAL:
+#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+	case TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+#if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+	case TPP_TOK_RAW_CHAR_LITERAL:
+#endif /* TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#if TPP_HAVE_UNICODE
+	case TPP_TOK_UNICHAR:
+#endif /* TPP_HAVE_UNICODE */
+#if TPP_HAVE_TPP_TOK_INT
+	case TPP_TOK_INT:
+#endif /* TPP_HAVE_TPP_TOK_INT */
+#if TPP_HAVE_TPP_TOK_FLOAT
+	case TPP_TOK_FLOAT:
+#endif /* TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	case TPP_TOK_0:
+	case TPP_TOK_1:
+	case TPP_TOK_2:
+	case TPP_TOK_3:
+	case TPP_TOK_4:
+	case TPP_TOK_5:
+	case TPP_TOK_6:
+	case TPP_TOK_7:
+	case TPP_TOK_8:
+	case TPP_TOK_9:
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+		return true;
+
+	default: break;
+	}
+	return TPP_TOK_ISKEYWORD(tok);
+}
+
+/* Check if 2 tokens, when written directly adjacent to each other,
+ * *might* (though not necessarily) result in a different set of
+ * tokens when re-parsed. */
+TPP_IMPL TPP_CONSTCALL TPP_WUNUSED bool TPPCALL
+tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs) {
+	if (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT_OR_EOF(lhs) ||
+	    TPP_TOK_ISSPACE_OR_LF_OR_COMMENT_OR_EOF(rhs))
+		return false; /* Whitespace or comment -> never need extra whitespace */
+	if (tpp_token_is_keyword_like(lhs) && tpp_token_is_keyword_like(rhs))
+		return true; /* If both sides are keyword-like, always need whitespace */
+	if (!TPP_TOK_ISKEYWORD(lhs) && !TPP_TOK_ISKEYWORD(rhs)) {
+		/* This case here could be made way more complicated, since it could
+		 * be made to includes stuff like:
+		 * >> if (lhs == TPP_TOK_PLUS && rhs == TPP_TOK_EQUAL)
+		 * >>     return tpp_lexer_has(<lexer>, TPP_TOK_PLUS_EQUAL);
+		 *
+		 * ... but for the sake of keeping this somewhat simple, we just always
+		 *     require additional whitespace between single/multi-char tokens. */
+		return true;
+	}
+	return false;
+}
+#endif /* TPP_HAVE_TOKEN_REQUIRE_WHITESPACE */
 
 
 /************************************************************************/
@@ -11818,6 +12038,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS)
 		/* .tff_CPP_MACROS                                                    = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE)
+		/* .tff_MAGIC_WHITESPACE                                              = */ TPP_CONF_DEFAULT(TPP_HAVE_MAGIC_WHITESPACE),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS)
 		/* .tff_CPP_BUILTIN_MACROS                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_BUILTIN_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS) */
@@ -28713,6 +28936,9 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	tpp_token const *const token = tpp_lexer_gettoken(lexer);
 	tpp_string_buffer buffer;
 	tpp_token_id tok;
+#if TPP_HAVE_MAGIC_WHITESPACE
+	tpp_token_id prev_tok = TPP_TOK_SPACE;
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 	tpp_char const *expected_simple_tok_start;
 	tpp_assert(tpp_lexer_getfile(lexer)->tf_prev == NULL);
 	expected_simple_tok_start = arginfo->tlai_start;
@@ -28752,6 +28978,30 @@ next_tok:
 
 	/* Print representation of tokens to "buffer" */
 again_print_token:
+
+#if TPP_HAVE_MAGIC_WHITESPACE
+	/* Inject an extra whitespace token if last token and this one could
+	 * accidentally be interpreted as a single token:
+	 * >> #define FOO() foo
+	 * >> #define BAR   bar
+	 * >> #define SCAN(x) x
+	 * >> SCAN(FOO()BAR)
+	 *
+	 * During expansion of "SCAN", we will get here 2 times, with 2 tokens:
+	 * - "foo"
+	 * - "bar"
+	 *
+	 * Without extra handling to add whitespace if as necessary, the "foo"
+	 * and "bar" tokens will appear as a singular "foobar" token in the final
+	 * expansion! */
+	if (tpp_lexer_has(lexer, MAGIC_WHITESPACE)) {
+		if (tpp_token_require_whitespace(prev_tok, tok)) {
+			if (!tpp_string_buffer_append(&buffer, (tpp_char const *)" ", 1))
+				goto err_builder_nomem;
+		}
+		prev_tok = tok;
+	}
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 	if (!tpp_string_buffer_append(&buffer, token->tt_start,
 	                              (tpp_size)(token->tt_end -
 	                                         token->tt_start)))
@@ -30963,6 +31213,9 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 	tpp_lexer *const self = data->tlhed_lexer;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token const *const token = tpp_lexer_gettoken(self);
+#if TPP_HAVE_MAGIC_WHITESPACE
+	tpp_token_id prev_tok = TPP_TOK_SPACE;
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 #if TPP_HAVE_CPP_DIRECTIVES
 	tpp_file_flags saved_flags;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
@@ -30988,6 +31241,18 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 		tok = tpp_lexer_yield_blocking(self);
 		if (TPP_TOK_ISERR_OR_EOF(tok))
 			break;
+#if TPP_HAVE_MAGIC_WHITESPACE
+		if (tpp_lexer_has(self, MAGIC_WHITESPACE)) {
+			if (tpp_token_require_whitespace(prev_tok, tok)) {
+				print_status = tpp_string_builder_print(&data->tlhed_builder, (tpp_char const *)" ", 1);
+				if tpp_unlikely(TPP_SSIZE_ISERR(print_status)) {
+					tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
+					break;
+				}
+			}
+			prev_tok = tok;
+		}
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 		print_status = tpp_string_builder_print(&data->tlhed_builder,
 		                                        tpp_token_getstart(token),
 		                                        tpp_token_getlen(token));

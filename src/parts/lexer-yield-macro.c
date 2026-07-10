@@ -157,6 +157,9 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	tpp_token const *const token = tpp_lexer_gettoken(lexer);
 	tpp_string_buffer buffer;
 	tpp_token_id tok;
+#if TPP_HAVE_MAGIC_WHITESPACE
+	tpp_token_id prev_tok = TPP_TOK_SPACE;
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 	tpp_char const *expected_simple_tok_start;
 	tpp_assert(tpp_lexer_getfile(lexer)->tf_prev == NULL);
 	expected_simple_tok_start = arginfo->tlai_start;
@@ -196,6 +199,30 @@ next_tok:
 
 	/* Print representation of tokens to "buffer" */
 again_print_token:
+
+#if TPP_HAVE_MAGIC_WHITESPACE
+	/* Inject an extra whitespace token if last token and this one could
+	 * accidentally be interpreted as a single token:
+	 * >> #define FOO() foo
+	 * >> #define BAR   bar
+	 * >> #define SCAN(x) x
+	 * >> SCAN(FOO()BAR)
+	 *
+	 * During expansion of "SCAN", we will get here 2 times, with 2 tokens:
+	 * - "foo"
+	 * - "bar"
+	 *
+	 * Without extra handling to add whitespace if as necessary, the "foo"
+	 * and "bar" tokens will appear as a singular "foobar" token in the final
+	 * expansion! */
+	if (tpp_lexer_has(lexer, MAGIC_WHITESPACE)) {
+		if (tpp_token_require_whitespace(prev_tok, tok)) {
+			if (!tpp_string_buffer_append(&buffer, (tpp_char const *)" ", 1))
+				goto err_builder_nomem;
+		}
+		prev_tok = tok;
+	}
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 	if (!tpp_string_buffer_append(&buffer, token->tt_start,
 	                              (tpp_size)(token->tt_end -
 	                                         token->tt_start)))

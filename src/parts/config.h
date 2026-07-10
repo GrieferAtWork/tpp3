@@ -557,6 +557,26 @@
 #define TPP_HAVE_CPP_MACROS (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fcpp-macros" */
 #endif /* !TPP_HAVE_CPP_MACROS */
 
+/* Enable support for magic whitespace insertions where failure
+ * to do so would result in accidental token concatenation:
+ * ```c
+ * #define FOO() foo
+ * #define BAR   bar
+ * #define SCAN(x) x
+ * FOO()BAR          // OK: Expands to [foo][bar] (works independent of `TPP_HAVE_MAGIC_WHITESPACE`)
+ * SCAN(FOO()BAR)    // Expands to [foo][ ][bar]  (or [foobar] when `TPP_HAVE_MAGIC_WHITESPACE` is disabled)
+ * ```
+ *
+ * The extra space (U+0020) character in `SCAN(FOO()BAR)` gets added
+ * during macro argument substitution in the call to `SCAN`, and is
+ * necessary because TPP is a text-based preprocessor. Trying to get
+ * L/C information on the associated `TPP_TOK_SPACE` will fail.
+ *
+ * @detect: N/A */
+#ifndef TPP_HAVE_MAGIC_WHITESPACE
+#define TPP_HAVE_MAGIC_WHITESPACE ((TPP_HAVE_CPP_MACROS || TPP_HAVE_MACRO___TPP_EXEC) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fmagic-whitespace" */
+#endif /* !TPP_HAVE_MAGIC_WHITESPACE */
+
 /* Support for builtin C-style macros (require `TPP_HAVE_CPP_MACROS` to be enabled, too)
  * @detect: N/A */
 #ifndef TPP_HAVE_CPP_BUILTIN_MACROS
@@ -4156,6 +4176,13 @@ for (local doc, name,
 	 TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_STR_PACK ||        \
 	 (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_LEXER_DUMP_DEFINITIONS))
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+
+/* Provide a function `tpp_token_require_whitespace()` to check if 2 tokens,
+ * when written directly adjacent to each other, *might* produce a different
+ * (set of) token(s) when re-parsed. */
+#ifndef TPP_HAVE_TOKEN_REQUIRE_WHITESPACE
+#define TPP_HAVE_TOKEN_REQUIRE_WHITESPACE TPP_HAVE_MAGIC_WHITESPACE
+#endif /* !TPP_HAVE_TOKEN_REQUIRE_WHITESPACE */
 
 /* Provide a function `tpp_lexer_decodeint_expr()` to parse an integer */
 #ifndef TPP_HAVE_LEXER_DECODEINT_EXPR

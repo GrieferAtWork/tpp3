@@ -234,6 +234,36 @@ static struct tpp_token_str_strings_struct {
 	char ttr_TPP_TOK_PIPE[5];
 	char ttr_TPP_TOK_RBRACE[7];
 	char ttr_TPP_TOK_TILDE[6];
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_0[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_1[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_2[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_3[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_4[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_5[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_6[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_7[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_8[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	char ttr_TPP_TOK_9[2];
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 #if TPP_HAVE_UNICODE
 	char ttr_TPP_TOK_UNICHAR[8];
 #endif /* TPP_HAVE_UNICODE */
@@ -662,6 +692,36 @@ static struct tpp_token_str_strings_struct {
 	/* .ttr_TPP_TOK_PIPE = */ "PIPE",
 	/* .ttr_TPP_TOK_RBRACE = */ "RBRACE",
 	/* .ttr_TPP_TOK_TILDE = */ "TILDE",
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_0 = */ "0",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_1 = */ "1",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_2 = */ "2",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_3 = */ "3",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_4 = */ "4",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_5 = */ "5",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_6 = */ "6",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_7 = */ "7",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_8 = */ "8",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* .ttr_TPP_TOK_9 = */ "9",
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 #if TPP_HAVE_UNICODE
 	/* .ttr_TPP_TOK_UNICHAR = */ "UNICHAR",
 #endif /* TPP_HAVE_UNICODE */
@@ -1109,16 +1169,56 @@ static uint_least16_t const tpp_token_str_offsets[] = {
 	/* [TPP_TOK_MINUS] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_MINUS),
 	/* [TPP_TOK_DOT] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_DOT),
 	/* [TPP_TOK_SLASH] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_SLASH),
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_0] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_0),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x30] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_1] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_1),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x31] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_2] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_2),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x32] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_3] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_3),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x33] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_4] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_4),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x34] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_5] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_5),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x35] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_6] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_6),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x36] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_7] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_7),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x37] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_8] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_8),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x38] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	/* [TPP_TOK_9] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_9),
+#else /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [0x39] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
+#endif /* !!TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 	/* [TPP_TOK_COLON] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_COLON),
 	/* [TPP_TOK_SEMICOLON] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_SEMICOLON),
 	/* [TPP_TOK_LANGLE] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_LANGLE),

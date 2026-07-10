@@ -1603,6 +1603,9 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 	tpp_lexer *const self = data->tlhed_lexer;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token const *const token = tpp_lexer_gettoken(self);
+#if TPP_HAVE_MAGIC_WHITESPACE
+	tpp_token_id prev_tok = TPP_TOK_SPACE;
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 #if TPP_HAVE_CPP_DIRECTIVES
 	tpp_file_flags saved_flags;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
@@ -1628,6 +1631,18 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 		tok = tpp_lexer_yield_blocking(self);
 		if (TPP_TOK_ISERR_OR_EOF(tok))
 			break;
+#if TPP_HAVE_MAGIC_WHITESPACE
+		if (tpp_lexer_has(self, MAGIC_WHITESPACE)) {
+			if (tpp_token_require_whitespace(prev_tok, tok)) {
+				print_status = tpp_string_builder_print(&data->tlhed_builder, (tpp_char const *)" ", 1);
+				if tpp_unlikely(TPP_SSIZE_ISERR(print_status)) {
+					tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
+					break;
+				}
+			}
+			prev_tok = tok;
+		}
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 		print_status = tpp_string_builder_print(&data->tlhed_builder,
 		                                        tpp_token_getstart(token),
 		                                        tpp_token_getlen(token));

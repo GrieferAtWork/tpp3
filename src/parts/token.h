@@ -183,6 +183,18 @@ typedef enum tpp_token_id {
 	TPP_TOK_PIPE      = '|',
 	TPP_TOK_RBRACE    = '}',
 	TPP_TOK_TILDE     = '~',
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	TPP_TOK_0         = '0',
+	TPP_TOK_1         = '1',
+	TPP_TOK_2         = '2',
+	TPP_TOK_3         = '3',
+	TPP_TOK_4         = '4',
+	TPP_TOK_5         = '5',
+	TPP_TOK_6         = '6',
+	TPP_TOK_7         = '7',
+	TPP_TOK_8         = '8',
+	TPP_TOK_9         = '9',
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 
 	/* Double(or more)-character tokens. */
 	TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN) = 255, /* KEEP THIS THE FIRST MULTICHAR TOKEN! */
@@ -1551,7 +1563,7 @@ typedef struct tpp_token {
 #define tpp_token_getid(self)      ((self)->TPP_INTERNAL(tt_id))
 #define tpp_token_getkwd(self)     ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "tpp_token_haskwd(self)" */
 #define tpp_token_getstart(self)   ((self)->TPP_INTERNAL(tt_start))
-#define tpp_token_getend(self)     ((self)->TPP_INTERNAL(tt_end))
+#define tpp_token_getend(self)     ((self)->TPP_INTERNAL(tt_end)) /* WARNING: Don't dereference -- pointed-to memory may not have been loaded! */
 #define tpp_token_getlen(self)     ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
 #define tpp_token_getkwdcstr(self) tpp_keyword_getcstr(tpp_token_getkwd(self))
 
@@ -1597,6 +1609,14 @@ TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes);
 #endif /* TPP_HAVE_TOKEN_ENCODESTRING */
+
+#if TPP_HAVE_TOKEN_REQUIRE_WHITESPACE
+/* Check if 2 tokens, when written directly adjacent to each other,
+ * *might* (though not necessarily) result in a different set of
+ * tokens when re-parsed. */
+TPP_DECL TPP_CONSTCALL TPP_WUNUSED bool TPPCALL
+tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
+#endif /* TPP_HAVE_TOKEN_REQUIRE_WHITESPACE */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

@@ -899,6 +899,14 @@ TPP_EXTENSION(TPP_EXT_CPP_DIRECTIVES, TPP_EXTNAME_CPP_DIRECTIVES, TPP_CONF_DEFAU
 TPP_EXTENSION(TPP_EXT_CPP_MACROS, TPP_EXTNAME_CPP_MACROS, TPP_CONF_DEFAULT(TPP_HAVE_CPP_MACROS))
 #define _tpp_lexer_has_CPP_MACROS(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_CPP_MACROS)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_CPP_MACROS) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_MAGIC_WHITESPACE)
+#ifndef TPP_EXTNAME_MAGIC_WHITESPACE
+#define TPP_EXTNAME_MAGIC_WHITESPACE "magic-whitespace"
+#endif /* !TPP_EXTNAME_MAGIC_WHITESPACE */
+#define TPP_EXT_MAGIC_WHITESPACE TPP_EXT_MAGIC_WHITESPACE
+TPP_EXTENSION(TPP_EXT_MAGIC_WHITESPACE, TPP_EXTNAME_MAGIC_WHITESPACE, TPP_CONF_DEFAULT(TPP_HAVE_MAGIC_WHITESPACE))
+#define _tpp_lexer_has_MAGIC_WHITESPACE(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_MAGIC_WHITESPACE)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_CPP_BUILTIN_MACROS)
 #ifndef TPP_EXTNAME_CPP_BUILTIN_MACROS
 #define TPP_EXTNAME_CPP_BUILTIN_MACROS "cpp-builtin-macros"
@@ -5148,6 +5156,26 @@ TPP_DECL_END
 #define TPP_HAVE_CPP_MACROS (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fcpp-macros" */
 #endif /* !TPP_HAVE_CPP_MACROS */
 
+/* Enable support for magic whitespace insertions where failure
+ * to do so would result in accidental token concatenation:
+ * ```c
+ * #define FOO() foo
+ * #define BAR   bar
+ * #define SCAN(x) x
+ * FOO()BAR          // OK: Expands to [foo][bar] (works independent of `TPP_HAVE_MAGIC_WHITESPACE`)
+ * SCAN(FOO()BAR)    // Expands to [foo][ ][bar]  (or [foobar] when `TPP_HAVE_MAGIC_WHITESPACE` is disabled)
+ * ```
+ *
+ * The extra space (U+0020) character in `SCAN(FOO()BAR)` gets added
+ * during macro argument substitution in the call to `SCAN`, and is
+ * necessary because TPP is a text-based preprocessor. Trying to get
+ * L/C information on the associated `TPP_TOK_SPACE` will fail.
+ *
+ * @detect: N/A */
+#ifndef TPP_HAVE_MAGIC_WHITESPACE
+#define TPP_HAVE_MAGIC_WHITESPACE ((TPP_HAVE_CPP_MACROS || TPP_HAVE_MACRO___TPP_EXEC) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fmagic-whitespace" */
+#endif /* !TPP_HAVE_MAGIC_WHITESPACE */
+
 /* Support for builtin C-style macros (require `TPP_HAVE_CPP_MACROS` to be enabled, too)
  * @detect: N/A */
 #ifndef TPP_HAVE_CPP_BUILTIN_MACROS
@@ -8379,6 +8407,13 @@ TPP_DECL_END
 	 (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_LEXER_DUMP_DEFINITIONS))
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
+/* Provide a function `tpp_token_require_whitespace()` to check if 2 tokens,
+ * when written directly adjacent to each other, *might* produce a different
+ * (set of) token(s) when re-parsed. */
+#ifndef TPP_HAVE_TOKEN_REQUIRE_WHITESPACE
+#define TPP_HAVE_TOKEN_REQUIRE_WHITESPACE TPP_HAVE_MAGIC_WHITESPACE
+#endif /* !TPP_HAVE_TOKEN_REQUIRE_WHITESPACE */
+
 /* Provide a function `tpp_lexer_decodeint_expr()` to parse an integer */
 #ifndef TPP_HAVE_LEXER_DECODEINT_EXPR
 #define TPP_HAVE_LEXER_DECODEINT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_INT)
@@ -10014,6 +10049,18 @@ typedef enum tpp_token_id {
 	TPP_TOK_PIPE      = '|',
 	TPP_TOK_RBRACE    = '}',
 	TPP_TOK_TILDE     = '~',
+#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	TPP_TOK_0         = '0',
+	TPP_TOK_1         = '1',
+	TPP_TOK_2         = '2',
+	TPP_TOK_3         = '3',
+	TPP_TOK_4         = '4',
+	TPP_TOK_5         = '5',
+	TPP_TOK_6         = '6',
+	TPP_TOK_7         = '7',
+	TPP_TOK_8         = '8',
+	TPP_TOK_9         = '9',
+#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
 
 	/* Double(or more)-character tokens. */
 	TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN) = 255, /* KEEP THIS THE FIRST MULTICHAR TOKEN! */
@@ -11343,7 +11390,7 @@ typedef struct tpp_token {
 #define tpp_token_getid(self)      ((self)->TPP_INTERNAL(tt_id))
 #define tpp_token_getkwd(self)     ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "tpp_token_haskwd(self)" */
 #define tpp_token_getstart(self)   ((self)->TPP_INTERNAL(tt_start))
-#define tpp_token_getend(self)     ((self)->TPP_INTERNAL(tt_end))
+#define tpp_token_getend(self)     ((self)->TPP_INTERNAL(tt_end)) /* WARNING: Don't dereference -- pointed-to memory may not have been loaded! */
 #define tpp_token_getlen(self)     ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
 #define tpp_token_getkwdcstr(self) tpp_keyword_getcstr(tpp_token_getkwd(self))
 
@@ -11390,6 +11437,14 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes);
 #endif /* TPP_HAVE_TOKEN_ENCODESTRING */
 
+#if TPP_HAVE_TOKEN_REQUIRE_WHITESPACE
+/* Check if 2 tokens, when written directly adjacent to each other,
+ * *might* (though not necessarily) result in a different set of
+ * tokens when re-parsed. */
+TPP_DECL TPP_CONSTCALL TPP_WUNUSED bool TPPCALL
+tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
+#endif /* TPP_HAVE_TOKEN_REQUIRE_WHITESPACE */
+
 /************************************************************************/
 /* File: parts/features.h                                               */
 /************************************************************************/
@@ -11402,6 +11457,7 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
      TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_S_IN_STRINGS) ||                                           \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES) ||                                                \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) ||                                                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) ||                                              \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS) ||                                            \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EXCLAIM) ||                                                   \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BLANK) ||                                                     \
@@ -11673,6 +11729,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS)
 	TPP_FEAT_CPP_MACROS,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE)
+	TPP_FEAT_MAGIC_WHITESPACE,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS)
 	TPP_FEAT_CPP_BUILTIN_MACROS,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS) */
@@ -12435,6 +12494,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_CPP_MACROS): 1;
 #define _tpp_lexer_has_CPP_MACROS(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_CPP_MACROS)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE)
+		unsigned int TPP_INTERNAL(tff_MAGIC_WHITESPACE): 1;
+#define _tpp_lexer_has_MAGIC_WHITESPACE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MAGIC_WHITESPACE)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS)
 		unsigned int TPP_INTERNAL(tff_CPP_BUILTIN_MACROS): 1;
 #define _tpp_lexer_has_CPP_BUILTIN_MACROS(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_CPP_BUILTIN_MACROS)
@@ -13447,6 +13510,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_CPP_MACROS)
 #define _tpp_lexer_has_CPP_MACROS(self) TPP_CONF_DEFAULT(TPP_HAVE_CPP_MACROS)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_CPP_MACROS) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_MAGIC_WHITESPACE)
+#define _tpp_lexer_has_MAGIC_WHITESPACE(self) TPP_CONF_DEFAULT(TPP_HAVE_MAGIC_WHITESPACE)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_CPP_BUILTIN_MACROS)
 #define _tpp_lexer_has_CPP_BUILTIN_MACROS(self) TPP_CONF_DEFAULT(TPP_HAVE_CPP_BUILTIN_MACROS)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_CPP_BUILTIN_MACROS) */
