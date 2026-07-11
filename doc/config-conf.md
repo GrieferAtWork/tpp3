@@ -14,7 +14,7 @@ Every one of these config macros can be defined as one of the following values:
 ## TPP_HAVE_BSE
 
 Support for `\`-escaped line continuation: when a line ends with a `\` character
-that is immediately (but see [`TPP_HAVE_BSE_WHITESPACE`](config-conf.md#tpp_have_bse_whitespace)) followed by a linefeed,
+that is immediately (but see [`TPP_HAVE_BSE_WHITESPACE`](#tpp_have_bse_whitespace)) followed by a linefeed,
 then that linefeed is never yielded, and a potential multi-character token is
 continued:
 
@@ -56,7 +56,7 @@ Detect:
 
 ## TPP_HAVE_BSE_WHITESPACE
 
-Extension to [`TPP_HAVE_BSE`](config-conf.md#tpp_have_bse): the `\` character is allowed to be followed by extra
+Extension to [`TPP_HAVE_BSE`](#tpp_have_bse): the `\` character is allowed to be followed by extra
 whitespace preceding the actual linefeed:
 
 ```c
@@ -134,7 +134,7 @@ printf("Error: \e[31m%d\e[0m", errno);
 Default:
 
 ```c
-TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1: 0
+TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0
 ```
 
 Extension name:
@@ -258,7 +258,7 @@ Detect:
 
 ## TPP_HAVE_CPP_BUILTIN_MACROS
 
-Support for builtin C-style macros (require [`TPP_HAVE_CPP_MACROS`](config-conf.md#tpp_have_cpp_macros) to be enabled, too)
+Support for builtin C-style macros (require [`TPP_HAVE_CPP_MACROS`](#tpp_have_cpp_macros) to be enabled, too)
 
 <details><summary>Details</summary>
 
@@ -814,7 +814,7 @@ Support for clang `__has_extension()`, which is conventionally
 used to check support of compiler extensions in C/C++ compilers.
 
 NOTE: Another builtin macro of the same name exists and can be
-      enabled via [`TPP_HAVE_MACRO___has_extension`](config-conf.md#tpp_have_macro___has_extension). The 2 macros
+      enabled via [`TPP_HAVE_MACRO___has_extension`](#tpp_have_macro___has_extension). The 2 macros
       don't conflict with each other though (both can safely be
       enabled at the same time), since TPP's `__has_extension()`
       takes a string, whilst this one takes a keyword/identifier.
@@ -905,8 +905,8 @@ expands to `1` when `__has_extension()` would.
 
 See also:
 
-- [`TPP_HAVE_CLANG_MACRO___has_feature`](config-conf.md#tpp_have_clang_macro___has_feature)
-- [`TPP_HAVE_CLANG_MACRO___has_extension`](config-conf.md#tpp_have_clang_macro___has_extension)
+- [`TPP_HAVE_CLANG_MACRO___has_feature`](#tpp_have_clang_macro___has_feature)
+- [`TPP_HAVE_CLANG_MACRO___has_extension`](#tpp_have_clang_macro___has_extension)
 
 <details><summary>Details</summary>
 
@@ -1390,7 +1390,7 @@ Detect:
 ## TPP_HAVE_MACRO___FILE_NAME__
 
 Support for the builtin macro `__FILE_NAME__`.
-Similar to `__FILE__` (see [`TPP_HAVE_MACRO___FILE__`](config-conf.md#tpp_have_macro___file__)), but expand to the
+Similar to `__FILE__` (see [`TPP_HAVE_MACRO___FILE__`](#tpp_have_macro___file__)), but expand to the
 current file's name, without its leading path components (i.e. its *basename*).
 
 <details><summary>Details</summary>
@@ -1448,7 +1448,7 @@ Detect:
 ## TPP_HAVE_MACRO___INCLUDE_DEPTH__
 
 Support for the builtin macro `__INCLUDE_DEPTH__`, which is an
-alias for `__INCLUDE_LEVEL__` (see [`TPP_HAVE_MACRO___INCLUDE_LEVEL__`](config-conf.md#tpp_have_macro___include_level__))
+alias for `__INCLUDE_LEVEL__` (see [`TPP_HAVE_MACRO___INCLUDE_LEVEL__`](#tpp_have_macro___include_level__))
 
 <details><summary>Details</summary>
 
@@ -1594,7 +1594,7 @@ invocation with the expression's result in the form of 1-2 tokens:
 
 - `[<int>]`
 - `[-][<int>]`
-- `[<string>]` (if [`TPP_HAVE_BUILTIN_EXPR_STRINGS`](config-conf.md#tpp_have_builtin_expr_strings) is enabled)
+- `[<string>]` (if [`TPP_HAVE_BUILTIN_EXPR_STRINGS`](#tpp_have_builtin_expr_strings) is enabled)
 
 Example:
 
@@ -1641,7 +1641,7 @@ RESOURCE_SIZE("resource.dat") // Expands to file size in bytes
 ```
 
 NOTE: If you just want to execute code but discard whatever it expands
-      to, use `#pragma tpp_exec()` (see [`TPP_HAVE_PRAGMA_TPP_EXEC`](config-conf.md#tpp_have_pragma_tpp_exec))
+      to, use `#pragma tpp_exec()` (see [`TPP_HAVE_PRAGMA_TPP_EXEC`](#tpp_have_pragma_tpp_exec))
       instead, which has a lower overhead and lets you safely execute
       the code whilst discarding its result.
 
@@ -1742,7 +1742,7 @@ Detect:
 
 Support for the builtin function-like macro `__TPP_COUNTER()`.
 
-Called the same way as `__TPP_UNIQUE` (see [`TPP_HAVE_MACRO___TPP_UNIQUE`](config-conf.md#tpp_have_macro___tpp_unique)),
+Called the same way as `__TPP_UNIQUE` (see [`TPP_HAVE_MACRO___TPP_UNIQUE`](#tpp_have_macro___tpp_unique)),
 but returns an ever-increasing value starting at `0` (same as `__COUNTER__`),
 but that counter is specific to the given keyword. i.e.: `__TPP_COUNTER(foo)`
 and `__TPP_COUNTER(bar)` increment different counters
@@ -1810,7 +1810,7 @@ Detect:
 
 Support for the builtin function-like macro `__TPP_STR_DECOMPILE()`.
 
-This macro is very similar to `__TPP_EXEC()` (see [`TPP_HAVE_MACRO___TPP_EXEC`](config-conf.md#tpp_have_macro___tpp_exec)),
+This macro is very similar to `__TPP_EXEC()` (see [`TPP_HAVE_MACRO___TPP_EXEC`](#tpp_have_macro___tpp_exec)),
 except that while `__TPP_EXEC()` will expand other macros and directives,
 `__TPP_STR_DECOMPILE()` doesn't: it simply takes a string and expands to
 its decoded form *without* expansion (however: expansion may still occur as
@@ -1882,8 +1882,8 @@ Detect:
 
 Support for the builtin function-like macro `__TPP_STR_SUBSTR()`.
 
-Stand-alone macro that takes 3 arguments and (assuming [`TPP_HAVE_BUILTIN_EXPR_STRINGS`](config-conf.md#tpp_have_builtin_expr_strings)
-and [`TPP_HAVE_MACRO___TPP_EVAL`](config-conf.md#tpp_have_macro___tpp_eval) are enabled) can be implemented as follows:
+Stand-alone macro that takes 3 arguments and (assuming [`TPP_HAVE_BUILTIN_EXPR_STRINGS`](#tpp_have_builtin_expr_strings)
+and [`TPP_HAVE_MACRO___TPP_EVAL`](#tpp_have_macro___tpp_eval) are enabled) can be implemented as follows:
 
 ```c
 #define __TPP_STR_SUBSTR(str, lo, hi) __TPP_EVAL((str)[(lo):(hi)])
@@ -1916,8 +1916,8 @@ Detect:
 
 Support for the builtin function-like macro `__TPP_STR_SIZE()`.
 
-Stand-alone macro that takes 1 arguments and (assuming [`TPP_HAVE_BUILTIN_EXPR_STRINGS`](config-conf.md#tpp_have_builtin_expr_strings)
-and [`TPP_HAVE_MACRO___TPP_EVAL`](config-conf.md#tpp_have_macro___tpp_eval) are enabled) can be implemented as follows:
+Stand-alone macro that takes 1 arguments and (assuming [`TPP_HAVE_BUILTIN_EXPR_STRINGS`](#tpp_have_builtin_expr_strings)
+and [`TPP_HAVE_MACRO___TPP_EVAL`](#tpp_have_macro___tpp_eval) are enabled) can be implemented as follows:
 
 ```c
 #define __TPP_STR_SIZE(str) __TPP_EVAL(#(str))
@@ -2007,7 +2007,7 @@ __TPP_IDENTIFIER("a\0b")  // Compilers probably won't like this: NUL-character i
                           // will probably print the keyword as "a")
 ```
 
-Similar functionality can also be achieved using [`TPP_HAVE_ESCAPE_IN_IDENTIFIERS`](config-conf.md#tpp_have_escape_in_identifiers)
+Similar functionality can also be achieved using [`TPP_HAVE_ESCAPE_IN_IDENTIFIERS`](#tpp_have_escape_in_identifiers)
 
 <details><summary>Details</summary>
 
@@ -2438,7 +2438,7 @@ Detect:
 
 Support for GCC-style va-comma: when a variable-argument macro
 contains a construct like `, ## __VA_ARGS__` (or the name of the
-variable-length argument when [`TPP_HAVE_NAMED_VARARGS_IN_MACROS`](config-conf.md#tpp_have_named_varargs_in_macros)
+variable-length argument when [`TPP_HAVE_NAMED_VARARGS_IN_MACROS`](#tpp_have_named_varargs_in_macros)
 is enabled), then the `,` is deleted during expansion whenever
 the there are no variable arguments:
 
@@ -2486,7 +2486,7 @@ str("foo")  // Expands to: "\"foo\""
 ```
 
 Note that this operator only takes effect during modern macro
-compilation. When [`TPP_HAVE_TRADITIONAL_MACROS`](config-conf.md#tpp_have_traditional_macros) is enabled,
+compilation. When [`TPP_HAVE_TRADITIONAL_MACROS`](#tpp_have_traditional_macros) is enabled,
 then stringization works differently and must be done like so:
 
 ```c
@@ -2532,7 +2532,7 @@ str('foo')  // Expands to: '\'foo\''
 ```
 
 Note that this operator only takes effect during modern macro
-compilation. When [`TPP_HAVE_TRADITIONAL_MACROS`](config-conf.md#tpp_have_traditional_macros) is enabled,
+compilation. When [`TPP_HAVE_TRADITIONAL_MACROS`](#tpp_have_traditional_macros) is enabled,
 then charization works differently and must be done like so:
 
 ```c
@@ -3709,7 +3709,7 @@ Detect:
 ## TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 
 Support for string literals: `L"foo"`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `LR"AB(foo)AB")`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `LR"AB(foo)AB")`
 
 <details><summary>Details</summary>
 
@@ -3737,7 +3737,7 @@ Detect:
 ## TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 
 Support for string literals: `u8"foo"`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `u8R"AB(foo)AB"`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `u8R"AB(foo)AB"`
 
 <details><summary>Details</summary>
 
@@ -3765,7 +3765,7 @@ Detect:
 ## TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 
 Support for string literals: `u"foo"`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `uR"AB(foo)AB"`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `uR"AB(foo)AB"`
 
 <details><summary>Details</summary>
 
@@ -3793,7 +3793,7 @@ Detect:
 ## TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
 
 Support for string literals: `U"foo"`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `UR"AB(foo)AB"`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `UR"AB(foo)AB"`
 
 <details><summary>Details</summary>
 
@@ -3848,7 +3848,7 @@ Detect:
 ## TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
 
 Support for string literals: `L'f'`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `LR'AB(f)AB'`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `LR'AB(f)AB'`
 
 <details><summary>Details</summary>
 
@@ -3876,7 +3876,7 @@ Detect:
 ## TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 
 Support for string literals: `u8'f'`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `u8R'AB(f)AB'`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `u8R'AB(f)AB'`
 
 <details><summary>Details</summary>
 
@@ -3904,7 +3904,7 @@ Detect:
 ## TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
 
 Support for string literals: `u'f'`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `uR'AB(f)AB'`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `uR'AB(f)AB'`
 
 <details><summary>Details</summary>
 
@@ -3932,7 +3932,7 @@ Detect:
 ## TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
 
 Support for string literals: `U'f'`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `UR'AB(f)AB'`
+When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `UR'AB(f)AB'`
 
 <details><summary>Details</summary>
 
@@ -4069,18 +4069,18 @@ Detect:
 
 Feature-flag: treat line-feeds like any regular character in string tokens:
 
-- [`TPP_HAVE_TPP_TOK_C_STRING`](config-conf.md#tpp_have_tpp_tok_c_string)
-- [`TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_wide_string_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf8_string_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf16_string_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf32_string_literal)
-- [`TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL`](config-conf.md#tpp_have_tpp_tok_raw_string_literal)
-- [`TPP_HAVE_TPP_TOK_C_CHAR`](config-conf.md#tpp_have_tpp_tok_c_char)
-- [`TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_wide_char_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf8_char_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf16_char_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_cxx_utf32_char_literal)
-- [`TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL`](config-conf.md#tpp_have_tpp_tok_raw_char_literal)
+- [`TPP_HAVE_TPP_TOK_C_STRING`](#tpp_have_tpp_tok_c_string)
+- [`TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_wide_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_utf8_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_utf16_string_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_utf32_string_literal)
+- [`TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL`](#tpp_have_tpp_tok_raw_string_literal)
+- [`TPP_HAVE_TPP_TOK_C_CHAR`](#tpp_have_tpp_tok_c_char)
+- [`TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_wide_char_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_utf8_char_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_utf16_char_literal)
+- [`TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_utf32_char_literal)
+- [`TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL`](#tpp_have_tpp_tok_raw_char_literal)
 
 When this flag is disabled, line-feeds in such string tokens will instead
 terminate the string, and cause a `TPP_W_STRING_TERMINATED_BY_LINEFEED`

@@ -533,7 +533,7 @@
  * printf("Error: \e[31m%d\e[0m", errno);
  * ``` */
 #ifndef TPP_HAVE_ESCAPE_E_IN_STRINGS
-#define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1: 0) /* "-fescape-e-in-strings" */
+#define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fescape-e-in-strings" */
 #endif /* !TPP_HAVE_ESCAPE_E_IN_STRINGS */
 
 /* Support for `\s` (for `U+0020`) escape sequences:

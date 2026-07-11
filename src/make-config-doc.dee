@@ -355,6 +355,7 @@ function formatDoc(currentFile: string, doc: string): string {
 
 function updateConfigMd(filename: string) {
 	print("Updating ", repr filename);
+	local currentFile = filename.rpartition("/").last;
 	local oldData = File.open(filename, "rb").read();
 	local i = 0, len = #oldData;
 	local newData = File.Writer(hint: "bytes");
@@ -422,7 +423,7 @@ function updateConfigMd(filename: string) {
 					f"{prototypePrefix}TPP_HOOK_{name}{prototypeSuffix};\n"
 					f"```\n"
 					f"\n"
-					f"{formatDoc(filename, doc.partition("\n@").first)}\n"
+					f"{formatDoc(currentFile, doc.partition("\n@").first)}\n"
 					f"\n"
 					f"<details><summary>Default</summary>\n"
 					f"\n"
@@ -461,7 +462,7 @@ function updateConfigMd(filename: string) {
 			local foundAny = false;
 			for (local conf: getAvailableConfigs()) {
 				if (conf.kind == tag) {
-					conf.printDesc(filename, newData);
+					conf.printDesc(currentFile, newData);
 					foundAny = true;
 				}
 			}

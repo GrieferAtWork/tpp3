@@ -49,7 +49,7 @@ Unicode support:
 
 - Use of a unicode traits database that is either user-supplied,
   a dummy (where all unicode character are allows in identifiers),
-  or built-in when [`TPP_HAVE_BUILTIN_CTYPE_UNICODE`](config-core.md#tpp_have_builtin_ctype_unicode) is enabled.
+  or built-in when [`TPP_HAVE_BUILTIN_CTYPE_UNICODE`](#tpp_have_builtin_ctype_unicode) is enabled.
 - Automatic detection of `utf-8`, `utf-8-bom`, `utf-16[le/be]`, `utf-32[le/be]` in input files.<br/>
   NOTE: The Lexer assumes `utf-8` by default, unless it encounters an invalid `utf-8`
         byte sequence, at which point it will automatically downgrade to `ASCII`-only
@@ -923,7 +923,7 @@ TPP_OS_WINDOWS && (TPP_HAVE_USER_KEYWORDS || (TPP_PROFILE != TPP_PROFILE_MINIMAL
 ## TPP_HAVE_JOINPATH
 
 Enable support for `tpp_joinpath()`, a wrapper around another internal function
-used to implement `tpp_lexer_openfile()` (see [`TPP_HAVE_LEXER_OPENFILE`](config-core.md#tpp_have_lexer_openfile)) and is also
+used to implement `tpp_lexer_openfile()` (see [`TPP_HAVE_LEXER_OPENFILE`](#tpp_have_lexer_openfile)) and is also
 needed to implement `#pragma GCC dependency` (see [`TPP_HAVE_PRAGMA_GCC_DEPENDENCY`](config-conf.md#tpp_have_pragma_gcc_dependency))
 
 This function takes 2 paths, resolves `.` and `..` path references between them,
