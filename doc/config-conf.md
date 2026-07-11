@@ -231,7 +231,7 @@ SCAN(FOO()BAR)    // Expands to [foo][ ][bar]  (or [foobar] when `TPP_HAVE_MAGIC
 The extra space (U+0020) character in `SCAN(FOO()BAR)` gets added
 during macro argument substitution in the call to `SCAN`, and is
 necessary because TPP is a text-based preprocessor. Trying to get
-L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L10130) will fail.
+L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L10096) will fail.
 
 <details><summary>Details</summary>
 
@@ -300,14 +300,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_CPP_EXCLAIM "shebang-directives"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fshebang-directives")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_CPP_BLANK
@@ -343,10 +335,10 @@ the filename, a number of additional "flags" can be specified:
 - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack. Like the
        `1` flag, this flag require [`TPP_HAVE_FILE_DUMMY`](config-core.md#tpp_have_file_dummy) to be enabled, otherwise it is
        ignored.
-- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14426) for the current text-file. When this flag is not
-       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14426) is instead cleared for the current text-file.
+- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14392) for the current text-file. When this flag is not
+       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14392) is instead cleared for the current text-file.
        This flag requires [`TPP_HAVE_FILE_SYSHDR`](config-core.md#tpp_have_file_syshdr) to be enabled, otherwise it is ignored.
-- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14429) flag. Similarly, this
+- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14395) flag. Similarly, this
        flag requires [`TPP_HAVE_FILE_EXTERN_C`](config-core.md#tpp_have_file_extern_c) to be enabled, otherwise it is ignored.
 
 <details><summary>Details</summary>
@@ -400,14 +392,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_CPP_INCLUDE "include-directives"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-finclude-directives")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_CPP_INCLUDE_NEXT
@@ -427,14 +411,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_CPP_INCLUDE_NEXT "include-next-directives"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-finclude-next-directives")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_CPP_IMPORT
@@ -453,14 +429,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_CPP_IMPORT "import-directives"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-fimport-directives")
-...
-#endif
 ```
 </details>
 
@@ -521,14 +489,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_CPP_ASSERT "assertions"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fassertions")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_CPP_ERROR
@@ -547,14 +507,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_CPP_ERROR "error-directives"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-ferror-directives")
-...
-#endif
 ```
 </details>
 
@@ -575,14 +527,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_CPP_WARNING "warning-directives"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fwarning-directives")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_CPP_IDENT_SCCS
@@ -601,14 +545,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_CPP_IDENT_SCCS "ident-directives"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-fident-directives")
-...
-#endif
 ```
 </details>
 
@@ -929,14 +865,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_CLANG_EXTENSIONS_ARE_FEATURES "clang-extensions-are-features"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fclang-extensions-are-features")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_MACRO___is_identifier
@@ -950,7 +878,7 @@ to check if a given keyword is a builtin identifier:
 #endif
 ```
 
-A keyword is considered to be an "identifier" if [`TPP_TOK_ISBUILTINKEYWORD()`](../src/tpp-amalgamation.h#L11457)
+A keyword is considered to be an "identifier" if [`TPP_TOK_ISBUILTINKEYWORD()`](../src/tpp-amalgamation.h#L11423)
 
 <details><summary>Details</summary>
 
@@ -1971,7 +1899,7 @@ __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TPP_TOK_SPACE) because d
 
 Based on the numbers returned by this macro, it becomes possible
 to detect the state of pretty much all configuration options that
-affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L18582)
+affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L18548)
 
 <details><summary>Details</summary>
 
@@ -2162,14 +2090,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_MACRO_ARGUMENT_WHITESPACE "macro-argument-whitespace"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fmacro-argument-whitespace")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_MACRO_RECURSION
@@ -2202,14 +2122,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_MACRO_RECURSION "macro-recursion"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fmacro-recursion")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_TRADITIONAL_MACROS
@@ -2229,7 +2141,7 @@ T_CAT(10, 20) // 1020
 T_STR(10)     // "10"
 ```
 
-NOTE: affects behavior of macros at the *TIME OF DEFINITION*
+NOTE: affects behavior of macros at the *TIME OF DEFINITION* ")
 
 <details><summary>Details</summary>
 
@@ -2243,14 +2155,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_TRADITIONAL_MACROS "traditional-macro"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-ftraditional-macro")
-...
-#endif
 ```
 </details>
 
@@ -2277,14 +2181,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_NAMED_VARARGS_IN_MACROS "named-varargs-in-macros"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fnamed-varargs-in-macros")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_VA_ARGS_IN_MACROS
@@ -2309,14 +2205,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_VA_ARGS_IN_MACROS "va-args-in-macros"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-fva-args-in-macros")
-...
-#endif
 ```
 </details>
 
@@ -2704,14 +2592,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_PRAGMA_ONCE "pragma-once"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-once")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_PRAGMA_DEPRECATED
@@ -2730,14 +2610,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_PRAGMA_DEPRECATED "pragma-deprecated"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-deprecated")
-...
-#endif
 ```
 </details>
 
@@ -2758,14 +2630,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_PRAGMA_EXTENSION "pragma-extension"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-extension")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_PRAGMA_WARNING
@@ -2784,14 +2648,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_PRAGMA_WARNING "pragma-warning"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-warning")
-...
-#endif
 ```
 </details>
 
@@ -2812,14 +2668,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_PRAGMA_MESSAGE "pragma-message"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-message")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_PRAGMA_ERROR
@@ -2838,14 +2686,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_PRAGMA_ERROR "pragma-error"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-error")
-...
-#endif
 ```
 </details>
 
@@ -2866,14 +2706,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_PRAGMA_REGION "pragma-region"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-region")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_PRAGMA_TPP_EXEC
@@ -2892,14 +2724,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_PRAGMA_TPP_EXEC "pragma-tpp-exec"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-tpp-exec")
-...
-#endif
 ```
 </details>
 
@@ -2920,14 +2744,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_PRAGMA_TPP_SET_KEYWORD_FLAGS "pragma-tpp-set-keyword-flags"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-tpp-set-keyword-flags")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_PRAGMA_GCC_POISON
@@ -2946,14 +2762,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_PRAGMA_GCC_POISON "pragma-gcc-poison"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-gcc-poison")
-...
-#endif
 ```
 </details>
 
@@ -2974,14 +2782,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_PRAGMA_GCC_WARNING "pragma-gcc-warning"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-gcc-warning")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_PRAGMA_GCC_ERROR
@@ -3000,14 +2800,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_PRAGMA_GCC_ERROR "pragma-gcc-error"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-gcc-error")
-...
-#endif
 ```
 </details>
 
@@ -3028,14 +2820,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_PRAGMA_GCC_SYSTEM_HEADER "pragma-gcc-system-header"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-gcc-system-header")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
@@ -3055,14 +2839,6 @@ Extension name:
 ```c
 #define TPP_EXTNAME_PRAGMA_GCC_DIAGNOSTIC "pragma-gcc-diagnostic"
 ```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-gcc-diagnostic")
-...
-#endif
-```
 </details>
 
 ## TPP_HAVE_PRAGMA_GCC_DEPENDENCY
@@ -3081,14 +2857,6 @@ Extension name:
 
 ```c
 #define TPP_EXTNAME_PRAGMA_GCC_DEPENDENCY "pragma-gcc-dependency"
-```
-
-Detect:
-
-```c
-#if __has_known_extension("-fpragma-gcc-dependency")
-...
-#endif
 ```
 </details>
 
@@ -3162,7 +2930,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_LF
 
-Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18779)
+Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18745)
 
 <details><summary>Details</summary>
 
@@ -3189,7 +2957,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_SPACE
 
-Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18779)
+Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18745)
 
 <details><summary>Details</summary>
 
@@ -3216,7 +2984,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_COMMENT
 
-Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18779)
+Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18745)
 
 <details><summary>Details</summary>
 
@@ -4120,8 +3888,8 @@ Detect:
 ## TPP_HAVE_STRING_AUTO_CONCAT
 
 Enable support for automatic concatenation of adjacent string tokens.
-This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L19381) and its
-companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L19422), such that they will only yield
+This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L19347) and its
+companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L19388), such that they will only yield
 to the next token, but not check if that next token might be another
 string.
 
@@ -4487,8 +4255,8 @@ Extension name:
 
 ## TPP_HAVE_EXTERN_C_FOR_SYSHDR
 
-When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14426) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
-then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14429) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14426).
+When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14392) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
+then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14395) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14392).
 
 <details><summary>Details</summary>
 

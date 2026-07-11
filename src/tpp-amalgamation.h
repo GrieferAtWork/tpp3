@@ -5192,8 +5192,7 @@ TPP_DECL_END
 #define TPP_HAVE_CPP_BUILTIN_MACROS (TPP_HAVE_CPP_MACROS ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fcpp-builtin-macros" */
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 
-/* Support for `#!foobar`-directives (which are treated as comments)
- * @detect: #if __has_known_extension("-fshebang-directives") */
+/* Support for `#!foobar`-directives (which are treated as comments) */
 #ifndef TPP_HAVE_CPP_EXCLAIM
 #define TPP_HAVE_CPP_EXCLAIM (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fshebang-directives" */
 #endif /* !TPP_HAVE_CPP_EXCLAIM */
@@ -5228,20 +5227,17 @@ TPP_DECL_END
 #define TPP_HAVE_CPP_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fline-directives" */
 #endif /* !TPP_HAVE_CPP_LINE */
 
-/* Support for `#include <stdio.h>`-directives
- * @detect: #if __has_known_extension("-finclude-directives") */
+/* Support for `#include <stdio.h>`-directives */
 #ifndef TPP_HAVE_CPP_INCLUDE
 #define TPP_HAVE_CPP_INCLUDE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-finclude-directives" */
 #endif /* !TPP_HAVE_CPP_INCLUDE */
 
-/* Support for `#include_next <stdio.h>`-directives
- * @detect: #if __has_known_extension("-finclude-next-directives") */
+/* Support for `#include_next <stdio.h>`-directives */
 #ifndef TPP_HAVE_CPP_INCLUDE_NEXT
 #define TPP_HAVE_CPP_INCLUDE_NEXT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-finclude-next-directives" */
 #endif /* !TPP_HAVE_CPP_INCLUDE_NEXT */
 
-/* Support for `#import <stdio.h>`-directives
- * @detect: #if __has_known_extension("-fimport-directives") */
+/* Support for `#import <stdio.h>`-directives */
 #ifndef TPP_HAVE_CPP_IMPORT
 #define TPP_HAVE_CPP_IMPORT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fimport-directives" */
 #endif /* !TPP_HAVE_CPP_IMPORT */
@@ -5258,26 +5254,22 @@ TPP_DECL_END
 
 /* Support for: `#assert`, `#unassert`
  *
- * see: https://gcc.gnu.org/onlinedocs/cpp/Obsolete-Features.html
- * @detect: #if __has_known_extension("-fassertions") */
+ * see: https://gcc.gnu.org/onlinedocs/cpp/Obsolete-Features.html */
 #ifndef TPP_HAVE_CPP_ASSERT
 #define TPP_HAVE_CPP_ASSERT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fassertions" */
 #endif /* !TPP_HAVE_CPP_ASSERT */
 
-/* Support for: `#error`
- * @detect: #if __has_known_extension("-ferror-directives") */
+/* Support for: `#error` */
 #ifndef TPP_HAVE_CPP_ERROR
 #define TPP_HAVE_CPP_ERROR (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-ferror-directives" */
 #endif /* !TPP_HAVE_CPP_ERROR */
 
-/* Support for: `#warning`
- * @detect: #if __has_known_extension("-fwarning-directives") */
+/* Support for: `#warning` */
 #ifndef TPP_HAVE_CPP_WARNING
 #define TPP_HAVE_CPP_WARNING (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fwarning-directives" */
 #endif /* !TPP_HAVE_CPP_WARNING */
 
-/* Support for: `#ident`, `#sccs`
- * @detect: #if __has_known_extension("-fident-directives") */
+/* Support for: `#ident`, `#sccs` */
 #ifndef TPP_HAVE_CPP_IDENT_SCCS
 #define TPP_HAVE_CPP_IDENT_SCCS (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fident-directives" */
 #endif /* !TPP_HAVE_CPP_IDENT_SCCS */
@@ -5383,9 +5375,7 @@ TPP_DECL_END
  *
  * See also:
  * - `TPP_HAVE_CLANG_MACRO___has_feature`
- * - `TPP_HAVE_CLANG_MACRO___has_extension`
- *
- * @detect: #if __has_known_extension("-fclang-extensions-are-features") */
+ * - `TPP_HAVE_CLANG_MACRO___has_extension` */
 #ifndef TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES
 #define TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES ((TPP_HAVE_CLANG_MACRO___has_extension && TPP_HAVE_CLANG_MACRO___has_feature) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fclang-extensions-are-features" */
 #endif /* !TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES */
@@ -5863,8 +5853,7 @@ TPP_DECL_END
  * STR2(  foo  ) // "  foo  "
  * ```
  *
- * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
- * @detect: #if __has_known_extension("-fmacro-argument-whitespace") */
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION* */
 #ifndef TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
 #define TPP_HAVE_MACRO_ARGUMENT_WHITESPACE ((TPP_HAVE_CPP_MACROS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : 0) /* "-fmacro-argument-whitespace" */
 #endif /* !TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
@@ -5881,8 +5870,7 @@ TPP_DECL_END
  * REPEAT(42, HELLO_WORLD) // HELLO_WORLD HELLO_WORLD HELLO_WORLD [...] (42 times)
  * ```
  *
- * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
- * @detect: #if __has_known_extension("-fmacro-recursion") */
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION* */
 #ifndef TPP_HAVE_MACRO_RECURSION
 #define TPP_HAVE_MACRO_RECURSION ((TPP_HAVE_CPP_MACROS && TPP_HAVE_PROFILE_NOT_MINIMAL) ? TPP_CONF_EXT0 : 0) /* "-fmacro-recursion" */
 #endif /* !TPP_HAVE_MACRO_RECURSION */
@@ -5901,8 +5889,7 @@ TPP_DECL_END
 // T_STR(10)     // "10"
 // ```
 //
-// NOTE: affects behavior of macros at the *TIME OF DEFINITION*
-// @detect: #if __has_known_extension("-ftraditional-macro")
+// NOTE: affects behavior of macros at the *TIME OF DEFINITION* ")
 #ifndef TPP_HAVE_TRADITIONAL_MACROS
 #define TPP_HAVE_TRADITIONAL_MACROS ((TPP_HAVE_CPP_MACROS && TPP_HAVE_PROFILE_NOT_MINIMAL) ? TPP_CONF_EXT0 : 0) /* "-ftraditional-macro" */
 #endif /* !TPP_HAVE_TRADITIONAL_MACROS */
@@ -5912,8 +5899,7 @@ TPP_DECL_END
  * #define printf(format, args...) fprintf(stdout, format, args)
  * ```
  *
- * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
- * @detect: #if __has_known_extension("-fnamed-varargs-in-macros") */
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION* */
 #ifndef TPP_HAVE_NAMED_VARARGS_IN_MACROS
 #define TPP_HAVE_NAMED_VARARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fnamed-varargs-in-macros" */
 #endif /* !TPP_HAVE_NAMED_VARARGS_IN_MACROS */
@@ -5923,8 +5909,7 @@ TPP_DECL_END
  * #define printf(format, ...) fprintf(stdout, format, __VA_ARGS__)
  * ```
  *
- * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
- * @detect: #if __has_known_extension("-fva-args-in-macros") */
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION* */
 #ifndef TPP_HAVE_VA_ARGS_IN_MACROS
 #define TPP_HAVE_VA_ARGS_IN_MACROS (TPP_HAVE_CPP_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fva-args-in-macros" */
 #endif /* !TPP_HAVE_VA_ARGS_IN_MACROS */
@@ -6109,116 +6094,97 @@ TPP_DECL_END
 #define TPP_HAVE_PRAGMA_PUSH_MACRO ((TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-push-macro" */
 #endif /* !TPP_HAVE_PRAGMA_PUSH_MACRO */
 
-/* Support for: `#pragma once`
- * @detect: #if __has_known_extension("-fpragma-once") */
+/* Support for: `#pragma once` */
 #ifndef TPP_HAVE_PRAGMA_ONCE
 #define TPP_HAVE_PRAGMA_ONCE (((TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT) && TPP_HAVE_PRAGMA) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-once" */
 #endif /* !TPP_HAVE_PRAGMA_ONCE */
 
-/* Support for: `#pragma deprecated("foo")`
- * @detect: #if __has_known_extension("-fpragma-deprecated") */
+/* Support for: `#pragma deprecated("foo")` */
 #ifndef TPP_HAVE_PRAGMA_DEPRECATED
 #define TPP_HAVE_PRAGMA_DEPRECATED (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-deprecated" */
 #endif /* !TPP_HAVE_PRAGMA_DEPRECATED */
 
-/* Support for: `#pragma extension(...)`
- * @detect: #if __has_known_extension("-fpragma-extension") */
+/* Support for: `#pragma extension(...)` */
 #ifndef TPP_HAVE_PRAGMA_EXTENSION
 #define TPP_HAVE_PRAGMA_EXTENSION ((TPP_HAVE_PRAGMA && TPP_HAVE_EXTENSIONS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-extension" */
 #endif /* !TPP_HAVE_PRAGMA_EXTENSION */
 
-/* Support for: `#pragma warning(...)`
- * @detect: #if __has_known_extension("-fpragma-warning") */
+/* Support for: `#pragma warning(...)` */
 #ifndef TPP_HAVE_PRAGMA_WARNING
 #define TPP_HAVE_PRAGMA_WARNING ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-warning" */
 #endif /* !TPP_HAVE_PRAGMA_WARNING */
 
-/* Support for: `#pragma message("...")`
- * @detect: #if __has_known_extension("-fpragma-message") */
+/* Support for: `#pragma message("...")` */
 #ifndef TPP_HAVE_PRAGMA_MESSAGE
 #define TPP_HAVE_PRAGMA_MESSAGE (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-message" */
 #endif /* !TPP_HAVE_PRAGMA_MESSAGE */
 
-/* Support for: `#pragma error("...")`
- * @detect: #if __has_known_extension("-fpragma-error") */
+/* Support for: `#pragma error("...")` */
 #ifndef TPP_HAVE_PRAGMA_ERROR
 #define TPP_HAVE_PRAGMA_ERROR (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-error" */
 #endif /* !TPP_HAVE_PRAGMA_ERROR */
 
-/* Support for: `#pragma region` + `#pragma endregion`
- * @detect: #if __has_known_extension("-fpragma-region") */
+/* Support for: `#pragma region` + `#pragma endregion` */
 #ifndef TPP_HAVE_PRAGMA_REGION
 #define TPP_HAVE_PRAGMA_REGION (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-region" */
 #endif /* !TPP_HAVE_PRAGMA_REGION */
 
-/* Support for: `#pragma tpp_exec("...")`
- * @detect: #if __has_known_extension("-fpragma-tpp-exec") */
+/* Support for: `#pragma tpp_exec("...")` */
 #ifndef TPP_HAVE_PRAGMA_TPP_EXEC
 #define TPP_HAVE_PRAGMA_TPP_EXEC (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-tpp-exec" */
 #endif /* !TPP_HAVE_PRAGMA_TPP_EXEC */
 
-/* Support for: `#pragma tpp_set_keyword_flags("foo", 0x7f)`
- * @detect: #if __has_known_extension("-fpragma-tpp-set-keyword-flags") */
+/* Support for: `#pragma tpp_set_keyword_flags("foo", 0x7f)` */
 #ifndef TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 #define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-tpp-set-keyword-flags" */
 #endif /* !TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
 
-/* Support for: `#pragma GCC poison foo`
- * @detect: #if __has_known_extension("-fpragma-gcc-poison") */
+/* Support for: `#pragma GCC poison foo` */
 #ifndef TPP_HAVE_PRAGMA_GCC_POISON
 #define TPP_HAVE_PRAGMA_GCC_POISON (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-poison" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_POISON */
 
-/* Support for: `#pragma GCC warning "message"`
- * @detect: #if __has_known_extension("-fpragma-gcc-warning") */
+/* Support for: `#pragma GCC warning "message"` */
 #ifndef TPP_HAVE_PRAGMA_GCC_WARNING
 #define TPP_HAVE_PRAGMA_GCC_WARNING ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-warning" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_WARNING */
 
-/* Support for: `#pragma GCC error "message"`
- * @detect: #if __has_known_extension("-fpragma-gcc-error") */
+/* Support for: `#pragma GCC error "message"` */
 #ifndef TPP_HAVE_PRAGMA_GCC_ERROR
 #define TPP_HAVE_PRAGMA_GCC_ERROR ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-error" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_ERROR */
 
-/* Support for: `#pragma GCC system_header`
- * @detect: #if __has_known_extension("-fpragma-gcc-system-header") */
+/* Support for: `#pragma GCC system_header` */
 #ifndef TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER
 #define TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-system-header" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER */
 
-/* Support for: `#pragma GCC diagnostic`
- * @detect: #if __has_known_extension("-fpragma-gcc-diagnostic") */
+/* Support for: `#pragma GCC diagnostic` */
 #ifndef TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
 #define TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC ((TPP_HAVE_PRAGMA && TPP_HAVE_WARNINGS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-diagnostic" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC */
 
-/* Support for: `#pragma GCC dependency`
- * @detect: #if __has_known_extension("-fpragma-gcc-dependency") */
+/* Support for: `#pragma GCC dependency` */
 #ifndef TPP_HAVE_PRAGMA_GCC_DEPENDENCY
 #define TPP_HAVE_PRAGMA_GCC_DEPENDENCY (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-dependency" */
 #endif /* !TPP_HAVE_PRAGMA_GCC_DEPENDENCY */
 
-/* Support for: `#pragma TPP warning(...)`  (same as `TPP_HAVE_PRAGMA_WARNING`, but doesn't require `"-fpragma-warning"`)
- * @detect: #if __has_known_extension("-fpragma-warning") */
+/* Support for: `#pragma TPP warning(...)`  (same as `TPP_HAVE_PRAGMA_WARNING`, but doesn't require `"-fpragma-warning"`) */
 #ifndef TPP_HAVE_PRAGMA_TPP_WARNING
 #define TPP_HAVE_PRAGMA_TPP_WARNING TPP_HAVE_PRAGMA_WARNING
 #endif /* !TPP_HAVE_PRAGMA_TPP_WARNING */
 
-/* Support for: `#pragma TPP extension(...)`  (same as `TPP_HAVE_PRAGMA_EXTENSION`, but doesn't require `"-fpragma-extension"`)
- * @detect: #if __has_known_extension("-fpragma-extension") */
+/* Support for: `#pragma TPP extension(...)`  (same as `TPP_HAVE_PRAGMA_EXTENSION`, but doesn't require `"-fpragma-extension"`) */
 #ifndef TPP_HAVE_PRAGMA_TPP_EXTENSION
 #define TPP_HAVE_PRAGMA_TPP_EXTENSION TPP_HAVE_PRAGMA_EXTENSION
 #endif /* !TPP_HAVE_PRAGMA_TPP_EXTENSION */
 
-/* Support for: `#pragma TPP tpp_exec(...)`  (same as `TPP_HAVE_PRAGMA_TPP_EXEC`, but doesn't require `"-fpragma-tpp-exec"`)
- * @detect: #if __has_known_extension("-fpragma-tpp-exec") */
+/* Support for: `#pragma TPP tpp_exec(...)`  (same as `TPP_HAVE_PRAGMA_TPP_EXEC`, but doesn't require `"-fpragma-tpp-exec"`) */
 #ifndef TPP_HAVE_PRAGMA_TPP_TPP_EXEC
 #define TPP_HAVE_PRAGMA_TPP_TPP_EXEC TPP_HAVE_PRAGMA_TPP_EXEC
 #endif /* !TPP_HAVE_PRAGMA_TPP_TPP_EXEC */
 
-/* Support for: `#pragma TPP tpp_set_keyword_flags("foo", 0x7f)`  (same as `TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS`, but doesn't require `"-fpragma-tpp-set-keyword-flags"`)
- * @detect: #if __has_known_extension("-fpragma-tpp-set-keyword-flags") */
+/* Support for: `#pragma TPP tpp_set_keyword_flags("foo", 0x7f)`  (same as `TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS`, but doesn't require `"-fpragma-tpp-set-keyword-flags"`) */
 #ifndef TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
 #define TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
 #endif /* !TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS */
