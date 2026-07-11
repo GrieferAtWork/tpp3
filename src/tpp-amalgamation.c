@@ -14137,7 +14137,7 @@ tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 
 
 
-#if TPP_HAVE_LEXER_INIT_FILENAME
+#if TPP_HAVE_LEXER_INIT_OPEN
 /* Initialize a lexer such that it starts reading from "filename"
  * @param: filename_maxlen: Max length of "filename" (in characters). You may
  *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
@@ -14161,7 +14161,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 	}
 	return error;
 }
-#endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+#endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
 
 #if TPP_HAVE_INCLUDE_STACK
@@ -14194,7 +14194,7 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 }
 #endif /* TPP_HAVE_LEXER_INIT_IO */
 
-#if TPP_HAVE_LEXER_INIT_FILENAME
+#if TPP_HAVE_LEXER_INIT_OPEN
 /* Push another file onto the #include-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: filename_maxlen: Max length of "filename" (in characters). You may
@@ -14224,7 +14224,7 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 	}
 	return TPP_EOK;
 }
-#endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+#endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
 /* Push another file onto the #include-stack: [text,text+text_size) blob.
  * After a call to this function, the caller is responsible to yield the first token!

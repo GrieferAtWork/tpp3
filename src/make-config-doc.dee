@@ -321,7 +321,7 @@ function _getAmalgamationHLines(): {string: int} {
 	local identPriority: {string: int} = Dict();
 	local lastLineEndsWithTPPCALL = false;
 	for (local lno, line: File.open("tpp-amalgamation.h").read().splitlines(false).enumerate()) {
-		local match = line.regfind(r"^\s*#\s*define\s+(\w+)\b"); /* Macro */
+		local match = line.regmatch(r"^\s*#\s*define\s+(\w+)\b"); /* Macro */
 		local prio = 0;
 		if (!match) {
 			match = line.regfind(r"\bTPPCALL\s+(\w+)\b"); /* Function decl */
@@ -337,6 +337,10 @@ function _getAmalgamationHLines(): {string: int} {
 		}
 		if (!match) {
 			match = line.regmatch(r"^\s*(\w+)\s*="); /* Enum */
+			prio = 1;
+		}
+		if (!match) {
+			match = line.regfind(r"\bstruct\s+(\w+)\s*\{"); /* struct */
 			prio = 1;
 		}
 		if (match) {

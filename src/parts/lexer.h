@@ -655,7 +655,7 @@ tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	tpp_lexer_initfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
 #endif /* TPP_HAVE_LEXER_INIT_IO */
 
-#if TPP_HAVE_LEXER_INIT_FILENAME
+#if TPP_HAVE_LEXER_INIT_OPEN
 /* Initialize a lexer such that it starts reading from "filename"
  * @param: filename_maxlen: Max length of "filename" (in characters). You may
  *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
@@ -666,7 +666,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
                         /*utf-8*/ char const *tpp_restrict filename,
                         tpp_size filename_maxlen);
-#endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+#endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
 
 #if TPP_HAVE_INCLUDE_STACK
@@ -690,7 +690,7 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	tpp_lexer_pushfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
 #endif /* TPP_HAVE_LEXER_INIT_IO */
 
-#if TPP_HAVE_LEXER_INIT_FILENAME
+#if TPP_HAVE_LEXER_INIT_OPEN
 /* Push another file onto the #include-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: filename_maxlen: Max length of "filename" (in characters). You may
@@ -702,7 +702,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
                         /*utf-8*/ char const *tpp_restrict filename,
                         tpp_size filename_maxlen);
-#endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+#endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
 /* Push another file onto the #include-stack: [text,text+text_size) blob.
  * After a call to this function, the caller is responsible to yield the first token!
@@ -2088,11 +2088,6 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #else /* TPP_HAVE_CPP_ASSERT */
 #define TPP_LEXER_DUMP_DEFINITIONS_ASSERTS    0x0000 /* no-op */
 #endif /* !TPP_HAVE_CPP_ASSERT */
-#if TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT)
-#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x1000 /* Sort macros/assertion-keys based on their name's first appearance */
-#else /* TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT) */
-#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x0000 /* no-op */
-#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED || (!TPP_HAVE_CPP_MACROS && !TPP_HAVE_CPP_ASSERT) */
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
 #define TPP_LEXER_DUMP_DEFINITIONS_EXTENSIONS 0x0004 /* #pragma TPP extension("-ffoo") // Where different from default */
 #else /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
@@ -2108,12 +2103,18 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #else /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 #define TPP_LEXER_DUMP_DEFINITIONS_INCLUDES   0x0000 /* no-op */
 #endif /* !TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+#define TPP_LEXER_DUMP_DEFINITIONS_ALL        0x0fff
+
+#if TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT)
+#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x1000 /* Sort macros/assertion-keys based on their name's first appearance */
+#else /* TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT) */
+#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x0000 /* no-op */
+#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED || (!TPP_HAVE_CPP_MACROS && !TPP_HAVE_CPP_ASSERT) */
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO
 #define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO  0x8000 /* Include comments containing some extra info on macro definitions */
 #else /* TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
 #define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO  0x0000 /* no-op */
 #endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
-#define TPP_LEXER_DUMP_DEFINITIONS_ALL        0x0fff
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
 TPP_DECL_END

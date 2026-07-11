@@ -4885,7 +4885,10 @@ TPP_DECL_END
 #define TPP_HAVE_WARNINGS_PUSH_POP (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
 
-/* Support for: `tpp_warning_id_fromnumber()` */
+/* Support for: `tpp_warning_ofnumber()` and `tpp_warning_getnumbers()`
+ *
+ * When `TPP_HAVE_PRAGMA_WARNING` is also enabled, user-code will also
+ * be able to configure warnings based on their ID. */
 #ifndef TPP_HAVE_WARNING_NUMBERS
 #define TPP_HAVE_WARNING_NUMBERS (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_WARNING_NUMBERS */
@@ -8149,7 +8152,7 @@ TPP_DECL_END
 #define TPP_HAVE_EXTERN_C_FOR_SYSHDR (TPP_HAVE_FILE_SYSHDR && TPP_HAVE_FILE_EXTERN_C ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT0 : TPP_CONF_FEAT0) : 0) /* "-fextern-c-for-syshdr" */
 #endif /* !TPP_HAVE_EXTERN_C_FOR_SYSHDR */
 
-/* Enable support for `tpp_file::tf_prev` */
+/* Enable API support for having an `#include`-stack. */
 #ifndef TPP_HAVE_INCLUDE_STACK
 #if (TPP_HAVE_CPP_MACROS ||       \
      TPP_HAVE_CPP_INCLUDE ||      \
@@ -8232,7 +8235,8 @@ TPP_DECL_END
 #define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING (TPP_HAVE_INCLUDE_PATH_PUSH_POP)
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 
-/* Enable support for `tpp_file::tf_ifdef` */
+/* Enable support for `tpp_file` keeping track of the state of active `#ifdef` directives
+ * via an embedded `tpp_ifdef_stack` strcture (accessible via `tpp_file_getifdef()`) */
 #ifndef TPP_HAVE_IFDEF_STACK
 #define TPP_HAVE_IFDEF_STACK (TPP_HAVE_CPP_IF_ELSE_ENDIF)
 #endif /* !TPP_HAVE_IFDEF_STACK */
@@ -8255,7 +8259,7 @@ TPP_DECL_END
 
 /* Keep track of the original `tpp_lexer_arginfo` used during macro invocation,
  * in order to improve `tpp_file_getlcinfo_ex()`'s `tlcix_proj*` return values,
- * to make them less error-prone. */
+ * by making them less error-prone. */
 #ifndef TPP_HAVE_FILE_MACRO_TRACKARGS
 #define TPP_HAVE_FILE_MACRO_TRACKARGS \
 	(TPP_HAVE_CPP_MACROS && TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_PROFILE_NOT_MINIMAL)
@@ -8318,10 +8322,12 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_LEXER_INIT_IO */
 
 /* Enable support for `tpp_lexer_initfile_open()`, a function that lets you directly
- * initialize the lexer by passing in a filename that should be opened as input. */
-#ifndef TPP_HAVE_LEXER_INIT_FILENAME
-#define TPP_HAVE_LEXER_INIT_FILENAME TPP_HAVE_LEXER_OPENFILE
-#endif /* !TPP_HAVE_LEXER_INIT_FILENAME */
+ * initialize the lexer by passing in a filename that should be opened as input.
+ *
+ * When `TPP_HAVE_INCLUDE_STACK` is enabled, this also enables support for `tpp_lexer_pushfile_open()` */
+#ifndef TPP_HAVE_LEXER_INIT_OPEN
+#define TPP_HAVE_LEXER_INIT_OPEN TPP_HAVE_LEXER_OPENFILE
+#endif /* !TPP_HAVE_LEXER_INIT_OPEN */
 
 /* Enable support for `tpp_lexer_skip()` and `tpp_lexer_require()` */
 #ifndef TPP_HAVE_LEXER_SKIP
@@ -8360,12 +8366,14 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_TIME TPP_HAVE_TIME_API
 #endif /* !TPP_HAVE_LEXER_TIME */
 
-/* Enable support for `tpp_lexer_rawskip_raw()`, a function that is used-
+/* Enable support for `tpp_lexer_tryskip_raw()`, a function that is used-
  * and needed in order to seek- and skip-over the `(` token following a
  * macro's name (with support for searching for tokens in parent files
- * of the current one, but rolling back all changes if the next token
- * isn't `(`). It also includes some additional functionality that will
- * retain the `[tf_tpos,*)` regions of files as they are scanned. */
+ * of the current one, but rolling back all changes if the next token isn't
+ * as expected). It also offers a flag `TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV`
+ * that will retain the `[tpp_file_getlastpos(),*)` regions of files as
+ * they are scanned, allowing it to keep the previous token (which is
+ * probably the name of a macro) loaded in memory. */
 #ifndef TPP_HAVE_LEXER_TRYSKIP_RAW
 #define TPP_HAVE_LEXER_TRYSKIP_RAW (TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_LEXER_TRYSKIP_RAW */
@@ -8416,9 +8424,23 @@ TPP_DECL_END
 
 /* Provide a set of macros/functions `tpp_lexer_manualpopfile_*`
  * that can be used to seek through the contents of files further
- * up the #include-stack in a way that allows for rollback. */
+ * up the #include-stack in a way that allows for rollback.
+ *
+ * - `tpp_lexer_manualpopfile_start()`
+ * - `tpp_lexer_manualpopfile_popfile()`
+ * - `tpp_lexer_manualpopfile_canpopfile()`
+ * - `tpp_lexer_manualpopfile_break_rollback()`
+ * - `tpp_lexer_manualpopfile_break_commit()`
+ * - `tpp_lexer_manualpopfile_break()`
+ * - `tpp_lexer_manualpopfile_end_rollback()`
+ * - `tpp_lexer_manualpopfile_end_commit()`
+ * - `tpp_lexer_manualpopfile_end()`
+ */
 #ifndef TPP_HAVE_LEXER_MANUALPOPFILE
-#define TPP_HAVE_LEXER_MANUALPOPFILE (TPP_HAVE_CPP_MACROS/* && TPP_HAVE_INCLUDE_STACK*/)
+#define TPP_HAVE_LEXER_MANUALPOPFILE                          \
+	(TPP_HAVE_INCLUDE_STACK && (TPP_HAVE_CPP_MACROS ||        \
+	                            TPP_HAVE_LEXER_TRYSKIP_RAW || \
+	                            TPP_HAVE_LEXER_SKIP))
 #endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
 
 /* Provide a function `tpp_lexer_seekpp_rparen()` that can be used
@@ -8435,7 +8457,17 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_SEEKPP_RPAREN_EX (TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
- /* Provide a function `tpp_macro_equals()` to compare macro definitions */
+/* Provide a function `tpp_macro_equals()` to compare macro definitions.
+ * Because the C standard specifies that re-defining a macro should only
+ * be worthy of a warning if its new definition differs from its old one,
+ * this function is used to only empty `TPP_W_REDEFINE_MACRO` if exactly
+ * that happened.
+ *
+ * ```c
+ * #define foo 10
+ * #define foo 10  // Don't warn here (not even because of this comment)
+ * #define foo 11  // But *do* warn here!
+ * ``` */
 #ifndef TPP_HAVE_MACRO_EQUALS
 #define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #endif /* !TPP_HAVE_MACRO_EQUALS */
@@ -8453,7 +8485,8 @@ TPP_DECL_END
 	(TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 
-/* Provide a function `tpp_expr_value_printrepr()` to construct the result of `__TPP_EVAL` */
+/* Provide a function `tpp_expr_value_printrepr()` to construct the result
+ * of `__TPP_EVAL` (see `TPP_HAVE_MACRO___TPP_EVAL`) */
 #ifndef TPP_HAVE_EXPR_VALUE_PRINTREPR
 #define TPP_HAVE_EXPR_VALUE_PRINTREPR (TPP_HAVE_MACRO___TPP_EVAL)
 #endif /* !TPP_HAVE_EXPR_VALUE_PRINTREPR */
@@ -8470,12 +8503,16 @@ TPP_DECL_END
 
 /* Provide a function `tpp_token_require_whitespace()` to check if 2 tokens,
  * when written directly adjacent to each other, *might* produce a different
- * (set of) token(s) when re-parsed. */
+ * (set of) token(s) when re-parsed.
+ *
+ * This function is used to implement `TPP_HAVE_MAGIC_WHITESPACE`, which in
+ * turn is needed to inject additional whitespace when failure to do so could
+ * result in accidental token concatenation during reparsing. */
 #ifndef TPP_HAVE_TOKEN_REQUIRE_WHITESPACE
 #define TPP_HAVE_TOKEN_REQUIRE_WHITESPACE TPP_HAVE_MAGIC_WHITESPACE
 #endif /* !TPP_HAVE_TOKEN_REQUIRE_WHITESPACE */
 
-/* Provide a function `tpp_lexer_decodeint_expr()` to parse an integer */
+/* Provide a function `tpp_lexer_decodeint_expr()` to parse an integer into a `tpp_expr_value` */
 #ifndef TPP_HAVE_LEXER_DECODEINT_EXPR
 #define TPP_HAVE_LEXER_DECODEINT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_INT)
 #endif /* !TPP_HAVE_LEXER_DECODEINT_EXPR */
@@ -8491,12 +8528,12 @@ TPP_DECL_END
 	                          TPP_HAVE_PRAGMA_TPP_WARNING))
 #endif /* !TPP_HAVE_LEXER_DECODEINT */
 
-/* Add API support for integer type suffixes */
+/* Add API support for integer type suffixes (see `tpp_integer_suffix_kind`) */
 #ifndef TPP_HAVE_LEXER_DECODEINT_SUFFIX
 #define TPP_HAVE_LEXER_DECODEINT_SUFFIX (TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX)
 #endif /* !TPP_HAVE_LEXER_DECODEINT_SUFFIX */
 
-/* Provide a function `tpp_lexer_decodefloat_expr()` to parse a float */
+/* Provide a function `tpp_lexer_decodefloat_expr()` to parse a float into a `tpp_expr_value` */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_EXPR
 #define TPP_HAVE_LEXER_DECODEFLOAT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TPP_TOK_FLOAT)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
@@ -8506,7 +8543,7 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_DECODEFLOAT (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
 
-/* Add API support for float type suffixes */
+/* Add API support for float type suffixes (see `tpp_float_suffix_kind`) */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX
 #define TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX (TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
@@ -8516,12 +8553,12 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_PARSECHARACTER_LITERAL (TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
 #endif /* !TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
 
-/* Provide a function `tpp_lexer_parsestring_expr()` to parse a string */
+/* Provide a function `tpp_lexer_parsestring_expr()` to parse a string into a `tpp_expr_value` */
 #ifndef TPP_HAVE_LEXER_PARSESTRING_EXPR
 #define TPP_HAVE_LEXER_PARSESTRING_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_STRINGS && TPP_HAVE_LEXER_DECODESTRING)
 #endif /* !TPP_HAVE_LEXER_PARSESTRING_EXPR */
 
-/* Provide a function `tpp_lexer_parsecharacter_expr()` to parse a character literal */
+/* Provide a function `tpp_lexer_parsecharacter_expr()` to parse a character literal into a `tpp_expr_value` */
 #ifndef TPP_HAVE_LEXER_PARSECHARACTER_EXPR
 #define TPP_HAVE_LEXER_PARSECHARACTER_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS && TPP_HAVE_LEXER_DECODESTRING)
 #endif /* !TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
@@ -8563,9 +8600,22 @@ TPP_DECL_END
 #ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS
 #define TPP_HAVE_LEXER_DUMP_DEFINITIONS (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS */
+
+/* Extension to `TPP_HAVE_LEXER_DUMP_DEFINITIONS`: provide an
+ * additional flag `TPP_LEXER_DUMP_DEFINITIONS_SORTED` that causes
+ * macro (`TPP_HAVE_CPP_MACROS`) / assert (`TPP_HAVE_CPP_ASSERT`)
+ * definition to be sorted based on the ID of the associated keyword
+ * (which corresponds with the first time the associated keyword was
+ * seen, which also usually lines up with the order in which macros
+ * were defined) */
 #ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED
 #define TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED (TPP_HAVE_LEXER_DUMP_DEFINITIONS)
 #endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED */
+
+/* Extension to `TPP_HAVE_LEXER_DUMP_DEFINITIONS`: provide an
+ * additional flag `TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO` that causes every
+ * dumped macro definition to be preceded by a comment containing (among
+ * other things) the file/line/column where that definition comes from. */
 #ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO
 #define TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO (TPP_HAVE_LEXER_DUMP_DEFINITIONS)
 #endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
@@ -8625,7 +8675,8 @@ TPP_DECL_END
 #endif /* !_MSC_VER */
 #endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
 
-/* General config for `-Wquality` warnings */
+/* General config for `-Wquality` warnings. When overwritten
+ * to `0`, all `-Wquality` warnings will be disabled. */
 #ifndef TPP_HAVE_QUALITY_WARNINGS
 #define TPP_HAVE_QUALITY_WARNINGS (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_QUALITY_WARNINGS */
@@ -18164,7 +18215,7 @@ tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	tpp_lexer_initfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
 #endif /* TPP_HAVE_LEXER_INIT_IO */
 
-#if TPP_HAVE_LEXER_INIT_FILENAME
+#if TPP_HAVE_LEXER_INIT_OPEN
 /* Initialize a lexer such that it starts reading from "filename"
  * @param: filename_maxlen: Max length of "filename" (in characters). You may
  *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
@@ -18175,7 +18226,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
                         /*utf-8*/ char const *tpp_restrict filename,
                         tpp_size filename_maxlen);
-#endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+#endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
 
 #if TPP_HAVE_INCLUDE_STACK
@@ -18199,7 +18250,7 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	tpp_lexer_pushfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
 #endif /* TPP_HAVE_LEXER_INIT_IO */
 
-#if TPP_HAVE_LEXER_INIT_FILENAME
+#if TPP_HAVE_LEXER_INIT_OPEN
 /* Push another file onto the #include-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: filename_maxlen: Max length of "filename" (in characters). You may
@@ -18211,7 +18262,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
                         /*utf-8*/ char const *tpp_restrict filename,
                         tpp_size filename_maxlen);
-#endif /* TPP_HAVE_LEXER_INIT_FILENAME */
+#endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
 /* Push another file onto the #include-stack: [text,text+text_size) blob.
  * After a call to this function, the caller is responsible to yield the first token!
@@ -19597,11 +19648,6 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #else /* TPP_HAVE_CPP_ASSERT */
 #define TPP_LEXER_DUMP_DEFINITIONS_ASSERTS    0x0000 /* no-op */
 #endif /* !TPP_HAVE_CPP_ASSERT */
-#if TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT)
-#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x1000 /* Sort macros/assertion-keys based on their name's first appearance */
-#else /* TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT) */
-#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x0000 /* no-op */
-#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED || (!TPP_HAVE_CPP_MACROS && !TPP_HAVE_CPP_ASSERT) */
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
 #define TPP_LEXER_DUMP_DEFINITIONS_EXTENSIONS 0x0004 /* #pragma TPP extension("-ffoo") // Where different from default */
 #else /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
@@ -19617,12 +19663,18 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #else /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 #define TPP_LEXER_DUMP_DEFINITIONS_INCLUDES   0x0000 /* no-op */
 #endif /* !TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+#define TPP_LEXER_DUMP_DEFINITIONS_ALL        0x0fff
+
+#if TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT)
+#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x1000 /* Sort macros/assertion-keys based on their name's first appearance */
+#else /* TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT) */
+#define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x0000 /* no-op */
+#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED || (!TPP_HAVE_CPP_MACROS && !TPP_HAVE_CPP_ASSERT) */
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO
 #define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO  0x8000 /* Include comments containing some extra info on macro definitions */
 #else /* TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
 #define TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO  0x0000 /* no-op */
 #endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
-#define TPP_LEXER_DUMP_DEFINITIONS_ALL        0x0fff
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
 TPP_DECL_END
