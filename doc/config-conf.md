@@ -2,12 +2,20 @@
 
 Every one of these config macros can be defined as one of the following values:
 
-- `TPP_CONF_1`: Compile-time enabled  (always on; no `#pragma extension("-f...")` / `TPP_FEAT_*` available)
-- `TPP_CONF_0`: Compile-time disabled
-- `TPP_CONF_EXT1`: Runtime-configurable (via `#pragma extension("-f...")` / `TPP_EXT_*`, default = `true`)
-- `TPP_CONF_EXT0`: Runtime-configurable (via `#pragma extension("-f...")` / `TPP_EXT_*`, default = `false`)
-- `TPP_CONF_FEAT1`: Runtime-configurable (via `TPP_FEAT_*`, default = `true`)
-- `TPP_CONF_FEAT0`: Runtime-configurable (via `TPP_FEAT_*`, default = `false`)
+| Value | Description |
+| ----- | ----------- |
+| `TPP_CONF_1` / `1` | Compile-time enabled  (always on; no `#pragma extension("-f...")` / `TPP_FEAT_*` available) |
+`TPP_CONF_0` / `0` | Compile-time disabled |
+| `TPP_CONF_EXT1` | Runtime-configurable (via `#pragma extension("-f...")` / `TPP_EXT_*`, default = `true`) |
+| `TPP_CONF_EXT0` | Runtime-configurable (via `#pragma extension("-f...")` / `TPP_EXT_*`, default = `false`) |
+| `TPP_CONF_FEAT1` | Runtime-configurable (via `TPP_FEAT_*`, default = `true`) |
+| `TPP_CONF_FEAT0` | Runtime-configurable (via `TPP_FEAT_*`, default = `false`) |
+
+### Hard-coded vs. Extension vs. Feature
+
+- Hard-code the desired state (`TPP_CONF_1` / `1` or `TPP_CONF_0` / `0`) if you don't need (or maybe don't even *want*) the config to be changeable at runtime in any way, shape, or form. This is what you should use most of the time, as hard-coded configs also tend to make TPP faster (less checking of feature flags at runtime) and smaller (disabled configs will literally not produce any code)
+- Use an extension (`TPP_CONF_EXT1` or `TPP_CONF_EXT0`) when you want user-code to manipulate (enable/disable) the config on-the-fly via `#pragma extension("-f...")` directives
+- Use a feature (`TPP_CONF_FEAT1` or `TPP_CONF_FEAT0`) if you have different use-cases where some require the config to be enabled, while other require it to be disabled. Can also be used if the config should be user-controllable, though not via user-code but instead by (e.g.) a command-line option.
 
 
 <!--BEGIN:conf-->
