@@ -24,7 +24,7 @@ TPP includes full Unicode support (and not just in strings), based on `XID_Start
 </details>
 
 
-## Usage
+## Using TPP
 
 TPP is primarily designed to be statically included in other projects (similar to sqlite3).
 
@@ -38,15 +38,55 @@ If this is what you want, you just need to download the following 2 files (this 
 - [tpp-amalgamation.h](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.h)
 - [tpp-amalgamation.c](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.c)
 
-... And add them to your C project. Examples for a simple integration setup can be found in [samples](./samples) and available configuration options (and the features they control) are listed in [doc/config.md](doc/config.md).
+... And add them to your C project. Examples for a simple integration setup can be found in [/samples](./samples) and available configuration options (and the features they control) are listed in [/doc/config.md](./doc/config.md).
 
 
 (((WIP: Secondly, TPP provides a CLI "frontend" that implements a (mostly) GCC/CPP-compatible commandline utility. This one's mainly there as a proof-of-concept, since such a tool alone doesn't warrant the degree of customization offered by TPP)))
 
+### Basic example
+
+For more examples, see [/samples](./samples)
+
+```c
+tpp_errno error;
+tpp_lexer lexer;
+tpp_lexer_init(&lexer);
+error = tpp_lexer_initfile_open(&lexer, "input.c", TPP_SIZE_MAX);
+if (TPP_ISERR(error))
+	HANDLE_ERROR();
+for (;;) {
+	tpp_token_id tok = tpp_lexer_yield(&lexer);
+	if (TPP_TOK_ISERR(tok))
+		HANDLE_ERROR();
+	if (tok == TPP_TOK_EOF)
+		break;
+	fwrite(tpp_lexer_gettokenstart(&lexer), 1,
+	       tpp_lexer_gettokenlen(&lexer), stdout);
+}
+tpp_lexer_finifile(&lexer);
+tpp_lexer_fini(&lexer);
+```
+
+NOTES:
+
+- `tpp_lexer lexer;` the heartpiece of TPP: a lexer is what keep track of everything related to preprocessing: the current token, the `#include`-stack (as well as the current file), keywords, macros, configuration (extensions/features), context flags, counters, include-paths, etc.  
+  Initializing a lexer is done in 2 steps:
+- `tpp_lexer_init(&lexer);`:  
+  Initialize common fields of a lexer (everything except for the current file and last token). Note thatthis step of initialization is designed to never fail (there are no mandatory heap-buffers or anythinglike that), meaning that `tpp_lexer_init(&lexer);` returns `void` so you don't have to check for errors!
+- `tpp_lexer_initfile_open(&lexer, "input.c", TPP_SIZE_MAX)`:  
+  Initialize the initial input file. For this purpose, other `tpp_lexer_initfile_*()` also exist. Note thatthis function can only be used to initialize the *initial* input file. Assuming that`TPP_HAVE_INCLUDE_STACK` is enabled, additional files must be pushed onto the `#include`-stack using`tpp_lexer_pushfile_*`
+- `tok = tpp_lexer_yield(&lexer)`:  
+  Yield the next token whilst dealing with preprocessor directives and macro expansion.
+- `tpp_lexer_finifile(&lexer);`, `tpp_lexer_fini(&lexer);`:  
+  Like initialization, finalization is also done in 2 steps:
+	- `tpp_lexer_finifile(&lexer);`:  
+	  Undo the effects of `tpp_lexer_initfile_*()`. Also finalizes all additional files pushed onto the`#include`-stack
+	- `tpp_lexer_fini(&lexer);`:  
+	  Undo the effects of `tpp_lexer_init(&lexer);`. Also finalizes all other dynamically allocated components of the lexer.
 
 ### Configuration
 
-- [doc/config.md](doc/config.md)
+- [/doc/config.md](doc/config.md)
 
 
 ## Implementation Notes
@@ -146,16 +186,16 @@ Lots more extensions (especially supported `#pragma` directives) exist and are d
 
 ## Migrating from TPP2
 
-In order to migrate from TPP2, an additional compatibility-file [src/tpp2.h](./src/tpp2.h) is provided. As an initial step to migrating, you must:
+In order to migrate from TPP2, an additional compatibility-file [tpp2.h](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp2.h) is provided. As an initial step to migrating, you must:
 
-- Add [src/tpp2.h](./src/tpp2.h), as well as `tpp-amalgamation.h` and `tpp-amalgamation.c` to your project
+- Add [tpp2.h](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp2.h), as well as [tpp-amalgamation.h](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.h) and [tpp-amalgamation.c](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.c) to your project
 - Remove TPP2 files from your project: `tpp.c`, `tpp.h`, `tpp-defs.inl` (and, if used: `tpp-gcc-defs.inl`)
-- Replace all includes of TPP2's `tpp.h` with the `tpp2.h` from this repository
+- Replace all includes of TPP2's `tpp.h` with the [tpp2.h](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp2.h) from this repository
 	- This is primarily meant as a stop-gap measure to easy in transitioning.
-	- Eventually, you should remove this file again and include `tpp-amalgamation.h` instead
-- Replace all includes of TPP2's `tpp.c` with `tpp-amalgamation.c`, but make sure that `tpp2.h` has also been included (first) at all of those instances
+	- Eventually, you should remove this file again and include [tpp-amalgamation.h](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.h) instead
+- Replace all includes of TPP2's `tpp.c` with [tpp-amalgamation.c](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.c), but make sure that [tpp2.h](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp2.h) has also been included (first) at all of those instances
 - Try to build your project and handle compilation errors as they appear.
-	- Hints on how to migrate some of TPP2's internal constructs that didn't make the cut can be found in `tpp2.h`
+	- Hints on how to migrate some of TPP2's internal constructs that didn't make the cut can be found in comments in [tpp2.h](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp2.h)
 
 
 ## Older versions

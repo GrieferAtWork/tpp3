@@ -78,9 +78,8 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 #if 1
-		printf("%.*s",
-		       (int)tpp_lexer_gettokenlen(&lexer),
-		       tpp_lexer_gettokenstart(&lexer));
+		fwrite(tpp_lexer_gettokenstart(&lexer), 1,
+		       tpp_lexer_gettokenlen(&lexer), stdout);
 #elif 1
 		printf("[%.*s]",
 		       (int)tpp_lexer_gettokenlen(&lexer),
