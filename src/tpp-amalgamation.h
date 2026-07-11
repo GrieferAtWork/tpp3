@@ -3860,8 +3860,8 @@ TPP_WARNING(TPP_W_CANNOT_POP_INCLUDE_PATHS, 1(TPP_WG_WARNING), 0(), ~,
 #endif /* !TPP_OS_UNIX */
 
 /* >> #define TPP_HOST_NO_SYSTEM_INCLUDES 1
- * Prevent TPP sources from doing `#include <foo.h>' -- instead, you must
- * pre-include any dependencies yourself before #include-ing TPP sources */
+ * Prevent TPP sources from doing `#include <foo.h>' -- instead, you must pre-
+ * include all dependencies yourself before doing `#include "tpp-amalgamation.h"` */
 #ifndef TPP_HOST_NO_SYSTEM_INCLUDES
 #define TPP_HOST_NO_SYSTEM_INCLUDES 0
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
@@ -5093,7 +5093,7 @@ TPP_DECL_END
  *
  * This DOES affect the line-continuation features of `#define` macro definitions.
  * When this is disabled, `\`-escaped line continuation can't be used there, either.
- * @detect: `#if __TPP_COUNT_TOKENS("a\\\nb") == 1` */
+ * @detect: #if __TPP_COUNT_TOKENS("a\\\nb") == 1 */
 #ifndef TPP_HAVE_BSE
 #define TPP_HAVE_BSE (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fbse" */
 #endif /* !TPP_HAVE_BSE */
@@ -5105,7 +5105,7 @@ TPP_DECL_END
  *                    line2
  * ```
  *
- * @detect: `#if __TPP_COUNT_TOKENS("a\\ \nb") == 1` */
+ * @detect: #if __TPP_COUNT_TOKENS("a\\ \nb") == 1 */
 #ifndef TPP_HAVE_BSE_WHITESPACE
 #define TPP_HAVE_BSE_WHITESPACE (TPP_HAVE_BSE ? TPP_CONF_EXT1 : 0) /* "-fbse-whitespace" */
 #endif /* !TPP_HAVE_BSE_WHITESPACE */
@@ -5118,7 +5118,7 @@ TPP_DECL_END
  * int __TPP_IDENTIFIER("identifier with whitespace") = 42;
  * ```
  *
- * @detect: `#if __TPP_COUNT_TOKENS("a\\u1234b") == 1` */
+ * @detect: #if __TPP_COUNT_TOKENS("a\\u1234b") == 1 */
 #ifndef TPP_HAVE_ESCAPE_IN_IDENTIFIERS
 #define TPP_HAVE_ESCAPE_IN_IDENTIFIERS (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
 #endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
@@ -5126,9 +5126,7 @@ TPP_DECL_END
 /* Support for `\e` (for `U+001B`) escape sequences:
  * ```c
  * printf("Error: \e[31m%d\e[0m", errno);
- * ```
- *
- * @detect: N/A */
+ * ``` */
 #ifndef TPP_HAVE_ESCAPE_E_IN_STRINGS
 #define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1: 0) /* "-fescape-e-in-strings" */
 #endif /* !TPP_HAVE_ESCAPE_E_IN_STRINGS */
@@ -5138,20 +5136,17 @@ TPP_DECL_END
  * System.out.println("""
  *     This line has visible trailing whitespace:    \s
  *     """);
- * ```
- * @detect: N/A */
+ * ```  */
 #ifndef TPP_HAVE_ESCAPE_S_IN_STRINGS
 #define TPP_HAVE_ESCAPE_S_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fescape-s-in-strings" */
 #endif /* !TPP_HAVE_ESCAPE_S_IN_STRINGS */
 
-/* Specifies if *any* CPP directives are supported
- * @detect: N/A */
+/* Specifies if *any* CPP directives are supported */
 #ifndef TPP_HAVE_CPP_DIRECTIVES
 #define TPP_HAVE_CPP_DIRECTIVES ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL)) /* "-fcpp-directives" */
 #endif /* !TPP_HAVE_CPP_DIRECTIVES */
 
-/* Support for C-style macros
- * @detect: N/A */
+/* Support for C-style macros */
 #ifndef TPP_HAVE_CPP_MACROS
 #define TPP_HAVE_CPP_MACROS (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fcpp-macros" */
 #endif /* !TPP_HAVE_CPP_MACROS */
@@ -5171,13 +5166,21 @@ TPP_DECL_END
  * necessary because TPP is a text-based preprocessor. Trying to get
  * L/C information on the associated `TPP_TOK_SPACE` will fail.
  *
- * @detect: N/A */
+ * @detect: #define FOO()         foo
+ *          #define BAR           bar
+ *          #define SCAN2(x)      pre##x##post
+ *          #define SCAN(x)       SCAN2(x)
+ *          #define prefoobarpost 0
+ *          #define prefoo        1
+ *          #define barpost       +1
+ *          #if SCAN(FOO()BAR) // "0" if disabled (non-standard-conforming, like mscv);
+ *                             // "1 +1" if enabled (standard-conforming, like gcc)
+ */
 #ifndef TPP_HAVE_MAGIC_WHITESPACE
 #define TPP_HAVE_MAGIC_WHITESPACE ((TPP_HAVE_CPP_MACROS || TPP_HAVE_MACRO___TPP_EXEC) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fmagic-whitespace" */
 #endif /* !TPP_HAVE_MAGIC_WHITESPACE */
 
-/* Support for builtin C-style macros (require `TPP_HAVE_CPP_MACROS` to be enabled, too)
- * @detect: N/A */
+/* Support for builtin C-style macros (require `TPP_HAVE_CPP_MACROS` to be enabled, too) */
 #ifndef TPP_HAVE_CPP_BUILTIN_MACROS
 #define TPP_HAVE_CPP_BUILTIN_MACROS (TPP_HAVE_CPP_MACROS ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fcpp-builtin-macros" */
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
@@ -5188,8 +5191,7 @@ TPP_DECL_END
 #define TPP_HAVE_CPP_EXCLAIM (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fshebang-directives" */
 #endif /* !TPP_HAVE_CPP_EXCLAIM */
 
-/* Support for `#`-directives (blank directives), which are ignored
- * @detect: N/A */
+/* Support for `#`-directives (blank directives), which are ignored */
 #ifndef TPP_HAVE_CPP_BLANK
 #define TPP_HAVE_CPP_BLANK (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fblank-directives" */
 #endif /* !TPP_HAVE_CPP_BLANK */
@@ -5209,15 +5211,12 @@ TPP_DECL_END
  *        supplied, `TPP_FILE_FLAGS_SYSHDR` is instead cleared for the current text-file.
  *        This flag requires `TPP_HAVE_FILE_SYSHDR` to be enabled, otherwise it is ignored.
  * - `4`: Same as flag `3`, except for the `TPP_FILE_FLAGS_EXTERN_C` flag. Similarly, this
- *        flag requires `TPP_HAVE_FILE_EXTERN_C` to be enabled, otherwise it is ignored.
- *
- * @detect: N/A */
+ *        flag requires `TPP_HAVE_FILE_EXTERN_C` to be enabled, otherwise it is ignored. */
 #ifndef TPP_HAVE_CPP_DIGIT_LINE
 #define TPP_HAVE_CPP_DIGIT_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fdigit-directives" */
 #endif /* !TPP_HAVE_CPP_DIGIT_LINE */
 
-/* Support for `#line 42 "foo.h"`-directives
- * @detect: N/A */
+/* Support for `#line 42 "foo.h"`-directives */
 #ifndef TPP_HAVE_CPP_LINE
 #define TPP_HAVE_CPP_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fline-directives" */
 #endif /* !TPP_HAVE_CPP_LINE */
@@ -5240,14 +5239,12 @@ TPP_DECL_END
 #define TPP_HAVE_CPP_IMPORT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fimport-directives" */
 #endif /* !TPP_HAVE_CPP_IMPORT */
 
-/* Support for: `#if`, `#ifdef`, `#ifndef`, `#elif`, `#elifdef`, `#elifndef`, `#else`, `#endif`
- * @detect: N/A */
+/* Support for: `#if`, `#ifdef`, `#ifndef`, `#elif`, `#elifdef`, `#elifndef`, `#else`, `#endif` */
 #ifndef TPP_HAVE_CPP_IF_ELSE_ENDIF
 #define TPP_HAVE_CPP_IF_ELSE_ENDIF ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_DIRECTIVES) ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fif-directives" */
 #endif /* !TPP_HAVE_CPP_IF_ELSE_ENDIF */
 
-/* Support for: `#define`, `#undef`
- * @detect: N/A */
+/* Support for: `#define`, `#undef` */
 #ifndef TPP_HAVE_CPP_DEFINE
 #define TPP_HAVE_CPP_DEFINE ((TPP_HAVE_CPP_MACROS && TPP_HAVE_CPP_DIRECTIVES) ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fdefine-directives" */
 #endif /* !TPP_HAVE_CPP_DEFINE */
@@ -5277,14 +5274,12 @@ TPP_DECL_END
 #define TPP_HAVE_CPP_IDENT_SCCS (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fident-directives" */
 #endif /* !TPP_HAVE_CPP_IDENT_SCCS */
 
-/* Support for: `#pragma`
- * @detect: N/A */
+/* Support for: `#pragma` */
 #ifndef TPP_HAVE_CPP_PRAGMA
 #define TPP_HAVE_CPP_PRAGMA (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fpragma-directives" */
 #endif /* !TPP_HAVE_CPP_PRAGMA */
 
-/* Support for: `#embed`
- * @detect: N/A */
+/* Support for: `#embed` */
 #ifndef TPP_HAVE_CPP_EMBED
 #define TPP_HAVE_CPP_EMBED (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fembed-directives" */
 #endif /* !TPP_HAVE_CPP_EMBED */
@@ -7876,8 +7871,7 @@ TPP_DECL_END
 /* LEXER EXPRESSIONS                                                    */
 /************************************************************************/
 
-/* Enable support for `defined(MACRO)` in builtin lexer expressions
- * @detect: N/A */
+/* Enable support for `defined(MACRO)` in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_DEFINED
 #define TPP_HAVE_BUILTIN_EXPR_DEFINED ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fdefined-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_DEFINED */
@@ -7912,28 +7906,23 @@ TPP_DECL_END
  * #if #"FOO" == 3
  * ...
  * #endif
- * ```
- *
- * @detect: N/A */
+ * ``` */
 #ifndef TPP_HAVE_BUILTIN_EXPR_STRINGS
 #define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_STRINGLIKE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fstrings-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
-/* Enable support for floats in builtin lexer expressions
- * @detect: N/A */
+/* Enable support for floats in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_FLOATS
 #define TPP_HAVE_BUILTIN_EXPR_FLOATS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffloats-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
-/* Enable support for `foo ?: bar` in builtin lexer expressions (same as `foo ? foo : bar`)
- * @detect: N/A */
+/* Enable support for `foo ?: bar` in builtin lexer expressions (same as `foo ? foo : bar`) */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fif-else-optional-true" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
 
 /* Enable support for `if (foo) bar else baz` in builtin
- * lexer expressions, as alias for `foo ? bar : baz`.
- * @detect: N/A */
+ * lexer expressions, as alias for `foo ? bar : baz`. */
 #ifndef TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) /* "-fifelse-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
@@ -7942,62 +7931,52 @@ TPP_DECL_END
  *      syntax, though TPP won't be able to guaranty that `tt`
  *      is only evaluated when `cond` evaluates to true! */
 
-/* Enable support for `^^` in builtin lexer expressions
- * @detect: N/A */
+/* Enable support for `^^` in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR
 #define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-flogical-xor-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR */
 
-/* Enable support for `0b` literals in builtin lexer expressions
- * @detect: N/A */
+/* Enable support for `0b` literals in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS (((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fbinary-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
 
-/* Enable support for `0o` literals in builtin lexer expressions
- * @detect: N/A */
+/* Enable support for `0o` literals in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS (((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
 
-/* Enable support for `u`, `l`, `ul`, `ll`, `ull` integer suffixes
- * @detect: N/A */
+/* Enable support for `u`, `l`, `ul`, `ll`, `ull` integer suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
 #define TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-integrals" */
 #endif /* !TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
 
-/* Enable support for `z`, `uz` integer suffixes
- * @detect: N/A */
+/* Enable support for `z`, `uz` integer suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX
 #define TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fsize-type-integrals" */
 #endif /* !TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX */
 
-/* Enable support for `i8`, `i16`, `i32`, `i64`, `ui8`, `ui16`, `ui32`, `ui64` integer suffixes
- * @detect: N/A */
+/* Enable support for `i8`, `i16`, `i32`, `i64`, `ui8`, `ui16`, `ui32`, `ui64` integer suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
 #define TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX ((TPP_HAVE_TPP_TOK_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-length-integrals" */
 #endif /* !TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
 
-/* Enable support for `f`, `F`, `l`, `L` float suffixes
- * @detect: N/A */
+/* Enable support for `f`, `F`, `l`, `L` float suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX
 #define TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-float" */
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX */
 
-/* Enable support for `d`, `D` float suffixes
- * @detect: N/A */
+/* Enable support for `d`, `D` float suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX
 #define TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 0) : 0) /* "-fdouble-type-float" */
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX */
 
-/* Enable support for `df`, `DF`, `dd`, `DD`, `dl`, `DL` float suffixes
- * @detect: N/A */
+/* Enable support for `df`, `DF`, `dd`, `DD`, `dl`, `DL` float suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX
 #define TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fdecimal-type-float" */
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX */
 
-/* Treat `'a'` in expressions as an integer, rather than as a string (in C/C++, this is always the case)
- * @detect: N/A */
+/* Treat `'a'` in expressions as an integer, rather than as a string (in C/C++, this is always the case) */
 #ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : (TPP_HAVE_PROFILE_C_LIKE ? 1 : 0)) : 0) /* "-fcharacter-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */

@@ -105,8 +105,8 @@
 #endif /* !TPP_OS_UNIX */
 
 /* >> #define TPP_HOST_NO_SYSTEM_INCLUDES 1
- * Prevent TPP sources from doing `#include <foo.h>' -- instead, you must
- * pre-include any dependencies yourself before #include-ing TPP sources */
+ * Prevent TPP sources from doing `#include <foo.h>' -- instead, you must pre-
+ * include all dependencies yourself before doing `#include "tpp-amalgamation.h"` */
 #ifndef TPP_HOST_NO_SYSTEM_INCLUDES
 #define TPP_HOST_NO_SYSTEM_INCLUDES 0
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */

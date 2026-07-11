@@ -144,6 +144,15 @@ int main(int argc, char *argv[]) {
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
 	if (tpp_lexer_geterrorcount(&lexer)) {
+#define FOO()         foo
+#define BAR           bar
+#define SCAN2(x)      pre##x##post
+#define SCAN(x)       SCAN2(x)
+#define prefoobarpost 0
+#define prefoo        1
+#define barpost       +1
+		enum{y = SCAN(FOO()BAR)};
+
 		fprintf(stderr, "There were lexer errors\n");
 		goto out;
 	}

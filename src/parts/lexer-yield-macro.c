@@ -212,9 +212,29 @@ again_print_token:
 	 * - "foo"
 	 * - "bar"
 	 *
-	 * Without extra handling to add whitespace if as necessary, the "foo"
-	 * and "bar" tokens will appear as a singular "foobar" token in the final
-	 * expansion! */
+	 * Without extra handling to add whitespace, the "foo" and "bar" tokens
+	 * will appear as a singular "foobar" token in the final expansion!
+	 *
+	 * Fun fact: this is actually something that MSVC gets wrong:
+	 * >> #define FOO()   foo
+	 * >> #define BAR     bar
+	 * >> #define STR(x)  #x
+	 * >> #define STR2(x) STR(x)
+	 * >> #define STR3(x) STR2(x)
+	 * >> #define foobar  wtf_why_is_this_macro_expanded
+	 * >> static char const a[] = STR3(FOO()BAR);
+	 * >> TPP_STATIC_ASSERT(sizeof(a) == 31); // [foo][bar] -> [foobar] -> [wtf_why_is_this_macro_expanded]
+	 *
+	 * Possible expansions:
+	 * - static char const a[] = "foo bar";                        // TPP (compliant text-based preprocessor)
+	 * - static char const a[] = "foobar";                         // GCC (compliant token-based preprocessor)
+	 * - static char const a[] = "wtf_why_is_this_macro_expanded"; // MSVC (non-compliant text-based preprocessor)
+	 *
+	 * Note that GCC also gets it right here, whilst at the same time proving that
+	 * it uses a token-based preprocessor (it expands to a[] = "foobar", iow: it
+	 * doesn't add any whitespace, but also doesn't fall into the trap MSVC falls
+	 * into, and TPP is able to emulate under "-DTPP_HAVE_MAGIC_WHITESPACE=0")
+	 */
 	if (tpp_lexer_has(lexer, MAGIC_WHITESPACE)) {
 		if (tpp_token_require_whitespace(prev_tok, tok)) {
 			if (!tpp_string_buffer_append(&buffer, (tpp_char const *)" ", 1))

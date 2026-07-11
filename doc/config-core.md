@@ -345,7 +345,6 @@ TPP_HAVE_WARNINGS && (TPP_PROFILE == TPP_PROFILE_ALL)
 ## TPP_HAVE_PRAGMA_TPP_WARNING
 
 Support for: `#pragma TPP warning(...)`  (same as [`TPP_HAVE_PRAGMA_WARNING`](config-conf.md#tpp_have_pragma_warning), but doesn't require `"-fpragma-warning"`)
-@detect: #if __has_known_extension("-fpragma-warning")
 
 <details><summary>Details</summary>
 
@@ -354,12 +353,19 @@ Default:
 ```c
 TPP_HAVE_PRAGMA_WARNING
 ```
+
+Detect:
+
+```c
+#if __has_known_extension("-fpragma-warning")
+...
+#endif
+```
 </details>
 
 ## TPP_HAVE_PRAGMA_TPP_EXTENSION
 
 Support for: `#pragma TPP extension(...)`  (same as [`TPP_HAVE_PRAGMA_EXTENSION`](config-conf.md#tpp_have_pragma_extension), but doesn't require `"-fpragma-extension"`)
-@detect: #if __has_known_extension("-fpragma-extension")
 
 <details><summary>Details</summary>
 
@@ -368,12 +374,19 @@ Default:
 ```c
 TPP_HAVE_PRAGMA_EXTENSION
 ```
+
+Detect:
+
+```c
+#if __has_known_extension("-fpragma-extension")
+...
+#endif
+```
 </details>
 
 ## TPP_HAVE_PRAGMA_TPP_TPP_EXEC
 
 Support for: `#pragma TPP tpp_exec(...)`  (same as [`TPP_HAVE_PRAGMA_TPP_EXEC`](config-conf.md#tpp_have_pragma_tpp_exec), but doesn't require `"-fpragma-tpp-exec"`)
-@detect: #if __has_known_extension("-fpragma-tpp-exec")
 
 <details><summary>Details</summary>
 
@@ -382,12 +395,19 @@ Default:
 ```c
 TPP_HAVE_PRAGMA_TPP_EXEC
 ```
+
+Detect:
+
+```c
+#if __has_known_extension("-fpragma-tpp-exec")
+...
+#endif
+```
 </details>
 
 ## TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
 
 Support for: `#pragma TPP tpp_set_keyword_flags("foo", 0x7f)`  (same as [`TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS`](config-conf.md#tpp_have_pragma_tpp_set_keyword_flags), but doesn't require `"-fpragma-tpp-set-keyword-flags"`)
-@detect: #if __has_known_extension("-fpragma-tpp-set-keyword-flags")
 
 <details><summary>Details</summary>
 
@@ -395,6 +415,14 @@ Default:
 
 ```c
 TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
+```
+
+Detect:
+
+```c
+#if __has_known_extension("-fpragma-tpp-set-keyword-flags")
+...
+#endif
 ```
 </details>
 

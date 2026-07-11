@@ -113,6 +113,9 @@ class Config {
 	@@Config doc string
 	public member doc: string;
 
+	@@Config doc string for `@detect` tag
+	public member docDetect: string;
+
 	@@Config default value
 	public member defaultValue: string;
 
@@ -178,6 +181,16 @@ class Config {
 				f"\n"
 				f"```c\n"
 				f"#define TPP_EXTNAME_{name.lsstrip("TPP_HAVE_")} {repr defaultExtensionName[2:]}\n"
+				f"```\n"
+			}"
+			f"{!docDetect ? "" :
+				f"\n"
+				f"Detect:\n"
+				f"\n"
+				f"```c\n"
+				f"{docDetect}"
+				f"...\n"
+				f"#endif\n"
 				f"```\n"
 			}"
 			f"</details>\n"
@@ -246,9 +259,40 @@ function _getAvailableConfigs(): {Config...} {
 		if (featureName !in [
 			"TPP_PROFILE"
 		])  {
+			local docBase = comment;
+			local docDetect = "";
+			local detectMatch = comment.refind(r"\n\s*@\s*detect\s*:\s*");
+			if (detectMatch !is none) {
+				local detectStart = detectMatch.first;
+				local detectEnd = detectMatch.last;
+				while (comment.islf(detectStart))
+					++detectStart;
+				local detectIndent = " " * (detectEnd - detectStart);
+				local detectLineStart = detectEnd;
+				local detectEnd = comment.find("\n", detectEnd);
+				local detectBody = File.Writer(hint: "string");
+				while (detectEnd >= 0) {
+					++detectEnd;
+					detectBody << comment[detectLineStart:detectEnd];
+					if (!comment.startswith(detectIndent, detectEnd))
+						break;
+					detectLineStart = detectEnd + #detectIndent;
+					detectEnd = comment.find("\n", detectEnd);
+				}
+				if (detectEnd < 0) {
+					detectBody << comment[detectLineStart:];
+					detectEnd = #comment;
+				}
+				docDetect = detectBody.string;
+				if (!docDetect.endswith("\n"))
+					docDetect += "\n";
+				docBase = comment[:detectStart] + comment[detectEnd:];
+			}
+			docBase = docBase.rstrip();
 			yield Config(
 					name: featureName,
-					doc: comment,
+					doc: docBase,
+					docDetect: docDetect,
 					defaultValue: featureExpr,
 					defaultExtensionName: extensionName,
 					isApiLimit: matchIndex >= apiLimitsStart && matchIndex < apiLimitsEnd
@@ -277,7 +321,6 @@ function formatDoc(currentFile: string, doc: string): string {
 	doc = doc
 		.replace(":\n-", ":\n\n-")
 		.replace(":\n```", ":\n\n```");
-	/* TODO: Deal with those `@detect` annotations -- those should go into the "Details" block */
 	for (local i = 0;;) {
 		local tick = doc.find("`", i);
 		if (tick < 0)
