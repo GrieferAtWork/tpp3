@@ -17333,7 +17333,7 @@ typedef struct tpp_hooks {
 	(*(self)->TPP_INTERNAL(th_parseexpr))(lexer, result)
 #else /* TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP */
 #define tpp_hooks_call_parseexpr(self, lexer, result) \
-	((self)->TPP_INTERNAL(th_parseexpr) ? (*(self)->TPP_INTERNAL(th_parseexpr))(lexer, result) : 0)
+	((self)->TPP_INTERNAL(th_parseexpr) ? (*(self)->TPP_INTERNAL(th_parseexpr))(lexer, result) : tpp_expr_value_init_zero(result))
 #endif /* TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_NOOP */
 #define tpp_hooks_get_parseexpr(self)    (self)->TPP_INTERNAL(th_parseexpr)
 #define tpp_hooks_set_parseexpr(self, v) (void)((self)->TPP_INTERNAL(th_parseexpr) = (v))
@@ -17354,7 +17354,7 @@ typedef struct tpp_hooks {
 #define tpp_hooks_call_parseexpr(self, lexer, result) \
 	_tpp_lexer_builtin_parseexpr(lexer, result)
 #else /*  */
-#define tpp_hooks_call_parseexpr(self, lexer, result) 0
+#define tpp_hooks_call_parseexpr(self, lexer, result) tpp_expr_value_init_zero(result)
 #endif /* ... */
 #define _tpp_hooks_init_parseexpr(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */

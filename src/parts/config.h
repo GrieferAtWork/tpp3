@@ -3205,7 +3205,7 @@ local HOOKS = {
 		"(TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed)",
 		"_tpp_lexer_builtin_parseexpr",
 		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result)", { "lexer", "result" },
-		"0"
+		"tpp_expr_value_init_zero(result)"
 	},
 
 	{
