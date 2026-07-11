@@ -481,20 +481,23 @@
 /* PREPROCESSOR FEATURES                                                */
 /************************************************************************/
 
-/* Support for `\`-escaped line continuation: when a line ends with a `\` character
- * that is immediately (but see `TPP_HAVE_BSE_WHITESPACE`) followed by a linefeed,
- * then that linefeed is never yielded, and a potential multi-character token is
- * continued:
- * ```c
- * foo\ 
- * bar // Produces a single token "foobar"
- * +\ 
- * =   // Produces a single token "+="
- * ```
- *
- * This DOES affect the line-continuation features of `#define` macro definitions.
- * When this is disabled, `\`-escaped line continuation can't be used there, either.
- * @detect: #if __TPP_COUNT_TOKENS("a\\\nb") == 1 */
+// Support for `\`-escaped line continuation: when a line ends with a `\` character
+// that is immediately (but see `TPP_HAVE_BSE_WHITESPACE`) followed by a linefeed,
+// then that linefeed is never yielded, and a potential multi-character token is
+// continued:
+// ```c
+// foo\ 
+// bar // Produces a single token "foobar"
+// +\ 
+// =   // Produces a single token "+="
+// ```
+//
+// This DOES affect the line-continuation features of `#define` macro definitions.
+// When this is disabled, `\`-escaped line continuation can't be used there, either.
+// @detect: #define HAVE_BSE
+//          // \ 
+//          #undef HAVE_BSE
+//          #ifdef HAVE_BSE
 #ifndef TPP_HAVE_BSE
 #define TPP_HAVE_BSE (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fbse" */
 #endif /* !TPP_HAVE_BSE */
@@ -518,8 +521,9 @@
  * // Same as:
  * int __TPP_IDENTIFIER("identifier with whitespace") = 42;
  * ```
- * 
- * @detect: #if __TPP_COUNT_TOKENS("a\\u1234b") == 1 */
+ *
+ * @detect: #define foo\u0062ar
+ *          #ifdef foobar */
 #ifndef TPP_HAVE_ESCAPE_IN_IDENTIFIERS
 #define TPP_HAVE_ESCAPE_IN_IDENTIFIERS (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
 #endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
@@ -651,7 +655,8 @@
 #endif /* !TPP_HAVE_CPP_DEFINE */
 
 /* Support for: `#assert`, `#unassert`
- * @see: https://gcc.gnu.org/onlinedocs/cpp/Obsolete-Features.html
+ *
+ * see: https://gcc.gnu.org/onlinedocs/cpp/Obsolete-Features.html
  * @detect: #if __has_known_extension("-fassertions") */
 #ifndef TPP_HAVE_CPP_ASSERT
 #define TPP_HAVE_CPP_ASSERT (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fassertions" */
@@ -709,40 +714,40 @@
 #endif /* !... */
 
 
-/* Support for clang `__has_attribute()`
- * Check support of `__attribute__((foo))`
+/* Support for clang `__has_attribute()`, which is conventionally
+ * used to check support of `__attribute__((foo))` in C/C++ compilers.
  *
  * @detect: #ifdef __has_attribute */
 #ifndef TPP_HAVE_CLANG_MACRO___has_attribute
 #define TPP_HAVE_CLANG_MACRO___has_attribute (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fclang-__has_attribute" */
 #endif /* !TPP_HAVE_CLANG_MACRO___has_attribute */
 
-/* Support for clang `__has_builtin()`
- * Check support of `__builtin_foo()`
+/* Support for clang `__has_builtin()`, which is conventionally
+ * used to check support of `__builtin_foo()` in C/C++ compilers.
  *
  * @detect: #ifdef __has_builtin */
 #ifndef TPP_HAVE_CLANG_MACRO___has_builtin
 #define TPP_HAVE_CLANG_MACRO___has_builtin (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fclang-__has_builtin" */
 #endif /* !TPP_HAVE_CLANG_MACRO___has_builtin */
 
-/* Support for clang `__has_cpp_attribute()`
- * Check support of `[[foo]]`
+/* Support for clang `__has_cpp_attribute()`, which is conventionally
+ * used to check support of `[[foo]]` in C++ compilers.
  *
  * @detect: #ifdef __has_cpp_attribute */
 #ifndef TPP_HAVE_CLANG_MACRO___has_cpp_attribute
 #define TPP_HAVE_CLANG_MACRO___has_cpp_attribute (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fclang-__has_cpp_attribute" */
 #endif /* !TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
 
-/* Support for clang `__has_declspec_attribute()`
- * Check support of `__declspec(foo)`
+/* Support for clang `__has_declspec_attribute()`, which is conventionally
+ * used to check support of `__declspec(foo)` in C/C++ compilers.
  *
  * @detect: #ifdef __has_declspec_attribute */
 #ifndef TPP_HAVE_CLANG_MACRO___has_declspec_attribute
 #define TPP_HAVE_CLANG_MACRO___has_declspec_attribute (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fclang-__has_declspec_attribute" */
 #endif /* !TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
 
-/* Support for clang `__has_extension()`
- * Check support of compiler extensions
+/* Support for clang `__has_extension()`, which is conventionally
+ * used to check support of compiler extensions in C/C++ compilers.
  *
  * NOTE: Another builtin macro of the same name exists and can be
  *       enabled via `TPP_HAVE_MACRO___has_extension`. The 2 macros
@@ -755,16 +760,16 @@
 #define TPP_HAVE_CLANG_MACRO___has_extension (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fclang-__has_extension" */
 #endif /* !TPP_HAVE_CLANG_MACRO___has_extension */
 
-/* Support for clang `__has_feature()`
- * Check support of compiler features
+/* Support for clang `__has_feature()`, which is conventionally
+ * used to check support of compiler features in C/C++ compilers.
  *
  * @detect: #ifdef __has_feature */
 #ifndef TPP_HAVE_CLANG_MACRO___has_feature
 #define TPP_HAVE_CLANG_MACRO___has_feature (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fclang-__has_feature" */
 #endif /* !TPP_HAVE_CLANG_MACRO___has_feature */
 
-/* Support for clang `__has_c_attribute()`
- * Check support of `[[foo]]`
+/* Support for clang `__has_c_attribute()`, which is conventionally
+ * used to check support of `[[foo]]` in C+ compilers.
  *
  * @detect: #ifdef __has_c_attribute */
 #ifndef TPP_HAVE_CLANG_MACRO___has_c_attribute
@@ -783,8 +788,8 @@
 #define TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES ((TPP_HAVE_CLANG_MACRO___has_extension && TPP_HAVE_CLANG_MACRO___has_feature) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fclang-extensions-are-features" */
 #endif /* !TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES */
 
-/* Support for clang `__is_identifier()`
- * Check if something is a builtin identifier:
+/* Support for clang `__is_identifier()`, which can be used
+ * to check if a given keyword is a builtin identifier:
  * ```c
  * #if __is_identifier(tpp_exec)
  * // "#pragma tpp_exec()" is probably supported then...
@@ -798,137 +803,137 @@
 #define TPP_HAVE_MACRO___is_identifier (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__is_identifier" */
 #endif /* !TPP_HAVE_MACRO___is_identifier */
 
-/* Support for TPP's `__is_deprecated()`
- * Check if an identifier has been `#pragma deprecated("foo")`-ed
+/* Support for TPP's `__is_deprecated()`, which can be used to
+ * check if an identifier has been `#pragma deprecated("foo")`-ed
  *
  * @detect: #ifdef __is_deprecated */
 #ifndef TPP_HAVE_MACRO___is_deprecated
 #define TPP_HAVE_MACRO___is_deprecated (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__is_deprecated" */
 #endif /* !TPP_HAVE_MACRO___is_deprecated */
 
-/* Support for TPP's `__is_poisoned()`
- * Check if an identifier has been `#pragma GCC poison foo`-ed
+/* Support for TPP's `__is_poisoned()`, which can be used to
+ * check if an identifier has been `#pragma GCC poison foo`-ed
  *
  * @detect: #ifdef __is_poisoned */
 #ifndef TPP_HAVE_MACRO___is_poisoned
 #define TPP_HAVE_MACRO___is_poisoned (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__is_poisoned" */
 #endif /* !TPP_HAVE_MACRO___is_poisoned */
 
-/* Support for TPP's `__has_extension()`
- * Check if a TPP extension is known + enabled: `#if __has_extension("-ftrigraphs")`
+/* Support for TPP's `__has_extension()`, which can be used to
+ * check if a TPP extension is known + enabled: `#if __has_extension("-ftrigraphs")`
  *
  * @detect: #ifdef __has_extension */
 #ifndef TPP_HAVE_MACRO___has_extension
 #define TPP_HAVE_MACRO___has_extension ((TPP_HAVE_EXTENSIONS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_extension" */
 #endif /* !TPP_HAVE_MACRO___has_extension */
 
-/* Support for TPP's `__has_known_extension()`
- * Check if a TPP extension is known: `#if __has_known_extension("-ftrigraphs")`
+/* Support for TPP's `__has_known_extension()`, which can be used to
+ * check if a TPP extension is known: `#if __has_known_extension("-ftrigraphs")`
  *
  * @detect: #ifdef __has_known_extension */
 #ifndef TPP_HAVE_MACRO___has_known_extension
 #define TPP_HAVE_MACRO___has_known_extension ((TPP_HAVE_EXTENSIONS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_known_extension" */
 #endif /* !TPP_HAVE_MACRO___has_known_extension */
 
-/* Support for TPP's `__has_warning()`
- * Check if a TPP warning is known + enabled: `#if __has_warning("-Wmultiline-string")`
+/* Support for TPP's `__has_warning()`, which can be used to
+ * check if a TPP warning is known + enabled: `#if __has_warning("-Wmultiline-string")`
  *
  * @detect: #ifdef __has_warning */
 #ifndef TPP_HAVE_MACRO___has_warning
 #define TPP_HAVE_MACRO___has_warning ((TPP_HAVE_WARNINGS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_warning" */
 #endif /* !TPP_HAVE_MACRO___has_warning */
 
-/* Support for TPP's `__has_known_warning()`
- * Check if a TPP warning is known: `#if __has_known_extension("-Wmultiline-string")`
+/* Support for TPP's `__has_known_warning()`, which can be used to
+ * check if a TPP warning is known: `#if __has_known_extension("-Wmultiline-string")`
  *
  * @detect: #ifdef __has_known_warning */
 #ifndef TPP_HAVE_MACRO___has_known_warning
 #define TPP_HAVE_MACRO___has_known_warning ((TPP_HAVE_WARNINGS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_known_warning" */
 #endif /* !TPP_HAVE_MACRO___has_known_warning */
 
-/* Support for clang `__has_include()`
- * Check if `#include` exists: `#if __has_include(<stdio.h>)`
+/* Support for clang `__has_include()`, which can be used to
+ * check if `#include` exists: `#if __has_include(<stdio.h>)`
  *
  * @detect: #ifdef __has_include */
 #ifndef TPP_HAVE_MACRO___has_include
 #define TPP_HAVE_MACRO___has_include (((TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_IMPORT) && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_include" */
 #endif /* !TPP_HAVE_MACRO___has_include */
 
-/* Support for clang `__has_include_next()`
- * Check if `#include_next` exists: `#if __has_include_next(<stdio.h>)`
+/* Support for clang `__has_include_next()`, which can be used to
+ * check if `#include_next` exists: `#if __has_include_next(<stdio.h>)`
  *
  * @detect: #ifdef __has_include_next */
 #ifndef TPP_HAVE_MACRO___has_include_next
 #define TPP_HAVE_MACRO___has_include_next ((TPP_HAVE_CPP_INCLUDE_NEXT && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_include_next" */
 #endif /* !TPP_HAVE_MACRO___has_include_next */
 
-/* Support for clang `__has_embed()`
- * Check if `#embed` exists: `#if __has_embed("resource.dat" limit(10))`
+/* Support for clang `__has_embed()`, which can be used to
+ * check if `#embed` exists: `#if __has_embed("resource.dat" limit(10))`
  *
  * @detect: #ifdef __has_embed */
 #ifndef TPP_HAVE_MACRO___has_embed
 #define TPP_HAVE_MACRO___has_embed ((TPP_HAVE_CPP_EMBED && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_embed" */
 #endif /* !TPP_HAVE_MACRO___has_embed */
 
-/* Support for the builtin macro `__FILE__`
- * Expand to current file's name
+/* Support for the builtin macro `__FILE__`,
+ * which expands to the current file's name
  *
  * @detect: #ifdef __FILE__ */
 #ifndef TPP_HAVE_MACRO___FILE__
 #define TPP_HAVE_MACRO___FILE__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__FILE__" */
 #endif /* !TPP_HAVE_MACRO___FILE__ */
 
-/* Support for the builtin macro `__LINE__`
- * Expand to current line number
+/* Support for the builtin macro `__LINE__`,
+ * which expands to the current line number
  *
  * @detect: #ifdef __LINE__ */
 #ifndef TPP_HAVE_MACRO___LINE__
 #define TPP_HAVE_MACRO___LINE__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__LINE__" */
 #endif /* !TPP_HAVE_MACRO___LINE__ */
 
-/* Support for the builtin macro `__TIME__`
- * Expand to something like `"12:37:58"`
+/* Support for the builtin macro `__TIME__`,
+ * which expands to something like `"12:37:58"`
  *
  * @detect: #ifdef __TIME__ */
 #ifndef TPP_HAVE_MACRO___TIME__
 #define TPP_HAVE_MACRO___TIME__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__TIME__" */
 #endif /* !TPP_HAVE_MACRO___TIME__ */
 
-/* Support for the builtin macro `__DATE__`
- * Expand to something like `"Jul  6 2026"`
+/* Support for the builtin macro `__DATE__`,
+ * which expands to something like `"Jul  6 2026"`
  *
  * @detect: #ifdef __DATE__ */
 #ifndef TPP_HAVE_MACRO___DATE__
 #define TPP_HAVE_MACRO___DATE__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__DATE__" */
 #endif /* !TPP_HAVE_MACRO___DATE__ */
 
-/* Support for the builtin macro `__COLUMN__`
- * Expand to current column number
+/* Support for the builtin macro `__COLUMN__`,
+ * which expands to current column number
  *
  * @detect: #ifdef __COLUMN__ */
 #ifndef TPP_HAVE_MACRO___COLUMN__
 #define TPP_HAVE_MACRO___COLUMN__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fcolumn-macro" */
 #endif /* !TPP_HAVE_MACRO___COLUMN__ */
 
-/* Support for the builtin macro `__BASE_FILE__`
- * Expand to base file's name
+/* Support for the builtin macro `__BASE_FILE__`,
+ * which expands to base file's name
  *
  * @detect: #ifdef __BASE_FILE__ */
 #ifndef TPP_HAVE_MACRO___BASE_FILE__
 #define TPP_HAVE_MACRO___BASE_FILE__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fbasefile-macro" */
 #endif /* !TPP_HAVE_MACRO___BASE_FILE__ */
 
-/* Support for the builtin macro `__FILE_NAME__`
- * Expand to current file's name, without its leading path components.
+/* Support for the builtin macro `__FILE_NAME__`.
+ * Similar to `__FILE__` (see `TPP_HAVE_MACRO___FILE__`), but expand to the
+ * current file's name, without its leading path components (i.e. its *basename*).
  *
- * @see: TPP_HAVE_MACRO___FILE__
  * @detect: #ifdef __FILE_NAME__ */
 #ifndef TPP_HAVE_MACRO___FILE_NAME__
 #define TPP_HAVE_MACRO___FILE_NAME__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__FILE_NAME__" */
 #endif /* !TPP_HAVE_MACRO___FILE_NAME__ */
 
-/* Support for the builtin macro `__INCLUDE_LEVEL__`
- * Expand to numerical representation of include depth.
+/* Support for the builtin macro `__INCLUDE_LEVEL__`,
+ * which expands to numerical representation of include depth.
  * Whilst inside the "base"-file, it expands to `0`
  *
  * @detect: #ifdef __INCLUDE_LEVEL__ */
@@ -936,49 +941,55 @@
 #define TPP_HAVE_MACRO___INCLUDE_LEVEL__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-finclude-level-macro" */
 #endif /* !TPP_HAVE_MACRO___INCLUDE_LEVEL__ */
 
-/* Support for the builtin macro `__INCLUDE_DEPTH__`
- * Alias for `__INCLUDE_LEVEL__` (see `TPP_HAVE_MACRO___INCLUDE_LEVEL__`)
+/* Support for the builtin macro `__INCLUDE_DEPTH__`, which is an
+ * alias for `__INCLUDE_LEVEL__` (see `TPP_HAVE_MACRO___INCLUDE_LEVEL__`)
  *
  * @detect: #ifdef __INCLUDE_DEPTH__ */
 #ifndef TPP_HAVE_MACRO___INCLUDE_DEPTH__
 #define TPP_HAVE_MACRO___INCLUDE_DEPTH__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-finclude-depth-macro" */
 #endif /* !TPP_HAVE_MACRO___INCLUDE_DEPTH__ */
 
-/* Support for the builtin macro `__COUNTER__`
- * Expand to `1+` its previous expansion. The first time
- * this macro is used, it expands to `0`
+/* Support for the builtin macro `__COUNTER__`, which
+ * expands to`1+` its previous expansion. The first time
+ * this macro is used, it expands to `0`.
  *
  * @detect: #ifdef __COUNTER__ */
 #ifndef TPP_HAVE_MACRO___COUNTER__
 #define TPP_HAVE_MACRO___COUNTER__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fcounter-macro" */
 #endif /* !TPP_HAVE_MACRO___COUNTER__ */
 
-/* Support for the builtin macro `__TIMESTAMP__`
- * Expand to something like `"Mon Jul  6 12:37:58 2026"`
+/* Support for the builtin macro `__TIMESTAMP__`, which
+ * expands to something like `"Mon Jul  6 12:37:58 2026"`
+ *
  * @detect: #ifdef __TIMESTAMP__ */
 #ifndef TPP_HAVE_MACRO___TIMESTAMP__
 #define TPP_HAVE_MACRO___TIMESTAMP__ (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftimestamp-macro" */
 #endif /* !TPP_HAVE_MACRO___TIMESTAMP__ */
 
-/* Support for the builtin macros `__DATE_DAY__`, `__DATE_WDAY__`, `__DATE_YDAY__`, `__DATE_MONTH__`, `__DATE_YEAR__`
- * Precise date/time macros (behave like `__LINE__`, but expand to components of `__DATE__`)
+/* Support for the builtin macros `__DATE_DAY__`, `__DATE_WDAY__`, `__DATE_YDAY__`, `__DATE_MONTH__`, `__DATE_YEAR__`.
+ * These are precise date/time macros and behave like `__LINE__`, but expand to the components of `__DATE__`
+ *
  * @detect: #ifdef __DATE_DAY__, ... */
 #ifndef TPP_HAVE_NUMERIC_DATE_MACROS
 #define TPP_HAVE_NUMERIC_DATE_MACROS (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fnumeric-date-macros" */
 #endif /* !TPP_HAVE_NUMERIC_DATE_MACROS */
 
-/* Support for the builtin macros `__TIME_SEC__`, `__TIME_MIN__`, `__TIME_HOUR__`
- * Precise date/time macros (behave like `__LINE__`, but expand to components of `__TIME__`)
+/* Support for the builtin macros `__TIME_SEC__`, `__TIME_MIN__`, `__TIME_HOUR__`.
+ * These are precise date/time macros and behave like `__LINE__`, but expand to components of `__TIME__`
+ *
  * @detect: #ifdef __TIME_SEC__, ... */
 #ifndef TPP_HAVE_NUMERIC_TIME_MACROS
 #define TPP_HAVE_NUMERIC_TIME_MACROS (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fnumeric-time-macros" */
 #endif /* !TPP_HAVE_NUMERIC_TIME_MACROS */
 
-/* Support for the builtin macro `__TPP_EVAL()`
+/* Support for the builtin function-like macro `__TPP_EVAL()`, which can
+ * be used to evaluate an expression like in `#if` and replace the macro
+ * invocation with the expression's result in the form of 1-2 tokens:
+ * - `[<int>]`
+ * - `[-][<int>]`
+ * - `[<string>]` (if `TPP_HAVE_BUILTIN_EXPR_STRINGS` is enabled)
  *
- * Evaluate an expression like in `#if`, then expand to its result
- * in the form of 1-2 tokens: `[<int>]` or `[-][<int>]` (or `[<string>]`
- * if `TPP_HAVE_BUILTIN_EXPR_STRINGS` is enabled):
+ * Example:
  * ```c
  * __TPP_EVAL(10 + 20) // Expands to a single token: 30
  * ```
@@ -988,7 +999,7 @@
 #define TPP_HAVE_MACRO___TPP_EVAL (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-eval-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_EVAL */
 
-/* Support for the builtin macro `__TPP_EXEC()`
+/* Support for the builtin function-like macro `__TPP_EXEC()`.
  *
  * Takes a string that is then re-interpreted as preprocessor input,
  * and expands to whatever that string expands to. Note that the string
@@ -1001,16 +1012,18 @@
  * ```
  *
  * NOTE: If you just want to execute code but discard whatever it expands
- *       to, use `#pragma tpp_exec()` instead, which has a lower overhead
- *       and lets you safely execute the code whilst discarding its result
+ *       to, use `#pragma tpp_exec()` (see `TPP_HAVE_PRAGMA_TPP_EXEC`)
+ *       instead, which has a lower overhead and lets you safely execute
+ *       the code whilst discarding its result.
  *
  * @detect: #ifdef __TPP_EXEC */
 #ifndef TPP_HAVE_MACRO___TPP_EXEC
 #define TPP_HAVE_MACRO___TPP_EXEC (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-exec-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_EXEC */
 
-/* Support for the builtin macro `__TPP_UNIQUE()`
- * Called with some keyword/identifier, this macro expands a unique INT-token
+/* Support for the builtin function-like macro `__TPP_UNIQUE()`.
+ *
+ * When called with some keyword/identifier, this macro expands a unique INT-token
  * representative of the given keyword/identifier. The value of that INT-token
  * is distinct from any other keyword/identifier and remains the same for the
  * remaining of input (though it will differ if re-run with different input;
@@ -1021,9 +1034,13 @@
 #define TPP_HAVE_MACRO___TPP_UNIQUE (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-unique-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_UNIQUE */
 
-/* Support for the builtin macro `__TPP_LOAD_FILE()`
- * Same as `#include`, but package the file's entire contents into a string.
- * Could be implemented as:
+/* Support for the builtin function-like macro `__TPP_LOAD_FILE()`.
+ *
+ * This macro behaves similar to `#include`, but the contents of the included
+ * file are not macro-expanded, but instead packaged into a string literal to
+ * which this macro then expands.
+ *
+ * Using some other features/extensions, this macro can be implemented as:
  * ```c
  * #define __TPP_LOAD_FILE(filename) __TPP_STR_PACK(__TPP_EXEC("#embed " #filename))
  * ```
@@ -1033,7 +1050,8 @@
 #define TPP_HAVE_MACRO___TPP_LOAD_FILE (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-load-file-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
 
-/* Support for the builtin macro `__TPP_COUNTER()`
+/* Support for the builtin function-like macro `__TPP_COUNTER()`.
+ *
  * Called the same way as `__TPP_UNIQUE` (see `TPP_HAVE_MACRO___TPP_UNIQUE`),
  * but returns an ever-increasing value starting at `0` (same as `__COUNTER__`),
  * but that counter is specific to the given keyword. i.e.: `__TPP_COUNTER(foo)`
@@ -1044,7 +1062,8 @@
 #define TPP_HAVE_MACRO___TPP_COUNTER (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-counter-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_COUNTER */
 
-/* Support for the builtin macro `__TPP_RANDOM()`
+/* Support for the builtin function-like macro `__TPP_RANDOM()`.
+ *
  * Overloaded macro taking 1 or 2 arguments, and expanding to a random number
  * that stays the same during repeated compilations, only changing if source
  * code is altered:
@@ -1058,12 +1077,14 @@
 #define TPP_HAVE_MACRO___TPP_RANDOM (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-random-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
 
-/* Support for the builtin macro `__TPP_STR_DECOMPILE()`
- * Very similar to `__TPP_EXEC()` (see `TPP_HAVE_MACRO___TPP_EXEC`), except
- * that `__TPP_EXEC()` will expand other macros and directives, while
+/* Support for the builtin function-like macro `__TPP_STR_DECOMPILE()`.
+ *
+ * This macro is very similar to `__TPP_EXEC()` (see `TPP_HAVE_MACRO___TPP_EXEC`),
+ * except that while `__TPP_EXEC()` will expand other macros and directives,
  * `__TPP_STR_DECOMPILE()` doesn't: it simply takes a string and expands to
- * its decoded form *without* expansion (however: expansion may still
- * occur as returned tokens are read).
+ * its decoded form *without* expansion (however: expansion may still occur as
+ * returned tokens are yielded, so this difference may not always be obvious).
+ *
  * In practice this usually only means:
  * - `__TPP_EXEC()` accepts preprocessor directives
  * - `__TPP_STR_DECOMPILE()` only does basic string-to-token conversion
@@ -1073,7 +1094,8 @@
 #define TPP_HAVE_MACRO___TPP_STR_DECOMPILE (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-str-decompile-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
 
-/* Support for the builtin macro `__TPP_STR_PACK()`
+/* Support for the builtin function-like macro `__TPP_STR_PACK()`.
+ *
  * Expands to a string literal that is made up of the arguments taken by
  * this macro. There can be any number of arguments (and arguments don't
  * even have to be separated by `,`), but every argument must be:
@@ -1085,7 +1107,8 @@
 #define TPP_HAVE_MACRO___TPP_STR_PACK (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-str-pack-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_PACK */
 
-/* Support for the builtin macro `__TPP_STR_SUBSTR()`
+/* Support for the builtin function-like macro `__TPP_STR_SUBSTR()`.
+ *
  * Stand-alone macro that takes 3 arguments and (assuming `TPP_HAVE_BUILTIN_EXPR_STRINGS`
  * and `TPP_HAVE_MACRO___TPP_EVAL` are enabled) can be implemented as follows:
  * ```c
@@ -1097,7 +1120,8 @@
 #define TPP_HAVE_MACRO___TPP_STR_SUBSTR (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-str-substr-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
 
-/* Support for the builtin macro `__TPP_STR_SIZE()`
+/* Support for the builtin function-like macro `__TPP_STR_SIZE()`.
+ *
  * Stand-alone macro that takes 1 arguments and (assuming `TPP_HAVE_BUILTIN_EXPR_STRINGS`
  * and `TPP_HAVE_MACRO___TPP_EVAL` are enabled) can be implemented as follows:
  * ```c
@@ -1109,8 +1133,9 @@
 #define TPP_HAVE_MACRO___TPP_STR_SIZE (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-str-size-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SIZE */
 
-/* Support for the builtin macro `__TPP_COUNT_TOKENS()`
- * A token-feature probing macro that lets you count the # of
+/* Support for the builtin function-like macro `__TPP_COUNT_TOKENS()`.
+ *
+ * A token-feature probing macro that lets you count the number of
  * tokens that are contained within a given string. For this
  * purpose, no macro expansion or directive processing is done:
  * ```c
@@ -1129,7 +1154,8 @@
 #define TPP_HAVE_MACRO___TPP_COUNT_TOKENS (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-count-tokens-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_COUNT_TOKENS */
 
-/* Support for the builtin macro `__TPP_IDENTIFIER()`
+/* Support for the builtin function-like macro `__TPP_IDENTIFIER()`.
+ *
  * This builtin macro can be used to construct arbitrary keyword-like
  * tokens, including ones that aren't actually keywords. This macro
  * takes a single argument (in the form of a string), and always expands
@@ -1144,13 +1170,15 @@
  *                           // will probably print the keyword as "a")
  * ```
  *
+ * Similar functionality can also be achieved using `TPP_HAVE_ESCAPE_IN_IDENTIFIERS`
+ *
  * @detect: #ifdef __TPP_IDENTIFIER */
 #ifndef TPP_HAVE_MACRO___TPP_IDENTIFIER
 #define TPP_HAVE_MACRO___TPP_IDENTIFIER (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-identifier-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_IDENTIFIER */
 
 
-/* Support for alternative parenthesis pairs in macros:
+/* Support for alternative parenthesis pairs in user-defined macros:
  * ```c
  * #define normal_macro(x) you_should("know this", x)
  * #define array[index]    get_ident(ARRAY, index)
@@ -1163,8 +1191,62 @@
  * point<int>        // struct { int x; int y; }
  * ```
  *
- * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
- * @detect: #if __has_known_extension("-falternative-macro-parenthesis") */
+ * These alternate parenthesis pairs work in a hierarchy, where
+ * higher-order parenthesis pairs respect unmatched parentheses
+ * of lower orders, but (to not break standard compatibility),
+ * not the opposite. iow: `point<foo(x > 10)>` works
+ * as expected (the `T` parameter is `foo(x > 10)` rather
+ * than `foo(x `), but `(normal_macro(foo < 10) > 20)` does not
+ * look out of `< >`-paris (the `x` parameter is `foo < 10`
+ * rather than `foo < 10) > 20`). See the following hierarchy:
+ *
+ * | order | l-paren | r-paren |
+ * | ----- | ------- | ------- |
+ * | 1     | `(`     | `)`     |
+ * | 2     | `[`     | `]`     |
+ * | 3     | `{`     | `}`     |
+ * | 4     | `<`     | `>`     |
+ *
+ * Some more examples of the results produced by this hirarchy:
+ *
+ * ```c
+ * point<{ int x = v > 20; }>   // T is `{ int x = v > 20; }`
+ * point<arr[y > 10 ? 0 : 2]>   // T is `arr[y > 10 ? 0 : 2]`
+ * point<foo(x > 10)>           // T is `foo(x > 10)`
+ * point<point<int>>            // T is `point<int>`
+ * point<x > 10>                // !!! T is `x` and expansion is followed by ` 10>`
+ *
+ * block { int y = < 20; } > }; // __VA_ARGS__ is `int y = v < 20;` and expansion is followed by ` > };`
+ * block { int y = { 20; } };   // __VA_ARGS__ is `int y = { 20; }`
+ * block { int y = [ 20; } ] }; // __VA_ARGS__ is `int y = [20; } ]`
+ * block { int y = ( 20; } ) }; // __VA_ARGS__ is `int y = (20; } )`
+ *
+ * array[y < 20] > ]; // index is `y < 20` and expansion is followed by ` > ];`
+ * array[y { 20] } ]; // index is `y < 20` and expansion is followed by ` } ];`
+ * array[y [ 20] ];   // index is `y [ 20]`
+ * array[y ( 20] ) ]; // index is `y ( 20] )`
+ *
+ * normal_macro(y < 20) > ); // x is `y < 20` and expansion is followed by ` > );`
+ * normal_macro(y { 20) } ); // x is `y { 20` and expansion is followed by ` } );`
+ * normal_macro(y [ 20) ] ); // x is `y [ 20` and expansion is followed by ` ] );`
+ * normal_macro(y ( 20) );   // x is `y ( 20)`
+ * ```
+ *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*:
+ * ```c
+ * #pragma extension("-falternative-macro-parenthesis")
+ * #define point1<T> struct { T x; T y; }
+ * #pragma extension("-fno-alternative-macro-parenthesis")
+ * #define point2<T> struct { T x; T y; }
+ *
+ * point1<int>  // struct { int x; int y; }
+ * point2<int>  // <T> struct { T x; T y; }<int>
+ * ```
+ *
+ * @detect: #define foo<bar> +1
+ *          #define bar 10
+ *          #if (1 foo<1> +1) == 3
+ */
 #ifndef TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
 #define TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS (TPP_HAVE_CPP_MACROS ? TPP_CONF_EXT1 : 0) /* "-falternative-macro-parenthesis" */
 #endif /* !TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
