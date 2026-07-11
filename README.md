@@ -4,7 +4,7 @@ TPP is a tiny (single source file) C Preprocessor, meant as a low-level backend 
 
 ## Basic design
 
-TPP is a *single-pass*, *text-based* preprocessor (as opposed to multi-pass or token-based). If you want, it also lets you disable pretty much everything that makes it a preprocessor in the conventional sense, allowing you to strip it down to a fairly basic tokenizer -- *everything* is configurable.
+TPP is a *single-pass*, *text-based* preprocessor (as opposed to multi-pass or token-based, though TPP obviously still produces tokens in the end). If you want, it also lets you disable pretty much everything that makes it a preprocessor in the conventional sense, allowing you to strip it down to a fairly basic tokenizer -- *everything* is configurable.
 
 TPP is *not* exclusive to C/C++ -- it has builtin support for lots of different token types normally only found in other languages (e.g. java `""" block strings """`, or SQL `-- comments`). Like all other features, every supported token can be individually configured at compile-time and/or runtime.
 
@@ -53,10 +53,11 @@ If this is what you want, you just need to download the following 2 files (this 
 
 - Disregarding macros and other functions that obviously require dynamic allocation, TPP has `O(1)` memory usage, meaning it automatically unloads old, unreferenced and already processed parts of input files at the same time as new parts are loaded
 - TPP can preprocess input on-the-fly, meaning it (normally) doesn't need to load an entire file into memory all-at-once. As a consequence, TPP also falls under the category of *single-pass* preprocessors
-- TPP is *text-based*, meaning it continues to operate on raw strings all-the-way throughout its entire implementation. Other preprocessors are *token-based*, meaning they initially convert input to a stream of distinct tokens which all further preprocessing is then performed upon. Both approaches have their advantages and disadvantages:
+- TPP is *text-based*, meaning it converts raw input strings into tokens on-the-fly, rather than operating on an already tokenized input stream. Meanwhile, a *token-based* preprocessor that is would initially convert its input to a stream of distinct tokens, with all further processing then performed on those tokens. Both approaches have their advantages and disadvantages:
 	- Advantage: Faster, because no conversion step is required
 	- Advantage: Because the original input can be re-used for every step, TPP doesn't require any heap memory to preprocess inputs that are already loaded into memory (and don't contain anything that requires dynamic definitions, like macros or keywords)
 	- Advantage: It becomes trivial to convert between token types, escape/unescape strings, or figure out where tokens originate from (file/line/column)
+	- Advantage: Availability and behavior of tokens can be configured on-the-fly and will immediately show results (as opposed to requiring something along the lines of a *retokenization pass*)
 	- Disadvantage: sometimes, tokens have to be parsed multiple times, meaning that certain error messages (like `-Wmultiline-string`) may be emitted multiple times for the same string location
 	- Disadvantage: TPP has to be careful not to accidentally concatenate pasted tokens in situations where input has to be re-processed (s.a. `TPP_HAVE_MAGIC_WHITESPACE`)
 - Not every combination of features will necessarily be able to compile. All features are automatically turned on if they're needed (or based on `TPP_PROFILE`), but if you manually disable a feature needed to implement something that is enabled, you'll probably get syntax/linker errors complaining about undefined functions
