@@ -8,12 +8,14 @@ Every hook consists of 2 macros:
 
 The `TPP_HAVE_SOMEEVENT_HOOK` must be defined to one of the following values:
 
-- `TPP_HOOK_DISABLED`: The hook is completely disabled
-- `TPP_HOOK_CONST_USER`: The hook is compile-time hard-coded to call a user-supplied function (this function is specified via `TPP_HOOK_SOMEEVENT`)
-- `TPP_HOOK_CONST_BUILTIN`: The hook is compile-time hard-coded to call a builtin implementation. If no builtin implementation exists, a no-op implementation is called, or the hook is simply omitted
-- `TPP_HOOK_RT_USER`: The hook can be overwritten at runtime, but is default-configured to a function pointer formed by `&TPP_HOOK_SOMEEVENT`. As such, use of this option requires you to also define a macro `#define TPP_HOOK_SOMEEVENT my_default_impl_for_someevent`
-- `TPP_HOOK_RT_BUILTIN`: The hook can be overwritten at runtime, and is default-configured to the builtin implementation of the hook. If there is no builtin implementation, this behaves the same as `TPP_HOOK_RT_NOOP`
-- `TPP_HOOK_RT_NOOP`: The hook can be overwritten at runtime, and is default-configured to `NULL`. Additionally, if the hook is `NULL` during invocation, it behaves as a no-op.
+| Value | Description |
+| ----- | ----------- |
+| `TPP_HOOK_DISABLED` | The hook is completely disabled |
+| `TPP_HOOK_CONST_USER` | The hook is compile-time hard-coded to call a user-supplied function (this function is specified via `TPP_HOOK_SOMEEVENT`) |
+| `TPP_HOOK_CONST_BUILTIN` | The hook is compile-time hard-coded to call a builtin implementation. If no builtin implementation exists, a no-op implementation is called, or the hook is simply omitted |
+| `TPP_HOOK_RT_USER` | The hook can be overwritten at runtime, but is default-configured to a function pointer formed by `&TPP_HOOK_SOMEEVENT`. As such, use of this option requires you to also define a macro `#define TPP_HOOK_SOMEEVENT my_default_impl_for_someevent` |
+| `TPP_HOOK_RT_BUILTIN` | The hook can be overwritten at runtime, and is default-configured to the builtin implementation of the hook. If there is no builtin implementation, this behaves the same as `TPP_HOOK_RT_NOOP` |
+| `TPP_HOOK_RT_NOOP` | The hook can be overwritten at runtime, and is default-configured to `NULL`. Additionally, if the hook is `NULL` during invocation, it behaves as a no-op. |
 
 Depending on being needed or not, hooks default-configure themselves as follows:
 
@@ -65,10 +67,28 @@ TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
 
 Called by `tpp_lexer_warnf()` to print warning messages
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_WARNINGS
+```
+
+Disabled:
+
+```c
+TPP_FORMATPRINTER_DEFINE(_tpp_disabled_hook_warnprinter, arg, text, num_bytes) {
+	return 0;
+}
+```
+
+Builtin:
+
+```c
+#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
+TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes);
+#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
 ```
 </details>
 
@@ -81,10 +101,28 @@ TPP_FORMATPRINTER_DEFINE(TPP_HOOK_MESGPRINTER, arg, text, num_bytes);
 
 Used by `#pragma message` to print messages
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA_MESSAGE
+```
+
+Disabled:
+
+```c
+TPP_FORMATPRINTER_DEFINE(_tpp_disabled_hook_mesgprinter, arg, text, num_bytes) {
+	return 0;
+}
+```
+
+Builtin:
+
+```c
+#if TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
+TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes);
+#endif /* TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 ```
 </details>
 
@@ -110,10 +148,28 @@ User-defined callback for parsing `#if`-style expressions
   itself with rollback)
 
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
+```
+
+Disabled:
+
+```c
+tpp_errno _tpp_disabled_hook_parseexpr(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result) {
+	return tpp_expr_value_init_zero(result);
+}
+```
+
+Builtin:
+
+```c
+#if TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
+tpp_errno _tpp_lexer_builtin_parseexpr(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
+#endif /* TPP_HAVE_BUILTIN_PARSEEXPR_HOOK */
 ```
 </details>
 
@@ -127,10 +183,20 @@ tpp_errno TPP_HOOK_UNKNOWN_PRAGMA(tpp_lexer *tpp_restrict self);
 Called whenever a `#pragma` is encountered that is not recognized.
 When called, the lexer is set-up to point at the first token after the `#pragma`.
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL
+```
+
+Disabled:
+
+```c
+tpp_errno _tpp_disabled_hook_unknown_pragma(tpp_lexer *tpp_restrict self) {
+	return TPP_ENOENT;
+}
 ```
 </details>
 
@@ -143,10 +209,20 @@ tpp_errno TPP_HOOK_NEW_DEPENDENCY(tpp_lexer *tpp_restrict self, tpp_keyword *fil
 
 Called whenever some file is `#include`-ed for the first time
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL
+```
+
+Disabled:
+
+```c
+tpp_errno _tpp_disabled_hook_new_dependency(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd) {
+	return TPP_EOK;
+}
 ```
 </details>
 
@@ -159,10 +235,20 @@ tpp_errno TPP_HOOK_IDENT_SCCS(tpp_lexer *tpp_restrict self, tpp_token_id mode, t
 
 Called to handle `#ident` and `#sccs` directives
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_CPP_IDENT_SCCS
+```
+
+Disabled:
+
+```c
+tpp_errno _tpp_disabled_hook_ident_sccs(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len) {
+	return TPP_EOK;
+}
 ```
 </details>
 
@@ -179,10 +265,20 @@ then allowed to enumerate some additional include paths that may exist, but
 for one reason or another (mainly: speed) aren't known to TPP via its system
 include path APIs (`tpp_lexer_includes_add*`)
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL
+```
+
+Disabled:
+
+```c
+tpp_errno _tpp_disabled_hook_system_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg) {
+	return TPP_ENOENT;
+}
 ```
 </details>
 
@@ -200,10 +296,20 @@ On entry, `*p_pos` points at the first (unrecognized) character after the leadin
 if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
 it before returning
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL
+```
+
+Disabled:
+
+```c
+tpp_ssize _tpp_disabled_hook_unknown_string_escape(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg) {
+	return TPP_SSIZE_OFERR(TPP_ENOENT);
+}
 ```
 </details>
 
@@ -218,10 +324,20 @@ Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
 This hook can be used to do additional state changes that may be necessary by the
 hosting application in order to handle the resulting `TPP_ELEXERROR`
 
-<details><summary>Default</summary>
+<details><summary>Details</summary>
+
+Default:
 
 ```c
 TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL
+```
+
+Disabled:
+
+```c
+tpp_errno _tpp_disabled_hook_raise_lexerror(tpp_lexer *tpp_restrict self) {
+	return TPP_ELEXERROR;
+}
 ```
 </details>
 

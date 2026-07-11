@@ -425,16 +425,35 @@ function updateConfigMd(filename: string) {
 					f"\n"
 					f"{formatDoc(currentFile, doc.partition("\n@").first)}\n"
 					f"\n"
-					f"<details><summary>Default</summary>\n"
+					f"<details><summary>Details</summary>\n"
+					f"\n"
+					f"Default:\n"
 					f"\n"
 					f"```c\n"
 					f"{normalizePpExpr(default_TPP_HAVE_FOO_HOOK)}\n"
 					f"```\n"
+					f"\n"
+					f"Disabled:\n"
+					f"\n"
+					f"```c\n"
+					f"{prototypePrefix}_tpp_disabled_hook_{name.lower()}{prototypeSuffix} \{\n"
+					f"	return {disabled_RETURN_VALUE};\n"
+					f"\}\n"
+					f"```\n"
+					f"{!builtin_FOO_HOOK ? "" :
+						f"\n"
+						f"Builtin:\n"
+						f"\n"
+						f"```c\n"
+						f"#if TPP_HAVE_BUILTIN_{name}_HOOK\n"
+						f"{prototypePrefix}{builtin_FOO_HOOK}{prototypeSuffix};\n"
+						f"#endif /* TPP_HAVE_BUILTIN_{name}_HOOK */\n"
+						f"```\n"
+					}"
 					f"</details>\n"
-//					f"Builtin:   `{builtin_FOO_HOOK ?: "N/A"}`\n"
 					f"\n"
 					f"\n"
-					,;
+				,;
 			}
 			break;
 
