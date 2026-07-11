@@ -8831,13 +8831,15 @@ tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
 			if ((_tpp_maybe_isbackslash(rhs_ch)) &&
 			    (bsi_len = tpp_decode_bsi(bsi, (tpp_char const **)&rhs_with_esc, rhs_end)) != 0) {
 				tpp_size i = 0;
-				do {
+				for (;;) {
 					if (lhs_ch != bsi[i])
 						return lhs_ch < bsi[i] ? -1 : 1;
 					if (lhs_without_esc >= lhs_end)
 						return -1;
+					if (++i >= bsi_len)
+						break;
 					lhs_ch = *lhs_without_esc++;
-				} while (++i < bsi_len);
+				}
 			} else
 #endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 			{

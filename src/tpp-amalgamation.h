@@ -5411,56 +5411,96 @@ TPP_DECL_END
 #define TPP_HAVE_MACRO___is_poisoned (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__is_poisoned" */
 #endif /* !TPP_HAVE_MACRO___is_poisoned */
 
-/* Support for TPP's `__has_extension()`, which can be used to
- * check if a TPP extension is known + enabled: `#if __has_extension("-ftrigraphs")`
+/* Support for TPP's `__has_extension()`, which can be
+ * used to check if a TPP extension is known + enabled:
+ * ```c
+ * #if __has_extension("-ftrigraphs")
+ * ...
+ * #endif
+ * ```
  *
  * @detect: #ifdef __has_extension */
 #ifndef TPP_HAVE_MACRO___has_extension
 #define TPP_HAVE_MACRO___has_extension ((TPP_HAVE_EXTENSIONS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_extension" */
 #endif /* !TPP_HAVE_MACRO___has_extension */
 
-/* Support for TPP's `__has_known_extension()`, which can be used to
- * check if a TPP extension is known: `#if __has_known_extension("-ftrigraphs")`
+/* Support for TPP's `__has_known_extension()`, which
+ * can be used to check if a TPP extension is known:
+ * ```c
+ * #if __has_known_extension("-ftrigraphs")
+ * ...
+ * #endif
+ * ```
  *
  * @detect: #ifdef __has_known_extension */
 #ifndef TPP_HAVE_MACRO___has_known_extension
 #define TPP_HAVE_MACRO___has_known_extension ((TPP_HAVE_EXTENSIONS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_known_extension" */
 #endif /* !TPP_HAVE_MACRO___has_known_extension */
 
-/* Support for TPP's `__has_warning()`, which can be used to
- * check if a TPP warning is known + enabled: `#if __has_warning("-Wmultiline-string")`
+/* Support for TPP's `__has_warning()`, which can be
+ * used to check if a TPP warning is known + enabled:
+ * ```c
+ * #if __has_warning("-Wmultiline-string")
+ * ...
+ * #endif
+ * ```
  *
  * @detect: #ifdef __has_warning */
 #ifndef TPP_HAVE_MACRO___has_warning
 #define TPP_HAVE_MACRO___has_warning ((TPP_HAVE_WARNINGS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_warning" */
 #endif /* !TPP_HAVE_MACRO___has_warning */
 
-/* Support for TPP's `__has_known_warning()`, which can be used to
- * check if a TPP warning is known: `#if __has_known_extension("-Wmultiline-string")`
+/* Support for TPP's `__has_known_warning()`, which
+ * can be used to check if a TPP warning is known:
+ * ```c
+ * #if __has_known_warning("-Wmultiline-string")
+ * ...
+ * #endif
+ * ```
  *
  * @detect: #ifdef __has_known_warning */
 #ifndef TPP_HAVE_MACRO___has_known_warning
 #define TPP_HAVE_MACRO___has_known_warning ((TPP_HAVE_WARNINGS && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_known_warning" */
 #endif /* !TPP_HAVE_MACRO___has_known_warning */
 
-/* Support for clang `__has_include()`, which can be used to
- * check if `#include` exists: `#if __has_include(<stdio.h>)`
+/* Support for clang `__has_include()`, which
+ * can be used to check if `#include` exists:
+ * ```c
+ * #if __has_include(<stdio.h>)
+ * #include <stdio.h>
+ * #endif
+ * ```
  *
  * @detect: #ifdef __has_include */
 #ifndef TPP_HAVE_MACRO___has_include
 #define TPP_HAVE_MACRO___has_include (((TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_IMPORT) && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_include" */
 #endif /* !TPP_HAVE_MACRO___has_include */
 
-/* Support for clang `__has_include_next()`, which can be used to
- * check if `#include_next` exists: `#if __has_include_next(<stdio.h>)`
+/* Support for clang `__has_include_next()`, which
+ * can be used to check if `#include_next` exists:
+ * ```c
+ * #if __has_include_next(<stdio.h>)
+ * #include_next <stdio.h>
+ * #endif
+ * ```
  *
  * @detect: #ifdef __has_include_next */
 #ifndef TPP_HAVE_MACRO___has_include_next
 #define TPP_HAVE_MACRO___has_include_next ((TPP_HAVE_CPP_INCLUDE_NEXT && TPP_HAVE_CPP_BUILTIN_MACROS) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__has_include_next" */
 #endif /* !TPP_HAVE_MACRO___has_include_next */
 
-/* Support for clang `__has_embed()`, which can be used to
- * check if `#embed` exists: `#if __has_embed("resource.dat" limit(10))`
+/* Support for clang `__has_embed()`, which can be
+ * used to check if `#embed` exists and/or is empty:
+ * ```c
+ * #if __has_embed("resource.dat" limit(10)) == __STDC_EMBED_FOUND__
+ * #embed "resource.dat" limit(10) // Resource exists and is non-empty
+ * #endif
+ * ```
+ *
+ * The different values that `__has_embed` can expand to are configured by:
+ * - `__STDC_EMBED_NOT_FOUND__` (usually `0`; `TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND`)
+ * - `__STDC_EMBED_FOUND__` (usually `1`; `TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND`)
+ * - `__STDC_EMBED_EMPTY__` (usually `2`; `TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY`)
  *
  * @detect: #ifdef __has_embed */
 #ifndef TPP_HAVE_MACRO___has_embed
@@ -5763,6 +5803,13 @@ TPP_DECL_END
  * ```
  *
  * Similar functionality can also be achieved using `TPP_HAVE_ESCAPE_IN_IDENTIFIERS`
+ *
+ * Note that unlike `TPP_HAVE_ESCAPE_IN_IDENTIFIERS`, `__TPP_IDENTIFIER`
+ * can only be used in places where macros are expanded:
+ * ```c
+ * #__TPP_IDENTIFIER("define") foo 42  // Won't work
+ * #\u0064efine foo 42                 // This will work
+ * ```
  *
  * @detect: #ifdef __TPP_IDENTIFIER */
 #ifndef TPP_HAVE_MACRO___TPP_IDENTIFIER
@@ -8588,19 +8635,31 @@ TPP_DECL_END
 
 #if TPP_HAVE_MACRO___has_embed
 /* String representations of what `__has_embed()`
- * should expand to when the file wasn't found */
+ * should expand to when the file wasn't found
+ *
+ * Also represents the expansion of the pre-defined macro `__STDC_EMBED_NOT_FOUND__`
+ *
+ * @detect: #ifdef __STDC_EMBED_NOT_FOUND__ */
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND
 #define TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND "0"
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND */
 
 /* String representations of what `__has_embed()` should
- * expand to when the file was found and is non-empty */
+ * expand to when the file was found and is non-empty
+ *
+ * Also represents the expansion of the pre-defined macro `__STDC_EMBED_FOUND__`
+ *
+ * @detect: #ifdef __STDC_EMBED_FOUND__ */
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND
 #define TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND "1"
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND */
 
 /* String representations of what `__has_embed()` should
- * expand to when the file was found, but is empty */
+ * expand to when the file was found, but is empty
+ *
+ * Also represents the expansion of the pre-defined macro `__STDC_EMBED_EMPTY__`
+ *
+ * @detect: #ifdef __STDC_EMBED_EMPTY__ */
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY
 #define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */

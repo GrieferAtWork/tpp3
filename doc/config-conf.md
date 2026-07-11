@@ -231,7 +231,7 @@ SCAN(FOO()BAR)    // Expands to [foo][ ][bar]  (or [foobar] when `TPP_HAVE_MAGIC
 The extra space (U+0020) character in `SCAN(FOO()BAR)` gets added
 during macro argument substitution in the call to `SCAN`, and is
 necessary because TPP is a text-based preprocessor. Trying to get
-L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L10096) will fail.
+L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L10155) will fail.
 
 <details><summary>Details</summary>
 
@@ -335,10 +335,10 @@ the filename, a number of additional "flags" can be specified:
 - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack. Like the
        `1` flag, this flag require [`TPP_HAVE_FILE_DUMMY`](config-core.md#tpp_have_file_dummy) to be enabled, otherwise it is
        ignored.
-- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14392) for the current text-file. When this flag is not
-       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14392) is instead cleared for the current text-file.
+- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14451) for the current text-file. When this flag is not
+       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14451) is instead cleared for the current text-file.
        This flag requires [`TPP_HAVE_FILE_SYSHDR`](config-core.md#tpp_have_file_syshdr) to be enabled, otherwise it is ignored.
-- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14395) flag. Similarly, this
+- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14454) flag. Similarly, this
        flag requires [`TPP_HAVE_FILE_EXTERN_C`](config-core.md#tpp_have_file_extern_c) to be enabled, otherwise it is ignored.
 
 <details><summary>Details</summary>
@@ -878,7 +878,7 @@ to check if a given keyword is a builtin identifier:
 #endif
 ```
 
-A keyword is considered to be an "identifier" if [`TPP_TOK_ISBUILTINKEYWORD()`](../src/tpp-amalgamation.h#L11423)
+A keyword is considered to be an "identifier" if [`TPP_TOK_ISBUILTINKEYWORD()`](../src/tpp-amalgamation.h#L11482)
 
 <details><summary>Details</summary>
 
@@ -961,8 +961,14 @@ Detect:
 
 ## TPP_HAVE_MACRO___has_extension
 
-Support for TPP's `__has_extension()`, which can be used to
-check if a TPP extension is known + enabled: `#if __has_extension("-ftrigraphs")`
+Support for TPP's `__has_extension()`, which can be
+used to check if a TPP extension is known + enabled:
+
+```c
+#if __has_extension("-ftrigraphs")
+...
+#endif
+```
 
 <details><summary>Details</summary>
 
@@ -989,8 +995,14 @@ Detect:
 
 ## TPP_HAVE_MACRO___has_known_extension
 
-Support for TPP's `__has_known_extension()`, which can be used to
-check if a TPP extension is known: `#if __has_known_extension("-ftrigraphs")`
+Support for TPP's `__has_known_extension()`, which
+can be used to check if a TPP extension is known:
+
+```c
+#if __has_known_extension("-ftrigraphs")
+...
+#endif
+```
 
 <details><summary>Details</summary>
 
@@ -1017,8 +1029,14 @@ Detect:
 
 ## TPP_HAVE_MACRO___has_warning
 
-Support for TPP's `__has_warning()`, which can be used to
-check if a TPP warning is known + enabled: `#if __has_warning("-Wmultiline-string")`
+Support for TPP's `__has_warning()`, which can be
+used to check if a TPP warning is known + enabled:
+
+```c
+#if __has_warning("-Wmultiline-string")
+...
+#endif
+```
 
 <details><summary>Details</summary>
 
@@ -1045,8 +1063,14 @@ Detect:
 
 ## TPP_HAVE_MACRO___has_known_warning
 
-Support for TPP's `__has_known_warning()`, which can be used to
-check if a TPP warning is known: `#if __has_known_extension("-Wmultiline-string")`
+Support for TPP's `__has_known_warning()`, which
+can be used to check if a TPP warning is known:
+
+```c
+#if __has_known_warning("-Wmultiline-string")
+...
+#endif
+```
 
 <details><summary>Details</summary>
 
@@ -1073,8 +1097,14 @@ Detect:
 
 ## TPP_HAVE_MACRO___has_include
 
-Support for clang `__has_include()`, which can be used to
-check if `#include` exists: `#if __has_include(<stdio.h>)`
+Support for clang `__has_include()`, which
+can be used to check if `#include` exists:
+
+```c
+#if __has_include(<stdio.h>)
+#include <stdio.h>
+#endif
+```
 
 <details><summary>Details</summary>
 
@@ -1101,8 +1131,14 @@ Detect:
 
 ## TPP_HAVE_MACRO___has_include_next
 
-Support for clang `__has_include_next()`, which can be used to
-check if `#include_next` exists: `#if __has_include_next(<stdio.h>)`
+Support for clang `__has_include_next()`, which
+can be used to check if `#include_next` exists:
+
+```c
+#if __has_include_next(<stdio.h>)
+#include_next <stdio.h>
+#endif
+```
 
 <details><summary>Details</summary>
 
@@ -1129,8 +1165,20 @@ Detect:
 
 ## TPP_HAVE_MACRO___has_embed
 
-Support for clang `__has_embed()`, which can be used to
-check if `#embed` exists: `#if __has_embed("resource.dat" limit(10))`
+Support for clang `__has_embed()`, which can be
+used to check if `#embed` exists and/or is empty:
+
+```c
+#if __has_embed("resource.dat" limit(10)) == __STDC_EMBED_FOUND__
+#embed "resource.dat" limit(10) // Resource exists and is non-empty
+#endif
+```
+
+The different values that `__has_embed` can expand to are configured by:
+
+- `__STDC_EMBED_NOT_FOUND__` (usually `0`; [`TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND`](config-value.md#tpp_config_valueof_stdc_embed_not_found))
+- `__STDC_EMBED_FOUND__` (usually `1`; [`TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND`](config-value.md#tpp_config_valueof_stdc_embed_found))
+- `__STDC_EMBED_EMPTY__` (usually `2`; [`TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY`](config-value.md#tpp_config_valueof_stdc_embed_empty))
 
 <details><summary>Details</summary>
 
@@ -1899,7 +1947,7 @@ __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TPP_TOK_SPACE) because d
 
 Based on the numbers returned by this macro, it becomes possible
 to detect the state of pretty much all configuration options that
-affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L18548)
+affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L18607)
 
 <details><summary>Details</summary>
 
@@ -1944,6 +1992,14 @@ __TPP_IDENTIFIER("a\0b")  // Compilers probably won't like this: NUL-character i
 ```
 
 Similar functionality can also be achieved using [`TPP_HAVE_ESCAPE_IN_IDENTIFIERS`](#tpp_have_escape_in_identifiers)
+
+Note that unlike [`TPP_HAVE_ESCAPE_IN_IDENTIFIERS`](#tpp_have_escape_in_identifiers), `__TPP_IDENTIFIER`
+can only be used in places where macros are expanded:
+
+```c
+#__TPP_IDENTIFIER("define") foo 42  // Won't work
+#\u0064efine foo 42                 // This will work
+```
 
 <details><summary>Details</summary>
 
@@ -2930,7 +2986,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_LF
 
-Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18745)
+Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18804)
 
 <details><summary>Details</summary>
 
@@ -2957,7 +3013,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_SPACE
 
-Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18745)
+Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18804)
 
 <details><summary>Details</summary>
 
@@ -2984,7 +3040,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_COMMENT
 
-Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18745)
+Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L18804)
 
 <details><summary>Details</summary>
 
@@ -3888,8 +3944,8 @@ Detect:
 ## TPP_HAVE_STRING_AUTO_CONCAT
 
 Enable support for automatic concatenation of adjacent string tokens.
-This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L19347) and its
-companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L19388), such that they will only yield
+This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L19406) and its
+companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L19447), such that they will only yield
 to the next token, but not check if that next token might be another
 string.
 
@@ -4255,8 +4311,8 @@ Extension name:
 
 ## TPP_HAVE_EXTERN_C_FOR_SYSHDR
 
-When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14392) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
-then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14395) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14392).
+When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14451) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
+then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14454) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14451).
 
 <details><summary>Details</summary>
 
