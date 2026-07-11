@@ -17,7 +17,7 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-.DELETE_ON_ERROR:
+#.DELETE_ON_ERROR: # Actually: don't turn this on: some of the files here aren't entirely generated, meaning we actually *don't* want to delete them on error
 
 CONFIG_MD := \
 	../doc/config.md \
@@ -34,7 +34,7 @@ CONFIG_MD := \
 all: tpp-amalgamation.h tpp-amalgamation.c $(CONFIG_MD)
 .PHONY: all
 
-$(CONFIG_MD): parts/config.h make-config-doc.dee
+$(CONFIG_MD): parts/config.h make-config-doc.dee tpp-amalgamation.h
 	deemon make-config-doc.dee
 
 tpp-amalgamation.c: tpp.h tpp.c make-amalgamation.dee $(wildcard parts/*.c) $(wildcard parts/*.h)

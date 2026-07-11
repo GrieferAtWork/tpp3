@@ -316,6 +316,48 @@ function getAvailableConfigsByName(): {string: Config} {
 }
 
 
+function _getAmalgamationHLines(): {string: int} {
+	local result: {string: int} = Dict();
+	local identPriority: {string: int} = Dict();
+	local lastLineEndsWithTPPCALL = false;
+	for (local lno, line: File.open("tpp-amalgamation.h").read().splitlines(false).enumerate()) {
+		local match = line.regfind(r"^\s*#\s*define\s+(\w+)\b"); /* Macro */
+		local prio = 0;
+		if (!match) {
+			match = line.regfind(r"\bTPPCALL\s+(\w+)\b"); /* Function decl */
+			prio = 1;
+		}
+		if (!match && lastLineEndsWithTPPCALL) {
+			match = line.regmatch(r"^\s*(\w+)\s*\("); /* Function decl */
+			prio = 1;
+		}
+		if (!match) {
+			match = line.regmatch(r"^\s*(\w+)\s*,\s*/[/*]"); /* Enum */
+			prio = 1;
+		}
+		if (!match) {
+			match = line.regmatch(r"^\s*(\w+)\s*="); /* Enum */
+			prio = 1;
+		}
+		if (match) {
+			local bounds = match[1];
+			local ident = line[bounds.first:bounds.last];
+			if (ident !in result || identPriority[ident] < prio) {
+				result[ident] = lno + 1;
+				identPriority[ident] = prio;
+			}
+		}
+		lastLineEndsWithTPPCALL = line.reendswith(r"\bTPPCALL");
+	}
+	return result;
+}
+
+function getAmalgamationHLines(): {string: int} {
+	static local result: {string: int} = _getAmalgamationHLines();
+	return result;
+}
+
+
 
 function formatDoc(currentFile: string, doc: string): string {
 	doc = doc
@@ -338,13 +380,28 @@ function formatDoc(currentFile: string, doc: string): string {
 			doc = doc[:tick] + newContent + doc[nextTick+1:];
 			nextTick += #newContent - #content;
 		} else {
-			/* TODO: When it's the name of a function/macro from the C API,
-			 *       then encode a link to `tpp-amalgamation.h#L<lineno>`
-			 *       here -- since that file is also generated, we can easily
-			 *       rig "Makefile" to re-generate config docs whenever the
-			 *       amalgamation is changed, and the online docs will be
-			 *       easier to navigate in terms of linking between feature
-			 *       documentation and associated source code. */
+			/* When it's the name of a function/macro from the C API,
+			 * then encode a link to `tpp-amalgamation.h#L<lineno>`
+			 * here -- since that file is also generated, we can easily
+			 * rig "Makefile" to re-generate config docs whenever the
+			 * amalgamation is changed, and the online docs will be
+			 * easier to navigate in terms of linking between feature
+			 * documentation and associated source code. */
+			local functionName = content;
+			local lparen = functionName.find("(");
+			if (lparen >= 0) {
+				local rparen = functionName.findmatch("(", ")", lparen + 1);
+				if (rparen == #functionName - 1)
+					functionName = functionName[:lparen].strip();
+			}
+			if (functionName.issymbol()) {
+				local lineNumber = getAmalgamationHLines().get(functionName);
+				if (lineNumber !is none) {
+					local newContent = f'[`{content}`](../src/tpp-amalgamation.h#L{lineNumber})';
+					doc = doc[:tick] + newContent + doc[nextTick+1:];
+					nextTick += #newContent - #content;
+				}
+			}
 		}
 		i = nextTick + 1;
 	}

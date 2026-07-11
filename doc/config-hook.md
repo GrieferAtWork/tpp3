@@ -65,7 +65,7 @@ The following hooks exist and can each be overwritten individually:
 TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
 ```
 
-Called by `tpp_lexer_warnf()` to print warning messages
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L19529) to print warning messages
 
 <details><summary>Details</summary>
 
@@ -259,7 +259,7 @@ tpp_errno _tpp_disabled_hook_ident_sccs(tpp_lexer *tpp_restrict self, tpp_token_
 tpp_errno TPP_HOOK_SYSTEM_INCLUDE_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
 ```
 
-Extra callback invoked by `tpp_lexer_foreach_include_path()` at diffrent
+Extra callback invoked by [`tpp_lexer_foreach_include_path()`](../src/tpp-amalgamation.h#L18877) at diffrent
 points during the process of enumerating include paths. This callback is
 then allowed to enumerate some additional include paths that may exist, but
 for one reason or another (mainly: speed) aren't known to TPP via its system
@@ -289,7 +289,7 @@ tpp_errno _tpp_disabled_hook_system_include_path(tpp_lexer *tpp_restrict self, t
 tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
 ```
 
-Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
+Called by [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L19289) when an unknown `\`-escape sequence is encountered
 This hook can be used to define additional, user-defined escape sequences, or any other
 arbitrary behavior to-be performed when specific escape-sequences are found.
 On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
@@ -320,9 +320,9 @@ tpp_ssize _tpp_disabled_hook_unknown_string_escape(tpp_lexer *tpp_restrict self,
 tpp_errno TPP_HOOK_RAISE_LEXERROR(tpp_lexer *tpp_restrict self);
 ```
 
-Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L19529) just before it's about to return [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L9094)
 This hook can be used to do additional state changes that may be necessary by the
-hosting application in order to handle the resulting `TPP_ELEXERROR`
+hosting application in order to handle the resulting [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L9094)
 
 <details><summary>Details</summary>
 
