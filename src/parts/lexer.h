@@ -784,15 +784,6 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_UNICODE */
 
 
-/* Helpers to reset certain parts of a lexer */
-#if TPP_HAVE_USER_KEYWORDS
-	tpp_keywords TPP_INTERNAL(tl_kwds);
-#endif /* TPP_HAVE_USER_KEYWORDS */
-#if TPP_HAVE_INCLUDE_PATH
-	tpp_include_paths TPP_INTERNAL(tl_include_paths);
-#endif /* TPP_HAVE_INCLUDE_PATH */
-
-
 /* Check if the current file can be popped. */
 #define tpp_lexer_canpopfile(self) \
 	(tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev) != NULL)

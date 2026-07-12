@@ -1947,7 +1947,7 @@ __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TPP_TOK_SPACE) because d
 
 Based on the numbers returned by this macro, it becomes possible
 to detect the state of pretty much all configuration options that
-affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L18864)
+affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L18855)
 
 <details><summary>Details</summary>
 
@@ -2986,7 +2986,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_LF
 
-Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19061)
+Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19052)
 
 <details><summary>Details</summary>
 
@@ -3013,7 +3013,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_SPACE
 
-Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19061)
+Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19052)
 
 <details><summary>Details</summary>
 
@@ -3040,7 +3040,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_COMMENT
 
-Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19061)
+Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19052)
 
 <details><summary>Details</summary>
 
@@ -3944,8 +3944,8 @@ Detect:
 ## TPP_HAVE_STRING_AUTO_CONCAT
 
 Enable support for automatic concatenation of adjacent string tokens.
-This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L19663) and its
-companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L19704), such that they will only yield
+This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L19654) and its
+companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L19695), such that they will only yield
 to the next token, but not check if that next token might be another
 string.
 

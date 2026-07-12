@@ -28,7 +28,7 @@ Default:
 
 ## TPP_CONFIG_CLI_FILENAME
 
-Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L18706)
+Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L18697)
 
 <details><summary>Details</summary>
 
