@@ -399,7 +399,6 @@ _tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
                          ) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, flags, encoding);
-	tpp_lexer_init(self);
 }
 
 
@@ -422,7 +421,6 @@ tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	 * be allocated by the lexer) */
 	ioflags |= TPP_FILE_FLAGS_NOKWD;
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
-	tpp_lexer_init(self);
 }
 #endif /* TPP_HAVE_LEXER_INIT_IO */
 
@@ -441,7 +439,6 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
                         tpp_size filename_maxlen) {
 	tpp_errno error;
 	tpp_lexer_openfile_result ofr;
-	tpp_lexer_init(self);
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
 	if (TPP_ISERR(error)) {
 		tpp_lexer_fini(self);
