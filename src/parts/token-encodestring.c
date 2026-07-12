@@ -197,13 +197,9 @@ tpp_token_is_keyword_like(tpp_token_id tok) {
 #if TPP_HAVE_UNICODE
 	case TPP_TOK_UNICHAR:
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TPP_TOK_INT
-	case TPP_TOK_INT:
-#endif /* TPP_HAVE_TPP_TOK_INT */
-#if TPP_HAVE_TPP_TOK_FLOAT
-	case TPP_TOK_FLOAT:
-#endif /* TPP_HAVE_TPP_TOK_FLOAT */
-#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+	TPP_CASE_TPP_TOK_INT
+	TPP_CASE_TPP_TOK_FLOAT
+#if !TPP_HAVE_TPP_TOK_C_INT && !TPP_HAVE_TPP_TOK_C_FLOAT
 	case TPP_TOK_0:
 	case TPP_TOK_1:
 	case TPP_TOK_2:
@@ -214,7 +210,7 @@ tpp_token_is_keyword_like(tpp_token_id tok) {
 	case TPP_TOK_7:
 	case TPP_TOK_8:
 	case TPP_TOK_9:
-#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#endif /* !TPP_HAVE_TPP_TOK_C_INT && !TPP_HAVE_TPP_TOK_C_FLOAT */
 		return true;
 
 	default: break;

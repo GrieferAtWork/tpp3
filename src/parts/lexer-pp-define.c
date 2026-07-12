@@ -501,7 +501,7 @@ tpp_macro_builder_compile_traditional_impl(tpp_macro_builder *tpp_restrict build
 		}	continue; /* Not a keyword */
 #endif /* TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE */
 
-#if TPP_HAVE_TPP_TOK_C_STRINGLIKE
+#if TPP_HAVE_TPP_TOK_STRINGLIKE
 		/* Strings must not actually be parsed as whole tokens!
 		 *
 		 * Since this can (easily) cause warnings to be emitted
@@ -511,11 +511,11 @@ tpp_macro_builder_compile_traditional_impl(tpp_macro_builder *tpp_restrict build
 		 * This is needed for stuff like:
 		 * >> #define str(x) "x"
 		 */
-		TPP_CASE_TPP_TOK_C_STRING {
+		TPP_CASE_TPP_TOK_STRING {
 			body_iter = token->tt_start + 1;
 			continue;
 		}
-#endif /* TPP_HAVE_TPP_TOK_C_STRINGLIKE */
+#endif /* TPP_HAVE_TPP_TOK_STRINGLIKE */
 
 		default:
 			/* Shouldn't really be able to produce errors, but better be safe. */

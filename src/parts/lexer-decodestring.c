@@ -949,7 +949,7 @@ again_yield:
 		tok = tpp_lexer_yield_blocking(self);
 		switch (tok) {
 
-		TPP_CASE_TPP_TOK_C_STRING
+		TPP_CASE_TPP_TOK_STRING
 			goto again;
 
 		case TPP_TOK_SPACE:
@@ -1226,7 +1226,7 @@ again_yield_after_empty:
 		tok = tpp_lexer_yield_blocking(self);
 		switch (tok) {
 
-		TPP_CASE_TPP_TOK_C_STRING
+		TPP_CASE_TPP_TOK_STRING
 			goto again;
 
 		case TPP_TOK_SPACE:
@@ -1262,7 +1262,7 @@ again_yield_after_single:
 		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 		switch (tok) {
 
-		TPP_CASE_TPP_TOK_C_STRING {
+		TPP_CASE_TPP_TOK_STRING {
 			how = tpp_lexer_decodestring_is_single_chunk_at(self, pos tpp_lexer_decodestring_single_chunk_flags__arg);
 			if (how == TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY)
 				goto again_yield_after_single;
@@ -1300,7 +1300,7 @@ again_yield_after_eof:
 			tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 			switch (tok) {
 
-			TPP_CASE_TPP_TOK_C_STRING
+			TPP_CASE_TPP_TOK_STRING
 				how = tpp_lexer_decodestring_is_single_chunk_at(self, pos tpp_lexer_decodestring_single_chunk_flags__arg);
 				if (how == TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY)
 					goto again_yield_after_eof;
@@ -1352,7 +1352,7 @@ do_multi_chunk_string_after_eof:
 again_yield_after_eof_decoded:
 				tok = tpp_lexer_yieldraw_blocking(self);
 				switch (tok) {
-				TPP_CASE_TPP_TOK_C_STRING
+				TPP_CASE_TPP_TOK_STRING
 					/* Should be an empty string! */
 					tpp_assert(tpp_lexer_decodestring_is_single_chunk(self tpp_lexer_decodestring_single_chunk_flags__arg) ==
 					           TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_EMPTY);

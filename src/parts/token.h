@@ -183,7 +183,7 @@ typedef enum tpp_token_id {
 	TPP_TOK_PIPE      = '|',
 	TPP_TOK_RBRACE    = '}',
 	TPP_TOK_TILDE     = '~',
-#if !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT
+#if !TPP_HAVE_TPP_TOK_C_INT && !TPP_HAVE_TPP_TOK_C_FLOAT
 	TPP_TOK_0         = '0',
 	TPP_TOK_1         = '1',
 	TPP_TOK_2         = '2',
@@ -194,19 +194,31 @@ typedef enum tpp_token_id {
 	TPP_TOK_7         = '7',
 	TPP_TOK_8         = '8',
 	TPP_TOK_9         = '9',
-#endif /* !TPP_HAVE_TPP_TOK_INT && !TPP_HAVE_TPP_TOK_FLOAT */
+#endif /* !TPP_HAVE_TPP_TOK_C_INT && !TPP_HAVE_TPP_TOK_C_FLOAT */
 
 	/* Double(or more)-character tokens. */
 	TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN) = 255, /* KEEP THIS THE FIRST MULTICHAR TOKEN! */
 #if TPP_HAVE_UNICODE
 	TPP_TOK_UNICHAR, /* "<unicode character>" Misc unicode character that could not be classified */
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TPP_TOK_INT
-	TPP_TOK_INT, /* "<integer>" 42 */
-#endif /* TPP_HAVE_TPP_TOK_INT */
-#if TPP_HAVE_TPP_TOK_FLOAT
-	TPP_TOK_FLOAT, /* "<float>" 42.0 */
-#endif /* TPP_HAVE_TPP_TOK_FLOAT */
+
+#if TPP_HAVE_TPP_TOK_C_INT
+	TPP_TOK_C_INT, /* "<integer>" 42 */
+#define TPP_CASE_TPP_TOK_INT case TPP_TOK_C_INT:
+#define TPP_TOK_ISINT(x)     ((x) == TPP_TOK_C_INT)
+#else /* TPP_HAVE_TPP_TOK_C_INT */
+#define TPP_CASE_TPP_TOK_INT /* nothing */
+#define TPP_TOK_ISINT(x)     0
+#endif /* !TPP_HAVE_TPP_TOK_C_INT */
+
+#if TPP_HAVE_TPP_TOK_C_FLOAT
+	TPP_TOK_C_FLOAT, /* "<float>" 42.0 */
+#define TPP_CASE_TPP_TOK_FLOAT case TPP_TOK_C_FLOAT:
+#define TPP_TOK_ISFLOAT(x)     ((x) == TPP_TOK_C_FLOAT)
+#else /* TPP_HAVE_TPP_TOK_C_FLOAT */
+#define TPP_CASE_TPP_TOK_FLOAT /* nothing */
+#define TPP_TOK_ISFLOAT(x)     0
+#endif /* !TPP_HAVE_TPP_TOK_C_FLOAT */
 
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE
 	TPP_TOK_COMMENTLIKE_MIN,
@@ -301,9 +313,9 @@ typedef enum tpp_token_id {
 #endif /* !TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE */
 
 
-#if TPP_HAVE_TPP_TOK_C_STRINGLIKE
-	TPP_TOK_C_STRINGLIKE_MIN,
-	TPP_INTERNAL(_TPP_TOK_C_STRINGLIKE_MIN) = TPP_TOK_C_STRINGLIKE_MIN - 1,
+#if TPP_HAVE_TPP_TOK_STRINGLIKE
+	TPP_TOK_STRINGLIKE_MIN,
+	TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MIN) = TPP_TOK_STRINGLIKE_MIN - 1,
 #if TPP_HAVE_TPP_TOK_C_STRING
 	TPP_TOK_C_STRING, /* "<string>" "foo" */
 #define _TPP_CASE_TPP_TOK_C_STRING case TPP_TOK_C_STRING:
@@ -380,8 +392,8 @@ typedef enum tpp_token_id {
 #else /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
 #define _TPP_CASE_TPP_TOK_BLOCK_STRING_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
-	TPP_TOK_C_CHARLIKE_MIN,
-	TPP_INTERNAL(_TPP_TOK_C_CHARLIKE_MIN) = TPP_TOK_C_CHARLIKE_MIN - 1,
+	TPP_TOK_CHARLIKE_MIN,
+	TPP_INTERNAL(_TPP_TOK_C_CHARLIKE_MIN) = TPP_TOK_CHARLIKE_MIN - 1,
 #if TPP_HAVE_TPP_TOK_C_CHAR
 	TPP_TOK_C_CHAR, /* "<char>" 'f' */
 #define _TPP_CASE_TPP_TOK_C_CHAR case TPP_TOK_C_CHAR:
@@ -459,17 +471,17 @@ typedef enum tpp_token_id {
 #define _TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL /* nothing */
 #endif /* !TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
 
-	TPP_INTERNAL(_TPP_TOK_C_STRINGLIKE_MAX),
-	TPP_TOK_C_STRINGLIKE_MAX = TPP_INTERNAL(_TPP_TOK_C_STRINGLIKE_MAX) - 1,
-#if TPP_HAVE_TPP_TOK_C_STRINGLIKE_SQUOTE
+	TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MAX),
+	TPP_TOK_STRINGLIKE_MAX = TPP_INTERNAL(_TPP_TOK_STRINGLIKE_MAX) - 1,
+#if TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE
 #define TPP_TOK_ISSTRING_SQUOTE(id)            \
-	((int)(id) >= (int)TPP_TOK_C_CHARLIKE_MIN && \
-	 (int)(id) <= (int)TPP_TOK_C_STRINGLIKE_MAX)
-#else /* TPP_HAVE_TPP_TOK_C_STRINGLIKE_SQUOTE */
+	((int)(id) >= (int)TPP_TOK_CHARLIKE_MIN && \
+	 (int)(id) <= (int)TPP_TOK_STRINGLIKE_MAX)
+#else /* TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE */
 #define TPP_TOK_ISSTRING_SQUOTE(id) 0
-#endif /* !TPP_HAVE_TPP_TOK_C_STRINGLIKE_SQUOTE */
-#define TPP_CASE_TPP_TOK_C_STRING_SQUOTE           \
-	_TPP_CASE_TPP_TOK_C_CHAR                       \
+#endif /* !TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE */
+#define TPP_CASE_TPP_TOK_STRING_SQUOTE           \
+	_TPP_CASE_TPP_TOK_C_CHAR                     \
 	_TPP_CASE_TPP_TOK_CXX_RAW_CHAR_LITERAL       \
 	_TPP_CASE_TPP_TOK_CXX_WIDE_CHAR_LITERAL      \
 	_TPP_CASE_TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL  \
@@ -482,15 +494,15 @@ typedef enum tpp_token_id {
 	_TPP_CASE_TPP_TOK_RAW_CHAR_LITERAL           \
 	_TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL
 
-#if TPP_HAVE_TPP_TOK_C_STRINGLIKE_DQUOTE
+#if TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE
 #define TPP_TOK_ISSTRING_DQUOTE(id)              \
-	((int)(id) >= (int)TPP_TOK_C_STRINGLIKE_MIN && \
-	 (int)(id) < (int)TPP_TOK_C_CHARLIKE_MIN)
-#else /* TPP_HAVE_TPP_TOK_C_STRINGLIKE_DQUOTE */
+	((int)(id) >= (int)TPP_TOK_STRINGLIKE_MIN && \
+	 (int)(id) < (int)TPP_TOK_CHARLIKE_MIN)
+#else /* TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE */
 #define TPP_TOK_ISSTRING_DQUOTE(id) 0
-#endif /* !TPP_HAVE_TPP_TOK_C_STRINGLIKE_DQUOTE */
-#define TPP_CASE_TPP_TOK_C_STRING_DQUOTE             \
-	_TPP_CASE_TPP_TOK_C_STRING                       \
+#endif /* !TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE */
+#define TPP_CASE_TPP_TOK_STRING_DQUOTE             \
+	_TPP_CASE_TPP_TOK_C_STRING                     \
 	_TPP_CASE_TPP_TOK_CXX_RAW_STRING_LITERAL       \
 	_TPP_CASE_TPP_TOK_CXX_WIDE_STRING_LITERAL      \
 	_TPP_CASE_TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL  \
@@ -504,19 +516,19 @@ typedef enum tpp_token_id {
 	_TPP_CASE_TPP_TOK_BLOCK_STRING_LITERAL
 
 #define TPP_TOK_ISSTRING(id)                     \
-	((int)(id) >= (int)TPP_TOK_C_STRINGLIKE_MIN && \
-	 (int)(id) <= (int)TPP_TOK_C_STRINGLIKE_MAX)
-#define TPP_CASE_TPP_TOK_C_STRING    \
-	TPP_CASE_TPP_TOK_C_STRING_DQUOTE \
-	TPP_CASE_TPP_TOK_C_STRING_SQUOTE
-#else /* TPP_HAVE_TPP_TOK_C_STRINGLIKE */
+	((int)(id) >= (int)TPP_TOK_STRINGLIKE_MIN && \
+	 (int)(id) <= (int)TPP_TOK_STRINGLIKE_MAX)
+#define TPP_CASE_TPP_TOK_STRING    \
+	TPP_CASE_TPP_TOK_STRING_DQUOTE \
+	TPP_CASE_TPP_TOK_STRING_SQUOTE
+#else /* TPP_HAVE_TPP_TOK_STRINGLIKE */
 #define TPP_TOK_ISSTRING(id)           0
 #define TPP_TOK_ISSTRING_DQUOTE(id)    0
 #define TPP_TOK_ISSTRING_SQUOTE(id)    0
-#define TPP_CASE_TPP_TOK_C_STRING        /* nothing */
-#define TPP_CASE_TPP_TOK_C_STRING_DQUOTE /* nothing */
-#define TPP_CASE_TPP_TOK_C_STRING_SQUOTE /* nothing */
-#endif /* !TPP_HAVE_TPP_TOK_C_STRINGLIKE */
+#define TPP_CASE_TPP_TOK_STRING        /* nothing */
+#define TPP_CASE_TPP_TOK_STRING_DQUOTE /* nothing */
+#define TPP_CASE_TPP_TOK_STRING_SQUOTE /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_STRINGLIKE */
 
 	/* Sort multi-char tokens by their first character (to make it possible to
 	 * define "tok >= X && tok <= Y"-style checks for multi-char-starts-with-z)

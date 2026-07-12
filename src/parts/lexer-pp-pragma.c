@@ -366,7 +366,7 @@ again_parse_string:
 		break;
 #endif /* TPP_HAVE_EXTENSIONS_PUSH_POP */
 
-	TPP_CASE_TPP_TOK_C_STRING
+	TPP_CASE_TPP_TOK_STRING
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_extension_cb,
 		                                 self, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 		break;
@@ -558,7 +558,7 @@ again_yield_and_handle:
 	{
 		tpp_intmax mode;
 		bool negative;
-	case TPP_TOK_INT:
+	TPP_CASE_TPP_TOK_INT
 		negative = false;
 		if (0) {
 	case '-':
@@ -568,10 +568,10 @@ again_yield_and_handle:
 			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
-			tok = tpp_lexer_require(self, TPP_TOK_INT);
+			tok = tpp_lexer_require_int(self);
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
-			if (tok != TPP_TOK_INT)
+			if (!TPP_TOK_ISINT(tok))
 				break;
 		}
 		error = tpp_lexer_decodeint(self, &mode);
@@ -631,7 +631,7 @@ again_handle_set_warning_state:
 			goto again_handle_set_warning_state;
 
 #if TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS
-		case TPP_TOK_INT: {
+		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax warning_number;
 			tpp_warning_id warning_id;
 			error = tpp_lexer_decodeint(self, &warning_number);
@@ -665,7 +665,7 @@ again_handle_set_warning_state:
 		}	break;
 #endif /* TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS */
 
-		TPP_CASE_TPP_TOK_C_STRING {
+		TPP_CASE_TPP_TOK_STRING {
 			struct tpp_lexer_pragma_warning_state_data data;
 			data.tlpwsd_lexer = self;
 			data.tlpwsd_state = new_state;
@@ -691,14 +691,14 @@ again_handle_set_warning_state:
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 #if TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS
-		if (tok == TPP_TOK_INT)
+		if (TPP_TOK_ISINT(tok))
 			goto again_handle_set_warning_state;
 #endif /* TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS */
 		if (TPP_TOK_ISSTRING(tok))
 			goto again_handle_set_warning_state;
 	}	break;
 
-	TPP_CASE_TPP_TOK_C_STRING
+	TPP_CASE_TPP_TOK_STRING
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_pragma_warning_raw_cb, self,
 		                                 TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 		tok = TPP_TOK_OFERR_OR_EOF(error);
@@ -1425,10 +1425,10 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 		return TPP_TOK_ASERR(tok);
 
 	/* Next token must be an integer */
-	tok = tpp_lexer_require(self, TPP_TOK_INT);
+	tok = tpp_lexer_require_int(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
-	if (tok == TPP_TOK_INT) {
+	if (TPP_TOK_ISINT(tok)) {
 		error = tpp_lexer_decodeint(self, &value);
 		if (TPP_ISERR(error))
 			return error;
@@ -1669,7 +1669,7 @@ skip_colon_and_andle_for_pathlist:
 			break;
 		}
 		if (TPP_TOK_ISSTRING(tok)) {
-	TPP_CASE_TPP_TOK_C_STRING
+	TPP_CASE_TPP_TOK_STRING
 			error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_TPP_include_path_cb,
 			                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 		} else {

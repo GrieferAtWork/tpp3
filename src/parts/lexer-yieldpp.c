@@ -2114,7 +2114,7 @@ err_tok_rollback:
 		tpp_intmax user_flag;
 		while (TPP_TOK_ISSPACE_OR_COMMENT(tok))
 			tok = tpp_lexer_yield_blocking(self);
-		if (tok != TPP_TOK_INT)
+		if (!TPP_TOK_ISINT(tok))
 			break;
 		error = tpp_lexer_decodeint(self, &user_flag);
 		if (TPP_ISERR(error)) {
@@ -2241,7 +2241,7 @@ tpp_lexer_handle_line_directive(tpp_lexer *tpp_restrict self,
 		return tok;
 
 #if TPP_HAVE_TPP_TOK_INT
-	if (tok == TPP_TOK_INT) {
+	if (TPP_TOK_ISINT(tok)) {
 		/* Decode line number */
 		error = tpp_lexer_decodeint(self, &new_linenumber);
 		if (TPP_ISERR(error))
@@ -2485,7 +2485,7 @@ again_yield_directive_iter:
 
 /************************************************************************/
 #if TPP_HAVE_CPP_DIGIT_LINE
-	case TPP_TOK_INT:
+	TPP_CASE_TPP_TOK_INT
 #if TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIGIT_LINE)
 		if (!tpp_lexer_has(self, CPP_DIGIT_LINE))
 			goto handle_unknown_directive;

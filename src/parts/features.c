@@ -404,12 +404,12 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK)
 		/* .tff_THOUSANDS_SEPARATOR_SINGLETICK                                = */ TPP_CONF_DEFAULT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_INT)
-		/* .tff_TPP_TOK_INT                                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_INT),
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_INT) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_FLOAT)
-		/* .tff_TPP_TOK_FLOAT                                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_FLOAT),
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_FLOAT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_INT)
+		/* .tff_TPP_TOK_C_INT                                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_C_INT),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_INT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_FLOAT)
+		/* .tff_TPP_TOK_C_FLOAT                                               = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_C_FLOAT),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_FLOAT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_SMART_FLOAT_TOKENS)
 		/* .tff_SMART_FLOAT_TOKENS                                            = */ TPP_CONF_DEFAULT(TPP_HAVE_SMART_FLOAT_TOKENS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_SMART_FLOAT_TOKENS) */

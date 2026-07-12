@@ -33,7 +33,7 @@ Default:
 
 Default configuration for [`TPP_HAVE_TPP_TOK_LF`](config-conf.md#tpp_have_tpp_tok_lf), [`TPP_HAVE_TPP_TOK_SPACE`](config-conf.md#tpp_have_tpp_tok_space),
 [`TPP_HAVE_TPP_TOK_COMMENT`](config-conf.md#tpp_have_tpp_tok_comment), indicating if tokens that are normally through
-of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19391)
+of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19417)
 
 <details><summary>Details</summary>
 
@@ -61,8 +61,8 @@ Default:
 
 Default configuration for:
 
-- [`TPP_HAVE_TPP_TOK_INT`](config-conf.md#tpp_have_tpp_tok_int)
-- [`TPP_HAVE_TPP_TOK_FLOAT`](config-conf.md#tpp_have_tpp_tok_float)
+- [`TPP_HAVE_TPP_TOK_C_INT`](config-conf.md#tpp_have_tpp_tok_c_int)
+- [`TPP_HAVE_TPP_TOK_C_FLOAT`](config-conf.md#tpp_have_tpp_tok_c_float)
 - [`TPP_HAVE_TPP_TOK_C_CHAR`](config-conf.md#tpp_have_tpp_tok_c_char)
 - [`TPP_HAVE_TPP_TOK_C_STRING`](config-conf.md#tpp_have_tpp_tok_c_string)
 

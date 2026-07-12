@@ -1596,6 +1596,8 @@ tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok);
  * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok);
+
+#define tpp_lexer_require_int(self) tpp_lexer_require(self, TPP_TOK_C_INT) /* TODO: Must solve differently */
 #endif /* TPP_HAVE_LEXER_SKIP */
 
 
@@ -1820,7 +1822,7 @@ typedef enum tpp_integer_suffix_kind {
 #endif /* TPP_HAVE_LEXER_DECODEINT_SUFFIX */
 
 
-/* Decode the current token (which should be TPP_TOK_INT) into an integer
+/* Decode the current token (which should be TPP_TOK_ISINT) into an integer
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_EWARNPRINT: Error while printing a warning */
@@ -1838,7 +1840,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 #endif /* !TPP_HAVE_LEXER_DECODEINT_SUFFIX */
 #endif /* TPP_HAVE_LEXER_DECODEINT */
 
-/* Decode the current token (which should be TPP_TOK_INT) into an integer
+/* Decode the current token (which should be TPP_TOK_ISINT) into an integer
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_ENOMEM:     Out of memory
@@ -1891,7 +1893,7 @@ typedef enum tpp_float_suffix_kind {
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
 
 
-/* Decode the current token (which should be TPP_TOK_FLOAT) into a float
+/* Decode the current token (which should be TPP_TOK_ISFLOAT) into a float
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_EWARNPRINT: Error while printing a warning */
@@ -1909,7 +1911,7 @@ tpp_lexer_decodefloat(tpp_lexer *tpp_restrict self,
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT */
 
-/* Decode the current token (which should be TPP_TOK_FLOAT) into a float
+/* Decode the current token (which should be TPP_TOK_ISFLOAT) into a float
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_ENOMEM:     Out of memory

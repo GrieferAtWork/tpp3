@@ -1412,16 +1412,16 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   Additionally, you may take a look at `tpp_fs_normalize()'
  */
 
-/* TOK_CHAR, TPP_TOK_C_CHAR, TOK_STRING, TPP_TOK_C_STRING:
+/* TOK_CHAR, TPP_TOK_CHAR, TOK_STRING, TPP_TOK_STRING:
  * - TPP3 has individual tokens for every type of string, whereas
  *   TPP2 used to have only 2 token types describing string and
  *   char tokens
  * - Because of this, you should migrate code as follows:
  *   ```diff
- *   - case TPP_TOK_C_CHAR:
- *   - case TPP_TOK_C_STRING:
- *   +     if (tok == TPP_TOK_C_CHAR || tok == TPP_TOK_C_STRING) {
- *   + TPP_CASE_TPP_TOK_C_STRING
+ *   - case TPP_TOK_CHAR:
+ *   - case TPP_TOK_STRING:
+ *   -     if (tok == TPP_TOK_CHAR || tok == TPP_TOK_STRING) {
+ *   + TPP_CASE_TPP_TOK_STRING
  *   +     if (TPP_TOK_ISSTRING(tok)) {
  *   ```
  */
@@ -2317,8 +2317,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TPP_TOK_SLASH_COMMENT                   0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT             0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TPP_TOK_DOLLAR                          TPP_CONF_FEAT0 /* "$" Configurable, default=false (TPP2 used to configure this via "TPPLEXER_TOKEN_DOLLAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOLLAR)") */
-#define TPP_HAVE_TPP_TOK_INT                             1              /* ... */
-#define TPP_HAVE_TPP_TOK_FLOAT                           1              /* ... */
+#define TPP_HAVE_TPP_TOK_C_INT                           1              /* ... */
+#define TPP_HAVE_TPP_TOK_C_FLOAT                         1              /* ... */
 #define TPP_HAVE_TPP_TOK_C_STRING                        1              /* TPP2 only supported C character/string literals */
 #define TPP_HAVE_TPP_TOK_C_CHAR                          1              /* *ditto* */
 #define TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL          0              /* *ditto* */
@@ -2723,10 +2723,10 @@ function alias(tpp2Name, tpp3Name, onlyIfDefined = true, condition: string = "")
 // Token IDs
 alias("TOK_EOF", "TPP_TOK_EOF", onlyIfDefined: false);
 
-alias("TOK_CHAR",      "TPP_TOK_C_CHAR",      condition: "TPP_HAVE_TPP_TOK_C_CHAR");
-alias("TOK_STRING",    "TPP_TOK_C_STRING",    condition: "TPP_HAVE_TPP_TOK_C_STRING");
-alias("TOK_INT",       "TPP_TOK_INT",       condition: "TPP_HAVE_TPP_TOK_INT");
-alias("TOK_FLOAT",     "TPP_TOK_FLOAT",     condition: "TPP_HAVE_TPP_TOK_FLOAT");
+alias("TOK_CHAR",      "TPP_TOK_C_CHAR",    condition: "TPP_HAVE_TPP_TOK_C_CHAR");
+alias("TOK_STRING",    "TPP_TOK_C_STRING",  condition: "TPP_HAVE_TPP_TOK_C_STRING");
+alias("TOK_INT",       "TPP_TOK_C_INT",     condition: "TPP_HAVE_TPP_TOK_C_INT");
+alias("TOK_FLOAT",     "TPP_TOK_C_FLOAT",   condition: "TPP_HAVE_TPP_TOK_C_FLOAT");
 alias("TOK_LF",        "TPP_TOK_LF",        onlyIfDefined: false);
 alias("TOK_SPACE",     "TPP_TOK_SPACE",     onlyIfDefined: false);
 alias("TOK_ADD",       "TPP_TOK_PLUS",      onlyIfDefined: false);
@@ -3108,12 +3108,18 @@ alias("W_INVALID_FLOAT_SUFFIX", "TPP_HAVE_TPP_W_INVALID_FLOAT");
 #define TOK_STRING TPP_TOK_C_STRING
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_HAVE_TPP_TOK_C_STRING */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_INT
-#define TOK_INT TPP_TOK_INT
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_INT */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_FLOAT
-#define TOK_FLOAT TPP_TOK_FLOAT
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_FLOAT */
+#if TPP_HAVE_TPP_TOK_C_INT
+#define TPP_TOK_INT TPP_TOK_C_INT
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define TOK_INT TPP_TOK_C_INT
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_HAVE_TPP_TOK_C_INT */
+#if TPP_HAVE_TPP_TOK_C_FLOAT
+#define TPP_TOK_FLOAT TPP_TOK_C_FLOAT
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define TOK_FLOAT TPP_TOK_C_FLOAT
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_HAVE_TPP_TOK_C_FLOAT */
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_LF TPP_TOK_LF
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
@@ -4529,6 +4535,12 @@ alias("W_INVALID_FLOAT_SUFFIX", "TPP_HAVE_TPP_W_INVALID_FLOAT");
 #define W_INTEGRAL_OVERFLOW TPP_W_INVALID_INTEGER
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_W_INVALID_INTEGER */
+#ifdef TPP_W_INVALID_INTEGER
+#define TPP_W_INTEGRAL_CLAMPED TPP_W_INVALID_INTEGER
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_INTEGRAL_CLAMPED TPP_W_INVALID_INTEGER
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_INVALID_INTEGER */
 #ifdef TPP_W_UNEXPECTED_TOKEN
 #define TPP_W_EXPECTED_ELSE_IN_EXPRESSION TPP_W_UNEXPECTED_TOKEN
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -4640,6 +4652,12 @@ alias("W_INVALID_FLOAT_SUFFIX", "TPP_HAVE_TPP_W_INVALID_FLOAT");
 #define W_CANT_POP_INCLUDE_PATH TPP_W_CANNOT_POP_INCLUDE_PATHS
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_W_CANNOT_POP_INCLUDE_PATHS */
+#ifdef TPP_HAVE_TPP_W_INVALID_FLOAT
+#define TPP_W_INVALID_FLOAT_SUFFIX TPP_HAVE_TPP_W_INVALID_FLOAT
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_INVALID_FLOAT_SUFFIX TPP_HAVE_TPP_W_INVALID_FLOAT
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_HAVE_TPP_W_INVALID_FLOAT */
 /*[[[end]]]*/
 
 // No-op directives warnings...

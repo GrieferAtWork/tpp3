@@ -1580,21 +1580,21 @@ done:
 #endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 
 
-#if TPP_HAVE_TPP_TOK_FLOAT
-/* Seek the end of a TPP_TOK_FLOAT (or TPP_TOK_INT) token
- * @param: result:               Token mode: TPP_TOK_FLOAT if a "." was already encountered;
- *                               else TPP_TOK_INT (or TPP_TOK_EOF if int-tokens are disabled).
- * @return: TPP_TOK_FLOAT:       Success; this is a float token
- * @return: TPP_TOK_INT:         Nothing found that would qualify as a float, so it's an int
+#if TPP_HAVE_TPP_TOK_C_FLOAT
+/* Seek the end of a TPP_TOK_C_FLOAT (or TPP_TOK_C_INT) token
+ * @param: result:               Token mode: TPP_TOK_C_FLOAT if a "." was already encountered;
+ *                               else TPP_TOK_C_INT (or TPP_TOK_EOF if int-tokens are disabled).
+ * @return: TPP_TOK_C_FLOAT:     Success; this is a float token
+ * @return: TPP_TOK_C_INT:       Nothing found that would qualify as a float, so it's an int
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_seek_end_of_float(tpp_lexer *tpp_restrict self,
-                            tpp_char const **p_pos,
-                            tpp_token_id result) {
+tpp_lexer_seek_end_of_c_float(tpp_lexer *tpp_restrict self,
+                              tpp_char const **p_pos,
+                              tpp_token_id result) {
 	tpp_errno error;
 	tpp_file const *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;
@@ -1618,7 +1618,7 @@ tpp_lexer_seek_end_of_float(tpp_lexer *tpp_restrict self,
 	 * #endif // TPP_HAVE_SMART_FLOAT_TOKENS
 	 *
 	 * Additionally, one of those tokens being encountered
-	 * causes the resulting token to become a "TPP_TOK_FLOAT"
+	 * causes the resulting token to become a "TPP_TOK_C_FLOAT"
 	 */
 again:
 	rel_end = tpp_file_ptr2rel(file, pos);
@@ -1630,16 +1630,16 @@ again_ch:
 #if TPP_HAVE_SMART_FLOAT_TOKENS
 		if (tpp_lexer_has(self, SMART_FLOAT_TOKENS)) {
 			tpp_token_id old_result = result;
-			if (result == TPP_TOK_FLOAT)
+			if (result == TPP_TOK_C_FLOAT)
 				goto done;
-			result = TPP_TOK_FLOAT;
+			result = TPP_TOK_C_FLOAT;
 
 			/* Make sure that next token is one of:
 			 *   [0-9]          Digit
 			 *   [a-fA-F]       hex digit (only if "allow_hex_chars == true")
 			 *   [eEpP][+-]     Exponent
 			 *
-			 * If it isn't then, the result is a TPP_TOK_INT,
+			 * If it isn't then, the result is a TPP_TOK_C_INT,
 			 * and ends just before the '.' character. */
 			error = tpp_lexer_readchar(self, &pos, &ch);
 			if (TPP_ISERR(error))
@@ -1683,7 +1683,7 @@ again_ch:
 			goto done;
 		}
 #endif /* TPP_HAVE_SMART_FLOAT_TOKENS */
-		result = TPP_TOK_FLOAT; /* It's a floating-point token */
+		result = TPP_TOK_C_FLOAT; /* It's a floating-point token */
 		goto again;
 	} else if (tpp_ascii_issymcont(ch)) { /* SYMCONT matches [\w\d_] */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_SMART_FLOAT_TOKENS)
@@ -1711,21 +1711,21 @@ again_ch:
 					has_exponent = true;
 				}
 #endif /* TPP_HAVE_SMART_FLOAT_TOKENS */
-				result = TPP_TOK_FLOAT;
+				result = TPP_TOK_C_FLOAT;
 				goto again;
 			} else if (tpp_ascii_isdigit(ch)) {
 				/* Special case to we detect the correct typing for:
-				 * -   1E2    (TPP_TOK_FLOAT)
-				 * -   1P2    (TPP_TOK_INT)
-				 * - 0x1E2    (TPP_TOK_INT)
-				 * - 0x1P2    (TPP_TOK_FLOAT)
+				 * -   1E2    (TPP_TOK_C_FLOAT)
+				 * -   1P2    (TPP_TOK_C_INT)
+				 * - 0x1E2    (TPP_TOK_C_INT)
+				 * - 0x1P2    (TPP_TOK_C_FLOAT)
 				 */
 				if (allow_hex_chars ? (exp_ch == 'p' || exp_ch == 'P')
 				                    : (exp_ch == 'e' || exp_ch == 'E'))
-					result = TPP_TOK_FLOAT;
+					result = TPP_TOK_C_FLOAT;
 #if TPP_HAVE_SMART_FLOAT_TOKENS
 				if (tpp_lexer_has(self, SMART_FLOAT_TOKENS)) {
-					if (result == TPP_TOK_FLOAT) {
+					if (result == TPP_TOK_C_FLOAT) {
 						if (has_exponent)
 							goto done;
 						has_exponent = true;
@@ -1739,7 +1739,7 @@ again_ch:
 		if (ch == 'x' || ch == 'X') {
 #if TPP_HAVE_SMART_FLOAT_TOKENS
 			if (tpp_lexer_has(self, SMART_FLOAT_TOKENS)) {
-				if (result == TPP_TOK_FLOAT) {
+				if (result == TPP_TOK_C_FLOAT) {
 					/* The "x" cannot appear after a construct that indicates a float.
 					 * If it does anyways, it can't be used to indicate a hex-float! */
 					goto again;
@@ -1797,11 +1797,11 @@ done:
 	*p_pos = tpp_file_rel2ptr(file, rel_end);
 	return result;
 }
-#endif /* TPP_HAVE_TPP_TOK_FLOAT */
+#endif /* TPP_HAVE_TPP_TOK_C_FLOAT */
 
 
-#if TPP_HAVE_TPP_TOK_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_FLOAT)
-/* Seek the end of a TPP_TOK_INT token
+#if TPP_HAVE_TPP_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_C_FLOAT)
+/* Seek the end of a TPP_TOK_C_INT token
  * @return: TPP_EOK:         Success
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         I/O error while trying to read from file
@@ -1809,8 +1809,8 @@ done:
  * @return: TPP_ELEXERROR:   Lexer error
  * @return: TPP_EWARNPRINT:  Error while printing a warning */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_seek_end_of_int(tpp_lexer *tpp_restrict self,
-                          tpp_char const **p_pos) {
+tpp_lexer_seek_end_of_c_int(tpp_lexer *tpp_restrict self,
+                            tpp_char const **p_pos) {
 	tpp_errno error;
 	tpp_file const *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;
@@ -1852,7 +1852,7 @@ again:
 	*p_pos = tpp_file_rel2ptr(file, rel_end);
 	return TPP_EOK;
 }
-#endif /* TPP_HAVE_TPP_TOK_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_FLOAT) */
+#endif /* TPP_HAVE_TPP_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_C_FLOAT) */
 
 
 
@@ -2884,8 +2884,8 @@ not_a_trigraph:
 
 /************************************************************************/
 	case '.': {
-#if (TPP_HAVE_TPP_TOK_FLOAT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT)
-		if (!tpp_lexer_has(self, TPP_TOK_FLOAT) &&
+#if (TPP_HAVE_TPP_TOK_C_FLOAT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT)
+		if (!tpp_lexer_has(self, TPP_TOK_C_FLOAT) &&
 /*[[[deemon (printHasNone from ".config")(".");]]]*/
 		    !tpp_lexer_has(self, TPP_TOK_DOT_STAR) &&
 		    !tpp_lexer_has(self, TPP_TOK_DOT_DOT) &&
@@ -2894,19 +2894,19 @@ not_a_trigraph:
 		    )
 			break;
 		read_ch2();
-#if TPP_HAVE_TPP_TOK_FLOAT
+#if TPP_HAVE_TPP_TOK_C_FLOAT
 		if (tpp_ascii_isdigit(ch2)) {
-			if (tpp_lexer_has(self, TPP_TOK_FLOAT)) {
-				result = tpp_lexer_seek_end_of_float(self, &pos, TPP_TOK_FLOAT);
+			if (tpp_lexer_has(self, TPP_TOK_C_FLOAT)) {
+				result = tpp_lexer_seek_end_of_c_float(self, &pos, TPP_TOK_C_FLOAT);
 				if (TPP_TOK_ISERR(result)) {
 					error = TPP_TOK_ASERR(result);
 					goto return_error;
 				}
-				tpp_assert(result == TPP_TOK_FLOAT);
+				tpp_assert(result == TPP_TOK_C_FLOAT);
 				goto set_result;
 			}
 		} else
-#endif /* TPP_HAVE_TPP_TOK_FLOAT */
+#endif /* TPP_HAVE_TPP_TOK_C_FLOAT */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")(".", "0123456789");]]]*/
 #if TPP_HAVE_TPP_TOK_DOT_STAR
 		if (ch2 == '*') {
@@ -4746,50 +4746,50 @@ handle_keyword_with_esc:
 		}
 
 		/* Check for digits */
-#if TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT
+#if TPP_HAVE_TPP_TOK_C_INT || TPP_HAVE_TPP_TOK_C_FLOAT
 		if (tpp_ascii_maybe_test(tpp_ascii_isdigit(ch))) {
 #if TPP_HAVE_ASSUME_ASCII_CTYPE
 	case '0': case '1': case '2': case '3': case '4':
 	case '5': case '6': case '7': case '8': case '9':
 #endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
-#if TPP_HAVE_TPP_TOK_FLOAT
-			if (tpp_lexer_has(self, TPP_TOK_FLOAT)) {
-#if TPP_HAVE_TPP_TOK_INT
-				result = TPP_TOK_INT;
-#else /* TPP_HAVE_TPP_TOK_INT */
+#if TPP_HAVE_TPP_TOK_C_FLOAT
+			if (tpp_lexer_has(self, TPP_TOK_C_FLOAT)) {
+#if TPP_HAVE_TPP_TOK_C_INT
+				result = TPP_TOK_C_INT;
+#else /* TPP_HAVE_TPP_TOK_C_INT */
 				result = TPP_TOK_EOF;
-#endif /* !TPP_HAVE_TPP_TOK_INT */
-				result = tpp_lexer_seek_end_of_float(self, &pos, result);
+#endif /* !TPP_HAVE_TPP_TOK_C_INT */
+				result = tpp_lexer_seek_end_of_c_float(self, &pos, result);
 				if (TPP_TOK_ISERR(result)) {
 					error = TPP_TOK_ASERR(result);
 					goto return_error;
 				}
-#if TPP_HAVE_TPP_TOK_INT
-				tpp_assert(result == TPP_TOK_INT || result == TPP_TOK_FLOAT);
-#if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_INT)
-				if (!tpp_lexer_has(self, TPP_TOK_INT))
-					result = TPP_TOK_FLOAT;
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_INT) */
-#else /* TPP_HAVE_TPP_TOK_INT */
-				tpp_assert(result == TPP_TOK_EOF || result == TPP_TOK_FLOAT);
-				result = TPP_TOK_FLOAT;
-#endif /* !TPP_HAVE_TPP_TOK_INT */
+#if TPP_HAVE_TPP_TOK_C_INT
+				tpp_assert(result == TPP_TOK_C_INT || result == TPP_TOK_C_FLOAT);
+#if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_C_INT)
+				if (!tpp_lexer_has(self, TPP_TOK_C_INT))
+					result = TPP_TOK_C_FLOAT;
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_C_INT) */
+#else /* TPP_HAVE_TPP_TOK_C_INT */
+				tpp_assert(result == TPP_TOK_EOF || result == TPP_TOK_C_FLOAT);
+				result = TPP_TOK_C_FLOAT;
+#endif /* !TPP_HAVE_TPP_TOK_C_INT */
 				goto set_result;
 			} else
-#endif /* TPP_HAVE_TPP_TOK_FLOAT */
-#if TPP_HAVE_TPP_TOK_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_FLOAT)
-			if (tpp_lexer_has(self, TPP_TOK_INT)) {
-				error = tpp_lexer_seek_end_of_int(self, &pos);
+#endif /* TPP_HAVE_TPP_TOK_C_FLOAT */
+#if TPP_HAVE_TPP_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_C_FLOAT)
+			if (tpp_lexer_has(self, TPP_TOK_C_INT)) {
+				error = tpp_lexer_seek_end_of_c_int(self, &pos);
 				if (TPP_ISERR(error))
 					goto return_error;
-				result = TPP_TOK_INT;
+				result = TPP_TOK_C_INT;
 				goto set_result;
 			} else
-#endif /* TPP_HAVE_TPP_TOK_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_FLOAT) */
+#endif /* TPP_HAVE_TPP_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_C_FLOAT) */
 			{
 			}
 		}
-#endif /* TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT */
+#endif /* TPP_HAVE_TPP_TOK_C_INT || TPP_HAVE_TPP_TOK_C_FLOAT */
 
 		/* Other trait-based character checks would go here... */
 	}	break;

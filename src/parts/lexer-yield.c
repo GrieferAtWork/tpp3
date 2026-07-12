@@ -1370,7 +1370,7 @@ err_tok_subtext_builder:
 		case ',': /* Ignore all ','-token in here! */
 			break;
 
-		TPP_CASE_TPP_TOK_C_STRING
+		TPP_CASE_TPP_TOK_STRING
 			status = tpp_lexer_decodestring(self,
 			                                &tpp_string_builder_print_encoded,
 			                                &tpp_string_builder_print_encoded,
@@ -1383,7 +1383,7 @@ handle_status:
 			break;
 
 #if TPP_HAVE_TPP_TOK_INT
-		case TPP_TOK_INT: {
+		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax value;
 			tpp_char value_ch[1];
 			tpp_errno error = tpp_lexer_decodeint(self, &value);
@@ -1760,11 +1760,11 @@ again_yield:
 #endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS */
 	default: break;
 	}
-	tok = tpp_lexer_require(self, TPP_TOK_INT);
+	tok = tpp_lexer_require_int(self);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 	*p_value = 0;
-	if (tok == TPP_TOK_INT) {
+	if (TPP_TOK_ISINT(tok)) {
 		tpp_errno error;
 		error = tpp_lexer_decodeint(self, p_value);
 		if (TPP_ISERR(error))

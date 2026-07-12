@@ -231,7 +231,7 @@ SCAN(FOO()BAR)    // Expands to [foo][ ][bar]  (or [foobar] when `TPP_HAVE_MAGIC
 The extra space (U+0020) character in `SCAN(FOO()BAR)` gets added
 during macro argument substitution in the call to `SCAN`, and is
 necessary because TPP is a text-based preprocessor. Trying to get
-L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L10374) will fail.
+L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L10388) will fail.
 
 <details><summary>Details</summary>
 
@@ -335,10 +335,10 @@ the filename, a number of additional "flags" can be specified:
 - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack. Like the
        `1` flag, this flag require [`TPP_HAVE_FILE_DUMMY`](config-core.md#tpp_have_file_dummy) to be enabled, otherwise it is
        ignored.
-- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14692) for the current text-file. When this flag is not
-       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14692) is instead cleared for the current text-file.
+- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14718) for the current text-file. When this flag is not
+       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14718) is instead cleared for the current text-file.
        This flag requires [`TPP_HAVE_FILE_SYSHDR`](config-core.md#tpp_have_file_syshdr) to be enabled, otherwise it is ignored.
-- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14695) flag. Similarly, this
+- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14721) flag. Similarly, this
        flag requires [`TPP_HAVE_FILE_EXTERN_C`](config-core.md#tpp_have_file_extern_c) to be enabled, otherwise it is ignored.
 
 <details><summary>Details</summary>
@@ -878,7 +878,7 @@ to check if a given keyword is a builtin identifier:
 #endif
 ```
 
-A keyword is considered to be an "identifier" if [`TPP_TOK_ISBUILTINKEYWORD()`](../src/tpp-amalgamation.h#L11701)
+A keyword is considered to be an "identifier" if [`TPP_TOK_ISBUILTINKEYWORD()`](../src/tpp-amalgamation.h#L11727)
 
 <details><summary>Details</summary>
 
@@ -1951,7 +1951,7 @@ __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TPP_TOK_SPACE) because d
 
 Based on the numbers returned by this macro, it becomes possible
 to detect the state of pretty much all configuration options that
-affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L19194)
+affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L19220)
 
 <details><summary>Details</summary>
 
@@ -1988,7 +1988,7 @@ to a single keyword/identifier-type token:
 ```c
 __TPP_IDENTIFIER("foo")   // Same "foo"
 __TPP_IDENTIFIER("1foo")  // Still a keyword; namely: "1foo" -- there's no way
-                          // to write this, since it'd normally be a TPP_TOK_INT
+                          // to write this, since it'd normally be a TPP_TOK_C_INT
 __TPP_IDENTIFIER("a\0b")  // Compilers probably won't like this: NUL-character in
                           // keyword name, meaning strlen() returns "1", but keyword
                           // is legally distinct from "a" (though lots of places
@@ -2990,7 +2990,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_LF
 
-Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19391)
+Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19417)
 
 <details><summary>Details</summary>
 
@@ -3017,7 +3017,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_SPACE
 
-Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19391)
+Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19417)
 
 <details><summary>Details</summary>
 
@@ -3044,7 +3044,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_COMMENT
 
-Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19391)
+Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19417)
 
 <details><summary>Details</summary>
 
@@ -3320,6 +3320,7 @@ Detect:
 ## TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
 
 Allow use of `_` as a thousands separator `123_456_789`
+in [`TPP_HAVE_TPP_TOK_C_INT`](#tpp_have_tpp_tok_c_int) and [`TPP_HAVE_TPP_TOK_C_FLOAT`](#tpp_have_tpp_tok_c_float)
 
 <details><summary>Details</summary>
 
@@ -3339,6 +3340,7 @@ Extension name:
 ## TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
 
 Allow use of `'` as a thousands separator `123'456'789`
+in [`TPP_HAVE_TPP_TOK_C_INT`](#tpp_have_tpp_tok_c_int) and [`TPP_HAVE_TPP_TOK_C_FLOAT`](#tpp_have_tpp_tok_c_float)
 
 <details><summary>Details</summary>
 
@@ -3363,9 +3365,9 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_INT
+## TPP_HAVE_TPP_TOK_C_INT
 
-`123`
+C-style integer token `123`
 
 <details><summary>Details</summary>
 
@@ -3378,7 +3380,7 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_INT "tok-int"
+#define TPP_EXTNAME_TPP_TOK_C_INT "tok-c-int"
 ```
 
 Detect:
@@ -3390,9 +3392,9 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_FLOAT
+## TPP_HAVE_TPP_TOK_C_FLOAT
 
-`123.0`
+C-style float token `123.0`
 
 <details><summary>Details</summary>
 
@@ -3405,7 +3407,7 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_FLOAT "tok-float"
+#define TPP_EXTNAME_TPP_TOK_C_FLOAT "tok-c-float"
 ```
 
 Detect:
@@ -3489,7 +3491,7 @@ keep going):
 Default:
 
 ```c
-((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) && TPP_HAVE_TPP_TOK_FLOAT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_CONF_FEAT1) : 0
+((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) && TPP_HAVE_TPP_TOK_C_FLOAT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_CONF_FEAT1) : 0
 ```
 
 Extension name:
@@ -3994,8 +3996,8 @@ Detect:
 ## TPP_HAVE_STRING_AUTO_CONCAT
 
 Enable support for automatic concatenation of adjacent string tokens.
-This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L19993) and its
-companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L20034), such that they will only yield
+This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L20021) and its
+companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L20062), such that they will only yield
 to the next token, but not check if that next token might be another
 string.
 
@@ -4044,7 +4046,7 @@ Extension name:
 ## TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
 
 Enable special handling in `#define foo(x) defined(x)` such that `x` is not expanded.
-Irregardless of this feature being enabled or not, a warning [`TPP_W_EXPANSION_TO_DEFINED`](../src/tpp-amalgamation.h#L3530)
+Irregardless of this feature being enabled or not, a warning [`TPP_W_EXPANSION_TO_DEFINED`](../src/tpp-amalgamation.h#L3533)
 is emitted whenever a construct `defined(<param>)` or `defined <param>` is encountered
 within the body of a function-style macro definition, where `<param>` is the name of one
 of the macro's parameters (see [`TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED`](config-warn.md#tpp_have_tpp_w_expansion_to_defined)).
@@ -4101,7 +4103,7 @@ Enable support for strings in builtin lexer expressions, as well as some new ope
 Default:
 
 ```c
-(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_STRINGLIKE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_STRINGLIKE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
 ```
 
 Extension name:
@@ -4120,7 +4122,7 @@ Enable support for floats in builtin lexer expressions
 Default:
 
 ```c
-(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
 ```
 
 Extension name:
@@ -4197,7 +4199,7 @@ Enable support for `0b` literals in builtin lexer expressions
 Default:
 
 ```c
-((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) && TPP_HAVE_TPP_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
 ```
 
 Extension name:
@@ -4216,7 +4218,7 @@ Enable support for `0o` literals in builtin lexer expressions
 Default:
 
 ```c
-((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) && TPP_HAVE_TPP_TOK_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) && TPP_HAVE_TPP_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
 ```
 
 Extension name:
@@ -4235,7 +4237,7 @@ Enable support for `u`, `l`, `ul`, `ll`, `ull` integer suffixes
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+(TPP_HAVE_TPP_TOK_C_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -4254,7 +4256,7 @@ Enable support for `z`, `uz` integer suffixes
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+(TPP_HAVE_TPP_TOK_C_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -4273,7 +4275,7 @@ Enable support for `i8`, `i16`, `i32`, `i64`, `ui8`, `ui16`, `ui32`, `ui64` inte
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+(TPP_HAVE_TPP_TOK_C_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -4292,7 +4294,7 @@ Enable support for `f`, `F`, `l`, `L` float suffixes
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+(TPP_HAVE_TPP_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -4311,7 +4313,7 @@ Enable support for `d`, `D` float suffixes
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 0) : 0
+(TPP_HAVE_TPP_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 0) : 0
 ```
 
 Extension name:
@@ -4330,7 +4332,7 @@ Enable support for `df`, `DF`, `dd`, `DD`, `dl`, `DL` float suffixes
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+(TPP_HAVE_TPP_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -4349,7 +4351,7 @@ Treat `'a'` in expressions as an integer, rather than as a string (in C/C++, thi
 Default:
 
 ```c
-(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : ((TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX) ? 1 : 0)) : 0
+(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : ((TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX) ? 1 : 0)) : 0
 ```
 
 Extension name:
@@ -4361,8 +4363,8 @@ Extension name:
 
 ## TPP_HAVE_EXTERN_C_FOR_SYSHDR
 
-When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14692) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
-then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14695) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14692).
+When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14718) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
+then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14721) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14718).
 
 <details><summary>Details</summary>
 
