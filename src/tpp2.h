@@ -1278,230 +1278,232 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 /************************************************************************/
 
 /* TPP_CONFIG_ONELEXER, TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS
- *  - TPP3 now only supports the multi-lexer configuration (TPP_CONFIG_ONELEXER=3)
- *    where the lexer is passed as an argument to various APIs. This has been done
- *    intentionally in order to allow multi-threaded API usage, where every thread
- *    has its own "tpp_lexer", which are all able to operate independently.
- *  - For global/one-lexer configurations, this compatibility header uses a new
- *    configuration macro "TPP2_LEXER", which is used in place for the current
- *    lexer. When transitioning to TPP3, this can be used as a stop-gap measure.
+ * - TPP3 now only supports the multi-lexer configuration (TPP_CONFIG_ONELEXER=3)
+ *   where the lexer is passed as an argument to various APIs. This has been done
+ *   intentionally in order to allow multi-threaded API usage, where every thread
+ *   has its own "tpp_lexer", which are all able to operate independently.
+ * - For global/one-lexer configurations, this compatibility header uses a new
+ *   configuration macro "TPP2_LEXER", which is used in place for the current
+ *   lexer. When transitioning to TPP3, this can be used as a stop-gap measure.
  */
 
 /* TPP_CONFIG_MINMACRO, TPP_CONFIG_GCCFUNC, TPP_CONFIG_MINGCCFUNC, __has_tpp_builtin
- *  - TPP3 no longer includes "builtin" function support, nor does it try to pre-
- *    define CPU-specific macros. As such, these config options (which used to
- *    configure which macros/builtins are available) are no longer needed.
- *  - If you use TPP3, you should define your own CPU-specific macros, though this header
- *    does continue to provide them (only if: #ifndef TPP2_NO_AUTOCONFIGURE_TPP3_DEFS)
+ * - TPP3 no longer includes "builtin" function support, nor does it try to pre-
+ *   define CPU-specific macros. As such, these config options (which used to
+ *   configure which macros/builtins are available) are no longer needed.
+ * - If you use TPP3, you should define your own CPU-specific macros, though this header
+ *   does continue to provide them (only if: #ifndef TPP2_NO_AUTOCONFIGURE_TPP3_DEFS)
  */
 
 /* TPP_UNESCAPE_MAXCHAR
- *  - TPP3 operates entirely on unicode/utf-8. As such, you can no longer configure
- *    the width of your designated USC-character type.
- *  - To decode multi-char characters, you must supply your own utf-8 decoder when
- *    calling "tpp_lexer_parsestring_ex()", which you can then use to transform
- *    input into whichever encoding you wish to use (though I recommend you just
- *    stick with utf-8 if possible)
+ * - TPP3 operates entirely on unicode/utf-8. As such, you can no longer configure
+ *   the width of your designated USC-character type.
+ * - To decode multi-char characters, you must supply your own utf-8 decoder when
+ *   calling "tpp_lexer_parsestring_ex()", which you can then use to transform
+ *   input into whichever encoding you wish to use (though I recommend you just
+ *   stick with utf-8 if possible)
  */
 
 /* TPP_UNESCAPE_ENDIAN, TPP_BYTEORDER
- *  - TPP3 is written to be agnostic to CPU endian at runtime
- *  - The only place TPP2 (and TPP3) need the endian is for decoding UTF-16,
- *    though TPP3 doesn't need some pre-defined macro specifying the endian
- *    at compile-time in order to do this.
+ * - TPP3 is written to be agnostic to CPU endian at runtime
+ * - The only place TPP2 (and TPP3) need the endian is for decoding UTF-16,
+ *   though TPP3 doesn't need some pre-defined macro specifying the endian
+ *   at compile-time in order to do this.
  */
 
 /* TPP_CONFIG_EXPORT
- *  - TPP3 has a completely different API, so it wouldn't make sense to
- *    support a legacy config macro that enables the dllexport-style export
- *    of that API
- *  - Instead, if you want to export TPP3, you can override the following:
- *    - TPP_DECL
- *    - TPP_IMPL
- *    - TPP_CONST_DECL
- *    - TPP_CONST_IMPL
+ * - TPP3 has a completely different API, so it wouldn't make sense to
+ *   support a legacy config macro that enables the dllexport-style export
+ *   of that API
+ * - Instead, if you want to export TPP3, you can override the following:
+ *   - TPP_DECL
+ *   - TPP_IMPL
+ *   - TPP_CONST_DECL
+ *   - TPP_CONST_IMPL
  */
 
 /* EXT_CLANG_FEATURES: "-fhas-feature-macros"
- *  - This extension has been split into its individual components:
- *    -> TPP_EXT_CLANG_MACRO___has_attribute:          "-fclang-__has_attribute"
- *    -> TPP_EXT_CLANG_MACRO___has_builtin:            "-fclang-__has_builtin"
- *    -> TPP_EXT_CLANG_MACRO___has_cpp_attribute:      "-fclang-__has_cpp_attribute"
- *    -> TPP_EXT_CLANG_MACRO___has_declspec_attribute: "-fclang-__has_declspec_attribute"
- *    -> TPP_EXT_CLANG_MACRO___has_extension:          "-fclang-__has_extension"
- *    -> TPP_EXT_CLANG_MACRO___has_feature:            "-fclang-__has_feature"
- *    -> TPP_EXT_CLANG_MACRO___has_c_attribute:        "-fclang-__has_c_attribute"
- *    -> TPP_EXT_MACRO___is_identifier:                "-f__is_identifier"
- *    -> TPP_EXT_MACRO___is_deprecated:                "-f__is_deprecated"
- *    -> TPP_EXT_MACRO___is_poisoned:                  "-f__is_poisoned"
+ * - This extension has been split into its individual components:
+ *   -> TPP_EXT_CLANG_MACRO___has_attribute:          "-fclang-__has_attribute"
+ *   -> TPP_EXT_CLANG_MACRO___has_builtin:            "-fclang-__has_builtin"
+ *   -> TPP_EXT_CLANG_MACRO___has_cpp_attribute:      "-fclang-__has_cpp_attribute"
+ *   -> TPP_EXT_CLANG_MACRO___has_declspec_attribute: "-fclang-__has_declspec_attribute"
+ *   -> TPP_EXT_CLANG_MACRO___has_extension:          "-fclang-__has_extension"
+ *   -> TPP_EXT_CLANG_MACRO___has_feature:            "-fclang-__has_feature"
+ *   -> TPP_EXT_CLANG_MACRO___has_c_attribute:        "-fclang-__has_c_attribute"
+ *   -> TPP_EXT_MACRO___is_identifier:                "-f__is_identifier"
+ *   -> TPP_EXT_MACRO___is_deprecated:                "-f__is_deprecated"
+ *   -> TPP_EXT_MACRO___is_poisoned:                  "-f__is_poisoned"
  */
 
 /* EXT_HAS_INCLUDE: "-fhas-include-macros"
- *  - This extension has been split into its individual components:
- *    -> TPP_EXT_MACRO___has_include:                  "-f__has_include"
- *    -> TPP_EXT_MACRO___has_include_next:             "-f__has_include_next"
+ * - This extension has been split into its individual components:
+ *   -> TPP_EXT_MACRO___has_include:                  "-f__has_include"
+ *   -> TPP_EXT_MACRO___has_include_next:             "-f__has_include_next"
  */
 
 /* EXT_EXTENDED_IDENTS: "-fextended-identifiers"
- *  - TPP3 no longer includes ANSI support. Instead, TPP3 supports proper unicode
- *    and utf-8. As such, there is no extension to enable/disable ANSI identifiers.
- *    Instead, you can pre-define macros like "tpp_unicode_issymstrt()" to supply
- *    TPP with a unicode character traits database, which it will happily use, or
- *    you can use "-DTPP_HAVE_BUILTIN_CTYPE_UNICODE=1" (default) to have TPP3 use
- *    its own builtin unicode character traits database.
- *  - Decoding input files from (certain) codecs into utf-8 is done automatically
- *  - TPP unicode support is enabled with "TPP_HAVE_UNICODE"
- *  - For compatibility with TPP2's (flaky) attempts at decoding (e.g.) utf-16
- *    into utf-8, this compatibility header force-enables unicode support, even
- *    though that (somewhat) conflicts with TPP2's ANSI support.
- *  - Note that TPP3 has an (entirely different) extension "-fextended-identifiers"
- *    that enables use of \u and \U escape sequences in identifier names. This name
- *    was chosen as default for that extension since GCC uses the same name to mean
- *    the same thing.
+ * - TPP3 no longer includes ANSI support. Instead, TPP3 supports proper unicode
+ *   and utf-8. As such, there is no extension to enable/disable ANSI identifiers.
+ *   Instead, you can pre-define macros like "tpp_unicode_issymstrt()" to supply
+ *   TPP with a unicode character traits database, which it will happily use, or
+ *   you can use "-DTPP_HAVE_BUILTIN_CTYPE_UNICODE=1" (default) to have TPP3 use
+ *   its own builtin unicode character traits database.
+ * - Decoding input files from (certain) codecs into utf-8 is done automatically
+ * - TPP unicode support is enabled with "TPP_HAVE_UNICODE"
+ * - For compatibility with TPP2's (flaky) attempts at decoding (e.g.) utf-16
+ *   into utf-8, this compatibility header force-enables unicode support, even
+ *   though that (somewhat) conflicts with TPP2's ANSI support.
+ * - Note that TPP3 has an (entirely different) extension "-fextended-identifiers"
+ *   that enables use of \u and \U escape sequences in identifier names. This name
+ *   was chosen as default for that extension since GCC uses the same name to mean
+ *   the same thing.
  */
 
 /* TPPLEXER_TOKEN_NONE, TPPLEXER_TOKEN_DEFAULT:
- *  - TPP3 allows recognized tokens to be configured on a per-token basis.
- *  - Every recognized token can also be configured to be runtime configurable
- *  - When runtime configurable, tokens can be enabled/disabled using "tpp_lexer_setfeat"
+ * - TPP3 allows recognized tokens to be configured on a per-token basis.
+ * - Every recognized token can also be configured to be runtime configurable
+ * - When runtime configurable, tokens can be enabled/disabled using "tpp_lexer_setfeat"
  */
 
 /* TPPLEXER_TOKEN_EQUALBINOP:
- *  - TPP3 still includes support for tokens like "=+", however unlike
- *    in TPP2, TPP3 defines separate token IDs for all mirrored variants.
- *  - As such, you will need to re-write your code as:
- *    ```diff
- *    -case TPP_TOK_SHL_EQUAL:
- *    +case TPP_TOK_LANGLE_LANGLE_EQUAL:
- *    +case TPP_TOK_EQUAL_LANGLE_LANGLE:
- *    ```
+ * - TPP3 still includes support for tokens like "=+", however unlike
+ *   in TPP2, TPP3 defines separate token IDs for all mirrored variants.
+ * - As such, you will need to re-write your code as:
+ *   ```diff
+ *   -case TPP_TOK_SHL_EQUAL:
+ *   +case TPP_TOK_LANGLE_LANGLE_EQUAL:
+ *   +case TPP_TOK_EQUAL_LANGLE_LANGLE:
+ *   ```
  */
 
 /* EXT_DOLLAR_IS_ALPHA: "-fdollars-in-identifiers"
  * TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA_DEFAULT
  * TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA
- *  - TPP3 has removed this feature as an extension switch.
- *    Instead, it is a lexer "feature" that can be configured
- *    (possibly at runtime) via "TPP_HAVE_TPP_TOK_DOLLAR"
- *  - When "TPP_HAVE_TPP_TOK_DOLLAR" is enabled, '$' is treated
- *    as its own, 1-char token.
- *  - When "TPP_HAVE_TPP_TOK_DOLLAR" is disabled, '$' is treated
- *    like any other tpp_ascii_issymcont() byte, meaning it is
- *    treated as part of a keyword / identifier
- *  - HINT: #define TPP_HAVE_TPP_TOK_DOLLAR (-1)  // Runtime-configurable; default=true
- *    HINT: #define TPP_HAVE_TPP_TOK_DOLLAR (-2)  // Runtime-configurable; default=false
+ * - TPP3 has removed this feature as an extension switch.
+ *   Instead, it is a lexer "feature" that can be configured
+ *   (possibly at runtime) via "TPP_HAVE_TPP_TOK_DOLLAR"
+ * - When "TPP_HAVE_TPP_TOK_DOLLAR" is enabled, '$' is treated
+ *   as its own, 1-char token.
+ * - When "TPP_HAVE_TPP_TOK_DOLLAR" is disabled, '$' is treated
+ *   like any other tpp_ascii_issymcont() byte, meaning it is
+ *   treated as part of a keyword / identifier
+ * - HINT: #define TPP_HAVE_TPP_TOK_DOLLAR (-1)  // Runtime-configurable; default=true
+ *   HINT: #define TPP_HAVE_TPP_TOK_DOLLAR (-2)  // Runtime-configurable; default=false
  */
 
 /* EXT_CANONICAL_HEADERS: "-fcanonical-system-headers"
  * TPP_CONFIG_EXTENSION_CANONICAL_HEADERS_DEFAULT
  * TPP_CONFIG_EXTENSION_CANONICAL_HEADERS
- *  - Filename normalization is no longer something that can be configured
- *    or affected using conventional lexer features / extensions. This is
- *    because the act of normalizing a filename / opening a file is now
- *    something that needs to happen at the time a lexer is initialized
- *  - Since TPP3 requires you to specify the file to-be loaded initially
- *    when initializing your lexer, that also means that there is no point
- *    in time where filename normalization could be overwritten/configured
- *  - You can however still affect how TPP3 normalizes filenames (TPP_FS_*):
- *    - TPP_FS_HAVE_DRIVES
- *    - TPP_FS_HAVE_ICASE
- *    - TPP_FS_SEP
- *    - TPP_FS_ALTSEP
- *    - TPP_FS_ISSEP
- *    - TPP_FS_ISABS
- *    Additionally, you may take a look at `tpp_fs_normalize()'
+ * - Filename normalization is no longer something that can be configured
+ *   or affected using conventional lexer features / extensions. This is
+ *   because the act of normalizing a filename / opening a file is now
+ *   something that needs to happen at the time a lexer is initialized
+ * - Since TPP3 requires you to specify the file to-be loaded initially
+ *   when initializing your lexer, that also means that there is no point
+ *   in time where filename normalization could be overwritten/configured
+ * - You can however still affect how TPP3 normalizes filenames (TPP_FS_*):
+ *   - TPP_FS_HAVE_DRIVES
+ *   - TPP_FS_HAVE_ICASE
+ *   - TPP_FS_SEP
+ *   - TPP_FS_ALTSEP
+ *   - TPP_FS_ISSEP
+ *   - TPP_FS_ISABS
+ *   Additionally, you may take a look at `tpp_fs_normalize()'
  */
 
 /* TOK_CHAR, TPP_TOK_C_CHAR, TOK_STRING, TPP_TOK_C_STRING:
- *  - TPP3 has individual tokens for every type of string, whereas
- *    TPP2 used to have only 2 token types describing string and
- *    char tokens
- *  - Because of this, you should migrate code as follows:
- *    ```diff
- *    - case TPP_TOK_C_CHAR:
- *    - case TPP_TOK_C_STRING:
- *    +     if (tok == TPP_TOK_C_CHAR || tok == TPP_TOK_C_STRING) {
- *    + TPP_CASE_TPP_TOK_C_STRING
- *    +     if (TPP_TOK_ISSTRING(tok)) {
- *    ```
+ * - TPP3 has individual tokens for every type of string, whereas
+ *   TPP2 used to have only 2 token types describing string and
+ *   char tokens
+ * - Because of this, you should migrate code as follows:
+ *   ```diff
+ *   - case TPP_TOK_C_CHAR:
+ *   - case TPP_TOK_C_STRING:
+ *   +     if (tok == TPP_TOK_C_CHAR || tok == TPP_TOK_C_STRING) {
+ *   + TPP_CASE_TPP_TOK_C_STRING
+ *   +     if (TPP_TOK_ISSTRING(tok)) {
+ *   ```
  */
 
 /* TOK_COMMENT, TPP_TOK_COMMENT:
- *  - TPP3 has individual tokens for every type of comment
- *  - It also differentiates between comments that include a trailing
- *    line-feed, and comments that end in-line
- *  - Because of this, you should migrate code as follows:
- *    ```diff
- *    - case TPP_TOK_COMMENT:
- *    -     if (tok == TPP_TOK_COMMENT) {
- *    + TPP_CASE_TPP_TOK_COMMENT
- *    +     if (TPP_TOK_ISCOMMENT(tok)) {
- *    ```
+ * - TPP3 has individual tokens for every type of comment
+ * - It also differentiates between comments that include a trailing
+ *   line-feed, and comments that end in-line
+ * - Because of this, you should migrate code as follows:
+ *   ```diff
+ *   - case TPP_TOK_COMMENT:
+ *   -     if (tok == TPP_TOK_COMMENT) {
+ *   + TPP_CASE_TPP_TOK_COMMENT
+ *   +     if (TPP_TOK_ISCOMMENT(tok)) {
+ *   ```
  */
 
 /* TOK_ERR, TPP_CONFIG_SET_API_ERROR, TPPLEXER_FLAG_ERROR,
  * TPP_CONFIG_SET_API_ERROR_BADALLOC, TPP_CONFIG_INLINE_SETERR:
- *  - TPP3 defines individual token IDs for different errors that can
- *    happen during lexing, whereas TPP2 only used to define a singular
- *    token ID to represent errors.
- *  - When migrating, you should adjust your error-checking code to
- *    deal with all possible types of lexing errors:
- *    ```diff
- *    - case TOK_ERR:
- *    -     if (tok == TOK_ERR) {
- *    + TPP_CASE_TPP_TOK_ERR
- *    +     if (TPP_TOK_ISERR(tok)) {
- *    ```
+ * - TPP3 defines individual token IDs for different errors that can
+ *   happen during lexing, whereas TPP2 only used to define a singular
+ *   token ID to represent errors.
+ * - When migrating, you should adjust your error-checking code to
+ *   deal with all possible types of lexing errors:
+ *   ```diff
+ *   - case TOK_ERR:
+ *   -     if (tok == TOK_ERR) {
+ *   + TPP_CASE_TPP_TOK_ERR
+ *   +     if (TPP_TOK_ISERR(tok)) {
+ *   ```
  *
  * Note however that you are advised to deal with the meaning of actual errors:
- *  - TPP_TOK_ENOMEM, TPP_TOK_EIO, TPP_TOK_EWARNPRINT:
- *    These errors are not caused by TPP itself and indicate a problem
- *    with the underlying operating system. In all likelihood, you can
- *    probably just propagate these errors
- *  - TPP_TOK_ELEXERROR:
- *    This error is what comes closest to TPP2's "TPPLexer_SetErr()"
- *    macro. This error is returned when an error/fatal-level message
- *    was emitted in a way where the configuration of lexer warnings
- *    indicates that compilation must be aborted.
- *  - TPP_TOK_EWOULDBLOCK:
- *    You will only see this error if you made use of "TPP_CONFIG_NONBLOCKING_IO"
- *    (aka. "TPP_HAVE_FILE_NONBLOCK" in TPP3). This is a temporary error
- *    that means that the next token cannot be read *right now* because
- *    reading from the underlying I/O file would block.
- *    -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
- *    -> You will not see this error when not using the "TPP_FILE_FLAGS_NONBLOCK" flag
+ * - TPP_TOK_ENOMEM, TPP_TOK_EIO, TPP_TOK_EWARNPRINT:
+ *   These errors are not caused by TPP itself and indicate a problem
+ *   with the underlying operating system. In all likelihood, you can
+ *   probably just propagate these errors
+ * - TPP_TOK_ELEXERROR:
+ *   This error is what comes closest to TPP2's "TPPLexer_SetErr()"
+ *   macro. This error is returned when an error/fatal-level message
+ *   was emitted in a way where the configuration of lexer warnings
+ *   indicates that compilation must be aborted.
+ * - TPP_TOK_EWOULDBLOCK:
+ *   You will only see this error if you made use of "TPP_CONFIG_NONBLOCKING_IO"
+ *   (aka. "TPP_HAVE_FILE_NONBLOCK" in TPP3). This is a temporary error
+ *   that means that the next token cannot be read *right now* because
+ *   reading from the underlying I/O file would block.
+ *   -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
+ *   -> You will not see this error when not using the "TPP_FILE_FLAGS_NONBLOCK" flag
  */
 
 /* TPP_CONFIG_EXTENSION_MULTICHAR_CONST_DEFAULT,
  * TPP_CONFIG_EXTENSION_MULTICHAR_CONST, EXT_MULTICHAR_CONST, "-fmultichar-constants":
- *  - TPP3 allows multi-char literals by default. Instead of having an extension to
- *    enable/disable support for this, there is now a warning "-Wmultichar" that is
- *    emitted by default when multi-char constants are used.
- *  - see: TPP_HAVE_TPP_W_MULTICHAR_LITERAL
+ * - TPP3 allows multi-char literals by default. Instead of having an extension to
+ *   enable/disable support for this, there is now a warning "-Wmultichar" that is
+ *   emitted by default when multi-char constants are used.
+ * - see: TPP_HAVE_TPP_W_MULTICHAR_LITERAL
  */
 
 /* >> int TPPFile_Copyname(struct TPPFile *self);
  * >> struct TPPFile *TPPFile_CopyForInclude(struct TPPFile *self);
  * >> struct TPPFile *TPPFile_NewDefine(void);
+ * >> struct TPPFile *TPPFile_NewDefine_(struct TPPLexer *self);
  * >> int TPPLexer_ExpandFunctionMacro_(struct TPPLexer *self, struct TPPFile *macro);
  * >> int TPPLexer_ExpandFunctionMacro(struct TPPFile *macro);
- *  - These functions should have never been exposed by the TPP2 API.
- *    If you've been using them, you'll have to decide how to migrate
- *  - TPP3 uses a completely different model when it comes to how files
- *    are managed and pushed on the #include-stack: namely, the current
- *    file is *inlined* within the lexer, allowing for faster access,
- *    and allowing a simple lexer to be constructed without the need
- *    for *any* heap allocations */
+ * - These functions should have never been exposed by the TPP2 API.
+ *   If you've been using them, you'll have to decide how to migrate
+ * - TPP3 uses a completely different model when it comes to how files
+ *   are managed and pushed on the #include-stack: namely, the current
+ *   file is *inlined* within the lexer, allowing for faster access,
+ *   and allowing a simple lexer to be constructed without the need
+ *   for *any* heap allocations
+ */
 
 /* >> struct TPPFile *TPPFile_Open(char const *filename);
  * >> struct TPPFile *TPPFile_OpenStream(TPP_stream_t stream, char const *name);
- *  - TPP3 uses a completely different model when it comes to how files
- *    are managed and pushed on the #include-stack
- *  - These functions don't exist in the same manner anymore
- *  - To migrate these functions, see the following:
- *                          First file                  Additional file
- *    - TPPFile_Open:       tpp_lexer_initfile_open()   tpp_lexer_pushfile_open()
- *    - TPPFile_OpenStream: tpp_lexer_initfile_io_ex()  tpp_lexer_pushfile_io_ex()
+ * - TPP3 uses a completely different model when it comes to how files
+ *   are managed and pushed on the #include-stack
+ * - These functions don't exist in the same manner anymore
+ * - To migrate these functions, see the following:
+ *                         First file                  Additional file
+ *   - TPPFile_Open:       tpp_lexer_initfile_open()   tpp_lexer_pushfile_open()
+ *   - TPPFile_OpenStream: tpp_lexer_initfile_io_ex()  tpp_lexer_pushfile_io_ex()
  */
 
 /* >> char *TPP_Unescape_(tpp_lexer *self, char *buf, char const *data, size_t size);
@@ -1510,49 +1512,49 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * >> size_t TPP_SizeofUnescape_(tpp_lexer *self, char const *data, size_t size);
  * >> size_t TPP_SizeofUnescape(char const *data, size_t size);
  * >> size_t TPP_SizeofUnescapeRaw(char const *data, size_t size);
- *  - Since TPP3 supports many different string formats (some of which don't even
- *    support \-escape sequences), these function no longer exist.
- *  - Instead, TPP3 has a function "tpp_lexer_decodestring()" can can be used to
- *    decode the character data of *any* type of string token. However, unlike
- *    the TPP2 api, "tpp_lexer_decodestring()" expects the currently loaded token
- *    to be string-like (TPP_TOK_ISSTRING()), rather than taking string token data
- *    via "data" + "size" arguments
- *  - Migrate use of these APIs as follows:
- *    ```diff
- *    - size_t size = TPP_SizeofUnescape(TPPLexer_Current->l_token.t_begin,
- *    -                                  (size_t)(TPPLexer_Current->l_token.t_end -
- *    -                                           TPPLexer_Current->l_token.t_begin));
- *    - char *buf = (char *)malloc(size);
- *    - if (!buf) return NULL;
- *    - TPP_Unescape(buf, TPPLexer_Current->l_token.t_begin,
- *    -              (size_t)(TPPLexer_Current->l_token.t_end -
- *    -                       TPPLexer_Current->l_token.t_begin));
- *    - ...
- *    - free(buf);
- *    + tpp_string_builder builder;
- *    + tpp_string_builder_init(&builder);
- *    + if (tpp_lexer_decodestring(TPPLexer_Current, &tpp_string_builder_print, &tpp_string_builder_print, &builder) < 0)
- *    +     return NULL;
- *    + TPP_REF tpp_string *string = tpp_string_builder_pack(&builder);
- *    + char *buf = (char *)tpp_string_str(string);
- *    + tpp_size size = tpp_string_len(string);
- *    + ...
- *    + tpp_string_decref(string);
- *    ```
+ * - Since TPP3 supports many different string formats (some of which don't even
+ *   support \-escape sequences), these function no longer exist.
+ * - Instead, TPP3 has a function "tpp_lexer_decodestring()" can can be used to
+ *   decode the character data of *any* type of string token. However, unlike
+ *   the TPP2 api, "tpp_lexer_decodestring()" expects the currently loaded token
+ *   to be string-like (TPP_TOK_ISSTRING()), rather than taking string token data
+ *   via "data" + "size" arguments
+ * - Migrate use of these APIs as follows:
+ *   ```diff
+ *   - size_t size = TPP_SizeofUnescape(TPPLexer_Current->l_token.t_begin,
+ *   -                                  (size_t)(TPPLexer_Current->l_token.t_end -
+ *   -                                           TPPLexer_Current->l_token.t_begin));
+ *   - char *buf = (char *)malloc(size);
+ *   - if (!buf) return NULL;
+ *   - TPP_Unescape(buf, TPPLexer_Current->l_token.t_begin,
+ *   -              (size_t)(TPPLexer_Current->l_token.t_end -
+ *   -                       TPPLexer_Current->l_token.t_begin));
+ *   - ...
+ *   - free(buf);
+ *   + tpp_string_builder builder;
+ *   + tpp_string_builder_init(&builder);
+ *   + if (tpp_lexer_decodestring(TPPLexer_Current, &tpp_string_builder_print, &tpp_string_builder_print, &builder) < 0)
+ *   +     return NULL;
+ *   + TPP_REF tpp_string *string = tpp_string_builder_pack(&builder);
+ *   + char *buf = (char *)tpp_string_str(string);
+ *   + tpp_size size = tpp_string_len(string);
+ *   + ...
+ *   + tpp_string_decref(string);
+ *   ```
  */
 
 /* TPP_CONFIG_LOCKED_KEYWORDS, TPP_KEYWORDFLAG_LOCKED,
  * W_CANT_DEFINE_LOCKED_KEYWORD, W_CANT_UNDEF_LOCKED_KEYWORD:
- *  - Locked keywords are no longer supported by TPP3.
- *  - Instead, TPP3 simply doesn't allow users to re-define builtin macros,
- *    but there is no runtime configurable flag (that can't even be set by
- *    a builtin #pragma, meaning it's entire purpose is to be set explicitly)
+ * - Locked keywords are no longer supported by TPP3.
+ * - Instead, TPP3 simply doesn't allow users to re-define builtin macros,
+ *   but there is no runtime configurable flag (that can't even be set by
+ *   a builtin #pragma, meaning it's entire purpose is to be set explicitly)
  */
 
 /* TPP_KEYWORDFLAG_NO_UNDERSCORES:
- *  - No longer supported in TPP3. All feature-test macros allow for optional
- *    leading/trailing _-characters, and this functionality cannot be disabled
- *    for some specific feature macro (because: why would you want to?)
+ * - No longer supported in TPP3. All feature-test macros allow for optional
+ *   leading/trailing _-characters, and this functionality cannot be disabled
+ *   for some specific feature macro (because: why would you want to?)
  */
 
 /* TPPLEXER_FLAG_WILLRESTORE,
@@ -1566,29 +1568,29 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * >> int TPPLexer_ParseBuiltinPragma_(struct TPPLexer *lexer);
  * >> int TPPLexer_ParsePragma(void);
  * >> int TPPLexer_ParseBuiltinPragma(void);
- *  - These APIs are no longer supported like this in TPP3
- *  - Instead, many individual lexer states can be pushed/popped, including
- *    in a way that makes (different types of) rollback possible:
- *    - tpp_lexer_yieldraw_at()
- *    - tpp_lexer_seek_start()
- *    - tpp_lexer_manualpopfile_start()
- *    - tpp_lexer_tryskip_raw()
- *    - TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK
+ * - These APIs are no longer supported like this in TPP3
+ * - Instead, many individual lexer states can be pushed/popped, including
+ *   in a way that makes (different types of) rollback possible:
+ *   - tpp_lexer_yieldraw_at()
+ *   - tpp_lexer_seek_start()
+ *   - tpp_lexer_manualpopfile_start()
+ *   - tpp_lexer_tryskip_raw()
+ *   - TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK
  */
 
 /* TPPLEXER_FLAG_DIRECTIVE_NOOWN_LF, __has_extension(tpp_emit_lf_after_directive),
  * TPPLEXER_FLAG_COMMENT_NOOWN_LF:
- *  - These flags are no longer supported in TPP3 (in TPP3, line-like comment tokens
- *    *always* include the trailing line-feed (if any) as part of the comment itself)
- *  - If line-feeds have special meaning in your programming language, I recommend
- *    you migrate your code as follows:
- *    ```diff
- *    - case TPP_TOK_LF:
- *    -    if (tok == TPP_TOK_LF)
- *    + case TPP_TOK_LF:
- *    + TPP_CASE_TPP_TOK_COMMENT_LINE
- *    +    if (TPP_TOK_ISLF_OR_COMMENT(tok))
- *    ```
+ * - These flags are no longer supported in TPP3 (in TPP3, line-like comment tokens
+ *   *always* include the trailing line-feed (if any) as part of the comment itself)
+ * - If line-feeds have special meaning in your programming language, I recommend
+ *   you migrate your code as follows:
+ *   ```diff
+ *   - case TPP_TOK_LF:
+ *   -    if (tok == TPP_TOK_LF)
+ *   + case TPP_TOK_LF:
+ *   + TPP_CASE_TPP_TOK_COMMENT_LINE
+ *   +    if (TPP_TOK_ISLF_OR_COMMENT(tok))
+ *   ```
  */
 
 /* TPPLEXER_FLAG_INCLUDESTRING:
@@ -1722,6 +1724,14 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   define a "TPP_HOOK_UNKNOWN_PRAGMA"-hook, and simply check if the currently
  *   loaded token is "TPP_KWD_GCC", and if so: "tpp_lexer_yieldraw()" to the next
  *   token in order to start parsing a "#pragma GCC" directive.
+ */
+
+/* W_EXPECTED_BOOL, W_EXPECTED_BOOL_UNARY, W_EXPECTED_BOOL_BINARY_LHS,
+ * W_EXPECTED_BOOL_BINARY_RHS, WG_BOOLVALUE, W_UNKNOWN_INCLUDE_PATH,
+ * W_INCLUDE_PATH_ALREADY_EXISTS, WG_USAGE:
+ * - These warnings/groups were removed. Not because the associated feature no
+ *   longer exists in TPP3, but because they didn't prove useful enough, and/or
+ *   added more overhead than benefit.
  */
 /************************************************************************/
 
@@ -2198,6 +2208,17 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_CONST_USER
 #define TPP_HOOK_NEW_DEPENDENCY      TPP_CONFIG_CALLBACK_NEW_TEXTFILE
 #endif /* !TPP_CONFIG_DYN_CALLBACK_NEW_TEXTFILE */
+
+
+/* TPP2: >> int TPP_CONFIG_CALLBACK_WARNING(int wnum, ...);
+ * TPP3: >> tpp_errno TPP_HOOK_WARNHANDLER(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
+ * Behaves/called differently in TPP3, but serves the same purpose between the two. */
+#ifdef TPP_CONFIG_CALLBACK_WARNING
+#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_CONST_USER
+#define TPP_HOOK_WARNHANDLER(self, info, tpp_restrict invokeinfo, id, args) \
+	TPP_CONFIG_CALLBACK_WARNING(self, info, tpp_restrict invokeinfo, id, args)
+#endif /* TPP_CONFIG_CALLBACK_WARNING */
+
 
 
 
@@ -2985,9 +3006,6 @@ alias("WG_DEPENDENCY", "TPP_WG_DEPENDENCY");
 alias("WG_LIMIT", "TPP_WG_LIMIT");
 alias("WG_QUALITY", "TPP_WG_QUALITY");
 
-//TODO:alias("WG_USAGE", "TPP_WG_USAGE");
-//TODO:alias("WG_BOOLVALUE", "TPP_WG_BOOLVALUE");
-
 // Warnings
 alias("W_EXPECTED_KEYWORD_AFTER_DEFINE", "TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE");
 alias("W_EXPECTED_KEYWORD_AFTER_UNDEF", "TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE");
@@ -3051,6 +3069,7 @@ alias("W_MULTICHAR_NOT_ALLOWED", "TPP_W_MULTICHAR_LITERAL");
 alias("W_EXPECTED_RBRACKET_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
 alias("W_EXPECTED_COMMA", "TPP_W_UNEXPECTED_TOKEN");
 alias("W_INTEGRAL_OVERFLOW", "TPP_W_INVALID_INTEGER");
+alias("W_INTEGRAL_CLAMPED", "TPP_W_INVALID_INTEGER");
 alias("W_EXPECTED_ELSE_IN_EXPRESSION", "TPP_W_UNEXPECTED_TOKEN");
 alias("W_EXPECTED_INCLUDE_STRING", "TPP_W_EXPECTED_INCLUDE_STRING");
 alias("W_FILE_NOT_FOUND", "TPP_W_NO_SUCH_FILE");
@@ -3071,16 +3090,24 @@ alias("W_INCLUDE_RECURSION_LIMIT_EXCEEDED", "TPP_W_INCLUDE_RECURSION_LIMIT_EXCEE
 alias("W_NONPARTABLE_FILENAME_CASING", "TPP_W_NONPORTABLE_FILENAME_CASING");
 alias("W_MACRO_RECURSION_LIMIT_EXCEEDED", "TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED");
 alias("W_CONSIDER_PAREN_AROUND_LAND", "TPP_W_PAREN_AROUND_LAND");
+alias("W_CANT_POP_INCLUDE_PATH", "TPP_W_CANNOT_POP_INCLUDE_PATHS");
+alias("W_INVALID_FLOAT_SUFFIX", "TPP_HAVE_TPP_W_INVALID_FLOAT");
 ]]]*/
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_EOF TPP_TOK_EOF
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_C_CHAR
+#if TPP_HAVE_TPP_TOK_C_CHAR
+#define TPP_TOK_CHAR TPP_TOK_C_CHAR
+#if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_CHAR TPP_TOK_C_CHAR
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_C_CHAR */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_C_STRING
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_HAVE_TPP_TOK_C_CHAR */
+#if TPP_HAVE_TPP_TOK_C_STRING
+#define TPP_TOK_STRING TPP_TOK_C_STRING
+#if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_STRING TPP_TOK_C_STRING
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_C_STRING */
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_HAVE_TPP_TOK_C_STRING */
 #if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_INT
 #define TOK_INT TPP_TOK_INT
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TPP_TOK_INT */
@@ -4163,6 +4190,9 @@ alias("W_CONSIDER_PAREN_AROUND_LAND", "TPP_W_PAREN_AROUND_LAND");
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_WG_LIMIT)
 #define WG_LIMIT TPP_WG_LIMIT
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_WG_LIMIT */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_WG_QUALITY)
+#define WG_QUALITY TPP_WG_QUALITY
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_WG_QUALITY */
 #ifdef TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #define TPP_W_EXPECTED_KEYWORD_AFTER_DEFINE TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -4604,33 +4634,35 @@ alias("W_CONSIDER_PAREN_AROUND_LAND", "TPP_W_PAREN_AROUND_LAND");
 #define W_CONSIDER_PAREN_AROUND_LAND TPP_W_PAREN_AROUND_LAND
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_W_PAREN_AROUND_LAND */
+#ifdef TPP_W_CANNOT_POP_INCLUDE_PATHS
+#define TPP_W_CANT_POP_INCLUDE_PATH TPP_W_CANNOT_POP_INCLUDE_PATHS
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#define W_CANT_POP_INCLUDE_PATH TPP_W_CANNOT_POP_INCLUDE_PATHS
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
+#endif /* TPP_W_CANNOT_POP_INCLUDE_PATHS */
 /*[[[end]]]*/
 
-//TODO: /* #define TPP_CONFIG_CALLBACK_WARNING          x // int x(int wnum, ...) { ... } -- A user-replacement for `TPPLexer_Warn' */
+// No-op directives warnings...
+//TODO:DEF_WARNING(W_MACRO_NOT_DEFINED, (WG_MACROS), WSTATE_DISABLED, WARNF("Macro " Q("%s") " is not defined", KWDNAME()))                                /* [struct TPPKeyword *] OLD(TPPWarn_MacroDoesntExist). */
+//TODO:DEF_WARNING(W_UNKNOWN_ASSERTION, (WG_VALUE), WSTATE_DISABLED, { char const *temp = KWDNAME(); WARNF("Assertion " Q("%s") " does not contain a predicate " Q("%s"), temp, KWDNAME()); }) /* [struct TPPKeyword *,struct TPPKeyword *]. */
+//TODO:DEF_WARNING(W_IDENT_SCCS_IGNORED, (WG_USAGE), WSTATE_WARN, WARNF("#ident/sccs with " Q("%s") " is ignored", CONST_STR())) /* [struct TPPConst *]. */
 
-//TODO:/*36*/ DEF_WARNING(W_MACRO_NOT_DEFINED, (WG_MACROS), WSTATE_DISABLED, WARNF("Macro " Q("%s") " is not defined", KWDNAME()))                                /* [struct TPPKeyword *] OLD(TPPWarn_MacroDoesntExist). */
-//TODO:/*64*/ DEF_WARNING(W_SPECIAL_ARGUMENT_NAME, (WG_MACROS), WSTATE_WARN, WARNF("Special keyword " Q("%s") " used as argument name", KWDNAME())) /* [struct TPPKeyword *] OLD(TPPWarn_VaArgsUsedAsMacroParameter). */
-//TODO:/*68*/ WARNING(W_EXPECTED_BOOL, (WG_BOOLVALUE, WG_VALUE), WSTATE_DISABLED)            /* [struct TPPConst *] OLD(TPPWarn_ExpectedBoolExpression). */
-//TODO:/*69*/ WARNING(W_EXPECTED_BOOL_UNARY, (WG_BOOLVALUE, WG_VALUE), WSTATE_DISABLED)      /* [struct TPPConst *] OLD(TPPWarn_ExpectedBoolExpressionNot). */
-//TODO:/*70*/ WARNING(W_EXPECTED_BOOL_BINARY_LHS, (WG_BOOLVALUE, WG_VALUE), WSTATE_DISABLED) /* [struct TPPConst *] OLD(TPPWarn_ExpectedBoolExpressionLhsOP). */
-//TODO:/*71*/ WARNING(W_EXPECTED_BOOL_BINARY_RHS, (WG_BOOLVALUE, WG_VALUE), WSTATE_DISABLED) /* [struct TPPConst *] OLD(TPPWarn_ExpectedBoolExpressionRhsOP). */
-
-/* Warnings added by the new TPP2. */
-//TODO:DEF_WARNING(W_VA_KEYWORD_IN_REGULAR_MACRO, (WG_MACROS), WSTATE_WARN, WARNF("Variadic keyword " Q("%s") " used in regular macro", KWDNAME()))                    /* [struct TPPKeyword *]. */
+// Macro-not-expanded warnings...
 //TODO:DEF_WARNING(W_KEYWORD_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Keyword-style macro " Q("%s") " is already being expanded", FILENAME()))      /* [struct TPPFile *]. */
 //TODO:DEF_WARNING(W_FUNCTION_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Function-style macro " Q("%s") " is expanded to the same text", FILENAME())) /* [struct TPPFile *]. */
-//TODO:DEF_WARNING(W_INDEX_OUT_OF_BOUNDS, (WG_VALUE), WSTATE_DISABLED, { struct TPPString *s = ARG(struct TPPString *); WARNF("Index %ld is out-of-bounds of 0..%lu", (unsigned long)s->s_size, (unsigned long)ARG(ptrdiff_t)); })                                                                                            /* [struct TPPString *,ptrdiff_t]. */
-//TODO:DEF_WARNING(W_IDENT_SCCS_IGNORED, (WG_USAGE), WSTATE_WARN, WARNF("#ident/sccs with " Q("%s") " is ignored", CONST_STR())) /* [struct TPPConst *]. */
-//TODO:DEF_WARNING(W_UNKNOWN_ASSERTION, (WG_VALUE), WSTATE_DISABLED, { char const *temp = KWDNAME(); WARNF("Assertion " Q("%s") " does not contain a predicate " Q("%s"), temp, KWDNAME()); }) /* [struct TPPKeyword *,struct TPPKeyword *]. */
-//TODO:DEF_WARNING(W_CANT_POP_INCLUDE_PATH, (WG_VALUE), WSTATE_ERROR, WARNF("Can't pop #include paths"))                                                                               /* . */
-//TODO:DEF_WARNING(W_INTEGRAL_CLAMPED, (WG_VALUE), WSTATE_WARN, WARNF("Integral constant clamped to fit")) /* [tint_t,tint_t]. */
-//TODO:DEF_WARNING(W_UNKNOWN_INCLUDE_PATH, (WG_VALUE), WSTATE_WARN, { char *temp = ARG(char *); WARNF("Unknown system #include-path " Q("%.*s"), (int)ARG(size_t), temp); })                                   /* [char const *,size_t]. */
-//TODO:DEF_WARNING(W_INCLUDE_PATH_ALREADY_EXISTS, (WG_VALUE), WSTATE_WARN, { char *temp = ARG(char *); WARNF("System #include-path " Q("%.*s") " already exists", (int)ARG(size_t), temp); })                            /* [char const *,size_t]. */
+
+// Meaningless, special keyword in macro...
+//TODO:DEF_WARNING(W_SPECIAL_ARGUMENT_NAME, (WG_MACROS), WSTATE_WARN, WARNF("Special keyword " Q("%s") " used as argument name", KWDNAME())) /* [struct TPPKeyword *] OLD(TPPWarn_VaArgsUsedAsMacroParameter). */
+//TODO:DEF_WARNING(W_VA_KEYWORD_IN_REGULAR_MACRO, (WG_MACROS), WSTATE_WARN, WARNF("Variadic keyword " Q("%s") " used in regular macro", KWDNAME()))                    /* [struct TPPKeyword *]. */
+
+// Statement expressions...
 //TODO:DEF_WARNING(W_STATEMENT_IN_EXPRESSION, (WG_USAGE, WG_SYNTAX), WSTATE_WARN, WARNF("GCC-style statement " TOK_S " in expression is not understood", TOK_A))                                                  /* . */
 //TODO:DEF_WARNING(W_TYPECAST_IN_EXPRESSION, (WG_USAGE, WG_SYNTAX), WSTATE_WARN, WARNF("C-style type cast " TOK_S " in expression is not understood (Consider using bit-masks to narrow integral types)", TOK_A)) /* . */
 //TODO:DEF_WARNING(W_EXPECTED_RPAREN_AFTER_CAST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(")") " after casting type, but got " TOK_S, TOK_A))                                                               /* . */
 //TODO:DEF_WARNING(W_EXPECTED_RBRACE_AFTER_STATEMENT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q("}") " after statement, but got " TOK_S, TOK_A))                                                             /* . */
-//TODO:DEF_WARNING(W_INVALID_FLOAT_SUFFIX, (WG_SYNTAX), WSTATE_ERROR, { char *temp = ARG(char *); WARNF("Invalid floating point suffix " Q("%.*s"), (int)ARG(size_t), temp); }) /* [char const *,size_t] */
+
+// Misc...
+//TODO:DEF_WARNING(W_INDEX_OUT_OF_BOUNDS, (WG_VALUE), WSTATE_DISABLED, { struct TPPString *s = ARG(struct TPPString *); WARNF("Index %ld is out-of-bounds of 0..%lu", (unsigned long)s->s_size, (unsigned long)ARG(ptrdiff_t)); })                                                                                            /* [struct TPPString *,ptrdiff_t]. */
 
 
 
@@ -4921,6 +4953,10 @@ extern tpp_lexer *TPPLexer_Current;
 	tpp_lcinfo_getline(tpp_file_getlcinfo(self, (tpp_char const *)(text_pointer)))
 #define TPPFile_ColumnAt(self, text_pointer) \
 	tpp_lcinfo_getcol(tpp_file_getlcinfo(self, (tpp_char const *)(text_pointer)))
+
+#define TPPFile_LCAt_(lexer, self, info, text_pointer) TPPFile_LCAt(self, info, text_pointer)
+#define TPPFile_LineAt_(lexer, self, text_pointer)     TPPFile_LineAt(self, text_pointer)
+#define TPPFile_ColumnAt_(lexer, self, text_pointer)   TPPFile_ColumnAt(self, text_pointer)
 #define TPPFile_Filename(self, opt_filename_length)                                        \
 	((opt_filename_length)                                                                 \
 	 ? (void)(*(tpp_size *)(opt_filename_length) = tpp_strlen(tpp_file_getfilename(self))) \
@@ -5564,43 +5600,66 @@ TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
 
 
 #if 0 /* TODO */
-///* Searches the cache and opens a new file if not found.
-// * WARNING: If the caller intends to push the file onto the #include-stack,
-// *          additional steps must be taken when the file was already
-// *          located on the stack (in which case another stream must be opened,
-// *          and a file that is not cached must be pushed onto the #include-stack).
-// * WARNING: This function may modify the given `filename..filename_size+1' area of memory.
-// * @param: pkeyword_entry: When non-NULL, the keyword entry associated with the filename is stored here.
-// * @return: * :   A pointer to the already-chached file (WARNING: This is not a reference)
-// * @return: NULL: File not found. */
-//TPPFUN struct TPPFile *TPPCALL
-//TPPLexer_OpenFile_(TPP_LEXER_PARAM_
-//                   int mode, char *tpp_restrict filename, size_t filename_size,
-//                   struct TPPKeyword **pkeyword_entry);
-//#define TPPLexer_OpenFile(mode, filename, filename_size, pkeyword_entry) \
-//	TPPLexer_OpenFile_(TPP_LEXER_ARG_ mode, filename, filename_size, pkeyword_entry)
-//#define TPPLEXER_OPENFILE_MODE_NORMAL     0x00 /* Normal open (simply pass the given filename to TPPFile_Open, but still sanitize and cache the filename) */
-//#define TPPLEXER_OPENFILE_MODE_RELATIVE   0x01 /* #include "foo.h" (Search for the file relative to the path of every text file on the #include-stack in reverse. - If this fails, search in system folders). */
-//#define TPPLEXER_OPENFILE_MODE_SYSTEM     0x02 /* #include <stdlib.h> (Search through system folders usually specified with `-I' on the commandline). */
-//#define TPPLEXER_OPENFILE_FLAG_NEXT       0x04 /* FLAG: Only open a file not already part of the #include-stack
-//                                                * WARNING: May not be used for `TPPLEXER_OPENFILE_MODE_NORMAL'! */
-//#define TPPLEXER_OPENFILE_FLAG_NOCASEWARN 0x08 /* FLAG: Don't warn about filename casing on windows. */
-//#ifndef TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE
-//#define TPPLEXER_OPENFILE_FLAG_NOCALLBACK 0x10 /* FLAG: Don't invoke the unknown-file callback when set. */
-//#endif /* !TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE */
-//#define TPPLEXER_OPENFILE_FLAG_CONSTNAME  0x20 /* FLAG: The given `filename' may not be modified, but is guarantied to be '\0'-terminated. */
-//
-///* Push a given file into the #include-stack of the current lexer.
-// * NOTE: These functions never fail and return void.
-// * HINT: Call `TPPLexer_PushFileInherited' if you want the lexer to inherit the file.
-// * WARNING: The file argument may be evaluated more than once! */
-//#define TPPLexer_PushFileInherited(f) TPPLexer_PushFileInherited_(TPPLexer_Current, f)
-//#define TPPLexer_PushFile(f)          TPPLexer_PushFile_(TPPLexer_Current, f)
-//#define TPPLexer_PushFileInherited_(_current, f)   \
-//	(void)((f)->f_prev = _current->l_token.t_file, \
-//	       _current->l_token.t_file = (f))
-//#define TPPLexer_PushFile_(_current, f) \
-//	(TPPFile_Incref(f), TPPLexer_PushFileInherited_(_current, f))
+TPPFUN struct TPPFile TPPFile_Empty;
+#define TPPFile_Incref(self)       (void)(++(self)->f_refcnt)
+#define TPPFile_Decref(self)       (void)(TPP_assert((self)->f_refcnt), --(self)->f_refcnt || (TPPFile_Destroy(self), 0))
+#define TPPFile_DecrefNoKill(self) (void)(TPP_assert((self)->f_refcnt >= 2), --(self)->f_refcnt)
+TPPFUN void TPPCALL TPPFile_Destroy(struct TPPFile *__restrict self);
+
+/* Create a new explicit text file by inherited the given `inherited_text'.
+ * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
+TPPFUN /*ref*/struct TPPFile *TPPCALL
+TPPFile_NewExplicitInherited(/*ref*/struct TPPString *__restrict inherited_text);
+
+/* Opens a file.
+ * NOTE: The given filename is what will appear as text when expanding __FILE__
+ * @return: NULL: Failed to open the given file (`errno' was set to ENOENT)
+ * @return: NULL: Not enough available memory (TPP_CONFIG_SET_API_ERROR) */
+TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_Open(char const *__restrict filename);
+
+/* Similar to `TPPFile_Open', but allows the caller to specify a stream,
+ * allowing them to use this function for opening things like STD handles.
+ * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
+TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, char const *__restrict name);
+
+
+/* Searches the cache and opens a new file if not found.
+ * WARNING: If the caller intends to push the file onto the #include-stack,
+ *          additional steps must be taken when the file was already
+ *          located on the stack (in which case another stream must be opened,
+ *          and a file that is not cached must be pushed onto the #include-stack).
+ * WARNING: This function may modify the given `filename..filename_size+1' area of memory.
+ * @param: pkeyword_entry: When non-NULL, the keyword entry associated with the filename is stored here.
+ * @return: * :   A pointer to the already-chached file (WARNING: This is not a reference)
+ * @return: NULL: File not found. */
+TPPFUN struct TPPFile *TPPCALL
+TPPLexer_OpenFile_(TPP_LEXER_PARAM_
+                   int mode, char *tpp_restrict filename, size_t filename_size,
+                   struct TPPKeyword **pkeyword_entry);
+#define TPPLexer_OpenFile(mode, filename, filename_size, pkeyword_entry) \
+	TPPLexer_OpenFile_(TPP_LEXER_ARG_ mode, filename, filename_size, pkeyword_entry)
+#define TPPLEXER_OPENFILE_MODE_NORMAL     0x00 /* Normal open (simply pass the given filename to TPPFile_Open, but still sanitize and cache the filename) */
+#define TPPLEXER_OPENFILE_MODE_RELATIVE   0x01 /* #include "foo.h" (Search for the file relative to the path of every text file on the #include-stack in reverse. - If this fails, search in system folders). */
+#define TPPLEXER_OPENFILE_MODE_SYSTEM     0x02 /* #include <stdlib.h> (Search through system folders usually specified with `-I' on the commandline). */
+#define TPPLEXER_OPENFILE_FLAG_NEXT       0x04 /* FLAG: Only open a file not already part of the #include-stack
+                                                * WARNING: May not be used for `TPPLEXER_OPENFILE_MODE_NORMAL'! */
+#define TPPLEXER_OPENFILE_FLAG_NOCASEWARN 0x08 /* FLAG: Don't warn about filename casing on windows. */
+#ifndef TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE
+#define TPPLEXER_OPENFILE_FLAG_NOCALLBACK 0x10 /* FLAG: Don't invoke the unknown-file callback when set. */
+#endif /* !TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE */
+#define TPPLEXER_OPENFILE_FLAG_CONSTNAME  0x20 /* FLAG: The given `filename' may not be modified, but is guarantied to be '\0'-terminated. */
+
+/* Push a given file into the #include-stack of the current lexer.
+ * NOTE: These functions never fail and return void.
+ * HINT: Call `TPPLexer_PushFileInherited' if you want the lexer to inherit the file.
+ * WARNING: The file argument may be evaluated more than once! */
+#define TPPLexer_PushFileInherited(f) TPPLexer_PushFileInherited_(TPPLexer_Current, f)
+#define TPPLexer_PushFile(f)          TPPLexer_PushFile_(TPPLexer_Current, f)
+#define TPPLexer_PushFileInherited_(_current, f)   \
+	(void)((f)->f_prev = _current->l_token.t_file, \
+	       _current->l_token.t_file = (f))
+#define TPPLexer_PushFile_(_current, f) \
+	(TPPFile_Incref(f), TPPLexer_PushFileInherited_(_current, f))
 #endif
 
 /* Returns the currently active #include-file.
@@ -6018,17 +6077,17 @@ TPP_INLINE int TPPCALL TPP_Atof_(tpp_lexer *self, TPP_tfloat_t *tpp_restrict pfl
 }
 
 #if 0 /* TODO */
-///* Prints the text contained within the current token, automatically
-// * skipping escaped linefeeds and converting di/trigraphs.
-// * NOTE: `TPP_PrintComment' behaves similar, but will
-// *        instead handle any kind of comment token,
-// *        printing the comment text within.
-// * @return: >= 0: Sum of all return values from `printer'.
-// * @return: <  0: The first negative value returned by `printer' */
-//TPPFUN ptrdiff_t TPPCALL TPP_PrintToken_(TPP_LEXER_PARAM_ TPP(printer_t) printer, void *closure);
-//TPPFUN ptrdiff_t TPPCALL TPP_PrintComment_(TPP_LEXER_PARAM_ TPP(printer_t) printer, void *closure);
-//#define TPP_PrintToken(printer, closure)   TPP_PrintToken_(TPP_LEXER_ARG_ printer, closure)
-//#define TPP_PrintComment(printer, closure) TPP_PrintComment_(TPP_LEXER_ARG_ printer, closure)
+/* Prints the text contained within the current token, automatically
+ * skipping escaped linefeeds and converting di/trigraphs.
+ * NOTE: `TPP_PrintComment' behaves similar, but will
+ *        instead handle any kind of comment token,
+ *        printing the comment text within.
+ * @return: >= 0: Sum of all return values from `printer'.
+ * @return: <  0: The first negative value returned by `printer' */
+TPPFUN ptrdiff_t TPPCALL TPP_PrintToken_(TPP_LEXER_PARAM_ TPP(printer_t) printer, void *closure);
+TPPFUN ptrdiff_t TPPCALL TPP_PrintComment_(TPP_LEXER_PARAM_ TPP(printer_t) printer, void *closure);
+#define TPP_PrintToken(printer, closure)   TPP_PrintToken_(TPP_LEXER_ARG_ printer, closure)
+#define TPP_PrintComment(printer, closure) TPP_PrintComment_(TPP_LEXER_ARG_ printer, closure)
 #endif
 
 
