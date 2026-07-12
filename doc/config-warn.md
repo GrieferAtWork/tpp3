@@ -57,6 +57,7 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_bad_expression_operands"></a>`TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS`
 - <a name="tpp_have_tpp_w_divide_by_zero"></a>`TPP_HAVE_TPP_W_DIVIDE_BY_ZERO`
 - <a name="tpp_have_tpp_w_invalid_integer"></a>`TPP_HAVE_TPP_W_INVALID_INTEGER`
+- <a name="tpp_have_tpp_w_invalid_float"></a>`TPP_HAVE_TPP_W_INVALID_FLOAT`
 - <a name="tpp_have_tpp_w_multichar_literal"></a>`TPP_HAVE_TPP_W_MULTICHAR_LITERAL`
 - <a name="tpp_have_tpp_w_date_time"></a>`TPP_HAVE_TPP_W_DATE_TIME`
 - <a name="tpp_have_tpp_w_unknown_extension"></a>`TPP_HAVE_TPP_W_UNKNOWN_EXTENSION`

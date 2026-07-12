@@ -1483,7 +1483,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_byt
 	tpp_size i;
 	struct tpp_lexer_decodecharacter_data *data;
 	data = (struct tpp_lexer_decodecharacter_data *)arg;
-	/* TODO: Decode utf-8 multi-char sequence -- '\U1234' must equal 0x1234, but currently doesn't! */
+	/* TODO: Decode utf-8 multi-char sequence -- '\u1234' must equal 0x1234, but currently doesn't! */
 #if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
 	if ((data->tldcd_count <= 1) &&
 	    (data->tldcd_count + num_bytes) > 1) {

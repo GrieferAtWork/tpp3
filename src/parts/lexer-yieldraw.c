@@ -1767,6 +1767,18 @@ again_ch:
 		}
 		goto again;
 	} else
+#if TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
+	if (ch == '_') {
+		if (tpp_lexer_has(self, THOUSANDS_SEPARATOR_UNDERSCORE))
+			goto again;
+	} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
+#if TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
+	if (ch == '\'') {
+		if (tpp_lexer_has(self, THOUSANDS_SEPARATOR_SINGLETICK))
+			goto again;
+	} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
 #if TPP_HAVE_UNICODE
 	if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 		tpp_unichar uc;
@@ -1812,6 +1824,18 @@ again:
 	if (tpp_ascii_issymcont(ch)) {
 		goto again;
 	} else
+#if TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
+	if (ch == '_') {
+		if (tpp_lexer_has(self, THOUSANDS_SEPARATOR_UNDERSCORE))
+			goto again;
+	} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
+#if TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
+	if (ch == '\'') {
+		if (tpp_lexer_has(self, THOUSANDS_SEPARATOR_SINGLETICK))
+			goto again;
+	} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
 #if TPP_HAVE_UNICODE
 	if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 		tpp_unichar uc;

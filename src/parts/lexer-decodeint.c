@@ -111,7 +111,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 			goto handle_invalid;
 	}
 
-	do {
+	for (;;) {
 		tpp_intmax new_value, old_value;
 		unsigned int digit;
 		if (tpp_ascii_isdigit(ch)) {
@@ -120,7 +120,20 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 			digit = (unsigned int)tpp_ascii_aslwrxdigit(ch);
 		} else if (tpp_ascii_isuprxdigit(ch)) {
 			digit = (unsigned int)tpp_ascii_asuprxdigit(ch);
-		} else {
+		} else
+#if TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
+		if (ch == '_') {
+			goto continue_with_ch;
+#define WANT_continue_with_ch
+		} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
+#if TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
+		if (ch == '\'') {
+			goto continue_with_ch;
+#define WANT_continue_with_ch
+		} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
+		{
 			break;
 		}
 		if (digit >= radix)
@@ -132,13 +145,15 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 		*result = new_value;
 		if (new_value < old_value)
 			goto handle_invalid;
+#ifdef WANT_continue_with_ch
+#undef WANT_continue_with_ch
+continue_with_ch:
+#endif /* WANT_continue_with_ch */
 		if (start >= end)
 			return TPP_EOK;
 		ch    = *start++;
 		start = tpp_skipbse_fwd(start, end, tpp_lexer_getfile(self));
-	} while (tpp_ascii_isdigit(ch) ||
-	         (ch >= 'a' && ch <= 'f') ||
-	         (ch >= 'A' && ch <= 'F'));
+	}
 
 #if TPP_HAVE_LEXER_DECODEINT_SUFFIX
 	switch (ch) {
@@ -374,7 +389,12 @@ tpp_lexer_decodefloat(tpp_lexer *tpp_restrict self,
 		*p_suffix_kind = TPP_FLOAT_SUFFIX_KIND_DEFAULT;
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
 	*result = 0.0;
+/*handle_invalid:*/
+#if TPP_HAVE_TPP_W_INVALID_FLOAT
+	return tpp_lexer_warnf(self, TPP_W_INVALID_FLOAT);
+#else /* TPP_HAVE_TPP_W_INVALID_FLOAT */
 	return TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_INVALID_FLOAT */
 }
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT */
 

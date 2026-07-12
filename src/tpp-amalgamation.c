@@ -155,6 +155,8 @@
 #define tef_TPP_EXT_TPP_TOK_MINUS_MINUS_COMMENT                                   TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_MINUS_MINUS_COMMENT)
 #define tef_TPP_EXT_TPP_TOK_AT_AT_COMMENT                                         TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_AT_AT_COMMENT)
 #define tef_TPP_EXT_TPP_TOK_DOLLAR                                                TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_DOLLAR)
+#define tef_TPP_EXT_THOUSANDS_SEPARATOR_UNDERSCORE                                TPP_INTERNAL(tef_TPP_EXT_THOUSANDS_SEPARATOR_UNDERSCORE)
+#define tef_TPP_EXT_THOUSANDS_SEPARATOR_SINGLETICK                                TPP_INTERNAL(tef_TPP_EXT_THOUSANDS_SEPARATOR_SINGLETICK)
 #define tef_TPP_EXT_TPP_TOK_INT                                                   TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_INT)
 #define tef_TPP_EXT_TPP_TOK_FLOAT                                                 TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_FLOAT)
 #define tef_TPP_EXT_SMART_FLOAT_TOKENS                                            TPP_INTERNAL(tef_TPP_EXT_SMART_FLOAT_TOKENS)
@@ -417,6 +419,8 @@
 #define tff_TPP_TOK_MINUS_MINUS_COMMENT                                           TPP_INTERNAL(tff_TPP_TOK_MINUS_MINUS_COMMENT)
 #define tff_TPP_TOK_AT_AT_COMMENT                                                 TPP_INTERNAL(tff_TPP_TOK_AT_AT_COMMENT)
 #define tff_TPP_TOK_DOLLAR                                                        TPP_INTERNAL(tff_TPP_TOK_DOLLAR)
+#define tff_THOUSANDS_SEPARATOR_UNDERSCORE                                        TPP_INTERNAL(tff_THOUSANDS_SEPARATOR_UNDERSCORE)
+#define tff_THOUSANDS_SEPARATOR_SINGLETICK                                        TPP_INTERNAL(tff_THOUSANDS_SEPARATOR_SINGLETICK)
 #define tff_TPP_TOK_INT                                                           TPP_INTERNAL(tff_TPP_TOK_INT)
 #define tff_TPP_TOK_FLOAT                                                         TPP_INTERNAL(tff_TPP_TOK_FLOAT)
 #define tff_SMART_FLOAT_TOKENS                                                    TPP_INTERNAL(tff_SMART_FLOAT_TOKENS)
@@ -12574,6 +12578,12 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOLLAR)
 		/* .tff_TPP_TOK_DOLLAR                                                = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_DOLLAR),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOLLAR) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE)
+		/* .tff_THOUSANDS_SEPARATOR_UNDERSCORE                                = */ TPP_CONF_DEFAULT(TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK)
+		/* .tff_THOUSANDS_SEPARATOR_SINGLETICK                                = */ TPP_CONF_DEFAULT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_INT)
 		/* .tff_TPP_TOK_INT                                                   = */ TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_INT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_INT) */
@@ -18469,6 +18479,18 @@ again_ch:
 		}
 		goto again;
 	} else
+#if TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
+	if (ch == '_') {
+		if (tpp_lexer_has(self, THOUSANDS_SEPARATOR_UNDERSCORE))
+			goto again;
+	} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
+#if TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
+	if (ch == '\'') {
+		if (tpp_lexer_has(self, THOUSANDS_SEPARATOR_SINGLETICK))
+			goto again;
+	} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
 #if TPP_HAVE_UNICODE
 	if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 		tpp_unichar uc;
@@ -18514,6 +18536,18 @@ again:
 	if (tpp_ascii_issymcont(ch)) {
 		goto again;
 	} else
+#if TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
+	if (ch == '_') {
+		if (tpp_lexer_has(self, THOUSANDS_SEPARATOR_UNDERSCORE))
+			goto again;
+	} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
+#if TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
+	if (ch == '\'') {
+		if (tpp_lexer_has(self, THOUSANDS_SEPARATOR_SINGLETICK))
+			goto again;
+	} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
 #if TPP_HAVE_UNICODE
 	if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 		tpp_unichar uc;
@@ -25987,7 +26021,7 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 			goto handle_invalid;
 	}
 
-	do {
+	for (;;) {
 		tpp_intmax new_value, old_value;
 		unsigned int digit;
 		if (tpp_ascii_isdigit(ch)) {
@@ -25996,7 +26030,20 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 			digit = (unsigned int)tpp_ascii_aslwrxdigit(ch);
 		} else if (tpp_ascii_isuprxdigit(ch)) {
 			digit = (unsigned int)tpp_ascii_asuprxdigit(ch);
-		} else {
+		} else
+#if TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
+		if (ch == '_') {
+			goto continue_with_ch;
+#define WANT_continue_with_ch
+		} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
+#if TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
+		if (ch == '\'') {
+			goto continue_with_ch;
+#define WANT_continue_with_ch
+		} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
+		{
 			break;
 		}
 		if (digit >= radix)
@@ -26008,13 +26055,15 @@ tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
 		*result = new_value;
 		if (new_value < old_value)
 			goto handle_invalid;
+#ifdef WANT_continue_with_ch
+#undef WANT_continue_with_ch
+continue_with_ch:
+#endif /* WANT_continue_with_ch */
 		if (start >= end)
 			return TPP_EOK;
 		ch    = *start++;
 		start = tpp_skipbse_fwd(start, end, tpp_lexer_getfile(self));
-	} while (tpp_ascii_isdigit(ch) ||
-	         (ch >= 'a' && ch <= 'f') ||
-	         (ch >= 'A' && ch <= 'F'));
+	}
 
 #if TPP_HAVE_LEXER_DECODEINT_SUFFIX
 	switch (ch) {
@@ -26250,7 +26299,12 @@ tpp_lexer_decodefloat(tpp_lexer *tpp_restrict self,
 		*p_suffix_kind = TPP_FLOAT_SUFFIX_KIND_DEFAULT;
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
 	*result = 0.0;
+/*handle_invalid:*/
+#if TPP_HAVE_TPP_W_INVALID_FLOAT
+	return tpp_lexer_warnf(self, TPP_W_INVALID_FLOAT);
+#else /* TPP_HAVE_TPP_W_INVALID_FLOAT */
 	return TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_INVALID_FLOAT */
 }
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT */
 
@@ -35326,7 +35380,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_byt
 	tpp_size i;
 	struct tpp_lexer_decodecharacter_data *data;
 	data = (struct tpp_lexer_decodecharacter_data *)arg;
-	/* TODO: Decode utf-8 multi-char sequence -- '\U1234' must equal 0x1234, but currently doesn't! */
+	/* TODO: Decode utf-8 multi-char sequence -- '\u1234' must equal 0x1234, but currently doesn't! */
 #if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
 	if ((data->tldcd_count <= 1) &&
 	    (data->tldcd_count + num_bytes) > 1) {

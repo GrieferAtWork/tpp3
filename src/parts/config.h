@@ -1812,6 +1812,17 @@
 
 /* XXX: Feature to disable support for C-style "0x" radix prefixes in tpp_lexer_decodeint() */
 
+/* Allow use of `_` as a thousands separator `123_456_789` */
+#ifndef TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
+#define TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) /* "-fthousands-separator-underscore" */
+#endif /* !TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
+
+/* Allow use of `'` as a thousands separator `123'456'789`
+ * @detect: #if __TPP_COUNT_TOKENS("123'456'789") == 1 */
+#ifndef TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
+#define TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fthousands-separator-singletick" */
+#endif /* !TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
+
 /* `123`
  * @detect: #if __TPP_COUNT_TOKENS("123") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_INT
@@ -4918,6 +4929,10 @@ for (local doc, name,
 #define TPP_HAVE_TPP_W_INVALID_INTEGER \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_DECODEINT)
 #endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+#ifndef TPP_HAVE_TPP_W_INVALID_FLOAT
+#define TPP_HAVE_TPP_W_INVALID_FLOAT \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_DECODEFLOAT)
+#endif /* !TPP_HAVE_TPP_W_INVALID_FLOAT */
 #ifndef TPP_HAVE_TPP_W_MULTICHAR_LITERAL
 #define TPP_HAVE_TPP_W_MULTICHAR_LITERAL \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
