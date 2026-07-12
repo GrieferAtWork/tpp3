@@ -55,9 +55,9 @@ TPP_DECL_BEGIN
 
 
 /* Ordinals for special character with special meaning */
-#define TPP_ASCII_TAB 9
-#define TPP_ASCII_LF  10
-#define TPP_ASCII_CR  13
+#define TPP_ASCII_TAB 9  /* \t */
+#define TPP_ASCII_LF  10 /* \n */
+#define TPP_ASCII_CR  13 /* \r */
 
 
 #if TPP_HAVE_BUILTIN_CTYPE

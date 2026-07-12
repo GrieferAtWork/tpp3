@@ -108,23 +108,67 @@ tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 	return tpp_formatprinter_print_cstr(printer, arg, start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
 }
 
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
-tpp_format_quote_start(tpp_formatprinter printer, void *arg) {
-	/* XXX: Do something more interesting here! */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_format_quote_start(tpp_lexer const *self, tpp_formatprinter printer, void *arg) {
+	(void)self; /* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
-tpp_format_quote_end(tpp_formatprinter printer, void *arg) {
-	/* XXX: Do something more interesting here! */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_format_quote_end(tpp_lexer const *self, tpp_formatprinter printer, void *arg) {
+	(void)self; /* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
-tpp_format_token_data(tpp_formatprinter printer, void *arg,
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_format_token_data(tpp_lexer const *self, tpp_formatprinter printer, void *arg,
                       tpp_char const *start, tpp_size length) {
-	/* TODO: Escape line-feeds while printing token body */
-	return tpp_formatprinter_print(printer, arg, start, length);
+	/* Escape line-feeds while printing token body */
+	tpp_char const *iter = start, *end = start + length;
+	tpp_ssize temp, result = 0;
+	(void)self;
+	while (iter < end) {
+		tpp_char const *prev_iter = iter;
+		tpp_char ch = *iter++;
+		if (tpp_ascii_islf(ch)) {
+#if TPP_HAVE_UNICODE
+handle_lf:
+#endif /* TPP_HAVE_UNICODE */
+			temp = tpp_formatprinter_print(printer, arg, start, prev_iter - start);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			temp = tpp_formatprinter_print_conststr(printer, arg, "<linefeed>");
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+#if TPP_HAVE_CR_LF_DETECTION
+			if (ch == TPP_ASCII_CR && iter < end && *iter == TPP_ASCII_LF)
+				++iter;
+#endif /* TPP_HAVE_CR_LF_DETECTION */
+			start = iter;
+		} else
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(self)))  {
+			tpp_unichar uc;
+			--iter;
+			uc = tpp_unicode_readutf8(&iter, end);
+			if (tpp_unicode_islf(uc))
+				goto handle_lf;
+		} else
+#endif /* TPP_HAVE_UNICODE */
+		{
+		}
+	}
+	if (start < iter) {
+		temp = tpp_formatprinter_print(printer, arg, start, iter - start);
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
@@ -166,11 +210,11 @@ handle_eof:
 		goto again;
 
 	case '[': /* "%["    Start quoting text */
-		temp = tpp_format_quote_start(printer, arg);
+		temp = tpp_format_quote_start(self, printer, arg);
 		break;
 
 	case ']': /* "%]"    Stop quoting text */
-		temp = tpp_format_quote_end(printer, arg);
+		temp = tpp_format_quote_end(self, printer, arg);
 		break;
 
 	case 'P':
@@ -214,7 +258,7 @@ handle_eof:
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */
 			tpp_token const *const token = tpp_lexer_gettoken(self);
 			tpp_size length;
-			temp = tpp_format_quote_start(printer, arg);
+			temp = tpp_format_quote_start(self, printer, arg);
 			if tpp_unlikely(temp < 0)
 				goto err_temp;
 			result += temp;
@@ -226,12 +270,12 @@ handle_eof:
 			} else
 #endif /* TPP_HAVE_LEXER_REPRTOKENID */
 			{
-				temp = tpp_format_token_data(printer, arg, token->tt_start, length);
+				temp = tpp_format_token_data(self, printer, arg, token->tt_start, length);
 			}
 			if tpp_unlikely(temp < 0)
 				goto err_temp;
 			result += temp;
-			temp = tpp_format_quote_end(printer, arg);
+			temp = tpp_format_quote_end(self, printer, arg);
 		}	break;
 
 		default:
@@ -307,7 +351,7 @@ handle_eof:
 
 				case 't': {
 					/* "%.NPt" "%[<N bytes starting at "pos">%]" */
-					temp = tpp_format_quote_start(printer, arg);
+					temp = tpp_format_quote_start(self, printer, arg);
 					if tpp_unlikely(temp < 0)
 						goto err_temp;
 					result += temp;
@@ -320,12 +364,12 @@ handle_eof:
 						                             info->tlpfi_pos);
 						if ((tpp_size)length > maxlen)
 							length = (unsigned int)maxlen;
-						temp = tpp_format_token_data(printer, arg, info->tlpfi_pos, (tpp_size)length);
+						temp = tpp_format_token_data(self, printer, arg, info->tlpfi_pos, (tpp_size)length);
 					}
 					if tpp_unlikely(temp < 0)
 						goto err_temp;
 					result += temp;
-					temp = tpp_format_quote_end(printer, arg);
+					temp = tpp_format_quote_end(self, printer, arg);
 				}	break;
 
 				default:
@@ -518,16 +562,12 @@ tpp_lexer_vwarnf_mesg(tpp_lexer *tpp_restrict self,
 	if (warning_format == NULL) {
 		/* In this case, "id" must be using a custom warning message expression! */
 		tpp_errno error;
-		error = tpp_lexer_vwarnf_impl_custom(self, info, printer,
-		                                     arg, id, args,
-		                                     p_printer_result);
+		error = tpp_lexer_vwarnf_impl_custom(self, info, printer, arg,
+		                                     id, args, p_printer_result);
 		tpp_assert((!TPP_ISERR(error) ||
 		            (error == TPP_ENOMEM || error == TPP_EIO ||
 		             error == TPP_ELEXERROR || error == TPP_EWARNPRINT)) &&
 		           "Custom warning callbacks may only return one of these errors");
-		if (TPP_ISERR(error)) {
-			return error;
-		}
 		return error;
 	}
 	printer_status = tpp_lexer_vprintf_warning(self, info, printer, arg,
