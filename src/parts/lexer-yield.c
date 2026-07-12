@@ -1910,18 +1910,18 @@ tpp_lexer_yield_handle___TPP_STR_SUBSTR(tpp_lexer *tpp_restrict self,
 	print_status = tpp_string_builder_print(&result_builder, &quote_ch, 1);
 	if tpp_unlikely(print_status < 0) {
 		tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
-		goto err_tok_data;
+		goto err_tok_data_result_builder;
 	}
 	print_status = tpp_token_encodestring(&tpp_string_builder_print, &result_builder,
 	                                      data.tlhsdsd_str, data.tlhsdsd_length);
 	if tpp_unlikely(print_status < 0) {
 		tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
-		goto err_tok_data;
+		goto err_tok_data_result_builder;
 	}
 	print_status = tpp_string_builder_print(&result_builder, &quote_ch, 1);
 	if tpp_unlikely(print_status < 0) {
 		tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
-		goto err_tok_data;
+		goto err_tok_data_result_builder;
 	}
 	result_str = tpp_string_builder_pack(&result_builder);
 	if (data.tlhsdsd_chunk)
@@ -1948,8 +1948,238 @@ err_tok_data:
 	if (data.tlhsdsd_chunk)
 		tpp_string_decref(data.tlhsdsd_chunk);
 	return tok;
+err_tok_data_result_builder:
+	tpp_string_builder_fini(&result_builder);
+	goto err_tok_data;
 }
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
+
+
+
+
+#if TPP_HAVE_MACRO___TPP_LOAD_FILE
+struct tpp_string_builder_inplace_escape_data {
+	tpp_string_builder *tsbied_builder; /* [1..1] Builder */
+	tpp_char           *tsbied_text;    /* [0..tsbied_size] Remaining data to escape */
+	tpp_size            tsbied_size;    /* Size of "tsbied_size" (in bytes) */
+};
+
+#define TPP_STRING_BUILDER_INPLACE_ESCAPE_RESTART ((tpp_ssize)(TPP_ELAST - 1))
+
+static TPP_FORMATPRINTER_DEFINE(tpp_string_builder_inplace_escape_cb, arg, text, num_bytes) {
+	tpp_char *buf;
+	tpp_size offset, delta_size, remaining;
+	struct tpp_string_builder_inplace_escape_data *data;
+	data = (struct tpp_string_builder_inplace_escape_data *)arg;
+	if (data->tsbied_text == text) {
+		tpp_assert(data->tsbied_size >= num_bytes);
+		data->tsbied_text += num_bytes;
+		data->tsbied_size -= num_bytes;
+		return 0;
+	}
+
+	/* Replace the next byte with "text...+=num_bytes" */
+	--data->tsbied_size;
+	++data->tsbied_text;
+	delta_size = num_bytes - 1;
+
+	/* Allocate additional space for escaped data. */
+	offset = data->tsbied_text - data->tsbied_builder->tsb_buf->ts_str;
+	buf = tpp_string_builder_alloc(data->tsbied_builder, delta_size);
+	data->tsbied_text = data->tsbied_builder->tsb_buf->ts_str + offset;
+	if tpp_unlikely(!buf)
+		return TPP_SSIZE_OFERR(TPP_ENOMEM);
+
+	/* Move buffer up to make space for escaped representation */
+	remaining = (data->tsbied_builder->tsb_buf->ts_str +
+	             tpp_string_builder_getlen(data->tsbied_builder)) -
+	            data->tsbied_text;
+	tpp_memmoveup(data->tsbied_text + delta_size,
+	              data->tsbied_text, remaining * sizeof(tpp_char));
+
+	/* Inject escaped representation */
+	tpp_memcpy(data->tsbied_text - 1, text, num_bytes * sizeof(tpp_char));
+	data->tsbied_text += delta_size;
+
+	/* Tell caller to restart "tpp_token_encodestring()" from updated base position */
+	return TPP_STRING_BUILDER_INPLACE_ESCAPE_RESTART;
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_string_builder_inplace_escape(tpp_string_builder *tpp_restrict self,
+                                  tpp_char *text, tpp_size num_bytes) {
+	struct tpp_string_builder_inplace_escape_data data;
+	data.tsbied_builder = self;
+	data.tsbied_text    = text;
+	data.tsbied_size    = num_bytes;
+	while (data.tsbied_size) {
+		tpp_ssize status = tpp_token_encodestring(&tpp_string_builder_inplace_escape_cb,
+		                                          &data, data.tsbied_text, data.tsbied_size);
+		if (status == TPP_STRING_BUILDER_INPLACE_ESCAPE_RESTART)
+			continue;
+		if (status == 0) {
+			tpp_assert(data.tsbied_size == 0);
+			break;
+		}
+		tpp_assert(TPP_SSIZE_ISERR(status));
+		return TPP_SSIZE_ASERR(status);
+	}
+	return TPP_EOK;
+}
+
+/* Read all data from "handle", escape it like "tpp_token_encodestring"
+ * would, then append the escaped contents onto "self". */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_string_builder_print_escaped_file(tpp_string_builder *tpp_restrict self,
+                                      tpp_io_handle handle) {
+	tpp_size bufsize = 512;
+	for (;;) {
+		tpp_size new_bufsize;
+		tpp_errno error;
+		tpp_ssize read_status;
+		tpp_size used_bufsize = bufsize;
+		tpp_char *buf = tpp_string_builder_tryalloc(self, used_bufsize);
+		if tpp_unlikely(!buf) {
+			used_bufsize = 1;
+			buf = tpp_string_builder_alloc(self, used_bufsize);
+			if tpp_unlikely(!buf)
+				goto err_nomem;
+		}
+#if TPP_HAVE_FILE_NONBLOCK
+		read_status = tpp_io_read(handle, buf, used_bufsize, 0);
+#else /* TPP_HAVE_FILE_NONBLOCK */
+		read_status = tpp_io_read(handle, buf, used_bufsize);
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+		if (TPP_SSIZE_ISERR(read_status))
+			return TPP_SSIZE_ASERR(read_status);
+		if (used_bufsize > (tpp_size)read_status) {
+			tpp_size unused = used_bufsize - (tpp_size)read_status;
+			tpp_string_builder_release(self, unused);
+		}
+		error = tpp_string_builder_inplace_escape(self, buf, (tpp_size)read_status);
+		if (TPP_ISERR(error))
+			return error;
+		if ((tpp_size)read_status < used_bufsize)
+			break; /* Done! */
+		new_bufsize = tpp_string_builder_getlen(self) >> 1;
+		if (new_bufsize > 64 * 1024)
+			new_bufsize = 64 * 1024;
+		if (bufsize < new_bufsize)
+			bufsize = new_bufsize;
+	}
+	return TPP_EOK;
+err_nomem:
+	return TPP_ENOMEM;
+}
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TPP_LOAD_FILE(tpp_lexer *tpp_restrict self) {
+	/* Pretty much the same as:
+	 * >> #define __TPP_LOAD_FILE(filename) __TPP_STR_PACK(__TPP_EXEC("#embed " #filename)) */
+	tpp_lexer_openfile_result ofr;
+	tpp_errno ofr_error;
+	tpp_token_id tok;
+	TPP_REF tpp_string *result_str;
+	tpp_string_builder result_builder;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *prev_file;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+	do {
+		tok = tpp_lexer_yield_include_string_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	if (tok == '"' || tok == '<') {
+#if TPP_HAVE_LEXER_OPENFILE_EX
+		ofr_error = tpp_lexer_open_include_string_ex(self, &ofr, TPP_LEXER_OPENFILE_FLAG_WARN_CASING);
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
+		ofr_error = tpp_lexer_open_include_string(self, &ofr);
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
+#if TPP_HAVE_LEXER_OPENFILE_EX
+		if (ofr_error == TPP_EMASKED)
+			ofr_error = TPP_ENOENT; /* Shouldn't happen */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
+	} else {
+		tpp_bzero(&ofr, sizeof(ofr)); /* To prevent compiler warnings; init here isn't actually necessary */
+#if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
+		ofr_error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INCLUDE_STRING);
+		if (!TPP_ISERR(ofr_error))
+			ofr_error = TPP_ENOENT;
+#else /* TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
+		ofr_error = TPP_ENOENT;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING */
+	}
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		goto err_tok_ofr;
+	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
+	if (TPP_TOK_ISERR(tok))
+		goto err_tok_ofr;
+
+	/* Load+escape the entire file into a string literal.
+	 * NOTE: There'd be no point in doing something similar to `TPP_FILE_ENCODING_EMBED',
+	 *       since unlike `#embed', which can just lazily load file-data because it produces
+	 *       a `,'-separated sequence of integer tokens, we're actually only producing a
+	 *       single string token, which would just be loaded in its entirety anyways the
+	 *       next time a call to `tpp_lexer_yieldraw()' was made -- so we wouldn't gain
+	 *       anything...
+	 * In order for something like that to make sense, `tpp_lexer_yieldraw()' would firstly
+	 * need to be able to yield the start of a string token *without* having to parse that
+	 * string token in its entirety first -- which would be impossible since it'd mean that
+	 * when `tpp_lexer_yieldraw()' returns after partially loading a string-encoded file,
+	 * there'd be no valid value that could be returned by `tpp_lexer_gettokenend()' (since
+	 * the end of the token wouldn't be loaded yet at that point). */
+	tpp_string_builder_init(&result_builder);
+	if (tpp_string_builder_print(&result_builder, (tpp_char const *)"\"", 1) < 0) {
+err_nomem_ofr_result_builder:
+		tok = TPP_TOK_ENOMEM;
+err_tok_ofr_result_builder:
+		tpp_string_builder_fini(&result_builder);
+		goto err_tok_ofr;
+	}
+	if (ofr_error == TPP_EOK) {
+		tpp_errno error = tpp_string_builder_print_escaped_file(&result_builder, ofr.tlofr_handle);
+		if (TPP_ISERR(error)) {
+			tok = TPP_TOK_OFERR(error);
+			goto err_tok_ofr_result_builder;
+		}
+		tpp_lexer_openfile_result_fini(&ofr);
+	}
+	if (tpp_string_builder_print(&result_builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_nomem_ofr_result_builder;
+	result_str = tpp_string_builder_pack(&result_builder);
+
+	/* Push the substring as a new file */
+	prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		goto err_nomem_result_str;
+	tpp_file_move(prev_file, file);
+	tpp_file_init_text_ex(file, NULL, result_str,
+	                      tpp_string_str(result_str),
+	                      tpp_string_len(result_str),
+	                      TPP_LCINFO_INVALID,
+	                      TPP_FILE_FLAGS_NORMAL,
+	                      prev_file->tf_enc);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return TPP_TOK_EOF;
+err_tok_ofr:
+	if (ofr_error == TPP_EOK)
+		tpp_lexer_openfile_result_fini(&ofr);
+	return tok;
+err_nomem_result_str:
+	tpp_string_decref(result_str);
+	return TPP_TOK_ENOMEM;
+}
+#endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
 
 
 
@@ -2251,7 +2481,8 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 /************************************************************************/
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
-	/* TODO: #define __TPP_LOAD_FILE(filename) __TPP_STR_PACK(__TPP_EXEC("#embed " #filename)) */
+	case TPP_KWD___TPP_LOAD_FILE:
+		return tpp_lexer_yield_handle___TPP_LOAD_FILE(self);
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
 /************************************************************************/
 

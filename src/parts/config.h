@@ -3008,6 +3008,7 @@ print("#endif /" "* !... *" "/");
 	 TPP_HAVE_MACRO___has_include ||       \
 	 TPP_HAVE_MACRO___has_include_next ||  \
 	 TPP_HAVE_MACRO___has_embed ||         \
+	 TPP_HAVE_MACRO___TPP_LOAD_FILE ||     \
 	 TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
 #endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
 
@@ -4195,6 +4196,17 @@ for (local doc, name,
 #ifndef TPP_HAVE_LEXER_INIT_OPEN
 #define TPP_HAVE_LEXER_INIT_OPEN TPP_HAVE_LEXER_OPENFILE
 #endif /* !TPP_HAVE_LEXER_INIT_OPEN */
+
+/* Provide an API `tpp_string_builder` centered around builtin `tpp_string` */
+#ifndef TPP_HAVE_STRING_BUILDER
+#define TPP_HAVE_STRING_BUILDER \
+	((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_LOAD_FILE || 1 /*TODO: List all consumers*/)
+#endif /* !TPP_HAVE_STRING_BUILDER */
+
+/* Provide a function `tpp_string_builder_tryalloc()` */
+#ifndef TPP_HAVE_STRING_BUILDER_TRYALLOC
+#define TPP_HAVE_STRING_BUILDER_TRYALLOC ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_LOAD_FILE)
+#endif /* !TPP_HAVE_STRING_BUILDER_TRYALLOC */
 
 /* Enable support for `tpp_lexer_skip()` and `tpp_lexer_require()` */
 #ifndef TPP_HAVE_LEXER_SKIP

@@ -93,6 +93,7 @@ again:
 	/* Only really need to escape \ " ' CR LF and (TPP_HAVE_UNICODE-only)
 	 * ordinals >=0xC0 that *might* form unicode line-feed characters. */
 
+	TPP_TOKEN_ENCODESTRING_CASE2('\0', '\\', '0'); /* To prevent problems with "strlen()" and the like... */
 	TPP_TOKEN_ENCODESTRING_CASE2('\\', '\\', '\\');
 	TPP_TOKEN_ENCODESTRING_CASE2('\'', '\\', '\'');
 	TPP_TOKEN_ENCODESTRING_CASE2('\"', '\\', '\"');

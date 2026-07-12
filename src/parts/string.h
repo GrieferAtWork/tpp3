@@ -83,7 +83,7 @@ TPP_DECL struct tpp_string_empty_struct {
 /************************************************************************/
 /* STRING BUILDER                                                       */
 /************************************************************************/
-
+#if TPP_HAVE_STRING_BUILDER
 typedef struct tpp_string_builder {
 	tpp_string *TPP_INTERNAL(tsb_buf); /* [0..1][owned] Allocated string buffer ("ts_len" in here is then *allocated* buffer size) */
 	tpp_size    TPP_INTERNAL(tsb_len); /* [<= tsb_buf->ts_len] Used buffer size */
@@ -95,6 +95,9 @@ typedef struct tpp_string_builder {
 	       (self)->TPP_INTERNAL(tsb_len) = 0)
 #define tpp_string_builder_fini(self) \
 	_tpp_string_free((self)->TPP_INTERNAL(tsb_buf))
+
+/* Return the # of used bytes */
+#define tpp_string_builder_getlen(self) (self)->TPP_INTERNAL(tsb_len)
 
 /* Package "self" into a tpp string and return said string.
  * This function never fails, but it *DOES* finalize "self"
@@ -115,11 +118,22 @@ tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict sel
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self, tpp_size num_bytes);
+#if TPP_HAVE_STRING_BUILDER_TRYALLOC
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
+tpp_string_builder_tryalloc(tpp_string_builder *tpp_restrict self, tpp_size num_bytes);
+#endif /* TPP_HAVE_STRING_BUILDER_TRYALLOC */
+
+/* After a call to `tpp_string_builder_tryalloc()' that didn't actually end up
+ * needing  */
+#define tpp_string_builder_release(self, num_unused_trailing_bytes)                  \
+	(void)(tpp_assert((self)->TPP_INTERNAL(tsb_len) >= (num_unused_trailing_bytes)), \
+	       (self)->TPP_INTERNAL(tsb_len) -= (num_unused_trailing_bytes))
 
 /* Print "text" into "tpp_string_builder *self"
  * @return: num_bytes:                   Success
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
 TPP_DECL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes);
+#endif /* TPP_HAVE_STRING_BUILDER */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

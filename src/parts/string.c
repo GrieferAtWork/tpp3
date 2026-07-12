@@ -63,6 +63,7 @@ TPP_IMPL struct tpp_string_empty_struct _tpp_string_empty = {
 /* STRING BUILDER                                                       */
 /************************************************************************/
 
+#if TPP_HAVE_STRING_BUILDER
 /* Package "self" into a tpp string and return said string.
  * This function never fails, but it *DOES* finalize "self"
  * iow: DO NOT CALL `tpp_string_builder_fini()' AFTER THIS FUNCTION!
@@ -98,18 +99,9 @@ tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict sel
 #endif /* !TPP_STRING_BUILDER_MINALLOC */
 
 
-/* Allocate (and return) an additional buffer of at least "num_bytes" characters,
- * to-be initialized by the caller at the end of all string data that has already
- * been allocated to the given builder.
- *
- * @return: * :   Pointer to the base of a "num_bytes"-bytes
- *                long buffer (to-be initialized by the caller)
- *                This pointer ONLY remains valid until the next
- *                call to this function with the same "self".
- * @return: NULL: Out of memory (TPP_ENOMEM) */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
-tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,
-                         tpp_size num_bytes) {
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
+tpp_string_builder_alloc_impl(tpp_string_builder *tpp_restrict self,
+                              tpp_size num_bytes, bool try_alloc) {
 	tpp_char *result;
 	tpp_string *buffer = self->tsb_buf;
 	tpp_size cur_alloc = buffer ? buffer->ts_len : 0;
@@ -126,7 +118,8 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,
 		buffer = _tpp_string_tryrealloc(buffer, new_alloc);
 		if tpp_unlikely(!buffer) {
 			new_alloc = min_alloc;
-			buffer = _tpp_string_realloc(self->tsb_buf, new_alloc);
+			buffer = try_alloc ? _tpp_string_tryrealloc(self->tsb_buf, new_alloc)
+			                   : _tpp_string_realloc(self->tsb_buf, new_alloc);
 			if tpp_unlikely(!buffer)
 				return NULL;
 		}
@@ -141,6 +134,29 @@ tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,
 	return result;
 }
 
+/* Allocate (and return) an additional buffer of at least "num_bytes" characters,
+ * to-be initialized by the caller at the end of all string data that has already
+ * been allocated to the given builder.
+ *
+ * @return: * :   Pointer to the base of a "num_bytes"-bytes
+ *                long buffer (to-be initialized by the caller)
+ *                This pointer ONLY remains valid until the next
+ *                call to this function with the same "self".
+ * @return: NULL: Out of memory (TPP_ENOMEM) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
+tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,
+                         tpp_size num_bytes) {
+	return tpp_string_builder_alloc_impl(self, num_bytes, false);
+}
+
+#if TPP_HAVE_STRING_BUILDER_TRYALLOC
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
+tpp_string_builder_tryalloc(tpp_string_builder *tpp_restrict self,
+                            tpp_size num_bytes) {
+	return tpp_string_builder_alloc_impl(self, num_bytes, true);
+}
+#endif /* TPP_HAVE_STRING_BUILDER_TRYALLOC */
+
 /* Print "text" into "tpp_string_builder *self"
  * @return: num_bytes:                   Success
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
@@ -154,7 +170,7 @@ TPP_IMPL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, tex
 err_nomem:
 	return TPP_SSIZE_OFERR(TPP_ENOMEM);
 }
-
+#endif /* TPP_HAVE_STRING_BUILDER */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/
