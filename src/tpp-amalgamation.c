@@ -633,6 +633,7 @@
 #define tks_bckm                                                                  TPP_INTERNAL(tks_bckm)
 #define tks_bckv                                                                  TPP_INTERNAL(tks_bckv)
 #define TPP_TOK_MULTICHAR_BEGIN                                                   TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN)
+#define tpp_lexer_core                                                            TPP_INTERNAL(tpp_lexer_core)
 #define tlc_tok                                                                   TPP_INTERNAL(tlc_tok)
 #define tt_start                                                                  TPP_INTERNAL(tt_start)
 #define tli_file                                                                  TPP_INTERNAL(tli_file)
@@ -8125,7 +8126,7 @@ tpp_assertions_contains(tpp_assertions const *tpp_restrict self,
 		tpp_assertion const *ent = &self->tass_bckv[hs & self->tass_bckm];
 		if (ent->tas_value == NULL)
 			break;
-		if (ent->tas_value == value)
+		if (tpp_keyword_equals(ent->tas_value, value))
 			return true;
 	}
 	return false;
@@ -8147,7 +8148,7 @@ tpp_assertions_assert(tpp_assertions *tpp_restrict self,
 			tpp_assertion const *ent = &self->tass_bckv[hs & self->tass_bckm];
 			if (ent->tas_value == NULL)
 				break;
-			if (ent->tas_value == value)
+			if (tpp_keyword_equals(ent->tas_value, value))
 				return TPP_ENOENT; /* Already contained */
 		}
 	}
@@ -8191,7 +8192,7 @@ tpp_assertions_fixtable(tpp_assertions *tpp_restrict self) {
 			for (tpp_assertions_hashinit(&hs, &perturb, hash, self->tass_bckm);;
 				 tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm)) {
 				tpp_assertion *ent2 = &self->tass_bckv[hs & self->tass_bckm];
-				tpp_assert((ent2->tas_value == ent->tas_value) == (ent2 == ent));
+				tpp_assert(tpp_keyword_equals(ent2->tas_value, ent->tas_value) == (ent2 == ent));
 				if (ent2->tas_value == NULL) {
 					ent2->tas_value = kwd;
 					ent->tas_value = NULL;
@@ -8223,7 +8224,7 @@ tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
 		ent = &self->tass_bckv[hs & self->tass_bckm];
 		if (ent->tas_value == NULL)
 			return false;
-		if (ent->tas_value == value)
+		if (tpp_keyword_equals(ent->tas_value, value))
 			break; /* Found it! */
 	}
 
@@ -14110,7 +14111,6 @@ _tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
                          ) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, flags, encoding);
-	tpp_lexer_init(self);
 }
 
 
@@ -14133,7 +14133,6 @@ tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	 * be allocated by the lexer) */
 	ioflags |= TPP_FILE_FLAGS_NOKWD;
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
-	tpp_lexer_init(self);
 }
 #endif /* TPP_HAVE_LEXER_INIT_IO */
 
@@ -14152,7 +14151,6 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
                         tpp_size filename_maxlen) {
 	tpp_errno error;
 	tpp_lexer_openfile_result ofr;
-	tpp_lexer_init(self);
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
 	if (TPP_ISERR(error)) {
 		tpp_lexer_fini(self);
@@ -23257,10 +23255,15 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	if tpp_unlikely(!keyword)
 		goto err_nomem;
 	token->tt_end = token->tt_start; /* Ensure that the macro's name stays loaded */
-	token->tt_end = pos;
-	do {
-		tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
-	} while (TPP_TOK_ISCOMMENT_NOLINE(tok));
+
+	/* Yield to next token.
+	 * NOTE: Because this is a "raw" yield, this is *always* able to yield TPP_TOK_SPACE
+	 *       and other such tokens, meaning by the time "tpp_lexer_parse_macro_definition"
+	 *       is called, it points *directly* after the end of the macro's name (except that
+	 *       a potential \-escaped linefeed is skipped -- as such, the next token will only
+	 *       be (e.g.) `(` if that is what *immediatly* follows the keyword, *WITHOUT* any
+	 *       preceding whitespace, comment, etc.) */
+	tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 
@@ -23308,8 +23311,135 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 err_nomem:
 	return TPP_TOK_ENOMEM;
 }
-
 #endif /* TPP_HAVE_CPP_DIRECTIVES && TPP_HAVE_CPP_DEFINE */
+
+#if TPP_HAVE_LEXER_CLI_DEFINE
+
+
+static TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
+                      char const *macro_name, tpp_size macro_name_len,
+                      char const *macro_body, tpp_size macro_body_len) {
+	tpp_char const *macro_params;
+	tpp_char const *pos;
+	tpp_size macro_params_len;
+	tpp_size def_chunk_len;
+	TPP_REF tpp_string *def_chunk;
+	tpp_errno error;
+	TPP_REF tpp_macro *macro;
+	tpp_token_id tok;
+	tpp_keyword const *ro_macro_keyword;
+	tpp_keyword *macro_keyword;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file_init_text_utf8(file, TPP_CONFIG_CLI_FILENAME,
+	                        NULL, macro_name, macro_name_len,
+	                        TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
+	do {
+		tok = tpp_lexer_yieldraw(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	if (TPP_TOK_ISKEYWORD(tok)) {
+		ro_macro_keyword = tpp_lexer_gettokenkwd(self);
+	} else {
+		/* Shouldn't really get here, unless someone
+		 * tries to do something stupid like `-D+-*=42` */
+		tpp_char const *token_start = tpp_lexer_gettokenstart(self);
+		tpp_size token_len = tpp_lexer_gettokenlen(self);
+#if TPP_HAVE_ESCAPED_KEYWORDS
+		tpp_hash hash = tpp_hashof_esc(token_start, token_len, file);
+		ro_macro_keyword = tpp_lexer_kwds_newkeyword_esc(self, token_start, token_len, hash, file);
+#else /* TPP_HAVE_ESCAPED_KEYWORDS */
+		tpp_hash hash = tpp_hashof(token_start, token_len);
+		ro_macro_keyword = tpp_lexer_kwds_newkeyword(self, token_start, token_len, hash);
+#endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
+		if tpp_unlikely(!ro_macro_keyword)
+			goto err_nomem;
+	}
+	macro_keyword = tpp_lexer_kwds_copybuiltin(self, ro_macro_keyword);
+	if tpp_unlikely(!macro_keyword)
+		goto err_nomem;
+
+	/* The current lexer position, alongside everything from "macro_body"
+	 * must now be packaged into a string-chunk, and that string chunk
+	 * must act as the input file of "tpp_lexer_parse_macro_definition()" */
+	macro_params     = tpp_lexer_gettokenend(self);
+	macro_params_len = (tpp_size)(file->tf_end - macro_params);
+	def_chunk_len    = macro_params_len + 1 + macro_body_len;
+	def_chunk = tpp_string_malloc(def_chunk_len);
+	if tpp_unlikely(!def_chunk)
+		goto err_nomem;
+	{
+		tpp_char *dst = tpp_string_str(def_chunk);
+		dst = (tpp_char *)tpp_mempcpy(dst, macro_params, macro_params_len * sizeof(char));
+		*dst++ = ' '; /* Always have whitespace here to prevent
+		               * function-style macro in case of "-DFOO=(10)" */
+		tpp_memcpy(dst, macro_body, macro_body_len * sizeof(char));
+		tpp_assert((dst + macro_body_len) == tpp_string_end(def_chunk));
+	}
+
+	/* Parse the *actual* macro definition */
+	tpp_file_init_text_utf8(file, TPP_CONFIG_CLI_FILENAME, def_chunk,
+	                        tpp_string_str(def_chunk),
+	                        tpp_string_len(def_chunk),
+	                        TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
+	pos = tpp_string_str(def_chunk);
+	tok = tpp_lexer_yieldraw_at(self, &pos);
+	if (TPP_TOK_ISERR(tok)) {
+		tpp_file_fini(file);
+		return TPP_TOK_ASERR(tok);
+	}
+	error = tpp_lexer_parse_macro_definition(self, &macro, &pos, TPP_LCINFO_INVALID);
+	tpp_file_fini(file); /* Lexer core (including the file) will be restored by caller */
+	if (TPP_ISERR(error))
+		return error;
+
+	/* Store macro definition */
+	if (macro_keyword->tk_macro)
+		tpp_macro_decref(macro_keyword->tk_macro);
+	macro_keyword->tk_macro = macro; /* Inherit reference */
+
+	return TPP_EOK;
+err_nomem:
+	return TPP_ENOMEM;
+}
+
+/* Define (or override) a macro `macro_name` with a body definition `macro_body`
+ * When `macro_name` contains an opening `(` character, it, as well as `macro_body`
+ * are parsed as a function-like macro. The same also goes for `{`, `[` and `<`
+ * when `TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS` is enabled.
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+tpp_lexer_define(tpp_lexer *tpp_restrict self,
+                 char const *macro_name, tpp_size macro_name_maxlen,
+                 char const *macro_body, tpp_size macro_body_maxlen) {
+	tpp_errno result;
+	tpp_size macro_name_len = tpp_strnlen(macro_name, macro_name_maxlen);
+	tpp_size macro_body_len = tpp_strnlen(macro_body, macro_body_maxlen);
+	union tpp_lexer_core saved_core = self->tl_core;
+	result = tpp_lexer_define_impl(self, macro_name, macro_name_len, macro_body, macro_body_len);
+	self->tl_core = saved_core;
+	return result;
+}
+
+/* Delete a macro definition
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: [SOFT_ERROR] No such macro */
+TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_undef(tpp_lexer *tpp_restrict self,
+                char const *macro_name, tpp_size macro_name_maxlen) {
+	tpp_size macro_name_len = tpp_strnlen(macro_name, macro_name_maxlen);
+	tpp_hash hash = tpp_hashof((tpp_char const *)macro_name, macro_name_len);
+	tpp_keyword *macro_keyword = _tpp_lexer_kwds_getkeyword(self, (tpp_char const *)macro_name, macro_name_len, hash);
+	if (macro_keyword && tpp_keyword_canundef(macro_keyword)) {
+		tpp_keyword_undef(macro_keyword);
+		return TPP_EOK;
+	}
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_LEXER_CLI_DEFINE */
 
 /************************************************************************/
 /* File: parts/lexer-pp-pragma.c                                        */

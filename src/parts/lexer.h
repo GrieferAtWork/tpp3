@@ -58,18 +58,19 @@ TPP_DECL_BEGIN
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
 
-typedef struct tpp_lexer {
-	union {
-		tpp_token      TPP_INTERNAL(tlc_tok);  /* [valid_if(WAS_CALLED(tpp_lexer_yieldraw()))] Last-read token (never
-		                                        * set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF). */
-		struct {
-			char _tli_pad[tpp_offsetof(tpp_token, TPP_INTERNAL(tt_start))];
-			tpp_file   TPP_INTERNAL(tli_file); /* [OVERRIDE(.tf_prev, [owned])]
-			                                    * The file that lies at the top of the lexer's #include/macro-stack.
-			                                    * this is also the file whose buffer currently contains `tl_tok' */
-		} TPP_INTERNAL(tlc_input);
-	} TPP_INTERNAL(tl_core);
+union TPP_INTERNAL(tpp_lexer_core) {
+	tpp_token      TPP_INTERNAL(tlc_tok);  /* [valid_if(WAS_CALLED(tpp_lexer_yieldraw()))] Last-read token (never
+	                                        * set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF). */
+	struct {
+		char _tli_pad[tpp_offsetof(tpp_token, TPP_INTERNAL(tt_start))];
+		tpp_file   TPP_INTERNAL(tli_file); /* [OVERRIDE(.tf_prev, [owned])]
+		                                    * The file that lies at the top of the lexer's #include/macro-stack.
+		                                    * this is also the file whose buffer currently contains `tl_tok' */
+	} TPP_INTERNAL(tlc_input);
+};
 
+typedef struct tpp_lexer {
+	union TPP_INTERNAL(tpp_lexer_core) TPP_INTERNAL(tl_core); /* Lexer core */
 
 	/* Lexer state flags */
 #if TPP_HAVE_LEXER_STATE_FLAGS
@@ -903,6 +904,52 @@ tpp_joinpath(/*0..1*/ char const *tpp_restrict relative_to,
 #endif /* TPP_HAVE_JOINPATH */
 
 
+#if TPP_HAVE_LEXER_CLI_DEFINE
+/* Define (or override) a macro `macro_name` with a body definition `macro_body`
+ * When `macro_name` contains an opening `(` character, it, as well as `macro_body`
+ * are parsed as a function-like macro. The same also goes for `{`, `[` and `<`
+ * when `TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS` is enabled.
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+tpp_lexer_define(tpp_lexer *tpp_restrict self,
+                 char const *macro_name, tpp_size macro_name_maxlen,
+                 char const *macro_body, tpp_size macro_body_maxlen);
+
+/* Delete a macro definition
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: [SOFT_ERROR] No such macro */
+TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_undef(tpp_lexer *tpp_restrict self,
+                char const *macro_name, tpp_size macro_name_maxlen);
+#endif /* TPP_HAVE_LEXER_CLI_DEFINE */
+
+#if TPP_HAVE_LEXER_CLI_ASSERT
+/* Add a new keyword assertions for `key` and `value`.
+ * This is the same as doing `#assert {key}({value})`
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+tpp_lexer_assert(tpp_lexer *tpp_restrict self,
+                 char const *key, tpp_size key_maxlen,
+                 char const *value, tpp_size value_maxlen);
+
+/* Delete a new keyword assertions for `key` and `value`.
+ * This is the same as doing `#unassert {key}({value})`
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: [SOFT_ERROR] No such assertion */
+TPP_DECL TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+tpp_lexer_unassert(tpp_lexer *tpp_restrict self,
+                   char const *key, tpp_size key_maxlen,
+                   char const *value, tpp_size value_maxlen);
+
+/* Delete all keyword assertions for `key`.
+ * This is the same as doing `#unassert {key}` */
+TPP_DECL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
+                      char const *key, tpp_size key_maxlen);
+#endif /* TPP_HAVE_LEXER_CLI_ASSERT */
 
 /* TODO: API to manually define/undef macros
  * TODO: Unlike TPP2's, this API should also (implicitly) be able to define

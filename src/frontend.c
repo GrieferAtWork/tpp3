@@ -56,16 +56,18 @@ int main(int argc, char *argv[]) {
 	if (argc)
 		filename = *argv;
 	tpp_lexer_init(&lexer);
+	error = tpp_lexer_define(&lexer, "CLI_MACRO1", TPP_SIZE_MAX, "42", TPP_SIZE_MAX);
+	if (TPP_ISERR(error))
+		goto setup_failed;
+	error = tpp_lexer_define(&lexer, "CLI_MACRO2(x,y)", TPP_SIZE_MAX, "(x+42+y)", TPP_SIZE_MAX);
+	if (TPP_ISERR(error))
+		goto setup_failed;
+	error = tpp_lexer_define(&lexer, "CLI_MACRO3", TPP_SIZE_MAX, "(x,y)(x+42+y)", TPP_SIZE_MAX);
+	if (TPP_ISERR(error))
+		goto setup_failed;
 	error = tpp_lexer_initfile_open(&lexer, filename, TPP_SIZE_MAX);
-	if (TPP_ISERR(error)) {
-#if TPP_HAVE_STRERROR
-		fprintf(stderr, "Initialization failed: %s\n", tpp_strerror(error));
-#else /* TPP_HAVE_STRERROR */
-		fprintf(stderr, "Initialization failed: %d\n", (int)error);
-#endif /* !TPP_HAVE_STRERROR */
-		tpp_lexer_fini(&lexer);
-		return 1;
-	}
+	if (TPP_ISERR(error))
+		goto setup_failed;
 
 	for (;;) {
 		tok = tpp_lexer_yield(&lexer);
@@ -156,6 +158,14 @@ out:
 	_CrtDumpMemoryLeaks();
 #endif /* _MSC_VER */
 	return result;
+setup_failed:
+#if TPP_HAVE_STRERROR
+	fprintf(stderr, "Initialization failed: %s\n", tpp_strerror(error));
+#else /* TPP_HAVE_STRERROR */
+	fprintf(stderr, "Initialization failed: %d\n", (int)error);
+#endif /* !TPP_HAVE_STRERROR */
+	tpp_lexer_fini(&lexer);
+	return 1;
 }
 
 TPP_DECL_END

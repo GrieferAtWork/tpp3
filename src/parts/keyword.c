@@ -193,7 +193,7 @@ tpp_assertions_contains(tpp_assertions const *tpp_restrict self,
 		tpp_assertion const *ent = &self->tass_bckv[hs & self->tass_bckm];
 		if (ent->tas_value == NULL)
 			break;
-		if (ent->tas_value == value)
+		if (tpp_keyword_equals(ent->tas_value, value))
 			return true;
 	}
 	return false;
@@ -215,7 +215,7 @@ tpp_assertions_assert(tpp_assertions *tpp_restrict self,
 			tpp_assertion const *ent = &self->tass_bckv[hs & self->tass_bckm];
 			if (ent->tas_value == NULL)
 				break;
-			if (ent->tas_value == value)
+			if (tpp_keyword_equals(ent->tas_value, value))
 				return TPP_ENOENT; /* Already contained */
 		}
 	}
@@ -259,7 +259,7 @@ tpp_assertions_fixtable(tpp_assertions *tpp_restrict self) {
 			for (tpp_assertions_hashinit(&hs, &perturb, hash, self->tass_bckm);;
 				 tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm)) {
 				tpp_assertion *ent2 = &self->tass_bckv[hs & self->tass_bckm];
-				tpp_assert((ent2->tas_value == ent->tas_value) == (ent2 == ent));
+				tpp_assert(tpp_keyword_equals(ent2->tas_value, ent->tas_value) == (ent2 == ent));
 				if (ent2->tas_value == NULL) {
 					ent2->tas_value = kwd;
 					ent->tas_value = NULL;
@@ -291,7 +291,7 @@ tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
 		ent = &self->tass_bckv[hs & self->tass_bckm];
 		if (ent->tas_value == NULL)
 			return false;
-		if (ent->tas_value == value)
+		if (tpp_keyword_equals(ent->tas_value, value))
 			break; /* Found it! */
 	}
 

@@ -496,6 +496,9 @@
 #define tpp_memmem      memmem
 #endif
 #endif /* !tpp_memcpy */
+#ifndef tpp_mempcpy
+#define tpp_mempcpy(d, s, n) ((void *)((char *)tpp_memcpy(d, s, n) + (n)))
+#endif /* !tpp_mempcpy */
 #ifndef tpp_bzero
 #define tpp_bzero(p, n) (void)tpp_memset(p, 0, n)
 #endif /* !tpp_bzero */

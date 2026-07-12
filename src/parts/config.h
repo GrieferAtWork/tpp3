@@ -4378,6 +4378,23 @@ for (local doc, name,
 	(TPP_HAVE_TPP_EXTENSION_NEAREST || TPP_HAVE_TPP_WARNING_GROUP_NEAREST)
 #endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
 
+/* Provide a function `tpp_lexer_define()` + `tpp_lexer_undef()`
+ * that can be used to define/undef commandline-defined macros. */
+#ifndef TPP_HAVE_LEXER_CLI_DEFINE
+#define TPP_HAVE_LEXER_CLI_DEFINE (TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_LEXER_CLI_DEFINE */
+
+/* Provide a function `tpp_lexer_assert()` + `tpp_lexer_unassert()` + `tpp_lexer_unassertall()`
+ * that can be used to add/delete keyword assertions. */
+#ifndef TPP_HAVE_LEXER_CLI_ASSERT
+#define TPP_HAVE_LEXER_CLI_ASSERT (TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_CPP_ASSERT)
+#endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
+
+/* Filename of definitions file used by `tpp_lexer_define()` */
+#ifndef TPP_CONFIG_CLI_FILENAME
+#define TPP_CONFIG_CLI_FILENAME "<commandline>"
+#endif /* !TPP_CONFIG_CLI_FILENAME */
+
 /* Provide a function `tpp_lexer_dump_definitions()` that can be
  * used to re-print all user-defined macro definitions and asserts. */
 #ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS
