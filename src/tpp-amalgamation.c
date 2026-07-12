@@ -32393,6 +32393,10 @@ again:
 
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 
+/************************************************************************/
+/* File: parts/lexer-skip.c                                             */
+/************************************************************************/
+
 #if TPP_HAVE_LEXER_SKIP
 
 static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL

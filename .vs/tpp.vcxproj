@@ -29,6 +29,7 @@
     <ClCompile Include="..\src\parts\lexer-pp-define.c" />
     <ClCompile Include="..\src\parts\lexer-pp-pragma.c" />
     <ClCompile Include="..\src\parts\lexer-seek-rparen.c" />
+    <ClCompile Include="..\src\parts\lexer-skip.c" />
     <ClCompile Include="..\src\parts\lexer-skipraw.c" />
     <ClCompile Include="..\src\parts\lexer-warn.c" />
     <ClCompile Include="..\src\parts\lexer-yield-include.c" />

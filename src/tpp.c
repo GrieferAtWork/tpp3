@@ -63,6 +63,7 @@
 #include "parts/lexer-yieldpp.c"
 #include "parts/lexer-yield-macro.c"
 #include "parts/lexer-yield.c"
+#include "parts/lexer-skip.c"
 #include "parts/lexer-yield-include.c"
 #include "parts/lexer-decodestring.c"
 #include "parts/lexer-parseexpr.c"
