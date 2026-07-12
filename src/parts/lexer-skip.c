@@ -24,6 +24,7 @@
 #include "api.h"
 
 #include "config.h"
+#include "error.h"
 #include "extensions.h"
 #include "file.h"
 #include "keyword.h"
@@ -368,7 +369,17 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		tpp_lexer_gettoken(self)->tt_id = tok;
 		if (tok == TPP_TOK_INT) {
 			/* Stop integer token prematurely if there's one of . + - */
-			/* TODO */
+			tpp_char const *start = tpp_lexer_gettokenstart(self);
+			tpp_char const *end = tpp_lexer_gettokenend(self);
+			tpp_char const *newend = start;
+			while (newend < end && (*newend != '.' &&
+			                        *newend != '+' &&
+			                        *newend != '-'))
+				++newend;
+			if (newend < end) {
+				newend = tpp_skipbse_bck(newend, start, tpp_lexer_getfile(self));
+				tpp_lexer_gettoken(self)->tt_end = newend;
+			}
 		}
 		return tok;
 	}
