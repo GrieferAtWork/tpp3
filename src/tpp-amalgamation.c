@@ -31324,7 +31324,7 @@ err_tok_ofr:
 #endif /* TPP_HAVE_MACRO___has_embed */
 
 
-#if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
+#if TPP_HAVE_MACRO___TPP_STR_DECOMPILE || TPP_HAVE_MACRO___TPP_STR_SUBSTR
 struct tpp_lexer_handle_str_decompile_string_data {
 	TPP_REF tpp_string *tlhsdsd_chunk;   /* [0..1] Out: chunk containing string */
 	tpp_char const     *tlhsdsd_str;     /* String to decompile */
@@ -31342,7 +31342,9 @@ tpp_lexer_handle_str_decompile_string(void *arg, tpp_string *chunk,
 	data->tlhsdsd_length = length;
 	return TPP_EOK;
 }
+#endif /* TPP_HAVE_MACRO___TPP_STR_DECOMPILE || TPP_HAVE_MACRO___TPP_STR_SUBSTR */
 
+#if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 	struct tpp_lexer_handle_str_decompile_string_data data;
@@ -31946,6 +31948,119 @@ tpp_lexer_yield_handle___TPP_RANDOM(tpp_lexer *tpp_restrict self) {
 
 
 
+#if TPP_HAVE_MACRO___TPP_STR_SUBSTR
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TPP_STR_SUBSTR(tpp_lexer *tpp_restrict self,
+                                        tpp_char quote_ch) {
+	struct tpp_lexer_handle_str_decompile_string_data data;
+	tpp_intmax index, length;
+	tpp_token_id tok;
+	tpp_errno error;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *prev_file;
+	tpp_string_builder result_builder;
+	TPP_REF tpp_string *result_str;
+	tpp_ssize print_status;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+	tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	if (TPP_TOK_ISSTRING(tok)) {
+		/* IMPORTANT: Don't set "TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS" here! */
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_str_decompile_string,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+		error = TPP_TOK_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+		data.tlhsdsd_chunk  = NULL;
+		data.tlhsdsd_str    = NULL;
+		data.tlhsdsd_length = 0;
+	}
+	if (TPP_ISERR(error))
+		return TPP_TOK_OFERR(error);
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(','));
+	if (TPP_TOK_ISERR(tok))
+		goto err_tok_data;
+	tok = tpp_lexer_parse_simple_int(self, &index);
+	if (TPP_TOK_ISERR(tok))
+		goto err_tok_data;
+	if (tok == ',') {
+		tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			goto err_tok_data;
+		tok = tpp_lexer_parse_simple_int(self, &length);
+		if (TPP_TOK_ISERR(tok))
+			goto err_tok_data;
+	} else {
+		length = 1;
+	}
+	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
+	if (TPP_TOK_ISERR(tok))
+		goto err_tok_data;
+	if ((tpp_uintmax)index >= (tpp_uintmax)data.tlhsdsd_length)
+		index = (tpp_intmax)(tpp_uintmax)data.tlhsdsd_length;
+	if (length < 0 || ((tpp_uintmax)index + (tpp_uintmax)length) < (tpp_uintmax)index ||
+	    ((tpp_uintmax)index + (tpp_uintmax)length) > (tpp_uintmax)data.tlhsdsd_length)
+		length = (tpp_intmax)(tpp_uintmax)(tpp_size)(data.tlhsdsd_length - (tpp_size)index);
+	data.tlhsdsd_str += (tpp_size)(tpp_uintmax)index;
+	data.tlhsdsd_length = (tpp_size)(tpp_uintmax)length;
+	tpp_string_builder_init(&result_builder);
+	print_status = tpp_string_builder_print(&result_builder, &quote_ch, 1);
+	if tpp_unlikely(print_status < 0) {
+		tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
+		goto err_tok_data;
+	}
+	print_status = tpp_token_encodestring(&tpp_string_builder_print, &result_builder,
+	                                      data.tlhsdsd_str, data.tlhsdsd_length);
+	if tpp_unlikely(print_status < 0) {
+		tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
+		goto err_tok_data;
+	}
+	print_status = tpp_string_builder_print(&result_builder, &quote_ch, 1);
+	if tpp_unlikely(print_status < 0) {
+		tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
+		goto err_tok_data;
+	}
+	result_str = tpp_string_builder_pack(&result_builder);
+	if (data.tlhsdsd_chunk)
+		tpp_string_decref(data.tlhsdsd_chunk);
+
+	/* Push the substring as a new file */
+	prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		goto err_nomem_result_str;
+	tpp_file_move(prev_file, file);
+	tpp_file_init_text_ex(file, NULL, result_str,
+	                      tpp_string_str(result_str),
+	                      tpp_string_len(result_str),
+	                      TPP_LCINFO_INVALID,
+	                      TPP_FILE_FLAGS_NORMAL,
+	                      prev_file->tf_enc);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return TPP_TOK_EOF;
+err_nomem_result_str:
+	data.tlhsdsd_chunk = result_str;
+	tok = TPP_TOK_ENOMEM;
+err_tok_data:
+	if (data.tlhsdsd_chunk)
+		tpp_string_decref(data.tlhsdsd_chunk);
+	return tok;
+}
+#endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
+
+
+
+
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 /* Handle a builtin macro.
  * @return: TPP_TOK_EOF: Caller should yield again.
@@ -32232,8 +32347,16 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 /************************************************************************/
 #if TPP_HAVE_MACRO___TPP_STR_SUBSTR
-	/* TODO: #define __TPP_STR_SUBSTR(str, start, end) __TPP_EVAL((str)[(start):(end)]) */
+	case TPP_KWD___TPP_STR_SUBSTR:
+		return tpp_lexer_yield_handle___TPP_STR_SUBSTR(self, '"');
+	case TPP_KWD___TPP_STR_AT:
+		return tpp_lexer_yield_handle___TPP_STR_SUBSTR(self, '\'');
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
 	/* TODO: #define __TPP_LOAD_FILE(filename) __TPP_STR_PACK(__TPP_EXEC("#embed " #filename)) */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */

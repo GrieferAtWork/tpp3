@@ -1140,15 +1140,19 @@
 #define TPP_HAVE_MACRO___TPP_STR_PACK (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-str-pack-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_PACK */
 
-/* Support for the builtin function-like macro `__TPP_STR_SUBSTR()`.
+/* Support for the builtin function-like macro `__TPP_STR_SUBSTR()` and `__TPP_STR_AT()`.
  *
  * Stand-alone macro that takes 3 arguments and (assuming `TPP_HAVE_BUILTIN_EXPR_STRINGS`
  * and `TPP_HAVE_MACRO___TPP_EVAL` are enabled) can be implemented as follows:
  * ```c
- * #define __TPP_STR_SUBSTR(str, lo, hi) __TPP_EVAL((str)[(lo):(hi)])
+ * #define __TPP_STR_SUBSTR_3(str, i, n) __TPP_EVAL((str)[(i):(i)+(n)])
+ * #define __TPP_STR_SUBSTR_2(str, i)    __TPP_EVAL((str)[(i):(i)+1])
+ * #define __TPP_STR_SUBSTR(...)         __TPP_STR_SUBSTR_##__VA_NARGS__(__VA_ARGS__)
  * ```
  *
- * @detect: #ifdef __TPP_STR_SUBSTR */
+ * The macro `__TPP_STR_AT()` behaves the same, but quotes its result using `'` instead of `"`
+ *
+ * @detect: #if defined(__TPP_STR_SUBSTR) || defined(__TPP_STR_AT) */
 #ifndef TPP_HAVE_MACRO___TPP_STR_SUBSTR
 #define TPP_HAVE_MACRO___TPP_STR_SUBSTR (TPP_HAVE_CPP_BUILTIN_MACROS ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-str-substr-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
@@ -4363,6 +4367,7 @@ for (local doc, name,
 	 (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS) ||     \
 	 TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ ||              \
 	 TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_STR_PACK ||        \
+	 TPP_HAVE_MACRO___TPP_STR_SUBSTR ||                                      \
 	 (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_LEXER_DUMP_DEFINITIONS))
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
