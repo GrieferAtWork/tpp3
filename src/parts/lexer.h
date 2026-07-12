@@ -199,6 +199,26 @@ typedef struct tpp_lexer {
 #endif /* TPP_HAVE_LEXER_TIME */
 
 
+	/* Seed for random-number generation (combined with `tpp_lexer_getinputhash()' before use).
+	 * Also combined with the final seed of I/O and TEXT files as those files are popped. */
+#if TPP_HAVE_LEXER_RAND
+	tpp_hash TPP_INTERNAL(tl_rngseed); /* Next RandomNumberGenerationSEED */
+#define tpp_lexer_getrngseed(self)    (self)->TPP_INTERNAL(tl_rngseed)
+#define tpp_lexer_setrngseed(self, v) (void)((self)->TPP_INTERNAL(tl_rngseed) = (v))
+#define tpp_lexer_resetrngseed(self)  (void)((self)->TPP_INTERNAL(tl_rngseed) = 0)
+#define _tpp_lexer_addrngseed(self, hash) \
+	tpp_lexer_setrngseed(self, (tpp_lexer_getrngseed(self) * 263) + (hash))
+#define _tpp_lexer_addrngseed_from_file(self, file)                                             \
+	(tpp_file_getkind(file) == TPP_FILE_KIND_IO || tpp_file_getkind(file) == TPP_FILE_KIND_TEXT \
+	 ? _tpp_lexer_addrngseed(self, tpp_file_gethash(file, (file)->TPP_INTERNAL(tf_end)))        \
+	 : (void)0)
+#else /* TPP_HAVE_LEXER_RAND */
+#define tpp_lexer_resetrngseed(self)                (void)0
+#define _tpp_lexer_addrngseed(self, hash)           (void)0
+#define _tpp_lexer_addrngseed_from_file(self, file) (void)0
+#endif /* !TPP_HAVE_LEXER_RAND */
+
+
 	/* Format to use for file-and-line prefixes in messages. */
 #if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
 	char const *TPP_INTERNAL(tl_file_and_line_format); /* [1..1] format for file-and-line prefixes in messages */
@@ -239,6 +259,14 @@ typedef struct tpp_lexer {
 #define tpp_lexer_getlcinfoattokenstart_ex(self, result) tpp_lexer_getlcinfoat_ex(self, tpp_lexer_gettokenstart(self), result)
 #define tpp_lexer_getlcinfoattokenend(self)              tpp_lexer_getlcinfoat(self, tpp_lexer_gettokenend(self))
 #define tpp_lexer_getlcinfoattokenend_ex(self, result)   tpp_lexer_getlcinfoat_ex(self, tpp_lexer_gettokenend(self), result)
+
+/* Lexer input hash API */
+#if TPP_HAVE_FILE_GETFULLHASH
+#define tpp_lexer_getinputhashat(self, pos)      tpp_file_getfullhash(tpp_lexer_getfile(self), pos)
+#define tpp_lexer_getinputhashattokenstart(self) tpp_lexer_getinputhashat(self, tpp_lexer_gettokenstart(self))
+#define tpp_lexer_getinputhashattokenend(self)   tpp_lexer_getinputhashat(self, tpp_lexer_gettokenend(self))
+#define tpp_lexer_getinputhash(self)             tpp_lexer_getinputhashattokenstart(self)
+#endif /* TPP_HAVE_FILE_GETFULLHASH */
 
 /* Convenience L/C information helpers.
  * If you don't want to bother learning what all the above does, then it's these that
@@ -1021,6 +1049,28 @@ tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
 /* Delete all user-defined keyword assertions */
 #define tpp_lexer_unassertall2(self) tpp_keywords_unassertall(&(self)->TPP_INTERNAL(tl_kwds))
 #endif /* TPP_HAVE_KEYWORDS_UNASSERTALL */
+
+
+#if TPP_HAVE_LEXER_RAND
+/* Produce a random number based on:
+ * - `tpp_lexer_getrngseed()' (affected by `tpp_lexer_popfile()' + `tpp_lexer_manualpopfile_break_commit()')
+ * - `tpp_lexer_getinputhash()' (affected by everything read from files currently on the #include-stack)
+ *
+ * The result of the combination of those 2 values if then put
+ * through a PRNG, before the result of the PRNG is then returned
+ * by this function.
+ *
+ * This function is used to implement the builtin macro `__TPP_RANDOM()` */
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
+tpp_lexer_getrand(tpp_lexer const *tpp_restrict self);
+
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
+tpp_lexer_nextrand(tpp_lexer *tpp_restrict self) {
+	tpp_hash const result = tpp_lexer_getrand(self);
+	tpp_lexer_setrngseed(self, result);
+	return result;
+}
+#endif /* TPP_HAVE_LEXER_RAND */
 
 
 

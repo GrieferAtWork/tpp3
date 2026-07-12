@@ -4119,6 +4119,26 @@ for (local doc, name,
 #define TPP_HAVE_FILE_ENCODING_EMBED (TPP_HAVE_UNICODE && TPP_HAVE_CPP_EMBED && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
 
+/* Provide an API `tpp_lexer_rand()` that can be used to random numbers
+ * using the already-parsed contents of of I/O and TEXT files as seed. */
+#ifndef TPP_HAVE_LEXER_RAND
+#define TPP_HAVE_LEXER_RAND ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_RANDOM)
+#endif /* !TPP_HAVE_LEXER_RAND */
+
+/* Provide an API `tpp_file_gethash()` that can be used to calculate a hash
+ * of all already-processed bytes within a file up to a given position. */
+#ifndef TPP_HAVE_FILE_GETHASH
+#define TPP_HAVE_FILE_GETHASH ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_LEXER_RAND)
+#endif /* !TPP_HAVE_FILE_GETHASH */
+
+/* Provide an API `tpp_file_getfullhash()` that behaves similar to `tpp_file_gethash()`,
+ * but also traverses the `#include`-stack to include the hash values of all parent files
+ * found therein, such that the return values describes not only the current file leading
+ * up to a given position, but also all other files that came before. */
+#ifndef TPP_HAVE_FILE_GETFULLHASH
+#define TPP_HAVE_FILE_GETFULLHASH (TPP_HAVE_FILE_GETHASH && TPP_HAVE_INCLUDE_STACK)
+#endif /* !TPP_HAVE_FILE_GETFULLHASH */
+
 /* Provide a secondary set of keyword APIs that include support for `\`-escape sequences.
  * Needed to implement `TPP_HAVE_BSE` and `TPP_HAVE_ESCAPE_IN_IDENTIFIERS` */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS

@@ -211,6 +211,10 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	tpp_time_empty(&self->tl_time);
 #endif /* TPP_HAVE_LEXER_TIME */
 
+#if TPP_HAVE_LEXER_RAND
+	tpp_lexer_resetrngseed(self);
+#endif /* TPP_HAVE_LEXER_RAND */
+
 #if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
 	self->tl_file_and_line_format = TPP_CONFIG_FILE_AND_LINE_FORMAT;
 #endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
@@ -333,6 +337,10 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_MACRO___COUNTER__
 	self->tl_builtin_counter = from->tl_builtin_counter;
 #endif /* TPP_HAVE_MACRO___COUNTER__ */
+
+#if TPP_HAVE_LEXER_RAND
+	self->tl_rngseed = from->tl_rngseed;
+#endif /* TPP_HAVE_LEXER_RAND */
 
 #if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
 	self->tl_file_and_line_format = from->tl_file_and_line_format;
@@ -566,11 +574,60 @@ TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev = file->tf_prev;
+	_tpp_lexer_addrngseed_from_file(self, file);
 	tpp_file_fini(file);
 	tpp_file_move(file, prev);
 	tpp_file_free(prev);
 }
 #endif /* TPP_HAVE_INCLUDE_STACK */
+
+
+
+#if TPP_HAVE_LEXER_RAND
+static TPP_CONSTCALL TPP_WUNUSED tpp_hash TPPCALL
+tpp_prng_next(tpp_hash x) {
+	x |= x == 0; /* Can't be zero */
+	/* From: https://en.wikipedia.org/wiki/Xorshift
+	 * and   https://stackoverflow.com/a/65668437 */
+#if TPP_SIZEOF_tpp_hash == 4
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+#elif TPP_SIZEOF_tpp_hash == 8
+	x ^= x << 13;
+	x ^= x >> 7;
+	x ^= x << 17;
+#elif TPP_SIZEOF_tpp_hash == 2
+	x ^= x << 5;
+	x ^= x >> 7;
+	x ^= x << 14;
+#elif TPP_SIZEOF_tpp_hash == 1
+	x ^= x << 5;
+	x ^= x >> 3;
+	x ^= x << 6;
+#elif !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported 'TPP_SIZEOF_tpp_hash'"
+#endif /* ... */
+	return x;
+}
+
+/* Produce a random number based on:
+ * - `tpp_lexer_getrngseed()' (affected by `tpp_lexer_popfile()' + `tpp_lexer_manualpopfile_break_commit()')
+ * - `tpp_lexer_getinputhash()' (affected by everything read from files currently on the #include-stack)
+ *
+ * The result of the combination of those 2 values if then put
+ * through a PRNG, before the result of the PRNG is then returned
+ * by this function.
+ *
+ * This function is used to implement the builtin macro `__TPP_RANDOM()` */
+TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
+tpp_lexer_getrand(tpp_lexer const *tpp_restrict self) {
+	tpp_hash hash1 = tpp_lexer_getrngseed(self);
+	tpp_hash hash2 = tpp_lexer_getinputhash(self);
+	tpp_hash result = hash1 * 263 + hash2;
+	return tpp_prng_next(result);
+}
+#endif /* TPP_HAVE_LEXER_RAND */
 
 
 
@@ -686,6 +743,7 @@ _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
 		tpp_file *prev_prev;
 		tpp_assert(orig_prev);
 		prev_prev = orig_prev->tf_prev;
+		_tpp_lexer_addrngseed_from_file(self, orig_prev);
 		tpp_file_fini(orig_prev);
 		tpp_file_free(orig_prev);
 		orig_prev = prev_prev;

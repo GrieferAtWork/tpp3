@@ -1559,6 +1559,7 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 		return TPP_TOK_ASERR(tok);
 	}
 	error = tpp_lexer_parse_macro_definition(self, &macro, &pos, TPP_LCINFO_INVALID);
+	_tpp_lexer_addrngseed(self, tpp_file_gethash(file, file->tf_end)); /* CLI macro definitions also count! */
 	tpp_file_fini(file); /* Lexer core (including the file) will be restored by caller */
 	if (TPP_ISERR(error))
 		return error;

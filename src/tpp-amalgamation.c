@@ -577,6 +577,7 @@
 #define tff_user_filename                                                         TPP_INTERNAL(tff_user_filename)
 #define tf_data                                                                   TPP_INTERNAL(tf_data)
 #define td_io                                                                     TPP_INTERNAL(td_io)
+#define tff_hash                                                                  TPP_INTERNAL(tff_hash)
 #define ttf_keep                                                                  TPP_INTERNAL(ttf_keep)
 #define tff_file                                                                  TPP_INTERNAL(tff_file)
 #define tffu_tailc                                                                TPP_INTERNAL(tffu_tailc)
@@ -652,6 +653,7 @@
 #define tl_recursive_macro_limit                                                  TPP_INTERNAL(tl_recursive_macro_limit)
 #define tl_builtin_counter                                                        TPP_INTERNAL(tl_builtin_counter)
 #define tl_time                                                                   TPP_INTERNAL(tl_time)
+#define tl_rngseed                                                                TPP_INTERNAL(tl_rngseed)
 #define tl_file_and_line_format                                                   TPP_INTERNAL(tl_file_and_line_format)
 #define tt_id                                                                     TPP_INTERNAL(tt_id)
 #define tlsb_id                                                                   TPP_INTERNAL(tlsb_id)
@@ -7024,6 +7026,28 @@ tpp_embed_to_utf8(unsigned char const *src, tpp_size src_count, tpp_char *dst_en
 
 
 
+#if TPP_HAVE_FILE_GETHASH
+static TPP_PURECALL TPP_WUNUSED tpp_hash TPPCALL
+tpp_file_hash_combine(tpp_hash result, tpp_char const *tpp_restrict text, tpp_size size) {
+	tpp_size i;
+	for (i = 0; i < size; ++i) {
+		tpp_char ch = text[i];
+		result = result * 263 + ch;
+	}
+	return result;
+}
+#endif /* TPP_HAVE_FILE_GETHASH */
+
+static TPP_NONNULL((1)) void TPPCALL
+tpp_file_io_prepare_unload(tpp_file *tpp_restrict self,
+                           tpp_char const *text, tpp_size size) {
+	self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account_ex(self->tf_data.td_io.tff_start_lc,
+	                                                         text, size, self->tf_enc);
+#if TPP_HAVE_FILE_GETHASH
+	self->tf_data.td_io.tff_hash = tpp_file_hash_combine(self->tf_data.td_io.tff_hash, text, size);
+#endif /* TPP_HAVE_FILE_GETHASH */
+}
+
 /* Try to expand the currently loaded `self->tf_chunk':
  * - If the file's kind isn't `TPP_FILE_KIND_IO', return `TPP_EOK'
  * - Allocate a new `tpp_string' suitable for holding both
@@ -7094,9 +7118,7 @@ again:
 		if (unused_head)
 #endif /* !__OPTIMIZE_SIZE__ */
 		{
-			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account_ex(self->tf_data.td_io.tff_start_lc,
-			                                                         tpp_string_str(old_chunk),
-			                                                         unused_head, self->tf_enc);
+			tpp_file_io_prepare_unload(self, tpp_string_str(old_chunk), unused_head);
 			tpp_memmovedown(tpp_string_str(old_chunk), base, old_inuse);
 			base -= unused_head;
 			self->tf_pos -= unused_head;
@@ -7182,9 +7204,7 @@ reuse_old_chunk:
 			ps_rel = (tpp_size)(self->tf_pos - base);
 			kp_rel = (tpp_size)(self->tf_data.td_io.ttf_keep - base);
 #endif /* TPP_HAVE_FILE_KEEPPOS */
-			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account_ex(self->tf_data.td_io.tff_start_lc,
-			                                                         tpp_string_str(old_chunk),
-			                                                         unused_head, self->tf_enc);
+			tpp_file_io_prepare_unload(self, tpp_string_str(old_chunk), unused_head);
 			tpp_assert(tpp_string_isshared(old_chunk));
 			tpp_string_decref_nokill(old_chunk);
 #if TPP_HAVE_UNICODE
@@ -7199,6 +7219,9 @@ reuse_old_chunk:
 			kp_rel = 0;
 #endif /* TPP_HAVE_FILE_KEEPPOS */
 			tpp_lcinfo_init(self->tf_data.td_io.tff_start_lc, 0, 0);
+#if TPP_HAVE_FILE_GETHASH
+			self->tf_data.td_io.tff_hash = 1; /* Initial hash starts at "1" (s.a. `tpp_hashof()') */
+#endif /* TPP_HAVE_FILE_GETHASH */
 #if TPP_HAVE_UNICODE
 			is_first_chunk = true;
 #endif /* TPP_HAVE_UNICODE */
@@ -7805,6 +7828,49 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 #endif /* TPP_HAVE_FILE_LC_CACHE */
 }
 #endif /* TPP_HAVE_FILE_SETLINE */
+
+
+#if TPP_HAVE_FILE_GETHASH
+/* Return the hash of all (decoded) bytes read from "self" up to (but not including) "pos"
+ * This *includes* the bytes of any already-unloaded chunk of "self", though "pos" must
+ * point into the current chunk (past hash values from previous chunks cannot be determined)
+ *
+ * Also note that the hash can *only* be determined when `tpp_file_getchunk(self) != NULL'.
+ * If the file doesn't have an input chunk (e.g.: its contents are statically allocated),
+ * then this function always returns the same value. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
+tpp_file_gethash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
+	tpp_hash result = 1;
+	if (self->tf_chunk) {
+		tpp_assert(pos >= tpp_string_str(self->tf_chunk));
+		tpp_assert(pos <= tpp_string_end(self->tf_chunk));
+		if (self->tf_kind == TPP_FILE_KIND_IO)
+			result = self->tf_data.td_io.tff_hash;
+		result = tpp_file_hash_combine(result, tpp_string_str(self->tf_chunk),
+		                               (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
+	}
+	return result;
+}
+#endif /* TPP_HAVE_FILE_GETHASH */
+
+
+#if TPP_HAVE_FILE_GETFULLHASH
+/* Same as `tpp_file_gethash()', but also includes the hash values of all parent files,
+ * such that the `tpp_file_gethash(f, tpp_file_getlastpos(f))' of every file reachable
+ * via `tpp_file_getprev()' is included in the return value in one way or another. Note
+ * that the value returned here may be different from the hash that would be calculated
+ * if all #include-ed files had been inlined into each other. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
+tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
+	tpp_hash result = tpp_file_gethash(self, pos);
+	tpp_file const *iter = self;
+	while ((iter = tpp_file_getprev(iter)) != NULL) {
+		result *= 263;
+		result += tpp_file_gethash(iter, tpp_file_getlastpos(iter));
+	}
+	return result;
+}
+#endif /* TPP_HAVE_FILE_GETFULLHASH */
 
 
 
@@ -14055,6 +14121,10 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	tpp_time_empty(&self->tl_time);
 #endif /* TPP_HAVE_LEXER_TIME */
 
+#if TPP_HAVE_LEXER_RAND
+	tpp_lexer_resetrngseed(self);
+#endif /* TPP_HAVE_LEXER_RAND */
+
 #if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
 	self->tl_file_and_line_format = TPP_CONFIG_FILE_AND_LINE_FORMAT;
 #endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
@@ -14177,6 +14247,10 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_MACRO___COUNTER__
 	self->tl_builtin_counter = from->tl_builtin_counter;
 #endif /* TPP_HAVE_MACRO___COUNTER__ */
+
+#if TPP_HAVE_LEXER_RAND
+	self->tl_rngseed = from->tl_rngseed;
+#endif /* TPP_HAVE_LEXER_RAND */
 
 #if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
 	self->tl_file_and_line_format = from->tl_file_and_line_format;
@@ -14410,11 +14484,60 @@ TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev = file->tf_prev;
+	_tpp_lexer_addrngseed_from_file(self, file);
 	tpp_file_fini(file);
 	tpp_file_move(file, prev);
 	tpp_file_free(prev);
 }
 #endif /* TPP_HAVE_INCLUDE_STACK */
+
+
+
+#if TPP_HAVE_LEXER_RAND
+static TPP_CONSTCALL TPP_WUNUSED tpp_hash TPPCALL
+tpp_prng_next(tpp_hash x) {
+	x |= x == 0; /* Can't be zero */
+	/* From: https://en.wikipedia.org/wiki/Xorshift
+	 * and   https://stackoverflow.com/a/65668437 */
+#if TPP_SIZEOF_tpp_hash == 4
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+#elif TPP_SIZEOF_tpp_hash == 8
+	x ^= x << 13;
+	x ^= x >> 7;
+	x ^= x << 17;
+#elif TPP_SIZEOF_tpp_hash == 2
+	x ^= x << 5;
+	x ^= x >> 7;
+	x ^= x << 14;
+#elif TPP_SIZEOF_tpp_hash == 1
+	x ^= x << 5;
+	x ^= x >> 3;
+	x ^= x << 6;
+#elif !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported 'TPP_SIZEOF_tpp_hash'"
+#endif /* ... */
+	return x;
+}
+
+/* Produce a random number based on:
+ * - `tpp_lexer_getrngseed()' (affected by `tpp_lexer_popfile()' + `tpp_lexer_manualpopfile_break_commit()')
+ * - `tpp_lexer_getinputhash()' (affected by everything read from files currently on the #include-stack)
+ *
+ * The result of the combination of those 2 values if then put
+ * through a PRNG, before the result of the PRNG is then returned
+ * by this function.
+ *
+ * This function is used to implement the builtin macro `__TPP_RANDOM()` */
+TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
+tpp_lexer_getrand(tpp_lexer const *tpp_restrict self) {
+	tpp_hash hash1 = tpp_lexer_getrngseed(self);
+	tpp_hash hash2 = tpp_lexer_getinputhash(self);
+	tpp_hash result = hash1 * 263 + hash2;
+	return tpp_prng_next(result);
+}
+#endif /* TPP_HAVE_LEXER_RAND */
 
 
 
@@ -14530,6 +14653,7 @@ _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
 		tpp_file *prev_prev;
 		tpp_assert(orig_prev);
 		prev_prev = orig_prev->tf_prev;
+		_tpp_lexer_addrngseed_from_file(self, orig_prev);
 		tpp_file_fini(orig_prev);
 		tpp_file_free(orig_prev);
 		orig_prev = prev_prev;
@@ -23575,6 +23699,7 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 		return TPP_TOK_ASERR(tok);
 	}
 	error = tpp_lexer_parse_macro_definition(self, &macro, &pos, TPP_LCINFO_INVALID);
+	_tpp_lexer_addrngseed(self, tpp_file_gethash(file, file->tf_end)); /* CLI macro definitions also count! */
 	tpp_file_fini(file); /* Lexer core (including the file) will be restored by caller */
 	if (TPP_ISERR(error))
 		return error;

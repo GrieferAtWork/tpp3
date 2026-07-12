@@ -237,14 +237,17 @@ typedef struct tpp_file {
 #define _tpp_file_init_enc(self)   _tpp_file_init_enc_ex(self, TPP_FILE_ENCODING_UTF8)
 	union {
 		struct {
-			char const      *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
-			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
+			char const *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
+			tpp_lcinfo  TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
 #if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_io_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_user_filename) = NULL
 #else /* TPP_HAVE_FILE_SETFILENAME */
 #define _tpp_file_init_io_user_filename(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_SETFILENAME */
+#if TPP_HAVE_FILE_GETHASH
+			tpp_hash TPP_INTERNAL(tff_hash); /* [valid_if(tf_chunk != NULL)] Hash of all (decoded) file data up to the start of the current chunk */
+#endif /* TPP_HAVE_FILE_GETHASH */
 #if TPP_HAVE_FILE_KEEPPOS
 			/* Need an additional "tpp_char const *ttf_keep" here whose only purpose
 			 * is to set an extra, lower-bound of effective text-data to always
@@ -670,20 +673,19 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 #endif /* !TPP_HAVE_FILE_NOKWD */
 #define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags) \
 	tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, TPP_FILE_ENCODING_UTF8)
-#define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                                       \
-	(void)((self)->TPP_INTERNAL(tf_pos)   = NULL,                                                              \
-	       (self)->TPP_INTERNAL(tf_chunk) = NULL,                                                              \
-	       (self)->TPP_INTERNAL(tf_end)   = NULL                                                               \
-	       _tpp_file_init_prev(self),                                                                          \
-	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                                    \
-	       _tpp_file_init_enc_ex(self, enc)                                                                    \
-	       _tpp_file_init_flags(self, flags)                                                                   \
-	       _tpp_file_init_common(self),                                                                        \
-	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename),              \
-	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
-	       tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc), 0, 0) \
-	       _tpp_file_init_io_user_filename(self)                                                               \
-	       _tpp_file_init_io_keep(self),                                                                       \
+#define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                          \
+	(void)((self)->TPP_INTERNAL(tf_pos)   = NULL,                                                 \
+	       (self)->TPP_INTERNAL(tf_chunk) = NULL,                                                 \
+	       (self)->TPP_INTERNAL(tf_end)   = NULL                                                  \
+	       _tpp_file_init_prev(self),                                                             \
+	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                       \
+	       _tpp_file_init_enc_ex(self, enc)                                                       \
+	       _tpp_file_init_flags(self, flags)                                                      \
+	       _tpp_file_init_common(self),                                                           \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename), \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp)        \
+	       _tpp_file_init_io_user_filename(self)                                                  \
+	       _tpp_file_init_io_keep(self),                                                          \
 	       _tpp_file_io_notify_initialized(self))
 
 /* Initialize "self" from a given "tpp_lexer_openfile_result" */
@@ -896,6 +898,28 @@ TPP_DECL TPP_NONNULL((1, 2)) void TPPCALL
 tpp_file_setline(tpp_file *tpp_restrict self,
                  tpp_char const *pos, tpp_line line);
 #endif /* TPP_HAVE_FILE_SETLINE */
+
+#if TPP_HAVE_FILE_GETHASH
+/* Return the hash of all (decoded) bytes read from "self" up to (but not including) "pos"
+ * This *includes* the bytes of any already-unloaded chunk of "self", though "pos" must
+ * point into the current chunk (past hash values from previous chunks cannot be determined)
+ *
+ * Also note that the hash can *only* be determined when `tpp_file_getchunk(self) != NULL'.
+ * If the file doesn't have an input chunk (e.g.: its contents are statically allocated),
+ * then this function always returns the same value. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
+tpp_file_gethash(tpp_file const *tpp_restrict self, tpp_char const *pos);
+#endif /* TPP_HAVE_FILE_GETHASH */
+
+#if TPP_HAVE_FILE_GETFULLHASH
+/* Same as `tpp_file_gethash()', but also includes the hash values of all parent files,
+ * such that the `tpp_file_gethash(f, tpp_file_getlastpos(f))' of every file reachable
+ * via `tpp_file_getprev()' is included in the return value in one way or another. Note
+ * that the value returned here may be different from the hash that would be calculated
+ * if all #include-ed files had been inlined into each other. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
+tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos);
+#endif /* TPP_HAVE_FILE_GETFULLHASH */
 
 typedef struct tpp_lcinfo_ex {
 	tpp_lcinfo      tlcix_info;     /* Line/column information, or "TPP_LCINFO_INVALID" if unknown */

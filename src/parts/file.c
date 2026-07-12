@@ -626,6 +626,28 @@ tpp_embed_to_utf8(unsigned char const *src, tpp_size src_count, tpp_char *dst_en
 
 
 
+#if TPP_HAVE_FILE_GETHASH
+static TPP_PURECALL TPP_WUNUSED tpp_hash TPPCALL
+tpp_file_hash_combine(tpp_hash result, tpp_char const *tpp_restrict text, tpp_size size) {
+	tpp_size i;
+	for (i = 0; i < size; ++i) {
+		tpp_char ch = text[i];
+		result = result * 263 + ch;
+	}
+	return result;
+}
+#endif /* TPP_HAVE_FILE_GETHASH */
+
+static TPP_NONNULL((1)) void TPPCALL
+tpp_file_io_prepare_unload(tpp_file *tpp_restrict self,
+                           tpp_char const *text, tpp_size size) {
+	self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account_ex(self->tf_data.td_io.tff_start_lc,
+	                                                         text, size, self->tf_enc);
+#if TPP_HAVE_FILE_GETHASH
+	self->tf_data.td_io.tff_hash = tpp_file_hash_combine(self->tf_data.td_io.tff_hash, text, size);
+#endif /* TPP_HAVE_FILE_GETHASH */
+}
+
 /* Try to expand the currently loaded `self->tf_chunk':
  * - If the file's kind isn't `TPP_FILE_KIND_IO', return `TPP_EOK'
  * - Allocate a new `tpp_string' suitable for holding both
@@ -696,9 +718,7 @@ again:
 		if (unused_head)
 #endif /* !__OPTIMIZE_SIZE__ */
 		{
-			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account_ex(self->tf_data.td_io.tff_start_lc,
-			                                                         tpp_string_str(old_chunk),
-			                                                         unused_head, self->tf_enc);
+			tpp_file_io_prepare_unload(self, tpp_string_str(old_chunk), unused_head);
 			tpp_memmovedown(tpp_string_str(old_chunk), base, old_inuse);
 			base -= unused_head;
 			self->tf_pos -= unused_head;
@@ -784,9 +804,7 @@ reuse_old_chunk:
 			ps_rel = (tpp_size)(self->tf_pos - base);
 			kp_rel = (tpp_size)(self->tf_data.td_io.ttf_keep - base);
 #endif /* TPP_HAVE_FILE_KEEPPOS */
-			self->tf_data.td_io.tff_start_lc = tpp_lcinfo_account_ex(self->tf_data.td_io.tff_start_lc,
-			                                                         tpp_string_str(old_chunk),
-			                                                         unused_head, self->tf_enc);
+			tpp_file_io_prepare_unload(self, tpp_string_str(old_chunk), unused_head);
 			tpp_assert(tpp_string_isshared(old_chunk));
 			tpp_string_decref_nokill(old_chunk);
 #if TPP_HAVE_UNICODE
@@ -801,6 +819,9 @@ reuse_old_chunk:
 			kp_rel = 0;
 #endif /* TPP_HAVE_FILE_KEEPPOS */
 			tpp_lcinfo_init(self->tf_data.td_io.tff_start_lc, 0, 0);
+#if TPP_HAVE_FILE_GETHASH
+			self->tf_data.td_io.tff_hash = 1; /* Initial hash starts at "1" (s.a. `tpp_hashof()') */
+#endif /* TPP_HAVE_FILE_GETHASH */
 #if TPP_HAVE_UNICODE
 			is_first_chunk = true;
 #endif /* TPP_HAVE_UNICODE */
@@ -1407,6 +1428,49 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 #endif /* TPP_HAVE_FILE_LC_CACHE */
 }
 #endif /* TPP_HAVE_FILE_SETLINE */
+
+
+#if TPP_HAVE_FILE_GETHASH
+/* Return the hash of all (decoded) bytes read from "self" up to (but not including) "pos"
+ * This *includes* the bytes of any already-unloaded chunk of "self", though "pos" must
+ * point into the current chunk (past hash values from previous chunks cannot be determined)
+ *
+ * Also note that the hash can *only* be determined when `tpp_file_getchunk(self) != NULL'.
+ * If the file doesn't have an input chunk (e.g.: its contents are statically allocated),
+ * then this function always returns the same value. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
+tpp_file_gethash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
+	tpp_hash result = 1;
+	if (self->tf_chunk) {
+		tpp_assert(pos >= tpp_string_str(self->tf_chunk));
+		tpp_assert(pos <= tpp_string_end(self->tf_chunk));
+		if (self->tf_kind == TPP_FILE_KIND_IO)
+			result = self->tf_data.td_io.tff_hash;
+		result = tpp_file_hash_combine(result, tpp_string_str(self->tf_chunk),
+		                               (tpp_size)(pos - tpp_string_str(self->tf_chunk)));
+	}
+	return result;
+}
+#endif /* TPP_HAVE_FILE_GETHASH */
+
+
+#if TPP_HAVE_FILE_GETFULLHASH
+/* Same as `tpp_file_gethash()', but also includes the hash values of all parent files,
+ * such that the `tpp_file_gethash(f, tpp_file_getlastpos(f))' of every file reachable
+ * via `tpp_file_getprev()' is included in the return value in one way or another. Note
+ * that the value returned here may be different from the hash that would be calculated
+ * if all #include-ed files had been inlined into each other. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
+tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
+	tpp_hash result = tpp_file_gethash(self, pos);
+	tpp_file const *iter = self;
+	while ((iter = tpp_file_getprev(iter)) != NULL) {
+		result *= 263;
+		result += tpp_file_gethash(iter, tpp_file_getlastpos(iter));
+	}
+	return result;
+}
+#endif /* TPP_HAVE_FILE_GETFULLHASH */
 
 
 

@@ -8332,6 +8332,26 @@ TPP_DECL_END
 #define TPP_HAVE_FILE_ENCODING_EMBED (TPP_HAVE_UNICODE && TPP_HAVE_CPP_EMBED && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
 
+/* Provide an API `tpp_lexer_rand()` that can be used to random numbers
+ * using the already-parsed contents of of I/O and TEXT files as seed. */
+#ifndef TPP_HAVE_LEXER_RAND
+#define TPP_HAVE_LEXER_RAND ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_RANDOM)
+#endif /* !TPP_HAVE_LEXER_RAND */
+
+/* Provide an API `tpp_file_gethash()` that can be used to calculate a hash
+ * of all already-processed bytes within a file up to a given position. */
+#ifndef TPP_HAVE_FILE_GETHASH
+#define TPP_HAVE_FILE_GETHASH ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_LEXER_RAND)
+#endif /* !TPP_HAVE_FILE_GETHASH */
+
+/* Provide an API `tpp_file_getfullhash()` that behaves similar to `tpp_file_gethash()`,
+ * but also traverses the `#include`-stack to include the hash values of all parent files
+ * found therein, such that the return values describes not only the current file leading
+ * up to a given position, but also all other files that came before. */
+#ifndef TPP_HAVE_FILE_GETFULLHASH
+#define TPP_HAVE_FILE_GETFULLHASH (TPP_HAVE_FILE_GETHASH && TPP_HAVE_INCLUDE_STACK)
+#endif /* !TPP_HAVE_FILE_GETFULLHASH */
+
 /* Provide a secondary set of keyword APIs that include support for `\`-escape sequences.
  * Needed to implement `TPP_HAVE_BSE` and `TPP_HAVE_ESCAPE_IN_IDENTIFIERS` */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
@@ -14708,14 +14728,17 @@ typedef struct tpp_file {
 #define _tpp_file_init_enc(self)   _tpp_file_init_enc_ex(self, TPP_FILE_ENCODING_UTF8)
 	union {
 		struct {
-			char const      *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
-			tpp_lcinfo       TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
+			char const *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
+			tpp_lcinfo  TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str', or `TPP_LCINFO_INVALID' */
 #if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_io_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_user_filename) = NULL
 #else /* TPP_HAVE_FILE_SETFILENAME */
 #define _tpp_file_init_io_user_filename(self) /* nothing */
 #endif /* !TPP_HAVE_FILE_SETFILENAME */
+#if TPP_HAVE_FILE_GETHASH
+			tpp_hash TPP_INTERNAL(tff_hash); /* [valid_if(tf_chunk != NULL)] Hash of all (decoded) file data up to the start of the current chunk */
+#endif /* TPP_HAVE_FILE_GETHASH */
 #if TPP_HAVE_FILE_KEEPPOS
 			/* Need an additional "tpp_char const *ttf_keep" here whose only purpose
 			 * is to set an extra, lower-bound of effective text-data to always
@@ -15141,20 +15164,19 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 #endif /* !TPP_HAVE_FILE_NOKWD */
 #define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags) \
 	tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, TPP_FILE_ENCODING_UTF8)
-#define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                                       \
-	(void)((self)->TPP_INTERNAL(tf_pos)   = NULL,                                                              \
-	       (self)->TPP_INTERNAL(tf_chunk) = NULL,                                                              \
-	       (self)->TPP_INTERNAL(tf_end)   = NULL                                                               \
-	       _tpp_file_init_prev(self),                                                                          \
-	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                                    \
-	       _tpp_file_init_enc_ex(self, enc)                                                                    \
-	       _tpp_file_init_flags(self, flags)                                                                   \
-	       _tpp_file_init_common(self),                                                                        \
-	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename),              \
-	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp),                    \
-	       tpp_lcinfo_init((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc), 0, 0) \
-	       _tpp_file_init_io_user_filename(self)                                                               \
-	       _tpp_file_init_io_keep(self),                                                                       \
+#define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                          \
+	(void)((self)->TPP_INTERNAL(tf_pos)   = NULL,                                                 \
+	       (self)->TPP_INTERNAL(tf_chunk) = NULL,                                                 \
+	       (self)->TPP_INTERNAL(tf_end)   = NULL                                                  \
+	       _tpp_file_init_prev(self),                                                             \
+	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_IO                                       \
+	       _tpp_file_init_enc_ex(self, enc)                                                       \
+	       _tpp_file_init_flags(self, flags)                                                      \
+	       _tpp_file_init_common(self),                                                           \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename), \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp)        \
+	       _tpp_file_init_io_user_filename(self)                                                  \
+	       _tpp_file_init_io_keep(self),                                                          \
 	       _tpp_file_io_notify_initialized(self))
 
 /* Initialize "self" from a given "tpp_lexer_openfile_result" */
@@ -15367,6 +15389,28 @@ TPP_DECL TPP_NONNULL((1, 2)) void TPPCALL
 tpp_file_setline(tpp_file *tpp_restrict self,
                  tpp_char const *pos, tpp_line line);
 #endif /* TPP_HAVE_FILE_SETLINE */
+
+#if TPP_HAVE_FILE_GETHASH
+/* Return the hash of all (decoded) bytes read from "self" up to (but not including) "pos"
+ * This *includes* the bytes of any already-unloaded chunk of "self", though "pos" must
+ * point into the current chunk (past hash values from previous chunks cannot be determined)
+ *
+ * Also note that the hash can *only* be determined when `tpp_file_getchunk(self) != NULL'.
+ * If the file doesn't have an input chunk (e.g.: its contents are statically allocated),
+ * then this function always returns the same value. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
+tpp_file_gethash(tpp_file const *tpp_restrict self, tpp_char const *pos);
+#endif /* TPP_HAVE_FILE_GETHASH */
+
+#if TPP_HAVE_FILE_GETFULLHASH
+/* Same as `tpp_file_gethash()', but also includes the hash values of all parent files,
+ * such that the `tpp_file_gethash(f, tpp_file_getlastpos(f))' of every file reachable
+ * via `tpp_file_getprev()' is included in the return value in one way or another. Note
+ * that the value returned here may be different from the hash that would be calculated
+ * if all #include-ed files had been inlined into each other. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
+tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos);
+#endif /* TPP_HAVE_FILE_GETFULLHASH */
 
 typedef struct tpp_lcinfo_ex {
 	tpp_lcinfo      tlcix_info;     /* Line/column information, or "TPP_LCINFO_INVALID" if unknown */
@@ -18095,6 +18139,26 @@ typedef struct tpp_lexer {
 #endif /* TPP_HAVE_LEXER_TIME */
 
 
+	/* Seed for random-number generation (combined with `tpp_lexer_getinputhash()' before use).
+	 * Also combined with the final seed of I/O and TEXT files as those files are popped. */
+#if TPP_HAVE_LEXER_RAND
+	tpp_hash TPP_INTERNAL(tl_rngseed); /* Next RandomNumberGenerationSEED */
+#define tpp_lexer_getrngseed(self)    (self)->TPP_INTERNAL(tl_rngseed)
+#define tpp_lexer_setrngseed(self, v) (void)((self)->TPP_INTERNAL(tl_rngseed) = (v))
+#define tpp_lexer_resetrngseed(self)  (void)((self)->TPP_INTERNAL(tl_rngseed) = 0)
+#define _tpp_lexer_addrngseed(self, hash) \
+	tpp_lexer_setrngseed(self, (tpp_lexer_getrngseed(self) * 263) + (hash))
+#define _tpp_lexer_addrngseed_from_file(self, file)                                             \
+	(tpp_file_getkind(file) == TPP_FILE_KIND_IO || tpp_file_getkind(file) == TPP_FILE_KIND_TEXT \
+	 ? _tpp_lexer_addrngseed(self, tpp_file_gethash(file, (file)->TPP_INTERNAL(tf_end)))        \
+	 : (void)0)
+#else /* TPP_HAVE_LEXER_RAND */
+#define tpp_lexer_resetrngseed(self)                (void)0
+#define _tpp_lexer_addrngseed(self, hash)           (void)0
+#define _tpp_lexer_addrngseed_from_file(self, file) (void)0
+#endif /* !TPP_HAVE_LEXER_RAND */
+
+
 	/* Format to use for file-and-line prefixes in messages. */
 #if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
 	char const *TPP_INTERNAL(tl_file_and_line_format); /* [1..1] format for file-and-line prefixes in messages */
@@ -18135,6 +18199,14 @@ typedef struct tpp_lexer {
 #define tpp_lexer_getlcinfoattokenstart_ex(self, result) tpp_lexer_getlcinfoat_ex(self, tpp_lexer_gettokenstart(self), result)
 #define tpp_lexer_getlcinfoattokenend(self)              tpp_lexer_getlcinfoat(self, tpp_lexer_gettokenend(self))
 #define tpp_lexer_getlcinfoattokenend_ex(self, result)   tpp_lexer_getlcinfoat_ex(self, tpp_lexer_gettokenend(self), result)
+
+/* Lexer input hash API */
+#if TPP_HAVE_FILE_GETFULLHASH
+#define tpp_lexer_getinputhashat(self, pos)      tpp_file_getfullhash(tpp_lexer_getfile(self), pos)
+#define tpp_lexer_getinputhashattokenstart(self) tpp_lexer_getinputhashat(self, tpp_lexer_gettokenstart(self))
+#define tpp_lexer_getinputhashattokenend(self)   tpp_lexer_getinputhashat(self, tpp_lexer_gettokenend(self))
+#define tpp_lexer_getinputhash(self)             tpp_lexer_getinputhashattokenstart(self)
+#endif /* TPP_HAVE_FILE_GETFULLHASH */
 
 /* Convenience L/C information helpers.
  * If you don't want to bother learning what all the above does, then it's these that
@@ -18882,6 +18954,28 @@ tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
 /* Delete all user-defined keyword assertions */
 #define tpp_lexer_unassertall2(self) tpp_keywords_unassertall(&(self)->TPP_INTERNAL(tl_kwds))
 #endif /* TPP_HAVE_KEYWORDS_UNASSERTALL */
+
+
+#if TPP_HAVE_LEXER_RAND
+/* Produce a random number based on:
+ * - `tpp_lexer_getrngseed()' (affected by `tpp_lexer_popfile()' + `tpp_lexer_manualpopfile_break_commit()')
+ * - `tpp_lexer_getinputhash()' (affected by everything read from files currently on the #include-stack)
+ *
+ * The result of the combination of those 2 values if then put
+ * through a PRNG, before the result of the PRNG is then returned
+ * by this function.
+ *
+ * This function is used to implement the builtin macro `__TPP_RANDOM()` */
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
+tpp_lexer_getrand(tpp_lexer const *tpp_restrict self);
+
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
+tpp_lexer_nextrand(tpp_lexer *tpp_restrict self) {
+	tpp_hash const result = tpp_lexer_getrand(self);
+	tpp_lexer_setrngseed(self, result);
+	return result;
+}
+#endif /* TPP_HAVE_LEXER_RAND */
 
 
 
