@@ -1594,9 +1594,9 @@ tpp_lexer_define(tpp_lexer *tpp_restrict self,
 }
 
 /* Delete a macro definition
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOENT: [SOFT_ERROR] No such macro */
-TPP_IMPL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+ * @return: true:  Success
+ * @return: false: No such macro */
+TPP_IMPL TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_lexer_undef(tpp_lexer *tpp_restrict self,
                 char const *macro_name, tpp_size macro_name_maxlen) {
 	tpp_size macro_name_len = tpp_strnlen(macro_name, macro_name_maxlen);
@@ -1604,9 +1604,9 @@ tpp_lexer_undef(tpp_lexer *tpp_restrict self,
 	tpp_keyword *macro_keyword = _tpp_lexer_kwds_getkeyword(self, (tpp_char const *)macro_name, macro_name_len, hash);
 	if (macro_keyword && tpp_keyword_canundef(macro_keyword)) {
 		tpp_keyword_undef(macro_keyword);
-		return TPP_EOK;
+		return true;
 	}
-	return TPP_ENOENT;
+	return false;
 }
 #endif /* TPP_HAVE_LEXER_CLI_DEFINE */
 

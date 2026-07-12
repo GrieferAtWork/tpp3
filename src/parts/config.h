@@ -4381,14 +4381,55 @@ for (local doc, name,
 /* Provide a function `tpp_lexer_define()` + `tpp_lexer_undef()`
  * that can be used to define/undef commandline-defined macros. */
 #ifndef TPP_HAVE_LEXER_CLI_DEFINE
-#define TPP_HAVE_LEXER_CLI_DEFINE (TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_CPP_MACROS)
+#define TPP_HAVE_LEXER_CLI_DEFINE (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_LEXER_CLI_DEFINE */
 
 /* Provide a function `tpp_lexer_assert()` + `tpp_lexer_unassert()` + `tpp_lexer_unassertall()`
  * that can be used to add/delete keyword assertions. */
 #ifndef TPP_HAVE_LEXER_CLI_ASSERT
-#define TPP_HAVE_LEXER_CLI_ASSERT (TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_CPP_ASSERT)
+#define TPP_HAVE_LEXER_CLI_ASSERT (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_CPP_ASSERT)
 #endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
+
+/* Provide a function `tpp_keywords_undefall()` + `tpp_lexer_undefall()`
+ * that can be used to quickly delete *all* macro definitions. */
+#ifndef TPP_HAVE_KEYWORDS_UNDEFALL
+#define TPP_HAVE_KEYWORDS_UNDEFALL ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_KEYWORDS_UNDEFALL */
+
+/* Provide a function `tpp_keywords_unassertall()` + `tpp_lexer_unassertall2()`
+ * that can be used to quickly delete *all* keyword assertions. */
+#ifndef TPP_HAVE_KEYWORDS_UNASSERTALL
+#define TPP_HAVE_KEYWORDS_UNASSERTALL ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_ASSERT)
+#endif /* !TPP_HAVE_KEYWORDS_UNASSERTALL */
+
+/* Provide a function `tpp_keywords_resetflags()` + `tpp_lexer_kwds_resetflags()`
+ * that can be used to delete the flags of all keywords. */
+#ifndef TPP_HAVE_KEYWORDS_RESETFLAGS
+#define TPP_HAVE_KEYWORDS_RESETFLAGS                   \
+	((TPP_PROFILE == TPP_PROFILE_ALL) &&               \
+	 (TPP_HAVE_PRAGMA_ONCE ||                          \
+	  TPP_HAVE_CPP_IMPORT ||                           \
+	  TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+	  TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+	  TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+	  TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+	  TPP_HAVE_CLANG_MACRO___has_extension ||          \
+	  TPP_HAVE_CLANG_MACRO___has_feature ||            \
+	  TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
+	  TPP_HAVE_MACRO___is_deprecated ||                \
+	  TPP_HAVE_MACRO___is_poisoned ||                  \
+	  TPP_HAVE_PRAGMA_DEPRECATED ||                    \
+	  TPP_HAVE_PRAGMA_GCC_POISON ||                    \
+	  TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS))
+#endif /* !TPP_HAVE_KEYWORDS_RESETFLAGS */
+
+/* Provide a function `tpp_keywords_resetcounters()` +
+ * `tpp_lexer_kwds_resetcounters()` that can be used to
+ * reset the state of all `__TPP_COUNTER()' macro expansions. */
+#ifndef TPP_HAVE_KEYWORDS_RESETCOUNTERS
+#define TPP_HAVE_KEYWORDS_RESETCOUNTERS \
+	((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_MACRO___TPP_COUNTER)
+#endif /* !TPP_HAVE_KEYWORDS_RESETCOUNTERS */
 
 /* Filename of definitions file used by `tpp_lexer_define()` */
 #ifndef TPP_CONFIG_CLI_FILENAME

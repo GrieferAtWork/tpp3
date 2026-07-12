@@ -161,6 +161,11 @@ typedef struct tpp_include_paths {
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
 
+/* Reset (re-initialize) "self" */
+#define tpp_include_paths_reset(self) \
+	(tpp_include_paths_fini(self), tpp_include_paths_init(self))
+
+
 #if TPP_HAVE_LEXER_COPY
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_include_paths_copy(tpp_include_paths *tpp_restrict self,

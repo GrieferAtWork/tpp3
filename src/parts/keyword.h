@@ -405,7 +405,9 @@ tpp_keyword_popmacro(tpp_keyword *tpp_restrict self);
  * The caller must ensure that `tpp_keyword_canundef(self)' */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undef(tpp_keyword *tpp_restrict self);
-#endif /* TPP_HAVE_CPP_MACROS */
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_keyword_canundef(self) 0
+#endif /* !TPP_HAVE_CPP_MACROS */
 
 
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
@@ -437,13 +439,22 @@ tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard);
 	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_builtin_counter) \
 	 : 0)
 
+/* Reset the counter such that `tpp_keyword_get_builtin_counter()' returns `0' */
+#define tpp_keyword_reset_builtin_counter(self)                                     \
+	((self)->TPP_INTERNAL(tk_misc)                                                  \
+	 ? (void)((self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_builtin_counter) = 0) \
+	 : (void)0)
+
 /* Fetch+increment the __TPP_COUNTER() value of this keyword
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
                                 tpp_counter *tpp_restrict p_result);
-#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+#else /* TPP_HAVE_MACRO___TPP_COUNTER */
+#define tpp_keyword_get_builtin_counter(self)   0
+#define tpp_keyword_reset_builtin_counter(self) (void)0
+#endif /* !TPP_HAVE_MACRO___TPP_COUNTER */
 
 
 
@@ -452,7 +463,7 @@ tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
 #define tpp_keyword_getflags(self)                            \
 	((self)->TPP_INTERNAL(tk_misc)                            \
 	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_flags) \
-	 : 0)
+	 : TPP_KEYWORD_FLAG_NORMAL)
 
 /* Set the flags (set of `TPP_KEYWORD_FLAG_*') linked to "self"
  * @return: TPP_EOK:    Success
@@ -495,7 +506,13 @@ tpp_keyword_addassert(tpp_keyword *self, tpp_keyword const *value);
  * @return: false: Assertion didn't exist in the first place */
 #define tpp_keyword_unassert(self, value) \
 	((self)->TPP_INTERNAL(tk_misc) && tpp_assertions_unassert(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_assertions), value))
-#endif /* TPP_HAVE_CPP_ASSERT */
+#else /* TPP_HAVE_CPP_ASSERT */
+#define tpp_keyword_getassertcount(self)        0
+#define tpp_keyword_containsanyassert(self)     false
+#define tpp_keyword_unassertall(self)           (void)0
+#define tpp_keyword_containsassert(self, value) false
+#define tpp_keyword_unassert(self, value)       false
+#endif /* !TPP_HAVE_CPP_ASSERT */
 
 
 
@@ -616,6 +633,11 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
                   tpp_keywords const *tpp_restrict from);
 #endif /* TPP_HAVE_LEXER_COPY */
 
+/* Reset (re-initialize) "self" */
+#define tpp_keywords_reset(self) \
+	(tpp_keywords_fini(self), tpp_keywords_init(self))
+
+
 /* Lookup keywords within the given keywords-table **ONLY**
  * @return: * :   The keyword in question
  * @return: NULL: No such keyword (consider using "tpp_keywords_getkeyword" to
@@ -697,6 +719,52 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
                          tpp_keyword const *tpp_restrict kwd);
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 #endif /* TPP_HAVE_USER_KEYWORDS */
+
+
+#if TPP_HAVE_KEYWORDS_UNDEFALL
+/* Delete all user-defined macro definitions */
+#if TPP_HAVE_CPP_MACROS
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_undefall(tpp_keywords *tpp_restrict self);
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_keywords_undefall(self) (void)0
+#endif /* !TPP_HAVE_CPP_MACROS */
+#endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
+
+
+#if TPP_HAVE_KEYWORDS_UNASSERTALL
+/* Delete all user-defined keyword assertions */
+#if TPP_HAVE_CPP_ASSERT
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_unassertall(tpp_keywords *tpp_restrict self);
+#else /* TPP_HAVE_CPP_ASSERT */
+#define tpp_keywords_unassertall(self) (void)0
+#endif /* !TPP_HAVE_CPP_ASSERT */
+#endif /* TPP_HAVE_KEYWORDS_UNASSERTALL */
+
+
+#if TPP_HAVE_KEYWORDS_RESETFLAGS
+/* Modify the flags of all keywords as `flags = flags & keep_mask' */
+#if TPP_HAVE_KEYWORD_FLAGS
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_resetflags(tpp_keywords *tpp_restrict self,
+                        tpp_keyword_flags keep_mask);
+#else /* TPP_HAVE_KEYWORD_FLAGS */
+#define tpp_keywords_resetflags(self, keep_mask) (void)0
+#endif /* !TPP_HAVE_KEYWORD_FLAGS */
+#endif /* TPP_HAVE_KEYWORDS_RESETFLAGS */
+
+#if TPP_HAVE_KEYWORDS_RESETCOUNTERS
+/* Call `tpp_keyword_reset_builtin_counter()' on every keyword, thereby
+ * resetting all side-effects of expansions of `__TPP_COUNTER' thus far. */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_resetcounters(tpp_keywords *tpp_restrict self);
+#else /* TPP_HAVE_MACRO___TPP_COUNTER */
+#define tpp_keywords_resetcounters(self) (void)0
+#endif /* !TPP_HAVE_MACRO___TPP_COUNTER */
+#endif /* TPP_HAVE_KEYWORDS_RESETCOUNTERS */
+
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

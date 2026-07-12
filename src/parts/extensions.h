@@ -113,6 +113,10 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 #define tpp_extensions_getid(self, id) \
 	tpp_extensions_state_getid(&(self)->TPP_INTERNAL(te_state), id)
 
+/* Reset (re-initialize) "self" */
+#define tpp_extensions_reset(self) \
+	(tpp_extensions_fini(self), tpp_extensions_init(self))
+
 
 /* Convert between extension IDs and their human-readable names. */
 TPP_DECL TPP_WUNUSED char const *TPPCALL

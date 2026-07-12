@@ -2261,6 +2261,136 @@ without_relative_to:
 #endif /* TPP_HAVE_JOINPATH */
 
 
+#if TPP_HAVE_LEXER_CLI_ASSERT
+/* Add a new keyword assertions for `key` and `value`.
+ * This is the same as doing `#assert {key}({value})`
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+tpp_lexer_assert(tpp_lexer *tpp_restrict self,
+                 char const *key, tpp_size key_maxlen,
+                 char const *value, tpp_size value_maxlen) {
+	tpp_size key_len = tpp_strnlen(key, key_maxlen);
+	tpp_size value_len = tpp_strnlen(value, value_maxlen);
+	tpp_hash key_hash = tpp_hashof((tpp_char const *)key, key_len);
+	tpp_hash value_hash = tpp_hashof((tpp_char const *)value, value_len);
+	tpp_keyword const *ro_key_keyword;
+	tpp_keyword const *ro_value_keyword;
+	tpp_keyword *key_keyword;
+	ro_key_keyword = tpp_lexer_kwds_newkeyword(self, (tpp_char const *)key, key_len, key_hash);
+	if tpp_unlikely(!ro_key_keyword)
+		goto err_nomem;
+	ro_value_keyword = tpp_lexer_kwds_newkeyword(self, (tpp_char const *)value, value_len, value_hash);
+	if tpp_unlikely(!ro_value_keyword)
+		goto err_nomem;
+	key_keyword = tpp_lexer_kwds_copybuiltin(self, ro_key_keyword);
+	if tpp_unlikely(!key_keyword)
+		goto err_nomem;
+	return tpp_keyword_addassert(key_keyword, ro_value_keyword);
+err_nomem:
+	return TPP_ENOMEM;
+}
+
+/* Delete a new keyword assertions for `key` and `value`.
+ * This is the same as doing `#unassert {key}({value})`
+ * @return: true:  Success
+ * @return: false: No such assertion */
+TPP_IMPL TPP_NONNULL((1, 2, 4)) bool TPPCALL
+tpp_lexer_unassert(tpp_lexer *tpp_restrict self,
+                   char const *key, tpp_size key_maxlen,
+                   char const *value, tpp_size value_maxlen) {
+	tpp_size key_len = tpp_strnlen(key, key_maxlen);
+	tpp_size value_len = tpp_strnlen(value, value_maxlen);
+	tpp_hash key_hash = tpp_hashof((tpp_char const *)key, key_len);
+	tpp_hash value_hash = tpp_hashof((tpp_char const *)value, value_len);
+	tpp_keyword *key_keyword;
+	tpp_keyword const *ro_value_keyword;
+	key_keyword = _tpp_lexer_kwds_getkeyword(self, (tpp_char const *)key, key_len, key_hash);
+	if (!key_keyword)
+		return false;
+	ro_value_keyword = tpp_lexer_kwds_getkeyword(self, (tpp_char const *)value, value_len, value_hash);
+	if (!ro_value_keyword)
+		return false;
+	return tpp_keyword_unassert(key_keyword, ro_value_keyword);
+}
+
+/* Delete all keyword assertions for `key`.
+ * This is the same as doing `#unassert {key}` */
+TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
+                      char const *key, tpp_size key_maxlen) {
+	tpp_size key_len = tpp_strnlen(key, key_maxlen);
+	tpp_hash key_hash = tpp_hashof((tpp_char const *)key, key_len);
+	tpp_keyword *key_keyword = _tpp_lexer_kwds_getkeyword(self, (tpp_char const *)key, key_len, key_hash);
+	if (key_keyword)
+		tpp_keyword_unassertall(key_keyword);
+}
+#endif /* TPP_HAVE_LEXER_CLI_ASSERT */
+
+
+#if TPP_HAVE_KEYWORDS_UNDEFALL && TPP_HAVE_CPP_MACROS
+/* Delete all user-defined macro definitions */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_undefall(tpp_keywords *tpp_restrict self) {
+	tpp_hash i;
+	for (i = 0; i <= self->tks_bckm; ++i) {
+		tpp_keyword *bucket = self->tks_bckv[i];
+		for (; bucket; bucket = bucket->tk_next) {
+			if (tpp_keyword_canundef(bucket))
+				tpp_keyword_undef(bucket);
+		}
+	}
+}
+#endif /* TPP_HAVE_KEYWORDS_UNDEFALL && TPP_HAVE_CPP_MACROS */
+
+
+#if TPP_HAVE_KEYWORDS_UNASSERTALL && TPP_HAVE_CPP_ASSERT
+/* Delete all user-defined keyword assertions */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_unassertall(tpp_keywords *tpp_restrict self) {
+	tpp_hash i;
+	for (i = 0; i <= self->tks_bckm; ++i) {
+		tpp_keyword *bucket = self->tks_bckv[i];
+		for (; bucket; bucket = bucket->tk_next)
+			tpp_keyword_unassertall(bucket);
+	}
+}
+#endif /* TPP_HAVE_KEYWORDS_UNASSERTALL && TPP_HAVE_CPP_ASSERT */
+
+
+#if TPP_HAVE_KEYWORDS_RESETFLAGS && TPP_HAVE_KEYWORD_FLAGS
+/* Modify the flags of all keywords as `flags = flags & keep_mask' */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_resetflags(tpp_keywords *tpp_restrict self,
+                        tpp_keyword_flags keep_mask) {
+	tpp_hash i;
+	for (i = 0; i <= self->tks_bckm; ++i) {
+		tpp_keyword *bucket = self->tks_bckv[i];
+		for (; bucket; bucket = bucket->tk_next) {
+			tpp_keyword_misc *misc = bucket->tk_misc;
+			if (misc)
+				misc->tkm_flags &= keep_mask;
+		}
+	}
+}
+#endif /* TPP_HAVE_KEYWORDS_RESETFLAGS && TPP_HAVE_KEYWORD_FLAGS */
+
+
+#if TPP_HAVE_KEYWORDS_RESETCOUNTERS && TPP_HAVE_MACRO___TPP_COUNTER
+/* Call `tpp_keyword_reset_builtin_counter()' on every keyword, thereby
+ * resetting all side-effects of expansions of `__TPP_COUNTER' thus far. */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_resetcounters(tpp_keywords *tpp_restrict self) {
+	tpp_hash i;
+	for (i = 0; i <= self->tks_bckm; ++i) {
+		tpp_keyword *bucket = self->tks_bckv[i];
+		for (; bucket; bucket = bucket->tk_next)
+			tpp_keyword_reset_builtin_counter(bucket);
+	}
+}
+#endif /* TPP_HAVE_KEYWORDS_RESETCOUNTERS && TPP_HAVE_MACRO___TPP_COUNTER */
+
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

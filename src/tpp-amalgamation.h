@@ -8614,14 +8614,55 @@ TPP_DECL_END
 /* Provide a function `tpp_lexer_define()` + `tpp_lexer_undef()`
  * that can be used to define/undef commandline-defined macros. */
 #ifndef TPP_HAVE_LEXER_CLI_DEFINE
-#define TPP_HAVE_LEXER_CLI_DEFINE (TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_CPP_MACROS)
+#define TPP_HAVE_LEXER_CLI_DEFINE (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_LEXER_CLI_DEFINE */
 
 /* Provide a function `tpp_lexer_assert()` + `tpp_lexer_unassert()` + `tpp_lexer_unassertall()`
  * that can be used to add/delete keyword assertions. */
 #ifndef TPP_HAVE_LEXER_CLI_ASSERT
-#define TPP_HAVE_LEXER_CLI_ASSERT (TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_CPP_ASSERT)
+#define TPP_HAVE_LEXER_CLI_ASSERT (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_CPP_ASSERT)
 #endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
+
+/* Provide a function `tpp_keywords_undefall()` + `tpp_lexer_undefall()`
+ * that can be used to quickly delete *all* macro definitions. */
+#ifndef TPP_HAVE_KEYWORDS_UNDEFALL
+#define TPP_HAVE_KEYWORDS_UNDEFALL ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_KEYWORDS_UNDEFALL */
+
+/* Provide a function `tpp_keywords_unassertall()` + `tpp_lexer_unassertall2()`
+ * that can be used to quickly delete *all* keyword assertions. */
+#ifndef TPP_HAVE_KEYWORDS_UNASSERTALL
+#define TPP_HAVE_KEYWORDS_UNASSERTALL ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_ASSERT)
+#endif /* !TPP_HAVE_KEYWORDS_UNASSERTALL */
+
+/* Provide a function `tpp_keywords_resetflags()` + `tpp_lexer_kwds_resetflags()`
+ * that can be used to delete the flags of all keywords. */
+#ifndef TPP_HAVE_KEYWORDS_RESETFLAGS
+#define TPP_HAVE_KEYWORDS_RESETFLAGS                   \
+	((TPP_PROFILE == TPP_PROFILE_ALL) &&               \
+	 (TPP_HAVE_PRAGMA_ONCE ||                          \
+	  TPP_HAVE_CPP_IMPORT ||                           \
+	  TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+	  TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+	  TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+	  TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+	  TPP_HAVE_CLANG_MACRO___has_extension ||          \
+	  TPP_HAVE_CLANG_MACRO___has_feature ||            \
+	  TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
+	  TPP_HAVE_MACRO___is_deprecated ||                \
+	  TPP_HAVE_MACRO___is_poisoned ||                  \
+	  TPP_HAVE_PRAGMA_DEPRECATED ||                    \
+	  TPP_HAVE_PRAGMA_GCC_POISON ||                    \
+	  TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS))
+#endif /* !TPP_HAVE_KEYWORDS_RESETFLAGS */
+
+/* Provide a function `tpp_keywords_resetcounters()` +
+ * `tpp_lexer_kwds_resetcounters()` that can be used to
+ * reset the state of all `__TPP_COUNTER()' macro expansions. */
+#ifndef TPP_HAVE_KEYWORDS_RESETCOUNTERS
+#define TPP_HAVE_KEYWORDS_RESETCOUNTERS \
+	((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_MACRO___TPP_COUNTER)
+#endif /* !TPP_HAVE_KEYWORDS_RESETCOUNTERS */
 
 /* Filename of definitions file used by `tpp_lexer_define()` */
 #ifndef TPP_CONFIG_CLI_FILENAME
@@ -16022,7 +16063,9 @@ tpp_keyword_popmacro(tpp_keyword *tpp_restrict self);
  * The caller must ensure that `tpp_keyword_canundef(self)' */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undef(tpp_keyword *tpp_restrict self);
-#endif /* TPP_HAVE_CPP_MACROS */
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_keyword_canundef(self) 0
+#endif /* !TPP_HAVE_CPP_MACROS */
 
 
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
@@ -16054,13 +16097,22 @@ tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard);
 	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_builtin_counter) \
 	 : 0)
 
+/* Reset the counter such that `tpp_keyword_get_builtin_counter()' returns `0' */
+#define tpp_keyword_reset_builtin_counter(self)                                     \
+	((self)->TPP_INTERNAL(tk_misc)                                                  \
+	 ? (void)((self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_builtin_counter) = 0) \
+	 : (void)0)
+
 /* Fetch+increment the __TPP_COUNTER() value of this keyword
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
                                 tpp_counter *tpp_restrict p_result);
-#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+#else /* TPP_HAVE_MACRO___TPP_COUNTER */
+#define tpp_keyword_get_builtin_counter(self)   0
+#define tpp_keyword_reset_builtin_counter(self) (void)0
+#endif /* !TPP_HAVE_MACRO___TPP_COUNTER */
 
 
 
@@ -16069,7 +16121,7 @@ tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
 #define tpp_keyword_getflags(self)                            \
 	((self)->TPP_INTERNAL(tk_misc)                            \
 	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_flags) \
-	 : 0)
+	 : TPP_KEYWORD_FLAG_NORMAL)
 
 /* Set the flags (set of `TPP_KEYWORD_FLAG_*') linked to "self"
  * @return: TPP_EOK:    Success
@@ -16112,7 +16164,13 @@ tpp_keyword_addassert(tpp_keyword *self, tpp_keyword const *value);
  * @return: false: Assertion didn't exist in the first place */
 #define tpp_keyword_unassert(self, value) \
 	((self)->TPP_INTERNAL(tk_misc) && tpp_assertions_unassert(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_assertions), value))
-#endif /* TPP_HAVE_CPP_ASSERT */
+#else /* TPP_HAVE_CPP_ASSERT */
+#define tpp_keyword_getassertcount(self)        0
+#define tpp_keyword_containsanyassert(self)     false
+#define tpp_keyword_unassertall(self)           (void)0
+#define tpp_keyword_containsassert(self, value) false
+#define tpp_keyword_unassert(self, value)       false
+#endif /* !TPP_HAVE_CPP_ASSERT */
 
 
 
@@ -16233,6 +16291,11 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
                   tpp_keywords const *tpp_restrict from);
 #endif /* TPP_HAVE_LEXER_COPY */
 
+/* Reset (re-initialize) "self" */
+#define tpp_keywords_reset(self) \
+	(tpp_keywords_fini(self), tpp_keywords_init(self))
+
+
 /* Lookup keywords within the given keywords-table **ONLY**
  * @return: * :   The keyword in question
  * @return: NULL: No such keyword (consider using "tpp_keywords_getkeyword" to
@@ -16314,6 +16377,52 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
                          tpp_keyword const *tpp_restrict kwd);
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 #endif /* TPP_HAVE_USER_KEYWORDS */
+
+
+#if TPP_HAVE_KEYWORDS_UNDEFALL
+/* Delete all user-defined macro definitions */
+#if TPP_HAVE_CPP_MACROS
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_undefall(tpp_keywords *tpp_restrict self);
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_keywords_undefall(self) (void)0
+#endif /* !TPP_HAVE_CPP_MACROS */
+#endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
+
+
+#if TPP_HAVE_KEYWORDS_UNASSERTALL
+/* Delete all user-defined keyword assertions */
+#if TPP_HAVE_CPP_ASSERT
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_unassertall(tpp_keywords *tpp_restrict self);
+#else /* TPP_HAVE_CPP_ASSERT */
+#define tpp_keywords_unassertall(self) (void)0
+#endif /* !TPP_HAVE_CPP_ASSERT */
+#endif /* TPP_HAVE_KEYWORDS_UNASSERTALL */
+
+
+#if TPP_HAVE_KEYWORDS_RESETFLAGS
+/* Modify the flags of all keywords as `flags = flags & keep_mask' */
+#if TPP_HAVE_KEYWORD_FLAGS
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_resetflags(tpp_keywords *tpp_restrict self,
+                        tpp_keyword_flags keep_mask);
+#else /* TPP_HAVE_KEYWORD_FLAGS */
+#define tpp_keywords_resetflags(self, keep_mask) (void)0
+#endif /* !TPP_HAVE_KEYWORD_FLAGS */
+#endif /* TPP_HAVE_KEYWORDS_RESETFLAGS */
+
+#if TPP_HAVE_KEYWORDS_RESETCOUNTERS
+/* Call `tpp_keyword_reset_builtin_counter()' on every keyword, thereby
+ * resetting all side-effects of expansions of `__TPP_COUNTER' thus far. */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_resetcounters(tpp_keywords *tpp_restrict self);
+#else /* TPP_HAVE_MACRO___TPP_COUNTER */
+#define tpp_keywords_resetcounters(self) (void)0
+#endif /* !TPP_HAVE_MACRO___TPP_COUNTER */
+#endif /* TPP_HAVE_KEYWORDS_RESETCOUNTERS */
+
 
 /************************************************************************/
 /* File: parts/extensions.h                                             */
@@ -16404,6 +16513,10 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 #endif /* !TPP_HAVE_EXTENSIONS_PUSH_POP */
 #define tpp_extensions_getid(self, id) \
 	tpp_extensions_state_getid(&(self)->TPP_INTERNAL(te_state), id)
+
+/* Reset (re-initialize) "self" */
+#define tpp_extensions_reset(self) \
+	(tpp_extensions_fini(self), tpp_extensions_init(self))
 
 
 /* Convert between extension IDs and their human-readable names. */
@@ -16737,6 +16850,10 @@ tpp_warnings_copy(tpp_warnings *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_COPY */
 #endif /* !TPP_HAVE_WARNINGS_FINI */
 
+/* Reset (re-initialize) "self" */
+#define tpp_warnings_reset(self) \
+	(tpp_warnings_fini(self), tpp_warnings_init(self))
+
 
 #if TPP_HAVE_WARNINGS_PUSH_POP
 #define _tpp_warnings_alloc() ((tpp_warnings *)tpp_malloc(sizeof(tpp_warnings)))
@@ -16961,6 +17078,11 @@ typedef struct tpp_include_paths {
 	 _tpp_include_paths_init_push(self))
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
+
+/* Reset (re-initialize) "self" */
+#define tpp_include_paths_reset(self) \
+	(tpp_include_paths_fini(self), tpp_include_paths_init(self))
+
 
 #if TPP_HAVE_LEXER_COPY
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
@@ -17888,6 +18010,7 @@ typedef struct tpp_lexer {
 #define tpp_lexer_getwarningctx(self, ctx_id)             tpp_warnings_getctx(&(self)->TPP_INTERNAL(tl_warn), ctx_id)
 #define tpp_lexer_setwarningctx(self, ctx_id, state)      tpp_warnings_setctx(&(self)->TPP_INTERNAL(tl_warn), ctx_id, state)
 #define tpp_lexer_invokewarning(self, warning_id, result) tpp_warnings_invoke(&(self)->TPP_INTERNAL(tl_warn), warning_id, result)
+#define tpp_lexer_resetwarnings(self)                     tpp_warnings_reset(&(self)->TPP_INTERNAL(tl_warn))
 #endif /* TPP_HAVE_WARNINGS */
 
 /* Extensions... */
@@ -17901,7 +18024,11 @@ typedef struct tpp_lexer {
 #define tpp_lexer_popextensions(self)    tpp_extensions_pop(&(self)->TPP_INTERNAL(tl_exts))
 #define tpp_lexer_canpopextensions(self) tpp_extensions_canpop(&(self)->TPP_INTERNAL(tl_exts))
 #endif /* TPP_HAVE_EXTENSIONS_PUSH_POP */
-#endif /* TPP_HAVE_EXTENSIONS */
+#define tpp_lexer_resetextensions(self) tpp_extensions_reset(&(self)->TPP_INTERNAL(tl_exts))
+#else /* TPP_HAVE_EXTENSIONS */
+#define tpp_lexer_getextension(self, TPP_EXT_x) 0
+#define tpp_lexer_resetextensions(self)         (void)0
+#endif /* !TPP_HAVE_EXTENSIONS */
 
 /* Features... */
 #if TPP_HAVE_FEATURES
@@ -17910,7 +18037,10 @@ typedef struct tpp_lexer {
 #define tpp_lexer_enablefeature(self, TPP_FEAT_x)       tpp_features_enable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
 #define tpp_lexer_disablefeature(self, TPP_FEAT_x)      tpp_features_disable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
 #define tpp_lexer_resetfeatures(self)                   tpp_features_reset(&(self)->TPP_INTERNAL(tl_feat))
-#endif /* TPP_HAVE_FEATURES */
+#else /* TPP_HAVE_FEATURES */
+#define tpp_lexer_getfeature(self, TPP_FEAT_x) 0
+#define tpp_lexer_resetfeatures(self)          (void)0
+#endif /* !TPP_HAVE_FEATURES */
 
 /* Check if "tpp_lexer_yieldpp()" might parse directives right now.
  * Since directives are only allowed to appear directly following a
@@ -17966,6 +18096,7 @@ typedef struct tpp_lexer {
 #define tpp_lexer_popincludes(self)    tpp_include_paths_pop(&(self)->TPP_INTERNAL(tl_include_paths))
 #define tpp_lexer_canpopincludes(self) tpp_include_paths_canpop(&(self)->TPP_INTERNAL(tl_include_paths))
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#define tpp_lexer_resetincludes(self)  tpp_include_paths_reset(&(self)->TPP_INTERNAL(tl_include_paths))
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
 
@@ -17985,12 +18116,31 @@ typedef struct tpp_lexer {
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 #define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->TPP_INTERNAL(tl_kwds), kwd)
 #endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+
+#if TPP_HAVE_KEYWORDS_RESETFLAGS
+/* Modify the flags of all keywords as `flags = flags & keep_mask' */
+#define tpp_lexer_kwds_resetflags(self, keep_mask) tpp_keywords_resetflags(&(self)->TPP_INTERNAL(tl_kwds), keep_mask)
+#endif /* TPP_HAVE_KEYWORDS_RESETFLAGS */
+
+#if TPP_HAVE_KEYWORDS_RESETCOUNTERS
+/* Call `tpp_keyword_reset_builtin_counter()' on every keyword, thereby
+ * resetting all side-effects of expansions of `__TPP_COUNTER' thus far. */
+#define tpp_lexer_kwds_resetcounters(self) tpp_keywords_resetcounters(&(self)->TPP_INTERNAL(tl_kwds))
+#endif /* TPP_HAVE_KEYWORDS_RESETCOUNTERS */
+
+/* Reset (re-initialize) all user-defined keywords
+ * WARNING: To use this function, you should first finalize the #include-stack (i.e.:
+ *          call `tpp_lexer_finifile()'), since the #include-stack usually contains
+ *          references to certain keywords that will become dangling after a call to
+ *          this function */
+#define tpp_lexer_kwds_reset(self) tpp_keywords_reset(&(self)->TPP_INTERNAL(tl_kwds))
 #else /* TPP_HAVE_USER_KEYWORDS */
 #define tpp_lexer_kwds_getkeyword(self, kwd, len, hash)  tpp_builtin_getkeyword(kwd, len, hash)
 #define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_builtin_getkeyword_byid(id)
 #if TPP_HAVE_ESCAPED_KEYWORDS
 #define tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash, file) tpp_builtin_getkeyword_esc(kwd, len, hash, file)
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
+#define tpp_lexer_kwds_reset(self) (void)0
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 
 
@@ -18349,6 +18499,14 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_UNICODE */
 
 
+/* Helpers to reset certain parts of a lexer */
+#if TPP_HAVE_USER_KEYWORDS
+	tpp_keywords TPP_INTERNAL(tl_kwds);
+#endif /* TPP_HAVE_USER_KEYWORDS */
+#if TPP_HAVE_INCLUDE_PATH
+	tpp_include_paths TPP_INTERNAL(tl_include_paths);
+#endif /* TPP_HAVE_INCLUDE_PATH */
+
 
 /* Check if the current file can be popped. */
 #define tpp_lexer_canpopfile(self) \
@@ -18523,12 +18681,18 @@ tpp_lexer_define(tpp_lexer *tpp_restrict self,
                  char const *macro_body, tpp_size macro_body_maxlen);
 
 /* Delete a macro definition
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOENT: [SOFT_ERROR] No such macro */
-TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+ * @return: true:  Success
+ * @return: false: No such macro */
+TPP_DECL TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_lexer_undef(tpp_lexer *tpp_restrict self,
                 char const *macro_name, tpp_size macro_name_maxlen);
 #endif /* TPP_HAVE_LEXER_CLI_DEFINE */
+
+#if TPP_HAVE_KEYWORDS_UNDEFALL
+/* Delete all user-defined macro definitions */
+#define tpp_lexer_undefall(self) tpp_keywords_undefall(&(self)->TPP_INTERNAL(tl_kwds))
+#endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
+
 
 #if TPP_HAVE_LEXER_CLI_ASSERT
 /* Add a new keyword assertions for `key` and `value`.
@@ -18542,9 +18706,9 @@ tpp_lexer_assert(tpp_lexer *tpp_restrict self,
 
 /* Delete a new keyword assertions for `key` and `value`.
  * This is the same as doing `#unassert {key}({value})`
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOENT: [SOFT_ERROR] No such assertion */
-TPP_DECL TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+ * @return: true:  Success
+ * @return: false: No such assertion */
+TPP_DECL TPP_NONNULL((1, 2, 4)) bool TPPCALL
 tpp_lexer_unassert(tpp_lexer *tpp_restrict self,
                    char const *key, tpp_size key_maxlen,
                    char const *value, tpp_size value_maxlen);
@@ -18556,11 +18720,10 @@ tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
                       char const *key, tpp_size key_maxlen);
 #endif /* TPP_HAVE_LEXER_CLI_ASSERT */
 
-/* TODO: API to manually define/undef macros
- * TODO: Unlike TPP2's, this API should also (implicitly) be able to define
- *       function-like macros if the macro name given to the function contains
- *       a '('-token. iow: GCC accepts this: `-DFOO(x)=1+x+2` for `#define FOO(x) 1+x+2`
- */
+#if TPP_HAVE_KEYWORDS_UNASSERTALL
+/* Delete all user-defined keyword assertions */
+#define tpp_lexer_unassertall2(self) tpp_keywords_unassertall(&(self)->TPP_INTERNAL(tl_kwds))
+#endif /* TPP_HAVE_KEYWORDS_UNASSERTALL */
 
 
 

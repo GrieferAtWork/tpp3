@@ -333,6 +333,10 @@ tpp_warnings_copy(tpp_warnings *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_COPY */
 #endif /* !TPP_HAVE_WARNINGS_FINI */
 
+/* Reset (re-initialize) "self" */
+#define tpp_warnings_reset(self) \
+	(tpp_warnings_fini(self), tpp_warnings_init(self))
+
 
 #if TPP_HAVE_WARNINGS_PUSH_POP
 #define _tpp_warnings_alloc() ((tpp_warnings *)tpp_malloc(sizeof(tpp_warnings)))

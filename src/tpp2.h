@@ -2543,8 +2543,14 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE 1 /* TPP2 used to do this unconditionally */
 
 /* Misc. features */
-#define TPP_HAVE_QUALITY_WARNINGS    1 /* General config for -Wquality warnings */
-#define TPP_HAVE_LEXER_WARNING_COUNT 1 /* Needed to emulate "l_warncount" */
+#define TPP_HAVE_QUALITY_WARNINGS       1                   /* General config for -Wquality warnings */
+#define TPP_HAVE_LEXER_WARNING_COUNT    1                   /* Needed to emulate "l_warncount" */
+#define TPP_HAVE_LEXER_CLI_DEFINE       1                   /* Needed to emulate "TPPLexer_Define()" */
+#define TPP_HAVE_LEXER_CLI_ASSERT       TPP_HAVE_CPP_ASSERT /* Needed to emulate "TPPLexer_AddAssert()" */
+#define TPP_HAVE_KEYWORDS_UNDEFALL      1                   /* Needed to emulate "TPPLEXER_RESET_MACRO" */
+#define TPP_HAVE_KEYWORDS_UNASSERTALL   1                   /* Needed to emulate "TPPLEXER_RESET_ASSERT" */
+#define TPP_HAVE_KEYWORDS_RESETFLAGS    1                   /* Needed to emulate "TPPLEXER_RESET_KWDFLAGS" + "TPPLEXER_RESET_FONCE" */
+#define TPP_HAVE_KEYWORDS_RESETCOUNTERS 1                   /* Needed to emulate "TPPLEXER_RESET_COUNTER" */
 
 /* Force extensions to use the names they'd been using in TPP2 */
 #define TPP_EXTNAME_TRIGRAPHS                           "trigraphs"
@@ -5462,38 +5468,52 @@ TPP_INLINE int TPPCALL TPPLexer_ClearIfdefStack_(tpp_lexer *self) {
 	return 1;
 }
 
-#if 0 /* TODO */
-//#define TPPLEXER_RESET_NONE       0x00000000
-//#define TPPLEXER_RESET_INCLUDE    0x00000001 /* Reset the #include/#ifdef-stack and set the current token to EOF.
-//                                              * NOTE: Also resets the `l_eob_file' and `l_eof_file' special
-//                                              *       file pointers, as well as setting `l_noerror' to EOF
-//                                              *       and `l_warncount' and `l_errorcount' to ZERO(0). */
-//#define TPPLEXER_RESET_ESTATE     0x00000002 /* Reset the current extensions state to mirror the default. */
-//#define TPPLEXER_RESET_ESTACK     0x00000004 /* Clear all previously pushed extension states. */
-//#define TPPLEXER_RESET_WSTATE     0x00000008 /* Reset the current warning state to mirror the default. */
-//#define TPPLEXER_RESET_WSTACK     0x00000010 /* Clear all previously pushed warning states. */
-//#define TPPLEXER_RESET_SYSPATHS   0x00000020 /* Clears all system #include-paths. */
-//#define TPPLEXER_RESET_MACRO      0x00000040 /* Reset user-defined macros.
-//                                              * The original definitions of runtime builtin macros are restored,
-//                                              * unless the `TPPLEXER_RESET_NORESTOREMACROS' flag is set. */
-//#define TPPLEXER_RESET_ASSERT     0x00000080 /* Reset user-defined assertions. */
-//#define TPPLEXER_RESET_KWDFLAGS   0x00000100 /* Reset user-defined keyword flags. */
-//#define TPPLEXER_RESET_COUNTER    0x00000200 /* Reset __COUNTER__ and __TPP_COUNTER for all keywords. */
-//#define TPPLEXER_RESET_FONCE      0x00000400 /* Clear all `#pragma once' descriptors. */
-//#define TPPLEXER_RESET_KEYWORDS   0x00000800 /* Clear all keywords, but keep all predefined.
-//                                              * NOTE: When set, this flag implies `TPPLEXER_RESET_MACRO',
-//                                              *       `TPPLEXER_RESET_ASSERT', `TPPLEXER_RESET_KWDFLAGS',
-//                                              *       `TPPLEXER_RESET_COUNTER' and `TPPLEXER_RESET_FONCE'.
-//                                              * NOTE: It also implies `TPPLEXER_RESET_NORESTOREMACROS' */
-//#define TPPLEXER_RESET_NORESTOREMACROS 0x00001000 /* When used with `TPPLEXER_RESET_MACRO': Don't restore builtin macro definitions. */
-//#define TPPLEXER_RESET_EXTENSIONS (TPPLEXER_RESET_ESTATE|TPPLEXER_RESET_ESTACK)
-//#define TPPLEXER_RESET_WARNINGS   (TPPLEXER_RESET_WSTATE|TPPLEXER_RESET_WSTACK)
+#define TPPLEXER_RESET_NONE       0x00000000 /* no-op */
+#undef TPPLEXER_RESET_INCLUDE                /* In TPP3, you *could* in theory call `tpp_lexer_finifile()`, but TPP3 doesn't have the concept of an "empty" #include-stack */
+#define TPPLEXER_RESET_ESTATE     0x00000002 /* Use `tpp_lexer_resetextensions()' / `tpp_lexer_resetfeatures()' */
+#undef TPPLEXER_RESET_ESTACK                 /* In TPP3, this is already done by `tpp_lexer_resetextensions()' */
+#define TPPLEXER_RESET_WSTATE     0x00000008 /* Use `tpp_lexer_resetwarnings()' */
+#undef TPPLEXER_RESET_WSTACK                 /* In TPP3, this is already done by `tpp_lexer_resetwarnings()' */
+#define TPPLEXER_RESET_SYSPATHS   0x00000020 /* Clears all system #include-paths. */
+#define TPPLEXER_RESET_MACRO      0x00000040 /* Delete all user-defined macro. Since TPP3 doesn*t have `TPPLEXER_RESET_NORESTOREMACROS', this also includes `TPPLEXER_DEFINE_FLAG_BUILTIN' macros (s.a. the fact that `TPPLEXER_DEFINE_FLAG_BUILTIN' is #undef'd below) */
+#define TPPLEXER_RESET_ASSERT     0x00000080 /* Reset user-defined assertions. */
+#define TPPLEXER_RESET_KWDFLAGS   0x00000100 /* Reset user-defined keyword flags. */
+#define TPPLEXER_RESET_COUNTER    0x00000200 /* Reset __COUNTER__ and __TPP_COUNTER for all keywords. */
+#define TPPLEXER_RESET_FONCE      0x00000400 /* Clear all `#pragma once' descriptors. */
+#define TPPLEXER_RESET_KEYWORDS   0x00000800 /* Clear all keywords, but keep all predefined. */
+#undef TPPLEXER_RESET_NORESTOREMACROS        /* TPP3 no longer supports `TPPLEXER_RESET_NORESTOREMACROS', so this flag would essentially always have to be set -- instead, it just doesn't exist anymore. */
+#define TPPLEXER_RESET_EXTENSIONS (TPPLEXER_RESET_ESTATE/*|TPPLEXER_RESET_ESTACK*/)
+#define TPPLEXER_RESET_WARNINGS   (TPPLEXER_RESET_WSTATE/*|TPPLEXER_RESET_WSTACK*/)
 
-///* Reset certain parts of the lexer.
-// * NOTE: This function can be called when `TPPLexer_Current' is NULL, or not initialized.
-// * @param: flags: Set of `TPPLEXER_RESET_*' */
-//TPPFUN void TPPCALL TPPLexer_Reset(struct TPPLexer *tpp_restrict self, uint32_t flags);
-#endif
+/* Reset certain parts of the lexer.
+ * @param: flags: Set of `TPPLEXER_RESET_*' */
+TPP_INLINE void TPPCALL
+TPPLexer_Reset(tpp_lexer *tpp_restrict self, uint32_t flags) {
+	if (flags & TPPLEXER_RESET_ESTATE) {
+		tpp_lexer_resetextensions(self);
+		tpp_lexer_resetfeatures(self);
+	}
+	if (flags & TPPLEXER_RESET_WSTATE)
+		tpp_lexer_resetwarnings(self);
+	if (flags & TPPLEXER_RESET_SYSPATHS)
+		tpp_lexer_resetincludes(self);
+	if (flags & TPPLEXER_RESET_KEYWORDS) {
+		tpp_lexer_kwds_reset(self);
+	} else {
+		if (flags & TPPLEXER_RESET_MACRO)
+			tpp_lexer_undefall(self);
+		if (flags & TPPLEXER_RESET_ASSERT)
+			tpp_lexer_unassertall2(self);
+		if (flags & TPPLEXER_RESET_COUNTER)
+			tpp_lexer_kwds_resetcounters(self);
+		if (flags & TPPLEXER_RESET_KWDFLAGS) {
+			tpp_lexer_kwds_resetflags(self, 0);
+		} else if (flags & TPPLEXER_RESET_FONCE) {
+			tpp_lexer_kwds_resetflags(self, ~TPP_KEYWORD_FLAG_HDR_ONCE);
+		}
+	}
+}
+
 
 /* Push/Pop the current extension state.
  * @return: 0: [TPPLexer_PushExtensions] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
@@ -5608,50 +5628,41 @@ TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
 #define TPPLexer_LookupKeywordID_(self, id) tpp_lexer_kwds_getkeyword_byid(self, id)
 #define TPPLexer_LookupKeywordID(id)        tpp_lexer_kwds_getkeyword_byid(TPP2_LEXER, id)
 
-#if 0 /* TODO */
-///* Define a regular, keyword-style macro `name' as `value'.
-// * @param: flags: A set of `TPPLEXER_DEFINE_FLAG_*'
-// * @return: 0: Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
-// * @return: 1: Successfully defined the given macro.
-// * @return: 2: A macro named `name' was already defined, and was overwritten. */
-//TPPFUN int TPPCALL
-//TPPLexer_Define_(TPP_LEXER_PARAM_
-//                 char const *tpp_restrict name, size_t name_size,
-//                 char const *tpp_restrict value, size_t value_size,
-//                 uint32_t flags);
-//#define TPPLexer_Define(name, name_size, value, value_size, flags) \
-//	TPPLexer_Define_(TPP_LEXER_ARG_ name, name_size, value, value_size, flags)
-//#define TPPLEXER_DEFINE_FLAG_NONE    0x00000000
-//#define TPPLEXER_DEFINE_FLAG_BUILTIN TPP_KEYWORDFLAG_BUILTINMACRO /* Define the macro as builtin, meaning the definition
-//                                                                   * set by `value' will be restored when `TPPLexer_Reset()'
-//                                                                   * is called with `TPPLEXER_RESET_MACRO'. */
-//
-///* Undefine the macro associated with a given name.
-// * @return: 0: No macro was associated with the given name.
-// * @return: 1: Successfully undefined a macro. */
-//TPPFUN int TPPCALL TPPLexer_Undef_(TPP_LEXER_PARAM_ char const *tpp_restrict name, size_t name_size);
-//#define TPPLexer_Undef(name, name_size) TPPLexer_Undef_(TPP_LEXER_ARG_ name, name_size)
-//
-//#ifndef TPP_CONFIG_NO_ASSERTIONS
-///* Add/Delete a given assertion for a given predicate.
-// * @param: answer: [TPPLexer_DelAssert] When NULL, clear all assertions.
-// * @return: 0: [TPPLexer_AddAssert] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
-// * @return: 0: [TPPLexer_DelAssert] Unknown/no answer(s)
-// * @return: 1: Successfully added/deleted any assertion(s) */
-//TPPFUN int TPPCALL
-//TPPLexer_AddAssert_(TPP_LEXER_PARAM_
-//                    char const *tpp_restrict predicate, size_t predicate_size,
-//                    char const *tpp_restrict answer, size_t answer_size);
-//TPPFUN int TPPCALL
-//TPPLexer_DelAssert_(TPP_LEXER_PARAM_
-//                    char const *tpp_restrict predicate, size_t predicate_size,
-//                    char const *answer, size_t answer_size);
-//#define TPPLexer_AddAssert(predicate, predicate_size, answer, answer_size) \
-//	TPPLexer_AddAssert_(TPP_LEXER_ARG_ predicate, predicate_size, answer, answer_size)
-//#define TPPLexer_DelAssert(predicate, predicate_size, answer, answer_size) \
-//	TPPLexer_DelAssert_(TPP_LEXER_ARG_ predicate, predicate_size, answer, answer_size)
-//#endif /* !TPP_CONFIG_NO_ASSERTIONS */
-#endif
+/* Define a regular, keyword-style macro `name' as `value'.
+ * @param: flags: A set of `TPPLEXER_DEFINE_FLAG_*'
+ * @return: 0: Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
+ * @return: 1: Successfully defined the given macro.
+ * @return: 2: A macro named `name' was already defined, and was overwritten. */
+#define TPPLexer_Define_(lexer, name, name_size, value, value_size, flags) \
+	(TPP_ISERR(tpp_lexer_define(lexer, name, name_size, value, value_size)) ? 0 : 1)
+#define TPPLexer_Define(name, name_size, value, value_size, flags) \
+	TPPLexer_Define_(TPP2_LEXER, name, name_size, value, value_size, flags)
+#undef TPPLEXER_DEFINE_FLAG_NONE
+#undef TPPLEXER_DEFINE_FLAG_BUILTIN /* No longer exists in TPP3 -- was used by `TPPLEXER_RESET_MACRO',
+                                     * but in TPP3 you should use `tpp_lexer_copy()' if you want to
+                                     * intend to restore a previous state at a later point in time. */
+
+/* Undefine the macro associated with a given name.
+ * @return: 0: No macro was associated with the given name.
+ * @return: 1: Successfully undefined a macro. */
+#define TPPLexer_Undef_(lexer, name, name_size) (tpp_lexer_undef(lexer, name, name_size) ? 1 : 0)
+#define TPPLexer_Undef(name, name_size) TPPLexer_Undef_(TPP2_LEXER, name, name_size)
+
+#if TPP_HAVE_CPP_ASSERT
+/* Add/Delete a given assertion for a given predicate.
+ * @param: answer: [TPPLexer_DelAssert] When NULL, clear all assertions.
+ * @return: 0: [TPPLexer_AddAssert] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
+ * @return: 0: [TPPLexer_DelAssert] Unknown/no answer(s)
+ * @return: 1: Successfully added/deleted any assertion(s) */
+#define TPPLexer_AddAssert_(lexer, predicate, predicate_size, answer, answer_size) \
+	(TPP_ISERR(tpp_lexer_assert(lexer, predicate, predicate_size, answer, answer_size)) ? 0 : 1)
+#define TPPLexer_DelAssert_(lexer, predicate, predicate_size, answer, answer_size) \
+	(tpp_lexer_unassert(lexer, predicate, predicate_size, answer, answer_size) ? 1 : 0)
+#define TPPLexer_AddAssert(predicate, predicate_size, answer, answer_size) \
+	TPPLexer_AddAssert_(TPP2_LEXER, predicate, predicate_size, answer, answer_size)
+#define TPPLexer_DelAssert(predicate, predicate_size, answer, answer_size) \
+	TPPLexer_DelAssert_(TPP2_LEXER, predicate, predicate_size, answer, answer_size)
+#endif /* TPP_HAVE_CPP_ASSERT */
 
 /* Similar to `TPPLexer_Yield' and used to implement it, but
  * doesn't expand macros or execute preprocessor directives. */
