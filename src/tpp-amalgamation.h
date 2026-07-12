@@ -5091,16 +5091,16 @@ TPP_DECL_END
 // then that linefeed is never yielded, and a potential multi-character token is
 // continued:
 // ```c
-// foo\
+// foo\ 
 // bar // Produces a single token "foobar"
-// +\
+// +\ 
 // =   // Produces a single token "+="
 // ```
 //
 // This DOES affect the line-continuation features of `#define` macro definitions.
 // When this is disabled, `\`-escaped line continuation can't be used there, either.
 // @detect: #define HAVE_BSE
-//          // \
+//          // \ 
 //          #undef HAVE_BSE
 //          #ifdef HAVE_BSE
 #ifndef TPP_HAVE_BSE
@@ -17909,9 +17909,10 @@ TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, 
 #endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 #if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
+struct tpp_lexer_printf_info;
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
-                               tpp_lexer_printf_info *tpp_restrict info,
+                               struct tpp_lexer_printf_info *tpp_restrict info,
                                tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                                tpp_warning_id id, va_list args);
 #endif /* TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */

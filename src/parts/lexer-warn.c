@@ -521,9 +521,9 @@ tpp_lexer_vwarnf_mesg(tpp_lexer *tpp_restrict self,
 		error = tpp_lexer_vwarnf_impl_custom(self, info, printer,
 		                                     arg, id, args,
 		                                     p_printer_result);
-		tpp_assert(!TPP_ISERR(error) ||
-		           (error == TPP_ENOMEM || error == TPP_EIO ||
-		            error == TPP_ELEXERROR || error == TPP_EWARNPRINT) &&
+		tpp_assert((!TPP_ISERR(error) ||
+		            (error == TPP_ENOMEM || error == TPP_EIO ||
+		             error == TPP_ELEXERROR || error == TPP_EWARNPRINT)) &&
 		           "Custom warning callbacks may only return one of these errors");
 		if (TPP_ISERR(error)) {
 			return error;
@@ -552,8 +552,8 @@ err_printer:
 
 #if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
-_tpp_lexer_builtin_warnhandler(tpp_lexer *tpp_restrict self,
-                               tpp_lexer_printf_info *tpp_restrict info,
+_tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
+                               struct tpp_lexer_printf_info *tpp_restrict info,
                                tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                                tpp_warning_id id, va_list args) {
 	tpp_errno error;

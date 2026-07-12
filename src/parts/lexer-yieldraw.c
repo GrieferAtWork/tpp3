@@ -1746,7 +1746,7 @@ again_ch:
 				}
 				if (!allow_hex_chars) {
 					allow_hex_chars = true;
-	
+
 					/* If what comes next is a hex-exponent: "0xP+12", then we mustn't
 					 * parse that as a float-token (but as [0xP][+][12]). strtof requires
 					 * that there be at least 1 hex-digit before a potential exponent! */
@@ -3844,7 +3844,7 @@ continue_pascal_comment_with_ch2:
 			tpp_assert(rel_before <= rel_after);
 			if (rel_before >= rel_after)
 				break; /* No BSE -> regular backslash */
-	
+
 			/* BSE was skipped -> read whatever comes after... */
 			*p_pos = npos;
 			goto again;

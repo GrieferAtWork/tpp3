@@ -317,7 +317,7 @@ tpp_lexer_handle_undef_directive(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
 		{
 		}
-	
+
 		/* Seek to next token (which should be a line-feed) */
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
 		do {
@@ -2834,7 +2834,7 @@ handle_unknown_directive:
 			}
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_POUND_COMMENT) */
-	
+
 			/* Seek until we hit LF or EOF. Caller has disabled "autopopfile",
 			 * so this'll always stay within the file currently being processed. */
 #ifdef WANT_seek_end_of_line

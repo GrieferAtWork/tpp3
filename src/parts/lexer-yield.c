@@ -526,7 +526,7 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 
 
 #if TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
 	tpp_errno result = tpp_lexer_process_pragma(self);
 	if (result == TPP_ENOENT) {
@@ -565,7 +565,7 @@ tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma */
 
 #if TPP_HAVE_MACRO__Pragma
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_yield_handle__Pragma_string(void *arg, tpp_string *chunk,
                                       tpp_char const *str, tpp_size length) {
 	tpp_token_id tok;
@@ -901,7 +901,7 @@ struct tpp_lexer_handle_tpp_identifier_data {
 	tpp_keyword const *tlhtid_keyword; /* [1..1] The identified keyword */
 };
 
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_handle_tpp_identifier_cb(void *arg, tpp_string *chunk,
                                    tpp_char const *str, tpp_size length) {
 	tpp_keyword const *kwd;
@@ -1222,7 +1222,7 @@ struct tpp_lexer_handle_str_decompile_string_data {
 	tpp_char const     *tlhsdsd_str;     /* String to decompile */
 	tpp_size            tlhsdsd_length;  /* Length of "tlhsdsd_str" */
 };
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_handle_str_decompile_string(void *arg, tpp_string *chunk,
                                       tpp_char const *str, tpp_size length) {
 	struct tpp_lexer_handle_str_decompile_string_data *data;
@@ -1444,7 +1444,7 @@ struct tpp_lexer_handle_count_tokens_data {
 	tpp_intmax tlhctd_count; /* Token count */
 };
 
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_handle_count_tokens(void *arg, tpp_string *chunk, tpp_char const *str, tpp_size length) {
 	tpp_token_id tok;
 	struct tpp_lexer_handle_count_tokens_data *const data = (struct tpp_lexer_handle_count_tokens_data *)arg;
@@ -1595,7 +1595,7 @@ struct tpp_lexer_handle_exec_data {
 	tpp_string_builder tlhed_builder; /* Expansion string builder */
 	tpp_lexer         *tlhed_lexer;   /* [1..1] Lexer */
 };
-static TPP_WUNUSED tpp_errno TPPCALL 
+static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
                          tpp_char const *str, tpp_size length) {
 	tpp_token_id tok;

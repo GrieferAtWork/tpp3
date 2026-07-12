@@ -1035,7 +1035,7 @@ tpp_lexer_process_pragma_GCC_poison(tpp_lexer *tpp_restrict self) {
 	 *                stack): emit warning
 	 *          - If the keyword appeared because of something else (e.g. token concat): emit warning
 	 */
-	
+
 	(void)self;
 	return TPP_ENOENT;
 }

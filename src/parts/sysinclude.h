@@ -234,7 +234,7 @@ tpp_include_paths_addbykind_head(tpp_include_paths *tpp_restrict self,
                                  char const *path, tpp_size path_maxlen);
 
 /* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOENT: Path could not be found
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_include_paths_delbykind(tpp_include_paths *tpp_restrict self,
@@ -255,7 +255,7 @@ _tpp_include_paths_addbykind_head(tpp_include_paths *tpp_restrict self,
                                   char const *path, tpp_size path_maxlen);
 
 /* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOENT: Path could not be found
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_include_paths_delbykind(tpp_include_paths *tpp_restrict self,

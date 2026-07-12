@@ -458,7 +458,7 @@ _tpp_include_paths_addbykind_head(tpp_include_paths *tpp_restrict self,
 }
 
 /* @return: TPP_EOK:    Path was located and removed
- * @return: TPP_ENOENT: Path could not be found 
+ * @return: TPP_ENOENT: Path could not be found
  * @return: TPP_ENOMEM: Out of memory */
 #if TPP_HAVE_INCLUDE_PATH_MULTIPLE
 TPP_IMPL TPP_NONNULL((1, 3)) tpp_errno TPPCALL

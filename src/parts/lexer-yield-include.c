@@ -304,7 +304,7 @@ tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
 			{
 			}
 		} /* while (iter < end) */
-		
+
 		/* Flush remainder */
 		if (start < end) {
 			temp = tpp_formatprinter_print(printer, arg, start, (tpp_size)(end - start));

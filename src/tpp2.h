@@ -2785,7 +2785,7 @@ alias("TOK_QMARK_QMARK", "TPP_TOK_QMARK_QMARK", condition: "TPP_HAVE_TPP_TOK_QMA
 alias("TOK_KEYWORD_BEGIN", "TPP_TOK_KEYWORD_BEGIN", onlyIfDefined: false);
 alias("TOK_TWOCHAR_END", "TPP_TOK_MULTICHAR_END", onlyIfDefined: false);
 
-// Name aliases 
+// Name aliases
 alias("TOK_POS",           "TPP_TOK_PLUS",      onlyIfDefined: false);
 alias("TOK_NEG",           "TPP_TOK_MINUS",     onlyIfDefined: false);
 alias("TOK_LOWER",         "TPP_TOK_LANGLE",    onlyIfDefined: false);
@@ -2804,7 +2804,7 @@ alias("TOK_RANGLE_EQUAL",  "TPP_TOK_RANGLE_EQUAL", condition: "TPP_HAVE_TPP_TOK_
 alias("TOK_RANGLE1_EQUAL", "TPP_TOK_RANGLE_EQUAL", condition: "TPP_HAVE_TPP_TOK_RANGLE_EQUAL");
 alias("TOK_RANGLE2_EQUAL", "TPP_TOK_RANGLE_RANGLE_EQUAL", condition: "TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL");
 
-// Deprecated typos 
+// Deprecated typos
 alias("TOK_COLLON",        "TPP_TOK_COLON",     onlyIfDefined: false);
 alias("TOK_COLLON_EQUAL",  "TPP_TOK_COLON_EQUAL", condition: "TPP_HAVE_TPP_TOK_COLON_EQUAL");
 alias("TOK_COLLON_COLLON", "TPP_TOK_COLON_COLON", condition: "TPP_HAVE_TPP_TOK_COLON_COLON");

@@ -607,7 +607,7 @@ tpp_lexer_reprtokenid(tpp_lexer const *tpp_restrict self, tpp_token_id tok) {
  * >> #define bar       foo
  * >> #define baz       bar
  * >> #define exo       baz
- * >> 
+ * >>
  * >> bot:  exo[10, 20]
  *
  * Data-layout:
