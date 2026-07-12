@@ -378,10 +378,6 @@ err_temp:
 	return temp;
 }
 
-#ifndef tpp_file_and_line
-#define tpp_file_and_line tpp_file_and_line
-static char const tpp_file_and_line[] = TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT;
-#endif /* !tpp_file_and_line */
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
@@ -412,7 +408,8 @@ tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
 /* Convenience functions (100% implementable using API exposed above) */
 #define tpp_warn_print_file_and_line(info)                                            \
 	tpp_do(tpp_lexer_printf_warning(tpp_current_lexer(), info, tpp_current_printer(), \
-	                                tpp_current_printer_arg(), tpp_file_and_line))
+	                                tpp_current_printer_arg(),                        \
+	                                tpp_lexer_getfileandlineformat(tpp_current_lexer())))
 #define tpp_warn_print_file_and_line_at(file, pos)             \
 	do {                                                       \
 		tpp_lexer_printf_info _nest_info;                      \
@@ -550,7 +547,8 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 	}
 
 	/* Print file-and-line prefix */
-	printer_status = tpp_lexer_printf_warning(self, info, printer, printer_arg, tpp_file_and_line);
+	printer_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
+	                                          tpp_lexer_getfileandlineformat(self));
 	if (printer_status < 0)
 		goto err_printer;
 
@@ -631,7 +629,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 			projection_info.tlpfi_lc = nlcx.tlcix_info;
 			printer_status = tpp_lexer_printf_warning(self, &projection_info,
 			                                          printer, printer_arg,
-			                                          tpp_file_and_line);
+			                                          tpp_lexer_getfileandlineformat(self));
 			if (printer_status < 0)
 				goto err_printer;
 			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg,
@@ -660,7 +658,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 			tpp_lexer_printf_info_init_at(&caller_info, caller, caller->tf_tpos);
 			printer_status = tpp_lexer_printf_warning(self, &caller_info,
 			                                          printer, printer_arg,
-			                                          tpp_file_and_line);
+			                                          tpp_lexer_getfileandlineformat(self));
 			if (printer_status < 0)
 				goto err_printer;
 			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "note: originating from here\n");

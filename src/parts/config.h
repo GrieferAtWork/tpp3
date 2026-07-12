@@ -4494,7 +4494,7 @@ for (local doc, name,
 #endif /* TPP_HAVE_MACRO___has_embed */
 
 /* Extra configuration for `#pragma message`: print a leading
- * `TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT` using the values
+ * `TPP_CONFIG_FILE_AND_LINE_FORMAT` using the values
  * that would also be printed by `__FILE__`, `__LINE__`, `__COLUMN__` */
 #ifndef TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
 #define TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION (TPP_HAVE_PROFILE_NOT_MINIMAL ? TPP_CONF_EXT0 : 0) /* "-fpragma-message-prints-location" */
@@ -4517,16 +4517,31 @@ for (local doc, name,
 /* WARNINGS                                                             */
 /************************************************************************/
 
-/* Format to use for file+line+column log messages
- * XXX: Configuration where "TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT"
- *      can be overwritten at runtime on a per-lexer basis */
-#ifndef TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT
+/* Format to use for file+line+column log messages.
+ * When `TPP_HAVE_RT_FILE_AND_LINE_FORMAT` is enabled, this is
+ * only the *default*-format, with the actual format being overwritable
+ * at runtime. */
+#ifndef TPP_CONFIG_FILE_AND_LINE_FORMAT
 #if defined(_MSC_VER)
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
+#define TPP_CONFIG_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
 #else /* _MSC_VER */
-#define TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT "%Pf:%Pl:%Pc: "
+#define TPP_CONFIG_FILE_AND_LINE_FORMAT "%Pf:%Pl:%Pc: "
 #endif /* !_MSC_VER */
-#endif /* !TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT */
+#endif /* !TPP_CONFIG_FILE_AND_LINE_FORMAT */
+
+/* Allow the file-and-line format used by warning to be overwritten on a per-lexer basis.
+ *
+ * When this is disabled, `TPP_CONFIG_FILE_AND_LINE_FORMAT` is always used instead.
+ *
+ * **Getter**: `tpp_lexer_getfileandlineformat(lexer)`<br/>
+ * **Setter**: `tpp_lexer_setfileandlineformat(lexer, format)` */
+#ifndef TPP_HAVE_RT_FILE_AND_LINE_FORMAT
+#define TPP_HAVE_RT_FILE_AND_LINE_FORMAT \
+	(TPP_PROFILE == TPP_PROFILE_ALL &&   \
+	 (TPP_HAVE_WARNINGS ||               \
+	  (TPP_HAVE_PRAGMA_MESSAGE &&        \
+	   TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)))
+#endif /* !TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
 
 /* General config for `-Wquality` warnings. When overwritten
  * to `0`, all `-Wquality` warnings will be disabled. */

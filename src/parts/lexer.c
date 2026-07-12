@@ -210,6 +210,10 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_LEXER_TIME
 	tpp_time_empty(&self->tl_time);
 #endif /* TPP_HAVE_LEXER_TIME */
+
+#if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
+	self->tl_file_and_line_format = TPP_CONFIG_FILE_AND_LINE_FORMAT;
+#endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
 }
 
 
@@ -329,6 +333,10 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_MACRO___COUNTER__
 	self->tl_builtin_counter = from->tl_builtin_counter;
 #endif /* TPP_HAVE_MACRO___COUNTER__ */
+
+#if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
+	self->tl_file_and_line_format = from->tl_file_and_line_format;
+#endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
 
 	return TPP_EOK;
 #if TPP_HAVE_USER_KEYWORDS

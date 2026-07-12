@@ -2543,14 +2543,15 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE 1 /* TPP2 used to do this unconditionally */
 
 /* Misc. features */
-#define TPP_HAVE_QUALITY_WARNINGS       1                   /* General config for -Wquality warnings */
-#define TPP_HAVE_LEXER_WARNING_COUNT    1                   /* Needed to emulate "l_warncount" */
-#define TPP_HAVE_LEXER_CLI_DEFINE       1                   /* Needed to emulate "TPPLexer_Define()" */
-#define TPP_HAVE_LEXER_CLI_ASSERT       TPP_HAVE_CPP_ASSERT /* Needed to emulate "TPPLexer_AddAssert()" */
-#define TPP_HAVE_KEYWORDS_UNDEFALL      1                   /* Needed to emulate "TPPLEXER_RESET_MACRO" */
-#define TPP_HAVE_KEYWORDS_UNASSERTALL   1                   /* Needed to emulate "TPPLEXER_RESET_ASSERT" */
-#define TPP_HAVE_KEYWORDS_RESETFLAGS    1                   /* Needed to emulate "TPPLEXER_RESET_KWDFLAGS" + "TPPLEXER_RESET_FONCE" */
-#define TPP_HAVE_KEYWORDS_RESETCOUNTERS 1                   /* Needed to emulate "TPPLEXER_RESET_COUNTER" */
+#define TPP_HAVE_QUALITY_WARNINGS        1                   /* General config for -Wquality warnings */
+#define TPP_HAVE_LEXER_WARNING_COUNT     1                   /* Needed to emulate "l_warncount" */
+#define TPP_HAVE_LEXER_CLI_DEFINE        1                   /* Needed to emulate "TPPLexer_Define()" */
+#define TPP_HAVE_LEXER_CLI_ASSERT        TPP_HAVE_CPP_ASSERT /* Needed to emulate "TPPLexer_AddAssert()" */
+#define TPP_HAVE_KEYWORDS_UNDEFALL       1                   /* Needed to emulate "TPPLEXER_RESET_MACRO" */
+#define TPP_HAVE_KEYWORDS_UNASSERTALL    1                   /* Needed to emulate "TPPLEXER_RESET_ASSERT" */
+#define TPP_HAVE_KEYWORDS_RESETFLAGS     1                   /* Needed to emulate "TPPLEXER_RESET_KWDFLAGS" + "TPPLEXER_RESET_FONCE" */
+#define TPP_HAVE_KEYWORDS_RESETCOUNTERS  1                   /* Needed to emulate "TPPLEXER_RESET_COUNTER" */
+#define TPP_HAVE_RT_FILE_AND_LINE_FORMAT 1                   /* Needed to emulate "TPPLEXER_FLAG_MSVC_MESSAGEFORMAT" */
 
 /* Force extensions to use the names they'd been using in TPP2 */
 #define TPP_EXTNAME_TRIGRAPHS                           "trigraphs"
@@ -5376,8 +5377,9 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 //#define TPPLEXER_FLAG_WERROR                 0x00080000 /* All warnings are turned into errors (NOTE: less powerful than `TPPLEXER_FLAG_WSYSTEMHEADERS'). */
 //#define TPPLEXER_FLAG_WSYSTEMHEADERS         0x00100000 /* Still emit warnings in system headers (alongside errors). */
 //#define TPPLEXER_FLAG_NO_DEPRECATED          0x00200000 /* Don't warn about deprecated or poisoned keywords. */
-//#define TPPLEXER_FLAG_MSVC_MESSAGEFORMAT     0x00400000 /* Use msvc's file+line format `%s(%d,%d) : ' instead of GCC's `%s:%d:%d: '. */
 #endif
+#undef TPPLEXER_FLAG_MSVC_MESSAGEFORMAT    /* Use `tpp_lexer_setfileandlineformat("%Pf(%Pl, %Pc): ")' to enable
+                                            * Use `tpp_lexer_setfileandlineformat("%Pf:%Pl:%Pc: ")' to disable */
 #define TPPLEXER_FLAG_NO_WARNINGS TPP_LEXER_STATE_FLAG_NOWARNINGS
 #undef TPPLEXER_FLAG_NO_ENCODING           /* No longer supported; encoding detection can be disabled on a per-file basis, though */
 #undef TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA /* No longer supported; define your own hook that gets called for unknown pragmas */

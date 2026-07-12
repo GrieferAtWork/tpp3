@@ -651,6 +651,7 @@
 #define tl_recursive_macro_limit                                                  TPP_INTERNAL(tl_recursive_macro_limit)
 #define tl_builtin_counter                                                        TPP_INTERNAL(tl_builtin_counter)
 #define tl_time                                                                   TPP_INTERNAL(tl_time)
+#define tl_file_and_line_format                                                   TPP_INTERNAL(tl_file_and_line_format)
 #define tt_id                                                                     TPP_INTERNAL(tt_id)
 #define tlsb_id                                                                   TPP_INTERNAL(tlsb_id)
 #define tlsb_kwd                                                                  TPP_INTERNAL(tlsb_kwd)
@@ -14052,6 +14053,10 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_LEXER_TIME
 	tpp_time_empty(&self->tl_time);
 #endif /* TPP_HAVE_LEXER_TIME */
+
+#if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
+	self->tl_file_and_line_format = TPP_CONFIG_FILE_AND_LINE_FORMAT;
+#endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
 }
 
 
@@ -14171,6 +14176,10 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_MACRO___COUNTER__
 	self->tl_builtin_counter = from->tl_builtin_counter;
 #endif /* TPP_HAVE_MACRO___COUNTER__ */
+
+#if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
+	self->tl_file_and_line_format = from->tl_file_and_line_format;
+#endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
 
 	return TPP_EOK;
 #if TPP_HAVE_USER_KEYWORDS
@@ -14873,10 +14882,6 @@ err_temp:
 	return temp;
 }
 
-#ifndef tpp_file_and_line
-#define tpp_file_and_line tpp_file_and_line
-static char const tpp_file_and_line[] = TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT;
-#endif /* !tpp_file_and_line */
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
@@ -14907,7 +14912,8 @@ tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
 /* Convenience functions (100% implementable using API exposed above) */
 #define tpp_warn_print_file_and_line(info)                                            \
 	tpp_do(tpp_lexer_printf_warning(tpp_current_lexer(), info, tpp_current_printer(), \
-	                                tpp_current_printer_arg(), tpp_file_and_line))
+	                                tpp_current_printer_arg(),                        \
+	                                tpp_lexer_getfileandlineformat(tpp_current_lexer())))
 #define tpp_warn_print_file_and_line_at(file, pos)             \
 	do {                                                       \
 		tpp_lexer_printf_info _nest_info;                      \
@@ -15045,7 +15051,8 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 	}
 
 	/* Print file-and-line prefix */
-	printer_status = tpp_lexer_printf_warning(self, info, printer, printer_arg, tpp_file_and_line);
+	printer_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
+	                                          tpp_lexer_getfileandlineformat(self));
 	if (printer_status < 0)
 		goto err_printer;
 
@@ -15126,7 +15133,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 			projection_info.tlpfi_lc = nlcx.tlcix_info;
 			printer_status = tpp_lexer_printf_warning(self, &projection_info,
 			                                          printer, printer_arg,
-			                                          tpp_file_and_line);
+			                                          tpp_lexer_getfileandlineformat(self));
 			if (printer_status < 0)
 				goto err_printer;
 			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg,
@@ -15155,7 +15162,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 			tpp_lexer_printf_info_init_at(&caller_info, caller, caller->tf_tpos);
 			printer_status = tpp_lexer_printf_warning(self, &caller_info,
 			                                          printer, printer_arg,
-			                                          tpp_file_and_line);
+			                                          tpp_lexer_getfileandlineformat(self));
 			if (printer_status < 0)
 				goto err_printer;
 			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "note: originating from here\n");
@@ -24293,12 +24300,6 @@ static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
 #endif /* !tpp_dummy_printer */
 #endif /* !tpp_lexer_gethook_mesgprinter */
 
-#if TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
-#ifndef tpp_file_and_line
-#define tpp_file_and_line tpp_file_and_line
-static char const tpp_file_and_line[] = TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT;
-#endif /* !tpp_file_and_line */
-#endif /* TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
 
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -24327,7 +24328,8 @@ tpp_lexer_process_pragma_message(tpp_lexer *tpp_restrict self) {
 			tpp_lexer_printf_info info;
 			tpp_file *const lcfile = tpp_file_getlcfile(tpp_lexer_getfile(self));
 			tpp_lexer_printf_info_init_at(&info, lcfile, tpp_file_getlastpos(lcfile));
-			status = tpp_lexer_printf_warning(self, &info, printer, self, tpp_file_and_line);
+			status = tpp_lexer_printf_warning(self, &info, printer, self,
+			                                  tpp_lexer_getfileandlineformat(self));
 			if (TPP_SSIZE_ISERR(status))
 				return TPP_SSIZE_ASERR(status);
 		}

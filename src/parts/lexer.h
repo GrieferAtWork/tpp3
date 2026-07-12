@@ -197,6 +197,18 @@ typedef struct tpp_lexer {
 #define tpp_lexer_gettime(self)    (self)->TPP_INTERNAL(tl_time)
 #define tpp_lexer_settime(self, v) (void)((self)->TPP_INTERNAL(tl_time) = (v))
 #endif /* TPP_HAVE_LEXER_TIME */
+
+
+	/* Format to use for file-and-line prefixes in messages. */
+#if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
+	char const *TPP_INTERNAL(tl_file_and_line_format); /* [1..1] format for file-and-line prefixes in messages */
+#define tpp_lexer_getfileandlineformat(self)         (self)->TPP_INTERNAL(tl_file_and_line_format)
+#define tpp_lexer_setfileandlineformat(self, format) (void)((self)->TPP_INTERNAL(tl_file_and_line_format) = (format))
+#define tpp_lexer_resetfileandlineformat(self)       (void)((self)->TPP_INTERNAL(tl_file_and_line_format) = TPP_CONFIG_FILE_AND_LINE_FORMAT)
+#else /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
+#define tpp_lexer_getfileandlineformat(self)   TPP_CONFIG_FILE_AND_LINE_FORMAT
+#define tpp_lexer_resetfileandlineformat(self) (void)0
+#endif /* !TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
 } tpp_lexer;
 
 /* Check if a runtime-configurable config option "conf" in "TPP_HAVE_conf" is currently enabled.

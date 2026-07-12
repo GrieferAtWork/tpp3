@@ -753,12 +753,6 @@ static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
 #endif /* !tpp_dummy_printer */
 #endif /* !tpp_lexer_gethook_mesgprinter */
 
-#if TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
-#ifndef tpp_file_and_line
-#define tpp_file_and_line tpp_file_and_line
-static char const tpp_file_and_line[] = TPP_CONFIG_WARNING_FILE_AND_LINE_FORMAT;
-#endif /* !tpp_file_and_line */
-#endif /* TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
 
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -787,7 +781,8 @@ tpp_lexer_process_pragma_message(tpp_lexer *tpp_restrict self) {
 			tpp_lexer_printf_info info;
 			tpp_file *const lcfile = tpp_file_getlcfile(tpp_lexer_getfile(self));
 			tpp_lexer_printf_info_init_at(&info, lcfile, tpp_file_getlastpos(lcfile));
-			status = tpp_lexer_printf_warning(self, &info, printer, self, tpp_file_and_line);
+			status = tpp_lexer_printf_warning(self, &info, printer, self,
+			                                  tpp_lexer_getfileandlineformat(self));
 			if (TPP_SSIZE_ISERR(status))
 				return TPP_SSIZE_ASERR(status);
 		}
