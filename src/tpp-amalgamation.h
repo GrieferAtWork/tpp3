@@ -5953,7 +5953,7 @@ TPP_DECL_END
 
 /* Support for variable-argument macros:
  * ```c
- * #define printf(format, ...) fprintf(stdout, format, __VA_ARGS__)
+ * #define printf(...) fprintf(stdout, __VA_ARGS__)
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION* */
@@ -5979,7 +5979,7 @@ TPP_DECL_END
 
 /* Support for special function `__VA_OPT__()` inside of variable-argument macros.
  * When varargs are non-empty, the content within parenthesis is kept. Otherwise,
- * replaced said content is removed alongside the `__VA_OPT__()` call itself:
+ * said content is removed alongside the `__VA_OPT__()` call itself:
  * ```c
  * #define printf(format, ...) fprintf(stdout, format __VA_OPT__(,) __VA_ARGS__)
  * printf("foo\n");         // fprintf(stdout, "foo\n");
@@ -6024,7 +6024,7 @@ TPP_DECL_END
  * the there are no variable arguments:
  *
  * ```c
- * #define printf(format, ...) fprintf(stdout, format, ##__VA_ARGS__)
+ * #define printf(format, ...) fprintf(stdout, format, ## __VA_ARGS__)
  * printf("foo\n");         // fprintf(stdout, "foo\n");
  * printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n", 10);
  * ```
@@ -18604,7 +18604,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see if "tpp_lexer_yieldraw_blocking" should be used instead */
+tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self);
 
 /* Same as `tpp_lexer_yieldraw()', but populate the token from a custom `*p_pos',
  * and don't pop files from the current #include-stack (unless `p_pos' is the top-
@@ -18633,7 +18633,7 @@ tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see
  *
  * @return: * : See `tpp_lexer_yieldraw()' */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos); /* TODO: Check all uses to see if "tpp_lexer_yieldraw_at_blocking" should be used instead */
+tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
 
 
 typedef struct tpp_lexer_seek_backup {
@@ -18801,7 +18801,7 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL _tpp_lexer_manualpopfile_break_commit(tpp
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see if "tpp_lexer_yieldpp_blocking" should be used instead */
+tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self);
 
 
 /* Wrapper around `tpp_lexer_yieldpp()' that adds handling for macro expansion.
@@ -18812,7 +18812,7 @@ tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see 
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield(tpp_lexer *tpp_restrict self); /* TODO: Check all uses to see if "tpp_lexer_yield_blocking" should be used instead */
+tpp_lexer_yield(tpp_lexer *tpp_restrict self);
 
 /* Handle a keyword-style macro (used to implement "tpp_lexer_yield()").
  * @return: TPP_TOK_EOF: Caller should yield again.

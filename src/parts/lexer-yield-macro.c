@@ -165,7 +165,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	expected_simple_tok_start = arginfo->tlai_start;
 
 next_tok:
-	tok = tpp_lexer_yield(lexer);
+	tok = tpp_lexer_yield(lexer); /* Caller has pre-loaded, so no need for `tpp_lexer_yield_blocking()' */
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	if (tok == TPP_TOK_EOF) {
@@ -247,7 +247,7 @@ again_print_token:
 	                              (tpp_size)(token->tt_end -
 	                                         token->tt_start)))
 		goto err_builder_nomem;
-	tok = tpp_lexer_yield(lexer);
+	tok = tpp_lexer_yield(lexer); /* Caller has pre-loaded, so no need for `tpp_lexer_yield_blocking()' */
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	if (tok != TPP_TOK_EOF)

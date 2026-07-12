@@ -939,7 +939,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	/* Setup file to (re-)parse the identifier string */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
-	tok = tpp_lexer_yield(self);
+	tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()', so no need for `tpp_lexer_yield_blocking()' */
 	data.tlhtid_lexer = self;
 	if (TPP_TOK_ISSTRING(tok)) {
 		tpp_errno error;
@@ -1257,7 +1257,7 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 	/* Setup file to (re-)parse the string that's being decompiled */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
-	tok = tpp_lexer_yield(self);
+	tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()', so no need for `tpp_lexer_yield_blocking()' */
 	if (TPP_TOK_ISSTRING(tok)) {
 		tpp_errno error;
 		/* IMPORTANT: Don't set "TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS" here! */
@@ -1356,7 +1356,7 @@ err_tok_subtext_builder:
 	}
 	for (;;) {
 		tpp_ssize status;
-		tok = tpp_lexer_yield(self);
+		tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()', so no need for `tpp_lexer_yield_blocking()' */
 		switch (tok) {
 		case TPP_TOK_EOF:
 			goto done_inner_loop;
@@ -1687,7 +1687,7 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	/* Setup file to (re-)parse the string that's being exec'd */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
-	tok = tpp_lexer_yield(self);
+	tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()', so no need for `tpp_lexer_yield_blocking()' */
 
 	tpp_string_builder_init(&data.tlhed_builder);
 	data.tlhed_lexer = self;

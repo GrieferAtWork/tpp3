@@ -2244,7 +2244,7 @@ Extension name:
 Support for variable-argument macros:
 
 ```c
-#define printf(format, ...) fprintf(stdout, format, __VA_ARGS__)
+#define printf(...) fprintf(stdout, __VA_ARGS__)
 ```
 
 NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -2306,7 +2306,7 @@ Detect:
 
 Support for special function `__VA_OPT__()` inside of variable-argument macros.
 When varargs are non-empty, the content within parenthesis is kept. Otherwise,
-replaced said content is removed alongside the `__VA_OPT__()` call itself:
+said content is removed alongside the `__VA_OPT__()` call itself:
 
 ```c
 #define printf(format, ...) fprintf(stdout, format __VA_OPT__(,) __VA_ARGS__)
@@ -2395,7 +2395,7 @@ is enabled), then the `,` is deleted during expansion whenever
 the there are no variable arguments:
 
 ```c
-#define printf(format, ...) fprintf(stdout, format, ##__VA_ARGS__)
+#define printf(format, ...) fprintf(stdout, format, ## __VA_ARGS__)
 printf("foo\n");         // fprintf(stdout, "foo\n");
 printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n", 10);
 ```

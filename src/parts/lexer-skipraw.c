@@ -99,7 +99,7 @@ tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
 	tpp_token_id tok;
 	pos = tpp_lexer_seek_start(self, &backup);
 again_yield_mainfile:
-	tok = tpp_lexer_yieldraw_at(self, &pos);
+	tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 	/* NOTE: No need to check for errors -- TPP_TOK_ISERR(*) fails all the tests
 	 *       below, meaning it is implicitly handled as rollback+propagate! */
 	if (TPP_TOK_ISSPACE_OR_COMMENT(tok) && !(flags & TPP_LEXER_TRYSKIP_RAW_FLAG_STOPONSPACE))
@@ -127,7 +127,7 @@ again_yield_mainfile:
 			tpp_lexer_manualpopfile_popfile(self);
 			pos = tpp_lexer_seek_start(self, &backup);
 again_yield_nextfile:
-			tok = tpp_lexer_yieldraw_at(self, &pos);
+			tok = tpp_lexer_yieldraw_at_blocking(self, &pos);
 			/* NOTE: No need to check for errors -- TPP_TOK_ISERR(*) fails all the tests
 			 *       below, meaning it is implicitly handled as rollback+propagate! */
 			if (TPP_TOK_ISSPACE_OR_COMMENT(tok) && !(flags & TPP_LEXER_TRYSKIP_RAW_FLAG_STOPONSPACE))
