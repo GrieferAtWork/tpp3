@@ -26,7 +26,7 @@ a.out: main.c config.h defs.h \
 	make-amalgamation-builtins.inl \
 	$(TPP_SOURCE)/tpp-amalgamation.h \
 	$(TPP_SOURCE)/tpp-amalgamation.c
-	gcc -Wall -Wextra -o a.out main.c
+	gcc -Wall -Wextra -Wno-misleading-indentation -o a.out main.c
 
 # How to (re-)generate the (optional) cache file that TPP can use to improve performance
 make-amalgamation-builtins.inl: config.h defs.h $(TPP_SOURCE)/tpp-amalgamation.h

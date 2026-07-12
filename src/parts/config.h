@@ -4215,6 +4215,8 @@ for (local doc, name,
      TPP_HAVE_MACRO___has_embed ||                \
      TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
      TPP_HAVE_MACRO___TPP_STR_SIZE ||             \
+     TPP_HAVE_MACRO___TPP_RANDOM ||               \
+     TPP_HAVE_MACRO___TPP_STR_SUBSTR ||           \
      TPP_HAVE_CPP_ASSERT ||                       \
      TPP_HAVE_CPP_EMBED ||                        \
      TPP_HAVE_BUILTIN_PARSEEXPR_HOOK)
@@ -4382,12 +4384,14 @@ for (local doc, name,
 
 /* Provide a function `tpp_lexer_decodeint()` to parse an integer */
 #ifndef TPP_HAVE_LEXER_DECODEINT
-#define TPP_HAVE_LEXER_DECODEINT                               \
-	(TPP_HAVE_TPP_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR || \
-	                          TPP_HAVE_CPP_LINE ||             \
-	                          TPP_HAVE_CPP_DIGIT_LINE ||       \
-	                          TPP_HAVE_MACRO___TPP_STR_PACK || \
-	                          TPP_HAVE_PRAGMA_WARNING ||       \
+#define TPP_HAVE_LEXER_DECODEINT                                 \
+	(TPP_HAVE_TPP_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR ||   \
+	                          TPP_HAVE_CPP_LINE ||               \
+	                          TPP_HAVE_CPP_DIGIT_LINE ||         \
+	                          TPP_HAVE_MACRO___TPP_STR_PACK ||   \
+	                          TPP_HAVE_MACRO___TPP_RANDOM ||     \
+	                          TPP_HAVE_MACRO___TPP_STR_SUBSTR || \
+	                          TPP_HAVE_PRAGMA_WARNING ||         \
 	                          TPP_HAVE_PRAGMA_TPP_WARNING))
 #endif /* !TPP_HAVE_LEXER_DECODEINT */
 

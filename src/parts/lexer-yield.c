@@ -130,16 +130,17 @@ err_builder:
 	 TPP_HAVE_KEYWORD_TEST_MACROS)
 
 #undef TPP_HAVE_LEXER_PUSH_TEXTFILE_INT
-#define TPP_HAVE_LEXER_PUSH_TEXTFILE_INT \
-	(TPP_HAVE_MACRO___COUNTER__ ||       \
-	 TPP_HAVE_MACRO___LINE__ ||          \
-	 TPP_HAVE_MACRO___COLUMN__ ||        \
-	 TPP_HAVE_MACRO___INCLUDE_LEVEL__ || \
-	 TPP_HAVE_MACRO___INCLUDE_DEPTH__ || \
-	 TPP_HAVE_NUMERIC_DATE_MACROS ||     \
-	 TPP_HAVE_NUMERIC_TIME_MACROS ||     \
-	 TPP_HAVE_MACRO___TPP_STR_SIZE ||    \
-	 TPP_HAVE_MACRO___TPP_COUNT_TOKENS)
+#define TPP_HAVE_LEXER_PUSH_TEXTFILE_INT  \
+	(TPP_HAVE_MACRO___COUNTER__ ||        \
+	 TPP_HAVE_MACRO___LINE__ ||           \
+	 TPP_HAVE_MACRO___COLUMN__ ||         \
+	 TPP_HAVE_MACRO___INCLUDE_LEVEL__ ||  \
+	 TPP_HAVE_MACRO___INCLUDE_DEPTH__ ||  \
+	 TPP_HAVE_NUMERIC_DATE_MACROS ||      \
+	 TPP_HAVE_NUMERIC_TIME_MACROS ||      \
+	 TPP_HAVE_MACRO___TPP_STR_SIZE ||     \
+	 TPP_HAVE_MACRO___TPP_COUNT_TOKENS || \
+	 TPP_HAVE_MACRO___TPP_RANDOM)
 
 #undef TPP_HAVE_LEXER_PUSH_TEXTFILE
 #define TPP_HAVE_LEXER_PUSH_TEXTFILE                 \
@@ -1736,6 +1737,108 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 
 
 
+#if TPP_HAVE_MACRO___TPP_RANDOM || TPP_HAVE_MACRO___TPP_STR_SUBSTR
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_parse_simple_int(tpp_lexer *tpp_restrict self, tpp_intmax *p_value) {
+	bool neg = false;
+	tpp_token_id tok = tpp_lexer_gettok(self);
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok)) {
+again_yield:
+		tok = tpp_lexer_yield_blocking(self);
+	}
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	switch (tok) {
+	case '-':
+		neg = !neg;
+		goto again_yield;
+#if TPP_HAVE_TPP_TOK_MINUS_MINUS
+	case TPP_TOK_MINUS_MINUS:
+		goto again_yield;
+#endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS */
+	default: break;
+	}
+	tok = tpp_lexer_require(self, TPP_TOK_INT);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	*p_value = 0;
+	if (tok == TPP_TOK_INT) {
+		tpp_errno error;
+		error = tpp_lexer_decodeint(self, p_value);
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	}
+	return tok;
+}
+#endif /* TPP_HAVE_MACRO___TPP_RANDOM || TPP_HAVE_MACRO___TPP_STR_SUBSTR */
+
+#if TPP_HAVE_MACRO___TPP_RANDOM
+#if TPP_SIZEOF_tpp_hash == 4
+#define TPP_HASH_MAX TPP_HASH_C(0xffffffff)
+#elif TPP_SIZEOF_tpp_hash == 8
+#define TPP_HASH_MAX TPP_HASH_C(0xffffffffffffffff)
+#elif TPP_SIZEOF_tpp_hash == 2
+#define TPP_HASH_MAX TPP_HASH_C(0xffff)
+#elif TPP_SIZEOF_tpp_hash == 1
+#define TPP_HASH_MAX TPP_HASH_C(0xff)
+#else /* ... */
+#error "Unsupported 'TPP_SIZEOF_tpp_hash'"
+#endif /* !... */
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___TPP_RANDOM(tpp_lexer *tpp_restrict self) {
+	tpp_intmax lo, hi, result;
+	tpp_token_id tok;
+	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
+	                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
+	if (tok != TPP_TOK_OFCHAR('(')) {
+		if (!TPP_TOK_ISERR(tok))
+			tok = tpp_lexer_gettok(self);
+		return tok;
+	}
+	tok = tpp_lexer_yield_blocking(self);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	tok = tpp_lexer_parse_simple_int(self, &lo);
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	if (tok == ',') {
+		tok = tpp_lexer_yield_blocking(self);
+		if (TPP_TOK_ISERR(tok))
+			return tok;
+		tok = tpp_lexer_parse_simple_int(self, &hi);
+		if (TPP_TOK_ISERR(tok))
+			return tok;
+	} else {
+		hi = lo;
+		lo = 0;
+	}
+	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR(')'));
+	if (TPP_TOK_ISERR(tok))
+		return tok;
+	result = lo;
+	if (lo < hi) {
+		tpp_uintmax range = (tpp_uintmax)(hi - lo);
+		tpp_uintmax uresult = tpp_lexer_nextrand(self);
+#if TPP_HASH_MAX < TPP_UINTMAX_MAX
+		if (range > TPP_HASH_MAX) {
+			uresult <<= (TPP_SIZEOF_tpp_hash * TPP_CHAR_BIT);
+			uresult |= tpp_lexer_nextrand(self);
+		}
+#endif /* TPP_HASH_MAX < TPP_UINTMAX_MAX */
+		uresult %= range; /* XXX: This isn't fair if "TPP_UINTMAX_MAX+1" isn't a multiple of "range" */
+		result += (tpp_intmax)uresult;
+	}
+	return tpp_lexer_push_textfile_int(self, result);
+}
+#endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
+
+
+
+
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 /* Handle a builtin macro.
  * @return: TPP_TOK_EOF: Caller should yield again.
@@ -2012,18 +2115,21 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
+#if TPP_HAVE_MACRO___TPP_RANDOM
+	case TPP_KWD___TPP_RANDOM:
+		return tpp_lexer_yield_handle___TPP_RANDOM(self);
+#endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_MACRO___TPP_STR_SUBSTR
 	/* TODO: #define __TPP_STR_SUBSTR(str, start, end) __TPP_EVAL((str)[(start):(end)]) */
 #endif /* !TPP_HAVE_MACRO___TPP_STR_SUBSTR */
 #if TPP_HAVE_MACRO___TPP_LOAD_FILE
 	/* TODO: #define __TPP_LOAD_FILE(filename) __TPP_STR_PACK(__TPP_EXEC("#embed " #filename)) */
 #endif /* !TPP_HAVE_MACRO___TPP_LOAD_FILE */
-#if TPP_HAVE_MACRO___TPP_RANDOM
-	/* TODO: __TPP_RANDOM */
-	/* TODO: The value this expands to must RREMAIN THE SAME during multiple compilations!
-	 *       It must only change if *anything* about the lexer's input is changed. iow: this
-	 *       needs to be a PRNG that uses the input text processed thus far as seed. */
-#endif /* !TPP_HAVE_MACRO___TPP_RANDOM */
 /************************************************************************/
 
 
@@ -2544,6 +2650,22 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 			return TPP_TOK_OFERR(error);
 	}
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
+
+	/* Automatically convert between INT and FLOAT tokens */
+#if TPP_HAVE_TPP_TOK_INT && TPP_HAVE_TPP_TOK_FLOAT
+	if ((tpp_lexer_gettok(self) == TPP_TOK_INT ||
+	     tpp_lexer_gettok(self) == TPP_TOK_FLOAT) &&
+	    (tok == TPP_TOK_INT || tok == TPP_TOK_FLOAT) &&
+	    tpp_lexer_has(self, TPP_TOK_INT) &&
+	    tpp_lexer_has(self, TPP_TOK_FLOAT)) {
+		tpp_lexer_gettoken(self)->tt_id = tok;
+		if (tok == TPP_TOK_INT) {
+			/* Stop integer token prematurely if there's one of . + - */
+			/* TODO */
+		}
+		return tok;
+	}
+#endif /* TPP_HAVE_TPP_TOK_INT && TPP_HAVE_TPP_TOK_FLOAT */
 
 	/* Start seeking ahead... */
 	pos = tpp_lexer_seek_start(self, &backup);

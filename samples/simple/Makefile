@@ -25,4 +25,4 @@ TPP_SOURCE := ../../src
 a.out: main.c config.h defs.h \
 	$(TPP_SOURCE)/tpp-amalgamation.h \
 	$(TPP_SOURCE)/tpp-amalgamation.c
-	gcc -Wall -Wextra -o a.out main.c
+	gcc -Wall -Wextra -Wno-misleading-indentation -o a.out main.c
