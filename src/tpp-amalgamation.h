@@ -8417,8 +8417,14 @@ TPP_DECL_END
 
 /* Provide an API `tpp_string_builder` centered around builtin `tpp_string` */
 #ifndef TPP_HAVE_STRING_BUILDER
-#define TPP_HAVE_STRING_BUILDER \
-	((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_LOAD_FILE || 1 /*TODO: List all consumers*/)
+#define TPP_HAVE_STRING_BUILDER                                                                   \
+	((TPP_PROFILE == TPP_PROFILE_ALL) ||                                                          \
+	 TPP_HAVE_LEXER_DECODESTRING || TPP_HAVE_LEXER_SEEKPP_RPAREN ||                               \
+	 (TPP_HAVE_LEXER_DECODE_INCLUDE_STRING &&                                                     \
+	  (TPP_CONF_MAYBE_1(TPP_HAVE_BSE) || TPP_CONF_MAYBE_1(TPP_HAVE_TRIGRAPHS))) ||                \
+	 (TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ || TPP_HAVE_MACRO___FILE_NAME__) || \
+	 TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_MACRO___TPP_STR_PACK || TPP_HAVE_MACRO___TPP_EXEC ||   \
+	 TPP_HAVE_MACRO___TPP_STR_SUBSTR || TPP_HAVE_MACRO___TPP_LOAD_FILE || TPP_HAVE_CPP_EMBED)
 #endif /* !TPP_HAVE_STRING_BUILDER */
 
 /* Provide a function `tpp_string_builder_tryalloc()` */
