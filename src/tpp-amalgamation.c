@@ -596,6 +596,7 @@
 #define tfd_user_filename                                                         TPP_INTERNAL(tfd_user_filename)
 #define td_dummy                                                                  TPP_INTERNAL(td_dummy)
 #define th_warnprinter                                                            TPP_INTERNAL(th_warnprinter)
+#define th_warnhandler                                                            TPP_INTERNAL(th_warnhandler)
 #define th_mesgprinter                                                            TPP_INTERNAL(th_mesgprinter)
 #define th_parseexpr                                                              TPP_INTERNAL(th_parseexpr)
 #define th_unknown_pragma                                                         TPP_INTERNAL(th_unknown_pragma)
@@ -14888,17 +14889,19 @@ tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
                              tpp_lexer_printf_info *tpp_restrict const _info,
                              tpp_formatprinter const _printer,
                              void *const _printer_arg,
-                             tpp_warning_id const _id,
-                             va_list _args) {
+                             tpp_warning_id const _id, va_list _args,
+                             tpp_ssize *const _p_printer_result) {
+	tpp_ssize _printer_temp, _printer_result = 0;
 	switch (_id) {
 
 /************************************************************************/
 /* MACROS FOR USE BY "TPP_WARNING_EX"                                   */
 /************************************************************************/
-#define tpp_do(expr)           \
-	do {                       \
-		if ((expr) < 0)        \
-			goto _err_printer; \
+#define tpp_do(expr)                      \
+	do {                                  \
+		if ((_printer_temp = (expr)) < 0) \
+			goto _err_printer;            \
+		_printer_result += _printer_temp; \
 	} while (0)
 #define tpp_current_va_arg(T)                va_arg(_args, T)
 #define tpp_current_va_args()                _args
@@ -14945,6 +14948,10 @@ tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
 #include TPP_AMALGAMATION_H
 #undef TPP_DEFS
 
+	default:
+		tpp_warn_print_conststr("UNKNOWN WARNING\n");
+		break;
+
 /************************************************************************/
 #undef tpp_warn_print_file_and_line
 #undef tpp_warn_print_file_and_line_at
@@ -14967,14 +14974,13 @@ tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
 #undef tpp_current_printer
 #undef tpp_current_printer_arg
 /************************************************************************/
-
-	default:
-		if (tpp_formatprinter_print_conststr(_printer, _printer_arg, "UNKNOWN WARNING\n") < 0)
-			goto _err_printer;
-		break;
 	}
+	if (_p_printer_result)
+		*_p_printer_result = _printer_result;
 	return TPP_EOK;
 _err_printer:
+	if (_p_printer_result)
+		*_p_printer_result = _printer_temp;
 	return TPP_EWARNPRINT;
 }
 
@@ -14991,16 +14997,177 @@ static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
 #endif /* !tpp_dummy_printer */
 #endif /* !tpp_lexer_gethook_warnprinter */
 
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+/* Print the actual warning message (and only the message, including
+ * its trailing linefeed) to "printer". When "id" uses `TPP_WARNING_EX`,
+ * the warning's printer callback is invoked with the relevant parameters
+ *
+ * @return: TPP_EOK:        Success (sum of return values of `printer' is stored in
+ *                          `*p_printer_result', assuming that `p_printer_result != NULL')
+ * @return: TPP_EWARNPRINT: An invocation of `*printer' returned a negative value
+ *                          (that value was stored in `*p_printer_result', assuming
+ *                          that `p_printer_result != NULL')
+ * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_vwarnf_mesg(tpp_lexer *tpp_restrict self,
+                      tpp_lexer_printf_info *tpp_restrict info,
+                      tpp_formatprinter printer, void *arg,
+                      tpp_warning_id id, va_list args,
+                      /*0..1*/ tpp_ssize *p_printer_result) {
+	tpp_ssize temp, printer_status;
+	char const *warning_format;
+
+	/* Lookup the generic warning-message format for "id" */
+	warning_format = tpp_warning_getformat(id);
+	if (warning_format == NULL) {
+		/* In this case, "id" must be using a custom warning message expression! */
+		tpp_errno error;
+		error = tpp_lexer_vwarnf_impl_custom(self, info, printer,
+		                                     arg, id, args,
+		                                     p_printer_result);
+		tpp_assert(!TPP_ISERR(error) ||
+		           (error == TPP_ENOMEM || error == TPP_EIO ||
+		            error == TPP_ELEXERROR || error == TPP_EWARNPRINT) &&
+		           "Custom warning callbacks may only return one of these errors");
+		if (TPP_ISERR(error)) {
+			return error;
+		}
+		return error;
+	}
+	printer_status = tpp_lexer_vprintf_warning(self, info, printer, arg,
+	                                           warning_format, args);
+	if (printer_status < 0)
+		goto err_printer;
+	temp = tpp_formatprinter_print_conststr(printer, arg, "\n");
+	if (temp < 0) {
+		printer_status = temp;
+		goto err_printer;
+	}
+	if (p_printer_result) {
+		printer_status += temp;
+		*p_printer_result = printer_status;
+	}
+	return TPP_EOK;
+err_printer:
+	if (p_printer_result)
+		*p_printer_result = printer_status;
+	return TPP_EWARNPRINT;
+}
+
+#if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+_tpp_lexer_builtin_warnhandler(tpp_lexer *tpp_restrict self,
+                               tpp_lexer_printf_info *tpp_restrict info,
+                               tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
+                               tpp_warning_id id, va_list args) {
+	tpp_errno error;
+	tpp_formatprinter const printer = tpp_lexer_gethook_warnprinter(self);
+	void *const printer_arg = self;
+
+	/* Print file-and-line prefix */
+	if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
+	                             tpp_lexer_getfileandlineformat(self)) < 0)
+		goto err_printer;
+
+	/* Print what this is about... */
+	if ((invokeinfo->twii_state == TPP_WSTATE_WARN
+	     ? tpp_formatprinter_print_conststr(printer, printer_arg, "warning[")
+	     : tpp_formatprinter_print_conststr(printer, printer_arg, "error[")) < 0)
+		goto err_printer;
+
+	/* Print the relevant context name. */
+#if TPP_HAVE_WARNING_NUMBERS
+	if (tpp_warning_context_id_isnumber(invokeinfo->twii_ctx_id)) {
+		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(invokeinfo->twii_ctx_id);
+		unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
+		if ((tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID)
+		     ? tpp_formatprinter_print_conststr(printer, printer_arg, "?")
+		     : tpp_format_print_uint(printer, printer_arg, number)) < 0)
+			goto err_printer;
+	} else
+#endif /* TPP_HAVE_WARNING_NUMBERS */
+	{
+		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(invokeinfo->twii_ctx_id);
+		char const *group_name = tpp_warning_group_getnames(group_id);
+		if tpp_unlikely(group_name == NULL) {
+			if (tpp_formatprinter_print_conststr(printer, printer_arg, "?") < 0)
+				goto err_printer;
+		} else {
+			if (tpp_formatprinter_print_conststr(printer, printer_arg, "-W") < 0)
+				goto err_printer;
+			if (tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name)) < 0)
+				goto err_printer;
+		}
+	}
+	if (tpp_formatprinter_print_conststr(printer, printer_arg, "]: ") < 0)
+		goto err_printer;
+
+
+	/* Lookup the generic warning-message format for "id" */
+	error = tpp_lexer_vwarnf_mesg(self, info, printer, printer_arg, id, args, NULL);
+	if (TPP_ISERR(error))
+		return error;
+
+	/* Print projection origin */
+#if TPP_HAVE_CPP_MACROS
+	if (info->tlpfi_file && info->tlpfi_pos) {
+		tpp_lcinfo_ex lcx;
+		tpp_file_getlcinfo_ex(info->tlpfi_file, info->tlpfi_pos, &lcx);
+		while (lcx.tlcix_projfile) {
+			tpp_lcinfo_ex nlcx;
+			tpp_lexer_printf_info projection_info;
+			tpp_lexer_printf_info_init_at(&projection_info, lcx.tlcix_projfile, lcx.tlcix_projpos);
+			tpp_file_getlcinfo_ex(lcx.tlcix_projfile, lcx.tlcix_projpos, &nlcx);
+			projection_info.tlpfi_lc = nlcx.tlcix_info;
+			if (tpp_lexer_printf_warning(self, &projection_info,
+			                             printer, printer_arg,
+			                             tpp_lexer_getfileandlineformat(self)) < 0)
+				goto err_printer;
+			if (tpp_formatprinter_print_conststr(printer, printer_arg,
+			                                     "note: projected from here\n") < 0)
+				goto err_printer;
+			lcx = nlcx;
+		}
+	}
+#endif /* TPP_HAVE_CPP_MACROS */
+
+	/* Print origin traceback */
+#if TPP_HAVE_INCLUDE_STACK
+	if (info->tlpfi_file) {
+		tpp_file *caller = info->tlpfi_file->tf_tprev;
+		for (; caller; caller = caller->tf_tprev) {
+			/* XXX: We could also display a range here:
+			 * >> [caller->tf_tpos, caller->tf_pos)
+			 *
+			 * This range of bytes describes the "expression" that caused
+			 * the include/macro-expansion to happen (it is either the range
+			 * from the start of a macro's name, to the end of its parameter
+			 * list, or the start of a #include-directive, to the trailing
+			 * line-feed) */
+			tpp_lexer_printf_info caller_info;
+			tpp_lexer_printf_info_init_at(&caller_info, caller, caller->tf_tpos);
+			if (tpp_lexer_printf_warning(self, &caller_info,
+			                             printer, printer_arg,
+			                             tpp_lexer_getfileandlineformat(self)) < 0)
+				goto err_printer;
+			if (tpp_formatprinter_print_conststr(printer, printer_arg, "note: originating from here\n") < 0)
+				goto err_printer;
+		}
+	}
+#endif /* TPP_HAVE_INCLUDE_STACK */
+	return TPP_EOK;
+err_printer:
+	return TPP_EWARNPRINT;
+}
+#endif /* TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
                       tpp_lexer_printf_info *tpp_restrict info,
                       tpp_warning_id id, va_list args) {
-	tpp_errno result;
-	tpp_ssize printer_status;
-	char const *warning_format;
+	tpp_errno result, error;
 	tpp_warning_invokeinfo invokeinfo;
-	tpp_formatprinter const printer = tpp_lexer_gethook_warnprinter(self);
-	void *const printer_arg = self;
 
 	/* Quick check: are warnings disabled? */
 	if (self->tl_state & TPP_LEXER_STATE_FLAG_NOWARNINGS)
@@ -15050,127 +15217,10 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 	default: tpp_unreachable();
 	}
 
-	/* Print file-and-line prefix */
-	printer_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
-	                                          tpp_lexer_getfileandlineformat(self));
-	if (printer_status < 0)
-		goto err_printer;
-
-	/* Print what this is about... */
-	if (invokeinfo.twii_state == TPP_WSTATE_WARN) {
-		printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "warning[");
-	} else {
-		printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "error[");
-	}
-	if (printer_status < 0)
-		goto err_printer;
-
-	/* Print the relevant context name. */
-#if TPP_HAVE_WARNING_NUMBERS
-	if (tpp_warning_context_id_isnumber(invokeinfo.twii_ctx_id)) {
-		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(invokeinfo.twii_ctx_id);
-		unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
-		if tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID) {
-			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "?");
-		} else {
-			printer_status = tpp_format_print_uint(printer, printer_arg, number);
-		}
-	} else
-#endif /* TPP_HAVE_WARNING_NUMBERS */
-	{
-		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(invokeinfo.twii_ctx_id);
-		char const *group_name = tpp_warning_group_getnames(group_id);
-		if tpp_unlikely(group_name == NULL) {
-			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "?");
-		} else {
-			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "-W");
-			if (printer_status < 0)
-				goto err_printer;
-			printer_status = tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name));
-		}
-	}
-	if (printer_status < 0)
-		goto err_printer;
-	printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "]: ");
-	if (printer_status < 0)
-		goto err_printer;
-
-
-	/* Lookup the generic warning-message format for "id" */
-	warning_format = tpp_warning_getformat(id);
-	if (warning_format) {
-		printer_status = tpp_lexer_vprintf_warning(self, info,
-		                                           printer, printer_arg,
-		                                           warning_format, args);
-		if (printer_status < 0)
-			goto err_printer;
-		printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "\n");
-		if (printer_status < 0)
-			goto err_printer;
-	} else {
-		/* In this case, "id" must be using a custom warning message expression! */
-		tpp_errno error;
-		error = tpp_lexer_vwarnf_impl_custom(self, info, printer,
-		                                     printer_arg, id, args);
-		if (TPP_ISERR(error)) {
-			tpp_assert((error == TPP_ENOMEM || error == TPP_EIO ||
-			            error == TPP_ELEXERROR || error == TPP_EWARNPRINT) &&
-			           "Custom warning callbacks may only return one of these errors");
-			return error;
-		}
-	}
-
-	/* Print projection origin */
-#if TPP_HAVE_CPP_MACROS
-	if (info->tlpfi_file && info->tlpfi_pos) {
-		tpp_lcinfo_ex lcx;
-		tpp_file_getlcinfo_ex(info->tlpfi_file, info->tlpfi_pos, &lcx);
-		while (lcx.tlcix_projfile) {
-			tpp_lcinfo_ex nlcx;
-			tpp_lexer_printf_info projection_info;
-			tpp_lexer_printf_info_init_at(&projection_info, lcx.tlcix_projfile, lcx.tlcix_projpos);
-			tpp_file_getlcinfo_ex(lcx.tlcix_projfile, lcx.tlcix_projpos, &nlcx);
-			projection_info.tlpfi_lc = nlcx.tlcix_info;
-			printer_status = tpp_lexer_printf_warning(self, &projection_info,
-			                                          printer, printer_arg,
-			                                          tpp_lexer_getfileandlineformat(self));
-			if (printer_status < 0)
-				goto err_printer;
-			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg,
-			                                                  "note: projected from here\n");
-			if (printer_status < 0)
-				goto err_printer;
-			lcx = nlcx;
-		}
-	}
-#endif /* TPP_HAVE_CPP_MACROS */
-
-	/* Print origin traceback */
-#if TPP_HAVE_INCLUDE_STACK
-	if (info->tlpfi_file) {
-		tpp_file *caller = info->tlpfi_file->tf_tprev;
-		for (; caller; caller = caller->tf_tprev) {
-			/* XXX: We could also display a range here:
-			 * >> [caller->tf_tpos, caller->tf_pos)
-			 *
-			 * This range of bytes describes the "expression" that caused
-			 * the include/macro-expansion to happen (it is either the range
-			 * from the start of a macro's name, to the end of its parameter
-			 * list, or the start of a #include-directive, to the trailing
-			 * line-feed) */
-			tpp_lexer_printf_info caller_info;
-			tpp_lexer_printf_info_init_at(&caller_info, caller, caller->tf_tpos);
-			printer_status = tpp_lexer_printf_warning(self, &caller_info,
-			                                          printer, printer_arg,
-			                                          tpp_lexer_getfileandlineformat(self));
-			if (printer_status < 0)
-				goto err_printer;
-			printer_status = tpp_formatprinter_print_conststr(printer, printer_arg, "note: originating from here\n");
-			if (printer_status < 0)
-				goto err_printer;
-		}
-	}
-#endif /* TPP_HAVE_INCLUDE_STACK */
+	/* Invoke warning handler */
+	error = tpp_lexer_callhook_warnhandler(self, info, &invokeinfo, id, args);
+	if (TPP_ISERR(error))
+		return error;
 
 done:
 #if TPP_HAVE_RAISE_LEXERROR_HOOK
@@ -15183,8 +15233,6 @@ done:
 	}
 #endif /* TPP_HAVE_RAISE_LEXERROR_HOOK */
 	return result;
-err_printer:
-	return TPP_EWARNPRINT;
 }
 
 

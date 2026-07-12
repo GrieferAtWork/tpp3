@@ -3178,12 +3178,32 @@ import unPointerizeHook from ".config";
 local HOOKS = {
 	{
 		"Called by `tpp_lexer_warnf()` to print warning messages\n" +
+		"Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten\n" +
 		"@param: arg: The current lexer (`tpp_lexer *`)",
 		"WARNPRINTER",
 		"TPP_HAVE_WARNINGS",
 		"_tpp_lexer_builtin_warn_or_mesg_printer",
 		"tpp_formatprinter ", "", { "lexer", "text", "num_bytes" },
 		"0"
+	},
+
+	{
+		"Called by `tpp_lexer_warnf()` to handle warning notifications. Can be\n" +
+		"overwritten to implement custom behavior in regards to handling of warnings.\n" +
+		"@param: info:       Warning context location\n" +
+		"@param: invokeinfo: Warning invocation method\n" +
+		"@param: id:         Warning ID\n" +
+		"@param: arg:        Variable arguments passed to warning\n" +
+		"@return: TPP_EOK:        Success (warning was emitted)\n" +
+		"@return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`\n" +
+		"@return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error\n" +
+		"@return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error\n" +
+		"@return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error",
+		"WARNHANDLER",
+		"TPP_HAVE_WARNINGS",
+		"_tpp_lexer_builtin_warnhandler",
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args)", { "lexer", "info", "invokeinfo", "id", "args" },
+		"TPP_EOK"
 	},
 
 	{
@@ -3379,6 +3399,7 @@ for (local doc, name,
 ]]]*/
 /* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
  * Called by `tpp_lexer_warnf()` to print warning messages
+ * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #ifndef TPP_HAVE_WARNPRINTER_HOOK
 #ifdef TPP_HOOK_WARNPRINTER
@@ -3406,6 +3427,45 @@ for (local doc, name,
 #ifndef TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
 #define TPP_HAVE_BUILTIN_WARNPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNPRINTER_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+
+/* >> tpp_errno TPP_HOOK_WARNHANDLER(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
+ * Called by `tpp_lexer_warnf()` to handle warning notifications. Can be
+ * overwritten to implement custom behavior in regards to handling of warnings.
+ * @param: info:       Warning context location
+ * @param: invokeinfo: Warning invocation method
+ * @param: id:         Warning ID
+ * @param: arg:        Variable arguments passed to warning
+ * @return: TPP_EOK:        Success (warning was emitted)
+ * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
+ * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+#ifndef TPP_HAVE_WARNHANDLER_HOOK
+#ifdef TPP_HOOK_WARNHANDLER
+#define TPP_HAVE_WARNHANDLER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_WARNHANDLER */
+#define TPP_HAVE_WARNHANDLER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_WARNHANDLER */
+#endif /* !TPP_HAVE_WARNHANDLER_HOOK */
+#if TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_WARNHANDLER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_WARNHANDLER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_WARNHANDLER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_WARNHANDLER_HOOK
+#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_WARNHANDLER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_WARNHANDLER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_WARNHANDLER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_WARNHANDLER_HOOK
+#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_WARNHANDLER) && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_WARNHANDLER' is defined, but 'TPP_HAVE_WARNHANDLER_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_WARNHANDLER && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK) */
+#ifndef TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
+#define TPP_HAVE_BUILTIN_WARNHANDLER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNHANDLER_HOOK)
+#endif /* !TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
 
 /* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_MESGPRINTER, arg, text, num_bytes);
  * Used by `#pragma message` to print messages

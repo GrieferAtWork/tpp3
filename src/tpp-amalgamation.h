@@ -7613,6 +7613,7 @@ TPP_DECL_END
 
 /* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
  * Called by `tpp_lexer_warnf()` to print warning messages
+ * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #ifndef TPP_HAVE_WARNPRINTER_HOOK
 #ifdef TPP_HOOK_WARNPRINTER
@@ -7640,6 +7641,45 @@ TPP_DECL_END
 #ifndef TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
 #define TPP_HAVE_BUILTIN_WARNPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNPRINTER_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+
+/* >> tpp_errno TPP_HOOK_WARNHANDLER(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
+ * Called by `tpp_lexer_warnf()` to handle warning notifications. Can be
+ * overwritten to implement custom behavior in regards to handling of warnings.
+ * @param: info:       Warning context location
+ * @param: invokeinfo: Warning invocation method
+ * @param: id:         Warning ID
+ * @param: arg:        Variable arguments passed to warning
+ * @return: TPP_EOK:        Success (warning was emitted)
+ * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
+ * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+#ifndef TPP_HAVE_WARNHANDLER_HOOK
+#ifdef TPP_HOOK_WARNHANDLER
+#define TPP_HAVE_WARNHANDLER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_WARNHANDLER */
+#define TPP_HAVE_WARNHANDLER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_WARNHANDLER */
+#endif /* !TPP_HAVE_WARNHANDLER_HOOK */
+#if TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_WARNHANDLER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_WARNHANDLER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_WARNHANDLER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_WARNHANDLER_HOOK
+#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_WARNHANDLER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_WARNHANDLER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_WARNHANDLER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_WARNHANDLER_HOOK
+#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_WARNHANDLER) && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_WARNHANDLER' is defined, but 'TPP_HAVE_WARNHANDLER_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_WARNHANDLER && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK) */
+#ifndef TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
+#define TPP_HAVE_BUILTIN_WARNHANDLER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNHANDLER_HOOK)
+#endif /* !TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
 
 /* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_MESGPRINTER, arg, text, num_bytes);
  * Used by `#pragma message` to print messages
@@ -17315,6 +17355,7 @@ typedef enum tpp_hook_system_include_path_when {
 
 #undef TPP_HAVE_HOOKS
 #if (TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) ||           \
+     TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) ||           \
      TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) ||           \
      TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) ||             \
      TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) ||        \
@@ -17330,9 +17371,13 @@ typedef enum tpp_hook_system_include_path_when {
 
 #if TPP_HAVE_HOOKS
 struct tpp_lexer;
+#if TPP_HAVE_WARNINGS
+struct tpp_lexer_printf_info;
+#endif /* TPP_HAVE_WARNINGS */
 typedef struct tpp_hooks {
 	/* >> tpp_formatprinter th_warnprinter;
 	 * Called by `tpp_lexer_warnf()` to print warning messages
+	 * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
 	 * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
 #if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
@@ -17341,6 +17386,26 @@ typedef struct tpp_hooks {
 	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [0..1] */
 #endif /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_NOOP */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_warnhandler)(struct tpp_lexer *tpp_restrict self, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
+	 * Called by `tpp_lexer_warnf()` to handle warning notifications. Can be
+	 * overwritten to implement custom behavior in regards to handling of warnings.
+	 * @param: info:       Warning context location
+	 * @param: invokeinfo: Warning invocation method
+	 * @param: id:         Warning ID
+	 * @param: arg:        Variable arguments passed to warning
+	 * @return: TPP_EOK:        Success (warning was emitted)
+	 * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
+	 * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
+	 * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
+	 * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+#if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
+#if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_warnhandler))(struct tpp_lexer *tpp_restrict self, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args); /* [1..1] */
+#else /* TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP */
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_warnhandler))(struct tpp_lexer *tpp_restrict self, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args); /* [0..1] */
+#endif /* TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) */
 
 	/* >> tpp_formatprinter th_mesgprinter;
 	 * Used by `#pragma message` to print messages
@@ -17469,6 +17534,7 @@ typedef struct tpp_hooks {
 #endif /* TPP_HAVE_HOOKS */
 
 /* Called by `tpp_lexer_warnf()` to print warning messages
+ * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
 #if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
@@ -17503,6 +17569,49 @@ typedef struct tpp_hooks {
 #endif /* ... */
 #define _tpp_hooks_init_warnprinter(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
+
+/* Called by `tpp_lexer_warnf()` to handle warning notifications. Can be
+ * overwritten to implement custom behavior in regards to handling of warnings.
+ * @param: info:       Warning context location
+ * @param: invokeinfo: Warning invocation method
+ * @param: id:         Warning ID
+ * @param: arg:        Variable arguments passed to warning
+ * @return: TPP_EOK:        Success (warning was emitted)
+ * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
+ * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+#if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
+#if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
+#define tpp_hooks_call_warnhandler(self, lexer, info, invokeinfo, id, args) \
+	(*(self)->TPP_INTERNAL(th_warnhandler))(lexer, info, invokeinfo, id, args)
+#else /* TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP */
+#define tpp_hooks_call_warnhandler(self, lexer, info, invokeinfo, id, args) \
+	((self)->TPP_INTERNAL(th_warnhandler) ? (*(self)->TPP_INTERNAL(th_warnhandler))(lexer, info, invokeinfo, id, args) : TPP_EOK)
+#endif /* TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_NOOP */
+#define tpp_hooks_get_warnhandler(self)    (self)->TPP_INTERNAL(th_warnhandler)
+#define tpp_hooks_set_warnhandler(self, v) (void)((self)->TPP_INTERNAL(th_warnhandler) = (v))
+#define tpp_hooks_reset_warnhandler(self)  (void)((self)->TPP_INTERNAL(th_warnhandler) = _TPP_HOOKS_DEFAULT_WARNHANDLER)
+#define _tpp_hooks_init_warnhandler(self)  , (self)->TPP_INTERNAL(th_warnhandler) = _TPP_HOOKS_DEFAULT_WARNHANDLER
+#if TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_WARNHANDLER)
+#define _TPP_HOOKS_DEFAULT_WARNHANDLER (&TPP_HOOK_WARNHANDLER)
+#elif TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_BUILTIN
+#define _TPP_HOOKS_DEFAULT_WARNHANDLER (&_tpp_lexer_builtin_warnhandler)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_WARNHANDLER NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) */
+#if TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_warnhandler(self, lexer, info, invokeinfo, id, args) \
+	TPP_HOOK_WARNHANDLER(lexer, info, invokeinfo, id, args)
+#elif TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_CONST_BUILTIN
+#define tpp_hooks_call_warnhandler(self, lexer, info, invokeinfo, id, args) \
+	_tpp_lexer_builtin_warnhandler(lexer, info, invokeinfo, id, args)
+#else /*  */
+#define tpp_hooks_call_warnhandler(self, lexer, info, invokeinfo, id, args) TPP_EOK
+#endif /* ... */
+#define _tpp_hooks_init_warnhandler(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) */
 
 /* Used by `#pragma message` to print messages
  * @param: arg: The current lexer (`tpp_lexer *`) */
@@ -17781,6 +17890,7 @@ typedef struct tpp_hooks {
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
 	(void)(0 _tpp_hooks_init_warnprinter(self) \
+	       _tpp_hooks_init_warnhandler(self) \
 	       _tpp_hooks_init_mesgprinter(self) \
 	       _tpp_hooks_init_parseexpr(self) \
 	       _tpp_hooks_init_unknown_pragma(self) \
@@ -17797,6 +17907,14 @@ typedef struct tpp_hooks {
 #if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
 TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes);
 #endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
+
+#if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+_tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
+                               tpp_lexer_printf_info *tpp_restrict info,
+                               tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
+                               tpp_warning_id id, va_list args);
+#endif /* TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
 
 #if TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
 TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_mesgprinter, arg, text, num_bytes);
@@ -18174,6 +18292,7 @@ typedef struct tpp_lexer {
 /* Invocation of hooks */
 /* >> TPP_FORMATPRINTER_DEFINE(tpp_lexer_callhook_warnprinter, arg, text, num_bytes);
  * Called by `tpp_lexer_warnf()` to print warning messages
+ * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #define tpp_lexer_callhook_warnprinter(self, text, num_bytes) \
 	tpp_hooks_call_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), self, text, num_bytes)
@@ -18184,6 +18303,26 @@ typedef struct tpp_lexer {
 #define tpp_lexer_sethook_warnprinter(self, v) tpp_hooks_set_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_warnprinter(self)  tpp_hooks_reset_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_warnprinter */
+
+/* >> tpp_errno tpp_lexer_callhook_warnhandler(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
+ * Called by `tpp_lexer_warnf()` to handle warning notifications. Can be
+ * overwritten to implement custom behavior in regards to handling of warnings.
+ * @param: info:       Warning context location
+ * @param: invokeinfo: Warning invocation method
+ * @param: id:         Warning ID
+ * @param: arg:        Variable arguments passed to warning
+ * @return: TPP_EOK:        Success (warning was emitted)
+ * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
+ * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+#define tpp_lexer_callhook_warnhandler(self, info, invokeinfo, id, args) \
+	tpp_hooks_call_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self, info, invokeinfo, id, args)
+#ifdef tpp_hooks_set_warnhandler
+#define tpp_lexer_gethook_warnhandler(self)    tpp_hooks_get_warnhandler(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_warnhandler(self, v) tpp_hooks_set_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_warnhandler(self)  tpp_hooks_reset_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_warnhandler */
 
 /* >> TPP_FORMATPRINTER_DEFINE(tpp_lexer_callhook_mesgprinter, arg, text, num_bytes);
  * Used by `#pragma message` to print messages
@@ -19823,6 +19962,25 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
 tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
                           tpp_formatprinter printer, void *arg,
                           char const *format, va_list args);
+
+/* Print the actual warning message (and only the message, including
+ * its trailing linefeed) to "printer". When "id" uses `TPP_WARNING_EX`,
+ * the warning's printer callback is invoked with the relevant parameters
+ *
+ * @return: TPP_EOK:        Success (sum of return values of `printer' is stored in
+ *                          `*p_printer_result', assuming that `p_printer_result != NULL')
+ * @return: TPP_EWARNPRINT: An invocation of `*printer' returned a negative value
+ *                          (that value was stored in `*p_printer_result', assuming
+ *                          that `p_printer_result != NULL')
+ * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_vwarnf_mesg(tpp_lexer *tpp_restrict self,
+                      tpp_lexer_printf_info *tpp_restrict info,
+                      tpp_formatprinter printer, void *arg,
+                      tpp_warning_id id, va_list args,
+                      /*0..1*/ tpp_ssize *p_printer_result);
 
 /* Emits the specified lexer warning at the start of the current token.
  * @param: args: Format arguments specific to "id" (see '%'-sequences in warning expressions)
