@@ -25938,11 +25938,12 @@ again_yield_nextfile:
 /* File: parts/lexer-decodeint.c                                        */
 /************************************************************************/
 
+#if TPP_HAVE_LEXER_DECODEINT
+
 /* Decode the current token (which should be TPP_TOK_ISINT) into an integer
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_EWARNPRINT: Error while printing a warning */
-#if TPP_HAVE_LEXER_DECODEINT
 #if TPP_HAVE_LEXER_DECODEINT_SUFFIX
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
@@ -26272,11 +26273,11 @@ handle_invalid:
 #endif /* TPP_HAVE_LEXER_DECODEINT */
 
 
+#if TPP_HAVE_LEXER_DECODEFLOAT
 /* Decode the current token (which should be TPP_TOK_ISFLOAT) into a float
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_EWARNPRINT: Error while printing a warning */
-#if TPP_HAVE_LEXER_DECODEFLOAT
 #if TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,

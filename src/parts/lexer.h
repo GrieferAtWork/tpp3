@@ -1831,6 +1831,11 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
                        tpp_intmax *tpp_restrict result,
                        tpp_integer_suffix_kind *p_suffix_kind);
+/* XXX: The "tpp_lexer_decodeint_ex" should be called differently -- instead,
+ *      there should be an API "tpp_lexer_decodeint_ex" that returns a pointer
+ *      to the unparsed suffix-portion of the integer token (in the form of a
+ *      parameter "tpp_char const **p_suffix_start"), which the caller can
+ *      then interpret however they want. */
 #define tpp_lexer_decodeint(self, result) \
 	tpp_lexer_decodeint_ex(self, result, NULL)
 #else /* TPP_HAVE_LEXER_DECODEINT_SUFFIX */
@@ -1902,6 +1907,11 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
                          tpp_float *tpp_restrict result,
                          tpp_float_suffix_kind *p_suffix_kind);
+/* XXX: The "tpp_lexer_decodefloat_ex" should be called differently -- instead,
+ *      there should be an API "tpp_lexer_decodefloat_ex" that returns a pointer
+ *      to the unparsed suffix-portion of the float token (in the form of a
+ *      parameter "tpp_char const **p_suffix_start"), which the caller can
+ *      then interpret however they want. */
 #define tpp_lexer_decodefloat(self, result) \
 	tpp_lexer_decodefloat_ex(self, result, NULL)
 #else /* TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */

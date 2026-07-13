@@ -6451,7 +6451,7 @@ TPP_DECL_END
 /* Allow use of `_` as a thousands separator `123_456_789`
  * in `TPP_HAVE_TPP_TOK_C_INT` and `TPP_HAVE_TPP_TOK_C_FLOAT` */
 #ifndef TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
-#define TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) /* "-fthousands-separator-underscore" */
+#define TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE (TPP_HAVE_TPP_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fthousands-separator-underscore" */
 #endif /* !TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
 
 /* Allow use of `'` as a thousands separator `123'456'789`
@@ -6459,7 +6459,7 @@ TPP_DECL_END
  *
  * @detect: #if __TPP_COUNT_TOKENS("123'456'789") == 1 */
 #ifndef TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
-#define TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fthousands-separator-singletick" */
+#define TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK (TPP_HAVE_TPP_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fthousands-separator-singletick" */
 #endif /* !TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
 
 /* C-style integer token `123`
@@ -19867,6 +19867,11 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
                        tpp_intmax *tpp_restrict result,
                        tpp_integer_suffix_kind *p_suffix_kind);
+/* XXX: The "tpp_lexer_decodeint_ex" should be called differently -- instead,
+ *      there should be an API "tpp_lexer_decodeint_ex" that returns a pointer
+ *      to the unparsed suffix-portion of the integer token (in the form of a
+ *      parameter "tpp_char const **p_suffix_start"), which the caller can
+ *      then interpret however they want. */
 #define tpp_lexer_decodeint(self, result) \
 	tpp_lexer_decodeint_ex(self, result, NULL)
 #else /* TPP_HAVE_LEXER_DECODEINT_SUFFIX */
@@ -19938,6 +19943,11 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
                          tpp_float *tpp_restrict result,
                          tpp_float_suffix_kind *p_suffix_kind);
+/* XXX: The "tpp_lexer_decodefloat_ex" should be called differently -- instead,
+ *      there should be an API "tpp_lexer_decodefloat_ex" that returns a pointer
+ *      to the unparsed suffix-portion of the float token (in the form of a
+ *      parameter "tpp_char const **p_suffix_start"), which the caller can
+ *      then interpret however they want. */
 #define tpp_lexer_decodefloat(self, result) \
 	tpp_lexer_decodefloat_ex(self, result, NULL)
 #else /* TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */

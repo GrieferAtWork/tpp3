@@ -3327,7 +3327,7 @@ in [`TPP_HAVE_TPP_TOK_C_INT`](#tpp_have_tpp_tok_c_int) and [`TPP_HAVE_TPP_TOK_C_
 Default:
 
 ```c
-(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT)
+TPP_HAVE_TPP_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT)) : 0
 ```
 
 Extension name:
@@ -3347,7 +3347,7 @@ in [`TPP_HAVE_TPP_TOK_C_INT`](#tpp_have_tpp_tok_c_int) and [`TPP_HAVE_TPP_TOK_C_
 Default:
 
 ```c
-(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)
+TPP_HAVE_TPP_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -3996,8 +3996,8 @@ Detect:
 ## TPP_HAVE_STRING_AUTO_CONCAT
 
 Enable support for automatic concatenation of adjacent string tokens.
-This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L20021) and its
-companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L20062), such that they will only yield
+This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L20031) and its
+companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L20072), such that they will only yield
 to the next token, but not check if that next token might be another
 string.
 
