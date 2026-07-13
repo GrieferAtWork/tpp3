@@ -18709,6 +18709,195 @@ tpp_lexer_check_sol(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
 
 
+
+#define TPP_HAVE_TPP_LEXER_STARTSWITH_MC_POUND \
+	(TPP_HAVE_TOK_SOL_SHELL_COMMENT &&         \
+	 (TPP_HAVE_TOK_MC_STARTSWITH_POUND))
+#if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_POUND
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_startswith_mc_pound(tpp_lexer *tpp_restrict self,
+                              tpp_char const **p_pos) {
+	tpp_char ch2;
+	tpp_errno error = TPP_EOK;
+	tpp_char const *pos = *p_pos;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_size const rel_start = tpp_file_ptr2rel(file, pos);
+#define read_ch2()                                    \
+	do {                                              \
+		error = tpp_lexer_readchar(self, &pos, &ch2); \
+		if (TPP_ISERR(error))                         \
+			goto return_error;                        \
+	} while (0)
+#if TPP_HAVE_TOK_POUND_POUND
+	if (tpp_lexer_has(self, TOK_POUND_POUND)) {
+		read_ch2();
+		if (ch2 == '#') {
+			goto return_error; /* "##" */
+		}
+	}
+#endif /* TPP_HAVE_TOK_POUND_POUND */
+	error = TPP_ENOENT;
+return_error:
+	*p_pos = tpp_file_rel2ptr(file, rel_start);
+	return error;
+}
+#endif /* TPP_HAVE_TPP_LEXER_STARTSWITH_MC_POUND */
+
+
+
+#define TPP_HAVE_TPP_LEXER_STARTSWITH_MC_SLASH              \
+	(TPP_HAVE_TOK_SOL_SLASH_COMMENT &&                      \
+	 (TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_C_COMMENT || \
+	  TPP_HAVE_TOK_MC_STARTSWITH_SLASH))
+#if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_SLASH
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_startswith_mc_slash(tpp_lexer *tpp_restrict self,
+                              tpp_char const **p_pos) {
+	tpp_char ch2;
+	tpp_errno error = TPP_EOK;
+	tpp_char const *pos = *p_pos;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_size const rel_start = tpp_file_ptr2rel(file, pos);
+#define read_ch2()                                    \
+	do {                                              \
+		error = tpp_lexer_readchar(self, &pos, &ch2); \
+		if (TPP_ISERR(error))                         \
+			goto return_error;                        \
+	} while (0)
+
+	if (!tpp_lexer_has(self, TOK_CXX_COMMENT) &&
+	    !tpp_lexer_has(self, TOK_C_COMMENT) &&
+	    !tpp_lexer_has(self, TOK_SLASH_COMMENT) &&
+	    !tpp_lexer_has(self, TOK_SOL_SLASH_COMMENT) &&
+	    !tpp_lexer_has(self, TOK_SLASH_SLASH) &&
+	    !tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL) &&
+	    !tpp_lexer_has(self, TOK_SLASH_EQUAL)
+	    )
+		goto return_noent;
+	read_ch2();
+
+#if TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL
+	if (ch2 == '/') {
+#if TPP_HAVE_TOK_CXX_COMMENT
+		if (tpp_lexer_has(self, TOK_CXX_COMMENT))
+			goto return_error;
+#endif /* TPP_HAVE_TOK_CXX_COMMENT */
+#if TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL
+#if TPP_HAVE_TOK_SLASH_SLASH
+		if (tpp_lexer_has(self, TOK_SLASH_SLASH))
+			goto return_error;
+#endif /* TPP_HAVE_TOK_SLASH_SLASH */
+#if TPP_HAVE_TOK_SLASH_SLASH_EQUAL
+		if (tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL)) {
+			read_ch2();
+			if (ch2 == '=') {
+				if (tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL))
+					goto return_error; /* "//=" */
+			} else
+			{
+			}
+		}
+#endif /* TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
+#endif /* TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
+	} else
+#endif /* TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
+#if TPP_HAVE_TOK_C_COMMENT
+	if (ch2 == '*') {
+		if (tpp_lexer_has(self, TOK_C_COMMENT))
+			goto return_error;
+	} else
+#endif /* TPP_HAVE_TOK_C_COMMENT */
+#if TPP_HAVE_TOK_SLASH_EQUAL
+	if (ch2 == '=') {
+		if (tpp_lexer_has(self, TOK_SLASH_EQUAL))
+			goto return_error; /* "/=" */
+	} else
+#endif /* TPP_HAVE_TOK_SLASH_EQUAL */
+	{
+	}
+
+return_noent:
+	error = TPP_ENOENT;
+return_error:
+	*p_pos = tpp_file_rel2ptr(file, rel_start);
+	return error;
+}
+#endif /* TPP_HAVE_TPP_LEXER_STARTSWITH_MC_SLASH */
+
+
+
+#define TPP_HAVE_TPP_LEXER_STARTSWITH_MC_AT \
+	(TPP_HAVE_TOK_SOL_AT_COMMENT &&         \
+	 (TPP_HAVE_TOK_AT_AT_COMMENT ||         \
+	  TPP_HAVE_TOK_MC_STARTSWITH_AT))
+#if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_AT
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_startswith_mc_at(tpp_lexer *tpp_restrict self,
+                           tpp_char const **p_pos) {
+	tpp_char ch2;
+	tpp_errno error = TPP_EOK;
+	tpp_char const *pos = *p_pos;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_size const rel_start = tpp_file_ptr2rel(file, pos);
+#define read_ch2()                                    \
+	do {                                              \
+		error = tpp_lexer_readchar(self, &pos, &ch2); \
+		if (TPP_ISERR(error))                         \
+			goto return_error;                        \
+	} while (0)
+
+	if (!tpp_lexer_has(self, TOK_AT_AT_COMMENT) &&
+	    !tpp_lexer_has(self, TOK_AT_EQUAL) &&
+	    !tpp_lexer_has(self, TOK_AT_AT) &&
+	    !tpp_lexer_has(self, TOK_AT_AT_EQUAL)
+	    )
+		goto return_noent;
+	read_ch2();
+
+#if TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_EQUAL
+	if (ch2 == '/') {
+#if TPP_HAVE_TOK_AT_AT_COMMENT
+		if (tpp_lexer_has(self, TOK_AT_AT_COMMENT))
+			goto return_error;
+#endif /* TPP_HAVE_TOK_AT_AT_COMMENT */
+#if TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_EQUAL
+#if TPP_HAVE_TOK_AT_AT
+		if (tpp_lexer_has(self, TOK_AT_AT))
+			goto return_error;
+#endif /* TPP_HAVE_TOK_AT_AT */
+#if TPP_HAVE_TOK_AT_AT_EQUAL
+		if (tpp_lexer_has(self, TOK_AT_AT_EQUAL)) {
+			read_ch2();
+			if (ch2 == '=') {
+				if (tpp_lexer_has(self, TOK_AT_AT_EQUAL))
+					goto return_error; /* "@@=" */
+			} else
+			{
+			}
+		}
+#endif /* TPP_HAVE_TOK_AT_AT_EQUAL */
+#endif /* TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_EQUAL */
+	} else
+#endif /* TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_EQUAL */
+#if TPP_HAVE_TOK_AT_EQUAL
+	if (ch2 == '=') {
+		if (tpp_lexer_has(self, TOK_AT_EQUAL))
+			goto return_error; /* "@=" */
+	} else
+#endif /* TPP_HAVE_TOK_AT_EQUAL */
+	{
+	}
+
+return_noent:
+	error = TPP_ENOENT;
+return_error:
+	*p_pos = tpp_file_rel2ptr(file, rel_start);
+	return error;
+}
+#endif /* TPP_HAVE_TPP_LEXER_STARTSWITH_MC_AT */
+
+
+
 /* Same as `tpp_lexer_yieldraw()', but populate the token from a custom `*p_pos',
  * and don't pop files from the current #include-stack (unless `p_pos' is the top-
  * most file's `tf_pos')
@@ -19113,7 +19302,6 @@ continue_html_comment_with_ch2:
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_MINUS_LANGLE */
 				read_ch2();
-#if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
 				if (ch2 == '<') {
 #if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
 					if (tpp_lexer_has(self, TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
@@ -19121,14 +19309,12 @@ continue_html_comment_with_ch2:
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE */
 						read_ch2();
-#if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
 						if (ch2 == '<') {
 							if (tpp_lexer_has(self, TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
 								result = TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE; /* "-<<<" */
 								goto set_result;
 							}
 						} else
-#endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE */
 						{
 						}
 #if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE
@@ -19143,7 +19329,6 @@ continue_html_comment_with_ch2:
 					}
 #endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE */
 				} else
-#endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE */
 				{
 				}
 #if TPP_HAVE_TOK_MINUS_LANGLE
@@ -19193,14 +19378,12 @@ continue_html_comment_with_ch2:
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_MINUS_RANGLE_RANGLE */
 						read_ch2();
-#if TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
 						if (ch2 == '>') {
 							if (tpp_lexer_has(self, TOK_MINUS_RANGLE_RANGLE_RANGLE)) {
 								result = TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE; /* "->>>" */
 								goto set_result;
 							}
 						} else
-#endif /* TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE */
 						{
 						}
 #if TPP_HAVE_TOK_MINUS_RANGLE_RANGLE
@@ -19253,7 +19436,7 @@ continue_html_comment_with_ch2:
 			break;
 		read_ch2();
 		switch (ch2) {
-#if TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_COMMENT
+#if TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_EQUAL
 		case '@': {
 #if TPP_HAVE_TOK_AT_AT_COMMENT
 			if (tpp_lexer_has(self, TOK_AT_AT_COMMENT)) {
@@ -19271,14 +19454,12 @@ continue_html_comment_with_ch2:
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_AT_AT */
 				read_ch2();
-#if TPP_HAVE_TOK_AT_AT_EQUAL
 				if (ch2 == '=') {
 					if (tpp_lexer_has(self, TOK_AT_AT_EQUAL)) {
 						result = TPP_TOK_AT_AT_EQUAL; /* "@@=" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TOK_AT_AT_EQUAL */
 				{
 				}
 #if TPP_HAVE_TOK_AT_AT
@@ -19294,7 +19475,7 @@ continue_html_comment_with_ch2:
 #endif /* TPP_HAVE_TOK_AT_AT */
 #endif /* TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_EQUAL */
 		}	break;
-#endif /* TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_COMMENT */
+#endif /* TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_EQUAL */
 #if TPP_HAVE_TOK_AT_EQUAL
 		case '=': {
 			if (tpp_lexer_has(self, TOK_AT_EQUAL)) {
@@ -19334,9 +19515,8 @@ return_TPP_TOK_SOL_AT_COMMENT:
 
 /************************************************************************/
 	case '/': {
-#if (TPP_HAVE_TOK_SLASH_COMMENT || \
-     TPP_HAVE_TOK_CXX_COMMENT ||   \
-     TPP_HAVE_TOK_C_COMMENT ||     \
+#if (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT || \
+     TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_C_COMMENT ||           \
      TPP_HAVE_TOK_MC_STARTSWITH_SLASH)
 #if TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT
 		tpp_size rel_end_of_1char;
@@ -19344,6 +19524,7 @@ return_TPP_TOK_SOL_AT_COMMENT:
 		if (!tpp_lexer_has(self, TOK_CXX_COMMENT) &&
 		    !tpp_lexer_has(self, TOK_C_COMMENT) &&
 		    !tpp_lexer_has(self, TOK_SLASH_COMMENT) &&
+		    !tpp_lexer_has(self, TOK_SOL_SLASH_COMMENT) &&
 		    !tpp_lexer_has(self, TOK_SLASH_SLASH) &&
 		    !tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL) &&
 		    !tpp_lexer_has(self, TOK_SLASH_EQUAL)
@@ -19359,23 +19540,21 @@ return_TPP_TOK_SOL_AT_COMMENT:
 #if TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL
 #if TPP_HAVE_TOK_SLASH_SLASH_EQUAL
 			if (tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL)) {
-#if TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH
+#if TPP_HAVE_TOK_CXX_COMMENT
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH */
+#endif /* TPP_HAVE_TOK_CXX_COMMENT */
 				read_ch2();
-#if TPP_HAVE_TOK_SLASH_SLASH_EQUAL
 				if (ch2 == '=') {
 					if (tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL)) {
 						result = TPP_TOK_SLASH_SLASH_EQUAL; /* "//=" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
 				{
 				}
-#if TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH
+#if TPP_HAVE_TOK_CXX_COMMENT
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH */
+#endif /* TPP_HAVE_TOK_CXX_COMMENT */
 			}
 #endif /* TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
 #endif /* TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
@@ -19521,14 +19700,12 @@ return_TPP_TOK_SOL_SLASH_COMMENT:
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_PERCENT_PERCENT */
 				read_ch2();
-#if TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL
 				if (ch2 == '=') {
 					if (tpp_lexer_has(self, TOK_PERCENT_PERCENT_EQUAL)) {
 						result = TPP_TOK_PERCENT_PERCENT_EQUAL; /* "%%=" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL */
 				{
 				}
 #if TPP_HAVE_TOK_PERCENT_PERCENT
@@ -19762,14 +19939,12 @@ not_a_trigraph:
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_DOT_DOT */
 				read_ch2();
-#if TPP_HAVE_TOK_DOT_DOT_DOT
 				if (ch2 == '.') {
 					if (tpp_lexer_has(self, TOK_DOT_DOT_DOT)) {
 						result = TPP_TOK_DOT_DOT_DOT; /* "..." */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TOK_DOT_DOT_DOT */
 				{
 				}
 #if TPP_HAVE_TOK_DOT_DOT
@@ -19816,14 +19991,12 @@ not_a_trigraph:
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL */
 					read_ch2();
-#if TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL
 					if (ch2 == '=') {
 						if (tpp_lexer_has(self, TOK_EXCLAIM_EQUAL_EQUAL)) {
 							result = TPP_TOK_EXCLAIM_EQUAL_EQUAL; /* "!==" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL */
 					{
 					}
 #if TPP_HAVE_TOK_EXCLAIM_EQUAL
@@ -19887,14 +20060,12 @@ not_a_trigraph:
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_STAR_STAR */
 					read_ch2();
-#if TPP_HAVE_TOK_STAR_STAR_EQUAL
 					if (ch2 == '=') {
 						if (tpp_lexer_has(self, TOK_STAR_STAR_EQUAL)) {
 							result = TPP_TOK_STAR_STAR_EQUAL; /* "**=" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TOK_STAR_STAR_EQUAL */
 					{
 					}
 #if TPP_HAVE_TOK_STAR_STAR
@@ -20014,14 +20185,12 @@ not_a_trigraph:
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_EQUAL_PERCENT */
 					read_ch2();
-#if TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT
 					if (ch2 == '%') {
 						if (tpp_lexer_has(self, TOK_EQUAL_PERCENT_PERCENT)) {
 							result = TPP_TOK_EQUAL_PERCENT_PERCENT; /* "=%%" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT */
 					{
 					}
 #if TPP_HAVE_TOK_EQUAL_PERCENT
@@ -20053,14 +20222,12 @@ not_a_trigraph:
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_EQUAL_STAR */
 					read_ch2();
-#if TPP_HAVE_TOK_EQUAL_STAR_STAR
 					if (ch2 == '*') {
 						if (tpp_lexer_has(self, TOK_EQUAL_STAR_STAR)) {
 							result = TPP_TOK_EQUAL_STAR_STAR; /* "=**" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TOK_EQUAL_STAR_STAR */
 					{
 					}
 #if TPP_HAVE_TOK_EQUAL_STAR
@@ -20100,14 +20267,12 @@ not_a_trigraph:
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_EQUAL_SLASH */
 					read_ch2();
-#if TPP_HAVE_TOK_EQUAL_SLASH_SLASH
 					if (ch2 == '/') {
 						if (tpp_lexer_has(self, TOK_EQUAL_SLASH_SLASH)) {
 							result = TPP_TOK_EQUAL_SLASH_SLASH; /* "=//" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TOK_EQUAL_SLASH_SLASH */
 					{
 					}
 #if TPP_HAVE_TOK_EQUAL_SLASH
@@ -20140,7 +20305,6 @@ not_a_trigraph:
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_EQUAL_LANGLE */
 					read_ch2();
-#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
 					if (ch2 == '<') {
 #if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
 						if (tpp_lexer_has(self, TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
@@ -20148,14 +20312,12 @@ not_a_trigraph:
 							tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE */
 							read_ch2();
-#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
 							if (ch2 == '<') {
 								if (tpp_lexer_has(self, TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
 									result = TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE; /* "=<<<" */
 									goto set_result;
 								}
 							} else
-#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
 							{
 							}
 #if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE
@@ -20170,7 +20332,6 @@ not_a_trigraph:
 						}
 #endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE */
 					} else
-#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
 					{
 					}
 #if TPP_HAVE_TOK_EQUAL_LANGLE
@@ -20235,7 +20396,6 @@ not_a_trigraph:
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_EQUAL_RANGLE */
 					read_ch2();
-#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 					if (ch2 == '>') {
 #if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 						if (tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
@@ -20243,14 +20403,12 @@ not_a_trigraph:
 							tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE */
 							read_ch2();
-#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 							if (ch2 == '>') {
 								if (tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
 									result = TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE; /* "=>>>" */
 									goto set_result;
 								}
 							} else
-#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 							{
 							}
 #if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE
@@ -20265,7 +20423,6 @@ not_a_trigraph:
 						}
 #endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE */
 					} else
-#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 					{
 					}
 #if TPP_HAVE_TOK_EQUAL_RANGLE
@@ -20298,14 +20455,12 @@ not_a_trigraph:
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 #endif /* TPP_HAVE_TOK_EQUAL_AT */
 					read_ch2();
-#if TPP_HAVE_TOK_EQUAL_AT_AT
 					if (ch2 == '@') {
 						if (tpp_lexer_has(self, TOK_EQUAL_AT_AT)) {
 							result = TPP_TOK_EQUAL_AT_AT; /* "=@@" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TOK_EQUAL_AT_AT */
 					{
 					}
 #if TPP_HAVE_TOK_EQUAL_AT
@@ -21372,6 +21527,8 @@ handle_space:
 #endif /* TPP_HAVE_BSE */
 #if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
 			switch (*pos) {
+
+/************************************************************************/
 #if TPP_HAVE_TOK_SOL_SHELL_COMMENT
 #if TPP_HAVE_TRIGRAPHS
 			case '?':
@@ -21398,6 +21555,17 @@ handle_space:
 								goto return_error;
 #endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 							pos += 3;
+#if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_POUND
+							error = tpp_lexer_startswith_mc_pound(self, &pos);
+							if (error != TPP_ENOENT) {
+								if (TPP_ISERR(error))
+									goto return_error;
+								/* Token following whitespace is multi-char starting
+								 * with "#" -> don't treat as SOL_SHELL comment */
+								pos -= 3;
+								break;
+							}
+#endif /* TPP_HAVE_TPP_LEXER_STARTSWITH_MC_POUND */
 							goto return_TPP_TOK_SOL_SHELL_COMMENT;
 						}
 					}
@@ -21405,22 +21573,73 @@ handle_space:
 				break;
 #endif /* TPP_HAVE_TRIGRAPHS */
 			case '#':
-				if (tpp_lexer_has(self, TOK_SOL_SHELL_COMMENT) && tpp_lexer_curtoken_getsol())
+				if (tpp_lexer_has(self, TOK_SOL_SHELL_COMMENT) && tpp_lexer_curtoken_getsol()) {
+					++pos;
+#if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_POUND
+					error = tpp_lexer_startswith_mc_pound(self, &pos);
+					if (error != TPP_ENOENT) {
+						if (TPP_ISERR(error))
+							goto return_error;
+						/* Token following whitespace is multi-char starting
+						 * with "#" -> don't treat as SOL_SHELL comment */
+						--pos;
+						break;
+					}
+#endif /* TPP_HAVE_TPP_LEXER_STARTSWITH_MC_POUND */
 					goto return_TPP_TOK_SOL_SHELL_COMMENT;
+				}
 				break;
 #endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_TOK_SOL_SLASH_COMMENT
 			case '/':
-				if (tpp_lexer_has(self, TOK_SOL_SLASH_COMMENT) && tpp_lexer_curtoken_getsol())
+				if (tpp_lexer_has(self, TOK_SOL_SLASH_COMMENT) && tpp_lexer_curtoken_getsol()) {
+					++pos;
+#if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_SLASH
+					error = tpp_lexer_startswith_mc_slash(self, &pos);
+					if (error != TPP_ENOENT) {
+						if (TPP_ISERR(error))
+							goto return_error;
+						/* Token following whitespace is multi-char starting
+						 * with "/" -> don't treat as SOL_SLASH comment */
+						--pos;
+						break;
+					}
+#endif /* TPP_HAVE_TPP_LEXER_STARTSWITH_MC_SLASH */
 					goto return_TPP_TOK_SOL_SLASH_COMMENT;
+				}
 				break;
 #endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_TOK_SOL_AT_COMMENT
 			case '@':
-				if (tpp_lexer_has(self, TOK_SOL_AT_COMMENT) && tpp_lexer_curtoken_getsol())
+				if (tpp_lexer_has(self, TOK_SOL_AT_COMMENT) && tpp_lexer_curtoken_getsol()) {
+					++pos;
+#if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_AT
+					error = tpp_lexer_startswith_mc_at(self, &pos);
+					if (error != TPP_ENOENT) {
+						if (TPP_ISERR(error))
+							goto return_error;
+						/* Token following whitespace is multi-char starting
+						 * with "@" -> don't treat as SOL_AT comment */
+						--pos;
+						break;
+					}
+#endif /* TPP_HAVE_TPP_LEXER_STARTSWITH_MC_AT */
 					goto return_TPP_TOK_SOL_AT_COMMENT;
+				}
 				break;
 #endif /* TPP_HAVE_TOK_SOL_AT_COMMENT */
+/************************************************************************/
+
 			default: break;
 			}
 #endif /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */

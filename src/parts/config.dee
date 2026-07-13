@@ -65,7 +65,9 @@ global printDecoder;
 @@assuming that the token's third character is loaded in `ch2`
 @@@param useSwitch If true, generated code uses "case" instead of "if"-checks
 function printDecoderAfterReadCh2(prefix: string, indent: string = none,
-                                  useSwitch: bool = false) {
+                                  useSwitch: bool = false,
+                                  doOnMatch: string = "",
+                                  skipCondition: bool = false) {
 	if (indent is none)
 		indent = "\t" * #prefix;
 	local tokens = (
@@ -81,7 +83,8 @@ function printDecoderAfterReadCh2(prefix: string, indent: string = none,
 	} else {
 		condition = " || ".join(tokens.map(e -> f"TPP_HAVE_TOK_{tokenName(e)}"));
 	}
-	print("#if ", condition);
+	if (!skipCondition)
+		print("#if ", condition);
 	if (useSwitch) {
 		print(indent, "case '", prefix.last.encode("c-escape"), "': {");
 	} else {
@@ -90,23 +93,26 @@ function printDecoderAfterReadCh2(prefix: string, indent: string = none,
 	printDecoder(
 			prefix: prefix,
 			indent: indent + "\t",
-			printCondition: false
+			printCondition: false,
+			doOnMatch: doOnMatch,
 	);
 	if (useSwitch) {
 		print(indent, "}	break;");
 	} else {
 		print(indent, "} else");
 	}
-	print("#endif /* ", condition, " */");
+	if (!skipCondition)
+		print("#endif /* ", condition, " */");
 }
 
 function printDecoderAfterReadCh2Each(prefix: string, exclude: string = "",
                                       indent: string = none,
-                                      useSwitch: bool = false) {
+                                      useSwitch: bool = false,
+                                      doOnMatch: string = "") {
 	for (local ord: [:256]) {
 		local chr = string.chr(ord);
 		if (chr !in exclude)
-			printDecoderAfterReadCh2(prefix + chr, indent, useSwitch);
+			printDecoderAfterReadCh2(prefix + chr, indent, useSwitch, doOnMatch);
 	}
 }
 
@@ -139,15 +145,22 @@ function printWarnIfCh2IsTrigraph(lastChar: string, indent: string = "") {
 	if (charBefore !is none)
 		print(indent, 'warn_if_ch2_is_trigraph(); /* "??', charBefore, '" -> "', lastChar, '" */');
 }
-function printPrefixExactMatch(prefix: string, indent: string | none = none) {
+function printPrefixExactMatch(prefix: string, indent: string | none = none,
+                               doOnMatch: string = "") {
 	if (indent is none)
 		indent = "\t" * (#prefix + 1);
 	print("#if TPP_HAVE_TOK_", tokenName(prefix));
-	print(indent, "if (tpp_lexer_has(self, TOK_", tokenName(prefix), ")) {");
-	printWarnIfCh2IsTrigraph(prefix.last, indent + "\t");
-	print(indent, "	result = TPP_TOK_", tokenName(prefix), "; /* ", repr prefix, " */");
-	print(indent, "	goto set_result;");
-	print(indent, "}");
+	print(indent, "if (tpp_lexer_has(self, TOK_", tokenName(prefix), "))"),;
+	if (doOnMatch) {
+		print;
+		print(indent, f"	{doOnMatch};");
+	} else {
+		print(" {");
+		printWarnIfCh2IsTrigraph(prefix.last, indent + "\t");
+		print(indent, "	result = TPP_TOK_", tokenName(prefix), "; /* ", repr prefix, " */");
+		print(indent, "	goto set_result;");
+		print(indent, "}");
+	}
 	print("#endif /* TPP_HAVE_TOK_", tokenName(prefix), " */");
 }
 
@@ -158,7 +171,8 @@ function printDecoder(prefix: string,
                       printCondition: bool = true,
                       shouldPrintPrefixExactMatch: bool = true,
                       extraRestoreCondition: string = "0",
-                      checkLexerFeature: bool = true) {
+                      checkLexerFeature: bool = true,
+                      doOnMatch: string = "") {
 	if (indent is none)
 		indent = "\t" * (#prefix + 1);
 	local tokens = (
@@ -179,17 +193,29 @@ function printDecoder(prefix: string,
 	if (#nextChars == 0) {
 		assert prefixExists;
 		if (checkLexerFeature) {
-			print(indent, "if (tpp_lexer_has(self, TOK_", tokenName(prefix), ")) {");
-			printWarnIfCh2IsTrigraph(prefix.last, indent + "\t");
-			print(indent, "	result = TPP_TOK_", tokenName(prefix), "; /* ", repr prefix, " */");
-			print(indent, "	goto set_result;");
-			print(indent, "}");
+			print(indent, "if (tpp_lexer_has(self, TOK_", tokenName(prefix), "))"),;
+			if (doOnMatch) {
+				print;
+				print(indent, f"	{doOnMatch}; /* {repr prefix} */");
+			} else {
+				print(" {");
+				printWarnIfCh2IsTrigraph(prefix.last, indent + "\t");
+				print(indent, "	result = TPP_TOK_", tokenName(prefix), "; /* ", repr prefix, " */");
+				print(indent, "	goto set_result;");
+				print(indent, "}");
+			}
+		} else if (doOnMatch) {
+			print(indent, f"{doOnMatch}; /* {repr prefix} */");
 		} else {
 			printWarnIfCh2IsTrigraph(prefix.last, indent);
 			print(indent, "result = TPP_TOK_", tokenName(prefix), "; /* ", repr prefix, " */");
 			print(indent, "goto set_result;");
 		}
 	} else if (prefixExists) {
+		if (shouldPrintPrefixExactMatch && doOnMatch) {
+			printPrefixExactMatch(prefix, indent, doOnMatch);
+			shouldPrintPrefixExactMatch = false;
+		}
 		local subTokensCondition = " || ".join(
 			for (local t: tokens)
 				if (t != prefix)
@@ -206,19 +232,32 @@ function printDecoder(prefix: string,
 		}
 		local restoreVarName = f"rel_end_of_{#prefix}char";
 		local restoreCondition = f"TPP_HAVE_TOK_{tokenName(prefix)}";
-		if (extraRestoreCondition != "0")
+		if (!shouldPrintPrefixExactMatch)
+			restoreCondition = "0";
+		if (restoreCondition == "0") {
+			restoreCondition = extraRestoreCondition;
+		} else if (extraRestoreCondition != "0") {
 			restoreCondition = f"{extraRestoreCondition} || {restoreCondition}";
-		print("#if ", restoreCondition);
-		print(indent, f"tpp_size {restoreVarName} = tpp_file_ptr2rel(file, pos);");
-		print("#endif /* ", restoreCondition, " */");
+		}
+		if (restoreCondition != "0") {
+			if (restoreCondition != "1")
+				print("#if ", restoreCondition);
+			print(indent, f"tpp_size {restoreVarName} = tpp_file_ptr2rel(file, pos);");
+			if (restoreCondition != "1")
+				print("#endif /* ", restoreCondition, " */");
+		}
 		print(indent, "read_ch2();");
+		local skipCondition = #nextChars == 1;
 		if (useSwitch) {
 			print(indent, "switch (ch2) {");
 			for (local nextChar: nextChars) {
 				printDecoderAfterReadCh2(
 						prefix: prefix + nextChar,
 						indent: indent,
-						useSwitch: true);
+						useSwitch: true,
+						doOnMatch: doOnMatch,
+						skipCondition: skipCondition,
+				);
 			}
 			print(indent, "default: break;");
 			print(indent, "}");
@@ -227,21 +266,28 @@ function printDecoder(prefix: string,
 				printDecoderAfterReadCh2(
 						prefix: prefix + nextChar,
 						indent: indent,
-						useSwitch: false);
+						useSwitch: false,
+						doOnMatch: doOnMatch,
+						skipCondition: skipCondition,
+				);
 			}
 			print(indent, "{");
 			print(indent, "}");
 		}
-		print("#if ", restoreCondition);
-		print(indent, "pos = tpp_file_rel2ptr(file, ", restoreVarName, ");");
-		print("#endif /* ", restoreCondition, " */");
+		if (restoreCondition != "0") {
+			if (restoreCondition != "1")
+				print("#if ", restoreCondition);
+			print(indent, "pos = tpp_file_rel2ptr(file, ", restoreVarName, ");");
+			if (restoreCondition != "1")
+				print("#endif /* ", restoreCondition, " */");
+		}
 		if (checkLexerFeature) {
 			indent = indent[:-1];
 			print(indent, "}");
 		}
 		print("#endif /* ", subTokensCondition, " */");
 		if (shouldPrintPrefixExactMatch)
-			printPrefixExactMatch(prefix, indent);
+			printPrefixExactMatch(prefix, indent, doOnMatch);
 	} else {
 		local restoreVarName = f"rel_end_of_{#prefix}char";
 		if (checkLexerFeature) {
@@ -252,9 +298,11 @@ function printDecoder(prefix: string,
 			indent = indent + "\t";
 		}
 		if (extraRestoreCondition != "0") {
-			print("#if ", extraRestoreCondition);
+			if (extraRestoreCondition != "1")
+				print("#if ", extraRestoreCondition);
 			print(indent, f"tpp_size {restoreVarName} = tpp_file_ptr2rel(file, pos);");
-			print("#endif /* ", extraRestoreCondition, " */");
+			if (extraRestoreCondition != "1")
+				print("#endif /* ", extraRestoreCondition, " */");
 		}
 		print(indent, "read_ch2();");
 		if (#nextChars == 1) {
@@ -263,7 +311,9 @@ function printDecoder(prefix: string,
 					prefix: prefix + nextChars.first,
 					indent: indent + "\t",
 					checkLexerFeature: false,
-					printCondition: false);
+					printCondition: false,
+					doOnMatch: doOnMatch
+			);
 			print(indent, "}");
 		} else if (useSwitch) {
 			print(indent, "switch (ch2) {");
@@ -271,7 +321,9 @@ function printDecoder(prefix: string,
 				printDecoderAfterReadCh2(
 						prefix: prefix + nextChar,
 						indent: indent,
-						useSwitch: true);
+						useSwitch: true,
+						doOnMatch: doOnMatch,
+				);
 			}
 			print(indent, "default: break;");
 			print(indent, "}");
@@ -280,15 +332,19 @@ function printDecoder(prefix: string,
 				printDecoderAfterReadCh2(
 						prefix: prefix + nextChar,
 						indent: indent,
-						useSwitch: false);
+						useSwitch: false,
+						doOnMatch: doOnMatch,
+				);
 			}
 			print(indent, "{");
 			print(indent, "}");
 		}
 		if (extraRestoreCondition != "0") {
-			print("#if ", extraRestoreCondition);
+			if (extraRestoreCondition != "1")
+				print("#if ", extraRestoreCondition);
 			print(indent, f"pos = tpp_file_rel2ptr(file, {restoreVarName});");
-			print("#endif /* ", extraRestoreCondition, " */");
+			if (extraRestoreCondition != "1")
+				print("#endif /* ", extraRestoreCondition, " */");
 		}
 		if (checkLexerFeature)
 			print(indent[:-1], "}");
