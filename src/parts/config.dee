@@ -77,9 +77,9 @@ function printDecoderAfterReadCh2(prefix: string, indent: string = none,
 		return;
 	local condition;
 	if (#prefix == 1) {
-		condition = f"TPP_HAVE_TPP_TOK_MC_STARTSWITH_{charNames[prefix.first]}";
+		condition = f"TPP_HAVE_TOK_MC_STARTSWITH_{charNames[prefix.first]}";
 	} else {
-		condition = " || ".join(tokens.map(e -> f"TPP_HAVE_TPP_TOK_{tokenName(e)}"));
+		condition = " || ".join(tokens.map(e -> f"TPP_HAVE_TOK_{tokenName(e)}"));
 	}
 	print("#if ", condition);
 	if (useSwitch) {
@@ -117,9 +117,9 @@ function getHasPrefixCondition(prefix: string): string {
 				mc.first
 	).sorted();
 	if (#prefix == 1 && #tokens != 1) {
-		return f"TPP_HAVE_TPP_TOK_MC_STARTSWITH_{charNames[prefix.first]}";
+		return f"TPP_HAVE_TOK_MC_STARTSWITH_{charNames[prefix.first]}";
 	} else {
-		return " || ".join(for (local t: tokens) f"TPP_HAVE_TPP_TOK_{tokenName(t)}");
+		return " || ".join(for (local t: tokens) f"TPP_HAVE_TOK_{tokenName(t)}");
 	}
 }
 
@@ -142,13 +142,13 @@ function printWarnIfCh2IsTrigraph(lastChar: string, indent: string = "") {
 function printPrefixExactMatch(prefix: string, indent: string | none = none) {
 	if (indent is none)
 		indent = "\t" * (#prefix + 1);
-	print("#if TPP_HAVE_TPP_TOK_", tokenName(prefix));
-	print(indent, "if (tpp_lexer_has(self, TPP_TOK_", tokenName(prefix), ")) {");
+	print("#if TPP_HAVE_TOK_", tokenName(prefix));
+	print(indent, "if (tpp_lexer_has(self, TOK_", tokenName(prefix), ")) {");
 	printWarnIfCh2IsTrigraph(prefix.last, indent + "\t");
 	print(indent, "	result = TPP_TOK_", tokenName(prefix), "; /* ", repr prefix, " */");
 	print(indent, "	goto set_result;");
 	print(indent, "}");
-	print("#endif /* TPP_HAVE_TPP_TOK_", tokenName(prefix), " */");
+	print("#endif /* TPP_HAVE_TOK_", tokenName(prefix), " */");
 }
 
 @@Wrapper around @printDecoderAfterReadCh2 that also generates code to
@@ -179,7 +179,7 @@ function printDecoder(prefix: string,
 	if (#nextChars == 0) {
 		assert prefixExists;
 		if (checkLexerFeature) {
-			print(indent, "if (tpp_lexer_has(self, TPP_TOK_", tokenName(prefix), ")) {");
+			print(indent, "if (tpp_lexer_has(self, TOK_", tokenName(prefix), ")) {");
 			printWarnIfCh2IsTrigraph(prefix.last, indent + "\t");
 			print(indent, "	result = TPP_TOK_", tokenName(prefix), "; /* ", repr prefix, " */");
 			print(indent, "	goto set_result;");
@@ -193,19 +193,19 @@ function printDecoder(prefix: string,
 		local subTokensCondition = " || ".join(
 			for (local t: tokens)
 				if (t != prefix)
-					f"TPP_HAVE_TPP_TOK_{tokenName(t)}"
+					f"TPP_HAVE_TOK_{tokenName(t)}"
 		);
 		print("#if ", subTokensCondition);
 		if (checkLexerFeature) {
 			print(indent, "if (", f" ||\n{indent}    ".join(
 				for (local t: tokens)
 					if (t != prefix)
-						f"tpp_lexer_has(self, TPP_TOK_{tokenName(t)})"
+						f"tpp_lexer_has(self, TOK_{tokenName(t)})"
 			), ") {");
 			indent = indent + "\t";
 		}
 		local restoreVarName = f"rel_end_of_{#prefix}char";
-		local restoreCondition = f"TPP_HAVE_TPP_TOK_{tokenName(prefix)}";
+		local restoreCondition = f"TPP_HAVE_TOK_{tokenName(prefix)}";
 		if (extraRestoreCondition != "0")
 			restoreCondition = f"{extraRestoreCondition} || {restoreCondition}";
 		print("#if ", restoreCondition);
@@ -247,7 +247,7 @@ function printDecoder(prefix: string,
 		if (checkLexerFeature) {
 			print(indent, "if (", f" ||\n{indent}    ".join(
 				for (local t: tokens)
-					f"tpp_lexer_has(self, TPP_TOK_{tokenName(t)})"
+					f"tpp_lexer_has(self, TOK_{tokenName(t)})"
 			), ") {");
 			indent = indent + "\t";
 		}
@@ -312,7 +312,7 @@ function printHasNone(prefix: string,
 	local condition = none;
 	print(indent, "    ", f" &&\n{indent}    ".join(
 		for (local t: tokens)
-			f"!tpp_lexer_has(self, TPP_TOK_{tokenName(t)})"
+			f"!tpp_lexer_has(self, TOK_{tokenName(t)})"
 	));
 }
 

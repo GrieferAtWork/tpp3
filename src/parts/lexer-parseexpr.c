@@ -81,9 +81,9 @@ again:
 #if !TPP_HAVE_BUILTIN_EXPR_STRINGS && !TPP_HAVE_CPP_ASSERT
 	_TPP_CASE_TPP_TOK_SHELL_COMMENT
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS && !TPP_HAVE_CPP_ASSERT */
-#if (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && TPP_HAVE_TOK_SHELL_COMMENT
 handle_comment:
-#endif /* (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && TPP_HAVE_TOK_SHELL_COMMENT */
 		/* Skip over whitespace */
 		tok = tpp_lexer_yield_blocking(self); /* Doesn't have to be "tpp_lexer_yield_forexpr" */
 		if (TPP_TOK_ISERR(tok))
@@ -102,22 +102,22 @@ handle_comment:
 		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
 
-#if (TPP_HAVE_TPP_TOK_MINUS_MINUS || \
-     TPP_HAVE_TPP_TOK_PLUS_PLUS ||   \
-     TPP_HAVE_TPP_TOK_TILDE_TILDE || \
-     TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM)
-#if TPP_HAVE_TPP_TOK_MINUS_MINUS
+#if (TPP_HAVE_TOK_MINUS_MINUS || \
+     TPP_HAVE_TOK_PLUS_PLUS ||   \
+     TPP_HAVE_TOK_TILDE_TILDE || \
+     TPP_HAVE_TOK_EXCLAIM_EXCLAIM)
+#if TPP_HAVE_TOK_MINUS_MINUS
 	case TPP_TOK_MINUS_MINUS:
-#endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS */
-#if TPP_HAVE_TPP_TOK_PLUS_PLUS
+#endif /* TPP_HAVE_TOK_MINUS_MINUS */
+#if TPP_HAVE_TOK_PLUS_PLUS
 	case TPP_TOK_PLUS_PLUS:
-#endif /* TPP_HAVE_TPP_TOK_PLUS_PLUS */
-#if TPP_HAVE_TPP_TOK_TILDE_TILDE
+#endif /* TPP_HAVE_TOK_PLUS_PLUS */
+#if TPP_HAVE_TOK_TILDE_TILDE
 	case TPP_TOK_TILDE_TILDE:
-#endif /* TPP_HAVE_TPP_TOK_TILDE_TILDE */
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+#endif /* TPP_HAVE_TOK_TILDE_TILDE */
+#if TPP_HAVE_TOK_EXCLAIM_EXCLAIM
 	case TPP_TOK_EXCLAIM_EXCLAIM:
-#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
+#endif /* TPP_HAVE_TOK_EXCLAIM_EXCLAIM */
 	{
 		/* Handling for multi-char tokens:  --  ++  ~~  !! */
 		tpp_token *const token = tpp_lexer_gettoken(self);
@@ -159,7 +159,7 @@ handle_comment:
 		return error;
 	}	break;
 
-#if TPP_HAVE_TPP_TOK_INT
+#if TPP_HAVE_TOK_INT
 	TPP_CASE_TPP_TOK_INT {
 		tpp_errno error;
 		if (result == NULL)
@@ -174,9 +174,9 @@ handle_comment:
 		}
 		return TPP_EOK;
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_INT */
+#endif /* TPP_HAVE_TOK_INT */
 
-#if TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TPP_TOK_FLOAT
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TOK_FLOAT
 	TPP_CASE_TPP_TOK_FLOAT {
 		tpp_errno error;
 		if (result == NULL)
@@ -191,7 +191,7 @@ handle_comment:
 		}
 		return TPP_EOK;
 	}	break;
-#endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TPP_TOK_FLOAT */
+#endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TOK_FLOAT */
 
 #if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS != 0
 	TPP_CASE_TPP_TOK_STRING_SQUOTE
@@ -227,7 +227,7 @@ handle_comment:
 
 
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_SHELL_COMMENT
 	case TPP_TOK_SHELL_COMMENT: {
 		tpp_token *const token = tpp_lexer_gettoken(self);
 		if (!tpp_lexer_has(self, CPP_ASSERT) &&
@@ -249,7 +249,7 @@ handle_comment:
 		{
 		}
 	}	TPP_FALLTHRU
-#endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* !TPP_HAVE_TOK_SHELL_COMMENT */
 	case '#':
 		/* Preprocessor assertions */
 		if (!tpp_lexer_has(self, CPP_ASSERT) &&
@@ -359,13 +359,13 @@ handle_comment:
 #endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED */
 			is_defined = false;
 			/* Be smart about stuff that should still be consumed here */
-#if TPP_HAVE_TPP_TOK_STRINGLIKE || TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT
+#if TPP_HAVE_TOK_STRINGLIKE || TPP_HAVE_TOK_INT || TPP_HAVE_TOK_FLOAT
 			if (TPP_TOK_ISSTRING(tok) || TPP_TOK_ISINT(tok) || TPP_TOK_ISFLOAT(tok)) {
 				tok = tpp_lexer_yield_forexpr(self);
 				if (TPP_TOK_ISERR(tok))
 					return TPP_TOK_ASERR(tok);
 			}
-#endif /* TPP_HAVE_TPP_TOK_STRINGLIKE || TPP_HAVE_TPP_TOK_INT || TPP_HAVE_TPP_TOK_FLOAT */
+#endif /* TPP_HAVE_TOK_STRINGLIKE || TPP_HAVE_TOK_INT || TPP_HAVE_TOK_FLOAT */
 		}
 		if (has_paren) {
 			tok = tpp_lexer_skip_forexpr(self, TPP_TOK_OFCHAR(')'));
@@ -729,14 +729,14 @@ TPP_DEFINE_PX_PARSER(tpp_px_prod, tpp_px_sum, tpp_px_sum_suffix, TPP_TEST_PX_SUM
 /* LEVEL #4 : SHIFT                                                     */
 /************************************************************************/
 #undef TPP_HAVE_PX_SHIFT_SUFFIX
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE
+#if TPP_HAVE_TOK_LANGLE_LANGLE || TPP_HAVE_TOK_RANGLE_RANGLE
 #define TPP_HAVE_PX_SHIFT_SUFFIX 1
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE && TPP_HAVE_TPP_TOK_RANGLE_RANGLE
+#if TPP_HAVE_TOK_LANGLE_LANGLE && TPP_HAVE_TOK_RANGLE_RANGLE
 #define TPP_CASE_PX_SHIFT_SUFFIX \
 	case TPP_TOK_LANGLE_LANGLE:  \
 	case TPP_TOK_RANGLE_RANGLE:
 #define TPP_TEST_PX_SHIFT_SUFFIX(tok) ((tok) == TPP_TOK_LANGLE_LANGLE || (tok) == TPP_TOK_RANGLE_RANGLE)
-#elif TPP_HAVE_TPP_TOK_LANGLE_LANGLE
+#elif TPP_HAVE_TOK_LANGLE_LANGLE
 #define TPP_CASE_PX_SHIFT_SUFFIX      case TPP_TOK_LANGLE_LANGLE:
 #define TPP_TEST_PX_SHIFT_SUFFIX(tok) ((tok) == TPP_TOK_LANGLE_LANGLE)
 #else /* ... */
@@ -760,12 +760,12 @@ tpp_px_shift_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_valu
 			if (TPP_ISERR(error))
 				goto err_r;
 			switch (what) {
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
+#if TPP_HAVE_TOK_LANGLE_LANGLE
 			case TPP_TOK_LANGLE_LANGLE: error = tpp_expr_value_shl(self, result, &rhs, &new_result); break;
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE */
+#if TPP_HAVE_TOK_RANGLE_RANGLE
 			case TPP_TOK_RANGLE_RANGLE: error = tpp_expr_value_shr(self, result, &rhs, &new_result); break;
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE */
 			default: tpp_unreachable();
 			}
 			tpp_expr_value_fini(&rhs);
@@ -786,24 +786,24 @@ err_r:
 	return error;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_sum, tpp_px_shift, tpp_px_shift_suffix, TPP_TEST_PX_SHIFT_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
+#else /* TPP_HAVE_TOK_LANGLE_LANGLE || TPP_HAVE_TOK_RANGLE_RANGLE */
 #define TPP_HAVE_PX_SHIFT_SUFFIX          0
 #define TPP_CASE_PX_SHIFT_SUFFIX          /* nothing */
 #define TPP_TEST_PX_SHIFT_SUFFIX(tok)     0
 #define tpp_px_shift_suffix(self, result) TPP_EOK
 #define tpp_px_shift(self, result)        tpp_px_sum(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE && !TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
+#endif /* !TPP_HAVE_TOK_LANGLE_LANGLE && !TPP_HAVE_TOK_RANGLE_RANGLE */
 
 
 /************************************************************************/
 /* LEVEL #5 : CMP                                                       */
 /************************************************************************/
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL && TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+#if TPP_HAVE_TOK_LANGLE_EQUAL && TPP_HAVE_TOK_RANGLE_EQUAL
 #define TPP_CASE_PX_CMP_SUFFIX_EXTRA \
 	case TPP_TOK_LANGLE_EQUAL:       \
 	case TPP_TOK_RANGLE_EQUAL:
 #define TPP_TEST_PX_CMP_SUFFIX_EXTRA(tok) ((tok) == TPP_TOK_LANGLE_EQUAL || (tok) == TPP_TOK_RANGLE_EQUAL)
-#elif TPP_HAVE_TPP_TOK_LANGLE_EQUAL
+#elif TPP_HAVE_TOK_LANGLE_EQUAL
 #define TPP_CASE_PX_CMP_SUFFIX_EXTRA      case TPP_TOK_LANGLE_EQUAL:
 #define TPP_TEST_PX_CMP_SUFFIX_EXTRA(tok) ((tok) == TPP_TOK_LANGLE_EQUAL)
 #else /* ... */
@@ -832,12 +832,12 @@ tpp_px_cmp_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value 
 			switch (what) {
 			case '<': error = tpp_expr_value_cmp_lo(self, result, &rhs, &cmp_result); break;
 			case '>': error = tpp_expr_value_cmp_gr(self, result, &rhs, &cmp_result); break;
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
+#if TPP_HAVE_TOK_LANGLE_EQUAL
 			case TPP_TOK_LANGLE_EQUAL: error = tpp_expr_value_cmp_le(self, result, &rhs, &cmp_result); break;
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL */
+#if TPP_HAVE_TOK_RANGLE_EQUAL
 			case TPP_TOK_RANGLE_EQUAL: error = tpp_expr_value_cmp_ge(self, result, &rhs, &cmp_result); break;
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL */
 			default: tpp_unreachable();
 			}
 			tpp_expr_value_fini(&rhs);
@@ -864,14 +864,14 @@ TPP_DEFINE_PX_PARSER(tpp_px_shift, tpp_px_cmp, tpp_px_cmp_suffix, TPP_TEST_PX_CM
 /* LEVEL #6 : CMPEQ                                                     */
 /************************************************************************/
 #undef TPP_HAVE_PX_CMPEQ_SUFFIX
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
+#if TPP_HAVE_TOK_EQUAL_EQUAL || TPP_HAVE_TOK_EXCLAIM_EQUAL
 #define TPP_HAVE_PX_CMPEQ_SUFFIX 1
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL && TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
+#if TPP_HAVE_TOK_EQUAL_EQUAL && TPP_HAVE_TOK_EXCLAIM_EQUAL
 #define TPP_CASE_PX_CMPEQ_SUFFIX \
 	case TPP_TOK_EQUAL_EQUAL:    \
 	case TPP_TOK_EXCLAIM_EQUAL:
 #define TPP_TEST_PX_CMPEQ_SUFFIX(tok) ((tok) == TPP_TOK_EQUAL_EQUAL || (tok) == TPP_TOK_EXCLAIM_EQUAL)
-#elif TPP_HAVE_TPP_TOK_EQUAL_EQUAL
+#elif TPP_HAVE_TOK_EQUAL_EQUAL
 #define TPP_CASE_PX_CMPEQ_SUFFIX      case TPP_TOK_EQUAL_EQUAL:
 #define TPP_TEST_PX_CMPEQ_SUFFIX(tok) ((tok) == TPP_TOK_EQUAL_EQUAL)
 #else /* ... */
@@ -896,12 +896,12 @@ tpp_px_cmpeq_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_valu
 			if (TPP_ISERR(error))
 				goto err_r;
 			switch (what) {
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL
+#if TPP_HAVE_TOK_EQUAL_EQUAL
 			case TPP_TOK_EQUAL_EQUAL: error = tpp_expr_value_cmp_eq(self, result, &rhs, &cmp_result); break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL */
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL */
+#if TPP_HAVE_TOK_EXCLAIM_EQUAL
 			case TPP_TOK_EXCLAIM_EQUAL: error = tpp_expr_value_cmp_ne(self, result, &rhs, &cmp_result); break;
-#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL */
 			default: tpp_unreachable();
 			}
 			tpp_expr_value_fini(&rhs);
@@ -922,13 +922,13 @@ err_r:
 	return error;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_cmp, tpp_px_cmpeq, tpp_px_cmpeq_suffix, TPP_TEST_PX_CMPEQ_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#else /* TPP_HAVE_TOK_EQUAL_EQUAL || TPP_HAVE_TOK_EXCLAIM_EQUAL */
 #define TPP_HAVE_PX_CMPEQ_SUFFIX          0
 #define TPP_CASE_PX_CMPEQ_SUFFIX          /* nothing */
 #define TPP_TEST_PX_CMPEQ_SUFFIX(tok)     0
 #define tpp_px_cmpeq_suffix(self, result) TPP_EOK
 #define tpp_px_cmpeq(self, result)        tpp_px_cmp(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL && !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* !TPP_HAVE_TOK_EQUAL_EQUAL && !TPP_HAVE_TOK_EXCLAIM_EQUAL */
 
 
 /************************************************************************/
@@ -1058,7 +1058,7 @@ TPP_DEFINE_PX_PARSER(tpp_px_xor, tpp_px_or, tpp_px_or_suffix, TPP_TEST_PX_OR_SUF
 /* LEVEL #10 : LAND                                                     */
 /************************************************************************/
 #undef TPP_HAVE_PX_LAND_SUFFIX
-#if TPP_HAVE_TPP_TOK_AMP_AMP
+#if TPP_HAVE_TOK_AMP_AMP
 #define TPP_HAVE_PX_LAND_SUFFIX      1
 #define TPP_CASE_PX_LAND_SUFFIX      case TPP_TOK_AMP_AMP:
 #define TPP_TEST_PX_LAND_SUFFIX(tok) ((tok) == TPP_TOK_AMP_AMP)
@@ -1095,7 +1095,7 @@ tpp_px_land_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 		if (TPP_ISERR(error))
 			return error;
 	} while (TPP_TEST_PX_LAND_SUFFIX(tpp_lexer_gettok(self)));
-#if TPP_HAVE_TPP_W_PAREN_AROUND_LAND && TPP_HAVE_TPP_TOK_PIPE_PIPE
+#if TPP_HAVE_TPP_W_PAREN_AROUND_LAND && TPP_HAVE_TOK_PIPE_PIPE
 	if (tpp_lexer_gettok(self) == TPP_TOK_PIPE_PIPE) {
 		tpp_errno error = tpp_lexer_warnf(self, TPP_W_PAREN_AROUND_LAND);
 		if (TPP_ISERR(error)) {
@@ -1104,24 +1104,24 @@ tpp_px_land_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 			return error;
 		}
 	}
-#endif /* TPP_HAVE_TPP_W_PAREN_AROUND_LAND && TPP_HAVE_TPP_TOK_PIPE_PIPE */
+#endif /* TPP_HAVE_TPP_W_PAREN_AROUND_LAND && TPP_HAVE_TOK_PIPE_PIPE */
 	return TPP_EOK;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_or, tpp_px_land, tpp_px_land_suffix, TPP_TEST_PX_LAND_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_AMP_AMP */
+#else /* TPP_HAVE_TOK_AMP_AMP */
 #define TPP_HAVE_PX_LAND_SUFFIX          0
 #define TPP_CASE_PX_LAND_SUFFIX          /* nothing */
 #define TPP_TEST_PX_LAND_SUFFIX(tok)     0
 #define tpp_px_land_suffix(self, result) TPP_EOK
 #define tpp_px_land(self, result)        tpp_px_or(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_AMP_AMP */
+#endif /* !TPP_HAVE_TOK_AMP_AMP */
 
 
 /************************************************************************/
 /* LEVEL #11 : LXOR                                                     */
 /************************************************************************/
 #undef TPP_HAVE_PX_LXOR_SUFFIX
-#if TPP_HAVE_TPP_TOK_HAT_HAT
+#if TPP_HAVE_TOK_HAT_HAT
 #define TPP_HAVE_PX_LXOR_SUFFIX      1
 #define TPP_CASE_PX_LXOR_SUFFIX      case TPP_TOK_HAT_HAT:
 #define TPP_TEST_PX_LXOR_SUFFIX(tok) ((tok) == TPP_TOK_HAT_HAT)
@@ -1161,20 +1161,20 @@ tpp_px_lxor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 	return TPP_EOK;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_land, tpp_px_lxor, tpp_px_lxor_suffix, TPP_TEST_PX_LXOR_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_HAT_HAT */
+#else /* TPP_HAVE_TOK_HAT_HAT */
 #define TPP_HAVE_PX_LXOR_SUFFIX          0
 #define TPP_CASE_PX_LXOR_SUFFIX          /* nothing */
 #define TPP_TEST_PX_LXOR_SUFFIX(tok)     0
 #define tpp_px_lxor_suffix(self, result) TPP_EOK
 #define tpp_px_lxor(self, result)        tpp_px_land(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_HAT_HAT */
+#endif /* !TPP_HAVE_TOK_HAT_HAT */
 
 
 /************************************************************************/
 /* LEVEL #12 : LOR                                                      */
 /************************************************************************/
 #undef TPP_HAVE_PX_LOR_SUFFIX
-#if TPP_HAVE_TPP_TOK_PIPE_PIPE
+#if TPP_HAVE_TOK_PIPE_PIPE
 #define TPP_HAVE_PX_LOR_SUFFIX      1
 #define TPP_CASE_PX_LOR_SUFFIX      case TPP_TOK_PIPE_PIPE:
 #define TPP_TEST_PX_LOR_SUFFIX(tok) ((tok) == TPP_TOK_PIPE_PIPE)
@@ -1214,13 +1214,13 @@ tpp_px_lor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value 
 	return TPP_EOK;
 }
 TPP_DEFINE_PX_PARSER(tpp_px_lxor, tpp_px_lor, tpp_px_lor_suffix, TPP_TEST_PX_LOR_SUFFIX)
-#else /* TPP_HAVE_TPP_TOK_PIPE_PIPE */
+#else /* TPP_HAVE_TOK_PIPE_PIPE */
 #define TPP_HAVE_PX_LOR_SUFFIX          0
 #define TPP_CASE_PX_LOR_SUFFIX          /* nothing */
 #define TPP_TEST_PX_LOR_SUFFIX(tok)     0
 #define tpp_px_lor_suffix(self, result) TPP_EOK
 #define tpp_px_lor(self, result)        tpp_px_lxor(self, result)
-#endif /* !TPP_HAVE_TPP_TOK_PIPE_PIPE */
+#endif /* !TPP_HAVE_TOK_PIPE_PIPE */
 
 
 /************************************************************************/

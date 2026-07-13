@@ -554,7 +554,7 @@ again_yield_and_handle:
 		break;
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 
-#if TPP_HAVE_TPP_TOK_INT
+#if TPP_HAVE_TOK_INT
 	{
 		tpp_intmax mode;
 		bool negative;
@@ -593,7 +593,7 @@ again_yield_and_handle:
 		}
 		goto set_warning_state;
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_INT */
+#endif /* TPP_HAVE_TOK_INT */
 	case TPP_KWD_disable:
 		new_state = TPP_WSTATE_DISABLED;
 		goto set_warning_state;
@@ -630,7 +630,7 @@ again_handle_set_warning_state:
 			tok = tpp_lexer_yield_blocking(self);
 			goto again_handle_set_warning_state;
 
-#if TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS
+#if TPP_HAVE_TOK_INT && TPP_HAVE_WARNING_NUMBERS
 		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax warning_number;
 			tpp_warning_id warning_id;
@@ -663,7 +663,7 @@ again_handle_set_warning_state:
 				return error;
 			tok = tpp_lexer_yield_blocking(self);
 		}	break;
-#endif /* TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS */
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_WARNING_NUMBERS */
 
 		TPP_CASE_TPP_TOK_STRING {
 			struct tpp_lexer_pragma_warning_state_data data;
@@ -690,10 +690,10 @@ again_handle_set_warning_state:
 			tok = tpp_lexer_yield_blocking(self);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-#if TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS
+#if TPP_HAVE_TOK_INT && TPP_HAVE_WARNING_NUMBERS
 		if (TPP_TOK_ISINT(tok))
 			goto again_handle_set_warning_state;
-#endif /* TPP_HAVE_TPP_TOK_INT && TPP_HAVE_WARNING_NUMBERS */
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_WARNING_NUMBERS */
 		if (TPP_TOK_ISSTRING(tok))
 			goto again_handle_set_warning_state;
 	}	break;
@@ -1620,9 +1620,9 @@ skip_colon_and_andle_for_pathlist:
 		TPP_FALLTHRU
 	case '+':
 	case '-':
-#if TPP_HAVE_TPP_TOK_PLUS_PLUS
+#if TPP_HAVE_TOK_PLUS_PLUS
 	case TPP_TOK_PLUS_PLUS:
-#endif /* TPP_HAVE_TPP_TOK_PLUS_PLUS */
+#endif /* TPP_HAVE_TOK_PLUS_PLUS */
 		/* Consume add-mode token */
 		switch (tok) {
 		case '-':
@@ -1631,8 +1631,8 @@ skip_colon_and_andle_for_pathlist:
 			break;
 		case '+':
 			data.tlpptipd_mode = TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_TAIL;
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_PLUS_PLUS)
-			if (!tpp_lexer_has(self, TPP_TOK_PLUS_PLUS)) {
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_PLUS_PLUS)
+			if (!tpp_lexer_has(self, TOK_PLUS_PLUS)) {
 				tpp_file *const file = tpp_lexer_getfile(self);
 				tpp_char const *pos = file->tf_pos;
 				tpp_char ch;
@@ -1644,15 +1644,15 @@ skip_colon_and_andle_for_pathlist:
 					file->tf_pos = pos;
 				}
 			}
-#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_PLUS_PLUS) */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_PLUS_PLUS) */
 			tok = tpp_lexer_yield_blocking(self);
 			break;
-#if TPP_HAVE_TPP_TOK_PLUS_PLUS
+#if TPP_HAVE_TOK_PLUS_PLUS
 		case TPP_TOK_PLUS_PLUS:
 			data.tlpptipd_mode = TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_HEAD;
 			tok = tpp_lexer_yield_blocking(self);
 			break;
-#endif /* TPP_HAVE_TPP_TOK_PLUS_PLUS */
+#endif /* TPP_HAVE_TOK_PLUS_PLUS */
 		default: break;
 		}
 		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))

@@ -408,7 +408,7 @@ err_temp:
 #endif /* TPP_HAVE_STRING_ESCAPE */
 
 
-#if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
+#if TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 struct tpp_block_string_prefix {
 	tpp_char const *tbsp_start;  /* [1..1] Prefix start */
 	tpp_char const *tbsp_end;    /* [1..1] Prefix end */
@@ -577,9 +577,9 @@ tpp_token_decodestring_block(tpp_lexer *self,
 handle_empty_prefix:
 	return tpp_token_decodestring_basic(self, start, end, data_printer, utf8_printer, arg);
 }
-#endif /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
 
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+#if TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL
 #if TPP_HAVE_BSE && 1
 /* TODO: Behavior here should be controllable via a config. However, default
  * should be disabled (no handling of BSE), since that's how GCC behaves:
@@ -644,25 +644,25 @@ tpp_lexer_decodestring(tpp_lexer *self,
 	tpp_assert(TPP_TOK_ISSTRING(token->tt_id));
 	switch (token->tt_id) {
 
-#if (TPP_HAVE_TPP_TOK_C_STRING ||                 \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_C_CHAR ||                   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL)
+#if (TPP_HAVE_TOK_C_STRING ||                 \
+     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_C_CHAR ||                   \
+     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL)
 #if TPP_HAVE_BSE
-#if (TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL)
+#if (TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL)
 	{
 		tpp_char quote_char;
 	_TPP_CASE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
@@ -673,19 +673,19 @@ tpp_lexer_decodestring(tpp_lexer *self,
 	_TPP_CASE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF32_STRING_LITERAL
-#if ((TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-      TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-      TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-      TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL) && \
-     (TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-      TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-      TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-      TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL))
+#if ((TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
+      TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+      TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
+      TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL) && \
+     (TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+      TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+      TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+      TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL))
 		quote_char = TPP_TOK_ISSTRING_SQUOTE(token->tt_id) ? '\'' : '"';
-#elif (TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-       TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-       TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-       TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL)
+#elif (TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
+       TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+       TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
+       TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL)
 		quote_char = '"';
 #else /* ... */
 		quote_char = '\'';
@@ -694,18 +694,18 @@ tpp_lexer_decodestring(tpp_lexer *self,
 	}	TPP_FALLTHRU
 #endif /* ... */
 #else /* TPP_HAVE_BSE */
-#if (TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL)
-#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+#if (TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL)
+#if TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF8_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
 		++start;
 		TPP_FALLTHRU
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL */
 	_TPP_CASE_TPP_TOK_CXX_WIDE_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF16_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_UTF32_STRING_LITERAL
@@ -729,17 +729,17 @@ tpp_lexer_decodestring(tpp_lexer *self,
 		start = tpp_skipbse_fwd(start, end, tpp_lexer_getfile(self));
 		end   = tpp_skipbse_bck(end, start, tpp_lexer_getfile(self));
 		tpp_assert(start <= end);
-#if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
+#if TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 do_decode_basic:
 #define HAVE_do_decode_basic
-#endif /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
 		return tpp_token_decodestring_basic(self, start, end,
 		                                    data_printer,
 		                                    utf8_printer, arg);
 	}	break;
 #endif /* ... */
 
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+#if TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_RAW_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL
@@ -755,9 +755,9 @@ do_decode_basic:
 		while ((start < end) && end[-1] != ')')
 			--end;
 		tpp_assert(start <= end);
-#if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+#if TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL
 		goto cxx_raw_string_common;
-#else /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#else /* TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 		++start; /* Skip over leading '(' */
 		if (start < end)
 			--end; /* Skip over trailing ')' */
@@ -772,11 +772,11 @@ do_decode_basic:
 
 		/* Print string */
 		return tpp_token_decodestring_raw(self, start, end, data_printer, arg);
-#endif /* !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#endif /* !TPP_HAVE_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
 
-#if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+#if TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL
 	_TPP_CASE_TPP_TOK_RAW_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_RAW_CHAR_LITERAL {
 		tpp_char quote_char;
@@ -793,9 +793,9 @@ do_decode_basic:
 		++start; /* Skip leading 'R' / 'r' */
 		tpp_bse_seek_until_fwd(start, quote_char);
 		tpp_assert(*start == quote_char);
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+#if TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
 cxx_raw_string_common:
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
 		if (start < end)
 			++start; /* Skip leading " / ' / ( */
 		if (start < end)
@@ -812,9 +812,9 @@ cxx_raw_string_common:
 		/* Print string */
 		return tpp_token_decodestring_raw(self, start, end, data_printer, arg);
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 
-#if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
+#if TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 	_TPP_CASE_TPP_TOK_BLOCK_STRING_LITERAL
 	_TPP_CASE_TPP_TOK_BLOCK_CHAR_LITERAL {
 		tpp_char lf_ch;
@@ -885,7 +885,7 @@ do_decode_basic:
 		                                    data_printer,
 		                                    utf8_printer, arg);
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
 
 	default: tpp_unreachable();
 	}

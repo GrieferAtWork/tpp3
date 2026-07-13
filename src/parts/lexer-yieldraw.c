@@ -628,10 +628,10 @@ again:
 
 	ch = *pos;
 	if (tpp_ascii_issymcont(ch)) {
-#if TPP_HAVE_TPP_TOK_DOLLAR
-		if (ch == '$' && tpp_lexer_has(self, TPP_TOK_DOLLAR))
+#if TPP_HAVE_TOK_DOLLAR
+		if (ch == '$' && tpp_lexer_has(self, TOK_DOLLAR))
 			goto done;
-#endif /* TPP_HAVE_TPP_TOK_DOLLAR */
+#endif /* TPP_HAVE_TOK_DOLLAR */
 		++pos;
 		goto again;
 	}
@@ -658,48 +658,48 @@ return_error:
 }
 
 #undef NEED_tpp_lexer_seek_eol
-#if (TPP_HAVE_TPP_TOK_SQL_COMMENT ||   \
-     TPP_HAVE_TPP_TOK_AT_AT_COMMENT || \
-     TPP_HAVE_TPP_TOK_ASM_COMMENT || \
-     TPP_HAVE_TPP_TOK_SHELL_COMMENT || \
-     TPP_HAVE_TPP_TOK_CXX_COMMENT)
+#if (TPP_HAVE_TOK_SQL_COMMENT ||   \
+     TPP_HAVE_TOK_AT_AT_COMMENT || \
+     TPP_HAVE_TOK_ASM_COMMENT || \
+     TPP_HAVE_TOK_SHELL_COMMENT || \
+     TPP_HAVE_TOK_CXX_COMMENT)
 #define NEED_tpp_lexer_seek_eol 1
 #else /* ... */
 #define NEED_tpp_lexer_seek_eol 0
 #endif /* !... */
 
 #undef NEED_tpp_lexer_seek_end_of_string
-#if (TPP_HAVE_TPP_TOK_C_STRING ||                 \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_C_CHAR ||                   \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL)
+#if (TPP_HAVE_TOK_C_STRING ||                 \
+     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TOK_C_CHAR ||                   \
+     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL)
 #define NEED_tpp_lexer_seek_end_of_string 1
 #else /* ... */
 #define NEED_tpp_lexer_seek_end_of_string 0
 #endif /* !... */
 
 #undef NEED_tpp_lexer_seek_end_of_block_string
-#if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
+#if TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 #define NEED_tpp_lexer_seek_end_of_block_string 1
 #else /* ... */
 #define NEED_tpp_lexer_seek_end_of_block_string 0
 #endif /* !... */
 
 #undef NEED_tpp_lexer_seek_end_of_cxx_raw_string
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+#if TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
 #define NEED_tpp_lexer_seek_end_of_cxx_raw_string 1
 #else /* ... */
 #define NEED_tpp_lexer_seek_end_of_cxx_raw_string 0
 #endif /* !... */
 
 #undef NEED_tpp_lexer_seek_end_of_raw_string
-#if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
+#if TPP_HAVE_TOK_RAW_CHAR_LITERAL || TPP_HAVE_TOK_RAW_STRING_LITERAL
 #define NEED_tpp_lexer_seek_end_of_raw_string 1
 #else /* ... */
 #define NEED_tpp_lexer_seek_end_of_raw_string 0
@@ -874,7 +874,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 #if (NEED_tpp_lexer_seek_eol || (TPP_HAVE_CPP_ERROR ||             \
                                  TPP_HAVE_CPP_WARNING ||           \
-                                 TPP_HAVE_TPP_TOK_SHELL_COMMENT || \
+                                 TPP_HAVE_TOK_SHELL_COMMENT || \
                                  TPP_HAVE_CPP_EMBED ||             \
                                  TPP_HAVE_CPP_DIGIT_LINE))
 #undef tpp_lexer_seek_eol__STYLE_PARAM
@@ -889,7 +889,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 /* Seek forward until *after* the next line-feed character (or true EOF)
  * Given `*p_pos' will be updated to point *after* the LF character (or *at* the EOF) */
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE
+#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
@@ -898,12 +898,12 @@ TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM)
-#else /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE */
+#else /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM)
-#endif /* !TPP_HAVE_CPP_ERROR && !TPP_HAVE_CPP_WARNING && !TPP_HAVE_TPP_TOK_SHELL_COMMENT && !TPP_HAVE_CPP_EMBED && !TPP_HAVE_CPP_DIGIT_LINE */
+#endif /* !TPP_HAVE_CPP_ERROR && !TPP_HAVE_CPP_WARNING && !TPP_HAVE_TOK_SHELL_COMMENT && !TPP_HAVE_CPP_EMBED && !TPP_HAVE_CPP_DIGIT_LINE */
 {
 	tpp_errno error = TPP_EOK;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -996,7 +996,7 @@ handle_backslash:
 		 * >> // foo \    .
 		 * >> // bar      << Do not warn here */
 		if (comment_style != TPP_TOK_EOF) {
-#if TPP_HAVE_CPP_DIRECTIVES && TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_CPP_DIRECTIVES && TPP_HAVE_TOK_SHELL_COMMENT
 			if (comment_style == TPP_TOK_SHELL_COMMENT) {
 				/* Special case: don't warn about line-continuation in #-comments
 				 *               when CPP directives are enabled. Else, we'd be warning
@@ -1004,7 +1004,7 @@ handle_backslash:
 				if (tpp_lexer_has(self, CPP_DIRECTIVES))
 					goto again;
 			}
-#endif /* TPP_HAVE_CPP_DIRECTIVES && TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_CPP_DIRECTIVES && TPP_HAVE_TOK_SHELL_COMMENT */
 			for (;;) {
 				if (pos >= file->tf_end) {
 					tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
@@ -1045,7 +1045,7 @@ handle_backslash:
 				}
 
 				switch (comment_style) {
-#if TPP_HAVE_TPP_TOK_CXX_COMMENT
+#if TPP_HAVE_TOK_CXX_COMMENT
 				case TPP_TOK_CXX_COMMENT:
 					if (ch == '/') {
 						if (pos >= file->tf_end) {
@@ -1063,8 +1063,8 @@ handle_backslash:
 						}
 					}
 					break;
-#endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT */
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES)
+#endif /* TPP_HAVE_TOK_CXX_COMMENT */
+#if TPP_HAVE_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES)
 				case TPP_TOK_SHELL_COMMENT:
 					if (ch == '#')
 						goto again;
@@ -1102,14 +1102,14 @@ handle_backslash:
 					}
 #endif /* TPP_HAVE_TRIGRAPHS */
 					break;
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES) */
-#if TPP_HAVE_TPP_TOK_ASM_COMMENT
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES) */
+#if TPP_HAVE_TOK_ASM_COMMENT
 				case TPP_TOK_ASM_COMMENT:
 					if (ch == '/')
 						goto again;
 					break;
-#endif /* TPP_HAVE_TPP_TOK_ASM_COMMENT */
-#if TPP_HAVE_TPP_TOK_SQL_COMMENT
+#endif /* TPP_HAVE_TOK_ASM_COMMENT */
+#if TPP_HAVE_TOK_SQL_COMMENT
 				case TPP_TOK_SQL_COMMENT:
 					if (ch == '-') {
 						if (pos >= file->tf_end) {
@@ -1125,8 +1125,8 @@ handle_backslash:
 						}
 					}
 					break;
-#endif /* TPP_HAVE_TPP_TOK_SQL_COMMENT */
-#if TPP_HAVE_TPP_TOK_AT_AT_COMMENT
+#endif /* TPP_HAVE_TOK_SQL_COMMENT */
+#if TPP_HAVE_TOK_AT_AT_COMMENT
 				case TPP_TOK_AT_AT_COMMENT:
 					if (ch == '@') {
 						if (pos >= file->tf_end) {
@@ -1142,7 +1142,7 @@ handle_backslash:
 						}
 					}
 					break;
-#endif /* TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
+#endif /* TPP_HAVE_TOK_AT_AT_COMMENT */
 				default: tpp_unreachable();
 				}
 				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_before_bse),
@@ -1580,7 +1580,7 @@ done:
 #endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 
 
-#if TPP_HAVE_TPP_TOK_C_FLOAT
+#if TPP_HAVE_TOK_C_FLOAT
 /* Seek the end of a TPP_TOK_C_FLOAT (or TPP_TOK_C_INT) token
  * @param: result:               Token mode: TPP_TOK_C_FLOAT if a "." was already encountered;
  *                               else TPP_TOK_C_INT (or TPP_TOK_EOF if int-tokens are disabled).
@@ -1797,10 +1797,10 @@ done:
 	*p_pos = tpp_file_rel2ptr(file, rel_end);
 	return result;
 }
-#endif /* TPP_HAVE_TPP_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_C_FLOAT */
 
 
-#if TPP_HAVE_TPP_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_C_FLOAT)
+#if TPP_HAVE_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_C_FLOAT)
 /* Seek the end of a TPP_TOK_C_INT token
  * @return: TPP_EOK:         Success
  * @return: TPP_ENOMEM:      Out of memory
@@ -1852,7 +1852,7 @@ again:
 	*p_pos = tpp_file_rel2ptr(file, rel_end);
 	return TPP_EOK;
 }
-#endif /* TPP_HAVE_TPP_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_C_FLOAT) */
+#endif /* TPP_HAVE_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_C_FLOAT) */
 
 
 
@@ -1914,7 +1914,7 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
      NEED_tpp_lexer_seek_end_of_block_string ||   \
      NEED_tpp_lexer_seek_end_of_cxx_raw_string || \
      NEED_tpp_lexer_seek_end_of_raw_string ||     \
-     TPP_HAVE_TPP_TOK_MC)
+     TPP_HAVE_TOK_MC)
 #define NEED_read_ch2 1
 #else /* ... */
 #define NEED_read_ch2 0
@@ -1975,23 +1975,23 @@ switch_on_ch:
 
 /************************************************************************/
 	case '<': {
-#if (TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE || TPP_HAVE_DIGRAPHS || TPP_HAVE_TPP_TOK_HTML_COMMENT)
+#if (TPP_HAVE_TOK_MC_STARTSWITH_LANGLE || TPP_HAVE_DIGRAPHS || TPP_HAVE_TOK_HTML_COMMENT)
 		if (!tpp_lexer_has(self, DIGRAPHS) &&
-		    !tpp_lexer_has(self, TPP_TOK_HTML_COMMENT) &&
+		    !tpp_lexer_has(self, TOK_HTML_COMMENT) &&
 /*[[[deemon (printHasNone from ".config")("<");]]]*/
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_LANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_RANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_MINUS) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_EQUAL) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_LANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_RANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_LANGLE_RANGLE)
+		    !tpp_lexer_has(self, TOK_LANGLE_MINUS) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_MINUS_LANGLE) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_MINUS_RANGLE) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_LANGLE_MINUS) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE_MINUS) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE_EQUAL) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_LANGLE_EQUAL) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_EQUAL) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_EQUAL_LANGLE) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_EQUAL_RANGLE) &&
+		    !tpp_lexer_has(self, TOK_LANGLE_RANGLE)
 /*[[[end]]]*/
 		    )
 			break;
@@ -2014,9 +2014,9 @@ switch_on_ch:
 			}
 		} else
 #endif /* TPP_HAVE_DIGRAPHS */
-#if TPP_HAVE_TPP_TOK_HTML_COMMENT
+#if TPP_HAVE_TOK_HTML_COMMENT
 		if (ch2 == '!') {
-			if (tpp_lexer_has(self, TPP_TOK_HTML_COMMENT)) {
+			if (tpp_lexer_has(self, TOK_HTML_COMMENT)) {
 				read_ch2();
 				if (ch2 != '-')
 					break;
@@ -2049,184 +2049,184 @@ continue_html_comment_with_ch2:
 				goto set_result;
 			}
 		} else
-#endif /* TPP_HAVE_TPP_TOK_HTML_COMMENT */
+#endif /* TPP_HAVE_TOK_HTML_COMMENT */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")("<");]]]*/
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+#if TPP_HAVE_TOK_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TOK_LANGLE_MINUS_RANGLE
 		if (ch2 == '-') {
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
-			if (tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_LANGLE) ||
-			    tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_RANGLE)) {
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
+#if TPP_HAVE_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TOK_LANGLE_MINUS_RANGLE
+			if (tpp_lexer_has(self, TOK_LANGLE_MINUS_LANGLE) ||
+			    tpp_lexer_has(self, TOK_LANGLE_MINUS_RANGLE)) {
+#if TPP_HAVE_TOK_LANGLE_MINUS
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+#endif /* TPP_HAVE_TOK_LANGLE_MINUS */
 				read_ch2();
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+#if TPP_HAVE_TOK_LANGLE_MINUS_LANGLE
 				if (ch2 == '<') {
-					if (tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_LANGLE)) {
+					if (tpp_lexer_has(self, TOK_LANGLE_MINUS_LANGLE)) {
 						result = TPP_TOK_LANGLE_MINUS_LANGLE; /* "<-<" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+#endif /* TPP_HAVE_TOK_LANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TOK_LANGLE_MINUS_RANGLE
 				if (ch2 == '>') {
-					if (tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS_RANGLE)) {
+					if (tpp_lexer_has(self, TOK_LANGLE_MINUS_RANGLE)) {
 						result = TPP_TOK_LANGLE_MINUS_RANGLE; /* "<->" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_MINUS_RANGLE */
 				{
 				}
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
+#if TPP_HAVE_TOK_LANGLE_MINUS
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+#endif /* TPP_HAVE_TOK_LANGLE_MINUS */
 			}
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS
-			if (tpp_lexer_has(self, TPP_TOK_LANGLE_MINUS)) {
+#endif /* TPP_HAVE_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TOK_LANGLE_MINUS
+			if (tpp_lexer_has(self, TOK_LANGLE_MINUS)) {
 				result = TPP_TOK_LANGLE_MINUS; /* "<-" */
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+#endif /* TPP_HAVE_TOK_LANGLE_MINUS */
 		} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TOK_LANGLE_LANGLE || TPP_HAVE_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL
 		if (ch2 == '<') {
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
-			if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_MINUS) ||
-			    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE) ||
-			    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS) ||
-			    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) ||
-			    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
+#if TPP_HAVE_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL
+			if (tpp_lexer_has(self, TOK_LANGLE_LANGLE_MINUS) ||
+			    tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE) ||
+			    tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE_MINUS) ||
+			    tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE_EQUAL) ||
+			    tpp_lexer_has(self, TOK_LANGLE_LANGLE_EQUAL)) {
+#if TPP_HAVE_TOK_LANGLE_LANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE */
 				read_ch2();
 				switch (ch2) {
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS
+#if TPP_HAVE_TOK_LANGLE_LANGLE_MINUS
 				case '-': {
-					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_MINUS)) {
+					if (tpp_lexer_has(self, TOK_LANGLE_LANGLE_MINUS)) {
 						result = TPP_TOK_LANGLE_LANGLE_MINUS; /* "<<-" */
 						goto set_result;
 					}
 				}	break;
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_MINUS */
+#if TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL
 				case '<': {
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
-					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS) ||
-					    tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
+#if TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL
+					if (tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE_MINUS) ||
+					    tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
+#if TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE */
 						read_ch2();
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS
+#if TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS
 						if (ch2 == '-') {
-							if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS)) {
+							if (tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE_MINUS)) {
 								result = TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS; /* "<<<-" */
 								goto set_result;
 							}
 						} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS */
+#if TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL
 						if (ch2 == '=') {
-							if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
+							if (tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE_EQUAL)) {
 								result = TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL; /* "<<<=" */
 								goto set_result;
 							}
 						} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
 						{
 						}
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
+#if TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE
 						pos = tpp_file_rel2ptr(file, rel_end_of_3char);
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE */
 					}
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
-					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_LANGLE)) {
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
+#if TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE
+					if (tpp_lexer_has(self, TOK_LANGLE_LANGLE_LANGLE)) {
 						result = TPP_TOK_LANGLE_LANGLE_LANGLE; /* "<<<" */
 						goto set_result;
 					}
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE */
 				}	break;
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
+#if TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL
 				case '=': {
-					if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE_EQUAL)) {
+					if (tpp_lexer_has(self, TOK_LANGLE_LANGLE_EQUAL)) {
 						result = TPP_TOK_LANGLE_LANGLE_EQUAL; /* "<<=" */
 						goto set_result;
 					}
 				}	break;
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL */
 				default: break;
 				}
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
+#if TPP_HAVE_TOK_LANGLE_LANGLE
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE */
 			}
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
-			if (tpp_lexer_has(self, TPP_TOK_LANGLE_LANGLE)) {
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL */
+#if TPP_HAVE_TOK_LANGLE_LANGLE
+			if (tpp_lexer_has(self, TOK_LANGLE_LANGLE)) {
 				result = TPP_TOK_LANGLE_LANGLE; /* "<<" */
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE */
 		} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE || TPP_HAVE_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL */
+#if TPP_HAVE_TOK_LANGLE_EQUAL || TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE
 		if (ch2 == '=') {
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
-			if (tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_LANGLE) ||
-			    tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_RANGLE)) {
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
+#if TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE
+			if (tpp_lexer_has(self, TOK_LANGLE_EQUAL_LANGLE) ||
+			    tpp_lexer_has(self, TOK_LANGLE_EQUAL_RANGLE)) {
+#if TPP_HAVE_TOK_LANGLE_EQUAL
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL */
 				read_ch2();
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+#if TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE
 				if (ch2 == '<') {
-					if (tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_LANGLE)) {
+					if (tpp_lexer_has(self, TOK_LANGLE_EQUAL_LANGLE)) {
 						result = TPP_TOK_LANGLE_EQUAL_LANGLE; /* "<=<" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE
 				if (ch2 == '>') {
-					if (tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL_RANGLE)) {
+					if (tpp_lexer_has(self, TOK_LANGLE_EQUAL_RANGLE)) {
 						result = TPP_TOK_LANGLE_EQUAL_RANGLE; /* "<=>" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE */
 				{
 				}
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
+#if TPP_HAVE_TOK_LANGLE_EQUAL
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL */
 			}
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL
-			if (tpp_lexer_has(self, TPP_TOK_LANGLE_EQUAL)) {
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TOK_LANGLE_EQUAL
+			if (tpp_lexer_has(self, TOK_LANGLE_EQUAL)) {
 				result = TPP_TOK_LANGLE_EQUAL; /* "<=" */
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL */
 		} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_RANGLE
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL || TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TOK_LANGLE_RANGLE
 		if (ch2 == '>') {
-			if (tpp_lexer_has(self, TPP_TOK_LANGLE_RANGLE)) {
+			if (tpp_lexer_has(self, TOK_LANGLE_RANGLE)) {
 				result = TPP_TOK_LANGLE_RANGLE; /* "<>" */
 				goto set_result;
 			}
 		} else
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_RANGLE */
 /*[[[end]]]*/
 		{
 		}
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE || TPP_HAVE_DIGRAPHS || TPP_HAVE_TPP_TOK_HTML_COMMENT */
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_LANGLE || TPP_HAVE_DIGRAPHS || TPP_HAVE_TOK_HTML_COMMENT */
 	}	break;
 /************************************************************************/
 
@@ -2234,172 +2234,172 @@ continue_html_comment_with_ch2:
 
 /************************************************************************/
 	case '-': {
-#if (TPP_HAVE_TPP_TOK_MC_STARTSWITH_MINUS || TPP_HAVE_TPP_TOK_SQL_COMMENT)
-		if (!tpp_lexer_has(self, TPP_TOK_SQL_COMMENT) &&
+#if (TPP_HAVE_TOK_MC_STARTSWITH_MINUS || TPP_HAVE_TOK_SQL_COMMENT)
+		if (!tpp_lexer_has(self, TOK_SQL_COMMENT) &&
 /*[[[deemon (printHasNone from ".config")("-");]]]*/
-		    !tpp_lexer_has(self, TPP_TOK_MINUS_MINUS) &&
-		    !tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_MINUS_EQUAL) &&
-		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_STAR) &&
-		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE) &&
-		    !tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE)
+		    !tpp_lexer_has(self, TOK_MINUS_MINUS) &&
+		    !tpp_lexer_has(self, TOK_MINUS_LANGLE) &&
+		    !tpp_lexer_has(self, TOK_MINUS_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TOK_MINUS_LANGLE_LANGLE_LANGLE) &&
+		    !tpp_lexer_has(self, TOK_MINUS_EQUAL) &&
+		    !tpp_lexer_has(self, TOK_MINUS_RANGLE) &&
+		    !tpp_lexer_has(self, TOK_MINUS_RANGLE_STAR) &&
+		    !tpp_lexer_has(self, TOK_MINUS_RANGLE_RANGLE) &&
+		    !tpp_lexer_has(self, TOK_MINUS_RANGLE_RANGLE_RANGLE)
 /*[[[end]]]*/
 		    )
 			break;
 		read_ch2();
 		switch (ch2) {
-#if TPP_HAVE_TPP_TOK_MINUS_MINUS || TPP_HAVE_TPP_TOK_SQL_COMMENT
+#if TPP_HAVE_TOK_MINUS_MINUS || TPP_HAVE_TOK_SQL_COMMENT
 		case '-': {
-#if TPP_HAVE_TPP_TOK_SQL_COMMENT
-			if (tpp_lexer_has(self, TPP_TOK_SQL_COMMENT)) {
+#if TPP_HAVE_TOK_SQL_COMMENT
+			if (tpp_lexer_has(self, TOK_SQL_COMMENT)) {
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SQL_COMMENT));
 				if (TPP_ISERR(error))
 					goto return_error;
 				result = TPP_TOK_SQL_COMMENT; // "-- like this one!"
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_SQL_COMMENT */
+#endif /* TPP_HAVE_TOK_SQL_COMMENT */
 /*[[[deemon (printDecoder from ".config")("--");]]]*/
-#if TPP_HAVE_TPP_TOK_MINUS_MINUS
-			if (tpp_lexer_has(self, TPP_TOK_MINUS_MINUS)) {
+#if TPP_HAVE_TOK_MINUS_MINUS
+			if (tpp_lexer_has(self, TOK_MINUS_MINUS)) {
 				result = TPP_TOK_MINUS_MINUS; /* "--" */
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS */
+#endif /* TPP_HAVE_TOK_MINUS_MINUS */
 /*[[[end]]]*/
 		}	break;
-#endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS || TPP_HAVE_TPP_TOK_SQL_COMMENT */
+#endif /* TPP_HAVE_TOK_MINUS_MINUS || TPP_HAVE_TOK_SQL_COMMENT */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")("-", "-", useSwitch: true);]]]*/
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
+#if TPP_HAVE_TOK_MINUS_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
 		case '<': {
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
-			if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE) ||
-			    tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+#if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
+			if (tpp_lexer_has(self, TOK_MINUS_LANGLE_LANGLE) ||
+			    tpp_lexer_has(self, TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
+#if TPP_HAVE_TOK_MINUS_LANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE */
 				read_ch2();
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
+#if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
 				if (ch2 == '<') {
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
-					if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE
+#if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
+					if (tpp_lexer_has(self, TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
+#if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE */
 						read_ch2();
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
+#if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
 						if (ch2 == '<') {
-							if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
+							if (tpp_lexer_has(self, TOK_MINUS_LANGLE_LANGLE_LANGLE)) {
 								result = TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE; /* "-<<<" */
 								goto set_result;
 							}
 						} else
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE */
 						{
 						}
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE
+#if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE
 						pos = tpp_file_rel2ptr(file, rel_end_of_3char);
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE */
 					}
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE
-					if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE_LANGLE)) {
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TOK_MINUS_LANGLE_LANGLE
+					if (tpp_lexer_has(self, TOK_MINUS_LANGLE_LANGLE)) {
 						result = TPP_TOK_MINUS_LANGLE_LANGLE; /* "-<<" */
 						goto set_result;
 					}
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE */
 				} else
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE */
 				{
 				}
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
+#if TPP_HAVE_TOK_MINUS_LANGLE
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE */
 			}
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_MINUS_LANGLE
-			if (tpp_lexer_has(self, TPP_TOK_MINUS_LANGLE)) {
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TOK_MINUS_LANGLE
+			if (tpp_lexer_has(self, TOK_MINUS_LANGLE)) {
 				result = TPP_TOK_MINUS_LANGLE; /* "-<" */
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE */
 		}	break;
-#endif /* TPP_HAVE_TPP_TOK_MINUS_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_MINUS_EQUAL
+#endif /* TPP_HAVE_TOK_MINUS_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TOK_MINUS_EQUAL
 		case '=': {
-			if (tpp_lexer_has(self, TPP_TOK_MINUS_EQUAL)) {
+			if (tpp_lexer_has(self, TOK_MINUS_EQUAL)) {
 				result = TPP_TOK_MINUS_EQUAL; /* "-=" */
 				goto set_result;
 			}
 		}	break;
-#endif /* TPP_HAVE_TPP_TOK_MINUS_EQUAL */
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
+#endif /* TPP_HAVE_TOK_MINUS_EQUAL */
+#if TPP_HAVE_TOK_MINUS_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
 		case '>': {
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
-			if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_STAR) ||
-			    tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE) ||
-			    tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE)) {
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE
+#if TPP_HAVE_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
+			if (tpp_lexer_has(self, TOK_MINUS_RANGLE_STAR) ||
+			    tpp_lexer_has(self, TOK_MINUS_RANGLE_RANGLE) ||
+			    tpp_lexer_has(self, TOK_MINUS_RANGLE_RANGLE_RANGLE)) {
+#if TPP_HAVE_TOK_MINUS_RANGLE
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE */
 				read_ch2();
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
+#if TPP_HAVE_TOK_MINUS_RANGLE_STAR
 				if (ch2 == '*') {
-					if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_STAR)) {
+					if (tpp_lexer_has(self, TOK_MINUS_RANGLE_STAR)) {
 						result = TPP_TOK_MINUS_RANGLE_STAR; /* "->*" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE_STAR */
+#if TPP_HAVE_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
 				if (ch2 == '>') {
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
-					if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE)) {
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE
+#if TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
+					if (tpp_lexer_has(self, TOK_MINUS_RANGLE_RANGLE_RANGLE)) {
+#if TPP_HAVE_TOK_MINUS_RANGLE_RANGLE
 						tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE_RANGLE */
 						read_ch2();
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
+#if TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
 						if (ch2 == '>') {
-							if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE)) {
+							if (tpp_lexer_has(self, TOK_MINUS_RANGLE_RANGLE_RANGLE)) {
 								result = TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE; /* "->>>" */
 								goto set_result;
 							}
 						} else
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE */
 						{
 						}
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE
+#if TPP_HAVE_TOK_MINUS_RANGLE_RANGLE
 						pos = tpp_file_rel2ptr(file, rel_end_of_3char);
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE_RANGLE */
 					}
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE
-					if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE_RANGLE)) {
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TOK_MINUS_RANGLE_RANGLE
+					if (tpp_lexer_has(self, TOK_MINUS_RANGLE_RANGLE)) {
 						result = TPP_TOK_MINUS_RANGLE_RANGLE; /* "->>" */
 						goto set_result;
 					}
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE_RANGLE */
 				} else
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE */
 				{
 				}
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE
+#if TPP_HAVE_TOK_MINUS_RANGLE
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE */
 			}
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE
-			if (tpp_lexer_has(self, TPP_TOK_MINUS_RANGLE)) {
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TOK_MINUS_RANGLE
+			if (tpp_lexer_has(self, TOK_MINUS_RANGLE)) {
 				result = TPP_TOK_MINUS_RANGLE; /* "->" */
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE */
 		}	break;
-#endif /* TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_MINUS_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE */
 /*[[[end]]]*/
 		default: break;
 		}
@@ -2411,70 +2411,70 @@ continue_html_comment_with_ch2:
 
 /************************************************************************/
 	case '@': {
-#if (TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT || TPP_HAVE_TPP_TOK_AT_AT_COMMENT)
-		if (!tpp_lexer_has(self, TPP_TOK_AT_AT_COMMENT) &&
+#if (TPP_HAVE_TOK_MC_STARTSWITH_AT || TPP_HAVE_TOK_AT_AT_COMMENT)
+		if (!tpp_lexer_has(self, TOK_AT_AT_COMMENT) &&
 /*[[[deemon (printHasNone from ".config")("@");]]]*/
-		    !tpp_lexer_has(self, TPP_TOK_AT_EQUAL) &&
-		    !tpp_lexer_has(self, TPP_TOK_AT_AT) &&
-		    !tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)
+		    !tpp_lexer_has(self, TOK_AT_EQUAL) &&
+		    !tpp_lexer_has(self, TOK_AT_AT) &&
+		    !tpp_lexer_has(self, TOK_AT_AT_EQUAL)
 /*[[[end]]]*/
 		    )
 			break;
 		read_ch2();
 		switch (ch2) {
-#if TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_COMMENT
+#if TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_COMMENT
 		case '@': {
-#if TPP_HAVE_TPP_TOK_AT_AT_COMMENT
-			if (tpp_lexer_has(self, TPP_TOK_AT_AT_COMMENT)) {
+#if TPP_HAVE_TOK_AT_AT_COMMENT
+			if (tpp_lexer_has(self, TOK_AT_AT_COMMENT)) {
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_AT_AT_COMMENT));
 				if (TPP_ISERR(error))
 					goto return_error;
 				result = TPP_TOK_AT_AT_COMMENT; // "@@ like this one!"
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
+#endif /* TPP_HAVE_TOK_AT_AT_COMMENT */
 /*[[[deemon (printDecoder from ".config")("@@");]]]*/
-#if TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_EQUAL
-#if TPP_HAVE_TPP_TOK_AT_AT_EQUAL
-			if (tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_AT_AT
+#if TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_EQUAL
+#if TPP_HAVE_TOK_AT_AT_EQUAL
+			if (tpp_lexer_has(self, TOK_AT_AT_EQUAL)) {
+#if TPP_HAVE_TOK_AT_AT
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_AT_AT */
+#endif /* TPP_HAVE_TOK_AT_AT */
 				read_ch2();
-#if TPP_HAVE_TPP_TOK_AT_AT_EQUAL
+#if TPP_HAVE_TOK_AT_AT_EQUAL
 				if (ch2 == '=') {
-					if (tpp_lexer_has(self, TPP_TOK_AT_AT_EQUAL)) {
+					if (tpp_lexer_has(self, TOK_AT_AT_EQUAL)) {
 						result = TPP_TOK_AT_AT_EQUAL; /* "@@=" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
+#endif /* TPP_HAVE_TOK_AT_AT_EQUAL */
 				{
 				}
-#if TPP_HAVE_TPP_TOK_AT_AT
+#if TPP_HAVE_TOK_AT_AT
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_AT_AT */
+#endif /* TPP_HAVE_TOK_AT_AT */
 			}
-#endif /* TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
-#if TPP_HAVE_TPP_TOK_AT_AT
-			if (tpp_lexer_has(self, TPP_TOK_AT_AT)) {
+#endif /* TPP_HAVE_TOK_AT_AT_EQUAL */
+#if TPP_HAVE_TOK_AT_AT
+			if (tpp_lexer_has(self, TOK_AT_AT)) {
 				result = TPP_TOK_AT_AT; /* "@@" */
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_AT_AT */
-#endif /* TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
+#endif /* TPP_HAVE_TOK_AT_AT */
+#endif /* TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_EQUAL */
 /*[[[end]]]*/
 		}	break;
-#endif /* TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
+#endif /* TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_COMMENT */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")("@", "@", useSwitch: true);]]]*/
-#if TPP_HAVE_TPP_TOK_AT_EQUAL
+#if TPP_HAVE_TOK_AT_EQUAL
 		case '=': {
-			if (tpp_lexer_has(self, TPP_TOK_AT_EQUAL)) {
+			if (tpp_lexer_has(self, TOK_AT_EQUAL)) {
 				result = TPP_TOK_AT_EQUAL; /* "@=" */
 				goto set_result;
 			}
 		}	break;
-#endif /* TPP_HAVE_TPP_TOK_AT_EQUAL */
+#endif /* TPP_HAVE_TOK_AT_EQUAL */
 /*[[[end]]]*/
 		default: break;
 		}
@@ -2486,84 +2486,84 @@ continue_html_comment_with_ch2:
 
 /************************************************************************/
 	case '/': {
-#if (TPP_HAVE_TPP_TOK_ASM_COMMENT ||                 \
-     TPP_HAVE_TPP_TOK_CXX_COMMENT ||           \
-     TPP_HAVE_TPP_TOK_C_COMMENT || \
-     TPP_HAVE_TPP_TOK_MC_STARTSWITH_SLASH)
-#if TPP_HAVE_TPP_TOK_ASM_COMMENT
+#if (TPP_HAVE_TOK_ASM_COMMENT ||                 \
+     TPP_HAVE_TOK_CXX_COMMENT ||           \
+     TPP_HAVE_TOK_C_COMMENT || \
+     TPP_HAVE_TOK_MC_STARTSWITH_SLASH)
+#if TPP_HAVE_TOK_ASM_COMMENT
 		tpp_size rel_end_of_1char;
-#endif /* TPP_HAVE_TPP_TOK_ASM_COMMENT */
-		if (!tpp_lexer_has(self, TPP_TOK_CXX_COMMENT) &&
-		    !tpp_lexer_has(self, TPP_TOK_C_COMMENT) &&
-		    !tpp_lexer_has(self, TPP_TOK_ASM_COMMENT) &&
+#endif /* TPP_HAVE_TOK_ASM_COMMENT */
+		if (!tpp_lexer_has(self, TOK_CXX_COMMENT) &&
+		    !tpp_lexer_has(self, TOK_C_COMMENT) &&
+		    !tpp_lexer_has(self, TOK_ASM_COMMENT) &&
 /*[[[deemon (printHasNone from ".config")("/");]]]*/
-		    !tpp_lexer_has(self, TPP_TOK_SLASH_SLASH) &&
-		    !tpp_lexer_has(self, TPP_TOK_SLASH_SLASH_EQUAL) &&
-		    !tpp_lexer_has(self, TPP_TOK_SLASH_EQUAL)
+		    !tpp_lexer_has(self, TOK_SLASH_SLASH) &&
+		    !tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL) &&
+		    !tpp_lexer_has(self, TOK_SLASH_EQUAL)
 /*[[[end]]]*/
 		    )
 			break;
-#if TPP_HAVE_TPP_TOK_ASM_COMMENT
+#if TPP_HAVE_TOK_ASM_COMMENT
 		rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_ASM_COMMENT */
+#endif /* TPP_HAVE_TOK_ASM_COMMENT */
 		read_ch2();
 
-/*[[[deemon print "#if TPP_HAVE_TPP_TOK_CXX_COMMENT ||", (getHasPrefixCondition from ".config")("//");]]]*/
-#if TPP_HAVE_TPP_TOK_CXX_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH || TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
+/*[[[deemon print "#if TPP_HAVE_TOK_CXX_COMMENT ||", (getHasPrefixCondition from ".config")("//");]]]*/
+#if TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL
 /*[[[end]]]*/
 		if (ch2 == '/') {
 /*[[[deemon (printDecoder from ".config")("//",
-	extraRestoreCondition: "TPP_HAVE_TPP_TOK_CXX_COMMENT",
+	extraRestoreCondition: "TPP_HAVE_TOK_CXX_COMMENT",
 	shouldPrintPrefixExactMatch: false,
 );]]]*/
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH || TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
-			if (tpp_lexer_has(self, TPP_TOK_SLASH_SLASH_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_CXX_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH
+#if TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL
+#if TPP_HAVE_TOK_SLASH_SLASH_EQUAL
+			if (tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL)) {
+#if TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH */
+#endif /* TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH */
 				read_ch2();
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
+#if TPP_HAVE_TOK_SLASH_SLASH_EQUAL
 				if (ch2 == '=') {
-					if (tpp_lexer_has(self, TPP_TOK_SLASH_SLASH_EQUAL)) {
+					if (tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL)) {
 						result = TPP_TOK_SLASH_SLASH_EQUAL; /* "//=" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
+#endif /* TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
 				{
 				}
-#if TPP_HAVE_TPP_TOK_CXX_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH
+#if TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH */
+#endif /* TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH */
 			}
-#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
-#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH || TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
+#endif /* TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
+#endif /* TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
 /*[[[end]]]*/
-#if TPP_HAVE_TPP_TOK_CXX_COMMENT
-			if (tpp_lexer_has(self, TPP_TOK_CXX_COMMENT)) {
+#if TPP_HAVE_TOK_CXX_COMMENT
+			if (tpp_lexer_has(self, TOK_CXX_COMMENT)) {
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_CXX_COMMENT));
 				if (TPP_ISERR(error))
 					goto return_error;
 				result = TPP_TOK_CXX_COMMENT; // like this one!
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT */
+#endif /* TPP_HAVE_TOK_CXX_COMMENT */
 /*[[[deemon (printPrefixExactMatch from ".config")("//");]]]*/
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH
-			if (tpp_lexer_has(self, TPP_TOK_SLASH_SLASH)) {
+#if TPP_HAVE_TOK_SLASH_SLASH
+			if (tpp_lexer_has(self, TOK_SLASH_SLASH)) {
 				result = TPP_TOK_SLASH_SLASH; /* "//" */
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_SLASH_SLASH */
+#endif /* TPP_HAVE_TOK_SLASH_SLASH */
 /*[[[end]]]*/
 		} else
-/*[[[deemon print "#endif /" "* TPP_HAVE_TPP_TOK_CXX_COMMENT ||", (getHasPrefixCondition from ".config")("//"), "*" "/";]]]*/
-#endif /* TPP_HAVE_TPP_TOK_CXX_COMMENT || TPP_HAVE_TPP_TOK_SLASH_SLASH || TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
+/*[[[deemon print "#endif /" "* TPP_HAVE_TOK_CXX_COMMENT ||", (getHasPrefixCondition from ".config")("//"), "*" "/";]]]*/
+#endif /* TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
 /*[[[end]]]*/
-#if TPP_HAVE_TPP_TOK_C_COMMENT
+#if TPP_HAVE_TOK_C_COMMENT
 		if (ch2 == '*') {
-			if (tpp_lexer_has(self, TPP_TOK_C_COMMENT)) {
+			if (tpp_lexer_has(self, TOK_C_COMMENT)) {
 				for (;;) {
 					read_ch2();
 continue_c_comment_with_ch2:
@@ -2602,20 +2602,20 @@ continue_c_comment_with_ch2:
 				goto set_result;
 			}
 		} else
-#endif /* TPP_HAVE_TPP_TOK_C_COMMENT */
+#endif /* TPP_HAVE_TOK_C_COMMENT */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")("/", "/");]]]*/
-#if TPP_HAVE_TPP_TOK_SLASH_EQUAL
+#if TPP_HAVE_TOK_SLASH_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_has(self, TPP_TOK_SLASH_EQUAL)) {
+			if (tpp_lexer_has(self, TOK_SLASH_EQUAL)) {
 				result = TPP_TOK_SLASH_EQUAL; /* "/=" */
 				goto set_result;
 			}
 		} else
-#endif /* TPP_HAVE_TPP_TOK_SLASH_EQUAL */
+#endif /* TPP_HAVE_TOK_SLASH_EQUAL */
 /*[[[end]]]*/
 		{
-#if TPP_HAVE_TPP_TOK_ASM_COMMENT
-			if (tpp_lexer_has(self, TPP_TOK_ASM_COMMENT)) {
+#if TPP_HAVE_TOK_ASM_COMMENT
+			if (tpp_lexer_has(self, TOK_ASM_COMMENT)) {
 				pos = tpp_file_rel2ptr(file, rel_end_of_1char);
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_ASM_COMMENT));
 				if (TPP_ISERR(error))
@@ -2623,7 +2623,7 @@ continue_c_comment_with_ch2:
 				result = TPP_TOK_ASM_COMMENT; // "/ like this one!"
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_ASM_COMMENT */
+#endif /* TPP_HAVE_TOK_ASM_COMMENT */
 		}
 #endif /* ... */
 	}	break;
@@ -2633,12 +2633,12 @@ continue_c_comment_with_ch2:
 
 /************************************************************************/
 	case '%': {
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_PERCENT || TPP_HAVE_DIGRAPHS
+#if TPP_HAVE_TOK_MC_STARTSWITH_PERCENT || TPP_HAVE_DIGRAPHS
 		if (!tpp_lexer_has(self, DIGRAPHS) &&
 /*[[[deemon (printHasNone from ".config")("%");]]]*/
-		    !tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT) &&
-		    !tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT_EQUAL) &&
-		    !tpp_lexer_has(self, TPP_TOK_PERCENT_EQUAL)
+		    !tpp_lexer_has(self, TOK_PERCENT_PERCENT) &&
+		    !tpp_lexer_has(self, TOK_PERCENT_PERCENT_EQUAL) &&
+		    !tpp_lexer_has(self, TOK_PERCENT_EQUAL)
 /*[[[end]]]*/
 		    )
 			break;
@@ -2652,8 +2652,8 @@ continue_c_comment_with_ch2:
 		} else
 		if (ch2 == ':') {
 			if (tpp_lexer_has(self, DIGRAPHS)) {
-#if TPP_HAVE_TPP_TOK_POUND_POUND
-				if (tpp_lexer_has(self, TPP_TOK_POUND_POUND)) {
+#if TPP_HAVE_TOK_POUND_POUND
+				if (tpp_lexer_has(self, TOK_POUND_POUND)) {
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
 					read_ch2();
 					if (ch2 == '%') {
@@ -2665,52 +2665,52 @@ continue_c_comment_with_ch2:
 					}
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
 				}
-#endif /* TPP_HAVE_TPP_TOK_POUND_POUND */
+#endif /* TPP_HAVE_TOK_POUND_POUND */
 				result = TPP_TOK_OFCHAR('#'); /* "%:" -> "#" */
 				goto set_result;
 			}
 		} else
 #endif /* TPP_HAVE_DIGRAPHS */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")("%");]]]*/
-#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT || TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL
+#if TPP_HAVE_TOK_PERCENT_PERCENT || TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL
 		if (ch2 == '%') {
-#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL
-			if (tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT
+#if TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL
+			if (tpp_lexer_has(self, TOK_PERCENT_PERCENT_EQUAL)) {
+#if TPP_HAVE_TOK_PERCENT_PERCENT
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT */
+#endif /* TPP_HAVE_TOK_PERCENT_PERCENT */
 				read_ch2();
-#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL
+#if TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL
 				if (ch2 == '=') {
-					if (tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT_EQUAL)) {
+					if (tpp_lexer_has(self, TOK_PERCENT_PERCENT_EQUAL)) {
 						result = TPP_TOK_PERCENT_PERCENT_EQUAL; /* "%%=" */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL */
+#endif /* TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL */
 				{
 				}
-#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT
+#if TPP_HAVE_TOK_PERCENT_PERCENT
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT */
+#endif /* TPP_HAVE_TOK_PERCENT_PERCENT */
 			}
-#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL */
-#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT
-			if (tpp_lexer_has(self, TPP_TOK_PERCENT_PERCENT)) {
+#endif /* TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL */
+#if TPP_HAVE_TOK_PERCENT_PERCENT
+			if (tpp_lexer_has(self, TOK_PERCENT_PERCENT)) {
 				result = TPP_TOK_PERCENT_PERCENT; /* "%%" */
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT */
+#endif /* TPP_HAVE_TOK_PERCENT_PERCENT */
 		} else
-#endif /* TPP_HAVE_TPP_TOK_PERCENT_PERCENT || TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL */
-#if TPP_HAVE_TPP_TOK_PERCENT_EQUAL
+#endif /* TPP_HAVE_TOK_PERCENT_PERCENT || TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL */
+#if TPP_HAVE_TOK_PERCENT_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_has(self, TPP_TOK_PERCENT_EQUAL)) {
+			if (tpp_lexer_has(self, TOK_PERCENT_EQUAL)) {
 				result = TPP_TOK_PERCENT_EQUAL; /* "%=" */
 				goto set_result;
 			}
 		} else
-#endif /* TPP_HAVE_TPP_TOK_PERCENT_EQUAL */
+#endif /* TPP_HAVE_TOK_PERCENT_EQUAL */
 /*[[[end]]]*/
 		{
 		}
@@ -2722,36 +2722,36 @@ continue_c_comment_with_ch2:
 
 /************************************************************************/
 	case '#': {
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TOK_SHELL_COMMENT
 /*[[[deemon (printDecoder from ".config")("#",
-	extraRestoreCondition: "TPP_HAVE_TPP_TOK_SHELL_COMMENT");]]]*/
-#if TPP_HAVE_TPP_TOK_POUND_POUND
-		if (tpp_lexer_has(self, TPP_TOK_POUND_POUND)) {
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+	extraRestoreCondition: "TPP_HAVE_TOK_SHELL_COMMENT");]]]*/
+#if TPP_HAVE_TOK_POUND_POUND
+		if (tpp_lexer_has(self, TOK_POUND_POUND)) {
+#if TPP_HAVE_TOK_SHELL_COMMENT
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 			read_ch2();
 			if (ch2 == '#') {
 				warn_if_ch2_is_trigraph(); /* "??=" -> "#" */
 				result = TPP_TOK_POUND_POUND; /* "##" */
 				goto set_result;
 			}
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_SHELL_COMMENT
 			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 		}
-#endif /* TPP_HAVE_TPP_TOK_POUND_POUND */
+#endif /* TPP_HAVE_TOK_POUND_POUND */
 /*[[[end]]]*/
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
-		if (tpp_lexer_has(self, TPP_TOK_SHELL_COMMENT)) {
+#if TPP_HAVE_TOK_SHELL_COMMENT
+		if (tpp_lexer_has(self, TOK_SHELL_COMMENT)) {
 			error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SHELL_COMMENT));
 			if (TPP_ISERR(error))
 				goto return_error;
 			result = TPP_TOK_SHELL_COMMENT; // "# like this one!"
 			goto set_result;
 		}
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TOK_SHELL_COMMENT */
 	}	break;
 /************************************************************************/
 
@@ -2759,11 +2759,11 @@ continue_c_comment_with_ch2:
 
 /************************************************************************/
 	case ':': {
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_COLON || TPP_HAVE_DIGRAPHS
+#if TPP_HAVE_TOK_MC_STARTSWITH_COLON || TPP_HAVE_DIGRAPHS
 		if (!tpp_lexer_has(self, DIGRAPHS) &&
 /*[[[deemon (printHasNone from ".config")(":");]]]*/
-		    !tpp_lexer_has(self, TPP_TOK_COLON_COLON) &&
-		    !tpp_lexer_has(self, TPP_TOK_COLON_EQUAL)
+		    !tpp_lexer_has(self, TOK_COLON_COLON) &&
+		    !tpp_lexer_has(self, TOK_COLON_EQUAL)
 /*[[[end]]]*/
 		    )
 			break;
@@ -2777,26 +2777,26 @@ continue_c_comment_with_ch2:
 		} else
 #endif /* TPP_HAVE_DIGRAPHS */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")(":");]]]*/
-#if TPP_HAVE_TPP_TOK_COLON_COLON
+#if TPP_HAVE_TOK_COLON_COLON
 		if (ch2 == ':') {
-			if (tpp_lexer_has(self, TPP_TOK_COLON_COLON)) {
+			if (tpp_lexer_has(self, TOK_COLON_COLON)) {
 				result = TPP_TOK_COLON_COLON; /* "::" */
 				goto set_result;
 			}
 		} else
-#endif /* TPP_HAVE_TPP_TOK_COLON_COLON */
-#if TPP_HAVE_TPP_TOK_COLON_EQUAL
+#endif /* TPP_HAVE_TOK_COLON_COLON */
+#if TPP_HAVE_TOK_COLON_EQUAL
 		if (ch2 == '=') {
-			if (tpp_lexer_has(self, TPP_TOK_COLON_EQUAL)) {
+			if (tpp_lexer_has(self, TOK_COLON_EQUAL)) {
 				result = TPP_TOK_COLON_EQUAL; /* ":=" */
 				goto set_result;
 			}
 		} else
-#endif /* TPP_HAVE_TPP_TOK_COLON_EQUAL */
+#endif /* TPP_HAVE_TOK_COLON_EQUAL */
 /*[[[end]]]*/
 		{
 		}
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_COLON || TPP_HAVE_DIGRAPHS */
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_COLON || TPP_HAVE_DIGRAPHS */
 	}	break;
 /************************************************************************/
 
@@ -2804,7 +2804,7 @@ continue_c_comment_with_ch2:
 
 /************************************************************************/
 	case '?': {
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_QMARK || TPP_HAVE_TRIGRAPHS
+#if TPP_HAVE_TOK_MC_STARTSWITH_QMARK || TPP_HAVE_TRIGRAPHS
 #if TPP_HAVE_TRIGRAPHS
 		if (tpp_lexer_has(self, TRIGRAPHS)) {
 			if (pos >= file->tf_end) {
@@ -2852,26 +2852,26 @@ continue_c_comment_with_ch2:
 not_a_trigraph:
 #endif /* TPP_HAVE_TRIGRAPHS */
 /*[[[deemon (printDecoder from ".config")("?", printCondition: false);]]]*/
-		if (tpp_lexer_has(self, TPP_TOK_QMARK_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_QMARK_QMARK)) {
+		if (tpp_lexer_has(self, TOK_QMARK_EQUAL) ||
+		    tpp_lexer_has(self, TOK_QMARK_QMARK)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_QMARK_EQUAL
+#if TPP_HAVE_TOK_QMARK_EQUAL
 			if (ch2 == '=') {
-				if (tpp_lexer_has(self, TPP_TOK_QMARK_EQUAL)) {
+				if (tpp_lexer_has(self, TOK_QMARK_EQUAL)) {
 					result = TPP_TOK_QMARK_EQUAL; /* "?=" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_QMARK_EQUAL */
-#if TPP_HAVE_TPP_TOK_QMARK_QMARK
+#endif /* TPP_HAVE_TOK_QMARK_EQUAL */
+#if TPP_HAVE_TOK_QMARK_QMARK
 			if (ch2 == '?') {
-				if (tpp_lexer_has(self, TPP_TOK_QMARK_QMARK)) {
+				if (tpp_lexer_has(self, TOK_QMARK_QMARK)) {
 					warn_if_ch2_is_trigraph(); /* "???" -> "?" */
 					result = TPP_TOK_QMARK_QMARK; /* "??" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_QMARK_QMARK */
+#endif /* TPP_HAVE_TOK_QMARK_QMARK */
 			{
 			}
 		}
@@ -2884,19 +2884,19 @@ not_a_trigraph:
 
 /************************************************************************/
 	case '.': {
-#if (TPP_HAVE_TPP_TOK_C_FLOAT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT)
-		if (!tpp_lexer_has(self, TPP_TOK_C_FLOAT) &&
+#if (TPP_HAVE_TOK_C_FLOAT || TPP_HAVE_TOK_MC_STARTSWITH_DOT)
+		if (!tpp_lexer_has(self, TOK_C_FLOAT) &&
 /*[[[deemon (printHasNone from ".config")(".");]]]*/
-		    !tpp_lexer_has(self, TPP_TOK_DOT_STAR) &&
-		    !tpp_lexer_has(self, TPP_TOK_DOT_DOT) &&
-		    !tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)
+		    !tpp_lexer_has(self, TOK_DOT_STAR) &&
+		    !tpp_lexer_has(self, TOK_DOT_DOT) &&
+		    !tpp_lexer_has(self, TOK_DOT_DOT_DOT)
 /*[[[end]]]*/
 		    )
 			break;
 		read_ch2();
-#if TPP_HAVE_TPP_TOK_C_FLOAT
+#if TPP_HAVE_TOK_C_FLOAT
 		if (tpp_ascii_isdigit(ch2)) {
-			if (tpp_lexer_has(self, TPP_TOK_C_FLOAT)) {
+			if (tpp_lexer_has(self, TOK_C_FLOAT)) {
 				result = tpp_lexer_seek_end_of_c_float(self, &pos, TPP_TOK_C_FLOAT);
 				if (TPP_TOK_ISERR(result)) {
 					error = TPP_TOK_ASERR(result);
@@ -2906,47 +2906,47 @@ not_a_trigraph:
 				goto set_result;
 			}
 		} else
-#endif /* TPP_HAVE_TPP_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_C_FLOAT */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")(".", "0123456789");]]]*/
-#if TPP_HAVE_TPP_TOK_DOT_STAR
+#if TPP_HAVE_TOK_DOT_STAR
 		if (ch2 == '*') {
-			if (tpp_lexer_has(self, TPP_TOK_DOT_STAR)) {
+			if (tpp_lexer_has(self, TOK_DOT_STAR)) {
 				result = TPP_TOK_DOT_STAR; /* ".*" */
 				goto set_result;
 			}
 		} else
-#endif /* TPP_HAVE_TPP_TOK_DOT_STAR */
-#if TPP_HAVE_TPP_TOK_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT_DOT
+#endif /* TPP_HAVE_TOK_DOT_STAR */
+#if TPP_HAVE_TOK_DOT_DOT || TPP_HAVE_TOK_DOT_DOT_DOT
 		if (ch2 == '.') {
-#if TPP_HAVE_TPP_TOK_DOT_DOT_DOT
-			if (tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)) {
-#if TPP_HAVE_TPP_TOK_DOT_DOT
+#if TPP_HAVE_TOK_DOT_DOT_DOT
+			if (tpp_lexer_has(self, TOK_DOT_DOT_DOT)) {
+#if TPP_HAVE_TOK_DOT_DOT
 				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
+#endif /* TPP_HAVE_TOK_DOT_DOT */
 				read_ch2();
-#if TPP_HAVE_TPP_TOK_DOT_DOT_DOT
+#if TPP_HAVE_TOK_DOT_DOT_DOT
 				if (ch2 == '.') {
-					if (tpp_lexer_has(self, TPP_TOK_DOT_DOT_DOT)) {
+					if (tpp_lexer_has(self, TOK_DOT_DOT_DOT)) {
 						result = TPP_TOK_DOT_DOT_DOT; /* "..." */
 						goto set_result;
 					}
 				} else
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
+#endif /* TPP_HAVE_TOK_DOT_DOT_DOT */
 				{
 				}
-#if TPP_HAVE_TPP_TOK_DOT_DOT
+#if TPP_HAVE_TOK_DOT_DOT
 				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
+#endif /* TPP_HAVE_TOK_DOT_DOT */
 			}
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
-#if TPP_HAVE_TPP_TOK_DOT_DOT
-			if (tpp_lexer_has(self, TPP_TOK_DOT_DOT)) {
+#endif /* TPP_HAVE_TOK_DOT_DOT_DOT */
+#if TPP_HAVE_TOK_DOT_DOT
+			if (tpp_lexer_has(self, TOK_DOT_DOT)) {
 				result = TPP_TOK_DOT_DOT; /* ".." */
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT */
+#endif /* TPP_HAVE_TOK_DOT_DOT */
 		} else
-#endif /* TPP_HAVE_TPP_TOK_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
+#endif /* TPP_HAVE_TOK_DOT_DOT || TPP_HAVE_TOK_DOT_DOT_DOT */
 /*[[[end]]]*/
 		{
 		}
@@ -2961,133 +2961,133 @@ not_a_trigraph:
 	"<-/%#:?.@", // first-token-characters that require custom case-es above
 	useSwitch: true
 );]]]*/
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_EXCLAIM
+#if TPP_HAVE_TOK_MC_STARTSWITH_EXCLAIM
 	case '!': {
-		if (tpp_lexer_has(self, TPP_TOK_EXCLAIM_EXCLAIM) ||
-		    tpp_lexer_has(self, TPP_TOK_EXCLAIM_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_EXCLAIM_EQUAL_EQUAL)) {
+		if (tpp_lexer_has(self, TOK_EXCLAIM_EXCLAIM) ||
+		    tpp_lexer_has(self, TOK_EXCLAIM_EQUAL) ||
+		    tpp_lexer_has(self, TOK_EXCLAIM_EQUAL_EQUAL)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+#if TPP_HAVE_TOK_EXCLAIM_EXCLAIM
 			if (ch2 == '!') {
-				if (tpp_lexer_has(self, TPP_TOK_EXCLAIM_EXCLAIM)) {
+				if (tpp_lexer_has(self, TOK_EXCLAIM_EXCLAIM)) {
 					result = TPP_TOK_EXCLAIM_EXCLAIM; /* "!!" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
+#endif /* TPP_HAVE_TOK_EXCLAIM_EXCLAIM */
+#if TPP_HAVE_TOK_EXCLAIM_EQUAL || TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL
 			if (ch2 == '=') {
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
-				if (tpp_lexer_has(self, TPP_TOK_EXCLAIM_EQUAL_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
+#if TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL
+				if (tpp_lexer_has(self, TOK_EXCLAIM_EQUAL_EQUAL)) {
+#if TPP_HAVE_TOK_EXCLAIM_EQUAL
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
+#if TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL
 					if (ch2 == '=') {
-						if (tpp_lexer_has(self, TPP_TOK_EXCLAIM_EQUAL_EQUAL)) {
+						if (tpp_lexer_has(self, TOK_EXCLAIM_EQUAL_EQUAL)) {
 							result = TPP_TOK_EXCLAIM_EQUAL_EQUAL; /* "!==" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
+#if TPP_HAVE_TOK_EXCLAIM_EQUAL
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL */
 				}
-#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
-				if (tpp_lexer_has(self, TPP_TOK_EXCLAIM_EQUAL)) {
+#endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL */
+#if TPP_HAVE_TOK_EXCLAIM_EQUAL
+				if (tpp_lexer_has(self, TOK_EXCLAIM_EQUAL)) {
 					result = TPP_TOK_EXCLAIM_EQUAL; /* "!=" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL */
 			} else
-#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL || TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL */
 			{
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_EXCLAIM */
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_AMP
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_EXCLAIM */
+#if TPP_HAVE_TOK_MC_STARTSWITH_AMP
 	case '&': {
-		if (tpp_lexer_has(self, TPP_TOK_AMP_AMP) ||
-		    tpp_lexer_has(self, TPP_TOK_AMP_EQUAL)) {
+		if (tpp_lexer_has(self, TOK_AMP_AMP) ||
+		    tpp_lexer_has(self, TOK_AMP_EQUAL)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_AMP_AMP
+#if TPP_HAVE_TOK_AMP_AMP
 			if (ch2 == '&') {
-				if (tpp_lexer_has(self, TPP_TOK_AMP_AMP)) {
+				if (tpp_lexer_has(self, TOK_AMP_AMP)) {
 					result = TPP_TOK_AMP_AMP; /* "&&" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_AMP_AMP */
-#if TPP_HAVE_TPP_TOK_AMP_EQUAL
+#endif /* TPP_HAVE_TOK_AMP_AMP */
+#if TPP_HAVE_TOK_AMP_EQUAL
 			if (ch2 == '=') {
-				if (tpp_lexer_has(self, TPP_TOK_AMP_EQUAL)) {
+				if (tpp_lexer_has(self, TOK_AMP_EQUAL)) {
 					result = TPP_TOK_AMP_EQUAL; /* "&=" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_AMP_EQUAL */
+#endif /* TPP_HAVE_TOK_AMP_EQUAL */
 			{
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_AMP */
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_STAR
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_AMP */
+#if TPP_HAVE_TOK_MC_STARTSWITH_STAR
 	case '*': {
-		if (tpp_lexer_has(self, TPP_TOK_STAR_STAR) ||
-		    tpp_lexer_has(self, TPP_TOK_STAR_STAR_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_STAR_DOT) ||
-		    tpp_lexer_has(self, TPP_TOK_STAR_LANGLE_MINUS) ||
-		    tpp_lexer_has(self, TPP_TOK_STAR_EQUAL)) {
+		if (tpp_lexer_has(self, TOK_STAR_STAR) ||
+		    tpp_lexer_has(self, TOK_STAR_STAR_EQUAL) ||
+		    tpp_lexer_has(self, TOK_STAR_DOT) ||
+		    tpp_lexer_has(self, TOK_STAR_LANGLE_MINUS) ||
+		    tpp_lexer_has(self, TOK_STAR_EQUAL)) {
 			read_ch2();
 			switch (ch2) {
-#if TPP_HAVE_TPP_TOK_STAR_STAR || TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
+#if TPP_HAVE_TOK_STAR_STAR || TPP_HAVE_TOK_STAR_STAR_EQUAL
 			case '*': {
-#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
-				if (tpp_lexer_has(self, TPP_TOK_STAR_STAR_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_STAR_STAR
+#if TPP_HAVE_TOK_STAR_STAR_EQUAL
+				if (tpp_lexer_has(self, TOK_STAR_STAR_EQUAL)) {
+#if TPP_HAVE_TOK_STAR_STAR
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR */
+#endif /* TPP_HAVE_TOK_STAR_STAR */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
+#if TPP_HAVE_TOK_STAR_STAR_EQUAL
 					if (ch2 == '=') {
-						if (tpp_lexer_has(self, TPP_TOK_STAR_STAR_EQUAL)) {
+						if (tpp_lexer_has(self, TOK_STAR_STAR_EQUAL)) {
 							result = TPP_TOK_STAR_STAR_EQUAL; /* "**=" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL */
+#endif /* TPP_HAVE_TOK_STAR_STAR_EQUAL */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_STAR_STAR
+#if TPP_HAVE_TOK_STAR_STAR
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR */
+#endif /* TPP_HAVE_TOK_STAR_STAR */
 				}
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL */
-#if TPP_HAVE_TPP_TOK_STAR_STAR
-				if (tpp_lexer_has(self, TPP_TOK_STAR_STAR)) {
+#endif /* TPP_HAVE_TOK_STAR_STAR_EQUAL */
+#if TPP_HAVE_TOK_STAR_STAR
+				if (tpp_lexer_has(self, TOK_STAR_STAR)) {
 					result = TPP_TOK_STAR_STAR; /* "**" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR */
+#endif /* TPP_HAVE_TOK_STAR_STAR */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_STAR_STAR || TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL */
-#if TPP_HAVE_TPP_TOK_STAR_DOT
+#endif /* TPP_HAVE_TOK_STAR_STAR || TPP_HAVE_TOK_STAR_STAR_EQUAL */
+#if TPP_HAVE_TOK_STAR_DOT
 			case '.': {
-				if (tpp_lexer_has(self, TPP_TOK_STAR_DOT)) {
+				if (tpp_lexer_has(self, TOK_STAR_DOT)) {
 					result = TPP_TOK_STAR_DOT; /* "*." */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_STAR_DOT */
-#if TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS
+#endif /* TPP_HAVE_TOK_STAR_DOT */
+#if TPP_HAVE_TOK_STAR_LANGLE_MINUS
 			case '<': {
-				if (tpp_lexer_has(self, TPP_TOK_STAR_LANGLE_MINUS)) {
+				if (tpp_lexer_has(self, TOK_STAR_LANGLE_MINUS)) {
 					read_ch2();
 					if (ch2 == '-') {
 						result = TPP_TOK_STAR_LANGLE_MINUS; /* "*<-" */
@@ -3095,706 +3095,706 @@ not_a_trigraph:
 					}
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS */
-#if TPP_HAVE_TPP_TOK_STAR_EQUAL
+#endif /* TPP_HAVE_TOK_STAR_LANGLE_MINUS */
+#if TPP_HAVE_TOK_STAR_EQUAL
 			case '=': {
-				if (tpp_lexer_has(self, TPP_TOK_STAR_EQUAL)) {
+				if (tpp_lexer_has(self, TOK_STAR_EQUAL)) {
 					result = TPP_TOK_STAR_EQUAL; /* "*=" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_STAR_EQUAL */
+#endif /* TPP_HAVE_TOK_STAR_EQUAL */
 			default: break;
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_STAR */
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_PLUS
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_STAR */
+#if TPP_HAVE_TOK_MC_STARTSWITH_PLUS
 	case '+': {
-		if (tpp_lexer_has(self, TPP_TOK_PLUS_PLUS) ||
-		    tpp_lexer_has(self, TPP_TOK_PLUS_EQUAL)) {
+		if (tpp_lexer_has(self, TOK_PLUS_PLUS) ||
+		    tpp_lexer_has(self, TOK_PLUS_EQUAL)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_PLUS_PLUS
+#if TPP_HAVE_TOK_PLUS_PLUS
 			if (ch2 == '+') {
-				if (tpp_lexer_has(self, TPP_TOK_PLUS_PLUS)) {
+				if (tpp_lexer_has(self, TOK_PLUS_PLUS)) {
 					result = TPP_TOK_PLUS_PLUS; /* "++" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_PLUS_PLUS */
-#if TPP_HAVE_TPP_TOK_PLUS_EQUAL
+#endif /* TPP_HAVE_TOK_PLUS_PLUS */
+#if TPP_HAVE_TOK_PLUS_EQUAL
 			if (ch2 == '=') {
-				if (tpp_lexer_has(self, TPP_TOK_PLUS_EQUAL)) {
+				if (tpp_lexer_has(self, TOK_PLUS_EQUAL)) {
 					result = TPP_TOK_PLUS_EQUAL; /* "+=" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_PLUS_EQUAL */
+#endif /* TPP_HAVE_TOK_PLUS_EQUAL */
 			{
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_PLUS */
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_EQUAL
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_PLUS */
+#if TPP_HAVE_TOK_MC_STARTSWITH_EQUAL
 	case '=': {
-		if (tpp_lexer_has(self, TPP_TOK_EQUAL_EXCLAIM) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT_PERCENT) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_AMP) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_STAR) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_STAR_STAR) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_PLUS) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_MINUS) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_SLASH) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_SLASH_SLASH) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_COLON) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_QMARK) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_AT) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_AT_AT) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_HAT) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_PIPE) ||
-		    tpp_lexer_has(self, TPP_TOK_EQUAL_TILDE)) {
+		if (tpp_lexer_has(self, TOK_EQUAL_EXCLAIM) ||
+		    tpp_lexer_has(self, TOK_EQUAL_PERCENT) ||
+		    tpp_lexer_has(self, TOK_EQUAL_PERCENT_PERCENT) ||
+		    tpp_lexer_has(self, TOK_EQUAL_AMP) ||
+		    tpp_lexer_has(self, TOK_EQUAL_STAR) ||
+		    tpp_lexer_has(self, TOK_EQUAL_STAR_STAR) ||
+		    tpp_lexer_has(self, TOK_EQUAL_PLUS) ||
+		    tpp_lexer_has(self, TOK_EQUAL_MINUS) ||
+		    tpp_lexer_has(self, TOK_EQUAL_SLASH) ||
+		    tpp_lexer_has(self, TOK_EQUAL_SLASH_SLASH) ||
+		    tpp_lexer_has(self, TOK_EQUAL_COLON) ||
+		    tpp_lexer_has(self, TOK_EQUAL_LANGLE) ||
+		    tpp_lexer_has(self, TOK_EQUAL_LANGLE_LANGLE) ||
+		    tpp_lexer_has(self, TOK_EQUAL_LANGLE_LANGLE_LANGLE) ||
+		    tpp_lexer_has(self, TOK_EQUAL_EQUAL) ||
+		    tpp_lexer_has(self, TOK_EQUAL_EQUAL_EXCLAIM) ||
+		    tpp_lexer_has(self, TOK_EQUAL_EQUAL_EQUAL) ||
+		    tpp_lexer_has(self, TOK_EQUAL_RANGLE) ||
+		    tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE) ||
+		    tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE_RANGLE) ||
+		    tpp_lexer_has(self, TOK_EQUAL_QMARK) ||
+		    tpp_lexer_has(self, TOK_EQUAL_AT) ||
+		    tpp_lexer_has(self, TOK_EQUAL_AT_AT) ||
+		    tpp_lexer_has(self, TOK_EQUAL_HAT) ||
+		    tpp_lexer_has(self, TOK_EQUAL_PIPE) ||
+		    tpp_lexer_has(self, TOK_EQUAL_TILDE)) {
 			read_ch2();
 			switch (ch2) {
-#if TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM
+#if TPP_HAVE_TOK_EQUAL_EXCLAIM
 			case '!': {
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_EXCLAIM)) {
+				if (tpp_lexer_has(self, TOK_EQUAL_EXCLAIM)) {
 					result = TPP_TOK_EQUAL_EXCLAIM; /* "=!" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM */
-#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT || TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT
+#endif /* TPP_HAVE_TOK_EQUAL_EXCLAIM */
+#if TPP_HAVE_TOK_EQUAL_PERCENT || TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT
 			case '%': {
-#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT_PERCENT)) {
-#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT
+#if TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT
+				if (tpp_lexer_has(self, TOK_EQUAL_PERCENT_PERCENT)) {
+#if TPP_HAVE_TOK_EQUAL_PERCENT
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT */
+#endif /* TPP_HAVE_TOK_EQUAL_PERCENT */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT
+#if TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT
 					if (ch2 == '%') {
-						if (tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT_PERCENT)) {
+						if (tpp_lexer_has(self, TOK_EQUAL_PERCENT_PERCENT)) {
 							result = TPP_TOK_EQUAL_PERCENT_PERCENT; /* "=%%" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT */
+#endif /* TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT
+#if TPP_HAVE_TOK_EQUAL_PERCENT
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT */
+#endif /* TPP_HAVE_TOK_EQUAL_PERCENT */
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT */
-#if TPP_HAVE_TPP_TOK_EQUAL_PERCENT
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_PERCENT)) {
+#endif /* TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT */
+#if TPP_HAVE_TOK_EQUAL_PERCENT
+				if (tpp_lexer_has(self, TOK_EQUAL_PERCENT)) {
 					result = TPP_TOK_EQUAL_PERCENT; /* "=%" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT */
+#endif /* TPP_HAVE_TOK_EQUAL_PERCENT */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_PERCENT || TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT */
-#if TPP_HAVE_TPP_TOK_EQUAL_AMP
+#endif /* TPP_HAVE_TOK_EQUAL_PERCENT || TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT */
+#if TPP_HAVE_TOK_EQUAL_AMP
 			case '&': {
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_AMP)) {
+				if (tpp_lexer_has(self, TOK_EQUAL_AMP)) {
 					result = TPP_TOK_EQUAL_AMP; /* "=&" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_AMP */
-#if TPP_HAVE_TPP_TOK_EQUAL_STAR || TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
+#endif /* TPP_HAVE_TOK_EQUAL_AMP */
+#if TPP_HAVE_TOK_EQUAL_STAR || TPP_HAVE_TOK_EQUAL_STAR_STAR
 			case '*': {
-#if TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_STAR_STAR)) {
-#if TPP_HAVE_TPP_TOK_EQUAL_STAR
+#if TPP_HAVE_TOK_EQUAL_STAR_STAR
+				if (tpp_lexer_has(self, TOK_EQUAL_STAR_STAR)) {
+#if TPP_HAVE_TOK_EQUAL_STAR
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR */
+#endif /* TPP_HAVE_TOK_EQUAL_STAR */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
+#if TPP_HAVE_TOK_EQUAL_STAR_STAR
 					if (ch2 == '*') {
-						if (tpp_lexer_has(self, TPP_TOK_EQUAL_STAR_STAR)) {
+						if (tpp_lexer_has(self, TOK_EQUAL_STAR_STAR)) {
 							result = TPP_TOK_EQUAL_STAR_STAR; /* "=**" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR */
+#endif /* TPP_HAVE_TOK_EQUAL_STAR_STAR */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_EQUAL_STAR
+#if TPP_HAVE_TOK_EQUAL_STAR
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR */
+#endif /* TPP_HAVE_TOK_EQUAL_STAR */
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR */
-#if TPP_HAVE_TPP_TOK_EQUAL_STAR
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_STAR)) {
+#endif /* TPP_HAVE_TOK_EQUAL_STAR_STAR */
+#if TPP_HAVE_TOK_EQUAL_STAR
+				if (tpp_lexer_has(self, TOK_EQUAL_STAR)) {
 					result = TPP_TOK_EQUAL_STAR; /* "=*" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR */
+#endif /* TPP_HAVE_TOK_EQUAL_STAR */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_STAR || TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR */
-#if TPP_HAVE_TPP_TOK_EQUAL_PLUS
+#endif /* TPP_HAVE_TOK_EQUAL_STAR || TPP_HAVE_TOK_EQUAL_STAR_STAR */
+#if TPP_HAVE_TOK_EQUAL_PLUS
 			case '+': {
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_PLUS)) {
+				if (tpp_lexer_has(self, TOK_EQUAL_PLUS)) {
 					result = TPP_TOK_EQUAL_PLUS; /* "=+" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_PLUS */
-#if TPP_HAVE_TPP_TOK_EQUAL_MINUS
+#endif /* TPP_HAVE_TOK_EQUAL_PLUS */
+#if TPP_HAVE_TOK_EQUAL_MINUS
 			case '-': {
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_MINUS)) {
+				if (tpp_lexer_has(self, TOK_EQUAL_MINUS)) {
 					result = TPP_TOK_EQUAL_MINUS; /* "=-" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_MINUS */
-#if TPP_HAVE_TPP_TOK_EQUAL_SLASH || TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
+#endif /* TPP_HAVE_TOK_EQUAL_MINUS */
+#if TPP_HAVE_TOK_EQUAL_SLASH || TPP_HAVE_TOK_EQUAL_SLASH_SLASH
 			case '/': {
-#if TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_SLASH_SLASH)) {
-#if TPP_HAVE_TPP_TOK_EQUAL_SLASH
+#if TPP_HAVE_TOK_EQUAL_SLASH_SLASH
+				if (tpp_lexer_has(self, TOK_EQUAL_SLASH_SLASH)) {
+#if TPP_HAVE_TOK_EQUAL_SLASH
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH */
+#endif /* TPP_HAVE_TOK_EQUAL_SLASH */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
+#if TPP_HAVE_TOK_EQUAL_SLASH_SLASH
 					if (ch2 == '/') {
-						if (tpp_lexer_has(self, TPP_TOK_EQUAL_SLASH_SLASH)) {
+						if (tpp_lexer_has(self, TOK_EQUAL_SLASH_SLASH)) {
 							result = TPP_TOK_EQUAL_SLASH_SLASH; /* "=//" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH */
+#endif /* TPP_HAVE_TOK_EQUAL_SLASH_SLASH */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_EQUAL_SLASH
+#if TPP_HAVE_TOK_EQUAL_SLASH
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH */
+#endif /* TPP_HAVE_TOK_EQUAL_SLASH */
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH */
-#if TPP_HAVE_TPP_TOK_EQUAL_SLASH
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_SLASH)) {
+#endif /* TPP_HAVE_TOK_EQUAL_SLASH_SLASH */
+#if TPP_HAVE_TOK_EQUAL_SLASH
+				if (tpp_lexer_has(self, TOK_EQUAL_SLASH)) {
 					result = TPP_TOK_EQUAL_SLASH; /* "=/" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH */
+#endif /* TPP_HAVE_TOK_EQUAL_SLASH */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_SLASH || TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH */
-#if TPP_HAVE_TPP_TOK_EQUAL_COLON
+#endif /* TPP_HAVE_TOK_EQUAL_SLASH || TPP_HAVE_TOK_EQUAL_SLASH_SLASH */
+#if TPP_HAVE_TOK_EQUAL_COLON
 			case ':': {
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_COLON)) {
+				if (tpp_lexer_has(self, TOK_EQUAL_COLON)) {
 					result = TPP_TOK_EQUAL_COLON; /* "=:" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_COLON */
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
+#endif /* TPP_HAVE_TOK_EQUAL_COLON */
+#if TPP_HAVE_TOK_EQUAL_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
 			case '<': {
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE) ||
-				    tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE
+#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
+				if (tpp_lexer_has(self, TOK_EQUAL_LANGLE_LANGLE) ||
+				    tpp_lexer_has(self, TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
+#if TPP_HAVE_TOK_EQUAL_LANGLE
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
+#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
 					if (ch2 == '<') {
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
-						if (tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
+#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
+						if (tpp_lexer_has(self, TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
+#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE
 							tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE */
 							read_ch2();
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
+#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
 							if (ch2 == '<') {
-								if (tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
+								if (tpp_lexer_has(self, TOK_EQUAL_LANGLE_LANGLE_LANGLE)) {
 									result = TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE; /* "=<<<" */
 									goto set_result;
 								}
 							} else
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
 							{
 							}
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
+#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE
 							pos = tpp_file_rel2ptr(file, rel_end_of_3char);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE */
 						}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
-						if (tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE_LANGLE)) {
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE
+						if (tpp_lexer_has(self, TOK_EQUAL_LANGLE_LANGLE)) {
 							result = TPP_TOK_EQUAL_LANGLE_LANGLE; /* "=<<" */
 							goto set_result;
 						}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE */
 					} else
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE
+#if TPP_HAVE_TOK_EQUAL_LANGLE
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE */
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_LANGLE)) {
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TOK_EQUAL_LANGLE
+				if (tpp_lexer_has(self, TOK_EQUAL_LANGLE)) {
 					result = TPP_TOK_EQUAL_LANGLE; /* "=<" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TOK_EQUAL_EQUAL || TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM || TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL
 			case '=': {
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM) ||
-				    tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL
+#if TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM || TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL
+				if (tpp_lexer_has(self, TOK_EQUAL_EQUAL_EXCLAIM) ||
+				    tpp_lexer_has(self, TOK_EQUAL_EQUAL_EQUAL)) {
+#if TPP_HAVE_TOK_EQUAL_EQUAL
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL */
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM
+#if TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM
 					if (ch2 == '!') {
-						if (tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EXCLAIM)) {
+						if (tpp_lexer_has(self, TOK_EQUAL_EQUAL_EXCLAIM)) {
 							result = TPP_TOK_EQUAL_EQUAL_EXCLAIM; /* "==!" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM */
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM */
+#if TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL
 					if (ch2 == '=') {
-						if (tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL_EQUAL)) {
+						if (tpp_lexer_has(self, TOK_EQUAL_EQUAL_EQUAL)) {
 							result = TPP_TOK_EQUAL_EQUAL_EQUAL; /* "===" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL */
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL
+#if TPP_HAVE_TOK_EQUAL_EQUAL
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL */
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL */
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL */
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_EQUAL)) {
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM || TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL */
+#if TPP_HAVE_TOK_EQUAL_EQUAL
+				if (tpp_lexer_has(self, TOK_EQUAL_EQUAL)) {
 					result = TPP_TOK_EQUAL_EQUAL; /* "==" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL */
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL */
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL || TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM || TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL */
+#if TPP_HAVE_TOK_EQUAL_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 			case '>': {
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE) ||
-				    tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE
+#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
+				if (tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE) ||
+				    tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
+#if TPP_HAVE_TOK_EQUAL_RANGLE
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
+#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 					if (ch2 == '>') {
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
-						if (tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
+#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
+						if (tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
+#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE
 							tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE */
 							read_ch2();
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
+#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 							if (ch2 == '>') {
-								if (tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
+								if (tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE_RANGLE)) {
 									result = TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE; /* "=>>>" */
 									goto set_result;
 								}
 							} else
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 							{
 							}
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
+#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE
 							pos = tpp_file_rel2ptr(file, rel_end_of_3char);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE */
 						}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
-						if (tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE_RANGLE)) {
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE
+						if (tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE)) {
 							result = TPP_TOK_EQUAL_RANGLE_RANGLE; /* "=>>" */
 							goto set_result;
 						}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE */
 					} else
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE
+#if TPP_HAVE_TOK_EQUAL_RANGLE
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE */
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_RANGLE)) {
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TOK_EQUAL_RANGLE
+				if (tpp_lexer_has(self, TOK_EQUAL_RANGLE)) {
 					result = TPP_TOK_EQUAL_RANGLE; /* "=>" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_EQUAL_QMARK
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TOK_EQUAL_QMARK
 			case '?': {
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_QMARK)) {
+				if (tpp_lexer_has(self, TOK_EQUAL_QMARK)) {
 					warn_if_ch2_is_trigraph(); /* "???" -> "?" */
 					result = TPP_TOK_EQUAL_QMARK; /* "=?" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_QMARK */
-#if TPP_HAVE_TPP_TOK_EQUAL_AT || TPP_HAVE_TPP_TOK_EQUAL_AT_AT
+#endif /* TPP_HAVE_TOK_EQUAL_QMARK */
+#if TPP_HAVE_TOK_EQUAL_AT || TPP_HAVE_TOK_EQUAL_AT_AT
 			case '@': {
-#if TPP_HAVE_TPP_TOK_EQUAL_AT_AT
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_AT_AT)) {
-#if TPP_HAVE_TPP_TOK_EQUAL_AT
+#if TPP_HAVE_TOK_EQUAL_AT_AT
+				if (tpp_lexer_has(self, TOK_EQUAL_AT_AT)) {
+#if TPP_HAVE_TOK_EQUAL_AT
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT */
+#endif /* TPP_HAVE_TOK_EQUAL_AT */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_EQUAL_AT_AT
+#if TPP_HAVE_TOK_EQUAL_AT_AT
 					if (ch2 == '@') {
-						if (tpp_lexer_has(self, TPP_TOK_EQUAL_AT_AT)) {
+						if (tpp_lexer_has(self, TOK_EQUAL_AT_AT)) {
 							result = TPP_TOK_EQUAL_AT_AT; /* "=@@" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT_AT */
+#endif /* TPP_HAVE_TOK_EQUAL_AT_AT */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_EQUAL_AT
+#if TPP_HAVE_TOK_EQUAL_AT
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT */
+#endif /* TPP_HAVE_TOK_EQUAL_AT */
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT_AT */
-#if TPP_HAVE_TPP_TOK_EQUAL_AT
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_AT)) {
+#endif /* TPP_HAVE_TOK_EQUAL_AT_AT */
+#if TPP_HAVE_TOK_EQUAL_AT
+				if (tpp_lexer_has(self, TOK_EQUAL_AT)) {
 					result = TPP_TOK_EQUAL_AT; /* "=@" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT */
+#endif /* TPP_HAVE_TOK_EQUAL_AT */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_AT || TPP_HAVE_TPP_TOK_EQUAL_AT_AT */
-#if TPP_HAVE_TPP_TOK_EQUAL_HAT
+#endif /* TPP_HAVE_TOK_EQUAL_AT || TPP_HAVE_TOK_EQUAL_AT_AT */
+#if TPP_HAVE_TOK_EQUAL_HAT
 			case '^': {
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_HAT)) {
+				if (tpp_lexer_has(self, TOK_EQUAL_HAT)) {
 					warn_if_ch2_is_trigraph(); /* "??'" -> "^" */
 					result = TPP_TOK_EQUAL_HAT; /* "=^" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_HAT */
-#if TPP_HAVE_TPP_TOK_EQUAL_PIPE
+#endif /* TPP_HAVE_TOK_EQUAL_HAT */
+#if TPP_HAVE_TOK_EQUAL_PIPE
 			case '|': {
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_PIPE)) {
+				if (tpp_lexer_has(self, TOK_EQUAL_PIPE)) {
 					warn_if_ch2_is_trigraph(); /* "??!" -> "|" */
 					result = TPP_TOK_EQUAL_PIPE; /* "=|" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_PIPE */
-#if TPP_HAVE_TPP_TOK_EQUAL_TILDE
+#endif /* TPP_HAVE_TOK_EQUAL_PIPE */
+#if TPP_HAVE_TOK_EQUAL_TILDE
 			case '~': {
-				if (tpp_lexer_has(self, TPP_TOK_EQUAL_TILDE)) {
+				if (tpp_lexer_has(self, TOK_EQUAL_TILDE)) {
 					warn_if_ch2_is_trigraph(); /* "??-" -> "~" */
 					result = TPP_TOK_EQUAL_TILDE; /* "=~" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_TILDE */
+#endif /* TPP_HAVE_TOK_EQUAL_TILDE */
 			default: break;
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_EQUAL */
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_RANGLE
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_EQUAL */
+#if TPP_HAVE_TOK_MC_STARTSWITH_RANGLE
 	case '>': {
-		if (tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_LANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_RANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_LANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_LANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_RANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_MINUS) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS) ||
-		    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
+		if (tpp_lexer_has(self, TOK_RANGLE_MINUS) ||
+		    tpp_lexer_has(self, TOK_RANGLE_MINUS_LANGLE) ||
+		    tpp_lexer_has(self, TOK_RANGLE_MINUS_RANGLE) ||
+		    tpp_lexer_has(self, TOK_RANGLE_LANGLE) ||
+		    tpp_lexer_has(self, TOK_RANGLE_EQUAL) ||
+		    tpp_lexer_has(self, TOK_RANGLE_EQUAL_LANGLE) ||
+		    tpp_lexer_has(self, TOK_RANGLE_EQUAL_RANGLE) ||
+		    tpp_lexer_has(self, TOK_RANGLE_RANGLE) ||
+		    tpp_lexer_has(self, TOK_RANGLE_RANGLE_MINUS) ||
+		    tpp_lexer_has(self, TOK_RANGLE_RANGLE_EQUAL) ||
+		    tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE) ||
+		    tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE_MINUS) ||
+		    tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
 			read_ch2();
 			switch (ch2) {
-#if TPP_HAVE_TPP_TOK_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+#if TPP_HAVE_TOK_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TOK_RANGLE_MINUS_RANGLE
 			case '-': {
-#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
-				if (tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_LANGLE) ||
-				    tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_RANGLE)) {
-#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+#if TPP_HAVE_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TOK_RANGLE_MINUS_RANGLE
+				if (tpp_lexer_has(self, TOK_RANGLE_MINUS_LANGLE) ||
+				    tpp_lexer_has(self, TOK_RANGLE_MINUS_RANGLE)) {
+#if TPP_HAVE_TOK_RANGLE_MINUS
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#endif /* TPP_HAVE_TOK_RANGLE_MINUS */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+#if TPP_HAVE_TOK_RANGLE_MINUS_LANGLE
 					if (ch2 == '<') {
-						if (tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_LANGLE)) {
+						if (tpp_lexer_has(self, TOK_RANGLE_MINUS_LANGLE)) {
 							result = TPP_TOK_RANGLE_MINUS_LANGLE; /* ">-<" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+#endif /* TPP_HAVE_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TOK_RANGLE_MINUS_RANGLE
 					if (ch2 == '>') {
-						if (tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS_RANGLE)) {
+						if (tpp_lexer_has(self, TOK_RANGLE_MINUS_RANGLE)) {
 							result = TPP_TOK_RANGLE_MINUS_RANGLE; /* ">->" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_MINUS_RANGLE */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
+#if TPP_HAVE_TOK_RANGLE_MINUS
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#endif /* TPP_HAVE_TOK_RANGLE_MINUS */
 				}
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_MINUS
-				if (tpp_lexer_has(self, TPP_TOK_RANGLE_MINUS)) {
+#endif /* TPP_HAVE_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TOK_RANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TOK_RANGLE_MINUS
+				if (tpp_lexer_has(self, TOK_RANGLE_MINUS)) {
 					result = TPP_TOK_RANGLE_MINUS; /* ">-" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#endif /* TPP_HAVE_TOK_RANGLE_MINUS */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_LANGLE
+#endif /* TPP_HAVE_TOK_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TOK_RANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TOK_RANGLE_LANGLE
 			case '<': {
-				if (tpp_lexer_has(self, TPP_TOK_RANGLE_LANGLE)) {
+				if (tpp_lexer_has(self, TOK_RANGLE_LANGLE)) {
 					result = TPP_TOK_RANGLE_LANGLE; /* "><" */
 					goto set_result;
 				}
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+#endif /* TPP_HAVE_TOK_RANGLE_LANGLE */
+#if TPP_HAVE_TOK_RANGLE_EQUAL || TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE
 			case '=': {
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
-				if (tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_LANGLE) ||
-				    tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_RANGLE)) {
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+#if TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE
+				if (tpp_lexer_has(self, TOK_RANGLE_EQUAL_LANGLE) ||
+				    tpp_lexer_has(self, TOK_RANGLE_EQUAL_RANGLE)) {
+#if TPP_HAVE_TOK_RANGLE_EQUAL
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL */
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+#if TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE
 					if (ch2 == '<') {
-						if (tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_LANGLE)) {
+						if (tpp_lexer_has(self, TOK_RANGLE_EQUAL_LANGLE)) {
 							result = TPP_TOK_RANGLE_EQUAL_LANGLE; /* ">=<" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE
 					if (ch2 == '>') {
-						if (tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL_RANGLE)) {
+						if (tpp_lexer_has(self, TOK_RANGLE_EQUAL_RANGLE)) {
 							result = TPP_TOK_RANGLE_EQUAL_RANGLE; /* ">=>" */
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE */
 					{
 					}
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+#if TPP_HAVE_TOK_RANGLE_EQUAL
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL */
 				}
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
-				if (tpp_lexer_has(self, TPP_TOK_RANGLE_EQUAL)) {
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TOK_RANGLE_EQUAL
+				if (tpp_lexer_has(self, TOK_RANGLE_EQUAL)) {
 					result = TPP_TOK_RANGLE_EQUAL; /* ">=" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL || TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TOK_RANGLE_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 			case '>': {
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
-				if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_MINUS) ||
-				    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_EQUAL) ||
-				    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE) ||
-				    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS) ||
-				    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
+#if TPP_HAVE_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+				if (tpp_lexer_has(self, TOK_RANGLE_RANGLE_MINUS) ||
+				    tpp_lexer_has(self, TOK_RANGLE_RANGLE_EQUAL) ||
+				    tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE) ||
+				    tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE_MINUS) ||
+				    tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
+#if TPP_HAVE_TOK_RANGLE_RANGLE
 					tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE */
 					read_ch2();
 					switch (ch2) {
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS
+#if TPP_HAVE_TOK_RANGLE_RANGLE_MINUS
 					case '-': {
-						if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_MINUS)) {
+						if (tpp_lexer_has(self, TOK_RANGLE_RANGLE_MINUS)) {
 							result = TPP_TOK_RANGLE_RANGLE_MINUS; /* ">>-" */
 							goto set_result;
 						}
 					}	break;
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_MINUS */
+#if TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL
 					case '=': {
-						if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_EQUAL)) {
+						if (tpp_lexer_has(self, TOK_RANGLE_RANGLE_EQUAL)) {
 							result = TPP_TOK_RANGLE_RANGLE_EQUAL; /* ">>=" */
 							goto set_result;
 						}
 					}	break;
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 					case '>': {
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
-						if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS) ||
-						    tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+						if (tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE_MINUS) ||
+						    tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE
 							tpp_size rel_end_of_3char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE */
 							read_ch2();
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS
 							if (ch2 == '-') {
-								if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS)) {
+								if (tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE_MINUS)) {
 									result = TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS; /* ">>>-" */
 									goto set_result;
 								}
 							} else
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS */
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 							if (ch2 == '=') {
-								if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
+								if (tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE_EQUAL)) {
 									result = TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL; /* ">>>=" */
 									goto set_result;
 								}
 							} else
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 							{
 							}
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE
 							pos = tpp_file_rel2ptr(file, rel_end_of_3char);
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE */
 						}
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
-						if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE_RANGLE)) {
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE
+						if (tpp_lexer_has(self, TOK_RANGLE_RANGLE_RANGLE)) {
 							result = TPP_TOK_RANGLE_RANGLE_RANGLE; /* ">>>" */
 							goto set_result;
 						}
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE */
 					}	break;
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 					default: break;
 					}
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
+#if TPP_HAVE_TOK_RANGLE_RANGLE
 					pos = tpp_file_rel2ptr(file, rel_end_of_2char);
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE */
 				}
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
-				if (tpp_lexer_has(self, TPP_TOK_RANGLE_RANGLE)) {
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TOK_RANGLE_RANGLE
+				if (tpp_lexer_has(self, TOK_RANGLE_RANGLE)) {
 					result = TPP_TOK_RANGLE_RANGLE; /* ">>" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE */
 			}	break;
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 			default: break;
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_RANGLE */
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_HAT
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_RANGLE */
+#if TPP_HAVE_TOK_MC_STARTSWITH_HAT
 	case '^': {
-		if (tpp_lexer_has(self, TPP_TOK_HAT_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_HAT_HAT)) {
+		if (tpp_lexer_has(self, TOK_HAT_EQUAL) ||
+		    tpp_lexer_has(self, TOK_HAT_HAT)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_HAT_EQUAL
+#if TPP_HAVE_TOK_HAT_EQUAL
 			if (ch2 == '=') {
-				if (tpp_lexer_has(self, TPP_TOK_HAT_EQUAL)) {
+				if (tpp_lexer_has(self, TOK_HAT_EQUAL)) {
 					result = TPP_TOK_HAT_EQUAL; /* "^=" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_HAT_EQUAL */
-#if TPP_HAVE_TPP_TOK_HAT_HAT
+#endif /* TPP_HAVE_TOK_HAT_EQUAL */
+#if TPP_HAVE_TOK_HAT_HAT
 			if (ch2 == '^') {
-				if (tpp_lexer_has(self, TPP_TOK_HAT_HAT)) {
+				if (tpp_lexer_has(self, TOK_HAT_HAT)) {
 					warn_if_ch2_is_trigraph(); /* "??'" -> "^" */
 					result = TPP_TOK_HAT_HAT; /* "^^" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_HAT_HAT */
+#endif /* TPP_HAVE_TOK_HAT_HAT */
 			{
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_HAT */
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_PIPE
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_HAT */
+#if TPP_HAVE_TOK_MC_STARTSWITH_PIPE
 	case '|': {
-		if (tpp_lexer_has(self, TPP_TOK_PIPE_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_PIPE_PIPE)) {
+		if (tpp_lexer_has(self, TOK_PIPE_EQUAL) ||
+		    tpp_lexer_has(self, TOK_PIPE_PIPE)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_PIPE_EQUAL
+#if TPP_HAVE_TOK_PIPE_EQUAL
 			if (ch2 == '=') {
-				if (tpp_lexer_has(self, TPP_TOK_PIPE_EQUAL)) {
+				if (tpp_lexer_has(self, TOK_PIPE_EQUAL)) {
 					result = TPP_TOK_PIPE_EQUAL; /* "|=" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_PIPE_EQUAL */
-#if TPP_HAVE_TPP_TOK_PIPE_PIPE
+#endif /* TPP_HAVE_TOK_PIPE_EQUAL */
+#if TPP_HAVE_TOK_PIPE_PIPE
 			if (ch2 == '|') {
-				if (tpp_lexer_has(self, TPP_TOK_PIPE_PIPE)) {
+				if (tpp_lexer_has(self, TOK_PIPE_PIPE)) {
 					warn_if_ch2_is_trigraph(); /* "??!" -> "|" */
 					result = TPP_TOK_PIPE_PIPE; /* "||" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_PIPE_PIPE */
+#endif /* TPP_HAVE_TOK_PIPE_PIPE */
 			{
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_PIPE */
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_TILDE
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_PIPE */
+#if TPP_HAVE_TOK_MC_STARTSWITH_TILDE
 	case '~': {
-		if (tpp_lexer_has(self, TPP_TOK_TILDE_EQUAL) ||
-		    tpp_lexer_has(self, TPP_TOK_TILDE_TILDE)) {
+		if (tpp_lexer_has(self, TOK_TILDE_EQUAL) ||
+		    tpp_lexer_has(self, TOK_TILDE_TILDE)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_TILDE_EQUAL
+#if TPP_HAVE_TOK_TILDE_EQUAL
 			if (ch2 == '=') {
-				if (tpp_lexer_has(self, TPP_TOK_TILDE_EQUAL)) {
+				if (tpp_lexer_has(self, TOK_TILDE_EQUAL)) {
 					result = TPP_TOK_TILDE_EQUAL; /* "~=" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_TILDE_EQUAL */
-#if TPP_HAVE_TPP_TOK_TILDE_TILDE
+#endif /* TPP_HAVE_TOK_TILDE_EQUAL */
+#if TPP_HAVE_TOK_TILDE_TILDE
 			if (ch2 == '~') {
-				if (tpp_lexer_has(self, TPP_TOK_TILDE_TILDE)) {
+				if (tpp_lexer_has(self, TOK_TILDE_TILDE)) {
 					warn_if_ch2_is_trigraph(); /* "??-" -> "~" */
 					result = TPP_TOK_TILDE_TILDE; /* "~~" */
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_TILDE_TILDE */
+#endif /* TPP_HAVE_TOK_TILDE_TILDE */
 			{
 			}
 		}
 	}	break;
-#endif /* TPP_HAVE_TPP_TOK_MC_STARTSWITH_TILDE */
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_TILDE */
 /*[[[end]]]*/
 /************************************************************************/
 
@@ -3802,8 +3802,8 @@ not_a_trigraph:
 
 /************************************************************************/
 	case '(': {
-#if TPP_HAVE_TPP_TOK_PASCAL_COMMENT
-		if (!tpp_lexer_has(self, TPP_TOK_PASCAL_COMMENT))
+#if TPP_HAVE_TOK_PASCAL_COMMENT
+		if (!tpp_lexer_has(self, TOK_PASCAL_COMMENT))
 			break;
 		read_ch2(); // "(*like this one!*)"
 		if (ch2 != '*')
@@ -3829,7 +3829,7 @@ continue_pascal_comment_with_ch2:
 		}
 		result = TPP_TOK_PASCAL_COMMENT;
 		goto set_result;
-#endif /* TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
+#endif /* TPP_HAVE_TOK_PASCAL_COMMENT */
 	}	break;
 /************************************************************************/
 
@@ -3881,12 +3881,12 @@ continue_pascal_comment_with_ch2:
 
 /************************************************************************/
 	case '\'': {
-#if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL || TPP_HAVE_TPP_TOK_C_CHAR
-#if TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
-		if (tpp_lexer_has(self, TPP_TOK_BLOCK_CHAR_LITERAL)) {
-#if TPP_HAVE_TPP_TOK_C_CHAR
+#if TPP_HAVE_TOK_BLOCK_CHAR_LITERAL || TPP_HAVE_TOK_C_CHAR
+#if TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
+		if (tpp_lexer_has(self, TOK_BLOCK_CHAR_LITERAL)) {
+#if TPP_HAVE_TOK_C_CHAR
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_C_CHAR */
+#endif /* TPP_HAVE_TOK_C_CHAR */
 			read_ch2();
 			if (ch2 == '\'') {
 				read_ch2();
@@ -3898,20 +3898,20 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			}
-#if TPP_HAVE_TPP_TOK_C_CHAR
+#if TPP_HAVE_TOK_C_CHAR
 			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
-#endif /* TPP_HAVE_TPP_TOK_C_CHAR */
+#endif /* TPP_HAVE_TOK_C_CHAR */
 		}
-#endif /* TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
-#if TPP_HAVE_TPP_TOK_C_CHAR
-		if (tpp_lexer_has(self, TPP_TOK_C_CHAR)) {
+#endif /* TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
+#if TPP_HAVE_TOK_C_CHAR
+		if (tpp_lexer_has(self, TOK_C_CHAR)) {
 			error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 			if (TPP_ISERR(error))
 				goto return_error;
 			result = TPP_TOK_C_CHAR; /* 'foo' */
 			goto set_result;
 		}
-#endif /* TPP_HAVE_TPP_TOK_C_CHAR */
+#endif /* TPP_HAVE_TOK_C_CHAR */
 #endif /* ... */
 	}	break;
 /************************************************************************/
@@ -3920,12 +3920,12 @@ continue_pascal_comment_with_ch2:
 
 /************************************************************************/
 	case '"': {
-#if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_C_STRING
-#if TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL
-		if (tpp_lexer_has(self, TPP_TOK_BLOCK_STRING_LITERAL)) {
-#if TPP_HAVE_TPP_TOK_C_STRING
+#if TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_C_STRING
+#if TPP_HAVE_TOK_BLOCK_STRING_LITERAL
+		if (tpp_lexer_has(self, TOK_BLOCK_STRING_LITERAL)) {
+#if TPP_HAVE_TOK_C_STRING
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TPP_TOK_C_STRING */
+#endif /* TPP_HAVE_TOK_C_STRING */
 			read_ch2();
 			if (ch2 == '"') {
 				read_ch2();
@@ -3937,20 +3937,20 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			}
-#if TPP_HAVE_TPP_TOK_C_STRING
+#if TPP_HAVE_TOK_C_STRING
 			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
-#endif /* TPP_HAVE_TPP_TOK_C_STRING */
+#endif /* TPP_HAVE_TOK_C_STRING */
 		}
-#endif /* TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_C_STRING
-		if (tpp_lexer_has(self, TPP_TOK_C_STRING)) {
+#endif /* TPP_HAVE_TOK_BLOCK_STRING_LITERAL */
+#if TPP_HAVE_TOK_C_STRING
+		if (tpp_lexer_has(self, TOK_C_STRING)) {
 			error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 			if (TPP_ISERR(error))
 				goto return_error;
 			result = TPP_TOK_C_STRING; /* "foo" */
 			goto set_result;
 		}
-#endif /* TPP_HAVE_TPP_TOK_C_STRING */
+#endif /* TPP_HAVE_TOK_C_STRING */
 #endif /* ... */
 	}	break;
 /************************************************************************/
@@ -3958,60 +3958,60 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
-#if (TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||     \
-     TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)
+#if (TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || \
+     TPP_HAVE_TOK_RAW_STRING_LITERAL ||     \
+     TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_RAW_CHAR_LITERAL)
 	case 'R': {
-		if (tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL) ||
-		    tpp_lexer_has(self, TPP_TOK_RAW_STRING_LITERAL) ||
-		    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL) ||
-		    tpp_lexer_has(self, TPP_TOK_RAW_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TOK_RAW_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL) ||
+		    tpp_lexer_has(self, TOK_RAW_CHAR_LITERAL)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
+#if TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_STRING_LITERAL
 			if (ch2 == '"') {
-#if TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-				if (tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+#if TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
+				if (tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_CXX_RAW_STRING_LITERAL; /* R"AB(foo)AB" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
-				if (tpp_lexer_has(self, TPP_TOK_RAW_STRING_LITERAL)) {
+#endif /* TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_TOK_RAW_STRING_LITERAL
+				if (tpp_lexer_has(self, TOK_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_RAW_STRING_LITERAL; /* R"foo" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
+#endif /* TPP_HAVE_TOK_RAW_STRING_LITERAL */
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+#endif /* TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_STRING_LITERAL */
+#if TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL
 			if (ch2 == '\'') {
-#if TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
-				if (tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+#if TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
+				if (tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_CXX_RAW_CHAR_LITERAL; /* R'AB(f)AB' */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
-#if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
-				if (tpp_lexer_has(self, TPP_TOK_RAW_CHAR_LITERAL)) {
+#endif /* TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
+#if TPP_HAVE_TOK_RAW_CHAR_LITERAL
+				if (tpp_lexer_has(self, TOK_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
 					result = TPP_TOK_RAW_CHAR_LITERAL; /* R'foo' */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 			{
 			}
 			pos = tpp_file_rel2ptr(file, rel_start + 1);
@@ -4025,15 +4025,15 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
-#if (TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)
+#if (TPP_HAVE_TOK_RAW_STRING_LITERAL || \
+     TPP_HAVE_TOK_RAW_CHAR_LITERAL)
 	case 'r': {
-		if (tpp_lexer_has(self, TPP_TOK_RAW_STRING_LITERAL) ||
-		    tpp_lexer_has(self, TPP_TOK_RAW_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TOK_RAW_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TOK_RAW_CHAR_LITERAL)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
+#if TPP_HAVE_TOK_RAW_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_has(self, TPP_TOK_RAW_STRING_LITERAL)) {
+				if (tpp_lexer_has(self, TOK_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -4041,10 +4041,10 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+#endif /* TPP_HAVE_TOK_RAW_STRING_LITERAL */
+#if TPP_HAVE_TOK_RAW_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_has(self, TPP_TOK_RAW_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TOK_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -4052,7 +4052,7 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 			{
 			}
 			pos = tpp_file_rel2ptr(file, rel_start + 1);
@@ -4066,15 +4066,15 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
-#if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+#if TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL
 	case 'L': {
-		if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) ||
-		    tpp_lexer_has(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TOK_CXX_WIDE_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TOK_CXX_WIDE_CHAR_LITERAL)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
-#if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
+#if TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL
+#if TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_STRING_LITERAL)) {
+				if (tpp_lexer_has(self, TOK_CXX_WIDE_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -4082,10 +4082,10 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+#endif /* TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL */
+#if TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TOK_CXX_WIDE_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -4093,19 +4093,19 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
-#if ((TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
-     (TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
+#endif /* TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL */
+#if ((TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL) || \
+     (TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if ((tpp_lexer_has(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
-				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-				    (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
-				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+				if ((tpp_lexer_has(self, TOK_CXX_WIDE_STRING_LITERAL) &&
+				     tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_has(self, TOK_CXX_WIDE_CHAR_LITERAL) &&
+				     tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+#if TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_STRING_LITERAL) &&
-						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+						if (tpp_lexer_has(self, TOK_CXX_WIDE_STRING_LITERAL) &&
+						    tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -4113,11 +4113,11 @@ continue_pascal_comment_with_ch2:
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+#endif /* TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
 					if (ch2 == '\'') {
-						if (tpp_lexer_has(self, TPP_TOK_CXX_WIDE_CHAR_LITERAL) &&
-						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+						if (tpp_lexer_has(self, TOK_CXX_WIDE_CHAR_LITERAL) &&
+						    tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -4125,13 +4125,13 @@ continue_pascal_comment_with_ch2:
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
 					{
 					}
 				}
 			} else
 #endif /* ... */
-#endif /* TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL */
 			{
 			}
 			pos = tpp_file_rel2ptr(file, rel_start + 1);
@@ -4145,24 +4145,24 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
-#if (TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL)
+#if (TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL)
 	case 'u': {
-		if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
-		    tpp_lexer_has(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) ||
-		    tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) ||
-		    tpp_lexer_has(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TOK_CXX_UTF8_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TOK_CXX_UTF16_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TOK_CXX_UTF8_CHAR_LITERAL) ||
+		    tpp_lexer_has(self, TOK_CXX_UTF16_CHAR_LITERAL)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+#if TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL
 			if (ch2 == '8') {
-				if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) ||
-				    tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TOK_CXX_UTF8_STRING_LITERAL) ||
+				    tpp_lexer_has(self, TOK_CXX_UTF8_CHAR_LITERAL)) {
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
+#if TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL)) {
+						if (tpp_lexer_has(self, TOK_CXX_UTF8_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -4170,10 +4170,10 @@ continue_pascal_comment_with_ch2:
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+#endif /* TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL */
+#if TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL
 					if (ch2 == '\'') {
-						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL)) {
+						if (tpp_lexer_has(self, TOK_CXX_UTF8_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -4181,19 +4181,19 @@ continue_pascal_comment_with_ch2:
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
-#if ((TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
-     (TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
+#endif /* TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL */
+#if ((TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL) || \
+     (TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL))
 					if (ch2 == 'R') {
-						if ((tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
-						     tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-						    (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
-						     tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+						if ((tpp_lexer_has(self, TOK_CXX_UTF8_STRING_LITERAL) &&
+						     tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL)) ||
+						    (tpp_lexer_has(self, TOK_CXX_UTF8_CHAR_LITERAL) &&
+						     tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL))) {
 							read_ch2();
-#if TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+#if TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
 							if (ch2 == '"') {
-								if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_STRING_LITERAL) &&
-								    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+								if (tpp_lexer_has(self, TOK_CXX_UTF8_STRING_LITERAL) &&
+								    tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL)) {
 									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 									if (TPP_ISERR(error))
 										goto return_error;
@@ -4201,11 +4201,11 @@ continue_pascal_comment_with_ch2:
 									goto set_result;
 								}
 							} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+#endif /* TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
 							if (ch2 == '\'') {
-								if (tpp_lexer_has(self, TPP_TOK_CXX_UTF8_CHAR_LITERAL) &&
-								    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+								if (tpp_lexer_has(self, TOK_CXX_UTF8_CHAR_LITERAL) &&
+								    tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL)) {
 									error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 									if (TPP_ISERR(error))
 										goto return_error;
@@ -4213,7 +4213,7 @@ continue_pascal_comment_with_ch2:
 									goto set_result;
 								}
 							} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
 							{
 							}
 						}
@@ -4223,11 +4223,11 @@ continue_pascal_comment_with_ch2:
 					}
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
-#if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
-#if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
+#endif /* TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL */
+#if TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL
+#if TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_STRING_LITERAL)) {
+				if (tpp_lexer_has(self, TOK_CXX_UTF16_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -4235,10 +4235,10 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+#endif /* TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL */
+#if TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TOK_CXX_UTF16_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -4246,19 +4246,19 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL */
-#if ((TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
-     (TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
+#endif /* TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL */
+#if ((TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL) || \
+     (TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if ((tpp_lexer_has(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
-				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-				    (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
-				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+				if ((tpp_lexer_has(self, TOK_CXX_UTF16_STRING_LITERAL) &&
+				     tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_has(self, TOK_CXX_UTF16_CHAR_LITERAL) &&
+				     tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+#if TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_STRING_LITERAL) &&
-						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+						if (tpp_lexer_has(self, TOK_CXX_UTF16_STRING_LITERAL) &&
+						    tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -4266,11 +4266,11 @@ continue_pascal_comment_with_ch2:
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+#endif /* TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
 					if (ch2 == '\'') {
-						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF16_CHAR_LITERAL) &&
-						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+						if (tpp_lexer_has(self, TOK_CXX_UTF16_CHAR_LITERAL) &&
+						    tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -4278,13 +4278,13 @@ continue_pascal_comment_with_ch2:
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
 					{
 					}
 				}
 			} else
 #endif /* ... */
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL */
 			{
 			}
 			pos = tpp_file_rel2ptr(file, rel_start + 1);
@@ -4298,15 +4298,15 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
-#if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+#if TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL
 	case 'U': {
-		if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) ||
-		    tpp_lexer_has(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
+		if (tpp_lexer_has(self, TOK_CXX_UTF32_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TOK_CXX_UTF32_CHAR_LITERAL)) {
 			read_ch2();
-#if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
-#if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
+#if TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL
+#if TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL
 			if (ch2 == '"') {
-				if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_STRING_LITERAL)) {
+				if (tpp_lexer_has(self, TOK_CXX_UTF32_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '"');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -4314,10 +4314,10 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+#endif /* TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL */
+#if TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL
 			if (ch2 == '\'') {
-				if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL)) {
+				if (tpp_lexer_has(self, TOK_CXX_UTF32_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
 						goto return_error;
@@ -4325,19 +4325,19 @@ continue_pascal_comment_with_ch2:
 					goto set_result;
 				}
 			} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
-#if ((TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) || \
-     (TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL))
+#endif /* TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL */
+#if ((TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL) || \
+     (TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL))
 			if (ch2 == 'R') {
-				if ((tpp_lexer_has(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
-				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) ||
-				    (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
-				     tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL))) {
+				if ((tpp_lexer_has(self, TOK_CXX_UTF32_STRING_LITERAL) &&
+				     tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL)) ||
+				    (tpp_lexer_has(self, TOK_CXX_UTF32_CHAR_LITERAL) &&
+				     tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL))) {
 					read_ch2();
-#if TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+#if TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
 					if (ch2 == '"') {
-						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_STRING_LITERAL) &&
-						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_STRING_LITERAL)) {
+						if (tpp_lexer_has(self, TOK_CXX_UTF32_STRING_LITERAL) &&
+						    tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -4345,11 +4345,11 @@ continue_pascal_comment_with_ch2:
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
-#if TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+#endif /* TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
 					if (ch2 == '\'') {
-						if (tpp_lexer_has(self, TPP_TOK_CXX_UTF32_CHAR_LITERAL) &&
-						    tpp_lexer_has(self, TPP_TOK_CXX_RAW_CHAR_LITERAL)) {
+						if (tpp_lexer_has(self, TOK_CXX_UTF32_CHAR_LITERAL) &&
+						    tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL)) {
 							error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 							if (TPP_ISERR(error))
 								goto return_error;
@@ -4357,13 +4357,13 @@ continue_pascal_comment_with_ch2:
 							goto set_result;
 						}
 					} else
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL && TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
 					{
 					}
 				}
 			} else
 #endif /* ... */
-#endif /* TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL */
 			{
 			}
 			pos = tpp_file_rel2ptr(file, rel_start + 1);
@@ -4377,17 +4377,17 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
-#if TPP_HAVE_TPP_TOK_DOLLAR
+#if TPP_HAVE_TOK_DOLLAR
 	case '$':
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_DOLLAR)
-		if (tpp_lexer_has(self, TPP_TOK_DOLLAR))
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR)
+		if (tpp_lexer_has(self, TOK_DOLLAR))
 			break; /* Follow single-char code-branch */
 		goto handle_keyword;
 #define WANT_handle_keyword
-#else /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_DOLLAR) */
+#else /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR) */
 		break; /* Follow single-char code-branch */
-#endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_DOLLAR) */
-#endif /* TPP_HAVE_TPP_TOK_DOLLAR */
+#endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR) */
+#endif /* TPP_HAVE_TOK_DOLLAR */
 /************************************************************************/
 
 
@@ -4556,35 +4556,35 @@ handle_space:
 		case 'f': case 'g': case 'h': case 'i': case 'j':
 		case 'k': case 'l': case 'm': case 'n': case 'o':
 		case 'p': case 'q':
-#if !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+#if !TPP_HAVE_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TOK_RAW_CHAR_LITERAL
 		case 'r':
-#endif /* !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#endif /* !TPP_HAVE_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 		case 's': case 't':
-#if (!TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL && !TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL && \
-     !TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL && !TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL)
+#if (!TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL && !TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL && \
+     !TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL && !TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL)
 		case 'u':
 #endif /* ... */
 		case 'v': case 'w': case 'x': case 'y': case 'z':
 		case 'A': case 'B': case 'C': case 'D': case 'E':
 		case 'F': case 'G': case 'H': case 'I': case 'J':
 		case 'K':
-#if !TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && !TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+#if !TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL && !TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL
 		case 'L':
-#endif /* !TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL && !TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
+#endif /* !TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL && !TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL */
 		case 'M': case 'N': case 'O': case 'P': case 'Q':
-#if (!TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL && !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL && \
-     !TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL && !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)
+#if (!TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL && !TPP_HAVE_TOK_RAW_STRING_LITERAL && \
+     !TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL && !TPP_HAVE_TOK_RAW_CHAR_LITERAL)
 		case 'R':
 #endif /* ... */
 		case 'S': case 'T':
-#if !TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && !TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+#if !TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL && !TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL
 		case 'U':
-#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL && !TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+#endif /* !TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL && !TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL */
 		case 'V': case 'W': case 'X': case 'Y': case 'Z':
 		case '_':
-#if !TPP_HAVE_TPP_TOK_DOLLAR
+#if !TPP_HAVE_TOK_DOLLAR
 		case '$':
-#endif /* !TPP_HAVE_TPP_TOK_DOLLAR */
+#endif /* !TPP_HAVE_TOK_DOLLAR */
 #endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
 
 #ifdef WANT_handle_keyword
@@ -4746,50 +4746,50 @@ handle_keyword_with_esc:
 		}
 
 		/* Check for digits */
-#if TPP_HAVE_TPP_TOK_C_INT || TPP_HAVE_TPP_TOK_C_FLOAT
+#if TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_C_FLOAT
 		if (tpp_ascii_maybe_test(tpp_ascii_isdigit(ch))) {
 #if TPP_HAVE_ASSUME_ASCII_CTYPE
 	case '0': case '1': case '2': case '3': case '4':
 	case '5': case '6': case '7': case '8': case '9':
 #endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
-#if TPP_HAVE_TPP_TOK_C_FLOAT
-			if (tpp_lexer_has(self, TPP_TOK_C_FLOAT)) {
-#if TPP_HAVE_TPP_TOK_C_INT
+#if TPP_HAVE_TOK_C_FLOAT
+			if (tpp_lexer_has(self, TOK_C_FLOAT)) {
+#if TPP_HAVE_TOK_C_INT
 				result = TPP_TOK_C_INT;
-#else /* TPP_HAVE_TPP_TOK_C_INT */
+#else /* TPP_HAVE_TOK_C_INT */
 				result = TPP_TOK_EOF;
-#endif /* !TPP_HAVE_TPP_TOK_C_INT */
+#endif /* !TPP_HAVE_TOK_C_INT */
 				result = tpp_lexer_seek_end_of_c_float(self, &pos, result);
 				if (TPP_TOK_ISERR(result)) {
 					error = TPP_TOK_ASERR(result);
 					goto return_error;
 				}
-#if TPP_HAVE_TPP_TOK_C_INT
+#if TPP_HAVE_TOK_C_INT
 				tpp_assert(result == TPP_TOK_C_INT || result == TPP_TOK_C_FLOAT);
-#if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_C_INT)
-				if (!tpp_lexer_has(self, TPP_TOK_C_INT))
+#if TPP_CONF_IS_RT(TPP_HAVE_TOK_C_INT)
+				if (!tpp_lexer_has(self, TOK_C_INT))
 					result = TPP_TOK_C_FLOAT;
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_C_INT) */
-#else /* TPP_HAVE_TPP_TOK_C_INT */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_TOK_C_INT) */
+#else /* TPP_HAVE_TOK_C_INT */
 				tpp_assert(result == TPP_TOK_EOF || result == TPP_TOK_C_FLOAT);
 				result = TPP_TOK_C_FLOAT;
-#endif /* !TPP_HAVE_TPP_TOK_C_INT */
+#endif /* !TPP_HAVE_TOK_C_INT */
 				goto set_result;
 			} else
-#endif /* TPP_HAVE_TPP_TOK_C_FLOAT */
-#if TPP_HAVE_TPP_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_C_FLOAT)
-			if (tpp_lexer_has(self, TPP_TOK_C_INT)) {
+#endif /* TPP_HAVE_TOK_C_FLOAT */
+#if TPP_HAVE_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_C_FLOAT)
+			if (tpp_lexer_has(self, TOK_C_INT)) {
 				error = tpp_lexer_seek_end_of_c_int(self, &pos);
 				if (TPP_ISERR(error))
 					goto return_error;
 				result = TPP_TOK_C_INT;
 				goto set_result;
 			} else
-#endif /* TPP_HAVE_TPP_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_C_FLOAT) */
+#endif /* TPP_HAVE_TOK_C_INT && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_C_FLOAT) */
 			{
 			}
 		}
-#endif /* TPP_HAVE_TPP_TOK_C_INT || TPP_HAVE_TPP_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_C_FLOAT */
 
 		/* Other trait-based character checks would go here... */
 	}	break;

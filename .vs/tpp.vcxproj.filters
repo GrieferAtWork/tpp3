@@ -10,6 +10,9 @@
     <Filter Include="doc">
       <UniqueIdentifier>{aea669ce-e031-49a9-b131-3c27e8b05da3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\parts\ctype-db">
+      <UniqueIdentifier>{9271e7b3-35f4-4203-9b6a-92417b141a34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\frontend.c">
@@ -235,6 +238,21 @@
     </None>
     <None Include="..\src\make-amalgamation-builtins.dee">
       <Filter>src</Filter>
+    </None>
+    <None Include="..\src\parts\config.dee">
+      <Filter>src\parts</Filter>
+    </None>
+    <None Include="..\src\parts\ctype-db\ctype.dee">
+      <Filter>src\parts\ctype-db</Filter>
+    </None>
+    <None Include="..\src\parts\ctype-db\Makefile">
+      <Filter>src\parts\ctype-db</Filter>
+    </None>
+    <None Include="..\src\parts\ctype-db\.gitignore">
+      <Filter>src\parts\ctype-db</Filter>
+    </None>
+    <None Include="..\src\parts\token-encodestring-mblf.dee">
+      <Filter>src\parts</Filter>
     </None>
   </ItemGroup>
 </Project>

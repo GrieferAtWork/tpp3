@@ -1382,7 +1382,7 @@ handle_status:
 			}
 			break;
 
-#if TPP_HAVE_TPP_TOK_INT
+#if TPP_HAVE_TOK_INT
 		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax value;
 			tpp_char value_ch[1];
@@ -1395,7 +1395,7 @@ handle_status:
 			status = tpp_string_builder_print_encoded(&builder, value_ch, 1);
 			goto handle_status;
 		}	break;
-#endif /* TPP_HAVE_TPP_TOK_INT */
+#endif /* TPP_HAVE_TOK_INT */
 
 		default:
 			if (TPP_TOK_ISERR(tok))
@@ -1462,24 +1462,24 @@ tpp_lexer_handle_count_tokens(void *arg, tpp_string *chunk, tpp_char const *str,
 		/* Important: our result must *NOT* depend on "TPP_LEXER_STATE_FLAG_ALLTOKENS",
 		 *            however it *does* have to depend on "tpp_lexer_has()"! */
 		switch (tok) {
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SPACE)
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE)
 		case TPP_TOK_SPACE:
-			if (!tpp_lexer_has(self, TPP_TOK_SPACE))
+			if (!tpp_lexer_has(self, TOK_SPACE))
 				continue;
 			break;
-#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SPACE) */
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF)
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE) */
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF)
 		case TPP_TOK_LF:
-			if (!tpp_lexer_has(self, TPP_TOK_LF))
+			if (!tpp_lexer_has(self, TOK_LF))
 				continue;
 			break;
-#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF) */
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_COMMENT)
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) */
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_COMMENT)
 		TPP_CASE_TPP_TOK_COMMENT
-			if (!tpp_lexer_has(self, TPP_TOK_COMMENT))
+			if (!tpp_lexer_has(self, TOK_COMMENT))
 				continue;
 			break;
-#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_COMMENT) */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_COMMENT) */
 		default: break;
 		}
 		++data->tlhctd_count;
@@ -1754,10 +1754,10 @@ again_yield:
 	case '-':
 		neg = !neg;
 		goto again_yield;
-#if TPP_HAVE_TPP_TOK_MINUS_MINUS
+#if TPP_HAVE_TOK_MINUS_MINUS
 	case TPP_TOK_MINUS_MINUS:
 		goto again_yield;
-#endif /* TPP_HAVE_TPP_TOK_MINUS_MINUS */
+#endif /* TPP_HAVE_TOK_MINUS_MINUS */
 	default: break;
 	}
 	tok = tpp_lexer_require_int(self);

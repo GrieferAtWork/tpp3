@@ -43,7 +43,7 @@ TPP_DECL_BEGIN
  * first character is '<'. In that last case, "self" is updated
  * to describe '<' before "true" is returned. */
 #if (TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && \
-     TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE)
+     TPP_HAVE_TOK_MC_STARTSWITH_LANGLE)
 static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_istok(tpp_lexer *tpp_restrict self,
                 tpp_token_id tok,

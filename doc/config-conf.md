@@ -1943,10 +1943,10 @@ tokens that are contained within a given string. For this
 purpose, no macro expansion or directive processing is done:
 
 ```c
-__TPP_COUNT_TOKENS("++")         // 1 if "TPP_HAVE_TPP_TOK_PLUS_PLUS" is enabled, else 2
+__TPP_COUNT_TOKENS("++")         // 1 if "TPP_HAVE_TOK_PLUS_PLUS" is enabled, else 2
 #define FOO 10 20 30
 __TPP_COUNT_TOKENS("FOO")        // 1 because macros aren't expanded
-__TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TPP_TOK_SPACE) because directives aren't parsed
+__TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TOK_SPACE) because directives aren't parsed
 ```
 
 Based on the numbers returned by this macro, it becomes possible
@@ -2573,7 +2573,7 @@ in order to form a new token:
 
 ```c
 #define cat(a, b) a##b
-cat(+, +)  // Expands to a single token "++" (assuming that TPP_HAVE_TPP_TOK_PLUS_PLUS is enabled)
+cat(+, +)  // Expands to a single token "++" (assuming that TPP_HAVE_TOK_PLUS_PLUS is enabled)
 ```
 
 NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -2962,8 +2962,8 @@ Support for digraph token aliases:
 | `%>`    | `}`         |
 | `:>`    | `]`         |
 | `%:`    | `#`         |
-| `%:%:`  | `##` (requires [`TPP_HAVE_TPP_TOK_POUND_POUND`](config-token.md#tpp_have_tpp_tok_pound_pound)) |
-| `<::`   | `<`, `::` (requires [`TPP_HAVE_TPP_TOK_COLON_COLON`](config-token.md#tpp_have_tpp_tok_colon_colon)) |
+| `%:%:`  | `##` (requires [`TPP_HAVE_TOK_POUND_POUND`](config-token.md#tpp_have_tok_pound_pound)) |
+| `<::`   | `<`, `::` (requires [`TPP_HAVE_TOK_COLON_COLON`](config-token.md#tpp_have_tok_colon_colon)) |
 
 <details><summary>Details</summary>
 
@@ -2988,7 +2988,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_LF
+## TPP_HAVE_TOK_LF
 
 Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426)
 
@@ -3003,7 +3003,7 @@ TPP_COMMON_HAVE_TPP_TOK_SPACE
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_LF "tok-lf"
+#define TPP_EXTNAME_TOK_LF "tok-lf"
 ```
 
 Detect:
@@ -3015,7 +3015,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_SPACE
+## TPP_HAVE_TOK_SPACE
 
 Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426)
 
@@ -3030,7 +3030,7 @@ TPP_COMMON_HAVE_TPP_TOK_SPACE
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_SPACE "tok-space"
+#define TPP_EXTNAME_TOK_SPACE "tok-space"
 ```
 
 Detect:
@@ -3042,7 +3042,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_COMMENT
+## TPP_HAVE_TOK_COMMENT
 
 Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426)
 
@@ -3057,7 +3057,7 @@ TPP_COMMON_HAVE_TPP_TOK_SPACE
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_COMMENT "tok-comment"
+#define TPP_EXTNAME_TOK_COMMENT "tok-comment"
 ```
 
 Detect:
@@ -3069,7 +3069,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_COMMENT
+## TPP_HAVE_TOK_CXX_COMMENT
 
 Enable support for recognizing c++-like comments: `// like this one!`
 
@@ -3084,7 +3084,7 @@ Default:
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_COMMENT "tok-cxx-comment"
+#define TPP_EXTNAME_TOK_CXX_COMMENT "tok-cxx-comment"
 ```
 
 Detect:
@@ -3096,7 +3096,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_C_COMMENT
+## TPP_HAVE_TOK_C_COMMENT
 
 Enable support for recognizing c-like comments: `/* like this one! */`
 
@@ -3111,7 +3111,7 @@ Default:
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_C_COMMENT "tok-c-comment"
+#define TPP_EXTNAME_TOK_C_COMMENT "tok-c-comment"
 ```
 
 Detect:
@@ -3123,7 +3123,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_PASCAL_COMMENT
+## TPP_HAVE_TOK_PASCAL_COMMENT
 
 Enable support for recognizing pascal-like comments: `(* like this one! *)`
 
@@ -3138,7 +3138,7 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_PASCAL_COMMENT "tok-pascal-comment"
+#define TPP_EXTNAME_TOK_PASCAL_COMMENT "tok-pascal-comment"
 ```
 
 Detect:
@@ -3150,7 +3150,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_HTML_COMMENT
+## TPP_HAVE_TOK_HTML_COMMENT
 
 Enable support for recognizing html-like comments: `<!-- like this one -->`
 
@@ -3165,7 +3165,7 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_HTML_COMMENT "tok-html-comment"
+#define TPP_EXTNAME_TOK_HTML_COMMENT "tok-html-comment"
 ```
 
 Detect:
@@ -3177,7 +3177,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_SQL_COMMENT
+## TPP_HAVE_TOK_SQL_COMMENT
 
 Enable support for recognizing SQL-like comments: `-- like this one!`
 
@@ -3192,7 +3192,7 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_SQL_COMMENT "tok-sql-comment"
+#define TPP_EXTNAME_TOK_SQL_COMMENT "tok-sql-comment"
 ```
 
 Detect:
@@ -3204,7 +3204,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_AT_AT_COMMENT
+## TPP_HAVE_TOK_AT_AT_COMMENT
 
 Enable support for recognizing deemon-doc-like comments: `@@ like this one!`
 
@@ -3219,7 +3219,7 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_AT_AT_COMMENT "tok-at-at-comment"
+#define TPP_EXTNAME_TOK_AT_AT_COMMENT "tok-at-at-comment"
 ```
 
 Detect:
@@ -3231,7 +3231,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_SHELL_COMMENT
+## TPP_HAVE_TOK_SHELL_COMMENT
 
 Enable support for recognizing shell-like comments: `# like this one!`
 
@@ -3251,7 +3251,7 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_SHELL_COMMENT "tok-shell-comment"
+#define TPP_EXTNAME_TOK_SHELL_COMMENT "tok-shell-comment"
 ```
 
 Detect:
@@ -3263,7 +3263,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_ASM_COMMENT
+## TPP_HAVE_TOK_ASM_COMMENT
 
 Enable support for recognizing ASM-like comments: `/ like this one!`
 
@@ -3282,7 +3282,7 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_ASM_COMMENT "tok-asm-comment"
+#define TPP_EXTNAME_TOK_ASM_COMMENT "tok-asm-comment"
 ```
 
 Detect:
@@ -3294,7 +3294,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_DOLLAR
+## TPP_HAVE_TOK_DOLLAR
 
 When enabled, `$` is treated as its own token, rather than as part of identifiers/keywords.
 
@@ -3309,7 +3309,7 @@ TPP_COMMON_HAVE_TPP_TOK_1CHAR
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_DOLLAR "tok-dollar"
+#define TPP_EXTNAME_TOK_DOLLAR "tok-dollar"
 ```
 
 Detect:
@@ -3324,14 +3324,14 @@ Detect:
 ## TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
 
 Allow use of `_` as a thousands separator `123_456_789`
-in [`TPP_HAVE_TPP_TOK_C_INT`](#tpp_have_tpp_tok_c_int) and [`TPP_HAVE_TPP_TOK_C_FLOAT`](#tpp_have_tpp_tok_c_float)
+in [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int) and [`TPP_HAVE_TOK_C_FLOAT`](#tpp_have_tok_c_float)
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-TPP_HAVE_TPP_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT)) : 0
+TPP_HAVE_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT)) : 0
 ```
 
 Extension name:
@@ -3344,14 +3344,14 @@ Extension name:
 ## TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
 
 Allow use of `'` as a thousands separator `123'456'789`
-in [`TPP_HAVE_TPP_TOK_C_INT`](#tpp_have_tpp_tok_c_int) and [`TPP_HAVE_TPP_TOK_C_FLOAT`](#tpp_have_tpp_tok_c_float)
+in [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int) and [`TPP_HAVE_TOK_C_FLOAT`](#tpp_have_tok_c_float)
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-TPP_HAVE_TPP_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+TPP_HAVE_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -3369,7 +3369,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_C_INT
+## TPP_HAVE_TOK_C_INT
 
 C-style integer token `123`
 
@@ -3384,7 +3384,7 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_C_INT "tok-c-int"
+#define TPP_EXTNAME_TOK_C_INT "tok-c-int"
 ```
 
 Detect:
@@ -3396,7 +3396,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_C_FLOAT
+## TPP_HAVE_TOK_C_FLOAT
 
 C-style float token `123.0`
 
@@ -3411,7 +3411,7 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_C_FLOAT "tok-c-float"
+#define TPP_EXTNAME_TOK_C_FLOAT "tok-c-float"
 ```
 
 Detect:
@@ -3495,7 +3495,7 @@ keep going):
 Default:
 
 ```c
-((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) && TPP_HAVE_TPP_TOK_C_FLOAT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_CONF_FEAT1) : 0
+((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) && TPP_HAVE_TOK_C_FLOAT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_CONF_FEAT1) : 0
 ```
 
 Extension name:
@@ -3513,7 +3513,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_C_CHAR
+## TPP_HAVE_TOK_C_CHAR
 
 Support for C character literals: `'foo'`
 
@@ -3528,7 +3528,7 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_C_CHAR "tok-char"
+#define TPP_EXTNAME_TOK_C_CHAR "tok-char"
 ```
 
 Detect:
@@ -3540,7 +3540,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_C_STRING
+## TPP_HAVE_TOK_C_STRING
 
 Support for C string literals: `"foo"`
 
@@ -3555,7 +3555,7 @@ TPP_COMMON_HAVE_TPP_TOK_GENERIC
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_C_STRING "tok-string"
+#define TPP_EXTNAME_TOK_C_STRING "tok-string"
 ```
 
 Detect:
@@ -3567,7 +3567,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
+## TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
 
 Support for string literals: `R"AB(foo)AB"`
 
@@ -3582,7 +3582,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_RAW_STRING_LITERAL "tok-cxx-raw-string-literal"
+#define TPP_EXTNAME_TOK_CXX_RAW_STRING_LITERAL "tok-cxx-raw-string-literal"
 ```
 
 Detect:
@@ -3594,10 +3594,10 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
+## TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL
 
 Support for string literals: `L"foo"`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `LR"AB(foo)AB")`
+When [`TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tok_cxx_raw_string_literal) is also enabled, also support `LR"AB(foo)AB")`
 
 <details><summary>Details</summary>
 
@@ -3610,7 +3610,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_WIDE_STRING_LITERAL "tok-cxx-wide-string-literal"
+#define TPP_EXTNAME_TOK_CXX_WIDE_STRING_LITERAL "tok-cxx-wide-string-literal"
 ```
 
 Detect:
@@ -3622,10 +3622,10 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
+## TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL
 
 Support for string literals: `u8"foo"`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `u8R"AB(foo)AB"`
+When [`TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tok_cxx_raw_string_literal) is also enabled, also support `u8R"AB(foo)AB"`
 
 <details><summary>Details</summary>
 
@@ -3638,7 +3638,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_UTF8_STRING_LITERAL "tok-cxx-utf8-string-literal"
+#define TPP_EXTNAME_TOK_CXX_UTF8_STRING_LITERAL "tok-cxx-utf8-string-literal"
 ```
 
 Detect:
@@ -3650,10 +3650,10 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
+## TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL
 
 Support for string literals: `u"foo"`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `uR"AB(foo)AB"`
+When [`TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tok_cxx_raw_string_literal) is also enabled, also support `uR"AB(foo)AB"`
 
 <details><summary>Details</summary>
 
@@ -3666,7 +3666,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_UTF16_STRING_LITERAL "tok-cxx-utf16-string-literal"
+#define TPP_EXTNAME_TOK_CXX_UTF16_STRING_LITERAL "tok-cxx-utf16-string-literal"
 ```
 
 Detect:
@@ -3678,10 +3678,10 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
+## TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL
 
 Support for string literals: `U"foo"`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_raw_string_literal) is also enabled, also support `UR"AB(foo)AB"`
+When [`TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL`](#tpp_have_tok_cxx_raw_string_literal) is also enabled, also support `UR"AB(foo)AB"`
 
 <details><summary>Details</summary>
 
@@ -3694,7 +3694,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_UTF32_STRING_LITERAL "tok-cxx-utf32-string-literal"
+#define TPP_EXTNAME_TOK_CXX_UTF32_STRING_LITERAL "tok-cxx-utf32-string-literal"
 ```
 
 Detect:
@@ -3706,7 +3706,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
+## TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
 
 Support for string literals: `R'AB(f)AB'`
 
@@ -3721,7 +3721,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_RAW_CHAR_LITERAL "tok-cxx-raw-char-literal"
+#define TPP_EXTNAME_TOK_CXX_RAW_CHAR_LITERAL "tok-cxx-raw-char-literal"
 ```
 
 Detect:
@@ -3733,10 +3733,10 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+## TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL
 
 Support for string literals: `L'f'`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `LR'AB(f)AB'`
+When [`TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tok_cxx_raw_char_literal) is also enabled, also support `LR'AB(f)AB'`
 
 <details><summary>Details</summary>
 
@@ -3749,7 +3749,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_WIDE_CHAR_LITERAL "tok-cxx-wide-char-literal"
+#define TPP_EXTNAME_TOK_CXX_WIDE_CHAR_LITERAL "tok-cxx-wide-char-literal"
 ```
 
 Detect:
@@ -3761,10 +3761,10 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+## TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL
 
 Support for string literals: `u8'f'`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `u8R'AB(f)AB'`
+When [`TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tok_cxx_raw_char_literal) is also enabled, also support `u8R'AB(f)AB'`
 
 <details><summary>Details</summary>
 
@@ -3777,7 +3777,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_UTF8_CHAR_LITERAL "tok-cxx-utf8-char-literal"
+#define TPP_EXTNAME_TOK_CXX_UTF8_CHAR_LITERAL "tok-cxx-utf8-char-literal"
 ```
 
 Detect:
@@ -3789,10 +3789,10 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+## TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL
 
 Support for string literals: `u'f'`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `uR'AB(f)AB'`
+When [`TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tok_cxx_raw_char_literal) is also enabled, also support `uR'AB(f)AB'`
 
 <details><summary>Details</summary>
 
@@ -3805,7 +3805,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_UTF16_CHAR_LITERAL "tok-cxx-utf16-char-literal"
+#define TPP_EXTNAME_TOK_CXX_UTF16_CHAR_LITERAL "tok-cxx-utf16-char-literal"
 ```
 
 Detect:
@@ -3817,10 +3817,10 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+## TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL
 
 Support for string literals: `U'f'`
-When [`TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_raw_char_literal) is also enabled, also support `UR'AB(f)AB'`
+When [`TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL`](#tpp_have_tok_cxx_raw_char_literal) is also enabled, also support `UR'AB(f)AB'`
 
 <details><summary>Details</summary>
 
@@ -3833,7 +3833,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_CXX_UTF32_CHAR_LITERAL "tok-cxx-utf32-char-literal"
+#define TPP_EXTNAME_TOK_CXX_UTF32_CHAR_LITERAL "tok-cxx-utf32-char-literal"
 ```
 
 Detect:
@@ -3845,7 +3845,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
+## TPP_HAVE_TOK_RAW_STRING_LITERAL
 
 Support for deemon-style raw string literals: `R"foo"` and `r"foo"`
 
@@ -3860,7 +3860,7 @@ TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_RAW_STRING_LITERAL "tok-raw-string-literal"
+#define TPP_EXTNAME_TOK_RAW_STRING_LITERAL "tok-raw-string-literal"
 ```
 
 Detect:
@@ -3872,7 +3872,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
+## TPP_HAVE_TOK_RAW_CHAR_LITERAL
 
 Support for deemon-style raw string literals: `R'bar'` and `r'bar'`
 
@@ -3887,7 +3887,7 @@ TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_RAW_CHAR_LITERAL "tok-raw-char-literal"
+#define TPP_EXTNAME_TOK_RAW_CHAR_LITERAL "tok-raw-char-literal"
 ```
 
 Detect:
@@ -3899,7 +3899,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL
+## TPP_HAVE_TOK_BLOCK_STRING_LITERAL
 
 Support for java-style block string literals: `"""foo"""`
 
@@ -3914,7 +3914,7 @@ TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_BLOCK_STRING_LITERAL "tok-block-string-literal"
+#define TPP_EXTNAME_TOK_BLOCK_STRING_LITERAL "tok-block-string-literal"
 ```
 
 Detect:
@@ -3926,7 +3926,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
+## TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 
 Support for java-style block string literals (but with single-ticks): `'''foo'''`
 
@@ -3941,7 +3941,7 @@ TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_BLOCK_CHAR_LITERAL "tok-block-char-literal"
+#define TPP_EXTNAME_TOK_BLOCK_CHAR_LITERAL "tok-block-char-literal"
 ```
 
 Detect:
@@ -3957,18 +3957,18 @@ Detect:
 
 Feature-flag: treat line-feeds like any regular character in string tokens:
 
-- [`TPP_HAVE_TPP_TOK_C_STRING`](#tpp_have_tpp_tok_c_string)
-- [`TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_wide_string_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_utf8_string_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_utf16_string_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL`](#tpp_have_tpp_tok_cxx_utf32_string_literal)
-- [`TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL`](#tpp_have_tpp_tok_raw_string_literal)
-- [`TPP_HAVE_TPP_TOK_C_CHAR`](#tpp_have_tpp_tok_c_char)
-- [`TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_wide_char_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_utf8_char_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_utf16_char_literal)
-- [`TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL`](#tpp_have_tpp_tok_cxx_utf32_char_literal)
-- [`TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL`](#tpp_have_tpp_tok_raw_char_literal)
+- [`TPP_HAVE_TOK_C_STRING`](#tpp_have_tok_c_string)
+- [`TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL`](#tpp_have_tok_cxx_wide_string_literal)
+- [`TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL`](#tpp_have_tok_cxx_utf8_string_literal)
+- [`TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL`](#tpp_have_tok_cxx_utf16_string_literal)
+- [`TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL`](#tpp_have_tok_cxx_utf32_string_literal)
+- [`TPP_HAVE_TOK_RAW_STRING_LITERAL`](#tpp_have_tok_raw_string_literal)
+- [`TPP_HAVE_TOK_C_CHAR`](#tpp_have_tok_c_char)
+- [`TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL`](#tpp_have_tok_cxx_wide_char_literal)
+- [`TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL`](#tpp_have_tok_cxx_utf8_char_literal)
+- [`TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL`](#tpp_have_tok_cxx_utf16_char_literal)
+- [`TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL`](#tpp_have_tok_cxx_utf32_char_literal)
+- [`TPP_HAVE_TOK_RAW_CHAR_LITERAL`](#tpp_have_tok_raw_char_literal)
 
 When this flag is disabled, line-feeds in such string tokens will instead
 terminate the string, and cause a [`TPP_W_STRING_TERMINATED_BY_LINEFEED`](../src/tpp-amalgamation.h#L2971)
@@ -4107,7 +4107,7 @@ Enable support for strings in builtin lexer expressions, as well as some new ope
 Default:
 
 ```c
-(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_STRINGLIKE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_STRINGLIKE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
 ```
 
 Extension name:
@@ -4126,7 +4126,7 @@ Enable support for floats in builtin lexer expressions
 Default:
 
 ```c
-(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
 ```
 
 Extension name:
@@ -4203,7 +4203,7 @@ Enable support for `0b` literals in builtin lexer expressions
 Default:
 
 ```c
-((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) && TPP_HAVE_TPP_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
 ```
 
 Extension name:
@@ -4222,7 +4222,7 @@ Enable support for `0o` literals in builtin lexer expressions
 Default:
 
 ```c
-((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) && TPP_HAVE_TPP_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
+((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0
 ```
 
 Extension name:
@@ -4241,7 +4241,7 @@ Enable support for `u`, `l`, `ul`, `ll`, `ull` integer suffixes
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_C_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+(TPP_HAVE_TOK_C_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -4260,7 +4260,7 @@ Enable support for `z`, `uz` integer suffixes
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_C_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+(TPP_HAVE_TOK_C_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -4279,7 +4279,7 @@ Enable support for `i8`, `i16`, `i32`, `i64`, `ui8`, `ui16`, `ui32`, `ui64` inte
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_C_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+(TPP_HAVE_TOK_C_INT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -4298,7 +4298,7 @@ Enable support for `f`, `F`, `l`, `L` float suffixes
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+(TPP_HAVE_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -4317,7 +4317,7 @@ Enable support for `d`, `D` float suffixes
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 0) : 0
+(TPP_HAVE_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 0) : 0
 ```
 
 Extension name:
@@ -4336,7 +4336,7 @@ Enable support for `df`, `DF`, `dd`, `DD`, `dl`, `DL` float suffixes
 Default:
 
 ```c
-(TPP_HAVE_TPP_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
+(TPP_HAVE_TOK_C_FLOAT && (TPP_PROFILE != TPP_PROFILE_MINIMAL)) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) : 0
 ```
 
 Extension name:
@@ -4355,7 +4355,7 @@ Treat `'a'` in expressions as an integer, rather than as a string (in C/C++, thi
 Default:
 
 ```c
-(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : ((TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX) ? 1 : 0)) : 0
+(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : ((TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX) ? 1 : 0)) : 0
 ```
 
 Extension name:

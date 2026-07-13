@@ -96,6 +96,11 @@
     <None Include="..\src\make-amalgamation.dee" />
     <None Include="..\src\make-config-doc.dee" />
     <None Include="..\src\Makefile" />
+    <None Include="..\src\parts\config.dee" />
+    <None Include="..\src\parts\ctype-db\.gitignore" />
+    <None Include="..\src\parts\ctype-db\ctype.dee" />
+    <None Include="..\src\parts\ctype-db\Makefile" />
+    <None Include="..\src\parts\token-encodestring-mblf.dee" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{86D226C5-EF62-4562-AC06-E6A753DFA7CF}</ProjectGuid>

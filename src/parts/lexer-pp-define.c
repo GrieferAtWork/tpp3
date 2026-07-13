@@ -165,30 +165,30 @@ tpp_lexer_is_rparen_token(tpp_lexer *tpp_restrict self,
 			return true;
 		break;
 
-#if (TPP_HAVE_TPP_TOK_RANGLE_RANGLE ||              \
-     TPP_HAVE_TPP_TOK_RANGLE_EQUAL ||               \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL ||        \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE ||       \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL || \
-     TPP_HAVE_TPP_TOK_RANGLE_LANGLE)
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
+#if (TPP_HAVE_TOK_RANGLE_RANGLE ||              \
+     TPP_HAVE_TOK_RANGLE_EQUAL ||               \
+     TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL ||        \
+     TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE ||       \
+     TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL || \
+     TPP_HAVE_TOK_RANGLE_LANGLE)
+#if TPP_HAVE_TOK_RANGLE_RANGLE
 	case TPP_TOK_RANGLE_RANGLE: /* ">>" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE */
+#if TPP_HAVE_TOK_RANGLE_EQUAL
 	case TPP_TOK_RANGLE_EQUAL: /* ">=" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL */
+#if TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL
 	case TPP_TOK_RANGLE_RANGLE_EQUAL: /* ">>=" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE
 	case TPP_TOK_RANGLE_RANGLE_RANGLE: /* ">>>" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 	case TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL: /* ">>>=" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_RANGLE_LANGLE
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TOK_RANGLE_LANGLE
 	case TPP_TOK_RANGLE_LANGLE: /* "><" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_LANGLE */
 		/* Convert to ">" token */
 		if (lparen_token == '<') {
 			tpp_assert(tpp_lexer_gettoken(self)->tt_start < *p_pos);
@@ -484,7 +484,7 @@ tpp_macro_builder_compile_traditional_impl(tpp_macro_builder *tpp_restrict build
 		tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 		switch (tok) {
 
-#if TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE
+#if TPP_HAVE_TOK_COMMENTLIKE_NOLINE
 		TPP_CASE_TPP_TOK_COMMENT_NOLINE {
 			if (TPP_TOK_ISCOMMENT_NOLINE(tok)) {
 				/* Non-line comments must be deleted in order to support traditional cat operations!
@@ -499,9 +499,9 @@ tpp_macro_builder_compile_traditional_impl(tpp_macro_builder *tpp_restrict build
 				body_start = body_iter;
 			}
 		}	continue; /* Not a keyword */
-#endif /* TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE */
+#endif /* TPP_HAVE_TOK_COMMENTLIKE_NOLINE */
 
-#if TPP_HAVE_TPP_TOK_STRINGLIKE
+#if TPP_HAVE_TOK_STRINGLIKE
 		/* Strings must not actually be parsed as whole tokens!
 		 *
 		 * Since this can (easily) cause warnings to be emitted
@@ -515,7 +515,7 @@ tpp_macro_builder_compile_traditional_impl(tpp_macro_builder *tpp_restrict build
 			body_iter = token->tt_start + 1;
 			continue;
 		}
-#endif /* TPP_HAVE_TPP_TOK_STRINGLIKE */
+#endif /* TPP_HAVE_TOK_STRINGLIKE */
 
 		default:
 			/* Shouldn't really be able to produce errors, but better be safe. */
@@ -890,12 +890,12 @@ found_va_opt_body_end:
 #if (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || \
      TPP_HAVE_CHARIZE_MACRO_ARGUMENT ||   \
      TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT)
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_SHELL_COMMENT
 		case TPP_TOK_SHELL_COMMENT:
 			/* Deal with special case of shell comments (which must be re-parsed as a #-token) */
 			body_iter = token->tt_start + 1;
 			TPP_FALLTHRU
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 		case '#': {
 			tpp_char const *start_of_pound;
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
@@ -1360,9 +1360,9 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 
 	/* Find end of body (moving the lexer to point at the trailing EOF/LF/COMMENT token) */
 	while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_SHELL_COMMENT
 again_scan_end_of_macro_body:
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 		/* Only update body on non-space tokens (thereby trimming trailing space/comments from macros) */
 		if (!TPP_TOK_ISSPACE_OR_COMMENT(tok))
 			rel_body_end = tpp_file_ptr2rel(file, *p_pos);
@@ -1373,13 +1373,13 @@ again_scan_end_of_macro_body:
 		}
 	}
 
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_SHELL_COMMENT
 	if (tok == TPP_TOK_SHELL_COMMENT) {
 		/* Deal with special case of shell comments (which must be re-parsed as a #-token) */
 		*p_pos = token->tt_start + 1;
 		goto again_scan_end_of_macro_body;
 	}
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 
 	/* Compile the macro according to active lexer rules */
 	body_start = tpp_file_rel2ptr(file, rel_body_start);

@@ -403,8 +403,8 @@
 #define TPP_COMMON_HAVE_TPP_TOK_1CHAR (TPP_HAVE_PROFILE_NOT_MINIMAL ? TPP_CONF_EXT0 : 0)
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_1CHAR */
 
-/* Default configuration for `TPP_HAVE_TPP_TOK_LF`, `TPP_HAVE_TPP_TOK_SPACE`,
- * `TPP_HAVE_TPP_TOK_COMMENT`, indicating if tokens that are normally through
+/* Default configuration for `TPP_HAVE_TOK_LF`, `TPP_HAVE_TOK_SPACE`,
+ * `TPP_HAVE_TOK_COMMENT`, indicating if tokens that are normally through
  * of as no-ops should be emitted by `tpp_lexer_yieldpp()` */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_SPACE
 #define TPP_COMMON_HAVE_TPP_TOK_SPACE (TPP_HAVE_PROFILE_NOT_MINIMAL ? TPP_CONF_FEAT1 : 1)
@@ -416,34 +416,34 @@
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_COMMENT */
 
 /* Default configuration for:
- * - `TPP_HAVE_TPP_TOK_C_INT`
- * - `TPP_HAVE_TPP_TOK_C_FLOAT`
- * - `TPP_HAVE_TPP_TOK_C_CHAR`
- * - `TPP_HAVE_TPP_TOK_C_STRING` */
+ * - `TPP_HAVE_TOK_C_INT`
+ * - `TPP_HAVE_TOK_C_FLOAT`
+ * - `TPP_HAVE_TOK_C_CHAR`
+ * - `TPP_HAVE_TOK_C_STRING` */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_GENERIC
 #define TPP_COMMON_HAVE_TPP_TOK_GENERIC TPP_COMMON_HAVE_TPP_TOK
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_GENERIC */
 
 /* Default configuration for extended C/C++ string tokens:
- * - `TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL` */
+ * - `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL` */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_C_STRING
 #define TPP_COMMON_HAVE_TPP_TOK_C_STRING (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_FEAT0 : TPP_HAVE_PROFILE_C_LIKE)
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_C_STRING */
 
 /* Default configuration for deemon-specific string tokens:
- * - `TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL`
- * - `TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL` */
+ * - `TPP_HAVE_TOK_RAW_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_RAW_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_BLOCK_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_BLOCK_CHAR_LITERAL` */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
 #define TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING */
@@ -1176,10 +1176,10 @@
  * tokens that are contained within a given string. For this
  * purpose, no macro expansion or directive processing is done:
  * ```c
- * __TPP_COUNT_TOKENS("++")         // 1 if "TPP_HAVE_TPP_TOK_PLUS_PLUS" is enabled, else 2
+ * __TPP_COUNT_TOKENS("++")         // 1 if "TPP_HAVE_TOK_PLUS_PLUS" is enabled, else 2
  * #define FOO 10 20 30
  * __TPP_COUNT_TOKENS("FOO")        // 1 because macros aren't expanded
- * __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TPP_TOK_SPACE) because directives aren't parsed
+ * __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TOK_SPACE) because directives aren't parsed
  * ```
  *
  * Based on the numbers returned by this macro, it becomes possible
@@ -1513,7 +1513,7 @@
  * in order to form a new token:
  * ```c
  * #define cat(a, b) a##b
- * cat(+, +)  // Expands to a single token "++" (assuming that TPP_HAVE_TPP_TOK_PLUS_PLUS is enabled)
+ * cat(+, +)  // Expands to a single token "++" (assuming that TPP_HAVE_TOK_PLUS_PLUS is enabled)
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -1703,8 +1703,8 @@
  * | `%>`    | `}`         |
  * | `:>`    | `]`         |
  * | `%:`    | `#`         |
- * | `%:%:`  | `##` (requires `TPP_HAVE_TPP_TOK_POUND_POUND`) |
- * | `<::`   | `<`, `::` (requires `TPP_HAVE_TPP_TOK_COLON_COLON`) |
+ * | `%:%:`  | `##` (requires `TPP_HAVE_TOK_POUND_POUND`) |
+ * | `<::`   | `<`, `::` (requires `TPP_HAVE_TOK_COLON_COLON`) |
  *
  * @detect: #if __TPP_COUNT_TOKENS("%:") == 1 */
 #ifndef TPP_HAVE_DIGRAPHS
@@ -1713,57 +1713,57 @@
 
 /* Configures if line-feed tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()`
  * @detect: #if __TPP_COUNT_TOKENS("\n") != 0 */
-#ifndef TPP_HAVE_TPP_TOK_LF
-#define TPP_HAVE_TPP_TOK_LF TPP_COMMON_HAVE_TPP_TOK_SPACE /* "-ftok-lf" */
-#endif /* !TPP_HAVE_TPP_TOK_LF */
+#ifndef TPP_HAVE_TOK_LF
+#define TPP_HAVE_TOK_LF TPP_COMMON_HAVE_TPP_TOK_SPACE /* "-ftok-lf" */
+#endif /* !TPP_HAVE_TOK_LF */
 
 /* Configures if whitespace tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()`
  * @detect: #if __TPP_COUNT_TOKENS(" ") != 0 */
-#ifndef TPP_HAVE_TPP_TOK_SPACE
-#define TPP_HAVE_TPP_TOK_SPACE TPP_COMMON_HAVE_TPP_TOK_SPACE /* "-ftok-space" */
-#endif /* !TPP_HAVE_TPP_TOK_SPACE */
+#ifndef TPP_HAVE_TOK_SPACE
+#define TPP_HAVE_TOK_SPACE TPP_COMMON_HAVE_TPP_TOK_SPACE /* "-ftok-space" */
+#endif /* !TPP_HAVE_TOK_SPACE */
 
 /* Configures if comment tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()`
  * @detect: #if __TPP_COUNT_TOKENS("// a b c") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_COMMENT
-#define TPP_HAVE_TPP_TOK_COMMENT TPP_COMMON_HAVE_TPP_TOK_SPACE /* "-ftok-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_COMMENT */
+#ifndef TPP_HAVE_TOK_COMMENT
+#define TPP_HAVE_TOK_COMMENT TPP_COMMON_HAVE_TPP_TOK_SPACE /* "-ftok-comment" */
+#endif /* !TPP_HAVE_TOK_COMMENT */
 
 /* Enable support for recognizing c++-like comments: `// like this one!`
  * @detect: #if __TPP_COUNT_TOKENS("// a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_COMMENT
-#define TPP_HAVE_TPP_TOK_CXX_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-cxx-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_COMMENT */
+#ifndef TPP_HAVE_TOK_CXX_COMMENT
+#define TPP_HAVE_TOK_CXX_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-cxx-comment" */
+#endif /* !TPP_HAVE_TOK_CXX_COMMENT */
 
 // Enable support for recognizing c-like comments: `/* like this one! */`
 // @detect: #if __TPP_COUNT_TOKENS("/* a b c */") <= 1
-#ifndef TPP_HAVE_TPP_TOK_C_COMMENT
-#define TPP_HAVE_TPP_TOK_C_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-c-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_C_COMMENT */
+#ifndef TPP_HAVE_TOK_C_COMMENT
+#define TPP_HAVE_TOK_C_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-c-comment" */
+#endif /* !TPP_HAVE_TOK_C_COMMENT */
 
 /* Enable support for recognizing pascal-like comments: `(* like this one! *)`
  * @detect: #if __TPP_COUNT_TOKENS("(* a b c *)") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_PASCAL_COMMENT
-#define TPP_HAVE_TPP_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pascal-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
+#ifndef TPP_HAVE_TOK_PASCAL_COMMENT
+#define TPP_HAVE_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pascal-comment" */
+#endif /* !TPP_HAVE_TOK_PASCAL_COMMENT */
 
 /* Enable support for recognizing html-like comments: `<!-- like this one -->`
  * @detect: #if __TPP_COUNT_TOKENS("<!-- a b c -->") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_HTML_COMMENT
-#define TPP_HAVE_TPP_TOK_HTML_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-html-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_HTML_COMMENT */
+#ifndef TPP_HAVE_TOK_HTML_COMMENT
+#define TPP_HAVE_TOK_HTML_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-html-comment" */
+#endif /* !TPP_HAVE_TOK_HTML_COMMENT */
 
 /* Enable support for recognizing SQL-like comments: `-- like this one!`
  * @detect: #if __TPP_COUNT_TOKENS("-- a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_SQL_COMMENT
-#define TPP_HAVE_TPP_TOK_SQL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sql-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
+#ifndef TPP_HAVE_TOK_SQL_COMMENT
+#define TPP_HAVE_TOK_SQL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sql-comment" */
+#endif /* !TPP_HAVE_TOK_SQL_COMMENT */
 
 /* Enable support for recognizing deemon-doc-like comments: `@@ like this one!`
  * @detect: #if __TPP_COUNT_TOKENS("@@ a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_AT_AT_COMMENT
-#define TPP_HAVE_TPP_TOK_AT_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-at-at-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
+#ifndef TPP_HAVE_TOK_AT_AT_COMMENT
+#define TPP_HAVE_TOK_AT_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-at-at-comment" */
+#endif /* !TPP_HAVE_TOK_AT_AT_COMMENT */
 
 /* Enable support for recognizing shell-like comments: `# like this one!`
  *
@@ -1772,9 +1772,9 @@
  * and shell comments that don't appear at the start of lines are not
  * even processed as CPP directives.
  * @detect: #if __TPP_COUNT_TOKENS("# a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_SHELL_COMMENT
-#define TPP_HAVE_TPP_TOK_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-shell-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#ifndef TPP_HAVE_TOK_SHELL_COMMENT
+#define TPP_HAVE_TOK_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-shell-comment" */
+#endif /* !TPP_HAVE_TOK_SHELL_COMMENT */
 
 /* Enable support for recognizing ASM-like comments: `/ like this one!`
  *
@@ -1782,9 +1782,9 @@
  *       >> / this is a comment
  *       >> movl $42, %eax  / This isn't a comment
  * @detect: #if __TPP_COUNT_TOKENS("/ a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_ASM_COMMENT
-#define TPP_HAVE_TPP_TOK_ASM_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-asm-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_ASM_COMMENT */
+#ifndef TPP_HAVE_TOK_ASM_COMMENT
+#define TPP_HAVE_TOK_ASM_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-asm-comment" */
+#endif /* !TPP_HAVE_TOK_ASM_COMMENT */
 
 /* TODO: Support for "@" comments */
 /* TODO: #, / and @ comments should each have 2 versions sub-config to specify if a
@@ -1797,9 +1797,9 @@
 
 /* When enabled, `$` is treated as its own token, rather than as part of identifiers/keywords.
  * @detect: #if __TPP_COUNT_TOKENS("a$b") == 3 */
-#ifndef TPP_HAVE_TPP_TOK_DOLLAR
-#define TPP_HAVE_TPP_TOK_DOLLAR TPP_COMMON_HAVE_TPP_TOK_1CHAR /* "-ftok-dollar" */
-#endif /* !TPP_HAVE_TPP_TOK_DOLLAR */
+#ifndef TPP_HAVE_TOK_DOLLAR
+#define TPP_HAVE_TOK_DOLLAR TPP_COMMON_HAVE_TPP_TOK_1CHAR /* "-ftok-dollar" */
+#endif /* !TPP_HAVE_TOK_DOLLAR */
 
 /************************************************************************/
 /* Number tokens                                                        */
@@ -1816,7 +1816,7 @@
  */
 
 /* XXX: Support for Pascal-style hex numbers; could be made to co-exist with
- *      TPP_HAVE_TPP_TOK_DOLLAR such that hex is only detected when the next
+ *      TPP_HAVE_TOK_DOLLAR such that hex is only detected when the next
  *      character is 0-9, a-f, A-F:
  *  - $FF  (same as 0xFF)
  *
@@ -1826,30 +1826,30 @@
 /* XXX: Feature to disable support for C-style "0x" radix prefixes in tpp_lexer_decodeint() */
 
 /* Allow use of `_` as a thousands separator `123_456_789`
- * in `TPP_HAVE_TPP_TOK_C_INT` and `TPP_HAVE_TPP_TOK_C_FLOAT` */
+ * in `TPP_HAVE_TOK_C_INT` and `TPP_HAVE_TOK_C_FLOAT` */
 #ifndef TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
-#define TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE (TPP_HAVE_TPP_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fthousands-separator-underscore" */
+#define TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE (TPP_HAVE_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fthousands-separator-underscore" */
 #endif /* !TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
 
 /* Allow use of `'` as a thousands separator `123'456'789`
- * in `TPP_HAVE_TPP_TOK_C_INT` and `TPP_HAVE_TPP_TOK_C_FLOAT`
+ * in `TPP_HAVE_TOK_C_INT` and `TPP_HAVE_TOK_C_FLOAT`
  *
  * @detect: #if __TPP_COUNT_TOKENS("123'456'789") == 1 */
 #ifndef TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
-#define TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK (TPP_HAVE_TPP_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fthousands-separator-singletick" */
+#define TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK (TPP_HAVE_TOK_C_INT ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fthousands-separator-singletick" */
 #endif /* !TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
 
 /* C-style integer token `123`
  * @detect: #if __TPP_COUNT_TOKENS("123") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_C_INT
-#define TPP_HAVE_TPP_TOK_C_INT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-c-int" */
-#endif /* !TPP_HAVE_TPP_TOK_C_INT */
+#ifndef TPP_HAVE_TOK_C_INT
+#define TPP_HAVE_TOK_C_INT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-c-int" */
+#endif /* !TPP_HAVE_TOK_C_INT */
 
 /* C-style float token `123.0`
  * @detect: #if __TPP_COUNT_TOKENS("123.0") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_C_FLOAT
-#define TPP_HAVE_TPP_TOK_C_FLOAT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-c-float" */
-#endif /* !TPP_HAVE_TPP_TOK_C_FLOAT */
+#ifndef TPP_HAVE_TOK_C_FLOAT
+#define TPP_HAVE_TOK_C_FLOAT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-c-float" */
+#endif /* !TPP_HAVE_TOK_C_FLOAT */
 
 /* (Try to) be smarter regarding how float tokens are detected.
  * This tries to detect some syntax-error floating point tokens
@@ -1918,7 +1918,7 @@
  *
  * @detect: #if __TPP_COUNT_TOKENS("0x1P+12") == 1 && __TPP_COUNT_TOKENS("0xE+12") == 3 */
 #ifndef TPP_HAVE_SMART_FLOAT_TOKENS
-#define TPP_HAVE_SMART_FLOAT_TOKENS ((TPP_HAVE_PROFILE_DEFAULT && TPP_HAVE_TPP_TOK_C_FLOAT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_CONF_FEAT1) : 0) /* "-fsmart-float-tokens" */
+#define TPP_HAVE_SMART_FLOAT_TOKENS ((TPP_HAVE_PROFILE_DEFAULT && TPP_HAVE_TOK_C_FLOAT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_CONF_FEAT1) : 0) /* "-fsmart-float-tokens" */
 #endif /* !TPP_HAVE_SMART_FLOAT_TOKENS */
 
 /************************************************************************/
@@ -1934,121 +1934,121 @@
 
 /* Support for C character literals: `'foo'`
  * @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_C_CHAR
-#define TPP_HAVE_TPP_TOK_C_CHAR TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-char" */
-#endif /* !TPP_HAVE_TPP_TOK_C_CHAR */
+#ifndef TPP_HAVE_TOK_C_CHAR
+#define TPP_HAVE_TOK_C_CHAR TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-char" */
+#endif /* !TPP_HAVE_TOK_C_CHAR */
 
 /* Support for C string literals: `"foo"`
  * @detect: #if __TPP_COUNT_TOKENS('"foo"') == 1 */
-#ifndef TPP_HAVE_TPP_TOK_C_STRING
-#define TPP_HAVE_TPP_TOK_C_STRING TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-string" */
-#endif /* !TPP_HAVE_TPP_TOK_C_STRING */
+#ifndef TPP_HAVE_TOK_C_STRING
+#define TPP_HAVE_TOK_C_STRING TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-string" */
+#endif /* !TPP_HAVE_TOK_C_STRING */
 
 /* Support for string literals: `R"AB(foo)AB"`
  * @detect: #if __TPP_COUNT_TOKENS('R"AB(foo)AB"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 3 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-raw-string-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL */
+#ifndef TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
+#define TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-raw-string-literal" */
+#endif /* !TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
 
 /* Support for string literals: `L"foo"`
- * When `TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `LR"AB(foo)AB")`
+ * When `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `LR"AB(foo)AB")`
  * @detect: #if __TPP_COUNT_TOKENS('L"foo"') == 1 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-wide-string-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL */
+#ifndef TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL
+#define TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-wide-string-literal" */
+#endif /* !TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL */
 
 /* Support for string literals: `u8"foo"`
- * When `TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `u8R"AB(foo)AB"`
+ * When `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `u8R"AB(foo)AB"`
  * @detect: #if __TPP_COUNT_TOKENS('u8"foo"') == 1 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf8-string-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL */
+#ifndef TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL
+#define TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf8-string-literal" */
+#endif /* !TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL */
 
 /* Support for string literals: `u"foo"`
- * When `TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `uR"AB(foo)AB"`
+ * When `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `uR"AB(foo)AB"`
  * @detect: #if __TPP_COUNT_TOKENS('u"foo"') == 1 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf16-string-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL */
+#ifndef TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL
+#define TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf16-string-literal" */
+#endif /* !TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL */
 
 /* Support for string literals: `U"foo"`
- * When `TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `UR"AB(foo)AB"`
+ * When `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `UR"AB(foo)AB"`
  * @detect: #if __TPP_COUNT_TOKENS('U"foo"') == 1 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf32-string-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL */
+#ifndef TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL
+#define TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf32-string-literal" */
+#endif /* !TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL */
 
 /* Support for string literals: `R'AB(f)AB'`
  * @detect: #if __TPP_COUNT_TOKENS("R'AB(foo)AB'") == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 3 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-raw-char-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL */
+#ifndef TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
+#define TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-raw-char-literal" */
+#endif /* !TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
 
 /* Support for string literals: `L'f'`
- * When `TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `LR'AB(f)AB'`
+ * When `TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `LR'AB(f)AB'`
  * @detect: #if __TPP_COUNT_TOKENS("L'f'") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-wide-char-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL */
+#ifndef TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL
+#define TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-wide-char-literal" */
+#endif /* !TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL */
 
 /* Support for string literals: `u8'f'`
- * When `TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `u8R'AB(f)AB'`
+ * When `TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `u8R'AB(f)AB'`
  * @detect: #if __TPP_COUNT_TOKENS("u8'f'") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf8-char-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL */
+#ifndef TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL
+#define TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf8-char-literal" */
+#endif /* !TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL */
 
 /* Support for string literals: `u'f'`
- * When `TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `uR'AB(f)AB'`
+ * When `TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `uR'AB(f)AB'`
  * @detect: #if __TPP_COUNT_TOKENS("u'f'") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf16-char-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL */
+#ifndef TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL
+#define TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf16-char-literal" */
+#endif /* !TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL */
 
 /* Support for string literals: `U'f'`
- * When `TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `UR'AB(f)AB'`
+ * When `TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `UR'AB(f)AB'`
  * @detect: #if __TPP_COUNT_TOKENS("U'f'") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
-#define TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf32-char-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL */
+#ifndef TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL
+#define TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf32-char-literal" */
+#endif /* !TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL */
 
 /* Support for deemon-style raw string literals: `R"foo"` and `r"foo"`
  * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 9 */
-#ifndef TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-raw-string-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL */
+#ifndef TPP_HAVE_TOK_RAW_STRING_LITERAL
+#define TPP_HAVE_TOK_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-raw-string-literal" */
+#endif /* !TPP_HAVE_TOK_RAW_STRING_LITERAL */
 
 /* Support for deemon-style raw string literals: `R'bar'` and `r'bar'`
  * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 9 */
-#ifndef TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL
-#define TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-raw-char-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL */
+#ifndef TPP_HAVE_TOK_RAW_CHAR_LITERAL
+#define TPP_HAVE_TOK_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-raw-char-literal" */
+#endif /* !TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 
 /* Support for java-style block string literals: `"""foo"""`
  * @detect: #if __TPP_COUNT_TOKENS('"""\n a\n b"""') == 1 */
-#ifndef TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL
-#define TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-block-string-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL */
+#ifndef TPP_HAVE_TOK_BLOCK_STRING_LITERAL
+#define TPP_HAVE_TOK_BLOCK_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-block-string-literal" */
+#endif /* !TPP_HAVE_TOK_BLOCK_STRING_LITERAL */
 
 /* Support for java-style block string literals (but with single-ticks): `'''foo'''`
  * @detect: #if __TPP_COUNT_TOKENS("'''\n a\n b'''") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL
-#define TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-block-char-literal" */
-#endif /* !TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL */
+#ifndef TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
+#define TPP_HAVE_TOK_BLOCK_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-block-char-literal" */
+#endif /* !TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
 
 /* Feature-flag: treat line-feeds like any regular character in string tokens:
- * - `TPP_HAVE_TPP_TOK_C_STRING`
- * - `TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL`
- * - `TPP_HAVE_TPP_TOK_C_CHAR`
- * - `TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL`
- * - `TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL`
- * - `TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_C_STRING`
+ * - `TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_RAW_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_C_CHAR`
+ * - `TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_RAW_CHAR_LITERAL`
  *
  * When this flag is disabled, line-feeds in such string tokens will instead
  * terminate the string, and cause a `TPP_W_STRING_TERMINATED_BY_LINEFEED`
@@ -2091,80 +2091,80 @@
 #endif /* !TPP_HAVE_STRING_AUTO_CONCAT */
 
 
-#undef TPP_HAVE_TPP_TOK_INT
-#define TPP_HAVE_TPP_TOK_INT TPP_HAVE_TPP_TOK_C_INT
-#undef TPP_HAVE_TPP_TOK_FLOAT
-#define TPP_HAVE_TPP_TOK_FLOAT TPP_HAVE_TPP_TOK_C_FLOAT
-#undef TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE
-#if (TPP_HAVE_TPP_TOK_C_COMMENT ||      \
-     TPP_HAVE_TPP_TOK_PASCAL_COMMENT || \
-     TPP_HAVE_TPP_TOK_HTML_COMMENT)
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 1
+#undef TPP_HAVE_TOK_INT
+#define TPP_HAVE_TOK_INT TPP_HAVE_TOK_C_INT
+#undef TPP_HAVE_TOK_FLOAT
+#define TPP_HAVE_TOK_FLOAT TPP_HAVE_TOK_C_FLOAT
+#undef TPP_HAVE_TOK_COMMENTLIKE_NOLINE
+#if (TPP_HAVE_TOK_C_COMMENT ||      \
+     TPP_HAVE_TOK_PASCAL_COMMENT || \
+     TPP_HAVE_TOK_HTML_COMMENT)
+#define TPP_HAVE_TOK_COMMENTLIKE_NOLINE 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 0
+#define TPP_HAVE_TOK_COMMENTLIKE_NOLINE 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE
-#if (TPP_HAVE_TPP_TOK_CXX_COMMENT ||   \
-     TPP_HAVE_TPP_TOK_SHELL_COMMENT || \
-     TPP_HAVE_TPP_TOK_ASM_COMMENT || \
-     TPP_HAVE_TPP_TOK_SQL_COMMENT)
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE 1
+#undef TPP_HAVE_TOK_COMMENTLIKE_LINE
+#if (TPP_HAVE_TOK_CXX_COMMENT ||   \
+     TPP_HAVE_TOK_SHELL_COMMENT || \
+     TPP_HAVE_TOK_ASM_COMMENT || \
+     TPP_HAVE_TOK_SQL_COMMENT)
+#define TPP_HAVE_TOK_COMMENTLIKE_LINE 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE 0
+#define TPP_HAVE_TOK_COMMENTLIKE_LINE 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_COMMENTLIKE
-#if (TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE || \
-     TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE)
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE 1
+#undef TPP_HAVE_TOK_COMMENTLIKE
+#if (TPP_HAVE_TOK_COMMENTLIKE_NOLINE || \
+     TPP_HAVE_TOK_COMMENTLIKE_LINE)
+#define TPP_HAVE_TOK_COMMENTLIKE 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_COMMENTLIKE 0
+#define TPP_HAVE_TOK_COMMENTLIKE 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE
-#if (TPP_HAVE_TPP_TOK_C_CHAR ||                 \
-     TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL || \
-     TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL ||       \
-     TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
-#define TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE 1
+#undef TPP_HAVE_TOK_STRINGLIKE_SQUOTE
+#if (TPP_HAVE_TOK_C_CHAR ||                 \
+     TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL || \
+     TPP_HAVE_TOK_RAW_CHAR_LITERAL ||       \
+     TPP_HAVE_TOK_BLOCK_CHAR_LITERAL)
+#define TPP_HAVE_TOK_STRINGLIKE_SQUOTE 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE 0
+#define TPP_HAVE_TOK_STRINGLIKE_SQUOTE 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE
-#if (TPP_HAVE_TPP_TOK_C_STRING ||                 \
-     TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||       \
-     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL)
-#define TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE 1
+#undef TPP_HAVE_TOK_STRINGLIKE_DQUOTE
+#if (TPP_HAVE_TOK_C_STRING ||                 \
+     TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TOK_RAW_STRING_LITERAL ||       \
+     TPP_HAVE_TOK_BLOCK_STRING_LITERAL)
+#define TPP_HAVE_TOK_STRINGLIKE_DQUOTE 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE 0
+#define TPP_HAVE_TOK_STRINGLIKE_DQUOTE 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_STRINGLIKE
-#if (TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE || \
-     TPP_HAVE_TPP_TOK_STRINGLIKE_DQUOTE)
-#define TPP_HAVE_TPP_TOK_STRINGLIKE 1
+#undef TPP_HAVE_TOK_STRINGLIKE
+#if (TPP_HAVE_TOK_STRINGLIKE_SQUOTE || \
+     TPP_HAVE_TOK_STRINGLIKE_DQUOTE)
+#define TPP_HAVE_TOK_STRINGLIKE 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_STRINGLIKE 0
+#define TPP_HAVE_TOK_STRINGLIKE 0
 #endif /* !... */
 #undef TPP_HAVE_STRING_ESCAPE
-#if (TPP_HAVE_TPP_TOK_C_STRING ||                 \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
-     TPP_HAVE_TPP_TOK_C_CHAR ||                   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL)
+#if (TPP_HAVE_TOK_C_STRING ||                 \
+     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TOK_BLOCK_STRING_LITERAL ||     \
+     TPP_HAVE_TOK_C_CHAR ||                   \
+     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_BLOCK_CHAR_LITERAL)
 #define TPP_HAVE_STRING_ESCAPE 1
 #else /* ... */
 #define TPP_HAVE_STRING_ESCAPE 0
@@ -2216,8 +2216,8 @@ local MC_TOKENS = {
 	{ "&=", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
 	{ "|=", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
 	{ "^=", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
-	{ "//", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT" },
-	{ "//=", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT" },
+	{ "//", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT" },
+	{ "//=", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT" },
 	{ "**=", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "@=", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "##", "(TPP_CONF_IS_RT(TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS) ? TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS : (TPP_HAVE_GLUE_MACRO_ARGUMENT || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS))", "" },
@@ -2225,7 +2225,7 @@ local MC_TOKENS = {
 	{ "||", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
 	{ "^^", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "++", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
-	{ "--", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SQL_COMMENT" },
+	{ "--", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TOK_SQL_COMMENT" },
 	{ "**", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "~~", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "~=", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
@@ -2251,7 +2251,7 @@ local MC_TOKENS = {
 	{ "=*", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "=**", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "=/", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
-	{ "=//", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT" },
+	{ "=//", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT" },
 	{ "=%", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "=&", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "=|", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
@@ -2303,717 +2303,717 @@ for (local tok, def, comment: MC_TOKENS.sorted()) {
 	local name = tokenName(tok);
 	print('/' '* "', tok, '"', comment ? f"  ({comment})" : "");
 	print(' * @detect: #if __TPP_COUNT_TOKENS("', tok, '") == 1 *' '/');
-	print('#ifndef TPP_HAVE_TPP_TOK_', name, '');
-	print('#define TPP_HAVE_TPP_TOK_', name, ' ', def, ' /' '* "-ftok-', name.lower(), '" *' '/');
-	print('#endif /' '* !TPP_HAVE_TPP_TOK_', name, ' *' '/');
+	print('#ifndef TPP_HAVE_TOK_', name, '');
+	print('#define TPP_HAVE_TOK_', name, ' ', def, ' /' '* "-ftok-', name.lower(), '" *' '/');
+	print('#endif /' '* !TPP_HAVE_TOK_', name, ' *' '/');
 	print;
 }
 local firstChars = HashSet(MC_TOKENS.each.first.first).sorted();
 for (local firstChar: firstChars) {
-	print("#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_", charNames[firstChar]);
+	print("#undef TPP_HAVE_TOK_MC_STARTSWITH_", charNames[firstChar]);
 	local startsWith = MC_TOKENS.filter(e -> e.first.startswith(firstChar)).sorted().each.first;
-	print("#if ", " || ".join(for (local c: startsWith) f"TPP_HAVE_TPP_TOK_{tokenName(c)}"));
-	print("#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_", charNames[firstChar], " 1");
+	print("#if ", " || ".join(for (local c: startsWith) f"TPP_HAVE_TOK_{tokenName(c)}"));
+	print("#define TPP_HAVE_TOK_MC_STARTSWITH_", charNames[firstChar], " 1");
 	print("#else /" "* ... *" "/");
-	print("#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_", charNames[firstChar], " 0");
+	print("#define TPP_HAVE_TOK_MC_STARTSWITH_", charNames[firstChar], " 0");
 	print("#endif /" "* !... *" "/");
 }
-print("#undef TPP_HAVE_TPP_TOK_MC");
-print("#if ", " || ".join(for (local c: firstChars) f"TPP_HAVE_TPP_TOK_MC_STARTSWITH_{charNames[c]}"));
-print("#define TPP_HAVE_TPP_TOK_MC 1");
+print("#undef TPP_HAVE_TOK_MC");
+print("#if ", " || ".join(for (local c: firstChars) f"TPP_HAVE_TOK_MC_STARTSWITH_{charNames[c]}"));
+print("#define TPP_HAVE_TOK_MC 1");
 print("#else /" "* ... *" "/");
-print("#define TPP_HAVE_TPP_TOK_MC 0");
+print("#define TPP_HAVE_TOK_MC 0");
 print("#endif /" "* !... *" "/");
 ]]]*/
 /* "!!"
  * @detect: #if __TPP_COUNT_TOKENS("!!") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
-#define TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-exclaim_exclaim" */
-#endif /* !TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
+#ifndef TPP_HAVE_TOK_EXCLAIM_EXCLAIM
+#define TPP_HAVE_TOK_EXCLAIM_EXCLAIM TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-exclaim_exclaim" */
+#endif /* !TPP_HAVE_TOK_EXCLAIM_EXCLAIM */
 
 /* "!="
  * @detect: #if __TPP_COUNT_TOKENS("!=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
-#define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-exclaim_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL */
+#ifndef TPP_HAVE_TOK_EXCLAIM_EQUAL
+#define TPP_HAVE_TOK_EXCLAIM_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-exclaim_equal" */
+#endif /* !TPP_HAVE_TOK_EXCLAIM_EQUAL */
 
 /* "!=="
  * @detect: #if __TPP_COUNT_TOKENS("!==") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
-#define TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-exclaim_equal_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL */
+#ifndef TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL
+#define TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-exclaim_equal_equal" */
+#endif /* !TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL */
 
 /* "##"
  * @detect: #if __TPP_COUNT_TOKENS("##") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_POUND_POUND
-#define TPP_HAVE_TPP_TOK_POUND_POUND (TPP_CONF_IS_RT(TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS) ? TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS : (TPP_HAVE_GLUE_MACRO_ARGUMENT || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS)) /* "-ftok-pound_pound" */
-#endif /* !TPP_HAVE_TPP_TOK_POUND_POUND */
+#ifndef TPP_HAVE_TOK_POUND_POUND
+#define TPP_HAVE_TOK_POUND_POUND (TPP_CONF_IS_RT(TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS) ? TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS : (TPP_HAVE_GLUE_MACRO_ARGUMENT || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS)) /* "-ftok-pound_pound" */
+#endif /* !TPP_HAVE_TOK_POUND_POUND */
 
 /* "%%"
  * @detect: #if __TPP_COUNT_TOKENS("%%") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_PERCENT_PERCENT
-#define TPP_HAVE_TPP_TOK_PERCENT_PERCENT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-percent_percent" */
-#endif /* !TPP_HAVE_TPP_TOK_PERCENT_PERCENT */
+#ifndef TPP_HAVE_TOK_PERCENT_PERCENT
+#define TPP_HAVE_TOK_PERCENT_PERCENT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-percent_percent" */
+#endif /* !TPP_HAVE_TOK_PERCENT_PERCENT */
 
 /* "%%="
  * @detect: #if __TPP_COUNT_TOKENS("%%=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL
-#define TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-percent_percent_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL */
+#ifndef TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL
+#define TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-percent_percent_equal" */
+#endif /* !TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL */
 
 /* "%="
  * @detect: #if __TPP_COUNT_TOKENS("%=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_PERCENT_EQUAL
-#define TPP_HAVE_TPP_TOK_PERCENT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-percent_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_PERCENT_EQUAL */
+#ifndef TPP_HAVE_TOK_PERCENT_EQUAL
+#define TPP_HAVE_TOK_PERCENT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-percent_equal" */
+#endif /* !TPP_HAVE_TOK_PERCENT_EQUAL */
 
 /* "&&"
  * @detect: #if __TPP_COUNT_TOKENS("&&") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_AMP_AMP
-#define TPP_HAVE_TPP_TOK_AMP_AMP TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-amp_amp" */
-#endif /* !TPP_HAVE_TPP_TOK_AMP_AMP */
+#ifndef TPP_HAVE_TOK_AMP_AMP
+#define TPP_HAVE_TOK_AMP_AMP TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-amp_amp" */
+#endif /* !TPP_HAVE_TOK_AMP_AMP */
 
 /* "&="
  * @detect: #if __TPP_COUNT_TOKENS("&=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_AMP_EQUAL
-#define TPP_HAVE_TPP_TOK_AMP_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-amp_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_AMP_EQUAL */
+#ifndef TPP_HAVE_TOK_AMP_EQUAL
+#define TPP_HAVE_TOK_AMP_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-amp_equal" */
+#endif /* !TPP_HAVE_TOK_AMP_EQUAL */
 
 /* "**"
  * @detect: #if __TPP_COUNT_TOKENS("**") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_STAR_STAR
-#define TPP_HAVE_TPP_TOK_STAR_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_star" */
-#endif /* !TPP_HAVE_TPP_TOK_STAR_STAR */
+#ifndef TPP_HAVE_TOK_STAR_STAR
+#define TPP_HAVE_TOK_STAR_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_star" */
+#endif /* !TPP_HAVE_TOK_STAR_STAR */
 
 /* "**="
  * @detect: #if __TPP_COUNT_TOKENS("**=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL
-#define TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_star_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL */
+#ifndef TPP_HAVE_TOK_STAR_STAR_EQUAL
+#define TPP_HAVE_TOK_STAR_STAR_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_star_equal" */
+#endif /* !TPP_HAVE_TOK_STAR_STAR_EQUAL */
 
 /* "*."
  * @detect: #if __TPP_COUNT_TOKENS("*.") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_STAR_DOT
-#define TPP_HAVE_TPP_TOK_STAR_DOT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_dot" */
-#endif /* !TPP_HAVE_TPP_TOK_STAR_DOT */
+#ifndef TPP_HAVE_TOK_STAR_DOT
+#define TPP_HAVE_TOK_STAR_DOT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_dot" */
+#endif /* !TPP_HAVE_TOK_STAR_DOT */
 
 /* "*<-"
  * @detect: #if __TPP_COUNT_TOKENS("*<-") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS
-#define TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_langle_minus" */
-#endif /* !TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS */
+#ifndef TPP_HAVE_TOK_STAR_LANGLE_MINUS
+#define TPP_HAVE_TOK_STAR_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_langle_minus" */
+#endif /* !TPP_HAVE_TOK_STAR_LANGLE_MINUS */
 
 /* "*="
  * @detect: #if __TPP_COUNT_TOKENS("*=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_STAR_EQUAL
-#define TPP_HAVE_TPP_TOK_STAR_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-star_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_STAR_EQUAL */
+#ifndef TPP_HAVE_TOK_STAR_EQUAL
+#define TPP_HAVE_TOK_STAR_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-star_equal" */
+#endif /* !TPP_HAVE_TOK_STAR_EQUAL */
 
 /* "++"
  * @detect: #if __TPP_COUNT_TOKENS("++") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_PLUS_PLUS
-#define TPP_HAVE_TPP_TOK_PLUS_PLUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-plus_plus" */
-#endif /* !TPP_HAVE_TPP_TOK_PLUS_PLUS */
+#ifndef TPP_HAVE_TOK_PLUS_PLUS
+#define TPP_HAVE_TOK_PLUS_PLUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-plus_plus" */
+#endif /* !TPP_HAVE_TOK_PLUS_PLUS */
 
 /* "+="
  * @detect: #if __TPP_COUNT_TOKENS("+=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_PLUS_EQUAL
-#define TPP_HAVE_TPP_TOK_PLUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-plus_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_PLUS_EQUAL */
+#ifndef TPP_HAVE_TOK_PLUS_EQUAL
+#define TPP_HAVE_TOK_PLUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-plus_equal" */
+#endif /* !TPP_HAVE_TOK_PLUS_EQUAL */
 
-/* "--"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SQL_COMMENT)
+/* "--"  (WARNING: This token conflicts with TPP_HAVE_TOK_SQL_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("--") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_MINUS
-#define TPP_HAVE_TPP_TOK_MINUS_MINUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_minus" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_MINUS */
+#ifndef TPP_HAVE_TOK_MINUS_MINUS
+#define TPP_HAVE_TOK_MINUS_MINUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_minus" */
+#endif /* !TPP_HAVE_TOK_MINUS_MINUS */
 
 /* "-<"
  * @detect: #if __TPP_COUNT_TOKENS("-<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_LANGLE
-#define TPP_HAVE_TPP_TOK_MINUS_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_LANGLE */
+#ifndef TPP_HAVE_TOK_MINUS_LANGLE
+#define TPP_HAVE_TOK_MINUS_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_langle" */
+#endif /* !TPP_HAVE_TOK_MINUS_LANGLE */
 
 /* "-<<"
  * @detect: #if __TPP_COUNT_TOKENS("-<<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE
-#define TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_langle_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE */
+#ifndef TPP_HAVE_TOK_MINUS_LANGLE_LANGLE
+#define TPP_HAVE_TOK_MINUS_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_langle_langle" */
+#endif /* !TPP_HAVE_TOK_MINUS_LANGLE_LANGLE */
 
 /* "-<<<"
  * @detect: #if __TPP_COUNT_TOKENS("-<<<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE
-#define TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_langle_langle_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE */
+#ifndef TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
+#define TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_langle_langle_langle" */
+#endif /* !TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE */
 
 /* "-="
  * @detect: #if __TPP_COUNT_TOKENS("-=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_EQUAL
-#define TPP_HAVE_TPP_TOK_MINUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_EQUAL */
+#ifndef TPP_HAVE_TOK_MINUS_EQUAL
+#define TPP_HAVE_TOK_MINUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_equal" */
+#endif /* !TPP_HAVE_TOK_MINUS_EQUAL */
 
 /* "->"
  * @detect: #if __TPP_COUNT_TOKENS("->") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_RANGLE
-#define TPP_HAVE_TPP_TOK_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_RANGLE */
+#ifndef TPP_HAVE_TOK_MINUS_RANGLE
+#define TPP_HAVE_TOK_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_rangle" */
+#endif /* !TPP_HAVE_TOK_MINUS_RANGLE */
 
 /* "->*"
  * @detect: #if __TPP_COUNT_TOKENS("->*") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR
-#define TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "-ftok-minus_rangle_star" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR */
+#ifndef TPP_HAVE_TOK_MINUS_RANGLE_STAR
+#define TPP_HAVE_TOK_MINUS_RANGLE_STAR TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "-ftok-minus_rangle_star" */
+#endif /* !TPP_HAVE_TOK_MINUS_RANGLE_STAR */
 
 /* "->>"
  * @detect: #if __TPP_COUNT_TOKENS("->>") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_rangle_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE */
+#ifndef TPP_HAVE_TOK_MINUS_RANGLE_RANGLE
+#define TPP_HAVE_TOK_MINUS_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_rangle_rangle" */
+#endif /* !TPP_HAVE_TOK_MINUS_RANGLE_RANGLE */
 
 /* "->>>"
  * @detect: #if __TPP_COUNT_TOKENS("->>>") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_rangle_rangle_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE */
+#ifndef TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
+#define TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_rangle_rangle_rangle" */
+#endif /* !TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE */
 
 /* ".*"
  * @detect: #if __TPP_COUNT_TOKENS(".*") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_DOT_STAR
-#define TPP_HAVE_TPP_TOK_DOT_STAR TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "-ftok-dot_star" */
-#endif /* !TPP_HAVE_TPP_TOK_DOT_STAR */
+#ifndef TPP_HAVE_TOK_DOT_STAR
+#define TPP_HAVE_TOK_DOT_STAR TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "-ftok-dot_star" */
+#endif /* !TPP_HAVE_TOK_DOT_STAR */
 
 /* ".."
  * @detect: #if __TPP_COUNT_TOKENS("..") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_DOT_DOT
-#define TPP_HAVE_TPP_TOK_DOT_DOT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-dot_dot" */
-#endif /* !TPP_HAVE_TPP_TOK_DOT_DOT */
+#ifndef TPP_HAVE_TOK_DOT_DOT
+#define TPP_HAVE_TOK_DOT_DOT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-dot_dot" */
+#endif /* !TPP_HAVE_TOK_DOT_DOT */
 
 /* "..."
  * @detect: #if __TPP_COUNT_TOKENS("...") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_DOT_DOT_DOT
-#define TPP_HAVE_TPP_TOK_DOT_DOT_DOT (TPP_CONF_IS_RT(TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) ? TPP_COMMON_HAVE_TPP_TOK_C_TOKENS : (TPP_COMMON_HAVE_TPP_TOK_C_TOKENS || TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS)) /* "-ftok-dot_dot_dot" */
-#endif /* !TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
+#ifndef TPP_HAVE_TOK_DOT_DOT_DOT
+#define TPP_HAVE_TOK_DOT_DOT_DOT (TPP_CONF_IS_RT(TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) ? TPP_COMMON_HAVE_TPP_TOK_C_TOKENS : (TPP_COMMON_HAVE_TPP_TOK_C_TOKENS || TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS)) /* "-ftok-dot_dot_dot" */
+#endif /* !TPP_HAVE_TOK_DOT_DOT_DOT */
 
-/* "//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT)
+/* "//"  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("//") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH
-#define TPP_HAVE_TPP_TOK_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-slash_slash" */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH */
+#ifndef TPP_HAVE_TOK_SLASH_SLASH
+#define TPP_HAVE_TOK_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-slash_slash" */
+#endif /* !TPP_HAVE_TOK_SLASH_SLASH */
 
-/* "//="  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT)
+/* "//="  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("//=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
-#define TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-slash_slash_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL */
+#ifndef TPP_HAVE_TOK_SLASH_SLASH_EQUAL
+#define TPP_HAVE_TOK_SLASH_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-slash_slash_equal" */
+#endif /* !TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
 
 /* "/="
  * @detect: #if __TPP_COUNT_TOKENS("/=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_SLASH_EQUAL
-#define TPP_HAVE_TPP_TOK_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-slash_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_EQUAL */
+#ifndef TPP_HAVE_TOK_SLASH_EQUAL
+#define TPP_HAVE_TOK_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-slash_equal" */
+#endif /* !TPP_HAVE_TOK_SLASH_EQUAL */
 
 /* "::"
  * @detect: #if __TPP_COUNT_TOKENS("::") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_COLON_COLON
-#define TPP_HAVE_TPP_TOK_COLON_COLON TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "-ftok-colon_colon" */
-#endif /* !TPP_HAVE_TPP_TOK_COLON_COLON */
+#ifndef TPP_HAVE_TOK_COLON_COLON
+#define TPP_HAVE_TOK_COLON_COLON TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "-ftok-colon_colon" */
+#endif /* !TPP_HAVE_TOK_COLON_COLON */
 
 /* ":="
  * @detect: #if __TPP_COUNT_TOKENS(":=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_COLON_EQUAL
-#define TPP_HAVE_TPP_TOK_COLON_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-colon_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_COLON_EQUAL */
+#ifndef TPP_HAVE_TOK_COLON_EQUAL
+#define TPP_HAVE_TOK_COLON_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-colon_equal" */
+#endif /* !TPP_HAVE_TOK_COLON_EQUAL */
 
 /* "<-"
  * @detect: #if __TPP_COUNT_TOKENS("<-") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_MINUS
-#define TPP_HAVE_TPP_TOK_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_minus" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS */
+#ifndef TPP_HAVE_TOK_LANGLE_MINUS
+#define TPP_HAVE_TOK_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_minus" */
+#endif /* !TPP_HAVE_TOK_LANGLE_MINUS */
 
 /* "<-<"
  * @detect: #if __TPP_COUNT_TOKENS("<-<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_minus_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#ifndef TPP_HAVE_TOK_LANGLE_MINUS_LANGLE
+#define TPP_HAVE_TOK_LANGLE_MINUS_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_minus_langle" */
+#endif /* !TPP_HAVE_TOK_LANGLE_MINUS_LANGLE */
 
 /* "<->"
  * @detect: #if __TPP_COUNT_TOKENS("<->") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_minus_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
+#ifndef TPP_HAVE_TOK_LANGLE_MINUS_RANGLE
+#define TPP_HAVE_TOK_LANGLE_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_minus_rangle" */
+#endif /* !TPP_HAVE_TOK_LANGLE_MINUS_RANGLE */
 
 /* "<<"
  * @detect: #if __TPP_COUNT_TOKENS("<<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-langle_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
+#ifndef TPP_HAVE_TOK_LANGLE_LANGLE
+#define TPP_HAVE_TOK_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-langle_langle" */
+#endif /* !TPP_HAVE_TOK_LANGLE_LANGLE */
 
 /* "<<-"
  * @detect: #if __TPP_COUNT_TOKENS("<<-") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_minus" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS */
+#ifndef TPP_HAVE_TOK_LANGLE_LANGLE_MINUS
+#define TPP_HAVE_TOK_LANGLE_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_minus" */
+#endif /* !TPP_HAVE_TOK_LANGLE_LANGLE_MINUS */
 
 /* "<<<"
  * @detect: #if __TPP_COUNT_TOKENS("<<<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
+#ifndef TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE
+#define TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_langle" */
+#endif /* !TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE */
 
 /* "<<<-"
  * @detect: #if __TPP_COUNT_TOKENS("<<<-") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_langle_minus" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS */
+#ifndef TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS
+#define TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_langle_minus" */
+#endif /* !TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS */
 
 /* "<<<="
  * @detect: #if __TPP_COUNT_TOKENS("<<<=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_langle_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
+#ifndef TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL
+#define TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_langle_equal" */
+#endif /* !TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
 
 /* "<<="
  * @detect: #if __TPP_COUNT_TOKENS("<<=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-langle_langle_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
+#ifndef TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL
+#define TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-langle_langle_equal" */
+#endif /* !TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL */
 
 /* "<="
  * @detect: #if __TPP_COUNT_TOKENS("<=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-langle_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EQUAL */
+#ifndef TPP_HAVE_TOK_LANGLE_EQUAL
+#define TPP_HAVE_TOK_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-langle_equal" */
+#endif /* !TPP_HAVE_TOK_LANGLE_EQUAL */
 
 /* "<=<"
  * @detect: #if __TPP_COUNT_TOKENS("<=<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_equal_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#ifndef TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE
+#define TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_equal_langle" */
+#endif /* !TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE */
 
 /* "<=>"
  * @detect: #if __TPP_COUNT_TOKENS("<=>") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_equal_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
+#ifndef TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE
+#define TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_equal_rangle" */
+#endif /* !TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE */
 
 /* "<>"
  * @detect: #if __TPP_COUNT_TOKENS("<>") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_RANGLE */
+#ifndef TPP_HAVE_TOK_LANGLE_RANGLE
+#define TPP_HAVE_TOK_LANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_rangle" */
+#endif /* !TPP_HAVE_TOK_LANGLE_RANGLE */
 
 /* "=!"
  * @detect: #if __TPP_COUNT_TOKENS("=!") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM
-#define TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_exclaim" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM */
+#ifndef TPP_HAVE_TOK_EQUAL_EXCLAIM
+#define TPP_HAVE_TOK_EQUAL_EXCLAIM TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_exclaim" */
+#endif /* !TPP_HAVE_TOK_EQUAL_EXCLAIM */
 
 /* "=%"
  * @detect: #if __TPP_COUNT_TOKENS("=%") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_PERCENT
-#define TPP_HAVE_TPP_TOK_EQUAL_PERCENT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_percent" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_PERCENT */
+#ifndef TPP_HAVE_TOK_EQUAL_PERCENT
+#define TPP_HAVE_TOK_EQUAL_PERCENT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_percent" */
+#endif /* !TPP_HAVE_TOK_EQUAL_PERCENT */
 
 /* "=%%"
  * @detect: #if __TPP_COUNT_TOKENS("=%%") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT
-#define TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_percent_percent" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT */
+#ifndef TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT
+#define TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_percent_percent" */
+#endif /* !TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT */
 
 /* "=&"
  * @detect: #if __TPP_COUNT_TOKENS("=&") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_AMP
-#define TPP_HAVE_TPP_TOK_EQUAL_AMP TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_amp" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_AMP */
+#ifndef TPP_HAVE_TOK_EQUAL_AMP
+#define TPP_HAVE_TOK_EQUAL_AMP TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_amp" */
+#endif /* !TPP_HAVE_TOK_EQUAL_AMP */
 
 /* "=*"
  * @detect: #if __TPP_COUNT_TOKENS("=*") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_STAR
-#define TPP_HAVE_TPP_TOK_EQUAL_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_star" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_STAR */
+#ifndef TPP_HAVE_TOK_EQUAL_STAR
+#define TPP_HAVE_TOK_EQUAL_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_star" */
+#endif /* !TPP_HAVE_TOK_EQUAL_STAR */
 
 /* "=**"
  * @detect: #if __TPP_COUNT_TOKENS("=**") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR
-#define TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_star_star" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR */
+#ifndef TPP_HAVE_TOK_EQUAL_STAR_STAR
+#define TPP_HAVE_TOK_EQUAL_STAR_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_star_star" */
+#endif /* !TPP_HAVE_TOK_EQUAL_STAR_STAR */
 
 /* "=+"
  * @detect: #if __TPP_COUNT_TOKENS("=+") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_PLUS
-#define TPP_HAVE_TPP_TOK_EQUAL_PLUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_plus" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_PLUS */
+#ifndef TPP_HAVE_TOK_EQUAL_PLUS
+#define TPP_HAVE_TOK_EQUAL_PLUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_plus" */
+#endif /* !TPP_HAVE_TOK_EQUAL_PLUS */
 
 /* "=-"
  * @detect: #if __TPP_COUNT_TOKENS("=-") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_MINUS
-#define TPP_HAVE_TPP_TOK_EQUAL_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_minus" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_MINUS */
+#ifndef TPP_HAVE_TOK_EQUAL_MINUS
+#define TPP_HAVE_TOK_EQUAL_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_minus" */
+#endif /* !TPP_HAVE_TOK_EQUAL_MINUS */
 
 /* "=/"
  * @detect: #if __TPP_COUNT_TOKENS("=/") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_SLASH
-#define TPP_HAVE_TPP_TOK_EQUAL_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_slash" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_SLASH */
+#ifndef TPP_HAVE_TOK_EQUAL_SLASH
+#define TPP_HAVE_TOK_EQUAL_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_slash" */
+#endif /* !TPP_HAVE_TOK_EQUAL_SLASH */
 
-/* "=//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT)
+/* "=//"  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("=//") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
-#define TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_slash_slash" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH */
+#ifndef TPP_HAVE_TOK_EQUAL_SLASH_SLASH
+#define TPP_HAVE_TOK_EQUAL_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_slash_slash" */
+#endif /* !TPP_HAVE_TOK_EQUAL_SLASH_SLASH */
 
 /* "=:"
  * @detect: #if __TPP_COUNT_TOKENS("=:") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_COLON
-#define TPP_HAVE_TPP_TOK_EQUAL_COLON TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_colon" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_COLON */
+#ifndef TPP_HAVE_TOK_EQUAL_COLON
+#define TPP_HAVE_TOK_EQUAL_COLON TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_colon" */
+#endif /* !TPP_HAVE_TOK_EQUAL_COLON */
 
 /* "=<"
  * @detect: #if __TPP_COUNT_TOKENS("=<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_LANGLE
-#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE */
+#ifndef TPP_HAVE_TOK_EQUAL_LANGLE
+#define TPP_HAVE_TOK_EQUAL_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_langle" */
+#endif /* !TPP_HAVE_TOK_EQUAL_LANGLE */
 
 /* "=<<"
  * @detect: #if __TPP_COUNT_TOKENS("=<<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
-#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_langle_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
+#ifndef TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE
+#define TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_langle_langle" */
+#endif /* !TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE */
 
 /* "=<<<"
  * @detect: #if __TPP_COUNT_TOKENS("=<<<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
-#define TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_langle_langle_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
+#ifndef TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
+#define TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_langle_langle_langle" */
+#endif /* !TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
 
 /* "=="
  * @detect: #if __TPP_COUNT_TOKENS("==") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_EQUAL
-#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-equal_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL */
+#ifndef TPP_HAVE_TOK_EQUAL_EQUAL
+#define TPP_HAVE_TOK_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-equal_equal" */
+#endif /* !TPP_HAVE_TOK_EQUAL_EQUAL */
 
 /* "==!"
  * @detect: #if __TPP_COUNT_TOKENS("==!") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM
-#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_equal_exclaim" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM */
+#ifndef TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM
+#define TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_equal_exclaim" */
+#endif /* !TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM */
 
 /* "==="
  * @detect: #if __TPP_COUNT_TOKENS("===") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL
-#define TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_equal_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL */
+#ifndef TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL
+#define TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_equal_equal" */
+#endif /* !TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL */
 
 /* "=>"
  * @detect: #if __TPP_COUNT_TOKENS("=>") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_RANGLE
-#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE */
+#ifndef TPP_HAVE_TOK_EQUAL_RANGLE
+#define TPP_HAVE_TOK_EQUAL_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_rangle" */
+#endif /* !TPP_HAVE_TOK_EQUAL_RANGLE */
 
 /* "=>>"
  * @detect: #if __TPP_COUNT_TOKENS("=>>") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_rangle_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
+#ifndef TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE
+#define TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_rangle_rangle" */
+#endif /* !TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE */
 
 /* "=>>>"
  * @detect: #if __TPP_COUNT_TOKENS("=>>>") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_rangle_rangle_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+#ifndef TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
+#define TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_rangle_rangle_rangle" */
+#endif /* !TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 
 /* "=?"
  * @detect: #if __TPP_COUNT_TOKENS("=?") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_QMARK
-#define TPP_HAVE_TPP_TOK_EQUAL_QMARK TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_qmark" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_QMARK */
+#ifndef TPP_HAVE_TOK_EQUAL_QMARK
+#define TPP_HAVE_TOK_EQUAL_QMARK TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_qmark" */
+#endif /* !TPP_HAVE_TOK_EQUAL_QMARK */
 
 /* "=@"
  * @detect: #if __TPP_COUNT_TOKENS("=@") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_AT
-#define TPP_HAVE_TPP_TOK_EQUAL_AT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_at" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_AT */
+#ifndef TPP_HAVE_TOK_EQUAL_AT
+#define TPP_HAVE_TOK_EQUAL_AT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_at" */
+#endif /* !TPP_HAVE_TOK_EQUAL_AT */
 
 /* "=@@"
  * @detect: #if __TPP_COUNT_TOKENS("=@@") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_AT_AT
-#define TPP_HAVE_TPP_TOK_EQUAL_AT_AT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_at_at" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_AT_AT */
+#ifndef TPP_HAVE_TOK_EQUAL_AT_AT
+#define TPP_HAVE_TOK_EQUAL_AT_AT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_at_at" */
+#endif /* !TPP_HAVE_TOK_EQUAL_AT_AT */
 
 /* "=^"
  * @detect: #if __TPP_COUNT_TOKENS("=^") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_HAT
-#define TPP_HAVE_TPP_TOK_EQUAL_HAT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_hat" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_HAT */
+#ifndef TPP_HAVE_TOK_EQUAL_HAT
+#define TPP_HAVE_TOK_EQUAL_HAT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_hat" */
+#endif /* !TPP_HAVE_TOK_EQUAL_HAT */
 
 /* "=|"
  * @detect: #if __TPP_COUNT_TOKENS("=|") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_PIPE
-#define TPP_HAVE_TPP_TOK_EQUAL_PIPE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_pipe" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_PIPE */
+#ifndef TPP_HAVE_TOK_EQUAL_PIPE
+#define TPP_HAVE_TOK_EQUAL_PIPE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_pipe" */
+#endif /* !TPP_HAVE_TOK_EQUAL_PIPE */
 
 /* "=~"
  * @detect: #if __TPP_COUNT_TOKENS("=~") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_EQUAL_TILDE
-#define TPP_HAVE_TPP_TOK_EQUAL_TILDE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_tilde" */
-#endif /* !TPP_HAVE_TPP_TOK_EQUAL_TILDE */
+#ifndef TPP_HAVE_TOK_EQUAL_TILDE
+#define TPP_HAVE_TOK_EQUAL_TILDE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_tilde" */
+#endif /* !TPP_HAVE_TOK_EQUAL_TILDE */
 
 /* ">-"
  * @detect: #if __TPP_COUNT_TOKENS(">-") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_MINUS
-#define TPP_HAVE_TPP_TOK_RANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_minus" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_MINUS */
+#ifndef TPP_HAVE_TOK_RANGLE_MINUS
+#define TPP_HAVE_TOK_RANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_minus" */
+#endif /* !TPP_HAVE_TOK_RANGLE_MINUS */
 
 /* ">-<"
  * @detect: #if __TPP_COUNT_TOKENS(">-<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
-#define TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_minus_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
+#ifndef TPP_HAVE_TOK_RANGLE_MINUS_LANGLE
+#define TPP_HAVE_TOK_RANGLE_MINUS_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_minus_langle" */
+#endif /* !TPP_HAVE_TOK_RANGLE_MINUS_LANGLE */
 
 /* ">->"
  * @detect: #if __TPP_COUNT_TOKENS(">->") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
-#define TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_minus_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
+#ifndef TPP_HAVE_TOK_RANGLE_MINUS_RANGLE
+#define TPP_HAVE_TOK_RANGLE_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_minus_rangle" */
+#endif /* !TPP_HAVE_TOK_RANGLE_MINUS_RANGLE */
 
 /* "><"
  * @detect: #if __TPP_COUNT_TOKENS("><") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_LANGLE
-#define TPP_HAVE_TPP_TOK_RANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_LANGLE */
+#ifndef TPP_HAVE_TOK_RANGLE_LANGLE
+#define TPP_HAVE_TOK_RANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_langle" */
+#endif /* !TPP_HAVE_TOK_RANGLE_LANGLE */
 
 /* ">="
  * @detect: #if __TPP_COUNT_TOKENS(">=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-rangle_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_EQUAL */
+#ifndef TPP_HAVE_TOK_RANGLE_EQUAL
+#define TPP_HAVE_TOK_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-rangle_equal" */
+#endif /* !TPP_HAVE_TOK_RANGLE_EQUAL */
 
 /* ">=<"
  * @detect: #if __TPP_COUNT_TOKENS(">=<") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
-#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_equal_langle" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
+#ifndef TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE
+#define TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_equal_langle" */
+#endif /* !TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE */
 
 /* ">=>"
  * @detect: #if __TPP_COUNT_TOKENS(">=>") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
-#define TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_equal_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#ifndef TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE
+#define TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_equal_rangle" */
+#endif /* !TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE */
 
 /* ">>"
  * @detect: #if __TPP_COUNT_TOKENS(">>") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-rangle_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
+#ifndef TPP_HAVE_TOK_RANGLE_RANGLE
+#define TPP_HAVE_TOK_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-rangle_rangle" */
+#endif /* !TPP_HAVE_TOK_RANGLE_RANGLE */
 
 /* ">>-"
  * @detect: #if __TPP_COUNT_TOKENS(">>-") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_minus" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS */
+#ifndef TPP_HAVE_TOK_RANGLE_RANGLE_MINUS
+#define TPP_HAVE_TOK_RANGLE_RANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_minus" */
+#endif /* !TPP_HAVE_TOK_RANGLE_RANGLE_MINUS */
 
 /* ">>="
  * @detect: #if __TPP_COUNT_TOKENS(">>=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-rangle_rangle_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL */
+#ifndef TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL
+#define TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-rangle_rangle_equal" */
+#endif /* !TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL */
 
 /* ">>>"
  * @detect: #if __TPP_COUNT_TOKENS(">>>") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
+#ifndef TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE
+#define TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_rangle" */
+#endif /* !TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE */
 
 /* ">>>-"
  * @detect: #if __TPP_COUNT_TOKENS(">>>-") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_rangle_minus" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS */
+#ifndef TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS
+#define TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_rangle_minus" */
+#endif /* !TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS */
 
 /* ">>>="
  * @detect: #if __TPP_COUNT_TOKENS(">>>=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_rangle_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#ifndef TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+#define TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_rangle_equal" */
+#endif /* !TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 
 /* "?="
  * @detect: #if __TPP_COUNT_TOKENS("?=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_QMARK_EQUAL
-#define TPP_HAVE_TPP_TOK_QMARK_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-qmark_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_QMARK_EQUAL */
+#ifndef TPP_HAVE_TOK_QMARK_EQUAL
+#define TPP_HAVE_TOK_QMARK_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-qmark_equal" */
+#endif /* !TPP_HAVE_TOK_QMARK_EQUAL */
 
 /* "??"
  * @detect: #if __TPP_COUNT_TOKENS("??") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_QMARK_QMARK
-#define TPP_HAVE_TPP_TOK_QMARK_QMARK TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-qmark_qmark" */
-#endif /* !TPP_HAVE_TPP_TOK_QMARK_QMARK */
+#ifndef TPP_HAVE_TOK_QMARK_QMARK
+#define TPP_HAVE_TOK_QMARK_QMARK TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-qmark_qmark" */
+#endif /* !TPP_HAVE_TOK_QMARK_QMARK */
 
 /* "@="
  * @detect: #if __TPP_COUNT_TOKENS("@=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_AT_EQUAL
-#define TPP_HAVE_TPP_TOK_AT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-at_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_AT_EQUAL */
+#ifndef TPP_HAVE_TOK_AT_EQUAL
+#define TPP_HAVE_TOK_AT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-at_equal" */
+#endif /* !TPP_HAVE_TOK_AT_EQUAL */
 
 /* "@@"
  * @detect: #if __TPP_COUNT_TOKENS("@@") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_AT_AT
-#define TPP_HAVE_TPP_TOK_AT_AT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-at_at" */
-#endif /* !TPP_HAVE_TPP_TOK_AT_AT */
+#ifndef TPP_HAVE_TOK_AT_AT
+#define TPP_HAVE_TOK_AT_AT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-at_at" */
+#endif /* !TPP_HAVE_TOK_AT_AT */
 
 /* "@@="
  * @detect: #if __TPP_COUNT_TOKENS("@@=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_AT_AT_EQUAL
-#define TPP_HAVE_TPP_TOK_AT_AT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-at_at_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_AT_AT_EQUAL */
+#ifndef TPP_HAVE_TOK_AT_AT_EQUAL
+#define TPP_HAVE_TOK_AT_AT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-at_at_equal" */
+#endif /* !TPP_HAVE_TOK_AT_AT_EQUAL */
 
 /* "^="
  * @detect: #if __TPP_COUNT_TOKENS("^=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_HAT_EQUAL
-#define TPP_HAVE_TPP_TOK_HAT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-hat_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_HAT_EQUAL */
+#ifndef TPP_HAVE_TOK_HAT_EQUAL
+#define TPP_HAVE_TOK_HAT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-hat_equal" */
+#endif /* !TPP_HAVE_TOK_HAT_EQUAL */
 
 /* "^^"
  * @detect: #if __TPP_COUNT_TOKENS("^^") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_HAT_HAT
-#define TPP_HAVE_TPP_TOK_HAT_HAT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-hat_hat" */
-#endif /* !TPP_HAVE_TPP_TOK_HAT_HAT */
+#ifndef TPP_HAVE_TOK_HAT_HAT
+#define TPP_HAVE_TOK_HAT_HAT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-hat_hat" */
+#endif /* !TPP_HAVE_TOK_HAT_HAT */
 
 /* "|="
  * @detect: #if __TPP_COUNT_TOKENS("|=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_PIPE_EQUAL
-#define TPP_HAVE_TPP_TOK_PIPE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-pipe_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_PIPE_EQUAL */
+#ifndef TPP_HAVE_TOK_PIPE_EQUAL
+#define TPP_HAVE_TOK_PIPE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-pipe_equal" */
+#endif /* !TPP_HAVE_TOK_PIPE_EQUAL */
 
 /* "||"
  * @detect: #if __TPP_COUNT_TOKENS("||") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_PIPE_PIPE
-#define TPP_HAVE_TPP_TOK_PIPE_PIPE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-pipe_pipe" */
-#endif /* !TPP_HAVE_TPP_TOK_PIPE_PIPE */
+#ifndef TPP_HAVE_TOK_PIPE_PIPE
+#define TPP_HAVE_TOK_PIPE_PIPE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-pipe_pipe" */
+#endif /* !TPP_HAVE_TOK_PIPE_PIPE */
 
 /* "~="
  * @detect: #if __TPP_COUNT_TOKENS("~=") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_TILDE_EQUAL
-#define TPP_HAVE_TPP_TOK_TILDE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-tilde_equal" */
-#endif /* !TPP_HAVE_TPP_TOK_TILDE_EQUAL */
+#ifndef TPP_HAVE_TOK_TILDE_EQUAL
+#define TPP_HAVE_TOK_TILDE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-tilde_equal" */
+#endif /* !TPP_HAVE_TOK_TILDE_EQUAL */
 
 /* "~~"
  * @detect: #if __TPP_COUNT_TOKENS("~~") == 1 */
-#ifndef TPP_HAVE_TPP_TOK_TILDE_TILDE
-#define TPP_HAVE_TPP_TOK_TILDE_TILDE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-tilde_tilde" */
-#endif /* !TPP_HAVE_TPP_TOK_TILDE_TILDE */
+#ifndef TPP_HAVE_TOK_TILDE_TILDE
+#define TPP_HAVE_TOK_TILDE_TILDE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-tilde_tilde" */
+#endif /* !TPP_HAVE_TOK_TILDE_TILDE */
 
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_EXCLAIM
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL || TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_EXCLAIM 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_EXCLAIM
+#if TPP_HAVE_TOK_EXCLAIM_EXCLAIM || TPP_HAVE_TOK_EXCLAIM_EQUAL || TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL
+#define TPP_HAVE_TOK_MC_STARTSWITH_EXCLAIM 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_EXCLAIM 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_EXCLAIM 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_POUND
-#if TPP_HAVE_TPP_TOK_POUND_POUND
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_POUND 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_POUND
+#if TPP_HAVE_TOK_POUND_POUND
+#define TPP_HAVE_TOK_MC_STARTSWITH_POUND 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_POUND 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_POUND 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_PERCENT
-#if TPP_HAVE_TPP_TOK_PERCENT_PERCENT || TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL || TPP_HAVE_TPP_TOK_PERCENT_EQUAL
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_PERCENT 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_PERCENT
+#if TPP_HAVE_TOK_PERCENT_PERCENT || TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL || TPP_HAVE_TOK_PERCENT_EQUAL
+#define TPP_HAVE_TOK_MC_STARTSWITH_PERCENT 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_PERCENT 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_PERCENT 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_AMP
-#if TPP_HAVE_TPP_TOK_AMP_AMP || TPP_HAVE_TPP_TOK_AMP_EQUAL
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_AMP 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_AMP
+#if TPP_HAVE_TOK_AMP_AMP || TPP_HAVE_TOK_AMP_EQUAL
+#define TPP_HAVE_TOK_MC_STARTSWITH_AMP 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_AMP 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_AMP 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_STAR
-#if TPP_HAVE_TPP_TOK_STAR_STAR || TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL || TPP_HAVE_TPP_TOK_STAR_DOT || TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS || TPP_HAVE_TPP_TOK_STAR_EQUAL
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_STAR 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_STAR
+#if TPP_HAVE_TOK_STAR_STAR || TPP_HAVE_TOK_STAR_STAR_EQUAL || TPP_HAVE_TOK_STAR_DOT || TPP_HAVE_TOK_STAR_LANGLE_MINUS || TPP_HAVE_TOK_STAR_EQUAL
+#define TPP_HAVE_TOK_MC_STARTSWITH_STAR 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_STAR 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_STAR 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_PLUS
-#if TPP_HAVE_TPP_TOK_PLUS_PLUS || TPP_HAVE_TPP_TOK_PLUS_EQUAL
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_PLUS 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_PLUS
+#if TPP_HAVE_TOK_PLUS_PLUS || TPP_HAVE_TOK_PLUS_EQUAL
+#define TPP_HAVE_TOK_MC_STARTSWITH_PLUS 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_PLUS 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_PLUS 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_MINUS
-#if TPP_HAVE_TPP_TOK_MINUS_MINUS || TPP_HAVE_TPP_TOK_MINUS_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_MINUS_EQUAL || TPP_HAVE_TPP_TOK_MINUS_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_MINUS 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_MINUS
+#if TPP_HAVE_TOK_MINUS_MINUS || TPP_HAVE_TOK_MINUS_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_EQUAL || TPP_HAVE_TOK_MINUS_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
+#define TPP_HAVE_TOK_MC_STARTSWITH_MINUS 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_MINUS 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_MINUS 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT
-#if TPP_HAVE_TPP_TOK_DOT_STAR || TPP_HAVE_TPP_TOK_DOT_DOT || TPP_HAVE_TPP_TOK_DOT_DOT_DOT
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_DOT
+#if TPP_HAVE_TOK_DOT_STAR || TPP_HAVE_TOK_DOT_DOT || TPP_HAVE_TOK_DOT_DOT_DOT
+#define TPP_HAVE_TOK_MC_STARTSWITH_DOT 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_DOT 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_SLASH
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH || TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL || TPP_HAVE_TPP_TOK_SLASH_EQUAL
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_SLASH 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_SLASH
+#if TPP_HAVE_TOK_SLASH_SLASH || TPP_HAVE_TOK_SLASH_SLASH_EQUAL || TPP_HAVE_TOK_SLASH_EQUAL
+#define TPP_HAVE_TOK_MC_STARTSWITH_SLASH 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_SLASH 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_SLASH 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_COLON
-#if TPP_HAVE_TPP_TOK_COLON_COLON || TPP_HAVE_TPP_TOK_COLON_EQUAL
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_COLON 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_COLON
+#if TPP_HAVE_TOK_COLON_COLON || TPP_HAVE_TOK_COLON_EQUAL
+#define TPP_HAVE_TOK_MC_STARTSWITH_COLON 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_COLON 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_COLON 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_EQUAL || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE || TPP_HAVE_TPP_TOK_LANGLE_RANGLE
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_LANGLE
+#if TPP_HAVE_TOK_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_MINUS_LANGLE || TPP_HAVE_TOK_LANGLE_MINUS_RANGLE || TPP_HAVE_TOK_LANGLE_LANGLE || TPP_HAVE_TOK_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS || TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL || TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL || TPP_HAVE_TOK_LANGLE_EQUAL || TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE || TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE || TPP_HAVE_TOK_LANGLE_RANGLE
+#define TPP_HAVE_TOK_MC_STARTSWITH_LANGLE 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_LANGLE 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_EQUAL
-#if TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM || TPP_HAVE_TPP_TOK_EQUAL_PERCENT || TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT || TPP_HAVE_TPP_TOK_EQUAL_AMP || TPP_HAVE_TPP_TOK_EQUAL_STAR || TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR || TPP_HAVE_TPP_TOK_EQUAL_PLUS || TPP_HAVE_TPP_TOK_EQUAL_MINUS || TPP_HAVE_TPP_TOK_EQUAL_SLASH || TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH || TPP_HAVE_TPP_TOK_EQUAL_COLON || TPP_HAVE_TPP_TOK_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || TPP_HAVE_TPP_TOK_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM || TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL || TPP_HAVE_TPP_TOK_EQUAL_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_EQUAL_QMARK || TPP_HAVE_TPP_TOK_EQUAL_AT || TPP_HAVE_TPP_TOK_EQUAL_AT_AT || TPP_HAVE_TPP_TOK_EQUAL_HAT || TPP_HAVE_TPP_TOK_EQUAL_PIPE || TPP_HAVE_TPP_TOK_EQUAL_TILDE
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_EQUAL 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_EQUAL
+#if TPP_HAVE_TOK_EQUAL_EXCLAIM || TPP_HAVE_TOK_EQUAL_PERCENT || TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT || TPP_HAVE_TOK_EQUAL_AMP || TPP_HAVE_TOK_EQUAL_STAR || TPP_HAVE_TOK_EQUAL_STAR_STAR || TPP_HAVE_TOK_EQUAL_PLUS || TPP_HAVE_TOK_EQUAL_MINUS || TPP_HAVE_TOK_EQUAL_SLASH || TPP_HAVE_TOK_EQUAL_SLASH_SLASH || TPP_HAVE_TOK_EQUAL_COLON || TPP_HAVE_TOK_EQUAL_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_EQUAL || TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM || TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL || TPP_HAVE_TOK_EQUAL_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_QMARK || TPP_HAVE_TOK_EQUAL_AT || TPP_HAVE_TOK_EQUAL_AT_AT || TPP_HAVE_TOK_EQUAL_HAT || TPP_HAVE_TOK_EQUAL_PIPE || TPP_HAVE_TOK_EQUAL_TILDE
+#define TPP_HAVE_TOK_MC_STARTSWITH_EQUAL 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_EQUAL 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_EQUAL 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_RANGLE
-#if TPP_HAVE_TPP_TOK_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_RANGLE 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_RANGLE
+#if TPP_HAVE_TOK_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_MINUS_LANGLE || TPP_HAVE_TOK_RANGLE_MINUS_RANGLE || TPP_HAVE_TOK_RANGLE_LANGLE || TPP_HAVE_TOK_RANGLE_EQUAL || TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE || TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS || TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+#define TPP_HAVE_TOK_MC_STARTSWITH_RANGLE 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_RANGLE 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_RANGLE 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_QMARK
-#if TPP_HAVE_TPP_TOK_QMARK_EQUAL || TPP_HAVE_TPP_TOK_QMARK_QMARK
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_QMARK 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_QMARK
+#if TPP_HAVE_TOK_QMARK_EQUAL || TPP_HAVE_TOK_QMARK_QMARK
+#define TPP_HAVE_TOK_MC_STARTSWITH_QMARK 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_QMARK 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_QMARK 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT
-#if TPP_HAVE_TPP_TOK_AT_EQUAL || TPP_HAVE_TPP_TOK_AT_AT || TPP_HAVE_TPP_TOK_AT_AT_EQUAL
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_AT
+#if TPP_HAVE_TOK_AT_EQUAL || TPP_HAVE_TOK_AT_AT || TPP_HAVE_TOK_AT_AT_EQUAL
+#define TPP_HAVE_TOK_MC_STARTSWITH_AT 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_AT 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_HAT
-#if TPP_HAVE_TPP_TOK_HAT_EQUAL || TPP_HAVE_TPP_TOK_HAT_HAT
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_HAT 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_HAT
+#if TPP_HAVE_TOK_HAT_EQUAL || TPP_HAVE_TOK_HAT_HAT
+#define TPP_HAVE_TOK_MC_STARTSWITH_HAT 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_HAT 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_HAT 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_PIPE
-#if TPP_HAVE_TPP_TOK_PIPE_EQUAL || TPP_HAVE_TPP_TOK_PIPE_PIPE
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_PIPE 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_PIPE
+#if TPP_HAVE_TOK_PIPE_EQUAL || TPP_HAVE_TOK_PIPE_PIPE
+#define TPP_HAVE_TOK_MC_STARTSWITH_PIPE 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_PIPE 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_PIPE 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC_STARTSWITH_TILDE
-#if TPP_HAVE_TPP_TOK_TILDE_EQUAL || TPP_HAVE_TPP_TOK_TILDE_TILDE
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_TILDE 1
+#undef TPP_HAVE_TOK_MC_STARTSWITH_TILDE
+#if TPP_HAVE_TOK_TILDE_EQUAL || TPP_HAVE_TOK_TILDE_TILDE
+#define TPP_HAVE_TOK_MC_STARTSWITH_TILDE 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC_STARTSWITH_TILDE 0
+#define TPP_HAVE_TOK_MC_STARTSWITH_TILDE 0
 #endif /* !... */
-#undef TPP_HAVE_TPP_TOK_MC
-#if TPP_HAVE_TPP_TOK_MC_STARTSWITH_EXCLAIM || TPP_HAVE_TPP_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TPP_TOK_MC_STARTSWITH_PERCENT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_AMP || TPP_HAVE_TPP_TOK_MC_STARTSWITH_STAR || TPP_HAVE_TPP_TOK_MC_STARTSWITH_PLUS || TPP_HAVE_TPP_TOK_MC_STARTSWITH_MINUS || TPP_HAVE_TPP_TOK_MC_STARTSWITH_DOT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_SLASH || TPP_HAVE_TPP_TOK_MC_STARTSWITH_COLON || TPP_HAVE_TPP_TOK_MC_STARTSWITH_LANGLE || TPP_HAVE_TPP_TOK_MC_STARTSWITH_EQUAL || TPP_HAVE_TPP_TOK_MC_STARTSWITH_RANGLE || TPP_HAVE_TPP_TOK_MC_STARTSWITH_QMARK || TPP_HAVE_TPP_TOK_MC_STARTSWITH_AT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_HAT || TPP_HAVE_TPP_TOK_MC_STARTSWITH_PIPE || TPP_HAVE_TPP_TOK_MC_STARTSWITH_TILDE
-#define TPP_HAVE_TPP_TOK_MC 1
+#undef TPP_HAVE_TOK_MC
+#if TPP_HAVE_TOK_MC_STARTSWITH_EXCLAIM || TPP_HAVE_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TOK_MC_STARTSWITH_PERCENT || TPP_HAVE_TOK_MC_STARTSWITH_AMP || TPP_HAVE_TOK_MC_STARTSWITH_STAR || TPP_HAVE_TOK_MC_STARTSWITH_PLUS || TPP_HAVE_TOK_MC_STARTSWITH_MINUS || TPP_HAVE_TOK_MC_STARTSWITH_DOT || TPP_HAVE_TOK_MC_STARTSWITH_SLASH || TPP_HAVE_TOK_MC_STARTSWITH_COLON || TPP_HAVE_TOK_MC_STARTSWITH_LANGLE || TPP_HAVE_TOK_MC_STARTSWITH_EQUAL || TPP_HAVE_TOK_MC_STARTSWITH_RANGLE || TPP_HAVE_TOK_MC_STARTSWITH_QMARK || TPP_HAVE_TOK_MC_STARTSWITH_AT || TPP_HAVE_TOK_MC_STARTSWITH_HAT || TPP_HAVE_TOK_MC_STARTSWITH_PIPE || TPP_HAVE_TOK_MC_STARTSWITH_TILDE
+#define TPP_HAVE_TOK_MC 1
 #else /* ... */
-#define TPP_HAVE_TPP_TOK_MC 0
+#define TPP_HAVE_TOK_MC 0
 #endif /* !... */
 /*[[[end]]]*/
 
@@ -3872,12 +3872,12 @@ for (local doc, name,
  * #endif
  * ``` */
 #ifndef TPP_HAVE_BUILTIN_EXPR_STRINGS
-#define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_STRINGLIKE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fstrings-in-expressions" */
+#define TPP_HAVE_BUILTIN_EXPR_STRINGS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_STRINGLIKE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fstrings-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 /* Enable support for floats in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_FLOATS
-#define TPP_HAVE_BUILTIN_EXPR_FLOATS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffloats-in-expressions" */
+#define TPP_HAVE_BUILTIN_EXPR_FLOATS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-ffloats-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
 /* Enable support for `foo ?: bar` in builtin lexer expressions (same as `foo ? foo : bar`) */
@@ -3902,47 +3902,47 @@ for (local doc, name,
 
 /* Enable support for `0b` literals in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
-#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS (((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fbinary-literals" */
+#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS (((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fbinary-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
 
 /* Enable support for `0o` literals in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS
-#define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS (((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TPP_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
+#define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS (((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
 
 /* Enable support for `u`, `l`, `ul`, `ll`, `ull` integer suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
-#define TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_C_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-integrals" */
+#define TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TOK_C_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-integrals" */
 #endif /* !TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
 
 /* Enable support for `z`, `uz` integer suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX
-#define TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_C_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fsize-type-integrals" */
+#define TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX ((TPP_HAVE_TOK_C_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fsize-type-integrals" */
 #endif /* !TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX */
 
 /* Enable support for `i8`, `i16`, `i32`, `i64`, `ui8`, `ui16`, `ui32`, `ui64` integer suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
-#define TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX ((TPP_HAVE_TPP_TOK_C_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-length-integrals" */
+#define TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX ((TPP_HAVE_TOK_C_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-length-integrals" */
 #endif /* !TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
 
 /* Enable support for `f`, `F`, `l`, `L` float suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX
-#define TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-float" */
+#define TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-float" */
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX */
 
 /* Enable support for `d`, `D` float suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX
-#define TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 0) : 0) /* "-fdouble-type-float" */
+#define TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 0) : 0) /* "-fdouble-type-float" */
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX */
 
 /* Enable support for `df`, `DF`, `dd`, `DD`, `dl`, `DL` float suffixes */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX
-#define TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX ((TPP_HAVE_TPP_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fdecimal-type-float" */
+#define TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fdecimal-type-float" */
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX */
 
 /* Treat `'a'` in expressions as an integer, rather than as a string (in C/C++, this is always the case) */
 #ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
-#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : (TPP_HAVE_PROFILE_C_LIKE ? 1 : 0)) : 0) /* "-fcharacter-literals" */
+#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : (TPP_HAVE_PROFILE_C_LIKE ? 1 : 0)) : 0) /* "-fcharacter-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
 /************************************************************************/
 /************************************************************************/
@@ -3958,18 +3958,18 @@ for (local doc, name,
 
 /* Provide an API function `tpp_unicode_writeutf8()` */
 #ifndef TPP_HAVE_TPP_UNICODE_WRITEUTF8
-#if (TPP_HAVE_TPP_TOK_C_STRING ||                 \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL ||     \
-     TPP_HAVE_TPP_TOK_C_CHAR ||                   \
-     TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-     TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-     TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL ||       \
+#if (TPP_HAVE_TOK_C_STRING ||                 \
+     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_BLOCK_STRING_LITERAL ||     \
+     TPP_HAVE_TOK_C_CHAR ||                   \
+     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_BLOCK_CHAR_LITERAL ||       \
      TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
 #define TPP_HAVE_TPP_UNICODE_WRITEUTF8 1
 #else /* ... */
@@ -4312,15 +4312,15 @@ for (local doc, name,
 
 /* Provide a lexer state flag `TPP_LEXER_STATE_FLAG_ALLTOKENS` that forces
  * `tpp_lexer_yieldpp()` to always re-emit *all* tokens (rather than skip
- * over space/lf/comment tokens based on `TPP_HAVE_TPP_TOK_SPACE`,
- * `TPP_HAVE_TPP_TOK_LF` and `TPP_HAVE_TPP_TOK_COMMENT`)
+ * over space/lf/comment tokens based on `TPP_HAVE_TOK_SPACE`,
+ * `TPP_HAVE_TOK_LF` and `TPP_HAVE_TOK_COMMENT`)
  *
  * This flag is also needed internally when TPP needs to expand
  * the arguments supplied to a user-defined macro */
 #ifndef TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
-#if (TPP_HAVE_CPP_MACROS && (TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SPACE) || \
-                             TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF) ||    \
-                             TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_COMMENT)))
+#if (TPP_HAVE_CPP_MACROS && (TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE) || \
+                             TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) ||    \
+                             TPP_CONF_MAYBE_0(TPP_HAVE_TOK_COMMENT)))
 #define TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS 1
 #else /* ... */
 #define TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS 0
@@ -4392,7 +4392,7 @@ for (local doc, name,
 
 /* Provide a function `tpp_lexer_decodestring()` to decode the data contained within strings */
 #ifndef TPP_HAVE_LEXER_DECODESTRING
-#define TPP_HAVE_LEXER_DECODESTRING (TPP_HAVE_TPP_TOK_STRINGLIKE)
+#define TPP_HAVE_LEXER_DECODESTRING (TPP_HAVE_TOK_STRINGLIKE)
 #endif /* !TPP_HAVE_LEXER_DECODESTRING */
 
 /* Provide an optional performance-optimization flag `TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS`
@@ -4433,13 +4433,13 @@ for (local doc, name,
 
 /* Provide a function `tpp_lexer_decodeint_expr()` to parse an integer into a `tpp_expr_value` */
 #ifndef TPP_HAVE_LEXER_DECODEINT_EXPR
-#define TPP_HAVE_LEXER_DECODEINT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_INT)
+#define TPP_HAVE_LEXER_DECODEINT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_C_INT)
 #endif /* !TPP_HAVE_LEXER_DECODEINT_EXPR */
 
 /* Provide a function `tpp_lexer_decodeint()` to parse an integer */
 #ifndef TPP_HAVE_LEXER_DECODEINT
 #define TPP_HAVE_LEXER_DECODEINT                                 \
-	(TPP_HAVE_TPP_TOK_C_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR ||   \
+	(TPP_HAVE_TOK_C_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR ||   \
 	                          TPP_HAVE_CPP_LINE ||               \
 	                          TPP_HAVE_CPP_DIGIT_LINE ||         \
 	                          TPP_HAVE_MACRO___TPP_STR_PACK ||   \
@@ -4456,7 +4456,7 @@ for (local doc, name,
 
 /* Provide a function `tpp_lexer_decodefloat_expr()` to parse a float into a `tpp_expr_value` */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_EXPR
-#define TPP_HAVE_LEXER_DECODEFLOAT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TPP_TOK_C_FLOAT)
+#define TPP_HAVE_LEXER_DECODEFLOAT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TOK_C_FLOAT)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
 
 /* Provide a function `tpp_lexer_decodefloat()` to parse a float */
@@ -4701,43 +4701,43 @@ for (local doc, name,
 #define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED        \
 	(TPP_HAVE_WARNINGS &&                                   \
 	 ((TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && \
-	   (TPP_HAVE_TPP_TOK_C_STRING ||                        \
-	    TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||         \
-	    TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||         \
-	    TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||        \
-	    TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||        \
-	    TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||              \
-	    TPP_HAVE_TPP_TOK_C_CHAR ||                          \
-	    TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||           \
-	    TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||           \
-	    TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||          \
-	    TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||          \
-	    TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL)) ||              \
+	   (TPP_HAVE_TOK_C_STRING ||                        \
+	    TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||         \
+	    TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||         \
+	    TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL ||        \
+	    TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL ||        \
+	    TPP_HAVE_TOK_RAW_STRING_LITERAL ||              \
+	    TPP_HAVE_TOK_C_CHAR ||                          \
+	    TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||           \
+	    TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||           \
+	    TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||          \
+	    TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||          \
+	    TPP_HAVE_TOK_RAW_CHAR_LITERAL)) ||              \
 	  TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
 #define TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED \
 	(TPP_HAVE_WARNINGS &&                              \
 	 TPP_HAVE_STRING_WARN_MULTILINE &&                 \
-	 (TPP_HAVE_TPP_TOK_C_STRING ||                     \
-	  TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL ||      \
-	  TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL ||      \
-	  TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL ||     \
-	  TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL ||     \
-	  TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL ||           \
-	  TPP_HAVE_TPP_TOK_C_CHAR ||                       \
-	  TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL ||        \
-	  TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL ||        \
-	  TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL ||       \
-	  TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL ||       \
-	  TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL))
+	 (TPP_HAVE_TOK_C_STRING ||                     \
+	  TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||      \
+	  TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||      \
+	  TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL ||     \
+	  TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL ||     \
+	  TPP_HAVE_TOK_RAW_STRING_LITERAL ||           \
+	  TPP_HAVE_TOK_C_CHAR ||                       \
+	  TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||        \
+	  TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||        \
+	  TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||       \
+	  TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||       \
+	  TPP_HAVE_TOK_RAW_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
 #define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_TPP_TOK_STRINGLIKE || TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TOK_STRINGLIKE || TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 #ifndef TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
-#define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE)
+#define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TOK_COMMENTLIKE_NOLINE)
 #endif /* !TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
 #ifndef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
 #define TPP_HAVE_TPP_W_UNEXPECTED_TOKEN (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SKIP)
@@ -4767,7 +4767,7 @@ for (local doc, name,
 #define TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE
-#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SHELL_COMMENT) && TPP_HAVE_CPP_DIRECTIVES)
+#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SHELL_COMMENT) && TPP_HAVE_CPP_DIRECTIVES)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
@@ -4853,7 +4853,7 @@ for (local doc, name,
 	 TPP_CONF_MAYBE_0(TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR))
 #endif /* !TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_STRING
-#if (TPP_HAVE_WARNINGS && TPP_HAVE_TPP_TOK_STRINGLIKE && \
+#if (TPP_HAVE_WARNINGS && TPP_HAVE_TOK_STRINGLIKE && \
      (TPP_HAVE_PROFILE_NOT_MINIMAL ||                    \
       TPP_HAVE_PRAGMA_PUSH_MACRO ||                      \
       TPP_HAVE_PRAGMA_DEPRECATED ||                      \
@@ -5008,7 +5008,7 @@ for (local doc, name,
 #ifndef TPP_HAVE_TPP_W_PAREN_AROUND_LAND
 #define TPP_HAVE_TPP_W_PAREN_AROUND_LAND                                                  \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_QUALITY_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && \
-	 TPP_HAVE_TPP_TOK_PIPE_PIPE && TPP_HAVE_TPP_TOK_AMP_AMP)
+	 TPP_HAVE_TOK_PIPE_PIPE && TPP_HAVE_TOK_AMP_AMP)
 #endif /* !TPP_HAVE_TPP_W_PAREN_AROUND_LAND */
 #ifndef TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
 #define TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS \

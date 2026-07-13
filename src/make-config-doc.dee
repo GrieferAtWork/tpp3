@@ -71,7 +71,7 @@ global final CONFIG_H = File
 
 global final MC_TOKEN_CONFIG_MACROS: {string...} = HashSet.Frozen(
 	for (local mc: config.MC_TOKENS)
-		f"TPP_HAVE_TPP_TOK_{config.tokenName(mc.first)}"
+		f"TPP_HAVE_TOK_{config.tokenName(mc.first)}"
 );
 
 
@@ -80,7 +80,7 @@ global final CONFIG_KIND_CONF = "conf"; // Overwritable config
 global final CONFIG_KIND_WARN = "warn"; // TPP_HAVE_TPP_W_*
 global final CONFIG_KIND_COMMON = "common"; // TPP_COMMON_HAVE_*
 global final CONFIG_KIND_VALUE = "value"; // TPP_CONFIG_*
-global final CONFIG_KIND_TOKEN = "token"; // TPP_HAVE_TPP_TOK_*
+global final CONFIG_KIND_TOKEN = "token"; // TPP_HAVE_TOK_*
 global final CONFIG_KIND_HOOK_DEFAULT = "hook_default"; // TPP_HOOK_DEFAULT_*
 global final CONFIG_KIND_BUILTIN_HOOK = "builtin_hook"; // TPP_HAVE_BUILTIN_*_HOOK
 global final CONFIG_KIND_LIMIT = "limit"; // Special API limits config
@@ -438,7 +438,7 @@ function updateConfigMd(filename: string) {
 			           "| ----- | ------ | --------- |\n";
 			for (local conf: getAvailableConfigs()) {
 				if (conf.kind == "token") {
-					local mcReprFull = conf.name.lsstrip("TPP_HAVE_TPP_TOK_");
+					local mcReprFull = conf.name.lsstrip("TPP_HAVE_TOK_");
 					local mcRepr = config.MC_TOKENS
 						.filter(e -> mcReprFull == config.tokenName(e.first))
 						.first.first;

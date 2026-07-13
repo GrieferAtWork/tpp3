@@ -18,7 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-/* -DCONFIG="my-tpp-config.h"  (file containing '#define TPP_HAVE_TPP_TOK_STRING 1', ...) */
+/* -DCONFIG="my-tpp-config.h"  (file containing '#define TPP_HAVE_TOK_STRING 1', ...) */
 #ifdef CONFIG
 #include CONFIG
 #endif /* CONFIG */

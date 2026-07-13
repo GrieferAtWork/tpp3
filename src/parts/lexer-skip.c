@@ -59,7 +59,7 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	/* XXX: The code here should be generated! */
 	switch (token->tt_id) {
 
-#if TPP_HAVE_TPP_TOK_DOT_DOT_DOT && TPP_HAVE_TPP_TOK_DOT_DOT
+#if TPP_HAVE_TOK_DOT_DOT_DOT && TPP_HAVE_TOK_DOT_DOT
 	case TPP_TOK_DOT_DOT_DOT: /* "..." */
 		if (tok == TPP_TOK_DOT_DOT)
 			goto set_twochar;
@@ -67,7 +67,7 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		break;
 #endif /* ... */
 
-#if TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL && TPP_HAVE_TPP_TOK_STAR_STAR
+#if TPP_HAVE_TOK_STAR_STAR_EQUAL && TPP_HAVE_TOK_STAR_STAR
 	case TPP_TOK_STAR_STAR_EQUAL: /* "**=" */
 		if (tok == TPP_TOK_STAR_STAR)
 			goto set_twochar;
@@ -75,7 +75,7 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		break;
 #endif /* ... */
 
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL && TPP_HAVE_TPP_TOK_SLASH_SLASH
+#if TPP_HAVE_TOK_SLASH_SLASH_EQUAL && TPP_HAVE_TOK_SLASH_SLASH
 	case TPP_TOK_SLASH_SLASH_EQUAL: /* "//=" */
 		if (tok == TPP_TOK_SLASH_SLASH)
 			goto set_twochar;
@@ -83,7 +83,7 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		break;
 #endif /* ... */
 
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL && TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL
+#if TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL && TPP_HAVE_TOK_EXCLAIM_EQUAL
 	case TPP_TOK_EXCLAIM_EQUAL_EQUAL: /* "!==" */
 		if (tok == TPP_TOK_EXCLAIM_EQUAL)
 			goto set_twochar;
@@ -91,7 +91,7 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		break;
 #endif /* ... */
 
-#if TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR && TPP_HAVE_TPP_TOK_EQUAL_STAR
+#if TPP_HAVE_TOK_EQUAL_STAR_STAR && TPP_HAVE_TOK_EQUAL_STAR
 	case TPP_TOK_EQUAL_STAR_STAR: /* "=**" */
 		if (tok == TPP_TOK_EQUAL_STAR)
 			goto set_twochar;
@@ -99,7 +99,7 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		break;
 #endif /* ... */
 
-#if TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH && TPP_HAVE_TPP_TOK_EQUAL_SLASH
+#if TPP_HAVE_TOK_EQUAL_SLASH_SLASH && TPP_HAVE_TOK_EQUAL_SLASH
 	case TPP_TOK_EQUAL_SLASH_SLASH: /* "=//" */
 		if (tok == TPP_TOK_EQUAL_SLASH)
 			goto set_twochar;
@@ -107,7 +107,7 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		break;
 #endif /* ... */
 
-#if TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR && TPP_HAVE_TPP_TOK_MINUS_RANGLE
+#if TPP_HAVE_TOK_MINUS_RANGLE_STAR && TPP_HAVE_TOK_MINUS_RANGLE
 	case TPP_TOK_MINUS_RANGLE_STAR: /* "->*" */
 		if (tok == TPP_TOK_MINUS_RANGLE)
 			goto set_twochar;
@@ -115,96 +115,96 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		break;
 #endif /* ... */
 
-#if ((TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL ||    \
-      TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM) && \
-     TPP_HAVE_TPP_TOK_EQUAL_EQUAL)
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL
+#if ((TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL ||    \
+      TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM) && \
+     TPP_HAVE_TOK_EQUAL_EQUAL)
+#if TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL
 	case TPP_TOK_EQUAL_EQUAL_EQUAL: /* "===" */
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL */
-#if TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL */
+#if TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM
 	case TPP_TOK_EQUAL_EQUAL_EXCLAIM: /* "==!" */
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM */
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM */
 		if (tok == TPP_TOK_EQUAL_EQUAL)
 			goto set_twochar;
 #define WANT_set_twochar
 		break;
 #endif /* ... */
 
-#if ((TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL || \
-      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE ||       \
-      TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL) &&       \
-     TPP_HAVE_TPP_TOK_LANGLE_LANGLE)
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL
+#if ((TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL || \
+      TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE ||       \
+      TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL) &&       \
+     TPP_HAVE_TOK_LANGLE_LANGLE)
+#if TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL
 	case TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL: /* "<<<=" */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
-		if (tok == TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE)
+#if TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE
+		if (tok == TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE)
 			goto set_threechar;
 #define WANT_set_threechar
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE */
 		TPP_FALLTHRU
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
+#if TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE
 	case TPP_TOK_LANGLE_LANGLE_LANGLE: /* "<<<" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL
 	case TPP_TOK_LANGLE_LANGLE_EQUAL: /* "<<=" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_LANGLE_LANGLE
-		if (tok == TPP_HAVE_TPP_TOK_LANGLE_LANGLE)
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL */
+#if TPP_HAVE_TOK_LANGLE_LANGLE
+		if (tok == TPP_HAVE_TOK_LANGLE_LANGLE)
 			goto set_twochar;
 #define WANT_set_twochar
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_LANGLE */
 		break;
-#elif TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL && TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE
+#elif TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL && TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE
 	case TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL: /* "<<<=" */
-		if (tok == TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE)
+		if (tok == TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE)
 			goto set_threechar;
 #define WANT_set_threechar
 		break;
 #endif /* ... */
 
-#if ((TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL || \
-      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE ||       \
-      TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL) &&       \
-     TPP_HAVE_TPP_TOK_RANGLE_RANGLE)
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL
+#if ((TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL || \
+      TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE ||       \
+      TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL) &&       \
+     TPP_HAVE_TOK_RANGLE_RANGLE)
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 	case TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL: /* ">>>=" */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
-		if (tok == TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE)
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE
+		if (tok == TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE)
 			goto set_threechar;
 #define WANT_set_threechar
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE */
 		TPP_FALLTHRU
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE
 	case TPP_TOK_RANGLE_RANGLE_RANGLE: /* ">>>" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL
 	case TPP_TOK_RANGLE_RANGLE_EQUAL: /* ">>=" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL */
-#if TPP_HAVE_TPP_TOK_RANGLE_RANGLE
-		if (tok == TPP_HAVE_TPP_TOK_RANGLE_RANGLE)
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL */
+#if TPP_HAVE_TOK_RANGLE_RANGLE
+		if (tok == TPP_HAVE_TOK_RANGLE_RANGLE)
 			goto set_twochar;
 #define WANT_set_twochar
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_RANGLE */
 		break;
-#elif TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL && TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE
+#elif TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL && TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE
 	case TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL: /* ">>>=" */
-		if (tok == TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE)
+		if (tok == TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE)
 			goto set_threechar;
 #define WANT_set_threechar
 		break;
 #endif /* ... */
 
-#if ((TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE || \
-      TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE) &&       \
-     TPP_HAVE_TPP_TOK_EQUAL_LANGLE)
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE
+#if ((TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE || \
+      TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE) &&       \
+     TPP_HAVE_TOK_EQUAL_LANGLE)
+#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
 	case TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE: /* "=<<<" */
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
-#if TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
+#if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE
 	case TPP_TOK_EQUAL_LANGLE_LANGLE: /* "=<<" */
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE */
 		if (tok == TPP_TOK_EQUAL_LANGLE)
 			goto set_twochar;
 #define WANT_set_twochar
@@ -212,15 +212,15 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* ... */
 
 
-#if ((TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE || \
-      TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE) &&       \
-     TPP_HAVE_TPP_TOK_EQUAL_RANGLE)
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE
+#if ((TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE || \
+      TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE) &&       \
+     TPP_HAVE_TOK_EQUAL_RANGLE)
+#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 	case TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE: /* "=>>>" */
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
-#if TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
+#if TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE
 	case TPP_TOK_EQUAL_RANGLE_RANGLE: /* "=>>" */
-#endif /* TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE */
+#endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE */
 		if (tok == TPP_TOK_EQUAL_RANGLE)
 			goto set_twochar;
 #define WANT_set_twochar
@@ -228,15 +228,15 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* ... */
 
 
-#if ((TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE ||  \
-      TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE) && \
-     TPP_HAVE_TPP_TOK_LANGLE_EQUAL)
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE
+#if ((TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE ||  \
+      TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE) && \
+     TPP_HAVE_TOK_LANGLE_EQUAL)
+#if TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE
 	case TPP_TOK_LANGLE_EQUAL_RANGLE: /* "<=>" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE */
+#if TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE
 	case TPP_TOK_LANGLE_EQUAL_LANGLE: /* "<=<" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE */
 		if (tok == TPP_TOK_LANGLE_EQUAL)
 			goto set_twochar;
 #define WANT_set_twochar
@@ -244,15 +244,15 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* ... */
 
 
-#if ((TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE ||  \
-      TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE) && \
-     TPP_HAVE_TPP_TOK_RANGLE_EQUAL)
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE
+#if ((TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE ||  \
+      TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE) && \
+     TPP_HAVE_TOK_RANGLE_EQUAL)
+#if TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE
 	case TPP_TOK_RANGLE_EQUAL_LANGLE: /* ">=<" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE */
+#if TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE
 	case TPP_TOK_RANGLE_EQUAL_RANGLE: /* ">=>" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE */
 		if (tok == TPP_TOK_RANGLE_EQUAL)
 			goto set_twochar;
 #define WANT_set_twochar
@@ -260,15 +260,15 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* ... */
 
 
-#if ((TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE ||  \
-      TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE) && \
-     TPP_HAVE_TPP_TOK_LANGLE_MINUS)
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE
+#if ((TPP_HAVE_TOK_LANGLE_MINUS_RANGLE ||  \
+      TPP_HAVE_TOK_LANGLE_MINUS_LANGLE) && \
+     TPP_HAVE_TOK_LANGLE_MINUS)
+#if TPP_HAVE_TOK_LANGLE_MINUS_RANGLE
 	case TPP_TOK_LANGLE_MINUS_RANGLE: /* "<->" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE */
-#if TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE
+#endif /* TPP_HAVE_TOK_LANGLE_MINUS_RANGLE */
+#if TPP_HAVE_TOK_LANGLE_MINUS_LANGLE
 	case TPP_TOK_LANGLE_MINUS_LANGLE: /* "<-<" */
-#endif /* TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE */
+#endif /* TPP_HAVE_TOK_LANGLE_MINUS_LANGLE */
 		if (tok == TPP_TOK_LANGLE_MINUS)
 			goto set_twochar;
 #define WANT_set_twochar
@@ -276,15 +276,15 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* ... */
 
 
-#if ((TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE ||  \
-      TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE) && \
-     TPP_HAVE_TPP_TOK_RANGLE_MINUS)
-#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE
+#if ((TPP_HAVE_TOK_RANGLE_MINUS_LANGLE ||  \
+      TPP_HAVE_TOK_RANGLE_MINUS_RANGLE) && \
+     TPP_HAVE_TOK_RANGLE_MINUS)
+#if TPP_HAVE_TOK_RANGLE_MINUS_LANGLE
 	case TPP_TOK_RANGLE_MINUS_LANGLE: /* ">-<" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE */
-#if TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE
+#endif /* TPP_HAVE_TOK_RANGLE_MINUS_LANGLE */
+#if TPP_HAVE_TOK_RANGLE_MINUS_RANGLE
 	case TPP_TOK_RANGLE_MINUS_RANGLE: /* ">->" */
-#endif /* TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE */
+#endif /* TPP_HAVE_TOK_RANGLE_MINUS_RANGLE */
 		if (tok == TPP_TOK_RANGLE_MINUS)
 			goto set_twochar;
 #define WANT_set_twochar
@@ -360,12 +360,12 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
 
 	/* Automatically convert between INT and FLOAT tokens */
-#if TPP_HAVE_TPP_TOK_C_INT && TPP_HAVE_TPP_TOK_C_FLOAT
+#if TPP_HAVE_TOK_C_INT && TPP_HAVE_TOK_C_FLOAT
 	if ((tpp_lexer_gettok(self) == TPP_TOK_C_INT ||
 	     tpp_lexer_gettok(self) == TPP_TOK_C_FLOAT) &&
 	    (tok == TPP_TOK_C_INT || tok == TPP_TOK_C_FLOAT) &&
-	    tpp_lexer_has(self, TPP_TOK_C_INT) &&
-	    tpp_lexer_has(self, TPP_TOK_C_FLOAT)) {
+	    tpp_lexer_has(self, TOK_C_INT) &&
+	    tpp_lexer_has(self, TOK_C_FLOAT)) {
 		tpp_lexer_gettoken(self)->tt_id = tok;
 		if (tok == TPP_TOK_C_INT) {
 			/* Stop integer token prematurely if there's one of . + - */
@@ -384,7 +384,7 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		}
 		return tok;
 	}
-#endif /* TPP_HAVE_TPP_TOK_C_INT && TPP_HAVE_TPP_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_C_INT && TPP_HAVE_TOK_C_FLOAT */
 
 	/* Start seeking ahead... */
 	pos = tpp_lexer_seek_start(self, &backup);

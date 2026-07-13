@@ -580,7 +580,7 @@ Provide an API function [`tpp_unicode_writeutf8()`](../src/tpp-amalgamation.h#L9
 Default:
 
 ```c
-TPP_HAVE_TPP_TOK_C_STRING || TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TPP_TOK_C_CHAR || TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL || TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL || TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL || TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+TPP_HAVE_TOK_C_STRING || TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_C_CHAR || TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL || TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL || TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL || TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL || TPP_HAVE_ESCAPE_IN_IDENTIFIERS
 ```
 </details>
 
@@ -1089,8 +1089,8 @@ TPP_HAVE_LEXER_REPRTOKENID
 
 Provide a lexer state flag [`TPP_LEXER_STATE_FLAG_ALLTOKENS`](../src/tpp-amalgamation.h#L18133) that forces
 [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426) to always re-emit *all* tokens (rather than skip
-over space/lf/comment tokens based on [`TPP_HAVE_TPP_TOK_SPACE`](config-conf.md#tpp_have_tpp_tok_space),
-[`TPP_HAVE_TPP_TOK_LF`](config-conf.md#tpp_have_tpp_tok_lf) and [`TPP_HAVE_TPP_TOK_COMMENT`](config-conf.md#tpp_have_tpp_tok_comment))
+over space/lf/comment tokens based on [`TPP_HAVE_TOK_SPACE`](config-conf.md#tpp_have_tok_space),
+[`TPP_HAVE_TOK_LF`](config-conf.md#tpp_have_tok_lf) and [`TPP_HAVE_TOK_COMMENT`](config-conf.md#tpp_have_tok_comment))
 
 This flag is also needed internally when TPP needs to expand
 the arguments supplied to a user-defined macro
@@ -1100,7 +1100,7 @@ the arguments supplied to a user-defined macro
 Default:
 
 ```c
-TPP_HAVE_CPP_MACROS && (TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SPACE) || TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF) || TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_COMMENT))
+TPP_HAVE_CPP_MACROS && (TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE) || TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) || TPP_CONF_MAYBE_0(TPP_HAVE_TOK_COMMENT))
 ```
 </details>
 
@@ -1206,7 +1206,7 @@ Provide a function [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L19999
 Default:
 
 ```c
-TPP_HAVE_TPP_TOK_STRINGLIKE
+TPP_HAVE_TOK_STRINGLIKE
 ```
 </details>
 
@@ -1280,7 +1280,7 @@ Provide a function [`tpp_lexer_decodeint_expr()`](../src/tpp-amalgamation.h#L199
 Default:
 
 ```c
-TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TPP_TOK_C_INT
+TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_C_INT
 ```
 </details>
 
@@ -1293,7 +1293,7 @@ Provide a function [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L19888) t
 Default:
 
 ```c
-TPP_HAVE_TPP_TOK_C_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR || TPP_HAVE_CPP_LINE || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_MACRO___TPP_STR_PACK || TPP_HAVE_MACRO___TPP_RANDOM || TPP_HAVE_MACRO___TPP_STR_SUBSTR || TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING)
+TPP_HAVE_TOK_C_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR || TPP_HAVE_CPP_LINE || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_MACRO___TPP_STR_PACK || TPP_HAVE_MACRO___TPP_RANDOM || TPP_HAVE_MACRO___TPP_STR_SUBSTR || TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING)
 ```
 </details>
 
@@ -1319,7 +1319,7 @@ Provide a function [`tpp_lexer_decodefloat_expr()`](../src/tpp-amalgamation.h#L1
 Default:
 
 ```c
-TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TPP_TOK_C_FLOAT
+TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TOK_C_FLOAT
 ```
 </details>
 

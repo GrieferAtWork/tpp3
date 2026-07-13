@@ -48,7 +48,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_DIRECTIVES
 
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE
+#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE
 #undef tpp_lexer_seek_eol__STYLE_PARAM
 #undef tpp_lexer_seek_eol__STYLE_ARG
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
@@ -64,7 +64,7 @@ TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM);
-#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TPP_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE */
+#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE */
 
 
 #undef TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
@@ -693,7 +693,7 @@ seek_next_lf:
 	/* First non-whitespace/comment token must be '#' */
 	if (tok != '#') {
 		/* Deal with shell comment tokens (must be re-interpreted as directives) */
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_SHELL_COMMENT
 		if (tok == TPP_TOK_SHELL_COMMENT) {
 			tpp_token *const token = tpp_lexer_gettoken(self);
 			token->tt_end = token->tt_start + 1;
@@ -707,7 +707,7 @@ seek_next_lf:
 
 /*			token->tt_id = tok = TPP_TOK_OFCHAR('#'); * Not needed */
 		} else
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 		{
 			goto seek_next_lf;
 		}
@@ -1632,15 +1632,15 @@ again:
 		return error;
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER */
 
-#if TPP_HAVE_TPP_TOK_COLON_COLON
+#if TPP_HAVE_TOK_COLON_COLON
 continue_after_unknown_name:
-#endif /* TPP_HAVE_TPP_TOK_COLON_COLON */
+#endif /* TPP_HAVE_TOK_COLON_COLON */
 	do {
 		tok = tpp_lexer_yield_blocking(lexer);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
-#if TPP_HAVE_TPP_TOK_COLON_COLON
+#if TPP_HAVE_TOK_COLON_COLON
 	if (tok == TPP_TOK_COLON_COLON) {
 		do {
 			tok = tpp_lexer_yield_blocking(lexer);
@@ -1650,7 +1650,7 @@ continue_after_unknown_name:
 		if (TPP_TOK_ISKEYWORD(tok))
 			goto continue_after_unknown_name;
 	}
-#endif /* TPP_HAVE_TPP_TOK_COLON_COLON */
+#endif /* TPP_HAVE_TOK_COLON_COLON */
 	if (tok == '(') {
 		tpp_lexer_arginfo arg;
 		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
@@ -2240,7 +2240,7 @@ tpp_lexer_handle_line_directive(tpp_lexer *tpp_restrict self,
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 
-#if TPP_HAVE_TPP_TOK_INT
+#if TPP_HAVE_TOK_INT
 	if (TPP_TOK_ISINT(tok)) {
 		/* Decode line number */
 		error = tpp_lexer_decodeint(self, &new_linenumber);
@@ -2252,7 +2252,7 @@ tpp_lexer_handle_line_directive(tpp_lexer *tpp_restrict self,
 		if (TPP_TOK_ISERR(tok))
 			return tok;
 	} else
-#endif /* TPP_HAVE_TPP_TOK_INT */
+#endif /* TPP_HAVE_TOK_INT */
 	{
 		tpp_lcinfo lc = tpp_file_getlcinfo(file, file->tf_tpos);
 		new_linenumber = tpp_lcinfo_getline(lc) - 1;
@@ -2467,9 +2467,9 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_EXCLAIM
 	case '!':
-#if TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM
+#if TPP_HAVE_TOK_EXCLAIM_EXCLAIM
 	case TPP_TOK_EXCLAIM_EXCLAIM:
-#endif /* TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM */
+#endif /* TPP_HAVE_TOK_EXCLAIM_EXCLAIM */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_CPP_EXCLAIM)
 		if (!tpp_lexer_has(self, CPP_EXCLAIM))
 			goto handle_unknown_directive;
@@ -2776,8 +2776,8 @@ again_yield_directive_iter:
 #undef WANT_handle_unknown_directive
 handle_unknown_directive:
 #endif /* WANT_handle_unknown_directive */
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
-		if (tpp_lexer_has(self, TPP_TOK_SHELL_COMMENT)
+#if TPP_HAVE_TOK_SHELL_COMMENT
+		if (tpp_lexer_has(self, TOK_SHELL_COMMENT)
 #if TPP_HAVE_DIGRAPHS
 		    && *file->tf_pos != '%' /* Digraph "%:" must never become a shell comment (since
 		                             * "%:" is a **TOKEN** substitution, but not a **CHARACTER**
@@ -2818,11 +2818,11 @@ handle_unknown_directive:
 			result = TPP_TOK_SHELL_COMMENT;
 			goto return_result;
 		} else
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 		{
 			tpp_lexer_process_directive_set_noguard();
-#if defined(WANT_seek_end_of_line) || TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SHELL_COMMENT)
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SHELL_COMMENT)
+#if defined(WANT_seek_end_of_line) || TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SHELL_COMMENT)
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SHELL_COMMENT)
 #if TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE
 			{
 				tpp_errno error;
@@ -2833,7 +2833,7 @@ handle_unknown_directive:
 				}
 			}
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
-#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SHELL_COMMENT) */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SHELL_COMMENT) */
 
 			/* Seek until we hit LF or EOF. Caller has disabled "autopopfile",
 			 * so this'll always stay within the file currently being processed. */
@@ -2846,7 +2846,7 @@ seek_end_of_line:
 				if (TPP_TOK_ISERR(result))
 					goto return_result;
 			}
-#endif /* WANT_seek_end_of_line || TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SHELL_COMMENT) */
+#endif /* WANT_seek_end_of_line || TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SHELL_COMMENT) */
 		}
 		tpp_lexer_autopopfile_break(self);
 		return TPP_TOK_EOF;
@@ -2863,9 +2863,9 @@ return_result:
 /* Wrapper around `tpp_lexer_yieldraw()' that filters certain tokens (based on
  * configured features), and implements handling for preprocessor directives,
  * like "#define", "#include", etc:
- * - TPP_TOK_LF:      Filtered based on `TPP_HAVE_TPP_TOK_LF' / `TPP_FEAT_TPP_TOK_LF'
- * - TPP_TOK_SPACE:   Filtered based on `TPP_HAVE_TPP_TOK_SPACE' / `TPP_FEAT_TPP_TOK_SPACE'
- * - TPP_TOK_COMMENT: Filtered based on `TPP_HAVE_TPP_TOK_COMMENT' / `TPP_FEAT_TPP_TOK_COMMENT'
+ * - TPP_TOK_LF:      Filtered based on `TPP_HAVE_TOK_LF' / `TPP_FEAT_TPP_TOK_LF'
+ * - TPP_TOK_SPACE:   Filtered based on `TPP_HAVE_TOK_SPACE' / `TPP_FEAT_TPP_TOK_SPACE'
+ * - TPP_TOK_COMMENT: Filtered based on `TPP_HAVE_TOK_COMMENT' / `TPP_FEAT_TPP_TOK_COMMENT'
  *
  * @return: * :                  The newly read token (after accounting for preprocessor directives)
  * @return: TPP_TOK_ENOMEM:      Out of memory
@@ -2884,16 +2884,16 @@ again:
 
 
 /************************************************************************/
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SPACE)
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE)
 	case TPP_TOK_SPACE:
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 		if (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-#if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_SPACE)
-		if (tpp_lexer_has(self, TPP_TOK_SPACE))
+#if TPP_CONF_IS_RT(TPP_HAVE_TOK_SPACE)
+		if (tpp_lexer_has(self, TOK_SPACE))
 			break; /* Enabled */
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_SPACE) */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_TOK_SPACE) */
 		goto again;
 #elif TPP_HAVE_CPP_DIRECTIVES
 	case TPP_TOK_SPACE:
@@ -2904,9 +2904,9 @@ again:
 
 
 /************************************************************************/
-#if TPP_HAVE_TPP_TOK_COMMENTLIKE
+#if TPP_HAVE_TOK_COMMENTLIKE
 	_TPP_CASE_TPP_TOK_SHELL_COMMENT
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_HAVE_CPP_DIRECTIVES
+#if TPP_HAVE_TOK_SHELL_COMMENT && TPP_HAVE_CPP_DIRECTIVES
 		if (tpp_file_getallowdirectives(file) &&
 			tpp_lexer_has(self, CPP_DIRECTIVES)) {
 			tpp_token *const token = tpp_lexer_gettoken(self);
@@ -2938,25 +2938,25 @@ again:
 			/* Fallthru to regular maybe-emit-comment code below... */
 		}
 		TPP_FALLTHRU
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT && TPP_HAVE_CPP_DIRECTIVES */
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_COMMENT) /* Never, or conditionally enabled */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT && TPP_HAVE_CPP_DIRECTIVES */
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_COMMENT) /* Never, or conditionally enabled */
 	_TPP_CASE_TPP_TOK_CXX_COMMENT
 	_TPP_CASE_TPP_TOK_ASM_COMMENT
 	_TPP_CASE_TPP_TOK_SQL_COMMENT
-#if TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES
+#if TPP_HAVE_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES
 		/* Remember that we've seen a linefeed. */
 		file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 		TPP_FALLTHRU
-#endif /* TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES */
+#endif /* TPP_HAVE_TOK_COMMENTLIKE_LINE && TPP_HAVE_CPP_DIRECTIVES */
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 		if (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-#if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_COMMENT)
-		if (tpp_lexer_has(self, TPP_TOK_COMMENT))
+#if TPP_CONF_IS_RT(TPP_HAVE_TOK_COMMENT)
+		if (tpp_lexer_has(self, TOK_COMMENT))
 			break; /* Comments are enabled -> emit to caller */
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_COMMENT) */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_TOK_COMMENT) */
 		goto again;
 #elif TPP_HAVE_CPP_DIRECTIVES
 	_TPP_CASE_TPP_TOK_CXX_COMMENT
@@ -2965,33 +2965,33 @@ again:
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE
 		break;
 #endif /* ... */
-#endif /* TPP_HAVE_TPP_TOK_COMMENTLIKE */
+#endif /* TPP_HAVE_TOK_COMMENTLIKE */
 /************************************************************************/
 
 
 
 /************************************************************************/
-#if TPP_HAVE_CPP_DIRECTIVES || TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF) /* Never, or conditionally enabled */
+#if TPP_HAVE_CPP_DIRECTIVES || TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) /* Never, or conditionally enabled */
 	case TPP_TOK_LF: {
 #if TPP_HAVE_CPP_DIRECTIVES
 		/* Remember that we've seen a linefeed. */
 		file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
-#if TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF) /* Never, or conditionally enabled */
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) /* Never, or conditionally enabled */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 		if (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-#if TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_LF)
-		if (tpp_lexer_has(self, TPP_TOK_LF))
+#if TPP_CONF_IS_RT(TPP_HAVE_TOK_LF)
+		if (tpp_lexer_has(self, TOK_LF))
 			break; /* Enabled */
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_TPP_TOK_LF) */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_TOK_LF) */
 		goto again;
-#else /* TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF) */
+#else /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) */
 		break;
-#endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF) */
+#endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) */
 	}
-#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_LF) */
+#endif /* TPP_HAVE_CPP_DIRECTIVES || TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) */
 /************************************************************************/
 
 
@@ -3008,14 +3008,14 @@ again:
 		file->tf_flags &= ~TPP_FILE_FLAGS_NODIRECTIVES;
 		if (TPP_TOK_ISERR(result))
 			break;
-#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_SHELL_COMMENT
 		if (result != TPP_TOK_EOF) {
 			/* Emit as a shell-comment (if enabled). Otherwise, check next raw token. */
 			tpp_assert(result == TPP_TOK_SHELL_COMMENT);
-			if (tpp_lexer_has(self, TPP_TOK_COMMENT))
+			if (tpp_lexer_has(self, TOK_COMMENT))
 				break;
 		}
-#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 		goto again;
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 /************************************************************************/
