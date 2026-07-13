@@ -1680,62 +1680,46 @@ TPP_EXTENSION(TPP_EXT_TPP_TOK_SPACE, TPP_EXTNAME_TPP_TOK_SPACE, TPP_CONF_DEFAULT
 TPP_EXTENSION(TPP_EXT_TPP_TOK_COMMENT, TPP_EXTNAME_TPP_TOK_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_COMMENT))
 #define _tpp_lexer_has_TPP_TOK_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_COMMENT)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_COMMENT) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
-#ifndef TPP_EXTNAME_TPP_TOK_SLASH_SLASH_COMMENT
-#define TPP_EXTNAME_TPP_TOK_SLASH_SLASH_COMMENT "tok-slash-slash-comment"
-#endif /* !TPP_EXTNAME_TPP_TOK_SLASH_SLASH_COMMENT */
-#define TPP_EXT_TPP_TOK_SLASH_SLASH_COMMENT TPP_EXT_TPP_TOK_SLASH_SLASH_COMMENT
-TPP_EXTENSION(TPP_EXT_TPP_TOK_SLASH_SLASH_COMMENT, TPP_EXTNAME_TPP_TOK_SLASH_SLASH_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT))
-#define _tpp_lexer_has_TPP_TOK_SLASH_SLASH_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_SLASH_SLASH_COMMENT)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH)
-#ifndef TPP_EXTNAME_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH
-#define TPP_EXTNAME_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH "tok-slash-star-comment-star-slash"
-#endif /* !TPP_EXTNAME_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH */
-#define TPP_EXT_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH TPP_EXT_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH
-TPP_EXTENSION(TPP_EXT_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH, TPP_EXTNAME_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH))
-#define _tpp_lexer_has_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN)
-#ifndef TPP_EXTNAME_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN
-#define TPP_EXTNAME_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN "tok-lparen-star-comment-star-rparen"
-#endif /* !TPP_EXTNAME_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN */
-#define TPP_EXT_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN TPP_EXT_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN
-TPP_EXTENSION(TPP_EXT_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN, TPP_EXTNAME_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN))
-#define _tpp_lexer_has_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
-#ifndef TPP_EXTNAME_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE
-#define TPP_EXTNAME_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE "tok-langle-exclaim-minus-minus-comment-minus-minus-rangle"
-#endif /* !TPP_EXTNAME_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE */
-#define TPP_EXT_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE TPP_EXT_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE
-TPP_EXTENSION(TPP_EXT_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE, TPP_EXTNAME_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE))
-#define _tpp_lexer_has_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_POUND_COMMENT)
-#ifndef TPP_EXTNAME_TPP_TOK_POUND_COMMENT
-#define TPP_EXTNAME_TPP_TOK_POUND_COMMENT "tok-pound-comment"
-#endif /* !TPP_EXTNAME_TPP_TOK_POUND_COMMENT */
-#define TPP_EXT_TPP_TOK_POUND_COMMENT TPP_EXT_TPP_TOK_POUND_COMMENT
-TPP_EXTENSION(TPP_EXT_TPP_TOK_POUND_COMMENT, TPP_EXTNAME_TPP_TOK_POUND_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_POUND_COMMENT))
-#define _tpp_lexer_has_TPP_TOK_POUND_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_POUND_COMMENT)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_POUND_COMMENT) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_SLASH_COMMENT)
-#ifndef TPP_EXTNAME_TPP_TOK_SLASH_COMMENT
-#define TPP_EXTNAME_TPP_TOK_SLASH_COMMENT "tok-slash-comment"
-#endif /* !TPP_EXTNAME_TPP_TOK_SLASH_COMMENT */
-#define TPP_EXT_TPP_TOK_SLASH_COMMENT TPP_EXT_TPP_TOK_SLASH_COMMENT
-TPP_EXTENSION(TPP_EXT_TPP_TOK_SLASH_COMMENT, TPP_EXTNAME_TPP_TOK_SLASH_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_COMMENT))
-#define _tpp_lexer_has_TPP_TOK_SLASH_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_SLASH_COMMENT)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_SLASH_COMMENT) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
-#ifndef TPP_EXTNAME_TPP_TOK_MINUS_MINUS_COMMENT
-#define TPP_EXTNAME_TPP_TOK_MINUS_MINUS_COMMENT "tok-minus-minus-comment"
-#endif /* !TPP_EXTNAME_TPP_TOK_MINUS_MINUS_COMMENT */
-#define TPP_EXT_TPP_TOK_MINUS_MINUS_COMMENT TPP_EXT_TPP_TOK_MINUS_MINUS_COMMENT
-TPP_EXTENSION(TPP_EXT_TPP_TOK_MINUS_MINUS_COMMENT, TPP_EXTNAME_TPP_TOK_MINUS_MINUS_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT))
-#define _tpp_lexer_has_TPP_TOK_MINUS_MINUS_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_MINUS_MINUS_COMMENT)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_CXX_COMMENT)
+#ifndef TPP_EXTNAME_TPP_TOK_CXX_COMMENT
+#define TPP_EXTNAME_TPP_TOK_CXX_COMMENT "tok-cxx-comment"
+#endif /* !TPP_EXTNAME_TPP_TOK_CXX_COMMENT */
+#define TPP_EXT_TPP_TOK_CXX_COMMENT TPP_EXT_TPP_TOK_CXX_COMMENT
+TPP_EXTENSION(TPP_EXT_TPP_TOK_CXX_COMMENT, TPP_EXTNAME_TPP_TOK_CXX_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_COMMENT))
+#define _tpp_lexer_has_TPP_TOK_CXX_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_CXX_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_CXX_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_C_COMMENT)
+#ifndef TPP_EXTNAME_TPP_TOK_C_COMMENT
+#define TPP_EXTNAME_TPP_TOK_C_COMMENT "tok-c-comment"
+#endif /* !TPP_EXTNAME_TPP_TOK_C_COMMENT */
+#define TPP_EXT_TPP_TOK_C_COMMENT TPP_EXT_TPP_TOK_C_COMMENT
+TPP_EXTENSION(TPP_EXT_TPP_TOK_C_COMMENT, TPP_EXTNAME_TPP_TOK_C_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_C_COMMENT))
+#define _tpp_lexer_has_TPP_TOK_C_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_C_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_C_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_PASCAL_COMMENT)
+#ifndef TPP_EXTNAME_TPP_TOK_PASCAL_COMMENT
+#define TPP_EXTNAME_TPP_TOK_PASCAL_COMMENT "tok-pascal-comment"
+#endif /* !TPP_EXTNAME_TPP_TOK_PASCAL_COMMENT */
+#define TPP_EXT_TPP_TOK_PASCAL_COMMENT TPP_EXT_TPP_TOK_PASCAL_COMMENT
+TPP_EXTENSION(TPP_EXT_TPP_TOK_PASCAL_COMMENT, TPP_EXTNAME_TPP_TOK_PASCAL_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PASCAL_COMMENT))
+#define _tpp_lexer_has_TPP_TOK_PASCAL_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_PASCAL_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_PASCAL_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_HTML_COMMENT)
+#ifndef TPP_EXTNAME_TPP_TOK_HTML_COMMENT
+#define TPP_EXTNAME_TPP_TOK_HTML_COMMENT "tok-html-comment"
+#endif /* !TPP_EXTNAME_TPP_TOK_HTML_COMMENT */
+#define TPP_EXT_TPP_TOK_HTML_COMMENT TPP_EXT_TPP_TOK_HTML_COMMENT
+TPP_EXTENSION(TPP_EXT_TPP_TOK_HTML_COMMENT, TPP_EXTNAME_TPP_TOK_HTML_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_HTML_COMMENT))
+#define _tpp_lexer_has_TPP_TOK_HTML_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_HTML_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_HTML_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_SQL_COMMENT)
+#ifndef TPP_EXTNAME_TPP_TOK_SQL_COMMENT
+#define TPP_EXTNAME_TPP_TOK_SQL_COMMENT "tok-sql-comment"
+#endif /* !TPP_EXTNAME_TPP_TOK_SQL_COMMENT */
+#define TPP_EXT_TPP_TOK_SQL_COMMENT TPP_EXT_TPP_TOK_SQL_COMMENT
+TPP_EXTENSION(TPP_EXT_TPP_TOK_SQL_COMMENT, TPP_EXTNAME_TPP_TOK_SQL_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SQL_COMMENT))
+#define _tpp_lexer_has_TPP_TOK_SQL_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_SQL_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_SQL_COMMENT) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT)
 #ifndef TPP_EXTNAME_TPP_TOK_AT_AT_COMMENT
 #define TPP_EXTNAME_TPP_TOK_AT_AT_COMMENT "tok-at-at-comment"
@@ -1744,6 +1728,22 @@ TPP_EXTENSION(TPP_EXT_TPP_TOK_MINUS_MINUS_COMMENT, TPP_EXTNAME_TPP_TOK_MINUS_MIN
 TPP_EXTENSION(TPP_EXT_TPP_TOK_AT_AT_COMMENT, TPP_EXTNAME_TPP_TOK_AT_AT_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT))
 #define _tpp_lexer_has_TPP_TOK_AT_AT_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_AT_AT_COMMENT)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_SHELL_COMMENT)
+#ifndef TPP_EXTNAME_TPP_TOK_SHELL_COMMENT
+#define TPP_EXTNAME_TPP_TOK_SHELL_COMMENT "tok-shell-comment"
+#endif /* !TPP_EXTNAME_TPP_TOK_SHELL_COMMENT */
+#define TPP_EXT_TPP_TOK_SHELL_COMMENT TPP_EXT_TPP_TOK_SHELL_COMMENT
+TPP_EXTENSION(TPP_EXT_TPP_TOK_SHELL_COMMENT, TPP_EXTNAME_TPP_TOK_SHELL_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SHELL_COMMENT))
+#define _tpp_lexer_has_TPP_TOK_SHELL_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_SHELL_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_SHELL_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_ASM_COMMENT)
+#ifndef TPP_EXTNAME_TPP_TOK_ASM_COMMENT
+#define TPP_EXTNAME_TPP_TOK_ASM_COMMENT "tok-asm-comment"
+#endif /* !TPP_EXTNAME_TPP_TOK_ASM_COMMENT */
+#define TPP_EXT_TPP_TOK_ASM_COMMENT TPP_EXT_TPP_TOK_ASM_COMMENT
+TPP_EXTENSION(TPP_EXT_TPP_TOK_ASM_COMMENT, TPP_EXTNAME_TPP_TOK_ASM_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_ASM_COMMENT))
+#define _tpp_lexer_has_TPP_TOK_ASM_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TPP_TOK_ASM_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_ASM_COMMENT) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_TPP_TOK_DOLLAR)
 #ifndef TPP_EXTNAME_TPP_TOK_DOLLAR
 #define TPP_EXTNAME_TPP_TOK_DOLLAR "tok-dollar"
@@ -6363,27 +6363,39 @@ TPP_DECL_END
 
 /* Enable support for recognizing c++-like comments: `// like this one!`
  * @detect: #if __TPP_COUNT_TOKENS("// a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT
-#define TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-slash-slash-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT */
+#ifndef TPP_HAVE_TPP_TOK_CXX_COMMENT
+#define TPP_HAVE_TPP_TOK_CXX_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-cxx-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_COMMENT */
 
 // Enable support for recognizing c-like comments: `/* like this one! */`
 // @detect: #if __TPP_COUNT_TOKENS("/* a b c */") <= 1
-#ifndef TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH
-#define TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-slash-star-comment-star-slash" */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH */
+#ifndef TPP_HAVE_TPP_TOK_C_COMMENT
+#define TPP_HAVE_TPP_TOK_C_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-c-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_C_COMMENT */
 
 /* Enable support for recognizing pascal-like comments: `(* like this one! *)`
  * @detect: #if __TPP_COUNT_TOKENS("(* a b c *)") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN
-#define TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-lparen-star-comment-star-rparen" */
-#endif /* !TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN */
+#ifndef TPP_HAVE_TPP_TOK_PASCAL_COMMENT
+#define TPP_HAVE_TPP_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pascal-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
 
 /* Enable support for recognizing html-like comments: `<!-- like this one -->`
  * @detect: #if __TPP_COUNT_TOKENS("<!-- a b c -->") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-langle-exclaim-minus-minus-comment-minus-minus-rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE */
+#ifndef TPP_HAVE_TPP_TOK_HTML_COMMENT
+#define TPP_HAVE_TPP_TOK_HTML_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-html-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_HTML_COMMENT */
+
+/* Enable support for recognizing SQL-like comments: `-- like this one!`
+ * @detect: #if __TPP_COUNT_TOKENS("-- a b c") <= 1 */
+#ifndef TPP_HAVE_TPP_TOK_SQL_COMMENT
+#define TPP_HAVE_TPP_TOK_SQL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sql-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
+
+/* Enable support for recognizing deemon-doc-like comments: `@@ like this one!`
+ * @detect: #if __TPP_COUNT_TOKENS("@@ a b c") <= 1 */
+#ifndef TPP_HAVE_TPP_TOK_AT_AT_COMMENT
+#define TPP_HAVE_TPP_TOK_AT_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-at-at-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
 
 /* Enable support for recognizing shell-like comments: `# like this one!`
  *
@@ -6392,27 +6404,24 @@ TPP_DECL_END
  * and shell comments that don't appear at the start of lines are not
  * even processed as CPP directives.
  * @detect: #if __TPP_COUNT_TOKENS("# a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_POUND_COMMENT
-#define TPP_HAVE_TPP_TOK_POUND_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pound-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_POUND_COMMENT */
+#ifndef TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#define TPP_HAVE_TPP_TOK_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-shell-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 
 /* Enable support for recognizing ASM-like comments: `/ like this one!`
+ *
+ * TODO: This type of comment should only be recognized if it's preceded by nothing but whitespace:
+ *       >> / this is a comment
+ *       >> movl $42, %eax  / This isn't a comment
  * @detect: #if __TPP_COUNT_TOKENS("/ a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_SLASH_COMMENT
-#define TPP_HAVE_TPP_TOK_SLASH_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-slash-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_COMMENT */
+#ifndef TPP_HAVE_TPP_TOK_ASM_COMMENT
+#define TPP_HAVE_TPP_TOK_ASM_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-asm-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_ASM_COMMENT */
 
-/* Enable support for recognizing SQL-like comments: `-- like this one!`
- * @detect: #if __TPP_COUNT_TOKENS("-- a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT
-#define TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-minus-minus-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT */
-
-/* Enable support for recognizing deemon-doc-like comments: `@@ like this one!`
- * @detect: #if __TPP_COUNT_TOKENS("@@ a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_AT_AT_COMMENT
-#define TPP_HAVE_TPP_TOK_AT_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-at-at-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
+/* TODO: Support for "@" comments */
+/* TODO: #, / and @ comments should each have 2 versions sub-config to specify if a
+ *       perspective match should only be treated as a comment if it's preceded by
+ *       nothing but whitespace, or if it should always be treated as a comment. */
 
 /************************************************************************/
 /* Single-char tokens                                                   */
@@ -6719,18 +6728,18 @@ TPP_DECL_END
 #undef TPP_HAVE_TPP_TOK_FLOAT
 #define TPP_HAVE_TPP_TOK_FLOAT TPP_HAVE_TPP_TOK_C_FLOAT
 #undef TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE
-#if (TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH ||   \
-     TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN || \
-     TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
+#if (TPP_HAVE_TPP_TOK_C_COMMENT ||      \
+     TPP_HAVE_TPP_TOK_PASCAL_COMMENT || \
+     TPP_HAVE_TPP_TOK_HTML_COMMENT)
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 1
 #else /* ... */
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 0
 #endif /* !... */
 #undef TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE
-#if (TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT || \
-     TPP_HAVE_TPP_TOK_POUND_COMMENT ||       \
-     TPP_HAVE_TPP_TOK_SLASH_COMMENT ||       \
-     TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
+#if (TPP_HAVE_TPP_TOK_CXX_COMMENT ||   \
+     TPP_HAVE_TPP_TOK_SHELL_COMMENT || \
+     TPP_HAVE_TPP_TOK_ASM_COMMENT || \
+     TPP_HAVE_TPP_TOK_SQL_COMMENT)
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE 1
 #else /* ... */
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE 0
@@ -6893,7 +6902,7 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_TOK_PLUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-plus_equal" */
 #endif /* !TPP_HAVE_TPP_TOK_PLUS_EQUAL */
 
-/* "--"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
+/* "--"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SQL_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("--") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_MINUS_MINUS
 #define TPP_HAVE_TPP_TOK_MINUS_MINUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_minus" */
@@ -6965,13 +6974,13 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_TOK_DOT_DOT_DOT (TPP_CONF_IS_RT(TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) ? TPP_COMMON_HAVE_TPP_TOK_C_TOKENS : (TPP_COMMON_HAVE_TPP_TOK_C_TOKENS || TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS)) /* "-ftok-dot_dot_dot" */
 #endif /* !TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
 
-/* "//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
+/* "//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("//") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH
 #define TPP_HAVE_TPP_TOK_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-slash_slash" */
 #endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH */
 
-/* "//="  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
+/* "//="  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("//=") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
 #define TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-slash_slash_equal" */
@@ -7127,7 +7136,7 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_TOK_EQUAL_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_slash" */
 #endif /* !TPP_HAVE_TPP_TOK_EQUAL_SLASH */
 
-/* "=//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
+/* "=//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("=//") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
 #define TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_slash_slash" */
@@ -9001,7 +9010,7 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE
-#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_POUND_COMMENT) && TPP_HAVE_CPP_DIRECTIVES)
+#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SHELL_COMMENT) && TPP_HAVE_CPP_DIRECTIVES)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
@@ -10459,50 +10468,50 @@ typedef enum tpp_token_id {
 #if TPP_HAVE_TPP_TOK_COMMENTLIKE
 	TPP_TOK_COMMENTLIKE_MIN,
 	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MIN) = TPP_TOK_COMMENTLIKE_MIN - 1,
-#if TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH
-	TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH, /* "<comment>" like this one! */
-#define _TPP_CASE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH case TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH:
-#else /* TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH */
-#define _TPP_CASE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH /* nothing */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH */
-#if TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN
-	TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN, // "<comment>" "(*like this one!*)"
-#define _TPP_CASE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN case TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN:
-#else /* TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN */
-#define _TPP_CASE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN /* nothing */
-#endif /* !TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN */
-#if TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE
-	TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE, // "<comment>" "<!-- like this one! -->"
-#define _TPP_CASE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE case TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE:
-#else /* TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE */
-#define _TPP_CASE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE /* nothing */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE */
+#if TPP_HAVE_TPP_TOK_C_COMMENT
+	TPP_TOK_C_COMMENT, /* "<comment>" like this one! */
+#define _TPP_CASE_TPP_TOK_C_COMMENT case TPP_TOK_C_COMMENT:
+#else /* TPP_HAVE_TPP_TOK_C_COMMENT */
+#define _TPP_CASE_TPP_TOK_C_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_C_COMMENT */
+#if TPP_HAVE_TPP_TOK_PASCAL_COMMENT
+	TPP_TOK_PASCAL_COMMENT, // "<comment>" "(*like this one!*)"
+#define _TPP_CASE_TPP_TOK_PASCAL_COMMENT case TPP_TOK_PASCAL_COMMENT:
+#else /* TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
+#define _TPP_CASE_TPP_TOK_PASCAL_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
+#if TPP_HAVE_TPP_TOK_HTML_COMMENT
+	TPP_TOK_HTML_COMMENT, // "<comment>" "<!-- like this one! -->"
+#define _TPP_CASE_TPP_TOK_HTML_COMMENT case TPP_TOK_HTML_COMMENT:
+#else /* TPP_HAVE_TPP_TOK_HTML_COMMENT */
+#define _TPP_CASE_TPP_TOK_HTML_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_HTML_COMMENT */
 	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_NOLINE_MAX),
 	TPP_TOK_COMMENTLIKE_NOLINE_MAX = TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_NOLINE_MAX) - 1,
-#if TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT
-	TPP_TOK_SLASH_SLASH_COMMENT, // "<comment>" like this one!
-#define _TPP_CASE_TPP_TOK_SLASH_SLASH_COMMENT case TPP_TOK_SLASH_SLASH_COMMENT:
-#else /* TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT */
-#define _TPP_CASE_TPP_TOK_SLASH_SLASH_COMMENT /* nothing */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT */
-#if TPP_HAVE_TPP_TOK_POUND_COMMENT
-	TPP_TOK_POUND_COMMENT, // "<comment>" "# like this one!"
-#define _TPP_CASE_TPP_TOK_POUND_COMMENT case TPP_TOK_POUND_COMMENT:
-#else /* TPP_HAVE_TPP_TOK_POUND_COMMENT */
-#define _TPP_CASE_TPP_TOK_POUND_COMMENT /* nothing */
-#endif /* !TPP_HAVE_TPP_TOK_POUND_COMMENT */
-#if TPP_HAVE_TPP_TOK_SLASH_COMMENT
-	TPP_TOK_SLASH_COMMENT, // "<comment>" "/ like this one!"
-#define _TPP_CASE_TPP_TOK_SLASH_COMMENT case TPP_TOK_SLASH_COMMENT:
-#else /* TPP_HAVE_TPP_TOK_SLASH_COMMENT */
-#define _TPP_CASE_TPP_TOK_SLASH_COMMENT /* nothing */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_COMMENT */
-#if TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT
-	TPP_TOK_MINUS_MINUS_COMMENT, // "<comment>" "-- like this one!"
-#define _TPP_CASE_TPP_TOK_MINUS_MINUS_COMMENT case TPP_TOK_MINUS_MINUS_COMMENT:
-#else /* TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT */
-#define _TPP_CASE_TPP_TOK_MINUS_MINUS_COMMENT /* nothing */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT */
+#if TPP_HAVE_TPP_TOK_CXX_COMMENT
+	TPP_TOK_CXX_COMMENT, // "<comment>" like this one!
+#define _TPP_CASE_TPP_TOK_CXX_COMMENT case TPP_TOK_CXX_COMMENT:
+#else /* TPP_HAVE_TPP_TOK_CXX_COMMENT */
+#define _TPP_CASE_TPP_TOK_CXX_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_COMMENT */
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+	TPP_TOK_SHELL_COMMENT, // "<comment>" "# like this one!"
+#define _TPP_CASE_TPP_TOK_SHELL_COMMENT case TPP_TOK_SHELL_COMMENT:
+#else /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#define _TPP_CASE_TPP_TOK_SHELL_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
+#if TPP_HAVE_TPP_TOK_ASM_COMMENT
+	TPP_TOK_ASM_COMMENT, // "<comment>" "/ like this one!"
+#define _TPP_CASE_TPP_TOK_ASM_COMMENT case TPP_TOK_ASM_COMMENT:
+#else /* TPP_HAVE_TPP_TOK_ASM_COMMENT */
+#define _TPP_CASE_TPP_TOK_ASM_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_ASM_COMMENT */
+#if TPP_HAVE_TPP_TOK_SQL_COMMENT
+	TPP_TOK_SQL_COMMENT, // "<comment>" "-- like this one!"
+#define _TPP_CASE_TPP_TOK_SQL_COMMENT case TPP_TOK_SQL_COMMENT:
+#else /* TPP_HAVE_TPP_TOK_SQL_COMMENT */
+#define _TPP_CASE_TPP_TOK_SQL_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
 #if TPP_HAVE_TPP_TOK_AT_AT_COMMENT
 	TPP_TOK_AT_AT_COMMENT, // "<comment>" "@@ like this one!"
 #define _TPP_CASE_TPP_TOK_AT_AT_COMMENT case TPP_TOK_AT_AT_COMMENT:
@@ -10511,15 +10520,15 @@ typedef enum tpp_token_id {
 #endif /* !TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
 	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX),
 	TPP_TOK_COMMENTLIKE_MAX = TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX) - 1,
-#define TPP_CASE_TPP_TOK_COMMENT_NOLINE               \
-	_TPP_CASE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH   \
-	_TPP_CASE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN \
-	_TPP_CASE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE
+#define TPP_CASE_TPP_TOK_COMMENT_NOLINE \
+	_TPP_CASE_TPP_TOK_C_COMMENT         \
+	_TPP_CASE_TPP_TOK_PASCAL_COMMENT    \
+	_TPP_CASE_TPP_TOK_HTML_COMMENT
 #define TPP_CASE_TPP_TOK_COMMENT_LINE     \
-	_TPP_CASE_TPP_TOK_SLASH_SLASH_COMMENT \
-	_TPP_CASE_TPP_TOK_POUND_COMMENT       \
-	_TPP_CASE_TPP_TOK_SLASH_COMMENT       \
-	_TPP_CASE_TPP_TOK_MINUS_MINUS_COMMENT \
+	_TPP_CASE_TPP_TOK_CXX_COMMENT         \
+	_TPP_CASE_TPP_TOK_SHELL_COMMENT       \
+	_TPP_CASE_TPP_TOK_ASM_COMMENT       \
+	_TPP_CASE_TPP_TOK_SQL_COMMENT \
 	_TPP_CASE_TPP_TOK_AT_AT_COMMENT
 #define TPP_TOK_ISCOMMENT(id)                     \
 	((int)(id) >= (int)TPP_TOK_COMMENTLIKE_MIN && \
@@ -11832,258 +11841,258 @@ tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
 /************************************************************************/
 
 #undef TPP_HAVE_FEATURES
-#if (TPP_CONF_IS_FEAT(TPP_HAVE_BSE) ||                                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BSE_WHITESPACE) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_E_IN_STRINGS) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_S_IN_STRINGS) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) ||                                                    \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EXCLAIM) ||                                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BLANK) ||                                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIGIT_LINE) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_LINE) ||                                                      \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_INCLUDE) ||                                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_INCLUDE_NEXT) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IMPORT) ||                                                    \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IF_ELSE_ENDIF) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DEFINE) ||                                                    \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_ASSERT) ||                                                    \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_ERROR) ||                                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_WARNING) ||                                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IDENT_SCCS) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_PRAGMA) ||                                                    \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) ||                                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma) ||                                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___pragma) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_attribute) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_builtin) ||                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_cpp_attribute) ||                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_declspec_attribute) ||                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_extension) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_feature) ||                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_c_attribute) ||                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES) ||                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_identifier) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_deprecated) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_poisoned) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_extension) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_known_extension) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_warning) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_known_warning) ||                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_include) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_include_next) ||                                      \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_embed) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE__) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___LINE__) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TIME__) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___DATE__) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COLUMN__) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__) ||                                       \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_DEPTH__) ||                                       \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COUNTER__) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TIMESTAMP__) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_NUMERIC_DATE_MACROS) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_NUMERIC_TIME_MACROS) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EVAL) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EXEC) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_UNIQUE) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_LOAD_FILE) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_COUNTER) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_RANDOM) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_DECOMPILE) ||                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_PACK) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SUBSTR) ||                                        \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SIZE) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_COUNT_TOKENS) ||                                      \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_IDENTIFIER) ||                                        \
-     TPP_CONF_IS_FEAT(TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS) ||                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) ||                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO_RECURSION) ||                                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TRADITIONAL_MACROS) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_NAMED_VARARGS_IN_MACROS) ||                                       \
-     TPP_CONF_IS_FEAT(TPP_HAVE_VA_ARGS_IN_MACROS) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_VA_COMMA_IN_MACROS) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_VA_OPT_IN_MACROS) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_VA_NARGS_IN_MACROS) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_VA_GLUE_COMMA_IN_MACROS) ||                                       \
-     TPP_CONF_IS_FEAT(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT) ||                                      \
-     TPP_CONF_IS_FEAT(TPP_HAVE_CHARIZE_MACRO_ARGUMENT) ||                                        \
-     TPP_CONF_IS_FEAT(TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT) ||                                    \
-     TPP_CONF_IS_FEAT(TPP_HAVE_GLUE_MACRO_ARGUMENT) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_PUSH_MACRO) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ONCE) ||                                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_DEPRECATED) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_EXTENSION) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_WARNING) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ERROR) ||                                                  \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_REGION) ||                                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_TPP_EXEC) ||                                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS) ||                                  \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_POISON) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_WARNING) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_ERROR) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER) ||                                      \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_DEPENDENCY) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TRIGRAPHS) ||                                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_DIGRAPHS) ||                                                      \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LF) ||                                                    \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SPACE) ||                                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COMMENT) ||                                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH) ||                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN) ||                       \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE) || \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_COMMENT) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_COMMENT) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOLLAR) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE) ||                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK) ||                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_INT) ||                                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_FLOAT) ||                                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_SMART_FLOAT_TOKENS) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_CHAR) ||                                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_STRING) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) ||                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL) ||                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL) ||                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL) ||                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL) ||                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL) ||                                  \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL) ||                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL) ||                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL) ||                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL) ||                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL) ||                                    \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL) ||                                      \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL) ||                                  \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL) ||                                    \
-     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) ||                                        \
-     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM) ||                                       \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_POUND) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT) ||                                       \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL) ||                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_EQUAL) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AMP_AMP) ||                                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AMP_EQUAL) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_STAR) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL) ||                                       \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_DOT) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS) ||                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_EQUAL) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PLUS_PLUS) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PLUS_EQUAL) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE) ||                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_EQUAL) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR) ||                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE) ||                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_STAR) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_DOT) ||                                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_DOT_DOT) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL) ||                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_EQUAL) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COLON_COLON) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COLON_EQUAL) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE) ||                                  \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS) ||                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) ||                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_RANGLE) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT) ||                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AMP) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_STAR) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR) ||                                       \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PLUS) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_MINUS) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_SLASH) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH) ||                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_COLON) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) ||                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL) ||                                     \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) ||                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_QMARK) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AT) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AT_AT) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_HAT) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PIPE) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_TILDE) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_LANGLE) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE) ||                                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE) ||                                  \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS) ||                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL) ||                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_QMARK_EQUAL) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_QMARK_QMARK) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_EQUAL) ||                                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT) ||                                                 \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_EQUAL) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HAT_EQUAL) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HAT_HAT) ||                                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PIPE_EQUAL) ||                                            \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PIPE_PIPE) ||                                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_TILDE_EQUAL) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_TILDE_TILDE) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_DEFINED) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_STRINGS) ||                                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_FLOATS) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT) ||                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS) ||                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR) ||                                      \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS) ||                                  \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS) ||                                   \
-     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX) ||                             \
-     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX) ||                              \
-     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX) ||                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX) ||                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX) ||                          \
-     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX) ||                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) ||                               \
-     TPP_CONF_IS_FEAT(TPP_HAVE_EXTERN_C_FOR_SYSHDR) ||                                           \
-     TPP_CONF_IS_FEAT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH) ||                                    \
-     TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) ||                                \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) ||                                \
+#if (TPP_CONF_IS_FEAT(TPP_HAVE_BSE) ||                                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_BSE_WHITESPACE) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_E_IN_STRINGS) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_S_IN_STRINGS) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) ||                             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EXCLAIM) ||                            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BLANK) ||                              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIGIT_LINE) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_LINE) ||                               \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_INCLUDE) ||                            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_INCLUDE_NEXT) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IMPORT) ||                             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IF_ELSE_ENDIF) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DEFINE) ||                             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_ASSERT) ||                             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_ERROR) ||                              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_WARNING) ||                            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IDENT_SCCS) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_PRAGMA) ||                             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) ||                              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma) ||                          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___pragma) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_attribute) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_builtin) ||              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_cpp_attribute) ||        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_declspec_attribute) ||   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_extension) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_feature) ||              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_c_attribute) ||          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES) ||          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_identifier) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_deprecated) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___is_poisoned) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_extension) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_known_extension) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_warning) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_known_warning) ||              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_include) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_include_next) ||               \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___has_embed) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE__) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___LINE__) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TIME__) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___DATE__) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COLUMN__) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___BASE_FILE__) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___FILE_NAME__) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_LEVEL__) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___INCLUDE_DEPTH__) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___COUNTER__) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TIMESTAMP__) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_NUMERIC_DATE_MACROS) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_NUMERIC_TIME_MACROS) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EVAL) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_EXEC) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_UNIQUE) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_LOAD_FILE) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_COUNTER) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_RANDOM) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_DECOMPILE) ||              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_PACK) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SUBSTR) ||                 \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_STR_SIZE) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_COUNT_TOKENS) ||               \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_IDENTIFIER) ||                 \
+     TPP_CONF_IS_FEAT(TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS) ||          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) ||              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_MACRO_RECURSION) ||                        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TRADITIONAL_MACROS) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_NAMED_VARARGS_IN_MACROS) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_VA_ARGS_IN_MACROS) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_VA_COMMA_IN_MACROS) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_VA_OPT_IN_MACROS) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_VA_NARGS_IN_MACROS) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_VA_GLUE_COMMA_IN_MACROS) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT) ||               \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CHARIZE_MACRO_ARGUMENT) ||                 \
+     TPP_CONF_IS_FEAT(TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT) ||             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_GLUE_MACRO_ARGUMENT) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_PUSH_MACRO) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ONCE) ||                            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_DEPRECATED) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_EXTENSION) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_WARNING) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ERROR) ||                           \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_REGION) ||                          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_TPP_EXEC) ||                        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS) ||           \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_POISON) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_WARNING) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_ERROR) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER) ||               \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_GCC_DEPENDENCY) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TRIGRAPHS) ||                              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_DIGRAPHS) ||                               \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LF) ||                             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SPACE) ||                          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COMMENT) ||                        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_COMMENT) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_COMMENT) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PASCAL_COMMENT) ||                 \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HTML_COMMENT) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SQL_COMMENT) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SHELL_COMMENT) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_ASM_COMMENT) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOLLAR) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE) ||         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK) ||         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_INT) ||                          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_FLOAT) ||                        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_SMART_FLOAT_TOKENS) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_CHAR) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_STRING) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_RAW_STRING_LITERAL) ||         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_WIDE_STRING_LITERAL) ||        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF8_STRING_LITERAL) ||        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF16_STRING_LITERAL) ||       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF32_STRING_LITERAL) ||       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_RAW_CHAR_LITERAL) ||           \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_WIDE_CHAR_LITERAL) ||          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF8_CHAR_LITERAL) ||          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF16_CHAR_LITERAL) ||         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_UTF32_CHAR_LITERAL) ||         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RAW_STRING_LITERAL) ||             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RAW_CHAR_LITERAL) ||               \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_BLOCK_STRING_LITERAL) ||           \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_BLOCK_CHAR_LITERAL) ||             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) ||                 \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EXCLAIM) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EXCLAIM_EQUAL_EQUAL) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_POUND) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_PERCENT_EQUAL) ||          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PERCENT_EQUAL) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AMP_AMP) ||                        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AMP_EQUAL) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_STAR) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_STAR_EQUAL) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_DOT) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_LANGLE_MINUS) ||              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_STAR_EQUAL) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PLUS_PLUS) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PLUS_EQUAL) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_LANGLE_LANGLE_LANGLE) ||     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_EQUAL) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_STAR) ||              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_RANGLE_RANGLE_RANGLE) ||     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_STAR) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_DOT) ||                        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOT_DOT_DOT) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL) ||              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_EQUAL) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COLON_COLON) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COLON_EQUAL) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_LANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_MINUS_RANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_MINUS) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE) ||           \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_MINUS) ||     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL) ||     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_LANGLE_EQUAL) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_LANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EQUAL_RANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_RANGLE) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EXCLAIM) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PERCENT_PERCENT) ||          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AMP) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_STAR) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_STAR_STAR) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PLUS) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_MINUS) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_SLASH) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH) ||              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_COLON) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_LANGLE_LANGLE_LANGLE) ||     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EXCLAIM) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_EQUAL_EQUAL) ||              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE) ||     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_QMARK) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AT) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_AT_AT) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_HAT) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_PIPE) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_EQUAL_TILDE) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_LANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_MINUS_RANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_LANGLE) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_LANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_EQUAL_RANGLE) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_MINUS) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_EQUAL) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE) ||           \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_MINUS) ||     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL) ||     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_QMARK_EQUAL) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_QMARK_QMARK) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_EQUAL) ||                       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT) ||                          \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_EQUAL) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HAT_EQUAL) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HAT_HAT) ||                        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PIPE_EQUAL) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PIPE_PIPE) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_TILDE_EQUAL) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_TILDE_TILDE) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_DEFINED) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_STRINGS) ||                   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_FLOATS) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT) ||       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS) ||    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR) ||               \
+     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS) ||           \
+     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS) ||            \
+     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX) ||      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX) ||       \
+     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX) ||    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX) ||    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX) ||   \
+     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX) ||  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS) ||        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_EXTERN_C_FOR_SYSHDR) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH) ||             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) ||         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) ||         \
      TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED))
 #define TPP_HAVE_FEATURES 1
 #else /* ... */
@@ -12404,30 +12413,30 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COMMENT)
 	TPP_FEAT_TPP_TOK_COMMENT,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COMMENT) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
-	TPP_FEAT_TPP_TOK_SLASH_SLASH_COMMENT,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH)
-	TPP_FEAT_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN)
-	TPP_FEAT_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
-	TPP_FEAT_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_COMMENT)
-	TPP_FEAT_TPP_TOK_POUND_COMMENT,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_COMMENT) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_COMMENT)
-	TPP_FEAT_TPP_TOK_SLASH_COMMENT,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_COMMENT) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
-	TPP_FEAT_TPP_TOK_MINUS_MINUS_COMMENT,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_COMMENT)
+	TPP_FEAT_TPP_TOK_CXX_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_COMMENT)
+	TPP_FEAT_TPP_TOK_C_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PASCAL_COMMENT)
+	TPP_FEAT_TPP_TOK_PASCAL_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PASCAL_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HTML_COMMENT)
+	TPP_FEAT_TPP_TOK_HTML_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HTML_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SQL_COMMENT)
+	TPP_FEAT_TPP_TOK_SQL_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SQL_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT)
 	TPP_FEAT_TPP_TOK_AT_AT_COMMENT,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SHELL_COMMENT)
+	TPP_FEAT_TPP_TOK_SHELL_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SHELL_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_ASM_COMMENT)
+	TPP_FEAT_TPP_TOK_ASM_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_ASM_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOLLAR)
 	TPP_FEAT_TPP_TOK_DOLLAR,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOLLAR) */
@@ -13272,38 +13281,38 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_TPP_TOK_COMMENT): 1;
 #define _tpp_lexer_has_TPP_TOK_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_COMMENT)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_COMMENT) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
-		unsigned int TPP_INTERNAL(tff_TPP_TOK_SLASH_SLASH_COMMENT): 1;
-#define _tpp_lexer_has_TPP_TOK_SLASH_SLASH_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_SLASH_SLASH_COMMENT)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH)
-		unsigned int TPP_INTERNAL(tff_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH): 1;
-#define _tpp_lexer_has_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN)
-		unsigned int TPP_INTERNAL(tff_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN): 1;
-#define _tpp_lexer_has_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
-		unsigned int TPP_INTERNAL(tff_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE): 1;
-#define _tpp_lexer_has_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_COMMENT)
-		unsigned int TPP_INTERNAL(tff_TPP_TOK_POUND_COMMENT): 1;
-#define _tpp_lexer_has_TPP_TOK_POUND_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_POUND_COMMENT)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_POUND_COMMENT) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_COMMENT)
-		unsigned int TPP_INTERNAL(tff_TPP_TOK_SLASH_COMMENT): 1;
-#define _tpp_lexer_has_TPP_TOK_SLASH_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_SLASH_COMMENT)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SLASH_COMMENT) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
-		unsigned int TPP_INTERNAL(tff_TPP_TOK_MINUS_MINUS_COMMENT): 1;
-#define _tpp_lexer_has_TPP_TOK_MINUS_MINUS_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_MINUS_MINUS_COMMENT)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TPP_TOK_CXX_COMMENT): 1;
+#define _tpp_lexer_has_TPP_TOK_CXX_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_CXX_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_CXX_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TPP_TOK_C_COMMENT): 1;
+#define _tpp_lexer_has_TPP_TOK_C_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_C_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_C_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PASCAL_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TPP_TOK_PASCAL_COMMENT): 1;
+#define _tpp_lexer_has_TPP_TOK_PASCAL_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_PASCAL_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_PASCAL_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HTML_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TPP_TOK_HTML_COMMENT): 1;
+#define _tpp_lexer_has_TPP_TOK_HTML_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_HTML_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_HTML_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SQL_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TPP_TOK_SQL_COMMENT): 1;
+#define _tpp_lexer_has_TPP_TOK_SQL_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_SQL_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SQL_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT)
 		unsigned int TPP_INTERNAL(tff_TPP_TOK_AT_AT_COMMENT): 1;
 #define _tpp_lexer_has_TPP_TOK_AT_AT_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_AT_AT_COMMENT)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SHELL_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TPP_TOK_SHELL_COMMENT): 1;
+#define _tpp_lexer_has_TPP_TOK_SHELL_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_SHELL_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_SHELL_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_ASM_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TPP_TOK_ASM_COMMENT): 1;
+#define _tpp_lexer_has_TPP_TOK_ASM_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_ASM_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_ASM_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TPP_TOK_DOLLAR)
 		unsigned int TPP_INTERNAL(tff_TPP_TOK_DOLLAR): 1;
 #define _tpp_lexer_has_TPP_TOK_DOLLAR(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TPP_TOK_DOLLAR)
@@ -14199,30 +14208,30 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_COMMENT)
 #define _tpp_lexer_has_TPP_TOK_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_COMMENT)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_COMMENT) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
-#define _tpp_lexer_has_TPP_TOK_SLASH_SLASH_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH)
-#define _tpp_lexer_has_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN)
-#define _tpp_lexer_has_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
-#define _tpp_lexer_has_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_POUND_COMMENT)
-#define _tpp_lexer_has_TPP_TOK_POUND_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_POUND_COMMENT)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_POUND_COMMENT) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_SLASH_COMMENT)
-#define _tpp_lexer_has_TPP_TOK_SLASH_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SLASH_COMMENT)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_SLASH_COMMENT) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
-#define _tpp_lexer_has_TPP_TOK_MINUS_MINUS_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_CXX_COMMENT)
+#define _tpp_lexer_has_TPP_TOK_CXX_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_CXX_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_CXX_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_C_COMMENT)
+#define _tpp_lexer_has_TPP_TOK_C_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_C_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_C_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_PASCAL_COMMENT)
+#define _tpp_lexer_has_TPP_TOK_PASCAL_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_PASCAL_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_PASCAL_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_HTML_COMMENT)
+#define _tpp_lexer_has_TPP_TOK_HTML_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_HTML_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_HTML_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_SQL_COMMENT)
+#define _tpp_lexer_has_TPP_TOK_SQL_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SQL_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_SQL_COMMENT) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_AT_AT_COMMENT)
 #define _tpp_lexer_has_TPP_TOK_AT_AT_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_AT_AT_COMMENT)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_AT_AT_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_SHELL_COMMENT)
+#define _tpp_lexer_has_TPP_TOK_SHELL_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_SHELL_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_SHELL_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_ASM_COMMENT)
+#define _tpp_lexer_has_TPP_TOK_ASM_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_ASM_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_ASM_COMMENT) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_DOLLAR)
 #define _tpp_lexer_has_TPP_TOK_DOLLAR(self) TPP_CONF_DEFAULT(TPP_HAVE_TPP_TOK_DOLLAR)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_TPP_TOK_DOLLAR) */

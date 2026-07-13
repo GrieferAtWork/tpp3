@@ -1731,27 +1731,39 @@
 
 /* Enable support for recognizing c++-like comments: `// like this one!`
  * @detect: #if __TPP_COUNT_TOKENS("// a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT
-#define TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-slash-slash-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT */
+#ifndef TPP_HAVE_TPP_TOK_CXX_COMMENT
+#define TPP_HAVE_TPP_TOK_CXX_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-cxx-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_CXX_COMMENT */
 
 // Enable support for recognizing c-like comments: `/* like this one! */`
 // @detect: #if __TPP_COUNT_TOKENS("/* a b c */") <= 1
-#ifndef TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH
-#define TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-slash-star-comment-star-slash" */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH */
+#ifndef TPP_HAVE_TPP_TOK_C_COMMENT
+#define TPP_HAVE_TPP_TOK_C_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-c-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_C_COMMENT */
 
 /* Enable support for recognizing pascal-like comments: `(* like this one! *)`
  * @detect: #if __TPP_COUNT_TOKENS("(* a b c *)") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN
-#define TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-lparen-star-comment-star-rparen" */
-#endif /* !TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN */
+#ifndef TPP_HAVE_TPP_TOK_PASCAL_COMMENT
+#define TPP_HAVE_TPP_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pascal-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_PASCAL_COMMENT */
 
 /* Enable support for recognizing html-like comments: `<!-- like this one -->`
  * @detect: #if __TPP_COUNT_TOKENS("<!-- a b c -->") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE
-#define TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-langle-exclaim-minus-minus-comment-minus-minus-rangle" */
-#endif /* !TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE */
+#ifndef TPP_HAVE_TPP_TOK_HTML_COMMENT
+#define TPP_HAVE_TPP_TOK_HTML_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-html-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_HTML_COMMENT */
+
+/* Enable support for recognizing SQL-like comments: `-- like this one!`
+ * @detect: #if __TPP_COUNT_TOKENS("-- a b c") <= 1 */
+#ifndef TPP_HAVE_TPP_TOK_SQL_COMMENT
+#define TPP_HAVE_TPP_TOK_SQL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sql-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_SQL_COMMENT */
+
+/* Enable support for recognizing deemon-doc-like comments: `@@ like this one!`
+ * @detect: #if __TPP_COUNT_TOKENS("@@ a b c") <= 1 */
+#ifndef TPP_HAVE_TPP_TOK_AT_AT_COMMENT
+#define TPP_HAVE_TPP_TOK_AT_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-at-at-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
 
 /* Enable support for recognizing shell-like comments: `# like this one!`
  *
@@ -1760,27 +1772,24 @@
  * and shell comments that don't appear at the start of lines are not
  * even processed as CPP directives.
  * @detect: #if __TPP_COUNT_TOKENS("# a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_POUND_COMMENT
-#define TPP_HAVE_TPP_TOK_POUND_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pound-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_POUND_COMMENT */
+#ifndef TPP_HAVE_TPP_TOK_SHELL_COMMENT
+#define TPP_HAVE_TPP_TOK_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-shell-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 
 /* Enable support for recognizing ASM-like comments: `/ like this one!`
+ *
+ * TODO: This type of comment should only be recognized if it's preceded by nothing but whitespace:
+ *       >> / this is a comment
+ *       >> movl $42, %eax  / This isn't a comment
  * @detect: #if __TPP_COUNT_TOKENS("/ a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_SLASH_COMMENT
-#define TPP_HAVE_TPP_TOK_SLASH_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-slash-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_SLASH_COMMENT */
+#ifndef TPP_HAVE_TPP_TOK_ASM_COMMENT
+#define TPP_HAVE_TPP_TOK_ASM_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-asm-comment" */
+#endif /* !TPP_HAVE_TPP_TOK_ASM_COMMENT */
 
-/* Enable support for recognizing SQL-like comments: `-- like this one!`
- * @detect: #if __TPP_COUNT_TOKENS("-- a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT
-#define TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-minus-minus-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT */
-
-/* Enable support for recognizing deemon-doc-like comments: `@@ like this one!`
- * @detect: #if __TPP_COUNT_TOKENS("@@ a b c") <= 1 */
-#ifndef TPP_HAVE_TPP_TOK_AT_AT_COMMENT
-#define TPP_HAVE_TPP_TOK_AT_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-at-at-comment" */
-#endif /* !TPP_HAVE_TPP_TOK_AT_AT_COMMENT */
+/* TODO: Support for "@" comments */
+/* TODO: #, / and @ comments should each have 2 versions sub-config to specify if a
+ *       perspective match should only be treated as a comment if it's preceded by
+ *       nothing but whitespace, or if it should always be treated as a comment. */
 
 /************************************************************************/
 /* Single-char tokens                                                   */
@@ -2087,18 +2096,18 @@
 #undef TPP_HAVE_TPP_TOK_FLOAT
 #define TPP_HAVE_TPP_TOK_FLOAT TPP_HAVE_TPP_TOK_C_FLOAT
 #undef TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE
-#if (TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH ||   \
-     TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN || \
-     TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE)
+#if (TPP_HAVE_TPP_TOK_C_COMMENT ||      \
+     TPP_HAVE_TPP_TOK_PASCAL_COMMENT || \
+     TPP_HAVE_TPP_TOK_HTML_COMMENT)
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 1
 #else /* ... */
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE_NOLINE 0
 #endif /* !... */
 #undef TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE
-#if (TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT || \
-     TPP_HAVE_TPP_TOK_POUND_COMMENT ||       \
-     TPP_HAVE_TPP_TOK_SLASH_COMMENT ||       \
-     TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
+#if (TPP_HAVE_TPP_TOK_CXX_COMMENT ||   \
+     TPP_HAVE_TPP_TOK_SHELL_COMMENT || \
+     TPP_HAVE_TPP_TOK_ASM_COMMENT || \
+     TPP_HAVE_TPP_TOK_SQL_COMMENT)
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE 1
 #else /* ... */
 #define TPP_HAVE_TPP_TOK_COMMENTLIKE_LINE 0
@@ -2207,8 +2216,8 @@ local MC_TOKENS = {
 	{ "&=", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
 	{ "|=", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
 	{ "^=", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
-	{ "//", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT" },
-	{ "//=", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT" },
+	{ "//", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT" },
+	{ "//=", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT" },
 	{ "**=", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "@=", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "##", "(TPP_CONF_IS_RT(TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS) ? TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS : (TPP_HAVE_GLUE_MACRO_ARGUMENT || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS))", "" },
@@ -2216,7 +2225,7 @@ local MC_TOKENS = {
 	{ "||", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
 	{ "^^", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "++", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
-	{ "--", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT" },
+	{ "--", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SQL_COMMENT" },
 	{ "**", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "~~", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "~=", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
@@ -2242,7 +2251,7 @@ local MC_TOKENS = {
 	{ "=*", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "=**", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "=/", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
-	{ "=//", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT" },
+	{ "=//", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT" },
 	{ "=%", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "=&", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
 	{ "=|", "TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS", "" },
@@ -2412,7 +2421,7 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_TOK_PLUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-plus_equal" */
 #endif /* !TPP_HAVE_TPP_TOK_PLUS_EQUAL */
 
-/* "--"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT)
+/* "--"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SQL_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("--") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_MINUS_MINUS
 #define TPP_HAVE_TPP_TOK_MINUS_MINUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_minus" */
@@ -2484,13 +2493,13 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_TOK_DOT_DOT_DOT (TPP_CONF_IS_RT(TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) ? TPP_COMMON_HAVE_TPP_TOK_C_TOKENS : (TPP_COMMON_HAVE_TPP_TOK_C_TOKENS || TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS)) /* "-ftok-dot_dot_dot" */
 #endif /* !TPP_HAVE_TPP_TOK_DOT_DOT_DOT */
 
-/* "//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
+/* "//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("//") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH
 #define TPP_HAVE_TPP_TOK_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-slash_slash" */
 #endif /* !TPP_HAVE_TPP_TOK_SLASH_SLASH */
 
-/* "//="  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
+/* "//="  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("//=") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL
 #define TPP_HAVE_TPP_TOK_SLASH_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-slash_slash_equal" */
@@ -2646,7 +2655,7 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_TOK_EQUAL_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_slash" */
 #endif /* !TPP_HAVE_TPP_TOK_EQUAL_SLASH */
 
-/* "=//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT)
+/* "=//"  (WARNING: This token conflicts with TPP_HAVE_TPP_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("=//") == 1 */
 #ifndef TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH
 #define TPP_HAVE_TPP_TOK_EQUAL_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_slash_slash" */
@@ -4758,7 +4767,7 @@ for (local doc, name,
 #define TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE
-#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_POUND_COMMENT) && TPP_HAVE_CPP_DIRECTIVES)
+#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_CONF_MAYBE_0(TPP_HAVE_TPP_TOK_SHELL_COMMENT) && TPP_HAVE_CPP_DIRECTIVES)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)

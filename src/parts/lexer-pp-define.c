@@ -890,12 +890,12 @@ found_va_opt_body_end:
 #if (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || \
      TPP_HAVE_CHARIZE_MACRO_ARGUMENT ||   \
      TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT)
-#if TPP_HAVE_TPP_TOK_POUND_COMMENT
-		case TPP_TOK_POUND_COMMENT:
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+		case TPP_TOK_SHELL_COMMENT:
 			/* Deal with special case of shell comments (which must be re-parsed as a #-token) */
 			body_iter = token->tt_start + 1;
 			TPP_FALLTHRU
-#endif /* TPP_HAVE_TPP_TOK_POUND_COMMENT */
+#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 		case '#': {
 			tpp_char const *start_of_pound;
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
@@ -1360,9 +1360,9 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 
 	/* Find end of body (moving the lexer to point at the trailing EOF/LF/COMMENT token) */
 	while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
-#if TPP_HAVE_TPP_TOK_POUND_COMMENT
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
 again_scan_end_of_macro_body:
-#endif /* TPP_HAVE_TPP_TOK_POUND_COMMENT */
+#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 		/* Only update body on non-space tokens (thereby trimming trailing space/comments from macros) */
 		if (!TPP_TOK_ISSPACE_OR_COMMENT(tok))
 			rel_body_end = tpp_file_ptr2rel(file, *p_pos);
@@ -1373,13 +1373,13 @@ again_scan_end_of_macro_body:
 		}
 	}
 
-#if TPP_HAVE_TPP_TOK_POUND_COMMENT
-	if (tok == TPP_TOK_POUND_COMMENT) {
+#if TPP_HAVE_TPP_TOK_SHELL_COMMENT
+	if (tok == TPP_TOK_SHELL_COMMENT) {
 		/* Deal with special case of shell comments (which must be re-parsed as a #-token) */
 		*p_pos = token->tt_start + 1;
 		goto again_scan_end_of_macro_body;
 	}
-#endif /* TPP_HAVE_TPP_TOK_POUND_COMMENT */
+#endif /* TPP_HAVE_TPP_TOK_SHELL_COMMENT */
 
 	/* Compile the macro according to active lexer rules */
 	body_start = tpp_file_rel2ptr(file, rel_body_start);

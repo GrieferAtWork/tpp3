@@ -231,7 +231,7 @@ SCAN(FOO()BAR)    // Expands to [foo][ ][bar]  (or [foobar] when `TPP_HAVE_MAGIC
 The extra space (U+0020) character in `SCAN(FOO()BAR)` gets added
 during macro argument substitution in the call to `SCAN`, and is
 necessary because TPP is a text-based preprocessor. Trying to get
-L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L10388) will fail.
+L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L10397) will fail.
 
 <details><summary>Details</summary>
 
@@ -335,10 +335,10 @@ the filename, a number of additional "flags" can be specified:
 - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack. Like the
        `1` flag, this flag require [`TPP_HAVE_FILE_DUMMY`](config-core.md#tpp_have_file_dummy) to be enabled, otherwise it is
        ignored.
-- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14718) for the current text-file. When this flag is not
-       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14718) is instead cleared for the current text-file.
+- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14727) for the current text-file. When this flag is not
+       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14727) is instead cleared for the current text-file.
        This flag requires [`TPP_HAVE_FILE_SYSHDR`](config-core.md#tpp_have_file_syshdr) to be enabled, otherwise it is ignored.
-- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14721) flag. Similarly, this
+- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14730) flag. Similarly, this
        flag requires [`TPP_HAVE_FILE_EXTERN_C`](config-core.md#tpp_have_file_extern_c) to be enabled, otherwise it is ignored.
 
 <details><summary>Details</summary>
@@ -878,7 +878,7 @@ to check if a given keyword is a builtin identifier:
 #endif
 ```
 
-A keyword is considered to be an "identifier" if [`TPP_TOK_ISBUILTINKEYWORD()`](../src/tpp-amalgamation.h#L11727)
+A keyword is considered to be an "identifier" if [`TPP_TOK_ISBUILTINKEYWORD()`](../src/tpp-amalgamation.h#L11736)
 
 <details><summary>Details</summary>
 
@@ -1951,7 +1951,7 @@ __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TPP_TOK_SPACE) because d
 
 Based on the numbers returned by this macro, it becomes possible
 to detect the state of pretty much all configuration options that
-affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L19220)
+affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L19229)
 
 <details><summary>Details</summary>
 
@@ -2990,7 +2990,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_LF
 
-Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19417)
+Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426)
 
 <details><summary>Details</summary>
 
@@ -3017,7 +3017,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_SPACE
 
-Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19417)
+Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426)
 
 <details><summary>Details</summary>
 
@@ -3044,7 +3044,7 @@ Detect:
 
 ## TPP_HAVE_TPP_TOK_COMMENT
 
-Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19417)
+Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426)
 
 <details><summary>Details</summary>
 
@@ -3069,7 +3069,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_SLASH_SLASH_COMMENT
+## TPP_HAVE_TPP_TOK_CXX_COMMENT
 
 Enable support for recognizing c++-like comments: `// like this one!`
 
@@ -3084,7 +3084,7 @@ Default:
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_SLASH_SLASH_COMMENT "tok-slash-slash-comment"
+#define TPP_EXTNAME_TPP_TOK_CXX_COMMENT "tok-cxx-comment"
 ```
 
 Detect:
@@ -3096,7 +3096,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH
+## TPP_HAVE_TPP_TOK_C_COMMENT
 
 Enable support for recognizing c-like comments: `/* like this one! */`
 
@@ -3111,7 +3111,7 @@ Default:
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_SLASH_STAR_COMMENT_STAR_SLASH "tok-slash-star-comment-star-slash"
+#define TPP_EXTNAME_TPP_TOK_C_COMMENT "tok-c-comment"
 ```
 
 Detect:
@@ -3123,7 +3123,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN
+## TPP_HAVE_TPP_TOK_PASCAL_COMMENT
 
 Enable support for recognizing pascal-like comments: `(* like this one! *)`
 
@@ -3138,7 +3138,7 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_LPAREN_STAR_COMMENT_STAR_RPAREN "tok-lparen-star-comment-star-rparen"
+#define TPP_EXTNAME_TPP_TOK_PASCAL_COMMENT "tok-pascal-comment"
 ```
 
 Detect:
@@ -3150,7 +3150,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE
+## TPP_HAVE_TPP_TOK_HTML_COMMENT
 
 Enable support for recognizing html-like comments: `<!-- like this one -->`
 
@@ -3165,7 +3165,7 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_LANGLE_EXCLAIM_MINUS_MINUS_COMMENT_MINUS_MINUS_RANGLE "tok-langle-exclaim-minus-minus-comment-minus-minus-rangle"
+#define TPP_EXTNAME_TPP_TOK_HTML_COMMENT "tok-html-comment"
 ```
 
 Detect:
@@ -3177,66 +3177,7 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TPP_TOK_POUND_COMMENT
-
-Enable support for recognizing shell-like comments: `# like this one!`
-
-This still works in conjunction with "TPP_HAVE_CPP_DIRECTIVES", in
-that unknown directives will simply be re-emit as shell comments,
-and shell comments that don't appear at the start of lines are not
-even processed as CPP directives.
-
-<details><summary>Details</summary>
-
-Default:
-
-```c
-TPP_COMMON_HAVE_TPP_TOK_COMMENT
-```
-
-Extension name:
-
-```c
-#define TPP_EXTNAME_TPP_TOK_POUND_COMMENT "tok-pound-comment"
-```
-
-Detect:
-
-```c
-#if __TPP_COUNT_TOKENS("# a b c") <= 1
-...
-#endif
-```
-</details>
-
-## TPP_HAVE_TPP_TOK_SLASH_COMMENT
-
-Enable support for recognizing ASM-like comments: `/ like this one!`
-
-<details><summary>Details</summary>
-
-Default:
-
-```c
-TPP_COMMON_HAVE_TPP_TOK_COMMENT
-```
-
-Extension name:
-
-```c
-#define TPP_EXTNAME_TPP_TOK_SLASH_COMMENT "tok-slash-comment"
-```
-
-Detect:
-
-```c
-#if __TPP_COUNT_TOKENS("/ a b c") <= 1
-...
-#endif
-```
-</details>
-
-## TPP_HAVE_TPP_TOK_MINUS_MINUS_COMMENT
+## TPP_HAVE_TPP_TOK_SQL_COMMENT
 
 Enable support for recognizing SQL-like comments: `-- like this one!`
 
@@ -3251,7 +3192,7 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TPP_TOK_MINUS_MINUS_COMMENT "tok-minus-minus-comment"
+#define TPP_EXTNAME_TPP_TOK_SQL_COMMENT "tok-sql-comment"
 ```
 
 Detect:
@@ -3285,6 +3226,69 @@ Detect:
 
 ```c
 #if __TPP_COUNT_TOKENS("@@ a b c") <= 1
+...
+#endif
+```
+</details>
+
+## TPP_HAVE_TPP_TOK_SHELL_COMMENT
+
+Enable support for recognizing shell-like comments: `# like this one!`
+
+This still works in conjunction with "TPP_HAVE_CPP_DIRECTIVES", in
+that unknown directives will simply be re-emit as shell comments,
+and shell comments that don't appear at the start of lines are not
+even processed as CPP directives.
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_COMMON_HAVE_TPP_TOK_COMMENT
+```
+
+Extension name:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_SHELL_COMMENT "tok-shell-comment"
+```
+
+Detect:
+
+```c
+#if __TPP_COUNT_TOKENS("# a b c") <= 1
+...
+#endif
+```
+</details>
+
+## TPP_HAVE_TPP_TOK_ASM_COMMENT
+
+Enable support for recognizing ASM-like comments: `/ like this one!`
+
+TODO: This type of comment should only be recognized if it's preceded by nothing but whitespace:
+      >> / this is a comment
+      >> movl $42, %eax  / This isn't a comment
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_COMMON_HAVE_TPP_TOK_COMMENT
+```
+
+Extension name:
+
+```c
+#define TPP_EXTNAME_TPP_TOK_ASM_COMMENT "tok-asm-comment"
+```
+
+Detect:
+
+```c
+#if __TPP_COUNT_TOKENS("/ a b c") <= 1
 ...
 #endif
 ```
@@ -3996,8 +4000,8 @@ Detect:
 ## TPP_HAVE_STRING_AUTO_CONCAT
 
 Enable support for automatic concatenation of adjacent string tokens.
-This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L20031) and its
-companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L20072), such that they will only yield
+This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L20040) and its
+companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L20081), such that they will only yield
 to the next token, but not check if that next token might be another
 string.
 
@@ -4363,8 +4367,8 @@ Extension name:
 
 ## TPP_HAVE_EXTERN_C_FOR_SYSHDR
 
-When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14718) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
-then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14721) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14718).
+When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14727) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
+then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14730) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14727).
 
 <details><summary>Details</summary>
 
