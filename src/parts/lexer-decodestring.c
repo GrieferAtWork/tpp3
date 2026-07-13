@@ -119,6 +119,11 @@ not_trigraph:
 	case '\\':
 	case '\'':
 	case '\"':
+#if !TPP_HAVE_TRIGRAPHS
+	case '?':
+#else /* TPP_HAVE_TRIGRAPHS */
+escape_self_sequence:
+#endif /* !TPP_HAVE_TRIGRAPHS */
 		/* Escape sequences that escape to themselves. */
 		start = iter - 1;
 		goto again;
@@ -126,15 +131,15 @@ not_trigraph:
 #if TPP_HAVE_TRIGRAPHS
 	case '?':
 		if ((iter + 1) >= end)
-			goto handle_unknown_escape_sequence;
+			goto escape_self_sequence;
 		if (iter[0] != '?')
-			goto handle_unknown_escape_sequence;
+			goto escape_self_sequence;
 
 		/* Only '??/??/' is allowed (which is the same as \\; which is printed as \) */
 		if (iter[1] != '/')
-			goto handle_unknown_escape_sequence;
+			goto escape_self_sequence;
 		if (!tpp_lexer_has(self, TRIGRAPHS))
-			goto handle_unknown_escape_sequence;
+			goto escape_self_sequence;
 		iter += 2;
 		goto print_backslash_and_flush_at_iter;
 #endif /* TPP_HAVE_TRIGRAPHS */
