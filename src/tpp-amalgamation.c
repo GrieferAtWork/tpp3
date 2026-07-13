@@ -17610,7 +17610,7 @@ not_a_trigraph:
 							end = file->tf_end;
 							goto continue_at_pos;
 						}
-						pos = tpp_file_rel2ptr(file, rel_before) + 1;
+						pos = tpp_file_rel2ptr(file, rel_before) + 2;
 					}
 #endif /* TPP_HAVE_BSE */
 					break;
