@@ -33,7 +33,7 @@ Default:
 
 Default configuration for [`TPP_HAVE_TOK_LF`](config-conf.md#tpp_have_tok_lf), [`TPP_HAVE_TOK_SPACE`](config-conf.md#tpp_have_tok_space),
 [`TPP_HAVE_TOK_COMMENT`](config-conf.md#tpp_have_tok_comment), indicating if tokens that are normally through
-of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426)
+of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19431)
 
 <details><summary>Details</summary>
 
@@ -53,7 +53,7 @@ Default configuration describing if otherwise unconfigured comment tokens should
 Default:
 
 ```c
-(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_HAVE_TPP_TOK : 0
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : 0
 ```
 </details>
 

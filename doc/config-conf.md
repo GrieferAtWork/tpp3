@@ -231,7 +231,7 @@ SCAN(FOO()BAR)    // Expands to [foo][ ][bar]  (or [foobar] when `TPP_HAVE_MAGIC
 The extra space (U+0020) character in `SCAN(FOO()BAR)` gets added
 during macro argument substitution in the call to `SCAN`, and is
 necessary because TPP is a text-based preprocessor. Trying to get
-L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L10397) will fail.
+L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L10402) will fail.
 
 <details><summary>Details</summary>
 
@@ -335,10 +335,10 @@ the filename, a number of additional "flags" can be specified:
 - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack. Like the
        `1` flag, this flag require [`TPP_HAVE_FILE_DUMMY`](config-core.md#tpp_have_file_dummy) to be enabled, otherwise it is
        ignored.
-- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14727) for the current text-file. When this flag is not
-       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14727) is instead cleared for the current text-file.
+- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14732) for the current text-file. When this flag is not
+       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14732) is instead cleared for the current text-file.
        This flag requires [`TPP_HAVE_FILE_SYSHDR`](config-core.md#tpp_have_file_syshdr) to be enabled, otherwise it is ignored.
-- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14730) flag. Similarly, this
+- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14735) flag. Similarly, this
        flag requires [`TPP_HAVE_FILE_EXTERN_C`](config-core.md#tpp_have_file_extern_c) to be enabled, otherwise it is ignored.
 
 <details><summary>Details</summary>
@@ -878,7 +878,7 @@ to check if a given keyword is a builtin identifier:
 #endif
 ```
 
-A keyword is considered to be an "identifier" if [`TPP_TOK_ISBUILTINKEYWORD()`](../src/tpp-amalgamation.h#L11736)
+A keyword is considered to be an "identifier" if [`TPP_TOK_ISBUILTINKEYWORD()`](../src/tpp-amalgamation.h#L11741)
 
 <details><summary>Details</summary>
 
@@ -1951,7 +1951,7 @@ __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TOK_SPACE) because direc
 
 Based on the numbers returned by this macro, it becomes possible
 to detect the state of pretty much all configuration options that
-affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L19229)
+affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L19234)
 
 <details><summary>Details</summary>
 
@@ -2990,7 +2990,7 @@ Detect:
 
 ## TPP_HAVE_TOK_LF
 
-Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426)
+Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19431)
 
 <details><summary>Details</summary>
 
@@ -3017,7 +3017,7 @@ Detect:
 
 ## TPP_HAVE_TOK_SPACE
 
-Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426)
+Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19431)
 
 <details><summary>Details</summary>
 
@@ -3044,7 +3044,7 @@ Detect:
 
 ## TPP_HAVE_TOK_COMMENT
 
-Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19426)
+Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L19431)
 
 <details><summary>Details</summary>
 
@@ -3078,7 +3078,7 @@ Enable support for recognizing c++-like comments: `// like this one!`
 Default:
 
 ```c
-(TPP_PROFILE == TPP_PROFILE_DEFAULT || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT
+(TPP_PROFILE == TPP_PROFILE_DEFAULT || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) ? 1 : (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_ENABLE(TPP_COMMON_HAVE_TPP_TOK_COMMENT) : TPP_COMMON_HAVE_TPP_TOK_COMMENT)
 ```
 
 Extension name:
@@ -3105,7 +3105,7 @@ Enable support for recognizing c-like comments: `/* like this one! */`
 Default:
 
 ```c
-(TPP_PROFILE == TPP_PROFILE_DEFAULT || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT
+(TPP_PROFILE == TPP_PROFILE_DEFAULT || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)) ? 1 : (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_ENABLE(TPP_COMMON_HAVE_TPP_TOK_COMMENT) : TPP_COMMON_HAVE_TPP_TOK_COMMENT)
 ```
 
 Extension name:
@@ -3263,13 +3263,9 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_TOK_ASM_COMMENT
+## TPP_HAVE_TOK_SLASH_COMMENT
 
 Enable support for recognizing ASM-like comments: `/ like this one!`
-
-TODO: This type of comment should only be recognized if it's preceded by nothing but whitespace:
-      >> / this is a comment
-      >> movl $42, %eax  / This isn't a comment
 
 <details><summary>Details</summary>
 
@@ -3282,7 +3278,7 @@ TPP_COMMON_HAVE_TPP_TOK_COMMENT
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TOK_ASM_COMMENT "tok-asm-comment"
+#define TPP_EXTNAME_TOK_SLASH_COMMENT "tok-slash-comment"
 ```
 
 Detect:
@@ -4000,8 +3996,8 @@ Detect:
 ## TPP_HAVE_STRING_AUTO_CONCAT
 
 Enable support for automatic concatenation of adjacent string tokens.
-This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L20040) and its
-companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L20081), such that they will only yield
+This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L20045) and its
+companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L20086), such that they will only yield
 to the next token, but not check if that next token might be another
 string.
 
@@ -4367,8 +4363,8 @@ Extension name:
 
 ## TPP_HAVE_EXTERN_C_FOR_SYSHDR
 
-When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14727) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
-then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14730) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14727).
+When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14732) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
+then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L14735) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L14732).
 
 <details><summary>Details</summary>
 

@@ -660,7 +660,7 @@ return_error:
 #undef NEED_tpp_lexer_seek_eol
 #if (TPP_HAVE_TOK_SQL_COMMENT ||   \
      TPP_HAVE_TOK_AT_AT_COMMENT || \
-     TPP_HAVE_TOK_ASM_COMMENT || \
+     TPP_HAVE_TOK_SLASH_COMMENT || \
      TPP_HAVE_TOK_SHELL_COMMENT || \
      TPP_HAVE_TOK_CXX_COMMENT)
 #define NEED_tpp_lexer_seek_eol 1
@@ -1103,12 +1103,12 @@ handle_backslash:
 #endif /* TPP_HAVE_TRIGRAPHS */
 					break;
 #endif /* TPP_HAVE_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES) */
-#if TPP_HAVE_TOK_ASM_COMMENT
-				case TPP_TOK_ASM_COMMENT:
+#if TPP_HAVE_TOK_SLASH_COMMENT
+				case TPP_TOK_SLASH_COMMENT:
 					if (ch == '/')
 						goto again;
 					break;
-#endif /* TPP_HAVE_TOK_ASM_COMMENT */
+#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
 #if TPP_HAVE_TOK_SQL_COMMENT
 				case TPP_TOK_SQL_COMMENT:
 					if (ch == '-') {
@@ -2486,16 +2486,16 @@ continue_html_comment_with_ch2:
 
 /************************************************************************/
 	case '/': {
-#if (TPP_HAVE_TOK_ASM_COMMENT ||                 \
+#if (TPP_HAVE_TOK_SLASH_COMMENT ||                 \
      TPP_HAVE_TOK_CXX_COMMENT ||           \
      TPP_HAVE_TOK_C_COMMENT || \
      TPP_HAVE_TOK_MC_STARTSWITH_SLASH)
-#if TPP_HAVE_TOK_ASM_COMMENT
+#if TPP_HAVE_TOK_SLASH_COMMENT
 		tpp_size rel_end_of_1char;
-#endif /* TPP_HAVE_TOK_ASM_COMMENT */
+#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
 		if (!tpp_lexer_has(self, TOK_CXX_COMMENT) &&
 		    !tpp_lexer_has(self, TOK_C_COMMENT) &&
-		    !tpp_lexer_has(self, TOK_ASM_COMMENT) &&
+		    !tpp_lexer_has(self, TOK_SLASH_COMMENT) &&
 /*[[[deemon (printHasNone from ".config")("/");]]]*/
 		    !tpp_lexer_has(self, TOK_SLASH_SLASH) &&
 		    !tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL) &&
@@ -2503,9 +2503,9 @@ continue_html_comment_with_ch2:
 /*[[[end]]]*/
 		    )
 			break;
-#if TPP_HAVE_TOK_ASM_COMMENT
+#if TPP_HAVE_TOK_SLASH_COMMENT
 		rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TOK_ASM_COMMENT */
+#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
 		read_ch2();
 
 /*[[[deemon print "#if TPP_HAVE_TOK_CXX_COMMENT ||", (getHasPrefixCondition from ".config")("//");]]]*/
@@ -2614,16 +2614,16 @@ continue_c_comment_with_ch2:
 #endif /* TPP_HAVE_TOK_SLASH_EQUAL */
 /*[[[end]]]*/
 		{
-#if TPP_HAVE_TOK_ASM_COMMENT
-			if (tpp_lexer_has(self, TOK_ASM_COMMENT)) {
+#if TPP_HAVE_TOK_SLASH_COMMENT
+			if (tpp_lexer_has(self, TOK_SLASH_COMMENT)) {
 				pos = tpp_file_rel2ptr(file, rel_end_of_1char);
-				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_ASM_COMMENT));
+				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SLASH_COMMENT));
 				if (TPP_ISERR(error))
 					goto return_error;
-				result = TPP_TOK_ASM_COMMENT; // "/ like this one!"
+				result = TPP_TOK_SLASH_COMMENT; // "/ like this one!"
 				goto set_result;
 			}
-#endif /* TPP_HAVE_TOK_ASM_COMMENT */
+#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
 		}
 #endif /* ... */
 	}	break;

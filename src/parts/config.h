@@ -392,6 +392,8 @@
 #define TPP_CONF_DEFAULT(cfg)      ((cfg) & 1)          /* Default state of config */
 #define TPP_CONF_MAKEFEAT(default) (-4 + !!(default))   /* Configure as feature */
 #define TPP_CONF_MAKEEXT(default)  (-2 + !!(default))   /* Configure as extension */
+#define TPP_CONF_ENABLE(cfg)       ((cfg) | 1)          /* Change `TPP_CONF_*0` to `TPP_CONF_*1` */
+#define TPP_CONF_DISABLE(cfg)      ((cfg) & ~1)         /* Change `TPP_CONF_*1` to `TPP_CONF_*0` */
 
 /* Default configuration for tokens */
 #ifndef TPP_COMMON_HAVE_TPP_TOK
@@ -412,7 +414,7 @@
 
 /* Default configuration describing if otherwise unconfigured comment tokens should be supported */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_COMMENT
-#define TPP_COMMON_HAVE_TPP_TOK_COMMENT ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_HAVE_TPP_TOK : 0)
+#define TPP_COMMON_HAVE_TPP_TOK_COMMENT ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_COMMENT */
 
 /* Default configuration for:
@@ -1732,13 +1734,13 @@
 /* Enable support for recognizing c++-like comments: `// like this one!`
  * @detect: #if __TPP_COUNT_TOKENS("// a b c") <= 1 */
 #ifndef TPP_HAVE_TOK_CXX_COMMENT
-#define TPP_HAVE_TOK_CXX_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-cxx-comment" */
+#define TPP_HAVE_TOK_CXX_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_ENABLE(TPP_COMMON_HAVE_TPP_TOK_COMMENT) : TPP_COMMON_HAVE_TPP_TOK_COMMENT)) /* "-ftok-cxx-comment" */
 #endif /* !TPP_HAVE_TOK_CXX_COMMENT */
 
 // Enable support for recognizing c-like comments: `/* like this one! */`
 // @detect: #if __TPP_COUNT_TOKENS("/* a b c */") <= 1
 #ifndef TPP_HAVE_TOK_C_COMMENT
-#define TPP_HAVE_TOK_C_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : TPP_COMMON_HAVE_TPP_TOK_COMMENT) /* "-ftok-c-comment" */
+#define TPP_HAVE_TOK_C_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_ENABLE(TPP_COMMON_HAVE_TPP_TOK_COMMENT) : TPP_COMMON_HAVE_TPP_TOK_COMMENT)) /* "-ftok-c-comment" */
 #endif /* !TPP_HAVE_TOK_C_COMMENT */
 
 /* Enable support for recognizing pascal-like comments: `(* like this one! *)`
@@ -1777,14 +1779,17 @@
 #endif /* !TPP_HAVE_TOK_SHELL_COMMENT */
 
 /* Enable support for recognizing ASM-like comments: `/ like this one!`
- *
- * TODO: This type of comment should only be recognized if it's preceded by nothing but whitespace:
- *       >> / this is a comment
- *       >> movl $42, %eax  / This isn't a comment
  * @detect: #if __TPP_COUNT_TOKENS("/ a b c") <= 1 */
-#ifndef TPP_HAVE_TOK_ASM_COMMENT
-#define TPP_HAVE_TOK_ASM_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-asm-comment" */
-#endif /* !TPP_HAVE_TOK_ASM_COMMENT */
+#ifndef TPP_HAVE_TOK_SLASH_COMMENT
+#define TPP_HAVE_TOK_SLASH_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-slash-comment" */
+#endif /* !TPP_HAVE_TOK_SLASH_COMMENT */
+
+//TODO:/* Same as `TPP_HAVE_TOK_SHELL_COMMENT`, but only recognized when the `#`
+//TODO: * appears as the first character of the relevant line, or is preceded by
+//TODO: * nothing but `TPP_TOK_SPACE` or inline comments like `TPP_TOK_C_COMMENT` */
+//TODO:#ifndef TPP_HAVE_TOK_SOL_SHELL_COMMENT
+//TODO:#define TPP_HAVE_TOK_SOL_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-shell-comment" */
+//TODO:#endif /* !TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 
 /* TODO: Support for "@" comments */
 /* TODO: #, / and @ comments should each have 2 versions sub-config to specify if a
@@ -2106,7 +2111,7 @@
 #undef TPP_HAVE_TOK_COMMENTLIKE_LINE
 #if (TPP_HAVE_TOK_CXX_COMMENT ||   \
      TPP_HAVE_TOK_SHELL_COMMENT || \
-     TPP_HAVE_TOK_ASM_COMMENT || \
+     TPP_HAVE_TOK_SLASH_COMMENT || \
      TPP_HAVE_TOK_SQL_COMMENT)
 #define TPP_HAVE_TOK_COMMENTLIKE_LINE 1
 #else /* ... */

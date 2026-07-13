@@ -2314,7 +2314,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TOK_PASCAL_COMMENT             0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TOK_HTML_COMMENT               0 /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TOK_SHELL_COMMENT              TPP_CONF_FEAT0 /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_ASM_COMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SHELL_COMMENT)") */
-#define TPP_HAVE_TOK_ASM_COMMENT                0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TOK_SLASH_COMMENT                0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TOK_SQL_COMMENT                0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TOK_DOLLAR                     TPP_CONF_FEAT0 /* "$" Configurable, default=false (TPP2 used to configure this via "TPPLEXER_TOKEN_DOLLAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOLLAR)") */
 #define TPP_HAVE_TOK_C_INT                      1              /* ... */
@@ -2333,9 +2333,9 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL     0              /* *ditto* */
 #define TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL     0              /* *ditto* */
 #define TPP_HAVE_TOK_BLOCK_CHAR_LITERAL         0              /* *ditto* */
-#define TPP_HAVE_STRING_ALLOW_MULTILINE             TPP_CONF_FEAT1 /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_STRING_ALLOW_MULTILINE)") */
-#define TPP_HAVE_STRING_WARN_MULTILINE              0              /* TPP2 offered no such warning */
-#define TPP_HAVE_STRING_AUTO_CONCAT                 1              /* TPP2 had this always-enabled */
+#define TPP_HAVE_STRING_ALLOW_MULTILINE         TPP_CONF_FEAT1 /* Configurable, default=true (TPP2 used to configure this via "TPPLEXER_FLAG_TERMINATE_STRING_LF"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_STRING_ALLOW_MULTILINE)") */
+#define TPP_HAVE_STRING_WARN_MULTILINE          0              /* TPP2 offered no such warning */
+#define TPP_HAVE_STRING_AUTO_CONCAT             1              /* TPP2 had this always-enabled */
 #define TPP_HAVE_TOK_LANGLE_LANGLE              1              /* "<<" */
 #define TPP_HAVE_TOK_RANGLE_RANGLE              1              /* ">>" */
 #define TPP_HAVE_TOK_EQUAL_EQUAL                1              /* "==" */
