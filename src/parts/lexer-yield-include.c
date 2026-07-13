@@ -247,7 +247,6 @@ tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
 				case '!': ch = '|'; break;
 				case '>': ch = '}'; break;
 				case '-': ch = '~'; break;
-				case '?': ch = '?'; break;
 				case '/':
 #if TPP_HAVE_BSE
 					if (tpp_lexer_has(self, BSE)) {

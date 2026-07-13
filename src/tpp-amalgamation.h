@@ -6355,8 +6355,7 @@ TPP_DECL_END
  * | `??<`    | `{`         |
  * | `??!`    | `\|`        |
  * | `??>`    | `}`         |
- * | `??-`    | `~`         |
- * | `???`    | `?`         | */
+ * | `??-`    | `~`         | */
 #ifndef TPP_HAVE_TRIGRAPHS
 #define TPP_HAVE_TRIGRAPHS (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-ftrigraphs" */
 #endif /* !TPP_HAVE_TRIGRAPHS */

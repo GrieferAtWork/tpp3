@@ -813,7 +813,6 @@ not_a_trigraph:
 				case '!': ch = '|'; break;
 				case '>': ch = '}'; break;
 				case '-': ch = '~'; break;
-				case '?': ch = '?'; break;
 				case '/':
 					ch = '\\';
 #if TPP_HAVE_BSE
@@ -3193,7 +3192,6 @@ return_TPP_TOK_SOL_SHELL_COMMENT:
 					case '!': ch = '|'; break;
 					case '>': ch = '}'; break;
 					case '-': ch = '~'; break;
-					case '?': break; /* Continue with '?'-case */
 					default:
 						/* Not actually a trigraph */
 						pos -= 2;
@@ -3212,13 +3210,10 @@ return_TPP_TOK_SOL_SHELL_COMMENT:
 		}
 not_a_trigraph:
 #endif /* TPP_HAVE_TRIGRAPHS */
-/*[[[deemon (printDecoder from ".config")("?", extraRestoreCondition: "TPP_HAVE_TRIGRAPHS");]]]*/
+/*[[[deemon (printDecoder from ".config")("?");]]]*/
 #if TPP_HAVE_TOK_MC_STARTSWITH_QMARK
 		if (tpp_lexer_has(self, TOK_QMARK_EQUAL) ||
 		    tpp_lexer_has(self, TOK_QMARK_QMARK)) {
-#if TPP_HAVE_TRIGRAPHS
-			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TRIGRAPHS */
 			read_ch2();
 #if TPP_HAVE_TOK_QMARK_EQUAL
 			if (ch2 == '=') {
@@ -3239,15 +3234,9 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TOK_QMARK_QMARK */
 			{
 			}
-#if TPP_HAVE_TRIGRAPHS
-			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
-#endif /* TPP_HAVE_TRIGRAPHS */
 		}
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_QMARK */
 /*[[[end]]]*/
-#if TPP_HAVE_TRIGRAPHS
-		goto set_result_ch; /* To skip over "pos = tpp_file_rel2ptr(file, rel_start + 1);" in case of "???" */
-#endif /* TPP_HAVE_TRIGRAPHS */
 	}	break;
 /************************************************************************/
 

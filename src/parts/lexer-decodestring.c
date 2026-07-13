@@ -71,7 +71,6 @@ again:
 		case '!': ch = '|'; break;
 		case '>': ch = '}'; break;
 		case '-': ch = '~'; break;
-		case '?': ch = '?'; break;
 		case '/': ch = '\\'; break;
 		default: goto not_trigraph; /* Not actually a trigraph escape sequence */
 		}
