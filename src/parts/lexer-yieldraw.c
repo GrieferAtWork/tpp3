@@ -3062,21 +3062,21 @@ return_TPP_TOK_SOL_SLASH_COMMENT:
 	case '#': {
 #if TPP_HAVE_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT
 /*[[[deemon (printDecoder from ".config")("#",
-	extraRestoreCondition: "TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT");]]]*/
+	extraRestoreCondition: "TPP_HAVE_TRIGRAPHS || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT");]]]*/
 #if TPP_HAVE_TOK_POUND_POUND
 		if (tpp_lexer_has(self, TOK_POUND_POUND)) {
-#if TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT
+#if TPP_HAVE_TRIGRAPHS || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+#endif /* TPP_HAVE_TRIGRAPHS || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 			read_ch2();
 			if (ch2 == '#') {
 				warn_if_ch2_is_trigraph(); /* "??=" -> "#" */
 				result = TPP_TOK_POUND_POUND; /* "##" */
 				goto set_result;
 			}
-#if TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT
+#if TPP_HAVE_TRIGRAPHS || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT
 			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
-#endif /* TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+#endif /* TPP_HAVE_TRIGRAPHS || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 		}
 #endif /* TPP_HAVE_TOK_POUND_POUND */
 /*[[[end]]]*/
@@ -3100,7 +3100,21 @@ return_TPP_TOK_SOL_SHELL_COMMENT:
 		}
 #endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+#if TPP_HAVE_TRIGRAPHS
+		goto set_result_ch; /* To skip over "pos = tpp_file_rel2ptr(file, rel_start + 1);" in case of "??=" */
+#endif /* TPP_HAVE_TRIGRAPHS */
 	}	break;
+/************************************************************************/
+
+
+
+/************************************************************************/
+	case '[':
+	case ']':
+	case '{':
+	case '}':
+		/* To skip over "pos = tpp_file_rel2ptr(file, rel_start + 1);" in case of "??x" */
+		goto set_result_ch;
 /************************************************************************/
 
 
@@ -3152,7 +3166,6 @@ return_TPP_TOK_SOL_SHELL_COMMENT:
 
 /************************************************************************/
 	case '?': {
-#if TPP_HAVE_TOK_MC_STARTSWITH_QMARK || TPP_HAVE_TRIGRAPHS
 #if TPP_HAVE_TRIGRAPHS
 		if (tpp_lexer_has(self, TRIGRAPHS)) {
 			if (pos >= file->tf_end) {
@@ -3199,9 +3212,13 @@ return_TPP_TOK_SOL_SHELL_COMMENT:
 		}
 not_a_trigraph:
 #endif /* TPP_HAVE_TRIGRAPHS */
-/*[[[deemon (printDecoder from ".config")("?", printCondition: false);]]]*/
+/*[[[deemon (printDecoder from ".config")("?", extraRestoreCondition: "TPP_HAVE_TRIGRAPHS");]]]*/
+#if TPP_HAVE_TOK_MC_STARTSWITH_QMARK
 		if (tpp_lexer_has(self, TOK_QMARK_EQUAL) ||
 		    tpp_lexer_has(self, TOK_QMARK_QMARK)) {
+#if TPP_HAVE_TRIGRAPHS
+			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TRIGRAPHS */
 			read_ch2();
 #if TPP_HAVE_TOK_QMARK_EQUAL
 			if (ch2 == '=') {
@@ -3222,9 +3239,15 @@ not_a_trigraph:
 #endif /* TPP_HAVE_TOK_QMARK_QMARK */
 			{
 			}
+#if TPP_HAVE_TRIGRAPHS
+			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
+#endif /* TPP_HAVE_TRIGRAPHS */
 		}
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_QMARK */
 /*[[[end]]]*/
-#endif /* ... */
+#if TPP_HAVE_TRIGRAPHS
+		goto set_result_ch; /* To skip over "pos = tpp_file_rel2ptr(file, rel_start + 1);" in case of "???" */
+#endif /* TPP_HAVE_TRIGRAPHS */
 	}	break;
 /************************************************************************/
 
@@ -3303,8 +3326,137 @@ not_a_trigraph:
 
 
 /************************************************************************/
+	case '^': {
+/*[[[deemon (printDecoder from ".config")("^", extraRestoreCondition: "TPP_HAVE_TRIGRAPHS");]]]*/
+#if TPP_HAVE_TOK_MC_STARTSWITH_HAT
+		if (tpp_lexer_has(self, TOK_HAT_EQUAL) ||
+		    tpp_lexer_has(self, TOK_HAT_HAT)) {
+#if TPP_HAVE_TRIGRAPHS
+			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TRIGRAPHS */
+			read_ch2();
+#if TPP_HAVE_TOK_HAT_EQUAL
+			if (ch2 == '=') {
+				if (tpp_lexer_has(self, TOK_HAT_EQUAL)) {
+					result = TPP_TOK_HAT_EQUAL; /* "^=" */
+					goto set_result;
+				}
+			} else
+#endif /* TPP_HAVE_TOK_HAT_EQUAL */
+#if TPP_HAVE_TOK_HAT_HAT
+			if (ch2 == '^') {
+				if (tpp_lexer_has(self, TOK_HAT_HAT)) {
+					warn_if_ch2_is_trigraph(); /* "??'" -> "^" */
+					result = TPP_TOK_HAT_HAT; /* "^^" */
+					goto set_result;
+				}
+			} else
+#endif /* TPP_HAVE_TOK_HAT_HAT */
+			{
+			}
+#if TPP_HAVE_TRIGRAPHS
+			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
+#endif /* TPP_HAVE_TRIGRAPHS */
+		}
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_HAT */
+/*[[[end]]]*/
+#if TPP_HAVE_TRIGRAPHS
+		goto set_result_ch; /* To skip over "pos = tpp_file_rel2ptr(file, rel_start + 1);" in case of "??'" */
+#endif /* TPP_HAVE_TRIGRAPHS */
+	}	break;
+/************************************************************************/
+
+
+
+/************************************************************************/
+	case '|': {
+/*[[[deemon (printDecoder from ".config")("|", extraRestoreCondition: "TPP_HAVE_TRIGRAPHS");]]]*/
+#if TPP_HAVE_TOK_MC_STARTSWITH_PIPE
+		if (tpp_lexer_has(self, TOK_PIPE_EQUAL) ||
+		    tpp_lexer_has(self, TOK_PIPE_PIPE)) {
+#if TPP_HAVE_TRIGRAPHS
+			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TRIGRAPHS */
+			read_ch2();
+#if TPP_HAVE_TOK_PIPE_EQUAL
+			if (ch2 == '=') {
+				if (tpp_lexer_has(self, TOK_PIPE_EQUAL)) {
+					result = TPP_TOK_PIPE_EQUAL; /* "|=" */
+					goto set_result;
+				}
+			} else
+#endif /* TPP_HAVE_TOK_PIPE_EQUAL */
+#if TPP_HAVE_TOK_PIPE_PIPE
+			if (ch2 == '|') {
+				if (tpp_lexer_has(self, TOK_PIPE_PIPE)) {
+					warn_if_ch2_is_trigraph(); /* "??!" -> "|" */
+					result = TPP_TOK_PIPE_PIPE; /* "||" */
+					goto set_result;
+				}
+			} else
+#endif /* TPP_HAVE_TOK_PIPE_PIPE */
+			{
+			}
+#if TPP_HAVE_TRIGRAPHS
+			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
+#endif /* TPP_HAVE_TRIGRAPHS */
+		}
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_PIPE */
+/*[[[end]]]*/
+#if TPP_HAVE_TRIGRAPHS
+		goto set_result_ch; /* To skip over "pos = tpp_file_rel2ptr(file, rel_start + 1);" in case of "??!" */
+#endif /* TPP_HAVE_TRIGRAPHS */
+	}	break;
+/************************************************************************/
+
+
+
+/************************************************************************/
+	case '~': {
+/*[[[deemon (printDecoder from ".config")("~", extraRestoreCondition: "TPP_HAVE_TRIGRAPHS");]]]*/
+#if TPP_HAVE_TOK_MC_STARTSWITH_TILDE
+		if (tpp_lexer_has(self, TOK_TILDE_EQUAL) ||
+		    tpp_lexer_has(self, TOK_TILDE_TILDE)) {
+#if TPP_HAVE_TRIGRAPHS
+			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_TRIGRAPHS */
+			read_ch2();
+#if TPP_HAVE_TOK_TILDE_EQUAL
+			if (ch2 == '=') {
+				if (tpp_lexer_has(self, TOK_TILDE_EQUAL)) {
+					result = TPP_TOK_TILDE_EQUAL; /* "~=" */
+					goto set_result;
+				}
+			} else
+#endif /* TPP_HAVE_TOK_TILDE_EQUAL */
+#if TPP_HAVE_TOK_TILDE_TILDE
+			if (ch2 == '~') {
+				if (tpp_lexer_has(self, TOK_TILDE_TILDE)) {
+					warn_if_ch2_is_trigraph(); /* "??-" -> "~" */
+					result = TPP_TOK_TILDE_TILDE; /* "~~" */
+					goto set_result;
+				}
+			} else
+#endif /* TPP_HAVE_TOK_TILDE_TILDE */
+			{
+			}
+#if TPP_HAVE_TRIGRAPHS
+			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
+#endif /* TPP_HAVE_TRIGRAPHS */
+		}
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_TILDE */
+/*[[[end]]]*/
+#if TPP_HAVE_TRIGRAPHS
+		goto set_result_ch; /* To skip over "pos = tpp_file_rel2ptr(file, rel_start + 1);" in case of "??-" */
+#endif /* TPP_HAVE_TRIGRAPHS */
+	}	break;
+/************************************************************************/
+
+
+
+/************************************************************************/
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")("",
-	"<-/%#:?.@", // first-token-characters that require custom case-es above
+	"<-/%#:?.@^|~", // first-token-characters that require custom case-es above
 	useSwitch: true
 );]]]*/
 #if TPP_HAVE_TOK_MC_STARTSWITH_EXCLAIM
@@ -4040,87 +4192,6 @@ not_a_trigraph:
 		}
 	}	break;
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_RANGLE */
-#if TPP_HAVE_TOK_MC_STARTSWITH_HAT
-	case '^': {
-		if (tpp_lexer_has(self, TOK_HAT_EQUAL) ||
-		    tpp_lexer_has(self, TOK_HAT_HAT)) {
-			read_ch2();
-#if TPP_HAVE_TOK_HAT_EQUAL
-			if (ch2 == '=') {
-				if (tpp_lexer_has(self, TOK_HAT_EQUAL)) {
-					result = TPP_TOK_HAT_EQUAL; /* "^=" */
-					goto set_result;
-				}
-			} else
-#endif /* TPP_HAVE_TOK_HAT_EQUAL */
-#if TPP_HAVE_TOK_HAT_HAT
-			if (ch2 == '^') {
-				if (tpp_lexer_has(self, TOK_HAT_HAT)) {
-					warn_if_ch2_is_trigraph(); /* "??'" -> "^" */
-					result = TPP_TOK_HAT_HAT; /* "^^" */
-					goto set_result;
-				}
-			} else
-#endif /* TPP_HAVE_TOK_HAT_HAT */
-			{
-			}
-		}
-	}	break;
-#endif /* TPP_HAVE_TOK_MC_STARTSWITH_HAT */
-#if TPP_HAVE_TOK_MC_STARTSWITH_PIPE
-	case '|': {
-		if (tpp_lexer_has(self, TOK_PIPE_EQUAL) ||
-		    tpp_lexer_has(self, TOK_PIPE_PIPE)) {
-			read_ch2();
-#if TPP_HAVE_TOK_PIPE_EQUAL
-			if (ch2 == '=') {
-				if (tpp_lexer_has(self, TOK_PIPE_EQUAL)) {
-					result = TPP_TOK_PIPE_EQUAL; /* "|=" */
-					goto set_result;
-				}
-			} else
-#endif /* TPP_HAVE_TOK_PIPE_EQUAL */
-#if TPP_HAVE_TOK_PIPE_PIPE
-			if (ch2 == '|') {
-				if (tpp_lexer_has(self, TOK_PIPE_PIPE)) {
-					warn_if_ch2_is_trigraph(); /* "??!" -> "|" */
-					result = TPP_TOK_PIPE_PIPE; /* "||" */
-					goto set_result;
-				}
-			} else
-#endif /* TPP_HAVE_TOK_PIPE_PIPE */
-			{
-			}
-		}
-	}	break;
-#endif /* TPP_HAVE_TOK_MC_STARTSWITH_PIPE */
-#if TPP_HAVE_TOK_MC_STARTSWITH_TILDE
-	case '~': {
-		if (tpp_lexer_has(self, TOK_TILDE_EQUAL) ||
-		    tpp_lexer_has(self, TOK_TILDE_TILDE)) {
-			read_ch2();
-#if TPP_HAVE_TOK_TILDE_EQUAL
-			if (ch2 == '=') {
-				if (tpp_lexer_has(self, TOK_TILDE_EQUAL)) {
-					result = TPP_TOK_TILDE_EQUAL; /* "~=" */
-					goto set_result;
-				}
-			} else
-#endif /* TPP_HAVE_TOK_TILDE_EQUAL */
-#if TPP_HAVE_TOK_TILDE_TILDE
-			if (ch2 == '~') {
-				if (tpp_lexer_has(self, TOK_TILDE_TILDE)) {
-					warn_if_ch2_is_trigraph(); /* "??-" -> "~" */
-					result = TPP_TOK_TILDE_TILDE; /* "~~" */
-					goto set_result;
-				}
-			} else
-#endif /* TPP_HAVE_TOK_TILDE_TILDE */
-			{
-			}
-		}
-	}	break;
-#endif /* TPP_HAVE_TOK_MC_STARTSWITH_TILDE */
 /*[[[end]]]*/
 /************************************************************************/
 
@@ -4193,7 +4264,7 @@ continue_pascal_comment_with_ch2:
 			rel_after = tpp_file_ptr2rel(file, npos);
 			tpp_assert(rel_before <= rel_after);
 			if (rel_before >= rel_after)
-				break; /* No BSE -> regular backslash */
+				goto set_result_ch; /* No BSE -> regular backslash */
 
 			/* BSE was skipped -> read whatever comes after... */
 			*p_pos = npos;
@@ -4201,6 +4272,8 @@ continue_pascal_comment_with_ch2:
 			goto again;
 #endif /* TPP_HAVE_BSE */
 		}
+		/* To skip over "pos = tpp_file_rel2ptr(file, rel_start + 1);" in case of "??/" */
+		goto set_result_ch;
 	}	break;
 /************************************************************************/
 
@@ -5247,8 +5320,9 @@ handle_keyword_with_esc:
 	}
 
 	/* Fallback: single-character token */
+	pos = tpp_file_rel2ptr(file, rel_start + 1);
+set_result_ch:
 	result = TPP_TOK_OFCHAR(ch);
-	pos    = tpp_file_rel2ptr(file, rel_start + 1);
 set_result:
 	token->tt_id    = result;
 	token->tt_start = tpp_file_rel2ptr(file, rel_start);
