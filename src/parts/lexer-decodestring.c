@@ -76,7 +76,15 @@ again:
 		}
 		--iter;
 
-		/* No need to warn about trigraph -- was already done in `tpp_lexer_yieldraw()' */
+		/* Warn about trigraph, because `tpp_lexer_yieldraw()' hadn't done so already */
+#if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
+		{
+			tpp_file *const file = tpp_lexer_getfile(self);
+			tpp_errno error = tpp_lexer_warnf_at(self, file, iter, TPP_W_ENCOUNTERED_TRIGRAPH);
+			if (TPP_ISERR(error))
+				return TPP_SSIZE_OFERR(error);
+		}
+#endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 
 		/* Print trigraph character (but also handle case where "??/" was encoded) */
 		temp = tpp_formatprinter_print(data_printer, arg, start, (tpp_size)(iter - start));
