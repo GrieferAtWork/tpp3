@@ -632,7 +632,7 @@ tpp_file_hash_combine(tpp_hash result, tpp_char const *tpp_restrict text, tpp_si
 	tpp_size i;
 	for (i = 0; i < size; ++i) {
 		tpp_char ch = text[i];
-		result = result * 263 + ch;
+		result = tpp_hash_combine_char(result, ch);
 	}
 	return result;
 }
@@ -820,7 +820,7 @@ reuse_old_chunk:
 #endif /* TPP_HAVE_FILE_KEEPPOS */
 			tpp_lcinfo_init(self->tf_data.td_io.tff_start_lc, 0, 0);
 #if TPP_HAVE_FILE_GETHASH
-			self->tf_data.td_io.tff_hash = 1; /* Initial hash starts at "1" (s.a. `tpp_hashof()') */
+			self->tf_data.td_io.tff_hash = TPP_HASH_INITIAL;
 #endif /* TPP_HAVE_FILE_GETHASH */
 #if TPP_HAVE_UNICODE
 			is_first_chunk = true;
@@ -1467,8 +1467,8 @@ tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
 	tpp_hash result = tpp_file_gethash(self, pos);
 	tpp_file const *iter = self;
 	while ((iter = tpp_file_getprev(iter)) != NULL) {
-		result *= 263;
-		result += tpp_file_gethash(iter, tpp_file_getlastpos(iter));
+		tpp_hash iter_hash = tpp_file_gethash(iter, tpp_file_getlastpos(iter));
+		result = tpp_hash_combine_hash(result, iter_hash);
 	}
 	return result;
 }

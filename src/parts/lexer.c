@@ -624,7 +624,7 @@ TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
 tpp_lexer_getrand(tpp_lexer const *tpp_restrict self) {
 	tpp_hash hash1 = tpp_lexer_getrngseed(self);
 	tpp_hash hash2 = tpp_lexer_getinputhash(self);
-	tpp_hash result = hash1 * 263 + hash2;
+	tpp_hash result = tpp_hash_combine_hash(hash1, hash2);
 	return tpp_prng_next(result);
 }
 #endif /* TPP_HAVE_LEXER_RAND */

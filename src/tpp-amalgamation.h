@@ -16609,6 +16609,17 @@ tpp_keyword_addassert(tpp_keyword *self, tpp_keyword const *value);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
 tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 
+/* Initial hash value */
+#define TPP_HASH_INITIAL TPP_HASH_C(1)
+
+/* >> tpp_hash tpp_hash_combine_char(tpp_hash a, tpp_char b);
+ * Combine a given hash value "a" with a character "b". */
+#define tpp_hash_combine_char(a, b) ((a) * 263 + (tpp_char)(b))
+
+/* >> tpp_hash tpp_hash_combine_hash(tpp_hash a, tpp_hash b);
+ * Combine a given hash value "a" with another hash value "b". */
+#define tpp_hash_combine_hash(a, b) ((a) * 263 + (tpp_hash)(b))
+
 
 #if TPP_HAVE_BSE && TPP_HAVE_UNICODE
 #define TPP_HAVE_BSE_FILE_PARAM 1
@@ -18477,9 +18488,9 @@ typedef struct tpp_lexer {
 	tpp_hash TPP_INTERNAL(tl_rngseed); /* Next RandomNumberGenerationSEED */
 #define tpp_lexer_getrngseed(self)    (self)->TPP_INTERNAL(tl_rngseed)
 #define tpp_lexer_setrngseed(self, v) (void)((self)->TPP_INTERNAL(tl_rngseed) = (v))
-#define tpp_lexer_resetrngseed(self)  (void)((self)->TPP_INTERNAL(tl_rngseed) = 0)
+#define tpp_lexer_resetrngseed(self)  (void)((self)->TPP_INTERNAL(tl_rngseed) = TPP_HASH_INITIAL)
 #define _tpp_lexer_addrngseed(self, hash) \
-	tpp_lexer_setrngseed(self, (tpp_lexer_getrngseed(self) * 263) + (hash))
+	tpp_lexer_setrngseed(self, tpp_hash_combine_hash(tpp_lexer_getrngseed(self), hash))
 #define _tpp_lexer_addrngseed_from_file(self, file)                                             \
 	(tpp_file_getkind(file) == TPP_FILE_KIND_IO || tpp_file_getkind(file) == TPP_FILE_KIND_TEXT \
 	 ? _tpp_lexer_addrngseed(self, tpp_file_gethash(file, (file)->TPP_INTERNAL(tf_end)))        \

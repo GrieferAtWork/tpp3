@@ -74,11 +74,15 @@ global warningGroups: {string: (string, int)} = Dict();
 }
 
 
+#undef tpp_char
+#define tpp_char int
+#undef tpp_hash
+#define tpp_hash int
 
 function tpp_hashof(s) {
-	local result = 1;
+	local result = TPP_HASH_INITIAL;
 	for (local o: s.ordinals)
-		result = result * 263 + o;
+		result = tpp_hash_combine_char(result, o);
 	return result;
 }
 

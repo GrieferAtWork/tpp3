@@ -205,9 +205,9 @@ typedef struct tpp_lexer {
 	tpp_hash TPP_INTERNAL(tl_rngseed); /* Next RandomNumberGenerationSEED */
 #define tpp_lexer_getrngseed(self)    (self)->TPP_INTERNAL(tl_rngseed)
 #define tpp_lexer_setrngseed(self, v) (void)((self)->TPP_INTERNAL(tl_rngseed) = (v))
-#define tpp_lexer_resetrngseed(self)  (void)((self)->TPP_INTERNAL(tl_rngseed) = 0)
+#define tpp_lexer_resetrngseed(self)  (void)((self)->TPP_INTERNAL(tl_rngseed) = TPP_HASH_INITIAL)
 #define _tpp_lexer_addrngseed(self, hash) \
-	tpp_lexer_setrngseed(self, (tpp_lexer_getrngseed(self) * 263) + (hash))
+	tpp_lexer_setrngseed(self, tpp_hash_combine_hash(tpp_lexer_getrngseed(self), hash))
 #define _tpp_lexer_addrngseed_from_file(self, file)                                             \
 	(tpp_file_getkind(file) == TPP_FILE_KIND_IO || tpp_file_getkind(file) == TPP_FILE_KIND_TEXT \
 	 ? _tpp_lexer_addrngseed(self, tpp_file_gethash(file, (file)->TPP_INTERNAL(tf_end)))        \

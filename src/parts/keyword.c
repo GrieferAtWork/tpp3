@@ -541,11 +541,11 @@ tpp_keyword_addassert(tpp_keyword *self, tpp_keyword const *value) {
 /* Calculate the hash of a given keyword string */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
 tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len) {
-	tpp_hash result = 1;
+	tpp_hash result = TPP_HASH_INITIAL;
 	tpp_size i;
 	for (i = 0; i < len; ++i) {
 		tpp_char ch = kwd[i];
-		result = result * 263 + ch;
+		result = tpp_hash_combine_char(result, ch);
 	}
 	return result;
 }
@@ -830,7 +830,7 @@ nope:
 /* Same as `tpp_hashof()', but skip over \-escaped linefeeds when calculating the hash */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
 tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PARAM) {
-	tpp_hash result = 1;
+	tpp_hash result = TPP_HASH_INITIAL;
 	tpp_char const *end = kwd + len;
 	while (kwd < end) {
 		tpp_char ch = *kwd++;
@@ -841,12 +841,13 @@ tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PAR
 		    (bsi_len = tpp_decode_bsi(bsi, (tpp_char const **)&kwd, end)) != 0) {
 			tpp_size i = 0;
 			do {
-				result = result * 263 + bsi[i];
+				tpp_char bsi_ch = bsi[i];
+				result = tpp_hash_combine_char(result, bsi_ch);
 			} while (++i < bsi_len);
 		} else
 #endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 		{
-			result = result * 263 + ch;
+			result = tpp_hash_combine_char(result, ch);
 		}
 		kwd = tpp_skipbse_fwd(kwd, end, file);
 	}

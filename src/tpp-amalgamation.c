@@ -7119,7 +7119,7 @@ tpp_file_hash_combine(tpp_hash result, tpp_char const *tpp_restrict text, tpp_si
 	tpp_size i;
 	for (i = 0; i < size; ++i) {
 		tpp_char ch = text[i];
-		result = result * 263 + ch;
+		result = tpp_hash_combine_char(result, ch);
 	}
 	return result;
 }
@@ -7307,7 +7307,7 @@ reuse_old_chunk:
 #endif /* TPP_HAVE_FILE_KEEPPOS */
 			tpp_lcinfo_init(self->tf_data.td_io.tff_start_lc, 0, 0);
 #if TPP_HAVE_FILE_GETHASH
-			self->tf_data.td_io.tff_hash = 1; /* Initial hash starts at "1" (s.a. `tpp_hashof()') */
+			self->tf_data.td_io.tff_hash = TPP_HASH_INITIAL;
 #endif /* TPP_HAVE_FILE_GETHASH */
 #if TPP_HAVE_UNICODE
 			is_first_chunk = true;
@@ -7954,8 +7954,8 @@ tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
 	tpp_hash result = tpp_file_gethash(self, pos);
 	tpp_file const *iter = self;
 	while ((iter = tpp_file_getprev(iter)) != NULL) {
-		result *= 263;
-		result += tpp_file_gethash(iter, tpp_file_getlastpos(iter));
+		tpp_hash iter_hash = tpp_file_gethash(iter, tpp_file_getlastpos(iter));
+		result = tpp_hash_combine_hash(result, iter_hash);
 	}
 	return result;
 }
@@ -8631,11 +8631,11 @@ tpp_keyword_addassert(tpp_keyword *self, tpp_keyword const *value) {
 /* Calculate the hash of a given keyword string */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
 tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len) {
-	tpp_hash result = 1;
+	tpp_hash result = TPP_HASH_INITIAL;
 	tpp_size i;
 	for (i = 0; i < len; ++i) {
 		tpp_char ch = kwd[i];
-		result = result * 263 + ch;
+		result = tpp_hash_combine_char(result, ch);
 	}
 	return result;
 }
@@ -8920,7 +8920,7 @@ nope:
 /* Same as `tpp_hashof()', but skip over \-escaped linefeeds when calculating the hash */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
 tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PARAM) {
-	tpp_hash result = 1;
+	tpp_hash result = TPP_HASH_INITIAL;
 	tpp_char const *end = kwd + len;
 	while (kwd < end) {
 		tpp_char ch = *kwd++;
@@ -8931,12 +8931,13 @@ tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PAR
 		    (bsi_len = tpp_decode_bsi(bsi, (tpp_char const **)&kwd, end)) != 0) {
 			tpp_size i = 0;
 			do {
-				result = result * 263 + bsi[i];
+				tpp_char bsi_ch = bsi[i];
+				result = tpp_hash_combine_char(result, bsi_ch);
 			} while (++i < bsi_len);
 		} else
 #endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 		{
-			result = result * 263 + ch;
+			result = tpp_hash_combine_char(result, ch);
 		}
 		kwd = tpp_skipbse_fwd(kwd, end, file);
 	}
@@ -10879,16 +10880,16 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
  * calculate keyword hashes within the preprocessor! */
 #pragma extension(push,"-fmacro-recursion")
 #if TPP_SIZEOF_tpp_hash == 4
-#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&TPP_HASH_C(0xffffffff)),__TPP_EVAL(str[1:]))
+#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL(tpp_hash_combine_char(result,str[0])&TPP_HASH_C(0xffffffff)),__TPP_EVAL(str[1:]))
 #elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL((result*263+str[0])&TPP_HASH_C(0xffffffffffffffff)),__TPP_EVAL(str[1:]))
+#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL(tpp_hash_combine_char(result,str[0])&TPP_HASH_C(0xffffffffffffffff)),__TPP_EVAL(str[1:]))
 #endif /* ... */
 #define TPP_PRIVATE_HASHOF2(result,str) TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF_,__TPP_EVAL(!!str))(result,str)
 #pragma extension(pop)
 #if TPP_SIZEOF_tpp_hash == 4
-#define TPP_HASHOF(str) TPP_HASH_C(TPP_PRIVATE_HASHOF2(1,str))
+#define TPP_HASHOF(str) TPP_HASH_C(TPP_PRIVATE_HASHOF2(TPP_HASH_INITIAL,str))
 #elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_HASHOF(str) TPP_HASH_C(TPP_PRIVATE_HASHOF2(1,str))
+#define TPP_HASHOF(str) TPP_HASH_C(TPP_PRIVATE_HASHOF2(TPP_HASH_INITIAL,str))
 #endif /* ... */
 #endif /* __TPP_VERSION__ && (TPP_SIZEOF_tpp_hash == 4 || TPP_SIZEOF_tpp_hash == 8) */
 
@@ -14644,7 +14645,7 @@ TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
 tpp_lexer_getrand(tpp_lexer const *tpp_restrict self) {
 	tpp_hash hash1 = tpp_lexer_getrngseed(self);
 	tpp_hash hash2 = tpp_lexer_getinputhash(self);
-	tpp_hash result = hash1 * 263 + hash2;
+	tpp_hash result = tpp_hash_combine_hash(hash1, hash2);
 	return tpp_prng_next(result);
 }
 #endif /* TPP_HAVE_LEXER_RAND */
