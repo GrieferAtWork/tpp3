@@ -3110,7 +3110,6 @@ return_TPP_TOK_SOL_SHELL_COMMENT:
 /************************************************************************/
 	case '[':
 	case ']':
-	case '{':
 	case '}':
 		/* To skip over "pos = tpp_file_rel2ptr(file, rel_start + 1);" in case of "??x" */
 		goto set_result_ch;
@@ -4216,6 +4215,36 @@ continue_pascal_comment_with_ch2:
 		result = TPP_TOK_PASCAL_COMMENT;
 		goto set_result;
 #endif /* TPP_HAVE_TOK_PASCAL_COMMENT */
+	}	break;
+/************************************************************************/
+
+
+
+/************************************************************************/
+	case '{': {
+#if TPP_HAVE_TOK_PASCAL_BRACE_COMMENT
+		if (tpp_lexer_has(self, TOK_PASCAL_BRACE_COMMENT)) {
+			for (;;) {
+				read_ch2();
+				if (ch2 == 0 && pos >= file->tf_end) {
+#if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
+					error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
+					                           TPP_W_COMMENT_TERMINATED_BY_EOF);
+					if (TPP_ISERR(error))
+						goto return_error;
+#endif /* TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
+					break;
+				}
+				if (ch2 == '}')
+					break;
+			}
+			result = TPP_TOK_PASCAL_BRACE_COMMENT; /* "{like this one!}" */
+			goto set_result;
+		}
+#endif /* TPP_HAVE_TOK_PASCAL_BRACE_COMMENT */
+
+		/* To skip over "pos = tpp_file_rel2ptr(file, rel_start + 1);" in case of "??<" */
+		goto set_result_ch;
 	}	break;
 /************************************************************************/
 

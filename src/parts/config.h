@@ -1748,6 +1748,12 @@
 #define TPP_HAVE_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pascal-comment" */
 #endif /* !TPP_HAVE_TOK_PASCAL_COMMENT */
 
+/* Enable support for recognizing pascal brace-like comments: `{ like this one! }`
+ * @detect: #if __TPP_COUNT_TOKENS("{ a b c }") <= 1 */
+#ifndef TPP_HAVE_TOK_PASCAL_BRACE_COMMENT
+#define TPP_HAVE_TOK_PASCAL_BRACE_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pascal-brace-comment" */
+#endif /* !TPP_HAVE_TOK_PASCAL_BRACE_COMMENT */
+
 /* Enable support for recognizing html-like comments: `<!-- like this one -->`
  * @detect: #if __TPP_COUNT_TOKENS("<!-- a b c -->") <= 1 */
 #ifndef TPP_HAVE_TOK_HTML_COMMENT
@@ -1797,7 +1803,7 @@
  * be unloaded, said preceding whitespace will be considered part of the
  * `TPP_TOK_SOL_SHELL_COMMENT` token)
  *
- * @detect: #if __TPP_COUNT_TOKENS("  # a b c") <= 1 */
+ * @detect: #if __TPP_COUNT_TOKENS("  # a b c") == __TPP_COUNT_TOKENS("# a b c") */
 #ifndef TPP_HAVE_TOK_SOL_SHELL_COMMENT
 #define TPP_HAVE_TOK_SOL_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-shell-comment" */
 #endif /* !TPP_HAVE_TOK_SOL_SHELL_COMMENT */
@@ -1807,7 +1813,7 @@
  * nothing but whitespace (any preceding whitespace will be part of the
  * resulting `TPP_TOK_SOL_SLASH_COMMENT` token; see `TPP_HAVE_TOK_SOL_SHELL_COMMENT`)
  *
- * @detect: #if __TPP_COUNT_TOKENS("  / a b c") <= 1 */
+ * @detect: #if __TPP_COUNT_TOKENS("  / a b c") == __TPP_COUNT_TOKENS("/ a b c") */
 #ifndef TPP_HAVE_TOK_SOL_SLASH_COMMENT
 #define TPP_HAVE_TOK_SOL_SLASH_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-slash-comment" */
 #endif /* !TPP_HAVE_TOK_SOL_SLASH_COMMENT */
@@ -1817,7 +1823,7 @@
  * nothing but whitespace (any preceding whitespace will be part of the
  * resulting `TPP_TOK_SOL_AT_COMMENT` token; see `TPP_HAVE_TOK_SOL_SHELL_COMMENT`)
  *
- * @detect: #if __TPP_COUNT_TOKENS("  @ a b c") <= 1 */
+ * @detect: #if __TPP_COUNT_TOKENS("  @ a b c") == __TPP_COUNT_TOKENS("@ a b c") */
 #ifndef TPP_HAVE_TOK_SOL_AT_COMMENT
 #define TPP_HAVE_TOK_SOL_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-at-comment" */
 #endif /* !TPP_HAVE_TOK_SOL_AT_COMMENT */

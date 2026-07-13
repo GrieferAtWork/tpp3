@@ -2312,10 +2312,16 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TOK_CXX_COMMENT                TPP_CONF_FEAT1 /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_CPP_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_CXX_COMMENT)") */
 #define TPP_HAVE_TOK_C_COMMENT                  TPP_CONF_FEAT1 /* Configurable, default=true  (TPP2 used to configure this via "TPPLEXER_TOKEN_C_COMMENT"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_C_COMMENT)") */
 #define TPP_HAVE_TOK_PASCAL_COMMENT             0              /* TPP2 only recognized C/C++-like comments */
-#define TPP_HAVE_TOK_HTML_COMMENT               0 /* TPP2 only recognized C/C++-like comments */
-#define TPP_HAVE_TOK_SHELL_COMMENT              TPP_CONF_FEAT0 /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_ASM_COMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SHELL_COMMENT)") */
-#define TPP_HAVE_TOK_SLASH_COMMENT                0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TOK_PASCAL_BRACE_COMMENT       0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TOK_HTML_COMMENT               0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TOK_SQL_COMMENT                0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TOK_AT_AT_COMMENT              0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TOK_SHELL_COMMENT              TPP_CONF_FEAT0 /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_ASM_COMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SHELL_COMMENT)") */
+#define TPP_HAVE_TOK_SLASH_COMMENT              0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TOK_AT_COMMENT                 0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TOK_SOL_SHELL_COMMENT          0              /* Not needed -- treated like `TPP_HAVE_TOK_SHELL_COMMENT' */
+#define TPP_HAVE_TOK_SOL_SLASH_COMMENT          0              /* TPP2 only recognized C/C++-like comments */
+#define TPP_HAVE_TOK_SOL_AT_COMMENT             0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TOK_DOLLAR                     TPP_CONF_FEAT0 /* "$" Configurable, default=false (TPP2 used to configure this via "TPPLEXER_TOKEN_DOLLAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOLLAR)") */
 #define TPP_HAVE_TOK_C_INT                      1              /* ... */
 #define TPP_HAVE_TOK_C_FLOAT                    1              /* ... */
