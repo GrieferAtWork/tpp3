@@ -2934,12 +2934,64 @@ again:
 
 /************************************************************************/
 #if TPP_HAVE_TOK_COMMENTLIKE
-	_TPP_CASE_TPP_TOK_SHELL_COMMENT
 	_TPP_CASE_TPP_TOK_SOL_SHELL_COMMENT
+	_TPP_CASE_TPP_TOK_SHELL_COMMENT
 #if (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && TPP_HAVE_CPP_DIRECTIVES
 		if (tpp_file_getallowdirectives(file) &&
 			tpp_lexer_has(self, CPP_DIRECTIVES)) {
 			tpp_token *const token = tpp_lexer_gettoken(self);
+
+			/* Must first emit leading space (if there is any) as a regular token:
+			 * >>    #define foo 42
+			 *   ^^^^
+			 *   When "tpp_lexer_yieldraw()" emitted a TPP_TOK_SOL_SHELL_COMMENT,
+			 *   then these 4 space characters will be part of that comment token
+			 *   (this is a hard requirement of how SOL comments work). But if the
+			 *   user also wants us to emit space tokens, and we were to process
+			 *   the directive without this extra step, those 4 spaces would never
+			 *   be emitted!
+			 *
+			 * As a downside to this, if we *don't* end up being able to process
+			 * the directive, then we end up emitting the space token incorrectly...
+			 *
+			 * You know: I don't think this really matters -- let's just emit the
+			 *           leading whitespace, if only so once we *do* get around
+			 *           to parsing the directive, LC information will point at
+			 *           the `#` (or `??=`) character(s), rather than the leading
+			 *           whitespace of the line.
+			 */
+#if (TPP_HAVE_TOK_SOL_SHELL_COMMENT && (TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS || TPP_HAVE_TOK_SPACE))
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE)
+			if (0
+#if TPP_CONF_IS_RT(TPP_HAVE_TOK_SPACE)
+			    || tpp_lexer_has(self, TOK_SPACE)
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_TOK_SPACE) */
+#if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+			    || (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
+#endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+			    )
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE) */
+			{
+				if (result == TPP_TOK_SOL_SHELL_COMMENT) {
+					tpp_char const *iter = tpp_lexer_gettokenstart(self);
+					tpp_char const *end = tpp_lexer_gettokenend(self);
+					for (; iter < end; ++iter) {
+						tpp_char ch = *iter;
+						if (ch == '#')
+							break;
+#if TPP_HAVE_TRIGRAPHS
+						if (ch == '?' && (iter + 2) < end && iter[1] == '?' && iter[2] == '=')
+							break;
+#endif /* TPP_HAVE_TRIGRAPHS */
+					}
+					if (iter > tpp_lexer_gettokenstart(self)) {
+						token->tt_end = iter;
+						token->tt_id = result = TPP_TOK_SPACE;
+						break;
+					}
+				}
+			}
+#endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT && (TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS || TPP_HAVE_TOK_SPACE) */
 
 			/* Must re-parse comment as a preprocessor directive instead! */
 			token->tt_id = TPP_TOK_OFCHAR('#');
