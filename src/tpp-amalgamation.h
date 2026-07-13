@@ -1744,6 +1744,38 @@ TPP_EXTENSION(TPP_EXT_TOK_SHELL_COMMENT, TPP_EXTNAME_TOK_SHELL_COMMENT, TPP_CONF
 TPP_EXTENSION(TPP_EXT_TOK_SLASH_COMMENT, TPP_EXTNAME_TOK_SLASH_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TOK_SLASH_COMMENT))
 #define _tpp_lexer_has_TOK_SLASH_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TOK_SLASH_COMMENT)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_TOK_SLASH_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TOK_AT_COMMENT)
+#ifndef TPP_EXTNAME_TOK_AT_COMMENT
+#define TPP_EXTNAME_TOK_AT_COMMENT "tok-at-comment"
+#endif /* !TPP_EXTNAME_TOK_AT_COMMENT */
+#define TPP_EXT_TOK_AT_COMMENT TPP_EXT_TOK_AT_COMMENT
+TPP_EXTENSION(TPP_EXT_TOK_AT_COMMENT, TPP_EXTNAME_TOK_AT_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TOK_AT_COMMENT))
+#define _tpp_lexer_has_TOK_AT_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TOK_AT_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TOK_AT_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TOK_SOL_SHELL_COMMENT)
+#ifndef TPP_EXTNAME_TOK_SOL_SHELL_COMMENT
+#define TPP_EXTNAME_TOK_SOL_SHELL_COMMENT "tok-sol-shell-comment"
+#endif /* !TPP_EXTNAME_TOK_SOL_SHELL_COMMENT */
+#define TPP_EXT_TOK_SOL_SHELL_COMMENT TPP_EXT_TOK_SOL_SHELL_COMMENT
+TPP_EXTENSION(TPP_EXT_TOK_SOL_SHELL_COMMENT, TPP_EXTNAME_TOK_SOL_SHELL_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TOK_SOL_SHELL_COMMENT))
+#define _tpp_lexer_has_TOK_SOL_SHELL_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TOK_SOL_SHELL_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TOK_SOL_SHELL_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TOK_SOL_SLASH_COMMENT)
+#ifndef TPP_EXTNAME_TOK_SOL_SLASH_COMMENT
+#define TPP_EXTNAME_TOK_SOL_SLASH_COMMENT "tok-sol-slash-comment"
+#endif /* !TPP_EXTNAME_TOK_SOL_SLASH_COMMENT */
+#define TPP_EXT_TOK_SOL_SLASH_COMMENT TPP_EXT_TOK_SOL_SLASH_COMMENT
+TPP_EXTENSION(TPP_EXT_TOK_SOL_SLASH_COMMENT, TPP_EXTNAME_TOK_SOL_SLASH_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TOK_SOL_SLASH_COMMENT))
+#define _tpp_lexer_has_TOK_SOL_SLASH_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TOK_SOL_SLASH_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TOK_SOL_SLASH_COMMENT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TOK_SOL_AT_COMMENT)
+#ifndef TPP_EXTNAME_TOK_SOL_AT_COMMENT
+#define TPP_EXTNAME_TOK_SOL_AT_COMMENT "tok-sol-at-comment"
+#endif /* !TPP_EXTNAME_TOK_SOL_AT_COMMENT */
+#define TPP_EXT_TOK_SOL_AT_COMMENT TPP_EXT_TOK_SOL_AT_COMMENT
+TPP_EXTENSION(TPP_EXT_TOK_SOL_AT_COMMENT, TPP_EXTNAME_TOK_SOL_AT_COMMENT, TPP_CONF_DEFAULT(TPP_HAVE_TOK_SOL_AT_COMMENT))
+#define _tpp_lexer_has_TOK_SOL_AT_COMMENT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TOK_SOL_AT_COMMENT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TOK_SOL_AT_COMMENT) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_TOK_DOLLAR)
 #ifndef TPP_EXTNAME_TOK_DOLLAR
 #define TPP_EXTNAME_TOK_DOLLAR "tok-dollar"
@@ -6405,28 +6437,57 @@ TPP_DECL_END
  * that unknown directives will simply be re-emit as shell comments,
  * and shell comments that don't appear at the start of lines are not
  * even processed as CPP directives.
- * @detect: #if __TPP_COUNT_TOKENS("# a b c") <= 1 */
+ * @detect: #if __TPP_COUNT_TOKENS("foo# a b c") <= 2 */
 #ifndef TPP_HAVE_TOK_SHELL_COMMENT
 #define TPP_HAVE_TOK_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-shell-comment" */
 #endif /* !TPP_HAVE_TOK_SHELL_COMMENT */
 
-/* Enable support for recognizing ASM-like comments: `/ like this one!`
- * @detect: #if __TPP_COUNT_TOKENS("/ a b c") <= 1 */
+/* Enable support for recognizing `/`-like comments anywhere: `/ like this one!`
+ * @detect: #if __TPP_COUNT_TOKENS("foo/ a b c") <= 2 */
 #ifndef TPP_HAVE_TOK_SLASH_COMMENT
 #define TPP_HAVE_TOK_SLASH_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-slash-comment" */
 #endif /* !TPP_HAVE_TOK_SLASH_COMMENT */
 
-//TODO:/* Same as `TPP_HAVE_TOK_SHELL_COMMENT`, but only recognized when the `#`
-//TODO: * appears as the first character of the relevant line, or is preceded by
-//TODO: * nothing but `TPP_TOK_SPACE` or inline comments like `TPP_TOK_C_COMMENT` */
-//TODO:#ifndef TPP_HAVE_TOK_SOL_SHELL_COMMENT
-//TODO:#define TPP_HAVE_TOK_SOL_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-shell-comment" */
-//TODO:#endif /* !TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+/* Enable support for recognizing `@`-like comments anywhere: `@ like this one!`
+ * @detect: #if __TPP_COUNT_TOKENS("foo@ a b c") <= 2 */
+#ifndef TPP_HAVE_TOK_AT_COMMENT
+#define TPP_HAVE_TOK_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-at-comment" */
+#endif /* !TPP_HAVE_TOK_AT_COMMENT */
 
-/* TODO: Support for "@" comments */
-/* TODO: #, / and @ comments should each have 2 versions sub-config to specify if a
- *       perspective match should only be treated as a comment if it's preceded by
- *       nothing but whitespace, or if it should always be treated as a comment. */
+/* Same as `TPP_HAVE_TOK_SHELL_COMMENT`, but only recognized when the `#`
+ * appears as the first character of the relevant line, or is preceded by
+ * nothing but whitespace.
+ *
+ * Due to limitations related to when/how the contents of a `tpp_file` can
+ * be unloaded, said preceding whitespace will be considered part of the
+ * `TPP_TOK_SOL_SHELL_COMMENT` token)
+ *
+ * @detect: #if __TPP_COUNT_TOKENS("  # a b c") <= 1 */
+#ifndef TPP_HAVE_TOK_SOL_SHELL_COMMENT
+#define TPP_HAVE_TOK_SOL_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-shell-comment" */
+#endif /* !TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+
+/* Same as `TPP_HAVE_TOK_SLASH_COMMENT`, but only recognized when the `/`
+ * appears as the first character of the relevant line, or is preceded by
+ * nothing but whitespace (any preceding whitespace will be part of the
+ * resulting `TPP_TOK_SOL_SLASH_COMMENT` token; see `TPP_HAVE_TOK_SOL_SHELL_COMMENT`)
+ *
+ * @detect: #if __TPP_COUNT_TOKENS("  / a b c") <= 1 */
+#ifndef TPP_HAVE_TOK_SOL_SLASH_COMMENT
+#define TPP_HAVE_TOK_SOL_SLASH_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-slash-comment" */
+#endif /* !TPP_HAVE_TOK_SOL_SLASH_COMMENT */
+
+/* Same as `TPP_HAVE_TOK_SLASH_COMMENT`, but only recognized when the `@`
+ * appears as the first character of the relevant line, or is preceded by
+ * nothing but whitespace (any preceding whitespace will be part of the
+ * resulting `TPP_TOK_SOL_AT_COMMENT` token; see `TPP_HAVE_TOK_SOL_SHELL_COMMENT`)
+ *
+ * @detect: #if __TPP_COUNT_TOKENS("  @ a b c") <= 1 */
+#ifndef TPP_HAVE_TOK_SOL_AT_COMMENT
+#define TPP_HAVE_TOK_SOL_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-at-comment" */
+#endif /* !TPP_HAVE_TOK_SOL_AT_COMMENT */
+
+
 
 /************************************************************************/
 /* Single-char tokens                                                   */
@@ -6740,11 +6801,21 @@ TPP_DECL_END
 #else /* ... */
 #define TPP_HAVE_TOK_COMMENTLIKE_NOLINE 0
 #endif /* !... */
+#undef TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
+#if (TPP_HAVE_TOK_SOL_SHELL_COMMENT || \
+     TPP_HAVE_TOK_SOL_SLASH_COMMENT || \
+     TPP_HAVE_TOK_SOL_AT_COMMENT)
+#define TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE 1
+#else /* ... */
+#define TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE 0
+#endif /* !... */
 #undef TPP_HAVE_TOK_COMMENTLIKE_LINE
 #if (TPP_HAVE_TOK_CXX_COMMENT ||   \
+     TPP_HAVE_TOK_SQL_COMMENT ||   \
      TPP_HAVE_TOK_SHELL_COMMENT || \
      TPP_HAVE_TOK_SLASH_COMMENT || \
-     TPP_HAVE_TOK_SQL_COMMENT)
+     TPP_HAVE_TOK_AT_COMMENT ||    \
+     TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE)
 #define TPP_HAVE_TOK_COMMENTLIKE_LINE 1
 #else /* ... */
 #define TPP_HAVE_TOK_COMMENTLIKE_LINE 0
@@ -9015,7 +9086,7 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE
-#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SHELL_COMMENT) && TPP_HAVE_CPP_DIRECTIVES)
+#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SHELL_COMMENT) && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SOL_SHELL_COMMENT) && TPP_HAVE_CPP_DIRECTIVES)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
@@ -10499,18 +10570,6 @@ typedef enum tpp_token_id {
 #else /* TPP_HAVE_TOK_CXX_COMMENT */
 #define _TPP_CASE_TPP_TOK_CXX_COMMENT /* nothing */
 #endif /* !TPP_HAVE_TOK_CXX_COMMENT */
-#if TPP_HAVE_TOK_SHELL_COMMENT
-	TPP_TOK_SHELL_COMMENT, // "<comment>" "# like this one!"
-#define _TPP_CASE_TPP_TOK_SHELL_COMMENT case TPP_TOK_SHELL_COMMENT:
-#else /* TPP_HAVE_TOK_SHELL_COMMENT */
-#define _TPP_CASE_TPP_TOK_SHELL_COMMENT /* nothing */
-#endif /* !TPP_HAVE_TOK_SHELL_COMMENT */
-#if TPP_HAVE_TOK_SLASH_COMMENT
-	TPP_TOK_SLASH_COMMENT, // "<comment>" "/ like this one!"
-#define _TPP_CASE_TPP_TOK_SLASH_COMMENT case TPP_TOK_SLASH_COMMENT:
-#else /* TPP_HAVE_TOK_SLASH_COMMENT */
-#define _TPP_CASE_TPP_TOK_SLASH_COMMENT /* nothing */
-#endif /* !TPP_HAVE_TOK_SLASH_COMMENT */
 #if TPP_HAVE_TOK_SQL_COMMENT
 	TPP_TOK_SQL_COMMENT, // "<comment>" "-- like this one!"
 #define _TPP_CASE_TPP_TOK_SQL_COMMENT case TPP_TOK_SQL_COMMENT:
@@ -10523,30 +10582,83 @@ typedef enum tpp_token_id {
 #else /* TPP_HAVE_TOK_AT_AT_COMMENT */
 #define _TPP_CASE_TPP_TOK_AT_AT_COMMENT /* nothing */
 #endif /* !TPP_HAVE_TOK_AT_AT_COMMENT */
+#if TPP_HAVE_TOK_SHELL_COMMENT
+	TPP_TOK_SHELL_COMMENT, // "<comment>" "# like this one!"
+#define _TPP_CASE_TPP_TOK_SHELL_COMMENT case TPP_TOK_SHELL_COMMENT:
+#else /* TPP_HAVE_TOK_SHELL_COMMENT */
+#define _TPP_CASE_TPP_TOK_SHELL_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TOK_SHELL_COMMENT */
+#if TPP_HAVE_TOK_SLASH_COMMENT
+	TPP_TOK_SLASH_COMMENT, // "<comment>" "/ like this one!"
+#define _TPP_CASE_TPP_TOK_SLASH_COMMENT case TPP_TOK_SLASH_COMMENT:
+#else /* TPP_HAVE_TOK_SLASH_COMMENT */
+#define _TPP_CASE_TPP_TOK_SLASH_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TOK_SLASH_COMMENT */
+#if TPP_HAVE_TOK_AT_COMMENT
+	TPP_TOK_AT_COMMENT, // "<comment>" "@ like this one!"
+#define _TPP_CASE_TPP_TOK_AT_COMMENT case TPP_TOK_AT_COMMENT:
+#else /* TPP_HAVE_TOK_AT_COMMENT */
+#define _TPP_CASE_TPP_TOK_AT_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TOK_AT_COMMENT */
+#if TPP_HAVE_TOK_SOL_SHELL_COMMENT
+	TPP_TOK_SOL_SHELL_COMMENT, // "<comment>" "# like this one!"
+#define _TPP_CASE_TPP_TOK_SOL_SHELL_COMMENT case TPP_TOK_SOL_SHELL_COMMENT:
+#else /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+#define _TPP_CASE_TPP_TOK_SOL_SHELL_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+#if TPP_HAVE_TOK_SOL_SLASH_COMMENT
+	TPP_TOK_SOL_SLASH_COMMENT, // "<comment>" "/ like this one!"
+#define _TPP_CASE_TPP_TOK_SOL_SLASH_COMMENT case TPP_TOK_SOL_SLASH_COMMENT:
+#else /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
+#define _TPP_CASE_TPP_TOK_SOL_SLASH_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TOK_SOL_SLASH_COMMENT */
+#if TPP_HAVE_TOK_SOL_AT_COMMENT
+	TPP_TOK_SOL_AT_COMMENT, // "<comment>" "@ like this one!"
+#define _TPP_CASE_TPP_TOK_SOL_AT_COMMENT case TPP_TOK_SOL_AT_COMMENT:
+#else /* TPP_HAVE_TOK_SOL_AT_COMMENT */
+#define _TPP_CASE_TPP_TOK_SOL_AT_COMMENT /* nothing */
+#endif /* !TPP_HAVE_TOK_SOL_AT_COMMENT */
 	TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX),
 	TPP_TOK_COMMENTLIKE_MAX = TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX) - 1,
 #define TPP_CASE_TPP_TOK_COMMENT_NOLINE \
 	_TPP_CASE_TPP_TOK_C_COMMENT         \
 	_TPP_CASE_TPP_TOK_PASCAL_COMMENT    \
 	_TPP_CASE_TPP_TOK_HTML_COMMENT
-#define TPP_CASE_TPP_TOK_COMMENT_LINE \
-	_TPP_CASE_TPP_TOK_CXX_COMMENT     \
-	_TPP_CASE_TPP_TOK_SHELL_COMMENT   \
-	_TPP_CASE_TPP_TOK_SLASH_COMMENT   \
-	_TPP_CASE_TPP_TOK_SQL_COMMENT     \
-	_TPP_CASE_TPP_TOK_AT_AT_COMMENT
+#define TPP_CASE_TPP_TOK_COMMENT_LINE   \
+	_TPP_CASE_TPP_TOK_CXX_COMMENT       \
+	_TPP_CASE_TPP_TOK_SQL_COMMENT       \
+	_TPP_CASE_TPP_TOK_AT_AT_COMMENT     \
+	_TPP_CASE_TPP_TOK_SHELL_COMMENT     \
+	_TPP_CASE_TPP_TOK_SLASH_COMMENT     \
+	_TPP_CASE_TPP_TOK_AT_COMMENT        \
+	_TPP_CASE_TPP_TOK_SOL_SHELL_COMMENT \
+	_TPP_CASE_TPP_TOK_SOL_SLASH_COMMENT \
+	_TPP_CASE_TPP_TOK_SOL_AT_COMMENT
 #define TPP_TOK_ISCOMMENT(id)                     \
 	((int)(id) >= (int)TPP_TOK_COMMENTLIKE_MIN && \
 	 (int)(id) <= (int)TPP_TOK_COMMENTLIKE_MAX)
 #define TPP_CASE_TPP_TOK_COMMENT    \
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE \
 	TPP_CASE_TPP_TOK_COMMENT_LINE
+#define TPP_CASE_TPP_TOK_SHELL_COMMENT \
+	_TPP_CASE_TPP_TOK_SHELL_COMMENT    \
+	_TPP_CASE_TPP_TOK_SOL_SHELL_COMMENT
 #else /* TPP_HAVE_TOK_COMMENTLIKE */
 #define TPP_TOK_ISCOMMENT(id)           0
 #define TPP_CASE_TPP_TOK_COMMENT_NOLINE /* nothing */
 #define TPP_CASE_TPP_TOK_COMMENT_LINE   /* nothing */
 #define TPP_CASE_TPP_TOK_COMMENT        /* nothing */
+#define TPP_CASE_TPP_TOK_SHELL_COMMENT  /* nothing */
 #endif /* !TPP_HAVE_TOK_COMMENTLIKE */
+#if TPP_HAVE_TOK_SHELL_COMMENT && TPP_HAVE_TOK_SOL_SHELL_COMMENT
+#define TPP_TOK_ISSHELLCOMMENT(id) ((id) == TPP_TOK_SHELL_COMMENT || (id) == TPP_TOK_SOL_SHELL_COMMENT)
+#elif TPP_HAVE_TOK_SHELL_COMMENT
+#define TPP_TOK_ISSHELLCOMMENT(id) ((id) == TPP_TOK_SHELL_COMMENT)
+#elif TPP_HAVE_TOK_SOL_SHELL_COMMENT
+#define TPP_TOK_ISSHELLCOMMENT(id) ((id) == TPP_TOK_SOL_SHELL_COMMENT)
+#else /* ... */
+#define TPP_TOK_ISSHELLCOMMENT(id) 0
+#endif /* !... */
 #if TPP_HAVE_TOK_COMMENTLIKE_NOLINE
 #define TPP_TOK_ISCOMMENT_NOLINE(id)              \
 	((int)(id) >= (int)TPP_TOK_COMMENTLIKE_MIN && \
@@ -11958,6 +12070,10 @@ tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_AT_AT_COMMENT) ||                      \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SHELL_COMMENT) ||                      \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SLASH_COMMENT) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TOK_AT_COMMENT) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_SHELL_COMMENT) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_SLASH_COMMENT) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_AT_COMMENT) ||                     \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_DOLLAR) ||                             \
      TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE) ||         \
      TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK) ||         \
@@ -12442,6 +12558,18 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SLASH_COMMENT)
 	TPP_FEAT_TOK_SLASH_COMMENT,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SLASH_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_AT_COMMENT)
+	TPP_FEAT_TOK_AT_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_AT_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_SHELL_COMMENT)
+	TPP_FEAT_TOK_SOL_SHELL_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_SHELL_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_SLASH_COMMENT)
+	TPP_FEAT_TOK_SOL_SLASH_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_SLASH_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_AT_COMMENT)
+	TPP_FEAT_TOK_SOL_AT_COMMENT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_AT_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_DOLLAR)
 	TPP_FEAT_TOK_DOLLAR,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_DOLLAR) */
@@ -13318,6 +13446,22 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_TOK_SLASH_COMMENT): 1;
 #define _tpp_lexer_has_TOK_SLASH_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_SLASH_COMMENT)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SLASH_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_AT_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TOK_AT_COMMENT): 1;
+#define _tpp_lexer_has_TOK_AT_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_AT_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_AT_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_SHELL_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TOK_SOL_SHELL_COMMENT): 1;
+#define _tpp_lexer_has_TOK_SOL_SHELL_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_SOL_SHELL_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_SHELL_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_SLASH_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TOK_SOL_SLASH_COMMENT): 1;
+#define _tpp_lexer_has_TOK_SOL_SLASH_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_SOL_SLASH_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_SLASH_COMMENT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_AT_COMMENT)
+		unsigned int TPP_INTERNAL(tff_TOK_SOL_AT_COMMENT): 1;
+#define _tpp_lexer_has_TOK_SOL_AT_COMMENT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_SOL_AT_COMMENT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_SOL_AT_COMMENT) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_DOLLAR)
 		unsigned int TPP_INTERNAL(tff_TOK_DOLLAR): 1;
 #define _tpp_lexer_has_TOK_DOLLAR(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_DOLLAR)
@@ -14237,6 +14381,18 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_TOK_SLASH_COMMENT)
 #define _tpp_lexer_has_TOK_SLASH_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_SLASH_COMMENT)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_SLASH_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TOK_AT_COMMENT)
+#define _tpp_lexer_has_TOK_AT_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_AT_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_AT_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TOK_SOL_SHELL_COMMENT)
+#define _tpp_lexer_has_TOK_SOL_SHELL_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_SOL_SHELL_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_SOL_SHELL_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TOK_SOL_SLASH_COMMENT)
+#define _tpp_lexer_has_TOK_SOL_SLASH_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_SOL_SLASH_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_SOL_SLASH_COMMENT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TOK_SOL_AT_COMMENT)
+#define _tpp_lexer_has_TOK_SOL_AT_COMMENT(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_SOL_AT_COMMENT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_SOL_AT_COMMENT) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_TOK_DOLLAR)
 #define _tpp_lexer_has_TOK_DOLLAR(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_DOLLAR)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_DOLLAR) */

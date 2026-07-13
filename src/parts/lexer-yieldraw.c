@@ -658,11 +658,15 @@ return_error:
 }
 
 #undef NEED_tpp_lexer_seek_eol
-#if (TPP_HAVE_TOK_SQL_COMMENT ||   \
-     TPP_HAVE_TOK_AT_AT_COMMENT || \
-     TPP_HAVE_TOK_SLASH_COMMENT || \
-     TPP_HAVE_TOK_SHELL_COMMENT || \
-     TPP_HAVE_TOK_CXX_COMMENT)
+#if (TPP_HAVE_TOK_SQL_COMMENT ||       \
+     TPP_HAVE_TOK_AT_AT_COMMENT ||     \
+     TPP_HAVE_TOK_CXX_COMMENT ||       \
+     TPP_HAVE_TOK_SHELL_COMMENT ||     \
+     TPP_HAVE_TOK_SLASH_COMMENT ||     \
+     TPP_HAVE_TOK_AT_COMMENT ||        \
+     TPP_HAVE_TOK_SOL_SHELL_COMMENT || \
+     TPP_HAVE_TOK_SOL_SLASH_COMMENT || \
+     TPP_HAVE_TOK_SOL_AT_COMMENT)
 #define NEED_tpp_lexer_seek_eol 1
 #else /* ... */
 #define NEED_tpp_lexer_seek_eol 0
@@ -874,7 +878,8 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 #if (NEED_tpp_lexer_seek_eol || (TPP_HAVE_CPP_ERROR ||             \
                                  TPP_HAVE_CPP_WARNING ||           \
-                                 TPP_HAVE_TOK_SHELL_COMMENT || \
+                                 TPP_HAVE_TOK_SHELL_COMMENT ||     \
+                                 TPP_HAVE_TOK_SOL_SHELL_COMMENT || \
                                  TPP_HAVE_CPP_EMBED ||             \
                                  TPP_HAVE_CPP_DIGIT_LINE))
 #undef tpp_lexer_seek_eol__STYLE_PARAM
@@ -889,7 +894,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 /* Seek forward until *after* the next line-feed character (or true EOF)
  * Given `*p_pos' will be updated to point *after* the LF character (or *at* the EOF) */
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE
+#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
@@ -898,12 +903,12 @@ TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM)
-#else /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE */
+#else /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM)
-#endif /* !TPP_HAVE_CPP_ERROR && !TPP_HAVE_CPP_WARNING && !TPP_HAVE_TOK_SHELL_COMMENT && !TPP_HAVE_CPP_EMBED && !TPP_HAVE_CPP_DIGIT_LINE */
+#endif /* !TPP_HAVE_CPP_ERROR && !TPP_HAVE_CPP_WARNING && !TPP_HAVE_TOK_SHELL_COMMENT && !TPP_HAVE_TOK_SOL_SHELL_COMMENT && !TPP_HAVE_CPP_EMBED && !TPP_HAVE_CPP_DIGIT_LINE */
 {
 	tpp_errno error = TPP_EOK;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -996,15 +1001,15 @@ handle_backslash:
 		 * >> // foo \    .
 		 * >> // bar      << Do not warn here */
 		if (comment_style != TPP_TOK_EOF) {
-#if TPP_HAVE_CPP_DIRECTIVES && TPP_HAVE_TOK_SHELL_COMMENT
-			if (comment_style == TPP_TOK_SHELL_COMMENT) {
+#if TPP_HAVE_CPP_DIRECTIVES && (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT)
+			if (TPP_TOK_ISSHELLCOMMENT(comment_style)) {
 				/* Special case: don't warn about line-continuation in #-comments
 				 *               when CPP directives are enabled. Else, we'd be warning
 				 *               about every #define or similar that uses a trailing \ */
 				if (tpp_lexer_has(self, CPP_DIRECTIVES))
 					goto again;
 			}
-#endif /* TPP_HAVE_CPP_DIRECTIVES && TPP_HAVE_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_CPP_DIRECTIVES && (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) */
 			for (;;) {
 				if (pos >= file->tf_end) {
 					tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
@@ -1064,8 +1069,8 @@ handle_backslash:
 					}
 					break;
 #endif /* TPP_HAVE_TOK_CXX_COMMENT */
-#if TPP_HAVE_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES)
-				case TPP_TOK_SHELL_COMMENT:
+#if (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES)
+				TPP_CASE_TPP_TOK_SHELL_COMMENT
 					if (ch == '#')
 						goto again;
 #if TPP_HAVE_TRIGRAPHS
@@ -1102,13 +1107,18 @@ handle_backslash:
 					}
 #endif /* TPP_HAVE_TRIGRAPHS */
 					break;
-#endif /* TPP_HAVE_TOK_SHELL_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES) */
+#endif /* (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && TPP_CONF_MAYBE_0(TPP_HAVE_CPP_DIRECTIVES) */
+#if TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT
 #if TPP_HAVE_TOK_SLASH_COMMENT
 				case TPP_TOK_SLASH_COMMENT:
+#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
+#if TPP_HAVE_TOK_SOL_SLASH_COMMENT
+				case TPP_TOK_SOL_SLASH_COMMENT:
+#endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 					if (ch == '/')
 						goto again;
 					break;
-#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
+#endif /* TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 #if TPP_HAVE_TOK_SQL_COMMENT
 				case TPP_TOK_SQL_COMMENT:
 					if (ch == '-') {
@@ -1880,6 +1890,69 @@ tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self) {
 
 
 
+#if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
+/* Check if "pos" points directly after a line-feed, or the start of the file */
+static /*TPP_NOINLINE*/ TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_lexer_check_sol(tpp_lexer *tpp_restrict self,
+                    tpp_char const *tpp_restrict pos) {
+	tpp_lcinfo lc;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_string *const chunk = file->tf_chunk;
+
+	/* Try to look at the currently loaded chunk. */
+	if (chunk) {
+		tpp_char const *chunk_start = tpp_string_str(chunk);
+		tpp_char const *chunk_end = file->tf_end;
+		tpp_assert(pos >= chunk_start && pos <= chunk_end);
+		if (pos > chunk_start) {
+			tpp_char prev_ch = pos[-1];
+#if TPP_HAVE_UNICODE
+			if (tpp_ascii_islf(prev_ch))
+				return true;
+			if (tpp_file_isutf8(file)) {
+/*[[[deemon
+import * from deemon;
+import UNICODE_LF_CHARACTERS from ".token-encodestring-mblf";
+local utf8LfSequences: {Bytes...} = (
+	for (local ord: UNICODE_LF_CHARACTERS)
+		string.chr(ord).encode("utf-8")
+).frozen;
+for (local seq: utf8LfSequences) {
+	switch (#seq) {
+	case 2:
+		print(f"				if (prev_ch == {seq[1].hex(2)} && (pos - 1) > chunk_start && pos[-2] == {seq[0].hex(2)})");
+		print(f"					return true;");
+		break;
+	case 3:
+		print(f"				if (prev_ch == {seq[2].hex(2)} && (pos - 2) > chunk_start && pos[-2] == {seq[1].hex(2)} && pos[-3] == {seq[0].hex(2)})");
+		print(f"					return true;");
+		break;
+	default: throw Error(f"No way to encode {repr seq}");
+	}
+}
+]]]*/
+				if (prev_ch == 0x85 && (pos - 1) > chunk_start && pos[-2] == 0xc2)
+					return true;
+				if (prev_ch == 0xa8 && (pos - 2) > chunk_start && pos[-2] == 0x80 && pos[-3] == 0xe2)
+					return true;
+				if (prev_ch == 0xa9 && (pos - 2) > chunk_start && pos[-2] == 0x80 && pos[-3] == 0xe2)
+					return true;
+/*[[[end]]]*/
+			}
+#else /* TPP_HAVE_UNICODE */
+			return tpp_ascii_islf(prev_ch);
+#endif /* !TPP_HAVE_UNICODE */
+		}
+	}
+
+	/* Fallback: look at L/C information (may not be perfectly
+	 * accurate since not actually meant for something like this) */
+	lc = tpp_file_getlcinfo(file, pos);
+	return tpp_lcinfo_isvalid(lc) && tpp_lcinfo_getcol(lc) == 0;
+}
+#endif /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
+
+
 /* Same as `tpp_lexer_yieldraw()', but populate the token from a custom `*p_pos',
  * and don't pop files from the current #include-stack (unless `p_pos' is the top-
  * most file's `tf_pos')
@@ -1933,6 +2006,17 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	/* Relative offset from start of loaded area of file
 	 * (usually `0', unless a custom "p_pos" is used) */
 	tpp_size rel_start;
+#if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
+	int curtoken_is_at_sol = -1;
+#define tpp_lexer_curtoken_getsol()                                 \
+	(curtoken_is_at_sol < 0                                         \
+	 ? tpp_lexer_check_sol(self, tpp_file_rel2ptr(file, rel_start)) \
+	 : (curtoken_is_at_sol != 0))
+#define tpp_lexer_curtoken_setsol(v) (void)(curtoken_is_at_sol = (v))
+#else /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
+#define tpp_lexer_curtoken_setsol(v) (void)0
+#endif /* !TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
+
 #if TPP_HAVE_INCLUDE_STACK || TPP_HAVE_BSE
 again:
 #endif /* TPP_HAVE_INCLUDE_STACK || TPP_HAVE_BSE */
@@ -2411,8 +2495,11 @@ continue_html_comment_with_ch2:
 
 /************************************************************************/
 	case '@': {
-#if (TPP_HAVE_TOK_MC_STARTSWITH_AT || TPP_HAVE_TOK_AT_AT_COMMENT)
+#if (TPP_HAVE_TOK_MC_STARTSWITH_AT || TPP_HAVE_TOK_AT_AT_COMMENT || \
+     TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT)
 		if (!tpp_lexer_has(self, TOK_AT_AT_COMMENT) &&
+		    !tpp_lexer_has(self, TOK_AT_COMMENT) &&
+		    !tpp_lexer_has(self, TOK_SOL_AT_COMMENT) &&
 /*[[[deemon (printHasNone from ".config")("@");]]]*/
 		    !tpp_lexer_has(self, TOK_AT_EQUAL) &&
 		    !tpp_lexer_has(self, TOK_AT_AT) &&
@@ -2478,6 +2565,27 @@ continue_html_comment_with_ch2:
 /*[[[end]]]*/
 		default: break;
 		}
+#if TPP_HAVE_TOK_SOL_AT_COMMENT
+		if (tpp_lexer_has(self, TOK_SOL_AT_COMMENT) && tpp_lexer_curtoken_getsol()) {
+			pos = tpp_file_rel2ptr(file, rel_start + 1);
+return_TPP_TOK_SOL_AT_COMMENT:
+			error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SOL_AT_COMMENT));
+			if (TPP_ISERR(error))
+				goto return_error;
+			result = TPP_TOK_SOL_AT_COMMENT; // "@ like this one!"
+			goto set_result;
+		}
+#endif /* TPP_HAVE_TOK_SOL_AT_COMMENT */
+#if TPP_HAVE_TOK_AT_COMMENT
+		if (tpp_lexer_has(self, TOK_AT_COMMENT)) {
+			pos = tpp_file_rel2ptr(file, rel_start + 1);
+			error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_AT_COMMENT));
+			if (TPP_ISERR(error))
+				goto return_error;
+			result = TPP_TOK_AT_COMMENT; // "@ like this one!"
+			goto set_result;
+		}
+#endif /* TPP_HAVE_TOK_AT_COMMENT */
 #endif /* ... */
 	}	break;
 /************************************************************************/
@@ -2486,13 +2594,13 @@ continue_html_comment_with_ch2:
 
 /************************************************************************/
 	case '/': {
-#if (TPP_HAVE_TOK_SLASH_COMMENT ||                 \
-     TPP_HAVE_TOK_CXX_COMMENT ||           \
-     TPP_HAVE_TOK_C_COMMENT || \
+#if (TPP_HAVE_TOK_SLASH_COMMENT || \
+     TPP_HAVE_TOK_CXX_COMMENT ||   \
+     TPP_HAVE_TOK_C_COMMENT ||     \
      TPP_HAVE_TOK_MC_STARTSWITH_SLASH)
-#if TPP_HAVE_TOK_SLASH_COMMENT
+#if TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT
 		tpp_size rel_end_of_1char;
-#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
+#endif /* TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 		if (!tpp_lexer_has(self, TOK_CXX_COMMENT) &&
 		    !tpp_lexer_has(self, TOK_C_COMMENT) &&
 		    !tpp_lexer_has(self, TOK_SLASH_COMMENT) &&
@@ -2503,9 +2611,9 @@ continue_html_comment_with_ch2:
 /*[[[end]]]*/
 		    )
 			break;
-#if TPP_HAVE_TOK_SLASH_COMMENT
+#if TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT
 		rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
+#endif /* TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 		read_ch2();
 
 /*[[[deemon print "#if TPP_HAVE_TOK_CXX_COMMENT ||", (getHasPrefixCondition from ".config")("//");]]]*/
@@ -2614,6 +2722,17 @@ continue_c_comment_with_ch2:
 #endif /* TPP_HAVE_TOK_SLASH_EQUAL */
 /*[[[end]]]*/
 		{
+#if TPP_HAVE_TOK_SOL_SLASH_COMMENT
+			if (tpp_lexer_has(self, TOK_SOL_SLASH_COMMENT) && tpp_lexer_curtoken_getsol()) {
+				pos = tpp_file_rel2ptr(file, rel_end_of_1char);
+return_TPP_TOK_SOL_SLASH_COMMENT:
+				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SOL_SLASH_COMMENT));
+				if (TPP_ISERR(error))
+					goto return_error;
+				result = TPP_TOK_SOL_SLASH_COMMENT; // "/ like this one!"
+				goto set_result;
+			}
+#endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 #if TPP_HAVE_TOK_SLASH_COMMENT
 			if (tpp_lexer_has(self, TOK_SLASH_COMMENT)) {
 				pos = tpp_file_rel2ptr(file, rel_end_of_1char);
@@ -2722,26 +2841,36 @@ continue_c_comment_with_ch2:
 
 /************************************************************************/
 	case '#': {
-#if TPP_HAVE_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT
 /*[[[deemon (printDecoder from ".config")("#",
-	extraRestoreCondition: "TPP_HAVE_TOK_SHELL_COMMENT");]]]*/
+	extraRestoreCondition: "TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT");]]]*/
 #if TPP_HAVE_TOK_POUND_POUND
 		if (tpp_lexer_has(self, TOK_POUND_POUND)) {
-#if TPP_HAVE_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT
 			tpp_size rel_end_of_1char = tpp_file_ptr2rel(file, pos);
-#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 			read_ch2();
 			if (ch2 == '#') {
 				warn_if_ch2_is_trigraph(); /* "??=" -> "#" */
 				result = TPP_TOK_POUND_POUND; /* "##" */
 				goto set_result;
 			}
-#if TPP_HAVE_TOK_SHELL_COMMENT
+#if TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT
 			pos = tpp_file_rel2ptr(file, rel_end_of_1char);
-#endif /* TPP_HAVE_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 		}
 #endif /* TPP_HAVE_TOK_POUND_POUND */
 /*[[[end]]]*/
+#if TPP_HAVE_TOK_SOL_SHELL_COMMENT
+		if (tpp_lexer_has(self, TOK_SOL_SHELL_COMMENT) && tpp_lexer_curtoken_getsol()) {
+return_TPP_TOK_SOL_SHELL_COMMENT:
+			error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SOL_SHELL_COMMENT));
+			if (TPP_ISERR(error))
+				goto return_error;
+			result = TPP_TOK_SOL_SHELL_COMMENT; // "# like this one!"
+			goto set_result;
+		}
+#endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 #if TPP_HAVE_TOK_SHELL_COMMENT
 		if (tpp_lexer_has(self, TOK_SHELL_COMMENT)) {
 			error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SHELL_COMMENT));
@@ -2751,7 +2880,7 @@ continue_c_comment_with_ch2:
 			goto set_result;
 		}
 #endif /* TPP_HAVE_TOK_SHELL_COMMENT */
-#endif /* TPP_HAVE_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TOK_SHELL_COMMENT */
+#endif /* TPP_HAVE_TOK_MC_STARTSWITH_POUND || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 	}	break;
 /************************************************************************/
 
@@ -3871,6 +4000,7 @@ continue_pascal_comment_with_ch2:
 
 			/* BSE was skipped -> read whatever comes after... */
 			*p_pos = npos;
+			tpp_lexer_curtoken_setsol(0);
 			goto again;
 #endif /* TPP_HAVE_BSE */
 		}
@@ -4525,6 +4655,7 @@ handle_space:
 					goto return_error;
 				if (npos == pos)
 					break;
+				tpp_lexer_curtoken_setsol(0);
 				rel_before = tpp_file_ptr2rel(file, npos);
 				error = tpp_lexer_skipspace_nolf(self, &npos);
 				if (TPP_ISERR(error))
@@ -4536,6 +4667,60 @@ handle_space:
 				pos = npos;
 			}
 #endif /* TPP_HAVE_BSE */
+#if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
+			switch (*pos) {
+#if TPP_HAVE_TOK_SOL_SHELL_COMMENT
+#if TPP_HAVE_TRIGRAPHS
+			case '?':
+				if (tpp_lexer_has(self, TOK_SOL_SHELL_COMMENT) && tpp_lexer_curtoken_getsol()) {
+					if ((pos + 1) >= file->tf_end) {
+						tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
+						error = tpp_file_expandchunk(file);
+						if (TPP_ISERR(error))
+							goto return_error;
+						pos = tpp_file_rel2ptr(file, rel_pos);
+					}
+					if ((pos + 1) < file->tf_end && pos[1] == '?') {
+						if ((pos + 2) >= file->tf_end) {
+							tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
+							error = tpp_file_expandchunk(file);
+							if (TPP_ISERR(error))
+								goto return_error;
+							pos = tpp_file_rel2ptr(file, rel_pos);
+						}
+						if ((pos + 2) < file->tf_end && pos[2] == '=') {
+#if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
+							error = tpp_lexer_warnf_at(self, file, pos, TPP_W_ENCOUNTERED_TRIGRAPH);
+							if (TPP_ISERR(error))
+								goto return_error;
+#endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
+							pos += 3;
+							goto return_TPP_TOK_SOL_SHELL_COMMENT;
+						}
+					}
+				}
+				break;
+#endif /* TPP_HAVE_TRIGRAPHS */
+			case '#':
+				if (tpp_lexer_has(self, TOK_SOL_SHELL_COMMENT) && tpp_lexer_curtoken_getsol())
+					goto return_TPP_TOK_SOL_SHELL_COMMENT;
+				break;
+#endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+#if TPP_HAVE_TOK_SOL_SLASH_COMMENT
+			case '/':
+				if (tpp_lexer_has(self, TOK_SOL_SLASH_COMMENT) && tpp_lexer_curtoken_getsol())
+					goto return_TPP_TOK_SOL_SLASH_COMMENT;
+				break;
+#endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
+#if TPP_HAVE_TOK_SOL_AT_COMMENT
+			case '@':
+				if (tpp_lexer_has(self, TOK_SOL_AT_COMMENT) && tpp_lexer_curtoken_getsol())
+					goto return_TPP_TOK_SOL_AT_COMMENT;
+				break;
+#endif /* TPP_HAVE_TOK_SOL_AT_COMMENT */
+			default: break;
+			}
+#endif /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
 
 			result = TPP_TOK_SPACE;
 			goto set_result;
@@ -4809,6 +4994,12 @@ set_result:
 	*p_pos = pos; /* This also updates "file->tf_pos" (if "p_pos == &token->tt_end") */
 	return result;
 eof:
+#if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
+	if (curtoken_is_at_sol < 0) {
+		curtoken_is_at_sol = tpp_lexer_check_sol(self, pos);
+		tpp_assert(curtoken_is_at_sol >= 0);
+	}
+#endif /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
 	/* Check if we can read some more data from the file */
 	rel_start = tpp_file_ptr2rel(file, pos);
 	error = tpp_file_expandchunk(file);
@@ -4837,6 +5028,7 @@ eof:
 
 		/* Actually pop the file! */
 		tpp_lexer_popfile(self);
+		tpp_lexer_curtoken_setsol(-1);
 		goto again;
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */
@@ -4853,6 +5045,8 @@ return_error:
 	if (p_pos != &file->tf_pos)
 		*p_pos = tpp_file_rel2ptr(file, rel_start);
 	return TPP_TOK_OFERR(error);
+#undef tpp_lexer_curtoken_getsol
+#undef tpp_lexer_curtoken_setsol
 #undef read_ch2
 #undef warn_if_ch2_is_trigraph
 #undef NEED_read_ch2

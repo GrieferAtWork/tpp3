@@ -890,6 +890,9 @@ found_va_opt_body_end:
 #if (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || \
      TPP_HAVE_CHARIZE_MACRO_ARGUMENT ||   \
      TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT)
+//TODO:#if TPP_HAVE_TOK_SOL_SHELL_COMMENT
+//TODO:		case TPP_TOK_SOL_SHELL_COMMENT:
+//TODO:#endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 #if TPP_HAVE_TOK_SHELL_COMMENT
 		case TPP_TOK_SHELL_COMMENT:
 			/* Deal with special case of shell comments (which must be re-parsed as a #-token) */
@@ -1240,6 +1243,12 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
 }
 
 
+#if TPP_HAVE_TOK_SOL_SHELL_COMMENT
+TPP_INTERN_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_char const *TPPCALL
+tpp_token_sol_shell_find_after_pound(tpp_lexer const *tpp_restrict self);
+#endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+
+
 /* Parse a macro-definition, with self/p_pos pointing at the first non-inline-comment
  * token following the macro's name. (in the case of a keyword-style macro, this may
  * be a space-token!)
@@ -1380,6 +1389,12 @@ again_scan_end_of_macro_body:
 		goto again_scan_end_of_macro_body;
 	}
 #endif /* TPP_HAVE_TOK_SHELL_COMMENT */
+#if TPP_HAVE_TOK_SOL_SHELL_COMMENT
+	if (tok == TPP_TOK_SOL_SHELL_COMMENT) {
+		*p_pos = tpp_token_sol_shell_find_after_pound(self);
+		goto again_scan_end_of_macro_body;
+	}
+#endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 
 	/* Compile the macro according to active lexer rules */
 	body_start = tpp_file_rel2ptr(file, rel_body_start);

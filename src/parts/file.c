@@ -1140,6 +1140,8 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcinfo result;
 	if tpp_unlikely(!self->tf_chunk) {
+		if (self->tf_kind == TPP_FILE_KIND_IO)
+			return tpp_lcinfo_of(0, 0); /* Start of I/O file with nothing loaded, yet */
 #if TPP_HAVE_FILE_DUMMY
 		if (self->tf_kind == TPP_FILE_KIND_DUMMY)
 			return self->tf_data.td_dummy.tfd_start_lc;

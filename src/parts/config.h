@@ -1773,28 +1773,57 @@
  * that unknown directives will simply be re-emit as shell comments,
  * and shell comments that don't appear at the start of lines are not
  * even processed as CPP directives.
- * @detect: #if __TPP_COUNT_TOKENS("# a b c") <= 1 */
+ * @detect: #if __TPP_COUNT_TOKENS("foo# a b c") <= 2 */
 #ifndef TPP_HAVE_TOK_SHELL_COMMENT
 #define TPP_HAVE_TOK_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-shell-comment" */
 #endif /* !TPP_HAVE_TOK_SHELL_COMMENT */
 
-/* Enable support for recognizing ASM-like comments: `/ like this one!`
- * @detect: #if __TPP_COUNT_TOKENS("/ a b c") <= 1 */
+/* Enable support for recognizing `/`-like comments anywhere: `/ like this one!`
+ * @detect: #if __TPP_COUNT_TOKENS("foo/ a b c") <= 2 */
 #ifndef TPP_HAVE_TOK_SLASH_COMMENT
 #define TPP_HAVE_TOK_SLASH_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-slash-comment" */
 #endif /* !TPP_HAVE_TOK_SLASH_COMMENT */
 
-//TODO:/* Same as `TPP_HAVE_TOK_SHELL_COMMENT`, but only recognized when the `#`
-//TODO: * appears as the first character of the relevant line, or is preceded by
-//TODO: * nothing but `TPP_TOK_SPACE` or inline comments like `TPP_TOK_C_COMMENT` */
-//TODO:#ifndef TPP_HAVE_TOK_SOL_SHELL_COMMENT
-//TODO:#define TPP_HAVE_TOK_SOL_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-shell-comment" */
-//TODO:#endif /* !TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+/* Enable support for recognizing `@`-like comments anywhere: `@ like this one!`
+ * @detect: #if __TPP_COUNT_TOKENS("foo@ a b c") <= 2 */
+#ifndef TPP_HAVE_TOK_AT_COMMENT
+#define TPP_HAVE_TOK_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-at-comment" */
+#endif /* !TPP_HAVE_TOK_AT_COMMENT */
 
-/* TODO: Support for "@" comments */
-/* TODO: #, / and @ comments should each have 2 versions sub-config to specify if a
- *       perspective match should only be treated as a comment if it's preceded by
- *       nothing but whitespace, or if it should always be treated as a comment. */
+/* Same as `TPP_HAVE_TOK_SHELL_COMMENT`, but only recognized when the `#`
+ * appears as the first character of the relevant line, or is preceded by
+ * nothing but whitespace.
+ *
+ * Due to limitations related to when/how the contents of a `tpp_file` can
+ * be unloaded, said preceding whitespace will be considered part of the
+ * `TPP_TOK_SOL_SHELL_COMMENT` token)
+ *
+ * @detect: #if __TPP_COUNT_TOKENS("  # a b c") <= 1 */
+#ifndef TPP_HAVE_TOK_SOL_SHELL_COMMENT
+#define TPP_HAVE_TOK_SOL_SHELL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-shell-comment" */
+#endif /* !TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+
+/* Same as `TPP_HAVE_TOK_SLASH_COMMENT`, but only recognized when the `/`
+ * appears as the first character of the relevant line, or is preceded by
+ * nothing but whitespace (any preceding whitespace will be part of the
+ * resulting `TPP_TOK_SOL_SLASH_COMMENT` token; see `TPP_HAVE_TOK_SOL_SHELL_COMMENT`)
+ *
+ * @detect: #if __TPP_COUNT_TOKENS("  / a b c") <= 1 */
+#ifndef TPP_HAVE_TOK_SOL_SLASH_COMMENT
+#define TPP_HAVE_TOK_SOL_SLASH_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-slash-comment" */
+#endif /* !TPP_HAVE_TOK_SOL_SLASH_COMMENT */
+
+/* Same as `TPP_HAVE_TOK_SLASH_COMMENT`, but only recognized when the `@`
+ * appears as the first character of the relevant line, or is preceded by
+ * nothing but whitespace (any preceding whitespace will be part of the
+ * resulting `TPP_TOK_SOL_AT_COMMENT` token; see `TPP_HAVE_TOK_SOL_SHELL_COMMENT`)
+ *
+ * @detect: #if __TPP_COUNT_TOKENS("  @ a b c") <= 1 */
+#ifndef TPP_HAVE_TOK_SOL_AT_COMMENT
+#define TPP_HAVE_TOK_SOL_AT_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-sol-at-comment" */
+#endif /* !TPP_HAVE_TOK_SOL_AT_COMMENT */
+
+
 
 /************************************************************************/
 /* Single-char tokens                                                   */
@@ -2108,11 +2137,21 @@
 #else /* ... */
 #define TPP_HAVE_TOK_COMMENTLIKE_NOLINE 0
 #endif /* !... */
+#undef TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
+#if (TPP_HAVE_TOK_SOL_SHELL_COMMENT || \
+     TPP_HAVE_TOK_SOL_SLASH_COMMENT || \
+     TPP_HAVE_TOK_SOL_AT_COMMENT)
+#define TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE 1
+#else /* ... */
+#define TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE 0
+#endif /* !... */
 #undef TPP_HAVE_TOK_COMMENTLIKE_LINE
 #if (TPP_HAVE_TOK_CXX_COMMENT ||   \
+     TPP_HAVE_TOK_SQL_COMMENT ||   \
      TPP_HAVE_TOK_SHELL_COMMENT || \
      TPP_HAVE_TOK_SLASH_COMMENT || \
-     TPP_HAVE_TOK_SQL_COMMENT)
+     TPP_HAVE_TOK_AT_COMMENT ||    \
+     TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE)
 #define TPP_HAVE_TOK_COMMENTLIKE_LINE 1
 #else /* ... */
 #define TPP_HAVE_TOK_COMMENTLIKE_LINE 0
@@ -4772,7 +4811,7 @@ for (local doc, name,
 #define TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_PRAGMAS */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE
-#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SHELL_COMMENT) && TPP_HAVE_CPP_DIRECTIVES)
+#define TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SHELL_COMMENT) && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SOL_SHELL_COMMENT) && TPP_HAVE_CPP_DIRECTIVES)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE */
 #ifndef TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE (TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA)

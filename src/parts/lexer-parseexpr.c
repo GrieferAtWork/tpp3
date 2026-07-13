@@ -81,9 +81,9 @@ again:
 #if !TPP_HAVE_BUILTIN_EXPR_STRINGS && !TPP_HAVE_CPP_ASSERT
 	_TPP_CASE_TPP_TOK_SHELL_COMMENT
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS && !TPP_HAVE_CPP_ASSERT */
-#if (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && TPP_HAVE_TOK_SHELL_COMMENT
+#if (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT)
 handle_comment:
-#endif /* (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && TPP_HAVE_TOK_SHELL_COMMENT */
+#endif /* (TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT) && (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) */
 		/* Skip over whitespace */
 		tok = tpp_lexer_yield_blocking(self); /* Doesn't have to be "tpp_lexer_yield_forexpr" */
 		if (TPP_TOK_ISERR(tok))
@@ -227,8 +227,8 @@ handle_comment:
 
 
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT
-#if TPP_HAVE_TOK_SHELL_COMMENT
-	case TPP_TOK_SHELL_COMMENT: {
+#if TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT
+	TPP_CASE_TPP_TOK_SHELL_COMMENT {
 		tpp_token *const token = tpp_lexer_gettoken(self);
 		if (!tpp_lexer_has(self, CPP_ASSERT) &&
 		    !tpp_lexer_has(self, BUILTIN_EXPR_STRINGS))
@@ -249,7 +249,7 @@ handle_comment:
 		{
 		}
 	}	TPP_FALLTHRU
-#endif /* !TPP_HAVE_TOK_SHELL_COMMENT */
+#endif /* !TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 	case '#':
 		/* Preprocessor assertions */
 		if (!tpp_lexer_has(self, CPP_ASSERT) &&
