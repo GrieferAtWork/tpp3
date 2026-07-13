@@ -2855,7 +2855,10 @@ handle_unknown_directive:
 #if TPP_HAVE_TPP_W_UNKNOWN_DIRECTIVE
 			{
 				tpp_errno error;
+				tpp_char const *saved_end = token->tt_end;
+				token->tt_end = directive_iter;
 				error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_DIRECTIVE);
+				token->tt_end = saved_end;
 				if (TPP_ISERR(error)) {
 					result = TPP_TOK_OFERR(error);
 					goto return_result;
