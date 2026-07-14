@@ -653,9 +653,18 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 	void *const printer_arg = self;
 
 	/* Print file-and-line prefix */
-	if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
-	                             tpp_lexer_getfileandlineformat(self)) < 0)
-		goto err_printer;
+	if (!tpp_lcinfo_isvalid(info->tlpfi_lc) &&
+	    (info->tlpfi_file && info->tlpfi_pos)) {
+		info->tlpfi_lc = tpp_file_getlcinfo(info->tlpfi_file,
+		                                    info->tlpfi_pos);
+	}
+	if (info->tlpfi_filename == NULL && info->tlpfi_file != NULL)
+		info->tlpfi_filename = tpp_file_getfilename(info->tlpfi_file);
+	if (info->tlpfi_filename || tpp_lcinfo_isvalid(info->tlpfi_lc)) {
+		if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
+		                             tpp_lexer_getfileandlineformat(self)) < 0)
+			goto err_printer;
+	}
 
 	/* Print what this is about... */
 	if ((invokeinfo->twii_state == TPP_WSTATE_WARN
@@ -707,8 +716,7 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			tpp_lexer_printf_info_init_at(&projection_info, lcx.tlcix_projfile, lcx.tlcix_projpos);
 			tpp_file_getlcinfo_ex(lcx.tlcix_projfile, lcx.tlcix_projpos, &nlcx);
 			projection_info.tlpfi_lc = nlcx.tlcix_info;
-			if (tpp_lexer_printf_warning(self, &projection_info,
-			                             printer, printer_arg,
+			if (tpp_lexer_printf_warning(self, &projection_info, printer, printer_arg,
 			                             tpp_lexer_getfileandlineformat(self)) < 0)
 				goto err_printer;
 			if (tpp_formatprinter_print_conststr(printer, printer_arg,
@@ -734,8 +742,7 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			 * line-feed) */
 			tpp_lexer_printf_info caller_info;
 			tpp_lexer_printf_info_init_at(&caller_info, caller, caller->tf_tpos);
-			if (tpp_lexer_printf_warning(self, &caller_info,
-			                             printer, printer_arg,
+			if (tpp_lexer_printf_warning(self, &caller_info, printer, printer_arg,
 			                             tpp_lexer_getfileandlineformat(self)) < 0)
 				goto err_printer;
 			if (tpp_formatprinter_print_conststr(printer, printer_arg, "note: originating from here\n") < 0)
