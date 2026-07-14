@@ -6671,6 +6671,10 @@ TPP_DECL_END
 /* XXX: Support for sql-style E"foo"-string literals (line-feeds are allowed, and \-escape sequences are handled) */
 /* XXX: Support for javascript-style `foo` format string literals (use a hook for implementing `${expr}`) */
 /* XXX: Support for deemon-style f"foo" / F"foo" format string literals (use a hook for implementing `{expr}`) */
+/* XXX: Support for raw block-strings: r"""foo"\"""  -- same as R"(foo"\)" */
+/* XXX: Support for raw block-strings: r'''foo'\'''  -- same as R'(foo'\)' */
+/* XXX: Support for python bytes-string: b"foo" */
+/* XXX: Support for python bytes-string: b'foo' */
 
 /* Support for C character literals: `'foo'`
  * @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1 */
@@ -6752,13 +6756,13 @@ TPP_DECL_END
 #define TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf32-char-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL */
 
-/* Support for deemon-style raw string literals: `R"foo"` and `r"foo"`
+/* Support for deemon/python-style raw string literals: `r"foo"`
  * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 9 */
 #ifndef TPP_HAVE_TOK_RAW_STRING_LITERAL
 #define TPP_HAVE_TOK_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-raw-string-literal" */
 #endif /* !TPP_HAVE_TOK_RAW_STRING_LITERAL */
 
-/* Support for deemon-style raw string literals: `R'bar'` and `r'bar'`
+/* Support for deemon/python-style raw string literals: `r'bar'`
  * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 9 */
 #ifndef TPP_HAVE_TOK_RAW_CHAR_LITERAL
 #define TPP_HAVE_TOK_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-raw-char-literal" */

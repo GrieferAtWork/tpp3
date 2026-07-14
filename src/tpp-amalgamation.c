@@ -21115,19 +21115,13 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
-#if (TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || \
-     TPP_HAVE_TOK_RAW_STRING_LITERAL ||     \
-     TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL ||   \
-     TPP_HAVE_TOK_RAW_CHAR_LITERAL)
+#if (TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL)
 	case 'R': {
 		if (tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL) ||
-		    tpp_lexer_has(self, TOK_RAW_STRING_LITERAL) ||
-		    tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL) ||
-		    tpp_lexer_has(self, TOK_RAW_CHAR_LITERAL)) {
+		    tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL)) {
 			read_ch2();
-#if TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_STRING_LITERAL
-			if (ch2 == '"') {
 #if TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
+			if (ch2 == '"') {
 				if (tpp_lexer_has(self, TOK_CXX_RAW_STRING_LITERAL)) {
 					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '"');
 					if (TPP_ISERR(error))
@@ -21135,21 +21129,10 @@ continue_pascal_comment_with_ch2:
 					result = TPP_TOK_CXX_RAW_STRING_LITERAL; /* R"AB(foo)AB" */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
-#if TPP_HAVE_TOK_RAW_STRING_LITERAL
-				if (tpp_lexer_has(self, TOK_RAW_STRING_LITERAL)) {
-					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '"');
-					if (TPP_ISERR(error))
-						goto return_error;
-					result = TPP_TOK_RAW_STRING_LITERAL; /* R"foo" */
-					goto set_result;
-				}
-#endif /* TPP_HAVE_TOK_RAW_STRING_LITERAL */
 			} else
-#endif /* TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_STRING_LITERAL */
-#if TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL
-			if (ch2 == '\'') {
+#endif /* TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
 #if TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
+			if (ch2 == '\'') {
 				if (tpp_lexer_has(self, TOK_CXX_RAW_CHAR_LITERAL)) {
 					error = tpp_lexer_seek_end_of_cxx_raw_string(self, &pos, '\'');
 					if (TPP_ISERR(error))
@@ -21157,18 +21140,8 @@ continue_pascal_comment_with_ch2:
 					result = TPP_TOK_CXX_RAW_CHAR_LITERAL; /* R'AB(f)AB' */
 					goto set_result;
 				}
-#endif /* TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
-#if TPP_HAVE_TOK_RAW_CHAR_LITERAL
-				if (tpp_lexer_has(self, TOK_RAW_CHAR_LITERAL)) {
-					error = tpp_lexer_seek_end_of_raw_string(self, &pos, '\'');
-					if (TPP_ISERR(error))
-						goto return_error;
-					result = TPP_TOK_RAW_CHAR_LITERAL; /* R'foo' */
-					goto set_result;
-				}
-#endif /* TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 			} else
-#endif /* TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL */
+#endif /* TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
 			{
 			}
 			pos = tpp_file_rel2ptr(file, rel_start + 1);
@@ -21182,8 +21155,7 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
-#if (TPP_HAVE_TOK_RAW_STRING_LITERAL || \
-     TPP_HAVE_TOK_RAW_CHAR_LITERAL)
+#if (TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL)
 	case 'r': {
 		if (tpp_lexer_has(self, TOK_RAW_STRING_LITERAL) ||
 		    tpp_lexer_has(self, TOK_RAW_CHAR_LITERAL)) {
@@ -21888,10 +21860,9 @@ handle_space:
 		case 'L':
 #endif /* !TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL && !TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL */
 		case 'M': case 'N': case 'O': case 'P': case 'Q':
-#if (!TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL && !TPP_HAVE_TOK_RAW_STRING_LITERAL && \
-     !TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL && !TPP_HAVE_TOK_RAW_CHAR_LITERAL)
+#if !TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL && !TPP_HAVE_TOK_RAW_STRING_LITERAL
 		case 'R':
-#endif /* ... */
+#endif /* !TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL && !TPP_HAVE_TOK_RAW_STRING_LITERAL */
 		case 'S': case 'T':
 #if !TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL && !TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL
 		case 'U':
@@ -35208,7 +35179,7 @@ print_ch_as_byte:
 				goto handle_unknown_escape_sequence;
 			ch = *iter;
 			if (!tpp_token_decodestring_is_rbrace(self, ch, &iter, end))
-				goto handle_unknown_escape_sequence;
+				goto handle_unknown_escape_sequence; /* TODO: Custom warning + scan for }-character */
 			++iter;
 		} else
 #endif /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE */
@@ -35282,7 +35253,7 @@ print_ch_as_byte:
 			goto handle_unknown_escape_sequence;
 		ch = *iter;
 		if (!tpp_token_decodestring_is_rbrace(self, ch, &iter, end))
-			goto handle_unknown_escape_sequence;
+			goto handle_unknown_escape_sequence; /* TODO: Custom warning + scan for }-character */
 		++iter;
 	}	break;
 #endif /* TPP_HAVE_STRING_ESCAPE_OCT_BRACE */
@@ -35357,7 +35328,7 @@ print_ch_as_byte:
 				goto handle_unknown_escape_sequence;
 			ch = *iter;
 			if (!tpp_token_decodestring_is_rbrace(self, ch, &iter, end))
-				goto handle_unknown_escape_sequence;
+				goto handle_unknown_escape_sequence; /* TODO: Custom warning + scan for }-character */
 			++iter;
 			break;
 		}
@@ -35367,12 +35338,17 @@ print_ch_as_byte:
 	}	break;
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE */
 
-	/* XXX: Support for: \U{NO-BREAK SPACE}  (for \u00A0)
+	/* XXX: Support for: \N{NO-BREAK SPACE}  (for \u00A0)
 	 *      Names come from 'UnicodeData.txt' + 'NameAliases.txt' */
-	/* XXX: Support for: \U{ NO-BREAK SPACE , NO-BREAK SPACE }  (for \u00A0\u00A0)
+	/* XXX: Support for: \N{ NO-BREAK SPACE , NO-BREAK SPACE }  (for \u00A0\u00A0)
 	 *      (extra extension; not mandated by C) */
-	/* XXX: Those same 4 extensions should also be available as extensions to
-	 *      "TPP_HAVE_ESCAPE_IN_IDENTIFIERS" */
+	/* XXX: These 4 extensions should also be available as extensions to
+	 *      "TPP_HAVE_ESCAPE_IN_IDENTIFIERS":
+	 *      - TPP_HAVE_STRING_ESCAPE_UNI_BRACE
+	 *      - TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY
+	 *      - TBA: \N{NO-BREAK SPACE}
+	 *      - TBA: \N{ NO-BREAK SPACE , NO-BREAK SPACE }
+	 */
 
 #if TPP_HAVE_STRING_ESCAPE_UNI
 #if TPP_HAVE_STRING_ESCAPE_UNI_BRACE
