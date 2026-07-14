@@ -4177,7 +4177,7 @@ Extension name:
 
 ## TPP_HAVE_STRING_ESCAPE_UNI
 
-Support for `\u1234` and `\U12345678` hex sequences.
+Support for `\u1234` and `\U12345678` unicode ordinal escape sequences.
 
 <details><summary>Details</summary>
 

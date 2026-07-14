@@ -2086,7 +2086,7 @@
 #define TPP_HAVE_STRING_ESCAPE_HEX_MANY (TPP_HAVE_STRING_ESCAPE_HEX ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fstring-escape-hex-many" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_HEX_MANY */
 
-/* Support for `\u1234` and `\U12345678` hex sequences. */
+/* Support for `\u1234` and `\U12345678` unicode ordinal escape sequences. */
 #ifndef TPP_HAVE_STRING_ESCAPE_UNI
 #define TPP_HAVE_STRING_ESCAPE_UNI ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_UNI */

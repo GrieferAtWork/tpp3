@@ -331,8 +331,10 @@ print_ch_as_byte:
 	}	break;
 #endif /* TPP_HAVE_STRING_ESCAPE_HEX */
 
-	/* XXX: Support for: \o{0 037 377} */
-	/* XXX: Support for: \x{12 34 56 78} */
+	/* XXX: Support for: \o{377} */
+	/* XXX: Support for: \o{ 0 037 , 377 } (extra extension; not mandated by C) */
+	/* XXX: Support for: \x{12345678} */
+	/* XXX: Support for: \x{ 1234 5678 , ABCD } (extra extension; not mandated by C) */
 
 #if TPP_HAVE_STRING_ESCAPE_UNI
 	case 'u':
@@ -346,9 +348,12 @@ print_ch_as_byte:
 			goto handle_unknown_escape_sequence;
 		if (!tpp_lexer_has(self, STRING_ESCAPE_UNI))
 			goto handle_unknown_escape_sequence;
-		/* XXX: Support for: \u{1234 5678} */
+		/* XXX: Support for: \u{1234} */
+		/* XXX: Support for: \u{ 1234 5678 , ABCD }  (extra extension; not mandated by C) */
 		/* XXX: Support for: \U{NO-BREAK SPACE}  (for \u00A0)
 		 *      Names come from 'UnicodeData.txt' + 'NameAliases.txt' */
+		/* XXX: Support for: \U{ NO-BREAK SPACE , NO-BREAK SPACE }  (for \u00A0\u00A0)
+		 *      (extra extension; not mandated by C) */
 		do {
 			tpp_char nibble;
 			ch = *iter++;
