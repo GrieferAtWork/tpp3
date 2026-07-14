@@ -422,6 +422,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT)
 		/* .tff_TOK_C_INT                              = */ TPP_CONF_DEFAULT(TPP_HAVE_TOK_C_INT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX)
+		/* .tff_TOK_PASCAL_HEX                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TOK_PASCAL_HEX),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT)
 		/* .tff_TOK_C_FLOAT                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TOK_C_FLOAT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT) */

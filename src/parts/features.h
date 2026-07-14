@@ -214,6 +214,7 @@ for (local CONF: configs) {
      TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE) ||         \
      TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK) ||         \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT) ||                              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX) ||                         \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT) ||                            \
      TPP_CONF_IS_FEAT(TPP_HAVE_SMART_FLOAT_TOKENS) ||                     \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_CHAR) ||                             \
@@ -721,6 +722,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT)
 	TPP_FEAT_TOK_C_INT,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX)
+	TPP_FEAT_TOK_PASCAL_HEX,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT)
 	TPP_FEAT_TOK_C_FLOAT,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT) */
@@ -1621,6 +1625,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_TOK_C_INT): 1;
 #define _tpp_lexer_has_TOK_C_INT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_C_INT)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX)
+		unsigned int TPP_INTERNAL(tff_TOK_PASCAL_HEX): 1;
+#define _tpp_lexer_has_TOK_PASCAL_HEX(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_PASCAL_HEX)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT)
 		unsigned int TPP_INTERNAL(tff_TOK_C_FLOAT): 1;
 #define _tpp_lexer_has_TOK_C_FLOAT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_C_FLOAT)
@@ -2551,6 +2559,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_TOK_C_INT)
 #define _tpp_lexer_has_TOK_C_INT(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_C_INT)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_C_INT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TOK_PASCAL_HEX)
+#define _tpp_lexer_has_TOK_PASCAL_HEX(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_PASCAL_HEX)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_PASCAL_HEX) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_TOK_C_FLOAT)
 #define _tpp_lexer_has_TOK_C_FLOAT(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_C_FLOAT)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_C_FLOAT) */

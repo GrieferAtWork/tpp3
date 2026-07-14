@@ -267,12 +267,15 @@ static struct tpp_token_str_strings_struct {
 #if TPP_HAVE_UNICODE
 	char ttr_TPP_TOK_UNICHAR[8];
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TOK_C_INT
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT
 	char ttr_TPP_TOK_C_INT[6];
-#endif /* TPP_HAVE_TOK_C_INT */
-#if TPP_HAVE_TOK_C_FLOAT
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT */
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX
+	char ttr_TPP_TOK_PASCAL_HEX[11];
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX */
+#if TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_C_FLOAT[8];
-#endif /* TPP_HAVE_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT */
 #if TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT
 	char ttr_TPP_TOK_C_COMMENT[10];
 #endif /* TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT */
@@ -740,12 +743,15 @@ static struct tpp_token_str_strings_struct {
 #if TPP_HAVE_UNICODE
 	/* .ttr_TPP_TOK_UNICHAR = */ "UNICHAR",
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TOK_C_INT
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT
 	/* .ttr_TPP_TOK_C_INT = */ "C_INT",
-#endif /* TPP_HAVE_TOK_C_INT */
-#if TPP_HAVE_TOK_C_FLOAT
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT */
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX
+	/* .ttr_TPP_TOK_PASCAL_HEX = */ "PASCAL_HEX",
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX */
+#if TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_C_FLOAT = */ "C_FLOAT",
-#endif /* TPP_HAVE_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT */
 #if TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT
 	/* .ttr_TPP_TOK_C_COMMENT = */ "C_COMMENT",
 #endif /* TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT */
@@ -1450,12 +1456,15 @@ static uint_least16_t const tpp_token_str_offsets[] = {
 #if TPP_HAVE_UNICODE
 	/* [TPP_TOK_UNICHAR] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_UNICHAR),
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TOK_C_INT
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT
 	/* [TPP_TOK_C_INT] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_C_INT),
-#endif /* TPP_HAVE_TOK_C_INT */
-#if TPP_HAVE_TOK_C_FLOAT
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT */
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX
+	/* [TPP_TOK_PASCAL_HEX] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_PASCAL_HEX),
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX */
+#if TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT
 	/* [TPP_TOK_C_FLOAT] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_C_FLOAT),
-#endif /* TPP_HAVE_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT */
 #if TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT
 	/* [TPP_TOK_C_COMMENT] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_C_COMMENT),
 #endif /* TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT */

@@ -202,23 +202,69 @@ typedef enum tpp_token_id {
 	TPP_TOK_UNICHAR, /* "<unicode character>" Misc unicode character that could not be classified */
 #endif /* TPP_HAVE_UNICODE */
 
+
+#if TPP_HAVE_TOK_INT
+	TPP_TOK_INTLIKE_MIN,
+	TPP_INTERNAL(_TPP_TOK_INTLIKE_MIN) = TPP_TOK_INTLIKE_MIN - 1,
 #if TPP_HAVE_TOK_C_INT
 	TPP_TOK_C_INT, /* "<integer>" 42 */
-#define TPP_CASE_TPP_TOK_INT case TPP_TOK_C_INT:
-#define TPP_TOK_ISINT(x)     ((x) == TPP_TOK_C_INT)
+#define _TPP_CASE_TPP_TOK_C_INT case TPP_TOK_C_INT:
 #else /* TPP_HAVE_TOK_C_INT */
+#define _TPP_CASE_TPP_TOK_C_INT /* nothing */
+#endif /* !TPP_HAVE_TOK_C_INT */
+#if TPP_HAVE_TOK_PASCAL_HEX
+	TPP_TOK_PASCAL_HEX, /* "<integer>" $DEADBEEF */
+#define _TPP_CASE_TPP_TOK_PASCAL_HEX case TPP_TOK_PASCAL_HEX:
+#else /* TPP_HAVE_TOK_PASCAL_HEX */
+#define _TPP_CASE_TPP_TOK_PASCAL_HEX /* nothing */
+#endif /* !TPP_HAVE_TOK_PASCAL_HEX */
+	TPP_INTERNAL(_TPP_TOK_INTLIKE_MAX),
+	TPP_TOK_INTLIKE_MAX = TPP_INTERNAL(_TPP_TOK_INTLIKE_MAX) - 1,
+#define TPP_CASE_TPP_TOK_INT \
+	_TPP_CASE_TPP_TOK_C_INT  \
+	_TPP_CASE_TPP_TOK_PASCAL_HEX
+#define TPP_TOK_ISINT(x)           \
+	((x) >= TPP_TOK_INTLIKE_MIN && \
+	 (x) <= TPP_TOK_INTLIKE_MAX)
+#else /* TPP_HAVE_TOK_INT */
 #define TPP_CASE_TPP_TOK_INT /* nothing */
 #define TPP_TOK_ISINT(x)     0
-#endif /* !TPP_HAVE_TOK_C_INT */
+#endif /* !TPP_HAVE_TOK_INT */
 
+
+#if TPP_HAVE_TOK_FLOAT
+	TPP_TOK_FLOATLIKE_MIN,
+	TPP_INTERNAL(_TPP_TOK_FLOATLIKE_MIN) = TPP_TOK_FLOATLIKE_MIN - 1,
 #if TPP_HAVE_TOK_C_FLOAT
 	TPP_TOK_C_FLOAT, /* "<float>" 42.0 */
-#define TPP_CASE_TPP_TOK_FLOAT case TPP_TOK_C_FLOAT:
-#define TPP_TOK_ISFLOAT(x)     ((x) == TPP_TOK_C_FLOAT)
+#define _TPP_CASE_TPP_TOK_C_FLOAT case TPP_TOK_C_FLOAT:
 #else /* TPP_HAVE_TOK_C_FLOAT */
+#define _TPP_CASE_TPP_TOK_C_FLOAT /* nothing */
+#endif /* !TPP_HAVE_TOK_C_FLOAT */
+	TPP_INTERNAL(_TPP_TOK_FLOATLIKE_MAX),
+	TPP_TOK_FLOATLIKE_MAX = TPP_INTERNAL(_TPP_TOK_FLOATLIKE_MAX) - 1,
+#define TPP_CASE_TPP_TOK_FLOAT \
+	_TPP_CASE_TPP_TOK_C_FLOAT
+#define TPP_TOK_ISFLOAT(x)           \
+	((x) >= TPP_TOK_FLOATLIKE_MIN && \
+	 (x) <= TPP_TOK_FLOATLIKE_MAX)
+#else /* TPP_HAVE_TOK_FLOAT */
 #define TPP_CASE_TPP_TOK_FLOAT /* nothing */
 #define TPP_TOK_ISFLOAT(x)     0
-#endif /* !TPP_HAVE_TOK_C_FLOAT */
+#endif /* !TPP_HAVE_TOK_FLOAT */
+
+	/* Any kind of number-like token */
+#define TPP_CASE_TPP_TOK_NUMBER \
+	TPP_CASE_TPP_TOK_INT        \
+	TPP_CASE_TPP_TOK_FLOAT
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_FLOAT
+#define TPP_TOK_ISNUMBER(x) ((x) >= TPP_TOK_INTLIKE_MIN && (x) <= TPP_TOK_FLOATLIKE_MAX)
+#elif TPP_HAVE_TOK_INT
+#define TPP_TOK_ISNUMBER(x) TPP_TOK_ISINT(x)
+#else /* ... */
+#define TPP_TOK_ISNUMBER(x) TPP_TOK_ISFLOAT(x)
+#endif /* !... */
+
 
 #if TPP_HAVE_TOK_COMMENTLIKE
 	TPP_TOK_COMMENTLIKE_MIN,

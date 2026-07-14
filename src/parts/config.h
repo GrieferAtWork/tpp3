@@ -1884,6 +1884,12 @@
 #define TPP_HAVE_TOK_C_INT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-c-int" */
 #endif /* !TPP_HAVE_TOK_C_INT */
 
+/* Pascal-style hex token `$DEADBEEF`. When disabled, such constructs would
+ * instead be treated as identifiers (depending on `TPP_HAVE_TOK_DOLLAR`) */
+#ifndef TPP_HAVE_TOK_PASCAL_HEX
+#define TPP_HAVE_TOK_PASCAL_HEX TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-pascal-hex" */
+#endif /* !TPP_HAVE_TOK_PASCAL_HEX */
+
 /* C-style float token `123.0`
  * @detect: #if __TPP_COUNT_TOKENS("123.0") == 1 */
 #ifndef TPP_HAVE_TOK_C_FLOAT
@@ -2131,9 +2137,17 @@
 
 
 #undef TPP_HAVE_TOK_INT
-#define TPP_HAVE_TOK_INT TPP_HAVE_TOK_C_INT
+#if TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_PASCAL_HEX
+#define TPP_HAVE_TOK_INT 1
+#else /* TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_PASCAL_HEX */
+#define TPP_HAVE_TOK_INT 0
+#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_PASCAL_HEX */
 #undef TPP_HAVE_TOK_FLOAT
-#define TPP_HAVE_TOK_FLOAT TPP_HAVE_TOK_C_FLOAT
+#if TPP_HAVE_TOK_C_FLOAT
+#define TPP_HAVE_TOK_FLOAT 1
+#else /* TPP_HAVE_TOK_C_FLOAT */
+#define TPP_HAVE_TOK_FLOAT 0
+#endif /* !TPP_HAVE_TOK_C_FLOAT */
 #undef TPP_HAVE_TOK_COMMENTLIKE_NOLINE
 #if (TPP_HAVE_TOK_C_COMMENT ||      \
      TPP_HAVE_TOK_PASCAL_COMMENT || \

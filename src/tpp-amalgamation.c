@@ -163,6 +163,7 @@
 #define tef_TPP_EXT_THOUSANDS_SEPARATOR_UNDERSCORE         TPP_INTERNAL(tef_TPP_EXT_THOUSANDS_SEPARATOR_UNDERSCORE)
 #define tef_TPP_EXT_THOUSANDS_SEPARATOR_SINGLETICK         TPP_INTERNAL(tef_TPP_EXT_THOUSANDS_SEPARATOR_SINGLETICK)
 #define tef_TPP_EXT_TOK_C_INT                              TPP_INTERNAL(tef_TPP_EXT_TOK_C_INT)
+#define tef_TPP_EXT_TOK_PASCAL_HEX                         TPP_INTERNAL(tef_TPP_EXT_TOK_PASCAL_HEX)
 #define tef_TPP_EXT_TOK_C_FLOAT                            TPP_INTERNAL(tef_TPP_EXT_TOK_C_FLOAT)
 #define tef_TPP_EXT_SMART_FLOAT_TOKENS                     TPP_INTERNAL(tef_TPP_EXT_SMART_FLOAT_TOKENS)
 #define tef_TPP_EXT_TOK_C_CHAR                             TPP_INTERNAL(tef_TPP_EXT_TOK_C_CHAR)
@@ -432,6 +433,7 @@
 #define tff_THOUSANDS_SEPARATOR_UNDERSCORE                 TPP_INTERNAL(tff_THOUSANDS_SEPARATOR_UNDERSCORE)
 #define tff_THOUSANDS_SEPARATOR_SINGLETICK                 TPP_INTERNAL(tff_THOUSANDS_SEPARATOR_SINGLETICK)
 #define tff_TOK_C_INT                                      TPP_INTERNAL(tff_TOK_C_INT)
+#define tff_TOK_PASCAL_HEX                                 TPP_INTERNAL(tff_TOK_PASCAL_HEX)
 #define tff_TOK_C_FLOAT                                    TPP_INTERNAL(tff_TOK_C_FLOAT)
 #define tff_SMART_FLOAT_TOKENS                             TPP_INTERNAL(tff_SMART_FLOAT_TOKENS)
 #define tff_TOK_C_CHAR                                     TPP_INTERNAL(tff_TOK_C_CHAR)
@@ -727,6 +729,10 @@
 #define tip_after_list                                     TPP_INTERNAL(tip_after_list)
 #define tip_pushcnt                                        TPP_INTERNAL(tip_pushcnt)
 #define tip_prev                                           TPP_INTERNAL(tip_prev)
+#define _TPP_TOK_INTLIKE_MIN                               TPP_INTERNAL(_TPP_TOK_INTLIKE_MIN)
+#define _TPP_TOK_INTLIKE_MAX                               TPP_INTERNAL(_TPP_TOK_INTLIKE_MAX)
+#define _TPP_TOK_FLOATLIKE_MIN                             TPP_INTERNAL(_TPP_TOK_FLOATLIKE_MIN)
+#define _TPP_TOK_FLOATLIKE_MAX                             TPP_INTERNAL(_TPP_TOK_FLOATLIKE_MAX)
 #define _TPP_TOK_COMMENTLIKE_MIN                           TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MIN)
 #define _TPP_TOK_COMMENTLIKE_NOLINE_MAX                    TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_NOLINE_MAX)
 #define _TPP_TOK_COMMENTLIKE_MAX                           TPP_INTERNAL(_TPP_TOK_COMMENTLIKE_MAX)
@@ -2414,12 +2420,15 @@ static struct tpp_token_str_strings_struct {
 #if TPP_HAVE_UNICODE
 	char ttr_TPP_TOK_UNICHAR[8];
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TOK_C_INT
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT
 	char ttr_TPP_TOK_C_INT[6];
-#endif /* TPP_HAVE_TOK_C_INT */
-#if TPP_HAVE_TOK_C_FLOAT
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT */
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX
+	char ttr_TPP_TOK_PASCAL_HEX[11];
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX */
+#if TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_C_FLOAT[8];
-#endif /* TPP_HAVE_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT */
 #if TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT
 	char ttr_TPP_TOK_C_COMMENT[10];
 #endif /* TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT */
@@ -2887,12 +2896,15 @@ static struct tpp_token_str_strings_struct {
 #if TPP_HAVE_UNICODE
 	/* .ttr_TPP_TOK_UNICHAR = */ "UNICHAR",
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TOK_C_INT
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT
 	/* .ttr_TPP_TOK_C_INT = */ "C_INT",
-#endif /* TPP_HAVE_TOK_C_INT */
-#if TPP_HAVE_TOK_C_FLOAT
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT */
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX
+	/* .ttr_TPP_TOK_PASCAL_HEX = */ "PASCAL_HEX",
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX */
+#if TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_C_FLOAT = */ "C_FLOAT",
-#endif /* TPP_HAVE_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT */
 #if TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT
 	/* .ttr_TPP_TOK_C_COMMENT = */ "C_COMMENT",
 #endif /* TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT */
@@ -3597,12 +3609,15 @@ static uint_least16_t const tpp_token_str_offsets[] = {
 #if TPP_HAVE_UNICODE
 	/* [TPP_TOK_UNICHAR] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_UNICHAR),
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TOK_C_INT
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT
 	/* [TPP_TOK_C_INT] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_C_INT),
-#endif /* TPP_HAVE_TOK_C_INT */
-#if TPP_HAVE_TOK_C_FLOAT
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT */
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX
+	/* [TPP_TOK_PASCAL_HEX] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_PASCAL_HEX),
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX */
+#if TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT
 	/* [TPP_TOK_C_FLOAT] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_C_FLOAT),
-#endif /* TPP_HAVE_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT */
 #if TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT
 	/* [TPP_TOK_C_COMMENT] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_C_COMMENT),
 #endif /* TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT */
@@ -4287,12 +4302,12 @@ static struct tpp_token_repr_strings_struct {
 #if TPP_HAVE_UNICODE
 	char ttr_TPP_TOK_UNICHAR[20];
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TOK_C_INT
+#if (TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT) || (TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX)
 	char ttr_TPP_TOK_C_INT[10];
-#endif /* TPP_HAVE_TOK_C_INT */
-#if TPP_HAVE_TOK_C_FLOAT
+#endif /* (TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT) || (TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX) */
+#if TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_C_FLOAT[8];
-#endif /* TPP_HAVE_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT */
 #if (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_PASCAL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_PASCAL_BRACE_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_HTML_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_CXX_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SQL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_AT_AT_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SHELL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SLASH_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_AT_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_SHELL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_SLASH_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_AT_COMMENT)
 	char ttr_TPP_TOK_C_COMMENT[10];
 #endif /* (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_PASCAL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_PASCAL_BRACE_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_HTML_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_CXX_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SQL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_AT_AT_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SHELL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SLASH_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_AT_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_SHELL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_SLASH_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_AT_COMMENT) */
@@ -4850,12 +4865,12 @@ static struct tpp_token_repr_strings_struct {
 #if TPP_HAVE_UNICODE
 	/* .ttr_TPP_TOK_UNICHAR = */ "<unicode character>",
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TOK_C_INT
+#if (TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT) || (TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX)
 	/* .ttr_TPP_TOK_C_INT = */ "<integer>",
-#endif /* TPP_HAVE_TOK_C_INT */
-#if TPP_HAVE_TOK_C_FLOAT
+#endif /* (TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT) || (TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX) */
+#if TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_C_FLOAT = */ "<float>",
-#endif /* TPP_HAVE_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT */
 #if (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_PASCAL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_PASCAL_BRACE_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_HTML_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_CXX_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SQL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_AT_AT_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SHELL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SLASH_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_AT_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_SHELL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_SLASH_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_AT_COMMENT)
 	/* .ttr_TPP_TOK_C_COMMENT = */ "<comment>",
 #endif /* (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_PASCAL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_PASCAL_BRACE_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_HTML_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_CXX_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SQL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_AT_AT_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SHELL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SLASH_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_AT_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_SHELL_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_SLASH_COMMENT) || (TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_SOL_AT_COMMENT) */
@@ -5414,12 +5429,15 @@ static uint_least16_t const tpp_token_repr_offsets[] = {
 #if TPP_HAVE_UNICODE
 	/* [TPP_TOK_UNICHAR] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_UNICHAR),
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_TOK_C_INT
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT
 	/* [TPP_TOK_C_INT] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_C_INT),
-#endif /* TPP_HAVE_TOK_C_INT */
-#if TPP_HAVE_TOK_C_FLOAT
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_C_INT */
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX
+	/* [TPP_TOK_PASCAL_HEX] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_C_INT),
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_TOK_PASCAL_HEX */
+#if TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT
 	/* [TPP_TOK_C_FLOAT] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_C_FLOAT),
-#endif /* TPP_HAVE_TOK_C_FLOAT */
+#endif /* TPP_HAVE_TOK_FLOAT && TPP_HAVE_TOK_C_FLOAT */
 #if TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT
 	/* [TPP_TOK_C_COMMENT] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_TPP_TOK_C_COMMENT),
 #endif /* TPP_HAVE_TOK_COMMENTLIKE && TPP_HAVE_TOK_C_COMMENT */
@@ -12671,6 +12689,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT)
 		/* .tff_TOK_C_INT                              = */ TPP_CONF_DEFAULT(TPP_HAVE_TOK_C_INT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX)
+		/* .tff_TOK_PASCAL_HEX                         = */ TPP_CONF_DEFAULT(TPP_HAVE_TOK_PASCAL_HEX),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT)
 		/* .tff_TOK_C_FLOAT                            = */ TPP_CONF_DEFAULT(TPP_HAVE_TOK_C_FLOAT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT) */
@@ -18949,7 +18970,7 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
      NEED_tpp_lexer_seek_end_of_block_string ||   \
      NEED_tpp_lexer_seek_end_of_cxx_raw_string || \
      NEED_tpp_lexer_seek_end_of_raw_string ||     \
-     TPP_HAVE_TOK_MC)
+     TPP_HAVE_TOK_MC || TPP_HAVE_TOK_PASCAL_HEX)
 #define NEED_read_ch2 1
 #else /* ... */
 #define NEED_read_ch2 0
@@ -21468,16 +21489,56 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
-#if TPP_HAVE_TOK_DOLLAR
-	case '$':
+#if TPP_HAVE_TOK_DOLLAR || TPP_HAVE_TOK_PASCAL_HEX
+	case '$': {
+#if TPP_HAVE_TOK_PASCAL_HEX
+		/* Check if all follow-up SYMCONT character are 0-9, a-f, A-F If so,
+		 * then this forms a pascal-hex number, rather than anything else. */
+		if (tpp_lexer_has(self, TOK_PASCAL_HEX)) {
+			read_ch2();
+			if (tpp_ascii_isxdigit(ch2)) {
+				tpp_size rel_end;
+				for (;;) {
+					rel_end = tpp_file_ptr2rel(file, pos);
+					read_ch2();
+					if (tpp_ascii_isxdigit(ch2))
+						continue; /* Keep going */
+					if (tpp_ascii_issymcont(ch2))
+						goto not_a_pascal_hex;
+#if TPP_HAVE_UNICODE
+					if (tpp_ascii_ismb(ch2) && tpp_file_isutf8(file)) {
+						tpp_unichar uc;
+						--pos;
+						error = tpp_lexer_readutf8(self, &pos, &uc);
+						if (TPP_ISERR(error))
+							goto return_error;
+						if tpp_unlikely(uc == 0 && !tpp_file_isutf8(file))
+							goto not_a_pascal_hex; /* Malformed utf-8 sequence */
+						if (tpp_unicode_issymcont(uc))
+							goto not_a_pascal_hex;
+					}
+#endif /* TPP_HAVE_UNICODE */
+					break;
+				}
+				pos = tpp_file_rel2ptr(file, rel_end);
+				result = TPP_TOK_PASCAL_HEX; /* $DEADEEF */
+				goto set_result;
+			}
+not_a_pascal_hex:
+			pos = tpp_file_rel2ptr(file, rel_start + 1);
+		}
+#endif /* TPP_HAVE_TOK_PASCAL_HEX */
+
+		/* Deal with handling of $-tokens */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR)
+#if TPP_HAVE_TOK_DOLLAR
 		if (tpp_lexer_has(self, TOK_DOLLAR))
 			break; /* Follow single-char code-branch */
+#endif /* TPP_HAVE_TOK_DOLLAR */
 		goto handle_keyword;
 #define WANT_handle_keyword
-#else /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR) */
-		break; /* Follow single-char code-branch */
-#endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR) */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR) */
+	}	break;
 #endif /* TPP_HAVE_TOK_DOLLAR */
 /************************************************************************/
 
@@ -21792,9 +21853,9 @@ handle_space:
 #endif /* !TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL && !TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL */
 		case 'V': case 'W': case 'X': case 'Y': case 'Z':
 		case '_':
-#if !TPP_HAVE_TOK_DOLLAR
+#if !TPP_HAVE_TOK_DOLLAR && !TPP_HAVE_TOK_PASCAL_HEX
 		case '$':
-#endif /* !TPP_HAVE_TOK_DOLLAR */
+#endif /* !TPP_HAVE_TOK_DOLLAR && !TPP_HAVE_TOK_PASCAL_HEX */
 #endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
 
 #ifdef WANT_handle_keyword

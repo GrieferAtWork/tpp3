@@ -2213,7 +2213,7 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
      NEED_tpp_lexer_seek_end_of_block_string ||   \
      NEED_tpp_lexer_seek_end_of_cxx_raw_string || \
      NEED_tpp_lexer_seek_end_of_raw_string ||     \
-     TPP_HAVE_TOK_MC)
+     TPP_HAVE_TOK_MC || TPP_HAVE_TOK_PASCAL_HEX)
 #define NEED_read_ch2 1
 #else /* ... */
 #define NEED_read_ch2 0
@@ -4795,16 +4795,56 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
-#if TPP_HAVE_TOK_DOLLAR
-	case '$':
+#if TPP_HAVE_TOK_DOLLAR || TPP_HAVE_TOK_PASCAL_HEX
+	case '$': {
+#if TPP_HAVE_TOK_PASCAL_HEX
+		/* Check if all follow-up SYMCONT character are 0-9, a-f, A-F If so,
+		 * then this forms a pascal-hex number, rather than anything else. */
+		if (tpp_lexer_has(self, TOK_PASCAL_HEX)) {
+			read_ch2();
+			if (tpp_ascii_isxdigit(ch2)) {
+				tpp_size rel_end;
+				for (;;) {
+					rel_end = tpp_file_ptr2rel(file, pos);
+					read_ch2();
+					if (tpp_ascii_isxdigit(ch2))
+						continue; /* Keep going */
+					if (tpp_ascii_issymcont(ch2))
+						goto not_a_pascal_hex;
+#if TPP_HAVE_UNICODE
+					if (tpp_ascii_ismb(ch2) && tpp_file_isutf8(file)) {
+						tpp_unichar uc;
+						--pos;
+						error = tpp_lexer_readutf8(self, &pos, &uc);
+						if (TPP_ISERR(error))
+							goto return_error;
+						if tpp_unlikely(uc == 0 && !tpp_file_isutf8(file))
+							goto not_a_pascal_hex; /* Malformed utf-8 sequence */
+						if (tpp_unicode_issymcont(uc))
+							goto not_a_pascal_hex;
+					}
+#endif /* TPP_HAVE_UNICODE */
+					break;
+				}
+				pos = tpp_file_rel2ptr(file, rel_end);
+				result = TPP_TOK_PASCAL_HEX; /* $DEADEEF */
+				goto set_result;
+			}
+not_a_pascal_hex:
+			pos = tpp_file_rel2ptr(file, rel_start + 1);
+		}
+#endif /* TPP_HAVE_TOK_PASCAL_HEX */
+
+		/* Deal with handling of $-tokens */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR)
+#if TPP_HAVE_TOK_DOLLAR
 		if (tpp_lexer_has(self, TOK_DOLLAR))
 			break; /* Follow single-char code-branch */
+#endif /* TPP_HAVE_TOK_DOLLAR */
 		goto handle_keyword;
 #define WANT_handle_keyword
-#else /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR) */
-		break; /* Follow single-char code-branch */
-#endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR) */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_DOLLAR) */
+	}	break;
 #endif /* TPP_HAVE_TOK_DOLLAR */
 /************************************************************************/
 
@@ -5119,9 +5159,9 @@ handle_space:
 #endif /* !TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL && !TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL */
 		case 'V': case 'W': case 'X': case 'Y': case 'Z':
 		case '_':
-#if !TPP_HAVE_TOK_DOLLAR
+#if !TPP_HAVE_TOK_DOLLAR && !TPP_HAVE_TOK_PASCAL_HEX
 		case '$':
-#endif /* !TPP_HAVE_TOK_DOLLAR */
+#endif /* !TPP_HAVE_TOK_DOLLAR && !TPP_HAVE_TOK_PASCAL_HEX */
 #endif /* TPP_HAVE_ASSUME_ASCII_CTYPE */
 
 #ifdef WANT_handle_keyword

@@ -130,6 +130,10 @@ print("#endif /" "* !tpp_ascii_islf_or_mblf *" "/");
 #define tpp_ascii_ofuprxdigit(v)  ('A' + ((v) - 10))  /* value => tpp_ascii_isuprxdigit-ch */
 #endif /* !tpp_ascii_isuprxdigit */
 
+#ifndef tpp_ascii_isxdigit
+#define tpp_ascii_isxdigit(ch) \
+	(tpp_ascii_isdigit(ch) || tpp_ascii_islwrxdigit(ch) || tpp_ascii_isuprxdigit(ch))
+#endif /* !tpp_ascii_isxdigit */
 
 #if TPP_HAVE_UNICODE
 

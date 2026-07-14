@@ -1816,6 +1816,14 @@ TPP_EXTENSION(TPP_EXT_THOUSANDS_SEPARATOR_SINGLETICK, TPP_EXTNAME_THOUSANDS_SEPA
 TPP_EXTENSION(TPP_EXT_TOK_C_INT, TPP_EXTNAME_TOK_C_INT, TPP_CONF_DEFAULT(TPP_HAVE_TOK_C_INT))
 #define _tpp_lexer_has_TOK_C_INT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TOK_C_INT)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_TOK_C_INT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_TOK_PASCAL_HEX)
+#ifndef TPP_EXTNAME_TOK_PASCAL_HEX
+#define TPP_EXTNAME_TOK_PASCAL_HEX "tok-pascal-hex"
+#endif /* !TPP_EXTNAME_TOK_PASCAL_HEX */
+#define TPP_EXT_TOK_PASCAL_HEX TPP_EXT_TOK_PASCAL_HEX
+TPP_EXTENSION(TPP_EXT_TOK_PASCAL_HEX, TPP_EXTNAME_TOK_PASCAL_HEX, TPP_CONF_DEFAULT(TPP_HAVE_TOK_PASCAL_HEX))
+#define _tpp_lexer_has_TOK_PASCAL_HEX(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_TOK_PASCAL_HEX)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_TOK_PASCAL_HEX) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_TOK_C_FLOAT)
 #ifndef TPP_EXTNAME_TOK_C_FLOAT
 #define TPP_EXTNAME_TOK_C_FLOAT "tok-c-float"
@@ -6556,6 +6564,12 @@ TPP_DECL_END
 #define TPP_HAVE_TOK_C_INT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-c-int" */
 #endif /* !TPP_HAVE_TOK_C_INT */
 
+/* Pascal-style hex token `$DEADBEEF`. When disabled, such constructs would
+ * instead be treated as identifiers (depending on `TPP_HAVE_TOK_DOLLAR`) */
+#ifndef TPP_HAVE_TOK_PASCAL_HEX
+#define TPP_HAVE_TOK_PASCAL_HEX TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-pascal-hex" */
+#endif /* !TPP_HAVE_TOK_PASCAL_HEX */
+
 /* C-style float token `123.0`
  * @detect: #if __TPP_COUNT_TOKENS("123.0") == 1 */
 #ifndef TPP_HAVE_TOK_C_FLOAT
@@ -6803,9 +6817,17 @@ TPP_DECL_END
 
 
 #undef TPP_HAVE_TOK_INT
-#define TPP_HAVE_TOK_INT TPP_HAVE_TOK_C_INT
+#if TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_PASCAL_HEX
+#define TPP_HAVE_TOK_INT 1
+#else /* TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_PASCAL_HEX */
+#define TPP_HAVE_TOK_INT 0
+#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_PASCAL_HEX */
 #undef TPP_HAVE_TOK_FLOAT
-#define TPP_HAVE_TOK_FLOAT TPP_HAVE_TOK_C_FLOAT
+#if TPP_HAVE_TOK_C_FLOAT
+#define TPP_HAVE_TOK_FLOAT 1
+#else /* TPP_HAVE_TOK_C_FLOAT */
+#define TPP_HAVE_TOK_FLOAT 0
+#endif /* !TPP_HAVE_TOK_C_FLOAT */
 #undef TPP_HAVE_TOK_COMMENTLIKE_NOLINE
 #if (TPP_HAVE_TOK_C_COMMENT ||      \
      TPP_HAVE_TOK_PASCAL_COMMENT || \
@@ -9626,6 +9648,10 @@ TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (c
 #define tpp_ascii_ofuprxdigit(v)  ('A' + ((v) - 10))  /* value => tpp_ascii_isuprxdigit-ch */
 #endif /* !tpp_ascii_isuprxdigit */
 
+#ifndef tpp_ascii_isxdigit
+#define tpp_ascii_isxdigit(ch) \
+	(tpp_ascii_isdigit(ch) || tpp_ascii_islwrxdigit(ch) || tpp_ascii_isuprxdigit(ch))
+#endif /* !tpp_ascii_isxdigit */
 
 #if TPP_HAVE_UNICODE
 
@@ -10536,23 +10562,69 @@ typedef enum tpp_token_id {
 	TPP_TOK_UNICHAR, /* "<unicode character>" Misc unicode character that could not be classified */
 #endif /* TPP_HAVE_UNICODE */
 
+
+#if TPP_HAVE_TOK_INT
+	TPP_TOK_INTLIKE_MIN,
+	TPP_INTERNAL(_TPP_TOK_INTLIKE_MIN) = TPP_TOK_INTLIKE_MIN - 1,
 #if TPP_HAVE_TOK_C_INT
 	TPP_TOK_C_INT, /* "<integer>" 42 */
-#define TPP_CASE_TPP_TOK_INT case TPP_TOK_C_INT:
-#define TPP_TOK_ISINT(x)     ((x) == TPP_TOK_C_INT)
+#define _TPP_CASE_TPP_TOK_C_INT case TPP_TOK_C_INT:
 #else /* TPP_HAVE_TOK_C_INT */
+#define _TPP_CASE_TPP_TOK_C_INT /* nothing */
+#endif /* !TPP_HAVE_TOK_C_INT */
+#if TPP_HAVE_TOK_PASCAL_HEX
+	TPP_TOK_PASCAL_HEX, /* "<integer>" $DEADBEEF */
+#define _TPP_CASE_TPP_TOK_PASCAL_HEX case TPP_TOK_PASCAL_HEX:
+#else /* TPP_HAVE_TOK_PASCAL_HEX */
+#define _TPP_CASE_TPP_TOK_PASCAL_HEX /* nothing */
+#endif /* !TPP_HAVE_TOK_PASCAL_HEX */
+	TPP_INTERNAL(_TPP_TOK_INTLIKE_MAX),
+	TPP_TOK_INTLIKE_MAX = TPP_INTERNAL(_TPP_TOK_INTLIKE_MAX) - 1,
+#define TPP_CASE_TPP_TOK_INT \
+	_TPP_CASE_TPP_TOK_C_INT  \
+	_TPP_CASE_TPP_TOK_PASCAL_HEX
+#define TPP_TOK_ISINT(x)           \
+	((x) >= TPP_TOK_INTLIKE_MIN && \
+	 (x) <= TPP_TOK_INTLIKE_MAX)
+#else /* TPP_HAVE_TOK_INT */
 #define TPP_CASE_TPP_TOK_INT /* nothing */
 #define TPP_TOK_ISINT(x)     0
-#endif /* !TPP_HAVE_TOK_C_INT */
+#endif /* !TPP_HAVE_TOK_INT */
 
+
+#if TPP_HAVE_TOK_FLOAT
+	TPP_TOK_FLOATLIKE_MIN,
+	TPP_INTERNAL(_TPP_TOK_FLOATLIKE_MIN) = TPP_TOK_FLOATLIKE_MIN - 1,
 #if TPP_HAVE_TOK_C_FLOAT
 	TPP_TOK_C_FLOAT, /* "<float>" 42.0 */
-#define TPP_CASE_TPP_TOK_FLOAT case TPP_TOK_C_FLOAT:
-#define TPP_TOK_ISFLOAT(x)     ((x) == TPP_TOK_C_FLOAT)
+#define _TPP_CASE_TPP_TOK_C_FLOAT case TPP_TOK_C_FLOAT:
 #else /* TPP_HAVE_TOK_C_FLOAT */
+#define _TPP_CASE_TPP_TOK_C_FLOAT /* nothing */
+#endif /* !TPP_HAVE_TOK_C_FLOAT */
+	TPP_INTERNAL(_TPP_TOK_FLOATLIKE_MAX),
+	TPP_TOK_FLOATLIKE_MAX = TPP_INTERNAL(_TPP_TOK_FLOATLIKE_MAX) - 1,
+#define TPP_CASE_TPP_TOK_FLOAT \
+	_TPP_CASE_TPP_TOK_C_FLOAT
+#define TPP_TOK_ISFLOAT(x)           \
+	((x) >= TPP_TOK_FLOATLIKE_MIN && \
+	 (x) <= TPP_TOK_FLOATLIKE_MAX)
+#else /* TPP_HAVE_TOK_FLOAT */
 #define TPP_CASE_TPP_TOK_FLOAT /* nothing */
 #define TPP_TOK_ISFLOAT(x)     0
-#endif /* !TPP_HAVE_TOK_C_FLOAT */
+#endif /* !TPP_HAVE_TOK_FLOAT */
+
+	/* Any kind of number-like token */
+#define TPP_CASE_TPP_TOK_NUMBER \
+	TPP_CASE_TPP_TOK_INT        \
+	TPP_CASE_TPP_TOK_FLOAT
+#if TPP_HAVE_TOK_INT && TPP_HAVE_TOK_FLOAT
+#define TPP_TOK_ISNUMBER(x) ((x) >= TPP_TOK_INTLIKE_MIN && (x) <= TPP_TOK_FLOATLIKE_MAX)
+#elif TPP_HAVE_TOK_INT
+#define TPP_TOK_ISNUMBER(x) TPP_TOK_ISINT(x)
+#else /* ... */
+#define TPP_TOK_ISNUMBER(x) TPP_TOK_ISFLOAT(x)
+#endif /* !... */
+
 
 #if TPP_HAVE_TOK_COMMENTLIKE
 	TPP_TOK_COMMENTLIKE_MIN,
@@ -12099,6 +12171,7 @@ tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
      TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE) ||         \
      TPP_CONF_IS_FEAT(TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK) ||         \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT) ||                              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX) ||                         \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT) ||                            \
      TPP_CONF_IS_FEAT(TPP_HAVE_SMART_FLOAT_TOKENS) ||                     \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_CHAR) ||                             \
@@ -12606,6 +12679,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT)
 	TPP_FEAT_TOK_C_INT,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX)
+	TPP_FEAT_TOK_PASCAL_HEX,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT)
 	TPP_FEAT_TOK_C_FLOAT,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT) */
@@ -13506,6 +13582,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_TOK_C_INT): 1;
 #define _tpp_lexer_has_TOK_C_INT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_C_INT)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_INT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX)
+		unsigned int TPP_INTERNAL(tff_TOK_PASCAL_HEX): 1;
+#define _tpp_lexer_has_TOK_PASCAL_HEX(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_PASCAL_HEX)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_PASCAL_HEX) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_C_FLOAT)
 		unsigned int TPP_INTERNAL(tff_TOK_C_FLOAT): 1;
 #define _tpp_lexer_has_TOK_C_FLOAT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_C_FLOAT)
@@ -14436,6 +14516,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_TOK_C_INT)
 #define _tpp_lexer_has_TOK_C_INT(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_C_INT)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_C_INT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_TOK_PASCAL_HEX)
+#define _tpp_lexer_has_TOK_PASCAL_HEX(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_PASCAL_HEX)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_PASCAL_HEX) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_TOK_C_FLOAT)
 #define _tpp_lexer_has_TOK_C_FLOAT(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_C_FLOAT)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_C_FLOAT) */
