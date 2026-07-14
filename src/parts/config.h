@@ -2073,6 +2073,18 @@
 #define TPP_HAVE_STRING_ESCAPE_OCT ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_OCT */
 
+/* Support for `\o{377}` as alias for `\377` */
+#ifndef TPP_HAVE_STRING_ESCAPE_OCT_BRACE
+#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct-brace" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_OCT_BRACE */
+
+/* Support for `\o{ 0 037 , 377 }` as alias for `\0\037\377`.
+ * This is an extension to `TPP_HAVE_STRING_ESCAPE_OCT_BRACE`,
+ * meaning it also requires that extension to be enabled to work. */
+#ifndef TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY
+#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY ((TPP_HAVE_STRING_ESCAPE_OCT_BRACE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) : 0) /* "-fstring-escape-oct-brace-many" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY */
+
 /* Support for `\xAB` hex sequences (with `1`-`2` characters in range `0-9`, `a-f`, `A-F` following the `\`)
  * When `TPP_HAVE_STRING_ESCAPE_HEX_BIG` is also enabled, the limit of `2` characters is lifted. */
 #ifndef TPP_HAVE_STRING_ESCAPE_HEX
@@ -2086,23 +2098,6 @@
 #define TPP_HAVE_STRING_ESCAPE_HEX_BIG (TPP_HAVE_STRING_ESCAPE_HEX ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fstring-escape-hex-big" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_HEX_BIG */
 
-/* Support for `\u1234` and `\U12345678` unicode ordinal escape sequences. */
-#ifndef TPP_HAVE_STRING_ESCAPE_UNI
-#define TPP_HAVE_STRING_ESCAPE_UNI ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni" */
-#endif /* !TPP_HAVE_STRING_ESCAPE_UNI */
-
-/* Support for `\o{377}` as alias for `\377` */
-#ifndef TPP_HAVE_STRING_ESCAPE_OCT_BRACE
-#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct-brace" */
-#endif /* !TPP_HAVE_STRING_ESCAPE_OCT_BRACE */
-
-/* Support for `\o{ 0 037 , 377 }` as alias for `\0\037\377`.
- * This is an extension to `TPP_HAVE_STRING_ESCAPE_OCT_BRACE`,
- * meaning it also requires that extension to be enabled to work. */
-#ifndef TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY
-#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY ((TPP_HAVE_STRING_ESCAPE_OCT_BRACE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) : 0) /* "-fstring-escape-oct-brace-many" */
-#endif /* !TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY */
-
 /* Support for `\o{377}` as alias for `\377` */
 #ifndef TPP_HAVE_STRING_ESCAPE_HEX_BRACE
 #define TPP_HAVE_STRING_ESCAPE_HEX_BRACE ((TPP_HAVE_STRING_ESCAPE_HEX && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-hex-brace" */
@@ -2114,6 +2109,23 @@
 #ifndef TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY
 #define TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY ((TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) : 0) /* "-fstring-escape-hex-brace-many" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY */
+
+/* Support for `\u1234` and `\U12345678` unicode ordinal escape sequences. */
+#ifndef TPP_HAVE_STRING_ESCAPE_UNI
+#define TPP_HAVE_STRING_ESCAPE_UNI ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_UNI */
+
+/* Support for `\u{12345678}` unicode ordinal escape sequences. */
+#ifndef TPP_HAVE_STRING_ESCAPE_UNI_BRACE
+#define TPP_HAVE_STRING_ESCAPE_UNI_BRACE ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni-brace" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_UNI_BRACE */
+
+/* Support for `\u{ 1234 5678 , ABCDEF }` as alias for `\u1234\u5678\U00ABCDEF`.
+ * This is an extension to `TPP_HAVE_STRING_ESCAPE_UNI_BRACE`,
+ * meaning it also requires that extension to be enabled to work. */
+#ifndef TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY
+#define TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY ((TPP_HAVE_STRING_ESCAPE_UNI_BRACE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) : 0) /* "-fstring-escape-uni-brace-many" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY */
 
 /* Enable support for large (> 1 byte) character constants in `tpp_lexer_decodestring()` */
 #ifndef TPP_HAVE_STRING_ESCAPE_BIGCHAR
