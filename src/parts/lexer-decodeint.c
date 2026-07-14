@@ -57,19 +57,23 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 		iter  = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
 		switch (ch) {
 
+#if TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS
 		case 'x':
 		case 'X':
+			if (!tpp_lexer_has(self, LEXER_DECODEINT_HEX_LITERALS))
+				break;
 			if (iter >= end)
 				goto handle_invalid;
 			ch    = *iter++;
 			iter  = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
 			radix = 16;
 			break;
+#endif /* TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS */
 
-#if TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
+#if TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS
 		case 'b':
 		case 'B':
-			if (!tpp_lexer_has(self, BUILTIN_EXPR_BINARY_LITERALS))
+			if (!tpp_lexer_has(self, LEXER_DECODEINT_BINARY_LITERALS))
 				break;
 			if (iter >= end)
 				goto handle_invalid;
@@ -77,12 +81,12 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 			iter  = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
 			radix = 2;
 			break;
-#endif /* TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
+#endif /* TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS */
 
-#if TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS
+#if TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS
 		case 'o':
 		case 'O':
-			if (!tpp_lexer_has(self, BUILTIN_EXPR_OCTAL_LITERALS))
+			if (!tpp_lexer_has(self, LEXER_DECODEINT_OCTAL_LITERALS))
 				break;
 			if (iter >= end)
 				goto handle_invalid;
@@ -90,7 +94,7 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 			iter  = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
 			radix = 8;
 			break;
-#endif /* TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
+#endif /* TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS */
 
 		default: break;
 		}

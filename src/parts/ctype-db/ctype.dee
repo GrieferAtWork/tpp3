@@ -312,6 +312,12 @@ function generateUnicodeDatabase() {
 	print("TPP_DECL_BEGIN");
 	print("");
 	print("#if TPP_HAVE_BUILTIN_CTYPE_UNICODE");
+	/* XXX: Might be able to compress this better if instead of having 2 tables,
+	 *      we instead had a single table with entries at every ord-boundary where
+	 *      something changes (with the flags set for that ord applying until the
+	 *      next ord that has different flags)
+	 * Reading from that table wouldn't be armortized O(1), but it should still be
+	 * fast enough so-as not to be noticably slower. */
 	printTable("tpp_unicode_tab1", unicode_tab1);
 	printTable("tpp_unicode_tab2", unicode_tab2);
 	print;

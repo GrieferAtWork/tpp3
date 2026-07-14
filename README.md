@@ -118,7 +118,7 @@ NOTE: A full list of configuration options and their meaning can be found in [do
 | `?:` | GCC | `BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT` | `-fif-else-optional-true` | GCC-style if-else in expressions: `#if foo ?: bar` |
 | `__VA_OPT__` | C++20 | `VA_OPT_IN_MACROS` | `-fva-opt-in-macros` | C++20 `__VA_OPT__`: `#define printf(format, ...) fprintf(stdout, format __VA_OPT__(,) __VA_ARGS__)` |
 | `\e` | GCC | `ESCAPE_E_IN_STRINGS` | `-fescape-e-in-strings` | Support for "\e" (for U+001B) escape sequences |
-| `0b00101010` | C++14 | `BUILTIN_EXPR_BINARY_LITERALS` | `-fbinary-literals` | Enable support for "0b" literals in builtin lexer expressions |
+| `0b00101010` | C++14 | `LEXER_DECODEINT_BINARY_LITERALS` | `-fbinary-literals` | Enable support for "0b" literals in builtin lexer expressions |
 | `__pragma` | MSVC | `MACRO___pragma` | `-f__pragma` | MSVC's `__pragma(push_macro("foo"))` keyword/macro |
 | `_Pragma` | C++11 | `MACRO__Pragma` | `-f_Pragma` | STDC's `_Pragma("push_macro(\"foo\")")` keyword/macro |
 | `#if`, `#ifdef`, ... | C | `CPP_IF_ELSE_ENDIF` | `-fif-directives` | Conditional code blocks |

@@ -229,10 +229,7 @@
  * - `U+00DF` (`ß`)    will be treated accepted as part of an identifier
  *
  * As such, TPP3 follows C23+-specifications, in that the builtin unicode
- * database is set-up to accept identifiers made up of `XID_Start`/`XID_Cont`.
- *
- * XXX: Config where `[C99,C23)`-compliant identifiers are recognized (i.e.: where 🐱 is an identifier)
- *      https://en.cppreference.com/c/language/identifier */
+ * database is set-up to accept identifiers made up of `XID_Start`/`XID_Cont`. */
 #ifndef TPP_HAVE_BUILTIN_CTYPE_UNICODE
 #define TPP_HAVE_BUILTIN_CTYPE_UNICODE (TPP_HAVE_UNICODE && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_BUILTIN_CTYPE_UNICODE */
@@ -1853,16 +1850,6 @@
  *
  * XXX: This should get its own token ID
  */
-
-/* XXX: Support for Pascal-style hex numbers; could be made to co-exist with
- *      TPP_HAVE_TOK_DOLLAR such that hex is only detected when the next
- *      character is 0-9, a-f, A-F:
- *  - $FF  (same as 0xFF)
- *
- * XXX: This should get its own token ID
- */
-
-/* XXX: Feature to disable support for C-style "0x" radix prefixes in tpp_lexer_decodeint() */
 
 /* Allow use of `_` as a thousands separator `123_456_789`
  * in `TPP_HAVE_TOK_C_INT` and `TPP_HAVE_TOK_C_FLOAT` */
@@ -4022,16 +4009,6 @@ for (local doc, name,
 #define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-flogical-xor-in-expressions" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR */
 
-/* Enable support for `0b` literals in builtin lexer expressions */
-#ifndef TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS
-#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS (((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fbinary-literals" */
-#endif /* !TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS */
-
-/* Enable support for `0o` literals in builtin lexer expressions */
-#ifndef TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS
-#define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS (((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
-#endif /* !TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
-
 /* Treat `'a'` in expressions as an integer, rather than as a string (in C/C++, this is always the case) */
 #ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : (TPP_HAVE_PROFILE_C_LIKE ? 1 : 0)) : 0) /* "-fcharacter-literals" */
@@ -4540,6 +4517,21 @@ for (local doc, name,
 	                      TPP_HAVE_PRAGMA_WARNING ||         \
 	                      TPP_HAVE_PRAGMA_TPP_WARNING))
 #endif /* !TPP_HAVE_LEXER_DECODEINT */
+
+/* Enable support for `0x` literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
+#ifndef TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS
+#define TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS ((TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fhex-literals" */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS */
+
+/* Enable support for `0b` literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
+#ifndef TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS
+#define TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS ((TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-fbinary-literals" */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS */
+
+/* Enable support for `0o` literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
+#ifndef TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS
+#define TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS ((TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS */
 
 /* Provide a function `tpp_lexer_decodefloat_expr()` to parse a float into a `tpp_expr_value` */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_EXPR

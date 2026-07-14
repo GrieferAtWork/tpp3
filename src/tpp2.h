@@ -2553,8 +2553,6 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    TPP_CONFIG_EXTENSION_GCC_IFELSE        /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
 #define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    /* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
 #define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR            TPP_CONFIG_EXTENSION_LXOR              /* Enable support for "^^" in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS        TPP_CONFIG_EXTENSION_BININTEGRAL       /* Enable support for "0b" literals in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS         0                                      /* Enable support for "0o" literals in builtin lexer expressions */
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS     1                                      /* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
 
 /* Include-path-related features */
@@ -2563,15 +2561,18 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE 1 /* TPP2 used to do this unconditionally */
 
 /* Misc. features */
-#define TPP_HAVE_QUALITY_WARNINGS        1                   /* General config for -Wquality warnings */
-#define TPP_HAVE_LEXER_WARNING_COUNT     1                   /* Needed to emulate "l_warncount" */
-#define TPP_HAVE_LEXER_CLI_DEFINE        1                   /* Needed to emulate "TPPLexer_Define()" */
-#define TPP_HAVE_LEXER_CLI_ASSERT        TPP_HAVE_CPP_ASSERT /* Needed to emulate "TPPLexer_AddAssert()" */
-#define TPP_HAVE_KEYWORDS_UNDEFALL       1                   /* Needed to emulate "TPPLEXER_RESET_MACRO" */
-#define TPP_HAVE_KEYWORDS_UNASSERTALL    1                   /* Needed to emulate "TPPLEXER_RESET_ASSERT" */
-#define TPP_HAVE_KEYWORDS_RESETFLAGS     1                   /* Needed to emulate "TPPLEXER_RESET_KWDFLAGS" + "TPPLEXER_RESET_FONCE" */
-#define TPP_HAVE_KEYWORDS_RESETCOUNTERS  1                   /* Needed to emulate "TPPLEXER_RESET_COUNTER" */
-#define TPP_HAVE_RT_FILE_AND_LINE_FORMAT 1                   /* Needed to emulate "TPPLEXER_FLAG_MSVC_MESSAGEFORMAT" */
+#define TPP_HAVE_QUALITY_WARNINGS                1                                /* General config for -Wquality warnings */
+#define TPP_HAVE_LEXER_WARNING_COUNT             1                                /* Needed to emulate "l_warncount" */
+#define TPP_HAVE_LEXER_CLI_DEFINE                1                                /* Needed to emulate "TPPLexer_Define()" */
+#define TPP_HAVE_LEXER_CLI_ASSERT                TPP_HAVE_CPP_ASSERT              /* Needed to emulate "TPPLexer_AddAssert()" */
+#define TPP_HAVE_KEYWORDS_UNDEFALL               1                                /* Needed to emulate "TPPLEXER_RESET_MACRO" */
+#define TPP_HAVE_KEYWORDS_UNASSERTALL            1                                /* Needed to emulate "TPPLEXER_RESET_ASSERT" */
+#define TPP_HAVE_KEYWORDS_RESETFLAGS             1                                /* Needed to emulate "TPPLEXER_RESET_KWDFLAGS" + "TPPLEXER_RESET_FONCE" */
+#define TPP_HAVE_KEYWORDS_RESETCOUNTERS          1                                /* Needed to emulate "TPPLEXER_RESET_COUNTER" */
+#define TPP_HAVE_RT_FILE_AND_LINE_FORMAT         1                                /* Needed to emulate "TPPLEXER_FLAG_MSVC_MESSAGEFORMAT" */
+#define TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS    1                                /* Enable support for "0x" literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
+#define TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS TPP_CONFIG_EXTENSION_BININTEGRAL /* Enable support for "0b" literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
+#define TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS  0                                /* Enable support for "0o" literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
 
 /* Force extensions to use the names they'd been using in TPP2 */
 #define TPP_EXTNAME_TRIGRAPHS                           "trigraphs"
@@ -2620,7 +2621,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    "if-else-optional-true"
 #define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS "ifelse-in-expressions"
 #define TPP_EXTNAME_BUILTIN_EXPR_LOGICAL_XOR            "logical-xor-in-expressions"
-#define TPP_EXTNAME_BUILTIN_EXPR_BINARY_LITERALS        "binary-literals"
+#define TPP_EXTNAME_LEXER_DECODEINT_BINARY_LITERALS        "binary-literals"
 /************************************************************************/
 
 
@@ -2985,7 +2986,7 @@ alias("EXT_STRINGOPS", "TPP_EXT_BUILTIN_EXPR_STRINGS");
 alias("EXT_GCC_IFELSE", "TPP_EXT_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT");
 alias("EXT_IFELSE_IN_EXPR", "TPP_EXT_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS");
 alias("EXT_LXOR", "TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR");
-alias("EXT_BININTEGRAL", "TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS");
+alias("EXT_BININTEGRAL", "TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS");
 alias("EXT_MSVC_FIXED_INT", "TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS");
 
 // Warning groups
@@ -4140,12 +4141,12 @@ alias("W_INVALID_FLOAT_SUFFIX", "TPP_HAVE_TPP_W_INVALID_FLOAT");
 #define EXT_LXOR TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_EXT_BUILTIN_EXPR_LOGICAL_XOR */
-#ifdef TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS
-#define TPP_EXT_BININTEGRAL TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS
+#ifdef TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS
+#define TPP_EXT_BININTEGRAL TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS
 #if TPP2_HAVE_GLOBAL_NAMESPACE
-#define EXT_BININTEGRAL TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS
+#define EXT_BININTEGRAL TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#endif /* TPP_EXT_BUILTIN_EXPR_BINARY_LITERALS */
+#endif /* TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS */
 #ifdef TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
 #define TPP_EXT_MSVC_FIXED_INT TPP_EXT_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS
 #if TPP2_HAVE_GLOBAL_NAMESPACE
