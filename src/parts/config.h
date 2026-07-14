@@ -3973,36 +3973,6 @@ for (local doc, name,
 #define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS (((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS */
 
-/* Enable support for `u`, `l`, `ul`, `ll`, `ull` integer suffixes */
-#ifndef TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
-#define TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TOK_C_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-integrals" */
-#endif /* !TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
-
-/* Enable support for `z`, `uz` integer suffixes */
-#ifndef TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX
-#define TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX ((TPP_HAVE_TOK_C_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fsize-type-integrals" */
-#endif /* !TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX */
-
-/* Enable support for `i8`, `i16`, `i32`, `i64`, `ui8`, `ui16`, `ui32`, `ui64` integer suffixes */
-#ifndef TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
-#define TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX ((TPP_HAVE_TOK_C_INT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-length-integrals" */
-#endif /* !TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
-
-/* Enable support for `f`, `F`, `l`, `L` float suffixes */
-#ifndef TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX
-#define TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-ffixed-type-float" */
-#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX */
-
-/* Enable support for `d`, `D` float suffixes */
-#ifndef TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX
-#define TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : 0) : 0) /* "-fdouble-type-float" */
-#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX */
-
-/* Enable support for `df`, `DF`, `dd`, `DD`, `dl`, `DL` float suffixes */
-#ifndef TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX
-#define TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fdecimal-type-float" */
-#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX */
-
 /* Treat `'a'` in expressions as an integer, rather than as a string (in C/C++, this is always the case) */
 #ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : (TPP_HAVE_PROFILE_C_LIKE ? 1 : 0)) : 0) /* "-fcharacter-literals" */
@@ -4501,25 +4471,20 @@ for (local doc, name,
 
 /* Provide a function `tpp_lexer_decodeint()` to parse an integer */
 #ifndef TPP_HAVE_LEXER_DECODEINT
-#define TPP_HAVE_LEXER_DECODEINT                                 \
-	(TPP_HAVE_TOK_C_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR ||   \
-	                          TPP_HAVE_CPP_LINE ||               \
-	                          TPP_HAVE_CPP_DIGIT_LINE ||         \
-	                          TPP_HAVE_MACRO___TPP_STR_PACK ||   \
-	                          TPP_HAVE_MACRO___TPP_RANDOM ||     \
-	                          TPP_HAVE_MACRO___TPP_STR_SUBSTR || \
-	                          TPP_HAVE_PRAGMA_WARNING ||         \
-	                          TPP_HAVE_PRAGMA_TPP_WARNING))
+#define TPP_HAVE_LEXER_DECODEINT                               \
+	(TPP_HAVE_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR ||   \
+	                      TPP_HAVE_CPP_LINE ||               \
+	                      TPP_HAVE_CPP_DIGIT_LINE ||         \
+	                      TPP_HAVE_MACRO___TPP_STR_PACK ||   \
+	                      TPP_HAVE_MACRO___TPP_RANDOM ||     \
+	                      TPP_HAVE_MACRO___TPP_STR_SUBSTR || \
+	                      TPP_HAVE_PRAGMA_WARNING ||         \
+	                      TPP_HAVE_PRAGMA_TPP_WARNING))
 #endif /* !TPP_HAVE_LEXER_DECODEINT */
-
-/* Add API support for integer type suffixes (see `tpp_integer_suffix_kind`) */
-#ifndef TPP_HAVE_LEXER_DECODEINT_SUFFIX
-#define TPP_HAVE_LEXER_DECODEINT_SUFFIX (TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX)
-#endif /* !TPP_HAVE_LEXER_DECODEINT_SUFFIX */
 
 /* Provide a function `tpp_lexer_decodefloat_expr()` to parse a float into a `tpp_expr_value` */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT_EXPR
-#define TPP_HAVE_LEXER_DECODEFLOAT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TOK_C_FLOAT)
+#define TPP_HAVE_LEXER_DECODEFLOAT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TOK_FLOAT)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
 
 /* Provide a function `tpp_lexer_decodefloat()` to parse a float */
@@ -4527,10 +4492,26 @@ for (local doc, name,
 #define TPP_HAVE_LEXER_DECODEFLOAT (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
 
-/* Add API support for float type suffixes (see `tpp_float_suffix_kind`) */
-#ifndef TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX
-#define TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX (TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX)
-#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
+/* User-overridable macro that is used to test if "ch" may
+ * be the first character of a floating-point type suffix.
+ *
+ * This macro is needed when `TPP_HAVE_SMART_FLOAT_TOKENS`
+ * is used to determine how tokens should be split in:
+ * >> 1.f;  // if (TPP_CONFIG_ISFLOATSUFFIX(self, 'f')) -> [FLOAT:1.f]; else -> [INT:1][DOT:.][f:f]
+ *
+ * When TPP is built with `-DTPP_HAVE_SMART_FLOAT_TOKENS=0`,
+ * this macro isn't used by the internal token parser impl. */
+/* TODO: This should be a hook! */
+#ifndef TPP_CONFIG_ISFLOATSUFFIX
+#if TPP_PROFILE == TPP_PROFILE_CXX
+#define TPP_CONFIG_ISFLOATSUFFIX(self, ch) ((ch) == 'f' || (ch) == 'F' || (ch) == 'l' || (ch) == 'L' || (ch) == 'b' || (ch) == 'B')
+#elif TPP_HAVE_PROFILE_C_LIKE
+#define TPP_CONFIG_ISFLOATSUFFIX(self, ch) ((ch) == 'f' || (ch) == 'F' || (ch) == 'l' || (ch) == 'L')
+#else /* ... */
+#define TPP_CONFIG_ISFLOATSUFFIX(self, ch) 0
+#endif /* !... */
+#endif /* !TPP_CONFIG_ISFLOATSUFFIX */
+
 
 /* Provide a function `tpp_lexer_parsecharacter_literal()` to parse character literals */
 #ifndef TPP_HAVE_LEXER_PARSECHARACTER_LITERAL

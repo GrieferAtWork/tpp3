@@ -1760,7 +1760,7 @@ again_yield:
 #endif /* TPP_HAVE_TOK_MINUS_MINUS */
 	default: break;
 	}
-	tok = tpp_lexer_require_int(self);
+	tok = tpp_lexer_require_number(self);
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 	*p_value = 0;

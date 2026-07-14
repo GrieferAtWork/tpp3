@@ -101,9 +101,7 @@ HAS_EXTENSION_IF(tpp_named_va_args, tpp_lexer_has(tpp_current_lexer(), NAMED_VAR
 #if TPP_HAVE_VA_COMMA_IN_MACROS
 HAS_EXTENSION_IF(tpp_va_comma, tpp_lexer_has(tpp_current_lexer(), VA_COMMA_IN_MACROS))
 #endif /* TPP_HAVE_VA_COMMA_IN_MACROS */
-#if TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
-HAS_EXTENSION_IF(tpp_msvc_integer_suffix, tpp_lexer_has(tpp_current_lexer(), LEXER_DECODEINT_FIXED_LENGTH_SUFFIX))
-#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
+HAS_EXTENSION_IF(tpp_msvc_integer_suffix, 1)
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 HAS_EXTENSION_IF(tpp_charize_operator, tpp_lexer_has(tpp_current_lexer(), CHARIZE_MACRO_ARGUMENT))
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
@@ -1733,6 +1731,12 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   longer exists in TPP3, but because they didn't prove useful enough, and/or
  *   added more overhead than benefit.
  */
+
+/* TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT,
+ * TPP_CONFIG_EXTENSION_MSVC_FIXED_INT: "-ffixed-length-integrals"
+ * - Suffix parsing in TPP3 is up to the caller, but in this emulated
+ *   header, it is assumed that this extension is always enabled. */
+
 /************************************************************************/
 
 
@@ -1982,9 +1986,6 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #ifndef TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES_DEFAULT
 #define TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES_DEFAULT 1
 #endif /* !TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES_DEFAULT */
-#ifndef TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT
-#define TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT 1
-#endif /* !TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT */
 #ifndef TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED_DEFAULT
 #define TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED_DEFAULT 1
 #endif /* !TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED_DEFAULT */
@@ -2139,9 +2140,6 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #ifndef TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES
 #define TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES */
-#ifndef TPP_CONFIG_EXTENSION_MSVC_FIXED_INT
-#define TPP_CONFIG_EXTENSION_MSVC_FIXED_INT TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT)
-#endif /* !TPP_CONFIG_EXTENSION_MSVC_FIXED_INT */
 #ifndef TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED
 #define TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED TPP_CONF_MAKEEXT(TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED_DEFAULT)
 #endif /* !TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED */
@@ -2548,21 +2546,16 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH          1 /* Support for: #pragma TPP include_path(...) */
 
 /* Lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_DEFINED                  1                                      /* Enable support for "defined(MACRO)" in builtin lexer expressions */
-#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR           TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED /* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
-#define TPP_HAVE_BUILTIN_EXPR_STRINGS                  TPP_CONFIG_EXTENSION_STRINGOPS         /* Enable support for string operations in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_FLOATS                   1                                      /* Enable support for floats in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT      TPP_CONFIG_EXTENSION_GCC_IFELSE        /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
-#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS   TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    /* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR              TPP_CONFIG_EXTENSION_LXOR              /* Enable support for "^^" in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS          TPP_CONFIG_EXTENSION_BININTEGRAL       /* Enable support for "0b" literals in builtin lexer expressions */
-#define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS           0                                      /* Enable support for "0o" literals in builtin lexer expressions */
-#define TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX     1                                      /* Enable support for "u", "l", "ul", "ll", "ull" integer suffixes */
-#define TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX   TPP_CONFIG_EXTENSION_MSVC_FIXED_INT    /* Enable support for "i8", "i16", "i32", "i64", "ui8", "ui16", "ui32", "ui64" integer suffixes */
-#define TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX   1                                      /* Enable support for "f", "F", "l", "L" float suffixes */
-#define TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX  0                                      /* Enable support for "d", "D" float suffixes */
-#define TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX 0                                      /* Enable support for "df", "DF", "dd", "DD", "dl", "DL" float suffixes */
-#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS       1                                      /* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
+#define TPP_HAVE_BUILTIN_EXPR_DEFINED                1                                      /* Enable support for "defined(MACRO)" in builtin lexer expressions */
+#define TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR         TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED /* Enable special handling in "#define foo(x) defined(x)" such that "x" is not expanded */
+#define TPP_HAVE_BUILTIN_EXPR_STRINGS                TPP_CONFIG_EXTENSION_STRINGOPS         /* Enable support for string operations in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_FLOATS                 1                                      /* Enable support for floats in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    TPP_CONFIG_EXTENSION_GCC_IFELSE        /* Enable support for "foo ?: bar" in builtin lexer expressions (same as "foo ? foo : bar") */
+#define TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    /* Enable support for "if (foo) bar else baz" in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR            TPP_CONFIG_EXTENSION_LXOR              /* Enable support for "^^" in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_BINARY_LITERALS        TPP_CONFIG_EXTENSION_BININTEGRAL       /* Enable support for "0b" literals in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_OCTAL_LITERALS         0                                      /* Enable support for "0o" literals in builtin lexer expressions */
+#define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS     1                                      /* Treat 'a' as an integer, rather than as a string (in C, this is always the case) */
 
 /* Include-path-related features */
 #define TPP_HAVE_INCLUDE_PATH_QUOTE             0 /* TPP2 only had a system-include-path list */
@@ -2628,7 +2621,6 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS "ifelse-in-expressions"
 #define TPP_EXTNAME_BUILTIN_EXPR_LOGICAL_XOR            "logical-xor-in-expressions"
 #define TPP_EXTNAME_BUILTIN_EXPR_BINARY_LITERALS        "binary-literals"
-#define TPP_EXTNAME_BUILTIN_EXPR_FIXED_LENGTH_INTEGRALS "fixed-length-integrals"
 /************************************************************************/
 
 
@@ -6006,7 +5998,9 @@ TPP_INLINE TPP_REF tpp_string *TPPCALL TPPLexer_ParseString_(tpp_lexer *self) {
 TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint) {
 	tpp_errno error;
 	tpp_token_id tok = tpp_lexer_gettok(self);
-	tpp_integer_suffix_kind kind;
+	tpp_char const *suffix_start;
+	tpp_char const *suffix_end;
+	tpp_char ch;
 	if (TPP_TOK_ISSTRING(tok)) {
 		/* Parse strings into character literals */
 		error = tpp_lexer_parsecharacter_literal(self, pint, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
@@ -6017,45 +6011,150 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 //		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT | TPP_ATOI_UNSIGNED; /* Returned by TPP2 dependent on "TPPLEXER_FLAG_CHAR_UNSIGNED" */
 		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT;
 	}
-	error = tpp_lexer_decodeint_ex(self, pint, &kind);
+	error = tpp_lexer_decodeint_ex(self, pint, &suffix_start);
 	if (TPP_ISERR(error))
 		return TPP_ATOI_ERR;
-	switch (kind) {
-	case TPP_INTEGER_SUFFIX_KIND_INT:
+	suffix_end = tpp_lexer_gettokenend(self);
+	if (suffix_start >= suffix_end)
 		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT;
-#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
-	case TPP_INTEGER_SUFFIX_KIND_UNSIGNED:
-		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT | TPP_ATOI_UNSIGNED;
-	case TPP_INTEGER_SUFFIX_KIND_LONG:
-		return TPP_ATOI_OK | TPP_ATOI_TYPE_LONG;
-	case TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG:
-		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_LONG;
-	case TPP_INTEGER_SUFFIX_KIND_LONG_LONG:
-		return TPP_ATOI_OK | TPP_ATOI_TYPE_LONGLONG;
-	case TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG_LONG:
-		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_LONGLONG;
-#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
-#if TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
-	case TPP_INTEGER_SUFFIX_KIND_INT8:
-		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT8;
-	case TPP_INTEGER_SUFFIX_KIND_INT16:
-		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT16;
-	case TPP_INTEGER_SUFFIX_KIND_INT32:
-		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT32;
-	case TPP_INTEGER_SUFFIX_KIND_INT64:
-		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT64;
-	case TPP_INTEGER_SUFFIX_KIND_UINT8:
-		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT8;
-	case TPP_INTEGER_SUFFIX_KIND_UINT16:
-		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT16;
-	case TPP_INTEGER_SUFFIX_KIND_UINT32:
-		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT32;
-	case TPP_INTEGER_SUFFIX_KIND_UINT64:
-		return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT64;
-#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
-	default: tpp_unreachable();
+	ch = *suffix_start++;
+	switch (ch) {
+	case 'i':
+	case 'I':
+		if (suffix_start >= suffix_end)
+			goto handle_invalid;
+		ch    = *suffix_start++;
+		suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+		if (ch == '8') {
+			if (suffix_start < suffix_end)
+				goto handle_invalid;
+			return TPP_ATOI_OK | TPP_ATOI_TYPE_INT8;
+		} else if (ch == '1') {
+			if (suffix_start >= suffix_end)
+				goto handle_invalid;
+			ch    = *suffix_start++;
+			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			if (ch != '6')
+				goto handle_invalid;
+			if (suffix_start < suffix_end)
+				goto handle_invalid;
+			return TPP_ATOI_OK | TPP_ATOI_TYPE_INT16;
+		} else if (ch == '3') {
+			if (suffix_start >= suffix_end)
+				goto handle_invalid;
+			ch    = *suffix_start++;
+			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			if (ch != '2')
+				goto handle_invalid;
+			if (suffix_start < suffix_end)
+				goto handle_invalid;
+			return TPP_ATOI_OK | TPP_ATOI_TYPE_INT32;
+		} else if (ch == '6') {
+			if (suffix_start >= suffix_end)
+				goto handle_invalid;
+			ch    = *suffix_start++;
+			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			if (ch != '4')
+				goto handle_invalid;
+			if (suffix_start < suffix_end)
+				goto handle_invalid;
+			return TPP_ATOI_OK | TPP_ATOI_TYPE_INT64;
+		} else {
+			goto handle_invalid;
+		}
+		break;
+
+	case 'u':
+	case 'U': {
+		if (suffix_start < suffix_end && (*suffix_start == 'i' || *suffix_start == 'I')) {
+			++suffix_start;
+			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			if (suffix_start >= suffix_end)
+				goto handle_invalid;
+			ch    = *suffix_start++;
+			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			if (ch == '8') {
+				if (suffix_start < suffix_end)
+					goto handle_invalid;
+				return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT8;
+			} else if (ch == '1') {
+				if (suffix_start >= suffix_end)
+					goto handle_invalid;
+				ch    = *suffix_start++;
+				suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+				if (ch != '6')
+					goto handle_invalid;
+				if (suffix_start < suffix_end)
+					goto handle_invalid;
+				return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT16;
+			} else if (ch == '3') {
+				if (suffix_start >= suffix_end)
+					goto handle_invalid;
+				ch    = *suffix_start++;
+				suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+				if (ch != '2')
+					goto handle_invalid;
+				if (suffix_start < suffix_end)
+					goto handle_invalid;
+				return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT32;
+			} else if (ch == '6') {
+				if (suffix_start >= suffix_end)
+					goto handle_invalid;
+				ch    = *suffix_start++;
+				suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+				if (ch != '4')
+					goto handle_invalid;
+				if (suffix_start < suffix_end)
+					goto handle_invalid;
+				return TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_INT64;
+			} else {
+				goto handle_invalid;
+			}
+			tpp_unreachable();
+		}
+	}	TPP_FALLTHRU
+	case 'l':
+	case 'L': {
+		unsigned int has_u = 0;
+		unsigned int has_l = 0;
+		for (;;) {
+			switch (ch) {
+			case 'u':
+			case 'U':
+				++has_u;
+				break;
+			case 'l':
+			case 'L':
+				++has_l;
+				break;
+			default: goto handle_invalid;
+			}
+			if (suffix_start >= suffix_end)
+				break;
+			ch = *suffix_start++;
+			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+		}
+		if (has_u > 1)
+			goto handle_invalid;
+		switch (has_l) {
+		case 0:
+			tpp_assert(has_u == 1);
+			return TPP_ATOI_OK | TPP_ATOI_UNSIGNED;
+		case 1:
+			return has_u ? (TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_LONG)
+			             : (TPP_ATOI_OK | TPP_ATOI_TYPE_LONG);
+		case 2:
+			return has_u ? (TPP_ATOI_OK | TPP_ATOI_UNSIGNED | TPP_ATOI_TYPE_LONGLONG)
+			             : (TPP_ATOI_OK | TPP_ATOI_TYPE_LONGLONG);
+		default: goto handle_invalid;
+		}
+		tpp_unreachable();
 	}
-	tpp_unreachable();
+
+	default: break;
+	}
+handle_invalid:
+	return tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
 }
 
 #define TPP_ATOF_ERR             0x00 /* NOTE: Never used with any flags (indicates failure). */
@@ -6076,28 +6175,33 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 TPP_INLINE int TPPCALL TPP_Atof_(tpp_lexer *self, TPP_tfloat_t *tpp_restrict pfloat) {
 	tpp_errno error;
 	tpp_token_id tok = tpp_lexer_gettok(self);
-	tpp_float_suffix_kind kind;
-	error = tpp_lexer_decodefloat_ex(self, pfloat, &kind);
+	tpp_char const *suffix_start;
+	tpp_char const *suffix_end;
+	tpp_char ch;
+	error = tpp_lexer_decodefloat_ex(self, pfloat, &suffix_start);
 	if (TPP_ISERR(error))
 		return TPP_ATOF_ERR;
-	switch (kind) {
-	case TPP_FLOAT_SUFFIX_KIND_DEFAULT:
-#if TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX
-	case TPP_FLOAT_SUFFIX_KIND_DOUBLE:
-#endif /* TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX */
+	suffix_end = tpp_lexer_gettokenend(self);
+	if (suffix_start >= suffix_end)
 		return TPP_ATOF_OK | TPP_ATOF_TYPE_DOUBLE;
-#if TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX
-	case TPP_FLOAT_SUFFIX_KIND_FLOAT:
+	ch = *suffix_start++;
+	if (TPP_ISERR(error))
+		return TPP_ATOF_ERR;
+	switch (ch) {
+	case 'f':
+	case 'F':
+		if (suffix_start < suffix_end)
+			goto handle_invalid;
 		return TPP_ATOF_OK | TPP_ATOF_TYPE_FLOAT;
-	case TPP_FLOAT_SUFFIX_KIND_LONG_DOUBLE:
+	case 'l':
+	case 'L':
+		if (suffix_start < suffix_end)
+			goto handle_invalid;
 		return TPP_ATOF_OK | TPP_ATOF_TYPE_LONGDOUBLE;
-#endif /* TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX */
-#if TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX
-#error "These didn't exist in TPP2; please upgrade to TPP3"
-#endif /* TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX */
-	default: tpp_unreachable();
+	default: break;
 	}
-	tpp_unreachable();
+handle_invalid:
+	return tpp_lexer_warnf(self, TPP_W_INVALID_FLOAT);
 }
 
 #if 0 /* TODO */

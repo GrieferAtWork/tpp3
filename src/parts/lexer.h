@@ -1597,7 +1597,7 @@ tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok);
 
-#define tpp_lexer_require_int(self) tpp_lexer_require(self, TPP_TOK_C_INT) /* TODO: Must solve differently */
+#define tpp_lexer_require_number(self) tpp_lexer_require(self, TPP_TOK_C_INT) /* TODO: Must solve differently */
 #endif /* TPP_HAVE_LEXER_SKIP */
 
 
@@ -1794,55 +1794,29 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 
 
 #if TPP_HAVE_LEXER_DECODEINT
-#if TPP_HAVE_LEXER_DECODEINT_SUFFIX
-typedef enum tpp_integer_suffix_kind {
-	TPP_INTEGER_SUFFIX_KIND_INT, /* "" (default) */
-#if TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX
-	TPP_INTEGER_SUFFIX_KIND_UNSIGNED,           /* "u" */
-	TPP_INTEGER_SUFFIX_KIND_LONG,               /* "l" */
-	TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG,      /* "ul" */
-	TPP_INTEGER_SUFFIX_KIND_LONG_LONG,          /* "ll" */
-	TPP_INTEGER_SUFFIX_KIND_UNSIGNED_LONG_LONG, /* "ull" */
-#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_TYPE_SUFFIX */
-#if TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX
-	TPP_INTEGER_SUFFIX_KIND_SIZE,          /* "z" */
-	TPP_INTEGER_SUFFIX_KIND_UNSIGNED_SIZE, /* "uz" */
-#endif /* TPP_HAVE_LEXER_DECODEINT_SIZE_TYPE_SUFFIX */
-#if TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX
-	TPP_INTEGER_SUFFIX_KIND_INT8,   /* "i8" */
-	TPP_INTEGER_SUFFIX_KIND_INT16,  /* "i16" */
-	TPP_INTEGER_SUFFIX_KIND_INT32,  /* "i32" */
-	TPP_INTEGER_SUFFIX_KIND_INT64,  /* "i64" */
-	TPP_INTEGER_SUFFIX_KIND_UINT8,  /* "ui8" */
-	TPP_INTEGER_SUFFIX_KIND_UINT16, /* "ui16" */
-	TPP_INTEGER_SUFFIX_KIND_UINT32, /* "ui32" */
-	TPP_INTEGER_SUFFIX_KIND_UINT64, /* "ui64" */
-#endif /* TPP_HAVE_LEXER_DECODEINT_FIXED_LENGTH_SUFFIX */
-} tpp_integer_suffix_kind;
-#endif /* TPP_HAVE_LEXER_DECODEINT_SUFFIX */
-
-
-/* Decode the current token (which should be TPP_TOK_ISINT) into an integer
+/* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into an integer
+ * When the current token is `TPP_TOK_ISFLOAT`, it will be trimmed (i.e. decimal
+ * and exponents will be removed from the token, such that the characters that
+ * make up those parts of the token will be yielded next)
+ *
+ * @param: p_suffix_start: When non-NULL, store a pointer to the first character
+ *                         of the int token's suffix (e.g. "ull" in "123ull").
+ *                         Note that when `TPP_HAVE_BSE` is enabled, you will
+ *                         have to skip over \-sequences yourself. However, TPP
+ *                         will ensure that pointer written here points *after*
+ *                         a potential BSE between the int and the suffix. The
+ *                         suffix always ends at `tpp_lexer_gettokenend(self)',
+ *                         and if there is no suffix, this function will store
+ *                         a pointer to `tpp_lexer_gettokenend(self)' instead.
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_EWARNPRINT: Error while printing a warning */
-#if TPP_HAVE_LEXER_DECODEINT_SUFFIX
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
                        tpp_intmax *tpp_restrict result,
-                       tpp_integer_suffix_kind *p_suffix_kind);
-/* XXX: The "tpp_lexer_decodeint_ex" should be called differently -- instead,
- *      there should be an API "tpp_lexer_decodeint_ex" that returns a pointer
- *      to the unparsed suffix-portion of the integer token (in the form of a
- *      parameter "tpp_char const **p_suffix_start"), which the caller can
- *      then interpret however they want. */
+                       tpp_char const **p_suffix_start);
 #define tpp_lexer_decodeint(self, result) \
 	tpp_lexer_decodeint_ex(self, result, NULL)
-#else /* TPP_HAVE_LEXER_DECODEINT_SUFFIX */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_decodeint(tpp_lexer *tpp_restrict self,
-                    tpp_intmax *tpp_restrict result);
-#endif /* !TPP_HAVE_LEXER_DECODEINT_SUFFIX */
 #endif /* TPP_HAVE_LEXER_DECODEINT */
 
 /* Decode the current token (which should be TPP_TOK_ISINT) into an integer
@@ -1858,67 +1832,18 @@ tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
 
 
 #if TPP_HAVE_LEXER_DECODEFLOAT
-#if TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX
-/* User-overridable macro that is used to test if "ch" may
- * be the first character of a floating-point type suffix.
- *
- * This macro is needed when "TPP_HAVE_SMART_FLOAT_TOKENS"
- * is used to determine how tokens should be split in:
- * >> 1.f;  // if (tpp_lexer_isfloatsuffix_char(self, 'f')) -> [FLOAT:1.f]; else -> [INT:1][DOT:.][f:f]
- *
- * When TPP is built with "-DTPP_HAVE_SMART_FLOAT_TOKENS=0",
- * this macro isn't used by the internal token parser impl. */
-#ifndef tpp_lexer_isfloatsuffix_char
-#if TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX && (TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX)
-#define tpp_lexer_isfloatsuffix_char(self, ch) ((ch) == 'f' || (ch) == 'F' || (ch) == 'l' || (ch) == 'L' || (ch) == 'd' || (ch) == 'D')
-#elif TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX
-#define tpp_lexer_isfloatsuffix_char(self, ch) ((ch) == 'f' || (ch) == 'F' || (ch) == 'l' || (ch) == 'L')
-#elif TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX || TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX
-#define tpp_lexer_isfloatsuffix_char(self, ch) ((ch) == 'd' || (ch) == 'D')
-#else /* ... */
-#define tpp_lexer_isfloatsuffix_char(self, ch) 0
-#endif /* !... */
-#endif /* !tpp_lexer_isfloatsuffix_char */
-
-typedef enum tpp_float_suffix_kind {
-	TPP_FLOAT_SUFFIX_KIND_DEFAULT,     /* "" (default; conventionally indicates "double") */
-#if TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX
-	TPP_FLOAT_SUFFIX_KIND_FLOAT,       /* "f", "F" */
-	TPP_FLOAT_SUFFIX_KIND_LONG_DOUBLE, /* "l", "L" */
-#endif /* TPP_HAVE_LEXER_DECODEFLOAT_FIXED_TYPE_SUFFIX */
-#if TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX
-	TPP_FLOAT_SUFFIX_KIND_DOUBLE,      /* "d", "D" */
-#endif /* TPP_HAVE_LEXER_DECODEFLOAT_DOUBLE_TYPE_SUFFIX */
-#if TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX
-	TPP_FLOAT_SUFFIX_KIND_DECIMAL32,   /* "df", "DF" */
-	TPP_FLOAT_SUFFIX_KIND_DECIMAL64,   /* "dd", "DD" */
-	TPP_FLOAT_SUFFIX_KIND_DECIMAL128,  /* "dl", "DL" */
-#endif /* TPP_HAVE_LEXER_DECODEFLOAT_DECIMAL_TYPE_SUFFIX */
-} tpp_float_suffix_kind;
-#endif /* TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
-
-
-/* Decode the current token (which should be TPP_TOK_ISFLOAT) into a float
+/* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float.
+ * When the current token is `TPP_TOK_ISINT`, it will be parsed as integer
+ * first, and that integer will be converted into the equivalent `tpp_float`.
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_EWARNPRINT: Error while printing a warning */
-#if TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
                          tpp_float *tpp_restrict result,
-                         tpp_float_suffix_kind *p_suffix_kind);
-/* XXX: The "tpp_lexer_decodefloat_ex" should be called differently -- instead,
- *      there should be an API "tpp_lexer_decodefloat_ex" that returns a pointer
- *      to the unparsed suffix-portion of the float token (in the form of a
- *      parameter "tpp_char const **p_suffix_start"), which the caller can
- *      then interpret however they want. */
+                         tpp_char const **p_suffix_start);
 #define tpp_lexer_decodefloat(self, result) \
 	tpp_lexer_decodefloat_ex(self, result, NULL)
-#else /* TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_decodefloat(tpp_lexer *tpp_restrict self,
-                      tpp_float *tpp_restrict result);
-#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX */
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT */
 
 /* Decode the current token (which should be TPP_TOK_ISFLOAT) into a float

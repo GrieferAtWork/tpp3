@@ -1677,15 +1677,15 @@ again_ch:
 			/* If enabled, allow strings that would qualify as float type suffixes here:
 			 * >> 1.F;    // Must always be [FLOAT:1.F], rather than [INT:1][DOT:.][F:F]
 			 *
-			 * NOTE: Intentionally do this "#ifdef tpp_lexer_isfloatsuffix_char", rather
+			 * NOTE: Intentionally do this "#ifdef TPP_CONFIG_ISFLOATSUFFIX", rather
 			 *       that "#if TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX", so-as to allow users
-			 *       to simply "#define tpp_lexer_isfloatsuffix_char" to add special
+			 *       to simply "#define TPP_CONFIG_ISFLOATSUFFIX" to add special
 			 *       handling here, without "TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX" needing
 			 *       to be enabled also! */
-#ifdef tpp_lexer_isfloatsuffix_char
-			if (tpp_lexer_isfloatsuffix_char(self, ch))
+#ifdef TPP_CONFIG_ISFLOATSUFFIX
+			if (TPP_CONFIG_ISFLOATSUFFIX(self, ch))
 				goto again;
-#endif /* tpp_lexer_isfloatsuffix_char */
+#endif /* TPP_CONFIG_ISFLOATSUFFIX */
 
 			/* End the token before the "." as whatever it was at the time. */
 			result = old_result;

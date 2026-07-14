@@ -359,33 +359,6 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	}
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
 
-	/* Automatically convert between INT and FLOAT tokens */
-#if TPP_HAVE_TOK_C_INT && TPP_HAVE_TOK_C_FLOAT
-	if ((tpp_lexer_gettok(self) == TPP_TOK_C_INT ||
-	     tpp_lexer_gettok(self) == TPP_TOK_C_FLOAT) &&
-	    (tok == TPP_TOK_C_INT || tok == TPP_TOK_C_FLOAT) &&
-	    tpp_lexer_has(self, TOK_C_INT) &&
-	    tpp_lexer_has(self, TOK_C_FLOAT)) {
-		tpp_lexer_gettoken(self)->tt_id = tok;
-		if (tok == TPP_TOK_C_INT) {
-			/* Stop integer token prematurely if there's one of . + - */
-			tpp_char const *start = tpp_lexer_gettokenstart(self);
-			tpp_char const *end = tpp_lexer_gettokenend(self);
-			tpp_char const *newend = start;
-			while (newend < end && (*newend != '.' &&
-			                        *newend != '+' &&
-			                        *newend != '-'))
-				++newend;
-			if (newend < end) {
-				newend = tpp_skipbse_bck(newend, start, tpp_lexer_getfile(self));
-				if (newend > start)
-					tpp_lexer_gettoken(self)->tt_end = newend;
-			}
-		}
-		return tok;
-	}
-#endif /* TPP_HAVE_TOK_C_INT && TPP_HAVE_TOK_C_FLOAT */
-
 	/* Start seeking ahead... */
 	pos = tpp_lexer_seek_start(self, &backup);
 
