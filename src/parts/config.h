@@ -4507,7 +4507,7 @@ for (local doc, name,
 
 /* Provide a function `tpp_lexer_decodeint()` to parse an integer */
 #ifndef TPP_HAVE_LEXER_DECODEINT
-#define TPP_HAVE_LEXER_DECODEINT                               \
+#define TPP_HAVE_LEXER_DECODEINT                             \
 	(TPP_HAVE_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR ||   \
 	                      TPP_HAVE_CPP_LINE ||               \
 	                      TPP_HAVE_CPP_DIGIT_LINE ||         \

@@ -242,6 +242,9 @@ print_ch:
 		goto print_ch;
 	}	break;
 
+	/* XXX: Support for: \o{0 037 377} */
+	/* XXX: Support for: \x{12 34 56 78} */
+
 	case 'u':
 	case 'U': {
 		tpp_unichar uc = 0;
@@ -251,6 +254,9 @@ print_ch:
 		tpp_size utf8_len;
 		if (iter >= end)
 			goto handle_unknown_escape_sequence;
+		/* XXX: Support for: \u{1234 5678} */
+		/* XXX: Support for: \U{NO-BREAK SPACE}  (for \u00A0)
+		 *      Names come from 'UnicodeData.txt' + 'NameAliases.txt' */
 		do {
 			tpp_char nibble;
 			ch = *iter++;
