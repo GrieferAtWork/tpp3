@@ -1984,14 +1984,14 @@ TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_OCT, TPP_EXTNAME_STRING_ESCAPE_OCT, TPP_CONF
 TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_HEX, TPP_EXTNAME_STRING_ESCAPE_HEX, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX))
 #define _tpp_lexer_has_STRING_ESCAPE_HEX(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_HEX)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
-#ifndef TPP_EXTNAME_STRING_ESCAPE_HEX_MANY
-#define TPP_EXTNAME_STRING_ESCAPE_HEX_MANY "string-escape-hex-many"
-#endif /* !TPP_EXTNAME_STRING_ESCAPE_HEX_MANY */
-#define TPP_EXT_STRING_ESCAPE_HEX_MANY TPP_EXT_STRING_ESCAPE_HEX_MANY
-TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_HEX_MANY, TPP_EXTNAME_STRING_ESCAPE_HEX_MANY, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_MANY))
-#define _tpp_lexer_has_STRING_ESCAPE_HEX_MANY(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_HEX_MANY)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_BIG)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_HEX_BIG
+#define TPP_EXTNAME_STRING_ESCAPE_HEX_BIG "string-escape-hex-big"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_HEX_BIG */
+#define TPP_EXT_STRING_ESCAPE_HEX_BIG TPP_EXT_STRING_ESCAPE_HEX_BIG
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_HEX_BIG, TPP_EXTNAME_STRING_ESCAPE_HEX_BIG, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_BIG))
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_BIG(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_HEX_BIG)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_UNI)
 #ifndef TPP_EXTNAME_STRING_ESCAPE_UNI
 #define TPP_EXTNAME_STRING_ESCAPE_UNI "string-escape-uni"
@@ -2000,6 +2000,38 @@ TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_HEX_MANY, TPP_EXTNAME_STRING_ESCAPE_HEX_MANY
 TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_UNI, TPP_EXTNAME_STRING_ESCAPE_UNI, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_UNI))
 #define _tpp_lexer_has_STRING_ESCAPE_UNI(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_UNI)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_UNI) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_OCT_BRACE
+#define TPP_EXTNAME_STRING_ESCAPE_OCT_BRACE "string-escape-oct-brace"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_OCT_BRACE */
+#define TPP_EXT_STRING_ESCAPE_OCT_BRACE TPP_EXT_STRING_ESCAPE_OCT_BRACE
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_OCT_BRACE, TPP_EXTNAME_STRING_ESCAPE_OCT_BRACE, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE))
+#define _tpp_lexer_has_STRING_ESCAPE_OCT_BRACE(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_OCT_BRACE)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_OCT_BRACE_MANY
+#define TPP_EXTNAME_STRING_ESCAPE_OCT_BRACE_MANY "string-escape-oct-brace-many"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_OCT_BRACE_MANY */
+#define TPP_EXT_STRING_ESCAPE_OCT_BRACE_MANY TPP_EXT_STRING_ESCAPE_OCT_BRACE_MANY
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_OCT_BRACE_MANY, TPP_EXTNAME_STRING_ESCAPE_OCT_BRACE_MANY, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY))
+#define _tpp_lexer_has_STRING_ESCAPE_OCT_BRACE_MANY(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_OCT_BRACE_MANY)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_HEX_BRACE
+#define TPP_EXTNAME_STRING_ESCAPE_HEX_BRACE "string-escape-hex-brace"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_HEX_BRACE */
+#define TPP_EXT_STRING_ESCAPE_HEX_BRACE TPP_EXT_STRING_ESCAPE_HEX_BRACE
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_HEX_BRACE, TPP_EXTNAME_STRING_ESCAPE_HEX_BRACE, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE))
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_BRACE(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_HEX_BRACE)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_HEX_BRACE_MANY
+#define TPP_EXTNAME_STRING_ESCAPE_HEX_BRACE_MANY "string-escape-hex-brace-many"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_HEX_BRACE_MANY */
+#define TPP_EXT_STRING_ESCAPE_HEX_BRACE_MANY TPP_EXT_STRING_ESCAPE_HEX_BRACE_MANY
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_HEX_BRACE_MANY, TPP_EXTNAME_STRING_ESCAPE_HEX_BRACE_MANY, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY))
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_BRACE_MANY(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_HEX_BRACE_MANY)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #ifndef TPP_EXTNAME_STRING_ALLOW_MULTILINE
 #define TPP_EXTNAME_STRING_ALLOW_MULTILINE "string-allow-multiline"
@@ -3451,7 +3483,7 @@ TPP_WGROUP(TPP_WG_STRING_ESCAPE, TPP_WGNAME_STRING_ESCAPE, TPP_WSTATE_WARN)
 #if TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
 #define TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
 TPP_WARNING(TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 1(4129), TPP_WSTATE_UNDEFINED,
-            "unknown escape sequence %[\\%c%]")
+            "unknown escape sequence: %Pt")
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 
 
@@ -3852,12 +3884,12 @@ TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 1(2124), TPP_WSTATE_ERROR_OR_FATAL,
 #if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
 #define TPP_W_CHARACTER_TOO_LARGE TPP_W_CHARACTER_TOO_LARGE
 TPP_WARNING(TPP_W_CHARACTER_TOO_LARGE, 0(), 1(2022), TPP_WSTATE_ERROR_OR_FATAL,
-            "character value is too large")
+            "character value is too large: %Pt")
 #endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 
 #if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
 #define TPP_W_CANNOT_POP_INCLUDE_PATHS TPP_W_CANNOT_POP_INCLUDE_PATHS
-TPP_WARNING(TPP_W_CANNOT_POP_INCLUDE_PATHS, 1(TPP_WG_WARNING), 0(), ~,
+TPP_WARNING(TPP_W_CANNOT_POP_INCLUDE_PATHS, 0(), 0(), ~,
             "cannot %[#pragma TPP include_path(pop)%]: no preceding %[push%]")
 #endif /* TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS */
 
@@ -6752,7 +6784,7 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_STRING_ESCAPE_OCT */
 
 /* Support for `\xAB` hex sequences (with `1`-`2` characters in range `0-9`, `a-f`, `A-F` following the `\`)
- * When `TPP_HAVE_STRING_ESCAPE_HEX_MANY` is also enabled, the limit of `2` characters is lifted. */
+ * When `TPP_HAVE_STRING_ESCAPE_HEX_BIG` is also enabled, the limit of `2` characters is lifted. */
 #ifndef TPP_HAVE_STRING_ESCAPE_HEX
 #define TPP_HAVE_STRING_ESCAPE_HEX ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-hex" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_HEX */
@@ -6760,14 +6792,43 @@ TPP_DECL_END
 /* Support for `\xABCDEF` hex sequences. Extension to `TPP_HAVE_STRING_ESCAPE_HEX` that allows more than `2`
  * hex nibbles to be specified. A warning `TPP_W_CHARACTER_TOO_LARGE` is emitted if the hex-sequence is too
  * large to fit into `tpp_uintmax`, or the output string format. */
-#ifndef TPP_HAVE_STRING_ESCAPE_HEX_MANY
-#define TPP_HAVE_STRING_ESCAPE_HEX_MANY (TPP_HAVE_STRING_ESCAPE_HEX ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fstring-escape-hex-many" */
-#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+#ifndef TPP_HAVE_STRING_ESCAPE_HEX_BIG
+#define TPP_HAVE_STRING_ESCAPE_HEX_BIG (TPP_HAVE_STRING_ESCAPE_HEX ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fstring-escape-hex-big" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_BIG */
 
 /* Support for `\u1234` and `\U12345678` unicode ordinal escape sequences. */
 #ifndef TPP_HAVE_STRING_ESCAPE_UNI
 #define TPP_HAVE_STRING_ESCAPE_UNI ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_UNI */
+
+/* Support for `\o{377}` as alias for `\377` */
+#ifndef TPP_HAVE_STRING_ESCAPE_OCT_BRACE
+#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct-brace" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_OCT_BRACE */
+
+/* Support for `\o{ 0 037 , 377 }` as alias for `\0\037\377`.
+ * This is an extension to `TPP_HAVE_STRING_ESCAPE_OCT_BRACE`,
+ * meaning it also requires that extension to be enabled to work. */
+#ifndef TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY
+#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY ((TPP_HAVE_STRING_ESCAPE_OCT_BRACE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) : 0) /* "-fstring-escape-oct-brace-many" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY */
+
+/* Support for `\o{377}` as alias for `\377` */
+#ifndef TPP_HAVE_STRING_ESCAPE_HEX_BRACE
+#define TPP_HAVE_STRING_ESCAPE_HEX_BRACE ((TPP_HAVE_STRING_ESCAPE_HEX && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-hex-brace" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_BRACE */
+
+/* Support for `\o{ 0 037 , 377 }` as alias for `\0\037\377`.
+ * This is an extension to `TPP_HAVE_STRING_ESCAPE_HEX_BRACE`,
+ * meaning it also requires that extension to be enabled to work. */
+#ifndef TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY
+#define TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY ((TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) : 0) /* "-fstring-escape-hex-brace-many" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY */
+
+/* Enable support for large (> 1 byte) character constants in `tpp_lexer_decodestring()` */
+#ifndef TPP_HAVE_STRING_ESCAPE_BIGCHAR
+#define TPP_HAVE_STRING_ESCAPE_BIGCHAR (TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_HAVE_STRING_ESCAPE_HEX_BIG || TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE))
+#endif /* !TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 
 /* Feature-flag: treat line-feeds like any regular character in string tokens:
  * - `TPP_HAVE_TOK_C_STRING`
@@ -9382,7 +9443,7 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS */
 #ifndef TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
 #define TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE \
-	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE_HEX_MANY)
+	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE_BIGCHAR)
 #endif /* !TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 /************************************************************************/
 /************************************************************************/
@@ -12208,8 +12269,12 @@ tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S) ||                        \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT) ||                      \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX) ||                      \
-     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) ||                 \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BIG) ||                  \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY) ||           \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY) ||           \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) ||                 \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT) ||                     \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_EXCLAIM_EXCLAIM) ||                    \
@@ -12757,12 +12822,24 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX)
 	TPP_FEAT_STRING_ESCAPE_HEX,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
-	TPP_FEAT_STRING_ESCAPE_HEX_MANY,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BIG)
+	TPP_FEAT_STRING_ESCAPE_HEX_BIG,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI)
 	TPP_FEAT_STRING_ESCAPE_UNI,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+	TPP_FEAT_STRING_ESCAPE_OCT_BRACE,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY)
+	TPP_FEAT_STRING_ESCAPE_OCT_BRACE_MANY,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+	TPP_FEAT_STRING_ESCAPE_HEX_BRACE,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY)
+	TPP_FEAT_STRING_ESCAPE_HEX_BRACE_MANY,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 	TPP_FEAT_STRING_ALLOW_MULTILINE,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) */
@@ -13678,14 +13755,30 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_HEX): 1;
 #define _tpp_lexer_has_STRING_ESCAPE_HEX(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_HEX)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
-		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_HEX_MANY): 1;
-#define _tpp_lexer_has_STRING_ESCAPE_HEX_MANY(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_HEX_MANY)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BIG)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_HEX_BIG): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_BIG(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_HEX_BIG)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI)
 		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_UNI): 1;
 #define _tpp_lexer_has_STRING_ESCAPE_UNI(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_UNI)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_OCT_BRACE): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_OCT_BRACE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_OCT_BRACE)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_OCT_BRACE_MANY): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_OCT_BRACE_MANY(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_OCT_BRACE_MANY)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_HEX_BRACE): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_BRACE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_HEX_BRACE)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_HEX_BRACE_MANY): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_BRACE_MANY(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_HEX_BRACE_MANY)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		unsigned int TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE): 1;
 #define _tpp_lexer_has_STRING_ALLOW_MULTILINE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE)
@@ -14587,12 +14680,24 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX)
 #define _tpp_lexer_has_STRING_ESCAPE_HEX(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
-#define _tpp_lexer_has_STRING_ESCAPE_HEX_MANY(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_BIG)
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_BIG(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_BIG)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_UNI)
 #define _tpp_lexer_has_STRING_ESCAPE_UNI(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_UNI)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_UNI) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+#define _tpp_lexer_has_STRING_ESCAPE_OCT_BRACE(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_OCT_BRACE) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY)
+#define _tpp_lexer_has_STRING_ESCAPE_OCT_BRACE_MANY(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_BRACE(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_BRACE) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY)
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_BRACE_MANY(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #define _tpp_lexer_has_STRING_ALLOW_MULTILINE(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ALLOW_MULTILINE) */
@@ -20308,8 +20413,8 @@ typedef struct tpp_lexer_decodestring_config {
 	                                        * The implementation is however also allowed to use this callback
 	                                        * for ASCII-only input data! */
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
-	tpp_ssize (TPPCALL *tldsc_hexprinter)(void *arg, tpp_lexer *tpp_restrict lexer, tpp_uintmax value);
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+	tpp_ssize (TPPCALL *tldsc_bigprinter)(void *arg, tpp_lexer *tpp_restrict lexer, tpp_uintmax value);
 	                                     /* [0..1] Printer for [2+]-byte-per-character data. When non-NULL,
 	                                      * and `\x1234` is used, this printer is called with `0x1234` as
 	                                      * value, and it should append `XCHAR[1]{0x1234}` to the output
@@ -20317,14 +20422,14 @@ typedef struct tpp_lexer_decodestring_config {
 	                                      * this callback should emit a warning:
 	                                      * >> tpp_errno error = tpp_lexer_warnf(lexer, TPP_W_CHARACTER_TOO_LARGE);
 	                                      * >> return TPP_SSIZE_ASERR_OR_EOK(error); */
-#endif /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+#endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 	void               *tldsc_arg;       /* [?..?] Cookie argument for other printers */
 } tpp_lexer_decodestring_config;
 
 /* Initialize a simple decodestring configuration (suitable for emitting utf-8 data) */
 #define tpp_lexer_decodestring_config_init_simple(self, printer, arg)    \
 	(_tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
-	 _tpp_lexer_decodestring_config_init_simple_hex(self))
+	 _tpp_lexer_decodestring_config_init_simple_big(self))
 #if TPP_HAVE_UNICODE
 #define _tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
 	(self)->tldsc_dataprinter = (self)->tldsc_utf8printer = (printer),      \
@@ -20334,11 +20439,11 @@ typedef struct tpp_lexer_decodestring_config {
 	(self)->tldsc_dataprinter = (printer),                                  \
 	(self)->tldsc_arg = (arg)
 #endif /* !TPP_HAVE_UNICODE */
-#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
-#define _tpp_lexer_decodestring_config_init_simple_hex(self) , (self)->tldsc_hexprinter = NULL
-#else /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
-#define _tpp_lexer_decodestring_config_init_simple_hex(self) /* nothing */
-#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+#define _tpp_lexer_decodestring_config_init_simple_big(self) , (self)->tldsc_bigprinter = NULL
+#else /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+#define _tpp_lexer_decodestring_config_init_simple_big(self) /* nothing */
+#endif /* !TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 
 /* Print the unescaped representation of the string-token described by "self"
  * The caller must ensure that `TPP_TOK_ISSTRING(tpp_lexer_gettoken(self)->tt_id)'

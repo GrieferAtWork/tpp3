@@ -1926,8 +1926,8 @@ typedef struct tpp_lexer_decodestring_config {
 	                                        * The implementation is however also allowed to use this callback
 	                                        * for ASCII-only input data! */
 #endif /* TPP_HAVE_UNICODE */
-#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
-	tpp_ssize (TPPCALL *tldsc_hexprinter)(void *arg, tpp_lexer *tpp_restrict lexer, tpp_uintmax value);
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+	tpp_ssize (TPPCALL *tldsc_bigprinter)(void *arg, tpp_lexer *tpp_restrict lexer, tpp_uintmax value);
 	                                     /* [0..1] Printer for [2+]-byte-per-character data. When non-NULL,
 	                                      * and `\x1234` is used, this printer is called with `0x1234` as
 	                                      * value, and it should append `XCHAR[1]{0x1234}` to the output
@@ -1935,14 +1935,14 @@ typedef struct tpp_lexer_decodestring_config {
 	                                      * this callback should emit a warning:
 	                                      * >> tpp_errno error = tpp_lexer_warnf(lexer, TPP_W_CHARACTER_TOO_LARGE);
 	                                      * >> return TPP_SSIZE_ASERR_OR_EOK(error); */
-#endif /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+#endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 	void               *tldsc_arg;       /* [?..?] Cookie argument for other printers */
 } tpp_lexer_decodestring_config;
 
 /* Initialize a simple decodestring configuration (suitable for emitting utf-8 data) */
 #define tpp_lexer_decodestring_config_init_simple(self, printer, arg)    \
 	(_tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
-	 _tpp_lexer_decodestring_config_init_simple_hex(self))
+	 _tpp_lexer_decodestring_config_init_simple_big(self))
 #if TPP_HAVE_UNICODE
 #define _tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
 	(self)->tldsc_dataprinter = (self)->tldsc_utf8printer = (printer),      \
@@ -1952,11 +1952,11 @@ typedef struct tpp_lexer_decodestring_config {
 	(self)->tldsc_dataprinter = (printer),                                  \
 	(self)->tldsc_arg = (arg)
 #endif /* !TPP_HAVE_UNICODE */
-#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
-#define _tpp_lexer_decodestring_config_init_simple_hex(self) , (self)->tldsc_hexprinter = NULL
-#else /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
-#define _tpp_lexer_decodestring_config_init_simple_hex(self) /* nothing */
-#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+#define _tpp_lexer_decodestring_config_init_simple_big(self) , (self)->tldsc_bigprinter = NULL
+#else /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+#define _tpp_lexer_decodestring_config_init_simple_big(self) /* nothing */
+#endif /* !TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 
 /* Print the unescaped representation of the string-token described by "self"
  * The caller must ensure that `TPP_TOK_ISSTRING(tpp_lexer_gettoken(self)->tt_id)'

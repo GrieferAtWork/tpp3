@@ -53,6 +53,236 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_STRING_ESCAPE
 
+#if TPP_HAVE_STRING_ESCAPE_OCT_BRACE
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_oct_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
+                                    tpp_lexer_decodestring_config const *tpp_restrict config) {
+	tpp_ssize result;
+	tpp_uintmax bigword;
+	tpp_token *const token = tpp_lexer_gettoken(self);
+	tpp_char const *iter = *p_iter;
+	tpp_char ch = *iter;
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+	bool has_overflow = false;
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+	tpp_assert(tpp_ascii_isoctdigit(ch));
+	bigword = tpp_ascii_asoctdigit(ch);
+	for (;;) {
+		++iter;
+		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+		if (iter >= end)
+			break;
+		ch = *iter;
+		if (!tpp_ascii_isoctdigit(ch))
+			break;
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+		if (((bigword << 3) >> 3) != bigword)
+			has_overflow = true;
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+		bigword <<= 3;
+		bigword |= tpp_ascii_asoctdigit(ch);
+	}
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+	if ((bigword > 0xff && !config->tldsc_bigprinter) || has_overflow)
+#else /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+	if ((bigword > 0xff) || has_overflow)
+#endif /* !TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+	{
+		tpp_errno error;
+		tpp_char const *saved_start = token->tt_start;
+		tpp_char const *saved_end = token->tt_end;
+		token->tt_start = *p_iter;
+		token->tt_end   = iter;
+		error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
+		token->tt_start = saved_start;
+		token->tt_end   = saved_end;
+		if (TPP_ISERR(error)) {
+			result = TPP_SSIZE_OFERR(error);
+			goto done;
+		}
+	}
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+	if (bigword > 0xff && config->tldsc_bigprinter) {
+		tpp_char const *saved_start = token->tt_start;
+		tpp_char const *saved_end = token->tt_end;
+		token->tt_start = *p_iter;
+		token->tt_end   = iter;
+		result = (*config->tldsc_bigprinter)(config->tldsc_arg, self, bigword);
+		token->tt_start = saved_start;
+		token->tt_end   = saved_end;
+		goto done;
+	}
+#endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+	ch = (tpp_char)bigword;
+	result = (*config->tldsc_dataprinter)(config->tldsc_arg, &ch, 1);
+done:
+	*p_iter = iter;
+	return result;
+}
+#endif /* TPP_HAVE_STRING_ESCAPE_OCT_BRACE */
+
+#if TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG
+#if TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG)
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_hex_sequence_ex(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
+                                       tpp_lexer_decodestring_config const *tpp_restrict config,
+                                       bool always_allow_big)
+#define tpp_token_decodestring_hex_sequence(self, p_iter, end, config) \
+	tpp_token_decodestring_hex_sequence_ex(self, p_iter, end, config, false)
+#else /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_hex_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
+                                    tpp_lexer_decodestring_config const *tpp_restrict config)
+#define tpp_token_decodestring_hex_sequence_ex(self, p_iter, config, always_allow_big) \
+	tpp_token_decodestring_hex_sequence(self, p_iter, config)
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_BRACE || !TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
+{
+	tpp_char word;
+	tpp_char const *iter = *p_iter;
+	tpp_char ch = *iter++;
+	tpp_assert(tpp_ascii_isxdigit(ch));
+	if (tpp_ascii_isdigit(ch)) {
+		word = (tpp_char)tpp_ascii_asdigit(ch);
+	} else if (tpp_ascii_islwrxdigit(ch)) {
+		word = (tpp_char)tpp_ascii_aslwrxdigit(ch);
+	} else {
+		tpp_assert(tpp_ascii_isuprxdigit(ch));
+		word = (tpp_char)tpp_ascii_asuprxdigit(ch);
+	}
+	iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+	if (iter < end) {
+		ch = *iter;
+		if (tpp_ascii_isdigit(ch)) {
+			word <<= 4;
+			word |= (tpp_char)tpp_ascii_asdigit(ch);
+			++iter;
+		} else if (tpp_ascii_islwrxdigit(ch)) {
+			word <<= 4;
+			word |= (tpp_char)tpp_ascii_aslwrxdigit(ch);
+			++iter;
+		} else if (tpp_ascii_isuprxdigit(ch)) {
+			word <<= 4;
+			word |= (tpp_char)tpp_ascii_asuprxdigit(ch);
+			++iter;
+		} else {
+#if TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG
+			goto print_word_as_byte;
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG */
+		}
+#if TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG
+#if TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG)
+		if (tpp_lexer_has(self, STRING_ESCAPE_HEX_BIG) || always_allow_big)
+#else /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
+		if (tpp_lexer_has(self, STRING_ESCAPE_HEX_BIG))
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_BRACE || !TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
+		{
+			iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+			if (iter < end) {
+				ch = *iter;
+				if (tpp_ascii_isxdigit(ch)) {
+					tpp_token *const token = tpp_lexer_gettoken(self);
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+					bool has_overflow = false;
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+					tpp_uintmax bigword = word;
+					++iter;
+					for (;;) {
+						tpp_char nibble;
+						if (tpp_ascii_isdigit(ch)) {
+							nibble = (tpp_char)tpp_ascii_asdigit(ch);
+						} else if (tpp_ascii_islwrxdigit(ch)) {
+							nibble = (tpp_char)tpp_ascii_aslwrxdigit(ch);
+						} else if (tpp_ascii_isuprxdigit(ch)) {
+							nibble = (tpp_char)tpp_ascii_asuprxdigit(ch);
+						} else {
+							--iter;
+							break;
+						}
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+						if (((bigword << 4) >> 4) != bigword)
+							has_overflow = true;
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+						bigword <<= 4;
+						bigword |= nibble;
+						iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+						if (iter >= end)
+							break;
+						ch = *iter++;
+					}
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+					if ((bigword > 0xff && !config->tldsc_bigprinter) || has_overflow)
+#else /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+					if ((bigword > 0xff) || has_overflow)
+#endif /* !TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+					{
+						tpp_errno error;
+						tpp_char const *saved_start = token->tt_start;
+						tpp_char const *saved_end = token->tt_end;
+						token->tt_start = *p_iter;
+						token->tt_end   = iter;
+						error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
+						token->tt_start = saved_start;
+						token->tt_end   = saved_end;
+						if (TPP_ISERR(error)) {
+							*p_iter = iter;
+							return TPP_SSIZE_OFERR(error);
+						}
+					}
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+					if (bigword > 0xff && config->tldsc_bigprinter) {
+						tpp_ssize result;
+						tpp_char const *saved_start = token->tt_start;
+						tpp_char const *saved_end = token->tt_end;
+						token->tt_start = *p_iter;
+						token->tt_end   = iter;
+						result = (*config->tldsc_bigprinter)(config->tldsc_arg, self, bigword);
+						token->tt_start = saved_start;
+						token->tt_end   = saved_end;
+						*p_iter = iter;
+						return result;
+					}
+#endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+					word = (tpp_char)bigword;
+					/* Fallthru to "print_word_as_byte" below... */
+				}
+			}
+		}
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG */
+	}
+#if TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG
+print_word_as_byte:
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG */
+	*p_iter = iter;
+	return tpp_formatprinter_print(config->tldsc_dataprinter,
+	                               config->tldsc_arg, &word, 1);
+}
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG */
+
+#if TPP_HAVE_TRIGRAPHS
+#define tpp_token_decodestring_is_lbrace(self, ch, p_iter, end) \
+	((ch) == '{' || ((ch) == '?' && (*(p_iter) + 2) < end &&    \
+	                 (*(p_iter))[1] == '?' &&                   \
+	                 (*(p_iter))[2] == '<' &&                   \
+	                 tpp_lexer_has(self, TRIGRAPHS)             \
+	                 ? (*(p_iter) += 2, true)                   \
+	                 : false))
+#define tpp_token_decodestring_is_rbrace(self, ch, p_iter, end) \
+	((ch) == '}' || ((ch) == '?' && (*(p_iter) + 2) < end &&    \
+	                 (*(p_iter))[1] == '?' &&                   \
+	                 (*(p_iter))[2] == '>' &&                   \
+	                 tpp_lexer_has(self, TRIGRAPHS)             \
+	                 ? (*(p_iter) += 2, true)                   \
+	                 : false))
+#else /* TPP_HAVE_TRIGRAPHS */
+#define tpp_token_decodestring_is_lbrace(self, ch, p_iter, end) ((ch) == '{')
+#define tpp_token_decodestring_is_rbrace(self, ch, p_iter, end) ((ch) == '}')
+#endif /* !TPP_HAVE_TRIGRAPHS */
+
+
 /* Decode string: "foobar fdasudfad"
  *                 ^start          ^end
  */
@@ -64,6 +294,7 @@ tpp_token_decodestring_basic(tpp_lexer *self, tpp_char const *start, tpp_char co
 	tpp_char ch;
 	tpp_ssize temp, result = 0;
 	tpp_char const *iter = start;
+	tpp_char const *esc_start;
 	tpp_assert(start <= end);
 
 again:
@@ -104,6 +335,7 @@ again:
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
+		esc_start = iter;
 		iter += 3;
 		start = iter;
 		if (ch != '\\') {
@@ -127,6 +359,7 @@ not_trigraph:
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
+		esc_start = iter - 1;
 	}
 
 	/* Deal with \-escape sequence */
@@ -134,7 +367,9 @@ not_trigraph:
 		ch = '\0';
 		goto handle_unknown_escape_sequence;
 	}
+	iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
 	ch = *iter++;
+	(void)esc_start;
 	switch (ch) {
 
 	case '\\':
@@ -162,7 +397,12 @@ escape_self_sequence:
 		if (!tpp_lexer_has(self, TRIGRAPHS))
 			goto escape_self_sequence;
 		iter += 2;
-		goto print_backslash_and_flush_at_iter;
+		temp = tpp_formatprinter_print(default_printer, arg, (tpp_char const *)"\\", 1);
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+		start = iter;
+		break;
 #endif /* TPP_HAVE_TRIGRAPHS */
 
 		/* Conventional escape sequences... */
@@ -200,14 +440,18 @@ print_ch_as_byte:
 #if TPP_HAVE_STRING_ESCAPE_OCT
 	case '0': case '1': case '2': case '3':
 	case '4': case '5': case '6': case '7': {
+		tpp_char word;
 		if (!tpp_lexer_has(self, STRING_ESCAPE_OCT))
 			goto handle_unknown_escape_sequence;
+
 		/* Octal escape sequence */
-		tpp_char word = (tpp_char)tpp_ascii_asoctdigit(ch);
+		word = (tpp_char)tpp_ascii_asoctdigit(ch);
+		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
 		if (iter < end && tpp_ascii_isoctdigit(*iter)) {
 			ch = *iter++;
 			word <<= 3;
 			word |= (tpp_char)tpp_ascii_asoctdigit(ch);
+			iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
 		}
 		if (iter < end && tpp_ascii_isoctdigit(*iter) && (word <= 037)) {
 			ch = *iter++;
@@ -219,122 +463,157 @@ print_ch_as_byte:
 	}	break;
 #endif /* TPP_HAVE_STRING_ESCAPE_OCT */
 
-#if TPP_HAVE_STRING_ESCAPE_HEX
+#if TPP_HAVE_STRING_ESCAPE_HEX || TPP_HAVE_STRING_ESCAPE_HEX_BRACE
 	case 'x': {
-		tpp_char word;
 		if (iter >= end)
 			goto handle_unknown_escape_sequence;
-		if (!tpp_lexer_has(self, STRING_ESCAPE_OCT))
+		if (!tpp_lexer_has(self, STRING_ESCAPE_HEX) &&
+		    !tpp_lexer_has(self, STRING_ESCAPE_HEX_BRACE))
 			goto handle_unknown_escape_sequence;
-		ch = *iter++;
-		if (tpp_ascii_isdigit(ch)) {
-			word = (tpp_char)tpp_ascii_asdigit(ch);
-		} else if (tpp_ascii_islwrxdigit(ch)) {
-			word = (tpp_char)tpp_ascii_aslwrxdigit(ch);
-		} else if (tpp_ascii_isuprxdigit(ch)) {
-			word = (tpp_char)tpp_ascii_asuprxdigit(ch);
-		} else {
-			goto handle_unknown_escape_sequence;
-		}
-		if (iter < end) {
-			ch = *iter;
-			if (tpp_ascii_isdigit(ch)) {
-				word <<= 4;
-				word |= (tpp_char)tpp_ascii_asdigit(ch);
-				++iter;
-			} else if (tpp_ascii_islwrxdigit(ch)) {
-				word <<= 4;
-				word |= (tpp_char)tpp_ascii_aslwrxdigit(ch);
-				++iter;
-			} else if (tpp_ascii_isuprxdigit(ch)) {
-				word <<= 4;
-				word |= (tpp_char)tpp_ascii_asuprxdigit(ch);
-				++iter;
-			} else {
-#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
-				ch = word;
-				goto print_ch_as_byte;
-#endif /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+		ch = *iter;
+#if TPP_HAVE_STRING_ESCAPE_HEX
+		if (tpp_ascii_isxdigit(ch)) {
+			if (tpp_lexer_has(self, STRING_ESCAPE_HEX)) {
+				temp = tpp_token_decodestring_hex_sequence(self, &iter, end, config);
+				if (temp < 0)
+					return temp;
+				result += temp;
 			}
-#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
-			if (tpp_lexer_has(self, STRING_ESCAPE_HEX_MANY) && iter < end) {
-				tpp_char const *escape_pos = iter - 4;
-#if TPP_HAVE_TRIGRAPHS
-				if (*escape_pos == '/')
-					escape_pos -= 2;
-#endif /* TPP_HAVE_TRIGRAPHS */
-				ch = *iter;
-				if (tpp_ascii_isxdigit(ch)) {
-					tpp_token *const token = tpp_lexer_gettoken(self);
-#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
-					bool has_overflow = false;
-#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
-					tpp_uintmax bigword = word;
-					++iter;
-					for (;;) {
-						tpp_char nibble;
-						if (tpp_ascii_isdigit(ch)) {
-							nibble = (tpp_char)tpp_ascii_asdigit(ch);
-						} else if (tpp_ascii_islwrxdigit(ch)) {
-							nibble = (tpp_char)tpp_ascii_aslwrxdigit(ch);
-						} else if (tpp_ascii_isuprxdigit(ch)) {
-							nibble = (tpp_char)tpp_ascii_asuprxdigit(ch);
-						} else {
-							--iter;
-							break;
-						}
-#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
-						if (((bigword << 4) >> 4) != bigword)
-							has_overflow = true;
-#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
-						bigword <<= 4;
-						bigword |= nibble;
-						if (iter >= end)
-							break;
-						ch = *iter++;
-					}
-#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
-					if ((bigword > 0xff && !config->tldsc_hexprinter) || has_overflow) {
-						tpp_errno error;
-						tpp_char const *saved_start = token->tt_start;
-						tpp_char const *saved_end = token->tt_end;
-						token->tt_start = escape_pos;
-						token->tt_end   = iter;
-						error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
-						token->tt_start = saved_start;
-						token->tt_end   = saved_end;
-						if (TPP_ISERR(error))
-							return TPP_SSIZE_OFERR(error);
-					}
-#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
-					if (bigword > 0xff && config->tldsc_hexprinter) {
-						tpp_char const *saved_start = token->tt_start;
-						tpp_char const *saved_end = token->tt_end;
-						token->tt_start = escape_pos;
-						token->tt_end   = iter;
-						temp = (*config->tldsc_hexprinter)(arg, self, bigword);
-						token->tt_start = saved_start;
-						token->tt_end   = saved_end;
-						if (temp < 0)
-							goto err_temp;
-						result += temp;
-						break;
-					}
-					word = (tpp_char)bigword;
-					/* Fallthru to "print_ch_as_byte" below... */
-				}
-			}
-#endif /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
-		}
-		ch = word;
-		goto print_ch_as_byte;
-	}	break;
+		} else
 #endif /* TPP_HAVE_STRING_ESCAPE_HEX */
+#if TPP_HAVE_STRING_ESCAPE_HEX_BRACE
+		if (tpp_lexer_has(self, STRING_ESCAPE_HEX_BRACE) &&
+		    tpp_token_decodestring_is_lbrace(self, ch, &iter, end)) {
+			iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(self));
+			if (iter >= end)
+				goto handle_unknown_escape_sequence;
+#if TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY
+			if (tpp_lexer_has(self, STRING_ESCAPE_HEX_BRACE_MANY)) {
+				for (;;) {
+					if (iter >= end)
+						goto handle_unknown_escape_sequence;
+					ch = *iter;
+					if (ch == '}')
+						break;
+#ifdef TPP_HAVE_TRIGRAPHS
+					if (ch == '?')
+						break; /* In case of ??> */
+#endif /* TPP_HAVE_TRIGRAPHS */
+					if (tpp_ascii_isspace(ch) || ch == ',') {
+						iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(self));
+						continue;
+					} else
+#if TPP_HAVE_UNICODE
+					if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(self))) {
+						tpp_char const *prev_iter = iter;
+						tpp_unichar uc = tpp_unicode_readutf8(&iter, end);
+						if (tpp_unicode_isspace(uc))
+							continue;
+						iter = prev_iter;
+						goto handle_unknown_escape_sequence;
+					} else
+#endif /* TPP_HAVE_UNICODE */
+					{
+					}
+					temp = tpp_token_decodestring_hex_sequence_ex(self, &iter, end, config, true);
+					if (temp < 0)
+						return temp;
+					result += temp;
+				}
+			} else
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY */
+			{
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY)
+				if (!tpp_ascii_isxdigit(*iter))
+					goto handle_unknown_escape_sequence;
+				temp = tpp_token_decodestring_hex_sequence_ex(self, &iter, end, config, true);
+				if (temp < 0)
+					return temp;
+				result += temp;
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY) */
+			}
+			if (iter >= end)
+				goto handle_unknown_escape_sequence;
+			ch = *iter;
+			if (!tpp_token_decodestring_is_rbrace(self, ch, &iter, end))
+				goto handle_unknown_escape_sequence;
+			++iter;
+		} else
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE */
+		{
+			goto handle_unknown_escape_sequence;
+		}
+	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX || TPP_HAVE_STRING_ESCAPE_HEX_BRACE */
 
-	/* XXX: Support for: \o{377} */
-	/* XXX: Support for: \o{ 0 037 , 377 } (extra extension; not mandated by C) */
-	/* XXX: Support for: \x{12345678} */
-	/* XXX: Support for: \x{ 1234 5678 , ABCD } (extra extension; not mandated by C) */
+#if TPP_HAVE_STRING_ESCAPE_OCT_BRACE
+	case 'o': {
+		/* Brace-delimited octal escape sequence */
+		if (!tpp_lexer_has(self, STRING_ESCAPE_OCT_BRACE))
+			goto handle_unknown_escape_sequence;
+		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+		if (iter >= end)
+			goto handle_unknown_escape_sequence;
+		ch = *iter;
+		if (!tpp_token_decodestring_is_lbrace(self, ch, &iter, end))
+			goto handle_unknown_escape_sequence;
+		iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(self));
+		if (iter >= end)
+			goto handle_unknown_escape_sequence;
+#if TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY
+		if (tpp_lexer_has(self, STRING_ESCAPE_OCT_BRACE_MANY)) {
+			for (;;) {
+				if (iter >= end)
+					goto handle_unknown_escape_sequence;
+				ch = *iter;
+				if (ch == '}')
+					break;
+#ifdef TPP_HAVE_TRIGRAPHS
+				if (ch == '?')
+					break; /* In case of ??> */
+#endif /* TPP_HAVE_TRIGRAPHS */
+				if (tpp_ascii_isspace(ch) || ch == ',') {
+					iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(self));
+					continue;
+				} else
+#if TPP_HAVE_UNICODE
+				if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(self))) {
+					tpp_char const *prev_iter = iter;
+					tpp_unichar uc = tpp_unicode_readutf8(&iter, end);
+					if (tpp_unicode_isspace(uc))
+						continue;
+					iter = prev_iter;
+					goto handle_unknown_escape_sequence;
+				} else
+#endif /* TPP_HAVE_UNICODE */
+				{
+				}
+				temp = tpp_token_decodestring_oct_sequence(self, &iter, end, config);
+				if (temp < 0)
+					return temp;
+				result += temp;
+			}
+		} else
+#endif /* TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY */
+		{
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY)
+			if (!tpp_ascii_isoctdigit(*iter))
+				goto handle_unknown_escape_sequence;
+			temp = tpp_token_decodestring_oct_sequence(self, &iter, end, config);
+			if (temp < 0)
+				return temp;
+			result += temp;
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY) */
+		}
+		if (iter >= end)
+			goto handle_unknown_escape_sequence;
+		ch = *iter;
+		if (!tpp_token_decodestring_is_rbrace(self, ch, &iter, end))
+			goto handle_unknown_escape_sequence;
+		++iter;
+	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_OCT_BRACE */
 
 #if TPP_HAVE_STRING_ESCAPE_UNI
 	case 'u':
@@ -354,6 +633,8 @@ print_ch_as_byte:
 		 *      Names come from 'UnicodeData.txt' + 'NameAliases.txt' */
 		/* XXX: Support for: \U{ NO-BREAK SPACE , NO-BREAK SPACE }  (for \u00A0\u00A0)
 		 *      (extra extension; not mandated by C) */
+		/* XXX: Those same 4 extensions should also be available as extensions to
+		 *      "TPP_HAVE_ESCAPE_IN_IDENTIFIERS" */
 		do {
 			tpp_char nibble;
 			ch = *iter++;
@@ -385,7 +666,9 @@ print_ch_as_byte:
 	}	break;
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI */
 
+
 	default: {
+		tpp_char const *esc_first;
 #if TPP_HAVE_BSE && TPP_HAVE_UNICODE
 		tpp_char const *bse_iter;
 		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(self))) {
@@ -470,14 +753,20 @@ again_read_unicode_whitespace_after_backslash:
 		}
 
 handle_unknown_escape_sequence:
-		--iter;
+		esc_first = esc_start + 1;
+#if TPP_HAVE_TRIGRAPHS
+		if (*esc_start == '?')
+			esc_first += 2;
+#endif /* TPP_HAVE_TRIGRAPHS */
+		/* NOTE: At this point, "iter" represents the end of the unknown escape sequence! */
+		tpp_assert(iter >= esc_first);
 #if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
 		/* Hook here to allow user-code to define custom string escape sequences */
-		temp = tpp_lexer_callhook_unknown_string_escape(self, &iter, end, config);
+		temp = tpp_lexer_callhook_unknown_string_escape(self, &esc_first, end, config);
 		if (temp >= 0) {
 			/* Successfully handled via hook. */
 			result += temp;
-			start = iter;
+			start = iter = esc_first;
 			goto again;
 		}
 		if (temp != TPP_SSIZE_OFERR(TPP_ENOENT))
@@ -485,25 +774,25 @@ handle_unknown_escape_sequence:
 #endif /* TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK */
 #if TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE
 		{
-			tpp_errno error = tpp_lexer_warnf_at(self, tpp_lexer_getfile(self), iter,
-			                                     TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, ch);
+			tpp_errno error;
+			tpp_token *const token = tpp_lexer_gettoken(self);
+			tpp_char const *saved_start = token->tt_start;
+			tpp_char const *saved_end = token->tt_end;
+			token->tt_start = esc_start;
+			token->tt_end   = iter;
+			error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE);
+			token->tt_start = saved_start;
+			token->tt_end   = saved_end;
 			if (TPP_ISERR(error))
 				return TPP_SSIZE_OFERR(error);
 		}
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
+		/* Setup flushing such that the \-character is removed */
 #if TPP_HAVE_TRIGRAPHS
-		if (iter[-1] != '\\') {
-print_backslash_and_flush_at_iter:
-			temp = tpp_formatprinter_print(default_printer, arg, (tpp_char const *)"\\", 1);
-			if (temp < 0)
-				goto err_temp;
-			result += temp;
-			start = iter;
-		} else
+		if (*esc_start == '?')
+			esc_start += 2;
 #endif /* TPP_HAVE_TRIGRAPHS */
-		{
-			start = iter - 1;
-		}
+		start = esc_first;
 		goto again;
 	}	break;
 

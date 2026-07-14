@@ -1955,6 +1955,18 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	}	break;
 #endif /* TPP_HAVE_PRAGMA_TPP */
 
+	/* XXX: #pragma filetag(ENCODING)
+	 * Allows users to specify the encoding of the source file, which TPP currently
+	 * (tries to) detect automatically (since TPP requires that its input files supply
+	 * it with purely UTF-8 data). However, I've already wanted to add some kind of
+	 * extension that allows the user to supply an iconv-style library and specify
+	 * that input files use some specific encoding -- this pragma could then override
+	 * the encoding used thus far, and cause further input to be processed using this
+	 * new ENCODING.
+	 *
+	 * ref: https://www.ibm.com/docs/en/zos/2.2.0?topic=descriptions-pragma-filetag
+	 */
+
 	/* XXX: Builtin support for STDC pragmas:
 	 * >> #pragma STDC FENV_ACCESS ON/OFF/DEFAULT
 	 * >> #pragma STDC FP_CONTRACT ON/OFF/DEFAULT
