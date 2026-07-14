@@ -1638,6 +1638,9 @@ again_ch:
 	if (ch == '.') {
 #if TPP_HAVE_SMART_FLOAT_TOKENS
 		if (tpp_lexer_has(self, SMART_FLOAT_TOKENS)) {
+#if TPP_HAVE_ISFLOATSUFFIX_HOOK && TPP_HAVE_ISFLOATSUFFIX_HOOK != TPP_HOOK_CONST_BUILTIN
+			tpp_size const suffix_start = tpp_file_ptr2rel(file, pos);
+#endif /* TPP_HAVE_ISFLOATSUFFIX_HOOK && TPP_HAVE_ISFLOATSUFFIX_HOOK != TPP_HOOK_CONST_BUILTIN */
 			tpp_token_id old_result = result;
 			if (result == TPP_TOK_C_FLOAT)
 				goto done;
@@ -1674,18 +1677,30 @@ again_ch:
 				pos = tpp_file_rel2ptr(file, saved_pos);
 			}
 
-			/* If enabled, allow strings that would qualify as float type suffixes here:
+			/* Use a hook to check how something like this should be parsed
 			 * >> 1.F;    // Must always be [FLOAT:1.F], rather than [INT:1][DOT:.][F:F]
 			 *
-			 * NOTE: Intentionally do this "#ifdef TPP_CONFIG_ISFLOATSUFFIX", rather
-			 *       that "#if TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX", so-as to allow users
-			 *       to simply "#define TPP_CONFIG_ISFLOATSUFFIX" to add special
-			 *       handling here, without "TPP_HAVE_LEXER_DECODEFLOAT_SUFFIX" needing
-			 *       to be enabled also! */
-#ifdef TPP_CONFIG_ISFLOATSUFFIX
-			if (TPP_CONFIG_ISFLOATSUFFIX(self, ch))
-				goto again;
-#endif /* TPP_CONFIG_ISFLOATSUFFIX */
+			 * When "tpp_lexer_callhook_isfloatsuffix()" indicates that "F"
+			 * is a valid float-suffix, then we include it in the float token
+			 * here. Otherwise, we don't */
+#if TPP_HAVE_ISFLOATSUFFIX_HOOK && TPP_HAVE_ISFLOATSUFFIX_HOOK != TPP_HOOK_CONST_BUILTIN
+#if TPP_HAVE_UNICODE
+			if (tpp_ascii_issymcont(ch) || (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)))
+#else /* TPP_HAVE_UNICODE */
+			if (tpp_ascii_issymcont(ch))
+#endif /* !TPP_HAVE_UNICODE */
+			{
+				tpp_size saved_pos = tpp_file_ptr2rel(file, pos);
+				pos   = tpp_file_rel2ptr(file, suffix_start);
+				error = tpp_lexer_callhook_isfloatsuffix(self, pos);
+				pos   = tpp_file_rel2ptr(file, saved_pos);
+				if (error != TPP_ENOENT) {
+					if (TPP_ISERR(error))
+						return TPP_TOK_OFERR(error);
+					goto again; /* It *is* a float suffix! */
+				}
+			}
+#endif /* TPP_HAVE_ISFLOATSUFFIX_HOOK && TPP_HAVE_ISFLOATSUFFIX_HOOK != TPP_HOOK_CONST_BUILTIN */
 
 			/* End the token before the "." as whatever it was at the time. */
 			result = old_result;

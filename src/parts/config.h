@@ -3444,6 +3444,24 @@ local HOOKS = {
 		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self)", { "lexer" },
 		"TPP_ELEXERROR"
 	},
+
+	{
+		"Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and\n" +
+		"a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be\n" +
+		"part of the float-token (in the form of a float-suffix), or if this is actually be\n" +
+		"parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called\n" +
+		"with `pos` pointing at the `f` (though additional characters thereafter may not be\n" +
+		"loaded yet, though can be loaded using `tpp_lexer_readchar()`)\n" +
+		"@return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix\n" +
+		"@return: TPP_ENOENT: It's not a float suffix\n" +
+		"@return: TPP_EIO:    I/O error\n" +
+		"@return: TPP_ENOMEM: Out of memory\n",
+		"ISFLOATSUFFIX",
+		"(TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_SMART_FLOAT_TOKENS)",
+		"", // No builtin default
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_char const *pos)", { "lexer", "pos" },
+		"TPP_ENOENT"
+	},
 };
 
 for (local doc, name,
@@ -3883,6 +3901,47 @@ for (local doc, name,
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_RAISE_LEXERROR) && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_RAISE_LEXERROR' is defined, but 'TPP_HAVE_RAISE_LEXERROR_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_RAISE_LEXERROR && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_ISFLOATSUFFIX(tpp_lexer *tpp_restrict self, tpp_char const *pos);
+ * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
+ * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
+ * part of the float-token (in the form of a float-suffix), or if this is actually be
+ * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
+ * with `pos` pointing at the `f` (though additional characters thereafter may not be
+ * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+ * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
+ * @return: TPP_ENOENT: It's not a float suffix
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_ISFLOATSUFFIX_HOOK
+#ifdef TPP_HOOK_ISFLOATSUFFIX
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_SMART_FLOAT_TOKENS) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_ISFLOATSUFFIX */
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_SMART_FLOAT_TOKENS) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_ISFLOATSUFFIX */
+#endif /* !TPP_HAVE_ISFLOATSUFFIX_HOOK */
+#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_ISFLOATSUFFIX)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_ISFLOATSUFFIX_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_ISFLOATSUFFIX' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_ISFLOATSUFFIX)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_ISFLOATSUFFIX_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_ISFLOATSUFFIX' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK /* There is no builtin version */
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK /* There is no builtin version */
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_ISFLOATSUFFIX) && !TPP_HOOK_USESUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_ISFLOATSUFFIX' is defined, but 'TPP_HAVE_ISFLOATSUFFIX_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_ISFLOATSUFFIX && !TPP_HOOK_USESUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
 /*[[[end]]]*/
 
 /************************************************************************/
@@ -4491,27 +4550,6 @@ for (local doc, name,
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT
 #define TPP_HAVE_LEXER_DECODEFLOAT (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
-
-/* User-overridable macro that is used to test if "ch" may
- * be the first character of a floating-point type suffix.
- *
- * This macro is needed when `TPP_HAVE_SMART_FLOAT_TOKENS`
- * is used to determine how tokens should be split in:
- * >> 1.f;  // if (TPP_CONFIG_ISFLOATSUFFIX(self, 'f')) -> [FLOAT:1.f]; else -> [INT:1][DOT:.][f:f]
- *
- * When TPP is built with `-DTPP_HAVE_SMART_FLOAT_TOKENS=0`,
- * this macro isn't used by the internal token parser impl. */
-/* TODO: This should be a hook! */
-#ifndef TPP_CONFIG_ISFLOATSUFFIX
-#if TPP_PROFILE == TPP_PROFILE_CXX
-#define TPP_CONFIG_ISFLOATSUFFIX(self, ch) ((ch) == 'f' || (ch) == 'F' || (ch) == 'l' || (ch) == 'L' || (ch) == 'b' || (ch) == 'B')
-#elif TPP_HAVE_PROFILE_C_LIKE
-#define TPP_CONFIG_ISFLOATSUFFIX(self, ch) ((ch) == 'f' || (ch) == 'F' || (ch) == 'l' || (ch) == 'L')
-#else /* ... */
-#define TPP_CONFIG_ISFLOATSUFFIX(self, ch) 0
-#endif /* !... */
-#endif /* !TPP_CONFIG_ISFLOATSUFFIX */
-
 
 /* Provide a function `tpp_lexer_parsecharacter_literal()` to parse character literals */
 #ifndef TPP_HAVE_LEXER_PARSECHARACTER_LITERAL

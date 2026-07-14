@@ -8128,6 +8128,47 @@ TPP_DECL_END
 #error "Invalid configuration: 'TPP_HOOK_RAISE_LEXERROR' is defined, but 'TPP_HAVE_RAISE_LEXERROR_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_RAISE_LEXERROR && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 
+/* >> tpp_errno TPP_HOOK_ISFLOATSUFFIX(tpp_lexer *tpp_restrict self, tpp_char const *pos);
+ * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
+ * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
+ * part of the float-token (in the form of a float-suffix), or if this is actually be
+ * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
+ * with `pos` pointing at the `f` (though additional characters thereafter may not be
+ * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+ * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
+ * @return: TPP_ENOENT: It's not a float suffix
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_ISFLOATSUFFIX_HOOK
+#ifdef TPP_HOOK_ISFLOATSUFFIX
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_SMART_FLOAT_TOKENS) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_ISFLOATSUFFIX */
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_SMART_FLOAT_TOKENS) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_ISFLOATSUFFIX */
+#endif /* !TPP_HAVE_ISFLOATSUFFIX_HOOK */
+#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_ISFLOATSUFFIX)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_ISFLOATSUFFIX_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_ISFLOATSUFFIX' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_ISFLOATSUFFIX)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_ISFLOATSUFFIX_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_ISFLOATSUFFIX' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK /* There is no builtin version */
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK /* There is no builtin version */
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_ISFLOATSUFFIX) && !TPP_HOOK_USESUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_ISFLOATSUFFIX' is defined, but 'TPP_HAVE_ISFLOATSUFFIX_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_ISFLOATSUFFIX && !TPP_HOOK_USESUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -8734,27 +8775,6 @@ TPP_DECL_END
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT
 #define TPP_HAVE_LEXER_DECODEFLOAT (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
-
-/* User-overridable macro that is used to test if "ch" may
- * be the first character of a floating-point type suffix.
- *
- * This macro is needed when `TPP_HAVE_SMART_FLOAT_TOKENS`
- * is used to determine how tokens should be split in:
- * >> 1.f;  // if (TPP_CONFIG_ISFLOATSUFFIX(self, 'f')) -> [FLOAT:1.f]; else -> [INT:1][DOT:.][f:f]
- *
- * When TPP is built with `-DTPP_HAVE_SMART_FLOAT_TOKENS=0`,
- * this macro isn't used by the internal token parser impl. */
-/* TODO: This should be a hook! */
-#ifndef TPP_CONFIG_ISFLOATSUFFIX
-#if TPP_PROFILE == TPP_PROFILE_CXX
-#define TPP_CONFIG_ISFLOATSUFFIX(self, ch) ((ch) == 'f' || (ch) == 'F' || (ch) == 'l' || (ch) == 'L' || (ch) == 'b' || (ch) == 'B')
-#elif TPP_HAVE_PROFILE_C_LIKE
-#define TPP_CONFIG_ISFLOATSUFFIX(self, ch) ((ch) == 'f' || (ch) == 'F' || (ch) == 'l' || (ch) == 'L')
-#else /* ... */
-#define TPP_CONFIG_ISFLOATSUFFIX(self, ch) 0
-#endif /* !... */
-#endif /* !TPP_CONFIG_ISFLOATSUFFIX */
-
 
 /* Provide a function `tpp_lexer_parsecharacter_literal()` to parse character literals */
 #ifndef TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
@@ -17700,7 +17720,8 @@ typedef enum tpp_hook_system_include_path_when {
      TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) ||            \
      TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) ||   \
      TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) || \
-     TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK))
+     TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK) ||        \
+     TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK))
 #define TPP_HAVE_HOOKS 1
 #else /* ... */
 #define TPP_HAVE_HOOKS 0
@@ -17867,6 +17888,21 @@ typedef struct tpp_hooks {
 #if TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_raise_lexerror))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_isfloatsuffix)(struct tpp_lexer *tpp_restrict self, tpp_char const *pos);
+	 * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
+	 * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
+	 * part of the float-token (in the form of a float-suffix), or if this is actually be
+	 * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
+	 * with `pos` pointing at the `f` (though additional characters thereafter may not be
+	 * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+	 * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
+	 * @return: TPP_ENOENT: It's not a float suffix
+	 * @return: TPP_EIO:    I/O error
+	 * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_isfloatsuffix))(struct tpp_lexer *tpp_restrict self, tpp_char const *pos); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
 } tpp_hooks;
 #endif /* TPP_HAVE_HOOKS */
 
@@ -18224,6 +18260,38 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_raise_lexerror(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 
+/* Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
+ * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
+ * part of the float-token (in the form of a float-suffix), or if this is actually be
+ * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
+ * with `pos` pointing at the `f` (though additional characters thereafter may not be
+ * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+ * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
+ * @return: TPP_ENOENT: It's not a float suffix
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK)
+#define tpp_hooks_call_isfloatsuffix(self, lexer, pos) \
+	((self)->TPP_INTERNAL(th_isfloatsuffix) ? (*(self)->TPP_INTERNAL(th_isfloatsuffix))(lexer, pos) : TPP_ENOENT)
+#define tpp_hooks_get_isfloatsuffix(self)    (self)->TPP_INTERNAL(th_isfloatsuffix)
+#define tpp_hooks_set_isfloatsuffix(self, v) (void)((self)->TPP_INTERNAL(th_isfloatsuffix) = (v))
+#define tpp_hooks_reset_isfloatsuffix(self)  (void)((self)->TPP_INTERNAL(th_isfloatsuffix) = _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX)
+#define _tpp_hooks_init_isfloatsuffix(self)  , (self)->TPP_INTERNAL(th_isfloatsuffix) = _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX
+#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_ISFLOATSUFFIX)
+#define _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX (&TPP_HOOK_ISFLOATSUFFIX)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
+#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_isfloatsuffix(self, lexer, pos) \
+	TPP_HOOK_ISFLOATSUFFIX(lexer, pos)
+#else /*  */
+#define tpp_hooks_call_isfloatsuffix(self, lexer, pos) TPP_ENOENT
+#endif /* ... */
+#define _tpp_hooks_init_isfloatsuffix(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
+
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
 	(void)(0 _tpp_hooks_init_warnprinter(self) \
@@ -18235,7 +18303,8 @@ typedef struct tpp_hooks {
 	       _tpp_hooks_init_ident_sccs(self) \
 	       _tpp_hooks_init_system_include_path(self) \
 	       _tpp_hooks_init_unknown_string_escape(self) \
-	       _tpp_hooks_init_raise_lexerror(self))
+	       _tpp_hooks_init_raise_lexerror(self) \
+	       _tpp_hooks_init_isfloatsuffix(self))
 
 
 /************************************************************************/
@@ -18839,6 +18908,25 @@ typedef struct tpp_lexer {
 #define tpp_lexer_sethook_raise_lexerror(self, v) tpp_hooks_set_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_raise_lexerror(self)  tpp_hooks_reset_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_raise_lexerror */
+
+/* >> tpp_errno tpp_lexer_callhook_isfloatsuffix(tpp_lexer *tpp_restrict self, tpp_char const *pos);
+ * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
+ * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
+ * part of the float-token (in the form of a float-suffix), or if this is actually be
+ * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
+ * with `pos` pointing at the `f` (though additional characters thereafter may not be
+ * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+ * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
+ * @return: TPP_ENOENT: It's not a float suffix
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#define tpp_lexer_callhook_isfloatsuffix(self, pos) \
+	tpp_hooks_call_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self, pos)
+#ifdef tpp_hooks_set_isfloatsuffix
+#define tpp_lexer_gethook_isfloatsuffix(self)    tpp_hooks_get_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_isfloatsuffix(self, v) tpp_hooks_set_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_isfloatsuffix(self)  tpp_hooks_reset_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_isfloatsuffix */
 
 
 

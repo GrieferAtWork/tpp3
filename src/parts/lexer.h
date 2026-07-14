@@ -640,6 +640,25 @@ for (local doc, name,
 #define tpp_lexer_sethook_raise_lexerror(self, v) tpp_hooks_set_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_raise_lexerror(self)  tpp_hooks_reset_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_raise_lexerror */
+
+/* >> tpp_errno tpp_lexer_callhook_isfloatsuffix(tpp_lexer *tpp_restrict self, tpp_char const *pos);
+ * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
+ * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
+ * part of the float-token (in the form of a float-suffix), or if this is actually be
+ * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
+ * with `pos` pointing at the `f` (though additional characters thereafter may not be
+ * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+ * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
+ * @return: TPP_ENOENT: It's not a float suffix
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#define tpp_lexer_callhook_isfloatsuffix(self, pos) \
+	tpp_hooks_call_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self, pos)
+#ifdef tpp_hooks_set_isfloatsuffix
+#define tpp_lexer_gethook_isfloatsuffix(self)    tpp_hooks_get_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_isfloatsuffix(self, v) tpp_hooks_set_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_isfloatsuffix(self)  tpp_hooks_reset_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_isfloatsuffix */
 /*[[[end]]]*/
 
 
