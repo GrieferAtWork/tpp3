@@ -161,21 +161,21 @@ escape_self_sequence:
 	case 'f': ch = 0x0c; goto print_ch;
 	case 'r': ch = 0x0d; goto print_ch;
 
-#if TPP_HAVE_ESCAPE_E_IN_STRINGS
+#if TPP_HAVE_STRING_ESCAPE_E
 	case 'e':
-		if (!tpp_lexer_has(self, ESCAPE_E_IN_STRINGS))
+		if (!tpp_lexer_has(self, STRING_ESCAPE_E))
 			goto handle_unknown_escape_sequence;
 		ch = 0x1b;
 		goto print_ch;
-#endif /* !TPP_HAVE_ESCAPE_E_IN_STRINGS */
+#endif /* !TPP_HAVE_STRING_ESCAPE_E */
 
-#if TPP_HAVE_ESCAPE_S_IN_STRINGS
+#if TPP_HAVE_STRING_ESCAPE_S
 	case 's':
-		if (!tpp_lexer_has(self, ESCAPE_S_IN_STRINGS))
+		if (!tpp_lexer_has(self, STRING_ESCAPE_S))
 			goto handle_unknown_escape_sequence;
 		ch = 0x20;
 		goto print_ch;
-#endif /* !TPP_HAVE_ESCAPE_S_IN_STRINGS */
+#endif /* !TPP_HAVE_STRING_ESCAPE_S */
 
 print_ch:
 		temp = tpp_formatprinter_print(data_printer, arg, &ch, 1);

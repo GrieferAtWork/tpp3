@@ -129,54 +129,6 @@ Detect:
 ```
 </details>
 
-## TPP_HAVE_ESCAPE_E_IN_STRINGS
-
-Support for `\e` (for `U+001B`) escape sequences:
-
-```c
-printf("Error: \e[31m%d\e[0m", errno);
-```
-
-<details><summary>Details</summary>
-
-Default:
-
-```c
-TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0
-```
-
-Extension name:
-
-```c
-#define TPP_EXTNAME_ESCAPE_E_IN_STRINGS "escape-e-in-strings"
-```
-</details>
-
-## TPP_HAVE_ESCAPE_S_IN_STRINGS
-
-Support for `\s` (for `U+0020`) escape sequences:
-
-```java
-System.out.println("""
-    This line has visible trailing whitespace:    \s
-    """);
-```
-
-<details><summary>Details</summary>
-
-Default:
-
-```c
-TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0
-```
-
-Extension name:
-
-```c
-#define TPP_EXTNAME_ESCAPE_S_IN_STRINGS "escape-s-in-strings"
-```
-</details>
-
 ## TPP_HAVE_CPP_DIRECTIVES
 
 Specifies if *any* CPP directives are supported
@@ -4112,6 +4064,54 @@ Detect:
 #if __TPP_COUNT_TOKENS("'''\n a\n b'''") == 1
 ...
 #endif
+```
+</details>
+
+## TPP_HAVE_STRING_ESCAPE_E
+
+Support for `\e` (for `U+001B`) escape sequences:
+
+```c
+printf("Error: \e[31m%d\e[0m", errno);
+```
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0
+```
+
+Extension name:
+
+```c
+#define TPP_EXTNAME_STRING_ESCAPE_E "string-escape-e"
+```
+</details>
+
+## TPP_HAVE_STRING_ESCAPE_S
+
+Support for `\s` (for `U+0020`) escape sequences:
+
+```java
+System.out.println("""
+    This line has visible trailing whitespace:    \s
+    """);
+```
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0
+```
+
+Extension name:
+
+```c
+#define TPP_EXTNAME_STRING_ESCAPE_S "string-escape-s"
 ```
 </details>
 

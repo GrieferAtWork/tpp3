@@ -530,24 +530,6 @@
 #define TPP_HAVE_ESCAPE_IN_IDENTIFIERS (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
 #endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
 
-/* Support for `\e` (for `U+001B`) escape sequences:
- * ```c
- * printf("Error: \e[31m%d\e[0m", errno);
- * ``` */
-#ifndef TPP_HAVE_ESCAPE_E_IN_STRINGS
-#define TPP_HAVE_ESCAPE_E_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fescape-e-in-strings" */
-#endif /* !TPP_HAVE_ESCAPE_E_IN_STRINGS */
-
-/* Support for `\s` (for `U+0020`) escape sequences:
- * ```java
- * System.out.println("""
- *     This line has visible trailing whitespace:    \s
- *     """);
- * ```  */
-#ifndef TPP_HAVE_ESCAPE_S_IN_STRINGS
-#define TPP_HAVE_ESCAPE_S_IN_STRINGS (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fescape-s-in-strings" */
-#endif /* !TPP_HAVE_ESCAPE_S_IN_STRINGS */
-
 /* Specifies if *any* CPP directives are supported */
 #ifndef TPP_HAVE_CPP_DIRECTIVES
 #define TPP_HAVE_CPP_DIRECTIVES ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL)) /* "-fcpp-directives" */
@@ -2067,6 +2049,24 @@
 #ifndef TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 #define TPP_HAVE_TOK_BLOCK_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-block-char-literal" */
 #endif /* !TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
+
+/* Support for `\e` (for `U+001B`) escape sequences:
+ * ```c
+ * printf("Error: \e[31m%d\e[0m", errno);
+ * ``` */
+#ifndef TPP_HAVE_STRING_ESCAPE_E
+#define TPP_HAVE_STRING_ESCAPE_E (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fstring-escape-e" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_E */
+
+/* Support for `\s` (for `U+0020`) escape sequences:
+ * ```java
+ * System.out.println("""
+ *     This line has visible trailing whitespace:    \s
+ *     """);
+ * ```  */
+#ifndef TPP_HAVE_STRING_ESCAPE_S
+#define TPP_HAVE_STRING_ESCAPE_S (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fstring-escape-s" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_S */
 
 /* Feature-flag: treat line-feeds like any regular character in string tokens:
  * - `TPP_HAVE_TOK_C_STRING`

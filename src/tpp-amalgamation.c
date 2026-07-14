@@ -45,8 +45,6 @@
 #define tef_TPP_EXT_BSE                                    TPP_INTERNAL(tef_TPP_EXT_BSE)
 #define tef_TPP_EXT_BSE_WHITESPACE                         TPP_INTERNAL(tef_TPP_EXT_BSE_WHITESPACE)
 #define tef_TPP_EXT_ESCAPE_IN_IDENTIFIERS                  TPP_INTERNAL(tef_TPP_EXT_ESCAPE_IN_IDENTIFIERS)
-#define tef_TPP_EXT_ESCAPE_E_IN_STRINGS                    TPP_INTERNAL(tef_TPP_EXT_ESCAPE_E_IN_STRINGS)
-#define tef_TPP_EXT_ESCAPE_S_IN_STRINGS                    TPP_INTERNAL(tef_TPP_EXT_ESCAPE_S_IN_STRINGS)
 #define tef_TPP_EXT_CPP_DIRECTIVES                         TPP_INTERNAL(tef_TPP_EXT_CPP_DIRECTIVES)
 #define tef_TPP_EXT_CPP_MACROS                             TPP_INTERNAL(tef_TPP_EXT_CPP_MACROS)
 #define tef_TPP_EXT_MAGIC_WHITESPACE                       TPP_INTERNAL(tef_TPP_EXT_MAGIC_WHITESPACE)
@@ -182,6 +180,8 @@
 #define tef_TPP_EXT_TOK_RAW_CHAR_LITERAL                   TPP_INTERNAL(tef_TPP_EXT_TOK_RAW_CHAR_LITERAL)
 #define tef_TPP_EXT_TOK_BLOCK_STRING_LITERAL               TPP_INTERNAL(tef_TPP_EXT_TOK_BLOCK_STRING_LITERAL)
 #define tef_TPP_EXT_TOK_BLOCK_CHAR_LITERAL                 TPP_INTERNAL(tef_TPP_EXT_TOK_BLOCK_CHAR_LITERAL)
+#define tef_TPP_EXT_STRING_ESCAPE_E                        TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_E)
+#define tef_TPP_EXT_STRING_ESCAPE_S                        TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_S)
 #define tef_TPP_EXT_STRING_ALLOW_MULTILINE                 TPP_INTERNAL(tef_TPP_EXT_STRING_ALLOW_MULTILINE)
 #define tef_TPP_EXT_STRING_AUTO_CONCAT                     TPP_INTERNAL(tef_TPP_EXT_STRING_AUTO_CONCAT)
 #define tef_TPP_EXT_TOK_EXCLAIM_EXCLAIM                    TPP_INTERNAL(tef_TPP_EXT_TOK_EXCLAIM_EXCLAIM)
@@ -310,8 +310,6 @@
 #define tff_BSE                                            TPP_INTERNAL(tff_BSE)
 #define tff_BSE_WHITESPACE                                 TPP_INTERNAL(tff_BSE_WHITESPACE)
 #define tff_ESCAPE_IN_IDENTIFIERS                          TPP_INTERNAL(tff_ESCAPE_IN_IDENTIFIERS)
-#define tff_ESCAPE_E_IN_STRINGS                            TPP_INTERNAL(tff_ESCAPE_E_IN_STRINGS)
-#define tff_ESCAPE_S_IN_STRINGS                            TPP_INTERNAL(tff_ESCAPE_S_IN_STRINGS)
 #define tff_CPP_DIRECTIVES                                 TPP_INTERNAL(tff_CPP_DIRECTIVES)
 #define tff_CPP_MACROS                                     TPP_INTERNAL(tff_CPP_MACROS)
 #define tff_MAGIC_WHITESPACE                               TPP_INTERNAL(tff_MAGIC_WHITESPACE)
@@ -447,6 +445,8 @@
 #define tff_TOK_RAW_CHAR_LITERAL                           TPP_INTERNAL(tff_TOK_RAW_CHAR_LITERAL)
 #define tff_TOK_BLOCK_STRING_LITERAL                       TPP_INTERNAL(tff_TOK_BLOCK_STRING_LITERAL)
 #define tff_TOK_BLOCK_CHAR_LITERAL                         TPP_INTERNAL(tff_TOK_BLOCK_CHAR_LITERAL)
+#define tff_STRING_ESCAPE_E                                TPP_INTERNAL(tff_STRING_ESCAPE_E)
+#define tff_STRING_ESCAPE_S                                TPP_INTERNAL(tff_STRING_ESCAPE_S)
 #define tff_STRING_ALLOW_MULTILINE                         TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE)
 #define tff_STRING_AUTO_CONCAT                             TPP_INTERNAL(tff_STRING_AUTO_CONCAT)
 #define tff_TOK_EXCLAIM_EXCLAIM                            TPP_INTERNAL(tff_TOK_EXCLAIM_EXCLAIM)
@@ -12326,12 +12326,6 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
 		/* .tff_ESCAPE_IN_IDENTIFIERS                  = */ TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_E_IN_STRINGS)
-		/* .tff_ESCAPE_E_IN_STRINGS                    = */ TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_E_IN_STRINGS),
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_E_IN_STRINGS) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_S_IN_STRINGS)
-		/* .tff_ESCAPE_S_IN_STRINGS                    = */ TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_S_IN_STRINGS),
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_S_IN_STRINGS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES)
 		/* .tff_CPP_DIRECTIVES                         = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_DIRECTIVES),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES) */
@@ -12737,6 +12731,12 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL)
 		/* .tff_TOK_BLOCK_CHAR_LITERAL                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_E)
+		/* .tff_STRING_ESCAPE_E                        = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_E),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_E) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S)
+		/* .tff_STRING_ESCAPE_S                        = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_S),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		/* .tff_STRING_ALLOW_MULTILINE                 = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ALLOW_MULTILINE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) */
@@ -34704,21 +34704,21 @@ escape_self_sequence:
 	case 'f': ch = 0x0c; goto print_ch;
 	case 'r': ch = 0x0d; goto print_ch;
 
-#if TPP_HAVE_ESCAPE_E_IN_STRINGS
+#if TPP_HAVE_STRING_ESCAPE_E
 	case 'e':
-		if (!tpp_lexer_has(self, ESCAPE_E_IN_STRINGS))
+		if (!tpp_lexer_has(self, STRING_ESCAPE_E))
 			goto handle_unknown_escape_sequence;
 		ch = 0x1b;
 		goto print_ch;
-#endif /* !TPP_HAVE_ESCAPE_E_IN_STRINGS */
+#endif /* !TPP_HAVE_STRING_ESCAPE_E */
 
-#if TPP_HAVE_ESCAPE_S_IN_STRINGS
+#if TPP_HAVE_STRING_ESCAPE_S
 	case 's':
-		if (!tpp_lexer_has(self, ESCAPE_S_IN_STRINGS))
+		if (!tpp_lexer_has(self, STRING_ESCAPE_S))
 			goto handle_unknown_escape_sequence;
 		ch = 0x20;
 		goto print_ch;
-#endif /* !TPP_HAVE_ESCAPE_S_IN_STRINGS */
+#endif /* !TPP_HAVE_STRING_ESCAPE_S */
 
 print_ch:
 		temp = tpp_formatprinter_print(data_printer, arg, &ch, 1);

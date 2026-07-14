@@ -2443,8 +2443,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_ESCAPE_IN_IDENTIFIERS                0 /* TPP2 didn't support \uXXXX or \UXXXXXXXX characters in identifiers */
 #define TPP_HAVE_TRIGRAPHS                            TPP_CONFIG_FEATURE_TRIGRAPHS
 #define TPP_HAVE_DIGRAPHS                             TPP_CONFIG_FEATURE_DIGRAPHS
-#define TPP_HAVE_ESCAPE_E_IN_STRINGS                  TPP_CONFIG_EXTENSION_STR_E             /* Support for "\e" (for U+001B) escape sequences */
-#define TPP_HAVE_ESCAPE_S_IN_STRINGS                  0                                      /* Support for "\s" (for U+0020) escape sequences */
+#define TPP_HAVE_STRING_ESCAPE_E                  TPP_CONFIG_EXTENSION_STR_E             /* Support for "\e" (for U+001B) escape sequences */
+#define TPP_HAVE_STRING_ESCAPE_S                  0                                      /* Support for "\s" (for U+0020) escape sequences */
 #define TPP_HAVE_CPP_DIRECTIVES                       1                                      /* Specifies if *any* CPP directives are supported */
 #define TPP_HAVE_CPP_MACROS                           1                                      /* Support for C-style macros */
 #define TPP_HAVE_MAGIC_WHITESPACE                     0                                      /* TPP2 didn't have "magic whitespace". As such, it suffered from accidental token pasting in certain situations */
@@ -2583,7 +2583,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_EXTNAME_VA_OPT_IN_MACROS                    "va-opt-in-macros"
 #define TPP_EXTNAME_VA_NARGS_IN_MACROS                  "va-nargs-in-macros"
 #define TPP_EXTNAME_VA_ARGS_IN_MACROS                   "va-args-in-macros"
-#define TPP_EXTNAME_ESCAPE_E_IN_STRINGS                 "escape-e-in-strings"
+#define TPP_EXTNAME_STRING_ESCAPE_E                     "escape-e-in-strings"
 #define TPP_EXTNAME_ALTERNATIVE_MACRO_PARENTHESIS       "alternative-macro-parenthesis"
 #define TPP_EXTNAME_MACRO_RECURSION                     "macro-recursion"
 #define TPP_EXTNAME_MACRO_ARGUMENT_WHITESPACE           "macro-argument-whitespace"
@@ -2621,7 +2621,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT    "if-else-optional-true"
 #define TPP_EXTNAME_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS "ifelse-in-expressions"
 #define TPP_EXTNAME_BUILTIN_EXPR_LOGICAL_XOR            "logical-xor-in-expressions"
-#define TPP_EXTNAME_LEXER_DECODEINT_BINARY_LITERALS        "binary-literals"
+#define TPP_EXTNAME_LEXER_DECODEINT_BINARY_LITERALS     "binary-literals"
 /************************************************************************/
 
 
@@ -2948,7 +2948,7 @@ alias("EXT_VA_COMMA", "TPP_EXT_VA_COMMA_IN_MACROS");
 alias("EXT_VA_OPT", "TPP_EXT_VA_OPT_IN_MACROS");
 alias("EXT_VA_NARGS", "TPP_EXT_VA_NARGS_IN_MACROS");
 alias("EXT_VA_ARGS", "TPP_EXT_VA_ARGS_IN_MACROS");
-alias("EXT_STR_E", "TPP_EXT_ESCAPE_E_IN_STRINGS");
+alias("EXT_STR_E", "TPP_EXT_STRING_ESCAPE_E");
 alias("EXT_ALTMAC", "TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS");
 alias("EXT_RECMAC", "TPP_EXT_MACRO_RECURSION");
 alias("EXT_ARGSPACE", "TPP_EXT_MACRO_ARGUMENT_WHITESPACE");
@@ -3913,12 +3913,12 @@ alias("W_INVALID_FLOAT_SUFFIX", "TPP_HAVE_TPP_W_INVALID_FLOAT");
 #define EXT_VA_ARGS TPP_EXT_VA_ARGS_IN_MACROS
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_EXT_VA_ARGS_IN_MACROS */
-#ifdef TPP_EXT_ESCAPE_E_IN_STRINGS
-#define TPP_EXT_STR_E TPP_EXT_ESCAPE_E_IN_STRINGS
+#ifdef TPP_EXT_STRING_ESCAPE_E
+#define TPP_EXT_STR_E TPP_EXT_STRING_ESCAPE_E
 #if TPP2_HAVE_GLOBAL_NAMESPACE
-#define EXT_STR_E TPP_EXT_ESCAPE_E_IN_STRINGS
+#define EXT_STR_E TPP_EXT_STRING_ESCAPE_E
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#endif /* TPP_EXT_ESCAPE_E_IN_STRINGS */
+#endif /* TPP_EXT_STRING_ESCAPE_E */
 #ifdef TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS
 #define TPP_EXT_ALTMAC TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS
 #if TPP2_HAVE_GLOBAL_NAMESPACE
