@@ -1943,7 +1943,7 @@ tpp_lexer_check_sol(tpp_lexer *tpp_restrict self,
                     tpp_char const *tpp_restrict pos) {
 	tpp_lcinfo lc;
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_string *const chunk = file->tf_chunk;
+	tpp_string const *const chunk = file->tf_chunk;
 
 	/* Try to look at the currently loaded chunk. */
 	if (chunk) {
@@ -1963,27 +1963,45 @@ local utf8LfSequences: {Bytes...} = (
 	for (local ord: UNICODE_LF_CHARACTERS)
 		string.chr(ord).encode("utf-8")
 ).frozen;
+local isFirst = true;
 for (local seq: utf8LfSequences) {
+	print("				"),;
+	if (!isFirst)
+		print("} else "),;
+	isFirst = false;
 	switch (#seq) {
 	case 2:
-		print(f"				if (prev_ch == {seq[1].hex(2)} && (pos - 1) > chunk_start && pos[-2] == {seq[0].hex(2)})");
-		print(f"					return true;");
+		print(f"if (prev_ch == {seq[1].hex(2)}) \{");
+		print(f"					if ((pos - 1) > chunk_start)");
+		print(f"						return pos[-2] == {seq[0].hex(2)};");
 		break;
 	case 3:
-		print(f"				if (prev_ch == {seq[2].hex(2)} && (pos - 2) > chunk_start && pos[-2] == {seq[1].hex(2)} && pos[-3] == {seq[0].hex(2)})");
-		print(f"					return true;");
+		print(f"if (prev_ch == {seq[2].hex(2)}) \{");
+		print(f"					if ((pos - 2) > chunk_start)");
+		print(f"						return pos[-2] == {seq[1].hex(2)} && pos[-3] == {seq[0].hex(2)};");
 		break;
 	default: throw Error(f"No way to encode {repr seq}");
 	}
 }
+print(f"				\} else \{");
+print(f"					return false;");
+print(f"				\}");
 ]]]*/
-				if (prev_ch == 0x85 && (pos - 1) > chunk_start && pos[-2] == 0xc2)
-					return true;
-				if (prev_ch == 0xa8 && (pos - 2) > chunk_start && pos[-2] == 0x80 && pos[-3] == 0xe2)
-					return true;
-				if (prev_ch == 0xa9 && (pos - 2) > chunk_start && pos[-2] == 0x80 && pos[-3] == 0xe2)
-					return true;
+				if (prev_ch == 0x85) {
+					if ((pos - 1) > chunk_start)
+						return pos[-2] == 0xc2;
+				} else if (prev_ch == 0xa8) {
+					if ((pos - 2) > chunk_start)
+						return pos[-2] == 0x80 && pos[-3] == 0xe2;
+				} else if (prev_ch == 0xa9) {
+					if ((pos - 2) > chunk_start)
+						return pos[-2] == 0x80 && pos[-3] == 0xe2;
+				} else {
+					return false;
+				}
 /*[[[end]]]*/
+			} else {
+				return false;
 			}
 #else /* TPP_HAVE_UNICODE */
 			return tpp_ascii_islf(prev_ch);

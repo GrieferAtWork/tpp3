@@ -18846,7 +18846,7 @@ tpp_lexer_check_sol(tpp_lexer *tpp_restrict self,
                     tpp_char const *tpp_restrict pos) {
 	tpp_lcinfo lc;
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_string *const chunk = file->tf_chunk;
+	tpp_string const *const chunk = file->tf_chunk;
 
 	/* Try to look at the currently loaded chunk. */
 	if (chunk) {
@@ -18859,12 +18859,20 @@ tpp_lexer_check_sol(tpp_lexer *tpp_restrict self,
 			if (tpp_ascii_islf(prev_ch))
 				return true;
 			if (tpp_file_isutf8(file)) {
-				if (prev_ch == 0x85 && (pos - 1) > chunk_start && pos[-2] == 0xc2)
-					return true;
-				if (prev_ch == 0xa8 && (pos - 2) > chunk_start && pos[-2] == 0x80 && pos[-3] == 0xe2)
-					return true;
-				if (prev_ch == 0xa9 && (pos - 2) > chunk_start && pos[-2] == 0x80 && pos[-3] == 0xe2)
-					return true;
+				if (prev_ch == 0x85) {
+					if ((pos - 1) > chunk_start)
+						return pos[-2] == 0xc2;
+				} else if (prev_ch == 0xa8) {
+					if ((pos - 2) > chunk_start)
+						return pos[-2] == 0x80 && pos[-3] == 0xe2;
+				} else if (prev_ch == 0xa9) {
+					if ((pos - 2) > chunk_start)
+						return pos[-2] == 0x80 && pos[-3] == 0xe2;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
 			}
 #else /* TPP_HAVE_UNICODE */
 			return tpp_ascii_islf(prev_ch);
