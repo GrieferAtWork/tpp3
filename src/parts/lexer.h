@@ -737,6 +737,8 @@ _tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
 #define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
 	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc)
 #endif /* !... */
+#define tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
 #define tpp_lexer_initfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
 #if TPP_HAVE_UNICODE
@@ -842,6 +844,8 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 #define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
 	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc)
 #endif /* !... */
+#define tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
 #define tpp_lexer_pushfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
 #if TPP_HAVE_UNICODE

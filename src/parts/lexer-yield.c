@@ -60,9 +60,8 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
 	tpp_file_move(prev_file, file);
-	tpp_file_init_text_ex(file, NULL, chunk, text, textsize,
-	                      TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL,
-	                      TPP_FILE_ENCODING_FORCE_UTF8);
+	tpp_file_init_text(file, NULL, chunk, text, textsize,
+	                   TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return TPP_TOK_EOF;

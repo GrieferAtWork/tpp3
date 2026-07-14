@@ -65,6 +65,8 @@ static uint_least8_t const tpp_unicode_utf8seqlen_safe[128] =
 TPP_UTF8_SEQLEN_INIT(1, ~, 2, 3, 4, 5, 6, 7, 8);
 #undef TPP_UTF8_SEQLEN_INIT
 
+/* Check if "ch" is a utf-8 continuation byte */
+#define tpp_ascii_isutf8cont(ch) (((ch) & 0xc0) == 0x80)
 
 
 /* Read a single unicode character from a given utf-8 blob.
@@ -279,6 +281,8 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 	case 2:
 		uc = (uc & 0x1f) << 6;
 		uc |= (pos[1] & 0x3f);
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[1]))
+			goto handle_ilseq; /* Bad continuation byte */
 		if tpp_unlikely(uc <= TPP_UTF8_1BYTE_MAX)
 			goto handle_ilseq; /* under-long utf-8 sequence */
 		break;
@@ -286,6 +290,10 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 		uc  = (uc & 0x0f) << 12;
 		uc |= (pos[1] & 0x3f) << 6;
 		uc |= (pos[2] & 0x3f);
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[1]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[2]))
+			goto handle_ilseq; /* Bad continuation byte */
 		if tpp_unlikely(uc <= TPP_UTF8_2BYTE_MAX)
 			goto handle_ilseq; /* under-long utf-8 sequence */
 		break;
@@ -294,6 +302,12 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 		uc |= (pos[1] & 0x3f) << 12;
 		uc |= (pos[2] & 0x3f) << 6;
 		uc |= (pos[3] & 0x3f);
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[1]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[2]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[3]))
+			goto handle_ilseq; /* Bad continuation byte */
 		if tpp_unlikely(uc <= TPP_UTF8_3BYTE_MAX)
 			goto handle_ilseq; /* under-long utf-8 sequence */
 		break;
@@ -313,7 +327,22 @@ handle_ilseq:
 		/* Automatic UTF-8 -> switch to ASCII */
 		file->tf_enc = TPP_FILE_ENCODING_ASCII;
 		*p_result = 0;
+#if TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE
+		{
+			tpp_errno error;
+			tpp_token *const token = tpp_lexer_gettoken(self);
+			tpp_char const *const saved_start = token->tt_start;
+			tpp_char const *const saved_end = token->tt_end;
+			token->tt_start = (*p_pos);
+			token->tt_end   = (*p_pos) + (len ? len : 1);
+			error = tpp_lexer_warnf(self, TPP_W_ILLEGAL_UTF8_SEQUENCE);
+			token->tt_start = saved_start;
+			token->tt_end   = saved_end;
+			return error;
+		}
+#else /* TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
 		return TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
 	}
 
 	/* Forced UTF-8 */
@@ -1261,8 +1290,8 @@ handle_linefeed:
 		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 			/* Check for unicode linefeed */
 			tpp_unichar uc;
-			*p_pos = tpp_file_rel2ptr(file, old_pos);
-			error  = tpp_lexer_readutf8(self, p_pos, &uc);
+			--*p_pos;
+			error = tpp_lexer_readutf8(self, p_pos, &uc);
 			if (TPP_ISERR(error))
 				return error;
 			if (tpp_unicode_islf(uc))

@@ -3909,6 +3909,12 @@ TPP_WARNING(TPP_W_CANNOT_POP_INCLUDE_PATHS, 0(), 0(), ~,
             "cannot %[#pragma TPP include_path(pop)%]: no preceding %[push%]")
 #endif /* TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS */
 
+#if TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE
+#define TPP_W_ILLEGAL_UTF8_SEQUENCE TPP_W_ILLEGAL_UTF8_SEQUENCE
+TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
+            "illegal utf-8 sequence: %Pt")
+#endif /* TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
+
 
 /* Pull in user definitions (if defined) */
 #ifdef TPP_CONFIG_USERDEFS_FILENAME
@@ -9477,6 +9483,10 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE_BIGCHAR)
 #endif /* !TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+#ifndef TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE
+#define TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_UNICODE)
+#endif /* !TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -15777,6 +15787,8 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
  * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text", or `TPP_LCINFO_INVALID'
  * @param: tpp_file_encoding   encoding:  File data encoding
  * @param: tpp_file_flags      flags:     File flags (set of `TPP_FILE_FLAGS_*') */
+#define tpp_file_init_text(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
 #define tpp_file_init_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
 #if TPP_HAVE_UNICODE
@@ -19278,6 +19290,8 @@ _tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
 #define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
 	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc)
 #endif /* !... */
+#define tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
 #define tpp_lexer_initfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
 #if TPP_HAVE_UNICODE
@@ -19383,6 +19397,8 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 #define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
 	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc)
 #endif /* !... */
+#define tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
 #define tpp_lexer_pushfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
 #if TPP_HAVE_UNICODE

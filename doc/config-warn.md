@@ -73,4 +73,5 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_paren_around_land"></a>`TPP_HAVE_TPP_W_PAREN_AROUND_LAND`
 - <a name="tpp_have_tpp_w_cannot_pop_include_paths"></a>`TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS`
 - <a name="tpp_have_tpp_w_character_too_large"></a>`TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE`
+- <a name="tpp_have_tpp_w_illegal_utf8_sequence"></a>`TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE`
 <!--END:warn-->

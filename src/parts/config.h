@@ -5156,6 +5156,10 @@ for (local doc, name,
 #define TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE_BIGCHAR)
 #endif /* !TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+#ifndef TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE
+#define TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_UNICODE)
+#endif /* !TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/

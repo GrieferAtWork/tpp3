@@ -4067,6 +4067,12 @@ TPP_WARNING(TPP_W_CANNOT_POP_INCLUDE_PATHS, 0(), 0(), ~,
             "cannot %[#pragma TPP include_path(pop)%]: no preceding %[push%]")
 #endif /* TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS */
 
+#if TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE
+#define TPP_W_ILLEGAL_UTF8_SEQUENCE TPP_W_ILLEGAL_UTF8_SEQUENCE
+TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
+            "illegal utf-8 sequence: %Pt")
+#endif /* TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
+
 
 /* Pull in user definitions (if defined) */
 #ifdef TPP_CONFIG_USERDEFS_FILENAME

@@ -707,6 +707,8 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
  * @param: tpp_lcinfo          start_lc:  [valid_if(chunk)] 0-based line/column info for start of "text", or `TPP_LCINFO_INVALID'
  * @param: tpp_file_encoding   encoding:  File data encoding
  * @param: tpp_file_flags      flags:     File flags (set of `TPP_FILE_FLAGS_*') */
+#define tpp_file_init_text(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
 #define tpp_file_init_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
 #if TPP_HAVE_UNICODE

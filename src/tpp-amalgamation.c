@@ -14908,6 +14908,34 @@ tpp_format_quote_end(tpp_lexer const *self, tpp_formatprinter printer, void *arg
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
+#if TPP_HAVE_UNICODE
+static TPP_CONSTCALL TPP_WUNUSED tpp_char TPPCALL
+tpp_format_token_data_tohex(tpp_char v) {
+	return v >= 10 ? tpp_ascii_ofuprxdigit(v)
+	               : tpp_ascii_ofdigit(v);
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
+tpp_format_token_data_hexrepr(tpp_char *dst, tpp_unichar uc) {
+	if (uc >= UINT32_C(0x10000000))
+		*dst++ = tpp_format_token_data_tohex((uc >> 28) & 0xf);
+	if (uc >= UINT32_C(0x1000000))
+		*dst++ = tpp_format_token_data_tohex((uc >> 24) & 0xf);
+	if (uc >= UINT32_C(0x100000))
+		*dst++ = tpp_format_token_data_tohex((uc >> 20) & 0xf);
+	if (uc >= UINT32_C(0x10000))
+		*dst++ = tpp_format_token_data_tohex((uc >> 16) & 0xf);
+	if (uc >= UINT32_C(0x1000))
+		*dst++ = tpp_format_token_data_tohex((uc >> 12) & 0xf);
+	if (uc >= UINT32_C(0x100))
+		*dst++ = tpp_format_token_data_tohex((uc >> 8) & 0xf);
+	if (uc >= UINT32_C(0x10))
+		*dst++ = tpp_format_token_data_tohex((uc >> 4) & 0xf);
+	*dst++ = tpp_format_token_data_tohex(uc & 0xf);
+	return dst;
+}
+#endif /* TPP_HAVE_UNICODE */
+
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_format_token_data(tpp_lexer const *self, tpp_formatprinter printer, void *arg,
                       tpp_char const *start, tpp_size length) {
@@ -14937,12 +14965,36 @@ handle_lf:
 			start = iter;
 		} else
 #if TPP_HAVE_UNICODE
-		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(self)))  {
-			tpp_unichar uc;
-			--iter;
-			uc = tpp_unicode_readutf8(&iter, end);
-			if (tpp_unicode_islf(uc))
-				goto handle_lf;
+		if (tpp_ascii_ismb(ch))  {
+			tpp_char uni_repr[sizeof("<U+12345678>")], *repr = uni_repr;
+			if (tpp_file_isutf8(tpp_lexer_getfile(self))) {
+				tpp_unichar uc;
+				--iter;
+				uc = tpp_unicode_readutf8(&iter, end);
+				if (tpp_unicode_islf(uc))
+					goto handle_lf;
+				*repr++ = '<';
+				*repr++ = 'U';
+				*repr++ = '+';
+				repr = tpp_format_token_data_hexrepr(repr, uc);
+				*repr++ = '>';
+			} else {
+				*repr++ = '<';
+				*repr++ = '\\';
+				*repr++ = 'x';
+				repr = tpp_format_token_data_hexrepr(repr, ch);
+				*repr++ = '>';
+			}
+			temp = tpp_formatprinter_print(printer, arg, start, prev_iter - start);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			temp = tpp_formatprinter_print(printer, arg, uni_repr,
+			                               (tpp_size)(repr - uni_repr));
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			start = iter;
 		} else
 #endif /* TPP_HAVE_UNICODE */
 		{
@@ -16909,6 +16961,8 @@ static uint_least8_t const tpp_unicode_utf8seqlen_safe[128] =
 TPP_UTF8_SEQLEN_INIT(1, ~, 2, 3, 4, 5, 6, 7, 8);
 #undef TPP_UTF8_SEQLEN_INIT
 
+/* Check if "ch" is a utf-8 continuation byte */
+#define tpp_ascii_isutf8cont(ch) (((ch) & 0xc0) == 0x80)
 
 
 /* Read a single unicode character from a given utf-8 blob.
@@ -17123,6 +17177,8 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 	case 2:
 		uc = (uc & 0x1f) << 6;
 		uc |= (pos[1] & 0x3f);
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[1]))
+			goto handle_ilseq; /* Bad continuation byte */
 		if tpp_unlikely(uc <= TPP_UTF8_1BYTE_MAX)
 			goto handle_ilseq; /* under-long utf-8 sequence */
 		break;
@@ -17130,6 +17186,10 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 		uc  = (uc & 0x0f) << 12;
 		uc |= (pos[1] & 0x3f) << 6;
 		uc |= (pos[2] & 0x3f);
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[1]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[2]))
+			goto handle_ilseq; /* Bad continuation byte */
 		if tpp_unlikely(uc <= TPP_UTF8_2BYTE_MAX)
 			goto handle_ilseq; /* under-long utf-8 sequence */
 		break;
@@ -17138,6 +17198,12 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 		uc |= (pos[1] & 0x3f) << 12;
 		uc |= (pos[2] & 0x3f) << 6;
 		uc |= (pos[3] & 0x3f);
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[1]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[2]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[3]))
+			goto handle_ilseq; /* Bad continuation byte */
 		if tpp_unlikely(uc <= TPP_UTF8_3BYTE_MAX)
 			goto handle_ilseq; /* under-long utf-8 sequence */
 		break;
@@ -17157,7 +17223,22 @@ handle_ilseq:
 		/* Automatic UTF-8 -> switch to ASCII */
 		file->tf_enc = TPP_FILE_ENCODING_ASCII;
 		*p_result = 0;
+#if TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE
+		{
+			tpp_errno error;
+			tpp_token *const token = tpp_lexer_gettoken(self);
+			tpp_char const *const saved_start = token->tt_start;
+			tpp_char const *const saved_end = token->tt_end;
+			token->tt_start = (*p_pos);
+			token->tt_end   = (*p_pos) + (len ? len : 1);
+			error = tpp_lexer_warnf(self, TPP_W_ILLEGAL_UTF8_SEQUENCE);
+			token->tt_start = saved_start;
+			token->tt_end   = saved_end;
+			return error;
+		}
+#else /* TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
 		return TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
 	}
 
 	/* Forced UTF-8 */
@@ -18105,8 +18186,8 @@ handle_linefeed:
 		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
 			/* Check for unicode linefeed */
 			tpp_unichar uc;
-			*p_pos = tpp_file_rel2ptr(file, old_pos);
-			error  = tpp_lexer_readutf8(self, p_pos, &uc);
+			--*p_pos;
+			error = tpp_lexer_readutf8(self, p_pos, &uc);
 			if (TPP_ISERR(error))
 				return error;
 			if (tpp_unicode_islf(uc))
@@ -30945,9 +31026,8 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 	if tpp_unlikely(!prev_file)
 		goto err_nomem;
 	tpp_file_move(prev_file, file);
-	tpp_file_init_text_ex(file, NULL, chunk, text, textsize,
-	                      TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL,
-	                      TPP_FILE_ENCODING_FORCE_UTF8);
+	tpp_file_init_text(file, NULL, chunk, text, textsize,
+	                   TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return TPP_TOK_EOF;

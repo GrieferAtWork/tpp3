@@ -120,6 +120,34 @@ tpp_format_quote_end(tpp_lexer const *self, tpp_formatprinter printer, void *arg
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
+#if TPP_HAVE_UNICODE
+static TPP_CONSTCALL TPP_WUNUSED tpp_char TPPCALL
+tpp_format_token_data_tohex(tpp_char v) {
+	return v >= 10 ? tpp_ascii_ofuprxdigit(v)
+	               : tpp_ascii_ofdigit(v);
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
+tpp_format_token_data_hexrepr(tpp_char *dst, tpp_unichar uc) {
+	if (uc >= UINT32_C(0x10000000))
+		*dst++ = tpp_format_token_data_tohex((uc >> 28) & 0xf);
+	if (uc >= UINT32_C(0x1000000))
+		*dst++ = tpp_format_token_data_tohex((uc >> 24) & 0xf);
+	if (uc >= UINT32_C(0x100000))
+		*dst++ = tpp_format_token_data_tohex((uc >> 20) & 0xf);
+	if (uc >= UINT32_C(0x10000))
+		*dst++ = tpp_format_token_data_tohex((uc >> 16) & 0xf);
+	if (uc >= UINT32_C(0x1000))
+		*dst++ = tpp_format_token_data_tohex((uc >> 12) & 0xf);
+	if (uc >= UINT32_C(0x100))
+		*dst++ = tpp_format_token_data_tohex((uc >> 8) & 0xf);
+	if (uc >= UINT32_C(0x10))
+		*dst++ = tpp_format_token_data_tohex((uc >> 4) & 0xf);
+	*dst++ = tpp_format_token_data_tohex(uc & 0xf);
+	return dst;
+}
+#endif /* TPP_HAVE_UNICODE */
+
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_format_token_data(tpp_lexer const *self, tpp_formatprinter printer, void *arg,
                       tpp_char const *start, tpp_size length) {
@@ -149,12 +177,36 @@ handle_lf:
 			start = iter;
 		} else
 #if TPP_HAVE_UNICODE
-		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(self)))  {
-			tpp_unichar uc;
-			--iter;
-			uc = tpp_unicode_readutf8(&iter, end);
-			if (tpp_unicode_islf(uc))
-				goto handle_lf;
+		if (tpp_ascii_ismb(ch))  {
+			tpp_char uni_repr[sizeof("<U+12345678>")], *repr = uni_repr;
+			if (tpp_file_isutf8(tpp_lexer_getfile(self))) {
+				tpp_unichar uc;
+				--iter;
+				uc = tpp_unicode_readutf8(&iter, end);
+				if (tpp_unicode_islf(uc))
+					goto handle_lf;
+				*repr++ = '<';
+				*repr++ = 'U';
+				*repr++ = '+';
+				repr = tpp_format_token_data_hexrepr(repr, uc);
+				*repr++ = '>';
+			} else {
+				*repr++ = '<';
+				*repr++ = '\\';
+				*repr++ = 'x';
+				repr = tpp_format_token_data_hexrepr(repr, ch);
+				*repr++ = '>';
+			}
+			temp = tpp_formatprinter_print(printer, arg, start, prev_iter - start);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			temp = tpp_formatprinter_print(printer, arg, uni_repr,
+			                               (tpp_size)(repr - uni_repr));
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			start = iter;
 		} else
 #endif /* TPP_HAVE_UNICODE */
 		{
