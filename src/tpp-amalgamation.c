@@ -185,6 +185,7 @@
 #define tef_TPP_EXT_STRING_ESCAPE_OCT                      TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_OCT)
 #define tef_TPP_EXT_STRING_ESCAPE_HEX                      TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_HEX)
 #define tef_TPP_EXT_STRING_ESCAPE_HEX_MANY                 TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_HEX_MANY)
+#define tef_TPP_EXT_STRING_ESCAPE_UNI                      TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_UNI)
 #define tef_TPP_EXT_STRING_ALLOW_MULTILINE                 TPP_INTERNAL(tef_TPP_EXT_STRING_ALLOW_MULTILINE)
 #define tef_TPP_EXT_STRING_AUTO_CONCAT                     TPP_INTERNAL(tef_TPP_EXT_STRING_AUTO_CONCAT)
 #define tef_TPP_EXT_TOK_EXCLAIM_EXCLAIM                    TPP_INTERNAL(tef_TPP_EXT_TOK_EXCLAIM_EXCLAIM)
@@ -453,6 +454,7 @@
 #define tff_STRING_ESCAPE_OCT                              TPP_INTERNAL(tff_STRING_ESCAPE_OCT)
 #define tff_STRING_ESCAPE_HEX                              TPP_INTERNAL(tff_STRING_ESCAPE_HEX)
 #define tff_STRING_ESCAPE_HEX_MANY                         TPP_INTERNAL(tff_STRING_ESCAPE_HEX_MANY)
+#define tff_STRING_ESCAPE_UNI                              TPP_INTERNAL(tff_STRING_ESCAPE_UNI)
 #define tff_STRING_ALLOW_MULTILINE                         TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE)
 #define tff_STRING_AUTO_CONCAT                             TPP_INTERNAL(tff_STRING_AUTO_CONCAT)
 #define tff_TOK_EXCLAIM_EXCLAIM                            TPP_INTERNAL(tff_TOK_EXCLAIM_EXCLAIM)
@@ -12753,6 +12755,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
 		/* .tff_STRING_ESCAPE_HEX_MANY                 = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_MANY),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI)
+		/* .tff_STRING_ESCAPE_UNI                      = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_UNI),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		/* .tff_STRING_ALLOW_MULTILINE                 = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ALLOW_MULTILINE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) */
@@ -34758,7 +34763,7 @@ print_ch_as_byte:
 	case '0': case '1': case '2': case '3':
 	case '4': case '5': case '6': case '7': {
 		if (!tpp_lexer_has(self, STRING_ESCAPE_OCT))
-			break;
+			goto handle_unknown_escape_sequence;
 		/* Octal escape sequence */
 		tpp_char word = (tpp_char)tpp_ascii_asoctdigit(ch);
 		if (iter < end && tpp_ascii_isoctdigit(*iter)) {
@@ -34782,7 +34787,7 @@ print_ch_as_byte:
 		if (iter >= end)
 			goto handle_unknown_escape_sequence;
 		if (!tpp_lexer_has(self, STRING_ESCAPE_OCT))
-			break;
+			goto handle_unknown_escape_sequence;
 		ch = *iter++;
 		if (tpp_ascii_isdigit(ch)) {
 			word = (tpp_char)tpp_ascii_asdigit(ch);
@@ -34891,6 +34896,7 @@ print_ch_as_byte:
 	/* XXX: Support for: \o{0 037 377} */
 	/* XXX: Support for: \x{12 34 56 78} */
 
+#if TPP_HAVE_STRING_ESCAPE_UNI
 	case 'u':
 	case 'U': {
 		tpp_unichar uc = 0;
@@ -34899,6 +34905,8 @@ print_ch_as_byte:
 		tpp_char utf8_buf[TPP_UTF8_MAXLEN];
 		tpp_size utf8_len;
 		if (iter >= end)
+			goto handle_unknown_escape_sequence;
+		if (!tpp_lexer_has(self, STRING_ESCAPE_UNI))
 			goto handle_unknown_escape_sequence;
 		/* XXX: Support for: \u{1234 5678} */
 		/* XXX: Support for: \U{NO-BREAK SPACE}  (for \u00A0)
@@ -34932,6 +34940,7 @@ print_ch_as_byte:
 			goto err_temp;
 		result += temp;
 	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_UNI */
 
 	default: {
 #if TPP_HAVE_BSE && TPP_HAVE_UNICODE

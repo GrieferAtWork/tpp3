@@ -2080,10 +2080,16 @@
 #endif /* !TPP_HAVE_STRING_ESCAPE_HEX */
 
 /* Support for `\xABCDEF` hex sequences. Extension to `TPP_HAVE_STRING_ESCAPE_HEX` that allows more than `2`
- * hex nibbles to be specified. A warning is emitted if  */
+ * hex nibbles to be specified. A warning `TPP_W_CHARACTER_TOO_LARGE` is emitted if the hex-sequence is too
+ * large to fit into `tpp_uintmax`, or the output string format. */
 #ifndef TPP_HAVE_STRING_ESCAPE_HEX_MANY
 #define TPP_HAVE_STRING_ESCAPE_HEX_MANY (TPP_HAVE_STRING_ESCAPE_HEX ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fstring-escape-hex-many" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+
+/* Support for `\u1234` and `\U12345678` hex sequences. */
+#ifndef TPP_HAVE_STRING_ESCAPE_UNI
+#define TPP_HAVE_STRING_ESCAPE_UNI ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_UNI */
 
 /* Feature-flag: treat line-feeds like any regular character in string tokens:
  * - `TPP_HAVE_TOK_C_STRING`

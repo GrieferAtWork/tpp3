@@ -201,7 +201,7 @@ print_ch_as_byte:
 	case '0': case '1': case '2': case '3':
 	case '4': case '5': case '6': case '7': {
 		if (!tpp_lexer_has(self, STRING_ESCAPE_OCT))
-			break;
+			goto handle_unknown_escape_sequence;
 		/* Octal escape sequence */
 		tpp_char word = (tpp_char)tpp_ascii_asoctdigit(ch);
 		if (iter < end && tpp_ascii_isoctdigit(*iter)) {
@@ -225,7 +225,7 @@ print_ch_as_byte:
 		if (iter >= end)
 			goto handle_unknown_escape_sequence;
 		if (!tpp_lexer_has(self, STRING_ESCAPE_OCT))
-			break;
+			goto handle_unknown_escape_sequence;
 		ch = *iter++;
 		if (tpp_ascii_isdigit(ch)) {
 			word = (tpp_char)tpp_ascii_asdigit(ch);
@@ -334,6 +334,7 @@ print_ch_as_byte:
 	/* XXX: Support for: \o{0 037 377} */
 	/* XXX: Support for: \x{12 34 56 78} */
 
+#if TPP_HAVE_STRING_ESCAPE_UNI
 	case 'u':
 	case 'U': {
 		tpp_unichar uc = 0;
@@ -342,6 +343,8 @@ print_ch_as_byte:
 		tpp_char utf8_buf[TPP_UTF8_MAXLEN];
 		tpp_size utf8_len;
 		if (iter >= end)
+			goto handle_unknown_escape_sequence;
+		if (!tpp_lexer_has(self, STRING_ESCAPE_UNI))
 			goto handle_unknown_escape_sequence;
 		/* XXX: Support for: \u{1234 5678} */
 		/* XXX: Support for: \U{NO-BREAK SPACE}  (for \u00A0)
@@ -375,6 +378,7 @@ print_ch_as_byte:
 			goto err_temp;
 		result += temp;
 	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_UNI */
 
 	default: {
 #if TPP_HAVE_BSE && TPP_HAVE_UNICODE

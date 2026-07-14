@@ -1933,7 +1933,7 @@ typedef struct tpp_lexer_decodestring_config {
 	                                      * value, and it should append `XCHAR[1]{0x1234}` to the output
 	                                      * string. If the given `value` is too large to fit `XCHAR`, then
 	                                      * this callback should emit a warning:
-	                                      * >> tpp_errno error = tpp_lexer_warnf(lexer, TPP_W_TODO);
+	                                      * >> tpp_errno error = tpp_lexer_warnf(lexer, TPP_W_CHARACTER_TOO_LARGE);
 	                                      * >> return TPP_SSIZE_ASERR_OR_EOK(error); */
 #endif /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
 	void               *tldsc_arg;       /* [?..?] Cookie argument for other printers */

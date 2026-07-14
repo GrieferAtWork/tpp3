@@ -1992,6 +1992,14 @@ TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_HEX, TPP_EXTNAME_STRING_ESCAPE_HEX, TPP_CONF
 TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_HEX_MANY, TPP_EXTNAME_STRING_ESCAPE_HEX_MANY, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_MANY))
 #define _tpp_lexer_has_STRING_ESCAPE_HEX_MANY(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_HEX_MANY)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_UNI)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_UNI
+#define TPP_EXTNAME_STRING_ESCAPE_UNI "string-escape-uni"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_UNI */
+#define TPP_EXT_STRING_ESCAPE_UNI TPP_EXT_STRING_ESCAPE_UNI
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_UNI, TPP_EXTNAME_STRING_ESCAPE_UNI, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_UNI))
+#define _tpp_lexer_has_STRING_ESCAPE_UNI(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_UNI)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_UNI) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #ifndef TPP_EXTNAME_STRING_ALLOW_MULTILINE
 #define TPP_EXTNAME_STRING_ALLOW_MULTILINE "string-allow-multiline"
@@ -6750,10 +6758,16 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_STRING_ESCAPE_HEX */
 
 /* Support for `\xABCDEF` hex sequences. Extension to `TPP_HAVE_STRING_ESCAPE_HEX` that allows more than `2`
- * hex nibbles to be specified. A warning is emitted if  */
+ * hex nibbles to be specified. A warning `TPP_W_CHARACTER_TOO_LARGE` is emitted if the hex-sequence is too
+ * large to fit into `tpp_uintmax`, or the output string format. */
 #ifndef TPP_HAVE_STRING_ESCAPE_HEX_MANY
 #define TPP_HAVE_STRING_ESCAPE_HEX_MANY (TPP_HAVE_STRING_ESCAPE_HEX ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fstring-escape-hex-many" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+
+/* Support for `\u1234` and `\U12345678` hex sequences. */
+#ifndef TPP_HAVE_STRING_ESCAPE_UNI
+#define TPP_HAVE_STRING_ESCAPE_UNI ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_UNI */
 
 /* Feature-flag: treat line-feeds like any regular character in string tokens:
  * - `TPP_HAVE_TOK_C_STRING`
@@ -12195,6 +12209,7 @@ tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT) ||                      \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX) ||                      \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) ||                 \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI) ||                      \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) ||                 \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT) ||                     \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_EXCLAIM_EXCLAIM) ||                    \
@@ -12745,6 +12760,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
 	TPP_FEAT_STRING_ESCAPE_HEX_MANY,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI)
+	TPP_FEAT_STRING_ESCAPE_UNI,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 	TPP_FEAT_STRING_ALLOW_MULTILINE,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) */
@@ -13664,6 +13682,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_HEX_MANY): 1;
 #define _tpp_lexer_has_STRING_ESCAPE_HEX_MANY(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_HEX_MANY)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_UNI): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_UNI(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_UNI)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		unsigned int TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE): 1;
 #define _tpp_lexer_has_STRING_ALLOW_MULTILINE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE)
@@ -14568,6 +14590,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
 #define _tpp_lexer_has_STRING_ESCAPE_HEX_MANY(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_UNI)
+#define _tpp_lexer_has_STRING_ESCAPE_UNI(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_UNI)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_UNI) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #define _tpp_lexer_has_STRING_ALLOW_MULTILINE(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ALLOW_MULTILINE) */
@@ -20290,7 +20315,7 @@ typedef struct tpp_lexer_decodestring_config {
 	                                      * value, and it should append `XCHAR[1]{0x1234}` to the output
 	                                      * string. If the given `value` is too large to fit `XCHAR`, then
 	                                      * this callback should emit a warning:
-	                                      * >> tpp_errno error = tpp_lexer_warnf(lexer, TPP_W_TODO);
+	                                      * >> tpp_errno error = tpp_lexer_warnf(lexer, TPP_W_CHARACTER_TOO_LARGE);
 	                                      * >> return TPP_SSIZE_ASERR_OR_EOK(error); */
 #endif /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
 	void               *tldsc_arg;       /* [?..?] Cookie argument for other printers */
