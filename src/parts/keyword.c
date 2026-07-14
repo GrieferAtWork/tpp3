@@ -259,14 +259,15 @@ tpp_assertions_fixtable(tpp_assertions *tpp_restrict self) {
 			for (tpp_assertions_hashinit(&hs, &perturb, hash, self->tass_bckm);;
 				 tpp_assertions_hashnext(&hs, &perturb, hash, self->tass_bckm)) {
 				tpp_assertion *ent2 = &self->tass_bckv[hs & self->tass_bckm];
-				tpp_assert(tpp_keyword_equals(ent2->tas_value, ent->tas_value) == (ent2 == ent));
 				if (ent2->tas_value == NULL) {
 					ent2->tas_value = kwd;
 					ent->tas_value = NULL;
 					result = true;
 					break;
-				} else if (ent2 == ent) {
-					break;
+				} else {
+					tpp_assert(tpp_keyword_equals(ent2->tas_value, kwd) == (ent2 == ent));
+					if (ent2 == ent)
+						break;
 				}
 			}
 		}

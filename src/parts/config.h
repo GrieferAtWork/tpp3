@@ -2055,7 +2055,7 @@
  * printf("Error: \e[31m%d\e[0m", errno);
  * ``` */
 #ifndef TPP_HAVE_STRING_ESCAPE_E
-#define TPP_HAVE_STRING_ESCAPE_E (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fstring-escape-e" */
+#define TPP_HAVE_STRING_ESCAPE_E ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-e" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_E */
 
 /* Support for `\s` (for `U+0020`) escape sequences:
@@ -2065,8 +2065,25 @@
  *     """);
  * ```  */
 #ifndef TPP_HAVE_STRING_ESCAPE_S
-#define TPP_HAVE_STRING_ESCAPE_S (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fstring-escape-s" */
+#define TPP_HAVE_STRING_ESCAPE_S ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : 0) : 0) /* "-fstring-escape-s" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_S */
+
+/* Support for `\123` octal sequences (with `1`-`3` characters in range `0-7` following the `\`) */
+#ifndef TPP_HAVE_STRING_ESCAPE_OCT
+#define TPP_HAVE_STRING_ESCAPE_OCT ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_OCT */
+
+/* Support for `\xAB` hex sequences (with `1`-`2` characters in range `0-9`, `a-f`, `A-F` following the `\`)
+ * When `TPP_HAVE_STRING_ESCAPE_HEX_MANY` is also enabled, the limit of `2` characters is lifted. */
+#ifndef TPP_HAVE_STRING_ESCAPE_HEX
+#define TPP_HAVE_STRING_ESCAPE_HEX ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-hex" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX */
+
+/* Support for `\xABCDEF` hex sequences. Extension to `TPP_HAVE_STRING_ESCAPE_HEX` that allows more than `2`
+ * hex nibbles to be specified. A warning is emitted if  */
+#ifndef TPP_HAVE_STRING_ESCAPE_HEX_MANY
+#define TPP_HAVE_STRING_ESCAPE_HEX_MANY (TPP_HAVE_STRING_ESCAPE_HEX ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fstring-escape-hex-many" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_MANY */
 
 /* Feature-flag: treat line-feeds like any regular character in string tokens:
  * - `TPP_HAVE_TOK_C_STRING`
@@ -3400,22 +3417,20 @@ local HOOKS = {
 		"On entry, `*p_pos` points at the first (unrecognized) character after the leading `\\`, and\n" +
 		"if the hook was able to parse said escape sequence, it should update `*p_pos` to point after\n" +
 		"it before returning\n" +
-		"@param: p_pos: [in]  Pointer to start of unrecognized `\\`-escape sequence\n" +
-		"               [out] First character no longer part of `\\`-escape sequence (if recognized)\n" +
-		"               [out] Unchanged (if not recognized)\n" +
-		"@param: end:   The of containing string sequence\n" +
-		"@param: data_printer: Identically-named argument of `tpp_lexer_decodestring()`\n" +
-		"@param: utf8_printer: *ditto*\n" +
-		"@param: arg:          *ditto*\n" +
-		"@return: * :   Sum of positive return values of `data_printer` and `utf8_printer`\n" +
-		"@return: < 0:  First negative return value of `data_printer` or `utf8_printer`\n" +
+		"@param: p_pos:  [in]  Pointer to start of unrecognized `\\`-escape sequence\n" +
+		"                [out] First character no longer part of `\\`-escape sequence (if recognized)\n" +
+		"                [out] Unchanged (if not recognized)\n" +
+		"@param: end:    The of containing string sequence\n" +
+		"@param: config: Identically-named argument of `tpp_lexer_decodestring()`\n" +
+		"@return: * :    Sum of positive return values of `data_printer` and `utf8_printer`\n" +
+		"@return: < 0:   First negative return value of `data_printer` or `utf8_printer`\n" +
 		"@return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized\n" +
-		"               (please leave `*p_pos` unchanged in this case). The caller will\n" +
-		"               proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE`",
+		"                (please leave `*p_pos` unchanged in this case). The caller will\n" +
+		"                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE`",
 		"UNKNOWN_STRING_ESCAPE",
 		"(TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL)",
 		"", // No builtin default
-		"tpp_ssize (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg)", { "lexer", "p_pos", "end", "data_printer", "utf8_printer", "arg" },
+		"tpp_ssize (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config)", { "lexer", "p_pos", "end", "config" },
 		"TPP_SSIZE_OFERR(TPP_ENOENT)"
 	},
 
@@ -3804,25 +3819,23 @@ for (local doc, name,
 #error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
-/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
  * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
  * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
  * it before returning
- * @param: p_pos: [in]  Pointer to start of unrecognized `\`-escape sequence
- *                [out] First character no longer part of `\`-escape sequence (if recognized)
- *                [out] Unchanged (if not recognized)
- * @param: end:   The of containing string sequence
- * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()`
- * @param: utf8_printer: *ditto*
- * @param: arg:          *ditto*
- * @return: * :   Sum of positive return values of `data_printer` and `utf8_printer`
- * @return: < 0:  First negative return value of `data_printer` or `utf8_printer`
+ * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
+ *                 [out] First character no longer part of `\`-escape sequence (if recognized)
+ *                 [out] Unchanged (if not recognized)
+ * @param: end:    The of containing string sequence
+ * @param: config: Identically-named argument of `tpp_lexer_decodestring()`
+ * @return: * :    Sum of positive return values of `data_printer` and `utf8_printer`
+ * @return: < 0:   First negative return value of `data_printer` or `utf8_printer`
  * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
- *                (please leave `*p_pos` unchanged in this case). The caller will
- *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
+ *                 (please leave `*p_pos` unchanged in this case). The caller will
+ *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
 #ifndef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
 #ifdef TPP_HOOK_UNKNOWN_STRING_ESCAPE
 #define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
@@ -5088,6 +5101,10 @@ for (local doc, name,
 #define TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_PUSH_POP)
 #endif /* !TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS */
+#ifndef TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+#define TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE_HEX_MANY)
+#endif /* !TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/

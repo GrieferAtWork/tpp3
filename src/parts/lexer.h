@@ -600,27 +600,25 @@ for (local doc, name,
 #define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_system_include_path */
 
-/* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+/* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
  * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
  * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
  * it before returning
- * @param: p_pos: [in]  Pointer to start of unrecognized `\`-escape sequence
- *                [out] First character no longer part of `\`-escape sequence (if recognized)
- *                [out] Unchanged (if not recognized)
- * @param: end:   The of containing string sequence
- * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()`
- * @param: utf8_printer: *ditto*
- * @param: arg:          *ditto*
- * @return: * :   Sum of positive return values of `data_printer` and `utf8_printer`
- * @return: < 0:  First negative return value of `data_printer` or `utf8_printer`
+ * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
+ *                 [out] First character no longer part of `\`-escape sequence (if recognized)
+ *                 [out] Unchanged (if not recognized)
+ * @param: end:    The of containing string sequence
+ * @param: config: Identically-named argument of `tpp_lexer_decodestring()`
+ * @return: * :    Sum of positive return values of `data_printer` and `utf8_printer`
+ * @return: < 0:   First negative return value of `data_printer` or `utf8_printer`
  * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
- *                (please leave `*p_pos` unchanged in this case). The caller will
- *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
-#define tpp_lexer_callhook_unknown_string_escape(self, p_pos, end, data_printer, utf8_printer, arg) \
-	tpp_hooks_call_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, p_pos, end, data_printer, utf8_printer, arg)
+ *                 (please leave `*p_pos` unchanged in this case). The caller will
+ *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
+#define tpp_lexer_callhook_unknown_string_escape(self, p_pos, end, config) \
+	tpp_hooks_call_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, p_pos, end, config)
 #ifdef tpp_hooks_set_unknown_string_escape
 #define tpp_lexer_gethook_unknown_string_escape(self)    tpp_hooks_get_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_unknown_string_escape(self, v) tpp_hooks_set_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
@@ -1881,24 +1879,98 @@ tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
 
 
 #if TPP_HAVE_LEXER_DECODESTRING
+typedef struct tpp_lexer_decodestring_config {
+	tpp_formatprinter   tldsc_dataprinter; /* [1..1] Printer for 1-byte-per-character data.
+	                                        * When output format has multiple bytes per character,
+	                                        * every byte passed to this printer must result in 1
+	                                        * character being appended to the output string:
+	                                        * Input: `"foo"`
+	                                        * -> `tldsc_dataprinter("foo")`
+	                                        * -> `XCHAR[3]{ 0x66, 0x6f, 0x6f }`
+	                                        *
+	                                        * Input: `"\x12"`
+	                                        * -> `tldsc_dataprinter("\x12")`
+	                                        * -> `XCHAR[1]{ 0x12 }`
+	                                        *
+	                                        * If the input file is `!tpp_file_isutf8`, then this printer
+	                                        * is also used for non-ASCII bytes. However, in this case any
+	                                        * such non-ascii byte shouldn't be considered part of any sort
+	                                        * of unicode sequence either, so that's intended:
+	                                        * Input: `"Stra[C3,9F]e"`
+	                                        * -> tldsc_dataprinter("Stra\xC3\x{9F}e")
+	                                        * -> `XCHAR[7]{ 0x53, 0x74, 0x72, 0x61, 0xc3, 0x9f, 0x65 }`
+	                                        */
+#if TPP_HAVE_UNICODE
+	tpp_formatprinter   tldsc_utf8printer; /* [1..1] Printer for utf-8 formatted input data.
+	                                        * Very similar to `tldsc_dataprinter`, especially in that
+	                                        * ASCII data may either be passed to `tldsc_dataprinter` or
+	                                        * this callback (behavior in both cases must be the same),
+	                                        * except that whereas `tldsc_dataprinter` must add 1 character
+	                                        * to the output string for every byte in the given data-buffer,
+	                                        * this function treats bytes in range [0x80,0xff] special, in
+	                                        * that it must treat such bytes as initiating a utf-8 character
+	                                        * sequences that may span multiple bytes.
+	                                        *
+	                                        * How exactly such a multi-byte utf-8 sequence is then encoded
+	                                        * in the actual output string (i.e. in terms of `XCHAR`s) is
+	                                        * not mandated, and is left up to the implementation. However,
+	                                        * here are some suggestions:
+	                                        * -> `tldsc_utf8printer("\xC3\x9F")`
+	                                        *    -> `XCHAR[2]{ 0xC3, 0x9F }`  (Keep utf-8 encoding in output)
+	                                        *    -> `XCHAR[1]{ 0x00DF }`      (Use UCS2 encoding in output)
+	                                        *
+	                                        * This printer is *always* for the following 2 cases:
+	                                        * - Input: "Straße"    (when `tpp_file_isutf8()` and a non-ASCII sequence is encountered)
+	                                        * - Input: "\u00DF"    (here, `tldsc_utf8printer("\xC3\x9F")` is called with the utf-8 representation)
+	                                        *
+	                                        * The implementation is however also allowed to use this callback
+	                                        * for ASCII-only input data! */
+#endif /* TPP_HAVE_UNICODE */
+#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
+	tpp_ssize (TPPCALL *tldsc_hexprinter)(void *arg, tpp_lexer *tpp_restrict lexer, tpp_uintmax value);
+	                                     /* [0..1] Printer for [2+]-byte-per-character data. When non-NULL,
+	                                      * and `\x1234` is used, this printer is called with `0x1234` as
+	                                      * value, and it should append `XCHAR[1]{0x1234}` to the output
+	                                      * string. If the given `value` is too large to fit `XCHAR`, then
+	                                      * this callback should emit a warning:
+	                                      * >> tpp_errno error = tpp_lexer_warnf(lexer, TPP_W_TODO);
+	                                      * >> return TPP_SSIZE_ASERR_OR_EOK(error); */
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+	void               *tldsc_arg;       /* [?..?] Cookie argument for other printers */
+} tpp_lexer_decodestring_config;
+
+/* Initialize a simple decodestring configuration (suitable for emitting utf-8 data) */
+#define tpp_lexer_decodestring_config_init_simple(self, printer, arg)    \
+	(_tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
+	 _tpp_lexer_decodestring_config_init_simple_hex(self))
+#if TPP_HAVE_UNICODE
+#define _tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
+	(self)->tldsc_dataprinter = (self)->tldsc_utf8printer = (printer),      \
+	(self)->tldsc_arg = (arg)
+#else /* TPP_HAVE_UNICODE */
+#define _tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
+	(self)->tldsc_dataprinter = (printer),                                  \
+	(self)->tldsc_arg = (arg)
+#endif /* !TPP_HAVE_UNICODE */
+#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
+#define _tpp_lexer_decodestring_config_init_simple_hex(self) , (self)->tldsc_hexprinter = NULL
+#else /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+#define _tpp_lexer_decodestring_config_init_simple_hex(self) /* nothing */
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+
 /* Print the unescaped representation of the string-token described by "self"
  * The caller must ensure that `TPP_TOK_ISSTRING(tpp_lexer_gettoken(self)->tt_id)'
  *
- * @param: data_printer: Printer used to fast-forward string data from token inputs, as well as \xAB
- * @param: utf8_printer: Printer used to emit explicitly utf-8 encoded data from \uABCD and \U876543210,
- *                       as well as regular text-data when the "tpp_file_isutf8(tpp_lexer_getfile(self))"
- *
+ * @param: config: Printer configuration
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
  * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
  *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
-                       tpp_formatprinter data_printer,
-                       tpp_formatprinter utf8_printer,
-                       void *arg);
+                       tpp_lexer_decodestring_config const *tpp_restrict config);
 
 /* Flags for `tpp_lexer_parsestring()' & friends. */
 #define TPP_LEXER_PARSESTRING_FLAG_NORMAL      0x0000 /* Normal flags */
@@ -1935,11 +2007,10 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory
  * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
-tpp_lexer_parsestring_ex(tpp_lexer *self,
-                         tpp_formatprinter data_printer,
-                         tpp_formatprinter utf8_printer,
-                         void *arg, unsigned int flags);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
+                         tpp_lexer_decodestring_config const *tpp_restrict config,
+                         unsigned int flags);
 
 /* Convenience wrapper around `tpp_lexer_parsestring_ex()'
  * On success (!TPP_ISERR(return)), caller must "tpp_string_decref(*p_result)"

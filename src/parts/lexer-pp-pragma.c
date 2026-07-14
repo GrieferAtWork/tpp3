@@ -775,24 +775,24 @@ tpp_lexer_process_pragma_message(tpp_lexer *tpp_restrict self) {
 
 	if (TPP_TOK_ISSTRING(tok)) {
 		tpp_ssize status;
-		tpp_formatprinter const printer = tpp_lexer_gethook_mesgprinter(self);
+		tpp_lexer_decodestring_config config;
+		tpp_lexer_decodestring_config_init_simple(&config, tpp_lexer_gethook_mesgprinter(self), self);
 #if TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
 		if (tpp_lexer_has(self, PRAGMA_MESSAGE_PRINTS_LOCATION)) {
 			tpp_lexer_printf_info info;
 			tpp_file *const lcfile = tpp_file_getlcfile(tpp_lexer_getfile(self));
 			tpp_lexer_printf_info_init_at(&info, lcfile, tpp_file_getlastpos(lcfile));
-			status = tpp_lexer_printf_warning(self, &info, printer, self,
+			status = tpp_lexer_printf_warning(self, &info, config.tldsc_dataprinter, self,
 			                                  tpp_lexer_getfileandlineformat(self));
 			if (TPP_SSIZE_ISERR(status))
 				return TPP_SSIZE_ASERR(status);
 		}
 #endif /* TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
-		status = tpp_lexer_parsestring_ex(self, printer, printer, self,
-		                                  TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		status = tpp_lexer_parsestring_ex(self, &config, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 #if TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
 		if (tpp_lexer_has(self, PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)) {
 			if (status >= 0)
-				status = tpp_formatprinter_print_conststr(printer, self, "\n");
+				status = tpp_formatprinter_print_conststr(config.tldsc_dataprinter, self, "\n");
 		}
 #endif /* TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED */
 		if (TPP_SSIZE_ISERR(status))

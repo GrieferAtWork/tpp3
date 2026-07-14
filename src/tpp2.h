@@ -2443,8 +2443,11 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_ESCAPE_IN_IDENTIFIERS                0 /* TPP2 didn't support \uXXXX or \UXXXXXXXX characters in identifiers */
 #define TPP_HAVE_TRIGRAPHS                            TPP_CONFIG_FEATURE_TRIGRAPHS
 #define TPP_HAVE_DIGRAPHS                             TPP_CONFIG_FEATURE_DIGRAPHS
-#define TPP_HAVE_STRING_ESCAPE_E                  TPP_CONFIG_EXTENSION_STR_E             /* Support for "\e" (for U+001B) escape sequences */
-#define TPP_HAVE_STRING_ESCAPE_S                  0                                      /* Support for "\s" (for U+0020) escape sequences */
+#define TPP_HAVE_STRING_ESCAPE_E                      TPP_CONFIG_EXTENSION_STR_E             /* Support for "\e" (for U+001B) escape sequences */
+#define TPP_HAVE_STRING_ESCAPE_S                      0                                      /* Support for "\s" (for U+0020) escape sequences */
+#define TPP_HAVE_STRING_ESCAPE_OCT                    1                                      /* Support for `\123` octal sequences */
+#define TPP_HAVE_STRING_ESCAPE_HEX                  1                                      /* Support for `\xAB` hex sequences */
+#define TPP_HAVE_STRING_ESCAPE_HEX_MANY             1                                      /* Support for `\xABCDEF` hex sequences */
 #define TPP_HAVE_CPP_DIRECTIVES                       1                                      /* Specifies if *any* CPP directives are supported */
 #define TPP_HAVE_CPP_MACROS                           1                                      /* Support for C-style macros */
 #define TPP_HAVE_MAGIC_WHITESPACE                     0                                      /* TPP2 didn't have "magic whitespace". As such, it suffered from accidental token pasting in certain situations */

@@ -1968,6 +1968,30 @@ TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_E, TPP_EXTNAME_STRING_ESCAPE_E, TPP_CONF_DEF
 TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_S, TPP_EXTNAME_STRING_ESCAPE_S, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_S))
 #define _tpp_lexer_has_STRING_ESCAPE_S(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_S)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_S) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_OCT)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_OCT
+#define TPP_EXTNAME_STRING_ESCAPE_OCT "string-escape-oct"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_OCT */
+#define TPP_EXT_STRING_ESCAPE_OCT TPP_EXT_STRING_ESCAPE_OCT
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_OCT, TPP_EXTNAME_STRING_ESCAPE_OCT, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_OCT))
+#define _tpp_lexer_has_STRING_ESCAPE_OCT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_OCT)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_OCT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_HEX
+#define TPP_EXTNAME_STRING_ESCAPE_HEX "string-escape-hex"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_HEX */
+#define TPP_EXT_STRING_ESCAPE_HEX TPP_EXT_STRING_ESCAPE_HEX
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_HEX, TPP_EXTNAME_STRING_ESCAPE_HEX, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX))
+#define _tpp_lexer_has_STRING_ESCAPE_HEX(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_HEX)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_HEX_MANY
+#define TPP_EXTNAME_STRING_ESCAPE_HEX_MANY "string-escape-hex-many"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_HEX_MANY */
+#define TPP_EXT_STRING_ESCAPE_HEX_MANY TPP_EXT_STRING_ESCAPE_HEX_MANY
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_HEX_MANY, TPP_EXTNAME_STRING_ESCAPE_HEX_MANY, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_MANY))
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_MANY(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_HEX_MANY)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #ifndef TPP_EXTNAME_STRING_ALLOW_MULTILINE
 #define TPP_EXTNAME_STRING_ALLOW_MULTILINE "string-allow-multiline"
@@ -3813,9 +3837,15 @@ TPP_WARNING(TPP_W_BAD_EXPRESSION_OPERANDS, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 
 #if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
 #define TPP_W_DIVIDE_BY_ZERO TPP_W_DIVIDE_BY_ZERO
-TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
+TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 1(2124), TPP_WSTATE_ERROR_OR_FATAL,
             "division by zero")
 #endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
+
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+#define TPP_W_CHARACTER_TOO_LARGE TPP_W_CHARACTER_TOO_LARGE
+TPP_WARNING(TPP_W_CHARACTER_TOO_LARGE, 0(), 1(2022), TPP_WSTATE_ERROR_OR_FATAL,
+            "character value is too large")
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 
 #if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
 #define TPP_W_CANNOT_POP_INCLUDE_PATHS TPP_W_CANNOT_POP_INCLUDE_PATHS
@@ -6695,7 +6725,7 @@ TPP_DECL_END
  * printf("Error: \e[31m%d\e[0m", errno);
  * ``` */
 #ifndef TPP_HAVE_STRING_ESCAPE_E
-#define TPP_HAVE_STRING_ESCAPE_E (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fstring-escape-e" */
+#define TPP_HAVE_STRING_ESCAPE_E ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-e" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_E */
 
 /* Support for `\s` (for `U+0020`) escape sequences:
@@ -6705,8 +6735,25 @@ TPP_DECL_END
  *     """);
  * ```  */
 #ifndef TPP_HAVE_STRING_ESCAPE_S
-#define TPP_HAVE_STRING_ESCAPE_S (TPP_HAVE_STRING_ESCAPE ? TPP_CONF_EXT1 : 0) /* "-fstring-escape-s" */
+#define TPP_HAVE_STRING_ESCAPE_S ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : 0) : 0) /* "-fstring-escape-s" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_S */
+
+/* Support for `\123` octal sequences (with `1`-`3` characters in range `0-7` following the `\`) */
+#ifndef TPP_HAVE_STRING_ESCAPE_OCT
+#define TPP_HAVE_STRING_ESCAPE_OCT ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_OCT */
+
+/* Support for `\xAB` hex sequences (with `1`-`2` characters in range `0-9`, `a-f`, `A-F` following the `\`)
+ * When `TPP_HAVE_STRING_ESCAPE_HEX_MANY` is also enabled, the limit of `2` characters is lifted. */
+#ifndef TPP_HAVE_STRING_ESCAPE_HEX
+#define TPP_HAVE_STRING_ESCAPE_HEX ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-hex" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX */
+
+/* Support for `\xABCDEF` hex sequences. Extension to `TPP_HAVE_STRING_ESCAPE_HEX` that allows more than `2`
+ * hex nibbles to be specified. A warning is emitted if  */
+#ifndef TPP_HAVE_STRING_ESCAPE_HEX_MANY
+#define TPP_HAVE_STRING_ESCAPE_HEX_MANY (TPP_HAVE_STRING_ESCAPE_HEX ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fstring-escape-hex-many" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_MANY */
 
 /* Feature-flag: treat line-feeds like any regular character in string tokens:
  * - `TPP_HAVE_TOK_C_STRING`
@@ -8038,25 +8085,23 @@ TPP_DECL_END
 #error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
-/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
  * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
  * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
  * it before returning
- * @param: p_pos: [in]  Pointer to start of unrecognized `\`-escape sequence
- *                [out] First character no longer part of `\`-escape sequence (if recognized)
- *                [out] Unchanged (if not recognized)
- * @param: end:   The of containing string sequence
- * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()`
- * @param: utf8_printer: *ditto*
- * @param: arg:          *ditto*
- * @return: * :   Sum of positive return values of `data_printer` and `utf8_printer`
- * @return: < 0:  First negative return value of `data_printer` or `utf8_printer`
+ * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
+ *                 [out] First character no longer part of `\`-escape sequence (if recognized)
+ *                 [out] Unchanged (if not recognized)
+ * @param: end:    The of containing string sequence
+ * @param: config: Identically-named argument of `tpp_lexer_decodestring()`
+ * @return: * :    Sum of positive return values of `data_printer` and `utf8_printer`
+ * @return: < 0:   First negative return value of `data_printer` or `utf8_printer`
  * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
- *                (please leave `*p_pos` unchanged in this case). The caller will
- *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
+ *                 (please leave `*p_pos` unchanged in this case). The caller will
+ *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
 #ifndef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
 #ifdef TPP_HOOK_UNKNOWN_STRING_ESCAPE
 #define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
@@ -9321,6 +9366,10 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_PUSH_POP)
 #endif /* !TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS */
+#ifndef TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+#define TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE_HEX_MANY)
+#endif /* !TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -12143,6 +12192,9 @@ tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL) ||                 \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_E) ||                        \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S) ||                        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX) ||                      \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) ||                 \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) ||                 \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT) ||                     \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_EXCLAIM_EXCLAIM) ||                    \
@@ -12684,6 +12736,15 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S)
 	TPP_FEAT_STRING_ESCAPE_S,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT)
+	TPP_FEAT_STRING_ESCAPE_OCT,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX)
+	TPP_FEAT_STRING_ESCAPE_HEX,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
+	TPP_FEAT_STRING_ESCAPE_HEX_MANY,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 	TPP_FEAT_STRING_ALLOW_MULTILINE,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) */
@@ -13591,6 +13652,18 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_S): 1;
 #define _tpp_lexer_has_STRING_ESCAPE_S(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_S)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_OCT): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_OCT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_OCT)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_HEX): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_HEX(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_HEX)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_HEX_MANY): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_MANY(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_HEX_MANY)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		unsigned int TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE): 1;
 #define _tpp_lexer_has_STRING_ALLOW_MULTILINE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE)
@@ -14486,6 +14559,15 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_S)
 #define _tpp_lexer_has_STRING_ESCAPE_S(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_S)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_S) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_OCT)
+#define _tpp_lexer_has_STRING_ESCAPE_OCT(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_OCT)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_OCT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX)
+#define _tpp_lexer_has_STRING_ESCAPE_HEX(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
+#define _tpp_lexer_has_STRING_ESCAPE_HEX_MANY(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_HEX_MANY)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_HEX_MANY) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #define _tpp_lexer_has_STRING_ALLOW_MULTILINE(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ALLOW_MULTILINE) */
@@ -17740,6 +17822,7 @@ typedef enum tpp_hook_system_include_path_when {
 
 #if TPP_HAVE_HOOKS
 struct tpp_lexer;
+struct tpp_lexer_decodestring_config;
 #if TPP_HAVE_WARNINGS
 struct tpp_lexer_printf_info;
 #endif /* TPP_HAVE_WARNINGS */
@@ -17867,27 +17950,25 @@ typedef struct tpp_hooks {
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_include_path))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
-	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config);
 	 * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
 	 * This hook can be used to define additional, user-defined escape sequences, or any other
 	 * arbitrary behavior to-be performed when specific escape-sequences are found.
 	 * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
 	 * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
 	 * it before returning
-	 * @param: p_pos: [in]  Pointer to start of unrecognized `\`-escape sequence
-	 *                [out] First character no longer part of `\`-escape sequence (if recognized)
-	 *                [out] Unchanged (if not recognized)
-	 * @param: end:   The of containing string sequence
-	 * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()`
-	 * @param: utf8_printer: *ditto*
-	 * @param: arg:          *ditto*
-	 * @return: * :   Sum of positive return values of `data_printer` and `utf8_printer`
-	 * @return: < 0:  First negative return value of `data_printer` or `utf8_printer`
+	 * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
+	 *                 [out] First character no longer part of `\`-escape sequence (if recognized)
+	 *                 [out] Unchanged (if not recognized)
+	 * @param: end:    The of containing string sequence
+	 * @param: config: Identically-named argument of `tpp_lexer_decodestring()`
+	 * @return: * :    Sum of positive return values of `data_printer` and `utf8_printer`
+	 * @return: < 0:   First negative return value of `data_printer` or `utf8_printer`
 	 * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
-	 *                (please leave `*p_pos` unchanged in this case). The caller will
-	 *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
+	 *                 (please leave `*p_pos` unchanged in this case). The caller will
+	 *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
-	tpp_ssize (TPPCALL *TPP_INTERNAL(th_unknown_string_escape))(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg); /* [0..1] */
+	tpp_ssize (TPPCALL *TPP_INTERNAL(th_unknown_string_escape))(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_raise_lexerror)(struct tpp_lexer *tpp_restrict self);
@@ -18210,21 +18291,19 @@ typedef struct tpp_hooks {
  * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
  * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
  * it before returning
- * @param: p_pos: [in]  Pointer to start of unrecognized `\`-escape sequence
- *                [out] First character no longer part of `\`-escape sequence (if recognized)
- *                [out] Unchanged (if not recognized)
- * @param: end:   The of containing string sequence
- * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()`
- * @param: utf8_printer: *ditto*
- * @param: arg:          *ditto*
- * @return: * :   Sum of positive return values of `data_printer` and `utf8_printer`
- * @return: < 0:  First negative return value of `data_printer` or `utf8_printer`
+ * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
+ *                 [out] First character no longer part of `\`-escape sequence (if recognized)
+ *                 [out] Unchanged (if not recognized)
+ * @param: end:    The of containing string sequence
+ * @param: config: Identically-named argument of `tpp_lexer_decodestring()`
+ * @return: * :    Sum of positive return values of `data_printer` and `utf8_printer`
+ * @return: < 0:   First negative return value of `data_printer` or `utf8_printer`
  * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
- *                (please leave `*p_pos` unchanged in this case). The caller will
- *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
+ *                 (please leave `*p_pos` unchanged in this case). The caller will
+ *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
-#define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, data_printer, utf8_printer, arg) \
-	((self)->TPP_INTERNAL(th_unknown_string_escape) ? (*(self)->TPP_INTERNAL(th_unknown_string_escape))(lexer, p_pos, end, data_printer, utf8_printer, arg) : TPP_SSIZE_OFERR(TPP_ENOENT))
+#define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, config) \
+	((self)->TPP_INTERNAL(th_unknown_string_escape) ? (*(self)->TPP_INTERNAL(th_unknown_string_escape))(lexer, p_pos, end, config) : TPP_SSIZE_OFERR(TPP_ENOENT))
 #define tpp_hooks_get_unknown_string_escape(self)    (self)->TPP_INTERNAL(th_unknown_string_escape)
 #define tpp_hooks_set_unknown_string_escape(self, v) (void)((self)->TPP_INTERNAL(th_unknown_string_escape) = (v))
 #define tpp_hooks_reset_unknown_string_escape(self)  (void)((self)->TPP_INTERNAL(th_unknown_string_escape) = _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE)
@@ -18236,10 +18315,10 @@ typedef struct tpp_hooks {
 #endif /* !... */
 #else /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 #if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_USER
-#define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, data_printer, utf8_printer, arg) \
-	TPP_HOOK_UNKNOWN_STRING_ESCAPE(lexer, p_pos, end, data_printer, utf8_printer, arg)
+#define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, config) \
+	TPP_HOOK_UNKNOWN_STRING_ESCAPE(lexer, p_pos, end, config)
 #else /*  */
-#define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, data_printer, utf8_printer, arg) TPP_SSIZE_OFERR(TPP_ENOENT)
+#define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, config) TPP_SSIZE_OFERR(TPP_ENOENT)
 #endif /* ... */
 #define _tpp_hooks_init_unknown_string_escape(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
@@ -18879,27 +18958,25 @@ typedef struct tpp_lexer {
 #define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_system_include_path */
 
-/* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_formatprinter data_printer, tpp_formatprinter utf8_printer, void *arg);
+/* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
  * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
  * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
  * it before returning
- * @param: p_pos: [in]  Pointer to start of unrecognized `\`-escape sequence
- *                [out] First character no longer part of `\`-escape sequence (if recognized)
- *                [out] Unchanged (if not recognized)
- * @param: end:   The of containing string sequence
- * @param: data_printer: Identically-named argument of `tpp_lexer_decodestring()`
- * @param: utf8_printer: *ditto*
- * @param: arg:          *ditto*
- * @return: * :   Sum of positive return values of `data_printer` and `utf8_printer`
- * @return: < 0:  First negative return value of `data_printer` or `utf8_printer`
+ * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
+ *                 [out] First character no longer part of `\`-escape sequence (if recognized)
+ *                 [out] Unchanged (if not recognized)
+ * @param: end:    The of containing string sequence
+ * @param: config: Identically-named argument of `tpp_lexer_decodestring()`
+ * @return: * :    Sum of positive return values of `data_printer` and `utf8_printer`
+ * @return: < 0:   First negative return value of `data_printer` or `utf8_printer`
  * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
- *                (please leave `*p_pos` unchanged in this case). The caller will
- *                proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
-#define tpp_lexer_callhook_unknown_string_escape(self, p_pos, end, data_printer, utf8_printer, arg) \
-	tpp_hooks_call_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, p_pos, end, data_printer, utf8_printer, arg)
+ *                 (please leave `*p_pos` unchanged in this case). The caller will
+ *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
+#define tpp_lexer_callhook_unknown_string_escape(self, p_pos, end, config) \
+	tpp_hooks_call_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, p_pos, end, config)
 #ifdef tpp_hooks_set_unknown_string_escape
 #define tpp_lexer_gethook_unknown_string_escape(self)    tpp_hooks_get_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_unknown_string_escape(self, v) tpp_hooks_set_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
@@ -20159,24 +20236,98 @@ tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
 
 
 #if TPP_HAVE_LEXER_DECODESTRING
+typedef struct tpp_lexer_decodestring_config {
+	tpp_formatprinter   tldsc_dataprinter; /* [1..1] Printer for 1-byte-per-character data.
+	                                        * When output format has multiple bytes per character,
+	                                        * every byte passed to this printer must result in 1
+	                                        * character being appended to the output string:
+	                                        * Input: `"foo"`
+	                                        * -> `tldsc_dataprinter("foo")`
+	                                        * -> `XCHAR[3]{ 0x66, 0x6f, 0x6f }`
+	                                        *
+	                                        * Input: `"\x12"`
+	                                        * -> `tldsc_dataprinter("\x12")`
+	                                        * -> `XCHAR[1]{ 0x12 }`
+	                                        *
+	                                        * If the input file is `!tpp_file_isutf8`, then this printer
+	                                        * is also used for non-ASCII bytes. However, in this case any
+	                                        * such non-ascii byte shouldn't be considered part of any sort
+	                                        * of unicode sequence either, so that's intended:
+	                                        * Input: `"Stra[C3,9F]e"`
+	                                        * -> tldsc_dataprinter("Stra\xC3\x{9F}e")
+	                                        * -> `XCHAR[7]{ 0x53, 0x74, 0x72, 0x61, 0xc3, 0x9f, 0x65 }`
+	                                        */
+#if TPP_HAVE_UNICODE
+	tpp_formatprinter   tldsc_utf8printer; /* [1..1] Printer for utf-8 formatted input data.
+	                                        * Very similar to `tldsc_dataprinter`, especially in that
+	                                        * ASCII data may either be passed to `tldsc_dataprinter` or
+	                                        * this callback (behavior in both cases must be the same),
+	                                        * except that whereas `tldsc_dataprinter` must add 1 character
+	                                        * to the output string for every byte in the given data-buffer,
+	                                        * this function treats bytes in range [0x80,0xff] special, in
+	                                        * that it must treat such bytes as initiating a utf-8 character
+	                                        * sequences that may span multiple bytes.
+	                                        *
+	                                        * How exactly such a multi-byte utf-8 sequence is then encoded
+	                                        * in the actual output string (i.e. in terms of `XCHAR`s) is
+	                                        * not mandated, and is left up to the implementation. However,
+	                                        * here are some suggestions:
+	                                        * -> `tldsc_utf8printer("\xC3\x9F")`
+	                                        *    -> `XCHAR[2]{ 0xC3, 0x9F }`  (Keep utf-8 encoding in output)
+	                                        *    -> `XCHAR[1]{ 0x00DF }`      (Use UCS2 encoding in output)
+	                                        *
+	                                        * This printer is *always* for the following 2 cases:
+	                                        * - Input: "Straße"    (when `tpp_file_isutf8()` and a non-ASCII sequence is encountered)
+	                                        * - Input: "\u00DF"    (here, `tldsc_utf8printer("\xC3\x9F")` is called with the utf-8 representation)
+	                                        *
+	                                        * The implementation is however also allowed to use this callback
+	                                        * for ASCII-only input data! */
+#endif /* TPP_HAVE_UNICODE */
+#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
+	tpp_ssize (TPPCALL *tldsc_hexprinter)(void *arg, tpp_lexer *tpp_restrict lexer, tpp_uintmax value);
+	                                     /* [0..1] Printer for [2+]-byte-per-character data. When non-NULL,
+	                                      * and `\x1234` is used, this printer is called with `0x1234` as
+	                                      * value, and it should append `XCHAR[1]{0x1234}` to the output
+	                                      * string. If the given `value` is too large to fit `XCHAR`, then
+	                                      * this callback should emit a warning:
+	                                      * >> tpp_errno error = tpp_lexer_warnf(lexer, TPP_W_TODO);
+	                                      * >> return TPP_SSIZE_ASERR_OR_EOK(error); */
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+	void               *tldsc_arg;       /* [?..?] Cookie argument for other printers */
+} tpp_lexer_decodestring_config;
+
+/* Initialize a simple decodestring configuration (suitable for emitting utf-8 data) */
+#define tpp_lexer_decodestring_config_init_simple(self, printer, arg)    \
+	(_tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
+	 _tpp_lexer_decodestring_config_init_simple_hex(self))
+#if TPP_HAVE_UNICODE
+#define _tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
+	(self)->tldsc_dataprinter = (self)->tldsc_utf8printer = (printer),      \
+	(self)->tldsc_arg = (arg)
+#else /* TPP_HAVE_UNICODE */
+#define _tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
+	(self)->tldsc_dataprinter = (printer),                                  \
+	(self)->tldsc_arg = (arg)
+#endif /* !TPP_HAVE_UNICODE */
+#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
+#define _tpp_lexer_decodestring_config_init_simple_hex(self) , (self)->tldsc_hexprinter = NULL
+#else /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+#define _tpp_lexer_decodestring_config_init_simple_hex(self) /* nothing */
+#endif /* !TPP_HAVE_STRING_ESCAPE_HEX_MANY */
+
 /* Print the unescaped representation of the string-token described by "self"
  * The caller must ensure that `TPP_TOK_ISSTRING(tpp_lexer_gettoken(self)->tt_id)'
  *
- * @param: data_printer: Printer used to fast-forward string data from token inputs, as well as \xAB
- * @param: utf8_printer: Printer used to emit explicitly utf-8 encoded data from \uABCD and \U876543210,
- *                       as well as regular text-data when the "tpp_file_isutf8(tpp_lexer_getfile(self))"
- *
+ * @param: config: Printer configuration
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
  * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
  *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
-                       tpp_formatprinter data_printer,
-                       tpp_formatprinter utf8_printer,
-                       void *arg);
+                       tpp_lexer_decodestring_config const *tpp_restrict config);
 
 /* Flags for `tpp_lexer_parsestring()' & friends. */
 #define TPP_LEXER_PARSESTRING_FLAG_NORMAL      0x0000 /* Normal flags */
@@ -20213,11 +20364,10 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory
  * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
-tpp_lexer_parsestring_ex(tpp_lexer *self,
-                         tpp_formatprinter data_printer,
-                         tpp_formatprinter utf8_printer,
-                         void *arg, unsigned int flags);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
+                         tpp_lexer_decodestring_config const *tpp_restrict config,
+                         unsigned int flags);
 
 /* Convenience wrapper around `tpp_lexer_parsestring_ex()'
  * On success (!TPP_ISERR(return)), caller must "tpp_string_decref(*p_result)"

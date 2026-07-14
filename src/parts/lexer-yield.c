@@ -1370,17 +1370,16 @@ err_tok_subtext_builder:
 		case ',': /* Ignore all ','-token in here! */
 			break;
 
-		TPP_CASE_TPP_TOK_STRING
-			status = tpp_lexer_decodestring(self,
-			                                &tpp_string_builder_print_encoded,
-			                                &tpp_string_builder_print_encoded,
-			                                &builder);
+		TPP_CASE_TPP_TOK_STRING {
+			tpp_lexer_decodestring_config config;
+			tpp_lexer_decodestring_config_init_simple(&config, &tpp_string_builder_print_encoded, &builder);
+			status = tpp_lexer_decodestring(self, &config);
 handle_status:
 			if (TPP_SSIZE_ISERR(status)) {
 				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(status));
 				goto err_tok_subtext_builder;
 			}
-			break;
+		}	break;
 
 #if TPP_HAVE_TOK_INT
 		TPP_CASE_TPP_TOK_INT {
@@ -1566,10 +1565,9 @@ tpp_lexer_yield_handle___TPP_STR_SIZE(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 	} else {
 		tpp_ssize status;
-		status = tpp_lexer_parsestring_ex(self,
-		                                  &tpp_lexer_handle_str_size,
-		                                  &tpp_lexer_handle_str_size, NULL,
-		                                  TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		tpp_lexer_decodestring_config config;
+		tpp_lexer_decodestring_config_init_simple(&config, &tpp_lexer_handle_str_size, NULL);
+		status = tpp_lexer_parsestring_ex(self, &config, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 		if (TPP_SSIZE_ISERR(status)) {
 			error = TPP_SSIZE_ASERR(status);
 		} else {

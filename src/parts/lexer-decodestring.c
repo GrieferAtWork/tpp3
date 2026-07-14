@@ -36,18 +36,31 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_DECODESTRING
 
+/* Return the printer that should be used by default. */
+#if TPP_HAVE_UNICODE
+#define tpp_lexer_decodestring_config_getdefl(self, lexer) \
+	(tpp_file_isutf8(tpp_lexer_getfile(lexer))             \
+	 ? (self)->tldsc_utf8printer                           \
+	 : (self)->tldsc_dataprinter)
+#define tpp_lexer_decodestring_config_getutf8(self) ((self)->tldsc_utf8printer)
+#else /* TPP_HAVE_UNICODE */
+#define tpp_lexer_decodestring_config_getdefl(self, lexer) ((self)->tldsc_dataprinter)
+#define tpp_lexer_decodestring_config_getutf8(self)        ((self)->tldsc_dataprinter)
+#endif /* !TPP_HAVE_UNICODE */
+
+
+
+
 #if TPP_HAVE_STRING_ESCAPE
 
 /* Decode string: "foobar fdasudfad"
  *                 ^start          ^end
  */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 5)) tpp_ssize TPPCALL
-tpp_token_decodestring_basic(tpp_lexer *self,
-                             tpp_char const *start,
-                             tpp_char const *end,
-                             tpp_formatprinter data_printer,
-                             tpp_formatprinter utf8_printer,
-                             void *arg) {
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_basic(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
+                             tpp_lexer_decodestring_config const *tpp_restrict config) {
+	tpp_formatprinter const default_printer = tpp_lexer_decodestring_config_getdefl(config, self);
+	void *const arg = config->tldsc_arg;
 	tpp_char ch;
 	tpp_ssize temp, result = 0;
 	tpp_char const *iter = start;
@@ -87,14 +100,14 @@ again:
 #endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
 
 		/* Print trigraph character (but also handle case where "??/" was encoded) */
-		temp = tpp_formatprinter_print(data_printer, arg, start, (tpp_size)(iter - start));
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)(iter - start));
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
 		iter += 3;
 		start = iter;
 		if (ch != '\\') {
-			temp = tpp_formatprinter_print(data_printer, arg, &ch, 1);
+			temp = tpp_formatprinter_print(default_printer, arg, &ch, 1);
 			if (temp < 0)
 				goto err_temp;
 			result += temp;
@@ -110,7 +123,7 @@ not_trigraph:
 			goto again;
 
 		/* Print everything up until the \-character */
-		temp = tpp_formatprinter_print(data_printer, arg, start, (tpp_size)((iter - 1) - start));
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)((iter - 1) - start));
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -153,20 +166,20 @@ escape_self_sequence:
 #endif /* TPP_HAVE_TRIGRAPHS */
 
 		/* Conventional escape sequences... */
-	case 'a': ch = 0x07; goto print_ch;
-	case 'b': ch = 0x08; goto print_ch;
-	case 't': ch = 0x09; goto print_ch;
-	case 'n': ch = 0x0a; goto print_ch;
-	case 'v': ch = 0x0b; goto print_ch;
-	case 'f': ch = 0x0c; goto print_ch;
-	case 'r': ch = 0x0d; goto print_ch;
+	case 'a': ch = 0x07; goto print_ch_as_byte;
+	case 'b': ch = 0x08; goto print_ch_as_byte;
+	case 't': ch = 0x09; goto print_ch_as_byte;
+	case 'n': ch = 0x0a; goto print_ch_as_byte;
+	case 'v': ch = 0x0b; goto print_ch_as_byte;
+	case 'f': ch = 0x0c; goto print_ch_as_byte;
+	case 'r': ch = 0x0d; goto print_ch_as_byte;
 
 #if TPP_HAVE_STRING_ESCAPE_E
 	case 'e':
 		if (!tpp_lexer_has(self, STRING_ESCAPE_E))
 			goto handle_unknown_escape_sequence;
 		ch = 0x1b;
-		goto print_ch;
+		goto print_ch_as_byte;
 #endif /* !TPP_HAVE_STRING_ESCAPE_E */
 
 #if TPP_HAVE_STRING_ESCAPE_S
@@ -174,24 +187,21 @@ escape_self_sequence:
 		if (!tpp_lexer_has(self, STRING_ESCAPE_S))
 			goto handle_unknown_escape_sequence;
 		ch = 0x20;
-		goto print_ch;
+		goto print_ch_as_byte;
 #endif /* !TPP_HAVE_STRING_ESCAPE_S */
 
-print_ch:
-		temp = tpp_formatprinter_print(data_printer, arg, &ch, 1);
+print_ch_as_byte:
+		temp = tpp_formatprinter_print(config->tldsc_dataprinter, arg, &ch, 1);
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
 		break;
 
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7': {
+#if TPP_HAVE_STRING_ESCAPE_OCT
+	case '0': case '1': case '2': case '3':
+	case '4': case '5': case '6': case '7': {
+		if (!tpp_lexer_has(self, STRING_ESCAPE_OCT))
+			break;
 		/* Octal escape sequence */
 		tpp_char word = (tpp_char)tpp_ascii_asoctdigit(ch);
 		if (iter < end && tpp_ascii_isoctdigit(*iter)) {
@@ -205,13 +215,17 @@ print_ch:
 			word |= (tpp_char)tpp_ascii_asoctdigit(ch);
 		}
 		ch = word;
-		goto print_ch;
+		goto print_ch_as_byte;
 	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_OCT */
 
+#if TPP_HAVE_STRING_ESCAPE_HEX
 	case 'x': {
 		tpp_char word;
 		if (iter >= end)
 			goto handle_unknown_escape_sequence;
+		if (!tpp_lexer_has(self, STRING_ESCAPE_OCT))
+			break;
 		ch = *iter++;
 		if (tpp_ascii_isdigit(ch)) {
 			word = (tpp_char)tpp_ascii_asdigit(ch);
@@ -236,11 +250,86 @@ print_ch:
 				word <<= 4;
 				word |= (tpp_char)tpp_ascii_asuprxdigit(ch);
 				++iter;
+			} else {
+#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
+				ch = word;
+				goto print_ch_as_byte;
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
 			}
+#if TPP_HAVE_STRING_ESCAPE_HEX_MANY
+			if (tpp_lexer_has(self, STRING_ESCAPE_HEX_MANY) && iter < end) {
+				tpp_char const *escape_pos = iter - 4;
+#if TPP_HAVE_TRIGRAPHS
+				if (*escape_pos == '/')
+					escape_pos -= 2;
+#endif /* TPP_HAVE_TRIGRAPHS */
+				ch = *iter;
+				if (tpp_ascii_isxdigit(ch)) {
+					tpp_token *const token = tpp_lexer_gettoken(self);
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+					bool has_overflow = false;
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+					tpp_uintmax bigword = word;
+					++iter;
+					for (;;) {
+						tpp_char nibble;
+						if (tpp_ascii_isdigit(ch)) {
+							nibble = (tpp_char)tpp_ascii_asdigit(ch);
+						} else if (tpp_ascii_islwrxdigit(ch)) {
+							nibble = (tpp_char)tpp_ascii_aslwrxdigit(ch);
+						} else if (tpp_ascii_isuprxdigit(ch)) {
+							nibble = (tpp_char)tpp_ascii_asuprxdigit(ch);
+						} else {
+							--iter;
+							break;
+						}
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+						if (((bigword << 4) >> 4) != bigword)
+							has_overflow = true;
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+						bigword <<= 4;
+						bigword |= nibble;
+						if (iter >= end)
+							break;
+						ch = *iter++;
+					}
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+					if ((bigword > 0xff && !config->tldsc_hexprinter) || has_overflow) {
+						tpp_errno error;
+						tpp_char const *saved_start = token->tt_start;
+						tpp_char const *saved_end = token->tt_end;
+						token->tt_start = escape_pos;
+						token->tt_end   = iter;
+						error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
+						token->tt_start = saved_start;
+						token->tt_end   = saved_end;
+						if (TPP_ISERR(error))
+							return TPP_SSIZE_OFERR(error);
+					}
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+					if (bigword > 0xff && config->tldsc_hexprinter) {
+						tpp_char const *saved_start = token->tt_start;
+						tpp_char const *saved_end = token->tt_end;
+						token->tt_start = escape_pos;
+						token->tt_end   = iter;
+						temp = (*config->tldsc_hexprinter)(arg, self, bigword);
+						token->tt_start = saved_start;
+						token->tt_end   = saved_end;
+						if (temp < 0)
+							goto err_temp;
+						result += temp;
+						break;
+					}
+					word = (tpp_char)bigword;
+					/* Fallthru to "print_ch_as_byte" below... */
+				}
+			}
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX_MANY */
 		}
 		ch = word;
-		goto print_ch;
+		goto print_ch_as_byte;
 	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_HEX */
 
 	/* XXX: Support for: \o{0 037 377} */
 	/* XXX: Support for: \x{12 34 56 78} */
@@ -280,7 +369,8 @@ print_ch:
 
 		/* Encode as utf-8 */
 		utf8_len = (tpp_size)(tpp_unicode_writeutf8(utf8_buf, uc) - utf8_buf);
-		temp = tpp_formatprinter_print(utf8_printer, arg, utf8_buf, utf8_len);
+		temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getutf8(config),
+		                               arg, utf8_buf, utf8_len);
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -374,7 +464,7 @@ handle_unknown_escape_sequence:
 		--iter;
 #if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
 		/* Hook here to allow user-code to define custom string escape sequences */
-		temp = tpp_lexer_callhook_unknown_string_escape(self, &iter, end, data_printer, utf8_printer, arg);
+		temp = tpp_lexer_callhook_unknown_string_escape(self, &iter, end, config);
 		if (temp >= 0) {
 			/* Successfully handled via hook. */
 			result += temp;
@@ -395,7 +485,7 @@ handle_unknown_escape_sequence:
 #if TPP_HAVE_TRIGRAPHS
 		if (iter[-1] != '\\') {
 print_backslash_and_flush_at_iter:
-			temp = tpp_formatprinter_print(data_printer, arg, (tpp_char const *)"\\", 1);
+			temp = tpp_formatprinter_print(default_printer, arg, (tpp_char const *)"\\", 1);
 			if (temp < 0)
 				goto err_temp;
 			result += temp;
@@ -414,7 +504,7 @@ print_backslash_and_flush_at_iter:
 	goto again;
 done:
 	if (start < end) {
-		temp = tpp_formatprinter_print(data_printer, arg, start, (tpp_size)(end - start));
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)(end - start));
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -540,13 +630,9 @@ tpp_block_string_seeklf(tpp_lexer *tpp_restrict lexer,
  * |"""      ^end
  *  ^ start@.
  */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 5)) tpp_ssize TPPCALL
-tpp_token_decodestring_block(tpp_lexer *self,
-                             tpp_char const *start,
-                             tpp_char const *end,
-                             tpp_formatprinter data_printer,
-                             tpp_formatprinter utf8_printer,
-                             void *arg) {
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_block(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
+                             tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize temp, result = 0;
 	struct tpp_block_string_prefix common_prefix;
 	tpp_size common_prefix_len;
@@ -580,11 +666,12 @@ tpp_token_decodestring_block(tpp_lexer *self,
 			temp = tpp_token_decodestring_basic(self,
 			                                    iter + common_prefix_len,
 			                                    iter + line_length_with_eol,
-			                                    data_printer, utf8_printer, arg);
+			                                    config);
 		} else {
 			/* Special case: blank line (without common prefix) -> only print EOL */
 			tpp_size eol_size = (tpp_size)(eol_end - eol_start);
-			temp = tpp_formatprinter_print(data_printer, arg, eol_start, eol_size);
+			temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getdefl(config, self),
+			                               config->tldsc_arg, eol_start, eol_size);
 		}
 		if (temp < 0)
 			return temp;
@@ -593,7 +680,7 @@ tpp_token_decodestring_block(tpp_lexer *self,
 	}
 	return result;
 handle_empty_prefix:
-	return tpp_token_decodestring_basic(self, start, end, data_printer, utf8_printer, arg);
+	return tpp_token_decodestring_basic(self, start, end, config);
 }
 #endif /* TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
 
@@ -609,21 +696,20 @@ handle_empty_prefix:
 #define tpp_token_decodestring_raw_SKIPS_BSE 1
 /* Decode string: R"FOO(bla bla bla)FOO"
 *                       ^start     ^end */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 5)) tpp_ssize TPPCALL
-tpp_token_decodestring_raw(tpp_lexer *self,
-                           tpp_char const *start,
-                           tpp_char const *end,
-                           tpp_formatprinter data_printer,
-                           void *arg) {
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_raw(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
+                           tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_assert(start <= end);
 	(void)self;
 	/* TODO: Print input as-is, but skip over BSE */
-	return tpp_formatprinter_print(data_printer, arg, start, (tpp_size)(end - start));
+	return tpp_formatprinter_print(tpp_lexer_decodestring_config_getdefl(config, self),
+	                               config->tldsc_arg, start, (tpp_size)(end - start));
 }
 #else
 #define tpp_token_decodestring_raw_SKIPS_BSE 0
-#define tpp_token_decodestring_raw(self, start, end, data_printer, arg) \
-	tpp_formatprinter_print(data_printer, arg, start, (tpp_size)((end) - (start)))
+#define tpp_token_decodestring_raw(self, start, end, config)                     \
+	tpp_formatprinter_print(tpp_lexer_decodestring_config_getdefl(config, self), \
+	                        (config)->tldsc_arg, start, (tpp_size)((end) - (start)))
 #endif
 #endif /* ... */
 
@@ -640,21 +726,16 @@ tpp_token_decodestring_raw(tpp_lexer *self,
 /* Print the unescaped representation of the string-token described by "self"
  * The caller must ensure that `TPP_TOK_ISSTRING(tpp_lexer_gettoken(self)->tt_id)'
  *
- * @param: data_printer: Printer used to fast-forward string data from token inputs, as well as \xAB
- * @param: utf8_printer: Printer used to emit explicitly utf-8 encoded data from \uABCD and \U876543210,
- *                       as well as regular text-data when the "tpp_file_isutf8(tpp_lexer_getfile(self))"
- *
+ * @param: config: Printer configuration
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
  * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
  *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
-tpp_lexer_decodestring(tpp_lexer *self,
-                       tpp_formatprinter data_printer,
-                       tpp_formatprinter utf8_printer,
-                       void *arg) {
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
+                       tpp_lexer_decodestring_config const *tpp_restrict config) {
 #undef HAVE_do_decode_basic
 	tpp_token const *const token = tpp_lexer_gettoken(self);
 	tpp_char const *start = token->tt_start;
@@ -751,9 +832,7 @@ tpp_lexer_decodestring(tpp_lexer *self,
 do_decode_basic:
 #define HAVE_do_decode_basic
 #endif /* TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
-		return tpp_token_decodestring_basic(self, start, end,
-		                                    data_printer,
-		                                    utf8_printer, arg);
+		return tpp_token_decodestring_basic(self, start, end, config);
 	}	break;
 #endif /* ... */
 
@@ -789,7 +868,7 @@ do_decode_basic:
 		tpp_assert(start <= end);
 
 		/* Print string */
-		return tpp_token_decodestring_raw(self, start, end, data_printer, arg);
+		return tpp_token_decodestring_raw(self, start, end, config);
 #endif /* !TPP_HAVE_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 	}	break;
 #endif /* TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
@@ -828,7 +907,7 @@ cxx_raw_string_common:
 		tpp_assert(start <= end);
 
 		/* Print string */
-		return tpp_token_decodestring_raw(self, start, end, data_printer, arg);
+		return tpp_token_decodestring_raw(self, start, end, config);
 	}	break;
 #endif /* TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 
@@ -894,14 +973,10 @@ cxx_raw_string_common:
 #if TPP_HAVE_UNICODE
 do_decode_basic:
 #endif /* TPP_HAVE_UNICODE */
-			return tpp_token_decodestring_basic(self, start, end,
-			                                    data_printer,
-			                                    utf8_printer, arg);
+			return tpp_token_decodestring_basic(self, start, end, config);
 #endif /* !HAVE_do_decode_basic */
 		}
-		return tpp_token_decodestring_block(self, start, end,
-		                                    data_printer,
-		                                    utf8_printer, arg);
+		return tpp_token_decodestring_block(self, start, end, config);
 	}	break;
 #endif /* TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
 
@@ -929,18 +1004,17 @@ do_decode_basic:
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory
  * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
-tpp_lexer_parsestring_ex(tpp_lexer *self,
-                         tpp_formatprinter data_printer,
-                         tpp_formatprinter utf8_printer,
-                         void *arg, unsigned int flags) {
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
+                         tpp_lexer_decodestring_config const *tpp_restrict config,
+                         unsigned int flags) {
 	(void)flags;
 #if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_AUTO_CONCAT)
 #if TPP_HAVE_STRING_AUTO_CONCAT
 	if (!tpp_lexer_has(self, STRING_AUTO_CONCAT))
 #endif /* TPP_HAVE_STRING_AUTO_CONCAT */
 	{
-		tpp_ssize result = tpp_lexer_decodestring(self, data_printer, utf8_printer, arg);
+		tpp_ssize result = tpp_lexer_decodestring(self, config);
 		if (result >= 0) {
 			tpp_token_id tok = tpp_lexer_yield_blocking(self);
 			if (TPP_TOK_ISERR(tok))
@@ -957,7 +1031,7 @@ tpp_lexer_parsestring_ex(tpp_lexer *self,
 		tpp_token_id tok;
 		tpp_ssize result = 0, temp;
 again:
-		temp = tpp_lexer_decodestring(self, data_printer, utf8_printer, arg);
+		temp = tpp_lexer_decodestring(self, config);
 		if tpp_unlikely(temp < 0)
 			return temp;
 		result += temp;
@@ -1009,11 +1083,10 @@ tpp_lexer_parsestring(tpp_lexer *tpp_restrict self,
                       unsigned int flags) {
 	tpp_ssize status;
 	tpp_string_builder builder;
+	tpp_lexer_decodestring_config config;
 	tpp_string_builder_init(&builder);
-	status = tpp_lexer_parsestring_ex(self,
-	                                  &tpp_string_builder_print,
-	                                  &tpp_string_builder_print,
-	                                  &builder, flags);
+	tpp_lexer_decodestring_config_init_simple(&config, &tpp_string_builder_print, &builder);
+	status = tpp_lexer_parsestring_ex(self, &config, flags);
 	if (TPP_SSIZE_ISERR(status))
 		goto err_builder;
 	*p_result = tpp_string_builder_pack(&builder);
@@ -1096,6 +1169,7 @@ tpp_lexer_decodestring_is_single_chunk(tpp_lexer *tpp_restrict self
                                        tpp_lexer_decodestring_single_chunk_flags__param) {
 	struct tpp_lexer_decodestring_chunk_count_data data;
 	tpp_ssize decode_status;
+	tpp_lexer_decodestring_config config;
 #if TPP_HAVE_WARNINGS
 	tpp_lexer_state_flags old_state;
 	old_state = self->tl_state;
@@ -1108,10 +1182,8 @@ tpp_lexer_decodestring_is_single_chunk(tpp_lexer *tpp_restrict self
 	data.tldsccd_flags = flags;
 #endif /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 	/* Try to decode the string and count how many chunks we encounter */
-	decode_status = tpp_lexer_decodestring(self,
-	                                       &tpp_lexer_decodestring_chunk_count,
-	                                       &tpp_lexer_decodestring_chunk_count,
-	                                       &data);
+	tpp_lexer_decodestring_config_init_simple(&config, &tpp_lexer_decodestring_chunk_count, &data);
+	decode_status = tpp_lexer_decodestring(self, &config);
 	tpp_assert(decode_status == 0 ||
 	           decode_status == TPP_LEXER_PARSESTRING_CHUNK_STOP);
 	(void)decode_status;
@@ -1168,15 +1240,14 @@ tpp_lexer_decodestring_as_single_chunk(tpp_lexer *self,
                                                                tpp_char const *str, tpp_size length),
                                        void *arg) {
 	tpp_ssize status;
+	tpp_lexer_decodestring_config config;
 	struct tpp_lexer_decodestring_as_single_chunk_data data;
 	tpp_assert(cb && "NULL-callback given");
 	data.tldsascd_cb    = cb;
 	data.tldsascd_arg   = arg;
 	data.tldsascd_chunk = tpp_lexer_getfile(self)->tf_chunk;
-	status = tpp_lexer_decodestring(self,
-	                                &tpp_lexer_decodestring_as_single_chunk_cb,
-	                                &tpp_lexer_decodestring_as_single_chunk_cb,
-	                                &data);
+	tpp_lexer_decodestring_config_init_simple(&config, &tpp_lexer_decodestring_as_single_chunk_cb, &data);
+	status = tpp_lexer_decodestring(self, &config);
 #ifndef __OPTIMIZE_SIZE__
 	if (status == TPP_LEXER_PARSESTRING_CHUNK_STOP)
 		status = TPP_SSIZE_OFERR(TPP_EOK);
@@ -1501,7 +1572,6 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_byt
 	tpp_size i;
 	struct tpp_lexer_decodecharacter_data *data;
 	data = (struct tpp_lexer_decodecharacter_data *)arg;
-	/* TODO: Decode utf-8 multi-char sequence -- '\u1234' must equal 0x1234, but currently doesn't! */
 #if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
 	if ((data->tldcd_count <= 1) &&
 	    (data->tldcd_count + num_bytes) > 1) {
@@ -1534,16 +1604,17 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
                                  /*out*/ tpp_intmax *tpp_restrict p_result,
                                  unsigned int flags) {
 	tpp_ssize status;
+	tpp_lexer_decodestring_config config;
 	struct tpp_lexer_decodecharacter_data data;
 #if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
 	data.tldcd_lexer = self;
 	data.tldcd_count = 0;
 #endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
 	data.tldcd_value = 0;
-	status = tpp_lexer_parsestring_ex(self,
-	                                  &tpp_lexer_decodecharacter_cb,
-	                                  &tpp_lexer_decodecharacter_cb,
-	                                  &data, flags);
+	/* TODO: Decode utf-8 multi-char sequence -- '\u1234' must equal 0x1234, but currently doesn't! */
+	/* TODO: If input uses \x1234, must evaluate to 0x1234 */
+	tpp_lexer_decodestring_config_init_simple(&config, &tpp_lexer_decodecharacter_cb, &data);
+	status = tpp_lexer_parsestring_ex(self, &config, flags);
 	*p_result = data.tldcd_value;
 	tpp_assert(TPP_SSIZE_ISERR_OR_EOK(status));
 	return TPP_SSIZE_ASERR_OR_EOK(status);
