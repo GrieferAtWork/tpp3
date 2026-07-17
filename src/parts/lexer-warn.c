@@ -530,12 +530,12 @@ tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
 #define tpp_warn_printf4(info, format, a, b, c, d) tpp_do(tpp_lexer_printf_warning(tpp_current_lexer(), info, tpp_current_printer(), tpp_current_printer_arg(), format, a, b, c, d))
 /************************************************************************/
 
-#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr) \
 		case warning_id: {                                                     \
 			expr;                                                              \
 		}	break;
+#undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS
 
@@ -649,6 +649,7 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
                                tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                                tpp_warning_id id, va_list args) {
 	tpp_errno error;
+	tpp_warning_context_id const ctxid = tpp_warning_invokeinfo_getctxid(invokeinfo);
 	tpp_formatprinter const printer = tpp_lexer_gethook_warnprinter(self);
 	void *const printer_arg = self;
 
@@ -667,15 +668,15 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 	}
 
 	/* Print what this is about... */
-	if ((invokeinfo->twii_state == TPP_WSTATE_WARN
+	if ((tpp_warning_invokeinfo_getstate(invokeinfo) == TPP_WSTATE_WARN
 	     ? tpp_formatprinter_print_conststr(printer, printer_arg, "warning[")
 	     : tpp_formatprinter_print_conststr(printer, printer_arg, "error[")) < 0)
 		goto err_printer;
 
 	/* Print the relevant context name. */
 #if TPP_HAVE_WARNING_NUMBERS
-	if (tpp_warning_context_id_isnumber(invokeinfo->twii_ctx_id)) {
-		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(invokeinfo->twii_ctx_id);
+	if (tpp_warning_context_id_isnumber(ctxid)) {
+		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(ctxid);
 		unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
 		if ((tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID)
 		     ? tpp_formatprinter_print_conststr(printer, printer_arg, "?")
@@ -684,7 +685,7 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 	} else
 #endif /* TPP_HAVE_WARNING_NUMBERS */
 	{
-		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(invokeinfo->twii_ctx_id);
+		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(ctxid);
 		char const *group_name = tpp_warning_group_getnames(group_id);
 		if tpp_unlikely(group_name == NULL) {
 			if (tpp_formatprinter_print_conststr(printer, printer_arg, "?") < 0)
@@ -775,7 +776,7 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 
 	/* Deal with certain warning states. */
-	switch (invokeinfo.twii_state) {
+	switch (tpp_warning_invokeinfo_getstate(&invokeinfo)) {
 
 	case TPP_WSTATE_DISABLED:
 		goto done; /* Nothing to do here */

@@ -1544,7 +1544,7 @@ tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	 * as a valid identifier. -- We should support that (*and* interpret
 	 * it as "\xF0\x9F\x90\xB1" (its utf-8 repr) during keyword lookup)
 	 *
-	 * For this purpose, the "*_bse" version of keyword lookup functions
+	 * For this purpose, the "*_esc" version of keyword lookup functions
 	 * should also have another extension that lets them treat \u and \U
 	 * sequences specially! */
 	tpp_errno error = TPP_EOK;

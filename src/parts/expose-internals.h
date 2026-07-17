@@ -811,6 +811,8 @@ for (local ident: identifiers)
 #define tw_suppressions                                    TPP_INTERNAL(tw_suppressions)
 #define tw_pushcnt                                         TPP_INTERNAL(tw_pushcnt)
 #define tw_prev                                            TPP_INTERNAL(tw_prev)
+#define twii_state                                         TPP_INTERNAL(twii_state)
+#define twii_ctx_id                                        TPP_INTERNAL(twii_ctx_id)
 /*[[[end]]]*/
 
 /*[[[tpp-end]]]*/

@@ -308,9 +308,9 @@ tpp_warnings_setctx(tpp_warnings *tpp_restrict self,
                     tpp_warning_state state)
 #else /* TPP_HAVE_WARNINGS_SETCTX_MAYFAIL */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_warnings_setctx_(tpp_warnings *tpp_restrict self,
-                     tpp_warning_context_id ctx_id,
-                     tpp_warning_state state)
+_tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
+                            tpp_warning_context_id ctx_id,
+                            tpp_warning_state state)
 #endif /* !TPP_HAVE_WARNINGS_SETCTX_MAYFAIL */
 {
 	tpp_assert((unsigned int)ctx_id < (unsigned int)TPP_WC_COUNT);
@@ -403,8 +403,8 @@ tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,
                     tpp_warning_invokeinfo *tpp_restrict result)
 #else /* TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 TPP_IMPL TPP_NONNULL((1, 3)) void TPPCALL
-tpp_warnings_invoke_nofail(tpp_warnings const *tpp_restrict self, tpp_warning_id warning_id,
-                           tpp_warning_invokeinfo *tpp_restrict result)
+_tpp_warnings_invoke_nofail(tpp_warnings const *tpp_restrict self, tpp_warning_id warning_id,
+                            tpp_warning_invokeinfo *tpp_restrict result)
 #endif /* !TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 {
 	tpp_size i;

@@ -94,9 +94,9 @@ typedef enum tpp_warning_state {
 /************************************************************************/
 
 typedef enum tpp_warning_group_id {
-#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) wgroup_id,
+#undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS
 	TPP_WG_COUNT
@@ -128,9 +128,9 @@ tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen
 /************************************************************************/
 
 typedef enum tpp_warning_id {
-#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) warning_id,
+#undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DEFS
 	TPP_W_COUNT
@@ -170,9 +170,9 @@ tpp_warning_getnumbers(tpp_warning_id warning_id);
 /* Warning context ID (used internally to keep track
  * of warning states for groups & numbered warnings) */
 typedef enum tpp_warning_context_id {
-#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) TPP_WC_##wgroup_id,
+#undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 
 #if TPP_HAVE_WARNING_NUMBERS
@@ -181,6 +181,7 @@ typedef enum tpp_warning_context_id {
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) TPP_WC_##warning_id,
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
+#undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DECLARE_NUMBERED_WARNING
 #endif /* TPP_HAVE_WARNING_NUMBERS */
@@ -233,16 +234,17 @@ tpp_warning_context_id_aswarning(tpp_warning_context_id ctx_id);
 /************************************************************************/
 typedef union tpp_warnings_state {
 	struct {
-#undef GUARD_TPP_AMALGAMATION_H
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
 	unsigned int TPP_INTERNAL(twsg_##wgroup_id): 2; /* One of `tpp_warning_state' */
+#undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 #if TPP_HAVE_WARNING_NUMBERS
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) \
 	unsigned int TPP_INTERNAL(twsn_##warning_id): 2; /* One of `tpp_warning_state' */
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
+#undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DECLARE_NUMBERED_WARNING
 #endif /* TPP_HAVE_WARNING_NUMBERS */
@@ -382,24 +384,28 @@ tpp_warnings_setctx(tpp_warnings *tpp_restrict self,
                     tpp_warning_state state);
 #else /* TPP_HAVE_WARNINGS_SETCTX_MAYFAIL */
 #define tpp_warnings_setctx(self, ctx_id, state) \
-	(tpp_warnings_setctx_(self, ctx_id, state), TPP_EOK)
+	(_tpp_warnings_setctx_nofail(self, ctx_id, state), TPP_EOK)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_warnings_setctx_(tpp_warnings *tpp_restrict self,
-                     tpp_warning_context_id ctx_id,
-                     tpp_warning_state state);
+_tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
+                            tpp_warning_context_id ctx_id,
+                            tpp_warning_state state);
 #endif /* !TPP_HAVE_WARNINGS_SETCTX_MAYFAIL */
 
 
 
 typedef struct tpp_warning_invokeinfo {
-	tpp_warning_state      twii_state;  /* State with which the warning should be invoked.
-	                                     * Always one of:
-	                                     * - TPP_WSTATE_DISABLED
-	                                     * - TPP_WSTATE_WARN
-	                                     * - TPP_WSTATE_ERROR      #if TPP_HAVE_WARNING_ERROR
-	                                     * - TPP_WSTATE_FATAL */
-	tpp_warning_context_id twii_ctx_id; /* Context ID that for error messages */
+	tpp_warning_state      TPP_INTERNAL(twii_state);  /* State with which the warning should be invoked.
+	                                                   * Always one of:
+	                                                   * - TPP_WSTATE_DISABLED
+	                                                   * - TPP_WSTATE_WARN
+	                                                   * - TPP_WSTATE_ERROR      #if TPP_HAVE_WARNING_ERROR
+	                                                   * - TPP_WSTATE_FATAL */
+	tpp_warning_context_id TPP_INTERNAL(twii_ctx_id); /* Context ID that for error messages */
 } tpp_warning_invokeinfo;
+
+#define tpp_warning_invokeinfo_getstate(self) (self)->TPP_INTERNAL(twii_state)
+#define tpp_warning_invokeinfo_getctxid(self) (self)->TPP_INTERNAL(twii_ctx_id)
+
 
 #undef TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 #define TPP_HAVE_WARNINGS_INVOKE_MAYFAIL \
@@ -417,10 +423,10 @@ tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,
                     tpp_warning_invokeinfo *tpp_restrict result);
 #else /* TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 #define tpp_warnings_invoke(self, warning_id, result) \
-	(tpp_warnings_invoke_nofail(self, warning_id, result), TPP_EOK)
+	(_tpp_warnings_invoke_nofail(self, warning_id, result), TPP_EOK)
 TPP_DECL TPP_NONNULL((1, 3)) void TPPCALL
-tpp_warnings_invoke_nofail(tpp_warnings const *tpp_restrict self, tpp_warning_id warning_id,
-                           tpp_warning_invokeinfo *tpp_restrict result);
+_tpp_warnings_invoke_nofail(tpp_warnings const *tpp_restrict self, tpp_warning_id warning_id,
+                            tpp_warning_invokeinfo *tpp_restrict result);
 #endif /* !TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
 
 #endif /* TPP_HAVE_WARNINGS */
