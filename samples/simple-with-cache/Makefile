@@ -22,16 +22,11 @@
 TPP_SOURCE := ../../src
 
 # The main (single-source-file) program
-a.out: main.c config.h defs.h \
-	make-amalgamation-builtins.inl \
+a.out: main.c config.h defs.h defs-cache.inl \
 	$(TPP_SOURCE)/tpp-amalgamation.h \
 	$(TPP_SOURCE)/tpp-amalgamation.c
 	gcc -Wall -Wextra -Wno-misleading-indentation -o a.out main.c
 
 # How to (re-)generate the (optional) cache file that TPP can use to improve performance
-make-amalgamation-builtins.inl: config.h defs.h $(TPP_SOURCE)/tpp-amalgamation.h
-	deemon \
-		'-DCONFIG="$(shell realpath --relative-to=$(TPP_SOURCE) ./config.h)"' \
-		'-DDEFS="$(shell realpath --relative-to=$(TPP_SOURCE) ./defs.h)"' \
-		$(TPP_SOURCE)/make-amalgamation-builtins.dee \
-	> ./make-amalgamation-builtins.inl
+defs-cache.inl: config.h defs.h $(TPP_SOURCE)/tpp-amalgamation.h $(TPP_SOURCE)/makecache.py
+	python $(TPP_SOURCE)/makecache.py config.h > ./defs-cache.inl

@@ -20,10 +20,8 @@
 
 #include "config.h"
 
-#define TPP_CONFIG_USERDEFS_FILENAME \
-	"../samples/simple-with-builtins-cache/defs.h"
 #define TPP_CONFIG_BUILTINS_FILENAME \
-	"../samples/simple-with-builtins-cache/make-amalgamation-builtins.inl"
+	"../samples/simple-with-cache/defs-cache.inl"
 #include "../../src/tpp-amalgamation.c"
 
 #include <stdio.h>

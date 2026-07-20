@@ -108,9 +108,8 @@ tpp_warnings_copy(tpp_warnings *tpp_restrict self,
 	tpp_errno error = tpp_warnings_copyone(self, from);
 	if (TPP_ISERR(error))
 		return error;
-	while (from->tw_prev) {
+	while ((from = from->tw_prev) != NULL) {
 		tpp_warnings *from_prev_copy;
-		from = from->tw_prev;
 		from_prev_copy = _tpp_warnings_alloc();
 		if tpp_unlikely(!from_prev_copy) {
 			error = TPP_ENOMEM;
@@ -205,9 +204,7 @@ tpp_warnings_dup(tpp_warnings const *tpp_restrict self) {
 		goto err;
 	if (TPP_ISERR(tpp_warnings_copyone(result, self)))
 		goto err_r;
-#if TPP_HAVE_WARNINGS_PUSH_POP
 	result->tw_prev = self->tw_prev; /* Hadn't been copied by "tpp_warnings_copyone()" */
-#endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 	return result;
 err_r:
 	_tpp_warnings_free(result);
@@ -396,7 +393,7 @@ _tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
  * should be processed.
  *
  * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out of memory (only when "TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
+ * @return: TPP_ENOMEM: Out of memory (only "#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,

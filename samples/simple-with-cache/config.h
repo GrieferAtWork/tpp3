@@ -87,3 +87,5 @@
 #define TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL 1
 #define TPP_HAVE_TOK_QMARK_QMARK 1
 #define TPP_HAVE_TOK_QMARK_EQUAL 1
+#define TPP_CONFIG_USERDEFS_FILENAME \
+	"../samples/simple-with-cache/defs.h"

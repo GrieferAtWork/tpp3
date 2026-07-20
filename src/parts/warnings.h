@@ -416,7 +416,7 @@ typedef struct tpp_warning_invokeinfo {
  * should be processed.
  *
  * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out of memory (only when "TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
+ * @return: TPP_ENOMEM: Out of memory (only "#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,
