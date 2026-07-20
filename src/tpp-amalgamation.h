@@ -5287,6 +5287,8 @@ TPP_DECL_END
  * necessary because TPP is a text-based preprocessor. Trying to get
  * L/C information on the associated `TPP_TOK_SPACE` will fail.
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION* 
+ *
  * @detect: #define FOO()         foo
  *          #define BAR           bar
  *          #define SCAN2(x)      pre##x##post
@@ -16157,10 +16159,11 @@ tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size);
 #endif /* !TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
 
 #undef TPP_HAVE_MACRO_FLAGS
-#if (TPP_HAVE_NAMED_VARARGS_IN_MACROS || \
-     TPP_HAVE_VA_ARGS_IN_MACROS ||       \
-     TPP_HAVE_MACRO_RECURSION ||         \
-     TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if (TPP_HAVE_NAMED_VARARGS_IN_MACROS ||                   \
+     TPP_HAVE_VA_ARGS_IN_MACROS ||                         \
+     TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) ||           \
+     TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) || \
+     TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE))
 #define TPP_HAVE_MACRO_FLAGS 1
 #else /* ... */
 #define TPP_HAVE_MACRO_FLAGS 0
@@ -16197,6 +16200,9 @@ tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size);
 #define TPP_MACRO_FLAG_SELFEXPAND UINT8_C(0x04) /* After being expanded, this function is allowed to re-invoke itself and be expanded, when
                                                  * the generated text is not identical to a previous iteration. (s.a.: `-fmacro-recursion') */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+#define TPP_MACRO_FLAG_MAGIC_WHITESPACE UINT8_C(0x08) /* Add extra whitespace during argument expansion when necessary */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
 
@@ -16346,6 +16352,11 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #else /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
 #define tpp_macro_allowsselfexpansion(self) (TPP_HAVE_MACRO_RECURSION != 0)
 #endif /* !TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+#define tpp_macro_hasmagicwhitespace(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_MAGIC_WHITESPACE)
+#else /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
+#define tpp_macro_hasmagicwhitespace(self) (TPP_HAVE_MAGIC_WHITESPACE != 0)
+#endif /* !TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 
 
 
@@ -17634,7 +17645,7 @@ typedef struct tpp_warning_invokeinfo {
  * should be processed.
  *
  * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out of memory (only when "TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
+ * @return: TPP_ENOMEM: Out of memory (only "#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,

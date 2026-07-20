@@ -13220,9 +13220,8 @@ tpp_warnings_copy(tpp_warnings *tpp_restrict self,
 	tpp_errno error = tpp_warnings_copyone(self, from);
 	if (TPP_ISERR(error))
 		return error;
-	while (from->tw_prev) {
+	while ((from = from->tw_prev) != NULL) {
 		tpp_warnings *from_prev_copy;
-		from = from->tw_prev;
 		from_prev_copy = _tpp_warnings_alloc();
 		if tpp_unlikely(!from_prev_copy) {
 			error = TPP_ENOMEM;
@@ -13317,9 +13316,7 @@ tpp_warnings_dup(tpp_warnings const *tpp_restrict self) {
 		goto err;
 	if (TPP_ISERR(tpp_warnings_copyone(result, self)))
 		goto err_r;
-#if TPP_HAVE_WARNINGS_PUSH_POP
 	result->tw_prev = self->tw_prev; /* Hadn't been copied by "tpp_warnings_copyone()" */
-#endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 	return result;
 err_r:
 	_tpp_warnings_free(result);
@@ -13508,7 +13505,7 @@ _tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
  * should be processed.
  *
  * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out of memory (only when "TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
+ * @return: TPP_ENOMEM: Out of memory (only "#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,
@@ -24324,6 +24321,10 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	if (tpp_lexer_has(self, MACRO_RECURSION))
 		builder.mab_flags |= TPP_MACRO_FLAG_SELFEXPAND;
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+	if (tpp_lexer_has(self, MAGIC_WHITESPACE))
+		builder.mab_flags |= TPP_MACRO_FLAG_MAGIC_WHITESPACE;
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
 	/* Parse macro argument list */
@@ -30257,10 +30258,11 @@ typedef struct tpp_macro_expinfo {
 /* Initialize "self" by expanding `argument_start...argument_end'
  * @return: TPP_EOK: Success
  * @return: * :      Error (must be propagated) */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
                        tpp_lexer_arginfo const *tpp_restrict arginfo,
-                       tpp_lexer *tpp_restrict lexer) {
+                       tpp_lexer *tpp_restrict lexer,
+                       tpp_macro const *tpp_restrict macro) {
 	/* Must actually expand argument data! (i.e.: when text contains
 	 * "__TPP_EVAL(10+20)", then our output must contain "30")
 	 *
@@ -30298,6 +30300,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	tpp_char const *expected_simple_tok_start;
 	tpp_assert(tpp_lexer_getfile(lexer)->tf_prev == NULL);
 	expected_simple_tok_start = arginfo->tlai_start;
+	(void)macro;
 
 next_tok:
 	tok = tpp_lexer_yield(lexer); /* Caller has pre-loaded, so no need for `tpp_lexer_yield_blocking()' */
@@ -30370,7 +30373,7 @@ again_print_token:
 	 * doesn't add any whitespace, but also doesn't fall into the trap MSVC falls
 	 * into, and TPP is able to emulate under "-DTPP_HAVE_MAGIC_WHITESPACE=0")
 	 */
-	if (tpp_lexer_has(lexer, MAGIC_WHITESPACE)) {
+	if (tpp_macro_hasmagicwhitespace(macro)) {
 		if (tpp_token_require_whitespace(prev_tok, tok)) {
 			if (!tpp_string_buffer_append(&buffer, (tpp_char const *)" ", 1))
 				goto err_builder_nomem;
@@ -30662,7 +30665,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 				tpp_errno error;
 				tpp_macro_expinfo *expand = &invoke_expinfo[i];
 				tpp_file_subtext_setchunk_fromarg(file, arginfo);
-				error = tpp_macro_expinfo_init(expand, arginfo, self);
+				error = tpp_macro_expinfo_init(expand, arginfo, self, macro);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
 					tpp_lexer_popallfiles(self);
@@ -33543,7 +33546,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 			/* Check if expansion of the macro is allowed. */
 			if (macro->tm_expansions > 0) {
 #if TPP_HAVE_MACRO_RECURSION
-				if (!(macro->tm_flags & TPP_MACRO_FLAG_SELFEXPAND))
+				if (!tpp_macro_allowsselfexpansion(macro))
 #endif /* TPP_HAVE_MACRO_RECURSION */
 				{
 					return tok;

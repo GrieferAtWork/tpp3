@@ -49,10 +49,11 @@ TPP_DECL_BEGIN
 #endif /* !TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
 
 #undef TPP_HAVE_MACRO_FLAGS
-#if (TPP_HAVE_NAMED_VARARGS_IN_MACROS || \
-     TPP_HAVE_VA_ARGS_IN_MACROS ||       \
-     TPP_HAVE_MACRO_RECURSION ||         \
-     TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if (TPP_HAVE_NAMED_VARARGS_IN_MACROS ||                   \
+     TPP_HAVE_VA_ARGS_IN_MACROS ||                         \
+     TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) ||           \
+     TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) || \
+     TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE))
 #define TPP_HAVE_MACRO_FLAGS 1
 #else /* ... */
 #define TPP_HAVE_MACRO_FLAGS 0
@@ -89,6 +90,9 @@ TPP_DECL_BEGIN
 #define TPP_MACRO_FLAG_SELFEXPAND UINT8_C(0x04) /* After being expanded, this function is allowed to re-invoke itself and be expanded, when
                                                  * the generated text is not identical to a previous iteration. (s.a.: `-fmacro-recursion') */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+#define TPP_MACRO_FLAG_MAGIC_WHITESPACE UINT8_C(0x08) /* Add extra whitespace during argument expansion when necessary */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
 
@@ -238,6 +242,11 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #else /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
 #define tpp_macro_allowsselfexpansion(self) (TPP_HAVE_MACRO_RECURSION != 0)
 #endif /* !TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+#define tpp_macro_hasmagicwhitespace(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_MAGIC_WHITESPACE)
+#else /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
+#define tpp_macro_hasmagicwhitespace(self) (TPP_HAVE_MAGIC_WHITESPACE != 0)
+#endif /* !TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 
 
 

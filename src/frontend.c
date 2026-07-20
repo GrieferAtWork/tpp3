@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 				tok = TPP_TOK_OFERR(error);
 			break;
 		}
-#if 0
+#if 1
 		fwrite(tpp_lexer_gettokenstart(&lexer), 1,
 		       tpp_lexer_gettokenlen(&lexer), stdout);
 #elif 0

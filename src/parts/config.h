@@ -555,6 +555,8 @@
  * necessary because TPP is a text-based preprocessor. Trying to get
  * L/C information on the associated `TPP_TOK_SPACE` will fail.
  *
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION* 
+ *
  * @detect: #define FOO()         foo
  *          #define BAR           bar
  *          #define SCAN2(x)      pre##x##post

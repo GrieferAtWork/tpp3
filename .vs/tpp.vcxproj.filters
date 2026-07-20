@@ -236,9 +236,6 @@
     <None Include="..\src\make-amalgamation.dee">
       <Filter>src</Filter>
     </None>
-    <None Include="..\src\make-amalgamation-builtins.dee">
-      <Filter>src</Filter>
-    </None>
     <None Include="..\src\parts\config.dee">
       <Filter>src\parts</Filter>
     </None>
@@ -253,6 +250,9 @@
     </None>
     <None Include="..\src\parts\token-encodestring-mblf.dee">
       <Filter>src\parts</Filter>
+    </None>
+    <None Include="..\src\makecache.py">
+      <Filter>src</Filter>
     </None>
   </ItemGroup>
 </Project>

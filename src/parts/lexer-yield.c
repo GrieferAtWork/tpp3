@@ -2557,7 +2557,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 			/* Check if expansion of the macro is allowed. */
 			if (macro->tm_expansions > 0) {
 #if TPP_HAVE_MACRO_RECURSION
-				if (!(macro->tm_flags & TPP_MACRO_FLAG_SELFEXPAND))
+				if (!tpp_macro_allowsselfexpansion(macro))
 #endif /* TPP_HAVE_MACRO_RECURSION */
 				{
 					return tok;

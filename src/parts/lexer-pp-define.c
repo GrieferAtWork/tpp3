@@ -1354,6 +1354,10 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	if (tpp_lexer_has(self, MACRO_RECURSION))
 		builder.mab_flags |= TPP_MACRO_FLAG_SELFEXPAND;
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+	if (tpp_lexer_has(self, MAGIC_WHITESPACE))
+		builder.mab_flags |= TPP_MACRO_FLAG_MAGIC_WHITESPACE;
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
 	/* Parse macro argument list */

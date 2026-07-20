@@ -92,9 +92,9 @@
     <None Include="..\doc\config.md" />
     <None Include="..\LICENSE" />
     <None Include="..\README.md" />
-    <None Include="..\src\make-amalgamation-builtins.dee" />
     <None Include="..\src\make-amalgamation.dee" />
     <None Include="..\src\make-config-doc.dee" />
+    <None Include="..\src\makecache.py" />
     <None Include="..\src\Makefile" />
     <None Include="..\src\parts\config.dee" />
     <None Include="..\src\parts\ctype-db\.gitignore" />

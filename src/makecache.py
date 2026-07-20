@@ -56,17 +56,6 @@ def writeln_stderr(line):
 	MY_STDERR.flush()
 
 
-def printhelp():
-	print("Usage: bash makecache.sh [OPTIONS...] [CONFIG_FILE]")
-	print("OPTIONS:")
-	print("	--cc=*                       Specify the C compiler to use")
-	print("	-*                           Extra flags for C compiler")
-	print("	--help                       Display this help")
-	print("CONFIG_FILE:")
-	print("	Filename for C source file containing your #define TPP_* config macros")
-	sys.exit(0)
-
-
 def tpp_hashof(s):
 	result = 1
 	for ch in s:
@@ -302,6 +291,15 @@ def load_amalgamation_builtins(CC, CFLAGS, AMALGAMATION_H, CONFIG_FILE):
 
 
 
+def printhelp():
+	print("Usage: bash makecache.sh [OPTIONS...] [CONFIG_FILE]")
+	print("OPTIONS:")
+	print("	--cc=*                       Specify the C compiler to use")
+	print("	-*                           Extra flags for C compiler")
+	print("	--help                       Display this help")
+	print("CONFIG_FILE:")
+	print("	Filename for C source file containing your #define TPP_* config macros")
+	sys.exit(0)
 
 def main(args):
 	CC = "gcc -E"

@@ -122,10 +122,11 @@ typedef struct tpp_macro_expinfo {
 /* Initialize "self" by expanding `argument_start...argument_end'
  * @return: TPP_EOK: Success
  * @return: * :      Error (must be propagated) */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
                        tpp_lexer_arginfo const *tpp_restrict arginfo,
-                       tpp_lexer *tpp_restrict lexer) {
+                       tpp_lexer *tpp_restrict lexer,
+                       tpp_macro const *tpp_restrict macro) {
 	/* Must actually expand argument data! (i.e.: when text contains
 	 * "__TPP_EVAL(10+20)", then our output must contain "30")
 	 *
@@ -163,6 +164,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	tpp_char const *expected_simple_tok_start;
 	tpp_assert(tpp_lexer_getfile(lexer)->tf_prev == NULL);
 	expected_simple_tok_start = arginfo->tlai_start;
+	(void)macro;
 
 next_tok:
 	tok = tpp_lexer_yield(lexer); /* Caller has pre-loaded, so no need for `tpp_lexer_yield_blocking()' */
@@ -235,7 +237,7 @@ again_print_token:
 	 * doesn't add any whitespace, but also doesn't fall into the trap MSVC falls
 	 * into, and TPP is able to emulate under "-DTPP_HAVE_MAGIC_WHITESPACE=0")
 	 */
-	if (tpp_lexer_has(lexer, MAGIC_WHITESPACE)) {
+	if (tpp_macro_hasmagicwhitespace(macro)) {
 		if (tpp_token_require_whitespace(prev_tok, tok)) {
 			if (!tpp_string_buffer_append(&buffer, (tpp_char const *)" ", 1))
 				goto err_builder_nomem;
@@ -527,7 +529,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 				tpp_errno error;
 				tpp_macro_expinfo *expand = &invoke_expinfo[i];
 				tpp_file_subtext_setchunk_fromarg(file, arginfo);
-				error = tpp_macro_expinfo_init(expand, arginfo, self);
+				error = tpp_macro_expinfo_init(expand, arginfo, self, macro);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
 					tpp_lexer_popallfiles(self);
