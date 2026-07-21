@@ -1,0 +1,3 @@
+[submodule "src/external/libiconv"]
+	path = src/external/libiconv
+	url = https://github.com/GrieferAtWork/kos-libiconv.git
