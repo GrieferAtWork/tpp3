@@ -1535,8 +1535,8 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 		tpp_char const *token_start = tpp_lexer_gettokenstart(self);
 		tpp_size token_len = tpp_lexer_gettokenlen(self);
 #if TPP_HAVE_ESCAPED_KEYWORDS
-		tpp_hash hash = tpp_hashof_esc(token_start, token_len, file);
-		ro_macro_keyword = tpp_lexer_kwds_newkeyword_esc(self, token_start, token_len, hash, file);
+		tpp_hash hash = tpp_hashof_esc(token_start, token_len, self);
+		ro_macro_keyword = tpp_lexer_kwds_newkeyword_esc(self, token_start, token_len, hash);
 #else /* TPP_HAVE_ESCAPED_KEYWORDS */
 		tpp_hash hash = tpp_hashof(token_start, token_len);
 		ro_macro_keyword = tpp_lexer_kwds_newkeyword(self, token_start, token_len, hash);

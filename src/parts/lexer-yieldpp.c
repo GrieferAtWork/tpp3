@@ -1573,7 +1573,9 @@ again:
 		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
 
+	/* TODO: offset ( https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3540r2.html ) */
 	/* XXX: gnu::offset */
+	/* XXX: clang::offset */
 	/* XXX: gnu::base64 */
 
 	case TPP_KWD_prefix:

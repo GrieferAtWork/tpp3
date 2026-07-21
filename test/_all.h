@@ -19,7 +19,7 @@
  */
 /*[[[deemon
 import fs;
-for (local e: fs.dir(".")) {
+for (local e: fs.dir(".").sorted()) {
 	if (e !in ["utils", "_all.h"])
 		print(f'#include "{e}"');
 }

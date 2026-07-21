@@ -873,6 +873,20 @@ not_a_trigraph:
 	}
 #endif /* TPP_HAVE_TRIGRAPHS */
 
+	/* Deal with special case: when NUL was read and we're now at the end of the file,
+	 * we have to (try to) extend the file once; otherwise, that NUL might wrongfully
+	 * be interpreted as a premature EOF.
+	 *
+	 * This still (incorrectly) identifies a trailing NUL-byte as EOF if it's the last
+	 * byte of a file, but as far as edge-cases go, that is acceptable! */
+	if (ch == '\0' && (pos >= file->tf_end)) {
+		tpp_size rel_pos = tpp_file_ptr2rel(file, pos);
+		tpp_errno error = tpp_file_expandchunk(file);
+		pos = tpp_file_rel2ptr(file, rel_pos);
+		if (TPP_ISERR(error))
+			return error;
+	}
+
 	*p_pos = pos;
 	*p_result = ch;
 	return TPP_EOK;
@@ -1533,7 +1547,19 @@ warn_premature_eof:
 #endif /* NEED_tpp_lexer_seek_end_of_raw_string */
 
 
-#if TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+#if TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+#if TPP_HAVE_UNICODE
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
+tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end, tpp_file const *file);
+#else /* TPP_HAVE_UNICODE */
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end);
+#define tpp_decode_named_skipspace(iter, end, file) _tpp_decode_named_skipspace(iter, end)
+#endif /* !TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+
+
 /* Seek end of unichar: foo\U12345678XY
  *                         ^=in      ^out */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
@@ -1547,75 +1573,117 @@ tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	 * For this purpose, the "*_esc" version of keyword lookup functions
 	 * should also have another extension that lets them treat \u and \U
 	 * sequences specially! */
-	tpp_errno error = TPP_EOK;
-	tpp_char const *scan = *p_pos;
-	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_size rel_start = tpp_file_ptr2rel(file, scan);
-	tpp_assert(scan < file->tf_end);
-#if TPP_HAVE_TRIGRAPHS
-	tpp_assert(*scan == '\\' || *scan == '?');
-	++scan;
-	if (scan[-1] == '?')
-		scan += 2; /* ??/ */
-#else /* TPP_HAVE_TRIGRAPHS */
-	tpp_assert(*scan == '\\');
-	++scan;
-#endif /* !TPP_HAVE_TRIGRAPHS */
-	if (scan >= file->tf_end) {
-		tpp_size rel_pos = tpp_file_ptr2rel(file, scan);
-		error = tpp_file_expandchunk(file);
+	tpp_char ch;
+	tpp_size rel_start = tpp_file_ptr2rel(tpp_lexer_getfile(self), *p_pos);
+	tpp_errno error = tpp_lexer_readchar(self, p_pos, &ch);
+	if (TPP_ISERR(error))
+		goto done;
+	if (ch != '\\')
+		goto done;
+	error = tpp_lexer_readchar(self, p_pos, &ch);
+	if (TPP_ISERR(error))
+		goto done;
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
+	if (ch == 'N' && tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED)) {
+#if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+		tpp_size rel_named_start;
+		tpp_size rel_named_end;
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+		tpp_size recursion = 0;
+		error = tpp_lexer_readchar(self, p_pos, &ch);
 		if (TPP_ISERR(error))
 			goto done;
-		scan = tpp_file_rel2ptr(file, rel_pos);
-	}
-	if (*scan == 'u' || *scan == 'U') {
-		/* No BSE allowed in here -- \u \U happens at the same time,
-		 * and I don't want to allow one escape escaping another escape.
-		 *
-		 * NOTE: If this ever needs to be added, would also need to add
-		 *       support in "tpp_decode_bsi()" (our partner function)
-		 *
-		 * TODO: This is incorrect -- the C standard allows BSE inside
-		 *       \u (and \U)-characters keywords since C++23:
-		 * https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2621r2.pdf
-		 */
-		unsigned int cur_digit = 0;
-		unsigned int max_digit = *scan == 'U' ? 8 : 4;
-		do {
-			tpp_char nibble_ch;
-			if ((scan + cur_digit + 1) >= file->tf_end) {
-				tpp_size rel_pos = tpp_file_ptr2rel(file, scan);
-				error = tpp_file_expandchunk(file);
-				if (TPP_ISERR(error))
-					goto done;
-				scan = tpp_file_rel2ptr(file, rel_pos);
-				if ((scan + cur_digit + 1) >= file->tf_end)
+		if (ch != '{')
+			goto done;
+#if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+		rel_named_start = tpp_file_ptr2rel(tpp_lexer_getfile(self), *p_pos);
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+		for (;;) {
+#if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+			rel_named_end = tpp_file_ptr2rel(tpp_lexer_getfile(self), *p_pos);
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+			error = tpp_lexer_readchar(self, p_pos, &ch);
+			if (TPP_ISERR(error))
+				goto done;
+			if (ch == '{') {
+				++recursion;
+			} else if (ch == '}') {
+				if (recursion == 0)
 					break;
+				--recursion;
+			} else if (ch == '\0' && (*p_pos >= tpp_file_getend(tpp_lexer_getfile(self)))) {
+				break; /* EOF in escaped identifier */
 			}
-			nibble_ch = scan[cur_digit + 1];
-			if (tpp_ascii_isdigit(nibble_ch)) {
-				/* ... */
-			} else if (tpp_ascii_islwrxdigit(nibble_ch)) {
-				/* ... */
-			} else if (tpp_ascii_isuprxdigit(nibble_ch)) {
-				/* ... */
-			} else {
+		}
+
+		/* Scan over the named escape sequence to verify that everything can be decoded */
+#if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+		{
+			tpp_char const *named_start = tpp_file_rel2ptr(tpp_lexer_getfile(self), rel_named_start);
+			tpp_char const *named_end   = tpp_file_rel2ptr(tpp_lexer_getfile(self), rel_named_end);
+			for (;;) {
+				tpp_size count;
+				tpp_unichar uc[TPP_DECODE_NAMED_ESCAPE_MAXLEN];
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+				if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY))
+					named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(self));
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+				count = tpp_decode_named_escape(&named_start, named_end, uc, self);
+				if (count == 0)
+					break;
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+				if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY)) {
+					named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(self));
+					if (named_start < named_end && *named_start == ',') {
+						named_start = tpp_decode_named_skipspace(named_start + 1, named_end, tpp_lexer_getfile(self));
+						continue;
+					}
+				}
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 				break;
 			}
-			++cur_digit;
-		} while (cur_digit < max_digit);
-		if (cur_digit == 0)
-			goto done;
-		scan += 1;
-		scan += cur_digit;
-		*p_pos = scan;
+			if (named_start < named_end) {
+				tpp_token *const token = tpp_lexer_gettoken(self);
+				tpp_char const *const saved_start = token->tt_start;
+				tpp_char const *const saved_end = token->tt_end;
+				token->tt_start = named_start;
+				token->tt_end   = named_end;
+				error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
+				token->tt_start = saved_start;
+				token->tt_end   = saved_end;
+				return error;
+			}
+		}
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+
 		return TPP_EOK;
 	}
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED */
+
+#if TPP_HAVE_IDENTIFIER_ESCAPE_UNI
+	if ((ch == 'u' || ch == 'U') && tpp_lexer_has(self, IDENTIFIER_ESCAPE_UNI)) {
+		unsigned int cur_digit = 0;
+		unsigned int max_digit = ch == 'U' ? 8 : 4;
+		tpp_size rel_end;
+		do {
+			rel_end = tpp_file_ptr2rel(tpp_lexer_getfile(self), *p_pos);
+			error = tpp_lexer_readchar(self, p_pos, &ch);
+			if (TPP_ISERR(error))
+				goto done;
+			if (!tpp_ascii_isxdigit(ch))
+				break;
+		} while (++cur_digit < max_digit);
+		if (cur_digit > 0) {
+			*p_pos = tpp_file_rel2ptr(tpp_lexer_getfile(self), rel_end);
+			return TPP_EOK;
+		}
+	}
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_UNI */
 done:
-	*p_pos = tpp_file_rel2ptr(file, rel_start);
+	*p_pos = tpp_file_rel2ptr(tpp_lexer_getfile(self), rel_start);
 	return error;
 }
-#endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_UNI */
 
 
 #if TPP_HAVE_TOK_C_FLOAT
@@ -4317,8 +4385,9 @@ continue_pascal_comment_with_ch2:
 
 /************************************************************************/
 	case '\\': {
-#if TPP_HAVE_ESCAPE_IN_IDENTIFIERS
-		if (tpp_lexer_has(self, ESCAPE_IN_IDENTIFIERS)) {
+#if TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
+		if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_UNI) ||
+		    tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED)) {
 			tpp_char const *npos;
 			tpp_size rel_before, rel_after;
 			npos = tpp_file_rel2ptr(file, rel_start);
@@ -4334,7 +4403,7 @@ continue_pascal_comment_with_ch2:
 #define WANT_handle_keyword_with_esc
 			}
 		}
-#endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED */
 		{
 #if TPP_HAVE_BSE
 			tpp_char const *npos;
@@ -5262,8 +5331,9 @@ handle_keyword_with_esc:
 				{
 					break; /* No backslash */
 				}
-#if TPP_HAVE_ESCAPE_IN_IDENTIFIERS
-				if (tpp_lexer_has(self, ESCAPE_IN_IDENTIFIERS)) {
+#if TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
+				if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_UNI) ||
+					tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED)) {
 					tpp_char const *npos = pos;
 					tpp_size rel_pos;
 					rel_pos = tpp_file_ptr2rel(file, pos);
@@ -5282,7 +5352,7 @@ handle_keyword_with_esc:
 						continue;
 					}
 				}
-#endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED */
 				{
 #if TPP_HAVE_BSE
 					tpp_char const *npos = pos;
@@ -5307,9 +5377,9 @@ handle_keyword_with_esc:
 							rel_kwd_end = tpp_file_ptr2rel(file, pos);
 						} else {
 							/* Still continue in case there's more to be found... */
-#if !TPP_HAVE_ESCAPE_IN_IDENTIFIERS
+#if !TPP_HAVE_IDENTIFIER_ESCAPE_UNI
 							break; /* No need to continue without \u-identifiers */
-#endif /* TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_UNI */
 						}
 						continue;
 					}
@@ -5325,11 +5395,11 @@ handle_keyword_with_esc:
 			kwd_len   = (tpp_size)(pos - kwd_start);
 #if TPP_HAVE_ESCAPED_KEYWORDS
 			if (uses_esc) {
-				kwd_hash = tpp_hashof_esc(kwd_start, kwd_len, file);
+				kwd_hash = tpp_hashof_esc(kwd_start, kwd_len, self);
 #if TPP_HAVE_USER_KEYWORDS
-				kwd = tpp_lexer_kwds_newkeyword_esc(self, kwd_start, kwd_len, kwd_hash, file);
+				kwd = tpp_lexer_kwds_newkeyword_esc(self, kwd_start, kwd_len, kwd_hash);
 #else /* TPP_HAVE_USER_KEYWORDS */
-				kwd = tpp_lexer_kwds_getkeyword_esc(self, kwd_start, kwd_len, kwd_hash, file);
+				kwd = tpp_lexer_kwds_getkeyword_esc(self, kwd_start, kwd_len, kwd_hash);
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 			} else
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */

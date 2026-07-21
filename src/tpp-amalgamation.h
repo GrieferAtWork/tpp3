@@ -864,14 +864,30 @@ TPP_EXTENSION(TPP_EXT_BSE, TPP_EXTNAME_BSE, TPP_CONF_DEFAULT(TPP_HAVE_BSE))
 TPP_EXTENSION(TPP_EXT_BSE_WHITESPACE, TPP_EXTNAME_BSE_WHITESPACE, TPP_CONF_DEFAULT(TPP_HAVE_BSE_WHITESPACE))
 #define _tpp_lexer_has_BSE_WHITESPACE(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_BSE_WHITESPACE)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_BSE_WHITESPACE) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
-#ifndef TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS
-#define TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS "extended-identifiers"
-#endif /* !TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS */
-#define TPP_EXT_ESCAPE_IN_IDENTIFIERS TPP_EXT_ESCAPE_IN_IDENTIFIERS
-TPP_EXTENSION(TPP_EXT_ESCAPE_IN_IDENTIFIERS, TPP_EXTNAME_ESCAPE_IN_IDENTIFIERS, TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS))
-#define _tpp_lexer_has_ESCAPE_IN_IDENTIFIERS(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_ESCAPE_IN_IDENTIFIERS)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_IDENTIFIER_ESCAPE_UNI)
+#ifndef TPP_EXTNAME_IDENTIFIER_ESCAPE_UNI
+#define TPP_EXTNAME_IDENTIFIER_ESCAPE_UNI "extended-identifiers"
+#endif /* !TPP_EXTNAME_IDENTIFIER_ESCAPE_UNI */
+#define TPP_EXT_IDENTIFIER_ESCAPE_UNI TPP_EXT_IDENTIFIER_ESCAPE_UNI
+TPP_EXTENSION(TPP_EXT_IDENTIFIER_ESCAPE_UNI, TPP_EXTNAME_IDENTIFIER_ESCAPE_UNI, TPP_CONF_DEFAULT(TPP_HAVE_IDENTIFIER_ESCAPE_UNI))
+#define _tpp_lexer_has_IDENTIFIER_ESCAPE_UNI(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_IDENTIFIER_ESCAPE_UNI)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_IDENTIFIER_ESCAPE_UNI) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
+#ifndef TPP_EXTNAME_IDENTIFIER_ESCAPE_NAMED
+#define TPP_EXTNAME_IDENTIFIER_ESCAPE_NAMED "named-extended-identifiers"
+#endif /* !TPP_EXTNAME_IDENTIFIER_ESCAPE_NAMED */
+#define TPP_EXT_IDENTIFIER_ESCAPE_NAMED TPP_EXT_IDENTIFIER_ESCAPE_NAMED
+TPP_EXTENSION(TPP_EXT_IDENTIFIER_ESCAPE_NAMED, TPP_EXTNAME_IDENTIFIER_ESCAPE_NAMED, TPP_CONF_DEFAULT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED))
+#define _tpp_lexer_has_IDENTIFIER_ESCAPE_NAMED(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_IDENTIFIER_ESCAPE_NAMED)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY)
+#ifndef TPP_EXTNAME_IDENTIFIER_ESCAPE_NAMED_MANY
+#define TPP_EXTNAME_IDENTIFIER_ESCAPE_NAMED_MANY "named-extended-identifiers-many"
+#endif /* !TPP_EXTNAME_IDENTIFIER_ESCAPE_NAMED_MANY */
+#define TPP_EXT_IDENTIFIER_ESCAPE_NAMED_MANY TPP_EXT_IDENTIFIER_ESCAPE_NAMED_MANY
+TPP_EXTENSION(TPP_EXT_IDENTIFIER_ESCAPE_NAMED_MANY, TPP_EXTNAME_IDENTIFIER_ESCAPE_NAMED_MANY, TPP_CONF_DEFAULT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY))
+#define _tpp_lexer_has_IDENTIFIER_ESCAPE_NAMED_MANY(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_IDENTIFIER_ESCAPE_NAMED_MANY)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_CPP_DIRECTIVES)
 #ifndef TPP_EXTNAME_CPP_DIRECTIVES
 #define TPP_EXTNAME_CPP_DIRECTIVES "cpp-directives"
@@ -2048,6 +2064,22 @@ TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_UNI_BRACE, TPP_EXTNAME_STRING_ESCAPE_UNI_BRA
 TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_UNI_BRACE_MANY, TPP_EXTNAME_STRING_ESCAPE_UNI_BRACE_MANY, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY))
 #define _tpp_lexer_has_STRING_ESCAPE_UNI_BRACE_MANY(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_UNI_BRACE_MANY)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_NAMED)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_NAMED
+#define TPP_EXTNAME_STRING_ESCAPE_NAMED "string-escape-named"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_NAMED */
+#define TPP_EXT_STRING_ESCAPE_NAMED TPP_EXT_STRING_ESCAPE_NAMED
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_NAMED, TPP_EXTNAME_STRING_ESCAPE_NAMED, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_NAMED))
+#define _tpp_lexer_has_STRING_ESCAPE_NAMED(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_NAMED)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_NAMED) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_NAMED_MANY)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_NAMED_MANY
+#define TPP_EXTNAME_STRING_ESCAPE_NAMED_MANY "string-escape-named-many"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_NAMED_MANY */
+#define TPP_EXT_STRING_ESCAPE_NAMED_MANY TPP_EXT_STRING_ESCAPE_NAMED_MANY
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_NAMED_MANY, TPP_EXTNAME_STRING_ESCAPE_NAMED_MANY, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_NAMED_MANY))
+#define _tpp_lexer_has_STRING_ESCAPE_NAMED_MANY(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_NAMED_MANY)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_NAMED_MANY) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #ifndef TPP_EXTNAME_STRING_ALLOW_MULTILINE
 #define TPP_EXTNAME_STRING_ALLOW_MULTILINE "string-allow-multiline"
@@ -2064,6 +2096,30 @@ TPP_EXTENSION(TPP_EXT_STRING_ALLOW_MULTILINE, TPP_EXTNAME_STRING_ALLOW_MULTILINE
 TPP_EXTENSION(TPP_EXT_STRING_AUTO_CONCAT, TPP_EXTNAME_STRING_AUTO_CONCAT, TPP_CONF_DEFAULT(TPP_HAVE_STRING_AUTO_CONCAT))
 #define _tpp_lexer_has_STRING_AUTO_CONCAT(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_AUTO_CONCAT)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_AUTO_CONCAT) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
+#ifndef TPP_EXTNAME_ESCAPE_NAMED_UNICODE_NAMES
+#define TPP_EXTNAME_ESCAPE_NAMED_UNICODE_NAMES "named-escape-unicode"
+#endif /* !TPP_EXTNAME_ESCAPE_NAMED_UNICODE_NAMES */
+#define TPP_EXT_ESCAPE_NAMED_UNICODE_NAMES TPP_EXT_ESCAPE_NAMED_UNICODE_NAMES
+TPP_EXTENSION(TPP_EXT_ESCAPE_NAMED_UNICODE_NAMES, TPP_EXTNAME_ESCAPE_NAMED_UNICODE_NAMES, TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES))
+#define _tpp_lexer_has_ESCAPE_NAMED_UNICODE_NAMES(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_ESCAPE_NAMED_UNICODE_NAMES)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD)
+#ifndef TPP_EXTNAME_ESCAPE_NAMED_UNICODE_ORD
+#define TPP_EXTNAME_ESCAPE_NAMED_UNICODE_ORD "named-escape-ord"
+#endif /* !TPP_EXTNAME_ESCAPE_NAMED_UNICODE_ORD */
+#define TPP_EXT_ESCAPE_NAMED_UNICODE_ORD TPP_EXT_ESCAPE_NAMED_UNICODE_ORD
+TPP_EXTENSION(TPP_EXT_ESCAPE_NAMED_UNICODE_ORD, TPP_EXTNAME_ESCAPE_NAMED_UNICODE_ORD, TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD))
+#define _tpp_lexer_has_ESCAPE_NAMED_UNICODE_ORD(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_ESCAPE_NAMED_UNICODE_ORD)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_ESCAPE_NAMED_XML)
+#ifndef TPP_EXTNAME_ESCAPE_NAMED_XML
+#define TPP_EXTNAME_ESCAPE_NAMED_XML "named-escape-xml"
+#endif /* !TPP_EXTNAME_ESCAPE_NAMED_XML */
+#define TPP_EXT_ESCAPE_NAMED_XML TPP_EXT_ESCAPE_NAMED_XML
+TPP_EXTENSION(TPP_EXT_ESCAPE_NAMED_XML, TPP_EXTNAME_ESCAPE_NAMED_XML, TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_NAMED_XML))
+#define _tpp_lexer_has_ESCAPE_NAMED_XML(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_ESCAPE_NAMED_XML)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_ESCAPE_NAMED_XML) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_TOK_EXCLAIM_EXCLAIM)
 #ifndef TPP_EXTNAME_TOK_EXCLAIM_EXCLAIM
 #define TPP_EXTNAME_TOK_EXCLAIM_EXCLAIM "tok-exclaim_exclaim"
@@ -3486,7 +3542,9 @@ TPP_WARNING(TPP_W_DEPRECATED_KEYWORD, 1(TPP_WG_DEPRECATED), 1(4995), TPP_WSTATE_
 /* -Wstring-escape                                                      */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_STRING_ESCAPE
-#define TPP_HAVE_TPP_WG_STRING_ESCAPE (TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE)
+#define TPP_HAVE_TPP_WG_STRING_ESCAPE                 \
+	(TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE || \
+	 TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE)
 #endif /* !TPP_HAVE_TPP_WG_STRING_ESCAPE */
 #if TPP_HAVE_TPP_WG_STRING_ESCAPE
 #ifndef TPP_WGNAME_STRING_ESCAPE
@@ -3501,6 +3559,12 @@ TPP_WGROUP(TPP_WG_STRING_ESCAPE, TPP_WGNAME_STRING_ESCAPE, TPP_WSTATE_WARN)
 TPP_WARNING(TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 1(4129), TPP_WSTATE_UNDEFINED,
             "unknown escape sequence: %Pt")
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
+
+#if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+#define TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+TPP_WARNING(TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 0(), ~,
+            "unknown named escaped sequence: %Pt")
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
 
 
 /************************************************************************/
@@ -5258,9 +5322,35 @@ TPP_DECL_END
  *
  * @detect: #define foo\u0062ar
  *          #ifdef foobar */
-#ifndef TPP_HAVE_ESCAPE_IN_IDENTIFIERS
-#define TPP_HAVE_ESCAPE_IN_IDENTIFIERS (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
-#endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+#ifndef TPP_HAVE_IDENTIFIER_ESCAPE_UNI
+#define TPP_HAVE_IDENTIFIER_ESCAPE_UNI (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
+#endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_UNI */
+
+/* Support for `\N{...}` in identifier names (see TODO)
+ * ```c
+ * int identifier\N{NO-BREAK SPACE}nbsp = 42;
+ * // Same as:
+ * int __TPP_IDENTIFIER("identifier\N{NO-BREAK SPACE}nbsp") = 42;
+ * ```
+ *
+ * What actually is allowed within `\N{...}` is controlled by:
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES`
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - `TPP_HAVE_ESCAPE_NAMED_XML`
+ *
+ * @detect: #define foo\N{LATIN SMALL LETTER B}ar
+ *          #ifdef foobar */
+#ifndef TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
+#define TPP_HAVE_IDENTIFIER_ESCAPE_NAMED (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fnamed-extended-identifiers" */
+#endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_NAMED */
+
+/* Extension to `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED`: accept
+ * multiple character names to appear within a `\N{...}`
+ * block. Without this extension, trying to spell multiple
+ * character will result in an unknown-character warning. */
+#ifndef TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+#define TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fnamed-extended-identifiers-many" */
+#endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 
 /* Specifies if *any* CPP directives are supported */
 #ifndef TPP_HAVE_CPP_DIRECTIVES
@@ -5922,9 +6012,9 @@ TPP_DECL_END
  *                           // will probably print the keyword as "a")
  * ```
  *
- * Similar functionality can also be achieved using `TPP_HAVE_ESCAPE_IN_IDENTIFIERS`
+ * Similar functionality can also be achieved using `TPP_HAVE_IDENTIFIER_ESCAPE_UNI`
  *
- * Note that unlike `TPP_HAVE_ESCAPE_IN_IDENTIFIERS`, `__TPP_IDENTIFIER`
+ * Note that unlike `TPP_HAVE_IDENTIFIER_ESCAPE_UNI`, `__TPP_IDENTIFIER`
  * can only be used in places where macros are expanded:
  * ```c
  * #__TPP_IDENTIFIER("define") foo 42  // Won't work
@@ -6865,6 +6955,23 @@ TPP_DECL_END
 #define TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY ((TPP_HAVE_STRING_ESCAPE_UNI_BRACE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) : 0) /* "-fstring-escape-uni-brace-many" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY */
 
+/* Support for `\N{...}` unicode ordinal escape sequences in strings.
+ * What actually is allowed within `\N{...}` is controlled by:
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES`
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - `TPP_HAVE_ESCAPE_NAMED_XML`
+ */
+#ifndef TPP_HAVE_STRING_ESCAPE_NAMED
+#define TPP_HAVE_STRING_ESCAPE_NAMED ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-named" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_NAMED */
+
+/* Support for `\N{FOO, BAR}` as alias for `\N{FOO}\N{BAR}`.
+ * This is an extension to `TPP_HAVE_STRING_ESCAPE_NAMED` and `TPP_HAVE_STRING_ESCAPE_NAMED`,
+ * meaning it takes no effect if neither of those extensions is enabled. */
+#ifndef TPP_HAVE_STRING_ESCAPE_NAMED_MANY
+#define TPP_HAVE_STRING_ESCAPE_NAMED_MANY (TPP_HAVE_STRING_ESCAPE_NAMED ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fstring-escape-named-many" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
+
 /* Enable support for large (> 1 byte) character constants in `tpp_lexer_decodestring()` */
 #ifndef TPP_HAVE_STRING_ESCAPE_BIGCHAR
 #define TPP_HAVE_STRING_ESCAPE_BIGCHAR (TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_HAVE_STRING_ESCAPE_HEX_BIG || TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE))
@@ -6923,6 +7030,54 @@ TPP_DECL_END
 #ifndef TPP_HAVE_STRING_AUTO_CONCAT
 #define TPP_HAVE_STRING_AUTO_CONCAT ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) /* "-fstring-auto-concat" */
 #endif /* !TPP_HAVE_STRING_AUTO_CONCAT */
+
+
+/* Enable API support for `tpp_decode_named_escape()`, which can be used to
+ * decode the contents of `\N{...}` escape sequences. Needed to implement
+ * `TPP_HAVE_STRING_ESCAPE_NAMED` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED`,
+ * whilst implementing the rules specified by:
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES`
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - `TPP_HAVE_ESCAPE_NAMED_XML` */
+#ifndef TPP_HAVE_DECODE_NAMED_ESCAPE
+#define TPP_HAVE_DECODE_NAMED_ESCAPE (TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
+#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE */
+
+
+/* Support for unicode names in `\N` like `\N{LATIN SMALL LETTER B}`.
+ * This feature affects the behavior of:
+ * - `TPP_HAVE_STRING_ESCAPE_NAMED`
+ * - `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED`
+ *
+ * Recognized names here are as defined by:
+ * - https://www.unicode.org/Public/14.0.0/ucd/NamesList.txt
+ */
+#ifndef TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES
+#define TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : 1) : 0) /* "-fnamed-escape-unicode" */
+#endif /* !TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES */
+
+/* Support for unicode names in `\N` (all of which are the same as `\u0100`):
+ * - `\N{U+0100}`
+ * - `\N{U+100}`
+ * - `\N{U+000100}`
+ * - `\N{0x0100}`
+ * - `\N{256}`
+ *
+ * This feature affects the behavior of:
+ * - `TPP_HAVE_STRING_ESCAPE_NAMED`
+ * - `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED` */
+#ifndef TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD
+#define TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fnamed-escape-ord" */
+#endif /* !TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD */
+
+/* Support for XML/HTML5 names in `\N`: `\N{&tab;}`
+ *
+ * This feature affects the behavior of:
+ * - `TPP_HAVE_STRING_ESCAPE_NAMED`
+ * - `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED` */
+#ifndef TPP_HAVE_ESCAPE_NAMED_XML
+#define TPP_HAVE_ESCAPE_NAMED_XML (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : 0) : 0) /* "-fnamed-escape-xml" */
+#endif /* !TPP_HAVE_ESCAPE_NAMED_XML */
 
 
 #undef TPP_HAVE_TOK_INT
@@ -8432,7 +8587,8 @@ TPP_DECL_END
      TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||   \
      TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||    \
      TPP_HAVE_TOK_BLOCK_CHAR_LITERAL ||       \
-     TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
+     TPP_HAVE_IDENTIFIER_ESCAPE_UNI ||        \
+     TPP_HAVE_DECODE_NAMED_ESCAPE)
 #define TPP_HAVE_TPP_UNICODE_WRITEUTF8 1
 #else /* ... */
 #define TPP_HAVE_TPP_UNICODE_WRITEUTF8 0
@@ -8638,9 +8794,9 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_FILE_GETFULLHASH */
 
 /* Provide a secondary set of keyword APIs that include support for `\`-escape sequences.
- * Needed to implement `TPP_HAVE_BSE` and `TPP_HAVE_ESCAPE_IN_IDENTIFIERS` */
+ * Needed to implement `TPP_HAVE_BSE`, `TPP_HAVE_IDENTIFIER_ESCAPE_UNI` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED` */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
-#define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
+#define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
 #endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
 
 /* Enable support for `tpp_io_compare_mtime()`.
@@ -9252,6 +9408,10 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
+#ifndef TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+#define TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_NAMED))
+#endif /* !TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
 #define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
 #endif /* !TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST */
@@ -9916,6 +10076,51 @@ TPP_DECL TPP_WUNUSED tpp_size TPPCALL
 tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
                  tpp_char const *rhs, tpp_size rhs_len);
 #endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
+
+
+/* Specifies that `tpp_decode_named_escape()` requires an extra `lexer`-parameter */
+#undef TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER
+#if (TPP_HAVE_DECODE_NAMED_ESCAPE &&                         \
+     (TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) || \
+      TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) ||   \
+      TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_XML)))
+#define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER 1
+#else /* ... */
+#define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER 0
+#endif /* !... */
+
+#if TPP_HAVE_DECODE_NAMED_ESCAPE
+
+/* Max # of unicode UTF-32 characters returned by `tpp_decode_named_escape()` */
+#define TPP_DECODE_NAMED_ESCAPE_MAXLEN 2
+
+/* Decode a named \N{...} sequence and update `*p_iter` to point to
+ * its end. This function implement the routing between the different
+ * (currently enabled) named escape decoders, as configured by:
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES`
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - `TPP_HAVE_ESCAPE_NAMED_XML`
+ *
+ * @return: 0 : Unknown named sequence (`*p_iter` is unchanged) 
+ * @return: * : The # of characters written to `result` (always `<= TPP_DECODE_NAMED_ESCAPE_MAXLEN`)*/
+#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER
+struct tpp_lexer;
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
+tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+                        tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN],
+                        struct tpp_lexer const *tpp_restrict lexer);
+#else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
+_tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN]);
+#define tpp_decode_named_escape(p_iter, end, result, lexer) \
+	_tpp_decode_named_escape(p_iter, end, result)
+#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER */
+#else /* TPP_HAVE_DECODE_NAMED_ESCAPE */
+#define TPP_DECODE_NAMED_ESCAPE_MAXLEN 0
+#define tpp_decode_named_escape(p_iter, end, result, lexer) \
+	TPP_SSIZE_OFERR(TPP_ENOENT)
+#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE */
 
 /************************************************************************/
 /* File: parts/string.h                                                 */
@@ -12173,7 +12378,9 @@ tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
 #undef TPP_HAVE_FEATURES
 #if (TPP_CONF_IS_FEAT(TPP_HAVE_BSE) ||                                    \
      TPP_CONF_IS_FEAT(TPP_HAVE_BSE_WHITESPACE) ||                         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_UNI) ||                  \
+     TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED) ||                \
+     TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY) ||           \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES) ||                         \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS) ||                             \
      TPP_CONF_IS_FEAT(TPP_HAVE_MAGIC_WHITESPACE) ||                       \
@@ -12321,8 +12528,13 @@ tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI) ||                      \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI_BRACE) ||                \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY) ||           \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_NAMED) ||                    \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_NAMED_MANY) ||               \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) ||                 \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT) ||                     \
+     TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) ||             \
+     TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) ||               \
+     TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_XML) ||                       \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_EXCLAIM_EXCLAIM) ||                    \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_EXCLAIM_EQUAL) ||                      \
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL) ||                \
@@ -12448,9 +12660,15 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_BSE_WHITESPACE)
 	TPP_FEAT_BSE_WHITESPACE,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BSE_WHITESPACE) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
-	TPP_FEAT_ESCAPE_IN_IDENTIFIERS,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_UNI)
+	TPP_FEAT_IDENTIFIER_ESCAPE_UNI,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_UNI) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
+	TPP_FEAT_IDENTIFIER_ESCAPE_NAMED,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY)
+	TPP_FEAT_IDENTIFIER_ESCAPE_NAMED_MANY,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES)
 	TPP_FEAT_CPP_DIRECTIVES,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES) */
@@ -12892,12 +13110,27 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY)
 	TPP_FEAT_STRING_ESCAPE_UNI_BRACE_MANY,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_NAMED)
+	TPP_FEAT_STRING_ESCAPE_NAMED,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_NAMED) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_NAMED_MANY)
+	TPP_FEAT_STRING_ESCAPE_NAMED_MANY,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_NAMED_MANY) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 	TPP_FEAT_STRING_ALLOW_MULTILINE,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT)
 	TPP_FEAT_STRING_AUTO_CONCAT,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
+	TPP_FEAT_ESCAPE_NAMED_UNICODE_NAMES,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD)
+	TPP_FEAT_ESCAPE_NAMED_UNICODE_ORD,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_XML)
+	TPP_FEAT_ESCAPE_NAMED_XML,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_XML) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_EXCLAIM_EXCLAIM)
 	TPP_FEAT_TOK_EXCLAIM_EXCLAIM,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_EXCLAIM_EXCLAIM) */
@@ -13247,10 +13480,18 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_BSE_WHITESPACE): 1;
 #define _tpp_lexer_has_BSE_WHITESPACE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_BSE_WHITESPACE)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_BSE_WHITESPACE) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
-		unsigned int TPP_INTERNAL(tff_ESCAPE_IN_IDENTIFIERS): 1;
-#define _tpp_lexer_has_ESCAPE_IN_IDENTIFIERS(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_ESCAPE_IN_IDENTIFIERS)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_UNI)
+		unsigned int TPP_INTERNAL(tff_IDENTIFIER_ESCAPE_UNI): 1;
+#define _tpp_lexer_has_IDENTIFIER_ESCAPE_UNI(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_IDENTIFIER_ESCAPE_UNI)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_UNI) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
+		unsigned int TPP_INTERNAL(tff_IDENTIFIER_ESCAPE_NAMED): 1;
+#define _tpp_lexer_has_IDENTIFIER_ESCAPE_NAMED(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_IDENTIFIER_ESCAPE_NAMED)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY)
+		unsigned int TPP_INTERNAL(tff_IDENTIFIER_ESCAPE_NAMED_MANY): 1;
+#define _tpp_lexer_has_IDENTIFIER_ESCAPE_NAMED_MANY(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_IDENTIFIER_ESCAPE_NAMED_MANY)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DIRECTIVES)
 		unsigned int TPP_INTERNAL(tff_CPP_DIRECTIVES): 1;
 #define _tpp_lexer_has_CPP_DIRECTIVES(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_CPP_DIRECTIVES)
@@ -13839,6 +14080,14 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_UNI_BRACE_MANY): 1;
 #define _tpp_lexer_has_STRING_ESCAPE_UNI_BRACE_MANY(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_UNI_BRACE_MANY)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_NAMED)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_NAMED): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_NAMED(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_NAMED)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_NAMED) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_NAMED_MANY)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_NAMED_MANY): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_NAMED_MANY(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_NAMED_MANY)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_NAMED_MANY) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		unsigned int TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE): 1;
 #define _tpp_lexer_has_STRING_ALLOW_MULTILINE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ALLOW_MULTILINE)
@@ -13847,6 +14096,18 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_STRING_AUTO_CONCAT): 1;
 #define _tpp_lexer_has_STRING_AUTO_CONCAT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_AUTO_CONCAT)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_AUTO_CONCAT) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
+		unsigned int TPP_INTERNAL(tff_ESCAPE_NAMED_UNICODE_NAMES): 1;
+#define _tpp_lexer_has_ESCAPE_NAMED_UNICODE_NAMES(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_ESCAPE_NAMED_UNICODE_NAMES)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD)
+		unsigned int TPP_INTERNAL(tff_ESCAPE_NAMED_UNICODE_ORD): 1;
+#define _tpp_lexer_has_ESCAPE_NAMED_UNICODE_ORD(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_ESCAPE_NAMED_UNICODE_ORD)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_XML)
+		unsigned int TPP_INTERNAL(tff_ESCAPE_NAMED_XML): 1;
+#define _tpp_lexer_has_ESCAPE_NAMED_XML(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_ESCAPE_NAMED_XML)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ESCAPE_NAMED_XML) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_EXCLAIM_EXCLAIM)
 		unsigned int TPP_INTERNAL(tff_TOK_EXCLAIM_EXCLAIM): 1;
 #define _tpp_lexer_has_TOK_EXCLAIM_EXCLAIM(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_TOK_EXCLAIM_EXCLAIM)
@@ -14320,9 +14581,15 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_BSE_WHITESPACE)
 #define _tpp_lexer_has_BSE_WHITESPACE(self) TPP_CONF_DEFAULT(TPP_HAVE_BSE_WHITESPACE)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_BSE_WHITESPACE) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
-#define _tpp_lexer_has_ESCAPE_IN_IDENTIFIERS(self) TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_ESCAPE_IN_IDENTIFIERS) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_IDENTIFIER_ESCAPE_UNI)
+#define _tpp_lexer_has_IDENTIFIER_ESCAPE_UNI(self) TPP_CONF_DEFAULT(TPP_HAVE_IDENTIFIER_ESCAPE_UNI)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_IDENTIFIER_ESCAPE_UNI) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
+#define _tpp_lexer_has_IDENTIFIER_ESCAPE_NAMED(self) TPP_CONF_DEFAULT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY)
+#define _tpp_lexer_has_IDENTIFIER_ESCAPE_NAMED_MANY(self) TPP_CONF_DEFAULT(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_CPP_DIRECTIVES)
 #define _tpp_lexer_has_CPP_DIRECTIVES(self) TPP_CONF_DEFAULT(TPP_HAVE_CPP_DIRECTIVES)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_CPP_DIRECTIVES) */
@@ -14764,12 +15031,27 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY)
 #define _tpp_lexer_has_STRING_ESCAPE_UNI_BRACE_MANY(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_NAMED)
+#define _tpp_lexer_has_STRING_ESCAPE_NAMED(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_NAMED)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_NAMED) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_NAMED_MANY)
+#define _tpp_lexer_has_STRING_ESCAPE_NAMED_MANY(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_NAMED_MANY)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_NAMED_MANY) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #define _tpp_lexer_has_STRING_ALLOW_MULTILINE(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ALLOW_MULTILINE)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ALLOW_MULTILINE) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_AUTO_CONCAT)
 #define _tpp_lexer_has_STRING_AUTO_CONCAT(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_AUTO_CONCAT)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_AUTO_CONCAT) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
+#define _tpp_lexer_has_ESCAPE_NAMED_UNICODE_NAMES(self) TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD)
+#define _tpp_lexer_has_ESCAPE_NAMED_UNICODE_ORD(self) TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_ESCAPE_NAMED_XML)
+#define _tpp_lexer_has_ESCAPE_NAMED_XML(self) TPP_CONF_DEFAULT(TPP_HAVE_ESCAPE_NAMED_XML)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_ESCAPE_NAMED_XML) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_TOK_EXCLAIM_EXCLAIM)
 #define _tpp_lexer_has_TOK_EXCLAIM_EXCLAIM(self) TPP_CONF_DEFAULT(TPP_HAVE_TOK_EXCLAIM_EXCLAIM)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_TOK_EXCLAIM_EXCLAIM) */
@@ -16891,6 +17173,7 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 #define tpp_hash_combine_hash(a, b) ((a) * 263 + (tpp_hash)(b))
 
 
+#undef TPP_HAVE_BSE_FILE_PARAM
 #if TPP_HAVE_BSE && TPP_HAVE_UNICODE
 #define TPP_HAVE_BSE_FILE_PARAM 1
 #define tpp_bse_file__PARAM  , tpp_file const *tpp_restrict file
@@ -16900,6 +17183,17 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 #define tpp_bse_file__PARAM  /* nothing */
 #define tpp_bse_file__ARG(x) /* nothing */
 #endif /* !TPP_HAVE_BSE || !TPP_HAVE_UNICODE */
+
+#if ((TPP_HAVE_BSE && TPP_HAVE_UNICODE) ||                                       \
+     (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && (TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER || \
+                                           TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS))))
+struct tpp_lexer;
+#define tpp_esc_lexer__PARAM  , struct tpp_lexer const *tpp_restrict lexer
+#define tpp_esc_lexer__ARG(x) , x
+#else /* ... */
+#define tpp_esc_lexer__PARAM  /* nothing */
+#define tpp_esc_lexer__ARG(x) /* nothing */
+#endif /* !... */
 
 
 /* Check if "ch" may be the first byte of a \-character */
@@ -16921,11 +17215,11 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
  * tpp_skipbse_bck: If "pos" points after a line-feed character, skip backward until start of BSE (if it is one) */
 #if TPP_HAVE_BSE
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-tpp_skipbse_fwd_(tpp_char const *pos, tpp_char const *end tpp_bse_file__PARAM);
+_tpp_skipbse_fwd(tpp_char const *pos, tpp_char const *end tpp_bse_file__PARAM);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-tpp_skipbse_bck_(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM);
-#define tpp_skipbse_fwd(pos, end, file)   (((pos) >= (end) || !_tpp_maybe_isbackslash(*(pos))) ? (pos) : tpp_skipbse_fwd_(pos, end tpp_bse_file__ARG(file)))
-#define tpp_skipbse_bck(pos, start, file) (((pos) <= (start) || !_tpp_maybe_islf((pos)[-1])) ? (pos) : tpp_skipbse_bck_(pos, start tpp_bse_file__ARG(file)))
+_tpp_skipbse_bck(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM);
+#define tpp_skipbse_fwd(pos, end, file)   (((pos) >= (end) || !_tpp_maybe_isbackslash(*(pos))) ? (pos) : _tpp_skipbse_fwd(pos, end tpp_bse_file__ARG(file)))
+#define tpp_skipbse_bck(pos, start, file) (((pos) <= (start) || !_tpp_maybe_islf((pos)[-1])) ? (pos) : _tpp_skipbse_bck(pos, start tpp_bse_file__ARG(file)))
 #else /* TPP_HAVE_BSE */
 #define tpp_skipbse_fwd(pos, end, file)   (pos)
 #define tpp_skipbse_bck(pos, start, file) (pos)
@@ -16935,8 +17229,8 @@ tpp_skipbse_bck_(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM)
 #if TPP_HAVE_ESCAPED_KEYWORDS
 /* Same as `tpp_hashof()', but skip over \-escaped linefeeds when calculating the hash */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
-tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PARAM);
-#define tpp_hashof_esc(kwd, len, file) tpp_hashof_esc_(kwd, len tpp_bse_file__ARG(file))
+tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_esc_lexer__PARAM);
+#define tpp_hashof_esc(kwd, len, lexer) tpp_hashof_esc_(kwd, len tpp_esc_lexer__ARG(lexer))
 
 /* Copy `in_text...+=len' to `out_text', whilst removing \-escaped linefeeds
  * The caller must ensure that `out_text' has space for at least `len' bytes,
@@ -16944,17 +17238,17 @@ tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PAR
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
 tpp_without_esc_(tpp_char *tpp_restrict out_text,
                  tpp_char const *tpp_restrict in_text,
-                 tpp_size len tpp_bse_file__PARAM);
-#define tpp_without_esc(out_text, in_text, len, file) \
-	tpp_without_esc_(out_text, in_text, len tpp_bse_file__ARG(file))
+                 tpp_size len tpp_esc_lexer__PARAM);
+#define tpp_without_esc(out_text, in_text, len, lexer) \
+	tpp_without_esc_(out_text, in_text, len tpp_esc_lexer__ARG(lexer))
 
 /* Compare 2 strings, one of which may contain \-escaped linefeeds that must be skipped. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) int TPPCALL
 tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
                 tpp_char const *rhs_with_esc, tpp_size rhs_len
-                tpp_bse_file__PARAM);
-#define tpp_memcmp_esc(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len, file) \
-	tpp_memcmp_esc_(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len tpp_bse_file__ARG(file))
+                tpp_esc_lexer__PARAM);
+#define tpp_memcmp_esc(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len, lexer) \
+	tpp_memcmp_esc_(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len tpp_esc_lexer__ARG(lexer))
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
@@ -16968,9 +17262,9 @@ tpp_builtin_getkeyword_byid(enum tpp_token_id id);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
                             tpp_size len, tpp_hash hash
-                            tpp_bse_file__PARAM);
-#define tpp_builtin_getkeyword_esc(kwd, len, hash, file) \
-	tpp_builtin_getkeyword_esc_(kwd, len, hash tpp_bse_file__ARG(file))
+                            tpp_esc_lexer__PARAM);
+#define tpp_builtin_getkeyword_esc(kwd, len, hash, lexer) \
+	tpp_builtin_getkeyword_esc_(kwd, len, hash tpp_esc_lexer__ARG(lexer))
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
@@ -17025,9 +17319,9 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
                               tpp_char const *tpp_restrict kwd,
                               tpp_size len, tpp_hash hash
-                              tpp_bse_file__PARAM);
-#define _tpp_keywords_getkeyword_esc(self, kwd, len, hash, file) \
-	_tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
+                              tpp_esc_lexer__PARAM);
+#define _tpp_keywords_getkeyword_esc(self, kwd, len, hash, lexer) \
+	_tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_esc_lexer__ARG(lexer))
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
@@ -17044,9 +17338,9 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
                              tpp_char const *tpp_restrict kwd,
                              tpp_size len, tpp_hash hash
-                             tpp_bse_file__PARAM);
-#define tpp_keywords_getkeyword_esc(self, kwd, len, hash, file) \
-	tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
+                             tpp_esc_lexer__PARAM);
+#define tpp_keywords_getkeyword_esc(self, kwd, len, hash, lexer) \
+	tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_esc_lexer__ARG(lexer))
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
@@ -17063,9 +17357,9 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_newkeyword_esc_(tpp_keywords *tpp_restrict self,
                              tpp_char const *tpp_restrict kwd,
                              tpp_size len, tpp_hash hash
-                             tpp_bse_file__PARAM);
-#define tpp_keywords_newkeyword_esc(self, kwd, len, hash, file) \
-	tpp_keywords_newkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
+                             tpp_esc_lexer__PARAM);
+#define tpp_keywords_newkeyword_esc(self, kwd, len, hash, lexer) \
+	tpp_keywords_newkeyword_esc_(self, kwd, len, hash tpp_esc_lexer__ARG(lexer))
 #endif /* TPP_HAVE_BSE */
 
 
@@ -18992,9 +19286,9 @@ typedef struct tpp_lexer {
 #define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
 #define tpp_lexer_kwds_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
 #if TPP_HAVE_ESCAPED_KEYWORDS
-#define _tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash, file) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
-#define tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash, file) tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
-#define tpp_lexer_kwds_newkeyword_esc(self, kwd, len, hash, file) tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, file)
+#define _tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
+#define tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash) tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
+#define tpp_lexer_kwds_newkeyword_esc(self, kwd, len, hash) tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 #define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->TPP_INTERNAL(tl_kwds), kwd)

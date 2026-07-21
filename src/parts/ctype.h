@@ -278,6 +278,51 @@ tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
                  tpp_char const *rhs, tpp_size rhs_len);
 #endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
 
+
+/* Specifies that `tpp_decode_named_escape()` requires an extra `lexer`-parameter */
+#undef TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER
+#if (TPP_HAVE_DECODE_NAMED_ESCAPE &&                         \
+     (TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) || \
+      TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) ||   \
+      TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_XML)))
+#define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER 1
+#else /* ... */
+#define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER 0
+#endif /* !... */
+
+#if TPP_HAVE_DECODE_NAMED_ESCAPE
+
+/* Max # of unicode UTF-32 characters returned by `tpp_decode_named_escape()` */
+#define TPP_DECODE_NAMED_ESCAPE_MAXLEN 2
+
+/* Decode a named \N{...} sequence and update `*p_iter` to point to
+ * its end. This function implement the routing between the different
+ * (currently enabled) named escape decoders, as configured by:
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES`
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - `TPP_HAVE_ESCAPE_NAMED_XML`
+ *
+ * @return: 0 : Unknown named sequence (`*p_iter` is unchanged) 
+ * @return: * : The # of characters written to `result` (always `<= TPP_DECODE_NAMED_ESCAPE_MAXLEN`)*/
+#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER
+struct tpp_lexer;
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
+tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+                        tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN],
+                        struct tpp_lexer const *tpp_restrict lexer);
+#else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
+_tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN]);
+#define tpp_decode_named_escape(p_iter, end, result, lexer) \
+	_tpp_decode_named_escape(p_iter, end, result)
+#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER */
+#else /* TPP_HAVE_DECODE_NAMED_ESCAPE */
+#define TPP_DECODE_NAMED_ESCAPE_MAXLEN 0
+#define tpp_decode_named_escape(p_iter, end, result, lexer) \
+	TPP_SSIZE_OFERR(TPP_ENOENT)
+#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE */
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

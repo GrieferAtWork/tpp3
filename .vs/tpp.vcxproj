@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\frontend.c" />
     <ClCompile Include="..\src\parts\builtins.c" />
+    <ClCompile Include="..\src\parts\ctype-named.c" />
     <ClCompile Include="..\src\parts\ctype-unicode.c" />
     <ClCompile Include="..\src\parts\ctype.c" />
     <ClCompile Include="..\src\parts\error.c" />

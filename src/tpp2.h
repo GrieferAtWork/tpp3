@@ -2440,7 +2440,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 /* Features... */
 #define TPP_HAVE_BSE                                  1 /* TPP2 didn't even let you disable this */
 #define TPP_HAVE_BSE_WHITESPACE                       0 /* TPP2 didn't support whitespace between \ and LF */
-#define TPP_HAVE_ESCAPE_IN_IDENTIFIERS                0 /* TPP2 didn't support \uXXXX or \UXXXXXXXX characters in identifiers */
+#define TPP_HAVE_IDENTIFIER_ESCAPE_UNI                0 /* TPP2 didn't support \uXXXX or \UXXXXXXXX characters in identifiers */
 #define TPP_HAVE_TRIGRAPHS                            TPP_CONFIG_FEATURE_TRIGRAPHS
 #define TPP_HAVE_DIGRAPHS                             TPP_CONFIG_FEATURE_DIGRAPHS
 #define TPP_HAVE_STRING_ESCAPE_E                      TPP_CONFIG_EXTENSION_STR_E             /* Support for "\e" (for U+001B) escape sequences */

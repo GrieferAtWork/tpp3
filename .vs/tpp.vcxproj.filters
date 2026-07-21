@@ -120,6 +120,9 @@
     <ClCompile Include="..\src\parts\lexer-skip.c">
       <Filter>src\parts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\ctype-named.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">

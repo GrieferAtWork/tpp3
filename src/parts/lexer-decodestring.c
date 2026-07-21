@@ -349,6 +349,29 @@ tpp_token_decodestring_uni_sequence(tpp_lexer *self, tpp_char const **p_iter, tp
 #endif /* !TPP_HAVE_TRIGRAPHS */
 
 
+#if TPP_HAVE_STRING_ESCAPE_NAMED
+#if TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
+tpp_decode_named_findend(tpp_char const **p_iter, tpp_char const *end, tpp_lexer const *lexer);
+#else /* TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_decode_named_findend(tpp_char const **p_iter, tpp_char const *end);
+#define tpp_decode_named_findend(p_iter, end, lexer) _tpp_decode_named_findend(p_iter, end)
+#endif /* !TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#endif /* TPP_HAVE_STRING_ESCAPE_NAMED */
+
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+#if TPP_HAVE_UNICODE
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
+tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end, tpp_file const *file);
+#else /* TPP_HAVE_UNICODE */
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end);
+#define tpp_decode_named_skipspace(iter, end, file) _tpp_decode_named_skipspace(iter, end)
+#endif /* !TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+
+
 /* Decode string: "foobar fdasudfad"
  *                 ^start          ^end
  */
@@ -683,18 +706,6 @@ print_ch_as_byte:
 	}	break;
 #endif /* TPP_HAVE_STRING_ESCAPE_OCT_BRACE */
 
-/* Support for `\u{12345678}` unicode ordinal escape sequences. */
-#ifndef TPP_HAVE_STRING_ESCAPE_UNI_BRACE
-#define TPP_HAVE_STRING_ESCAPE_UNI_BRACE ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni-brace" */
-#endif /* !TPP_HAVE_STRING_ESCAPE_UNI_BRACE */
-
-/* Support for `\u{ 1234 5678 , ABCDEF }` as alias for `\u1234\u5678\U00ABCDEF`.
- * This is an extension to `TPP_HAVE_STRING_ESCAPE_UNI_BRACE`,
- * meaning it also requires that extension to be enabled to work. */
-#ifndef TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY
-#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY ((TPP_HAVE_STRING_ESCAPE_UNI_BRACE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) : 0) /* "-fstring-escape-uni-brace-many" */
-#endif /* !TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY */
-
 #if TPP_HAVE_STRING_ESCAPE_UNI_BRACE
 	case 'u': {
 		if (tpp_lexer_has(self, STRING_ESCAPE_UNI_BRACE) &&
@@ -763,17 +774,78 @@ print_ch_as_byte:
 	}	break;
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE */
 
-	/* XXX: Support for: \N{NO-BREAK SPACE}  (for \u00A0)
-	 *      Names come from 'UnicodeData.txt' + 'NameAliases.txt' */
-	/* XXX: Support for: \N{ NO-BREAK SPACE , NO-BREAK SPACE }  (for \u00A0\u00A0)
-	 *      (extra extension; not mandated by C) */
-	/* XXX: These 4 extensions should also be available as extensions to
-	 *      "TPP_HAVE_ESCAPE_IN_IDENTIFIERS":
-	 *      - TPP_HAVE_STRING_ESCAPE_UNI_BRACE
-	 *      - TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY
-	 *      - TBA: \N{NO-BREAK SPACE}
-	 *      - TBA: \N{ NO-BREAK SPACE , NO-BREAK SPACE }
-	 */
+#if TPP_HAVE_STRING_ESCAPE_NAMED
+	case 'N': {
+		tpp_char const *named_start;
+		tpp_char const *named_end;
+		/* Brace-delimited named unicode sequence */
+		if (!tpp_lexer_has(self, STRING_ESCAPE_OCT_BRACE))
+			goto handle_unknown_escape_sequence;
+		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+		if (iter >= end)
+			goto handle_unknown_escape_sequence;
+		ch = *iter;
+		if (!tpp_token_decodestring_is_lbrace(self, ch, &iter, end))
+			goto handle_unknown_escape_sequence;
+		iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(self));
+		named_start = iter;
+		named_end   = tpp_decode_named_findend(&iter, end, self);
+		for (;;) {
+			tpp_size i, count, utf8_len;
+			tpp_unichar uc[TPP_DECODE_NAMED_ESCAPE_MAXLEN];
+			tpp_char utf8_buf[TPP_DECODE_NAMED_ESCAPE_MAXLEN * TPP_UTF8_MAXLEN], *utf8_dst;
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+			if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY))
+				named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(self));
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+			count = tpp_decode_named_escape(&named_start, named_end, uc, self);
+			if (count == 0)
+				break;
+
+			/* Encode as utf-8 */
+			utf8_dst = utf8_buf;
+			for (i = 0; i < count; ++i)
+				utf8_dst = tpp_unicode_writeutf8(utf8_dst, uc[i]);
+
+			/* Write data as utf-8 */
+			utf8_len = (tpp_size)(utf8_dst - utf8_buf);
+			temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getutf8(config),
+			                               arg, utf8_buf, utf8_len);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+
+			/* Check if there are additional character names */
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+			if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY)) {
+				named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(self));
+				if (named_start < named_end && *named_start == ',') {
+					named_start = tpp_decode_named_skipspace(named_start + 1, named_end, tpp_lexer_getfile(self));
+					continue;
+				}
+			}
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+			break;
+		}
+
+		/* Warn if not everything was consumed */
+#if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+		if (named_start < named_end) {
+			tpp_errno error;
+			tpp_token *const token = tpp_lexer_gettoken(self);
+			tpp_char const *const saved_start = token->tt_start;
+			tpp_char const *const saved_end = token->tt_end;
+			token->tt_start = named_start;
+			token->tt_end   = named_end;
+			error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
+			token->tt_start = saved_start;
+			token->tt_end   = saved_end;
+			if (TPP_ISERR(error))
+				return TPP_SSIZE_OFERR(error);
+		}
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_NAMED */
 
 #if TPP_HAVE_STRING_ESCAPE_UNI
 #if TPP_HAVE_STRING_ESCAPE_UNI_BRACE

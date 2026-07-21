@@ -25,6 +25,7 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_deprecated_keyword"></a>`TPP_HAVE_TPP_W_DEPRECATED_KEYWORD`
 - <a name="tpp_have_tpp_w_pop_macro_empty_stack"></a>`TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK`
 - <a name="tpp_have_tpp_w_unknown_string_escape_sequence"></a>`TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE`
+- <a name="tpp_have_tpp_w_unknown_named_escape_sequence"></a>`TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE`
 - <a name="tpp_have_tpp_w_eof_in_argument_list"></a>`TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST`
 - <a name="tpp_have_tpp_w_too_many_arguments"></a>`TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS`
 - <a name="tpp_have_tpp_w_too_few_arguments"></a>`TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS`

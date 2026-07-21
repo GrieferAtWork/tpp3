@@ -580,7 +580,7 @@ tpp_builtin_getkeyword_byid(enum tpp_token_id id) {
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
                             tpp_size len, tpp_hash hash
-                            tpp_bse_file__PARAM) {
+                            tpp_esc_lexer__PARAM) {
 	tpp_keyword const *result;
 	tpp_init_builtin_keywords();
 	result = tpp_builtin_keyword_table[hash & TPP_BUILTIN_KEYWORD_MASK];
@@ -589,7 +589,7 @@ tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
 			continue;
 		if (tpp_memcmp_esc(result->tk_kwd,
 		                   result->tk_len,
-		                   kwd, len, file) == 0)
+		                   kwd, len, lexer) == 0)
 			break;
 	}
 	return result;

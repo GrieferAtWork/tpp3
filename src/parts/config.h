@@ -526,9 +526,35 @@
  *
  * @detect: #define foo\u0062ar
  *          #ifdef foobar */
-#ifndef TPP_HAVE_ESCAPE_IN_IDENTIFIERS
-#define TPP_HAVE_ESCAPE_IN_IDENTIFIERS (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
-#endif /* !TPP_HAVE_ESCAPE_IN_IDENTIFIERS */
+#ifndef TPP_HAVE_IDENTIFIER_ESCAPE_UNI
+#define TPP_HAVE_IDENTIFIER_ESCAPE_UNI (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
+#endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_UNI */
+
+/* Support for `\N{...}` in identifier names (see TODO)
+ * ```c
+ * int identifier\N{NO-BREAK SPACE}nbsp = 42;
+ * // Same as:
+ * int __TPP_IDENTIFIER("identifier\N{NO-BREAK SPACE}nbsp") = 42;
+ * ```
+ *
+ * What actually is allowed within `\N{...}` is controlled by:
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES`
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - `TPP_HAVE_ESCAPE_NAMED_XML`
+ *
+ * @detect: #define foo\N{LATIN SMALL LETTER B}ar
+ *          #ifdef foobar */
+#ifndef TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
+#define TPP_HAVE_IDENTIFIER_ESCAPE_NAMED (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fnamed-extended-identifiers" */
+#endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_NAMED */
+
+/* Extension to `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED`: accept
+ * multiple character names to appear within a `\N{...}`
+ * block. Without this extension, trying to spell multiple
+ * character will result in an unknown-character warning. */
+#ifndef TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+#define TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fnamed-extended-identifiers-many" */
+#endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 
 /* Specifies if *any* CPP directives are supported */
 #ifndef TPP_HAVE_CPP_DIRECTIVES
@@ -1190,9 +1216,9 @@
  *                           // will probably print the keyword as "a")
  * ```
  *
- * Similar functionality can also be achieved using `TPP_HAVE_ESCAPE_IN_IDENTIFIERS`
+ * Similar functionality can also be achieved using `TPP_HAVE_IDENTIFIER_ESCAPE_UNI`
  *
- * Note that unlike `TPP_HAVE_ESCAPE_IN_IDENTIFIERS`, `__TPP_IDENTIFIER`
+ * Note that unlike `TPP_HAVE_IDENTIFIER_ESCAPE_UNI`, `__TPP_IDENTIFIER`
  * can only be used in places where macros are expanded:
  * ```c
  * #__TPP_IDENTIFIER("define") foo 42  // Won't work
@@ -2133,6 +2159,23 @@
 #define TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY ((TPP_HAVE_STRING_ESCAPE_UNI_BRACE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) : 0) /* "-fstring-escape-uni-brace-many" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY */
 
+/* Support for `\N{...}` unicode ordinal escape sequences in strings.
+ * What actually is allowed within `\N{...}` is controlled by:
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES`
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - `TPP_HAVE_ESCAPE_NAMED_XML`
+ */
+#ifndef TPP_HAVE_STRING_ESCAPE_NAMED
+#define TPP_HAVE_STRING_ESCAPE_NAMED ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-named" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_NAMED */
+
+/* Support for `\N{FOO, BAR}` as alias for `\N{FOO}\N{BAR}`.
+ * This is an extension to `TPP_HAVE_STRING_ESCAPE_NAMED` and `TPP_HAVE_STRING_ESCAPE_NAMED`,
+ * meaning it takes no effect if neither of those extensions is enabled. */
+#ifndef TPP_HAVE_STRING_ESCAPE_NAMED_MANY
+#define TPP_HAVE_STRING_ESCAPE_NAMED_MANY (TPP_HAVE_STRING_ESCAPE_NAMED ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fstring-escape-named-many" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
+
 /* Enable support for large (> 1 byte) character constants in `tpp_lexer_decodestring()` */
 #ifndef TPP_HAVE_STRING_ESCAPE_BIGCHAR
 #define TPP_HAVE_STRING_ESCAPE_BIGCHAR (TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_HAVE_STRING_ESCAPE_HEX_BIG || TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE))
@@ -2191,6 +2234,54 @@
 #ifndef TPP_HAVE_STRING_AUTO_CONCAT
 #define TPP_HAVE_STRING_AUTO_CONCAT ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) /* "-fstring-auto-concat" */
 #endif /* !TPP_HAVE_STRING_AUTO_CONCAT */
+
+
+/* Enable API support for `tpp_decode_named_escape()`, which can be used to
+ * decode the contents of `\N{...}` escape sequences. Needed to implement
+ * `TPP_HAVE_STRING_ESCAPE_NAMED` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED`,
+ * whilst implementing the rules specified by:
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES`
+ * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - `TPP_HAVE_ESCAPE_NAMED_XML` */
+#ifndef TPP_HAVE_DECODE_NAMED_ESCAPE
+#define TPP_HAVE_DECODE_NAMED_ESCAPE (TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
+#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE */
+
+
+/* Support for unicode names in `\N` like `\N{LATIN SMALL LETTER B}`.
+ * This feature affects the behavior of:
+ * - `TPP_HAVE_STRING_ESCAPE_NAMED`
+ * - `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED`
+ *
+ * Recognized names here are as defined by:
+ * - https://www.unicode.org/Public/14.0.0/ucd/NamesList.txt
+ */
+#ifndef TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES
+#define TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : 1) : 0) /* "-fnamed-escape-unicode" */
+#endif /* !TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES */
+
+/* Support for unicode names in `\N` (all of which are the same as `\u0100`):
+ * - `\N{U+0100}`
+ * - `\N{U+100}`
+ * - `\N{U+000100}`
+ * - `\N{0x0100}`
+ * - `\N{256}`
+ *
+ * This feature affects the behavior of:
+ * - `TPP_HAVE_STRING_ESCAPE_NAMED`
+ * - `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED` */
+#ifndef TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD
+#define TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fnamed-escape-ord" */
+#endif /* !TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD */
+
+/* Support for XML/HTML5 names in `\N`: `\N{&tab;}`
+ *
+ * This feature affects the behavior of:
+ * - `TPP_HAVE_STRING_ESCAPE_NAMED`
+ * - `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED` */
+#ifndef TPP_HAVE_ESCAPE_NAMED_XML
+#define TPP_HAVE_ESCAPE_NAMED_XML (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : 0) : 0) /* "-fnamed-escape-xml" */
+#endif /* !TPP_HAVE_ESCAPE_NAMED_XML */
 
 
 #undef TPP_HAVE_TOK_INT
@@ -4105,7 +4196,8 @@ for (local doc, name,
      TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||   \
      TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||    \
      TPP_HAVE_TOK_BLOCK_CHAR_LITERAL ||       \
-     TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
+     TPP_HAVE_IDENTIFIER_ESCAPE_UNI ||        \
+     TPP_HAVE_DECODE_NAMED_ESCAPE)
 #define TPP_HAVE_TPP_UNICODE_WRITEUTF8 1
 #else /* ... */
 #define TPP_HAVE_TPP_UNICODE_WRITEUTF8 0
@@ -4311,9 +4403,9 @@ for (local doc, name,
 #endif /* !TPP_HAVE_FILE_GETFULLHASH */
 
 /* Provide a secondary set of keyword APIs that include support for `\`-escape sequences.
- * Needed to implement `TPP_HAVE_BSE` and `TPP_HAVE_ESCAPE_IN_IDENTIFIERS` */
+ * Needed to implement `TPP_HAVE_BSE`, `TPP_HAVE_IDENTIFIER_ESCAPE_UNI` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED` */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
-#define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_ESCAPE_IN_IDENTIFIERS)
+#define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
 #endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
 
 /* Enable support for `tpp_io_compare_mtime()`.
@@ -4925,6 +5017,10 @@ for (local doc, name,
 #define TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
+#ifndef TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+#define TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_NAMED))
+#endif /* !TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
 #define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
 #endif /* !TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST */

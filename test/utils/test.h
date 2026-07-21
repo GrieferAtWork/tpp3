@@ -22,7 +22,7 @@
 #error "The `#pragma once` didn't work"
 #endif /* TPP_FAIL */
 
-#pragma extension(push, \
+#pragma TPP extension(push, \
 	"-fno-magic-whitespace", \
 	"-fno-macro-argument-whitespace", \
 	"-fdont-expand-macro-argument" \
@@ -72,4 +72,4 @@
 #define _TPP_ASSERT_EXPANDS_1(expected_str, unexpanded_str, actual_str)
 
 
-#pragma extension(pop)
+#pragma TPP extension(pop)

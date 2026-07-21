@@ -23,9 +23,10 @@
 #include "api.h"
 
 #include "config.h"
+#include "ctype.h"
 #include "error.h"
-#include "file.h"
 #include "file-io.h"
+#include "file.h"
 #include "string.h"
 #include "token.h"
 
@@ -532,6 +533,7 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 #define tpp_hash_combine_hash(a, b) ((a) * 263 + (tpp_hash)(b))
 
 
+#undef TPP_HAVE_BSE_FILE_PARAM
 #if TPP_HAVE_BSE && TPP_HAVE_UNICODE
 #define TPP_HAVE_BSE_FILE_PARAM 1
 #define tpp_bse_file__PARAM  , tpp_file const *tpp_restrict file
@@ -541,6 +543,17 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 #define tpp_bse_file__PARAM  /* nothing */
 #define tpp_bse_file__ARG(x) /* nothing */
 #endif /* !TPP_HAVE_BSE || !TPP_HAVE_UNICODE */
+
+#if ((TPP_HAVE_BSE && TPP_HAVE_UNICODE) ||                                       \
+     (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && (TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER || \
+                                           TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS))))
+struct tpp_lexer;
+#define tpp_esc_lexer__PARAM  , struct tpp_lexer const *tpp_restrict lexer
+#define tpp_esc_lexer__ARG(x) , x
+#else /* ... */
+#define tpp_esc_lexer__PARAM  /* nothing */
+#define tpp_esc_lexer__ARG(x) /* nothing */
+#endif /* !... */
 
 
 /* Check if "ch" may be the first byte of a \-character */
@@ -562,11 +575,11 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
  * tpp_skipbse_bck: If "pos" points after a line-feed character, skip backward until start of BSE (if it is one) */
 #if TPP_HAVE_BSE
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-tpp_skipbse_fwd_(tpp_char const *pos, tpp_char const *end tpp_bse_file__PARAM);
+_tpp_skipbse_fwd(tpp_char const *pos, tpp_char const *end tpp_bse_file__PARAM);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-tpp_skipbse_bck_(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM);
-#define tpp_skipbse_fwd(pos, end, file)   (((pos) >= (end) || !_tpp_maybe_isbackslash(*(pos))) ? (pos) : tpp_skipbse_fwd_(pos, end tpp_bse_file__ARG(file)))
-#define tpp_skipbse_bck(pos, start, file) (((pos) <= (start) || !_tpp_maybe_islf((pos)[-1])) ? (pos) : tpp_skipbse_bck_(pos, start tpp_bse_file__ARG(file)))
+_tpp_skipbse_bck(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM);
+#define tpp_skipbse_fwd(pos, end, file)   (((pos) >= (end) || !_tpp_maybe_isbackslash(*(pos))) ? (pos) : _tpp_skipbse_fwd(pos, end tpp_bse_file__ARG(file)))
+#define tpp_skipbse_bck(pos, start, file) (((pos) <= (start) || !_tpp_maybe_islf((pos)[-1])) ? (pos) : _tpp_skipbse_bck(pos, start tpp_bse_file__ARG(file)))
 #else /* TPP_HAVE_BSE */
 #define tpp_skipbse_fwd(pos, end, file)   (pos)
 #define tpp_skipbse_bck(pos, start, file) (pos)
@@ -576,8 +589,8 @@ tpp_skipbse_bck_(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM)
 #if TPP_HAVE_ESCAPED_KEYWORDS
 /* Same as `tpp_hashof()', but skip over \-escaped linefeeds when calculating the hash */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
-tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PARAM);
-#define tpp_hashof_esc(kwd, len, file) tpp_hashof_esc_(kwd, len tpp_bse_file__ARG(file))
+tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_esc_lexer__PARAM);
+#define tpp_hashof_esc(kwd, len, lexer) tpp_hashof_esc_(kwd, len tpp_esc_lexer__ARG(lexer))
 
 /* Copy `in_text...+=len' to `out_text', whilst removing \-escaped linefeeds
  * The caller must ensure that `out_text' has space for at least `len' bytes,
@@ -585,17 +598,17 @@ tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len tpp_bse_file__PAR
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
 tpp_without_esc_(tpp_char *tpp_restrict out_text,
                  tpp_char const *tpp_restrict in_text,
-                 tpp_size len tpp_bse_file__PARAM);
-#define tpp_without_esc(out_text, in_text, len, file) \
-	tpp_without_esc_(out_text, in_text, len tpp_bse_file__ARG(file))
+                 tpp_size len tpp_esc_lexer__PARAM);
+#define tpp_without_esc(out_text, in_text, len, lexer) \
+	tpp_without_esc_(out_text, in_text, len tpp_esc_lexer__ARG(lexer))
 
 /* Compare 2 strings, one of which may contain \-escaped linefeeds that must be skipped. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) int TPPCALL
 tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
                 tpp_char const *rhs_with_esc, tpp_size rhs_len
-                tpp_bse_file__PARAM);
-#define tpp_memcmp_esc(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len, file) \
-	tpp_memcmp_esc_(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len tpp_bse_file__ARG(file))
+                tpp_esc_lexer__PARAM);
+#define tpp_memcmp_esc(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len, lexer) \
+	tpp_memcmp_esc_(lhs_without_esc, lhs_len, rhs_with_esc, rhs_len tpp_esc_lexer__ARG(lexer))
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
@@ -609,9 +622,9 @@ tpp_builtin_getkeyword_byid(enum tpp_token_id id);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
                             tpp_size len, tpp_hash hash
-                            tpp_bse_file__PARAM);
-#define tpp_builtin_getkeyword_esc(kwd, len, hash, file) \
-	tpp_builtin_getkeyword_esc_(kwd, len, hash tpp_bse_file__ARG(file))
+                            tpp_esc_lexer__PARAM);
+#define tpp_builtin_getkeyword_esc(kwd, len, hash, lexer) \
+	tpp_builtin_getkeyword_esc_(kwd, len, hash tpp_esc_lexer__ARG(lexer))
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
@@ -666,9 +679,9 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
                               tpp_char const *tpp_restrict kwd,
                               tpp_size len, tpp_hash hash
-                              tpp_bse_file__PARAM);
-#define _tpp_keywords_getkeyword_esc(self, kwd, len, hash, file) \
-	_tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
+                              tpp_esc_lexer__PARAM);
+#define _tpp_keywords_getkeyword_esc(self, kwd, len, hash, lexer) \
+	_tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_esc_lexer__ARG(lexer))
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
@@ -685,9 +698,9 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
                              tpp_char const *tpp_restrict kwd,
                              tpp_size len, tpp_hash hash
-                             tpp_bse_file__PARAM);
-#define tpp_keywords_getkeyword_esc(self, kwd, len, hash, file) \
-	tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
+                             tpp_esc_lexer__PARAM);
+#define tpp_keywords_getkeyword_esc(self, kwd, len, hash, lexer) \
+	tpp_keywords_getkeyword_esc_(self, kwd, len, hash tpp_esc_lexer__ARG(lexer))
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
@@ -704,9 +717,9 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_newkeyword_esc_(tpp_keywords *tpp_restrict self,
                              tpp_char const *tpp_restrict kwd,
                              tpp_size len, tpp_hash hash
-                             tpp_bse_file__PARAM);
-#define tpp_keywords_newkeyword_esc(self, kwd, len, hash, file) \
-	tpp_keywords_newkeyword_esc_(self, kwd, len, hash tpp_bse_file__ARG(file))
+                             tpp_esc_lexer__PARAM);
+#define tpp_keywords_newkeyword_esc(self, kwd, len, hash, lexer) \
+	tpp_keywords_newkeyword_esc_(self, kwd, len, hash tpp_esc_lexer__ARG(lexer))
 #endif /* TPP_HAVE_BSE */
 
 
