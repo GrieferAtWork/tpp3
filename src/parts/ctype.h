@@ -133,6 +133,8 @@ print("#endif /" "* !tpp_ascii_islf_or_mblf *" "/");
 #ifndef tpp_ascii_isxdigit
 #define tpp_ascii_isxdigit(ch) \
 	(tpp_ascii_isdigit(ch) || tpp_ascii_islwrxdigit(ch) || tpp_ascii_isuprxdigit(ch))
+#define tpp_ascii_asxdigit(ch) \
+	(tpp_ascii_isdigit(ch) ? tpp_ascii_asdigit(ch) : tpp_ascii_islwrxdigit(ch) ? tpp_ascii_aslwrxdigit(ch) : tpp_ascii_asuprxdigit(ch))
 #endif /* !tpp_ascii_isxdigit */
 
 #if TPP_HAVE_UNICODE
@@ -280,14 +282,15 @@ tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
 
 
 /* Specifies that `tpp_decode_named_escape()` requires an extra `lexer`-parameter */
-#undef TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER
+#undef TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 #if (TPP_HAVE_DECODE_NAMED_ESCAPE &&                         \
      (TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) || \
       TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) ||   \
-      TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_XML)))
-#define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER 1
+      TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_XML) ||           \
+      (TPP_HAVE_BSE && TPP_HAVE_UNICODE)))
+#define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM 1
 #else /* ... */
-#define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER 0
+#define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM 0
 #endif /* !... */
 
 #if TPP_HAVE_DECODE_NAMED_ESCAPE
@@ -304,19 +307,19 @@ tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
  *
  * @return: 0 : Unknown named sequence (`*p_iter` is unchanged) 
  * @return: * : The # of characters written to `result` (always `<= TPP_DECODE_NAMED_ESCAPE_MAXLEN`)*/
-#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER
+#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 struct tpp_lexer;
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
 tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN],
                         struct tpp_lexer const *tpp_restrict lexer);
-#else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER */
+#else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
 _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
                          tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN]);
 #define tpp_decode_named_escape(p_iter, end, result, lexer) \
 	_tpp_decode_named_escape(p_iter, end, result)
-#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER */
+#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 #else /* TPP_HAVE_DECODE_NAMED_ESCAPE */
 #define TPP_DECODE_NAMED_ESCAPE_MAXLEN 0
 #define tpp_decode_named_escape(p_iter, end, result, lexer) \

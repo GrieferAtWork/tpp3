@@ -2242,25 +2242,99 @@ _tpp_unicode_traits(tpp_unichar uch) {
  *
  * @return: 0 : Unknown named sequence (`*p_iter` is unchanged) 
  * @return: * : The # of characters written to `result` (always `<= TPP_DECODE_NAMED_ESCAPE_MAXLEN`)*/
-#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER
+#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
 tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN],
                         struct tpp_lexer const *tpp_restrict lexer)
-#else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER */
+#else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
 _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
                          tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN])
-#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER */
+#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 {
+	tpp_char ch;
 	tpp_char const *iter = *p_iter;
+	if (iter >= end)
+		goto nope;
+	ch = *iter++;
+	iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+#if TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD
+	if (((ch == 'U' && iter < end && (*iter == '+')) ||
+	     (ch == '0' && iter < end && (*iter == 'x' || *iter == 'X'))) &&
+	    tpp_lexer_has(lexer, ESCAPE_NAMED_UNICODE_ORD)) {
+		tpp_unichar uc; /* Unicode character code (in hex) */
+		tpp_char const *uc_iter;
+		iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(lexer));
+		if (iter >= end)
+			goto nope;
+		ch = *iter++;
+		if (!tpp_ascii_isxdigit(ch))
+			goto nope;
+		uc = tpp_ascii_asxdigit(ch);
+		uc_iter = iter;
+		for (;;) {
+			unsigned char nibble;
+			iter = uc_iter;
+			uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
+			if (uc_iter >= end)
+				break;
+			ch = *uc_iter++;
+			if (!tpp_ascii_isxdigit(ch))
+				break;
+			nibble = tpp_ascii_asxdigit(ch);
+			if (((uc << 4) >> 4) != uc)
+				break;
+			uc <<= 4;
+			uc |= nibble;
+		}
+		*p_iter = iter;
+		result[0] = uc;
+		return 1;
+	}
+	if (tpp_ascii_isdigit(ch) &&
+	    tpp_lexer_has(lexer, ESCAPE_NAMED_UNICODE_ORD)) {
+		/* Decimal-encoded unicode ordinal */
+		tpp_unichar uc;
+		tpp_char const *uc_iter;
+		uc = tpp_ascii_asdigit(ch);
+		uc_iter = iter = (*p_iter + 1);
+		for (;;) {
+			unsigned char nibble;
+			iter = uc_iter;
+			uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
+			if (uc_iter >= end)
+				break;
+			ch = *uc_iter++;
+			if (!tpp_ascii_isdigit(ch))
+				break;
+			nibble = tpp_ascii_asdigit(ch);
+			if (((uc * 10) / 10) != uc)
+				break;
+			uc *= 10;
+			uc += nibble;
+		}
+		*p_iter = iter;
+		result[0] = uc;
+		return 1;
+	}
+#endif /* TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD */
+
+#if TPP_HAVE_ESCAPE_NAMED_XML
+	if (ch == '&' && tpp_lexer_has(lexer, ESCAPE_NAMED_XML)) {
+		/* TODO */
+	}
+#endif /* TPP_HAVE_ESCAPE_NAMED_XML */
+
 	/* TODO */
 	(void)iter;
 	(void)end;
 	(void)result;
-#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER
+#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 	(void)lexer;
-#endif /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER */
+#endif /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
+
+nope:
 	return 0;
 }
 #endif /* TPP_HAVE_DECODE_NAMED_ESCAPE */
