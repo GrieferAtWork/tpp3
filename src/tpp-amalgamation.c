@@ -184,6 +184,7 @@
 #define tef_TPP_EXT_TOK_BLOCK_CHAR_LITERAL                 TPP_INTERNAL(tef_TPP_EXT_TOK_BLOCK_CHAR_LITERAL)
 #define tef_TPP_EXT_STRING_ESCAPE_E                        TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_E)
 #define tef_TPP_EXT_STRING_ESCAPE_S                        TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_S)
+#define tef_TPP_EXT_STRING_ESCAPE_XML                      TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_XML)
 #define tef_TPP_EXT_STRING_ESCAPE_OCT                      TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_OCT)
 #define tef_TPP_EXT_STRING_ESCAPE_OCT_BRACE                TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_OCT_BRACE)
 #define tef_TPP_EXT_STRING_ESCAPE_OCT_BRACE_MANY           TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_OCT_BRACE_MANY)
@@ -466,6 +467,7 @@
 #define tff_TOK_BLOCK_CHAR_LITERAL                         TPP_INTERNAL(tff_TOK_BLOCK_CHAR_LITERAL)
 #define tff_STRING_ESCAPE_E                                TPP_INTERNAL(tff_STRING_ESCAPE_E)
 #define tff_STRING_ESCAPE_S                                TPP_INTERNAL(tff_STRING_ESCAPE_S)
+#define tff_STRING_ESCAPE_XML                              TPP_INTERNAL(tff_STRING_ESCAPE_XML)
 #define tff_STRING_ESCAPE_OCT                              TPP_INTERNAL(tff_STRING_ESCAPE_OCT)
 #define tff_STRING_ESCAPE_OCT_BRACE                        TPP_INTERNAL(tff_STRING_ESCAPE_OCT_BRACE)
 #define tff_STRING_ESCAPE_OCT_BRACE_MANY                   TPP_INTERNAL(tff_STRING_ESCAPE_OCT_BRACE_MANY)
@@ -4459,6 +4461,153 @@ tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon
 /* File: parts/ctype-named.c                                            */
 /************************************************************************/
 
+#if TPP_HAVE_ESCAPE_NAMED_XML
+/* In addition to `tpp_xml_entity_lookup()`, must also support:
+ * - &#<decimal>;
+ * - &#x<hex>;
+ * ... both of which allow encoding of unicode ordinals */
+#if TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
+tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
+                            tpp_unichar result[1],
+                            tpp_lexer const *tpp_restrict lexer)
+#else /* TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
+_tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
+                             tpp_unichar result[1])
+#define tpp_decode_named_escape_xml(p_iter, end, result, lexer) \
+	_tpp_decode_named_escape_xml(p_iter, end, result)
+#endif /* !TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+{
+	tpp_char const *iter = *p_iter;
+	tpp_char ch;
+	tpp_unichar uc;
+	char xmlname[TPP_XML_ENTITY_LOOKUP_MAXLEN + 1];
+	tpp_size xmlname_size = 0;
+	bool has_semi;
+	(void)lexer;
+	if (iter >= end)
+		goto nope;
+	ch = *iter++;
+	iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+	if (ch == '#') {
+#if TPP_HAVE_TRIGRAPHS
+handle_xml_ord:
+#endif /* TPP_HAVE_TRIGRAPHS */
+		if (iter >= end)
+			goto nope;
+		ch = *iter++;
+		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+		if (ch == 'x') { /* Only lowercase 'x' is allowed here! */
+			tpp_char const *uc_iter;
+			if (iter >= end)
+				goto nope;
+			ch = *iter++;
+			if (!tpp_ascii_isxdigit(ch))
+				goto nope;
+			uc = tpp_ascii_asxdigit(ch);
+			uc_iter = iter;
+			for (;;) {
+				unsigned char nibble;
+				iter = uc_iter;
+				uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
+				if (uc_iter >= end)
+					break;
+				ch = *uc_iter++;
+				if (!tpp_ascii_isxdigit(ch)) {
+					if (ch == ';') /* Include trailing ';' */
+						iter = uc_iter;
+					break;
+				}
+				nibble = tpp_ascii_asxdigit(ch);
+				if (((uc << 4) >> 4) != uc)
+					break;
+				uc <<= 4;
+				uc |= nibble;
+			}
+			*p_iter = iter;
+			result[0] = uc;
+			return 1;
+		} else if (tpp_ascii_isdigit(ch)) {
+			tpp_char const *uc_iter;
+			uc = tpp_ascii_asdigit(ch);
+			uc_iter = iter = (*p_iter + 1);
+			for (;;) {
+				unsigned char nibble;
+				iter = uc_iter;
+				uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
+				if (uc_iter >= end)
+					break;
+				ch = *uc_iter++;
+				if (!tpp_ascii_isdigit(ch))
+					break;
+				nibble = tpp_ascii_asdigit(ch);
+				if (((uc * 10) / 10) != uc)
+					break;
+				uc *= 10;
+				uc += nibble;
+			}
+			*p_iter = iter;
+			result[0] = uc;
+			return 1;
+		}
+		goto nope;
+	} else
+#if TPP_HAVE_TRIGRAPHS
+	if (ch == '?' && (iter + 1) < end &&
+	    iter[0] == '?' && iter[1] == '=' &&
+	    tpp_lexer_has(lexer, TRIGRAPHS)) {
+		iter += 2;
+		goto handle_xml_ord;
+	} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+	{
+	}
+
+	if (ch == ';')
+		goto nope;
+	xmlname[0] = (char)ch;
+	xmlname_size = 1;
+#if TPP_XML_ENTITY_LOOKUP_MINLEN < 2
+	has_semi = iter < end && *iter == ';';
+	uc = tpp_xml_entity_lookup(xmlname, has_semi);
+	if (uc != TPP_XML_ENTITY_LOOKUP_UNKNOWN) {
+		if (has_semi)
+			++iter;
+	} else
+#endif /* TPP_XML_ENTITY_LOOKUP_MINLEN < 2 */
+	{
+		for (;;) {
+			if (iter >= end)
+				goto nope;
+			ch = *iter++;
+			iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+			xmlname[xmlname_size++] = (char)ch;
+			xmlname[xmlname_size] = '\0';
+			has_semi = iter < end && *iter == ';';
+			uc = tpp_xml_entity_lookup(xmlname, has_semi);
+			if (uc != TPP_XML_ENTITY_LOOKUP_UNKNOWN) {
+				if (has_semi)
+					++iter;
+				break;
+			}
+			if (has_semi)
+				goto nope;
+		}
+	}
+	*p_iter = iter;
+	result[0] = uc;
+	return 1;
+nope:
+#if TPP_HAVE_STRING_ESCAPE_XML
+	/* Needed so `\&foo;` knows that the sequence
+	 * ends after `;`, even when `foo` isn't known */
+	*p_iter = iter;
+#endif /* TPP_HAVE_STRING_ESCAPE_XML */
+	return 0;
+}
+#endif /* TPP_HAVE_ESCAPE_NAMED_XML */
+
 #if TPP_HAVE_DECODE_NAMED_ESCAPE
 
 /* Decode a named \N{...} sequence and update `*p_iter` to point to
@@ -4550,129 +4699,10 @@ _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
 
 #if TPP_HAVE_ESCAPE_NAMED_XML
 	if (ch == '&' && tpp_lexer_has(lexer, ESCAPE_NAMED_XML)) {
-		/* In addition to `tpp_xml_entity_lookup()`, must also support:
-		 * - &#<decimal>;
-		 * - &#x<hex>;
-		 * ... both of which allow encoding of unicode ordinals */
-		tpp_unichar uc;
-		char xmlname[TPP_XML_ENTITY_LOOKUP_MAXLEN + 1];
-		tpp_size xmlname_size = 0;
-		bool has_semi;
-		if (iter >= end)
-			goto nope;
-		ch = *iter++;
-		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
-		if (ch == '#') {
-#if TPP_HAVE_TRIGRAPHS
-handle_xml_ord:
-#endif /* TPP_HAVE_TRIGRAPHS */
-			if (iter >= end)
-				goto nope;
-			ch = *iter++;
-			iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
-			if (ch == 'x') { /* Only lowercase 'x' is allowed here! */
-				tpp_char const *uc_iter;
-				if (iter >= end)
-					goto nope;
-				ch = *iter++;
-				if (!tpp_ascii_isxdigit(ch))
-					goto nope;
-				uc = tpp_ascii_asxdigit(ch);
-				uc_iter = iter;
-				for (;;) {
-					unsigned char nibble;
-					iter = uc_iter;
-					uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
-					if (uc_iter >= end)
-						break;
-					ch = *uc_iter++;
-					if (!tpp_ascii_isxdigit(ch)) {
-						if (ch == ';') /* Include trailing ';' */
-							iter = uc_iter;
-						break;
-					}
-					nibble = tpp_ascii_asxdigit(ch);
-					if (((uc << 4) >> 4) != uc)
-						break;
-					uc <<= 4;
-					uc |= nibble;
-				}
-				*p_iter = iter;
-				result[0] = uc;
-				return 1;
-			} else if (tpp_ascii_isdigit(ch)) {
-				tpp_char const *uc_iter;
-				uc = tpp_ascii_asdigit(ch);
-				uc_iter = iter = (*p_iter + 1);
-				for (;;) {
-					unsigned char nibble;
-					iter = uc_iter;
-					uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
-					if (uc_iter >= end)
-						break;
-					ch = *uc_iter++;
-					if (!tpp_ascii_isdigit(ch))
-						break;
-					nibble = tpp_ascii_asdigit(ch);
-					if (((uc * 10) / 10) != uc)
-						break;
-					uc *= 10;
-					uc += nibble;
-				}
-				*p_iter = iter;
-				result[0] = uc;
-				return 1;
-			}
-			goto nope;
-		} else
-#if TPP_HAVE_TRIGRAPHS
-		if (ch == '?' && (iter + 1) < end &&
-		    iter[0] == '?' && iter[1] == '=' &&
-		    tpp_lexer_has(lexer, TRIGRAPHS)) {
-			iter += 2;
-			goto handle_xml_ord;
-		} else
-#endif /* TPP_HAVE_TRIGRAPHS */
-		{
-		}
-
-		xmlname[0] = (char)ch;
-		xmlname_size = 1;
-#if TPP_XML_ENTITY_LOOKUP_MINLEN < 2
-		has_semi = iter < end && *iter == ';';
-		uc = tpp_xml_entity_lookup(xmlname, has_semi);
-		if (uc != TPP_XML_ENTITY_LOOKUP_UNKNOWN) {
-			if (has_semi)
-				++iter;
-		} else
-#endif /* TPP_XML_ENTITY_LOOKUP_MINLEN < 2 */
-		{
-			for (;;) {
-				if (iter >= end)
-					goto nope;
-				ch = *iter++;
-				iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
-				if (ch == ';') {
-					xmlname[xmlname_size] = '\0';
-					uc = tpp_xml_entity_lookup(xmlname, true);
-					if (uc == TPP_XML_ENTITY_LOOKUP_UNKNOWN)
-						goto nope;
-					break;
-				}
-				xmlname[xmlname_size++] = (char)ch;
-				xmlname[xmlname_size] = '\0';
-				has_semi = iter < end && *iter == ';';
-				uc = tpp_xml_entity_lookup(xmlname, has_semi);
-				if (uc != TPP_XML_ENTITY_LOOKUP_UNKNOWN) {
-					if (has_semi)
-						++iter;
-					break;
-				}
-			}
-		}
-		*p_iter = iter;
-		result[0] = uc;
-		return 1;
+		tpp_size status = tpp_decode_named_escape_xml(&iter, end, result, lexer);
+		if (status)
+			*p_iter = iter;
+		return status;
 	}
 #endif /* TPP_HAVE_ESCAPE_NAMED_XML */
 
@@ -8356,11 +8386,6 @@ tpp_reprtokenid(tpp_token_id id) {
 
 #if TPP_HAVE_TOKEN_ENCODESTRING
 
-#define TPP_CASE_UTF8_FIRSTBYTE_ISLF_FOREACH(cb) \
-	cb(0xc2, '\\', 'x', 'c', '2') \
-	cb(0xe2, '\\', 'x', 'e', '2')
-
-
 /* \-encode "data...+=num_bytes" by passing it to "printer"
  * NOTE: Leading/trailing " (or ')-characters are *NOT* printed!
  *
@@ -8395,11 +8420,6 @@ again:
 		static tpp_char const _repr[3] = { r1, r2, 0 }; \
 		output_repr = _repr;                            \
 	}	break;
-#define TPP_TOKEN_ENCODESTRING_CASE4(b, r1, r2, r3, r4)         \
-	case b: {                                                   \
-		static tpp_char const _repr[5] = { r1, r2, r3, r4, 0 }; \
-		output_repr = _repr;                                    \
-	}	break;
 #else /* TPP_HAVE_UNICODE */
 #define TPP_TOKEN_ENCODESTRING_CASE2(b, r1, r2)      \
 	case b: {                                        \
@@ -8418,9 +8438,76 @@ again:
 	TPP_TOKEN_ENCODESTRING_CASE2(TPP_ASCII_CR, '\\', 'r');
 	TPP_TOKEN_ENCODESTRING_CASE2(TPP_ASCII_LF, '\\', 'n');
 
-#if TPP_HAVE_UNICODE
-	TPP_CASE_UTF8_FIRSTBYTE_ISLF_FOREACH(TPP_TOKEN_ENCODESTRING_CASE4)
-#endif /* TPP_HAVE_UNICODE */
+	case 0xc2:
+		if ((iter + 1) < end && iter[0] == 0x85) {
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
+			output_repr = (tpp_char const *)"\\u0085";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
+			output_repr = (tpp_char const *)"\\u{85}";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
+			output_repr = (tpp_char const *)"\\&#85;";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
+			output_repr = (tpp_char const *)"\\302\\205";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)
+			output_repr = (tpp_char const *)"\\xc2\\x{85}";
+#else /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+			output_repr = (tpp_char const *)"\\x{c2}\\x{85}";
+#endif /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+			output_repr = (tpp_char const *)"\\o{302}\\o{205}";
+#else /* ... */
+			output_repr = (tpp_char const *)"\\302\\205"; /* May not be decodable... */
+#endif /* !... */
+			break;
+		}
+		goto again;
+	case 0xe2:
+		if ((iter + 2) < end && iter[0] == 0x80 && iter[1] == 0xa8) {
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
+			output_repr = (tpp_char const *)"\\u2028";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
+			output_repr = (tpp_char const *)"\\u{2028}";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
+			output_repr = (tpp_char const *)"\\&#2028;";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
+			output_repr = (tpp_char const *)"\\342\\200\\250";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)
+			output_repr = (tpp_char const *)"\\xe2\\x80\\x{a8}";
+#else /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+			output_repr = (tpp_char const *)"\\x{e2}\\x{80}\\x{a8}";
+#endif /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+			output_repr = (tpp_char const *)"\\o{342}\\o{200}\\o{250}";
+#else /* ... */
+			output_repr = (tpp_char const *)"\\342\\200\\250"; /* May not be decodable... */
+#endif /* !... */
+			break;
+		}
+		if ((iter + 2) < end && iter[0] == 0x80 && iter[1] == 0xa9) {
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
+			output_repr = (tpp_char const *)"\\u2029";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
+			output_repr = (tpp_char const *)"\\u{2029}";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
+			output_repr = (tpp_char const *)"\\&#2029;";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
+			output_repr = (tpp_char const *)"\\342\\200\\251";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)
+			output_repr = (tpp_char const *)"\\xe2\\x80\\x{a9}";
+#else /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+			output_repr = (tpp_char const *)"\\x{e2}\\x{80}\\x{a9}";
+#endif /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+			output_repr = (tpp_char const *)"\\o{342}\\o{200}\\o{251}";
+#else /* ... */
+			output_repr = (tpp_char const *)"\\342\\200\\251"; /* May not be decodable... */
+#endif /* !... */
+			break;
+		}
+		goto again;
 
 #undef TPP_TOKEN_ENCODESTRING_CASE4
 #undef TPP_TOKEN_ENCODESTRING_CASE2
@@ -15467,6 +15554,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S)
 		/* .tff_STRING_ESCAPE_S                        = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_S),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_XML)
+		/* .tff_STRING_ESCAPE_XML                      = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_XML),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_XML) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT)
 		/* .tff_STRING_ESCAPE_OCT                      = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_OCT),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT) */
@@ -37527,7 +37617,7 @@ tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_STRING_ESCAPE
 
 #if TPP_HAVE_STRING_ESCAPE_OCT_BRACE
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
 tpp_token_decodestring_oct_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
                                     tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize result;
@@ -37598,14 +37688,14 @@ done:
 
 #if TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG
 #if TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG)
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
 tpp_token_decodestring_hex_sequence_ex(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
                                        tpp_lexer_decodestring_config const *tpp_restrict config,
                                        bool always_allow_big)
 #define tpp_token_decodestring_hex_sequence(self, p_iter, end, config) \
 	tpp_token_decodestring_hex_sequence_ex(self, p_iter, end, config, false)
 #else /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
 tpp_token_decodestring_hex_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
                                     tpp_lexer_decodestring_config const *tpp_restrict config)
 #define tpp_token_decodestring_hex_sequence_ex(self, p_iter, config, always_allow_big) \
@@ -37737,7 +37827,7 @@ print_word_as_byte:
 
 
 #if TPP_HAVE_STRING_ESCAPE_UNI_BRACE
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
 tpp_token_decodestring_uni_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
                                     tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize result;
@@ -37799,6 +37889,26 @@ tpp_token_decodestring_uni_sequence(tpp_lexer *self, tpp_char const **p_iter, tp
 	return result;
 }
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE */
+
+
+#if TPP_HAVE_STRING_ESCAPE_XML
+/* In addition to `tpp_xml_entity_lookup()`, must also support:
+ * - &#<decimal>;
+ * - &#x<hex>;
+ * ... both of which allow encoding of unicode ordinals */
+#if TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
+tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
+                            tpp_unichar result[1],
+                            tpp_lexer const *tpp_restrict lexer);
+#else /* TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
+_tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
+                             tpp_unichar result[1]);
+#define tpp_decode_named_escape_xml(p_iter, end, result, lexer) \
+	_tpp_decode_named_escape_xml(p_iter, end, result)
+#endif /* !TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#endif /* TPP_HAVE_STRING_ESCAPE_XML */
 
 
 #if TPP_HAVE_TRIGRAPHS
@@ -37998,6 +38108,32 @@ print_ch_as_byte:
 			goto err_temp;
 		result += temp;
 		break;
+
+#if TPP_HAVE_STRING_ESCAPE_XML
+	case '&': {
+		tpp_size count;
+		tpp_unichar uc;
+		tpp_char utf8_buf[TPP_UTF8_MAXLEN];
+		tpp_size utf8_len;
+		if (!tpp_lexer_has(self, STRING_ESCAPE_XML))
+			goto handle_unknown_escape_sequence;
+		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+#if TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+		count = tpp_decode_named_escape_xml(&iter, end, &uc, self);
+#else /* TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+		count = tpp_decode_named_escape_xml(&iter, end, &uc);
+#endif /* !TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+		if (count == 0)
+			goto handle_unknown_escape_sequence;
+		tpp_assert(count == 1);
+		utf8_len = (tpp_size)(tpp_unicode_writeutf8(utf8_buf, uc) - utf8_buf);
+		temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getutf8(config),
+		                               config->tldsc_arg, utf8_buf, utf8_len);
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_XML */
 
 #if TPP_HAVE_STRING_ESCAPE_OCT
 	case '0': case '1': case '2': case '3':

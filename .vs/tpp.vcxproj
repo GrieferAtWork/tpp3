@@ -100,7 +100,8 @@
     <None Include="..\src\Makefile" />
     <None Include="..\src\parts\config.dee" />
     <None Include="..\src\parts\ctype-db\.gitignore" />
-    <None Include="..\src\parts\ctype-db\ctype.dee" />
+    <None Include="..\src\parts\ctype-db\ctype-unicode.dee" />
+    <None Include="..\src\parts\ctype-db\ctype-xml.dee" />
     <None Include="..\src\parts\ctype-db\Makefile" />
     <None Include="..\src\parts\token-encodestring-mblf.dee" />
   </ItemGroup>

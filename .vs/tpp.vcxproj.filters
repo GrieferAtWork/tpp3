@@ -245,9 +245,6 @@
     <None Include="..\src\parts\config.dee">
       <Filter>src\parts</Filter>
     </None>
-    <None Include="..\src\parts\ctype-db\ctype.dee">
-      <Filter>src\parts\ctype-db</Filter>
-    </None>
     <None Include="..\src\parts\ctype-db\Makefile">
       <Filter>src\parts\ctype-db</Filter>
     </None>
@@ -259,6 +256,12 @@
     </None>
     <None Include="..\src\makecache.py">
       <Filter>src</Filter>
+    </None>
+    <None Include="..\src\parts\ctype-db\ctype-xml.dee">
+      <Filter>src\parts\ctype-db</Filter>
+    </None>
+    <None Include="..\src\parts\ctype-db\ctype-unicode.dee">
+      <Filter>src\parts\ctype-db</Filter>
     </None>
   </ItemGroup>
 </Project>

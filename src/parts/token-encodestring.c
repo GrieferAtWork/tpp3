@@ -31,18 +31,6 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_TOKEN_ENCODESTRING
 
-/*[[[deemon
-import UTF8_LF_FIRST_BYTES from ".token-encodestring-mblf";
-print("#define TPP_CASE_UTF8_FIRSTBYTE_ISLF_FOREACH(cb) \\");
-print("	", " \\\n	".join(UTF8_LF_FIRST_BYTES.map(b -> f"cb({b.hex()}, '\\\\', 'x', {
-	", ".join(b.tostr(16, 2).map(e -> f"'{e}'"))})")));
-]]]*/
-#define TPP_CASE_UTF8_FIRSTBYTE_ISLF_FOREACH(cb) \
-	cb(0xc2, '\\', 'x', 'c', '2') \
-	cb(0xe2, '\\', 'x', 'e', '2')
-/*[[[end]]]*/
-
-
 /* \-encode "data...+=num_bytes" by passing it to "printer"
  * NOTE: Leading/trailing " (or ')-characters are *NOT* printed!
  *
@@ -77,11 +65,6 @@ again:
 		static tpp_char const _repr[3] = { r1, r2, 0 }; \
 		output_repr = _repr;                            \
 	}	break;
-#define TPP_TOKEN_ENCODESTRING_CASE4(b, r1, r2, r3, r4)         \
-	case b: {                                                   \
-		static tpp_char const _repr[5] = { r1, r2, r3, r4, 0 }; \
-		output_repr = _repr;                                    \
-	}	break;
 #else /* TPP_HAVE_UNICODE */
 #define TPP_TOKEN_ENCODESTRING_CASE2(b, r1, r2)      \
 	case b: {                                        \
@@ -100,9 +83,130 @@ again:
 	TPP_TOKEN_ENCODESTRING_CASE2(TPP_ASCII_CR, '\\', 'r');
 	TPP_TOKEN_ENCODESTRING_CASE2(TPP_ASCII_LF, '\\', 'n');
 
-#if TPP_HAVE_UNICODE
-	TPP_CASE_UTF8_FIRSTBYTE_ISLF_FOREACH(TPP_TOKEN_ENCODESTRING_CASE4)
-#endif /* TPP_HAVE_UNICODE */
+/*[[[deemon
+import * from ".token-encodestring-mblf";
+import * from deemon;
+for (local b: UTF8_LF_FIRST_BYTES.sorted()) {
+	print(f'	case {b.hex(2)}:');
+	for (local ord: UNICODE_LF_CHARACTERS) {
+		local utf8 = string.chr(ord).encode('utf-8');
+		if (utf8.first == b) {
+			local remainder = utf8[1:];
+			print(f'		if ((iter + {#remainder}) < end && {' && '.join(
+				for (local i, b: remainder.enumerate())
+					f'iter[{i}] == {b.hex(2)}'
+			)}) \{');
+			print(f'#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)');
+			if (ord <= 0xffff) {
+				print(f'			output_repr = (tpp_char const *)"\\\\u{ord.tostr(16, 4)}";');
+			} else {
+				print(f'			output_repr = (tpp_char const *)"\\\\U{ord.tostr(16, 8)}";');
+			}
+			print(f'#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)');
+			print(f'			output_repr = (tpp_char const *)"\\\\u\{{ord.tostr(16)}\}";');
+			print(f'#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)');
+			print(f'			output_repr = (tpp_char const *)"\\\\&#{ord.tostr(16)};";');
+			print(f'#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)');
+			print(f'			output_repr = (tpp_char const *)"{
+				''.join(for (local b: utf8[:-1]) f'\\\\{b.tostr(8)}')
+			}\\\\{utf8.last.tostr(8, 3)}";');
+			print('#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)');
+			print('#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)');
+			print(f'			output_repr = (tpp_char const *)"{
+				''.join(for (local b: utf8[:-1]) f'\\\\x{b.tostr(16)}')
+			}\\\\x\{{utf8.last.tostr(16)}\}";');
+			print('#else /' '* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) *' '/');
+			print(f'			output_repr = (tpp_char const *)"{
+				''.join(for (local b: utf8) f'\\\\x\{{b.tostr(16)}\}')
+			}";');
+			print('#endif /' '* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) *' '/');
+			print(f'#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)');
+			print(f'			output_repr = (tpp_char const *)"{
+				''.join(for (local b: utf8) f'\\\\o\{{b.tostr(8)}\}')
+			}";');
+			print('#else /' '* ... *' '/');
+			print(f'			output_repr = (tpp_char const *)"{
+				''.join(for (local b: utf8[:-1]) f'\\\\{b.tostr(8)}')
+			}\\\\{utf8.last.tostr(8, 3)}"; /' f'* May not be decodable... *' f'/');
+			print('#endif /' '* !... *' '/');
+			print('			break;');
+			print('		}');
+		}
+	}
+	print(f'		goto again;');
+}
+]]]*/
+	case 0xc2:
+		if ((iter + 1) < end && iter[0] == 0x85) {
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
+			output_repr = (tpp_char const *)"\\u0085";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
+			output_repr = (tpp_char const *)"\\u{85}";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
+			output_repr = (tpp_char const *)"\\&#85;";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
+			output_repr = (tpp_char const *)"\\302\\205";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)
+			output_repr = (tpp_char const *)"\\xc2\\x{85}";
+#else /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+			output_repr = (tpp_char const *)"\\x{c2}\\x{85}";
+#endif /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+			output_repr = (tpp_char const *)"\\o{302}\\o{205}";
+#else /* ... */
+			output_repr = (tpp_char const *)"\\302\\205"; /* May not be decodable... */
+#endif /* !... */
+			break;
+		}
+		goto again;
+	case 0xe2:
+		if ((iter + 2) < end && iter[0] == 0x80 && iter[1] == 0xa8) {
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
+			output_repr = (tpp_char const *)"\\u2028";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
+			output_repr = (tpp_char const *)"\\u{2028}";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
+			output_repr = (tpp_char const *)"\\&#2028;";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
+			output_repr = (tpp_char const *)"\\342\\200\\250";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)
+			output_repr = (tpp_char const *)"\\xe2\\x80\\x{a8}";
+#else /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+			output_repr = (tpp_char const *)"\\x{e2}\\x{80}\\x{a8}";
+#endif /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+			output_repr = (tpp_char const *)"\\o{342}\\o{200}\\o{250}";
+#else /* ... */
+			output_repr = (tpp_char const *)"\\342\\200\\250"; /* May not be decodable... */
+#endif /* !... */
+			break;
+		}
+		if ((iter + 2) < end && iter[0] == 0x80 && iter[1] == 0xa9) {
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
+			output_repr = (tpp_char const *)"\\u2029";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
+			output_repr = (tpp_char const *)"\\u{2029}";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
+			output_repr = (tpp_char const *)"\\&#2029;";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
+			output_repr = (tpp_char const *)"\\342\\200\\251";
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)
+			output_repr = (tpp_char const *)"\\xe2\\x80\\x{a9}";
+#else /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+			output_repr = (tpp_char const *)"\\x{e2}\\x{80}\\x{a9}";
+#endif /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+			output_repr = (tpp_char const *)"\\o{342}\\o{200}\\o{251}";
+#else /* ... */
+			output_repr = (tpp_char const *)"\\342\\200\\251"; /* May not be decodable... */
+#endif /* !... */
+			break;
+		}
+		goto again;
+/*[[[end]]]*/
 
 #undef TPP_TOKEN_ENCODESTRING_CASE4
 #undef TPP_TOKEN_ENCODESTRING_CASE2

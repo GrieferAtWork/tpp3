@@ -287,6 +287,7 @@ tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
      (TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) || \
       TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) ||   \
       TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_XML) ||           \
+      TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) ||                  \
       (TPP_HAVE_BSE && TPP_HAVE_UNICODE)))
 #define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM 1
 #else /* ... */

@@ -386,6 +386,7 @@
 #define TPP_CONF_IS_EXT(cfg)       (((cfg) & ~1) == -2) /* Should config be runtime-configurable as an extension? */
 #define TPP_CONF_IS_CONST(cfg)     ((cfg) >= 0)         /* Should config be compile-time only? */
 #define TPP_CONF_IS_RT(cfg)        ((cfg) < 0)          /* Should config be runtime configurable? */
+#define TPP_CONF_IS_ALWAYS(cfg)    ((cfg) > 0)          /* Is config always hard-enabled */
 #define TPP_CONF_DEFAULT(cfg)      ((cfg) & 1)          /* Default state of config */
 #define TPP_CONF_MAKEFEAT(default) (-4 + !!(default))   /* Configure as feature */
 #define TPP_CONF_MAKEEXT(default)  (-2 + !!(default))   /* Configure as extension */
@@ -2100,6 +2101,16 @@
 #define TPP_HAVE_STRING_ESCAPE_S ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : 0) : 0) /* "-fstring-escape-s" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_S */
 
+/* Support for [D](https://en.wikipedia.org/wiki/D_(programming_language))-like
+ * escape sequences in strings:
+ * ```c
+ * char const *tpp1 = "Tiny\&nbsp;PreProcessor";
+ * char const *tpp2 = "Tiny\u0080PreProcessor"; // Same as this
+ * ``` */
+#ifndef TPP_HAVE_STRING_ESCAPE_XML
+#define TPP_HAVE_STRING_ESCAPE_XML ((TPP_HAVE_STRING_ESCAPE && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) /* "-fstring-escape-xml" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_XML */
+
 /* Support for `\123` octal sequences (with `1`-`3` characters in range `0-7` following the `\`) */
 #ifndef TPP_HAVE_STRING_ESCAPE_OCT
 #define TPP_HAVE_STRING_ESCAPE_OCT ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct" */
@@ -2287,7 +2298,7 @@
  * a XML entity given its name. e.g. `tpp_xml_entity_lookup("Agrave", true)`
  * will return `0x00C0`. */
 #ifndef TPP_HAVE_XML_ENTITY_LOOKUP
-#define TPP_HAVE_XML_ENTITY_LOOKUP TPP_HAVE_ESCAPE_NAMED_XML
+#define TPP_HAVE_XML_ENTITY_LOOKUP (TPP_HAVE_ESCAPE_NAMED_XML || TPP_HAVE_STRING_ESCAPE_XML)
 #endif /* !TPP_HAVE_XML_ENTITY_LOOKUP */
 
 

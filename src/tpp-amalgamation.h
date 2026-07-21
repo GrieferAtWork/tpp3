@@ -1984,6 +1984,14 @@ TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_E, TPP_EXTNAME_STRING_ESCAPE_E, TPP_CONF_DEF
 TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_S, TPP_EXTNAME_STRING_ESCAPE_S, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_S))
 #define _tpp_lexer_has_STRING_ESCAPE_S(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_S)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_S) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_XML)
+#ifndef TPP_EXTNAME_STRING_ESCAPE_XML
+#define TPP_EXTNAME_STRING_ESCAPE_XML "string-escape-xml"
+#endif /* !TPP_EXTNAME_STRING_ESCAPE_XML */
+#define TPP_EXT_STRING_ESCAPE_XML TPP_EXT_STRING_ESCAPE_XML
+TPP_EXTENSION(TPP_EXT_STRING_ESCAPE_XML, TPP_EXTNAME_STRING_ESCAPE_XML, TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_XML))
+#define _tpp_lexer_has_STRING_ESCAPE_XML(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_XML)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_XML) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_STRING_ESCAPE_OCT)
 #ifndef TPP_EXTNAME_STRING_ESCAPE_OCT
 #define TPP_EXTNAME_STRING_ESCAPE_OCT "string-escape-oct"
@@ -5182,6 +5190,7 @@ TPP_DECL_END
 #define TPP_CONF_IS_EXT(cfg)       (((cfg) & ~1) == -2) /* Should config be runtime-configurable as an extension? */
 #define TPP_CONF_IS_CONST(cfg)     ((cfg) >= 0)         /* Should config be compile-time only? */
 #define TPP_CONF_IS_RT(cfg)        ((cfg) < 0)          /* Should config be runtime configurable? */
+#define TPP_CONF_IS_ALWAYS(cfg)    ((cfg) > 0)          /* Is config always hard-enabled */
 #define TPP_CONF_DEFAULT(cfg)      ((cfg) & 1)          /* Default state of config */
 #define TPP_CONF_MAKEFEAT(default) (-4 + !!(default))   /* Configure as feature */
 #define TPP_CONF_MAKEEXT(default)  (-2 + !!(default))   /* Configure as extension */
@@ -6896,6 +6905,16 @@ TPP_DECL_END
 #define TPP_HAVE_STRING_ESCAPE_S ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : 0) : 0) /* "-fstring-escape-s" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_S */
 
+/* Support for [D](https://en.wikipedia.org/wiki/D_(programming_language))-like
+ * escape sequences in strings:
+ * ```c
+ * char const *tpp1 = "Tiny\&nbsp;PreProcessor";
+ * char const *tpp2 = "Tiny\u0080PreProcessor"; // Same as this
+ * ``` */
+#ifndef TPP_HAVE_STRING_ESCAPE_XML
+#define TPP_HAVE_STRING_ESCAPE_XML ((TPP_HAVE_STRING_ESCAPE && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 0) /* "-fstring-escape-xml" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_XML */
+
 /* Support for `\123` octal sequences (with `1`-`3` characters in range `0-7` following the `\`) */
 #ifndef TPP_HAVE_STRING_ESCAPE_OCT
 #define TPP_HAVE_STRING_ESCAPE_OCT ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct" */
@@ -7083,7 +7102,7 @@ TPP_DECL_END
  * a XML entity given its name. e.g. `tpp_xml_entity_lookup("Agrave", true)`
  * will return `0x00C0`. */
 #ifndef TPP_HAVE_XML_ENTITY_LOOKUP
-#define TPP_HAVE_XML_ENTITY_LOOKUP TPP_HAVE_ESCAPE_NAMED_XML
+#define TPP_HAVE_XML_ENTITY_LOOKUP (TPP_HAVE_ESCAPE_NAMED_XML || TPP_HAVE_STRING_ESCAPE_XML)
 #endif /* !TPP_HAVE_XML_ENTITY_LOOKUP */
 
 
@@ -10093,6 +10112,7 @@ tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
      (TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) || \
       TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) ||   \
       TPP_CONF_IS_RT(TPP_HAVE_ESCAPE_NAMED_XML) ||           \
+      TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) ||                  \
       (TPP_HAVE_BSE && TPP_HAVE_UNICODE)))
 #define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM 1
 #else /* ... */
@@ -12546,6 +12566,7 @@ tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
      TPP_CONF_IS_FEAT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL) ||                 \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_E) ||                        \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S) ||                        \
+     TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_XML) ||                      \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT) ||                      \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE) ||                \
      TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY) ||           \
@@ -13108,6 +13129,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S)
 	TPP_FEAT_STRING_ESCAPE_S,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_XML)
+	TPP_FEAT_STRING_ESCAPE_XML,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_XML) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT)
 	TPP_FEAT_STRING_ESCAPE_OCT,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT) */
@@ -14068,6 +14092,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_S): 1;
 #define _tpp_lexer_has_STRING_ESCAPE_S(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_S)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_S) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_XML)
+		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_XML): 1;
+#define _tpp_lexer_has_STRING_ESCAPE_XML(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_XML)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_XML) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_OCT)
 		unsigned int TPP_INTERNAL(tff_STRING_ESCAPE_OCT): 1;
 #define _tpp_lexer_has_STRING_ESCAPE_OCT(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_STRING_ESCAPE_OCT)
@@ -15029,6 +15057,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_S)
 #define _tpp_lexer_has_STRING_ESCAPE_S(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_S)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_S) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_XML)
+#define _tpp_lexer_has_STRING_ESCAPE_XML(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_XML)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_XML) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_OCT)
 #define _tpp_lexer_has_STRING_ESCAPE_OCT(self) TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_OCT)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_STRING_ESCAPE_OCT) */

@@ -54,7 +54,7 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_STRING_ESCAPE
 
 #if TPP_HAVE_STRING_ESCAPE_OCT_BRACE
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
 tpp_token_decodestring_oct_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
                                     tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize result;
@@ -125,14 +125,14 @@ done:
 
 #if TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG
 #if TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG)
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
 tpp_token_decodestring_hex_sequence_ex(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
                                        tpp_lexer_decodestring_config const *tpp_restrict config,
                                        bool always_allow_big)
 #define tpp_token_decodestring_hex_sequence(self, p_iter, end, config) \
 	tpp_token_decodestring_hex_sequence_ex(self, p_iter, end, config, false)
 #else /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
 tpp_token_decodestring_hex_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
                                     tpp_lexer_decodestring_config const *tpp_restrict config)
 #define tpp_token_decodestring_hex_sequence_ex(self, p_iter, config, always_allow_big) \
@@ -264,7 +264,7 @@ print_word_as_byte:
 
 
 #if TPP_HAVE_STRING_ESCAPE_UNI_BRACE
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
 tpp_token_decodestring_uni_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
                                     tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize result;
@@ -326,6 +326,26 @@ tpp_token_decodestring_uni_sequence(tpp_lexer *self, tpp_char const **p_iter, tp
 	return result;
 }
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE */
+
+
+#if TPP_HAVE_STRING_ESCAPE_XML
+/* In addition to `tpp_xml_entity_lookup()`, must also support:
+ * - &#<decimal>;
+ * - &#x<hex>;
+ * ... both of which allow encoding of unicode ordinals */
+#if TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
+tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
+                            tpp_unichar result[1],
+                            tpp_lexer const *tpp_restrict lexer);
+#else /* TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
+_tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
+                             tpp_unichar result[1]);
+#define tpp_decode_named_escape_xml(p_iter, end, result, lexer) \
+	_tpp_decode_named_escape_xml(p_iter, end, result)
+#endif /* !TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#endif /* TPP_HAVE_STRING_ESCAPE_XML */
 
 
 #if TPP_HAVE_TRIGRAPHS
@@ -525,6 +545,32 @@ print_ch_as_byte:
 			goto err_temp;
 		result += temp;
 		break;
+
+#if TPP_HAVE_STRING_ESCAPE_XML
+	case '&': {
+		tpp_size count;
+		tpp_unichar uc;
+		tpp_char utf8_buf[TPP_UTF8_MAXLEN];
+		tpp_size utf8_len;
+		if (!tpp_lexer_has(self, STRING_ESCAPE_XML))
+			goto handle_unknown_escape_sequence;
+		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+#if TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+		count = tpp_decode_named_escape_xml(&iter, end, &uc, self);
+#else /* TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+		count = tpp_decode_named_escape_xml(&iter, end, &uc);
+#endif /* !TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+		if (count == 0)
+			goto handle_unknown_escape_sequence;
+		tpp_assert(count == 1);
+		utf8_len = (tpp_size)(tpp_unicode_writeutf8(utf8_buf, uc) - utf8_buf);
+		temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getutf8(config),
+		                               config->tldsc_arg, utf8_buf, utf8_len);
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_XML */
 
 #if TPP_HAVE_STRING_ESCAPE_OCT
 	case '0': case '1': case '2': case '3':

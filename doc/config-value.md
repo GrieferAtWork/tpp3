@@ -7,7 +7,7 @@ These configurations all define something other than an enabled/disabled state.
 
 A preprocessor tuple describing the built-in, hard-coded, system-include path.
 - The paths specified here are searched in order of specification.
-- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L18076)
+- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L18107)
 - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
   trailing slashes in these strings, it will add those itself)
 
@@ -28,7 +28,7 @@ Default:
 
 ## TPP_CONFIG_CLI_FILENAME
 
-Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L19917)
+Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L19948)
 
 <details><summary>Details</summary>
 
