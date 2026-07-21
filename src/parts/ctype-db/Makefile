@@ -2,7 +2,7 @@
 .DEFAULT_TARGET = all
 .PHONY: all
 
-all: ../ctype-unicode.c ../ctype-xml.c
+all: ../ctype-unicode.c ../ctype-xml.c ../ctype-names.c
 
 ../ctype-unicode.c: ctype-unicode.dee UnicodeData.txt DerivedCoreProperties.txt
 	deemon ctype-unicode.dee > ../ctype-unicode.c
@@ -10,6 +10,10 @@ all: ../ctype-unicode.c ../ctype-xml.c
 		../../external/libiconv/iconvdata/xml-entities \
 		../../external/libiconv/iconvdata/xml-entities.dee
 	deemon ctype-xml.dee > ../ctype-xml.c
+../ctype-names.c: ctype-names.dee \
+		UnicodeData.txt NameAliases.txt NamedSequences.txt \
+		emoji-zwj-sequences.txt emoji-sequences.txt
+	deemon ctype-names.dee > ../ctype-names.c
 
 
 
@@ -20,3 +24,11 @@ UnicodeData.txt:
 	wget --no-check-certificate https://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt
 DerivedCoreProperties.txt:
 	wget --no-check-certificate https://ftp.unicode.org/Public/UNIDATA/DerivedCoreProperties.txt
+NameAliases.txt:
+	wget --no-check-certificate https://ftp.unicode.org/Public/UNIDATA/NameAliases.txt
+NamedSequences.txt:
+	wget --no-check-certificate https://ftp.unicode.org/Public/UNIDATA/NamedSequences.txt
+emoji-zwj-sequences.txt:
+	wget --no-check-certificate https://ftp.unicode.org/Public/UCD/latest/emoji/emoji-zwj-sequences.txt
+emoji-sequences.txt:
+	wget --no-check-certificate https://ftp.unicode.org/Public/UCD/latest/emoji/emoji-sequences.txt

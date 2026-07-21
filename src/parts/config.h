@@ -2296,10 +2296,21 @@
 
 /* Provide a function `tpp_xml_entity_lookup()` that can be used to lookup
  * a XML entity given its name. e.g. `tpp_xml_entity_lookup("Agrave", true)`
- * will return `0x00C0`. */
+ * will return `0x00C0`.
+ *
+ * Adds ~6KiB to the final executable. */
 #ifndef TPP_HAVE_XML_ENTITY_LOOKUP
 #define TPP_HAVE_XML_ENTITY_LOOKUP (TPP_HAVE_ESCAPE_NAMED_XML || TPP_HAVE_STRING_ESCAPE_XML)
 #endif /* !TPP_HAVE_XML_ENTITY_LOOKUP */
+
+/* Provide a function `tpp_unicode_byname_lookup()` that can
+ * be used to lookup a unicode character given its name. e.g.
+ * `tpp_unicode_byname_lookup("NO-BREAK SPACE")` will return `0x00A0`. */
+#ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP (TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP */
+/* TODO: Option to enable UAX44-LM2 normalization in `TPP_HAVE_UNICODE_BYNAME_LOOKUP`
+ *       https://www.unicode.org/reports/tr44/tr44-24.html#UAX44-LM2 */
 
 
 #undef TPP_HAVE_TOK_INT

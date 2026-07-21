@@ -120,10 +120,13 @@
     <ClCompile Include="..\src\parts\lexer-skip.c">
       <Filter>src\parts</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parts\ctype-named.c">
+    <ClCompile Include="..\src\parts\ctype-xml.c">
       <Filter>src\parts</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\parts\ctype-xml.c">
+    <ClCompile Include="..\src\parts\ctype-names.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parts\ctype-decode-named.c">
       <Filter>src\parts</Filter>
     </ClCompile>
   </ItemGroup>
@@ -261,6 +264,9 @@
       <Filter>src\parts\ctype-db</Filter>
     </None>
     <None Include="..\src\parts\ctype-db\ctype-unicode.dee">
+      <Filter>src\parts\ctype-db</Filter>
+    </None>
+    <None Include="..\src\parts\ctype-db\ctype-names.dee">
       <Filter>src\parts\ctype-db</Filter>
     </None>
   </ItemGroup>

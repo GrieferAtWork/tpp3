@@ -1,0 +1,373 @@
+global final COPYRIGHT =
+"/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */";
+
+import * from deemon;
+import posix;
+
+@@Read lines from the given file, but skip comments and empty lines
+function readLines(filename: string): {Bytes...} {
+	print File.stderr: ("Parsing file: ", repr filename);
+	with (local fp = File.open(filename, "rb")) {
+		for (local line: fp) {
+			local com = line.find("#");
+			if (com >= 0)
+				line = line[:com];
+			line = line.strip();
+			if (line)
+				yield line;
+		}
+	}
+}
+
+function asciiUpper(x: string): string {
+	return "".join(
+		for (local ch: x) ({
+			local ord = ch.ord();
+			if (ord >= 'a'.ord() && ord <= 'z'.ord())
+				string.chr('A'.ord() + (ord - 'a'.ord()));
+			else
+				ch;
+		})
+	);
+}
+
+function decodeName(name: Bytes): string {
+	local result = asciiUpper(name.decode("utf-8")
+		.strip()
+		.replace(":", " : ")
+		.replace(",", " , ")
+		.replace("-", " - ")
+		.rereplace(r"\s+", " "));
+	for (;;) {
+		local pos = result.find("\\X{");
+		if (pos < 0)
+			break;
+		local end = result.find("}", pos);
+		local ord = int(result[pos+3:end], 16);
+		result = result[:pos] + string.chr(ord) + result[end+1:];
+	}
+	return result;
+}
+
+function getUnicodeNames(): {string: {int...}} {
+	local result: {string: {int...}} = Dict();
+	for (local line: readLines("./UnicodeData.txt")) {
+		local ord, name, none, none, none, none, none, none, none, none,
+			none, none, none, none, none = line.split(";")...;
+		if (name != "<control>")
+			result[decodeName(name)] = {int(ord, 16)};
+	}
+	for (local line: readLines("./NameAliases.txt")) {
+		local ord, name, none = line.split(";")...;
+		result[decodeName(name)] = {int(ord, 16)};
+	}
+	for (local line: readLines("./NamedSequences.txt")) {
+		local name, seq = line.split(";")...;
+		result[decodeName(name)] = (
+			for (local e: seq.strip().split(" "))
+				int(e, 16)
+		).frozen;
+	}
+	for (local line: readLines("./emoji-zwj-sequences.txt")) {
+		local seq, none, name = line.split(";")...;
+		result[decodeName(name)] = (
+			for (local e: seq.strip().split(" "))
+				int(e, 16)
+		).frozen;
+	}
+	for (local line: readLines("./emoji-sequences.txt")) {
+		local seq, none, name = line.split(";")...;
+		if (".." in seq) {
+			local seq1, none, seq2 = seq.partition("..")...;
+			local name1, none, name2 = name.partition("..")...;
+			result[decodeName(name1)] = (
+				for (local e: seq1.strip().split(" "))
+					int(e, 16)
+			).frozen;
+			result[decodeName(name2)] = (
+				for (local e: seq2.strip().split(" "))
+					int(e, 16)
+			).frozen;
+		} else {
+			result[decodeName(name)] = (
+				for (local e: seq.strip().split(" "))
+					int(e, 16)
+			).frozen;
+		}
+	}
+	return result;
+}
+
+
+function printDatabase(db: {string: {int...}}) {
+	db = Dict(db);
+
+	/* Extract groups */
+	local nameByOrd: {int: HashSet with string} = Dict();
+	local maxOrdCount = 1;
+	for (local name, ordSeq: db) {
+		local ordSeqLen = #ordSeq;
+		if (ordSeqLen == 1) {
+			local ord = ordSeq[0];
+			local names = nameByOrd.get(ord);
+			if (names is none)
+				nameByOrd[ord] = names = HashSet();
+			names.insert(name);
+		} else {
+			if (maxOrdCount < ordSeqLen)
+				maxOrdCount = ordSeqLen;
+		}
+	}
+
+	local maxOrd = nameByOrd.keys > ...;
+
+	@@Ranges of "PREFIX 123" / "PREFIX 1AB" characters
+	@@Elements are `(prefix, minOrd, maxOrd, startNumber, isHex)`, where:
+	@@ - `prefix`: Text that comes before the number suffix (**may end with whitespace**)
+	@@ - `minOrd`: Lowest unicode ordinal part of this range
+	@@ - `maxOrd`: Greatest unicode ordinal part of this range
+	@@ - `startNumber`: Integer suffix value of `minOrd`
+	@@ - `isHex`: Is the integer suffix written in hex (`true`) or decimal (`false`)
+	local numberSuffixGroups: {(string, int, int, int, bool)...} = [];
+	for (local groupMin = 0; groupMin < maxOrd;) {
+		local name1Candidates = nameByOrd.get(groupMin, {});
+		if (!name1Candidates) {
+			++groupMin;
+		} else {
+			local foundGroup = false;
+			for (local name1: name1Candidates) {
+				local groupMax = groupMin + 1;
+				local name2 = "";
+				local commonCount = 0;
+				for (local testName2: nameByOrd.get(groupMax, {})) {
+					local testCommonCount = name1.common(testName2);
+					if (commonCount < testCommonCount) {
+						commonCount = testCommonCount;
+						name2 = testName2;
+					}
+				}
+				if (commonCount > #name1)
+					continue;
+				while (commonCount >= 2 && name1.isdigit(commonCount - 1))
+					--commonCount;
+				if (commonCount > 1 && name1.isxdigit(commonCount, #name1)) {
+handle_group_start:
+					local afterCommon1 = name1[commonCount:];
+					local afterCommon2 = name2[commonCount:];
+					local afterCommon1Integer16 = try int(afterCommon1, 16) catch (...) -1;
+					local afterCommon1Integer10 = try int(afterCommon1, 10) catch (...) -1;
+					local afterCommon2Integer16 = try int(afterCommon2, 16) catch (...) -1;
+					local afterCommon2Integer10 = try int(afterCommon2, 10) catch (...) -1;
+					local isHex = (afterCommon1Integer16 + 1) == afterCommon2Integer16;
+					local isDec = (afterCommon1Integer10 + 1) == afterCommon2Integer10;
+					if (isHex || isDec) {
+						local groupMemberNames: {string...} = HashSet({ name1, name2 });
+						local groupPrefix = name1[:commonCount];
+						local groupMode = (isHex && isDec) ? 2 : isHex ? 1 : 0;
+						local groupStartNumber10 = afterCommon1Integer10;
+						local groupStartNumber16 = afterCommon1Integer16;
+						local nextGroupMax = groupMax + 1;
+						while (nextGroupMax <= maxOrd) {
+							afterCommon1Integer10 = afterCommon2Integer10;
+							afterCommon1Integer16 = afterCommon2Integer16;
+							local name3 = "";
+							for (local testName3: nameByOrd.get(nextGroupMax, {})) {
+								if (testName3.startswith(groupPrefix)) {
+									name3 = testName3;
+									break;
+								}
+							}
+							if (!name3.startswith(groupPrefix)) {
+								/* See if we can include some extra hex digits within this group... */
+								if (groupMode != 0) {
+									local newCommonCount = commonCount;
+									while (newCommonCount >= 2 && name1.isxdigit(newCommonCount - 1))
+										--newCommonCount;
+									if (commonCount > newCommonCount) {
+										print File.stderr: (f"Restarting group {repr name1}: {repr name1[commonCount:]} -> {repr name1[newCommonCount:]}");
+										commonCount = newCommonCount;
+										groupMax = groupMin + 1;
+										goto handle_group_start;
+									}
+								}
+								break;
+							}
+							local afterCommon3 = name3[commonCount:];
+							local afterCommon3Integer16 = try int(afterCommon3, 16) catch (...) -1;
+							local afterCommon3Integer10 = try int(afterCommon3, 10) catch (...) -1;
+							isHex = (afterCommon2Integer16 + 1) == afterCommon3Integer16;
+							isDec = (afterCommon2Integer10 + 1) == afterCommon3Integer10;
+							if (isHex && isDec) {
+								/* Continue with old groupMode */
+							} else if (isHex) {
+								if (groupMode == 2)
+									groupMode = 1; /* Switch to hex-only */
+								if (groupMode == 0)
+									break; /* Group must be decimal */
+							} else if (isDec) {
+								if (groupMode == 2)
+									groupMode = 0; /* Switch to decimal-only */
+								if (groupMode == 1)
+									break; /* Group must be hex */
+							} else {
+								break; /* End of group */
+							}
+							afterCommon2Integer16 = afterCommon3Integer16;
+							afterCommon2Integer10 = afterCommon3Integer10;
+							groupMemberNames.insert(name3);
+							groupMax = nextGroupMax;
+							++nextGroupMax;
+						}
+						if (#groupMemberNames > 6) {
+							/* Register this group! */
+							local groupIsHex = groupMode != 0;
+							local groupStartNumber = groupIsHex ? groupStartNumber16 : groupStartNumber10;
+							print File.stderr: (
+								f"Found group: {repr groupPrefix}: U+{groupMin.tostr(16, 4, "X")}, U+{
+								groupMax.tostr(16, 4, "X")} ({groupMax - groupMin + 1}), {
+								groupStartNumber.tostr(groupIsHex ? 16 : 10, 0)}, {groupIsHex}");
+							numberSuffixGroups.append({
+								groupPrefix,
+								groupMin,
+								groupMax,
+								groupStartNumber,
+								groupIsHex,
+							});
+							for (local groupMemberName: groupMemberNames)
+								del db[groupMemberName];
+							for (local ord: [groupMin:groupMax+1])
+								nameByOrd[ord].removeall(groupMemberNames);
+							foundGroup = true;
+							break;
+						}
+					}
+				}
+			}
+			if (!foundGroup)
+				++groupMin;
+		}
+	}
+
+	local tokensByCount: {string: int} = Dict();
+	local minTokenCount: int = 999999;
+	local maxTokenCount: int = 0;
+	for (local key: db.keys) {
+		local tokens = key.split(" ");
+		for (local tok: tokens)
+			tokensByCount[tok] = tokensByCount.get(tok, 0) + 1;
+		local tokenCount = #tokens;
+		if (maxTokenCount < tokenCount)
+			maxTokenCount = tokenCount;
+		if (minTokenCount > tokenCount)
+			minTokenCount = tokenCount;
+	}
+	for (local group: numberSuffixGroups) {
+		local tokens = group[0].strip().split(" ");
+		for (local tok: tokens)
+			tokensByCount[tok] = tokensByCount.get(tok, 0) + 1;
+		local tokenCount = #tokens;
+		if (maxTokenCount < tokenCount)
+			maxTokenCount = tokenCount;
+		if (minTokenCount > tokenCount)
+			minTokenCount = tokenCount;
+	}
+	local tokensSortedByUseCount = tokensByCount.sorted(key: e -> -e.last).cached;
+
+	/* Database uses 2 layers:
+	 *  - Conversion of input text to tokens:
+	 *    - Have a big blob of "TOKEN_REPR, TOKEN_ID" pairs (sorted by TOKEN_REPR)
+	 *      that can be used to tokenize input text using various rules:
+	 *      - Case sensitive y/n
+	 *      - UAX44-LM2 y/n
+	 *      - ...
+	 *  - Tokens can then be used to traverse a big prefix-tree:
+	 *    - Every node looks like this:
+	 *      - { [opt:OFFSET_TO_NEXT_SIBLING], {TOKEN_ID...}, [opt:{RESULT_ORD...}], [opt:FIRST_CHILD] }
+	 *        - [opt:OFFSET_TO_NEXT_SIBLING]: Offset to next sibling node (same parent, but different {TOKEN_ID...} sequence)
+	 *        - {TOKEN_ID...}: Sequence of token IDs needed to match this node (never empty)
+	 *        - [opt:{RESULT_ORD...}]: Resulting unicode ordinal sequence when matched
+	 *        - [opt:FIRST_CHILD]: Inlined (i.e.: stored in memory directly after this node):
+	 *          the first child of this node, that is: a node that expects a prefix matching
+	 *          what was described by `{TOKEN_ID...}`
+	 *        NOTE: [opt:{RESULT_ORD...}] and [opt:{RESULT_ORD...}] are mutually exclusive:
+	 *              Every node must have one or the other, but never both or neither
+	 *
+	 * Also: sibling nodes are sorted by `{TOKEN_ID...}`, and in turn `TOKEN_ID`
+	 *       are allocated based on how often the resp. token is used by unicode
+	 *
+	 * The encoding of `TOKEN_ID`, `OFFSET_TO_NEXT_SIBLING`, `RESULT_ORD`
+	 * uses a variable-length integer encoding TODO (will probably use ULEB128)
+	 */
+	print(f'TPP_STATIC_ASSERT(TPP_UNICODE_BYNAME_LOOKUP_MAXUC == {maxOrdCount});');
+	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MINTOKENS {minTokenCount}');
+	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MAXTOKENS {maxTokenCount}');
+
+#if 0
+	for (local tok, count: tokensSortedByUseCount)
+		print(f"// {tok}      {count}");
+#endif
+
+	print;
+	print;
+	print;
+	print;
+	for (local prefix, minOrd, maxOrd, startNumber, isHex: numberSuffixGroups) {
+		print(f"// {repr prefix}      U+{minOrd.tostr(16, 4, "X")}, U+{
+			maxOrd.tostr(16, 4, "X")} ({maxOrd - minOrd + 1}), {
+			startNumber.tostr(isHex ? 16 : 10, 0)}, {isHex}");
+	}
+
+}
+
+
+function main() {
+	print(COPYRIGHT);
+	print;
+	print('/* GENERATED FILE -- DO NOT EDIT */');
+	print;
+	print('#ifndef GUARD_TPP_CTYPE_NAMES_C');
+	print('#define GUARD_TPP_CTYPE_NAMES_C 1');
+	print('#define TPP_BUILDING 1');
+	print;
+	print('#include "api.h"');
+	print;
+	print('#include "config.h"');
+	print('#include "ctype.h"');
+	print;
+	print('/*[[[tpp-begin]]]*/');
+	print('TPP_DECL_BEGIN');
+	print;
+	print('#if TPP_HAVE_UNICODE_BYNAME_LOOKUP');
+	print('#ifndef tpp_unicode_byname_lookup');
+	local db: {string: {int...}} = getUnicodeNames();
+	printDatabase(db);
+	print('#endif /* !tpp_unicode_byname_lookup */');
+	print('#endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP */');
+	print;
+	print('TPP_DECL_END');
+	print('/*[[[tpp-end]]]*/');
+	print;
+	print('#endif /* !GUARD_TPP_CTYPE_NAMES_C */');
+}
+
+#ifdef __MAIN__
+main();
+#endif /* __MAIN__ */

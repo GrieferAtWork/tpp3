@@ -1,2 +1,6 @@
 UnicodeData.txt
 DerivedCoreProperties.txt
+NameAliases.txt
+NamedSequences.txt
+emoji-zwj-sequences.txt
+emoji-sequences.txt

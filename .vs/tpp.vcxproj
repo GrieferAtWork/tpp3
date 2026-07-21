@@ -13,7 +13,8 @@
   <ItemGroup>
     <ClCompile Include="..\src\frontend.c" />
     <ClCompile Include="..\src\parts\builtins.c" />
-    <ClCompile Include="..\src\parts\ctype-named.c" />
+    <ClCompile Include="..\src\parts\ctype-decode-named.c" />
+    <ClCompile Include="..\src\parts\ctype-names.c" />
     <ClCompile Include="..\src\parts\ctype-unicode.c" />
     <ClCompile Include="..\src\parts\ctype-xml.c" />
     <ClCompile Include="..\src\parts\ctype.c" />
@@ -100,6 +101,7 @@
     <None Include="..\src\Makefile" />
     <None Include="..\src\parts\config.dee" />
     <None Include="..\src\parts\ctype-db\.gitignore" />
+    <None Include="..\src\parts\ctype-db\ctype-names.dee" />
     <None Include="..\src\parts\ctype-db\ctype-unicode.dee" />
     <None Include="..\src\parts\ctype-db\ctype-xml.dee" />
     <None Include="..\src\parts\ctype-db\Makefile" />

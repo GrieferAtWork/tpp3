@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_TPP_CTYPE_NAMED_C
-#define GUARD_TPP_CTYPE_NAMED_C 1
+#ifndef GUARD_TPP_CTYPE_DECODE_NAMED_C
+#define GUARD_TPP_CTYPE_DECODE_NAMED_C 1
 #define TPP_BUILDING 1
 
 #include "api.h"
@@ -291,4 +291,4 @@ nope:
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 
-#endif /* !GUARD_TPP_CTYPE_NAMED_C */
+#endif /* !GUARD_TPP_CTYPE_DECODE_NAMED_C */
