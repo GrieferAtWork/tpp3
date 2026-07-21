@@ -300,6 +300,9 @@ function generateUnicodeDatabase() {
 	assert lookup('ß'.ord()) == (_TPP_CTYPE_ISSYMSTRT | _TPP_CTYPE_ISSYMCONT);
 
 	print(COPYRIGHT);
+	print;
+	print('/* GENERATED FILE -- DO NOT EDIT */');
+	print;
 	print("#ifndef GUARD_TPP_CTYPE_UNICODE_C");
 	print("#define GUARD_TPP_CTYPE_UNICODE_C 1");
 	print("#define TPP_BUILDING 1");
@@ -338,16 +341,7 @@ function generateUnicodeDatabase() {
 }
 
 
-
 #ifdef __MAIN__
 loadTraits(".");
-with (local fp = File.open("../ctype-unicode.c", "wb")) {
-	local oldStdout = File.stdout;
-	try {
-		File.stdout = fp;
-		generateUnicodeDatabase();
-	} finally {
-		File.stdout = oldStdout;
-	}
-}
+generateUnicodeDatabase();
 #endif /* __MAIN__ */

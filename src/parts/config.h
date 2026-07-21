@@ -2283,6 +2283,13 @@
 #define TPP_HAVE_ESCAPE_NAMED_XML (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : 0) : 0) /* "-fnamed-escape-xml" */
 #endif /* !TPP_HAVE_ESCAPE_NAMED_XML */
 
+/* Provide a function `tpp_xml_entity_lookup()` that can be used to lookup
+ * a XML entity given its name. e.g. `tpp_xml_entity_lookup("Agrave", true)`
+ * will return `0x00C0`. */
+#ifndef TPP_HAVE_XML_ENTITY_LOOKUP
+#define TPP_HAVE_XML_ENTITY_LOOKUP TPP_HAVE_ESCAPE_NAMED_XML
+#endif /* !TPP_HAVE_XML_ENTITY_LOOKUP */
+
 
 #undef TPP_HAVE_TOK_INT
 #if TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_PASCAL_HEX

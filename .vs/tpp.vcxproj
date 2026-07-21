@@ -15,6 +15,7 @@
     <ClCompile Include="..\src\parts\builtins.c" />
     <ClCompile Include="..\src\parts\ctype-named.c" />
     <ClCompile Include="..\src\parts\ctype-unicode.c" />
+    <ClCompile Include="..\src\parts\ctype-xml.c" />
     <ClCompile Include="..\src\parts\ctype.c" />
     <ClCompile Include="..\src\parts\error.c" />
     <ClCompile Include="..\src\parts\expr.c" />

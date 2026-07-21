@@ -61,8 +61,11 @@ TPP_DECL_BEGIN
 /* clang-format on */
 static uint_least8_t const tpp_unicode_utf8seqlen[128] =
 TPP_UTF8_SEQLEN_INIT(0, ~, 2, 3, 4, 0, 0, 0, 0);
+#ifndef tpp_unicode_utf8seqlen_safe
+#define tpp_unicode_utf8seqlen_safe tpp_unicode_utf8seqlen_safe
 static uint_least8_t const tpp_unicode_utf8seqlen_safe[128] =
 TPP_UTF8_SEQLEN_INIT(1, ~, 2, 3, 4, 5, 6, 7, 8);
+#endif /* !tpp_unicode_utf8seqlen_safe */
 #undef TPP_UTF8_SEQLEN_INIT
 
 /* Check if "ch" is a utf-8 continuation byte */

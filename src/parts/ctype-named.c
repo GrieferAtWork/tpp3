@@ -121,7 +121,129 @@ _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
 
 #if TPP_HAVE_ESCAPE_NAMED_XML
 	if (ch == '&' && tpp_lexer_has(lexer, ESCAPE_NAMED_XML)) {
-		/* TODO */
+		/* In addition to `tpp_xml_entity_lookup()`, must also support:
+		 * - &#<decimal>;
+		 * - &#x<hex>;
+		 * ... both of which allow encoding of unicode ordinals */
+		tpp_unichar uc;
+		char xmlname[TPP_XML_ENTITY_LOOKUP_MAXLEN + 1];
+		tpp_size xmlname_size = 0;
+		bool has_semi;
+		if (iter >= end)
+			goto nope;
+		ch = *iter++;
+		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+		if (ch == '#') {
+#if TPP_HAVE_TRIGRAPHS
+handle_xml_ord:
+#endif /* TPP_HAVE_TRIGRAPHS */
+			if (iter >= end)
+				goto nope;
+			ch = *iter++;
+			iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+			if (ch == 'x') { /* Only lowercase 'x' is allowed here! */
+				tpp_char const *uc_iter;
+				if (iter >= end)
+					goto nope;
+				ch = *iter++;
+				if (!tpp_ascii_isxdigit(ch))
+					goto nope;
+				uc = tpp_ascii_asxdigit(ch);
+				uc_iter = iter;
+				for (;;) {
+					unsigned char nibble;
+					iter = uc_iter;
+					uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
+					if (uc_iter >= end)
+						break;
+					ch = *uc_iter++;
+					if (!tpp_ascii_isxdigit(ch)) {
+						if (ch == ';') /* Include trailing ';' */
+							iter = uc_iter;
+						break;
+					}
+					nibble = tpp_ascii_asxdigit(ch);
+					if (((uc << 4) >> 4) != uc)
+						break;
+					uc <<= 4;
+					uc |= nibble;
+				}
+				*p_iter = iter;
+				result[0] = uc;
+				return 1;
+			} else if (tpp_ascii_isdigit(ch)) {
+				tpp_char const *uc_iter;
+				uc = tpp_ascii_asdigit(ch);
+				uc_iter = iter = (*p_iter + 1);
+				for (;;) {
+					unsigned char nibble;
+					iter = uc_iter;
+					uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
+					if (uc_iter >= end)
+						break;
+					ch = *uc_iter++;
+					if (!tpp_ascii_isdigit(ch))
+						break;
+					nibble = tpp_ascii_asdigit(ch);
+					if (((uc * 10) / 10) != uc)
+						break;
+					uc *= 10;
+					uc += nibble;
+				}
+				*p_iter = iter;
+				result[0] = uc;
+				return 1;
+			}
+			goto nope;
+		} else
+#if TPP_HAVE_TRIGRAPHS
+		if (ch == '?' && (iter + 1) < end &&
+		    iter[0] == '?' && iter[1] == '=' &&
+		    tpp_lexer_has(lexer, TRIGRAPHS)) {
+			iter += 2;
+			goto handle_xml_ord;
+		} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+		{
+		}
+
+		xmlname[0] = (char)ch;
+		xmlname_size = 1;
+#if TPP_XML_ENTITY_LOOKUP_MINLEN < 2
+		has_semi = iter < end && *iter == ';';
+		uc = tpp_xml_entity_lookup(xmlname, has_semi);
+		if (uc != TPP_XML_ENTITY_LOOKUP_UNKNOWN) {
+			if (has_semi)
+				++iter;
+		} else
+#endif /* TPP_XML_ENTITY_LOOKUP_MINLEN < 2 */
+		{
+			for (;;) {
+				if (iter >= end)
+					goto nope;
+				ch = *iter++;
+				iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+				if (ch == ';') {
+					xmlname[xmlname_size] = '\0';
+					uc = tpp_xml_entity_lookup(xmlname, true);
+					if (uc == TPP_XML_ENTITY_LOOKUP_UNKNOWN)
+						goto nope;
+					break;
+				}
+				xmlname[xmlname_size++] = (char)ch;
+				xmlname[xmlname_size] = '\0';
+				has_semi = iter < end && *iter == ';';
+				uc = tpp_xml_entity_lookup(xmlname, has_semi);
+				if (uc != TPP_XML_ENTITY_LOOKUP_UNKNOWN) {
+					if (has_semi)
+						++iter;
+					break;
+				}
+			}
+		}
+		*p_iter = iter;
+		result[0] = uc;
+		return 1;
 	}
 #endif /* TPP_HAVE_ESCAPE_NAMED_XML */
 

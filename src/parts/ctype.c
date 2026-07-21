@@ -32,7 +32,7 @@ TPP_DECL_BEGIN
 TPP_CONST_IMPL uint_least8_t const _tpp_ctype[256] = {
 /*[[[deemon
 import UTF8_LF_FIRST_BYTES from ".token-encodestring-mblf";
-import getAsciiFlags from ".ctype-db.ctype";
+import getAsciiFlags from ".ctype-db.ctype-unicode";
 local asciiFlags = getAsciiFlags();
 for (local i = 0; i < 256; ++i) {
 	if ((i % 16) == 0)

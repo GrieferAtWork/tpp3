@@ -7079,6 +7079,13 @@ TPP_DECL_END
 #define TPP_HAVE_ESCAPE_NAMED_XML (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : 0) : 0) /* "-fnamed-escape-xml" */
 #endif /* !TPP_HAVE_ESCAPE_NAMED_XML */
 
+/* Provide a function `tpp_xml_entity_lookup()` that can be used to lookup
+ * a XML entity given its name. e.g. `tpp_xml_entity_lookup("Agrave", true)`
+ * will return `0x00C0`. */
+#ifndef TPP_HAVE_XML_ENTITY_LOOKUP
+#define TPP_HAVE_XML_ENTITY_LOOKUP TPP_HAVE_ESCAPE_NAMED_XML
+#endif /* !TPP_HAVE_XML_ENTITY_LOOKUP */
+
 
 #undef TPP_HAVE_TOK_INT
 #if TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_PASCAL_HEX
@@ -10124,6 +10131,24 @@ _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
 #define tpp_decode_named_escape(p_iter, end, result, lexer) \
 	TPP_SSIZE_OFERR(TPP_ENOENT)
 #endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE */
+
+
+#if TPP_HAVE_XML_ENTITY_LOOKUP
+#ifndef tpp_xml_entity_lookup
+/* Return the unicode ordinal associated with `name`
+ * @return: TPP_XML_ENTITY_LOOKUP_UNKNOWN: Unknown entity name
+ * @return: * : Unicode ordinal for specified entity */
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_unichar TPPCALL
+tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon);
+
+/* Returned by `tpp_xml_entity_lookup()` when entity name is unrecognized */
+#define TPP_XML_ENTITY_LOOKUP_UNKNOWN 0
+
+/* Length of the longest, known XML entity */
+#define TPP_XML_ENTITY_LOOKUP_MAXLEN 31
+#define TPP_XML_ENTITY_LOOKUP_MINLEN 2
+#endif /* !tpp_xml_entity_lookup */
+#endif /* TPP_HAVE_XML_ENTITY_LOOKUP */
 
 /************************************************************************/
 /* File: parts/string.h                                                 */
@@ -17187,7 +17212,7 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 #define tpp_bse_file__ARG(x) /* nothing */
 #endif /* !TPP_HAVE_BSE || !TPP_HAVE_UNICODE */
 
-#if ((TPP_HAVE_BSE && TPP_HAVE_UNICODE) ||                                       \
+#if ((TPP_HAVE_BSE && TPP_HAVE_UNICODE) ||                                             \
      (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && (TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM || \
                                            TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS))))
 struct tpp_lexer;

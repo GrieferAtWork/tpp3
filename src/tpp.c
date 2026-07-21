@@ -38,6 +38,7 @@
 #include "parts/error.c"
 #include "parts/ctype.c"
 #include "parts/ctype-unicode.c"
+#include "parts/ctype-xml.c"
 #include "parts/ctype-named.c"
 #include "parts/string.c"
 #include "parts/token-strtokenid.c"

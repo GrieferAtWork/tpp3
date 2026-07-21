@@ -544,7 +544,7 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 #define tpp_bse_file__ARG(x) /* nothing */
 #endif /* !TPP_HAVE_BSE || !TPP_HAVE_UNICODE */
 
-#if ((TPP_HAVE_BSE && TPP_HAVE_UNICODE) ||                                       \
+#if ((TPP_HAVE_BSE && TPP_HAVE_UNICODE) ||                                             \
      (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && (TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM || \
                                            TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS))))
 struct tpp_lexer;

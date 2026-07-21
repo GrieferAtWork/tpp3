@@ -326,6 +326,24 @@ _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
 	TPP_SSIZE_OFERR(TPP_ENOENT)
 #endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE */
 
+
+#if TPP_HAVE_XML_ENTITY_LOOKUP
+#ifndef tpp_xml_entity_lookup
+/* Return the unicode ordinal associated with `name`
+ * @return: TPP_XML_ENTITY_LOOKUP_UNKNOWN: Unknown entity name
+ * @return: * : Unicode ordinal for specified entity */
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_unichar TPPCALL
+tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon);
+
+/* Returned by `tpp_xml_entity_lookup()` when entity name is unrecognized */
+#define TPP_XML_ENTITY_LOOKUP_UNKNOWN 0
+
+/* Length of the longest, known XML entity */
+#define TPP_XML_ENTITY_LOOKUP_MAXLEN 31
+#define TPP_XML_ENTITY_LOOKUP_MINLEN 2
+#endif /* !tpp_xml_entity_lookup */
+#endif /* TPP_HAVE_XML_ENTITY_LOOKUP */
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

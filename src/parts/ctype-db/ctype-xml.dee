@@ -1,0 +1,195 @@
+global final COPYRIGHT =
+"/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */";
+
+import * from deemon;
+import xe = XML_ENTITIES from "...external.libiconv.iconvdata.xml-entities";
+
+
+function main() {
+	print(COPYRIGHT);
+	print;
+	print('/* GENERATED FILE -- DO NOT EDIT */');
+	print;
+	print('#ifndef GUARD_TPP_CTYPE_XML_C');
+	print('#define GUARD_TPP_CTYPE_XML_C 1');
+	print('#define TPP_BUILDING 1');
+	print;
+	print('#include "api.h"');
+	print;
+	print('#include "config.h"');
+	print('#include "ctype.h"');
+	print;
+	print('/*[[[tpp-begin]]]*/');
+	print('TPP_DECL_BEGIN');
+	print;
+	print('#if TPP_HAVE_XML_ENTITY_LOOKUP');
+	print('#ifndef tpp_xml_entity_lookup');
+
+	// In order for the special database encoding we're using
+	// to work, all keys must have a length of at least 2!
+	local keys = xe.keys.sorted();
+	local minKeyLen = keys.each.length < ...;
+	local maxKeyLen = keys.each.length > ...;
+	assert minKeyLen >= 2;
+	print(f'TPP_STATIC_ASSERT(TPP_XML_ENTITY_LOOKUP_MINLEN == {minKeyLen});');
+	print(f'TPP_STATIC_ASSERT(TPP_XML_ENTITY_LOOKUP_MAXLEN == {maxKeyLen});');
+
+	function encodeBytes(line: Bytes): string {
+		return ", ".join(
+			for (local b: line) ({
+				local chr = string.chr(b);
+				if (b <= 9) {
+					str(b);
+				} else if (b >= 0x80 || !chr.isprint()) {
+					b.hex(2);
+				} else if (chr in "\\'\"") {
+					f"'\\{chr}'";
+				} else {
+					f"'{chr}'";
+				}
+			})
+		);
+	}
+
+	local lines = [];
+	if (!xe[keys.first].last)
+		print("	0,");
+	for (local key: keys) {
+		local ord, semicolonIsOptional = xe[key]...;
+		local line = File.Writer(hint: "bytes");
+		if (semicolonIsOptional)
+			line.putc(1);
+		line.write(key);
+		line.putc(0);
+		line.write(string.chr(ord).encode("utf-8"));
+		line.putc(0);
+		lines.append(line.bytes);
+	}
+	lines.append("..\0.\0".encode("utf-8"));
+
+	local dbSize = lines.each.length + ...;
+
+	print("static tpp_char const tpp_xml_entity_db[", dbSize.hex(), "] = {");
+	for (local line: lines)
+		print("	", encodeBytes(line), ",");
+	print("};");
+	print("""\
+
+/* Helpers for working XML Entity database entries. */
+typedef char tpp_xml_entity_t;
+#define tpp_xml_entity_semiopt(self) ((self)[-1] == 1) /* non-zero iff the trailing ';' is optional */
+#define tpp_xml_entity_name(self)    (self)            /* String that must appear in '&<str>;' */
+#define tpp_xml_entity_utf8(self)    ((self) + tpp_strlen(self) + 1) /* utf-8 sequence used for replacement. */
+
+#ifndef tpp_unicode_utf8seqlen_safe
+#define tpp_unicode_utf8seqlen_safe tpp_unicode_utf8seqlen_safe
+static uint_least8_t const tpp_unicode_utf8seqlen_safe[128] = {
+	/* Unicode follow-up word (`0b10??????'). */
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0x80-0x8f */
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0x90-0x9f */
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0xa0-0xaf */
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0xb0-0xbf */
+	/* `0b110?????' */
+	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, /* 0xc0-0xcf */
+	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, /* 0xd0-0xdf */
+	/* `0b1110????' */
+	3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, /* 0xe0-0xef */
+	/* `0b11110???' */
+	4,4,4,4,4,4,4,4,                 /* 0xf0-0xf7 */
+	5,5,5,5,                         /* 0xf8-0xfb */
+	6,6,                             /* 0xfc-0xfd */
+	7,                               /* 0xfe */
+	8                                /* 0xff */
+};
+#endif /* !tpp_unicode_utf8seqlen_safe */
+
+
+/* Find the start of the given entry. */
+static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_xml_entity_t const *TPPCALL
+tpp_xml_entity_fromptr(tpp_char const *tpp_restrict ptr) {
+	tpp_char const *iter;
+	iter = ptr + tpp_strlen((char const *)ptr) + 1;
+	iter += (*iter < 0xc0 ? 1 : tpp_unicode_utf8seqlen_safe[*iter & 0x7f]);
+	if (*iter == 0) {
+		/* `ptr' points into the first string! */
+		if (*ptr == 0x01)
+			return (tpp_xml_entity_t const *)(ptr + 1);
+		while ((unsigned char)ptr[-1] >= 0x02)
+			--ptr;
+		return (tpp_xml_entity_t const *)ptr;
+	}
+
+	/* `ptr' points into the second string! */
+	while (ptr[-1] != 0)
+		--ptr;
+
+	/* `ptr' now points at the start of the second string. */
+	--ptr;
+
+	/* `ptr' now points at the nul after the first string. */
+	while ((unsigned char)ptr[-1] >= 0x02)
+		--ptr;
+
+	/* `ptr' now points at the start of the first string. */
+	return (tpp_xml_entity_t const *)ptr;
+}
+
+/* Return the unicode ordinal associated with `name`
+ * @return: TPP_XML_ENTITY_LOOKUP_UNKNOWN: Unknown entity name
+ * @return: * : Unicode ordinal for specified entity */
+TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_unichar TPPCALL
+tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon) {
+	tpp_size lo, hi;
+	lo = 1;
+	hi = sizeof(tpp_xml_entity_db) - 5;
+	while (lo < hi) {
+		tpp_xml_entity_t const *entry;
+		tpp_size i = (lo + hi) / 2;
+		int cmp;
+		entry = tpp_xml_entity_fromptr(tpp_xml_entity_db + i);
+		cmp   = tpp_strcmp(tpp_xml_entity_name(entry), name);
+		if (cmp > 0) {
+			hi = i;
+		} else if (cmp < 0) {
+			lo = i + 1;
+		} else {
+			/* Found it! */
+			tpp_char const *utf8;
+			if (!has_trailing_semicolon && !tpp_xml_entity_semiopt(entry))
+				return TPP_XML_ENTITY_LOOKUP_UNKNOWN; /* Trailing semicolon is mandatory */
+			utf8 = (tpp_char const *)tpp_xml_entity_utf8(entry);
+			return tpp_unicode_readutf8(&utf8, utf8 + TPP_UTF8_MAXLEN);
+		}
+	}
+	return TPP_XML_ENTITY_LOOKUP_UNKNOWN;
+}""");
+	print('#endif /* !tpp_xml_entity_lookup */');
+	print('#endif /* TPP_HAVE_XML_ENTITY_LOOKUP */');
+	print;
+	print('TPP_DECL_END');
+	print('/*[[[tpp-end]]]*/');
+	print;
+	print('#endif /* !GUARD_TPP_CTYPE_XML_C */');
+}
+
+#ifdef __MAIN__
+main();
+#endif /* __MAIN__ */
