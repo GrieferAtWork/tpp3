@@ -65,7 +65,7 @@ tpp_unam_token_getstart(tpp_char const *tpp_restrict db_ptr) {
 	tpp_char const *db_iter = db_ptr;
 	while (db_iter[-1] != 0)
 		--db_iter;
-	tpp_decode_uleb128_tokenid(&db_iter);
+	(void)tpp_decode_uleb128_tokenid(&db_iter);
 	if (db_iter <= db_ptr) {
 		/* "db_ptr" points at-or-before the NUL of its own record */
 		return db_iter;
@@ -87,7 +87,7 @@ tpp_unam_token_getstart(tpp_char const *tpp_restrict db_ptr) {
 	} while (db_iter[-1] != 0);
 
 	/* Skip the ULEB of the preceding record (or the "1" preceding the first record) */
-	tpp_decode_uleb128_tokenid(&db_iter);
+	(void)tpp_decode_uleb128_tokenid(&db_iter);
 	tpp_assert(db_iter < db_ptr);
 	return db_iter;
 }
@@ -417,7 +417,7 @@ again:
 			while (*db_lo)
 				++db_lo;
 			++db_lo; /* Skip NUL */
-			tpp_decode_uleb128_tokenid(&db_lo);
+			(void)tpp_decode_uleb128_tokenid(&db_lo);
 		} else {
 			if (*db_rec == 0)
 				++db_rec; /* Skip 00h-byte between TEXT and ULEB128 */
@@ -660,7 +660,7 @@ tpp_unam_node_matchtext_after_1token_ex(tpp_char const *tpp_restrict db_iter,
 				}
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE) */
 			}
-			if (!tpp_unam_token_parser_skip_token(parser, &db_iter))
+			if (!tpp_unam_token_parser_skip_token(parser, (tpp_char const **)&db_iter))
 				return 0;
 		}
 		++db_iter; /* Skip over token list termination byte */
@@ -690,12 +690,12 @@ tpp_unam_node_matchtext_after_1token_ex(tpp_char const *tpp_restrict db_iter,
 			tpp_unichar parser_ord;
 			tpp_char parser_next;
 			tpp_char ns_features  = *db_iter++;
-			tpp_unichar ns_minord = tpp_decode_uleb128_unichar(&db_iter);
-			tpp_unichar ns_maxord = ns_minord + tpp_decode_uleb128_unichar(&db_iter);
+			tpp_unichar ns_minord = tpp_decode_uleb128_unichar((tpp_char const **)&db_iter);
+			tpp_unichar ns_maxord = ns_minord + tpp_decode_uleb128_unichar((tpp_char const **)&db_iter);
 			tpp_unichar ns_base   = ns_features & TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_BASE;
 			tpp_char const *saved_parser_pos = parser->tuntp_pos;
 			if (ns_base == TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_BASE)
-				ns_base = tpp_decode_uleb128_unichar(&db_iter);
+				ns_base = tpp_decode_uleb128_unichar((tpp_char const **)&db_iter);
 #if TPP_CONF_MAYBE_0(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE)
 			if (ns_features & TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_REQUIRES_SPACE) {
 				if (!tpp_unam_token_parser_skipspace(parser) &&
@@ -799,10 +799,10 @@ next_ns:
 		tpp_size child_result;
 		tpp_char const *db_children = db_iter;
 		if (features & TPP_UNAM_NODE_FEAT_ONE_ORD) {
-			tpp_decode_uleb128_unichar(&db_children);
+			(void)tpp_decode_uleb128_unichar(&db_children);
 		} else {
 			while (*db_children)
-				tpp_decode_uleb128_unichar(&db_children);
+				(void)tpp_decode_uleb128_unichar(&db_children);
 			++db_children; /* Skip over "ord_end" terminator */
 		}
 
@@ -817,7 +817,7 @@ next_ns:
 	 * return! */
 	if (features & TPP_UNAM_NODE_FEAT_ONE_ORD) {
 		/* Yes! we have an ordinal (1 of them to be precise) */
-		uc[0] = tpp_decode_uleb128_unichar(&db_iter);
+		uc[0] = tpp_decode_uleb128_unichar((tpp_char const **)&db_iter);
 		return 1;
 	}
 
@@ -825,7 +825,7 @@ next_ns:
 	{
 		tpp_size ord_count = 0;
 		while (*db_iter) {
-			uc[ord_count] = tpp_decode_uleb128_unichar(&db_iter);
+			uc[ord_count] = tpp_decode_uleb128_unichar((tpp_char const **)&db_iter);
 			++ord_count;
 		}
 		return ord_count;
@@ -842,7 +842,7 @@ tpp_unam_node_matchtext_after_1token(tpp_unam_node const *tpp_restrict db_self,
 	tpp_char features = tpp_unam_node_getfeatures(db_self);
 	tpp_char const *db_iter = db_self + 1;
 	if (features & TPP_UNAM_NODE_FEAT_HAS_SIBLING)
-		tpp_decode_uleb128_size(&db_iter); /* Skip "size"-field */
+		(void)tpp_decode_uleb128_size(&db_iter); /* Skip "size"-field */
 
 	/* Skip over first token (which has already been matched by "parser") */
 	db_iter = tpp_unam_skiptoken(db_iter);
@@ -865,12 +865,12 @@ tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_chil
 		tpp_char const *saved_parser_pos = parser->tuntp_pos;
 		++db_first_child; /* Skip over "feature" byte */
 		if (child_features & TPP_UNAM_NODE_FEAT_HAS_SIBLING) {
-			tpp_size child_size = tpp_decode_uleb128_size(&db_first_child);
+			tpp_size child_size = tpp_decode_uleb128_size((tpp_char const **)&db_first_child);
 			db_next_child = db_first_child + child_size;
 		}
 
 		/* Match the child's first token */
-		if (tpp_unam_token_parser_skip_token(parser, &db_first_child)) {
+		if (tpp_unam_token_parser_skip_token(parser, (tpp_char const **)&db_first_child)) {
 			/* Try to match against this node... */
 			tpp_size this_match_count;
 			this_match_count = tpp_unam_node_matchtext_after_1token_ex(db_first_child, parser,

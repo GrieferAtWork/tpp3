@@ -131,7 +131,7 @@ Detect:
 
 ## TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 
-Support for `\N{...}` in identifier names (see TODO)
+Support for `\N{...}` in identifier names (see [`TPP_HAVE_DECODE_NAMED_ESCAPE`](config-core.md#tpp_have_decode_named_escape))
 ```c
 int identifier\N{NO-BREAK SPACE}nbsp = 42;
 // Same as:

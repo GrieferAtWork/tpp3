@@ -549,12 +549,12 @@ Other extensions that affect the behavior of [`tpp_unicode_byname_lookup()`](../
 The STDC Proposal for [Named universal character escapes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2071r2.html#extensions)
 lists a couple of extensions to name lookup. All of these have been implemented by TPP:
 
-- *Allow comma separated names*: [`TPP_HAVE_STRING_ESCAPE_NAMED_MANY`](config-conf.md#tpp_have_string_escape_named_many) and [`TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY`](config-conf.md#tpp_have_identifier_escape_named_many)
-- *Allow code point numbers as names*: [`TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`](config-conf.md#tpp_have_escape_named_unicode_ord)
-- *Allow names to match ISO/IEC 10646 named sequences*: enabled unconditionally (baked into name database)
-- *Allow names to match Unicode emoji named sequences*: enabled unconditionally (baked into name database)
-- *Allow names to match Unicode emoji ZWJ named sequences*: enabled unconditionally (baked into name database)
-- *Allow names to match HTML 5 named character references *: [`TPP_HAVE_ESCAPE_NAMED_XML`](config-conf.md#tpp_have_escape_named_xml)
+- **Allow comma separated names**: [`TPP_HAVE_STRING_ESCAPE_NAMED_MANY`](config-conf.md#tpp_have_string_escape_named_many) and [`TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY`](config-conf.md#tpp_have_identifier_escape_named_many)
+- **Allow code point numbers as names**: [`TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`](config-conf.md#tpp_have_escape_named_unicode_ord)
+- **Allow names to match ISO/IEC 10646 named sequences**: enabled unconditionally (baked into name database)
+- **Allow names to match Unicode emoji named sequences**: enabled unconditionally (baked into name database)
+- **Allow names to match Unicode emoji ZWJ named sequences**: enabled unconditionally (baked into name database)
+- **Allow names to match HTML 5 named character references**: [`TPP_HAVE_ESCAPE_NAMED_XML`](config-conf.md#tpp_have_escape_named_xml)
 
 <details><summary>Details</summary>
 

@@ -5351,7 +5351,7 @@ TPP_DECL_END
 #define TPP_HAVE_IDENTIFIER_ESCAPE_UNI (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
 #endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_UNI */
 
-/* Support for `\N{...}` in identifier names (see TODO)
+/* Support for `\N{...}` in identifier names (see `TPP_HAVE_DECODE_NAMED_ESCAPE`)
  * ```c
  * int identifier\N{NO-BREAK SPACE}nbsp = 42;
  * // Same as:
@@ -7193,12 +7193,12 @@ TPP_DECL_END
  *
  * The STDC Proposal for [Named universal character escapes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2071r2.html#extensions)
  * lists a couple of extensions to name lookup. All of these have been implemented by TPP:
- * - *Allow comma separated names*: `TPP_HAVE_STRING_ESCAPE_NAMED_MANY` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY`
- * - *Allow code point numbers as names*: `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
- * - *Allow names to match ISO/IEC 10646 named sequences*: enabled unconditionally (baked into name database)
- * - *Allow names to match Unicode emoji named sequences*: enabled unconditionally (baked into name database)
- * - *Allow names to match Unicode emoji ZWJ named sequences*: enabled unconditionally (baked into name database)
- * - *Allow names to match HTML 5 named character references *: `TPP_HAVE_ESCAPE_NAMED_XML`
+ * - **Allow comma separated names**: `TPP_HAVE_STRING_ESCAPE_NAMED_MANY` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY`
+ * - **Allow code point numbers as names**: `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - **Allow names to match ISO/IEC 10646 named sequences**: enabled unconditionally (baked into name database)
+ * - **Allow names to match Unicode emoji named sequences**: enabled unconditionally (baked into name database)
+ * - **Allow names to match Unicode emoji ZWJ named sequences**: enabled unconditionally (baked into name database)
+ * - **Allow names to match HTML 5 named character references**: `TPP_HAVE_ESCAPE_NAMED_XML`
  */
 #ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP
 #define TPP_HAVE_UNICODE_BYNAME_LOOKUP (TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
@@ -10170,11 +10170,11 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
  * WARNING: This function doesn't do any validity checking,
  *          allowing over-long utf-8 sequences, as well as
  *          incorrectly positioned UTF-8 continuation bytes. */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
+TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
 tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end);
 
 /* Same as `tpp_unicode_readutf8()', but read in reverse */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
+TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
 tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base);
 #endif /* TPP_HAVE_UNICODE */
 

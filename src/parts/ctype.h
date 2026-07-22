@@ -207,11 +207,11 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
  * WARNING: This function doesn't do any validity checking,
  *          allowing over-long utf-8 sequences, as well as
  *          incorrectly positioned UTF-8 continuation bytes. */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
+TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
 tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end);
 
 /* Same as `tpp_unicode_readutf8()', but read in reverse */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
+TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
 tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base);
 #endif /* TPP_HAVE_UNICODE */
 
