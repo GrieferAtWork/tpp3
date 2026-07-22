@@ -2276,7 +2276,7 @@
 #define TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : 1) : 0) /* "-fnamed-escape-unicode" */
 #endif /* !TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES */
 
-/* Support for unicode names in `\N` (all of which are the same as `\u0100`):
+/* Support for unicode ordinals in `\N` (all of which are the same as `\u0100`):
  * - `\N{U+0100}`
  * - `\N{U+100}`
  * - `\N{U+000100}`
@@ -2383,20 +2383,6 @@
 #ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP
 #define TPP_HAVE_UNICODE_BYNAME_LOOKUP (TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP */
-
-/* Extension to `TPP_HAVE_UNICODE_BYNAME_LOOKUP`: use an extra
- * table to speed up the initial entry into the internal database
- * of unicode names.
- *
- * Disabling this saves ~5KiB by making a (not insignificant)
- * sacrifice in performance related to unicode name lookup. */
-#ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP && !defined(__OPTIMIZE_SIZE__)
-#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE 1
-#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP && !__OPTIMIZE_SIZE__ */
-#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE 0
-#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP || __OPTIMIZE_SIZE__ */
-#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE */
 
 /* Ignore casing (which is normally all-uppercase) inside of `TPP_HAVE_UNICODE_BYNAME_LOOKUP`
  *
@@ -2520,6 +2506,20 @@
 #else /* ... */
 #define TPP_HAVE_STRING_ESCAPE 0
 #endif /* !... */
+
+/* Extension to `TPP_HAVE_UNICODE_BYNAME_LOOKUP`: use an extra
+ * table to speed up the initial entry into the internal database
+ * of unicode names.
+ *
+ * Disabling this saves ~5KiB by making a (not insignificant)
+ * sacrifice in performance related to unicode name lookup. */
+#ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
+#if TPP_HAVE_UNICODE_BYNAME_LOOKUP && !defined(__OPTIMIZE_SIZE__)
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE 1
+#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP && !__OPTIMIZE_SIZE__ */
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE 0
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP || __OPTIMIZE_SIZE__ */
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE */
 
 /************************************************************************/
 /* Multi-char tokens                                                    */

@@ -4557,7 +4557,7 @@ Extension name:
 
 ## TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD
 
-Support for unicode names in `\N` (all of which are the same as `\u0100`):
+Support for unicode ordinals in `\N` (all of which are the same as `\u0100`):
 
 - `\N{U+0100}`
 - `\N{U+100}`

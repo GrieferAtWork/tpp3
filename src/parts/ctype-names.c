@@ -42,6 +42,7 @@ TPP_STATIC_ASSERT(sizeof(uint_least32_t) >= sizeof(tpp_unichar));
 #define tpp_decode_uleb128_unichar (tpp_unichar)tpp_decode_uleb128
 #define tpp_decode_uleb128_size    (tpp_size)tpp_decode_uleb128
 
+/* see: https://en.wikipedia.org/wiki/LEB128#Decode_unsigned_integer */
 static TPP_NONNULL((1)) uint_least32_t TPPCALL
 tpp_decode_uleb128(tpp_char const **tpp_restrict p_iter) {
 	uint_least32_t result = 0;

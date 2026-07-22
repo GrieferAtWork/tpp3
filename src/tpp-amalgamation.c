@@ -16522,6 +16522,7 @@ TPP_STATIC_ASSERT(sizeof(uint_least32_t) >= sizeof(tpp_unichar));
 #define tpp_decode_uleb128_unichar (tpp_unichar)tpp_decode_uleb128
 #define tpp_decode_uleb128_size    (tpp_size)tpp_decode_uleb128
 
+/* see: https://en.wikipedia.org/wiki/LEB128#Decode_unsigned_integer */
 static TPP_NONNULL((1)) uint_least32_t TPPCALL
 tpp_decode_uleb128(tpp_char const **tpp_restrict p_iter) {
 	uint_least32_t result = 0;
@@ -21472,6 +21473,9 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes) {
 	tpp_char const *output_repr;
 	tpp_ssize temp, result = 0;
+#if TPP_HAVE_UNICODE
+	tpp_char const *new_iter;
+#endif /* TPP_HAVE_UNICODE */
 	tpp_char const *iter = (tpp_char const *)data;
 	tpp_char const *end  = iter + num_bytes;
 	tpp_char ch;
@@ -21490,6 +21494,7 @@ again:
 #define TPP_TOKEN_ENCODESTRING_CASE2(b, r1, r2)         \
 	case b: {                                           \
 		static tpp_char const _repr[3] = { r1, r2, 0 }; \
+		new_iter = iter;                                \
 		output_repr = _repr;                            \
 	}	break;
 #else /* TPP_HAVE_UNICODE */
@@ -21510,8 +21515,10 @@ again:
 	TPP_TOKEN_ENCODESTRING_CASE2(TPP_ASCII_CR, '\\', 'r');
 	TPP_TOKEN_ENCODESTRING_CASE2(TPP_ASCII_LF, '\\', 'n');
 
+#if TPP_HAVE_UNICODE
 	case 0xc2:
 		if ((iter + 1) < end && iter[0] == 0x85) {
+			new_iter = iter + 1;
 #if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
 			output_repr = (tpp_char const *)"\\u0085";
 #elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
@@ -21536,6 +21543,7 @@ again:
 		goto again;
 	case 0xe2:
 		if ((iter + 2) < end && iter[0] == 0x80 && iter[1] == 0xa8) {
+			new_iter = iter + 2;
 #if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
 			output_repr = (tpp_char const *)"\\u2028";
 #elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
@@ -21558,6 +21566,7 @@ again:
 			break;
 		}
 		if ((iter + 2) < end && iter[0] == 0x80 && iter[1] == 0xa9) {
+			new_iter = iter + 2;
 #if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
 			output_repr = (tpp_char const *)"\\u2029";
 #elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
@@ -21580,6 +21589,7 @@ again:
 			break;
 		}
 		goto again;
+#endif /* TPP_HAVE_UNICODE */
 
 #undef TPP_TOKEN_ENCODESTRING_CASE4
 #undef TPP_TOKEN_ENCODESTRING_CASE2
@@ -21600,6 +21610,9 @@ again:
 	if (temp < 0)
 		return temp;
 	result += temp;
+#if TPP_HAVE_UNICODE
+	iter = new_iter;
+#endif /* TPP_HAVE_UNICODE */
 	data = (void const *)iter;
 	goto again;
 }
