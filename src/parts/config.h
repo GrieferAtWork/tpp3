@@ -2187,6 +2187,9 @@
 #define TPP_HAVE_STRING_ESCAPE_NAMED_MANY (TPP_HAVE_STRING_ESCAPE_NAMED ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fstring-escape-named-many" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
 
+/* TODO: Support for `\c[...]` as alias for `\N{...}` (`TPP_HAVE_STRING_ESCAPE_NAMED`)
+ *       This is something that "Raku" has. */
+
 /* Enable support for large (> 1 byte) character constants in `tpp_lexer_decodestring()` */
 #ifndef TPP_HAVE_STRING_ESCAPE_BIGCHAR
 #define TPP_HAVE_STRING_ESCAPE_BIGCHAR (TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_HAVE_STRING_ESCAPE_HEX_BIG || TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE))

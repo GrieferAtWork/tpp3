@@ -21491,29 +21491,30 @@ again:
 	ch = *iter++;
 	switch (ch) {
 #if TPP_HAVE_UNICODE
-#define TPP_TOKEN_ENCODESTRING_CASE2(b, r1, r2)         \
-	case b: {                                           \
-		static tpp_char const _repr[3] = { r1, r2, 0 }; \
-		new_iter = iter;                                \
-		output_repr = _repr;                            \
+#define TPP_TOKEN_ENCODESTRING_CASE(b, repr)  \
+	case b: {                                 \
+		static tpp_char const _repr[] = repr; \
+		new_iter = iter;                      \
+		output_repr = _repr;                  \
 	}	break;
 #else /* TPP_HAVE_UNICODE */
-#define TPP_TOKEN_ENCODESTRING_CASE2(b, r1, r2)      \
-	case b: {                                        \
-		static tpp_char const _repr[2] = { r1, r2 }; \
-		output_repr = _repr;                         \
+#define TPP_TOKEN_ENCODESTRING_CASE(b, repr)  \
+	case b: {                                 \
+		static tpp_char const _repr[] = repr; \
+		output_repr = _repr;                  \
 	}	break;
 #endif /* !TPP_HAVE_UNICODE */
 
 	/* Only really need to escape \ " ' CR LF and (TPP_HAVE_UNICODE-only)
 	 * ordinals >=0xC0 that *might* form unicode line-feed characters. */
 
-	TPP_TOKEN_ENCODESTRING_CASE2('\0', '\\', '0'); /* To prevent problems with "strlen()" and the like... */
-	TPP_TOKEN_ENCODESTRING_CASE2('\\', '\\', '\\');
-	TPP_TOKEN_ENCODESTRING_CASE2('\'', '\\', '\'');
-	TPP_TOKEN_ENCODESTRING_CASE2('\"', '\\', '\"');
-	TPP_TOKEN_ENCODESTRING_CASE2(TPP_ASCII_CR, '\\', 'r');
-	TPP_TOKEN_ENCODESTRING_CASE2(TPP_ASCII_LF, '\\', 'n');
+		/* NOTE: Must encode 00h as \000 instead of \0 to prevent ambiguity with "\N{NUL}00" */
+	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\000"); /* To prevent problems with "strlen()" and the like... */
+	TPP_TOKEN_ENCODESTRING_CASE('\\', "\\\\");
+	TPP_TOKEN_ENCODESTRING_CASE('\'', "\\\'");
+	TPP_TOKEN_ENCODESTRING_CASE('\"', "\\\"");
+	TPP_TOKEN_ENCODESTRING_CASE(TPP_ASCII_CR, "\\r");
+	TPP_TOKEN_ENCODESTRING_CASE(TPP_ASCII_LF, "\\n");
 
 #if TPP_HAVE_UNICODE
 	case 0xc2:
@@ -21591,8 +21592,7 @@ again:
 		goto again;
 #endif /* TPP_HAVE_UNICODE */
 
-#undef TPP_TOKEN_ENCODESTRING_CASE4
-#undef TPP_TOKEN_ENCODESTRING_CASE2
+#undef TPP_TOKEN_ENCODESTRING_CASE
 	default: goto again;
 	}
 	temp = tpp_formatprinter_print(printer, arg, (tpp_char const *)data,
@@ -21601,12 +21601,7 @@ again:
 	if (temp < 0)
 		return temp;
 	result += temp;
-#if TPP_HAVE_UNICODE
 	temp = tpp_formatprinter_print(printer, arg, output_repr, tpp_strlen((char const *)output_repr));
-#else /* TPP_HAVE_UNICODE */
-	/* All mandatory ASCII-escape-sequences are 2 bytes long! */
-	temp = tpp_formatprinter_print(printer, arg, output_repr, 2);
-#endif /* !TPP_HAVE_UNICODE */
 	if (temp < 0)
 		return temp;
 	result += temp;
