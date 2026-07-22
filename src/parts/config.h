@@ -531,7 +531,7 @@
 #define TPP_HAVE_IDENTIFIER_ESCAPE_UNI (TPP_HAVE_PROFILE_DEFAULT ? TPP_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-fextended-identifiers" */
 #endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_UNI */
 
-/* Support for `\N{...}` in identifier names (see TODO)
+/* Support for `\N{...}` in identifier names (see `TPP_HAVE_DECODE_NAMED_ESCAPE`)
  * ```c
  * int identifier\N{NO-BREAK SPACE}nbsp = 42;
  * // Same as:
@@ -2313,7 +2313,8 @@
  * `tpp_unicode_byname_lookup("NO-BREAK SPACE")` will return
  * `0x00A0`.
  *
- * Enabling this feature adds ~360KiB to the final executable.
+ * Enabling this feature adds a while **~360KiB** to the final executable.
+ * (Sorry that it's that much, but unicode defines over 35_000 names here)
  *
  * Recognized names here are as defined by unicode:
  * - [UnicodeData.txt](https://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt)
@@ -2339,13 +2340,14 @@
  *     needs to be enabled for TPP to under casings other than all-uppercase here
  *
  * A few notes on the internal implementation:
- * - During queries, names are converted into "tokens".
  * - All space characters, as well as `_` are treated identically,
  *   and any sequence of such characters is treated the same as a
  *   single space ` `
  * - Name matching is greedy: it will always try to consume as
  *   much input as it can. This only becomes relevant when you
- *   enable other extensions:
+ *   enable other extensions which add extra meaning to `,`
+ *   characters (`emoji-zwj-sequences.txt` already defines some
+ *   names that contain `,` characters):
  *   - `TPP_HAVE_STRING_ESCAPE_NAMED_MANY`
  *   - `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY`
  * - Space characters between SYMCONT-like and non-SYMCONT-like
@@ -2353,6 +2355,8 @@
  *   - `\N{MAN TIPPING HAND: LIGHT SKIN TONE}`
  *   - `\N{MAN TIPPING HAND:LIGHT SKIN TONE}`
  *   - `\N{MAN TIPPING HAND : LIGHT SKIN TONE}`
+ *   The same also goes for `.`, `,`, `-`, `(` and `)`, all of
+ *   which appear in one name or another.
  * - In order to save space, TPP's unicode name database detects and
  *   compressed ranges of *numbered* unicode characters that don't
  *   have dedicated names, but instead feature lists of names that
@@ -2363,9 +2367,18 @@
  *   - `\N{TANGUT COMPONENT-1}`: TPP also accepts this spelling...
  *   - `\N{TANGUT COMPONENT-0001}`: ... as well as this spelling.
  *
- * Additional lookup functionality can be enabled via:
+ * Other extensions that affect the behavior of `tpp_unicode_byname_lookup()`:
  * - `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE`: Ignore casing when matching names
  * - `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE`: Space within and between tokens becomes optional
+ *
+ * The STDC Proposal for [Named universal character escapes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2071r2.html#extensions)
+ * lists a couple of extensions to name lookup. All of these have been implemented by TPP:
+ * - *Allow comma separated names*: `TPP_HAVE_STRING_ESCAPE_NAMED_MANY` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY`
+ * - *Allow code point numbers as names*: `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - *Allow names to match ISO/IEC 10646 named sequences*: enabled unconditionally (baked into name database)
+ * - *Allow names to match Unicode emoji named sequences*: enabled unconditionally (baked into name database)
+ * - *Allow names to match Unicode emoji ZWJ named sequences*: enabled unconditionally (baked into name database)
+ * - *Allow names to match HTML 5 named character references *: `TPP_HAVE_ESCAPE_NAMED_XML`
  */
 #ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP
 #define TPP_HAVE_UNICODE_BYNAME_LOOKUP (TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
