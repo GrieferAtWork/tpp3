@@ -2264,9 +2264,14 @@
  * - `TPP_HAVE_STRING_ESCAPE_NAMED`
  * - `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED`
  *
- * Recognized names here are as defined by:
- * - https://www.unicode.org/Public/14.0.0/ucd/NamesList.txt
- */
+ * With this enabled, you can write stuff like this:
+ * ```c
+ * "Happy\N{SPACE, CANDLE, BIRTHDAY CAKE, CANDLE, SPACE}to\N{SPACE}you\N{EXCLAMATION MARK}"
+ * ```
+ *
+ * For more information, see `TPP_HAVE_UNICODE_BYNAME_LOOKUP`, which
+ * is enabled based on this config, and controls the availability of
+ * the internal API required for this feature. */
 #ifndef TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES
 #define TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : 1) : 0) /* "-fnamed-escape-unicode" */
 #endif /* !TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES */
@@ -2305,7 +2310,63 @@
 
 /* Provide a function `tpp_unicode_byname_lookup()` that can
  * be used to lookup a unicode character given its name. e.g.
- * `tpp_unicode_byname_lookup("NO-BREAK SPACE")` will return `0x00A0`. */
+ * `tpp_unicode_byname_lookup("NO-BREAK SPACE")` will return
+ * `0x00A0`.
+ *
+ * Enabling this feature adds ~360KiB to the final executable.
+ *
+ * Recognized names here are as defined by unicode:
+ * - [UnicodeData.txt](https://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt)
+ *   - `\N{LATIN SMALL LETTER B}`: Basic unicode character name
+ * - [NameAliases.txt](https://ftp.unicode.org/Public/UNIDATA/NameAliases.txt)
+ *   - `\N{NULL}`: `control` name
+ *   - `\N{PADDING CHARACTER}`: `alternate` name
+ *   - `\N{PADDING CHARACTER}`: `figment` name
+ *   - `\N{NUL}`: `abbreviation` name
+ *   - `\N{LATIN CAPITAL LETTER GHA}`: `correction` name
+ * - [NamedSequences.txt](https://ftp.unicode.org/Public/UNIDATA/NamedSequences.txt)
+ *   - `\N{LATIN CAPITAL LETTER A WITH MACRON AND GRAVE}`: multi-ordinal named sequence
+ * - [emoji-zwj-sequences.txt](https://ftp.unicode.org/Public/UCD/latest/emoji/emoji-zwj-sequences.txt)
+ *   - `\N{FAMILY: MAN, WOMAN, GIRL, BOY}`: emoji sequence
+ *   - Note that due to internal limitations, emoji sequences must also be written
+ *     in all-uppercase characters by default (even though unicode specifies that
+ *     these sequences should be written in lowercase). If this is a problem you
+ *     can enable `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE` to ignore casing in all
+ *     unicode names (which will include emoji sequence names)
+ * - [emoji-sequences.txt](https://ftp.unicode.org/Public/UCD/latest/emoji/emoji-sequences.txt)
+ *   - `\N{FLAG: GERMANY}`: emoji sequence
+ *   - Like with `emoji-zwj-sequences.txt`, `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE`
+ *     needs to be enabled for TPP to under casings other than all-uppercase here
+ *
+ * A few notes on the internal implementation:
+ * - During queries, names are converted into "tokens".
+ * - All space characters, as well as `_` are treated identically,
+ *   and any sequence of such characters is treated the same as a
+ *   single space ` `
+ * - Name matching is greedy: it will always try to consume as
+ *   much input as it can. This only becomes relevant when you
+ *   enable other extensions:
+ *   - `TPP_HAVE_STRING_ESCAPE_NAMED_MANY`
+ *   - `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY`
+ * - Space characters between SYMCONT-like and non-SYMCONT-like
+ *   tokens is always optional. The following are all accepted:
+ *   - `\N{MAN TIPPING HAND: LIGHT SKIN TONE}`
+ *   - `\N{MAN TIPPING HAND:LIGHT SKIN TONE}`
+ *   - `\N{MAN TIPPING HAND : LIGHT SKIN TONE}`
+ * - In order to save space, TPP's unicode name database detects and
+ *   compressed ranges of *numbered* unicode characters that don't
+ *   have dedicated names, but instead feature lists of names that
+ *   all end with some number. Sometimes, unicode specifies that
+ *   this number be 0-padded. However, the amount of 0-padding here
+ *   cannot be stored in TPP's database, so any amount is accepted:
+ *   - `\N{TANGUT COMPONENT-001}`: Unicode's listed name for `U+18800`
+ *   - `\N{TANGUT COMPONENT-1}`: TPP also accepts this spelling...
+ *   - `\N{TANGUT COMPONENT-0001}`: ... as well as this spelling.
+ *
+ * Additional lookup functionality can be enabled via:
+ * - `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE`: Ignore casing when matching names
+ * - `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE`: Space within and between tokens becomes optional
+ */
 #ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP
 #define TPP_HAVE_UNICODE_BYNAME_LOOKUP (TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP */
@@ -2314,7 +2375,8 @@
  * table to speed up the initial entry into the internal database
  * of unicode names.
  *
- * Adds ~7KiB to final executable (though lookup without this is rather slow) */
+ * Disabling this saves ~5KiB by making a (not insignificant)
+ * sacrifice in performance related to unicode name lookup. */
 #ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP && !defined(__OPTIMIZE_SIZE__)
 #define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE 1
@@ -2323,8 +2385,30 @@
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP || __OPTIMIZE_SIZE__ */
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE */
 
-/* TODO: Option to enable UAX44-LM2 normalization in `TPP_HAVE_UNICODE_BYNAME_LOOKUP`
- *       https://www.unicode.org/reports/tr44/tr44-24.html#UAX44-LM2 */
+/* Ignore casing (which is normally all-uppercase) inside of `TPP_HAVE_UNICODE_BYNAME_LOOKUP`
+ *
+ * When this is enabled, the following 2 are identical:
+ * ```c
+ * foo\N{LATIN SMALL LETTER B}ar
+ * foo\N{latin small letter b}ar
+ * ``` */
+#ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE (TPP_HAVE_UNICODE_BYNAME_LOOKUP ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : 1) : 0) /* "-fnamed-escape-unicode-icase" */
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE */
+
+/* Whitespace (and `_`) are ignored by `TPP_HAVE_UNICODE_BYNAME_LOOKUP` whenever they
+ * aren't required to distinguish distinct tokens. When this extension is combined with
+ * `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE`, TPP's unicode name parser pretty much satisfies
+ * [UAX44-LM2](https://www.unicode.org/reports/tr44/tr44-24.html#UAX44-LM2)
+ *
+ * When this is enabled, the following 2 are identical:
+ * ```c
+ * foo\N{LATIN SMALL LETTER B}ar
+ * foo\N{LATINSMALLLETTERB}ar
+ * ``` */
+#ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE (TPP_HAVE_UNICODE_BYNAME_LOOKUP ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT0 : 0) : 0) /* "-fnamed-escape-unicode-icase" */
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE */
 
 
 #undef TPP_HAVE_TOK_INT

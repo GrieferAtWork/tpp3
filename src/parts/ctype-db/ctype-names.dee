@@ -749,7 +749,9 @@ handle_group_start:
 			tokenUseCount.sorted(key: e -> -e.last).cached;
 		this.tokenUseCountSorted = tokenUseCountSorted;
 		local tokensToId: {string: int} = Dict();
-		local nextTokenId: int = 1;
+		/* 0: Cannot be used because `tpp_unam_tokens` can't contain 0-bytes
+		 * 1: Cannot be used because of "RadixTreeNode.token_end" */
+		local nextTokenId: int = 2;
 		function uleb128ContainsNulBytes(v: int) {
 			local fp = File.Writer(hint: "bytes");
 			serializeUleb128(fp, v);
@@ -758,7 +760,7 @@ handle_group_start:
 
 		for (local name, useCount: tokenUseCountSorted) {
 			if (useCount < 2)
-				break;
+				break; /* Single-use tokens don't get IDs */
 			if (/*nextTokenId >= 128 &&*/ #name == 1 &&
 			    name in "ABCDEFGHIJKLMNOPQRSTUVWXYZ.:-")
 				continue; /* Don't include this one -- inline encoding is shorter */
@@ -861,16 +863,22 @@ handle_group_start:
 	@@    ???2      TOKEN    token1      First token
 	@@   [???3      TOKEN    token2      Second token]
 	@@   [???4      TOKEN    token3      ...]
-	@@    ???5      BYTE     token_end   A 00h-byte marking the end of the token sequence
+	@@    ???5      BYTE     token_end   A 01h-byte marking the end of the token sequence
+	@@ fi
+	@@
+	@@ if features.HAS_NUMBER_SUFFIX
+	@@    ???6      NUMBER_SUFFIX_DESC   First number suffix descriptor
+	@@   [???7      NUMBER_SUFFIX_DESC   Second number suffix descriptor]
+	@@   [???8      NUMBER_SUFFIX_DESC   ... descriptors end if one has the `features.LAST` flag]
 	@@ fi
 	@@
 	@@ if features.ONE_ORD
-	@@    ???6      ULEB128  ord         First (and *only*) expansion ordinal
+	@@    ???9      ULEB128  ord         First (and *only*) expansion ordinal
 	@@ else
-	@@   [???6      ULEB128  ord1        First expansion ordinal]
-	@@   [???7      ULEB128  ord2        Second expansion ordinal]
-	@@   [???8      ULEB128  ord3        ...]
-	@@    ???9      BYTE     ord_end     A 00h-byte marking the end of expansion ordinals
+	@@   [???9      ULEB128  ord1        First expansion ordinal]
+	@@   [???A      ULEB128  ord2        Second expansion ordinal]
+	@@   [???B      ULEB128  ord3        ...]
+	@@    ???C      BYTE     ord_end     A 00h-byte marking the end of expansion ordinals
 	@@                                   There may also not be any ordinals, in which case
 	@@                                   this 00h-byte appears directly. This also means
 	@@                                   that no sequence can contain U+0000 ordinals, but
@@ -878,14 +886,8 @@ handle_group_start:
 	@@                                   is set.
 	@@ fi
 	@@
-	@@ if features.HAS_NUMBER_SUFFIX
-	@@    ???A      NUMBER_SUFFIX_DESC   First number suffix descriptor
-	@@   [???B      NUMBER_SUFFIX_DESC   Second number suffix descriptor]
-	@@   [???C      NUMBER_SUFFIX_DESC   ... descriptors end if one has the `features.LAST` flag]
-	@@ fi
-	@@
 	@@ if features.HAS_CHILDREN
-	@@    ???E      NODE     child1      First child
+	@@    ???D      NODE     child1      First child
 	@@   [????      NODE     child2      Second child]
 	@@   [????      NODE     child3      ...]
 	@@ fi
@@ -917,15 +919,17 @@ handle_group_start:
 		/* If "hasSibling" is true, the missing ULEB here is inserted later! */
 		for (local tok: node.tokens)
 			serializeToken(line, tok);
-		for (local ord: node.resultOrdinals)
-			serializeUleb128(line, ord);
-		if (!(features & FEAT_ONE_ORD))
-			line.putc(0);
+		if (!(features & FEAT_ONE_TOKEN))
+			line.putc(1); /* token_end: Terminate token list */
 		local maxNumberSuffixGroups = #node.numberSuffixGroups - 1;
 		for (local i, group: node.numberSuffixGroups.enumerate()) {
 			local isLast = i == maxNumberSuffixGroups;
 			this.serializeNumberSuffixGroup(line, isLast, group);
 		}
+		for (local ord: node.resultOrdinals)
+			serializeUleb128(line, ord);
+		if (!(features & FEAT_ONE_ORD))
+			line.putc(0);
 		local newPrefix = prefix + node.tokens;
 		local childLines: {(/*prefix:*/{string...}, /*node:*/RadixTreeNode, /*line:*/Bytes)...} = [];
 		local sizeOfChildrenCell = Cell(0);
@@ -1016,17 +1020,20 @@ handle_group_start:
 				line.putc(0x00); /* NUL */
 			serializeUleb128(line, tokenId);
 			line = line.bytes;
+			assert line.count(0) == 1,
+				f"Encoding for repr={repr tokenRepr} id={tokenId} "
+				f"does not contain exactly 1 00h-byte";
 			tokenReprLines.append((line, tokenRepr, tokenId));
 			blobSize += #line;
 		}
 
 		blobSize += 2; /* For leading "0,1" */
-		print("static tpp_char const tpp_unicode_byname_tokens[", blobSize.hex(), "] = {");
+		print("static tpp_char const tpp_unam_tokens[", blobSize.hex(), "] = {");
 		if (PRETTY_PRINT) {
 			print("	0,1, /* Needed so the start of the first token record can be determined */");
 			local blobOffset = 0;
 			for (local line, tokenRepr, tokenId: tokenReprLines) {
-				print("\t/*", blobOffset.tostr(16, 4),
+				print("\t/*", blobOffset.tostr(16, 4, "X"),
 					"*/ ", ",".join(for (local b: line) b < 10 ? b : b.hex(2)),
 					", /* '", tokenRepr.encode("c-escape"), "' -> ",
 					tokenId.hex(), " */");
@@ -1063,11 +1070,11 @@ handle_group_start:
 		local maxTopLevelBlobOffset = topLevelTokenBasedNodes.each.blobOffset > ...;
 		local topLevelFirstTokenIdType = uintLeastTypeFor(maxTopLevelFirstTokenId);
 		local topLevelBlobOffsetType = uintLeastTypeFor(maxTopLevelBlobOffset);
-		print("typedef struct tpp_unicode_byname_tree_token_entry {");
+		print("typedef struct tpp_unam_tree_token_entry {");
 		print("	", topLevelFirstTokenIdType, " tubnte_token_id; /* Token ID */");
-		print("	", topLevelBlobOffsetType, " tubnte_offset; /* Offset into `tpp_unicode_byname_tree` */");
-		print("} tpp_unicode_byname_tree_token_entry;");
-		print("static tpp_unicode_byname_tree_token_entry const tpp_unicode_byname_tree_token_entries[",
+		print("	", topLevelBlobOffsetType, " tubnte_offset; /* Offset into `tpp_unam_tree` */");
+		print("} tpp_unam_tree_token_entry;");
+		print("static tpp_unam_tree_token_entry const tpp_unam_tree_token_entries[",
 			(#topLevelTokenBasedNodes).hex(), "] = {");
 		for (local topLevelChild: topLevelTokenBasedNodes) {
 			local firstTokenId = this.tokensToId[topLevelChild.tokens.first];
@@ -1097,11 +1104,6 @@ handle_group_start:
 		 *   always be followed by *all* other ID-less nodes that
 		 *   start with the same initial character! */
 		topLevelCharBasedNodes.sort(key: e -> (e.tokens.first.first, e.blobOffset));
-		local minChar: string = topLevelCharBasedNodes.first.tokens.first.first;
-		local maxChar: string = topLevelCharBasedNodes.last.tokens.first.first;
-		print(f"#define TPP_UNICODE_BYNAME_TREE_CHAR_ENTRY_MINCHAR '{minChar.encode("c-escape")}'");
-		print(f"#define TPP_UNICODE_BYNAME_TREE_CHAR_ENTRY_MAXCHAR '{maxChar.encode("c-escape")}'");
-		local numChars = (maxChar.ord() - minChar.ord()) + 1;
 
 		/* We only want the *first* node that starts with some character */
 		local firstTopLevelCharBasedNode: {int: RadixTreeNode} = Dict();
@@ -1118,8 +1120,19 @@ handle_group_start:
 			}
 		}
 
+		local minChar: string = topLevelCharBasedNodes.first.tokens.first.first;
+		local maxChar: string = topLevelCharBasedNodes.last.tokens.first.first;
+		local numChars = (maxChar.ord() - minChar.ord()) + 1;
+		print(f"#define TPP_UNAM_TREE_CHAR_ENTRY_MINCHAR '{minChar.encode("c-escape")}'");
+		print(f"#define TPP_UNAM_TREE_CHAR_ENTRY_MAXCHAR '{maxChar.encode("c-escape")}'");
+		print(f"#define TPP_UNAM_TREE_CHAR_ENTRY_HASNULL {int((
+			for (local ord: [minChar.ord():maxChar.ord()+1])
+				firstTopLevelCharBasedNode.get(ord) is none
+		) || ...)}");
+
 		local topLevelBlobOffsetType = uintLeastTypeFor(maxTopLevelBlobOffset);
-		print("static ", topLevelBlobOffsetType, " const tpp_unicode_byname_tree_char_entries[",
+		print("typedef ", topLevelBlobOffsetType, " tpp_unam_tree_char_offset;");
+		print("static tpp_unam_tree_char_offset const tpp_unam_tree_char_entries[",
 			numChars.hex(), "] = {");
 		for (local ord: [minChar.ord():maxChar.ord()+1]) {
 			local firstNode: RadixTreeNode | none = firstTopLevelCharBasedNode.get(ord);
@@ -1148,13 +1161,13 @@ function printDatabase(db: {string: {int...}}) {
 	local minTokenId = ser.tokensToId.values.min();
 	local maxTokenId = ser.tokensToId.values.max();
 	print(f'TPP_STATIC_ASSERT(TPP_UNICODE_BYNAME_LOOKUP_MAXUC == {ser.maxOrdCount});');
-	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MINTOKEN_COUNT {ser.minTokenCount}');
-	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MAXTOKEN_COUNT {ser.maxTokenCount}');
-	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MINTOKENID     {minTokenId.hex()} /* Lowest token ID */');
-	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MAXTOKENID     {maxTokenId.hex()} /* Greatest token ID */');
-	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_NUMTOKENIDS    {(#ser.tokensToId).hex()} /* # of distinct token IDs */');
-	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_NODES          {(#ser.db).hex()} /* # of nodes in `tpp_unicode_byname_tree` */');
-	print(f'typedef {uintLeastTypeFor(maxTokenId)} tpp_unicode_byname_tokenid;');
+	print(f'#define TPP_UNAM_LOOKUP_MINTOKEN_COUNT {ser.minTokenCount}');
+	print(f'#define TPP_UNAM_LOOKUP_MAXTOKEN_COUNT {ser.maxTokenCount}');
+	print(f'#define TPP_UNAM_LOOKUP_MINTOKENID     {minTokenId.hex()} /* Lowest token ID */');
+	print(f'#define TPP_UNAM_LOOKUP_MAXTOKENID     {maxTokenId.hex()} /* Greatest token ID */');
+	print(f'#define TPP_UNAM_LOOKUP_NUMTOKENIDS    {(#ser.tokensToId).hex()} /* # of distinct token IDs */');
+	print(f'#define TPP_UNAM_LOOKUP_NODES          {(#ser.db).hex()} /* # of nodes in `tpp_unam_tree` */');
+	print(f'typedef {uintLeastTypeFor(maxTokenId)} tpp_unam_tokenid;');
 
 	local final PRETTY_PRINT = false;
 
@@ -1171,10 +1184,10 @@ function printDatabase(db: {string: {int...}}) {
 		radixTreeBlobSize = 0;
 		for (local none, none, line: lines)
 			radixTreeBlobSize += #line;
-		print("static tpp_char const tpp_unicode_byname_tree[", radixTreeBlobSize.hex(), "] = {");
+		print("static tpp_char const tpp_unam_tree[", radixTreeBlobSize.hex(), "] = {");
 		local blobOffset = 0;
 		for (local prefix, node, line: lines) {
-			print("\t/*", blobOffset.tostr(16, 5), "." * #prefix, "*/ "),;
+			print("\t/*", blobOffset.tostr(16, 5, "X"), "." * #prefix, "*/ "),;
 			print(",".join(for (local b: line) b < 10 ? b : b.hex(2)), ", /* '",
 				" ".join(prefix + node.tokens), node.resultOrdinals ? "': " : "'",
 				", ".join(for (local ord: node.resultOrdinals) f"U+{ord.tostr(16, 4, "X")}"),
@@ -1191,7 +1204,7 @@ function printDatabase(db: {string: {int...}}) {
 		});
 		serialBlob = serialBlob.bytes;
 		radixTreeBlobSize = #serialBlob;
-		print("static tpp_char const tpp_unicode_byname_tree[", radixTreeBlobSize.hex(), "] = {");
+		print("static tpp_char const tpp_unam_tree[", radixTreeBlobSize.hex(), "] = {");
 		for (local line: serialBlob.segments(32))
 			print("\t", ",".join(line), ",");
 		print("};");
@@ -1235,7 +1248,7 @@ function printDatabase(db: {string: {int...}}) {
 	for (local prefix, minOrd, maxOrd, startNumber, isHex: ser.numberSuffixGroups) {
 		print(f"// {repr prefix}      U+{minOrd.tostr(16, 4, "X")}, U+{
 			maxOrd.tostr(16, 4, "X")} ({maxOrd - minOrd + 1}), {
-			startNumber.tostr(isHex ? 16 : 10, 0)}, {isHex}");
+			startNumber.tostr(isHex ? 16 : 10, 0, "X")}, {isHex}");
 	}
 #endif
 }
@@ -1252,6 +1265,7 @@ function main() {
 	print('#include "api.h"');
 	print;
 	print('#include "config.h"');
+	print('#include "keyword.h"');
 	print;
 	print('/*[[[tpp-begin]]]*/');
 	print('TPP_DECL_BEGIN');

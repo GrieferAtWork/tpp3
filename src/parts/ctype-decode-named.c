@@ -199,12 +199,15 @@ _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
                          tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN])
 #endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 {
+#if TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD || TPP_HAVE_ESCAPE_NAMED_XML
 	tpp_char ch;
 	tpp_char const *iter = *p_iter;
 	if (iter >= end)
 		goto nope;
 	ch = *iter++;
 	iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+#endif /* TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD || TPP_HAVE_ESCAPE_NAMED_XML */
+
 #if TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD
 	if (((ch == 'U' && iter < end && (*iter == '+')) ||
 	     (ch == '0' && iter < end && (*iter == 'x' || *iter == 'X'))) &&
@@ -275,16 +278,34 @@ _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
 	}
 #endif /* TPP_HAVE_ESCAPE_NAMED_XML */
 
-	/* TODO */
+
+#if TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES
+#if TPP_CONF_MAYBE_0(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
+	if (tpp_lexer_has(lexer, ESCAPE_NAMED_UNICODE_NAMES))
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) */
+	{
+#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
+		return tpp_unicode_byname_lookup(p_iter, end, result, lexer);
+#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+		return tpp_unicode_byname_lookup(p_iter, end, result);
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+	}
+#endif /* TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES */
+
+#if (TPP_CONF_MAYBE_0(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) || \
+     TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD || TPP_HAVE_ESCAPE_NAMED_XML)
+#if TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD || TPP_HAVE_ESCAPE_NAMED_XML
+nope:
+#endif /* TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD || TPP_HAVE_ESCAPE_NAMED_XML */
+	/* Unsupported... */
 	(void)iter;
 	(void)end;
 	(void)result;
 #if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 	(void)lexer;
 #endif /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
-
-nope:
 	return 0;
+#endif /* ... */
 }
 #endif /* TPP_HAVE_DECODE_NAMED_ESCAPE */
 
