@@ -19,6 +19,14 @@ global final COPYRIGHT =
  * 3. This notice may not be removed or altered from any source distribution. *
  */";
 
+/* Credit where credit is due: the compression techniques implemented here
+ * are (somewhat) inspired by: https://cor3ntin.github.io/posts/cp_to_name/
+ *
+ * However, I did greatly diverge from what that guy did, and also: this database
+ * is quite a bit bigger in general since it also contains emoji names, as well
+ * as a bunch of other niceties (see all the files used by `getUnicodeNames()`)
+ */
+
 import * from deemon;
 import posix;
 
@@ -49,13 +57,15 @@ function asciiUpper(x: string): string {
 	);
 }
 
-function decodeName(name: Bytes): string {
-	local result = asciiUpper(name.decode("utf-8")
-		.strip()
+function decodeName(name: Bytes): {string...} {
+	local result = name.decode("utf-8")
 		.replace(":", " : ")
 		.replace(",", " , ")
 		.replace("-", " - ")
-		.rereplace(r"\s+", " "));
+		.replace("(", " ( ")
+		.replace(")", " ) ")
+		.rereplace(r"\s+", " ")
+		.strip();
 	for (;;) {
 		local pos = result.find("\\X{");
 		if (pos < 0)
@@ -64,80 +74,416 @@ function decodeName(name: Bytes): string {
 		local ord = int(result[pos+3:end], 16);
 		result = result[:pos] + string.chr(ord) + result[end+1:];
 	}
-	return result;
+	return {
+		asciiUpper(result.title()),
+		asciiUpper(result.lower()),
+		asciiUpper(result.upper())
+	};
 }
 
 function getUnicodeNames(): {string: {int...}} {
 	local result: {string: {int...}} = Dict();
+	function setResult(name: Bytes, data: {int...}) {
+		for (local decoded: decodeName(name))
+			result[decoded] = data;
+	}
 	for (local line: readLines("./UnicodeData.txt")) {
 		local ord, name, none, none, none, none, none, none, none, none,
 			none, none, none, none, none = line.split(";")...;
-		if (name != "<control>")
-			result[decodeName(name)] = {int(ord, 16)};
+		if (!name.startswith("<"))
+			setResult(name, {int(ord, 16)});
 	}
 	for (local line: readLines("./NameAliases.txt")) {
 		local ord, name, none = line.split(";")...;
-		result[decodeName(name)] = {int(ord, 16)};
+		setResult(name, {int(ord, 16)});
 	}
 	for (local line: readLines("./NamedSequences.txt")) {
 		local name, seq = line.split(";")...;
-		result[decodeName(name)] = (
+		setResult(name, (
 			for (local e: seq.strip().split(" "))
 				int(e, 16)
-		).frozen;
+		).frozen);
 	}
 	for (local line: readLines("./emoji-zwj-sequences.txt")) {
 		local seq, none, name = line.split(";")...;
-		result[decodeName(name)] = (
+		setResult(name, (
 			for (local e: seq.strip().split(" "))
 				int(e, 16)
-		).frozen;
+		).frozen);
 	}
 	for (local line: readLines("./emoji-sequences.txt")) {
 		local seq, none, name = line.split(";")...;
 		if (".." in seq) {
 			local seq1, none, seq2 = seq.partition("..")...;
 			local name1, none, name2 = name.partition("..")...;
-			result[decodeName(name1)] = (
+			setResult(name1, (
 				for (local e: seq1.strip().split(" "))
 					int(e, 16)
-			).frozen;
-			result[decodeName(name2)] = (
+			).frozen);
+			setResult(name2, (
 				for (local e: seq2.strip().split(" "))
 					int(e, 16)
-			).frozen;
+			).frozen);
 		} else {
-			result[decodeName(name)] = (
+			setResult(name, (
 				for (local e: seq.strip().split(" "))
 					int(e, 16)
-			).frozen;
+			).frozen);
 		}
 	}
 	return result;
 }
 
 
-function printDatabase(db: {string: {int...}}) {
-	db = Dict(db);
+function uintLeastTypeFor(maxValue: int): string {
+	if (maxValue <= 0xff)
+		return "uint_least8_t";
+	if (maxValue <= 0xffff)
+		return "uint_least16_t";
+	if (maxValue <= 0xffffffff)
+		return "uint_least32_t";
+	return "uint_least64_t";
+}
 
-	/* Extract groups */
-	local nameByOrd: {int: HashSet with string} = Dict();
-	local maxOrdCount = 1;
-	for (local name, ordSeq: db) {
-		local ordSeqLen = #ordSeq;
-		if (ordSeqLen == 1) {
-			local ord = ordSeq[0];
-			local names = nameByOrd.get(ord);
-			if (names is none)
-				nameByOrd[ord] = names = HashSet();
-			names.insert(name);
-		} else {
-			if (maxOrdCount < ordSeqLen)
-				maxOrdCount = ordSeqLen;
+function uintLeastSizeof(T: string): int {
+	/* Presumably... (may be larger if platform doesn't have matching type) */
+	return {
+		"uint_least8_t": 1,
+		"uint_least16_t": 2,
+		"uint_least32_t": 4,
+		"uint_least64_t": 8,
+	}[T];
+}
+
+
+/* Database uses 2 layers:
+ *  - Conversion of input text to tokens:
+ *    - Have a big blob of "TOKEN_REPR, TOKEN_ID" pairs (sorted by TOKEN_REPR)
+ *      that can be used to tokenize input text using various rules:
+ *      - Case sensitive y/n
+ *      - UAX44-LM2 y/n
+ *      - ...
+ *  - Tokens can then be used to traverse a big prefix-tree:
+ *    - Every node looks like this:
+ *      - { [opt:OFFSET_TO_NEXT_SIBLING], {TOKEN_ID...}, [opt:{RESULT_ORD...}], [opt:FIRST_CHILD] }
+ *        - [opt:OFFSET_TO_NEXT_SIBLING]: Offset to next sibling node (same parent, but different {TOKEN_ID...} sequence)
+ *        - {TOKEN_ID...}: Sequence of token IDs needed to match this node (never empty)
+ *        - [opt:{RESULT_ORD...}]: Resulting unicode ordinal sequence when matched
+ *        - [opt:FIRST_CHILD]: Inlined (i.e.: stored in memory directly after this node):
+ *          the first child of this node, that is: a node that expects a prefix matching
+ *          what was described by `{TOKEN_ID...}`
+ *
+ * Also: sibling nodes are sorted by `{TOKEN_ID...}`, and in turn `TOKEN_ID`
+ *       are allocated based on how often the resp. token is used by unicode
+ *
+ * NOTES:
+ * - TOKEN_IDs that are only used once within the node-tree should be inlined
+ *   within their respective node. (NOTE: a token may only be used by a single
+ *   element of the node-tree, even if the token is used by multiple leafs. This
+ *   can happen if all leafs that use a specific token use that token at the
+ *   same position within a singular, common prefix)
+ * - The representation of unencoded tokens doesn't need to use ASCII -- these
+ *   only ever use [A-Z0-9.:-], as well as a hand full of unicode chars when
+ *   it comes to the names of countries.
+ * - Most unicode names describe a singular ordinal code. In these cases,
+ *   some spare bit should be used to indicate that only a single character
+ *   is encoded in [opt:{RESULT_ORD...}], rather than some multi-character
+ *   sequence that is then terminated by some special byte.
+ * - XXX: Lots of emoji sequences use "200D" (ZERO WIDTH JOINER), so that ordinal
+ *        in particular should have a shortened representation (we can easily encode
+ *        up to 64 additional characters as single bytes by using 80h-BFh, since
+ *        utf-8 only uses those bytes during follow-up, but not as initiators)
+ *
+ * The encoding of `TOKEN_ID`, `OFFSET_TO_NEXT_SIBLING`, `RESULT_ORD`
+ * uses the variable-length integer encoding ULEB128
+ */
+class RadixTreeNode {
+	this = default;
+	@@Tokens matched by this node (never empty, except for the special "root"
+	@@node, which is only during during calculation, but not actually emitted)
+	public member tokens: {string...};
+
+	@@Ordinals produced when this node is matched, or empty if there are none
+	public member resultOrdinals: {int...} = ();
+
+	@@Number-suffix ranges applicable to this node.
+	@@Elements are `(requiresSpace, minOrd, maxOrd, startNumber, isHex)`, where:
+	@@ - `requiresSpace`: The number-suffix requires a space between @tokens and the
+	@@   number-sequence. When @false, the number-sequence is appended to @tokens.
+	@@ - `minOrd`: Lowest unicode ordinal part of this range
+	@@ - `maxOrd`: Greatest unicode ordinal part of this range
+	@@ - `startNumber`: Integer suffix value of `minOrd`
+	@@ - `isHex`: Is the integer suffix written in hex (`true`) or decimal (`false`)
+	public member numberSuffixGroups: {(bool, int, int, int, bool)...} = [];
+
+	@@Children of this node
+	public member children: {RadixTreeNode...} = [];
+
+	@@Start offset into serialized blob (for later quick-reference)
+	public member blobOffset: int;
+
+	private member _totalChildCount: int;
+	public property totalChildCount: int = {
+		get(): int {
+			if (this._totalChildCount !is bound) {
+				local count = #this.children;
+				for (local child: this.children)
+					count += child.totalChildCount;
+				this._totalChildCount = count;
+			}
+			return this._totalChildCount;
 		}
 	}
 
-	local maxOrd = nameByOrd.keys > ...;
+
+	public function enumerateAllTokens() {
+		for (local tok: tokens) {
+			if (!tok)
+				throw Error(f"Empty token not allowed in: {repr tokens}");
+			yield tok;
+		}
+		for (local child: children) {
+			try {
+				yield child.enumerateAllTokens()...;
+			} catch (e...) {
+				throw Error(f"from: {repr tokens}", cause: e);
+			}
+		}
+	}
+
+	public function add(childTokens: {string...}, childOrdinals: {int...} = (),
+	                    childNumberSuffixGroup: (bool, int, int, int, bool) | none = none) {
+		if (!childTokens) {
+			if (childOrdinals && this.resultOrdinals && this.resultOrdinals != childOrdinals) {
+				throw Error(f"Duplicate token sequence for {
+					repr childOrdinals} (already mapped to {
+					repr this.resultOrdinals})");
+			}
+			this.resultOrdinals = childOrdinals;
+			if (childNumberSuffixGroup !is none)
+				numberSuffixGroups.append(childNumberSuffixGroup);
+			return;
+		}
+
+		/* Check if there is a child that starts with the first token */
+		local firstToken = childTokens.first;
+		local child: RadixTreeNode;
+		for (child: this.children) {
+			if (child.tokens.first == firstToken)
+				goto got_child;
+		}
+		/* Need a new child */
+		child = RadixTreeNode(tokens: childTokens.frozen);
+		this.children.append(child);
+got_child:
+		local numCommonTokens = 1;
+		while (numCommonTokens < #childTokens && numCommonTokens < #child.tokens &&
+		       childTokens[numCommonTokens] == child.tokens[numCommonTokens])
+			++numCommonTokens;
+
+		if (numCommonTokens < #child.tokens) {
+			/* Must split "child" at the common-token boundary */
+			local subChild: RadixTreeNode = RadixTreeNode(
+					tokens: child.tokens[numCommonTokens:].frozen,
+					resultOrdinals: child.resultOrdinals,
+					numberSuffixGroups: child.numberSuffixGroups,
+					children: child.children);
+			child.tokens = child.tokens[:numCommonTokens].frozen;
+			child.resultOrdinals = ();
+			child.numberSuffixGroups = [];
+			child.children = [subChild];
+		}
+		child.add(childTokens[numCommonTokens:], childOrdinals, childNumberSuffixGroup);
+	}
+
+	function dumpChildren(prefix: string) {
+		for (local child: children)
+			child.dump(prefix);
+	}
+
+	function dump(prefix: string) {
+		print(prefix, "'", " ".join(tokens), "':"),;
+		if (resultOrdinals) {
+			print(" [", ", ".join(
+				for (local ord: resultOrdinals)
+					f"U+{ord.tostr(16, 4, "X")}"
+			), "]"),;
+		}
+		print;
+		prefix += "\t";
+		for (local requiresSpace, minOrd, maxOrd, startNumber, isHex: numberSuffixGroups) {
+			print(prefix, f"@NUMBER_SUFFIX: space={requiresSpace}, hex={isHex}, U+{
+				minOrd.tostr(16, 4, "X")}..U+{maxOrd.tostr(16, 4, "X")} ({
+				maxOrd - minOrd + 1}), start={startNumber.tostr(isHex ? 16 : 10, 0)}");
+		}
+		this.dumpChildren(prefix);
+	}
+}
+
+function serializeUleb128(fp: File, value: int) {
+	assert value >= 0;
+	local byte = value & 0x7f;
+	local temp = value >> 7;
+	for (;;) {
+		if (temp)
+			byte |= 0x80;
+		fp.putc(byte);
+		if (!temp)
+			break;
+		byte = temp & 0x7f;
+		temp >>= 7;
+	}
+}
+
+@@Most-significant-bit-first writer
+class MSBBitWriter {
+	this = default;
+	public member fp: File;
+
+	private member byte: int = 0;
+	private member bits: int = 0;
+
+	public function put1(b: int | bool) {
+		byte = (byte << 1) | b;
+		++bits;
+		if (bits >= 8) {
+			assert bits == 8;
+			fp.putc(byte);
+			bits = 0;
+			byte = 0;
+		}
+	}
+
+	public function putn(v: int, n: int) {
+		for (local i: [:n]) {
+			local shift = n - i - 1;
+			this.put1((v >> shift) & 1);
+		}
+	}
+
+	@@return The final, flushed byte, or @(-1) if nothing was written
+	public function flush() {
+		local result = -1;
+		if (bits) {
+			result = byte << (8 - bits);
+			fp.putc(result);
+			bits = 0;
+			byte = 0;
+		}
+		return result;
+	}
+}
+
+
+@@A 1-6-bit (MSB-first) variable-length encoding of
+@@ASCII/unicode text (unused LSB bits are all 0):
+@@
+@@```
+@@       0    EOF   (End of text)
+@@  100000    A
+@@  100001    B
+@@  100010    C
+@@  100011    D
+@@  100100    E
+@@  100101    F
+@@  100110    G
+@@  100111    H
+@@  101000    I
+@@  101001    J
+@@  101010    K
+@@  101011    L
+@@  101100    M
+@@  101101    N
+@@  101110    O
+@@  101111    P
+@@  110000    Q
+@@  110001    R
+@@  110010    S
+@@  110011    T
+@@  110100    U
+@@  110101    V
+@@  110110    W
+@@  110111    X
+@@  111000    Y
+@@  111001    Z
+@@  111010    .
+@@  111011    :
+@@  111100    -
+@@  111101 1?????                       UNICODE5 : 5-bit  range for U+0020-U+003F
+@@  111110 1????? 1?????                UNICODE10: 10-bit range for U+0000-U+03FF
+@@  111111 1????? 1????? 1????? 1?????  UNICODE20: 20-bit range for U+0000-U+FFFFF
+@@```
+@@
+@@@return: last byte written during final flush, or @(-1) if nothing was flushed
+function serializeText(fp: File, text: string): int {
+	final local ASCII_ENCODING: {string: int} = {
+		"A": 0b100000,
+		"B": 0b100001,
+		"C": 0b100010,
+		"D": 0b100011,
+		"E": 0b100100,
+		"F": 0b100101,
+		"G": 0b100110,
+		"H": 0b100111,
+		"I": 0b101000,
+		"J": 0b101001,
+		"K": 0b101010,
+		"L": 0b101011,
+		"M": 0b101100,
+		"N": 0b101101,
+		"O": 0b101110,
+		"P": 0b101111,
+		"Q": 0b110000,
+		"R": 0b110001,
+		"S": 0b110010,
+		"T": 0b110011,
+		"U": 0b110100,
+		"V": 0b110101,
+		"W": 0b110110,
+		"X": 0b110111,
+		"Y": 0b111000,
+		"Z": 0b111001,
+		".": 0b111010,
+		":": 0b111011,
+		"-": 0b111100,
+	}.frozen;
+	local writer = MSBBitWriter(fp: fp);
+	for (local ch: text) {
+		local simpleEncoding: int | none = ASCII_ENCODING.get(ch);
+		if (simpleEncoding !is none) {
+			writer.putn(simpleEncoding, 6);
+		} else {
+			local ord = ch.ord();
+			if (ord >= 0x0020 && ord <= 0x003F) {
+				writer.putn(0b111101, 6);
+				writer.putn(0b100000 | (ord & 0x1F), 6);
+			} else if (ord <= 0x03FF) {
+				writer.putn(0b111110, 6);
+				writer.putn(0b100000 | ((ord >> 5) & 0x1F), 6);
+				writer.putn(0b100000 | (ord & 0x1F), 6);
+			} else if (ord <= 0xFFFFF) {
+				writer.putn(0b111111, 6);
+				writer.putn(0b100000 | ((ord >> 15) & 0x1F), 6);
+				writer.putn(0b100000 | ((ord >> 10) & 0x1F), 6);
+				writer.putn(0b100000 | ((ord >> 5) & 0x1F), 6);
+				writer.putn(0b100000 | (ord & 0x1F), 6);
+			} else {
+				throw Error(f"No way to encode U+{ord.tostr(16, 4, "X")} in text");
+			}
+		}
+	}
+	writer.put1(0); /* EOF */
+	return writer.flush();
+}
+
+class RadixTreeSerializer {
+	public member db: {string: {int...}};
+	public member nameByOrd: {int: HashSet with string} = Dict();
+
+	@@The max # of UTF-32 ordinals that a single unicode name may decode to
+	public member maxOrdCount: int;
+
+#define NumberSuffixGroup (string, int, int, int, bool)
 
 	@@Ranges of "PREFIX 123" / "PREFIX 1AB" characters
 	@@Elements are `(prefix, minOrd, maxOrd, startNumber, isHex)`, where:
@@ -146,195 +492,752 @@ function printDatabase(db: {string: {int...}}) {
 	@@ - `maxOrd`: Greatest unicode ordinal part of this range
 	@@ - `startNumber`: Integer suffix value of `minOrd`
 	@@ - `isHex`: Is the integer suffix written in hex (`true`) or decimal (`false`)
-	local numberSuffixGroups: {(string, int, int, int, bool)...} = [];
-	for (local groupMin = 0; groupMin < maxOrd;) {
-		local name1Candidates = nameByOrd.get(groupMin, {});
-		if (!name1Candidates) {
-			++groupMin;
-		} else {
-			local foundGroup = false;
-			for (local name1: name1Candidates) {
-				local groupMax = groupMin + 1;
-				local name2 = "";
-				local commonCount = 0;
-				for (local testName2: nameByOrd.get(groupMax, {})) {
-					local testCommonCount = name1.common(testName2);
-					if (commonCount < testCommonCount) {
-						commonCount = testCommonCount;
-						name2 = testName2;
+	public member numberSuffixGroups: {NumberSuffixGroup...};
+
+	@@Lookup tree to convert from tokens -> ordinals/suffix-groups
+	@@
+	@@This tree is serialized into the C program
+	public member tree: RadixTreeNode;
+
+	@@Min # of tokens in any unicode name (excluding number suffix)
+	public member minTokenCount: int;
+
+	@@Max # of tokens in any unicode name (excluding number suffix)
+	public member maxTokenCount: int;
+
+	@@Every token, and how often it is used in the tree
+	public member tokenUseCount: {string: int};
+
+	@@Same as @tokenUseCount, but sorted by use count
+	public member tokenUseCountSorted: {(string, int)...};
+
+	@@Mapping of tokens to their respective IDs.
+	@@This is the same as @tokenUseCountSorted, but every token
+	@@is given its own, distinct ID, and only tokens that are
+	@@used in at least 2 places will appear here.
+	@@
+	@@Additionally, token ID 0 never appears here since that ID
+	@@is special and reserved for inlined tokens (which are used
+	@@for all tokens that appear only once) in the binary output
+	@@
+	@@This table is serialized into the C program
+	public member tokensToId: {string: int};
+
+
+	this(db: {string: {int...}}) {
+		this.db = Dict(db);
+	}
+
+	public function buildNameByOrd() {
+		print File.stderr: "Building name-by-ord map...";
+		local nameByOrd: {int: HashSet with string} = Dict();
+		local maxOrdCount = 1;
+		for (local name, ordSeq: db) {
+			local ordSeqLen = #ordSeq;
+			if (ordSeqLen == 1) {
+				local ord = ordSeq[0];
+				local names = nameByOrd.get(ord);
+				if (names is none)
+					nameByOrd[ord] = names = HashSet();
+				names.insert(name);
+			} else {
+				if (maxOrdCount < ordSeqLen)
+					maxOrdCount = ordSeqLen;
+			}
+		}
+		this.nameByOrd = nameByOrd;
+		this.maxOrdCount = maxOrdCount;
+	}
+
+	@@Extract groups
+	public function buildNumberSuffixGroups() {
+		print File.stderr: "Building number suffix groups...";
+		local nameByOrd = this.nameByOrd;
+		local numberSuffixGroups: {NumberSuffixGroup...} = [];
+		local maxOrd = nameByOrd.keys > ...;
+		for (local groupMin = 0; groupMin < maxOrd;) {
+			local name1Candidates = nameByOrd.get(groupMin, {});
+			if (!name1Candidates) {
+				++groupMin;
+			} else {
+				local foundGroup = false;
+				for (local name1: name1Candidates) {
+					local groupMax = groupMin + 1;
+					local name2 = "";
+					local commonCount = 0;
+					for (local testName2: nameByOrd.get(groupMax, {})) {
+						local testCommonCount = name1.common(testName2);
+						if (commonCount < testCommonCount) {
+							commonCount = testCommonCount;
+							name2 = testName2;
+						}
 					}
-				}
-				if (commonCount > #name1)
-					continue;
-				while (commonCount >= 2 && name1.isdigit(commonCount - 1))
-					--commonCount;
-				if (commonCount > 1 && name1.isxdigit(commonCount, #name1)) {
+					if (commonCount > #name1)
+						continue;
+					while (commonCount >= 2 && name1.isdigit(commonCount - 1))
+						--commonCount;
+					if (commonCount > 1 && name1.isxdigit(commonCount, #name1)) {
 handle_group_start:
-					local afterCommon1 = name1[commonCount:];
-					local afterCommon2 = name2[commonCount:];
-					local afterCommon1Integer16 = try int(afterCommon1, 16) catch (...) -1;
-					local afterCommon1Integer10 = try int(afterCommon1, 10) catch (...) -1;
-					local afterCommon2Integer16 = try int(afterCommon2, 16) catch (...) -1;
-					local afterCommon2Integer10 = try int(afterCommon2, 10) catch (...) -1;
-					local isHex = (afterCommon1Integer16 + 1) == afterCommon2Integer16;
-					local isDec = (afterCommon1Integer10 + 1) == afterCommon2Integer10;
-					if (isHex || isDec) {
-						local groupMemberNames: {string...} = HashSet({ name1, name2 });
-						local groupPrefix = name1[:commonCount];
-						local groupMode = (isHex && isDec) ? 2 : isHex ? 1 : 0;
-						local groupStartNumber10 = afterCommon1Integer10;
-						local groupStartNumber16 = afterCommon1Integer16;
-						local nextGroupMax = groupMax + 1;
-						while (nextGroupMax <= maxOrd) {
-							afterCommon1Integer10 = afterCommon2Integer10;
-							afterCommon1Integer16 = afterCommon2Integer16;
-							local name3 = "";
-							for (local testName3: nameByOrd.get(nextGroupMax, {})) {
-								if (testName3.startswith(groupPrefix)) {
-									name3 = testName3;
-									break;
-								}
-							}
-							if (!name3.startswith(groupPrefix)) {
-								/* See if we can include some extra hex digits within this group... */
-								if (groupMode != 0) {
-									local newCommonCount = commonCount;
-									while (newCommonCount >= 2 && name1.isxdigit(newCommonCount - 1))
-										--newCommonCount;
-									if (commonCount > newCommonCount) {
-										print File.stderr: (f"Restarting group {repr name1}: {repr name1[commonCount:]} -> {repr name1[newCommonCount:]}");
-										commonCount = newCommonCount;
-										groupMax = groupMin + 1;
-										goto handle_group_start;
+						local afterCommon1 = name1[commonCount:];
+						local afterCommon2 = name2[commonCount:];
+						local afterCommon1Integer16 = try int(afterCommon1, 16) catch (...) -1;
+						local afterCommon1Integer10 = try int(afterCommon1, 10) catch (...) -1;
+						local afterCommon2Integer16 = try int(afterCommon2, 16) catch (...) -1;
+						local afterCommon2Integer10 = try int(afterCommon2, 10) catch (...) -1;
+						local isHex = (afterCommon1Integer16 + 1) == afterCommon2Integer16;
+						local isDec = (afterCommon1Integer10 + 1) == afterCommon2Integer10;
+						if (isHex || isDec) {
+							local groupMemberNames: {string...} = HashSet({ name1, name2 });
+							local groupPrefix = name1[:commonCount];
+							local groupMode = (isHex && isDec) ? 2 : isHex ? 1 : 0;
+							local groupStartNumber10 = afterCommon1Integer10;
+							local groupStartNumber16 = afterCommon1Integer16;
+							local nextGroupMax = groupMax + 1;
+							while (nextGroupMax <= maxOrd) {
+								afterCommon1Integer10 = afterCommon2Integer10;
+								afterCommon1Integer16 = afterCommon2Integer16;
+								local name3 = "";
+								for (local testName3: nameByOrd.get(nextGroupMax, {})) {
+									if (testName3.startswith(groupPrefix)) {
+										name3 = testName3;
+										break;
 									}
 								}
+								if (!name3.startswith(groupPrefix)) {
+									/* See if we can include some extra hex digits within this group... */
+									if (groupMode != 0) {
+										local newCommonCount = commonCount;
+										while (newCommonCount >= 2 && name1.isxdigit(newCommonCount - 1))
+											--newCommonCount;
+										if (commonCount > newCommonCount) {
+											print File.stderr: (f"Restarting group {repr name1}: {repr name1[commonCount:]} -> {repr name1[newCommonCount:]}");
+											commonCount = newCommonCount;
+											groupMax = groupMin + 1;
+											goto handle_group_start;
+										}
+									}
+									break;
+								}
+								local afterCommon3 = name3[commonCount:];
+								local afterCommon3Integer16 = try int(afterCommon3, 16) catch (...) -1;
+								local afterCommon3Integer10 = try int(afterCommon3, 10) catch (...) -1;
+								isHex = (afterCommon2Integer16 + 1) == afterCommon3Integer16;
+								isDec = (afterCommon2Integer10 + 1) == afterCommon3Integer10;
+								if (isHex && isDec) {
+									/* Continue with old groupMode */
+								} else if (isHex) {
+									if (groupMode == 2)
+										groupMode = 1; /* Switch to hex-only */
+									if (groupMode == 0)
+										break; /* Group must be decimal */
+								} else if (isDec) {
+									if (groupMode == 2)
+										groupMode = 0; /* Switch to decimal-only */
+									if (groupMode == 1)
+										break; /* Group must be hex */
+								} else {
+									break; /* End of group */
+								}
+								afterCommon2Integer16 = afterCommon3Integer16;
+								afterCommon2Integer10 = afterCommon3Integer10;
+								groupMemberNames.insert(name3);
+								groupMax = nextGroupMax;
+								++nextGroupMax;
+							}
+							if (#groupMemberNames > 6) {
+								/* Register this group! */
+								local groupIsHex = groupMode != 0;
+								local groupStartNumber = groupIsHex ? groupStartNumber16 : groupStartNumber10;
+
+#if 0 /* Doesn't actually change anything... */
+								/* Maximize the number-part to reduce the amount of distinct tokens */
+								while (#groupPrefix >= 2) {
+									local last = groupPrefix.last;
+									if (groupIsHex) {
+										if (!last.isxdigit())
+											break;
+										afterCommon1 = last + afterCommon1;
+										groupStartNumber = int(afterCommon1, 16);
+									} else {
+										if (!last.isdigit())
+											break;
+										afterCommon1 = last + afterCommon1;
+										groupStartNumber = int(afterCommon1, 10);
+									}
+									groupPrefix = groupPrefix[:-1];
+								}
+#endif
+
+								print File.stderr: (
+									f"Found group: {repr groupPrefix}: U+{groupMin.tostr(16, 4, "X")}, U+{
+									groupMax.tostr(16, 4, "X")} ({groupMax - groupMin + 1}), {
+									groupStartNumber.tostr(groupIsHex ? 16 : 10, 0)}, {groupIsHex}");
+								numberSuffixGroups.append({
+									groupPrefix,
+									groupMin,
+									groupMax,
+									groupStartNumber,
+									groupIsHex,
+								});
+								for (local groupMemberName: groupMemberNames)
+									del db[groupMemberName];
+								for (local ord: [groupMin:groupMax+1])
+									nameByOrd[ord].removeall(groupMemberNames);
+								foundGroup = true;
 								break;
 							}
-							local afterCommon3 = name3[commonCount:];
-							local afterCommon3Integer16 = try int(afterCommon3, 16) catch (...) -1;
-							local afterCommon3Integer10 = try int(afterCommon3, 10) catch (...) -1;
-							isHex = (afterCommon2Integer16 + 1) == afterCommon3Integer16;
-							isDec = (afterCommon2Integer10 + 1) == afterCommon3Integer10;
-							if (isHex && isDec) {
-								/* Continue with old groupMode */
-							} else if (isHex) {
-								if (groupMode == 2)
-									groupMode = 1; /* Switch to hex-only */
-								if (groupMode == 0)
-									break; /* Group must be decimal */
-							} else if (isDec) {
-								if (groupMode == 2)
-									groupMode = 0; /* Switch to decimal-only */
-								if (groupMode == 1)
-									break; /* Group must be hex */
-							} else {
-								break; /* End of group */
-							}
-							afterCommon2Integer16 = afterCommon3Integer16;
-							afterCommon2Integer10 = afterCommon3Integer10;
-							groupMemberNames.insert(name3);
-							groupMax = nextGroupMax;
-							++nextGroupMax;
-						}
-						if (#groupMemberNames > 6) {
-							/* Register this group! */
-							local groupIsHex = groupMode != 0;
-							local groupStartNumber = groupIsHex ? groupStartNumber16 : groupStartNumber10;
-							print File.stderr: (
-								f"Found group: {repr groupPrefix}: U+{groupMin.tostr(16, 4, "X")}, U+{
-								groupMax.tostr(16, 4, "X")} ({groupMax - groupMin + 1}), {
-								groupStartNumber.tostr(groupIsHex ? 16 : 10, 0)}, {groupIsHex}");
-							numberSuffixGroups.append({
-								groupPrefix,
-								groupMin,
-								groupMax,
-								groupStartNumber,
-								groupIsHex,
-							});
-							for (local groupMemberName: groupMemberNames)
-								del db[groupMemberName];
-							for (local ord: [groupMin:groupMax+1])
-								nameByOrd[ord].removeall(groupMemberNames);
-							foundGroup = true;
-							break;
 						}
 					}
 				}
+				if (!foundGroup)
+					++groupMin;
 			}
-			if (!foundGroup)
-				++groupMin;
+		}
+		this.numberSuffixGroups = numberSuffixGroups;
+	}
+
+	@@Build lookup tree
+	public function buildTree() {
+		local tree = RadixTreeNode(tokens: {});
+		local minTokenCount: int = 999999;
+		local maxTokenCount: int = 0;
+		print File.stderr: "Building lookup tree... (db)";
+		for (local key, ordinals: db) {
+			local tokens: {string...} = key.split(" ").frozen;
+			local tokenCount = #tokens;
+			if (maxTokenCount < tokenCount)
+				maxTokenCount = tokenCount;
+			if (minTokenCount > tokenCount)
+				minTokenCount = tokenCount;
+			try {
+				tree.add(tokens, childOrdinals: ordinals);
+			} catch (e...) {
+				throw Error(f"Unable to add {repr key}: {repr ordinals}", cause: e);
+			}
+		}
+
+		print File.stderr: "Building lookup tree... (numberSuffixGroups)";
+		for (local prefix, minOrd, maxOrd, startNumber, isHex: numberSuffixGroups) {
+			local requiresSpace: bool = prefix.endswith(" ");
+			local tokens: {string...} = prefix.strip().split(" ").frozen;
+			local childNumberSuffixGroup: (bool, int, int, int, bool) =
+				(requiresSpace, minOrd, maxOrd, startNumber, isHex);
+			local tokenCount = #tokens;
+			if (maxTokenCount < tokenCount)
+				maxTokenCount = tokenCount;
+			if (minTokenCount > tokenCount)
+				minTokenCount = tokenCount;
+			try {
+				tree.add(tokens, childNumberSuffixGroup: childNumberSuffixGroup);
+			} catch (e...) {
+				throw Error(f"Unable to add {repr prefix}: {repr childNumberSuffixGroup}", cause: e);
+			}
+		}
+		this.tree = tree;
+		this.minTokenCount = minTokenCount;
+		this.maxTokenCount = maxTokenCount;
+	}
+
+
+	public buildTokenTable() {
+		print File.stderr: "Building token table...";
+		local tokenUseCount: {string: int} = Dict();
+		for (local token: this.tree.enumerateAllTokens())
+			tokenUseCount[token] = tokenUseCount.get(token, 0) + 1;
+		this.tokenUseCount = tokenUseCount;
+		local tokenUseCountSorted: {(string, int)...} =
+			tokenUseCount.sorted(key: e -> -e.last).cached;
+		this.tokenUseCountSorted = tokenUseCountSorted;
+		local tokensToId: {string: int} = Dict();
+		local nextTokenId: int = 1;
+		function uleb128ContainsNulBytes(v: int) {
+			local fp = File.Writer(hint: "bytes");
+			serializeUleb128(fp, v);
+			return 0 in fp.bytes;
+		}
+
+		for (local name, useCount: tokenUseCountSorted) {
+			if (useCount < 2)
+				break;
+			if (/*nextTokenId >= 128 &&*/ #name == 1 &&
+			    name in "ABCDEFGHIJKLMNOPQRSTUVWXYZ.:-")
+				continue; /* Don't include this one -- inline encoding is shorter */
+			tokensToId[name] = nextTokenId;
+			/* This is important for later: ULEB128-encodings of token IDs mustn't
+			 * contain NUL-bytes. It might be possible for them to contain those
+			 * bytes if the last 7 bits are all 0, but for the sake of simplicity,
+			 * we simply keep counting if we get one such "bad" ID. */
+			do {
+				++nextTokenId;
+			} while (uleb128ContainsNulBytes(nextTokenId));
+		}
+		this.tokensToId = tokensToId;
+	}
+
+
+	@@Encode a token:
+	@@ - Either a `ULEB128`, in which case it's the ID of a token
+	@@ - Or a `00h` byte followed by TEXT (see @serializeText)
+	function serializeToken(fp: File, token: string) {
+		local tokenId: int | none = this.tokensToId.get(token);
+		if (tokenId !is none)
+			return serializeUleb128(fp, tokenId);
+
+		/* Must encode as inline TEXT */
+		fp.putc(0);
+		serializeText(fp, token);
+	}
+
+#define NUMBER_SUFFIX_FEAT_BASE           0x0F
+#define NUMBER_SUFFIX_FEAT_HEX            0x20
+#define NUMBER_SUFFIX_FEAT_REQUIRES_SPACE 0x40
+#define NUMBER_SUFFIX_FEAT_LAST           0x80
+
+	@@NUMBER_SUFFIX_DESC:
+	@@
+	@@```
+	@@    OFFSET    TYPE     NAME          DESCRIPTION
+	@@    0000      BYTE     features      0Fh: BASE            (start value of group, or 0Fh if there is a dedicated base-value)
+	@@                                     10h: RESERVED
+	@@                                     20h: HEX
+	@@                                     40h: REQUIRES_SPACE
+	@@                                     80h: LAST            (this is the last suffix desc)
+	@@    0001      ULEB128  minOrd        Unicode ordinal of first group member
+	@@    ???2      ULEB128  countMinusOne # of ordinals described by group, minus 1
+	@@if features.BASE == 0Fh
+	@@    ???3      ULEB128  base          Integer value of lowest, valid group suffix
+	@@                                     e.g. when features.HEX=0 and base=123, then
+	@@                                     `FOO123`=`minOrd` and `FOO124`=`minOrd+1`,
+	@@                                     but `FOO122` isn't matched.
+	@@fi
+	@@```
+	function serializeNumberSuffixGroup(
+			fp: File, last: bool, numberSuffixGroup: NumberSuffixGroup) {
+		local requiresSpace, minOrd, maxOrd, startNumber, isHex = numberSuffixGroup...;
+		local features = 0;
+		if (last)
+			features |= NUMBER_SUFFIX_FEAT_LAST;
+		if (requiresSpace)
+			features |= NUMBER_SUFFIX_FEAT_REQUIRES_SPACE;
+		if (isHex)
+			features |= NUMBER_SUFFIX_FEAT_HEX;
+		if (startNumber <= 0x0E) {
+			features |= startNumber;
+		} else {
+			features |= NUMBER_SUFFIX_FEAT_BASE;
+		}
+		fp.putc(features);
+		serializeUleb128(fp, minOrd);
+		serializeUleb128(fp, maxOrd - minOrd); /* count-1 */
+		if ((features & NUMBER_SUFFIX_FEAT_BASE) == 0x0F)
+			serializeUleb128(fp, startNumber);
+	}
+
+#define FEAT_HAS_SIBLING       0x01
+#define FEAT_HAS_CHILDREN      0x02
+#define FEAT_ONE_TOKEN         0x04
+#define FEAT_ONE_ORD           0x08
+#define FEAT_HAS_NUMBER_SUFFIX 0x10
+
+	@@Serialize a @RadixTreeNode:
+	@@
+	@@```
+	@@    OFFSET    TYPE     NAME        DESCRIPTION
+	@@    0000      BYTE     features    01h: HAS_SIBLING
+	@@                                   02h: HAS_CHILDREN
+	@@                                   04h: ONE_TOKEN
+	@@                                   08h: ONE_ORD
+	@@                                   10h: HAS_NUMBER_SUFFIX
+	@@                                   20h: RESERVED
+	@@                                   40h: RESERVED
+	@@                                   80h: RESERVED
+	@@ if features.HAS_SIBLING
+	@@    0001      ULEB128  size        offset from end of "size" to next sibling node (in bytes)
+	@@ fi
+	@@
+	@@ if features.ONE_TOKEN
+	@@    ???2      TOKEN    tokens      First (and *only*) token
+	@@ else
+	@@    ???2      TOKEN    token1      First token
+	@@   [???3      TOKEN    token2      Second token]
+	@@   [???4      TOKEN    token3      ...]
+	@@    ???5      BYTE     token_end   A 00h-byte marking the end of the token sequence
+	@@ fi
+	@@
+	@@ if features.ONE_ORD
+	@@    ???6      ULEB128  ord         First (and *only*) expansion ordinal
+	@@ else
+	@@   [???6      ULEB128  ord1        First expansion ordinal]
+	@@   [???7      ULEB128  ord2        Second expansion ordinal]
+	@@   [???8      ULEB128  ord3        ...]
+	@@    ???9      BYTE     ord_end     A 00h-byte marking the end of expansion ordinals
+	@@                                   There may also not be any ordinals, in which case
+	@@                                   this 00h-byte appears directly. This also means
+	@@                                   that no sequence can contain U+0000 ordinals, but
+	@@                                   "NULL = U+0000" can still be encoded when ONE_ORD
+	@@                                   is set.
+	@@ fi
+	@@
+	@@ if features.HAS_NUMBER_SUFFIX
+	@@    ???A      NUMBER_SUFFIX_DESC   First number suffix descriptor
+	@@   [???B      NUMBER_SUFFIX_DESC   Second number suffix descriptor]
+	@@   [???C      NUMBER_SUFFIX_DESC   ... descriptors end if one has the `features.LAST` flag]
+	@@ fi
+	@@
+	@@ if features.HAS_CHILDREN
+	@@    ???E      NODE     child1      First child
+	@@   [????      NODE     child2      Second child]
+	@@   [????      NODE     child3      ...]
+	@@ fi
+	@@    ----                           This is where HAS_SIBLING -> size points to
+	@@```
+	@@
+	@@Data types:
+	@@- TOKEN: see @serializeToken
+	@@- NUMBER_SUFFIX_DESC: see @serializeNumberSuffix
+	public function serializeTreeNode(
+#define PutLineCallback Callable with (/*prefix:*/{string...}, /*node:*/RadixTreeNode, /*line:*/Bytes)
+			prefix: {string...}, putLine: PutLineCallback,
+			node: RadixTreeNode, hasSibling: bool): int {
+		local features = 0;
+		if (hasSibling)
+			features |= FEAT_HAS_SIBLING;
+		if (node.children)
+			features |= FEAT_HAS_CHILDREN;
+		assert node.tokens, "'tokens' cannot be empty!";
+		if (#node.tokens == 1)
+			features |= FEAT_ONE_TOKEN;
+		if (#node.resultOrdinals == 1)
+			features |= FEAT_ONE_ORD;
+		if (node.numberSuffixGroups)
+			features |= FEAT_HAS_NUMBER_SUFFIX;
+
+		local line = File.Writer(hint: "bytes");
+		line.putc(features);
+		/* If "hasSibling" is true, the missing ULEB here is inserted later! */
+		for (local tok: node.tokens)
+			serializeToken(line, tok);
+		for (local ord: node.resultOrdinals)
+			serializeUleb128(line, ord);
+		if (!(features & FEAT_ONE_ORD))
+			line.putc(0);
+		local maxNumberSuffixGroups = #node.numberSuffixGroups - 1;
+		for (local i, group: node.numberSuffixGroups.enumerate()) {
+			local isLast = i == maxNumberSuffixGroups;
+			this.serializeNumberSuffixGroup(line, isLast, group);
+		}
+		local newPrefix = prefix + node.tokens;
+		local childLines: {(/*prefix:*/{string...}, /*node:*/RadixTreeNode, /*line:*/Bytes)...} = [];
+		local sizeOfChildrenCell = Cell(0);
+		this.serializeNodeChildren(newPrefix,
+			(prefix: {string...}, node: RadixTreeNode, line: Bytes) -> {
+				childLines.append((prefix, node, line));
+				sizeOfChildrenCell.value += #line;
+			}, node.children);
+		line = line.bytes;
+		if (features & FEAT_HAS_SIBLING) {
+			local newLine = File.Writer(hint: "bytes");
+			local lineSize = (#line - 1) + sizeOfChildrenCell.value;
+			newLine.write(line[:1]);
+			serializeUleb128(newLine, lineSize);
+			newLine.write(line[1:]);
+			line = newLine.bytes;
+		}
+
+		/* Emit line */
+		putLine(prefix, node, line);
+
+		/* Emit child lines */
+		for (local childPrefix, childNode, childLine: childLines)
+			putLine(childPrefix, childNode, childLine);
+	}
+
+	public function serializeNodeChildren(
+			prefix: {string...}, putLine: PutLineCallback,
+			children: {RadixTreeNode...}) {
+		local sortedChildren: {RadixTreeNode...} = List(children);
+		/* Sort children as:
+		 * 1. Based on token ID (with tokens without ID appearing last)
+		 * 2. Beyond that, perform textual comparison of tokens
+		 *    (such that tokens without ID are sorted alphabetically).
+		 */
+		sortedChildren.sort(key: e -> {
+			this.tokensToId.get(e.tokens.first) ?? 9999999999999,
+			e.tokens,
+		});
+		local maxIndex = #sortedChildren - 1;
+		for (local i, child: sortedChildren.enumerate()) {
+			local hasSibling = i < maxIndex;
+			this.serializeTreeNode(prefix, putLine, child, hasSibling);
 		}
 	}
 
-	local tokensByCount: {string: int} = Dict();
-	local minTokenCount: int = 999999;
-	local maxTokenCount: int = 0;
-	for (local key: db.keys) {
-		local tokens = key.split(" ");
-		for (local tok: tokens)
-			tokensByCount[tok] = tokensByCount.get(tok, 0) + 1;
-		local tokenCount = #tokens;
-		if (maxTokenCount < tokenCount)
-			maxTokenCount = tokenCount;
-		if (minTokenCount > tokenCount)
-			minTokenCount = tokenCount;
+	public function serializeTree(putLine: PutLineCallback) {
+		print File.stderr: "Serializing tree...";
+		this.serializeNodeChildren({}, putLine, this.tree.children);
 	}
-	for (local group: numberSuffixGroups) {
-		local tokens = group[0].strip().split(" ");
-		for (local tok: tokens)
-			tokensByCount[tok] = tokensByCount.get(tok, 0) + 1;
-		local tokenCount = #tokens;
-		if (maxTokenCount < tokenCount)
-			maxTokenCount = tokenCount;
-		if (minTokenCount > tokenCount)
-			minTokenCount = tokenCount;
-	}
-	local tokensSortedByUseCount = tokensByCount.sorted(key: e -> -e.last).cached;
 
-	/* Database uses 2 layers:
-	 *  - Conversion of input text to tokens:
-	 *    - Have a big blob of "TOKEN_REPR, TOKEN_ID" pairs (sorted by TOKEN_REPR)
-	 *      that can be used to tokenize input text using various rules:
-	 *      - Case sensitive y/n
-	 *      - UAX44-LM2 y/n
-	 *      - ...
-	 *  - Tokens can then be used to traverse a big prefix-tree:
-	 *    - Every node looks like this:
-	 *      - { [opt:OFFSET_TO_NEXT_SIBLING], {TOKEN_ID...}, [opt:{RESULT_ORD...}], [opt:FIRST_CHILD] }
-	 *        - [opt:OFFSET_TO_NEXT_SIBLING]: Offset to next sibling node (same parent, but different {TOKEN_ID...} sequence)
-	 *        - {TOKEN_ID...}: Sequence of token IDs needed to match this node (never empty)
-	 *        - [opt:{RESULT_ORD...}]: Resulting unicode ordinal sequence when matched
-	 *        - [opt:FIRST_CHILD]: Inlined (i.e.: stored in memory directly after this node):
-	 *          the first child of this node, that is: a node that expects a prefix matching
-	 *          what was described by `{TOKEN_ID...}`
-	 *        NOTE: [opt:{RESULT_ORD...}] and [opt:{RESULT_ORD...}] are mutually exclusive:
-	 *              Every node must have one or the other, but never both or neither
-	 *
-	 * Also: sibling nodes are sorted by `{TOKEN_ID...}`, and in turn `TOKEN_ID`
-	 *       are allocated based on how often the resp. token is used by unicode
-	 *
-	 * The encoding of `TOKEN_ID`, `OFFSET_TO_NEXT_SIBLING`, `RESULT_ORD`
-	 * uses a variable-length integer encoding TODO (will probably use ULEB128)
-	 */
-	print(f'TPP_STATIC_ASSERT(TPP_UNICODE_BYNAME_LOOKUP_MAXUC == {maxOrdCount});');
-	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MINTOKENS {minTokenCount}');
-	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MAXTOKENS {maxTokenCount}');
+	@@This table is designed to be binary-searchable, because all entries
+	@@are tightly packed, and feature exactly 1 NUL-byte in the middle (which
+	@@in turn can be used to always find the start of an entry). Additionally,
+	@@entries of this table are sorted by their decoded `repr` (see below),
+	@@which is also required for binary search:
+	@@
+	@@Every table entry looks like this:
+	@@
+	@@```
+	@@    OFFSET    TYPE     NAME        DESCRIPTION
+	@@    0000      TEXT     repr        Compressed representation of token
+	@@ if BYTES(repr).last != 00h
+	@@    ???1      BYTE     NUL         A forced NUL-byte. Omitted if last
+	@@                                   byte of encoded content of "repr"
+	@@                                   is already a NUL-byte (which can
+	@@                                   happen if only 0-bits remain during
+	@@                                   the final flush)
+	@@ fi
+	@@    0000      ULEB128  token_id    token ID. Could in theory contain
+	@@                                   00h bytes, but token IDs are allocated
+	@@                                   such that their ULEB128 encodings will
+	@@                                   not contain any NUL-bytes!
+	@@```
+	@@
+	@@@return size of generated tables (in bytes)
+	public function printTokenTable(PRETTY_PRINT: bool): int {
+		print File.stderr: "Generating token table...";
+		print("/* Token decoder tree -- see `ctype-names.dee:printTokenTable()` for binary format */");
+		local sortedTokenReprs: {string...} = this.tokensToId.keys.sorted();
+		local tokenReprLines: {(Bytes, string, int)...} = [];
+		local blobSize: int = 0;
+		for (local tokenRepr: sortedTokenReprs) {
+			local line = File.Writer(hint: "bytes");
+			local tokenId = this.tokensToId[tokenRepr];
+			local lastByte = serializeText(line, tokenRepr); /* repr */
+			if (lastByte != 0x00)
+				line.putc(0x00); /* NUL */
+			serializeUleb128(line, tokenId);
+			line = line.bytes;
+			tokenReprLines.append((line, tokenRepr, tokenId));
+			blobSize += #line;
+		}
+
+		blobSize += 2; /* For leading "0,1" */
+		print("static tpp_char const tpp_unicode_byname_tokens[", blobSize.hex(), "] = {");
+		if (PRETTY_PRINT) {
+			print("	0,1, /* Needed so the start of the first token record can be determined */");
+			local blobOffset = 0;
+			for (local line, tokenRepr, tokenId: tokenReprLines) {
+				print("\t/*", blobOffset.tostr(16, 4),
+					"*/ ", ",".join(for (local b: line) b < 10 ? b : b.hex(2)),
+					", /* '", tokenRepr.encode("c-escape"), "' -> ",
+					tokenId.hex(), " */");
+				blobOffset += #line;
+			}
+		} else {
+			local serialBlob = File.Writer(hint: "bytes");
+			serialBlob.putc(0); /* Needed so the start of the first ... */
+			serialBlob.putc(1); /* ... token record can be determined */
+			for (local line, none, none: tokenReprLines)
+				serialBlob.write(line);
+			serialBlob = serialBlob.bytes;
+			for (local line: serialBlob.segments(32))
+				print("\t", ",".join(line), ",");
+		}
+		print("};");
+		return blobSize;
+	}
+
+	public function printTopLevelTokenEntryTable(PRETTY_PRINT: bool): int {
+		print File.stderr: "Generating top-level token entry table...";
+		local topLevelTokenBasedNodes: {RadixTreeNode...} = [];
+		for (local topLevelChild: this.tree.children) {
+			if (topLevelChild.tokens.first in this.tokensToId)
+				topLevelTokenBasedNodes.append(topLevelChild);
+		}
+		local maxTopLevelFirstTokenId = 0;
+		topLevelTokenBasedNodes.sort(key: e -> this.tokensToId[e.tokens.first]);
+		for (local topLevelChild: topLevelTokenBasedNodes) {
+			local firstTokenId = this.tokensToId[topLevelChild.tokens.first];
+			if (maxTopLevelFirstTokenId < firstTokenId)
+				maxTopLevelFirstTokenId = firstTokenId;
+		}
+		local maxTopLevelBlobOffset = topLevelTokenBasedNodes.each.blobOffset > ...;
+		local topLevelFirstTokenIdType = uintLeastTypeFor(maxTopLevelFirstTokenId);
+		local topLevelBlobOffsetType = uintLeastTypeFor(maxTopLevelBlobOffset);
+		print("typedef struct tpp_unicode_byname_tree_token_entry {");
+		print("	", topLevelFirstTokenIdType, " tubnte_token_id; /* Token ID */");
+		print("	", topLevelBlobOffsetType, " tubnte_offset; /* Offset into `tpp_unicode_byname_tree` */");
+		print("} tpp_unicode_byname_tree_token_entry;");
+		print("static tpp_unicode_byname_tree_token_entry const tpp_unicode_byname_tree_token_entries[",
+			(#topLevelTokenBasedNodes).hex(), "] = {");
+		for (local topLevelChild: topLevelTokenBasedNodes) {
+			local firstTokenId = this.tokensToId[topLevelChild.tokens.first];
+			print("	{ ", firstTokenId.hex(), ", ", topLevelChild.blobOffset.hex(),
+				" }, /* '", topLevelChild.tokens.first, "' */");
+		}
+		print("};");
+		return #topLevelTokenBasedNodes * (
+			uintLeastSizeof(topLevelFirstTokenIdType) +
+			uintLeastSizeof(topLevelBlobOffsetType)
+		);
+	}
+
+	public function printTopLevelCharEntryTable(PRETTY_PRINT: bool): int {
+		print File.stderr: "Generating top-level character entry table...";
+		local topLevelCharBasedNodes: {RadixTreeNode...} = [];
+		for (local topLevelChild: this.tree.children) {
+			if (topLevelChild.tokens.first !in this.tokensToId)
+				topLevelCharBasedNodes.append(topLevelChild);
+		}
+		/* Sort based on the first character of their first token.
+		 * Beyond that, sort based on their blob offsets:
+		 * - We're only dealing with ID-less tokens here, and...
+		 * - ... all ID-less tokens appear sorted alphabetically
+		 *   after all tokens *with* ID.
+		 * - As such, the node with the smallest blob-offset will
+		 *   always be followed by *all* other ID-less nodes that
+		 *   start with the same initial character! */
+		topLevelCharBasedNodes.sort(key: e -> (e.tokens.first.first, e.blobOffset));
+		local minChar: string = topLevelCharBasedNodes.first.tokens.first.first;
+		local maxChar: string = topLevelCharBasedNodes.last.tokens.first.first;
+		print(f"#define TPP_UNICODE_BYNAME_TREE_CHAR_ENTRY_MINCHAR '{minChar.encode("c-escape")}'");
+		print(f"#define TPP_UNICODE_BYNAME_TREE_CHAR_ENTRY_MAXCHAR '{maxChar.encode("c-escape")}'");
+		local numChars = (maxChar.ord() - minChar.ord()) + 1;
+
+		/* We only want the *first* node that starts with some character */
+		local firstTopLevelCharBasedNode: {int: RadixTreeNode} = Dict();
+		local lastOrd = -1;
+		local maxTopLevelBlobOffset = 0;
+		for (local topLevelChild: topLevelCharBasedNodes) {
+			local thisOrd = topLevelChild.tokens.first.ord(0);
+			if (lastOrd != thisOrd) {
+				firstTopLevelCharBasedNode[thisOrd] = topLevelChild;
+				lastOrd = thisOrd;
+				local blobOffset = topLevelChild.blobOffset;
+				if (maxTopLevelBlobOffset < blobOffset)
+					maxTopLevelBlobOffset = blobOffset;
+			}
+		}
+
+		local topLevelBlobOffsetType = uintLeastTypeFor(maxTopLevelBlobOffset);
+		print("static ", topLevelBlobOffsetType, " const tpp_unicode_byname_tree_char_entries[",
+			numChars.hex(), "] = {");
+		for (local ord: [minChar.ord():maxChar.ord()+1]) {
+			local firstNode: RadixTreeNode | none = firstTopLevelCharBasedNode.get(ord);
+			print("	/* [", ord.hex(2), "] = */ "),;
+			if (firstNode is none) {
+				print("0,");
+			} else {
+				print(firstNode.blobOffset.hex(), ", /* '",
+					string.chr(ord).encode("c-escape"), "': '",
+					" ".join(firstNode.tokens), "' */");
+			}
+		}
+		print("};");
+		return numChars * uintLeastSizeof(topLevelBlobOffsetType);
+	}
+}
+
+
+function printDatabase(db: {string: {int...}}) {
+	local ser: RadixTreeSerializer = RadixTreeSerializer(db);
+	ser.buildNameByOrd();
+	ser.buildNumberSuffixGroups();
+	ser.buildTree();
+	ser.buildTokenTable();
+
+	local minTokenId = ser.tokensToId.values.min();
+	local maxTokenId = ser.tokensToId.values.max();
+	print(f'TPP_STATIC_ASSERT(TPP_UNICODE_BYNAME_LOOKUP_MAXUC == {ser.maxOrdCount});');
+	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MINTOKEN_COUNT {ser.minTokenCount}');
+	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MAXTOKEN_COUNT {ser.maxTokenCount}');
+	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MINTOKENID     {minTokenId.hex()} /* Lowest token ID */');
+	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_MAXTOKENID     {maxTokenId.hex()} /* Greatest token ID */');
+	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_NUMTOKENIDS    {(#ser.tokensToId).hex()} /* # of distinct token IDs */');
+	print(f'#define TPP_UNICODE_BYNAME_LOOKUP_NODES          {(#ser.db).hex()} /* # of nodes in `tpp_unicode_byname_tree` */');
+	print(f'typedef {uintLeastTypeFor(maxTokenId)} tpp_unicode_byname_tokenid;');
+
+	local final PRETTY_PRINT = false;
+
+	/* Token decoding table */
+	local tokenTableBlobSize = ser.printTokenTable(PRETTY_PRINT);
+
+	print("/* By-name radix tree -- see `ctype-names.dee:serializeTreeNode()` for binary format */");
+	local radixTreeBlobSize: int;
+	if (PRETTY_PRINT) {
+		local lines: {(/*prefix:*/{string...}, /*node:*/RadixTreeNode, /*line:*/Bytes)...} = [];
+		ser.serializeTree((prefix: {string...}, node: RadixTreeNode, line: Bytes) -> {
+			lines.append((prefix, node, line));
+		});
+		radixTreeBlobSize = 0;
+		for (local none, none, line: lines)
+			radixTreeBlobSize += #line;
+		print("static tpp_char const tpp_unicode_byname_tree[", radixTreeBlobSize.hex(), "] = {");
+		local blobOffset = 0;
+		for (local prefix, node, line: lines) {
+			print("\t/*", blobOffset.tostr(16, 5), "." * #prefix, "*/ "),;
+			print(",".join(for (local b: line) b < 10 ? b : b.hex(2)), ", /* '",
+				" ".join(prefix + node.tokens), node.resultOrdinals ? "': " : "'",
+				", ".join(for (local ord: node.resultOrdinals) f"U+{ord.tostr(16, 4, "X")}"),
+				" */");
+			node.blobOffset = blobOffset;
+			blobOffset += #line;
+		}
+		print("};");
+	} else {
+		local serialBlob = File.Writer(hint: "bytes");
+		ser.serializeTree((prefix: {string...}, node: RadixTreeNode, line: Bytes) -> {
+			node.blobOffset = serialBlob.size();
+			serialBlob.write(line);
+		});
+		serialBlob = serialBlob.bytes;
+		radixTreeBlobSize = #serialBlob;
+		print("static tpp_char const tpp_unicode_byname_tree[", radixTreeBlobSize.hex(), "] = {");
+		for (local line: serialBlob.segments(32))
+			print("\t", ",".join(line), ",");
+		print("};");
+	}
+
+	/* Generate a quick-lookup table for top-level token IDs */
+	print;
+	print("#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE");
+	local entryTableBlobSize = ser.printTopLevelTokenEntryTable(PRETTY_PRINT);
+	entryTableBlobSize += ser.printTopLevelCharEntryTable(PRETTY_PRINT);
+	print("#endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE */");
+
+
+	/* Print some information on the size of the database */
+	print;
+	local final RJUST = 7;
+	print("/* Database sizes:");
+	print(" *    token: ", tokenTableBlobSize.tostr(10, 0, "_").rjust(RJUST));
+	print(" *    radix: ", radixTreeBlobSize.tostr(10, 0, "_").rjust(RJUST));
+	print(" * #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE");
+	local total = tokenTableBlobSize + radixTreeBlobSize + entryTableBlobSize;
+	print(" *    entry: ", entryTableBlobSize.tostr(10, 0, "_").rjust(RJUST));
+	print(" *    total: ", total.tostr(10, 0, "_").rjust(RJUST));
+	print(" * #else // TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE");
+	local total = tokenTableBlobSize + radixTreeBlobSize;
+	print(" *    total: ", total.tostr(10, 0, "_").rjust(RJUST));
+	print(" * #endif // !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE");
+	print(" */");
 
 #if 0
-	for (local tok, count: tokensSortedByUseCount)
-		print(f"// {tok}      {count}");
+	local maxTokLen = ser.tokenUseCountSorted.each.first.length > ...;
+	for (local tok, count: ser.tokenUseCountSorted)
+		print(f"// {tok.ljust(maxTokLen)} {count}");
 #endif
 
-	print;
-	print;
-	print;
-	print;
-	for (local prefix, minOrd, maxOrd, startNumber, isHex: numberSuffixGroups) {
+#if 0
+	ser.tree.dumpChildren("//");
+#endif
+
+#if 0
+	for (local prefix, minOrd, maxOrd, startNumber, isHex: ser.numberSuffixGroups) {
 		print(f"// {repr prefix}      U+{minOrd.tostr(16, 4, "X")}, U+{
 			maxOrd.tostr(16, 4, "X")} ({maxOrd - minOrd + 1}), {
 			startNumber.tostr(isHex ? 16 : 10, 0)}, {isHex}");
 	}
-
+#endif
 }
 
 
@@ -343,29 +1246,23 @@ function main() {
 	print;
 	print('/* GENERATED FILE -- DO NOT EDIT */');
 	print;
-	print('#ifndef GUARD_TPP_CTYPE_NAMES_C');
-	print('#define GUARD_TPP_CTYPE_NAMES_C 1');
-	print('#define TPP_BUILDING 1');
+	print('#ifndef GUARD_TPP_CTYPE_NAMES_H');
+	print('#define GUARD_TPP_CTYPE_NAMES_H 1');
 	print;
 	print('#include "api.h"');
 	print;
 	print('#include "config.h"');
-	print('#include "ctype.h"');
 	print;
 	print('/*[[[tpp-begin]]]*/');
 	print('TPP_DECL_BEGIN');
 	print;
-	print('#if TPP_HAVE_UNICODE_BYNAME_LOOKUP');
-	print('#ifndef tpp_unicode_byname_lookup');
 	local db: {string: {int...}} = getUnicodeNames();
 	printDatabase(db);
-	print('#endif /* !tpp_unicode_byname_lookup */');
-	print('#endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP */');
 	print;
 	print('TPP_DECL_END');
 	print('/*[[[tpp-end]]]*/');
 	print;
-	print('#endif /* !GUARD_TPP_CTYPE_NAMES_C */');
+	print('#endif /* !GUARD_TPP_CTYPE_NAMES_H */');
 }
 
 #ifdef __MAIN__

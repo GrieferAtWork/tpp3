@@ -39,7 +39,12 @@
 #include "parts/ctype.c"
 #include "parts/ctype-unicode.c"
 #include "parts/ctype-xml.c"
+#if TPP_HAVE_UNICODE_BYNAME_LOOKUP
+#ifndef tpp_unicode_byname_lookup
+#include "parts/ctype-names.h"
 #include "parts/ctype-names.c"
+#endif /* !tpp_unicode_byname_lookup */
+#endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP */
 #include "parts/ctype-decode-named.c"
 #include "parts/string.c"
 #include "parts/token-strtokenid.c"

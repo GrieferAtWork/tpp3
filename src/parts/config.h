@@ -2309,6 +2309,20 @@
 #ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP
 #define TPP_HAVE_UNICODE_BYNAME_LOOKUP (TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP */
+
+/* Extension to `TPP_HAVE_UNICODE_BYNAME_LOOKUP`: use an extra
+ * table to speed up the initial entry into the internal database
+ * of unicode names.
+ *
+ * Adds ~7KiB to final executable (though lookup without this is rather slow) */
+#ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
+#if TPP_HAVE_UNICODE_BYNAME_LOOKUP && !defined(__OPTIMIZE_SIZE__)
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE 1
+#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP && !__OPTIMIZE_SIZE__ */
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE 0
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP || __OPTIMIZE_SIZE__ */
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE */
+
 /* TODO: Option to enable UAX44-LM2 normalization in `TPP_HAVE_UNICODE_BYNAME_LOOKUP`
  *       https://www.unicode.org/reports/tr44/tr44-24.html#UAX44-LM2 */
 

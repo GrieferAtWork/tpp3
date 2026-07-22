@@ -56,6 +56,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\parts\api.h" />
     <ClInclude Include="..\src\parts\config.h" />
+    <ClInclude Include="..\src\parts\ctype-names.h" />
     <ClInclude Include="..\src\parts\ctype.h" />
     <ClInclude Include="..\src\parts\defs.h" />
     <ClInclude Include="..\src\parts\error.h" />
