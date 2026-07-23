@@ -35,7 +35,7 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS
 static TPP_FORMATPRINTER_DEFINE(dump_defs_printer, arg, text, num_bytes) {
 	(void)arg;
-	fwrite(text, 1, num_bytes, stderr);
+	fwrite(text, 1, num_bytes, stdout);
 	return 0;
 }
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */

@@ -24,6 +24,7 @@ for (local e: fs.dir(".").sorted()) {
 		print(f'#include "{e}"');
 }
 ]]]*/
+#include "arguments-as-macro.h"
 #include "macro-expansion.h"
 /*[[[end]]]*/
 

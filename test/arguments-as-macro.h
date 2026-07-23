@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -17,7 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
 #define args 10,20,30
 #define func(a,b,c) a+b+c
@@ -31,12 +31,12 @@
 #error "Should now be suppressed (once)"
 #endif
 
-/* E0105("-Wmacros"): Not enough enough arguments for `func' */
+/* warning[-Wmacros]: too few arguments for `func` which takes 3 when 1 were given */
 /* NOTE: Expands to:
  *  >> [func][(][args][)]
  *  >> [args][+][][+][]
  *  >> [10][,][20][,][30][+][+] */
-TEST_EXPANDS(func(args), "10,20,30++")
+TPP_ASSERT_EXPANDS("10,20,30++", func(args))
 
 #if !__has_warning("-Wmacros")
 #error "Should have been triggered"

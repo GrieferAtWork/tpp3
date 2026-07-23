@@ -25,27 +25,34 @@ else
 EXE :=
 endif
 
+
+
 all: Makefile.autoformat src/tpp-amalgamation.h src/tpp-amalgamation.c doc/config.md
 .PHONY: all
 
+# Inline code generation self-dependencies...
 Makefile.autoformat: src/scripts/Makefile.autoformat.dee src/tpp.h src/tpp.c
 	deemon src/scripts/Makefile.autoformat.dee > Makefile.autoformat
-
 -include Makefile.autoformat
 
-src/tpp-amalgamation.h: src/tpp.h src/scripts/make-amalgamation.dee
+# The big one: the TPP source amalgamation files...
+src/tpp-amalgamation.h: Makefile.autoformat src/tpp.h src/scripts/make-amalgamation.dee
 	deemon src/scripts/make-amalgamation.dee src/tpp.h '"tpp-amalgamation.h"' > src/tpp-amalgamation.h
-src/tpp-amalgamation.c: src/tpp.h src/scripts/make-amalgamation.dee
+src/tpp-amalgamation.c: Makefile.autoformat src/tpp.h src/scripts/make-amalgamation.dee
 	deemon src/scripts/make-amalgamation.dee src/tpp.c 'TPP_AMALGAMATION_H' > src/tpp-amalgamation.c
-doc/config.md: src/parts/.format-cache/config.h src/scripts/make-config-doc.dee src/tpp-amalgamation.h
+
+# Generated documentation
+doc/config.md: Makefile.autoformat src/parts/.format-cache/config.h src/scripts/make-config-doc.dee src/tpp-amalgamation.h
 	deemon src/scripts/make-config-doc.dee
 
 
+# Frontend executable
 bin/tpp$(EXE): src/tpp-amalgamation.c src/tpp-amalgamation.h src/frontend.c
 	gcc -Wall -Wextra -Wno-misleading-indentation -DUSE_AMALGAMATION -o bin/tpp$(EXE) src/frontend.c
 
 
+# Unit tests...
 test: bin/tpp$(EXE)
 	deemon -F test/_all.h
-	bin/tpp$(EXE) test/_all.h && echo "ALL TEST OK!"
+	bin/tpp$(EXE) test/_all.h > /dev/null && echo "TESTS PASSED"
 .PHONY: test
