@@ -80,8 +80,24 @@ again:
 	/* Only really need to escape \ " ' CR LF and (TPP_HAVE_UNICODE-only)
 	 * ordinals >=0xC0 that *might* form unicode line-feed characters. */
 
-		/* NOTE: Must encode 00h as \000 instead of \0 to prevent ambiguity with "\N{NUL}00" */
-	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\000"); /* To prevent problems with "strlen()" and the like... */
+	/* To prevent problems with "strlen()" and the like... 
+	 * NOTE: Must encode 00h as \000 instead of \0 to prevent ambiguity with "\N{NUL}00" */
+#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
+	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\u0000");
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
+	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\u{0}");
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
+	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\&#0;");
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
+	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\000");
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\x{0}");
+#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\o{0}");
+#else /* ... */
+	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\000");
+#endif /* !... */
+
 	TPP_TOKEN_ENCODESTRING_CASE('\\', "\\\\");
 	TPP_TOKEN_ENCODESTRING_CASE('\'', "\\\'");
 	TPP_TOKEN_ENCODESTRING_CASE('\"', "\\\"");

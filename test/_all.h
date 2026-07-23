@@ -26,5 +26,6 @@ for (local e: fs.dir(".").sorted()) {
 ]]]*/
 #include "arguments-as-macro.h"
 #include "macro-expansion.h"
+#include "unicode-names.h"
 /*[[[end]]]*/
 

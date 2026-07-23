@@ -42,3 +42,5 @@ TPP_ASSERT_EXPANDS("10,20,30++", func(args))
 #error "Should have been triggered"
 #endif
 
+#undef func
+#undef args
