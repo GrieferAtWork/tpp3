@@ -606,6 +606,34 @@ again_switch_tok:
 #endif /* ... */
 		switch (tok) {
 
+/* TODO: When `TPP_HAVE_MAGIC_WHITESPACE` is enabled,
+ *       there's another place we have to inject whitespace:
+ * >> #define sum1(a, b, c) a+b+c
+ * >> #define sum2(a, b, c) a+#!b+c
+ * >> sum1(10,,20)  // Expands to [10][++][20]
+ * >> sum2(10,,20)  // Expands to [10][++][20]
+ *
+ * Handle this by introducing new `TPP_MACRO_OPCODE_*` that
+ * get used when the macro argument being empty must result
+ * in a single whitespace character U+0020 being inserted
+ * instead of the argument itself.
+ *
+ * This must be done in those cases where the tokens preceding
+ * and succeeding the macro argument would form a token, as
+ * per `tpp_lexer_require_whitespace()`, and the argument in
+ * question would be inserted using opcodes:
+ * - TPP_MACRO_OPCODE_INS_EXP
+ * - TPP_MACRO_OPCODE_INS
+ *
+ * To minimize impact, add 2 new opcodes that will be used for
+ * macro arguments in these situations:
+ * - TPP_MACRO_OPCODE_INS_SP_EXP
+ * - TPP_MACRO_OPCODE_INS_SP
+ *
+ * Also: add 1 extra field to `tpp_macro_argument` that specifies
+ *       the # of extra bytes needed for magic whitespace characters
+ *       within the resulting macro body if the argument is empty
+ */
 
 /************************************************************************/
 #if TPP_HAVE_GLUE_MACRO_ARGUMENT
