@@ -1,0 +1,80 @@
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import * from deemon;
+import * from posix;
+
+local PARTS_DIR = joinpath(headof(__FILE__), "parts");
+
+local filesWithDeemonScripts: {string...} = [];
+local allFiles: {string...} = [];
+
+for (local ent: opendir(PARTS_DIR)) {
+	if (ent.d_type == DT_REG) {
+		local filename = ent.d_name;
+		local fileData = File.open(joinpath(PARTS_DIR, filename), "rb").read();
+		if ("[[[deemon" in fileData)
+			filesWithDeemonScripts.append(filename);
+		allFiles.append(filename);
+	}
+}
+
+for (local filename: filesWithDeemonScripts) {
+	local dependencies = [filename];
+	if (filename == "expose-internals.h") {
+		for (local allFile: allFiles) {
+			if (allFile == filename)
+				continue;
+			if (allFile.endswith(".h") || allFile.endswith(".c")) {
+				if (allFile in filesWithDeemonScripts)
+					allFile = f"format-cache/{allFile}";
+				dependencies.append(allFile);
+			}
+		}
+	}
+	print(f"parts/format-cache/{filename}: {" ".join(
+		for (local dependency: dependencies)
+			f"parts/{dependency}"
+	)}");
+	print(f"	deemon -Wno-usage -Wno-user -F parts/{filename}");
+	print(f"	@> parts/format-cache/{filename}");
+}
+
+@@Return the `#include "parts/..."` filenames performed within @filename
+function getPartIncludes(filename: string): {string...} {
+	local data = File.open(filename, "rb").read();
+	for (local match: data.reglocateall(r'\n\s*#\s*include\s*"parts/([^"]+)"'))
+		yield match.last;
+}
+
+function printIncludeDependencies(tppH: string, tppAmalgamationH: string) {
+	local partIncludes = getPartIncludes(tppH);
+	local finalPartIncludes = [];
+	for (local partInclude: partIncludes) {
+		if (partInclude in filesWithDeemonScripts)
+			partInclude = f"format-cache/{partInclude}";
+		finalPartIncludes.append(f"parts/{partInclude}");
+	}
+	print(f"{tppAmalgamationH}: {" ".join(finalPartIncludes)}");
+}
+
+
+printIncludeDependencies("tpp.h", "tpp-amalgamation.h");
+printIncludeDependencies("tpp.c", "tpp-amalgamation.c");
+

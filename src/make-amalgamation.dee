@@ -111,7 +111,7 @@ function removeUnnecessaryDeclBlocks(bytes: Bytes): Bytes {
 	return bytes;
 }
 
-function makeAmalgamation(inputFilename: string, outputFilename: string, TPP_AMALGAMATION_H: string) {
+function makeAmalgamation(inputFilename: string, TPP_AMALGAMATION_H: string) {
 	local data: Bytes;
 	with (local fp = File.open(inputFilename, "rb"))
 		data = fp.readall();
@@ -139,12 +139,17 @@ function makeAmalgamation(inputFilename: string, outputFilename: string, TPP_AMA
 	writer.write(data[i:]);
 	local outData = writer.bytes;
 	outData = removeUnnecessaryDeclBlocks(outData);
-	with (local fp = File.open(outputFilename, "wb"))
-		fp.write(outData);
+	File.stdout.write(outData);
 }
 
+function main(args: {string...}) {
+	local inFile = args...;
+	makeAmalgamation(inFile, {
+		"tpp.h": '"tpp-amalgamation.h"',
+		"tpp.c": 'TPP_AMALGAMATION_H',
+	}[inFile]);
+}
 
-makeAmalgamation("tpp.h", "tpp-amalgamation.h", TPP_AMALGAMATION_H: '"tpp-amalgamation.h"');
-makeAmalgamation("tpp.c", "tpp-amalgamation.c", TPP_AMALGAMATION_H: 'TPP_AMALGAMATION_H');
-
-
+#ifdef __MAIN__
+main([...][1:]);
+#endif /* __MAIN__ */

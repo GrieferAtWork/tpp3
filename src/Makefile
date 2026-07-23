@@ -19,27 +19,19 @@
 
 #.DELETE_ON_ERROR: # Actually: don't turn this on: some of the files here aren't entirely generated, meaning we actually *don't* want to delete them on error
 
-CONFIG_MD := \
-	../doc/config.md \
-	../doc/config-limit.md \
-	../doc/config-core.md \
-	../doc/config-conf.md \
-	../doc/config-token.md \
-	../doc/config-value.md \
-	../doc/config-warn.md \
-	../doc/config-hook.md \
-	../doc/config-common.md
 
-
-all: tpp-amalgamation.h tpp-amalgamation.c $(CONFIG_MD)
+all: Makefile.autoformat tpp-amalgamation.h tpp-amalgamation.c ../doc/config.md
 .PHONY: all
 
-$(CONFIG_MD): parts/config.h make-config-doc.dee tpp-amalgamation.h
+Makefile.autoformat: Makefile.autoformat.dee tpp.h tpp.c
+	deemon Makefile.autoformat.dee > Makefile.autoformat
+
+-include Makefile.autoformat
+
+tpp-amalgamation.h: tpp.h make-amalgamation.dee
+	deemon make-amalgamation.dee tpp.h > tpp-amalgamation.h
+tpp-amalgamation.c: tpp.h make-amalgamation.dee
+	deemon make-amalgamation.dee tpp.c > tpp-amalgamation.c
+../doc/config.md: parts/format-cache/config.h make-config-doc.dee tpp-amalgamation.h
 	deemon make-config-doc.dee
 
-tpp-amalgamation.c: tpp.h tpp.c make-amalgamation.dee $(wildcard parts/*.c) $(wildcard parts/*.h)
-	deemon -Wno-usage -Wno-user -F parts/*.h parts/*.c
-#	This one must be run last because it depends on the generated contents of other files
-	deemon -Wno-usage -Wno-user -F parts/expose-internals.h
-	deemon make-amalgamation.dee
-tpp-amalgamation.h: tpp-amalgamation.c
