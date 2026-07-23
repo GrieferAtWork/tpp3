@@ -492,6 +492,9 @@ _tpp_warnings_invoke_nofail(tpp_warnings const *tpp_restrict self, tpp_warning_i
 			                (self->tw_suppressions.tws_ctxc - mid) *
 			                sizeof(tpp_warning_suppress_item));
 		}
+
+		/* Treat supressed warning as disabled. */
+		result->twii_state = TPP_WSTATE_DISABLED;
 	}
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 
