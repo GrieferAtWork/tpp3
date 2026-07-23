@@ -83,10 +83,10 @@ int main(int argc, char *argv[]) {
 				tok = TPP_TOK_OFERR(error);
 			break;
 		}
-#if 1
+#if 0
 		fwrite(tpp_lexer_gettokenstart(&lexer), 1,
 		       tpp_lexer_gettokenlen(&lexer), stdout);
-#elif 0
+#elif 1
 		printf("[%.*s]",
 		       (int)tpp_lexer_gettokenlen(&lexer),
 		       tpp_lexer_gettokenstart(&lexer));

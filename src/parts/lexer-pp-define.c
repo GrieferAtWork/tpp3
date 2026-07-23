@@ -890,15 +890,49 @@ found_va_opt_body_end:
 #if (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || \
      TPP_HAVE_CHARIZE_MACRO_ARGUMENT ||   \
      TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT)
-//TODO:#if TPP_HAVE_TOK_SOL_SHELL_COMMENT
-//TODO:		case TPP_TOK_SOL_SHELL_COMMENT:
-//TODO:#endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
+#if TPP_HAVE_TOK_SOL_SHELL_COMMENT
+		case TPP_TOK_SOL_SHELL_COMMENT: {
+			for (;;) {
+				tpp_char ch;
+				tpp_assert(token->tt_start < body_end);
+				ch = *token->tt_start;
+				if (ch == '#')
+					break;
+#if TPP_HAVE_TRIGRAPHS
+				if (ch == '?') {
+					tpp_assert((token->tt_start + 2) < body_end);
+					tpp_assert(token->tt_start[1] == '?');
+					tpp_assert(token->tt_start[2] == '=');
+					token->tt_start += 2;
+					break;
+				}
+#endif /* TPP_HAVE_TRIGRAPHS */
+				++token->tt_start;
+			}
+		}
+#if TPP_HAVE_TOK_SHELL_COMMENT || !TPP_HAVE_TRIGRAPHS
+			TPP_FALLTHRU
+#endif /* TPP_HAVE_TOK_SHELL_COMMENT || !TPP_HAVE_TRIGRAPHS */
+#endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 #if TPP_HAVE_TOK_SHELL_COMMENT
 		case TPP_TOK_SHELL_COMMENT:
 			/* Deal with special case of shell comments (which must be re-parsed as a #-token) */
 			body_iter = token->tt_start + 1;
+#if !TPP_HAVE_TRIGRAPHS
 			TPP_FALLTHRU
+#endif /* !TPP_HAVE_TRIGRAPHS */
 #endif /* TPP_HAVE_TOK_SHELL_COMMENT */
+#if TPP_HAVE_TOK_SOL_SHELL_COMMENT || TPP_HAVE_TOK_SHELL_COMMENT
+#if TPP_HAVE_TRIGRAPHS
+			if (body_iter[-1] == '?') {
+				tpp_assert((body_iter + 1) < body_end);
+				tpp_assert(body_iter[0] == '?');
+				tpp_assert(body_iter[1] == '=');
+				body_iter += 2;
+			}
+			TPP_FALLTHRU
+#endif /* TPP_HAVE_TRIGRAPHS */
+#endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT || TPP_HAVE_TOK_SHELL_COMMENT */
 		case '#': {
 			tpp_char const *start_of_pound;
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
