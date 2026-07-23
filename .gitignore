@@ -11,3 +11,4 @@ lib/*
 *.VC.db
 *.VC.opendb
 *.dec
+Makefile.autoformat
