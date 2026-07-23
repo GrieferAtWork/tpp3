@@ -1716,14 +1716,6 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes);
 #endif /* TPP_HAVE_TOKEN_ENCODESTRING */
 
-#if TPP_HAVE_TOKEN_REQUIRE_WHITESPACE
-/* Check if 2 tokens, when written directly adjacent to each other,
- * *might* (though not necessarily) result in a different set of
- * tokens when re-parsed. */
-TPP_DECL TPP_CONSTCALL TPP_WUNUSED bool TPPCALL
-tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
-#endif /* TPP_HAVE_TOKEN_REQUIRE_WHITESPACE */
-
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

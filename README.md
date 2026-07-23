@@ -71,10 +71,10 @@ NOTES:
 
 - `tpp_lexer lexer;` the heartpiece of TPP: a lexer is what keep track of everything related to preprocessing: the current token, the `#include`-stack (as well as the current file), keywords, macros, configuration (extensions/features), context flags, counters, include-paths, etc.  
   Initializing a lexer is done in 2 steps:
-- `tpp_lexer_init(&lexer);`:  
-  Initialize common fields of a lexer (everything except for the current file and last token). Note thatthis step of initialization is designed to never fail (there are no mandatory heap-buffers or anythinglike that), meaning that `tpp_lexer_init(&lexer);` returns `void` so you don't have to check for errors!
-- `tpp_lexer_initfile_open(&lexer, "input.c", TPP_SIZE_MAX)`:  
-  Initialize the initial input file. For this purpose, other `tpp_lexer_initfile_*()` also exist. Note thatthis function can only be used to initialize the *initial* input file. Assuming that`TPP_HAVE_INCLUDE_STACK` is enabled, additional files must be pushed onto the `#include`-stack using`tpp_lexer_pushfile_*`
+	- `tpp_lexer_init(&lexer);`:  
+	  Initialize common fields of a lexer (everything except for the current file and last token). This step of initialization is designed to never fail (there are no mandatory heap-buffers or anything like that), meaning that `tpp_lexer_init(&lexer);` returns `void` so you don't have to check for errors!
+	- `tpp_lexer_initfile_open(&lexer, "input.c", TPP_SIZE_MAX)`:  
+	  Initialize the initial input file. For this purpose, other `tpp_lexer_initfile_*()` also exist. This function can only be used to initialize the *initial* input file. Assuming that`TPP_HAVE_INCLUDE_STACK` is enabled, additional files must be pushed onto the `#include`-stack using`tpp_lexer_pushfile_*`
 - `tok = tpp_lexer_yield(&lexer)`:  
   Yield the next token whilst dealing with preprocessor directives and macro expansion.
 - `tpp_lexer_finifile(&lexer);`, `tpp_lexer_fini(&lexer);`:  

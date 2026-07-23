@@ -526,11 +526,11 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 
 /* >> tpp_hash tpp_hash_combine_char(tpp_hash a, tpp_char b);
  * Combine a given hash value "a" with a character "b". */
-#define tpp_hash_combine_char(a, b) ((a) * 263 + (tpp_char)(b))
+#define tpp_hash_combine_char(a, b) ((a) * 263 + /*(tpp_char)*/(b))
 
 /* >> tpp_hash tpp_hash_combine_hash(tpp_hash a, tpp_hash b);
  * Combine a given hash value "a" with another hash value "b". */
-#define tpp_hash_combine_hash(a, b) ((a) * 263 + (tpp_hash)(b))
+#define tpp_hash_combine_hash(a, b) ((a) * 263 + /*(tpp_hash)*/(b))
 
 
 #undef TPP_HAVE_BSE_FILE_PARAM

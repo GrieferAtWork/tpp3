@@ -50,6 +50,7 @@
 #include "parts/token-strtokenid.c"
 #include "parts/token-reprtokenid.c"
 #include "parts/token-encodestring.c"
+#include "parts/lexer-require-whitespace.c"
 #include "parts/file-io.c"
 #include "parts/file.c"
 #include "parts/keyword.c"

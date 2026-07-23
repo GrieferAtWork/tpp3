@@ -1095,6 +1095,17 @@ tpp_lexer_nextrand(tpp_lexer *tpp_restrict self) {
 
 
 
+#if TPP_HAVE_LEXER_REQUIRE_WHITESPACE
+/* Check if 2 tokens, when written directly adjacent to each other,
+ * *might* (though not necessarily) result in a different set of
+ * tokens when re-parsed. */
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
+                             tpp_token_id lhs, tpp_token_id rhs);
+#endif /* TPP_HAVE_LEXER_REQUIRE_WHITESPACE */
+
+
+
 /* Read a single character (byte) whilst accounting for BSE (if enabled)
  * and automatically extending the current file if EOF is reached.
  * On true EOF:

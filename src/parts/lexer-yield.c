@@ -1633,7 +1633,7 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 			break;
 #if TPP_HAVE_MAGIC_WHITESPACE
 		if (tpp_lexer_has(self, MAGIC_WHITESPACE)) {
-			if (tpp_token_require_whitespace(prev_tok, tok)) {
+			if (tpp_lexer_require_whitespace(self, prev_tok, tok)) {
 				print_status = tpp_string_builder_print(&data->tlhed_builder, (tpp_char const *)" ", 1);
 				if tpp_unlikely(TPP_SSIZE_ISERR(print_status)) {
 					tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));

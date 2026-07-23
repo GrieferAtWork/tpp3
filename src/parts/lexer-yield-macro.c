@@ -238,7 +238,7 @@ again_print_token:
 	 * into, and TPP is able to emulate under "-DTPP_HAVE_MAGIC_WHITESPACE=0")
 	 */
 	if (tpp_macro_hasmagicwhitespace(macro)) {
-		if (tpp_token_require_whitespace(prev_tok, tok)) {
+		if (tpp_lexer_require_whitespace(lexer, prev_tok, tok)) {
 			if (!tpp_string_buffer_append(&buffer, (tpp_char const *)" ", 1))
 				goto err_builder_nomem;
 		}

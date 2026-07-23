@@ -7124,9 +7124,13 @@ TPP_DECL_END
  *
  * For more information, see `TPP_HAVE_UNICODE_BYNAME_LOOKUP`, which
  * is enabled based on this config, and controls the availability of
- * the internal API required for this feature. */
+ * the internal API required for this feature.
+ *
+ * Because of the amount of data added by this feature, it isn't
+ * automatically enabled under `TPP_PROFILE_DEFAULT`, so if you
+ * want it, you have to enable is manually. */
 #ifndef TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES
-#define TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : 1) : 0) /* "-fnamed-escape-unicode" */
+#define TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES (TPP_HAVE_DECODE_NAMED_ESCAPE ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : TPP_HAVE_PROFILE_C_LIKE) : 0) /* "-fnamed-escape-unicode" */
 #endif /* !TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES */
 
 /* Support for unicode ordinals in `\N` (all of which are the same as `\u0100`):
@@ -7158,7 +7162,7 @@ TPP_DECL_END
  *
  * Adds ~6KiB to the final executable. */
 #ifndef TPP_HAVE_XML_ENTITY_LOOKUP
-#define TPP_HAVE_XML_ENTITY_LOOKUP (TPP_HAVE_ESCAPE_NAMED_XML || TPP_HAVE_STRING_ESCAPE_XML)
+#define TPP_HAVE_XML_ENTITY_LOOKUP (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_ESCAPE_NAMED_XML || TPP_HAVE_STRING_ESCAPE_XML)
 #endif /* !TPP_HAVE_XML_ENTITY_LOOKUP */
 
 /* Provide a function `tpp_unicode_byname_lookup()` that can
@@ -7234,7 +7238,7 @@ TPP_DECL_END
  * - **Allow names to match HTML 5 named character references**: `TPP_HAVE_ESCAPE_NAMED_XML`
  */
 #ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP
-#define TPP_HAVE_UNICODE_BYNAME_LOOKUP (TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP */
 
 /* Ignore casing (which is normally all-uppercase) inside of `TPP_HAVE_UNICODE_BYNAME_LOOKUP`
@@ -8098,7 +8102,7 @@ TPP_DECL_END
 /* Provide a function `tpp_lexer_decode_include_string()`
  * to decode the actual contents of an `#include`-string. */
 #ifndef TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
-#define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
 #endif /* !TPP_HAVE_LEXER_DECODE_INCLUDE_STRING */
 
 /* Provide a function `tpp_lexer_yield_include_string()` to
@@ -8106,7 +8110,7 @@ TPP_DECL_END
  * token's first character is `<` or `"`in which case the
  * token is parsed as a #include-string */
 #ifndef TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
-#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
 #endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 /* Enable support for `tpp_lexer_openfile()` */
@@ -8137,7 +8141,7 @@ TPP_DECL_END
 
 /* Provide a function `tpp_file_getrealfilenamekwd()` */
 #ifndef TPP_HAVE_FILE_GETREALFILENAMEKWD
-#define TPP_HAVE_FILE_GETREALFILENAMEKWD (TPP_HAVE_PRAGMA_ONCE)
+#define TPP_HAVE_FILE_GETREALFILENAMEKWD (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_ONCE)
 #endif /* !TPP_HAVE_FILE_GETREALFILENAMEKWD */
 
 /* Enable support for detecting `#ifndef`-style `#include`-guards
@@ -9235,16 +9239,16 @@ TPP_DECL_END
 	 (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_LEXER_DUMP_DEFINITIONS))
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
-/* Provide a function `tpp_token_require_whitespace()` to check if 2 tokens,
+/* Provide a function `tpp_lexer_require_whitespace()` to check if 2 tokens,
  * when written directly adjacent to each other, *might* produce a different
  * (set of) token(s) when re-parsed.
  *
  * This function is used to implement `TPP_HAVE_MAGIC_WHITESPACE`, which in
  * turn is needed to inject additional whitespace when failure to do so could
  * result in accidental token concatenation during reparsing. */
-#ifndef TPP_HAVE_TOKEN_REQUIRE_WHITESPACE
-#define TPP_HAVE_TOKEN_REQUIRE_WHITESPACE TPP_HAVE_MAGIC_WHITESPACE
-#endif /* !TPP_HAVE_TOKEN_REQUIRE_WHITESPACE */
+#ifndef TPP_HAVE_LEXER_REQUIRE_WHITESPACE
+#define TPP_HAVE_LEXER_REQUIRE_WHITESPACE TPP_HAVE_MAGIC_WHITESPACE
+#endif /* !TPP_HAVE_LEXER_REQUIRE_WHITESPACE */
 
 /* Provide a function `tpp_lexer_decodeint_expr()` to parse an integer into a `tpp_expr_value` */
 #ifndef TPP_HAVE_LEXER_DECODEINT_EXPR
@@ -12620,14 +12624,6 @@ TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes);
 #endif /* TPP_HAVE_TOKEN_ENCODESTRING */
-
-#if TPP_HAVE_TOKEN_REQUIRE_WHITESPACE
-/* Check if 2 tokens, when written directly adjacent to each other,
- * *might* (though not necessarily) result in a different set of
- * tokens when re-parsed. */
-TPP_DECL TPP_CONSTCALL TPP_WUNUSED bool TPPCALL
-tpp_token_require_whitespace(tpp_token_id lhs, tpp_token_id rhs);
-#endif /* TPP_HAVE_TOKEN_REQUIRE_WHITESPACE */
 
 /************************************************************************/
 /* File: parts/features.h                                               */
@@ -17457,11 +17453,11 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 
 /* >> tpp_hash tpp_hash_combine_char(tpp_hash a, tpp_char b);
  * Combine a given hash value "a" with a character "b". */
-#define tpp_hash_combine_char(a, b) ((a) * 263 + (tpp_char)(b))
+#define tpp_hash_combine_char(a, b) ((a) * 263 + /*(tpp_char)*/(b))
 
 /* >> tpp_hash tpp_hash_combine_hash(tpp_hash a, tpp_hash b);
  * Combine a given hash value "a" with another hash value "b". */
-#define tpp_hash_combine_hash(a, b) ((a) * 263 + (tpp_hash)(b))
+#define tpp_hash_combine_hash(a, b) ((a) * 263 + /*(tpp_hash)*/(b))
 
 
 #undef TPP_HAVE_BSE_FILE_PARAM
@@ -20247,6 +20243,17 @@ tpp_lexer_nextrand(tpp_lexer *tpp_restrict self) {
 	return result;
 }
 #endif /* TPP_HAVE_LEXER_RAND */
+
+
+
+#if TPP_HAVE_LEXER_REQUIRE_WHITESPACE
+/* Check if 2 tokens, when written directly adjacent to each other,
+ * *might* (though not necessarily) result in a different set of
+ * tokens when re-parsed. */
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
+                             tpp_token_id lhs, tpp_token_id rhs);
+#endif /* TPP_HAVE_LEXER_REQUIRE_WHITESPACE */
 
 
 
