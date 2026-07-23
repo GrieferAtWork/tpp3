@@ -34,7 +34,7 @@
 #define TPP_PROFILE TPP_PROFILE_ALL
 
 /* Configure such that all tokens are enabled by default (different from
- * regular "TPP_PROFILE_ALL" where all tokens are still available, but
+ * regular `TPP_PROFILE_ALL` where all tokens are still available, but
  * only tokens needed somewhere within the preprocessor itself are enabled
  * by default) */
 #define TPP_COMMON_HAVE_TPP_TOK                TPP_CONF_EXT1
@@ -139,7 +139,7 @@
 /* CONFIGURATION PROFILE                                                */
 /************************************************************************/
 #define TPP_PROFILE_MINIMAL 0 /* Disable everything, except dependencies of explicitly enabled features */
-#define TPP_PROFILE_DEFAULT 1 /* Default configuration for a pretty good compromise between "TPP_PROFILE_MINIMAL" and "TPP_PROFILE_ALL" */
+#define TPP_PROFILE_DEFAULT 1 /* Default configuration for a pretty good compromise between `TPP_PROFILE_MINIMAL` and `TPP_PROFILE_ALL` */
 #define TPP_PROFILE_ALL     2 /* Enable (almost) all features, with everything configurable at runtime */
 #define TPP_PROFILE_C       3 /* Enable features needed for a C compiler (warning: subjective) */
 #define TPP_PROFILE_CXX     4 /* Enable features needed for a C++ compiler (warning: subjective) */
@@ -351,7 +351,7 @@
  * - TPP_CONF_FEAT1 : Runtime-configurable (via TPP_FEAT_*, default = true)
  * - TPP_CONF_FEAT0 : Runtime-configurable (via TPP_FEAT_*, default = false)
  *
- * In the case of "TPP_CONF_EXT1" / "TPP_CONF_EXT0", the extension's name will be the
+ * In the case of `TPP_CONF_EXT1` / `TPP_CONF_EXT0`, the extension's name will be the
  * "-f..." comment, but can be overwritten via #define TPP_EXTNAME_<name> "my-name":
  * ```c
  * #define TPP_HAVE_TRIGRAPHS    TPP_CONF_EXT1
@@ -363,7 +363,7 @@
  * #pragma extension("-fthe-cool-trigraphs")
  * ```
  *
- * WARNING: Use of "TPP_CONF_EXT1" / "TPP_CONF_EXT0" requires "#define TPP_HAVE_EXTENSIONS 1"
+ * WARNING: Use of `TPP_CONF_EXT1` / `TPP_CONF_EXT0` requires "#define TPP_HAVE_EXTENSIONS 1"
  */
 
 /* Possible values for configs */
@@ -1782,7 +1782,7 @@
 
 /* Enable support for recognizing shell-like comments: `# like this one!`
  *
- * This still works in conjunction with "TPP_HAVE_CPP_DIRECTIVES", in
+ * This still works in conjunction with `TPP_HAVE_CPP_DIRECTIVES`, in
  * that unknown directives will simply be re-emit as shell comments,
  * and shell comments that don't appear at the start of lines are not
  * even processed as CPP directives.
@@ -3556,12 +3556,12 @@ import unPointerizeHook from ".config";
 
 @@Defined callbacks:
 @@for (local doc, name,           // Doc string and name of hook
-@@     default_TPP_HAVE_FOO_HOOK, // Default value for "TPP_HAVE_FOO_HOOK"
-@@     builtin_FOO_HOOK,          // Name of builtin to use when "TPP_HOOK_USESBUILTIN". If there is none, leave empty
+@@     default_TPP_HAVE_FOO_HOOK, // Default value for `TPP_HAVE_FOO_HOOK`
+@@     builtin_FOO_HOOK,          // Name of builtin to use when `TPP_HOOK_USESBUILTIN`. If there is none, leave empty
 @@     prototypePrefix,           // Prefix for function-pointer-prototype
 @@     prototypeSuffix,           // Suffix for function-pointer-prototype
 @@     prototypeArgs,             // names of arguments taken by hook
-@@     disabled_RETURN_VALUE:     // Return value of hook when configured as "TPP_HOOK_DISABLED"
+@@     disabled_RETURN_VALUE:     // Return value of hook when configured as `TPP_HOOK_DISABLED`
 @@     HOOKS) {
 @@    ...
 @@}

@@ -30,6 +30,8 @@ global final COPYRIGHT =
 import * from deemon;
 import posix;
 
+global PRETTY_PRINT = false;
+
 @@Read lines from the given file, but skip comments and empty lines
 function readLines(filename: string): {Bytes...} {
 	print File.stderr: ("Parsing file: ", repr filename);
@@ -67,10 +69,10 @@ function decodeName(name: Bytes): {string...} {
 		.rereplace(r"\s+", " ")
 		.strip();
 	for (;;) {
-		local pos = result.find("\\X{");
+		local pos = result.find(r"\x{");
 		if (pos < 0)
 			break;
-		local end = result.find("}", pos);
+		local end = result.find(r"}", pos);
 		local ord = int(result[pos+3:end], 16);
 		result = result[:pos] + string.chr(ord) + result[end+1:];
 	}
@@ -81,29 +83,101 @@ function decodeName(name: Bytes): {string...} {
 	};
 }
 
-function getUnicodeNames(): {string: {int...}} {
+@@Primary loader function to parse unicode source files for character(-sequence) names
+function getUnicodeNames(warnConflicts: bool = true): {string: {int...}} {
 	local result: {string: {int...}} = Dict();
 	function setResult(name: Bytes, data: {int...}) {
-		for (local decoded: decodeName(name))
+		for (local decoded: decodeName(name)) {
+			local oldData = result.get(decoded);
+			if (oldData !is none && oldData != data) {
+				if (warnConflicts) {
+					print File.stderr: (
+						"WARNING: Conflicting representation of ", repr decoded, ":\n"
+						"	old:[", ", ".join(for (local o: oldData) f"U+{o.tostr(16, 4, "X")}"), "]\n"
+						"	new:[", ", ".join(for (local o: data) f"U+{o.tostr(16, 4, "X")}"), "]"
+					);
+				}
+			}
 			result[decoded] = data;
+		}
 	}
-	for (local line: readLines("./UnicodeData.txt")) {
-		local ord, name, none, none, none, none, none, none, none, none,
-			none, none, none, none, none = line.split(";")...;
-		if (!name.startswith("<"))
-			setResult(name, {int(ord, 16)});
+
+	/* Need to parse "emoji-variation-sequences.txt" so we can add "emoji style" suffix to
+	 * emoji sequences read from CLDR annotation files (which normally lack those suffixes)
+	 *
+	 * Additionally, need to parse "emoji-data.txt" for "Emoji_Presentation" tags, since
+	 * those specify which emojis are already rendered as pictures by default (without the
+	 * need of a (currently always VS16) variation suffix) */
+	local emojiStyleSuffixes: {int: int} = Dict();
+	for (local line: readLines("./emoji-variation-sequences.txt")) {
+		local seq, kind = line.rstrip(";").split(";")...;
+		kind = kind.strip();
+		if (kind == "emoji style") {
+			local prefix, suffix = seq.strip().split(" ")...;
+			emojiStyleSuffixes[int(prefix, 16)] = int(suffix, 16);
+		}
 	}
-	for (local line: readLines("./NameAliases.txt")) {
-		local ord, name, none = line.split(";")...;
-		setResult(name, {int(ord, 16)});
+
+	local Emoji_Modifier: {int...} = HashSet();
+
+	for (local line: readLines("./emoji-data.txt")) {
+		local range, tag = line.split(";")...;
+		tag = tag.strip();
+		range = range.strip();
+		local lo = range, hi = range;
+		if (".." in range)
+			lo, none, hi = range.partition("..")...;
+		lo = int(lo, 16);
+		hi = int(hi, 16);
+		range = [lo:hi+1];
+		switch (tag) {
+		case "Emoji_Presentation":
+			/* This range defaults to picture-rendering (so no VS-suffix needed) */
+			for (local ord: range)
+				del emojiStyleSuffixes[ord];
+			break;
+		case "Emoji_Modifier":
+			Emoji_Modifier.insertall(range);
+			break;
+		default: break;
+		}
 	}
-	for (local line: readLines("./NamedSequences.txt")) {
-		local name, seq = line.split(";")...;
-		setResult(name, (
-			for (local e: seq.strip().split(" "))
-				int(e, 16)
-		).frozen);
+
+	function enableEmojiPictureRendering(text: string): string {
+		text = text.replace("\uFE0F", "");
+		local result = "";
+		for (local i, ch: text.enumerate()) {
+			result += ch;
+			local suffix = emojiStyleSuffixes.get(ch.ord());
+			if (suffix !is none) {
+				if ((i + 1) < #text && text.ord(i + 1) in Emoji_Modifier) {
+					/* Don't add the suffix if the following character is "Emoji_Modifier",
+					 * which already (implicitly) turns on picture-rendering. */
+				} else {
+					result += string.chr(suffix);
+				}
+			}
+		}
+		return result;
 	}
+
+	function parseCldrAnnotationsFile(filename: string) {
+		print File.stderr: ("Parsing file: ", repr filename);
+		for (local none, ordinalBytes, nameBytes: File
+			.open(filename, "rb")
+			.read().reglocateall(
+				r'<\s*annotation\s*cp\s*=\s*"([^"]*)"\s*type\s*=\s*"tts"\s*>([^<]*)'
+				r'<\s*/\s*annotation\s*>'
+		)) {
+			local ordinals = enableEmojiPictureRendering(ordinalBytes.decode("xml")).ordinals;
+			local name = nameBytes.decode("xml").encode("utf-8");
+			if (!ordinals && name == "space")
+				continue; /* Added later... */
+			assert ordinals, f"Empty ordinals for: {repr name}";
+			setResult(name, ordinals.frozen);
+		}
+	}
+
 	for (local line: readLines("./emoji-zwj-sequences.txt")) {
 		local seq, none, name = line.split(";")...;
 		setResult(name, (
@@ -114,6 +188,21 @@ function getUnicodeNames(): {string: {int...}} {
 	for (local line: readLines("./emoji-sequences.txt")) {
 		local seq, none, name = line.split(";")...;
 		if (".." in seq) {
+			/* NOTE: This ".." is actually mean to describe a range, but the names
+			 *       used here actually originate from a different source:
+			 * - https://unicode.org/Public/cldr/48/
+			 *   -> core.zip/common/annotations/en.xml
+			 *
+			 * So we should somehow get that file, parse it, and add its character
+			 * names to the big name table we're building as well!
+			 *
+			 * Example:
+			 * 23E9..23EC ; Basic_Emoji ; fast-forward button..fast down button
+			 *
+			 * This is missing the names for 23EA, 23EB, which are defined as:
+			 * 23EA: fast reverse button
+			 * 23EB: fast up button
+			 */
 			local seq1, none, seq2 = seq.partition("..")...;
 			local name1, none, name2 = name.partition("..")...;
 			setResult(name1, (
@@ -130,6 +219,43 @@ function getUnicodeNames(): {string: {int...}} {
 					int(e, 16)
 			).frozen);
 		}
+	}
+	parseCldrAnnotationsFile("./cldr-annotations-en.xml");
+	parseCldrAnnotationsFile("./cldr-annotations-derived-en.xml");
+
+	/* Read these last, so they can override any conflicting names from CLDR:
+	 *
+	 * - Because we enable picture-rendering for anything read from CLDR files,
+	 *   stuff like `ASTERISK` gets inserted as `002A FE0F`, but the unicode
+	 *   core data `UnicodeData.txt` comes along and says `002A` on its own
+	 *   should be called `ASTERISK` (we obviously respect unicode here since
+	 *   it was who added that trailing `FE0F` because `002A` appears was given
+	 *   a name by CLDR data and a suffix by `emoji-variation-sequences.txt`)
+	 *
+	 * - A little more annoying are some conflicts where it isn't a missing
+	 *   FE0F (VS16) suffix, like in in the following conflicts:
+	 *   - "DAGGER"    emoji:[U+1F5E1, U+FE0F] 🗡️  UnicodeData:[U+2020]  †
+	 *   - "HOUSE"     emoji:[U+1F3E0]         🏠  UnicodeData:[U+2302]  ⌂
+	 *   - "BULLSEYE": emoji:[U+1F3AF]         🎯  UnicodeData:[U+25CE]  ◎
+	 *   Again: we always pick what "UnicodeData.txt" says over emoji names,
+	 *          but these conflicts are pretty annoying if you ask me...
+	 */
+	for (local line: readLines("./NamedSequences.txt")) {
+		local name, seq = line.split(";")...;
+		setResult(name, (
+			for (local e: seq.strip().split(" "))
+				int(e, 16)
+		).frozen);
+	}
+	for (local line: readLines("./UnicodeData.txt")) {
+		local ord, name, none, none, none, none, none, none, none, none,
+			none, none, none, none, none = line.split(";")...;
+		if (!name.startswith("<"))
+			setResult(name, {int(ord, 16)});
+	}
+	for (local line: readLines("./NameAliases.txt")) {
+		local ord, name, none = line.split(";")...;
+		setResult(name, {int(ord, 16)});
 	}
 	return result;
 }
@@ -375,107 +501,6 @@ class MSBBitWriter {
 	}
 }
 
-
-@@A 1-6-bit (MSB-first) variable-length encoding of
-@@ASCII/unicode text (unused LSB bits are all 0):
-@@
-@@```
-@@       0    EOF   (End of text)
-@@  100000    A
-@@  100001    B
-@@  100010    C
-@@  100011    D
-@@  100100    E
-@@  100101    F
-@@  100110    G
-@@  100111    H
-@@  101000    I
-@@  101001    J
-@@  101010    K
-@@  101011    L
-@@  101100    M
-@@  101101    N
-@@  101110    O
-@@  101111    P
-@@  110000    Q
-@@  110001    R
-@@  110010    S
-@@  110011    T
-@@  110100    U
-@@  110101    V
-@@  110110    W
-@@  110111    X
-@@  111000    Y
-@@  111001    Z
-@@  111010    .
-@@  111011    :
-@@  111100    -
-@@  111101 1?????                       UNICODE5 : 5-bit  range for U+0020-U+003F
-@@  111110 1????? 1?????                UNICODE10: 10-bit range for U+0000-U+03FF
-@@  111111 1????? 1????? 1????? 1?????  UNICODE20: 20-bit range for U+0000-U+FFFFF
-@@```
-@@
-@@@return: last byte written during final flush, or @(-1) if nothing was flushed
-function serializeText(fp: File, text: string): int {
-	final local ASCII_ENCODING: {string: int} = {
-		"A": 0b100000,
-		"B": 0b100001,
-		"C": 0b100010,
-		"D": 0b100011,
-		"E": 0b100100,
-		"F": 0b100101,
-		"G": 0b100110,
-		"H": 0b100111,
-		"I": 0b101000,
-		"J": 0b101001,
-		"K": 0b101010,
-		"L": 0b101011,
-		"M": 0b101100,
-		"N": 0b101101,
-		"O": 0b101110,
-		"P": 0b101111,
-		"Q": 0b110000,
-		"R": 0b110001,
-		"S": 0b110010,
-		"T": 0b110011,
-		"U": 0b110100,
-		"V": 0b110101,
-		"W": 0b110110,
-		"X": 0b110111,
-		"Y": 0b111000,
-		"Z": 0b111001,
-		".": 0b111010,
-		":": 0b111011,
-		"-": 0b111100,
-	}.frozen;
-	local writer = MSBBitWriter(fp: fp);
-	for (local ch: text) {
-		local simpleEncoding: int | none = ASCII_ENCODING.get(ch);
-		if (simpleEncoding !is none) {
-			writer.putn(simpleEncoding, 6);
-		} else {
-			local ord = ch.ord();
-			if (ord >= 0x0020 && ord <= 0x003F) {
-				writer.putn(0b111101, 6);
-				writer.putn(0b100000 | (ord & 0x1F), 6);
-			} else if (ord <= 0x03FF) {
-				writer.putn(0b111110, 6);
-				writer.putn(0b100000 | ((ord >> 5) & 0x1F), 6);
-				writer.putn(0b100000 | (ord & 0x1F), 6);
-			} else if (ord <= 0xFFFFF) {
-				writer.putn(0b111111, 6);
-				writer.putn(0b100000 | ((ord >> 15) & 0x1F), 6);
-				writer.putn(0b100000 | ((ord >> 10) & 0x1F), 6);
-				writer.putn(0b100000 | ((ord >> 5) & 0x1F), 6);
-				writer.putn(0b100000 | (ord & 0x1F), 6);
-			} else {
-				throw Error(f"No way to encode U+{ord.tostr(16, 4, "X")} in text");
-			}
-		}
-	}
-	writer.put1(0); /* EOF */
-	return writer.flush();
-}
 
 class RadixTreeSerializer {
 	public member db: {string: {int...}};
@@ -777,6 +802,121 @@ handle_group_start:
 		this.tokensToId = tokensToId;
 	}
 
+	@@Indicates that @serializeText used the `UNICODE5` character
+	public member textUnicodeUsed5: int = 0;
+	@@Indicates that @serializeText used the `UNICODE10` character
+	public member textUnicodeUsed10: int = 0;
+	@@Indicates that @serializeText used the `UNICODE20` character
+	public member textUnicodeUsed20: int = 0;
+
+
+	@@A 1-6-bit (MSB-first) variable-length encoding of ASCII/
+	@@unicode text (unused LSB bits of last byte are all 0):
+	@@
+	@@```
+	@@       0    EOF   (End of text; yes: that's a single 0-bit used to indicate EOF)
+	@@  100000    A     U+0041
+	@@  100001    B     U+0042
+	@@  100010    C     U+0043
+	@@  100011    D     U+0044
+	@@  100100    E     U+0045
+	@@  100101    F     U+0046
+	@@  100110    G     U+0047
+	@@  100111    H     U+0048
+	@@  101000    I     U+0049
+	@@  101001    J     U+004A
+	@@  101010    K     U+004B
+	@@  101011    L     U+004C
+	@@  101100    M     U+004D
+	@@  101101    N     U+004E
+	@@  101110    O     U+004F
+	@@  101111    P     U+0050
+	@@  110000    Q     U+0051
+	@@  110001    R     U+0052
+	@@  110010    S     U+0053
+	@@  110011    T     U+0054
+	@@  110100    U     U+0055
+	@@  110101    V     U+0056
+	@@  110110    W     U+0057
+	@@  110111    X     U+0058
+	@@  111000    Y     U+0059
+	@@  111001    Z     U+005A
+	@@  111010    .     U+002E
+	@@  111011    :     U+003A
+	@@  111100    -     U+002D
+	@@  111101 1?????                       UNICODE5 : 5-bit  range for U+0020-U+003F
+	@@  111110 1????? 1?????                UNICODE10: 10-bit range for U+0000-U+03FF
+	@@  111111 1????? 1????? 1????? 1?????  UNICODE20: 20-bit range for U+0000-U+FFFFF
+	@@```
+	@@
+	@@@return: last byte written during final flush, or @(-1) if nothing was flushed
+	function serializeText(fp: File, text: string): int {
+		final local ASCII_ENCODING: {string: int} = {
+			"A": 0b100000,
+			"B": 0b100001,
+			"C": 0b100010,
+			"D": 0b100011,
+			"E": 0b100100,
+			"F": 0b100101,
+			"G": 0b100110,
+			"H": 0b100111,
+			"I": 0b101000,
+			"J": 0b101001,
+			"K": 0b101010,
+			"L": 0b101011,
+			"M": 0b101100,
+			"N": 0b101101,
+			"O": 0b101110,
+			"P": 0b101111,
+			"Q": 0b110000,
+			"R": 0b110001,
+			"S": 0b110010,
+			"T": 0b110011,
+			"U": 0b110100,
+			"V": 0b110101,
+			"W": 0b110110,
+			"X": 0b110111,
+			"Y": 0b111000,
+			"Z": 0b111001,
+			".": 0b111010,
+			":": 0b111011,
+			"-": 0b111100,
+		}.frozen;
+		local writer = MSBBitWriter(fp: fp);
+		for (local ch: text) {
+			local simpleEncoding: int | none = ASCII_ENCODING.get(ch);
+			if (simpleEncoding !is none) {
+				writer.putn(simpleEncoding, 6);
+			} else {
+				local ord = ch.ord();
+				if (ord >= 0x0020 && ord <= 0x003F) {
+					writer.putn(0b111101, 6);
+					writer.putn(0b100000 | (ord & 0x1F), 6);
+					++this.textUnicodeUsed5;
+				} else if (ord <= 0x03FF) {
+					writer.putn(0b111110, 6);
+					writer.putn(0b100000 | ((ord >> 5) & 0x1F), 6);
+					writer.putn(0b100000 | (ord & 0x1F), 6);
+					++this.textUnicodeUsed10;
+					print File.stderr: (f"UNICODE10 in {repr text} ('{text}')");
+				} else if (ord <= 0xFFFFF) {
+					writer.putn(0b111111, 6);
+					writer.putn(0b100000 | ((ord >> 15) & 0x1F), 6);
+					writer.putn(0b100000 | ((ord >> 10) & 0x1F), 6);
+					writer.putn(0b100000 | ((ord >> 5) & 0x1F), 6);
+					writer.putn(0b100000 | (ord & 0x1F), 6);
+					++this.textUnicodeUsed20;
+					print File.stderr: (f"UNICODE20 in {repr text} ('{text}')");
+				} else {
+					throw Error(f"No way to encode U+{ord.tostr(16, 4, "X")} in text");
+				}
+			}
+		}
+		writer.put1(0); /* EOF */
+		return writer.flush();
+	}
+
+
 
 	@@Encode a token:
 	@@ - Either a `ULEB128`, in which case it's the ID of a token
@@ -788,7 +928,7 @@ handle_group_start:
 
 		/* Must encode as inline TEXT */
 		fp.putc(0);
-		serializeText(fp, token);
+		this.serializeText(fp, token);
 	}
 
 #define NUMBER_SUFFIX_FEAT_BASE           0x0F
@@ -1007,7 +1147,7 @@ handle_group_start:
 	@@```
 	@@
 	@@@return size of generated tables (in bytes)
-	public function printTokenTable(PRETTY_PRINT: bool): int {
+	public function printTokenTable(): int {
 		print File.stderr: "Generating token table...";
 		print("/* Token decoder tree -- see `ctype-names.dee:printTokenTable()` for binary format */");
 		local sortedTokenReprs: {string...} = this.tokensToId.keys.sorted();
@@ -1016,7 +1156,7 @@ handle_group_start:
 		for (local tokenRepr: sortedTokenReprs) {
 			local line = File.Writer(hint: "bytes");
 			local tokenId = this.tokensToId[tokenRepr];
-			local lastByte = serializeText(line, tokenRepr); /* repr */
+			local lastByte = this.serializeText(line, tokenRepr); /* repr */
 			if (lastByte != 0x00)
 				line.putc(0x00); /* NUL */
 			serializeUleb128(line, tokenId);
@@ -1054,7 +1194,7 @@ handle_group_start:
 		return blobSize;
 	}
 
-	public function printTopLevelTokenEntryTable(PRETTY_PRINT: bool): int {
+	public function printTopLevelTokenEntryTable(): int {
 		print File.stderr: "Generating top-level token entry table...";
 		local topLevelTokenBasedNodes: {RadixTreeNode...} = [];
 		for (local topLevelChild: this.tree.children) {
@@ -1089,7 +1229,7 @@ handle_group_start:
 		);
 	}
 
-	public function printTopLevelCharEntryTable(PRETTY_PRINT: bool): int {
+	public function printTopLevelCharEntryTable(): int {
 		print File.stderr: "Generating top-level character entry table...";
 		local topLevelCharBasedNodes: {RadixTreeNode...} = [];
 		for (local topLevelChild: this.tree.children) {
@@ -1170,10 +1310,8 @@ function printDatabase(db: {string: {int...}}) {
 	print(f'#define TPP_UNAM_LOOKUP_NODES          {(#ser.db).hex()} /* # of nodes in `tpp_unam_tree` */');
 	print(f'typedef {uintLeastTypeFor(maxTokenId)} tpp_unam_tokenid;');
 
-	local final PRETTY_PRINT = false;
-
 	/* Token decoding table */
-	local tokenTableBlobSize = ser.printTokenTable(PRETTY_PRINT);
+	local tokenTableBlobSize = ser.printTokenTable();
 
 	print("/* By-name radix tree -- see `ctype-names.dee:serializeTreeNode()` for binary format */");
 	local radixTreeBlobSize: int;
@@ -1211,11 +1349,17 @@ function printDatabase(db: {string: {int...}}) {
 		print("};");
 	}
 
+	print;
+	print(f"/* Specifies how often each multi-word encoding is used by compressed TEXT */");
+	print(f'#define TPP_UNAM_LOOKUP_USES_UNICODE5  {ser.textUnicodeUsed5}');
+	print(f'#define TPP_UNAM_LOOKUP_USES_UNICODE10 {ser.textUnicodeUsed10}');
+	print(f'#define TPP_UNAM_LOOKUP_USES_UNICODE20 {ser.textUnicodeUsed20}');
+
 	/* Generate a quick-lookup table for top-level token IDs */
 	print;
 	print("#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE");
-	local entryTableBlobSize = ser.printTopLevelTokenEntryTable(PRETTY_PRINT);
-	entryTableBlobSize += ser.printTopLevelCharEntryTable(PRETTY_PRINT);
+	local entryTableBlobSize = ser.printTopLevelTokenEntryTable();
+	entryTableBlobSize += ser.printTopLevelCharEntryTable();
 	print("#endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE */");
 
 
@@ -1266,7 +1410,7 @@ function main() {
 	print('#include "api.h"');
 	print;
 	print('#include "config.h"');
-	print('#include "keyword.h"');
+	print('#include "ctype.h"');
 	print;
 	print('/*[[[tpp-begin]]]*/');
 	print('TPP_DECL_BEGIN');

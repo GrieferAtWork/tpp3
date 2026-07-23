@@ -4,3 +4,8 @@ NameAliases.txt
 NamedSequences.txt
 emoji-zwj-sequences.txt
 emoji-sequences.txt
+emoji-data.txt
+emoji-variation-sequences.txt
+core.zip
+cldr-annotations-en.xml
+cldr-annotations-derived-en.xml

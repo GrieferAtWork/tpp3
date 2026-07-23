@@ -3276,7 +3276,7 @@ Detect:
 
 Enable support for recognizing shell-like comments: `# like this one!`
 
-This still works in conjunction with "TPP_HAVE_CPP_DIRECTIVES", in
+This still works in conjunction with [`TPP_HAVE_CPP_DIRECTIVES`](#tpp_have_cpp_directives), in
 that unknown directives will simply be re-emit as shell comments,
 and shell comments that don't appear at the start of lines are not
 even processed as CPP directives.

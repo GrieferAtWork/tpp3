@@ -122,6 +122,8 @@ tpp_unam_text_reader_readbits(tpp_unam_text_reader *tpp_restrict self, tpp_char 
 }
 
 /* Decode+read a compressed unicode character from "self".
+ * s.a. the compression function `ctype-names.dee:serializeText()`
+ *
  * Returns "0" if EOF has been reached */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_unichar TPPCALL
 tpp_unam_text_reader_readchar(tpp_unam_text_reader *tpp_restrict self) {
@@ -144,12 +146,15 @@ tpp_unam_text_reader_readchar(tpp_unam_text_reader *tpp_restrict self) {
 	/* Special multi-byte character... */
 	switch (word) {
 
+#if TPP_UNAM_LOOKUP_USES_UNICODE5
 	case 29: { /* UNICODE5 */
 		word = tpp_unam_text_reader_readbits(self, 6);
 		tpp_assert(word & 0x20);
 		return 0x0020 + (word & 0x1f);
 	}	break;
+#endif /* TPP_UNAM_LOOKUP_USES_UNICODE5 */
 
+#if TPP_UNAM_LOOKUP_USES_UNICODE10
 	case 30: { /* UNICODE10 */
 		tpp_unichar result;
 		word = tpp_unam_text_reader_readbits(self, 6);
@@ -161,7 +166,9 @@ tpp_unam_text_reader_readchar(tpp_unam_text_reader *tpp_restrict self) {
 		tpp_assert(result != 0);
 		return result;
 	}	break;
+#endif /* TPP_UNAM_LOOKUP_USES_UNICODE10 */
 
+#if TPP_UNAM_LOOKUP_USES_UNICODE20
 	case 31: { /* UNICODE20 */
 		tpp_unichar result;
 		word = tpp_unam_text_reader_readbits(self, 6);
@@ -179,6 +186,7 @@ tpp_unam_text_reader_readchar(tpp_unam_text_reader *tpp_restrict self) {
 		tpp_assert(result != 0);
 		return result;
 	}	break;
+#endif /* TPP_UNAM_LOOKUP_USES_UNICODE20 */
 
 	default: tpp_unreachable();
 	}
