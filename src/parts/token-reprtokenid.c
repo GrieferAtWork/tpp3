@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!depends token.h*/
 #ifndef GUARD_TPP_TOKEN_REPRTOKENID_C
 #define GUARD_TPP_TOKEN_REPRTOKENID_C 1
 #define TPP_BUILDING 1

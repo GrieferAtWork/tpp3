@@ -143,11 +143,7 @@ function makeAmalgamation(inputFilename: string, TPP_AMALGAMATION_H: string) {
 }
 
 function main(args: {string...}) {
-	local inFile = args...;
-	makeAmalgamation(inFile, {
-		"tpp.h": '"tpp-amalgamation.h"',
-		"tpp.c": 'TPP_AMALGAMATION_H',
-	}[inFile]);
+	makeAmalgamation(args...);
 }
 
 #ifdef __MAIN__

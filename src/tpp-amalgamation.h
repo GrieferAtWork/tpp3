@@ -7391,7 +7391,7 @@ TPP_DECL_END
 /* "!="
  * @detect: #if __TPP_COUNT_TOKENS("!=") == 1 */
 #ifndef TPP_HAVE_TOK_EXCLAIM_EQUAL
-#define TPP_HAVE_TOK_EXCLAIM_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-exclaim_equal" */
+#define TPP_HAVE_TOK_EXCLAIM_EQUAL (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-exclaim_equal" */
 #endif /* !TPP_HAVE_TOK_EXCLAIM_EQUAL */
 
 /* "!=="
@@ -7403,7 +7403,7 @@ TPP_DECL_END
 /* "##"
  * @detect: #if __TPP_COUNT_TOKENS("##") == 1 */
 #ifndef TPP_HAVE_TOK_POUND_POUND
-#define TPP_HAVE_TOK_POUND_POUND (TPP_CONF_IS_RT(TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS) ? TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS : (TPP_HAVE_GLUE_MACRO_ARGUMENT || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS)) /* "-ftok-pound_pound" */
+#define TPP_HAVE_TOK_POUND_POUND (TPP_HAVE_GLUE_MACRO_ARGUMENT || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-pound_pound" */
 #endif /* !TPP_HAVE_TOK_POUND_POUND */
 
 /* "%%"
@@ -7427,7 +7427,7 @@ TPP_DECL_END
 /* "&&"
  * @detect: #if __TPP_COUNT_TOKENS("&&") == 1 */
 #ifndef TPP_HAVE_TOK_AMP_AMP
-#define TPP_HAVE_TOK_AMP_AMP TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-amp_amp" */
+#define TPP_HAVE_TOK_AMP_AMP (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-amp_amp" */
 #endif /* !TPP_HAVE_TOK_AMP_AMP */
 
 /* "&="
@@ -7547,7 +7547,7 @@ TPP_DECL_END
 /* "..."
  * @detect: #if __TPP_COUNT_TOKENS("...") == 1 */
 #ifndef TPP_HAVE_TOK_DOT_DOT_DOT
-#define TPP_HAVE_TOK_DOT_DOT_DOT (TPP_CONF_IS_RT(TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) ? TPP_COMMON_HAVE_TPP_TOK_C_TOKENS : (TPP_COMMON_HAVE_TPP_TOK_C_TOKENS || TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS)) /* "-ftok-dot_dot_dot" */
+#define TPP_HAVE_TOK_DOT_DOT_DOT (TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-dot_dot_dot" */
 #endif /* !TPP_HAVE_TOK_DOT_DOT_DOT */
 
 /* "//"  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
@@ -7601,7 +7601,7 @@ TPP_DECL_END
 /* "<<"
  * @detect: #if __TPP_COUNT_TOKENS("<<") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_LANGLE
-#define TPP_HAVE_TOK_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-langle_langle" */
+#define TPP_HAVE_TOK_LANGLE_LANGLE (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-langle_langle" */
 #endif /* !TPP_HAVE_TOK_LANGLE_LANGLE */
 
 /* "<<-"
@@ -7637,7 +7637,7 @@ TPP_DECL_END
 /* "<="
  * @detect: #if __TPP_COUNT_TOKENS("<=") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_EQUAL
-#define TPP_HAVE_TOK_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-langle_equal" */
+#define TPP_HAVE_TOK_LANGLE_EQUAL (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-langle_equal" */
 #endif /* !TPP_HAVE_TOK_LANGLE_EQUAL */
 
 /* "<=<"
@@ -7745,7 +7745,7 @@ TPP_DECL_END
 /* "=="
  * @detect: #if __TPP_COUNT_TOKENS("==") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_EQUAL
-#define TPP_HAVE_TOK_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-equal_equal" */
+#define TPP_HAVE_TOK_EQUAL_EQUAL (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-equal_equal" */
 #endif /* !TPP_HAVE_TOK_EQUAL_EQUAL */
 
 /* "==!"
@@ -7841,7 +7841,7 @@ TPP_DECL_END
 /* ">="
  * @detect: #if __TPP_COUNT_TOKENS(">=") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_EQUAL
-#define TPP_HAVE_TOK_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-rangle_equal" */
+#define TPP_HAVE_TOK_RANGLE_EQUAL (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-rangle_equal" */
 #endif /* !TPP_HAVE_TOK_RANGLE_EQUAL */
 
 /* ">=<"
@@ -7859,7 +7859,7 @@ TPP_DECL_END
 /* ">>"
  * @detect: #if __TPP_COUNT_TOKENS(">>") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_RANGLE
-#define TPP_HAVE_TOK_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-rangle_rangle" */
+#define TPP_HAVE_TOK_RANGLE_RANGLE (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-rangle_rangle" */
 #endif /* !TPP_HAVE_TOK_RANGLE_RANGLE */
 
 /* ">>-"
@@ -7943,7 +7943,7 @@ TPP_DECL_END
 /* "||"
  * @detect: #if __TPP_COUNT_TOKENS("||") == 1 */
 #ifndef TPP_HAVE_TOK_PIPE_PIPE
-#define TPP_HAVE_TOK_PIPE_PIPE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-pipe_pipe" */
+#define TPP_HAVE_TOK_PIPE_PIPE (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-pipe_pipe" */
 #endif /* !TPP_HAVE_TOK_PIPE_PIPE */
 
 /* "~="
@@ -19178,7 +19178,7 @@ typedef struct tpp_hooks {
 
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
-	(void)(0 _tpp_hooks_init_warnprinter(self) \
+	(void)((void)0 _tpp_hooks_init_warnprinter(self) \
 	       _tpp_hooks_init_warnhandler(self) \
 	       _tpp_hooks_init_mesgprinter(self) \
 	       _tpp_hooks_init_parseexpr(self) \

@@ -17,8 +17,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-
+#ifdef USE_AMALGAMATION
+#define TPP_PROFILE TPP_PROFILE_ALL
+#include "tpp-amalgamation.c"
+#else /* USE_AMALGAMATION */
 #include "tpp.h"
+#endif /* !USE_AMALGAMATION */
 
 #include <stdio.h>
 

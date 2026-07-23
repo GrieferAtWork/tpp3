@@ -19,19 +19,33 @@
 
 #.DELETE_ON_ERROR: # Actually: don't turn this on: some of the files here aren't entirely generated, meaning we actually *don't* want to delete them on error
 
+ifeq ($(OS),Windows_NT)
+EXE := .exe
+else
+EXE :=
+endif
 
-all: Makefile.autoformat tpp-amalgamation.h tpp-amalgamation.c ../doc/config.md
+all: Makefile.autoformat src/tpp-amalgamation.h src/tpp-amalgamation.c doc/config.md
 .PHONY: all
 
-Makefile.autoformat: Makefile.autoformat.dee tpp.h tpp.c
-	deemon Makefile.autoformat.dee > Makefile.autoformat
+Makefile.autoformat: src/scripts/Makefile.autoformat.dee src/tpp.h src/tpp.c
+	deemon src/scripts/Makefile.autoformat.dee > Makefile.autoformat
 
 -include Makefile.autoformat
 
-tpp-amalgamation.h: tpp.h make-amalgamation.dee
-	deemon make-amalgamation.dee tpp.h > tpp-amalgamation.h
-tpp-amalgamation.c: tpp.h make-amalgamation.dee
-	deemon make-amalgamation.dee tpp.c > tpp-amalgamation.c
-../doc/config.md: parts/format-cache/config.h make-config-doc.dee tpp-amalgamation.h
-	deemon make-config-doc.dee
+src/tpp-amalgamation.h: src/tpp.h src/scripts/make-amalgamation.dee
+	deemon src/scripts/make-amalgamation.dee src/tpp.h '"tpp-amalgamation.h"' > src/tpp-amalgamation.h
+src/tpp-amalgamation.c: src/tpp.h src/scripts/make-amalgamation.dee
+	deemon src/scripts/make-amalgamation.dee src/tpp.c 'TPP_AMALGAMATION_H' > src/tpp-amalgamation.c
+doc/config.md: src/parts/.format-cache/config.h src/scripts/make-config-doc.dee src/tpp-amalgamation.h
+	deemon src/scripts/make-config-doc.dee
 
+
+bin/tpp$(EXE): src/tpp-amalgamation.c src/tpp-amalgamation.h src/frontend.c
+	gcc -Wall -Wextra -Wno-misleading-indentation -DUSE_AMALGAMATION -o bin/tpp$(EXE) src/frontend.c
+
+
+test: bin/tpp$(EXE)
+	deemon -F test/_all.h
+	bin/tpp$(EXE) test/_all.h && echo "ALL TEST OK!"
+.PHONY: test

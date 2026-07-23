@@ -19,11 +19,13 @@
  */
 
 import * from deemon;
-import .parts.config;
+import ..parts.config;
 import posix;
 
+local SRC_DIR = posix.joinpath(posix.headof(__FILE__), "..");
+
 global final CONFIG_H = File
-	.open("./parts/config.h", "rb")
+	.open(posix.joinpath(SRC_DIR, "parts/config.h"), "rb")
 	.read()
 	.unifylines()
 	.replace("\\\n", "")
@@ -320,7 +322,8 @@ function _getAmalgamationHLines(): {string: int} {
 	local result: {string: int} = Dict();
 	local identPriority: {string: int} = Dict();
 	local lastLineEndsWithTPPCALL = false;
-	for (local lno, line: File.open("tpp-amalgamation.h").read().splitlines(false).enumerate()) {
+	for (local lno, line: File.open(posix.joinpath(SRC_DIR, "tpp-amalgamation.h"), "rb")
+			.read().splitlines(false).enumerate()) {
 		local match = line.regmatch(r"^\s*#\s*define\s+(\w+)\b"); /* Macro */
 		local prio = 0;
 		if (!match) {
@@ -527,7 +530,7 @@ function updateConfigMd(filename: string) {
 				isFirst = false;
 				local refFile = conf.refFile;
 				if (refFile !in knownFiles) {
-					if (posix.stat.isreg(f"../doc/{refFile}")) {
+					if (posix.stat.isreg(f"{SRC_DIR}/../doc/{refFile}")) {
 						knownFiles.insert(refFile);
 					} else {
 						print newData: f"<!-- ?: {conf.name} -->",;
@@ -567,15 +570,15 @@ function updateConfigMd(filename: string) {
 
 
 #ifdef __MAIN__
-updateConfigMd("../doc/config.md");
-updateConfigMd("../doc/config-limit.md");
-updateConfigMd("../doc/config-core.md");
-updateConfigMd("../doc/config-conf.md");
-updateConfigMd("../doc/config-token.md");
-updateConfigMd("../doc/config-value.md");
-updateConfigMd("../doc/config-warn.md");
-updateConfigMd("../doc/config-hook.md");
-updateConfigMd("../doc/config-common.md");
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config.md"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-limit.md"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-core.md"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-conf.md"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-token.md"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-value.md"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-warn.md"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-hook.md"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-common.md"));
 #endif /* __MAIN__ */
 
 

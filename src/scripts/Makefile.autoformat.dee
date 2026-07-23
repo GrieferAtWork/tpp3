@@ -20,10 +20,16 @@
 import * from deemon;
 import * from posix;
 
-local PARTS_DIR = joinpath(headof(__FILE__), "parts");
+global final FORMAT_CACHE = ".format-cache";
 
-local filesWithDeemonScripts: {string...} = [];
-local allFiles: {string...} = [];
+global final SRC_DIR = joinpath(headof(__FILE__), "..");
+global final PARTS_DIR = joinpath(SRC_DIR, "parts");
+
+global filesWithDeemonScripts: {string...} = [];
+global allFiles: {string...} = [];
+
+@@Rules described within `/*!depends ... */` comments
+global dependsOnRules: {string: string} = Dict();
 
 for (local ent: opendir(PARTS_DIR)) {
 	if (ent.d_type == DT_REG) {
@@ -31,29 +37,16 @@ for (local ent: opendir(PARTS_DIR)) {
 		local fileData = File.open(joinpath(PARTS_DIR, filename), "rb").read();
 		if ("[[[deemon" in fileData)
 			filesWithDeemonScripts.append(filename);
+		
+		local dependsOnStart = fileData.find("/*!depends");
+		if (dependsOnStart >= 0) {
+			dependsOnStart += 10;
+			local dependsOnEnd = fileData.index("*/", dependsOnStart);
+			local dependsOnText = fileData[dependsOnStart:dependsOnEnd].strip().decode("utf-8");
+			dependsOnRules[filename] = dependsOnText;
+		}
 		allFiles.append(filename);
 	}
-}
-
-for (local filename: filesWithDeemonScripts) {
-	local dependencies = [filename];
-	if (filename == "expose-internals.h") {
-		for (local allFile: allFiles) {
-			if (allFile == filename)
-				continue;
-			if (allFile.endswith(".h") || allFile.endswith(".c")) {
-				if (allFile in filesWithDeemonScripts)
-					allFile = f"format-cache/{allFile}";
-				dependencies.append(allFile);
-			}
-		}
-	}
-	print(f"parts/format-cache/{filename}: {" ".join(
-		for (local dependency: dependencies)
-			f"parts/{dependency}"
-	)}");
-	print(f"	deemon -Wno-usage -Wno-user -F parts/{filename}");
-	print(f"	@> parts/format-cache/{filename}");
 }
 
 @@Return the `#include "parts/..."` filenames performed within @filename
@@ -68,13 +61,45 @@ function printIncludeDependencies(tppH: string, tppAmalgamationH: string) {
 	local finalPartIncludes = [];
 	for (local partInclude: partIncludes) {
 		if (partInclude in filesWithDeemonScripts)
-			partInclude = f"format-cache/{partInclude}";
-		finalPartIncludes.append(f"parts/{partInclude}");
+			partInclude = f"{FORMAT_CACHE}/{partInclude}";
+		finalPartIncludes.append(f"src/parts/{partInclude}");
 	}
-	print(f"{tppAmalgamationH}: {" ".join(finalPartIncludes)}");
+	print(f"src/{tppAmalgamationH}: {" ".join(finalPartIncludes)}");
 }
 
+function main() {
+	for (local filename: filesWithDeemonScripts) {
+		local dependencies = [filename];
+		local dependsOnRule = dependsOnRules.get(filename, "");
+		if (dependsOnRule) {
+			local rules = (
+				for (local rule: dependsOnRule.split(","))
+					rule.strip()
+			).frozen;
+			for (local allFile: allFiles) {
+				if (allFile == filename)
+					continue;
+				if (!allFile.endswith(".h") && !allFile.endswith(".c"))
+					continue;
+				if ((for (local rule: rules) allFile.wmatch(rule)) || ...) {
+					if (allFile in filesWithDeemonScripts)
+						allFile = f"{FORMAT_CACHE}/{allFile}";
+					dependencies.append(allFile);
+				}
+			}
+		}
+		print(f"src/parts/{FORMAT_CACHE}/{filename}: {" ".join(
+			for (local dependency: dependencies)
+				f"src/parts/{dependency}"
+		)}");
+		print(f"	deemon -Wno-usage -Wno-user -F src/parts/{filename}");
+		print(f"	@> src/parts/{FORMAT_CACHE}/{filename}");
+	}
 
-printIncludeDependencies("tpp.h", "tpp-amalgamation.h");
-printIncludeDependencies("tpp.c", "tpp-amalgamation.c");
+	printIncludeDependencies(joinpath(SRC_DIR, "tpp.h"), "tpp-amalgamation.h");
+	printIncludeDependencies(joinpath(SRC_DIR, "tpp.c"), "tpp-amalgamation.c");
+}
 
+#ifdef __MAIN__
+main();
+#endif /* __MAIN__ */

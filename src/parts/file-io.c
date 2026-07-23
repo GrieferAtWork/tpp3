@@ -239,7 +239,7 @@ tpp_io_read(tpp_io_handle file, void *buf,
 		}, tpp_io_read_return_error);
 		if (result < 0)
 			return TPP_SSIZE_OFERR(TPP_EIO);
-		if (!FD_ISSET(fd, &read_fds))
+		if (!FD_ISSET(file, &read_fds))
 			return TPP_SSIZE_OFERR(TPP_EWOULDBLOCK);
 	}
 #endif /* !TPP_HAVE_FILE_NONBLOCK */

@@ -36,11 +36,11 @@ TPP_ASSERT_EXPANDS(
 	EXAMPLE(5)
 )
 TPP_ASSERT_EXPANDS(
-	"EXAMPLE_ ()(5 - 1-1) (5 - 1) ( 5 )",
+	"EXAMPLE_ ()(5-1-1) (5-1) (5)",
 	SCAN(EXAMPLE(5))
 )
 TPP_ASSERT_EXPANDS(
-	"EXAMPLE_ ()(5 - 1 - 1-1) (5 - 1 - 1) ( 5 - 1 ) ( 5 )",
+	"EXAMPLE_ ()(5-1-1-1) (5-1-1) (5-1) (5)",
 	SCAN(SCAN(EXAMPLE(5)))
 )
 

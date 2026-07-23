@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!depends config.h*/
 #ifndef GUARD_TPP_HOOKS_H
 #define GUARD_TPP_HOOKS_H 1
 
@@ -189,7 +190,7 @@ for (local doc, name,
 }
 print("/" "* Initialize lexer hooks *" "/");
 print("#define tpp_hooks_init(self) \\");
-print("	(void)(0 "),;
+print("	(void)((void)0 "),;
 local isFirst = true;
 for (local doc, name,
      default_TPP_HAVE_FOO_HOOK,
@@ -786,7 +787,7 @@ typedef struct tpp_hooks {
 
 /* Initialize lexer hooks */
 #define tpp_hooks_init(self) \
-	(void)(0 _tpp_hooks_init_warnprinter(self) \
+	(void)((void)0 _tpp_hooks_init_warnprinter(self) \
 	       _tpp_hooks_init_warnhandler(self) \
 	       _tpp_hooks_init_mesgprinter(self) \
 	       _tpp_hooks_init_parseexpr(self) \

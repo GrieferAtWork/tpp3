@@ -4,11 +4,14 @@
     <Filter Include="src">
       <UniqueIdentifier>{cda78eda-b19b-4d47-8417-c11383d571ff}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\parts">
-      <UniqueIdentifier>{2023c03d-ff74-40ae-b0cc-90e22dea73d2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="doc">
       <UniqueIdentifier>{aea669ce-e031-49a9-b131-3c27e8b05da3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\scripts">
+      <UniqueIdentifier>{b88273ec-ba96-4d25-8468-cba413b62836}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\parts">
+      <UniqueIdentifier>{2023c03d-ff74-40ae-b0cc-90e22dea73d2}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\parts\ctype-db">
       <UniqueIdentifier>{9271e7b3-35f4-4203-9b6a-92417b141a34}</UniqueIdentifier>
@@ -242,13 +245,7 @@
     <None Include="..\doc\config-conf.md">
       <Filter>doc</Filter>
     </None>
-    <None Include="..\src\make-config-doc.dee">
-      <Filter>src</Filter>
-    </None>
     <None Include="..\src\Makefile">
-      <Filter>src</Filter>
-    </None>
-    <None Include="..\src\make-amalgamation.dee">
       <Filter>src</Filter>
     </None>
     <None Include="..\src\parts\config.dee">
@@ -274,6 +271,15 @@
     </None>
     <None Include="..\src\parts\ctype-db\ctype-names.dee">
       <Filter>src\parts\ctype-db</Filter>
+    </None>
+    <None Include="..\src\scripts\make-amalgamation.dee">
+      <Filter>src\scripts</Filter>
+    </None>
+    <None Include="..\src\scripts\make-config-doc.dee">
+      <Filter>src\scripts</Filter>
+    </None>
+    <None Include="..\src\scripts\Makefile.autoformat.dee">
+      <Filter>src\scripts</Filter>
     </None>
   </ItemGroup>
 </Project>
