@@ -21753,7 +21753,7 @@ again:
 
 #if TPP_HAVE_UNICODE
 	case 0xc2:
-		if ((iter + 1) < end && iter[0] == 0x85) {
+		if (iter < end && iter[0] == 0x85) {
 			new_iter = iter + 1;
 #if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
 			output_repr = (tpp_char const *)"\\u0085";
@@ -21778,7 +21778,7 @@ again:
 		}
 		goto again;
 	case 0xe2:
-		if ((iter + 2) < end && iter[0] == 0x80 && iter[1] == 0xa8) {
+		if ((iter + 1) < end && iter[0] == 0x80 && iter[1] == 0xa8) {
 			new_iter = iter + 2;
 #if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
 			output_repr = (tpp_char const *)"\\u2028";
@@ -21801,7 +21801,7 @@ again:
 #endif /* !... */
 			break;
 		}
-		if ((iter + 2) < end && iter[0] == 0x80 && iter[1] == 0xa9) {
+		if ((iter + 1) < end && iter[0] == 0x80 && iter[1] == 0xa9) {
 			new_iter = iter + 2;
 #if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
 			output_repr = (tpp_char const *)"\\u2029";

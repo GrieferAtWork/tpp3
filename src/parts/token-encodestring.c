@@ -98,7 +98,7 @@ for (local b: UTF8_LF_FIRST_BYTES.sorted()) {
 		local utf8 = string.chr(ord).encode('utf-8');
 		if (utf8.first == b) {
 			local remainder = utf8[1:];
-			print(f'		if ((iter + {#remainder}) < end && {' && '.join(
+			print(f'		if ({#remainder >= 2 ? f"(iter + {#remainder-1})" : "iter"} < end && {' && '.join(
 				for (local i, b: remainder.enumerate())
 					f'iter[{i}] == {b.hex(2)}'
 			)}) \{');
@@ -144,7 +144,7 @@ for (local b: UTF8_LF_FIRST_BYTES.sorted()) {
 }
 ]]]*/
 	case 0xc2:
-		if ((iter + 1) < end && iter[0] == 0x85) {
+		if (iter < end && iter[0] == 0x85) {
 			new_iter = iter + 1;
 #if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
 			output_repr = (tpp_char const *)"\\u0085";
@@ -169,7 +169,7 @@ for (local b: UTF8_LF_FIRST_BYTES.sorted()) {
 		}
 		goto again;
 	case 0xe2:
-		if ((iter + 2) < end && iter[0] == 0x80 && iter[1] == 0xa8) {
+		if ((iter + 1) < end && iter[0] == 0x80 && iter[1] == 0xa8) {
 			new_iter = iter + 2;
 #if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
 			output_repr = (tpp_char const *)"\\u2028";
@@ -192,7 +192,7 @@ for (local b: UTF8_LF_FIRST_BYTES.sorted()) {
 #endif /* !... */
 			break;
 		}
-		if ((iter + 2) < end && iter[0] == 0x80 && iter[1] == 0xa9) {
+		if ((iter + 1) < end && iter[0] == 0x80 && iter[1] == 0xa9) {
 			new_iter = iter + 2;
 #if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
 			output_repr = (tpp_char const *)"\\u2029";
