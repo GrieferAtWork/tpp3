@@ -27638,6 +27638,13 @@ tpp_macro_func_expand_count(tpp_macro const *tpp_restrict self) {
 	return (tpp_size)(iter - self->tm_data.tmd_func.tmf_expand);
 }
 
+/* Suppress "-Walloc-size" because `_tpp_macro_alloc_keyword()`
+ * doesn't allocate memory for the function-only portion of a macro */
+#if TPP_GCC_VERSION_NUM >= 140001
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Walloc-size"
+#endif /* TPP_GCC_VERSION_NUM >= 140001 */
+
 /* Allocate+return a hard-copy of "self"
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_macro *TPPCALL
@@ -27695,6 +27702,10 @@ tpp_macro_copy(tpp_macro const *tpp_restrict self) {
 	result->tm_body_lc    = self->tm_body_lc;
 	return result;
 }
+
+#if TPP_GCC_VERSION_NUM >= 140001
+#pragma GCC diagnostic pop
+#endif /* TPP_GCC_VERSION_NUM >= 140001 */
 #endif /* TPP_HAVE_LEXER_COPY */
 
 #if TPP_HAVE_MACRO_EQUALS
@@ -40419,6 +40430,12 @@ static TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_char const *TPPCALL
 tpp_token_sol_shell_find_after_pound(tpp_lexer const *tpp_restrict self);
 #endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 
+/* Suppress "-Walloc-size" because `_tpp_macro_alloc_keyword()`
+ * doesn't allocate memory for the function-only portion of a macro */
+#if TPP_GCC_VERSION_NUM >= 140001
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Walloc-size"
+#endif /* TPP_GCC_VERSION_NUM >= 140001 */
 
 /* Parse a macro-definition, with self/p_pos pointing at the first non-inline-comment
  * token following the macro's name. (in the case of a keyword-style macro, this may
@@ -40597,6 +40614,10 @@ err_builder:
 	tpp_macro_builder_fini(&builder);
 	return error;
 }
+
+#if TPP_GCC_VERSION_NUM >= 140001
+#pragma GCC diagnostic pop
+#endif /* TPP_GCC_VERSION_NUM >= 140001 */
 
 /* Handle a "#define" directive, with "self" pointing at the macro's name-keyword
  * @return: TPP_TOK_ISERR: Error
@@ -46611,8 +46632,8 @@ err_builder_nomem:
 }
 
 typedef struct tpp_macro_argbuf {
-	tpp_lexer_arginfo tmab_arginfo[TPP_FLEX_ARRAY]; /* [:tmf_argc] Origin argument info vector */
-/*	tpp_macro_expinfo tmab_expinfo[TPP_FLEX_ARRAY];  * [:tmf_argc] Argument expansion info vector. */
+	tpp_lexer_arginfo tmab_arginfo[4096/*TPP_FLEX_ARRAY*/]; /* [:tmf_argc] Origin argument info vector */
+/*	tpp_macro_expinfo tmab_expinfo[      TPP_FLEX_ARRAY  ];  * [:tmf_argc] Argument expansion info vector. */
 } tpp_macro_argbuf;
 
 #define tpp_macro_argbuf_sizeof(argc) \

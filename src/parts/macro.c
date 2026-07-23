@@ -86,6 +86,13 @@ tpp_macro_func_expand_count(tpp_macro const *tpp_restrict self) {
 	return (tpp_size)(iter - self->tm_data.tmd_func.tmf_expand);
 }
 
+/* Suppress "-Walloc-size" because `_tpp_macro_alloc_keyword()`
+ * doesn't allocate memory for the function-only portion of a macro */
+#if TPP_GCC_VERSION_NUM >= 140001
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Walloc-size"
+#endif /* TPP_GCC_VERSION_NUM >= 140001 */
+
 /* Allocate+return a hard-copy of "self"
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_macro *TPPCALL
@@ -143,6 +150,10 @@ tpp_macro_copy(tpp_macro const *tpp_restrict self) {
 	result->tm_body_lc    = self->tm_body_lc;
 	return result;
 }
+
+#if TPP_GCC_VERSION_NUM >= 140001
+#pragma GCC diagnostic pop
+#endif /* TPP_GCC_VERSION_NUM >= 140001 */
 #endif /* TPP_HAVE_LEXER_COPY */
 
 #if TPP_HAVE_MACRO_EQUALS

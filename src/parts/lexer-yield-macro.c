@@ -269,8 +269,8 @@ err_builder_nomem:
 }
 
 typedef struct tpp_macro_argbuf {
-	tpp_lexer_arginfo tmab_arginfo[TPP_FLEX_ARRAY]; /* [:tmf_argc] Origin argument info vector */
-/*	tpp_macro_expinfo tmab_expinfo[TPP_FLEX_ARRAY];  * [:tmf_argc] Argument expansion info vector. */
+	tpp_lexer_arginfo tmab_arginfo[4096/*TPP_FLEX_ARRAY*/]; /* [:tmf_argc] Origin argument info vector */
+/*	tpp_macro_expinfo tmab_expinfo[      TPP_FLEX_ARRAY  ];  * [:tmf_argc] Argument expansion info vector. */
 } tpp_macro_argbuf;
 
 #define tpp_macro_argbuf_sizeof(argc) \

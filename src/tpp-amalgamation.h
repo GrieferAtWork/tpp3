@@ -4164,6 +4164,30 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #define TPPVCALL /* nothing */
 #endif /* !TPPVCALL */
 
+#ifndef TPP_GCC_VERSION_NUM
+#ifdef __GNUC__
+#ifndef TPP_GCC_VERSION_MINOR
+#ifdef __GNUC_MINOR__
+#define TPP_GCC_VERSION_MINOR __GNUC_MINOR__
+#else /* __GNUC_MINOR__ */
+#define TPP_GCC_VERSION_MINOR 0
+#endif /* !__GNUC_MINOR__ */
+#endif /* !TPP_GCC_VERSION_MINOR */
+#ifndef TPP_GCC_VERSION_PATCH
+#ifdef __GNUC_PATCH__
+#define TPP_GCC_VERSION_PATCH __GNUC_PATCH__
+#elif defined(__GNUC_PATCHLEVEL__)
+#define TPP_GCC_VERSION_PATCH __GNUC_PATCHLEVEL__
+#else /* __GNUC_PATCH__ */
+#define TPP_GCC_VERSION_PATCH 0
+#endif /* !__GNUC_PATCH__ */
+#endif /* !TPP_GCC_VERSION_PATCH */
+#define TPP_GCC_VERSION_NUM (__GNUC__ * 10000 + TPP_GCC_VERSION_MINOR * 100 + TPP_GCC_VERSION_PATCH)
+#else /* __GNUC__ */
+#define TPP_GCC_VERSION_NUM 0
+#endif /* !__GNUC__ */
+#endif /* !TPP_GCC_VERSION_NUM */
+
 /* Declaration providers for internal functions used across multiple source files.
  * HINT: These get hard-overwritten to "static" in "tpp-amalgamation.c" */
 #ifndef TPP_IMPL
@@ -4193,37 +4217,37 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #ifndef tpp_restrict
 #ifdef restrict
 #define tpp_restrict restrict
-#elif defined(_MSC_VER) || defined(__GNUC__)
+#elif defined(_MSC_VER) || TPP_GCC_VERSION_NUM >= 29200
 #define tpp_restrict __restrict
-#elif defined(__STDC__)
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ + 0) >= 199901
 #define tpp_restrict restrict /* C99 */
 #else /* ... */
 #define tpp_restrict /* nothing */
 #endif /* !... */
 #endif /* !tpp_restrict */
 #ifndef TPP_NONNULL
-#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__nonnull__)
+#if TPP_HOST_HAS_ATTRIBUTE(__nonnull__) || TPP_GCC_VERSION_NUM >= 30300
 #define TPP_NONNULL(x) __attribute__((__nonnull__ x))
 #else /* ... */
 #define TPP_NONNULL(x) /* nothing */
 #endif /* !... */
 #endif /* !TPP_NONNULL */
 #ifndef TPP_WUNUSED
-#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__warn_unused_result__)
+#if TPP_HOST_HAS_ATTRIBUTE(__warn_unused_result__) || TPP_GCC_VERSION_NUM >= 30300
 #define TPP_WUNUSED __attribute__((__warn_unused_result__))
 #else /* ... */
 #define TPP_WUNUSED /* nothing */
 #endif /* !... */
 #endif /* !TPP_WUNUSED */
 #ifndef TPP_RETNONNULL
-#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__returns_nonnull__)
+#if TPP_HOST_HAS_ATTRIBUTE(__returns_nonnull__) || TPP_GCC_VERSION_NUM != 0
 #define TPP_RETNONNULL __attribute__((__returns_nonnull__))
 #else /* ... */
 #define TPP_RETNONNULL /* nothing */
 #endif /* !... */
 #endif /* !TPP_RETNONNULL */
 #ifndef TPP_PURECALL
-#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__pure__)
+#if TPP_HOST_HAS_ATTRIBUTE(__pure__) || TPP_GCC_VERSION_NUM >= 29600
 #define TPP_PURECALL __attribute__((__pure__))
 #elif defined(_MSC_VER) || TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(noalias)
 #define TPP_PURECALL __declspec(noalias)
@@ -4232,21 +4256,21 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #endif /* !... */
 #endif /* !TPP_PURECALL */
 #ifndef TPP_CONSTCALL
-#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__const__)
+#if TPP_HOST_HAS_ATTRIBUTE(__const__) || TPP_GCC_VERSION_NUM >= 20400
 #define TPP_CONSTCALL __attribute__((__const__))
 #else /* ... */
 #define TPP_CONSTCALL TPP_PURECALL
 #endif /* !... */
 #endif /* !TPP_CONSTCALL */
 #ifndef TPP_COLDCALL
-#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__cold__)
+#if TPP_HOST_HAS_ATTRIBUTE(__cold__) || TPP_GCC_VERSION_NUM >= 40300
 #define TPP_COLDCALL __attribute__((__cold__))
 #else /* ... */
 #define TPP_COLDCALL /* nothing */
 #endif /* !... */
 #endif /* !TPP_COLDCALL */
 #ifndef TPP_NOINLINE
-#if defined(__GNUC__) || TPP_HOST_HAS_ATTRIBUTE(__noinline__)
+#if TPP_HOST_HAS_ATTRIBUTE(__noinline__) || TPP_GCC_VERSION_NUM >= 29600
 #define TPP_NOINLINE __attribute__((__noinline__))
 #elif defined(_MSC_VER) || TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(noinline)
 #define TPP_NOINLINE __declspec(noinline)
@@ -4255,15 +4279,21 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #endif /* !... */
 #endif /* !TPP_NOINLINE */
 #ifndef TPP_FLEX_ARRAY
+#if defined(_MSC_VER) || (TPP_GCC_VERSION_NUM && TPP_GCC_VERSION_NUM < 20970)
 #define TPP_FLEX_ARRAY 4096
+#elif TPP_GCC_VERSION_NUM != 0
+#define TPP_FLEX_ARRAY 0 /*__extension__*/
+#else /* ... */
+#define TPP_FLEX_ARRAY /* nothing */
+#endif /* !... */
 #endif /* !TPP_FLEX_ARRAY */
 #ifndef TPP_FALLTHRU
 #if TPP_HOST_HAS_CPP_ATTRIBUTE(fallthrough)
 #define TPP_FALLTHRU [[fallthrough]];
-#elif TPP_HOST_HAS_ATTRIBUTE(__fallthrough__)
+#elif TPP_HOST_HAS_ATTRIBUTE(__fallthrough__) || TPP_GCC_VERSION_NUM >= 70000
 #define TPP_FALLTHRU __attribute__((__fallthrough__));
-#elif defined(__GNUC__) && (__GNUC__ > 6 || (__GNUC__ == 6 && __GNUC_MINOR__ >= 3))
-#define TPP_FALLTHRU __attribute__((__fallthrough__));
+#elif TPP_GCC_VERSION_NUM >= 60000
+#define TPP_FALLTHRU __attribute__((fallthrough));
 #else /* ... */
 #define TPP_FALLTHRU /* @fallthrough@ */
 #endif /* !... */
@@ -4308,7 +4338,7 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #define TPP_INLINE static inline
 #elif defined(_MSC_VER)
 #define TPP_INLINE static __inline
-#elif defined(__GNUC__) || defined(__TCC__) || defined(__DCC_VERSION__)
+#elif defined(__TCC__) || defined(__DCC_VERSION__) || TPP_GCC_VERSION_NUM >= 20700
 #define TPP_INLINE static __inline__
 #else /* ... */
 #define TPP_INLINE static
@@ -4337,7 +4367,7 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #ifndef tpp_unreachable
 #ifdef _MSC_VER
 #define tpp_unreachable() __assume(0)
-#elif TPP_HOST_HAS_BUILTIN(__builtin_unreachable)
+#elif TPP_HOST_HAS_BUILTIN(__builtin_unreachable) || TPP_GCC_VERSION_NUM >= 40600
 #define tpp_unreachable() __builtin_unreachable()
 #else /* ... */
 #define tpp_unreachable() do{}while(1)
@@ -4345,12 +4375,12 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #endif /* !tpp_unreachable */
 
 #ifndef tpp_expect
-#if TPP_HOST_HAS_BUILTIN(__builtin_expect)
+#if TPP_HOST_HAS_BUILTIN(__builtin_expect) || TPP_GCC_VERSION_NUM >= 29700
 #define tpp_expect(expr, expected) __builtin_expect(expr, expected)
-#else /* TPP_HOST_HAS_BUILTIN(__builtin_expect) */
+#else /* ... */
 #define tpp_expect(expr, expected) expr
 #define tpp_expect_IS_NOOP
-#endif /* !TPP_HOST_HAS_BUILTIN(__builtin_expect) */
+#endif /* !... */
 #endif /* !tpp_expect */
 
 #ifndef tpp_likely
@@ -4498,7 +4528,7 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #endif /* !tpp_malloc */
 
 #ifndef tpp_alloca
-#if TPP_HOST_HAS_BUILTIN(__builtin_alloca)
+#if TPP_HOST_HAS_BUILTIN(__builtin_alloca) || TPP_GCC_VERSION_NUM >= 29700
 #define tpp_alloca __builtin_alloca
 #elif defined(_MSC_VER)
 #include <malloc.h>

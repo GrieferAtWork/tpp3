@@ -1248,6 +1248,12 @@ TPP_INTERN_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_char const *TPPC
 tpp_token_sol_shell_find_after_pound(tpp_lexer const *tpp_restrict self);
 #endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 
+/* Suppress "-Walloc-size" because `_tpp_macro_alloc_keyword()`
+ * doesn't allocate memory for the function-only portion of a macro */
+#if TPP_GCC_VERSION_NUM >= 140001
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Walloc-size"
+#endif /* TPP_GCC_VERSION_NUM >= 140001 */
 
 /* Parse a macro-definition, with self/p_pos pointing at the first non-inline-comment
  * token following the macro's name. (in the case of a keyword-style macro, this may
@@ -1426,6 +1432,10 @@ err_builder:
 	tpp_macro_builder_fini(&builder);
 	return error;
 }
+
+#if TPP_GCC_VERSION_NUM >= 140001
+#pragma GCC diagnostic pop
+#endif /* TPP_GCC_VERSION_NUM >= 140001 */
 
 /* Handle a "#define" directive, with "self" pointing at the macro's name-keyword
  * @return: TPP_TOK_ISERR: Error
