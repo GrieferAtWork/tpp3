@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,12 +12,12 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
 #pragma once
 
@@ -28,9 +28,22 @@
 
 /* include ourselves with some really abstract path.
  * #pragma once will prevent infinite recursion */
-#include "include_path.h"
-#include "./include_path.h"
+#include "include-path.h"
+#include "./include-path.h"
 
-//FIXME:#include "./../test/include_path.h"
-//FIXME:#include "./../test/include_path.h"
-//FIXME:#include "./../test/./missing_folder/../include_path.h"
+
+/* Sanity check: last 14 characters of __FILE__ should be "include-path.h" */
+TPP_ASSERT(__FILE__[-14:] == "include-path.h")
+
+/* NOTE: These here actually only work if you invoke TPP such that
+ *       it knowns that our current file is inside a folder "test":
+ *       >> tpp test/include-path.h          #  OK
+ *       >> cd test && tpp include-path.h    #  Test would fail without __FILE__-check
+ */
+#if __FILE__[-19:-15] == "test"
+#include "./../test/include-path.h"
+#include "./../test/include-path.h"
+#include "./../test/./missing_folder/../include-path.h"
+#endif
+
+#undef WAS_HERE

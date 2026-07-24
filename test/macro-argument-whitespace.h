@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,21 +12,24 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
-#define DOUBLE_ASSERT(x) TEST_ASSERT(x) TEST_ASSERT(x)
+/* Test the effects of the "macro-argument-whitespace" extension. */
 
-TEST_ASSERT(__has_include("has_include.h"))
-TEST_ASSERT(__has_include("has_include.h"))
-TEST_ASSERT(!__has_include("NOPE"))
-TEST_ASSERT(!__has_include("./NOPE.h"))
-TEST_ASSERT(__has_include("./has_include.h"))
-TEST_ASSERT(__has_include("../test/has_include.h"))
-TEST_ASSERT(__has_include("does_exist/../has_include.h"))
-DOUBLE_ASSERT(!__has_include("./NOPE.h"))
-DOUBLE_ASSERT(__has_include("./has_include.h"))
+#define STR1(x) #x
+#pragma extension(push, "-fmacro-argument-whitespace")
+#define STR2(x) #x
+#pragma extension(pop)
+
+TPP_ASSERT_EXPANDS("\"foo\"",     STR1(foo))
+TPP_ASSERT_EXPANDS("\"foo\"",     STR1(  foo  ))
+TPP_ASSERT_EXPANDS("\"foo\"",     STR2(foo))
+TPP_ASSERT_EXPANDS("\"  foo  \"", STR2(  foo  ))
+
+#undef STR1
+#undef STR2

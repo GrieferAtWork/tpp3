@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,23 +12,28 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
 // Test 18: Macros with escaped line feeds
 
 #define macro \
- code... \
+	code... \
 /**/
 #define func(a,b,c) \
- a + b + c \
+	a + b + c \
 /**/
 
-TEST_EXPANDS(macro,"code...")
-TEST_EXPANDS(func(10,20,30),"10 + 20 + 30")
+TPP_ASSERT_EXPANDS(
+	"code...",
+	macro)
+TPP_ASSERT_EXPANDS(
+	"10 + 20 + 30",
+	func(10,20,30))
 
-
+#undef macro
+#undef func

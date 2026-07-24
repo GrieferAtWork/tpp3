@@ -27,9 +27,4 @@ TPP_ASSERT_EXPANDS(
 clone({
  int x = 42;
 }))
-
-
-
-
-
-
+#undef clone

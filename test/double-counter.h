@@ -29,3 +29,5 @@ SAME(__COUNTER__)
 
 /* Still make sure that `__COUNTER__' changes every time, though... */
 TPP_ASSERT(__COUNTER__ != __COUNTER__)
+
+#undef SAME
