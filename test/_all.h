@@ -29,6 +29,7 @@ for (local e: fs.dir(".").sorted()) {
 #include "count-tokens.h"
 #include "cxx-comments-in-macro.h"
 #include "define-directives.h"
+#include "directives-in-macros.h"
 #include "macro-expansion.h"
 #include "unicode-names.h"
 /*[[[end]]]*/

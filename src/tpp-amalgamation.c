@@ -39552,11 +39552,14 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 	tpp_size curarg_rel_end;   /* End of current argument (relative to current file's KEEP) */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 	tpp_size curarg_rel_rend;  /* End of current argument without trailing whitespace */
-#define tpp_set_curarg_rel_rend(v) (curarg_rel_end = curarg_rel_rend = (v))
+	tpp_size curarg_nonspace;  /* # of non-space characters written to current argument buffer */
+#define tpp_set_curarg_rel_rend(v) (void)(curarg_rel_end = curarg_rel_rend = (v))
 #define tpp_get_curarg_rel_rend()  curarg_rel_rend
+#define tpp_set_curarg_nonspace(v) (void)(curarg_nonspace = (v))
 #else /* TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-#define tpp_set_curarg_rel_rend(v) (curarg_rel_end = (v))
-#define tpp_get_curarg_rel_rend()   curarg_rel_end
+#define tpp_set_curarg_rel_rend(v) (void)(curarg_rel_end = (v))
+#define tpp_get_curarg_rel_rend()  curarg_rel_end
+#define tpp_set_curarg_nonspace(v) (void)0
 #endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 	saved_lexer_state = self->tl_state;
 	self->tl_state |= TPP_LEXER_STATE_FLAG_ALLTOKENS;
@@ -39581,6 +39584,7 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 	result = token->tt_id;
 	curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_end);
 	tpp_set_curarg_rel_rend(curarg_rel_start);
+	tpp_set_curarg_nonspace(0);
 again_yield_and_switch_tok:
 	result = tpp_lexer_yieldpp_blocking(self);
 again_switch_tok:
@@ -39607,6 +39611,7 @@ again_switch_tok:
 		} while (file->tf_prev != NULL);
 		curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
 		tpp_set_curarg_rel_rend(curarg_rel_start);
+		tpp_set_curarg_nonspace(tpp_string_builder_getlen(&state.tsrps_curarg_prefix));
 	}
 
 	switch (result) {
@@ -39619,7 +39624,7 @@ again_switch_tok:
 			break; /* When whitespace should be kept: treat it like a regular token */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
-		if (state.tsrps_curarg_prefix.tsb_len == 0 &&
+		if (tpp_string_builder_isempty(&state.tsrps_curarg_prefix) &&
 		    curarg_rel_start == curarg_rel_rend) {
 			/* Skip leading whitespace... */
 			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_end);
@@ -39627,14 +39632,53 @@ again_switch_tok:
 			goto again_yield_and_switch_tok;
 		}
 		if (curarg_rel_end != tpp_file_keep_ptr2rel(file, token->tt_start)) {
-			tpp_assert(curarg_rel_rend >= curarg_rel_start);
-			if (curarg_rel_rend > curarg_rel_start) {
-				tpp_size num_bytes = (tpp_size)(curarg_rel_rend - curarg_rel_start);
+			tpp_assert(curarg_rel_end >= curarg_rel_rend);
+			if (curarg_rel_end > curarg_rel_start) {
+				tpp_size num_bytes = (tpp_size)(curarg_rel_end - curarg_rel_start);
 				tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
 				if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
 					goto err_nomem;
+				/* Only the *real* (non-whitespace) portion of the argument must
+				 * count to the # of non-whitespace tokens written to the buffer:
+				 *
+				 * [01] #define STR1(a, b...) #a
+				 * [02] STR1(
+				 * [03] 	a
+				 * [04] #if 1
+				 * [05] 	<trailing whitespace here, but ignore this comment>
+				 * [06] #if 1
+				 * [07] #endif
+				 * [08] 	X  ,  Y
+				 * [09] #endif
+				 * [10] 	b
+				 * [11] )
+				 *
+				 * Both the line-feed after "a" on line 03, and the whitespace of
+				 * line 05 are written to the buffer, but only the non-whitespace
+				 * text of "a" (which is written together with the line-feed following
+				 * the "a" once we reach the whitespace on line 05) counts towards the
+				 * value stored in "curarg_nonspace"
+				 *
+				 * Once we get to line 08 and see the whitespace before the "X" token,
+				 * "curarg_rel_rend" still points after the "a" on line 03, and
+				 * "curarg_rel_start" is changed to point at the start of the whitespace
+				 * on line 08. Finally, when the "X" on line 08 is reached, all whitespace
+				 * written to buffers (and pending to-be written by "curarg_rel_start" is
+				 * confirmed as part of the argument when "tpp_set_curarg_nonspace()" is
+				 * used to confirm the argument text.
+				 *
+				 * Thus:    the final argument text is "a\n\t\n\tX" (the 2 spaces
+				 *          after the "X" don't count towards the argument)
+				 * However: if it wasn't for that trailing "X" token, the final
+				 *          argument text would be "a" (even though parts of those
+				 *          whitespace tokens were written to the buffer. Specifically,
+				 *          at one point the buffer looked like "a\n\t\n"), but because
+				 *          "curarg_nonspace" was never updated after the initial "a"
+				 *          character, no arguments were generated. */
+				if (curarg_rel_rend > curarg_rel_start)
+					curarg_nonspace += (curarg_rel_rend - curarg_rel_start);
 			}
-			curarg_rel_start = curarg_rel_rend;
+			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
 		}
 		curarg_rel_end = tpp_file_keep_ptr2rel(file, token->tt_end);
 		goto again_yield_and_switch_tok;
@@ -39681,6 +39725,7 @@ again_switch_tok:
 				tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
 				if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
 					goto err_nomem;
+				tpp_set_curarg_nonspace(tpp_string_builder_getlen(&state.tsrps_curarg_prefix));
 			}
 
 			/* Continue with next file */
@@ -39912,13 +39957,22 @@ handle_rangle:
 		/* Write next argument */
 		if (argc < (argv_bufsize - 1)) {
 			tpp_lexer_arginfo *arg = &p_argv[argc];
-			if (state.tsrps_curarg_prefix.tsb_len) {
+			if (!tpp_string_builder_isempty(&state.tsrps_curarg_prefix)) {
 				if (curarg_rel_start < tpp_get_curarg_rel_rend()) { /* Save argument text */
 					tpp_size num_bytes   = (tpp_size)(tpp_get_curarg_rel_rend() - curarg_rel_start);
 					tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
 					if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
 						goto err_nomem;
+				} else
+#if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+				if (curarg_rel_start > tpp_get_curarg_rel_rend()) {
+					/* Must truncate some trailing memory again. */
+					tpp_string_builder_truncate(&state.tsrps_curarg_prefix, curarg_nonspace);
+				} else
+#endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+				{
 				}
+
 				arg->tlai_chunk = tpp_string_builder_pack(&state.tsrps_curarg_prefix);
 				arg->tlai_start = tpp_string_str(arg->tlai_chunk);
 				arg->tlai_end   = tpp_string_end(arg->tlai_chunk);
@@ -39948,6 +40002,7 @@ handle_rangle:
 			tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
 			if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
 				goto err_nomem;
+			tpp_set_curarg_nonspace(tpp_string_builder_getlen(&state.tsrps_curarg_prefix));
 		}
 		curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
 	}
@@ -39960,8 +40015,8 @@ done:
 	if (tpp_lexer_seekpp_rparen_keepspace())
 		curarg_rel_rend = curarg_rel_end; /* Argument must includes trailing whitespace */
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
-	if (argc || (state.tsrps_curarg_prefix.tsb_len ||
-	             tpp_get_curarg_rel_rend() > curarg_rel_start)) {
+	if (argc || (!tpp_string_builder_isempty(&state.tsrps_curarg_prefix) ||
+	             curarg_rel_start < tpp_get_curarg_rel_rend())) {
 		/* Write last argument */
 		tpp_lexer_arginfo *arg;
 		if (argc < argv_bufsize) {
@@ -39974,12 +40029,20 @@ done:
 			goto done_after_last_arg;
 		}
 		++argc;
-		if (state.tsrps_curarg_prefix.tsb_len) {
-			if (tpp_get_curarg_rel_rend() > curarg_rel_start) {
+		if (!tpp_string_builder_isempty(&state.tsrps_curarg_prefix)) {
+			if (curarg_rel_start < tpp_get_curarg_rel_rend()) {
 				tpp_size num_bytes   = (tpp_size)(tpp_get_curarg_rel_rend() - curarg_rel_start);
 				tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
 				if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
 					goto err_nomem;
+			} else
+#if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+			if (curarg_rel_start > tpp_get_curarg_rel_rend()) {
+				/* Must truncate some trailing memory again. */
+				tpp_string_builder_truncate(&state.tsrps_curarg_prefix, curarg_nonspace);
+			} else
+#endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+			{
 			}
 			arg->tlai_chunk = tpp_string_builder_pack(&state.tsrps_curarg_prefix);
 			arg->tlai_start = tpp_string_str(arg->tlai_chunk);
@@ -40038,6 +40101,7 @@ err_nomem:
 	result = TPP_TOK_ENOMEM;
 	goto err_result;
 #undef tpp_set_curarg_rel_rend
+#undef tpp_set_curarg_nonspace
 #undef tpp_lexer_seekpp_rparen_keepspace
 }
 

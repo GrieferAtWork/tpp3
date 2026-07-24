@@ -99,6 +99,9 @@ typedef struct tpp_string_builder {
 /* Return the # of used bytes */
 #define tpp_string_builder_getlen(self) (self)->TPP_INTERNAL(tsb_len)
 
+/* Check if the builder is empty */
+#define tpp_string_builder_isempty(self) ((self)->TPP_INTERNAL(tsb_len) == 0)
+
 /* Package "self" into a tpp string and return said string.
  * This function never fails, but it *DOES* finalize "self"
  * iow: DO NOT CALL `tpp_string_builder_fini()' AFTER THIS FUNCTION!
@@ -124,10 +127,15 @@ tpp_string_builder_tryalloc(tpp_string_builder *tpp_restrict self, tpp_size num_
 #endif /* TPP_HAVE_STRING_BUILDER_TRYALLOC */
 
 /* After a call to `tpp_string_builder_tryalloc()' that didn't actually end up
- * needing  */
+ * needing all memory, use this function release the unused, trailing portion. */
 #define tpp_string_builder_release(self, num_unused_trailing_bytes)                  \
 	(void)(tpp_assert((self)->TPP_INTERNAL(tsb_len) >= (num_unused_trailing_bytes)), \
 	       (self)->TPP_INTERNAL(tsb_len) -= (num_unused_trailing_bytes))
+
+/* Assign a new length to "self", releasing unused, trailing memory */
+#define tpp_string_builder_truncate(self, new_length)                 \
+	(void)(tpp_assert((self)->TPP_INTERNAL(tsb_len) >= (new_length)), \
+	       (self)->TPP_INTERNAL(tsb_len) = (new_length))
 
 /* Print "text" into "tpp_string_builder *self"
  * @return: num_bytes:                   Success
