@@ -3,6 +3,42 @@
 Similar to `TPP_PROFILE`, common configuration groups don't configure individual features, but rather specify the defaults of many features at once
 
 <!--BEGIN:common-->
+## TPP_COMMON_HAVE_EXTENSIONS
+
+Common configuration describing if extensions configuration should be used in defaults.
+When disabled, default configurations use...
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L5245) instead of [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L5243)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L5244) instead of [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L5242)
+
+s.a.: [`TPP_COMMON_HAVE_FEATURES`](#tpp_common_have_features)
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_EXTENSIONS
+```
+</details>
+
+## TPP_COMMON_HAVE_FEATURES
+
+Common configuration describing if feature configuration should be used in defaults.
+When disabled, default configurations use...
+- ... [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L5243) instead of [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L5245)
+- ... [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L5242) instead of [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L5244)
+
+s.a.: [`TPP_COMMON_HAVE_EXTENSIONS`](#tpp_common_have_extensions)
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+1
+```
+</details>
+
 ## TPP_COMMON_HAVE_TPP_TOK
 
 Default configuration for tokens
@@ -16,31 +52,18 @@ Default:
 ```
 </details>
 
-## TPP_COMMON_HAVE_TPP_TOK_1CHAR
-
-Default configuration for 1-char tokens
-
-<details><summary>Details</summary>
-
-Default:
-
-```c
-(TPP_PROFILE != TPP_PROFILE_MINIMAL) ? TPP_CONF_EXT0 : 0
-```
-</details>
-
 ## TPP_COMMON_HAVE_TPP_TOK_SPACE
 
 Default configuration for [`TPP_HAVE_TOK_LF`](config-conf.md#tpp_have_tok_lf), [`TPP_HAVE_TOK_SPACE`](config-conf.md#tpp_have_tok_space),
 [`TPP_HAVE_TOK_COMMENT`](config-conf.md#tpp_have_tok_comment), indicating if tokens that are normally through
-of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L20570)
+of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L20598)
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-(TPP_PROFILE != TPP_PROFILE_MINIMAL) ? TPP_CONF_FEAT1 : 1
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) ? TPP_CONF_FEAT0 : 0)
 ```
 </details>
 

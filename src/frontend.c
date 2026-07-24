@@ -19,6 +19,8 @@
  */
 #ifdef USE_AMALGAMATION
 #define TPP_PROFILE TPP_PROFILE_ALL
+#define TPP_COMMON_HAVE_FEATURES 0
+
 #include "tpp-amalgamation.c"
 #else /* USE_AMALGAMATION */
 #include "tpp.h"
