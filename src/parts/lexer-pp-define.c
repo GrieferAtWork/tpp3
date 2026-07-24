@@ -962,15 +962,15 @@ found_va_opt_body_end:
 #endif /* TPP_HAVE_TRIGRAPHS */
 #endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT || TPP_HAVE_TOK_SHELL_COMMENT */
 		case '#': {
-			tpp_char const *start_of_pound;
+			tpp_char const *start_of_pound = token->tt_start;
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
+			tpp_char const *end_of_pound = body_iter;
 			tpp_macro_opcode opcode;
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
 			if (!tpp_lexer_has(self, STRINGIZE_MACRO_ARGUMENT) &&
 			    !tpp_lexer_has(self, CHARIZE_MACRO_ARGUMENT) &&
 			    !tpp_lexer_has(self, DONT_EXPAND_MACRO_ARGUMENT))
 				break;
-			start_of_pound = token->tt_start;
 			do {
 				tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
 			} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
@@ -1007,6 +1007,7 @@ found_va_opt_body_end:
 			if (tok == '@') {
 				if (!tpp_lexer_has(self, CHARIZE_MACRO_ARGUMENT))
 					break;
+				end_of_pound = body_iter;
 				opcode = TPP_MACRO_OPCODE_INS_CHR;
 				do {
 					tok = tpp_lexer_yieldraw_at_blocking(self, &body_iter);
@@ -1025,8 +1026,10 @@ found_va_opt_body_end:
 #endif /* !TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
 			}
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT || TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
-			if (!TPP_TOK_ISKEYWORD(tok))
+			if (!TPP_TOK_ISKEYWORD(tok)) {
+				last_non_space_end = end_of_pound;
 				goto again_switch_tok;
+			}
 			arg = tpp_macro_builder_getargument(builder, tok);
 			if (!arg)
 				goto again_switch_tok;

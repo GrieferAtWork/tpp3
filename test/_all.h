@@ -30,6 +30,9 @@ for (local e: fs.dir(".").sorted()) {
 #include "cxx-comments-in-macro.h"
 #include "define-directives.h"
 #include "directives-in-macros.h"
+#include "directives-start-of-line.h"
+#include "double-counter.h"
+#include "glue.h"
 #include "macro-expansion.h"
 #include "unicode-names.h"
 /*[[[end]]]*/
