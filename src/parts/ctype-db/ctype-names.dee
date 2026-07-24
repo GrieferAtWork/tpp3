@@ -1149,7 +1149,7 @@ handle_group_start:
 	@@@return size of generated tables (in bytes)
 	public function printTokenTable(): int {
 		print File.stderr: "Generating token table...";
-		print("/* Token decoder tree -- see `ctype-names.dee:printTokenTable()` for binary format */");
+		print("/* Token decoder table -- see `ctype-names.dee:printTokenTable()` for binary format */");
 		local sortedTokenReprs: {string...} = this.tokensToId.keys.sorted();
 		local tokenReprLines: {(Bytes, string, int)...} = [];
 		local blobSize: int = 0;

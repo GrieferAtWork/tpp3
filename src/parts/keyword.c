@@ -492,7 +492,7 @@ tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard) {
 /* Fetch+increment the __TPP_COUNTER() value of this keyword
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
                                 tpp_counter *tpp_restrict p_result) {
 	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);

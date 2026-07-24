@@ -4478,7 +4478,7 @@ TPP_STATIC_ASSERT(TPP_UNICODE_BYNAME_LOOKUP_MAXUC == 10);
 #define TPP_UNAM_LOOKUP_NUMTOKENIDS    0xeb4 /* # of distinct token IDs */
 #define TPP_UNAM_LOOKUP_NODES          0x8c20 /* # of nodes in `tpp_unam_tree` */
 typedef uint_least16_t tpp_unam_tokenid;
-/* Token decoder tree -- see `ctype-names.dee:printTokenTable()` for binary format */
+/* Token decoder table -- see `ctype-names.dee:printTokenTable()` for binary format */
 static tpp_char const tpp_unam_tokens[0x69d2] = {
 	0,1,246,96,0,136,4,246,128,0,138,8,246,144,0,137,8,246,192,0,24,247,15,112,0,198,18,247,15,113,0,197,
 	18,247,15,114,0,196,18,247,15,115,0,195,18,247,15,116,0,194,18,247,15,117,0,193,18,247,15,117,247,0,242,21,
@@ -21758,7 +21758,7 @@ again:
 #elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
 	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\o{0}");
 #else /* ... */
-	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\000");
+	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\000"); /* May not be decodable... */
 #endif /* !... */
 
 	TPP_TOKEN_ENCODESTRING_CASE('\\', "\\\\");
@@ -24250,8 +24250,9 @@ convert_multiword_to_utf8:
 			if (last_word >= TPP_UTF16_HIGH_SURROGATE_MIN &&
 			    last_word <= TPP_UTF16_HIGH_SURROGATE_MAX) {
 				/* Last word is a HIGH_UTF16 surrogate -> exclude from conversion
-				 * and add to tail (this character can only the next word has been
-				 * fully read, also, which should be the LOW_UTF16 surrogate) */
+				 * and add to tail (this character can only be decoded when the
+				 * "next word" has also been fully read, where that "next word"
+				 * should be the LOW_UTF16 surrogate) */
 				tpp_memmoveup(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv + 2,
 				              self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_size);
 				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv[0] = raw_last_word.w8[0];
@@ -24474,7 +24475,6 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 #endif /* TPP_HAVE_CPP_MACROS */
 	default: tpp_unreachable();
 	}
-
 
 #if TPP_HAVE_FILE_LC_CACHE
 done:
@@ -24781,9 +24781,9 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 #endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY */
 
 #if TPP_HAVE_FILE_DUMMY
-/* Push/pop a so-called "dummy-file" that goes between "self" and parent, which
- * is a copy of "self", but with all file/chunk-data stripped, except that the
- * current values for the following are preserved (for tracebacks):
+/* Push/pop a so-called "dummy-file" that goes between "self" and its parent,
+ * which is a copy of "self", but with all file/chunk-data stripped, except
+ * that the current values for the following are preserved (for tracebacks):
  * - tpp_file_getfilename(self)
  * - tpp_file_getlcinfo(self, pos)   (returned by tpp_file_getlcinfo() for any pointer)
  *
@@ -25321,7 +25321,7 @@ tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard) {
 /* Fetch+increment the __TPP_COUNTER() value of this keyword
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
                                 tpp_counter *tpp_restrict p_result) {
 	tpp_keyword_misc *const misc = tpp_keyword_requiremisc(self);
@@ -51231,7 +51231,7 @@ tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 /************************************************************************/
 
 #if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token *const token = tpp_lexer_gettoken(self);

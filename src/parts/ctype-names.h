@@ -39,7 +39,7 @@ TPP_STATIC_ASSERT(TPP_UNICODE_BYNAME_LOOKUP_MAXUC == 10);
 #define TPP_UNAM_LOOKUP_NUMTOKENIDS    0xeb4 /* # of distinct token IDs */
 #define TPP_UNAM_LOOKUP_NODES          0x8c20 /* # of nodes in `tpp_unam_tree` */
 typedef uint_least16_t tpp_unam_tokenid;
-/* Token decoder tree -- see `ctype-names.dee:printTokenTable()` for binary format */
+/* Token decoder table -- see `ctype-names.dee:printTokenTable()` for binary format */
 static tpp_char const tpp_unam_tokens[0x69d2] = {
 	0,1,246,96,0,136,4,246,128,0,138,8,246,144,0,137,8,246,192,0,24,247,15,112,0,198,18,247,15,113,0,197,
 	18,247,15,114,0,196,18,247,15,115,0,195,18,247,15,116,0,194,18,247,15,117,0,193,18,247,15,117,247,0,242,21,

@@ -30,16 +30,16 @@ Default:
 
 ## TPP_ERROR_LIMIT
 
-Max # of [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L17862) (continue compilation and fail later) warnings that
-can be emitted before the next one will be treated as [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L17867) (fail
+Max # of [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L17868) (continue compilation and fail later) warnings that
+can be emitted before the next one will be treated as [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L17873) (fail
 immediately)
 
 - `0`:  Set limit to `0` (when not also overwritten, causes `TPP_HAVE_WARNING_ERROR=0`)
 - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
 - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
 
-**Getter**: [`tpp_lexer_geterrorlimit(lexer)`](../src/tpp-amalgamation.h#L19313)<br/>
-**Setter**: [`tpp_lexer_seterrorlimit(lexer, v)`](../src/tpp-amalgamation.h#L19314)
+**Getter**: [`tpp_lexer_geterrorlimit(lexer)`](../src/tpp-amalgamation.h#L19319)<br/>
+**Setter**: [`tpp_lexer_seterrorlimit(lexer, v)`](../src/tpp-amalgamation.h#L19320)
 
 <details><summary>Details</summary>
 
@@ -60,8 +60,8 @@ appear on the `#include`-stack before a warning [`TPP_W_INCLUDE_RECURSION_LIMIT_
 - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
 - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
 
-**Getter**: [`tpp_lexer_getinclusionlimit(lexer)`](../src/tpp-amalgamation.h#L19335)<br/>
-**Setter**: [`tpp_lexer_setinclusionlimit(lexer, v)`](../src/tpp-amalgamation.h#L19336)
+**Getter**: [`tpp_lexer_getinclusionlimit(lexer)`](../src/tpp-amalgamation.h#L19341)<br/>
+**Setter**: [`tpp_lexer_setinclusionlimit(lexer, v)`](../src/tpp-amalgamation.h#L19342)
 
 <details><summary>Details</summary>
 
@@ -90,8 +90,8 @@ NOTE: When [`TPP_HAVE_MACRO_RECURSION`](config-conf.md#tpp_have_macro_recursion)
 - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
 - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
 
-**Getter**: [`tpp_lexer_getrecursivemacrolimit(lexer)`](../src/tpp-amalgamation.h#L19351)<br/>
-**Setter**: [`tpp_lexer_setrecursivemacrolimit(lexer, v)`](../src/tpp-amalgamation.h#L19352)
+**Getter**: [`tpp_lexer_getrecursivemacrolimit(lexer)`](../src/tpp-amalgamation.h#L19357)<br/>
+**Setter**: [`tpp_lexer_setrecursivemacrolimit(lexer, v)`](../src/tpp-amalgamation.h#L19358)
 
 <details><summary>Details</summary>
 

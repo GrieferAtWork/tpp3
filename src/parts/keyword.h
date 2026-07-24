@@ -574,12 +574,18 @@ struct tpp_lexer;
  * tpp_skipbse_fwd: If "pos" points at a \-character, skip forward until end of BSE (if it is one)
  * tpp_skipbse_bck: If "pos" points after a line-feed character, skip backward until start of BSE (if it is one) */
 #if TPP_HAVE_BSE
+/* TODO: These functions need to take the lexer as argument:
+ * - If trigraphs are compiled-in, but soft-disabled, then "a??/\nb"
+ *   must not be treated as "ab", but these functions here will do so!
+ * - This is primarily a problem in \N{FOO} sequences, which must be
+ *   pre-loaded by searching for the closing `}`, before then being
+ *   parsed by a separate parser. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
 _tpp_skipbse_fwd(tpp_char const *pos, tpp_char const *end tpp_bse_file__PARAM);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
 _tpp_skipbse_bck(tpp_char const *pos, tpp_char const *start tpp_bse_file__PARAM);
-#define tpp_skipbse_fwd(pos, end, file)   (((pos) >= (end) || !_tpp_maybe_isbackslash(*(pos))) ? (pos) : _tpp_skipbse_fwd(pos, end tpp_bse_file__ARG(file)))
-#define tpp_skipbse_bck(pos, start, file) (((pos) <= (start) || !_tpp_maybe_islf((pos)[-1])) ? (pos) : _tpp_skipbse_bck(pos, start tpp_bse_file__ARG(file)))
+#define tpp_skipbse_fwd(pos, end, file)   (((pos) >= (end) || tpp_likely(!_tpp_maybe_isbackslash(*(pos)))) ? (pos) : _tpp_skipbse_fwd(pos, end tpp_bse_file__ARG(file)))
+#define tpp_skipbse_bck(pos, start, file) (((pos) <= (start) || tpp_likely(!_tpp_maybe_islf((pos)[-1]))) ? (pos) : _tpp_skipbse_bck(pos, start tpp_bse_file__ARG(file)))
 #else /* TPP_HAVE_BSE */
 #define tpp_skipbse_fwd(pos, end, file)   (pos)
 #define tpp_skipbse_bck(pos, start, file) (pos)

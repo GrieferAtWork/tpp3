@@ -987,9 +987,9 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self);
 #endif /* !TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY */
 
 #if TPP_HAVE_FILE_DUMMY
-/* Push/pop a so-called "dummy-file" that goes between "self" and parent, which
- * is a copy of "self", but with all file/chunk-data stripped, except that the
- * current values for the following are preserved (for tracebacks):
+/* Push/pop a so-called "dummy-file" that goes between "self" and its parent,
+ * which is a copy of "self", but with all file/chunk-data stripped, except
+ * that the current values for the following are preserved (for tracebacks):
  * - tpp_file_getfilename(self)
  * - tpp_file_getlcinfo(self, pos)   (returned by tpp_file_getlcinfo() for any pointer)
  *

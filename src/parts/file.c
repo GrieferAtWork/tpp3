@@ -1024,8 +1024,9 @@ convert_multiword_to_utf8:
 			if (last_word >= TPP_UTF16_HIGH_SURROGATE_MIN &&
 			    last_word <= TPP_UTF16_HIGH_SURROGATE_MAX) {
 				/* Last word is a HIGH_UTF16 surrogate -> exclude from conversion
-				 * and add to tail (this character can only the next word has been
-				 * fully read, also, which should be the LOW_UTF16 surrogate) */
+				 * and add to tail (this character can only be decoded when the
+				 * "next word" has also been fully read, where that "next word"
+				 * should be the LOW_UTF16 surrogate) */
 				tpp_memmoveup(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv + 2,
 				              self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_size);
 				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv[0] = raw_last_word.w8[0];
@@ -1248,7 +1249,6 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 #endif /* TPP_HAVE_CPP_MACROS */
 	default: tpp_unreachable();
 	}
-
 
 #if TPP_HAVE_FILE_LC_CACHE
 done:
@@ -1555,9 +1555,9 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 #endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY */
 
 #if TPP_HAVE_FILE_DUMMY
-/* Push/pop a so-called "dummy-file" that goes between "self" and parent, which
- * is a copy of "self", but with all file/chunk-data stripped, except that the
- * current values for the following are preserved (for tracebacks):
+/* Push/pop a so-called "dummy-file" that goes between "self" and its parent,
+ * which is a copy of "self", but with all file/chunk-data stripped, except
+ * that the current values for the following are preserved (for tracebacks):
  * - tpp_file_getfilename(self)
  * - tpp_file_getlcinfo(self, pos)   (returned by tpp_file_getlcinfo() for any pointer)
  *

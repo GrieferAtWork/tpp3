@@ -95,7 +95,7 @@ again:
 #elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
 	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\o{0}");
 #else /* ... */
-	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\000");
+	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\000"); /* May not be decodable... */
 #endif /* !... */
 
 	TPP_TOKEN_ENCODESTRING_CASE('\\', "\\\\");

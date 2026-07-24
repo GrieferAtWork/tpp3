@@ -381,12 +381,12 @@ handle_ilseq:
 		uc |= (pos[1] & 0x3f);
 		break;
 	case 3:
-		uc  = (uc & 0x0f) << 12;
+		uc = (uc & 0x0f) << 12;
 		uc |= (pos[1] & 0x3f) << 6;
 		uc |= (pos[2] & 0x3f);
 		break;
 	case 4:
-		uc  = (uc & 0x07) << 18;
+		uc = (uc & 0x07) << 18;
 		uc |= (pos[1] & 0x3f) << 12;
 		uc |= (pos[2] & 0x3f) << 6;
 		uc |= (pos[3] & 0x3f);
