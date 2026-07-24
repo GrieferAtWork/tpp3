@@ -80,9 +80,9 @@
  * optional second argument is included in the error message. */
 #define TPP_ASSERT(...) _TPP_ASSERT_##__VA_NARGS__(#!__VA_ARGS__)
 #define _TPP_ASSERT_1(condition) \
-	_TPP_ASSERT2(__TPP_EVAL(!!(condition)), #condition, "")
+	_TPP_ASSERT2(__TPP_EVAL(!!(#!condition)), #condition, "")
 #define _TPP_ASSERT_2(condition, message) \
-	_TPP_ASSERT2(__TPP_EVAL(!!(condition)), #condition, ": " #!message)
+	_TPP_ASSERT2(__TPP_EVAL(!!(#!condition)), #condition, ": " #!message)
 #define _TPP_ASSERT2(condition, condition_str, message_suffix) \
 	_TPP_ASSERT3(condition, #!condition_str, #!message_suffix)
 #define _TPP_ASSERT3(condition, condition_str, message_suffix) \

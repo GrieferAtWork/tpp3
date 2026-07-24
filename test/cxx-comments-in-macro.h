@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,24 +12,22 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
-// Copy Line-feeds
+#define foo(a) [a] // Comment
 
-#define clone(...) __VA_ARGS__ __VA_ARGS__
-TEST_EXPANDS(
-clone({
- int x = 42;
-})
-, "{\n int x = 42;\n} {\n int x = 42;\n}")
+#define expand2(x) x
+#define expand(x) expand2(x)
 
+/* HINT: This is a test that TPP2 used to fail, but has been fixed in TPP3 */
+TPP_ASSERT_EXPANDS("[10]", expand(foo(10)))
 
-
-
-
+#undef expand
+#undef expand2
+#undef foo
 

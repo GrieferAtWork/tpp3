@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,20 +12,31 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
-#define define undef
+TPP_ASSERT_EXPANDS("0", __TPP_COUNT_TOKENS(""))
+TPP_ASSERT_EXPANDS("1", __TPP_COUNT_TOKENS("foo"))
+TPP_ASSERT_EXPANDS("2", __TPP_COUNT_TOKENS("foo+"))
+TPP_ASSERT_EXPANDS("3", __TPP_COUNT_TOKENS("foo[]"))
 
-TEST_EXPANDS(FOOBAR, "FOOBAR")
-#define FOOBAR 42
-TEST_EXPANDS(FOOBAR, "42")
-TEST_EXPANDS(define FOOBAR 42, "undef 42 42")
-#undef FOOBAR
-#undef define
-TEST_EXPANDS(define FOOBAR 42, "define FOOBAR 42")
+#pragma TPP extension(push)
+#pragma TPP extension("-ftok-lf")
+TPP_ASSERT_EXPANDS("1", __TPP_COUNT_TOKENS("\n"))
+#pragma TPP extension("-fno-tok-lf")
+TPP_ASSERT_EXPANDS("0", __TPP_COUNT_TOKENS("\n"))
 
+#pragma TPP extension("-ftok-space")
+TPP_ASSERT_EXPANDS("1", __TPP_COUNT_TOKENS(" "))
+#pragma TPP extension("-fno-tok-space")
+TPP_ASSERT_EXPANDS("0", __TPP_COUNT_TOKENS(" "))
+
+#pragma TPP extension("-ftok-comment")
+TPP_ASSERT_EXPANDS("1", __TPP_COUNT_TOKENS("/* foo */"))
+#pragma TPP extension("-fno-tok-comment")
+TPP_ASSERT_EXPANDS("0", __TPP_COUNT_TOKENS("/* foo */"))
+#pragma TPP extension(pop)

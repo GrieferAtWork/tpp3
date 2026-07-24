@@ -25,6 +25,10 @@ for (local e: fs.dir(".").sorted()) {
 }
 ]]]*/
 #include "arguments-as-macro.h"
+#include "clone-linefeed.h"
+#include "count-tokens.h"
+#include "cxx-comments-in-macro.h"
+#include "define-directives.h"
 #include "macro-expansion.h"
 #include "unicode-names.h"
 /*[[[end]]]*/
