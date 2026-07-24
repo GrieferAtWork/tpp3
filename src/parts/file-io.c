@@ -85,7 +85,7 @@ tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
 #ifdef tpp_io_handle_IS_HANDLE
 	DWORD const dwDesiredAccess       = FILE_GENERIC_READ;
 	DWORD const dwShareMode           = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-	DWORD const dwFlagsAndAttributes  = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS;
+	DWORD const dwFlagsAndAttributes  = FILE_ATTRIBUTE_NORMAL;
 	DWORD const dwCreationDisposition = OPEN_EXISTING;
 	HANDLE hFile;
 	LPWSTR lpwFixedFilename;
