@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,27 +12,31 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
-// #pragma push_macro
+#define REDEF(m, b)  __pragma(tpp_exec("#undef " #m "\n#define " #m " " #b))
+#define Word  w1
+#define w1    REDEF(Word, w2)Hello
+#define w2    REDEF(Word, w3)There
+#define w3    REDEF(Word, w4)Good
+#define w4    REDEF(Word, w1)Sir!
 
-TEST_EXPANDS(int *a = new int();, "int *a = new int();")
-#define new __debug_new
-TEST_EXPANDS(int *b = new int();, "int *b = __debug_new int();")
-#pragma push_macro("new")
-#undef new
-#define new __alt_default_new
-TEST_EXPANDS(int *c = new int();, "int *c = __alt_default_new int();")
-#pragma pop_macro("new")
-TEST_EXPANDS(int *d = new int();, "int *d = __debug_new int();")
-TEST_EXPANDS(int *e = new int();, "int *e = __debug_new int();")
-#undef new
-TEST_EXPANDS(int *f = new int();, "int *f = new int();")
+TPP_ASSERT_EXPANDS("Hello There Good Sir!", Word Word Word Word)
+TPP_ASSERT_EXPANDS("Hello", Word)
+TPP_ASSERT_EXPANDS("There", Word)
+TPP_ASSERT_EXPANDS("Good", Word)
+TPP_ASSERT_EXPANDS("Sir!", Word)
+TPP_ASSERT_EXPANDS("Hello There", Word Word)
+TPP_ASSERT_EXPANDS("Good Sir!", Word Word)
 
-
-
+#undef w4
+#undef w3
+#undef w2
+#undef w1
+#undef Word
+#undef REDEF

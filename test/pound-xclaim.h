@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,34 +12,23 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
-TEST_EXPANDS(BEFORE, "BEFORE")
+#define STR(x) #x
+#define WARP0(x) STR(x)
+#define WARP1(x) STR(#!x)
 
-#if 0
+#define FOO 42
 
-#error An incomplete " in a disabled #error directive
-#error An incomplete ' in a disabled #error directive
-#error An incomplete """ in a disabled #error directive
-#error An incomplete ''' in a disabled #error directive
+TPP_ASSERT_EXPANDS("\"42\"", WARP0(FOO))
+TPP_ASSERT_EXPANDS("\"FOO\"", WARP1(FOO))
 
-#else
-
-#pragma warning(push, "-Wno-user") /* Hide warnings */
-#warning An incomplete " in an enabled #warning directive
-#warning An incomplete " in an enabled #warning directive
-#warning An incomplete " in an enabled #warning directive
-#warning An incomplete ' in an enabled #warning directive
-#warning An incomplete ' in an enabled #warning directive
-#warning An incomplete ' in an enabled #warning directive
-#warning An incomplete ' in an enabled #warning directive
-#pragma warning(pop)
-
-#endif
-
-TEST_EXPANDS(AFTER, "AFTER")
+#undef FOO
+#undef WARP1
+#undef WARP0
+#undef STR

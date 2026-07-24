@@ -20,7 +20,7 @@
 /*[[[deemon
 import fs;
 for (local e: fs.dir(".").sorted()) {
-	if (e !in ["utils", "_all.h"])
+	if (e !in ["utils", "_all.h", "misc"])
 		print(f'#include "{e}"');
 }
 ]]]*/
@@ -40,6 +40,13 @@ for (local e: fs.dir(".").sorted()) {
 #include "macro-escape-lf.h"
 #include "macro-expansion.h"
 #include "null-directive.h"
+#include "pound-xclaim.h"
+#include "prevent-macro-expansion.h"
+#include "push-pop-macro.h"
+#include "quotes-in-error.h"
+#include "self-redef.h"
+#include "stdc-6.10.3.5_5.h"
+#include "stdc-6.10.3.5_6.h"
 #include "stringize.h"
 #include "unicode-names.h"
 /*[[[end]]]*/

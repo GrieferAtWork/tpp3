@@ -57,12 +57,11 @@ TPP_ASSERT_EXPANDS("1", NARGS(
 #endif
 ))
 
-/* FIXME: This breaks for some reason */
-//TPP_ASSERT_EXPANDS("1", NARGS(
-//#if 1
-//	a
-//#endif
-//))
+TPP_ASSERT_EXPANDS("1", NARGS(
+#if 1
+	a
+#endif
+))
 
 #undef NARGS
 
