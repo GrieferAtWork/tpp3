@@ -72,4 +72,43 @@
 #define _TPP_ASSERT_EXPANDS_1(expected_str, unexpanded_str, actual_str)
 
 
+/* >> TPP_ASSERT(10 < 20)
+ * >> TPP_ASSERT(10 < 20, "Go home math. You're drunk")
+ *
+ * Assert that `__TPP_EVAL(!!(<first-argument>))` expands to `1`
+ * If that is not the case, trigger `#error`, in which case the
+ * optional second argument is included in the error message. */
+#define TPP_ASSERT(...) _TPP_ASSERT_##__VA_NARGS__(#!__VA_ARGS__)
+#define _TPP_ASSERT_1(condition) \
+	_TPP_ASSERT2(__TPP_EVAL(!!(condition)), #condition, "")
+#define _TPP_ASSERT_2(condition, message) \
+	_TPP_ASSERT2(__TPP_EVAL(!!(condition)), #condition, ": " #!message)
+#define _TPP_ASSERT2(condition, condition_str, message_suffix) \
+	_TPP_ASSERT3(condition, #!condition_str, #!message_suffix)
+#define _TPP_ASSERT3(condition, condition_str, message_suffix) \
+	_TPP_ASSERT4_##condition(condition_str, message_suffix)
+#define _TPP_ASSERT4_1(condition_str, message_suffix)
+#define _TPP_ASSERT4_0(condition_str, message_suffix) \
+	TPP_FAIL("Assertion failed: " #!condition_str #!message_suffix)
+
+
+/* >> TPP_ASSERT_WARNING("-Wmacros", ...)
+ * Assert that the second argument `caused_by` triggers a warning
+ * specified by the first argument during expansion. The warning
+ * that was triggered is not printed, but it is an error if it is
+ * not triggered, or is triggered more than once. */
+#define TPP_ASSERT_WARNING(name, caused_by...) \
+	TPP_ASSERT_WARNING_BEGIN(#!name)           \
+	#!caused_by                                \
+	TPP_ASSERT_WARNING_END(#!name)
+
+/* Used to implement `TPP_ASSERT_WARNING()`, but can also be used stand-alone */
+#define TPP_ASSERT_WARNING_BEGIN(name)                            \
+	__pragma(TPP warning(push, enable: #!name, suppress: #!name)) \
+	TPP_ASSERT(!__has_warning(#!name), "Warning " #name " could not be suppressed")
+#define TPP_ASSERT_WARNING_END(name) \
+	TPP_ASSERT(__has_warning(#!name), "Warning " #name " was not triggered") \
+	__pragma(TPP warning(pop))
+
+
 #pragma TPP extension(pop)

@@ -21763,9 +21763,53 @@ again:
 
 	TPP_TOKEN_ENCODESTRING_CASE('\\', "\\\\");
 	TPP_TOKEN_ENCODESTRING_CASE('\'', "\\\'");
-	TPP_TOKEN_ENCODESTRING_CASE('\"', "\\\"");
+	TPP_TOKEN_ENCODESTRING_CASE('"', "\\\"");
 	TPP_TOKEN_ENCODESTRING_CASE(TPP_ASCII_CR, "\\r");
 	TPP_TOKEN_ENCODESTRING_CASE(TPP_ASCII_LF, "\\n");
+#if TPP_HAVE_TRIGRAPHS
+	case '?':
+		/* Needed to prevent trigraphs being matched */
+		if (iter < end) {
+			if (iter[0] != '?')
+				goto again; /* Don't need to escape if next char isn't another '?' */
+			if ((iter + 1) < end) {
+				/* Only need to escape if final char isn't available, or
+				 * could form a valid trigraph sequence. */
+				switch (iter[1]) {
+				case '=':
+				case '(':
+				case ')':
+				case '\'':
+				case '<':
+				case '!':
+				case '>':
+				case '-':
+				case '/':
+					/* Yes: must escape! */
+					break;
+				default:
+					/* Not a valid trigraph */
+					++iter; /* Directly flush 2nd '?' */
+					if (*iter == '?')
+						++iter; /* Directly flush 3rd '?' */
+					goto again;
+				}
+			} else {
+				/* At least the first ?-character doesn't need to be escaped */
+				++iter;
+			}
+		} else {
+			/* If we're at the end of the string, must always escape '?',
+			 * because the caller may write some more text, in which case
+			 * said text may start with "?" and could accidentally form a
+			 * valid trigraph */
+		}
+		output_repr = (tpp_char const *)"\\?";
+#if TPP_HAVE_UNICODE
+		new_iter = iter;
+#endif /* TPP_HAVE_UNICODE */
+		break;
+#endif /* TPP_HAVE_TRIGRAPHS */
 
 #if TPP_HAVE_UNICODE
 	case 0xc2:
@@ -34260,12 +34304,12 @@ handle_ilseq:
 		uc |= (pos[1] & 0x3f);
 		break;
 	case 3:
-		uc  = (uc & 0x0f) << 12;
+		uc = (uc & 0x0f) << 12;
 		uc |= (pos[1] & 0x3f) << 6;
 		uc |= (pos[2] & 0x3f);
 		break;
 	case 4:
-		uc  = (uc & 0x07) << 18;
+		uc = (uc & 0x07) << 18;
 		uc |= (pos[1] & 0x3f) << 12;
 		uc |= (pos[2] & 0x3f) << 6;
 		uc |= (pos[3] & 0x3f);

@@ -22,25 +22,14 @@
 #define args 10,20,30
 #define func(a,b,c) a+b+c
 
-#pragma warning("-Wmacros")
-#if !__has_warning("-Wmacros")
-#error "Should now be enabled"
-#endif
-#pragma warning("-Wsup-macros")
-#if __has_warning("-Wmacros")
-#error "Should now be suppressed (once)"
-#endif
-
 /* warning[-Wmacros]: too few arguments for `func` which takes 3 when 1 were given */
 /* NOTE: Expands to:
  *  >> [func][(][args][)]
  *  >> [args][+][][+][]
  *  >> [10][,][20][,][30][+][+] */
+TPP_ASSERT_WARNING_BEGIN("-Wmacros")
 TPP_ASSERT_EXPANDS("10,20,30++", func(args))
-
-#if !__has_warning("-Wmacros")
-#error "Should have been triggered"
-#endif
+TPP_ASSERT_WARNING_END("-Wmacros")
 
 #undef func
 #undef args

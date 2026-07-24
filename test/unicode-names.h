@@ -44,6 +44,35 @@ TPP_ASSERT_EXPANDS("\"\\302\\205\"", __TPP_EVAL("\N{NEL}")) /* Alias... */
 TPP_ASSERT_EXPANDS("\"\\342\\200\\250\"", __TPP_EVAL("\N{LINE SEPARATOR}"))
 TPP_ASSERT_EXPANDS("\"\\342\\200\\251\"", __TPP_EVAL("\N{PARAGRAPH SEPARATOR}"))
 
+/* Also assert that trigraph sequences are escaped correctly */
+
+/* During string-escape, trigraphs are always escaped by prefixing the first ? with \ */
+TPP_ASSERT_EXPANDS("\"\\\??=\"", __TPP_EVAL("??" "="))
+TPP_ASSERT_EXPANDS("\"\\\??=\"", __TPP_EVAL("\??="))
+TPP_ASSERT_EXPANDS("\"\\\??=\"", __TPP_EVAL("?\?="))
+
+/* However, only valid trigraph sequences are escaped (remember that `???` *isn't* a trigraph) */
+TPP_ASSERT_EXPANDS("3", __TPP_EVAL(#"???"))
+TPP_ASSERT_EXPANDS("\"???\"", __TPP_EVAL("???"))
+TPP_ASSERT_EXPANDS("\"??a\"", __TPP_EVAL("??a"))
+
+/* These cases are special edge-cases, since the encoder must be prepared
+ * for anything to be written following a string-chunk that's being encoded
+ * As such, when strings *end* with ?-characters, those characters still
+ * need to be escaped */
+TPP_ASSERT_EXPANDS("\"\\?\"", __TPP_EVAL("?"))
+TPP_ASSERT_EXPANDS("\"?\\?\"", __TPP_EVAL("??"))
+
+/* When the input string itself contains a trigraph *while* `__TPP_EVAL()`
+ * reads its arguments, then that trigraph gets decoded *before* the output
+ * strings gets encoded again (so in this case the fact that the output string
+ * contains a '#' has nothing to do with the string encoder, but the fact that
+ * the input string it is given contains a '#'-character) */
+TPP_ASSERT_WARNING_BEGIN("-Wtrigraphs")
+TPP_ASSERT_EXPANDS("\"#\"", __TPP_EVAL("??="))
+TPP_ASSERT_WARNING_END("-Wtrigraphs")
+TPP_ASSERT_EXPANDS("\"#\"", __TPP_EVAL("#"))
+
 
 /* Also test XML-style encoding */
 TPP_ASSERT_EXPANDS("\"<\"", __TPP_EVAL("\&lt;"))
