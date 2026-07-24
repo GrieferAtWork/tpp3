@@ -485,14 +485,18 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 #endif /* TPP_MACRO_FLAG_VARIADIC */
 		{
 #if TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
-			tpp_errno error;
-			error = tpp_lexer_warnf(self, TPP_W_TOO_FEW_ARGUMENTS,
-			                        (char const *)macro_keyword->tk_kwd,
-			                        (unsigned int)macro_argc,
-			                        (unsigned int)argc);
-			if (TPP_ISERR(error)) {
-				tok = TPP_TOK_OFERR(error);
-				goto err_tok_macro_argbuf_rollback_arginfo;
+			if (argc == 0 && macro_argc == 1) {
+				/* This is something the standard explicitly allows (see `test/stdc-6.10.3.5_5.h`) */
+			} else {
+				tpp_errno error;
+				error = tpp_lexer_warnf(self, TPP_W_TOO_FEW_ARGUMENTS,
+				                        (char const *)macro_keyword->tk_kwd,
+				                        (unsigned int)macro_argc,
+				                        (unsigned int)argc);
+				if (TPP_ISERR(error)) {
+					tok = TPP_TOK_OFERR(error);
+					goto err_tok_macro_argbuf_rollback_arginfo;
+				}
 			}
 		}
 #endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
