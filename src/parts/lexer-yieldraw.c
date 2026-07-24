@@ -2021,8 +2021,8 @@ tpp_lexer_check_sol(tpp_lexer *tpp_restrict self,
 	if (chunk) {
 		tpp_char const *chunk_start = tpp_string_str(chunk);
 		tpp_char const *chunk_end = file->tf_end;
-		tpp_assert(pos >= chunk_start && pos <= chunk_end);
-		if (pos > chunk_start) {
+		if ((/*pos >= chunk_start &&*/ pos <= chunk_end) &&
+		    pos > chunk_start) {
 			tpp_char prev_ch = pos[-1];
 #if TPP_HAVE_UNICODE
 			if (tpp_ascii_islf(prev_ch))

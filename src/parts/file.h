@@ -191,7 +191,7 @@ struct tpp_lexer_arginfo;
 typedef struct tpp_file {
 	tpp_char const     *TPP_INTERNAL(tf_tpos);  /* [?..?][valid_if(DID_CALL(tpp_lexer_yieldraw))]
 	                                             * Start of last-loaded token (also valid in "tf_tprev"-files)
-	                                             * WARNING: This field is NOT maintained/updated by `tpp_file_*' APIs
+	                                             * WARNING: This field is NOT maintained/updated by `tpp_file_*` APIs
 	                                             *          It is only here so it overlaps with the lexer's token's
 	                                             *          "tt_start" field, such that said field is saved when
 	                                             *          a new file is pushed onto the #include-stack, and can
@@ -199,8 +199,18 @@ typedef struct tpp_file {
 	                                             *          lexer prints its #include-stack. */
 	/* Important: "tf_pos" and "tf_chunk" must come first, so they can shadow the tail of "tpp_token" */
 	tpp_char const     *TPP_INTERNAL(tf_pos);   /* [0..1][<= tf_end] File pointer to next unread byte. */
-	TPP_REF tpp_string *TPP_INTERNAL(tf_chunk); /* [0..1][const_if(tf_kind != TPP_FILE_KIND_IO)] Currently loaded text-chunk (mutable for text-files) */
-	tpp_char const     *TPP_INTERNAL(tf_end);   /* [0..1][>= tf_chunk->ts_str && <= tf_chunk->ts_str+tf_chunk->ts_len][const_if(tf_kind != TPP_FILE_KIND_IO)] End of effective file content (mutable for text-files) */
+	TPP_REF tpp_string *TPP_INTERNAL(tf_chunk); /* [0..1][const_if(tf_kind != TPP_FILE_KIND_IO)] Currently loaded text-chunk (mutable for text-files)
+	                                             * WARNING: `tf_tpos` / `tf_pos` / `tf_end` may *NOT* necessarily point *into* this chunk (they are only
+	                                             *          required to point into this chunk when when `tf_kind == TPP_FILE_KIND_IO`; all other kinds
+	                                             *          of files do not guaranty that the text being parsed belongs to the current chunk; only that
+	                                             *          the currently loaded chunk can be incref'd to prevent the text being parsed from being unloaded,
+	                                             *          except when whoever assigned the chunk knows that nothing will try to incref it,  as is whole
+	                                             *          point of the `TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS` flag).
+	                                             *          That can happen when (e.g.) `tpp_file_subtext_setchunk_fromstring()` is used to assign
+	                                             *          a chunk that doesn't actually contain the associated buffer (which can easily happen
+	                                             *          when `tpp_lexer_parsestring_cb()` is used with `TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS`,
+	                                             *          or for a number of other reasons) */
+	tpp_char const     *TPP_INTERNAL(tf_end);   /* [0..1][const_if(tf_kind != TPP_FILE_KIND_IO)] End of effective file content (mutable for text-files) */
 #if TPP_HAVE_INCLUDE_STACK
 	struct tpp_file    *TPP_INTERNAL(tf_prev);  /* [0..1] Parent file in #include stack */
 	struct tpp_file    *TPP_INTERNAL(tf_tprev); /* [0..1] Real parent for the purposes of message tracebacks (not affected by `tpp_file_autopopfile_pushoff') */

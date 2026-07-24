@@ -24419,8 +24419,14 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 #endif /* TPP_HAVE_FILE_DUMMY */
 		return TPP_LCINFO_INVALID;
 	}
-	tpp_assert(pos >= tpp_string_str(self->tf_chunk));
-	tpp_assert(pos <= tpp_string_end(self->tf_chunk));
+
+	/* Ensure that the given point is part of the currently loaded chunk.
+	 * It may not necessarily be for reasons such as `tpp_lexer_parsestring_cb()`
+	 * being used with `TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS`. In all of these
+	 * cases, LC-information is simply not available */
+	if (pos < tpp_string_str(self->tf_chunk) ||
+	    pos > tpp_string_end(self->tf_chunk))
+		return TPP_LCINFO_INVALID;
 
 	/* Check against the cache */
 #if TPP_HAVE_FILE_LC_CACHE
@@ -24713,9 +24719,9 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
 tpp_file_gethash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
 	tpp_hash result = 1;
-	if (self->tf_chunk) {
-		tpp_assert(pos >= tpp_string_str(self->tf_chunk));
-		tpp_assert(pos <= tpp_string_end(self->tf_chunk));
+	if (self->tf_chunk != NULL &&
+	    pos >= tpp_string_str(self->tf_chunk) &&
+	    pos <= tpp_string_end(self->tf_chunk)) {
 		if (self->tf_kind == TPP_FILE_KIND_IO)
 			result = self->tf_data.td_io.tff_hash;
 		result = tpp_file_hash_combine(result, tpp_string_str(self->tf_chunk),
@@ -35944,8 +35950,8 @@ tpp_lexer_check_sol(tpp_lexer *tpp_restrict self,
 	if (chunk) {
 		tpp_char const *chunk_start = tpp_string_str(chunk);
 		tpp_char const *chunk_end = file->tf_end;
-		tpp_assert(pos >= chunk_start && pos <= chunk_end);
-		if (pos > chunk_start) {
+		if ((/*pos >= chunk_start &&*/ pos <= chunk_end) &&
+		    pos > chunk_start) {
 			tpp_char prev_ch = pos[-1];
 #if TPP_HAVE_UNICODE
 			if (tpp_ascii_islf(prev_ch))
