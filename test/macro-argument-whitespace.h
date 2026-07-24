@@ -22,9 +22,9 @@
 /* Test the effects of the "macro-argument-whitespace" extension. */
 
 #define STR1(x) #x
-#pragma extension(push, "-fmacro-argument-whitespace")
+#pragma TPP extension(push, "-fmacro-argument-whitespace")
 #define STR2(x) #x
-#pragma extension(pop)
+#pragma TPP extension(pop)
 
 TPP_ASSERT_EXPANDS("\"foo\"",     STR1(foo))
 TPP_ASSERT_EXPANDS("\"foo\"",     STR1(  foo  ))

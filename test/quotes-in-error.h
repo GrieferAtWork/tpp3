@@ -66,7 +66,7 @@ TPP_ASSERT(!defined(SECOND_BLOCK_LEFT))
 
 #define SECOND_BLOCK_ENTERED
 
-#pragma warning(push, "-Wno-user") /* Hide warnings */
+#pragma TPP warning(push, "-Wno-user") /* Hide warnings */
 #warning An incomplete " in an enabled #warning directive
 #warning An incomplete """ in an enabled #warning directive
 #warning An incomplete R"( in an enabled #warning directive
@@ -74,7 +74,7 @@ TPP_ASSERT(!defined(SECOND_BLOCK_LEFT))
 #warning An incomplete ''' in an enabled #warning directive
 #warning An incomplete R'( in an enabled #warning directive
 #warning An incomplete /* in an enabled #warning directive
-#pragma warning(pop)
+#pragma TPP warning(pop)
 
 #define SECOND_BLOCK_LEFT
 

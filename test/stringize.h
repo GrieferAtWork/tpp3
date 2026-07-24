@@ -19,7 +19,7 @@
  */
 #include "utils/test.h"
 
-#pragma extension(push)
+#pragma TPP extension(push)
 #define WSTR(x) L ## #x
 #define WCHR(x) L ## #@x
 #define WSTR2(x) L ## # ## x
@@ -34,14 +34,14 @@ TPP_ASSERT_EXPANDS("L#@foo", WCHR2(foo))
 #define STR2(x) #x
 #define STR(x) STR2(x)
 
-#pragma extension("-ftok-cxx-wide-string-literal")
+#pragma TPP extension("-ftok-cxx-wide-string-literal")
 TPP_ASSERT(__TPP_COUNT_TOKENS(STR(WSTR(foo))) == 1)
-#pragma extension("-fno-tok-cxx-wide-string-literal")
+#pragma TPP extension("-fno-tok-cxx-wide-string-literal")
 TPP_ASSERT(__TPP_COUNT_TOKENS(STR(WSTR(foo))) == 2)
 
-#pragma extension("-ftok-cxx-wide-char-literal")
+#pragma TPP extension("-ftok-cxx-wide-char-literal")
 TPP_ASSERT(__TPP_COUNT_TOKENS(STR(WCHR(foo))) == 1)
-#pragma extension("-fno-tok-cxx-wide-char-literal")
+#pragma TPP extension("-fno-tok-cxx-wide-char-literal")
 TPP_ASSERT(__TPP_COUNT_TOKENS(STR(WCHR(foo))) == 2)
 
 #undef STR2
@@ -52,4 +52,4 @@ TPP_ASSERT(__TPP_COUNT_TOKENS(STR(WCHR(foo))) == 2)
 #undef WSTR2
 #undef WCHR2
 
-#pragma extension(pop)
+#pragma TPP extension(pop)

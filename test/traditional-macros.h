@@ -21,12 +21,12 @@
 
 /* Enabling "-ftraditional-macro" alters macro definitions
  * to follow more ~traditional~ expansion rules. */
-#pragma extension(push, "-ftraditional-macro")
+#pragma TPP extension(push, "-ftraditional-macro")
 #define T_CAT1(a, b) a/**/b
 #define T_STR1(x)    "x"
 #define T_CAT2(a, b) a##b
 #define T_STR2(x)    #x
-#pragma extension(pop)
+#pragma TPP extension(pop)
 
 #define N_CAT1(a, b) a/**/b
 #define N_STR1(x)    "x"
