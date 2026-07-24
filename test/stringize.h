@@ -17,24 +17,39 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*[[[deemon
-import fs;
-for (local e: fs.dir(".").sorted()) {
-	if (e !in ["utils", "_all.h"])
-		print(f'#include "{e}"');
-}
-]]]*/
-#include "arguments-as-macro.h"
-#include "clone-linefeed.h"
-#include "count-tokens.h"
-#include "cxx-comments-in-macro.h"
-#include "define-directives.h"
-#include "directives-in-macros.h"
-#include "directives-start-of-line.h"
-#include "double-counter.h"
-#include "glue.h"
-#include "macro-expansion.h"
-#include "stringize.h"
-#include "unicode-names.h"
-/*[[[end]]]*/
+#include "utils/test.h"
 
+#pragma extension(push)
+#define WSTR(x) L ## #x
+#define WCHR(x) L ## #@x
+#define WSTR2(x) L ## # ## x
+#define WCHR2(x) L ## #@ ## x
+
+TPP_ASSERT_EXPANDS("L\"foo\"", WSTR(foo))
+TPP_ASSERT_EXPANDS("L'foo'", WCHR(foo))
+
+TPP_ASSERT_EXPANDS("L#foo", WSTR2(foo))
+TPP_ASSERT_EXPANDS("L#@foo", WCHR2(foo))
+
+#define STR2(x) #x
+#define STR(x) STR2(x)
+
+#pragma extension("-ftok-cxx-wide-string-literal")
+TPP_ASSERT(__TPP_COUNT_TOKENS(STR(WSTR(foo))) == 1)
+#pragma extension("-fno-tok-cxx-wide-string-literal")
+TPP_ASSERT(__TPP_COUNT_TOKENS(STR(WSTR(foo))) == 2)
+
+#pragma extension("-ftok-cxx-wide-char-literal")
+TPP_ASSERT(__TPP_COUNT_TOKENS(STR(WCHR(foo))) == 1)
+#pragma extension("-fno-tok-cxx-wide-char-literal")
+TPP_ASSERT(__TPP_COUNT_TOKENS(STR(WCHR(foo))) == 2)
+
+#undef STR2
+#undef STR
+
+#undef WSTR
+#undef WCHR
+#undef WSTR2
+#undef WCHR2
+
+#pragma extension(pop)
