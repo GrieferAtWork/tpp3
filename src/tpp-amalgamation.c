@@ -48830,7 +48830,7 @@ tpp_lexer_yield_handle__Pragma(tpp_lexer *tpp_restrict self) {
 		return tok;
 	}
 	do {
-		tok = tpp_lexer_yieldpp_blocking(self);
+		tok = tpp_lexer_yield_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return tok;
@@ -49727,7 +49727,7 @@ tpp_lexer_yield_handle___TPP_COUNT_TOKENS(tpp_lexer *tpp_restrict self) {
 		return tok;
 	}
 	do {
-		tok = tpp_lexer_yieldpp_blocking(self);
+		tok = tpp_lexer_yield_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return tok;
@@ -49779,7 +49779,7 @@ tpp_lexer_yield_handle___TPP_STR_SIZE(tpp_lexer *tpp_restrict self) {
 		return tok;
 	}
 	do {
-		tok = tpp_lexer_yieldpp_blocking(self);
+		tok = tpp_lexer_yield_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return tok;
