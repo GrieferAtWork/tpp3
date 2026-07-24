@@ -1316,6 +1316,8 @@ tpp_lexer_process_pragma_tpp_exec(tpp_lexer *tpp_restrict self) {
 
 	/* Skip leading '(' */
 	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 
@@ -1393,6 +1395,8 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 
 	/* Skip leading '(' */
 	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('('));
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+		tok = tpp_lexer_yield_blocking(self);
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 
