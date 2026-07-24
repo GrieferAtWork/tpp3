@@ -2474,6 +2474,7 @@ again_yield_directive_iter:
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_BLANK) */
+		file->tf_pos = directive_iter; /* Tell caller to continue parsing *after* linefeed */
 		result = TPP_TOK_EOF;
 		break;
 #endif /* TPP_HAVE_CPP_BLANK */

@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,23 +12,41 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
 #
+#define OK1
 #
 #
 # /* Some Null directives */
+#define OK2
 # // Some Null directives
+#define OK3
 #
 #
 #
 
 #
+#!
+#define OK4
 #! Also this type of NULL-directive (for Hash-Bang compatibility)
+#define OK5
+#!
 #
 
+TPP_ASSERT(defined(OK1))
+TPP_ASSERT(defined(OK2))
+TPP_ASSERT(defined(OK3))
+TPP_ASSERT(defined(OK4))
+TPP_ASSERT(defined(OK5))
+
+#undef OK1
+#undef OK2
+#undef OK3
+#undef OK4
+#undef OK5

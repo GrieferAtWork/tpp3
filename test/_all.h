@@ -39,6 +39,7 @@ for (local e: fs.dir(".").sorted()) {
 #include "macro-call-conv.h"
 #include "macro-escape-lf.h"
 #include "macro-expansion.h"
+#include "null-directive.h"
 #include "stringize.h"
 #include "unicode-names.h"
 /*[[[end]]]*/
