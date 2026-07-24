@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,29 +12,46 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
-
-#define CAT(a,b) a ## b
-#define STR(x)   #x
+#include "utils/test.h"
 
 /* Enabling "-ftraditional-macro" alters macro definitions
  * to follow more ~traditional~ expansion rules. */
 #pragma extension(push, "-ftraditional-macro")
-#define T_CAT(a, b) a/**/b
-#define T_STR(x)    "x"
+#define T_CAT1(a, b) a/**/b
+#define T_STR1(x)    "x"
+#define T_CAT2(a, b) a##b
+#define T_STR2(x)    #x
 #pragma extension(pop)
 
-#define N_CAT(a, b) a/**/b
-#define N_STR(x)    "x"
+#define N_CAT1(a, b) a/**/b
+#define N_STR1(x)    "x"
+#define N_CAT2(a, b) a##b
+#define N_STR2(x)    #x
 
-TEST_EXPANDS(CAT(10, 20),   "1020")
-TEST_EXPANDS(STR(10),       "\"10\"")
-TEST_EXPANDS(T_CAT(10, 20), "1020")
-TEST_EXPANDS(T_STR(10),     "\"10\"")
-TEST_EXPANDS(N_CAT(10, 20), "10/**/20")
-TEST_EXPANDS(N_STR(10),     "\"x\"")
+TPP_ASSERT_EXPANDS("1020",           T_CAT1(10, 20))
+TPP_ASSERT_EXPANDS("10##20",         T_CAT2(10, 20))
+TPP_ASSERT_EXPANDS("\"10\"",         T_STR1(10))
+TPP_ASSERT_EXPANDS("#10",            T_STR2(10))
+TPP_ASSERT_EXPANDS("\"\"10\"\"",     T_STR1("10"))
+TPP_ASSERT_EXPANDS("#\"10\"",        T_STR2("10"))
+
+TPP_ASSERT_EXPANDS("10/**/20",       N_CAT1(10, 20))
+TPP_ASSERT_EXPANDS("1020",           N_CAT2(10, 20))
+TPP_ASSERT_EXPANDS("\"x\"",          N_STR1(10))
+TPP_ASSERT_EXPANDS("\"10\"",         N_STR2(10))
+TPP_ASSERT_EXPANDS("\"x\"",          N_STR1("10"))
+TPP_ASSERT_EXPANDS("\"\\\"10\\\"\"", N_STR2("10"))
+
+#undef T_CAT1
+#undef T_STR1
+#undef T_CAT2
+#undef T_STR2
+#undef N_CAT1
+#undef N_STR1
+#undef N_CAT2
+#undef N_STR2

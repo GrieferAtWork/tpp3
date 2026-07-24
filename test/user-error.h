@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,17 +12,22 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
-// named_va_args
+/* Both #warning and #error directives should produce -Wuser warnings.
+ * Note that despite the name, `#error' still produces a warning, only
+ * that this warning is normally set-up to be fatal, whilst #warning
+ * is normally set-up to be non-fatal. */
+TPP_ASSERT_WARNING_BEGIN("-Wuser")
+#warning User Warning
+TPP_ASSERT_WARNING_END("-Wuser")
 
-#define named_varargs(args...) args
-TEST_EXPANDS(named_varargs(),"")
-TEST_EXPANDS(named_varargs(,),",")
-TEST_EXPANDS(named_varargs(10),"10")
-TEST_EXPANDS(named_varargs(10,20),"10,20")
+TPP_ASSERT_WARNING_BEGIN("-Wuser")
+#error User Error
+TPP_ASSERT_WARNING_END("-Wuser")
+

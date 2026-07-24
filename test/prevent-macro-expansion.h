@@ -27,14 +27,16 @@
 
 TPP_ASSERT_EXPANDS(
 	"int min  (int,int);",
-	int min PREVENT_EXP_KWD (int,int);)
+	int min PREVENT_EXP_KWD (int,int);
+)
 TPP_ASSERT_EXPANDS(
 	"int min  (int,int);",
-	int min PREVENT_EXP_FNC() (int,int);)
-
+	int min PREVENT_EXP_FNC() (int,int);
+)
 TPP_ASSERT_EXPANDS(
 	"int ((int) < (int) ? (int) : (int));",
-	int min(int,int);)
+	int min(int,int);
+)
 
 #undef min
 #undef PREVENT_EXP_FNC

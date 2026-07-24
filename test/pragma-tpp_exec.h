@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,12 +12,12 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
 /* TPP Includes a builtin `#pragma tpp_exec("foo")' that can be used
  * to run preprocessor text whilst discarding all produced output.
@@ -27,19 +27,19 @@
 
 
 /* Use __pragma(tpp_exec()) to delete a macro while it's being expanded.
- * This used to fail due to a problem relating to recursive parenthesis
+ * In TPP2, this used to fail due to a problem relating to recursive parenthesis
  * tracking failing to skip the trailing `)' in `__pragma(tpp_exec(...))' */
 #define foo(x) x
-TEST_EXPANDS(foo(10 __pragma(tpp_exec("#undef foo")) 20), "10  20")
-TEST_EXPANDS(foo(10 __pragma(tpp_exec("#undef foo")) 20), "foo(10  20)")
-TEST_EXPANDS(foo(10 __pragma(tpp_exec("#undef foo")) 20), "foo(10  20)")
-TEST_EXPANDS(foo(10 __pragma(tpp_exec("#undef foo")) 20), "foo(10  20)")
+TPP_ASSERT_EXPANDS("10  20", foo(10 __pragma(tpp_exec("#undef foo")) 20))
+TPP_ASSERT_EXPANDS("foo(10  20)", foo(10 __pragma(tpp_exec("#undef foo")) 20))
+TPP_ASSERT_EXPANDS("foo(10  20)", foo(10 __pragma(tpp_exec("#undef foo")) 20))
+TPP_ASSERT_EXPANDS("foo(10  20)", foo(10 __pragma(tpp_exec("#undef foo")) 20))
 
 #define foo(x) x
-TEST_EXPANDS(foo(10 _Pragma("tpp_exec(\"#undef foo\")") 20), "10  20")
-TEST_EXPANDS(foo(10 _Pragma("tpp_exec(\"#undef foo\")") 20), "foo(10  20)")
-TEST_EXPANDS(foo(10 _Pragma("tpp_exec(\"#undef foo\")") 20), "foo(10  20)")
-TEST_EXPANDS(foo(10 _Pragma("tpp_exec(\"#undef foo\")") 20), "foo(10  20)")
+TPP_ASSERT_EXPANDS("10  20", foo(10 _Pragma("tpp_exec(\"#undef foo\")") 20))
+TPP_ASSERT_EXPANDS("foo(10  20)", foo(10 _Pragma("tpp_exec(\"#undef foo\")") 20))
+TPP_ASSERT_EXPANDS("foo(10  20)", foo(10 _Pragma("tpp_exec(\"#undef foo\")") 20))
+TPP_ASSERT_EXPANDS("foo(10  20)", foo(10 _Pragma("tpp_exec(\"#undef foo\")") 20))
 
 
 #define HACK_COUNTER_VALUE 0
@@ -52,13 +52,13 @@ TEST_EXPANDS(foo(10 _Pragma("tpp_exec(\"#undef foo\")") 20), "foo(10  20)")
 	"#define HACK_COUNTER_VALUE " STR(__TPP_EVAL(HACK_COUNTER_VALUE + 1)) "\n" \
 	))
 
-TEST_EXPANDS(HACK_COUNTER_VALUE, "0")
-TEST_EXPANDS(HACK_COUNTER_VALUE, "0")
-TEST_EXPANDS(HACK_COUNTER, "0")
-TEST_EXPANDS(HACK_COUNTER, "1")
-TEST_EXPANDS(HACK_COUNTER, "2")
-TEST_EXPANDS(HACK_COUNTER, "3")
-TEST_EXPANDS(HACK_COUNTER_VALUE, "4")
+TPP_ASSERT_EXPANDS("0", HACK_COUNTER_VALUE)
+TPP_ASSERT_EXPANDS("0", HACK_COUNTER_VALUE)
+TPP_ASSERT_EXPANDS("0", HACK_COUNTER)
+TPP_ASSERT_EXPANDS("1", HACK_COUNTER)
+TPP_ASSERT_EXPANDS("2", HACK_COUNTER)
+TPP_ASSERT_EXPANDS("3", HACK_COUNTER)
+TPP_ASSERT_EXPANDS("4", HACK_COUNTER_VALUE)
 
 /* When `HACK_COUNTER' isn't actually expanded, then the tpp_exec
  * code mustn't get executed (since it's skipped in its entirety).
@@ -67,8 +67,11 @@ TEST_EXPANDS(HACK_COUNTER_VALUE, "4")
 HIDE(HACK_COUNTER)
 HIDE(HACK_COUNTER)
 HIDE(HACK_COUNTER)
+#undef HIDE
 
-TEST_EXPANDS(HACK_COUNTER_VALUE, "4")
+TPP_ASSERT_EXPANDS("4", HACK_COUNTER_VALUE)
 
-
-
+#undef HACK_COUNTER_VALUE
+#undef STR2
+#undef STR
+#undef HACK_COUNTER

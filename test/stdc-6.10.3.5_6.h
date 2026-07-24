@@ -60,3 +60,13 @@ TPP_ASSERT_EXPANDS(
 	"\"hello\" \", world\"",
 	xglue(HIGH, LOW)
 )
+
+#undef str
+#undef xstr
+#undef debug
+#undef INCFILE
+#undef glue
+#undef xglue
+#undef HIGHLOW
+#undef LOW
+#undef xstr

@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2023 Griefer@Work                                       *
+/* Copyright (c) 2017-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,25 +12,34 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2017-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2017-2026 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#include "include/test.h"
+#include "utils/test.h"
 
-// ISO/IEC 9899:201x - 6.10.3.5 - 9
+// named_va_args
 
-#define debug(...)      fprintf(stderr, __VA_ARGS__)
-#define debug2(...)     fprintf(stderr, ##__VA_ARGS__)
-#define showlist(...)   puts(#__VA_ARGS__)
-#define report(test, ...) ((test)?puts(#test):\
-            printf(__VA_ARGS__))
-TEST_EXPANDS(debug();, "fprintf(stderr, );")
-TEST_EXPANDS(debug2();, "fprintf(stderr);")
-TEST_EXPANDS(debug("Flag");, "fprintf(stderr, \"Flag\");")
-TEST_EXPANDS(debug2("Flag");, "fprintf(stderr,\"Flag\");")
-TEST_EXPANDS(debug("X = %d\n", x);, "fprintf(stderr, \"X = %d\\n\", x);")
-TEST_EXPANDS(showlist(The first, second, and third items.);, "puts(\"The first, second, and third items.\");")
-TEST_EXPANDS(report(x>y, "x is %d but y is %d", x, y);, "((x>y)?puts(\"x>y\"):            printf(\"x is %d but y is %d\", x, y));")
-
+#define named_varargs(args...) args
+TPP_ASSERT_EXPANDS(
+	"",
+	named_varargs()
+)
+TPP_ASSERT_EXPANDS(
+	",",
+	named_varargs(,)
+)
+TPP_ASSERT_EXPANDS(
+	"10",
+	named_varargs(10)
+)
+TPP_ASSERT_EXPANDS(
+	"10,20",
+	named_varargs(10,20)
+)
+TPP_ASSERT_EXPANDS(
+	"10, 20",
+	named_varargs(10, 20)
+)
+#undef named_varargs
