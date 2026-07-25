@@ -6490,6 +6490,18 @@ TPP_DECL_END
 #define TPP_HAVE_PRAGMA_MESSAGE (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-message" */
 #endif /* !TPP_HAVE_PRAGMA_MESSAGE */
 
+/* Extra configuration for `#pragma message`: print a leading
+ * `TPP_CONFIG_FILE_AND_LINE_FORMAT` using the values
+ * that would also be printed by `__FILE__`, `__LINE__`, `__COLUMN__` */
+#ifndef TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
+#define TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION ((TPP_HAVE_PRAGMA_MESSAGE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fpragma-message-prints-location" */
+#endif /* !TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
+
+/* Extra configuration for `#pragma message`: print a trailing `\n` */
+#ifndef TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
+#define TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED ((TPP_HAVE_PRAGMA_MESSAGE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fpragma-message-omits-trailing-linefeed" */
+#endif /* !TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED */
+
 /* Support for: `#pragma error("...")` */
 #ifndef TPP_HAVE_PRAGMA_ERROR
 #define TPP_HAVE_PRAGMA_ERROR (TPP_HAVE_PRAGMA ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-error" */
@@ -7439,7 +7451,661 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE */
 
 /************************************************************************/
-/* Multi-char tokens                                                    */
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+
+/************************************************************************/
+/* IMPLICIT API FEATURES (PART 1)                                       */
+/************************************************************************/
+/* Provide a function `tpp_lexer_open_include_string()`
+ * to open the file associated with an `#include`-string. */
+#ifndef TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#if (TPP_HAVE_CPP_INCLUDE ||              \
+     TPP_HAVE_CPP_INCLUDE_NEXT ||         \
+     TPP_HAVE_CPP_IMPORT ||               \
+     TPP_HAVE_CPP_EMBED ||                \
+     TPP_HAVE_MACRO___has_include ||      \
+     TPP_HAVE_MACRO___has_include_next || \
+     TPP_HAVE_MACRO___has_embed ||        \
+     TPP_HAVE_MACRO___TPP_LOAD_FILE ||    \
+     TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
+#define TPP_HAVE_LEXER_OPEN_INCLUDE_STRING 1
+#else /* ... */
+#define TPP_HAVE_LEXER_OPEN_INCLUDE_STRING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
+
+/* Provide a function `tpp_lexer_decode_include_string()`
+ * to decode the actual contents of an `#include`-string. */
+#ifndef TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
+#if (TPP_PROFILE == TPP_PROFILE_ALL || \
+     TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
+#define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING 1
+#else /* ... */
+#define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_DECODE_INCLUDE_STRING */
+
+/* Provide a function `tpp_lexer_yield_include_string()` to
+ * do yield the next token with special handling if the next
+ * token's first character is `<` or `"`in which case the
+ * token is parsed as a #include-string */
+#ifndef TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
+#if (TPP_PROFILE == TPP_PROFILE_ALL || \
+     TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
+#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING 1
+#else /* ... */
+#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
+
+/* Enable support for `tpp_lexer_openfile()` */
+#ifndef TPP_HAVE_LEXER_OPENFILE
+#if (TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || \
+     TPP_HAVE_CPP_INCLUDE ||               \
+     TPP_HAVE_CPP_INCLUDE_NEXT ||          \
+     TPP_HAVE_CPP_IMPORT ||                \
+     TPP_HAVE_CPP_EMBED ||                 \
+     1) /* Always enable by default */
+#define TPP_HAVE_LEXER_OPENFILE 1
+#else /* ... */
+#define TPP_HAVE_LEXER_OPENFILE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_OPENFILE */
+
+/* Enable support for `tpp_lexer_openfile_ex()` */
+#ifndef TPP_HAVE_LEXER_OPENFILE_EX
+#if (TPP_HAVE_LEXER_OPENFILE &&                                           \
+     (TPP_HAVE_CPP_IMPORT ||                                              \
+      (TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next) || \
+      (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
+#define TPP_HAVE_LEXER_OPENFILE_EX 1
+#else /* ... */
+#define TPP_HAVE_LEXER_OPENFILE_EX 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
+
+/* Provide a function `tpp_file_getrealfilenamekwd()` */
+#ifndef TPP_HAVE_FILE_GETREALFILENAMEKWD
+#if (TPP_PROFILE == TPP_PROFILE_ALL || \
+     TPP_HAVE_PRAGMA_ONCE)
+#define TPP_HAVE_FILE_GETREALFILENAMEKWD 1
+#else /* ... */
+#define TPP_HAVE_FILE_GETREALFILENAMEKWD 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_GETREALFILENAMEKWD */
+
+/* Enable support for detecting `#ifndef`-style `#include`-guards.
+ * Has no effect on semantics/behavior, but tends to speed up
+ * processing of files with many (repeated) includes:
+ *
+ * `foo.h`:
+ * ```c
+ * #ifndef FOO_H
+ * #define FOO_H
+ * ...
+ * #endif // !FOO_H
+ * ```
+ *
+ * `bar.h`:
+ * ```c
+ * #include "foo.h"
+ * ```
+ *
+ * `bar.c`:
+ * ```c
+ * #include "bar.h" // Already includes "foo.h"
+ * #include "foo.h" // This one's a no-op (won't even try to open("foo.h"))
+ * #undef FOO_H
+ * #include "foo.h" // This one once again opens "foo.h", behaving as expected
+ * ```
+ */
+#ifndef TPP_HAVE_IFNDEF_INCLUDE_GUARDS
+#if ((TPP_HAVE_CPP_IMPORT ||        \
+      TPP_HAVE_CPP_INCLUDE ||       \
+      TPP_HAVE_CPP_INCLUDE_NEXT) && \
+     TPP_HAVE_CPP_IF_ELSE_ENDIF &&  \
+     TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_IFNDEF_INCLUDE_GUARDS 1
+#else /* ... */
+#define TPP_HAVE_IFNDEF_INCLUDE_GUARDS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+
+/* Enable support for TPP generating new `tpp_keyword` definitions
+ * on-the-fly, as keywords are parsed (the first time any unique
+ * keyword is parsed, `tpp_keywords_newkeyword()` is used to give
+ * it a unique ID and `tpp_keyword` structure). This is also needed
+ * for macros and a number of other features that need to store some
+ * kind of state alongside keywords. */
+#ifndef TPP_HAVE_USER_KEYWORDS
+#if (TPP_HAVE_PROFILE_NOT_MINIMAL ||                  \
+     TPP_HAVE_FILE_GETREALFILENAMEKWD ||              \
+     TPP_HAVE_CPP_MACROS ||                           \
+     TPP_HAVE_PRAGMA_ONCE ||                          \
+     TPP_HAVE_CPP_IMPORT ||                           \
+     TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+     TPP_HAVE_CLANG_MACRO___has_extension ||          \
+     TPP_HAVE_CLANG_MACRO___has_feature ||            \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
+     TPP_HAVE_MACRO___is_deprecated ||                \
+     TPP_HAVE_MACRO___is_poisoned ||                  \
+     TPP_HAVE_PRAGMA_DEPRECATED ||                    \
+     TPP_HAVE_PRAGMA_GCC_POISON ||                    \
+     TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||         \
+     TPP_HAVE_IFNDEF_INCLUDE_GUARDS ||                \
+     TPP_HAVE_KEYWORD_INCLCOUNT ||                    \
+     TPP_HAVE_PRAGMA_PUSH_MACRO ||                    \
+     TPP_HAVE_MACRO___TPP_COUNTER ||                  \
+     TPP_HAVE_KEYWORD_USERDATA)
+#define TPP_HAVE_USER_KEYWORDS 1
+#else /* ... */
+#define TPP_HAVE_USER_KEYWORDS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_USER_KEYWORDS */
+
+/* Provide a couple of functions to decode the data contained within strings:
+ * - `tpp_lexer_decodestring_config`
+ * - `tpp_lexer_decodestring()`
+ * - `tpp_lexer_parsestring_ex()`
+ * - `tpp_lexer_parsestring()`
+ * - `tpp_lexer_parsestring_cb()`
+ */
+#ifndef TPP_HAVE_LEXER_DECODESTRING
+#define TPP_HAVE_LEXER_DECODESTRING (TPP_HAVE_TOK_STRINGLIKE)
+#endif /* !TPP_HAVE_LEXER_DECODESTRING */
+
+/* Provide an optional performance-optimization flag `TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS`
+ * that may be passed to `tpp_lexer_parsestring_cb()` to speed up decoding of certain kinds
+ * of strings (by slightly weakening what callbacks are allowed to do when this flag is set) */
+#ifndef TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
+#define TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS \
+	(TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+
+
+/************************************************************************/
+/* LEXER HOOK CONFIGURATION                                             */
+/************************************************************************/
+
+/* Possible values for "TPP_HAVE_*_HOOK" feature macros */
+#define TPP_HOOK_DISABLED      0    /* Hook is hard-disabled (same as a no-op implementation) */
+#define TPP_HOOK_CONST_USER    1    /* Hook is hard-coded to call a user-supplied implementation "TPP_HOOK_FOO" (or no-op if "TPP_HOOK_FOO" isn't defined) */
+#define TPP_HOOK_CONST_BUILTIN 2    /* Hook is hard-coded to call a builtin implementation (same as TPP_HOOK_DISABLED if there is no builtin) */
+#define TPP_HOOK_RT_USER       (-1) /* Hook is per-lexer configurable; defaults to user-supplied implementation "TPP_HOOK_FOO" (or no-op if "TPP_HOOK_FOO" isn't defined) */
+#define TPP_HOOK_RT_BUILTIN    (-2) /* Hook is per-lexer configurable; defaults to builtin implementation (or no-op if there is no builtin) */
+#define TPP_HOOK_RT_NOOP       (-3) /* Hook is per-lexer configurable; defaults to no-op implementation */
+
+#define TPP_HOOK_USESBUILTIN(x) ((x) == TPP_HOOK_CONST_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN)
+#define TPP_HOOK_USESUSER(x)    ((x) == TPP_HOOK_CONST_USER || (x) == TPP_HOOK_RT_USER)
+#define TPP_HOOK_ISCONST(x)     ((x) > 0)
+#define TPP_HOOK_ISRT(x)        ((x) < 0)
+
+/* Default configuration specifying how required hooks should be linked. */
+#ifndef TPP_HOOK_DEFAULT_BUILTIN
+#define TPP_HOOK_DEFAULT_BUILTIN ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_RT_BUILTIN : TPP_HOOK_CONST_BUILTIN)
+#endif /* !TPP_HOOK_DEFAULT_BUILTIN */
+#ifndef TPP_HOOK_DEFAULT_USER
+#define TPP_HOOK_DEFAULT_USER ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_RT_USER : TPP_HOOK_CONST_USER)
+#endif /* !TPP_HOOK_DEFAULT_USER */
+#ifndef TPP_HOOK_DEFAULT_NOOP
+#define TPP_HOOK_DEFAULT_NOOP ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_RT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_DEFAULT_NOOP */
+
+
+/* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
+ * Called by `tpp_lexer_warnf()` to print warning messages
+ * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
+ * @param: arg: The current lexer (`tpp_lexer *`) */
+#ifndef TPP_HAVE_WARNPRINTER_HOOK
+#ifdef TPP_HOOK_WARNPRINTER
+#define TPP_HAVE_WARNPRINTER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_WARNPRINTER */
+#define TPP_HAVE_WARNPRINTER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_WARNPRINTER */
+#endif /* !TPP_HAVE_WARNPRINTER_HOOK */
+#if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_WARNPRINTER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_WARNPRINTER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_WARNPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_WARNPRINTER_HOOK
+#define TPP_HAVE_WARNPRINTER_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_WARNPRINTER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_WARNPRINTER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_WARNPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_WARNPRINTER_HOOK
+#define TPP_HAVE_WARNPRINTER_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_WARNPRINTER) && !TPP_HOOK_USESUSER(TPP_HAVE_WARNPRINTER_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_WARNPRINTER' is defined, but 'TPP_HAVE_WARNPRINTER_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_WARNPRINTER && !TPP_HOOK_USESUSER(TPP_HAVE_WARNPRINTER_HOOK) */
+#ifndef TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
+#define TPP_HAVE_BUILTIN_WARNPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNPRINTER_HOOK)
+#endif /* !TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
+
+/* >> tpp_errno TPP_HOOK_WARNHANDLER(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
+ * Called by `tpp_lexer_warnf()` to handle warning notifications. Can be
+ * overwritten to implement custom behavior in regards to handling of warnings.
+ * @param: info:       Warning context location
+ * @param: invokeinfo: Warning invocation method
+ * @param: id:         Warning ID
+ * @param: arg:        Variable arguments passed to warning
+ * @return: TPP_EOK:        Success (warning was emitted)
+ * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
+ * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+#ifndef TPP_HAVE_WARNHANDLER_HOOK
+#ifdef TPP_HOOK_WARNHANDLER
+#define TPP_HAVE_WARNHANDLER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_WARNHANDLER */
+#define TPP_HAVE_WARNHANDLER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_WARNHANDLER */
+#endif /* !TPP_HAVE_WARNHANDLER_HOOK */
+#if TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_WARNHANDLER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_WARNHANDLER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_WARNHANDLER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_WARNHANDLER_HOOK
+#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_WARNHANDLER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_WARNHANDLER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_WARNHANDLER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_WARNHANDLER_HOOK
+#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_WARNHANDLER) && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_WARNHANDLER' is defined, but 'TPP_HAVE_WARNHANDLER_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_WARNHANDLER && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK) */
+#ifndef TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
+#define TPP_HAVE_BUILTIN_WARNHANDLER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNHANDLER_HOOK)
+#endif /* !TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
+
+/* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_MESGPRINTER, arg, text, num_bytes);
+ * Used by `#pragma message` to print messages
+ * @param: arg: The current lexer (`tpp_lexer *`) */
+#ifndef TPP_HAVE_MESGPRINTER_HOOK
+#ifdef TPP_HOOK_MESGPRINTER
+#define TPP_HAVE_MESGPRINTER_HOOK (TPP_HAVE_PRAGMA_MESSAGE ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_MESGPRINTER */
+#define TPP_HAVE_MESGPRINTER_HOOK (TPP_HAVE_PRAGMA_MESSAGE ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_MESGPRINTER */
+#endif /* !TPP_HAVE_MESGPRINTER_HOOK */
+#if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_MESGPRINTER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_MESGPRINTER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_MESGPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MESGPRINTER_HOOK
+#define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_MESGPRINTER)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_MESGPRINTER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_MESGPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MESGPRINTER_HOOK
+#define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_MESGPRINTER) && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_MESGPRINTER' is defined, but 'TPP_HAVE_MESGPRINTER_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MESGPRINTER && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK) */
+#ifndef TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
+#define TPP_HAVE_BUILTIN_MESGPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_MESGPRINTER_HOOK)
+#endif /* !TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
+
+/* >> tpp_errno TPP_HOOK_PARSEEXPR(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
+ * User-defined callback for parsing `#if`-style expressions
+ * - This callback is invoked in a context where `self` points
+ *   before the expression's first token (meaning that this
+ *   callback is responsible to do the initial yield using
+ *   whatever method it wants to use).
+ * - When it is known that the expression has finite length,
+ *   as in: it has to end before EOF, or at the next unmatched
+ *   `)`-token, the caller will have configured the lexer's
+ *   current EOF accordingly (and disabled file-popping)
+ * - When this function returns an error, the caller will rewind
+ *   back to the start of the expression (or even further, if
+ *   applicable; meaning this callback doesn't need to concern
+ *   itself with rollback)
+ *
+ * @return: TPP_EOK:         Success (`*result` was initialized)
+ * @return: TPP_ENOMEM:      Out of memory
+ * @return: TPP_EIO:         Filesystem I/O operation failed
+ * @return: TPP_EWOULDBLOCK: Operation would block
+ * @return: TPP_ELEXERROR:   A lexer error happened
+ * @return: TPP_EWARNPRINT:  Error while printing a warning */
+#ifndef TPP_HAVE_PARSEEXPR_HOOK
+#ifdef TPP_HOOK_PARSEEXPR
+#define TPP_HAVE_PARSEEXPR_HOOK ((TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_PARSEEXPR */
+#define TPP_HAVE_PARSEEXPR_HOOK ((TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_PARSEEXPR */
+#endif /* !TPP_HAVE_PARSEEXPR_HOOK */
+#if TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_PARSEEXPR)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_PARSEEXPR_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_PARSEEXPR' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_PARSEEXPR_HOOK
+#define TPP_HAVE_PARSEEXPR_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_PARSEEXPR)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_PARSEEXPR_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_PARSEEXPR' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_PARSEEXPR_HOOK
+#define TPP_HAVE_PARSEEXPR_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_PARSEEXPR) && !TPP_HOOK_USESUSER(TPP_HAVE_PARSEEXPR_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_PARSEEXPR' is defined, but 'TPP_HAVE_PARSEEXPR_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_PARSEEXPR && !TPP_HOOK_USESUSER(TPP_HAVE_PARSEEXPR_HOOK) */
+#ifndef TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
+#define TPP_HAVE_BUILTIN_PARSEEXPR_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_PARSEEXPR_HOOK)
+#endif /* !TPP_HAVE_BUILTIN_PARSEEXPR_HOOK */
+
+/* >> tpp_errno TPP_HOOK_UNKNOWN_PRAGMA(tpp_lexer *tpp_restrict self);
+ * Called whenever a `#pragma` is encountered that is not recognized.
+ * When called, the lexer is set-up to point at the first token after the `#pragma`.
+ * @return: TPP_EOK:    Pragma has been handled
+ * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
+#ifdef TPP_HOOK_UNKNOWN_PRAGMA
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK ((TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_UNKNOWN_PRAGMA */
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK ((TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_UNKNOWN_PRAGMA */
+#endif /* !TPP_HAVE_UNKNOWN_PRAGMA_HOOK */
+#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_UNKNOWN_PRAGMA)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_UNKNOWN_PRAGMA' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_UNKNOWN_PRAGMA)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_UNKNOWN_PRAGMA' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK /* There is no builtin version */
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK /* There is no builtin version */
+#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_PRAGMA) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_UNKNOWN_PRAGMA' is defined, but 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_PRAGMA && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_NEW_DEPENDENCY(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+ * Called whenever some file is `#include`-ed for the first time
+ * @param: filename_kwd: Then `tpp_keyword` used to describe the file's name. The actual
+ *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`. */
+#ifndef TPP_HAVE_NEW_DEPENDENCY_HOOK
+#ifdef TPP_HOOK_NEW_DEPENDENCY
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_NEW_DEPENDENCY */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_NEW_DEPENDENCY */
+#endif /* !TPP_HAVE_NEW_DEPENDENCY_HOOK */
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_NEW_DEPENDENCY)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_NEW_DEPENDENCY_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_NEW_DEPENDENCY' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_NEW_DEPENDENCY)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_NEW_DEPENDENCY_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_NEW_DEPENDENCY' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK /* There is no builtin version */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_NEW_DEPENDENCY_HOOK /* There is no builtin version */
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_NEW_DEPENDENCY) && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_NEW_DEPENDENCY' is defined, but 'TPP_HAVE_NEW_DEPENDENCY_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_NEW_DEPENDENCY && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_IDENT_SCCS(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+ * Called to handle `#ident` and `#sccs` directives
+ * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
+ * @param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d
+ *                      if you want to keep `comment_str` alive. If NULL, then the
+ *                      given `comment_str` is statically allocated and doesn't need
+ *                      any chunk to stay alive
+ * @param: comment_str: The source comment that should be inserted
+ * @param: comment_len: Length of `comment_str` in bytes
+ * @return: TPP_EOK:    Success
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_IDENT_SCCS_HOOK
+#ifdef TPP_HOOK_IDENT_SCCS
+#define TPP_HAVE_IDENT_SCCS_HOOK (TPP_HAVE_CPP_IDENT_SCCS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_IDENT_SCCS */
+#define TPP_HAVE_IDENT_SCCS_HOOK (TPP_HAVE_CPP_IDENT_SCCS ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_IDENT_SCCS */
+#endif /* !TPP_HAVE_IDENT_SCCS_HOOK */
+#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_IDENT_SCCS)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_IDENT_SCCS_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_IDENT_SCCS' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_IDENT_SCCS_HOOK
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_IDENT_SCCS)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_IDENT_SCCS_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_IDENT_SCCS' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_IDENT_SCCS_HOOK
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_IDENT_SCCS_HOOK /* There is no builtin version */
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_IDENT_SCCS_HOOK /* There is no builtin version */
+#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_IDENT_SCCS) && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_SYSTEM_INCLUDE_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+ * Extra callback invoked by `tpp_lexer_foreach_include_path()` at diffrent
+ * points during the process of enumerating include paths. This callback is
+ * then allowed to enumerate some additional include paths that may exist, but
+ * for one reason or another (mainly: speed) aren't known to TPP via its system
+ * include path APIs (`tpp_lexer_includes_add*`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * @return: * :         First non-TPP_ENOENT return value of `cb`
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+#ifdef TPP_HOOK_SYSTEM_INCLUDE_PATH
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_SYSTEM_INCLUDE_PATH */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_SYSTEM_INCLUDE_PATH */
+#endif /* !TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
+#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_SYSTEM_INCLUDE_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_SYSTEM_INCLUDE_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK /* There is no builtin version */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK /* There is no builtin version */
+#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
+/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
+ * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
+ * This hook can be used to define additional, user-defined escape sequences, or any other
+ * arbitrary behavior to-be performed when specific escape-sequences are found.
+ * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
+ * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
+ * it before returning
+ * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
+ *                 [out] First character no longer part of `\`-escape sequence (if recognized)
+ *                 [out] Unchanged (if not recognized)
+ * @param: end:    The of containing string sequence
+ * @param: config: Identically-named argument of `tpp_lexer_decodestring()`
+ * @return: * :    Sum of positive return values of `data_printer` and `utf8_printer`
+ * @return: < 0:   First negative return value of `data_printer` or `utf8_printer`
+ * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
+ *                 (please leave `*p_pos` unchanged in this case). The caller will
+ *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
+#ifndef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+#ifdef TPP_HOOK_UNKNOWN_STRING_ESCAPE
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_UNKNOWN_STRING_ESCAPE */
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_UNKNOWN_STRING_ESCAPE */
+#endif /* !TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK */
+#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK /* There is no builtin version */
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK /* There is no builtin version */
+#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' is defined, but 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_STRING_ESCAPE && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_RAISE_LEXERROR(tpp_lexer *tpp_restrict self);
+ * Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
+ * This hook can be used to do additional state changes that may be necessary by the
+ * hosting application in order to handle the resulting `TPP_ELEXERROR`
+ * @return: TPP_EOK: Have `tpp_lexer_warnf()` still return `TPP_ELEXERROR`
+ * @return: * :      Make `tpp_lexer_warnf()` return this instead of `TPP_ELEXERROR` */
+#ifndef TPP_HAVE_RAISE_LEXERROR_HOOK
+#ifdef TPP_HOOK_RAISE_LEXERROR
+#define TPP_HAVE_RAISE_LEXERROR_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_RAISE_LEXERROR */
+#define TPP_HAVE_RAISE_LEXERROR_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_RAISE_LEXERROR */
+#endif /* !TPP_HAVE_RAISE_LEXERROR_HOOK */
+#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_RAISE_LEXERROR)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_RAISE_LEXERROR_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_RAISE_LEXERROR' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_RAISE_LEXERROR_HOOK
+#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_RAISE_LEXERROR)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_RAISE_LEXERROR_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_RAISE_LEXERROR' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_RAISE_LEXERROR_HOOK
+#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_RAISE_LEXERROR_HOOK /* There is no builtin version */
+#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_RAISE_LEXERROR_HOOK /* There is no builtin version */
+#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_RAISE_LEXERROR) && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_RAISE_LEXERROR' is defined, but 'TPP_HAVE_RAISE_LEXERROR_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_RAISE_LEXERROR && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_ISFLOATSUFFIX(tpp_lexer *tpp_restrict self, tpp_char const *pos);
+ * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
+ * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
+ * part of the float-token (in the form of a float-suffix), or if this is actually be
+ * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
+ * with `pos` pointing at the `f` (though additional characters thereafter may not be
+ * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+ * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
+ * @return: TPP_ENOENT: It's not a float suffix
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_ISFLOATSUFFIX_HOOK
+#ifdef TPP_HOOK_ISFLOATSUFFIX
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_SMART_FLOAT_TOKENS) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_ISFLOATSUFFIX */
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_SMART_FLOAT_TOKENS) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_ISFLOATSUFFIX */
+#endif /* !TPP_HAVE_ISFLOATSUFFIX_HOOK */
+#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_ISFLOATSUFFIX)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_ISFLOATSUFFIX_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_ISFLOATSUFFIX' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_ISFLOATSUFFIX)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_ISFLOATSUFFIX_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_ISFLOATSUFFIX' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK /* There is no builtin version */
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_ISFLOATSUFFIX_HOOK /* There is no builtin version */
+#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_ISFLOATSUFFIX) && !TPP_HOOK_USESUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_ISFLOATSUFFIX' is defined, but 'TPP_HAVE_ISFLOATSUFFIX_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_ISFLOATSUFFIX && !TPP_HOOK_USESUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+
+
+/************************************************************************/
+/* MULTI-CHAR TOKENS                                                    */
 /************************************************************************/
 
 /* "!!"
@@ -8141,613 +8807,6 @@ TPP_DECL_END
 
 
 
-/************************************************************************/
-/* IMPLICIT API FEATURES (PART 1)                                       */
-/************************************************************************/
-/* Provide a function `tpp_lexer_open_include_string()`
- * to open the file associated with an `#include`-string. */
-#ifndef TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
-#define TPP_HAVE_LEXER_OPEN_INCLUDE_STRING \
-	(TPP_HAVE_CPP_INCLUDE ||               \
-	 TPP_HAVE_CPP_INCLUDE_NEXT ||          \
-	 TPP_HAVE_CPP_IMPORT ||                \
-	 TPP_HAVE_CPP_EMBED ||                 \
-	 TPP_HAVE_MACRO___has_include ||       \
-	 TPP_HAVE_MACRO___has_include_next ||  \
-	 TPP_HAVE_MACRO___has_embed ||         \
-	 TPP_HAVE_MACRO___TPP_LOAD_FILE ||     \
-	 TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
-#endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
-
-/* Provide a function `tpp_lexer_decode_include_string()`
- * to decode the actual contents of an `#include`-string. */
-#ifndef TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
-#define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
-#endif /* !TPP_HAVE_LEXER_DECODE_INCLUDE_STRING */
-
-/* Provide a function `tpp_lexer_yield_include_string()` to
- * do yield the next token with special handling if the next
- * token's first character is `<` or `"`in which case the
- * token is parsed as a #include-string */
-#ifndef TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
-#define TPP_HAVE_LEXER_YIELD_INCLUDE_STRING (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
-#endif /* !TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
-
-/* Enable support for `tpp_lexer_openfile()` */
-#ifndef TPP_HAVE_LEXER_OPENFILE
-#if (TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || \
-     TPP_HAVE_CPP_INCLUDE ||               \
-     TPP_HAVE_CPP_INCLUDE_NEXT ||          \
-     TPP_HAVE_CPP_IMPORT ||                \
-     TPP_HAVE_CPP_EMBED ||                 \
-     1) /* Always enable by default */
-#define TPP_HAVE_LEXER_OPENFILE 1
-#else /* ... */
-#define TPP_HAVE_LEXER_OPENFILE 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_OPENFILE */
-
-/* Enable support for `tpp_lexer_openfile_ex()` */
-#ifndef TPP_HAVE_LEXER_OPENFILE_EX
-#if (TPP_HAVE_LEXER_OPENFILE &&                                           \
-     (TPP_HAVE_CPP_IMPORT ||                                              \
-      (TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next) || \
-      (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
-#define TPP_HAVE_LEXER_OPENFILE_EX 1
-#else /* ... */
-#define TPP_HAVE_LEXER_OPENFILE_EX 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-
-/* Provide a function `tpp_file_getrealfilenamekwd()` */
-#ifndef TPP_HAVE_FILE_GETREALFILENAMEKWD
-#define TPP_HAVE_FILE_GETREALFILENAMEKWD (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_ONCE)
-#endif /* !TPP_HAVE_FILE_GETREALFILENAMEKWD */
-
-/* Enable support for detecting `#ifndef`-style `#include`-guards.
- * Has no effect on semantics/behavior, but tends to speed up
- * processing of files with many (repeated) includes:
- *
- * `foo.h`:
- * ```c
- * #ifndef FOO_H
- * #define FOO_H
- * ...
- * #endif // !FOO_H
- * ```
- *
- * `bar.h`:
- * ```c
- * #include "foo.h"
- * ```
- *
- * `bar.c`:
- * ```c
- * #include "bar.h" // Already includes "foo.h"
- * #include "foo.h" // This one's a no-op (won't even try to open("foo.h"))
- * #undef FOO_H
- * #include "foo.h" // This one once again opens "foo.h", behaving as expected
- * ```
- */
-#ifndef TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-#if ((TPP_HAVE_CPP_IMPORT ||        \
-      TPP_HAVE_CPP_INCLUDE ||       \
-      TPP_HAVE_CPP_INCLUDE_NEXT) && \
-     TPP_HAVE_CPP_IF_ELSE_ENDIF &&  \
-     TPP_HAVE_PROFILE_NOT_MINIMAL)
-#define TPP_HAVE_IFNDEF_INCLUDE_GUARDS 1
-#else /* ... */
-#define TPP_HAVE_IFNDEF_INCLUDE_GUARDS 0
-#endif /* !... */
-#endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
-
-/* Enable support for TPP generating new `tpp_keyword` definitions
- * on-the-fly, as keywords are parsed (the first time any unique
- * keyword is parsed, `tpp_keywords_newkeyword()` is used to give
- * it a unique ID and `tpp_keyword` structure). This is also needed
- * for macros and a number of other features that need to store some
- * kind of state alongside keywords. */
-#ifndef TPP_HAVE_USER_KEYWORDS
-#if (TPP_HAVE_PROFILE_NOT_MINIMAL ||                  \
-     TPP_HAVE_FILE_GETREALFILENAMEKWD ||              \
-     TPP_HAVE_CPP_MACROS ||                           \
-     TPP_HAVE_PRAGMA_ONCE ||                          \
-     TPP_HAVE_CPP_IMPORT ||                           \
-     TPP_HAVE_CLANG_MACRO___has_attribute ||          \
-     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
-     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
-     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
-     TPP_HAVE_CLANG_MACRO___has_extension ||          \
-     TPP_HAVE_CLANG_MACRO___has_feature ||            \
-     TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
-     TPP_HAVE_MACRO___is_deprecated ||                \
-     TPP_HAVE_MACRO___is_poisoned ||                  \
-     TPP_HAVE_PRAGMA_DEPRECATED ||                    \
-     TPP_HAVE_PRAGMA_GCC_POISON ||                    \
-     TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||         \
-     TPP_HAVE_IFNDEF_INCLUDE_GUARDS ||                \
-     TPP_HAVE_KEYWORD_INCLCOUNT ||                    \
-     TPP_HAVE_PRAGMA_PUSH_MACRO ||                    \
-     TPP_HAVE_MACRO___TPP_COUNTER ||                  \
-     TPP_HAVE_KEYWORD_USERDATA)
-#define TPP_HAVE_USER_KEYWORDS 1
-#else /* ... */
-#define TPP_HAVE_USER_KEYWORDS 0
-#endif /* !... */
-#endif /* !TPP_HAVE_USER_KEYWORDS */
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-
-
-
-
-
-/************************************************************************/
-/* LEXER HOOK CONFIGURATION                                             */
-/************************************************************************/
-
-/* Possible values for "TPP_HAVE_*_HOOK" feature macros */
-#define TPP_HOOK_DISABLED      0    /* Hook is hard-disabled (same as a no-op implementation) */
-#define TPP_HOOK_CONST_USER    1    /* Hook is hard-coded to call a user-supplied implementation "TPP_HOOK_FOO" (or no-op if "TPP_HOOK_FOO" isn't defined) */
-#define TPP_HOOK_CONST_BUILTIN 2    /* Hook is hard-coded to call a builtin implementation (same as TPP_HOOK_DISABLED if there is no builtin) */
-#define TPP_HOOK_RT_USER       (-1) /* Hook is per-lexer configurable; defaults to user-supplied implementation "TPP_HOOK_FOO" (or no-op if "TPP_HOOK_FOO" isn't defined) */
-#define TPP_HOOK_RT_BUILTIN    (-2) /* Hook is per-lexer configurable; defaults to builtin implementation (or no-op if there is no builtin) */
-#define TPP_HOOK_RT_NOOP       (-3) /* Hook is per-lexer configurable; defaults to no-op implementation */
-
-#define TPP_HOOK_USESBUILTIN(x) ((x) == TPP_HOOK_CONST_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN)
-#define TPP_HOOK_USESUSER(x)    ((x) == TPP_HOOK_CONST_USER || (x) == TPP_HOOK_RT_USER)
-#define TPP_HOOK_ISCONST(x)     ((x) > 0)
-#define TPP_HOOK_ISRT(x)        ((x) < 0)
-
-/* Default configuration specifying how required hooks should be linked. */
-#ifndef TPP_HOOK_DEFAULT_BUILTIN
-#define TPP_HOOK_DEFAULT_BUILTIN ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_RT_BUILTIN : TPP_HOOK_CONST_BUILTIN)
-#endif /* !TPP_HOOK_DEFAULT_BUILTIN */
-#ifndef TPP_HOOK_DEFAULT_USER
-#define TPP_HOOK_DEFAULT_USER ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_RT_USER : TPP_HOOK_CONST_USER)
-#endif /* !TPP_HOOK_DEFAULT_USER */
-#ifndef TPP_HOOK_DEFAULT_NOOP
-#define TPP_HOOK_DEFAULT_NOOP ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_RT_NOOP : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_DEFAULT_NOOP */
-
-
-/* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
- * Called by `tpp_lexer_warnf()` to print warning messages
- * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
- * @param: arg: The current lexer (`tpp_lexer *`) */
-#ifndef TPP_HAVE_WARNPRINTER_HOOK
-#ifdef TPP_HOOK_WARNPRINTER
-#define TPP_HAVE_WARNPRINTER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_WARNPRINTER */
-#define TPP_HAVE_WARNPRINTER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_WARNPRINTER */
-#endif /* !TPP_HAVE_WARNPRINTER_HOOK */
-#if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_WARNPRINTER)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_WARNPRINTER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_WARNPRINTER' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_WARNPRINTER_HOOK
-#define TPP_HAVE_WARNPRINTER_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_WARNPRINTER)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_WARNPRINTER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_WARNPRINTER' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_WARNPRINTER_HOOK
-#define TPP_HAVE_WARNPRINTER_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_WARNPRINTER) && !TPP_HOOK_USESUSER(TPP_HAVE_WARNPRINTER_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_WARNPRINTER' is defined, but 'TPP_HAVE_WARNPRINTER_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_WARNPRINTER && !TPP_HOOK_USESUSER(TPP_HAVE_WARNPRINTER_HOOK) */
-#ifndef TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
-#define TPP_HAVE_BUILTIN_WARNPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNPRINTER_HOOK)
-#endif /* !TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
-
-/* >> tpp_errno TPP_HOOK_WARNHANDLER(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
- * Called by `tpp_lexer_warnf()` to handle warning notifications. Can be
- * overwritten to implement custom behavior in regards to handling of warnings.
- * @param: info:       Warning context location
- * @param: invokeinfo: Warning invocation method
- * @param: id:         Warning ID
- * @param: arg:        Variable arguments passed to warning
- * @return: TPP_EOK:        Success (warning was emitted)
- * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
- * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
- * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
- * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
-#ifndef TPP_HAVE_WARNHANDLER_HOOK
-#ifdef TPP_HOOK_WARNHANDLER
-#define TPP_HAVE_WARNHANDLER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_WARNHANDLER */
-#define TPP_HAVE_WARNHANDLER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_WARNHANDLER */
-#endif /* !TPP_HAVE_WARNHANDLER_HOOK */
-#if TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_WARNHANDLER)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_WARNHANDLER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_WARNHANDLER' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_WARNHANDLER_HOOK
-#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_WARNHANDLER)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_WARNHANDLER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_WARNHANDLER' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_WARNHANDLER_HOOK
-#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_WARNHANDLER) && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_WARNHANDLER' is defined, but 'TPP_HAVE_WARNHANDLER_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_WARNHANDLER && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK) */
-#ifndef TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
-#define TPP_HAVE_BUILTIN_WARNHANDLER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNHANDLER_HOOK)
-#endif /* !TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
-
-/* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_MESGPRINTER, arg, text, num_bytes);
- * Used by `#pragma message` to print messages
- * @param: arg: The current lexer (`tpp_lexer *`) */
-#ifndef TPP_HAVE_MESGPRINTER_HOOK
-#ifdef TPP_HOOK_MESGPRINTER
-#define TPP_HAVE_MESGPRINTER_HOOK (TPP_HAVE_PRAGMA_MESSAGE ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_MESGPRINTER */
-#define TPP_HAVE_MESGPRINTER_HOOK (TPP_HAVE_PRAGMA_MESSAGE ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_MESGPRINTER */
-#endif /* !TPP_HAVE_MESGPRINTER_HOOK */
-#if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_MESGPRINTER)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_MESGPRINTER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_MESGPRINTER' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_MESGPRINTER_HOOK
-#define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_MESGPRINTER)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_MESGPRINTER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_MESGPRINTER' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_MESGPRINTER_HOOK
-#define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_MESGPRINTER) && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_MESGPRINTER' is defined, but 'TPP_HAVE_MESGPRINTER_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MESGPRINTER && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK) */
-#ifndef TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
-#define TPP_HAVE_BUILTIN_MESGPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_MESGPRINTER_HOOK)
-#endif /* !TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
-
-/* >> tpp_errno TPP_HOOK_PARSEEXPR(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
- * User-defined callback for parsing `#if`-style expressions
- * - This callback is invoked in a context where `self` points
- *   before the expression's first token (meaning that this
- *   callback is responsible to do the initial yield using
- *   whatever method it wants to use).
- * - When it is known that the expression has finite length,
- *   as in: it has to end before EOF, or at the next unmatched
- *   `)`-token, the caller will have configured the lexer's
- *   current EOF accordingly (and disabled file-popping)
- * - When this function returns an error, the caller will rewind
- *   back to the start of the expression (or even further, if
- *   applicable; meaning this callback doesn't need to concern
- *   itself with rollback)
- *
- * @return: TPP_EOK:         Success (`*result` was initialized)
- * @return: TPP_ENOMEM:      Out of memory
- * @return: TPP_EIO:         Filesystem I/O operation failed
- * @return: TPP_EWOULDBLOCK: Operation would block
- * @return: TPP_ELEXERROR:   A lexer error happened
- * @return: TPP_EWARNPRINT:  Error while printing a warning */
-#ifndef TPP_HAVE_PARSEEXPR_HOOK
-#ifdef TPP_HOOK_PARSEEXPR
-#define TPP_HAVE_PARSEEXPR_HOOK ((TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_PARSEEXPR */
-#define TPP_HAVE_PARSEEXPR_HOOK ((TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) ? TPP_HOOK_DEFAULT_BUILTIN : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_PARSEEXPR */
-#endif /* !TPP_HAVE_PARSEEXPR_HOOK */
-#if TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_PARSEEXPR)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_PARSEEXPR_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_PARSEEXPR' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_PARSEEXPR_HOOK
-#define TPP_HAVE_PARSEEXPR_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_PARSEEXPR)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_PARSEEXPR_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_PARSEEXPR' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_PARSEEXPR_HOOK
-#define TPP_HAVE_PARSEEXPR_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_PARSEEXPR) && !TPP_HOOK_USESUSER(TPP_HAVE_PARSEEXPR_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_PARSEEXPR' is defined, but 'TPP_HAVE_PARSEEXPR_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_PARSEEXPR && !TPP_HOOK_USESUSER(TPP_HAVE_PARSEEXPR_HOOK) */
-#ifndef TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
-#define TPP_HAVE_BUILTIN_PARSEEXPR_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_PARSEEXPR_HOOK)
-#endif /* !TPP_HAVE_BUILTIN_PARSEEXPR_HOOK */
-
-/* >> tpp_errno TPP_HOOK_UNKNOWN_PRAGMA(tpp_lexer *tpp_restrict self);
- * Called whenever a `#pragma` is encountered that is not recognized.
- * When called, the lexer is set-up to point at the first token after the `#pragma`.
- * @return: TPP_EOK:    Pragma has been handled
- * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
- * @return: TPP_EIO:    I/O error
- * @return: TPP_ENOMEM: Out of memory */
-#ifndef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
-#ifdef TPP_HOOK_UNKNOWN_PRAGMA
-#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK ((TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_UNKNOWN_PRAGMA */
-#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK ((TPP_HAVE_PRAGMA && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_UNKNOWN_PRAGMA */
-#endif /* !TPP_HAVE_UNKNOWN_PRAGMA_HOOK */
-#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_UNKNOWN_PRAGMA)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_UNKNOWN_PRAGMA' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
-#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_UNKNOWN_PRAGMA)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_UNKNOWN_PRAGMA' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
-#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_CONST_BUILTIN
-#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK /* There is no builtin version */
-#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_BUILTIN
-#undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK /* There is no builtin version */
-#define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_PRAGMA) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_UNKNOWN_PRAGMA' is defined, but 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_PRAGMA && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
-
-/* >> tpp_errno TPP_HOOK_NEW_DEPENDENCY(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
- * Called whenever some file is `#include`-ed for the first time
- * @param: filename_kwd: Then `tpp_keyword` used to describe the file's name. The actual
- *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`. */
-#ifndef TPP_HAVE_NEW_DEPENDENCY_HOOK
-#ifdef TPP_HOOK_NEW_DEPENDENCY
-#define TPP_HAVE_NEW_DEPENDENCY_HOOK ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_NEW_DEPENDENCY */
-#define TPP_HAVE_NEW_DEPENDENCY_HOOK ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_NEW_DEPENDENCY */
-#endif /* !TPP_HAVE_NEW_DEPENDENCY_HOOK */
-#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_NEW_DEPENDENCY)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_NEW_DEPENDENCY_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_NEW_DEPENDENCY' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_NEW_DEPENDENCY_HOOK
-#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_NEW_DEPENDENCY)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_NEW_DEPENDENCY_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_NEW_DEPENDENCY' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_NEW_DEPENDENCY_HOOK
-#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_BUILTIN
-#undef TPP_HAVE_NEW_DEPENDENCY_HOOK /* There is no builtin version */
-#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_BUILTIN
-#undef TPP_HAVE_NEW_DEPENDENCY_HOOK /* There is no builtin version */
-#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_NEW_DEPENDENCY) && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_NEW_DEPENDENCY' is defined, but 'TPP_HAVE_NEW_DEPENDENCY_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_NEW_DEPENDENCY && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
-
-/* >> tpp_errno TPP_HOOK_IDENT_SCCS(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
- * Called to handle `#ident` and `#sccs` directives
- * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
- * @param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d
- *                      if you want to keep `comment_str` alive. If NULL, then the
- *                      given `comment_str` is statically allocated and doesn't need
- *                      any chunk to stay alive
- * @param: comment_str: The source comment that should be inserted
- * @param: comment_len: Length of `comment_str` in bytes
- * @return: TPP_EOK:    Success
- * @return: TPP_EIO:    I/O error
- * @return: TPP_ENOMEM: Out of memory */
-#ifndef TPP_HAVE_IDENT_SCCS_HOOK
-#ifdef TPP_HOOK_IDENT_SCCS
-#define TPP_HAVE_IDENT_SCCS_HOOK (TPP_HAVE_CPP_IDENT_SCCS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_IDENT_SCCS */
-#define TPP_HAVE_IDENT_SCCS_HOOK (TPP_HAVE_CPP_IDENT_SCCS ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_IDENT_SCCS */
-#endif /* !TPP_HAVE_IDENT_SCCS_HOOK */
-#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_IDENT_SCCS)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_IDENT_SCCS_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_IDENT_SCCS' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_IDENT_SCCS_HOOK
-#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_IDENT_SCCS)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_IDENT_SCCS_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_IDENT_SCCS' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_IDENT_SCCS_HOOK
-#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_BUILTIN
-#undef TPP_HAVE_IDENT_SCCS_HOOK /* There is no builtin version */
-#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_BUILTIN
-#undef TPP_HAVE_IDENT_SCCS_HOOK /* There is no builtin version */
-#define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_IDENT_SCCS) && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
-
-/* >> tpp_errno TPP_HOOK_SYSTEM_INCLUDE_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
- * Extra callback invoked by `tpp_lexer_foreach_include_path()` at diffrent
- * points during the process of enumerating include paths. This callback is
- * then allowed to enumerate some additional include paths that may exist, but
- * for one reason or another (mainly: speed) aren't known to TPP via its system
- * include path APIs (`tpp_lexer_includes_add*`)
- * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
- *               caller's position in `tpp_lexer_foreach_include_path()`.
- * @return: * :         First non-TPP_ENOENT return value of `cb`
- * @return: TPP_ENOENT: File still not found
- * @return: TPP_EIO:    I/O error
- * @return: TPP_ENOMEM: Out of memory */
-#ifndef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
-#ifdef TPP_HOOK_SYSTEM_INCLUDE_PATH
-#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_SYSTEM_INCLUDE_PATH */
-#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_SYSTEM_INCLUDE_PATH */
-#endif /* !TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
-#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_SYSTEM_INCLUDE_PATH' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
-#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_SYSTEM_INCLUDE_PATH' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
-#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_CONST_BUILTIN
-#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK /* There is no builtin version */
-#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_BUILTIN
-#undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK /* There is no builtin version */
-#define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
-
-/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
- * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
- * This hook can be used to define additional, user-defined escape sequences, or any other
- * arbitrary behavior to-be performed when specific escape-sequences are found.
- * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
- * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
- * it before returning
- * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
- *                 [out] First character no longer part of `\`-escape sequence (if recognized)
- *                 [out] Unchanged (if not recognized)
- * @param: end:    The of containing string sequence
- * @param: config: Identically-named argument of `tpp_lexer_decodestring()`
- * @return: * :    Sum of positive return values of `data_printer` and `utf8_printer`
- * @return: < 0:   First negative return value of `data_printer` or `utf8_printer`
- * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
- *                 (please leave `*p_pos` unchanged in this case). The caller will
- *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
-#ifndef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
-#ifdef TPP_HOOK_UNKNOWN_STRING_ESCAPE
-#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_UNKNOWN_STRING_ESCAPE */
-#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_UNKNOWN_STRING_ESCAPE */
-#endif /* !TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK */
-#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
-#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
-#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_BUILTIN
-#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK /* There is no builtin version */
-#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_BUILTIN
-#undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK /* There is no builtin version */
-#define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' is defined, but 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_STRING_ESCAPE && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
-
-/* >> tpp_errno TPP_HOOK_RAISE_LEXERROR(tpp_lexer *tpp_restrict self);
- * Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
- * This hook can be used to do additional state changes that may be necessary by the
- * hosting application in order to handle the resulting `TPP_ELEXERROR`
- * @return: TPP_EOK: Have `tpp_lexer_warnf()` still return `TPP_ELEXERROR`
- * @return: * :      Make `tpp_lexer_warnf()` return this instead of `TPP_ELEXERROR` */
-#ifndef TPP_HAVE_RAISE_LEXERROR_HOOK
-#ifdef TPP_HOOK_RAISE_LEXERROR
-#define TPP_HAVE_RAISE_LEXERROR_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_RAISE_LEXERROR */
-#define TPP_HAVE_RAISE_LEXERROR_HOOK ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_RAISE_LEXERROR */
-#endif /* !TPP_HAVE_RAISE_LEXERROR_HOOK */
-#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_RAISE_LEXERROR)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_RAISE_LEXERROR_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_RAISE_LEXERROR' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_RAISE_LEXERROR_HOOK
-#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_RAISE_LEXERROR)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_RAISE_LEXERROR_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_RAISE_LEXERROR' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_RAISE_LEXERROR_HOOK
-#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_CONST_BUILTIN
-#undef TPP_HAVE_RAISE_LEXERROR_HOOK /* There is no builtin version */
-#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_BUILTIN
-#undef TPP_HAVE_RAISE_LEXERROR_HOOK /* There is no builtin version */
-#define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_RAISE_LEXERROR) && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_RAISE_LEXERROR' is defined, but 'TPP_HAVE_RAISE_LEXERROR_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_RAISE_LEXERROR && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) */
-
-/* >> tpp_errno TPP_HOOK_ISFLOATSUFFIX(tpp_lexer *tpp_restrict self, tpp_char const *pos);
- * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
- * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
- * part of the float-token (in the form of a float-suffix), or if this is actually be
- * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
- * with `pos` pointing at the `f` (though additional characters thereafter may not be
- * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
- * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
- * @return: TPP_ENOENT: It's not a float suffix
- * @return: TPP_EIO:    I/O error
- * @return: TPP_ENOMEM: Out of memory */
-#ifndef TPP_HAVE_ISFLOATSUFFIX_HOOK
-#ifdef TPP_HOOK_ISFLOATSUFFIX
-#define TPP_HAVE_ISFLOATSUFFIX_HOOK ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_SMART_FLOAT_TOKENS) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
-#else /* TPP_HOOK_ISFLOATSUFFIX */
-#define TPP_HAVE_ISFLOATSUFFIX_HOOK ((TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_SMART_FLOAT_TOKENS) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
-#endif /* !TPP_HOOK_ISFLOATSUFFIX */
-#endif /* !TPP_HAVE_ISFLOATSUFFIX_HOOK */
-#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_ISFLOATSUFFIX)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_ISFLOATSUFFIX_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_ISFLOATSUFFIX' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_ISFLOATSUFFIX_HOOK
-#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_ISFLOATSUFFIX)
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_ISFLOATSUFFIX_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_ISFLOATSUFFIX' isn't defined. Configure the hook differently, or supply your definition"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#undef TPP_HAVE_ISFLOATSUFFIX_HOOK
-#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_CONST_BUILTIN
-#undef TPP_HAVE_ISFLOATSUFFIX_HOOK /* There is no builtin version */
-#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_DISABLED
-#elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_BUILTIN
-#undef TPP_HAVE_ISFLOATSUFFIX_HOOK /* There is no builtin version */
-#define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_RT_NOOP
-#endif /* ... */
-#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_ISFLOATSUFFIX) && !TPP_HOOK_USESUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_ISFLOATSUFFIX' is defined, but 'TPP_HAVE_ISFLOATSUFFIX_HOOK' isn't using it"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_ISFLOATSUFFIX && !TPP_HOOK_USESUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
-
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-
-
-
-
 
 /************************************************************************/
 /* LEXER EXPRESSIONS                                                    */
@@ -8810,8 +8869,10 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_BUILTIN_EXPR_IF_ELSE_IN_EXPRESSIONS */
 
 /* XXX: Also have an extension for python's `tt if cond else ff`
- *      syntax, though TPP won't be able to guaranty that `tt`
- *      is only evaluated when `cond` evaluates to true! */
+ *      syntax, though this'll be *very* complicated since we can
+ *      only know if "tt" should be evaluated *after* it was already
+ *      parsed (which would seem to imply the requirement of an
+ *      intermediate AST-representation...) */
 
 /* Enable support for `^^` in builtin lexer expressions */
 #ifndef TPP_HAVE_BUILTIN_EXPR_LOGICAL_XOR
@@ -8822,731 +8883,6 @@ TPP_DECL_END
 #ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_STRINGLIKE_SQUOTE) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : (TPP_HAVE_PROFILE_C_LIKE ? 1 : 0)) : 0) /* "-fcharacter-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-
-
-
-
-/************************************************************************/
-/* IMPLICIT API FEATURES (PART 2)                                       */
-/************************************************************************/
-
-/* Provide an API function `tpp_unicode_writeutf8()` */
-#ifndef TPP_HAVE_TPP_UNICODE_WRITEUTF8
-#if (TPP_HAVE_TOK_C_STRING ||                 \
-     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TOK_BLOCK_STRING_LITERAL ||     \
-     TPP_HAVE_TOK_C_CHAR ||                   \
-     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-     TPP_HAVE_TOK_BLOCK_CHAR_LITERAL ||       \
-     TPP_HAVE_IDENTIFIER_ESCAPE_UNI ||        \
-     TPP_HAVE_DECODE_NAMED_ESCAPE)
-#define TPP_HAVE_TPP_UNICODE_WRITEUTF8 1
-#else /* ... */
-#define TPP_HAVE_TPP_UNICODE_WRITEUTF8 0
-#endif /* !... */
-#endif /* !TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
-
-/* Provide an API for loading the current date/time */
-#ifndef TPP_HAVE_TIME_API
-#if (TPP_HAVE_MACRO___TIME__ ||      \
-     TPP_HAVE_MACRO___DATE__ ||      \
-     TPP_HAVE_MACRO___TIMESTAMP__ || \
-     TPP_HAVE_NUMERIC_DATE_MACROS || \
-     TPP_HAVE_NUMERIC_TIME_MACROS)
-#define TPP_HAVE_TIME_API 1
-#else /* ... */
-#define TPP_HAVE_TIME_API 0
-#endif /* !... */
-#endif /* !TPP_HAVE_TIME_API */
-
-/* Enable support for `TPP_FILE_FLAGS_SYSHDR` */
-#ifndef TPP_HAVE_FILE_SYSHDR
-#define TPP_HAVE_FILE_SYSHDR (TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0)
-#endif /* !TPP_HAVE_FILE_SYSHDR */
-
-/* Enable support for `TPP_FILE_KIND_SUBTEXT` */
-#ifndef TPP_HAVE_FILE_SUBTEXT
-#define TPP_HAVE_FILE_SUBTEXT                     \
-	(TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_EMBED || \
-	 TPP_HAVE_MACRO__Pragma ||                    \
-	 TPP_HAVE_MACRO___pragma ||                   \
-	 TPP_HAVE_MACRO___TPP_IDENTIFIER ||           \
-	 TPP_HAVE_MACRO___TPP_STR_DECOMPILE ||        \
-	 TPP_HAVE_MACRO___TPP_STR_PACK ||             \
-	 TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
-	 TPP_HAVE_PRAGMA_TPP_EXEC ||                  \
-	 TPP_HAVE_PRAGMA_TPP_TPP_EXEC)
-#endif /* !TPP_HAVE_FILE_SUBTEXT */
-
-/* Enable support for `TPP_FILE_KIND_DUMMY`, which is
- * needed to support gcc's `# <linenum>` -> `1`/`2` flags
- *
- * These flags push so-called "dummy" files onto the
- * `#include`-stack (without altering the actual current
- * file), with those dummy files acting as additional
- * entries for `#include` tracebacks. */
-#ifndef TPP_HAVE_FILE_DUMMY
-#define TPP_HAVE_FILE_DUMMY (TPP_HAVE_CPP_DIGIT_LINE)
-#endif /* !TPP_HAVE_FILE_DUMMY */
-
-/* Enable support for `TPP_FILE_FLAGS_EXTERN_C` */
-#ifndef TPP_HAVE_FILE_EXTERN_C
-#define TPP_HAVE_FILE_EXTERN_C (TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_CPP_DIGIT_LINE)
-#endif /* !TPP_HAVE_FILE_EXTERN_C */
-
-/* When `TPP_FILE_FLAGS_SYSHDR` is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
- * then the `TPP_FILE_FLAGS_EXTERN_C` flag should be set alongside `TPP_FILE_FLAGS_SYSHDR`. */
-#ifndef TPP_HAVE_EXTERN_C_FOR_SYSHDR
-#define TPP_HAVE_EXTERN_C_FOR_SYSHDR (TPP_HAVE_FILE_SYSHDR && TPP_HAVE_FILE_EXTERN_C ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_EXT0 : TPP_COMMON_CONF_FEAT0) : 0) /* "-fextern-c-for-syshdr" */
-#endif /* !TPP_HAVE_EXTERN_C_FOR_SYSHDR */
-
-/* Enable API support for having an `#include`-stack. Despite the name,
- * this is also needed for macro expansion (see `TPP_HAVE_CPP_MACROS`) */
-#ifndef TPP_HAVE_INCLUDE_STACK
-#if (TPP_HAVE_CPP_MACROS ||       \
-     TPP_HAVE_CPP_INCLUDE ||      \
-     TPP_HAVE_CPP_INCLUDE_NEXT || \
-     TPP_HAVE_CPP_IMPORT ||       \
-     TPP_HAVE_CPP_EMBED ||        \
-     TPP_HAVE_FILE_SUBTEXT ||     \
-     TPP_HAVE_FILE_DUMMY)
-#define TPP_HAVE_INCLUDE_STACK 1
-#else /* ... */
-#define TPP_HAVE_INCLUDE_STACK 0
-#endif /* !... */
-#endif /* !TPP_HAVE_INCLUDE_STACK */
-
-/* Support for: custom string list describing the available
- * `-I/usr/include`-style -> `#include <foo.h>`-paths */
-#ifndef TPP_HAVE_INCLUDE_PATH
-#define TPP_HAVE_INCLUDE_PATH (TPP_HAVE_INCLUDE_STACK)
-#endif /* !TPP_HAVE_INCLUDE_PATH */
-
-/* `tpp_include_paths` contains a 2nd path-list that is only searched during `"`-strings */
-#ifndef TPP_HAVE_INCLUDE_PATH_QUOTE
-#define TPP_HAVE_INCLUDE_PATH_QUOTE \
-	(TPP_HAVE_INCLUDE_STACK && TPP_HAVE_PROFILE_NOT_MINIMAL)
-#endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
-
-/* `tpp_include_paths` contains a 3rd path-list whose files are treated as `TPP_FILE_FLAGS_SYSHDR` */
-#ifndef TPP_HAVE_INCLUDE_PATH_SYSHDR
-#define TPP_HAVE_INCLUDE_PATH_SYSHDR \
-	(TPP_HAVE_INCLUDE_STACK && TPP_HAVE_FILE_SYSHDR && TPP_HAVE_PROFILE_NOT_MINIMAL)
-#endif /* !TPP_HAVE_INCLUDE_PATH_SYSHDR */
-
-/* `tpp_include_paths` contains a 4th path-list that is searched after all other paths */
-#ifndef TPP_HAVE_INCLUDE_PATH_AFTER
-#define TPP_HAVE_INCLUDE_PATH_AFTER                                 \
-	(TPP_HAVE_INCLUDE_STACK && ((TPP_PROFILE == TPP_PROFILE_ALL) || \
-	                            (TPP_HAVE_PROFILE_NOT_MINIMAL &&    \
-	                             TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH)))
-#endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
-
-/* A preprocessor tuple describing the built-in, hard-coded, system-include path.
- * - The paths specified here are searched in order of specification.
- * - For information on the full `#include`-path resolution order, see `tpp_include_paths`
- * - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
- *   trailing slashes in these strings, it will add those itself)
- *
- * Example:
- * ```c
- * #define TPP_CONFIG_SYSTEM_INCLUDE_PATH  2("/usr/local/include", "/usr/include")
- * ``` */
-#ifndef TPP_CONFIG_SYSTEM_INCLUDE_PATH
-#define TPP_CONFIG_SYSTEM_INCLUDE_PATH 0()
-#endif /* !TPP_CONFIG_SYSTEM_INCLUDE_PATH */
-
-/* Config option to skip searching `TPP_CONFIG_SYSTEM_INCLUDE_PATH`.
- * Can (and should) be used to implement `-nostdinc` */
-#ifndef TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
-#define TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH (TPP_TUPLE_NONEMPTY(TPP_CONFIG_SYSTEM_INCLUDE_PATH) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstdinc" */
-#endif /* !TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
-
-/* `"`-quoted `#include`-strings are searched relative to *every* I/O-file found on the
- * `#include`-stack; not just the most-recent one. Doing this for all files is what TPP2
- * always- and unconditionally did, but turns out that isn't actually something normally
- * done by preprocessors. As such, TPP3 turns this behavior into an extension, but has
- * it turned off by default. */
-#ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE
-#define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE ((TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_COMMON_CONF_EXT0 : 0) /* "-finclude-relative-to-every-file" */
-#endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE */
-
-/* Enable support to push/pop the `#include`-path state */
-#ifndef TPP_HAVE_INCLUDE_PATH_PUSH_POP
-#define TPP_HAVE_INCLUDE_PATH_PUSH_POP (TPP_HAVE_INCLUDE_PATH)
-#endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
-
-/* Use `TPP_REF tpp_string *` instead of `char *` in `#include`-path lists.
- * Doing so greatly reduces the overhead when `#include`-path lists are
- * pushed/popped, since `tpp_string` can be incref'd, whereas `char`
- * must be hard-copied. */
-#ifndef TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
-#define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING (TPP_HAVE_INCLUDE_PATH_PUSH_POP)
-#endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
-
-/* Enable support for `tpp_file` keeping track of the state of active `#ifdef` directives
- * via an embedded `tpp_ifdef_stack` strcture (accessible via `tpp_file_getifdef()`) */
-#ifndef TPP_HAVE_IFDEF_STACK
-#define TPP_HAVE_IFDEF_STACK (TPP_HAVE_CPP_IF_ELSE_ENDIF)
-#endif /* !TPP_HAVE_IFDEF_STACK */
-
-/* Enable support for `tpp_file_setfilename()` */
-#ifndef TPP_HAVE_FILE_SETFILENAME
-#define TPP_HAVE_FILE_SETFILENAME (TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE)
-#endif /* !TPP_HAVE_FILE_SETFILENAME */
-
-/* Enable support for `tpp_file_setline()` */
-#ifndef TPP_HAVE_FILE_SETLINE
-#define TPP_HAVE_FILE_SETLINE (TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE)
-#endif /* !TPP_HAVE_FILE_SETLINE */
-
-/* Enable support for setting a special pointer in files to
- * represent a lower bound of memory that must be kept loaded. */
-#ifndef TPP_HAVE_FILE_KEEPPOS
-#define TPP_HAVE_FILE_KEEPPOS (TPP_HAVE_CPP_MACROS)
-#endif /* !TPP_HAVE_FILE_KEEPPOS */
-
-/* Keep track of the original `tpp_lexer_arginfo` used during macro invocation,
- * in order to improve `tpp_file_getlcinfo_ex()`'s `tlcix_proj*` return values,
- * by making them less error-prone. */
-#ifndef TPP_HAVE_FILE_MACRO_TRACKARGS
-#define TPP_HAVE_FILE_MACRO_TRACKARGS \
-	(TPP_HAVE_CPP_MACROS && TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_PROFILE_NOT_MINIMAL)
-#endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
-
-/* Provide a special `TPP_FILE_ENCODING_EMBED` file encoding
- * to convert bytes into `,`-separated decimals on-the-fly.
- *
- * NOTE: Even when this is disabled, `#embed` directives work,
- *       but will have to pre-load the entire input file into
- *       memory, rather than allowing the file to be streamed
- *       by converting it on-the-fly. */
-#ifndef TPP_HAVE_FILE_ENCODING_EMBED
-#define TPP_HAVE_FILE_ENCODING_EMBED (TPP_HAVE_UNICODE && TPP_HAVE_CPP_EMBED && TPP_HAVE_PROFILE_NOT_MINIMAL)
-#endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
-
-/* Provide an API `tpp_lexer_nextrand()` that can be used to generate random
- * numbers using the already-parsed contents of of I/O and TEXT files as seed. */
-#ifndef TPP_HAVE_LEXER_RAND
-#define TPP_HAVE_LEXER_RAND ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_RANDOM)
-#endif /* !TPP_HAVE_LEXER_RAND */
-
-/* Provide an API `tpp_file_gethash()` that can be used to calculate a hash
- * of all already-processed bytes within a file up to a given position. */
-#ifndef TPP_HAVE_FILE_GETHASH
-#define TPP_HAVE_FILE_GETHASH ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_LEXER_RAND)
-#endif /* !TPP_HAVE_FILE_GETHASH */
-
-/* Provide an API `tpp_file_getfullhash()` that behaves similar to `tpp_file_gethash()`,
- * but also traverses the `#include`-stack to include the hash values of all parent files
- * found therein, such that the return values describes not only the current file leading
- * up to a given position, but also all other files that came before. */
-#ifndef TPP_HAVE_FILE_GETFULLHASH
-#define TPP_HAVE_FILE_GETFULLHASH (TPP_HAVE_FILE_GETHASH && TPP_HAVE_INCLUDE_STACK)
-#endif /* !TPP_HAVE_FILE_GETFULLHASH */
-
-/* Provide a secondary set of keyword APIs that include support for `\`-escape sequences.
- * Needed to implement `TPP_HAVE_BSE`, `TPP_HAVE_IDENTIFIER_ESCAPE_UNI` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED` */
-#ifndef TPP_HAVE_ESCAPED_KEYWORDS
-#define TPP_HAVE_ESCAPED_KEYWORDS (TPP_HAVE_BSE || TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
-#endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
-
-/* Enable support for `tpp_io_compare_mtime()`.
- * This is the underlying system function needed for
- * `#pragma GCC dependency` (see `TPP_HAVE_PRAGMA_GCC_DEPENDENCY`) */
-#ifndef TPP_HAVE_IO_COMPARE_MTIME
-#define TPP_HAVE_IO_COMPARE_MTIME (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
-#endif /* !TPP_HAVE_IO_COMPARE_MTIME */
-
-/* Enable support for `tpp_io_normalize_filename()`.
- * This function is needed to detect+fix (see `TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING`)
- * incorrect casing in `#include`-paths on host platforms with case-insensitive filenames
- * (i.e.: windows).
- *
- * In particular, this function is necessary such that `#pragma once` in a header file
- * `<stdio.h>` will still prevent multiple inclusion if that file is included multiple
- * times with different path casing:
- * ```c
- * #include <stdio.h>
- * #include <STDIO.H> // `TPP_HAVE_IO_NORMALIZE_FILENAME` saves the day
- * ```
- */
-#ifndef TPP_HAVE_IO_NORMALIZE_FILENAME
-#define TPP_HAVE_IO_NORMALIZE_FILENAME (TPP_OS_WINDOWS && (TPP_HAVE_USER_KEYWORDS || TPP_HAVE_PROFILE_NOT_MINIMAL))
-#endif /* !TPP_HAVE_IO_NORMALIZE_FILENAME */
-
-/* Enable support for `tpp_joinpath()`, a wrapper around another internal function
- * used to implement `tpp_lexer_openfile()` (see `TPP_HAVE_LEXER_OPENFILE`) and is also
- * needed to implement `#pragma GCC dependency` (see `TPP_HAVE_PRAGMA_GCC_DEPENDENCY`)
- *
- * This function takes 2 paths, resolves `.` and `..` path references between them,
- * whilst pasting them onto each other in order to form a singular, normalized path */
-#ifndef TPP_HAVE_JOINPATH
-#define TPP_HAVE_JOINPATH (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
-#endif /* !TPP_HAVE_JOINPATH */
-
-/* Enable support for `tpp_lexer_initfile_io()` and `tpp_lexer_initfile_io_ex()` */
-#ifndef TPP_HAVE_LEXER_INIT_IO
-#define TPP_HAVE_LEXER_INIT_IO TPP_HAVE_FILE_NOKWD
-#endif /* !TPP_HAVE_LEXER_INIT_IO */
-
-/* Enable support for `tpp_lexer_initfile_open()`, a function that lets you directly
- * initialize the lexer by passing in a filename that should be opened as input.
- *
- * When `TPP_HAVE_INCLUDE_STACK` is enabled, this also enables support for `tpp_lexer_pushfile_open()` */
-#ifndef TPP_HAVE_LEXER_INIT_OPEN
-#define TPP_HAVE_LEXER_INIT_OPEN TPP_HAVE_LEXER_OPENFILE
-#endif /* !TPP_HAVE_LEXER_INIT_OPEN */
-
-/* Provide an API `tpp_string_builder` centered around building `tpp_string` */
-#ifndef TPP_HAVE_STRING_BUILDER
-#define TPP_HAVE_STRING_BUILDER                                                                   \
-	((TPP_PROFILE == TPP_PROFILE_ALL) ||                                                          \
-	 TPP_HAVE_LEXER_DECODESTRING || TPP_HAVE_LEXER_SEEKPP_RPAREN ||                               \
-	 (TPP_HAVE_LEXER_DECODE_INCLUDE_STRING &&                                                     \
-	  (TPP_CONF_MAYBE_1(TPP_HAVE_BSE) || TPP_CONF_MAYBE_1(TPP_HAVE_TRIGRAPHS))) ||                \
-	 (TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ || TPP_HAVE_MACRO___FILE_NAME__) || \
-	 TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_MACRO___TPP_STR_PACK || TPP_HAVE_MACRO___TPP_EXEC ||   \
-	 TPP_HAVE_MACRO___TPP_STR_SUBSTR || TPP_HAVE_MACRO___TPP_LOAD_FILE || TPP_HAVE_CPP_EMBED)
-#endif /* !TPP_HAVE_STRING_BUILDER */
-
-/* Provide a function `tpp_string_builder_tryalloc()` */
-#ifndef TPP_HAVE_STRING_BUILDER_TRYALLOC
-#define TPP_HAVE_STRING_BUILDER_TRYALLOC ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_LOAD_FILE)
-#endif /* !TPP_HAVE_STRING_BUILDER_TRYALLOC */
-
-/* Enable support for `tpp_lexer_skip()` and `tpp_lexer_require()` */
-#ifndef TPP_HAVE_LEXER_SKIP
-#if (TPP_HAVE_PROFILE_NOT_MINIMAL ||              \
-     TPP_HAVE_PRAGMA_PUSH_MACRO ||                \
-     TPP_HAVE_PRAGMA_DEPRECATED ||                \
-     TPP_HAVE_PRAGMA_MESSAGE ||                   \
-     TPP_HAVE_PRAGMA_ERROR ||                     \
-     TPP_HAVE_PRAGMA_WARNING ||                   \
-     TPP_HAVE_PRAGMA_EXTENSION ||                 \
-     TPP_HAVE_PRAGMA_TPP_WARNING ||               \
-     TPP_HAVE_PRAGMA_TPP_EXTENSION ||             \
-     TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||     \
-     TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS || \
-     TPP_HAVE_PRAGMA_TPP_EXEC ||                  \
-     TPP_HAVE_PRAGMA_TPP_TPP_EXEC ||              \
-     TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH ||          \
-     TPP_HAVE_MACRO__Pragma ||                    \
-     TPP_HAVE_MACRO___TPP_EVAL ||                 \
-     TPP_HAVE_MACRO___has_include ||              \
-     TPP_HAVE_MACRO___has_include_next ||         \
-     TPP_HAVE_MACRO___has_embed ||                \
-     TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
-     TPP_HAVE_MACRO___TPP_STR_SIZE ||             \
-     TPP_HAVE_MACRO___TPP_RANDOM ||               \
-     TPP_HAVE_MACRO___TPP_STR_SUBSTR ||           \
-     TPP_HAVE_CPP_ASSERT ||                       \
-     TPP_HAVE_CPP_EMBED ||                        \
-     TPP_HAVE_BUILTIN_PARSEEXPR_HOOK)
-#define TPP_HAVE_LEXER_SKIP 1
-#else /* ... */
-#define TPP_HAVE_LEXER_SKIP 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_SKIP */
-
-/* Enable support for storing a time value in `tpp_lexer` */
-#ifndef TPP_HAVE_LEXER_TIME
-#define TPP_HAVE_LEXER_TIME TPP_HAVE_TIME_API
-#endif /* !TPP_HAVE_LEXER_TIME */
-
-/* Enable support for `tpp_lexer_tryskip_raw()`, a function that is used-
- * and needed in order to seek- and skip-over the `(` token following a
- * macro's name (with support for searching for tokens in parent files
- * of the current one, but rolling back all changes if the next token isn't
- * as expected). It also offers a flag `TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV`
- * that will retain the `[tpp_file_getlastpos(),*)` regions of files as
- * they are scanned, allowing it to keep the previous token (which is
- * probably the name of a macro) loaded in memory. */
-#ifndef TPP_HAVE_LEXER_TRYSKIP_RAW
-#define TPP_HAVE_LEXER_TRYSKIP_RAW (TPP_HAVE_CPP_MACROS)
-#endif /* !TPP_HAVE_LEXER_TRYSKIP_RAW */
-
-/* Provide a function `tpp_lexer_reprtokenid()` to
- * return the string-representation of a given token ID */
-#ifndef TPP_HAVE_LEXER_REPRTOKENID
-#define TPP_HAVE_LEXER_REPRTOKENID (TPP_HAVE_LEXER_SKIP)
-#endif /* !TPP_HAVE_LEXER_REPRTOKENID */
-
-/* Provide a function `tpp_reprtokenid()` that does the
- * same as `tpp_lexer_reprtokenid()` (and is also used to
- * implement that function), but fails for user-defined
- * keyword token IDs */
-#ifndef TPP_HAVE_REPRTOKENID
-#define TPP_HAVE_REPRTOKENID (TPP_HAVE_LEXER_REPRTOKENID)
-#endif /* !TPP_HAVE_REPRTOKENID */
-
-/* Provide a lexer state flag `TPP_LEXER_STATE_FLAG_ALLTOKENS` that forces
- * `tpp_lexer_yieldpp()` to always re-emit *all* tokens (rather than skip
- * over space/lf/comment tokens based on `TPP_HAVE_TOK_SPACE`,
- * `TPP_HAVE_TOK_LF` and `TPP_HAVE_TOK_COMMENT`)
- *
- * This flag is also needed internally when TPP needs to expand
- * the arguments supplied to a user-defined macro */
-#ifndef TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
-#if (TPP_HAVE_CPP_MACROS && (TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE) || \
-                             TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) ||    \
-                             TPP_CONF_MAYBE_0(TPP_HAVE_TOK_COMMENT)))
-#define TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS 1
-#else /* ... */
-#define TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-
-/* Provide a function `tpp_lexer_getkeyworddefined()` to check
- * if a given keyword is `defined()` (meaning it can be expanded
- * as a (potentially builtin) macro) */
-#ifndef TPP_HAVE_LEXER_GETKEYWORDDEFINED
-#if (TPP_HAVE_CPP_IF_ELSE_ENDIF || \
-     TPP_HAVE_CPP_MACROS ||        \
-     TPP_HAVE_BUILTIN_EXPR_DEFINED)
-#define TPP_HAVE_LEXER_GETKEYWORDDEFINED 1
-#else /* ... */
-#define TPP_HAVE_LEXER_GETKEYWORDDEFINED 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_GETKEYWORDDEFINED */
-
-/* Provide a set of macros/functions `tpp_lexer_manualpopfile_*`
- * that can be used to seek through the contents of files further
- * up the #include-stack in a way that allows for rollback.
- *
- * - `tpp_lexer_manualpopfile_start()`
- * - `tpp_lexer_manualpopfile_popfile()`
- * - `tpp_lexer_manualpopfile_canpopfile()`
- * - `tpp_lexer_manualpopfile_break_rollback()`
- * - `tpp_lexer_manualpopfile_break_commit()`
- * - `tpp_lexer_manualpopfile_break()`
- * - `tpp_lexer_manualpopfile_end_rollback()`
- * - `tpp_lexer_manualpopfile_end_commit()`
- * - `tpp_lexer_manualpopfile_end()`
- */
-#ifndef TPP_HAVE_LEXER_MANUALPOPFILE
-#define TPP_HAVE_LEXER_MANUALPOPFILE                          \
-	(TPP_HAVE_INCLUDE_STACK && (TPP_HAVE_CPP_MACROS ||        \
-	                            TPP_HAVE_LEXER_TRYSKIP_RAW || \
-	                            TPP_HAVE_LEXER_SKIP))
-#endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
-
-/* Provide a function `tpp_lexer_seekpp_rparen()` that can be used
- * to find the position of a matching `)`-token for the purpose
- * of macro argument lists. */
-#ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN
-#define TPP_HAVE_LEXER_SEEKPP_RPAREN (TPP_HAVE_CPP_MACROS)
-#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN */
-
-/* Provide a function `tpp_lexer_seekpp_rparen_ex()` that is pretty much
- * the same as `tpp_lexer_seekpp_rparen()`, but is also able to deal with
- * alternate parenthesis pairs: `[ ]` `{ }` `< >` in addition to `( )` */
-#ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
-#define TPP_HAVE_LEXER_SEEKPP_RPAREN_EX (TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
-#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
-
-/* Provide a function `tpp_macro_equals()` to compare macro definitions.
- * Because the C standard specifies that re-defining a macro should only
- * be worthy of a warning if its new definition differs from its old one,
- * this function is used to only empty `TPP_W_REDEFINE_MACRO` if exactly
- * that happened.
- *
- * ```c
- * #define foo 10
- * #define foo 10  // Don't warn here (not even because of this comment)
- * #define foo 11  // But *do* warn here!
- * ``` */
-#ifndef TPP_HAVE_MACRO_EQUALS
-#define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
-#endif /* !TPP_HAVE_MACRO_EQUALS */
-
-/* Provide a couple of functions to decode the data contained within strings:
- * - `tpp_lexer_decodestring_config`
- * - `tpp_lexer_decodestring()`
- * - `tpp_lexer_parsestring_ex()`
- * - `tpp_lexer_parsestring()`
- * - `tpp_lexer_parsestring_cb()`
- */
-#ifndef TPP_HAVE_LEXER_DECODESTRING
-#define TPP_HAVE_LEXER_DECODESTRING (TPP_HAVE_TOK_STRINGLIKE)
-#endif /* !TPP_HAVE_LEXER_DECODESTRING */
-
-/* Provide an optional performance-optimization flag `TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS`
- * that may be passed to `tpp_lexer_parsestring_cb()` to speed up decoding of certain kinds
- * of strings (by slightly weakening what callbacks are allowed to do when this flag is set) */
-#ifndef TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
-#define TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS \
-	(TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_PROFILE_NOT_MINIMAL)
-#endif /* !TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
-
-/* Provide a function `tpp_expr_value_printrepr()` to construct the result
- * of `__TPP_EVAL` (see `TPP_HAVE_MACRO___TPP_EVAL`) */
-#ifndef TPP_HAVE_EXPR_VALUE_PRINTREPR
-#define TPP_HAVE_EXPR_VALUE_PRINTREPR (TPP_HAVE_MACRO___TPP_EVAL)
-#endif /* !TPP_HAVE_EXPR_VALUE_PRINTREPR */
-
-/* Provide a function `tpp_token_encodestring()` to perform `\`-escaping of arbitrary
- * data, such that `tpp_lexer_yieldraw()` and `tpp_lexer_decodestring()` will understand
- * the encoded representation in such a way that the original data is reproducible.
- *
- * This is primarily needed to implement stuff like `#define STR(x) #x` */
-#ifndef TPP_HAVE_TOKEN_ENCODESTRING
-#define TPP_HAVE_TOKEN_ENCODESTRING                                          \
-	(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || \
-	 (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS) ||     \
-	 TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ ||              \
-	 TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_STR_PACK ||        \
-	 TPP_HAVE_MACRO___TPP_STR_SUBSTR ||                                      \
-	 (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_LEXER_DUMP_DEFINITIONS))
-#endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
-
-/* Provide a function `tpp_lexer_require_whitespace()` to check if 2 tokens,
- * when written directly adjacent to each other, *might* produce a different
- * (set of) token(s) when re-parsed.
- *
- * This function is used to implement `TPP_HAVE_MAGIC_WHITESPACE`, which in
- * turn is needed to inject additional whitespace when failure to do so could
- * result in accidental token concatenation during reparsing. */
-#ifndef TPP_HAVE_LEXER_REQUIRE_WHITESPACE
-#define TPP_HAVE_LEXER_REQUIRE_WHITESPACE TPP_HAVE_MAGIC_WHITESPACE
-#endif /* !TPP_HAVE_LEXER_REQUIRE_WHITESPACE */
-
-/* Provide a function `tpp_lexer_decodeint_expr()` to parse an integer into a `tpp_expr_value` */
-#ifndef TPP_HAVE_LEXER_DECODEINT_EXPR
-#define TPP_HAVE_LEXER_DECODEINT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_C_INT)
-#endif /* !TPP_HAVE_LEXER_DECODEINT_EXPR */
-
-/* Provide a function `tpp_lexer_decodeint()` to parse an integer */
-#ifndef TPP_HAVE_LEXER_DECODEINT
-#define TPP_HAVE_LEXER_DECODEINT                             \
-	(TPP_HAVE_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR ||   \
-	                      TPP_HAVE_CPP_LINE ||               \
-	                      TPP_HAVE_CPP_DIGIT_LINE ||         \
-	                      TPP_HAVE_MACRO___TPP_STR_PACK ||   \
-	                      TPP_HAVE_MACRO___TPP_RANDOM ||     \
-	                      TPP_HAVE_MACRO___TPP_STR_SUBSTR || \
-	                      TPP_HAVE_PRAGMA_WARNING ||         \
-	                      TPP_HAVE_PRAGMA_TPP_WARNING))
-#endif /* !TPP_HAVE_LEXER_DECODEINT */
-
-/* Enable support for `0x` literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
-#ifndef TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS
-#define TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS ((TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fhex-literals" */
-#endif /* !TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS */
-
-/* Enable support for `0b` literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
-#ifndef TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS
-#define TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS ((TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fbinary-literals" */
-#endif /* !TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS */
-
-/* Enable support for `0o` literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
-#ifndef TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS
-#define TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS ((TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
-#endif /* !TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS */
-
-/* Provide a function `tpp_lexer_decodefloat_expr()` to parse a float into a `tpp_expr_value` */
-#ifndef TPP_HAVE_LEXER_DECODEFLOAT_EXPR
-#define TPP_HAVE_LEXER_DECODEFLOAT_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TOK_FLOAT)
-#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
-
-/* Provide a function `tpp_lexer_decodefloat()` to parse a float */
-#ifndef TPP_HAVE_LEXER_DECODEFLOAT
-#define TPP_HAVE_LEXER_DECODEFLOAT (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
-#endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
-
-/* Provide a function `tpp_lexer_parsecharacter_literal()` to parse character literals */
-#ifndef TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
-#define TPP_HAVE_LEXER_PARSECHARACTER_LITERAL (TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
-#endif /* !TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
-
-/* Provide a function `tpp_lexer_parsestring_expr()` to parse a string into a `tpp_expr_value` */
-#ifndef TPP_HAVE_LEXER_PARSESTRING_EXPR
-#define TPP_HAVE_LEXER_PARSESTRING_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_STRINGS && TPP_HAVE_LEXER_DECODESTRING)
-#endif /* !TPP_HAVE_LEXER_PARSESTRING_EXPR */
-
-/* Provide a function `tpp_lexer_parsecharacter_expr()` to parse a character literal into a `tpp_expr_value` */
-#ifndef TPP_HAVE_LEXER_PARSECHARACTER_EXPR
-#define TPP_HAVE_LEXER_PARSECHARACTER_EXPR (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS && TPP_HAVE_LEXER_DECODESTRING)
-#endif /* !TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
-
-/* Provide a builtin implementation for `tpp_expr_value` and its API */
-#undef TPP_HAVE_BUILTIN_EXPR_VALUE
-#if !defined(tpp_expr_value) && TPP_HAVE_PARSEEXPR_HOOK
-#define TPP_HAVE_BUILTIN_EXPR_VALUE 1
-#else /* !tpp_expr_value && TPP_HAVE_PARSEEXPR_HOOK */
-#define TPP_HAVE_BUILTIN_EXPR_VALUE 0
-#endif /* tpp_expr_value || !TPP_HAVE_PARSEEXPR_HOOK */
-
-/* Provide a function `tpp_ftoa()` to convert a float into a string */
-#ifndef TPP_HAVE_FTOA
-#define TPP_HAVE_FTOA (TPP_HAVE_EXPR_VALUE_PRINTREPR)
-#endif /* !TPP_HAVE_FTOA */
-
-/* Provide a function `tpp_extension_nearest()` that does fuzzy matching to find
- * the closest match of a given extension name. Used in the warning message emitted
- * when trying to set an unknown extension: `TPP_HAVE_TPP_W_UNKNOWN_EXTENSION` */
-#ifndef TPP_HAVE_TPP_EXTENSION_NEAREST
-#define TPP_HAVE_TPP_EXTENSION_NEAREST \
-	(TPP_HAVE_TPP_W_UNKNOWN_EXTENSION && TPP_HAVE_PROFILE_NOT_MINIMAL)
-#endif /* !TPP_HAVE_TPP_EXTENSION_NEAREST */
-
-/* Provide a function `tpp_warning_group_nearest()` that does fuzzy matching to find
- * the closest match of a given warning name. Used in the warning message emitted
- * when trying to set an unknown warning: `TPP_HAVE_TPP_W_UNKNOWN_WARNING` */
-#ifndef TPP_HAVE_TPP_WARNING_GROUP_NEAREST
-#define TPP_HAVE_TPP_WARNING_GROUP_NEAREST \
-	(TPP_HAVE_TPP_W_UNKNOWN_WARNING && TPP_HAVE_PROFILE_NOT_MINIMAL)
-#endif /* !TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
-
-/* Provide a function `tpp_fuzzy_memcmp()` to quantify the
- * *fuzziness* of how close 2 memory-blocks are to each other.
- *
- * Needed to implement `TPP_HAVE_TPP_EXTENSION_NEAREST` and
- * `TPP_HAVE_TPP_WARNING_GROUP_NEAREST`. */
-#ifndef TPP_HAVE_TPP_FUZZY_MEMCMP
-#define TPP_HAVE_TPP_FUZZY_MEMCMP \
-	(TPP_HAVE_TPP_EXTENSION_NEAREST || TPP_HAVE_TPP_WARNING_GROUP_NEAREST)
-#endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
-
-/* Provide a function `tpp_lexer_define()` + `tpp_lexer_undef()`
- * that can be used to define/undef commandline-defined macros. */
-#ifndef TPP_HAVE_LEXER_CLI_DEFINE
-#define TPP_HAVE_LEXER_CLI_DEFINE (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_CPP_MACROS)
-#endif /* !TPP_HAVE_LEXER_CLI_DEFINE */
-
-/* Provide a function `tpp_lexer_assert()` + `tpp_lexer_unassert()` + `tpp_lexer_unassertall()`
- * that can be used to add/delete keyword assertions. */
-#ifndef TPP_HAVE_LEXER_CLI_ASSERT
-#define TPP_HAVE_LEXER_CLI_ASSERT (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_CPP_ASSERT)
-#endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
-
-/* Provide a function `tpp_keywords_undefall()` + `tpp_lexer_undefall()`
- * that can be used to quickly delete *all* macro definitions. */
-#ifndef TPP_HAVE_KEYWORDS_UNDEFALL
-#define TPP_HAVE_KEYWORDS_UNDEFALL ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_MACROS)
-#endif /* !TPP_HAVE_KEYWORDS_UNDEFALL */
-
-/* Provide a function `tpp_keywords_unassertall()` + `tpp_lexer_unassertall2()`
- * that can be used to quickly delete *all* keyword assertions. */
-#ifndef TPP_HAVE_KEYWORDS_UNASSERTALL
-#define TPP_HAVE_KEYWORDS_UNASSERTALL ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_ASSERT)
-#endif /* !TPP_HAVE_KEYWORDS_UNASSERTALL */
-
-/* Provide a function `tpp_keywords_resetflags()` + `tpp_lexer_kwds_resetflags()`
- * that can be used to delete the flags of all keywords. */
-#ifndef TPP_HAVE_KEYWORDS_RESETFLAGS
-#define TPP_HAVE_KEYWORDS_RESETFLAGS                   \
-	((TPP_PROFILE == TPP_PROFILE_ALL) &&               \
-	 (TPP_HAVE_PRAGMA_ONCE ||                          \
-	  TPP_HAVE_CPP_IMPORT ||                           \
-	  TPP_HAVE_CLANG_MACRO___has_attribute ||          \
-	  TPP_HAVE_CLANG_MACRO___has_builtin ||            \
-	  TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
-	  TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
-	  TPP_HAVE_CLANG_MACRO___has_extension ||          \
-	  TPP_HAVE_CLANG_MACRO___has_feature ||            \
-	  TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
-	  TPP_HAVE_MACRO___is_deprecated ||                \
-	  TPP_HAVE_MACRO___is_poisoned ||                  \
-	  TPP_HAVE_PRAGMA_DEPRECATED ||                    \
-	  TPP_HAVE_PRAGMA_GCC_POISON ||                    \
-	  TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS))
-#endif /* !TPP_HAVE_KEYWORDS_RESETFLAGS */
-
-/* Provide a function `tpp_keywords_resetcounters()` +
- * `tpp_lexer_kwds_resetcounters()` that can be used to
- * reset the state of all `__TPP_COUNTER()` macro expansions. */
-#ifndef TPP_HAVE_KEYWORDS_RESETCOUNTERS
-#define TPP_HAVE_KEYWORDS_RESETCOUNTERS \
-	((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_MACRO___TPP_COUNTER)
-#endif /* !TPP_HAVE_KEYWORDS_RESETCOUNTERS */
-
-/* Filename of definitions file used by `tpp_lexer_define()` */
-#ifndef TPP_CONFIG_CLI_FILENAME
-#define TPP_CONFIG_CLI_FILENAME "<commandline>"
-#endif /* !TPP_CONFIG_CLI_FILENAME */
-
-/* Provide a function `tpp_lexer_dump_definitions()` that can be
- * used to re-print all user-defined macro definitions and asserts.
- *
- * This can be used to implement GCC's CPP's `-dM` CLI flag. */
-#ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS
-#define TPP_HAVE_LEXER_DUMP_DEFINITIONS (TPP_PROFILE == TPP_PROFILE_ALL)
-#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS */
-
-/* Extension to `TPP_HAVE_LEXER_DUMP_DEFINITIONS`: provide an
- * additional flag `TPP_LEXER_DUMP_DEFINITIONS_SORTED` that causes
- * macro (`TPP_HAVE_CPP_MACROS`) / assert (`TPP_HAVE_CPP_ASSERT`)
- * definition to be sorted based on the ID of the associated keyword
- * (which corresponds with the first time the associated keyword was
- * seen, which also usually lines up with the order in which macros
- * were defined) */
-#ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED
-#define TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED (TPP_HAVE_LEXER_DUMP_DEFINITIONS)
-#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED */
-
-/* Extension to `TPP_HAVE_LEXER_DUMP_DEFINITIONS`: provide an
- * additional flag `TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO` that causes every
- * dumped macro definition to be preceded by a comment containing (among
- * other things) the file/line/column where that definition comes from. */
-#ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO
-#define TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO (TPP_HAVE_LEXER_DUMP_DEFINITIONS)
-#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
-
-#if TPP_HAVE_MACRO___has_embed
-/* String representations of what `__has_embed()`
- * should expand to when the file wasn't found
- *
- * Also represents the expansion of the pre-defined macro `__STDC_EMBED_NOT_FOUND__`
- *
- * @detect: #ifdef __STDC_EMBED_NOT_FOUND__ */
-#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND
-#define TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND "0"
-#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND */
-
-/* String representations of what `__has_embed()` should
- * expand to when the file was found and is non-empty
- *
- * Also represents the expansion of the pre-defined macro `__STDC_EMBED_FOUND__`
- *
- * @detect: #ifdef __STDC_EMBED_FOUND__ */
-#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND
-#define TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND "1"
-#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND */
-
-/* String representations of what `__has_embed()` should
- * expand to when the file was found, but is empty
- *
- * Also represents the expansion of the pre-defined macro `__STDC_EMBED_EMPTY__`
- *
- * @detect: #ifdef __STDC_EMBED_EMPTY__ */
-#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY
-#define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
-#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
-#endif /* TPP_HAVE_MACRO___has_embed */
-
-/* Extra configuration for `#pragma message`: print a leading
- * `TPP_CONFIG_FILE_AND_LINE_FORMAT` using the values
- * that would also be printed by `__FILE__`, `__LINE__`, `__COLUMN__` */
-#ifndef TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
-#define TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION (TPP_HAVE_PROFILE_NOT_MINIMAL ? TPP_COMMON_CONF_EXT0 : 0) /* "-fpragma-message-prints-location" */
-#endif /* !TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION */
-
-/* Extra configuration for `#pragma message`: print a trailing `\n` */
-#ifndef TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
-#define TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED (TPP_HAVE_PROFILE_NOT_MINIMAL ? TPP_COMMON_CONF_EXT0 : 0) /* "-fpragma-message-omits-trailing-linefeed" */
-#endif /* !TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED */
-
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -9578,17 +8914,24 @@ TPP_DECL_END
  * **Getter**: `tpp_lexer_getfileandlineformat(lexer)`<br/>
  * **Setter**: `tpp_lexer_setfileandlineformat(lexer, format)` */
 #ifndef TPP_HAVE_RT_FILE_AND_LINE_FORMAT
-#define TPP_HAVE_RT_FILE_AND_LINE_FORMAT \
-	(TPP_PROFILE == TPP_PROFILE_ALL &&   \
-	 (TPP_HAVE_WARNINGS ||               \
-	  (TPP_HAVE_PRAGMA_MESSAGE &&        \
-	   TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)))
+#if (TPP_PROFILE == TPP_PROFILE_ALL && \
+     (TPP_HAVE_WARNINGS ||             \
+      (TPP_HAVE_PRAGMA_MESSAGE &&      \
+       TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)))
+#define TPP_HAVE_RT_FILE_AND_LINE_FORMAT 1
+#else /* ... */
+#define TPP_HAVE_RT_FILE_AND_LINE_FORMAT 0
+#endif /* !... */
 #endif /* !TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
 
 /* General config for `-Wquality` warnings. When overwritten
  * to `0`, all `-Wquality` warnings will be disabled. */
 #ifndef TPP_HAVE_QUALITY_WARNINGS
-#define TPP_HAVE_QUALITY_WARNINGS (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#if (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_QUALITY_WARNINGS 1
+#else /* ... */
+#define TPP_HAVE_QUALITY_WARNINGS 0
+#endif /* !... */
 #endif /* !TPP_HAVE_QUALITY_WARNINGS */
 
 /* Configurations for individual warnings */
@@ -9605,35 +8948,35 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED        \
 	(TPP_HAVE_WARNINGS &&                                   \
 	 ((TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && \
-	   (TPP_HAVE_TOK_C_STRING ||                        \
-	    TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||         \
-	    TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||         \
-	    TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL ||        \
-	    TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL ||        \
-	    TPP_HAVE_TOK_RAW_STRING_LITERAL ||              \
-	    TPP_HAVE_TOK_C_CHAR ||                          \
-	    TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||           \
-	    TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||           \
-	    TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||          \
-	    TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||          \
-	    TPP_HAVE_TOK_RAW_CHAR_LITERAL)) ||              \
+	   (TPP_HAVE_TOK_C_STRING ||                            \
+	    TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||             \
+	    TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||             \
+	    TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL ||            \
+	    TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL ||            \
+	    TPP_HAVE_TOK_RAW_STRING_LITERAL ||                  \
+	    TPP_HAVE_TOK_C_CHAR ||                              \
+	    TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||               \
+	    TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||               \
+	    TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||              \
+	    TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||              \
+	    TPP_HAVE_TOK_RAW_CHAR_LITERAL)) ||                  \
 	  TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
 #define TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED \
 	(TPP_HAVE_WARNINGS &&                              \
 	 TPP_HAVE_STRING_WARN_MULTILINE &&                 \
-	 (TPP_HAVE_TOK_C_STRING ||                     \
-	  TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||      \
-	  TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||      \
-	  TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL ||     \
-	  TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL ||     \
-	  TPP_HAVE_TOK_RAW_STRING_LITERAL ||           \
-	  TPP_HAVE_TOK_C_CHAR ||                       \
-	  TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||        \
-	  TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||        \
-	  TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||       \
-	  TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||       \
+	 (TPP_HAVE_TOK_C_STRING ||                         \
+	  TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||          \
+	  TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||          \
+	  TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL ||         \
+	  TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL ||         \
+	  TPP_HAVE_TOK_RAW_STRING_LITERAL ||               \
+	  TPP_HAVE_TOK_C_CHAR ||                           \
+	  TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||            \
+	  TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||            \
+	  TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||           \
+	  TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||           \
 	  TPP_HAVE_TOK_RAW_CHAR_LITERAL))
 #endif /* !TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 #ifndef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
@@ -9930,6 +9273,926 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_UNICODE)
 #endif /* !TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+
+/************************************************************************/
+/* IMPLICIT API FEATURES (PART 2)                                       */
+/************************************************************************/
+
+/* Provide an API function `tpp_unicode_writeutf8()` */
+#ifndef TPP_HAVE_TPP_UNICODE_WRITEUTF8
+#if (TPP_HAVE_TOK_C_STRING ||                 \
+     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
+     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
+     TPP_HAVE_TOK_BLOCK_STRING_LITERAL ||     \
+     TPP_HAVE_TOK_C_CHAR ||                   \
+     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||   \
+     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||    \
+     TPP_HAVE_TOK_BLOCK_CHAR_LITERAL ||       \
+     TPP_HAVE_IDENTIFIER_ESCAPE_UNI ||        \
+     TPP_HAVE_DECODE_NAMED_ESCAPE)
+#define TPP_HAVE_TPP_UNICODE_WRITEUTF8 1
+#else /* ... */
+#define TPP_HAVE_TPP_UNICODE_WRITEUTF8 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
+
+/* Provide an API for loading the current date/time */
+#ifndef TPP_HAVE_TIME_API
+#if (TPP_HAVE_MACRO___TIME__ ||      \
+     TPP_HAVE_MACRO___DATE__ ||      \
+     TPP_HAVE_MACRO___TIMESTAMP__ || \
+     TPP_HAVE_NUMERIC_DATE_MACROS || \
+     TPP_HAVE_NUMERIC_TIME_MACROS)
+#define TPP_HAVE_TIME_API 1
+#else /* ... */
+#define TPP_HAVE_TIME_API 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TIME_API */
+
+/* Enable support for `TPP_FILE_FLAGS_SYSHDR` */
+#ifndef TPP_HAVE_FILE_SYSHDR
+#if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0
+#define TPP_HAVE_FILE_SYSHDR 1
+#else /* ... */
+#define TPP_HAVE_FILE_SYSHDR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_SYSHDR */
+
+/* Enable support for `TPP_FILE_KIND_SUBTEXT` */
+#ifndef TPP_HAVE_FILE_SUBTEXT
+#if (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_EMBED || \
+     TPP_HAVE_MACRO__Pragma ||                    \
+     TPP_HAVE_MACRO___pragma ||                   \
+     TPP_HAVE_MACRO___TPP_IDENTIFIER ||           \
+     TPP_HAVE_MACRO___TPP_STR_DECOMPILE ||        \
+     TPP_HAVE_MACRO___TPP_STR_PACK ||             \
+     TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
+     TPP_HAVE_PRAGMA_TPP_EXEC ||                  \
+     TPP_HAVE_PRAGMA_TPP_TPP_EXEC)
+#define TPP_HAVE_FILE_SUBTEXT 1
+#else /* ... */
+#define TPP_HAVE_FILE_SUBTEXT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_SUBTEXT */
+
+/* Enable support for `TPP_FILE_KIND_DUMMY`, which is
+ * needed to support gcc's `# <linenum>` -> `1`/`2` flags
+ *
+ * These flags push so-called "dummy" files onto the
+ * `#include`-stack (without altering the actual current
+ * file), with those dummy files acting as additional
+ * entries for `#include` tracebacks. */
+#ifndef TPP_HAVE_FILE_DUMMY
+#if TPP_HAVE_CPP_DIGIT_LINE
+#define TPP_HAVE_FILE_DUMMY 1
+#else /* ... */
+#define TPP_HAVE_FILE_DUMMY 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_DUMMY */
+
+/* Enable support for `TPP_FILE_FLAGS_EXTERN_C` */
+#ifndef TPP_HAVE_FILE_EXTERN_C
+#if (TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_CPP_DIGIT_LINE)
+#define TPP_HAVE_FILE_EXTERN_C 1
+#else /* ... */
+#define TPP_HAVE_FILE_EXTERN_C 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_EXTERN_C */
+
+/* When `TPP_FILE_FLAGS_SYSHDR` is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
+ * then the `TPP_FILE_FLAGS_EXTERN_C` flag should be set alongside `TPP_FILE_FLAGS_SYSHDR`. */
+#ifndef TPP_HAVE_EXTERN_C_FOR_SYSHDR
+#define TPP_HAVE_EXTERN_C_FOR_SYSHDR ((TPP_HAVE_FILE_SYSHDR && TPP_HAVE_FILE_EXTERN_C) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_EXT0 : TPP_COMMON_CONF_FEAT0) : 0) /* "-fextern-c-for-syshdr" */
+#endif /* !TPP_HAVE_EXTERN_C_FOR_SYSHDR */
+
+/* Enable API support for having an `#include`-stack. Despite the name,
+ * this is also needed for macro expansion (see `TPP_HAVE_CPP_MACROS`) */
+#ifndef TPP_HAVE_INCLUDE_STACK
+#if (TPP_HAVE_CPP_MACROS ||       \
+     TPP_HAVE_CPP_INCLUDE ||      \
+     TPP_HAVE_CPP_INCLUDE_NEXT || \
+     TPP_HAVE_CPP_IMPORT ||       \
+     TPP_HAVE_CPP_EMBED ||        \
+     TPP_HAVE_FILE_SUBTEXT ||     \
+     TPP_HAVE_FILE_DUMMY)
+#define TPP_HAVE_INCLUDE_STACK 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_STACK 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+
+/* Support for: custom string list describing the available
+ * `-I/usr/include`-style -> `#include <foo.h>`-paths */
+#ifndef TPP_HAVE_INCLUDE_PATH
+#if TPP_HAVE_INCLUDE_STACK
+#define TPP_HAVE_INCLUDE_PATH 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_PATH 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_PATH */
+
+/* `tpp_include_paths` contains a 2nd path-list that is only searched during `"`-strings */
+#ifndef TPP_HAVE_INCLUDE_PATH_QUOTE
+#if (TPP_HAVE_INCLUDE_STACK && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_INCLUDE_PATH_QUOTE 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_PATH_QUOTE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
+
+/* `tpp_include_paths` contains a 3rd path-list whose files are treated as `TPP_FILE_FLAGS_SYSHDR` */
+#ifndef TPP_HAVE_INCLUDE_PATH_SYSHDR
+#if (TPP_HAVE_INCLUDE_STACK && \
+     TPP_HAVE_FILE_SYSHDR &&   \
+     TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_INCLUDE_PATH_SYSHDR 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_PATH_SYSHDR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_PATH_SYSHDR */
+
+/* A preprocessor tuple describing the built-in, hard-coded, system-include path.
+ * - The paths specified here are searched in order of specification.
+ * - For information on the full `#include`-path resolution order, see `tpp_include_paths`
+ * - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
+ *   trailing slashes in these strings, it will add those itself)
+ *
+ * Example:
+ * ```c
+ * #define TPP_CONFIG_SYSTEM_INCLUDE_PATH  2("/usr/local/include", "/usr/include")
+ * ``` */
+#ifndef TPP_CONFIG_SYSTEM_INCLUDE_PATH
+#define TPP_CONFIG_SYSTEM_INCLUDE_PATH 0()
+#endif /* !TPP_CONFIG_SYSTEM_INCLUDE_PATH */
+
+/* Config option to skip searching `TPP_CONFIG_SYSTEM_INCLUDE_PATH`.
+ * Can (and should) be used to implement `-nostdinc` */
+#ifndef TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
+#define TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH (TPP_TUPLE_NONEMPTY(TPP_CONFIG_SYSTEM_INCLUDE_PATH) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstdinc" */
+#endif /* !TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
+
+/* `tpp_include_paths` contains a 4th path-list that is searched after all other paths */
+#ifndef TPP_HAVE_INCLUDE_PATH_AFTER
+#if (TPP_HAVE_INCLUDE_STACK && ((TPP_PROFILE == TPP_PROFILE_ALL) || \
+                                (TPP_HAVE_PROFILE_NOT_MINIMAL &&    \
+                                 TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH)))
+#define TPP_HAVE_INCLUDE_PATH_AFTER 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_PATH_AFTER 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
+
+/* `"`-quoted `#include`-strings are searched relative to *every* I/O-file found on the
+ * `#include`-stack; not just the most-recent one. Doing this for all files is what TPP2
+ * always- and unconditionally did, but turns out that isn't actually something normally
+ * done by preprocessors. As such, TPP3 turns this behavior into an extension, but has
+ * it turned off by default. */
+#ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE
+#define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE ((TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_COMMON_CONF_EXT0 : 0) /* "-finclude-relative-to-every-file" */
+#endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE */
+
+/* Enable support to push/pop the `#include`-path state */
+#ifndef TPP_HAVE_INCLUDE_PATH_PUSH_POP
+#if (TPP_HAVE_INCLUDE_PATH && (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH || TPP_PROFILE == TPP_PROFILE_ALL))
+#define TPP_HAVE_INCLUDE_PATH_PUSH_POP 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_PATH_PUSH_POP 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+
+/* Use `TPP_REF tpp_string *` instead of `char *` in `#include`-path lists.
+ * Doing so greatly reduces the overhead when `#include`-path lists are
+ * pushed/popped, since `tpp_string` can be incref'd, whereas `char`
+ * must be hard-copied. */
+#ifndef TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
+#if TPP_HAVE_INCLUDE_PATH_PUSH_POP
+#define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+
+/* Provide a function `tpp_lexer_seekpp_rparen()` that can be used
+ * to find the position of a matching `)`-token for the purpose
+ * of macro argument lists. */
+#ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN
+#define TPP_HAVE_LEXER_SEEKPP_RPAREN (TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN */
+
+/* Provide a function `tpp_lexer_seekpp_rparen_ex()` that is pretty much
+ * the same as `tpp_lexer_seekpp_rparen()`, but is also able to deal with
+ * alternate parenthesis pairs: `[ ]` `{ }` `< >` in addition to `( )` */
+#ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
+#define TPP_HAVE_LEXER_SEEKPP_RPAREN_EX (TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+
+/* Enable support for `tpp_file` keeping track of the state of active `#ifdef` directives
+ * via an embedded `tpp_ifdef_stack` strcture (accessible via `tpp_file_getifdef()`) */
+#ifndef TPP_HAVE_IFDEF_STACK
+#if TPP_HAVE_CPP_IF_ELSE_ENDIF
+#define TPP_HAVE_IFDEF_STACK 1
+#else /* ... */
+#define TPP_HAVE_IFDEF_STACK 0
+#endif /* !... */
+#endif /* !TPP_HAVE_IFDEF_STACK */
+
+/* Enable support for `tpp_file_setfilename()` */
+#ifndef TPP_HAVE_FILE_SETFILENAME
+#if (TPP_PROFILE == TPP_PROFILE_ALL || \
+     TPP_HAVE_CPP_DIGIT_LINE ||        \
+     TPP_HAVE_CPP_LINE)
+#define TPP_HAVE_FILE_SETFILENAME 1
+#else /* ... */
+#define TPP_HAVE_FILE_SETFILENAME 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_SETFILENAME */
+
+/* Enable support for `tpp_file_setline()` */
+#ifndef TPP_HAVE_FILE_SETLINE
+#if (TPP_PROFILE == TPP_PROFILE_ALL || \
+     TPP_HAVE_CPP_DIGIT_LINE ||        \
+     TPP_HAVE_CPP_LINE)
+#define TPP_HAVE_FILE_SETLINE 1
+#else /* ... */
+#define TPP_HAVE_FILE_SETLINE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_SETLINE */
+
+/* Enable support for setting a special pointer in files to
+ * represent a lower bound of memory that must be kept loaded. */
+#ifndef TPP_HAVE_FILE_KEEPPOS
+#if (TPP_PROFILE == TPP_PROFILE_ALL || \
+     TPP_HAVE_CPP_MACROS)
+#define TPP_HAVE_FILE_KEEPPOS 1
+#else /* ... */
+#define TPP_HAVE_FILE_KEEPPOS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_KEEPPOS */
+
+/* Keep track of the original `tpp_lexer_arginfo` used during macro invocation,
+ * in order to improve `tpp_file_getlcinfo_ex()`'s `tlcix_proj*` return values,
+ * by making them less error-prone. */
+#ifndef TPP_HAVE_FILE_MACRO_TRACKARGS
+#if (TPP_HAVE_CPP_MACROS &&          \
+     TPP_HAVE_LEXER_SEEKPP_RPAREN && \
+     TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_FILE_MACRO_TRACKARGS 1
+#else /* ... */
+#define TPP_HAVE_FILE_MACRO_TRACKARGS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
+
+/* Provide a special `TPP_FILE_ENCODING_EMBED` file encoding
+ * to convert bytes into `,`-separated decimals on-the-fly.
+ *
+ * NOTE: Even when this is disabled, `#embed` directives work,
+ *       but will have to pre-load the entire input file into
+ *       memory, rather than allowing the file to be streamed
+ *       by converting it on-the-fly. */
+#ifndef TPP_HAVE_FILE_ENCODING_EMBED
+#if (TPP_HAVE_UNICODE &&   \
+     TPP_HAVE_CPP_EMBED && \
+     TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_FILE_ENCODING_EMBED 1
+#else /* ... */
+#define TPP_HAVE_FILE_ENCODING_EMBED 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
+
+/* Provide an API `tpp_lexer_nextrand()` that can be used to generate random
+ * numbers using the already-parsed contents of of I/O and TEXT files as seed. */
+#ifndef TPP_HAVE_LEXER_RAND
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_RANDOM)
+#define TPP_HAVE_LEXER_RAND 1
+#else /* ... */
+#define TPP_HAVE_LEXER_RAND 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_RAND */
+
+/* Provide an API `tpp_file_gethash()` that can be used to calculate a hash
+ * of all already-processed bytes within a file up to a given position. */
+#ifndef TPP_HAVE_FILE_GETHASH
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_LEXER_RAND)
+#define TPP_HAVE_FILE_GETHASH 1
+#else /* ... */
+#define TPP_HAVE_FILE_GETHASH 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_GETHASH */
+
+/* Provide an API `tpp_file_getfullhash()` that behaves similar to `tpp_file_gethash()`,
+ * but also traverses the `#include`-stack to include the hash values of all parent files
+ * found therein, such that the return values describes not only the current file leading
+ * up to a given position, but also all other files that came before. */
+#ifndef TPP_HAVE_FILE_GETFULLHASH
+#if (TPP_HAVE_FILE_GETHASH && TPP_HAVE_INCLUDE_STACK)
+#define TPP_HAVE_FILE_GETFULLHASH 1
+#else /* ... */
+#define TPP_HAVE_FILE_GETFULLHASH 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_GETFULLHASH */
+
+/* Provide a secondary set of keyword APIs that include support for `\`-escape sequences.
+ * Needed to implement `TPP_HAVE_BSE`, `TPP_HAVE_IDENTIFIER_ESCAPE_UNI` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED` */
+#ifndef TPP_HAVE_ESCAPED_KEYWORDS
+#if (TPP_HAVE_BSE || TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)
+#define TPP_HAVE_ESCAPED_KEYWORDS 1
+#else /* ... */
+#define TPP_HAVE_ESCAPED_KEYWORDS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
+
+/* Enable support for `tpp_io_compare_mtime()`.
+ * This is the underlying system function needed for
+ * `#pragma GCC dependency` (see `TPP_HAVE_PRAGMA_GCC_DEPENDENCY`) */
+#ifndef TPP_HAVE_IO_COMPARE_MTIME
+#if ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY) && \
+     (defined(tpp_io_compare_mtime) || (TPP_OS_WINDOWS || TPP_OS_UNIX)))
+#define TPP_HAVE_IO_COMPARE_MTIME 1
+#else /* ... */
+#define TPP_HAVE_IO_COMPARE_MTIME 0
+#endif /* !... */
+#endif /* !TPP_HAVE_IO_COMPARE_MTIME */
+
+/* Enable support for `tpp_io_normalize_filename()`.
+ * This function is needed to detect+fix (see `TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING`)
+ * incorrect casing in `#include`-paths on host platforms with case-insensitive filenames
+ * (i.e.: windows).
+ *
+ * In particular, this function is necessary such that `#pragma once` in a header file
+ * `<stdio.h>` will still prevent multiple inclusion if that file is included multiple
+ * times with different path casing:
+ * ```c
+ * #include <stdio.h>
+ * #include <STDIO.H> // `TPP_HAVE_IO_NORMALIZE_FILENAME` saves the day
+ * ```
+ */
+#ifndef TPP_HAVE_IO_NORMALIZE_FILENAME
+#if (TPP_OS_WINDOWS && (TPP_HAVE_USER_KEYWORDS || TPP_HAVE_PROFILE_NOT_MINIMAL))
+#define TPP_HAVE_IO_NORMALIZE_FILENAME 1
+#else /* ... */
+#define TPP_HAVE_IO_NORMALIZE_FILENAME 0
+#endif /* !... */
+#endif /* !TPP_HAVE_IO_NORMALIZE_FILENAME */
+
+/* Enable support for `tpp_joinpath()`, a wrapper around another internal function
+ * used to implement `tpp_lexer_openfile()` (see `TPP_HAVE_LEXER_OPENFILE`) and is also
+ * needed to implement `#pragma GCC dependency` (see `TPP_HAVE_PRAGMA_GCC_DEPENDENCY`)
+ *
+ * This function takes 2 paths, resolves `.` and `..` path references between them,
+ * whilst pasting them onto each other in order to form a singular, normalized path */
+#ifndef TPP_HAVE_JOINPATH
+#if (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
+#define TPP_HAVE_JOINPATH 1
+#else /* ... */
+#define TPP_HAVE_JOINPATH 0
+#endif /* !... */
+#endif /* !TPP_HAVE_JOINPATH */
+
+/* Enable support for `tpp_lexer_initfile_io()` and `tpp_lexer_initfile_io_ex()` */
+#ifndef TPP_HAVE_LEXER_INIT_IO
+#if (TPP_HAVE_FILE_NOKWD && (TPP_PROFILE == TPP_PROFILE_ALL))
+#define TPP_HAVE_LEXER_INIT_IO 1
+#else /* ... */
+#define TPP_HAVE_LEXER_INIT_IO 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_INIT_IO */
+
+/* Enable support for `tpp_lexer_initfile_open()`, a function that lets you directly
+ * initialize the lexer by passing in a filename that should be opened as input.
+ *
+ * When `TPP_HAVE_INCLUDE_STACK` is enabled, this also enables support for `tpp_lexer_pushfile_open()` */
+#ifndef TPP_HAVE_LEXER_INIT_OPEN
+#if TPP_HAVE_LEXER_OPENFILE
+#define TPP_HAVE_LEXER_INIT_OPEN 1
+#else /* ... */
+#define TPP_HAVE_LEXER_INIT_OPEN 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_INIT_OPEN */
+
+/* Provide an API `tpp_string_builder` centered around building `tpp_string` */
+#ifndef TPP_HAVE_STRING_BUILDER
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) ||         \
+     TPP_HAVE_LEXER_DECODESTRING ||              \
+     TPP_HAVE_LEXER_SEEKPP_RPAREN ||             \
+     (TPP_HAVE_LEXER_DECODE_INCLUDE_STRING &&    \
+      (TPP_CONF_MAYBE_1(TPP_HAVE_BSE) ||         \
+       TPP_CONF_MAYBE_1(TPP_HAVE_TRIGRAPHS))) || \
+     TPP_HAVE_MACRO___FILE__ ||                  \
+     TPP_HAVE_MACRO___BASE_FILE__ ||             \
+     TPP_HAVE_MACRO___FILE_NAME__ ||             \
+     TPP_HAVE_MACRO___TPP_EVAL ||                \
+     TPP_HAVE_MACRO___TPP_STR_PACK ||            \
+     TPP_HAVE_MACRO___TPP_EXEC ||                \
+     TPP_HAVE_MACRO___TPP_STR_SUBSTR ||          \
+     TPP_HAVE_MACRO___TPP_LOAD_FILE ||           \
+     TPP_HAVE_CPP_EMBED)
+#define TPP_HAVE_STRING_BUILDER 1
+#else /* ... */
+#define TPP_HAVE_STRING_BUILDER 0
+#endif /* !... */
+#endif /* !TPP_HAVE_STRING_BUILDER */
+
+/* Provide a function `tpp_string_builder_tryalloc()` */
+#ifndef TPP_HAVE_STRING_BUILDER_TRYALLOC
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_LOAD_FILE)
+#define TPP_HAVE_STRING_BUILDER_TRYALLOC 1
+#else /* ... */
+#define TPP_HAVE_STRING_BUILDER_TRYALLOC 0
+#endif /* !... */
+#endif /* !TPP_HAVE_STRING_BUILDER_TRYALLOC */
+
+/* Enable support for `tpp_lexer_skip()` and `tpp_lexer_require()` */
+#ifndef TPP_HAVE_LEXER_SKIP
+#if (TPP_HAVE_PROFILE_NOT_MINIMAL ||              \
+     TPP_HAVE_PRAGMA_PUSH_MACRO ||                \
+     TPP_HAVE_PRAGMA_DEPRECATED ||                \
+     TPP_HAVE_PRAGMA_MESSAGE ||                   \
+     TPP_HAVE_PRAGMA_ERROR ||                     \
+     TPP_HAVE_PRAGMA_WARNING ||                   \
+     TPP_HAVE_PRAGMA_EXTENSION ||                 \
+     TPP_HAVE_PRAGMA_TPP_WARNING ||               \
+     TPP_HAVE_PRAGMA_TPP_EXTENSION ||             \
+     TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||     \
+     TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS || \
+     TPP_HAVE_PRAGMA_TPP_EXEC ||                  \
+     TPP_HAVE_PRAGMA_TPP_TPP_EXEC ||              \
+     TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH ||          \
+     TPP_HAVE_MACRO__Pragma ||                    \
+     TPP_HAVE_MACRO___TPP_EVAL ||                 \
+     TPP_HAVE_MACRO___has_include ||              \
+     TPP_HAVE_MACRO___has_include_next ||         \
+     TPP_HAVE_MACRO___has_embed ||                \
+     TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
+     TPP_HAVE_MACRO___TPP_STR_SIZE ||             \
+     TPP_HAVE_MACRO___TPP_RANDOM ||               \
+     TPP_HAVE_MACRO___TPP_STR_SUBSTR ||           \
+     TPP_HAVE_CPP_ASSERT ||                       \
+     TPP_HAVE_CPP_EMBED ||                        \
+     TPP_HAVE_BUILTIN_PARSEEXPR_HOOK)
+#define TPP_HAVE_LEXER_SKIP 1
+#else /* ... */
+#define TPP_HAVE_LEXER_SKIP 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_SKIP */
+
+/* Enable support for storing a time value in `tpp_lexer` */
+#ifndef TPP_HAVE_LEXER_TIME
+#if TPP_HAVE_TIME_API
+#define TPP_HAVE_LEXER_TIME 1
+#else /* ... */
+#define TPP_HAVE_LEXER_TIME 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_TIME */
+
+/* Enable support for `tpp_lexer_tryskip_raw()`, a function that is used-
+ * and needed in order to seek- and skip-over the `(` token following a
+ * macro's name (with support for searching for tokens in parent files
+ * of the current one, but rolling back all changes if the next token isn't
+ * as expected). It also offers a flag `TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV`
+ * that will retain the `[tpp_file_getlastpos(),*)` regions of files as
+ * they are scanned, allowing it to keep the previous token (which is
+ * probably the name of a macro) loaded in memory. */
+#ifndef TPP_HAVE_LEXER_TRYSKIP_RAW
+#if (TPP_PROFILE == TPP_PROFILE_ALL || \
+     TPP_HAVE_CPP_MACROS)
+#define TPP_HAVE_LEXER_TRYSKIP_RAW 1
+#else /* ... */
+#define TPP_HAVE_LEXER_TRYSKIP_RAW 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_TRYSKIP_RAW */
+
+/* Provide a function `tpp_lexer_reprtokenid()` to
+ * return the string-representation of a given token ID */
+#ifndef TPP_HAVE_LEXER_REPRTOKENID
+#if (TPP_HAVE_LEXER_SKIP)
+#define TPP_HAVE_LEXER_REPRTOKENID 1
+#else /* ... */
+#define TPP_HAVE_LEXER_REPRTOKENID 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_REPRTOKENID */
+
+/* Provide a function `tpp_reprtokenid()` that does the
+ * same as `tpp_lexer_reprtokenid()` (and is also used to
+ * implement that function), but fails for user-defined
+ * keyword token IDs */
+#ifndef TPP_HAVE_REPRTOKENID
+#if (TPP_HAVE_LEXER_REPRTOKENID)
+#define TPP_HAVE_REPRTOKENID 1
+#else /* ... */
+#define TPP_HAVE_REPRTOKENID 0
+#endif /* !... */
+#endif /* !TPP_HAVE_REPRTOKENID */
+
+/* Provide a lexer state flag `TPP_LEXER_STATE_FLAG_ALLTOKENS` that forces
+ * `tpp_lexer_yieldpp()` to always re-emit *all* tokens (rather than skip
+ * over space/lf/comment tokens based on `TPP_HAVE_TOK_SPACE`,
+ * `TPP_HAVE_TOK_LF` and `TPP_HAVE_TOK_COMMENT`)
+ *
+ * This flag is also needed internally when TPP needs to expand
+ * the arguments supplied to a user-defined macro */
+#ifndef TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
+#if (TPP_HAVE_CPP_MACROS && (TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE) || \
+                             TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) ||    \
+                             TPP_CONF_MAYBE_0(TPP_HAVE_TOK_COMMENT)))
+#define TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS 1
+#else /* ... */
+#define TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+
+/* Provide a function `tpp_lexer_getkeyworddefined()` to check
+ * if a given keyword is `defined()` (meaning it can be expanded
+ * as a (potentially builtin) macro) */
+#ifndef TPP_HAVE_LEXER_GETKEYWORDDEFINED
+#if (TPP_HAVE_CPP_IF_ELSE_ENDIF || \
+     TPP_HAVE_CPP_MACROS ||        \
+     TPP_HAVE_BUILTIN_EXPR_DEFINED)
+#define TPP_HAVE_LEXER_GETKEYWORDDEFINED 1
+#else /* ... */
+#define TPP_HAVE_LEXER_GETKEYWORDDEFINED 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+
+/* Provide a set of macros/functions `tpp_lexer_manualpopfile_*`
+ * that can be used to seek through the contents of files further
+ * up the #include-stack in a way that allows for rollback.
+ *
+ * - `tpp_lexer_manualpopfile_start()`
+ * - `tpp_lexer_manualpopfile_popfile()`
+ * - `tpp_lexer_manualpopfile_canpopfile()`
+ * - `tpp_lexer_manualpopfile_break_rollback()`
+ * - `tpp_lexer_manualpopfile_break_commit()`
+ * - `tpp_lexer_manualpopfile_break()`
+ * - `tpp_lexer_manualpopfile_end_rollback()`
+ * - `tpp_lexer_manualpopfile_end_commit()`
+ * - `tpp_lexer_manualpopfile_end()`
+ */
+#ifndef TPP_HAVE_LEXER_MANUALPOPFILE
+#if (TPP_HAVE_INCLUDE_STACK && (TPP_HAVE_CPP_MACROS ||        \
+                                TPP_HAVE_LEXER_TRYSKIP_RAW || \
+                                TPP_HAVE_LEXER_SKIP))
+#define TPP_HAVE_LEXER_MANUALPOPFILE 1
+#else /* ... */
+#define TPP_HAVE_LEXER_MANUALPOPFILE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
+
+/* Provide a function `tpp_macro_equals()` to compare macro definitions.
+ * Because the C standard specifies that re-defining a macro should only
+ * be worthy of a warning if its new definition differs from its old one,
+ * this function is used to only empty `TPP_W_REDEFINE_MACRO` if exactly
+ * that happened.
+ *
+ * ```c
+ * #define foo 10
+ * #define foo 10  // Don't warn here (not even because of this comment)
+ * #define foo 11  // But *do* warn here!
+ * ``` */
+#ifndef TPP_HAVE_MACRO_EQUALS
+#if (TPP_HAVE_TPP_W_REDEFINE_MACRO)
+#define TPP_HAVE_MACRO_EQUALS 1
+#else /* ... */
+#define TPP_HAVE_MACRO_EQUALS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_MACRO_EQUALS */
+
+/* Provide a function `tpp_expr_value_printrepr()` to construct the result
+ * of `__TPP_EVAL` (see `TPP_HAVE_MACRO___TPP_EVAL`) */
+#ifndef TPP_HAVE_EXPR_VALUE_PRINTREPR
+#if (TPP_HAVE_MACRO___TPP_EVAL)
+#define TPP_HAVE_EXPR_VALUE_PRINTREPR 1
+#else /* ... */
+#define TPP_HAVE_EXPR_VALUE_PRINTREPR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_EXPR_VALUE_PRINTREPR */
+
+/* Provide a function `tpp_lexer_dump_definitions()` that can be
+ * used to re-print all user-defined macro definitions and asserts.
+ *
+ * This can be used to implement GCC's CPP's `-dM` CLI flag. */
+#ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS (TPP_PROFILE == TPP_PROFILE_ALL)
+#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS */
+
+/* Extension to `TPP_HAVE_LEXER_DUMP_DEFINITIONS`: provide an
+ * additional flag `TPP_LEXER_DUMP_DEFINITIONS_SORTED` that causes
+ * macro (`TPP_HAVE_CPP_MACROS`) / assert (`TPP_HAVE_CPP_ASSERT`)
+ * definition to be sorted based on the ID of the associated keyword
+ * (which corresponds with the first time the associated keyword was
+ * seen, which also usually lines up with the order in which macros
+ * were defined) */
+#ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED (TPP_HAVE_LEXER_DUMP_DEFINITIONS)
+#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED */
+
+/* Extension to `TPP_HAVE_LEXER_DUMP_DEFINITIONS`: provide an
+ * additional flag `TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO` that causes every
+ * dumped macro definition to be preceded by a comment containing (among
+ * other things) the file/line/column where that definition comes from. */
+#ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO
+#define TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO (TPP_HAVE_LEXER_DUMP_DEFINITIONS)
+#endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO */
+
+/* Provide a function `tpp_token_encodestring()` to perform `\`-escaping of arbitrary
+ * data, such that `tpp_lexer_yieldraw()` and `tpp_lexer_decodestring()` will understand
+ * the encoded representation in such a way that the original data is reproducible.
+ *
+ * This is primarily needed to implement stuff like `#define STR(x) #x` */
+#ifndef TPP_HAVE_TOKEN_ENCODESTRING
+#if (TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || \
+     (TPP_HAVE_EXPR_VALUE_PRINTREPR && TPP_HAVE_BUILTIN_EXPR_STRINGS) ||     \
+     TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ ||              \
+     TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_STR_PACK ||        \
+     TPP_HAVE_MACRO___TPP_STR_SUBSTR ||                                      \
+     (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_LEXER_DUMP_DEFINITIONS))
+#define TPP_HAVE_TOKEN_ENCODESTRING 1
+#else /* ... */
+#define TPP_HAVE_TOKEN_ENCODESTRING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+
+/* Provide a function `tpp_lexer_require_whitespace()` to check if 2 tokens,
+ * when written directly adjacent to each other, *might* produce a different
+ * (set of) token(s) when re-parsed.
+ *
+ * This function is used to implement `TPP_HAVE_MAGIC_WHITESPACE`, which in
+ * turn is needed to inject additional whitespace when failure to do so could
+ * result in accidental token concatenation during reparsing. */
+#ifndef TPP_HAVE_LEXER_REQUIRE_WHITESPACE
+#if TPP_HAVE_MAGIC_WHITESPACE
+#define TPP_HAVE_LEXER_REQUIRE_WHITESPACE 1
+#else /* ... */
+#define TPP_HAVE_LEXER_REQUIRE_WHITESPACE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_REQUIRE_WHITESPACE */
+
+/* Provide a function `tpp_lexer_decodeint_expr()` to parse an integer into a `tpp_expr_value` */
+#ifndef TPP_HAVE_LEXER_DECODEINT_EXPR
+#if (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_C_INT)
+#define TPP_HAVE_LEXER_DECODEINT_EXPR 1
+#else /* ... */
+#define TPP_HAVE_LEXER_DECODEINT_EXPR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_EXPR */
+
+/* Provide a function `tpp_lexer_decodeint()` to parse an integer */
+#ifndef TPP_HAVE_LEXER_DECODEINT
+#if (TPP_HAVE_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR ||   \
+                          TPP_HAVE_CPP_LINE ||               \
+                          TPP_HAVE_CPP_DIGIT_LINE ||         \
+                          TPP_HAVE_MACRO___TPP_STR_PACK ||   \
+                          TPP_HAVE_MACRO___TPP_RANDOM ||     \
+                          TPP_HAVE_MACRO___TPP_STR_SUBSTR || \
+                          TPP_HAVE_PRAGMA_WARNING ||         \
+                          TPP_HAVE_PRAGMA_TPP_WARNING))
+#define TPP_HAVE_LEXER_DECODEINT 1
+#else /* ... */
+#define TPP_HAVE_LEXER_DECODEINT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_DECODEINT */
+
+/* Enable support for `0x` literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
+#ifndef TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS
+#define TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS ((TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fhex-literals" */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS */
+
+/* Enable support for `0b` literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
+#ifndef TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS
+#define TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS ((TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fbinary-literals" */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS */
+
+/* Enable support for `0o` literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
+#ifndef TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS
+#define TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS ((TPP_HAVE_LEXER_DECODEINT && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_TOK_C_INT) ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-foctal-literals" */
+#endif /* !TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS */
+
+/* Provide a function `tpp_lexer_decodefloat_expr()` to parse a float into a `tpp_expr_value` */
+#ifndef TPP_HAVE_LEXER_DECODEFLOAT_EXPR
+#if (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && \
+     TPP_HAVE_BUILTIN_EXPR_FLOATS &&    \
+     TPP_HAVE_TOK_FLOAT)
+#define TPP_HAVE_LEXER_DECODEFLOAT_EXPR 1
+#else /* ... */
+#define TPP_HAVE_LEXER_DECODEFLOAT_EXPR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
+
+/* Provide a function `tpp_lexer_decodefloat()` to parse a float */
+#ifndef TPP_HAVE_LEXER_DECODEFLOAT
+#if (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
+#define TPP_HAVE_LEXER_DECODEFLOAT 1
+#else /* ... */
+#define TPP_HAVE_LEXER_DECODEFLOAT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
+
+/* Provide a function `tpp_lexer_parsecharacter_literal()` to parse character literals */
+#ifndef TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
+#if (TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS)
+#define TPP_HAVE_LEXER_PARSECHARACTER_LITERAL 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PARSECHARACTER_LITERAL 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
+
+/* Provide a function `tpp_lexer_parsestring_expr()` to parse a string into a `tpp_expr_value` */
+#ifndef TPP_HAVE_LEXER_PARSESTRING_EXPR
+#if (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && \
+     TPP_HAVE_BUILTIN_EXPR_STRINGS &&   \
+     TPP_HAVE_LEXER_DECODESTRING)
+#define TPP_HAVE_LEXER_PARSESTRING_EXPR 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PARSESTRING_EXPR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PARSESTRING_EXPR */
+
+/* Provide a function `tpp_lexer_parsecharacter_expr()` to parse a character literal into a `tpp_expr_value` */
+#ifndef TPP_HAVE_LEXER_PARSECHARACTER_EXPR
+#if (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK &&          \
+     TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS && \
+     TPP_HAVE_LEXER_DECODESTRING)
+#define TPP_HAVE_LEXER_PARSECHARACTER_EXPR 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PARSECHARACTER_EXPR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+
+/* Provide a builtin implementation for `tpp_expr_value` and its API */
+#undef TPP_HAVE_BUILTIN_EXPR_VALUE
+#if !defined(tpp_expr_value) && TPP_HAVE_PARSEEXPR_HOOK
+#define TPP_HAVE_BUILTIN_EXPR_VALUE 1
+#else /* !tpp_expr_value && TPP_HAVE_PARSEEXPR_HOOK */
+#define TPP_HAVE_BUILTIN_EXPR_VALUE 0
+#endif /* tpp_expr_value || !TPP_HAVE_PARSEEXPR_HOOK */
+
+/* Provide a function `tpp_ftoa()` to convert a float into a string */
+#ifndef TPP_HAVE_FTOA
+#if (TPP_HAVE_EXPR_VALUE_PRINTREPR)
+#define TPP_HAVE_FTOA 1
+#else /* ... */
+#define TPP_HAVE_FTOA 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FTOA */
+
+/* Provide a function `tpp_extension_nearest()` that does fuzzy matching to find
+ * the closest match of a given extension name. Used in the warning message emitted
+ * when trying to set an unknown extension: `TPP_HAVE_TPP_W_UNKNOWN_EXTENSION` */
+#ifndef TPP_HAVE_TPP_EXTENSION_NEAREST
+#if (TPP_HAVE_TPP_W_UNKNOWN_EXTENSION && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_TPP_EXTENSION_NEAREST 1
+#else /* ... */
+#define TPP_HAVE_TPP_EXTENSION_NEAREST 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TPP_EXTENSION_NEAREST */
+
+/* Provide a function `tpp_warning_group_nearest()` that does fuzzy matching to find
+ * the closest match of a given warning name. Used in the warning message emitted
+ * when trying to set an unknown warning: `TPP_HAVE_TPP_W_UNKNOWN_WARNING` */
+#ifndef TPP_HAVE_TPP_WARNING_GROUP_NEAREST
+#if (TPP_HAVE_TPP_W_UNKNOWN_WARNING && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_TPP_WARNING_GROUP_NEAREST 1
+#else /* ... */
+#define TPP_HAVE_TPP_WARNING_GROUP_NEAREST 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
+
+/* Provide a function `tpp_fuzzy_memcmp()` to quantify the
+ * *fuzziness* of how close 2 memory-blocks are to each other.
+ *
+ * Needed to implement `TPP_HAVE_TPP_EXTENSION_NEAREST` and
+ * `TPP_HAVE_TPP_WARNING_GROUP_NEAREST`. */
+#ifndef TPP_HAVE_TPP_FUZZY_MEMCMP
+#if (TPP_HAVE_TPP_EXTENSION_NEAREST || \
+     TPP_HAVE_TPP_WARNING_GROUP_NEAREST)
+#define TPP_HAVE_TPP_FUZZY_MEMCMP 1
+#else /* ... */
+#define TPP_HAVE_TPP_FUZZY_MEMCMP 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
+
+/* Provide a function `tpp_lexer_define()` + `tpp_lexer_undef()`
+ * that can be used to define/undef commandline-defined macros. */
+#ifndef TPP_HAVE_LEXER_CLI_DEFINE
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_MACROS)
+#define TPP_HAVE_LEXER_CLI_DEFINE 1
+#else /* ... */
+#define TPP_HAVE_LEXER_CLI_DEFINE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_CLI_DEFINE */
+
+/* Provide a function `tpp_lexer_assert()` + `tpp_lexer_unassert()` + `tpp_lexer_unassertall()`
+ * that can be used to add/delete keyword assertions. */
+#ifndef TPP_HAVE_LEXER_CLI_ASSERT
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_ASSERT)
+#define TPP_HAVE_LEXER_CLI_ASSERT 1
+#else /* ... */
+#define TPP_HAVE_LEXER_CLI_ASSERT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
+
+/* Provide a function `tpp_keywords_undefall()` + `tpp_lexer_undefall()`
+ * that can be used to quickly delete *all* macro definitions. */
+#ifndef TPP_HAVE_KEYWORDS_UNDEFALL
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_MACROS)
+#define TPP_HAVE_KEYWORDS_UNDEFALL 1
+#else /* ... */
+#define TPP_HAVE_KEYWORDS_UNDEFALL 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORDS_UNDEFALL */
+
+/* Provide a function `tpp_keywords_unassertall()` + `tpp_lexer_unassertall2()`
+ * that can be used to quickly delete *all* keyword assertions. */
+#ifndef TPP_HAVE_KEYWORDS_UNASSERTALL
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_ASSERT)
+#define TPP_HAVE_KEYWORDS_UNASSERTALL 1
+#else /* ... */
+#define TPP_HAVE_KEYWORDS_UNASSERTALL 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORDS_UNASSERTALL */
+
+/* Provide a function `tpp_keywords_resetflags()` + `tpp_lexer_kwds_resetflags()`
+ * that can be used to delete the flags of all keywords. */
+#ifndef TPP_HAVE_KEYWORDS_RESETFLAGS
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) &&               \
+     (TPP_HAVE_PRAGMA_ONCE ||                          \
+      TPP_HAVE_CPP_IMPORT ||                           \
+      TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+      TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+      TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+      TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+      TPP_HAVE_CLANG_MACRO___has_extension ||          \
+      TPP_HAVE_CLANG_MACRO___has_feature ||            \
+      TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
+      TPP_HAVE_MACRO___is_deprecated ||                \
+      TPP_HAVE_MACRO___is_poisoned ||                  \
+      TPP_HAVE_PRAGMA_DEPRECATED ||                    \
+      TPP_HAVE_PRAGMA_GCC_POISON ||                    \
+      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS))
+#define TPP_HAVE_KEYWORDS_RESETFLAGS 1
+#else /* ... */
+#define TPP_HAVE_KEYWORDS_RESETFLAGS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORDS_RESETFLAGS */
+
+/* Provide a function `tpp_keywords_resetcounters()` +
+ * `tpp_lexer_kwds_resetcounters()` that can be used to
+ * reset the state of all `__TPP_COUNTER()` macro expansions. */
+#ifndef TPP_HAVE_KEYWORDS_RESETCOUNTERS
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_MACRO___TPP_COUNTER)
+#define TPP_HAVE_KEYWORDS_RESETCOUNTERS 1
+#else /* ... */
+#define TPP_HAVE_KEYWORDS_RESETCOUNTERS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORDS_RESETCOUNTERS */
+
+/* Filename of definitions file used by `tpp_lexer_define()` */
+#ifndef TPP_CONFIG_CLI_FILENAME
+#define TPP_CONFIG_CLI_FILENAME "<commandline>"
+#endif /* !TPP_CONFIG_CLI_FILENAME */
+
+#if TPP_HAVE_MACRO___has_embed
+/* String representations of what `__has_embed()`
+ * should expand to when the file wasn't found
+ *
+ * Also represents the expansion of the pre-defined macro `__STDC_EMBED_NOT_FOUND__`
+ *
+ * @detect: #ifdef __STDC_EMBED_NOT_FOUND__ */
+#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND
+#define TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND "0"
+#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND */
+
+/* String representations of what `__has_embed()` should
+ * expand to when the file was found and is non-empty
+ *
+ * Also represents the expansion of the pre-defined macro `__STDC_EMBED_FOUND__`
+ *
+ * @detect: #ifdef __STDC_EMBED_FOUND__ */
+#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND
+#define TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND "1"
+#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND */
+
+/* String representations of what `__has_embed()` should
+ * expand to when the file was found, but is empty
+ *
+ * Also represents the expansion of the pre-defined macro `__STDC_EMBED_EMPTY__`
+ *
+ * @detect: #ifdef __STDC_EMBED_EMPTY__ */
+#ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY
+#define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
+#endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
+#endif /* TPP_HAVE_MACRO___has_embed */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -12807,6 +13070,8 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
      TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_EXTENSION) ||                       \
      TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_WARNING) ||                         \
      TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE) ||                         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) ||         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) || \
      TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ERROR) ||                           \
      TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_REGION) ||                          \
      TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_TPP_EXEC) ||                        \
@@ -12989,9 +13254,7 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
      TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) ||         \
      TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS) ||           \
      TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS) ||        \
-     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS) ||         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) ||         \
-     TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED))
+     TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS))
 #define TPP_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_HAVE_FEATURES 0
@@ -13266,6 +13529,12 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE)
 	TPP_FEAT_PRAGMA_MESSAGE,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+	TPP_FEAT_PRAGMA_MESSAGE_PRINTS_LOCATION,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+	TPP_FEAT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ERROR)
 	TPP_FEAT_PRAGMA_ERROR,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ERROR) */
@@ -13815,12 +14084,6 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS)
 	TPP_FEAT_LEXER_DECODEINT_OCTAL_LITERALS,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
-	TPP_FEAT_PRAGMA_MESSAGE_PRINTS_LOCATION,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
-	TPP_FEAT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED,
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 	TPP_FEAT_COUNT
 } tpp_feature_id;
 
@@ -14182,6 +14445,14 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_PRAGMA_MESSAGE): 1;
 #define _tpp_lexer_has_PRAGMA_MESSAGE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_PRAGMA_MESSAGE)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+		unsigned int TPP_INTERNAL(tff_PRAGMA_MESSAGE_PRINTS_LOCATION): 1;
+#define _tpp_lexer_has_PRAGMA_MESSAGE_PRINTS_LOCATION(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+		unsigned int TPP_INTERNAL(tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED): 1;
+#define _tpp_lexer_has_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_ERROR)
 		unsigned int TPP_INTERNAL(tff_PRAGMA_ERROR): 1;
 #define _tpp_lexer_has_PRAGMA_ERROR(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_PRAGMA_ERROR)
@@ -14914,14 +15185,6 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_LEXER_DECODEINT_OCTAL_LITERALS): 1;
 #define _tpp_lexer_has_LEXER_DECODEINT_OCTAL_LITERALS(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_LEXER_DECODEINT_OCTAL_LITERALS)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
-		unsigned int TPP_INTERNAL(tff_PRAGMA_MESSAGE_PRINTS_LOCATION): 1;
-#define _tpp_lexer_has_PRAGMA_MESSAGE_PRINTS_LOCATION(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_PRAGMA_MESSAGE_PRINTS_LOCATION)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
-#if TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
-		unsigned int TPP_INTERNAL(tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED): 1;
-#define _tpp_lexer_has_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
-#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 	} TPP_INTERNAL(tf_flags);
 	unsigned char TPP_INTERNAL(ttf_bitset)[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_features;
@@ -15208,6 +15471,12 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE)
 #define _tpp_lexer_has_PRAGMA_MESSAGE(self) TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#define _tpp_lexer_has_PRAGMA_MESSAGE_PRINTS_LOCATION(self) TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+#define _tpp_lexer_has_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED(self) TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_ERROR)
 #define _tpp_lexer_has_PRAGMA_ERROR(self) TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_ERROR)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_ERROR) */
@@ -15757,12 +16026,6 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS)
 #define _tpp_lexer_has_LEXER_DECODEINT_OCTAL_LITERALS(self) TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
-#define _tpp_lexer_has_PRAGMA_MESSAGE_PRINTS_LOCATION(self) TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
-#if TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
-#define _tpp_lexer_has_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED(self) TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
-#endif /* TPP_CONF_IS_CONST(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 
 /************************************************************************/
 /* File: parts/file.h                                                   */

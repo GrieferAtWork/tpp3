@@ -3,11 +3,27 @@
 These configurations all define something other than an enabled/disabled state.
 
 <!--BEGIN:value-->
+## TPP_CONFIG_FILE_AND_LINE_FORMAT
+
+Format to use for file+line+column log messages.
+When [`TPP_HAVE_RT_FILE_AND_LINE_FORMAT`](config-core.md#tpp_have_rt_file_and_line_format) is enabled, this is
+only the *default*-format, with the actual format being overwritable
+at runtime.
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+defined(_MSC_VER) ? "%Pf(%Pl, %Pc): " : "%Pf:%Pl:%Pc: "
+```
+</details>
+
 ## TPP_CONFIG_SYSTEM_INCLUDE_PATH
 
 A preprocessor tuple describing the built-in, hard-coded, system-include path.
 - The paths specified here are searched in order of specification.
-- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L18439)
+- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L18702)
 - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
   trailing slashes in these strings, it will add those itself)
 
@@ -28,7 +44,7 @@ Default:
 
 ## TPP_CONFIG_CLI_FILENAME
 
-Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L20280)
+Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L20543)
 
 <details><summary>Details</summary>
 
@@ -108,22 +124,6 @@ Detect:
 #ifdef __STDC_EMBED_EMPTY__
 ...
 #endif
-```
-</details>
-
-## TPP_CONFIG_FILE_AND_LINE_FORMAT
-
-Format to use for file+line+column log messages.
-When [`TPP_HAVE_RT_FILE_AND_LINE_FORMAT`](config-core.md#tpp_have_rt_file_and_line_format) is enabled, this is
-only the *default*-format, with the actual format being overwritable
-at runtime.
-
-<details><summary>Details</summary>
-
-Default:
-
-```c
-defined(_MSC_VER) ? "%Pf(%Pl, %Pc): " : "%Pf:%Pl:%Pc: "
 ```
 </details>
 
