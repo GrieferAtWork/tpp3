@@ -191,6 +191,18 @@
  *         enabling user-code to test feature flags you implemented without the use
  *         of TPP's extension system
  *
+ * >> #define TPP_BUILTIN_MACRO(keyword_id, value)
+ *    Defines the textual expansion of a builtin macro when it is defined.
+ *    This can be used to set the expansion values of builtin macros, such
+ *    as OS/CPU definitions, or compilers. One such macro that is always
+ *    defined (sorry: you can't disable this one) is `__TPP_VERSION__`, which
+ *    expands to TPP's version number.
+ *    The specified `value` must be a constant string literal.
+ *    Example:
+ *       >> TPP_KWD(KWD___MY_COMPILER__, "__MY_COMPILER__")
+ *       >> TPP_MACRO(KWD___MY_COMPILER__, 1) // Always defined
+ *       >> TPP_BUILTIN_MACRO(KWD___MY_COMPILER__, "1337") // What `__MY_COMPILER__` expands to
+ *
  ********************************************************************************/
 
 

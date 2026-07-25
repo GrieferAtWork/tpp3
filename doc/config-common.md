@@ -7,8 +7,8 @@ Similar to `TPP_PROFILE`, common configuration groups don't configure individual
 
 Common configuration describing if extensions configuration should be used in defaults.
 When disabled, default configurations use...
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L5262) instead of [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L5260)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L5261) instead of [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L5259)
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L5274) instead of [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L5272)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L5273) instead of [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L5271)
 
 s.a.: [`TPP_COMMON_HAVE_FEATURES`](#tpp_common_have_features)
 
@@ -25,8 +25,8 @@ TPP_HAVE_EXTENSIONS
 
 Common configuration describing if feature configuration should be used in defaults.
 When disabled, default configurations use...
-- ... [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L5260) instead of [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L5262)
-- ... [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L5259) instead of [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L5261)
+- ... [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L5272) instead of [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L5274)
+- ... [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L5271) instead of [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L5273)
 
 s.a.: [`TPP_COMMON_HAVE_EXTENSIONS`](#tpp_common_have_extensions)
 
@@ -56,7 +56,7 @@ Default:
 
 Default configuration for [`TPP_HAVE_TOK_LF`](config-conf.md#tpp_have_tok_lf), [`TPP_HAVE_TOK_SPACE`](config-conf.md#tpp_have_tok_space),
 [`TPP_HAVE_TOK_COMMENT`](config-conf.md#tpp_have_tok_comment), indicating if tokens that are normally through
-of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L20656)
+of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L20668)
 
 <details><summary>Details</summary>
 

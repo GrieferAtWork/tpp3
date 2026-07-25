@@ -58,6 +58,12 @@ TPP_ASSERT_WARNING_END("-Wmultichar")
 TPP_ASSERT_EXPANDS("less than", SELECT(7))
 TPP_ASSERT_EXPANDS("more than", SELECT(10))
 
+#undef SELECT
+#undef ISLESS_1
+#undef ISLESS_0
+#undef CAT
+#undef CAT2
+
 TPP_ASSERT_EXPANDS("\"Hello\"", __TPP_STR_PACK(0x48, 0x65, 0x6c, 0x6c, 0x6f))
 
 #pragma TPP extension(pop)

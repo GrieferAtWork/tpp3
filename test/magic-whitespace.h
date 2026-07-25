@@ -49,6 +49,9 @@ TPP_ASSERT_EXPANDS("=@", ADJ(=, @))
 TPP_ASSERT_EXPANDS("= @", ADJ(=, @))
 #pragma TPP extension(pop)
 
+#undef ADJ
+#undef ADJ1
+
 #undef SCAN
 #undef BAR
 #undef FOO

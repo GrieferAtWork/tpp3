@@ -42,7 +42,7 @@ TPP_DECL_BEGIN
 	} while (0)
 
 typedef struct tpp_lexer_dumper {
-	tpp_lexer const  *tld_lexer;   /* [1..1][const] Lexer */
+	tpp_lexer        *tld_lexer;   /* [1..1][const] Lexer */
 	tpp_formatprinter tld_printer; /* [1..1][const] Printer */
 	void             *tld_arg;     /* [?..?][const] Cookie for "tld_printer" */
 	tpp_ssize         tld_result;  /* Accumulated results of "tld_printer", or negative on error */
@@ -162,6 +162,55 @@ tpp_lexer_dumper_do_print_escaped(tpp_lexer_dumper *tpp_restrict self,
 			tpp_lexer_dumper_do_print_disable_extension(self, extname); \
 		}                                                               \
 	} while (0)
+
+	/* Dump builtin macros */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+static TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_dumper_print_builtin_macros(tpp_lexer_dumper *tpp_restrict self) {
+	tpp_token_id kwd_iter = TPP_TOK_KEYWORD_BEGIN;
+#if TPP_HAVE_USER_KEYWORDS
+	tpp_token_id kwd_end = TPP_TOK_USERKEYWORD_BEGIN;
+#else /* TPP_HAVE_USER_KEYWORDS */
+	tpp_token_id kwd_end = TPP_TOK_USERKEYWORD;
+#endif /* !TPP_HAVE_USER_KEYWORDS */
+	for (; kwd_iter < kwd_end; kwd_iter = (tpp_token_id)((unsigned int)kwd_iter + 1)) {
+		tpp_keyword const *keyword = tpp_builtin_getkeyword_byid(kwd_iter);
+		if (keyword && tpp_lexer_getkeyworddefined(self->tld_lexer, keyword)) {
+			tpp_builtin_macro const *expansion = tpp_macro_getbuiltin(kwd_iter);
+			tpp_lexer_dumper_do_print_conststr(self, "#define ");
+			tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(keyword), tpp_keyword_getlen(keyword));
+			if (expansion) {
+				tpp_lexer_dumper_do_print_conststr(self, " ");
+				tpp_lexer_dumper_do_print(self,
+				                          tpp_builtin_macro_getbody(expansion),
+				                          tpp_builtin_macro_getsize(expansion));
+			} else {
+				/* All magic builtins provided by TPP follow the rule:
+				 * - If it ends with a trailing _, then it's a keyword (__LINE__, etc.)
+				 * - If it doesn't end with a trailing _, then it's a function
+				 *
+				 * And since we should only get here for builtin macros that don't
+				 * have their expansion defined by `TPP_BUILTIN_MACRO()`, that
+				 * should only happen for TPP's *own* builtin macros. */
+				bool is_function = tpp_keyword_getlen(keyword) &&
+				                   tpp_keyword_getstr(keyword)[tpp_keyword_getlen(keyword) - 1] != '_';
+
+				/* Not really what's happening, but should get the point across that it's *magic* */
+				if (is_function)
+					tpp_lexer_dumper_do_print_conststr(self, "(ARGS)");
+				tpp_lexer_dumper_do_print_conststr(self, " ");
+				tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(keyword), tpp_keyword_getlen(keyword));
+				if (is_function)
+					tpp_lexer_dumper_do_print_conststr(self, "(ARGS)");
+			}
+			tpp_lexer_dumper_do_print_conststr(self, "\n");
+			if (tpp_lexer_dumper_haserr(self))
+				break;
+		}
+	}
+}
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
+
 
 #if TPP_HAVE_CPP_MACROS
 static TPP_NONNULL((1, 2, 3)) void TPPCALL
@@ -649,7 +698,7 @@ tpp_lexer_dumper_printincludes(tpp_lexer_dumper *tpp_restrict self,
  * @return: * :  Sum of return values of "printer"
  * @return: < 0: First negative return value of "printer" */
 TPP_IMPL TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
-tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
+tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
                            tpp_formatprinter printer, void *arg,
                            unsigned int what) {
 	tpp_lexer_dumper dumper;
@@ -668,6 +717,13 @@ tpp_lexer_dump_definitions(tpp_lexer const *tpp_restrict self,
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_CPP_MACROS */
 #endif /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
+
+	/* Dump builtin macros */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+	if ((what & TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS) &&
+	    !tpp_lexer_dumper_haserr(&dumper))
+		tpp_lexer_dumper_print_builtin_macros(&dumper);
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 
 	/* Dump macros & assertions */
 #if TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT
