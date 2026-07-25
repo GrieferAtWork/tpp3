@@ -2166,7 +2166,7 @@ static tpp_char const tpp_xml_entity_db[0x5f23] = {
 };
 
 /* Helpers for working XML Entity database entries. */
-typedef char tpp_xml_entity_t;
+typedef char tpp_xml_entity;
 #define tpp_xml_entity_semiopt(self) ((self)[-1] == 1) /* non-zero iff the trailing ';' is optional */
 #define tpp_xml_entity_name(self)    (self)            /* String that must appear in '&<str>;' */
 #define tpp_xml_entity_utf8(self)    ((self) + tpp_strlen(self) + 1) /* utf-8 sequence used for replacement. */
@@ -2195,7 +2195,7 @@ static uint_least8_t const tpp_unicode_utf8seqlen_safe[128] = {
 
 
 /* Find the start of the given entry. */
-static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_xml_entity_t const *TPPCALL
+static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_xml_entity const *TPPCALL
 tpp_xml_entity_fromptr(tpp_char const *tpp_restrict ptr) {
 	tpp_char const *iter;
 	iter = ptr + tpp_strlen((char const *)ptr) + 1;
@@ -2203,10 +2203,10 @@ tpp_xml_entity_fromptr(tpp_char const *tpp_restrict ptr) {
 	if (*iter == 0) {
 		/* `ptr' points into the first string! */
 		if (*ptr == 0x01)
-			return (tpp_xml_entity_t const *)(ptr + 1);
+			return (tpp_xml_entity const *)(ptr + 1);
 		while ((unsigned char)ptr[-1] >= 0x02)
 			--ptr;
-		return (tpp_xml_entity_t const *)ptr;
+		return (tpp_xml_entity const *)ptr;
 	}
 
 	/* `ptr' points into the second string! */
@@ -2221,7 +2221,7 @@ tpp_xml_entity_fromptr(tpp_char const *tpp_restrict ptr) {
 		--ptr;
 
 	/* `ptr' now points at the start of the first string. */
-	return (tpp_xml_entity_t const *)ptr;
+	return (tpp_xml_entity const *)ptr;
 }
 
 /* Return the unicode ordinal associated with `name`
@@ -2233,7 +2233,7 @@ tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon
 	lo = 1;
 	hi = sizeof(tpp_xml_entity_db) - 5;
 	while (lo < hi) {
-		tpp_xml_entity_t const *entry;
+		tpp_xml_entity const *entry;
 		tpp_size i = (lo + hi) / 2;
 		int cmp;
 		entry = tpp_xml_entity_fromptr(tpp_xml_entity_db + i);

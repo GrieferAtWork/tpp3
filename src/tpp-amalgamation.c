@@ -965,40 +965,40 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc) {
 	tpp_char *dst = buf;
 	if (uc <= TPP_UTF8_1BYTE_MAX) {
-		*dst++ = (uint8_t)uc;
+		*dst++ = (tpp_char)uc;
 	} else if (uc <= TPP_UTF8_2BYTE_MAX) {
-		*dst++ = 0xc0 | (uint8_t)((uc >> 6) /* & 0x1f*/);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0xc0 | (tpp_char)((uc >> 6) /* & 0x1f*/);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	} else if (uc <= TPP_UTF8_3BYTE_MAX) {
-		*dst++ = 0xe0 | (uint8_t)((uc >> 12) /* & 0x0f*/);
-		*dst++ = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0xe0 | (tpp_char)((uc >> 12) /* & 0x0f*/);
+		*dst++ = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	} else if (uc <= TPP_UTF8_4BYTE_MAX) {
-		*dst++ = 0xf0 | (uint8_t)((uc >> 18) /* & 0x07*/);
-		*dst++ = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0xf0 | (tpp_char)((uc >> 18) /* & 0x07*/);
+		*dst++ = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	} else if (uc <= TPP_UTF8_5BYTE_MAX) {
-		*dst++ = 0xf8 | (uint8_t)((uc >> 24) /* & 0x03*/);
-		*dst++ = 0x80 | (uint8_t)((uc >> 18) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0xf8 | (tpp_char)((uc >> 24) /* & 0x03*/);
+		*dst++ = 0x80 | (tpp_char)((uc >> 18) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	} else if (uc <= TPP_UTF8_6BYTE_MAX) {
-		*dst++ = 0xfc | (uint8_t)((uc >> 30) /* & 0x01*/);
-		*dst++ = 0x80 | (uint8_t)((uc >> 24) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 18) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0xfc | (tpp_char)((uc >> 30) /* & 0x01*/);
+		*dst++ = 0x80 | (tpp_char)((uc >> 24) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 18) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	} else {
 		*dst++ = 0xfe;
-		*dst++ = 0x80 | (uint8_t)((uc >> 30) & 0x03 /* & 0x3f*/);
-		*dst++ = 0x80 | (uint8_t)((uc >> 24) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 18) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 30) & 0x03 /* & 0x3f*/);
+		*dst++ = 0x80 | (tpp_char)((uc >> 24) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 18) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	}
 	return dst;
 }
@@ -3924,7 +3924,7 @@ static tpp_char const tpp_xml_entity_db[0x5f23] = {
 };
 
 /* Helpers for working XML Entity database entries. */
-typedef char tpp_xml_entity_t;
+typedef char tpp_xml_entity;
 #define tpp_xml_entity_semiopt(self) ((self)[-1] == 1) /* non-zero iff the trailing ';' is optional */
 #define tpp_xml_entity_name(self)    (self)            /* String that must appear in '&<str>;' */
 #define tpp_xml_entity_utf8(self)    ((self) + tpp_strlen(self) + 1) /* utf-8 sequence used for replacement. */
@@ -3953,7 +3953,7 @@ static uint_least8_t const tpp_unicode_utf8seqlen_safe[128] = {
 
 
 /* Find the start of the given entry. */
-static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_xml_entity_t const *TPPCALL
+static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_xml_entity const *TPPCALL
 tpp_xml_entity_fromptr(tpp_char const *tpp_restrict ptr) {
 	tpp_char const *iter;
 	iter = ptr + tpp_strlen((char const *)ptr) + 1;
@@ -3961,10 +3961,10 @@ tpp_xml_entity_fromptr(tpp_char const *tpp_restrict ptr) {
 	if (*iter == 0) {
 		/* `ptr' points into the first string! */
 		if (*ptr == 0x01)
-			return (tpp_xml_entity_t const *)(ptr + 1);
+			return (tpp_xml_entity const *)(ptr + 1);
 		while ((unsigned char)ptr[-1] >= 0x02)
 			--ptr;
-		return (tpp_xml_entity_t const *)ptr;
+		return (tpp_xml_entity const *)ptr;
 	}
 
 	/* `ptr' points into the second string! */
@@ -3979,7 +3979,7 @@ tpp_xml_entity_fromptr(tpp_char const *tpp_restrict ptr) {
 		--ptr;
 
 	/* `ptr' now points at the start of the first string. */
-	return (tpp_xml_entity_t const *)ptr;
+	return (tpp_xml_entity const *)ptr;
 }
 
 /* Return the unicode ordinal associated with `name`
@@ -3991,7 +3991,7 @@ tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon
 	lo = 1;
 	hi = sizeof(tpp_xml_entity_db) - 5;
 	while (lo < hi) {
-		tpp_xml_entity_t const *entry;
+		tpp_xml_entity const *entry;
 		tpp_size i = (lo + hi) / 2;
 		int cmp;
 		entry = tpp_xml_entity_fromptr(tpp_xml_entity_db + i);
@@ -23267,39 +23267,39 @@ tpp_lcinfo_count_linefeed(tpp_file const *tpp_restrict self,
 static tpp_char *TPPCALL
 tpp_writeutf8_rev(tpp_char *dst, tpp_unichar uc) {
 	if (uc <= TPP_UTF8_1BYTE_MAX) {
-		*--dst = (uint8_t)uc;
+		*--dst = (tpp_char)uc;
 	} else if (uc <= TPP_UTF8_2BYTE_MAX) {
-		*--dst = 0x80 | (uint8_t)((uc) & 0x3f);
-		*--dst = 0xc0 | (uint8_t)((uc >> 6) /* & 0x1f*/);
+		*--dst = 0x80 | (tpp_char)((uc) & 0x3f);
+		*--dst = 0xc0 | (tpp_char)((uc >> 6) /* & 0x1f*/);
 	} else if (uc <= TPP_UTF8_3BYTE_MAX) {
-		*--dst = 0x80 | (uint8_t)((uc) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*--dst = 0xe0 | (uint8_t)((uc >> 12) /* & 0x0f*/);
+		*--dst = 0x80 | (tpp_char)((uc) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*--dst = 0xe0 | (tpp_char)((uc >> 12) /* & 0x0f*/);
 	} else if (uc <= TPP_UTF8_4BYTE_MAX) {
-		*--dst = 0x80 | (uint8_t)((uc) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*--dst = 0xf0 | (uint8_t)((uc >> 18) /* & 0x07*/);
+		*--dst = 0x80 | (tpp_char)((uc) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*--dst = 0xf0 | (tpp_char)((uc >> 18) /* & 0x07*/);
 	} else if (uc <= TPP_UTF8_5BYTE_MAX) {
-		*--dst = 0x80 | (uint8_t)((uc) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 18) & 0x3f);
-		*--dst = 0xf8 | (uint8_t)((uc >> 24) /* & 0x03*/);
+		*--dst = 0x80 | (tpp_char)((uc) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 18) & 0x3f);
+		*--dst = 0xf8 | (tpp_char)((uc >> 24) /* & 0x03*/);
 	} else if (uc <= TPP_UTF8_6BYTE_MAX) {
-		*--dst = 0x80 | (uint8_t)((uc) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 18) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 24) & 0x3f);
-		*--dst = 0xfc | (uint8_t)((uc >> 30) /* & 0x01*/);
+		*--dst = 0x80 | (tpp_char)((uc) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 18) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 24) & 0x3f);
+		*--dst = 0xfc | (tpp_char)((uc >> 30) /* & 0x01*/);
 	} else {
-		*--dst = 0x80 | (uint8_t)((uc) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 18) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 24) & 0x3f);
-		*--dst = 0x80 | (uint8_t)((uc >> 30) & 0x03 /* & 0x3f*/);
+		*--dst = 0x80 | (tpp_char)((uc) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 18) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 24) & 0x3f);
+		*--dst = 0x80 | (tpp_char)((uc >> 30) & 0x03 /* & 0x3f*/);
 		*--dst = 0xfe;
 	}
 	return dst;
@@ -28223,8 +28223,8 @@ typedef struct tpp_macro_func_lcscan_vars {
 #ifndef tpp_memmem
 #define tpp_memmem tpp_memmem
 static TPP_PURECALL TPP_WUNUSED void *
-tpp_memmem(void const *haystack, size_t haystack_length,
-           void const *needle, size_t needle_length) {
+tpp_memmem(void const *haystack, tpp_size haystack_length,
+           void const *needle, tpp_size needle_length) {
 	unsigned char *candidate, marker;
 	if tpp_unlikely(!needle_length)
 		return (void *)haystack;
@@ -30421,7 +30421,7 @@ tpp_include_paths_fini(tpp_include_paths *tpp_restrict self) {
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_include_path_list_copy(tpp_include_path_list *tpp_restrict self,
                            tpp_include_path_list const *tpp_restrict other) {
-	size_t i;
+	tpp_size i;
 	tpp_include_path_entry *listcopy;
 	if (other->tipl_size == 0) {
 		self->tipl_list = NULL;

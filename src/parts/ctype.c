@@ -145,40 +145,40 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc) {
 	tpp_char *dst = buf;
 	if (uc <= TPP_UTF8_1BYTE_MAX) {
-		*dst++ = (uint8_t)uc;
+		*dst++ = (tpp_char)uc;
 	} else if (uc <= TPP_UTF8_2BYTE_MAX) {
-		*dst++ = 0xc0 | (uint8_t)((uc >> 6) /* & 0x1f*/);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0xc0 | (tpp_char)((uc >> 6) /* & 0x1f*/);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	} else if (uc <= TPP_UTF8_3BYTE_MAX) {
-		*dst++ = 0xe0 | (uint8_t)((uc >> 12) /* & 0x0f*/);
-		*dst++ = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0xe0 | (tpp_char)((uc >> 12) /* & 0x0f*/);
+		*dst++ = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	} else if (uc <= TPP_UTF8_4BYTE_MAX) {
-		*dst++ = 0xf0 | (uint8_t)((uc >> 18) /* & 0x07*/);
-		*dst++ = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0xf0 | (tpp_char)((uc >> 18) /* & 0x07*/);
+		*dst++ = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	} else if (uc <= TPP_UTF8_5BYTE_MAX) {
-		*dst++ = 0xf8 | (uint8_t)((uc >> 24) /* & 0x03*/);
-		*dst++ = 0x80 | (uint8_t)((uc >> 18) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0xf8 | (tpp_char)((uc >> 24) /* & 0x03*/);
+		*dst++ = 0x80 | (tpp_char)((uc >> 18) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	} else if (uc <= TPP_UTF8_6BYTE_MAX) {
-		*dst++ = 0xfc | (uint8_t)((uc >> 30) /* & 0x01*/);
-		*dst++ = 0x80 | (uint8_t)((uc >> 24) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 18) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0xfc | (tpp_char)((uc >> 30) /* & 0x01*/);
+		*dst++ = 0x80 | (tpp_char)((uc >> 24) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 18) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	} else {
 		*dst++ = 0xfe;
-		*dst++ = 0x80 | (uint8_t)((uc >> 30) & 0x03 /* & 0x3f*/);
-		*dst++ = 0x80 | (uint8_t)((uc >> 24) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 18) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 12) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc >> 6) & 0x3f);
-		*dst++ = 0x80 | (uint8_t)((uc) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 30) & 0x03 /* & 0x3f*/);
+		*dst++ = 0x80 | (tpp_char)((uc >> 24) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 18) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 12) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc >> 6) & 0x3f);
+		*dst++ = 0x80 | (tpp_char)((uc) & 0x3f);
 	}
 	return dst;
 }

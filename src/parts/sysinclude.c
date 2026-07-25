@@ -255,7 +255,7 @@ tpp_include_paths_fini(tpp_include_paths *tpp_restrict self) {
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_include_path_list_copy(tpp_include_path_list *tpp_restrict self,
                            tpp_include_path_list const *tpp_restrict other) {
-	size_t i;
+	tpp_size i;
 	tpp_include_path_entry *listcopy;
 	if (other->tipl_size == 0) {
 		self->tipl_list = NULL;

@@ -237,8 +237,8 @@ typedef struct tpp_macro_func_lcscan_vars {
 #ifndef tpp_memmem
 #define tpp_memmem tpp_memmem
 static TPP_PURECALL TPP_WUNUSED void *
-tpp_memmem(void const *haystack, size_t haystack_length,
-           void const *needle, size_t needle_length) {
+tpp_memmem(void const *haystack, tpp_size haystack_length,
+           void const *needle, tpp_size needle_length) {
 	unsigned char *candidate, marker;
 	if tpp_unlikely(!needle_length)
 		return (void *)haystack;

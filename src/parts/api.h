@@ -643,15 +643,14 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 /* Line/Column-information API */
 #ifndef tpp_lcinfo
 #if defined(INT_LEAST64_MAX) && defined(UINT32_MAX) && !TPP_HAVE_TPP2_COMPAT
-typedef int_least64_t tpp_lcinfo;
-#define tpp_lcinfo tpp_lcinfo
+#define tpp_lcinfo int_least64_t
 
 #define tpp_lcinfo_equals(a, b)  ((a) == (b))
 #define tpp_lcinfo_getline(self) ((tpp_line)((int32_t)(uint32_t)(self)))
 #define tpp_lcinfo_getcol(self)  ((tpp_column)((int32_t)(uint32_t)((self) >> 32)))
-#define tpp_lcinfo_of(line, col)                  \
-	(((int_least64_t)(uint32_t)(int32_t)(line)) | \
-	 ((int_least64_t)(uint32_t)(int32_t)(col) << 32))
+#define tpp_lcinfo_of(line, col)               \
+	(((tpp_lcinfo)(uint32_t)(int32_t)(line)) | \
+	 ((tpp_lcinfo)(uint32_t)(int32_t)(col) << 32))
 #else /* INT_LEAST64_MAX && UINT32_MAX && !TPP_HAVE_TPP2_COMPAT */
 typedef struct tpp_lcinfo {
 	tpp_line   TPP_INTERNAL(lci_line); /* Line */
