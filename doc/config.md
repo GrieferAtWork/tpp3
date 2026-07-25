@@ -6,13 +6,13 @@
 
 # API Profile: `TPP_PROFILE`
 
-The `TPP_PROFILE` itself has no impact on individual features. It merely defines how features are default-configured. It also does *NOT* affect features that you've configured explicitly: it's merely how TPP will decide . The following profiles exist:
+The `TPP_PROFILE` itself has no impact on individual features. It merely defines how features are default-configured. It also does *NOT* affect features that you've configured explicitly: it merely specifies how TPP decides to configure features you've not configured explicitly. The following profiles exist:
 
 | Profile | Description |
 | ------- | ----------- |
 | `TPP_PROFILE_DEFAULT` (default) | Default configuration for a pretty good compromise between `TPP_PROFILE_MINIMAL` and `TPP_PROFILE_ALL`. Use this for a nicely feature-packed preprocessor with all conflicting features disabled, in a configuration that doesn't make *too* many assumptions on your behalf.<br/>This is also the default when you don't `#define TPP_PROFILE` before your `#include "tpp-amalgamation.h"` |
 | `TPP_PROFILE_MINIMAL` | Disable everything, except dependencies of features you (re-)enabled explicitly. In this configuration, TPP is basically just an over-complicated tokenizer with 90% of its code excluded from compilation. Unless you manually turn features like [`TPP_HAVE_CPP_MACROS`](config-conf.md#tpp_have_cpp_macros), [`TPP_HAVE_CPP_DIRECTIVES`](config-conf.md#tpp_have_cpp_directives) and [`TPP_HAVE_CPP_DEFINE`](config-conf.md#tpp_have_cpp_define) back on, you won't even get macros or directives |
-| `TPP_PROFILE_ALL` | Turn *everything* on that TPP has to offer, a I do mean **everything**. No feature exists that can't be enabled one way or another when this profile is used, and the default state of individual features sees *most* of them enabled (the exception here being that certain tokens are available, but runtime-disabled by default). Additionally, all features are configured to use extensions rather than features (meaning code can use `#pragma extension` to control pretty much everything TPP has to offer) |
+| `TPP_PROFILE_ALL` | Turn *everything* on that TPP has to offer, a I do mean **everything**. No feature exists that can't be enabled one way or another when this profile is used, and the default state of individual features sees *most* of them enabled (the exception here being that certain tokens are available, but runtime-disabled by default). |
 | `TPP_PROFILE_C` | Use this if you're writing a C compiler: pretty much the same as `TPP_PROFILE_DEFAULT`, but some features that would otherwise be runtime-configurable become hard-enabled (such as [`TPP_HAVE_BSE`](config-conf.md#tpp_have_bse)) |
 | `TPP_PROFILE_CXX` | Use this if you're writing a C++ compiler: same as `TPP_PROFILE_C`, but default-enables support for some C++-specific tokens like `.*` or `->*` |
 
