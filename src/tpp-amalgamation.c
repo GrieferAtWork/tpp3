@@ -22050,6 +22050,13 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 #if TPP_HAVE_TRIGRAPHS
 		case '=':
 		case '(':
+		case '/':
+#if TPP_HAVE_TOK_SLASH_COMMENT
+		case TPP_TOK_SLASH_COMMENT:
+#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
+#if TPP_HAVE_TOK_SOL_SLASH_COMMENT
+		case TPP_TOK_SOL_SLASH_COMMENT:
+#endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 		case ')':
 		case '<':
 		case '!':
@@ -22057,15 +22064,6 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		case '-':
 			return tpp_lexer_has(self, TRIGRAPHS);
 #endif /* TPP_HAVE_TRIGRAPHS */
-#if (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TRIGRAPHS
-#if TPP_HAVE_TOK_SLASH_COMMENT
-		case TPP_TOK_SLASH_COMMENT:
-#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
-#if TPP_HAVE_TOK_SOL_SLASH_COMMENT
-		case TPP_TOK_SOL_SLASH_COMMENT:
-#endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
-			return tpp_lexer_has(self, TRIGRAPHS);
-#endif /* (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TRIGRAPHS */
 #if (TPP_HAVE_TOK_C_CHAR || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL) && TPP_HAVE_TRIGRAPHS
 #if TPP_HAVE_TOK_C_CHAR
 		case TPP_TOK_C_CHAR:
@@ -22079,7 +22077,7 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		}
 		break;
 #endif /* TPP_HAVE_TOK_QMARK_QMARK */
-#if TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT
+	case '/':
 #if TPP_HAVE_TOK_SLASH_COMMENT
 	case TPP_TOK_SLASH_COMMENT:
 #endif /* TPP_HAVE_TOK_SLASH_COMMENT */
@@ -22095,7 +22093,8 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		case '=':
 			return tpp_lexer_has(self, TOK_SLASH_EQUAL);
 #endif /* TPP_HAVE_TOK_SLASH_EQUAL */
-#if (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && (TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH)
+#if TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH
+		case '/':
 #if TPP_HAVE_TOK_SLASH_COMMENT
 		case TPP_TOK_SLASH_COMMENT:
 #endif /* TPP_HAVE_TOK_SLASH_COMMENT */
@@ -22103,7 +22102,7 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		case TPP_TOK_SOL_SLASH_COMMENT:
 #endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 			return tpp_lexer_has(self, TOK_CXX_COMMENT) || tpp_lexer_has(self, TOK_SLASH_SLASH);
-#endif /* (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && (TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH) */
+#endif /* TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH */
 #if TPP_HAVE_TOK_SLASH_EQUAL && TPP_HAVE_TOK_SLASH_SLASH_EQUAL
 		case TPP_TOK_SLASH_EQUAL:
 			return tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL);
@@ -22111,7 +22110,6 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		default: break;
 		}
 		break;
-#endif /* TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 #if TPP_HAVE_TOK_PASCAL_COMMENT
 	case '(':
 		return rhs == '*' && tpp_lexer_has(self, TOK_PASCAL_COMMENT);
@@ -22256,7 +22254,8 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		case TPP_TOK_STAR_STAR:
 			return tpp_lexer_has(self, TOK_EQUAL_STAR_STAR);
 #endif /* TPP_HAVE_TOK_STAR_STAR && TPP_HAVE_TOK_EQUAL_STAR_STAR */
-#if (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TOK_EQUAL_SLASH
+#if TPP_HAVE_TOK_EQUAL_SLASH
+		case '/':
 #if TPP_HAVE_TOK_SLASH_COMMENT
 		case TPP_TOK_SLASH_COMMENT:
 #endif /* TPP_HAVE_TOK_SLASH_COMMENT */
@@ -22264,7 +22263,7 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		case TPP_TOK_SOL_SLASH_COMMENT:
 #endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 			return tpp_lexer_has(self, TOK_EQUAL_SLASH);
-#endif /* (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TOK_EQUAL_SLASH */
+#endif /* TPP_HAVE_TOK_EQUAL_SLASH */
 #if (TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH) && TPP_HAVE_TOK_EQUAL_SLASH_SLASH
 		case TPP_TOK_SLASH_SLASH:
 			return tpp_lexer_has(self, TOK_EQUAL_SLASH_SLASH);
@@ -22309,7 +22308,8 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		case TPP_TOK_RANGLE_RANGLE_RANGLE:
 			return tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE_RANGLE);
 #endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE && TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
-#if (TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && TPP_HAVE_TOK_EQUAL_AT
+#if TPP_HAVE_TOK_EQUAL_AT
+		case '@':
 #if TPP_HAVE_TOK_AT_COMMENT
 		case TPP_TOK_AT_COMMENT:
 #endif /* TPP_HAVE_TOK_AT_COMMENT */
@@ -22317,7 +22317,7 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		case TPP_TOK_SOL_AT_COMMENT:
 #endif /* TPP_HAVE_TOK_SOL_AT_COMMENT */
 			return tpp_lexer_has(self, TOK_EQUAL_AT);
-#endif /* (TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && TPP_HAVE_TOK_EQUAL_AT */
+#endif /* TPP_HAVE_TOK_EQUAL_AT */
 #if TPP_HAVE_TOK_EQUAL_TILDE
 		case '~':
 			return tpp_lexer_has(self, TOK_EQUAL_TILDE);
@@ -22568,7 +22568,7 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 	case TPP_TOK_STAR_STAR:
 		return rhs == '=' && tpp_lexer_has(self, TOK_STAR_STAR_EQUAL);
 #endif /* TPP_HAVE_TOK_STAR_STAR && TPP_HAVE_TOK_STAR_STAR_EQUAL */
-#if TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT
+	case '@':
 #if TPP_HAVE_TOK_AT_COMMENT
 	case TPP_TOK_AT_COMMENT:
 #endif /* TPP_HAVE_TOK_AT_COMMENT */
@@ -22580,7 +22580,8 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		case '=':
 			return tpp_lexer_has(self, TOK_AT_EQUAL);
 #endif /* TPP_HAVE_TOK_AT_EQUAL */
-#if (TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && (TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT)
+#if TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT
+		case '@':
 #if TPP_HAVE_TOK_AT_COMMENT
 		case TPP_TOK_AT_COMMENT:
 #endif /* TPP_HAVE_TOK_AT_COMMENT */
@@ -22588,7 +22589,7 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		case TPP_TOK_SOL_AT_COMMENT:
 #endif /* TPP_HAVE_TOK_SOL_AT_COMMENT */
 			return tpp_lexer_has(self, TOK_AT_AT_COMMENT) || tpp_lexer_has(self, TOK_AT_AT);
-#endif /* (TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && (TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT) */
+#endif /* TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT */
 #if TPP_HAVE_TOK_AT_EQUAL && TPP_HAVE_TOK_AT_AT_EQUAL
 		case TPP_TOK_AT_EQUAL:
 			return tpp_lexer_has(self, TOK_AT_AT_EQUAL);
@@ -22596,15 +22597,15 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		default: break;
 		}
 		break;
-#endif /* TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT */
-#if (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && ((TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && TPP_HAVE_TOK_POUND_POUND)
+#if TPP_HAVE_TOK_POUND_POUND
+	case '#':
 #if TPP_HAVE_TOK_SHELL_COMMENT
 	case TPP_TOK_SHELL_COMMENT:
 #endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 #if TPP_HAVE_TOK_SOL_SHELL_COMMENT
 	case TPP_TOK_SOL_SHELL_COMMENT:
 #endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
-		return (0
+		return (rhs == '#'
 #if TPP_HAVE_TOK_SHELL_COMMENT
 		       || rhs == TPP_TOK_SHELL_COMMENT
 #endif /* TPP_HAVE_TOK_SHELL_COMMENT */
@@ -22612,7 +22613,7 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		       || rhs == TPP_TOK_SOL_SHELL_COMMENT
 #endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 		       ) && tpp_lexer_has(self, TOK_POUND_POUND);
-#endif /* (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && ((TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && TPP_HAVE_TOK_POUND_POUND) */
+#endif /* TPP_HAVE_TOK_POUND_POUND */
 	case '~':
 #if TPP_HAVE_TOK_TILDE_TILDE
 		if (rhs == '~')
@@ -22696,9 +22697,9 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 	case TPP_TOK_EQUAL_STAR:
 		return rhs == '*' && tpp_lexer_has(self, TOK_EQUAL_STAR_STAR);
 #endif /* TPP_HAVE_TOK_EQUAL_STAR && TPP_HAVE_TOK_EQUAL_STAR_STAR */
-#if TPP_HAVE_TOK_EQUAL_SLASH && ((TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TOK_EQUAL_SLASH_SLASH)
+#if TPP_HAVE_TOK_EQUAL_SLASH && TPP_HAVE_TOK_EQUAL_SLASH_SLASH
 	case TPP_TOK_EQUAL_SLASH:
-		return (0
+		return (rhs == '/'
 #if TPP_HAVE_TOK_SLASH_COMMENT
 		       || rhs == TPP_TOK_SLASH_COMMENT
 #endif /* TPP_HAVE_TOK_SLASH_COMMENT */
@@ -22706,7 +22707,7 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		       || rhs == TPP_TOK_SOL_SLASH_COMMENT
 #endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 		       ) && tpp_lexer_has(self, TOK_EQUAL_SLASH_SLASH);
-#endif /* TPP_HAVE_TOK_EQUAL_SLASH && ((TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TOK_EQUAL_SLASH_SLASH) */
+#endif /* TPP_HAVE_TOK_EQUAL_SLASH && TPP_HAVE_TOK_EQUAL_SLASH_SLASH */
 #if TPP_HAVE_TOK_EQUAL_LANGLE
 	case TPP_TOK_EQUAL_LANGLE:
 #if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE
@@ -22799,9 +22800,9 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 	case TPP_TOK_AT_AT:
 		return rhs == '=' && tpp_lexer_has(self, TOK_AT_AT_EQUAL);
 #endif /* (TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT) && TPP_HAVE_TOK_AT_AT_EQUAL */
-#if TPP_HAVE_TOK_EQUAL_AT && ((TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && TPP_HAVE_TOK_EQUAL_AT_AT)
+#if TPP_HAVE_TOK_EQUAL_AT && TPP_HAVE_TOK_EQUAL_AT_AT
 	case TPP_TOK_EQUAL_AT:
-		return (0
+		return (rhs == '@'
 #if TPP_HAVE_TOK_AT_COMMENT
 		       || rhs == TPP_TOK_AT_COMMENT
 #endif /* TPP_HAVE_TOK_AT_COMMENT */
@@ -22809,7 +22810,7 @@ tpp_lexer_require_whitespace(tpp_lexer const *tpp_restrict self,
 		       || rhs == TPP_TOK_SOL_AT_COMMENT
 #endif /* TPP_HAVE_TOK_SOL_AT_COMMENT */
 		       ) && tpp_lexer_has(self, TOK_EQUAL_AT_AT);
-#endif /* TPP_HAVE_TOK_EQUAL_AT && ((TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && TPP_HAVE_TOK_EQUAL_AT_AT) */
+#endif /* TPP_HAVE_TOK_EQUAL_AT && TPP_HAVE_TOK_EQUAL_AT_AT */
 #if TPP_HAVE_TOK_MINUS_RANGLE_RANGLE && TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
 	case TPP_TOK_MINUS_RANGLE_RANGLE:
 		return rhs == '>' && tpp_lexer_has(self, TOK_MINUS_RANGLE_RANGLE_RANGLE);

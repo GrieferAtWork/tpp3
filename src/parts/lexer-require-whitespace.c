@@ -209,9 +209,9 @@ for (local mcCharSeq: featuresByCharSeq.keys) {
 local oneCharStartsWithTokens: {string: {string...}} = {
 	"'" : {"TPP_TOK_C_CHAR", "TPP_TOK_BLOCK_CHAR_LITERAL"},
 	'"' : {"TPP_TOK_C_STRING", "TPP_TOK_BLOCK_STRING_LITERAL"},
-	'#' : {"TPP_TOK_SHELL_COMMENT", "TPP_TOK_SOL_SHELL_COMMENT"},
-	'/' : {"TPP_TOK_SLASH_COMMENT", "TPP_TOK_SOL_SLASH_COMMENT"},
-	'@' : {"TPP_TOK_AT_COMMENT", "TPP_TOK_SOL_AT_COMMENT"},
+	'#' : {"'#'", "TPP_TOK_SHELL_COMMENT", "TPP_TOK_SOL_SHELL_COMMENT"},
+	'/' : {"'/'", "TPP_TOK_SLASH_COMMENT", "TPP_TOK_SOL_SLASH_COMMENT"},
+	'@' : {"'@'", "TPP_TOK_AT_COMMENT", "TPP_TOK_SOL_AT_COMMENT"},
 };
 
 function tokenSymbols(charSeq: string): {string...} {
@@ -252,15 +252,29 @@ function joinCond(how: string, conditions...: string): string {
 	local result = "";
 	local otherHow = { "||": "&&", "&&": "||" }[how];
 	for (local cond: conditions) {
-		if (cond == "1")
-			continue;
+		if (cond == "1") {
+			if (how == "||")
+				return "1";
+			if (how == "&&")
+				continue;
+		} else if (cond == "0") {
+			if (how == "||")
+				continue;
+			if (how == "&&")
+				return "0";
+		}
 		if (result)
 			result += f" {how} ";
 		if (otherHow in cond)
 			cond = f"({cond})";
 		result += cond;
 	}
-	return result ?: "1";
+	if (!result)
+		return how == "&&" ? "1" : "0";
+	while (result.startswith("(") && result.endswith(")") &&
+	       result.findmatch("(", ")", 1) == (#result - 1))
+		result = result[1:-1];
+	return result;
 }
 
 function builtTppLexerHas(features: string): string {
@@ -410,6 +424,13 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 #if TPP_HAVE_TRIGRAPHS
 		case '=':
 		case '(':
+		case '/':
+#if TPP_HAVE_TOK_SLASH_COMMENT
+		case TPP_TOK_SLASH_COMMENT:
+#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
+#if TPP_HAVE_TOK_SOL_SLASH_COMMENT
+		case TPP_TOK_SOL_SLASH_COMMENT:
+#endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 		case ')':
 		case '<':
 		case '!':
@@ -417,15 +438,6 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		case '-':
 			return tpp_lexer_has(self, TRIGRAPHS);
 #endif /* TPP_HAVE_TRIGRAPHS */
-#if (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TRIGRAPHS
-#if TPP_HAVE_TOK_SLASH_COMMENT
-		case TPP_TOK_SLASH_COMMENT:
-#endif /* TPP_HAVE_TOK_SLASH_COMMENT */
-#if TPP_HAVE_TOK_SOL_SLASH_COMMENT
-		case TPP_TOK_SOL_SLASH_COMMENT:
-#endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
-			return tpp_lexer_has(self, TRIGRAPHS);
-#endif /* (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TRIGRAPHS */
 #if (TPP_HAVE_TOK_C_CHAR || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL) && TPP_HAVE_TRIGRAPHS
 #if TPP_HAVE_TOK_C_CHAR
 		case TPP_TOK_C_CHAR:
@@ -439,7 +451,7 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		}
 		break;
 #endif /* TPP_HAVE_TOK_QMARK_QMARK */
-#if TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT
+	case '/':
 #if TPP_HAVE_TOK_SLASH_COMMENT
 	case TPP_TOK_SLASH_COMMENT:
 #endif /* TPP_HAVE_TOK_SLASH_COMMENT */
@@ -455,7 +467,8 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		case '=':
 			return tpp_lexer_has(self, TOK_SLASH_EQUAL);
 #endif /* TPP_HAVE_TOK_SLASH_EQUAL */
-#if (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && (TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH)
+#if TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH
+		case '/':
 #if TPP_HAVE_TOK_SLASH_COMMENT
 		case TPP_TOK_SLASH_COMMENT:
 #endif /* TPP_HAVE_TOK_SLASH_COMMENT */
@@ -463,7 +476,7 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		case TPP_TOK_SOL_SLASH_COMMENT:
 #endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 			return tpp_lexer_has(self, TOK_CXX_COMMENT) || tpp_lexer_has(self, TOK_SLASH_SLASH);
-#endif /* (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && (TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH) */
+#endif /* TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH */
 #if TPP_HAVE_TOK_SLASH_EQUAL && TPP_HAVE_TOK_SLASH_SLASH_EQUAL
 		case TPP_TOK_SLASH_EQUAL:
 			return tpp_lexer_has(self, TOK_SLASH_SLASH_EQUAL);
@@ -471,7 +484,6 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		default: break;
 		}
 		break;
-#endif /* TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 #if TPP_HAVE_TOK_PASCAL_COMMENT
 	case '(':
 		return rhs == '*' && tpp_lexer_has(self, TOK_PASCAL_COMMENT);
@@ -616,7 +628,8 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		case TPP_TOK_STAR_STAR:
 			return tpp_lexer_has(self, TOK_EQUAL_STAR_STAR);
 #endif /* TPP_HAVE_TOK_STAR_STAR && TPP_HAVE_TOK_EQUAL_STAR_STAR */
-#if (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TOK_EQUAL_SLASH
+#if TPP_HAVE_TOK_EQUAL_SLASH
+		case '/':
 #if TPP_HAVE_TOK_SLASH_COMMENT
 		case TPP_TOK_SLASH_COMMENT:
 #endif /* TPP_HAVE_TOK_SLASH_COMMENT */
@@ -624,7 +637,7 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		case TPP_TOK_SOL_SLASH_COMMENT:
 #endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 			return tpp_lexer_has(self, TOK_EQUAL_SLASH);
-#endif /* (TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TOK_EQUAL_SLASH */
+#endif /* TPP_HAVE_TOK_EQUAL_SLASH */
 #if (TPP_HAVE_TOK_CXX_COMMENT || TPP_HAVE_TOK_SLASH_SLASH) && TPP_HAVE_TOK_EQUAL_SLASH_SLASH
 		case TPP_TOK_SLASH_SLASH:
 			return tpp_lexer_has(self, TOK_EQUAL_SLASH_SLASH);
@@ -669,7 +682,8 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		case TPP_TOK_RANGLE_RANGLE_RANGLE:
 			return tpp_lexer_has(self, TOK_EQUAL_RANGLE_RANGLE_RANGLE);
 #endif /* TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE && TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
-#if (TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && TPP_HAVE_TOK_EQUAL_AT
+#if TPP_HAVE_TOK_EQUAL_AT
+		case '@':
 #if TPP_HAVE_TOK_AT_COMMENT
 		case TPP_TOK_AT_COMMENT:
 #endif /* TPP_HAVE_TOK_AT_COMMENT */
@@ -677,7 +691,7 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		case TPP_TOK_SOL_AT_COMMENT:
 #endif /* TPP_HAVE_TOK_SOL_AT_COMMENT */
 			return tpp_lexer_has(self, TOK_EQUAL_AT);
-#endif /* (TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && TPP_HAVE_TOK_EQUAL_AT */
+#endif /* TPP_HAVE_TOK_EQUAL_AT */
 #if TPP_HAVE_TOK_EQUAL_TILDE
 		case '~':
 			return tpp_lexer_has(self, TOK_EQUAL_TILDE);
@@ -928,7 +942,7 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 	case TPP_TOK_STAR_STAR:
 		return rhs == '=' && tpp_lexer_has(self, TOK_STAR_STAR_EQUAL);
 #endif /* TPP_HAVE_TOK_STAR_STAR && TPP_HAVE_TOK_STAR_STAR_EQUAL */
-#if TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT
+	case '@':
 #if TPP_HAVE_TOK_AT_COMMENT
 	case TPP_TOK_AT_COMMENT:
 #endif /* TPP_HAVE_TOK_AT_COMMENT */
@@ -940,7 +954,8 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		case '=':
 			return tpp_lexer_has(self, TOK_AT_EQUAL);
 #endif /* TPP_HAVE_TOK_AT_EQUAL */
-#if (TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && (TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT)
+#if TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT
+		case '@':
 #if TPP_HAVE_TOK_AT_COMMENT
 		case TPP_TOK_AT_COMMENT:
 #endif /* TPP_HAVE_TOK_AT_COMMENT */
@@ -948,7 +963,7 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		case TPP_TOK_SOL_AT_COMMENT:
 #endif /* TPP_HAVE_TOK_SOL_AT_COMMENT */
 			return tpp_lexer_has(self, TOK_AT_AT_COMMENT) || tpp_lexer_has(self, TOK_AT_AT);
-#endif /* (TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && (TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT) */
+#endif /* TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT */
 #if TPP_HAVE_TOK_AT_EQUAL && TPP_HAVE_TOK_AT_AT_EQUAL
 		case TPP_TOK_AT_EQUAL:
 			return tpp_lexer_has(self, TOK_AT_AT_EQUAL);
@@ -956,15 +971,15 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		default: break;
 		}
 		break;
-#endif /* TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT */
-#if (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && ((TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && TPP_HAVE_TOK_POUND_POUND)
+#if TPP_HAVE_TOK_POUND_POUND
+	case '#':
 #if TPP_HAVE_TOK_SHELL_COMMENT
 	case TPP_TOK_SHELL_COMMENT:
 #endif /* TPP_HAVE_TOK_SHELL_COMMENT */
 #if TPP_HAVE_TOK_SOL_SHELL_COMMENT
 	case TPP_TOK_SOL_SHELL_COMMENT:
 #endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
-		return (0
+		return (rhs == '#'
 #if TPP_HAVE_TOK_SHELL_COMMENT
 		       || rhs == TPP_TOK_SHELL_COMMENT
 #endif /* TPP_HAVE_TOK_SHELL_COMMENT */
@@ -972,7 +987,7 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		       || rhs == TPP_TOK_SOL_SHELL_COMMENT
 #endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 		       ) && tpp_lexer_has(self, TOK_POUND_POUND);
-#endif /* (TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && ((TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT) && TPP_HAVE_TOK_POUND_POUND) */
+#endif /* TPP_HAVE_TOK_POUND_POUND */
 	case '~':
 #if TPP_HAVE_TOK_TILDE_TILDE
 		if (rhs == '~')
@@ -1056,9 +1071,9 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 	case TPP_TOK_EQUAL_STAR:
 		return rhs == '*' && tpp_lexer_has(self, TOK_EQUAL_STAR_STAR);
 #endif /* TPP_HAVE_TOK_EQUAL_STAR && TPP_HAVE_TOK_EQUAL_STAR_STAR */
-#if TPP_HAVE_TOK_EQUAL_SLASH && ((TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TOK_EQUAL_SLASH_SLASH)
+#if TPP_HAVE_TOK_EQUAL_SLASH && TPP_HAVE_TOK_EQUAL_SLASH_SLASH
 	case TPP_TOK_EQUAL_SLASH:
-		return (0
+		return (rhs == '/'
 #if TPP_HAVE_TOK_SLASH_COMMENT
 		       || rhs == TPP_TOK_SLASH_COMMENT
 #endif /* TPP_HAVE_TOK_SLASH_COMMENT */
@@ -1066,7 +1081,7 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		       || rhs == TPP_TOK_SOL_SLASH_COMMENT
 #endif /* TPP_HAVE_TOK_SOL_SLASH_COMMENT */
 		       ) && tpp_lexer_has(self, TOK_EQUAL_SLASH_SLASH);
-#endif /* TPP_HAVE_TOK_EQUAL_SLASH && ((TPP_HAVE_TOK_SLASH_COMMENT || TPP_HAVE_TOK_SOL_SLASH_COMMENT) && TPP_HAVE_TOK_EQUAL_SLASH_SLASH) */
+#endif /* TPP_HAVE_TOK_EQUAL_SLASH && TPP_HAVE_TOK_EQUAL_SLASH_SLASH */
 #if TPP_HAVE_TOK_EQUAL_LANGLE
 	case TPP_TOK_EQUAL_LANGLE:
 #if TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE
@@ -1159,9 +1174,9 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 	case TPP_TOK_AT_AT:
 		return rhs == '=' && tpp_lexer_has(self, TOK_AT_AT_EQUAL);
 #endif /* (TPP_HAVE_TOK_AT_AT_COMMENT || TPP_HAVE_TOK_AT_AT) && TPP_HAVE_TOK_AT_AT_EQUAL */
-#if TPP_HAVE_TOK_EQUAL_AT && ((TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && TPP_HAVE_TOK_EQUAL_AT_AT)
+#if TPP_HAVE_TOK_EQUAL_AT && TPP_HAVE_TOK_EQUAL_AT_AT
 	case TPP_TOK_EQUAL_AT:
-		return (0
+		return (rhs == '@'
 #if TPP_HAVE_TOK_AT_COMMENT
 		       || rhs == TPP_TOK_AT_COMMENT
 #endif /* TPP_HAVE_TOK_AT_COMMENT */
@@ -1169,7 +1184,7 @@ for (local firstCharSeq, possibleExtraCharSeqs: mcFormingSequences) {
 		       || rhs == TPP_TOK_SOL_AT_COMMENT
 #endif /* TPP_HAVE_TOK_SOL_AT_COMMENT */
 		       ) && tpp_lexer_has(self, TOK_EQUAL_AT_AT);
-#endif /* TPP_HAVE_TOK_EQUAL_AT && ((TPP_HAVE_TOK_AT_COMMENT || TPP_HAVE_TOK_SOL_AT_COMMENT) && TPP_HAVE_TOK_EQUAL_AT_AT) */
+#endif /* TPP_HAVE_TOK_EQUAL_AT && TPP_HAVE_TOK_EQUAL_AT_AT */
 #if TPP_HAVE_TOK_MINUS_RANGLE_RANGLE && TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
 	case TPP_TOK_MINUS_RANGLE_RANGLE:
 		return rhs == '>' && tpp_lexer_has(self, TOK_MINUS_RANGLE_RANGLE_RANGLE);

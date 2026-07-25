@@ -17,52 +17,38 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*[[[deemon
-import fs;
-for (local e: fs.dir(".").sorted()) {
-	if (e !in ["utils", "_all.h", "misc"])
-		print(f'#include "{e}"');
-}
-]]]*/
-#include "arguments-as-macro.h"
-#include "clone-linefeed.h"
-#include "count-tokens.h"
-#include "cxx-comments-in-macro.h"
-#include "define-directives.h"
-#include "directives-in-macros.h"
-#include "directives-start-of-line.h"
-#include "double-counter.h"
-#include "glue.h"
-#include "has-include.h"
-#include "include-path.h"
-#include "macro-argument-whitespace.h"
-#include "macro-call-conv.h"
-#include "macro-escape-lf.h"
-#include "macro-expansion.h"
-#include "magic-whitespace.h"
-#include "null-directive.h"
-#include "pound-xclaim.h"
-#include "pragma-tpp_exec.h"
-#include "prevent-macro-expansion.h"
-#include "push-pop-macro.h"
-#include "quotes-in-error.h"
-#include "self-redef.h"
-#include "stdc-6.10.3.5_5.h"
-#include "stdc-6.10.3.5_6.h"
-#include "stdc-6.10.3.5_7.h"
-#include "stdc-6.10.3.5_9.h"
-#include "stdc-6.10.3_5+6.h"
-#include "stringize.h"
-#include "strings-in-expressions.h"
-#include "traditional-macros.h"
-#include "undef-current-macro.h"
-#include "undef-macro-cexpr.h"
-#include "unicode-names.h"
-#include "user-error.h"
-#include "varargs-empty.h"
-#include "varargs-named.h"
-#include "varargs-va_comma.h"
-#include "varargs-va_nargs.h"
-#include "varargs-va_opt.h"
-/*[[[end]]]*/
+#include "utils/test.h"
 
+#define FOO() foo
+#define BAR   bar
+#define SCAN(x) x
+
+/* Magic whitespace here */
+TPP_ASSERT_EXPANDS("foo bar", SCAN(FOO()BAR))
+
+/* No magic whitespace needed here. Don't get me wrong: you might
+ * think that magic whitespace is needed, but it isn't because when
+ * TPP parses `FOO()BAR`, it yields 2 tokens [foo][bar] without any
+ * whitespace in-between; the whitespace only gets added when that
+ * sequences of tokens is copied for the purpose of being reparsed,
+ * like when expanded again during SCAN()! */
+TPP_ASSERT_EXPANDS("foobar", FOO()BAR)
+
+#define ADJ1(x)  x
+#define ADJ(a,b) SCAN(ADJ1(a)b)
+
+/* Here's a way you can directly test `tpp_lexer_require_whitespace()` */
+TPP_ASSERT_EXPANDS("= =", ADJ(=, =))
+TPP_ASSERT_EXPANDS("=foo", ADJ(=, foo))
+
+/* Injection of whitespace is reactive to recognized tokens. */
+#pragma TPP extension(push)
+#pragma TPP extension("-fno-tok-equal_at")
+TPP_ASSERT_EXPANDS("=@", ADJ(=, @))
+#pragma TPP extension("-ftok-equal_at")
+TPP_ASSERT_EXPANDS("= @", ADJ(=, @))
+#pragma TPP extension(pop)
+
+#undef SCAN
+#undef BAR
+#undef FOO
