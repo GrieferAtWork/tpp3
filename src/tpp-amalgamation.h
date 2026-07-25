@@ -4968,7 +4968,7 @@ TPP_DECL_END
  * will be emitted.
  *
  * NOTE: When `TPP_HAVE_MACRO_RECURSION` can never be enabled, this limit is
- *       entirely pointless, since the C standard (which we followed whenever
+ *       entirely pointless, since the C standard (which we follow whenever
  *       `TPP_HAVE_MACRO_RECURSION` isn't enabled) essentially requires that
  *       this limit be `1`.
  *
@@ -5045,20 +5045,22 @@ TPP_DECL_END
 /* API support for non-blocking I/O. Must also be enabled on a per-file basis
  * by setting the file's `TPP_FILE_FLAGS_NONBLOCK` flag. Also: calls made to
  * `tpp_lexer_yield_blocking()` & friends can be used to force calls to become
- * blocking, even when enabled for the current file (s.a. `TPP_EWOULDBLOCK`
- * and `TPP_TOK_EWOULDBLOCK`) */
+ * blocking, even when the associated file is confirmed as non-blocking (s.a.
+ * `TPP_EWOULDBLOCK` and `TPP_TOK_EWOULDBLOCK`) */
 #ifndef TPP_HAVE_FILE_NONBLOCK
 #define TPP_HAVE_FILE_NONBLOCK (TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_OS_WINDOWS || TPP_OS_UNIX))
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 /* Unicode support:
  * - Use of a unicode traits database that is either user-supplied,
- *   a dummy (where all unicode character are allows in identifiers),
+ *   a dummy (where all unicode character are allowed in identifiers),
  *   or built-in when `TPP_HAVE_BUILTIN_CTYPE_UNICODE` is enabled.
- * - Automatic detection of `utf-8`, `utf-8-bom`, `utf-16[le/be]`, `utf-32[le/be]` in input files.<br/>
- *   NOTE: The Lexer assumes `utf-8` by default, unless it encounters an invalid `utf-8`
- *         byte sequence, at which point it will automatically downgrade to `ASCII`-only
- *         for the remainder of the relevant file */
+ * - Automatic detection of `utf-8`, `utf-8-bom`, `utf-16[le/be]`, `utf-32[le/be]`
+ *   in input files.<br/>
+ *   The Lexer assumes `utf-8` by default, unless it encounters an invalid `utf-8`
+ *   byte sequence, at which point it will emit a warning `TPP_W_ILLEGAL_UTF8_SEQUENCE`
+ *   (see `TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE`) and downgrade to `ASCII`-only for
+ *   the remainder of the file containing said invalid sequence. */
 #ifndef TPP_HAVE_UNICODE
 #define TPP_HAVE_UNICODE 1
 #endif /* !TPP_HAVE_UNICODE */
@@ -5076,7 +5078,7 @@ TPP_DECL_END
  * Some examples of stuff that is supported when this is enabled:
  * - `U+0085` (`NEL`)  will be treated like `U+000A` (`LF` `\n`)
  * - `U+00A0` (`NBSP`) will be treated like `U+0020` (`space` `\s`)
- * - `U+00DF` (`ß`)    will be treated accepted as part of an identifier
+ * - `U+00DF` (`ß`)    will be accepted as part of identifiers
  *
  * As such, TPP3 follows C23+-specifications, in that the builtin unicode
  * database is set-up to accept identifiers made up of `XID_Start`/`XID_Cont`. */
@@ -5094,13 +5096,19 @@ TPP_DECL_END
 #define TPP_HAVE_STRTOKENID (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_STRTOKENID */
 
-/* Enable support for storing custom user-data in keywords */
+/* Enable support for storing custom user-data in keywords
+ *
+ * **Getter**: `tpp_keyword_getuserdata(keyword)`<br/>
+ * **Setter**: `tpp_keyword_setuserdata(keyword, v)`
+ */
 #ifndef TPP_HAVE_KEYWORD_USERDATA
 #define TPP_HAVE_KEYWORD_USERDATA (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_KEYWORD_USERDATA */
 
 /* Provide support for `tpp_keyword_asstring()` that allows
- * keywords to be binary-compatible with `tpp_string` */
+ * keywords to be binary-compatible with `tpp_string`, at the
+ * expense of adding an (otherwise unused) reference counter
+ * field to `tpp_keyword`. */
 #ifndef TPP_HAVE_KEYWORD_ASSTRING
 #define TPP_HAVE_KEYWORD_ASSTRING (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_KEYWORD_ASSTRING */
@@ -5113,7 +5121,16 @@ TPP_DECL_END
 #define TPP_HAVE_KEYWORD_INCLCOUNT (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_MAX_INCLUDE_DEPTH != 0)
 #endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */
 
-/* Enable support for runtime-configurable extensions */
+/* Enable support for runtime-configurable extensions.
+ *
+ * s.a.:
+ * - `TPP_CONF_EXT0`
+ * - `TPP_CONF_EXT1`
+ * - `TPP_HAVE_MACRO___has_extension`
+ * - `TPP_HAVE_MACRO___has_known_extension`
+ * - `TPP_HAVE_PRAGMA_EXTENSION`
+ * - `TPP_HAVE_PRAGMA_TPP_EXTENSION`
+ */
 #ifndef TPP_HAVE_EXTENSIONS
 #define TPP_HAVE_EXTENSIONS TPP_HAVE_PROFILE_NOT_MINIMAL
 #endif /* !TPP_HAVE_EXTENSIONS */
@@ -5440,7 +5457,9 @@ TPP_DECL_END
 #define TPP_HAVE_CPP_DIRECTIVES ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : (TPP_HAVE_PROFILE_DEFAULT ? TPP_COMMON_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL)) /* "-fcpp-directives" */
 #endif /* !TPP_HAVE_CPP_DIRECTIVES */
 
-/* Support for C-style macros */
+/* Support for C-style macros. Required pre-condition for lots of stuff,
+ * including builtin macros (`TPP_HAVE_CPP_BUILTIN_MACROS`), and lots of
+ * macro-related directives: `#define`, `#undef`, `#if defined()`, etc. */
 #ifndef TPP_HAVE_CPP_MACROS
 #define TPP_HAVE_CPP_MACROS (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fcpp-macros" */
 #endif /* !TPP_HAVE_CPP_MACROS */
@@ -7198,7 +7217,7 @@ TPP_DECL_END
  * `tpp_unicode_byname_lookup("NO-BREAK SPACE")` will return
  * `0x00A0`.
  *
- * Enabling this feature adds a while **~360KiB** to the final executable.
+ * Enabling this feature adds a whole **~360KiB** to the final executable.
  * (Sorry that it's that much, but unicode defines over 35_000 names here)
  *
  * Recognized names here are as defined by unicode:
@@ -7206,7 +7225,7 @@ TPP_DECL_END
  *   - `\N{LATIN SMALL LETTER B}`: Basic unicode character name
  * - [NameAliases.txt](https://ftp.unicode.org/Public/UNIDATA/NameAliases.txt)
  *   - `\N{NULL}`: `control` name
- *   - `\N{PADDING CHARACTER}`: `alternate` name
+ *   - `\N{BYTE ORDER MARK}`: `alternate` name
  *   - `\N{PADDING CHARACTER}`: `figment` name
  *   - `\N{NUL}`: `abbreviation` name
  *   - `\N{LATIN CAPITAL LETTER GHA}`: `correction` name
@@ -7240,6 +7259,7 @@ TPP_DECL_END
  *   - `\N{MAN TIPPING HAND: LIGHT SKIN TONE}`
  *   - `\N{MAN TIPPING HAND:LIGHT SKIN TONE}`
  *   - `\N{MAN TIPPING HAND : LIGHT SKIN TONE}`
+ *
  *   The same also goes for `.`, `,`, `-`, `(` and `)`, all of
  *   which appear in one name or another.
  * - In order to save space, TPP's unicode name database detects and
@@ -7258,12 +7278,12 @@ TPP_DECL_END
  *
  * The STDC Proposal for [Named universal character escapes](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2071r2.html#extensions)
  * lists a couple of extensions to name lookup. All of these have been implemented by TPP:
- * - **Allow comma separated names**: `TPP_HAVE_STRING_ESCAPE_NAMED_MANY` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY`
- * - **Allow code point numbers as names**: `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
- * - **Allow names to match ISO/IEC 10646 named sequences**: enabled unconditionally (baked into name database)
- * - **Allow names to match Unicode emoji named sequences**: enabled unconditionally (baked into name database)
- * - **Allow names to match Unicode emoji ZWJ named sequences**: enabled unconditionally (baked into name database)
- * - **Allow names to match HTML 5 named character references**: `TPP_HAVE_ESCAPE_NAMED_XML`
+ * - *Allow comma separated names*: `TPP_HAVE_STRING_ESCAPE_NAMED_MANY` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY`
+ * - *Allow code point numbers as names*: `TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD`
+ * - *Allow names to match ISO/IEC 10646 named sequences*: enabled unconditionally (baked into name database)
+ * - *Allow names to match Unicode emoji named sequences*: enabled unconditionally (baked into name database)
+ * - *Allow names to match Unicode emoji ZWJ named sequences*: enabled unconditionally (baked into name database)
+ * - *Allow names to match HTML 5 named character references*: `TPP_HAVE_ESCAPE_NAMED_XML`
  */
 #ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP
 #define TPP_HAVE_UNICODE_BYNAME_LOOKUP (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
@@ -8172,7 +8192,7 @@ TPP_DECL_END
 #define TPP_HAVE_FILE_GETREALFILENAMEKWD (TPP_PROFILE == TPP_PROFILE_ALL || TPP_HAVE_PRAGMA_ONCE)
 #endif /* !TPP_HAVE_FILE_GETREALFILENAMEKWD */
 
-/* Enable support for detecting `#ifndef`-style `#include`-guards
+/* Enable support for detecting `#ifndef`-style `#include`-guards.
  * Has no effect on semantics/behavior, but tends to speed up
  * processing of files with many (repeated) includes:
  *
@@ -8860,9 +8880,9 @@ TPP_DECL_END
  * needed to support gcc's `# <linenum>` -> `1`/`2` flags
  *
  * These flags push so-called "dummy" files onto the
- * #include-stack (without altering the actual current
+ * `#include`-stack (without altering the actual current
  * file), with those dummy files acting as additional
- * entries for #include tracebacks. */
+ * entries for `#include` tracebacks. */
 #ifndef TPP_HAVE_FILE_DUMMY
 #define TPP_HAVE_FILE_DUMMY (TPP_HAVE_CPP_DIGIT_LINE)
 #endif /* !TPP_HAVE_FILE_DUMMY */
@@ -8878,7 +8898,8 @@ TPP_DECL_END
 #define TPP_HAVE_EXTERN_C_FOR_SYSHDR (TPP_HAVE_FILE_SYSHDR && TPP_HAVE_FILE_EXTERN_C ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_EXT0 : TPP_COMMON_CONF_FEAT0) : 0) /* "-fextern-c-for-syshdr" */
 #endif /* !TPP_HAVE_EXTERN_C_FOR_SYSHDR */
 
-/* Enable API support for having an `#include`-stack. */
+/* Enable API support for having an `#include`-stack. Despite the name,
+ * this is also needed for macro expansion (see `TPP_HAVE_CPP_MACROS`) */
 #ifndef TPP_HAVE_INCLUDE_STACK
 #if (TPP_HAVE_CPP_MACROS ||       \
      TPP_HAVE_CPP_INCLUDE ||      \
@@ -9002,8 +9023,8 @@ TPP_DECL_END
 #define TPP_HAVE_FILE_ENCODING_EMBED (TPP_HAVE_UNICODE && TPP_HAVE_CPP_EMBED && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
 
-/* Provide an API `tpp_lexer_rand()` that can be used to random numbers
- * using the already-parsed contents of of I/O and TEXT files as seed. */
+/* Provide an API `tpp_lexer_nextrand()` that can be used to generate random
+ * numbers using the already-parsed contents of of I/O and TEXT files as seed. */
 #ifndef TPP_HAVE_LEXER_RAND
 #define TPP_HAVE_LEXER_RAND ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_RANDOM)
 #endif /* !TPP_HAVE_LEXER_RAND */
@@ -9075,7 +9096,7 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_INIT_OPEN TPP_HAVE_LEXER_OPENFILE
 #endif /* !TPP_HAVE_LEXER_INIT_OPEN */
 
-/* Provide an API `tpp_string_builder` centered around builtin `tpp_string` */
+/* Provide an API `tpp_string_builder` centered around building `tpp_string` */
 #ifndef TPP_HAVE_STRING_BUILDER
 #define TPP_HAVE_STRING_BUILDER                                                                   \
 	((TPP_PROFILE == TPP_PROFILE_ALL) ||                                                          \
@@ -9237,7 +9258,13 @@ TPP_DECL_END
 #define TPP_HAVE_MACRO_EQUALS (TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #endif /* !TPP_HAVE_MACRO_EQUALS */
 
-/* Provide a function `tpp_lexer_decodestring()` to decode the data contained within strings */
+/* Provide a couple of functions to decode the data contained within strings:
+ * - `tpp_lexer_decodestring_config`
+ * - `tpp_lexer_decodestring()`
+ * - `tpp_lexer_parsestring_ex()`
+ * - `tpp_lexer_parsestring()`
+ * - `tpp_lexer_parsestring_cb()`
+ */
 #ifndef TPP_HAVE_LEXER_DECODESTRING
 #define TPP_HAVE_LEXER_DECODESTRING (TPP_HAVE_TOK_STRINGLIKE)
 #endif /* !TPP_HAVE_LEXER_DECODESTRING */
@@ -9256,7 +9283,11 @@ TPP_DECL_END
 #define TPP_HAVE_EXPR_VALUE_PRINTREPR (TPP_HAVE_MACRO___TPP_EVAL)
 #endif /* !TPP_HAVE_EXPR_VALUE_PRINTREPR */
 
-/* Provide a function `tpp_token_encodestring()` to perform `\`-escaping of arbitrary data */
+/* Provide a function `tpp_token_encodestring()` to perform `\`-escaping of arbitrary
+ * data, such that `tpp_lexer_yieldraw()` and `tpp_lexer_decodestring()` will understand
+ * the encoded representation in such a way that the original data is reproducible.
+ *
+ * This is primarily needed to implement stuff like `#define STR(x) #x` */
 #ifndef TPP_HAVE_TOKEN_ENCODESTRING
 #define TPP_HAVE_TOKEN_ENCODESTRING                                          \
 	(TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || \
@@ -9349,20 +9380,27 @@ TPP_DECL_END
 #define TPP_HAVE_FTOA (TPP_HAVE_EXPR_VALUE_PRINTREPR)
 #endif /* !TPP_HAVE_FTOA */
 
-/* Provide a function `tpp_extension_nearest()` */
+/* Provide a function `tpp_extension_nearest()` that does fuzzy matching to find
+ * the closest match of a given extension name. Used in the warning message emitted
+ * when trying to set an unknown extension: `TPP_HAVE_TPP_W_UNKNOWN_EXTENSION` */
 #ifndef TPP_HAVE_TPP_EXTENSION_NEAREST
 #define TPP_HAVE_TPP_EXTENSION_NEAREST \
 	(TPP_HAVE_TPP_W_UNKNOWN_EXTENSION && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_TPP_EXTENSION_NEAREST */
 
-/* Provide a function `tpp_warning_group_nearest()` */
+/* Provide a function `tpp_warning_group_nearest()` that does fuzzy matching to find
+ * the closest match of a given warning name. Used in the warning message emitted
+ * when trying to set an unknown warning: `TPP_HAVE_TPP_W_UNKNOWN_WARNING` */
 #ifndef TPP_HAVE_TPP_WARNING_GROUP_NEAREST
 #define TPP_HAVE_TPP_WARNING_GROUP_NEAREST \
 	(TPP_HAVE_TPP_W_UNKNOWN_WARNING && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
 
 /* Provide a function `tpp_fuzzy_memcmp()` to quantify the
- * *fuzziness* of how close 2 memory-blocks are to each other */
+ * *fuzziness* of how close 2 memory-blocks are to each other.
+ *
+ * Needed to implement `TPP_HAVE_TPP_EXTENSION_NEAREST` and
+ * `TPP_HAVE_TPP_WARNING_GROUP_NEAREST`. */
 #ifndef TPP_HAVE_TPP_FUZZY_MEMCMP
 #define TPP_HAVE_TPP_FUZZY_MEMCMP \
 	(TPP_HAVE_TPP_EXTENSION_NEAREST || TPP_HAVE_TPP_WARNING_GROUP_NEAREST)
@@ -9415,7 +9453,7 @@ TPP_DECL_END
 
 /* Provide a function `tpp_keywords_resetcounters()` +
  * `tpp_lexer_kwds_resetcounters()` that can be used to
- * reset the state of all `__TPP_COUNTER()' macro expansions. */
+ * reset the state of all `__TPP_COUNTER()` macro expansions. */
 #ifndef TPP_HAVE_KEYWORDS_RESETCOUNTERS
 #define TPP_HAVE_KEYWORDS_RESETCOUNTERS \
 	((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_MACRO___TPP_COUNTER)
@@ -9427,7 +9465,9 @@ TPP_DECL_END
 #endif /* !TPP_CONFIG_CLI_FILENAME */
 
 /* Provide a function `tpp_lexer_dump_definitions()` that can be
- * used to re-print all user-defined macro definitions and asserts. */
+ * used to re-print all user-defined macro definitions and asserts.
+ *
+ * This can be used to implement GCC's CPP's `-dM` CLI flag. */
 #ifndef TPP_HAVE_LEXER_DUMP_DEFINITIONS
 #define TPP_HAVE_LEXER_DUMP_DEFINITIONS (TPP_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_HAVE_LEXER_DUMP_DEFINITIONS */
@@ -20280,7 +20320,7 @@ tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
  * - `tpp_lexer_getrngseed()' (affected by `tpp_lexer_popfile()' + `tpp_lexer_manualpopfile_break_commit()')
  * - `tpp_lexer_getinputhash()' (affected by everything read from files currently on the #include-stack)
  *
- * The result of the combination of those 2 values if then put
+ * The result of the combination of those 2 values is then put
  * through a PRNG, before the result of the PRNG is then returned
  * by this function.
  *
@@ -21270,6 +21310,7 @@ tpp_lexer_parsestring_cb(tpp_lexer *self,
                          tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
                                                  tpp_char const *str, tpp_size length),
                          void *arg, unsigned int flags);
+#endif /* TPP_HAVE_LEXER_DECODESTRING */
 
 #if TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
 /* Convenience wrapper to parse a character integer literal
@@ -21287,7 +21328,6 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
                                  /*out*/ tpp_intmax *tpp_restrict p_result,
                                  unsigned int flags);
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
-#endif /* TPP_HAVE_LEXER_DECODESTRING */
 
 #undef TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR
 #if TPP_HAVE_LEXER_PARSESTRING_EXPR

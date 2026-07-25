@@ -1078,7 +1078,7 @@ tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
  * - `tpp_lexer_getrngseed()' (affected by `tpp_lexer_popfile()' + `tpp_lexer_manualpopfile_break_commit()')
  * - `tpp_lexer_getinputhash()' (affected by everything read from files currently on the #include-stack)
  *
- * The result of the combination of those 2 values if then put
+ * The result of the combination of those 2 values is then put
  * through a PRNG, before the result of the PRNG is then returned
  * by this function.
  *
@@ -2068,6 +2068,7 @@ tpp_lexer_parsestring_cb(tpp_lexer *self,
                          tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
                                                  tpp_char const *str, tpp_size length),
                          void *arg, unsigned int flags);
+#endif /* TPP_HAVE_LEXER_DECODESTRING */
 
 #if TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
 /* Convenience wrapper to parse a character integer literal
@@ -2085,7 +2086,6 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
                                  /*out*/ tpp_intmax *tpp_restrict p_result,
                                  unsigned int flags);
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
-#endif /* TPP_HAVE_LEXER_DECODESTRING */
 
 #undef TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR
 #if TPP_HAVE_LEXER_PARSESTRING_EXPR

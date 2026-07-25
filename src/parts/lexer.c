@@ -615,7 +615,7 @@ tpp_prng_next(tpp_hash x) {
  * - `tpp_lexer_getrngseed()' (affected by `tpp_lexer_popfile()' + `tpp_lexer_manualpopfile_break_commit()')
  * - `tpp_lexer_getinputhash()' (affected by everything read from files currently on the #include-stack)
  *
- * The result of the combination of those 2 values if then put
+ * The result of the combination of those 2 values is then put
  * through a PRNG, before the result of the PRNG is then returned
  * by this function.
  *
