@@ -5086,7 +5086,7 @@ TPP_DECL_END
 #define TPP_HAVE_BUILTIN_CTYPE_UNICODE 0 /* There are user-supplied unicode trait functions */
 #endif /* !... */
 
-/* Supply a built-in unicode character traits database (adds ~36KiB data to final executable).
+/* Supply a built-in unicode character traits database (adds ~21KiB data to final executable).
  * Some examples of stuff that is supported when this is enabled:
  * - `U+0085` (`NEL`)  will be treated like `U+000A` (`LF` `\n`)
  * - `U+00A0` (`NBSP`) will be treated like `U+0020` (`space` `\s`)
