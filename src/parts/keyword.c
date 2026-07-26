@@ -553,44 +553,6 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len) {
 }
 
 
-#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || TPP_HAVE_STRING_ESCAPE_NAMED_MANY
-#if TPP_HAVE_UNICODE
-#define tpp_decode_named_skipspace_lexer__PARAM  , tpp_lexer const *lexer
-#define tpp_decode_named_skipspace_lexer__ARG(x) , x
-#else /* TPP_HAVE_UNICODE */
-#define tpp_decode_named_skipspace_lexer__PARAM  /* nothing */
-#define tpp_decode_named_skipspace_lexer__ARG(x) /* nothing */
-#endif /* !TPP_HAVE_UNICODE */
-
-TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end
-                           tpp_decode_named_skipspace_lexer__PARAM) {
-	for (;;) {
-		tpp_char ch;
-		iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
-		if (iter >= end)
-			break;
-		ch = *iter;
-		if (tpp_ascii_isspace(ch)) {
-			++iter;
-		} else
-#if TPP_HAVE_UNICODE
-		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
-			tpp_char const *uc_iter = iter;
-			tpp_unichar uc = tpp_unicode_readutf8(&uc_iter, end);
-			if (!tpp_unicode_isspace(uc))
-				break;
-			iter = uc_iter;
-		} else
-#endif /* TPP_HAVE_UNICODE */
-		{
-			break;
-		}
-	}
-	return iter;
-}
-#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
-
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 #if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
@@ -637,7 +599,7 @@ _tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p
 
 	/* Decode named sequence */
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
-	named_start = tpp_decode_named_skipspace(named_start, named_end tpp_decode_named_skipspace_lexer__ARG(lexer));
+	named_start = tpp_preparse_skipspace_fwd(lexer, named_start, named_end);
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 	named_count = tpp_decode_named_escape(&named_start, named_end, named_uc, lexer);
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
@@ -648,9 +610,9 @@ _tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p
 		if (comma)
 			named_start = comma;
 	}
-	named_start = tpp_decode_named_skipspace(named_start, named_end tpp_decode_named_skipspace_lexer__ARG(lexer));
+	named_start = tpp_preparse_skipspace_fwd(lexer, named_start, named_end);
 	if (named_start < named_end && *named_start == ',') {
-		named_start = tpp_decode_named_skipspace(named_start + 1, named_end tpp_decode_named_skipspace_lexer__ARG(lexer));
+		named_start = tpp_preparse_skipspace_fwd(lexer, named_start + 1, named_end);
 		*p_continue = true;
 	} else {
 		*p_continue = (named_count && named_start < named_end);

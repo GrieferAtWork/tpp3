@@ -5735,6 +5735,18 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
 
+/* Provide an API `tpp_preparse_skipspace_fwd()` that can be used to easily skip an arbitrary
+ * amount of whitespace (but not comments), as well as BSE sequences in a forward-direction. */
+#ifndef TPP_HAVE_PREPARSE_SKIPSPACE_FWD
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) ||      \
+     TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || \
+     TPP_HAVE_STRING_ESCAPE_NAMED_MANY)
+#define TPP_HAVE_PREPARSE_SKIPSPACE_FWD 1
+#else /* ... */
+#define TPP_HAVE_PREPARSE_SKIPSPACE_FWD 0
+#endif /* !... */
+#endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_FWD */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/

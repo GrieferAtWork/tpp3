@@ -10203,6 +10203,18 @@ TPP_DECL_END
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
 
+/* Provide an API `tpp_preparse_skipspace_fwd()` that can be used to easily skip an arbitrary
+ * amount of whitespace (but not comments), as well as BSE sequences in a forward-direction. */
+#ifndef TPP_HAVE_PREPARSE_SKIPSPACE_FWD
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) ||      \
+     TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || \
+     TPP_HAVE_STRING_ESCAPE_NAMED_MANY)
+#define TPP_HAVE_PREPARSE_SKIPSPACE_FWD 1
+#else /* ... */
+#define TPP_HAVE_PREPARSE_SKIPSPACE_FWD 0
+#endif /* !... */
+#endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_FWD */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -17364,16 +17376,33 @@ struct tpp_lexer;
  * tpp_preparse_skipbse_fwd: If "pos" points at a \-character, skip forward until end of BSE (if it is one)
  * tpp_preparse_skipbse_bck: If "pos" points after a line-feed character, skip backward until start of BSE (if it is one) */
 #if TPP_HAVE_BSE
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_preparse_skipbse_fwd(tpp_char const *pos, tpp_char const *end _tpp_preparse_skipbse_lexer__PARAM);
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_preparse_skipbse_bck(tpp_char const *pos, tpp_char const *start _tpp_preparse_skipbse_lexer__PARAM);
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_preparse_skipbse_fwd(tpp_char const *pos, tpp_char const *end
+                          _tpp_preparse_skipbse_lexer__PARAM);
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_preparse_skipbse_bck(tpp_char const *pos, tpp_char const *start
+                          _tpp_preparse_skipbse_lexer__PARAM);
 #define tpp_preparse_skipbse_fwd(lexer, pos, end)   (((pos) >= (end) || tpp_likely(!_tpp_maybe_isbackslash(*(pos)))) ? (pos) : _tpp_preparse_skipbse_fwd(pos, end _tpp_preparse_skipbse_lexer__ARG(lexer)))
 #define tpp_preparse_skipbse_bck(lexer, pos, start) (((pos) <= (start) || tpp_likely(!_tpp_maybe_islf((pos)[-1]))) ? (pos) : _tpp_preparse_skipbse_bck(pos, start _tpp_preparse_skipbse_lexer__ARG(lexer)))
 #else /* TPP_HAVE_BSE */
 #define tpp_preparse_skipbse_fwd(lexer, pos, end)   (pos)
 #define tpp_preparse_skipbse_bck(lexer, pos, start) (pos)
 #endif /* !TPP_HAVE_BSE */
+
+
+#if TPP_HAVE_PREPARSE_SKIPSPACE_FWD
+/* Skip over all whitespace and BSE sequences, starting at `pos` and
+ * going no further than `end` (such that `*end` is never dereferenced)
+ *
+ * @return: * :  Pointer to the first non-whitespace (and not-part-of-BSE)
+ *               character that is `>= pos`.
+ * @return: end: Nothing but whitespace (or BSE) found before `end` was reached. */
+#define tpp_preparse_skipspace_fwd(lexer, pos, end) \
+	_tpp_preparse_skipspace_fwd(pos, end _tpp_preparse_skipbse_lexer__ARG(lexer))
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_preparse_skipspace_fwd(tpp_char const *pos, tpp_char const *end
+                            _tpp_preparse_skipbse_lexer__PARAM);
+#endif /* TPP_HAVE_PREPARSE_SKIPSPACE_FWD */
 
 /************************************************************************/
 /* File: parts/keyword.h                                                */

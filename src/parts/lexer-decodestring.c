@@ -459,20 +459,6 @@ tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(tpp_char const **p_iter, tpp_c
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BRACE */
 
 
-#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
-#if TPP_HAVE_UNICODE
-#define tpp_decode_named_skipspace_lexer__PARAM  , tpp_lexer const *lexer
-#define tpp_decode_named_skipspace_lexer__ARG(x) , x
-#else /* TPP_HAVE_UNICODE */
-#define tpp_decode_named_skipspace_lexer__PARAM  /* nothing */
-#define tpp_decode_named_skipspace_lexer__ARG(x) /* nothing */
-#endif /* !TPP_HAVE_UNICODE */
-
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end
-                           tpp_decode_named_skipspace_lexer__PARAM);
-#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
-
 #if TPP_HAVE_STRING_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 #ifndef tpp_lexer_warn_unknown_named_escape_sequence
 #define tpp_lexer_warn_unknown_named_escape_sequence tpp_lexer_warn_unknown_named_escape_sequence
@@ -954,7 +940,7 @@ handle_unknown_uni_brace_sequence:
 			tpp_char utf8_buf[TPP_DECODE_NAMED_ESCAPE_MAXLEN * TPP_UTF8_MAXLEN], *utf8_dst;
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
 			if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY))
-				named_start = tpp_decode_named_skipspace(named_start, named_end tpp_decode_named_skipspace_lexer__ARG(self));
+				named_start = tpp_preparse_skipspace_fwd(self, named_start, named_end);
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 			count = tpp_decode_named_escape(&named_start, named_end, uc, self);
 			if (count == 0) {
@@ -998,9 +984,9 @@ handle_unknown_uni_brace_sequence:
 			/* Check if there are additional character names */
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
 			if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY)) {
-				named_start = tpp_decode_named_skipspace(named_start, named_end tpp_decode_named_skipspace_lexer__ARG(self));
+				named_start = tpp_preparse_skipspace_fwd(self, named_start, named_end);
 				if (named_start < named_end && *named_start == ',') {
-					named_start = tpp_decode_named_skipspace(named_start + 1, named_end tpp_decode_named_skipspace_lexer__ARG(self));
+					named_start = tpp_preparse_skipspace_fwd(self, named_start + 1, named_end);
 					continue;
 				}
 			}
