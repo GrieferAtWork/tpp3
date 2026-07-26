@@ -173,12 +173,14 @@ typedef enum tpp_errno {
 
 
 /* Helper macros for embedding error codes in "tpp_ssize" values. */
-#define /*tpp_ssize*/ TPP_SSIZE_OFERR(/*tpp_errno*/ e) ((tpp_ssize)(int)(e))
-#define /*tpp_errno*/ TPP_SSIZE_ASERR(/*tpp_ssize*/ v) ((tpp_errno)(int)(v))
+#define /*tpp_ssize*/ TPP_SSIZE_OFERR(/*tpp_errno*/ e)        ((tpp_ssize)(int)(e))
+#define /*tpp_errno*/ TPP_SSIZE_ASERR(/*tpp_ssize*/ v)        ((tpp_errno)(int)(v))
 #if 1
+#define /*tpp_ssize*/ TPP_SSIZE_OFERR_OR_EOK(/*tpp_errno*/ e) ((tpp_ssize)(int)(e))
 #define /*tpp_errno*/ TPP_SSIZE_ASERR_OR_EOK(/*tpp_ssize*/ v) ((tpp_errno)(int)(v))
 #else
-#define /*tpp_errno*/ TPP_SSIZE_ASERR_OR_EOK(/*tpp_ssize*/ v) ((v) == 0 ? TPP_EOK : (tpp_errno)(int)(v))
+#define /*tpp_ssize*/ TPP_SSIZE_OFERR_OR_EOK(/*tpp_errno*/ e) ((v) == TPP_EOK ? 0 : (tpp_ssize)(int)(v))
+#define /*tpp_errno*/ TPP_SSIZE_ASERR_OR_EOK(/*tpp_ssize*/ v) ((v) == 0 ? TPP_EOK : (tpp_ssize)(int)(v))
 #endif
 #if TPP_DEBUG
 #define /*bool*/ TPP_SSIZE_ISERR(/*tpp_ssize*/ v) \

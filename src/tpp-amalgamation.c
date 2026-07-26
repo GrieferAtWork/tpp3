@@ -27269,6 +27269,47 @@ static struct tpp_warning_group_names_struct {
 #undef TPP_DEFS
 };
 
+enum {
+#define TPP_DEFS
+#define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
+	_TPP_WGN_##wgroup_id##_##index,
+#define TPP_WGROUP(wgroup_id, names, default) \
+	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_AMALGAMATION_H
+#undef _TPP_EXPAND_WGROUP_NAMES
+#undef TPP_DEFS
+	TPP_WGN_COUNT
+};
+
+
+/* Convert WARNING_GROUP_NAME_ID -> tpp_warning_group_id */
+static tpp_warning_group_id const tpp_warning_group_bynameid[TPP_WGN_COUNT] = {
+#define TPP_DEFS
+#define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
+	/* [_TPP_WGN_##wgroup_id##_##index] = */ wgroup_id,
+#define TPP_WGROUP(wgroup_id, names, default) \
+	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_AMALGAMATION_H
+#undef _TPP_EXPAND_WGROUP_NAMES
+#undef TPP_DEFS
+};
+
+/* Convert WARNING_GROUP_NAME_ID -> offset-into-tpp_warning_group_names */
+static tpp_size const tpp_warning_group_name_offsets_bynameid[TPP_WGN_COUNT] = {
+#define TPP_DEFS
+#define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
+	/* [_TPP_WGN_##wgroup_id##_##index] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_##index),
+#define TPP_WGROUP(wgroup_id, names, default) \
+	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_AMALGAMATION_H
+#undef _TPP_EXPAND_WGROUP_NAMES
+#undef TPP_DEFS
+};
+
+/* Convert tpp_warning_group_id -> offset-into-tpp_warning_group_names */
 static tpp_size const tpp_warning_group_name_offsets_byid[TPP_WG_COUNT] = {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
@@ -27322,6 +27363,7 @@ static struct tpp_warning_groups_struct {
 #undef TPP_DEFS
 };
 
+/* Convert tpp_warning_id -> offset-into-tpp_warning_groups */
 static tpp_size const tpp_warning_group_offsets_byid[TPP_W_COUNT] = {
 #define TPP_DEFS
 #define _TPP_WARNING_GROUPS_NONEMPTY(warning_id) \
@@ -27524,31 +27566,6 @@ static void tpp_init_extension_name_offsets_byname(void) {
 
 
 #if TPP_HAVE_WARNINGS
-enum {
-#define TPP_DEFS
-#define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
-	_TPP_WGN_##wgroup_id##_##index,
-#define TPP_WGROUP(wgroup_id, names, default) \
-	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
-#undef GUARD_TPP_AMALGAMATION_H
-#include TPP_AMALGAMATION_H
-#undef _TPP_EXPAND_WGROUP_NAMES
-#undef TPP_DEFS
-	TPP_WGN_COUNT
-};
-
-static tpp_size const tpp_warning_group_name_offsets_bynameid[TPP_WGN_COUNT] = {
-#define TPP_DEFS
-#define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
-	/* [_TPP_WGN_##wgroup_id##_##index] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_##index),
-#define TPP_WGROUP(wgroup_id, names, default) \
-	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
-#undef GUARD_TPP_AMALGAMATION_H
-#include TPP_AMALGAMATION_H
-#undef _TPP_EXPAND_WGROUP_NAMES
-#undef TPP_DEFS
-};
-
 static tpp_size tpp_warning_group_name_offsets_byname[TPP_WGN_COUNT] = {};
 static int tpp_warning_group_name_offset_compare(void const *lhs, void const *rhs) {
 	tpp_size lhs_value = *(tpp_size const *)lhs;
@@ -27562,7 +27579,7 @@ static void tpp_init_warning_group_name_offsets_byname_impl(void) {
 	tpp_memcpy(tpp_warning_group_name_offsets_byname,
 	           tpp_warning_group_name_offsets_bynameid,
 	           sizeof(tpp_warning_group_name_offsets_bynameid));
-	qsort(tpp_warning_group_name_offsets_byname, TPP_WG_COUNT, sizeof(tpp_size),
+	qsort(tpp_warning_group_name_offsets_byname, TPP_WGN_COUNT, sizeof(tpp_size),
 	      &tpp_warning_group_name_offset_compare);
 }
 
@@ -28096,17 +28113,19 @@ static TPP_WUNUSED tpp_warning_group_id TPPCALL
 tpp_warning_group_byname_offset(tpp_size name_offset) {
 	unsigned int lo, hi;
 	lo = 0;
-	hi = tpp_lengthof(tpp_warning_group_name_offsets_byid);
+	hi = tpp_lengthof(tpp_warning_group_name_offsets_bynameid);
 	for (;;) {
 		unsigned int mid = (lo + hi) / 2;
-		tpp_size mid_offset = tpp_warning_group_name_offsets_byid[mid];
+		tpp_size mid_offset = tpp_warning_group_name_offsets_bynameid[mid];
 		tpp_assert(lo < hi);
 		if (name_offset < mid_offset) {
 			hi = mid;
 		} else if (name_offset > mid_offset) {
 			lo = mid + 1;
 		} else {
-			return (tpp_warning_group_id)mid;
+			/* At this point, "mid" is the *name-id* of the warning group.
+			 * That ID must now finally be converted */
+			return tpp_warning_group_bynameid[mid];
 		}
 	}
 }
@@ -33741,7 +33760,7 @@ tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end) {
 	uc = (tpp_unichar)*pos++;
 	if (uc >= 0xc0) {
 		uint_least8_t len = tpp_unicode_utf8seqlen_mb_getmax(uc);
-		tpp_size maxlen = (tpp_size)(end - pos);
+		tpp_size maxlen = (tpp_size)(end - pos) + 1;
 		if ((tpp_size)len > maxlen)
 			len = (uint_least8_t)maxlen;
 		switch (len) {
@@ -54150,33 +54169,83 @@ tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
 struct tpp_lexer_decodecharacter_data {
+#if TPP_HAVE_TPP_W_MULTICHAR_LITERAL || TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+	tpp_lexer  *tldcd_lexer; /* [1..1] Active lexer */
+#endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL || TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 #if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
-	tpp_lexer *tldcd_lexer; /* [1..1] Active lexer */
-	tpp_size   tldcd_count; /* # of bytes already parsed */
+	tpp_size    tldcd_count; /* # of words already parsed */
 #endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
-	tpp_intmax tldcd_value; /* Multichar value */
+	tpp_uintmax tldcd_value; /* Multichar value */
 };
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_decodecharacter_data_addword(struct tpp_lexer_decodecharacter_data *tpp_restrict self,
+                                       tpp_uintmax word) {
+#if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
+	if ((self->tldcd_count <= 1) &&
+	    (self->tldcd_count + 1) > 1) {
+		/* Emit warning about multi-char literals being used */
+		tpp_errno error = tpp_lexer_warnf(self->tldcd_lexer, TPP_W_MULTICHAR_LITERAL);
+		if (TPP_ISERR(error))
+			return error;
+	}
+	self->tldcd_count += 1;
+#endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+	if (((self->tldcd_value << TPP_CHAR_BIT) >> TPP_CHAR_BIT) != self->tldcd_value) {
+		tpp_errno error = tpp_lexer_warnf(self->tldcd_lexer, TPP_W_CHARACTER_TOO_LARGE);
+		if (TPP_ISERR(error))
+			return error;
+	}
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+	self->tldcd_value <<= TPP_CHAR_BIT;
+	self->tldcd_value |= word;
+	return TPP_EOK;
+}
 
 static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_bytes) {
 	tpp_size i;
 	struct tpp_lexer_decodecharacter_data *data;
 	data = (struct tpp_lexer_decodecharacter_data *)arg;
-#if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
-	if ((data->tldcd_count <= 1) &&
-	    (data->tldcd_count + num_bytes) > 1) {
-		/* Emit warning about multi-char literals being used */
-		tpp_errno error = tpp_lexer_warnf(data->tldcd_lexer, TPP_W_MULTICHAR_LITERAL);
+	for (i = 0; i < num_bytes; ++i) {
+		tpp_errno error;
+		tpp_char word = text[i];
+		error = tpp_lexer_decodecharacter_data_addword(data, word);
 		if (TPP_ISERR(error))
 			return TPP_SSIZE_OFERR(error);
 	}
-	data->tldcd_count += num_bytes;
-#endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
-	for (i = 0; i < num_bytes; ++i) {
-		data->tldcd_value <<= TPP_CHAR_BIT;
-		data->tldcd_value |= text[i];
+	return 0;
+}
+
+#if TPP_HAVE_UNICODE
+static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_utf8_cb, arg, text, num_bytes) {
+	tpp_char const *iter = text;
+	tpp_char const *end = text + num_bytes;
+	struct tpp_lexer_decodecharacter_data *data;
+	data = (struct tpp_lexer_decodecharacter_data *)arg;
+	while (iter < end) {
+		tpp_errno error;
+		tpp_unichar word = tpp_unicode_readutf8(&iter, end);
+		error = tpp_lexer_decodecharacter_data_addword(data, word);
+		if (TPP_ISERR(error))
+			return TPP_SSIZE_OFERR(error);
 	}
 	return 0;
 }
+#endif /* TPP_HAVE_UNICODE */
+
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+static TPP_NONNULL((2)) tpp_ssize TPPCALL
+tpp_lexer_decodecharacter_big_cb(void *arg, tpp_lexer *tpp_restrict lexer, tpp_uintmax value) {
+	tpp_errno error;
+	struct tpp_lexer_decodecharacter_data *data;
+	(void)lexer;
+	data = (struct tpp_lexer_decodecharacter_data *)arg;
+	error = tpp_lexer_decodecharacter_data_addword(data, value);
+	return TPP_SSIZE_OFERR_OR_EOK(error);
+}
+#endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+
 
 /* Convenience wrapper to parse a character integer literal
  *
@@ -54190,19 +54259,32 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_byt
  * @return: TPP_EWARNPRINT: Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
-                                 /*out*/ tpp_intmax *tpp_restrict p_result,
+                                 /*out*/ tpp_uintmax *tpp_restrict p_result,
                                  unsigned int flags) {
 	tpp_ssize status;
 	tpp_lexer_decodestring_config config;
 	struct tpp_lexer_decodecharacter_data data;
-#if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
+#if TPP_HAVE_TPP_W_MULTICHAR_LITERAL || TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
 	data.tldcd_lexer = self;
+#endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL || TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+#if TPP_HAVE_TPP_W_MULTICHAR_LITERAL
 	data.tldcd_count = 0;
 #endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
 	data.tldcd_value = 0;
-	/* TODO: Decode utf-8 multi-char sequence -- '\u1234' must equal 0x1234, but currently doesn't! */
-	/* TODO: If input uses \x1234, must evaluate to 0x1234 */
-	tpp_lexer_decodestring_config_init_simple(&config, &tpp_lexer_decodecharacter_cb, &data);
+
+	config.tldsc_dataprinter = &tpp_lexer_decodecharacter_cb;
+	config.tldsc_arg         = &data;
+
+	/* Decode utf-8 multi-char sequence -- '\u1234' must equal 0x1234! */
+#if TPP_HAVE_UNICODE
+	config.tldsc_utf8printer = &tpp_lexer_decodecharacter_utf8_cb;
+#endif /* TPP_HAVE_UNICODE */
+
+	/* If input uses \x1234, must evaluate to 0x1234! */
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+	config.tldsc_bigprinter = &tpp_lexer_decodecharacter_big_cb;
+#endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+
 	status = tpp_lexer_parsestring_ex(self, &config, flags);
 	*p_result = data.tldcd_value;
 	tpp_assert(TPP_SSIZE_ISERR_OR_EOK(status));
@@ -54227,11 +54309,11 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
                               /*out*/ tpp_expr_value *tpp_restrict result,
                               unsigned int flags) {
-	tpp_intmax value;
+	tpp_uintmax value;
 	tpp_errno error = tpp_lexer_parsecharacter_literal(self, &value, flags);
 	if (TPP_ISERR(error))
 		return error;
-	return tpp_expr_value_init_int(result, value);
+	return tpp_expr_value_init_int(result, (tpp_intmax)value);
 }
 #endif /* TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR */
 

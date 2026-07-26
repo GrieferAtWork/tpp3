@@ -25,6 +25,7 @@ for (local e: fs.dir(".").sorted()) {
 }
 ]]]*/
 #include "arguments-as-macro.h"
+#include "big-character-literal.h"
 #include "clone-linefeed.h"
 #include "count-tokens.h"
 #include "cxx-comments-in-macro.h"

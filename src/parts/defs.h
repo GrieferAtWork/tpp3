@@ -4931,6 +4931,27 @@ TPP_WARNING(TPP_W_FILE_HAS_NO_TRAILING_LINEFEED, 1(TPP_WG_QUALITY), 0(), ~,
 #endif /* TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED */
 
 
+/************************************************************************/
+/* -Wbig-character                                                      */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_BIG_CHARACTER
+#define TPP_HAVE_TPP_WG_BIG_CHARACTER \
+	(TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE)
+#endif /* !TPP_HAVE_TPP_WG_BIG_CHARACTER */
+#if TPP_HAVE_TPP_WG_BIG_CHARACTER
+#ifndef TPP_WGNAME_BIG_CHARACTER
+#define TPP_WGNAME_BIG_CHARACTER 1("big-character")
+#endif /* !TPP_WGNAME_BIG_CHARACTER */
+#define TPP_WG_BIG_CHARACTER TPP_WG_BIG_CHARACTER
+TPP_WGROUP(TPP_WG_BIG_CHARACTER, TPP_WGNAME_BIG_CHARACTER, TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_BIG_CHARACTER */
+
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+#define TPP_W_CHARACTER_TOO_LARGE TPP_W_CHARACTER_TOO_LARGE
+TPP_WARNING(TPP_W_CHARACTER_TOO_LARGE, 1(TPP_WG_BIG_CHARACTER), 1(2022), TPP_WSTATE_ERROR_OR_FATAL,
+            "character value is too large: %Pt")
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+
 
 /************************************************************************/
 /* Misc warnings...                                                     */
@@ -4985,12 +5006,6 @@ TPP_WARNING(TPP_W_BAD_EXPRESSION_OPERANDS, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 1(2124), TPP_WSTATE_ERROR_OR_FATAL,
             "division by zero")
 #endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
-
-#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
-#define TPP_W_CHARACTER_TOO_LARGE TPP_W_CHARACTER_TOO_LARGE
-TPP_WARNING(TPP_W_CHARACTER_TOO_LARGE, 0(), 1(2022), TPP_WSTATE_ERROR_OR_FATAL,
-            "character value is too large: %Pt")
-#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 
 #if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
 #define TPP_W_CANNOT_POP_INCLUDE_PATHS TPP_W_CANNOT_POP_INCLUDE_PATHS

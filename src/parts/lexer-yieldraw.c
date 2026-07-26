@@ -53,7 +53,7 @@ tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end) {
 	uc = (tpp_unichar)*pos++;
 	if (uc >= 0xc0) {
 		uint_least8_t len = tpp_unicode_utf8seqlen_mb_getmax(uc);
-		tpp_size maxlen = (tpp_size)(end - pos);
+		tpp_size maxlen = (tpp_size)(end - pos) + 1;
 		if ((tpp_size)len > maxlen)
 			len = (uint_least8_t)maxlen;
 		switch (len) {

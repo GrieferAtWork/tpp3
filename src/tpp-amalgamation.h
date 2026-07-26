@@ -4743,6 +4743,27 @@ TPP_WARNING(TPP_W_FILE_HAS_NO_TRAILING_LINEFEED, 1(TPP_WG_QUALITY), 0(), ~,
 #endif /* TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED */
 
 
+/************************************************************************/
+/* -Wbig-character                                                      */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_BIG_CHARACTER
+#define TPP_HAVE_TPP_WG_BIG_CHARACTER \
+	(TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE)
+#endif /* !TPP_HAVE_TPP_WG_BIG_CHARACTER */
+#if TPP_HAVE_TPP_WG_BIG_CHARACTER
+#ifndef TPP_WGNAME_BIG_CHARACTER
+#define TPP_WGNAME_BIG_CHARACTER 1("big-character")
+#endif /* !TPP_WGNAME_BIG_CHARACTER */
+#define TPP_WG_BIG_CHARACTER TPP_WG_BIG_CHARACTER
+TPP_WGROUP(TPP_WG_BIG_CHARACTER, TPP_WGNAME_BIG_CHARACTER, TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_BIG_CHARACTER */
+
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+#define TPP_W_CHARACTER_TOO_LARGE TPP_W_CHARACTER_TOO_LARGE
+TPP_WARNING(TPP_W_CHARACTER_TOO_LARGE, 1(TPP_WG_BIG_CHARACTER), 1(2022), TPP_WSTATE_ERROR_OR_FATAL,
+            "character value is too large: %Pt")
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+
 
 /************************************************************************/
 /* Misc warnings...                                                     */
@@ -4797,12 +4818,6 @@ TPP_WARNING(TPP_W_BAD_EXPRESSION_OPERANDS, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 1(2124), TPP_WSTATE_ERROR_OR_FATAL,
             "division by zero")
 #endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
-
-#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
-#define TPP_W_CHARACTER_TOO_LARGE TPP_W_CHARACTER_TOO_LARGE
-TPP_WARNING(TPP_W_CHARACTER_TOO_LARGE, 0(), 1(2022), TPP_WSTATE_ERROR_OR_FATAL,
-            "character value is too large: %Pt")
-#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 
 #if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
 #define TPP_W_CANNOT_POP_INCLUDE_PATHS TPP_W_CANNOT_POP_INCLUDE_PATHS
@@ -11268,12 +11283,14 @@ typedef enum tpp_errno {
 
 
 /* Helper macros for embedding error codes in "tpp_ssize" values. */
-#define /*tpp_ssize*/ TPP_SSIZE_OFERR(/*tpp_errno*/ e) ((tpp_ssize)(int)(e))
-#define /*tpp_errno*/ TPP_SSIZE_ASERR(/*tpp_ssize*/ v) ((tpp_errno)(int)(v))
+#define /*tpp_ssize*/ TPP_SSIZE_OFERR(/*tpp_errno*/ e)        ((tpp_ssize)(int)(e))
+#define /*tpp_errno*/ TPP_SSIZE_ASERR(/*tpp_ssize*/ v)        ((tpp_errno)(int)(v))
 #if 1
+#define /*tpp_ssize*/ TPP_SSIZE_OFERR_OR_EOK(/*tpp_errno*/ e) ((tpp_ssize)(int)(e))
 #define /*tpp_errno*/ TPP_SSIZE_ASERR_OR_EOK(/*tpp_ssize*/ v) ((tpp_errno)(int)(v))
 #else
-#define /*tpp_errno*/ TPP_SSIZE_ASERR_OR_EOK(/*tpp_ssize*/ v) ((v) == 0 ? TPP_EOK : (tpp_errno)(int)(v))
+#define /*tpp_ssize*/ TPP_SSIZE_OFERR_OR_EOK(/*tpp_errno*/ e) ((v) == TPP_EOK ? 0 : (tpp_ssize)(int)(v))
+#define /*tpp_errno*/ TPP_SSIZE_ASERR_OR_EOK(/*tpp_ssize*/ v) ((v) == 0 ? TPP_EOK : (tpp_ssize)(int)(v))
 #endif
 #if TPP_DEBUG
 #define /*bool*/ TPP_SSIZE_ISERR(/*tpp_ssize*/ v) \
@@ -22692,7 +22709,7 @@ tpp_lexer_parsestring_cb(tpp_lexer *self,
  * @return: TPP_EWARNPRINT: Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
-                                 /*out*/ tpp_intmax *tpp_restrict p_result,
+                                 /*out*/ tpp_uintmax *tpp_restrict p_result,
                                  unsigned int flags);
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
 

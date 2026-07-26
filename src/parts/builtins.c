@@ -113,6 +113,47 @@ static struct tpp_warning_group_names_struct {
 #undef TPP_DEFS
 };
 
+enum {
+#define TPP_DEFS
+#define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
+	_TPP_WGN_##wgroup_id##_##index,
+#define TPP_WGROUP(wgroup_id, names, default) \
+	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef _TPP_EXPAND_WGROUP_NAMES
+#undef TPP_DEFS
+	TPP_WGN_COUNT
+};
+
+
+/* Convert WARNING_GROUP_NAME_ID -> tpp_warning_group_id */
+static tpp_warning_group_id const tpp_warning_group_bynameid[TPP_WGN_COUNT] = {
+#define TPP_DEFS
+#define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
+	/* [_TPP_WGN_##wgroup_id##_##index] = */ wgroup_id,
+#define TPP_WGROUP(wgroup_id, names, default) \
+	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef _TPP_EXPAND_WGROUP_NAMES
+#undef TPP_DEFS
+};
+
+/* Convert WARNING_GROUP_NAME_ID -> offset-into-tpp_warning_group_names */
+static tpp_size const tpp_warning_group_name_offsets_bynameid[TPP_WGN_COUNT] = {
+#define TPP_DEFS
+#define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
+	/* [_TPP_WGN_##wgroup_id##_##index] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_##index),
+#define TPP_WGROUP(wgroup_id, names, default) \
+	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef _TPP_EXPAND_WGROUP_NAMES
+#undef TPP_DEFS
+};
+
+/* Convert tpp_warning_group_id -> offset-into-tpp_warning_group_names */
 static tpp_size const tpp_warning_group_name_offsets_byid[TPP_WG_COUNT] = {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
@@ -166,6 +207,7 @@ static struct tpp_warning_groups_struct {
 #undef TPP_DEFS
 };
 
+/* Convert tpp_warning_id -> offset-into-tpp_warning_groups */
 static tpp_size const tpp_warning_group_offsets_byid[TPP_W_COUNT] = {
 #define TPP_DEFS
 #define _TPP_WARNING_GROUPS_NONEMPTY(warning_id) \
@@ -368,31 +410,6 @@ static void tpp_init_extension_name_offsets_byname(void) {
 
 
 #if TPP_HAVE_WARNINGS
-enum {
-#define TPP_DEFS
-#define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
-	_TPP_WGN_##wgroup_id##_##index,
-#define TPP_WGROUP(wgroup_id, names, default) \
-	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
-#undef GUARD_TPP_AMALGAMATION_H
-#include TPP_CONFIG_DEFS_FILENAME
-#undef _TPP_EXPAND_WGROUP_NAMES
-#undef TPP_DEFS
-	TPP_WGN_COUNT
-};
-
-static tpp_size const tpp_warning_group_name_offsets_bynameid[TPP_WGN_COUNT] = {
-#define TPP_DEFS
-#define _TPP_EXPAND_WGROUP_NAMES(wgroup_id, index, value) \
-	/* [_TPP_WGN_##wgroup_id##_##index] = */ tpp_offsetof(struct tpp_warning_group_names_struct, twgn_##wgroup_id##_##index),
-#define TPP_WGROUP(wgroup_id, names, default) \
-	TPP_TUPLE_FOREACH(names, TPP_TUPLE_FOREACH_DUMMY_SEP, _TPP_EXPAND_WGROUP_NAMES, wgroup_id)
-#undef GUARD_TPP_AMALGAMATION_H
-#include TPP_CONFIG_DEFS_FILENAME
-#undef _TPP_EXPAND_WGROUP_NAMES
-#undef TPP_DEFS
-};
-
 static tpp_size tpp_warning_group_name_offsets_byname[TPP_WGN_COUNT] = {};
 static int tpp_warning_group_name_offset_compare(void const *lhs, void const *rhs) {
 	tpp_size lhs_value = *(tpp_size const *)lhs;
@@ -406,7 +423,7 @@ static void tpp_init_warning_group_name_offsets_byname_impl(void) {
 	tpp_memcpy(tpp_warning_group_name_offsets_byname,
 	           tpp_warning_group_name_offsets_bynameid,
 	           sizeof(tpp_warning_group_name_offsets_bynameid));
-	qsort(tpp_warning_group_name_offsets_byname, TPP_WG_COUNT, sizeof(tpp_size),
+	qsort(tpp_warning_group_name_offsets_byname, TPP_WGN_COUNT, sizeof(tpp_size),
 	      &tpp_warning_group_name_offset_compare);
 }
 
@@ -940,17 +957,19 @@ static TPP_WUNUSED tpp_warning_group_id TPPCALL
 tpp_warning_group_byname_offset(tpp_size name_offset) {
 	unsigned int lo, hi;
 	lo = 0;
-	hi = tpp_lengthof(tpp_warning_group_name_offsets_byid);
+	hi = tpp_lengthof(tpp_warning_group_name_offsets_bynameid);
 	for (;;) {
 		unsigned int mid = (lo + hi) / 2;
-		tpp_size mid_offset = tpp_warning_group_name_offsets_byid[mid];
+		tpp_size mid_offset = tpp_warning_group_name_offsets_bynameid[mid];
 		tpp_assert(lo < hi);
 		if (name_offset < mid_offset) {
 			hi = mid;
 		} else if (name_offset > mid_offset) {
 			lo = mid + 1;
 		} else {
-			return (tpp_warning_group_id)mid;
+			/* At this point, "mid" is the *name-id* of the warning group.
+			 * That ID must now finally be converted */
+			return tpp_warning_group_bynameid[mid];
 		}
 	}
 }

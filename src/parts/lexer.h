@@ -2109,7 +2109,7 @@ tpp_lexer_parsestring_cb(tpp_lexer *self,
  * @return: TPP_EWARNPRINT: Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
-                                 /*out*/ tpp_intmax *tpp_restrict p_result,
+                                 /*out*/ tpp_uintmax *tpp_restrict p_result,
                                  unsigned int flags);
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
 
