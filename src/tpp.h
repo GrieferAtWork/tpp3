@@ -37,6 +37,7 @@
 #include "parts/features.h"
 #include "parts/file.h"
 #include "parts/macro.h"
+#include "parts/preparse.h"
 #include "parts/keyword.h"
 #include "parts/extensions.h"
 #include "parts/warnings.h"

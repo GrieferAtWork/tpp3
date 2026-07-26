@@ -31,6 +31,7 @@
 #include "file.h"
 #include "keyword.h"
 #include "lexer.h"
+#include "preparse.h"
 #include "token.h"
 #include "warnings.h"
 
@@ -1554,13 +1555,16 @@ warn_premature_eof:
 #if TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
 #if TPP_HAVE_UNICODE
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
-tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end, tpp_file const *file);
+#define tpp_decode_named_skipspace_lexer__PARAM  , tpp_lexer const *lexer
+#define tpp_decode_named_skipspace_lexer__ARG(x) , x
 #else /* TPP_HAVE_UNICODE */
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end);
-#define tpp_decode_named_skipspace(iter, end, file) _tpp_decode_named_skipspace(iter, end)
+#define tpp_decode_named_skipspace_lexer__PARAM  /* nothing */
+#define tpp_decode_named_skipspace_lexer__ARG(x) /* nothing */
 #endif /* !TPP_HAVE_UNICODE */
+
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end
+                           tpp_decode_named_skipspace_lexer__PARAM);
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 
 
@@ -1651,7 +1655,7 @@ tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
 			if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY)) {
 				for (;;) {
-					named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(self));
+					named_start = tpp_decode_named_skipspace(named_start, named_end tpp_decode_named_skipspace_lexer__ARG(self));
 					count = tpp_decode_named_escape(&named_start, named_end, uc, self);
 					if (count == 0) {
 						/* See if we can seek ahead to a ','-character */
@@ -1669,12 +1673,12 @@ search_for_comma:
 						named_start = comma + 1;
 						continue;
 					}
-					named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(self));
+					named_start = tpp_decode_named_skipspace(named_start, named_end tpp_decode_named_skipspace_lexer__ARG(self));
 					if (named_start >= named_end)
 						break;
 					if (*named_start != ',')
 						goto search_for_comma;
-					named_start = tpp_decode_named_skipspace(named_start + 1, named_end, tpp_lexer_getfile(self));
+					named_start = tpp_decode_named_skipspace(named_start + 1, named_end tpp_decode_named_skipspace_lexer__ARG(self));
 				}
 			} else
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */

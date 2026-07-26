@@ -262,7 +262,7 @@ tpp_unam_token_parser_skipspace(tpp_unam_token_parser *tpp_restrict self) {
 	bool result = false;
 	tpp_char const *pos = self->tuntp_pos;
 again:
-	pos = tpp_skipbse_fwd(pos, self->tuntp_end, tpp_lexer_getfile(self->tuntp_lexer));
+	pos = tpp_preparse_skipbse_fwd(self->tuntp_lexer, pos, self->tuntp_end);
 	if (pos < self->tuntp_end) {
 		tpp_char ch = *pos;
 		if (tpp_ascii_isspace(ch) || ch == '_') {
@@ -304,7 +304,7 @@ tpp_unam_token_parser_strcmp_text_ex(tpp_unam_token_parser *tpp_restrict self,
 			self->tuntp_pos = pos;
 			return 0;
 		}
-		next_pos = tpp_skipbse_fwd(pos, self->tuntp_end, tpp_lexer_getfile(self->tuntp_lexer));
+		next_pos = tpp_preparse_skipbse_fwd(self->tuntp_lexer, pos, self->tuntp_end);
 again_read_after_space:
 		if (next_pos >= self->tuntp_end) {
 			self->tuntp_pos = pos;
@@ -731,8 +731,9 @@ tpp_unam_node_matchtext_after_1token_ex(tpp_char const *tpp_restrict db_iter,
 #endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE */
 				{
 #if TPP_CONF_MAYBE_0(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE)
-					parser->tuntp_pos = tpp_skipbse_fwd(parser->tuntp_pos, parser->tuntp_end,
-					                                    tpp_lexer_getfile(parser->tuntp_lexer));
+					parser->tuntp_pos = tpp_preparse_skipbse_fwd(parser->tuntp_lexer,
+					                                             parser->tuntp_pos,
+					                                             parser->tuntp_end);
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE) */
 				}
 				if (parser->tuntp_pos >= parser->tuntp_end) {

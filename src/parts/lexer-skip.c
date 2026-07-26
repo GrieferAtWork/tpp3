@@ -29,6 +29,7 @@
 #include "file.h"
 #include "keyword.h"
 #include "lexer.h"
+#include "preparse.h"
 #include "token.h"
 
 /*[[[tpp-begin]]]*/
@@ -297,7 +298,7 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 			tpp_char const *iter;
 set_twochar:
 			iter = token->tt_start + 1;
-			iter = tpp_skipbse_fwd(iter, token->tt_end, tpp_lexer_getfile(self));
+			iter = tpp_preparse_skipbse_fwd(self, iter, token->tt_end);
 			token->tt_end = iter + 1;
 			token->tt_id  = tok;
 			return true;
@@ -310,9 +311,9 @@ set_twochar:
 			tpp_char const *iter;
 set_threechar:
 			iter = token->tt_start + 1;
-			iter = tpp_skipbse_fwd(iter, token->tt_end, tpp_lexer_getfile(self));
+			iter = tpp_preparse_skipbse_fwd(self, iter, token->tt_end);
 			iter = iter + 1;
-			iter = tpp_skipbse_fwd(iter, token->tt_end, tpp_lexer_getfile(self));
+			iter = tpp_preparse_skipbse_fwd(self, iter, token->tt_end);
 			token->tt_end = iter + 1;
 			token->tt_id  = tok;
 			return true;

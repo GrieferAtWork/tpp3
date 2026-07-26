@@ -580,7 +580,7 @@ tpp_builtin_getkeyword_byid(enum tpp_token_id id) {
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
                             tpp_size len, tpp_hash hash
-                            tpp_esc_lexer__PARAM) {
+                            _tpp_esc_lexer__PARAM) {
 	tpp_keyword const *result;
 	tpp_init_builtin_keywords();
 	result = tpp_builtin_keyword_table[hash & TPP_BUILTIN_KEYWORD_MASK];

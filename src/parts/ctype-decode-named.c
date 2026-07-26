@@ -35,18 +35,18 @@ TPP_DECL_BEGIN
  * - &#<decimal>;
  * - &#x<hex>;
  * ... both of which allow encoding of unicode ordinals */
-#if TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+#if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
 TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
 tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
                             tpp_unichar result[1],
                             tpp_lexer const *tpp_restrict lexer)
-#else /* TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
 TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
 _tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
                              tpp_unichar result[1])
 #define tpp_decode_named_escape_xml(p_iter, end, result, lexer) \
 	_tpp_decode_named_escape_xml(p_iter, end, result)
-#endif /* !TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
 {
 	tpp_char const *iter = *p_iter;
 	tpp_char ch;
@@ -58,7 +58,7 @@ _tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
 	if (iter >= end)
 		goto nope;
 	ch = *iter++;
-	iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+	iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
 	if (ch == '#') {
 #if TPP_HAVE_TRIGRAPHS
 handle_xml_ord:
@@ -66,7 +66,7 @@ handle_xml_ord:
 		if (iter >= end)
 			goto nope;
 		ch = *iter++;
-		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+		iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
 		if (ch == 'x') { /* Only lowercase 'x' is allowed here! */
 			tpp_char const *uc_iter;
 			if (iter >= end)
@@ -79,7 +79,7 @@ handle_xml_ord:
 			for (;;) {
 				unsigned char nibble;
 				iter = uc_iter;
-				uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
+				uc_iter = tpp_preparse_skipbse_fwd(lexer, uc_iter, end);
 				if (uc_iter >= end)
 					break;
 				ch = *uc_iter++;
@@ -104,7 +104,7 @@ handle_xml_ord:
 			for (;;) {
 				unsigned char nibble;
 				iter = uc_iter;
-				uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
+				uc_iter = tpp_preparse_skipbse_fwd(lexer, uc_iter, end);
 				if (uc_iter >= end)
 					break;
 				ch = *uc_iter++;
@@ -150,7 +150,7 @@ handle_xml_ord:
 			if (iter >= end)
 				goto nope;
 			ch = *iter++;
-			iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+			iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
 			xmlname[xmlname_size++] = (char)ch;
 			xmlname[xmlname_size] = '\0';
 			has_semi = iter < end && *iter == ';';
@@ -205,7 +205,7 @@ _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
 	if (iter >= end)
 		goto nope;
 	ch = *iter++;
-	iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+	iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
 #endif /* TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD || TPP_HAVE_ESCAPE_NAMED_XML */
 
 #if TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD
@@ -214,7 +214,7 @@ _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
 	    tpp_lexer_has(lexer, ESCAPE_NAMED_UNICODE_ORD)) {
 		tpp_unichar uc; /* Unicode character code (in hex) */
 		tpp_char const *uc_iter;
-		iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(lexer));
+		iter = tpp_preparse_skipbse_fwd(lexer, iter + 1, end);
 		if (iter >= end)
 			goto nope;
 		ch = *iter++;
@@ -225,7 +225,7 @@ _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
 		for (;;) {
 			unsigned char nibble;
 			iter = uc_iter;
-			uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
+			uc_iter = tpp_preparse_skipbse_fwd(lexer, uc_iter, end);
 			if (uc_iter >= end)
 				break;
 			ch = *uc_iter++;
@@ -251,7 +251,7 @@ _tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
 		for (;;) {
 			unsigned char nibble;
 			iter = uc_iter;
-			uc_iter = tpp_skipbse_fwd(uc_iter, end, tpp_lexer_getfile(lexer));
+			uc_iter = tpp_preparse_skipbse_fwd(lexer, uc_iter, end);
 			if (uc_iter >= end)
 				break;
 			ch = *uc_iter++;

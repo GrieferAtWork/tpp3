@@ -27,6 +27,7 @@
 #include "error.h"
 #include "expr.h"
 #include "lexer.h"
+#include "preparse.h"
 #include "token.h"
 
 /*[[[tpp-begin]]]*/
@@ -47,14 +48,14 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 	if (iter >= end)
 		goto handle_invalid;
 	ch   = *iter++;
-	iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+	iter = tpp_preparse_skipbse_fwd(self, iter, end);
 	if (ch == '0') {
 		suffix_start = iter;
 		if (iter >= end)
 			goto done;
 		radix = 8;
 		ch    = *iter++;
-		iter  = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+		iter  = tpp_preparse_skipbse_fwd(self, iter, end);
 		switch (ch) {
 
 #if TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS
@@ -65,7 +66,7 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 			if (iter >= end)
 				goto handle_invalid;
 			ch    = *iter++;
-			iter  = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+			iter  = tpp_preparse_skipbse_fwd(self, iter, end);
 			radix = 16;
 			break;
 #endif /* TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS */
@@ -78,7 +79,7 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 			if (iter >= end)
 				goto handle_invalid;
 			ch    = *iter++;
-			iter  = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+			iter  = tpp_preparse_skipbse_fwd(self, iter, end);
 			radix = 2;
 			break;
 #endif /* TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS */
@@ -91,7 +92,7 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 			if (iter >= end)
 				goto handle_invalid;
 			ch    = *iter++;
-			iter  = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+			iter  = tpp_preparse_skipbse_fwd(self, iter, end);
 			radix = 8;
 			break;
 #endif /* TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS */
@@ -145,7 +146,7 @@ continue_with_ch:
 		if (iter >= end)
 			break;
 		ch   = *iter++;
-		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+		iter = tpp_preparse_skipbse_fwd(self, iter, end);
 	}
 
 done:
@@ -174,7 +175,7 @@ tpp_lexer_decode_pascal_hex(tpp_lexer *tpp_restrict self,
 	if (iter >= end)
 		goto handle_invalid;
 	ch   = *iter++;
-	iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+	iter = tpp_preparse_skipbse_fwd(self, iter, end);
 	if (ch != '$')
 		goto handle_invalid;
 	if (iter >= end)
@@ -183,7 +184,7 @@ tpp_lexer_decode_pascal_hex(tpp_lexer *tpp_restrict self,
 		tpp_intmax new_value, old_value;
 		unsigned int digit;
 		ch   = *iter++;
-		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self));
+		iter = tpp_preparse_skipbse_fwd(self, iter, end);
 		if (tpp_ascii_isdigit(ch)) {
 			digit = (unsigned int)tpp_ascii_asdigit(ch);
 		} else if (tpp_ascii_islwrxdigit(ch)) {
@@ -249,7 +250,7 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
 		                        *newend != '-'))
 			++newend;
 		if (newend < end) {
-			newend = tpp_skipbse_bck(newend, start, tpp_lexer_getfile(self));
+			newend = tpp_preparse_skipbse_bck(self, newend, start);
 			if (newend > start)
 				tpp_lexer_gettoken(self)->tt_end = newend;
 		}

@@ -6028,7 +6028,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 		if (suffix_start >= suffix_end)
 			goto handle_invalid;
 		ch    = *suffix_start++;
-		suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+		suffix_start = tpp_preparse_skipbse_fwd(self, suffix_start, suffix_end);
 		if (ch == '8') {
 			if (suffix_start < suffix_end)
 				goto handle_invalid;
@@ -6037,7 +6037,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 			if (suffix_start >= suffix_end)
 				goto handle_invalid;
 			ch    = *suffix_start++;
-			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			suffix_start = tpp_preparse_skipbse_fwd(self, suffix_start, suffix_end);
 			if (ch != '6')
 				goto handle_invalid;
 			if (suffix_start < suffix_end)
@@ -6047,7 +6047,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 			if (suffix_start >= suffix_end)
 				goto handle_invalid;
 			ch    = *suffix_start++;
-			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			suffix_start = tpp_preparse_skipbse_fwd(self, suffix_start, suffix_end);
 			if (ch != '2')
 				goto handle_invalid;
 			if (suffix_start < suffix_end)
@@ -6057,7 +6057,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 			if (suffix_start >= suffix_end)
 				goto handle_invalid;
 			ch    = *suffix_start++;
-			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			suffix_start = tpp_preparse_skipbse_fwd(self, suffix_start, suffix_end);
 			if (ch != '4')
 				goto handle_invalid;
 			if (suffix_start < suffix_end)
@@ -6072,11 +6072,11 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 	case 'U': {
 		if (suffix_start < suffix_end && (*suffix_start == 'i' || *suffix_start == 'I')) {
 			++suffix_start;
-			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			suffix_start = tpp_preparse_skipbse_fwd(self, suffix_start, suffix_end);
 			if (suffix_start >= suffix_end)
 				goto handle_invalid;
 			ch    = *suffix_start++;
-			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			suffix_start = tpp_preparse_skipbse_fwd(self, suffix_start, suffix_end);
 			if (ch == '8') {
 				if (suffix_start < suffix_end)
 					goto handle_invalid;
@@ -6085,7 +6085,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 				if (suffix_start >= suffix_end)
 					goto handle_invalid;
 				ch    = *suffix_start++;
-				suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+				suffix_start = tpp_preparse_skipbse_fwd(self, suffix_start, suffix_end);
 				if (ch != '6')
 					goto handle_invalid;
 				if (suffix_start < suffix_end)
@@ -6095,7 +6095,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 				if (suffix_start >= suffix_end)
 					goto handle_invalid;
 				ch    = *suffix_start++;
-				suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+				suffix_start = tpp_preparse_skipbse_fwd(self, suffix_start, suffix_end);
 				if (ch != '2')
 					goto handle_invalid;
 				if (suffix_start < suffix_end)
@@ -6105,7 +6105,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 				if (suffix_start >= suffix_end)
 					goto handle_invalid;
 				ch    = *suffix_start++;
-				suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+				suffix_start = tpp_preparse_skipbse_fwd(self, suffix_start, suffix_end);
 				if (ch != '4')
 					goto handle_invalid;
 				if (suffix_start < suffix_end)
@@ -6136,7 +6136,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 			if (suffix_start >= suffix_end)
 				break;
 			ch = *suffix_start++;
-			suffix_start = tpp_skipbse_fwd(suffix_start, suffix_end, tpp_lexer_getfile(self));
+			suffix_start = tpp_preparse_skipbse_fwd(self, suffix_start, suffix_end);
 		}
 		if (has_u > 1)
 			goto handle_invalid;

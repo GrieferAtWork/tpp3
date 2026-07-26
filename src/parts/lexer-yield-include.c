@@ -29,10 +29,11 @@
 #include "file.h"
 #include "keyword.h"
 #include "lexer.h"
-#include "tuple.h"
 #include "macro.h"
+#include "preparse.h"
 #include "sysinclude.h"
 #include "token.h"
+#include "tuple.h"
 
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
@@ -251,7 +252,7 @@ tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
 #if TPP_HAVE_BSE
 					if (tpp_lexer_has(self, BSE)) {
 						tpp_char const *before_bse = iter - 1;
-						tpp_char const *after_bse = tpp_skipbse_fwd(before_bse, end, tpp_lexer_getfile(self));
+						tpp_char const *after_bse = tpp_preparse_skipbse_fwd(self, before_bse, end);
 						if (after_bse > before_bse) {
 							temp = tpp_formatprinter_print(printer, arg, start, (tpp_size)(before_bse - start));
 							if (temp < 0)
@@ -288,7 +289,7 @@ tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
 			if (ch == '\\') {
 				if (tpp_lexer_has(self, BSE)) {
 					tpp_char const *before_bse = iter - 1;
-					tpp_char const *after_bse = tpp_skipbse_fwd(before_bse, end, tpp_lexer_getfile(self));
+					tpp_char const *after_bse = tpp_preparse_skipbse_fwd(self, before_bse, end);
 					if (after_bse > before_bse) {
 						temp = tpp_formatprinter_print(printer, arg, start, (tpp_size)(before_bse - start));
 						if (temp < 0)
