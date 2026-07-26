@@ -339,7 +339,7 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 #if TPP_HAVE_MACRO___is_identifier
 			case TPP_KWD___is_identifier:
 				/* Something is considered to be an "identifier" if it's not a builtin keyword. */
-				if (!TPP_TOK_ISBUILTINKEYWORD(feature_keyword->tk_id))
+				if (tpp_lexer_isidentifier(self, feature_keyword))
 					tpp_feature_test_macro_expansion[0] = '1';
 				goto after_expansion_mode_assignment;
 #define WANT_after_expansion_mode_assignment

@@ -4601,6 +4601,10 @@ print("#endif /" "* !... *" "/");
 	  TPP_HAVE_VA_NARGS_IN_MACROS ||                  \
 	  TPP_HAVE_VA_OPT_IN_MACROS))
 #endif /* !TPP_HAVE_TPP_W_RESERVED_MACRO_KEYWORD */
+#ifndef TPP_HAVE_TPP_W_MACRO_NAME_IS_IDENTIFIER
+#define TPP_HAVE_TPP_W_MACRO_NAME_IS_IDENTIFIER \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_TPP_W_MACRO_NAME_IS_IDENTIFIER */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE
 #define TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_DEFINE))
@@ -5383,6 +5387,37 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_LEXER_GETKEYWORDDEFINED 0
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+
+/* Provide a function `tpp_lexer_isidentifier()` to check if
+ * a given keyword is considered to be an `__is_identifier()`
+ *
+ * When that is the case, `__is_identifier()` (s.a. `TPP_HAVE_MACRO___is_identifier`)
+ * expands to `1` (rather than `0`) for that keyword, and the user attempting to
+ * define a macro of the same name triggers a `-Wkeyword-macro` warning (s.a.
+ * `TPP_HAVE_TPP_W_MACRO_NAME_IS_IDENTIFIER`) */
+#ifndef TPP_HAVE_LEXER_ISIDENTIFIER
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) || \
+     TPP_HAVE_MACRO___is_identifier ||   \
+     TPP_HAVE_TPP_W_MACRO_NAME_IS_IDENTIFIER)
+#define TPP_HAVE_LEXER_ISIDENTIFIER 1
+#else /* ... */
+#define TPP_HAVE_LEXER_ISIDENTIFIER 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_ISIDENTIFIER */
+
+/* Default return value for `tpp_lexer_isidentifier()` (see `TPP_HAVE_LEXER_ISIDENTIFIER`)
+ * for keywords where this property hasn't been explicitly defined by `TPP_KWD_IS_IDENTIFIER()`,
+ * and also don't have macro expansions as per `tpp_macro_getbuiltin()`.
+ *
+ * This only affects additional keywords that you've defined. All of TPP's builtin keywords
+ * come pre-configured with sensible defaults, though those defaults can also be overwritten
+ * on a per-keyword basis by pre-defining a macro `TPP_KWDIDENTIFIER_<ident>` to `0` or `1`:
+ * ```c
+ * #define TPP_KWDIDENTIFIER_if 0  // Causes `__has_identifier(if)` to expand to `0`
+ * ``` */
+#ifndef TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
+#define TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT 0
+#endif /* !TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
 
 /* Provide a set of macros/functions `tpp_lexer_manualpopfile_*`
  * that can be used to seek through the contents of files further

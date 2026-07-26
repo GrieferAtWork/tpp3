@@ -1826,6 +1826,30 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 #endif /* !... */
 
 
+#if TPP_HAVE_LEXER_ISIDENTIFIER
+/* Returns true if "kwd" should is considered a `__is_identifier()`
+ *
+ * When that is the case, `__is_identifier()` expands to `1` (rather
+ * than `0`) for that keyword, and the user attempting to define a
+ * macro of the same name triggers a `-Wkeyword-macro` warning. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+tpp_lexer_isidentifier(tpp_lexer *tpp_restrict self,
+                       tpp_keyword const *tpp_restrict kwd);
+#elif TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
+#if TPP_HAVE_USER_KEYWORDS && TPP_HAVE_CPP_MACROS
+#define tpp_lexer_isidentifier(self, kwd) (!tpp_macro_getbuiltin(tpp_keyword_getid(kwd)) && !TPP_TOK_ISUSERKEYWORD(tpp_keyword_getid(kwd)))
+#elif TPP_HAVE_CPP_MACROS
+#define tpp_lexer_isidentifier(self, kwd) (!tpp_macro_getbuiltin(tpp_keyword_getid(kwd)))
+#elif TPP_HAVE_USER_KEYWORDS
+#define tpp_lexer_isidentifier(self, kwd) (!TPP_TOK_ISUSERKEYWORD(tpp_keyword_getid(kwd)))
+#else /* ... */
+#define tpp_lexer_isidentifier(self, kwd) 1
+#endif /* ... */
+#else /* ... */
+#define tpp_lexer_isidentifier(self, kwd) 0
+#endif /* !... */
+
+
 #if TPP_HAVE_LEXER_DECODEINT
 /* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into an integer
  * When the current token is `TPP_TOK_ISFLOAT`, it will be trimmed (i.e. decimal

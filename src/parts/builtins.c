@@ -640,25 +640,25 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
  * when `kwd->tk_macro == NULL', this function is needed to handle
  * such macros. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
-tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
-                            tpp_keyword const *tpp_restrict kwd) {
+tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict _self,
+                            tpp_keyword const *tpp_restrict _kwd) {
 #if TPP_HAVE_CPP_MACROS
-	if (kwd->tk_macro != NULL)
+	if (_kwd->tk_macro != NULL)
 		return true;
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 #if TPP_CONF_IS_RT(TPP_HAVE_CPP_BUILTIN_MACROS)
-	if (!tpp_lexer_has(self, CPP_BUILTIN_MACROS))
+	if (!tpp_lexer_has(_self, CPP_BUILTIN_MACROS))
 		return false;
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_BUILTIN_MACROS) */
-	(void)self;
-	switch (kwd->tk_id) {
+	(void)_self;
+	switch (_kwd->tk_id) {
 #define TPP_DEFS
 #define TPP_MACRO(id, if_expr) \
 	case id: return if_expr;
-#define tpp_current_lexer()      self
-#define tpp_current_keyword()    kwd
-#define tpp_current_keyword_id() kwd->tk_id
+#define tpp_current_lexer()      _self
+#define tpp_current_keyword()    _kwd
+#define tpp_current_keyword_id() _kwd->tk_id
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 #undef tpp_current_lexer
@@ -671,6 +671,47 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
 	return false;
 }
 #endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+
+
+#if TPP_HAVE_LEXER_ISIDENTIFIER
+/* Returns true if "kwd" should is considered a `__is_identifier()`
+ *
+ * When that is the case, `__is_identifier()` expands to `1` (rather
+ * than `0`) for that keyword, and the user attempting to define a
+ * macro of the same name triggers a `-Wkeyword-macro` warning. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+tpp_lexer_isidentifier(tpp_lexer *tpp_restrict _self,
+                       tpp_keyword const *tpp_restrict _kwd) {
+	/* User-defined keywords are never identifiers */
+	if (TPP_TOK_ISUSERKEYWORD(_kwd->tk_id))
+		return false;
+
+	/* Builtin macros with custom expansions are never identifiers */
+#if TPP_HAVE_CPP_MACROS
+	if (tpp_macro_getbuiltin(_kwd->tk_id))
+		return false;
+#endif /* TPP_HAVE_CPP_MACROS */
+
+	/* Evaluate on a per-keyword basis. */
+	(void)_self;
+	switch (_kwd->tk_id) {
+#define TPP_DEFS
+#define TPP_KWD_IS_IDENTIFIER(id, is_identifier_expr) \
+	case id: return is_identifier_expr;
+#define tpp_current_lexer()      _self
+#define tpp_current_keyword()    _kwd
+#define tpp_current_keyword_id() _kwd->tk_id
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef tpp_current_lexer
+#undef tpp_current_keyword
+#undef tpp_current_keyword_id
+#undef TPP_DEFS
+	default: break;
+	}
+	return TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT;
+}
+#endif /* TPP_HAVE_LEXER_ISIDENTIFIER */
 
 
 #if TPP_HAVE_EXTENSIONS

@@ -34,6 +34,7 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_too_few_arguments"></a>`TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS`
 - <a name="tpp_have_tpp_w_reserved_macro_parameter_name"></a>`TPP_HAVE_TPP_W_RESERVED_MACRO_PARAMETER_NAME`
 - <a name="tpp_have_tpp_w_reserved_macro_keyword"></a>`TPP_HAVE_TPP_W_RESERVED_MACRO_KEYWORD`
+- <a name="tpp_have_tpp_w_macro_name_is_identifier"></a>`TPP_HAVE_TPP_W_MACRO_NAME_IS_IDENTIFIER`
 - <a name="tpp_have_tpp_w_expected_macro_name_in_directive"></a>`TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE`
 - <a name="tpp_have_tpp_w_expected_assertion_key_in_directive"></a>`TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE`
 - <a name="tpp_have_tpp_w_expected_assertion_value_in_directive"></a>`TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE`

@@ -1593,6 +1593,16 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	tpp_lcinfo deflc = tpp_file_getlcinfo(file, pos);
 	if tpp_unlikely(!keyword)
 		goto err_nomem;
+
+#if TPP_HAVE_TPP_W_MACRO_NAME_IS_IDENTIFIER
+	if (tpp_lexer_isidentifier(self, keyword)) {
+		/* -Wkeyword-macro  (warn about #define-ing builtin keywords) */
+		error = tpp_lexer_warnf(self, TPP_W_MACRO_NAME_IS_IDENTIFIER);
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+	}
+#endif /* TPP_HAVE_TPP_W_MACRO_NAME_IS_IDENTIFIER */
+
 	token->tt_end = token->tt_start; /* Ensure that the macro's name stays loaded */
 
 	/* Yield to next token.
@@ -1614,8 +1624,6 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	/* Setup token such that it describes the entire macro definition (for messages) */
 	token->tt_start = token->tt_end;
 	token->tt_end   = pos;
-
-	/* XXX: -Wkeyword-macro  (warn about #define-ing builtin keywords) */
 
 	/* Store the macro definition within the keyword. */
 	if (!keyword->tk_macro) {
