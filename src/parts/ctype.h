@@ -136,6 +136,20 @@ print("#endif /" "* !tpp_ascii_islf_or_mblf *" "/");
 #define tpp_ascii_asxdigit(ch) \
 	(tpp_ascii_isdigit(ch) ? tpp_ascii_asdigit(ch) : tpp_ascii_islwrxdigit(ch) ? tpp_ascii_aslwrxdigit(ch) : tpp_ascii_asuprxdigit(ch))
 #endif /* !tpp_ascii_isxdigit */
+#ifndef tpp_ascii_tolwrxdigit
+#if 1
+#define tpp_ascii_tolwrxdigit(v) ("0123456789abcdef"[v])
+#else
+#define tpp_ascii_tolwrxdigit(v) ((v) < 10 ? tpp_ascii_ofdigit(v) : tpp_ascii_oflwrxdigit(v))
+#endif
+#endif /* !tpp_ascii_tolwrxdigit */
+#ifndef tpp_ascii_touprxdigit
+#if 1
+#define tpp_ascii_touprxdigit(v) ("0123456789ABCDEF"[v])
+#else
+#define tpp_ascii_touprxdigit(v) ((v) < 10 ? tpp_ascii_ofdigit(v) : tpp_ascii_ofuprxdigit(v))
+#endif
+#endif /* !tpp_ascii_touprxdigit */
 
 #if TPP_HAVE_UNICODE
 
@@ -203,6 +217,67 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
 #define tpp_unicode_islf(ord) ((ord) <= 0xff && tpp_ascii_islf(ord))
 #endif /* !tpp_unicode_islf */
 
+
+/* Return the length (in bytes, including the first byte) of
+ * a utf-8 sequence whose first byte is `first_utf8_byte`,
+ * whilst ensuring that the sequence doesn't exceed the length
+ * of a valid utf-8 sequence.
+ *
+ * The caller must still check that all following bytes are in
+ * range 80h-BFh, and that the utf-8 sequence isn't under-long.
+ *
+ * The caller must ensure that `tpp_ascii_ismb(first_utf8_byte)`
+ *
+ * @return: 0 :                 Invalid UTF-8 sequence
+ * @return: 2..TPP_UTF8_CURLEN: Length of sequence (in bytes) */
+#ifndef tpp_unicode_utf8seqlen_mb_getcur
+#define tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte) \
+	(tpp_assert(tpp_ascii_ismb(first_utf8_byte)),         \
+	 _tpp_unicode_utf8seqlen_mb_cur[(first_utf8_byte) - 128])
+TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
+#define _tpp_unicode_utf8seqlen_mb_cur _tpp_unicode_utf8seqlen_mb_cur
+#endif /* !tpp_unicode_utf8seqlen_mb_getcur */
+
+/* Same as `tpp_unicode_utf8seqlen_mb_getcur()`, but returns a
+ * valid result (of `1`) when `first_utf8_byte` is in range `00h-7Fh` */
+#ifndef tpp_unicode_utf8seqlen_getcur
+#define tpp_unicode_utf8seqlen_getcur(first_utf8_byte) \
+	((first_utf8_byte) < 0x80 ? 1 : tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte))
+#endif /* !tpp_unicode_utf8seqlen_getcur */
+
+/* Similar to `tpp_unicode_utf8seqlen_mb_getcur()`, except that this
+ * function also returns the mathematically correct length for utf-8
+ * sequences that are longer than allowed by the unicode standard.
+ *
+ * It also returns the *safer* value of `1` if this is an invalid
+ * utf-8 sequence (whereas `tpp_unicode_utf8seqlen_mb_getcur()` would
+ * return `0` in this case)
+ *
+ * The caller must ensure that `tpp_ascii_ismb(first_utf8_byte)`
+ *
+ * @return: 1:    Invalid UTF-8 sequence
+ * @return: 2..8: Length of sequence (in bytes) */
+#ifndef tpp_unicode_utf8seqlen_mb_getmax
+#define tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte) \
+	(tpp_assert(tpp_ascii_ismb(first_utf8_byte)),         \
+	 _tpp_unicode_utf8seqlen_mb_max[(first_utf8_byte) - 128])
+TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128];
+#define _tpp_unicode_utf8seqlen_mb_max _tpp_unicode_utf8seqlen_mb_max
+#endif /* !tpp_unicode_utf8seqlen_mb_getmax */
+
+/* Same as `tpp_unicode_utf8seqlen_mb_getcur()`, but returns a
+ * valid result (of `1`) when `first_utf8_byte` is in range `00h-7Fh` */
+#ifndef tpp_unicode_utf8seqlen_getmax
+#define tpp_unicode_utf8seqlen_getmax(first_utf8_byte) \
+	((first_utf8_byte) < 0x80 ? 1 : tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte))
+#endif /* !tpp_unicode_utf8seqlen_getmax */
+
+/* Check if `ch` is a utf-8 continuation byte */
+#ifndef tpp_ascii_isutf8cont
+#define tpp_ascii_isutf8cont(ch) (((ch) & 0xc0) == 0x80)
+#endif /* !tpp_ascii_isutf8cont */
+
+
 /* Read a single unicode character from a given utf-8 blob.
  * WARNING: This function doesn't do any validity checking,
  *          allowing over-long utf-8 sequences, as well as
@@ -249,7 +324,6 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL tpp_itoa(char buf[TPP_ITOA_M
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_size TPPCALL tpp_ftoa(char buf[TPP_FTOA_MAXLEN], tpp_float value);
 #endif /* TPP_HAVE_FTOA */
 
-
 #define TPP_UTF8_1BYTE_MAX ((TPP_UNICHAR_C(1) << 7) - 1)
 #define TPP_UTF8_2BYTE_MAX ((TPP_UNICHAR_C(1) << 11) - 1)
 #define TPP_UTF8_3BYTE_MAX ((TPP_UNICHAR_C(1) << 16) - 1)
@@ -257,6 +331,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_size TPPCALL tpp_ftoa(char buf[TPP_FTO
 #define TPP_UTF8_5BYTE_MAX ((TPP_UNICHAR_C(1) << 26) - 1)
 #define TPP_UTF8_6BYTE_MAX ((TPP_UNICHAR_C(1) << 31) - 1)
 
+#define TPP_UTF8_CURLEN 4 /* Upper limit on length of any *valid* utf-8 sequence */
 #define TPP_UTF8_MAXLEN 7 /* Enough to write *any* 32-bit unicode ordinal as utf-8 (including invalid ones) */
 
 #if TPP_HAVE_TPP_UNICODE_WRITEUTF8

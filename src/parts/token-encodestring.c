@@ -43,11 +43,43 @@ TPP_DECL_BEGIN
 TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes) {
+#if TPP_HAVE_UNICODE
+#if !TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT) && TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+	tpp_char esc_byte_buf[sizeof("\\x{ff}")];
+#define tpp_encodestring_set_output_repr_byte(value)         \
+	(esc_byte_buf[0] = '\\',                                 \
+	 esc_byte_buf[1] = 'x',                                  \
+	 esc_byte_buf[2] = '{',                                  \
+	 esc_byte_buf[3] = tpp_ascii_tolwrxdigit((value) >> 4),  \
+	 esc_byte_buf[4] = tpp_ascii_tolwrxdigit((value) & 0xf), \
+	 esc_byte_buf[5] = '}',                                  \
+	 esc_byte_buf[6] = '\0',                                 \
+	 output_repr     = esc_byte_buf)
+#elif !TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT) && TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+	tpp_char esc_byte_buf[sizeof("\\o{377}")];
+#define tpp_encodestring_set_output_repr_byte(value)             \
+	(esc_byte_buf[0] = '\\',                                     \
+	 esc_byte_buf[1] = 'o',                                      \
+	 esc_byte_buf[2] = '{',                                      \
+	 esc_byte_buf[3] = tpp_ascii_ofoctdigit((value) >> 6),       \
+	 esc_byte_buf[4] = tpp_ascii_ofoctdigit(((value) >> 3) & 7), \
+	 esc_byte_buf[5] = tpp_ascii_ofoctdigit((value) & 7),        \
+	 esc_byte_buf[6] = '}',                                      \
+	 esc_byte_buf[7] = '\0',                                     \
+	 output_repr     = esc_byte_buf)
+#else /* ... */
+	tpp_char esc_byte_buf[sizeof("\\377")];
+#define tpp_encodestring_set_output_repr_byte(value)             \
+	(esc_byte_buf[0] = '\\',                                     \
+	 esc_byte_buf[1] = tpp_ascii_ofoctdigit((value) >> 6),       \
+	 esc_byte_buf[2] = tpp_ascii_ofoctdigit(((value) >> 3) & 7), \
+	 esc_byte_buf[3] = tpp_ascii_ofoctdigit((value) & 7),        \
+	 esc_byte_buf[4] = '\0',                                     \
+	 output_repr     = esc_byte_buf)
+#endif /* !... */
+#endif /* TPP_HAVE_UNICODE */
 	tpp_char const *output_repr;
 	tpp_ssize temp, result = 0;
-#if TPP_HAVE_UNICODE
-	tpp_char const *new_iter;
-#endif /* TPP_HAVE_UNICODE */
 	tpp_char const *iter = (tpp_char const *)data;
 	tpp_char const *end  = iter + num_bytes;
 	tpp_char ch;
@@ -62,20 +94,11 @@ again:
 	}
 	ch = *iter++;
 	switch (ch) {
-#if TPP_HAVE_UNICODE
-#define TPP_TOKEN_ENCODESTRING_CASE(b, repr)  \
-	case b: {                                 \
-		static tpp_char const _repr[] = repr; \
-		new_iter = iter;                      \
-		output_repr = _repr;                  \
-	}	break;
-#else /* TPP_HAVE_UNICODE */
 #define TPP_TOKEN_ENCODESTRING_CASE(b, repr)  \
 	case b: {                                 \
 		static tpp_char const _repr[] = repr; \
 		output_repr = _repr;                  \
 	}	break;
-#endif /* !TPP_HAVE_UNICODE */
 
 	/* Only really need to escape \ " ' CR LF and (TPP_HAVE_UNICODE-only)
 	 * ordinals >=0xC0 that *might* form unicode line-feed characters. */
@@ -142,146 +165,132 @@ again:
 			 * valid trigraph */
 		}
 		output_repr = (tpp_char const *)"\\?";
-#if TPP_HAVE_UNICODE
-		new_iter = iter;
-#endif /* TPP_HAVE_UNICODE */
 		break;
 #endif /* TPP_HAVE_TRIGRAPHS */
 
 #if TPP_HAVE_UNICODE
+	/* Must really escape *all* bytes `>= 0x80` when they don't form a valid
+	 * utf-8 sequences (anything that might trigger `TPP_W_ILLEGAL_UTF8_SEQUENCE`
+	 * needs to be escaped). */
+	case 0xc0: case 0xc1: case 0xc2: case 0xc3: case 0xc4: case 0xc5: case 0xc6: case 0xc7:
+	case 0xc8: case 0xc9: case 0xca: case 0xcb: case 0xcc: case 0xcd: case 0xce: case 0xcf:
+	case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
+	case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
+	case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
+	case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef:
+	case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7:
+	case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff: {
+		tpp_char const *utf8_start = iter - 1;
+		uint_least8_t utf8_size    = tpp_unicode_utf8seqlen_mb_getcur(ch);
+		tpp_char const *utf8_end   = utf8_start + utf8_size;
+		if (utf8_start < utf8_end && utf8_end <= end) {
+			/* Verify that this is a valid utf-8 sequence */
+			tpp_unichar uc;
+			uint_least8_t i;
 
-	/* TODO: Must really escape *all* bytes `>= 0x80` when they don't form a valid
-	 *       utf-8 sequences (anything that might trigger `TPP_W_ILLEGAL_UTF8_SEQUENCE`
-	 *       needs to be escaped). */
-
-/*[[[deemon
-import * from ".token-encodestring-mblf";
-import * from deemon;
-for (local b: UTF8_LF_FIRST_BYTES.sorted()) {
-	print(f'	case {b.hex(2)}:');
-	for (local ord: UNICODE_LF_CHARACTERS) {
-		local utf8 = string.chr(ord).encode('utf-8');
-		if (utf8.first == b) {
-			local remainder = utf8[1:];
-			print(f'		if ({#remainder >= 2 ? f"(iter + {#remainder-1})" : "iter"} < end && {' && '.join(
-				for (local i, b: remainder.enumerate())
-					f'iter[{i}] == {b.hex(2)}'
-			)}) \{');
-			print(f'			new_iter = iter + {#remainder};');
-			print(f'#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)');
-			if (ord <= 0xffff) {
-				print(f'			output_repr = (tpp_char const *)"\\\\u{ord.tostr(16, 4)}";');
-			} else {
-				print(f'			output_repr = (tpp_char const *)"\\\\U{ord.tostr(16, 8)}";');
+			/* Validate follow-up bytes. */
+			for (i = 1; i < utf8_size; ++i) {
+				if (!tpp_ascii_isutf8cont(utf8_start[i]))
+					goto encode_as_byte;
 			}
-			print(f'#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)');
-			print(f'			output_repr = (tpp_char const *)"\\\\u\{{ord.tostr(16)}\}";');
-			print(f'#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)');
-			print(f'			output_repr = (tpp_char const *)"\\\\&#{ord.tostr(16)};";');
-			print(f'#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)');
-			print(f'			output_repr = (tpp_char const *)"{
-				''.join(for (local b: utf8[:-1]) f'\\\\{b.tostr(8)}')
-			}\\\\{utf8.last.tostr(8, 3)}";');
-			print('#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)');
-			print('#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)');
-			print(f'			output_repr = (tpp_char const *)"{
-				''.join(for (local b: utf8[:-1]) f'\\\\x{b.tostr(16)}')
-			}\\\\x\{{utf8.last.tostr(16)}\}";');
-			print('#else /' '* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) *' '/');
-			print(f'			output_repr = (tpp_char const *)"{
-				''.join(for (local b: utf8) f'\\\\x\{{b.tostr(16)}\}')
-			}";');
-			print('#endif /' '* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) *' '/');
-			print(f'#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)');
-			print(f'			output_repr = (tpp_char const *)"{
-				''.join(for (local b: utf8) f'\\\\o\{{b.tostr(8)}\}')
-			}";');
-			print('#else /' '* ... *' '/');
-			print(f'			output_repr = (tpp_char const *)"{
-				''.join(for (local b: utf8[:-1]) f'\\\\{b.tostr(8)}')
-			}\\\\{utf8.last.tostr(8, 3)}"; /' f'* May not be decodable... *' f'/');
-			print('#endif /' '* !... *' '/');
-			print('			break;');
-			print('		}');
+
+			/* Decode utf-8 character */
+			uc = ch;
+			switch (utf8_size) {
+
+			case 2:
+				uc = (uc & 0x1f) << 6;
+				uc |= (utf8_start[1] & 0x3f);
+				if (uc <= TPP_UTF8_1BYTE_MAX)
+					goto encode_as_byte; /* under-long utf-8 sequence */
+				break;
+
+#if TPP_UTF8_CURLEN >= 3
+			case 3:
+				uc = (uc & 0x0f) << 12;
+				uc |= (utf8_start[1] & 0x3f) << 6;
+				uc |= (utf8_start[2] & 0x3f);
+				if (uc <= TPP_UTF8_2BYTE_MAX)
+					goto encode_as_byte; /* under-long utf-8 sequence */
+				break;
+#endif /* TPP_UTF8_CURLEN >= 3 */
+
+#if TPP_UTF8_CURLEN >= 4
+			case 4:
+				uc = (uc & 0x07) << 18;
+				uc |= (utf8_start[1] & 0x3f) << 12;
+				uc |= (utf8_start[2] & 0x3f) << 6;
+				uc |= (utf8_start[3] & 0x3f);
+				if (uc <= TPP_UTF8_3BYTE_MAX)
+					goto encode_as_byte; /* under-long utf-8 sequence */
+				break;
+#endif /* TPP_UTF8_CURLEN >= 4 */
+
+#if TPP_UTF8_CURLEN >= 5
+			case 5:
+				uc = (uc & 0x03) << 24;
+				uc |= (utf8_start[1] & 0x3f) << 18;
+				uc |= (utf8_start[2] & 0x3f) << 12;
+				uc |= (utf8_start[3] & 0x3f) << 6;
+				uc |= (utf8_start[4] & 0x3f);
+				if (uc <= TPP_UTF8_4BYTE_MAX)
+					goto encode_as_byte; /* under-long utf-8 sequence */
+				break;
+#endif /* TPP_UTF8_CURLEN >= 5 */
+
+#if TPP_UTF8_CURLEN >= 6
+			case 6:
+				uc = (uc & 0x01) << 30;
+				uc |= (utf8_start[1] & 0x3f) << 24;
+				uc |= (utf8_start[2] & 0x3f) << 18;
+				uc |= (utf8_start[3] & 0x3f) << 12;
+				uc |= (utf8_start[4] & 0x3f) << 6;
+				uc |= (utf8_start[5] & 0x3f);
+				if (uc <= TPP_UTF8_5BYTE_MAX)
+					goto encode_as_byte; /* under-long utf-8 sequence */
+				break;
+#endif /* TPP_UTF8_CURLEN >= 6 */
+
+#if TPP_UTF8_CURLEN >= 7
+			case 7:
+				uc = (utf8_start[1] & 0x03 /*0x3f*/) << 30;
+				uc |= (utf8_start[2] & 0x3f) << 24;
+				uc |= (utf8_start[3] & 0x3f) << 18;
+				uc |= (utf8_start[4] & 0x3f) << 12;
+				uc |= (utf8_start[5] & 0x3f) << 6;
+				uc |= (utf8_start[6] & 0x3f);
+				if (uc <= TPP_UTF8_6BYTE_MAX)
+					goto encode_as_byte; /* under-long utf-8 sequence */
+				break;
+#endif /* TPP_UTF8_CURLEN >= 7 */
+
+#if TPP_UTF8_CURLEN >= 8
+#error "Unsupported 'TPP_UTF8_CURLEN'"
+#endif /* TPP_UTF8_CURLEN >= 8 */
+			default: tpp_unreachable();
+			}
+
+			/* If it's a line-feed, then must also escape! */
+			if (tpp_unicode_islf(uc))
+				goto encode_as_byte;
+
+			/* It's valid utf-8 -- don't need to escape */
+			iter = utf8_end;
+			goto again;
 		}
-	}
-	print(f'		goto again;');
-}
-]]]*/
-	case 0xc2:
-		if (iter < end && iter[0] == 0x85) {
-			new_iter = iter + 1;
-#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
-			output_repr = (tpp_char const *)"\\u0085";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
-			output_repr = (tpp_char const *)"\\u{85}";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
-			output_repr = (tpp_char const *)"\\&#85;";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
-			output_repr = (tpp_char const *)"\\302\\205";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
-#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)
-			output_repr = (tpp_char const *)"\\xc2\\x{85}";
-#else /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
-			output_repr = (tpp_char const *)"\\x{c2}\\x{85}";
-#endif /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
-			output_repr = (tpp_char const *)"\\o{302}\\o{205}";
-#else /* ... */
-			output_repr = (tpp_char const *)"\\302\\205"; /* May not be decodable... */
-#endif /* !... */
-			break;
-		}
-		goto again;
-	case 0xe2:
-		if ((iter + 1) < end && iter[0] == 0x80 && iter[1] == 0xa8) {
-			new_iter = iter + 2;
-#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
-			output_repr = (tpp_char const *)"\\u2028";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
-			output_repr = (tpp_char const *)"\\u{2028}";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
-			output_repr = (tpp_char const *)"\\&#2028;";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
-			output_repr = (tpp_char const *)"\\342\\200\\250";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
-#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)
-			output_repr = (tpp_char const *)"\\xe2\\x80\\x{a8}";
-#else /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
-			output_repr = (tpp_char const *)"\\x{e2}\\x{80}\\x{a8}";
-#endif /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
-			output_repr = (tpp_char const *)"\\o{342}\\o{200}\\o{250}";
-#else /* ... */
-			output_repr = (tpp_char const *)"\\342\\200\\250"; /* May not be decodable... */
-#endif /* !... */
-			break;
-		}
-		if ((iter + 1) < end && iter[0] == 0x80 && iter[1] == 0xa9) {
-			new_iter = iter + 2;
-#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
-			output_repr = (tpp_char const *)"\\u2029";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
-			output_repr = (tpp_char const *)"\\u{2029}";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
-			output_repr = (tpp_char const *)"\\&#2029;";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
-			output_repr = (tpp_char const *)"\\342\\200\\251";
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
-#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX)
-			output_repr = (tpp_char const *)"\\xe2\\x80\\x{a9}";
-#else /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
-			output_repr = (tpp_char const *)"\\x{e2}\\x{80}\\x{a9}";
-#endif /* TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX) */
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
-			output_repr = (tpp_char const *)"\\o{342}\\o{200}\\o{251}";
-#else /* ... */
-			output_repr = (tpp_char const *)"\\342\\200\\251"; /* May not be decodable... */
-#endif /* !... */
-			break;
-		}
-		goto again;
-/*[[[end]]]*/
+	}	TPP_FALLTHRU
+		/* UTF-8 follow-up bytes must always be escaped! */
+	case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+	case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
+	case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
+	case 0x98: case 0x99: case 0x9a: case 0x9b: case 0x9c: case 0x9d: case 0x9e: case 0x9f:
+	case 0xa0: case 0xa1: case 0xa2: case 0xa3: case 0xa4: case 0xa5: case 0xa6: case 0xa7:
+	case 0xa8: case 0xa9: case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
+	case 0xb0: case 0xb1: case 0xb2: case 0xb3: case 0xb4: case 0xb5: case 0xb6: case 0xb7:
+	case 0xb8: case 0xb9: case 0xba: case 0xbb: case 0xbc: case 0xbd: case 0xbe: case 0xbf:
+encode_as_byte:
+		tpp_encodestring_set_output_repr_byte(ch);
+		break;
 #endif /* TPP_HAVE_UNICODE */
 
 #undef TPP_TOKEN_ENCODESTRING_CASE
@@ -297,11 +306,9 @@ for (local b: UTF8_LF_FIRST_BYTES.sorted()) {
 	if (temp < 0)
 		return temp;
 	result += temp;
-#if TPP_HAVE_UNICODE
-	iter = new_iter;
-#endif /* TPP_HAVE_UNICODE */
 	data = (void const *)iter;
 	goto again;
+#undef tpp_encodestring_set_output_repr_byte
 }
 #endif /* TPP_HAVE_TOKEN_ENCODESTRING */
 

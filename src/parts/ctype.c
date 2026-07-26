@@ -28,6 +28,54 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
+/* clang-format off */
+#define TPP_UTF8_SEQLEN_INIT(_0, _1, _2, _3, _4, _5, _6, _7, _8)         \
+	{                                                                    \
+		/* Unicode follow-up word (`0b10??????'). */                     \
+		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0x80-0x8f */ \
+		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0x90-0x9f */ \
+		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0xa0-0xaf */ \
+		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0xb0-0xbf */ \
+		/* `0b110?????' */                                               \
+		_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2, /* 0xc0-0xcf */ \
+		_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2, /* 0xd0-0xdf */ \
+		/* `0b1110????' */                                               \
+		_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3, /* 0xe0-0xef */ \
+		/* `0b11110???' */                                               \
+		_4,_4,_4,_4,_4,_4,_4,_4,                         /* 0xf0-0xf7 */ \
+		_5,_5,_5,_5,                                     /* 0xf8-0xfb */ \
+		_6,_6,                                           /* 0xfc-0xfd */ \
+		_7,                                              /* 0xfe */      \
+		_8                                               /* 0xff */      \
+	}
+/* clang-format on */
+
+#ifdef _tpp_unicode_utf8seqlen_mb_cur
+TPP_CONST_IMPL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128] =
+#if TPP_UTF8_CURLEN == 2
+TPP_UTF8_SEQLEN_INIT(0, ~, 2, 0, 0, 0, 0, 0, 0);
+#elif TPP_UTF8_CURLEN == 3
+TPP_UTF8_SEQLEN_INIT(0, ~, 2, 3, 0, 0, 0, 0, 0);
+#elif TPP_UTF8_CURLEN == 4
+TPP_UTF8_SEQLEN_INIT(0, ~, 2, 3, 4, 0, 0, 0, 0);
+#elif TPP_UTF8_CURLEN == 5
+TPP_UTF8_SEQLEN_INIT(0, ~, 2, 3, 4, 5, 0, 0, 0);
+#elif TPP_UTF8_CURLEN == 6
+TPP_UTF8_SEQLEN_INIT(0, ~, 2, 3, 4, 5, 6, 0, 0);
+#elif TPP_UTF8_CURLEN == 7
+TPP_UTF8_SEQLEN_INIT(0, ~, 2, 3, 4, 5, 6, 7, 0);
+#else /* TPP_UTF8_CURLEN == ... */
+#error "Unsupported 'TPP_UTF8_CURLEN'"
+#endif /* TPP_UTF8_CURLEN != ... */
+#endif /* _tpp_unicode_utf8seqlen_mb_cur */
+#ifdef _tpp_unicode_utf8seqlen_mb_max
+TPP_CONST_IMPL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128] =
+TPP_UTF8_SEQLEN_INIT(1, ~, 2, 3, 4, 5, 6, 7, 8);
+#endif /* _tpp_unicode_utf8seqlen_mb_max */
+#undef TPP_UTF8_SEQLEN_INIT
+
+
+
 #if TPP_HAVE_BUILTIN_CTYPE
 TPP_CONST_IMPL uint_least8_t const _tpp_ctype[256] = {
 /*[[[deemon

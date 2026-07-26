@@ -2171,35 +2171,12 @@ typedef char tpp_xml_entity;
 #define tpp_xml_entity_name(self)    (self)            /* String that must appear in '&<str>;' */
 #define tpp_xml_entity_utf8(self)    ((self) + tpp_strlen(self) + 1) /* utf-8 sequence used for replacement. */
 
-#ifndef tpp_unicode_utf8seqlen_safe
-#define tpp_unicode_utf8seqlen_safe tpp_unicode_utf8seqlen_safe
-static uint_least8_t const tpp_unicode_utf8seqlen_safe[128] = {
-	/* Unicode follow-up word (`0b10??????'). */
-	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0x80-0x8f */
-	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0x90-0x9f */
-	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0xa0-0xaf */
-	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0xb0-0xbf */
-	/* `0b110?????' */
-	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, /* 0xc0-0xcf */
-	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, /* 0xd0-0xdf */
-	/* `0b1110????' */
-	3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, /* 0xe0-0xef */
-	/* `0b11110???' */
-	4,4,4,4,4,4,4,4,                 /* 0xf0-0xf7 */
-	5,5,5,5,                         /* 0xf8-0xfb */
-	6,6,                             /* 0xfc-0xfd */
-	7,                               /* 0xfe */
-	8                                /* 0xff */
-};
-#endif /* !tpp_unicode_utf8seqlen_safe */
-
-
 /* Find the start of the given entry. */
 static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_xml_entity const *TPPCALL
 tpp_xml_entity_fromptr(tpp_char const *tpp_restrict ptr) {
 	tpp_char const *iter;
 	iter = ptr + tpp_strlen((char const *)ptr) + 1;
-	iter += (*iter < 0xc0 ? 1 : tpp_unicode_utf8seqlen_safe[*iter & 0x7f]);
+	iter += tpp_unicode_utf8seqlen_getmax(*iter);
 	if (*iter == 0) {
 		/* `ptr' points into the first string! */
 		if (*ptr == 0x01)

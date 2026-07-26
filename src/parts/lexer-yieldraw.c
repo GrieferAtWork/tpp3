@@ -40,40 +40,6 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_UNICODE
 
-/* clang-format off */
-#define TPP_UTF8_SEQLEN_INIT(_0, _1, _2, _3, _4, _5, _6, _7, _8)         \
-	{                                                                    \
-		/* Unicode follow-up word (`0b10??????'). */                     \
-		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0x80-0x8f */ \
-		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0x90-0x9f */ \
-		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0xa0-0xaf */ \
-		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0xb0-0xbf */ \
-		/* `0b110?????' */                                               \
-		_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2, /* 0xc0-0xcf */ \
-		_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2, /* 0xd0-0xdf */ \
-		/* `0b1110????' */                                               \
-		_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3, /* 0xe0-0xef */ \
-		/* `0b11110???' */                                               \
-		_4,_4,_4,_4,_4,_4,_4,_4,                         /* 0xf0-0xf7 */ \
-		_5,_5,_5,_5,                                     /* 0xf8-0xfb */ \
-		_6,_6,                                           /* 0xfc-0xfd */ \
-		_7,                                              /* 0xfe */      \
-		_8                                               /* 0xff */      \
-	}
-/* clang-format on */
-static uint_least8_t const tpp_unicode_utf8seqlen[128] =
-TPP_UTF8_SEQLEN_INIT(0, ~, 2, 3, 4, 0, 0, 0, 0);
-#ifndef tpp_unicode_utf8seqlen_safe
-#define tpp_unicode_utf8seqlen_safe tpp_unicode_utf8seqlen_safe
-static uint_least8_t const tpp_unicode_utf8seqlen_safe[128] =
-TPP_UTF8_SEQLEN_INIT(1, ~, 2, 3, 4, 5, 6, 7, 8);
-#endif /* !tpp_unicode_utf8seqlen_safe */
-#undef TPP_UTF8_SEQLEN_INIT
-
-/* Check if "ch" is a utf-8 continuation byte */
-#define tpp_ascii_isutf8cont(ch) (((ch) & 0xc0) == 0x80)
-
-
 /* Read a single unicode character from a given utf-8 blob.
  * WARNING: This function doesn't do any validity checking,
  *          allowing over-long utf-8 sequences, as well as
@@ -86,7 +52,7 @@ tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end) {
 		return 0;
 	uc = (tpp_unichar)*pos++;
 	if (uc >= 0xc0) {
-		uint_least8_t len = tpp_unicode_utf8seqlen_safe[uc & 0x7f];
+		uint_least8_t len = tpp_unicode_utf8seqlen_mb_getmax(uc);
 		tpp_size maxlen = (tpp_size)(end - pos);
 		if ((tpp_size)len > maxlen)
 			len = (uint_least8_t)maxlen;
@@ -264,7 +230,7 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 	tpp_assert(pos < end);
 	uc = *pos;
 	tpp_assert(tpp_ascii_ismb(uc));
-	len = tpp_unicode_utf8seqlen[uc & 0x7f];
+	len = tpp_unicode_utf8seqlen_mb_getcur(uc);
 	if tpp_unlikely(len == 0)
 		goto handle_ilseq;
 	tpp_assert(len >= 2 && len <= 4);
@@ -285,6 +251,7 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 
 	/* All required data has been loaded into memory -> parse the sequence */
 	switch (len) {
+
 	case 2:
 		uc = (uc & 0x1f) << 6;
 		uc |= (pos[1] & 0x3f);
@@ -293,6 +260,8 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 		if tpp_unlikely(uc <= TPP_UTF8_1BYTE_MAX)
 			goto handle_ilseq; /* under-long utf-8 sequence */
 		break;
+
+#if TPP_UTF8_CURLEN >= 3
 	case 3:
 		uc  = (uc & 0x0f) << 12;
 		uc |= (pos[1] & 0x3f) << 6;
@@ -304,6 +273,9 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 		if tpp_unlikely(uc <= TPP_UTF8_2BYTE_MAX)
 			goto handle_ilseq; /* under-long utf-8 sequence */
 		break;
+#endif /* TPP_UTF8_CURLEN >= 3 */
+
+#if TPP_UTF8_CURLEN >= 4
 	case 4:
 		uc  = (uc & 0x07) << 18;
 		uc |= (pos[1] & 0x3f) << 12;
@@ -318,7 +290,79 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 		if tpp_unlikely(uc <= TPP_UTF8_3BYTE_MAX)
 			goto handle_ilseq; /* under-long utf-8 sequence */
 		break;
-	/* 5+ doesn't appear in `tpp_unicode_utf8seqlen' */
+#endif /* TPP_UTF8_CURLEN >= 4 */
+
+#if TPP_UTF8_CURLEN >= 5
+	case 5:
+		uc = (uc & 0x03) << 24;
+		uc |= (pos[1] & 0x3f) << 18;
+		uc |= (pos[2] & 0x3f) << 12;
+		uc |= (pos[3] & 0x3f) << 6;
+		uc |= (pos[4] & 0x3f);
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[1]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[2]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[3]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[4]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(uc <= TPP_UTF8_4BYTE_MAX)
+			goto handle_ilseq; /* under-long utf-8 sequence */
+		break;
+#endif /* TPP_UTF8_CURLEN >= 5 */
+
+#if TPP_UTF8_CURLEN >= 6
+	case 6:
+		uc = (uc & 0x01) << 30;
+		uc |= (pos[1] & 0x3f) << 24;
+		uc |= (pos[2] & 0x3f) << 18;
+		uc |= (pos[3] & 0x3f) << 12;
+		uc |= (pos[4] & 0x3f) << 6;
+		uc |= (pos[5] & 0x3f);
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[1]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[2]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[3]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[4]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[5]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(uc <= TPP_UTF8_5BYTE_MAX)
+			goto handle_ilseq; /* under-long utf-8 sequence */
+		break;
+#endif /* TPP_UTF8_CURLEN >= 6 */
+
+#if TPP_UTF8_CURLEN >= 7
+	case 7:
+		uc = (pos[1] & 0x03/*0x3f*/) << 30;
+		uc |= (pos[2] & 0x3f) << 24;
+		uc |= (pos[3] & 0x3f) << 18;
+		uc |= (pos[4] & 0x3f) << 12;
+		uc |= (pos[5] & 0x3f) << 6;
+		uc |= (pos[6] & 0x3f);
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[1]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[2]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[3]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[4]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[5]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(!tpp_ascii_isutf8cont(pos[6]))
+			goto handle_ilseq; /* Bad continuation byte */
+		if tpp_unlikely(uc <= TPP_UTF8_6BYTE_MAX)
+			goto handle_ilseq; /* under-long utf-8 sequence */
+		break;
+#endif /* TPP_UTF8_CURLEN >= 7 */
+
+#if TPP_UTF8_CURLEN >= 8
+#error "Unsupported 'TPP_UTF8_CURLEN'"
+#endif /* TPP_UTF8_CURLEN >= 8 */
 	default: tpp_unreachable();
 	}
 
@@ -353,7 +397,7 @@ handle_ilseq:
 	}
 
 	/* Forced UTF-8 */
-	len = tpp_unicode_utf8seqlen_safe[uc & 0x7f];
+	len = tpp_unicode_utf8seqlen_mb_getmax(uc);
 	tpp_assert(len >= 1 && len <= 8);
 
 	while ((pos + len) > end) {

@@ -52,6 +52,7 @@ for (local e: fs.dir(".").sorted()) {
 #include "stdc-6.10.3.5_7.h"
 #include "stdc-6.10.3.5_9.h"
 #include "stdc-6.10.3_5+6.h"
+#include "string-escape-invalid-utf-8.h"
 #include "stringize.h"
 #include "strings-in-expressions.h"
 #include "traditional-macros.h"
