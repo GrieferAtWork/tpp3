@@ -24714,6 +24714,42 @@ _tpp_preparse_skipspace_fwd(tpp_char const *pos, tpp_char const *end
 }
 #endif /* TPP_HAVE_PREPARSE_SKIPSPACE_FWD */
 
+#if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
+/* Skip over all whitespace and BSE sequences, starting at `pos-1` and
+ * going no further than `start` (such that `start[-1]` is never dereferenced)
+ *
+ * @return: * :    Pointer after the first non-whitespace (and not-part-of-BSE)
+ *                 character that is `<= pos`.
+ * @return: start: Nothing but whitespace (or BSE) found before `start` was reached. */
+TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_preparse_skipspace_bck(tpp_char const *pos, tpp_char const *start
+                            _tpp_preparse_skipbse_lexer__PARAM) {
+	for (;;) {
+		tpp_char ch;
+		pos = tpp_preparse_skipbse_bck(lexer, pos, start);
+		if (pos <= start)
+			break;
+		ch = pos[-1];
+		if (tpp_ascii_isspace(ch)) {
+			--pos;
+		} else
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
+			tpp_char const *uc_pos = pos;
+			tpp_unichar uc = tpp_unicode_readutf8_rev(&uc_pos, start);
+			if (!tpp_unicode_isspace(uc))
+				break;
+			pos = uc_pos;
+		} else
+#endif /* TPP_HAVE_UNICODE */
+		{
+			break;
+		}
+	}
+	return pos;
+}
+#endif /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
+
 
 /************************************************************************/
 /* File: parts/keyword.c                                                */
@@ -35123,13 +35159,20 @@ tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 						/* See if we can seek ahead to a ','-character */
 						tpp_size remaining;
 						tpp_char const *comma;
+#if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
+						tpp_char const *before_comma;
+#endif /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 search_for_comma:
 						remaining = (tpp_size)(named_end - named_start);
 						comma = (tpp_char const *)tpp_memchr(named_start, ',', remaining);
 						if (!comma)
 							break;
-						/* Technically would need to emit warning with trailing space before "comma" stripped */
+#if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
+						before_comma = tpp_preparse_skipspace_bck(self, comma, named_start);
+						error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, before_comma);
+#else /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 						error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, comma);
+#endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 						if (TPP_ISERR(error))
 							return error;
 						named_start = comma + 1;
@@ -52427,14 +52470,14 @@ handle_unknown_uni_brace_sequence:
 			tpp_size i, count, utf8_len;
 			tpp_unichar uc[TPP_DECODE_NAMED_ESCAPE_MAXLEN];
 			tpp_char utf8_buf[TPP_DECODE_NAMED_ESCAPE_MAXLEN * TPP_UTF8_MAXLEN], *utf8_dst;
-#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
-			if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY))
+#if TPP_HAVE_STRING_ESCAPE_NAMED_MANY
+			if (tpp_lexer_has(self, STRING_ESCAPE_NAMED_MANY))
 				named_start = tpp_preparse_skipspace_fwd(self, named_start, named_end);
-#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+#endif /* TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
 			count = tpp_decode_named_escape(&named_start, named_end, uc, self);
 			if (count == 0) {
-#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
-				if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY)) {
+#if TPP_HAVE_STRING_ESCAPE_NAMED_MANY
+				if (tpp_lexer_has(self, STRING_ESCAPE_NAMED_MANY)) {
 					/* See if we can seek ahead to a ','-character */
 					tpp_size remaining = (tpp_size)(named_end - named_start);
 					tpp_char const *comma = (tpp_char const *)tpp_memchr(named_start, ',', remaining);
@@ -52442,8 +52485,12 @@ handle_unknown_uni_brace_sequence:
 						break;
 #if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 					{
-						/* Technically would need to emit warning with trailing space before "comma" stripped */
+#if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
+						tpp_char const *before_comma = tpp_preparse_skipspace_bck(self, comma, named_start);
+						tpp_errno error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, before_comma);
+#else /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 						tpp_errno error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, comma);
+#endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 						if (TPP_ISERR(error))
 							return TPP_SSIZE_OFERR(error);
 					}
@@ -52451,7 +52498,7 @@ handle_unknown_uni_brace_sequence:
 					named_start = comma + 1;
 					continue;
 				} else
-#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+#endif /* TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
 				{
 					break;
 				}
@@ -52471,15 +52518,15 @@ handle_unknown_uni_brace_sequence:
 			result += temp;
 
 			/* Check if there are additional character names */
-#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
-			if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY)) {
+#if TPP_HAVE_STRING_ESCAPE_NAMED_MANY
+			if (tpp_lexer_has(self, STRING_ESCAPE_NAMED_MANY)) {
 				named_start = tpp_preparse_skipspace_fwd(self, named_start, named_end);
 				if (named_start < named_end && *named_start == ',') {
 					named_start = tpp_preparse_skipspace_fwd(self, named_start + 1, named_end);
 					continue;
 				}
 			}
-#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+#endif /* TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
 			break;
 		}
 

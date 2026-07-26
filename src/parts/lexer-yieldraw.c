@@ -1646,13 +1646,20 @@ tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 						/* See if we can seek ahead to a ','-character */
 						tpp_size remaining;
 						tpp_char const *comma;
+#if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
+						tpp_char const *before_comma;
+#endif /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 search_for_comma:
 						remaining = (tpp_size)(named_end - named_start);
 						comma = (tpp_char const *)tpp_memchr(named_start, ',', remaining);
 						if (!comma)
 							break;
-						/* Technically would need to emit warning with trailing space before "comma" stripped */
+#if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
+						before_comma = tpp_preparse_skipspace_bck(self, comma, named_start);
+						error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, before_comma);
+#else /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 						error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, comma);
+#endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 						if (TPP_ISERR(error))
 							return error;
 						named_start = comma + 1;

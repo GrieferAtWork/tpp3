@@ -10215,6 +10215,17 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_FWD */
 
+#ifndef TPP_HAVE_PREPARSE_SKIPSPACE_BCK
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) ||        \
+     ((TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || \
+       TPP_HAVE_STRING_ESCAPE_NAMED_MANY) &&    \
+      TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE))
+#define TPP_HAVE_PREPARSE_SKIPSPACE_BCK 1
+#else /* ... */
+#define TPP_HAVE_PREPARSE_SKIPSPACE_BCK 0
+#endif /* !... */
+#endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -17403,6 +17414,20 @@ TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
 _tpp_preparse_skipspace_fwd(tpp_char const *pos, tpp_char const *end
                             _tpp_preparse_skipbse_lexer__PARAM);
 #endif /* TPP_HAVE_PREPARSE_SKIPSPACE_FWD */
+
+#if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
+/* Skip over all whitespace and BSE sequences, starting at `pos-1` and
+ * going no further than `start` (such that `start[-1]` is never dereferenced)
+ *
+ * @return: * :    Pointer after the first non-whitespace (and not-part-of-BSE)
+ *                 character that is `<= pos`.
+ * @return: start: Nothing but whitespace (or BSE) found before `start` was reached. */
+#define tpp_preparse_skipspace_bck(lexer, pos, start) \
+	_tpp_preparse_skipspace_bck(pos, start _tpp_preparse_skipbse_lexer__ARG(lexer))
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_preparse_skipspace_bck(tpp_char const *pos, tpp_char const *start
+                            _tpp_preparse_skipbse_lexer__PARAM);
+#endif /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 
 /************************************************************************/
 /* File: parts/keyword.h                                                */

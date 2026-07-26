@@ -277,6 +277,42 @@ _tpp_preparse_skipspace_fwd(tpp_char const *pos, tpp_char const *end
 }
 #endif /* TPP_HAVE_PREPARSE_SKIPSPACE_FWD */
 
+#if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
+/* Skip over all whitespace and BSE sequences, starting at `pos-1` and
+ * going no further than `start` (such that `start[-1]` is never dereferenced)
+ *
+ * @return: * :    Pointer after the first non-whitespace (and not-part-of-BSE)
+ *                 character that is `<= pos`.
+ * @return: start: Nothing but whitespace (or BSE) found before `start` was reached. */
+TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_preparse_skipspace_bck(tpp_char const *pos, tpp_char const *start
+                            _tpp_preparse_skipbse_lexer__PARAM) {
+	for (;;) {
+		tpp_char ch;
+		pos = tpp_preparse_skipbse_bck(lexer, pos, start);
+		if (pos <= start)
+			break;
+		ch = pos[-1];
+		if (tpp_ascii_isspace(ch)) {
+			--pos;
+		} else
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
+			tpp_char const *uc_pos = pos;
+			tpp_unichar uc = tpp_unicode_readutf8_rev(&uc_pos, start);
+			if (!tpp_unicode_isspace(uc))
+				break;
+			pos = uc_pos;
+		} else
+#endif /* TPP_HAVE_UNICODE */
+		{
+			break;
+		}
+	}
+	return pos;
+}
+#endif /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
+
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

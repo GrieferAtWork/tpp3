@@ -5747,6 +5747,17 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_FWD */
 
+#ifndef TPP_HAVE_PREPARSE_SKIPSPACE_BCK
+#if ((TPP_PROFILE == TPP_PROFILE_ALL) ||        \
+     ((TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || \
+       TPP_HAVE_STRING_ESCAPE_NAMED_MANY) &&    \
+      TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE))
+#define TPP_HAVE_PREPARSE_SKIPSPACE_BCK 1
+#else /* ... */
+#define TPP_HAVE_PREPARSE_SKIPSPACE_BCK 0
+#endif /* !... */
+#endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
