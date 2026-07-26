@@ -51,7 +51,7 @@ TPP_DECL_BEGIN
 #define tpp_lexer_state_flags uint_least8_t
 #define TPP_LEXER_STATE_FLAG_NORMAL       UINT8_C(0x00) /* Normal state flags */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
-#define TPP_LEXER_STATE_FLAG_ALLTOKENS    UINT8_C(0x01) /* Prevent `tpp_lexer_yieldpp()' from (possibly) skipp SPACE/LF/COMMENT tokens */
+#define TPP_LEXER_STATE_FLAG_ALLTOKENS    UINT8_C(0x01) /* Prevent `tpp_lexer_yieldpp()' from (possibly) filtering SPACE/LF/COMMENT tokens */
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_HAVE_WARNINGS
 #define TPP_LEXER_STATE_FLAG_NOWARNINGS   UINT8_C(0x02) /* Do not emit any warnings/errors (don't even trigger them) -- should be used during seek-ahead yields. */
@@ -290,6 +290,8 @@ typedef struct tpp_lexer {
 #define tpp_lexer_setwarningctx(self, ctx_id, state)      tpp_warnings_setctx(&(self)->TPP_INTERNAL(tl_warn), ctx_id, state)
 #define tpp_lexer_invokewarning(self, warning_id, result) tpp_warnings_invoke(&(self)->TPP_INTERNAL(tl_warn), warning_id, result)
 #define tpp_lexer_resetwarnings(self)                     tpp_warnings_reset(&(self)->TPP_INTERNAL(tl_warn))
+#define tpp_lexer_getwarninggrp(self, grp_id)             tpp_lexer_getwarningctx(self, tpp_warning_context_id_ofgroup(grp_id))
+#define tpp_lexer_setwarninggrp(self, grp_id, state)      tpp_lexer_setwarningctx(self, tpp_warning_context_id_ofgroup(grp_id), state)
 #endif /* TPP_HAVE_WARNINGS */
 
 /* Extensions... */

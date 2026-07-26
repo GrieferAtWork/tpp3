@@ -4886,7 +4886,7 @@ print("#endif /" "* !... *" "/");
 
 /* Enable support for `TPP_FILE_FLAGS_SYSHDR` */
 #ifndef TPP_HAVE_FILE_SYSHDR
-#if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0
+#if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER || TPP_HAVE_CPP_DIGIT_LINE
 #define TPP_HAVE_FILE_SYSHDR 1
 #else /* ... */
 #define TPP_HAVE_FILE_SYSHDR 0
@@ -5046,6 +5046,17 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING 0
 #endif /* !... */
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+
+/* When enabled, `TPP_WSTATE_WARN` is treated as `TPP_WSTATE_ERROR_OR_FATAL` instead */
+#ifndef TPP_HAVE_WERROR
+#define TPP_HAVE_WERROR ((TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_WARNINGS) ? TPP_CONF_EXT0 : 0) /* "-fWerror" */
+#endif /* !TPP_HAVE_WERROR */
+
+/* When enabled, the `TPP_FILE_FLAGS_SYSHDR` flag of files is ignored,
+ * meaning that warnings are emitted as normal within system headers. */
+#ifndef TPP_HAVE_WSYSTEM_HEADERS
+#define TPP_HAVE_WSYSTEM_HEADERS ((TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_FILE_SYSHDR) ? TPP_CONF_EXT0 : 0) /* "-fWsystem-headers" */
+#endif /* !TPP_HAVE_WSYSTEM_HEADERS */
 
 /* Provide a function `tpp_lexer_seekpp_rparen()` that can be used
  * to find the position of a matching `)`-token for the purpose

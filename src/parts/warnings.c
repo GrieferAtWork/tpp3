@@ -392,6 +392,11 @@ _tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
  * returning information about the context/state with which the warning
  * should be processed.
  *
+ * NOTE: The caller must still implement handling for:
+ * - `TPP_HAVE_FILE_SYSHDR`
+ * - `TPP_HAVE_WSYSTEM_HEADERS`
+ * - `TPP_HAVE_WERROR`
+ *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory (only "#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL

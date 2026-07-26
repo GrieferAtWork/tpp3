@@ -3710,6 +3710,22 @@ TPP_EXTENSION(TPP_EXT_SEARCH_SYSTEM_INCLUDE_PATH, TPP_EXTNAME_SEARCH_SYSTEM_INCL
 TPP_EXTENSION(TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE, TPP_EXTNAME_INCLUDE_RELATIVE_TO_EVERY_FILE, TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE))
 #define _tpp_lexer_has_INCLUDE_RELATIVE_TO_EVERY_FILE(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_WERROR)
+#ifndef TPP_EXTNAME_WERROR
+#define TPP_EXTNAME_WERROR "Werror"
+#endif /* !TPP_EXTNAME_WERROR */
+#define TPP_EXT_WERROR TPP_EXT_WERROR
+TPP_EXTENSION(TPP_EXT_WERROR, TPP_EXTNAME_WERROR, TPP_CONF_DEFAULT(TPP_HAVE_WERROR))
+#define _tpp_lexer_has_WERROR(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_WERROR)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_WERROR) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_WSYSTEM_HEADERS)
+#ifndef TPP_EXTNAME_WSYSTEM_HEADERS
+#define TPP_EXTNAME_WSYSTEM_HEADERS "Wsystem-headers"
+#endif /* !TPP_EXTNAME_WSYSTEM_HEADERS */
+#define TPP_EXT_WSYSTEM_HEADERS TPP_EXT_WSYSTEM_HEADERS
+TPP_EXTENSION(TPP_EXT_WSYSTEM_HEADERS, TPP_EXTNAME_WSYSTEM_HEADERS, TPP_CONF_DEFAULT(TPP_HAVE_WSYSTEM_HEADERS))
+#define _tpp_lexer_has_WSYSTEM_HEADERS(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_WSYSTEM_HEADERS)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_WSYSTEM_HEADERS) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS)
 #ifndef TPP_EXTNAME_LEXER_DECODEINT_HEX_LITERALS
 #define TPP_EXTNAME_LEXER_DECODEINT_HEX_LITERALS "hex-literals"
@@ -10125,7 +10141,7 @@ TPP_DECL_END
 
 /* Enable support for `TPP_FILE_FLAGS_SYSHDR` */
 #ifndef TPP_HAVE_FILE_SYSHDR
-#if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER != 0
+#if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER || TPP_HAVE_CPP_DIGIT_LINE
 #define TPP_HAVE_FILE_SYSHDR 1
 #else /* ... */
 #define TPP_HAVE_FILE_SYSHDR 0
@@ -10285,6 +10301,17 @@ TPP_DECL_END
 #define TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING 0
 #endif /* !... */
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
+
+/* When enabled, `TPP_WSTATE_WARN` is treated as `TPP_WSTATE_ERROR_OR_FATAL` instead */
+#ifndef TPP_HAVE_WERROR
+#define TPP_HAVE_WERROR ((TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_WARNINGS) ? TPP_CONF_EXT0 : 0) /* "-fWerror" */
+#endif /* !TPP_HAVE_WERROR */
+
+/* When enabled, the `TPP_FILE_FLAGS_SYSHDR` flag of files is ignored,
+ * meaning that warnings are emitted as normal within system headers. */
+#ifndef TPP_HAVE_WSYSTEM_HEADERS
+#define TPP_HAVE_WSYSTEM_HEADERS ((TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_FILE_SYSHDR) ? TPP_CONF_EXT0 : 0) /* "-fWsystem-headers" */
+#endif /* !TPP_HAVE_WSYSTEM_HEADERS */
 
 /* Provide a function `tpp_lexer_seekpp_rparen()` that can be used
  * to find the position of a matching `)`-token for the purpose
@@ -14205,6 +14232,8 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
      TPP_CONF_IS_FEAT(TPP_HAVE_EXTERN_C_FOR_SYSHDR) ||                    \
      TPP_CONF_IS_FEAT(TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH) ||             \
      TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) ||         \
+     TPP_CONF_IS_FEAT(TPP_HAVE_WERROR) ||                                 \
+     TPP_CONF_IS_FEAT(TPP_HAVE_WSYSTEM_HEADERS) ||                        \
      TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS) ||           \
      TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS) ||        \
      TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS))
@@ -15028,6 +15057,12 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
 	TPP_FEAT_INCLUDE_RELATIVE_TO_EVERY_FILE,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_WERROR)
+	TPP_FEAT_WERROR,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_WERROR) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_WSYSTEM_HEADERS)
+	TPP_FEAT_WSYSTEM_HEADERS,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_WSYSTEM_HEADERS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS)
 	TPP_FEAT_LEXER_DECODEINT_HEX_LITERALS,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS) */
@@ -16126,6 +16161,14 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_INCLUDE_RELATIVE_TO_EVERY_FILE): 1;
 #define _tpp_lexer_has_INCLUDE_RELATIVE_TO_EVERY_FILE(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_WERROR)
+		unsigned int TPP_INTERNAL(tff_WERROR): 1;
+#define _tpp_lexer_has_WERROR(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_WERROR)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_WERROR) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_WSYSTEM_HEADERS)
+		unsigned int TPP_INTERNAL(tff_WSYSTEM_HEADERS): 1;
+#define _tpp_lexer_has_WSYSTEM_HEADERS(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_WSYSTEM_HEADERS)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_WSYSTEM_HEADERS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS)
 		unsigned int TPP_INTERNAL(tff_LEXER_DECODEINT_HEX_LITERALS): 1;
 #define _tpp_lexer_has_LEXER_DECODEINT_HEX_LITERALS(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_LEXER_DECODEINT_HEX_LITERALS)
@@ -16970,6 +17013,12 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #define _tpp_lexer_has_INCLUDE_RELATIVE_TO_EVERY_FILE(self) TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_WERROR)
+#define _tpp_lexer_has_WERROR(self) TPP_CONF_DEFAULT(TPP_HAVE_WERROR)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_WERROR) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_WSYSTEM_HEADERS)
+#define _tpp_lexer_has_WSYSTEM_HEADERS(self) TPP_CONF_DEFAULT(TPP_HAVE_WSYSTEM_HEADERS)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_WSYSTEM_HEADERS) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS)
 #define _tpp_lexer_has_LEXER_DECODEINT_HEX_LITERALS(self) TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS) */
@@ -19576,6 +19625,11 @@ typedef struct tpp_warning_invokeinfo {
  * returning information about the context/state with which the warning
  * should be processed.
  *
+ * NOTE: The caller must still implement handling for:
+ * - `TPP_HAVE_FILE_SYSHDR`
+ * - `TPP_HAVE_WSYSTEM_HEADERS`
+ * - `TPP_HAVE_WERROR`
+ *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory (only "#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
@@ -20587,7 +20641,7 @@ _tpp_lexer_builtin_parseexpr(struct tpp_lexer *tpp_restrict self,
 #define tpp_lexer_state_flags uint_least8_t
 #define TPP_LEXER_STATE_FLAG_NORMAL       UINT8_C(0x00) /* Normal state flags */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
-#define TPP_LEXER_STATE_FLAG_ALLTOKENS    UINT8_C(0x01) /* Prevent `tpp_lexer_yieldpp()' from (possibly) skipp SPACE/LF/COMMENT tokens */
+#define TPP_LEXER_STATE_FLAG_ALLTOKENS    UINT8_C(0x01) /* Prevent `tpp_lexer_yieldpp()' from (possibly) filtering SPACE/LF/COMMENT tokens */
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_HAVE_WARNINGS
 #define TPP_LEXER_STATE_FLAG_NOWARNINGS   UINT8_C(0x02) /* Do not emit any warnings/errors (don't even trigger them) -- should be used during seek-ahead yields. */
@@ -20826,6 +20880,8 @@ typedef struct tpp_lexer {
 #define tpp_lexer_setwarningctx(self, ctx_id, state)      tpp_warnings_setctx(&(self)->TPP_INTERNAL(tl_warn), ctx_id, state)
 #define tpp_lexer_invokewarning(self, warning_id, result) tpp_warnings_invoke(&(self)->TPP_INTERNAL(tl_warn), warning_id, result)
 #define tpp_lexer_resetwarnings(self)                     tpp_warnings_reset(&(self)->TPP_INTERNAL(tl_warn))
+#define tpp_lexer_getwarninggrp(self, grp_id)             tpp_lexer_getwarningctx(self, tpp_warning_context_id_ofgroup(grp_id))
+#define tpp_lexer_setwarninggrp(self, grp_id, state)      tpp_lexer_setwarningctx(self, tpp_warning_context_id_ofgroup(grp_id), state)
 #endif /* TPP_HAVE_WARNINGS */
 
 /* Extensions... */

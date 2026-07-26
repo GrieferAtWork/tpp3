@@ -1732,6 +1732,16 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   added more overhead than benefit.
  */
 
+/* W_MACRO_NOT_DEFINED, W_UNKNOWN_ASSERTION, W_IDENT_SCCS_IGNORED,
+ * W_KEYWORD_MACRO_ALREADY_ONSTACK, W_FUNCTION_MACRO_ALREADY_ONSTACK,
+ * W_STATEMENT_IN_EXPRESSION, W_TYPECAST_IN_EXPRESSION,
+ * W_EXPECTED_RPAREN_AFTER_CAST, W_EXPECTED_RBRACE_AFTER_STATEMENT,
+ * W_INDEX_OUT_OF_BOUNDS:
+ * - These warnings were removed because they were either default-disabled in
+ *   TPP2, or were related to features that are no longer supported by TPP3
+ * - There is no replacement for these warnings.
+ */
+
 /* TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT,
  * TPP_CONFIG_EXTENSION_MSVC_FIXED_INT: "-ffixed-length-integrals"
  * - Suffix parsing in TPP3 is up to the caller, but in this emulated
@@ -4676,24 +4686,6 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #endif /* TPP_W_RESERVED_MACRO_KEYWORD */
 /*[[[end]]]*/
 
-// No-op directives warnings...
-//TODO:DEF_WARNING(W_MACRO_NOT_DEFINED, (WG_MACROS), WSTATE_DISABLED, WARNF("Macro " Q("%s") " is not defined", KWDNAME()))                                /* [struct TPPKeyword *] OLD(TPPWarn_MacroDoesntExist). */
-//TODO:DEF_WARNING(W_UNKNOWN_ASSERTION, (WG_VALUE), WSTATE_DISABLED, { char const *temp = KWDNAME(); WARNF("Assertion " Q("%s") " does not contain a predicate " Q("%s"), temp, KWDNAME()); }) /* [struct TPPKeyword *,struct TPPKeyword *]. */
-//TODO:DEF_WARNING(W_IDENT_SCCS_IGNORED, (WG_USAGE), WSTATE_WARN, WARNF("#ident/sccs with " Q("%s") " is ignored", CONST_STR())) /* [struct TPPConst *]. */
-
-// Macro-not-expanded warnings...
-//TODO:DEF_WARNING(W_KEYWORD_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Keyword-style macro " Q("%s") " is already being expanded", FILENAME()))      /* [struct TPPFile *]. */
-//TODO:DEF_WARNING(W_FUNCTION_MACRO_ALREADY_ONSTACK, (WG_MACROS), WSTATE_DISABLED, WARNF("Function-style macro " Q("%s") " is expanded to the same text", FILENAME())) /* [struct TPPFile *]. */
-
-// Statement expressions...
-//TODO:DEF_WARNING(W_STATEMENT_IN_EXPRESSION, (WG_USAGE, WG_SYNTAX), WSTATE_WARN, WARNF("GCC-style statement " TOK_S " in expression is not understood", TOK_A))                                                  /* . */
-//TODO:DEF_WARNING(W_TYPECAST_IN_EXPRESSION, (WG_USAGE, WG_SYNTAX), WSTATE_WARN, WARNF("C-style type cast " TOK_S " in expression is not understood (Consider using bit-masks to narrow integral types)", TOK_A)) /* . */
-//TODO:DEF_WARNING(W_EXPECTED_RPAREN_AFTER_CAST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q(")") " after casting type, but got " TOK_S, TOK_A))                                                               /* . */
-//TODO:DEF_WARNING(W_EXPECTED_RBRACE_AFTER_STATEMENT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected " Q("}") " after statement, but got " TOK_S, TOK_A))                                                             /* . */
-
-// Misc...
-//TODO:DEF_WARNING(W_INDEX_OUT_OF_BOUNDS, (WG_VALUE), WSTATE_DISABLED, { struct TPPString *s = ARG(struct TPPString *); WARNF("Index %ld is out-of-bounds of 0..%lu", (unsigned long)s->s_size, (unsigned long)ARG(ptrdiff_t)); })                                                                                            /* [struct TPPString *,ptrdiff_t]. */
-
 
 
 
@@ -5439,11 +5431,9 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 #undef TPPLEXER_FLAG_INCLUDESTRING         /* No longer supported; in TPP3, #include-strings parsing bypasses regular tokenization done by "tpp_lexer_yieldraw()" */
 #undef TPPLEXER_FLAG_EXTENDFILE            /* Use tpp_file_pushkeep() + tpp_file_setkeep() to keep certain file data loaded into memory */
 #undef TPPLEXER_FLAG_NO_LEGACY_GUARDS      /* No longer supported; in TPP3, this can only be compile-time configured via "TPP_HAVE_IFNDEF_INCLUDE_GUARDS" */
-#if 0 /* TODO */
-//#define TPPLEXER_FLAG_WERROR                 0x00080000 /* All warnings are turned into errors (NOTE: less powerful than `TPPLEXER_FLAG_WSYSTEMHEADERS'). */
-//#define TPPLEXER_FLAG_WSYSTEMHEADERS         0x00100000 /* Still emit warnings in system headers (alongside errors). */
-//#define TPPLEXER_FLAG_NO_DEPRECATED          0x00200000 /* Don't warn about deprecated or poisoned keywords. */
-#endif
+#undef TPPLEXER_FLAG_WERROR                /* Use tpp_lexer_setextension(TPP_EXT_WERROR) */
+#undef TPPLEXER_FLAG_WSYSTEMHEADERS        /* Use tpp_lexer_setextension(WSYSTEM_HEADERS) */
+#undef TPPLEXER_FLAG_NO_DEPRECATED         /* Use `tpp_lexer_getwarninggrp(TPP_WG_DEPRECATED)` / `tpp_lexer_setwarninggrp(TPP_WG_DEPRECATED)` */
 #undef TPPLEXER_FLAG_MSVC_MESSAGEFORMAT    /* Use `tpp_lexer_setfileandlineformat("%Pf(%Pl, %Pc): ")' to enable
                                             * Use `tpp_lexer_setfileandlineformat("%Pf:%Pl:%Pc: ")' to disable */
 #define TPPLEXER_FLAG_NO_WARNINGS TPP_LEXER_STATE_FLAG_NOWARNINGS

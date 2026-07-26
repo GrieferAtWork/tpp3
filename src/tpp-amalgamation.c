@@ -313,6 +313,8 @@
 #define tef_TPP_EXT_EXTERN_C_FOR_SYSHDR                    TPP_INTERNAL(tef_TPP_EXT_EXTERN_C_FOR_SYSHDR)
 #define tef_TPP_EXT_SEARCH_SYSTEM_INCLUDE_PATH             TPP_INTERNAL(tef_TPP_EXT_SEARCH_SYSTEM_INCLUDE_PATH)
 #define tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE         TPP_INTERNAL(tef_TPP_EXT_INCLUDE_RELATIVE_TO_EVERY_FILE)
+#define tef_TPP_EXT_WERROR                                 TPP_INTERNAL(tef_TPP_EXT_WERROR)
+#define tef_TPP_EXT_WSYSTEM_HEADERS                        TPP_INTERNAL(tef_TPP_EXT_WSYSTEM_HEADERS)
 #define tef_TPP_EXT_LEXER_DECODEINT_HEX_LITERALS           TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_HEX_LITERALS)
 #define tef_TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS        TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS)
 #define tef_TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS         TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS)
@@ -598,6 +600,8 @@
 #define tff_EXTERN_C_FOR_SYSHDR                            TPP_INTERNAL(tff_EXTERN_C_FOR_SYSHDR)
 #define tff_SEARCH_SYSTEM_INCLUDE_PATH                     TPP_INTERNAL(tff_SEARCH_SYSTEM_INCLUDE_PATH)
 #define tff_INCLUDE_RELATIVE_TO_EVERY_FILE                 TPP_INTERNAL(tff_INCLUDE_RELATIVE_TO_EVERY_FILE)
+#define tff_WERROR                                         TPP_INTERNAL(tff_WERROR)
+#define tff_WSYSTEM_HEADERS                                TPP_INTERNAL(tff_WSYSTEM_HEADERS)
 #define tff_LEXER_DECODEINT_HEX_LITERALS                   TPP_INTERNAL(tff_LEXER_DECODEINT_HEX_LITERALS)
 #define tff_LEXER_DECODEINT_BINARY_LITERALS                TPP_INTERNAL(tff_LEXER_DECODEINT_BINARY_LITERALS)
 #define tff_LEXER_DECODEINT_OCTAL_LITERALS                 TPP_INTERNAL(tff_LEXER_DECODEINT_OCTAL_LITERALS)
@@ -29874,6 +29878,12 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
 		/* .tff_INCLUDE_RELATIVE_TO_EVERY_FILE         = */ TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_WERROR)
+		/* .tff_WERROR                                 = */ TPP_CONF_DEFAULT(TPP_HAVE_WERROR),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_WERROR) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_WSYSTEM_HEADERS)
+		/* .tff_WSYSTEM_HEADERS                        = */ TPP_CONF_DEFAULT(TPP_HAVE_WSYSTEM_HEADERS),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_WSYSTEM_HEADERS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS)
 		/* .tff_LEXER_DECODEINT_HEX_LITERALS           = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS) */
@@ -30252,6 +30262,11 @@ _tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
 /* Invoke "warning_id" (updating suppression counters if necessary) and
  * returning information about the context/state with which the warning
  * should be processed.
+ *
+ * NOTE: The caller must still implement handling for:
+ * - `TPP_HAVE_FILE_SYSHDR`
+ * - `TPP_HAVE_WSYSTEM_HEADERS`
+ * - `TPP_HAVE_WERROR`
  *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory (only "#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
@@ -32322,19 +32337,30 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 	case TPP_WSTATE_DISABLED:
 		goto done; /* Nothing to do here */
 
-	case TPP_WSTATE_WARN: {
-		/* Display as a warning */
+	case TPP_WSTATE_WARN:
+#if TPP_HAVE_WERROR
+		if (tpp_lexer_has(self, WERROR)) {
+			invokeinfo.twii_state = TPP_WSTATE_ERROR_OR_FATAL;
+		} else
+#endif /* TPP_HAVE_WERROR */
+		{
+			/* Display as a warning */
+			if (!tpp_lexer_has(self, WSYSTEM_HEADERS)) {
 #if TPP_HAVE_FILE_SYSHDR
-		tpp_file const *const file = info->tlpfi_file ? info->tlpfi_file : tpp_lexer_getfile(self);
-		tpp_file const *const textfile = tpp_file_gettextfile(file);
-		if (textfile && tpp_file_getsystemheader(textfile))
-			return TPP_EOK; /* Suppress warnings in this file */
+				tpp_file const *const file     = info->tlpfi_file ? info->tlpfi_file : tpp_lexer_getfile(self);
+				tpp_file const *const textfile = tpp_file_gettextfile(file);
+				if (textfile && tpp_file_getsystemheader(textfile))
+					return TPP_EOK; /* Suppress warnings in this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
+			}
 #if TPP_HAVE_LEXER_WARNING_COUNT
-		++self->tl_warning_count;
+			++self->tl_warning_count;
 #endif /* TPP_HAVE_LEXER_WARNING_COUNT */
-	}	break;
-
+			break;
+		}
+#if TPP_HAVE_WERROR
+		TPP_FALLTHRU
+#endif /* TPP_HAVE_WERROR */
 #if TPP_HAVE_WARNING_ERROR
 	case TPP_WSTATE_ERROR: {
 		tpp_size errors = tpp_lexer_geterrorcount(self);

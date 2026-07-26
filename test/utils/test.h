@@ -110,6 +110,7 @@
 	TPP_ASSERT(__has_warning(#!name), "Warning " #name " was not triggered") \
 	__pragma(TPP warning(default: #!name))
 
-/* XXX: Turn on -Werror ? */
-
 #pragma TPP extension(pop)
+
+/* Turn on -Werror */
+#pragma TPP extension("-fWerror")

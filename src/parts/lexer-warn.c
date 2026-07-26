@@ -781,19 +781,30 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 	case TPP_WSTATE_DISABLED:
 		goto done; /* Nothing to do here */
 
-	case TPP_WSTATE_WARN: {
-		/* Display as a warning */
+	case TPP_WSTATE_WARN:
+#if TPP_HAVE_WERROR
+		if (tpp_lexer_has(self, WERROR)) {
+			invokeinfo.twii_state = TPP_WSTATE_ERROR_OR_FATAL;
+		} else
+#endif /* TPP_HAVE_WERROR */
+		{
+			/* Display as a warning */
+			if (!tpp_lexer_has(self, WSYSTEM_HEADERS)) {
 #if TPP_HAVE_FILE_SYSHDR
-		tpp_file const *const file = info->tlpfi_file ? info->tlpfi_file : tpp_lexer_getfile(self);
-		tpp_file const *const textfile = tpp_file_gettextfile(file);
-		if (textfile && tpp_file_getsystemheader(textfile))
-			return TPP_EOK; /* Suppress warnings in this file */
+				tpp_file const *const file     = info->tlpfi_file ? info->tlpfi_file : tpp_lexer_getfile(self);
+				tpp_file const *const textfile = tpp_file_gettextfile(file);
+				if (textfile && tpp_file_getsystemheader(textfile))
+					return TPP_EOK; /* Suppress warnings in this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
+			}
 #if TPP_HAVE_LEXER_WARNING_COUNT
-		++self->tl_warning_count;
+			++self->tl_warning_count;
 #endif /* TPP_HAVE_LEXER_WARNING_COUNT */
-	}	break;
-
+			break;
+		}
+#if TPP_HAVE_WERROR
+		TPP_FALLTHRU
+#endif /* TPP_HAVE_WERROR */
 #if TPP_HAVE_WARNING_ERROR
 	case TPP_WSTATE_ERROR: {
 		tpp_size errors = tpp_lexer_geterrorcount(self);
