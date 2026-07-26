@@ -4097,9 +4097,10 @@ TPP_WARNING_EX(TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 0(), ~, {
 /* -Wquality                                                            */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_QUALITY
-#define TPP_HAVE_TPP_WG_QUALITY          \
-	(TPP_HAVE_TPP_W_PAREN_AROUND_LAND || \
-	 TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN)
+#define TPP_HAVE_TPP_WG_QUALITY                        \
+	(TPP_HAVE_TPP_W_PAREN_AROUND_LAND ||               \
+	 TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN || \
+	 TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED)
 #endif /* !TPP_HAVE_TPP_WG_QUALITY */
 #if TPP_HAVE_TPP_WG_QUALITY
 #ifndef TPP_WGNAME_QUALITY
@@ -4120,6 +4121,12 @@ TPP_WARNING(TPP_W_PAREN_AROUND_LAND, 1(TPP_WG_QUALITY), 0(), ~,
 TPP_WARNING(TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN, 1(TPP_WG_QUALITY), 0(), ~,
             "raw string literal pattern is longer than 16 bytes")
 #endif /* TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN */
+
+#if TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED
+#define TPP_W_FILE_HAS_NO_TRAILING_LINEFEED TPP_W_FILE_HAS_NO_TRAILING_LINEFEED
+TPP_WARNING(TPP_W_FILE_HAS_NO_TRAILING_LINEFEED, 1(TPP_WG_QUALITY), 0(), ~,
+            "file has no trailing linefeed")
+#endif /* TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED */
 
 
 

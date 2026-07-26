@@ -149,6 +149,11 @@ again:
 #endif /* TPP_HAVE_TRIGRAPHS */
 
 #if TPP_HAVE_UNICODE
+
+	/* TODO: Must really escape *all* bytes `>= 0x80` when they don't form a valid
+	 *       utf-8 sequences (anything that might trigger `TPP_W_ILLEGAL_UTF8_SEQUENCE`
+	 *       needs to be escaped). */
+
 /*[[[deemon
 import * from ".token-encodestring-mblf";
 import * from deemon;

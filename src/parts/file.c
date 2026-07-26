@@ -884,7 +884,8 @@ amend_tail_data:
 			io_size = (tpp_size)self->tf_data.td_io.tff_encdat.tffed_embedlimit;
 			/* Check for special case: stop reading data from embedded file */
 			if tpp_unlikely(io_size == 0)
-				return TPP_EOK; /* EOF */
+				goto done; /* EOF */
+#define WANT_done
 		}
 		break;
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
@@ -982,7 +983,8 @@ amend_tail_data:
 		tpp_size tail_mask, tail_size, out_size;
 convert_multiword_to_utf8:
 		if tpp_unlikely(read_status == 0)
-			return TPP_EOK; /* EOF */
+			goto done; /* EOF */
+#define WANT_done
 		if (self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc) {
 			io_dst -= self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
 			read_status += self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
@@ -1069,7 +1071,8 @@ convert_multiword_to_utf8:
 		}
 
 		self->tf_end += out_size;
-		return TPP_EOK;
+		goto done;
+#define WANT_done
 	}	break;
 
 #if TPP_HAVE_FILE_ENCODING_EMBED
@@ -1080,7 +1083,7 @@ convert_multiword_to_utf8:
 			read_status = (tpp_size)self->tf_data.td_io.tff_encdat.tffed_embedlimit;
 		self->tf_data.td_io.tff_encdat.tffed_embedlimit -= (tpp_size)read_status;
 		if tpp_unlikely(read_status == 0)
-			return TPP_EOK; /* EOF */
+			goto done; /* EOF */
 		tpp_assert(io_dst == (tpp_char *)self->tf_end);
 		dst_end = tpp_string_end(new_chunk);
 		dst_base = tpp_embed_to_utf8((unsigned char const *)io_dst,
@@ -1090,7 +1093,8 @@ convert_multiword_to_utf8:
 		out_size = (tpp_size)(dst_end - dst_base);
 		tpp_memmovedown(io_dst, dst_base, out_size);
 		self->tf_end += out_size;
-		return TPP_EOK;
+		goto done;
+#define WANT_done
 	}	break;
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 
@@ -1102,6 +1106,12 @@ convert_multiword_to_utf8:
 
 	/* Remember that more buffer space is now available! */
 	self->tf_end += (tpp_size)read_status;
+	/* Debug-initialize the unused buffer tail */
+done:
+#if TPP_DEBUG
+	tpp_memset((tpp_char *)self->tf_end, 0x66,
+	           (tpp_size)(tpp_string_end(self->tf_chunk) - self->tf_end));
+#endif /* !TPP_DEBUG */
 	return TPP_EOK;
 }
 

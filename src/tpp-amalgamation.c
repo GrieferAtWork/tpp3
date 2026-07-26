@@ -21366,6 +21366,11 @@ again:
 #endif /* TPP_HAVE_TRIGRAPHS */
 
 #if TPP_HAVE_UNICODE
+
+	/* TODO: Must really escape *all* bytes `>= 0x80` when they don't form a valid
+	 *       utf-8 sequences (anything that might trigger `TPP_W_ILLEGAL_UTF8_SEQUENCE`
+	 *       needs to be escaped). */
+
 	case 0xc2:
 		if (iter < end && iter[0] == 0x85) {
 			new_iter = iter + 1;
@@ -23709,7 +23714,8 @@ amend_tail_data:
 			io_size = (tpp_size)self->tf_data.td_io.tff_encdat.tffed_embedlimit;
 			/* Check for special case: stop reading data from embedded file */
 			if tpp_unlikely(io_size == 0)
-				return TPP_EOK; /* EOF */
+				goto done; /* EOF */
+#define WANT_done
 		}
 		break;
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
@@ -23807,7 +23813,8 @@ amend_tail_data:
 		tpp_size tail_mask, tail_size, out_size;
 convert_multiword_to_utf8:
 		if tpp_unlikely(read_status == 0)
-			return TPP_EOK; /* EOF */
+			goto done; /* EOF */
+#define WANT_done
 		if (self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc) {
 			io_dst -= self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
 			read_status += self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
@@ -23894,7 +23901,8 @@ convert_multiword_to_utf8:
 		}
 
 		self->tf_end += out_size;
-		return TPP_EOK;
+		goto done;
+#define WANT_done
 	}	break;
 
 #if TPP_HAVE_FILE_ENCODING_EMBED
@@ -23905,7 +23913,7 @@ convert_multiword_to_utf8:
 			read_status = (tpp_size)self->tf_data.td_io.tff_encdat.tffed_embedlimit;
 		self->tf_data.td_io.tff_encdat.tffed_embedlimit -= (tpp_size)read_status;
 		if tpp_unlikely(read_status == 0)
-			return TPP_EOK; /* EOF */
+			goto done; /* EOF */
 		tpp_assert(io_dst == (tpp_char *)self->tf_end);
 		dst_end = tpp_string_end(new_chunk);
 		dst_base = tpp_embed_to_utf8((unsigned char const *)io_dst,
@@ -23915,7 +23923,8 @@ convert_multiword_to_utf8:
 		out_size = (tpp_size)(dst_end - dst_base);
 		tpp_memmovedown(io_dst, dst_base, out_size);
 		self->tf_end += out_size;
-		return TPP_EOK;
+		goto done;
+#define WANT_done
 	}	break;
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 
@@ -23927,6 +23936,12 @@ convert_multiword_to_utf8:
 
 	/* Remember that more buffer space is now available! */
 	self->tf_end += (tpp_size)read_status;
+	/* Debug-initialize the unused buffer tail */
+done:
+#if TPP_DEBUG
+	tpp_memset((tpp_char *)self->tf_end, 0x66,
+	           (tpp_size)(tpp_string_end(self->tf_chunk) - self->tf_end));
+#endif /* !TPP_DEBUG */
 	return TPP_EOK;
 }
 
@@ -35579,13 +35594,12 @@ tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self) {
 
 
 
-#if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
+#if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE || TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED
 /* Check if "pos" points directly after a line-feed, or the start of the file */
 static /*TPP_NOINLINE*/ TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
-tpp_lexer_check_sol(tpp_lexer *tpp_restrict self,
-                    tpp_char const *tpp_restrict pos) {
+tpp_file_check_sol(tpp_file *tpp_restrict file,
+                   tpp_char const *tpp_restrict pos) {
 	tpp_lcinfo lc;
-	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_string const *const chunk = file->tf_chunk;
 
 	/* Try to look at the currently loaded chunk. */
@@ -35625,7 +35639,7 @@ tpp_lexer_check_sol(tpp_lexer *tpp_restrict self,
 	lc = tpp_file_getlcinfo(file, pos);
 	return tpp_lcinfo_isvalid(lc) && tpp_lcinfo_getcol(lc) == 0;
 }
-#endif /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
+#endif /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE || TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED */
 
 
 
@@ -35874,7 +35888,7 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	int curtoken_is_at_sol = -1;
 #define tpp_lexer_curtoken_getsol()                                 \
 	(curtoken_is_at_sol < 0                                         \
-	 ? tpp_lexer_check_sol(self, tpp_file_rel2ptr(file, rel_start)) \
+	 ? tpp_file_check_sol(file, tpp_file_rel2ptr(file, rel_start)) \
 	 : (curtoken_is_at_sol != 0))
 #define tpp_lexer_curtoken_setsol(v) (void)(curtoken_is_at_sol = (v))
 #else /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
@@ -38934,24 +38948,51 @@ set_result:
 	token->tt_start = tpp_file_rel2ptr(file, rel_start);
 	*p_pos = pos; /* This also updates "file->tf_pos" (if "p_pos == &token->tt_end") */
 	return result;
+	{
+#if TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED && !TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
+		bool curtoken_is_at_sol;
+#endif /* TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED && !TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
 eof:
 #if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
-	if (curtoken_is_at_sol < 0) {
-		curtoken_is_at_sol = tpp_lexer_check_sol(self, pos);
-		tpp_assert(curtoken_is_at_sol >= 0);
-	}
-#endif /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
-	/* Check if we can read some more data from the file */
-	rel_start = tpp_file_ptr2rel(file, pos);
-	error = tpp_file_expandchunk(file);
-	if (TPP_ISERR(error))
-		goto return_error;
-	pos = tpp_file_rel2ptr(file, rel_start);
-	end = file->tf_end;
-	if (pos < end)
-		goto again_read_from_pos;
+		if (curtoken_is_at_sol < 0) {
+			curtoken_is_at_sol = tpp_file_check_sol(file, pos);
+			tpp_assert(curtoken_is_at_sol >= 0);
+		}
+#elif TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED
+		curtoken_is_at_sol = tpp_file_check_sol(file, pos);
+#endif /* ... */
 
-	/* XXX: Warning if current file is a IO/TEXT file and doesn't end with a trailing linefeed */
+		/* Check if we can read some more data from the file */
+		rel_start = tpp_file_ptr2rel(file, pos);
+		error = tpp_file_expandchunk(file);
+		if (TPP_ISERR(error))
+			goto return_error;
+		pos = tpp_file_rel2ptr(file, rel_start);
+		end = file->tf_end;
+		if (pos < end)
+			goto again_read_from_pos;
+
+#if TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED
+		if (tpp_file_getkind(file) == TPP_FILE_KIND_IO && !curtoken_is_at_sol) {
+			/* Warning if current file is an IO file and doesn't end with a trailing linefeed */
+			error = tpp_lexer_warnf_at(self, file, pos, TPP_W_FILE_HAS_NO_TRAILING_LINEFEED);
+			if (TPP_ISERR(error))
+				goto return_error;
+
+			/* TODO: Manipulate the file such that the warning won't be triggered a second
+			 *       time if someone tries to call `tpp_lexer_yieldraw()` once again (which
+			 *       can easily happen in the most likely case of us getting here due to
+			 *       the last line containing a `#endif` without a subsequent linefeed, in
+			 *       which case we get here once during the directive-prescan, and once again
+			 *       when the directive tries to yield its follow-up token.
+			 * XXX: How:
+			 * - Can't append actual line-feed to tf_chunk (don't invent tokens)
+			 * - Can't replace tf_chunk with an empty string (conflicts with tpp_file_setkeep)
+			 * - Can't define a new file flag (all bits are already assigned)
+			 */
+		}
+#endif /* TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED */
+	}
 
 	/* Check if we can pop to another file */
 #if TPP_HAVE_INCLUDE_STACK
@@ -38982,7 +39023,12 @@ eof:
 	return TPP_TOK_EOF;
 
 return_error:
-	/* Fix the caller's `p_pos' (unless it's the one from the file) */
+	/* Fix the caller's `p_pos` (unless it's the one from the file),
+	 * in which case `rel_start` would need to be relative to itself,
+	 * which it could only be when it's equal to `0` (which it would
+	 * actually be *most* of the time), but might not be when a free-
+	 * standing BSE sequence was skipped (since those don't appear in
+	 * tokens we produce). */
 	if (p_pos != &file->tf_pos)
 		*p_pos = tpp_file_rel2ptr(file, rel_start);
 	return TPP_TOK_OFERR(error);

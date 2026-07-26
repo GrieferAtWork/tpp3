@@ -75,6 +75,7 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_macro_recursion_limit_exceeded"></a>`TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED`
 - <a name="tpp_have_tpp_w_nonportable_filename_casing"></a>`TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING`
 - <a name="tpp_have_tpp_w_paren_around_land"></a>`TPP_HAVE_TPP_W_PAREN_AROUND_LAND`
+- <a name="tpp_have_tpp_w_file_has_no_trailing_linefeed"></a>`TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED`
 - <a name="tpp_have_tpp_w_cannot_pop_include_paths"></a>`TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS`
 - <a name="tpp_have_tpp_w_character_too_large"></a>`TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE`
 - <a name="tpp_have_tpp_w_illegal_utf8_sequence"></a>`TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE`
