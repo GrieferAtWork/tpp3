@@ -368,17 +368,95 @@ _tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
 #define tpp_token_decodestring_is_rbrace(self, ch, p_iter, end) ((ch) == '}')
 #endif /* !TPP_HAVE_TRIGRAPHS */
 
-
-#if TPP_HAVE_STRING_ESCAPE_NAMED
+#if (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED || \
+     TPP_HAVE_STRING_ESCAPE_NAMED ||     \
+     TPP_HAVE_STRING_ESCAPE_UNI_BRACE || \
+     TPP_HAVE_STRING_ESCAPE_OCT_BRACE || \
+     TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
 #if TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
-tpp_decode_named_findend(tpp_char const **p_iter, tpp_char const *end, tpp_lexer const *lexer);
+TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
+tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end, tpp_lexer const *lexer)
 #else /* TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_decode_named_findend(tpp_char const **p_iter, tpp_char const *end);
-#define tpp_decode_named_findend(p_iter, end, lexer) _tpp_decode_named_findend(p_iter, end)
+TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end)
+#define tpp_decode_find_unmatched_rbrace(p_iter, end, lexer) \
+	_tpp_decode_find_unmatched_rbrace(p_iter, end)
 #endif /* !TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
-#endif /* TPP_HAVE_STRING_ESCAPE_NAMED */
+{
+	tpp_char const *named_end;
+	tpp_size recursion = 0;
+	tpp_char const *iter = *p_iter;
+	for (;;) {
+		tpp_char ch;
+		named_end = iter;
+		if (iter >= end)
+			break;
+		ch = *iter++;
+		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
+		if (ch == '{') {
+			++recursion;
+		} else if (ch == '}') {
+			if (recursion == 0)
+				break;
+			--recursion;
+		} else
+#if TPP_HAVE_TRIGRAPHS
+		if (ch == '?' && tpp_lexer_has(lexer, TRIGRAPHS) &&
+			(iter + 1) < end && iter[0] == '?') {
+			ch = iter[1];
+			if (ch == '<') {
+				iter += 2;
+				++recursion;
+			} else if (ch == '>') {
+				iter += 2;
+				if (recursion == 0)
+					break;
+				--recursion;
+			}
+		} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+		{
+		}
+	}
+	*p_iter = iter;
+	return named_end;
+}
+#endif /* ... */
+
+#if TPP_HAVE_STRING_ESCAPE_UNI_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BRACE
+/* Find the first unmatched '}'-character and update `*p_iter` to point *after* it.
+ * If no such character can be found update `*p_iter` to point at "end". In either
+ * case, emit a warning `TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE` referencing
+ * the skipped portion of input. */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(tpp_char const **p_iter, tpp_char const *end,
+                                                  tpp_lexer *tpp_restrict self) {
+#if TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE
+	tpp_char const *unmatched_start = *p_iter;
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE */
+	tpp_char const *unmatched_end;
+	unmatched_end = tpp_decode_find_unmatched_rbrace(p_iter, end, self);
+	(void)unmatched_end;
+	(void)self;
+#if TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE
+	{
+		tpp_errno error;
+		tpp_token *const token = tpp_lexer_gettoken(self);
+		tpp_char const *saved_start = token->tt_start;
+		tpp_char const *saved_end = token->tt_end;
+		token->tt_start = unmatched_start;
+		token->tt_end   = unmatched_end;
+		error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE, "}");
+		token->tt_start = saved_start;
+		token->tt_end   = saved_end;
+		return error;
+	}
+#else /* TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE */
+	return TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE */
+}
+#endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BRACE */
+
 
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
 #if TPP_HAVE_UNICODE
@@ -643,12 +721,12 @@ print_ch_as_byte:
 		    tpp_token_decodestring_is_lbrace(self, ch, &iter, end)) {
 			iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(self));
 			if (iter >= end)
-				goto handle_unknown_escape_sequence;
+				goto handle_unknown_hex_brace_sequence;
 #if TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY
 			if (tpp_lexer_has(self, STRING_ESCAPE_HEX_BRACE_MANY)) {
 				for (;;) {
 					if (iter >= end)
-						goto handle_unknown_escape_sequence;
+						goto handle_unknown_hex_brace_sequence;
 					ch = *iter;
 					if (ch == '}')
 						break;
@@ -665,7 +743,7 @@ print_ch_as_byte:
 						tpp_unichar uc = tpp_unicode_readutf8(&iter, end);
 						if (!tpp_unicode_isspace(uc)) {
 							iter = prev_iter;
-							goto handle_unknown_escape_sequence;
+							goto handle_unknown_hex_brace_sequence;
 						}
 					} else
 #endif /* TPP_HAVE_UNICODE */
@@ -675,7 +753,7 @@ print_ch_as_byte:
 							return temp;
 						result += temp;
 					} else {
-						goto handle_unknown_escape_sequence;
+						goto handle_unknown_hex_brace_sequence;
 					}
 				}
 			} else
@@ -683,19 +761,22 @@ print_ch_as_byte:
 			{
 #if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY)
 				if (!tpp_ascii_isxdigit(*iter))
-					goto handle_unknown_escape_sequence;
+					goto handle_unknown_hex_brace_sequence;
 				temp = tpp_token_decodestring_hex_sequence_ex(self, &iter, end, config, true);
 				if (temp < 0)
 					return temp;
 				result += temp;
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY) */
 			}
-			if (iter >= end)
-				goto handle_unknown_escape_sequence;
-			ch = *iter;
-			if (!tpp_token_decodestring_is_rbrace(self, ch, &iter, end))
-				goto handle_unknown_escape_sequence; /* TODO: Custom warning + scan for }-character */
-			++iter;
+			if (iter < end && (ch = *iter, tpp_token_decodestring_is_rbrace(self, ch, &iter, end))) {
+				++iter;
+			} else {
+				tpp_errno error;
+handle_unknown_hex_brace_sequence:
+				error = tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(&iter, end, self);
+				if (TPP_ISERR(error))
+					return TPP_SSIZE_OFERR(error);
+			}
 		} else
 #endif /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE */
 		{
@@ -717,12 +798,12 @@ print_ch_as_byte:
 			goto handle_unknown_escape_sequence;
 		iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(self));
 		if (iter >= end)
-			goto handle_unknown_escape_sequence;
+			goto handle_unknown_oct_brace_sequence;
 #if TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY
 		if (tpp_lexer_has(self, STRING_ESCAPE_OCT_BRACE_MANY)) {
 			for (;;) {
 				if (iter >= end)
-					goto handle_unknown_escape_sequence;
+					goto handle_unknown_oct_brace_sequence;
 				ch = *iter;
 				if (ch == '}')
 					break;
@@ -739,7 +820,7 @@ print_ch_as_byte:
 					tpp_unichar uc = tpp_unicode_readutf8(&iter, end);
 					if (!tpp_unicode_isspace(uc)) {
 						iter = prev_iter;
-						goto handle_unknown_escape_sequence;
+						goto handle_unknown_oct_brace_sequence;
 					}
 				} else
 #endif /* TPP_HAVE_UNICODE */
@@ -749,7 +830,7 @@ print_ch_as_byte:
 						return temp;
 					result += temp;
 				} else {
-					goto handle_unknown_escape_sequence;
+					goto handle_unknown_oct_brace_sequence;
 				}
 			}
 		} else
@@ -757,19 +838,22 @@ print_ch_as_byte:
 		{
 #if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY)
 			if (!tpp_ascii_isoctdigit(*iter))
-				goto handle_unknown_escape_sequence;
+				goto handle_unknown_oct_brace_sequence;
 			temp = tpp_token_decodestring_oct_sequence(self, &iter, end, config);
 			if (temp < 0)
 				return temp;
 			result += temp;
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY) */
 		}
-		if (iter >= end)
-			goto handle_unknown_escape_sequence;
-		ch = *iter;
-		if (!tpp_token_decodestring_is_rbrace(self, ch, &iter, end))
-			goto handle_unknown_escape_sequence; /* TODO: Custom warning + scan for }-character */
-		++iter;
+		if (iter < end && (ch = *iter, tpp_token_decodestring_is_rbrace(self, ch, &iter, end))) {
+			++iter;
+		} else {
+			tpp_errno error;
+handle_unknown_oct_brace_sequence:
+			error = tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(&iter, end, self);
+			if (TPP_ISERR(error))
+				return TPP_SSIZE_OFERR(error);
+		}
 	}	break;
 #endif /* TPP_HAVE_STRING_ESCAPE_OCT_BRACE */
 
@@ -779,13 +863,11 @@ print_ch_as_byte:
 		    (iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(self)), iter < end) &&
 		    (ch = *iter, tpp_token_decodestring_is_lbrace(self, ch, &iter, end))) {
 			iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(self));
-			if (iter >= end)
-				goto handle_unknown_escape_sequence;
 #if TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY
 			if (tpp_lexer_has(self, STRING_ESCAPE_UNI_BRACE_MANY)) {
 				for (;;) {
 					if (iter >= end)
-						goto handle_unknown_escape_sequence;
+						goto handle_unknown_uni_brace_sequence;
 					ch = *iter;
 					if (ch == '}')
 						break;
@@ -802,7 +884,7 @@ print_ch_as_byte:
 						tpp_unichar uc = tpp_unicode_readutf8(&iter, end);
 						if (!tpp_unicode_isspace(uc)) {
 							iter = prev_iter;
-							goto handle_unknown_escape_sequence;
+							goto handle_unknown_uni_brace_sequence;
 						}
 					} else
 #endif /* TPP_HAVE_UNICODE */
@@ -812,27 +894,32 @@ print_ch_as_byte:
 							return temp;
 						result += temp;
 					} else {
-						goto handle_unknown_escape_sequence;
+						goto handle_unknown_uni_brace_sequence;
 					}
 				}
 			} else
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY */
 			{
 #if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY)
+				if (iter >= end)
+					goto handle_unknown_uni_brace_sequence;
 				if (!tpp_ascii_isxdigit(*iter))
-					goto handle_unknown_escape_sequence;
+					goto handle_unknown_uni_brace_sequence;
 				temp = tpp_token_decodestring_uni_sequence(self, &iter, end, config);
 				if (temp < 0)
 					return temp;
 				result += temp;
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY) */
 			}
-			if (iter >= end)
-				goto handle_unknown_escape_sequence;
-			ch = *iter;
-			if (!tpp_token_decodestring_is_rbrace(self, ch, &iter, end))
-				goto handle_unknown_escape_sequence; /* TODO: Custom warning + scan for }-character */
-			++iter;
+			if (iter < end && (ch = *iter, tpp_token_decodestring_is_rbrace(self, ch, &iter, end))) {
+				++iter;
+			} else {
+				tpp_errno error;
+handle_unknown_uni_brace_sequence:
+				error = tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(&iter, end, self);
+				if (TPP_ISERR(error))
+					return TPP_SSIZE_OFERR(error);
+			}
 			break;
 		}
 #if TPP_HAVE_STRING_ESCAPE_UNI
@@ -856,7 +943,7 @@ print_ch_as_byte:
 			goto handle_unknown_escape_sequence;
 		iter = tpp_skipbse_fwd(iter + 1, end, tpp_lexer_getfile(self));
 		named_start = iter;
-		named_end   = tpp_decode_named_findend(&iter, end, self);
+		named_end   = tpp_decode_find_unmatched_rbrace(&iter, end, self);
 		for (;;) {
 			tpp_size i, count, utf8_len;
 			tpp_unichar uc[TPP_DECODE_NAMED_ESCAPE_MAXLEN];

@@ -11,6 +11,7 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_string_terminated_by_eof"></a>`TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF`
 - <a name="tpp_have_tpp_w_comment_terminated_by_eof"></a>`TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF`
 - <a name="tpp_have_tpp_w_unexpected_token"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN`
+- <a name="tpp_have_tpp_w_unexpected_character_in_string_escape"></a>`TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE`
 - <a name="tpp_have_tpp_w_unexpected_token_in_tpp_str_pack"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK`
 - <a name="tpp_have_tpp_w_unexpected_token_in_pragma_warning"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING`
 - <a name="tpp_have_tpp_w_unexpected_token_in_pragma_warning_after_colon"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_WARNING_AFTER_COLON`

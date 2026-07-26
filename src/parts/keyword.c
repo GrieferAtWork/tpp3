@@ -782,55 +782,17 @@ _tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end)
 }
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
 
-#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_NAMED
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 #if TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
-TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
-tpp_decode_named_findend(tpp_char const **p_iter, tpp_char const *end, tpp_lexer const *lexer)
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
+tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end, tpp_lexer const *lexer);
 #else /* TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
-TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_decode_named_findend(tpp_char const **p_iter, tpp_char const *end)
-#define tpp_decode_named_findend(p_iter, end, lexer) _tpp_decode_named_findend(p_iter, end)
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
+_tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end)
+#define tpp_decode_find_unmatched_rbrace(p_iter, end, lexer) \
+	_tpp_decode_find_unmatched_rbrace(p_iter, end);
 #endif /* !TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
-{
-	tpp_char const *named_end;
-	tpp_size recursion = 0;
-	tpp_char const *iter = *p_iter;
-	for (;;) {
-		tpp_char ch;
-		named_end = iter;
-		if (iter >= end)
-			break;
-		ch = *iter++;
-		iter = tpp_skipbse_fwd(iter, end, tpp_lexer_getfile(lexer));
-		if (ch == '{') {
-			++recursion;
-		} else if (ch == '}') {
-			if (recursion == 0)
-				break;
-			--recursion;
-		} else
-#if TPP_HAVE_TRIGRAPHS
-		if (ch == '?' && tpp_lexer_has(lexer, TRIGRAPHS) &&
-			(iter + 1) < end && iter[0] == '?') {
-			ch = iter[1];
-			if (ch == '<') {
-				iter += 2;
-				++recursion;
-			} else if (ch == '>') {
-				iter += 2;
-				if (recursion == 0)
-					break;
-				--recursion;
-			}
-		} else
-#endif /* TPP_HAVE_TRIGRAPHS */
-		{
-		}
-	}
-	*p_iter = iter;
-	return named_end;
-}
-#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_NAMED */
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED */
 
 
 
@@ -862,7 +824,7 @@ _tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p
 	tpp_unichar named_uc[TPP_DECODE_NAMED_ESCAPE_MAXLEN];
 	tpp_char *buf_iter;
 	tpp_char const *named_start = *p_iter;
-	tpp_char const *named_end = tpp_decode_named_findend(p_iter, end, lexer);
+	tpp_char const *named_end = tpp_decode_find_unmatched_rbrace(p_iter, end, lexer);
 
 	/* Decode named sequence */
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
