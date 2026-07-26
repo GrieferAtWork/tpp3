@@ -198,30 +198,8 @@ tpp_lexer_handle_error_directive(tpp_lexer *tpp_restrict self,
 		return TPP_TOK_OFERR(error);
 
 	/* Strip leading/trailing whitespace */
-#if TPP_HAVE_UNICODE
-	if (tpp_file_isutf8(tpp_lexer_getfile(self))) {
-		while (message_start < message_end) {
-			tpp_char const *nstart = message_start;
-			tpp_unichar uc = tpp_unicode_readutf8(&nstart, message_end);
-			if (!tpp_unicode_isspace(uc))
-				break;
-			message_start = nstart;
-		}
-		while (message_start < message_end) {
-			tpp_char const *nend = message_end;
-			tpp_unichar uc = tpp_unicode_readutf8_bck(message_start, &nend);
-			if (!tpp_unicode_isspace(uc))
-				break;
-			message_end = nend;
-		}
-	} else
-#endif /* TPP_HAVE_UNICODE */
-	{
-		while (message_start < message_end && tpp_ascii_isspace(*message_start))
-			++message_start;
-		while (message_start < message_end && tpp_ascii_isspace(message_end[-1]))
-			--message_end;
-	}
+	message_start = tpp_preparse_skipspace_fwd(self, message_start, message_end);
+	message_end   = tpp_preparse_skipspace_bck(self, message_start, message_end);
 
 	/* Emit error/warning message */
 	message_size = (tpp_size)(message_end - message_start);
