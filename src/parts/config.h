@@ -2131,12 +2131,21 @@
 #define TPP_HAVE_TOK_BLOCK_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-block-char-literal" */
 #endif /* !TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
 
+/* Controls if `\`-escaped line-feeds should be skipped in "raw" string literals:
+ * - `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL`
+ * - `TPP_HAVE_TOK_RAW_STRING_LITERAL`
+ * - `TPP_HAVE_TOK_RAW_CHAR_LITERAL` */
+#ifndef TPP_HAVE_RAW_STRING_BSE
+#define TPP_HAVE_RAW_STRING_BSE ((TPP_PROFILE == TPP_PROFILE_ALL && TPP_HAVE_BSE && TPP_HAVE_LEXER_DECODESTRING && (TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL)) ? TPP_CONF_EXT0 : 0) /* "-fraw-string-bse" */
+#endif /* !TPP_HAVE_RAW_STRING_BSE */
+
 /* Support for `\e` (for `U+001B`) escape sequences:
  * ```c
  * printf("Error: \e[31m%d\e[0m", errno);
  * ``` */
 #ifndef TPP_HAVE_STRING_ESCAPE_E
-#define TPP_HAVE_STRING_ESCAPE_E ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-e" */
+#define TPP_HAVE_STRING_ESCAPE_E ((TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-e" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_E */
 
 /* Support for `\s` (for `U+0020`) escape sequences:
@@ -2146,7 +2155,7 @@
  *     """);
  * ```  */
 #ifndef TPP_HAVE_STRING_ESCAPE_S
-#define TPP_HAVE_STRING_ESCAPE_S ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT0 : 0) : 0) /* "-fstring-escape-s" */
+#define TPP_HAVE_STRING_ESCAPE_S ((TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT0 : 0) : 0) /* "-fstring-escape-s" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_S */
 
 /* Support for [D](https://en.wikipedia.org/wiki/D_(programming_language))-like
@@ -2156,17 +2165,17 @@
  * char const *tpp2 = "Tiny\u0080PreProcessor"; // Same as this
  * ``` */
 #ifndef TPP_HAVE_STRING_ESCAPE_XML
-#define TPP_HAVE_STRING_ESCAPE_XML ((TPP_HAVE_STRING_ESCAPE && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 0) /* "-fstring-escape-xml" */
+#define TPP_HAVE_STRING_ESCAPE_XML ((TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_STRING_ESCAPE && TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 0) /* "-fstring-escape-xml" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_XML */
 
 /* Support for `\123` octal sequences (with `1`-`3` characters in range `0-7` following the `\`) */
 #ifndef TPP_HAVE_STRING_ESCAPE_OCT
-#define TPP_HAVE_STRING_ESCAPE_OCT ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct" */
+#define TPP_HAVE_STRING_ESCAPE_OCT ((TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_OCT */
 
 /* Support for `\o{377}` as alias for `\377` */
 #ifndef TPP_HAVE_STRING_ESCAPE_OCT_BRACE
-#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct-brace" */
+#define TPP_HAVE_STRING_ESCAPE_OCT_BRACE ((TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-oct-brace" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_OCT_BRACE */
 
 /* Support for `\o{ 0 037 , 377 }` as alias for `\0\037\377`.
@@ -2179,7 +2188,7 @@
 /* Support for `\xAB` hex sequences (with `1`-`2` characters in range `0-9`, `a-f`, `A-F` following the `\`)
  * When `TPP_HAVE_STRING_ESCAPE_HEX_BIG` is also enabled, the limit of `2` characters is lifted. */
 #ifndef TPP_HAVE_STRING_ESCAPE_HEX
-#define TPP_HAVE_STRING_ESCAPE_HEX ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-hex" */
+#define TPP_HAVE_STRING_ESCAPE_HEX ((TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-hex" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_HEX */
 
 /* Support for `\xABCDEF` hex sequences. Extension to `TPP_HAVE_STRING_ESCAPE_HEX` that allows more than `2`
@@ -2203,12 +2212,12 @@
 
 /* Support for `\u1234` and `\U12345678` unicode ordinal escape sequences. */
 #ifndef TPP_HAVE_STRING_ESCAPE_UNI
-#define TPP_HAVE_STRING_ESCAPE_UNI ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni" */
+#define TPP_HAVE_STRING_ESCAPE_UNI ((TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_UNI */
 
 /* Support for `\u{12345678}` unicode ordinal escape sequences. */
 #ifndef TPP_HAVE_STRING_ESCAPE_UNI_BRACE
-#define TPP_HAVE_STRING_ESCAPE_UNI_BRACE ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni-brace" */
+#define TPP_HAVE_STRING_ESCAPE_UNI_BRACE ((TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-uni-brace" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_UNI_BRACE */
 
 /* Support for `\u{ 1234 5678 , ABCDEF }` as alias for `\u1234\u5678\U00ABCDEF`.
@@ -2225,7 +2234,7 @@
  * - `TPP_HAVE_ESCAPE_NAMED_XML`
  */
 #ifndef TPP_HAVE_STRING_ESCAPE_NAMED
-#define TPP_HAVE_STRING_ESCAPE_NAMED ((TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-named" */
+#define TPP_HAVE_STRING_ESCAPE_NAMED ((TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_STRING_ESCAPE && TPP_HAVE_PROFILE_NOT_MINIMAL) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstring-escape-named" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_NAMED */
 
 /* Support for `\N{FOO, BAR}` as alias for `\N{FOO}\N{BAR}`.

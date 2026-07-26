@@ -184,6 +184,7 @@
 #define tef_TPP_EXT_TOK_RAW_CHAR_LITERAL                   TPP_INTERNAL(tef_TPP_EXT_TOK_RAW_CHAR_LITERAL)
 #define tef_TPP_EXT_TOK_BLOCK_STRING_LITERAL               TPP_INTERNAL(tef_TPP_EXT_TOK_BLOCK_STRING_LITERAL)
 #define tef_TPP_EXT_TOK_BLOCK_CHAR_LITERAL                 TPP_INTERNAL(tef_TPP_EXT_TOK_BLOCK_CHAR_LITERAL)
+#define tef_TPP_EXT_RAW_STRING_BSE                         TPP_INTERNAL(tef_TPP_EXT_RAW_STRING_BSE)
 #define tef_TPP_EXT_STRING_ESCAPE_E                        TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_E)
 #define tef_TPP_EXT_STRING_ESCAPE_S                        TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_S)
 #define tef_TPP_EXT_STRING_ESCAPE_XML                      TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_XML)
@@ -471,6 +472,7 @@
 #define tff_TOK_RAW_CHAR_LITERAL                           TPP_INTERNAL(tff_TOK_RAW_CHAR_LITERAL)
 #define tff_TOK_BLOCK_STRING_LITERAL                       TPP_INTERNAL(tff_TOK_BLOCK_STRING_LITERAL)
 #define tff_TOK_BLOCK_CHAR_LITERAL                         TPP_INTERNAL(tff_TOK_BLOCK_CHAR_LITERAL)
+#define tff_RAW_STRING_BSE                                 TPP_INTERNAL(tff_RAW_STRING_BSE)
 #define tff_STRING_ESCAPE_E                                TPP_INTERNAL(tff_STRING_ESCAPE_E)
 #define tff_STRING_ESCAPE_S                                TPP_INTERNAL(tff_STRING_ESCAPE_S)
 #define tff_STRING_ESCAPE_XML                              TPP_INTERNAL(tff_STRING_ESCAPE_XML)
@@ -29491,6 +29493,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL)
 		/* .tff_TOK_BLOCK_CHAR_LITERAL                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_RAW_STRING_BSE)
+		/* .tff_RAW_STRING_BSE                         = */ TPP_CONF_DEFAULT(TPP_HAVE_RAW_STRING_BSE),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_RAW_STRING_BSE) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_E)
 		/* .tff_STRING_ESCAPE_E                        = */ TPP_CONF_DEFAULT(TPP_HAVE_STRING_ESCAPE_E),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_STRING_ESCAPE_E) */
@@ -53249,32 +53254,68 @@ handle_empty_prefix:
 #endif /* TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
 
 #if TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL
-#if TPP_HAVE_BSE && 1
-/* TODO: Behavior here should be controllable via a config. However, default
- * should be disabled (no handling of BSE), since that's how GCC behaves:
+#if TPP_CONF_MAYBE_0(TPP_HAVE_RAW_STRING_BSE)
+#define tpp_token_decodestring_raw_nobse(self, start, end, config)               \
+	tpp_formatprinter_print(tpp_lexer_decodestring_config_getdefl(config, self), \
+	                        (config)->tldsc_arg, start, (tpp_size)((end) - (start)))
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_RAW_STRING_BSE) */
+
+#if TPP_CONF_MAYBE_1(TPP_HAVE_RAW_STRING_BSE)
+/* Behavior here is be controllable via a config. However, default
+ * is disabled (no handling of BSE), since that's how GCC behaves:
  * >> static char const foo[] =
  * >> R"AB(a\
  * >> b)AB";
  * >> typedef int x[sizeof(foo) == 5 ? 1 : -1]; // 5: {'a','\\','\n','b',0}, as opposed to 3: {'a','b',0}
  */
-#define tpp_token_decodestring_raw_SKIPS_BSE 1
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_raw_bse(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
+                               tpp_lexer_decodestring_config const *tpp_restrict config) {
+	tpp_ssize temp, result = 0;
+	tpp_char const *iter;
+	/* Skip Any remaining BSE sequences at the head/tail */
+	start = tpp_preparse_skipbse_fwd(self, start, end);
+	end   = tpp_preparse_skipbse_bck(self, start, end);
+	tpp_assert(start <= end);
+	iter = start;
+	while (iter < end) {
+		tpp_char const *next_iter;
+		++iter;
+		next_iter = tpp_preparse_skipbse_fwd(self, iter, end);
+		if (next_iter != iter) {
+			temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getdefl(config, self),
+			                               config->tldsc_arg, start, (tpp_size)(iter - start));
+			if (temp < 0)
+				return temp;
+			result += temp;
+			start = iter = next_iter;
+		}
+	}
+
+	/* Flush remainder */
+	temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getdefl(config, self),
+	                               config->tldsc_arg, start, (tpp_size)(end - start));
+	if (temp < 0)
+		return temp;
+	result += temp;
+	return result;
+}
+#endif /* TPP_CONF_MAYBE_1(TPP_HAVE_RAW_STRING_BSE) */
+
 /* Decode string: R"FOO(bla bla bla)FOO"
 *                       ^start     ^end */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_raw(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
-                           tpp_lexer_decodestring_config const *tpp_restrict config) {
-	tpp_assert(start <= end);
-	(void)self;
-	/* TODO: Print input as-is, but skip over BSE */
-	return tpp_formatprinter_print(tpp_lexer_decodestring_config_getdefl(config, self),
-	                               config->tldsc_arg, start, (tpp_size)(end - start));
-}
-#else
-#define tpp_token_decodestring_raw_SKIPS_BSE 0
-#define tpp_token_decodestring_raw(self, start, end, config)                     \
-	tpp_formatprinter_print(tpp_lexer_decodestring_config_getdefl(config, self), \
-	                        (config)->tldsc_arg, start, (tpp_size)((end) - (start)))
-#endif
+#if TPP_CONF_IS_RT(TPP_HAVE_RAW_STRING_BSE)
+#define tpp_token_decodestring_raw(self, start, end, config)    \
+	(tpp_lexer_has(self, RAW_STRING_BSE)                        \
+	 ? tpp_token_decodestring_raw_bse(self, start, end, config) \
+	 : tpp_token_decodestring_raw_nobse(self, start, end, config))
+#elif TPP_HAVE_RAW_STRING_BSE
+#define tpp_token_decodestring_raw(self, start, end, config) \
+	tpp_token_decodestring_raw_bse(self, start, end, config)
+#else /* ... */
+#define tpp_token_decodestring_raw(self, start, end, config) \
+	tpp_token_decodestring_raw_nobse(self, start, end, config)
+#endif /* !... */
 #endif /* ... */
 
 
@@ -53423,14 +53464,6 @@ do_decode_basic:
 		if (start < end)
 			--end; /* Skip over trailing ')' */
 
-		/* Skip Any remaining BSE sequences at the head/tail */
-#if tpp_token_decodestring_raw_SKIPS_BSE
-		tpp_assert(start <= end);
-		start = tpp_preparse_skipbse_fwd(self, start, end);
-		end   = tpp_preparse_skipbse_bck(self, start, end);
-#endif /* tpp_token_decodestring_raw_SKIPS_BSE */
-		tpp_assert(start <= end);
-
 		/* Print string */
 		return tpp_token_decodestring_raw(self, start, end, config);
 #endif /* !TPP_HAVE_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TOK_RAW_CHAR_LITERAL */
@@ -53461,14 +53494,6 @@ cxx_raw_string_common:
 			++start; /* Skip leading " / ' / ( */
 		if (start < end)
 			--end; /* Skip trailing " / ' / ) */
-
-		/* Skip Any remaining BSE sequences at the head/tail */
-#if tpp_token_decodestring_raw_SKIPS_BSE
-		tpp_assert(start <= end);
-		start = tpp_preparse_skipbse_fwd(self, start, end);
-		end   = tpp_preparse_skipbse_bck(self, start, end);
-#endif /* tpp_token_decodestring_raw_SKIPS_BSE */
-		tpp_assert(start <= end);
 
 		/* Print string */
 		return tpp_token_decodestring_raw(self, start, end, config);
