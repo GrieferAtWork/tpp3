@@ -1339,6 +1339,7 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 			tok = tpp_lexer_gettok(self);
 		return tok;
 	}
+	/* TODO: Re-write this to not use `tpp_lexer_seekpp_rparen_exact`, but parse tokens directly! */
 	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "__TPP_STR_PACK",
 	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL |
 	                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);

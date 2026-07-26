@@ -6,7 +6,6 @@ lib/*
 .vs/*.opensdf
 .vs/.vs/
 *.exe
-*.dat
 *.out
 *.VC.db
 *.VC.opendb

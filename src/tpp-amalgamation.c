@@ -39195,7 +39195,11 @@ eof:
 			goto again_read_from_pos;
 
 #if TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED
-		if (tpp_file_getkind(file) == TPP_FILE_KIND_IO && !curtoken_is_at_sol) {
+		if (tpp_file_getkind(file) == TPP_FILE_KIND_IO && !curtoken_is_at_sol
+#if TPP_HAVE_FILE_ENCODING_EMBED
+		    && file->tf_enc != TPP_FILE_ENCODING_EMBED
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+		    ) {
 			/* Warning if current file is an IO file and doesn't end with a trailing linefeed */
 			error = tpp_lexer_warnf_at(self, file, pos, TPP_W_FILE_HAS_NO_TRAILING_LINEFEED);
 			if (TPP_ISERR(error))
@@ -40049,13 +40053,17 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
 	if (!TPP_TOK_ISERR(result) && argc_actual < argc) {
 		tpp_size i;
 #if TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
-		tpp_errno error;
-		error = tpp_lexer_warnf(self, TPP_W_TOO_FEW_ARGUMENTS,
-		                        opt_function_name_for_messages,
-		                        (unsigned int)argc,
-		                        (unsigned int)argc_actual);
-		if (TPP_ISERR(error))
-			result = TPP_TOK_OFERR(error);
+		if (argc_actual == 0 && argc == 1) {
+			/* Explicitly allowed! */
+		} else {
+			tpp_errno error;
+			error = tpp_lexer_warnf(self, TPP_W_TOO_FEW_ARGUMENTS,
+			                        opt_function_name_for_messages,
+			                        (unsigned int)argc,
+			                        (unsigned int)argc_actual);
+			if (TPP_ISERR(error))
+				result = TPP_TOK_OFERR(error);
+		}
 #endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
 		for (i = argc_actual; i < argc; ++i) {
 			p_argv[i].tlai_start = rollback_pos;
@@ -45873,6 +45881,7 @@ again:
 				                                              tpp_hashof((tpp_char const *)function_name, len));
 				if (function_name_kwd) {
 					tpp_token_setkwd(tpp_lexer_gettoken(lexer), function_name_kwd);
+					param_kwd = tpp_keyword_getid(function_name_kwd);
 					goto again;
 				}
 			}
@@ -45914,7 +45923,8 @@ continue_after_unknown_name:
 		tpp_lexer_arginfo_fini(&arg);
 	} else {
 		/* Re-parse current token */
-		tpp_lexer_gettoken(lexer)->tt_end = tpp_lexer_gettoken(lexer)->tt_start;
+		tpp_token *const token = tpp_lexer_gettoken(lexer);
+		token->tt_end = token->tt_start;
 	}
 	return TPP_EOK;
 }
@@ -49548,6 +49558,7 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 			tok = tpp_lexer_gettok(self);
 		return tok;
 	}
+	/* TODO: Re-write this to not use `tpp_lexer_seekpp_rparen_exact`, but parse tokens directly! */
 	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "__TPP_STR_PACK",
 	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL |
 	                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);

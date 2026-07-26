@@ -1613,6 +1613,7 @@ again:
 				                                              tpp_hashof((tpp_char const *)function_name, len));
 				if (function_name_kwd) {
 					tpp_token_setkwd(tpp_lexer_gettoken(lexer), function_name_kwd);
+					param_kwd = tpp_keyword_getid(function_name_kwd);
 					goto again;
 				}
 			}
@@ -1654,7 +1655,8 @@ continue_after_unknown_name:
 		tpp_lexer_arginfo_fini(&arg);
 	} else {
 		/* Re-parse current token */
-		tpp_lexer_gettoken(lexer)->tt_end = tpp_lexer_gettoken(lexer)->tt_start;
+		tpp_token *const token = tpp_lexer_gettoken(lexer);
+		token->tt_end = token->tt_start;
 	}
 	return TPP_EOK;
 }

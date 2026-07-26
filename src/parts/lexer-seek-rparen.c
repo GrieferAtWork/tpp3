@@ -859,13 +859,17 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
 	if (!TPP_TOK_ISERR(result) && argc_actual < argc) {
 		tpp_size i;
 #if TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
-		tpp_errno error;
-		error = tpp_lexer_warnf(self, TPP_W_TOO_FEW_ARGUMENTS,
-		                        opt_function_name_for_messages,
-		                        (unsigned int)argc,
-		                        (unsigned int)argc_actual);
-		if (TPP_ISERR(error))
-			result = TPP_TOK_OFERR(error);
+		if (argc_actual == 0 && argc == 1) {
+			/* Explicitly allowed! */
+		} else {
+			tpp_errno error;
+			error = tpp_lexer_warnf(self, TPP_W_TOO_FEW_ARGUMENTS,
+			                        opt_function_name_for_messages,
+			                        (unsigned int)argc,
+			                        (unsigned int)argc_actual);
+			if (TPP_ISERR(error))
+				result = TPP_TOK_OFERR(error);
+		}
 #endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
 		for (i = argc_actual; i < argc; ++i) {
 			p_argv[i].tlai_start = rollback_pos;

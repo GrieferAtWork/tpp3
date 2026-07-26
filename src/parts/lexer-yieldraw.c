@@ -5621,7 +5621,11 @@ eof:
 			goto again_read_from_pos;
 
 #if TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED
-		if (tpp_file_getkind(file) == TPP_FILE_KIND_IO && !curtoken_is_at_sol) {
+		if (tpp_file_getkind(file) == TPP_FILE_KIND_IO && !curtoken_is_at_sol
+#if TPP_HAVE_FILE_ENCODING_EMBED
+		    && file->tf_enc != TPP_FILE_ENCODING_EMBED
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+		    ) {
 			/* Warning if current file is an IO file and doesn't end with a trailing linefeed */
 			error = tpp_lexer_warnf_at(self, file, pos, TPP_W_FILE_HAS_NO_TRAILING_LINEFEED);
 			if (TPP_ISERR(error))

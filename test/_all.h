@@ -33,6 +33,7 @@ for (local e: fs.dir(".").sorted()) {
 #include "directives-in-macros.h"
 #include "directives-start-of-line.h"
 #include "double-counter.h"
+#include "embed.h"
 #include "glue.h"
 #include "has-include.h"
 #include "include-path.h"
