@@ -45891,7 +45891,7 @@ again:
 
 #if TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER
 	error = tpp_lexer_warnf(lexer, TPP_W_UNKNOWN_EMBED_PARAMETER);
-	if (TPP_TOK_ISERR(error))
+	if (TPP_ISERR(error))
 		return error;
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER */
 
@@ -45901,19 +45901,17 @@ continue_after_unknown_name:
 	do {
 		tok = tpp_lexer_yield_blocking(lexer);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-	if (TPP_TOK_ISERR(tok))
-		return TPP_TOK_ASERR(tok);
 #if TPP_HAVE_TOK_COLON_COLON
 	if (tok == TPP_TOK_COLON_COLON) {
 		do {
 			tok = tpp_lexer_yield_blocking(lexer);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-		if (TPP_TOK_ISERR(tok))
-			return TPP_TOK_ASERR(tok);
 		if (TPP_TOK_ISKEYWORD(tok))
 			goto continue_after_unknown_name;
 	}
 #endif /* TPP_HAVE_TOK_COLON_COLON */
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
 	if (tok == '(') {
 		tpp_lexer_arginfo arg;
 		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
@@ -46215,7 +46213,7 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 		if (!TPP_TOK_ISKEYWORD(tok))
 			break;
 		error = tpp_embed_builder_handle_param(self, lexer, tok);
-		if (TPP_TOK_ISERR(error)) {
+		if (TPP_ISERR(error)) {
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_builder;
 		}
@@ -49388,7 +49386,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 		if (!TPP_TOK_ISKEYWORD(tok))
 			break;
 		error = tpp_embed_builder_handle_param_forhas(&param_limit, self, tok);
-		if (TPP_TOK_ISERR(error)) {
+		if (TPP_ISERR(error)) {
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_ofr;
 		}
@@ -49621,7 +49619,7 @@ handle_status:
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK
 			{
 				tpp_errno error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK);
-				if (TPP_TOK_ISERR(error)) {
+				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
 					goto err_tok_subtext_builder;
 				}

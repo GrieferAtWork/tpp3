@@ -1169,7 +1169,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 		if (!TPP_TOK_ISKEYWORD(tok))
 			break;
 		error = tpp_embed_builder_handle_param_forhas(&param_limit, self, tok);
-		if (TPP_TOK_ISERR(error)) {
+		if (TPP_ISERR(error)) {
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_ofr;
 		}
@@ -1402,7 +1402,7 @@ handle_status:
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK
 			{
 				tpp_errno error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK);
-				if (TPP_TOK_ISERR(error)) {
+				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
 					goto err_tok_subtext_builder;
 				}

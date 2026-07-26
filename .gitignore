@@ -4,6 +4,7 @@ lib/*
 .vs/*.sdf
 .vs/*.suo
 .vs/*.opensdf
+.vs/CodeCoverage.cov
 .vs/.vs/
 *.exe
 *.out
