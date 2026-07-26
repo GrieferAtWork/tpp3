@@ -149,9 +149,11 @@ tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end) {
 	return uc;
 }
 
-/* Same as `tpp_unicode_readutf8()', but read in reverse */
+/* Same as `tpp_unicode_readutf8()', but read in reverse, such
+ * that the last byte of the returned character is `(*p_end)[-1]`
+ * (assuming that `*p_end > base`). */
 TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base) {
+tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **p_end) {
 	tpp_unichar uc;
 	tpp_char const *iter = *p_end;
 	uint_least8_t seqlen = 1;
@@ -1655,7 +1657,7 @@ search_for_comma:
 						if (!comma)
 							break;
 #if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
-						before_comma = tpp_preparse_skipspace_bck(self, comma, named_start);
+						before_comma = tpp_preparse_skipspace_bck(self, named_start, comma);
 						error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, before_comma);
 #else /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 						error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, comma);

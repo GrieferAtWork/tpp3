@@ -478,7 +478,7 @@ tpp_unam_token_parser_skip_tokenid(tpp_unam_token_parser *tpp_restrict self,
 		self->tuntp_end = self->tuntp_pos;
 #if TPP_HAVE_UNICODE
 		if (tpp_file_isutf8(tpp_lexer_getfile(self->tuntp_lexer))) {
-			tpp_unicode_readutf8_rev(&self->tuntp_end, orig_pos);
+			tpp_unicode_readutf8_bck(orig_pos, &self->tuntp_end);
 		} else
 #endif /* TPP_HAVE_UNICODE */
 		{
@@ -636,7 +636,7 @@ tpp_unam_token_parser_skip_mandatory_space(tpp_unam_token_parser *tpp_restrict p
 #if TPP_HAVE_UNICODE
 		if (tpp_ascii_ismb(last_ch) && tpp_file_isutf8(tpp_lexer_getfile(parser->tuntp_lexer))) {
 			tpp_char const *temp = parser->tuntp_pos;
-			tpp_unichar last_uc = tpp_unicode_readutf8_rev(&temp, parser->tuntp_start);
+			tpp_unichar last_uc = tpp_unicode_readutf8_bck(parser->tuntp_start, &temp);
 			if (tpp_unicode_issymcont(last_uc))
 				return false; /* Missing space -> can't be this one (or one of its children) */
 		} else
@@ -965,7 +965,7 @@ tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
 			/* Actually not a match -> see if we can match a shorter leading token... */
 #if TPP_HAVE_UNICODE
 			if (tpp_file_isutf8(tpp_lexer_getfile(parser.tuntp_lexer))) {
-				tpp_unicode_readutf8_rev(&max_match_end, *p_iter);
+				tpp_unicode_readutf8_bck(*p_iter, &max_match_end);
 			} else
 #endif /* TPP_HAVE_UNICODE */
 			{
@@ -1021,7 +1021,7 @@ tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
 		 * of characters from "parser" that is 1 character shorter */
 #if TPP_HAVE_UNICODE
 		if (tpp_file_isutf8(tpp_lexer_getfile(parser.tuntp_lexer))) {
-			tpp_unicode_readutf8_rev(&max_match_end, orig_start);
+			tpp_unicode_readutf8_bck(orig_start, &max_match_end);
 		} else
 #endif /* TPP_HAVE_UNICODE */
 		{

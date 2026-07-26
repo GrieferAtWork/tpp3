@@ -954,7 +954,7 @@ handle_unknown_uni_brace_sequence:
 #if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 					{
 #if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
-						tpp_char const *before_comma = tpp_preparse_skipspace_bck(self, comma, named_start);
+						tpp_char const *before_comma = tpp_preparse_skipspace_bck(self, named_start, comma);
 						tpp_errno error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, before_comma);
 #else /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 						tpp_errno error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, comma);
@@ -1517,7 +1517,7 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
 		if (start < end)
 			--end; /* Skip trailing quote */
 		start = tpp_preparse_skipbse_fwd(self, start, end);
-		end   = tpp_preparse_skipbse_bck(self, end, start);
+		end   = tpp_preparse_skipbse_bck(self, start, end);
 		tpp_assert(start <= end);
 #if TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 do_decode_basic:
@@ -1554,7 +1554,7 @@ do_decode_basic:
 #if tpp_token_decodestring_raw_SKIPS_BSE
 		tpp_assert(start <= end);
 		start = tpp_preparse_skipbse_fwd(self, start, end);
-		end   = tpp_preparse_skipbse_bck(self, end, start);
+		end   = tpp_preparse_skipbse_bck(self, start, end);
 #endif /* tpp_token_decodestring_raw_SKIPS_BSE */
 		tpp_assert(start <= end);
 
@@ -1593,7 +1593,7 @@ cxx_raw_string_common:
 #if tpp_token_decodestring_raw_SKIPS_BSE
 		tpp_assert(start <= end);
 		start = tpp_preparse_skipbse_fwd(self, start, end);
-		end   = tpp_preparse_skipbse_bck(self, end, start);
+		end   = tpp_preparse_skipbse_bck(self, start, end);
 #endif /* tpp_token_decodestring_raw_SKIPS_BSE */
 		tpp_assert(start <= end);
 
@@ -1631,7 +1631,7 @@ cxx_raw_string_common:
 		/* Skip Any remaining BSE sequences at the head/tail */
 		tpp_assert(start <= end);
 		start = tpp_preparse_skipbse_fwd(self, start, end);
-		end   = tpp_preparse_skipbse_bck(self, end, start);
+		end   = tpp_preparse_skipbse_bck(self, start, end);
 		tpp_assert(start <= end);
 
 		/* Check if block-string starts with a line-feed character.

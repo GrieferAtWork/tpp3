@@ -16738,7 +16738,7 @@ tpp_unam_token_parser_skip_tokenid(tpp_unam_token_parser *tpp_restrict self,
 		self->tuntp_end = self->tuntp_pos;
 #if TPP_HAVE_UNICODE
 		if (tpp_file_isutf8(tpp_lexer_getfile(self->tuntp_lexer))) {
-			tpp_unicode_readutf8_rev(&self->tuntp_end, orig_pos);
+			tpp_unicode_readutf8_bck(orig_pos, &self->tuntp_end);
 		} else
 #endif /* TPP_HAVE_UNICODE */
 		{
@@ -16896,7 +16896,7 @@ tpp_unam_token_parser_skip_mandatory_space(tpp_unam_token_parser *tpp_restrict p
 #if TPP_HAVE_UNICODE
 		if (tpp_ascii_ismb(last_ch) && tpp_file_isutf8(tpp_lexer_getfile(parser->tuntp_lexer))) {
 			tpp_char const *temp = parser->tuntp_pos;
-			tpp_unichar last_uc = tpp_unicode_readutf8_rev(&temp, parser->tuntp_start);
+			tpp_unichar last_uc = tpp_unicode_readutf8_bck(parser->tuntp_start, &temp);
 			if (tpp_unicode_issymcont(last_uc))
 				return false; /* Missing space -> can't be this one (or one of its children) */
 		} else
@@ -17225,7 +17225,7 @@ tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
 			/* Actually not a match -> see if we can match a shorter leading token... */
 #if TPP_HAVE_UNICODE
 			if (tpp_file_isutf8(tpp_lexer_getfile(parser.tuntp_lexer))) {
-				tpp_unicode_readutf8_rev(&max_match_end, *p_iter);
+				tpp_unicode_readutf8_bck(*p_iter, &max_match_end);
 			} else
 #endif /* TPP_HAVE_UNICODE */
 			{
@@ -17281,7 +17281,7 @@ tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
 		 * of characters from "parser" that is 1 character shorter */
 #if TPP_HAVE_UNICODE
 		if (tpp_file_isutf8(tpp_lexer_getfile(parser.tuntp_lexer))) {
-			tpp_unicode_readutf8_rev(&max_match_end, orig_start);
+			tpp_unicode_readutf8_bck(orig_start, &max_match_end);
 		} else
 #endif /* TPP_HAVE_UNICODE */
 		{
@@ -23192,7 +23192,7 @@ tpp_lcinfo_find_last_linefeed(tpp_file const *tpp_restrict self,
 		while (end > ptr) {
 			tpp_unichar uc;
 			tpp_char const *nend = end;
-			uc = tpp_unicode_readutf8_rev(&nend, ptr);
+			uc = tpp_unicode_readutf8_bck(ptr, &nend);
 			if (tpp_unicode_islf(uc))
 				return end;
 			end = nend;
@@ -24560,7 +24560,8 @@ not_bse:
 }
 
 TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_preparse_skipbse_bck(tpp_char const *pos, tpp_char const *start _tpp_preparse_skipbse_lexer__PARAM) {
+_tpp_preparse_skipbse_bck(tpp_char const *start, tpp_char const *pos
+                          _tpp_preparse_skipbse_lexer__PARAM) {
 	tpp_char const *iter = pos;
 #if TPP_CONF_MAYBE_0(TPP_HAVE_BSE)
 	if (!tpp_lexer_has(lexer, BSE))
@@ -24572,7 +24573,7 @@ again:
 	tpp_assert(tpp_ascii_islf_or_mblf(iter[-1]));
 	if (tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
 		tpp_unichar uc;
-		uc = tpp_unicode_readutf8_rev(&iter, start);
+		uc = tpp_unicode_readutf8_bck(start, &iter);
 		if (!tpp_unicode_islf(uc))
 			goto not_bse;
 #if TPP_HAVE_CR_LF_DETECTION
@@ -24581,7 +24582,7 @@ again:
 #endif /* TPP_HAVE_CR_LF_DETECTION */
 #if TPP_HAVE_BSE_WHITESPACE
 		for (;;) {
-			uc = tpp_unicode_readutf8_rev(&iter, start);
+			uc = tpp_unicode_readutf8_bck(start, &iter);
 			if (!uc && iter <= start)
 				goto not_bse;
 			if (tpp_unicode_isspace_nolf(uc)) {
@@ -24593,10 +24594,10 @@ again:
 				goto return_iter;
 #if TPP_HAVE_TRIGRAPHS
 			if (uc == '/' && tpp_lexer_has(lexer, TRIGRAPHS)) {
-				uc = tpp_unicode_readutf8_rev(&iter, start);
+				uc = tpp_unicode_readutf8_bck(start, &iter);
 				if (uc != '?')
 					goto not_bse;
-				uc = tpp_unicode_readutf8_rev(&iter, start);
+				uc = tpp_unicode_readutf8_bck(start, &iter);
 				if (uc != '?')
 					goto not_bse;
 				goto return_iter;
@@ -24605,15 +24606,15 @@ again:
 			goto not_bse;
 		}
 #else /* TPP_HAVE_BSE_WHITESPACE */
-		uc = tpp_unicode_readutf8_rev(&iter, start);
+		uc = tpp_unicode_readutf8_bck(start, &iter);
 		if (uc == '\\')
 			goto return_iter;
 #if TPP_HAVE_TRIGRAPHS
 		if (uc == '/' && tpp_lexer_has(lexer, TRIGRAPHS)) {
-			uc = tpp_unicode_readutf8_rev(&iter, start);
+			uc = tpp_unicode_readutf8_bck(start, &iter);
 			if (uc != '?')
 				goto not_bse;
-			uc = tpp_unicode_readutf8_rev(&iter, start);
+			uc = tpp_unicode_readutf8_bck(start, &iter);
 			if (uc != '?')
 				goto not_bse;
 			goto return_iter;
@@ -24722,11 +24723,11 @@ _tpp_preparse_skipspace_fwd(tpp_char const *pos, tpp_char const *end
  *                 character that is `<= pos`.
  * @return: start: Nothing but whitespace (or BSE) found before `start` was reached. */
 TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_preparse_skipspace_bck(tpp_char const *pos, tpp_char const *start
+_tpp_preparse_skipspace_bck(tpp_char const *start, tpp_char const *pos
                             _tpp_preparse_skipbse_lexer__PARAM) {
 	for (;;) {
 		tpp_char ch;
-		pos = tpp_preparse_skipbse_bck(lexer, pos, start);
+		pos = tpp_preparse_skipbse_bck(lexer, start, pos);
 		if (pos <= start)
 			break;
 		ch = pos[-1];
@@ -24736,7 +24737,7 @@ _tpp_preparse_skipspace_bck(tpp_char const *pos, tpp_char const *start
 #if TPP_HAVE_UNICODE
 		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
 			tpp_char const *uc_pos = pos;
-			tpp_unichar uc = tpp_unicode_readutf8_rev(&uc_pos, start);
+			tpp_unichar uc = tpp_unicode_readutf8_bck(start, &uc_pos);
 			if (!tpp_unicode_isspace(uc))
 				break;
 			pos = uc_pos;
@@ -33662,9 +33663,11 @@ tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end) {
 	return uc;
 }
 
-/* Same as `tpp_unicode_readutf8()', but read in reverse */
+/* Same as `tpp_unicode_readutf8()', but read in reverse, such
+ * that the last byte of the returned character is `(*p_end)[-1]`
+ * (assuming that `*p_end > base`). */
 TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base) {
+tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **p_end) {
 	tpp_unichar uc;
 	tpp_char const *iter = *p_end;
 	uint_least8_t seqlen = 1;
@@ -35168,7 +35171,7 @@ search_for_comma:
 						if (!comma)
 							break;
 #if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
-						before_comma = tpp_preparse_skipspace_bck(self, comma, named_start);
+						before_comma = tpp_preparse_skipspace_bck(self, named_start, comma);
 						error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, before_comma);
 #else /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 						error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, comma);
@@ -43774,7 +43777,7 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
 		                        *newend != '-'))
 			++newend;
 		if (newend < end) {
-			newend = tpp_preparse_skipbse_bck(self, newend, start);
+			newend = tpp_preparse_skipbse_bck(self, start, newend);
 			if (newend > start)
 				tpp_lexer_gettoken(self)->tt_end = newend;
 		}
@@ -44082,7 +44085,7 @@ tpp_lexer_handle_error_directive(tpp_lexer *tpp_restrict self,
 		}
 		while (message_start < message_end) {
 			tpp_char const *nend = message_end;
-			tpp_unichar uc = tpp_unicode_readutf8_rev(&nend, message_start);
+			tpp_unichar uc = tpp_unicode_readutf8_bck(message_start, &nend);
 			if (!tpp_unicode_isspace(uc))
 				break;
 			message_end = nend;
@@ -52486,7 +52489,7 @@ handle_unknown_uni_brace_sequence:
 #if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 					{
 #if TPP_HAVE_PREPARSE_SKIPSPACE_BCK
-						tpp_char const *before_comma = tpp_preparse_skipspace_bck(self, comma, named_start);
+						tpp_char const *before_comma = tpp_preparse_skipspace_bck(self, named_start, comma);
 						tpp_errno error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, before_comma);
 #else /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 						tpp_errno error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, comma);
@@ -53049,7 +53052,7 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
 		if (start < end)
 			--end; /* Skip trailing quote */
 		start = tpp_preparse_skipbse_fwd(self, start, end);
-		end   = tpp_preparse_skipbse_bck(self, end, start);
+		end   = tpp_preparse_skipbse_bck(self, start, end);
 		tpp_assert(start <= end);
 #if TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 do_decode_basic:
@@ -53086,7 +53089,7 @@ do_decode_basic:
 #if tpp_token_decodestring_raw_SKIPS_BSE
 		tpp_assert(start <= end);
 		start = tpp_preparse_skipbse_fwd(self, start, end);
-		end   = tpp_preparse_skipbse_bck(self, end, start);
+		end   = tpp_preparse_skipbse_bck(self, start, end);
 #endif /* tpp_token_decodestring_raw_SKIPS_BSE */
 		tpp_assert(start <= end);
 
@@ -53125,7 +53128,7 @@ cxx_raw_string_common:
 #if tpp_token_decodestring_raw_SKIPS_BSE
 		tpp_assert(start <= end);
 		start = tpp_preparse_skipbse_fwd(self, start, end);
-		end   = tpp_preparse_skipbse_bck(self, end, start);
+		end   = tpp_preparse_skipbse_bck(self, start, end);
 #endif /* tpp_token_decodestring_raw_SKIPS_BSE */
 		tpp_assert(start <= end);
 
@@ -53163,7 +53166,7 @@ cxx_raw_string_common:
 		/* Skip Any remaining BSE sequences at the head/tail */
 		tpp_assert(start <= end);
 		start = tpp_preparse_skipbse_fwd(self, start, end);
-		end   = tpp_preparse_skipbse_bck(self, end, start);
+		end   = tpp_preparse_skipbse_bck(self, start, end);
 		tpp_assert(start <= end);
 
 		/* Check if block-string starts with a line-feed character.

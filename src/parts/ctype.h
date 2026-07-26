@@ -210,9 +210,11 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
 tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end);
 
-/* Same as `tpp_unicode_readutf8()', but read in reverse */
+/* Same as `tpp_unicode_readutf8()', but read in reverse, such
+ * that the last byte of the returned character is `(*p_end)[-1]`
+ * (assuming that `*p_end > base`). */
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base);
+tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **p_end);
 #endif /* TPP_HAVE_UNICODE */
 
 

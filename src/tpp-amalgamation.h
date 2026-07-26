@@ -10586,9 +10586,11 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
 tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end);
 
-/* Same as `tpp_unicode_readutf8()', but read in reverse */
+/* Same as `tpp_unicode_readutf8()', but read in reverse, such
+ * that the last byte of the returned character is `(*p_end)[-1]`
+ * (assuming that `*p_end > base`). */
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8_rev(tpp_char const **p_end, tpp_char const *base);
+tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **p_end);
 #endif /* TPP_HAVE_UNICODE */
 
 
@@ -17391,13 +17393,13 @@ TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
 _tpp_preparse_skipbse_fwd(tpp_char const *pos, tpp_char const *end
                           _tpp_preparse_skipbse_lexer__PARAM);
 TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_preparse_skipbse_bck(tpp_char const *pos, tpp_char const *start
+_tpp_preparse_skipbse_bck(tpp_char const *start, tpp_char const *pos
                           _tpp_preparse_skipbse_lexer__PARAM);
 #define tpp_preparse_skipbse_fwd(lexer, pos, end)   (((pos) >= (end) || tpp_likely(!_tpp_maybe_isbackslash(*(pos)))) ? (pos) : _tpp_preparse_skipbse_fwd(pos, end _tpp_preparse_skipbse_lexer__ARG(lexer)))
-#define tpp_preparse_skipbse_bck(lexer, pos, start) (((pos) <= (start) || tpp_likely(!_tpp_maybe_islf((pos)[-1]))) ? (pos) : _tpp_preparse_skipbse_bck(pos, start _tpp_preparse_skipbse_lexer__ARG(lexer)))
+#define tpp_preparse_skipbse_bck(lexer, start, pos) (((pos) <= (start) || tpp_likely(!_tpp_maybe_islf((pos)[-1]))) ? (pos) : _tpp_preparse_skipbse_bck(start, pos _tpp_preparse_skipbse_lexer__ARG(lexer)))
 #else /* TPP_HAVE_BSE */
 #define tpp_preparse_skipbse_fwd(lexer, pos, end)   (pos)
-#define tpp_preparse_skipbse_bck(lexer, pos, start) (pos)
+#define tpp_preparse_skipbse_bck(lexer, start, pos) (pos)
 #endif /* !TPP_HAVE_BSE */
 
 
@@ -17422,10 +17424,10 @@ _tpp_preparse_skipspace_fwd(tpp_char const *pos, tpp_char const *end
  * @return: * :    Pointer after the first non-whitespace (and not-part-of-BSE)
  *                 character that is `<= pos`.
  * @return: start: Nothing but whitespace (or BSE) found before `start` was reached. */
-#define tpp_preparse_skipspace_bck(lexer, pos, start) \
-	_tpp_preparse_skipspace_bck(pos, start _tpp_preparse_skipbse_lexer__ARG(lexer))
+#define tpp_preparse_skipspace_bck(lexer, start, pos) \
+	_tpp_preparse_skipspace_bck(start, pos _tpp_preparse_skipbse_lexer__ARG(lexer))
 TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_preparse_skipspace_bck(tpp_char const *pos, tpp_char const *start
+_tpp_preparse_skipspace_bck(tpp_char const *start, tpp_char const *pos
                             _tpp_preparse_skipbse_lexer__PARAM);
 #endif /* TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
 

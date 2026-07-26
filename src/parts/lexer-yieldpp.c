@@ -209,7 +209,7 @@ tpp_lexer_handle_error_directive(tpp_lexer *tpp_restrict self,
 		}
 		while (message_start < message_end) {
 			tpp_char const *nend = message_end;
-			tpp_unichar uc = tpp_unicode_readutf8_rev(&nend, message_start);
+			tpp_unichar uc = tpp_unicode_readutf8_bck(message_start, &nend);
 			if (!tpp_unicode_isspace(uc))
 				break;
 			message_end = nend;

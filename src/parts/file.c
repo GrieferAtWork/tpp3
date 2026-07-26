@@ -367,7 +367,7 @@ tpp_lcinfo_find_last_linefeed(tpp_file const *tpp_restrict self,
 		while (end > ptr) {
 			tpp_unichar uc;
 			tpp_char const *nend = end;
-			uc = tpp_unicode_readutf8_rev(&nend, ptr);
+			uc = tpp_unicode_readutf8_bck(ptr, &nend);
 			if (tpp_unicode_islf(uc))
 				return end;
 			end = nend;
