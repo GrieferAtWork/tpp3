@@ -104,11 +104,11 @@
 
 /* Used to implement `TPP_ASSERT_WARNING()`, but can also be used stand-alone */
 #define TPP_ASSERT_WARNING_BEGIN(name)                            \
-	__pragma(TPP warning(push, enable: #!name, suppress: #!name)) \
+	__pragma(TPP warning(enable: #!name, suppress: #!name)) \
 	TPP_ASSERT(!__has_warning(#!name), "Warning " #name " could not be suppressed")
 #define TPP_ASSERT_WARNING_END(name) \
 	TPP_ASSERT(__has_warning(#!name), "Warning " #name " was not triggered") \
-	__pragma(TPP warning(pop))
+	__pragma(TPP warning(default: #!name))
 
 /* XXX: Turn on -Werror ? */
 

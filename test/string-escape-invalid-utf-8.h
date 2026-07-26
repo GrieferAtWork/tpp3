@@ -149,7 +149,7 @@ TPP_ASSERT_EXPANDS("\"\xDF\xBF\"",   __TPP_EVAL("\xDF\xBF")) /* U+07FF -- correc
 /* Assert that under-long 3-byte utf-8 sequences are escaped */
 TPP_ASSERT_EXPANDS("\"\\340\\200\\200\"", __TPP_EVAL("\xE0\x80\x80")) /* U+0000 */
 TPP_ASSERT_EXPANDS("\"\\340\\200\\277\"", __TPP_EVAL("\xE0\x80\xBF")) /* U+003F */
-TPP_ASSERT_EXPANDS("\"\\340\\237\\200\"", __TPP_EVAL("\xE0\x9F\x80")) /* U+07E0 */
+TPP_ASSERT_EXPANDS("\"\\340\\237\\200\"", __TPP_EVAL("\xE0\x9F\x80")) /* U+07C0 */
 TPP_ASSERT_EXPANDS("\"\\340\\237\\277\"", __TPP_EVAL("\xE0\x9F\xBF")) /* U+07FF */
 TPP_ASSERT_EXPANDS("\"\xE0\xA0\x80\"",    __TPP_EVAL("\xE0\xA0\x80")) /* U+0800 -- correct for 3-byte */
 TPP_ASSERT_EXPANDS("\"\xEF\xBF\xBF\"",    __TPP_EVAL("\xEF\xBF\xBF")) /* U+FFFF -- correct for 3-byte */
@@ -157,13 +157,15 @@ TPP_ASSERT_EXPANDS("\"\xEF\xBF\xBF\"",    __TPP_EVAL("\xEF\xBF\xBF")) /* U+FFFF 
 /* Assert that under-long 4-byte utf-8 sequences are escaped */
 TPP_ASSERT_EXPANDS("\"\\360\\200\\200\\200\"", __TPP_EVAL("\xF0\x80\x80\x80")) /* U+0000 */
 TPP_ASSERT_EXPANDS("\"\\360\\217\\200\\200\"", __TPP_EVAL("\xF0\x8F\x80\x80")) /* U+F000 */
-TPP_ASSERT_EXPANDS("\"\\360\\217\\277\\200\"", __TPP_EVAL("\xF0\x8F\xBF\x80")) /* U+FFE0 */
+TPP_ASSERT_EXPANDS("\"\\360\\217\\200\\277\"", __TPP_EVAL("\xF0\x8F\x80\xBF")) /* U+F03F */
+TPP_ASSERT_EXPANDS("\"\\360\\217\\277\\200\"", __TPP_EVAL("\xF0\x8F\xBF\x80")) /* U+FFC0 */
 TPP_ASSERT_EXPANDS("\"\\360\\217\\277\\277\"", __TPP_EVAL("\xF0\x8F\xBF\xBF")) /* U+FFFF */
 TPP_ASSERT_EXPANDS("\"\xF0\x90\x80\x80\"",     __TPP_EVAL("\xF0\x90\x80\x80")) /* U+10000 -- correct for 4-byte */
 TPP_ASSERT_EXPANDS("\"\xF7\xBF\xBF\xBF\"",     __TPP_EVAL("\xF7\xBF\xBF\xBF")) /* U+1FFFFF -- correct for 4-byte */
 
 
 /* Assert that incomplete utf-8 (where the last byte is missing) is escaped */
+TPP_ASSERT_EXPANDS("\"\\300\"",    __TPP_EVAL("\xC0"))
 TPP_ASSERT_EXPANDS("\"\\302\"",    __TPP_EVAL("\xC2"))
 TPP_ASSERT_EXPANDS("\"\xC2\x80\"", __TPP_EVAL("\xC2\x80"))
 TPP_ASSERT_EXPANDS("\"\\337\"",    __TPP_EVAL("\xDF"))
@@ -186,7 +188,7 @@ TPP_ASSERT_EXPANDS("\"\\367\"",    __TPP_EVAL("\xF7"))
 TPP_ASSERT_EXPANDS("\"\\370\"",    __TPP_EVAL("\xF8"))
 TPP_ASSERT_EXPANDS("\"\\377\"",    __TPP_EVAL("\xFF"))
 
-/* Assert that any utf-8 continuation character is escaped */
+/* Assert that any utf-8 continuation byte is escaped */
 TPP_ASSERT_EXPANDS("\"\\200SUFFIX\"", __TPP_EVAL("\x80" "SUFFIX"))
 TPP_ASSERT_EXPANDS("\"\\201SUFFIX\"", __TPP_EVAL("\x81" "SUFFIX"))
 TPP_ASSERT_EXPANDS("\"\\207SUFFIX\"", __TPP_EVAL("\x87" "SUFFIX"))

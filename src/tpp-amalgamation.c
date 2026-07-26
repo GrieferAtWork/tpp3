@@ -40191,6 +40191,53 @@ again_yield_macro_argument_list:
 #define WANT_do_append_keyword_to_argument_list
 #endif /* TPP_HAVE_VA_ARGS_IN_MACROS */
 
+#if TPP_HAVE_TPP_W_RESERVED_MACRO_PARAMETER_NAME
+	{
+		tpp_errno error;
+		tpp_char const *saved_end;
+#if TPP_HAVE_VA_ARGS_IN_MACROS
+		if (0) {
+	case TPP_KWD___VA_ARGS__:
+			if (!tpp_lexer_has(self, VA_ARGS_IN_MACROS))
+				break;
+		}
+#endif /* TPP_HAVE_VA_ARGS_IN_MACROS */
+#if TPP_HAVE_VA_COMMA_IN_MACROS
+		if (0) {
+	case TPP_KWD___VA_COMMA__:
+			if (!tpp_lexer_has(self, VA_COMMA_IN_MACROS))
+				break;
+		}
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS */
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+		if (0) {
+	case TPP_KWD___VA_NARGS__:
+			if (!tpp_lexer_has(self, VA_NARGS_IN_MACROS))
+				break;
+		}
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
+#if TPP_HAVE_VA_OPT_IN_MACROS
+		if (0) {
+	case TPP_KWD___VA_OPT__:
+			if (!tpp_lexer_has(self, VA_OPT_IN_MACROS))
+				break;
+		}
+#endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+		if (!tpp_lexer_has(self, VA_OPT_IN_MACROS))
+			break;
+		if (tpp_lexer_has(self, TRADITIONAL_MACROS))
+			break;
+
+		/* Warn about use of reserved varargs-keyword as a macro param name */
+		saved_end = token->tt_end;
+		token->tt_end = *p_pos;
+		error = tpp_lexer_warnf(self, TPP_W_RESERVED_MACRO_PARAMETER_NAME);
+		token->tt_end = saved_end;
+		if (TPP_ISERR(error))
+			return error;
+	}	break;
+#endif /* TPP_HAVE_TPP_W_RESERVED_MACRO_PARAMETER_NAME */
+
 	default: break;
 	}
 
@@ -41086,8 +41133,37 @@ handle_keyword:
 #endif /* WANT_handle_keyword */
 				/* Check if this keyword (identified by "tok") is an argument. */
 				arg = tpp_macro_builder_getargument(builder, tok);
-				if (!arg)
+				if (!arg) {
+#if TPP_HAVE_TPP_W_RESERVED_MACRO_KEYWORD
+					switch (tok) {
+#if TPP_HAVE_VA_ARGS_IN_MACROS
+					case TPP_KWD___VA_ARGS__:
+#endif /* TPP_HAVE_VA_ARGS_IN_MACROS */
+#if TPP_HAVE_VA_COMMA_IN_MACROS
+					case TPP_KWD___VA_COMMA__:
+#endif /* TPP_HAVE_VA_COMMA_IN_MACROS */
+#if TPP_HAVE_VA_NARGS_IN_MACROS
+					case TPP_KWD___VA_NARGS__:
+#endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
+#if TPP_HAVE_VA_OPT_IN_MACROS
+					case TPP_KWD___VA_OPT__:
+#endif /* TPP_HAVE_VA_OPT_IN_MACROS */
+					{
+						tpp_errno error;
+						tpp_char const *saved_pos;
+						saved_pos = token->tt_end;
+						token->tt_end = body_iter;
+						error = tpp_lexer_warnf(self, TPP_W_RESERVED_MACRO_KEYWORD);
+						token->tt_end = saved_pos;
+						if (TPP_ISERR(error))
+							return error;
+					}	break;
+
+					default: break;
+					}
+#endif /* TPP_HAVE_TPP_W_RESERVED_MACRO_KEYWORD */
 					break; /* Not actually an argument */
+				}
 
 #ifdef WANT_handle_keyword_after_arg
 #undef WANT_handle_keyword_after_arg

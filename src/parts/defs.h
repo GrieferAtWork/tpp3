@@ -3846,7 +3846,8 @@ TPP_WARNING(TPP_W_DATE_TIME, 1(TPP_WG_DATE_TIME), 0(), ~,
 #ifndef TPP_HAVE_TPP_WG_MACROS
 #define TPP_HAVE_TPP_WG_MACROS              \
 	(TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST || \
-	 TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS)
+	 TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS ||   \
+	 TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS)
 #endif /* !TPP_HAVE_TPP_WG_MACROS */
 #if TPP_HAVE_TPP_WG_MACROS
 #ifndef TPP_WGNAME_MACROS
@@ -3873,6 +3874,50 @@ TPP_WARNING(TPP_W_TOO_MANY_ARGUMENTS, 1(TPP_WG_MACROS), 1(4002), TPP_WSTATE_UNDE
 TPP_WARNING(TPP_W_TOO_FEW_ARGUMENTS, 1(TPP_WG_MACROS), 1(4003), TPP_WSTATE_UNDEFINED,
             "too few arguments for %[%s%] which takes %u when %u were given")
 #endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
+
+
+/************************************************************************/
+/* -Wreserved-macro-parameter                                           */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_RESERVED_MACRO_PARAMETER
+#define TPP_HAVE_TPP_WG_RESERVED_MACRO_PARAMETER \
+	(TPP_HAVE_TPP_W_RESERVED_MACRO_PARAMETER_NAME)
+#endif /* !TPP_HAVE_TPP_WG_RESERVED_MACRO_PARAMETER */
+#if TPP_HAVE_TPP_WG_RESERVED_MACRO_PARAMETER
+#ifndef TPP_WGNAME_RESERVED_MACRO_PARAMETER
+#define TPP_WGNAME_RESERVED_MACRO_PARAMETER 1("reserved-macro-parameter")
+#endif /* !TPP_WGNAME_RESERVED_MACRO_PARAMETER */
+#define TPP_WG_RESERVED_MACRO_PARAMETER TPP_WG_RESERVED_MACRO_PARAMETER
+TPP_WGROUP(TPP_WG_RESERVED_MACRO_PARAMETER, TPP_WGNAME_RESERVED_MACRO_PARAMETER, TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_RESERVED_MACRO_PARAMETER */
+
+#if TPP_HAVE_TPP_W_RESERVED_MACRO_PARAMETER_NAME
+#define TPP_W_RESERVED_MACRO_PARAMETER_NAME TPP_W_RESERVED_MACRO_PARAMETER_NAME
+TPP_WARNING(TPP_W_RESERVED_MACRO_PARAMETER_NAME, 1(TPP_WG_RESERVED_MACRO_PARAMETER), 0(), ~,
+            "%Pt has special meaning in macros and should not be used as a parameter name")
+#endif /* TPP_HAVE_TPP_W_RESERVED_MACRO_PARAMETER_NAME */
+
+
+/************************************************************************/
+/* -Wreserved-macro-keyword                                             */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_RESERVED_MACRO_KEYWORD
+#define TPP_HAVE_TPP_WG_RESERVED_MACRO_KEYWORD \
+	(TPP_HAVE_TPP_W_RESERVED_MACRO_KEYWORD)
+#endif /* !TPP_HAVE_TPP_WG_RESERVED_MACRO_KEYWORD */
+#if TPP_HAVE_TPP_WG_RESERVED_MACRO_KEYWORD
+#ifndef TPP_WGNAME_RESERVED_MACRO_KEYWORD
+#define TPP_WGNAME_RESERVED_MACRO_KEYWORD 1("reserved-macro-keyword")
+#endif /* !TPP_WGNAME_RESERVED_MACRO_KEYWORD */
+#define TPP_WG_RESERVED_MACRO_KEYWORD TPP_WG_RESERVED_MACRO_KEYWORD
+TPP_WGROUP(TPP_WG_RESERVED_MACRO_KEYWORD, TPP_WGNAME_RESERVED_MACRO_KEYWORD, TPP_WSTATE_WARN)
+#endif /* TPP_HAVE_TPP_WG_RESERVED_MACRO_KEYWORD */
+
+#if TPP_HAVE_TPP_W_RESERVED_MACRO_KEYWORD
+#define TPP_W_RESERVED_MACRO_KEYWORD TPP_W_RESERVED_MACRO_KEYWORD
+TPP_WARNING(TPP_W_RESERVED_MACRO_KEYWORD, 1(TPP_WG_RESERVED_MACRO_KEYWORD), 0(), ~,
+            "%Pt is treated as a regular keyword within this macro")
+#endif /* TPP_HAVE_TPP_W_RESERVED_MACRO_KEYWORD */
 
 
 /************************************************************************/

@@ -22,29 +22,80 @@
 // ISO/IEC 9899:201x - 6.10.3 - 5 + 6
 
 // ISO/IEC 9899:201x - 6.10.3 - 5
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_WARNING_BEGIN("-Wmacros")
-//XXX:NOT_IMPLEMENTED:#define VARARGS(__VA_ARGS__) __VA_ARGS__ /* Warning: __VA_ARGS__ used as argument name */
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_WARNING_END("-Wmacros")
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_EXPANDS("foo", VARARGS(foo))
-//XXX:NOT_IMPLEMENTED:#undef VARARGS
-//XXX:NOT_IMPLEMENTED:
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_WARNING_BEGIN("-Wmacros")
-//XXX:NOT_IMPLEMENTED:#define VARARGS(__VA_COMMA__) __VA_COMMA__ /* Warning: __VA_COMMA__ used as argument name */
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_WARNING_END("-Wmacros")
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_EXPANDS("foo", VARARGS(foo))
-//XXX:NOT_IMPLEMENTED:#undef VARARGS
-//XXX:NOT_IMPLEMENTED:
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_WARNING_BEGIN("-Wmacros")
-//XXX:NOT_IMPLEMENTED:#define VARARGS(__VA_OPT__) __VA_OPT__ /* Warning: __VA_OPT__ used as argument name */
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_WARNING_END("-Wmacros")
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_EXPANDS("foo", VARARGS(foo))
-//XXX:NOT_IMPLEMENTED:#undef VARARGS
-//XXX:NOT_IMPLEMENTED:
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_WARNING_BEGIN("-Wmacros")
-//XXX:NOT_IMPLEMENTED:#define VARARGS(__VA_NARGS__) __VA_NARGS__ /* Warning: __VA_NARGS__ used as argument name */
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_WARNING_END("-Wmacros")
-//XXX:NOT_IMPLEMENTED:TPP_ASSERT_EXPANDS("foo", VARARGS(foo))
-//XXX:NOT_IMPLEMENTED:#undef VARARGS
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-parameter")
+#define VARARGS1(__VA_ARGS__)      __VA_ARGS__
+TPP_ASSERT_WARNING_END("-Wreserved-macro-parameter")
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-parameter")
+TPP_ASSERT_WARNING_BEGIN("-Wsyntax") /* duplicate macro parameter name */
+#define VARARGS2(__VA_ARGS__, ...) __VA_ARGS__
+TPP_ASSERT_WARNING_END("-Wsyntax")
+TPP_ASSERT_WARNING_END("-Wreserved-macro-parameter")
+TPP_ASSERT_EXPANDS("foo", VARARGS1(foo))
+TPP_ASSERT_EXPANDS("foo", VARARGS2(foo))
+TPP_ASSERT_EXPANDS("foo", VARARGS2(foo,))
+#undef VARARGS2
+#undef VARARGS1
+
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-parameter")
+#define VARARGS1(__VA_COMMA__)      __VA_COMMA__
+TPP_ASSERT_WARNING_END("-Wreserved-macro-parameter")
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-parameter")
+#define VARARGS2(__VA_COMMA__, ...) __VA_COMMA__
+TPP_ASSERT_WARNING_END("-Wreserved-macro-parameter")
+TPP_ASSERT_EXPANDS("foo", VARARGS1(foo))
+TPP_ASSERT_EXPANDS("",    VARARGS2(foo))
+TPP_ASSERT_EXPANDS(",",   VARARGS2(foo,))
+#undef VARARGS2
+#undef VARARGS1
+
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-parameter")
+#define VARARGS1(__VA_OPT__)      __VA_OPT__(a)
+TPP_ASSERT_WARNING_END("-Wreserved-macro-parameter")
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-parameter")
+#define VARARGS2(__VA_OPT__, ...) __VA_OPT__(a)
+TPP_ASSERT_WARNING_END("-Wreserved-macro-parameter")
+TPP_ASSERT_EXPANDS("foo(a)", VARARGS1(foo))
+TPP_ASSERT_EXPANDS("",       VARARGS2(foo))
+TPP_ASSERT_EXPANDS("a",      VARARGS2(foo,))
+#undef VARARGS2
+#undef VARARGS1
+
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-parameter")
+#define VARARGS1(__VA_NARGS__)      __VA_NARGS__
+TPP_ASSERT_WARNING_END("-Wreserved-macro-parameter")
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-parameter")
+#define VARARGS2(__VA_NARGS__, ...) __VA_NARGS__
+TPP_ASSERT_WARNING_END("-Wreserved-macro-parameter")
+TPP_ASSERT_EXPANDS("foo", VARARGS1(foo))
+TPP_ASSERT_EXPANDS("0",   VARARGS2(foo))
+TPP_ASSERT_EXPANDS("1",   VARARGS2(foo,))
+#undef VARARGS2
+#undef VARARGS1
+
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-keyword")
+#define VARARGS(a) __VA_ARGS__
+TPP_ASSERT_WARNING_END("-Wreserved-macro-keyword")
+TPP_ASSERT_EXPANDS("__VA_ARGS__", VARARGS(foo))
+#undef VARARGS
+
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-keyword")
+#define VARARGS(a) __VA_COMMA__
+TPP_ASSERT_WARNING_END("-Wreserved-macro-keyword")
+TPP_ASSERT_EXPANDS("__VA_COMMA__", VARARGS(foo))
+#undef VARARGS
+
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-keyword")
+#define VARARGS(a) __VA_NARGS__
+TPP_ASSERT_WARNING_END("-Wreserved-macro-keyword")
+TPP_ASSERT_EXPANDS("__VA_NARGS__", VARARGS(foo))
+#undef VARARGS
+
+TPP_ASSERT_WARNING_BEGIN("-Wreserved-macro-keyword")
+#define VARARGS(a) __VA_OPT__(a)
+TPP_ASSERT_WARNING_END("-Wreserved-macro-keyword")
+TPP_ASSERT_EXPANDS("__VA_OPT__(foo)", VARARGS(foo))
+#undef VARARGS
+
 
 // ISO/IEC 9899:201x - 6.10.3 - 6
 TPP_ASSERT_WARNING_BEGIN("-Wsyntax") /* duplicate macro parameter name `a` */
