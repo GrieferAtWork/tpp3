@@ -1411,11 +1411,43 @@ tpp_lexer_seek_end_of_cxx_raw_string(tpp_lexer *tpp_restrict self,
 		if (ch == '(')
 			break;
 		if (tpp_ascii_islf(ch)) {
-			/* TODO: Warning if a line-feed is encountered */
+#if TPP_HAVE_UNICODE
+handle_linefeed_in_pattern:
+#endif /* TPP_HAVE_UNICODE */
+#if TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN
+			error = tpp_lexer_warnf_at(self, file, (*p_pos - 1),
+			                           TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN);
+#else /* TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN */
+			error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN */
+			*p_pos = tpp_file_rel2ptr(file, rel_pattern_end);
+			return error;
+		} else
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
+			tpp_unichar uc;
+			tpp_size rel_uc_start = tpp_file_ptr2rel(file, *p_pos);
+			--*p_pos;
+			error = tpp_lexer_readutf8(self, p_pos, &uc);
+			if (TPP_ISERR(error))
+				return error;
+			*p_pos = tpp_file_rel2ptr(file, rel_uc_start);
+			if (tpp_unicode_islf(uc))
+				goto handle_linefeed_in_pattern;
+		} else
+#endif /* TPP_HAVE_UNICODE */
+		{
 		}
+
+		/* Warning if raw string delimiter longer than 16 bytes (the maximum allowed by specs) */
+#if TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN
 		if (delim_len == 16) {
-			/* TODO: Warning if raw string delimiter longer than 16 characters */
+			error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_pattern_end),
+			                           TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN);
+			if (TPP_ISERR(error))
+				return error;
 		}
+#endif /* TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN */
 
 		++delim_len;
 		if (ch == 0 && (*p_pos) >= file->tf_end)

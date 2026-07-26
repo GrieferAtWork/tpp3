@@ -2644,18 +2644,6 @@
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_OPENFILE */
 
-/* Enable support for `tpp_lexer_openfile_ex()` */
-#ifndef TPP_HAVE_LEXER_OPENFILE_EX
-#if (TPP_HAVE_LEXER_OPENFILE &&                                           \
-     (TPP_HAVE_CPP_IMPORT ||                                              \
-      (TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next) || \
-      (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
-#define TPP_HAVE_LEXER_OPENFILE_EX 1
-#else /* ... */
-#define TPP_HAVE_LEXER_OPENFILE_EX 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-
 /* Provide a function `tpp_file_getrealfilenamekwd()` */
 #ifndef TPP_HAVE_FILE_GETREALFILENAMEKWD
 #if (TPP_PROFILE == TPP_PROFILE_ALL || \
@@ -4522,6 +4510,14 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_TOK_STRINGLIKE || TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
+#ifndef TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN
+#define TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL))
+#endif /* !TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN */
+#ifndef TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN
+#define TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL))
+#endif /* !TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN */
 #ifndef TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 #define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TOK_COMMENTLIKE_NOLINE)
 #endif /* !TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
@@ -5734,6 +5730,20 @@ print("#endif /" "* !... *" "/");
 #define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
+
+/* Enable support for `tpp_lexer_openfile_ex()` */
+#ifndef TPP_HAVE_LEXER_OPENFILE_EX
+#if (TPP_HAVE_LEXER_OPENFILE &&                                           \
+     (TPP_HAVE_CPP_IMPORT ||                                              \
+      (TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next) || \
+      TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED ||                  \
+      TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING ||                       \
+      (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
+#define TPP_HAVE_LEXER_OPENFILE_EX 1
+#else /* ... */
+#define TPP_HAVE_LEXER_OPENFILE_EX 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 
 /* Provide an API `tpp_preparse_skipspace_fwd()` that can be used to easily skip an arbitrary
  * amount of whitespace (but not comments), as well as BSE sequences in a forward-direction. */

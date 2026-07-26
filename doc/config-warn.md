@@ -9,6 +9,8 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_string_terminated_by_linefeed"></a>`TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED`
 - <a name="tpp_have_tpp_w_string_continued_after_linefeed"></a>`TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED`
 - <a name="tpp_have_tpp_w_string_terminated_by_eof"></a>`TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF`
+- <a name="tpp_have_tpp_w_linefeed_in_cxx_raw_string_pattern"></a>`TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN`
+- <a name="tpp_have_tpp_w_overlong_cxx_raw_string_pattern"></a>`TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN`
 - <a name="tpp_have_tpp_w_comment_terminated_by_eof"></a>`TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF`
 - <a name="tpp_have_tpp_w_unexpected_token"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN`
 - <a name="tpp_have_tpp_w_unexpected_character_in_string_escape"></a>`TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE`

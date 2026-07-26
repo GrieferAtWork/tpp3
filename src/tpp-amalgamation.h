@@ -3111,6 +3111,7 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 #define TPP_HAVE_TPP_WG_SYNTAX                                        \
 	(TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED ||                  \
 	 TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF ||                       \
+	 TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN ||             \
 	 TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF ||                      \
 	 TPP_HAVE_TPP_W_UNEXPECTED_TOKEN ||                               \
 	 TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE ||          \
@@ -3159,6 +3160,12 @@ TPP_WARNING(TPP_W_STRING_TERMINATED_BY_LINEFEED, 1(TPP_WG_SYNTAX), 0(), ~,
 TPP_WARNING(TPP_W_STRING_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), ~,
             "string was terminated by EOF")
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
+
+#if TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN
+#define TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN
+TPP_WARNING(TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN, 1(TPP_WG_SYNTAX), 0(), ~,
+            "linefeed in raw string literal pattern")
+#endif /* TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN */
 
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 #define TPP_W_COMMENT_TERMINATED_BY_EOF TPP_W_COMMENT_TERMINATED_BY_EOF
@@ -3931,8 +3938,9 @@ TPP_WARNING_EX(TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 0(), ~, {
 /* -Wquality                                                            */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_QUALITY
-#define TPP_HAVE_TPP_WG_QUALITY \
-	(TPP_HAVE_TPP_W_PAREN_AROUND_LAND)
+#define TPP_HAVE_TPP_WG_QUALITY          \
+	(TPP_HAVE_TPP_W_PAREN_AROUND_LAND || \
+	 TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN)
 #endif /* !TPP_HAVE_TPP_WG_QUALITY */
 #if TPP_HAVE_TPP_WG_QUALITY
 #ifndef TPP_WGNAME_QUALITY
@@ -3945,8 +3953,14 @@ TPP_WGROUP(TPP_WG_QUALITY, TPP_WGNAME_QUALITY, TPP_WSTATE_WARN)
 #if TPP_HAVE_TPP_W_PAREN_AROUND_LAND
 #define TPP_W_PAREN_AROUND_LAND TPP_W_PAREN_AROUND_LAND
 TPP_WARNING(TPP_W_PAREN_AROUND_LAND, 1(TPP_WG_QUALITY), 0(), ~,
-            "Consider adding %[()%] around preceding %[&&%] to prevent confusion with %[||%]")
+            "consider adding %[()%] around preceding %[&&%] to prevent confusion with %[||%]")
 #endif /* TPP_HAVE_TPP_W_PAREN_AROUND_LAND */
+
+#if TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN
+#define TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN
+TPP_WARNING(TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN, 1(TPP_WG_QUALITY), 0(), ~,
+            "raw string literal pattern is longer than 16 bytes")
+#endif /* TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN */
 
 
 
@@ -7524,18 +7538,6 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_OPENFILE */
 
-/* Enable support for `tpp_lexer_openfile_ex()` */
-#ifndef TPP_HAVE_LEXER_OPENFILE_EX
-#if (TPP_HAVE_LEXER_OPENFILE &&                                           \
-     (TPP_HAVE_CPP_IMPORT ||                                              \
-      (TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next) || \
-      (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
-#define TPP_HAVE_LEXER_OPENFILE_EX 1
-#else /* ... */
-#define TPP_HAVE_LEXER_OPENFILE_EX 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-
 /* Provide a function `tpp_file_getrealfilenamekwd()` */
 #ifndef TPP_HAVE_FILE_GETREALFILENAMEKWD
 #if (TPP_PROFILE == TPP_PROFILE_ALL || \
@@ -8990,6 +8992,14 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_TOK_STRINGLIKE || TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
+#ifndef TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN
+#define TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL))
+#endif /* !TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN */
+#ifndef TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN
+#define TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL))
+#endif /* !TPP_HAVE_TPP_W_OVERLONG_CXX_RAW_STRING_PATTERN */
 #ifndef TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 #define TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF (TPP_HAVE_WARNINGS && TPP_HAVE_TOK_COMMENTLIKE_NOLINE)
 #endif /* !TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
@@ -10202,6 +10212,20 @@ TPP_DECL_END
 #define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
+
+/* Enable support for `tpp_lexer_openfile_ex()` */
+#ifndef TPP_HAVE_LEXER_OPENFILE_EX
+#if (TPP_HAVE_LEXER_OPENFILE &&                                           \
+     (TPP_HAVE_CPP_IMPORT ||                                              \
+      (TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next) || \
+      TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED ||                  \
+      TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING ||                       \
+      (TPP_HAVE_CPP_INCLUDE && TPP_HAVE_PRAGMA_ONCE)))
+#define TPP_HAVE_LEXER_OPENFILE_EX 1
+#else /* ... */
+#define TPP_HAVE_LEXER_OPENFILE_EX 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 
 /* Provide an API `tpp_preparse_skipspace_fwd()` that can be used to easily skip an arbitrary
  * amount of whitespace (but not comments), as well as BSE sequences in a forward-direction. */
