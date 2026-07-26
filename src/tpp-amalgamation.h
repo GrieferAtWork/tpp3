@@ -1572,6 +1572,22 @@ TPP_EXTENSION(TPP_EXT_PRAGMA_WARNING, TPP_EXTNAME_PRAGMA_WARNING, TPP_CONF_DEFAU
 TPP_EXTENSION(TPP_EXT_PRAGMA_MESSAGE, TPP_EXTNAME_PRAGMA_MESSAGE, TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE))
 #define _tpp_lexer_has_PRAGMA_MESSAGE(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_PRAGMA_MESSAGE)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#ifndef TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION
+#define TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION "pragma-message-prints-location"
+#endif /* !TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION */
+#define TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION
+TPP_EXTENSION(TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION, TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION, TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION))
+#define _tpp_lexer_has_PRAGMA_MESSAGE_PRINTS_LOCATION(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+#ifndef TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
+#define TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED "pragma-message-omits-trailing-linefeed"
+#endif /* !TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED */
+#define TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
+TPP_EXTENSION(TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED, TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED, TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED))
+#define _tpp_lexer_has_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_ERROR)
 #ifndef TPP_EXTNAME_PRAGMA_ERROR
 #define TPP_EXTNAME_PRAGMA_ERROR "pragma-error"
@@ -2150,7 +2166,7 @@ TPP_EXTENSION(TPP_EXT_UNICODE_BYNAME_LOOKUP_ICASE, TPP_EXTNAME_UNICODE_BYNAME_LO
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE)
 #ifndef TPP_EXTNAME_UNICODE_BYNAME_LOOKUP_ISPACE
-#define TPP_EXTNAME_UNICODE_BYNAME_LOOKUP_ISPACE "named-escape-unicode-icase"
+#define TPP_EXTNAME_UNICODE_BYNAME_LOOKUP_ISPACE "named-escape-unicode-ispace"
 #endif /* !TPP_EXTNAME_UNICODE_BYNAME_LOOKUP_ISPACE */
 #define TPP_EXT_UNICODE_BYNAME_LOOKUP_ISPACE TPP_EXT_UNICODE_BYNAME_LOOKUP_ISPACE
 TPP_EXTENSION(TPP_EXT_UNICODE_BYNAME_LOOKUP_ISPACE, TPP_EXTNAME_UNICODE_BYNAME_LOOKUP_ISPACE, TPP_CONF_DEFAULT(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE))
@@ -3036,22 +3052,6 @@ TPP_EXTENSION(TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS, TPP_EXTNAME_LEXER_DECODEI
 TPP_EXTENSION(TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS, TPP_EXTNAME_LEXER_DECODEINT_OCTAL_LITERALS, TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS))
 #define _tpp_lexer_has_LEXER_DECODEINT_OCTAL_LITERALS(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION)
-#ifndef TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION
-#define TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION "pragma-message-prints-location"
-#endif /* !TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION */
-#define TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION
-TPP_EXTENSION(TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION, TPP_EXTNAME_PRAGMA_MESSAGE_PRINTS_LOCATION, TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION))
-#define _tpp_lexer_has_PRAGMA_MESSAGE_PRINTS_LOCATION(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
-#ifndef TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
-#define TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED "pragma-message-omits-trailing-linefeed"
-#endif /* !TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED */
-#define TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED
-TPP_EXTENSION(TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED, TPP_EXTNAME_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED, TPP_CONF_DEFAULT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED))
-#define _tpp_lexer_has_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED)
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 
 
 
@@ -4459,7 +4459,8 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #define tpp_char unsigned char
 #endif /* !tpp_char */
 #ifndef tpp_unichar
-#define tpp_unichar uint_least32_t
+#define tpp_unichar   uint_least32_t
+#define TPP_UNICHAR_C UINT32_C
 #endif /* !tpp_unichar */
 
 #ifndef tpp_intmax
@@ -7107,8 +7108,8 @@ TPP_DECL_END
 #define TPP_HAVE_STRING_ESCAPE_NAMED_MANY (TPP_HAVE_STRING_ESCAPE_NAMED ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fstring-escape-named-many" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
 
-/* TODO: Support for `\c[...]` as alias for `\N{...}` (`TPP_HAVE_STRING_ESCAPE_NAMED`)
- *       This is something that "Raku" has. */
+/* XXX: Support for `\c[...]` as alias for `\N{...}` (`TPP_HAVE_STRING_ESCAPE_NAMED`)
+ *      This is something that "Raku" has. */
 
 /* Enable support for large (> 1 byte) character constants in `tpp_lexer_decodestring()` */
 #ifndef TPP_HAVE_STRING_ESCAPE_BIGCHAR
@@ -7334,7 +7335,7 @@ TPP_DECL_END
  * foo\N{LATINSMALLLETTERB}ar
  * ``` */
 #ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE
-#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE (TPP_HAVE_UNICODE_BYNAME_LOOKUP ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT0 : 0) : 0) /* "-fnamed-escape-unicode-icase" */
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE (TPP_HAVE_UNICODE_BYNAME_LOOKUP ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT0 : 0) : 0) /* "-fnamed-escape-unicode-ispace" */
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE */
 
 
@@ -10590,12 +10591,12 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_size TPPCALL tpp_ftoa(char buf[TPP_FTO
 #endif /* TPP_HAVE_FTOA */
 
 
-#define TPP_UTF8_1BYTE_MAX ((UINT32_C(1) << 7) - 1)
-#define TPP_UTF8_2BYTE_MAX ((UINT32_C(1) << 11) - 1)
-#define TPP_UTF8_3BYTE_MAX ((UINT32_C(1) << 16) - 1)
-#define TPP_UTF8_4BYTE_MAX ((UINT32_C(1) << 21) - 1)
-#define TPP_UTF8_5BYTE_MAX ((UINT32_C(1) << 26) - 1)
-#define TPP_UTF8_6BYTE_MAX ((UINT32_C(1) << 31) - 1)
+#define TPP_UTF8_1BYTE_MAX ((TPP_UNICHAR_C(1) << 7) - 1)
+#define TPP_UTF8_2BYTE_MAX ((TPP_UNICHAR_C(1) << 11) - 1)
+#define TPP_UTF8_3BYTE_MAX ((TPP_UNICHAR_C(1) << 16) - 1)
+#define TPP_UTF8_4BYTE_MAX ((TPP_UNICHAR_C(1) << 21) - 1)
+#define TPP_UTF8_5BYTE_MAX ((TPP_UNICHAR_C(1) << 26) - 1)
+#define TPP_UTF8_6BYTE_MAX ((TPP_UNICHAR_C(1) << 31) - 1)
 
 #define TPP_UTF8_MAXLEN 7 /* Enough to write *any* 32-bit unicode ordinal as utf-8 (including invalid ones) */
 
@@ -10737,6 +10738,14 @@ typedef struct tpp_string {
 /*	tpp_char          TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing \0-character */
 } tpp_string;
 
+/* Internal allocation API */
+#define _tpp_string_sizeof(len)        (tpp_offsetof(tpp_string, ts_str) + ((len) + 1) * sizeof(tpp_char))
+#define _tpp_string_trymalloc(len)     ((tpp_string *)tpp_trymalloc(_tpp_string_sizeof(len)))
+#define _tpp_string_malloc(len)        ((tpp_string *)tpp_malloc(_tpp_string_sizeof(len)))
+#define _tpp_string_tryrealloc(p, len) ((tpp_string *)tpp_tryrealloc(p, _tpp_string_sizeof(len)))
+#define _tpp_string_realloc(p, len)    ((tpp_string *)tpp_realloc(p, _tpp_string_sizeof(len)))
+#define _tpp_string_free(p)            tpp_free(p)
+
 /* Public API */
 #define tpp_string_len(self)  ((self)->TPP_INTERNAL(ts_len))
 #define tpp_string_str(self)  ((self)->TPP_INTERNAL(ts_str))
@@ -10750,13 +10759,6 @@ typedef struct tpp_string {
 	(tpp_string_len(lhs) == (sizeof(rhs_cstr) - sizeof(char)) && \
 	 tpp_memcmp(tpp_string_str(lhs), rhs_cstr,                   \
 	            (sizeof(rhs_cstr) - sizeof(char)) * sizeof(tpp_char)) == 0)
-
-#define tpp_string_sizeof(len)         (tpp_offsetof(tpp_string, ts_str) + ((len) + 1) * sizeof(tpp_char))
-#define _tpp_string_trymalloc(len)     ((tpp_string *)tpp_trymalloc(tpp_string_sizeof(len)))
-#define _tpp_string_malloc(len)        ((tpp_string *)tpp_malloc(tpp_string_sizeof(len)))
-#define _tpp_string_tryrealloc(p, len) ((tpp_string *)tpp_tryrealloc(p, tpp_string_sizeof(len)))
-#define _tpp_string_realloc(p, len)    ((tpp_string *)tpp_realloc(p, tpp_string_sizeof(len)))
-#define _tpp_string_free(p)            tpp_free(p)
 
 /* Helpers for interacting with TPP strings */
 #define tpp_string_destroy(self)  _tpp_string_free(self)
@@ -17821,7 +17823,9 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 
 
 #undef TPP_HAVE_BSE_FILE_PARAM
-#if TPP_HAVE_BSE && TPP_HAVE_UNICODE
+#if (TPP_HAVE_BSE && (TPP_HAVE_UNICODE /*||                        \
+                      TPP_CONF_IS_RT(TPP_HAVE_BSE_WHITESPACE) || \
+                      TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)*/))
 #define TPP_HAVE_BSE_FILE_PARAM 1
 #define tpp_bse_file__PARAM  , tpp_file const *tpp_restrict file
 #define tpp_bse_file__ARG(x) , x

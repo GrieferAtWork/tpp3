@@ -1564,6 +1564,27 @@ _tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end);
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 
 
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+#ifndef tpp_lexer_warn_unknown_named_escape_sequence
+#define tpp_lexer_warn_unknown_named_escape_sequence tpp_lexer_warn_unknown_named_escape_sequence
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
+                                             tpp_char const *start,
+                                             tpp_char const *end) {
+	tpp_errno error;
+	tpp_token *const token = tpp_lexer_gettoken(self);
+	tpp_char const *const saved_start = token->tt_start;
+	tpp_char const *const saved_end = token->tt_end;
+	token->tt_start = start;
+	token->tt_end   = end;
+	error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
+	token->tt_start = saved_start;
+	token->tt_end   = saved_end;
+	return error;
+}
+#endif /* !tpp_lexer_warn_unknown_named_escape_sequence */
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+
 /* Seek end of unichar: foo\U12345678XY
  *                         ^=in      ^out */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
@@ -1623,40 +1644,46 @@ tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 		/* Scan over the named escape sequence to verify that everything can be decoded */
 #if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 		{
+			tpp_size count;
+			tpp_unichar uc[TPP_DECODE_NAMED_ESCAPE_MAXLEN];
 			tpp_char const *named_start = tpp_file_rel2ptr(tpp_lexer_getfile(self), rel_named_start);
 			tpp_char const *named_end   = tpp_file_rel2ptr(tpp_lexer_getfile(self), rel_named_end);
-			for (;;) {
-				tpp_size count;
-				tpp_unichar uc[TPP_DECODE_NAMED_ESCAPE_MAXLEN];
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
-				if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY))
+			if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY)) {
+				for (;;) {
 					named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(self));
-#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
-				count = tpp_decode_named_escape(&named_start, named_end, uc, self);
-				if (count == 0)
-					break;
-#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
-				if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY)) {
-					named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(self));
-					if (named_start < named_end && *named_start == ',') {
-						named_start = tpp_decode_named_skipspace(named_start + 1, named_end, tpp_lexer_getfile(self));
+					count = tpp_decode_named_escape(&named_start, named_end, uc, self);
+					if (count == 0) {
+						/* See if we can seek ahead to a ','-character */
+						tpp_size remaining;
+						tpp_char const *comma;
+search_for_comma:
+						remaining = (tpp_size)(named_end - named_start);
+						comma = (tpp_char const *)tpp_memchr(named_start, ',', remaining);
+						if (!comma)
+							break;
+						/* Technically would need to emit warning with trailing space before "comma" stripped */
+						error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, comma);
+						if (TPP_ISERR(error))
+							return error;
+						named_start = comma + 1;
 						continue;
 					}
+					named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(self));
+					if (named_start >= named_end)
+						break;
+					if (*named_start != ',')
+						goto search_for_comma;
+					named_start = tpp_decode_named_skipspace(named_start + 1, named_end, tpp_lexer_getfile(self));
 				}
+			} else
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
-				break;
+			{
+				count = tpp_decode_named_escape(&named_start, named_end, uc, self);
+				(void)count;
 			}
-			if (named_start < named_end) {
-				tpp_token *const token = tpp_lexer_gettoken(self);
-				tpp_char const *const saved_start = token->tt_start;
-				tpp_char const *const saved_end = token->tt_end;
-				token->tt_start = named_start;
-				token->tt_end   = named_end;
-				error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
-				token->tt_start = saved_start;
-				token->tt_end   = saved_end;
-				return error;
-			}
+			if (named_start < named_end)
+				return tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, named_end);
 		}
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
 

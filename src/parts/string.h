@@ -33,6 +33,14 @@ typedef struct tpp_string {
 /*	tpp_char          TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing \0-character */
 } tpp_string;
 
+/* Internal allocation API */
+#define _tpp_string_sizeof(len)        (tpp_offsetof(tpp_string, ts_str) + ((len) + 1) * sizeof(tpp_char))
+#define _tpp_string_trymalloc(len)     ((tpp_string *)tpp_trymalloc(_tpp_string_sizeof(len)))
+#define _tpp_string_malloc(len)        ((tpp_string *)tpp_malloc(_tpp_string_sizeof(len)))
+#define _tpp_string_tryrealloc(p, len) ((tpp_string *)tpp_tryrealloc(p, _tpp_string_sizeof(len)))
+#define _tpp_string_realloc(p, len)    ((tpp_string *)tpp_realloc(p, _tpp_string_sizeof(len)))
+#define _tpp_string_free(p)            tpp_free(p)
+
 /* Public API */
 #define tpp_string_len(self)  ((self)->TPP_INTERNAL(ts_len))
 #define tpp_string_str(self)  ((self)->TPP_INTERNAL(ts_str))
@@ -46,13 +54,6 @@ typedef struct tpp_string {
 	(tpp_string_len(lhs) == (sizeof(rhs_cstr) - sizeof(char)) && \
 	 tpp_memcmp(tpp_string_str(lhs), rhs_cstr,                   \
 	            (sizeof(rhs_cstr) - sizeof(char)) * sizeof(tpp_char)) == 0)
-
-#define tpp_string_sizeof(len)         (tpp_offsetof(tpp_string, ts_str) + ((len) + 1) * sizeof(tpp_char))
-#define _tpp_string_trymalloc(len)     ((tpp_string *)tpp_trymalloc(tpp_string_sizeof(len)))
-#define _tpp_string_malloc(len)        ((tpp_string *)tpp_malloc(tpp_string_sizeof(len)))
-#define _tpp_string_tryrealloc(p, len) ((tpp_string *)tpp_tryrealloc(p, tpp_string_sizeof(len)))
-#define _tpp_string_realloc(p, len)    ((tpp_string *)tpp_realloc(p, tpp_string_sizeof(len)))
-#define _tpp_string_free(p)            tpp_free(p)
 
 /* Helpers for interacting with TPP strings */
 #define tpp_string_destroy(self)  _tpp_string_free(self)

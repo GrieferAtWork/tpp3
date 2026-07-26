@@ -248,12 +248,12 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_size TPPCALL tpp_ftoa(char buf[TPP_FTO
 #endif /* TPP_HAVE_FTOA */
 
 
-#define TPP_UTF8_1BYTE_MAX ((UINT32_C(1) << 7) - 1)
-#define TPP_UTF8_2BYTE_MAX ((UINT32_C(1) << 11) - 1)
-#define TPP_UTF8_3BYTE_MAX ((UINT32_C(1) << 16) - 1)
-#define TPP_UTF8_4BYTE_MAX ((UINT32_C(1) << 21) - 1)
-#define TPP_UTF8_5BYTE_MAX ((UINT32_C(1) << 26) - 1)
-#define TPP_UTF8_6BYTE_MAX ((UINT32_C(1) << 31) - 1)
+#define TPP_UTF8_1BYTE_MAX ((TPP_UNICHAR_C(1) << 7) - 1)
+#define TPP_UTF8_2BYTE_MAX ((TPP_UNICHAR_C(1) << 11) - 1)
+#define TPP_UTF8_3BYTE_MAX ((TPP_UNICHAR_C(1) << 16) - 1)
+#define TPP_UTF8_4BYTE_MAX ((TPP_UNICHAR_C(1) << 21) - 1)
+#define TPP_UTF8_5BYTE_MAX ((TPP_UNICHAR_C(1) << 26) - 1)
+#define TPP_UTF8_6BYTE_MAX ((TPP_UNICHAR_C(1) << 31) - 1)
 
 #define TPP_UTF8_MAXLEN 7 /* Enough to write *any* 32-bit unicode ordinal as utf-8 (including invalid ones) */
 

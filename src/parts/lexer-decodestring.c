@@ -391,6 +391,27 @@ _tpp_decode_named_skipspace(tpp_char const *iter, tpp_char const *end);
 #endif /* !TPP_HAVE_UNICODE */
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 
+#if TPP_HAVE_STRING_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+#ifndef tpp_lexer_warn_unknown_named_escape_sequence
+#define tpp_lexer_warn_unknown_named_escape_sequence tpp_lexer_warn_unknown_named_escape_sequence
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
+                                             tpp_char const *start,
+                                             tpp_char const *end) {
+	tpp_errno error;
+	tpp_token *const token = tpp_lexer_gettoken(self);
+	tpp_char const *const saved_start = token->tt_start;
+	tpp_char const *const saved_end = token->tt_end;
+	token->tt_start = start;
+	token->tt_end   = end;
+	error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
+	token->tt_start = saved_start;
+	token->tt_end   = saved_end;
+	return error;
+}
+#endif /* !tpp_lexer_warn_unknown_named_escape_sequence */
+#endif /* TPP_HAVE_STRING_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+
 
 /* Decode string: "foobar fdasudfad"
  *                 ^start          ^end
@@ -845,8 +866,30 @@ print_ch_as_byte:
 				named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(self));
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 			count = tpp_decode_named_escape(&named_start, named_end, uc, self);
-			if (count == 0)
-				break;
+			if (count == 0) {
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+				if (tpp_lexer_has(self, IDENTIFIER_ESCAPE_NAMED_MANY)) {
+					/* See if we can seek ahead to a ','-character */
+					tpp_size remaining = (tpp_size)(named_end - named_start);
+					tpp_char const *comma = (tpp_char const *)tpp_memchr(named_start, ',', remaining);
+					if (!comma)
+						break;
+#if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+					{
+						/* Technically would need to emit warning with trailing space before "comma" stripped */
+						tpp_errno error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, comma);
+						if (TPP_ISERR(error))
+							return TPP_SSIZE_OFERR(error);
+					}
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+					named_start = comma + 1;
+					continue;
+				} else
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+				{
+					break;
+				}
+			}
 
 			/* Encode as utf-8 */
 			utf8_dst = utf8_buf;
@@ -877,15 +920,7 @@ print_ch_as_byte:
 		/* Warn if not everything was consumed */
 #if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 		if (named_start < named_end) {
-			tpp_errno error;
-			tpp_token *const token = tpp_lexer_gettoken(self);
-			tpp_char const *const saved_start = token->tt_start;
-			tpp_char const *const saved_end = token->tt_end;
-			token->tt_start = named_start;
-			token->tt_end   = named_end;
-			error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
-			token->tt_start = saved_start;
-			token->tt_end   = saved_end;
+			tpp_errno error = tpp_lexer_warn_unknown_named_escape_sequence(self, named_start, named_end);
 			if (TPP_ISERR(error))
 				return TPP_SSIZE_OFERR(error);
 		}

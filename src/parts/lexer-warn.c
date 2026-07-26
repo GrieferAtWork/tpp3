@@ -129,19 +129,19 @@ tpp_format_token_data_tohex(tpp_char v) {
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_format_token_data_hexrepr(tpp_char *dst, tpp_unichar uc) {
-	if (uc >= UINT32_C(0x10000000))
+	if (uc >= TPP_UNICHAR_C(0x10000000))
 		*dst++ = tpp_format_token_data_tohex((uc >> 28) & 0xf);
-	if (uc >= UINT32_C(0x1000000))
+	if (uc >= TPP_UNICHAR_C(0x1000000))
 		*dst++ = tpp_format_token_data_tohex((uc >> 24) & 0xf);
-	if (uc >= UINT32_C(0x100000))
+	if (uc >= TPP_UNICHAR_C(0x100000))
 		*dst++ = tpp_format_token_data_tohex((uc >> 20) & 0xf);
-	if (uc >= UINT32_C(0x10000))
+	if (uc >= TPP_UNICHAR_C(0x10000))
 		*dst++ = tpp_format_token_data_tohex((uc >> 16) & 0xf);
-	if (uc >= UINT32_C(0x1000))
+	if (uc >= TPP_UNICHAR_C(0x1000))
 		*dst++ = tpp_format_token_data_tohex((uc >> 12) & 0xf);
-	if (uc >= UINT32_C(0x100))
+	if (uc >= TPP_UNICHAR_C(0x100))
 		*dst++ = tpp_format_token_data_tohex((uc >> 8) & 0xf);
-	if (uc >= UINT32_C(0x10))
+	if (uc >= TPP_UNICHAR_C(0x10))
 		*dst++ = tpp_format_token_data_tohex((uc >> 4) & 0xf);
 	*dst++ = tpp_format_token_data_tohex(uc & 0xf);
 	return dst;

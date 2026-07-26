@@ -534,7 +534,9 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 
 
 #undef TPP_HAVE_BSE_FILE_PARAM
-#if TPP_HAVE_BSE && TPP_HAVE_UNICODE
+#if (TPP_HAVE_BSE && (TPP_HAVE_UNICODE /*||                        \
+                      TPP_CONF_IS_RT(TPP_HAVE_BSE_WHITESPACE) || \
+                      TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)*/))
 #define TPP_HAVE_BSE_FILE_PARAM 1
 #define tpp_bse_file__PARAM  , tpp_file const *tpp_restrict file
 #define tpp_bse_file__ARG(x) , x

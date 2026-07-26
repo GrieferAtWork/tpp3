@@ -474,7 +474,8 @@
 #define tpp_char unsigned char
 #endif /* !tpp_char */
 #ifndef tpp_unichar
-#define tpp_unichar uint_least32_t
+#define tpp_unichar   uint_least32_t
+#define TPP_UNICHAR_C UINT32_C
 #endif /* !tpp_unichar */
 
 #ifndef tpp_intmax

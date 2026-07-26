@@ -2235,8 +2235,8 @@
 #define TPP_HAVE_STRING_ESCAPE_NAMED_MANY (TPP_HAVE_STRING_ESCAPE_NAMED ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fstring-escape-named-many" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
 
-/* TODO: Support for `\c[...]` as alias for `\N{...}` (`TPP_HAVE_STRING_ESCAPE_NAMED`)
- *       This is something that "Raku" has. */
+/* XXX: Support for `\c[...]` as alias for `\N{...}` (`TPP_HAVE_STRING_ESCAPE_NAMED`)
+ *      This is something that "Raku" has. */
 
 /* Enable support for large (> 1 byte) character constants in `tpp_lexer_decodestring()` */
 #ifndef TPP_HAVE_STRING_ESCAPE_BIGCHAR
@@ -2462,7 +2462,7 @@
  * foo\N{LATINSMALLLETTERB}ar
  * ``` */
 #ifndef TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE
-#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE (TPP_HAVE_UNICODE_BYNAME_LOOKUP ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT0 : 0) : 0) /* "-fnamed-escape-unicode-icase" */
+#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE (TPP_HAVE_UNICODE_BYNAME_LOOKUP ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_EXT0 : 0) : 0) /* "-fnamed-escape-unicode-ispace" */
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE */
 
 

@@ -870,10 +870,20 @@ _tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 	named_count = tpp_decode_named_escape(&named_start, named_end, named_uc, lexer);
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+	if (!named_count && tpp_lexer_has(lexer, IDENTIFIER_ESCAPE_NAMED_MANY)) {
+		/* See if we can seek ahead to a ','-character */
+		tpp_size remaining = (tpp_size)(named_end - named_start);
+		tpp_char const *comma = (tpp_char const *)tpp_memchr(named_start, ',', remaining);
+		if (comma)
+			named_start = comma;
+	}
 	named_start = tpp_decode_named_skipspace(named_start, named_end, tpp_lexer_getfile(lexer));
-	if (named_start < named_end && *named_start == ',')
+	if (named_start < named_end && *named_start == ',') {
 		named_start = tpp_decode_named_skipspace(named_start + 1, named_end, tpp_lexer_getfile(lexer));
-	*p_continue = (named_count && named_start < named_end);
+		*p_continue = true;
+	} else {
+		*p_continue = (named_count && named_start < named_end);
+	}
 	if (*p_continue)
 		*p_iter = named_start;
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */

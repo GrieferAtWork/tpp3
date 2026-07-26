@@ -751,12 +751,12 @@ reuse_old_chunk:
 			tpp_size ps_rel = (tpp_size)(self->tf_pos - base);
 			tpp_size kp_rel = (tpp_size)(self->tf_data.td_io.ttf_keep - base);
 #endif /* TPP_HAVE_FILE_KEEPPOS */
-			new_chunk = (TPP_REF tpp_string *)tpp_tryrealloc(old_chunk, tpp_string_sizeof(new_size));
+			new_chunk = (TPP_REF tpp_string *)_tpp_string_tryrealloc(old_chunk, new_size);
 			if tpp_unlikely(!new_chunk) {
 				new_size = old_inuse + TPP_FILE_MINEXTRA;
 				if (tpp_string_len(old_chunk) >= new_size)
 					goto reuse_old_chunk;
-				new_chunk = (TPP_REF tpp_string *)tpp_realloc(old_chunk, tpp_string_sizeof(new_size));
+				new_chunk = (TPP_REF tpp_string *)_tpp_string_realloc(old_chunk, new_size);
 				if tpp_unlikely(!new_chunk)
 					return TPP_ENOMEM;
 			}
