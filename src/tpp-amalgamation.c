@@ -45988,11 +45988,7 @@ again:
 	count = sizeof(buf);
 	if ((tpp_uintmax)count > limit)
 		count = (tpp_size)limit;
-#if TPP_HAVE_FILE_NONBLOCK
-	read_status = tpp_io_read(ioh, buf, count, 0);
-#else /* TPP_HAVE_FILE_NONBLOCK */
-	read_status = tpp_io_read(ioh, buf, count);
-#endif /* !TPP_HAVE_FILE_NONBLOCK */
+	read_status = tpp_io_read_blocking(ioh, buf, count);
 	if (TPP_SSIZE_ISERR(read_status))
 		return TPP_SSIZE_ASERR(read_status);
 	if (read_status == 0)
@@ -46048,11 +46044,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 
 	/* Read the first by of the OFR file */
-#if TPP_HAVE_FILE_NONBLOCK
-	ofr_read_status = tpp_io_read(self->teb_ofr.tlofr_handle, &ofr_first_byte, 1, 0);
-#else /* TPP_HAVE_FILE_NONBLOCK */
-	ofr_read_status = tpp_io_read(self->teb_ofr.tlofr_handle, &ofr_first_byte, 1);
-#endif /* !TPP_HAVE_FILE_NONBLOCK */
+	ofr_read_status = tpp_io_read_blocking(self->teb_ofr.tlofr_handle, &ofr_first_byte, 1);
 	if (TPP_SSIZE_ISERR(ofr_read_status)) {
 		result = TPP_TOK_OFERR(TPP_SSIZE_ASERR(ofr_read_status));
 		goto return_result_and_fini;
@@ -46731,15 +46723,12 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_EXCLAIM
 	case '!':
-#if TPP_HAVE_TOK_EXCLAIM_EXCLAIM
-	case TPP_TOK_EXCLAIM_EXCLAIM:
-#endif /* TPP_HAVE_TOK_EXCLAIM_EXCLAIM */
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_EXCLAIM
 #if TPP_CONF_MAYBE_0(TPP_HAVE_CPP_EXCLAIM)
 		if (!tpp_lexer_has(self, CPP_EXCLAIM))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_EXCLAIM) */
-
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
 #endif /* TPP_HAVE_CPP_EXCLAIM */
@@ -49401,12 +49390,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 			expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY;
 		} else {
 			unsigned char first_byte;
-			tpp_ssize read_status;
-#if TPP_HAVE_FILE_NONBLOCK
-			read_status = tpp_io_read(ofr.tlofr_handle, &first_byte, 1, 0);
-#else  /* TPP_HAVE_FILE_NONBLOCK */
-			read_status = tpp_io_read(ofr.tlofr_handle, &first_byte, 1);
-#endif /* !TPP_HAVE_FILE_NONBLOCK */
+			tpp_ssize read_status = tpp_io_read_blocking(ofr.tlofr_handle, &first_byte, 1);
 			if tpp_unlikely(TPP_SSIZE_ISERR(read_status)) {
 				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(read_status));
 				goto err_tok_ofr;
@@ -50260,11 +50244,7 @@ tpp_string_builder_print_escaped_file(tpp_string_builder *tpp_restrict self,
 			if tpp_unlikely(!buf)
 				goto err_nomem;
 		}
-#if TPP_HAVE_FILE_NONBLOCK
-		read_status = tpp_io_read(handle, buf, used_bufsize, 0);
-#else /* TPP_HAVE_FILE_NONBLOCK */
-		read_status = tpp_io_read(handle, buf, used_bufsize);
-#endif /* !TPP_HAVE_FILE_NONBLOCK */
+		read_status = tpp_io_read_blocking(handle, buf, used_bufsize);
 		if (TPP_SSIZE_ISERR(read_status))
 			return TPP_SSIZE_ASERR(read_status);
 		if (used_bufsize > (tpp_size)read_status) {
@@ -54368,7 +54348,7 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_px_unary_prefix(tpp_lexer *tpp_restrict self, tpp_expr_value *result) {
 	tpp_token_id tok = tpp_lexer_gettok(self);
 again:
-	switch (tpp_lexer_gettok(self)) {
+	switch (tok) {
 	case TPP_TOK_SPACE:
 	case TPP_TOK_LF:
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE
@@ -54399,22 +54379,14 @@ handle_comment:
 		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
 
-#if (TPP_HAVE_TOK_MINUS_MINUS || \
-     TPP_HAVE_TOK_PLUS_PLUS ||   \
-     TPP_HAVE_TOK_TILDE_TILDE || \
-     TPP_HAVE_TOK_EXCLAIM_EXCLAIM)
-#if TPP_HAVE_TOK_MINUS_MINUS
-	case TPP_TOK_MINUS_MINUS:
-#endif /* TPP_HAVE_TOK_MINUS_MINUS */
-#if TPP_HAVE_TOK_PLUS_PLUS
-	case TPP_TOK_PLUS_PLUS:
-#endif /* TPP_HAVE_TOK_PLUS_PLUS */
-#if TPP_HAVE_TOK_TILDE_TILDE
-	case TPP_TOK_TILDE_TILDE:
-#endif /* TPP_HAVE_TOK_TILDE_TILDE */
-#if TPP_HAVE_TOK_EXCLAIM_EXCLAIM
-	case TPP_TOK_EXCLAIM_EXCLAIM:
-#endif /* TPP_HAVE_TOK_EXCLAIM_EXCLAIM */
+#if (TPP_HAVE_TOK_MC_STARTSWITH_MINUS || \
+     TPP_HAVE_TOK_MC_STARTSWITH_PLUS ||  \
+     TPP_HAVE_TOK_MC_STARTSWITH_TILDE || \
+     TPP_HAVE_TOK_MC_STARTSWITH_EXCLAIM)
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_MINUS
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_PLUS
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_TILDE
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_EXCLAIM
 	{
 		/* Handling for multi-char tokens:  --  ++  ~~  !! */
 		tpp_token *const token = tpp_lexer_gettoken(self);

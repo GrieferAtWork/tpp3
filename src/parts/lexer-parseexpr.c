@@ -71,7 +71,7 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_px_unary_prefix(tpp_lexer *tpp_restrict self, tpp_expr_value *result) {
 	tpp_token_id tok = tpp_lexer_gettok(self);
 again:
-	switch (tpp_lexer_gettok(self)) {
+	switch (tok) {
 	case TPP_TOK_SPACE:
 	case TPP_TOK_LF:
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE
@@ -102,22 +102,14 @@ handle_comment:
 		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
 
-#if (TPP_HAVE_TOK_MINUS_MINUS || \
-     TPP_HAVE_TOK_PLUS_PLUS ||   \
-     TPP_HAVE_TOK_TILDE_TILDE || \
-     TPP_HAVE_TOK_EXCLAIM_EXCLAIM)
-#if TPP_HAVE_TOK_MINUS_MINUS
-	case TPP_TOK_MINUS_MINUS:
-#endif /* TPP_HAVE_TOK_MINUS_MINUS */
-#if TPP_HAVE_TOK_PLUS_PLUS
-	case TPP_TOK_PLUS_PLUS:
-#endif /* TPP_HAVE_TOK_PLUS_PLUS */
-#if TPP_HAVE_TOK_TILDE_TILDE
-	case TPP_TOK_TILDE_TILDE:
-#endif /* TPP_HAVE_TOK_TILDE_TILDE */
-#if TPP_HAVE_TOK_EXCLAIM_EXCLAIM
-	case TPP_TOK_EXCLAIM_EXCLAIM:
-#endif /* TPP_HAVE_TOK_EXCLAIM_EXCLAIM */
+#if (TPP_HAVE_TOK_MC_STARTSWITH_MINUS || \
+     TPP_HAVE_TOK_MC_STARTSWITH_PLUS ||  \
+     TPP_HAVE_TOK_MC_STARTSWITH_TILDE || \
+     TPP_HAVE_TOK_MC_STARTSWITH_EXCLAIM)
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_MINUS
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_PLUS
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_TILDE
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_EXCLAIM
 	{
 		/* Handling for multi-char tokens:  --  ++  ~~  !! */
 		tpp_token *const token = tpp_lexer_gettoken(self);

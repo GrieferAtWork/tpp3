@@ -2455,15 +2455,12 @@ again_yield_directive_iter:
 /************************************************************************/
 #if TPP_HAVE_CPP_EXCLAIM
 	case '!':
-#if TPP_HAVE_TOK_EXCLAIM_EXCLAIM
-	case TPP_TOK_EXCLAIM_EXCLAIM:
-#endif /* TPP_HAVE_TOK_EXCLAIM_EXCLAIM */
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_EXCLAIM
 #if TPP_CONF_MAYBE_0(TPP_HAVE_CPP_EXCLAIM)
 		if (!tpp_lexer_has(self, CPP_EXCLAIM))
 			goto handle_unknown_directive;
 #define WANT_handle_unknown_directive
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_CPP_EXCLAIM) */
-
 		goto seek_end_of_line;
 #define WANT_seek_end_of_line
 #endif /* TPP_HAVE_CPP_EXCLAIM */
