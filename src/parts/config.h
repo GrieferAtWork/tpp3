@@ -555,7 +555,7 @@
  * replaced with effective UTF-8 encodings when translated to keywords)
  * ```c
  * int identifier\u0020with\u0020whitespace = 42;
- * // Same as:
+ * // Same as (assuming TPP_HAVE_MACRO___TPP_IDENTIFIER):
  * int __TPP_IDENTIFIER("identifier with whitespace") = 42;
  * ```
  *
@@ -568,7 +568,7 @@
 /* Support for `\N{...}` in identifier names (see `TPP_HAVE_DECODE_NAMED_ESCAPE`)
  * ```c
  * int identifier\N{NO-BREAK SPACE}nbsp = 42;
- * // Same as:
+ * // Same as (assuming TPP_HAVE_MACRO___TPP_IDENTIFIER + TPP_HAVE_STRING_ESCAPE_NAMED):
  * int __TPP_IDENTIFIER("identifier\N{NO-BREAK SPACE}nbsp") = 42;
  * ```
  *
@@ -639,7 +639,10 @@
 #define TPP_HAVE_CPP_BUILTIN_MACROS (TPP_HAVE_CPP_MACROS ? (TPP_PROFILE == TPP_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fcpp-builtin-macros" */
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 
-/* Support for `#!foobar`-directives (which are treated as comments) */
+/* Support for `#!foobar`-directives (which cause the entire line to be ignored).
+ *
+ * Note that the `foobar` is only an example. Anything matching regex `#![^\n]*`
+ * is ignored when this extension is enabled. */
 #ifndef TPP_HAVE_CPP_EXCLAIM
 #define TPP_HAVE_CPP_EXCLAIM (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_EXT : 0) /* "-fshebang-directives" */
 #endif /* !TPP_HAVE_CPP_EXCLAIM */
@@ -655,10 +658,10 @@
  * the filename, a number of additional "flags" can be specified:
  * - `1`: Push a dummy-file containing the old file/line/column onto the `#include`-stack,
  *        before applying the new line/filename. After being pushed, said last position will
- *        be displayed as part of warning messages. This flag require `TPP_HAVE_FILE_DUMMY`
+ *        be displayed as part of warning messages. This flag requires `TPP_HAVE_FILE_DUMMY`
  *        to be enabled, otherwise it is ignored.
  * - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack. Like the
- *        `1` flag, this flag require `TPP_HAVE_FILE_DUMMY` to be enabled, otherwise it is
+ *        `1` flag, this flag requires `TPP_HAVE_FILE_DUMMY` to be enabled, otherwise it is
  *        ignored.
  * - `3`: Set `TPP_FILE_FLAGS_SYSHDR` for the current text-file. When this flag is not
  *        supplied, `TPP_FILE_FLAGS_SYSHDR` is instead cleared for the current text-file.
@@ -835,7 +838,8 @@
  * #endif
  * ```
  *
- * A keyword is considered to be an "identifier" if `TPP_TOK_ISBUILTINKEYWORD()`
+ * A keyword is considered to be an "identifier" based on
+ * `tpp_lexer_isidentifier()` (see `TPP_HAVE_LEXER_ISIDENTIFIER`)
  *
  * @detect: #ifdef __is_identifier */
 #ifndef TPP_HAVE_MACRO___is_identifier
@@ -1387,7 +1391,7 @@
 // T_STR(10)     // "10"
 // ```
 //
-// NOTE: affects behavior of macros at the *TIME OF DEFINITION* ")
+// NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 #ifndef TPP_HAVE_TRADITIONAL_MACROS
 #define TPP_HAVE_TRADITIONAL_MACROS ((TPP_HAVE_CPP_MACROS && TPP_HAVE_PROFILE_NOT_MINIMAL) ? TPP_COMMON_CONF_EXT0 : 0) /* "-ftraditional-macro" */
 #endif /* !TPP_HAVE_TRADITIONAL_MACROS */
@@ -1417,7 +1421,7 @@
  * ```c
  * #define printf(format, ...) fprintf(stdout, format __VA_COMMA__ __VA_ARGS__)
  * printf("foo\n");         // fprintf(stdout, "foo\n");
- * printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n", 10);
+ * printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n" , 10);
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -1434,7 +1438,7 @@
  * ```c
  * #define printf(format, ...) fprintf(stdout, format __VA_OPT__(,) __VA_ARGS__)
  * printf("foo\n");         // fprintf(stdout, "foo\n");
- * printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n", 10);
+ * printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n" , 10);
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -1477,7 +1481,7 @@
  * ```c
  * #define printf(format, ...) fprintf(stdout, format, ## __VA_ARGS__)
  * printf("foo\n");         // fprintf(stdout, "foo\n");
- * printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n", 10);
+ * printf("i = %d\n", 10);  // fprintf(stdout, "i = %d\n",10);
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
