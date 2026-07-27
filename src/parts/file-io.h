@@ -151,6 +151,13 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 #endif /* TPP_HAVE_IO_COMPARE_MTIME */
 #endif /* tpp_io_handle_IS_BUILTIN */
 
+#if TPP_HAVE_FILE_NONBLOCK
+#define tpp_io_read_blocking(file, buf, bufsize) tpp_io_read(file, buf, bufsize, 0)
+#else /* TPP_HAVE_FILE_NONBLOCK */
+#define tpp_io_read_blocking(file, buf, bufsize) tpp_io_read(file, buf, bufsize)
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+
+
 #if TPP_HAVE_IO_NORMALIZE_FILENAME
 #ifndef tpp_io_normalize_filename
 /* Given pointers to a string like this:

@@ -1184,12 +1184,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 			expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY;
 		} else {
 			unsigned char first_byte;
-			tpp_ssize read_status;
-#if TPP_HAVE_FILE_NONBLOCK
-			read_status = tpp_io_read(ofr.tlofr_handle, &first_byte, 1, 0);
-#else  /* TPP_HAVE_FILE_NONBLOCK */
-			read_status = tpp_io_read(ofr.tlofr_handle, &first_byte, 1);
-#endif /* !TPP_HAVE_FILE_NONBLOCK */
+			tpp_ssize read_status = tpp_io_read_blocking(ofr.tlofr_handle, &first_byte, 1);
 			if tpp_unlikely(TPP_SSIZE_ISERR(read_status)) {
 				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(read_status));
 				goto err_tok_ofr;
@@ -2043,11 +2038,7 @@ tpp_string_builder_print_escaped_file(tpp_string_builder *tpp_restrict self,
 			if tpp_unlikely(!buf)
 				goto err_nomem;
 		}
-#if TPP_HAVE_FILE_NONBLOCK
-		read_status = tpp_io_read(handle, buf, used_bufsize, 0);
-#else /* TPP_HAVE_FILE_NONBLOCK */
-		read_status = tpp_io_read(handle, buf, used_bufsize);
-#endif /* !TPP_HAVE_FILE_NONBLOCK */
+		read_status = tpp_io_read_blocking(handle, buf, used_bufsize);
 		if (TPP_SSIZE_ISERR(read_status))
 			return TPP_SSIZE_ASERR(read_status);
 		if (used_bufsize > (tpp_size)read_status) {
