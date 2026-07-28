@@ -641,10 +641,28 @@
 #define TPP_HAVE_MAGIC_WHITESPACE ((TPP_HAVE_CPP_MACROS || TPP_HAVE_MACRO___TPP_EXEC) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fmagic-whitespace" */
 #endif /* !TPP_HAVE_MAGIC_WHITESPACE */
 
-/* Support for builtin C-style macros (require `TPP_HAVE_CPP_MACROS` to be enabled, too) */
+/* Support for builtin C-style macros (require `TPP_HAVE_CPP_MACROS` to be enabled, too):
+ * - `__FILE__`
+ * - `__LINE__`
+ * - `__TPP_EVAL()`
+ * - ... (anything that does something interesting during expansion)
+ *
+ * Pre-defined macros (as defined by `TPP_BUILTIN_MACRO`) are configured by
+ * `TPP_HAVE_CPP_PREDEFINED_MACROS` */
 #ifndef TPP_HAVE_CPP_BUILTIN_MACROS
 #define TPP_HAVE_CPP_BUILTIN_MACROS (TPP_HAVE_CPP_MACROS ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fcpp-builtin-macros" */
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
+
+/* Support for builtin C-style macros (require `TPP_HAVE_CPP_BUILTIN_MACROS` to be enabled, too):
+ * - `__TPP_VERSION__`
+ * - `__STDC_EMBED_NOT_FOUND__`
+ * - ... (anything defined by `TPP_BUILTIN_MACRO`)
+ *
+ * This feature can be used to implement GCC's `-undef` CLI argument
+ * (causing all *predefined* macros to be not get expanded). */
+#ifndef TPP_HAVE_CPP_PREDEFINED_MACROS
+#define TPP_HAVE_CPP_PREDEFINED_MACROS (TPP_HAVE_CPP_BUILTIN_MACROS ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fcpp-predefined-macros" */
+#endif /* !TPP_HAVE_CPP_PREDEFINED_MACROS */
 
 /* Support for `#!foobar`-directives (which cause the entire line to be ignored).
  *
@@ -764,6 +782,36 @@
 #define TPP_HAVE_PRAGMA 0
 #endif /* !... */
 
+
+/* TODO: The way that all the `TPP_HAVE_CLANG_MACRO_*` macros work must be
+ *       re-thought: currently, they all expand to either "0" or "1", but
+ *       it turns out that the C++ standard actually defines different
+ *       version numbers specifying different levels of compliance of
+ *       implementations whenever described language features are revised
+ *       in later versions of the standard:
+ *        - __has_cpp_attribute(nodiscard) == 201603L  (C++17)
+ *        - __has_cpp_attribute(nodiscard) == 201907L  (C++20)
+ * -> As a consequence, instead of every `__has_*` macro corresponding to
+ *    a specific `TPP_KEYWORD_FLAG_*` flag, every one of them instead needs
+ *    a distinct `TPP_REF tpp_string *` that specifies what that keyword
+ *    should expand to when used with the relevant `__has_*` macro. This
+ *    is needed for runtime override/re-definition of `__has_*` expansion
+ *    values, for use by either the target-compiler, and a new
+ *    `#pragma TPP __has_attribute(my_keyword) = "42"` (WIP syntax)
+ * -> Secondly, `TPP_KWD_FLAGS()` simply needs to go away from "defs.h".
+ *    It will need to be replaced with a series of annotation macros, one
+ *    for every `__has_*` macro there is:
+ *    >> #define TPP_KWD___has_attribute(id, expansion_str)  <magic>  (WIP syntax)
+ *
+ * Different possible feature macros:
+ * - __has_attribute()
+ * - __has_builtin()
+ * - __has_cpp_attribute()
+ * - __has_declspec_attribute()
+ * - __has_extension()
+ * - __has_feature()
+ * - __has_c_attribute()
+ */
 
 /* Support for clang `__has_attribute()`, which is conventionally
  * used to check support of `__attribute__((foo))` in C/C++ compilers.
@@ -5470,7 +5518,7 @@ print("#endif /" "* !... *" "/");
 
 /* Default return value for `tpp_lexer_isidentifier()` (see `TPP_HAVE_LEXER_ISIDENTIFIER`)
  * for keywords where this property hasn't been explicitly defined by `TPP_KWD_IS_IDENTIFIER()`,
- * and also don't have macro expansions as per `tpp_macro_getbuiltin()`.
+ * and also don't have macro expansions as per `TPP_BUILTIN_MACRO()`.
  *
  * This only affects additional keywords that you've defined. All of TPP's builtin keywords
  * come pre-configured with sensible defaults, though those defaults can also be overwritten

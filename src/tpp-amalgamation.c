@@ -51,6 +51,7 @@
 #define tef_TPP_EXT_CPP_MACROS                             TPP_INTERNAL(tef_TPP_EXT_CPP_MACROS)
 #define tef_TPP_EXT_MAGIC_WHITESPACE                       TPP_INTERNAL(tef_TPP_EXT_MAGIC_WHITESPACE)
 #define tef_TPP_EXT_CPP_BUILTIN_MACROS                     TPP_INTERNAL(tef_TPP_EXT_CPP_BUILTIN_MACROS)
+#define tef_TPP_EXT_CPP_PREDEFINED_MACROS                  TPP_INTERNAL(tef_TPP_EXT_CPP_PREDEFINED_MACROS)
 #define tef_TPP_EXT_CPP_EXCLAIM                            TPP_INTERNAL(tef_TPP_EXT_CPP_EXCLAIM)
 #define tef_TPP_EXT_CPP_BLANK                              TPP_INTERNAL(tef_TPP_EXT_CPP_BLANK)
 #define tef_TPP_EXT_CPP_DIGIT_LINE                         TPP_INTERNAL(tef_TPP_EXT_CPP_DIGIT_LINE)
@@ -339,6 +340,7 @@
 #define tff_CPP_MACROS                                     TPP_INTERNAL(tff_CPP_MACROS)
 #define tff_MAGIC_WHITESPACE                               TPP_INTERNAL(tff_MAGIC_WHITESPACE)
 #define tff_CPP_BUILTIN_MACROS                             TPP_INTERNAL(tff_CPP_BUILTIN_MACROS)
+#define tff_CPP_PREDEFINED_MACROS                          TPP_INTERNAL(tff_CPP_PREDEFINED_MACROS)
 #define tff_CPP_EXCLAIM                                    TPP_INTERNAL(tff_CPP_EXCLAIM)
 #define tff_CPP_BLANK                                      TPP_INTERNAL(tff_CPP_BLANK)
 #define tff_CPP_DIGIT_LINE                                 TPP_INTERNAL(tff_CPP_DIGIT_LINE)
@@ -29113,6 +29115,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS)
 		/* .tff_CPP_BUILTIN_MACROS                     = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_BUILTIN_MACROS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_BUILTIN_MACROS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_PREDEFINED_MACROS)
+		/* .tff_CPP_PREDEFINED_MACROS                  = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_PREDEFINED_MACROS),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_PREDEFINED_MACROS) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EXCLAIM)
 		/* .tff_CPP_EXCLAIM                            = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_EXCLAIM),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EXCLAIM) */
@@ -50684,14 +50689,19 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 	default: {
+#if TPP_HAVE_CPP_PREDEFINED_MACROS
 		/* Check for a pre-defined, builtin macro expansion */
 		tpp_builtin_macro const *builtin_macro;
+		if (!tpp_lexer_has(self, CPP_PREDEFINED_MACROS))
+			break;
+
 		builtin_macro = tpp_macro_getbuiltin(tok);
 		if (builtin_macro != NULL) {
 			return tpp_lexer_push_textfile_inherited(self, builtin_macro->tbm_body,
 			                                         builtin_macro->tbm_body_size,
 			                                         NULL);
 		}
+#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
 	}	break;
 
 	}

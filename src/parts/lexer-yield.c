@@ -2478,14 +2478,19 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 	default: {
+#if TPP_HAVE_CPP_PREDEFINED_MACROS
 		/* Check for a pre-defined, builtin macro expansion */
 		tpp_builtin_macro const *builtin_macro;
+		if (!tpp_lexer_has(self, CPP_PREDEFINED_MACROS))
+			break;
+
 		builtin_macro = tpp_macro_getbuiltin(tok);
 		if (builtin_macro != NULL) {
 			return tpp_lexer_push_textfile_inherited(self, builtin_macro->tbm_body,
 			                                         builtin_macro->tbm_body_size,
 			                                         NULL);
 		}
+#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
 	}	break;
 
 	}
