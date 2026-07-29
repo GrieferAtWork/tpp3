@@ -6475,14 +6475,131 @@ TPP_DECL_END
 #define TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES ((TPP_HAVE_CLANG_MACRO___has_extension && TPP_HAVE_CLANG_MACRO___has_feature) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fclang-extensions-are-features" */
 #endif /* !TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES */
 
+/* Default configuration for `TPP_HAVE_KEYWORD_FEATURE_*`-configs used
+ * to control which keyword features (as queried by builtin macros
+ * such as `TPP_HAVE_CLANG_MACRO___has_attribute`) can be overwritten
+ * at runtime.
+ *
+ * The ability to override these expansions is a prerequisite for
+ * `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES`, as well as the associated
+ * APIs `tpp_keyword_getfeature()` and `tpp_keyword_setfeature()`. */
+#ifndef TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_COMMON_HAVE_KEYWORD_FEATURES TPP_HAVE_PROFILE_NOT_MINIMAL
+#endif /* !TPP_COMMON_HAVE_KEYWORD_FEATURES */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_attribute()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_attribute(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_attribute`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_builtin()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_builtin(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_builtin`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
+#if TPP_HAVE_CLANG_MACRO___has_builtin && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_cpp_attribute()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_cpp_attribute(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_cpp_attribute`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_declspec_attribute()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_declspec_attribute(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_declspec_attribute`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_extension()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_extension(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_extension`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
+#if TPP_HAVE_CLANG_MACRO___has_extension && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_feature()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_feature(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_feature`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
+#if TPP_HAVE_CLANG_MACRO___has_feature && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_c_attribute()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_c_attribute(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_c_attribute`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
+
 #undef TPP_HAVE_KEYWORD_FEATURES
-#if (TPP_HAVE_CLANG_MACRO___has_attribute ||          \
-     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
-     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
-     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
-     TPP_HAVE_CLANG_MACRO___has_extension ||          \
-     TPP_HAVE_CLANG_MACRO___has_feature ||            \
-     TPP_HAVE_CLANG_MACRO___has_c_attribute)
+#if (TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE ||           \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN ||             \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE ||       \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE ||  \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION ||           \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE ||             \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE)
 #define TPP_HAVE_KEYWORD_FEATURES 1
 #else /* ... */
 #define TPP_HAVE_KEYWORD_FEATURES 0
@@ -10713,6 +10830,22 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS 0
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+
+/* Provide a function `tpp_lexer_getkeywordfeature()` to determine
+ * what a given keyword should expand to within a `__has_*`-context. */
+#ifndef TPP_HAVE_LEXER_GETKEYWORDFEATURE
+#if (TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+     TPP_HAVE_CLANG_MACRO___has_extension ||          \
+     TPP_HAVE_CLANG_MACRO___has_feature ||            \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute)
+#define TPP_HAVE_LEXER_GETKEYWORDFEATURE 1
+#else /* ... */
+#define TPP_HAVE_LEXER_GETKEYWORDFEATURE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_GETKEYWORDFEATURE */
 
 /* Provide a function `tpp_lexer_getkeyworddefined()` to check
  * if a given keyword is `defined()` (meaning it can be expanded
@@ -18618,57 +18751,54 @@ typedef struct tpp_keyword_feature {
 	 _tpp_keyword_feature_init(self))
 
 typedef struct tpp_keyword_features {
-	/* TODO: Custom configs such that only certain types of features can be overwritten at
-	 *       runtime, with all other features only ever looking at builtin defaults as per
-	 *       `TPP_PREDEFINED_FEATURE_HAS_*()` from user-definitions. */
-#if TPP_HAVE_CLANG_MACRO___has_attribute
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_attribute);          /* Expansion for `__has_attribute()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_attribute); /* Expansion for `__has_attribute()` */
 #define _tpp_keyword_features_with_has_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_attribute))
-#else /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_attribute(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_attribute */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 
-#if TPP_HAVE_CLANG_MACRO___has_builtin
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_builtin);            /* Expansion for `__has_builtin()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_builtin); /* Expansion for `__has_builtin()` */
 #define _tpp_keyword_features_with_has_builtin(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_builtin))
-#else /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 #define _tpp_keyword_features_with_has_builtin(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_builtin */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 
-#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_cpp_attribute);      /* Expansion for `__has_cpp_attribute()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_cpp_attribute); /* Expansion for `__has_cpp_attribute()` */
 #define _tpp_keyword_features_with_has_cpp_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_cpp_attribute))
-#else /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_cpp_attribute(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 
-#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
 	tpp_keyword_feature TPP_INTERNAL(tkfs_has_declspec_attribute); /* Expansion for `__has_declspec_attribute()` */
 #define _tpp_keyword_features_with_has_declspec_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_declspec_attribute))
-#else /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_declspec_attribute(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 
-#if TPP_HAVE_CLANG_MACRO___has_extension
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_extension);          /* Expansion for `__has_extension()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_extension); /* Expansion for `__has_extension()` */
 #define _tpp_keyword_features_with_has_extension(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_extension))
-#else /* TPP_HAVE_CLANG_MACRO___has_extension */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 #define _tpp_keyword_features_with_has_extension(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_extension */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 
-#if TPP_HAVE_CLANG_MACRO___has_feature
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_feature);            /* Expansion for `__has_feature()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_feature); /* Expansion for `__has_feature()` */
 #define _tpp_keyword_features_with_has_feature(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_feature))
-#else /* TPP_HAVE_CLANG_MACRO___has_feature */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 #define _tpp_keyword_features_with_has_feature(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_feature */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 
-#if TPP_HAVE_CLANG_MACRO___has_c_attribute
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_c_attribute);        /* Expansion for `__has_c_attribute()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_c_attribute); /* Expansion for `__has_c_attribute()` */
 #define _tpp_keyword_features_with_has_c_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_c_attribute))
-#else /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_c_attribute(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 } tpp_keyword_features;
 
 #define _tpp_keyword_features_witheach(self, cb)                  \
@@ -19060,27 +19190,27 @@ tpp_keyword_setflags(tpp_keyword *tpp_restrict self,
 
 #if TPP_HAVE_KEYWORD_FEATURES
 typedef enum tpp_keyword_feature_kind {
-#if TPP_HAVE_CLANG_MACRO___has_attribute
-	TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_attribute)), /* Expansion for `__has_attribute()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_builtin
-	TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_builtin)), /* Expansion for `__has_builtin()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
-#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
-	TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_cpp_attribute)), /* Expansion for `__has_cpp_attribute()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
-	TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_declspec_attribute)), /* Expansion for `__has_declspec_attribute()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_extension
-	TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_extension)), /* Expansion for `__has_extension()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
-#if TPP_HAVE_CLANG_MACRO___has_feature
-	TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_feature)), /* Expansion for `__has_feature()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
-#if TPP_HAVE_CLANG_MACRO___has_c_attribute
-	TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_c_attribute)), /* Expansion for `__has_c_attribute()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
+	TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_attribute)), /* Expansion for `__has_has_attribute()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
+	TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_builtin)), /* Expansion for `__has_has_builtin()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
+	TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_cpp_attribute)), /* Expansion for `__has_has_cpp_attribute()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
+	TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_declspec_attribute)), /* Expansion for `__has_has_declspec_attribute()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
+	TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_extension)), /* Expansion for `__has_has_extension()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
+	TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_feature)), /* Expansion for `__has_has_feature()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
+	TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_c_attribute)), /* Expansion for `__has_has_c_attribute()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 } tpp_keyword_feature_kind;
 
 #define tpp_keyword_resetfeature(self, kind)                                                                  \
@@ -22646,7 +22776,7 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
 
 
 
-#if TPP_HAVE_KEYWORD_FEATURES || TPP_HAVE_CPP_PREDEFINED_MACROS
+#if TPP_HAVE_LEXER_GETKEYWORDFEATURE || TPP_HAVE_CPP_PREDEFINED_MACROS
 typedef struct tpp_macro_expansion {
 	TPP_REF tpp_string *TPP_INTERNAL(tme_chunk); /* [0..1] Expansion chunk buffer (or "NULL" if expansion is statically allocated) */
 	tpp_char const     *TPP_INTERNAL(tme_start); /* [1..1] Start of expansion text */
@@ -22678,20 +22808,21 @@ typedef struct tpp_macro_expansion {
 #define tpp_macro_expansion_gettext(self)  (self)->TPP_INTERNAL(tme_start)
 #define tpp_macro_expansion_getsize(self) \
 	((tpp_size)((self)->TPP_INTERNAL(tme_end) - (self)->TPP_INTERNAL(tme_start)))
-#endif /* TPP_HAVE_KEYWORD_FEATURES || TPP_HAVE_CPP_PREDEFINED_MACROS */
+#endif /* TPP_HAVE_LEXER_GETKEYWORDFEATURE || TPP_HAVE_CPP_PREDEFINED_MACROS */
 
 
-#if TPP_HAVE_KEYWORD_FEATURES
+#if TPP_HAVE_LEXER_GETKEYWORDFEATURE
 /* Return the effective expansion of a feature-keyword "kwd".
+ * @param: feature_kind: One of `TPP_KWD___has_attribute`, `TPP_KWD___has_feature`, etc.
  * @return: TPP_EOK:    Success: expansion was stored in "result"
  * @return: TPP_ENOENT: SOFT_ERROR: keyword has no expansion (caller should expand to "0" instead)
  * @return: TPP_E*:     HARD_ERROR: error returned by a user-defined feature-test callback. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
 tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict self,
                             tpp_keyword const *tpp_restrict kwd,
-                            tpp_keyword_feature_kind kind,
+                            tpp_token_id feature_kind,
                             tpp_macro_expansion *tpp_restrict result);
-#endif /* TPP_HAVE_KEYWORD_FEATURES */
+#endif /* TPP_HAVE_LEXER_GETKEYWORDFEATURE */
 
 
 #if TPP_HAVE_CPP_PREDEFINED_MACROS

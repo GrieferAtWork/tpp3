@@ -27865,7 +27865,7 @@ tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
-/* Shared API */
+/* Shared API for `tpp_lexer_getkeywordfeature()` and `tpp_lexer_getpredefinedmacro()` */
 #define tpp_current_lexer()      _self
 #define tpp_current_keyword()    _kwd
 #define tpp_current_keyword_id() _kwd->tk_id
@@ -27873,39 +27873,41 @@ tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
 #define tpp_return_conststr(CONSTstr) return (tpp_macro_expansion_init_conststr(tpp_current_expansion(), CONSTstr), TPP_EOK)
 #define tpp_return_bool(is_enabled)   return (tpp_macro_expansion_init_cstr(tpp_current_expansion(), &"01"[!!(is_enabled)], 1), TPP_EOK)
 
-#if TPP_HAVE_KEYWORD_FEATURES
+#if TPP_HAVE_LEXER_GETKEYWORDFEATURE
 /* Return the effective expansion of a feature-keyword "kwd".
+ * @param: feature_kind: One of `TPP_KWD___has_attribute`, `TPP_KWD___has_feature`, etc.
  * @return: TPP_EOK:    Success: expansion was stored in "result"
  * @return: TPP_ENOENT: SOFT_ERROR: keyword has no expansion (caller should expand to "0" instead)
  * @return: TPP_E*:     HARD_ERROR: error returned by a user-defined feature-test callback. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict _self,
                             tpp_keyword const *tpp_restrict _kwd,
-                            tpp_keyword_feature_kind _kind,
+                            tpp_token_id _feature_kind,
                             tpp_macro_expansion *tpp_restrict _result) {
-	TPP_REF tpp_string *keyword_feature;
 	(void)_self;
-
-	/* Check for a custom override */
-	keyword_feature = tpp_keyword_getfeature(_kwd, _kind);
-	if (keyword_feature) {
-		tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
-		return TPP_EOK;
-	}
-
-	/* If it's a user-defined keyword, there won't be a predefined feature */
-	if (tpp_keyword_isuser(_kwd))
-		return TPP_ENOENT;
+	(void)_kwd;
+	(void)_feature_kind;
+	(void)_result;
 
 	/* Switch on different feature kinds */
-	switch (_kind) {
+	switch (_feature_kind) {
 #if TPP_HAVE_CLANG_MACRO___has_attribute
-	case TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE:
+	case TPP_KWD___has_attribute:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                               \
+			expansion_expr;                                              \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_AMALGAMATION_H
@@ -27915,12 +27917,22 @@ tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict _self,
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
 #if TPP_HAVE_CLANG_MACRO___has_builtin
-	case TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN:
+	case TPP_KWD___has_builtin:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_BUILTIN(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                             \
+			expansion_expr;                                            \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_AMALGAMATION_H
@@ -27930,12 +27942,22 @@ tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict _self,
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
 #if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
-	case TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE:
+	case TPP_KWD___has_cpp_attribute:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                                   \
+			expansion_expr;                                                  \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_AMALGAMATION_H
@@ -27945,12 +27967,22 @@ tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict _self,
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
 #if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
-	case TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE:
+	case TPP_KWD___has_declspec_attribute:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                                        \
+			expansion_expr;                                                       \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_AMALGAMATION_H
@@ -27960,12 +27992,22 @@ tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict _self,
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
 #if TPP_HAVE_CLANG_MACRO___has_extension
-	case TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION:
+	case TPP_KWD___has_extension:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_EXTENSION(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                               \
+			expansion_expr;                                              \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_AMALGAMATION_H
@@ -27975,12 +28017,22 @@ tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict _self,
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_extension */
 #if TPP_HAVE_CLANG_MACRO___has_feature
-	case TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE:
+	case TPP_KWD___has_feature:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_FEATURE(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                             \
+			expansion_expr;                                            \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_AMALGAMATION_H
@@ -27990,12 +28042,22 @@ tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict _self,
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_feature */
 #if TPP_HAVE_CLANG_MACRO___has_c_attribute
-	case TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE:
+	case TPP_KWD___has_c_attribute:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_C_ATTRIBUTE(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                                 \
+			expansion_expr;                                                \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_AMALGAMATION_H
@@ -28008,7 +28070,7 @@ tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict _self,
 	}
 	return TPP_ENOENT;
 }
-#endif /* TPP_HAVE_KEYWORD_FEATURES */
+#endif /* TPP_HAVE_LEXER_GETKEYWORDFEATURE */
 
 
 #if TPP_HAVE_CPP_PREDEFINED_MACROS
@@ -43632,42 +43694,42 @@ tpp_keyword_set_legacy_flags(tpp_keyword *tpp_restrict keyword, uint_least8_t fl
 
 	/* Apply overrides for feature-macros */
 #if TPP_HAVE_KEYWORD_FEATURES
-#if TPP_HAVE_CLANG_MACRO___has_attribute
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
 	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE,
 	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_ATTRIBUTE) != 0);
 	if (TPP_ISERR(error))
 		goto done;
-#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_builtin
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
 	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN,
 	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_BUILTIN) != 0);
 	if (TPP_ISERR(error))
 		goto done;
-#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
-#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
 	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE,
 	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE) != 0);
 	if (TPP_ISERR(error))
 		goto done;
-#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
 	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE,
 	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE) != 0);
 	if (TPP_ISERR(error))
 		goto done;
-#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_extension
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
 	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION,
 	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_EXTENSION) != 0);
 	if (TPP_ISERR(error))
 		goto done;
-#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
-#if TPP_HAVE_CLANG_MACRO___has_feature
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
 	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE,
 	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_FEATURE) != 0);
 	if (TPP_ISERR(error))
 		goto done;
-#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 #endif /* TPP_HAVE_KEYWORD_FEATURES */
 done:
 	return error;
@@ -44038,34 +44100,34 @@ skip_colon_and_andle_for_pathlist:
 static TPP_CONSTCALL TPP_WUNUSED tpp_keyword_feature_kind TPPCALL
 tpp_keyword_feature_kind_oftok(tpp_token_id mode_tok) {
 	switch (mode_tok) {
-#if TPP_HAVE_CLANG_MACRO___has_attribute
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
 	case TPP_KWD___has_attribute:
 		return TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE;
-#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_builtin
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
 	case TPP_KWD___has_builtin:
 		return TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN;
-#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
-#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
 	case TPP_KWD___has_cpp_attribute:
 		return TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE;
-#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
 	case TPP_KWD___has_declspec_attribute:
 		return TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE;
-#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_extension
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
 	case TPP_KWD___has_extension:
 		return TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION;
-#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
-#if TPP_HAVE_CLANG_MACRO___has_feature
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
 	case TPP_KWD___has_feature:
 		return TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE;
-#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
-#if TPP_HAVE_CLANG_MACRO___has_c_attribute
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
 	case TPP_KWD___has_c_attribute:
 		return TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE;
-#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 	default: tpp_unreachable();
 	}
 	tpp_unreachable();
@@ -44311,27 +44373,27 @@ tpp_lexer_process_pragma_TPP(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 
 #if TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
-#if TPP_HAVE_CLANG_MACRO___has_attribute
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
 	case TPP_KWD___has_attribute:
-#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_builtin
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
 	case TPP_KWD___has_builtin:
-#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
-#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
 	case TPP_KWD___has_cpp_attribute:
-#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
 	case TPP_KWD___has_declspec_attribute:
-#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_extension
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
 	case TPP_KWD___has_extension:
-#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
-#if TPP_HAVE_CLANG_MACRO___has_feature
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
 	case TPP_KWD___has_feature:
-#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
-#if TPP_HAVE_CLANG_MACRO___has_c_attribute
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
 	case TPP_KWD___has_c_attribute:
-#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_TPP_keyword_feature(self);
 #endif /* TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
@@ -49251,7 +49313,6 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 		if (TPP_TOK_ISKEYWORD(tok)) {
 			tpp_keyword const *feature_keyword;
 #if TPP_HAVE_KEYWORD_FEATURE_TEST_MACROS
-			tpp_keyword_feature_kind feature_kind;
 			tpp_macro_expansion feature_expansion;
 			tpp_errno feature_error;
 #endif /* TPP_HAVE_KEYWORD_FEATURE_TEST_MACROS */
@@ -49332,57 +49393,17 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 			}
 
 #if TPP_HAVE_KEYWORD_FEATURE_TEST_MACROS
-			/* Determine feature kind */
-			switch (mode) {
-#if TPP_HAVE_CLANG_MACRO___has_attribute
-			case TPP_KWD___has_attribute:
-				feature_kind = TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE;
-				break;
-#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_builtin
-			case TPP_KWD___has_builtin:
-				feature_kind = TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN;
-				break;
-#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
-#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
-			case TPP_KWD___has_cpp_attribute:
-				feature_kind = TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE;
-				break;
-#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
-			case TPP_KWD___has_declspec_attribute:
-				feature_kind = TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE;
-				break;
-#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_extension
-			case TPP_KWD___has_extension:
-				feature_kind = TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION;
-				break;
-#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
-#if TPP_HAVE_CLANG_MACRO___has_feature
-			case TPP_KWD___has_feature:
-				feature_kind = TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE;
-				break;
-#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
-#if TPP_HAVE_CLANG_MACRO___has_c_attribute
-			case TPP_KWD___has_c_attribute:
-				feature_kind = TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE;
-				break;
-#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
-			default: tpp_unreachable();
-			}
-
 			/* Load feature expansion. */
 probe_feature_keyword:
 			feature_error = tpp_lexer_getkeywordfeature(self, feature_keyword,
-			                                            feature_kind, &feature_expansion);
+			                                            mode, &feature_expansion);
 			if (feature_error != TPP_ENOENT)
 				goto check_feature_expansion_error;
 #if TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES
-			if (feature_kind == TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE &&
+			if (mode == TPP_KWD___has_feature &&
 			    tpp_lexer_has(self, CLANG_EXTENSIONS_ARE_FEATURES)) {
 				feature_error = tpp_lexer_getkeywordfeature(self, feature_keyword,
-				                                            TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION,
+				                                            TPP_KWD___has_extension,
 				                                            &feature_expansion);
 				if (feature_error != TPP_ENOENT)
 					goto check_feature_expansion_error;

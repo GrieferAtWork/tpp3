@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!depends config.h*/
 #ifndef GUARD_TPP_KEYWORD_H
 #define GUARD_TPP_KEYWORD_H 1
 
@@ -126,59 +127,80 @@ typedef struct tpp_keyword_feature {
 	 _tpp_keyword_feature_init(self))
 
 typedef struct tpp_keyword_features {
-	/* TODO: Custom configs such that only certain types of features can be overwritten at
-	 *       runtime, with all other features only ever looking at builtin defaults as per
-	 *       `TPP_PREDEFINED_FEATURE_HAS_*()` from user-definitions. */
-#if TPP_HAVE_CLANG_MACRO___has_attribute
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_attribute);          /* Expansion for `__has_attribute()` */
+/*[[[deemon
+import KEYWORD_FEATURE_KINDS from .config;
+for (local kind: KEYWORD_FEATURE_KINDS) {
+	local KIND = kind.upper();
+	print("#if TPP_HAVE_KEYWORD_FEATURE_", KIND);
+	print("	tpp_keyword_feature TPP_INTERNAL(tkfs_", kind, "); /" "* Expansion for `__", kind, "()` *" "/");
+	print("#define _tpp_keyword_features_with_", kind, "(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_", kind, "))");
+	print("#else /" "* TPP_HAVE_KEYWORD_FEATURE_", KIND, " *" "/");
+	print("#define _tpp_keyword_features_with_", kind, "(self, cb) /" "* nothing *" "/");
+	print("#endif /" "* !TPP_HAVE_KEYWORD_FEATURE_", KIND, " *" "/");
+	print;
+}
+]]]*/
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_attribute); /* Expansion for `__has_attribute()` */
 #define _tpp_keyword_features_with_has_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_attribute))
-#else /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_attribute(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_attribute */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 
-#if TPP_HAVE_CLANG_MACRO___has_builtin
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_builtin);            /* Expansion for `__has_builtin()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_builtin); /* Expansion for `__has_builtin()` */
 #define _tpp_keyword_features_with_has_builtin(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_builtin))
-#else /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 #define _tpp_keyword_features_with_has_builtin(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_builtin */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 
-#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_cpp_attribute);      /* Expansion for `__has_cpp_attribute()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_cpp_attribute); /* Expansion for `__has_cpp_attribute()` */
 #define _tpp_keyword_features_with_has_cpp_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_cpp_attribute))
-#else /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_cpp_attribute(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 
-#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
 	tpp_keyword_feature TPP_INTERNAL(tkfs_has_declspec_attribute); /* Expansion for `__has_declspec_attribute()` */
 #define _tpp_keyword_features_with_has_declspec_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_declspec_attribute))
-#else /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_declspec_attribute(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 
-#if TPP_HAVE_CLANG_MACRO___has_extension
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_extension);          /* Expansion for `__has_extension()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_extension); /* Expansion for `__has_extension()` */
 #define _tpp_keyword_features_with_has_extension(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_extension))
-#else /* TPP_HAVE_CLANG_MACRO___has_extension */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 #define _tpp_keyword_features_with_has_extension(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_extension */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 
-#if TPP_HAVE_CLANG_MACRO___has_feature
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_feature);            /* Expansion for `__has_feature()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_feature); /* Expansion for `__has_feature()` */
 #define _tpp_keyword_features_with_has_feature(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_feature))
-#else /* TPP_HAVE_CLANG_MACRO___has_feature */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 #define _tpp_keyword_features_with_has_feature(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_feature */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 
-#if TPP_HAVE_CLANG_MACRO___has_c_attribute
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_c_attribute);        /* Expansion for `__has_c_attribute()` */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
+	tpp_keyword_feature TPP_INTERNAL(tkfs_has_c_attribute); /* Expansion for `__has_c_attribute()` */
 #define _tpp_keyword_features_with_has_c_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_c_attribute))
-#else /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#else /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_c_attribute(self, cb) /* nothing */
-#endif /* !TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
+/*[[[end]]]*/
 } tpp_keyword_features;
 
+/*[[[deemon
+import KEYWORD_FEATURE_KINDS from .config;
+local maxLen = KEYWORD_FEATURE_KINDS.each.length > ...;
+print("#define _tpp_keyword_features_witheach(self, cb) ", " " * (maxLen - 5), "\\\n", " \\\n".join(
+	for (local kind: KEYWORD_FEATURE_KINDS)
+		f"	, _tpp_keyword_features_with_{kind}(self, cb){
+			" " * (maxLen - #kind)
+		}"
+));
+]]]*/
 #define _tpp_keyword_features_witheach(self, cb)                  \
 	, _tpp_keyword_features_with_has_attribute(self, cb)          \
 	, _tpp_keyword_features_with_has_builtin(self, cb)            \
@@ -187,6 +209,7 @@ typedef struct tpp_keyword_features {
 	, _tpp_keyword_features_with_has_extension(self, cb)          \
 	, _tpp_keyword_features_with_has_feature(self, cb)            \
 	, _tpp_keyword_features_with_has_c_attribute(self, cb)
+/*[[[end]]]*/
 
 #define _tpp_keyword_features_init(self) \
 	((void)0 _tpp_keyword_features_witheach(self, _tpp_keyword_feature_init))
@@ -568,27 +591,37 @@ tpp_keyword_setflags(tpp_keyword *tpp_restrict self,
 
 #if TPP_HAVE_KEYWORD_FEATURES
 typedef enum tpp_keyword_feature_kind {
-#if TPP_HAVE_CLANG_MACRO___has_attribute
-	TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_attribute)), /* Expansion for `__has_attribute()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_builtin
-	TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_builtin)), /* Expansion for `__has_builtin()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
-#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
-	TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_cpp_attribute)), /* Expansion for `__has_cpp_attribute()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
-	TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_declspec_attribute)), /* Expansion for `__has_declspec_attribute()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_extension
-	TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_extension)), /* Expansion for `__has_extension()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
-#if TPP_HAVE_CLANG_MACRO___has_feature
-	TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_feature)), /* Expansion for `__has_feature()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
-#if TPP_HAVE_CLANG_MACRO___has_c_attribute
-	TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_c_attribute)), /* Expansion for `__has_c_attribute()` */
-#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+/*[[[deemon
+import KEYWORD_FEATURE_KINDS from .config;
+for (local kind: KEYWORD_FEATURE_KINDS) {
+	local KIND = kind.upper();
+	print("#if TPP_HAVE_KEYWORD_FEATURE_", KIND);
+	print("	TPP_KEYWORD_FEATURE_KIND_", KIND, " = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_", kind, ")), /" "* Expansion for `__has_", kind, "()` *" "/");
+	print("#endif /" "* TPP_HAVE_KEYWORD_FEATURE_", KIND, " *" "/");
+}
+]]]*/
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
+	TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_attribute)), /* Expansion for `__has_has_attribute()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
+	TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_builtin)), /* Expansion for `__has_has_builtin()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
+	TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_cpp_attribute)), /* Expansion for `__has_has_cpp_attribute()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
+	TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_declspec_attribute)), /* Expansion for `__has_has_declspec_attribute()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
+	TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_extension)), /* Expansion for `__has_has_extension()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
+	TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_feature)), /* Expansion for `__has_has_feature()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
+	TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_c_attribute)), /* Expansion for `__has_has_c_attribute()` */
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
+/*[[[end]]]*/
 } tpp_keyword_feature_kind;
 
 #define tpp_keyword_resetfeature(self, kind)                                                                  \

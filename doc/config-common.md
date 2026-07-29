@@ -56,7 +56,7 @@ TPP_HAVE_PROFILE_ALL ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 Default configuration for [`TPP_HAVE_TOK_LF`](config-conf.md#tpp_have_tok_lf), [`TPP_HAVE_TOK_SPACE`](config-conf.md#tpp_have_tok_space),
 [`TPP_HAVE_TOK_COMMENT`](config-conf.md#tpp_have_tok_comment), indicating if tokens that are normally through
-of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L22263)
+of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L22406)
 
 <details><summary>Details</summary>
 
@@ -203,6 +203,26 @@ Default:
 
 ```c
 TPP_HAVE_PROFILE_ALL ? TPP_CONF_EXT1 : ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX))
+```
+</details>
+
+## TPP_COMMON_HAVE_KEYWORD_FEATURES
+
+Default configuration for `TPP_HAVE_KEYWORD_FEATURE_*`-configs used
+to control which keyword features (as queried by builtin macros
+such as [`TPP_HAVE_CLANG_MACRO___has_attribute`](config-conf.md#tpp_have_clang_macro___has_attribute)) can be overwritten
+at runtime.
+
+The ability to override these expansions is a prerequisite for
+[`TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES`](config-core.md#tpp_have_pragma_tpp_keyword_features), as well as the associated
+APIs [`tpp_keyword_getfeature()`](../src/tpp-amalgamation.h#L19250) and [`tpp_keyword_setfeature()`](../src/tpp-amalgamation.h#L19260).
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_PROFILE != TPP_PROFILE_MINIMAL
 ```
 </details>
 

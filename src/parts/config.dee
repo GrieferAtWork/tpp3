@@ -31,6 +31,7 @@ function getProperty(name: string) {
 
 global final charNames: {string: string} = getProperty("charNames");
 global final MC_TOKENS: {(string, string, string)...} = getProperty("MC_TOKENS");
+global final KEYWORD_FEATURE_KINDS: {string...} = getProperty("KEYWORD_FEATURE_KINDS");
 
 @@Defined callbacks:
 @@for (local doc, name,           // Doc string and name of hook

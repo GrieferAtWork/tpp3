@@ -857,18 +857,179 @@
 #define TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES ((TPP_HAVE_CLANG_MACRO___has_extension && TPP_HAVE_CLANG_MACRO___has_feature) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fclang-extensions-are-features" */
 #endif /* !TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES */
 
+/* Default configuration for `TPP_HAVE_KEYWORD_FEATURE_*`-configs used
+ * to control which keyword features (as queried by builtin macros
+ * such as `TPP_HAVE_CLANG_MACRO___has_attribute`) can be overwritten
+ * at runtime.
+ *
+ * The ability to override these expansions is a prerequisite for
+ * `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES`, as well as the associated
+ * APIs `tpp_keyword_getfeature()` and `tpp_keyword_setfeature()`. */
+#ifndef TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_COMMON_HAVE_KEYWORD_FEATURES TPP_HAVE_PROFILE_NOT_MINIMAL
+#endif /* !TPP_COMMON_HAVE_KEYWORD_FEATURES */
+
+/*[[[deemon
+local KEYWORD_FEATURE_KINDS = {
+	"has_attribute",
+	"has_builtin",
+	"has_cpp_attribute",
+	"has_declspec_attribute",
+	"has_extension",
+	"has_feature",
+	"has_c_attribute",
+};
+
+for (local feat: KEYWORD_FEATURE_KINDS) {
+	local FEAT = feat.upper();
+	print("/" "* Controls if `tpp_keyword` should have support for a runtime-override");
+	print(" " "* of what `", feat, "()` should expand to when applied to that keyword.");
+	print(" " "* Needed to implement `#pragma TPP ", feat, "(keyword) = \"expansion\"`.");
+	print(" " "*");
+	print(" " "* see:");
+	print(" " "* - `TPP_HAVE_CLANG_MACRO___", feat, "`");
+	print(" " "* - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` *" "/");
+	print("#ifndef TPP_HAVE_KEYWORD_FEATURE_", FEAT);
+	print("#if TPP_HAVE_CLANG_MACRO___", feat, " && TPP_COMMON_HAVE_KEYWORD_FEATURES");
+	print("#define TPP_HAVE_KEYWORD_FEATURE_", FEAT, " 1");
+	print("#else /" "* ... *" "/");
+	print("#define TPP_HAVE_KEYWORD_FEATURE_", FEAT, " 0");
+	print("#endif /" "* !... *" "/");
+	print("#endif /" "* !TPP_HAVE_KEYWORD_FEATURE_", FEAT, " *" "/");
+	print;
+}
+
+print("#undef TPP_HAVE_KEYWORD_FEATURES");
+local maxLen = KEYWORD_FEATURE_KINDS.each.length > ...;
+print("#if (", " \\\n".join(
+	for (local feat: KEYWORD_FEATURE_KINDS)
+		f"     TPP_HAVE_KEYWORD_FEATURE_{feat.upper()} || {
+			" " * (maxLen - #feat)
+		}"
+).strip("| "), ")");
+print("#define TPP_HAVE_KEYWORD_FEATURES 1");
+print("#else /" "* ... *" "/");
+print("#define TPP_HAVE_KEYWORD_FEATURES 0");
+print("#endif /" "* !... *" "/");
+]]]*/
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_attribute()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_attribute(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_attribute`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_builtin()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_builtin(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_builtin`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
+#if TPP_HAVE_CLANG_MACRO___has_builtin && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_cpp_attribute()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_cpp_attribute(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_cpp_attribute`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_declspec_attribute()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_declspec_attribute(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_declspec_attribute`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_extension()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_extension(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_extension`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
+#if TPP_HAVE_CLANG_MACRO___has_extension && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_feature()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_feature(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_feature`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
+#if TPP_HAVE_CLANG_MACRO___has_feature && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
+
+/* Controls if `tpp_keyword` should have support for a runtime-override
+ * of what `has_c_attribute()` should expand to when applied to that keyword.
+ * Needed to implement `#pragma TPP has_c_attribute(keyword) = "expansion"`.
+ *
+ * see:
+ * - `TPP_HAVE_CLANG_MACRO___has_c_attribute`
+ * - `TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES` */
+#ifndef TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURES
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
+
 #undef TPP_HAVE_KEYWORD_FEATURES
-#if (TPP_HAVE_CLANG_MACRO___has_attribute ||          \
-     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
-     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
-     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
-     TPP_HAVE_CLANG_MACRO___has_extension ||          \
-     TPP_HAVE_CLANG_MACRO___has_feature ||            \
-     TPP_HAVE_CLANG_MACRO___has_c_attribute)
+#if (TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE ||           \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN ||             \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE ||       \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE ||  \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION ||           \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE ||             \
+     TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE)
 #define TPP_HAVE_KEYWORD_FEATURES 1
 #else /* ... */
 #define TPP_HAVE_KEYWORD_FEATURES 0
 #endif /* !... */
+/*[[[end]]]*/
 
 
 
@@ -5507,6 +5668,22 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS 0
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+
+/* Provide a function `tpp_lexer_getkeywordfeature()` to determine
+ * what a given keyword should expand to within a `__has_*`-context. */
+#ifndef TPP_HAVE_LEXER_GETKEYWORDFEATURE
+#if (TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+     TPP_HAVE_CLANG_MACRO___has_extension ||          \
+     TPP_HAVE_CLANG_MACRO___has_feature ||            \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute)
+#define TPP_HAVE_LEXER_GETKEYWORDFEATURE 1
+#else /* ... */
+#define TPP_HAVE_LEXER_GETKEYWORDFEATURE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_GETKEYWORDFEATURE */
 
 /* Provide a function `tpp_lexer_getkeyworddefined()` to check
  * if a given keyword is `defined()` (meaning it can be expanded

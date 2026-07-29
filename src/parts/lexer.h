@@ -1804,7 +1804,7 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
 
 
 
-#if TPP_HAVE_KEYWORD_FEATURES || TPP_HAVE_CPP_PREDEFINED_MACROS
+#if TPP_HAVE_LEXER_GETKEYWORDFEATURE || TPP_HAVE_CPP_PREDEFINED_MACROS
 typedef struct tpp_macro_expansion {
 	TPP_REF tpp_string *TPP_INTERNAL(tme_chunk); /* [0..1] Expansion chunk buffer (or "NULL" if expansion is statically allocated) */
 	tpp_char const     *TPP_INTERNAL(tme_start); /* [1..1] Start of expansion text */
@@ -1836,20 +1836,21 @@ typedef struct tpp_macro_expansion {
 #define tpp_macro_expansion_gettext(self)  (self)->TPP_INTERNAL(tme_start)
 #define tpp_macro_expansion_getsize(self) \
 	((tpp_size)((self)->TPP_INTERNAL(tme_end) - (self)->TPP_INTERNAL(tme_start)))
-#endif /* TPP_HAVE_KEYWORD_FEATURES || TPP_HAVE_CPP_PREDEFINED_MACROS */
+#endif /* TPP_HAVE_LEXER_GETKEYWORDFEATURE || TPP_HAVE_CPP_PREDEFINED_MACROS */
 
 
-#if TPP_HAVE_KEYWORD_FEATURES
+#if TPP_HAVE_LEXER_GETKEYWORDFEATURE
 /* Return the effective expansion of a feature-keyword "kwd".
+ * @param: feature_kind: One of `TPP_KWD___has_attribute`, `TPP_KWD___has_feature`, etc.
  * @return: TPP_EOK:    Success: expansion was stored in "result"
  * @return: TPP_ENOENT: SOFT_ERROR: keyword has no expansion (caller should expand to "0" instead)
  * @return: TPP_E*:     HARD_ERROR: error returned by a user-defined feature-test callback. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
 tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict self,
                             tpp_keyword const *tpp_restrict kwd,
-                            tpp_keyword_feature_kind kind,
+                            tpp_token_id feature_kind,
                             tpp_macro_expansion *tpp_restrict result);
-#endif /* TPP_HAVE_KEYWORD_FEATURES */
+#endif /* TPP_HAVE_LEXER_GETKEYWORDFEATURE */
 
 
 #if TPP_HAVE_CPP_PREDEFINED_MACROS

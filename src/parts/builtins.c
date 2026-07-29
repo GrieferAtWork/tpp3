@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!depends config.h*/
 #ifndef GUARD_TPP_BUILTINS_C
 #define GUARD_TPP_BUILTINS_C 1
 #define TPP_BUILDING 1
@@ -614,7 +615,7 @@ tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
-/* Shared API */
+/* Shared API for `tpp_lexer_getkeywordfeature()` and `tpp_lexer_getpredefinedmacro()` */
 #define tpp_current_lexer()      _self
 #define tpp_current_keyword()    _kwd
 #define tpp_current_keyword_id() _kwd->tk_id
@@ -622,50 +623,45 @@ tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
 #define tpp_return_conststr(CONSTstr) return (tpp_macro_expansion_init_conststr(tpp_current_expansion(), CONSTstr), TPP_EOK)
 #define tpp_return_bool(is_enabled)   return (tpp_macro_expansion_init_cstr(tpp_current_expansion(), &"01"[!!(is_enabled)], 1), TPP_EOK)
 
-#if TPP_HAVE_KEYWORD_FEATURES
+#if TPP_HAVE_LEXER_GETKEYWORDFEATURE
 /* Return the effective expansion of a feature-keyword "kwd".
+ * @param: feature_kind: One of `TPP_KWD___has_attribute`, `TPP_KWD___has_feature`, etc.
  * @return: TPP_EOK:    Success: expansion was stored in "result"
  * @return: TPP_ENOENT: SOFT_ERROR: keyword has no expansion (caller should expand to "0" instead)
  * @return: TPP_E*:     HARD_ERROR: error returned by a user-defined feature-test callback. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict _self,
                             tpp_keyword const *tpp_restrict _kwd,
-                            tpp_keyword_feature_kind _kind,
+                            tpp_token_id _feature_kind,
                             tpp_macro_expansion *tpp_restrict _result) {
-	TPP_REF tpp_string *keyword_feature;
 	(void)_self;
-
-	/* Check for a custom override */
-	keyword_feature = tpp_keyword_getfeature(_kwd, _kind);
-	if (keyword_feature) {
-		tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
-		return TPP_EOK;
-	}
-
-	/* If it's a user-defined keyword, there won't be a predefined feature */
-	if (tpp_keyword_isuser(_kwd))
-		return TPP_ENOENT;
+	(void)_kwd;
+	(void)_feature_kind;
+	(void)_result;
 
 	/* Switch on different feature kinds */
-	switch (_kind) {
+	switch (_feature_kind) {
 /*[[[deemon
-for (local kind: {
-	"has_attribute",
-	"has_builtin",
-	"has_cpp_attribute",
-	"has_declspec_attribute",
-	"has_extension",
-	"has_feature",
-	"has_c_attribute",
-}) {
+import KEYWORD_FEATURE_KINDS from .config;
+for (local kind: KEYWORD_FEATURE_KINDS) {
 	local KIND = kind.upper();
 	print("#if TPP_HAVE_CLANG_MACRO___", kind);
-	print("	case TPP_KEYWORD_FEATURE_KIND_", KIND, ":");
+	print("	case TPP_KWD___", kind, ":");
+	print("#if TPP_HAVE_KEYWORD_FEATURE_", KIND);
+	print("		{");
+	print("			TPP_REF tpp_string *keyword_feature;");
+	print("			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_", KIND, ");");
+	print("			if (keyword_feature) {");
+	print("				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);");
+	print("				return TPP_EOK;");
+	print("			}");
+	print("		}");
+	print("#endif /" "* TPP_HAVE_KEYWORD_FEATURE_", KIND, " *" "/");
 	print("		switch (tpp_keyword_getid(_kwd)) {");
 	print("#define TPP_DEFS");
 	print("#define TPP_PREDEFINED_FEATURE_", KIND, "(keyword_id, expansion_expr) \\");
-	print("		case keyword_id: { \\");
-	print("			expansion_expr; \\");
+	print("		case keyword_id: {  ", " " * #KIND, "                                \\");
+	print("			expansion_expr; ", " " * #KIND, "                                \\");
 	print("		}	break;");
 	print("#undef GUARD_TPP_AMALGAMATION_H");
 	print("#include TPP_CONFIG_DEFS_FILENAME");
@@ -677,12 +673,22 @@ for (local kind: {
 }
 ]]]*/
 #if TPP_HAVE_CLANG_MACRO___has_attribute
-	case TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE:
+	case TPP_KWD___has_attribute:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                               \
+			expansion_expr;                                              \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
@@ -692,12 +698,22 @@ for (local kind: {
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
 #if TPP_HAVE_CLANG_MACRO___has_builtin
-	case TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN:
+	case TPP_KWD___has_builtin:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_BUILTIN(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                             \
+			expansion_expr;                                            \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
@@ -707,12 +723,22 @@ for (local kind: {
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
 #if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
-	case TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE:
+	case TPP_KWD___has_cpp_attribute:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                                   \
+			expansion_expr;                                                  \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
@@ -722,12 +748,22 @@ for (local kind: {
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
 #if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
-	case TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE:
+	case TPP_KWD___has_declspec_attribute:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                                        \
+			expansion_expr;                                                       \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
@@ -737,12 +773,22 @@ for (local kind: {
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
 #if TPP_HAVE_CLANG_MACRO___has_extension
-	case TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION:
+	case TPP_KWD___has_extension:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_EXTENSION(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                               \
+			expansion_expr;                                              \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
@@ -752,12 +798,22 @@ for (local kind: {
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_extension */
 #if TPP_HAVE_CLANG_MACRO___has_feature
-	case TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE:
+	case TPP_KWD___has_feature:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_FEATURE(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                             \
+			expansion_expr;                                            \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
@@ -767,12 +823,22 @@ for (local kind: {
 		break;
 #endif /* TPP_HAVE_CLANG_MACRO___has_feature */
 #if TPP_HAVE_CLANG_MACRO___has_c_attribute
-	case TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE:
+	case TPP_KWD___has_c_attribute:
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
+		{
+			TPP_REF tpp_string *keyword_feature;
+			keyword_feature = tpp_keyword_getfeature(_kwd, TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE);
+			if (keyword_feature) {
+				tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+				return TPP_EOK;
+			}
+		}
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
 #define TPP_PREDEFINED_FEATURE_HAS_C_ATTRIBUTE(keyword_id, expansion_expr) \
-		case keyword_id: { \
-			expansion_expr; \
+		case keyword_id: {                                                 \
+			expansion_expr;                                                \
 		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
@@ -786,7 +852,7 @@ for (local kind: {
 	}
 	return TPP_ENOENT;
 }
-#endif /* TPP_HAVE_KEYWORD_FEATURES */
+#endif /* TPP_HAVE_LEXER_GETKEYWORDFEATURE */
 
 
 #if TPP_HAVE_CPP_PREDEFINED_MACROS
