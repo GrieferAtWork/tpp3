@@ -215,6 +215,9 @@
     <ClInclude Include="..\src\parts\preparse.h">
       <Filter>src\parts</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\parts\token-aliases.h">
+      <Filter>src\parts</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\cpp.hint" />

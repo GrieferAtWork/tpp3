@@ -76,6 +76,7 @@
     <ClInclude Include="..\src\parts\string.h" />
     <ClInclude Include="..\src\parts\sysinclude.h" />
     <ClInclude Include="..\src\parts\time.h" />
+    <ClInclude Include="..\src\parts\token-aliases.h" />
     <ClInclude Include="..\src\parts\token.h" />
     <ClInclude Include="..\src\parts\tuple.h" />
     <ClInclude Include="..\src\parts\warnings.h" />

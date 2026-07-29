@@ -50282,7 +50282,9 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 			tok = tpp_lexer_gettok(self);
 		return tok;
 	}
-	/* TODO: Re-write this to not use `tpp_lexer_seekpp_rparen_exact`, but parse tokens directly! */
+	/* Use `tpp_lexer_seekpp_rparen_exact()` so #include-tracebacks point
+	 * at the entirety of the `__TPP_STR_PACK()` expression, rather than
+	 * just at its end. */
 	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "__TPP_STR_PACK",
 	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL |
 	                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
@@ -50294,6 +50296,8 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
 	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0) {
+err_nomem_subtext_builder:
+		tok = TPP_TOK_ENOMEM;
 err_tok_subtext_builder:
 		tpp_file_subtext_break(file);
 		tpp_string_builder_fini(&builder);
@@ -50333,6 +50337,15 @@ handle_status:
 				tok = TPP_TOK_OFERR(error);
 				goto err_tok_subtext_builder;
 			}
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+			if ((tpp_intmax)(tpp_char)value != value) {
+				error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
+				if (TPP_ISERR(error)) {
+					tok = TPP_TOK_OFERR(error);
+					goto err_tok_subtext_builder;
+				}
+			}
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 			value_ch[0] = (tpp_char)value;
 			status = tpp_string_builder_print_encoded(&builder, value_ch, 1);
 			goto handle_status;
@@ -50355,12 +50368,11 @@ handle_status:
 		}
 	}
 done_inner_loop:
+	tpp_assert(!TPP_TOK_ISERR(tok));
 	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
-		goto err_tok_subtext_builder;
+		goto err_nomem_subtext_builder;
 	tpp_file_subtext_pop(file);
 	tpp_lexer_arginfo_fini(&argv[0]);
-	if (TPP_TOK_ISERR(tok))
-		return tok;
 
 	/* Push a sub-text file describing the decoded contents of the string */
 	prev_file = tpp_file_alloc();
