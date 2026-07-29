@@ -33,8 +33,8 @@
 #endif /* !tpp_va_arg */
 #define WARNING_NAMESPACE(name, start)      /* nothing (sorry; these no longer exist in TPP3; use warning numbers instead!) */
 #define MACRO(keyword_id, if)               TPP_MACRO(keyword_id, if)
-#define BUILTIN_MACRO(keyword_id, value)    TPP_BUILTIN_MACRO(keyword_id, value)
-#define RT_BUILTIN_MACRO(keyword_id, value) TPP_BUILTIN_MACRO(keyword_id, value)
+#define BUILTIN_MACRO(keyword_id, value)    TPP_PREDEFINED_MACRO(keyword_id, value)
+#define RT_BUILTIN_MACRO(keyword_id, value) TPP_PREDEFINED_MACRO(keyword_id, value)
 #define BUILTIN_FUNCTION(name, argc, expr)  /* nothing (sorry; these no longer exist in TPP3) */
 #define EXTENSION(id, name, default)        TPP_EXTENSION(id, name, default)
 
@@ -1305,7 +1305,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 /* TPP_UNESCAPE_ENDIAN, TPP_BYTEORDER
  * - TPP3 is written to be agnostic to CPU endian at runtime
  * - The only place TPP2 (and TPP3) need the endian is for decoding UTF-16,
- *   though TPP3 doesn't need some pre-defined macro specifying the endian
+ *   though TPP3 doesn't need some predefined macro specifying the endian
  *   at compile-time in order to do this.
  */
 
@@ -1740,6 +1740,11 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * - These warnings were removed because they were either default-disabled in
  *   TPP2, or were related to features that are no longer supported by TPP3
  * - There is no replacement for these warnings.
+ */
+
+/* W_CANT_UNDEF_BUILTIN_MACRO:
+ * - TPP3 allows you to #undef builtin/predefined macros just like
+ *   any other macro (though you probably don't want to do that)
  */
 
 /* TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT,
@@ -3031,7 +3036,6 @@ alias("W_EXPECTED_COMMA_OR_ARGEND", "TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_L
 alias("W_TOO_MANY_MACRO_ARGUMENTS", "TPP_W_TOO_MANY_ARGUMENTS");
 alias("W_EOF_IN_MACRO_ARGUMENT_LIST", "TPP_W_EOF_IN_ARGUMENT_LIST");
 alias("W_REDEFINING_MACRO", "TPP_W_REDEFINE_MACRO");
-alias("W_CANT_UNDEF_BUILTIN_MACRO", "TPP_W_CANNOT_UNDEF_BUILTIN_MACRO");
 alias("W_EXPECTED_STRING_AFTER_PUSHMACRO", "TPP_W_EXPECTED_STRING");
 alias("W_EXPECTED_STRING_AFTER_TPP_STRD", "TPP_W_EXPECTED_STRING");
 alias("W_EXPECTED_LPAREN", "TPP_W_UNEXPECTED_TOKEN");
@@ -4279,12 +4283,6 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define W_REDEFINING_MACRO TPP_W_REDEFINE_MACRO
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_W_REDEFINE_MACRO */
-#ifdef TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
-#define TPP_W_CANT_UNDEF_BUILTIN_MACRO TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define W_CANT_UNDEF_BUILTIN_MACRO TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#endif /* TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
 #ifdef TPP_W_EXPECTED_STRING
 #define TPP_W_EXPECTED_STRING_AFTER_PUSHMACRO TPP_W_EXPECTED_STRING
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -5278,8 +5276,8 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 
 
 #define TPP_KEYWORDFLAG_NONE TPP_KEYWORD_FLAG_NORMAL
-#undef TPP_KEYWORDFLAG_BUILTINMACRO   /* Must be checked for using `tpp_macro_getbuiltin()' */
-#undef TPP_KEYWORDFLAG_NO_UNDERSCORES /* Must be checked for using `tpp_macro_getbuiltin()' */
+#undef TPP_KEYWORDFLAG_BUILTINMACRO   /* Must be checked for using `tpp_macro_getpredefined()' */
+#undef TPP_KEYWORDFLAG_NO_UNDERSCORES /* Must be checked for using `tpp_macro_getpredefined()' */
 #define TPP_KEYWORDFLAG_IMPORTED               TPP_KEYWORD_FLAG_HDR_IMPORTED
 #define TPP_KEYWORDFLAG_HAS_ATTRIBUTE          TPP_KEYWORD_FLAG_HAS_ATTRIBUTE
 #define TPP_KEYWORDFLAG_HAS_BUILTIN            TPP_KEYWORD_FLAG_HAS_BUILTIN
@@ -5296,7 +5294,7 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define TPPRareKeyword tpp_keyword_misc
 #undef kr_file     /* Replaced with "tkm_file_guard" (which has a slightly different meaning) */
 #undef kr_oldmacro /* Replaced with "tkm_macro_pushstack" (which has a slightly different meaning) */
-#undef kr_defmacro /* Builtin macros are now handled by `tpp_macro_getbuiltin()' */
+#undef kr_defmacro /* Builtin macros are now handled by `tpp_macro_getpredefined()' */
 #define kr_flags   TPP_INTERNAL(tkm_flags) /* Use tpp_lexer_getkeywordflags() */
 #define kr_counter TPP_INTERNAL(tkm_builtin_counter) /* Don't access */
 #if TPP_HAVE_CPP_ASSERT
@@ -5559,7 +5557,7 @@ TPPLexer_Reset(tpp_lexer *tpp_restrict self, uint32_t flags) {
 		tpp_lexer_kwds_reset(self);
 	} else {
 		if (flags & TPPLEXER_RESET_MACRO)
-			tpp_lexer_undefall(self);
+			tpp_lexer_undefalluser(self);
 		if (flags & TPPLEXER_RESET_ASSERT)
 			tpp_lexer_unassertall2(self);
 		if (flags & TPPLEXER_RESET_COUNTER)

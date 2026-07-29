@@ -32,7 +32,7 @@
  * extensions/etc. for integration into TPP3.
  ********************************************************************************
  *
- * While inside of this file, the following macros are pre-defined:
+ * While inside of this file, the following macros are predefined:
  *
  *
  * >> #define TPP_DEFS
@@ -57,7 +57,7 @@
  *    token "id". The given "flags_expr" parameter is allowed to be a runtime expression,
  *    and should evaluate to a set of `TPP_KEYWORD_FLAG_*', and can thus be used to encode
  *    the intended expansion values of builtins like `__has_extension()'.
- *    The specified "flags_expr" has access to the following pre-defined function:
+ *    The specified "flags_expr" has access to the following predefined function:
  *       >> tpp_lexer *tpp_current_lexer(void);            // The current lexer
  *       >> tpp_keyword const *tpp_current_keyword(void);  // The current keyword
  *       >> tpp_token_id tpp_current_keyword_id(void);     // The current keyword ID
@@ -82,7 +82,7 @@
  *    declared as "no-an-identifier", the `-Wkeyword-macro` is not triggered if
  *    the user tries to `#define` a macro using this keyword's name.
  *    The specified `is_identifier_expr` is evaluated at runtime, and has access
- *    to the following pre-defined functions:
+ *    to the following predefined functions:
  *       >> tpp_lexer *tpp_current_lexer(void);            // The current lexer
  *       >> tpp_keyword const *tpp_current_keyword(void);  // The current keyword
  *       >> tpp_token_id tpp_current_keyword_id(void);     // The current keyword ID
@@ -189,7 +189,7 @@
  *    For use with "TPP_KWD": specifies if the associated keyword should be considered to
  *    be "#if defined(<keyword_id>)" for the purposes of #ifdef-checks, as well as builtin
  *    macro expansions. For this purpose, "if_expr" should be a "bool"-expression.
- *    The specified "if_expr" has access to the following pre-defined function:
+ *    The specified "if_expr" has access to the following predefined function:
  *       >> tpp_lexer *tpp_current_lexer(void);            // The current lexer
  *       >> tpp_keyword const *tpp_current_keyword(void);  // The current keyword
  *       >> tpp_token_id tpp_current_keyword_id(void);     // The current keyword ID
@@ -208,7 +208,7 @@
  *         enabling user-code to test feature flags you implemented without the use
  *         of TPP's extension system
  *
- * >> #define TPP_BUILTIN_MACRO(keyword_id, value)
+ * >> #define TPP_PREDEFINED_MACRO(keyword_id, value)
  *    Defines the textual expansion of a builtin macro when it is defined.
  *    This can be used to set the expansion values of builtin macros, such
  *    as OS/CPU definitions, or compilers. One such macro that is always
@@ -218,7 +218,7 @@
  *    Example:
  *       >> TPP_KWD(KWD___MY_COMPILER__, "__MY_COMPILER__")
  *       >> TPP_MACRO(KWD___MY_COMPILER__, 1) // Always defined
- *       >> TPP_BUILTIN_MACRO(KWD___MY_COMPILER__, "1337") // What `__MY_COMPILER__` expands to
+ *       >> TPP_PREDEFINED_MACRO(KWD___MY_COMPILER__, "1337") // What `__MY_COMPILER__` expands to
  *
  ********************************************************************************/
 
@@ -260,13 +260,13 @@
  *       later be #undef'd again to restore its original meaning. */
 #define TPP_MACRO(keyword_id, if_expr)
 #endif /* !TPP_MACRO */
-#ifndef TPP_BUILTIN_MACRO
+#ifndef TPP_PREDEFINED_MACRO
 /* Defines the value that a builtin macro without custom behavior
  * should expand to. Without this, the expansion is either controlled
  * via custom behavior (in the case of macros like __FILE__, __LINE__),
  * or as a fallback: the macro will simply expand to itself. */
-#define TPP_BUILTIN_MACRO(keyword_id, value)
-#endif /* !TPP_BUILTIN_MACRO */
+#define TPP_PREDEFINED_MACRO(keyword_id, value)
+#endif /* !TPP_PREDEFINED_MACRO */
 
 
 
@@ -1391,152 +1391,16 @@ TPP_KWD_IS_IDENTIFIER(TPP_KWD_dirafter, TPP_KWDIDENTIFIER_dirafter)
 /* Pre-defined macros... */
 #if TPP_HAVE_CPP_MACROS
 TPP_MACRO(TPP_KWD___TPP_VERSION__, true)
-TPP_BUILTIN_MACRO(TPP_KWD___TPP_VERSION__, TPP_PREPROCESSOR_VERSION_STR)
-#if TPP_HAVE_MACRO__Pragma /* GCC defines _Pragma as a macro... So I'll just do that as well! */
-TPP_MACRO(TPP_KWD__Pragma, tpp_lexer_has(tpp_current_lexer(), MACRO__Pragma))
-#endif /* TPP_HAVE_MACRO__Pragma */
-#if TPP_HAVE_MACRO___pragma /* I promised this would be defined as a macro... */
-TPP_MACRO(TPP_KWD___pragma, tpp_lexer_has(tpp_current_lexer(), MACRO___pragma))
-#endif /* TPP_HAVE_MACRO___pragma */
+TPP_PREDEFINED_MACRO(TPP_KWD___TPP_VERSION__, TPP_PREPROCESSOR_VERSION_STR)
 
-/* Declare magic, built-in macros */
-#if TPP_HAVE_CLANG_MACRO___has_attribute
-TPP_MACRO(TPP_KWD___has_attribute, tpp_lexer_has(tpp_current_lexer(), CLANG_MACRO___has_attribute))
-#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_builtin
-TPP_MACRO(TPP_KWD___has_builtin, tpp_lexer_has(tpp_current_lexer(), CLANG_MACRO___has_builtin))
-#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
-#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
-TPP_MACRO(TPP_KWD___has_cpp_attribute, tpp_lexer_has(tpp_current_lexer(), CLANG_MACRO___has_cpp_attribute))
-#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
-TPP_MACRO(TPP_KWD___has_declspec_attribute, tpp_lexer_has(tpp_current_lexer(), CLANG_MACRO___has_declspec_attribute))
-#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
-#if TPP_HAVE_CLANG_MACRO___has_extension || TPP_HAVE_MACRO___has_extension
-TPP_MACRO(TPP_KWD___has_extension, tpp_lexer_has(tpp_current_lexer(), CLANG_MACRO___has_extension) ||
-                                   tpp_lexer_has(tpp_current_lexer(), MACRO___has_extension))
-#endif /* TPP_HAVE_CLANG_MACRO___has_extension || TPP_HAVE_MACRO___has_extension */
-#if TPP_HAVE_CLANG_MACRO___has_feature
-TPP_MACRO(TPP_KWD___has_feature, tpp_lexer_has(tpp_current_lexer(), CLANG_MACRO___has_feature))
-#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
-#if TPP_HAVE_CLANG_MACRO___has_c_attribute
-TPP_MACRO(TPP_KWD___has_c_attribute, tpp_lexer_has(tpp_current_lexer(), CLANG_MACRO___has_c_attribute))
-#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
-#if TPP_HAVE_MACRO___is_identifier
-TPP_MACRO(TPP_KWD___is_identifier, tpp_lexer_has(tpp_current_lexer(), MACRO___is_identifier))
-#endif /* TPP_HAVE_MACRO___is_identifier */
-#if TPP_HAVE_MACRO___is_deprecated
-TPP_MACRO(TPP_KWD___is_deprecated, tpp_lexer_has(tpp_current_lexer(), MACRO___is_deprecated))
-#endif /* TPP_HAVE_MACRO___is_deprecated */
-#if TPP_HAVE_MACRO___is_poisoned
-TPP_MACRO(TPP_KWD___is_poisoned, tpp_lexer_has(tpp_current_lexer(), MACRO___is_poisoned))
-#endif /* TPP_HAVE_MACRO___is_poisoned */
-#if TPP_HAVE_MACRO___has_known_extension
-TPP_MACRO(TPP_KWD___has_known_extension, tpp_lexer_has(tpp_current_lexer(), MACRO___has_known_extension))
-#endif /* TPP_HAVE_MACRO___has_known_extension */
-#if TPP_HAVE_MACRO___has_warning
-TPP_MACRO(TPP_KWD___has_warning, tpp_lexer_has(tpp_current_lexer(), MACRO___has_warning))
-#endif /* TPP_HAVE_MACRO___has_warning */
-#if TPP_HAVE_MACRO___has_known_warning
-TPP_MACRO(TPP_KWD___has_known_warning, tpp_lexer_has(tpp_current_lexer(), MACRO___has_known_warning))
-#endif /* TPP_HAVE_MACRO___has_known_warning */
-#if TPP_HAVE_MACRO___has_include
-TPP_MACRO(TPP_KWD___has_include, tpp_lexer_has(tpp_current_lexer(), MACRO___has_include))
-#endif /* TPP_HAVE_MACRO___has_include */
-#if TPP_HAVE_MACRO___has_include_next
-TPP_MACRO(TPP_KWD___has_include_next, tpp_lexer_has(tpp_current_lexer(), MACRO___has_include_next))
-#endif /* TPP_HAVE_MACRO___has_include_next */
 #if TPP_HAVE_MACRO___has_embed
-TPP_MACRO(TPP_KWD___has_embed, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
 TPP_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
 TPP_MACRO(TPP_KWD___STDC_EMBED_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
 TPP_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
-TPP_BUILTIN_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND)
-TPP_BUILTIN_MACRO(TPP_KWD___STDC_EMBED_FOUND__, TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND)
-TPP_BUILTIN_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY)
+TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND)
+TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_FOUND__, TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND)
+TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY)
 #endif /* TPP_HAVE_MACRO___has_embed */
-#if TPP_HAVE_MACRO___FILE__
-TPP_MACRO(TPP_KWD___FILE__, tpp_lexer_has(tpp_current_lexer(), MACRO___FILE__))
-#endif /* TPP_HAVE_MACRO___FILE__ */
-#if TPP_HAVE_MACRO___LINE__
-TPP_MACRO(TPP_KWD___LINE__, tpp_lexer_has(tpp_current_lexer(), MACRO___LINE__))
-#endif /* TPP_HAVE_MACRO___LINE__ */
-#if TPP_HAVE_MACRO___TIME__
-TPP_MACRO(TPP_KWD___TIME__, tpp_lexer_has(tpp_current_lexer(), MACRO___TIME__))
-#endif /* TPP_HAVE_MACRO___TIME__ */
-#if TPP_HAVE_MACRO___DATE__
-TPP_MACRO(TPP_KWD___DATE__, tpp_lexer_has(tpp_current_lexer(), MACRO___DATE__))
-#endif /* TPP_HAVE_MACRO___DATE__ */
-#if TPP_HAVE_MACRO___COLUMN__
-TPP_MACRO(TPP_KWD___COLUMN__, tpp_lexer_has(tpp_current_lexer(), MACRO___COLUMN__))
-#endif /* TPP_HAVE_MACRO___COLUMN__ */
-#if TPP_HAVE_MACRO___BASE_FILE__
-TPP_MACRO(TPP_KWD___BASE_FILE__, tpp_lexer_has(tpp_current_lexer(), MACRO___BASE_FILE__))
-#endif /* TPP_HAVE_MACRO___BASE_FILE__ */
-#if TPP_HAVE_MACRO___FILE_NAME__
-TPP_MACRO(TPP_KWD___FILE_NAME__, tpp_lexer_has(tpp_current_lexer(), MACRO___FILE_NAME__))
-#endif /* TPP_HAVE_MACRO___FILE_NAME__ */
-#if TPP_HAVE_MACRO___INCLUDE_LEVEL__
-TPP_MACRO(TPP_KWD___INCLUDE_LEVEL__, tpp_lexer_has(tpp_current_lexer(), MACRO___INCLUDE_LEVEL__))
-#endif /* TPP_HAVE_MACRO___INCLUDE_LEVEL__ */
-#if TPP_HAVE_MACRO___INCLUDE_DEPTH__
-TPP_MACRO(TPP_KWD___INCLUDE_DEPTH__, tpp_lexer_has(tpp_current_lexer(), MACRO___INCLUDE_DEPTH__))
-#endif /* TPP_HAVE_MACRO___INCLUDE_DEPTH__ */
-#if TPP_HAVE_MACRO___COUNTER__
-TPP_MACRO(TPP_KWD___COUNTER__, tpp_lexer_has(tpp_current_lexer(), MACRO___COUNTER__))
-#endif /* TPP_HAVE_MACRO___COUNTER__ */
-#if TPP_HAVE_MACRO___TIMESTAMP__
-TPP_MACRO(TPP_KWD___TIMESTAMP__, tpp_lexer_has(tpp_current_lexer(), MACRO___TIMESTAMP__))
-#endif /* TPP_HAVE_MACRO___TIMESTAMP__ */
-#if TPP_HAVE_NUMERIC_DATE_MACROS
-TPP_MACRO(TPP_KWD___DATE_DAY__, tpp_lexer_has(tpp_current_lexer(), NUMERIC_DATE_MACROS))
-TPP_MACRO(TPP_KWD___DATE_WDAY__, tpp_lexer_has(tpp_current_lexer(), NUMERIC_DATE_MACROS))
-TPP_MACRO(TPP_KWD___DATE_YDAY__, tpp_lexer_has(tpp_current_lexer(), NUMERIC_DATE_MACROS))
-TPP_MACRO(TPP_KWD___DATE_MONTH__, tpp_lexer_has(tpp_current_lexer(), NUMERIC_DATE_MACROS))
-TPP_MACRO(TPP_KWD___DATE_YEAR__, tpp_lexer_has(tpp_current_lexer(), NUMERIC_DATE_MACROS))
-#endif /* TPP_HAVE_NUMERIC_DATE_MACROS */
-#if TPP_HAVE_NUMERIC_TIME_MACROS
-TPP_MACRO(TPP_KWD___TIME_SEC__, tpp_lexer_has(tpp_current_lexer(), NUMERIC_TIME_MACROS))
-TPP_MACRO(TPP_KWD___TIME_MIN__, tpp_lexer_has(tpp_current_lexer(), NUMERIC_TIME_MACROS))
-TPP_MACRO(TPP_KWD___TIME_HOUR__, tpp_lexer_has(tpp_current_lexer(), NUMERIC_TIME_MACROS))
-#endif /* TPP_HAVE_NUMERIC_TIME_MACROS */
-#if TPP_HAVE_MACRO___TPP_EVAL
-TPP_MACRO(TPP_KWD___TPP_EVAL, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_EVAL))
-#endif /* TPP_HAVE_MACRO___TPP_EVAL */
-#if TPP_HAVE_MACRO___TPP_EXEC
-TPP_MACRO(TPP_KWD___TPP_EXEC, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_EXEC))
-#endif /* TPP_HAVE_MACRO___TPP_EXEC */
-#if TPP_HAVE_MACRO___TPP_UNIQUE
-TPP_MACRO(TPP_KWD___TPP_UNIQUE, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_UNIQUE))
-#endif /* TPP_HAVE_MACRO___TPP_UNIQUE */
-#if TPP_HAVE_MACRO___TPP_LOAD_FILE
-TPP_MACRO(TPP_KWD___TPP_LOAD_FILE, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_LOAD_FILE))
-#endif /* TPP_HAVE_MACRO___TPP_LOAD_FILE */
-#if TPP_HAVE_MACRO___TPP_COUNTER
-TPP_MACRO(TPP_KWD___TPP_COUNTER, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_COUNTER))
-#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
-#if TPP_HAVE_MACRO___TPP_RANDOM
-TPP_MACRO(TPP_KWD___TPP_RANDOM, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_RANDOM))
-#endif /* TPP_HAVE_MACRO___TPP_RANDOM */
-#if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
-TPP_MACRO(TPP_KWD___TPP_STR_DECOMPILE, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_STR_DECOMPILE))
-#endif /* TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
-#if TPP_HAVE_MACRO___TPP_STR_SUBSTR
-TPP_MACRO(TPP_KWD___TPP_STR_SUBSTR, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_STR_SUBSTR))
-TPP_MACRO(TPP_KWD___TPP_STR_AT, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_STR_SUBSTR))
-#endif /* TPP_HAVE_MACRO___TPP_STR_SUBSTR */
-#if TPP_HAVE_MACRO___TPP_STR_PACK
-TPP_MACRO(TPP_KWD___TPP_STR_PACK, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_STR_PACK))
-#endif /* TPP_HAVE_MACRO___TPP_STR_PACK */
-#if TPP_HAVE_MACRO___TPP_STR_SIZE
-TPP_MACRO(TPP_KWD___TPP_STR_SIZE, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_STR_SIZE))
-#endif /* TPP_HAVE_MACRO___TPP_STR_SIZE */
-#if TPP_HAVE_MACRO___TPP_COUNT_TOKENS
-TPP_MACRO(TPP_KWD___TPP_COUNT_TOKENS, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_COUNT_TOKENS))
-#endif /* TPP_HAVE_MACRO___TPP_COUNT_TOKENS */
-#if TPP_HAVE_MACRO___TPP_IDENTIFIER
-TPP_MACRO(TPP_KWD___TPP_IDENTIFIER, tpp_lexer_has(tpp_current_lexer(), MACRO___TPP_IDENTIFIER))
-#endif /* TPP_HAVE_MACRO___TPP_IDENTIFIER */
 #endif /* TPP_HAVE_CPP_MACROS */
 
 
@@ -4788,12 +4652,6 @@ TPP_WARNING(TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, 0(), 1(4067), TPP_WSTATE_WARN,
             "extra token %Pt after %[#%s%] directive")
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 
-#if TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
-#define TPP_W_CANNOT_UNDEF_BUILTIN_MACRO TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
-TPP_WARNING(TPP_W_CANNOT_UNDEF_BUILTIN_MACRO, 0(), 1(4117), TPP_WSTATE_WARN,
-            "cannot %[#undef%] builtin keyword %[%s%]")
-#endif /* TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
-
 #if TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO
 #define TPP_W_DEFINE_BUILTIN_MACRO TPP_W_DEFINE_BUILTIN_MACRO
 TPP_WARNING(TPP_W_DEFINE_BUILTIN_MACRO, 0(), 1(4118), TPP_WSTATE_WARN,
@@ -4856,7 +4714,7 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #undef TPP_WARNING_WITH_NUMBER
 #undef TPP_WARNING_WITH_NUMBER_EX
 #undef TPP_MACRO
-#undef TPP_BUILTIN_MACRO
+#undef TPP_PREDEFINED_MACRO
 
 #else /* TPP_DEFS */
 #define GUARD_TPP_AMALGAMATION_H 1
@@ -6339,27 +6197,30 @@ TPP_DECL_END
 #define TPP_HAVE_MAGIC_WHITESPACE ((TPP_HAVE_CPP_MACROS || TPP_HAVE_MACRO___TPP_EXEC) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fmagic-whitespace" */
 #endif /* !TPP_HAVE_MAGIC_WHITESPACE */
 
-/* Support for builtin C-style macros (require `TPP_HAVE_CPP_MACROS` to be enabled, too):
+/* Support for builtin C-style macros (requires `TPP_HAVE_CPP_MACROS` to also be enabled):
  * - `__FILE__`
  * - `__LINE__`
  * - `__TPP_EVAL()`
  * - ... (anything that does something interesting during expansion)
  *
- * Pre-defined macros (as defined by `TPP_BUILTIN_MACRO`) are configured by
- * `TPP_HAVE_CPP_PREDEFINED_MACROS` */
+ * Expansion of pre-defined macros (as defined by `TPP_PREDEFINED_MACRO`)
+ * is configured by `TPP_HAVE_CPP_PREDEFINED_MACROS` (use that one if you
+ * want to implement a `-undef`-style CLI switch) */
 #ifndef TPP_HAVE_CPP_BUILTIN_MACROS
 #define TPP_HAVE_CPP_BUILTIN_MACROS (TPP_HAVE_CPP_MACROS ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fcpp-builtin-macros" */
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 
-/* Support for builtin C-style macros (require `TPP_HAVE_CPP_BUILTIN_MACROS` to be enabled, too):
+/* Support for predefined C-style macros (requires `TPP_HAVE_CPP_MACROS` to also be enabled):
  * - `__TPP_VERSION__`
  * - `__STDC_EMBED_NOT_FOUND__`
- * - ... (anything defined by `TPP_BUILTIN_MACRO`)
+ * - ... (anything defined by `TPP_PREDEFINED_MACRO`)
  *
- * This feature can be used to implement GCC's `-undef` CLI argument
- * (causing all *predefined* macros to be not get expanded). */
+ * This feature can be used to implement an `-undef`-style CLI switch
+ * that causes all *predefined* macros to be not get expanded, whilst
+ * ensuring that stuff like `__FILE__`, `__LINE__`, etc. continue to
+ * get expanded. */
 #ifndef TPP_HAVE_CPP_PREDEFINED_MACROS
-#define TPP_HAVE_CPP_PREDEFINED_MACROS (TPP_HAVE_CPP_BUILTIN_MACROS ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fcpp-predefined-macros" */
+#define TPP_HAVE_CPP_PREDEFINED_MACROS (TPP_HAVE_CPP_MACROS ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fcpp-predefined-macros" */
 #endif /* !TPP_HAVE_CPP_PREDEFINED_MACROS */
 
 /* Support for `#!foobar`-directives (which cause the entire line to be ignored).
@@ -10015,10 +9876,6 @@ TPP_DECL_END
 	                       TPP_HAVE_CPP_LINE ||          \
 	                       TPP_HAVE_CPP_IDENT_SCCS))
 #endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
-#ifndef TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
-#define TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO \
-	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
-#endif /* !TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
 #ifndef TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO
 #define TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
@@ -10804,7 +10661,7 @@ TPP_DECL_END
 
 /* Default return value for `tpp_lexer_isidentifier()` (see `TPP_HAVE_LEXER_ISIDENTIFIER`)
  * for keywords where this property hasn't been explicitly defined by `TPP_KWD_IS_IDENTIFIER()`,
- * and also don't have macro expansions as per `TPP_BUILTIN_MACRO()`.
+ * and also don't have macro expansions as per `TPP_PREDEFINED_MACRO()`.
  *
  * This only affects additional keywords that you've defined. All of TPP's builtin keywords
  * come pre-configured with sensible defaults, though those defaults can also be overwritten
@@ -11105,7 +10962,7 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
 
-/* Provide a function `tpp_keywords_undefall()` + `tpp_lexer_undefall()`
+/* Provide a function `tpp_keywords_undefalluser()` + `tpp_lexer_undefalluser()`
  * that can be used to quickly delete *all* macro definitions. */
 #ifndef TPP_HAVE_KEYWORDS_UNDEFALL
 #if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_MACROS)
@@ -11169,7 +11026,7 @@ TPP_DECL_END
 /* String representations of what `__has_embed()`
  * should expand to when the file wasn't found
  *
- * Also represents the expansion of the pre-defined macro `__STDC_EMBED_NOT_FOUND__`
+ * Also represents the expansion of the predefined macro `__STDC_EMBED_NOT_FOUND__`
  *
  * @detect: #ifdef __STDC_EMBED_NOT_FOUND__ */
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND
@@ -11179,7 +11036,7 @@ TPP_DECL_END
 /* String representations of what `__has_embed()` should
  * expand to when the file was found and is non-empty
  *
- * Also represents the expansion of the pre-defined macro `__STDC_EMBED_FOUND__`
+ * Also represents the expansion of the predefined macro `__STDC_EMBED_FOUND__`
  *
  * @detect: #ifdef __STDC_EMBED_FOUND__ */
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND
@@ -11189,7 +11046,7 @@ TPP_DECL_END
 /* String representations of what `__has_embed()` should
  * expand to when the file was found, but is empty
  *
- * Also represents the expansion of the pre-defined macro `__STDC_EMBED_EMPTY__`
+ * Also represents the expansion of the predefined macro `__STDC_EMBED_EMPTY__`
  *
  * @detect: #ifdef __STDC_EMBED_EMPTY__ */
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY
@@ -11879,10 +11736,10 @@ typedef struct tpp_string {
 	(tpp_string_len(lhs) == tpp_string_len(rhs) &&        \
 	 tpp_memcmp(tpp_string_str(lhs), tpp_string_str(rhs), \
 	            tpp_string_len(lhs) * sizeof(tpp_char)) == 0)
-#define tpp_string_equals_cstr(lhs, rhs_cstr)                    \
-	(tpp_string_len(lhs) == (sizeof(rhs_cstr) - sizeof(char)) && \
-	 tpp_memcmp(tpp_string_str(lhs), rhs_cstr,                   \
-	            (sizeof(rhs_cstr) - sizeof(char)) * sizeof(tpp_char)) == 0)
+#define tpp_string_equals_conststr(lhs, rhs_CONSTstr)                \
+	(tpp_string_len(lhs) == (sizeof(rhs_CONSTstr) - sizeof(char)) && \
+	 tpp_memcmp(tpp_string_str(lhs), rhs_CONSTstr,                   \
+	            (sizeof(rhs_CONSTstr) - sizeof(char)) * sizeof(tpp_char)) == 0)
 
 /* Helpers for interacting with TPP strings */
 #define tpp_string_destroy(self)  _tpp_string_free(self)
@@ -18468,12 +18325,12 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 
 
 
-typedef struct tpp_builtin_macro {
+typedef struct tpp_predefined_macro {
 	tpp_size TPP_INTERNAL(tbm_body_size);            /* Length of "tbm_body" (in characters; excluding trailing NUL) */
 	tpp_char TPP_INTERNAL(tbm_body)[TPP_FLEX_ARRAY]; /* [tbm_body_size] Body text (followed by a trailing NUL) */
-} tpp_builtin_macro;
+} tpp_predefined_macro;
 
-#define TPP_BUILTIN_MACRO_DEFINE(name, value)                      \
+#define TPP_PREDEFINED_MACRO_DEFINE(name, value)                   \
 	struct name##_struct {                                         \
 		tpp_size TPP_INTERNAL(tbm_body_size);                      \
 		char TPP_INTERNAL(tbm_body)[sizeof(value) / sizeof(char)]; \
@@ -18482,14 +18339,14 @@ typedef struct tpp_builtin_macro {
 		/* .tbm_body      = */ value,                              \
 	}
 
-#define tpp_builtin_macro_getbody(self) ((self)->TPP_INTERNAL(tbm_body))
-#define tpp_builtin_macro_getsize(self) ((self)->TPP_INTERNAL(tbm_body_size))
+#define tpp_predefined_macro_getbody(self) ((self)->TPP_INTERNAL(tbm_body))
+#define tpp_predefined_macro_getsize(self) ((self)->TPP_INTERNAL(tbm_body_size))
 
 /* Return the hard-coded expansion of the builtin macro linked to "id".
  * If "id" isn't a builtin keyword, or that keyword doesn't specify a
- * value for "TPP_BUILTIN_MACRO()", return "NULL" instead. */
-TPP_DECL TPP_CONSTCALL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
-tpp_macro_getbuiltin(tpp_token_id id);
+ * value for "TPP_PREDEFINED_MACRO()", return "NULL" instead. */
+TPP_DECL TPP_CONSTCALL TPP_WUNUSED tpp_predefined_macro const *TPPCALL
+tpp_macro_getpredefined(tpp_token_id id);
 
 #endif /* TPP_HAVE_CPP_MACROS */
 
@@ -18575,10 +18432,21 @@ _tpp_preparse_skipspace_bck(tpp_char const *start, tpp_char const *pos
 /* File: parts/keyword.h                                                */
 /************************************************************************/
 
+#if TPP_HAVE_CPP_MACROS
+#if TPP_HAVE_CPP_BUILTIN_MACROS || TPP_HAVE_CPP_PREDEFINED_MACROS
+#define _TPP_KEYWORD_MACRO_BUILTIN      ((TPP_REF struct tpp_macro *)0) /* Use builtin/predefined definition */
+#define _TPP_KEYWORD_MACRO_UNDEFINED    ((TPP_REF struct tpp_macro *)1) /* Macro is undefined */
+#define _TPP_KEYWORD_MACRO_ISDEFINED(x) ((tpp_size)(x) > 1)
+#else /* TPP_HAVE_CPP_BUILTIN_MACROS || TPP_HAVE_CPP_PREDEFINED_MACROS */
+#define _TPP_KEYWORD_MACRO_UNDEFINED    ((TPP_REF struct tpp_macro *)0) /* Macro is undefined */
+#define _TPP_KEYWORD_MACRO_ISDEFINED(x) ((x) != _TPP_KEYWORD_MACRO_UNDEFINED)
+#endif /* !TPP_HAVE_CPP_BUILTIN_MACROS && !TPP_HAVE_CPP_PREDEFINED_MACROS */
+#endif /* TPP_HAVE_CPP_MACROS */
+
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 struct tpp_macro;
 typedef struct tpp_macro_pushent {
-	TPP_REF struct tpp_macro *TPP_INTERNAL(tmpe_macro); /* [0..1] The macro that was pushed, or "NULL" if not defined at the time. */
+	TPP_REF struct tpp_macro *TPP_INTERNAL(tmpe_macro); /* [0..1] The macro that was pushed, or one of `_TPP_KEYWORD_MACRO_*`. */
 	tpp_size                  TPP_INTERNAL(tmpe_count); /* # of times that `tmpe_macro' was pushed without the macro actually having changed */
 } tpp_macro_pushent;
 
@@ -18878,8 +18746,13 @@ typedef struct tpp_keyword {
 #endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
 /* Public API for accessing "tpp_keyword" internals */
+#if TPP_HAVE_USER_KEYWORDS
 #define tpp_keyword_isuser(self)    TPP_TOK_ISUSERKEYWORD((self)->TPP_INTERNAL(tk_id))
 #define tpp_keyword_isbuiltin(self) (!tpp_keyword_isuser(self))
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define tpp_keyword_isuser(self)    0
+#define tpp_keyword_isbuiltin(self) 1
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 #define tpp_keyword_getid(self)     ((self)->TPP_INTERNAL(tk_id))
 #define tpp_keyword_getstr(self)    ((self)->TPP_INTERNAL(tk_kwd))
 #define tpp_keyword_getcstr(self)   ((char const *)(self)->TPP_INTERNAL(tk_kwd))
@@ -18940,16 +18813,35 @@ tpp_keyword_popmacro(tpp_keyword *tpp_restrict self);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
 #if TPP_HAVE_CPP_MACROS
-/* Check if "tpp_keyword_undef()" can be invoked on "self" */
+/* Check if `self` can be #undef'd such that it changes state after that action
+ * If `self` has a builtin/predefined macro definition, that definition will
+ * no longer be expanded. */
 #define tpp_keyword_canundef(self) \
-	(tpp_keyword_getmacro(self) != NULL)
+	(tpp_keyword_getmacro(self) != _TPP_KEYWORD_MACRO_UNDEFINED)
 
-/* Delete the macro definition of `self'.
- * The caller must ensure that `tpp_keyword_canundef(self)' */
+/* Similar to `tpp_keyword_canundef()`, but only check if there is a user-defined
+ * definition that can be deleted. Returns `false` if the keyword is currently
+ * configured such that a (potential) builtin/predefined macro is expanded. */
+#define tpp_keyword_canundefuser(self) \
+	_TPP_KEYWORD_MACRO_ISDEFINED(tpp_keyword_getmacro(self))
+
+/* Delete the macro definition of `self' (including any builtin/predefined definition) */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undef(tpp_keyword *tpp_restrict self);
+
+/* Similar to `tpp_keyword_undef()`, but only delete user-defined macro expansions,
+ * and -- if there might be a builtin/predefined macro related to `self` -- that
+ * macro is re-enabled. */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_undefuser(tpp_keyword *tpp_restrict self);
+#else /* TPP_HAVE_CPP_BUILTIN_MACROS */
+#define tpp_keyword_undefuser(self) tpp_keyword_undef(self)
+#endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
+
 #else /* TPP_HAVE_CPP_MACROS */
-#define tpp_keyword_canundef(self) 0
+#define tpp_keyword_canundef(self)     0
+#define tpp_keyword_canundefuser(self) 0
 #endif /* !TPP_HAVE_CPP_MACROS */
 
 
@@ -19113,7 +19005,7 @@ tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
-/* Lookup one of the built-in, pre-defined keywords */
+/* Lookup one of the built-in, predefined keywords */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword(tpp_char const *tpp_restrict kwd,
                        tpp_size len, tpp_hash hash);
@@ -19250,9 +19142,9 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 /* Delete all user-defined macro definitions */
 #if TPP_HAVE_CPP_MACROS
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_keywords_undefall(tpp_keywords *tpp_restrict self);
+tpp_keywords_undefalluser(tpp_keywords *tpp_restrict self);
 #else /* TPP_HAVE_CPP_MACROS */
-#define tpp_keywords_undefall(self) (void)0
+#define tpp_keywords_undefalluser(self) (void)0
 #endif /* !TPP_HAVE_CPP_MACROS */
 #endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
 
@@ -21768,7 +21660,7 @@ tpp_lexer_undef(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_KEYWORDS_UNDEFALL
 /* Delete all user-defined macro definitions */
-#define tpp_lexer_undefall(self) tpp_keywords_undefall(&(self)->TPP_INTERNAL(tl_kwds))
+#define tpp_lexer_undefalluser(self) tpp_keywords_undefalluser(&(self)->TPP_INTERNAL(tl_kwds))
 #endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
 
 
@@ -22544,9 +22436,8 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_LEXER_GETKEYWORDDEFINED
 /* Returns true if "kwd" should be considered to be "#if defined()"
- * Since "builtin" keywords can be considered to be "defined", even
- * when `kwd->tk_macro == NULL', this function is needed to handle
- * such macros. */
+ * Does all the handling necessary to determine the correct state of
+ * builtin/predefined macros. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
                             tpp_keyword const *tpp_restrict kwd);
@@ -22567,14 +22458,10 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_isidentifier(tpp_lexer *tpp_restrict self,
                        tpp_keyword const *tpp_restrict kwd);
 #elif TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
-#if TPP_HAVE_USER_KEYWORDS && TPP_HAVE_CPP_MACROS
-#define tpp_lexer_isidentifier(self, kwd) (!tpp_macro_getbuiltin(tpp_keyword_getid(kwd)) && !TPP_TOK_ISUSERKEYWORD(tpp_keyword_getid(kwd)))
-#elif TPP_HAVE_CPP_MACROS
-#define tpp_lexer_isidentifier(self, kwd) (!tpp_macro_getbuiltin(tpp_keyword_getid(kwd)))
-#elif TPP_HAVE_USER_KEYWORDS
-#define tpp_lexer_isidentifier(self, kwd) (!TPP_TOK_ISUSERKEYWORD(tpp_keyword_getid(kwd)))
+#if TPP_HAVE_CPP_MACROS
+#define tpp_lexer_isidentifier(self, kwd) (!tpp_macro_getpredefined(tpp_keyword_getid(kwd)) && tpp_keyword_isbuiltin(kwd))
 #else /* ... */
-#define tpp_lexer_isidentifier(self, kwd) 1
+#define tpp_lexer_isidentifier(self, kwd) tpp_keyword_isbuiltin(kwd)
 #endif /* ... */
 #else /* ... */
 #define tpp_lexer_isidentifier(self, kwd) 0

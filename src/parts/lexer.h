@@ -1039,7 +1039,7 @@ tpp_lexer_undef(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_KEYWORDS_UNDEFALL
 /* Delete all user-defined macro definitions */
-#define tpp_lexer_undefall(self) tpp_keywords_undefall(&(self)->TPP_INTERNAL(tl_kwds))
+#define tpp_lexer_undefalluser(self) tpp_keywords_undefalluser(&(self)->TPP_INTERNAL(tl_kwds))
 #endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
 
 
@@ -1815,9 +1815,8 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_LEXER_GETKEYWORDDEFINED
 /* Returns true if "kwd" should be considered to be "#if defined()"
- * Since "builtin" keywords can be considered to be "defined", even
- * when `kwd->tk_macro == NULL', this function is needed to handle
- * such macros. */
+ * Does all the handling necessary to determine the correct state of
+ * builtin/predefined macros. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
                             tpp_keyword const *tpp_restrict kwd);
@@ -1838,14 +1837,10 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_isidentifier(tpp_lexer *tpp_restrict self,
                        tpp_keyword const *tpp_restrict kwd);
 #elif TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
-#if TPP_HAVE_USER_KEYWORDS && TPP_HAVE_CPP_MACROS
-#define tpp_lexer_isidentifier(self, kwd) (!tpp_macro_getbuiltin(tpp_keyword_getid(kwd)) && !TPP_TOK_ISUSERKEYWORD(tpp_keyword_getid(kwd)))
-#elif TPP_HAVE_CPP_MACROS
-#define tpp_lexer_isidentifier(self, kwd) (!tpp_macro_getbuiltin(tpp_keyword_getid(kwd)))
-#elif TPP_HAVE_USER_KEYWORDS
-#define tpp_lexer_isidentifier(self, kwd) (!TPP_TOK_ISUSERKEYWORD(tpp_keyword_getid(kwd)))
+#if TPP_HAVE_CPP_MACROS
+#define tpp_lexer_isidentifier(self, kwd) (!tpp_macro_getpredefined(tpp_keyword_getid(kwd)) && tpp_keyword_isbuiltin(kwd))
 #else /* ... */
-#define tpp_lexer_isidentifier(self, kwd) 1
+#define tpp_lexer_isidentifier(self, kwd) tpp_keyword_isbuiltin(kwd)
 #endif /* ... */
 #else /* ... */
 #define tpp_lexer_isidentifier(self, kwd) 0

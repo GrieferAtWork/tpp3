@@ -367,7 +367,9 @@ err_warn:
 	tpp_warnings_fini(&self->tl_warn);
 #endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH */
 #endif /* TPP_HAVE_WARNINGS */
+#if TPP_HAVE_LEXER_TIME
 err:
+#endif /* TPP_HAVE_LEXER_TIME */
 	return error;
 }
 #endif /* TPP_HAVE_LEXER_COPY */

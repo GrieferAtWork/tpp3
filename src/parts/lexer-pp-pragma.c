@@ -74,11 +74,8 @@ tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
 	/* Push/pop the macro linked to this keyword. */
 	if (data->tlhppmd_mode == TPP_KWD_push_macro) {
 		result = tpp_keyword_pushmacro(keyword);
-		if (data->tlhppmd_undef) {
-			/* Also #undef the keyword if requested */
-			if (tpp_keyword_canundef(keyword))
-				tpp_keyword_undef(keyword);
-		}
+		if (data->tlhppmd_undef)
+			tpp_keyword_undef(keyword); /* Also #undef the keyword if requested */
 	} else {
 		result = tpp_keyword_popmacro(keyword);
 		tpp_assert(!TPP_ISERR(result) ||

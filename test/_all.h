@@ -45,6 +45,7 @@ for (local e: fs.dir(".").sorted()) {
 #include "null-directive.h"
 #include "pound-xclaim.h"
 #include "pragma-tpp_exec.h"
+#include "predefined-macros.h"
 #include "prevent-macro-expansion.h"
 #include "push-pop-macro.h"
 #include "quotes-in-error.h"

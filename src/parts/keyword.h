@@ -34,10 +34,21 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
+#if TPP_HAVE_CPP_MACROS
+#if TPP_HAVE_CPP_BUILTIN_MACROS || TPP_HAVE_CPP_PREDEFINED_MACROS
+#define _TPP_KEYWORD_MACRO_BUILTIN      ((TPP_REF struct tpp_macro *)0) /* Use builtin/predefined definition */
+#define _TPP_KEYWORD_MACRO_UNDEFINED    ((TPP_REF struct tpp_macro *)1) /* Macro is undefined */
+#define _TPP_KEYWORD_MACRO_ISDEFINED(x) ((tpp_size)(x) > 1)
+#else /* TPP_HAVE_CPP_BUILTIN_MACROS || TPP_HAVE_CPP_PREDEFINED_MACROS */
+#define _TPP_KEYWORD_MACRO_UNDEFINED    ((TPP_REF struct tpp_macro *)0) /* Macro is undefined */
+#define _TPP_KEYWORD_MACRO_ISDEFINED(x) ((x) != _TPP_KEYWORD_MACRO_UNDEFINED)
+#endif /* !TPP_HAVE_CPP_BUILTIN_MACROS && !TPP_HAVE_CPP_PREDEFINED_MACROS */
+#endif /* TPP_HAVE_CPP_MACROS */
+
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 struct tpp_macro;
 typedef struct tpp_macro_pushent {
-	TPP_REF struct tpp_macro *TPP_INTERNAL(tmpe_macro); /* [0..1] The macro that was pushed, or "NULL" if not defined at the time. */
+	TPP_REF struct tpp_macro *TPP_INTERNAL(tmpe_macro); /* [0..1] The macro that was pushed, or one of `_TPP_KEYWORD_MACRO_*`. */
 	tpp_size                  TPP_INTERNAL(tmpe_count); /* # of times that `tmpe_macro' was pushed without the macro actually having changed */
 } tpp_macro_pushent;
 
@@ -337,8 +348,13 @@ typedef struct tpp_keyword {
 #endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
 /* Public API for accessing "tpp_keyword" internals */
+#if TPP_HAVE_USER_KEYWORDS
 #define tpp_keyword_isuser(self)    TPP_TOK_ISUSERKEYWORD((self)->TPP_INTERNAL(tk_id))
 #define tpp_keyword_isbuiltin(self) (!tpp_keyword_isuser(self))
+#else /* TPP_HAVE_USER_KEYWORDS */
+#define tpp_keyword_isuser(self)    0
+#define tpp_keyword_isbuiltin(self) 1
+#endif /* !TPP_HAVE_USER_KEYWORDS */
 #define tpp_keyword_getid(self)     ((self)->TPP_INTERNAL(tk_id))
 #define tpp_keyword_getstr(self)    ((self)->TPP_INTERNAL(tk_kwd))
 #define tpp_keyword_getcstr(self)   ((char const *)(self)->TPP_INTERNAL(tk_kwd))
@@ -399,16 +415,35 @@ tpp_keyword_popmacro(tpp_keyword *tpp_restrict self);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
 #if TPP_HAVE_CPP_MACROS
-/* Check if "tpp_keyword_undef()" can be invoked on "self" */
+/* Check if `self` can be #undef'd such that it changes state after that action
+ * If `self` has a builtin/predefined macro definition, that definition will
+ * no longer be expanded. */
 #define tpp_keyword_canundef(self) \
-	(tpp_keyword_getmacro(self) != NULL)
+	(tpp_keyword_getmacro(self) != _TPP_KEYWORD_MACRO_UNDEFINED)
 
-/* Delete the macro definition of `self'.
- * The caller must ensure that `tpp_keyword_canundef(self)' */
+/* Similar to `tpp_keyword_canundef()`, but only check if there is a user-defined
+ * definition that can be deleted. Returns `false` if the keyword is currently
+ * configured such that a (potential) builtin/predefined macro is expanded. */
+#define tpp_keyword_canundefuser(self) \
+	_TPP_KEYWORD_MACRO_ISDEFINED(tpp_keyword_getmacro(self))
+
+/* Delete the macro definition of `self' (including any builtin/predefined definition) */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undef(tpp_keyword *tpp_restrict self);
+
+/* Similar to `tpp_keyword_undef()`, but only delete user-defined macro expansions,
+ * and -- if there might be a builtin/predefined macro related to `self` -- that
+ * macro is re-enabled. */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_undefuser(tpp_keyword *tpp_restrict self);
+#else /* TPP_HAVE_CPP_BUILTIN_MACROS */
+#define tpp_keyword_undefuser(self) tpp_keyword_undef(self)
+#endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
+
 #else /* TPP_HAVE_CPP_MACROS */
-#define tpp_keyword_canundef(self) 0
+#define tpp_keyword_canundef(self)     0
+#define tpp_keyword_canundefuser(self) 0
 #endif /* !TPP_HAVE_CPP_MACROS */
 
 
@@ -572,7 +607,7 @@ tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
-/* Lookup one of the built-in, pre-defined keywords */
+/* Lookup one of the built-in, predefined keywords */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword(tpp_char const *tpp_restrict kwd,
                        tpp_size len, tpp_hash hash);
@@ -709,9 +744,9 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 /* Delete all user-defined macro definitions */
 #if TPP_HAVE_CPP_MACROS
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_keywords_undefall(tpp_keywords *tpp_restrict self);
+tpp_keywords_undefalluser(tpp_keywords *tpp_restrict self);
 #else /* TPP_HAVE_CPP_MACROS */
-#define tpp_keywords_undefall(self) (void)0
+#define tpp_keywords_undefalluser(self) (void)0
 #endif /* !TPP_HAVE_CPP_MACROS */
 #endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
 

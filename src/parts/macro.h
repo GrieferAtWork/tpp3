@@ -252,12 +252,12 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 
 
 
-typedef struct tpp_builtin_macro {
+typedef struct tpp_predefined_macro {
 	tpp_size TPP_INTERNAL(tbm_body_size);            /* Length of "tbm_body" (in characters; excluding trailing NUL) */
 	tpp_char TPP_INTERNAL(tbm_body)[TPP_FLEX_ARRAY]; /* [tbm_body_size] Body text (followed by a trailing NUL) */
-} tpp_builtin_macro;
+} tpp_predefined_macro;
 
-#define TPP_BUILTIN_MACRO_DEFINE(name, value)                      \
+#define TPP_PREDEFINED_MACRO_DEFINE(name, value)                   \
 	struct name##_struct {                                         \
 		tpp_size TPP_INTERNAL(tbm_body_size);                      \
 		char TPP_INTERNAL(tbm_body)[sizeof(value) / sizeof(char)]; \
@@ -266,14 +266,14 @@ typedef struct tpp_builtin_macro {
 		/* .tbm_body      = */ value,                              \
 	}
 
-#define tpp_builtin_macro_getbody(self) ((self)->TPP_INTERNAL(tbm_body))
-#define tpp_builtin_macro_getsize(self) ((self)->TPP_INTERNAL(tbm_body_size))
+#define tpp_predefined_macro_getbody(self) ((self)->TPP_INTERNAL(tbm_body))
+#define tpp_predefined_macro_getsize(self) ((self)->TPP_INTERNAL(tbm_body_size))
 
 /* Return the hard-coded expansion of the builtin macro linked to "id".
  * If "id" isn't a builtin keyword, or that keyword doesn't specify a
- * value for "TPP_BUILTIN_MACRO()", return "NULL" instead. */
-TPP_DECL TPP_CONSTCALL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
-tpp_macro_getbuiltin(tpp_token_id id);
+ * value for "TPP_PREDEFINED_MACRO()", return "NULL" instead. */
+TPP_DECL TPP_CONSTCALL TPP_WUNUSED tpp_predefined_macro const *TPPCALL
+tpp_macro_getpredefined(tpp_token_id id);
 
 #endif /* TPP_HAVE_CPP_MACROS */
 

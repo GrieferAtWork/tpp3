@@ -176,21 +176,21 @@ tpp_lexer_dumper_print_builtin_macros(tpp_lexer_dumper *tpp_restrict self) {
 	for (; kwd_iter < kwd_end; kwd_iter = (tpp_token_id)((unsigned int)kwd_iter + 1)) {
 		tpp_keyword const *keyword = tpp_builtin_getkeyword_byid(kwd_iter);
 		if (keyword && tpp_lexer_getkeyworddefined(self->tld_lexer, keyword)) {
-			tpp_builtin_macro const *expansion = tpp_macro_getbuiltin(kwd_iter);
+			tpp_predefined_macro const *expansion = tpp_macro_getpredefined(kwd_iter);
 			tpp_lexer_dumper_do_print_conststr(self, "#define ");
 			tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(keyword), tpp_keyword_getlen(keyword));
 			if (expansion) {
 				tpp_lexer_dumper_do_print_conststr(self, " ");
 				tpp_lexer_dumper_do_print(self,
-				                          tpp_builtin_macro_getbody(expansion),
-				                          tpp_builtin_macro_getsize(expansion));
+				                          tpp_predefined_macro_getbody(expansion),
+				                          tpp_predefined_macro_getsize(expansion));
 			} else {
 				/* All magic builtins provided by TPP follow the rule:
 				 * - If it ends with a trailing _, then it's a keyword (__LINE__, etc.)
 				 * - If it doesn't end with a trailing _, then it's a function
 				 *
 				 * And since we should only get here for builtin macros that don't
-				 * have their expansion defined by `TPP_BUILTIN_MACRO()`, that
+				 * have their expansion defined by `TPP_PREDEFINED_MACRO()`, that
 				 * should only happen for TPP's *own* builtin macros. */
 				bool is_function = tpp_keyword_getlen(keyword) &&
 				                   tpp_keyword_getstr(keyword)[tpp_keyword_getlen(keyword) - 1] != '_';
@@ -399,7 +399,7 @@ tpp_lexer_dumper_printkeyword(tpp_lexer_dumper *tpp_restrict self,
 #if TPP_HAVE_CPP_MACROS
 	if (self->tld_what & TPP_LEXER_DUMP_DEFINITIONS_MACROS) {
 		tpp_macro const *macro = keyword->tk_macro;
-		if (macro && !tpp_lexer_dumper_haserr(self))
+		if (_TPP_KEYWORD_MACRO_ISDEFINED(macro) && !tpp_lexer_dumper_haserr(self))
 			tpp_lexer_dumper_printmacro(self, keyword, macro);
 	}
 #endif /* TPP_HAVE_CPP_MACROS */

@@ -51,49 +51,11 @@ TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCAL
 tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
                        tpp_macro *tpp_restrict macro);
 
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
-                                  tpp_char const *text, tpp_size textsize,
-                                  /*0..1,inherit(always)*/ TPP_REF tpp_string *chunk) {
-	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file *prev_file = tpp_file_alloc();
-	if tpp_unlikely(!prev_file)
-		goto err_nomem;
-	tpp_file_move(prev_file, file);
-	tpp_file_init_text(file, NULL, chunk, text, textsize,
-	                   TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
-	file->tf_prev  = prev_file;
-	file->tf_tprev = prev_file;
-	return TPP_TOK_EOF;
-err_nomem:
-	if (chunk)
-		tpp_string_decref(chunk);
-	return TPP_TOK_ENOMEM;
-}
-
-#if (TPP_HAVE_MACRO___FILE__ ||      \
-     TPP_HAVE_MACRO___BASE_FILE__ || \
-     TPP_HAVE_MACRO___FILE_NAME__)
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_push_textfile_string_esc(tpp_lexer *tpp_restrict self,
-                                   tpp_char const *unescaped_text,
-                                   tpp_size unescaped_size) {
-	TPP_REF tpp_string *chunk;
-	tpp_string_builder builder;
-	tpp_string_builder_init(&builder);
-	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
-		goto err_builder;
-	if (tpp_token_encodestring(&tpp_string_builder_print, &builder, unescaped_text, unescaped_size) < 0)
-		goto err_builder;
-	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
-		goto err_builder;
-	chunk = tpp_string_builder_pack(&builder);
-	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk), tpp_string_len(chunk), chunk);
-err_builder:
-	tpp_string_builder_fini(&builder);
-	return TPP_TOK_ENOMEM;
-}
-#endif /* ... */
+#undef TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC
+#define TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC \
+	(TPP_HAVE_MACRO___FILE__ ||                 \
+	 TPP_HAVE_MACRO___BASE_FILE__ ||            \
+	 TPP_HAVE_MACRO___FILE_NAME__)
 
 /* Support for feature-test-style macros */
 #undef TPP_HAVE_KEYWORD_TEST_MACROS
@@ -148,6 +110,60 @@ err_builder:
 	 TPP_HAVE_MACRO___TIME__ ||                      \
 	 TPP_HAVE_MACRO___DATE__ ||                      \
 	 TPP_HAVE_MACRO___TIMESTAMP__)
+
+#undef TPP_HAVE_LEXER_PUSH_TEXTFILE_INHERITED
+#define TPP_HAVE_LEXER_PUSH_TEXTFILE_INHERITED  \
+	(TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC || \
+	 TPP_HAVE_LEXER_PUSH_TEXTFILE ||            \
+	 TPP_HAVE_MACRO___TPP_EVAL ||               \
+	 TPP_HAVE_MACRO___has_include ||            \
+	 TPP_HAVE_MACRO___has_include_next ||       \
+	 TPP_HAVE_MACRO___has_embed)
+
+
+#if TPP_HAVE_LEXER_PUSH_TEXTFILE_INHERITED
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
+                                  tpp_char const *text, tpp_size textsize,
+                                  /*0..1,inherit(always)*/ TPP_REF tpp_string *chunk) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		goto err_nomem;
+	tpp_file_move(prev_file, file);
+	tpp_file_init_text(file, NULL, chunk, text, textsize,
+	                   TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return TPP_TOK_EOF;
+err_nomem:
+	if (chunk)
+		tpp_string_decref(chunk);
+	return TPP_TOK_ENOMEM;
+}
+#endif /* TPP_HAVE_LEXER_PUSH_TEXTFILE_INHERITED */
+
+#if TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_push_textfile_string_esc(tpp_lexer *tpp_restrict self,
+                                   tpp_char const *unescaped_text,
+                                   tpp_size unescaped_size) {
+	TPP_REF tpp_string *chunk;
+	tpp_string_builder builder;
+	tpp_string_builder_init(&builder);
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_builder;
+	if (tpp_token_encodestring(&tpp_string_builder_print, &builder, unescaped_text, unescaped_size) < 0)
+		goto err_builder;
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_builder;
+	chunk = tpp_string_builder_pack(&builder);
+	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk), tpp_string_len(chunk), chunk);
+err_builder:
+	tpp_string_builder_fini(&builder);
+	return TPP_TOK_ENOMEM;
+}
+#endif /* TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC */
 
 #if TPP_HAVE_LEXER_PUSH_TEXTFILE
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
@@ -2173,13 +2189,34 @@ err_nomem_result_str:
 
 
 
+#if TPP_HAVE_CPP_PREDEFINED_MACROS
+/* Handle a predefined macro.
+ * @return: TPP_TOK_EOF: Caller should yield again.
+ * @return: * : The new expansion token after keywords were handled */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle_predefined_macro(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
+	/* Check for a predefined macro definition */
+	if (tpp_lexer_has(self, CPP_PREDEFINED_MACROS)) {
+		tpp_predefined_macro const *predef_macro;
+		predef_macro = tpp_macro_getpredefined(tok);
+		if (predef_macro != NULL) {
+			return tpp_lexer_push_textfile_inherited(self,
+			                                         tpp_predefined_macro_getbody(predef_macro),
+			                                         tpp_predefined_macro_getsize(predef_macro),
+			                                         NULL);
+		}
+	}
+	return tok;
+}
+#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
+
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 /* Handle a builtin macro.
  * @return: TPP_TOK_EOF: Caller should yield again.
  * @return: * : The new expansion token after keywords were handled */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
-	/* Deal with pre-defined macros. */
+	/* Deal with builtin macros. */
 	switch (tok) {
 
 
@@ -2477,27 +2514,17 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 
-	default: {
-#if TPP_HAVE_CPP_PREDEFINED_MACROS
-		/* Check for a pre-defined, builtin macro expansion */
-		tpp_builtin_macro const *builtin_macro;
-		if (!tpp_lexer_has(self, CPP_PREDEFINED_MACROS))
-			break;
-
-		builtin_macro = tpp_macro_getbuiltin(tok);
-		if (builtin_macro != NULL) {
-			return tpp_lexer_push_textfile_inherited(self, builtin_macro->tbm_body,
-			                                         builtin_macro->tbm_body_size,
-			                                         NULL);
-		}
-#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
-	}	break;
-
+	default: break;
 	}
 
+	/* Check for a predefined macro expansion */
+#if TPP_HAVE_CPP_PREDEFINED_MACROS
+	return tpp_lexer_yield_handle_predefined_macro(self, tok);
+#else /* TPP_HAVE_CPP_PREDEFINED_MACROS */
 	/* Fallback: act as though the macro takes no arguments, and expands to itself:
 	 * >> #define SOME_MACRO SOME_MACRO */
 	return tok;
+#endif /* !TPP_HAVE_CPP_PREDEFINED_MACROS */
 }
 #endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -2540,17 +2567,19 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		return tok;
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS) */
 
-	/* Check if this keyword should be expanded as a macro.
-	 * This also does the is-enabled checks for builtin macros. */
-#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
-	if (!tpp_lexer_getkeyworddefined(self, keyword))
-		return tok;
-#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
-
-	/* Check for explicitly defined macros... */
+	/* Check for explicitly #define'd and #undef'd macros... */
 	{
 		tpp_macro *const macro = keyword->tk_macro;
-		if (macro) {
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+		if (macro != _TPP_KEYWORD_MACRO_BUILTIN)
+#else /* TPP_HAVE_CPP_BUILTIN_MACROS */
+		if (_TPP_KEYWORD_MACRO_ISDEFINED(macro))
+#endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
+		{
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+			if (macro == _TPP_KEYWORD_MACRO_UNDEFINED)
+				return tok;
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 			/* Check if expansion of the macro is allowed. */
 			if (macro->tm_expansions > 0) {
 #if TPP_HAVE_MACRO_RECURSION
@@ -2566,14 +2595,23 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		}
 	}
 
-	/* Expand builtin macros (if enabled)
+	/* Check if this keyword should be expanded as a macro.
+	 * This also does the is-enabled checks for builtin macros. */
+#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
+	if (!tpp_lexer_getkeyworddefined(self, keyword))
+		return tok;
+#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+
+	/* Expand builtin/predefined macros (if enabled)
 	 * NOTE: Don't need to check "TPP_FEAT_CPP_BUILTIN_MACROS" here; that feature
 	 *       flag (if enabled) was already checked by "tpp_lexer_getkeyworddefined()" */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 	return tpp_lexer_yield_handle_builtin_macro(self, tok);
-#else /* TPP_HAVE_CPP_BUILTIN_MACROS */
+#elif TPP_HAVE_CPP_PREDEFINED_MACROS
+	return tpp_lexer_yield_handle_predefined_macro(self, tok);
+#else /* ... */
 	return tok;
-#endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
+#endif /* !... */
 #else /* TPP_HAVE_CPP_MACROS */
 	return tok;
 #endif /* !TPP_HAVE_CPP_MACROS */

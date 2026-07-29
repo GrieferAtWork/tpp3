@@ -39,7 +39,6 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_expected_assertion_key_in_directive"></a>`TPP_HAVE_TPP_W_EXPECTED_ASSERTION_KEY_IN_DIRECTIVE`
 - <a name="tpp_have_tpp_w_expected_assertion_value_in_directive"></a>`TPP_HAVE_TPP_W_EXPECTED_ASSERTION_VALUE_IN_DIRECTIVE`
 - <a name="tpp_have_tpp_w_extra_tokens_after_directive"></a>`TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE`
-- <a name="tpp_have_tpp_w_cannot_undef_builtin_macro"></a>`TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO`
 - <a name="tpp_have_tpp_w_define_builtin_macro"></a>`TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO`
 - <a name="tpp_have_tpp_w_redefine_macro"></a>`TPP_HAVE_TPP_W_REDEFINE_MACRO`
 - <a name="tpp_have_tpp_w_unexpected_token_in_macro_parameter_list"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_MACRO_PARAMETER_LIST`

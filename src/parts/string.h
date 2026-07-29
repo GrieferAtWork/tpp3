@@ -50,10 +50,10 @@ typedef struct tpp_string {
 	(tpp_string_len(lhs) == tpp_string_len(rhs) &&        \
 	 tpp_memcmp(tpp_string_str(lhs), tpp_string_str(rhs), \
 	            tpp_string_len(lhs) * sizeof(tpp_char)) == 0)
-#define tpp_string_equals_cstr(lhs, rhs_cstr)                    \
-	(tpp_string_len(lhs) == (sizeof(rhs_cstr) - sizeof(char)) && \
-	 tpp_memcmp(tpp_string_str(lhs), rhs_cstr,                   \
-	            (sizeof(rhs_cstr) - sizeof(char)) * sizeof(tpp_char)) == 0)
+#define tpp_string_equals_conststr(lhs, rhs_CONSTstr)                \
+	(tpp_string_len(lhs) == (sizeof(rhs_CONSTstr) - sizeof(char)) && \
+	 tpp_memcmp(tpp_string_str(lhs), rhs_CONSTstr,                   \
+	            (sizeof(rhs_CONSTstr) - sizeof(char)) * sizeof(tpp_char)) == 0)
 
 /* Helpers for interacting with TPP strings */
 #define tpp_string_destroy(self)  _tpp_string_free(self)

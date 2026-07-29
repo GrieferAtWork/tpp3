@@ -24891,7 +24891,7 @@ tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self) {
 	for (i = 0; i < self->tmps_cnt; ++i) {
 		TPP_REF tpp_macro *mac;
 		mac = self->tmps_vec[i].tmpe_macro;
-		if (mac)
+		if (_TPP_KEYWORD_MACRO_ISDEFINED(mac))
 			tpp_macro_decref(mac);
 	}
 	tpp_free(self->tmps_vec);
@@ -24916,14 +24916,18 @@ tpp_macro_pushstack_copy(tpp_macro_pushstack *tpp_restrict self,
 		tpp_macro_pushent const *src = &from->tmps_vec[i];
 		tpp_macro_pushent *dst = &vec[i];
 		dst->tmpe_count = src->tmpe_count;
-		dst->tmpe_macro = tpp_macro_copy(src->tmpe_macro);
-		if tpp_unlikely(!dst->tmpe_macro) {
-			while (i--) {
-				dst = &vec[i];
-				tpp_macro_decref(dst->tmpe_macro);
+		dst->tmpe_macro = src->tmpe_macro;
+		if (_TPP_KEYWORD_MACRO_ISDEFINED(dst->tmpe_macro)) {
+			dst->tmpe_macro = tpp_macro_copy(src->tmpe_macro);
+			if tpp_unlikely(!dst->tmpe_macro) {
+				while (i--) {
+					dst = &vec[i];
+					if (_TPP_KEYWORD_MACRO_ISDEFINED(dst->tmpe_macro))
+						tpp_macro_decref(dst->tmpe_macro);
+				}
+				tpp_free(vec);
+				return TPP_ENOMEM;
 			}
-			tpp_free(vec);
-			return TPP_ENOMEM;
 		}
 	}
 	return TPP_EOK;
@@ -25226,7 +25230,7 @@ tpp_keyword_pushmacro(tpp_keyword *tpp_restrict self) {
 	/* Initialize the new push-entry */
 	ent->tmpe_count = 1;              /* First time! */
 	ent->tmpe_macro = self->tk_macro; /* Current definition */
-	if (ent->tmpe_macro)
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(ent->tmpe_macro))
 		tpp_macro_incref(ent->tmpe_macro);
 	return TPP_EOK;
 err_nomem:
@@ -25249,9 +25253,9 @@ tpp_keyword_popmacro(tpp_keyword *tpp_restrict self) {
 	tpp_assert(last->tmpe_count != 0);
 
 	/* Restore macro definition */
-	if (last->tmpe_macro)
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(last->tmpe_macro))
 		tpp_macro_incref(last->tmpe_macro);
-	if (self->tk_macro)
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(self->tk_macro))
 		tpp_macro_decref(self->tk_macro);
 	self->tk_macro = last->tmpe_macro;
 
@@ -25287,16 +25291,32 @@ err_empty:
 
 
 #if TPP_HAVE_CPP_MACROS
-/* Delete the macro definition of `self'.
- * The caller must ensure that `tpp_keyword_canundef(self)' */
+/* Delete the macro definition of `self'. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undef(tpp_keyword *tpp_restrict self) {
 	TPP_REF tpp_macro *old_macro;
-	tpp_assert(tpp_keyword_canundef(self));
 	old_macro = self->tk_macro;
-	self->tk_macro = NULL;
-	tpp_macro_decref(old_macro);
+	self->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(old_macro))
+		tpp_macro_decref(old_macro);
 }
+
+/* Similar to `tpp_keyword_undef()`, but only delete user-defined macro expansions,
+ * and -- if there might be a builtin/predefined macro related to `self` -- that
+ * macro is re-enabled. */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_undefuser(tpp_keyword *tpp_restrict self) {
+	TPP_REF tpp_macro *old_macro;
+	old_macro = self->tk_macro;
+	self->tk_macro = tpp_keyword_isbuiltin(self)
+	                 ? _TPP_KEYWORD_MACRO_BUILTIN
+	                 : _TPP_KEYWORD_MACRO_UNDEFINED;
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(old_macro))
+		tpp_macro_decref(old_macro);
+}
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
+
 #endif /* TPP_HAVE_CPP_MACROS */
 
 
@@ -25722,6 +25742,9 @@ tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
 #if TPP_HAVE_KEYWORD_MISC
 static TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
+#if TPP_HAVE_KEYWORD_FEATURES
+	_tpp_keyword_features_fini(&self->tkm_features);
+#endif /* TPP_HAVE_KEYWORD_FEATURES */
 #if TPP_HAVE_CPP_ASSERT
 	tpp_assertions_fini(&self->tkm_assertions);
 #endif /* TPP_HAVE_CPP_ASSERT */
@@ -25743,8 +25766,9 @@ tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
 	tpp_assert(!tpp_refcnt_atomic_isshared(&self->tk_refcnt) && "Keyword still in use");
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */
 #if TPP_HAVE_CPP_MACROS
-	if (self->tk_macro) {
-		tpp_assert(self->tk_macro->tm_expansions == 0 && "Macro still part of #include-stack?");
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(self->tk_macro)) {
+		tpp_assert(self->tk_macro->tm_expansions == 0 &&
+		           "Macro still part of #include-stack?");
 		tpp_macro_decref(self->tk_macro);
 	}
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -25853,8 +25877,8 @@ tpp_keyword_copy(tpp_keyword const *tpp_restrict self) {
 #endif /* TPP_HAVE_KEYWORD_MISC */
 	result->tk_id = self->tk_id;
 #if TPP_HAVE_CPP_MACROS
-	result->tk_macro = NULL;
-	if (self->tk_macro) {
+	result->tk_macro = self->tk_macro;
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(self->tk_macro)) {
 		result->tk_macro = tpp_macro_copy(self->tk_macro);
 		if tpp_unlikely(!result->tk_macro) {
 #if TPP_HAVE_KEYWORD_MISC
@@ -26003,7 +26027,7 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
 				}
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_ASSERT || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO) */
 #if TPP_HAVE_CPP_MACROS
-				if (chain->tk_macro)
+				if (_TPP_KEYWORD_MACRO_ISDEFINED(chain->tk_macro))
 					tpp_macro_relocate_deffile(chain->tk_macro, self);
 #endif /* TPP_HAVE_CPP_MACROS */
 			}
@@ -26191,7 +26215,7 @@ tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
 
 	result->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
 #if TPP_HAVE_CPP_MACROS
-	result->tk_macro = NULL;
+	result->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
 	result->tk_misc = NULL;
@@ -26225,7 +26249,7 @@ tpp_keywords_newkeyword_esc_(tpp_keywords *tpp_restrict self,
 
 	result->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
 #if TPP_HAVE_CPP_MACROS
-	result->tk_macro = NULL;
+	result->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
 	result->tk_misc = NULL;
@@ -26293,7 +26317,7 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 	result->tk_id = kwd->tk_id;
 #if TPP_HAVE_CPP_MACROS
 	result->tk_macro = kwd->tk_macro;
-	if (result->tk_macro)
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(result->tk_macro))
 		tpp_macro_incref(result->tk_macro);
 #endif /* TPP_HAVE_CPP_MACROS */
 	result->tk_hash = kwd->tk_hash;
@@ -26883,7 +26907,7 @@ got_result_kwd2:;
 		result_kwd->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN +
 		                                   self->tl_kwds.tks_kwdc);
 #if TPP_HAVE_CPP_MACROS
-		result_kwd->tk_macro = NULL;
+		result_kwd->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
 		result_kwd->tk_misc = NULL;
@@ -27129,14 +27153,12 @@ tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_KEYWORDS_UNDEFALL && TPP_HAVE_CPP_MACROS
 /* Delete all user-defined macro definitions */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_keywords_undefall(tpp_keywords *tpp_restrict self) {
+tpp_keywords_undefalluser(tpp_keywords *tpp_restrict self) {
 	tpp_hash i;
 	for (i = 0; i <= self->tks_bckm; ++i) {
 		tpp_keyword *bucket = self->tks_bckv[i];
-		for (; bucket; bucket = bucket->tk_next) {
-			if (tpp_keyword_canundef(bucket))
-				tpp_keyword_undef(bucket);
-		}
+		for (; bucket; bucket = bucket->tk_next)
+			tpp_keyword_undefuser(bucket);
 	}
 }
 #endif /* TPP_HAVE_KEYWORDS_UNDEFALL && TPP_HAVE_CPP_MACROS */
@@ -27713,7 +27735,7 @@ TPP_STATIC_ASSERT((TPP_BUILTIN_KEYWORD_COUNT == 0) || TPP_BUILTIN_KEYWORD_MASK >
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_builtin_keyword_table) == (TPP_BUILTIN_KEYWORD_MASK + 1));
 
 
-/* Lookup one of the built-in, pre-defined keywords */
+/* Lookup one of the built-in, predefined keywords */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword const *TPPCALL
 tpp_builtin_getkeyword(tpp_char const *tpp_restrict kwd,
                        tpp_size len, tpp_hash hash) {
@@ -27810,22 +27832,205 @@ tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
 
 #if TPP_HAVE_LEXER_GETKEYWORDDEFINED
-/* Returns true if "kwd" should be considered to be "#if defined()"
- * Since "builtin" keywords can be considered to be "defined", even
- * when `kwd->tk_macro == NULL', this function is needed to handle
- * such macros. */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
-tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict _self,
-                            tpp_keyword const *tpp_restrict _kwd) {
-#if TPP_HAVE_CPP_MACROS
-	if (_kwd->tk_macro != NULL)
-		return true;
-#endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
-#if TPP_CONF_IS_RT(TPP_HAVE_CPP_BUILTIN_MACROS)
-	if (!tpp_lexer_has(_self, CPP_BUILTIN_MACROS))
-		return false;
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_BUILTIN_MACROS) */
+static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+tpp_lexer_builtin_keyword_defined(tpp_lexer *tpp_restrict self, tpp_token_id id) {
+	(void)self;
+	switch (id) {
+
+#if TPP_HAVE_MACRO__Pragma /* GCC defines _Pragma as a macro... So I'll just do that as well! */
+	case TPP_KWD__Pragma:
+		return tpp_lexer_has(self, MACRO__Pragma);
+#endif /* TPP_HAVE_MACRO__Pragma */
+#if TPP_HAVE_MACRO___pragma /* I promised this would be defined as a macro... */
+	case TPP_KWD___pragma:
+		return tpp_lexer_has(self, MACRO___pragma);
+#endif /* TPP_HAVE_MACRO___pragma */
+
+/* Declare magic, built-in macros */
+#if TPP_HAVE_CLANG_MACRO___has_attribute
+	case TPP_KWD___has_attribute:
+		return tpp_lexer_has(self, CLANG_MACRO___has_attribute);
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
+	case TPP_KWD___has_builtin:
+		return tpp_lexer_has(self, CLANG_MACRO___has_builtin);
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+	case TPP_KWD___has_cpp_attribute:
+		return tpp_lexer_has(self, CLANG_MACRO___has_cpp_attribute);
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+	case TPP_KWD___has_declspec_attribute:
+		return tpp_lexer_has(self, CLANG_MACRO___has_declspec_attribute);
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension || TPP_HAVE_MACRO___has_extension
+	case TPP_KWD___has_extension:
+		return tpp_lexer_has(self, CLANG_MACRO___has_extension) ||
+		       tpp_lexer_has(self, MACRO___has_extension);
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension || TPP_HAVE_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
+	case TPP_KWD___has_feature:
+		return tpp_lexer_has(self, CLANG_MACRO___has_feature);
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute
+	case TPP_KWD___has_c_attribute:
+		return tpp_lexer_has(self, CLANG_MACRO___has_c_attribute);
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+#if TPP_HAVE_MACRO___is_identifier
+	case TPP_KWD___is_identifier:
+		return tpp_lexer_has(self, MACRO___is_identifier);
+#endif /* TPP_HAVE_MACRO___is_identifier */
+#if TPP_HAVE_MACRO___is_deprecated
+	case TPP_KWD___is_deprecated:
+		return tpp_lexer_has(self, MACRO___is_deprecated);
+#endif /* TPP_HAVE_MACRO___is_deprecated */
+#if TPP_HAVE_MACRO___is_poisoned
+	case TPP_KWD___is_poisoned:
+		return tpp_lexer_has(self, MACRO___is_poisoned);
+#endif /* TPP_HAVE_MACRO___is_poisoned */
+#if TPP_HAVE_MACRO___has_known_extension
+	case TPP_KWD___has_known_extension:
+		return tpp_lexer_has(self, MACRO___has_known_extension);
+#endif /* TPP_HAVE_MACRO___has_known_extension */
+#if TPP_HAVE_MACRO___has_warning
+	case TPP_KWD___has_warning:
+		return tpp_lexer_has(self, MACRO___has_warning);
+#endif /* TPP_HAVE_MACRO___has_warning */
+#if TPP_HAVE_MACRO___has_known_warning
+	case TPP_KWD___has_known_warning:
+		return tpp_lexer_has(self, MACRO___has_known_warning);
+#endif /* TPP_HAVE_MACRO___has_known_warning */
+#if TPP_HAVE_MACRO___has_include
+	case TPP_KWD___has_include:
+		return tpp_lexer_has(self, MACRO___has_include);
+#endif /* TPP_HAVE_MACRO___has_include */
+#if TPP_HAVE_MACRO___has_include_next
+	case TPP_KWD___has_include_next:
+		return tpp_lexer_has(self, MACRO___has_include_next);
+#endif /* TPP_HAVE_MACRO___has_include_next */
+#if TPP_HAVE_MACRO___has_embed
+	case TPP_KWD___has_embed:
+		return tpp_lexer_has(self, MACRO___has_embed);
+#endif /* TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_MACRO___FILE__
+	case TPP_KWD___FILE__:
+		return tpp_lexer_has(self, MACRO___FILE__);
+#endif /* TPP_HAVE_MACRO___FILE__ */
+#if TPP_HAVE_MACRO___LINE__
+	case TPP_KWD___LINE__:
+		return tpp_lexer_has(self, MACRO___LINE__);
+#endif /* TPP_HAVE_MACRO___LINE__ */
+#if TPP_HAVE_MACRO___TIME__
+	case TPP_KWD___TIME__:
+		return tpp_lexer_has(self, MACRO___TIME__);
+#endif /* TPP_HAVE_MACRO___TIME__ */
+#if TPP_HAVE_MACRO___DATE__
+	case TPP_KWD___DATE__:
+		return tpp_lexer_has(self, MACRO___DATE__);
+#endif /* TPP_HAVE_MACRO___DATE__ */
+#if TPP_HAVE_MACRO___COLUMN__
+	case TPP_KWD___COLUMN__:
+		return tpp_lexer_has(self, MACRO___COLUMN__);
+#endif /* TPP_HAVE_MACRO___COLUMN__ */
+#if TPP_HAVE_MACRO___BASE_FILE__
+	case TPP_KWD___BASE_FILE__:
+		return tpp_lexer_has(self, MACRO___BASE_FILE__);
+#endif /* TPP_HAVE_MACRO___BASE_FILE__ */
+#if TPP_HAVE_MACRO___FILE_NAME__
+	case TPP_KWD___FILE_NAME__:
+		return tpp_lexer_has(self, MACRO___FILE_NAME__);
+#endif /* TPP_HAVE_MACRO___FILE_NAME__ */
+#if TPP_HAVE_MACRO___INCLUDE_LEVEL__
+	case TPP_KWD___INCLUDE_LEVEL__:
+		return tpp_lexer_has(self, MACRO___INCLUDE_LEVEL__);
+#endif /* TPP_HAVE_MACRO___INCLUDE_LEVEL__ */
+#if TPP_HAVE_MACRO___INCLUDE_DEPTH__
+	case TPP_KWD___INCLUDE_DEPTH__:
+		return tpp_lexer_has(self, MACRO___INCLUDE_DEPTH__);
+#endif /* TPP_HAVE_MACRO___INCLUDE_DEPTH__ */
+#if TPP_HAVE_MACRO___COUNTER__
+	case TPP_KWD___COUNTER__:
+		return tpp_lexer_has(self, MACRO___COUNTER__);
+#endif /* TPP_HAVE_MACRO___COUNTER__ */
+#if TPP_HAVE_MACRO___TIMESTAMP__
+	case TPP_KWD___TIMESTAMP__:
+		return tpp_lexer_has(self, MACRO___TIMESTAMP__);
+#endif /* TPP_HAVE_MACRO___TIMESTAMP__ */
+#if TPP_HAVE_NUMERIC_DATE_MACROS
+	case TPP_KWD___DATE_DAY__:
+	case TPP_KWD___DATE_WDAY__:
+	case TPP_KWD___DATE_YDAY__:
+	case TPP_KWD___DATE_MONTH__:
+	case TPP_KWD___DATE_YEAR__:
+		return tpp_lexer_has(self, NUMERIC_DATE_MACROS);
+#endif /* TPP_HAVE_NUMERIC_DATE_MACROS */
+#if TPP_HAVE_NUMERIC_TIME_MACROS
+	case TPP_KWD___TIME_SEC__:
+	case TPP_KWD___TIME_MIN__:
+	case TPP_KWD___TIME_HOUR__:
+		return tpp_lexer_has(self, NUMERIC_TIME_MACROS);
+#endif /* TPP_HAVE_NUMERIC_TIME_MACROS */
+#if TPP_HAVE_MACRO___TPP_EVAL
+	case TPP_KWD___TPP_EVAL:
+		return tpp_lexer_has(self, MACRO___TPP_EVAL);
+#endif /* TPP_HAVE_MACRO___TPP_EVAL */
+#if TPP_HAVE_MACRO___TPP_EXEC
+	case TPP_KWD___TPP_EXEC:
+		return tpp_lexer_has(self, MACRO___TPP_EXEC);
+#endif /* TPP_HAVE_MACRO___TPP_EXEC */
+#if TPP_HAVE_MACRO___TPP_UNIQUE
+	case TPP_KWD___TPP_UNIQUE:
+		return tpp_lexer_has(self, MACRO___TPP_UNIQUE);
+#endif /* TPP_HAVE_MACRO___TPP_UNIQUE */
+#if TPP_HAVE_MACRO___TPP_LOAD_FILE
+	case TPP_KWD___TPP_LOAD_FILE:
+		return tpp_lexer_has(self, MACRO___TPP_LOAD_FILE);
+#endif /* TPP_HAVE_MACRO___TPP_LOAD_FILE */
+#if TPP_HAVE_MACRO___TPP_COUNTER
+	case TPP_KWD___TPP_COUNTER:
+		return tpp_lexer_has(self, MACRO___TPP_COUNTER);
+#endif /* TPP_HAVE_MACRO___TPP_COUNTER */
+#if TPP_HAVE_MACRO___TPP_RANDOM
+	case TPP_KWD___TPP_RANDOM:
+		return tpp_lexer_has(self, MACRO___TPP_RANDOM);
+#endif /* TPP_HAVE_MACRO___TPP_RANDOM */
+#if TPP_HAVE_MACRO___TPP_STR_DECOMPILE
+	case TPP_KWD___TPP_STR_DECOMPILE:
+		return tpp_lexer_has(self, MACRO___TPP_STR_DECOMPILE);
+#endif /* TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
+#if TPP_HAVE_MACRO___TPP_STR_SUBSTR
+	case TPP_KWD___TPP_STR_SUBSTR:
+		return tpp_lexer_has(self, MACRO___TPP_STR_SUBSTR);
+	case TPP_KWD___TPP_STR_AT:
+		return tpp_lexer_has(self, MACRO___TPP_STR_SUBSTR);
+#endif /* TPP_HAVE_MACRO___TPP_STR_SUBSTR */
+#if TPP_HAVE_MACRO___TPP_STR_PACK
+	case TPP_KWD___TPP_STR_PACK:
+		return tpp_lexer_has(self, MACRO___TPP_STR_PACK);
+#endif /* TPP_HAVE_MACRO___TPP_STR_PACK */
+#if TPP_HAVE_MACRO___TPP_STR_SIZE
+	case TPP_KWD___TPP_STR_SIZE:
+		return tpp_lexer_has(self, MACRO___TPP_STR_SIZE);
+#endif /* TPP_HAVE_MACRO___TPP_STR_SIZE */
+#if TPP_HAVE_MACRO___TPP_COUNT_TOKENS
+	case TPP_KWD___TPP_COUNT_TOKENS:
+		return tpp_lexer_has(self, MACRO___TPP_COUNT_TOKENS);
+#endif /* TPP_HAVE_MACRO___TPP_COUNT_TOKENS */
+#if TPP_HAVE_MACRO___TPP_IDENTIFIER
+	case TPP_KWD___TPP_IDENTIFIER:
+		return tpp_lexer_has(self, MACRO___TPP_IDENTIFIER);
+#endif /* TPP_HAVE_MACRO___TPP_IDENTIFIER */
+	default: break;
+	}
+	return false;
+}
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
+
+#if TPP_HAVE_CPP_PREDEFINED_MACROS
+static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+tpp_lexer_predefined_keyword_defined(tpp_lexer *tpp_restrict _self,
+                                     tpp_keyword const *tpp_restrict _kwd) {
 	(void)_self;
 	switch (_kwd->tk_id) {
 #define TPP_DEFS
@@ -27842,7 +28047,45 @@ tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict _self,
 #undef TPP_DEFS
 	default: break;
 	}
+	return false;
+}
+#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
+
+/* Returns true if "kwd" should be considered to be "#if defined()"
+ * Does all the handling necessary to determine the correct state of
+ * builtin/predefined macros. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+tpp_lexer_getkeyworddefined(tpp_lexer *tpp_restrict self,
+                            tpp_keyword const *tpp_restrict kwd) {
+	(void)self;
+
+	/* Check for user-defined macro definitions */
+#if TPP_HAVE_CPP_MACROS
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(kwd->tk_macro))
+		return true; /* User-defined macro definition */
+	if (tpp_keyword_isuser(kwd))
+		return false; /* User-keyword never have builtin/predefined expansions */
+#endif /* TPP_HAVE_CPP_MACROS */
+
+	/* Check if the user has deleted this macro's definition */
+#if TPP_HAVE_CPP_BUILTIN_MACROS || TPP_HAVE_CPP_PREDEFINED_MACROS
+	if (kwd->tk_macro == _TPP_KEYWORD_MACRO_UNDEFINED)
+		return false; /* Manually deleted */
+#endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_PREDEFINED_MACROS */
+
+	/* Check for predefined macro definitions */
+#if TPP_HAVE_CPP_PREDEFINED_MACROS
+	if (tpp_lexer_predefined_keyword_defined(self, kwd))
+		return tpp_lexer_has(self, CPP_PREDEFINED_MACROS);
+#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
+
+	/* Check for builtin macro definitions */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+	if (tpp_lexer_builtin_keyword_defined(self, tpp_keyword_getid(kwd)))
+		return tpp_lexer_has(self, CPP_BUILTIN_MACROS);
 #endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
+
+	/* Else: keyword isn't considered "defined" */
 	return false;
 }
 #endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
@@ -27858,19 +28101,17 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_isidentifier(tpp_lexer *tpp_restrict _self,
                        tpp_keyword const *tpp_restrict _kwd) {
 	/* User-defined keywords are never identifiers */
-	if (TPP_TOK_ISUSERKEYWORD(_kwd->tk_id))
+	if (tpp_keyword_isuser(_kwd))
 		return false;
-
-	/* Builtin macros with custom expansions are never identifiers */
-#if TPP_HAVE_CPP_MACROS
-	if (tpp_macro_getbuiltin(_kwd->tk_id))
-		return false;
-#endif /* TPP_HAVE_CPP_MACROS */
 
 	/* Evaluate on a per-keyword basis. */
 	(void)_self;
 	switch (_kwd->tk_id) {
 #define TPP_DEFS
+#if TPP_HAVE_CPP_MACROS
+#define TPP_PREDEFINED_MACRO(keyword_id, value) \
+	case keyword_id: return false; /* Builtin macros with custom expansions are never identifiers */
+#endif /* TPP_HAVE_CPP_MACROS */
 #define TPP_KWD_IS_IDENTIFIER(id, is_identifier_expr) \
 	case id: return is_identifier_expr;
 #define tpp_current_lexer()      _self
@@ -28195,15 +28436,15 @@ tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen
 #if TPP_HAVE_CPP_MACROS
 /* Return the hard-coded expansion of the builtin macro linked to "id".
  * If "id" isn't a builtin keyword, or that keyword doesn't specify a
- * value for "TPP_BUILTIN_MACRO()", return "NULL" instead. */
-TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_builtin_macro const *TPPCALL
-tpp_macro_getbuiltin(tpp_token_id id) {
+ * value for "TPP_PREDEFINED_MACRO()", return "NULL" instead. */
+TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_predefined_macro const *TPPCALL
+tpp_macro_getpredefined(tpp_token_id id) {
 	switch (id) {
 #define TPP_DEFS
-#define TPP_BUILTIN_MACRO(keyword_id, value)                          \
+#define TPP_PREDEFINED_MACRO(keyword_id, value)                          \
 	case keyword_id: {                                                \
-		static TPP_BUILTIN_MACRO_DEFINE(builtin_##keyword_id, value); \
-		return (tpp_builtin_macro const *)&builtin_##keyword_id;      \
+		static TPP_PREDEFINED_MACRO_DEFINE(builtin_##keyword_id, value); \
+		return (tpp_predefined_macro const *)&builtin_##keyword_id;      \
 	}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_AMALGAMATION_H
@@ -31233,7 +31474,9 @@ err_warn:
 	tpp_warnings_fini(&self->tl_warn);
 #endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH */
 #endif /* TPP_HAVE_WARNINGS */
+#if TPP_HAVE_LEXER_TIME
 err:
+#endif /* TPP_HAVE_LEXER_TIME */
 	return error;
 }
 #endif /* TPP_HAVE_LEXER_COPY */
@@ -41678,9 +41921,9 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	token->tt_end   = pos;
 
 	/* Store the macro definition within the keyword. */
-	if (!keyword->tk_macro) {
+	if (!_TPP_KEYWORD_MACRO_ISDEFINED(keyword->tk_macro)) {
 #if TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO
-		if (!TPP_TOK_ISUSERKEYWORD(keyword->tk_id) &&
+		if (tpp_keyword_isbuiltin(keyword) &&
 		    tpp_lexer_getkeyworddefined(self, keyword)) {
 			/* Warning if macro is builtin and defined */
 			error = tpp_lexer_warnf(self, TPP_W_DEFINE_BUILTIN_MACRO, keyword->tk_kwd);
@@ -41795,7 +42038,7 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 		return error;
 
 	/* Store macro definition */
-	if (macro_keyword->tk_macro)
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(macro_keyword->tk_macro))
 		tpp_macro_decref(macro_keyword->tk_macro);
 	macro_keyword->tk_macro = macro; /* Inherit reference */
 
@@ -41829,11 +42072,12 @@ tpp_lexer_define(tpp_lexer *tpp_restrict self,
  * @return: false: No such macro */
 TPP_IMPL TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_lexer_undef(tpp_lexer *tpp_restrict self,
-                char const *macro_name, tpp_size macro_name_maxlen) {
+                char const *macro_name,
+                tpp_size macro_name_maxlen) {
 	tpp_size macro_name_len = tpp_strnlen(macro_name, macro_name_maxlen);
 	tpp_hash hash = tpp_hashof((tpp_char const *)macro_name, macro_name_len);
 	tpp_keyword *macro_keyword = _tpp_lexer_kwds_getkeyword(self, (tpp_char const *)macro_name, macro_name_len, hash);
-	if (macro_keyword && tpp_keyword_canundef(macro_keyword)) {
+	if (macro_keyword) {
 		tpp_keyword_undef(macro_keyword);
 		return true;
 	}
@@ -41884,11 +42128,8 @@ tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
 	/* Push/pop the macro linked to this keyword. */
 	if (data->tlhppmd_mode == TPP_KWD_push_macro) {
 		result = tpp_keyword_pushmacro(keyword);
-		if (data->tlhppmd_undef) {
-			/* Also #undef the keyword if requested */
-			if (tpp_keyword_canundef(keyword))
-				tpp_keyword_undef(keyword);
-		}
+		if (data->tlhppmd_undef)
+			tpp_keyword_undef(keyword); /* Also #undef the keyword if requested */
 	} else {
 		result = tpp_keyword_popmacro(keyword);
 		tpp_assert(!TPP_ISERR(result) ||
@@ -44540,24 +44781,11 @@ tpp_lexer_handle_undef_directive(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE */
 	} else {
 		/* Delete keyword definition */
-		tpp_keyword const *ro_keyword = tpp_lexer_gettoken(self)->tt_kwd;
-		if (tpp_keyword_canundef(ro_keyword)) {
-			tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
-			if tpp_unlikely(!keyword)
-				return TPP_TOK_ENOMEM;
-			tpp_assert(tpp_keyword_canundef(keyword));
-			tpp_keyword_undef(keyword);
-		} else
-#if TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
-		if (tpp_lexer_getkeyworddefined(self, ro_keyword)) {
-			/* Builtin keyword... */
-			tpp_errno error = tpp_lexer_warnf(self, TPP_W_CANNOT_UNDEF_BUILTIN_MACRO);
-			if (TPP_ISERR(error))
-				return TPP_TOK_OFERR(error);
-		} else
-#endif /* TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
-		{
-		}
+		tpp_keyword const *ro_keyword = tpp_lexer_gettokenkwd(self);
+		tpp_keyword *keyword = tpp_lexer_kwds_copybuiltin(self, ro_keyword);
+		if tpp_unlikely(!keyword)
+			return TPP_TOK_ENOMEM;
+		tpp_keyword_undef(keyword);
 
 		/* Seek to next token (which should be a line-feed) */
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
@@ -48262,49 +48490,11 @@ static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
                        tpp_macro *tpp_restrict macro);
 
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
-                                  tpp_char const *text, tpp_size textsize,
-                                  /*0..1,inherit(always)*/ TPP_REF tpp_string *chunk) {
-	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file *prev_file = tpp_file_alloc();
-	if tpp_unlikely(!prev_file)
-		goto err_nomem;
-	tpp_file_move(prev_file, file);
-	tpp_file_init_text(file, NULL, chunk, text, textsize,
-	                   TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
-	file->tf_prev  = prev_file;
-	file->tf_tprev = prev_file;
-	return TPP_TOK_EOF;
-err_nomem:
-	if (chunk)
-		tpp_string_decref(chunk);
-	return TPP_TOK_ENOMEM;
-}
-
-#if (TPP_HAVE_MACRO___FILE__ ||      \
-     TPP_HAVE_MACRO___BASE_FILE__ || \
-     TPP_HAVE_MACRO___FILE_NAME__)
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_push_textfile_string_esc(tpp_lexer *tpp_restrict self,
-                                   tpp_char const *unescaped_text,
-                                   tpp_size unescaped_size) {
-	TPP_REF tpp_string *chunk;
-	tpp_string_builder builder;
-	tpp_string_builder_init(&builder);
-	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
-		goto err_builder;
-	if (tpp_token_encodestring(&tpp_string_builder_print, &builder, unescaped_text, unescaped_size) < 0)
-		goto err_builder;
-	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
-		goto err_builder;
-	chunk = tpp_string_builder_pack(&builder);
-	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk), tpp_string_len(chunk), chunk);
-err_builder:
-	tpp_string_builder_fini(&builder);
-	return TPP_TOK_ENOMEM;
-}
-#endif /* ... */
+#undef TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC
+#define TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC \
+	(TPP_HAVE_MACRO___FILE__ ||                 \
+	 TPP_HAVE_MACRO___BASE_FILE__ ||            \
+	 TPP_HAVE_MACRO___FILE_NAME__)
 
 /* Support for feature-test-style macros */
 #undef TPP_HAVE_KEYWORD_TEST_MACROS
@@ -48359,6 +48549,60 @@ err_builder:
 	 TPP_HAVE_MACRO___TIME__ ||                      \
 	 TPP_HAVE_MACRO___DATE__ ||                      \
 	 TPP_HAVE_MACRO___TIMESTAMP__)
+
+#undef TPP_HAVE_LEXER_PUSH_TEXTFILE_INHERITED
+#define TPP_HAVE_LEXER_PUSH_TEXTFILE_INHERITED  \
+	(TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC || \
+	 TPP_HAVE_LEXER_PUSH_TEXTFILE ||            \
+	 TPP_HAVE_MACRO___TPP_EVAL ||               \
+	 TPP_HAVE_MACRO___has_include ||            \
+	 TPP_HAVE_MACRO___has_include_next ||       \
+	 TPP_HAVE_MACRO___has_embed)
+
+
+#if TPP_HAVE_LEXER_PUSH_TEXTFILE_INHERITED
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
+                                  tpp_char const *text, tpp_size textsize,
+                                  /*0..1,inherit(always)*/ TPP_REF tpp_string *chunk) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		goto err_nomem;
+	tpp_file_move(prev_file, file);
+	tpp_file_init_text(file, NULL, chunk, text, textsize,
+	                   TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return TPP_TOK_EOF;
+err_nomem:
+	if (chunk)
+		tpp_string_decref(chunk);
+	return TPP_TOK_ENOMEM;
+}
+#endif /* TPP_HAVE_LEXER_PUSH_TEXTFILE_INHERITED */
+
+#if TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
+tpp_lexer_push_textfile_string_esc(tpp_lexer *tpp_restrict self,
+                                   tpp_char const *unescaped_text,
+                                   tpp_size unescaped_size) {
+	TPP_REF tpp_string *chunk;
+	tpp_string_builder builder;
+	tpp_string_builder_init(&builder);
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_builder;
+	if (tpp_token_encodestring(&tpp_string_builder_print, &builder, unescaped_text, unescaped_size) < 0)
+		goto err_builder;
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_builder;
+	chunk = tpp_string_builder_pack(&builder);
+	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk), tpp_string_len(chunk), chunk);
+err_builder:
+	tpp_string_builder_fini(&builder);
+	return TPP_TOK_ENOMEM;
+}
+#endif /* TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC */
 
 #if TPP_HAVE_LEXER_PUSH_TEXTFILE
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
@@ -50384,13 +50628,34 @@ err_nomem_result_str:
 
 
 
+#if TPP_HAVE_CPP_PREDEFINED_MACROS
+/* Handle a predefined macro.
+ * @return: TPP_TOK_EOF: Caller should yield again.
+ * @return: * : The new expansion token after keywords were handled */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle_predefined_macro(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
+	/* Check for a predefined macro definition */
+	if (tpp_lexer_has(self, CPP_PREDEFINED_MACROS)) {
+		tpp_predefined_macro const *predef_macro;
+		predef_macro = tpp_macro_getpredefined(tok);
+		if (predef_macro != NULL) {
+			return tpp_lexer_push_textfile_inherited(self,
+			                                         tpp_predefined_macro_getbody(predef_macro),
+			                                         tpp_predefined_macro_getsize(predef_macro),
+			                                         NULL);
+		}
+	}
+	return tok;
+}
+#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
+
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 /* Handle a builtin macro.
  * @return: TPP_TOK_EOF: Caller should yield again.
  * @return: * : The new expansion token after keywords were handled */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
-	/* Deal with pre-defined macros. */
+	/* Deal with builtin macros. */
 	switch (tok) {
 
 
@@ -50688,27 +50953,17 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 
-	default: {
-#if TPP_HAVE_CPP_PREDEFINED_MACROS
-		/* Check for a pre-defined, builtin macro expansion */
-		tpp_builtin_macro const *builtin_macro;
-		if (!tpp_lexer_has(self, CPP_PREDEFINED_MACROS))
-			break;
-
-		builtin_macro = tpp_macro_getbuiltin(tok);
-		if (builtin_macro != NULL) {
-			return tpp_lexer_push_textfile_inherited(self, builtin_macro->tbm_body,
-			                                         builtin_macro->tbm_body_size,
-			                                         NULL);
-		}
-#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
-	}	break;
-
+	default: break;
 	}
 
+	/* Check for a predefined macro expansion */
+#if TPP_HAVE_CPP_PREDEFINED_MACROS
+	return tpp_lexer_yield_handle_predefined_macro(self, tok);
+#else /* TPP_HAVE_CPP_PREDEFINED_MACROS */
 	/* Fallback: act as though the macro takes no arguments, and expands to itself:
 	 * >> #define SOME_MACRO SOME_MACRO */
 	return tok;
+#endif /* !TPP_HAVE_CPP_PREDEFINED_MACROS */
 }
 #endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -50751,17 +51006,19 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		return tok;
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS) */
 
-	/* Check if this keyword should be expanded as a macro.
-	 * This also does the is-enabled checks for builtin macros. */
-#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
-	if (!tpp_lexer_getkeyworddefined(self, keyword))
-		return tok;
-#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
-
-	/* Check for explicitly defined macros... */
+	/* Check for explicitly #define'd and #undef'd macros... */
 	{
 		tpp_macro *const macro = keyword->tk_macro;
-		if (macro) {
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+		if (macro != _TPP_KEYWORD_MACRO_BUILTIN)
+#else /* TPP_HAVE_CPP_BUILTIN_MACROS */
+		if (_TPP_KEYWORD_MACRO_ISDEFINED(macro))
+#endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
+		{
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+			if (macro == _TPP_KEYWORD_MACRO_UNDEFINED)
+				return tok;
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 			/* Check if expansion of the macro is allowed. */
 			if (macro->tm_expansions > 0) {
 #if TPP_HAVE_MACRO_RECURSION
@@ -50777,14 +51034,23 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		}
 	}
 
-	/* Expand builtin macros (if enabled)
+	/* Check if this keyword should be expanded as a macro.
+	 * This also does the is-enabled checks for builtin macros. */
+#if TPP_HAVE_LEXER_GETKEYWORDDEFINED
+	if (!tpp_lexer_getkeyworddefined(self, keyword))
+		return tok;
+#endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
+
+	/* Expand builtin/predefined macros (if enabled)
 	 * NOTE: Don't need to check "TPP_FEAT_CPP_BUILTIN_MACROS" here; that feature
 	 *       flag (if enabled) was already checked by "tpp_lexer_getkeyworddefined()" */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 	return tpp_lexer_yield_handle_builtin_macro(self, tok);
-#else /* TPP_HAVE_CPP_BUILTIN_MACROS */
+#elif TPP_HAVE_CPP_PREDEFINED_MACROS
+	return tpp_lexer_yield_handle_predefined_macro(self, tok);
+#else /* ... */
 	return tok;
-#endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
+#endif /* !... */
 #else /* TPP_HAVE_CPP_MACROS */
 	return tok;
 #endif /* !TPP_HAVE_CPP_MACROS */
@@ -55875,21 +56141,21 @@ tpp_lexer_dumper_print_builtin_macros(tpp_lexer_dumper *tpp_restrict self) {
 	for (; kwd_iter < kwd_end; kwd_iter = (tpp_token_id)((unsigned int)kwd_iter + 1)) {
 		tpp_keyword const *keyword = tpp_builtin_getkeyword_byid(kwd_iter);
 		if (keyword && tpp_lexer_getkeyworddefined(self->tld_lexer, keyword)) {
-			tpp_builtin_macro const *expansion = tpp_macro_getbuiltin(kwd_iter);
+			tpp_predefined_macro const *expansion = tpp_macro_getpredefined(kwd_iter);
 			tpp_lexer_dumper_do_print_conststr(self, "#define ");
 			tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(keyword), tpp_keyword_getlen(keyword));
 			if (expansion) {
 				tpp_lexer_dumper_do_print_conststr(self, " ");
 				tpp_lexer_dumper_do_print(self,
-				                          tpp_builtin_macro_getbody(expansion),
-				                          tpp_builtin_macro_getsize(expansion));
+				                          tpp_predefined_macro_getbody(expansion),
+				                          tpp_predefined_macro_getsize(expansion));
 			} else {
 				/* All magic builtins provided by TPP follow the rule:
 				 * - If it ends with a trailing _, then it's a keyword (__LINE__, etc.)
 				 * - If it doesn't end with a trailing _, then it's a function
 				 *
 				 * And since we should only get here for builtin macros that don't
-				 * have their expansion defined by `TPP_BUILTIN_MACRO()`, that
+				 * have their expansion defined by `TPP_PREDEFINED_MACRO()`, that
 				 * should only happen for TPP's *own* builtin macros. */
 				bool is_function = tpp_keyword_getlen(keyword) &&
 				                   tpp_keyword_getstr(keyword)[tpp_keyword_getlen(keyword) - 1] != '_';
@@ -56098,7 +56364,7 @@ tpp_lexer_dumper_printkeyword(tpp_lexer_dumper *tpp_restrict self,
 #if TPP_HAVE_CPP_MACROS
 	if (self->tld_what & TPP_LEXER_DUMP_DEFINITIONS_MACROS) {
 		tpp_macro const *macro = keyword->tk_macro;
-		if (macro && !tpp_lexer_dumper_haserr(self))
+		if (_TPP_KEYWORD_MACRO_ISDEFINED(macro) && !tpp_lexer_dumper_haserr(self))
 			tpp_lexer_dumper_printmacro(self, keyword, macro);
 	}
 #endif /* TPP_HAVE_CPP_MACROS */

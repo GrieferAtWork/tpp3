@@ -61,7 +61,7 @@ tpp_macro_pushstack_fini(tpp_macro_pushstack *tpp_restrict self) {
 	for (i = 0; i < self->tmps_cnt; ++i) {
 		TPP_REF tpp_macro *mac;
 		mac = self->tmps_vec[i].tmpe_macro;
-		if (mac)
+		if (_TPP_KEYWORD_MACRO_ISDEFINED(mac))
 			tpp_macro_decref(mac);
 	}
 	tpp_free(self->tmps_vec);
@@ -86,14 +86,18 @@ tpp_macro_pushstack_copy(tpp_macro_pushstack *tpp_restrict self,
 		tpp_macro_pushent const *src = &from->tmps_vec[i];
 		tpp_macro_pushent *dst = &vec[i];
 		dst->tmpe_count = src->tmpe_count;
-		dst->tmpe_macro = tpp_macro_copy(src->tmpe_macro);
-		if tpp_unlikely(!dst->tmpe_macro) {
-			while (i--) {
-				dst = &vec[i];
-				tpp_macro_decref(dst->tmpe_macro);
+		dst->tmpe_macro = src->tmpe_macro;
+		if (_TPP_KEYWORD_MACRO_ISDEFINED(dst->tmpe_macro)) {
+			dst->tmpe_macro = tpp_macro_copy(src->tmpe_macro);
+			if tpp_unlikely(!dst->tmpe_macro) {
+				while (i--) {
+					dst = &vec[i];
+					if (_TPP_KEYWORD_MACRO_ISDEFINED(dst->tmpe_macro))
+						tpp_macro_decref(dst->tmpe_macro);
+				}
+				tpp_free(vec);
+				return TPP_ENOMEM;
 			}
-			tpp_free(vec);
-			return TPP_ENOMEM;
 		}
 	}
 	return TPP_EOK;
@@ -396,7 +400,7 @@ tpp_keyword_pushmacro(tpp_keyword *tpp_restrict self) {
 	/* Initialize the new push-entry */
 	ent->tmpe_count = 1;              /* First time! */
 	ent->tmpe_macro = self->tk_macro; /* Current definition */
-	if (ent->tmpe_macro)
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(ent->tmpe_macro))
 		tpp_macro_incref(ent->tmpe_macro);
 	return TPP_EOK;
 err_nomem:
@@ -419,9 +423,9 @@ tpp_keyword_popmacro(tpp_keyword *tpp_restrict self) {
 	tpp_assert(last->tmpe_count != 0);
 
 	/* Restore macro definition */
-	if (last->tmpe_macro)
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(last->tmpe_macro))
 		tpp_macro_incref(last->tmpe_macro);
-	if (self->tk_macro)
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(self->tk_macro))
 		tpp_macro_decref(self->tk_macro);
 	self->tk_macro = last->tmpe_macro;
 
@@ -457,16 +461,32 @@ err_empty:
 
 
 #if TPP_HAVE_CPP_MACROS
-/* Delete the macro definition of `self'.
- * The caller must ensure that `tpp_keyword_canundef(self)' */
+/* Delete the macro definition of `self'. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undef(tpp_keyword *tpp_restrict self) {
 	TPP_REF tpp_macro *old_macro;
-	tpp_assert(tpp_keyword_canundef(self));
 	old_macro = self->tk_macro;
-	self->tk_macro = NULL;
-	tpp_macro_decref(old_macro);
+	self->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(old_macro))
+		tpp_macro_decref(old_macro);
 }
+
+/* Similar to `tpp_keyword_undef()`, but only delete user-defined macro expansions,
+ * and -- if there might be a builtin/predefined macro related to `self` -- that
+ * macro is re-enabled. */
+#if TPP_HAVE_CPP_BUILTIN_MACROS
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_undefuser(tpp_keyword *tpp_restrict self) {
+	TPP_REF tpp_macro *old_macro;
+	old_macro = self->tk_macro;
+	self->tk_macro = tpp_keyword_isbuiltin(self)
+	                 ? _TPP_KEYWORD_MACRO_BUILTIN
+	                 : _TPP_KEYWORD_MACRO_UNDEFINED;
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(old_macro))
+		tpp_macro_decref(old_macro);
+}
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
+
 #endif /* TPP_HAVE_CPP_MACROS */
 
 
@@ -892,6 +912,9 @@ tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
 #if TPP_HAVE_KEYWORD_MISC
 static TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
+#if TPP_HAVE_KEYWORD_FEATURES
+	_tpp_keyword_features_fini(&self->tkm_features);
+#endif /* TPP_HAVE_KEYWORD_FEATURES */
 #if TPP_HAVE_CPP_ASSERT
 	tpp_assertions_fini(&self->tkm_assertions);
 #endif /* TPP_HAVE_CPP_ASSERT */
@@ -913,8 +936,9 @@ tpp_keyword_destroy(tpp_keyword *tpp_restrict self) {
 	tpp_assert(!tpp_refcnt_atomic_isshared(&self->tk_refcnt) && "Keyword still in use");
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */
 #if TPP_HAVE_CPP_MACROS
-	if (self->tk_macro) {
-		tpp_assert(self->tk_macro->tm_expansions == 0 && "Macro still part of #include-stack?");
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(self->tk_macro)) {
+		tpp_assert(self->tk_macro->tm_expansions == 0 &&
+		           "Macro still part of #include-stack?");
 		tpp_macro_decref(self->tk_macro);
 	}
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -1023,8 +1047,8 @@ tpp_keyword_copy(tpp_keyword const *tpp_restrict self) {
 #endif /* TPP_HAVE_KEYWORD_MISC */
 	result->tk_id = self->tk_id;
 #if TPP_HAVE_CPP_MACROS
-	result->tk_macro = NULL;
-	if (self->tk_macro) {
+	result->tk_macro = self->tk_macro;
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(self->tk_macro)) {
 		result->tk_macro = tpp_macro_copy(self->tk_macro);
 		if tpp_unlikely(!result->tk_macro) {
 #if TPP_HAVE_KEYWORD_MISC
@@ -1173,7 +1197,7 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
 				}
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_ASSERT || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO) */
 #if TPP_HAVE_CPP_MACROS
-				if (chain->tk_macro)
+				if (_TPP_KEYWORD_MACRO_ISDEFINED(chain->tk_macro))
 					tpp_macro_relocate_deffile(chain->tk_macro, self);
 #endif /* TPP_HAVE_CPP_MACROS */
 			}
@@ -1361,7 +1385,7 @@ tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
 
 	result->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
 #if TPP_HAVE_CPP_MACROS
-	result->tk_macro = NULL;
+	result->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
 	result->tk_misc = NULL;
@@ -1395,7 +1419,7 @@ tpp_keywords_newkeyword_esc_(tpp_keywords *tpp_restrict self,
 
 	result->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
 #if TPP_HAVE_CPP_MACROS
-	result->tk_macro = NULL;
+	result->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
 	result->tk_misc = NULL;
@@ -1463,7 +1487,7 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 	result->tk_id = kwd->tk_id;
 #if TPP_HAVE_CPP_MACROS
 	result->tk_macro = kwd->tk_macro;
-	if (result->tk_macro)
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(result->tk_macro))
 		tpp_macro_incref(result->tk_macro);
 #endif /* TPP_HAVE_CPP_MACROS */
 	result->tk_hash = kwd->tk_hash;
@@ -2053,7 +2077,7 @@ got_result_kwd2:;
 		result_kwd->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN +
 		                                   self->tl_kwds.tks_kwdc);
 #if TPP_HAVE_CPP_MACROS
-		result_kwd->tk_macro = NULL;
+		result_kwd->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
 		result_kwd->tk_misc = NULL;
@@ -2299,14 +2323,12 @@ tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_KEYWORDS_UNDEFALL && TPP_HAVE_CPP_MACROS
 /* Delete all user-defined macro definitions */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_keywords_undefall(tpp_keywords *tpp_restrict self) {
+tpp_keywords_undefalluser(tpp_keywords *tpp_restrict self) {
 	tpp_hash i;
 	for (i = 0; i <= self->tks_bckm; ++i) {
 		tpp_keyword *bucket = self->tks_bckv[i];
-		for (; bucket; bucket = bucket->tk_next) {
-			if (tpp_keyword_canundef(bucket))
-				tpp_keyword_undef(bucket);
-		}
+		for (; bucket; bucket = bucket->tk_next)
+			tpp_keyword_undefuser(bucket);
 	}
 }
 #endif /* TPP_HAVE_KEYWORDS_UNDEFALL && TPP_HAVE_CPP_MACROS */

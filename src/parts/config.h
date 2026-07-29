@@ -641,27 +641,30 @@
 #define TPP_HAVE_MAGIC_WHITESPACE ((TPP_HAVE_CPP_MACROS || TPP_HAVE_MACRO___TPP_EXEC) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fmagic-whitespace" */
 #endif /* !TPP_HAVE_MAGIC_WHITESPACE */
 
-/* Support for builtin C-style macros (require `TPP_HAVE_CPP_MACROS` to be enabled, too):
+/* Support for builtin C-style macros (requires `TPP_HAVE_CPP_MACROS` to also be enabled):
  * - `__FILE__`
  * - `__LINE__`
  * - `__TPP_EVAL()`
  * - ... (anything that does something interesting during expansion)
  *
- * Pre-defined macros (as defined by `TPP_BUILTIN_MACRO`) are configured by
- * `TPP_HAVE_CPP_PREDEFINED_MACROS` */
+ * Expansion of pre-defined macros (as defined by `TPP_PREDEFINED_MACRO`)
+ * is configured by `TPP_HAVE_CPP_PREDEFINED_MACROS` (use that one if you
+ * want to implement a `-undef`-style CLI switch) */
 #ifndef TPP_HAVE_CPP_BUILTIN_MACROS
 #define TPP_HAVE_CPP_BUILTIN_MACROS (TPP_HAVE_CPP_MACROS ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fcpp-builtin-macros" */
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 
-/* Support for builtin C-style macros (require `TPP_HAVE_CPP_BUILTIN_MACROS` to be enabled, too):
+/* Support for predefined C-style macros (requires `TPP_HAVE_CPP_MACROS` to also be enabled):
  * - `__TPP_VERSION__`
  * - `__STDC_EMBED_NOT_FOUND__`
- * - ... (anything defined by `TPP_BUILTIN_MACRO`)
+ * - ... (anything defined by `TPP_PREDEFINED_MACRO`)
  *
- * This feature can be used to implement GCC's `-undef` CLI argument
- * (causing all *predefined* macros to be not get expanded). */
+ * This feature can be used to implement an `-undef`-style CLI switch
+ * that causes all *predefined* macros to be not get expanded, whilst
+ * ensuring that stuff like `__FILE__`, `__LINE__`, etc. continue to
+ * get expanded. */
 #ifndef TPP_HAVE_CPP_PREDEFINED_MACROS
-#define TPP_HAVE_CPP_PREDEFINED_MACROS (TPP_HAVE_CPP_BUILTIN_MACROS ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fcpp-predefined-macros" */
+#define TPP_HAVE_CPP_PREDEFINED_MACROS (TPP_HAVE_CPP_MACROS ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fcpp-predefined-macros" */
 #endif /* !TPP_HAVE_CPP_PREDEFINED_MACROS */
 
 /* Support for `#!foobar`-directives (which cause the entire line to be ignored).
@@ -4729,10 +4732,6 @@ print("#endif /" "* !... *" "/");
 	                       TPP_HAVE_CPP_LINE ||          \
 	                       TPP_HAVE_CPP_IDENT_SCCS))
 #endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
-#ifndef TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
-#define TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO \
-	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
-#endif /* !TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
 #ifndef TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO
 #define TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_CPP_DEFINE)
@@ -5518,7 +5517,7 @@ print("#endif /" "* !... *" "/");
 
 /* Default return value for `tpp_lexer_isidentifier()` (see `TPP_HAVE_LEXER_ISIDENTIFIER`)
  * for keywords where this property hasn't been explicitly defined by `TPP_KWD_IS_IDENTIFIER()`,
- * and also don't have macro expansions as per `TPP_BUILTIN_MACRO()`.
+ * and also don't have macro expansions as per `TPP_PREDEFINED_MACRO()`.
  *
  * This only affects additional keywords that you've defined. All of TPP's builtin keywords
  * come pre-configured with sensible defaults, though those defaults can also be overwritten
@@ -5819,7 +5818,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
 
-/* Provide a function `tpp_keywords_undefall()` + `tpp_lexer_undefall()`
+/* Provide a function `tpp_keywords_undefalluser()` + `tpp_lexer_undefalluser()`
  * that can be used to quickly delete *all* macro definitions. */
 #ifndef TPP_HAVE_KEYWORDS_UNDEFALL
 #if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_MACROS)
@@ -5883,7 +5882,7 @@ print("#endif /" "* !... *" "/");
 /* String representations of what `__has_embed()`
  * should expand to when the file wasn't found
  *
- * Also represents the expansion of the pre-defined macro `__STDC_EMBED_NOT_FOUND__`
+ * Also represents the expansion of the predefined macro `__STDC_EMBED_NOT_FOUND__`
  *
  * @detect: #ifdef __STDC_EMBED_NOT_FOUND__ */
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND
@@ -5893,7 +5892,7 @@ print("#endif /" "* !... *" "/");
 /* String representations of what `__has_embed()` should
  * expand to when the file was found and is non-empty
  *
- * Also represents the expansion of the pre-defined macro `__STDC_EMBED_FOUND__`
+ * Also represents the expansion of the predefined macro `__STDC_EMBED_FOUND__`
  *
  * @detect: #ifdef __STDC_EMBED_FOUND__ */
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND
@@ -5903,7 +5902,7 @@ print("#endif /" "* !... *" "/");
 /* String representations of what `__has_embed()` should
  * expand to when the file was found, but is empty
  *
- * Also represents the expansion of the pre-defined macro `__STDC_EMBED_EMPTY__`
+ * Also represents the expansion of the predefined macro `__STDC_EMBED_EMPTY__`
  *
  * @detect: #ifdef __STDC_EMBED_EMPTY__ */
 #ifndef TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY

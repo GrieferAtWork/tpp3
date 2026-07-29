@@ -267,24 +267,11 @@ tpp_lexer_handle_undef_directive(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_EXPECTED_MACRO_NAME_IN_DIRECTIVE */
 	} else {
 		/* Delete keyword definition */
-		tpp_keyword const *ro_keyword = tpp_lexer_gettoken(self)->tt_kwd;
-		if (tpp_keyword_canundef(ro_keyword)) {
-			tpp_keyword *keyword = tpp_keywords_copybuiltin(&self->tl_kwds, ro_keyword);
-			if tpp_unlikely(!keyword)
-				return TPP_TOK_ENOMEM;
-			tpp_assert(tpp_keyword_canundef(keyword));
-			tpp_keyword_undef(keyword);
-		} else
-#if TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO
-		if (tpp_lexer_getkeyworddefined(self, ro_keyword)) {
-			/* Builtin keyword... */
-			tpp_errno error = tpp_lexer_warnf(self, TPP_W_CANNOT_UNDEF_BUILTIN_MACRO);
-			if (TPP_ISERR(error))
-				return TPP_TOK_OFERR(error);
-		} else
-#endif /* TPP_HAVE_TPP_W_CANNOT_UNDEF_BUILTIN_MACRO */
-		{
-		}
+		tpp_keyword const *ro_keyword = tpp_lexer_gettokenkwd(self);
+		tpp_keyword *keyword = tpp_lexer_kwds_copybuiltin(self, ro_keyword);
+		if tpp_unlikely(!keyword)
+			return TPP_TOK_ENOMEM;
+		tpp_keyword_undef(keyword);
 
 		/* Seek to next token (which should be a line-feed) */
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE

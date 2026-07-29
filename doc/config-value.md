@@ -23,7 +23,7 @@ defined(_MSC_VER) ? "%Pf(%Pl, %Pc): " : "%Pf:%Pl:%Pc: "
 
 A preprocessor tuple describing the built-in, hard-coded, system-include path.
 - The paths specified here are searched in order of specification.
-- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L19914)
+- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L19806)
 - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
   trailing slashes in these strings, it will add those itself)
 
@@ -44,7 +44,7 @@ Default:
 
 ## TPP_CONFIG_CLI_FILENAME
 
-Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L21757)
+Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L21649)
 
 <details><summary>Details</summary>
 
@@ -60,7 +60,7 @@ Default:
 String representations of what `__has_embed()`
 should expand to when the file wasn't found
 
-Also represents the expansion of the pre-defined macro `__STDC_EMBED_NOT_FOUND__`
+Also represents the expansion of the predefined macro `__STDC_EMBED_NOT_FOUND__`
 
 <details><summary>Details</summary>
 
@@ -84,7 +84,7 @@ Detect:
 String representations of what `__has_embed()` should
 expand to when the file was found and is non-empty
 
-Also represents the expansion of the pre-defined macro `__STDC_EMBED_FOUND__`
+Also represents the expansion of the predefined macro `__STDC_EMBED_FOUND__`
 
 <details><summary>Details</summary>
 
@@ -108,7 +108,7 @@ Detect:
 String representations of what `__has_embed()` should
 expand to when the file was found, but is empty
 
-Also represents the expansion of the pre-defined macro `__STDC_EMBED_EMPTY__`
+Also represents the expansion of the predefined macro `__STDC_EMBED_EMPTY__`
 
 <details><summary>Details</summary>
 

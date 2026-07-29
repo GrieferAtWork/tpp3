@@ -1626,9 +1626,9 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	token->tt_end   = pos;
 
 	/* Store the macro definition within the keyword. */
-	if (!keyword->tk_macro) {
+	if (!_TPP_KEYWORD_MACRO_ISDEFINED(keyword->tk_macro)) {
 #if TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO
-		if (!TPP_TOK_ISUSERKEYWORD(keyword->tk_id) &&
+		if (tpp_keyword_isbuiltin(keyword) &&
 		    tpp_lexer_getkeyworddefined(self, keyword)) {
 			/* Warning if macro is builtin and defined */
 			error = tpp_lexer_warnf(self, TPP_W_DEFINE_BUILTIN_MACRO, keyword->tk_kwd);
@@ -1743,7 +1743,7 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 		return error;
 
 	/* Store macro definition */
-	if (macro_keyword->tk_macro)
+	if (_TPP_KEYWORD_MACRO_ISDEFINED(macro_keyword->tk_macro))
 		tpp_macro_decref(macro_keyword->tk_macro);
 	macro_keyword->tk_macro = macro; /* Inherit reference */
 
@@ -1777,11 +1777,12 @@ tpp_lexer_define(tpp_lexer *tpp_restrict self,
  * @return: false: No such macro */
 TPP_IMPL TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_lexer_undef(tpp_lexer *tpp_restrict self,
-                char const *macro_name, tpp_size macro_name_maxlen) {
+                char const *macro_name,
+                tpp_size macro_name_maxlen) {
 	tpp_size macro_name_len = tpp_strnlen(macro_name, macro_name_maxlen);
 	tpp_hash hash = tpp_hashof((tpp_char const *)macro_name, macro_name_len);
 	tpp_keyword *macro_keyword = _tpp_lexer_kwds_getkeyword(self, (tpp_char const *)macro_name, macro_name_len, hash);
-	if (macro_keyword && tpp_keyword_canundef(macro_keyword)) {
+	if (macro_keyword) {
 		tpp_keyword_undef(macro_keyword);
 		return true;
 	}
