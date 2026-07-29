@@ -31,7 +31,6 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-
 typedef enum tpp_token_id {
 	/* Token IDs can also represent (certain) error */
 

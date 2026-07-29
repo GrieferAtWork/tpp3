@@ -2599,6 +2599,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS    1                                /* Enable support for "0x" literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
 #define TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS TPP_CONFIG_EXTENSION_BININTEGRAL /* Enable support for "0b" literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
 #define TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS  0                                /* Enable support for "0o" literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
+#define TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE TPP2_HAVE_GLOBAL_NAMESPACE   /* Enable global namespace aliases for token names */
 
 /* Force extensions to use the names they'd been using in TPP2 */
 #define TPP_EXTNAME_TRIGRAPHS                           "trigraphs"
@@ -2746,49 +2747,33 @@ function alias(tpp2Name, tpp3Name, onlyIfDefined = true, condition: string = "")
 }
 
 // Token IDs
-alias("TOK_EOF", "TPP_TOK_EOF", onlyIfDefined: false);
-
 alias("TOK_CHAR",      "TPP_TOK_C_CHAR",    condition: "TPP_HAVE_TOK_C_CHAR");
 alias("TOK_STRING",    "TPP_TOK_C_STRING",  condition: "TPP_HAVE_TOK_C_STRING");
 alias("TOK_INT",       "TPP_TOK_C_INT",     condition: "TPP_HAVE_TOK_C_INT");
 alias("TOK_FLOAT",     "TPP_TOK_C_FLOAT",   condition: "TPP_HAVE_TOK_C_FLOAT");
-alias("TOK_LF",        "TPP_TOK_LF",        onlyIfDefined: false);
-alias("TOK_SPACE",     "TPP_TOK_SPACE",     onlyIfDefined: false);
 alias("TOK_ADD",       "TPP_TOK_PLUS",      onlyIfDefined: false);
 alias("TOK_AND",       "TPP_TOK_AMP",       onlyIfDefined: false);
 alias("TOK_ASSIGN",    "TPP_TOK_EQUAL",     onlyIfDefined: false);
-alias("TOK_AT",        "TPP_TOK_AT",        onlyIfDefined: false);
-alias("TOK_BACKSLASH", "TPP_TOK_BACKSLASH", onlyIfDefined: false);
-alias("TOK_COLON",     "TPP_TOK_COLON",     onlyIfDefined: false);
-alias("TOK_COMMA",     "TPP_TOK_COMMA",     onlyIfDefined: false);
 alias("TOK_DIV",       "TPP_TOK_SLASH",     onlyIfDefined: false);
-alias("TOK_DOT",       "TPP_TOK_DOT",       onlyIfDefined: false);
 alias("TOK_HASH",      "TPP_TOK_POUND",     onlyIfDefined: false);
-alias("TOK_LANGLE",    "TPP_TOK_LANGLE",    onlyIfDefined: false);
-alias("TOK_RANGLE",    "TPP_TOK_RANGLE",    onlyIfDefined: false);
-alias("TOK_LBRACKET",  "TPP_TOK_LBRACKET",  onlyIfDefined: false);
-alias("TOK_RBRACKET",  "TPP_TOK_RBRACKET",  onlyIfDefined: false);
-alias("TOK_LBRACE",    "TPP_TOK_LBRACE",    onlyIfDefined: false);
-alias("TOK_RBRACE",    "TPP_TOK_RBRACE",    onlyIfDefined: false);
-alias("TOK_LPAREN",    "TPP_TOK_LPAREN",    onlyIfDefined: false);
-alias("TOK_RPAREN",    "TPP_TOK_RPAREN",    onlyIfDefined: false);
 alias("TOK_MOD",       "TPP_TOK_PERCENT",   onlyIfDefined: false);
 alias("TOK_MUL",       "TPP_TOK_STAR",      onlyIfDefined: false);
 alias("TOK_NOT",       "TPP_TOK_EXCLAIM",   onlyIfDefined: false);
 alias("TOK_OR",        "TPP_TOK_PIPE",      onlyIfDefined: false);
 alias("TOK_QUESTION",  "TPP_TOK_QMARK",     onlyIfDefined: false);
-alias("TOK_SEMICOLON", "TPP_TOK_SEMICOLON", onlyIfDefined: false);
 alias("TOK_SUB",       "TPP_TOK_MINUS",     onlyIfDefined: false);
-alias("TOK_TILDE",     "TPP_TOK_TILDE",     onlyIfDefined: false);
 alias("TOK_XOR",       "TPP_TOK_HAT",       onlyIfDefined: false);
 
 alias("TOK_SHL", "TPP_TOK_LANGLE_LANGLE", condition: "TPP_HAVE_TOK_LANGLE_LANGLE");
 alias("TOK_SHR", "TPP_TOK_RANGLE_RANGLE", condition: "TPP_HAVE_TOK_RANGLE_RANGLE");
 
 // Custom handling required here because "TPP_TOK_EQUAL" is a single-character token in TPP3
-print("#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_EQUAL_EQUAL");
+print("#if TPP2_HAVE_GLOBAL_NAMESPACE");
+print("#undef TOK_EQUAL");
+print("#if TPP_HAVE_TOK_EQUAL_EQUAL");
 print("#define TOK_EQUAL TPP_TOK_EQUAL_EQUAL");
-print("#endif /" "* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_EQUAL_EQUAL *" "/");
+print("#endif /" "* TPP_HAVE_TOK_EQUAL_EQUAL *" "/");
+print("#endif /" "* TPP2_HAVE_GLOBAL_NAMESPACE *" "/");
 
 alias("TOK_NOT_EQUAL", "TPP_TOK_EXCLAIM_EQUAL", condition: "TPP_HAVE_TOK_EXCLAIM_EQUAL");
 alias("TOK_GREATER_EQUAL", "TPP_TOK_RANGLE_EQUAL", condition: "TPP_HAVE_TOK_RANGLE_EQUAL");
@@ -2813,12 +2798,9 @@ alias("TOK_LXOR", "TPP_TOK_HAT_HAT", condition: "TPP_HAVE_TOK_HAT_HAT");
 alias("TOK_INC", "TPP_TOK_PLUS_PLUS", condition: "TPP_HAVE_TOK_PLUS_PLUS");
 alias("TOK_DEC", "TPP_TOK_MINUS_MINUS", condition: "TPP_HAVE_TOK_MINUS_MINUS");
 alias("TOK_POW", "TPP_TOK_STAR_STAR", condition: "TPP_HAVE_TOK_STAR_STAR");
-alias("TOK_TILDE_TILDE", "TPP_TOK_TILDE_TILDE", condition: "TPP_HAVE_TOK_TILDE_TILDE");
 alias("TOK_ARROW", "TPP_TOK_MINUS_RANGLE", condition: "TPP_HAVE_TOK_MINUS_RANGLE");
-alias("TOK_COLON_EQUAL", "TPP_TOK_COLON_EQUAL", condition: "TPP_HAVE_TOK_COLON_EQUAL");
 alias("TOK_NAMESPACE", "TPP_TOK_COLON_COLON", condition: "TPP_HAVE_TOK_COLON_COLON");
 alias("TOK_ARROW_STAR", "TPP_TOK_MINUS_RANGLE_STAR", condition: "TPP_HAVE_TOK_MINUS_RANGLE_STAR");
-alias("TOK_DOT_STAR", "TPP_TOK_DOT_STAR", condition: "TPP_HAVE_TOK_DOT_STAR");
 alias("TOK_DOTDOT", "TPP_TOK_DOT_DOT", condition: "TPP_HAVE_TOK_DOT_DOT");
 alias("TOK_LOGT", "TPP_TOK_LANGLE_RANGLE", condition: "TPP_HAVE_TOK_LANGLE_RANGLE");
 alias("TOK_LANGLE3", "TPP_TOK_LANGLE_LANGLE_LANGLE", condition: "TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE");
@@ -2827,7 +2809,6 @@ alias("TOK_LANGLE3_EQUAL", "TPP_TOK_LANGLE_LANGLE_LANGLE_EQUAL", condition: "TPP
 alias("TOK_RANGLE3_EQUAL", "TPP_TOK_RANGLE_RANGLE_RANGLE_EQUAL", condition: "TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL");
 alias("TOK_EQUAL3", "TPP_TOK_EQUAL_EQUAL_EQUAL", condition: "TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL");
 alias("TOK_NOT_EQUAL3", "TPP_TOK_EXCLAIM_EQUAL_EQUAL", condition: "TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL");
-alias("TOK_QMARK_QMARK", "TPP_TOK_QMARK_QMARK", condition: "TPP_HAVE_TOK_QMARK_QMARK");
 alias("TOK_KEYWORD_BEGIN", "TPP_TOK_KEYWORD_BEGIN", onlyIfDefined: false);
 alias("TOK_TWOCHAR_END", "TPP_TOK_MULTICHAR_END", onlyIfDefined: false);
 
@@ -2854,116 +2835,6 @@ alias("TOK_RANGLE2_EQUAL", "TPP_TOK_RANGLE_RANGLE_EQUAL", condition: "TPP_HAVE_T
 alias("TOK_COLLON",        "TPP_TOK_COLON",     onlyIfDefined: false);
 alias("TOK_COLLON_EQUAL",  "TPP_TOK_COLON_EQUAL", condition: "TPP_HAVE_TOK_COLON_EQUAL");
 alias("TOK_COLLON_COLLON", "TPP_TOK_COLON_COLON", condition: "TPP_HAVE_TOK_COLON_COLON");
-
-// Keywords
-alias("KWD_if", "TPP_KWD_if");
-alias("KWD_ifdef", "TPP_KWD_ifdef");
-alias("KWD_ifndef", "TPP_KWD_ifndef");
-alias("KWD_elif", "TPP_KWD_elif");
-alias("KWD_else", "TPP_KWD_else");
-alias("KWD_endif", "TPP_KWD_endif");
-alias("KWD_define", "TPP_KWD_define");
-alias("KWD_defined", "TPP_KWD_defined");
-alias("KWD_undef", "TPP_KWD_undef");
-alias("KWD_include", "TPP_KWD_include");
-alias("KWD_include_next", "TPP_KWD_include_next");
-alias("KWD_import", "TPP_KWD_import");
-alias("KWD_line", "TPP_KWD_line");
-alias("KWD_error", "TPP_KWD_error");
-alias("KWD_warning", "TPP_KWD_warning");
-alias("KWD_ident", "TPP_KWD_ident");
-alias("KWD_sccs", "TPP_KWD_sccs");
-alias("KWD_assert", "TPP_KWD_assert");
-alias("KWD_unassert", "TPP_KWD_unassert");
-alias("KWD_pragma", "TPP_KWD_pragma");
-alias("KWD__Pragma", "TPP_KWD__Pragma");
-alias("KWD___pragma", "TPP_KWD___pragma");
-alias("KWD___FILE__", "TPP_KWD___FILE__");
-alias("KWD___LINE__", "TPP_KWD___LINE__");
-alias("KWD___TIME__", "TPP_KWD___TIME__");
-alias("KWD___DATE__", "TPP_KWD___DATE__");
-alias("KWD___BASE_FILE__", "TPP_KWD___BASE_FILE__");
-alias("KWD___INCLUDE_LEVEL__", "TPP_KWD___INCLUDE_LEVEL__");
-alias("KWD___INCLUDE_DEPTH__", "TPP_KWD___INCLUDE_DEPTH__");
-alias("KWD___COUNTER__", "TPP_KWD___COUNTER__");
-alias("KWD___TIMESTAMP__", "TPP_KWD___TIMESTAMP__");
-alias("KWD___COLUMN__", "TPP_KWD___COLUMN__");
-alias("KWD___is_identifier", "TPP_KWD___is_identifier");
-alias("KWD___is_deprecated", "TPP_KWD___is_deprecated");
-alias("KWD___is_poisoned", "TPP_KWD___is_poisoned");
-alias("KWD___has_attribute", "TPP_KWD___has_attribute");
-alias("KWD___has_builtin", "TPP_KWD___has_builtin");
-alias("KWD___has_cpp_attribute", "TPP_KWD___has_cpp_attribute");
-alias("KWD___has_declspec_attribute", "TPP_KWD___has_declspec_attribute");
-alias("KWD___has_feature", "TPP_KWD___has_feature");
-alias("KWD___has_extension", "TPP_KWD___has_extension");
-alias("KWD___has_warning", "TPP_KWD___has_warning");
-alias("KWD___has_known_extension", "TPP_KWD___has_known_extension");
-alias("KWD___has_known_warning", "TPP_KWD___has_known_warning");
-alias("KWD___has_include", "TPP_KWD___has_include");
-alias("KWD___has_include_next", "TPP_KWD___has_include_next");
-alias("KWD___VA_ARGS__", "TPP_KWD___VA_ARGS__");
-alias("KWD___VA_COMMA__", "TPP_KWD___VA_COMMA__");
-alias("KWD___VA_NARGS__", "TPP_KWD___VA_NARGS__");
-alias("KWD___VA_OPT__", "TPP_KWD___VA_OPT__");
-alias("KWD___TPP_EVAL", "TPP_KWD___TPP_EVAL");
-alias("KWD___TPP_LOAD_FILE", "TPP_KWD___TPP_LOAD_FILE");
-alias("KWD___TPP_COUNTER", "TPP_KWD___TPP_COUNTER");
-alias("KWD___TPP_RANDOM", "TPP_KWD___TPP_RANDOM");
-alias("KWD___TPP_STR_DECOMPILE", "TPP_KWD___TPP_STR_DECOMPILE");
-alias("KWD___TPP_STR_AT", "TPP_KWD___TPP_STR_AT");
-alias("KWD___TPP_STR_SUBSTR", "TPP_KWD___TPP_STR_SUBSTR");
-alias("KWD___TPP_STR_PACK", "TPP_KWD___TPP_STR_PACK");
-alias("KWD___TPP_STR_SIZE", "TPP_KWD___TPP_STR_SIZE");
-alias("KWD___TPP_UNIQUE", "TPP_KWD___TPP_UNIQUE");
-alias("KWD___TPP_COUNT_TOKENS", "TPP_KWD___TPP_COUNT_TOKENS");
-alias("KWD___TPP_IDENTIFIER", "TPP_KWD___TPP_IDENTIFIER");
-alias("KWD___DATE_DAY__", "TPP_KWD___DATE_DAY__");
-alias("KWD___DATE_WDAY__", "TPP_KWD___DATE_WDAY__");
-alias("KWD___DATE_YDAY__", "TPP_KWD___DATE_YDAY__");
-alias("KWD___DATE_MONTH__", "TPP_KWD___DATE_MONTH__");
-alias("KWD___DATE_YEAR__", "TPP_KWD___DATE_YEAR__");
-alias("KWD___TIME_SEC__", "TPP_KWD___TIME_SEC__");
-alias("KWD___TIME_MIN__", "TPP_KWD___TIME_MIN__");
-alias("KWD___TIME_HOUR__", "TPP_KWD___TIME_HOUR__");
-alias("KWD_tpp_dollar_is_alpha", "TPP_KWD_tpp_dollar_is_alpha");
-alias("KWD_tpp_va_args", "TPP_KWD_tpp_va_args");
-alias("KWD_tpp_named_va_args", "TPP_KWD_tpp_named_va_args");
-alias("KWD_tpp_va_comma", "TPP_KWD_tpp_va_comma");
-alias("KWD_tpp_msvc_integer_suffix", "TPP_KWD_tpp_msvc_integer_suffix");
-alias("KWD_tpp_charize_operator", "TPP_KWD_tpp_charize_operator");
-alias("KWD_tpp_trigraphs", "TPP_KWD_tpp_trigraphs");
-alias("KWD_tpp_digraphs", "TPP_KWD_tpp_digraphs");
-alias("KWD_tpp_reemit_unknown_pragmas", "TPP_KWD_tpp_reemit_unknown_pragmas");
-alias("KWD_tpp_pragma_push_macro", "TPP_KWD_tpp_pragma_push_macro");
-alias("KWD_tpp_pragma_pop_macro", "TPP_KWD_tpp_pragma_pop_macro");
-alias("KWD_tpp_pragma_region", "TPP_KWD_tpp_pragma_region");
-alias("KWD_tpp_pragma_endregion", "TPP_KWD_tpp_pragma_endregion");
-alias("KWD_tpp_pragma_warning", "TPP_KWD_tpp_pragma_warning");
-alias("KWD_tpp_pragma_message", "TPP_KWD_tpp_pragma_message");
-alias("KWD_tpp_pragma_error", "TPP_KWD_tpp_pragma_error");
-alias("KWD_tpp_pragma_once", "TPP_KWD_tpp_pragma_once");
-alias("KWD_tpp_pragma_tpp_exec", "TPP_KWD_tpp_pragma_tpp_exec");
-alias("KWD_tpp_pragma_deprecated", "TPP_KWD_tpp_pragma_deprecated");
-alias("KWD_tpp_pragma_tpp_set_keyword_flags", "TPP_KWD_tpp_pragma_tpp_set_keyword_flags");
-alias("KWD_tpp_directive_include_next", "TPP_KWD_tpp_directive_include_next");
-alias("KWD_tpp_directive_import", "TPP_KWD_tpp_directive_import");
-alias("KWD_tpp_directive_warning", "TPP_KWD_tpp_directive_warning");
-alias("KWD_tpp_lxor", "TPP_KWD_tpp_lxor");
-alias("KWD_tpp_token_tilde_tilde", "TPP_KWD_tpp_token_tilde_tilde");
-alias("KWD_tpp_token_pow", "TPP_KWD_tpp_token_pow");
-alias("KWD_tpp_token_lxor", "TPP_KWD_tpp_token_lxor");
-alias("KWD_tpp_token_arrow", "TPP_KWD_tpp_token_arrow");
-alias("KWD_tpp_token_colon_assign", "TPP_KWD_tpp_token_colon_assign");
-alias("KWD_tpp_token_colon_colon", "TPP_KWD_tpp_token_colon_colon");
-alias("KWD_tpp_macro_calling_conventions", "TPP_KWD_tpp_macro_calling_conventions");
-alias("KWD_tpp_strict_whitespace", "TPP_KWD_tpp_strict_whitespace");
-alias("KWD_tpp_strict_integer_overflow", "TPP_KWD_tpp_strict_integer_overflow");
-alias("KWD_tpp_support_ansi_characters", "TPP_KWD_tpp_support_ansi_characters");
-alias("KWD_tpp_emit_lf_after_directive", "TPP_KWD_tpp_emit_lf_after_directive");
-alias("KWD_tpp_if_cond_expression", "TPP_KWD_tpp_if_cond_expression");
-alias("KWD_tpp_debug", "TPP_KWD_tpp_debug");
-alias("KWD___TPP_VERSION__", "TPP_KWD___TPP_VERSION__", onlyIfDefined: false);
 
 // Extensions
 alias("EXT_TRIGRAPHS", "TPP_EXT_TRIGRAPHS");
@@ -3119,9 +2990,6 @@ alias("W_INVALID_FLOAT_SUFFIX", "TPP_HAVE_TPP_W_INVALID_FLOAT");
 alias("W_SPECIAL_ARGUMENT_NAME", "TPP_W_RESERVED_MACRO_PARAMETER_NAME");
 alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 ]]]*/
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_EOF TPP_TOK_EOF
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #if TPP_HAVE_TOK_C_CHAR
 #define TPP_TOK_CHAR TPP_TOK_C_CHAR
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -3146,12 +3014,6 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define TOK_FLOAT TPP_TOK_C_FLOAT
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_HAVE_TOK_C_FLOAT */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_LF TPP_TOK_LF
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_SPACE TPP_TOK_SPACE
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #define TPP_TOK_ADD TPP_TOK_PLUS
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_ADD TPP_TOK_PLUS
@@ -3164,52 +3026,13 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_ASSIGN TPP_TOK_EQUAL
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_AT TPP_TOK_AT
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_BACKSLASH TPP_TOK_BACKSLASH
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_COLON TPP_TOK_COLON
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_COMMA TPP_TOK_COMMA
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #define TPP_TOK_DIV TPP_TOK_SLASH
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_DIV TPP_TOK_SLASH
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_DOT TPP_TOK_DOT
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #define TPP_TOK_HASH TPP_TOK_POUND
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_HASH TPP_TOK_POUND
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_LANGLE TPP_TOK_LANGLE
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_RANGLE TPP_TOK_RANGLE
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_LBRACKET TPP_TOK_LBRACKET
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_RBRACKET TPP_TOK_RBRACKET
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_LBRACE TPP_TOK_LBRACE
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_RBRACE TPP_TOK_RBRACE
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_LPAREN TPP_TOK_LPAREN
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_RPAREN TPP_TOK_RPAREN
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #define TPP_TOK_MOD TPP_TOK_PERCENT
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -3231,15 +3054,9 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_QUESTION TPP_TOK_QMARK
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_SEMICOLON TPP_TOK_SEMICOLON
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #define TPP_TOK_SUB TPP_TOK_MINUS
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_SUB TPP_TOK_MINUS
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define TOK_TILDE TPP_TOK_TILDE
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #define TPP_TOK_XOR TPP_TOK_HAT
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -3257,9 +3074,12 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define TOK_SHR TPP_TOK_RANGLE_RANGLE
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_HAVE_TOK_RANGLE_RANGLE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_EQUAL_EQUAL
+#if TPP2_HAVE_GLOBAL_NAMESPACE
+#undef TOK_EQUAL
+#if TPP_HAVE_TOK_EQUAL_EQUAL
 #define TOK_EQUAL TPP_TOK_EQUAL_EQUAL
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_EQUAL_EQUAL */
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL */
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #if TPP_HAVE_TOK_EXCLAIM_EQUAL
 #define TPP_TOK_NOT_EQUAL TPP_TOK_EXCLAIM_EQUAL
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -3395,18 +3215,12 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define TOK_POW TPP_TOK_STAR_STAR
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_HAVE_TOK_STAR_STAR */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_TILDE_TILDE
-#define TOK_TILDE_TILDE TPP_TOK_TILDE_TILDE
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_TILDE_TILDE */
 #if TPP_HAVE_TOK_MINUS_RANGLE
 #define TPP_TOK_ARROW TPP_TOK_MINUS_RANGLE
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_ARROW TPP_TOK_MINUS_RANGLE
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_HAVE_TOK_MINUS_RANGLE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_COLON_EQUAL
-#define TOK_COLON_EQUAL TPP_TOK_COLON_EQUAL
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_COLON_EQUAL */
 #if TPP_HAVE_TOK_COLON_COLON
 #define TPP_TOK_NAMESPACE TPP_TOK_COLON_COLON
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -3419,9 +3233,6 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define TOK_ARROW_STAR TPP_TOK_MINUS_RANGLE_STAR
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_HAVE_TOK_MINUS_RANGLE_STAR */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_DOT_STAR
-#define TOK_DOT_STAR TPP_TOK_DOT_STAR
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_DOT_STAR */
 #if TPP_HAVE_TOK_DOT_DOT
 #define TPP_TOK_DOTDOT TPP_TOK_DOT_DOT
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -3470,9 +3281,6 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define TOK_NOT_EQUAL3 TPP_TOK_EXCLAIM_EQUAL_EQUAL
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_QMARK_QMARK
-#define TOK_QMARK_QMARK TPP_TOK_QMARK_QMARK
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_HAVE_TOK_QMARK_QMARK */
 #if TPP2_HAVE_GLOBAL_NAMESPACE
 #define TOK_KEYWORD_BEGIN TPP_TOK_KEYWORD_BEGIN
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
@@ -3574,330 +3382,6 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define TOK_COLLON_COLLON TPP_TOK_COLON_COLON
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_HAVE_TOK_COLON_COLON */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_if)
-#define KWD_if TPP_KWD_if
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_if */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_ifdef)
-#define KWD_ifdef TPP_KWD_ifdef
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_ifdef */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_ifndef)
-#define KWD_ifndef TPP_KWD_ifndef
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_ifndef */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_elif)
-#define KWD_elif TPP_KWD_elif
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_elif */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_else)
-#define KWD_else TPP_KWD_else
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_else */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_endif)
-#define KWD_endif TPP_KWD_endif
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_endif */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_define)
-#define KWD_define TPP_KWD_define
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_define */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_defined)
-#define KWD_defined TPP_KWD_defined
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_defined */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_undef)
-#define KWD_undef TPP_KWD_undef
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_undef */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_include)
-#define KWD_include TPP_KWD_include
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_include */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_include_next)
-#define KWD_include_next TPP_KWD_include_next
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_include_next */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_import)
-#define KWD_import TPP_KWD_import
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_import */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_line)
-#define KWD_line TPP_KWD_line
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_line */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_error)
-#define KWD_error TPP_KWD_error
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_error */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_warning)
-#define KWD_warning TPP_KWD_warning
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_warning */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_ident)
-#define KWD_ident TPP_KWD_ident
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_ident */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_sccs)
-#define KWD_sccs TPP_KWD_sccs
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_sccs */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_assert)
-#define KWD_assert TPP_KWD_assert
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_assert */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_unassert)
-#define KWD_unassert TPP_KWD_unassert
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_unassert */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_pragma)
-#define KWD_pragma TPP_KWD_pragma
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_pragma */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD__Pragma)
-#define KWD__Pragma TPP_KWD__Pragma
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD__Pragma */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___pragma)
-#define KWD___pragma TPP_KWD___pragma
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___pragma */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___FILE__)
-#define KWD___FILE__ TPP_KWD___FILE__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___FILE__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___LINE__)
-#define KWD___LINE__ TPP_KWD___LINE__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___LINE__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TIME__)
-#define KWD___TIME__ TPP_KWD___TIME__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TIME__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___DATE__)
-#define KWD___DATE__ TPP_KWD___DATE__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___DATE__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___BASE_FILE__)
-#define KWD___BASE_FILE__ TPP_KWD___BASE_FILE__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___BASE_FILE__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___INCLUDE_LEVEL__)
-#define KWD___INCLUDE_LEVEL__ TPP_KWD___INCLUDE_LEVEL__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___INCLUDE_LEVEL__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___INCLUDE_DEPTH__)
-#define KWD___INCLUDE_DEPTH__ TPP_KWD___INCLUDE_DEPTH__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___INCLUDE_DEPTH__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___COUNTER__)
-#define KWD___COUNTER__ TPP_KWD___COUNTER__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___COUNTER__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TIMESTAMP__)
-#define KWD___TIMESTAMP__ TPP_KWD___TIMESTAMP__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TIMESTAMP__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___COLUMN__)
-#define KWD___COLUMN__ TPP_KWD___COLUMN__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___COLUMN__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___is_identifier)
-#define KWD___is_identifier TPP_KWD___is_identifier
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___is_identifier */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___is_deprecated)
-#define KWD___is_deprecated TPP_KWD___is_deprecated
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___is_deprecated */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___is_poisoned)
-#define KWD___is_poisoned TPP_KWD___is_poisoned
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___is_poisoned */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_attribute)
-#define KWD___has_attribute TPP_KWD___has_attribute
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_attribute */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_builtin)
-#define KWD___has_builtin TPP_KWD___has_builtin
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_builtin */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_cpp_attribute)
-#define KWD___has_cpp_attribute TPP_KWD___has_cpp_attribute
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_cpp_attribute */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_declspec_attribute)
-#define KWD___has_declspec_attribute TPP_KWD___has_declspec_attribute
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_declspec_attribute */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_feature)
-#define KWD___has_feature TPP_KWD___has_feature
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_feature */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_extension)
-#define KWD___has_extension TPP_KWD___has_extension
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_extension */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_warning)
-#define KWD___has_warning TPP_KWD___has_warning
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_warning */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_known_extension)
-#define KWD___has_known_extension TPP_KWD___has_known_extension
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_known_extension */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_known_warning)
-#define KWD___has_known_warning TPP_KWD___has_known_warning
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_known_warning */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_include)
-#define KWD___has_include TPP_KWD___has_include
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_include */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___has_include_next)
-#define KWD___has_include_next TPP_KWD___has_include_next
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___has_include_next */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___VA_ARGS__)
-#define KWD___VA_ARGS__ TPP_KWD___VA_ARGS__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___VA_ARGS__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___VA_COMMA__)
-#define KWD___VA_COMMA__ TPP_KWD___VA_COMMA__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___VA_COMMA__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___VA_NARGS__)
-#define KWD___VA_NARGS__ TPP_KWD___VA_NARGS__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___VA_NARGS__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___VA_OPT__)
-#define KWD___VA_OPT__ TPP_KWD___VA_OPT__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___VA_OPT__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_EVAL)
-#define KWD___TPP_EVAL TPP_KWD___TPP_EVAL
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_EVAL */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_LOAD_FILE)
-#define KWD___TPP_LOAD_FILE TPP_KWD___TPP_LOAD_FILE
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_LOAD_FILE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_COUNTER)
-#define KWD___TPP_COUNTER TPP_KWD___TPP_COUNTER
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_COUNTER */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_RANDOM)
-#define KWD___TPP_RANDOM TPP_KWD___TPP_RANDOM
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_RANDOM */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_STR_DECOMPILE)
-#define KWD___TPP_STR_DECOMPILE TPP_KWD___TPP_STR_DECOMPILE
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_STR_DECOMPILE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_STR_AT)
-#define KWD___TPP_STR_AT TPP_KWD___TPP_STR_AT
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_STR_AT */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_STR_SUBSTR)
-#define KWD___TPP_STR_SUBSTR TPP_KWD___TPP_STR_SUBSTR
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_STR_SUBSTR */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_STR_PACK)
-#define KWD___TPP_STR_PACK TPP_KWD___TPP_STR_PACK
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_STR_PACK */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_STR_SIZE)
-#define KWD___TPP_STR_SIZE TPP_KWD___TPP_STR_SIZE
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_STR_SIZE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_UNIQUE)
-#define KWD___TPP_UNIQUE TPP_KWD___TPP_UNIQUE
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_UNIQUE */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_COUNT_TOKENS)
-#define KWD___TPP_COUNT_TOKENS TPP_KWD___TPP_COUNT_TOKENS
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_COUNT_TOKENS */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TPP_IDENTIFIER)
-#define KWD___TPP_IDENTIFIER TPP_KWD___TPP_IDENTIFIER
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TPP_IDENTIFIER */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___DATE_DAY__)
-#define KWD___DATE_DAY__ TPP_KWD___DATE_DAY__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___DATE_DAY__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___DATE_WDAY__)
-#define KWD___DATE_WDAY__ TPP_KWD___DATE_WDAY__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___DATE_WDAY__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___DATE_YDAY__)
-#define KWD___DATE_YDAY__ TPP_KWD___DATE_YDAY__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___DATE_YDAY__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___DATE_MONTH__)
-#define KWD___DATE_MONTH__ TPP_KWD___DATE_MONTH__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___DATE_MONTH__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___DATE_YEAR__)
-#define KWD___DATE_YEAR__ TPP_KWD___DATE_YEAR__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___DATE_YEAR__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TIME_SEC__)
-#define KWD___TIME_SEC__ TPP_KWD___TIME_SEC__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TIME_SEC__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TIME_MIN__)
-#define KWD___TIME_MIN__ TPP_KWD___TIME_MIN__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TIME_MIN__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD___TIME_HOUR__)
-#define KWD___TIME_HOUR__ TPP_KWD___TIME_HOUR__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD___TIME_HOUR__ */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_dollar_is_alpha)
-#define KWD_tpp_dollar_is_alpha TPP_KWD_tpp_dollar_is_alpha
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_dollar_is_alpha */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_va_args)
-#define KWD_tpp_va_args TPP_KWD_tpp_va_args
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_va_args */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_named_va_args)
-#define KWD_tpp_named_va_args TPP_KWD_tpp_named_va_args
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_named_va_args */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_va_comma)
-#define KWD_tpp_va_comma TPP_KWD_tpp_va_comma
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_va_comma */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_msvc_integer_suffix)
-#define KWD_tpp_msvc_integer_suffix TPP_KWD_tpp_msvc_integer_suffix
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_msvc_integer_suffix */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_charize_operator)
-#define KWD_tpp_charize_operator TPP_KWD_tpp_charize_operator
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_charize_operator */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_trigraphs)
-#define KWD_tpp_trigraphs TPP_KWD_tpp_trigraphs
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_trigraphs */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_digraphs)
-#define KWD_tpp_digraphs TPP_KWD_tpp_digraphs
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_digraphs */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_reemit_unknown_pragmas)
-#define KWD_tpp_reemit_unknown_pragmas TPP_KWD_tpp_reemit_unknown_pragmas
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_reemit_unknown_pragmas */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_push_macro)
-#define KWD_tpp_pragma_push_macro TPP_KWD_tpp_pragma_push_macro
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_push_macro */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_pop_macro)
-#define KWD_tpp_pragma_pop_macro TPP_KWD_tpp_pragma_pop_macro
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_pop_macro */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_region)
-#define KWD_tpp_pragma_region TPP_KWD_tpp_pragma_region
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_region */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_endregion)
-#define KWD_tpp_pragma_endregion TPP_KWD_tpp_pragma_endregion
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_endregion */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_warning)
-#define KWD_tpp_pragma_warning TPP_KWD_tpp_pragma_warning
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_warning */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_message)
-#define KWD_tpp_pragma_message TPP_KWD_tpp_pragma_message
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_message */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_error)
-#define KWD_tpp_pragma_error TPP_KWD_tpp_pragma_error
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_error */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_once)
-#define KWD_tpp_pragma_once TPP_KWD_tpp_pragma_once
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_once */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_tpp_exec)
-#define KWD_tpp_pragma_tpp_exec TPP_KWD_tpp_pragma_tpp_exec
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_tpp_exec */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_deprecated)
-#define KWD_tpp_pragma_deprecated TPP_KWD_tpp_pragma_deprecated
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_deprecated */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_pragma_tpp_set_keyword_flags)
-#define KWD_tpp_pragma_tpp_set_keyword_flags TPP_KWD_tpp_pragma_tpp_set_keyword_flags
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_pragma_tpp_set_keyword_flags */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_directive_include_next)
-#define KWD_tpp_directive_include_next TPP_KWD_tpp_directive_include_next
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_directive_include_next */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_directive_import)
-#define KWD_tpp_directive_import TPP_KWD_tpp_directive_import
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_directive_import */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_directive_warning)
-#define KWD_tpp_directive_warning TPP_KWD_tpp_directive_warning
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_directive_warning */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_lxor)
-#define KWD_tpp_lxor TPP_KWD_tpp_lxor
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_lxor */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_token_tilde_tilde)
-#define KWD_tpp_token_tilde_tilde TPP_KWD_tpp_token_tilde_tilde
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_token_tilde_tilde */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_token_pow)
-#define KWD_tpp_token_pow TPP_KWD_tpp_token_pow
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_token_pow */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_token_lxor)
-#define KWD_tpp_token_lxor TPP_KWD_tpp_token_lxor
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_token_lxor */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_token_arrow)
-#define KWD_tpp_token_arrow TPP_KWD_tpp_token_arrow
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_token_arrow */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_token_colon_assign)
-#define KWD_tpp_token_colon_assign TPP_KWD_tpp_token_colon_assign
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_token_colon_assign */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_token_colon_colon)
-#define KWD_tpp_token_colon_colon TPP_KWD_tpp_token_colon_colon
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_token_colon_colon */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_macro_calling_conventions)
-#define KWD_tpp_macro_calling_conventions TPP_KWD_tpp_macro_calling_conventions
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_macro_calling_conventions */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_strict_whitespace)
-#define KWD_tpp_strict_whitespace TPP_KWD_tpp_strict_whitespace
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_strict_whitespace */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_strict_integer_overflow)
-#define KWD_tpp_strict_integer_overflow TPP_KWD_tpp_strict_integer_overflow
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_strict_integer_overflow */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_support_ansi_characters)
-#define KWD_tpp_support_ansi_characters TPP_KWD_tpp_support_ansi_characters
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_support_ansi_characters */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_emit_lf_after_directive)
-#define KWD_tpp_emit_lf_after_directive TPP_KWD_tpp_emit_lf_after_directive
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_emit_lf_after_directive */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_if_cond_expression)
-#define KWD_tpp_if_cond_expression TPP_KWD_tpp_if_cond_expression
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_if_cond_expression */
-#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_KWD_tpp_debug)
-#define KWD_tpp_debug TPP_KWD_tpp_debug
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_KWD_tpp_debug */
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define KWD___TPP_VERSION__ TPP_KWD___TPP_VERSION__
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_EXT_TRIGRAPHS)
 #define EXT_TRIGRAPHS TPP_EXT_TRIGRAPHS
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_EXT_TRIGRAPHS */

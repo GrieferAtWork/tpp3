@@ -6019,6 +6019,28 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
 
 
+/* Every token/keyword that TPP needs to pre-define for one reason or another
+ * is defined as an enum in `tpp_token_id` under the name `TPP_KWD_<keyword>`
+ * for keywords and `TPP_TOK_<DESCRIPTION>` for tokens.
+ * For the sake of making it easier to determine which keywords have been
+ * pre-defined by TPP, every `TPP_KWD_<keyword>` is also defined as a macro
+ * expanding to itself.
+ *
+ * When this feature is enabled, every `TPP_KWD_<keyword>` and `TPP_TOK_<DESCRIPTION>`
+ * is accompanied by another macro, exposing keyword and token identifiers within
+ * the global namespace, similar to what TPP2 used to do:
+ * ```c
+ * #define KWD_<keyword>     TPP_KWD_<keyword>`
+ * #define TOK_<DESCRIPTION> TPP_TOK_<DESCRIPTION>`
+ * ```
+ *
+ * This option does *NOT* affect user-defined keywords. Those are always defined
+ * as `<name>` just the way you wrote them using `TPP_KWD(<name>, "<repr>")`. */
+#ifndef TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE
+#define TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE 0
+#endif /* !TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE */
+
+
 #undef TPP_HAVE_KEYWORD_FLAGS
 #if (TPP_HAVE_PRAGMA_ONCE ||           \
      TPP_HAVE_CPP_IMPORT ||            \

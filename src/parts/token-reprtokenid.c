@@ -153,35 +153,54 @@ for (local t: tokens)
 	addTokenString(t.id, t.tokenRepr, t.condition);
 
 print("static struct tpp_token_repr_strings_struct {");
+local currentCondition = "1";
 for (local ts: tokenStrings.values) {
-	if (ts.condition != "1")
-		print(f"#if {ts.condition}");
+	if (ts.condition != currentCondition) {
+		if (currentCondition != "1")
+			print(f"#endif /" f"* {currentCondition} *" f"/");
+		if (ts.condition != "1")
+			print(f"#if {ts.condition}");
+		currentCondition = ts.condition;
+	}
 	print(f"	char ttr_{ts.name}[{#ts.value + 1}];");
-	if (ts.condition != "1")
-		print(f"#endif /" f"* {ts.condition} *" f"/");
 }
+if (currentCondition != "1")
+	print(f"#endif /" f"* {currentCondition} *" f"/");
 print("} const tpp_token_repr_strings = {");
+
+local currentCondition = "1";
 for (local ts: tokenStrings.values) {
-	if (ts.condition != "1")
-		print(f"#if {ts.condition}");
+	if (ts.condition != currentCondition) {
+		if (currentCondition != "1")
+			print(f"#endif /" f"* {currentCondition} *" f"/");
+		if (ts.condition != "1")
+			print(f"#if {ts.condition}");
+		currentCondition = ts.condition;
+	}
 	print(f"	/" f"* .ttr_{ts.name} = *" f"/ {repr ts.value},");
-	if (ts.condition != "1")
-		print(f"#endif /" f"* {ts.condition} *" f"/");
 }
+if (currentCondition != "1")
+	print(f"#endif /" f"* {currentCondition} *" f"/");
 print("};");
 print("static uint_least16_t const tpp_token_repr_offsets[] = {");
 for (local i, value: oneCharTokenNames.enumerate()) {
 	local ts = tokenStrings[value];
 	print(f"	/" f"* [{i.hex()}] = *" f"/ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_{ts.name}),");
 }
+local currentCondition = "1";
 for (local t: tokens) {
 	local ts = tokenStrings[t.tokenRepr];
-	if (t.condition != "1")
-		print(f"#if {t.condition}");
+	if (t.condition != currentCondition) {
+		if (currentCondition != "1")
+			print(f"#endif /" f"* {currentCondition} *" f"/");
+		if (t.condition != "1")
+			print(f"#if {t.condition}");
+		currentCondition = t.condition;
+	}
 	print(f"	/" f"* [{t.id}] = *" f"/ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_{ts.name}),");
-	if (t.condition != "1")
-		print(f"#endif /" f"* {t.condition} *" f"/");
 }
+if (currentCondition != "1")
+	print(f"#endif /" f"* {currentCondition} *" f"/");
 print("};");
 print("TPP_STATIC_ASSERT(tpp_lengthof(tpp_token_repr_offsets) == TPP_TOK_MULTICHAR_END);");
 ]]]*/

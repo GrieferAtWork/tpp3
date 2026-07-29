@@ -929,7 +929,7 @@ tpp_keywords_resetflags(tpp_keywords *tpp_restrict self,
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_resetfeatures(tpp_keywords *tpp_restrict self);
 #else /* TPP_HAVE_KEYWORD_FEATURES */
-#define tpp_keywords_resetfeatures(self, keep_mask) (void)0
+#define tpp_keywords_resetfeatures(self) (void)0
 #endif /* !TPP_HAVE_KEYWORD_FEATURES */
 #endif /* TPP_HAVE_KEYWORDS_RESETFEATURES */
 

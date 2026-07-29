@@ -57,7 +57,7 @@ local insideMultiChar = false;
 local currentValue = 0;
 for (local line: File.open("token.h").read().decode("utf-8").splitlines(false)) {
 	if (!inside) {
-		if ("TPP_TOK_EOF" in line) {
+		if ("TPP_TOK_EOF" in line && "\\0" in line) {
 			inside = true;
 		} else {
 			continue;
@@ -148,21 +148,34 @@ function addTokenString(name: string, value: string, condition: string = "1") {
 for (local t: tokens + multiCharTokens)
 	addTokenString(t.id, t.asString, t.condition);
 print("static struct tpp_token_str_strings_struct {");
+local currentCondition = "1";
 for (local ts: tokenStrings.values) {
-	if (ts.condition != "1")
-		print(f"#if {ts.condition}");
+	if (ts.condition != currentCondition) {
+		if (currentCondition != "1")
+			print(f"#endif /" f"* {currentCondition} *" f"/");
+		if (ts.condition != "1")
+			print(f"#if {ts.condition}");
+		currentCondition = ts.condition;
+	}
 	print(f"	char ttr_{ts.name}[{#ts.value + 1}];");
-	if (ts.condition != "1")
-		print(f"#endif /" f"* {ts.condition} *" f"/");
 }
+if (currentCondition != "1")
+	print(f"#endif /" f"* {currentCondition} *" f"/");
 print("} const tpp_token_str_strings = {");
+
+local currentCondition = "1";
 for (local ts: tokenStrings.values) {
-	if (ts.condition != "1")
-		print(f"#if {ts.condition}");
+	if (ts.condition != currentCondition) {
+		if (currentCondition != "1")
+			print(f"#endif /" f"* {currentCondition} *" f"/");
+		if (ts.condition != "1")
+			print(f"#if {ts.condition}");
+		currentCondition = ts.condition;
+	}
 	print(f"	/" f"* .ttr_{ts.name} = *" f"/ {repr ts.value},");
-	if (ts.condition != "1")
-		print(f"#endif /" f"* {ts.condition} *" f"/");
 }
+if (currentCondition != "1")
+	print(f"#endif /" f"* {currentCondition} *" f"/");
 print("};");
 
 local oneCharTokenNames: {(TokenId | none)...} = List([none] * 256);
@@ -189,14 +202,23 @@ for (local i, value: oneCharTokenNames.enumerate()) {
 		}
 	}
 }
+
+local currentCondition = "1";
 for (local t: multiCharTokens) {
 	local ts = tokenStrings[t.asString];
-	if (t.condition != "1")
-		print(f"#if {t.condition}");
+	if (t.condition != "1") {
+		if (currentCondition != t.condition) {
+			if (currentCondition != "1")
+				print(f"#endif /" f"* {currentCondition} *" f"/");
+			if (t.condition != "1")
+				print(f"#if {t.condition}");
+			currentCondition = t.condition;
+		}
+	}
 	print(f"	/" f"* [{t.id}] = *" f"/ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_{ts.name}),");
-	if (t.condition != "1")
-		print(f"#endif /" f"* {t.condition} *" f"/");
 }
+if (currentCondition != "1")
+	print(f"#endif /" f"* {currentCondition} *" f"/");
 print("};");
 print("TPP_STATIC_ASSERT(tpp_lengthof(tpp_token_str_offsets) == TPP_TOK_MULTICHAR_END);");
 ]]]*/
@@ -237,32 +259,14 @@ static struct tpp_token_str_strings_struct {
 	char ttr_TPP_TOK_TILDE[6];
 #if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_0[2];
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_1[2];
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_2[2];
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_3[2];
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_4[2];
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_5[2];
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_6[2];
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_7[2];
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_8[2];
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	char ttr_TPP_TOK_9[2];
 #endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
 #if TPP_HAVE_UNICODE
@@ -713,32 +717,14 @@ static struct tpp_token_str_strings_struct {
 	/* .ttr_TPP_TOK_TILDE = */ "TILDE",
 #if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_0 = */ "0",
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_1 = */ "1",
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_2 = */ "2",
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_3 = */ "3",
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_4 = */ "4",
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_5 = */ "5",
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_6 = */ "6",
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_7 = */ "7",
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_8 = */ "8",
-#endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
-#if !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT
 	/* .ttr_TPP_TOK_9 = */ "9",
 #endif /* !TPP_HAVE_TOK_C_INT && !TPP_HAVE_TOK_C_FLOAT */
 #if TPP_HAVE_UNICODE
