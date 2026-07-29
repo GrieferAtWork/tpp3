@@ -268,8 +268,8 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
  * to this function, the caller must still call `tpp_lexer_initfile_*'
  *
  * Additionally, the following properties are not copied:
- * - tpp_keyword_misc_getuserdata_dtor()  (only "tpp_keyword_misc_getuserdata()"
- *                                         is copied; dtors are set to "NULL")
+ * - tpp_keyword_getuserdata_dtor()  (only "tpp_keyword_getuserdata()"
+ *                                    is copied; dtors are set to "NULL")
  *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */

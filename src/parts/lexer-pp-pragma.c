@@ -1802,6 +1802,170 @@ skip_colon_and_andle_for_pathlist:
 
 
 /************************************************************************/
+/* #pragma TPP __has_attribute(feature_test_keyword) = "expansion"      */
+/* #pragma TPP __has_builtin(feature_test_keyword) = "expansion"        */
+/* #pragma TPP __has_cpp_attribute(feature_test_keyword) = "expansion"  */
+/* #pragma TPP __has_declspec_attribute(feature_test_keyword) = "expansion" */
+/* #pragma TPP __has_extension(feature_test_keyword) = "expansion"      */
+/* #pragma TPP __has_feature(feature_test_keyword) = "expansion"        */
+/* #pragma TPP __has_c_attribute(feature_test_keyword) = "expansion"    */
+/************************************************************************/
+#if TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
+static TPP_CONSTCALL TPP_WUNUSED tpp_keyword_feature_kind TPPCALL
+tpp_keyword_feature_kind_oftok(tpp_token_id mode_tok) {
+	switch (mode_tok) {
+#if TPP_HAVE_CLANG_MACRO___has_attribute
+	case TPP_KWD___has_attribute:
+		return TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE;
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
+	case TPP_KWD___has_builtin:
+		return TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN;
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+	case TPP_KWD___has_cpp_attribute:
+		return TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE;
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+	case TPP_KWD___has_declspec_attribute:
+		return TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE;
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension
+	case TPP_KWD___has_extension:
+		return TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION;
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
+	case TPP_KWD___has_feature:
+		return TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE;
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute
+	case TPP_KWD___has_c_attribute:
+		return TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE;
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+	default: tpp_unreachable();
+	}
+	tpp_unreachable();
+}
+
+struct tpp_lexer_process_pragma_TPP_keyword_feature_data {
+	tpp_keyword             *tlpptkfd_keyword; /* [1..1] Keyword whose feature to set */
+	tpp_keyword_feature_kind tlpptkfd_kind;    /* The kind of feature to set */
+};
+
+static tpp_errno TPPCALL
+tpp_lexer_process_pragma_TPP_keyword_feature_cb(void *arg, tpp_string *chunk,
+                                                tpp_char const *str, tpp_size length) {
+	struct tpp_lexer_process_pragma_TPP_keyword_feature_data *data;
+	TPP_REF tpp_string *feature_str;
+	tpp_errno result;
+	data = (struct tpp_lexer_process_pragma_TPP_keyword_feature_data *)arg;
+	if (chunk && tpp_string_str(chunk) == str && tpp_string_len(chunk) == length) {
+		feature_str = chunk;
+		tpp_string_incref(feature_str);
+	} else {
+		feature_str = tpp_string_malloc(length);
+		if tpp_unlikely(!feature_str)
+			return TPP_ENOMEM;
+		tpp_memcpy(tpp_string_str(feature_str), str,
+		           length * sizeof(tpp_char));
+	}
+	result = tpp_keyword_setfeature(data->tlpptkfd_keyword,
+	                                data->tlpptkfd_kind,
+	                                feature_str);
+	tpp_string_decref(feature_str);
+	return result;
+}
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_process_pragma_TPP_keyword_feature(tpp_lexer *tpp_restrict self) {
+	tpp_keyword const *ro_keyword;
+	struct tpp_lexer_process_pragma_TPP_keyword_feature_data data;
+#if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES
+	char const *mode_name = tpp_lexer_gettokenkwdcstr(self);
+#endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES */
+	tpp_token_id const mode_tok = tpp_lexer_gettok(self);
+	tpp_token_id tok;
+	tpp_errno error;
+	data.tlpptkfd_kind = tpp_keyword_feature_kind_oftok(mode_tok);
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	tok = tpp_lexer_require(self, TPP_TOK_OFCHAR('('));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	do {
+		tok = tpp_lexer_yieldraw_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	if (TPP_TOK_ISKEYWORD(tok)) {
+		ro_keyword = tpp_lexer_gettokenkwd(self);
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES, mode_name);
+		if (TPP_ISERR(error))
+			return error;
+#endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES */
+		ro_keyword = tpp_lexer_kwds_getkeyword_byid(self, TPP_KWD_TPP);
+		tpp_assert(ro_keyword);
+	}
+	data.tlpptkfd_keyword = tpp_lexer_kwds_copybuiltin(self, ro_keyword);
+	if tpp_unlikely(!data.tlpptkfd_keyword)
+		return TPP_ENOMEM;
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('='));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	do {
+		tok = tpp_lexer_yield_blocking(self);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	if (TPP_TOK_ISERR(tok))
+		return TPP_TOK_ASERR(tok);
+	if (TPP_TOK_ISSTRING(tok)) {
+		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_process_pragma_TPP_keyword_feature_cb,
+		                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
+	} else if (tok == TPP_KWD_default) {
+		/* Restore default definition of feature */
+		error = tpp_keyword_setfeature(data.tlpptkfd_keyword,
+		                               data.tlpptkfd_kind,
+		                               NULL);
+		if (!TPP_ISERR(error)) {
+			do {
+				tok = tpp_lexer_yield_blocking(self);
+			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+			if (TPP_TOK_ISERR(tok))
+				return TPP_TOK_ASERR(tok);
+		}
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_STRING
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+#else  /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+		error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+	}
+	return error;
+}
+#endif /* TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
+
+
+
+
+
+/************************************************************************/
 /* #pragma GCC ...                                                      */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_GCC
@@ -1921,6 +2085,32 @@ tpp_lexer_process_pragma_TPP(tpp_lexer *tpp_restrict self) {
 		tpp_lexer_seek_commit(self, pos);
 		return tpp_lexer_process_pragma_TPP_include_path(self);
 #endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+
+#if TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
+#if TPP_HAVE_CLANG_MACRO___has_attribute
+	case TPP_KWD___has_attribute:
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
+	case TPP_KWD___has_builtin:
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+	case TPP_KWD___has_cpp_attribute:
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+	case TPP_KWD___has_declspec_attribute:
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension
+	case TPP_KWD___has_extension:
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
+	case TPP_KWD___has_feature:
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute
+	case TPP_KWD___has_c_attribute:
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+		tpp_lexer_seek_commit(self, pos);
+		return tpp_lexer_process_pragma_TPP_keyword_feature(self);
+#endif /* TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
 
 	default: break;
 	}

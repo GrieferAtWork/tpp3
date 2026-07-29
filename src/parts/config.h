@@ -785,12 +785,6 @@
 #define TPP_HAVE_PRAGMA 0
 #endif /* !... */
 
-/* TODO: Have a custom `#pragma TPP ...` pragma to define custom expansions for keyword-feature macros:
- * >> __has_feature(my_feature)  // Expands to [0]
- * >> #pragma TPP __has_feature(my_feature) = "42"
- * >> __has_feature(my_feature)  // Expands to [42]
- */
-
 /* Support for clang `__has_attribute()`, which is conventionally
  * used to check support of `__attribute__((foo))` in C/C++ compilers.
  *
@@ -862,6 +856,21 @@
 #ifndef TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES
 #define TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES ((TPP_HAVE_CLANG_MACRO___has_extension && TPP_HAVE_CLANG_MACRO___has_feature) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fclang-extensions-are-features" */
 #endif /* !TPP_HAVE_CLANG_EXTENSIONS_ARE_FEATURES */
+
+#undef TPP_HAVE_KEYWORD_FEATURES
+#if (TPP_HAVE_CLANG_MACRO___has_attribute ||          \
+     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
+     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
+     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
+     TPP_HAVE_CLANG_MACRO___has_extension ||          \
+     TPP_HAVE_CLANG_MACRO___has_feature ||            \
+     TPP_HAVE_CLANG_MACRO___has_c_attribute)
+#define TPP_HAVE_KEYWORD_FEATURES 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FEATURES 0
+#endif /* !... */
+
+
 
 /* Support for clang `__is_identifier()`, which can be used
  * to check if a given keyword is a builtin identifier:
@@ -1742,6 +1751,37 @@
 #define TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH (TPP_HAVE_PRAGMA && TPP_HAVE_INCLUDE_PATH)
 #endif /* !TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 
+/* Support for a number of pragma directives in the `#pragma TPP` namespace
+ * that can be used to define custom overrides for `__has_*`-style feature-test
+ * macros:
+ * ```c
+ * #pragma TPP __has_attribute(feature_test_keyword) = "expansion"
+ * #pragma TPP __has_builtin(feature_test_keyword) = "expansion"
+ * #pragma TPP __has_cpp_attribute(feature_test_keyword) = "expansion"
+ * #pragma TPP __has_declspec_attribute(feature_test_keyword) = "expansion"
+ * #pragma TPP __has_extension(feature_test_keyword) = "expansion"
+ * #pragma TPP __has_feature(feature_test_keyword) = "expansion"
+ * #pragma TPP __has_c_attribute(feature_test_keyword) = "expansion"
+ * ```
+ *
+ * Each of these resp. only works if the corresponding `TPP_HAVE_CLANG_MACRO_*`
+ * hasn't been hard-disabled (as per `TPP_CONF_0`):
+ * - `__has_attribute`: `TPP_HAVE_CLANG_MACRO___has_attribute`
+ * - `__has_builtin`: `TPP_HAVE_CLANG_MACRO___has_builtin`
+ * - `__has_cpp_attribute`: `TPP_HAVE_CLANG_MACRO___has_cpp_attribute`
+ * - `__has_declspec_attribute`: `TPP_HAVE_CLANG_MACRO___has_declspec_attribute`
+ * - `__has_extension`: `TPP_HAVE_CLANG_MACRO___has_extension`
+ * - `__has_feature`: `TPP_HAVE_CLANG_MACRO___has_feature`
+ * - `__has_c_attribute`: `TPP_HAVE_CLANG_MACRO___has_c_attribute`
+ */
+#ifndef TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
+#if (TPP_HAVE_PRAGMA && TPP_HAVE_KEYWORD_FEATURES)
+#define TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES 1
+#else /* ... */
+#define TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES 0
+#endif /* !... */
+#endif /* !TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
+
 #undef TPP_HAVE_PRAGMA_GCC
 #if (TPP_HAVE_PRAGMA_GCC_POISON ||        \
      TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER || \
@@ -1756,7 +1796,8 @@
      TPP_HAVE_PRAGMA_TPP_EXTENSION ||             \
      TPP_HAVE_PRAGMA_TPP_TPP_EXEC ||              \
      TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS || \
-     TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH)
+     TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH ||          \
+     TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES)
 #define TPP_HAVE_PRAGMA_TPP 1
 #else /* ... */
 #define TPP_HAVE_PRAGMA_TPP 0
@@ -4733,33 +4774,34 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_WARNINGS && TPP_HAVE_VA_OPT_IN_MACROS)
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT */
 #ifndef TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED
-#define TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED                  \
+#define TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED                \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_DEFINED && \
 	 TPP_CONF_MAYBE_0(TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR))
 #endif /* !TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_STRING
 #if (TPP_HAVE_WARNINGS && TPP_HAVE_TOK_STRINGLIKE && \
-     (TPP_HAVE_PROFILE_NOT_MINIMAL ||                    \
-      TPP_HAVE_PRAGMA_PUSH_MACRO ||                      \
-      TPP_HAVE_PRAGMA_DEPRECATED ||                      \
-      TPP_HAVE_PRAGMA_EXTENSION ||                       \
-      TPP_HAVE_PRAGMA_TPP_EXTENSION ||                   \
-      TPP_HAVE_PRAGMA_MESSAGE ||                         \
-      TPP_HAVE_PRAGMA_ERROR ||                           \
-      TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC ||                  \
-      TPP_HAVE_PRAGMA_GCC_WARNING ||                     \
-      TPP_HAVE_PRAGMA_GCC_ERROR ||                       \
-      TPP_HAVE_PRAGMA_TPP_EXEC ||                        \
-      TPP_HAVE_PRAGMA_TPP_TPP_EXEC ||                    \
-      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||           \
-      TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS ||       \
-      TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH ||                \
-      TPP_HAVE_MACRO__Pragma ||                          \
-      TPP_HAVE_MACRO___TPP_IDENTIFIER ||                 \
-      TPP_HAVE_MACRO___TPP_STR_DECOMPILE ||              \
-      TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||               \
-      TPP_HAVE_MACRO___TPP_STR_SIZE ||                   \
-      TPP_HAVE_MACRO___TPP_EXEC ||                       \
+     (TPP_HAVE_PROFILE_NOT_MINIMAL ||                \
+      TPP_HAVE_PRAGMA_PUSH_MACRO ||                  \
+      TPP_HAVE_PRAGMA_DEPRECATED ||                  \
+      TPP_HAVE_PRAGMA_EXTENSION ||                   \
+      TPP_HAVE_PRAGMA_TPP_EXTENSION ||               \
+      TPP_HAVE_PRAGMA_MESSAGE ||                     \
+      TPP_HAVE_PRAGMA_ERROR ||                       \
+      TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC ||              \
+      TPP_HAVE_PRAGMA_GCC_WARNING ||                 \
+      TPP_HAVE_PRAGMA_GCC_ERROR ||                   \
+      TPP_HAVE_PRAGMA_TPP_EXEC ||                    \
+      TPP_HAVE_PRAGMA_TPP_TPP_EXEC ||                \
+      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||       \
+      TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS ||   \
+      TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH ||            \
+      TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES ||        \
+      TPP_HAVE_MACRO__Pragma ||                      \
+      TPP_HAVE_MACRO___TPP_IDENTIFIER ||             \
+      TPP_HAVE_MACRO___TPP_STR_DECOMPILE ||          \
+      TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||           \
+      TPP_HAVE_MACRO___TPP_STR_SIZE ||               \
+      TPP_HAVE_MACRO___TPP_EXEC ||                   \
       TPP_HAVE_CPP_IDENT_SCCS))
 #define TPP_HAVE_TPP_W_EXPECTED_STRING 1
 #else /* ... */
@@ -4911,6 +4953,10 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_UNICODE)
 #endif /* !TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES
+#define TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES)
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -5378,6 +5424,7 @@ print("#endif /" "* !... *" "/");
      TPP_HAVE_PRAGMA_TPP_EXEC ||                  \
      TPP_HAVE_PRAGMA_TPP_TPP_EXEC ||              \
      TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH ||          \
+     TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES ||      \
      TPP_HAVE_MACRO__Pragma ||                    \
      TPP_HAVE_MACRO___TPP_EVAL ||                 \
      TPP_HAVE_MACRO___has_include ||              \
@@ -5794,6 +5841,34 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
 
+
+#undef TPP_HAVE_KEYWORD_FLAGS
+#if (TPP_HAVE_PRAGMA_ONCE ||           \
+     TPP_HAVE_CPP_IMPORT ||            \
+     TPP_HAVE_CPP_PREDEFINED_MACROS || \
+     TPP_HAVE_MACRO___is_deprecated || \
+     TPP_HAVE_MACRO___is_poisoned ||   \
+     TPP_HAVE_PRAGMA_DEPRECATED ||     \
+     TPP_HAVE_PRAGMA_GCC_POISON)
+#define TPP_HAVE_KEYWORD_FLAGS 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_FLAGS 0
+#endif /* !... */
+
+#undef TPP_HAVE_KEYWORD_MISC
+#if (TPP_HAVE_KEYWORD_FLAGS ||         \
+     TPP_HAVE_KEYWORD_FEATURES ||      \
+     TPP_HAVE_CPP_ASSERT ||            \
+     TPP_HAVE_IFNDEF_INCLUDE_GUARDS || \
+     TPP_HAVE_KEYWORD_INCLCOUNT ||     \
+     TPP_HAVE_PRAGMA_PUSH_MACRO ||     \
+     TPP_HAVE_MACRO___TPP_COUNTER ||   \
+     TPP_HAVE_KEYWORD_USERDATA)
+#define TPP_HAVE_KEYWORD_MISC 1
+#else /* ... */
+#define TPP_HAVE_KEYWORD_MISC 0
+#endif /* !... */
+
 /* Provide a function `tpp_keywords_undefalluser()` + `tpp_lexer_undefalluser()`
  * that can be used to quickly delete *all* macro definitions. */
 #ifndef TPP_HAVE_KEYWORDS_UNDEFALL
@@ -5817,26 +5892,22 @@ print("#endif /" "* !... *" "/");
 /* Provide a function `tpp_keywords_resetflags()` + `tpp_lexer_kwds_resetflags()`
  * that can be used to delete the flags of all keywords. */
 #ifndef TPP_HAVE_KEYWORDS_RESETFLAGS
-#if (TPP_HAVE_PROFILE_ALL &&                           \
-     (TPP_HAVE_PRAGMA_ONCE ||                          \
-      TPP_HAVE_CPP_IMPORT ||                           \
-      TPP_HAVE_CLANG_MACRO___has_attribute ||          \
-      TPP_HAVE_CLANG_MACRO___has_builtin ||            \
-      TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
-      TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
-      TPP_HAVE_CLANG_MACRO___has_extension ||          \
-      TPP_HAVE_CLANG_MACRO___has_feature ||            \
-      TPP_HAVE_CLANG_MACRO___has_c_attribute ||        \
-      TPP_HAVE_MACRO___is_deprecated ||                \
-      TPP_HAVE_MACRO___is_poisoned ||                  \
-      TPP_HAVE_PRAGMA_DEPRECATED ||                    \
-      TPP_HAVE_PRAGMA_GCC_POISON ||                    \
-      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS))
+#if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_KEYWORD_FLAGS)
 #define TPP_HAVE_KEYWORDS_RESETFLAGS 1
 #else /* ... */
 #define TPP_HAVE_KEYWORDS_RESETFLAGS 0
 #endif /* !... */
 #endif /* !TPP_HAVE_KEYWORDS_RESETFLAGS */
+
+/* Provide a function `tpp_keywords_resetfeatures()` + `tpp_lexer_kwds_resetfeatures()`
+ * that can be used to delete (restore defaults) of any custom keyword feature override. */
+#ifndef TPP_HAVE_KEYWORDS_RESETFEATURES
+#if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_KEYWORD_FEATURES)
+#define TPP_HAVE_KEYWORDS_RESETFEATURES 1
+#else /* ... */
+#define TPP_HAVE_KEYWORDS_RESETFEATURES 0
+#endif /* !... */
+#endif /* !TPP_HAVE_KEYWORDS_RESETFEATURES */
 
 /* Provide a function `tpp_keywords_resetcounters()` +
  * `tpp_lexer_kwds_resetcounters()` that can be used to

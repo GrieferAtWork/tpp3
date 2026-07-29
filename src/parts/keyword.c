@@ -344,14 +344,6 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 
 
 #if TPP_HAVE_KEYWORD_USERDATA
-/* Get the user-data pointer for "self"
- * @return: NULL: No pointer set, or set pointer is "NULL" */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) void *TPPCALL
-tpp_keyword_getuserdata(tpp_keyword const *tpp_restrict self) {
-	tpp_keyword_misc const *misc = self->tk_misc;
-	return misc ? tpp_keyword_misc_getuserdata(misc) : NULL;
-}
-
 /* Set the user-data pointer for "self"
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
@@ -364,7 +356,8 @@ tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
 	misc = tpp_keyword_requiremisc(self);
 	if tpp_unlikely(!misc)
 		return TPP_ENOMEM;
-	tpp_keyword_misc_setuserdata(misc, ptr, dtor);
+	misc->tkm_userdata_ptr  = ptr;
+	misc->tkm_userdata_dtor = dtor;
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_KEYWORD_USERDATA */
@@ -2420,6 +2413,19 @@ tpp_keywords_resetflags(tpp_keywords *tpp_restrict self,
 }
 #endif /* TPP_HAVE_KEYWORDS_RESETFLAGS && TPP_HAVE_KEYWORD_FLAGS */
 
+
+#if TPP_HAVE_KEYWORDS_RESETFEATURES && TPP_HAVE_KEYWORD_FEATURES
+/* Reset all uses of `tpp_keyword_setfeature()` */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_resetfeatures(tpp_keywords *tpp_restrict self) {
+	tpp_hash i;
+	for (i = 0; i <= self->tks_bckm; ++i) {
+		tpp_keyword *bucket = self->tks_bckv[i];
+		for (; bucket; bucket = bucket->tk_next)
+			tpp_keyword_resetfeatures(bucket);
+	}
+}
+#endif /* TPP_HAVE_KEYWORDS_RESETFEATURES && TPP_HAVE_KEYWORD_FEATURES */
 
 #if TPP_HAVE_KEYWORDS_RESETCOUNTERS && TPP_HAVE_MACRO___TPP_COUNTER
 /* Call `tpp_keyword_reset_builtin_counter()' on every keyword, thereby

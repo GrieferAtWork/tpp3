@@ -76,49 +76,6 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_macro_pushent *TPPCALL
 tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
 
-#undef TPP_HAVE_KEYWORD_FEATURES
-#if (TPP_HAVE_CLANG_MACRO___has_attribute ||          \
-     TPP_HAVE_CLANG_MACRO___has_builtin ||            \
-     TPP_HAVE_CLANG_MACRO___has_cpp_attribute ||      \
-     TPP_HAVE_CLANG_MACRO___has_declspec_attribute || \
-     TPP_HAVE_CLANG_MACRO___has_extension ||          \
-     TPP_HAVE_CLANG_MACRO___has_feature ||            \
-     TPP_HAVE_CLANG_MACRO___has_c_attribute)
-#define TPP_HAVE_KEYWORD_FEATURES 1
-#else /* ... */
-#define TPP_HAVE_KEYWORD_FEATURES 0
-#endif /* !... */
-
-
-#undef TPP_HAVE_KEYWORD_FLAGS
-#if (TPP_HAVE_PRAGMA_ONCE ||           \
-     TPP_HAVE_CPP_IMPORT ||            \
-     TPP_HAVE_KEYWORD_FEATURES ||      \
-     TPP_HAVE_CPP_PREDEFINED_MACROS || \
-     TPP_HAVE_MACRO___is_deprecated || \
-     TPP_HAVE_MACRO___is_poisoned ||   \
-     TPP_HAVE_PRAGMA_DEPRECATED ||     \
-     TPP_HAVE_PRAGMA_GCC_POISON ||     \
-     TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS)
-#define TPP_HAVE_KEYWORD_FLAGS 1
-#else /* ... */
-#define TPP_HAVE_KEYWORD_FLAGS 0
-#endif /* !... */
-
-#undef TPP_HAVE_KEYWORD_MISC
-#if (TPP_HAVE_KEYWORD_FLAGS ||         \
-     TPP_HAVE_CPP_ASSERT ||            \
-     TPP_HAVE_IFNDEF_INCLUDE_GUARDS || \
-     TPP_HAVE_KEYWORD_INCLCOUNT ||     \
-     TPP_HAVE_PRAGMA_PUSH_MACRO ||     \
-     TPP_HAVE_MACRO___TPP_COUNTER ||   \
-     TPP_HAVE_KEYWORD_USERDATA)
-#define TPP_HAVE_KEYWORD_MISC 1
-#else /* ... */
-#define TPP_HAVE_KEYWORD_MISC 0
-#endif /* !... */
-
-
 
 #if TPP_HAVE_KEYWORD_MISC
 
@@ -164,8 +121,14 @@ typedef struct tpp_keyword_feature {
 	((self)->TPP_INTERNAL(tkf_expansion)                      \
 	 ? tpp_string_decref((self)->TPP_INTERNAL(tkf_expansion)) \
 	 : (void)0)
+#define _tpp_keyword_feature_reset(self) \
+	(_tpp_keyword_feature_fini(self),    \
+	 _tpp_keyword_feature_init(self))
 
 typedef struct tpp_keyword_features {
+	/* TODO: Custom configs such that only certain types of features can be overwritten at
+	 *       runtime, with all other features only ever looking at builtin defaults as per
+	 *       `TPP_PREDEFINED_FEATURE_HAS_*()` from user-definitions. */
 #if TPP_HAVE_CLANG_MACRO___has_attribute
 	tpp_keyword_feature TPP_INTERNAL(tkfs_has_attribute);          /* Expansion for `__has_attribute()` */
 #define _tpp_keyword_features_with_has_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_attribute))
@@ -229,6 +192,9 @@ typedef struct tpp_keyword_features {
 	((void)0 _tpp_keyword_features_witheach(self, _tpp_keyword_feature_init))
 #define _tpp_keyword_features_fini(self) \
 	((void)0 _tpp_keyword_features_witheach(self, _tpp_keyword_feature_fini))
+#define _tpp_keyword_features_reset(self) \
+	((void)0 _tpp_keyword_features_witheach(self, _tpp_keyword_feature_fini) \
+	         _tpp_keyword_features_witheach(self, _tpp_keyword_feature_init))
 #endif /* TPP_HAVE_KEYWORD_FEATURES */
 
 
@@ -306,6 +272,8 @@ typedef struct tpp_keyword_misc {
 #if TPP_HAVE_KEYWORD_FEATURES
 	tpp_keyword_features TPP_INTERNAL(tkm_features); /* Expansions of `__has_*` feature-test macros */
 #define _tpp_keyword_misc_init_features(self) , _tpp_keyword_features_init(&(self)->TPP_INTERNAL(tkm_features))
+#define _tpp_keyword_misc_featurebykind(self, kind) \
+	((tpp_keyword_feature *)((char *)(self) + (tpp_size)(unsigned int)(kind)))
 #else /* TPP_HAVE_KEYWORD_FEATURES */
 #define _tpp_keyword_misc_init_features(self) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURES */
@@ -348,15 +316,8 @@ typedef struct tpp_keyword_misc {
 #if TPP_HAVE_KEYWORD_USERDATA
 	void          *TPP_INTERNAL(tkm_userdata_ptr); /* [?..?] User-data pointer (initialize to "NULL") */
 	void (TPPCALL *TPP_INTERNAL(tkm_userdata_dtor))(void *ptr); /* [0..1] Optional finalizer for user-data */
-#define tpp_keyword_misc_setuserdata(self, ptr, dtor) \
-	(void)((self)->tkm_userdata_ptr  = (ptr),         \
-	       (self)->tkm_userdata_dtor = (dtor))
-#define tpp_keyword_misc_getuserdata(self)      ((self)->tkm_userdata_ptr)
-#define tpp_keyword_misc_getuserdata_dtor(self) ((self)->tkm_userdata_dtor)
 #define _tpp_keyword_misc_init_userdata(self)   , (self)->TPP_INTERNAL(tkm_userdata_ptr) = NULL, (self)->TPP_INTERNAL(tkm_userdata_dtor) = NULL
 #else /* TPP_HAVE_KEYWORD_USERDATA */
-#define tpp_keyword_misc_getuserdata(self)      ((void *)NULL)
-#define tpp_keyword_misc_getuserdata_dtor(self) ((void (TPPCALL *)(void *))NULL)
 #define _tpp_keyword_misc_init_userdata(self)   /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_USERDATA */
 } tpp_keyword_misc;
@@ -373,9 +334,6 @@ typedef struct tpp_keyword_misc {
 #define _tpp_keyword_misc_alloc()    ((tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc)))
 #define _tpp_keyword_misc_tryalloc() ((tpp_keyword_misc *)tpp_trymalloc(sizeof(tpp_keyword_misc)))
 #define _tpp_keyword_misc_free(p)    tpp_free(p)
-
-#define _tpp_keyword_misc_featurebykind(self, kind) \
-	((tpp_keyword_feature *)((char *)(self) + (tpp_size)(unsigned int)(kind)))
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
 
@@ -388,7 +346,7 @@ typedef struct tpp_keyword {
 	tpp_token_id              TPP_INTERNAL(tk_id);                  /* [const] Keyword ID */
 	struct tpp_keyword       *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
 #if TPP_HAVE_CPP_MACROS
-	TPP_REF struct tpp_macro *TPP_INTERNAL(tk_macro);               /* [0..1][const_if(IS_BUILTIN)] Macro definition */
+	TPP_REF struct tpp_macro *TPP_INTERNAL(tk_macro);               /* [0..1][const_if(IS_BUILTIN)] Macro definition or one of `_TPP_KEYWORD_MACRO_*` */
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
@@ -447,6 +405,7 @@ typedef struct tpp_keyword {
 #define tpp_keyword_gethash(self)   ((self)->TPP_INTERNAL(tk_hash))
 #if TPP_HAVE_CPP_MACROS
 #define tpp_keyword_getmacro(self)  ((self)->TPP_INTERNAL(tk_macro))
+#define tpp_keyword_hasmacro(self)  _TPP_KEYWORD_MACRO_ISDEFINED((self)->TPP_INTERNAL(tk_macro))
 #endif /* TPP_HAVE_CPP_MACROS */
 
 /* Check if "self" matches the C, constant string literal "STR" */
@@ -474,8 +433,18 @@ typedef struct tpp_keyword {
 #if TPP_HAVE_KEYWORD_USERDATA
 /* Get the user-data pointer for "self"
  * @return: NULL: No pointer set, or set pointer is "NULL" */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) void *TPPCALL
-tpp_keyword_getuserdata(tpp_keyword const *tpp_restrict self);
+#define tpp_keyword_getuserdata(self)                                \
+	((self)->TPP_INTERNAL(tk_misc)                                   \
+	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_userdata_ptr) \
+	 : NULL)
+
+/* Returns the linked destructor (which you can also think of as a
+ * sort-of type-pointer describing what `tpp_keyword_getuserdata(self)`
+ * actually means) */
+#define tpp_keyword_getuserdata_dtor(self)                            \
+	((self)->TPP_INTERNAL(tk_misc)                                    \
+	 ? (self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_userdata_dtor) \
+	 : NULL)
 
 /* Set the user-data pointer for "self"
  * @return: TPP_EOK:    Success
@@ -621,6 +590,15 @@ typedef enum tpp_keyword_feature_kind {
 	TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_c_attribute)), /* Expansion for `__has_c_attribute()` */
 #endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
 } tpp_keyword_feature_kind;
+
+#define tpp_keyword_resetfeature(self, kind)                                                                  \
+	((self)->TPP_INTERNAL(tk_misc)                                                                            \
+	 ? (void)_tpp_keyword_feature_reset(_tpp_keyword_misc_featurebykind((self)->TPP_INTERNAL(tk_misc), kind)) \
+	 : (void)0)
+#define tpp_keyword_resetfeatures(self)                                                              \
+	((self)->TPP_INTERNAL(tk_misc)                                                                   \
+	 ? (void)_tpp_keyword_features_reset(&(self)->TPP_INTERNAL(tk_misc)->TPP_INTERNAL(tkm_features)) \
+	 : (void)0)
 
 /* Return the string-expansion of the feature-check `kind` when
  * given `self` as an argument. Returns `NULL` when no custom
@@ -911,6 +889,16 @@ tpp_keywords_resetflags(tpp_keywords *tpp_restrict self,
 #define tpp_keywords_resetflags(self, keep_mask) (void)0
 #endif /* !TPP_HAVE_KEYWORD_FLAGS */
 #endif /* TPP_HAVE_KEYWORDS_RESETFLAGS */
+
+#if TPP_HAVE_KEYWORDS_RESETFEATURES
+/* Reset all uses of `tpp_keyword_setfeature()` */
+#if TPP_HAVE_KEYWORD_FEATURES
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keywords_resetfeatures(tpp_keywords *tpp_restrict self);
+#else /* TPP_HAVE_KEYWORD_FEATURES */
+#define tpp_keywords_resetfeatures(self, keep_mask) (void)0
+#endif /* !TPP_HAVE_KEYWORD_FEATURES */
+#endif /* TPP_HAVE_KEYWORDS_RESETFEATURES */
 
 #if TPP_HAVE_KEYWORDS_RESETCOUNTERS
 /* Call `tpp_keyword_reset_builtin_counter()' on every keyword, thereby

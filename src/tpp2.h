@@ -2568,6 +2568,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_PRAGMA_TPP_TPP_EXEC              1 /* Support for: #pragma TPP tpp_exec(...)  (same as TPP_HAVE_PRAGMA_TPP_EXEC) */
 #define TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS 1 /* Support for: #pragma TPP tpp_set_keyword_flags("foo", 0x7f)  (same as TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS) */
 #define TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH          1 /* Support for: #pragma TPP include_path(...) */
+#define TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES      0 /* TPP2 did have this pragma */
 
 /* Lexer expressions */
 #define TPP_HAVE_BUILTIN_EXPR_DEFINED                1                                      /* Enable support for "defined(MACRO)" in builtin lexer expressions */
@@ -2592,6 +2593,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_KEYWORDS_UNDEFALL               1                                /* Needed to emulate "TPPLEXER_RESET_MACRO" */
 #define TPP_HAVE_KEYWORDS_UNASSERTALL            1                                /* Needed to emulate "TPPLEXER_RESET_ASSERT" */
 #define TPP_HAVE_KEYWORDS_RESETFLAGS             1                                /* Needed to emulate "TPPLEXER_RESET_KWDFLAGS" + "TPPLEXER_RESET_FONCE" */
+#define TPP_HAVE_KEYWORDS_RESETFEATURES          1                                /* Needed to emulate "TPPLEXER_RESET_KWDFLAGS" */
 #define TPP_HAVE_KEYWORDS_RESETCOUNTERS          1                                /* Needed to emulate "TPPLEXER_RESET_COUNTER" */
 #define TPP_HAVE_RT_FILE_AND_LINE_FORMAT         1                                /* Needed to emulate "TPPLEXER_FLAG_MSVC_MESSAGEFORMAT" */
 #define TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS    1                                /* Enable support for "0x" literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
@@ -5306,7 +5308,7 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #if TPP_HAVE_CPP_ASSERT
 #define kr_asserts TPP_INTERNAL(tkm_assertions) /* Don't access */
 #endif /* TPP_HAVE_CPP_ASSERT */
-#define kr_user    TPP_INTERNAL(tkm_userdata_ptr) /* Use tpp_keyword_getuserdata() / tpp_keyword_setuserdata() / tpp_keyword_misc_getuserdata() / tpp_keyword_misc_setuserdata() */
+#define kr_user    TPP_INTERNAL(tkm_userdata_ptr) /* Use tpp_keyword_getuserdata() / tpp_keyword_setuserdata() */
 /* }; */
 
 
@@ -5570,6 +5572,7 @@ TPPLexer_Reset(tpp_lexer *tpp_restrict self, uint32_t flags) {
 			tpp_lexer_kwds_resetcounters(self);
 		if (flags & TPPLEXER_RESET_KWDFLAGS) {
 			tpp_lexer_kwds_resetflags(self, 0);
+			tpp_lexer_kwds_resetfeatures(self);
 		} else if (flags & TPPLEXER_RESET_FONCE) {
 			tpp_lexer_kwds_resetflags(self, ~TPP_KEYWORD_FLAG_HDR_ONCE);
 		}

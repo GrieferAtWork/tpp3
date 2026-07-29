@@ -49,4 +49,31 @@ TPP_ASSERT_EXPANDS("0", __has_extension(unknown_feature))
 TPP_ASSERT_EXPANDS("0", __has_feature(unknown_feature))
 TPP_ASSERT_EXPANDS("0", __has_c_attribute(unknown_feature))
 
-/* TODO: Have a custom `#pragma TPP ...` to define expansions on a per-feature basis */
+/* Have a custom `#pragma TPP ...` to define expansions on a per-feature basis */
+#pragma TPP __has_builtin(my_builtin) = "YES"
+#pragma TPP __has_builtin(your_builtin) = "NO"
+TPP_ASSERT_EXPANDS("0", __has_attribute(my_builtin))
+TPP_ASSERT_EXPANDS("YES", __has_builtin(my_builtin))
+TPP_ASSERT_EXPANDS("0", __has_cpp_attribute(my_builtin))
+TPP_ASSERT_EXPANDS("0", __has_declspec_attribute(my_builtin))
+TPP_ASSERT_EXPANDS("0", __has_extension(my_builtin))
+TPP_ASSERT_EXPANDS("0", __has_feature(my_builtin))
+TPP_ASSERT_EXPANDS("0", __has_c_attribute(my_builtin))
+
+TPP_ASSERT_EXPANDS("0", __has_attribute(your_builtin))
+TPP_ASSERT_EXPANDS("NO", __has_builtin(your_builtin))
+TPP_ASSERT_EXPANDS("0", __has_cpp_attribute(your_builtin))
+TPP_ASSERT_EXPANDS("0", __has_declspec_attribute(your_builtin))
+TPP_ASSERT_EXPANDS("0", __has_extension(your_builtin))
+TPP_ASSERT_EXPANDS("0", __has_feature(your_builtin))
+TPP_ASSERT_EXPANDS("0", __has_c_attribute(your_builtin))
+
+TPP_ASSERT_EXPANDS("YES", __has_builtin(__my_builtin__))
+TPP_ASSERT_EXPANDS("NO", __has_builtin(__your_builtin__))
+
+#pragma TPP __has_builtin(my_builtin) = default
+#pragma TPP __has_builtin(your_builtin) = default
+TPP_ASSERT_EXPANDS("0", __has_builtin(my_builtin))
+TPP_ASSERT_EXPANDS("0", __has_builtin(your_builtin))
+TPP_ASSERT_EXPANDS("0", __has_builtin(__my_builtin__))
+TPP_ASSERT_EXPANDS("0", __has_builtin(__your_builtin__))

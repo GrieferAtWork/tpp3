@@ -403,6 +403,11 @@ typedef struct tpp_lexer {
 #define tpp_lexer_kwds_resetflags(self, keep_mask) tpp_keywords_resetflags(&(self)->TPP_INTERNAL(tl_kwds), keep_mask)
 #endif /* TPP_HAVE_KEYWORDS_RESETFLAGS */
 
+#if TPP_HAVE_KEYWORDS_RESETFEATURES
+/* Reset all uses of `tpp_keyword_setfeature()` */
+#define tpp_lexer_kwds_resetfeatures(self) tpp_keywords_resetfeatures(&(self)->TPP_INTERNAL(tl_kwds))
+#endif /* TPP_HAVE_KEYWORDS_RESETFEATURES */
+
 #if TPP_HAVE_KEYWORDS_RESETCOUNTERS
 /* Call `tpp_keyword_reset_builtin_counter()' on every keyword, thereby
  * resetting all side-effects of expansions of `__TPP_COUNTER' thus far. */
@@ -694,8 +699,8 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self);
  * to this function, the caller must still call `tpp_lexer_initfile_*'
  *
  * Additionally, the following properties are not copied:
- * - tpp_keyword_misc_getuserdata_dtor()  (only "tpp_keyword_misc_getuserdata()"
- *                                         is copied; dtors are set to "NULL")
+ * - tpp_keyword_getuserdata_dtor()  (only "tpp_keyword_getuserdata()"
+ *                                    is copied; dtors are set to "NULL")
  *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
@@ -2380,6 +2385,9 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 #else /* TPP_HAVE_CPP_ASSERT */
 #define TPP_LEXER_DUMP_DEFINITIONS_ASSERTS        0x0000 /* no-op */
 #endif /* !TPP_HAVE_CPP_ASSERT */
+#if TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
+/* TODO: Dump custom keyword-feature definitions */
+#endif /* TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
 #define TPP_LEXER_DUMP_DEFINITIONS_EXTENSIONS     0x0008 /* #pragma TPP extension("-ffoo") // Where different from default */
 #else /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
