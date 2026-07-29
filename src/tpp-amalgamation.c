@@ -67,6 +67,7 @@
 #define tef_TPP_EXT_CPP_IDENT_SCCS                         TPP_INTERNAL(tef_TPP_EXT_CPP_IDENT_SCCS)
 #define tef_TPP_EXT_CPP_PRAGMA                             TPP_INTERNAL(tef_TPP_EXT_CPP_PRAGMA)
 #define tef_TPP_EXT_CPP_EMBED                              TPP_INTERNAL(tef_TPP_EXT_CPP_EMBED)
+#define tef_TPP_EXT_CPP_EMBED_OFFSET                       TPP_INTERNAL(tef_TPP_EXT_CPP_EMBED_OFFSET)
 #define tef_TPP_EXT_MACRO__Pragma                          TPP_INTERNAL(tef_TPP_EXT_MACRO__Pragma)
 #define tef_TPP_EXT_MACRO___pragma                         TPP_INTERNAL(tef_TPP_EXT_MACRO___pragma)
 #define tef_TPP_EXT_CLANG_MACRO___has_attribute            TPP_INTERNAL(tef_TPP_EXT_CLANG_MACRO___has_attribute)
@@ -356,6 +357,7 @@
 #define tff_CPP_IDENT_SCCS                                 TPP_INTERNAL(tff_CPP_IDENT_SCCS)
 #define tff_CPP_PRAGMA                                     TPP_INTERNAL(tff_CPP_PRAGMA)
 #define tff_CPP_EMBED                                      TPP_INTERNAL(tff_CPP_EMBED)
+#define tff_CPP_EMBED_OFFSET                               TPP_INTERNAL(tff_CPP_EMBED_OFFSET)
 #define tff_MACRO__Pragma                                  TPP_INTERNAL(tff_MACRO__Pragma)
 #define tff_MACRO___pragma                                 TPP_INTERNAL(tff_MACRO___pragma)
 #define tff_CLANG_MACRO___has_attribute                    TPP_INTERNAL(tff_CLANG_MACRO___has_attribute)
@@ -22929,6 +22931,42 @@ tpp_io_normalize_filename(char *filename, char *after_last_sep,
 #endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
 #endif /* tpp_io_handle_IS_BUILTIN */
 
+
+#if TPP_HAVE_IO_SKIP_BLOCKING
+#ifndef tpp_io_skip_blocking
+/* Skip up to `max_bytes` of input from `file` whilst blocking,
+ * storing the actual number of skipped bytes in `*p_skipped_bytes`
+ * before returning `TPP_EOK`.
+ *
+ * @return: TPP_EOK: Success
+ * @return: TPP_EIO: I/O error (HARD_ERROR) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((3)) tpp_errno TPPCALL
+tpp_io_skip_blocking(tpp_io_handle file, tpp_uintmax max_bytes,
+                     tpp_uintmax *tpp_restrict p_skipped_bytes) {
+	tpp_uintmax skipped_bytes = 0;
+#if defined(tpp_io_handle_IS_BUILTIN) && defined(tpp_io_handle_IS_HANDLE)
+	/* XXX: Fast-pass when input isn't a pipe */
+#elif defined(tpp_io_handle_IS_BUILTIN) && defined(tpp_io_handle_IS_int)
+	/* XXX: Fast-pass when input isn't a pipe */
+#endif
+	while (skipped_bytes < max_bytes) {
+		char buf[256];
+		tpp_uintmax max_skip1 = max_bytes - skipped_bytes;
+		tpp_size max_skip2 = max_skip1 < sizeof(buf) ? (tpp_size)max_skip1 : sizeof(buf);
+		tpp_ssize read_status = tpp_io_read_blocking(file, buf, max_skip2);
+		if (TPP_SSIZE_ISERR(read_status))
+			return TPP_SSIZE_ASERR(read_status);
+		skipped_bytes += (tpp_size)read_status;
+		if ((tpp_size)read_status < max_skip2)
+			break;
+	}
+	*p_skipped_bytes = skipped_bytes;
+	return TPP_EOK;
+}
+#endif /* !tpp_io_skip_blocking */
+#endif /* TPP_HAVE_IO_SKIP_BLOCKING */
+
+
 /************************************************************************/
 /* File: parts/file.c                                                   */
 /************************************************************************/
@@ -29620,6 +29658,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED)
 		/* .tff_CPP_EMBED                              = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET)
+		/* .tff_CPP_EMBED_OFFSET                       = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED_OFFSET),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma)
 		/* .tff_MACRO__Pragma                          = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO__Pragma),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma) */
@@ -46473,6 +46514,9 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 typedef struct tpp_embed_builder {
 	tpp_uintmax               teb_limit;     /* Limit on how many bytes to embed */
+#if TPP_HAVE_CPP_EMBED_OFFSET
+	tpp_uintmax               teb_offset;    /* Offset on how many bytes to embed */
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
 #if TPP_HAVE_CPP_EMBED
 	tpp_lexer_arginfo         teb_prefix;    /* Prefix to put before a non-empty file */
 	tpp_lexer_arginfo         teb_suffix;    /* Suffix to put after a non-empty file */
@@ -46481,6 +46525,35 @@ typedef struct tpp_embed_builder {
 	tpp_errno                 teb_ofr_error; /* Error from opening "teb_ofr" (either TPP_EOK, or TPP_ENOENT) */
 #endif /* TPP_HAVE_CPP_EMBED */
 } tpp_embed_builder;
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_skip_ns_prefix(tpp_lexer *tpp_restrict lexer, tpp_token_id tok) {
+#if TPP_HAVE_TOK_COLON_COLON
+	if (tok == TPP_TOK_COLON_COLON)
+		goto yield_and_skip_whitespace;
+#endif /* TPP_HAVE_TOK_COLON_COLON */
+
+#if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_COLON_COLON)
+	if (tok == ':') {
+		tpp_char next_ch;
+		tpp_char const *pos = tpp_lexer_gettokenend(lexer);
+		tpp_errno read_err = tpp_lexer_readchar(lexer, &pos, &next_ch);
+		if (TPP_ISERR(read_err))
+			return read_err;
+		if (next_ch == ':') {
+			tpp_file_setpos(tpp_lexer_getfile(lexer), pos);
+			goto yield_and_skip_whitespace;
+		}
+	}
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_COLON_COLON) */
+
+	return TPP_ENOENT;
+yield_and_skip_whitespace:
+	do {
+		tok = tpp_lexer_yield_blocking(lexer);
+	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	return TPP_TOK_ASERR_OR_EOK(tok);
+}
 
 /* Parse trailing parameters following a #embed directive */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
@@ -46496,8 +46569,16 @@ again:
 	function_name = tpp_keyword_getcstr(function_name_kwd);
 	switch (param_kwd) {
 
+#if TPP_HAVE_CPP_EMBED_OFFSET
+	case TPP_KWD_offset:
+handle_offset_param:
+		if (!tpp_lexer_has(lexer, CPP_EMBED_OFFSET))
+			break;
+		TPP_FALLTHRU
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
 	case TPP_KWD_limit: {
-		tpp_expr_value limit_value_expr;
+		tpp_expr_value int_value_expr;
+		tpp_intmax int_value;
 		do {
 			tok = tpp_lexer_yield_blocking(lexer);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
@@ -46506,19 +46587,30 @@ again:
 		tok = tpp_lexer_require(lexer, TPP_TOK_OFCHAR('('));
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-		error = tpp_lexer_callhook_parseexpr(lexer, &limit_value_expr);
+		error = tpp_lexer_callhook_parseexpr(lexer, &int_value_expr);
 		if (TPP_ISERR(error))
 			return error;
-		if (tpp_expr_value_isint(&limit_value_expr)) {
-			error = tpp_expr_value_asint(&limit_value_expr, &self->teb_limit);
+		if (tpp_expr_value_isint(&int_value_expr)) {
+			error = tpp_expr_value_asint(&int_value_expr, &int_value);
 		} else {
 			bool as_bool;
-			error = tpp_expr_value_asbool(lexer, &limit_value_expr, &as_bool);
-			self->teb_limit = as_bool ? 1 : 0;
+			error = tpp_expr_value_asbool(lexer, &int_value_expr, &as_bool);
+			int_value = as_bool ? 1 : 0;
 		}
-		tpp_expr_value_fini(&limit_value_expr);
+		tpp_expr_value_fini(&int_value_expr);
 		if (TPP_ISERR(error))
 			return error;
+		switch (param_kwd) {
+		case TPP_KWD_limit:
+			self->teb_limit = int_value;
+			break;
+#if TPP_HAVE_CPP_EMBED_OFFSET
+		case TPP_KWD_offset:
+			self->teb_offset = int_value;
+			break;
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
+		default: tpp_unreachable();
+		}
 		tok = tpp_lexer_gettok(lexer);
 		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 			tok = tpp_lexer_yield_blocking(lexer);
@@ -46528,9 +46620,53 @@ again:
 		return TPP_TOK_ASERR_OR_EOK(tok);
 	}	break;
 
-	/* TODO: offset ( https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3540r2.html ) */
-	/* XXX: gnu::offset */
-	/* XXX: clang::offset */
+#if TPP_HAVE_CPP_EMBED_OFFSET
+	case TPP_KWD_gnu:
+	case TPP_KWD_clang:
+		do {
+			tok = tpp_lexer_yield_blocking(lexer);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		error = tpp_lexer_skip_ns_prefix(lexer, tok);
+		if (TPP_ISERR(error)) {
+			if (error != TPP_ENOENT)
+				return error;
+			break;
+		}
+		param_kwd = tpp_lexer_gettok(lexer);
+		if (!TPP_TOK_ISKEYWORD(param_kwd))
+			break;
+handle_gnu_clang_ns_prefixed_tok:
+		function_name_kwd = tpp_lexer_gettokenkwd(lexer);
+		function_name = tpp_keyword_getcstr(function_name_kwd);
+		switch (param_kwd) {
+
+		case TPP_KWD_offset:
+			/* gnu::offset */
+			/* clang::offset */
+			goto handle_offset_param;
+
+		default:
+			if (*function_name == '_' || function_name[tpp_keyword_getlen(function_name_kwd) - 1] == '_') {
+				tpp_size len = tpp_keyword_getlen(function_name_kwd);
+				while (len && function_name[len - 1] == '_')
+					--len;
+				while (len && function_name[0] == '_')
+					++function_name, --len;
+				if (len) {
+					function_name_kwd = tpp_lexer_kwds_getkeyword(lexer, (tpp_char const *)function_name, len,
+					                                              tpp_hashof((tpp_char const *)function_name, len));
+					if (function_name_kwd) {
+						tpp_token_setkwd(tpp_lexer_gettoken(lexer), function_name_kwd);
+						param_kwd = tpp_keyword_getid(function_name_kwd);
+						goto handle_gnu_clang_ns_prefixed_tok;
+					}
+				}
+			}
+			break;
+		}
+		break;
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
+
 	/* XXX: gnu::base64 */
 
 	case TPP_KWD_prefix:
@@ -46604,23 +46740,19 @@ again:
 		return error;
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER */
 
-#if TPP_HAVE_TOK_COLON_COLON
 continue_after_unknown_name:
-#endif /* TPP_HAVE_TOK_COLON_COLON */
 	do {
 		tok = tpp_lexer_yield_blocking(lexer);
 	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-#if TPP_HAVE_TOK_COLON_COLON
-	if (tok == TPP_TOK_COLON_COLON) {
-		do {
-			tok = tpp_lexer_yield_blocking(lexer);
-		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-		if (TPP_TOK_ISKEYWORD(tok))
-			goto continue_after_unknown_name;
-	}
-#endif /* TPP_HAVE_TOK_COLON_COLON */
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
+	error = tpp_lexer_skip_ns_prefix(lexer, tok);
+	if (!TPP_ISERR(error))
+		goto continue_after_unknown_name;
+	if (error != TPP_ENOENT)
+		return error;
+	tok = tpp_lexer_gettok(lexer);
+
 	if (tok == '(') {
 		tpp_lexer_arginfo arg;
 		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name,
@@ -46642,19 +46774,30 @@ continue_after_unknown_name:
 
 /************************************************************************/
 #if TPP_HAVE_MACRO___has_embed
+#ifndef tpp_embed_builder_handle_param_forhas_result_DEFINED
+#define tpp_embed_builder_handle_param_forhas_result_DEFINED
+struct tpp_embed_builder_handle_param_forhas_result {
+	tpp_uintmax tebhpfhr_limit;  /* Value of `limit` parameter (or `TPP_UINTMAX_MAX`) */
+#if TPP_HAVE_CPP_EMBED_OFFSET
+	tpp_uintmax tebhpfhr_offset; /* Value of `offset` parameter (or `0`) */
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
+};
+#endif /* !tpp_embed_builder_handle_param_forhas_result_DEFINED */
+
 /* Minimal/adjusted parameter handler for __has_embed */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
-                                      tpp_lexer *tpp_restrict lexer,
-                                      tpp_token_id param_kwd);
+tpp_embed_builder_handle_param_forhas(struct tpp_embed_builder_handle_param_forhas_result *tpp_restrict res,
+                                      tpp_lexer *tpp_restrict lexer, tpp_token_id param_kwd);
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
-                                      tpp_lexer *tpp_restrict lexer,
-                                      tpp_token_id param_kwd) {
+tpp_embed_builder_handle_param_forhas(struct tpp_embed_builder_handle_param_forhas_result *tpp_restrict res,
+                                      tpp_lexer *tpp_restrict lexer, tpp_token_id param_kwd) {
 	tpp_errno result;
 	tpp_embed_builder self;
-	self.teb_limit = TPP_UINTMAX_MAX;
+	self.teb_limit = res->tebhpfhr_limit;
+#if TPP_HAVE_CPP_EMBED_OFFSET
+	self.teb_offset = res->tebhpfhr_offset;
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
 #if TPP_HAVE_CPP_EMBED
 	self.teb_ofr_error = TPP_ENOENT;
 	tpp_lexer_arginfo_init_empty(&self.teb_prefix);
@@ -46667,7 +46810,10 @@ tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
 	tpp_lexer_arginfo_fini(&self.teb_suffix);
 	tpp_lexer_arginfo_fini(&self.teb_if_empty);
 #endif /* TPP_HAVE_CPP_EMBED */
-	*p_limit = self.teb_limit;
+	res->tebhpfhr_limit = self.teb_limit;
+#if TPP_HAVE_CPP_EMBED_OFFSET
+	res->tebhpfhr_offset = self.teb_offset;
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
 	return result;
 }
 #endif /* TPP_HAVE_MACRO___has_embed */
@@ -46734,6 +46880,22 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		goto return_empty_file; /* Treat as an file... */
 	if (self->teb_ofr_error != TPP_EOK)
 		goto return_empty_file; /* Treat as an file... */
+
+	/* Apply offset parameter */
+#if TPP_HAVE_CPP_EMBED_OFFSET
+	if (self->teb_offset != 0) {
+		tpp_errno skip_error;
+		tpp_uintmax skip_bytes;
+		skip_error = tpp_io_skip_blocking(self->teb_ofr.tlofr_handle, self->teb_offset, &skip_bytes);
+		if (TPP_ISERR(skip_error)) {
+			result = TPP_TOK_OFERR(skip_error);
+			goto return_result_and_fini;
+		}
+		if (skip_bytes < self->teb_offset)
+			goto return_empty_file; /* Treat as an file... */
+	}
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
+
 #if TPP_HAVE_FILE_ENCODING_EMBED
 	if ((self->teb_if_empty.tlai_start >= self->teb_if_empty.tlai_end) &&
 	    (self->teb_prefix.tlai_start >= self->teb_prefix.tlai_end) &&
@@ -46891,6 +47053,9 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 	tpp_lexer_arginfo_init_empty(&self->teb_suffix);
 	tpp_lexer_arginfo_init_empty(&self->teb_if_empty);
 	self->teb_limit = TPP_UINTMAX_MAX;
+#if TPP_HAVE_CPP_EMBED_OFFSET
+	self->teb_offset = 0;
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
 
 	/* At this point, the lexer looks like this:
 	 *           tf_tpos  tf_pos
@@ -50056,11 +50221,20 @@ tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
 
 #if TPP_HAVE_MACRO___has_embed
 
+#ifndef tpp_embed_builder_handle_param_forhas_result_DEFINED
+#define tpp_embed_builder_handle_param_forhas_result_DEFINED
+struct tpp_embed_builder_handle_param_forhas_result {
+	tpp_uintmax tebhpfhr_limit;  /* Value of `limit` parameter (or `TPP_UINTMAX_MAX`) */
+#if TPP_HAVE_CPP_EMBED_OFFSET
+	tpp_uintmax tebhpfhr_offset; /* Value of `offset` parameter (or `0`) */
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
+};
+#endif /* !tpp_embed_builder_handle_param_forhas_result_DEFINED */
+
 /* Minimal/adjusted parameter handler for __has_embed */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_embed_builder_handle_param_forhas(tpp_uintmax *tpp_restrict p_limit,
-                                      tpp_lexer *tpp_restrict lexer,
-                                      tpp_token_id param_kwd);
+tpp_embed_builder_handle_param_forhas(struct tpp_embed_builder_handle_param_forhas_result *tpp_restrict res,
+                                      tpp_lexer *tpp_restrict lexer, tpp_token_id param_kwd);
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
@@ -50068,7 +50242,11 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 	tpp_errno ofr_error;
 	tpp_token_id tok;
 	char const *expansion_result;
-	tpp_uintmax param_limit = TPP_UINTMAX_MAX;
+	struct tpp_embed_builder_handle_param_forhas_result params;
+	params.tebhpfhr_limit = TPP_UINTMAX_MAX;
+#if TPP_HAVE_CPP_EMBED_OFFSET
+	params.tebhpfhr_offset = 0;
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
 	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_NORMAL);
 	if (tok != TPP_TOK_OFCHAR('(')) {
@@ -50116,7 +50294,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 			goto err_tok_ofr;
 		if (!TPP_TOK_ISKEYWORD(tok))
 			break;
-		error = tpp_embed_builder_handle_param_forhas(&param_limit, self, tok);
+		error = tpp_embed_builder_handle_param_forhas(&params, self, tok);
 		if (TPP_ISERR(error)) {
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_ofr;
@@ -50127,20 +50305,35 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 	if (ofr_error != TPP_EOK) {
 		expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND;
 	} else {
-		if (param_limit == 0) {
+		if (params.tebhpfhr_limit == 0) {
 			/* Always empty! */
 			expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY;
 		} else {
-			unsigned char first_byte;
-			tpp_ssize read_status = tpp_io_read_blocking(ofr.tlofr_handle, &first_byte, 1);
-			if tpp_unlikely(TPP_SSIZE_ISERR(read_status)) {
-				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(read_status));
+#if TPP_HAVE_CPP_EMBED_OFFSET
+			tpp_uintmax num_skipped;
+			tpp_errno skip_error;
+			skip_error = tpp_io_skip_blocking(ofr.tlofr_handle, params.tebhpfhr_offset, &num_skipped);
+			if (TPP_ISERR(skip_error)) {
+				tok = TPP_TOK_OFERR(skip_error);
 				goto err_tok_ofr;
 			}
-			if (read_status == 0) {
+			if (num_skipped < params.tebhpfhr_offset) {
 				expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY;
-			} else {
-				expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND;
+			} else
+#endif /* TPP_HAVE_CPP_EMBED_OFFSET */
+			{
+				unsigned char first_byte;
+				tpp_ssize read_status;
+				read_status = tpp_io_read_blocking(ofr.tlofr_handle, &first_byte, 1);
+				if tpp_unlikely(TPP_SSIZE_ISERR(read_status)) {
+					tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(read_status));
+					goto err_tok_ofr;
+				}
+				if (read_status == 0) {
+					expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY;
+				} else {
+					expansion_result = TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND;
+				}
 			}
 		}
 		tpp_lexer_openfile_result_fini(&ofr);

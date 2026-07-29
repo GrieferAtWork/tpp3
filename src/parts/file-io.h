@@ -151,6 +151,20 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 #endif /* TPP_HAVE_IO_COMPARE_MTIME */
 #endif /* tpp_io_handle_IS_BUILTIN */
 
+#if TPP_HAVE_IO_SKIP_BLOCKING
+#ifndef tpp_io_skip_blocking
+/* Skip up to `max_bytes` of input from `file` whilst blocking,
+ * storing the actual number of skipped bytes in `*p_skipped_bytes`
+ * before returning `TPP_EOK`.
+ *
+ * @return: TPP_EOK: Success
+ * @return: TPP_EIO: I/O error (HARD_ERROR) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((3)) tpp_errno TPPCALL
+tpp_io_skip_blocking(tpp_io_handle file, tpp_uintmax max_bytes,
+                     tpp_uintmax *tpp_restrict p_skipped_bytes);
+#endif /* !tpp_io_skip_blocking */
+#endif /* TPP_HAVE_IO_SKIP_BLOCKING */
+
 #if TPP_HAVE_FILE_NONBLOCK
 #define tpp_io_read_blocking(file, buf, bufsize) tpp_io_read(file, buf, bufsize, 0)
 #else /* TPP_HAVE_FILE_NONBLOCK */

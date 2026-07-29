@@ -119,6 +119,7 @@ for (local CONF: configs) {
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IDENT_SCCS) ||                         \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_PRAGMA) ||                             \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) ||                              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET) ||                       \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma) ||                          \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___pragma) ||                         \
      TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_attribute) ||            \
@@ -454,6 +455,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED)
 	TPP_FEAT_CPP_EMBED,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET)
+	TPP_FEAT_CPP_EMBED_OFFSET,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma)
 	TPP_FEAT_MACRO__Pragma,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma) */
@@ -1318,6 +1322,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_CPP_EMBED): 1;
 #define _tpp_lexer_has_CPP_EMBED(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_CPP_EMBED)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET)
+		unsigned int TPP_INTERNAL(tff_CPP_EMBED_OFFSET): 1;
+#define _tpp_lexer_has_CPP_EMBED_OFFSET(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_CPP_EMBED_OFFSET)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma)
 		unsigned int TPP_INTERNAL(tff_MACRO__Pragma): 1;
 #define _tpp_lexer_has_MACRO__Pragma(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO__Pragma)
@@ -2424,6 +2432,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_CPP_EMBED)
 #define _tpp_lexer_has_CPP_EMBED(self) TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_CPP_EMBED) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_CPP_EMBED_OFFSET)
+#define _tpp_lexer_has_CPP_EMBED_OFFSET(self) TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED_OFFSET)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_CPP_EMBED_OFFSET) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_MACRO__Pragma)
 #define _tpp_lexer_has_MACRO__Pragma(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO__Pragma)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO__Pragma) */

@@ -490,6 +490,42 @@ tpp_io_normalize_filename(char *filename, char *after_last_sep,
 #endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
 #endif /* tpp_io_handle_IS_BUILTIN */
 
+
+#if TPP_HAVE_IO_SKIP_BLOCKING
+#ifndef tpp_io_skip_blocking
+/* Skip up to `max_bytes` of input from `file` whilst blocking,
+ * storing the actual number of skipped bytes in `*p_skipped_bytes`
+ * before returning `TPP_EOK`.
+ *
+ * @return: TPP_EOK: Success
+ * @return: TPP_EIO: I/O error (HARD_ERROR) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((3)) tpp_errno TPPCALL
+tpp_io_skip_blocking(tpp_io_handle file, tpp_uintmax max_bytes,
+                     tpp_uintmax *tpp_restrict p_skipped_bytes) {
+	tpp_uintmax skipped_bytes = 0;
+#if defined(tpp_io_handle_IS_BUILTIN) && defined(tpp_io_handle_IS_HANDLE)
+	/* XXX: Fast-pass when input isn't a pipe */
+#elif defined(tpp_io_handle_IS_BUILTIN) && defined(tpp_io_handle_IS_int)
+	/* XXX: Fast-pass when input isn't a pipe */
+#endif
+	while (skipped_bytes < max_bytes) {
+		char buf[256];
+		tpp_uintmax max_skip1 = max_bytes - skipped_bytes;
+		tpp_size max_skip2 = max_skip1 < sizeof(buf) ? (tpp_size)max_skip1 : sizeof(buf);
+		tpp_ssize read_status = tpp_io_read_blocking(file, buf, max_skip2);
+		if (TPP_SSIZE_ISERR(read_status))
+			return TPP_SSIZE_ASERR(read_status);
+		skipped_bytes += (tpp_size)read_status;
+		if ((tpp_size)read_status < max_skip2)
+			break;
+	}
+	*p_skipped_bytes = skipped_bytes;
+	return TPP_EOK;
+}
+#endif /* !tpp_io_skip_blocking */
+#endif /* TPP_HAVE_IO_SKIP_BLOCKING */
+
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

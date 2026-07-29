@@ -31,11 +31,24 @@ TPP_ASSERT_EXPANDS("",
 #define embed(x) __TPP_EXEC("#embed " #x)
 TPP_ASSERT_EXPANDS("105,95,97,109,95,98,105,110,46,100,97,116", embed("misc/bin.dat"))
 TPP_ASSERT_EXPANDS("105,95,97,109,95,98,105", embed("misc/bin.dat" limit(7)))
+TPP_ASSERT_EXPANDS("105,95,97,109,95,98,105,110,46,100,97,116", embed("misc/bin.dat" offset(0)))
+TPP_ASSERT_EXPANDS("95,97,109,95,98,105,110,46,100,97,116", embed("misc/bin.dat" offset(1)))
+TPP_ASSERT_EXPANDS("116", embed("misc/bin.dat" offset(11)))
+TPP_ASSERT_EXPANDS("97", embed("misc/bin.dat" offset(10) limit(1)))
+TPP_ASSERT_EXPANDS("97", embed("misc/bin.dat" limit(1) offset(10)))
 TPP_ASSERT_EXPANDS("", embed("misc/blank.dat"))
 #undef embed
 
 TPP_ASSERT_EXPANDS("\"i_am_bin.dat\"", __TPP_STR_PACK(
 #embed "misc/bin.dat" if_empty("WRONG")
+))
+
+TPP_ASSERT_EXPANDS("\"t\"", __TPP_STR_PACK(
+#embed "misc/bin.dat" offset(11) if_empty("WRONG")
+))
+
+TPP_ASSERT_EXPANDS("\"NOW_IM_EMPTY\"", __TPP_STR_PACK(
+#embed "misc/bin.dat" offset(12) if_empty("NOW_IM_EMPTY")
 ))
 
 #define LIMIT 10
@@ -94,12 +107,40 @@ TPP_ASSERT_EXPANDS("\"but i am\"", __TPP_STR_PACK(
 
 
 TPP_ASSERT_EXPANDS("0", __has_embed("misc/missing.dat"))
+TPP_ASSERT_EXPANDS("0", __has_embed("misc/missing.dat" limit(0)))
+TPP_ASSERT_EXPANDS("0", __has_embed("misc/missing.dat" offset(1)))
 TPP_ASSERT_EXPANDS("1", __has_embed("misc/bin.dat"))
+TPP_ASSERT_EXPANDS("2", __has_embed("misc/bin.dat" limit(0)))
+TPP_ASSERT_EXPANDS("1", __has_embed("misc/bin.dat" offset(1)))
+TPP_ASSERT_EXPANDS("1", __has_embed("misc/bin.dat" offset(11)))
+TPP_ASSERT_EXPANDS("2", __has_embed("misc/bin.dat" offset(12)))
 TPP_ASSERT_EXPANDS("2", __has_embed("misc/blank.dat"))
+TPP_ASSERT_EXPANDS("2", __has_embed("misc/blank.dat" limit(0)))
+TPP_ASSERT_EXPANDS("2", __has_embed("misc/blank.dat" offset(1)))
 TPP_ASSERT_EXPANDS("0", __STDC_EMBED_NOT_FOUND__)
 TPP_ASSERT_EXPANDS("1", __STDC_EMBED_FOUND__)
 TPP_ASSERT_EXPANDS("2", __STDC_EMBED_EMPTY__)
 
+/* TPP also recognizes `gnu::` and `clang::` namespace-prefixed `offset` parameters */
+TPP_ASSERT_EXPANDS("1", __has_embed("misc/bin.dat" gnu::offset(11)))
+TPP_ASSERT_EXPANDS("2", __has_embed("misc/bin.dat" gnu::offset(12)))
+TPP_ASSERT_EXPANDS("1", __has_embed("misc/bin.dat" clang::offset(11)))
+TPP_ASSERT_EXPANDS("2", __has_embed("misc/bin.dat" clang::offset(12)))
+TPP_ASSERT_EXPANDS("1", __has_embed("misc/bin.dat" __gnu_::__offset_(11)))
+TPP_ASSERT_EXPANDS("2", __has_embed("misc/bin.dat" __gnu_::__offset_(12)))
+TPP_ASSERT_EXPANDS("1", __has_embed("misc/bin.dat" __clang_::__offset_(11)))
+TPP_ASSERT_EXPANDS("2", __has_embed("misc/bin.dat" __clang_::__offset_(12)))
+
 TPP_ASSERT_EXPANDS("0", __has_include("misc/missing.dat"))
 TPP_ASSERT_EXPANDS("1", __has_include("misc/bin.dat"))
 TPP_ASSERT_EXPANDS("1", __has_include("misc/blank.dat"))
+
+/* TPP also implements `__cpp_pp_embed` with correct expansions based on support-level */
+#pragma extension(push)
+TPP_ASSERT_EXPANDS("202606", __cpp_pp_embed)
+#pragma extension("-fno-embed-directives-offset")
+TPP_ASSERT_EXPANDS("202502", __cpp_pp_embed)
+#pragma extension("-fno-embed-directives")
+TPP_ASSERT_EXPANDS("__cpp_pp_embed", __cpp_pp_embed)
+#pragma extension(pop)
+

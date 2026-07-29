@@ -135,6 +135,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED)
 		/* .tff_CPP_EMBED                              = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET)
+		/* .tff_CPP_EMBED_OFFSET                       = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED_OFFSET),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma)
 		/* .tff_MACRO__Pragma                          = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO__Pragma),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma) */

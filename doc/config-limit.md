@@ -16,8 +16,8 @@ the builtin `__COLUMN__` macro (see [`TPP_HAVE_MACRO___COLUMN__`](config-conf.md
 - when positive: compile-time hard-code
 - when negative: runtime-configurable, with absolute value being used as default
 
-**Getter**: [`tpp_gettabsize()`](../src/tpp-amalgamation.h#L19163)<br/>
-**Setter**: [`tpp_settabsize(v)`](../src/tpp-amalgamation.h#L19167)
+**Getter**: [`tpp_gettabsize()`](../src/tpp-amalgamation.h#L19298)<br/>
+**Setter**: [`tpp_settabsize(v)`](../src/tpp-amalgamation.h#L19302)
 
 <details><summary>Details</summary>
 
@@ -30,16 +30,16 @@ TPP_HAVE_PROFILE_ALL ? -4 : 4
 
 ## TPP_ERROR_LIMIT
 
-Max # of [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L20506) (continue compilation and fail later) warnings that
-can be emitted before the next one will be treated as [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L20511) (fail
+Max # of [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L20641) (continue compilation and fail later) warnings that
+can be emitted before the next one will be treated as [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L20646) (fail
 immediately)
 
 - `0`:  Set limit to `0` (when not also overwritten, causes `TPP_HAVE_WARNING_ERROR=0`)
 - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
 - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
 
-**Getter**: [`tpp_lexer_geterrorlimit(lexer)`](../src/tpp-amalgamation.h#L21962)<br/>
-**Setter**: [`tpp_lexer_seterrorlimit(lexer, v)`](../src/tpp-amalgamation.h#L21963)
+**Getter**: [`tpp_lexer_geterrorlimit(lexer)`](../src/tpp-amalgamation.h#L22097)<br/>
+**Setter**: [`tpp_lexer_seterrorlimit(lexer, v)`](../src/tpp-amalgamation.h#L22098)
 
 <details><summary>Details</summary>
 
@@ -53,15 +53,15 @@ Default:
 ## TPP_MAX_INCLUDE_DEPTH
 
 Similar to GCC's `-fmax-include-depth`: Max # of times that the same file is allowed to
-appear on the `#include`-stack before a warning [`TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED`](../src/tpp-amalgamation.h#L4609)
+appear on the `#include`-stack before a warning [`TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED`](../src/tpp-amalgamation.h#L4676)
 (which is default-configured to be an error) is emitted.
 
 - `0`:  Disable include depth checks entirely (limit becomes *infinite*)
 - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
 - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
 
-**Getter**: [`tpp_lexer_getinclusionlimit(lexer)`](../src/tpp-amalgamation.h#L21984)<br/>
-**Setter**: [`tpp_lexer_setinclusionlimit(lexer, v)`](../src/tpp-amalgamation.h#L21985)
+**Getter**: [`tpp_lexer_getinclusionlimit(lexer)`](../src/tpp-amalgamation.h#L22119)<br/>
+**Setter**: [`tpp_lexer_setinclusionlimit(lexer, v)`](../src/tpp-amalgamation.h#L22120)
 
 <details><summary>Details</summary>
 
@@ -78,7 +78,7 @@ Max # of times that the same (self-recursive; see [`TPP_HAVE_MACRO_RECURSION`](c
 macro may appear on the `#include`-stack (with each instance's body having a
 different expansion) before the macro will be treated as though its body
 didn't change, causing it to not be expanded (anymore). At the same time
-that this limit is reached, a warning [`TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED`](../src/tpp-amalgamation.h#L4615)
+that this limit is reached, a warning [`TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED`](../src/tpp-amalgamation.h#L4682)
 will be emitted.
 
 NOTE: When [`TPP_HAVE_MACRO_RECURSION`](config-conf.md#tpp_have_macro_recursion) can never be enabled, this limit is
@@ -90,8 +90,8 @@ NOTE: When [`TPP_HAVE_MACRO_RECURSION`](config-conf.md#tpp_have_macro_recursion)
 - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
 - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
 
-**Getter**: [`tpp_lexer_getrecursivemacrolimit(lexer)`](../src/tpp-amalgamation.h#L22000)<br/>
-**Setter**: [`tpp_lexer_setrecursivemacrolimit(lexer, v)`](../src/tpp-amalgamation.h#L22001)
+**Getter**: [`tpp_lexer_getrecursivemacrolimit(lexer)`](../src/tpp-amalgamation.h#L22135)<br/>
+**Setter**: [`tpp_lexer_setrecursivemacrolimit(lexer, v)`](../src/tpp-amalgamation.h#L22136)
 
 <details><summary>Details</summary>
 

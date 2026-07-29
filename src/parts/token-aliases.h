@@ -619,6 +619,9 @@ print("#endif /" "* TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE *" "/");
 #if TPP_HAVE_CPP_EMBED
 #define KWD_embed TPP_KWD_embed
 #endif /* TPP_HAVE_CPP_EMBED */
+#if TPP_HAVE_CPP_EMBED
+#define KWD___cpp_pp_embed TPP_KWD___cpp_pp_embed
+#endif /* TPP_HAVE_CPP_EMBED */
 #if TPP_HAVE_CPP_ASSERT
 #define KWD_assert TPP_KWD_assert
 #endif /* TPP_HAVE_CPP_ASSERT */
@@ -820,6 +823,15 @@ print("#endif /" "* TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE *" "/");
 #if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 #define KWD_if_empty TPP_KWD_if_empty
 #endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET
+#define KWD_offset TPP_KWD_offset
+#endif /* (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET */
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET
+#define KWD_gnu TPP_KWD_gnu
+#endif /* (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET */
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET
+#define KWD_clang TPP_KWD_clang
+#endif /* (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET */
 #if TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed
 #define KWD___STDC_EMBED_NOT_FOUND__ TPP_KWD___STDC_EMBED_NOT_FOUND__
 #endif /* TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed */

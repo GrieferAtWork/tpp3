@@ -469,6 +469,16 @@ TPP_KWD(TPP_KWD_embed, "embed")
 TPP_KWD_IS_IDENTIFIER(TPP_KWD_embed, TPP_KWDIDENTIFIER_embed)
 #endif /* TPP_KWDIDENTIFIER_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
 #endif /* TPP_HAVE_CPP_EMBED */
+#if TPP_HAVE_CPP_EMBED
+#define TPP_KWD___cpp_pp_embed TPP_KWD___cpp_pp_embed
+TPP_KWD(TPP_KWD___cpp_pp_embed, "__cpp_pp_embed")
+#ifndef TPP_KWDIDENTIFIER___cpp_pp_embed
+#define TPP_KWDIDENTIFIER___cpp_pp_embed 0
+#endif /* !TPP_KWDIDENTIFIER___cpp_pp_embed */
+#if TPP_KWDIDENTIFIER___cpp_pp_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
+TPP_KWD_IS_IDENTIFIER(TPP_KWD___cpp_pp_embed, TPP_KWDIDENTIFIER___cpp_pp_embed)
+#endif /* TPP_KWDIDENTIFIER___cpp_pp_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
+#endif /* TPP_HAVE_CPP_EMBED */
 #if TPP_HAVE_CPP_ASSERT
 #define TPP_KWD_assert TPP_KWD_assert
 TPP_KWD(TPP_KWD_assert, "assert")
@@ -1133,6 +1143,36 @@ TPP_KWD(TPP_KWD_if_empty, "if_empty")
 TPP_KWD_IS_IDENTIFIER(TPP_KWD_if_empty, TPP_KWDIDENTIFIER_if_empty)
 #endif /* TPP_KWDIDENTIFIER_if_empty != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
 #endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET
+#define TPP_KWD_offset TPP_KWD_offset
+TPP_KWD(TPP_KWD_offset, "offset")
+#ifndef TPP_KWDIDENTIFIER_offset
+#define TPP_KWDIDENTIFIER_offset 0
+#endif /* !TPP_KWDIDENTIFIER_offset */
+#if TPP_KWDIDENTIFIER_offset != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
+TPP_KWD_IS_IDENTIFIER(TPP_KWD_offset, TPP_KWDIDENTIFIER_offset)
+#endif /* TPP_KWDIDENTIFIER_offset != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
+#endif /* (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET */
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET
+#define TPP_KWD_gnu TPP_KWD_gnu
+TPP_KWD(TPP_KWD_gnu, "gnu")
+#ifndef TPP_KWDIDENTIFIER_gnu
+#define TPP_KWDIDENTIFIER_gnu 0
+#endif /* !TPP_KWDIDENTIFIER_gnu */
+#if TPP_KWDIDENTIFIER_gnu != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
+TPP_KWD_IS_IDENTIFIER(TPP_KWD_gnu, TPP_KWDIDENTIFIER_gnu)
+#endif /* TPP_KWDIDENTIFIER_gnu != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
+#endif /* (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET */
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET
+#define TPP_KWD_clang TPP_KWD_clang
+TPP_KWD(TPP_KWD_clang, "clang")
+#ifndef TPP_KWDIDENTIFIER_clang
+#define TPP_KWDIDENTIFIER_clang 0
+#endif /* !TPP_KWDIDENTIFIER_clang */
+#if TPP_KWDIDENTIFIER_clang != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
+TPP_KWD_IS_IDENTIFIER(TPP_KWD_clang, TPP_KWDIDENTIFIER_clang)
+#endif /* TPP_KWDIDENTIFIER_clang != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
+#endif /* (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET */
 #if TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed
 #define TPP_KWD___STDC_EMBED_NOT_FOUND__ TPP_KWD___STDC_EMBED_NOT_FOUND__
 TPP_KWD(TPP_KWD___STDC_EMBED_NOT_FOUND__, "__STDC_EMBED_NOT_FOUND__")
@@ -1442,12 +1482,31 @@ TPP_KWD_IS_IDENTIFIER(TPP_KWD_dirafter, TPP_KWDIDENTIFIER_dirafter)
 TPP_MACRO(TPP_KWD___TPP_VERSION__, true)
 TPP_PREDEFINED_MACRO(TPP_KWD___TPP_VERSION__, tpp_return_conststr(TPP_PREPROCESSOR_VERSION_STR))
 
+#if TPP_HAVE_CPP_EMBED
+TPP_MACRO(TPP_KWD___cpp_pp_embed, tpp_lexer_has(tpp_current_lexer(), CPP_EMBED))
+#if !TPP_HAVE_CPP_EMBED_OFFSET
+TPP_PREDEFINED_MACRO(TPP_KWD___cpp_pp_embed, tpp_return_conststr("202502" TPP_CONFIG_CPP_CONSTANT_SUFFIX))
+#elif !TPP_CONF_MAYBE_0(TPP_HAVE_CPP_EMBED_OFFSET)
+TPP_PREDEFINED_MACRO(TPP_KWD___cpp_pp_embed, tpp_return_conststr("202606" TPP_CONFIG_CPP_CONSTANT_SUFFIX))
+#else /* ... */
+TPP_PREDEFINED_MACRO(TPP_KWD___cpp_pp_embed, {
+	if (tpp_lexer_has(tpp_current_lexer(), CPP_EMBED_OFFSET)) {
+		tpp_return_conststr("202606" TPP_CONFIG_CPP_CONSTANT_SUFFIX);
+	} else {
+		tpp_return_conststr("202502" TPP_CONFIG_CPP_CONSTANT_SUFFIX);
+	}
+})
+#endif /* !... */
+#endif /* TPP_HAVE_CPP_EMBED */
+
 #if TPP_HAVE_MACRO___has_embed
 TPP_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
-TPP_MACRO(TPP_KWD___STDC_EMBED_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
-TPP_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
 TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, tpp_return_conststr(TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND))
+
+TPP_MACRO(TPP_KWD___STDC_EMBED_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
 TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_FOUND__, tpp_return_conststr(TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND))
+
+TPP_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
 TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, tpp_return_conststr(TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY))
 #endif /* TPP_HAVE_MACRO___has_embed */
 #endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
@@ -1655,6 +1714,14 @@ TPP_EXTENSION(TPP_EXT_CPP_PRAGMA, TPP_EXTNAME_CPP_PRAGMA, TPP_CONF_DEFAULT(TPP_H
 TPP_EXTENSION(TPP_EXT_CPP_EMBED, TPP_EXTNAME_CPP_EMBED, TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED))
 #define _tpp_lexer_has_CPP_EMBED(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_CPP_EMBED)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_CPP_EMBED) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_CPP_EMBED_OFFSET)
+#ifndef TPP_EXTNAME_CPP_EMBED_OFFSET
+#define TPP_EXTNAME_CPP_EMBED_OFFSET "embed-directives-offset"
+#endif /* !TPP_EXTNAME_CPP_EMBED_OFFSET */
+#define TPP_EXT_CPP_EMBED_OFFSET TPP_EXT_CPP_EMBED_OFFSET
+TPP_EXTENSION(TPP_EXT_CPP_EMBED_OFFSET, TPP_EXTNAME_CPP_EMBED_OFFSET, TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED_OFFSET))
+#define _tpp_lexer_has_CPP_EMBED_OFFSET(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_CPP_EMBED_OFFSET)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_CPP_EMBED_OFFSET) */
 #if TPP_CONF_IS_EXT(TPP_HAVE_MACRO__Pragma)
 #ifndef TPP_EXTNAME_MACRO__Pragma
 #define TPP_EXTNAME_MACRO__Pragma "_Pragma"
@@ -6380,6 +6447,16 @@ TPP_DECL_END
 #define TPP_HAVE_CPP_EMBED (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fembed-directives" */
 #endif /* !TPP_HAVE_CPP_EMBED */
 
+/* Support for the `offset` (and `gnu::offset` / `clang::offset`) parameter
+ * in `#embed` directives and `__has_embed()` macros, as defined in
+ * https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3540r2.html
+ *
+ * When this is enabled, `__cpp_pp_embed` also expands to a different value,
+ * as defined here: https://en.cppreference.com/cpp/feature_test#cpp_pp_embed */
+#ifndef TPP_HAVE_CPP_EMBED_OFFSET
+#define TPP_HAVE_CPP_EMBED_OFFSET ((TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fembed-directives-offset" */
+#endif /* !TPP_HAVE_CPP_EMBED_OFFSET */
+
 /* Support for: `_Pragma("foo")`
  * @detect: #ifdef _Pragma */
 #ifndef TPP_HAVE_MACRO__Pragma
@@ -10643,6 +10720,14 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_IO_COMPARE_MTIME */
 
+#ifndef TPP_HAVE_IO_SKIP_BLOCKING
+#if (TPP_HAVE_PROFILE_ALL || TPP_HAVE_CPP_EMBED_OFFSET)
+#define TPP_HAVE_IO_SKIP_BLOCKING 1
+#else /* ... */
+#define TPP_HAVE_IO_SKIP_BLOCKING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_IO_SKIP_BLOCKING */
+
 /* Enable support for `tpp_io_normalize_filename()`.
  * This function is needed to detect+fix (see `TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING`)
  * incorrect casing in `#include`-paths on host platforms with case-insensitive filenames
@@ -11317,6 +11402,19 @@ TPP_DECL_END
 #define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
+
+/* Suffix added to version numbers in `__cpp_*` predefined macros/keyword-features.
+ *
+ * e.g.: When `TPP_HAVE_CPP_EMBED` is enabled, `__cpp_pp_embed` is defined
+ *       to expand to something like `202502`, followed by a suffix defined
+ *       by this config. */
+#ifndef TPP_CONFIG_CPP_CONSTANT_SUFFIX
+#if TPP_HAVE_PROFILE_C_LIKE
+#define TPP_CONFIG_CPP_CONSTANT_SUFFIX "L"
+#else /* TPP_HAVE_PROFILE_C_LIKE */
+#define TPP_CONFIG_CPP_CONSTANT_SUFFIX ""
+#endif /* !TPP_HAVE_PROFILE_C_LIKE */
+#endif /* !TPP_CONFIG_CPP_CONSTANT_SUFFIX */
 
 /* Enable support for `tpp_lexer_openfile_ex()` */
 #ifndef TPP_HAVE_LEXER_OPENFILE_EX
@@ -12238,6 +12336,20 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 #endif /* TPP_HAVE_IO_COMPARE_MTIME */
 #endif /* tpp_io_handle_IS_BUILTIN */
 
+#if TPP_HAVE_IO_SKIP_BLOCKING
+#ifndef tpp_io_skip_blocking
+/* Skip up to `max_bytes` of input from `file` whilst blocking,
+ * storing the actual number of skipped bytes in `*p_skipped_bytes`
+ * before returning `TPP_EOK`.
+ *
+ * @return: TPP_EOK: Success
+ * @return: TPP_EIO: I/O error (HARD_ERROR) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((3)) tpp_errno TPPCALL
+tpp_io_skip_blocking(tpp_io_handle file, tpp_uintmax max_bytes,
+                     tpp_uintmax *tpp_restrict p_skipped_bytes);
+#endif /* !tpp_io_skip_blocking */
+#endif /* TPP_HAVE_IO_SKIP_BLOCKING */
+
 #if TPP_HAVE_FILE_NONBLOCK
 #define tpp_io_read_blocking(file, buf, bufsize) tpp_io_read(file, buf, bufsize, 0)
 #else /* TPP_HAVE_FILE_NONBLOCK */
@@ -13097,6 +13209,9 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 #if TPP_HAVE_CPP_EMBED
 #define KWD_embed TPP_KWD_embed
 #endif /* TPP_HAVE_CPP_EMBED */
+#if TPP_HAVE_CPP_EMBED
+#define KWD___cpp_pp_embed TPP_KWD___cpp_pp_embed
+#endif /* TPP_HAVE_CPP_EMBED */
 #if TPP_HAVE_CPP_ASSERT
 #define KWD_assert TPP_KWD_assert
 #endif /* TPP_HAVE_CPP_ASSERT */
@@ -13298,6 +13413,15 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 #if TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 #define KWD_if_empty TPP_KWD_if_empty
 #endif /* TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed */
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET
+#define KWD_offset TPP_KWD_offset
+#endif /* (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET */
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET
+#define KWD_gnu TPP_KWD_gnu
+#endif /* (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET */
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET
+#define KWD_clang TPP_KWD_clang
+#endif /* (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && TPP_HAVE_CPP_EMBED_OFFSET */
 #if TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed
 #define KWD___STDC_EMBED_NOT_FOUND__ TPP_KWD___STDC_EMBED_NOT_FOUND__
 #endif /* TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed */
@@ -15076,6 +15200,7 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IDENT_SCCS) ||                         \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_PRAGMA) ||                             \
      TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) ||                              \
+     TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET) ||                       \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma) ||                          \
      TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___pragma) ||                         \
      TPP_CONF_IS_FEAT(TPP_HAVE_CLANG_MACRO___has_attribute) ||            \
@@ -15411,6 +15536,9 @@ typedef enum tpp_feature_id {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED)
 	TPP_FEAT_CPP_EMBED,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET)
+	TPP_FEAT_CPP_EMBED_OFFSET,
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma)
 	TPP_FEAT_MACRO__Pragma,
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma) */
@@ -16275,6 +16403,10 @@ typedef union tpp_features {
 		unsigned int TPP_INTERNAL(tff_CPP_EMBED): 1;
 #define _tpp_lexer_has_CPP_EMBED(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_CPP_EMBED)
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET)
+		unsigned int TPP_INTERNAL(tff_CPP_EMBED_OFFSET): 1;
+#define _tpp_lexer_has_CPP_EMBED_OFFSET(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_CPP_EMBED_OFFSET)
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_EMBED_OFFSET) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO__Pragma)
 		unsigned int TPP_INTERNAL(tff_MACRO__Pragma): 1;
 #define _tpp_lexer_has_MACRO__Pragma(self) (self)->TPP_INTERNAL(tl_feat).TPP_INTERNAL(tf_flags).TPP_INTERNAL(tff_MACRO__Pragma)
@@ -17381,6 +17513,9 @@ TPP_CONST_DECL tpp_features const tpp_features_default;
 #if TPP_CONF_IS_CONST(TPP_HAVE_CPP_EMBED)
 #define _tpp_lexer_has_CPP_EMBED(self) TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_CPP_EMBED) */
+#if TPP_CONF_IS_CONST(TPP_HAVE_CPP_EMBED_OFFSET)
+#define _tpp_lexer_has_CPP_EMBED_OFFSET(self) TPP_CONF_DEFAULT(TPP_HAVE_CPP_EMBED_OFFSET)
+#endif /* TPP_CONF_IS_CONST(TPP_HAVE_CPP_EMBED_OFFSET) */
 #if TPP_CONF_IS_CONST(TPP_HAVE_MACRO__Pragma)
 #define _tpp_lexer_has_MACRO__Pragma(self) TPP_CONF_DEFAULT(TPP_HAVE_MACRO__Pragma)
 #endif /* TPP_CONF_IS_CONST(TPP_HAVE_MACRO__Pragma) */

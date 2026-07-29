@@ -762,6 +762,16 @@
 #define TPP_HAVE_CPP_EMBED (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fembed-directives" */
 #endif /* !TPP_HAVE_CPP_EMBED */
 
+/* Support for the `offset` (and `gnu::offset` / `clang::offset`) parameter
+ * in `#embed` directives and `__has_embed()` macros, as defined in
+ * https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3540r2.html
+ *
+ * When this is enabled, `__cpp_pp_embed` also expands to a different value,
+ * as defined here: https://en.cppreference.com/cpp/feature_test#cpp_pp_embed */
+#ifndef TPP_HAVE_CPP_EMBED_OFFSET
+#define TPP_HAVE_CPP_EMBED_OFFSET ((TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fembed-directives-offset" */
+#endif /* !TPP_HAVE_CPP_EMBED_OFFSET */
+
 /* Support for: `_Pragma("foo")`
  * @detect: #ifdef _Pragma */
 #ifndef TPP_HAVE_MACRO__Pragma
@@ -5481,6 +5491,14 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_IO_COMPARE_MTIME */
 
+#ifndef TPP_HAVE_IO_SKIP_BLOCKING
+#if (TPP_HAVE_PROFILE_ALL || TPP_HAVE_CPP_EMBED_OFFSET)
+#define TPP_HAVE_IO_SKIP_BLOCKING 1
+#else /* ... */
+#define TPP_HAVE_IO_SKIP_BLOCKING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_IO_SKIP_BLOCKING */
+
 /* Enable support for `tpp_io_normalize_filename()`.
  * This function is needed to detect+fix (see `TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING`)
  * incorrect casing in `#include`-paths on host platforms with case-insensitive filenames
@@ -6155,6 +6173,19 @@ print("#endif /" "* !... *" "/");
 #define TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY "2"
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
+
+/* Suffix added to version numbers in `__cpp_*` predefined macros/keyword-features.
+ *
+ * e.g.: When `TPP_HAVE_CPP_EMBED` is enabled, `__cpp_pp_embed` is defined
+ *       to expand to something like `202502`, followed by a suffix defined
+ *       by this config. */
+#ifndef TPP_CONFIG_CPP_CONSTANT_SUFFIX
+#if TPP_HAVE_PROFILE_C_LIKE
+#define TPP_CONFIG_CPP_CONSTANT_SUFFIX "L"
+#else /* TPP_HAVE_PROFILE_C_LIKE */
+#define TPP_CONFIG_CPP_CONSTANT_SUFFIX ""
+#endif /* !TPP_HAVE_PROFILE_C_LIKE */
+#endif /* !TPP_CONFIG_CPP_CONSTANT_SUFFIX */
 
 /* Enable support for `tpp_lexer_openfile_ex()` */
 #ifndef TPP_HAVE_LEXER_OPENFILE_EX
