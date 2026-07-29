@@ -543,6 +543,61 @@ tpp_keyword_setflags(tpp_keyword *tpp_restrict self,
 
 
 
+#if TPP_HAVE_KEYWORD_FEATURES
+/* Return the string-expansion of the feature-check `kind` when
+ * given `self` as an argument. Returns `NULL` when no custom
+ * expansion has been defined (caller must still check for pre-
+ * defined/builtin feature-check expansions)
+ *
+ * You should probably call `tpp_lexer_getkeywordfeature()`
+ * instead of this function, since this one doesn't handle
+ * builtin expansions!
+ *
+ * @return: * :   The custom override for what "self" should expand to
+ * @return: NULL: No custom override present. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
+tpp_keyword_getfeature(tpp_keyword const *tpp_restrict self,
+                       tpp_keyword_feature_kind kind) {
+	tpp_keyword_misc const *misc = self->tk_misc;
+	if (misc) {
+		tpp_keyword_feature const *feat;
+		feat = _tpp_keyword_misc_featurebykind(misc, kind);
+		if (feat->tkf_expansion) {
+			tpp_string_incref(feat->tkf_expansion);
+			return feat->tkf_expansion;
+		}
+	}
+	return NULL;
+}
+
+/* Set the text that a feature-check of `kind` expands to when used
+ * with the given keyword `self`. You may also pass `value: NULL` to
+ * reset that specific feature back to its builtin (or "0") state.
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_setfeature(tpp_keyword *tpp_restrict self,
+                       tpp_keyword_feature_kind kind,
+                       tpp_string *value) {
+	TPP_REF tpp_string *old_value;
+	tpp_keyword_feature *feat;
+	tpp_keyword_misc *misc = tpp_keyword_requiremisc(self);
+	if (!misc)
+		return TPP_ENOMEM;
+	feat = _tpp_keyword_misc_featurebykind(misc, kind);
+	old_value = feat->tkf_expansion;
+	feat->tkf_expansion = value;
+	if (value)
+		tpp_string_incref(value);
+	if (old_value)
+		tpp_string_decref(old_value);
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_KEYWORD_FEATURES */
+
+
+
 #if TPP_HAVE_CPP_ASSERT
 /* Assert a given "value" within "self".
  * @return: TPP_EOK:    Assertion was added

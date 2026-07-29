@@ -935,17 +935,17 @@ typedef struct tpp_lexer_openfile_result {
 #define tpp_lexer_openfile_flags uint_least32_t /* Set of `TPP_LEXER_OPENFILE_FLAG_*' */
 #endif /* !tpp_keyword_flags */
 #if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
-#define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT32_C(0x10000000) /* Reject files that are already on the #include-stack */
+#define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT16_C(0x0100) /* Reject files that are already on the #include-stack */
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT32_C(0x08000000) /* Emit a warning if the file already appears too often on the #include-stack */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT16_C(0x0200) /* Emit a warning if the file already appears too often on the #include-stack */
 #else /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT32_C(0x00000000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT16_C(0x0000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 #if TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
-#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT32_C(0x04000000) /* Emit a warning "TPP_W_NONPORTABLE_FILENAME_CASING" if the file's casing is bad */
+#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT16_C(0x0400) /* Emit a warning "TPP_W_NONPORTABLE_FILENAME_CASING" if the file's casing is bad */
 #else /* TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
-#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT32_C(0x00000000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT16_C(0x0000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
 
 /* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
@@ -1799,19 +1799,65 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
 
 
 
+#if TPP_HAVE_KEYWORD_FEATURES || TPP_HAVE_CPP_PREDEFINED_MACROS
+typedef struct tpp_macro_expansion {
+	TPP_REF tpp_string *TPP_INTERNAL(tme_chunk); /* [0..1] Expansion chunk buffer (or "NULL" if expansion is statically allocated) */
+	tpp_char const     *TPP_INTERNAL(tme_start); /* [1..1] Start of expansion text */
+	tpp_char const     *TPP_INTERNAL(tme_end);   /* [1..1] End of expansion text */
+} tpp_macro_expansion;
 
-#if TPP_HAVE_KEYWORD_FLAGS
-/* Return the effective set of flags for a given "kwd"
- * Since the effective flags for (certain) builtin keywords
- * can depend on active extensions/features, this can only
- * be done in the context of a specific lexer (rather than
- * stand-alone using only the "kwd")
- *
- * @return: * : Set of `TPP_KEYWORD_FLAG_*' */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_flags TPPCALL
-tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
-                          tpp_keyword const *tpp_restrict kwd);
-#endif /* TPP_HAVE_KEYWORD_FLAGS */
+#define tpp_macro_expansion_init_chunk_ex_inherited(self, chunk, text, text_size) \
+	(void)((self)->TPP_INTERNAL(tme_chunk) = (chunk),                             \
+	       (self)->TPP_INTERNAL(tme_start) = (text),                              \
+	       (self)->TPP_INTERNAL(tme_end)   = (text) + (text_size))
+#define tpp_macro_expansion_init_chunk_ex(self, chunk, text, text_size) \
+	(tpp_string_incref(chunk), tpp_macro_expansion_init_chunk_ex_inherited(self, chunk, text, text_size))
+#define tpp_macro_expansion_init_chunk_inherited(self, chunk) \
+	tpp_macro_expansion_init_chunk_ex_inherited(self, chunk, tpp_string_str(chunk), tpp_string_len(chunk))
+#define tpp_macro_expansion_init_chunk(self, chunk) \
+	(tpp_string_incref(chunk), tpp_macro_expansion_init_chunk_inherited(self, chunk))
+#define tpp_macro_expansion_init_cstr(self, text, text_size) \
+	tpp_macro_expansion_init_chunk_ex_inherited(self, NULL, (tpp_char const *)(text), text_size)
+#define tpp_macro_expansion_init_conststr(self, CONSTstr) \
+	tpp_macro_expansion_init_cstr(self, CONSTstr, (sizeof(CONSTstr) - sizeof(char)))
+#define tpp_macro_expansion_fini(self)                    \
+	((self)->TPP_INTERNAL(tme_chunk)                      \
+	 ? tpp_string_decref((self)->TPP_INTERNAL(tme_chunk)) \
+	 : (void)0)
+
+#define tpp_macro_expansion_getchunk(self) (self)->TPP_INTERNAL(tme_chunk)
+#define tpp_macro_expansion_getstart(self) (self)->TPP_INTERNAL(tme_start)
+#define tpp_macro_expansion_getend(self)   (self)->TPP_INTERNAL(tme_end)
+#define tpp_macro_expansion_gettext(self)  (self)->TPP_INTERNAL(tme_start)
+#define tpp_macro_expansion_getsize(self) \
+	((tpp_size)((self)->TPP_INTERNAL(tme_end) - (self)->TPP_INTERNAL(tme_start)))
+#endif /* TPP_HAVE_KEYWORD_FEATURES || TPP_HAVE_CPP_PREDEFINED_MACROS */
+
+
+#if TPP_HAVE_KEYWORD_FEATURES
+/* Return the effective expansion of a feature-keyword "kwd".
+ * @return: TPP_EOK:    Success: expansion was stored in "result"
+ * @return: TPP_ENOENT: SOFT_ERROR: keyword has no expansion (caller should expand to "0" instead)
+ * @return: TPP_E*:     HARD_ERROR: error returned by a user-defined feature-test callback. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict self,
+                            tpp_keyword const *tpp_restrict kwd,
+                            tpp_keyword_feature_kind kind,
+                            tpp_macro_expansion *tpp_restrict result);
+#endif /* TPP_HAVE_KEYWORD_FEATURES */
+
+
+#if TPP_HAVE_CPP_PREDEFINED_MACROS
+/* Return the effective expansion of a predefined keyword-style macro.
+ * @return: TPP_EOK:    Success: expansion was stored in "result"
+ * @return: TPP_ENOENT: SOFT_ERROR: keyword has no expansion
+ * @return: TPP_E*:     HARD_ERROR: error returned by a user-defined feature-test callback. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_lexer_getpredefinedmacro(tpp_lexer *tpp_restrict self,
+                             tpp_keyword const *tpp_restrict kwd,
+                             tpp_macro_expansion *tpp_restrict result);
+#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
+
 
 #if TPP_HAVE_LEXER_GETKEYWORDDEFINED
 /* Returns true if "kwd" should be considered to be "#if defined()"
@@ -1837,11 +1883,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
 tpp_lexer_isidentifier(tpp_lexer *tpp_restrict self,
                        tpp_keyword const *tpp_restrict kwd);
 #elif TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
-#if TPP_HAVE_CPP_MACROS
-#define tpp_lexer_isidentifier(self, kwd) (!tpp_macro_getpredefined(tpp_keyword_getid(kwd)) && tpp_keyword_isbuiltin(kwd))
-#else /* ... */
 #define tpp_lexer_isidentifier(self, kwd) tpp_keyword_isbuiltin(kwd)
-#endif /* ... */
 #else /* ... */
 #define tpp_lexer_isidentifier(self, kwd) 0
 #endif /* !... */

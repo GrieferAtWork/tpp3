@@ -785,35 +785,10 @@
 #define TPP_HAVE_PRAGMA 0
 #endif /* !... */
 
-
-/* TODO: The way that all the `TPP_HAVE_CLANG_MACRO_*` macros work must be
- *       re-thought: currently, they all expand to either "0" or "1", but
- *       it turns out that the C++ standard actually defines different
- *       version numbers specifying different levels of compliance of
- *       implementations whenever described language features are revised
- *       in later versions of the standard:
- *        - __has_cpp_attribute(nodiscard) == 201603L  (C++17)
- *        - __has_cpp_attribute(nodiscard) == 201907L  (C++20)
- * -> As a consequence, instead of every `__has_*` macro corresponding to
- *    a specific `TPP_KEYWORD_FLAG_*` flag, every one of them instead needs
- *    a distinct `TPP_REF tpp_string *` that specifies what that keyword
- *    should expand to when used with the relevant `__has_*` macro. This
- *    is needed for runtime override/re-definition of `__has_*` expansion
- *    values, for use by either the target-compiler, and a new
- *    `#pragma TPP __has_attribute(my_keyword) = "42"` (WIP syntax)
- * -> Secondly, `TPP_KWD_FLAGS()` simply needs to go away from "defs.h".
- *    It will need to be replaced with a series of annotation macros, one
- *    for every `__has_*` macro there is:
- *    >> #define TPP_KWD___has_attribute(id, expansion_str)  <magic>  (WIP syntax)
- *
- * Different possible feature macros:
- * - __has_attribute()
- * - __has_builtin()
- * - __has_cpp_attribute()
- * - __has_declspec_attribute()
- * - __has_extension()
- * - __has_feature()
- * - __has_c_attribute()
+/* TODO: Have a custom `#pragma TPP ...` pragma to define custom expansions for keyword-feature macros:
+ * >> __has_feature(my_feature)  // Expands to [0]
+ * >> #pragma TPP __has_feature(my_feature) = "42"
+ * >> __has_feature(my_feature)  // Expands to [42]
  */
 
 /* Support for clang `__has_attribute()`, which is conventionally
@@ -879,7 +854,7 @@
 #endif /* !TPP_HAVE_CLANG_MACRO___has_c_attribute */
 
 /* When enabled, clang's `__has_feature()` also
- * expands to `1` when `__has_extension()` would.
+ * expands to what `__has_extension()` would.
  *
  * See also:
  * - `TPP_HAVE_CLANG_MACRO___has_feature`
@@ -1706,9 +1681,10 @@
 #define TPP_HAVE_PRAGMA_TPP_EXEC (TPP_HAVE_PRAGMA ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-tpp-exec" */
 #endif /* !TPP_HAVE_PRAGMA_TPP_EXEC */
 
-/* Support for: `#pragma tpp_set_keyword_flags("foo", 0x7f)` */
+/* Support for: `#pragma tpp_set_keyword_flags("foo", 0x7f)`
+ * This pragma is deprecated and should not be used */
 #ifndef TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS
-#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS (TPP_HAVE_PRAGMA ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-tpp-set-keyword-flags" */
+#define TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ((TPP_HAVE_PRAGMA && TPP_HAVE_PROFILE_ALL) ? TPP_COMMON_CONF_FEAT1 : 0) /* "-fpragma-tpp-set-keyword-flags" */
 #endif /* !TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS */
 
 /* Support for: `#pragma GCC poison foo` */

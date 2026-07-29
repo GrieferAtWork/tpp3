@@ -11,7 +11,6 @@ TPP_BUILTIN_KEYWORD(TPP_KWD_message, 7, "message", &tpp_builtin_keyword_TPP_KWD_
 TPP_BUILTIN_KEYWORD(TPP_KWD_GCC, 3, "GCC", &tpp_builtin_keyword_TPP_KWD_message, 00000000, 0160C906)
 TPP_BUILTIN_KEYWORD(TPP_KWD___is_deprecated, 15, "__is_deprecated", NULL, 74AE0E48, 0E240207)
 TPP_BUILTIN_KEYWORD(TPP_KWD_defined, 7, "defined", NULL, 01AB3B05, B0B07208)
-TPP_BUILTIN_KEYWORD(TPP_KWD_tpp_set_keyword_flags, 21, "tpp_set_keyword_flags", &tpp_builtin_keyword_TPP_KWD_defined, EE25E9F3, D62CB288)
 TPP_BUILTIN_KEYWORD(TPP_KWD_fatal, 5, "fatal", NULL, 00000197, 0087928B)
 TPP_BUILTIN_KEYWORD(TPP_KWD_quote, 5, "quote", &tpp_builtin_keyword_TPP_KWD_fatal, 000001A3, 570F510B)
 TPP_BUILTIN_KEYWORD(async, 5, "async", &tpp_builtin_keyword_TPP_KWD_quote, 00000191, 82385A0B)
@@ -116,7 +115,7 @@ TPP_BUILTIN_KEYWORD(TPP_KWD___is_poisoned, 13, "__is_poisoned", NULL, 1D4F1511, 
 TPP_BUILTIN_KEYWORD(TPP_KWD___is_identifier, 15, "__is_identifier", NULL, E82BBD26, 553C3C7D)
 TPP_BUILTIN_KEYWORD(TPP_KWD_pop_macro, 9, "pop_macro", &tpp_builtin_keyword_TPP_KWD___is_identifier, DA19EBBE, E2F109FD)
 
-#define TPP_BUILTIN_KEYWORD_COUNT 115
+#define TPP_BUILTIN_KEYWORD_COUNT 114
 #define TPP_BUILTIN_KEYWORD_MASK  127
 TPP_BUILTIN_KEYWORD_TABLE(
 	TPP_BUILTIN_KEYWORD_TABLE_ITEM_BLANK
@@ -127,7 +126,7 @@ TPP_BUILTIN_KEYWORD_TABLE(
 	TPP_BUILTIN_KEYWORD_TABLE_ITEM(&tpp_builtin_keyword_TPP_KWD___pragma)
 	TPP_BUILTIN_KEYWORD_TABLE_ITEM(&tpp_builtin_keyword_TPP_KWD_GCC)
 	TPP_BUILTIN_KEYWORD_TABLE_ITEM(&tpp_builtin_keyword_TPP_KWD___is_deprecated)
-	TPP_BUILTIN_KEYWORD_TABLE_ITEM(&tpp_builtin_keyword_TPP_KWD_tpp_set_keyword_flags)
+	TPP_BUILTIN_KEYWORD_TABLE_ITEM(&tpp_builtin_keyword_TPP_KWD_defined)
 	TPP_BUILTIN_KEYWORD_TABLE_ITEM_BLANK
 	TPP_BUILTIN_KEYWORD_TABLE_ITEM_BLANK
 	TPP_BUILTIN_KEYWORD_TABLE_ITEM(&tpp_builtin_keyword_async)

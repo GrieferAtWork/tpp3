@@ -1351,9 +1351,103 @@ tpp_lexer_process_pragma_tpp_exec(tpp_lexer *tpp_restrict self) {
 /* #pragma tpp_set_keyword_flags("foo", 0x7f)                           */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS || TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
-#ifndef TPP_SET_KEYWORD_FLAGS_MASK
-#define TPP_SET_KEYWORD_FLAGS_MASK 0x7f /* Historical constant (s.a. how keyword flags are assigned) */
-#endif /* !TPP_SET_KEYWORD_FLAGS_MASK */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_ATTRIBUTE          0x01 /* Historical constant: `__has_attribute()' */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_BUILTIN            0x02 /* Historical constant: `__has_builtin()' */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE      0x04 /* Historical constant: `__has_cpp_attribute()' */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE 0x08 /* Historical constant: `__has_declspec_attribute()' */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_EXTENSION          0x10 /* Historical constant: `__has_extension()' */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_FEATURE            0x20 /* Historical constant: `__has_feature()' */
+#define TPP_LEGACY_KEYWORD_FLAG_IS_DEPRECATED          0x40 /* Historical constant: Warn when the keyword appears as the result of lexical processing. */
+#define TPP_LEGACY_KEYWORD_FLAG_MASK                   0x7f /* Historical constant */
+
+#if TPP_HAVE_KEYWORD_FEATURES
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_set_legacy_feature_expansion(tpp_keyword *tpp_restrict keyword,
+                                         tpp_keyword_feature_kind kind,
+                                         bool enabled) {
+	static TPP_STRING_DEFINE(str_0, "0");
+	static TPP_STRING_DEFINE(str_1, "1");
+	tpp_string *value = enabled ? (tpp_string *)&str_1 : (tpp_string *)&str_0;
+	return tpp_keyword_setfeature(keyword, kind, value);
+}
+#endif /* TPP_HAVE_KEYWORD_FEATURES */
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_keyword_set_legacy_flags(tpp_keyword *tpp_restrict keyword, uint_least8_t flags) {
+	/* Modify keyword flags */
+	tpp_errno error = TPP_EOK;
+	tpp_keyword_flags old_kwd_flags = tpp_keyword_getflags(keyword);
+	tpp_keyword_flags new_kwd_flags = old_kwd_flags & ~TPP_KEYWORD_FLAG_IS_DEPRECATED;
+	if (flags & TPP_LEGACY_KEYWORD_FLAG_IS_DEPRECATED)
+		new_kwd_flags |= TPP_KEYWORD_FLAG_IS_DEPRECATED;
+	if (old_kwd_flags != new_kwd_flags) {
+		error = tpp_keyword_setflags(keyword, new_kwd_flags);
+		if (TPP_ISERR(error))
+			goto done;
+	}
+
+	/* Apply overrides for feature-macros */
+#if TPP_HAVE_KEYWORD_FEATURES
+/*[[[deemon
+for (local kind: {
+	"has_attribute",
+	"has_builtin",
+	"has_cpp_attribute",
+	"has_declspec_attribute",
+	"has_extension",
+	"has_feature",
+//	"has_c_attribute", // Not part of legacy
+}) {
+	local KIND = kind.upper();
+	print("#if TPP_HAVE_CLANG_MACRO___", kind);
+	print("	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_", KIND, ",");
+	print("	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_", KIND, ") != 0);");
+	print("	if (TPP_ISERR(error))");
+	print("		goto done;");
+	print("#endif /* TPP_HAVE_CLANG_MACRO___", kind, " *" "/");
+}
+]]]*/
+#if TPP_HAVE_CLANG_MACRO___has_attribute
+	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE,
+	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_ATTRIBUTE) != 0);
+	if (TPP_ISERR(error))
+		goto done;
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
+	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN,
+	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_BUILTIN) != 0);
+	if (TPP_ISERR(error))
+		goto done;
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE,
+	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE) != 0);
+	if (TPP_ISERR(error))
+		goto done;
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE,
+	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE) != 0);
+	if (TPP_ISERR(error))
+		goto done;
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension
+	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION,
+	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_EXTENSION) != 0);
+	if (TPP_ISERR(error))
+		goto done;
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
+	error = tpp_keyword_set_legacy_feature_expansion(keyword, TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE,
+	                                                 (flags & TPP_LEGACY_KEYWORD_FLAG_HAS_FEATURE) != 0);
+	if (TPP_ISERR(error))
+		goto done;
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+/*[[[end]]]*/
+#endif /* TPP_HAVE_KEYWORD_FEATURES */
+done:
+	return error;
+}
 
 struct tpp_lexer_process_pragma_tpp_set_keyword_flags_data {
 	tpp_lexer   *tlpptskfd_lexer;   /* [1..1] The current lexer */
@@ -1433,16 +1527,12 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 		error = tpp_lexer_decodeint(self, &value);
 		if (TPP_ISERR(error))
 			return error;
-		value &= TPP_SET_KEYWORD_FLAGS_MASK;
+		value &= TPP_LEGACY_KEYWORD_FLAG_MASK;
 		if (data.tlpptskfd_keyword) {
-			/* Modify keyword flags */
-			tpp_keyword_flags old_flags = tpp_keyword_getflags(data.tlpptskfd_keyword);
-			tpp_keyword_flags new_flags = (old_flags & ~TPP_SET_KEYWORD_FLAGS_MASK) | (tpp_keyword_flags)value;
-			if (old_flags != new_flags) {
-				error = tpp_keyword_setflags(data.tlpptskfd_keyword, new_flags);
-				if (TPP_ISERR(error))
-					return error;
-			}
+			error = tpp_keyword_set_legacy_flags(data.tlpptskfd_keyword,
+			                                     (uint_least8_t)value);
+			if (TPP_ISERR(error))
+				return error;
 		}
 	}
 	do {

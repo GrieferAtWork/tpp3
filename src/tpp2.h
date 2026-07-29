@@ -22,7 +22,13 @@
 /* Emulate TPP2 user-defs */
 
 #define KWD(id, string)                     TPP_KWD(id, string)
-#define KWD_FLAGS(id, flags)                TPP_KWD_FLAGS(id, flags)
+#define KWD_FLAGS(id, flags)                                                                                             \
+	TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE(id, tpp_return_bool((flags) & TPP_KEYWORDFLAG_HAS_ATTRIBUTE))                   \
+	TPP_PREDEFINED_FEATURE_HAS_BUILTIN(id, tpp_return_bool((flags) & TPP_KEYWORDFLAG_HAS_BUILTIN))                       \
+	TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE(id, tpp_return_bool((flags) & TPP_KEYWORDFLAG_HAS_CPP_ATTRIBUTE))           \
+	TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE(id, tpp_return_bool((flags) & TPP_KEYWORDFLAG_HAS_DECLSPEC_ATTRIBUTE)) \
+	TPP_PREDEFINED_FEATURE_HAS_EXTENSION(id, tpp_return_bool((flags) & TPP_KEYWORDFLAG_HAS_EXTENSION))                   \
+	TPP_PREDEFINED_FEATURE_HAS_FEATURE(id, tpp_return_bool((flags) & TPP_KEYWORDFLAG_HAS_FEATURE))
 #define WGROUP(wgroup_id, names, default)   TPP_WGROUP(wgroup_id, names, default)
 #ifdef tpp_va_arg
 #define WARNING(name, groups, default)      /* nothing */
@@ -5276,17 +5282,17 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 
 
 #define TPP_KEYWORDFLAG_NONE TPP_KEYWORD_FLAG_NORMAL
-#undef TPP_KEYWORDFLAG_BUILTINMACRO   /* Must be checked for using `tpp_macro_getpredefined()' */
-#undef TPP_KEYWORDFLAG_NO_UNDERSCORES /* Must be checked for using `tpp_macro_getpredefined()' */
+#undef TPP_KEYWORDFLAG_BUILTINMACRO   /* Must be checked for using `tpp_lexer_getpredefinedmacro()' */
+#undef TPP_KEYWORDFLAG_NO_UNDERSCORES /* Must be checked for using `tpp_lexer_getpredefinedmacro()' */
 #define TPP_KEYWORDFLAG_IMPORTED               TPP_KEYWORD_FLAG_HDR_IMPORTED
-#define TPP_KEYWORDFLAG_HAS_ATTRIBUTE          TPP_KEYWORD_FLAG_HAS_ATTRIBUTE
-#define TPP_KEYWORDFLAG_HAS_BUILTIN            TPP_KEYWORD_FLAG_HAS_BUILTIN
-#define TPP_KEYWORDFLAG_HAS_CPP_ATTRIBUTE      TPP_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE
-#define TPP_KEYWORDFLAG_HAS_DECLSPEC_ATTRIBUTE TPP_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE
-#define TPP_KEYWORDFLAG_HAS_EXTENSION          TPP_KEYWORD_FLAG_HAS_EXTENSION
-#define TPP_KEYWORDFLAG_HAS_FEATURE            TPP_KEYWORD_FLAG_HAS_FEATURE
 #define TPP_KEYWORDFLAG_IS_DEPRECATED          TPP_KEYWORD_FLAG_IS_DEPRECATED
 #define TPP_KEYWORDFLAG_IS_POISONED            TPP_KEYWORD_FLAG_IS_POISONED
+#define TPP_KEYWORDFLAG_HAS_ATTRIBUTE          UINT32_C(0x00010000) /* Use `TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE()` instead! */
+#define TPP_KEYWORDFLAG_HAS_BUILTIN            UINT32_C(0x00020000) /* Use `TPP_PREDEFINED_FEATURE_HAS_BUILTIN()` instead! */
+#define TPP_KEYWORDFLAG_HAS_CPP_ATTRIBUTE      UINT32_C(0x00040000) /* Use `TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE()` instead! */
+#define TPP_KEYWORDFLAG_HAS_DECLSPEC_ATTRIBUTE UINT32_C(0x00080000) /* Use `TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE()` instead! */
+#define TPP_KEYWORDFLAG_HAS_EXTENSION          UINT32_C(0x00100000) /* Use `TPP_PREDEFINED_FEATURE_HAS_EXTENSION()` instead! */
+#define TPP_KEYWORDFLAG_HAS_FEATURE            UINT32_C(0x00200000) /* Use `TPP_PREDEFINED_FEATURE_HAS_FEATURE()` instead! */
 #undef TPP_KEYWORDFLAG_HAS_TPP_BUILTIN /* TPP builtins (and consequently "__has_tpp_builtin") are no longer supported */
 #define TPP_KEYWORDFLAG_USERMASK TPP_KEYWORD_FLAG_USERMASK
 
@@ -5294,7 +5300,7 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define TPPRareKeyword tpp_keyword_misc
 #undef kr_file     /* Replaced with "tkm_file_guard" (which has a slightly different meaning) */
 #undef kr_oldmacro /* Replaced with "tkm_macro_pushstack" (which has a slightly different meaning) */
-#undef kr_defmacro /* Builtin macros are now handled by `tpp_macro_getpredefined()' */
+#undef kr_defmacro /* Builtin macros are now handled by `tpp_lexer_getpredefinedmacro()' */
 #define kr_flags   TPP_INTERNAL(tkm_flags) /* Use tpp_lexer_getkeywordflags() */
 #define kr_counter TPP_INTERNAL(tkm_builtin_counter) /* Don't access */
 #if TPP_HAVE_CPP_ASSERT
@@ -5330,7 +5336,7 @@ TPP_INLINE tpp_keyword_flags TPPCALL
 TPPKeyword_GetFlags_(tpp_lexer *lexer,
                      tpp_keyword const *tpp_restrict self,
                      int check_without_underscores) {
-	tpp_keyword_flags result = tpp_lexer_getkeywordflags(lexer, self);
+	tpp_keyword_flags result = tpp_keyword_getflags(self);
 	if (check_without_underscores) {
 		tpp_char const *without_underscore_start = tpp_keyword_getstr(self);
 		tpp_size without_underscore_len          = tpp_keyword_getlen(self);
@@ -5343,7 +5349,7 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 			tpp_keyword const *without_underscore = tpp_lexer_kwds_getkeyword(lexer, without_underscore_start,
 			                                                                  without_underscore_len, hash);
 			if (without_underscore)
-				result |= tpp_lexer_getkeywordflags(lexer, without_underscore);
+				result |= tpp_keyword_getflags(without_underscore);
 		}
 	}
 	return result;
@@ -6005,7 +6011,8 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 	tpp_char ch;
 	if (TPP_TOK_ISSTRING(tok)) {
 		/* Parse strings into character literals */
-		error = tpp_lexer_parsecharacter_literal(self, pint, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
+		error = tpp_lexer_parsecharacter_literal(self, (tpp_uintmax *)pint,
+		                                         TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 		if (TPP_ISERR(error))
 			return TPP_ATOI_ERR;
 		/* Rewind so token after character literal gets yielded again */

@@ -210,17 +210,52 @@
  *         enabling user-code to test feature flags you implemented without the use
  *         of TPP's extension system
  *
- * >> #define TPP_PREDEFINED_MACRO(keyword_id, value)
- *    Defines the textual expansion of a builtin macro when it is defined.
- *    This can be used to set the expansion values of builtin macros, such
- *    as OS/CPU definitions, or compilers. One such macro that is always
- *    defined (sorry: you can't disable this one) is `__TPP_VERSION__`, which
- *    expands to TPP's version number.
- *    The specified `value` must be a constant string literal.
- *    Example:
- *       >> TPP_KWD(KWD___MY_COMPILER__, "__MY_COMPILER__")
- *       >> TPP_MACRO(KWD___MY_COMPILER__, 1) // Always defined
- *       >> TPP_PREDEFINED_MACRO(KWD___MY_COMPILER__, "1337") // What `__MY_COMPILER__` expands to
+ * >> #define TPP_PREDEFINED_MACRO(keyword_id, expansion_expr)                  <magic>
+ * >> #define TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE(id, expansion_expr)          <magic>
+ * >> #define TPP_PREDEFINED_FEATURE_HAS_BUILTIN(id, expansion_expr)            <magic>
+ * >> #define TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE(id, expansion_expr)      <magic>
+ * >> #define TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE(id, expansion_expr) <magic>
+ * >> #define TPP_PREDEFINED_FEATURE_HAS_EXTENSION(id, expansion_expr)          <magic>
+ * >> #define TPP_PREDEFINED_FEATURE_HAS_FEATURE(id, expansion_expr)            <magic>
+ * >> #define TPP_PREDEFINED_FEATURE_HAS_C_ATTRIBUTE(id, expansion_expr)        <magic>
+ *    Defines the textual expansion of a predefined macro/feature-test when it
+ *    is accessed. These can be used to set the expansion values of predefined
+ *    macros, as well as the results of `__has_*`-style feature-test macros, such
+ *    as `__has_feature()`. The former should be used to define OS/CPU definitions,
+ *    as well as compiler identification macros (like `__GNUC__`).
+ *    One such macro that is always defined (sorry: you can't disable this one)
+ *    is `__TPP_VERSION__`, which expands to TPP's version number.
+ *    The given `expansion_expr` is evaluated at runtime and may be used to define
+ *    an arbitrary expression that's used to initialize a `tpp_macro_expansion`
+ *    with the intended expansion:
+ *       >> tpp_lexer *tpp_current_lexer(void);               // The current lexer
+ *       >> tpp_keyword const *tpp_current_keyword(void);     // The current keyword
+ *       >> tpp_token_id tpp_current_keyword_id(void);        // The current keyword ID
+ *       >> tpp_macro_expansion *tpp_current_expansion(void); // The expansion that must be initialize
+ *    Additionally, `expansion_expr` must contain a `return` statement accompanied by
+ *    a `tpp_errno` value. This value should be `TPP_EOK` on success (but only when
+ *    `tpp_current_expansion()` was initialized), `TPP_ENOENT` if there is no expansion
+ *    (causing `__has_*` to expand to `0` and a predefined macro to expand to itself),
+ *    or some other error that should be propagated.
+ *    When `expansion_expr` ends without a `return` statement, behavior is the same as
+ *    though it ended with `return TPP_ENOENT;`.
+ *    For convenience, the following pre-defined macros are also provided:
+ *       >> #define tpp_return_conststr(CONSTstr) return (tpp_macro_expansion_init_conststr(tpp_current_expansion(), CONSTstr), TPP_EOK)
+ *       >> #define tpp_return_bool(is_enabled)   return (tpp_macro_expansion_init_cstr(tpp_current_expansion(), &"01"[!!(is_enabled)], 1), TPP_EOK)
+ *    Examples:
+ *       >> TPP_KWD(KWD___MY_COOL_COMPILER__, "__MY_COOL_COMPILER__")
+ *       >> TPP_MACRO(KWD___MY_COOL_COMPILER__, true)
+ *       >> TPP_PREDEFINED_MACRO(KWD___MY_COOL_COMPILER__, tpp_return_conststr("100"))
+ *       >>
+ *       >> TPP_KWD(KWD_pragma_once, "pragma_once")
+ *       >> TPP_PREDEFINED_FEATURE_HAS_FEATURE(KWD_pragma_once, tpp_return_bool(tpp_lexer_has(tpp_current_lexer(), PRAGMA_ONCE)))
+ *    User-code can now use these specifications like so:
+ *       >> #if defined(__MY_COOL_COMPILER__) && __MY_COOL_COMPILER__ == 100
+ *       >> // It's your compiler!
+ *       >> #endif
+ *       >> #if __has_extension(pragma_once)
+ *       >> #pragma once
+ *       >> #endif
  *
  ********************************************************************************/
 
@@ -230,9 +265,6 @@
 #ifndef TPP_KWD
 #define TPP_KWD(id, string)
 #endif /* !TPP_KWD */
-#ifndef TPP_KWD_FLAGS
-#define TPP_KWD_FLAGS(id, flags_expr)
-#endif /* !TPP_KWD_FLAGS */
 #ifndef TPP_KWD_IS_IDENTIFIER
 #define TPP_KWD_IS_IDENTIFIER(id, is_identifier_expr)
 #endif /* !TPP_KWD_IS_IDENTIFIER */
@@ -263,12 +295,29 @@
 #define TPP_MACRO(keyword_id, if_expr)
 #endif /* !TPP_MACRO */
 #ifndef TPP_PREDEFINED_MACRO
-/* Defines the value that a builtin macro without custom behavior
- * should expand to. Without this, the expansion is either controlled
- * via custom behavior (in the case of macros like __FILE__, __LINE__),
- * or as a fallback: the macro will simply expand to itself. */
-#define TPP_PREDEFINED_MACRO(keyword_id, value)
+#define TPP_PREDEFINED_MACRO(keyword_id, expansion_expr)
 #endif /* !TPP_PREDEFINED_MACRO */
+#ifndef TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE
+#define TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE(id, expansion_expr)
+#endif /* !TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE */
+#ifndef TPP_PREDEFINED_FEATURE_HAS_BUILTIN
+#define TPP_PREDEFINED_FEATURE_HAS_BUILTIN(id, expansion_expr)
+#endif /* !TPP_PREDEFINED_FEATURE_HAS_BUILTIN */
+#ifndef TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE
+#define TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE(id, expansion_expr)
+#endif /* !TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE */
+#ifndef TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE
+#define TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE(id, expansion_expr)
+#endif /* !TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
+#ifndef TPP_PREDEFINED_FEATURE_HAS_EXTENSION
+#define TPP_PREDEFINED_FEATURE_HAS_EXTENSION(id, expansion_expr)
+#endif /* !TPP_PREDEFINED_FEATURE_HAS_EXTENSION */
+#ifndef TPP_PREDEFINED_FEATURE_HAS_FEATURE
+#define TPP_PREDEFINED_FEATURE_HAS_FEATURE(id, expansion_expr)
+#endif /* !TPP_PREDEFINED_FEATURE_HAS_FEATURE */
+#ifndef TPP_PREDEFINED_FEATURE_HAS_C_ATTRIBUTE
+#define TPP_PREDEFINED_FEATURE_HAS_C_ATTRIBUTE(id, expansion_expr)
+#endif /* !TPP_PREDEFINED_FEATURE_HAS_C_ATTRIBUTE */
 
 
 
@@ -1556,15 +1605,15 @@ TPP_KWD_IS_IDENTIFIER(TPP_KWD_dirafter, TPP_KWDIDENTIFIER_dirafter)
 /* Pre-defined macros... */
 #if TPP_HAVE_CPP_MACROS
 TPP_MACRO(TPP_KWD___TPP_VERSION__, true)
-TPP_PREDEFINED_MACRO(TPP_KWD___TPP_VERSION__, TPP_PREPROCESSOR_VERSION_STR)
+TPP_PREDEFINED_MACRO(TPP_KWD___TPP_VERSION__, tpp_return_conststr(TPP_PREPROCESSOR_VERSION_STR))
 
 #if TPP_HAVE_MACRO___has_embed
 TPP_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
 TPP_MACRO(TPP_KWD___STDC_EMBED_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
 TPP_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
-TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND)
-TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_FOUND__, TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND)
-TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY)
+TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, tpp_return_conststr(TPP_CONFIG_VALUEOF_STDC_EMBED_NOT_FOUND))
+TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_FOUND__, tpp_return_conststr(TPP_CONFIG_VALUEOF_STDC_EMBED_FOUND))
+TPP_PREDEFINED_MACRO(TPP_KWD___STDC_EMBED_EMPTY__, tpp_return_conststr(TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY))
 #endif /* TPP_HAVE_MACRO___has_embed */
 #endif /* TPP_HAVE_CPP_MACROS */
 
@@ -4893,7 +4942,6 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 
 
 #undef TPP_KWD
-#undef TPP_KWD_FLAGS
 #undef TPP_KWD_IS_IDENTIFIER
 #undef TPP_EXTENSION
 #undef TPP_WGROUP
@@ -4903,4 +4951,11 @@ TPP_WARNING(TPP_W_ILLEGAL_UTF8_SEQUENCE, 0(), 0(), ~,
 #undef TPP_WARNING_WITH_NUMBER_EX
 #undef TPP_MACRO
 #undef TPP_PREDEFINED_MACRO
+#undef TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE
+#undef TPP_PREDEFINED_FEATURE_HAS_BUILTIN
+#undef TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE
+#undef TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE
+#undef TPP_PREDEFINED_FEATURE_HAS_EXTENSION
+#undef TPP_PREDEFINED_FEATURE_HAS_FEATURE
+#undef TPP_PREDEFINED_FEATURE_HAS_C_ATTRIBUTE
 /*[[[tpp-end]]]*/

@@ -176,14 +176,23 @@ tpp_lexer_dumper_print_builtin_macros(tpp_lexer_dumper *tpp_restrict self) {
 	for (; kwd_iter < kwd_end; kwd_iter = (tpp_token_id)((unsigned int)kwd_iter + 1)) {
 		tpp_keyword const *keyword = tpp_builtin_getkeyword_byid(kwd_iter);
 		if (keyword && tpp_lexer_getkeyworddefined(self->tld_lexer, keyword)) {
-			tpp_predefined_macro const *expansion = tpp_macro_getpredefined(kwd_iter);
+			tpp_macro_expansion expansion;
+			tpp_errno expansion_error;
+			if (tpp_lexer_dumper_haserr(self))
+				break;
+			expansion_error = tpp_lexer_getpredefinedmacro(self->tld_lexer, keyword, &expansion);
+			if (TPP_ISERR(expansion_error) && expansion_error != TPP_ENOENT) {
+				self->tld_result = TPP_SSIZE_OFERR(expansion_error);
+				break;
+			}
 			tpp_lexer_dumper_do_print_conststr(self, "#define ");
 			tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(keyword), tpp_keyword_getlen(keyword));
-			if (expansion) {
+			if (!TPP_ISERR(expansion_error)) {
 				tpp_lexer_dumper_do_print_conststr(self, " ");
 				tpp_lexer_dumper_do_print(self,
-				                          tpp_predefined_macro_getbody(expansion),
-				                          tpp_predefined_macro_getsize(expansion));
+				                          tpp_macro_expansion_gettext(&expansion),
+				                          tpp_macro_expansion_getsize(&expansion));
+				tpp_macro_expansion_fini(&expansion);
 			} else {
 				/* All magic builtins provided by TPP follow the rule:
 				 * - If it ends with a trailing _, then it's a keyword (__LINE__, etc.)

@@ -614,42 +614,213 @@ tpp_builtin_getkeyword_esc_(tpp_char const *tpp_restrict kwd,
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
+/* Shared API */
+#define tpp_current_lexer()      _self
+#define tpp_current_keyword()    _kwd
+#define tpp_current_keyword_id() _kwd->tk_id
+#define tpp_current_expansion()  _result
+#define tpp_return_conststr(CONSTstr) return (tpp_macro_expansion_init_conststr(tpp_current_expansion(), CONSTstr), TPP_EOK)
+#define tpp_return_bool(is_enabled)   return (tpp_macro_expansion_init_cstr(tpp_current_expansion(), &"01"[!!(is_enabled)], 1), TPP_EOK)
 
-#if TPP_HAVE_KEYWORD_FLAGS
-/* Return the effective set of flags for a given "kwd"
- * Since the effective flags for (certain) builtin keywords
- * can depend on active extensions/features, this can only
- * be done in the context of a specific lexer (rather than
- * stand-alone using only the "kwd")
- *
- * @return: * : Set of `TPP_KEYWORD_FLAG_*' */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_flags TPPCALL
-tpp_lexer_getkeywordflags(tpp_lexer *tpp_restrict self,
-                          tpp_keyword const *tpp_restrict kwd) {
-	/* Special handling for built-in keywords */
-	if (TPP_TOK_ISBUILTINKEYWORD(kwd->tk_id)) {
-		(void)self;
-		switch (kwd->tk_id) {
+#if TPP_HAVE_KEYWORD_FEATURES
+/* Return the effective expansion of a feature-keyword "kwd".
+ * @return: TPP_EOK:    Success: expansion was stored in "result"
+ * @return: TPP_ENOENT: SOFT_ERROR: keyword has no expansion (caller should expand to "0" instead)
+ * @return: TPP_E*:     HARD_ERROR: error returned by a user-defined feature-test callback. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_getkeywordfeature(tpp_lexer *tpp_restrict _self,
+                            tpp_keyword const *tpp_restrict _kwd,
+                            tpp_keyword_feature_kind _kind,
+                            tpp_macro_expansion *tpp_restrict _result) {
+	TPP_REF tpp_string *keyword_feature;
+	(void)_self;
+
+	/* Check for a custom override */
+	keyword_feature = tpp_keyword_getfeature(_kwd, _kind);
+	if (keyword_feature) {
+		tpp_macro_expansion_init_chunk_inherited(_result, keyword_feature);
+		return TPP_EOK;
+	}
+
+	/* If it's a user-defined keyword, there won't be a predefined feature */
+	if (tpp_keyword_isuser(_kwd))
+		return TPP_ENOENT;
+
+	/* Switch on different feature kinds */
+	switch (_kind) {
+/*[[[deemon
+for (local kind: {
+	"has_attribute",
+	"has_builtin",
+	"has_cpp_attribute",
+	"has_declspec_attribute",
+	"has_extension",
+	"has_feature",
+	"has_c_attribute",
+}) {
+	local KIND = kind.upper();
+	print("#if TPP_HAVE_CLANG_MACRO___", kind);
+	print("	case TPP_KEYWORD_FEATURE_KIND_", KIND, ":");
+	print("		switch (tpp_keyword_getid(_kwd)) {");
+	print("#define TPP_DEFS");
+	print("#define TPP_PREDEFINED_FEATURE_", KIND, "(keyword_id, expansion_expr) \\");
+	print("		case keyword_id: { \\");
+	print("			expansion_expr; \\");
+	print("		}	break;");
+	print("#undef GUARD_TPP_AMALGAMATION_H");
+	print("#include TPP_CONFIG_DEFS_FILENAME");
+	print("#undef TPP_DEFS");
+	print("		default: break;");
+	print("		}");
+	print("		break;");
+	print("#endif /* TPP_HAVE_CLANG_MACRO___", kind, " *" "/");
+}
+]]]*/
+#if TPP_HAVE_CLANG_MACRO___has_attribute
+	case TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE:
+		switch (tpp_keyword_getid(_kwd)) {
 #define TPP_DEFS
-#define TPP_KWD_FLAGS(id, flags_expr) \
-		case id: return flags_expr;
-#define tpp_current_lexer()      self
-#define tpp_current_keyword()    kwd
-#define tpp_current_keyword_id() kwd->tk_id
+#define TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE(keyword_id, expansion_expr) \
+		case keyword_id: { \
+			expansion_expr; \
+		}	break;
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
-#undef tpp_current_lexer
-#undef tpp_current_keyword
-#undef tpp_current_keyword_id
 #undef TPP_DEFS
 		default: break;
 		}
-	} else if (kwd->tk_misc != NULL) {
-		return kwd->tk_misc->tkm_flags;
+		break;
+#endif /* TPP_HAVE_CLANG_MACRO___has_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_builtin
+	case TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN:
+		switch (tpp_keyword_getid(_kwd)) {
+#define TPP_DEFS
+#define TPP_PREDEFINED_FEATURE_HAS_BUILTIN(keyword_id, expansion_expr) \
+		case keyword_id: { \
+			expansion_expr; \
+		}	break;
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef TPP_DEFS
+		default: break;
+		}
+		break;
+#endif /* TPP_HAVE_CLANG_MACRO___has_builtin */
+#if TPP_HAVE_CLANG_MACRO___has_cpp_attribute
+	case TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE:
+		switch (tpp_keyword_getid(_kwd)) {
+#define TPP_DEFS
+#define TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE(keyword_id, expansion_expr) \
+		case keyword_id: { \
+			expansion_expr; \
+		}	break;
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef TPP_DEFS
+		default: break;
+		}
+		break;
+#endif /* TPP_HAVE_CLANG_MACRO___has_cpp_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_declspec_attribute
+	case TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE:
+		switch (tpp_keyword_getid(_kwd)) {
+#define TPP_DEFS
+#define TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE(keyword_id, expansion_expr) \
+		case keyword_id: { \
+			expansion_expr; \
+		}	break;
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef TPP_DEFS
+		default: break;
+		}
+		break;
+#endif /* TPP_HAVE_CLANG_MACRO___has_declspec_attribute */
+#if TPP_HAVE_CLANG_MACRO___has_extension
+	case TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION:
+		switch (tpp_keyword_getid(_kwd)) {
+#define TPP_DEFS
+#define TPP_PREDEFINED_FEATURE_HAS_EXTENSION(keyword_id, expansion_expr) \
+		case keyword_id: { \
+			expansion_expr; \
+		}	break;
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef TPP_DEFS
+		default: break;
+		}
+		break;
+#endif /* TPP_HAVE_CLANG_MACRO___has_extension */
+#if TPP_HAVE_CLANG_MACRO___has_feature
+	case TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE:
+		switch (tpp_keyword_getid(_kwd)) {
+#define TPP_DEFS
+#define TPP_PREDEFINED_FEATURE_HAS_FEATURE(keyword_id, expansion_expr) \
+		case keyword_id: { \
+			expansion_expr; \
+		}	break;
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef TPP_DEFS
+		default: break;
+		}
+		break;
+#endif /* TPP_HAVE_CLANG_MACRO___has_feature */
+#if TPP_HAVE_CLANG_MACRO___has_c_attribute
+	case TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE:
+		switch (tpp_keyword_getid(_kwd)) {
+#define TPP_DEFS
+#define TPP_PREDEFINED_FEATURE_HAS_C_ATTRIBUTE(keyword_id, expansion_expr) \
+		case keyword_id: { \
+			expansion_expr; \
+		}	break;
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef TPP_DEFS
+		default: break;
+		}
+		break;
+#endif /* TPP_HAVE_CLANG_MACRO___has_c_attribute */
+/*[[[end]]]*/
+	default: tpp_unreachable();
 	}
-	return TPP_KEYWORD_FLAG_NORMAL;
+	return TPP_ENOENT;
 }
-#endif /* TPP_HAVE_KEYWORD_FLAGS */
+#endif /* TPP_HAVE_KEYWORD_FEATURES */
+
+
+#if TPP_HAVE_CPP_PREDEFINED_MACROS
+/* Return the effective expansion of a keyword-style macro.
+ * @return: TPP_EOK:    Success: expansion was stored in "result"
+ * @return: TPP_ENOENT: SOFT_ERROR: keyword has no expansion
+ * @return: TPP_E*:     HARD_ERROR: error returned by a user-defined feature-test callback. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_lexer_getpredefinedmacro(tpp_lexer *tpp_restrict _self,
+                             tpp_keyword const *tpp_restrict _kwd,
+                             tpp_macro_expansion *tpp_restrict _result) {
+	(void)_self;
+	switch (tpp_keyword_getid(_kwd)) {
+#define TPP_DEFS
+#define TPP_PREDEFINED_MACRO(keyword_id, expansion_expr) \
+	case keyword_id: {                                   \
+		expansion_expr;                                  \
+	}	break;
+#undef GUARD_TPP_AMALGAMATION_H
+#include TPP_CONFIG_DEFS_FILENAME
+#undef TPP_DEFS
+	default: break;
+	}
+	return TPP_ENOENT;
+}
+#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
+
+#undef tpp_return_conststr
+#undef tpp_return_bool
+#undef tpp_current_lexer
+#undef tpp_current_keyword
+#undef tpp_current_keyword_id
+#undef tpp_current_expansion
+
 
 #if TPP_HAVE_LEXER_GETKEYWORDDEFINED
 #if TPP_HAVE_CPP_BUILTIN_MACROS
@@ -1251,29 +1422,6 @@ tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen
 }
 #endif /* TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
 #endif /* TPP_HAVE_WARNINGS */
-
-
-#if TPP_HAVE_CPP_MACROS
-/* Return the hard-coded expansion of the builtin macro linked to "id".
- * If "id" isn't a builtin keyword, or that keyword doesn't specify a
- * value for "TPP_PREDEFINED_MACRO()", return "NULL" instead. */
-TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_predefined_macro const *TPPCALL
-tpp_macro_getpredefined(tpp_token_id id) {
-	switch (id) {
-#define TPP_DEFS
-#define TPP_PREDEFINED_MACRO(keyword_id, value)                          \
-	case keyword_id: {                                                \
-		static TPP_PREDEFINED_MACRO_DEFINE(builtin_##keyword_id, value); \
-		return (tpp_predefined_macro const *)&builtin_##keyword_id;      \
-	}	break;
-#undef GUARD_TPP_AMALGAMATION_H
-#include TPP_CONFIG_DEFS_FILENAME
-#undef TPP_DEFS
-	default: break;
-	}
-	return NULL;
-}
-#endif /* TPP_HAVE_CPP_MACROS */
 
 
 TPP_DECL_END

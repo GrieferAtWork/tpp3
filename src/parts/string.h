@@ -33,6 +33,18 @@ typedef struct tpp_string {
 /*	tpp_char          TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing \0-character */
 } tpp_string;
 
+/* Helper macro to statically define a string. */
+#define TPP_STRING_DEFINE(name, value)                         \
+	struct {                                                   \
+		tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt);             \
+		tpp_size          TPP_INTERNAL(ts_len);                \
+		tpp_char          TPP_INTERNAL(ts_str)[sizeof(value)]; \
+	} name = {                                                 \
+		/* .ts_refcnt = */ TPP_REFCNT_ATOMIC_INIT(1),          \
+		/* .ts_len    = */ sizeof(value) - sizeof(char),       \
+		/* .ts_str    = */ value                               \
+	}
+
 /* Internal allocation API */
 #define _tpp_string_sizeof(len)        (tpp_offsetof(tpp_string, ts_str) + ((len) + 1) * sizeof(tpp_char))
 #define _tpp_string_trymalloc(len)     ((tpp_string *)tpp_trymalloc(_tpp_string_sizeof(len)))

@@ -36,6 +36,7 @@ for (local e: fs.dir(".").sorted()) {
 #include "embed.h"
 #include "glue.h"
 #include "has-include.h"
+#include "has-keyword-feature.h"
 #include "include-path.h"
 #include "macro-argument-whitespace.h"
 #include "macro-call-conv.h"
