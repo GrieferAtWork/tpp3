@@ -79,5 +79,6 @@
 #include "parts/lexer-decodestring.c"
 #include "parts/lexer-parseexpr.c"
 #include "parts/lexer-dump.c"
+#include "parts/cli.c"
 #endif /* !GUARD_TPP_AMALGAMATION_C */
 /* clang-format on */

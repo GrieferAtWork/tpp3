@@ -458,9 +458,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 	tpp_errno error;
 	tpp_lexer_openfile_result ofr;
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
-	if (TPP_ISERR(error)) {
-		tpp_lexer_fini(self);
-	} else {
+	if (!TPP_ISERR(error)) {
 		/* Initialize the lexer's I/O file */
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_file_init_io_from_ofr(file, &ofr);
@@ -528,6 +526,24 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 		tpp_file_move(file, prev_file);
 		tpp_file_free(prev_file);
 	}
+	return TPP_EOK;
+}
+
+/* Push another file onto the #include-stack:
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory (given `ofr` was *NOT* inherited) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_pushfile_ofr(tpp_lexer *tpp_restrict self,
+                       /*inherit(on_success)*/ tpp_lexer_openfile_result *tpp_restrict ofr) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_file *const prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		return TPP_ENOMEM; /* Don't inherit "ofr" on failure */
+	tpp_file_move(prev_file, file);
+	tpp_file_init_io_from_ofr(file, ofr);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_LEXER_INIT_OPEN */

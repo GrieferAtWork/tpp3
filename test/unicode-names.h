@@ -68,10 +68,12 @@ TPP_ASSERT_EXPANDS("\"?\\?\"", __TPP_EVAL("??"))
  * strings gets encoded again (so in this case the fact that the output string
  * contains a '#' has nothing to do with the string encoder, but the fact that
  * the input string it is given contains a '#'-character) */
+#pragma TPP extension(push, "-ftrigraphs")
 TPP_ASSERT_WARNING_BEGIN("-Wtrigraphs")
 TPP_ASSERT_EXPANDS("\"#\"", __TPP_EVAL("??="))
 TPP_ASSERT_WARNING_END("-Wtrigraphs")
 TPP_ASSERT_EXPANDS("\"#\"", __TPP_EVAL("#"))
+#pragma TPP extension(pop)
 
 
 /* Also test XML-style encoding */

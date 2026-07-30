@@ -424,8 +424,8 @@ tpp_lexer_foreach_include_path_in_list(tpp_include_path_list const *paths,
  *                   configured (see "TPP_HAVE_EXTERN_C_FOR_SYSHDR")
  * @param: arg:  Cookie for "cb"
  * @return: * :  The first non-TPP_ENOENT return value of "cb"
- * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
- *                      invocations of "cb" returned "TPP_ENOENT". */
+ * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths),
+ *                      or all invocations of "cb" returned "TPP_ENOENT". */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
                                tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
@@ -453,36 +453,40 @@ tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
 	tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_FIRST);
 	if (mode == '"') {
 		/* Try to open files relative to the current #include-stack */
-		tpp_file const *file = tpp_lexer_getfile(self);
-		do {
+#if TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE
+		if (tpp_lexer_has(self, INCLUDE_RELATIVE_TO_CURRENT_FILE)) {
+			tpp_file const *file = tpp_lexer_getfile(self);
+			do {
 #if TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS
-			/* Must also accept TEXT-files as base:
-			 * - The API user may have explicitly pushed a file using `tpp_lexer_pushfile_text_*'
-			 * - We might be inside of a "tpp_file_pusheof()"-block (actually, this is *highly*
-			 *   likely, since regular #if and #embed directives are usually parsed within such
-			 *   a block to ensure they don't span past EOL, meaning that __has_include and the
-			 *   filename taken by #embed originate from a TEXT-file at that point) */
-			if (file->tf_kind == TPP_FILE_KIND_IO ||
-			    file->tf_kind == TPP_FILE_KIND_TEXT)
+				/* Must also accept TEXT-files as base:
+				 * - The API user may have explicitly pushed a file using `tpp_lexer_pushfile_text_*'
+				 * - We might be inside of a "tpp_file_pusheof()"-block (actually, this is *highly*
+				 *   likely, since regular #if and #embed directives are usually parsed within such
+				 *   a block to ensure they don't span past EOL, meaning that __has_include and the
+				 *   filename taken by #embed originate from a TEXT-file at that point) */
+				if (file->tf_kind == TPP_FILE_KIND_IO ||
+				    file->tf_kind == TPP_FILE_KIND_TEXT)
 #endif /* TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS */
-			{
-				char const *filename = file->tf_data.td_io.tff_name;
-				if (filename) {
-					error = (*cb)(arg, filename tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
-					if (error != TPP_ENOENT)
-						return error;
-				}
+				{
+					char const *filename = file->tf_data.td_io.tff_name;
+					if (filename) {
+						error = (*cb)(arg, filename tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
+						if (error != TPP_ENOENT)
+							return error;
+					}
 #if TPP_CONF_MAYBE_0(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
-				if (!tpp_lexer_has(self, INCLUDE_RELATIVE_TO_EVERY_FILE))
-					break;
+					if (!tpp_lexer_has(self, INCLUDE_RELATIVE_TO_EVERY_FILE))
+						break;
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+				}
 			}
-		}
 #if TPP_HAVE_INCLUDE_STACK
-		while ((file = file->tf_tprev) != NULL);
+			while ((file = file->tf_tprev) != NULL);
 #else /* TPP_HAVE_INCLUDE_STACK */
-		while (0);
+			while (0);
 #endif /* !TPP_HAVE_INCLUDE_STACK */
+		}
+#endif /* TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE */
 
 		/* Search the quote-include path */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE
@@ -515,8 +519,8 @@ tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
 	/* Check hard-coded system include paths... */
-#if TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
-	if (tpp_lexer_has(self, SEARCH_SYSTEM_INCLUDE_PATH)) {
+#if TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH
+	if (tpp_lexer_has(self, INCLUDE_SYSTEM_INCLUDE_PATH)) {
 		tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_CONFIG);
 #define tpp_handle_system_include_path(_, index, value)                                                                                \
 		error = (*cb)(arg, value TPP_FS_SEP_S tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS)); \
@@ -526,7 +530,7 @@ tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
 		                  tpp_handle_system_include_path, ~)
 #undef tpp_handle_system_include_path
 	}
-#endif /* TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
+#endif /* TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH */
 
 
 	/* Check "after" system include paths... */

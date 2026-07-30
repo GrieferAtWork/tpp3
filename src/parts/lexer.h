@@ -709,183 +709,6 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
                tpp_lexer const *tpp_restrict from);
 #endif /* TPP_HAVE_LEXER_COPY */
 
-/* Finalize the currently loaded file (including any extra files
- * found on the #include-stack, but that hadn't been popped yet)
- *
- * This function must be called after "tpp_lexer_initfile_*" has been */
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
-
-
-/* Initialize a lexer's file to read the given [text,text+text_size) blob.
- * @param: start_lc: [valid_if(chunk != NULL)] */
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
-_tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
-                         /*utf-8*/ char const *filename,
-                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                         void const *text, tpp_size text_size,
-                         tpp_lcinfo start_lc
-#if TPP_HAVE_FILE_FLAGS
-                         , tpp_file_flags flags
-#endif /* TPP_HAVE_FILE_FLAGS */
-#if TPP_HAVE_UNICODE
-                         , tpp_file_encoding encoding
-#endif /* TPP_HAVE_UNICODE */
-                         );
-#if TPP_HAVE_FILE_FLAGS && TPP_HAVE_UNICODE
-#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags, encoding)
-#elif TPP_HAVE_FILE_FLAGS
-#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags)
-#elif TPP_HAVE_UNICODE
-#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, encoding)
-#else /* ... */
-#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc)
-#endif /* !... */
-#define tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags) \
-	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
-#define tpp_lexer_initfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
-	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
-#if TPP_HAVE_UNICODE
-#define tpp_lexer_initfile_text_utf8(self, filename, chunk, text, text_size, start_lc, flags) \
-	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_FORCE_UTF8)
-#endif /* TPP_HAVE_UNICODE */
-
-
-#if TPP_HAVE_LEXER_INIT_IO
-/* Initialize a lexer such that it starts reading from "handle"
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()')
- *                          WARNING: This filename is *NOT* copied -- it must remain
- *                                   allocated and valid until "self" is finalized.
- * @param: handle:   The I/O handle to read from in order to retrieve text data.
- * @param: ioflags:  Extra flags specifying how to interact with "handle":
- *                   - TPP_FILE_FLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
- *                   - TPP_FILE_FLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
- *                   - TPP_FILE_FLAGS_SYSHDR:   Do not emit warnings */
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_flags ioflags);
-#define tpp_lexer_initfile_io(self, filename, handle) \
-	tpp_lexer_initfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
-#endif /* TPP_HAVE_LEXER_INIT_IO */
-
-#if TPP_HAVE_LEXER_INIT_OPEN
-/* Initialize a lexer such that it starts reading from "filename"
- * @param: filename_maxlen: Max length of "filename" (in characters). You may
- *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOENT: No such file or directory
- * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
-                        /*utf-8*/ char const *tpp_restrict filename,
-                        tpp_size filename_maxlen);
-#endif /* TPP_HAVE_LEXER_INIT_OPEN */
-
-
-#if TPP_HAVE_INCLUDE_STACK
-#if TPP_HAVE_LEXER_INIT_IO
-/* Push another file onto the #include-stack:
- * After a call to this function, the caller is responsible to yield the first token!
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()')
- *                          WARNING: This filename is *NOT* copied -- it must remain
- *                                   allocated and valid until "self" is finalized.
- * @param: handle:   The I/O handle to read from in order to retrieve text data.
- * @param: ioflags:  Extra flags specifying how to interact with "handle":
- *                   - TPP_FILE_FLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
- *                   - TPP_FILE_FLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
- *                   - TPP_FILE_FLAGS_SYSHDR:   Do not emit warnings
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_flags ioflags);
-#define tpp_lexer_pushfile_io(self, filename, handle) \
-	tpp_lexer_pushfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
-#endif /* TPP_HAVE_LEXER_INIT_IO */
-
-#if TPP_HAVE_LEXER_INIT_OPEN
-/* Push another file onto the #include-stack:
- * After a call to this function, the caller is responsible to yield the first token!
- * @param: filename_maxlen: Max length of "filename" (in characters). You may
- *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOENT: No such file or directory
- * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
-                        /*utf-8*/ char const *tpp_restrict filename,
-                        tpp_size filename_maxlen);
-#endif /* TPP_HAVE_LEXER_INIT_OPEN */
-
-/* Push another file onto the #include-stack: [text,text+text_size) blob.
- * After a call to this function, the caller is responsible to yield the first token!
- * @param: start_lc: [valid_if(chunk != NULL)]
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-_tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
-                         /*utf-8*/ char const *filename,
-                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                         void const *text, tpp_size text_size,
-                         tpp_lcinfo start_lc
-#if TPP_HAVE_FILE_FLAGS
-                         , tpp_file_flags flags
-#endif /* TPP_HAVE_FILE_FLAGS */
-#if TPP_HAVE_UNICODE
-                         , tpp_file_encoding encoding
-#endif /* TPP_HAVE_UNICODE */
-                         );
-#if TPP_HAVE_FILE_FLAGS && TPP_HAVE_UNICODE
-#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, flags, encoding)
-#elif TPP_HAVE_FILE_FLAGS
-#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, flags)
-#elif TPP_HAVE_UNICODE
-#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, encoding)
-#else /* ... */
-#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc)
-#endif /* !... */
-#define tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, flags) \
-	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
-#define tpp_lexer_pushfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
-	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
-#if TPP_HAVE_UNICODE
-#define tpp_lexer_pushfile_text_utf8(self, filename, chunk, text, text_size, start_lc, flags) \
-	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_FORCE_UTF8)
-#endif /* TPP_HAVE_UNICODE */
-
-
-/* Check if the current file can be popped. */
-#define tpp_lexer_canpopfile(self) \
-	(tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev) != NULL)
-
-/* Pop the current file off the #include-stack.
- * The caller is responsible to ensure that "tpp_lexer_canpopfile(self) == true"
- * After a call to this function, the caller is responsible to yield the next token!
- * WARNING: It is the caller's responsibility to call "tpp_lexer_manualpopfile_popfile()"
- *          instead of this function if rollback of the pop should be possible.
- * NOTE: It is recommended to call "tpp_lexer_warn_nonempty_ifdef()" before calling
- *       this function in order to warn about unterminated #ifdef-blocks. */
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
-#define tpp_lexer_popallfiles(self)        \
-	do {                                   \
-		while (tpp_lexer_canpopfile(self)) \
-			tpp_lexer_popfile(self);       \
-	} while (0)
-#else /* TPP_HAVE_INCLUDE_STACK */
-#define tpp_lexer_popallfiles(self) (void)0
-#endif /* !TPP_HAVE_INCLUDE_STACK */
-
-
-
 #if TPP_HAVE_LEXER_OPENFILE
 typedef struct tpp_lexer_openfile_result {
 	tpp_io_handle  tlofr_handle;       /* [1..1][owned] I/O handle for requested file (must be inherited by caller) */
@@ -898,7 +721,7 @@ typedef struct tpp_lexer_openfile_result {
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 #if TPP_HAVE_FILE_SYSHDR
 	tpp_file_flags tlofr_fileflags;    /* Either "TPP_FILE_FLAGS_NORMAL" or "TPP_FILE_FLAGS_SYSHDR" or "TPP_FILE_FLAGS_EXTERN_C" */
-#define _tpp_lexer_openfile_result_getfileflags(self) ((self)->tlofr_fileflags)
+#define _tpp_lexer_openfile_result_getfileflags(self) (self)->tlofr_fileflags
 #else /* TPP_HAVE_FILE_SYSHDR */
 #define _tpp_lexer_openfile_result_getfileflags(self) TPP_FILE_FLAGS_NORMAL
 #endif /* !TPP_HAVE_FILE_SYSHDR */
@@ -1009,6 +832,197 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
 #endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 #endif /* TPP_HAVE_LEXER_OPENFILE */
+
+
+/* Finalize the currently loaded file (including any extra files
+ * found on the #include-stack, but that hadn't been popped yet)
+ *
+ * This function must be called after "tpp_lexer_initfile_*" has been */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
+
+
+/* Initialize a lexer's file to read the given [text,text+text_size) blob.
+ * @param: start_lc: [valid_if(chunk != NULL)] */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+_tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
+                         /*utf-8*/ char const *filename,
+                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                         void const *text, tpp_size text_size,
+                         tpp_lcinfo start_lc
+#if TPP_HAVE_FILE_FLAGS
+                         , tpp_file_flags flags
+#endif /* TPP_HAVE_FILE_FLAGS */
+#if TPP_HAVE_UNICODE
+                         , tpp_file_encoding encoding
+#endif /* TPP_HAVE_UNICODE */
+                         );
+#if TPP_HAVE_FILE_FLAGS && TPP_HAVE_UNICODE
+#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags, encoding)
+#elif TPP_HAVE_FILE_FLAGS
+#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags)
+#elif TPP_HAVE_UNICODE
+#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, encoding)
+#else /* ... */
+#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc)
+#endif /* !... */
+#define tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
+#define tpp_lexer_initfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
+#if TPP_HAVE_UNICODE
+#define tpp_lexer_initfile_text_utf8(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_FORCE_UTF8)
+#endif /* TPP_HAVE_UNICODE */
+
+
+#if TPP_HAVE_LEXER_INIT_IO
+/* Initialize a lexer such that it starts reading from "handle"
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()')
+ *                          WARNING: This filename is *NOT* copied -- it must remain
+ *                                   allocated and valid until "self" is finalized.
+ * @param: handle:   The I/O handle to read from in order to retrieve text data.
+ * @param: ioflags:  Extra flags specifying how to interact with "handle":
+ *                   - TPP_FILE_FLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
+ *                   - TPP_FILE_FLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
+ *                   - TPP_FILE_FLAGS_SYSHDR:   Do not emit warnings */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
+                         tpp_io_handle handle, tpp_file_flags ioflags);
+#define tpp_lexer_initfile_io(self, filename, handle) \
+	tpp_lexer_initfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
+#endif /* TPP_HAVE_LEXER_INIT_IO */
+
+#if TPP_HAVE_LEXER_INIT_OPEN
+/* Initialize a lexer such that it starts reading from "filename"
+ * @param: filename_maxlen: Max length of "filename" (in characters). You may
+ *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
+                        /*utf-8*/ char const *tpp_restrict filename,
+                        tpp_size filename_maxlen);
+
+/* Initialize a lexer such that it starts reading
+ * from "tpp_lexer_openfile_result *ofr" (never fails) */
+#define tpp_lexer_initfile_ofr(self, /*inherit*/ /*tpp_lexer_openfile_result **/ofr) \
+	tpp_file_init_io_from_ofr(tpp_lexer_getfile(file), ofr)
+#endif /* TPP_HAVE_LEXER_INIT_OPEN */
+
+
+#if TPP_HAVE_INCLUDE_STACK
+#if TPP_HAVE_LEXER_INIT_IO
+/* Push another file onto the #include-stack:
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()')
+ *                          WARNING: This filename is *NOT* copied -- it must remain
+ *                                   allocated and valid until "self" is finalized.
+ * @param: handle:   The I/O handle to read from in order to retrieve text data.
+ * @param: ioflags:  Extra flags specifying how to interact with "handle":
+ *                   - TPP_FILE_FLAGS_NONBLOCK: Do non-blocking reads (useful in case "handle" is a pipe)
+ *                   - TPP_FILE_FLAGS_NOCLOSE:  A later call to `tpp_lexer_finifile()' will not close "handle"
+ *                   - TPP_FILE_FLAGS_SYSHDR:   Do not emit warnings
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
+                         tpp_io_handle handle, tpp_file_flags ioflags);
+#define tpp_lexer_pushfile_io(self, filename, handle) \
+	tpp_lexer_pushfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
+#endif /* TPP_HAVE_LEXER_INIT_IO */
+
+#if TPP_HAVE_LEXER_INIT_OPEN
+/* Push another file onto the #include-stack:
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @param: filename_maxlen: Max length of "filename" (in characters). You may
+ *                          pass TPP_SIZE_MAX when "filename" is NUL-terminated.
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: No such file or directory
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
+                        /*utf-8*/ char const *tpp_restrict filename,
+                        tpp_size filename_maxlen);
+
+/* Push another file onto the #include-stack:
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory (given `ofr` was *NOT* inherited) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_pushfile_ofr(tpp_lexer *tpp_restrict self,
+                       /*inherit(on_success)*/ tpp_lexer_openfile_result *tpp_restrict ofr);
+#endif /* TPP_HAVE_LEXER_INIT_OPEN */
+
+/* Push another file onto the #include-stack: [text,text+text_size) blob.
+ * After a call to this function, the caller is responsible to yield the first token!
+ * @param: start_lc: [valid_if(chunk != NULL)]
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
+                         /*utf-8*/ char const *filename,
+                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
+                         void const *text, tpp_size text_size,
+                         tpp_lcinfo start_lc
+#if TPP_HAVE_FILE_FLAGS
+                         , tpp_file_flags flags
+#endif /* TPP_HAVE_FILE_FLAGS */
+#if TPP_HAVE_UNICODE
+                         , tpp_file_encoding encoding
+#endif /* TPP_HAVE_UNICODE */
+                         );
+#if TPP_HAVE_FILE_FLAGS && TPP_HAVE_UNICODE
+#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, flags, encoding)
+#elif TPP_HAVE_FILE_FLAGS
+#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, flags)
+#elif TPP_HAVE_UNICODE
+#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, encoding)
+#else /* ... */
+#define tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
+	_tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc)
+#endif /* !... */
+#define tpp_lexer_pushfile_text(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
+#define tpp_lexer_pushfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_ASCII)
+#if TPP_HAVE_UNICODE
+#define tpp_lexer_pushfile_text_utf8(self, filename, chunk, text, text_size, start_lc, flags) \
+	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_FORCE_UTF8)
+#endif /* TPP_HAVE_UNICODE */
+
+
+/* Check if the current file can be popped. */
+#define tpp_lexer_canpopfile(self) \
+	(tpp_lexer_getfile(self)->TPP_INTERNAL(tf_prev) != NULL)
+
+/* Pop the current file off the #include-stack.
+ * The caller is responsible to ensure that "tpp_lexer_canpopfile(self) == true"
+ * After a call to this function, the caller is responsible to yield the next token!
+ * WARNING: It is the caller's responsibility to call "tpp_lexer_manualpopfile_popfile()"
+ *          instead of this function if rollback of the pop should be possible.
+ * NOTE: It is recommended to call "tpp_lexer_warn_nonempty_ifdef()" before calling
+ *       this function in order to warn about unterminated #ifdef-blocks. */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
+#define tpp_lexer_popallfiles(self)        \
+	do {                                   \
+		while (tpp_lexer_canpopfile(self)) \
+			tpp_lexer_popfile(self);       \
+	} while (0)
+#else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_lexer_popallfiles(self) (void)0
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+
+
 
 #if TPP_HAVE_JOINPATH
 /* Form an absolute filename by combining "relative_to" with "filename"
@@ -1620,8 +1634,8 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
  *                   configured (see "TPP_HAVE_EXTERN_C_FOR_SYSHDR")
  * @param: arg:  Cookie for "cb"
  * @return: * :  The first non-TPP_ENOENT return value of "cb"
- * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths), or all
- *                      invocations of "cb" returned "TPP_ENOENT". */
+ * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths),
+ *                      or all invocations of "cb" returned "TPP_ENOENT". */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
                                tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to

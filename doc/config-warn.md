@@ -82,4 +82,5 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_character_too_large"></a>`TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE`
 - <a name="tpp_have_tpp_w_illegal_utf8_sequence"></a>`TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE`
 - <a name="tpp_have_tpp_w_expected_identifier_after_pragma_tpp_keyword_features"></a>`TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES`
+- <a name="tpp_have_tpp_w_missing_cli_argument"></a>`TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT`
 <!--END:warn-->

@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\frontend.c" />
     <ClCompile Include="..\src\parts\builtins.c" />
+    <ClCompile Include="..\src\parts\cli.c" />
     <ClCompile Include="..\src\parts\ctype-decode-named.c" />
     <ClCompile Include="..\src\parts\ctype-names.c" />
     <ClCompile Include="..\src\parts\ctype-unicode.c" />
@@ -58,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\parts\api.h" />
+    <ClInclude Include="..\src\parts\cli.h" />
     <ClInclude Include="..\src\parts\config.h" />
     <ClInclude Include="..\src\parts\ctype-names.h" />
     <ClInclude Include="..\src\parts\ctype.h" />

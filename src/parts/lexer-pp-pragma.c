@@ -2263,6 +2263,8 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	 * new ENCODING.
 	 *
 	 * ref: https://www.ibm.com/docs/en/zos/2.2.0?topic=descriptions-pragma-filetag
+	 *
+	 * s.a. `-finput-charset=...`
 	 */
 
 	/* XXX: Builtin support for STDC pragmas:

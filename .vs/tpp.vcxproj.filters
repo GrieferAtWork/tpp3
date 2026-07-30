@@ -141,6 +141,9 @@
     <ClCompile Include="..\src\parts\lexer-parseembed.c">
       <Filter>src\parts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\cli.c">
+      <Filter>src\parts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">
@@ -219,6 +222,9 @@
       <Filter>src\parts</Filter>
     </ClInclude>
     <ClInclude Include="..\src\parts\token-aliases.h">
+      <Filter>src\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\cli.h">
       <Filter>src\parts</Filter>
     </ClInclude>
   </ItemGroup>

@@ -5648,22 +5648,24 @@ eof:
 
 	/* Check if we can pop to another file */
 #if TPP_HAVE_INCLUDE_STACK
-	if (file->tf_prev && p_pos == &file->tf_pos) {
+	if (p_pos == &file->tf_pos) {
 		/* Warn if the file still has an active #ifdef-stack
-		 * Only do this when we're actually going to pop the
-		 * file off the #include-stack. In those cases where
-		 * we're not allowed to do so, it's up to the caller
-		 * to emit these sorts of warnings! */
+		 * Only do this when not inside of a `tpp_file_autopopfile_pushoff()` region. */
 #if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
-		error = tpp_lexer_warn_nonempty_ifdef(self);
-		if (TPP_ISERR(error))
-			goto return_error;
+		if (file->tf_prev == file->tf_tprev) {
+			/* Not inside of `tpp_file_autopopfile_pushoff()` */
+			error = tpp_lexer_warn_nonempty_ifdef(self);
+			if (TPP_ISERR(error))
+				goto return_error;
+		}
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 
-		/* Actually pop the file! */
-		tpp_lexer_popfile(self);
-		tpp_lexer_curtoken_setsol(-1);
-		goto again;
+		if (file->tf_prev) {
+			/* Actually pop the file! */
+			tpp_lexer_popfile(self);
+			tpp_lexer_curtoken_setsol(-1);
+			goto again;
+		}
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */
 

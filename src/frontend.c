@@ -43,48 +43,76 @@ static TPP_FORMATPRINTER_DEFINE(dump_defs_printer, arg, text, num_bytes) {
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
 /* TODO: Properly write this one out (with all the bells n' whistles of GCC's CPP) */
-
-int main(int argc, char *argv[]) {
-	int result = 1;
-	tpp_lexer lexer;
+int main(int argc, char **argv) {
+	int result    = 1;
+	char *appname = argv[0];
 	tpp_errno error;
-	tpp_token_id tok;
+	tpp_lexer lexer;
+	tpp_cli_loader cli_loader;
 	char const *filename = "input.c";
-	if (argc) {
-		--argc;
-		++argv;
-	}
 
 #if TPP_OS_WINDOWS
 	SetConsoleOutputCP(CP_UTF8);
 #endif /* TPP_OS_WINDOWS */
 
-	if (argc)
-		filename = *argv;
 	tpp_lexer_init(&lexer);
-	error = tpp_lexer_define(&lexer, "CLI_MACRO1", TPP_SIZE_MAX, "42", TPP_SIZE_MAX);
-	if (TPP_ISERR(error))
-		goto setup_failed;
-	error = tpp_lexer_define(&lexer, "CLI_MACRO2(x,y)", TPP_SIZE_MAX, "(x+42+y)", TPP_SIZE_MAX);
-	if (TPP_ISERR(error))
-		goto setup_failed;
-	error = tpp_lexer_define(&lexer, "CLI_MACRO3", TPP_SIZE_MAX, "(x,y)(x+42+y)", TPP_SIZE_MAX);
-	if (TPP_ISERR(error))
-		goto setup_failed;
+	tpp_cli_loader_init(&cli_loader, &lexer);
+	if (argc)
+		--argc, ++argv; /* Skip "appname" argument */
+	error = tpp_cli_loader_parseargv(&cli_loader, &argc, &argv);
+	if (TPP_ISERR(error)) {
+		fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
+		goto out_lexer_loader;
+	}
+
+	/* XXX: Support for CLI arguments that must be handled by front-end:
+	 * - "-M", "--dependencies"
+	 * - "-MM", "--user-dependencies"
+	 * - "-MF file"
+	 * - "-MG", "--print-missing-file-dependencies"
+	 * - "-MP"
+	 * - "-MT target"
+	 * - "-MQ target"
+	 * - "-MD", "--write-dependencies"
+	 * - "-MMD", "--write-user-dependencies"
+	 * - "-fsearch-include-path[=kind]"
+	 * - "-fworking-directory"
+	 * - "-P", "--no-line-commands"
+	 * - "-H", "--trace-includes"
+	 * - "-dM", "--dump=M"
+	 * - "-dD", "--dump=D"
+	 * - "-dN", "--dump=N"
+	 * - "-dI", "--dump=I"
+	 * - "-dU", "--dump=U"
+	 */
+	if (argc && strcmp(*argv, "--") == 0)
+		--argc, ++argv;
+	if (argc == 1) {
+		filename = argv[0];
+	} else if (argc != 0) {
+		fprintf(stderr, "bad arguments\nUSAGE: %s [ARGS...] [INFILE]\n", appname);
+		goto out_lexer_loader;
+	}
 	error = tpp_lexer_initfile_open(&lexer, filename, TPP_SIZE_MAX);
-	if (TPP_ISERR(error))
-		goto setup_failed;
+	if (TPP_ISERR(error)) {
+		fprintf(stderr, "failed to open '%s': %s\n", filename, tpp_strerror(error));
+		goto out_lexer_loader;
+	}
+	error = tpp_cli_loader_flush(&cli_loader);
+	tpp_cli_loader_fini(&cli_loader);
+	if (TPP_ISERR(error)) {
+		fprintf(stderr, "failed to complete arguments: %s\n", tpp_strerror(error));
+		goto out_lexer_file;
+	}
 
 	for (;;) {
-		tok = tpp_lexer_yield(&lexer);
-		if (TPP_TOK_ISERR(tok))
-			break;
-		if (tok == TPP_TOK_EOF) {
-			error = tpp_lexer_warn_nonempty_ifdef(&lexer);
-			if (TPP_ISERR(error))
-				tok = TPP_TOK_OFERR(error);
+		tpp_token_id tok = tpp_lexer_yield(&lexer);
+		if (TPP_TOK_ISERR(tok)) {
+			fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
 			break;
 		}
+		if (tok == TPP_TOK_EOF)
+			break;
 #if 0
 		fwrite(tpp_lexer_gettokenstart(&lexer), 1,
 		       tpp_lexer_gettokenlen(&lexer), stdout);
@@ -135,43 +163,30 @@ int main(int argc, char *argv[]) {
 		printf("]\n");
 #endif
 	}
-	if (TPP_TOK_ISERR(tok)) {
-#if TPP_HAVE_STRERROR
-		fprintf(stderr, "Yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
-#else /* TPP_HAVE_STRERROR */
-		fprintf(stderr, "Yield failed: %d\n", (int)TPP_TOK_ASERR(tok));
-#endif /* !TPP_HAVE_STRERROR */
-		goto out;
-	}
+
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS
 	tpp_lexer_dump_definitions(&lexer, &dump_defs_printer, NULL,
 	                           TPP_LEXER_DUMP_DEFINITIONS_ALL |
 	                           TPP_LEXER_DUMP_DEFINITIONS_SORTED |
 	                           TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO);
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
-
 	if (tpp_lexer_geterrorcount(&lexer)) {
 		fprintf(stderr, "There were lexer errors\n");
-		goto out;
+		goto out_lexer_file;
 	}
 	result = 0;
 
-out:
+out_lexer_file:
 	tpp_lexer_finifile(&lexer);
+out_lexer:
 	tpp_lexer_fini(&lexer);
-
 #ifdef _MSC_VER
 	_CrtDumpMemoryLeaks();
 #endif /* _MSC_VER */
 	return result;
-setup_failed:
-#if TPP_HAVE_STRERROR
-	fprintf(stderr, "Initialization failed: %s\n", tpp_strerror(error));
-#else /* TPP_HAVE_STRERROR */
-	fprintf(stderr, "Initialization failed: %d\n", (int)error);
-#endif /* !TPP_HAVE_STRERROR */
-	tpp_lexer_fini(&lexer);
-	return 1;
+out_lexer_loader:
+	tpp_cli_loader_fini(&cli_loader);
+	goto out_lexer;
 }
 
 TPP_DECL_END

@@ -21,6 +21,7 @@
 
 /* Assert that string-escape sequences using trigraphs work properly */
 
+#pragma TPP extension(push, "-ftrigraphs")
 #pragma TPP warning(push, "-Wno-trigraphs")
 TPP_ASSERT_EXPANDS("\"\\?\"",           __TPP_EVAL("\?"))
 TPP_ASSERT_EXPANDS("\"\\n\"",           __TPP_EVAL("??/n"))
@@ -46,3 +47,4 @@ TPP_ASSERT("??" "/\n"      == "\??/??/n")
 TPP_ASSERT("??" "/??" "/n" == "\??/\??/n")
 TPP_ASSERT("??" "/"        == "??/???/?/")
 #pragma TPP warning(pop)
+#pragma TPP extension(pop)

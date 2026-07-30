@@ -2005,7 +2005,7 @@ print("#endif /" "* !... *" "/");
  * | `??>`    | `}`         |
  * | `??-`    | `~`         | */
 #ifndef TPP_HAVE_TRIGRAPHS
-#define TPP_HAVE_TRIGRAPHS (TPP_HAVE_PROFILE_DEFAULT ? TPP_COMMON_CONF_EXT1 : TPP_HAVE_PROFILE_C_LIKE) /* "-ftrigraphs" */
+#define TPP_HAVE_TRIGRAPHS (TPP_HAVE_PROFILE_DEFAULT ? TPP_COMMON_CONF_EXT0 : TPP_HAVE_PROFILE_C_LIKE) /* "-ftrigraphs" */
 #endif /* !TPP_HAVE_TRIGRAPHS */
 
 /* Support for digraph token aliases:
@@ -2039,7 +2039,7 @@ print("#endif /" "* !... *" "/");
 /* Configures if comment tokens should be forwarded, or filtered by `tpp_lexer_yieldpp()`
  * @detect: #if __TPP_COUNT_TOKENS("// a b c") == 1 */
 #ifndef TPP_HAVE_TOK_COMMENT
-#define TPP_HAVE_TOK_COMMENT TPP_COMMON_HAVE_TPP_TOK_SPACE /* "-ftok-comment" */
+#define TPP_HAVE_TOK_COMMENT (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-comment" */
 #endif /* !TPP_HAVE_TOK_COMMENT */
 
 /* Enable support for recognizing c++-like comments: `// like this one!`
@@ -4706,6 +4706,75 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_STRINGLIKE_SQUOTE) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : (TPP_HAVE_PROFILE_C_LIKE ? 1 : 0)) : 0) /* "-fcharacter-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+
+/* XXX: Lexer functionality to automatically rename files as they are #include-ded,
+ *      by assigning them custom `tpp_file_setfilename()` immediately after being
+ *      initialized. The way names are assigned here is by replacing directory
+ *      prefixes, which should be configurable via `-fmacro-prefix-map`. */
+
+/* Provide an API surrounding `tpp_cli_loader`, which can be used to configure a lexer
+ * using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.
+ *
+ * This API is entirely optional: there's nothing it can do that can't already
+ * be done using some other C API; it's only there as a convenience to you.
+ *
+ * The CLI loader must be used on a lexer that has already been initialized
+ * itself (as per `tpp_lexer_init()`), though whether or not the its initial
+ * file has already been initialized doesn't matter (the CLI loader will never
+ * make persistent modifications to a lexer's current file/token).
+ *
+ * ```c
+ * int main(int argc, char **argv) {
+ *     int result = 1;
+ *     char *appname = argv[0];
+ *     tpp_errno error;
+ *     tpp_lexer lexer;
+ *     tpp_cli_loader cli_loader;
+ *     tpp_lexer_init(&lexer);
+ *     tpp_cli_loader_init(&cli_loader, &lexer);
+ *     if (argc)
+ *         --argc, ++argv; // Skip "appname" argument
+ *     error = tpp_cli_loader_parseargv(&cli_loader, &argc, &argv);
+ *     if (TPP_ISERR(error)) {
+ *         fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
+ *         goto out_lexer;
+ *     }
+ *     // Normally, you'd be parsing your own input arguments at this point
+ *     if (argc && strcmp(*argv, "--") == 0)
+ *         --argc, ++argv;
+ *     if (argc != 1) {
+ *         fprintf(stderr, "bad arguments\nUSAGE: %s [ARGS...] INFILE\n", appname);
+ *         goto out_lexer;
+ *     }
+ *     error = tpp_lexer_initfile_open(&lexer, argv[0], TPP_SIZE_MAX);
+ *     if (TPP_ISERR(error)) {
+ *         fprintf(stderr, "failed to open '%s': %s\n", argv[0], tpp_strerror(error));
+ *         goto out_lexer;
+ *     }
+ *     error = tpp_cli_loader_flush(&cli_loader);
+ *     for (;;) {
+ *         tpp_token_id tok = tpp_lexer_yield(&lexer);
+ *         if (tok == TPP_TOK_EOF)
+ *             break;
+ *         if (TPP_TOK_ISERR(tok)) {
+ *             fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
+ *             goto out_lexer_file;
+ *         }
+ *         fwrite(tpp_lexer_gettokenstart(&lexer), 1,
+ *                tpp_lexer_gettokenlen(&lexer), stdout);
+ *     }
+ *     result = 0;
+ * out_lexer_file:
+ *     tpp_lexer_finifile(&lexer);
+ * out_lexer:
+ *     tpp_lexer_fini(&lexer);
+ *     return result;
+ * }
+ * ```
+ */
+#ifndef TPP_HAVE_CLI_LOADER
+#define TPP_HAVE_CLI_LOADER TPP_HAVE_PROFILE_ALL
+#endif /* !TPP_HAVE_CLI_LOADER */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -5134,6 +5203,10 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES)
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES */
+#ifndef TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT
+#define TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CLI_LOADER)
+#endif /* !TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -5299,16 +5372,24 @@ print("#endif /" "* !... *" "/");
 
 /* Config option to skip searching `TPP_CONFIG_SYSTEM_INCLUDE_PATH`.
  * Can (and should) be used to implement `-nostdinc` */
-#ifndef TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH
-#define TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH (TPP_TUPLE_NONEMPTY(TPP_CONFIG_SYSTEM_INCLUDE_PATH) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstdinc" */
-#endif /* !TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH */
+#ifndef TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH
+#define TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH (TPP_TUPLE_NONEMPTY(TPP_CONFIG_SYSTEM_INCLUDE_PATH) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstdinc" */
+#endif /* !TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH */
+
+/* Config option to specify if `#include "foo"` should be searched
+ * for relative to the file containing the `#include`-directive.
+ *
+ * Needed to implement GCC's `--include-barrier` (aka. `-I-`) CLI option. */
+#ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE
+#define TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) /* "-finclude-relative-to-current-file" */
+#endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE */
 
 /* `tpp_include_paths` contains a 4th path-list that is searched after all other paths */
 #ifndef TPP_HAVE_INCLUDE_PATH_AFTER
 #if (TPP_HAVE_INCLUDE_STACK &&         \
      (TPP_HAVE_PROFILE_ALL ||          \
       (TPP_HAVE_PROFILE_NOT_MINIMAL && \
-       TPP_HAVE_SEARCH_SYSTEM_INCLUDE_PATH)))
+       TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH)))
 #define TPP_HAVE_INCLUDE_PATH_AFTER 1
 #else /* ... */
 #define TPP_HAVE_INCLUDE_PATH_AFTER 0
