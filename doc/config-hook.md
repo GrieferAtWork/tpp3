@@ -225,7 +225,7 @@ When called, the lexer is set-up to point at the first token after the `#pragma`
 Default:
 
 ```c
-TPP_HAVE_PRAGMA && TPP_HAVE_PROFILE_ALL
+TPP_HAVE_PRAGMA && (TPP_PROFILE == TPP_PROFILE_ALL)
 ```
 
 Disabled:
@@ -251,7 +251,7 @@ Called whenever some file is `#include`-ed for the first time
 Default:
 
 ```c
-TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_HAVE_PROFILE_ALL
+TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && (TPP_PROFILE == TPP_PROFILE_ALL)
 ```
 
 Disabled:
@@ -307,7 +307,7 @@ include path APIs (`tpp_lexer_includes_add*`)
 Default:
 
 ```c
-TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_HAVE_PROFILE_ALL
+TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && (TPP_PROFILE == TPP_PROFILE_ALL)
 ```
 
 Disabled:
@@ -338,7 +338,7 @@ it before returning
 Default:
 
 ```c
-TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_PROFILE_ALL
+TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && (TPP_PROFILE == TPP_PROFILE_ALL)
 ```
 
 Disabled:
@@ -366,7 +366,7 @@ hosting application in order to handle the resulting [`TPP_ELEXERROR`](../src/tp
 Default:
 
 ```c
-TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_PROFILE_ALL
+TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && (TPP_PROFILE == TPP_PROFILE_ALL)
 ```
 
 Disabled:

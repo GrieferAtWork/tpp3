@@ -48,7 +48,7 @@ Default configuration for tokens
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 ```
 </details>
 
@@ -63,7 +63,7 @@ of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamatio
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL ? TPP_CONF_FEAT1 : ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) ? TPP_CONF_FEAT0 : 0)
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) ? TPP_CONF_FEAT0 : 0)
 ```
 </details>
 
@@ -76,7 +76,7 @@ Default configuration describing if otherwise unconfigured comment tokens should
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL ? TPP_CONF_FEAT0 : 0
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : 0
 ```
 </details>
 
@@ -136,7 +136,7 @@ Default configuration for deemon-specific string tokens:
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL ? TPP_CONF_FEAT0 : 0
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : 0
 ```
 </details>
 
@@ -162,7 +162,7 @@ Default configuration for tokens needed to implement a C++-compiler
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL ? TPP_CONF_FEAT0 : (TPP_PROFILE == TPP_PROFILE_CXX)
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : (TPP_PROFILE == TPP_PROFILE_CXX)
 ```
 </details>
 
@@ -176,7 +176,7 @@ of the other `TPP_COMMON_HAVE_TPP_TOK_*` configs
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL ? TPP_CONF_FEAT0 : 0
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : 0
 ```
 </details>
 
@@ -189,7 +189,7 @@ Default configuration for constructs defined by some C/C++ standard
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL ? TPP_CONF_EXT1 : ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX))
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX))
 ```
 </details>
 
@@ -202,7 +202,7 @@ Default configuration for constructs that should be considered extensions
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL ? TPP_CONF_EXT1 : ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX))
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_EXT1 : ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) || (TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX))
 ```
 </details>
 

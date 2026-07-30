@@ -24,7 +24,7 @@ the builtin `__COLUMN__` macro (see [`TPP_HAVE_MACRO___COLUMN__`](config-conf.md
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL ? -4 : 4
+(TPP_PROFILE == TPP_PROFILE_ALL) ? -4 : 4
 ```
 </details>
 

@@ -99,6 +99,8 @@ function normalizePpExpr(expr: string): string {
 			"(TPP_PROFILE == TPP_PROFILE_C || TPP_PROFILE == TPP_PROFILE_CXX)")
 		.rereplace(r"\bTPP_HAVE_PROFILE_DEFAULT\b",
 			"(TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT)")
+		.rereplace(r"\bTPP_HAVE_PROFILE_ALL\b",
+			"(TPP_PROFILE == TPP_PROFILE_ALL)")
 		.rereplace(r"\bTPP_COMMON_CONF_EXT0\b", "TPP_CONF_EXT0")
 		.rereplace(r"\bTPP_COMMON_CONF_EXT1\b", "TPP_CONF_EXT1")
 		.rereplace(r"\bTPP_COMMON_CONF_FEAT0\b", "TPP_CONF_FEAT0")

@@ -96,7 +96,7 @@ Provide a function [`tpp_strerror()`](../src/tpp-amalgamation.h#L11825) to get a
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL
+TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
@@ -109,7 +109,7 @@ Provide a function [`tpp_strtokenid()`](../src/tpp-amalgamation.h#L15278) to get
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL
+TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
@@ -125,7 +125,7 @@ Enable support for storing custom user-data in keywords
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL
+TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
@@ -141,7 +141,7 @@ field to [`tpp_keyword`](../src/tpp-amalgamation.h#L20141).
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL
+TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
@@ -286,7 +286,7 @@ Enable support for [`TPP_FILE_FLAGS_NOCLOSE`](../src/tpp-amalgamation.h#L18554)
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL
+TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
@@ -340,7 +340,7 @@ Provide a function [`tpp_lexer_copy()`](../src/tpp-amalgamation.h#L22854) that c
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL
+TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
@@ -354,7 +354,7 @@ actually used for anything, but can be read using [`tpp_lexer_getwarningcount()`
 Default:
 
 ```c
-TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_ALL
+TPP_HAVE_WARNINGS && (TPP_PROFILE == TPP_PROFILE_ALL)
 ```
 </details>
 
@@ -630,7 +630,7 @@ to decode the actual contents of an `#include`-string.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
 ```
 </details>
 
@@ -646,7 +646,7 @@ token is parsed as a #include-string
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
 ```
 </details>
 
@@ -672,7 +672,7 @@ Provide a function [`tpp_file_getrealfilenamekwd()`](../src/tpp-amalgamation.h#L
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_PRAGMA_ONCE
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_PRAGMA_ONCE
 ```
 </details>
 
@@ -834,7 +834,7 @@ Adds ~6KiB to the final executable.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_ESCAPE_NAMED_XML || TPP_HAVE_STRING_ESCAPE_XML
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_ESCAPE_NAMED_XML || TPP_HAVE_STRING_ESCAPE_XML
 ```
 </details>
 
@@ -922,7 +922,7 @@ lists a couple of extensions to name lookup. All of these have been implemented 
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES
 ```
 </details>
 
@@ -1011,7 +1011,7 @@ out_lexer:
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL
+TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
@@ -1029,7 +1029,7 @@ When this is disabled, [`TPP_CONFIG_FILE_AND_LINE_FORMAT`](config-value.md#tpp_c
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL && (TPP_HAVE_WARNINGS || (TPP_HAVE_PRAGMA_MESSAGE && TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION))
+(TPP_PROFILE == TPP_PROFILE_ALL) && (TPP_HAVE_WARNINGS || (TPP_HAVE_PRAGMA_MESSAGE && TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION))
 ```
 </details>
 
@@ -1127,7 +1127,7 @@ Enable support for [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L18566)
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_DIGIT_LINE
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_DIGIT_LINE
 ```
 </details>
 
@@ -1194,7 +1194,7 @@ TPP_HAVE_INCLUDE_STACK && TPP_HAVE_FILE_SYSHDR && (TPP_PROFILE != TPP_PROFILE_MI
 Default:
 
 ```c
-TPP_HAVE_INCLUDE_STACK && (TPP_HAVE_PROFILE_ALL || ((TPP_PROFILE != TPP_PROFILE_MINIMAL) && TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH))
+TPP_HAVE_INCLUDE_STACK && ((TPP_PROFILE == TPP_PROFILE_ALL) || ((TPP_PROFILE != TPP_PROFILE_MINIMAL) && TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH))
 ```
 </details>
 
@@ -1207,7 +1207,7 @@ Enable support to push/pop the `#include`-path state
 Default:
 
 ```c
-TPP_HAVE_INCLUDE_PATH && (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH || TPP_HAVE_PROFILE_ALL)
+TPP_HAVE_INCLUDE_PATH && (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH || (TPP_PROFILE == TPP_PROFILE_ALL))
 ```
 </details>
 
@@ -1280,7 +1280,7 @@ Enable support for [`tpp_file_setfilename()`](../src/tpp-amalgamation.h#L19360)
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE
 ```
 </details>
 
@@ -1293,7 +1293,7 @@ Enable support for [`tpp_file_setline()`](../src/tpp-amalgamation.h#L19373)
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE
 ```
 </details>
 
@@ -1307,7 +1307,7 @@ represent a lower bound of memory that must be kept loaded.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_CPP_MACROS
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_CPP_MACROS
 ```
 </details>
 
@@ -1355,7 +1355,7 @@ numbers using the already-parsed contents of of I/O and TEXT files as seed.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_MACRO___TPP_RANDOM
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_RANDOM
 ```
 </details>
 
@@ -1369,7 +1369,7 @@ of all already-processed bytes within a file up to a given position.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_LEXER_RAND
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_LEXER_RAND
 ```
 </details>
 
@@ -1414,7 +1414,7 @@ This is the underlying system function needed for
 Default:
 
 ```c
-(TPP_HAVE_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY) && (defined(tpp_io_compare_mtime) || (TPP_OS_WINDOWS || TPP_OS_UNIX))
+((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_PRAGMA_GCC_DEPENDENCY) && (defined(tpp_io_compare_mtime) || (TPP_OS_WINDOWS || TPP_OS_UNIX))
 ```
 </details>
 
@@ -1427,7 +1427,7 @@ Default:
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_CPP_EMBED_OFFSET
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_CPP_EMBED_OFFSET
 ```
 </details>
 
@@ -1470,7 +1470,7 @@ whilst pasting them onto each other in order to form a singular, normalized path
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_PRAGMA_GCC_DEPENDENCY
 ```
 </details>
 
@@ -1483,7 +1483,7 @@ Enable support for [`tpp_lexer_initfile_io()`](../src/tpp-amalgamation.h#L23042)
 Default:
 
 ```c
-TPP_HAVE_FILE_NOKWD && TPP_HAVE_PROFILE_ALL
+TPP_HAVE_FILE_NOKWD && (TPP_PROFILE == TPP_PROFILE_ALL)
 ```
 </details>
 
@@ -1512,7 +1512,7 @@ Provide an API [`tpp_string_builder`](../src/tpp-amalgamation.h#L12333) centered
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_LEXER_DECODESTRING || TPP_HAVE_LEXER_SEEKPP_RPAREN || (TPP_HAVE_LEXER_DECODE_INCLUDE_STRING && (TPP_CONF_MAYBE_1(TPP_HAVE_BSE) || TPP_CONF_MAYBE_1(TPP_HAVE_TRIGRAPHS))) || TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ || TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_MACRO___TPP_STR_PACK || TPP_HAVE_MACRO___TPP_EXEC || TPP_HAVE_MACRO___TPP_STR_SUBSTR || TPP_HAVE_MACRO___TPP_LOAD_FILE || TPP_HAVE_CPP_EMBED
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_LEXER_DECODESTRING || TPP_HAVE_LEXER_SEEKPP_RPAREN || (TPP_HAVE_LEXER_DECODE_INCLUDE_STRING && (TPP_CONF_MAYBE_1(TPP_HAVE_BSE) || TPP_CONF_MAYBE_1(TPP_HAVE_TRIGRAPHS))) || TPP_HAVE_MACRO___FILE__ || TPP_HAVE_MACRO___BASE_FILE__ || TPP_HAVE_MACRO___FILE_NAME__ || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_MACRO___TPP_STR_PACK || TPP_HAVE_MACRO___TPP_EXEC || TPP_HAVE_MACRO___TPP_STR_SUBSTR || TPP_HAVE_MACRO___TPP_LOAD_FILE || TPP_HAVE_CPP_EMBED
 ```
 </details>
 
@@ -1525,7 +1525,7 @@ Provide a function [`tpp_string_builder_tryalloc()`](../src/tpp-amalgamation.h#L
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_MACRO___TPP_LOAD_FILE
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___TPP_LOAD_FILE
 ```
 </details>
 
@@ -1571,7 +1571,7 @@ probably the name of a macro) loaded in memory.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_CPP_MACROS
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_CPP_MACROS
 ```
 </details>
 
@@ -1668,7 +1668,7 @@ define a macro of the same name triggers a `-Wkeyword-macro` warning (s.a.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_MACRO___is_identifier || TPP_HAVE_TPP_W_MACRO_NAME_IS_IDENTIFIER
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MACRO___is_identifier || TPP_HAVE_TPP_W_MACRO_NAME_IS_IDENTIFIER
 ```
 </details>
 
@@ -1769,7 +1769,7 @@ This can be used to implement GCC's CPP's `-dM` CLI flag.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL
+TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
@@ -1870,7 +1870,7 @@ also enabled)
 Default:
 
 ```c
-(TPP_HAVE_PROFILE_ALL || (TPP_HAVE_MACRO___TPP_STR_PACK && TPP_HAVE_FILE_ENCODING_EMBED)) && TPP_HAVE_TOK_INT
+((TPP_PROFILE == TPP_PROFILE_ALL) || (TPP_HAVE_MACRO___TPP_STR_PACK && TPP_HAVE_FILE_ENCODING_EMBED)) && TPP_HAVE_TOK_INT
 ```
 </details>
 
@@ -2022,7 +2022,7 @@ that can be used to define/undef commandline-defined macros.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_MACROS
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_MACROS
 ```
 </details>
 
@@ -2036,7 +2036,7 @@ that can be used to add/delete keyword assertions.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_ASSERT
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_ASSERT
 ```
 </details>
 
@@ -2080,7 +2080,7 @@ that can be used to quickly delete *all* macro definitions.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_MACROS
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_MACROS
 ```
 </details>
 
@@ -2094,7 +2094,7 @@ that can be used to quickly delete *all* keyword assertions.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_ASSERT
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CPP_ASSERT
 ```
 </details>
 
@@ -2108,7 +2108,7 @@ that can be used to delete the flags of all keywords.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL && TPP_HAVE_KEYWORD_FLAGS
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_KEYWORD_FLAGS
 ```
 </details>
 
@@ -2122,7 +2122,7 @@ that can be used to delete (restore defaults) of any custom keyword feature over
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL && TPP_HAVE_KEYWORD_FEATURES
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_KEYWORD_FEATURES
 ```
 </details>
 
@@ -2137,7 +2137,7 @@ reset the state of all `__TPP_COUNTER()` macro expansions.
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL && TPP_HAVE_MACRO___TPP_COUNTER
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_MACRO___TPP_COUNTER
 ```
 </details>
 
@@ -2164,7 +2164,7 @@ amount of whitespace (but not comments), as well as BSE sequences in a forward-d
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || TPP_HAVE_STRING_ESCAPE_NAMED_MANY || TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING
+(TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || TPP_HAVE_STRING_ESCAPE_NAMED_MANY || TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING
 ```
 </details>
 
@@ -2178,7 +2178,7 @@ amount of whitespace (but not comments), as well as BSE sequences in a backwards
 Default:
 
 ```c
-TPP_HAVE_PROFILE_ALL || ((TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || TPP_HAVE_STRING_ESCAPE_NAMED_MANY) && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE) || TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING
+(TPP_PROFILE == TPP_PROFILE_ALL) || ((TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY || TPP_HAVE_STRING_ESCAPE_NAMED_MANY) && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE) || TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING
 ```
 </details>
 
