@@ -86,6 +86,7 @@ global final CONFIG_KIND_TOKEN = "token"; // TPP_HAVE_TOK_*
 global final CONFIG_KIND_HOOK_DEFAULT = "hook_default"; // TPP_HOOK_DEFAULT_*
 global final CONFIG_KIND_BUILTIN_HOOK = "builtin_hook"; // TPP_HAVE_BUILTIN_*_HOOK
 global final CONFIG_KIND_LIMIT = "limit"; // Special API limits config
+global final CONFIG_KIND_CLI = "cli"; // TPP_HAVE_CLI_*
 
 global formatDoc;
 
@@ -151,6 +152,8 @@ class Config {
 				return CONFIG_KIND_VALUE;
 			if (name.startswith("TPP_HOOK_DEFAULT_"))
 				return CONFIG_KIND_HOOK_DEFAULT;
+			if (name.startswith("TPP_HAVE_CLI_") || name == "TPP_HAVE_CLI")
+				return CONFIG_KIND_CLI;
 			if (name.wmatch("TPP_HAVE_BUILTIN_*_HOOK"))
 				return CONFIG_KIND_BUILTIN_HOOK;
 			return CONFIG_KIND_CORE;
@@ -545,6 +548,7 @@ function updateConfigMd(filename: string) {
 				if (refFile in knownFiles)
 					print newData: f"[`{conf.name}`]({refFile}#{conf.name.lower()})",;
 			}
+			print newData:;
 		}	break;
 
 		default: {
@@ -585,6 +589,7 @@ updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-value.md"));
 updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-warn.md"));
 updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-hook.md"));
 updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-common.md"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-cli.md"));
 #endif /* __MAIN__ */
 
 

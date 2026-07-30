@@ -29,29 +29,24 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-#if TPP_HAVE_CLI_LOADER
-
-/* Enable support for "-include" CLI arguments */
-#undef TPP_HAVE_CLI_LOADER_INCLUDE
-#define TPP_HAVE_CLI_LOADER_INCLUDE \
-	(TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_OPENFILE)
+#if TPP_HAVE_CLI
 
 /* Publicly exposed CLI loader states */
 #define TPP_CLI_LOADER_STATE_NORMAL 0 /* Normal state */
 #define TPP_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
 
-#undef TPP_HAVE_CLI_LOADER_NEEDS_FINI
+#undef TPP_HAVE_CLI_NEEDS_FINI
 typedef struct tpp_cli_loader {
 	tpp_lexer   *TPP_INTERNAL(tcl_lexer); /* [1..1][const] The lexer being configured by this CLI loader */
 	unsigned int TPP_INTERNAL(tcl_state); /* CLI loader state (meaning of value is internal, except for `TPP_CLI_LOADER_STATE_*` listed above) */
-#if TPP_HAVE_CLI_LOADER_INCLUDE
-#define TPP_HAVE_CLI_LOADER_NEEDS_FINI 1
+#if TPP_HAVE_CLI_DASH_INCLUDE
+#define TPP_HAVE_CLI_NEEDS_FINI 1
 	tpp_lexer_openfile_result *TPP_INTERNAL(tcl_includev); /* [0..tcl_includec][owned] Extra files to #include at start of main input file */
 	tpp_size                   TPP_INTERNAL(tcl_includec); /* # of elements in `tcl_includev` */
 #define _tpp_cli_loader_init_include(self) , (self)->TPP_INTERNAL(tcl_includev) = NULL, (self)->TPP_INTERNAL(tcl_includec) = 0
-#else /* TPP_HAVE_CLI_LOADER_INCLUDE */
+#else /* TPP_HAVE_CLI_DASH_INCLUDE */
 #define _tpp_cli_loader_init_include(self) /* nothing */
-#endif /* !TPP_HAVE_CLI_LOADER_INCLUDE */
+#endif /* !TPP_HAVE_CLI_DASH_INCLUDE */
 } tpp_cli_loader;
 
 /* Return the lexer that is being initialized by the given CLI loader. */
@@ -66,9 +61,9 @@ typedef struct tpp_cli_loader {
 #define tpp_cli_loader_hasddash(self) \
 	((self)->TPP_INTERNAL(tcl_state) == TPP_CLI_LOADER_STATE_DDASH)
 
-#ifndef TPP_HAVE_CLI_LOADER_NEEDS_FINI
-#define TPP_HAVE_CLI_LOADER_NEEDS_FINI 0
-#endif /* !TPP_HAVE_CLI_LOADER_NEEDS_FINI */
+#ifndef TPP_HAVE_CLI_NEEDS_FINI
+#define TPP_HAVE_CLI_NEEDS_FINI 0
+#endif /* !TPP_HAVE_CLI_NEEDS_FINI */
 
 /* Initialize a CLI loader for `lexer`
  *
@@ -80,12 +75,12 @@ typedef struct tpp_cli_loader {
 	(void)((self)->TPP_INTERNAL(tcl_lexer) = (lexer),                    \
 	       (self)->TPP_INTERNAL(tcl_state) = TPP_CLI_LOADER_STATE_NORMAL \
 	       _tpp_cli_loader_init_include(self))
-#if TPP_HAVE_CLI_LOADER_NEEDS_FINI
+#if TPP_HAVE_CLI_NEEDS_FINI
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);
-#else /* TPP_HAVE_CLI_LOADER_NEEDS_FINI */
+#else /* TPP_HAVE_CLI_NEEDS_FINI */
 #define tpp_cli_loader_fini(self) tpp_dbg_memset(self, sizeof(tpp_cli_loader))
-#endif /* !TPP_HAVE_CLI_LOADER_NEEDS_FINI */
+#endif /* !TPP_HAVE_CLI_NEEDS_FINI */
 
 /* Feed an argument to the loader how exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
@@ -155,7 +150,7 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
  * @return: TPP_EWARNPRINT: An error happened within a warning printer */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self);
-#endif /* TPP_HAVE_CLI_LOADER */
+#endif /* TPP_HAVE_CLI */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

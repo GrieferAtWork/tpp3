@@ -4707,74 +4707,6 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS ((TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_STRINGLIKE_SQUOTE) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : (TPP_HAVE_PROFILE_C_LIKE ? 1 : 0)) : 0) /* "-fcharacter-literals" */
 #endif /* !TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
 
-/* XXX: Lexer functionality to automatically rename files as they are #include-ded,
- *      by assigning them custom `tpp_file_setfilename()` immediately after being
- *      initialized. The way names are assigned here is by replacing directory
- *      prefixes, which should be configurable via `-fmacro-prefix-map`. */
-
-/* Provide an API surrounding `tpp_cli_loader`, which can be used to configure a lexer
- * using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.
- *
- * This API is entirely optional: there's nothing it can do that can't already
- * be done using some other C API; it's only there as a convenience to you.
- *
- * The CLI loader must be used on a lexer that has already been initialized
- * itself (as per `tpp_lexer_init()`), though whether or not the its initial
- * file has already been initialized doesn't matter (the CLI loader will never
- * make persistent modifications to a lexer's current file/token).
- *
- * ```c
- * int main(int argc, char **argv) {
- *     int result = 1;
- *     char *appname = argv[0];
- *     tpp_errno error;
- *     tpp_lexer lexer;
- *     tpp_cli_loader cli_loader;
- *     tpp_lexer_init(&lexer);
- *     tpp_cli_loader_init(&cli_loader, &lexer);
- *     if (argc)
- *         --argc, ++argv; // Skip "appname" argument
- *     error = tpp_cli_loader_parseargv(&cli_loader, &argc, &argv);
- *     if (TPP_ISERR(error)) {
- *         fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
- *         goto out_lexer;
- *     }
- *     // Normally, you'd be parsing your own input arguments at this point
- *     if (argc && strcmp(*argv, "--") == 0)
- *         --argc, ++argv;
- *     if (argc != 1) {
- *         fprintf(stderr, "bad arguments\nUSAGE: %s [ARGS...] INFILE\n", appname);
- *         goto out_lexer;
- *     }
- *     error = tpp_lexer_initfile_open(&lexer, argv[0], TPP_SIZE_MAX);
- *     if (TPP_ISERR(error)) {
- *         fprintf(stderr, "failed to open '%s': %s\n", argv[0], tpp_strerror(error));
- *         goto out_lexer;
- *     }
- *     error = tpp_cli_loader_flush(&cli_loader);
- *     for (;;) {
- *         tpp_token_id tok = tpp_lexer_yield(&lexer);
- *         if (tok == TPP_TOK_EOF)
- *             break;
- *         if (TPP_TOK_ISERR(tok)) {
- *             fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
- *             goto out_lexer_file;
- *         }
- *         fwrite(tpp_lexer_gettokenstart(&lexer), 1,
- *                tpp_lexer_gettokenlen(&lexer), stdout);
- *     }
- *     result = 0;
- * out_lexer_file:
- *     tpp_lexer_finifile(&lexer);
- * out_lexer:
- *     tpp_lexer_fini(&lexer);
- *     return result;
- * }
- * ```
- */
-#ifndef TPP_HAVE_CLI_LOADER
-#define TPP_HAVE_CLI_LOADER TPP_HAVE_PROFILE_ALL
-#endif /* !TPP_HAVE_CLI_LOADER */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -5205,7 +5137,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES */
 #ifndef TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT
 #define TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT \
-	(TPP_HAVE_WARNINGS && TPP_HAVE_CLI_LOADER)
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CLI)
 #endif /* !TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
 /************************************************************************/
 /************************************************************************/
@@ -6340,6 +6272,315 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_PREPARSE_SKIPSPACE_BCK 0
 #endif /* !... */
 #endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+
+/************************************************************************/
+/* CLI PARSER CONFIGURATION                                             */
+/************************************************************************/
+
+/* XXX: Lexer functionality to automatically rename files as they are #include-ded,
+ *      by assigning them custom `tpp_file_setfilename()` immediately after being
+ *      initialized. The way names are assigned here is by replacing directory
+ *      prefixes, which should be configurable via `-fmacro-prefix-map`. */
+
+/* Provide an API surrounding `tpp_cli_loader`, which can be used to configure a lexer
+ * using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.
+ *
+ * This API is entirely optional: there's nothing it can do that can't already
+ * be done using some other C API; it's only there as a convenience to you.
+ *
+ * The CLI loader must be used on a lexer that has already been initialized
+ * itself (as per `tpp_lexer_init()`), though whether or not the its initial
+ * file has already been initialized doesn't matter (the CLI loader will never
+ * make persistent modifications to a lexer's current file/token).
+ *
+ * ```c
+ * int main(int argc, char **argv) {
+ *     int result = 1;
+ *     char *appname = argv[0];
+ *     tpp_errno error;
+ *     tpp_lexer lexer;
+ *     tpp_cli_loader cli_loader;
+ *     tpp_lexer_init(&lexer);
+ *     tpp_cli_loader_init(&cli_loader, &lexer);
+ *     if (argc)
+ *         --argc, ++argv; // Skip "appname" argument
+ *     error = tpp_cli_loader_parseargv(&cli_loader, &argc, &argv);
+ *     if (TPP_ISERR(error)) {
+ *         fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
+ *         goto out_lexer;
+ *     }
+ *     // Normally, you'd be parsing your own input arguments at this point
+ *     if (argc && strcmp(*argv, "--") == 0)
+ *         --argc, ++argv;
+ *     if (argc != 1) {
+ *         fprintf(stderr, "bad arguments\nUSAGE: %s [ARGS...] INFILE\n", appname);
+ *         goto out_lexer;
+ *     }
+ *     error = tpp_lexer_initfile_open(&lexer, argv[0], TPP_SIZE_MAX);
+ *     if (TPP_ISERR(error)) {
+ *         fprintf(stderr, "failed to open '%s': %s\n", argv[0], tpp_strerror(error));
+ *         goto out_lexer;
+ *     }
+ *     error = tpp_cli_loader_flush(&cli_loader);
+ *     for (;;) {
+ *         tpp_token_id tok = tpp_lexer_yield(&lexer);
+ *         if (tok == TPP_TOK_EOF)
+ *             break;
+ *         if (TPP_TOK_ISERR(tok)) {
+ *             fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
+ *             goto out_lexer_file;
+ *         }
+ *         fwrite(tpp_lexer_gettokenstart(&lexer), 1,
+ *                tpp_lexer_gettokenlen(&lexer), stdout);
+ *     }
+ *     result = 0;
+ * out_lexer_file:
+ *     tpp_lexer_finifile(&lexer);
+ * out_lexer:
+ *     tpp_lexer_fini(&lexer);
+ *     return result;
+ * }
+ * ```
+ */
+#ifndef TPP_HAVE_CLI
+#define TPP_HAVE_CLI TPP_HAVE_PROFILE_ALL
+#endif /* !TPP_HAVE_CLI */
+
+/* `-Dmacro[=def]`, `-D macro[=def]`,
+ * `--define-macro=macro[=def]`, `--define-macro macro[=def]`:
+ * Define an additional macro as `#define macro def` (or
+ * `#define macro 1` when `def` isn't given) */
+#ifndef TPP_HAVE_CLI_DASH_DEFINE_MACRO
+#define TPP_HAVE_CLI_DASH_DEFINE_MACRO (TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_DEFINE)
+#endif /* !TPP_HAVE_CLI_DASH_DEFINE_MACRO */
+
+/* `-Umacro`, `-U macro`, `--undefine-macro=macro`, `--undefine-macro macro`:
+ * Delete a macro definition, the same way `#undef macro` would.
+ *
+ * Implementation makes use of: `tpp_lexer_define()` + `tpp_lexer_undef()` */
+#ifndef TPP_HAVE_CLI_DASH_UNDEFINE_MACRO
+#define TPP_HAVE_CLI_DASH_UNDEFINE_MACRO (TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_DEFINE)
+#endif /* !TPP_HAVE_CLI_DASH_UNDEFINE_MACRO */
+
+/* `-Apredicate=answer`, `-A predicate=answer`, `--assert=predicate=answer`,
+ * `--assert predicate=answer`, `-A-predicate[=answer]`, `-A -predicate[=answer]`,
+ * `--assert=-predicate[=answer]`, `--assert -predicate[=answer]`:
+ * Define or delete a preprocessor *"assertion"* (see `TPP_HAVE_CPP_ASSERT`).
+ *
+ * Implementation makes use of: `tpp_lexer_assert()` + `tpp_lexer_unassert()` +
+ *                              `tpp_lexer_unassertall()` */
+#ifndef TPP_HAVE_CLI_DASH_ASSERT
+#define TPP_HAVE_CLI_DASH_ASSERT \
+	(TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_ASSERT)
+#endif /* !TPP_HAVE_CLI_DASH_ASSERT */
+
+/* `-include FILE`:
+ * causes `FILE` to be injected as though it was `#include`-ed
+ * at the start of the lexer's main input file. */
+#ifndef TPP_HAVE_CLI_DASH_INCLUDE
+#define TPP_HAVE_CLI_DASH_INCLUDE (TPP_HAVE_CLI && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_OPENFILE)
+#endif /* !TPP_HAVE_CLI_DASH_INCLUDE */
+
+/* `-imacros <file>`, `--imacros=<file>`, `--imacros <file>`:
+ * Similar to `TPP_HAVE_CLI_DASH_INCLUDE`, but rather than including
+ * the file at the start of the lexer's main input, it is instead
+ * included right now, with all of its macros and pragma directives
+ * processed as per usual (including expansion of macros within,
+ * meaning that deeply nested pragmas also take effect), but any
+ * tokens produced by it are discarded. */
+#ifndef TPP_HAVE_CLI_DASH_IMACROS
+#define TPP_HAVE_CLI_DASH_IMACROS \
+	(TPP_HAVE_CLI && TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_CPP_MACROS)
+#endif /* !TPP_HAVE_CLI_DASH_IMACROS */
+
+/* `-undef`:
+ * Undef all *predefined* macros (done by disabling `TPP_HAVE_CPP_PREDEFINED_MACROS`) */
+#ifndef TPP_HAVE_CLI_DASH_UNDEF
+#define TPP_HAVE_CLI_DASH_UNDEF \
+	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_CPP_PREDEFINED_MACROS))
+#endif /* !TPP_HAVE_CLI_DASH_UNDEF */
+
+/* `-f...`, `-fno-...`:
+ * Allow TPP extensions to be turned on/off via the commandline. Syntax here is the
+ * same as in `#pragma TPP extension(...)`, such that `-fEXTENSION` turns `EXTENSION`
+ * on, whilst `-fno-EXTENSION` turns it off. */
+#ifndef TPP_HAVE_CLI_DASH_FEXTENSION
+#define TPP_HAVE_CLI_DASH_FEXTENSION \
+	(TPP_HAVE_CLI && TPP_HAVE_EXTENSIONS)
+#endif /* !TPP_HAVE_CLI_DASH_FEXTENSION */
+
+/* `-fpreprocessed`, `-fno-preprocessed`:
+ * Turns the following lexer features off when enabled (or turns them on when disabled):
+ * - `TPP_HAVE_CPP_MACROS`
+ * - `TPP_HAVE_TRIGRAPHS`
+ * - `TPP_HAVE_BSE`
+ * - `TPP_HAVE_CPP_INCLUDE`
+ * - `TPP_HAVE_CPP_INCLUDE_NEXT`
+ * - `TPP_HAVE_CPP_IMPORT`
+ * - `TPP_HAVE_CPP_IF_ELSE_ENDIF`
+ * - `TPP_HAVE_CPP_DEFINE`
+ * - `TPP_HAVE_CPP_ASSERT` */
+#ifndef TPP_HAVE_CLI_DASH_FPREPROCESSED
+#define TPP_HAVE_CLI_DASH_FPREPROCESSED             \
+	(TPP_HAVE_CLI &&                                \
+	 (TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS) ||        \
+	  TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) ||         \
+	  TPP_CONF_IS_RT(TPP_HAVE_BSE) ||               \
+	  TPP_CONF_IS_RT(TPP_HAVE_CPP_INCLUDE) ||       \
+	  TPP_CONF_IS_RT(TPP_HAVE_CPP_INCLUDE_NEXT) ||  \
+	  TPP_CONF_IS_RT(TPP_HAVE_CPP_IMPORT) ||        \
+	  TPP_CONF_IS_RT(TPP_HAVE_CPP_IF_ELSE_ENDIF) || \
+	  TPP_CONF_IS_RT(TPP_HAVE_CPP_DEFINE) ||        \
+	  TPP_CONF_IS_RT(TPP_HAVE_CPP_ASSERT)))
+#endif /* !TPP_HAVE_CLI_DASH_FPREPROCESSED */
+
+/* `-fdirectives-only`, `-fno-directives-only`:
+ * Turns off expansion of macros when enabled (but turns expansion back on when disabled)
+ *
+ * s.a. `TPP_HAVE_CPP_MACROS` */
+#ifndef TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY
+#define TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY \
+	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS))
+#endif /* !TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY */
+
+/* `-fdollars-in-identifiers`:
+ * Turns off `$` being treated as a distinct token when enabled.
+ * Essentially does the inverse of `-ftok-dollar` (s.a. `TPP_HAVE_TOK_DOLLAR`) */
+#ifndef TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS
+#define TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS \
+	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TOK_DOLLAR))
+#endif /* !TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS */
+
+/* `-fmax-include-depth=<count>`:
+ * Configure the max # of times the same file may appear on the `#include`-stack.
+ * This slightly differs from how GCC treats this CLI switch, in that GCC treats
+ * this as the max size of the `#include`-stack as a whole. */
+#undef TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH
+#define TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH \
+	(TPP_HAVE_CLI && (TPP_MAX_INCLUDE_DEPTH < 0))
+
+/* `-ftabstop=<width>`:
+ * Configure the number of columns to assign to `U+0008` (`\t`) characters.
+ *
+ * WARNING: This is a *GLOBAL* config, meaning if you may run into problems
+ *          if you have multiple threads with multiple lexers all running
+ *          in parallel, with each of them also trying to set its own,
+ *          different value for `-ftabstop`! */
+#ifndef TPP_HAVE_CLI_DASH_FTABSTOP
+#define TPP_HAVE_CLI_DASH_FTABSTOP \
+	(TPP_HAVE_CLI && (TPP_TABSIZE < 0))
+#endif /* !TPP_HAVE_CLI_DASH_FTABSTOP */
+
+/* `-C`, `-CC`, `--comments`, `--comments-in-macros`:
+ * Enable emission of comment-like tokens in output. Without this, comments
+ * are simply skipped the same way that preprocessor directives and macros
+ * that expand to nothing are skipped.
+ *
+ * NOTE: TPP doesn't differentiate between comments in-source and comments
+ *       in macros, so both of these CLI switches are handled the same by
+ *       turning on emission of comment tokens everywhere. */
+#ifndef TPP_HAVE_CLI_DASH_COMMENTS
+#define TPP_HAVE_CLI_DASH_COMMENTS \
+	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TOK_COMMENT))
+#endif /* !TPP_HAVE_CLI_DASH_COMMENTS */
+
+/* `-traditional`, `--traditional`, `-traditional-cpp`, `--traditional-cpp`:
+ * Enable traditional macro expansion rules (by default). Also turns off
+ * a couple of other features (assuming those features can be turned off
+ * at runtime):
+ * - `TPP_HAVE_TRIGRAPHS`
+ * - `TPP_HAVE_TOK_CXX_COMMENT` */
+#ifndef TPP_HAVE_CLI_DASH_TRADITIONAL
+#define TPP_HAVE_CLI_DASH_TRADITIONAL \
+	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TRADITIONAL_MACROS))
+#endif /* !TPP_HAVE_CLI_DASH_TRADITIONAL */
+
+/* `-trigraphs`, `--trigraphs`:
+ * Turns on processing of trigraphs (see `TPP_HAVE_TRIGRAPHS`) */
+#ifndef TPP_HAVE_CLI_DASH_TRIGRAPHS
+#define TPP_HAVE_CLI_DASH_TRIGRAPHS \
+	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS))
+#endif /* !TPP_HAVE_CLI_DASH_TRIGRAPHS */
+
+/* `-I-`, `--include-barrier`:
+ * Move `-I`-style include paths to `-iquote`, then turn off
+ * `TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE`. */
+#ifndef TPP_HAVE_CLI_DASH_INCLUDE_BARRIER
+#define TPP_HAVE_CLI_DASH_INCLUDE_BARRIER \
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_CONF_IS_RT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE))
+#endif /* !TPP_HAVE_CLI_DASH_INCLUDE_BARRIER */
+
+/* `-IPATH`, `--include-directory=PATH`:
+ * Add another include paths for `#include <file>`-style includes */
+#ifndef TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY
+#define TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY \
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH)
+#endif /* !TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY */
+
+/* `-iquote PATH`:
+ * Add another include path for `#include "file"`-style
+ * includes (s.a. `TPP_HAVE_INCLUDE_PATH_QUOTE`) */
+#undef TPP_HAVE_CLI_DASH_IQUOTE
+#define TPP_HAVE_CLI_DASH_IQUOTE \
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE)
+
+/* `-isystem PATH`:
+ * Add another include path for syshdr-style `#include <file>` paths
+ * includes (s.a. `TPP_HAVE_INCLUDE_PATH_SYSHDR`) */
+#undef TPP_HAVE_CLI_DASH_ISYSTEM
+#define TPP_HAVE_CLI_DASH_ISYSTEM \
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR)
+
+/* `-idirafter PATH`, `--include-directory-after=PATH`:
+ * Add another include path for after-style `#include`-paths
+ * includes (s.a. `TPP_HAVE_INCLUDE_PATH_AFTER`) */
+#undef TPP_HAVE_CLI_DASH_IDIRAFTER
+#define TPP_HAVE_CLI_DASH_IDIRAFTER \
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER)
+
+/* TODO: "-iprefix", "--include-prefix prefix", "--include-prefix=prefix" */
+/* TODO: "-iwithprefix dir", "--include-with-prefix=dir", "--include-with-prefix dir", "--include-with-prefix-after=dir", "--include-with-prefix-after dir" */
+/* TODO: "-iwithprefixbefore dir", "--include-with-prefix-before=dir", "--include-with-prefix-before dir" */
+/* TODO: "-isysroot", "--sysroot" */
+/* TODO: "--embed-dir=dir", "--embed-directory=dir", "--embed-directory dir" */
+/* XXX: "-nostdinc++" */
+
+/* `-nostdinc`, `--no-standard-includes`:
+ * Disable searching for standard system include paths
+ * (s.a. `TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH`) */
+#ifndef TPP_HAVE_CLI_DASH_NOSTDINC
+#define TPP_HAVE_CLI_DASH_NOSTDINC \
+	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH))
+#endif /* !TPP_HAVE_CLI_DASH_NOSTDINC */
+
+/* `-Werror`, `-Wno-error`:
+ * Treat all warnings as errors (s.a. `TPP_HAVE_WERROR`) */
+#ifndef TPP_HAVE_CLI_DASH_WERROR
+#define TPP_HAVE_CLI_DASH_WERROR \
+	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_WERROR))
+#endif /* !TPP_HAVE_CLI_DASH_WERROR */
+
+/* `-W...`, `-Wno-...`:
+ * Turn emission of a specific warning on/off (similar to `#pragma TPP warning("-W...")`).
+ *
+ * When turned off, the warning state is set to `TPP_WSTATE_DISABLED`. When turned on,
+ * the warning state is gradually increased from what it's previous state was:
+ * - `TPP_WSTATE_DISABLED` is changed to `TPP_WSTATE_WARN`
+ * - `TPP_WSTATE_WARN` is changed to `TPP_WSTATE_ERROR` (if `TPP_HAVE_WARNING_ERROR`
+ *   is available; else, changed to `TPP_WSTATE_FATAL` instead)
+ * - `TPP_HAVE_WARNING_ERROR` is changed to `TPP_WSTATE_FATAL` */
+#ifndef TPP_HAVE_CLI_DASH_WWARNING
+#define TPP_HAVE_CLI_DASH_WWARNING \
+	(TPP_HAVE_CLI && TPP_HAVE_WARNINGS)
+#endif /* !TPP_HAVE_CLI_DASH_WWARNING */
 
 /************************************************************************/
 /************************************************************************/

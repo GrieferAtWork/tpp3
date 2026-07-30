@@ -57703,154 +57703,31 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 /* File: parts/cli.c                                                    */
 /************************************************************************/
 
-#if TPP_HAVE_CLI_LOADER
-
-/* "-D macro[=def]" */
-#undef TPP_HAVE_CLI_LOADER_DEFINE_MACRO
-#define TPP_HAVE_CLI_LOADER_DEFINE_MACRO \
-	(TPP_HAVE_LEXER_CLI_DEFINE)
-
-/* "-U macro" */
-#undef TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO
-#define TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO \
-	(TPP_HAVE_LEXER_CLI_DEFINE)
-
-/* "-A prediacte=answer" */
-#undef TPP_HAVE_CLI_LOADER_ASSERT
-#define TPP_HAVE_CLI_LOADER_ASSERT \
-	(TPP_HAVE_LEXER_CLI_ASSERT)
-
-/* "-imacros <file>" */
-#undef TPP_HAVE_CLI_LOADER_IMACROS
-#define TPP_HAVE_CLI_LOADER_IMACROS \
-	(TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_CPP_MACROS)
-
-/* "-undef" */
-#undef TPP_HAVE_CLI_LOADER_UNDEF
-#define TPP_HAVE_CLI_LOADER_UNDEF \
-	TPP_CONF_IS_RT(TPP_HAVE_CPP_PREDEFINED_MACROS)
-
-/* "-fpreprocessed" */
-#undef TPP_HAVE_CLI_LOADER_FPREPROCESSED
-#define TPP_HAVE_CLI_LOADER_FPREPROCESSED          \
-	(TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS) ||        \
-	 TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) ||         \
-	 TPP_CONF_IS_RT(TPP_HAVE_BSE) ||               \
-	 TPP_CONF_IS_RT(TPP_HAVE_CPP_INCLUDE) ||       \
-	 TPP_CONF_IS_RT(TPP_HAVE_CPP_INCLUDE_NEXT) ||  \
-	 TPP_CONF_IS_RT(TPP_HAVE_CPP_IMPORT) ||        \
-	 TPP_CONF_IS_RT(TPP_HAVE_CPP_IF_ELSE_ENDIF) || \
-	 TPP_CONF_IS_RT(TPP_HAVE_CPP_DEFINE) ||        \
-	 TPP_CONF_IS_RT(TPP_HAVE_CPP_ASSERT))
-
-/* "-fdirectives-only" */
-#undef TPP_HAVE_CLI_LOADER_FDIRECTIVES_ONLY
-#define TPP_HAVE_CLI_LOADER_FDIRECTIVES_ONLY \
-	(TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS))
-
-/* "-fdollars-in-identifiers" */
-#undef TPP_HAVE_CLI_LOADER_FDOLLARS_IN_IDENTIFIERS
-#define TPP_HAVE_CLI_LOADER_FDOLLARS_IN_IDENTIFIERS \
-	(TPP_CONF_IS_RT(TPP_HAVE_TOK_DOLLAR))
-
-/* "-fmax-include-depth=<count>" */
-#undef TPP_HAVE_CLI_LOADER_FMAX_INCLUDE_DEPTH
-#define TPP_HAVE_CLI_LOADER_FMAX_INCLUDE_DEPTH \
-	(TPP_MAX_INCLUDE_DEPTH < 0)
-
-/* "-ftabstop=<width>" */
-#undef TPP_HAVE_CLI_LOADER_FTABSTOP
-#define TPP_HAVE_CLI_LOADER_FTABSTOP \
-	(TPP_TABSIZE < 0)
-
-/* "-C", "-CC", "--comments", "--comments-in-macros"
- * NOTE: TPP doesn't differentiate between comments in-source and comments
- *       in macros, so both of these CLI switches are handled the same by
- *       turning on emission of comment tokens everywhere. */
-#undef TPP_HAVE_CLI_LOADER_COMMENTS
-#define TPP_HAVE_CLI_LOADER_COMMENTS \
-	(TPP_CONF_IS_RT(TPP_HAVE_TOK_COMMENT))
-
-/* "-traditional", "--traditional", "-traditional-cpp", "--traditional-cpp" */
-#undef TPP_HAVE_CLI_LOADER_TRADITIONAL
-#define TPP_HAVE_CLI_LOADER_TRADITIONAL \
-	(TPP_CONF_IS_RT(TPP_HAVE_TRADITIONAL_MACROS))
-
-/* "-trigraphs", "--trigraphs" */
-#undef TPP_HAVE_CLI_LOADER_TRIGRAPHS
-#define TPP_HAVE_CLI_LOADER_TRIGRAPHS \
-	(TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS))
-
-/* "-I-", "--include-barrier" */
-#undef TPP_HAVE_CLI_LOADER_INCLUDE_BARRIER
-#define TPP_HAVE_CLI_LOADER_INCLUDE_BARRIER \
-	(TPP_HAVE_INCLUDE_PATH && TPP_CONF_IS_RT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE))
-
-/* "-I/usr/include", "--include-directory=/usr/include" */
-#undef TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY
-#define TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY \
-	(TPP_HAVE_INCLUDE_PATH)
-
-/* "-iquote /usr/include" */
-#undef TPP_HAVE_CLI_LOADER_IQUOTE
-#define TPP_HAVE_CLI_LOADER_IQUOTE \
-	(TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE)
-
-/* "-isystem /usr/include" */
-#undef TPP_HAVE_CLI_LOADER_ISYSTEM
-#define TPP_HAVE_CLI_LOADER_ISYSTEM \
-	(TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR)
-
-/* "-idirafter /usr/include", "--include-directory-after=/usr/include" */
-#undef TPP_HAVE_CLI_LOADER_IDIRAFTER
-#define TPP_HAVE_CLI_LOADER_IDIRAFTER \
-	(TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER)
-
-/* TODO: "-iprefix", "--include-prefix prefix", "--include-prefix=prefix" */
-/* TODO: "-iwithprefix dir", "--include-with-prefix=dir", "--include-with-prefix dir", "--include-with-prefix-after=dir", "--include-with-prefix-after dir" */
-/* TODO: "-iwithprefixbefore dir", "--include-with-prefix-before=dir", "--include-with-prefix-before dir" */
-/* TODO: "-isysroot", "--sysroot" */
-/* TODO: "--embed-dir=dir", "--embed-directory=dir", "--embed-directory dir" */
-/* XXX: "-nostdinc++" */
-
-/* "-nostdinc", "--no-standard-includes" */
-#undef TPP_HAVE_CLI_NOSTDINC
-#define TPP_HAVE_CLI_NOSTDINC \
-	(TPP_CONF_IS_RT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH))
-
-/* "-Werror" */
-#undef TPP_HAVE_CLI_WERROR
-#define TPP_HAVE_CLI_WERROR \
-	(TPP_CONF_IS_RT(TPP_HAVE_WERROR))
-
-
-
-
-
+#if TPP_HAVE_CLI
 
 /* Define a function `tpp_lexer_openfile_for_cli()` */
-#undef TPP_HAVE_CLI_LOADER_OPEN_OFR
-#define TPP_HAVE_CLI_LOADER_OPEN_OFR \
-	(TPP_HAVE_CLI_LOADER_INCLUDE || TPP_HAVE_CLI_LOADER_IMACROS)
+#undef TPP_HAVE_CLI_OPEN_OFR
+#define TPP_HAVE_CLI_OPEN_OFR \
+	(TPP_HAVE_CLI_DASH_INCLUDE || TPP_HAVE_CLI_DASH_IMACROS)
 
 /* Define a function `tpp_cli_loader_add_include()` */
-#undef TPP_HAVE_CLI_LOADER_ADD_INCLUDE
-#define TPP_HAVE_CLI_LOADER_ADD_INCLUDE       \
-	(TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY || \
-	 TPP_HAVE_CLI_LOADER_IQUOTE ||            \
-	 TPP_HAVE_CLI_LOADER_ISYSTEM ||           \
-	 TPP_HAVE_CLI_LOADER_IDIRAFTER)
+#undef TPP_HAVE_CLI_ADD_INCLUDE
+#define TPP_HAVE_CLI_ADD_INCLUDE       \
+	(TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || \
+	 TPP_HAVE_CLI_DASH_IQUOTE ||            \
+	 TPP_HAVE_CLI_DASH_ISYSTEM ||           \
+	 TPP_HAVE_CLI_DASH_IDIRAFTER)
 
 /* Define a function `tpp_lexer_cli_warnf()` */
 #undef TPP_HAVE_LEXER_CLI_WARN
 #define TPP_HAVE_LEXER_CLI_WARN                                       \
-	((TPP_HAVE_CLI_LOADER_OPEN_OFR && TPP_HAVE_TPP_W_NO_SUCH_FILE) || \
+	((TPP_HAVE_CLI_OPEN_OFR && TPP_HAVE_TPP_W_NO_SUCH_FILE) || \
 	 (TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT))
 
 /* Define a function `tpp_simple_atoz()` */
 #undef TPP_HAVE_SIMPLE_ATOZ
 #define TPP_HAVE_SIMPLE_ATOZ \
-	(TPP_HAVE_CLI_LOADER_FMAX_INCLUDE_DEPTH)
+	(TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH)
 
 #if TPP_CONF_IS_EXT(TPP_HAVE_CPP_PREDEFINED_MACROS)
 #define tpp_lexer_disable_CPP_PREDEFINED_MACROS(self) tpp_lexer_disableextension(self, TPP_EXT_CPP_PREDEFINED_MACROS)
@@ -57990,33 +57867,33 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 enum {
 	_TPP_CLI_LOADER_STATE_FIRST_INTERNAL = TPP_CLI_LOADER_STATE_DDASH,
 	/* Extra states go here... */
-#if TPP_HAVE_CLI_LOADER_DEFINE_MACRO
+#if TPP_HAVE_CLI_DASH_DEFINE_MACRO
 	TPP_CLI_LOADER_STATE_DEFINE_MACRO,   /* "--define-macro name[=definition]" */
-#endif /* TPP_HAVE_CLI_LOADER_DEFINE_MACRO */
-#if TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO
+#endif /* TPP_HAVE_CLI_DASH_DEFINE_MACRO */
+#if TPP_HAVE_CLI_DASH_UNDEFINE_MACRO
 	TPP_CLI_LOADER_STATE_UNDEFINE_MACRO, /* "--undefine-macro name" */
-#endif /* TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO */
-#if TPP_HAVE_CLI_LOADER_ASSERT
+#endif /* TPP_HAVE_CLI_DASH_UNDEFINE_MACRO */
+#if TPP_HAVE_CLI_DASH_ASSERT
 	TPP_CLI_LOADER_STATE_ASSERT,         /* "--assert predicate=answer" */
-#endif /* TPP_HAVE_CLI_LOADER_ASSERT */
-#if TPP_HAVE_CLI_LOADER_INCLUDE
+#endif /* TPP_HAVE_CLI_DASH_ASSERT */
+#if TPP_HAVE_CLI_DASH_INCLUDE
 	TPP_CLI_LOADER_STATE_INCLUDE,        /* "-include file" */
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE */
-#if TPP_HAVE_CLI_LOADER_IMACROS
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE */
+#if TPP_HAVE_CLI_DASH_IMACROS
 	TPP_CLI_LOADER_STATE_IMACROS,        /* "-imacros file" */
-#endif /* TPP_HAVE_CLI_LOADER_IMACROS */
-#if TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY
+#endif /* TPP_HAVE_CLI_DASH_IMACROS */
+#if TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY
 	TPP_CLI_LOADER_STATE_INCLUDE_DIRECTORY, /* "-I dir" */
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY */
-#if TPP_HAVE_CLI_LOADER_IQUOTE
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY */
+#if TPP_HAVE_CLI_DASH_IQUOTE
 	TPP_CLI_LOADER_STATE_IQUOTE, /* "-iquote dir" */
-#endif /* TPP_HAVE_CLI_LOADER_IQUOTE */
-#if TPP_HAVE_CLI_LOADER_ISYSTEM
+#endif /* TPP_HAVE_CLI_DASH_IQUOTE */
+#if TPP_HAVE_CLI_DASH_ISYSTEM
 	TPP_CLI_LOADER_STATE_ISYSTEM, /* "-isystem dir" */
-#endif /* TPP_HAVE_CLI_LOADER_ISYSTEM */
-#if TPP_HAVE_CLI_LOADER_IDIRAFTER
+#endif /* TPP_HAVE_CLI_DASH_ISYSTEM */
+#if TPP_HAVE_CLI_DASH_IDIRAFTER
 	TPP_CLI_LOADER_STATE_IDIRAFTER, /* "-idirafter dir" */
-#endif /* TPP_HAVE_CLI_LOADER_IDIRAFTER */
+#endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
 };
 
 
@@ -58036,10 +57913,10 @@ tpp_simple_atoz(char const *value) {
 }
 #endif /* TPP_HAVE_SIMPLE_ATOZ */
 
-#if TPP_HAVE_CLI_LOADER_NEEDS_FINI
+#if TPP_HAVE_CLI_NEEDS_FINI
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self) {
-#if TPP_HAVE_CLI_LOADER_INCLUDE
+#if TPP_HAVE_CLI_DASH_INCLUDE
 	{
 		tpp_size i;
 		for (i = 0; i < self->tcl_includec; ++i) {
@@ -58048,10 +57925,10 @@ tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self) {
 		}
 		tpp_free(self->tcl_includev);
 	}
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE */
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE */
 	tpp_dbg_memset(self, sizeof(tpp_cli_loader));
 }
-#endif /* TPP_HAVE_CLI_LOADER_NEEDS_FINI */
+#endif /* TPP_HAVE_CLI_NEEDS_FINI */
 
 
 
@@ -58076,7 +57953,7 @@ tpp_lexer_cli_warnf(tpp_lexer *tpp_restrict self, tpp_char const *token_start,
 }
 #endif /* TPP_HAVE_LEXER_CLI_WARN */
 
-#if TPP_HAVE_CLI_LOADER_OPEN_OFR
+#if TPP_HAVE_CLI_OPEN_OFR
 #if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
 struct tpp_lexer_openfile_for_cli_data {
 	tpp_lexer                 *tloffcd_lexer;    /* [1..1] Lexer */
@@ -58143,10 +58020,10 @@ tpp_lexer_openfile_for_cli(tpp_lexer *tpp_restrict self, char const *filename,
 	return TPP_ENOENT;
 #endif /* !TPP_HAVE_TPP_W_NO_SUCH_FILE */
 }
-#endif /* TPP_HAVE_CLI_LOADER_OPEN_OFR */
+#endif /* TPP_HAVE_CLI_OPEN_OFR */
 
 
-#if TPP_HAVE_CLI_LOADER_DEFINE_MACRO
+#if TPP_HAVE_CLI_DASH_DEFINE_MACRO
 /* Parse the macro definition that comes after "-D<arg>" */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parse_define_macro(tpp_cli_loader *tpp_restrict self, char const *arg) {
@@ -58163,18 +58040,18 @@ tpp_cli_loader_parse_define_macro(tpp_cli_loader *tpp_restrict self, char const 
 	                          body, TPP_SIZE_MAX);
 	return result;
 }
-#endif /* TPP_HAVE_CLI_LOADER_DEFINE_MACRO */
+#endif /* TPP_HAVE_CLI_DASH_DEFINE_MACRO */
 
-#if TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO
+#if TPP_HAVE_CLI_DASH_UNDEFINE_MACRO
 /* Parse the macro un-definition that comes after "-U<arg>" */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parse_undefine_macro(tpp_cli_loader *tpp_restrict self, char const *arg) {
 	tpp_lexer_undef(self->tcl_lexer, arg, TPP_SIZE_MAX);
 	return TPP_EOK;
 }
-#endif /* TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO */
+#endif /* TPP_HAVE_CLI_DASH_UNDEFINE_MACRO */
 
-#if TPP_HAVE_CLI_LOADER_ASSERT
+#if TPP_HAVE_CLI_DASH_ASSERT
 /* Parse the predicate definition that comes after "-A<arg>" */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parse_assert(tpp_cli_loader *tpp_restrict self, char const *arg) {
@@ -58194,11 +58071,11 @@ tpp_cli_loader_parse_assert(tpp_cli_loader *tpp_restrict self, char const *arg) 
 	}
 	return TPP_EOK;
 }
-#endif /* TPP_HAVE_CLI_LOADER_ASSERT */
+#endif /* TPP_HAVE_CLI_DASH_ASSERT */
 
 
 
-#if TPP_HAVE_CLI_LOADER_INCLUDE
+#if TPP_HAVE_CLI_DASH_INCLUDE
 /* Parse the include that comes after "-include <arg>" */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parse_include(tpp_cli_loader *tpp_restrict self, char const *arg) {
@@ -58224,9 +58101,9 @@ tpp_cli_loader_parse_include(tpp_cli_loader *tpp_restrict self, char const *arg)
 	++self->tcl_includec;
 	return TPP_EOK;
 }
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE */
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE */
 
-#if TPP_HAVE_CLI_LOADER_IMACROS
+#if TPP_HAVE_CLI_DASH_IMACROS
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_include_imacros(tpp_lexer *tpp_restrict self,
                           /*inherit(always)*/ tpp_lexer_openfile_result *tpp_restrict ofr) {
@@ -58263,10 +58140,10 @@ tpp_cli_loader_parse_imacros(tpp_cli_loader *tpp_restrict self, char const *arg)
 	}
 	return tpp_lexer_include_imacros(self->tcl_lexer, &ofr);
 }
-#endif /* TPP_HAVE_CLI_LOADER_IMACROS */
+#endif /* TPP_HAVE_CLI_DASH_IMACROS */
 
 
-#if TPP_HAVE_CLI_LOADER_FPREPROCESSED
+#if TPP_HAVE_CLI_DASH_FPREPROCESSED
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_set_fpreprocessed(tpp_lexer *tpp_restrict self, bool no) {
 	tpp_errno result = tpp_lexer_set_CPP_MACROS(self, no);
@@ -58288,10 +58165,10 @@ tpp_lexer_set_fpreprocessed(tpp_lexer *tpp_restrict self, bool no) {
 		result = tpp_lexer_set_CPP_ASSERT(self, no);
 	return result;
 }
-#endif /* TPP_HAVE_CLI_LOADER_FPREPROCESSED */
+#endif /* TPP_HAVE_CLI_DASH_FPREPROCESSED */
 
 
-#if TPP_HAVE_CLI_LOADER_TRADITIONAL
+#if TPP_HAVE_CLI_DASH_TRADITIONAL
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_enable_traditional(tpp_lexer *tpp_restrict self) {
 	/* Enable traditional macro processing rules */
@@ -58306,10 +58183,10 @@ tpp_lexer_enable_traditional(tpp_lexer *tpp_restrict self) {
 		result = tpp_lexer_disable_TOK_CXX_COMMENT(self);
 	return result;
 }
-#endif /* TPP_HAVE_CLI_LOADER_TRADITIONAL */
+#endif /* TPP_HAVE_CLI_DASH_TRADITIONAL */
 
 
-#if TPP_HAVE_CLI_LOADER_INCLUDE_BARRIER
+#if TPP_HAVE_CLI_DASH_INCLUDE_BARRIER
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_enable_include_barrier(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
@@ -58321,10 +58198,10 @@ tpp_lexer_enable_include_barrier(tpp_lexer *tpp_restrict self) {
 
 	return tpp_lexer_disable_INCLUDE_RELATIVE_TO_CURRENT_FILE(self);
 }
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE_BARRIER */
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE_BARRIER */
 
 
-#if TPP_HAVE_CLI_LOADER_ADD_INCLUDE
+#if TPP_HAVE_CLI_ADD_INCLUDE
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_parse_addinclude(tpp_cli_loader *tpp_restrict self,
                                 tpp_include_path_kind kind,
@@ -58336,7 +58213,7 @@ tpp_cli_loader_parse_addinclude(tpp_cli_loader *tpp_restrict self,
 #endif
 	return tpp_lexer_includes_addbykind(self->tcl_lexer, kind, path, TPP_SIZE_MAX);
 }
-#endif /* TPP_HAVE_CLI_LOADER_ADD_INCLUDE */
+#endif /* TPP_HAVE_CLI_ADD_INCLUDE */
 
 
 
@@ -58367,55 +58244,55 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 		switch (*arg++) {
 
 /************************************************************************/
-#if TPP_HAVE_CLI_LOADER_DEFINE_MACRO
+#if TPP_HAVE_CLI_DASH_DEFINE_MACRO
 		case 'D':
 			if (*arg) /* -D */
 				return tpp_cli_loader_parse_define_macro(self, arg);
 			self->tcl_state = TPP_CLI_LOADER_STATE_DEFINE_MACRO;
 			return TPP_EOK;
-#endif /* TPP_HAVE_CLI_LOADER_DEFINE_MACRO */
+#endif /* TPP_HAVE_CLI_DASH_DEFINE_MACRO */
 /************************************************************************/
 
 
 
 /************************************************************************/
-#if TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO
+#if TPP_HAVE_CLI_DASH_UNDEFINE_MACRO
 		case 'U':
 			if (*arg) /* -U */
 				return tpp_cli_loader_parse_undefine_macro(self, arg);
 			self->tcl_state = TPP_CLI_LOADER_STATE_UNDEFINE_MACRO;
 			return TPP_EOK;
-#endif /* TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO */
+#endif /* TPP_HAVE_CLI_DASH_UNDEFINE_MACRO */
 /************************************************************************/
 
 
 
 /************************************************************************/
-#if TPP_HAVE_CLI_LOADER_ASSERT
+#if TPP_HAVE_CLI_DASH_ASSERT
 		case 'A':
 			if (*arg) /* -A */
 				return tpp_cli_loader_parse_assert(self, arg);
 			self->tcl_state = TPP_CLI_LOADER_STATE_ASSERT;
 			return TPP_EOK;
-#endif /* TPP_HAVE_CLI_LOADER_ASSERT */
+#endif /* TPP_HAVE_CLI_DASH_ASSERT */
 /************************************************************************/
 
 
 
 /************************************************************************/
 		case 'I':
-#if TPP_HAVE_CLI_LOADER_INCLUDE_BARRIER
+#if TPP_HAVE_CLI_DASH_INCLUDE_BARRIER
 			if (tpp_streq(arg, "-\0")) { /* -I- */
 				return tpp_lexer_enable_include_barrier(self->tcl_lexer);
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE_BARRIER */
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE_BARRIER */
 			{
-#if TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY
+#if TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY
 				if (*arg)
 					return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_SYSTEM, arg);
 				self->tcl_state = TPP_CLI_LOADER_STATE_INCLUDE_DIRECTORY;
 				return TPP_EOK;
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY */
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY */
 			}
 			break;
 /************************************************************************/
@@ -58432,7 +58309,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				return TPP_EOK;
 
 			case 'd':
-#if TPP_HAVE_CLI_LOADER_DEFINE_MACRO
+#if TPP_HAVE_CLI_DASH_DEFINE_MACRO
 				if (tpp_streq(arg, "efine-macro")) { /* --define-macro */
 					arg += (sizeof("efine-macro") - sizeof(char));
 					if (*arg == '=')
@@ -58442,13 +58319,13 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 						return TPP_EOK;
 					}
 				} else
-#endif /* TPP_HAVE_CLI_LOADER_DEFINE_MACRO */
+#endif /* TPP_HAVE_CLI_DASH_DEFINE_MACRO */
 				{
 				}
 				break;
 
 			case 'u':
-#if TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO
+#if TPP_HAVE_CLI_DASH_UNDEFINE_MACRO
 				if (tpp_streq(arg, "ndefine-macro")) { /* --undefine-macro */
 					arg += (sizeof("ndefine-macro") - sizeof(char));
 					if (*arg == '=')
@@ -58458,13 +58335,13 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 						return TPP_EOK;
 					}
 				} else
-#endif /* TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO */
+#endif /* TPP_HAVE_CLI_DASH_UNDEFINE_MACRO */
 				{
 				}
 				break;
 
 			case 'a':
-#if TPP_HAVE_CLI_LOADER_ASSERT
+#if TPP_HAVE_CLI_DASH_ASSERT
 				if (tpp_streq(arg, "ssert")) { /* --assert */
 					arg += (sizeof("ssert") - sizeof(char));
 					if (*arg == '=')
@@ -58474,24 +58351,57 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 						return TPP_EOK;
 					}
 				} else
-#endif /* TPP_HAVE_CLI_LOADER_ASSERT */
+#endif /* TPP_HAVE_CLI_DASH_ASSERT */
 				{
 				}
 				break;
 
 			case 'i':
-#if TPP_HAVE_CLI_LOADER_INCLUDE
+#if TPP_HAVE_CLI_DASH_INCLUDE || TPP_HAVE_CLI_DASH_INCLUDE_BARRIER || TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || TPP_HAVE_CLI_DASH_IDIRAFTER
 				if (tpp_streq(arg, "nclude")) { /* --include */
 					arg += (sizeof("nclude") - sizeof(char));
+#if TPP_HAVE_CLI_DASH_INCLUDE
 					if (*arg == '=')
 						return tpp_cli_loader_parse_include(self, arg + 1);
 					if (*arg == '\0') {
 						self->tcl_state = TPP_CLI_LOADER_STATE_INCLUDE;
 						return TPP_EOK;
 					}
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE */
+#if TPP_HAVE_CLI_DASH_INCLUDE_BARRIER
+					if (tpp_streq(arg, "-barrier\0")) { /* --include-barrier */
+						return tpp_lexer_enable_include_barrier(self->tcl_lexer);
+					} else
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE_BARRIER */
+#if TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || TPP_HAVE_CLI_DASH_IDIRAFTER
+					if (tpp_streq(arg, "-directory")) { /* --include-directory= */
+						arg += (sizeof("-directory") - sizeof(char));
+#if TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY
+						if (*arg == '=')
+							return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_SYSTEM, arg + 1);
+						if (*arg == '\0') {
+							self->tcl_state = TPP_CLI_LOADER_STATE_INCLUDE_DIRECTORY;
+							return TPP_EOK;
+						}
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY */
+#if TPP_HAVE_CLI_DASH_IDIRAFTER
+						if (tpp_streq(arg, "-after")) { /* --include-directory-after= */
+							arg += (sizeof("-after") - sizeof(char));
+							if (*arg == '=')
+								return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_AFTER, arg + 1);
+							if (*arg == '\0') {
+								self->tcl_state = TPP_CLI_LOADER_STATE_IDIRAFTER;
+								return TPP_EOK;
+							}
+						}
+#endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
+					} else
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || TPP_HAVE_CLI_DASH_IDIRAFTER */
+					{
+					}
 				} else
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE */
-#if TPP_HAVE_CLI_LOADER_IMACROS
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE || TPP_HAVE_CLI_DASH_INCLUDE_BARRIER || TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || TPP_HAVE_CLI_DASH_IDIRAFTER */
+#if TPP_HAVE_CLI_DASH_IMACROS
 				if (tpp_streq(arg, "macros")) { /* --imacros */
 					arg += (sizeof("macros") - sizeof(char));
 					if (*arg == '=')
@@ -58501,73 +58411,44 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 						return TPP_EOK;
 					}
 				} else
-#endif /* TPP_HAVE_CLI_LOADER_IMACROS */
-#if TPP_HAVE_CLI_LOADER_INCLUDE_BARRIER
-				if (tpp_streq(arg, "nclude-barrier\0")) { /* --include-barrier */
-					return tpp_lexer_enable_include_barrier(self->tcl_lexer);
-				} else
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE_BARRIER */
-#if TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY || TPP_HAVE_CLI_LOADER_IDIRAFTER
-				if (tpp_streq(arg, "nclude-directory")) { /* --include-directory= */
-					arg += (sizeof("nclude-directory") - sizeof(char));
-#if TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY
-					if (*arg == '=')
-						return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_SYSTEM, arg + 1);
-					if (*arg == '\0') {
-						self->tcl_state = TPP_CLI_LOADER_STATE_INCLUDE_DIRECTORY;
-						return TPP_EOK;
-					}
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY */
-#if TPP_HAVE_CLI_LOADER_IDIRAFTER
-					if (tpp_streq(arg, "-after")) { /* --include-directory-after= */
-						arg += (sizeof("-after") - sizeof(char));
-						if (*arg == '=')
-							return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_AFTER, arg + 1);
-						if (*arg == '\0') {
-							self->tcl_state = TPP_CLI_LOADER_STATE_IDIRAFTER;
-							return TPP_EOK;
-						}
-					}
-#endif /* TPP_HAVE_CLI_LOADER_IDIRAFTER */
-				} else
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY || TPP_HAVE_CLI_LOADER_IDIRAFTER */
+#endif /* TPP_HAVE_CLI_DASH_IMACROS */
 				{
 				}
 				break;
 
 			case 'c':
-#if TPP_HAVE_CLI_LOADER_COMMENTS
+#if TPP_HAVE_CLI_DASH_COMMENTS
 				if (tpp_streq(arg, "omments\0") ||           /* --comments */
 				    tpp_streq(arg, "omments-in-macros\0")) { /* --comments-in-macros */
 					return tpp_lexer_enable_TOK_COMMENT(self->tcl_lexer);
 				} else
-#endif /* TPP_HAVE_CLI_LOADER_COMMENTS */
+#endif /* TPP_HAVE_CLI_DASH_COMMENTS */
 				{
 				}
 				break;
 
 			case 't':
-#if TPP_HAVE_CLI_LOADER_TRADITIONAL
+#if TPP_HAVE_CLI_DASH_TRADITIONAL
 				if (tpp_streq(arg, "raditional\0") ||     /* --traditional */
 				    tpp_streq(arg, "raditional-cpp\0")) { /* --traditional-cpp */
 					return tpp_lexer_enable_traditional(self->tcl_lexer);
 				} else
-#endif /* TPP_HAVE_CLI_LOADER_TRADITIONAL */
-#if TPP_HAVE_CLI_LOADER_TRIGRAPHS
+#endif /* TPP_HAVE_CLI_DASH_TRADITIONAL */
+#if TPP_HAVE_CLI_DASH_TRIGRAPHS
 				if (tpp_streq(arg, "rigraphs\0")) { /* --trigraphs */
 					return tpp_lexer_enable_TRIGRAPHS(self->tcl_lexer);
 				} else
-#endif /* TPP_HAVE_CLI_LOADER_TRIGRAPHS */
+#endif /* TPP_HAVE_CLI_DASH_TRIGRAPHS */
 				{
 				}
 				break;
 
 			case 'n':
-#if TPP_HAVE_CLI_NOSTDINC
+#if TPP_HAVE_CLI_DASH_NOSTDINC
 				if (tpp_streq(arg, "o-standard-includes\0")) { /* --no-standard-includes */
 					return tpp_lexer_disable_INCLUDE_SYSTEM_INCLUDE_PATH(self->tcl_lexer);
 				} else
-#endif /* TPP_HAVE_CLI_NOSTDINC */
+#endif /* TPP_HAVE_CLI_DASH_NOSTDINC */
 				{
 				}
 				break;
@@ -58581,36 +58462,36 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 'i':
-#if TPP_HAVE_CLI_LOADER_INCLUDE
+#if TPP_HAVE_CLI_DASH_INCLUDE
 			if (tpp_streq(arg, "nclude\0")) { /* -include ... */
 				self->tcl_state = TPP_CLI_LOADER_STATE_INCLUDE;
 				return TPP_EOK;
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE */
-#if TPP_HAVE_CLI_LOADER_IMACROS
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE */
+#if TPP_HAVE_CLI_DASH_IMACROS
 			if (tpp_streq(arg, "macros\0")) { /* -imacros ... */
 				self->tcl_state = TPP_CLI_LOADER_STATE_IMACROS;
 				return TPP_EOK;
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_IMACROS */
-#if TPP_HAVE_CLI_LOADER_IQUOTE
+#endif /* TPP_HAVE_CLI_DASH_IMACROS */
+#if TPP_HAVE_CLI_DASH_IQUOTE
 			if (tpp_streq(arg, "quote\0")) { /* -iquote ... */
 				self->tcl_state = TPP_CLI_LOADER_STATE_IQUOTE;
 				return TPP_EOK;
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_IQUOTE */
-#if TPP_HAVE_CLI_LOADER_ISYSTEM
+#endif /* TPP_HAVE_CLI_DASH_IQUOTE */
+#if TPP_HAVE_CLI_DASH_ISYSTEM
 			if (tpp_streq(arg, "system\0")) { /* -isystem ... */
 				self->tcl_state = TPP_CLI_LOADER_STATE_ISYSTEM;
 				return TPP_EOK;
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_ISYSTEM */
-#if TPP_HAVE_CLI_LOADER_IDIRAFTER
+#endif /* TPP_HAVE_CLI_DASH_ISYSTEM */
+#if TPP_HAVE_CLI_DASH_IDIRAFTER
 			if (tpp_streq(arg, "dirafter\0")) { /* -idirafter ... */
 				self->tcl_state = TPP_CLI_LOADER_STATE_IDIRAFTER;
 				return TPP_EOK;
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_IDIRAFTER */
+#endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
 			{
 			}
 			break;
@@ -58620,11 +58501,11 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 'u':
-#if TPP_HAVE_CLI_LOADER_UNDEF
+#if TPP_HAVE_CLI_DASH_UNDEF
 			if (tpp_streq(arg, "ndef\0")) { /* -undef */
 				return tpp_lexer_disable_CPP_PREDEFINED_MACROS(self->tcl_lexer);
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_UNDEF */
+#endif /* TPP_HAVE_CLI_DASH_UNDEF */
 			{
 			}
 			break;
@@ -58634,11 +58515,11 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 'n':
-#if TPP_HAVE_CLI_NOSTDINC
+#if TPP_HAVE_CLI_DASH_NOSTDINC
 			if (tpp_streq(arg, "ostdinc\0")) { /* -nostdinc */
 				return tpp_lexer_disable_INCLUDE_SYSTEM_INCLUDE_PATH(self->tcl_lexer);
 			} else
-#endif /* TPP_HAVE_CLI_NOSTDINC */
+#endif /* TPP_HAVE_CLI_DASH_NOSTDINC */
 			{
 			}
 			break;
@@ -58648,48 +58529,55 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 'f': {
+#if (TPP_HAVE_CLI_DASH_FPREPROCESSED ||           \
+     TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY ||        \
+     TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS || \
+     TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH ||      \
+     TPP_HAVE_CLI_DASH_FTABSTOP ||                \
+     TPP_HAVE_CLI_DASH_FEXTENSION)
 			bool no = false;
 			if (tpp_streq(arg, "no-")) {
 				arg += 3;
 				no = true;
 			}
+#endif /* ... */
 
-#if TPP_HAVE_CLI_LOADER_FPREPROCESSED
+#if TPP_HAVE_CLI_DASH_FPREPROCESSED
 			if (tpp_streq(arg, "preprocessed\0")) { /* -fpreprocessed */
 				return tpp_lexer_set_fpreprocessed(self->tcl_lexer, no);
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_FPREPROCESSED */
-#if TPP_HAVE_CLI_LOADER_FDIRECTIVES_ONLY
+#endif /* TPP_HAVE_CLI_DASH_FPREPROCESSED */
+#if TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY
 			if (tpp_streq(arg, "directives-only\0")) { /* -fdirectives-only */
 				return tpp_lexer_set_CPP_MACROS(self->tcl_lexer, no);
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_FDIRECTIVES_ONLY */
-#if TPP_HAVE_CLI_LOADER_FDOLLARS_IN_IDENTIFIERS
+#endif /* TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY */
+#if TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS
 			if (tpp_streq(arg, "dollars-in-identifiers\0")) { /* -fdollars-in-identifiers */
 				return tpp_lexer_set_TOK_DOLLAR(self->tcl_lexer, no);
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_FDOLLARS_IN_IDENTIFIERS */
-#if TPP_HAVE_CLI_LOADER_FMAX_INCLUDE_DEPTH
+#endif /* TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS */
+#if TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH
 			if (tpp_streq(arg, "max-include-depth=") && !no) { /* -fmax-include-depth=... */
 				tpp_size new_limit = tpp_simple_atoz(arg + 19);
 				tpp_lexer_setinclusionlimit(self->tcl_lexer, new_limit);
 				return TPP_EOK;
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_FMAX_INCLUDE_DEPTH */
-#if TPP_HAVE_CLI_LOADER_FTABSTOP
+#endif /* TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH */
+#if TPP_HAVE_CLI_DASH_FTABSTOP
 			if (tpp_streq(arg, "tabstop=") && !no) { /* -ftabstop=... */
 				tpp_size new_stop = tpp_simple_atoz(arg + 8);
 				tpp_settabsize(new_stop);
 				return TPP_EOK;
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_FTABSTOP */
+#endif /* TPP_HAVE_CLI_DASH_FTABSTOP */
 			{
-#if TPP_HAVE_EXTENSIONS
+#if TPP_HAVE_CLI_DASH_FEXTENSION
 				/* Fallback: configure an extension */
 				tpp_extension_id extension = tpp_extension_byname(arg);
 				if (extension != TPP_EXT_COUNT)
 					return tpp_lexer_setextension(self->tcl_lexer, extension, !no);
-#endif /* TPP_HAVE_EXTENSIONS */
+#endif /* TPP_HAVE_CLI_DASH_FEXTENSION */
 			}
 		}	break;
 /************************************************************************/
@@ -58698,18 +58586,21 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 'W': {
+#if TPP_HAVE_CLI_DASH_WERROR || TPP_HAVE_CLI_DASH_WWARNING
 			bool no = false;
 			if (tpp_streq(arg, "no-")) {
 				arg += 3;
 				no = true;
 			}
-#if TPP_HAVE_CLI_WERROR
+#endif /* ... */
+
+#if TPP_HAVE_CLI_DASH_WERROR
 			if (tpp_streq(arg, "error\0")) {
 				return tpp_lexer_set_WERROR(self->tcl_lexer, !no);
 			} else
-#endif /* TPP_HAVE_CLI_WERROR */
+#endif /* TPP_HAVE_CLI_DASH_WERROR */
 			{
-#if TPP_HAVE_WARNINGS
+#if TPP_HAVE_CLI_DASH_WWARNING
 				/* Fallback: configure a warning */
 				tpp_warning_group_id wgid = tpp_warning_group_byname(arg);
 				if (wgid != TPP_WG_COUNT) {
@@ -58733,7 +58624,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 					}
 					return tpp_lexer_setwarninggrp(self->tcl_lexer, wgid, state);
 				}
-#endif /* TPP_HAVE_WARNINGS */
+#endif /* TPP_HAVE_CLI_DASH_WWARNING */
 			}
 		}	break;
 /************************************************************************/
@@ -58742,11 +58633,11 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 'C':
-#if TPP_HAVE_CLI_LOADER_COMMENTS
+#if TPP_HAVE_CLI_DASH_COMMENTS
 			if (*arg == '\0' || tpp_streq(arg, "C\0")) { /* -C -CC */
 				return tpp_lexer_enable_TOK_COMMENT(self->tcl_lexer);
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_COMMENTS */
+#endif /* TPP_HAVE_CLI_DASH_COMMENTS */
 			{
 			}
 			break;
@@ -58756,17 +58647,17 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 't':
-#if TPP_HAVE_CLI_LOADER_TRADITIONAL
+#if TPP_HAVE_CLI_DASH_TRADITIONAL
 			if (tpp_streq(arg, "raditional\0") ||     /* -traditional */
 			    tpp_streq(arg, "raditional-cpp\0")) { /* -traditional-cpp */
 				return tpp_lexer_enable_traditional(self->tcl_lexer);
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_TRADITIONAL */
-#if TPP_HAVE_CLI_LOADER_TRIGRAPHS
+#endif /* TPP_HAVE_CLI_DASH_TRADITIONAL */
+#if TPP_HAVE_CLI_DASH_TRIGRAPHS
 			if (tpp_streq(arg, "rigraphs\0")) { /* -trigraphs */
 				return tpp_lexer_enable_TRIGRAPHS(self->tcl_lexer);
 			} else
-#endif /* TPP_HAVE_CLI_LOADER_TRIGRAPHS */
+#endif /* TPP_HAVE_CLI_DASH_TRIGRAPHS */
 			{
 			}
 			break;
@@ -58779,59 +58670,59 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 	case TPP_CLI_LOADER_STATE_DDASH:
 		break; /* Don't accept any more arguments after having encountered a "--" arguments */
 
-#if TPP_HAVE_CLI_LOADER_DEFINE_MACRO
+#if TPP_HAVE_CLI_DASH_DEFINE_MACRO
 	case TPP_CLI_LOADER_STATE_DEFINE_MACRO:
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_define_macro(self, arg);
-#endif /* TPP_HAVE_CLI_LOADER_DEFINE_MACRO */
+#endif /* TPP_HAVE_CLI_DASH_DEFINE_MACRO */
 
-#if TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO
+#if TPP_HAVE_CLI_DASH_UNDEFINE_MACRO
 	case TPP_CLI_LOADER_STATE_UNDEFINE_MACRO:
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_undefine_macro(self, arg);
-#endif /* TPP_HAVE_CLI_LOADER_UNDEFINE_MACRO */
+#endif /* TPP_HAVE_CLI_DASH_UNDEFINE_MACRO */
 
-#if TPP_HAVE_CLI_LOADER_ASSERT
+#if TPP_HAVE_CLI_DASH_ASSERT
 	case TPP_CLI_LOADER_STATE_ASSERT:
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_assert(self, arg);
-#endif /* TPP_HAVE_CLI_LOADER_ASSERT */
+#endif /* TPP_HAVE_CLI_DASH_ASSERT */
 
-#if TPP_HAVE_CLI_LOADER_INCLUDE
+#if TPP_HAVE_CLI_DASH_INCLUDE
 	case TPP_CLI_LOADER_STATE_INCLUDE:
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_include(self, arg);
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE */
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE */
 
-#if TPP_HAVE_CLI_LOADER_IMACROS
+#if TPP_HAVE_CLI_DASH_IMACROS
 	case TPP_CLI_LOADER_STATE_IMACROS:
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_imacros(self, arg);
-#endif /* TPP_HAVE_CLI_LOADER_IMACROS */
+#endif /* TPP_HAVE_CLI_DASH_IMACROS */
 
-#if TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY
+#if TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY
 	case TPP_CLI_LOADER_STATE_INCLUDE_DIRECTORY:
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_SYSTEM, arg);
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE_DIRECTORY */
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY */
 
-#if TPP_HAVE_CLI_LOADER_IQUOTE
+#if TPP_HAVE_CLI_DASH_IQUOTE
 	case TPP_CLI_LOADER_STATE_IQUOTE:
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_QUOTE, arg);
-#endif /* TPP_HAVE_CLI_LOADER_IQUOTE */
+#endif /* TPP_HAVE_CLI_DASH_IQUOTE */
 
-#if TPP_HAVE_CLI_LOADER_ISYSTEM
+#if TPP_HAVE_CLI_DASH_ISYSTEM
 	case TPP_CLI_LOADER_STATE_ISYSTEM:
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_SYSTEM, arg);
-#endif /* TPP_HAVE_CLI_LOADER_ISYSTEM */
+#endif /* TPP_HAVE_CLI_DASH_ISYSTEM */
 
-#if TPP_HAVE_CLI_LOADER_IDIRAFTER
+#if TPP_HAVE_CLI_DASH_IDIRAFTER
 	case TPP_CLI_LOADER_STATE_IDIRAFTER:
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_AFTER, arg);
-#endif /* TPP_HAVE_CLI_LOADER_IDIRAFTER */
+#endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
 
 	default: tpp_unreachable();
 	}
@@ -58946,7 +58837,7 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
 
 	(void)self;
-#if TPP_HAVE_CLI_LOADER_INCLUDE
+#if TPP_HAVE_CLI_DASH_INCLUDE
 	/* Push -include files onto the lexer's #include-stack */
 	{
 		tpp_size i;
@@ -58964,10 +58855,10 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
 		}
 		self->tcl_includec = 0;
 	}
-#endif /* TPP_HAVE_CLI_LOADER_INCLUDE */
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE */
 	return TPP_EOK;
 }
-#endif /* TPP_HAVE_CLI_LOADER */
+#endif /* TPP_HAVE_CLI */
 
 TPP_DECL_END
 
