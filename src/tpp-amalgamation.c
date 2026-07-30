@@ -53685,8 +53685,10 @@ escape_self_sequence:
 		if (iter[0] != '?')
 			goto escape_self_sequence;
 
-		/* Only '??/??/' is allowed (which is the same as \\; which is printed as \) */
+		/* Only '??/??/' is allowed (which is the same as \\; which is printed as \): */
 		if (iter[1] != '/')
+			goto escape_self_sequence;
+		if (iter[-2] != '/') /* Preceding \-character must have also been a trigraph */
 			goto escape_self_sequence;
 		if (!tpp_lexer_has(self, TRIGRAPHS))
 			goto escape_self_sequence;

@@ -62,6 +62,7 @@ for (local e: fs.dir(".").sorted()) {
 #include "stringize.h"
 #include "strings-in-expressions.h"
 #include "traditional-macros.h"
+#include "trigraph-escape.h"
 #include "undef-current-macro.h"
 #include "undef-macro-cexpr.h"
 #include "unicode-names.h"
