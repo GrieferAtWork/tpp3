@@ -321,6 +321,7 @@
 #define tef_TPP_EXT_LEXER_DECODEINT_HEX_LITERALS           TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_HEX_LITERALS)
 #define tef_TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS        TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS)
 #define tef_TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS         TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS)
+#define tef_TPP_EXT_CPP_FEATURE_MACROS                     TPP_INTERNAL(tef_TPP_EXT_CPP_FEATURE_MACROS)
 #define xv_kind                                            TPP_INTERNAL(xv_kind)
 #define xd_int                                             TPP_INTERNAL(xd_int)
 #define xv_data                                            TPP_INTERNAL(xv_data)
@@ -611,6 +612,7 @@
 #define tff_LEXER_DECODEINT_HEX_LITERALS                   TPP_INTERNAL(tff_LEXER_DECODEINT_HEX_LITERALS)
 #define tff_LEXER_DECODEINT_BINARY_LITERALS                TPP_INTERNAL(tff_LEXER_DECODEINT_BINARY_LITERALS)
 #define tff_LEXER_DECODEINT_OCTAL_LITERALS                 TPP_INTERNAL(tff_LEXER_DECODEINT_OCTAL_LITERALS)
+#define tff_CPP_FEATURE_MACROS                             TPP_INTERNAL(tff_CPP_FEATURE_MACROS)
 #define tidse_mode                                         TPP_INTERNAL(tidse_mode)
 #define tidse_created                                      TPP_INTERNAL(tidse_created)
 #define tidse_updated                                      TPP_INTERNAL(tidse_updated)
@@ -30420,6 +30422,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS)
 		/* .tff_LEXER_DECODEINT_OCTAL_LITERALS         = */ TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_CPP_FEATURE_MACROS)
+		/* .tff_CPP_FEATURE_MACROS                     = */ TPP_CONF_DEFAULT(TPP_HAVE_CPP_FEATURE_MACROS),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_CPP_FEATURE_MACROS) */
 	}
 };
 #endif /* TPP_HAVE_FEATURES */

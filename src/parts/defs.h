@@ -339,7 +339,6 @@ local BUILTIN_KEYWORDS = {
 	"define": "TPP_HAVE_CPP_DEFINE",
 	"undef": "TPP_HAVE_CPP_DEFINE || TPP_HAVE_PRAGMA_PUSH_MACRO",
 	"embed": "TPP_HAVE_CPP_EMBED",
-	"__cpp_pp_embed": "TPP_HAVE_CPP_EMBED",
 	"assert": "TPP_HAVE_CPP_ASSERT",
 	"unassert": "TPP_HAVE_CPP_ASSERT",
 	"error": "TPP_HAVE_CPP_ERROR || TPP_HAVE_PRAGMA_ERROR || TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC || TPP_HAVE_PRAGMA_GCC_ERROR || TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING",
@@ -417,6 +416,12 @@ local BUILTIN_KEYWORDS = {
 	"__STDC_EMBED_NOT_FOUND__": "TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed",
 	"__STDC_EMBED_FOUND__": "TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed",
 	"__STDC_EMBED_EMPTY__": "TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed",
+
+	// CPP feature macros
+	"__cpp_binary_literals": "TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS",
+	"__cpp_raw_strings": "TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL",
+	"__cpp_named_character_escapes": "TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_STRING_ESCAPE_NAMED",
+	"__cpp_pp_embed": "TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_CPP_EMBED",
 
 	// Pragmas....
 	"push_macro": "TPP_HAVE_PRAGMA_PUSH_MACRO",
@@ -638,16 +643,6 @@ TPP_KWD(TPP_KWD_embed, "embed")
 #if TPP_KWDIDENTIFIER_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
 TPP_KWD_IS_IDENTIFIER(TPP_KWD_embed, TPP_KWDIDENTIFIER_embed)
 #endif /* TPP_KWDIDENTIFIER_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
-#endif /* TPP_HAVE_CPP_EMBED */
-#if TPP_HAVE_CPP_EMBED
-#define TPP_KWD___cpp_pp_embed TPP_KWD___cpp_pp_embed
-TPP_KWD(TPP_KWD___cpp_pp_embed, "__cpp_pp_embed")
-#ifndef TPP_KWDIDENTIFIER___cpp_pp_embed
-#define TPP_KWDIDENTIFIER___cpp_pp_embed 0
-#endif /* !TPP_KWDIDENTIFIER___cpp_pp_embed */
-#if TPP_KWDIDENTIFIER___cpp_pp_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
-TPP_KWD_IS_IDENTIFIER(TPP_KWD___cpp_pp_embed, TPP_KWDIDENTIFIER___cpp_pp_embed)
-#endif /* TPP_KWDIDENTIFIER___cpp_pp_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
 #endif /* TPP_HAVE_CPP_EMBED */
 #if TPP_HAVE_CPP_ASSERT
 #define TPP_KWD_assert TPP_KWD_assert
@@ -1355,6 +1350,46 @@ TPP_KWD(TPP_KWD___STDC_EMBED_FOUND__, "__STDC_EMBED_FOUND__")
 #define TPP_KWD___STDC_EMBED_EMPTY__ TPP_KWD___STDC_EMBED_EMPTY__
 TPP_KWD(TPP_KWD___STDC_EMBED_EMPTY__, "__STDC_EMBED_EMPTY__")
 #endif /* TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS
+#define TPP_KWD___cpp_binary_literals TPP_KWD___cpp_binary_literals
+TPP_KWD(TPP_KWD___cpp_binary_literals, "__cpp_binary_literals")
+#ifndef TPP_KWDIDENTIFIER___cpp_binary_literals
+#define TPP_KWDIDENTIFIER___cpp_binary_literals 0
+#endif /* !TPP_KWDIDENTIFIER___cpp_binary_literals */
+#if TPP_KWDIDENTIFIER___cpp_binary_literals != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
+TPP_KWD_IS_IDENTIFIER(TPP_KWD___cpp_binary_literals, TPP_KWDIDENTIFIER___cpp_binary_literals)
+#endif /* TPP_KWDIDENTIFIER___cpp_binary_literals != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
+#endif /* TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS */
+#if TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
+#define TPP_KWD___cpp_raw_strings TPP_KWD___cpp_raw_strings
+TPP_KWD(TPP_KWD___cpp_raw_strings, "__cpp_raw_strings")
+#ifndef TPP_KWDIDENTIFIER___cpp_raw_strings
+#define TPP_KWDIDENTIFIER___cpp_raw_strings 0
+#endif /* !TPP_KWDIDENTIFIER___cpp_raw_strings */
+#if TPP_KWDIDENTIFIER___cpp_raw_strings != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
+TPP_KWD_IS_IDENTIFIER(TPP_KWD___cpp_raw_strings, TPP_KWDIDENTIFIER___cpp_raw_strings)
+#endif /* TPP_KWDIDENTIFIER___cpp_raw_strings != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
+#endif /* TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_STRING_ESCAPE_NAMED
+#define TPP_KWD___cpp_named_character_escapes TPP_KWD___cpp_named_character_escapes
+TPP_KWD(TPP_KWD___cpp_named_character_escapes, "__cpp_named_character_escapes")
+#ifndef TPP_KWDIDENTIFIER___cpp_named_character_escapes
+#define TPP_KWDIDENTIFIER___cpp_named_character_escapes 0
+#endif /* !TPP_KWDIDENTIFIER___cpp_named_character_escapes */
+#if TPP_KWDIDENTIFIER___cpp_named_character_escapes != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
+TPP_KWD_IS_IDENTIFIER(TPP_KWD___cpp_named_character_escapes, TPP_KWDIDENTIFIER___cpp_named_character_escapes)
+#endif /* TPP_KWDIDENTIFIER___cpp_named_character_escapes != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
+#endif /* TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_STRING_ESCAPE_NAMED */
+#if TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_CPP_EMBED
+#define TPP_KWD___cpp_pp_embed TPP_KWD___cpp_pp_embed
+TPP_KWD(TPP_KWD___cpp_pp_embed, "__cpp_pp_embed")
+#ifndef TPP_KWDIDENTIFIER___cpp_pp_embed
+#define TPP_KWDIDENTIFIER___cpp_pp_embed 0
+#endif /* !TPP_KWDIDENTIFIER___cpp_pp_embed */
+#if TPP_KWDIDENTIFIER___cpp_pp_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
+TPP_KWD_IS_IDENTIFIER(TPP_KWD___cpp_pp_embed, TPP_KWDIDENTIFIER___cpp_pp_embed)
+#endif /* TPP_KWDIDENTIFIER___cpp_pp_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
+#endif /* TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_CPP_EMBED */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 #define TPP_KWD_push_macro TPP_KWD_push_macro
 TPP_KWD(TPP_KWD_push_macro, "push_macro")
@@ -1653,8 +1688,27 @@ TPP_KWD_IS_IDENTIFIER(TPP_KWD_dirafter, TPP_KWDIDENTIFIER_dirafter)
 TPP_MACRO(TPP_KWD___TPP_VERSION__, true)
 TPP_PREDEFINED_MACRO(TPP_KWD___TPP_VERSION__, tpp_return_conststr(TPP_PREPROCESSOR_VERSION_STR))
 
+#if TPP_HAVE_CPP_FEATURE_MACROS
+/* XXX: __cpp_hex_float=201603L (doesn't have a feature-flag, yet) */
+
+#if TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS
+TPP_MACRO(TPP_KWD___cpp_binary_literals, tpp_lexer_has(tpp_current_lexer(), CPP_FEATURE_MACROS) &&
+                                         tpp_lexer_has(tpp_current_lexer(), LEXER_DECODEINT_BINARY_LITERALS))
+TPP_PREDEFINED_MACRO(TPP_KWD___cpp_binary_literals, tpp_return_conststr("201304" TPP_CONFIG_CPP_CONSTANT_SUFFIX))
+#endif /* TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS */
+#if TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
+TPP_MACRO(TPP_KWD___cpp_raw_strings, tpp_lexer_has(tpp_current_lexer(), CPP_FEATURE_MACROS) &&
+                                     tpp_lexer_has(tpp_current_lexer(), TOK_CXX_RAW_STRING_LITERAL))
+TPP_PREDEFINED_MACRO(TPP_KWD___cpp_raw_strings, tpp_return_conststr("200710" TPP_CONFIG_CPP_CONSTANT_SUFFIX))
+#endif /* TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_STRING_ESCAPE_NAMED
+TPP_MACRO(TPP_KWD___cpp_named_character_escapes, tpp_lexer_has(tpp_current_lexer(), CPP_FEATURE_MACROS) &&
+                                                 tpp_lexer_has(tpp_current_lexer(), STRING_ESCAPE_NAMED))
+TPP_PREDEFINED_MACRO(TPP_KWD___cpp_named_character_escapes, tpp_return_conststr("202207" TPP_CONFIG_CPP_CONSTANT_SUFFIX))
+#endif /* TPP_HAVE_STRING_ESCAPE_NAMED */
 #if TPP_HAVE_CPP_EMBED
-TPP_MACRO(TPP_KWD___cpp_pp_embed, tpp_lexer_has(tpp_current_lexer(), CPP_EMBED))
+TPP_MACRO(TPP_KWD___cpp_pp_embed, tpp_lexer_has(tpp_current_lexer(), CPP_FEATURE_MACROS) &&
+                                  tpp_lexer_has(tpp_current_lexer(), CPP_EMBED))
 #if !TPP_HAVE_CPP_EMBED_OFFSET
 TPP_PREDEFINED_MACRO(TPP_KWD___cpp_pp_embed, tpp_return_conststr("202502" TPP_CONFIG_CPP_CONSTANT_SUFFIX))
 #elif !TPP_CONF_MAYBE_0(TPP_HAVE_CPP_EMBED_OFFSET)
@@ -1669,6 +1723,7 @@ TPP_PREDEFINED_MACRO(TPP_KWD___cpp_pp_embed, {
 })
 #endif /* !... */
 #endif /* TPP_HAVE_CPP_EMBED */
+#endif /* TPP_HAVE_CPP_FEATURE_MACROS */
 
 #if TPP_HAVE_MACRO___has_embed
 TPP_MACRO(TPP_KWD___STDC_EMBED_NOT_FOUND__, tpp_lexer_has(tpp_current_lexer(), MACRO___has_embed))
@@ -3939,6 +3994,14 @@ TPP_EXTENSION(TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS, TPP_EXTNAME_LEXER_DECODEI
 TPP_EXTENSION(TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS, TPP_EXTNAME_LEXER_DECODEINT_OCTAL_LITERALS, TPP_CONF_DEFAULT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS))
 #define _tpp_lexer_has_LEXER_DECODEINT_OCTAL_LITERALS(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS)
 #endif /* TPP_CONF_IS_EXT(TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS) */
+#if TPP_CONF_IS_EXT(TPP_HAVE_CPP_FEATURE_MACROS)
+#ifndef TPP_EXTNAME_CPP_FEATURE_MACROS
+#define TPP_EXTNAME_CPP_FEATURE_MACROS "extern-c-for-syshdr"
+#endif /* !TPP_EXTNAME_CPP_FEATURE_MACROS */
+#define TPP_EXT_CPP_FEATURE_MACROS TPP_EXT_CPP_FEATURE_MACROS
+TPP_EXTENSION(TPP_EXT_CPP_FEATURE_MACROS, TPP_EXTNAME_CPP_FEATURE_MACROS, TPP_CONF_DEFAULT(TPP_HAVE_CPP_FEATURE_MACROS))
+#define _tpp_lexer_has_CPP_FEATURE_MACROS(self) (self)->TPP_INTERNAL(tl_exts).TPP_INTERNAL(te_state).TPP_INTERNAL(tes_flags).TPP_INTERNAL(tef_TPP_EXT_CPP_FEATURE_MACROS)
+#endif /* TPP_CONF_IS_EXT(TPP_HAVE_CPP_FEATURE_MACROS) */
 /*[[[end]]]*/
 
 

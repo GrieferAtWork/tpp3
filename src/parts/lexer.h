@@ -1467,6 +1467,13 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 
+/* TODO: API function to quickly parse ,-separated lists of decimal bytes,
+ *       whilst passing every byte parsed into a given "tpp_formatprinter"
+ *       callback (the function would be called on a TPP_TOK_C_INT-token,
+ *       and continue parsing until the first non-int/','-token)
+ * -> When enabled, this API would obviously have a fast-pass case for
+ *    for when the current input file is a `#embed` source file */
+
 
 #if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
 /* Special token IDs for include paths */

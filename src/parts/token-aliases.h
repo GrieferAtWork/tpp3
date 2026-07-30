@@ -619,9 +619,6 @@ print("#endif /" "* TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE *" "/");
 #if TPP_HAVE_CPP_EMBED
 #define KWD_embed TPP_KWD_embed
 #endif /* TPP_HAVE_CPP_EMBED */
-#if TPP_HAVE_CPP_EMBED
-#define KWD___cpp_pp_embed TPP_KWD___cpp_pp_embed
-#endif /* TPP_HAVE_CPP_EMBED */
 #if TPP_HAVE_CPP_ASSERT
 #define KWD_assert TPP_KWD_assert
 #endif /* TPP_HAVE_CPP_ASSERT */
@@ -841,6 +838,18 @@ print("#endif /" "* TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE *" "/");
 #if TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed
 #define KWD___STDC_EMBED_EMPTY__ TPP_KWD___STDC_EMBED_EMPTY__
 #endif /* TPP_HAVE_CPP_PREDEFINED_MACROS && TPP_HAVE_MACRO___has_embed */
+#if TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS
+#define KWD___cpp_binary_literals TPP_KWD___cpp_binary_literals
+#endif /* TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS */
+#if TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
+#define KWD___cpp_raw_strings TPP_KWD___cpp_raw_strings
+#endif /* TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
+#if TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_STRING_ESCAPE_NAMED
+#define KWD___cpp_named_character_escapes TPP_KWD___cpp_named_character_escapes
+#endif /* TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_STRING_ESCAPE_NAMED */
+#if TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_CPP_EMBED
+#define KWD___cpp_pp_embed TPP_KWD___cpp_pp_embed
+#endif /* TPP_HAVE_CPP_FEATURE_MACROS && TPP_HAVE_CPP_EMBED */
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 #define KWD_push_macro TPP_KWD_push_macro
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */

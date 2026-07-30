@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/* TODO: Unit test that uses this file to load TPP */
 #ifdef TPP_DEFS
 
 /* Emulate TPP2 user-defs */
@@ -30,13 +31,13 @@
 	TPP_PREDEFINED_FEATURE_HAS_EXTENSION(id, tpp_return_bool((flags) & TPP_KEYWORDFLAG_HAS_EXTENSION))                   \
 	TPP_PREDEFINED_FEATURE_HAS_FEATURE(id, tpp_return_bool((flags) & TPP_KEYWORDFLAG_HAS_FEATURE))
 #define WGROUP(wgroup_id, names, default)   TPP_WGROUP(wgroup_id, names, default)
-#ifdef tpp_va_arg
+#ifdef tpp_current_va_arg
 #define WARNING(name, groups, default)      /* nothing */
 #define WARNING_MESSAGE(name, expr)         TPP_WARNING_EX(name, ~, ~, ~, format)
-#else /* tpp_va_arg */
+#else /* tpp_current_va_arg */
 #define WARNING(name, groups, default)      TPP_WARNING_EX(name, TPP2_VA_NARGS(groups) groups, 1(name), default, ~)
 #define WARNING_MESSAGE(name, expr)         /* nothing */
-#endif /* !tpp_va_arg */
+#endif /* !tpp_current_va_arg */
 #define WARNING_NAMESPACE(name, start)      /* nothing (sorry; these no longer exist in TPP3; use warning numbers instead!) */
 #define MACRO(keyword_id, if)               TPP_MACRO(keyword_id, if)
 #define BUILTIN_MACRO(keyword_id, value)    TPP_PREDEFINED_MACRO(keyword_id, value)
@@ -1210,7 +1211,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #undef WARN
 #undef HAS
 #undef CURRENT
-#ifdef tpp_va_arg
+#ifdef tpp_current_va_arg
 #undef Q
 #undef WARNF
 #undef TOK_S
@@ -1218,7 +1219,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #undef KWDNAME
 #undef FILENAME
 #undef ARG
-#endif /* tpp_va_arg */
+#endif /* tpp_current_va_arg */
 
 
 #undef TPP_PP_STR

@@ -1935,6 +1935,12 @@ print("#endif /" "* !... *" "/");
  * #pragma TPP __has_c_attribute(feature_test_keyword) = "expansion"
  * ```
  *
+ * The default feature-test expansion of some keyword can be restored
+ * by writing `default` instead of `"expansion"` like so:
+ * ```c
+ * #pragma TPP __has_attribute(feature_test_keyword) = default
+ * ```
+ *
  * Each of these resp. only works if the corresponding `TPP_HAVE_CLANG_MACRO_*`
  * hasn't been hard-disabled (as per `TPP_CONF_0`):
  * - `__has_attribute`: `TPP_HAVE_CLANG_MACRO___has_attribute`
@@ -6174,7 +6180,19 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_CONFIG_VALUEOF_STDC_EMBED_EMPTY */
 #endif /* TPP_HAVE_MACRO___has_embed */
 
+/* Enable a couple of `__cpp_*` predefined macros:
+ * - `TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS`: `__cpp_binary_literals`
+ * - `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL`: `__cpp_raw_strings`
+ * - `TPP_HAVE_STRING_ESCAPE_NAMED`: `__cpp_named_character_escapes`
+ * - `TPP_HAVE_CPP_EMBED`: `__cpp_pp_embed`
+ */
+#ifndef TPP_HAVE_CPP_FEATURE_MACROS
+#define TPP_HAVE_CPP_FEATURE_MACROS ((TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_HAVE_CPP_EMBED || TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_FEAT1 : 1) : 0) /* "-fextern-c-for-syshdr" */
+#endif /* !TPP_HAVE_CPP_FEATURE_MACROS */
+
 /* Suffix added to version numbers in `__cpp_*` predefined macros/keyword-features.
+ *
+ * This config only takes effect when `TPP_HAVE_CPP_FEATURE_MACROS` is enabled.
  *
  * e.g.: When `TPP_HAVE_CPP_EMBED` is enabled, `__cpp_pp_embed` is defined
  *       to expand to something like `202502`, followed by a suffix defined

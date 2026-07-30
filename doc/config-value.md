@@ -23,7 +23,7 @@ defined(_MSC_VER) ? "%Pf(%Pl, %Pc): " : "%Pf:%Pl:%Pc: "
 
 A preprocessor tuple describing the built-in, hard-coded, system-include path.
 - The paths specified here are searched in order of specification.
-- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L21119)
+- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L21215)
 - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
   trailing slashes in these strings, it will add those itself)
 
@@ -44,7 +44,7 @@ Default:
 
 ## TPP_CONFIG_CLI_FILENAME
 
-Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L22967)
+Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L23063)
 
 <details><summary>Details</summary>
 
@@ -130,6 +130,8 @@ Detect:
 ## TPP_CONFIG_CPP_CONSTANT_SUFFIX
 
 Suffix added to version numbers in `__cpp_*` predefined macros/keyword-features.
+
+This config only takes effect when [`TPP_HAVE_CPP_FEATURE_MACROS`](config-conf.md#tpp_have_cpp_feature_macros) is enabled.
 
 e.g.: When [`TPP_HAVE_CPP_EMBED`](config-conf.md#tpp_have_cpp_embed) is enabled, `__cpp_pp_embed` is defined
       to expand to something like `202502`, followed by a suffix defined
