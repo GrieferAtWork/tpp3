@@ -5617,6 +5617,7 @@ print("#endif /" "* !... *" "/");
      TPP_HAVE_MACRO___has_embed ||                \
      TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
      TPP_HAVE_MACRO___TPP_STR_SIZE ||             \
+     TPP_HAVE_MACRO___TPP_STR_PACK ||             \
      TPP_HAVE_MACRO___TPP_RANDOM ||               \
      TPP_HAVE_MACRO___TPP_STR_SUBSTR ||           \
      TPP_HAVE_CPP_ASSERT ||                       \
@@ -5887,12 +5888,25 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_DECODEINT_EXPR */
 
+/* Provide a function `tpp_lexer_parseembed()` to quickly parse ,-separated sequences
+ * of integer tokens with values in range [0,0xff]. Extra optimization is done if the
+ * current file turns out to be the result of a `#embed` directive, in which case the
+ * data doesn't need to be converted to decimals (if `TPP_HAVE_FILE_ENCODING_EMBED` is
+ * also enabled) */
+#ifndef TPP_HAVE_LEXER_PARSEEMBED
+#if ((TPP_HAVE_PROFILE_ALL || (TPP_HAVE_MACRO___TPP_STR_PACK && TPP_HAVE_FILE_ENCODING_EMBED)) && TPP_HAVE_TOK_INT)
+#define TPP_HAVE_LEXER_PARSEEMBED 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PARSEEMBED 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PARSEEMBED */
+
 /* Provide a function `tpp_lexer_decodeint()` to parse an integer */
 #ifndef TPP_HAVE_LEXER_DECODEINT
 #if (TPP_HAVE_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR ||   \
+                          TPP_HAVE_LEXER_PARSEEMBED ||       \
                           TPP_HAVE_CPP_LINE ||               \
                           TPP_HAVE_CPP_DIGIT_LINE ||         \
-                          TPP_HAVE_MACRO___TPP_STR_PACK ||   \
                           TPP_HAVE_MACRO___TPP_RANDOM ||     \
                           TPP_HAVE_MACRO___TPP_STR_SUBSTR || \
                           TPP_HAVE_PRAGMA_WARNING ||         \
@@ -6187,7 +6201,7 @@ print("#endif /" "* !... *" "/");
  * - `TPP_HAVE_CPP_EMBED`: `__cpp_pp_embed`
  */
 #ifndef TPP_HAVE_CPP_FEATURE_MACROS
-#define TPP_HAVE_CPP_FEATURE_MACROS ((TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_HAVE_CPP_EMBED || TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_FEAT1 : 1) : 0) /* "-fextern-c-for-syshdr" */
+#define TPP_HAVE_CPP_FEATURE_MACROS ((TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_HAVE_CPP_EMBED || TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS)) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : 0) /* "-fextern-c-for-syshdr" */
 #endif /* !TPP_HAVE_CPP_FEATURE_MACROS */
 
 /* Suffix added to version numbers in `__cpp_*` predefined macros/keyword-features.

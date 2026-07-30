@@ -486,8 +486,7 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_CPP_MACROS */
 
 
-/* - Disable automatic popping of "self" from the #include-stack
- * - Disable I/O expansion by reading additional data from the file
+/* - Disable I/O expansion by reading additional data from the file
  * - Make it so the file's EOF position can be overwritten freely
  *   (such that trying to yield additional tokens at/beyond that
  *   position will cause "tpp_lexer_yieldraw()" to return TPP_TOK_EOF)
@@ -535,38 +534,35 @@ typedef struct tpp_file {
 
 
 #if TPP_HAVE_FILE_KEEPPOS
-/* Push the current keep-pointer for "self"
- * This macro has no effect if "tpp_file_getkind(self) != TPP_FILE_KIND_IO" */
-#define tpp_file_pushkeep(self) \
-	do {                        \
-		tpp_char const *const _tfpk_oldkeep = (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep);
-#define tpp_file_breakkeep(self) \
-		(void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = _tfpk_oldkeep)
-#define tpp_file_popkeep(self)    \
-		tpp_file_breakkeep(self); \
-	} while (0)
-
 /* Returns the keep-pointer for the file (which may be "NULL").
  * Return value is undefined if "tpp_file_getkind(self) != TPP_FILE_KIND_IO" */
 #define tpp_file_getkeep(self) \
 	(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep)
 
-/* Set the keep-pointer for the file (given "ptr" must not be "NULL").
- * This macro has no effect if "tpp_file_getkind(self) != TPP_FILE_KIND_IO"
- *
- * @return: true:  Keep pointer was updated because "ptr" describes a greater
- *                 area of effect than the previously active keep-range.
- * @return: false: Keep pointer was not updated */
-#define tpp_file_setkeep(self, ptr)                                              \
-	(tpp_assert(!(self)->tf_chunk || (ptr) >= tpp_string_str((self)->tf_chunk)), \
-	 tpp_assert((ptr) <= (self)->tf_end),                                        \
-	 (!tpp_file_getkeep(self) || ((ptr) < tpp_file_getkeep(self))) &&            \
-	 ((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = (ptr), 1))
+/* Push the current keep-pointer for "self" and setup a new pointer "ptr"
+ * This macro has no effect if "tpp_file_getkind(self) != TPP_FILE_KIND_IO" */
+#define tpp_file_pushkeep(self, ptr)                                                          \
+	do {                                                                                      \
+		tpp_size _tfpk_oldkeep = 0;                                                           \
+		tpp_assert(!(self)->TPP_INTERNAL(tf_chunk) ||                                         \
+		           (ptr) >= tpp_string_str((self)->TPP_INTERNAL(tf_chunk)));                  \
+		tpp_assert((ptr) <= (self)->TPP_INTERNAL(tf_end));                                    \
+		if (!tpp_file_getkeep(self)) {                                                        \
+			_tfpk_oldkeep = TPP_SIZE_MAX;                                                     \
+			(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = (ptr); \
+		} else if ((ptr) < tpp_file_getkeep(self)) {                                          \
+			_tfpk_oldkeep = tpp_file_getkeep(self) - (ptr);                                   \
+			(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = (ptr); \
+		}
+#define tpp_file_breakkeep(self)                                                                   \
+		(_tfpk_oldkeep == TPP_SIZE_MAX                                                             \
+		 ? (void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = NULL) \
+		 : (void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) += _tfpk_oldkeep))
+#define tpp_file_popkeep(self)    \
+		tpp_file_breakkeep(self); \
+	} while (0)
 #else /* TPP_HAVE_FILE_KEEPPOS */
-#define tpp_file_pushkeep(self)  do {
-#define tpp_file_breakkeep(self) (void)0
-#define tpp_file_popkeep(self)   } while (0)
-#define tpp_file_getkeep(self)   tpp_file_getpos(self)
+#define tpp_file_getkeep(self) tpp_file_getpos(self)
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
 
 

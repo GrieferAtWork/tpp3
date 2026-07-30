@@ -45069,6 +45069,223 @@ tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
 
 /************************************************************************/
+/* File: parts/lexer-parseembed.c                                       */
+/************************************************************************/
+
+#if TPP_HAVE_LEXER_PARSEEMBED
+
+#if TPP_HAVE_FILE_ENCODING_EMBED
+#ifndef TPP_IO_READFILE_BLOCKING_STACK_BUFSIZE
+#define TPP_IO_READFILE_BLOCKING_STACK_BUFSIZE 1024
+#endif /* !TPP_IO_READFILE_BLOCKING_STACK_BUFSIZE */
+
+static TPP_WUNUSED TPP_NONNULL((2, 4)) tpp_ssize TPPCALL
+tpp_io_readfile_blocking_with_buffer(tpp_io_handle file, tpp_formatprinter printer, void *arg,
+                                     tpp_uintmax *tpp_restrict p_read_bytes, tpp_uintmax max_bytes,
+                                     tpp_char *buffer, tpp_size bufsize) {
+	tpp_ssize temp, result = 0;
+	tpp_uintmax read_bytes = 0;
+	while (read_bytes < max_bytes) {
+		tpp_ssize read_status;
+		tpp_uintmax remaining = max_bytes - read_bytes;
+		tpp_size block_size = bufsize;
+		if ((tpp_uintmax)block_size > remaining)
+			block_size = (tpp_size)remaining;
+		read_status = tpp_io_read_blocking(file, buffer, block_size);
+		if (TPP_SSIZE_ISERR(read_status))
+			return read_status;
+		if (read_status == 0)
+			break; /* EOF */
+		read_bytes += (tpp_size)read_status;
+		temp = tpp_formatprinter_print(printer, arg, buffer, (tpp_size)read_status);
+		if (temp < 0) {
+			result = temp;
+			break;
+		}
+		result += temp;
+	}
+	*p_read_bytes = read_bytes;
+	return result;
+}
+
+#ifndef tpp_alloca
+static TPP_WUNUSED TPP_NONNULL((2, 4)) tpp_ssize TPPCALL
+tpp_io_readfile_blocking_with_stack_buffer(tpp_io_handle file, tpp_formatprinter printer, void *arg,
+                                           tpp_uintmax *tpp_restrict p_read_bytes, tpp_uintmax max_bytes) {
+	tpp_char buffer[TPP_IO_READFILE_BLOCKING_STACK_BUFSIZE];
+	return tpp_io_readfile_blocking_with_buffer(file, printer, arg, p_read_bytes,
+	                                            max_bytes, buffer, sizeof(buffer));
+}
+#endif /* !tpp_alloca */
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((2, 4)) tpp_ssize TPPCALL
+tpp_io_readfile_blocking(tpp_io_handle file, tpp_formatprinter printer, void *arg,
+                         tpp_uintmax *tpp_restrict p_read_bytes, tpp_uintmax max_bytes) {
+	tpp_ssize result;
+	tpp_char *buffer;
+	tpp_size bufsize = 64 * 1024;
+	if ((tpp_uintmax)bufsize > max_bytes)
+		bufsize = (tpp_size)max_bytes;
+	buffer = (tpp_char *)tpp_trymalloc(bufsize);
+	if (!buffer) {
+#ifdef tpp_alloca
+		bufsize = TPP_IO_READFILE_BLOCKING_STACK_BUFSIZE;
+		buffer = (tpp_char *)tpp_alloca(TPP_IO_READFILE_BLOCKING_STACK_BUFSIZE);
+#else /* tpp_alloca */
+		return tpp_io_readfile_blocking_with_stack_buffer(file, printer, arg,
+		                                                  p_read_bytes, max_bytes);
+#endif /* !tpp_alloca */
+	}
+	result = tpp_io_readfile_blocking_with_buffer(file, printer, arg, p_read_bytes,
+	                                              max_bytes, buffer, bufsize);
+	tpp_free(buffer);
+	return result;
+}
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+
+/* Quickly parse a `,`-separated sequence of `TPP_TOK_ISINT()`-like
+ * tokens in range of `[0,0xff]` into a sequence of bytes, which are
+ * then fed to `printer`.
+ *
+ * If enabled and used, this function has special optimizations for
+ * input files pushed by `#embed` and `TPP_HAVE_FILE_ENCODING_EMBED`,
+ * such that in this case, anything not already read from the file
+ * will be streamed directly into `printer` (without the need of
+ * `tpp_file` converting file bytes into decimals first).
+ *
+ * NOTES:
+ * - This function must be called when the current token is an int
+ *   This is asserted: `tpp_assert(TPP_TOK_ISINT(tpp_lexer_gettok(self)))`
+ * - This function returns in the following situations:
+ *   - After skipping whitespace and comments, the token that follows
+ *     a `TPP_TOK_ISINT()`-like token isn't `TPP_TOK_COMMA`. In this
+ *     case, the return value is the sum of calls to `printer`, and
+ *     the currently loaded token is whatever that non-`TPP_TOK_ISINT()`
+ *     turned out to be.
+ *     In this case `*p_final_state = TPP_LEXER_PARSEEMBED_STATE_COMMA`
+ *   - After skipping a `TPP_TOK_COMMA` (and any whitespace+comments
+ *     thereafter), what follows wasn't a `TPP_TOK_ISINT()`-like token.
+ *     Like with the prior case, the return value is the sum of calls
+ *     to `printer`, and the currently loaded token is whatever that
+ *     non-`TPP_TOK_ISINT()` turned out to be.
+ *     In this case `*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER`
+ *   - A `TPP_TOK_ISINT()`-like token is encountered whose decoded value
+ *     falls outside the range of `[0,0xff]`.
+ *     Once again, the return value is the sum of calls to `printer`,
+ *     and the currently loaded token is whatever that `TPP_TOK_ISINT()`
+ *     token whose value (as per `tpp_lexer_decodeint()`) is bad.
+ *     In this case `*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER`
+ *   - A call to `printer` returned a negative value, which is propagated
+ *     immediately. In this case `*p_final_state` is undefined, and the
+ *     currently loaded token is weakly undefined. It may point to some
+ *     arbitrary, or unrelated token.
+ *   - A call to `tpp_lexer_yield_blocking()` returned an error, which is
+ *     propagated by being wrapped as `TPP_SSIZE_OFERR()`. In this case
+ *     `*p_final_state` is undefined, and the currently loaded token is
+ *     left in whatever state `tpp_lexer_yield_blocking()` left it in.
+ *
+ * @param: p_final_state: [0..1] Set to a description of the final parser state
+ * @return: * : Success:  return value is sum of return value of `printer`
+ *                        current token is whatever caused parsing to stop
+ *                        parsing stop position is described by `*p_final_state`
+ * @return: < 0: Failure: Either `printer` returned this value, or trying to
+ *                        yield to the next token resulted in an error. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_lexer_parseembed(tpp_lexer *tpp_restrict self,
+                     tpp_formatprinter printer, void *arg,
+                     unsigned int *p_final_state) {
+	tpp_ssize temp, result = 0;
+	tpp_assert(TPP_TOK_ISINT(tpp_lexer_gettok(self)));
+	for (;;) {
+		tpp_char byte;
+		tpp_intmax intval;
+		tpp_token_id tok;
+		tpp_errno error;
+#if TPP_HAVE_FILE_ENCODING_EMBED
+		if (tpp_file_getkind(tpp_lexer_getfile(self)) == TPP_FILE_KIND_IO &&
+		    tpp_lexer_getfile(self)->tf_enc == TPP_FILE_ENCODING_EMBED) {
+			/* Optimization: parse remainder of file as decimals, then
+			 * proceed to directly stream data from underlying file into
+			 * the supplied `printer` */
+			tpp_file *const file = tpp_lexer_getfile(self);
+			tpp_uintmax read_bytes;
+			unsigned int inner_final_state;
+
+			/* Parse remainder of file that has already been loaded into memory */
+			tpp_file_autopopfile_pushoff(file);
+			file->tf_kind = TPP_FILE_KIND_TEXT; /* Prevent more data from being loaded (and also recursion above) */
+			temp = tpp_lexer_parseembed(self, printer, arg, &inner_final_state);
+			file->tf_kind = TPP_FILE_KIND_IO;
+			tpp_file_autopopfile_pop(file);
+			if (temp < 0)
+				return temp;
+			result += temp;
+
+			/* Make sure that everything was parsed and we're at EOF now.
+			 * Since it's an #embed-file, there really shouldn't be any
+			 * way that it wouldn't be, but better be safe than sorry */
+			if (inner_final_state != TPP_LEXER_PARSEEMBED_STATE_COMMA ||
+			    tpp_lexer_gettok(self) != TPP_TOK_EOF) {
+				if (p_final_state)
+					*p_final_state = inner_final_state;
+				if (tpp_lexer_gettok(self) == TPP_TOK_EOF)
+					goto yield_at_eof_when_expecting_int;
+				return result;
+			}
+			tpp_assert(file->tf_pos >= file->tf_end && "Then why are we at EOF?");
+
+			temp = tpp_io_readfile_blocking(file->tf_data.td_io.tff_file, printer, arg, &read_bytes,
+			                                file->tf_data.td_io.tff_encdat.tffed_embedlimit);
+			file->tf_data.td_io.tff_encdat.tffed_embedlimit -= read_bytes;
+			if (temp < 0)
+				return temp;
+			result += temp;
+yield_at_eof_when_expecting_int:;
+		} else
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+		{
+			error = tpp_lexer_decodeint(self, &intval);
+			if (TPP_ISERR(error))
+				return TPP_SSIZE_OFERR(error);
+			if (intval < 0 || intval > 0xff) {
+				if (p_final_state)
+					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
+				break;
+			}
+			byte = (tpp_char)intval;
+			temp = tpp_formatprinter_print(printer, arg, &byte, 1);
+			if (temp < 0) {
+				result = temp;
+				break;
+			}
+			result += temp;
+		}
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
+		if (tok != ',') {
+			if (p_final_state)
+				*p_final_state = TPP_LEXER_PARSEEMBED_STATE_COMMA;
+			break;
+		}
+		do {
+			tok = tpp_lexer_yield_blocking(self);
+		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
+		if (!TPP_TOK_ISINT(tok)) {
+			if (p_final_state)
+				*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
+			break;
+		}
+	}
+	return result;
+}
+#endif /* TPP_HAVE_LEXER_PARSEEMBED */
+
+/************************************************************************/
 /* File: parts/lexer-yieldpp.c                                          */
 /************************************************************************/
 
@@ -46285,8 +46502,7 @@ again:
 	if (TPP_TOK_ISKEYWORD(tok)) {
 		/* Preserve the starting position of the current directive */
 		tpp_size rel_directive_start;
-		tpp_file_pushkeep(directive_file);
-		tpp_file_setkeep(directive_file, directive_start);
+		tpp_file_pushkeep(directive_file, directive_start);
 		rel_directive_start = tpp_file_keep_ptr2rel(directive_file, directive_start);
 
 		/* Do macro expansion... */
@@ -50471,7 +50687,6 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 	TPP_REF tpp_string *string;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev_file;
-	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
 	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
@@ -50480,33 +50695,18 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 			tok = tpp_lexer_gettok(self);
 		return tok;
 	}
-	/* Use `tpp_lexer_seekpp_rparen_exact()` so #include-tracebacks point
-	 * at the entirety of the `__TPP_STR_PACK()` expression, rather than
-	 * just at its end. */
-	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "__TPP_STR_PACK",
-	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL |
-	                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
-	if (TPP_TOK_ISERR(tok))
-		return tok;
-	tpp_string_builder_init(&builder);
 
-	/* Setup file to (re-)parse the string that's being decompiled */
-	tpp_file_subtext_push(file);
-	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
-	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0) {
-err_nomem_subtext_builder:
-		tok = TPP_TOK_ENOMEM;
-err_tok_subtext_builder:
-		tpp_file_subtext_break(file);
-		tpp_string_builder_fini(&builder);
-		tpp_lexer_arginfo_fini(&argv[0]);
-		return tok;
-	}
+	tpp_string_builder_init(&builder);
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_nomem_builder;
 	for (;;) {
 		tpp_ssize status;
 		tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()', so no need for `tpp_lexer_yield_blocking()' */
+#if TPP_HAVE_TOK_INT && TPP_HAVE_LEXER_PARSEEMBED
+again_handle_tok:
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_LEXER_PARSEEMBED */
 		switch (tok) {
-		case TPP_TOK_EOF:
+		case ')':
 			goto done_inner_loop;
 
 		case TPP_TOK_SPACE:
@@ -50522,7 +50722,7 @@ err_tok_subtext_builder:
 handle_status:
 			if (TPP_SSIZE_ISERR(status)) {
 				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(status));
-				goto err_tok_subtext_builder;
+				goto err_tok_builder;
 			}
 		}	break;
 
@@ -50530,17 +50730,36 @@ handle_status:
 		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax value;
 			tpp_char value_ch[1];
-			tpp_errno error = tpp_lexer_decodeint(self, &value);
+			tpp_errno error;
+
+			/* (try to) stream #embed-data directly into buffer */
+#if TPP_HAVE_LEXER_PARSEEMBED
+			tpp_ssize stream_result;
+			unsigned int stream_state;
+			stream_result = tpp_lexer_parseembed(self, &tpp_string_builder_print_encoded,
+			                                     &builder, &stream_state);
+			if (TPP_SSIZE_ISERR(stream_result)) {
+				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(stream_result));
+				goto err_tok_builder;
+			}
+			tok = tpp_lexer_gettok(self);
+			if (stream_state != TPP_LEXER_PARSEEMBED_STATE_INTEGER)
+				goto again_handle_tok;
+			if (!TPP_TOK_ISINT(tok))
+				goto again_handle_tok;
+#endif /* TPP_HAVE_LEXER_PARSEEMBED */
+
+			error = tpp_lexer_decodeint(self, &value);
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
-				goto err_tok_subtext_builder;
+				goto err_tok_builder;
 			}
 #if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
 			if ((tpp_intmax)(tpp_char)value != value) {
 				error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
-					goto err_tok_subtext_builder;
+					goto err_tok_builder;
 				}
 			}
 #endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
@@ -50552,25 +50771,26 @@ handle_status:
 
 		default:
 			if (TPP_TOK_ISERR(tok))
-				goto err_tok_subtext_builder;
+				goto err_tok_builder;
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK
 			{
 				tpp_errno error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
-					goto err_tok_subtext_builder;
+					goto err_tok_builder;
 				}
 			}
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK */
-			break;
+			tok = tpp_lexer_require(self, TPP_TOK_OFERR(')'));
+			if (TPP_TOK_ISERR(tok))
+				goto err_tok_builder;
+			goto done_inner_loop;
 		}
 	}
 done_inner_loop:
 	tpp_assert(!TPP_TOK_ISERR(tok));
 	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
-		goto err_nomem_subtext_builder;
-	tpp_file_subtext_pop(file);
-	tpp_lexer_arginfo_fini(&argv[0]);
+		goto err_nomem_builder;
 
 	/* Push a sub-text file describing the decoded contents of the string */
 	prev_file = tpp_file_alloc();
@@ -50589,6 +50809,11 @@ done_inner_loop:
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return TPP_TOK_EOF; /* Instruct caller to yield the first token from the subtext file */
+err_nomem_builder:
+	tok = TPP_TOK_ENOMEM;
+err_tok_builder:
+	tpp_string_builder_fini(&builder);
+	return tok;
 }
 #endif /* !TPP_HAVE_MACRO___TPP_STR_PACK */
 

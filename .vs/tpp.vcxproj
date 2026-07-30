@@ -28,6 +28,7 @@
     <ClCompile Include="..\src\parts\lexer-decodeint.c" />
     <ClCompile Include="..\src\parts\lexer-decodestring.c" />
     <ClCompile Include="..\src\parts\lexer-dump.c" />
+    <ClCompile Include="..\src\parts\lexer-parseembed.c" />
     <ClCompile Include="..\src\parts\lexer-parseexpr.c" />
     <ClCompile Include="..\src\parts\lexer-pp-define.c" />
     <ClCompile Include="..\src\parts\lexer-pp-pragma.c" />

@@ -1249,8 +1249,7 @@ again:
 	if (TPP_TOK_ISKEYWORD(tok)) {
 		/* Preserve the starting position of the current directive */
 		tpp_size rel_directive_start;
-		tpp_file_pushkeep(directive_file);
-		tpp_file_setkeep(directive_file, directive_start);
+		tpp_file_pushkeep(directive_file, directive_start);
 		rel_directive_start = tpp_file_keep_ptr2rel(directive_file, directive_start);
 
 		/* Do macro expansion... */

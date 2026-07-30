@@ -1610,11 +1610,11 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   data that is considered to be unused (and all data that is still considered
  *   to be used will never be unloaded). For this purpose, you have multiple ways
  *   of telling "tpp_file" that you want certain ranges of memory to be kept loaded:
- *   - tpp_file_pushkeep() + tpp_file_setkeep():
+ *   - tpp_file_pushkeep():
  *     Probably the most useful method: allows you to set a position within a file
  *     from which point forth no data can be unloaded.
  *   - tpp_lexer_yieldraw_at():
- *     Not as powerful as tpp_file_setkeep(), but still useful none-the-less, this
+ *     Not as powerful as tpp_file_pushkeep(), but still useful none-the-less, this
  *     method of reading tokens uses your own, custom file-pointer, whilst keeping
  *     the file's *actual* pointer unchanged. As such (since the file's actual
  *     pointer isn't advanced), no file data will be unloaded, however more file
@@ -4436,7 +4436,7 @@ extern tpp_lexer *TPPLexer_Current;
 #define f_ownedstream TPP_INTERNAL(tff_file)                            /* Don't access directly; also: TPP3 uses "TPP_FILE_FLAGS_NOCLOSE" to know if the file should be closed */
 #undef f_guard        /* TPP3 stores this in "tpp_keyword_misc::tkm_file_guard" */
 #undef f_cacheinc     /* TPP3 no longer tracks how often some specific file was #include-ed */
-#undef f_rdata        /* TPP3 no longer tracks how much file-data has already been processed; you can use "tpp_file_setkeep" + "tpp_file_keep_ptr2rel" for markers */
+#undef f_rdata        /* TPP3 no longer tracks how much file-data has already been processed; you can use "tpp_file_pushkeep" + "tpp_file_keep_ptr2rel" for markers */
 #undef f_prefixdel    /* TPP3 no longer guaranties that the currently loaded chunk ends with a '\0'-character. File chunks in TPP3 can end arbitrarily! */
 #define TPP_TEXTFILE_FLAG_NONE      TPP_FILE_FLAGS_NORMAL
 #define TPP_TEXTFILE_FLAG_NOGUARD   TPP_FILE_FLAGS_NOGUARD
@@ -4688,7 +4688,7 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 /* CAUTION: This function works differently:
  * - TPPFILE_NEXTCHUNK_FLAG_EXTEND: Extension is now works such that the file may
  *                                  only discard bytes that have already been read,
- *                                  and are not covered by "tpp_file_setkeep"
+ *                                  and are not covered by "tpp_file_pushkeep"
  * - TPPFILE_NEXTCHUNK_FLAG_BINARY: Not available anymore (if you want to do binary
  *                                  read, you must directly use "tpp_io_read()")
  * - TPPFILE_NEXTCHUNK_FLAG_NOBLCK: Not available anymore: non-blocking is controlled on
@@ -4920,7 +4920,7 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 #undef TPPLEXER_FLAG_MESSAGE_LOCATION      /* Use tpp_lexer_setextension(TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION) */
 #undef TPPLEXER_FLAG_MESSAGE_NOLINEFEED    /* Use tpp_lexer_setextension(TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
 #undef TPPLEXER_FLAG_INCLUDESTRING         /* No longer supported; in TPP3, #include-strings parsing bypasses regular tokenization done by "tpp_lexer_yieldraw()" */
-#undef TPPLEXER_FLAG_EXTENDFILE            /* Use tpp_file_pushkeep() + tpp_file_setkeep() to keep certain file data loaded into memory */
+#undef TPPLEXER_FLAG_EXTENDFILE            /* Use tpp_file_pushkeep() to keep certain file data loaded into memory */
 #undef TPPLEXER_FLAG_NO_LEGACY_GUARDS      /* No longer supported; in TPP3, this can only be compile-time configured via "TPP_HAVE_IFNDEF_INCLUDE_GUARDS" */
 #undef TPPLEXER_FLAG_WERROR                /* Use tpp_lexer_setextension(TPP_EXT_WERROR) */
 #undef TPPLEXER_FLAG_WSYSTEMHEADERS        /* Use tpp_lexer_setextension(WSYSTEM_HEADERS) */

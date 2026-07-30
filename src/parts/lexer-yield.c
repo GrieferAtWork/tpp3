@@ -1386,7 +1386,6 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 	TPP_REF tpp_string *string;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev_file;
-	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
 	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
@@ -1395,33 +1394,18 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 			tok = tpp_lexer_gettok(self);
 		return tok;
 	}
-	/* Use `tpp_lexer_seekpp_rparen_exact()` so #include-tracebacks point
-	 * at the entirety of the `__TPP_STR_PACK()` expression, rather than
-	 * just at its end. */
-	tok = tpp_lexer_seekpp_rparen_exact(self, argv, 1, "__TPP_STR_PACK",
-	                                    TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL |
-	                                    TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS);
-	if (TPP_TOK_ISERR(tok))
-		return tok;
-	tpp_string_builder_init(&builder);
 
-	/* Setup file to (re-)parse the string that's being decompiled */
-	tpp_file_subtext_push(file);
-	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
-	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0) {
-err_nomem_subtext_builder:
-		tok = TPP_TOK_ENOMEM;
-err_tok_subtext_builder:
-		tpp_file_subtext_break(file);
-		tpp_string_builder_fini(&builder);
-		tpp_lexer_arginfo_fini(&argv[0]);
-		return tok;
-	}
+	tpp_string_builder_init(&builder);
+	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+		goto err_nomem_builder;
 	for (;;) {
 		tpp_ssize status;
 		tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()', so no need for `tpp_lexer_yield_blocking()' */
+#if TPP_HAVE_TOK_INT && TPP_HAVE_LEXER_PARSEEMBED
+again_handle_tok:
+#endif /* TPP_HAVE_TOK_INT && TPP_HAVE_LEXER_PARSEEMBED */
 		switch (tok) {
-		case TPP_TOK_EOF:
+		case ')':
 			goto done_inner_loop;
 
 		case TPP_TOK_SPACE:
@@ -1437,7 +1421,7 @@ err_tok_subtext_builder:
 handle_status:
 			if (TPP_SSIZE_ISERR(status)) {
 				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(status));
-				goto err_tok_subtext_builder;
+				goto err_tok_builder;
 			}
 		}	break;
 
@@ -1445,17 +1429,36 @@ handle_status:
 		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax value;
 			tpp_char value_ch[1];
-			tpp_errno error = tpp_lexer_decodeint(self, &value);
+			tpp_errno error;
+
+			/* (try to) stream #embed-data directly into buffer */
+#if TPP_HAVE_LEXER_PARSEEMBED
+			tpp_ssize stream_result;
+			unsigned int stream_state;
+			stream_result = tpp_lexer_parseembed(self, &tpp_string_builder_print_encoded,
+			                                     &builder, &stream_state);
+			if (TPP_SSIZE_ISERR(stream_result)) {
+				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(stream_result));
+				goto err_tok_builder;
+			}
+			tok = tpp_lexer_gettok(self);
+			if (stream_state != TPP_LEXER_PARSEEMBED_STATE_INTEGER)
+				goto again_handle_tok;
+			if (!TPP_TOK_ISINT(tok))
+				goto again_handle_tok;
+#endif /* TPP_HAVE_LEXER_PARSEEMBED */
+
+			error = tpp_lexer_decodeint(self, &value);
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
-				goto err_tok_subtext_builder;
+				goto err_tok_builder;
 			}
 #if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
 			if ((tpp_intmax)(tpp_char)value != value) {
 				error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
-					goto err_tok_subtext_builder;
+					goto err_tok_builder;
 				}
 			}
 #endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
@@ -1467,25 +1470,26 @@ handle_status:
 
 		default:
 			if (TPP_TOK_ISERR(tok))
-				goto err_tok_subtext_builder;
+				goto err_tok_builder;
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK
 			{
 				tpp_errno error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
-					goto err_tok_subtext_builder;
+					goto err_tok_builder;
 				}
 			}
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK */
-			break;
+			tok = tpp_lexer_require(self, TPP_TOK_OFERR(')'));
+			if (TPP_TOK_ISERR(tok))
+				goto err_tok_builder;
+			goto done_inner_loop;
 		}
 	}
 done_inner_loop:
 	tpp_assert(!TPP_TOK_ISERR(tok));
 	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
-		goto err_nomem_subtext_builder;
-	tpp_file_subtext_pop(file);
-	tpp_lexer_arginfo_fini(&argv[0]);
+		goto err_nomem_builder;
 
 	/* Push a sub-text file describing the decoded contents of the string */
 	prev_file = tpp_file_alloc();
@@ -1504,6 +1508,11 @@ done_inner_loop:
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return TPP_TOK_EOF; /* Instruct caller to yield the first token from the subtext file */
+err_nomem_builder:
+	tok = TPP_TOK_ENOMEM;
+err_tok_builder:
+	tpp_string_builder_fini(&builder);
+	return tok;
 }
 #endif /* !TPP_HAVE_MACRO___TPP_STR_PACK */
 

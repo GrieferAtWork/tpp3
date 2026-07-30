@@ -10904,6 +10904,7 @@ TPP_DECL_END
      TPP_HAVE_MACRO___has_embed ||                \
      TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
      TPP_HAVE_MACRO___TPP_STR_SIZE ||             \
+     TPP_HAVE_MACRO___TPP_STR_PACK ||             \
      TPP_HAVE_MACRO___TPP_RANDOM ||               \
      TPP_HAVE_MACRO___TPP_STR_SUBSTR ||           \
      TPP_HAVE_CPP_ASSERT ||                       \
@@ -11174,12 +11175,25 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_DECODEINT_EXPR */
 
+/* Provide a function `tpp_lexer_parseembed()` to quickly parse ,-separated sequences
+ * of integer tokens with values in range [0,0xff]. Extra optimization is done if the
+ * current file turns out to be the result of a `#embed` directive, in which case the
+ * data doesn't need to be converted to decimals (if `TPP_HAVE_FILE_ENCODING_EMBED` is
+ * also enabled) */
+#ifndef TPP_HAVE_LEXER_PARSEEMBED
+#if ((TPP_HAVE_PROFILE_ALL || (TPP_HAVE_MACRO___TPP_STR_PACK && TPP_HAVE_FILE_ENCODING_EMBED)) && TPP_HAVE_TOK_INT)
+#define TPP_HAVE_LEXER_PARSEEMBED 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PARSEEMBED 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PARSEEMBED */
+
 /* Provide a function `tpp_lexer_decodeint()` to parse an integer */
 #ifndef TPP_HAVE_LEXER_DECODEINT
 #if (TPP_HAVE_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR ||   \
+                          TPP_HAVE_LEXER_PARSEEMBED ||       \
                           TPP_HAVE_CPP_LINE ||               \
                           TPP_HAVE_CPP_DIGIT_LINE ||         \
-                          TPP_HAVE_MACRO___TPP_STR_PACK ||   \
                           TPP_HAVE_MACRO___TPP_RANDOM ||     \
                           TPP_HAVE_MACRO___TPP_STR_SUBSTR || \
                           TPP_HAVE_PRAGMA_WARNING ||         \
@@ -11474,7 +11488,7 @@ TPP_DECL_END
  * - `TPP_HAVE_CPP_EMBED`: `__cpp_pp_embed`
  */
 #ifndef TPP_HAVE_CPP_FEATURE_MACROS
-#define TPP_HAVE_CPP_FEATURE_MACROS ((TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_HAVE_CPP_EMBED || TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS)) ? ((TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_COMMON_CONF_FEAT1 : 1) : 0) /* "-fextern-c-for-syshdr" */
+#define TPP_HAVE_CPP_FEATURE_MACROS ((TPP_HAVE_PROFILE_NOT_MINIMAL && (TPP_HAVE_CPP_EMBED || TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS)) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : 0) /* "-fextern-c-for-syshdr" */
 #endif /* !TPP_HAVE_CPP_FEATURE_MACROS */
 
 /* Suffix added to version numbers in `__cpp_*` predefined macros/keyword-features.
@@ -18833,8 +18847,7 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_CPP_MACROS */
 
 
-/* - Disable automatic popping of "self" from the #include-stack
- * - Disable I/O expansion by reading additional data from the file
+/* - Disable I/O expansion by reading additional data from the file
  * - Make it so the file's EOF position can be overwritten freely
  *   (such that trying to yield additional tokens at/beyond that
  *   position will cause "tpp_lexer_yieldraw()" to return TPP_TOK_EOF)
@@ -18882,38 +18895,35 @@ typedef struct tpp_file {
 
 
 #if TPP_HAVE_FILE_KEEPPOS
-/* Push the current keep-pointer for "self"
- * This macro has no effect if "tpp_file_getkind(self) != TPP_FILE_KIND_IO" */
-#define tpp_file_pushkeep(self) \
-	do {                        \
-		tpp_char const *const _tfpk_oldkeep = (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep);
-#define tpp_file_breakkeep(self) \
-		(void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = _tfpk_oldkeep)
-#define tpp_file_popkeep(self)    \
-		tpp_file_breakkeep(self); \
-	} while (0)
-
 /* Returns the keep-pointer for the file (which may be "NULL").
  * Return value is undefined if "tpp_file_getkind(self) != TPP_FILE_KIND_IO" */
 #define tpp_file_getkeep(self) \
 	(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep)
 
-/* Set the keep-pointer for the file (given "ptr" must not be "NULL").
- * This macro has no effect if "tpp_file_getkind(self) != TPP_FILE_KIND_IO"
- *
- * @return: true:  Keep pointer was updated because "ptr" describes a greater
- *                 area of effect than the previously active keep-range.
- * @return: false: Keep pointer was not updated */
-#define tpp_file_setkeep(self, ptr)                                              \
-	(tpp_assert(!(self)->tf_chunk || (ptr) >= tpp_string_str((self)->tf_chunk)), \
-	 tpp_assert((ptr) <= (self)->tf_end),                                        \
-	 (!tpp_file_getkeep(self) || ((ptr) < tpp_file_getkeep(self))) &&            \
-	 ((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = (ptr), 1))
+/* Push the current keep-pointer for "self" and setup a new pointer "ptr"
+ * This macro has no effect if "tpp_file_getkind(self) != TPP_FILE_KIND_IO" */
+#define tpp_file_pushkeep(self, ptr)                                                          \
+	do {                                                                                      \
+		tpp_size _tfpk_oldkeep = 0;                                                           \
+		tpp_assert(!(self)->TPP_INTERNAL(tf_chunk) ||                                         \
+		           (ptr) >= tpp_string_str((self)->TPP_INTERNAL(tf_chunk)));                  \
+		tpp_assert((ptr) <= (self)->TPP_INTERNAL(tf_end));                                    \
+		if (!tpp_file_getkeep(self)) {                                                        \
+			_tfpk_oldkeep = TPP_SIZE_MAX;                                                     \
+			(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = (ptr); \
+		} else if ((ptr) < tpp_file_getkeep(self)) {                                          \
+			_tfpk_oldkeep = tpp_file_getkeep(self) - (ptr);                                   \
+			(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = (ptr); \
+		}
+#define tpp_file_breakkeep(self)                                                                   \
+		(_tfpk_oldkeep == TPP_SIZE_MAX                                                             \
+		 ? (void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) = NULL) \
+		 : (void)((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) += _tfpk_oldkeep))
+#define tpp_file_popkeep(self)    \
+		tpp_file_breakkeep(self); \
+	} while (0)
 #else /* TPP_HAVE_FILE_KEEPPOS */
-#define tpp_file_pushkeep(self)  do {
-#define tpp_file_breakkeep(self) (void)0
-#define tpp_file_popkeep(self)   } while (0)
-#define tpp_file_getkeep(self)   tpp_file_getpos(self)
+#define tpp_file_getkeep(self) tpp_file_getpos(self)
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
 
 
@@ -23497,12 +23507,61 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 
-/* TODO: API function to quickly parse ,-separated lists of decimal bytes,
- *       whilst passing every byte parsed into a given "tpp_formatprinter"
- *       callback (the function would be called on a TPP_TOK_C_INT-token,
- *       and continue parsing until the first non-int/','-token)
- * -> When enabled, this API would obviously have a fast-pass case for
- *    for when the current input file is a `#embed` source file */
+#if TPP_HAVE_LEXER_PARSEEMBED
+/* Quickly parse a `,`-separated sequence of `TPP_TOK_ISINT()`-like
+ * tokens in range of `[0,0xff]` into a sequence of bytes, which are
+ * then fed to `printer`.
+ *
+ * If enabled and used, this function has special optimizations for
+ * input files pushed by `#embed` and `TPP_HAVE_FILE_ENCODING_EMBED`,
+ * such that in this case, anything not already read from the file
+ * will be streamed directly into `printer` (without the need of
+ * `tpp_file` converting file bytes into decimals first).
+ *
+ * NOTES:
+ * - This function must be called when the current token is an int
+ *   This is asserted: `tpp_assert(TPP_TOK_ISINT(tpp_lexer_gettok(self)))`
+ * - This function returns in the following situations:
+ *   - After skipping whitespace and comments, the token that follows
+ *     a `TPP_TOK_ISINT()`-like token isn't `TPP_TOK_COMMA`. In this
+ *     case, the return value is the sum of calls to `printer`, and
+ *     the currently loaded token is whatever that non-`TPP_TOK_ISINT()`
+ *     turned out to be.
+ *     In this case `*p_final_state = TPP_LEXER_PARSEEMBED_STATE_COMMA`
+ *   - After skipping a `TPP_TOK_COMMA` (and any whitespace+comments
+ *     thereafter), what follows wasn't a `TPP_TOK_ISINT()`-like token.
+ *     Like with the prior case, the return value is the sum of calls
+ *     to `printer`, and the currently loaded token is whatever that
+ *     non-`TPP_TOK_ISINT()` turned out to be.
+ *     In this case `*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER`
+ *   - A `TPP_TOK_ISINT()`-like token is encountered whose decoded value
+ *     falls outside the range of `[0,0xff]`.
+ *     Once again, the return value is the sum of calls to `printer`,
+ *     and the currently loaded token is whatever that `TPP_TOK_ISINT()`
+ *     token whose value (as per `tpp_lexer_decodeint()`) is bad.
+ *     In this case `*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER`
+ *   - A call to `printer` returned a negative value, which is propagated
+ *     immediately. In this case `*p_final_state` is undefined, and the
+ *     currently loaded token is weakly undefined. It may point to some
+ *     arbitrary, or unrelated token.
+ *   - A call to `tpp_lexer_yield_blocking()` returned an error, which is
+ *     propagated by being wrapped as `TPP_SSIZE_OFERR()`. In this case
+ *     `*p_final_state` is undefined, and the currently loaded token is
+ *     left in whatever state `tpp_lexer_yield_blocking()` left it in.
+ *
+ * @param: p_final_state: [0..1] Set to a description of the final parser state
+ * @return: * : Success:  return value is sum of return value of `printer`
+ *                        current token is whatever caused parsing to stop
+ *                        parsing stop position is described by `*p_final_state`
+ * @return: < 0: Failure: Either `printer` returned this value, or trying to
+ *                        yield to the next token resulted in an error. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_lexer_parseembed(tpp_lexer *tpp_restrict self,
+                     tpp_formatprinter printer, void *arg,
+                     unsigned int *p_final_state);
+#define TPP_LEXER_PARSEEMBED_STATE_INTEGER 0 /* Expected an <int> but found some other token (or <int> was not in range [0,0xff]) */
+#define TPP_LEXER_PARSEEMBED_STATE_COMMA   1 /* Expected a ',' but found some other token */
+#endif /* TPP_HAVE_LEXER_PARSEEMBED */
 
 
 #if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING

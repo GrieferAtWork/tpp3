@@ -70,6 +70,7 @@
 #include "parts/lexer-pp-pragma.c"
 #include "parts/lexer-skipraw.c"
 #include "parts/lexer-decodeint.c"
+#include "parts/lexer-parseembed.c"
 #include "parts/lexer-yieldpp.c"
 #include "parts/lexer-yield-macro.c"
 #include "parts/lexer-yield.c"

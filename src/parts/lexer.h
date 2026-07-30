@@ -1467,12 +1467,61 @@ tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 
 
-/* TODO: API function to quickly parse ,-separated lists of decimal bytes,
- *       whilst passing every byte parsed into a given "tpp_formatprinter"
- *       callback (the function would be called on a TPP_TOK_C_INT-token,
- *       and continue parsing until the first non-int/','-token)
- * -> When enabled, this API would obviously have a fast-pass case for
- *    for when the current input file is a `#embed` source file */
+#if TPP_HAVE_LEXER_PARSEEMBED
+/* Quickly parse a `,`-separated sequence of `TPP_TOK_ISINT()`-like
+ * tokens in range of `[0,0xff]` into a sequence of bytes, which are
+ * then fed to `printer`.
+ *
+ * If enabled and used, this function has special optimizations for
+ * input files pushed by `#embed` and `TPP_HAVE_FILE_ENCODING_EMBED`,
+ * such that in this case, anything not already read from the file
+ * will be streamed directly into `printer` (without the need of
+ * `tpp_file` converting file bytes into decimals first).
+ *
+ * NOTES:
+ * - This function must be called when the current token is an int
+ *   This is asserted: `tpp_assert(TPP_TOK_ISINT(tpp_lexer_gettok(self)))`
+ * - This function returns in the following situations:
+ *   - After skipping whitespace and comments, the token that follows
+ *     a `TPP_TOK_ISINT()`-like token isn't `TPP_TOK_COMMA`. In this
+ *     case, the return value is the sum of calls to `printer`, and
+ *     the currently loaded token is whatever that non-`TPP_TOK_ISINT()`
+ *     turned out to be.
+ *     In this case `*p_final_state = TPP_LEXER_PARSEEMBED_STATE_COMMA`
+ *   - After skipping a `TPP_TOK_COMMA` (and any whitespace+comments
+ *     thereafter), what follows wasn't a `TPP_TOK_ISINT()`-like token.
+ *     Like with the prior case, the return value is the sum of calls
+ *     to `printer`, and the currently loaded token is whatever that
+ *     non-`TPP_TOK_ISINT()` turned out to be.
+ *     In this case `*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER`
+ *   - A `TPP_TOK_ISINT()`-like token is encountered whose decoded value
+ *     falls outside the range of `[0,0xff]`.
+ *     Once again, the return value is the sum of calls to `printer`,
+ *     and the currently loaded token is whatever that `TPP_TOK_ISINT()`
+ *     token whose value (as per `tpp_lexer_decodeint()`) is bad.
+ *     In this case `*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER`
+ *   - A call to `printer` returned a negative value, which is propagated
+ *     immediately. In this case `*p_final_state` is undefined, and the
+ *     currently loaded token is weakly undefined. It may point to some
+ *     arbitrary, or unrelated token.
+ *   - A call to `tpp_lexer_yield_blocking()` returned an error, which is
+ *     propagated by being wrapped as `TPP_SSIZE_OFERR()`. In this case
+ *     `*p_final_state` is undefined, and the currently loaded token is
+ *     left in whatever state `tpp_lexer_yield_blocking()` left it in.
+ *
+ * @param: p_final_state: [0..1] Set to a description of the final parser state
+ * @return: * : Success:  return value is sum of return value of `printer`
+ *                        current token is whatever caused parsing to stop
+ *                        parsing stop position is described by `*p_final_state`
+ * @return: < 0: Failure: Either `printer` returned this value, or trying to
+ *                        yield to the next token resulted in an error. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_lexer_parseembed(tpp_lexer *tpp_restrict self,
+                     tpp_formatprinter printer, void *arg,
+                     unsigned int *p_final_state);
+#define TPP_LEXER_PARSEEMBED_STATE_INTEGER 0 /* Expected an <int> but found some other token (or <int> was not in range [0,0xff]) */
+#define TPP_LEXER_PARSEEMBED_STATE_COMMA   1 /* Expected a ',' but found some other token */
+#endif /* TPP_HAVE_LEXER_PARSEEMBED */
 
 
 #if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
