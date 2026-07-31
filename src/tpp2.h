@@ -1393,8 +1393,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * - When "TPP_HAVE_TOK_DOLLAR" is disabled, '$' is treated
  *   like any other tpp_ascii_issymcont() byte, meaning it is
  *   treated as part of a keyword / identifier
- * - HINT: #define TPP_HAVE_TOK_DOLLAR (-1)  // Runtime-configurable; default=true
- *   HINT: #define TPP_HAVE_TOK_DOLLAR (-2)  // Runtime-configurable; default=false
+ * - HINT: #define TPP_HAVE_TOK_DOLLAR TPP_CONF_EXT1  // Runtime-configurable; default=true
+ *   HINT: #define TPP_HAVE_TOK_DOLLAR TPP_CONF_EXT0  // Runtime-configurable; default=false
  */
 
 /* EXT_CANONICAL_HEADERS: "-fcanonical-system-headers"
@@ -1402,18 +1402,15 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * TPP_CONFIG_EXTENSION_CANONICAL_HEADERS
  * - Filename normalization is no longer something that can be configured
  *   or affected using conventional lexer features / extensions. This is
- *   because the act of normalizing a filename / opening a file is now
- *   something that needs to happen at the time a lexer is initialized
- * - Since TPP3 requires you to specify the file to-be loaded initially
- *   when initializing your lexer, that also means that there is no point
- *   in time where filename normalization could be overwritten/configured
+ *   done so-as to ensure better consistency, as there was never really a
+ *   reason to turn this off in TPP2, either.
  * - You can however still affect how TPP3 normalizes filenames (TPP_FS_*):
- *   - TPP_FS_HAVE_DRIVES
- *   - TPP_FS_HAVE_ICASE
- *   - TPP_FS_SEP
- *   - TPP_FS_ALTSEP
- *   - TPP_FS_ISSEP
- *   - TPP_FS_ISABS
+ *   - `TPP_FS_HAVE_DRIVES`
+ *   - `TPP_FS_HAVE_ICASE`
+ *   - `TPP_FS_SEP`
+ *   - `TPP_FS_ALTSEP`
+ *   - `TPP_FS_ISSEP`
+ *   - `TPP_FS_ISABS`
  *   Additionally, you may take a look at `tpp_fs_normalize()'
  */
 

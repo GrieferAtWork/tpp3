@@ -2683,7 +2683,7 @@ print("#endif /" "* !... *" "/");
  * - `TPP_HAVE_TOK_RAW_STRING_LITERAL`
  * - `TPP_HAVE_TOK_RAW_CHAR_LITERAL` */
 #ifndef TPP_HAVE_RAW_STRING_BSE
-#define TPP_HAVE_RAW_STRING_BSE ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_BSE && TPP_HAVE_LEXER_DECODESTRING && (TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL)) ? TPP_CONF_EXT0 : 0) /* "-fraw-string-bse" */
+#define TPP_HAVE_RAW_STRING_BSE ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_BSE && TPP_HAVE_LEXER_DECODESTRING && (TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL || TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL || TPP_HAVE_TOK_RAW_STRING_LITERAL || TPP_HAVE_TOK_RAW_CHAR_LITERAL)) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fraw-string-bse" */
 #endif /* !TPP_HAVE_RAW_STRING_BSE */
 
 /* Support for `\e` (for `U+001B`) escape sequences:
@@ -5377,13 +5377,13 @@ print("#endif /" "* !... *" "/");
 
 /* When enabled, `TPP_WSTATE_WARN` is treated as `TPP_WSTATE_ERROR_OR_FATAL` instead */
 #ifndef TPP_HAVE_WERROR
-#define TPP_HAVE_WERROR ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_WARNINGS) ? TPP_CONF_EXT0 : 0) /* "-fWerror" */
+#define TPP_HAVE_WERROR ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_WARNINGS) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWerror" */
 #endif /* !TPP_HAVE_WERROR */
 
 /* When enabled, the `TPP_FILE_FLAGS_SYSHDR` flag of files is ignored,
  * meaning that warnings are emitted as normal within system headers. */
 #ifndef TPP_HAVE_WSYSTEM_HEADERS
-#define TPP_HAVE_WSYSTEM_HEADERS ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_FILE_SYSHDR) ? TPP_CONF_EXT0 : 0) /* "-fWsystem-headers" */
+#define TPP_HAVE_WSYSTEM_HEADERS ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_FILE_SYSHDR) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWsystem-headers" */
 #endif /* !TPP_HAVE_WSYSTEM_HEADERS */
 
 /* Provide a function `tpp_lexer_seekpp_rparen()` that can be used
