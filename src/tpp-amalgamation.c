@@ -43942,12 +43942,14 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 /* #pragma TPP include_path(quote: "/usr/include")    // Added in TPP3  */
 /* #pragma TPP include_path(system: "/usr/include")   // Added in TPP3  */
 /* #pragma TPP include_path(dirafter: "/usr/include") // Added in TPP3  */
+/* #pragma TPP include_path(embed: "/usr/include")    // Added in TPP3  */
 /* #pragma TPP include_path(pop)                                        */
 /* #pragma TPP include_path(clear)     // Only clears "tip_system_list" */
 /* #pragma TPP include_path(default: clear)           // same as direct */
 /* #pragma TPP include_path(quote: clear)             // Added in TPP3  */
 /* #pragma TPP include_path(system: clear)            // Added in TPP3  */
 /* #pragma TPP include_path(dirafter: clear)          // Added in TPP3  */
+/* #pragma TPP include_path(embed: clear)             // Added in TPP3  */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
 typedef enum tpp_lexer_process_pragma_TPP_include_path_mode {
@@ -43966,33 +43968,30 @@ struct tpp_lexer_process_pragma_TPP_include_path_data {
 };
 
 static tpp_errno TPPCALL
-tpp_lexer_process_pragma_TPP_include_path_cb(void *arg, tpp_string *chunk,
-                                             tpp_char const *str, tpp_size length) {
+tpp_lexer_process_pragma_TPP_include_path_cb_impl(struct tpp_lexer_process_pragma_TPP_include_path_data *data,
+                                                  char const *str) {
 	tpp_errno result;
-	struct tpp_lexer_process_pragma_TPP_include_path_data *data;
 #if TPP_HAVE_INCLUDE_PATH_MULTIPLE
 #define tpp_local_pragma_include_path_kind data->tlpptipd_kind
 #else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
 #define tpp_local_pragma_include_path_kind TPP_INCLUDE_PATH_KIND_SYSTEM
 #endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */
-	data = (struct tpp_lexer_process_pragma_TPP_include_path_data *)arg;
-	(void)chunk;
 	switch (data->tlpptipd_mode) {
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_DEFAULT:
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_TAIL:
 		result = tpp_lexer_includes_addbykind(data->tlpptipd_lexer,
 		                                      tpp_local_pragma_include_path_kind,
-		                                      (char const *)str, length);
+		                                      str, TPP_SIZE_MAX);
 		break;
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_HEAD:
 		result = tpp_lexer_includes_addbykind_head(data->tlpptipd_lexer,
 		                                           tpp_local_pragma_include_path_kind,
-		                                           (char const *)str, length);
+		                                           str, TPP_SIZE_MAX);
 		break;
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_REMOVE:
 		result = tpp_lexer_includes_delbykind(data->tlpptipd_lexer,
 		                                      tpp_local_pragma_include_path_kind,
-		                                      (char const *)str, length);
+		                                      str, TPP_SIZE_MAX);
 		if (result == TPP_ENOENT) {
 			/* XXX: Warning? */
 			result = TPP_EOK;
@@ -44002,6 +44001,33 @@ tpp_lexer_process_pragma_TPP_include_path_cb(void *arg, tpp_string *chunk,
 	}
 	return result;
 #undef tpp_local_pragma_include_path_kind
+}
+
+static tpp_errno TPPCALL
+tpp_lexer_process_pragma_TPP_include_path_cb(void *arg, tpp_string *chunk,
+                                             tpp_char const *str, tpp_size length) {
+	struct tpp_lexer_process_pragma_TPP_include_path_data *data;
+	data = (struct tpp_lexer_process_pragma_TPP_include_path_data *)arg;
+	(void)chunk;
+
+	/* Add/remove path relative to current *real* filename.
+	 * WARNING: This is something that TPP2 didn't use to do! */
+	if (!TPP_FS_ISABS(str, length)) {
+		tpp_file const *const lcfile = tpp_lexer_getlcfile(data->tlpptipd_lexer);
+		char const *const real_filename = tpp_file_getrealfilename(lcfile);
+		if (real_filename) {
+			tpp_errno result;
+			char *relpath = tpp_joinpath(real_filename, (char const *)str, length);
+			if tpp_unlikely(!relpath)
+				return TPP_ENOMEM;
+			result = tpp_lexer_process_pragma_TPP_include_path_cb_impl(data, relpath);
+			tpp_free(relpath);
+			return result;
+		}
+	}
+
+	/* Fallback: add/remove path as-is */
+	return tpp_lexer_process_pragma_TPP_include_path_cb_impl(data, (char const *)str);
 }
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -57965,7 +57991,7 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 
 /* Define a function `tpp_lexer_cli_warnf()` */
 #undef TPP_HAVE_LEXER_CLI_WARN
-#define TPP_HAVE_LEXER_CLI_WARN                                       \
+#define TPP_HAVE_LEXER_CLI_WARN                                \
 	((TPP_HAVE_CLI_OPEN_OFR && TPP_HAVE_TPP_W_NO_SUCH_FILE) || \
 	 (TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT))
 

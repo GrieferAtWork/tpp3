@@ -11072,11 +11072,11 @@ TPP_DECL_END
  * This function takes 2 paths, resolves `.` and `..` path references between them,
  * whilst pasting them onto each other in order to form a singular, normalized path */
 #ifndef TPP_HAVE_JOINPATH
-#if (TPP_HAVE_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
-#define TPP_HAVE_JOINPATH 1
-#else /* ... */
-#define TPP_HAVE_JOINPATH 0
-#endif /* !... */
+#define TPP_HAVE_JOINPATH                                            \
+	(TPP_HAVE_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY ||       \
+	 TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH ||                             \
+	 (TPP_HAVE_CLI_DASH_IPREFIX && (TPP_HAVE_CLI_DASH_IWITHPREFIX || \
+	                                TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE)))
 #endif /* !TPP_HAVE_JOINPATH */
 
 /* Enable support for `tpp_lexer_initfile_io()` and `tpp_lexer_initfile_io_ex()` */

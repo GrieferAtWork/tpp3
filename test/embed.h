@@ -144,3 +144,19 @@ TPP_ASSERT_EXPANDS("202502", __cpp_pp_embed)
 TPP_ASSERT_EXPANDS("__cpp_pp_embed", __cpp_pp_embed)
 #pragma extension(pop)
 
+
+
+TPP_ASSERT_WARNING_BEGIN("-Wenviron") /* no such file: `<misc/bin.dat>` */
+TPP_ASSERT_EXPANDS("\"NOT_FOUND\"", __TPP_STR_PACK(
+#embed <misc/bin.dat> if_empty("NOT_FOUND")
+))
+TPP_ASSERT_WARNING_END("-Wenviron")
+
+/* Add directory containing the current file to `#embed`-path.
+ * Then, trying to open `<misc/bin.dat>` must become possible. */
+#pragma TPP include_path(push, embed: ".")
+TPP_ASSERT_EXPANDS("\"i_am_bin.dat\"", __TPP_STR_PACK(
+#embed <misc/bin.dat> if_empty("NOT_FOUND")
+))
+#pragma TPP include_path(pop)
+

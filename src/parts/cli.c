@@ -55,7 +55,7 @@ TPP_DECL_BEGIN
 
 /* Define a function `tpp_lexer_cli_warnf()` */
 #undef TPP_HAVE_LEXER_CLI_WARN
-#define TPP_HAVE_LEXER_CLI_WARN                                       \
+#define TPP_HAVE_LEXER_CLI_WARN                                \
 	((TPP_HAVE_CLI_OPEN_OFR && TPP_HAVE_TPP_W_NO_SUCH_FILE) || \
 	 (TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT))
 
