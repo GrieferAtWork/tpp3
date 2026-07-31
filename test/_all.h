@@ -66,7 +66,6 @@ for (local e: fs.dir(".").sorted()) {
 #include "undef-current-macro.h"
 #include "undef-macro-cexpr.h"
 #include "unicode-identifiers.h"
-#include "unicode-identifiers.h.bak"
 #include "unicode-names.h"
 #include "unterminated-in-directive.h"
 #include "user-error.h"

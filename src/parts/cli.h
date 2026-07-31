@@ -37,8 +37,14 @@ TPP_DECL_BEGIN
 
 #undef TPP_HAVE_CLI_NEEDS_FINI
 typedef struct tpp_cli_loader {
-	tpp_lexer   *TPP_INTERNAL(tcl_lexer); /* [1..1][const] The lexer being configured by this CLI loader */
-	unsigned int TPP_INTERNAL(tcl_state); /* CLI loader state (meaning of value is internal, except for `TPP_CLI_LOADER_STATE_*` listed above) */
+	tpp_lexer   *TPP_INTERNAL(tcl_lexer);  /* [1..1][const] The lexer being configured by this CLI loader */
+	unsigned int TPP_INTERNAL(tcl_state);  /* CLI loader state (meaning of value is internal, except for `TPP_CLI_LOADER_STATE_*` listed above) */
+#if TPP_HAVE_CLI_DASH_IPREFIX
+	char const  *TPP_INTERNAL(tcl_prefix); /* [0..1][const] Current path prefix for `TPP_HAVE_CLI_DASH_IWITHPREFIX` and `TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE` */
+#define _tpp_cli_loader_init_prefix(self) , (self)->TPP_INTERNAL(tcl_prefix) = NULL
+#else /* TPP_HAVE_CLI_DASH_IPREFIX */
+#define _tpp_cli_loader_init_prefix(self) /* nothing */
+#endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
 #if TPP_HAVE_CLI_DASH_INCLUDE
 #define TPP_HAVE_CLI_NEEDS_FINI 1
 	tpp_lexer_openfile_result *TPP_INTERNAL(tcl_includev); /* [0..tcl_includec][owned] Extra files to #include at start of main input file */
@@ -74,7 +80,8 @@ typedef struct tpp_cli_loader {
 #define tpp_cli_loader_init(self, lexer)                                 \
 	(void)((self)->TPP_INTERNAL(tcl_lexer) = (lexer),                    \
 	       (self)->TPP_INTERNAL(tcl_state) = TPP_CLI_LOADER_STATE_NORMAL \
-	       _tpp_cli_loader_init_include(self))
+	       _tpp_cli_loader_init_include(self)                            \
+	       _tpp_cli_loader_init_prefix(self))
 #if TPP_HAVE_CLI_NEEDS_FINI
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);

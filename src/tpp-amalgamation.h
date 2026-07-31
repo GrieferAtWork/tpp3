@@ -11829,30 +11829,56 @@ TPP_DECL_END
 /* `-iquote PATH`:
  * Add another include path for `#include "file"`-style
  * includes (s.a. `TPP_HAVE_INCLUDE_PATH_QUOTE`) */
-#undef TPP_HAVE_CLI_DASH_IQUOTE
+#ifndef TPP_HAVE_CLI_DASH_IQUOTE
 #define TPP_HAVE_CLI_DASH_IQUOTE \
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE)
+#endif /* !TPP_HAVE_CLI_DASH_IQUOTE */
 
 /* `-isystem PATH`:
  * Add another include path for syshdr-style `#include <file>` paths
  * includes (s.a. `TPP_HAVE_INCLUDE_PATH_SYSHDR`) */
-#undef TPP_HAVE_CLI_DASH_ISYSTEM
+#ifndef TPP_HAVE_CLI_DASH_ISYSTEM
 #define TPP_HAVE_CLI_DASH_ISYSTEM \
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR)
+#endif /* !TPP_HAVE_CLI_DASH_ISYSTEM */
 
 /* `-idirafter PATH`, `--include-directory-after=PATH`:
  * Add another include path for after-style `#include`-paths
  * includes (s.a. `TPP_HAVE_INCLUDE_PATH_AFTER`) */
-#undef TPP_HAVE_CLI_DASH_IDIRAFTER
+#ifndef TPP_HAVE_CLI_DASH_IDIRAFTER
 #define TPP_HAVE_CLI_DASH_IDIRAFTER \
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER)
+#endif /* !TPP_HAVE_CLI_DASH_IDIRAFTER */
 
-/* TODO: "-iprefix", "--include-prefix prefix", "--include-prefix=prefix" */
-/* TODO: "-iwithprefix dir", "--include-with-prefix=dir", "--include-with-prefix dir", "--include-with-prefix-after=dir", "--include-with-prefix-after dir" */
-/* TODO: "-iwithprefixbefore dir", "--include-with-prefix-before=dir", "--include-with-prefix-before dir" */
-/* TODO: "-isysroot", "--sysroot" */
-/* TODO: "--embed-dir=dir", "--embed-directory=dir", "--embed-directory dir" */
-/* XXX: "-nostdinc++" */
+/* `-iwithprefix dir`, `--include-with-prefix=dir`, `--include-with-prefix dir`,
+ * `--include-with-prefix-after=dir`, `--include-with-prefix-after dir`:
+ * Same as `TPP_HAVE_CLI_DASH_IDIRAFTER`, but concat the given `dir` with the `prefix`
+ * specified by the last `-iprefix prefix` (see `TPP_HAVE_CLI_DASH_IPREFIX`) */
+#ifndef TPP_HAVE_CLI_DASH_IWITHPREFIX
+#define TPP_HAVE_CLI_DASH_IWITHPREFIX \
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER)
+#endif /* !TPP_HAVE_CLI_DASH_IWITHPREFIX */
+
+/* `-iwithprefixbefore dir`, `--include-with-prefix-before=dir`,
+ * `--include-with-prefix-before dir`:
+ * Same as `TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY`, but concat the given `dir` with the
+ * `prefix` specified by the last `-iprefix prefix` (see `TPP_HAVE_CLI_DASH_IPREFIX`) */
+#ifndef TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
+#define TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE \
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH)
+#endif /* !TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
+
+/* `-iprefix prefix`, `--include-prefix prefix`, `--include-prefix=prefix`:
+ * Specify a prefix to use with subsequent `-iwithprefix dir` (see `TPP_HAVE_CLI_DASH_IWITHPREFIX`)
+ * and `-iwithprefixbefore dir` (see `TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE`) arguments. */
+#ifndef TPP_HAVE_CLI_DASH_IPREFIX
+#define TPP_HAVE_CLI_DASH_IPREFIX \
+	(TPP_HAVE_CLI && (TPP_HAVE_CLI_DASH_IWITHPREFIX || TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE))
+#endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
+
+/* TODO: `-isysroot`, `--sysroot` */
+/* TODO: `--embed-dir=dir`, `--embed-directory=dir`, `--embed-directory dir` */
+/* XXX: `-nostdinc++` */
 
 /* `-nostdinc`, `--no-standard-includes`:
  * Disable searching for standard system include paths
@@ -24890,8 +24916,14 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 
 #undef TPP_HAVE_CLI_NEEDS_FINI
 typedef struct tpp_cli_loader {
-	tpp_lexer   *TPP_INTERNAL(tcl_lexer); /* [1..1][const] The lexer being configured by this CLI loader */
-	unsigned int TPP_INTERNAL(tcl_state); /* CLI loader state (meaning of value is internal, except for `TPP_CLI_LOADER_STATE_*` listed above) */
+	tpp_lexer   *TPP_INTERNAL(tcl_lexer);  /* [1..1][const] The lexer being configured by this CLI loader */
+	unsigned int TPP_INTERNAL(tcl_state);  /* CLI loader state (meaning of value is internal, except for `TPP_CLI_LOADER_STATE_*` listed above) */
+#if TPP_HAVE_CLI_DASH_IPREFIX
+	char const  *TPP_INTERNAL(tcl_prefix); /* [0..1][const] Current path prefix for `TPP_HAVE_CLI_DASH_IWITHPREFIX` and `TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE` */
+#define _tpp_cli_loader_init_prefix(self) , (self)->TPP_INTERNAL(tcl_prefix) = NULL
+#else /* TPP_HAVE_CLI_DASH_IPREFIX */
+#define _tpp_cli_loader_init_prefix(self) /* nothing */
+#endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
 #if TPP_HAVE_CLI_DASH_INCLUDE
 #define TPP_HAVE_CLI_NEEDS_FINI 1
 	tpp_lexer_openfile_result *TPP_INTERNAL(tcl_includev); /* [0..tcl_includec][owned] Extra files to #include at start of main input file */
@@ -24927,7 +24959,8 @@ typedef struct tpp_cli_loader {
 #define tpp_cli_loader_init(self, lexer)                                 \
 	(void)((self)->TPP_INTERNAL(tcl_lexer) = (lexer),                    \
 	       (self)->TPP_INTERNAL(tcl_state) = TPP_CLI_LOADER_STATE_NORMAL \
-	       _tpp_cli_loader_init_include(self))
+	       _tpp_cli_loader_init_include(self)                            \
+	       _tpp_cli_loader_init_prefix(self))
 #if TPP_HAVE_CLI_NEEDS_FINI
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);

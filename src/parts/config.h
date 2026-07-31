@@ -6528,30 +6528,56 @@ print("#endif /" "* !... *" "/");
 /* `-iquote PATH`:
  * Add another include path for `#include "file"`-style
  * includes (s.a. `TPP_HAVE_INCLUDE_PATH_QUOTE`) */
-#undef TPP_HAVE_CLI_DASH_IQUOTE
+#ifndef TPP_HAVE_CLI_DASH_IQUOTE
 #define TPP_HAVE_CLI_DASH_IQUOTE \
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE)
+#endif /* !TPP_HAVE_CLI_DASH_IQUOTE */
 
 /* `-isystem PATH`:
  * Add another include path for syshdr-style `#include <file>` paths
  * includes (s.a. `TPP_HAVE_INCLUDE_PATH_SYSHDR`) */
-#undef TPP_HAVE_CLI_DASH_ISYSTEM
+#ifndef TPP_HAVE_CLI_DASH_ISYSTEM
 #define TPP_HAVE_CLI_DASH_ISYSTEM \
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR)
+#endif /* !TPP_HAVE_CLI_DASH_ISYSTEM */
 
 /* `-idirafter PATH`, `--include-directory-after=PATH`:
  * Add another include path for after-style `#include`-paths
  * includes (s.a. `TPP_HAVE_INCLUDE_PATH_AFTER`) */
-#undef TPP_HAVE_CLI_DASH_IDIRAFTER
+#ifndef TPP_HAVE_CLI_DASH_IDIRAFTER
 #define TPP_HAVE_CLI_DASH_IDIRAFTER \
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER)
+#endif /* !TPP_HAVE_CLI_DASH_IDIRAFTER */
 
-/* TODO: "-iprefix", "--include-prefix prefix", "--include-prefix=prefix" */
-/* TODO: "-iwithprefix dir", "--include-with-prefix=dir", "--include-with-prefix dir", "--include-with-prefix-after=dir", "--include-with-prefix-after dir" */
-/* TODO: "-iwithprefixbefore dir", "--include-with-prefix-before=dir", "--include-with-prefix-before dir" */
-/* TODO: "-isysroot", "--sysroot" */
-/* TODO: "--embed-dir=dir", "--embed-directory=dir", "--embed-directory dir" */
-/* XXX: "-nostdinc++" */
+/* `-iwithprefix dir`, `--include-with-prefix=dir`, `--include-with-prefix dir`,
+ * `--include-with-prefix-after=dir`, `--include-with-prefix-after dir`:
+ * Same as `TPP_HAVE_CLI_DASH_IDIRAFTER`, but concat the given `dir` with the `prefix`
+ * specified by the last `-iprefix prefix` (see `TPP_HAVE_CLI_DASH_IPREFIX`) */
+#ifndef TPP_HAVE_CLI_DASH_IWITHPREFIX
+#define TPP_HAVE_CLI_DASH_IWITHPREFIX \
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER)
+#endif /* !TPP_HAVE_CLI_DASH_IWITHPREFIX */
+
+/* `-iwithprefixbefore dir`, `--include-with-prefix-before=dir`,
+ * `--include-with-prefix-before dir`:
+ * Same as `TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY`, but concat the given `dir` with the
+ * `prefix` specified by the last `-iprefix prefix` (see `TPP_HAVE_CLI_DASH_IPREFIX`) */
+#ifndef TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
+#define TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE \
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH)
+#endif /* !TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
+
+/* `-iprefix prefix`, `--include-prefix prefix`, `--include-prefix=prefix`:
+ * Specify a prefix to use with subsequent `-iwithprefix dir` (see `TPP_HAVE_CLI_DASH_IWITHPREFIX`)
+ * and `-iwithprefixbefore dir` (see `TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE`) arguments. */
+#ifndef TPP_HAVE_CLI_DASH_IPREFIX
+#define TPP_HAVE_CLI_DASH_IPREFIX \
+	(TPP_HAVE_CLI && (TPP_HAVE_CLI_DASH_IWITHPREFIX || TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE))
+#endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
+
+/* TODO: `-isysroot`, `--sysroot` */
+/* TODO: `--embed-dir=dir`, `--embed-directory=dir`, `--embed-directory dir` */
+/* XXX: `-nostdinc++` */
 
 /* `-nostdinc`, `--no-standard-includes`:
  * Disable searching for standard system include paths

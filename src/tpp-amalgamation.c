@@ -41,6 +41,7 @@
 #define lci_col                                            TPP_INTERNAL(lci_col)
 #define tcl_lexer                                          TPP_INTERNAL(tcl_lexer)
 #define tcl_state                                          TPP_INTERNAL(tcl_state)
+#define tcl_prefix                                         TPP_INTERNAL(tcl_prefix)
 #define tcl_includev                                       TPP_INTERNAL(tcl_includev)
 #define tcl_includec                                       TPP_INTERNAL(tcl_includec)
 #define tl_exts                                            TPP_INTERNAL(tl_exts)
@@ -57737,13 +57738,20 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 #define TPP_HAVE_CLI_OPEN_OFR \
 	(TPP_HAVE_CLI_DASH_INCLUDE || TPP_HAVE_CLI_DASH_IMACROS)
 
+/* Define a function `tpp_cli_loader_add_include_with_prefix()` */
+#undef TPP_HAVE_CLI_ADD_INCLUDE_WITH_PREFIX
+#define TPP_HAVE_CLI_ADD_INCLUDE_WITH_PREFIX \
+	(TPP_HAVE_CLI_DASH_IWITHPREFIX ||        \
+	 TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE)
+
 /* Define a function `tpp_cli_loader_add_include()` */
 #undef TPP_HAVE_CLI_ADD_INCLUDE
-#define TPP_HAVE_CLI_ADD_INCLUDE       \
+#define TPP_HAVE_CLI_ADD_INCLUDE            \
 	(TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || \
 	 TPP_HAVE_CLI_DASH_IQUOTE ||            \
 	 TPP_HAVE_CLI_DASH_ISYSTEM ||           \
-	 TPP_HAVE_CLI_DASH_IDIRAFTER)
+	 TPP_HAVE_CLI_DASH_IDIRAFTER ||         \
+	 TPP_HAVE_CLI_ADD_INCLUDE_WITH_PREFIX)
 
 /* Define a function `tpp_lexer_cli_warnf()` */
 #undef TPP_HAVE_LEXER_CLI_WARN
@@ -57921,6 +57929,15 @@ enum {
 #if TPP_HAVE_CLI_DASH_IDIRAFTER
 	TPP_CLI_LOADER_STATE_IDIRAFTER, /* "-idirafter dir" */
 #endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
+#if TPP_HAVE_CLI_DASH_IPREFIX
+	TPP_CLI_LOADER_STATE_IPREFIX, /* "-iprefix dir" */
+#endif /* TPP_HAVE_CLI_DASH_IPREFIX */
+#if TPP_HAVE_CLI_DASH_IWITHPREFIX
+	TPP_CLI_LOADER_STATE_IWITHPREFIX, /* "-iwithprefix dir" */
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIX */
+#if TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
+	TPP_CLI_LOADER_STATE_IWITHPREFIXBEFORE, /* "-iwithprefixbefore dir" */
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
 };
 
 
@@ -58243,6 +58260,49 @@ tpp_cli_loader_parse_addinclude(tpp_cli_loader *tpp_restrict self,
 #endif /* TPP_HAVE_CLI_ADD_INCLUDE */
 
 
+#if TPP_HAVE_CLI_ADD_INCLUDE_WITH_PREFIX
+#if TPP_HAVE_CLI_DASH_IPREFIX
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_cli_loader_parse_addinclude_with_prefix(tpp_cli_loader *tpp_restrict self,
+                                            tpp_include_path_kind kind,
+                                            char const *path) {
+	tpp_errno result;
+	char *whole_path;
+	if (self->tcl_prefix == NULL)
+		return tpp_cli_loader_parse_addinclude(self, kind, path);
+	whole_path = tpp_joinpath(self->tcl_prefix, path, TPP_SIZE_MAX);
+	if tpp_unlikely(!whole_path)
+		return TPP_ENOMEM;
+	result = tpp_cli_loader_parse_addinclude(self, kind, whole_path);
+	tpp_free(whole_path);
+	return result;
+}
+#else /* TPP_HAVE_CLI_DASH_IPREFIX */
+#define tpp_cli_loader_parse_addinclude_with_prefix(self, kind, path) \
+	tpp_cli_loader_parse_addinclude(self, kind, path)
+#endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
+#endif /* TPP_HAVE_CLI_ADD_INCLUDE_WITH_PREFIX */
+
+
+/* Parse the path that comes after "-iprefix <arg>" */
+#if TPP_HAVE_CLI_DASH_IPREFIX
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_cli_loader_parse_iprefix(tpp_cli_loader *tpp_restrict self, char const *arg) {
+	/* NOTE: GCC already documents that:
+	 * """
+	 *    If the prefix represents a directory, you should include the final '/'.
+	 * """
+	 *
+	 * iow: What the `tpp_joinpath()` in `tpp_cli_loader_parse_addinclude_with_prefix()`
+	 *      does with the prefix set here is already compatible with what GCC does, in
+	 *      that `-iprefix` actually specifies a *file* that include paths should be
+	 *      added relative to! */
+	self->tcl_prefix = arg;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_CLI_DASH_IPREFIX */
+
+
 
 /* Feed an argument to the loader how exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
@@ -58388,16 +58448,20 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				break;
 
 			case 'i':
-#if TPP_HAVE_CLI_DASH_INCLUDE || TPP_HAVE_CLI_DASH_INCLUDE_BARRIER || TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || TPP_HAVE_CLI_DASH_IDIRAFTER
+#if (TPP_HAVE_CLI_DASH_INCLUDE ||           \
+     TPP_HAVE_CLI_DASH_INCLUDE_BARRIER ||   \
+     TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || \
+     TPP_HAVE_CLI_DASH_IDIRAFTER ||         \
+     TPP_HAVE_CLI_DASH_IPREFIX)
 				if (tpp_streq(arg, "nclude")) { /* --include */
 					arg += (sizeof("nclude") - sizeof(char));
 #if TPP_HAVE_CLI_DASH_INCLUDE
-					if (*arg == '=')
+					if (*arg == '=') {
 						return tpp_cli_loader_parse_include(self, arg + 1);
-					if (*arg == '\0') {
+					} else if (*arg == '\0') {
 						self->tcl_state = TPP_CLI_LOADER_STATE_INCLUDE;
 						return TPP_EOK;
-					}
+					} else
 #endif /* TPP_HAVE_CLI_DASH_INCLUDE */
 #if TPP_HAVE_CLI_DASH_INCLUDE_BARRIER
 					if (tpp_streq(arg, "-barrier\0")) { /* --include-barrier */
@@ -58408,12 +58472,12 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 					if (tpp_streq(arg, "-directory")) { /* --include-directory= */
 						arg += (sizeof("-directory") - sizeof(char));
 #if TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY
-						if (*arg == '=')
+						if (*arg == '=') {
 							return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_SYSTEM, arg + 1);
-						if (*arg == '\0') {
+						} else if (*arg == '\0') {
 							self->tcl_state = TPP_CLI_LOADER_STATE_INCLUDE_DIRECTORY;
 							return TPP_EOK;
-						}
+						} else
 #endif /* TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY */
 #if TPP_HAVE_CLI_DASH_IDIRAFTER
 						if (tpp_streq(arg, "-after")) { /* --include-directory-after= */
@@ -58424,14 +58488,61 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 								self->tcl_state = TPP_CLI_LOADER_STATE_IDIRAFTER;
 								return TPP_EOK;
 							}
-						}
+						} else
 #endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
+						{
+						}
 					} else
 #endif /* TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || TPP_HAVE_CLI_DASH_IDIRAFTER */
+#if TPP_HAVE_CLI_DASH_IPREFIX
+					if (tpp_streq(arg, "-prefix")) { /* --include-prefix= */
+						arg += (sizeof("-prefix") - sizeof(char));
+						if (*arg == '=') {
+							return tpp_cli_loader_parse_iprefix(self, arg + 1);
+						} else if (*arg == '\0') {
+							self->tcl_state = TPP_CLI_LOADER_STATE_IPREFIX;
+							return TPP_EOK;
+						}
+					} else
+#endif /* TPP_HAVE_CLI_DASH_IPREFIX */
+#if TPP_HAVE_CLI_DASH_IWITHPREFIX || TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
+					if (tpp_streq(arg, "-with-prefix")) { /* --include-with-prefix[...] */
+						arg += (sizeof("-with-prefix") - sizeof(char));
+#if TPP_HAVE_CLI_DASH_IWITHPREFIX
+						if (*arg == '=') {
+							return tpp_cli_loader_parse_addinclude_with_prefix(self, TPP_INCLUDE_PATH_KIND_AFTER, arg + 1);
+						} else if (*arg == '\0') {
+							self->tcl_state = TPP_CLI_LOADER_STATE_IWITHPREFIX;
+							return TPP_EOK;
+						} else if (tpp_streq(arg, "-after")) { /* --include-with-prefix-after= */
+							arg += (sizeof("-after") - sizeof(char));
+							if (*arg == '=') {
+								return tpp_cli_loader_parse_addinclude_with_prefix(self, TPP_INCLUDE_PATH_KIND_AFTER, arg + 1);
+							} else if (*arg == '\0') {
+								self->tcl_state = TPP_CLI_LOADER_STATE_IWITHPREFIX;
+								return TPP_EOK;
+							}
+						} else
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIX */
+#if TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
+						if (tpp_streq(arg, "-before")) { /* --include-with-prefix-before= */
+							arg += (sizeof("-before") - sizeof(char));
+							if (*arg == '=') {
+								return tpp_cli_loader_parse_addinclude_with_prefix(self, TPP_INCLUDE_PATH_KIND_SYSTEM, arg + 1);
+							} else if (*arg == '\0') {
+								self->tcl_state = TPP_CLI_LOADER_STATE_IWITHPREFIXBEFORE;
+								return TPP_EOK;
+							}
+						} else
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
+						{
+						}
+					} else
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIX || TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
 					{
 					}
 				} else
-#endif /* TPP_HAVE_CLI_DASH_INCLUDE || TPP_HAVE_CLI_DASH_INCLUDE_BARRIER || TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || TPP_HAVE_CLI_DASH_IDIRAFTER */
+#endif /* ... */
 #if TPP_HAVE_CLI_DASH_IMACROS
 				if (tpp_streq(arg, "macros")) { /* --imacros */
 					arg += (sizeof("macros") - sizeof(char));
@@ -58523,6 +58634,24 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				return TPP_EOK;
 			} else
 #endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
+#if TPP_HAVE_CLI_DASH_IPREFIX
+			if (tpp_streq(arg, "prefix\0")) { /* -iprefix ... */
+				self->tcl_state = TPP_CLI_LOADER_STATE_IPREFIX;
+				return TPP_EOK;
+			} else
+#endif /* TPP_HAVE_CLI_DASH_IPREFIX */
+#if TPP_HAVE_CLI_DASH_IWITHPREFIX
+			if (tpp_streq(arg, "withprefix\0")) { /* -iwithprefix ... */
+				self->tcl_state = TPP_CLI_LOADER_STATE_IWITHPREFIX;
+				return TPP_EOK;
+			} else
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIX */
+#if TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
+			if (tpp_streq(arg, "withprefixbefore\0")) { /* -iwithprefixbefore ... */
+				self->tcl_state = TPP_CLI_LOADER_STATE_IWITHPREFIXBEFORE;
+				return TPP_EOK;
+			} else
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
 			{
 			}
 			break;
@@ -58746,7 +58875,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 #if TPP_HAVE_CLI_DASH_ISYSTEM
 	case TPP_CLI_LOADER_STATE_ISYSTEM:
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
-		return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_SYSTEM, arg);
+		return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_SYSHDR, arg);
 #endif /* TPP_HAVE_CLI_DASH_ISYSTEM */
 
 #if TPP_HAVE_CLI_DASH_IDIRAFTER
@@ -58754,6 +58883,24 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_AFTER, arg);
 #endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
+
+#if TPP_HAVE_CLI_DASH_IPREFIX
+	case TPP_CLI_LOADER_STATE_IPREFIX:
+		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
+		return tpp_cli_loader_parse_iprefix(self, arg);
+#endif /* TPP_HAVE_CLI_DASH_IPREFIX */
+
+#if TPP_HAVE_CLI_DASH_IWITHPREFIX
+	case TPP_CLI_LOADER_STATE_IWITHPREFIX:
+		self->tcl_state  = TPP_CLI_LOADER_STATE_NORMAL;
+		return tpp_cli_loader_parse_addinclude_with_prefix(self, TPP_INCLUDE_PATH_KIND_AFTER, arg);
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIX */
+
+#if TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
+	case TPP_CLI_LOADER_STATE_IWITHPREFIXBEFORE:
+		self->tcl_state  = TPP_CLI_LOADER_STATE_NORMAL;
+		return tpp_cli_loader_parse_addinclude_with_prefix(self, TPP_INCLUDE_PATH_KIND_SYSTEM, arg);
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
 
 	default: tpp_unreachable();
 	}
@@ -58856,6 +59003,8 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
  * @return: TPP_EWARNPRINT: An error happened within a warning printer */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
+	(void)self;
+
 	/* Emit a warning if the CLI loader isn't in a neutral state */
 #if TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT
 	if (self->tcl_state != TPP_CLI_LOADER_STATE_NORMAL &&
@@ -58867,7 +59016,6 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
 	}
 #endif /* TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
 
-	(void)self;
 #if TPP_HAVE_CLI_DASH_INCLUDE
 	/* Push -include files onto the lexer's #include-stack */
 	{
@@ -58887,6 +59035,13 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
 		self->tcl_includec = 0;
 	}
 #endif /* TPP_HAVE_CLI_DASH_INCLUDE */
+
+	/* Delete prefix, since we document that `tpp_cli_loader_flush()`
+	 * means that any string passed to `tpp_cli_loader_parsearg()`
+	 * may now be deallocated. */
+#if TPP_HAVE_CLI_DASH_IPREFIX
+	self->tcl_prefix = NULL;
+#endif /* TPP_HAVE_CLI_DASH_IPREFIX */
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_CLI */

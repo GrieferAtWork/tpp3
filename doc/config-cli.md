@@ -5,14 +5,14 @@ In order to help you more easily create CLI frontends for TPP, there also exists
 <!--BEGIN:cli-->
 ## TPP_HAVE_CLI
 
-Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L24892), which can be used to configure a lexer
+Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L24918), which can be used to configure a lexer
 using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.
 
 This API is entirely optional: there's nothing it can do that can't already
 be done using some other C API; it's only there as a convenience to you.
 
 The CLI loader must be used on a lexer that has already been initialized
-itself (as per [`tpp_lexer_init()`](../src/tpp-amalgamation.h#L23063)), though whether or not the its initial
+itself (as per [`tpp_lexer_init()`](../src/tpp-amalgamation.h#L23089)), though whether or not the its initial
 file has already been initialized doesn't matter (the CLI loader will never
 make persistent modifications to a lexer's current file/token).
 
@@ -95,7 +95,7 @@ TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_DEFINE
 `-Umacro`, `-U macro`, `--undefine-macro=macro`, `--undefine-macro macro`:
 Delete a macro definition, the same way `#undef macro` would.
 
-Implementation makes use of: [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L23434) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L23442)
+Implementation makes use of: [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L23460) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L23468)
 
 <details><summary>Details</summary>
 
@@ -113,8 +113,8 @@ TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_DEFINE
 `--assert=-predicate[=answer]`, `--assert -predicate[=answer]`:
 Define or delete a preprocessor *"assertion"* (see [`TPP_HAVE_CPP_ASSERT`](config-conf.md#tpp_have_cpp_assert)).
 
-Implementation makes use of: [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L23458) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L23467) +
-                             [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L23474)
+Implementation makes use of: [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L23484) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L23493) +
+                             [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L23500)
 
 <details><summary>Details</summary>
 
@@ -345,6 +345,98 @@ TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH
 ```
 </details>
 
+## TPP_HAVE_CLI_DASH_IQUOTE
+
+`-iquote PATH`:
+Add another include path for `#include "file"`-style
+includes (s.a. [`TPP_HAVE_INCLUDE_PATH_QUOTE`](config-core.md#tpp_have_include_path_quote))
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE
+```
+</details>
+
+## TPP_HAVE_CLI_DASH_ISYSTEM
+
+`-isystem PATH`:
+Add another include path for syshdr-style `#include <file>` paths
+includes (s.a. [`TPP_HAVE_INCLUDE_PATH_SYSHDR`](config-core.md#tpp_have_include_path_syshdr))
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR
+```
+</details>
+
+## TPP_HAVE_CLI_DASH_IDIRAFTER
+
+`-idirafter PATH`, `--include-directory-after=PATH`:
+Add another include path for after-style `#include`-paths
+includes (s.a. [`TPP_HAVE_INCLUDE_PATH_AFTER`](config-core.md#tpp_have_include_path_after))
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
+```
+</details>
+
+## TPP_HAVE_CLI_DASH_IWITHPREFIX
+
+`-iwithprefix dir`, `--include-with-prefix=dir`, `--include-with-prefix dir`,
+`--include-with-prefix-after=dir`, `--include-with-prefix-after dir`:
+Same as [`TPP_HAVE_CLI_DASH_IDIRAFTER`](#tpp_have_cli_dash_idirafter), but concat the given `dir` with the `prefix`
+specified by the last `-iprefix prefix` (see [`TPP_HAVE_CLI_DASH_IPREFIX`](#tpp_have_cli_dash_iprefix))
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
+```
+</details>
+
+## TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
+
+`-iwithprefixbefore dir`, `--include-with-prefix-before=dir`,
+`--include-with-prefix-before dir`:
+Same as [`TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY`](#tpp_have_cli_dash_include_directory), but concat the given `dir` with the
+`prefix` specified by the last `-iprefix prefix` (see [`TPP_HAVE_CLI_DASH_IPREFIX`](#tpp_have_cli_dash_iprefix))
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH
+```
+</details>
+
+## TPP_HAVE_CLI_DASH_IPREFIX
+
+`-iprefix prefix`, `--include-prefix prefix`, `--include-prefix=prefix`:
+Specify a prefix to use with subsequent `-iwithprefix dir` (see [`TPP_HAVE_CLI_DASH_IWITHPREFIX`](#tpp_have_cli_dash_iwithprefix))
+and `-iwithprefixbefore dir` (see [`TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE`](#tpp_have_cli_dash_iwithprefixbefore)) arguments.
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_CLI && (TPP_HAVE_CLI_DASH_IWITHPREFIX || TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE)
+```
+</details>
+
 ## TPP_HAVE_CLI_DASH_NOSTDINC
 
 `-nostdinc`, `--no-standard-includes`:
@@ -379,13 +471,13 @@ TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_WERROR)
 `-W...`, `-Wno-...`:
 Turn emission of a specific warning on/off (similar to `#pragma TPP warning("-W...")`).
 
-When turned off, the warning state is set to [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L21091). When turned on,
+When turned off, the warning state is set to [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L21117). When turned on,
 the warning state is gradually increased from what it's previous state was:
 
-- [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L21091) is changed to [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L21092)
-- [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L21092) is changed to [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L21094) (if [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error)
-  is available; else, changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L21099) instead)
-- [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error) is changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L21099)
+- [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L21117) is changed to [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L21118)
+- [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L21118) is changed to [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L21120) (if [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error)
+  is available; else, changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L21125) instead)
+- [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error) is changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L21125)
 
 <details><summary>Details</summary>
 
