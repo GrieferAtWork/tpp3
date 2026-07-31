@@ -22,9 +22,13 @@
 #define FOO() foo
 #define BAR   bar
 #define SCAN(x) x
+#pragma TPP extension(push, "-fno-magic-whitespace")
+#define SCAN_NSP(x) x
+#pragma TPP extension(pop)
 
 /* Magic whitespace here */
 TPP_ASSERT_EXPANDS("foo bar", SCAN(FOO()BAR))
+TPP_ASSERT_EXPANDS("foobar", SCAN_NSP(FOO()BAR))
 
 /* No magic whitespace needed here. Don't get me wrong: you might
  * think that magic whitespace is needed, but it isn't because when
@@ -35,23 +39,65 @@ TPP_ASSERT_EXPANDS("foo bar", SCAN(FOO()BAR))
 TPP_ASSERT_EXPANDS("foobar", FOO()BAR)
 
 #define ADJ1(x)  x
-#define ADJ(a,b) SCAN(ADJ1(a)b)
+#define ADJ(a,b) ADJ1(a)b
 
 /* Here's a way you can directly test `tpp_lexer_require_whitespace()` */
-TPP_ASSERT_EXPANDS("= =", ADJ(=, =))
-TPP_ASSERT_EXPANDS("=foo", ADJ(=, foo))
+TPP_ASSERT_EXPANDS("= =", SCAN(ADJ(=, =)))
+TPP_ASSERT_EXPANDS("=foo", SCAN(ADJ(=, foo)))
 
 /* Injection of whitespace is reactive to recognized tokens. */
 #pragma TPP extension(push)
 #pragma TPP extension("-fno-tok-equal_at")
-TPP_ASSERT_EXPANDS("=@", ADJ(=, @))
+TPP_ASSERT_EXPANDS("=@", SCAN(ADJ(=, @)))
+TPP_ASSERT_EXPANDS("=@", SCAN_NSP(ADJ(=, @)))
 #pragma TPP extension("-ftok-equal_at")
-TPP_ASSERT_EXPANDS("= @", ADJ(=, @))
+TPP_ASSERT_EXPANDS("= @", SCAN(ADJ(=, @)))
+TPP_ASSERT_EXPANDS("=@", SCAN_NSP(ADJ(=, @)))
 #pragma TPP extension(pop)
+
+/* Magic whitespace can also become necessary while building a macro
+ * argument list, in which case it may be necessary to inject extra
+ * whitespace across a file-pop within the argument list. */
+#define CALL_SCAN()      SCAN(foo
+#define CALL_SCAN_NSP()  SCAN_NSP(foo
+#define CALL_SCAN2       CALL_SCAN()bar)
+#define CALL_SCAN_NSP2   CALL_SCAN_NSP()bar)
+//FIXME:TPP_ASSERT_EXPANDS("foo bar", CALL_SCAN2)
+TPP_ASSERT_EXPANDS("foobar", CALL_SCAN_NSP2)
+#undef CALL_SCAN_NSP2
+#undef CALL_SCAN2
+#undef CALL_SCAN_NSP
+#undef CALL_SCAN
 
 #undef ADJ
 #undef ADJ1
 
 #undef SCAN
+#undef SCAN_NSP
 #undef BAR
 #undef FOO
+
+/* Make sure that whitespace surrounding file-pops
+ * in macro arguments is handled correctly */
+#define STR1(x)    #x
+#define STR2(x, y) #x
+#define CALL_STR1_1   __TPP_STR_DECOMPILE("STR1(foo/*comment*/"))
+#define CALL_STR1_2   __TPP_STR_DECOMPILE("STR1(foo/*comment*/")bar)
+#define CALL_STR1_3   __TPP_STR_DECOMPILE("STR1(foo/*comment*/") bar)
+#define CALL_STR2_1   __TPP_STR_DECOMPILE("STR2(foo/*comment*/") /**/ , IGNORED)
+#define CALL_STR2_2   __TPP_STR_DECOMPILE("STR2(foo/*comment*/")bar /**/ , IGNORED)
+#define CALL_STR2_3   __TPP_STR_DECOMPILE("STR2(foo/*comment*/") bar /**/ , IGNORED)
+TPP_ASSERT_EXPANDS("\"foo\"", CALL_STR1_1)
+TPP_ASSERT_EXPANDS("\"foo/*comment*/bar\"", CALL_STR1_2)
+TPP_ASSERT_EXPANDS("\"foo/*comment*/ bar\"", CALL_STR1_3)
+TPP_ASSERT_EXPANDS("\"foo\"", CALL_STR2_1)
+TPP_ASSERT_EXPANDS("\"foo/*comment*/bar\"", CALL_STR2_2)
+TPP_ASSERT_EXPANDS("\"foo/*comment*/ bar\"", CALL_STR2_3)
+#undef CALL_STR1_1
+#undef CALL_STR1_2
+#undef CALL_STR1_3
+#undef CALL_STR2_1
+#undef CALL_STR2_2
+#undef CALL_STR2_3
+#undef STR1
+#undef STR2

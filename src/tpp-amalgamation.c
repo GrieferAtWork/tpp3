@@ -40156,27 +40156,20 @@ again_switch_tok:
 				}
 			}
 
+			curarg_rel_end = tpp_file_keep_ptr2rel(file, token->tt_start);
 #if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
-			if (tpp_lexer_seekpp_rparen_keepspace()) {
+			if (tpp_lexer_seekpp_rparen_keepspace())
 				curarg_rel_rend = curarg_rel_end;
-			} else
 #endif /* TPP_HAVE_MACRO_ARGUMENT_WHITESPACE */
-			{
-#if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
-				/* FIXME: Have to print text until "curarg_rel_end" (iow: including whitespace)
-				 *        if follow-up files contain tokens that also have to be appended (the
-				 *        trailing whitespace of the current (old) file must only be trimmed if
-				 *        the argument at the very start of the next file (possibly after being
-				 *        preceded by some more whitespace)) */
-#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-			}
-
-			if (curarg_rel_start < tpp_get_curarg_rel_rend()) { /* Save argument text */
-				tpp_size num_bytes   = (tpp_size)(tpp_get_curarg_rel_rend() - curarg_rel_start);
+			if (curarg_rel_start < curarg_rel_end) { /* Save argument text */
+				tpp_size num_bytes   = (tpp_size)(curarg_rel_end - curarg_rel_start);
 				tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
 				if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
 					goto err_nomem;
-				tpp_set_curarg_nonspace(tpp_string_builder_getlen(&state.tsrps_curarg_prefix));
+#if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+				if (curarg_rel_rend > curarg_rel_start)
+					curarg_nonspace += (curarg_rel_rend - curarg_rel_start);
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 			}
 
 			/* Continue with next file */
@@ -40412,14 +40405,11 @@ handle_rangle:
 					tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
 					if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
 						goto err_nomem;
-				} else
+				} else {
 #if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
-				if (curarg_rel_start > tpp_get_curarg_rel_rend()) {
-					/* Must truncate some trailing memory again. */
+					/* Might need to truncate some trailing memory again. */
 					tpp_string_builder_truncate(&state.tsrps_curarg_prefix, curarg_nonspace);
-				} else
 #endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-				{
 				}
 
 				arg->tlai_chunk = tpp_string_builder_pack(&state.tsrps_curarg_prefix);
@@ -40484,14 +40474,11 @@ done:
 				tpp_char const *data = tpp_file_keep_rel2ptr(file, curarg_rel_start);
 				if (!tpp_seek_rparen_state_curarg_append(&state, data, num_bytes))
 					goto err_nomem;
-			} else
+			} else {
 #if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
-			if (curarg_rel_start > tpp_get_curarg_rel_rend()) {
-				/* Must truncate some trailing memory again. */
+				/* Might need to truncate some trailing memory again. */
 				tpp_string_builder_truncate(&state.tsrps_curarg_prefix, curarg_nonspace);
-			} else
 #endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-			{
 			}
 			arg->tlai_chunk = tpp_string_builder_pack(&state.tsrps_curarg_prefix);
 			arg->tlai_start = tpp_string_str(arg->tlai_chunk);
