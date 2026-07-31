@@ -11878,7 +11878,6 @@ TPP_DECL_END
 
 /* TODO: `-isysroot`, `--sysroot` */
 /* TODO: `--embed-dir=dir`, `--embed-directory=dir`, `--embed-directory dir` */
-/* XXX: `-nostdinc++` */
 
 /* `-nostdinc`, `--no-standard-includes`:
  * Disable searching for standard system include paths
@@ -11887,6 +11886,8 @@ TPP_DECL_END
 #define TPP_HAVE_CLI_DASH_NOSTDINC \
 	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH))
 #endif /* !TPP_HAVE_CLI_DASH_NOSTDINC */
+
+/* XXX: `-nostdinc++` */
 
 /* `-Werror`, `-Wno-error`:
  * Treat all warnings as errors (s.a. `TPP_HAVE_WERROR`) */
@@ -25002,7 +25003,7 @@ tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);
  * or `-I/usr/include`, etc.
  *
  * WARNING: When you call this function, you must guaranty that `arg` remains
- *          valid, allocated, and unaltered until `tpp_cli_loader_flush()` is
+ *          valid, allocated, and unaltered until `tpp_cli_loader_fini()` is
  *          called.
  *
  * @return: TPP_EOK:        Success (argument was parsed + consumed)

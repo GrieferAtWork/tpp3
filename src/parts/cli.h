@@ -95,7 +95,7 @@ tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);
  * or `-I/usr/include`, etc.
  *
  * WARNING: When you call this function, you must guaranty that `arg` remains
- *          valid, allocated, and unaltered until `tpp_cli_loader_flush()` is
+ *          valid, allocated, and unaltered until `tpp_cli_loader_fini()` is
  *          called.
  *
  * @return: TPP_EOK:        Success (argument was parsed + consumed)

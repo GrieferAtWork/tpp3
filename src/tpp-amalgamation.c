@@ -58328,7 +58328,7 @@ tpp_cli_loader_parse_iprefix(tpp_cli_loader *tpp_restrict self, char const *arg)
  * or `-I/usr/include`, etc.
  *
  * WARNING: When you call this function, you must guaranty that `arg` remains
- *          valid, allocated, and unaltered until `tpp_cli_loader_flush()` is
+ *          valid, allocated, and unaltered until `tpp_cli_loader_fini()` is
  *          called.
  *
  * @return: TPP_EOK:        Success (argument was parsed + consumed)
@@ -59091,13 +59091,6 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
 		self->tcl_includec = 0;
 	}
 #endif /* TPP_HAVE_CLI_DASH_INCLUDE */
-
-	/* Delete prefix, since we document that `tpp_cli_loader_flush()`
-	 * means that any string passed to `tpp_cli_loader_parsearg()`
-	 * may now be deallocated. */
-#if TPP_HAVE_CLI_DASH_IPREFIX
-	self->tcl_prefix = NULL;
-#endif /* TPP_HAVE_CLI_DASH_IPREFIX */
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_CLI */
