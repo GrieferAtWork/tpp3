@@ -18823,6 +18823,21 @@ typedef enum tpp_file_encoding {
 #endif /* TPP_HAVE_UNICODE */
 
 
+/* Given a `lc` value for the start of `text`, calculate (and return)
+ * a new value that describes the effect value at `text+size`. */
+#if TPP_HAVE_UNICODE
+TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
+tpp_lcinfo_account_ex(tpp_lcinfo lc, tpp_char const *text,
+                      tpp_size size, tpp_file_encoding enc);
+#else /* TPP_HAVE_UNICODE */
+TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
+tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size);
+#define tpp_lcinfo_account_ex(lc, text, size, enc) \
+	tpp_lcinfo_account(lc, text, size)
+#endif /* !TPP_HAVE_UNICODE */
+
+
+
 #undef TPP_HAVE_FILE_FLAGS
 #if (TPP_HAVE_FILE_NONBLOCK ||                               \
      TPP_HAVE_FILE_NOCLOSE ||                                \
@@ -19806,19 +19821,6 @@ TPP_DECL tpp_column _tpp_tabsize; /* Internal API -- use getters/setters below *
 #define tpp_gettabsize()  _tpp_tabsize
 #define tpp_settabsize(v) (void)(_tpp_tabsize = (v))
 #endif /* TPP_TABSIZE < 0 */
-
-
-/* Update "self" according to text-data from [text,text+size) */
-#if TPP_HAVE_UNICODE
-TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
-tpp_lcinfo_account_ex(tpp_lcinfo lc, tpp_char const *text,
-                      tpp_size size, tpp_file_encoding enc);
-#else /* TPP_HAVE_UNICODE */
-TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
-tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size);
-#define tpp_lcinfo_account_ex(lc, text, size, enc) \
-	tpp_lcinfo_account(lc, text, size)
-#endif /* !TPP_HAVE_UNICODE */
 
 
 /************************************************************************/
