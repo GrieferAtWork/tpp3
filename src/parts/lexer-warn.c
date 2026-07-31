@@ -807,10 +807,10 @@ tpp_lexer_vwarnf_impl(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_WERROR */
 #if TPP_HAVE_WARNING_ERROR
 	case TPP_WSTATE_ERROR: {
-		tpp_size errors = tpp_lexer_geterrorcount(self);
-		tpp_lexer_seterrorcount(self, errors + 1);
+		tpp_size new_error_count = tpp_lexer_geterrorcount(self) + 1;
+		tpp_lexer_seterrorcount(self, new_error_count);
 #if TPP_ERROR_LIMIT != 0
-		if (errors >= tpp_lexer_geterrorlimit(self))
+		if (new_error_count >= tpp_lexer_geterrorlimit(self))
 			result = TPP_ELEXERROR;
 #endif /* TPP_ERROR_LIMIT != 0 */
 	}	break;
