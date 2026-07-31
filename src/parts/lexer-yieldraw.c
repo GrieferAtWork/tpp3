@@ -5666,6 +5666,15 @@ eof:
 			tpp_lexer_curtoken_setsol(-1);
 			goto again;
 		}
+#if 0
+		if ((file->tf_tprev == NULL) && tpp_file_getkind(file) == TPP_FILE_KIND_IO) {
+			/* XXX: -Wunused-macros (warn about macros define by __BASE_FILE__,
+			 *      but that were never expanded, or otherwise used in `#ifdef`
+			 *      or `defined` expressions)
+			 * NOTE: If the macro is an #include-guard for __BASE_FILE__, then
+			 *       don't warn about its usage, either! */
+		}
+#endif
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */
 

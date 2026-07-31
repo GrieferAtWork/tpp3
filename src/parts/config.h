@@ -1484,6 +1484,23 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_MACRO___TPP_IDENTIFIER (TPP_HAVE_CPP_BUILTIN_MACROS ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-ftpp-identifier-macro" */
 #endif /* !TPP_HAVE_MACRO___TPP_IDENTIFIER */
 
+/* Add some predefined macros:
+ * ```c
+ * #define and    &&
+ * #define and_eq &=
+ * #define bitand &
+ * #define bitor  |
+ * #define compl  ~
+ * #define not    !
+ * #define not_eq !=
+ * #define or     ||
+ * #define or_eq  |=
+ * #define xor    ^
+ * #define xor_eq ^=
+ * ``` */
+#ifndef TPP_HAVE_MACRO_CXX_OPERATOR_NAMES
+#define TPP_HAVE_MACRO_CXX_OPERATOR_NAMES (TPP_HAVE_CPP_PREDEFINED_MACROS ? ((TPP_HAVE_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_C) ? TPP_COMMON_CONF_EXT0 : (TPP_PROFILE == TPP_PROFILE_CXX ? TPP_COMMON_CONF_EXT1 : 0)) : 0) /* "-foperator-names" */
+#endif /* !TPP_HAVE_MACRO_CXX_OPERATOR_NAMES */
 
 /* Support for alternative parenthesis pairs in user-defined macros:
  * ```c

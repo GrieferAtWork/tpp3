@@ -118,6 +118,7 @@
 #define tef_TPP_EXT_MACRO___TPP_STR_SIZE                   TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_STR_SIZE)
 #define tef_TPP_EXT_MACRO___TPP_COUNT_TOKENS               TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_COUNT_TOKENS)
 #define tef_TPP_EXT_MACRO___TPP_IDENTIFIER                 TPP_INTERNAL(tef_TPP_EXT_MACRO___TPP_IDENTIFIER)
+#define tef_TPP_EXT_MACRO_CXX_OPERATOR_NAMES               TPP_INTERNAL(tef_TPP_EXT_MACRO_CXX_OPERATOR_NAMES)
 #define tef_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS          TPP_INTERNAL(tef_TPP_EXT_ALTERNATIVE_MACRO_PARENTHESIS)
 #define tef_TPP_EXT_MACRO_ARGUMENT_WHITESPACE              TPP_INTERNAL(tef_TPP_EXT_MACRO_ARGUMENT_WHITESPACE)
 #define tef_TPP_EXT_MACRO_RECURSION                        TPP_INTERNAL(tef_TPP_EXT_MACRO_RECURSION)
@@ -410,6 +411,7 @@
 #define tff_MACRO___TPP_STR_SIZE                           TPP_INTERNAL(tff_MACRO___TPP_STR_SIZE)
 #define tff_MACRO___TPP_COUNT_TOKENS                       TPP_INTERNAL(tff_MACRO___TPP_COUNT_TOKENS)
 #define tff_MACRO___TPP_IDENTIFIER                         TPP_INTERNAL(tff_MACRO___TPP_IDENTIFIER)
+#define tff_MACRO_CXX_OPERATOR_NAMES                       TPP_INTERNAL(tff_MACRO_CXX_OPERATOR_NAMES)
 #define tff_ALTERNATIVE_MACRO_PARENTHESIS                  TPP_INTERNAL(tff_ALTERNATIVE_MACRO_PARENTHESIS)
 #define tff_MACRO_ARGUMENT_WHITESPACE                      TPP_INTERNAL(tff_MACRO_ARGUMENT_WHITESPACE)
 #define tff_MACRO_RECURSION                                TPP_INTERNAL(tff_MACRO_RECURSION)
@@ -29814,6 +29816,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_IDENTIFIER)
 		/* .tff_MACRO___TPP_IDENTIFIER                 = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO___TPP_IDENTIFIER),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO___TPP_IDENTIFIER) */
+#if TPP_CONF_IS_FEAT(TPP_HAVE_MACRO_CXX_OPERATOR_NAMES)
+		/* .tff_MACRO_CXX_OPERATOR_NAMES               = */ TPP_CONF_DEFAULT(TPP_HAVE_MACRO_CXX_OPERATOR_NAMES),
+#endif /* TPP_CONF_IS_FEAT(TPP_HAVE_MACRO_CXX_OPERATOR_NAMES) */
 #if TPP_CONF_IS_FEAT(TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
 		/* .tff_ALTERNATIVE_MACRO_PARENTHESIS          = */ TPP_CONF_DEFAULT(TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS),
 #endif /* TPP_CONF_IS_FEAT(TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS) */
@@ -39785,6 +39790,15 @@ eof:
 			tpp_lexer_curtoken_setsol(-1);
 			goto again;
 		}
+#if 0
+		if ((file->tf_tprev == NULL) && tpp_file_getkind(file) == TPP_FILE_KIND_IO) {
+			/* XXX: -Wunused-macros (warn about macros define by __BASE_FILE__,
+			 *      but that were never expanded, or otherwise used in `#ifdef`
+			 *      or `defined` expressions)
+			 * NOTE: If the macro is an #include-guard for __BASE_FILE__, then
+			 *       don't warn about its usage, either! */
+		}
+#endif
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
