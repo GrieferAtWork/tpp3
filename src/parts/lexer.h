@@ -1756,10 +1756,13 @@ tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
 #if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 #define TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC 0x0002 /* Do not strip whitespace/comments around arguments */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+#define TPP_LEXER_SEEK_RPAREN_FLAG_MAGIC_WHITESPACE 0x0004 /* Add extra whitespace during across EOF when necessary */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_HAVE_LEXER_MANUALPOPFILE
-#define TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK    0x0004 /* Use "tpp_lexer_manualpopfile_popfile()" to pop files */
+#define TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK    0x0008 /* Use "tpp_lexer_manualpopfile_popfile()" to pop files */
 #endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
-#define TPP_LEXER_SEEK_RPAREN_FLAG_NOWARNEOF  0x0008 /* Do not emit "TPP_W_EOF_IN_ARGUMENT_LIST" warnings */
+#define TPP_LEXER_SEEK_RPAREN_FLAG_NOWARNEOF  0x0010 /* Do not emit "TPP_W_EOF_IN_ARGUMENT_LIST" warnings */
 
 typedef struct tpp_lexer_arginfo {
 	/* NOTE: Leading/trailing whitespace in arguments is controlled by "TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC" */

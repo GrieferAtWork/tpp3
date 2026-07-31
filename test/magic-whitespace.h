@@ -62,7 +62,7 @@ TPP_ASSERT_EXPANDS("=@", SCAN_NSP(ADJ(=, @)))
 #define CALL_SCAN_NSP()  SCAN_NSP(foo
 #define CALL_SCAN2       CALL_SCAN()bar)
 #define CALL_SCAN_NSP2   CALL_SCAN_NSP()bar)
-//FIXME:TPP_ASSERT_EXPANDS("foo bar", CALL_SCAN2)
+TPP_ASSERT_EXPANDS("foo bar", CALL_SCAN2)
 TPP_ASSERT_EXPANDS("foobar", CALL_SCAN_NSP2)
 #undef CALL_SCAN_NSP2
 #undef CALL_SCAN2
@@ -84,20 +84,57 @@ TPP_ASSERT_EXPANDS("foobar", CALL_SCAN_NSP2)
 #define CALL_STR1_1   __TPP_STR_DECOMPILE("STR1(foo/*comment*/"))
 #define CALL_STR1_2   __TPP_STR_DECOMPILE("STR1(foo/*comment*/")bar)
 #define CALL_STR1_3   __TPP_STR_DECOMPILE("STR1(foo/*comment*/") bar)
-#define CALL_STR2_1   __TPP_STR_DECOMPILE("STR2(foo/*comment*/") /**/ , IGNORED)
-#define CALL_STR2_2   __TPP_STR_DECOMPILE("STR2(foo/*comment*/")bar /**/ , IGNORED)
-#define CALL_STR2_3   __TPP_STR_DECOMPILE("STR2(foo/*comment*/") bar /**/ , IGNORED)
+#define CALL_STR1_4   __TPP_STR_DECOMPILE("STR1(foo/*comment*/") /**/ )
+#define CALL_STR1_5   __TPP_STR_DECOMPILE("STR1(foo/*comment*/")bar /**/ )
+#define CALL_STR1_6   __TPP_STR_DECOMPILE("STR1(foo/*comment*/") bar /**/ )
+#define CALL_STR2_1   __TPP_STR_DECOMPILE("STR2(foo/*comment*/"), IGNORED)
+#define CALL_STR2_2   __TPP_STR_DECOMPILE("STR2(foo/*comment*/")bar, IGNORED)
+#define CALL_STR2_3   __TPP_STR_DECOMPILE("STR2(foo/*comment*/") bar, IGNORED)
+#define CALL_STR2_4   __TPP_STR_DECOMPILE("STR2(foo/*comment*/") /**/ , IGNORED)
+#define CALL_STR2_5   __TPP_STR_DECOMPILE("STR2(foo/*comment*/")bar /**/ , IGNORED)
+#define CALL_STR2_6   __TPP_STR_DECOMPILE("STR2(foo/*comment*/") bar /**/ , IGNORED)
 TPP_ASSERT_EXPANDS("\"foo\"", CALL_STR1_1)
 TPP_ASSERT_EXPANDS("\"foo/*comment*/bar\"", CALL_STR1_2)
 TPP_ASSERT_EXPANDS("\"foo/*comment*/ bar\"", CALL_STR1_3)
+TPP_ASSERT_EXPANDS("\"foo\"", CALL_STR1_4)
+TPP_ASSERT_EXPANDS("\"foo/*comment*/bar\"", CALL_STR1_5)
+TPP_ASSERT_EXPANDS("\"foo/*comment*/ bar\"", CALL_STR1_6)
 TPP_ASSERT_EXPANDS("\"foo\"", CALL_STR2_1)
 TPP_ASSERT_EXPANDS("\"foo/*comment*/bar\"", CALL_STR2_2)
 TPP_ASSERT_EXPANDS("\"foo/*comment*/ bar\"", CALL_STR2_3)
+TPP_ASSERT_EXPANDS("\"foo\"", CALL_STR2_4)
+TPP_ASSERT_EXPANDS("\"foo/*comment*/bar\"", CALL_STR2_5)
+TPP_ASSERT_EXPANDS("\"foo/*comment*/ bar\"", CALL_STR2_6)
 #undef CALL_STR1_1
 #undef CALL_STR1_2
 #undef CALL_STR1_3
+#undef CALL_STR1_4
+#undef CALL_STR1_5
+#undef CALL_STR1_6
 #undef CALL_STR2_1
 #undef CALL_STR2_2
 #undef CALL_STR2_3
+#undef CALL_STR2_4
+#undef CALL_STR2_5
+#undef CALL_STR2_6
 #undef STR1
 #undef STR2
+
+/* One final place where magic whitespace is required is in macros where
+ * an empty argument might form a new token by accidentally pasting what
+ * comes before/after that argument within the macro. */
+#pragma TPP extension(push)
+#pragma TPP extension("-ftok-plus_plus")
+#define SUM3_1(a, b, c) a+b+c
+#pragma TPP extension("-fno-magic-whitespace")
+#define SUM3_2(a, b, c) a+b+c
+#pragma TPP extension("-fno-tok-plus_plus")
+#define SUM3_3(a, b, c) a+b+c
+#pragma TPP extension(pop)
+
+TPP_ASSERT_EXPANDS("10+20+30", SUM3_1(10, 20, 30))
+TPP_ASSERT_EXPANDS("10+20+30", SUM3_2(10, 20, 30))
+TPP_ASSERT_EXPANDS("10+20+30", SUM3_3(10, 20, 30))
+//FIXME(not working):TPP_ASSERT_EXPANDS("10+ +30", SUM3_1(10, , 30))
+TPP_ASSERT_EXPANDS("10++30", SUM3_2(10, , 30)) /* Doesn't inject extra whitespace because "-fmagic-whitespace" was turned off */
+TPP_ASSERT_EXPANDS("10++30", SUM3_3(10, , 30)) /* Doesn't inject extra whitespace because "++" wasn't considered a singular token at the time */

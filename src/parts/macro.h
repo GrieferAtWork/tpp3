@@ -86,13 +86,13 @@ TPP_DECL_BEGIN
 #define TPP_MACRO_FLAG_KEEPARGSPC UINT8_C(0x02) /* When set, keep whitespace surrounding macro arguments during invocation.
                                                  * WARNING: Also affects recursive macro expansion. */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+#define TPP_MACRO_FLAG_MAGIC_WHITESPACE UINT8_C(0x04) /* Add extra whitespace during argument expansion when necessary */
+#endif /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION)
-#define TPP_MACRO_FLAG_SELFEXPAND UINT8_C(0x04) /* After being expanded, this function is allowed to re-invoke itself and be expanded, when
+#define TPP_MACRO_FLAG_SELFEXPAND UINT8_C(0x08) /* After being expanded, this function is allowed to re-invoke itself and be expanded, when
                                                  * the generated text is not identical to a previous iteration. (s.a.: `-fmacro-recursion') */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
-#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
-#define TPP_MACRO_FLAG_MAGIC_WHITESPACE UINT8_C(0x08) /* Add extra whitespace during argument expansion when necessary */
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
 
@@ -237,16 +237,16 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #else /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #define tpp_macro_keepsargspc(self) (TPP_HAVE_MACRO_ARGUMENT_WHITESPACE != 0)
 #endif /* !TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION)
-#define tpp_macro_allowsselfexpansion(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_SELFEXPAND)
-#else /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
-#define tpp_macro_allowsselfexpansion(self) (TPP_HAVE_MACRO_RECURSION != 0)
-#endif /* !TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
 #if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
 #define tpp_macro_hasmagicwhitespace(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_MAGIC_WHITESPACE)
 #else /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 #define tpp_macro_hasmagicwhitespace(self) (TPP_HAVE_MAGIC_WHITESPACE != 0)
 #endif /* !TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION)
+#define tpp_macro_allowsselfexpansion(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_SELFEXPAND)
+#else /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
+#define tpp_macro_allowsselfexpansion(self) (TPP_HAVE_MACRO_RECURSION != 0)
+#endif /* !TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
 
 #endif /* TPP_HAVE_CPP_MACROS */
 

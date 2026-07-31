@@ -214,6 +214,11 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 #else /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #define tpp_lexer_seekpp_rparen_keepspace() (TPP_HAVE_MACRO_ARGUMENT_WHITESPACE != 0)
 #endif /* !TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+#define tpp_lexer_seekpp_rparen_magic_whitespace() (flags & TPP_LEXER_SEEK_RPAREN_FLAG_MAGIC_WHITESPACE)
+#else /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
+#define tpp_lexer_seekpp_rparen_magic_whitespace() (TPP_HAVE_MAGIC_WHITESPACE != 0)
+#endif /* !TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 	tpp_size const argv_bufsize = *p_argc;
 	tpp_size argc = 0;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -223,6 +228,9 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 	tpp_lexer_state_flags saved_lexer_state;
 	tpp_size curarg_rel_start; /* Start of current argument (relative to current file's KEEP) */
 	tpp_size curarg_rel_end;   /* End of current argument (relative to current file's KEEP) */
+#if TPP_HAVE_MAGIC_WHITESPACE
+	tpp_token_id last_token;
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 	tpp_size curarg_rel_rend;  /* End of current argument without trailing whitespace */
 	tpp_size curarg_nonspace;  /* # of non-space characters written to current argument buffer */
@@ -259,6 +267,9 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 	tpp_set_curarg_rel_rend(curarg_rel_start);
 	tpp_set_curarg_nonspace(0);
 again_yield_and_switch_tok:
+#if TPP_HAVE_MAGIC_WHITESPACE
+	last_token = result;
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 	result = tpp_lexer_yieldpp_blocking(self);
 again_switch_tok:
 	if (file->tf_prev != NULL && !TPP_TOK_ISERR(result)) {
@@ -274,6 +285,14 @@ again_switch_tok:
 				goto err_nomem;
 		}
 		do {
+#if TPP_HAVE_MAGIC_WHITESPACE
+			if (tpp_lexer_require_whitespace(self, last_token, result) &&
+			    tpp_lexer_seekpp_rparen_magic_whitespace()) {
+				if (!tpp_seek_rparen_state_curarg_append(&state, (tpp_char const *)" ", 1))
+					goto err_nomem;
+			}
+			last_token = result;
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 			if (!tpp_seek_rparen_state_curarg_append(&state,
 			                                         tpp_token_getstart(token),
 			                                         tpp_token_getlen(token)))
@@ -411,6 +430,14 @@ again_switch_tok:
 			result = tpp_lexer_yieldpp_blocking(self);
 			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
 			tpp_set_curarg_rel_rend(curarg_rel_start);
+#if TPP_HAVE_MAGIC_WHITESPACE
+			if (!TPP_TOK_ISERR(result) &&
+			    tpp_lexer_require_whitespace(self, last_token, result) &&
+			    tpp_lexer_seekpp_rparen_magic_whitespace()) {
+				if (!tpp_seek_rparen_state_curarg_append(&state, (tpp_char const *)" ", 1))
+					goto err_nomem;
+			}
+#endif /* TPP_HAVE_MAGIC_WHITESPACE */
 			goto again_switch_tok;
 		} else
 #endif /* TPP_HAVE_INCLUDE_STACK */
@@ -808,6 +835,7 @@ err_nomem:
 #undef tpp_set_curarg_rel_rend
 #undef tpp_set_curarg_nonspace
 #undef tpp_lexer_seekpp_rparen_keepspace
+#undef tpp_lexer_seekpp_rparen_magic_whitespace
 }
 
 
