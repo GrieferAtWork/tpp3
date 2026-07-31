@@ -326,6 +326,15 @@ handle_linefeed:
 				/* Check for unicode linefeed characters */
 				tpp_unichar uch;
 				--text;
+				/* FIXME: What if the load-process of the current chunk has stopped in the
+				 *        middle of a utf-8 sequence? When that happens, we'd be getting some
+				 *        weak undefined result from `tpp_unicode_readutf8()`, and our column
+				 *        counter could go out of whack (and if it would have been a unicode
+				 *        linefeed, then our line counter might even break)
+				 * Solution: when unicode is enabled, this function must also take some kind
+				 *           of extra read/write state parameter (akin to `mbstate_t`) that
+				 *           we can update if the memory being accounted ends in the middle
+				 *           of a utf-8 sequence. */
 				uch = tpp_unicode_readutf8(&text, endp);
 				if (tpp_unicode_islf(uch))
 					goto handle_linefeed;
