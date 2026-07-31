@@ -61,8 +61,10 @@ TPP_DECL_BEGIN
 
 /* Define a function `tpp_simple_atoz()` */
 #undef TPP_HAVE_SIMPLE_ATOZ
-#define TPP_HAVE_SIMPLE_ATOZ \
-	(TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH)
+#define TPP_HAVE_SIMPLE_ATOZ                 \
+	(TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH || \
+	 TPP_HAVE_CLI_DASH_FTABSTOP ||           \
+	 TPP_HAVE_CLI_DASH_FMAX_ERRORS)
 
 /*[[[deemon
 for (local option, what: {
@@ -1022,18 +1024,20 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 'f': {
+#undef tpp_cli__and_not_no
 #if (TPP_HAVE_CLI_DASH_FPREPROCESSED ||           \
      TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY ||        \
      TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS || \
-     TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH ||      \
-     TPP_HAVE_CLI_DASH_FTABSTOP ||                \
      TPP_HAVE_CLI_DASH_FEXTENSION)
 			bool no = false;
 			if (tpp_streq(arg, "no-")) {
 				arg += 3;
 				no = true;
 			}
-#endif /* ... */
+#define tpp_cli__and_not_no && !no
+#else /* ... */
+#define tpp_cli__and_not_no /* nothing */
+#endif /* !... */
 
 #if TPP_HAVE_CLI_DASH_FPREPROCESSED
 			if (tpp_streq(arg, "preprocessed\0")) { /* -fpreprocessed */
@@ -1051,7 +1055,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 			} else
 #endif /* TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS */
 #if TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH
-			if (tpp_streq(arg, "max-include-depth=") && !no) { /* -fmax-include-depth=... */
+			if (tpp_streq(arg, "max-include-depth=") tpp_cli__and_not_no) { /* -fmax-include-depth=... */
 				tpp_size new_limit;
 				arg += (sizeof("max-include-depth=") - sizeof(char));
 				new_limit = tpp_simple_atoz(arg);
@@ -1060,7 +1064,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 			} else
 #endif /* TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH */
 #if TPP_HAVE_CLI_DASH_FTABSTOP
-			if (tpp_streq(arg, "tabstop=") && !no) { /* -ftabstop=... */
+			if (tpp_streq(arg, "tabstop=") tpp_cli__and_not_no) { /* -ftabstop=... */
 				tpp_size new_stop;
 				arg += (sizeof("tabstop=") - sizeof(char));
 				new_stop = tpp_simple_atoz(arg);
@@ -1068,6 +1072,15 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				return TPP_EOK;
 			} else
 #endif /* TPP_HAVE_CLI_DASH_FTABSTOP */
+#if TPP_HAVE_CLI_DASH_FMAX_ERRORS
+			if (tpp_streq(arg, "max-errors=") tpp_cli__and_not_no) { /* -fmax-errors=... */
+				tpp_size new_limit;
+				arg += (sizeof("max-errors=") - sizeof(char));
+				new_limit = tpp_simple_atoz(arg);
+				tpp_lexer_seterrorlimit(self->tcl_lexer, new_limit);
+				return TPP_EOK;
+			} else
+#endif /* TPP_HAVE_CLI_DASH_FMAX_ERRORS */
 			{
 #if TPP_HAVE_CLI_DASH_FEXTENSION
 				/* Fallback: configure an extension */
@@ -1076,6 +1089,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 					return tpp_lexer_setextension(self->tcl_lexer, extension, !no);
 #endif /* TPP_HAVE_CLI_DASH_FEXTENSION */
 			}
+#undef tpp_cli__and_not_no
 		}	break;
 /************************************************************************/
 

@@ -11905,6 +11905,15 @@ TPP_DECL_END
 	(TPP_HAVE_CLI && TPP_HAVE_WARNING_ERROR && (TPP_ERROR_LIMIT < 0))
 #endif /* !TPP_HAVE_CLI_DASH_WFATAL_ERROR */
 
+/* `-fmax-errors=COUNT`:
+ * Change the max-error limit (as specified by `TPP_ERROR_LIMIT`) to `COUNT`.
+ *
+ * Requires that `tpp_lexer_seterrorlimit()` be available. */
+#ifndef TPP_HAVE_CLI_DASH_FMAX_ERRORS
+#define TPP_HAVE_CLI_DASH_FMAX_ERRORS \
+	(TPP_HAVE_CLI && TPP_HAVE_WARNING_ERROR && (TPP_ERROR_LIMIT < 0))
+#endif /* !TPP_HAVE_CLI_DASH_FMAX_ERRORS */
+
 /* `-W...`, `-Wno-...`:
  * Turn emission of a specific warning on/off (similar to `#pragma TPP warning("-W...")`).
  *
