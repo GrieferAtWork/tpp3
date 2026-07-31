@@ -614,7 +614,7 @@ tpp_lexer_dumper_printwarnings(tpp_lexer_dumper *tpp_restrict self,
 #endif /* ... */
 #endif /* !TPP_HAVE_WARNING_ERROR */
 					tpp_lexer_dumper_do_print_cstr(self, group_names, tpp_strlen(group_names));
-					tpp_lexer_dumper_do_print_conststr(self, "\")");
+					tpp_lexer_dumper_do_print_conststr(self, "\")\n");
 					continue;
 #if TPP_HAVE_WARNING_SUPPRESS
 				case TPP_WSTATE_SUPPRESS:

@@ -42778,6 +42778,7 @@ again_parse_string:
 /* #pragma warning("[-W]def-unknown-pragmas")      // #pragma warning(default: "-Wunknown-pragmas")  */
 /* #pragma warning("[-W]sup-unknown-pragmas")      // #pragma warning(suppress: "-Wunknown-pragmas") */
 /* #pragma warning("[-W]suppress-unknown-pragmas") // #pragma warning(suppress: "-Wunknown-pragmas") */
+/* #pragma warning("[-W]error=unknown-pragmas")    // #pragma warning(error: "-Wunknown-pragmas")    */
 /* #pragma warning(pop)                                                 */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING || TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
@@ -42838,6 +42839,12 @@ tpp_lexer_pragma_warning_raw_cb(void *arg, tpp_string *chunk,
 		state = TPP_WSTATE_DISABLED;
 		length -= 3;
 		str += 3;
+	} else if (length >= 6 &&
+	           str[0] == 'e' && str[1] == 'r' && str[2] == 'r' &&
+	           str[3] == 'o' && str[4] == 'r' && str[5] == '=') {
+		state = TPP_WSTATE_ERROR_OR_FATAL;
+		length -= 6;
+		str += 6;
 	} else
 #if TPP_HAVE_WARNING_DEFAULT
 	if (length >= 4 && str[0] == 'd' && str[1] == 'e' && str[2] == 'f' && str[3] == '-') {
@@ -57576,7 +57583,7 @@ tpp_lexer_dumper_printwarnings(tpp_lexer_dumper *tpp_restrict self,
 #endif /* ... */
 #endif /* !TPP_HAVE_WARNING_ERROR */
 					tpp_lexer_dumper_do_print_cstr(self, group_names, tpp_strlen(group_names));
-					tpp_lexer_dumper_do_print_conststr(self, "\")");
+					tpp_lexer_dumper_do_print_conststr(self, "\")\n");
 					continue;
 #if TPP_HAVE_WARNING_SUPPRESS
 				case TPP_WSTATE_SUPPRESS:
@@ -58719,14 +58726,18 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 #endif /* TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS */
 #if TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH
 			if (tpp_streq(arg, "max-include-depth=") && !no) { /* -fmax-include-depth=... */
-				tpp_size new_limit = tpp_simple_atoz(arg + 19);
+				tpp_size new_limit;
+				arg += (sizeof("max-include-depth=") - sizeof(char));
+				new_limit = tpp_simple_atoz(arg);
 				tpp_lexer_setinclusionlimit(self->tcl_lexer, new_limit);
 				return TPP_EOK;
 			} else
 #endif /* TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH */
 #if TPP_HAVE_CLI_DASH_FTABSTOP
 			if (tpp_streq(arg, "tabstop=") && !no) { /* -ftabstop=... */
-				tpp_size new_stop = tpp_simple_atoz(arg + 8);
+				tpp_size new_stop;
+				arg += (sizeof("tabstop=") - sizeof(char));
+				new_stop = tpp_simple_atoz(arg);
 				tpp_settabsize(new_stop);
 				return TPP_EOK;
 			} else
@@ -58746,6 +58757,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 'W': {
+#undef tpp_cli__and_not_no
 #if (TPP_HAVE_CLI_DASH_WERROR ||       \
      TPP_HAVE_CLI_DASH_WFATAL_ERROR || \
      TPP_HAVE_CLI_DASH_WWARNING)
@@ -58754,7 +58766,10 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				arg += 3;
 				no = true;
 			}
-#endif /* ... */
+#define tpp_cli__and_not_no && !no
+#else /* ... */
+#define tpp_cli__and_not_no /* nothing */
+#endif /* !... */
 
 #if TPP_HAVE_CLI_DASH_WERROR
 			if (tpp_streq(arg, "error\0")) {
@@ -58767,6 +58782,15 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				return TPP_EOK;
 			} else
 #endif /* TPP_HAVE_CLI_DASH_WFATAL_ERROR */
+#if TPP_HAVE_CLI_DASH_WERROR_WARNING
+			if (tpp_streq(arg, "error=") tpp_cli__and_not_no) {
+				tpp_warning_group_id wgid;
+				arg += (sizeof("error=") - sizeof(char));
+				wgid = tpp_warning_group_byname(arg);
+				if (wgid != TPP_WG_COUNT)
+					return tpp_lexer_setwarninggrp(self->tcl_lexer, wgid, TPP_WSTATE_ERROR_OR_FATAL);
+			} else
+#endif /* TPP_HAVE_CLI_DASH_WERROR_WARNING */
 			{
 #if TPP_HAVE_CLI_DASH_WWARNING
 				/* Fallback: configure a warning */
@@ -58794,6 +58818,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				}
 #endif /* TPP_HAVE_CLI_DASH_WWARNING */
 			}
+#undef tpp_cli__and_not_no
 		}	break;
 /************************************************************************/
 

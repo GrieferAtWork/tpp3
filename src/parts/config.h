@@ -6601,7 +6601,7 @@ print("#endif /" "* !... *" "/");
  * Requires that `tpp_lexer_seterrorlimit()` be available. */
 #ifndef TPP_HAVE_CLI_DASH_WFATAL_ERROR
 #define TPP_HAVE_CLI_DASH_WFATAL_ERROR \
-	(TPP_HAVE_CLI && (TPP_ERROR_LIMIT < 0))
+	(TPP_HAVE_CLI && TPP_HAVE_WARNING_ERROR && (TPP_ERROR_LIMIT < 0))
 #endif /* !TPP_HAVE_CLI_DASH_WFATAL_ERROR */
 
 /* `-W...`, `-Wno-...`:
@@ -6617,6 +6617,13 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_CLI_DASH_WWARNING \
 	(TPP_HAVE_CLI && TPP_HAVE_WARNINGS)
 #endif /* !TPP_HAVE_CLI_DASH_WWARNING */
+
+/* `-Werror=NAME`:
+ * Configure the specified warning `NAME` as `TPP_WSTATE_ERROR_OR_FATAL`, or `TPP_WSTATE_WARN` */
+#ifndef TPP_HAVE_CLI_DASH_WERROR_WARNING
+#define TPP_HAVE_CLI_DASH_WERROR_WARNING \
+	(TPP_HAVE_CLI && TPP_HAVE_WARNINGS)
+#endif /* !TPP_HAVE_CLI_DASH_WERROR_WARNING */
 
 /************************************************************************/
 /************************************************************************/

@@ -420,6 +420,7 @@ again_parse_string:
 /* #pragma warning("[-W]def-unknown-pragmas")      // #pragma warning(default: "-Wunknown-pragmas")  */
 /* #pragma warning("[-W]sup-unknown-pragmas")      // #pragma warning(suppress: "-Wunknown-pragmas") */
 /* #pragma warning("[-W]suppress-unknown-pragmas") // #pragma warning(suppress: "-Wunknown-pragmas") */
+/* #pragma warning("[-W]error=unknown-pragmas")    // #pragma warning(error: "-Wunknown-pragmas")    */
 /* #pragma warning(pop)                                                 */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING || TPP_HAVE_PRAGMA_GCC_DIAGNOSTIC
@@ -480,6 +481,12 @@ tpp_lexer_pragma_warning_raw_cb(void *arg, tpp_string *chunk,
 		state = TPP_WSTATE_DISABLED;
 		length -= 3;
 		str += 3;
+	} else if (length >= 6 &&
+	           str[0] == 'e' && str[1] == 'r' && str[2] == 'r' &&
+	           str[3] == 'o' && str[4] == 'r' && str[5] == '=') {
+		state = TPP_WSTATE_ERROR_OR_FATAL;
+		length -= 6;
+		str += 6;
 	} else
 #if TPP_HAVE_WARNING_DEFAULT
 	if (length >= 4 && str[0] == 'd' && str[1] == 'e' && str[2] == 'f' && str[3] == '-') {

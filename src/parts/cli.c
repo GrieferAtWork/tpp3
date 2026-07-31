@@ -1052,14 +1052,18 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 #endif /* TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS */
 #if TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH
 			if (tpp_streq(arg, "max-include-depth=") && !no) { /* -fmax-include-depth=... */
-				tpp_size new_limit = tpp_simple_atoz(arg + 19);
+				tpp_size new_limit;
+				arg += (sizeof("max-include-depth=") - sizeof(char));
+				new_limit = tpp_simple_atoz(arg);
 				tpp_lexer_setinclusionlimit(self->tcl_lexer, new_limit);
 				return TPP_EOK;
 			} else
 #endif /* TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH */
 #if TPP_HAVE_CLI_DASH_FTABSTOP
 			if (tpp_streq(arg, "tabstop=") && !no) { /* -ftabstop=... */
-				tpp_size new_stop = tpp_simple_atoz(arg + 8);
+				tpp_size new_stop;
+				arg += (sizeof("tabstop=") - sizeof(char));
+				new_stop = tpp_simple_atoz(arg);
 				tpp_settabsize(new_stop);
 				return TPP_EOK;
 			} else
@@ -1079,6 +1083,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 'W': {
+#undef tpp_cli__and_not_no
 #if (TPP_HAVE_CLI_DASH_WERROR ||       \
      TPP_HAVE_CLI_DASH_WFATAL_ERROR || \
      TPP_HAVE_CLI_DASH_WWARNING)
@@ -1087,7 +1092,10 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				arg += 3;
 				no = true;
 			}
-#endif /* ... */
+#define tpp_cli__and_not_no && !no
+#else /* ... */
+#define tpp_cli__and_not_no /* nothing */
+#endif /* !... */
 
 #if TPP_HAVE_CLI_DASH_WERROR
 			if (tpp_streq(arg, "error\0")) {
@@ -1100,6 +1108,15 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				return TPP_EOK;
 			} else
 #endif /* TPP_HAVE_CLI_DASH_WFATAL_ERROR */
+#if TPP_HAVE_CLI_DASH_WERROR_WARNING
+			if (tpp_streq(arg, "error=") tpp_cli__and_not_no) {
+				tpp_warning_group_id wgid;
+				arg += (sizeof("error=") - sizeof(char));
+				wgid = tpp_warning_group_byname(arg);
+				if (wgid != TPP_WG_COUNT)
+					return tpp_lexer_setwarninggrp(self->tcl_lexer, wgid, TPP_WSTATE_ERROR_OR_FATAL);
+			} else
+#endif /* TPP_HAVE_CLI_DASH_WERROR_WARNING */
 			{
 #if TPP_HAVE_CLI_DASH_WWARNING
 				/* Fallback: configure a warning */
@@ -1127,6 +1144,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				}
 #endif /* TPP_HAVE_CLI_DASH_WWARNING */
 			}
+#undef tpp_cli__and_not_no
 		}	break;
 /************************************************************************/
 
