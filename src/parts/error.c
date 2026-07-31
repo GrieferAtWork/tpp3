@@ -51,7 +51,7 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 #endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
 	case TPP_ELEXERROR:
-		return "User compilation/lexer error";
+		return "Fatal compilation error";
 	case TPP_EWARNPRINT:
 		return "Error while printing warning";
 #endif /* TPP_HAVE_WARNINGS */

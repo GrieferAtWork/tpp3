@@ -6594,6 +6594,16 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_WERROR))
 #endif /* !TPP_HAVE_CLI_DASH_WERROR */
 
+/* `-Wfatal-errors`, `-Wno-fatal-errors`:
+ * Change the max-error limit (as specified by `TPP_ERROR_LIMIT`)
+ * to `1`, or restore its default when this flag is disabled.
+ *
+ * Requires that `tpp_lexer_seterrorlimit()` be available. */
+#ifndef TPP_HAVE_CLI_DASH_WFATAL_ERROR
+#define TPP_HAVE_CLI_DASH_WFATAL_ERROR \
+	(TPP_HAVE_CLI && (TPP_ERROR_LIMIT < 0))
+#endif /* !TPP_HAVE_CLI_DASH_WFATAL_ERROR */
+
 /* `-W...`, `-Wno-...`:
  * Turn emission of a specific warning on/off (similar to `#pragma TPP warning("-W...")`).
  *

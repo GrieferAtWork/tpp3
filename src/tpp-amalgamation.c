@@ -883,7 +883,7 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 #endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
 	case TPP_ELEXERROR:
-		return "User compilation/lexer error";
+		return "Fatal compilation error";
 	case TPP_EWARNPRINT:
 		return "Error while printing warning";
 #endif /* TPP_HAVE_WARNINGS */
@@ -58746,7 +58746,9 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 /************************************************************************/
 		case 'W': {
-#if TPP_HAVE_CLI_DASH_WERROR || TPP_HAVE_CLI_DASH_WWARNING
+#if (TPP_HAVE_CLI_DASH_WERROR ||       \
+     TPP_HAVE_CLI_DASH_WFATAL_ERROR || \
+     TPP_HAVE_CLI_DASH_WWARNING)
 			bool no = false;
 			if (tpp_streq(arg, "no-")) {
 				arg += 3;
@@ -58759,6 +58761,12 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				return tpp_lexer_set_WERROR(self->tcl_lexer, !no);
 			} else
 #endif /* TPP_HAVE_CLI_DASH_WERROR */
+#if TPP_HAVE_CLI_DASH_WFATAL_ERROR
+			if (tpp_streq(arg, "fatal-errors\0")) {
+				tpp_lexer_seterrorlimit(self->tcl_lexer, no ? (-TPP_ERROR_LIMIT) : 1);
+				return TPP_EOK;
+			} else
+#endif /* TPP_HAVE_CLI_DASH_WFATAL_ERROR */
 			{
 #if TPP_HAVE_CLI_DASH_WWARNING
 				/* Fallback: configure a warning */
