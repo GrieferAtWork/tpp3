@@ -653,34 +653,36 @@ again_switch_tok:
 #endif /* ... */
 		switch (tok) {
 
-/* TODO: When `TPP_HAVE_MAGIC_WHITESPACE` is enabled,
- *       there's another place we have to inject whitespace:
- * >> #define sum1(a, b, c) a+b+c
- * >> #define sum2(a, b, c) a+#!b+c
- * >> sum1(10,,20)  // Expands to [10][++][20]
- * >> sum2(10,,20)  // Expands to [10][++][20]
- *
- * Handle this by introducing new `TPP_MACRO_OPCODE_*` that
- * get used when the macro argument being empty must result
- * in a single whitespace character U+0020 being inserted
- * instead of the argument itself.
- *
- * This must be done in those cases where the tokens preceding
- * and succeeding the macro argument would form a token, as
- * per `tpp_lexer_require_whitespace()`, and the argument in
- * question would be inserted using opcodes:
- * - TPP_MACRO_OPCODE_INS_EXP
- * - TPP_MACRO_OPCODE_INS
- *
- * To minimize impact, add 2 new opcodes that will be used for
- * macro arguments in these situations:
- * - TPP_MACRO_OPCODE_INS_SP_EXP
- * - TPP_MACRO_OPCODE_INS_SP
- *
- * Also: add 1 extra field to `tpp_macro_argument` that specifies
- *       the # of extra bytes needed for magic whitespace characters
- *       within the resulting macro body if the argument is empty
- */
+		/* FIXME: When `TPP_HAVE_MAGIC_WHITESPACE` is enabled, there's
+		 *        some more places we have to inject whitespace, but it
+		 *        these get really complicated:
+		 * >> #define TEST_MACRO1_1(x)   +x+
+		 * >> #define TEST_MACRO1_2(x)   +x
+		 * >> #define TEST_MACRO1_3(a,b) +a##b+
+		 *
+		 * All of the following sequences currently expand to bad tokens:
+		 * >> TEST_MACRO1_1()   // actual: [++]     should: [+][ ][+]
+		 * >> TEST_MACRO1_1(+)  // actual: [++][+]  should: [+][ ][+][ ][+]
+		 * >> TEST_MACRO1_2(+)  // actual: [++]     should: [+][ ][+]
+		 * >> TEST_MACRO1_3(,)  // actual: [++]     should: [+][ ][+]
+		 *
+		 * Expected behavior:
+		 * - "TEST_MACRO1_1":
+		 *   - Must inject whitespace either before or after "x" when "x" is empty
+		 *   - Must inject whitespace before "x" if tpp_lexer_require_whitespace(TPP_TOK_PLUS, <first-token-from-expansion-of-"x">)
+		 *   - Must inject whitespace after "x" if tpp_lexer_require_whitespace(<last-token-from-expansion-of-"x">, TPP_TOK_PLUS)
+		 * - "TEST_MACRO1_2":
+		 *   - Must inject whitespace before "x" if tpp_lexer_require_whitespace(TPP_TOK_PLUS, <first-token-from-expansion-of-"x">)
+		 * - "TEST_MACRO1_3":
+		 *   - Must inject whitespace either before or after "a##b" if "a" **and** "b" are BOTH empty
+		 *   - Must inject whitespace before "x" if tpp_lexer_require_whitespace(TPP_TOK_PLUS, <first-token-from-"a##b">)
+		 *   - Must inject whitespace after "x" if tpp_lexer_require_whitespace(<last-token-from-"a##b">, TPP_TOK_PLUS)
+		 *
+		 * ... Right now I'm completely stumped as to how all those edge-
+		 *     cases could be covered without *always* injecting some extra
+		 *     space before/after arguments (which is something I *really*
+		 *     don't want to do)
+		 */
 
 /************************************************************************/
 #if TPP_HAVE_GLUE_MACRO_ARGUMENT

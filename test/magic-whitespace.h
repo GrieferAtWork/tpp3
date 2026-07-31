@@ -123,18 +123,39 @@ TPP_ASSERT_EXPANDS("\"foo/*comment*/ bar\"", CALL_STR2_6)
 /* One final place where magic whitespace is required is in macros where
  * an empty argument might form a new token by accidentally pasting what
  * comes before/after that argument within the macro. */
-#pragma TPP extension(push)
-#pragma TPP extension("-ftok-plus_plus")
-#define SUM3_1(a, b, c) a+b+c
-#pragma TPP extension("-fno-magic-whitespace")
-#define SUM3_2(a, b, c) a+b+c
-#pragma TPP extension("-fno-tok-plus_plus")
-#define SUM3_3(a, b, c) a+b+c
+#define TEST_MACRO1_1(x)   +x+
+#define TEST_MACRO1_2(x)   +x
+#define TEST_MACRO1_3(a,b) +a##b+
+#pragma TPP extension(push, "-fno-magic-whitespace")
+#define TEST_MACRO2_1(x)   +x+
+#define TEST_MACRO2_2(x)   +x
+#define TEST_MACRO2_3(a,b) +a##b+
 #pragma TPP extension(pop)
 
-TPP_ASSERT_EXPANDS("10+20+30", SUM3_1(10, 20, 30))
-TPP_ASSERT_EXPANDS("10+20+30", SUM3_2(10, 20, 30))
-TPP_ASSERT_EXPANDS("10+20+30", SUM3_3(10, 20, 30))
-//FIXME(not working):TPP_ASSERT_EXPANDS("10+ +30", SUM3_1(10, , 30))
-TPP_ASSERT_EXPANDS("10++30", SUM3_2(10, , 30)) /* Doesn't inject extra whitespace because "-fmagic-whitespace" was turned off */
-TPP_ASSERT_EXPANDS("10++30", SUM3_3(10, , 30)) /* Doesn't inject extra whitespace because "++" wasn't considered a singular token at the time */
+// See comment in `tpp_macro_builder_compile_modern()` regarding these "FIXME"s
+TPP_ASSERT_EXPANDS("+10+", TEST_MACRO1_1(10))
+//FIXME:TPP_ASSERT_EXPANDS("+ +",  TEST_MACRO1_1())
+//FIXME:TPP_ASSERT_EXPANDS("+ + +",  TEST_MACRO1_1(+))
+TPP_ASSERT_EXPANDS("+10",  TEST_MACRO1_2(10))
+//FIXME:TPP_ASSERT_EXPANDS("+ +",  TEST_MACRO1_2(+))
+TPP_ASSERT_EXPANDS("+1+",  TEST_MACRO1_3(1,))
+TPP_ASSERT_EXPANDS("+2+",  TEST_MACRO1_3(,2))
+TPP_ASSERT_EXPANDS("+12+", TEST_MACRO1_3(1,2))
+//FIXME:TPP_ASSERT_EXPANDS("+ +",  TEST_MACRO1_3(,))
+
+/* These don't inject extra whitespace because "-fmagic-whitespace" was turned off */
+TPP_ASSERT_EXPANDS("+10+", TEST_MACRO2_1(10))
+TPP_ASSERT_EXPANDS("++",   TEST_MACRO2_1())   // CAT!
+TPP_ASSERT_EXPANDS("+10",  TEST_MACRO2_2(10))
+TPP_ASSERT_EXPANDS("++",   TEST_MACRO2_2(+))  // CAT!
+TPP_ASSERT_EXPANDS("+1+",  TEST_MACRO2_3(1,))
+TPP_ASSERT_EXPANDS("+2+",  TEST_MACRO2_3(,2))
+TPP_ASSERT_EXPANDS("+12+", TEST_MACRO2_3(1,2))
+TPP_ASSERT_EXPANDS("++",   TEST_MACRO2_3(,))  // CAT!
+
+#undef TEST_MACRO1_1
+#undef TEST_MACRO1_2
+#undef TEST_MACRO1_3
+#undef TEST_MACRO2_1
+#undef TEST_MACRO2_2
+#undef TEST_MACRO2_3
