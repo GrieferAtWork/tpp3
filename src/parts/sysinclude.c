@@ -228,7 +228,8 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 	(tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_system_list)) \
 	 _tpp_include_paths_fini_quote(self)                                \
 	 _tpp_include_paths_fini_syshdr(self)                               \
-	 _tpp_include_paths_fini_after(self))
+	 _tpp_include_paths_fini_after(self)                                \
+	 _tpp_include_paths_fini_embed(self))
 
 
 /* Initialize/finalize include paths. */
@@ -298,41 +299,51 @@ tpp_include_paths_copyone(tpp_include_paths *tpp_restrict self,
 	self->tip_pushcnt = from->tip_pushcnt;
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
+	error = tpp_include_path_list_copy(&self->tip_embed_list,
+	                                   &from->tip_embed_list);
+	if (TPP_ISERR(error))
+		goto err;
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
 	error = tpp_include_path_list_copy(&self->tip_after_list,
 	                                   &from->tip_after_list);
 	if (TPP_ISERR(error))
-		goto err;
+		goto err_embed;
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
 	error = tpp_include_path_list_copy(&self->tip_syshdr_list,
 	                                   &from->tip_syshdr_list);
 	if (TPP_ISERR(error))
-		goto err_after;
+		goto err_embed_after;
 #endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 	error = tpp_include_path_list_copy(&self->tip_quote_list,
 	                                   &from->tip_quote_list);
 	if (TPP_ISERR(error))
-		goto err_after_syshdr;
+		goto err_embed_after_syshdr;
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
 	error = tpp_include_path_list_copy(&self->tip_system_list,
 	                                   &from->tip_system_list);
 	if (TPP_ISERR(error))
-		goto err_after_syshdr_quote;
+		goto err_embed_after_syshdr_quote;
 	return error;
-err_after_syshdr_quote:
+err_embed_after_syshdr_quote:
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 	tpp_include_path_list_fini(&self->tip_quote_list);
-err_after_syshdr:
+err_embed_after_syshdr:
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
 	tpp_include_path_list_fini(&self->tip_syshdr_list);
-err_after:
+err_embed_after:
 #endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 	tpp_include_path_list_fini(&self->tip_after_list);
-err:
+err_embed:
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	tpp_include_path_list_fini(&self->tip_embed_list);
+err:
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 	return error;
 }
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP || TPP_HAVE_LEXER_COPY */

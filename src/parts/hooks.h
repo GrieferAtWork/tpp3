@@ -68,6 +68,17 @@ typedef enum tpp_hook_system_include_path_when {
 #endif /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
 
 
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
+typedef enum tpp_hook_system_embed_path_when {
+	TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_FIRST,         /* Called at the very start */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_BEFORE_SYSTEM, /* Called before "tip_embed_list" is checked */
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
+	TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_LAST,          /* Called at the very end */
+} tpp_hook_system_embed_path_when;
+#endif /* TPP_HAVE_SYSTEM_EMBED_PATH_HOOK */
+
+
 
 
 /*[[[deemon
@@ -215,6 +226,7 @@ print(")");
      TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) ||        \
      TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) ||            \
      TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) ||   \
+     TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) ||     \
      TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK) ||        \
      TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK))
@@ -352,6 +364,19 @@ typedef struct tpp_hooks {
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_include_path))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_system_embed_path)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
+	 * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points
+	 * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
+	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+	 *               caller's position in `tpp_lexer_foreach_include_path()`.
+	 * @return: * :         First non-TPP_ENOENT return value of `cb`
+	 * @return: TPP_ENOENT: File still not found
+	 * @return: TPP_EIO:    I/O error
+	 * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_embed_path))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
 	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config);
 	 * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
@@ -688,6 +713,36 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_system_include_path(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
+/* Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points
+ * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * @return: * :         First non-TPP_ENOENT return value of `cb`
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
+#define tpp_hooks_call_system_embed_path(self, lexer, mode, when, cb, arg) \
+	((self)->TPP_INTERNAL(th_system_embed_path) ? (*(self)->TPP_INTERNAL(th_system_embed_path))(lexer, mode, when, cb, arg) : TPP_ENOENT)
+#define tpp_hooks_get_system_embed_path(self)    (self)->TPP_INTERNAL(th_system_embed_path)
+#define tpp_hooks_set_system_embed_path(self, v) (void)((self)->TPP_INTERNAL(th_system_embed_path) = (v))
+#define tpp_hooks_reset_system_embed_path(self)  (void)((self)->TPP_INTERNAL(th_system_embed_path) = _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH)
+#define _tpp_hooks_init_system_embed_path(self)  , (self)->TPP_INTERNAL(th_system_embed_path) = _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_SYSTEM_EMBED_PATH)
+#define _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH (&TPP_HOOK_SYSTEM_EMBED_PATH)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_system_embed_path(self, lexer, mode, when, cb, arg) \
+	TPP_HOOK_SYSTEM_EMBED_PATH(lexer, mode, when, cb, arg)
+#else /*  */
+#define tpp_hooks_call_system_embed_path(self, lexer, mode, when, cb, arg) TPP_ENOENT
+#endif /* ... */
+#define _tpp_hooks_init_system_embed_path(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
+
 /* Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -795,6 +850,7 @@ typedef struct tpp_hooks {
 	       _tpp_hooks_init_new_dependency(self) \
 	       _tpp_hooks_init_ident_sccs(self) \
 	       _tpp_hooks_init_system_include_path(self) \
+	       _tpp_hooks_init_system_embed_path(self) \
 	       _tpp_hooks_init_unknown_string_escape(self) \
 	       _tpp_hooks_init_raise_lexerror(self) \
 	       _tpp_hooks_init_isfloatsuffix(self))

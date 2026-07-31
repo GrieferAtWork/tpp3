@@ -608,6 +608,23 @@ for (local doc, name,
 #define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_system_include_path */
 
+/* >> tpp_errno tpp_lexer_callhook_system_embed_path(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
+ * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points
+ * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * @return: * :         First non-TPP_ENOENT return value of `cb`
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#define tpp_lexer_callhook_system_embed_path(self, mode, when, cb, arg) \
+	tpp_hooks_call_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self, mode, when, cb, arg)
+#ifdef tpp_hooks_set_system_embed_path
+#define tpp_lexer_gethook_system_embed_path(self)    tpp_hooks_get_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_system_embed_path(self, v) tpp_hooks_set_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_system_embed_path(self)  tpp_hooks_reset_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_system_embed_path */
+
 /* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
  * This hook can be used to define additional, user-defined escape sequences, or any other
@@ -1673,6 +1690,24 @@ tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
                               /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
 #endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 #endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
+
+
+
+#if TPP_HAVE_LEXER_OPEN_EMBED_STRING
+/* Enumerate `#embed`-paths according to "mode" (s.a. `tpp_lexer_foreach_include_path()`) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_lexer_foreach_embed_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
+                             tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
+                             void *arg);
+
+/* Open an `#embed`-file (s.a. `tpp_lexer_open_include_string()`) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_open_embed_string(tpp_lexer *tpp_restrict self,
+                            /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
+#elif TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#define tpp_lexer_open_embed_string(self, result) \
+	tpp_lexer_open_include_string(self, result)
+#endif /* ... */
 
 
 

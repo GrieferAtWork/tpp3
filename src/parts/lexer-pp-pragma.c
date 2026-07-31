@@ -1696,6 +1696,13 @@ again_yield:
 #define WANT_skip_colon_and_andle_for_pathlist
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	case TPP_KWD_embed:
+		data.tlpptipd_kind = TPP_INCLUDE_PATH_KIND_EMBED;
+		goto skip_colon_and_andle_for_pathlist;
+#define WANT_skip_colon_and_andle_for_pathlist
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
+
 	case TPP_KWD_default:
 #ifdef WANT_skip_colon_and_andle_for_pathlist
 #undef WANT_skip_colon_and_andle_for_pathlist

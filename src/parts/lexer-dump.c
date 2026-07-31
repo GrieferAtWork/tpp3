@@ -695,6 +695,10 @@ tpp_lexer_dumper_printincludes(tpp_lexer_dumper *tpp_restrict self,
 	if (!tpp_lexer_dumper_haserr(self))
 		tpp_lexer_dumper_printincludes_list(self, &includes->tip_after_list, "dirafter: ", 10);
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	if (!tpp_lexer_dumper_haserr(self))
+		tpp_lexer_dumper_printincludes_list(self, &includes->tip_embed_list, "embed: ", 7);
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 #else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
 	tpp_lexer_dumper_printincludes_list(self, &includes->tip_system_list);
 #endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */

@@ -2519,10 +2519,8 @@ print("#endif /" "* !... *" "/");
 #if (TPP_HAVE_CPP_INCLUDE ||              \
      TPP_HAVE_CPP_INCLUDE_NEXT ||         \
      TPP_HAVE_CPP_IMPORT ||               \
-     TPP_HAVE_CPP_EMBED ||                \
      TPP_HAVE_MACRO___has_include ||      \
      TPP_HAVE_MACRO___has_include_next || \
-     TPP_HAVE_MACRO___has_embed ||        \
      TPP_HAVE_MACRO___TPP_LOAD_FILE ||    \
      TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
 #define TPP_HAVE_LEXER_OPEN_INCLUDE_STRING 1
@@ -2531,11 +2529,22 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
 
+/* Provide a function `tpp_lexer_open_embed_string()`
+ * to open the file associated with an `#embed`-string. */
+#ifndef TPP_HAVE_LEXER_OPEN_EMBED_STRING
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed)
+#define TPP_HAVE_LEXER_OPEN_EMBED_STRING 1
+#else /* ... */
+#define TPP_HAVE_LEXER_OPEN_EMBED_STRING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_OPEN_EMBED_STRING */
+
 /* Provide a function `tpp_lexer_decode_include_string()`
  * to decode the actual contents of an `#include`-string. */
 #ifndef TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
-#if (TPP_HAVE_PROFILE_ALL || \
-     TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
+#if (TPP_HAVE_PROFILE_ALL ||               \
+     TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || \
+     TPP_HAVE_LEXER_OPEN_EMBED_STRING)
 #define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING 1
 #else /* ... */
 #define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING 0
@@ -3243,6 +3252,22 @@ local HOOKS = {
 	},
 
 	{
+		"Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points\n" +
+		"during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)\n" +
+		"@param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the\n" +
+		"              caller's position in `tpp_lexer_foreach_include_path()`.\n" +
+		"@return: * :         First non-TPP_ENOENT return value of `cb`\n" +
+		"@return: TPP_ENOENT: File still not found\n" +
+		"@return: TPP_EIO:    I/O error\n" +
+		"@return: TPP_ENOMEM: Out of memory",
+		"SYSTEM_EMBED_PATH",
+		"(TPP_HAVE_LEXER_OPEN_EMBED_STRING && TPP_HAVE_PROFILE_ALL)",
+		"", // No builtin default
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg)", { "lexer", "mode", "when", "cb", "arg" },
+		"TPP_ENOENT"
+	},
+
+	{
 		"Called by `tpp_lexer_decodestring()` when an unknown `\\`-escape sequence is encountered\n" +
 		"This hook can be used to define additional, user-defined escape sequences, or any other\n" +
 		"arbitrary behavior to-be performed when specific escape-sequences are found.\n" +
@@ -3650,6 +3675,45 @@ for (local doc, name,
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_SYSTEM_EMBED_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
+ * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points
+ * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * @return: * :         First non-TPP_ENOENT return value of `cb`
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
+#ifdef TPP_HOOK_SYSTEM_EMBED_PATH
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_EMBED_STRING && TPP_HAVE_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_SYSTEM_EMBED_PATH */
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_EMBED_STRING && TPP_HAVE_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_SYSTEM_EMBED_PATH */
+#endif /* !TPP_HAVE_SYSTEM_EMBED_PATH_HOOK */
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_SYSTEM_EMBED_PATH)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_SYSTEM_EMBED_PATH_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_SYSTEM_EMBED_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_SYSTEM_EMBED_PATH)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_SYSTEM_EMBED_PATH_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_SYSTEM_EMBED_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK /* There is no builtin version */
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK /* There is no builtin version */
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_EMBED_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_SYSTEM_EMBED_PATH' is defined, but 'TPP_HAVE_SYSTEM_EMBED_PATH_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_EMBED_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
 /* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
@@ -5325,14 +5389,6 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH (TPP_TUPLE_NONEMPTY(TPP_CONFIG_SYSTEM_INCLUDE_PATH) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstdinc" */
 #endif /* !TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH */
 
-/* Config option to specify if `#include "foo"` should be searched
- * for relative to the file containing the `#include`-directive.
- *
- * Needed to implement GCC's `--include-barrier` (aka. `-I-`) CLI option. */
-#ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE
-#define TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) /* "-finclude-relative-to-current-file" */
-#endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE */
-
 /* `tpp_include_paths` contains a 4th path-list that is searched after all other paths */
 #ifndef TPP_HAVE_INCLUDE_PATH_AFTER
 #if (TPP_HAVE_INCLUDE_STACK &&         \
@@ -5345,6 +5401,14 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
 
+/* Config option to specify if `#include "foo"` should be searched
+ * for relative to the file containing the `#include`-directive.
+ *
+ * Needed to implement GCC's `--include-barrier` (aka. `-I-`) CLI option. */
+#ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE
+#define TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) /* "-finclude-relative-to-current-file" */
+#endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE */
+
 /* `"`-quoted `#include`-strings are searched relative to *every* I/O-file found on the
  * `#include`-stack; not just the most-recent one. Doing this for all files is what TPP2
  * always- and unconditionally did, but turns out that isn't actually something normally
@@ -5353,6 +5417,23 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE
 #define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_COMMON_CONF_EXT0 : 0) /* "-finclude-relative-to-every-file" */
 #endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE */
+
+/* Add another #include-path list specifically for `#embed` and `__has_embed`. This list
+ * is used for filenames specified in `#embed <file>` and `#embed "file"`, whereas use
+ * of `#embed "file"` will also try to open relative to the current file.
+ *
+ * When this feature is disabled, trying to opening a `#embed <file>` always fails, and
+ * `#embed "file"` will only find files relative to the directory containing the current
+ * input file. */
+#ifndef TPP_HAVE_INCLUDE_PATH_EMBED
+#if (TPP_HAVE_INCLUDE_PATH &&                              \
+     (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && \
+     TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_INCLUDE_PATH_EMBED 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_PATH_EMBED 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_PATH_EMBED */
 
 /* Enable support to push/pop the `#include`-path state */
 #ifndef TPP_HAVE_INCLUDE_PATH_PUSH_POP

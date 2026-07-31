@@ -547,6 +547,7 @@ tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
 
 	/* File not found :( */
 	return TPP_ENOENT;
+#undef tpp_lexer_foreach_include_path_hook
 #undef TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS
 }
 
@@ -640,6 +641,135 @@ tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
 	return tpp_lexer_decode_include_string_cb(self, &tpp_lexer_open_include_string_cb, &data);
 }
 #endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
+
+
+#if TPP_HAVE_LEXER_OPEN_EMBED_STRING
+
+/* Enumerate `#embed`-paths according to "mode" (s.a. `tpp_lexer_foreach_include_path()`) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_lexer_foreach_embed_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
+                             tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
+                             void *arg) {
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
+#define tpp_lexer_foreach_embed_path_hook(when)                              \
+	error = tpp_lexer_callhook_system_embed_path(self, mode, when, cb, arg); \
+	if (error != TPP_ENOENT)                                                 \
+		return error;
+#else /* TPP_HAVE_SYSTEM_EMBED_PATH_HOOK */
+#define tpp_lexer_foreach_embed_path_hook(when) /* nothing */
+#endif /* !TPP_HAVE_SYSTEM_EMBED_PATH_HOOK */
+	tpp_errno error;
+	tpp_assert(mode == '<' || mode == '"');
+	tpp_lexer_foreach_embed_path_hook(TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_FIRST);
+	if (mode == '"') {
+		/* Try to open files relative to the current #include-stack */
+#if TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE
+		if (tpp_lexer_has(self, INCLUDE_RELATIVE_TO_CURRENT_FILE)) {
+			tpp_file const *file = tpp_lexer_getfile(self);
+			do {
+#if TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS
+				if (file->tf_kind == TPP_FILE_KIND_IO ||
+				    file->tf_kind == TPP_FILE_KIND_TEXT)
+#endif /* TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS */
+				{
+					char const *filename = file->tf_data.td_io.tff_name;
+					if (filename) {
+						error = (*cb)(arg, filename);
+						if (error != TPP_ENOENT)
+							return error;
+					}
+#if TPP_CONF_MAYBE_0(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
+					if (!tpp_lexer_has(self, INCLUDE_RELATIVE_TO_EVERY_FILE))
+						break;
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+				}
+			}
+#if TPP_HAVE_INCLUDE_STACK
+			while ((file = file->tf_tprev) != NULL);
+#else /* TPP_HAVE_INCLUDE_STACK */
+			while (0);
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+		}
+#endif /* TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE */
+	}
+
+	/* Try to open files relative to system include paths
+	 * Yes: these paths are checked even for "foo.h"-style
+	 *      include strings -- that's what the standard says. */
+
+	/* Search the system-include path */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	tpp_lexer_foreach_embed_path_hook(TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_BEFORE_SYSTEM);
+	{
+		tpp_size i;
+		for (i = 0; i < self->tl_include_paths.tip_embed_list.tipl_size; ++i) {
+			tpp_include_path_entry const *entry = &self->tl_include_paths.tip_embed_list.tipl_list[i];
+			char const *path = _tpp_include_path_entry_getpath(entry);
+			error = (*cb)(arg, path);
+			if (error != TPP_ENOENT)
+				return error;
+		}
+	}
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
+
+	/* Invoke the final system include path hook */
+	tpp_lexer_foreach_embed_path_hook(TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_LAST);
+
+	/* File not found :( */
+	return TPP_ENOENT;
+#undef tpp_lexer_foreach_embed_path_hook
+}
+
+struct tpp_lexer_open_embed_string_data {
+	tpp_lexer                 *tloesd_lexer;  /* [1..1] lexer */
+	tpp_lexer_openfile_result *tloesd_result; /* [1..1] Openfile result */
+	char const                *tloesd_str;    /* #embed-string (used during callback) */
+	tpp_size                   tloesd_length; /* #embed-string length (used during callback) */
+};
+
+#if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && !TPP_HAVE_LEXER_OPENFILE_EX
+#define tpp_lexer_open_embed_string_path_cb tpp_lexer_open_include_string_path_cb
+#else /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && !TPP_HAVE_LEXER_OPENFILE_EX */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_open_embed_string_path_cb(void *arg, char const *relative_to) {
+	struct tpp_lexer_open_embed_string_data *data;
+	data = (struct tpp_lexer_open_embed_string_data *)arg;
+	return tpp_lexer_openfile_ex(data->tloesd_lexer, relative_to,
+	                             data->tloesd_str, data->tloesd_length,
+	                             data->tloesd_result,
+	                             TPP_LEXER_OPENFILE_FLAG_WARN_CASING);
+}
+#endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || TPP_HAVE_LEXER_OPENFILE_EX */
+
+
+static tpp_errno TPPCALL
+tpp_lexer_open_embed_string_cb(void *arg, char const *str, tpp_size length) {
+	tpp_token_id mode;
+	struct tpp_lexer_open_embed_string_data *data;
+	data = (struct tpp_lexer_open_embed_string_data *)arg;
+	data->tloesd_str    = str;
+	data->tloesd_length = length;
+	/* Check for special case: if the given filename is absolute,
+	 * then we must skip all the embed-path resolution! */
+	if (TPP_FS_ISABS(str, length))
+		return tpp_lexer_open_embed_string_path_cb(data, NULL);
+	mode = tpp_lexer_gettok(data->tloesd_lexer);
+	tpp_assert(mode == '<' || mode == '"');
+	return tpp_lexer_foreach_embed_path(data->tloesd_lexer, mode,
+	                                    &tpp_lexer_open_embed_string_path_cb,
+	                                    data);
+}
+
+/* Open an `#embed`-file (s.a. `tpp_lexer_open_include_string()`) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_open_embed_string(tpp_lexer *tpp_restrict self,
+                            /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result) {
+	struct tpp_lexer_open_embed_string_data data;
+	data.tloesd_lexer  = self;
+	data.tloesd_result = result;
+	return tpp_lexer_decode_include_string_cb(self, &tpp_lexer_open_embed_string_cb, &data);
+}
+#endif /* TPP_HAVE_LEXER_OPEN_EMBED_STRING */
 
 
 TPP_DECL_END

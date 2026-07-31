@@ -671,6 +671,7 @@
 #define th_new_dependency                                  TPP_INTERNAL(th_new_dependency)
 #define th_ident_sccs                                      TPP_INTERNAL(th_ident_sccs)
 #define th_system_include_path                             TPP_INTERNAL(th_system_include_path)
+#define th_system_embed_path                               TPP_INTERNAL(th_system_embed_path)
 #define th_unknown_string_escape                           TPP_INTERNAL(th_unknown_string_escape)
 #define th_raise_lexerror                                  TPP_INTERNAL(th_raise_lexerror)
 #define th_isfloatsuffix                                   TPP_INTERNAL(th_isfloatsuffix)
@@ -789,6 +790,7 @@
 #define tip_quote_list                                     TPP_INTERNAL(tip_quote_list)
 #define tip_syshdr_list                                    TPP_INTERNAL(tip_syshdr_list)
 #define tip_after_list                                     TPP_INTERNAL(tip_after_list)
+#define tip_embed_list                                     TPP_INTERNAL(tip_embed_list)
 #define tip_pushcnt                                        TPP_INTERNAL(tip_pushcnt)
 #define tip_prev                                           TPP_INTERNAL(tip_prev)
 #define _TPP_TOK_INTLIKE_MIN                               TPP_INTERNAL(_TPP_TOK_INTLIKE_MIN)
@@ -31138,7 +31140,8 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 	(tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_system_list)) \
 	 _tpp_include_paths_fini_quote(self)                                \
 	 _tpp_include_paths_fini_syshdr(self)                               \
-	 _tpp_include_paths_fini_after(self))
+	 _tpp_include_paths_fini_after(self)                                \
+	 _tpp_include_paths_fini_embed(self))
 
 
 /* Initialize/finalize include paths. */
@@ -31208,41 +31211,51 @@ tpp_include_paths_copyone(tpp_include_paths *tpp_restrict self,
 	self->tip_pushcnt = from->tip_pushcnt;
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
+	error = tpp_include_path_list_copy(&self->tip_embed_list,
+	                                   &from->tip_embed_list);
+	if (TPP_ISERR(error))
+		goto err;
+#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_AFTER
 	error = tpp_include_path_list_copy(&self->tip_after_list,
 	                                   &from->tip_after_list);
 	if (TPP_ISERR(error))
-		goto err;
+		goto err_embed;
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
 	error = tpp_include_path_list_copy(&self->tip_syshdr_list,
 	                                   &from->tip_syshdr_list);
 	if (TPP_ISERR(error))
-		goto err_after;
+		goto err_embed_after;
 #endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 	error = tpp_include_path_list_copy(&self->tip_quote_list,
 	                                   &from->tip_quote_list);
 	if (TPP_ISERR(error))
-		goto err_after_syshdr;
+		goto err_embed_after_syshdr;
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
 	error = tpp_include_path_list_copy(&self->tip_system_list,
 	                                   &from->tip_system_list);
 	if (TPP_ISERR(error))
-		goto err_after_syshdr_quote;
+		goto err_embed_after_syshdr_quote;
 	return error;
-err_after_syshdr_quote:
+err_embed_after_syshdr_quote:
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 	tpp_include_path_list_fini(&self->tip_quote_list);
-err_after_syshdr:
+err_embed_after_syshdr:
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
 	tpp_include_path_list_fini(&self->tip_syshdr_list);
-err_after:
+err_embed_after:
 #endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 	tpp_include_path_list_fini(&self->tip_after_list);
-err:
+err_embed:
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	tpp_include_path_list_fini(&self->tip_embed_list);
+err:
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 	return error;
 }
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP || TPP_HAVE_LEXER_COPY */
@@ -44062,6 +44075,13 @@ again_yield:
 #define WANT_skip_colon_and_andle_for_pathlist
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
 
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	case TPP_KWD_embed:
+		data.tlpptipd_kind = TPP_INCLUDE_PATH_KIND_EMBED;
+		goto skip_colon_and_andle_for_pathlist;
+#define WANT_skip_colon_and_andle_for_pathlist
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
+
 	case TPP_KWD_default:
 #ifdef WANT_skip_colon_and_andle_for_pathlist
 #undef WANT_skip_colon_and_andle_for_pathlist
@@ -46522,6 +46542,10 @@ tpp_lexer_handle_endif_directive(tpp_lexer *tpp_restrict self) {
 /************************************************************************/
 #if TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED
 
+#define TPP_LEXER_PARSE_INCLUDE_DIRECTIVE_IMPL_HAS__FOR_EMBED    \
+	((TPP_HAVE_CPP_EMBED && TPP_HAVE_LEXER_OPEN_EMBED_STRING) && \
+	 (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT))
+
 /* Parse the string with the current token pointing at the "include"-keyword
  * Returns with the current token ending directly after the include-string (meaning
  * that any trailing comments, or the trailing line-feed have *NOT* been parsed, yet,
@@ -46532,18 +46556,30 @@ tpp_lexer_handle_endif_directive(tpp_lexer *tpp_restrict self) {
  *                       or file was marked according to "mask_flags"
  * @return: TPP_ENOMEM:  Out of memory
  * @return: TPP_EIO:     I/O error */
+#if TPP_HAVE_LEXER_OPENFILE_EX && TPP_LEXER_PARSE_INCLUDE_DIRECTIVE_IMPL_HAS__FOR_EMBED
+#define tpp_lexer_parse_include_directive_impl(self, result, mask_flags, for_embed) \
+	tpp_lexer_parse_include_directive_impl_(self, result, mask_flags, for_embed)
+#elif TPP_HAVE_LEXER_OPENFILE_EX
+#define tpp_lexer_parse_include_directive_impl(self, result, mask_flags, for_embed) \
+	tpp_lexer_parse_include_directive_impl_(self, result, mask_flags)
+#elif TPP_LEXER_PARSE_INCLUDE_DIRECTIVE_IMPL_HAS__FOR_EMBED
+#define tpp_lexer_parse_include_directive_impl(self, result, mask_flags, for_embed) \
+	tpp_lexer_parse_include_directive_impl_(self, result, for_embed)
+#else /* ... */
+#define tpp_lexer_parse_include_directive_impl(self, result, mask_flags, for_embed) \
+	tpp_lexer_parse_include_directive_impl_(self, result)
+#endif /* !... */
+
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parse_include_directive_impl_(tpp_lexer *tpp_restrict self,
+                                        tpp_lexer_openfile_result *tpp_restrict result
 #if TPP_HAVE_LEXER_OPENFILE_EX
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_parse_include_directive_impl_ex(tpp_lexer *tpp_restrict self,
-                                          tpp_lexer_openfile_result *tpp_restrict result,
-                                          tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_LEXER_OPENFILE_EX */
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_parse_include_directive_impl(tpp_lexer *tpp_restrict self,
-                                       tpp_lexer_openfile_result *tpp_restrict result)
-#define tpp_lexer_parse_include_directive_impl_ex(self, mask_flags) tpp_lexer_parse_include_directive_impl(self)
-#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-{
+                                        , tpp_lexer_openfile_flags mask_flags
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
+#if TPP_LEXER_PARSE_INCLUDE_DIRECTIVE_IMPL_HAS__FOR_EMBED
+                                        , bool for_embed
+#endif /* TPP_LEXER_PARSE_INCLUDE_DIRECTIVE_IMPL_HAS__FOR_EMBED */
+                                        ) {
 	tpp_errno error;
 	tpp_token_id tok;
 	tpp_char const *directive_iter;
@@ -46602,11 +46638,26 @@ again:
 
 	token->tt_start = token_start;
 	if (tok == '"' || tok == '<') {
+#if TPP_LEXER_PARSE_INCLUDE_DIRECTIVE_IMPL_HAS__FOR_EMBED
+		if (for_embed)
+#endif /* TPP_LEXER_PARSE_INCLUDE_DIRECTIVE_IMPL_HAS__FOR_EMBED */
+		{
+#if TPP_HAVE_CPP_EMBED && TPP_HAVE_LEXER_OPEN_EMBED_STRING
+			error = tpp_lexer_open_embed_string(self, result);
+#endif /* TPP_HAVE_CPP_EMBED && TPP_HAVE_LEXER_OPEN_EMBED_STRING */
+		}
+#if TPP_LEXER_PARSE_INCLUDE_DIRECTIVE_IMPL_HAS__FOR_EMBED
+		else
+#endif /* TPP_LEXER_PARSE_INCLUDE_DIRECTIVE_IMPL_HAS__FOR_EMBED */
+		{
+#if TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT
 #if TPP_HAVE_LEXER_OPENFILE_EX
-		error = tpp_lexer_open_include_string_ex(self, result, mask_flags);
-#else /* TPP_HAVE_LEXER_OPENFILE_EX */
-		error = tpp_lexer_open_include_string(self, result);
+			error = tpp_lexer_open_include_string_ex(self, result, mask_flags);
+#else  /* TPP_HAVE_LEXER_OPENFILE_EX */
+			error = tpp_lexer_open_include_string(self, result);
 #endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
+#endif /* TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT */
+		}
 
 #if TPP_HAVE_TPP_W_NO_SUCH_FILE
 		if (error == TPP_ENOENT) {
@@ -46659,17 +46710,19 @@ again:
  * @return: TPP_ENOMEM:  Out of memory
  * @return: TPP_EIO:     I/O error */
 #if TPP_HAVE_LEXER_OPENFILE_EX
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_parse_include_directive_ex(tpp_lexer *tpp_restrict self,
-                                     tpp_lexer_openfile_result *tpp_restrict result,
-                                     tpp_lexer_openfile_flags mask_flags)
+#define tpp_lexer_parse_include_directive(self, result, mask_flags) \
+	tpp_lexer_parse_include_directive_(self, result, mask_flags)
 #else /* TPP_HAVE_LEXER_OPENFILE_EX */
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
-                                  tpp_lexer_openfile_result *tpp_restrict result)
-#define tpp_lexer_parse_include_directive_ex(self, mask_flags) tpp_lexer_parse_include_directive(self)
+#define tpp_lexer_parse_include_directive(self, result, mask_flags) \
+	tpp_lexer_parse_include_directive_(self, result)
 #endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-{
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_parse_include_directive_(tpp_lexer *tpp_restrict self,
+                                   tpp_lexer_openfile_result *tpp_restrict result
+#if TPP_HAVE_LEXER_OPENFILE_EX
+                                   , tpp_lexer_openfile_flags mask_flags
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
+                                     ) {
 	tpp_errno error;
 	tpp_token_id tok;
 	tpp_token *const token = tpp_lexer_gettoken(self);
@@ -46679,7 +46732,7 @@ tpp_lexer_parse_include_directive(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 
 	/* Call underlying include loader. */
-	error = tpp_lexer_parse_include_directive_impl_ex(self, result, mask_flags);
+	error = tpp_lexer_parse_include_directive_impl(self, result, mask_flags, false);
 	if (error != TPP_EOK && error != TPP_ENOENT)
 		return error;
 
@@ -46775,7 +46828,7 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 	tpp_lexer_openfile_result ofr;
 
 	/* Parse include string... */
-	error = tpp_lexer_parse_include_directive_ex(self, &ofr, flags);
+	error = tpp_lexer_parse_include_directive(self, &ofr, flags);
 
 	/* Pop no-autopopfile block originally created in "tpp_lexer_process_directive()" */
 	tpp_lexer_autopopfile_break(self);
@@ -47338,9 +47391,10 @@ tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
 	tpp_token_id tok;
 
 	/* Call underlying include loader. */
-	self->teb_ofr_error = tpp_lexer_parse_include_directive_impl_ex(lexer, &self->teb_ofr,
-	                                                                /* Warn about bad casing */
-	                                                                TPP_LEXER_OPENFILE_FLAG_WARN_CASING);
+	self->teb_ofr_error = tpp_lexer_parse_include_directive_impl(lexer, &self->teb_ofr,
+	                                                             /* Warn about bad casing */
+	                                                             TPP_LEXER_OPENFILE_FLAG_WARN_CASING,
+	                                                             true);
 	if (self->teb_ofr_error != TPP_EOK && self->teb_ofr_error != TPP_ENOENT)
 		return self->teb_ofr_error;
 
@@ -50569,15 +50623,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 	if (tok == '"' || tok == '<') {
-#if TPP_HAVE_LEXER_OPENFILE_EX
-		ofr_error = tpp_lexer_open_include_string_ex(self, &ofr, TPP_LEXER_OPENFILE_FLAG_WARN_CASING);
-#else /* TPP_HAVE_LEXER_OPENFILE_EX */
-		ofr_error = tpp_lexer_open_include_string(self, &ofr);
-#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-#if TPP_HAVE_LEXER_OPENFILE_EX
-		if (ofr_error == TPP_EMASKED)
-			ofr_error = TPP_ENOENT; /* Shouldn't happen */
-#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
+		ofr_error = tpp_lexer_open_embed_string(self, &ofr);
 	} else {
 		tpp_bzero(&ofr, sizeof(ofr)); /* To prevent compiler warnings; init here isn't actually necessary */
 #if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
@@ -53123,6 +53169,7 @@ tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
 
 	/* File not found :( */
 	return TPP_ENOENT;
+#undef tpp_lexer_foreach_include_path_hook
 #undef TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS
 }
 
@@ -53216,6 +53263,135 @@ tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
 	return tpp_lexer_decode_include_string_cb(self, &tpp_lexer_open_include_string_cb, &data);
 }
 #endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
+
+
+#if TPP_HAVE_LEXER_OPEN_EMBED_STRING
+
+/* Enumerate `#embed`-paths according to "mode" (s.a. `tpp_lexer_foreach_include_path()`) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_lexer_foreach_embed_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
+                             tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
+                             void *arg) {
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
+#define tpp_lexer_foreach_embed_path_hook(when)                              \
+	error = tpp_lexer_callhook_system_embed_path(self, mode, when, cb, arg); \
+	if (error != TPP_ENOENT)                                                 \
+		return error;
+#else /* TPP_HAVE_SYSTEM_EMBED_PATH_HOOK */
+#define tpp_lexer_foreach_embed_path_hook(when) /* nothing */
+#endif /* !TPP_HAVE_SYSTEM_EMBED_PATH_HOOK */
+	tpp_errno error;
+	tpp_assert(mode == '<' || mode == '"');
+	tpp_lexer_foreach_embed_path_hook(TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_FIRST);
+	if (mode == '"') {
+		/* Try to open files relative to the current #include-stack */
+#if TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE
+		if (tpp_lexer_has(self, INCLUDE_RELATIVE_TO_CURRENT_FILE)) {
+			tpp_file const *file = tpp_lexer_getfile(self);
+			do {
+#if TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS
+				if (file->tf_kind == TPP_FILE_KIND_IO ||
+				    file->tf_kind == TPP_FILE_KIND_TEXT)
+#endif /* TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS */
+				{
+					char const *filename = file->tf_data.td_io.tff_name;
+					if (filename) {
+						error = (*cb)(arg, filename);
+						if (error != TPP_ENOENT)
+							return error;
+					}
+#if TPP_CONF_MAYBE_0(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE)
+					if (!tpp_lexer_has(self, INCLUDE_RELATIVE_TO_EVERY_FILE))
+						break;
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE) */
+				}
+			}
+#if TPP_HAVE_INCLUDE_STACK
+			while ((file = file->tf_tprev) != NULL);
+#else /* TPP_HAVE_INCLUDE_STACK */
+			while (0);
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+		}
+#endif /* TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE */
+	}
+
+	/* Try to open files relative to system include paths
+	 * Yes: these paths are checked even for "foo.h"-style
+	 *      include strings -- that's what the standard says. */
+
+	/* Search the system-include path */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	tpp_lexer_foreach_embed_path_hook(TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_BEFORE_SYSTEM);
+	{
+		tpp_size i;
+		for (i = 0; i < self->tl_include_paths.tip_embed_list.tipl_size; ++i) {
+			tpp_include_path_entry const *entry = &self->tl_include_paths.tip_embed_list.tipl_list[i];
+			char const *path = _tpp_include_path_entry_getpath(entry);
+			error = (*cb)(arg, path);
+			if (error != TPP_ENOENT)
+				return error;
+		}
+	}
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
+
+	/* Invoke the final system include path hook */
+	tpp_lexer_foreach_embed_path_hook(TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_LAST);
+
+	/* File not found :( */
+	return TPP_ENOENT;
+#undef tpp_lexer_foreach_embed_path_hook
+}
+
+struct tpp_lexer_open_embed_string_data {
+	tpp_lexer                 *tloesd_lexer;  /* [1..1] lexer */
+	tpp_lexer_openfile_result *tloesd_result; /* [1..1] Openfile result */
+	char const                *tloesd_str;    /* #embed-string (used during callback) */
+	tpp_size                   tloesd_length; /* #embed-string length (used during callback) */
+};
+
+#if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && !TPP_HAVE_LEXER_OPENFILE_EX
+#define tpp_lexer_open_embed_string_path_cb tpp_lexer_open_include_string_path_cb
+#else /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && !TPP_HAVE_LEXER_OPENFILE_EX */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_open_embed_string_path_cb(void *arg, char const *relative_to) {
+	struct tpp_lexer_open_embed_string_data *data;
+	data = (struct tpp_lexer_open_embed_string_data *)arg;
+	return tpp_lexer_openfile_ex(data->tloesd_lexer, relative_to,
+	                             data->tloesd_str, data->tloesd_length,
+	                             data->tloesd_result,
+	                             TPP_LEXER_OPENFILE_FLAG_WARN_CASING);
+}
+#endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || TPP_HAVE_LEXER_OPENFILE_EX */
+
+
+static tpp_errno TPPCALL
+tpp_lexer_open_embed_string_cb(void *arg, char const *str, tpp_size length) {
+	tpp_token_id mode;
+	struct tpp_lexer_open_embed_string_data *data;
+	data = (struct tpp_lexer_open_embed_string_data *)arg;
+	data->tloesd_str    = str;
+	data->tloesd_length = length;
+	/* Check for special case: if the given filename is absolute,
+	 * then we must skip all the embed-path resolution! */
+	if (TPP_FS_ISABS(str, length))
+		return tpp_lexer_open_embed_string_path_cb(data, NULL);
+	mode = tpp_lexer_gettok(data->tloesd_lexer);
+	tpp_assert(mode == '<' || mode == '"');
+	return tpp_lexer_foreach_embed_path(data->tloesd_lexer, mode,
+	                                    &tpp_lexer_open_embed_string_path_cb,
+	                                    data);
+}
+
+/* Open an `#embed`-file (s.a. `tpp_lexer_open_include_string()`) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_open_embed_string(tpp_lexer *tpp_restrict self,
+                            /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result) {
+	struct tpp_lexer_open_embed_string_data data;
+	data.tloesd_lexer  = self;
+	data.tloesd_result = result;
+	return tpp_lexer_decode_include_string_cb(self, &tpp_lexer_open_embed_string_cb, &data);
+}
+#endif /* TPP_HAVE_LEXER_OPEN_EMBED_STRING */
 
 
 /************************************************************************/
@@ -57687,6 +57863,10 @@ tpp_lexer_dumper_printincludes(tpp_lexer_dumper *tpp_restrict self,
 	if (!tpp_lexer_dumper_haserr(self))
 		tpp_lexer_dumper_printincludes_list(self, &includes->tip_after_list, "dirafter: ", 10);
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	if (!tpp_lexer_dumper_haserr(self))
+		tpp_lexer_dumper_printincludes_list(self, &includes->tip_embed_list, "embed: ", 7);
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 #else /* TPP_HAVE_INCLUDE_PATH_MULTIPLE */
 	tpp_lexer_dumper_printincludes_list(self, &includes->tip_system_list);
 #endif /* !TPP_HAVE_INCLUDE_PATH_MULTIPLE */

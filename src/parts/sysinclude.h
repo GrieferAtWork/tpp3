@@ -142,6 +142,15 @@ typedef struct tpp_include_paths {
 #define _tpp_include_paths_fini_after(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
 
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	tpp_include_path_list TPP_INTERNAL(tip_embed_list);  /* #embed-path list searched for `#embed <file>`-like filenames */
+#define _tpp_include_paths_init_embed(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_embed_list))
+#define _tpp_include_paths_fini_embed(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_embed_list))
+#else /* TPP_HAVE_INCLUDE_PATH_EMBED */
+#define _tpp_include_paths_init_embed(self) /* nothing */
+#define _tpp_include_paths_fini_embed(self) /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH_EMBED */
+
 #if TPP_HAVE_INCLUDE_PATH_PUSH_POP
 	tpp_size                  TPP_INTERNAL(tip_pushcnt); /* # of times paths pushed were since last modified */
 	struct tpp_include_paths *TPP_INTERNAL(tip_prev);    /* [0..1][owned] Old warning state. */
@@ -157,6 +166,7 @@ typedef struct tpp_include_paths {
 	 _tpp_include_paths_init_quote(self)                                \
 	 _tpp_include_paths_init_syshdr(self)                               \
 	 _tpp_include_paths_init_after(self)                                \
+	 _tpp_include_paths_init_embed(self)                                \
 	 _tpp_include_paths_init_push(self))
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
@@ -187,6 +197,10 @@ typedef enum tpp_include_path_kind {
 	TPP_INCLUDE_PATH_KIND_AFTER = tpp_offsetof(tpp_include_paths, TPP_INTERNAL(tip_after_list)),
 #define TPP_HAVE_INCLUDE_PATH_MULTIPLE 1
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	TPP_INCLUDE_PATH_KIND_EMBED = tpp_offsetof(tpp_include_paths, TPP_INTERNAL(tip_embed_list)),
+#define TPP_HAVE_INCLUDE_PATH_MULTIPLE 1
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 } tpp_include_path_kind;
 #ifndef TPP_HAVE_INCLUDE_PATH_MULTIPLE
 #define TPP_HAVE_INCLUDE_PATH_MULTIPLE 0
@@ -215,6 +229,10 @@ typedef enum tpp_include_path_kind {
 #define tpp_include_paths_numafter(self)     tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_after_list))
 #define tpp_include_paths_getafter(self, i)  tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_after_list), i)
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+#define tpp_include_paths_numembed(self)     tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_embed_list))
+#define tpp_include_paths_getembed(self, i)  tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_embed_list), i)
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 #define tpp_include_paths_numbykind(self, kind)    tpp_include_path_list_getcount(_tpp_include_paths_bykind(self, kind))
 #define tpp_include_paths_getbykind(self, kind, i) tpp_include_path_list_getentry(_tpp_include_paths_bykind(self, kind), i)
 
@@ -298,6 +316,12 @@ _tpp_include_paths_clearbykind(tpp_include_paths *tpp_restrict self);
 #define tpp_include_paths_delafter(self, path, path_maxlen)      tpp_include_paths_delbykind(self, TPP_INCLUDE_PATH_KIND_AFTER, path, path_maxlen)
 #define tpp_include_paths_clearafter(self)                       tpp_include_paths_clearbykind(self, TPP_INCLUDE_PATH_KIND_AFTER)
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+#define tpp_include_paths_addembed(self, path, path_maxlen)      tpp_include_paths_addbykind(self, TPP_INCLUDE_PATH_KIND_EMBED, path, path_maxlen)
+#define tpp_include_paths_addembed_head(self, path, path_maxlen) tpp_include_paths_addbykind_head(self, TPP_INCLUDE_PATH_KIND_EMBED, path, path_maxlen)
+#define tpp_include_paths_delembed(self, path, path_maxlen)      tpp_include_paths_delbykind(self, TPP_INCLUDE_PATH_KIND_EMBED, path, path_maxlen)
+#define tpp_include_paths_clearembed(self)                       tpp_include_paths_clearbykind(self, TPP_INCLUDE_PATH_KIND_EMBED)
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 
 /* Push the current include paths state */
 #define tpp_include_paths_push(self) (void)(++(self)->TPP_INTERNAL(tip_pushcnt))
@@ -335,6 +359,12 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *
 #define tpp_include_paths_delafter(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_after_list), path, path_maxlen)
 #define tpp_include_paths_clearafter(self)                       tpp_include_path_list_clear(&(self)->TPP_INTERNAL(tip_after_list))
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+#define tpp_include_paths_addembed(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_embed_list), path, path_maxlen)
+#define tpp_include_paths_addembed_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_embed_list), path, path_maxlen)
+#define tpp_include_paths_delembed(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_embed_list), path, path_maxlen)
+#define tpp_include_paths_clearembed(self)                       tpp_include_path_list_clear(&(self)->TPP_INTERNAL(tip_embed_list))
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 #endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 #endif /* TPP_HAVE_INCLUDE_PATH */
 

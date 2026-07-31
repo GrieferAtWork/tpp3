@@ -1181,15 +1181,7 @@ tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 	if (TPP_TOK_ISERR(tok))
 		return tok;
 	if (tok == '"' || tok == '<') {
-#if TPP_HAVE_LEXER_OPENFILE_EX
-		ofr_error = tpp_lexer_open_include_string_ex(self, &ofr, TPP_LEXER_OPENFILE_FLAG_WARN_CASING);
-#else /* TPP_HAVE_LEXER_OPENFILE_EX */
-		ofr_error = tpp_lexer_open_include_string(self, &ofr);
-#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-#if TPP_HAVE_LEXER_OPENFILE_EX
-		if (ofr_error == TPP_EMASKED)
-			ofr_error = TPP_ENOENT; /* Shouldn't happen */
-#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
+		ofr_error = tpp_lexer_open_embed_string(self, &ofr);
 	} else {
 		tpp_bzero(&ofr, sizeof(ofr)); /* To prevent compiler warnings; init here isn't actually necessary */
 #if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING

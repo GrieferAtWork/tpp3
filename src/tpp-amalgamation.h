@@ -459,7 +459,7 @@ TPP_KWD(TPP_KWD_undef, "undef")
 TPP_KWD_IS_IDENTIFIER(TPP_KWD_undef, TPP_KWDIDENTIFIER_undef)
 #endif /* TPP_KWDIDENTIFIER_undef != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
 #endif /* TPP_HAVE_CPP_DEFINE || TPP_HAVE_PRAGMA_PUSH_MACRO */
-#if TPP_HAVE_CPP_EMBED
+#if TPP_HAVE_CPP_EMBED || (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_EMBED)
 #define TPP_KWD_embed TPP_KWD_embed
 TPP_KWD(TPP_KWD_embed, "embed")
 #ifndef TPP_KWDIDENTIFIER_embed
@@ -468,7 +468,7 @@ TPP_KWD(TPP_KWD_embed, "embed")
 #if TPP_KWDIDENTIFIER_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
 TPP_KWD_IS_IDENTIFIER(TPP_KWD_embed, TPP_KWDIDENTIFIER_embed)
 #endif /* TPP_KWDIDENTIFIER_embed != TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT */
-#endif /* TPP_HAVE_CPP_EMBED */
+#endif /* TPP_HAVE_CPP_EMBED || (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_EMBED) */
 #if TPP_HAVE_CPP_ASSERT
 #define TPP_KWD_assert TPP_KWD_assert
 TPP_KWD(TPP_KWD_assert, "assert")
@@ -8375,10 +8375,8 @@ TPP_DECL_END
 #if (TPP_HAVE_CPP_INCLUDE ||              \
      TPP_HAVE_CPP_INCLUDE_NEXT ||         \
      TPP_HAVE_CPP_IMPORT ||               \
-     TPP_HAVE_CPP_EMBED ||                \
      TPP_HAVE_MACRO___has_include ||      \
      TPP_HAVE_MACRO___has_include_next || \
-     TPP_HAVE_MACRO___has_embed ||        \
      TPP_HAVE_MACRO___TPP_LOAD_FILE ||    \
      TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
 #define TPP_HAVE_LEXER_OPEN_INCLUDE_STRING 1
@@ -8387,11 +8385,22 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
 
+/* Provide a function `tpp_lexer_open_embed_string()`
+ * to open the file associated with an `#embed`-string. */
+#ifndef TPP_HAVE_LEXER_OPEN_EMBED_STRING
+#if (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed)
+#define TPP_HAVE_LEXER_OPEN_EMBED_STRING 1
+#else /* ... */
+#define TPP_HAVE_LEXER_OPEN_EMBED_STRING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_OPEN_EMBED_STRING */
+
 /* Provide a function `tpp_lexer_decode_include_string()`
  * to decode the actual contents of an `#include`-string. */
 #ifndef TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
-#if (TPP_HAVE_PROFILE_ALL || \
-     TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
+#if (TPP_HAVE_PROFILE_ALL ||               \
+     TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || \
+     TPP_HAVE_LEXER_OPEN_EMBED_STRING)
 #define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING 1
 #else /* ... */
 #define TPP_HAVE_LEXER_DECODE_INCLUDE_STRING 0
@@ -9254,6 +9263,45 @@ TPP_DECL_END
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_SYSTEM_EMBED_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
+ * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points
+ * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * @return: * :         First non-TPP_ENOENT return value of `cb`
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#ifndef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
+#ifdef TPP_HOOK_SYSTEM_EMBED_PATH
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_EMBED_STRING && TPP_HAVE_PROFILE_ALL) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_SYSTEM_EMBED_PATH */
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK ((TPP_HAVE_LEXER_OPEN_EMBED_STRING && TPP_HAVE_PROFILE_ALL) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_SYSTEM_EMBED_PATH */
+#endif /* !TPP_HAVE_SYSTEM_EMBED_PATH_HOOK */
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_SYSTEM_EMBED_PATH)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_SYSTEM_EMBED_PATH_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_SYSTEM_EMBED_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_SYSTEM_EMBED_PATH)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_SYSTEM_EMBED_PATH_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_SYSTEM_EMBED_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK /* There is no builtin version */
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK /* There is no builtin version */
+#define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_EMBED_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_SYSTEM_EMBED_PATH' is defined, but 'TPP_HAVE_SYSTEM_EMBED_PATH_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_EMBED_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
 /* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
@@ -10769,14 +10817,6 @@ TPP_DECL_END
 #define TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH (TPP_TUPLE_NONEMPTY(TPP_CONFIG_SYSTEM_INCLUDE_PATH) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fstdinc" */
 #endif /* !TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH */
 
-/* Config option to specify if `#include "foo"` should be searched
- * for relative to the file containing the `#include`-directive.
- *
- * Needed to implement GCC's `--include-barrier` (aka. `-I-`) CLI option. */
-#ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE
-#define TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) /* "-finclude-relative-to-current-file" */
-#endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE */
-
 /* `tpp_include_paths` contains a 4th path-list that is searched after all other paths */
 #ifndef TPP_HAVE_INCLUDE_PATH_AFTER
 #if (TPP_HAVE_INCLUDE_STACK &&         \
@@ -10789,6 +10829,14 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
 
+/* Config option to specify if `#include "foo"` should be searched
+ * for relative to the file containing the `#include`-directive.
+ *
+ * Needed to implement GCC's `--include-barrier` (aka. `-I-`) CLI option. */
+#ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE
+#define TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) /* "-finclude-relative-to-current-file" */
+#endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE */
+
 /* `"`-quoted `#include`-strings are searched relative to *every* I/O-file found on the
  * `#include`-stack; not just the most-recent one. Doing this for all files is what TPP2
  * always- and unconditionally did, but turns out that isn't actually something normally
@@ -10797,6 +10845,23 @@ TPP_DECL_END
 #ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE
 #define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_COMMON_CONF_EXT0 : 0) /* "-finclude-relative-to-every-file" */
 #endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE */
+
+/* Add another #include-path list specifically for `#embed` and `__has_embed`. This list
+ * is used for filenames specified in `#embed <file>` and `#embed "file"`, whereas use
+ * of `#embed "file"` will also try to open relative to the current file.
+ *
+ * When this feature is disabled, trying to opening a `#embed <file>` always fails, and
+ * `#embed "file"` will only find files relative to the directory containing the current
+ * input file. */
+#ifndef TPP_HAVE_INCLUDE_PATH_EMBED
+#if (TPP_HAVE_INCLUDE_PATH &&                              \
+     (TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) && \
+     TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_INCLUDE_PATH_EMBED 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_PATH_EMBED 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_PATH_EMBED */
 
 /* Enable support to push/pop the `#include`-path state */
 #ifndef TPP_HAVE_INCLUDE_PATH_PUSH_POP
@@ -13833,9 +13898,9 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
 #if TPP_HAVE_CPP_DEFINE || TPP_HAVE_PRAGMA_PUSH_MACRO
 #define KWD_undef TPP_KWD_undef
 #endif /* TPP_HAVE_CPP_DEFINE || TPP_HAVE_PRAGMA_PUSH_MACRO */
-#if TPP_HAVE_CPP_EMBED
+#if TPP_HAVE_CPP_EMBED || (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_EMBED)
 #define KWD_embed TPP_KWD_embed
-#endif /* TPP_HAVE_CPP_EMBED */
+#endif /* TPP_HAVE_CPP_EMBED || (TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_EMBED) */
 #if TPP_HAVE_CPP_ASSERT
 #define KWD_assert   TPP_KWD_assert
 #define KWD_unassert TPP_KWD_unassert
@@ -21777,6 +21842,15 @@ typedef struct tpp_include_paths {
 #define _tpp_include_paths_fini_after(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
 
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	tpp_include_path_list TPP_INTERNAL(tip_embed_list);  /* #embed-path list searched for `#embed <file>`-like filenames */
+#define _tpp_include_paths_init_embed(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_embed_list))
+#define _tpp_include_paths_fini_embed(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_embed_list))
+#else /* TPP_HAVE_INCLUDE_PATH_EMBED */
+#define _tpp_include_paths_init_embed(self) /* nothing */
+#define _tpp_include_paths_fini_embed(self) /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_PATH_EMBED */
+
 #if TPP_HAVE_INCLUDE_PATH_PUSH_POP
 	tpp_size                  TPP_INTERNAL(tip_pushcnt); /* # of times paths pushed were since last modified */
 	struct tpp_include_paths *TPP_INTERNAL(tip_prev);    /* [0..1][owned] Old warning state. */
@@ -21792,6 +21866,7 @@ typedef struct tpp_include_paths {
 	 _tpp_include_paths_init_quote(self)                                \
 	 _tpp_include_paths_init_syshdr(self)                               \
 	 _tpp_include_paths_init_after(self)                                \
+	 _tpp_include_paths_init_embed(self)                                \
 	 _tpp_include_paths_init_push(self))
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
@@ -21822,6 +21897,10 @@ typedef enum tpp_include_path_kind {
 	TPP_INCLUDE_PATH_KIND_AFTER = tpp_offsetof(tpp_include_paths, TPP_INTERNAL(tip_after_list)),
 #define TPP_HAVE_INCLUDE_PATH_MULTIPLE 1
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	TPP_INCLUDE_PATH_KIND_EMBED = tpp_offsetof(tpp_include_paths, TPP_INTERNAL(tip_embed_list)),
+#define TPP_HAVE_INCLUDE_PATH_MULTIPLE 1
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 } tpp_include_path_kind;
 #ifndef TPP_HAVE_INCLUDE_PATH_MULTIPLE
 #define TPP_HAVE_INCLUDE_PATH_MULTIPLE 0
@@ -21850,6 +21929,10 @@ typedef enum tpp_include_path_kind {
 #define tpp_include_paths_numafter(self)     tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_after_list))
 #define tpp_include_paths_getafter(self, i)  tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_after_list), i)
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+#define tpp_include_paths_numembed(self)     tpp_include_path_list_getcount(&(self)->TPP_INTERNAL(tip_embed_list))
+#define tpp_include_paths_getembed(self, i)  tpp_include_path_list_getentry(&(self)->TPP_INTERNAL(tip_embed_list), i)
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 #define tpp_include_paths_numbykind(self, kind)    tpp_include_path_list_getcount(_tpp_include_paths_bykind(self, kind))
 #define tpp_include_paths_getbykind(self, kind, i) tpp_include_path_list_getentry(_tpp_include_paths_bykind(self, kind), i)
 
@@ -21933,6 +22016,12 @@ _tpp_include_paths_clearbykind(tpp_include_paths *tpp_restrict self);
 #define tpp_include_paths_delafter(self, path, path_maxlen)      tpp_include_paths_delbykind(self, TPP_INCLUDE_PATH_KIND_AFTER, path, path_maxlen)
 #define tpp_include_paths_clearafter(self)                       tpp_include_paths_clearbykind(self, TPP_INCLUDE_PATH_KIND_AFTER)
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+#define tpp_include_paths_addembed(self, path, path_maxlen)      tpp_include_paths_addbykind(self, TPP_INCLUDE_PATH_KIND_EMBED, path, path_maxlen)
+#define tpp_include_paths_addembed_head(self, path, path_maxlen) tpp_include_paths_addbykind_head(self, TPP_INCLUDE_PATH_KIND_EMBED, path, path_maxlen)
+#define tpp_include_paths_delembed(self, path, path_maxlen)      tpp_include_paths_delbykind(self, TPP_INCLUDE_PATH_KIND_EMBED, path, path_maxlen)
+#define tpp_include_paths_clearembed(self)                       tpp_include_paths_clearbykind(self, TPP_INCLUDE_PATH_KIND_EMBED)
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 
 /* Push the current include paths state */
 #define tpp_include_paths_push(self) (void)(++(self)->TPP_INTERNAL(tip_pushcnt))
@@ -21970,6 +22059,12 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *
 #define tpp_include_paths_delafter(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_after_list), path, path_maxlen)
 #define tpp_include_paths_clearafter(self)                       tpp_include_path_list_clear(&(self)->TPP_INTERNAL(tip_after_list))
 #endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+#define tpp_include_paths_addembed(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_embed_list), path, path_maxlen)
+#define tpp_include_paths_addembed_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_embed_list), path, path_maxlen)
+#define tpp_include_paths_delembed(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_embed_list), path, path_maxlen)
+#define tpp_include_paths_clearembed(self)                       tpp_include_path_list_clear(&(self)->TPP_INTERNAL(tip_embed_list))
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 #endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
@@ -22013,6 +22108,17 @@ typedef enum tpp_hook_system_include_path_when {
 #endif /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
 
 
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
+typedef enum tpp_hook_system_embed_path_when {
+	TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_FIRST,         /* Called at the very start */
+#if TPP_HAVE_INCLUDE_PATH_EMBED
+	TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_BEFORE_SYSTEM, /* Called before "tip_embed_list" is checked */
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
+	TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_LAST,          /* Called at the very end */
+} tpp_hook_system_embed_path_when;
+#endif /* TPP_HAVE_SYSTEM_EMBED_PATH_HOOK */
+
+
 
 
 #undef TPP_HAVE_HOOKS
@@ -22024,6 +22130,7 @@ typedef enum tpp_hook_system_include_path_when {
      TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) ||        \
      TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) ||            \
      TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) ||   \
+     TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) ||     \
      TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) || \
      TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK) ||        \
      TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK))
@@ -22161,6 +22268,19 @@ typedef struct tpp_hooks {
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_include_path))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_system_embed_path)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
+	 * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points
+	 * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
+	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+	 *               caller's position in `tpp_lexer_foreach_include_path()`.
+	 * @return: * :         First non-TPP_ENOENT return value of `cb`
+	 * @return: TPP_ENOENT: File still not found
+	 * @return: TPP_EIO:    I/O error
+	 * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_embed_path))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
 	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config);
 	 * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
@@ -22497,6 +22617,36 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_system_include_path(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
+/* Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points
+ * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * @return: * :         First non-TPP_ENOENT return value of `cb`
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
+#define tpp_hooks_call_system_embed_path(self, lexer, mode, when, cb, arg) \
+	((self)->TPP_INTERNAL(th_system_embed_path) ? (*(self)->TPP_INTERNAL(th_system_embed_path))(lexer, mode, when, cb, arg) : TPP_ENOENT)
+#define tpp_hooks_get_system_embed_path(self)    (self)->TPP_INTERNAL(th_system_embed_path)
+#define tpp_hooks_set_system_embed_path(self, v) (void)((self)->TPP_INTERNAL(th_system_embed_path) = (v))
+#define tpp_hooks_reset_system_embed_path(self)  (void)((self)->TPP_INTERNAL(th_system_embed_path) = _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH)
+#define _tpp_hooks_init_system_embed_path(self)  , (self)->TPP_INTERNAL(th_system_embed_path) = _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_SYSTEM_EMBED_PATH)
+#define _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH (&TPP_HOOK_SYSTEM_EMBED_PATH)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_system_embed_path(self, lexer, mode, when, cb, arg) \
+	TPP_HOOK_SYSTEM_EMBED_PATH(lexer, mode, when, cb, arg)
+#else /*  */
+#define tpp_hooks_call_system_embed_path(self, lexer, mode, when, cb, arg) TPP_ENOENT
+#endif /* ... */
+#define _tpp_hooks_init_system_embed_path(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
+
 /* Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -22604,6 +22754,7 @@ typedef struct tpp_hooks {
 	       _tpp_hooks_init_new_dependency(self) \
 	       _tpp_hooks_init_ident_sccs(self) \
 	       _tpp_hooks_init_system_include_path(self) \
+	       _tpp_hooks_init_system_embed_path(self) \
 	       _tpp_hooks_init_unknown_string_escape(self) \
 	       _tpp_hooks_init_raise_lexerror(self) \
 	       _tpp_hooks_init_isfloatsuffix(self))
@@ -23176,6 +23327,23 @@ typedef struct tpp_lexer {
 #define tpp_lexer_sethook_system_include_path(self, v) tpp_hooks_set_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
 #define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_system_include_path */
+
+/* >> tpp_errno tpp_lexer_callhook_system_embed_path(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
+ * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points
+ * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * @return: * :         First non-TPP_ENOENT return value of `cb`
+ * @return: TPP_ENOENT: File still not found
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#define tpp_lexer_callhook_system_embed_path(self, mode, when, cb, arg) \
+	tpp_hooks_call_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self, mode, when, cb, arg)
+#ifdef tpp_hooks_set_system_embed_path
+#define tpp_lexer_gethook_system_embed_path(self)    tpp_hooks_get_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_system_embed_path(self, v) tpp_hooks_set_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_system_embed_path(self)  tpp_hooks_reset_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_system_embed_path */
 
 /* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
@@ -24241,6 +24409,24 @@ tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
                               /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
 #endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
 #endif /* TPP_HAVE_LEXER_OPEN_INCLUDE_STRING */
+
+
+
+#if TPP_HAVE_LEXER_OPEN_EMBED_STRING
+/* Enumerate `#embed`-paths according to "mode" (s.a. `tpp_lexer_foreach_include_path()`) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
+tpp_lexer_foreach_embed_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
+                             tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),
+                             void *arg);
+
+/* Open an `#embed`-file (s.a. `tpp_lexer_open_include_string()`) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_open_embed_string(tpp_lexer *tpp_restrict self,
+                            /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
+#elif TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
+#define tpp_lexer_open_embed_string(self, result) \
+	tpp_lexer_open_include_string(self, result)
+#endif /* ... */
 
 
 
