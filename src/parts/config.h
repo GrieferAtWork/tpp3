@@ -6616,14 +6616,14 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_CONF_IS_RT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE))
 #endif /* !TPP_HAVE_CLI_DASH_INCLUDE_BARRIER */
 
-/* `-IPATH`, `--include-directory=PATH`:
+/* `-Ipath`, `--include-directory=path`:
  * Add another include paths for `#include <file>`-style includes */
 #ifndef TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY
 #define TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY \
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH)
 #endif /* !TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY */
 
-/* `-iquote PATH`:
+/* `-iquote path`:
  * Add another include path for `#include "file"`-style
  * includes (s.a. `TPP_HAVE_INCLUDE_PATH_QUOTE`) */
 #ifndef TPP_HAVE_CLI_DASH_IQUOTE
@@ -6631,7 +6631,7 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_QUOTE)
 #endif /* !TPP_HAVE_CLI_DASH_IQUOTE */
 
-/* `-isystem PATH`:
+/* `-isystem path`:
  * Add another include path for syshdr-style `#include <file>` paths
  * includes (s.a. `TPP_HAVE_INCLUDE_PATH_SYSHDR`) */
 #ifndef TPP_HAVE_CLI_DASH_ISYSTEM
@@ -6639,7 +6639,7 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR)
 #endif /* !TPP_HAVE_CLI_DASH_ISYSTEM */
 
-/* `-idirafter PATH`, `--include-directory-after=PATH`:
+/* `-idirafter path`, `--include-directory-after=path`:
  * Add another include path for after-style `#include`-paths
  * includes (s.a. `TPP_HAVE_INCLUDE_PATH_AFTER`) */
 #ifndef TPP_HAVE_CLI_DASH_IDIRAFTER
@@ -6647,18 +6647,25 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER)
 #endif /* !TPP_HAVE_CLI_DASH_IDIRAFTER */
 
-/* `-iwithprefix dir`, `--include-with-prefix=dir`, `--include-with-prefix dir`,
- * `--include-with-prefix-after=dir`, `--include-with-prefix-after dir`:
- * Same as `TPP_HAVE_CLI_DASH_IDIRAFTER`, but concat the given `dir` with the `prefix`
+/* `--embed-dir=path`, `--embed-directory=path`, `--embed-directory path`:
+ * Add another include path for `#embed <file>` (s.a. `TPP_HAVE_INCLUDE_PATH_EMBED`) */
+#ifndef TPP_HAVE_CLI_DASH_EMBED_DIR
+#define TPP_HAVE_CLI_DASH_EMBED_DIR \
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_EMBED)
+#endif /* !TPP_HAVE_CLI_DASH_EMBED_DIR */
+
+/* `-iwithprefix path`, `--include-with-prefix=path`, `--include-with-prefix path`,
+ * `--include-with-prefix-after=path`, `--include-with-prefix-after path`:
+ * Same as `TPP_HAVE_CLI_DASH_IDIRAFTER`, but concat the given `path` with the `prefix`
  * specified by the last `-iprefix prefix` (see `TPP_HAVE_CLI_DASH_IPREFIX`) */
 #ifndef TPP_HAVE_CLI_DASH_IWITHPREFIX
 #define TPP_HAVE_CLI_DASH_IWITHPREFIX \
 	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER)
 #endif /* !TPP_HAVE_CLI_DASH_IWITHPREFIX */
 
-/* `-iwithprefixbefore dir`, `--include-with-prefix-before=dir`,
- * `--include-with-prefix-before dir`:
- * Same as `TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY`, but concat the given `dir` with the
+/* `-iwithprefixbefore path`, `--include-with-prefix-before=path`,
+ * `--include-with-prefix-before path`:
+ * Same as `TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY`, but concat the given `path` with the
  * `prefix` specified by the last `-iprefix prefix` (see `TPP_HAVE_CLI_DASH_IPREFIX`) */
 #ifndef TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
 #define TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE \
@@ -6666,7 +6673,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
 
 /* `-iprefix prefix`, `--include-prefix prefix`, `--include-prefix=prefix`:
- * Specify a prefix to use with subsequent `-iwithprefix dir` (see `TPP_HAVE_CLI_DASH_IWITHPREFIX`)
+ * Specify a prefix to use with subsequent `-iwithprefix path` (see `TPP_HAVE_CLI_DASH_IWITHPREFIX`)
  * and `-iwithprefixbefore dir` (see `TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE`) arguments. */
 #ifndef TPP_HAVE_CLI_DASH_IPREFIX
 #define TPP_HAVE_CLI_DASH_IPREFIX \
@@ -6674,7 +6681,6 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
 
 /* TODO: `-isysroot`, `--sysroot` */
-/* TODO: `--embed-dir=dir`, `--embed-directory=dir`, `--embed-directory dir` */
 
 /* `-nostdinc`, `--no-standard-includes`:
  * Disable searching for standard system include paths

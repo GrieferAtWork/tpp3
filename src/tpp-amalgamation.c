@@ -57987,6 +57987,7 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 	 TPP_HAVE_CLI_DASH_IQUOTE ||            \
 	 TPP_HAVE_CLI_DASH_ISYSTEM ||           \
 	 TPP_HAVE_CLI_DASH_IDIRAFTER ||         \
+	 TPP_HAVE_CLI_DASH_EMBED_DIR ||         \
 	 TPP_HAVE_CLI_ADD_INCLUDE_WITH_PREFIX)
 
 /* Define a function `tpp_lexer_cli_warnf()` */
@@ -58167,6 +58168,9 @@ enum {
 #if TPP_HAVE_CLI_DASH_IDIRAFTER
 	TPP_CLI_LOADER_STATE_IDIRAFTER, /* "-idirafter dir" */
 #endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
+#if TPP_HAVE_CLI_DASH_EMBED_DIR
+	TPP_CLI_LOADER_STATE_EMBED_DIRECTORY, /* "--embed-directory dir" */
+#endif /* TPP_HAVE_CLI_DASH_EMBED_DIR */
 #if TPP_HAVE_CLI_DASH_IPREFIX
 	TPP_CLI_LOADER_STATE_IPREFIX, /* "-iprefix dir" */
 #endif /* TPP_HAVE_CLI_DASH_IPREFIX */
@@ -58807,6 +58811,25 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				}
 				break;
 
+			case 'e':
+#if TPP_HAVE_CLI_DASH_EMBED_DIR
+				if (tpp_streq(arg, "embed-dir=")) { /* --embed-dir=... */
+					arg += (sizeof("embed-dir=") - sizeof(char));
+					return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_EMBED, arg);
+				} else if (tpp_streq(arg, "embed-directory")) { /* --embed-directory */
+					arg += (sizeof("embed-directory") - sizeof(char));
+					if (*arg == '=') {
+						return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_EMBED, arg + 1);
+					} else if (*arg == '\0') {
+						self->tcl_state = TPP_CLI_LOADER_STATE_EMBED_DIRECTORY;
+						return TPP_EOK;
+					}
+				} else
+#endif /* TPP_HAVE_CLI_DASH_EMBED_DIR */
+				{
+				}
+				break;
+
 			case 't':
 #if TPP_HAVE_CLI_DASH_TRADITIONAL
 				if (tpp_streq(arg, "raditional\0") ||     /* --traditional */
@@ -59159,6 +59182,12 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_AFTER, arg);
 #endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
+
+#if TPP_HAVE_CLI_DASH_EMBED_DIR
+	case TPP_CLI_LOADER_STATE_EMBED_DIRECTORY:
+		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
+		return tpp_cli_loader_parse_addinclude(self, TPP_INCLUDE_PATH_KIND_EMBED, arg);
+#endif /* TPP_HAVE_CLI_DASH_EMBED_DIR */
 
 #if TPP_HAVE_CLI_DASH_IPREFIX
 	case TPP_CLI_LOADER_STATE_IPREFIX:
