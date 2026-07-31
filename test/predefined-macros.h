@@ -46,11 +46,16 @@ TPP_ASSERT_EXPANDS("30", __TPP_EVAL(10+20))
 TPP_ASSERT(defined(__TPP_EVAL))
 TPP_ASSERT_EXPANDS("30", __TPP_EVAL(10+20))
 #undef __TPP_EVAL
-TPP_ASSERT(!defined(__TPP_EVAL))
-TPP_ASSERT_EXPANDS("__TPP_EVAL(10+20)", __TPP_EVAL(10+20))
+#ifdef __TPP_EVAL
+#error "Should no longer be defined"
+#endif
 #define __TPP_EVAL(expr) 42 /* Should always be the correct answer */
-TPP_ASSERT(defined(__TPP_EVAL))
-TPP_ASSERT_EXPANDS("42", __TPP_EVAL(10+20))
+#ifndef __TPP_EVAL
+#error "Should now be defined again"
+#endif
+#if __TPP_EVAL(10+20) != 42
+#error "But this should always be the right answer!"
+#endif
 #pragma pop_macro("__TPP_EVAL")
 
 TPP_ASSERT(defined(__TPP_EVAL))

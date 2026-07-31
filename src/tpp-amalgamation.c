@@ -40280,7 +40280,6 @@ again_switch_tok:
 /*		token->tt_id = result;         * Not necessary */
 		goto handle_langle;
 #define WANT_handle_langle
-		break;
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_LANGLE */
 
 
@@ -40295,7 +40294,6 @@ again_switch_tok:
 		token->tt_id = result;
 		goto handle_rangle;
 #define WANT_handle_rangle
-		break;
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_RANGLE */
 
 	/* Tokens where the first character is irrelevant, but do contain relevant characters somewhere further within */
@@ -58221,6 +58219,10 @@ tpp_cli_loader_parse_addinclude(tpp_cli_loader *tpp_restrict self,
  * depends on the loader's current state, but sufficed to say: in its
  * default/initial state, `arg` should be something like `-Dfoo=bar`
  * or `-I/usr/include`, etc.
+ *
+ * WARNING: When you call this function, you must guaranty that `arg` remains
+ *          valid, allocated, and unaltered until `tpp_cli_loader_flush()` is
+ *          called.
  *
  * @return: TPP_EOK:        Success (argument was parsed + consumed)
  * @return: TPP_ENOENT:     SOFT_ERROR: Argument could not be understood (but no

@@ -502,7 +502,6 @@ again_switch_tok:
 /*		token->tt_id = result;         * Not necessary */
 		goto handle_langle;
 #define WANT_handle_langle
-		break;
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_LANGLE */
 
 
@@ -517,7 +516,6 @@ again_switch_tok:
 		token->tt_id = result;
 		goto handle_rangle;
 #define WANT_handle_rangle
-		break;
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_RANGLE */
 
 	/* Tokens where the first character is irrelevant, but do contain relevant characters somewhere further within */

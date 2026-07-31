@@ -583,6 +583,10 @@ tpp_cli_loader_parse_addinclude(tpp_cli_loader *tpp_restrict self,
  * default/initial state, `arg` should be something like `-Dfoo=bar`
  * or `-I/usr/include`, etc.
  *
+ * WARNING: When you call this function, you must guaranty that `arg` remains
+ *          valid, allocated, and unaltered until `tpp_cli_loader_flush()` is
+ *          called.
+ *
  * @return: TPP_EOK:        Success (argument was parsed + consumed)
  * @return: TPP_ENOENT:     SOFT_ERROR: Argument could not be understood (but no
  *                          warning was emitted). You must either handle it yourself
