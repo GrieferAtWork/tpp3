@@ -6680,7 +6680,31 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_CLI && (TPP_HAVE_CLI_DASH_IWITHPREFIX || TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE))
 #endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
 
-/* TODO: `-isysroot`, `--sysroot` */
+/* `-isysroot path`, `--sysroot=path`:
+ * Override what a `=` or `$SYSROOT` prefix in include paths should be replaced with in:
+ * - `TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY`
+ * - `TPP_HAVE_CLI_DASH_IQUOTE`
+ * - `TPP_HAVE_CLI_DASH_ISYSTEM`
+ * - `TPP_HAVE_CLI_DASH_IDIRAFTER`
+ * - `TPP_HAVE_CLI_DASH_EMBED_DIR`
+ * - `TPP_HAVE_CLI_DASH_IWITHPREFIX`
+ * - `TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE` */
+#ifndef TPP_HAVE_CLI_DASH_ISYSROOT
+#define TPP_HAVE_CLI_DASH_ISYSROOT                           \
+	(TPP_HAVE_CLI && (TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || \
+	                  TPP_HAVE_CLI_DASH_IQUOTE ||            \
+	                  TPP_HAVE_CLI_DASH_ISYSTEM ||           \
+	                  TPP_HAVE_CLI_DASH_IDIRAFTER ||         \
+	                  TPP_HAVE_CLI_DASH_EMBED_DIR ||         \
+	                  TPP_HAVE_CLI_DASH_IWITHPREFIX ||       \
+	                  TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE))
+#endif /* !TPP_HAVE_CLI_DASH_ISYSROOT */
+
+/* The default value for `-isysroot path` (see `TPP_HAVE_CLI_DASH_ISYSROOT`) in `tpp_cli_loader` */
+#ifndef TPP_CONFIG_CLI_DEFAULT_SYSROOT
+#define TPP_CONFIG_CLI_DEFAULT_SYSROOT ((char const *)NULL)
+#endif /* !TPP_CONFIG_CLI_DEFAULT_SYSROOT */
+
 
 /* `-nostdinc`, `--no-standard-includes`:
  * Disable searching for standard system include paths

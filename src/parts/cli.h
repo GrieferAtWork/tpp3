@@ -45,6 +45,12 @@ typedef struct tpp_cli_loader {
 #else /* TPP_HAVE_CLI_DASH_IPREFIX */
 #define _tpp_cli_loader_init_prefix(self) /* nothing */
 #endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
+#if TPP_HAVE_CLI_DASH_ISYSROOT
+	char const  *TPP_INTERNAL(tcl_sysroot); /* [0..1][const] Sysroot prefix */
+#define _tpp_cli_loader_init_sysroot(self) , (self)->TPP_INTERNAL(tcl_sysroot) = TPP_CONFIG_CLI_DEFAULT_SYSROOT
+#else /* TPP_HAVE_CLI_DASH_ISYSROOT */
+#define _tpp_cli_loader_init_sysroot(self) /* nothing */
+#endif /* !TPP_HAVE_CLI_DASH_ISYSROOT */
 #if TPP_HAVE_CLI_DASH_INCLUDE
 #define TPP_HAVE_CLI_NEEDS_FINI 1
 	tpp_lexer_openfile_result *TPP_INTERNAL(tcl_includev); /* [0..tcl_includec][owned] Extra files to #include at start of main input file */
@@ -81,7 +87,8 @@ typedef struct tpp_cli_loader {
 	(void)((self)->TPP_INTERNAL(tcl_lexer) = (lexer),                    \
 	       (self)->TPP_INTERNAL(tcl_state) = TPP_CLI_LOADER_STATE_NORMAL \
 	       _tpp_cli_loader_init_include(self)                            \
-	       _tpp_cli_loader_init_prefix(self))
+	       _tpp_cli_loader_init_prefix(self)                             \
+	       _tpp_cli_loader_init_sysroot(self))
 #if TPP_HAVE_CLI_NEEDS_FINI
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);

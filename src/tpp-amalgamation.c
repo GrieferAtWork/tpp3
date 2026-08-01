@@ -42,6 +42,7 @@
 #define tcl_lexer                                          TPP_INTERNAL(tcl_lexer)
 #define tcl_state                                          TPP_INTERNAL(tcl_state)
 #define tcl_prefix                                         TPP_INTERNAL(tcl_prefix)
+#define tcl_sysroot                                        TPP_INTERNAL(tcl_sysroot)
 #define tcl_includev                                       TPP_INTERNAL(tcl_includev)
 #define tcl_includec                                       TPP_INTERNAL(tcl_includec)
 #define tl_exts                                            TPP_INTERNAL(tl_exts)
@@ -34241,9 +34242,9 @@ tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer,
 #endif /* !_TPP_EXPR_VALUE_KIND_MULTIPLE */
 
 
-/* Print the representation of `self` to `printer` (in target encoding; used to implement __TPP_EVAL)
+/* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
  * @return: *  : Sum of positive return value of `printer`
- * @return: < 0: An error was thrown (TPP_SSIZE_ISERR), or `printer` returned this value */
+ * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
@@ -58180,6 +58181,9 @@ enum {
 #if TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
 	TPP_CLI_LOADER_STATE_IWITHPREFIXBEFORE, /* "-iwithprefixbefore dir" */
 #endif /* TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
+#if TPP_HAVE_CLI_DASH_ISYSROOT
+	TPP_CLI_LOADER_STATE_ISYSROOT, /* "-isysroot dir" */
+#endif /* TPP_HAVE_CLI_DASH_ISYSROOT */
 };
 
 
@@ -58492,11 +58496,29 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_parse_addinclude(tpp_cli_loader *tpp_restrict self,
                                 tpp_include_path_kind kind,
                                 char const *path) {
-#if 0
+#if TPP_HAVE_CLI_DASH_ISYSROOT
 	if (*path == '=' || tpp_memcmp(path, "$SYSROOT", 8 * sizeof(char)) == 0) {
 		/* XXX: Replace prefix with "system root" */
+		++path;
+		if (path[-1] == '$')
+			path += (sizeof("SYSROOT") - sizeof(char));
+		if (self->tcl_sysroot /*&& *self->tcl_sysroot*/) {
+			tpp_errno result;
+			tpp_size sysroot_len = tpp_strlen(self->tcl_sysroot);
+			tpp_size path_len    = tpp_strlen(path);
+			tpp_size whole_len   = sysroot_len + path_len;
+			char *dst, *whole = (char *)tpp_malloc((whole_len + 1) * sizeof(char));
+			if tpp_unlikely(!whole)
+				return TPP_ENOMEM;
+			dst = (char *)tpp_mempcpy(whole, self->tcl_sysroot, sysroot_len);
+			dst = (char *)tpp_mempcpy(dst, path, path_len);
+			*dst = '\0';
+			result = tpp_lexer_includes_addbykind(self->tcl_lexer, kind, whole, whole_len);
+			tpp_free(whole);
+			return result;
+		}
 	}
-#endif
+#endif /* TPP_HAVE_CLI_DASH_ISYSROOT */
 	return tpp_lexer_includes_addbykind(self->tcl_lexer, kind, path, TPP_SIZE_MAX);
 }
 #endif /* TPP_HAVE_CLI_ADD_INCLUDE */
@@ -58543,6 +58565,16 @@ tpp_cli_loader_parse_iprefix(tpp_cli_loader *tpp_restrict self, char const *arg)
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_CLI_DASH_IPREFIX */
+
+
+/* Parse the path that comes after "-isysroot <arg>" */
+#if TPP_HAVE_CLI_DASH_ISYSROOT
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_cli_loader_parse_isysroot(tpp_cli_loader *tpp_restrict self, char const *arg) {
+	self->tcl_sysroot = arg;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_CLI_DASH_ISYSROOT */
 
 
 
@@ -58856,6 +58888,17 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				}
 				break;
 
+			case 's':
+#if TPP_HAVE_CLI_DASH_ISYSROOT
+				if (tpp_streq(arg, "ysroot\0")) { /* --sysroot ... */
+					self->tcl_state = TPP_CLI_LOADER_STATE_ISYSROOT;
+					return TPP_EOK;
+				} else
+#endif /* TPP_HAVE_CLI_DASH_ISYSROOT */
+				{
+				}
+				break;
+
 			default: break;
 			}
 			break;
@@ -58913,6 +58956,12 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				return TPP_EOK;
 			} else
 #endif /* TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
+#if TPP_HAVE_CLI_DASH_ISYSROOT
+			if (tpp_streq(arg, "sysroot\0")) { /* -isysroot ... */
+				self->tcl_state = TPP_CLI_LOADER_STATE_ISYSROOT;
+				return TPP_EOK;
+			} else
+#endif /* TPP_HAVE_CLI_DASH_ISYSROOT */
 			{
 			}
 			break;
@@ -59206,6 +59255,12 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 		self->tcl_state  = TPP_CLI_LOADER_STATE_NORMAL;
 		return tpp_cli_loader_parse_addinclude_with_prefix(self, TPP_INCLUDE_PATH_KIND_SYSTEM, arg);
 #endif /* TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
+
+#if TPP_HAVE_CLI_DASH_ISYSROOT
+	case TPP_CLI_LOADER_STATE_ISYSROOT:
+		self->tcl_state = TPP_CLI_LOADER_STATE_NORMAL;
+		return tpp_cli_loader_parse_isysroot(self, arg);
+#endif /* TPP_HAVE_CLI_DASH_ISYSROOT */
 
 	default: tpp_unreachable();
 	}

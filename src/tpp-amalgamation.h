@@ -12084,7 +12084,31 @@ TPP_DECL_END
 	(TPP_HAVE_CLI && (TPP_HAVE_CLI_DASH_IWITHPREFIX || TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE))
 #endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
 
-/* TODO: `-isysroot`, `--sysroot` */
+/* `-isysroot path`, `--sysroot=path`:
+ * Override what a `=` or `$SYSROOT` prefix in include paths should be replaced with in:
+ * - `TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY`
+ * - `TPP_HAVE_CLI_DASH_IQUOTE`
+ * - `TPP_HAVE_CLI_DASH_ISYSTEM`
+ * - `TPP_HAVE_CLI_DASH_IDIRAFTER`
+ * - `TPP_HAVE_CLI_DASH_EMBED_DIR`
+ * - `TPP_HAVE_CLI_DASH_IWITHPREFIX`
+ * - `TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE` */
+#ifndef TPP_HAVE_CLI_DASH_ISYSROOT
+#define TPP_HAVE_CLI_DASH_ISYSROOT                           \
+	(TPP_HAVE_CLI && (TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY || \
+	                  TPP_HAVE_CLI_DASH_IQUOTE ||            \
+	                  TPP_HAVE_CLI_DASH_ISYSTEM ||           \
+	                  TPP_HAVE_CLI_DASH_IDIRAFTER ||         \
+	                  TPP_HAVE_CLI_DASH_EMBED_DIR ||         \
+	                  TPP_HAVE_CLI_DASH_IWITHPREFIX ||       \
+	                  TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE))
+#endif /* !TPP_HAVE_CLI_DASH_ISYSROOT */
+
+/* The default value for `-isysroot path` (see `TPP_HAVE_CLI_DASH_ISYSROOT`) in `tpp_cli_loader` */
+#ifndef TPP_CONFIG_CLI_DEFAULT_SYSROOT
+#define TPP_CONFIG_CLI_DEFAULT_SYSROOT ((char const *)NULL)
+#endif /* !TPP_CONFIG_CLI_DEFAULT_SYSROOT */
+
 
 /* `-nostdinc`, `--no-standard-includes`:
  * Disable searching for standard system include paths
@@ -13350,9 +13374,9 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_asb
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_div(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
 
-/* Print the representation of `self` to `printer` (in target encoding; used to implement __TPP_EVAL)
+/* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
  * @return: *  : Sum of positive return value of `printer`
- * @return: < 0: An error was thrown (TPP_SSIZE_ISERR), or `printer` returned this value */
+ * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
@@ -25232,6 +25256,12 @@ typedef struct tpp_cli_loader {
 #else /* TPP_HAVE_CLI_DASH_IPREFIX */
 #define _tpp_cli_loader_init_prefix(self) /* nothing */
 #endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
+#if TPP_HAVE_CLI_DASH_ISYSROOT
+	char const  *TPP_INTERNAL(tcl_sysroot); /* [0..1][const] Sysroot prefix */
+#define _tpp_cli_loader_init_sysroot(self) , (self)->TPP_INTERNAL(tcl_sysroot) = TPP_CONFIG_CLI_DEFAULT_SYSROOT
+#else /* TPP_HAVE_CLI_DASH_ISYSROOT */
+#define _tpp_cli_loader_init_sysroot(self) /* nothing */
+#endif /* !TPP_HAVE_CLI_DASH_ISYSROOT */
 #if TPP_HAVE_CLI_DASH_INCLUDE
 #define TPP_HAVE_CLI_NEEDS_FINI 1
 	tpp_lexer_openfile_result *TPP_INTERNAL(tcl_includev); /* [0..tcl_includec][owned] Extra files to #include at start of main input file */
@@ -25268,7 +25298,8 @@ typedef struct tpp_cli_loader {
 	(void)((self)->TPP_INTERNAL(tcl_lexer) = (lexer),                    \
 	       (self)->TPP_INTERNAL(tcl_state) = TPP_CLI_LOADER_STATE_NORMAL \
 	       _tpp_cli_loader_init_include(self)                            \
-	       _tpp_cli_loader_init_prefix(self))
+	       _tpp_cli_loader_init_prefix(self)                             \
+	       _tpp_cli_loader_init_sysroot(self))
 #if TPP_HAVE_CLI_NEEDS_FINI
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);
