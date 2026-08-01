@@ -672,6 +672,7 @@
 #define th_new_dependency                                  TPP_INTERNAL(th_new_dependency)
 #define th_file_pushed                                     TPP_INTERNAL(th_file_pushed)
 #define th_file_popped                                     TPP_INTERNAL(th_file_popped)
+#define th_include_not_found                               TPP_INTERNAL(th_include_not_found)
 #define th_ident_sccs                                      TPP_INTERNAL(th_ident_sccs)
 #define th_system_include_path                             TPP_INTERNAL(th_system_include_path)
 #define th_system_embed_path                               TPP_INTERNAL(th_system_embed_path)
@@ -46717,13 +46718,24 @@ again:
 #endif /* TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT */
 		}
 
-#if TPP_HAVE_TPP_W_NO_SUCH_FILE
+#if TPP_HAVE_TPP_W_NO_SUCH_FILE || TPP_HAVE_INCLUDE_NOT_FOUND_HOOK
 		if (error == TPP_ENOENT) {
-			tpp_errno warn_error = tpp_lexer_warnf(self, TPP_W_NO_SUCH_FILE);
-			if (TPP_ISERR(warn_error))
-				error = warn_error;
-		} else
+#if TPP_HAVE_INCLUDE_NOT_FOUND_HOOK
+			tpp_errno hook_error = tpp_lexer_callhook_include_not_found(self);
+			if (hook_error != TPP_ENOENT) {
+				if (TPP_ISERR(hook_error))
+					error = hook_error;
+			} else
+#endif /* TPP_HAVE_INCLUDE_NOT_FOUND_HOOK */
+			{
+#if TPP_HAVE_TPP_W_NO_SUCH_FILE
+				tpp_errno warn_error = tpp_lexer_warnf(self, TPP_W_NO_SUCH_FILE);
+				if (TPP_ISERR(warn_error))
+					error = warn_error;
 #endif /* TPP_HAVE_TPP_W_NO_SUCH_FILE */
+			}
+		} else
+#endif /* TPP_HAVE_TPP_W_NO_SUCH_FILE || TPP_HAVE_INCLUDE_NOT_FOUND_HOOK */
 #if TPP_HAVE_LEXER_OPENFILE_EX
 		if (error == TPP_EMASKED) {
 			error = TPP_ENOENT;

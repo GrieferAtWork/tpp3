@@ -67,19 +67,48 @@ int main(int argc, char **argv) {
 
 	/* XXX: Support for CLI arguments that must be handled by front-end:
 	 * - "-M", "--dependencies"
+	 *   - Using TPP_HAVE_NEW_DEPENDENCY_HOOK
 	 * - "-MM", "--user-dependencies"
+	 *   - Don't emit if #include-stack contains a `tpp_file_getsystemheader()`-file
 	 * - "-MF file"
+	 *   No special handling needed in TPP backend
 	 * - "-MG", "--print-missing-file-dependencies"
+	 *   - Use `TPP_HAVE_INCLUDE_NOT_FOUND_HOOK` (with a `TPP_EOK` return value)
+	 *     to suppress `TPP_W_NO_SUCH_FILE` warnings, whilst at the same time
+	 *     using `tpp_lexer_decode_include_string_cb()` to add the missing include's
+	 *     filename to the set of dependencies
 	 * - "-MP"
+	 *   No special handling needed in TPP backend
 	 * - "-MT target"
+	 *   No special handling needed in TPP backend
 	 * - "-MQ target"
+	 *   No special handling needed in TPP backend
 	 * - "-MD", "--write-dependencies"
+	 *   No special handling needed in TPP backend
 	 * - "-MMD", "--write-user-dependencies"
-	 * - "-fsearch-include-path[=kind]"
+	 *   No special handling needed in TPP backend (see "-MM")
+	 * - "-fsearch-include-path[=kind]"  (kind=R"(user|system)", default="user")
+	 *   No special handling needed in TPP backend
+	 *   When kind=user, and the main input file could not be found, it must be
+	 *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_DQUOTE)`
+	 *   When kind=system, and the main input file could not be found, it must be
+	 *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_LANGLE)`
 	 * - "-fworking-directory"
+	 *   No special handling needed in TPP backend
+	 *   The first time the frontend emits a `# <linenum>` marker, it must simply
+	 *   follow this up by emitting a second marker like: `# 1 "$(pwd)//"`
 	 * - "-P", "--no-line-commands"
+	 *   No special handling needed in TPP backend
+	 *   Frontend simply mustn't emit any `# <linenum>` or `#line` directives
 	 * - "-H", "--trace-includes"
+	 *   - Use TPP_HAVE_FILE_PUSHED_HOOK to filter for TPP_FILE_KIND_IO files being
+	 *     pushed onto the #include-stack. Whenever that has happened, print a line
+	 *     like this to stderr:
+	 *     >> print("." * NUMBER_OF_IO_FILES_ON_INCLUDE_STACK, " ", tpp_file_getrealfilename(file));
 	 * - "-dM", "--dump=M"
+	 *   - Use `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`
+	 *     at the very start, just before the first token is yielded.
+	 *   - Use `TODO:NEW_HOOK` to 
 	 * - "-dD", "--dump=D"
 	 * - "-dN", "--dump=N"
 	 * - "-dI", "--dump=I"

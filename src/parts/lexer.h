@@ -596,6 +596,25 @@ for (local doc, name,
 #define tpp_lexer_resethook_file_popped(self)  tpp_hooks_reset_file_popped(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_file_popped */
 
+/* >> tpp_errno tpp_lexer_callhook_include_not_found(tpp_lexer *tpp_restrict self);
+ * Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
+ * directive could not be found, this hook may be used to either suppress the error (by returning
+ * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
+ * commandline switch. This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with
+ * the lexer's current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
+ * to know what that string says, you can use `tpp_lexer_decode_include_string_cb()` to decode it.
+ * @return: TPP_EOK:    Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
+ *                      the file could not be found (*DONT* use this hook to manually push a file or
+ *                      something like that)@return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
+ * @return: TPP_E*:     Some other error -- propagate immdediately */
+#define tpp_lexer_callhook_include_not_found(self) \
+	tpp_hooks_call_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self)
+#ifdef tpp_hooks_set_include_not_found
+#define tpp_lexer_gethook_include_not_found(self)    tpp_hooks_get_include_not_found(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_include_not_found(self, v) tpp_hooks_set_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_include_not_found(self)  tpp_hooks_reset_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_include_not_found */
+
 /* >> tpp_errno tpp_lexer_callhook_ident_sccs(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
  * Called to handle `#ident` and `#sccs` directives
  * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
@@ -2498,7 +2517,7 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 #define TPP_LEXER_DUMP_DEFINITIONS_MACROS         0x0000 /* no-op */
 #endif /* !TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
-#define TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS 0x0002 /* `#define __LINE__ <magic>` */
+#define TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS 0x0002 /* `#define __LINE__ <magic>`, `#define __TPP_VERSION__ 300` (yes: also prints *predefined* macros) */
 #else /* TPP_HAVE_CPP_BUILTIN_MACROS */
 #define TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS 0x0000 /* no-op */
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
