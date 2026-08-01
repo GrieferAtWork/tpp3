@@ -428,11 +428,11 @@
 
 #define TPP_CONF_MAYBE_1(cfg)      cfg                  /* Config may be enabled (guarantied to just be "cfg [!= 0]") */
 #define TPP_CONF_MAYBE_0(cfg)      ((cfg) <= 0)         /* Config may be disabled */
-#define TPP_CONF_IS_FEAT(cfg)      ((cfg) <= -3)        /* Should config be runtime-configurable as a feature? */
-#define TPP_CONF_IS_EXT(cfg)       (((cfg) & ~1) == -2) /* Should config be runtime-configurable as an extension? */
-#define TPP_CONF_IS_CONST(cfg)     ((cfg) >= 0)         /* Should config be compile-time only? */
-#define TPP_CONF_IS_RT(cfg)        ((cfg) < 0)          /* Should config be runtime configurable? */
-#define TPP_CONF_IS_ALWAYS(cfg)    ((cfg) > 0)          /* Is config always hard-enabled */
+#define TPP_CONF_ISFEAT(cfg)       ((cfg) <= -3)        /* Should config be runtime-configurable as a feature? */
+#define TPP_CONF_ISEXT(cfg)        (((cfg) & ~1) == -2) /* Should config be runtime-configurable as an extension? */
+#define TPP_CONF_ISCONST(cfg)      ((cfg) >= 0)         /* Should config be compile-time only? */
+#define TPP_CONF_ISRT(cfg)         ((cfg) < 0)          /* Should config be runtime configurable? */
+#define TPP_CONF_ISALWAYS(cfg)     ((cfg) > 0)          /* Is config always hard-enabled */
 #define TPP_CONF_DEFAULT(cfg)      ((cfg) & 1)          /* Default state of config */
 #define TPP_CONF_MAKEFEAT(default) (-4 + !!(default))   /* Configure as feature */
 #define TPP_CONF_MAKEEXT(default)  (-2 + !!(default))   /* Configure as extension */
@@ -6891,7 +6891,7 @@ print("#endif /" "* !... *" "/");
  * Undef all *predefined* macros (done by disabling `TPP_HAVE_CPP_PREDEFINED_MACROS`) */
 #ifndef TPP_HAVE_CLI_DASH_UNDEF
 #define TPP_HAVE_CLI_DASH_UNDEF \
-	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_CPP_PREDEFINED_MACROS))
+	(TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_CPP_PREDEFINED_MACROS))
 #endif /* !TPP_HAVE_CLI_DASH_UNDEF */
 
 /* `-f...`, `-fno-...`:
@@ -6917,15 +6917,15 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_CLI_DASH_FPREPROCESSED
 #define TPP_HAVE_CLI_DASH_FPREPROCESSED             \
 	(TPP_HAVE_CLI &&                                \
-	 (TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS) ||        \
-	  TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) ||         \
-	  TPP_CONF_IS_RT(TPP_HAVE_BSE) ||               \
-	  TPP_CONF_IS_RT(TPP_HAVE_CPP_INCLUDE) ||       \
-	  TPP_CONF_IS_RT(TPP_HAVE_CPP_INCLUDE_NEXT) ||  \
-	  TPP_CONF_IS_RT(TPP_HAVE_CPP_IMPORT) ||        \
-	  TPP_CONF_IS_RT(TPP_HAVE_CPP_IF_ELSE_ENDIF) || \
-	  TPP_CONF_IS_RT(TPP_HAVE_CPP_DEFINE) ||        \
-	  TPP_CONF_IS_RT(TPP_HAVE_CPP_ASSERT)))
+	 (TPP_CONF_ISRT(TPP_HAVE_CPP_MACROS) ||        \
+	  TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) ||         \
+	  TPP_CONF_ISRT(TPP_HAVE_BSE) ||               \
+	  TPP_CONF_ISRT(TPP_HAVE_CPP_INCLUDE) ||       \
+	  TPP_CONF_ISRT(TPP_HAVE_CPP_INCLUDE_NEXT) ||  \
+	  TPP_CONF_ISRT(TPP_HAVE_CPP_IMPORT) ||        \
+	  TPP_CONF_ISRT(TPP_HAVE_CPP_IF_ELSE_ENDIF) || \
+	  TPP_CONF_ISRT(TPP_HAVE_CPP_DEFINE) ||        \
+	  TPP_CONF_ISRT(TPP_HAVE_CPP_ASSERT)))
 #endif /* !TPP_HAVE_CLI_DASH_FPREPROCESSED */
 
 /* `-fdirectives-only`, `-fno-directives-only`:
@@ -6934,7 +6934,7 @@ print("#endif /" "* !... *" "/");
  * s.a. `TPP_HAVE_CPP_MACROS` */
 #ifndef TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY
 #define TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY \
-	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS))
+	(TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_CPP_MACROS))
 #endif /* !TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY */
 
 /* `-fdollars-in-identifiers`:
@@ -6942,7 +6942,7 @@ print("#endif /" "* !... *" "/");
  * Essentially does the inverse of `-ftok-dollar` (s.a. `TPP_HAVE_TOK_DOLLAR`) */
 #ifndef TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS
 #define TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS \
-	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TOK_DOLLAR))
+	(TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_TOK_DOLLAR))
 #endif /* !TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS */
 
 /* `-fmax-include-depth=<count>`:
@@ -6975,7 +6975,7 @@ print("#endif /" "* !... *" "/");
  *       turning on emission of comment tokens everywhere. */
 #ifndef TPP_HAVE_CLI_DASH_COMMENTS
 #define TPP_HAVE_CLI_DASH_COMMENTS \
-	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TOK_COMMENT))
+	(TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_TOK_COMMENT))
 #endif /* !TPP_HAVE_CLI_DASH_COMMENTS */
 
 /* `-traditional`, `--traditional`, `-traditional-cpp`, `--traditional-cpp`:
@@ -6986,14 +6986,14 @@ print("#endif /" "* !... *" "/");
  * - `TPP_HAVE_TOK_CXX_COMMENT` */
 #ifndef TPP_HAVE_CLI_DASH_TRADITIONAL
 #define TPP_HAVE_CLI_DASH_TRADITIONAL \
-	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TRADITIONAL_MACROS))
+	(TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_TRADITIONAL_MACROS))
 #endif /* !TPP_HAVE_CLI_DASH_TRADITIONAL */
 
 /* `-trigraphs`, `--trigraphs`:
  * Turns on processing of trigraphs (see `TPP_HAVE_TRIGRAPHS`) */
 #ifndef TPP_HAVE_CLI_DASH_TRIGRAPHS
 #define TPP_HAVE_CLI_DASH_TRIGRAPHS \
-	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS))
+	(TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS))
 #endif /* !TPP_HAVE_CLI_DASH_TRIGRAPHS */
 
 /* `-I-`, `--include-barrier`:
@@ -7001,7 +7001,7 @@ print("#endif /" "* !... *" "/");
  * `TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE`. */
 #ifndef TPP_HAVE_CLI_DASH_INCLUDE_BARRIER
 #define TPP_HAVE_CLI_DASH_INCLUDE_BARRIER \
-	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_CONF_IS_RT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE))
+	(TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_CONF_ISRT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE))
 #endif /* !TPP_HAVE_CLI_DASH_INCLUDE_BARRIER */
 
 /* `-Ipath`, `--include-directory=path`:
@@ -7099,7 +7099,7 @@ print("#endif /" "* !... *" "/");
  * (s.a. `TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH`) */
 #ifndef TPP_HAVE_CLI_DASH_NOSTDINC
 #define TPP_HAVE_CLI_DASH_NOSTDINC \
-	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH))
+	(TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH))
 #endif /* !TPP_HAVE_CLI_DASH_NOSTDINC */
 
 /* XXX: `-nostdinc++` */
@@ -7108,7 +7108,7 @@ print("#endif /" "* !... *" "/");
  * Treat all warnings as errors (s.a. `TPP_HAVE_WERROR`) */
 #ifndef TPP_HAVE_CLI_DASH_WERROR
 #define TPP_HAVE_CLI_DASH_WERROR \
-	(TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_WERROR))
+	(TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_WERROR))
 #endif /* !TPP_HAVE_CLI_DASH_WERROR */
 
 /* `-Wfatal-errors`, `-Wno-fatal-errors`:

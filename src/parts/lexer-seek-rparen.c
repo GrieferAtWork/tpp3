@@ -209,16 +209,16 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
                         unsigned int flags)
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 {
-#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 #define tpp_lexer_seekpp_rparen_keepspace() (flags & TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC)
-#else /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#else /* TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #define tpp_lexer_seekpp_rparen_keepspace() (TPP_HAVE_MACRO_ARGUMENT_WHITESPACE != 0)
-#endif /* !TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+#endif /* !TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE)
 #define tpp_lexer_seekpp_rparen_magic_whitespace() (flags & TPP_LEXER_SEEK_RPAREN_FLAG_MAGIC_WHITESPACE)
-#else /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
+#else /* TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE) */
 #define tpp_lexer_seekpp_rparen_magic_whitespace() (TPP_HAVE_MAGIC_WHITESPACE != 0)
-#endif /* !TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
+#endif /* !TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE) */
 	tpp_size const argv_bufsize = *p_argc;
 	tpp_size argc = 0;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -311,10 +311,10 @@ again_switch_tok:
 	case TPP_TOK_SPACE:
 	case TPP_TOK_LF:
 	TPP_CASE_TPP_TOK_COMMENT {
-#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 		if (tpp_lexer_seekpp_rparen_keepspace())
 			break; /* When whitespace should be kept: treat it like a regular token */
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#endif /* TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 		if (tpp_string_builder_isempty(&state.tsrps_curarg_prefix) &&
 		    curarg_rel_start == curarg_rel_rend) {

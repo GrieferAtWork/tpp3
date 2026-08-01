@@ -169,7 +169,7 @@ Undef all *predefined* macros (done by disabling [`TPP_HAVE_CPP_PREDEFINED_MACRO
 Default:
 
 ```c
-TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_CPP_PREDEFINED_MACROS)
+TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_CPP_PREDEFINED_MACROS)
 ```
 </details>
 
@@ -209,7 +209,7 @@ Turns the following lexer features off when enabled (or turns them on when disab
 Default:
 
 ```c
-TPP_HAVE_CLI && (TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS) || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) || TPP_CONF_IS_RT(TPP_HAVE_BSE) || TPP_CONF_IS_RT(TPP_HAVE_CPP_INCLUDE) || TPP_CONF_IS_RT(TPP_HAVE_CPP_INCLUDE_NEXT) || TPP_CONF_IS_RT(TPP_HAVE_CPP_IMPORT) || TPP_CONF_IS_RT(TPP_HAVE_CPP_IF_ELSE_ENDIF) || TPP_CONF_IS_RT(TPP_HAVE_CPP_DEFINE) || TPP_CONF_IS_RT(TPP_HAVE_CPP_ASSERT))
+TPP_HAVE_CLI && (TPP_CONF_ISRT(TPP_HAVE_CPP_MACROS) || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) || TPP_CONF_ISRT(TPP_HAVE_BSE) || TPP_CONF_ISRT(TPP_HAVE_CPP_INCLUDE) || TPP_CONF_ISRT(TPP_HAVE_CPP_INCLUDE_NEXT) || TPP_CONF_ISRT(TPP_HAVE_CPP_IMPORT) || TPP_CONF_ISRT(TPP_HAVE_CPP_IF_ELSE_ENDIF) || TPP_CONF_ISRT(TPP_HAVE_CPP_DEFINE) || TPP_CONF_ISRT(TPP_HAVE_CPP_ASSERT))
 ```
 </details>
 
@@ -225,7 +225,7 @@ s.a. [`TPP_HAVE_CPP_MACROS`](config-conf.md#tpp_have_cpp_macros)
 Default:
 
 ```c
-TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS)
+TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_CPP_MACROS)
 ```
 </details>
 
@@ -240,7 +240,7 @@ Essentially does the inverse of `-ftok-dollar` (s.a. [`TPP_HAVE_TOK_DOLLAR`](con
 Default:
 
 ```c
-TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TOK_DOLLAR)
+TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_TOK_DOLLAR)
 ```
 </details>
 
@@ -279,7 +279,7 @@ NOTE: TPP doesn't differentiate between comments in-source and comments
 Default:
 
 ```c
-TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TOK_COMMENT)
+TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_TOK_COMMENT)
 ```
 </details>
 
@@ -298,7 +298,7 @@ at runtime):
 Default:
 
 ```c
-TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TRADITIONAL_MACROS)
+TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_TRADITIONAL_MACROS)
 ```
 </details>
 
@@ -312,7 +312,7 @@ Turns on processing of trigraphs (see [`TPP_HAVE_TRIGRAPHS`](config-conf.md#tpp_
 Default:
 
 ```c
-TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
 ```
 </details>
 
@@ -327,7 +327,7 @@ Move `-I`-style include paths to `-iquote`, then turn off
 Default:
 
 ```c
-TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_CONF_IS_RT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE)
+TPP_HAVE_CLI && TPP_HAVE_INCLUDE_PATH && TPP_CONF_ISRT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE)
 ```
 </details>
 
@@ -484,7 +484,7 @@ Disable searching for standard system include paths
 Default:
 
 ```c
-TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH)
+TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH)
 ```
 </details>
 
@@ -498,7 +498,7 @@ Treat all warnings as errors (s.a. [`TPP_HAVE_WERROR`](config-conf.md#tpp_have_w
 Default:
 
 ```c
-TPP_HAVE_CLI && TPP_CONF_IS_RT(TPP_HAVE_WERROR)
+TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_WERROR)
 ```
 </details>
 

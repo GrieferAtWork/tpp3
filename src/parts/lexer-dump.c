@@ -50,12 +50,12 @@ typedef struct tpp_lexer_dumper {
 	unsigned int      tld_what;    /* What to print (set of `TPP_LEXER_DUMP_DEFINITIONS_*`) */
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
 #if TPP_HAVE_CPP_MACROS
-#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if TPP_CONF_ISEXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 	bool tld_enabled_keepargspc;
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION)
+#endif /* TPP_CONF_ISEXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_ISEXT(TPP_HAVE_MACRO_RECURSION)
 	bool tld_enabled_macro_recursion;
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION) */
+#endif /* TPP_CONF_ISEXT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_CPP_MACROS */
 #endif /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
 } tpp_lexer_dumper;
@@ -228,20 +228,20 @@ tpp_lexer_dumper_printmacro(tpp_lexer_dumper *tpp_restrict self,
                             tpp_keyword const *tpp_restrict keyword,
                             tpp_macro const *tpp_restrict macro) {
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
-#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if TPP_CONF_ISEXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 	if (!!self->tld_enabled_keepargspc != !!tpp_macro_keepsargspc(macro)) {
 		tpp_lexer_dumper_do_print_set_extension(self, TPP_EXTNAME_MACRO_ARGUMENT_WHITESPACE,
 		                                        tpp_macro_keepsargspc(macro));
 		self->tld_enabled_keepargspc = tpp_macro_keepsargspc(macro);
 	}
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION)
+#endif /* TPP_CONF_ISEXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_ISEXT(TPP_HAVE_MACRO_RECURSION)
 	if (!!self->tld_enabled_macro_recursion != !!tpp_macro_allowsselfexpansion(macro)) {
 		tpp_lexer_dumper_do_print_set_extension(self, TPP_EXTNAME_MACRO_RECURSION,
 		                                        tpp_macro_allowsselfexpansion(macro));
 		self->tld_enabled_macro_recursion = tpp_macro_allowsselfexpansion(macro);
 	}
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION) */
+#endif /* TPP_CONF_ISEXT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
 
 #if TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO
@@ -548,14 +548,14 @@ tpp_lexer_dumper_getextdefault(tpp_lexer_dumper const *self, tpp_extension_id id
 	(void)self;
 	switch (id) {
 #if TPP_HAVE_CPP_MACROS
-#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if TPP_CONF_ISEXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 	case TPP_EXT_MACRO_ARGUMENT_WHITESPACE:
 		return self->tld_enabled_keepargspc;
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION)
+#endif /* TPP_CONF_ISEXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_ISEXT(TPP_HAVE_MACRO_RECURSION)
 	case TPP_EXT_MACRO_RECURSION:
 		return self->tld_enabled_macro_recursion;
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION) */
+#endif /* TPP_CONF_ISEXT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_CPP_MACROS */
 	default: break;
 	}
@@ -786,12 +786,12 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 	dumper.tld_what    = what;
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
 #if TPP_HAVE_CPP_MACROS
-#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if TPP_CONF_ISEXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 	dumper.tld_enabled_keepargspc = TPP_CONF_DEFAULT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE);
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-#if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION)
+#endif /* TPP_CONF_ISEXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_ISEXT(TPP_HAVE_MACRO_RECURSION)
 	dumper.tld_enabled_macro_recursion = TPP_CONF_DEFAULT(TPP_HAVE_MACRO_RECURSION);
-#endif /* TPP_CONF_IS_EXT(TPP_HAVE_MACRO_RECURSION) */
+#endif /* TPP_CONF_ISEXT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_CPP_MACROS */
 #endif /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
 

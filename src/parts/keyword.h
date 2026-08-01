@@ -721,7 +721,7 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 
 #if (_TPP_HAVE_BSE_FILE_PARAM ||                                                       \
      (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && (TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM || \
-                                           TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS))))
+                                           TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS))))
 struct tpp_lexer;
 #define _tpp_esc_lexer__PARAM  , struct tpp_lexer const *tpp_restrict lexer
 #define _tpp_esc_lexer__ARG(x) , x

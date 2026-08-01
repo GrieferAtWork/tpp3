@@ -334,18 +334,18 @@ tpp_token_decodestring_uni_sequence(tpp_lexer *self, tpp_char const **p_iter, tp
  * - &#<decimal>;
  * - &#x<hex>;
  * ... both of which allow encoding of unicode ordinals */
-#if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+#if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
 tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
                             tpp_unichar result[1],
                             tpp_lexer const *tpp_restrict lexer);
-#else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
 _tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
                              tpp_unichar result[1]);
 #define tpp_decode_named_escape_xml(p_iter, end, result, lexer) \
 	_tpp_decode_named_escape_xml(p_iter, end, result)
-#endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 #endif /* TPP_HAVE_STRING_ESCAPE_XML */
 
 
@@ -374,15 +374,15 @@ _tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
      TPP_HAVE_STRING_ESCAPE_UNI_BRACE || \
      TPP_HAVE_STRING_ESCAPE_OCT_BRACE || \
      TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
-#if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+#if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
 TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
 tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end, tpp_lexer const *lexer)
-#else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
 _tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end)
 #define tpp_decode_find_unmatched_rbrace(p_iter, end, lexer) \
 	_tpp_decode_find_unmatched_rbrace(p_iter, end)
-#endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 {
 	tpp_char const *named_end;
 	tpp_size recursion = 0;
@@ -646,11 +646,11 @@ print_ch_as_byte:
 		if (!tpp_lexer_has(self, STRING_ESCAPE_XML))
 			goto handle_unknown_escape_sequence;
 		iter = tpp_preparse_skipbse_fwd(self, iter, end);
-#if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)
+#if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
 		count = tpp_decode_named_escape_xml(&iter, end, &uc, self);
-#else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 		count = tpp_decode_named_escape_xml(&iter, end, &uc);
-#endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS) */
+#endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 		if (count == 0)
 			goto handle_unknown_escape_sequence;
 		tpp_assert(count == 1);
@@ -1428,7 +1428,7 @@ tpp_token_decodestring_raw_bse(tpp_lexer *self, tpp_char const *start, tpp_char 
 
 /* Decode string: R"FOO(bla bla bla)FOO"
 *                       ^start     ^end */
-#if TPP_CONF_IS_RT(TPP_HAVE_RAW_STRING_BSE)
+#if TPP_CONF_ISRT(TPP_HAVE_RAW_STRING_BSE)
 #define tpp_token_decodestring_raw(self, start, end, config)    \
 	(tpp_lexer_has(self, RAW_STRING_BSE)                        \
 	 ? tpp_token_decodestring_raw_bse(self, start, end, config) \

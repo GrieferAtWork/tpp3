@@ -232,7 +232,7 @@ typedef struct tpp_lexer {
 } tpp_lexer;
 
 /* Check if a runtime-configurable config option `conf` in `TPP_HAVE_<conf>` is currently enabled.
- * When `TPP_HAVE_<conf>` is configured as `TPP_CONF_IS_CONST()`, return that constant instead. */
+ * When `TPP_HAVE_<conf>` is configured as `TPP_CONF_ISCONST()`, return that constant instead. */
 #define tpp_lexer_has(self, conf) _tpp_lexer_has_##conf(self)
 
 /* Current token */
@@ -1909,12 +1909,12 @@ tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
 
 #define TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL     0x0000
 #define TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS    0x0001 /* Store varargs info in p_argv[IN(*p_argc) - 1] */
-#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 #define TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC 0x0002 /* Do not strip whitespace/comments around arguments */
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+#endif /* TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE)
 #define TPP_LEXER_SEEK_RPAREN_FLAG_MAGIC_WHITESPACE 0x0004 /* Add extra whitespace during across EOF when necessary */
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
+#endif /* TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_HAVE_LEXER_MANUALPOPFILE
 #define TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK    0x0008 /* Use `tpp_lexer_manualpopfile_popfile()` to pop files */
 #endif /* TPP_HAVE_LEXER_MANUALPOPFILE */

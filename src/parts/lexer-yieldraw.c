@@ -5554,10 +5554,10 @@ handle_keyword_with_esc:
 				}
 #if TPP_HAVE_TOK_C_INT
 				tpp_assert(result == TPP_TOK_C_INT || result == TPP_TOK_C_FLOAT);
-#if TPP_CONF_IS_RT(TPP_HAVE_TOK_C_INT)
+#if TPP_CONF_ISRT(TPP_HAVE_TOK_C_INT)
 				if (!tpp_lexer_has(self, TOK_C_INT))
 					result = TPP_TOK_C_FLOAT;
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_TOK_C_INT) */
+#endif /* TPP_CONF_ISRT(TPP_HAVE_TOK_C_INT) */
 #else /* TPP_HAVE_TOK_C_INT */
 				tpp_assert(result == TPP_TOK_EOF || result == TPP_TOK_C_FLOAT);
 				result = TPP_TOK_C_FLOAT;

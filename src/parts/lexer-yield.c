@@ -2635,10 +2635,10 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #if TPP_HAVE_CPP_MACROS
 
 	/* Check if macros are runtime-configurable and currently disabled. */
-#if TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS)
+#if TPP_CONF_ISRT(TPP_HAVE_CPP_MACROS)
 	if (!tpp_lexer_has(self, CPP_MACROS))
 		return tok;
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_CPP_MACROS) */
+#endif /* TPP_CONF_ISRT(TPP_HAVE_CPP_MACROS) */
 
 	/* Check for explicitly #define'd and #undef'd macros... */
 	{

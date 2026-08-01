@@ -1731,10 +1731,10 @@ handle_gnu_clang_ns_prefixed_tok:
 		seek_flags = TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS;
 		/* Control behavior of "TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC"
 		 * -- Should depend on "-fmacro-argument-whitespace" */
-#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 		if (tpp_lexer_has(lexer, MACRO_ARGUMENT_WHITESPACE))
 			seek_flags |= TPP_LEXER_SEEK_RPAREN_FLAG_KEEPARGSPC;
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#endif /* TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 		tok = tpp_lexer_seekpp_rparen_exact(lexer, &arg, 1, function_name, seek_flags);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
@@ -3093,10 +3093,10 @@ again:
 		if (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-#if TPP_CONF_IS_RT(TPP_HAVE_TOK_SPACE)
+#if TPP_CONF_ISRT(TPP_HAVE_TOK_SPACE)
 		if (tpp_lexer_has(self, TOK_SPACE))
 			break; /* Enabled */
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_TOK_SPACE) */
+#endif /* TPP_CONF_ISRT(TPP_HAVE_TOK_SPACE) */
 		goto again;
 #elif TPP_HAVE_CPP_DIRECTIVES
 	case TPP_TOK_SPACE:
@@ -3137,9 +3137,9 @@ again:
 #if (TPP_HAVE_TOK_SOL_SHELL_COMMENT && (TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS || TPP_HAVE_TOK_SPACE))
 #if TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE)
 			if (0
-#if TPP_CONF_IS_RT(TPP_HAVE_TOK_SPACE)
+#if TPP_CONF_ISRT(TPP_HAVE_TOK_SPACE)
 			    || tpp_lexer_has(self, TOK_SPACE)
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_TOK_SPACE) */
+#endif /* TPP_CONF_ISRT(TPP_HAVE_TOK_SPACE) */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 			    || (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
@@ -3223,10 +3223,10 @@ again:
 		if (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-#if TPP_CONF_IS_RT(TPP_HAVE_TOK_COMMENT)
+#if TPP_CONF_ISRT(TPP_HAVE_TOK_COMMENT)
 		if (tpp_lexer_has(self, TOK_COMMENT))
 			break; /* Comments are enabled -> emit to caller */
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_TOK_COMMENT) */
+#endif /* TPP_CONF_ISRT(TPP_HAVE_TOK_COMMENT) */
 		goto again;
 #elif TPP_HAVE_CPP_DIRECTIVES
 	TPP_CASE_TPP_TOK_COMMENT_NOLINE
@@ -3249,10 +3249,10 @@ again:
 		if (self->tl_state & TPP_LEXER_STATE_FLAG_ALLTOKENS)
 			break;
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-#if TPP_CONF_IS_RT(TPP_HAVE_TOK_LF)
+#if TPP_CONF_ISRT(TPP_HAVE_TOK_LF)
 		if (tpp_lexer_has(self, TOK_LF))
 			break; /* Enabled */
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_TOK_LF) */
+#endif /* TPP_CONF_ISRT(TPP_HAVE_TOK_LF) */
 		goto again;
 #else /* TPP_CONF_MAYBE_0(TPP_HAVE_TOK_LF) */
 		break;

@@ -90,144 +90,144 @@ for (local option, what: {
 	{"WERROR", "set"},
 }) {
 	local extraArgs = what == "set" ? ", v" : "";
-	print("#if TPP_CONF_IS_EXT(TPP_HAVE_", option, ")");
+	print("#if TPP_CONF_ISEXT(TPP_HAVE_", option, ")");
 	print("#define tpp_lexer_", what, "_", option, "(self", extraArgs, ") tpp_lexer_", what, "extension(self, TPP_EXT_", option, extraArgs, ")");
-	print("#elif TPP_CONF_IS_FEAT(TPP_HAVE_", option, ")");
+	print("#elif TPP_CONF_ISFEAT(TPP_HAVE_", option, ")");
 	print("#define tpp_lexer_", what, "_", option, "(self", extraArgs, ") (tpp_lexer_", what, "feature(self, TPP_FEAT_", option, extraArgs, "), TPP_EOK)");
 	print("#else /" "* ... *" "/");
 	print("#define tpp_lexer_", what, "_", option, "(self", extraArgs, ") TPP_EOK");
 	print("#endif /" "* !... *" "/");
 }
 ]]]*/
-#if TPP_CONF_IS_EXT(TPP_HAVE_CPP_PREDEFINED_MACROS)
+#if TPP_CONF_ISEXT(TPP_HAVE_CPP_PREDEFINED_MACROS)
 #define tpp_lexer_disable_CPP_PREDEFINED_MACROS(self) tpp_lexer_disableextension(self, TPP_EXT_CPP_PREDEFINED_MACROS)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_CPP_PREDEFINED_MACROS)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_CPP_PREDEFINED_MACROS)
 #define tpp_lexer_disable_CPP_PREDEFINED_MACROS(self) (tpp_lexer_disablefeature(self, TPP_FEAT_CPP_PREDEFINED_MACROS), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_disable_CPP_PREDEFINED_MACROS(self) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_CPP_MACROS)
+#if TPP_CONF_ISEXT(TPP_HAVE_CPP_MACROS)
 #define tpp_lexer_set_CPP_MACROS(self, v) tpp_lexer_setextension(self, TPP_EXT_CPP_MACROS, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_CPP_MACROS)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_CPP_MACROS)
 #define tpp_lexer_set_CPP_MACROS(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_CPP_MACROS, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_CPP_MACROS(self, v) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TRIGRAPHS)
+#if TPP_CONF_ISEXT(TPP_HAVE_TRIGRAPHS)
 #define tpp_lexer_set_TRIGRAPHS(self, v) tpp_lexer_setextension(self, TPP_EXT_TRIGRAPHS, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_TRIGRAPHS)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TRIGRAPHS)
 #define tpp_lexer_set_TRIGRAPHS(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_TRIGRAPHS, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_TRIGRAPHS(self, v) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TRIGRAPHS)
+#if TPP_CONF_ISEXT(TPP_HAVE_TRIGRAPHS)
 #define tpp_lexer_disable_TRIGRAPHS(self) tpp_lexer_disableextension(self, TPP_EXT_TRIGRAPHS)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_TRIGRAPHS)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TRIGRAPHS)
 #define tpp_lexer_disable_TRIGRAPHS(self) (tpp_lexer_disablefeature(self, TPP_FEAT_TRIGRAPHS), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_disable_TRIGRAPHS(self) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TRIGRAPHS)
+#if TPP_CONF_ISEXT(TPP_HAVE_TRIGRAPHS)
 #define tpp_lexer_enable_TRIGRAPHS(self) tpp_lexer_enableextension(self, TPP_EXT_TRIGRAPHS)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_TRIGRAPHS)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TRIGRAPHS)
 #define tpp_lexer_enable_TRIGRAPHS(self) (tpp_lexer_enablefeature(self, TPP_FEAT_TRIGRAPHS), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_enable_TRIGRAPHS(self) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_BSE)
+#if TPP_CONF_ISEXT(TPP_HAVE_BSE)
 #define tpp_lexer_set_BSE(self, v) tpp_lexer_setextension(self, TPP_EXT_BSE, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_BSE)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_BSE)
 #define tpp_lexer_set_BSE(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_BSE, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_BSE(self, v) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_CPP_INCLUDE)
+#if TPP_CONF_ISEXT(TPP_HAVE_CPP_INCLUDE)
 #define tpp_lexer_set_CPP_INCLUDE(self, v) tpp_lexer_setextension(self, TPP_EXT_CPP_INCLUDE, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_CPP_INCLUDE)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_CPP_INCLUDE)
 #define tpp_lexer_set_CPP_INCLUDE(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_CPP_INCLUDE, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_CPP_INCLUDE(self, v) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_CPP_INCLUDE_NEXT)
+#if TPP_CONF_ISEXT(TPP_HAVE_CPP_INCLUDE_NEXT)
 #define tpp_lexer_set_CPP_INCLUDE_NEXT(self, v) tpp_lexer_setextension(self, TPP_EXT_CPP_INCLUDE_NEXT, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_CPP_INCLUDE_NEXT)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_CPP_INCLUDE_NEXT)
 #define tpp_lexer_set_CPP_INCLUDE_NEXT(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_CPP_INCLUDE_NEXT, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_CPP_INCLUDE_NEXT(self, v) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_CPP_IMPORT)
+#if TPP_CONF_ISEXT(TPP_HAVE_CPP_IMPORT)
 #define tpp_lexer_set_CPP_IMPORT(self, v) tpp_lexer_setextension(self, TPP_EXT_CPP_IMPORT, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IMPORT)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_CPP_IMPORT)
 #define tpp_lexer_set_CPP_IMPORT(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_CPP_IMPORT, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_CPP_IMPORT(self, v) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#if TPP_CONF_ISEXT(TPP_HAVE_CPP_IF_ELSE_ENDIF)
 #define tpp_lexer_set_CPP_IF_ELSE_ENDIF(self, v) tpp_lexer_setextension(self, TPP_EXT_CPP_IF_ELSE_ENDIF, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_CPP_IF_ELSE_ENDIF)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_CPP_IF_ELSE_ENDIF)
 #define tpp_lexer_set_CPP_IF_ELSE_ENDIF(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_CPP_IF_ELSE_ENDIF, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_CPP_IF_ELSE_ENDIF(self, v) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_CPP_DEFINE)
+#if TPP_CONF_ISEXT(TPP_HAVE_CPP_DEFINE)
 #define tpp_lexer_set_CPP_DEFINE(self, v) tpp_lexer_setextension(self, TPP_EXT_CPP_DEFINE, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_CPP_DEFINE)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_CPP_DEFINE)
 #define tpp_lexer_set_CPP_DEFINE(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_CPP_DEFINE, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_CPP_DEFINE(self, v) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_CPP_ASSERT)
+#if TPP_CONF_ISEXT(TPP_HAVE_CPP_ASSERT)
 #define tpp_lexer_set_CPP_ASSERT(self, v) tpp_lexer_setextension(self, TPP_EXT_CPP_ASSERT, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_CPP_ASSERT)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_CPP_ASSERT)
 #define tpp_lexer_set_CPP_ASSERT(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_CPP_ASSERT, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_CPP_ASSERT(self, v) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TOK_DOLLAR)
+#if TPP_CONF_ISEXT(TPP_HAVE_TOK_DOLLAR)
 #define tpp_lexer_set_TOK_DOLLAR(self, v) tpp_lexer_setextension(self, TPP_EXT_TOK_DOLLAR, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_TOK_DOLLAR)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TOK_DOLLAR)
 #define tpp_lexer_set_TOK_DOLLAR(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_TOK_DOLLAR, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_TOK_DOLLAR(self, v) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TOK_COMMENT)
+#if TPP_CONF_ISEXT(TPP_HAVE_TOK_COMMENT)
 #define tpp_lexer_enable_TOK_COMMENT(self) tpp_lexer_enableextension(self, TPP_EXT_TOK_COMMENT)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_TOK_COMMENT)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TOK_COMMENT)
 #define tpp_lexer_enable_TOK_COMMENT(self) (tpp_lexer_enablefeature(self, TPP_FEAT_TOK_COMMENT), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_enable_TOK_COMMENT(self) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TRADITIONAL_MACROS)
+#if TPP_CONF_ISEXT(TPP_HAVE_TRADITIONAL_MACROS)
 #define tpp_lexer_enable_TRADITIONAL_MACROS(self) tpp_lexer_enableextension(self, TPP_EXT_TRADITIONAL_MACROS)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_TRADITIONAL_MACROS)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TRADITIONAL_MACROS)
 #define tpp_lexer_enable_TRADITIONAL_MACROS(self) (tpp_lexer_enablefeature(self, TPP_FEAT_TRADITIONAL_MACROS), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_enable_TRADITIONAL_MACROS(self) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_TOK_CXX_COMMENT)
+#if TPP_CONF_ISEXT(TPP_HAVE_TOK_CXX_COMMENT)
 #define tpp_lexer_disable_TOK_CXX_COMMENT(self) tpp_lexer_disableextension(self, TPP_EXT_TOK_CXX_COMMENT)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_TOK_CXX_COMMENT)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TOK_CXX_COMMENT)
 #define tpp_lexer_disable_TOK_CXX_COMMENT(self) (tpp_lexer_disablefeature(self, TPP_FEAT_TOK_CXX_COMMENT), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_disable_TOK_CXX_COMMENT(self) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE)
+#if TPP_CONF_ISEXT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE)
 #define tpp_lexer_disable_INCLUDE_RELATIVE_TO_CURRENT_FILE(self) tpp_lexer_disableextension(self, TPP_EXT_INCLUDE_RELATIVE_TO_CURRENT_FILE)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE)
 #define tpp_lexer_disable_INCLUDE_RELATIVE_TO_CURRENT_FILE(self) (tpp_lexer_disablefeature(self, TPP_FEAT_INCLUDE_RELATIVE_TO_CURRENT_FILE), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_disable_INCLUDE_RELATIVE_TO_CURRENT_FILE(self) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH)
+#if TPP_CONF_ISEXT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH)
 #define tpp_lexer_disable_INCLUDE_SYSTEM_INCLUDE_PATH(self) tpp_lexer_disableextension(self, TPP_EXT_INCLUDE_SYSTEM_INCLUDE_PATH)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH)
 #define tpp_lexer_disable_INCLUDE_SYSTEM_INCLUDE_PATH(self) (tpp_lexer_disablefeature(self, TPP_FEAT_INCLUDE_SYSTEM_INCLUDE_PATH), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_disable_INCLUDE_SYSTEM_INCLUDE_PATH(self) TPP_EOK
 #endif /* !... */
-#if TPP_CONF_IS_EXT(TPP_HAVE_WERROR)
+#if TPP_CONF_ISEXT(TPP_HAVE_WERROR)
 #define tpp_lexer_set_WERROR(self, v) tpp_lexer_setextension(self, TPP_EXT_WERROR, v)
-#elif TPP_CONF_IS_FEAT(TPP_HAVE_WERROR)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_WERROR)
 #define tpp_lexer_set_WERROR(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_WERROR, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_WERROR(self, v) TPP_EOK

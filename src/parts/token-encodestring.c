@@ -43,7 +43,7 @@ TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes) {
 #if TPP_HAVE_UNICODE
-#if !TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT) && TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#if !TPP_CONF_ISALWAYS(TPP_HAVE_STRING_ESCAPE_OCT) && TPP_CONF_ISALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
 	tpp_char esc_byte_buf[sizeof("\\x{ff}")];
 #define tpp_encodestring_set_output_repr_byte(value)         \
 	(esc_byte_buf[0] = '\\',                                 \
@@ -54,7 +54,7 @@ tpp_token_encodestring(tpp_formatprinter printer, void *arg,
 	 esc_byte_buf[5] = '}',                                  \
 	 esc_byte_buf[6] = '\0',                                 \
 	 output_repr     = esc_byte_buf)
-#elif !TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT) && TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+#elif !TPP_CONF_ISALWAYS(TPP_HAVE_STRING_ESCAPE_OCT) && TPP_CONF_ISALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
 	tpp_char esc_byte_buf[sizeof("\\o{377}")];
 #define tpp_encodestring_set_output_repr_byte(value)             \
 	(esc_byte_buf[0] = '\\',                                     \
@@ -104,17 +104,17 @@ again:
 
 	/* To prevent problems with "strlen()" and the like... 
 	 * NOTE: Must encode 00h as \000 instead of \0 to prevent ambiguity with "\N{NUL}00" */
-#if TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
+#if TPP_CONF_ISALWAYS(TPP_HAVE_STRING_ESCAPE_UNI)
 	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\u0000");
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
+#elif TPP_CONF_ISALWAYS(TPP_HAVE_STRING_ESCAPE_UNI_BRACE)
 	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\u{0}");
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
+#elif TPP_CONF_ISALWAYS(TPP_HAVE_STRING_ESCAPE_XML)
 	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\&#0;");
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
+#elif TPP_CONF_ISALWAYS(TPP_HAVE_STRING_ESCAPE_OCT)
 	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\000");
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
+#elif TPP_CONF_ISALWAYS(TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
 	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\x{0}");
-#elif TPP_CONF_IS_ALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
+#elif TPP_CONF_ISALWAYS(TPP_HAVE_STRING_ESCAPE_OCT_BRACE)
 	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\o{0}");
 #else /* ... */
 	TPP_TOKEN_ENCODESTRING_CASE('\0', "\\000"); /* May not be decodable... */

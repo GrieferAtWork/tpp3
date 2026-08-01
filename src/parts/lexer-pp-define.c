@@ -1301,7 +1301,7 @@ err_nomem:
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS) */
 
 
-#if TPP_CONF_IS_RT(TPP_HAVE_TRADITIONAL_MACROS)
+#if TPP_CONF_ISRT(TPP_HAVE_TRADITIONAL_MACROS)
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_macro_builder_compile(tpp_macro_builder *tpp_restrict builder,
                           tpp_lexer *tpp_restrict self,
@@ -1495,18 +1495,18 @@ tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
 	/* Initialize flags for the macro being built. */
 	tpp_macro_builder_init(&builder);
 #if TPP_HAVE_MACRO_FLAGS
-#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
+#if TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
 	if (tpp_lexer_has(self, MACRO_ARGUMENT_WHITESPACE))
 		builder.mab_flags |= TPP_MACRO_FLAG_KEEPARGSPC;
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
-#if TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION)
+#endif /* TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+#if TPP_CONF_ISRT(TPP_HAVE_MACRO_RECURSION)
 	if (tpp_lexer_has(self, MACRO_RECURSION))
 		builder.mab_flags |= TPP_MACRO_FLAG_SELFEXPAND;
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
-#if TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE)
+#endif /* TPP_CONF_ISRT(TPP_HAVE_MACRO_RECURSION) */
+#if TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE)
 	if (tpp_lexer_has(self, MAGIC_WHITESPACE))
 		builder.mab_flags |= TPP_MACRO_FLAG_MAGIC_WHITESPACE;
-#endif /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
+#endif /* TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
 	/* Parse macro argument list */

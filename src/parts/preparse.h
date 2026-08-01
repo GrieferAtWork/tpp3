@@ -31,8 +31,8 @@ TPP_DECL_BEGIN
 
 #undef _TPP_HAVE_BSE_FILE_PARAM
 #if (TPP_HAVE_BSE && (TPP_HAVE_UNICODE ||                        \
-                      TPP_CONF_IS_RT(TPP_HAVE_BSE_WHITESPACE) || \
-                      TPP_CONF_IS_RT(TPP_HAVE_TRIGRAPHS)))
+                      TPP_CONF_ISRT(TPP_HAVE_BSE_WHITESPACE) || \
+                      TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)))
 #define _TPP_HAVE_BSE_FILE_PARAM 1
 struct tpp_lexer;
 #define _tpp_preparse_skipbse_lexer__PARAM  , struct tpp_lexer const *tpp_restrict lexer
