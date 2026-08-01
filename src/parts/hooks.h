@@ -470,7 +470,7 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_system_include_path)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
-	 * Extra callback invoked by `tpp_lexer_foreach_include_path()` at diffrent
+	 * Extra callback invoked by `tpp_lexer_foreach_include_path()` at different
 	 * points during the process of enumerating include paths. This callback is
 	 * then allowed to enumerate some additional include paths that may exist, but
 	 * for one reason or another (mainly: speed) aren't known to TPP via its system
@@ -486,7 +486,7 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_system_embed_path)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
-	 * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points
+	 * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at different points
 	 * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
 	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
 	 *               caller's position in `tpp_lexer_foreach_include_path()`.
@@ -997,7 +997,7 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_ident_sccs(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
 
-/* Extra callback invoked by `tpp_lexer_foreach_include_path()` at diffrent
+/* Extra callback invoked by `tpp_lexer_foreach_include_path()` at different
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but
  * for one reason or another (mainly: speed) aren't known to TPP via its system
@@ -1030,7 +1030,7 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_system_include_path(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
-/* Extra callback invoked by `tpp_lexer_foreach_embed_path()` at diffrent points
+/* Extra callback invoked by `tpp_lexer_foreach_embed_path()` at different points
  * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
  * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
  *               caller's position in `tpp_lexer_foreach_include_path()`.

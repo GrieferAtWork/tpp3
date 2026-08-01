@@ -548,6 +548,15 @@ function updateConfigMd(filename: string) {
 				if (refFile in knownFiles)
 					print newData: f"[`{conf.name}`]({refFile}#{conf.name.lower()})",;
 			}
+			for (local doc, name, default_TPP_HAVE_FOO_HOOK,
+			     builtin_FOO_HOOK, prototypePrefix,
+			     prototypeSuffix, prototypeArgs,
+			     disabled_RETURN_VALUE: config.HOOKS) {
+				if (!isFirst)
+					print newData: " ",;
+				isFirst = false;
+				print newData: f"[`TPP_HAVE_{name}_HOOK`](config-hook.md#tpp_have_{name.lower()}_hook)",;
+			}
 			print newData:;
 		}	break;
 
