@@ -9254,7 +9254,7 @@ TPP_DECL_END
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_FILE_PUSHED && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_PUSHED_HOOK) */
 
 /* >> void TPP_HOOK_FILE_POPPED(tpp_lexer *tpp_restrict self);
- * Called whenever a file is about to be popped off the `#include`-stack
+ * Called whenever a file is about to be popped off the `#include`-stack.
  * Information about the file that's about-to-be popped can be retrieved
  * by examining `tpp_lexer_getfile(self)`.
  *
@@ -9345,10 +9345,10 @@ TPP_DECL_END
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_INCLUDE_ENCOUNTERED && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_INCLUDE_NOT_FOUND(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
- * Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
- * directive could not be found, this hook may be used to either suppress the error (by returning
- * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
- * commandline switch.
+ * Called when the file specified by a `#include` (or `#include_next`, `#import` or
+ * `#embed`)-directive could not be found. This hook may be used to either suppress
+ * the error (by returning something other than `TPP_ENOENT`), or log the error to
+ * implement something like GCC's `-MG` commandline switch.
  *
  * This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's
  * current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
@@ -22550,7 +22550,7 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) */
 
 	/* >> void (TPPCALL *th_file_popped)(struct tpp_lexer *tpp_restrict self);
-	 * Called whenever a file is about to be popped off the `#include`-stack
+	 * Called whenever a file is about to be popped off the `#include`-stack.
 	 * Information about the file that's about-to-be popped can be retrieved
 	 * by examining `tpp_lexer_getfile(self)`.
 	 *
@@ -22589,10 +22589,10 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_include_not_found)(struct tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
-	 * Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
-	 * directive could not be found, this hook may be used to either suppress the error (by returning
-	 * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
-	 * commandline switch.
+	 * Called when the file specified by a `#include` (or `#include_next`, `#import` or
+	 * `#embed`)-directive could not be found. This hook may be used to either suppress
+	 * the error (by returning something other than `TPP_ENOENT`), or log the error to
+	 * implement something like GCC's `-MG` commandline switch.
 	 *
 	 * This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's
 	 * current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
@@ -22981,7 +22981,7 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_file_pushed(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) */
 
-/* Called whenever a file is about to be popped off the `#include`-stack
+/* Called whenever a file is about to be popped off the `#include`-stack.
  * Information about the file that's about-to-be popped can be retrieved
  * by examining `tpp_lexer_getfile(self)`.
  *
@@ -23054,10 +23054,10 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_include_encountered(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 
-/* Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
- * directive could not be found, this hook may be used to either suppress the error (by returning
- * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
- * commandline switch.
+/* Called when the file specified by a `#include` (or `#include_next`, `#import` or
+ * `#embed`)-directive could not be found. This hook may be used to either suppress
+ * the error (by returning something other than `TPP_ENOENT`), or log the error to
+ * implement something like GCC's `-MG` commandline switch.
  *
  * This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's
  * current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
@@ -23914,7 +23914,7 @@ typedef struct tpp_lexer {
 #endif /* tpp_hooks_set_file_pushed */
 
 /* >> void tpp_lexer_callhook_file_popped(tpp_lexer *tpp_restrict self);
- * Called whenever a file is about to be popped off the `#include`-stack
+ * Called whenever a file is about to be popped off the `#include`-stack.
  * Information about the file that's about-to-be popped can be retrieved
  * by examining `tpp_lexer_getfile(self)`.
  *
@@ -23961,10 +23961,10 @@ typedef struct tpp_lexer {
 #endif /* tpp_hooks_set_include_encountered */
 
 /* >> tpp_errno tpp_lexer_callhook_include_not_found(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
- * Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
- * directive could not be found, this hook may be used to either suppress the error (by returning
- * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
- * commandline switch.
+ * Called when the file specified by a `#include` (or `#include_next`, `#import` or
+ * `#embed`)-directive could not be found. This hook may be used to either suppress
+ * the error (by returning something other than `TPP_ENOENT`), or log the error to
+ * implement something like GCC's `-MG` commandline switch.
  *
  * This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's
  * current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want

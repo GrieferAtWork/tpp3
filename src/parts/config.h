@@ -3288,7 +3288,7 @@ local HOOKS = {
 	},
 
 	{
-		"Called whenever a file is about to be popped off the `#include`-stack\n" +
+		"Called whenever a file is about to be popped off the `#include`-stack.\n" +
 		"Information about the file that's about-to-be popped can be retrieved\n" +
 		"by examining `tpp_lexer_getfile(self)`.\n" +
 		"\n" +
@@ -3333,10 +3333,10 @@ local HOOKS = {
 	},
 
 	{
-		"Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-\n" +
-		"directive could not be found, this hook may be used to either suppress the error (by returning\n" +
-		"something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`\n" +
-		"commandline switch.\n" +
+		"Called when the file specified by a `#include` (or `#include_next`, `#import` or\n" +
+		"`#embed`)-directive could not be found. This hook may be used to either suppress\n" +
+		"the error (by returning something other than `TPP_ENOENT`), or log the error to\n" +
+		"implement something like GCC's `-MG` commandline switch.\n" +
 		"\n" +
 		"This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's\n" +
 		"current token still being the `<stdio.h>` or `\"file.h\"` string, meaning if you want\n" +
@@ -3809,7 +3809,7 @@ for (local doc, name,
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_FILE_PUSHED && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_PUSHED_HOOK) */
 
 /* >> void TPP_HOOK_FILE_POPPED(tpp_lexer *tpp_restrict self);
- * Called whenever a file is about to be popped off the `#include`-stack
+ * Called whenever a file is about to be popped off the `#include`-stack.
  * Information about the file that's about-to-be popped can be retrieved
  * by examining `tpp_lexer_getfile(self)`.
  *
@@ -3900,10 +3900,10 @@ for (local doc, name,
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_INCLUDE_ENCOUNTERED && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_INCLUDE_NOT_FOUND(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
- * Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
- * directive could not be found, this hook may be used to either suppress the error (by returning
- * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
- * commandline switch.
+ * Called when the file specified by a `#include` (or `#include_next`, `#import` or
+ * `#embed`)-directive could not be found. This hook may be used to either suppress
+ * the error (by returning something other than `TPP_ENOENT`), or log the error to
+ * implement something like GCC's `-MG` commandline switch.
  *
  * This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's
  * current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want

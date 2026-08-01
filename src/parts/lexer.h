@@ -583,7 +583,7 @@ for (local doc, name,
 #endif /* tpp_hooks_set_file_pushed */
 
 /* >> void tpp_lexer_callhook_file_popped(tpp_lexer *tpp_restrict self);
- * Called whenever a file is about to be popped off the `#include`-stack
+ * Called whenever a file is about to be popped off the `#include`-stack.
  * Information about the file that's about-to-be popped can be retrieved
  * by examining `tpp_lexer_getfile(self)`.
  *
@@ -630,10 +630,10 @@ for (local doc, name,
 #endif /* tpp_hooks_set_include_encountered */
 
 /* >> tpp_errno tpp_lexer_callhook_include_not_found(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
- * Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
- * directive could not be found, this hook may be used to either suppress the error (by returning
- * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
- * commandline switch.
+ * Called when the file specified by a `#include` (or `#include_next`, `#import` or
+ * `#embed`)-directive could not be found. This hook may be used to either suppress
+ * the error (by returning something other than `TPP_ENOENT`), or log the error to
+ * implement something like GCC's `-MG` commandline switch.
  *
  * This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's
  * current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
