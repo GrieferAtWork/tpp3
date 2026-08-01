@@ -506,7 +506,7 @@ function updateConfigMd(filename: string) {
 					f"{normalizePpExpr(default_TPP_HAVE_FOO_HOOK)}\n"
 					f"```\n"
 					f"\n"
-					f"Disabled:\n"
+					f"Disabled (mock):\n"
 					f"\n"
 					f"```c\n"
 					f"{prototypePrefix}_tpp_disabled_hook_{name.lower()}{prototypeSuffix} \{\n"
@@ -515,7 +515,7 @@ function updateConfigMd(filename: string) {
 					f"```\n"
 					f"{!builtin_FOO_HOOK ? "" :
 						f"\n"
-						f"Builtin:\n"
+						f"Builtin (internal; don't call directly):\n"
 						f"\n"
 						f"```c\n"
 						f"#if TPP_HAVE_BUILTIN_{name}_HOOK\n"

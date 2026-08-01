@@ -8998,7 +8998,7 @@ TPP_DECL_END
 
 
 /* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
- * Called by `tpp_lexer_warnf()` to print warning messages
+ * Called by `tpp_lexer_warnf()` to print warning messages.
  * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #ifndef TPP_HAVE_WARNPRINTER_HOOK
@@ -9010,19 +9010,19 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_WARNPRINTER_HOOK */
 #if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_WARNPRINTER)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_WARNPRINTER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_WARNPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_WARNPRINTER_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_WARNPRINTER` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_WARNPRINTER_HOOK
 #define TPP_HAVE_WARNPRINTER_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_WARNPRINTER)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_WARNPRINTER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_WARNPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_WARNPRINTER_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_WARNPRINTER` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_WARNPRINTER_HOOK
 #define TPP_HAVE_WARNPRINTER_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_WARNPRINTER) && !TPP_HOOK_USESUSER(TPP_HAVE_WARNPRINTER_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_WARNPRINTER' is defined, but 'TPP_HAVE_WARNPRINTER_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_WARNPRINTER` is defined, but `TPP_HAVE_WARNPRINTER_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_WARNPRINTER && !TPP_HOOK_USESUSER(TPP_HAVE_WARNPRINTER_HOOK) */
 #ifndef TPP_HAVE_BUILTIN_WARNPRINTER_HOOK
 #define TPP_HAVE_BUILTIN_WARNPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNPRINTER_HOOK)
@@ -9049,26 +9049,26 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_WARNHANDLER_HOOK */
 #if TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_WARNHANDLER)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_WARNHANDLER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_WARNHANDLER' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_WARNHANDLER_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_WARNHANDLER` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_WARNHANDLER_HOOK
 #define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_WARNHANDLER)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_WARNHANDLER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_WARNHANDLER' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_WARNHANDLER_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_WARNHANDLER` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_WARNHANDLER_HOOK
 #define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_WARNHANDLER) && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_WARNHANDLER' is defined, but 'TPP_HAVE_WARNHANDLER_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_WARNHANDLER` is defined, but `TPP_HAVE_WARNHANDLER_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_WARNHANDLER && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK) */
 #ifndef TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
 #define TPP_HAVE_BUILTIN_WARNHANDLER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNHANDLER_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
 
 /* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_MESGPRINTER, arg, text, num_bytes);
- * Used by `#pragma message` to print messages
+ * Used by `#pragma message` to print messages (see `TPP_HAVE_PRAGMA_MESSAGE`)
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #ifndef TPP_HAVE_MESGPRINTER_HOOK
 #ifdef TPP_HOOK_MESGPRINTER
@@ -9079,19 +9079,19 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_MESGPRINTER_HOOK */
 #if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_MESGPRINTER)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_MESGPRINTER_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_MESGPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_MESGPRINTER_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_MESGPRINTER` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_MESGPRINTER_HOOK
 #define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_MESGPRINTER)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_MESGPRINTER_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_MESGPRINTER' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_MESGPRINTER_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_MESGPRINTER` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_MESGPRINTER_HOOK
 #define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_MESGPRINTER) && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_MESGPRINTER' is defined, but 'TPP_HAVE_MESGPRINTER_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_MESGPRINTER` is defined, but `TPP_HAVE_MESGPRINTER_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MESGPRINTER && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK) */
 #ifndef TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
 #define TPP_HAVE_BUILTIN_MESGPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_MESGPRINTER_HOOK)
@@ -9127,19 +9127,19 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_PARSEEXPR_HOOK */
 #if TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_PARSEEXPR)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_PARSEEXPR_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_PARSEEXPR' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_PARSEEXPR_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_PARSEEXPR` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_PARSEEXPR_HOOK
 #define TPP_HAVE_PARSEEXPR_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_PARSEEXPR)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_PARSEEXPR_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_PARSEEXPR' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_PARSEEXPR_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_PARSEEXPR` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_PARSEEXPR_HOOK
 #define TPP_HAVE_PARSEEXPR_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_PARSEEXPR) && !TPP_HOOK_USESUSER(TPP_HAVE_PARSEEXPR_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_PARSEEXPR' is defined, but 'TPP_HAVE_PARSEEXPR_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_PARSEEXPR` is defined, but `TPP_HAVE_PARSEEXPR_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_PARSEEXPR && !TPP_HOOK_USESUSER(TPP_HAVE_PARSEEXPR_HOOK) */
 #ifndef TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
 #define TPP_HAVE_BUILTIN_PARSEEXPR_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_PARSEEXPR_HOOK)
@@ -9161,13 +9161,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_UNKNOWN_PRAGMA_HOOK */
 #if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_UNKNOWN_PRAGMA)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_UNKNOWN_PRAGMA' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_UNKNOWN_PRAGMA_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_UNKNOWN_PRAGMA` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
 #define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_UNKNOWN_PRAGMA)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_UNKNOWN_PRAGMA' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_UNKNOWN_PRAGMA_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_UNKNOWN_PRAGMA` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_UNKNOWN_PRAGMA_HOOK
 #define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_RT_NOOP
@@ -9179,7 +9179,7 @@ TPP_DECL_END
 #define TPP_HAVE_UNKNOWN_PRAGMA_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_PRAGMA) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_UNKNOWN_PRAGMA' is defined, but 'TPP_HAVE_UNKNOWN_PRAGMA_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_UNKNOWN_PRAGMA` is defined, but `TPP_HAVE_UNKNOWN_PRAGMA_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_PRAGMA && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_NEW_DEPENDENCY(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
@@ -9195,13 +9195,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_NEW_DEPENDENCY_HOOK */
 #if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_NEW_DEPENDENCY)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_NEW_DEPENDENCY_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_NEW_DEPENDENCY' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_NEW_DEPENDENCY_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_NEW_DEPENDENCY` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_NEW_DEPENDENCY_HOOK
 #define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_NEW_DEPENDENCY)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_NEW_DEPENDENCY_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_NEW_DEPENDENCY' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_NEW_DEPENDENCY_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_NEW_DEPENDENCY` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_NEW_DEPENDENCY_HOOK
 #define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
@@ -9213,14 +9213,16 @@ TPP_DECL_END
 #define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_NEW_DEPENDENCY) && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_NEW_DEPENDENCY' is defined, but 'TPP_HAVE_NEW_DEPENDENCY_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_NEW_DEPENDENCY` is defined, but `TPP_HAVE_NEW_DEPENDENCY_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_NEW_DEPENDENCY && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_FILE_PUSHED(tpp_lexer *tpp_restrict self);
- * Called whenever a file was just pushed onto the `#include`-stack
- * Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`
- * This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
- * WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+ * Called whenever a file was just pushed onto the `#include`-stack. Information
+ * about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`.
+ *
+ * Notes:
+ * - This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+ * - This hook is *NOT* called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
 #ifndef TPP_HAVE_FILE_PUSHED_HOOK
 #ifdef TPP_HOOK_FILE_PUSHED
 #define TPP_HAVE_FILE_PUSHED_HOOK ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
@@ -9230,13 +9232,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_FILE_PUSHED_HOOK */
 #if TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_FILE_PUSHED)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_FILE_PUSHED_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_FILE_PUSHED' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_FILE_PUSHED_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_FILE_PUSHED` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_FILE_PUSHED_HOOK
 #define TPP_HAVE_FILE_PUSHED_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_FILE_PUSHED)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_FILE_PUSHED_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_FILE_PUSHED' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_FILE_PUSHED_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_FILE_PUSHED` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_FILE_PUSHED_HOOK
 #define TPP_HAVE_FILE_PUSHED_HOOK TPP_HOOK_RT_NOOP
@@ -9248,16 +9250,20 @@ TPP_DECL_END
 #define TPP_HAVE_FILE_PUSHED_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_FILE_PUSHED) && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_PUSHED_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_FILE_PUSHED' is defined, but 'TPP_HAVE_FILE_PUSHED_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_FILE_PUSHED` is defined, but `TPP_HAVE_FILE_PUSHED_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_FILE_PUSHED && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_PUSHED_HOOK) */
 
 /* >> void TPP_HOOK_FILE_POPPED(tpp_lexer *tpp_restrict self);
  * Called whenever a file is about to be popped off the `#include`-stack
  * Information about the file that's about-to-be popped can be retrieved
- * by examining `tpp_lexer_getfile(self)`. Note that this hook is called
- * during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)
- * but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.
- * WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
+ * by examining `tpp_lexer_getfile(self)`.
+ *
+ * Notes:
+ * - When files are popped by `tpp_lexer_manualpopfile_popfile()` within a
+ *   `tpp_lexer_manualpopfile_start()`-region, this hook is called during the
+ *   *commit* phase (i.e.: by `tpp_lexer_manualpopfile_break_commit()`),
+ *   rather than `tpp_lexer_manualpopfile_popfile()` as one might suspect at first.
+ * - This hook is *NOT* called by `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
 #ifndef TPP_HAVE_FILE_POPPED_HOOK
 #ifdef TPP_HOOK_FILE_POPPED
 #define TPP_HAVE_FILE_POPPED_HOOK ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
@@ -9267,13 +9273,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_FILE_POPPED_HOOK */
 #if TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_FILE_POPPED)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_FILE_POPPED_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_FILE_POPPED' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_FILE_POPPED_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_FILE_POPPED` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_FILE_POPPED_HOOK
 #define TPP_HAVE_FILE_POPPED_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_FILE_POPPED)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_FILE_POPPED_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_FILE_POPPED' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_FILE_POPPED_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_FILE_POPPED` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_FILE_POPPED_HOOK
 #define TPP_HAVE_FILE_POPPED_HOOK TPP_HOOK_RT_NOOP
@@ -9285,7 +9291,7 @@ TPP_DECL_END
 #define TPP_HAVE_FILE_POPPED_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_FILE_POPPED) && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_POPPED_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_FILE_POPPED' is defined, but 'TPP_HAVE_FILE_POPPED_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_FILE_POPPED` is defined, but `TPP_HAVE_FILE_POPPED_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_FILE_POPPED && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_POPPED_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_INCLUDE_ENCOUNTERED(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
@@ -9317,13 +9323,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK */
 #if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_INCLUDE_ENCOUNTERED)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_INCLUDE_ENCOUNTERED' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_INCLUDE_ENCOUNTERED` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK
 #define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_INCLUDE_ENCOUNTERED)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_INCLUDE_ENCOUNTERED' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_INCLUDE_ENCOUNTERED` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK
 #define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK TPP_HOOK_RT_NOOP
@@ -9335,7 +9341,7 @@ TPP_DECL_END
 #define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_INCLUDE_ENCOUNTERED) && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_INCLUDE_ENCOUNTERED' is defined, but 'TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_INCLUDE_ENCOUNTERED` is defined, but `TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_INCLUDE_ENCOUNTERED && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_INCLUDE_NOT_FOUND(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
@@ -9363,13 +9369,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_INCLUDE_NOT_FOUND_HOOK */
 #if TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_INCLUDE_NOT_FOUND)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_INCLUDE_NOT_FOUND_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_INCLUDE_NOT_FOUND' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_INCLUDE_NOT_FOUND_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_INCLUDE_NOT_FOUND` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_INCLUDE_NOT_FOUND_HOOK
 #define TPP_HAVE_INCLUDE_NOT_FOUND_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_INCLUDE_NOT_FOUND)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_INCLUDE_NOT_FOUND_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_INCLUDE_NOT_FOUND' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_INCLUDE_NOT_FOUND_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_INCLUDE_NOT_FOUND` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_INCLUDE_NOT_FOUND_HOOK
 #define TPP_HAVE_INCLUDE_NOT_FOUND_HOOK TPP_HOOK_RT_NOOP
@@ -9381,7 +9387,7 @@ TPP_DECL_END
 #define TPP_HAVE_INCLUDE_NOT_FOUND_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_INCLUDE_NOT_FOUND) && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_INCLUDE_NOT_FOUND' is defined, but 'TPP_HAVE_INCLUDE_NOT_FOUND_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_INCLUDE_NOT_FOUND` is defined, but `TPP_HAVE_INCLUDE_NOT_FOUND_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_INCLUDE_NOT_FOUND && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_MACRO_DEFINED(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro);
@@ -9403,13 +9409,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_MACRO_DEFINED_HOOK */
 #if TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_MACRO_DEFINED)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_MACRO_DEFINED_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_MACRO_DEFINED' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_MACRO_DEFINED_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_MACRO_DEFINED` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_MACRO_DEFINED_HOOK
 #define TPP_HAVE_MACRO_DEFINED_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_MACRO_DEFINED)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_MACRO_DEFINED_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_MACRO_DEFINED' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_MACRO_DEFINED_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_MACRO_DEFINED` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_MACRO_DEFINED_HOOK
 #define TPP_HAVE_MACRO_DEFINED_HOOK TPP_HOOK_RT_NOOP
@@ -9421,7 +9427,7 @@ TPP_DECL_END
 #define TPP_HAVE_MACRO_DEFINED_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_MACRO_DEFINED) && !TPP_HOOK_USESUSER(TPP_HAVE_MACRO_DEFINED_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_MACRO_DEFINED' is defined, but 'TPP_HAVE_MACRO_DEFINED_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_MACRO_DEFINED` is defined, but `TPP_HAVE_MACRO_DEFINED_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MACRO_DEFINED && !TPP_HOOK_USESUSER(TPP_HAVE_MACRO_DEFINED_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_MACRO_UNDEFINED(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name);
@@ -9446,13 +9452,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_MACRO_UNDEFINED_HOOK */
 #if TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_MACRO_UNDEFINED)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_MACRO_UNDEFINED_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_MACRO_UNDEFINED' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_MACRO_UNDEFINED_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_MACRO_UNDEFINED` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_MACRO_UNDEFINED_HOOK
 #define TPP_HAVE_MACRO_UNDEFINED_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_MACRO_UNDEFINED)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_MACRO_UNDEFINED_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_MACRO_UNDEFINED' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_MACRO_UNDEFINED_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_MACRO_UNDEFINED` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_MACRO_UNDEFINED_HOOK
 #define TPP_HAVE_MACRO_UNDEFINED_HOOK TPP_HOOK_RT_NOOP
@@ -9464,7 +9470,7 @@ TPP_DECL_END
 #define TPP_HAVE_MACRO_UNDEFINED_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_MACRO_UNDEFINED) && !TPP_HOOK_USESUSER(TPP_HAVE_MACRO_UNDEFINED_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_MACRO_UNDEFINED' is defined, but 'TPP_HAVE_MACRO_UNDEFINED_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_MACRO_UNDEFINED` is defined, but `TPP_HAVE_MACRO_UNDEFINED_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MACRO_UNDEFINED && !TPP_HOOK_USESUSER(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_IDENT_SCCS(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
@@ -9488,13 +9494,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_IDENT_SCCS_HOOK */
 #if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_IDENT_SCCS)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_IDENT_SCCS_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_IDENT_SCCS' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_IDENT_SCCS_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_IDENT_SCCS` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_IDENT_SCCS_HOOK
 #define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_IDENT_SCCS)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_IDENT_SCCS_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_IDENT_SCCS' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_IDENT_SCCS_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_IDENT_SCCS` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_IDENT_SCCS_HOOK
 #define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
@@ -9506,7 +9512,7 @@ TPP_DECL_END
 #define TPP_HAVE_IDENT_SCCS_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_IDENT_SCCS) && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_IDENT_SCCS' is defined, but 'TPP_HAVE_IDENT_SCCS_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_IDENT_SCCS` is defined, but `TPP_HAVE_IDENT_SCCS_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_SYSTEM_INCLUDE_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
@@ -9515,7 +9521,7 @@ TPP_DECL_END
  * then allowed to enumerate some additional include paths that may exist, but
  * for one reason or another (mainly: speed) aren't known to TPP via its system
  * include path APIs (`tpp_lexer_includes_add*`)
- * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
  *               caller's position in `tpp_lexer_foreach_include_path()`.
  * @return: * :         First non-TPP_ENOENT return value of `cb`
  * @return: TPP_ENOENT: File still not found
@@ -9530,13 +9536,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK */
 #if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_SYSTEM_INCLUDE_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_SYSTEM_INCLUDE_PATH` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
 #define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_SYSTEM_INCLUDE_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_SYSTEM_INCLUDE_PATH` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
 #define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_RT_NOOP
@@ -9548,14 +9554,14 @@ TPP_DECL_END
 #define TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_SYSTEM_INCLUDE_PATH' is defined, but 'TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_SYSTEM_INCLUDE_PATH` is defined, but `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_SYSTEM_EMBED_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at different points
- * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
- * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
- *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * during the process of enumerating embed paths. (s.a. `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
+ *               caller's position in `tpp_lexer_foreach_embed_path()`.
  * @return: * :         First non-TPP_ENOENT return value of `cb`
  * @return: TPP_ENOENT: File still not found
  * @return: TPP_EIO:    I/O error
@@ -9569,13 +9575,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_SYSTEM_EMBED_PATH_HOOK */
 #if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_SYSTEM_EMBED_PATH)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_SYSTEM_EMBED_PATH_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_SYSTEM_EMBED_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_SYSTEM_EMBED_PATH_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_SYSTEM_EMBED_PATH` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
 #define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_SYSTEM_EMBED_PATH)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_SYSTEM_EMBED_PATH_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_SYSTEM_EMBED_PATH' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_SYSTEM_EMBED_PATH_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_SYSTEM_EMBED_PATH` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_SYSTEM_EMBED_PATH_HOOK
 #define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_RT_NOOP
@@ -9587,16 +9593,16 @@ TPP_DECL_END
 #define TPP_HAVE_SYSTEM_EMBED_PATH_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_SYSTEM_EMBED_PATH) && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_SYSTEM_EMBED_PATH' is defined, but 'TPP_HAVE_SYSTEM_EMBED_PATH_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_SYSTEM_EMBED_PATH` is defined, but `TPP_HAVE_SYSTEM_EMBED_PATH_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_EMBED_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
 /* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
- * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
+ * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
  * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
  * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
- * it before returning
+ * it before returning.
  * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
  *                 [out] First character no longer part of `\`-escape sequence (if recognized)
  *                 [out] Unchanged (if not recognized)
@@ -9616,13 +9622,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK */
 #if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_UNKNOWN_STRING_ESCAPE` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
 #define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_UNKNOWN_STRING_ESCAPE` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK
 #define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_RT_NOOP
@@ -9634,7 +9640,7 @@ TPP_DECL_END
 #define TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE) && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_UNKNOWN_STRING_ESCAPE' is defined, but 'TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_UNKNOWN_STRING_ESCAPE` is defined, but `TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_STRING_ESCAPE && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_RAISE_LEXERROR(tpp_lexer *tpp_restrict self);
@@ -9652,13 +9658,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_RAISE_LEXERROR_HOOK */
 #if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_RAISE_LEXERROR)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_RAISE_LEXERROR_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_RAISE_LEXERROR' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_RAISE_LEXERROR_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_RAISE_LEXERROR` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_RAISE_LEXERROR_HOOK
 #define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_RAISE_LEXERROR)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_RAISE_LEXERROR_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_RAISE_LEXERROR' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_RAISE_LEXERROR_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_RAISE_LEXERROR` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_RAISE_LEXERROR_HOOK
 #define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_RT_NOOP
@@ -9670,16 +9676,16 @@ TPP_DECL_END
 #define TPP_HAVE_RAISE_LEXERROR_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_RAISE_LEXERROR) && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_RAISE_LEXERROR' is defined, but 'TPP_HAVE_RAISE_LEXERROR_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_RAISE_LEXERROR` is defined, but `TPP_HAVE_RAISE_LEXERROR_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_RAISE_LEXERROR && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_ISFLOATSUFFIX(tpp_lexer *tpp_restrict self, tpp_char const *pos);
  * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
  * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
- * part of the float-token (in the form of a float-suffix), or if this is actually be
+ * part of the float-token (in the form of a float-suffix), or if this should actually be
  * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
- * with `pos` pointing at the `f` (though additional characters thereafter may not be
- * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+ * with `pos` pointing at the `f` (additional characters thereafter may not be loaded
+ * yet, though can be loaded using `tpp_lexer_readchar()` and `tpp_lexer_readunichar()`)
  * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
  * @return: TPP_ENOENT: It's not a float suffix
  * @return: TPP_EIO:    I/O error
@@ -9693,13 +9699,13 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_ISFLOATSUFFIX_HOOK */
 #if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_ISFLOATSUFFIX)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_ISFLOATSUFFIX_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_ISFLOATSUFFIX' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_ISFLOATSUFFIX_HOOK` is configured as `TPP_HOOK_CONST_USER`, but `TPP_HOOK_ISFLOATSUFFIX` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_ISFLOATSUFFIX_HOOK
 #define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_DISABLED
 #elif TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_ISFLOATSUFFIX)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: 'TPP_HAVE_ISFLOATSUFFIX_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_ISFLOATSUFFIX' isn't defined. Configure the hook differently, or supply your definition"
+#error "Invalid configuration: `TPP_HAVE_ISFLOATSUFFIX_HOOK` is configured as `TPP_HOOK_RT_USER`, but `TPP_HOOK_ISFLOATSUFFIX` isn't defined. Configure the hook differently, or supply your definition"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_ISFLOATSUFFIX_HOOK
 #define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_RT_NOOP
@@ -9711,7 +9717,7 @@ TPP_DECL_END
 #define TPP_HAVE_ISFLOATSUFFIX_HOOK TPP_HOOK_RT_NOOP
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_ISFLOATSUFFIX) && !TPP_HOOK_USESUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK)
-#error "Invalid configuration: 'TPP_HOOK_ISFLOATSUFFIX' is defined, but 'TPP_HAVE_ISFLOATSUFFIX_HOOK' isn't using it"
+#error "Invalid configuration: `TPP_HOOK_ISFLOATSUFFIX` is defined, but `TPP_HAVE_ISFLOATSUFFIX_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_ISFLOATSUFFIX && !TPP_HOOK_USESUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
 
 /************************************************************************/
@@ -22442,7 +22448,7 @@ struct tpp_lexer_printf_info;
 #endif /* TPP_HAVE_WARNINGS */
 typedef struct tpp_hooks {
 	/* >> tpp_formatprinter th_warnprinter;
-	 * Called by `tpp_lexer_warnf()` to print warning messages
+	 * Called by `tpp_lexer_warnf()` to print warning messages.
 	 * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
 	 * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
@@ -22474,7 +22480,7 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) */
 
 	/* >> tpp_formatprinter th_mesgprinter;
-	 * Used by `#pragma message` to print messages
+	 * Used by `#pragma message` to print messages (see `TPP_HAVE_PRAGMA_MESSAGE`)
 	 * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
 #if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
@@ -22533,10 +22539,12 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_file_pushed)(struct tpp_lexer *tpp_restrict self);
-	 * Called whenever a file was just pushed onto the `#include`-stack
-	 * Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`
-	 * This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
-	 * WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+	 * Called whenever a file was just pushed onto the `#include`-stack. Information
+	 * about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`.
+	 *
+	 * Notes:
+	 * - This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+	 * - This hook is *NOT* called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_file_pushed))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) */
@@ -22544,10 +22552,14 @@ typedef struct tpp_hooks {
 	/* >> void (TPPCALL *th_file_popped)(struct tpp_lexer *tpp_restrict self);
 	 * Called whenever a file is about to be popped off the `#include`-stack
 	 * Information about the file that's about-to-be popped can be retrieved
-	 * by examining `tpp_lexer_getfile(self)`. Note that this hook is called
-	 * during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)
-	 * but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.
-	 * WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
+	 * by examining `tpp_lexer_getfile(self)`.
+	 *
+	 * Notes:
+	 * - When files are popped by `tpp_lexer_manualpopfile_popfile()` within a
+	 *   `tpp_lexer_manualpopfile_start()`-region, this hook is called during the
+	 *   *commit* phase (i.e.: by `tpp_lexer_manualpopfile_break_commit()`),
+	 *   rather than `tpp_lexer_manualpopfile_popfile()` as one might suspect at first.
+	 * - This hook is *NOT* called by `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
 	void (TPPCALL *TPP_INTERNAL(th_file_popped))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
@@ -22649,7 +22661,7 @@ typedef struct tpp_hooks {
 	 * then allowed to enumerate some additional include paths that may exist, but
 	 * for one reason or another (mainly: speed) aren't known to TPP via its system
 	 * include path APIs (`tpp_lexer_includes_add*`)
-	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
 	 *               caller's position in `tpp_lexer_foreach_include_path()`.
 	 * @return: * :         First non-TPP_ENOENT return value of `cb`
 	 * @return: TPP_ENOENT: File still not found
@@ -22661,9 +22673,9 @@ typedef struct tpp_hooks {
 
 	/* >> tpp_errno (TPPCALL *th_system_embed_path)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
 	 * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at different points
-	 * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
-	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
-	 *               caller's position in `tpp_lexer_foreach_include_path()`.
+	 * during the process of enumerating embed paths. (s.a. `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`)
+	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
+	 *               caller's position in `tpp_lexer_foreach_embed_path()`.
 	 * @return: * :         First non-TPP_ENOENT return value of `cb`
 	 * @return: TPP_ENOENT: File still not found
 	 * @return: TPP_EIO:    I/O error
@@ -22673,12 +22685,12 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
 	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config);
-	 * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
+	 * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
 	 * This hook can be used to define additional, user-defined escape sequences, or any other
 	 * arbitrary behavior to-be performed when specific escape-sequences are found.
 	 * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
 	 * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
-	 * it before returning
+	 * it before returning.
 	 * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
 	 *                 [out] First character no longer part of `\`-escape sequence (if recognized)
 	 *                 [out] Unchanged (if not recognized)
@@ -22706,10 +22718,10 @@ typedef struct tpp_hooks {
 	/* >> tpp_errno (TPPCALL *th_isfloatsuffix)(struct tpp_lexer *tpp_restrict self, tpp_char const *pos);
 	 * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
 	 * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
-	 * part of the float-token (in the form of a float-suffix), or if this is actually be
+	 * part of the float-token (in the form of a float-suffix), or if this should actually be
 	 * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
-	 * with `pos` pointing at the `f` (though additional characters thereafter may not be
-	 * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+	 * with `pos` pointing at the `f` (additional characters thereafter may not be loaded
+	 * yet, though can be loaded using `tpp_lexer_readchar()` and `tpp_lexer_readunichar()`)
 	 * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
 	 * @return: TPP_ENOENT: It's not a float suffix
 	 * @return: TPP_EIO:    I/O error
@@ -22720,7 +22732,7 @@ typedef struct tpp_hooks {
 } tpp_hooks;
 #endif /* TPP_HAVE_HOOKS */
 
-/* Called by `tpp_lexer_warnf()` to print warning messages
+/* Called by `tpp_lexer_warnf()` to print warning messages.
  * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
@@ -22800,7 +22812,7 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_warnhandler(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) */
 
-/* Used by `#pragma message` to print messages
+/* Used by `#pragma message` to print messages (see `TPP_HAVE_PRAGMA_MESSAGE`)
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
 #if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
@@ -22941,10 +22953,12 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_new_dependency(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
-/* Called whenever a file was just pushed onto the `#include`-stack
- * Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`
- * This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
- * WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+/* Called whenever a file was just pushed onto the `#include`-stack. Information
+ * about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`.
+ *
+ * Notes:
+ * - This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+ * - This hook is *NOT* called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
 #define tpp_hooks_call_file_pushed(self, lexer) \
 	((self)->TPP_INTERNAL(th_file_pushed) ? (*(self)->TPP_INTERNAL(th_file_pushed))(lexer) : TPP_EOK)
@@ -22969,10 +22983,14 @@ typedef struct tpp_hooks {
 
 /* Called whenever a file is about to be popped off the `#include`-stack
  * Information about the file that's about-to-be popped can be retrieved
- * by examining `tpp_lexer_getfile(self)`. Note that this hook is called
- * during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)
- * but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.
- * WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
+ * by examining `tpp_lexer_getfile(self)`.
+ *
+ * Notes:
+ * - When files are popped by `tpp_lexer_manualpopfile_popfile()` within a
+ *   `tpp_lexer_manualpopfile_start()`-region, this hook is called during the
+ *   *commit* phase (i.e.: by `tpp_lexer_manualpopfile_break_commit()`),
+ *   rather than `tpp_lexer_manualpopfile_popfile()` as one might suspect at first.
+ * - This hook is *NOT* called by `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
 #define tpp_hooks_call_file_popped(self, lexer) \
 	((self)->TPP_INTERNAL(th_file_popped) ? (*(self)->TPP_INTERNAL(th_file_popped))(lexer) : (void)0)
@@ -23176,7 +23194,7 @@ typedef struct tpp_hooks {
  * then allowed to enumerate some additional include paths that may exist, but
  * for one reason or another (mainly: speed) aren't known to TPP via its system
  * include path APIs (`tpp_lexer_includes_add*`)
- * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
  *               caller's position in `tpp_lexer_foreach_include_path()`.
  * @return: * :         First non-TPP_ENOENT return value of `cb`
  * @return: TPP_ENOENT: File still not found
@@ -23205,9 +23223,9 @@ typedef struct tpp_hooks {
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
 /* Extra callback invoked by `tpp_lexer_foreach_embed_path()` at different points
- * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
- * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
- *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * during the process of enumerating embed paths. (s.a. `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
+ *               caller's position in `tpp_lexer_foreach_embed_path()`.
  * @return: * :         First non-TPP_ENOENT return value of `cb`
  * @return: TPP_ENOENT: File still not found
  * @return: TPP_EIO:    I/O error
@@ -23234,12 +23252,12 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_system_embed_path(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
-/* Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
+/* Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
  * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
  * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
- * it before returning
+ * it before returning.
  * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
  *                 [out] First character no longer part of `\`-escape sequence (if recognized)
  *                 [out] Unchanged (if not recognized)
@@ -23301,10 +23319,10 @@ typedef struct tpp_hooks {
 
 /* Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
  * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
- * part of the float-token (in the form of a float-suffix), or if this is actually be
+ * part of the float-token (in the form of a float-suffix), or if this should actually be
  * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
- * with `pos` pointing at the `f` (though additional characters thereafter may not be
- * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+ * with `pos` pointing at the `f` (additional characters thereafter may not be loaded
+ * yet, though can be loaded using `tpp_lexer_readchar()` and `tpp_lexer_readunichar()`)
  * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
  * @return: TPP_ENOENT: It's not a float suffix
  * @return: TPP_EIO:    I/O error
@@ -23778,7 +23796,7 @@ typedef struct tpp_lexer {
 
 /* Invocation of hooks */
 /* >> TPP_FORMATPRINTER_DEFINE(tpp_lexer_callhook_warnprinter, arg, text, num_bytes);
- * Called by `tpp_lexer_warnf()` to print warning messages
+ * Called by `tpp_lexer_warnf()` to print warning messages.
  * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #define tpp_lexer_callhook_warnprinter(self, text, num_bytes) \
@@ -23812,7 +23830,7 @@ typedef struct tpp_lexer {
 #endif /* tpp_hooks_set_warnhandler */
 
 /* >> TPP_FORMATPRINTER_DEFINE(tpp_lexer_callhook_mesgprinter, arg, text, num_bytes);
- * Used by `#pragma message` to print messages
+ * Used by `#pragma message` to print messages (see `TPP_HAVE_PRAGMA_MESSAGE`)
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #define tpp_lexer_callhook_mesgprinter(self, text, num_bytes) \
 	tpp_hooks_call_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), self, text, num_bytes)
@@ -23881,10 +23899,12 @@ typedef struct tpp_lexer {
 #endif /* tpp_hooks_set_new_dependency */
 
 /* >> tpp_errno tpp_lexer_callhook_file_pushed(tpp_lexer *tpp_restrict self);
- * Called whenever a file was just pushed onto the `#include`-stack
- * Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`
- * This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
- * WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+ * Called whenever a file was just pushed onto the `#include`-stack. Information
+ * about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`.
+ *
+ * Notes:
+ * - This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+ * - This hook is *NOT* called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
 #define tpp_lexer_callhook_file_pushed(self) \
 	tpp_hooks_call_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self)
 #ifdef tpp_hooks_set_file_pushed
@@ -23896,10 +23916,14 @@ typedef struct tpp_lexer {
 /* >> void tpp_lexer_callhook_file_popped(tpp_lexer *tpp_restrict self);
  * Called whenever a file is about to be popped off the `#include`-stack
  * Information about the file that's about-to-be popped can be retrieved
- * by examining `tpp_lexer_getfile(self)`. Note that this hook is called
- * during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)
- * but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.
- * WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
+ * by examining `tpp_lexer_getfile(self)`.
+ *
+ * Notes:
+ * - When files are popped by `tpp_lexer_manualpopfile_popfile()` within a
+ *   `tpp_lexer_manualpopfile_start()`-region, this hook is called during the
+ *   *commit* phase (i.e.: by `tpp_lexer_manualpopfile_break_commit()`),
+ *   rather than `tpp_lexer_manualpopfile_popfile()` as one might suspect at first.
+ * - This hook is *NOT* called by `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
 #define tpp_lexer_callhook_file_popped(self) \
 	tpp_hooks_call_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self)
 #ifdef tpp_hooks_set_file_popped
@@ -24025,7 +24049,7 @@ typedef struct tpp_lexer {
  * then allowed to enumerate some additional include paths that may exist, but
  * for one reason or another (mainly: speed) aren't known to TPP via its system
  * include path APIs (`tpp_lexer_includes_add*`)
- * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
  *               caller's position in `tpp_lexer_foreach_include_path()`.
  * @return: * :         First non-TPP_ENOENT return value of `cb`
  * @return: TPP_ENOENT: File still not found
@@ -24041,9 +24065,9 @@ typedef struct tpp_lexer {
 
 /* >> tpp_errno tpp_lexer_callhook_system_embed_path(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at different points
- * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
- * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
- *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * during the process of enumerating embed paths. (s.a. `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
+ *               caller's position in `tpp_lexer_foreach_embed_path()`.
  * @return: * :         First non-TPP_ENOENT return value of `cb`
  * @return: TPP_ENOENT: File still not found
  * @return: TPP_EIO:    I/O error
@@ -24057,12 +24081,12 @@ typedef struct tpp_lexer {
 #endif /* tpp_hooks_set_system_embed_path */
 
 /* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
- * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
+ * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
  * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
  * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
- * it before returning
+ * it before returning.
  * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
  *                 [out] First character no longer part of `\`-escape sequence (if recognized)
  *                 [out] Unchanged (if not recognized)
@@ -24098,10 +24122,10 @@ typedef struct tpp_lexer {
 /* >> tpp_errno tpp_lexer_callhook_isfloatsuffix(tpp_lexer *tpp_restrict self, tpp_char const *pos);
  * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
  * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
- * part of the float-token (in the form of a float-suffix), or if this is actually be
+ * part of the float-token (in the form of a float-suffix), or if this should actually be
  * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
- * with `pos` pointing at the `f` (though additional characters thereafter may not be
- * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+ * with `pos` pointing at the `f` (additional characters thereafter may not be loaded
+ * yet, though can be loaded using `tpp_lexer_readchar()` and `tpp_lexer_readunichar()`)
  * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
  * @return: TPP_ENOENT: It's not a float suffix
  * @return: TPP_EIO:    I/O error

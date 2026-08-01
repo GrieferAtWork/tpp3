@@ -268,7 +268,7 @@ struct tpp_lexer_printf_info;
 #endif /* TPP_HAVE_WARNINGS */
 typedef struct tpp_hooks {
 	/* >> tpp_formatprinter th_warnprinter;
-	 * Called by `tpp_lexer_warnf()` to print warning messages
+	 * Called by `tpp_lexer_warnf()` to print warning messages.
 	 * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
 	 * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
@@ -300,7 +300,7 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) */
 
 	/* >> tpp_formatprinter th_mesgprinter;
-	 * Used by `#pragma message` to print messages
+	 * Used by `#pragma message` to print messages (see `TPP_HAVE_PRAGMA_MESSAGE`)
 	 * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
 #if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
@@ -359,10 +359,12 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_file_pushed)(struct tpp_lexer *tpp_restrict self);
-	 * Called whenever a file was just pushed onto the `#include`-stack
-	 * Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`
-	 * This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
-	 * WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+	 * Called whenever a file was just pushed onto the `#include`-stack. Information
+	 * about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`.
+	 *
+	 * Notes:
+	 * - This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+	 * - This hook is *NOT* called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_file_pushed))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) */
@@ -370,10 +372,14 @@ typedef struct tpp_hooks {
 	/* >> void (TPPCALL *th_file_popped)(struct tpp_lexer *tpp_restrict self);
 	 * Called whenever a file is about to be popped off the `#include`-stack
 	 * Information about the file that's about-to-be popped can be retrieved
-	 * by examining `tpp_lexer_getfile(self)`. Note that this hook is called
-	 * during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)
-	 * but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.
-	 * WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
+	 * by examining `tpp_lexer_getfile(self)`.
+	 *
+	 * Notes:
+	 * - When files are popped by `tpp_lexer_manualpopfile_popfile()` within a
+	 *   `tpp_lexer_manualpopfile_start()`-region, this hook is called during the
+	 *   *commit* phase (i.e.: by `tpp_lexer_manualpopfile_break_commit()`),
+	 *   rather than `tpp_lexer_manualpopfile_popfile()` as one might suspect at first.
+	 * - This hook is *NOT* called by `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
 	void (TPPCALL *TPP_INTERNAL(th_file_popped))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
@@ -475,7 +481,7 @@ typedef struct tpp_hooks {
 	 * then allowed to enumerate some additional include paths that may exist, but
 	 * for one reason or another (mainly: speed) aren't known to TPP via its system
 	 * include path APIs (`tpp_lexer_includes_add*`)
-	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
 	 *               caller's position in `tpp_lexer_foreach_include_path()`.
 	 * @return: * :         First non-TPP_ENOENT return value of `cb`
 	 * @return: TPP_ENOENT: File still not found
@@ -487,9 +493,9 @@ typedef struct tpp_hooks {
 
 	/* >> tpp_errno (TPPCALL *th_system_embed_path)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
 	 * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at different points
-	 * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
-	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
-	 *               caller's position in `tpp_lexer_foreach_include_path()`.
+	 * during the process of enumerating embed paths. (s.a. `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`)
+	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
+	 *               caller's position in `tpp_lexer_foreach_embed_path()`.
 	 * @return: * :         First non-TPP_ENOENT return value of `cb`
 	 * @return: TPP_ENOENT: File still not found
 	 * @return: TPP_EIO:    I/O error
@@ -499,12 +505,12 @@ typedef struct tpp_hooks {
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
 	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config);
-	 * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
+	 * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
 	 * This hook can be used to define additional, user-defined escape sequences, or any other
 	 * arbitrary behavior to-be performed when specific escape-sequences are found.
 	 * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
 	 * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
-	 * it before returning
+	 * it before returning.
 	 * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
 	 *                 [out] First character no longer part of `\`-escape sequence (if recognized)
 	 *                 [out] Unchanged (if not recognized)
@@ -532,10 +538,10 @@ typedef struct tpp_hooks {
 	/* >> tpp_errno (TPPCALL *th_isfloatsuffix)(struct tpp_lexer *tpp_restrict self, tpp_char const *pos);
 	 * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
 	 * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
-	 * part of the float-token (in the form of a float-suffix), or if this is actually be
+	 * part of the float-token (in the form of a float-suffix), or if this should actually be
 	 * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
-	 * with `pos` pointing at the `f` (though additional characters thereafter may not be
-	 * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+	 * with `pos` pointing at the `f` (additional characters thereafter may not be loaded
+	 * yet, though can be loaded using `tpp_lexer_readchar()` and `tpp_lexer_readunichar()`)
 	 * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
 	 * @return: TPP_ENOENT: It's not a float suffix
 	 * @return: TPP_EIO:    I/O error
@@ -546,7 +552,7 @@ typedef struct tpp_hooks {
 } tpp_hooks;
 #endif /* TPP_HAVE_HOOKS */
 
-/* Called by `tpp_lexer_warnf()` to print warning messages
+/* Called by `tpp_lexer_warnf()` to print warning messages.
  * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
@@ -626,7 +632,7 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_warnhandler(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) */
 
-/* Used by `#pragma message` to print messages
+/* Used by `#pragma message` to print messages (see `TPP_HAVE_PRAGMA_MESSAGE`)
  * @param: arg: The current lexer (`tpp_lexer *`) */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
 #if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
@@ -767,10 +773,12 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_new_dependency(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
-/* Called whenever a file was just pushed onto the `#include`-stack
- * Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`
- * This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
- * WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+/* Called whenever a file was just pushed onto the `#include`-stack. Information
+ * about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`.
+ *
+ * Notes:
+ * - This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+ * - This hook is *NOT* called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
 #define tpp_hooks_call_file_pushed(self, lexer) \
 	((self)->TPP_INTERNAL(th_file_pushed) ? (*(self)->TPP_INTERNAL(th_file_pushed))(lexer) : TPP_EOK)
@@ -795,10 +803,14 @@ typedef struct tpp_hooks {
 
 /* Called whenever a file is about to be popped off the `#include`-stack
  * Information about the file that's about-to-be popped can be retrieved
- * by examining `tpp_lexer_getfile(self)`. Note that this hook is called
- * during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)
- * but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.
- * WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
+ * by examining `tpp_lexer_getfile(self)`.
+ *
+ * Notes:
+ * - When files are popped by `tpp_lexer_manualpopfile_popfile()` within a
+ *   `tpp_lexer_manualpopfile_start()`-region, this hook is called during the
+ *   *commit* phase (i.e.: by `tpp_lexer_manualpopfile_break_commit()`),
+ *   rather than `tpp_lexer_manualpopfile_popfile()` as one might suspect at first.
+ * - This hook is *NOT* called by `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
 #define tpp_hooks_call_file_popped(self, lexer) \
 	((self)->TPP_INTERNAL(th_file_popped) ? (*(self)->TPP_INTERNAL(th_file_popped))(lexer) : (void)0)
@@ -1002,7 +1014,7 @@ typedef struct tpp_hooks {
  * then allowed to enumerate some additional include paths that may exist, but
  * for one reason or another (mainly: speed) aren't known to TPP via its system
  * include path APIs (`tpp_lexer_includes_add*`)
- * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
  *               caller's position in `tpp_lexer_foreach_include_path()`.
  * @return: * :         First non-TPP_ENOENT return value of `cb`
  * @return: TPP_ENOENT: File still not found
@@ -1031,9 +1043,9 @@ typedef struct tpp_hooks {
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
 /* Extra callback invoked by `tpp_lexer_foreach_embed_path()` at different points
- * during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
- * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`: describes the
- *               caller's position in `tpp_lexer_foreach_include_path()`.
+ * during the process of enumerating embed paths. (s.a. `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`)
+ * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
+ *               caller's position in `tpp_lexer_foreach_embed_path()`.
  * @return: * :         First non-TPP_ENOENT return value of `cb`
  * @return: TPP_ENOENT: File still not found
  * @return: TPP_EIO:    I/O error
@@ -1060,12 +1072,12 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_system_embed_path(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
-/* Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered
+/* Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
  * On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
  * if the hook was able to parse said escape sequence, it should update `*p_pos` to point after
- * it before returning
+ * it before returning.
  * @param: p_pos:  [in]  Pointer to start of unrecognized `\`-escape sequence
  *                 [out] First character no longer part of `\`-escape sequence (if recognized)
  *                 [out] Unchanged (if not recognized)
@@ -1127,10 +1139,10 @@ typedef struct tpp_hooks {
 
 /* Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
  * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
- * part of the float-token (in the form of a float-suffix), or if this is actually be
+ * part of the float-token (in the form of a float-suffix), or if this should actually be
  * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
- * with `pos` pointing at the `f` (though additional characters thereafter may not be
- * loaded yet, though can be loaded using `tpp_lexer_readchar()`)
+ * with `pos` pointing at the `f` (additional characters thereafter may not be loaded
+ * yet, though can be loaded using `tpp_lexer_readchar()` and `tpp_lexer_readunichar()`)
  * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
  * @return: TPP_ENOENT: It's not a float suffix
  * @return: TPP_EIO:    I/O error
