@@ -182,7 +182,6 @@ typedef struct tpp_lexer {
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 
 
-
 	/* Next value for `__COUNTER__` */
 #if TPP_HAVE_MACRO___COUNTER__
 	tpp_counter TPP_INTERNAL(tl_builtin_counter); /* Next value for `__COUNTER__` */
@@ -201,7 +200,7 @@ typedef struct tpp_lexer {
 
 
 	/* Seed for random-number generation (combined with `tpp_lexer_getinputhash()` before use).
-	 * Also combined with the final seed of I/O and TEXT files as those files are popped. */
+	 * Also combined with the final hash of I/O and TEXT files as those files are popped. */
 #if TPP_HAVE_LEXER_RAND
 	tpp_hash TPP_INTERNAL(tl_rngseed); /* Next RandomNumberGenerationSEED */
 #define tpp_lexer_getrngseed(self)    (self)->TPP_INTERNAL(tl_rngseed)
@@ -2582,39 +2581,41 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
                            tpp_formatprinter printer, void *arg,
                            unsigned int what);
 #if TPP_HAVE_CPP_MACROS
-#define TPP_LEXER_DUMP_DEFINITIONS_MACROS         0x0001 /* `#define foo bar` */
+#define TPP_LEXER_DUMP_DEFINITIONS_MACROS           0x0001 /* `#define foo bar` */
 #else /* TPP_HAVE_CPP_MACROS */
-#define TPP_LEXER_DUMP_DEFINITIONS_MACROS         0x0000 /* no-op */
+#define TPP_LEXER_DUMP_DEFINITIONS_MACROS           0x0000 /* no-op */
 #endif /* !TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
-#define TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS 0x0002 /* `#define __LINE__ <magic>`, `#define __TPP_VERSION__ 300` (yes: also prints *predefined* macros) */
+#define TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS   0x0002 /* `#define __LINE__ <magic>`, `#define __TPP_VERSION__ 300` (yes: also prints *predefined* macros) */
 #else /* TPP_HAVE_CPP_BUILTIN_MACROS */
-#define TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS 0x0000 /* no-op */
+#define TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS   0x0000 /* no-op */
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 #if TPP_HAVE_CPP_ASSERT
-#define TPP_LEXER_DUMP_DEFINITIONS_ASSERTS        0x0004 /* `#assert foo(bar)` */
+#define TPP_LEXER_DUMP_DEFINITIONS_ASSERTS          0x0004 /* `#assert foo(bar)` */
 #else /* TPP_HAVE_CPP_ASSERT */
-#define TPP_LEXER_DUMP_DEFINITIONS_ASSERTS        0x0000 /* no-op */
+#define TPP_LEXER_DUMP_DEFINITIONS_ASSERTS          0x0000 /* no-op */
 #endif /* !TPP_HAVE_CPP_ASSERT */
 #if TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
-/* TODO: Dump custom keyword-feature definitions */
-#endif /* TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
+#define TPP_LEXER_DUMP_DEFINITIONS_KEYWORD_FEATURES 0x0008 /* `#pragma TPP __has_feature(foo) = "123"` */
+#else /* TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
+#define TPP_LEXER_DUMP_DEFINITIONS_KEYWORD_FEATURES 0x0000 /* no-op */
+#endif /* !TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
-#define TPP_LEXER_DUMP_DEFINITIONS_EXTENSIONS     0x0008 /* `#pragma TPP extension("-ffoo")` -- Where different from default */
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTENSIONS       0x0010 /* `#pragma TPP extension("-ffoo")` -- Where different from default */
 #else /* TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION */
-#define TPP_LEXER_DUMP_DEFINITIONS_EXTENSIONS     0x0000 /* no-op */
+#define TPP_LEXER_DUMP_DEFINITIONS_EXTENSIONS       0x0000 /* no-op */
 #endif /* !TPP_HAVE_PRAGMA_EXTENSION && !TPP_HAVE_PRAGMA_TPP_EXTENSION */
 #if TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING
-#define TPP_LEXER_DUMP_DEFINITIONS_WARNINGS       0x0008 /* `#pragma TPP warning("-Wfoo")` -- Where different from default */
+#define TPP_LEXER_DUMP_DEFINITIONS_WARNINGS         0x0020 /* `#pragma TPP warning("-Wfoo")` -- Where different from default */
 #else /* TPP_HAVE_PRAGMA_WARNING || TPP_HAVE_PRAGMA_TPP_WARNING */
-#define TPP_LEXER_DUMP_DEFINITIONS_WARNINGS       0x0000 /* no-op */
+#define TPP_LEXER_DUMP_DEFINITIONS_WARNINGS         0x0000 /* no-op */
 #endif /* !TPP_HAVE_PRAGMA_WARNING && !TPP_HAVE_PRAGMA_TPP_WARNING */
 #if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
-#define TPP_LEXER_DUMP_DEFINITIONS_INCLUDES       0x0010 /* `#pragma TPP include_path("/usr/include")` */
+#define TPP_LEXER_DUMP_DEFINITIONS_INCLUDES         0x0040 /* `#pragma TPP include_path("/usr/include")` */
 #else /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
-#define TPP_LEXER_DUMP_DEFINITIONS_INCLUDES       0x0000 /* no-op */
+#define TPP_LEXER_DUMP_DEFINITIONS_INCLUDES         0x0000 /* no-op */
 #endif /* !TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
-#define TPP_LEXER_DUMP_DEFINITIONS_ALL            0x0fff
+#define TPP_LEXER_DUMP_DEFINITIONS_ALL              0x0fff
 
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED && (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT)
 #define TPP_LEXER_DUMP_DEFINITIONS_SORTED     0x1000 /* Sort macros/assertion-keys based on their name's first appearance */

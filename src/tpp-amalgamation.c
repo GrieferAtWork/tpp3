@@ -27540,7 +27540,12 @@ TPP_IMPL tpp_warnings_state const tpp_warnings_state_default = {
 #endif /* TPP_HAVE_WARNINGS */
 
 
-/* Define this macro as `tpp-amalgamation-builtins.inl` */
+/* This macro (`TPP_CONFIG_BUILTINS_FILENAME`) should be defined as `"defs-cache.inl"`
+ * for TPP to use your pre-generated cache of builtin definitions. For more info, see:
+ * - `/src/makecache.py`
+ * - `/samples/simple-with-cache/defs-cache.inl`
+ * - `/samples/simple-with-cache/Makefile`
+ */
 #ifdef TPP_CONFIG_BUILTINS_FILENAME
 #if TPP_SIZEOF_tpp_hash == 4
 #define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) UINT32_C(0x##hash_lo)
@@ -57448,7 +57453,7 @@ tpp_lexer_dumper_do_print_cstr(tpp_lexer_dumper *tpp_restrict self,
 	                                   text, num_bytes))
 #endif /* !tpp_lexer_dumper_do_print_cstr */
 
-#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH
+#if TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH || TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
 #if TPP_HAVE_TOKEN_ENCODESTRING
 static TPP_NONNULL((1, 2)) void TPPCALL
 tpp_lexer_dumper_do_print_escaped(tpp_lexer_dumper *tpp_restrict self,
@@ -57462,7 +57467,7 @@ tpp_lexer_dumper_do_print_escaped(tpp_lexer_dumper *tpp_restrict self,
 #define tpp_lexer_dumper_do_print_escaped(self, text, num_bytes) \
 	tpp_lexer_dumper_do_print(self, text, num_bytes)
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
-#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
+#endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH || TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
 
 
 #if TPP_HAVE_PRAGMA_EXTENSION
@@ -57723,7 +57728,53 @@ tpp_lexer_dumper_printasserts(tpp_lexer_dumper *tpp_restrict self,
 }
 #endif /* TPP_HAVE_CPP_ASSERT */
 
-#if TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT
+#if TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
+static TPP_NONNULL((1, 2, 3, 4)) void TPPCALL
+tpp_lexer_dumper_printfeature(tpp_lexer_dumper *tpp_restrict self,
+                              tpp_keyword const *tpp_restrict keyword, char const *name,
+                              tpp_keyword_feature const *tpp_restrict feature) {
+	tpp_string const *const expansion = feature->tkf_expansion;
+	if (expansion) {
+		tpp_lexer_dumper_do_print_conststr(self, "#pragma TPP ");
+		tpp_lexer_dumper_do_print_cstr(self, name, tpp_strlen(name));
+		tpp_lexer_dumper_do_print_conststr(self, "(");
+		tpp_lexer_dumper_do_print(self, tpp_keyword_getstr(keyword), tpp_keyword_getlen(keyword));
+		tpp_lexer_dumper_do_print_conststr(self, ") = \"");
+		tpp_lexer_dumper_do_print_escaped(self, tpp_string_str(expansion), tpp_string_len(expansion));
+		tpp_lexer_dumper_do_print_conststr(self, "\"\n");
+	}
+}
+
+static TPP_NONNULL((1, 2, 3)) void TPPCALL
+tpp_lexer_dumper_printfeatures(tpp_lexer_dumper *tpp_restrict self,
+                               tpp_keyword const *tpp_restrict keyword,
+                               tpp_keyword_features const *tpp_restrict features) {
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
+	tpp_lexer_dumper_printfeature(self, keyword, "__has_attribute", &features->tkfs_has_attribute);
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
+	tpp_lexer_dumper_printfeature(self, keyword, "__has_builtin", &features->tkfs_has_builtin);
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
+	tpp_lexer_dumper_printfeature(self, keyword, "__has_cpp_attribute", &features->tkfs_has_cpp_attribute);
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
+	tpp_lexer_dumper_printfeature(self, keyword, "__has_declspec_attribute", &features->tkfs_has_declspec_attribute);
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
+	tpp_lexer_dumper_printfeature(self, keyword, "__has_extension", &features->tkfs_has_extension);
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
+	tpp_lexer_dumper_printfeature(self, keyword, "__has_feature", &features->tkfs_has_feature);
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
+#if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
+	tpp_lexer_dumper_printfeature(self, keyword, "__has_c_attribute", &features->tkfs_has_c_attribute);
+#endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
+}
+#endif /* TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
+
+#if TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT || TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
+
 static TPP_NONNULL((1, 2)) void TPPCALL
 tpp_lexer_dumper_printkeyword(tpp_lexer_dumper *tpp_restrict self,
                               tpp_keyword const *tpp_restrict keyword) {
@@ -57741,6 +57792,13 @@ tpp_lexer_dumper_printkeyword(tpp_lexer_dumper *tpp_restrict self,
 			tpp_lexer_dumper_printasserts(self, keyword, &misc->tkm_assertions);
 	}
 #endif /* TPP_HAVE_CPP_ASSERT */
+#if TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
+	if (self->tld_what & TPP_LEXER_DUMP_DEFINITIONS_KEYWORD_FEATURES) {
+		tpp_keyword_misc const *misc = keyword->tk_misc;
+		if (misc && !tpp_lexer_dumper_haserr(self))
+			tpp_lexer_dumper_printfeatures(self, keyword, &misc->tkm_features);
+	}
+#endif /* TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
 }
 
 /* Find the keyword with the smallest token id that is ">= min_token_id" */
@@ -57796,7 +57854,7 @@ tpp_lexer_dumper_printkeywords(tpp_lexer_dumper *tpp_restrict self,
 		}
 	}
 }
-#endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT */
+#endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT || TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
 
 
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
@@ -58061,11 +58119,13 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 
 	/* Dump macros & assertions */
-#if TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT
-	if ((what & (TPP_LEXER_DUMP_DEFINITIONS_MACROS | TPP_LEXER_DUMP_DEFINITIONS_ASSERTS)) &&
+#if TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT || TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES
+	if ((what & (TPP_LEXER_DUMP_DEFINITIONS_MACROS |
+	             TPP_LEXER_DUMP_DEFINITIONS_ASSERTS |
+	             TPP_LEXER_DUMP_DEFINITIONS_KEYWORD_FEATURES)) &&
 	    !tpp_lexer_dumper_haserr(&dumper))
 		tpp_lexer_dumper_printkeywords(&dumper, &self->tl_kwds);
-#endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT */
+#endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_ASSERT || TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES */
 
 	/* Dump extensions */
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION

@@ -18,8 +18,8 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef USE_AMALGAMATION
-#define TPP_PROFILE TPP_PROFILE_ALL
-#define TPP_COMMON_HAVE_FEATURES 0
+#define TPP_PROFILE TPP_PROFILE_ALL /* Enable all features */
+#define TPP_COMMON_HAVE_FEATURES 0  /* Use extensions for everything */
 
 #include "tpp-amalgamation.c"
 #else /* USE_AMALGAMATION */
@@ -42,7 +42,6 @@ static TPP_FORMATPRINTER_DEFINE(dump_defs_printer, arg, text, num_bytes) {
 }
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
-/* TODO: Properly write this one out (with all the bells n' whistles of GCC's CPP) */
 int main(int argc, char **argv) {
 	int result    = 1;
 	char *appname = argv[0];
@@ -65,7 +64,7 @@ int main(int argc, char **argv) {
 		goto out_lexer_loader;
 	}
 
-	/* XXX: Support for CLI arguments that must be handled by front-end:
+	/* TODO: Support for CLI arguments that must be handled by front-end:
 	 * - "-o file", "--output file", "--output=file"
 	 *   No special handling needed in TPP backend
 	 *   Simply redirect what below stuff often calls "preprocessor output" to "file"

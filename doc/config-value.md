@@ -44,7 +44,7 @@ Default:
 
 ## TPP_CONFIG_CLI_FILENAME
 
-Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L24487)
+Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L24486)
 
 <details><summary>Details</summary>
 
@@ -148,7 +148,7 @@ Default:
 
 ## TPP_CONFIG_CLI_DEFAULT_SYSROOT
 
-The default value for `-isysroot path` (see [`TPP_HAVE_CLI_DASH_ISYSROOT`](config-cli.md#tpp_have_cli_dash_isysroot)) in [`tpp_cli_loader`](../src/tpp-amalgamation.h#L25948)
+The default value for `-isysroot path` (see [`TPP_HAVE_CLI_DASH_ISYSROOT`](config-cli.md#tpp_have_cli_dash_isysroot)) in [`tpp_cli_loader`](../src/tpp-amalgamation.h#L25949)
 
 <details><summary>Details</summary>
 

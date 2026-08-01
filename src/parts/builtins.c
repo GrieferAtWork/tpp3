@@ -263,7 +263,12 @@ TPP_IMPL tpp_warnings_state const tpp_warnings_state_default = {
 #endif /* TPP_HAVE_WARNINGS */
 
 
-/* Define this macro as `tpp-amalgamation-builtins.inl` */
+/* This macro (`TPP_CONFIG_BUILTINS_FILENAME`) should be defined as `"defs-cache.inl"`
+ * for TPP to use your pre-generated cache of builtin definitions. For more info, see:
+ * - `/src/makecache.py`
+ * - `/samples/simple-with-cache/defs-cache.inl`
+ * - `/samples/simple-with-cache/Makefile`
+ */
 #ifdef TPP_CONFIG_BUILTINS_FILENAME
 #if TPP_SIZEOF_tpp_hash == 4
 #define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) UINT32_C(0x##hash_lo)

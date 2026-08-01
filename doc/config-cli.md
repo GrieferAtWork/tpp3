@@ -5,14 +5,14 @@ In order to help you more easily create CLI frontends for TPP, there also exists
 <!--BEGIN:cli-->
 ## TPP_HAVE_CLI
 
-Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L25948), which can be used to configure a lexer
+Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L25949), which can be used to configure a lexer
 using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.
 
 This API is entirely optional: there's nothing it can do that can't already
 be done using some other C API; it's only there as a convenience to you.
 
 The CLI loader must be used on a lexer that has already been initialized
-itself (as per [`tpp_lexer_init()`](../src/tpp-amalgamation.h#L24116)), though whether or not the its initial
+itself (as per [`tpp_lexer_init()`](../src/tpp-amalgamation.h#L24115)), though whether or not the its initial
 file has already been initialized doesn't matter (the CLI loader will never
 make persistent modifications to a lexer's current file/token).
 
@@ -95,7 +95,7 @@ TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_DEFINE
 `-Umacro`, `-U macro`, `--undefine-macro=macro`, `--undefine-macro macro`:
 Delete a macro definition, the same way `#undef macro` would.
 
-Implementation makes use of: [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L24487) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L24495)
+Implementation makes use of: [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L24486) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L24494)
 
 <details><summary>Details</summary>
 
@@ -113,8 +113,8 @@ TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_DEFINE
 `--assert=-predicate[=answer]`, `--assert -predicate[=answer]`:
 Define or delete a preprocessor *"assertion"* (see [`TPP_HAVE_CPP_ASSERT`](config-conf.md#tpp_have_cpp_assert)).
 
-Implementation makes use of: [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L24511) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L24520) +
-                             [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L24527)
+Implementation makes use of: [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L24510) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L24519) +
+                             [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L24526)
 
 <details><summary>Details</summary>
 
