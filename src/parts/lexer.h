@@ -568,6 +568,34 @@ for (local doc, name,
 #define tpp_lexer_resethook_new_dependency(self)  tpp_hooks_reset_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_new_dependency */
 
+/* >> tpp_errno tpp_lexer_callhook_file_pushed(tpp_lexer *tpp_restrict self);
+ * Called whenever a file was just pushed onto the `#include`-stack
+ * Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`
+ * This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+ * WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+#define tpp_lexer_callhook_file_pushed(self) \
+	tpp_hooks_call_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self)
+#ifdef tpp_hooks_set_file_pushed
+#define tpp_lexer_gethook_file_pushed(self)    tpp_hooks_get_file_pushed(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_file_pushed(self, v) tpp_hooks_set_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_file_pushed(self)  tpp_hooks_reset_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_file_pushed */
+
+/* >> void tpp_lexer_callhook_file_popped(tpp_lexer *tpp_restrict self);
+ * Called whenever a file is about to be popped off the `#include`-stack
+ * Information about the file that's about-to-be popped can be retrieved
+ * by examining `tpp_lexer_getfile(self)`. Note that this hook is called
+ * during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)
+ * but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.
+ * WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
+#define tpp_lexer_callhook_file_popped(self) \
+	tpp_hooks_call_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self)
+#ifdef tpp_hooks_set_file_popped
+#define tpp_lexer_gethook_file_popped(self)    tpp_hooks_get_file_popped(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_file_popped(self, v) tpp_hooks_set_file_popped(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_file_popped(self)  tpp_hooks_reset_file_popped(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_file_popped */
+
 /* >> tpp_errno tpp_lexer_callhook_ident_sccs(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
  * Called to handle `#ident` and `#sccs` directives
  * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`

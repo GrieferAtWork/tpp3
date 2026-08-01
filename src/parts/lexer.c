@@ -494,7 +494,7 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_EOK;
+	return tpp_lexer_callhook_file_pushed(self);
 }
 #endif /* TPP_HAVE_LEXER_INIT_IO */
 
@@ -516,17 +516,16 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
-	tpp_file_move(prev_file, file);
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
-	if tpp_likely(!TPP_ISERR(error)) {
-		tpp_file_init_io_from_ofr(file, &ofr);
-		file->tf_prev  = prev_file;
-		file->tf_tprev = prev_file;
-	} else {
-		tpp_file_move(file, prev_file);
+	if (TPP_ISERR(error)) {
 		tpp_file_free(prev_file);
+		return error;
 	}
-	return TPP_EOK;
+	tpp_file_move(prev_file, file);
+	tpp_file_init_io_from_ofr(file, &ofr);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return tpp_lexer_callhook_file_pushed(self);
 }
 
 /* Push another file onto the `#include`-stack:
@@ -544,7 +543,7 @@ tpp_lexer_pushfile_ofr(tpp_lexer *tpp_restrict self,
 	tpp_file_init_io_from_ofr(file, ofr);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_EOK;
+	return tpp_lexer_callhook_file_pushed(self);
 }
 #endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
@@ -577,7 +576,7 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, flags, encoding);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_EOK;
+	return tpp_lexer_callhook_file_pushed(self);
 }
 
 
@@ -591,7 +590,9 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file *prev = file->tf_prev;
+	tpp_file *prev;
+	tpp_lexer_callhook_file_popped(self);
+	prev = file->tf_prev;
 	_tpp_lexer_addrngseed_from_file(self, file);
 	tpp_file_fini(file);
 	tpp_file_move(file, prev);
@@ -752,6 +753,30 @@ _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
 		file->tf_prev = last;
 	}
 }
+#if TPP_HAVE_FILE_POPPED_HOOK
+static TPP_NOINLINE TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_manualpopfile_callhook(tpp_lexer *self, tpp_file *file_to_pop) {
+	tpp_file *const lexer_file = tpp_lexer_getfile(self);
+	tpp_file *saved_prev, *saved_tprev;
+
+	/* Temporarily push "file_to_pop" onto the #include-stack (again),
+	 * and re-use its memory to represent the file that's going to be
+	 * kept on the #include-stack. */
+	tpp_swapmem(lexer_file, file_to_pop, sizeof(tpp_file));
+	saved_prev  = lexer_file->tf_prev;
+	saved_tprev = lexer_file->tf_tprev;
+	lexer_file->tf_prev  = file_to_pop;
+	lexer_file->tf_tprev = file_to_pop;
+#if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
+	(*self->tl_hooks.th_file_popped)(self);
+#else /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
+	tpp_lexer_callhook_file_popped(self);
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
+	lexer_file->tf_prev  = saved_prev;
+	lexer_file->tf_tprev = saved_tprev;
+	tpp_swapmem(lexer_file, file_to_pop, sizeof(tpp_file));
+}
+#endif /* TPP_HAVE_FILE_POPPED_HOOK */
 
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
@@ -761,6 +786,14 @@ _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
 		tpp_file *prev_prev;
 		tpp_assert(orig_prev);
 		prev_prev = orig_prev->tf_prev;
+#if TPP_HAVE_FILE_POPPED_HOOK
+#if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
+		if (self->tl_hooks.th_file_popped)
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
+		{
+			tpp_lexer_manualpopfile_callhook(self, orig_prev);
+		}
+#endif /* TPP_HAVE_FILE_POPPED_HOOK */
 		_tpp_lexer_addrngseed_from_file(self, orig_prev);
 		tpp_file_fini(orig_prev);
 		tpp_file_free(orig_prev);

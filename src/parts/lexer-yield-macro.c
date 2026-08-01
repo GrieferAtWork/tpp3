@@ -401,6 +401,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_buffer_printer, arg, text, num_bytes) {
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
                                 tpp_macro *tpp_restrict macro) {
+	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_keyword const *const macro_keyword = tpp_lexer_gettokenkwd(self);
@@ -500,7 +501,6 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			if (argc == 0 && macro_argc == 1) {
 				/* This is something the standard explicitly allows (see `test/stdc-6.10.3.5_5.h`) */
 			} else {
-				tpp_errno error;
 				error = tpp_lexer_warnf(self, TPP_W_TOO_FEW_ARGUMENTS,
 				                        (char const *)macro_keyword->tk_kwd,
 				                        (unsigned int)macro_argc,
@@ -542,7 +542,6 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			tpp_macro_argument const *arg = &macro->tm_data.tmd_func.tmf_argv[i];
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[i];
 			if (arg->tma_ins_exp) {
-				tpp_errno error;
 				tpp_macro_expinfo *expand = &invoke_expinfo[i];
 				tpp_file_subtext_setchunk_fromarg(file, arginfo);
 				error = tpp_macro_expinfo_init(expand, arginfo, self, macro);
@@ -771,8 +770,8 @@ handle_duplicate_chunk:
 			/* Emit a warning and disallow expansion if the
 			 * macro's recursion limit has been exceeded */
 #if TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
-			tpp_errno error = tpp_lexer_warnf(self, TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED,
-			                                  macro_keyword, macro);
+			error = tpp_lexer_warnf(self, TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED,
+			                        macro_keyword, macro);
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
 				goto err_tok_macro_result_chunk_argbuf_rollback;
@@ -816,7 +815,8 @@ err_tok_macro_result_chunk_argbuf_rollback:
 #if TPP_HAVE_FILE_MACRO_TRACKARGS
 	file->tf_data.td_macro.tfm_args = invoke_arginfo;
 #endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
-	return TPP_TOK_EOF;
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 #if TPP_HAVE_MACRO_RECURSION
 done_rollback:
 	tpp_lexer_alltokens_break(self);
@@ -875,6 +875,7 @@ err_tok:
 TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
                        tpp_macro *tpp_restrict macro) {
+	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev_file;
 	if (TPP_MACRO_KIND_ISFUNC(macro->tm_kind))
@@ -895,7 +896,8 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
 	                     macro->tm_body_chunk, /* Inherit reference */
 	                     macro->tm_body_start,
 	                     macro->tm_body_end);
-	return TPP_TOK_EOF;
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 err_nomem:
 	return TPP_TOK_ENOMEM;
 }

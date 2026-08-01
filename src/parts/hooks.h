@@ -224,6 +224,8 @@ print(")");
      TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) ||             \
      TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) ||        \
      TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) ||        \
+     TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) ||           \
+     TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) ||           \
      TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) ||            \
      TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) ||   \
      TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) ||     \
@@ -332,6 +334,26 @@ typedef struct tpp_hooks {
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_new_dependency))(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_file_pushed)(struct tpp_lexer *tpp_restrict self);
+	 * Called whenever a file was just pushed onto the `#include`-stack
+	 * Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`
+	 * This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+	 * WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+#if TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_file_pushed))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) */
+
+	/* >> void (TPPCALL *th_file_popped)(struct tpp_lexer *tpp_restrict self);
+	 * Called whenever a file is about to be popped off the `#include`-stack
+	 * Information about the file that's about-to-be popped can be retrieved
+	 * by examining `tpp_lexer_getfile(self)`. Note that this hook is called
+	 * during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)
+	 * but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.
+	 * WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
+#if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
+	void (TPPCALL *TPP_INTERNAL(th_file_popped))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_ident_sccs)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
 	 * Called to handle `#ident` and `#sccs` directives
@@ -647,6 +669,60 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_new_dependency(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
+/* Called whenever a file was just pushed onto the `#include`-stack
+ * Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`
+ * This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+ * WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+#if TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
+#define tpp_hooks_call_file_pushed(self, lexer) \
+	((self)->TPP_INTERNAL(th_file_pushed) ? (*(self)->TPP_INTERNAL(th_file_pushed))(lexer) : TPP_EOK)
+#define tpp_hooks_get_file_pushed(self)    (self)->TPP_INTERNAL(th_file_pushed)
+#define tpp_hooks_set_file_pushed(self, v) (void)((self)->TPP_INTERNAL(th_file_pushed) = (v))
+#define tpp_hooks_reset_file_pushed(self)  (void)((self)->TPP_INTERNAL(th_file_pushed) = _TPP_HOOKS_DEFAULT_FILE_PUSHED)
+#define _tpp_hooks_init_file_pushed(self)  , (self)->TPP_INTERNAL(th_file_pushed) = _TPP_HOOKS_DEFAULT_FILE_PUSHED
+#if TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_FILE_PUSHED)
+#define _TPP_HOOKS_DEFAULT_FILE_PUSHED (&TPP_HOOK_FILE_PUSHED)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_FILE_PUSHED NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) */
+#if TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_file_pushed(self, lexer) \
+	TPP_HOOK_FILE_PUSHED(lexer)
+#else /*  */
+#define tpp_hooks_call_file_pushed(self, lexer) TPP_EOK
+#endif /* ... */
+#define _tpp_hooks_init_file_pushed(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) */
+
+/* Called whenever a file is about to be popped off the `#include`-stack
+ * Information about the file that's about-to-be popped can be retrieved
+ * by examining `tpp_lexer_getfile(self)`. Note that this hook is called
+ * during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)
+ * but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.
+ * WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
+#if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
+#define tpp_hooks_call_file_popped(self, lexer) \
+	((self)->TPP_INTERNAL(th_file_popped) ? (*(self)->TPP_INTERNAL(th_file_popped))(lexer) : (void)0)
+#define tpp_hooks_get_file_popped(self)    (self)->TPP_INTERNAL(th_file_popped)
+#define tpp_hooks_set_file_popped(self, v) (void)((self)->TPP_INTERNAL(th_file_popped) = (v))
+#define tpp_hooks_reset_file_popped(self)  (void)((self)->TPP_INTERNAL(th_file_popped) = _TPP_HOOKS_DEFAULT_FILE_POPPED)
+#define _tpp_hooks_init_file_popped(self)  , (self)->TPP_INTERNAL(th_file_popped) = _TPP_HOOKS_DEFAULT_FILE_POPPED
+#if TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_FILE_POPPED)
+#define _TPP_HOOKS_DEFAULT_FILE_POPPED (&TPP_HOOK_FILE_POPPED)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_FILE_POPPED NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
+#if TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_file_popped(self, lexer) \
+	TPP_HOOK_FILE_POPPED(lexer)
+#else /*  */
+#define tpp_hooks_call_file_popped(self, lexer) (void)0
+#endif /* ... */
+#define _tpp_hooks_init_file_popped(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
+
 /* Called to handle `#ident` and `#sccs` directives
  * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
  * @param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d
@@ -848,6 +924,8 @@ typedef struct tpp_hooks {
 	       _tpp_hooks_init_parseexpr(self) \
 	       _tpp_hooks_init_unknown_pragma(self) \
 	       _tpp_hooks_init_new_dependency(self) \
+	       _tpp_hooks_init_file_pushed(self) \
+	       _tpp_hooks_init_file_popped(self) \
 	       _tpp_hooks_init_ident_sccs(self) \
 	       _tpp_hooks_init_system_include_path(self) \
 	       _tpp_hooks_init_system_embed_path(self) \

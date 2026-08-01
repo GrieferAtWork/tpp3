@@ -3067,6 +3067,54 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP || __OPTIMIZE_SIZE__ */
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE */
 
+/* Enable support for `TPP_FILE_KIND_SUBTEXT` */
+#ifndef TPP_HAVE_FILE_SUBTEXT
+#if (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_EMBED || \
+     TPP_HAVE_MACRO__Pragma ||                    \
+     TPP_HAVE_MACRO___pragma ||                   \
+     TPP_HAVE_MACRO___TPP_IDENTIFIER ||           \
+     TPP_HAVE_MACRO___TPP_STR_DECOMPILE ||        \
+     TPP_HAVE_MACRO___TPP_STR_PACK ||             \
+     TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
+     TPP_HAVE_PRAGMA_TPP_EXEC ||                  \
+     TPP_HAVE_PRAGMA_TPP_TPP_EXEC)
+#define TPP_HAVE_FILE_SUBTEXT 1
+#else /* ... */
+#define TPP_HAVE_FILE_SUBTEXT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_SUBTEXT */
+
+/* Enable support for `TPP_FILE_KIND_DUMMY`, which is
+ * needed to support gcc's `# <linenum>` -> `1`/`2` flags
+ *
+ * These flags push so-called *dummy* files onto the
+ * `#include`-stack (without altering the actual current
+ * file), with those dummy files acting as additional
+ * entries for `#include` tracebacks. */
+#ifndef TPP_HAVE_FILE_DUMMY
+#if TPP_HAVE_CPP_DIGIT_LINE
+#define TPP_HAVE_FILE_DUMMY 1
+#else /* ... */
+#define TPP_HAVE_FILE_DUMMY 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_DUMMY */
+
+/* Enable API support for having an `#include`-stack. Despite the name,
+ * this is also needed for macro expansion (see `TPP_HAVE_CPP_MACROS`) */
+#ifndef TPP_HAVE_INCLUDE_STACK
+#if (TPP_HAVE_CPP_MACROS ||       \
+     TPP_HAVE_CPP_INCLUDE ||      \
+     TPP_HAVE_CPP_INCLUDE_NEXT || \
+     TPP_HAVE_CPP_IMPORT ||       \
+     TPP_HAVE_CPP_EMBED ||        \
+     TPP_HAVE_FILE_SUBTEXT ||     \
+     TPP_HAVE_FILE_DUMMY)
+#define TPP_HAVE_INCLUDE_STACK 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_STACK 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_STACK */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -3095,13 +3143,25 @@ print("#endif /" "* !... *" "/");
 
 /* Default configuration specifying how required hooks should be linked. */
 #ifndef TPP_HOOK_DEFAULT_BUILTIN
-#define TPP_HOOK_DEFAULT_BUILTIN (TPP_HAVE_PROFILE_ALL ? TPP_HOOK_RT_BUILTIN : TPP_HOOK_CONST_BUILTIN)
+#if TPP_HAVE_PROFILE_ALL
+#define TPP_HOOK_DEFAULT_BUILTIN TPP_HOOK_RT_BUILTIN
+#else /* ... */
+#define TPP_HOOK_DEFAULT_BUILTIN TPP_HOOK_CONST_BUILTIN
+#endif /* !... */
 #endif /* !TPP_HOOK_DEFAULT_BUILTIN */
 #ifndef TPP_HOOK_DEFAULT_USER
-#define TPP_HOOK_DEFAULT_USER (TPP_HAVE_PROFILE_ALL ? TPP_HOOK_RT_USER : TPP_HOOK_CONST_USER)
+#if TPP_HAVE_PROFILE_ALL
+#define TPP_HOOK_DEFAULT_USER TPP_HOOK_RT_USER
+#else /* ... */
+#define TPP_HOOK_DEFAULT_USER TPP_HOOK_CONST_USER
+#endif /* !... */
 #endif /* !TPP_HOOK_DEFAULT_USER */
 #ifndef TPP_HOOK_DEFAULT_NOOP
-#define TPP_HOOK_DEFAULT_NOOP (TPP_HAVE_PROFILE_ALL ? TPP_HOOK_RT_NOOP : TPP_HOOK_DISABLED)
+#if TPP_HAVE_PROFILE_ALL
+#define TPP_HOOK_DEFAULT_NOOP TPP_HOOK_RT_NOOP
+#else /* ... */
+#define TPP_HOOK_DEFAULT_NOOP TPP_HOOK_DISABLED
+#endif /* !... */
 #endif /* !TPP_HOOK_DEFAULT_NOOP */
 
 
@@ -3211,6 +3271,32 @@ local HOOKS = {
 		"", // No builtin default
 		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd)", { "lexer", "filename_kwd" },
 		"TPP_EOK"
+	},
+
+	{
+		"Called whenever a file was just pushed onto the `#include`-stack\n" +
+		"Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`\n" +
+		"This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.\n" +
+		"WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()`",
+		"FILE_PUSHED",
+		"(TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK)",
+		"", // No builtin default
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self)", { "lexer" },
+		"TPP_EOK"
+	},
+
+	{
+		"Called whenever a file is about to be popped off the `#include`-stack\n" +
+		"Information about the file that's about-to-be popped can be retrieved\n" +
+		"by examining `tpp_lexer_getfile(self)`. Note that this hook is called\n" +
+		"during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)\n"+
+		"but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.\n" +
+		"WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()`",
+		"FILE_POPPED",
+		"(TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK)",
+		"", // No builtin default
+		"void (TPPCALL *", ")(tpp_lexer *tpp_restrict self)", { "lexer" },
+		"(void)0"
 	},
 
 	{
@@ -3591,6 +3677,78 @@ for (local doc, name,
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_NEW_DEPENDENCY) && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_NEW_DEPENDENCY' is defined, but 'TPP_HAVE_NEW_DEPENDENCY_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_NEW_DEPENDENCY && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_FILE_PUSHED(tpp_lexer *tpp_restrict self);
+ * Called whenever a file was just pushed onto the `#include`-stack
+ * Information about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`
+ * This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+ * WARNING: *NOT* Called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+#ifndef TPP_HAVE_FILE_PUSHED_HOOK
+#ifdef TPP_HOOK_FILE_PUSHED
+#define TPP_HAVE_FILE_PUSHED_HOOK ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_FILE_PUSHED */
+#define TPP_HAVE_FILE_PUSHED_HOOK ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_FILE_PUSHED */
+#endif /* !TPP_HAVE_FILE_PUSHED_HOOK */
+#if TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_FILE_PUSHED)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_FILE_PUSHED_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_FILE_PUSHED' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_FILE_PUSHED_HOOK
+#define TPP_HAVE_FILE_PUSHED_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_FILE_PUSHED)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_FILE_PUSHED_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_FILE_PUSHED' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_FILE_PUSHED_HOOK
+#define TPP_HAVE_FILE_PUSHED_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_FILE_PUSHED_HOOK /* There is no builtin version */
+#define TPP_HAVE_FILE_PUSHED_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_FILE_PUSHED_HOOK /* There is no builtin version */
+#define TPP_HAVE_FILE_PUSHED_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_FILE_PUSHED) && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_PUSHED_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_FILE_PUSHED' is defined, but 'TPP_HAVE_FILE_PUSHED_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_FILE_PUSHED && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_PUSHED_HOOK) */
+
+/* >> void TPP_HOOK_FILE_POPPED(tpp_lexer *tpp_restrict self);
+ * Called whenever a file is about to be popped off the `#include`-stack
+ * Information about the file that's about-to-be popped can be retrieved
+ * by examining `tpp_lexer_getfile(self)`. Note that this hook is called
+ * during the file-pop *commit* phase (`tpp_lexer_manualpopfile_break_commit()`)
+ * but is *NOT* called by `tpp_lexer_manualpopfile_popfile()`.
+ * WARNING: *NOT* Called for `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
+#ifndef TPP_HAVE_FILE_POPPED_HOOK
+#ifdef TPP_HOOK_FILE_POPPED
+#define TPP_HAVE_FILE_POPPED_HOOK ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_FILE_POPPED */
+#define TPP_HAVE_FILE_POPPED_HOOK ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_FILE_POPPED */
+#endif /* !TPP_HAVE_FILE_POPPED_HOOK */
+#if TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_FILE_POPPED)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_FILE_POPPED_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_FILE_POPPED' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_FILE_POPPED_HOOK
+#define TPP_HAVE_FILE_POPPED_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_FILE_POPPED)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_FILE_POPPED_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_FILE_POPPED' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_FILE_POPPED_HOOK
+#define TPP_HAVE_FILE_POPPED_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_FILE_POPPED_HOOK /* There is no builtin version */
+#define TPP_HAVE_FILE_POPPED_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_FILE_POPPED_HOOK /* There is no builtin version */
+#define TPP_HAVE_FILE_POPPED_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_FILE_POPPED) && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_POPPED_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_FILE_POPPED' is defined, but 'TPP_HAVE_FILE_POPPED_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_FILE_POPPED && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_POPPED_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_IDENT_SCCS(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
  * Called to handle `#ident` and `#sccs` directives
@@ -5276,38 +5434,6 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_FILE_SYSHDR */
 
-/* Enable support for `TPP_FILE_KIND_SUBTEXT` */
-#ifndef TPP_HAVE_FILE_SUBTEXT
-#if (TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_EMBED || \
-     TPP_HAVE_MACRO__Pragma ||                    \
-     TPP_HAVE_MACRO___pragma ||                   \
-     TPP_HAVE_MACRO___TPP_IDENTIFIER ||           \
-     TPP_HAVE_MACRO___TPP_STR_DECOMPILE ||        \
-     TPP_HAVE_MACRO___TPP_STR_PACK ||             \
-     TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
-     TPP_HAVE_PRAGMA_TPP_EXEC ||                  \
-     TPP_HAVE_PRAGMA_TPP_TPP_EXEC)
-#define TPP_HAVE_FILE_SUBTEXT 1
-#else /* ... */
-#define TPP_HAVE_FILE_SUBTEXT 0
-#endif /* !... */
-#endif /* !TPP_HAVE_FILE_SUBTEXT */
-
-/* Enable support for `TPP_FILE_KIND_DUMMY`, which is
- * needed to support gcc's `# <linenum>` -> `1`/`2` flags
- *
- * These flags push so-called *dummy* files onto the
- * `#include`-stack (without altering the actual current
- * file), with those dummy files acting as additional
- * entries for `#include` tracebacks. */
-#ifndef TPP_HAVE_FILE_DUMMY
-#if TPP_HAVE_CPP_DIGIT_LINE
-#define TPP_HAVE_FILE_DUMMY 1
-#else /* ... */
-#define TPP_HAVE_FILE_DUMMY 0
-#endif /* !... */
-#endif /* !TPP_HAVE_FILE_DUMMY */
-
 /* Enable support for `TPP_FILE_FLAGS_EXTERN_C` */
 #ifndef TPP_HAVE_FILE_EXTERN_C
 #if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_DIGIT_LINE)
@@ -5322,22 +5448,6 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_EXTERN_C_FOR_SYSHDR
 #define TPP_HAVE_EXTERN_C_FOR_SYSHDR ((TPP_HAVE_FILE_SYSHDR && TPP_HAVE_FILE_EXTERN_C) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT0 : TPP_COMMON_CONF_FEAT0) : 0) /* "-fextern-c-for-syshdr" */
 #endif /* !TPP_HAVE_EXTERN_C_FOR_SYSHDR */
-
-/* Enable API support for having an `#include`-stack. Despite the name,
- * this is also needed for macro expansion (see `TPP_HAVE_CPP_MACROS`) */
-#ifndef TPP_HAVE_INCLUDE_STACK
-#if (TPP_HAVE_CPP_MACROS ||       \
-     TPP_HAVE_CPP_INCLUDE ||      \
-     TPP_HAVE_CPP_INCLUDE_NEXT || \
-     TPP_HAVE_CPP_IMPORT ||       \
-     TPP_HAVE_CPP_EMBED ||        \
-     TPP_HAVE_FILE_SUBTEXT ||     \
-     TPP_HAVE_FILE_DUMMY)
-#define TPP_HAVE_INCLUDE_STACK 1
-#else /* ... */
-#define TPP_HAVE_INCLUDE_STACK 0
-#endif /* !... */
-#endif /* !TPP_HAVE_INCLUDE_STACK */
 
 /* Support for: custom string list describing the available
  * `-I/usr/include`-style -> `#include <foo.h>`-paths */

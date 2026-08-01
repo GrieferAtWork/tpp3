@@ -1504,7 +1504,9 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 	                    ofr.tlofr_handle, TPP_FILE_FLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_TOK_EOF; /* Continue parsing in newly pushed file */
+	/* Continue parsing in newly pushed file */
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 }
 #endif /* TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT */
 /************************************************************************/
@@ -1870,6 +1872,7 @@ again:
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
                                     tpp_lexer *tpp_restrict lexer) {
+	tpp_errno error;
 	tpp_string_builder embed_data;
 	tpp_token_id result;
 	tpp_ssize ofr_read_status;
@@ -1943,6 +1946,13 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		file->tf_pos   = self->teb_suffix.tlai_start;
 		file->tf_end   = self->teb_suffix.tlai_end;
 		self->teb_suffix.tlai_chunk = NULL;
+#if TPP_HAVE_FILE_PUSHED_HOOK
+		error = tpp_lexer_callhook_file_pushed(lexer);
+		if (TPP_ISERR(error)) {
+			result = TPP_TOK_OFERR(error);
+			goto return_result_and_fini;
+		}
+#endif /* TPP_HAVE_FILE_PUSHED_HOOK */
 	}
 
 	/* Construct the (possibly only head)-data for the embedded file itself. */
@@ -1966,9 +1976,9 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	/* Convert remainder of embedded file into a byte-sequence */
 #if !TPP_HAVE_FILE_ENCODING_EMBED
 	{
-		tpp_errno error = tpp_string_builder_append_embed(&embed_data,
-		                                                  self->teb_ofr.tlofr_handle,
-		                                                  self->teb_limit);
+		error = tpp_string_builder_append_embed(&embed_data,
+		                                        self->teb_ofr.tlofr_handle,
+		                                        self->teb_limit);
 		if (TPP_ISERR(error)) {
 			result = TPP_TOK_OFERR(error);
 			tpp_string_builder_fini(&embed_data);
@@ -2007,7 +2017,8 @@ done_inherit_io_handle:
 	file->tf_tprev = prev_file;
 	tpp_embed_builder_fini(self);
 #endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
-	return TPP_TOK_EOF;
+	error = tpp_lexer_callhook_file_pushed(lexer);
+	return TPP_TOK_OFERR_OR_EOF(error);
 return_empty_file:
 	if (self->teb_if_empty.tlai_start < self->teb_if_empty.tlai_end) {
 		/* Return a sub-text file containing the if-empty text */
@@ -2024,6 +2035,13 @@ return_empty_file:
 		file->tf_pos   = self->teb_if_empty.tlai_start;
 		file->tf_end   = self->teb_if_empty.tlai_end;
 		self->teb_if_empty.tlai_chunk = NULL;
+#if TPP_HAVE_FILE_PUSHED_HOOK
+		error = tpp_lexer_callhook_file_pushed(lexer);
+		if (TPP_ISERR(error)) {
+			result = TPP_TOK_OFERR(error);
+			goto return_result_and_fini;
+		}
+#endif /* TPP_HAVE_FILE_PUSHED_HOOK */
 	}
 	result = TPP_TOK_EOF;
 return_result_and_fini:

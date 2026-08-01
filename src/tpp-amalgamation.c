@@ -670,6 +670,8 @@
 #define th_parseexpr                                       TPP_INTERNAL(th_parseexpr)
 #define th_unknown_pragma                                  TPP_INTERNAL(th_unknown_pragma)
 #define th_new_dependency                                  TPP_INTERNAL(th_new_dependency)
+#define th_file_pushed                                     TPP_INTERNAL(th_file_pushed)
+#define th_file_popped                                     TPP_INTERNAL(th_file_popped)
 #define th_ident_sccs                                      TPP_INTERNAL(th_ident_sccs)
 #define th_system_include_path                             TPP_INTERNAL(th_system_include_path)
 #define th_system_embed_path                               TPP_INTERNAL(th_system_embed_path)
@@ -31898,7 +31900,7 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	tpp_file_init_io_ex(file, filename, handle, ioflags);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_EOK;
+	return tpp_lexer_callhook_file_pushed(self);
 }
 #endif /* TPP_HAVE_LEXER_INIT_IO */
 
@@ -31920,17 +31922,16 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
-	tpp_file_move(prev_file, file);
 	error = tpp_lexer_openfile(self, NULL, filename, filename_maxlen, &ofr);
-	if tpp_likely(!TPP_ISERR(error)) {
-		tpp_file_init_io_from_ofr(file, &ofr);
-		file->tf_prev  = prev_file;
-		file->tf_tprev = prev_file;
-	} else {
-		tpp_file_move(file, prev_file);
+	if (TPP_ISERR(error)) {
 		tpp_file_free(prev_file);
+		return error;
 	}
-	return TPP_EOK;
+	tpp_file_move(prev_file, file);
+	tpp_file_init_io_from_ofr(file, &ofr);
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return tpp_lexer_callhook_file_pushed(self);
 }
 
 /* Push another file onto the `#include`-stack:
@@ -31948,7 +31949,7 @@ tpp_lexer_pushfile_ofr(tpp_lexer *tpp_restrict self,
 	tpp_file_init_io_from_ofr(file, ofr);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_EOK;
+	return tpp_lexer_callhook_file_pushed(self);
 }
 #endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
@@ -31981,7 +31982,7 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, flags, encoding);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_EOK;
+	return tpp_lexer_callhook_file_pushed(self);
 }
 
 
@@ -31995,7 +31996,9 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file *prev = file->tf_prev;
+	tpp_file *prev;
+	tpp_lexer_callhook_file_popped(self);
+	prev = file->tf_prev;
 	_tpp_lexer_addrngseed_from_file(self, file);
 	tpp_file_fini(file);
 	tpp_file_move(file, prev);
@@ -32156,6 +32159,30 @@ _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
 		file->tf_prev = last;
 	}
 }
+#if TPP_HAVE_FILE_POPPED_HOOK
+static TPP_NOINLINE TPP_NONNULL((1, 2)) void TPPCALL
+tpp_lexer_manualpopfile_callhook(tpp_lexer *self, tpp_file *file_to_pop) {
+	tpp_file *const lexer_file = tpp_lexer_getfile(self);
+	tpp_file *saved_prev, *saved_tprev;
+
+	/* Temporarily push "file_to_pop" onto the #include-stack (again),
+	 * and re-use its memory to represent the file that's going to be
+	 * kept on the #include-stack. */
+	tpp_swapmem(lexer_file, file_to_pop, sizeof(tpp_file));
+	saved_prev  = lexer_file->tf_prev;
+	saved_tprev = lexer_file->tf_tprev;
+	lexer_file->tf_prev  = file_to_pop;
+	lexer_file->tf_tprev = file_to_pop;
+#if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
+	(*self->tl_hooks.th_file_popped)(self);
+#else /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
+	tpp_lexer_callhook_file_popped(self);
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
+	lexer_file->tf_prev  = saved_prev;
+	lexer_file->tf_tprev = saved_tprev;
+	tpp_swapmem(lexer_file, file_to_pop, sizeof(tpp_file));
+}
+#endif /* TPP_HAVE_FILE_POPPED_HOOK */
 
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
@@ -32165,6 +32192,14 @@ _tpp_lexer_manualpopfile_break_commit(tpp_lexer *tpp_restrict self,
 		tpp_file *prev_prev;
 		tpp_assert(orig_prev);
 		prev_prev = orig_prev->tf_prev;
+#if TPP_HAVE_FILE_POPPED_HOOK
+#if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
+		if (self->tl_hooks.th_file_popped)
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
+		{
+			tpp_lexer_manualpopfile_callhook(self, orig_prev);
+		}
+#endif /* TPP_HAVE_FILE_POPPED_HOOK */
 		_tpp_lexer_addrngseed_from_file(self, orig_prev);
 		tpp_file_fini(orig_prev);
 		tpp_file_free(orig_prev);
@@ -46875,7 +46910,9 @@ tpp_lexer_handle_include_directive(tpp_lexer *tpp_restrict self,
 	                    ofr.tlofr_handle, TPP_FILE_FLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_TOK_EOF; /* Continue parsing in newly pushed file */
+	/* Continue parsing in newly pushed file */
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 }
 #endif /* TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT */
 /************************************************************************/
@@ -47241,6 +47278,7 @@ again:
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
                                     tpp_lexer *tpp_restrict lexer) {
+	tpp_errno error;
 	tpp_string_builder embed_data;
 	tpp_token_id result;
 	tpp_ssize ofr_read_status;
@@ -47314,6 +47352,13 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		file->tf_pos   = self->teb_suffix.tlai_start;
 		file->tf_end   = self->teb_suffix.tlai_end;
 		self->teb_suffix.tlai_chunk = NULL;
+#if TPP_HAVE_FILE_PUSHED_HOOK
+		error = tpp_lexer_callhook_file_pushed(lexer);
+		if (TPP_ISERR(error)) {
+			result = TPP_TOK_OFERR(error);
+			goto return_result_and_fini;
+		}
+#endif /* TPP_HAVE_FILE_PUSHED_HOOK */
 	}
 
 	/* Construct the (possibly only head)-data for the embedded file itself. */
@@ -47337,9 +47382,9 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	/* Convert remainder of embedded file into a byte-sequence */
 #if !TPP_HAVE_FILE_ENCODING_EMBED
 	{
-		tpp_errno error = tpp_string_builder_append_embed(&embed_data,
-		                                                  self->teb_ofr.tlofr_handle,
-		                                                  self->teb_limit);
+		error = tpp_string_builder_append_embed(&embed_data,
+		                                        self->teb_ofr.tlofr_handle,
+		                                        self->teb_limit);
 		if (TPP_ISERR(error)) {
 			result = TPP_TOK_OFERR(error);
 			tpp_string_builder_fini(&embed_data);
@@ -47378,7 +47423,8 @@ done_inherit_io_handle:
 	file->tf_tprev = prev_file;
 	tpp_embed_builder_fini(self);
 #endif /* !TPP_HAVE_FILE_ENCODING_EMBED */
-	return TPP_TOK_EOF;
+	error = tpp_lexer_callhook_file_pushed(lexer);
+	return TPP_TOK_OFERR_OR_EOF(error);
 return_empty_file:
 	if (self->teb_if_empty.tlai_start < self->teb_if_empty.tlai_end) {
 		/* Return a sub-text file containing the if-empty text */
@@ -47395,6 +47441,13 @@ return_empty_file:
 		file->tf_pos   = self->teb_if_empty.tlai_start;
 		file->tf_end   = self->teb_if_empty.tlai_end;
 		self->teb_if_empty.tlai_chunk = NULL;
+#if TPP_HAVE_FILE_PUSHED_HOOK
+		error = tpp_lexer_callhook_file_pushed(lexer);
+		if (TPP_ISERR(error)) {
+			result = TPP_TOK_OFERR(error);
+			goto return_result_and_fini;
+		}
+#endif /* TPP_HAVE_FILE_PUSHED_HOOK */
 	}
 	result = TPP_TOK_EOF;
 return_result_and_fini:
@@ -48997,6 +49050,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_buffer_printer, arg, text, num_bytes) {
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
                                 tpp_macro *tpp_restrict macro) {
+	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_keyword const *const macro_keyword = tpp_lexer_gettokenkwd(self);
@@ -49096,7 +49150,6 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			if (argc == 0 && macro_argc == 1) {
 				/* This is something the standard explicitly allows (see `test/stdc-6.10.3.5_5.h`) */
 			} else {
-				tpp_errno error;
 				error = tpp_lexer_warnf(self, TPP_W_TOO_FEW_ARGUMENTS,
 				                        (char const *)macro_keyword->tk_kwd,
 				                        (unsigned int)macro_argc,
@@ -49138,7 +49191,6 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			tpp_macro_argument const *arg = &macro->tm_data.tmd_func.tmf_argv[i];
 			tpp_lexer_arginfo const *arginfo = &invoke_arginfo[i];
 			if (arg->tma_ins_exp) {
-				tpp_errno error;
 				tpp_macro_expinfo *expand = &invoke_expinfo[i];
 				tpp_file_subtext_setchunk_fromarg(file, arginfo);
 				error = tpp_macro_expinfo_init(expand, arginfo, self, macro);
@@ -49367,8 +49419,8 @@ handle_duplicate_chunk:
 			/* Emit a warning and disallow expansion if the
 			 * macro's recursion limit has been exceeded */
 #if TPP_HAVE_TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED
-			tpp_errno error = tpp_lexer_warnf(self, TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED,
-			                                  macro_keyword, macro);
+			error = tpp_lexer_warnf(self, TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED,
+			                        macro_keyword, macro);
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
 				goto err_tok_macro_result_chunk_argbuf_rollback;
@@ -49412,7 +49464,8 @@ err_tok_macro_result_chunk_argbuf_rollback:
 #if TPP_HAVE_FILE_MACRO_TRACKARGS
 	file->tf_data.td_macro.tfm_args = invoke_arginfo;
 #endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
-	return TPP_TOK_EOF;
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 #if TPP_HAVE_MACRO_RECURSION
 done_rollback:
 	tpp_lexer_alltokens_break(self);
@@ -49471,6 +49524,7 @@ err_tok:
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
                        tpp_macro *tpp_restrict macro) {
+	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev_file;
 	if (TPP_MACRO_KIND_ISFUNC(macro->tm_kind))
@@ -49491,7 +49545,8 @@ tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
 	                     macro->tm_body_chunk, /* Inherit reference */
 	                     macro->tm_body_start,
 	                     macro->tm_body_end);
-	return TPP_TOK_EOF;
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 err_nomem:
 	return TPP_TOK_ENOMEM;
 }
@@ -49597,6 +49652,7 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
                                   tpp_char const *text, tpp_size textsize,
                                   /*0..1,inherit(always)*/ TPP_REF tpp_string *chunk) {
+	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
@@ -49606,7 +49662,8 @@ tpp_lexer_push_textfile_inherited(tpp_lexer *tpp_restrict self,
 	                   TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_TOK_EOF;
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 err_nomem:
 	if (chunk)
 		tpp_string_decref(chunk);
@@ -50757,6 +50814,7 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 	tpp_file *prev_file;
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
+	tpp_errno error;
 	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
 	if (tok != TPP_TOK_OFCHAR('(')) {
@@ -50774,7 +50832,6 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
 	tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()`, so no need for `tpp_lexer_yield_blocking()` */
 	if (TPP_TOK_ISSTRING(tok)) {
-		tpp_errno error;
 		/* IMPORTANT: Don't set "TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS" here! */
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_str_decompile_string,
 		                                 &data, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
@@ -50787,7 +50844,7 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 	if (!TPP_TOK_ISERR(tok)) {
 		if (tpp_lexer_gettok(self) != TPP_TOK_EOF) {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
-			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
 			if (TPP_ISERR(error)) {
 				if (data.tlhsdsd_chunk)
 					tpp_string_decref(data.tlhsdsd_chunk);
@@ -50827,7 +50884,9 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 	file->tf_chunk = data.tlhsdsd_chunk; /* Inherit reference */
 	file->tf_pos   = data.tlhsdsd_str;
 	file->tf_end   = data.tlhsdsd_str + data.tlhsdsd_length;
-	return TPP_TOK_EOF; /* Instruct caller to yield the first token from the subtext file */
+	/* Instruct caller to yield the first token from the subtext file */
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 }
 #endif /* !TPP_HAVE_MACRO___TPP_STR_DECOMPILE */
 
@@ -50844,6 +50903,7 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *prev_file;
 	tpp_token_id tok;
+	tpp_errno error;
 	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
 	if (tok != TPP_TOK_OFCHAR('(')) {
@@ -50886,7 +50946,6 @@ handle_status:
 		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax value;
 			tpp_char value_ch[1];
-			tpp_errno error;
 
 			/* (try to) stream #embed-data directly into buffer */
 #if TPP_HAVE_LEXER_PARSEEMBED
@@ -50930,7 +50989,7 @@ handle_status:
 				goto err_tok_builder;
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK
 			{
-				tpp_errno error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK);
+				error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_TPP_STR_PACK);
 				if (TPP_ISERR(error)) {
 					tok = TPP_TOK_OFERR(error);
 					goto err_tok_builder;
@@ -50964,7 +51023,9 @@ done_inner_loop:
 	                      file->tf_enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_TOK_EOF; /* Instruct caller to yield the first token from the subtext file */
+	/* Instruct caller to yield the first token from the subtext file */
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 err_nomem_builder:
 	tok = TPP_TOK_ENOMEM;
 err_tok_builder:
@@ -51206,6 +51267,7 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	tpp_file *prev_file;
 	tpp_lexer_arginfo argv[1];
 	tpp_token_id tok;
+	tpp_errno error;
 
 	tok = tpp_lexer_tryskip_raw(self, TPP_TOK_OFCHAR('('),
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
@@ -51227,7 +51289,6 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	tpp_string_builder_init(&data.tlhed_builder);
 	data.tlhed_lexer = self;
 	if (TPP_TOK_ISSTRING(tok)) {
-		tpp_errno error;
 		error = tpp_lexer_parsestring_cb(self, &tpp_lexer_handle_exec_cb,
 		                                 &data, TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS);
 		tok = TPP_TOK_OFERR_OR_EOF(error);
@@ -51235,7 +51296,7 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	if (!TPP_TOK_ISERR(tok)) {
 		if (tpp_lexer_gettok(self) != TPP_TOK_EOF) {
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
-			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
+			error = tpp_lexer_warnf(self, TPP_W_EXPECTED_STRING);
 			tok = TPP_TOK_OFERR_OR_EOF(error);
 #endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
 			tpp_lexer_popallfiles(self);
@@ -51264,7 +51325,8 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	                      file->tf_enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_TOK_EOF;
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 }
 #endif /* !TPP_HAVE_MACRO___TPP_EXEC */
 
@@ -51472,7 +51534,8 @@ tpp_lexer_yield_handle___TPP_STR_SUBSTR(tpp_lexer *tpp_restrict self,
 	                      prev_file->tf_enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_TOK_EOF;
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 err_nomem_result_str:
 	data.tlhsdsd_chunk = result_str;
 	tok = TPP_TOK_ENOMEM;
@@ -51605,7 +51668,7 @@ tpp_lexer_yield_handle___TPP_LOAD_FILE(tpp_lexer *tpp_restrict self) {
 	/* Pretty much the same as:
 	 * >> #define __TPP_LOAD_FILE(filename) __TPP_STR_PACK(__TPP_EXEC("#embed " #filename)) */
 	tpp_lexer_openfile_result ofr;
-	tpp_errno ofr_error;
+	tpp_errno ofr_error, error;
 	tpp_token_id tok;
 	TPP_REF tpp_string *result_str;
 	tpp_string_builder result_builder;
@@ -51674,7 +51737,7 @@ err_tok_ofr_result_builder:
 		goto err_tok_ofr;
 	}
 	if (ofr_error == TPP_EOK) {
-		tpp_errno error = tpp_string_builder_print_escaped_file(&result_builder, ofr.tlofr_handle);
+		error = tpp_string_builder_print_escaped_file(&result_builder, ofr.tlofr_handle);
 		if (TPP_ISERR(error)) {
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_ofr_result_builder;
@@ -51698,7 +51761,8 @@ err_tok_ofr_result_builder:
 	                      prev_file->tf_enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
-	return TPP_TOK_EOF;
+	error = tpp_lexer_callhook_file_pushed(self);
+	return TPP_TOK_OFERR_OR_EOF(error);
 err_tok_ofr:
 	if (ofr_error == TPP_EOK)
 		tpp_lexer_openfile_result_fini(&ofr);

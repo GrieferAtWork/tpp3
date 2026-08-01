@@ -66,8 +66,8 @@ The following hooks exist and can each be overwritten individually:
 TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
 ```
 
-Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L25131) to print warning messages
-Potentially unused if [`TPP_HAVE_WARNHANDLER_HOOK`](../src/tpp-amalgamation.h#L8985) is also overwritten
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L25321) to print warning messages
+Potentially unused if [`TPP_HAVE_WARNHANDLER_HOOK`](../src/tpp-amalgamation.h#L9045) is also overwritten
 
 <details><summary>Details</summary>
 
@@ -101,7 +101,7 @@ TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num
 tpp_errno TPP_HOOK_WARNHANDLER(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
 ```
 
-Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L25131) to handle warning notifications. Can be
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L25321) to handle warning notifications. Can be
 overwritten to implement custom behavior in regards to handling of warnings.
 
 <details><summary>Details</summary>
@@ -264,6 +264,66 @@ tpp_errno _tpp_disabled_hook_new_dependency(tpp_lexer *tpp_restrict self, tpp_ke
 </details>
 
 
+## TPP_HAVE_FILE_PUSHED_HOOK
+
+```c
+tpp_errno TPP_HOOK_FILE_PUSHED(tpp_lexer *tpp_restrict self);
+```
+
+Called whenever a file was just pushed onto the `#include`-stack
+Information about the just-pushed file can be retrieved by examining [`tpp_lexer_getfile(self)`](../src/tpp-amalgamation.h#L23172)
+This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
+WARNING: *NOT* Called for [`tpp_file_subtext_push()`](../src/tpp-amalgamation.h#L19689) or [`tpp_file_pushdummy()`](../src/tpp-amalgamation.h#L20066)
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_INCLUDE_STACK
+```
+
+Disabled:
+
+```c
+tpp_errno _tpp_disabled_hook_file_pushed(tpp_lexer *tpp_restrict self) {
+	return TPP_EOK;
+}
+```
+</details>
+
+
+## TPP_HAVE_FILE_POPPED_HOOK
+
+```c
+void TPP_HOOK_FILE_POPPED(tpp_lexer *tpp_restrict self);
+```
+
+Called whenever a file is about to be popped off the `#include`-stack
+Information about the file that's about-to-be popped can be retrieved
+by examining [`tpp_lexer_getfile(self)`](../src/tpp-amalgamation.h#L23172). Note that this hook is called
+during the file-pop *commit* phase ([`tpp_lexer_manualpopfile_break_commit()`](../src/tpp-amalgamation.h#L24335))
+but is *NOT* called by [`tpp_lexer_manualpopfile_popfile()`](../src/tpp-amalgamation.h#L24330).
+WARNING: *NOT* Called for [`tpp_file_subtext_pop()`](../src/tpp-amalgamation.h#L19712) or [`tpp_file_popdummy()`](../src/tpp-amalgamation.h#L20079)
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_INCLUDE_STACK
+```
+
+Disabled:
+
+```c
+void _tpp_disabled_hook_file_popped(tpp_lexer *tpp_restrict self) {
+	return (void)0;
+}
+```
+</details>
+
+
 ## TPP_HAVE_IDENT_SCCS_HOOK
 
 ```c
@@ -296,7 +356,7 @@ tpp_errno _tpp_disabled_hook_ident_sccs(tpp_lexer *tpp_restrict self, tpp_token_
 tpp_errno TPP_HOOK_SYSTEM_INCLUDE_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
 ```
 
-Extra callback invoked by [`tpp_lexer_foreach_include_path()`](../src/tpp-amalgamation.h#L24382) at diffrent
+Extra callback invoked by [`tpp_lexer_foreach_include_path()`](../src/tpp-amalgamation.h#L24572) at diffrent
 points during the process of enumerating include paths. This callback is
 then allowed to enumerate some additional include paths that may exist, but
 for one reason or another (mainly: speed) aren't known to TPP via its system
@@ -326,7 +386,7 @@ tpp_errno _tpp_disabled_hook_system_include_path(tpp_lexer *tpp_restrict self, t
 tpp_errno TPP_HOOK_SYSTEM_EMBED_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
 ```
 
-Extra callback invoked by [`tpp_lexer_foreach_embed_path()`](../src/tpp-amalgamation.h#L24424) at diffrent points
+Extra callback invoked by [`tpp_lexer_foreach_embed_path()`](../src/tpp-amalgamation.h#L24614) at diffrent points
 during the process of enumerating embed paths. (s.a. `TPP_HOOK_SYSTEM_INCLUDE_PATH`)
 
 <details><summary>Details</summary>
@@ -353,7 +413,7 @@ tpp_errno _tpp_disabled_hook_system_embed_path(tpp_lexer *tpp_restrict self, tpp
 tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
 ```
 
-Called by [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L24887) when an unknown `\`-escape sequence is encountered
+Called by [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L25077) when an unknown `\`-escape sequence is encountered
 This hook can be used to define additional, user-defined escape sequences, or any other
 arbitrary behavior to-be performed when specific escape-sequences are found.
 On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
@@ -384,9 +444,9 @@ tpp_ssize _tpp_disabled_hook_unknown_string_escape(tpp_lexer *tpp_restrict self,
 tpp_errno TPP_HOOK_RAISE_LEXERROR(tpp_lexer *tpp_restrict self);
 ```
 
-Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L25131) just before it's about to return [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L12308)
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L25321) just before it's about to return [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L12392)
 This hook can be used to do additional state changes that may be necessary by the
-hosting application in order to handle the resulting [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L12308)
+hosting application in order to handle the resulting [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L12392)
 
 <details><summary>Details</summary>
 
@@ -412,12 +472,12 @@ tpp_errno _tpp_disabled_hook_raise_lexerror(tpp_lexer *tpp_restrict self) {
 tpp_errno TPP_HOOK_ISFLOATSUFFIX(tpp_lexer *tpp_restrict self, tpp_char const *pos);
 ```
 
-Called by [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L23980) when [`TPP_HAVE_SMART_FLOAT_TOKENS`](config-conf.md#tpp_have_smart_float_tokens) is enabled and
+Called by [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L24170) when [`TPP_HAVE_SMART_FLOAT_TOKENS`](config-conf.md#tpp_have_smart_float_tokens) is enabled and
 a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
 part of the float-token (in the form of a float-suffix), or if this is actually be
 parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
 with `pos` pointing at the `f` (though additional characters thereafter may not be
-loaded yet, though can be loaded using [`tpp_lexer_readchar()`](../src/tpp-amalgamation.h#L23884))
+loaded yet, though can be loaded using [`tpp_lexer_readchar()`](../src/tpp-amalgamation.h#L24074))
 
 <details><summary>Details</summary>
 
