@@ -9288,13 +9288,66 @@ TPP_DECL_END
 #error "Invalid configuration: 'TPP_HOOK_FILE_POPPED' is defined, but 'TPP_HAVE_FILE_POPPED_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_FILE_POPPED && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_POPPED_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_INCLUDE_NOT_FOUND(tpp_lexer *tpp_restrict self);
+/* >> tpp_errno TPP_HOOK_INCLUDE_ENCOUNTERED(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
+ * Called when a `#include` (or `#include_next`, `#import` or `#embed`)-directive
+ * is encountered, at the point in time when the lexer's current token has already
+ * been populated by `tpp_lexer_yieldraw_at_include_string_blocking()` (and macros
+ * were also already expanded), and the current token is `TPP_TOK_INCPATH_DQUOTE` or
+ * `TPP_TOK_INCPATH_LANGLE`.
+ *
+ * This hook is primarily here for the purpose of implementing GCC's `-dI` switch, but
+ * it could also be used for other purposes, such as intentionally skipping certain
+ * `#include`-directives.
+ *
+ * To gain access to the `#include`-string, you must use `tpp_lexer_decode_include_string_cb()`
+ *
+ * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
+ * @return: TPP_EOK:    Continue handling like usual@return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing
+ *                      the file containing the `#include`-directive as though the file
+ *                      could not be found, and the `TPP_W_NO_SUCH_FILE` error was being
+ *                      suppressed.
+ * @return: TPP_E*:     Some other error -- propagate immdediately */
+#ifndef TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK
+#ifdef TPP_HOOK_INCLUDE_ENCOUNTERED
+#define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK ((TPP_HAVE_PROFILE_ALL && (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED)) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_INCLUDE_ENCOUNTERED */
+#define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK ((TPP_HAVE_PROFILE_ALL && (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED)) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_INCLUDE_ENCOUNTERED */
+#endif /* !TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK */
+#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_INCLUDE_ENCOUNTERED)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_INCLUDE_ENCOUNTERED' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK
+#define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_INCLUDE_ENCOUNTERED)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_INCLUDE_ENCOUNTERED' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK
+#define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK /* There is no builtin version */
+#define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK /* There is no builtin version */
+#define TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_INCLUDE_ENCOUNTERED) && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_INCLUDE_ENCOUNTERED' is defined, but 'TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_INCLUDE_ENCOUNTERED && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_INCLUDE_NOT_FOUND(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
  * Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
  * directive could not be found, this hook may be used to either suppress the error (by returning
  * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
- * commandline switch. This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with
- * the lexer's current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
+ * commandline switch.
+ *
+ * This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's
+ * current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
  * to know what that string says, you can use `tpp_lexer_decode_include_string_cb()` to decode it.
+ *
+ * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
  * @return: TPP_EOK:    Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
  *                      the file could not be found (*DONT* use this hook to manually push a file or
  *                      something like that)@return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
@@ -22335,6 +22388,24 @@ typedef enum tpp_hook_system_embed_path_when {
 #endif /* TPP_HAVE_SYSTEM_EMBED_PATH_HOOK */
 
 
+#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK || TPP_HAVE_INCLUDE_NOT_FOUND_HOOK
+typedef enum tpp_hook_include_kind {
+#if TPP_HAVE_CPP_INCLUDE
+	TPP_HOOK_INCLUDE_KIND_INCLUDE, /* `#include "foo"` or `#include <foo>` */
+#endif /* TPP_HAVE_CPP_INCLUDE */
+#if TPP_HAVE_CPP_INCLUDE_NEXT
+	TPP_HOOK_INCLUDE_KIND_INCLUDE_NEXT, /* `#include_next "foo"` or `#include_next <foo>` */
+#endif /* TPP_HAVE_CPP_INCLUDE_NEXT */
+#if TPP_HAVE_CPP_IMPORT
+	TPP_HOOK_INCLUDE_KIND_IMPORT, /* `#import "foo"` or `#import <foo>` */
+#endif /* TPP_HAVE_CPP_IMPORT */
+#if TPP_HAVE_CPP_EMBED
+	TPP_HOOK_INCLUDE_KIND_EMBED, /* `#embed "foo"` or `#embed <foo>` */
+#endif /* TPP_HAVE_CPP_EMBED */
+} tpp_hook_include_kind;
+#endif /* TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK || TPP_HAVE_INCLUDE_NOT_FOUND_HOOK */
+
+
 
 
 #undef TPP_HAVE_HOOKS
@@ -22346,6 +22417,7 @@ typedef enum tpp_hook_system_embed_path_when {
      TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) ||        \
      TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) ||           \
      TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) ||           \
+     TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ||   \
      TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) ||     \
      TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) ||         \
      TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK) ||       \
@@ -22478,19 +22550,46 @@ typedef struct tpp_hooks {
 	void (TPPCALL *TPP_INTERNAL(th_file_popped))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
 
-	/* >> tpp_errno (TPPCALL *th_include_not_found)(struct tpp_lexer *tpp_restrict self);
+	/* >> tpp_errno (TPPCALL *th_include_encountered)(struct tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
+	 * Called when a `#include` (or `#include_next`, `#import` or `#embed`)-directive
+	 * is encountered, at the point in time when the lexer's current token has already
+	 * been populated by `tpp_lexer_yieldraw_at_include_string_blocking()` (and macros
+	 * were also already expanded), and the current token is `TPP_TOK_INCPATH_DQUOTE` or
+	 * `TPP_TOK_INCPATH_LANGLE`.
+	 *
+	 * This hook is primarily here for the purpose of implementing GCC's `-dI` switch, but
+	 * it could also be used for other purposes, such as intentionally skipping certain
+	 * `#include`-directives.
+	 *
+	 * To gain access to the `#include`-string, you must use `tpp_lexer_decode_include_string_cb()`
+	 *
+	 * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
+	 * @return: TPP_EOK:    Continue handling like usual@return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing
+	 *                      the file containing the `#include`-directive as though the file
+	 *                      could not be found, and the `TPP_W_NO_SUCH_FILE` error was being
+	 *                      suppressed.
+	 * @return: TPP_E*:     Some other error -- propagate immdediately */
+#if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_include_encountered))(struct tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_include_not_found)(struct tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
 	 * Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
 	 * directive could not be found, this hook may be used to either suppress the error (by returning
 	 * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
-	 * commandline switch. This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with
-	 * the lexer's current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
+	 * commandline switch.
+	 *
+	 * This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's
+	 * current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
 	 * to know what that string says, you can use `tpp_lexer_decode_include_string_cb()` to decode it.
+	 *
+	 * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
 	 * @return: TPP_EOK:    Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
 	 *                      the file could not be found (*DONT* use this hook to manually push a file or
 	 *                      something like that)@return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
 	 * @return: TPP_E*:     Some other error -- propagate immdediately */
 #if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
-	tpp_errno (TPPCALL *TPP_INTERNAL(th_include_not_found))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_include_not_found))(struct tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_macro_defined)(struct tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro);
@@ -22892,19 +22991,63 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_file_popped(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
 
+/* Called when a `#include` (or `#include_next`, `#import` or `#embed`)-directive
+ * is encountered, at the point in time when the lexer's current token has already
+ * been populated by `tpp_lexer_yieldraw_at_include_string_blocking()` (and macros
+ * were also already expanded), and the current token is `TPP_TOK_INCPATH_DQUOTE` or
+ * `TPP_TOK_INCPATH_LANGLE`.
+ *
+ * This hook is primarily here for the purpose of implementing GCC's `-dI` switch, but
+ * it could also be used for other purposes, such as intentionally skipping certain
+ * `#include`-directives.
+ *
+ * To gain access to the `#include`-string, you must use `tpp_lexer_decode_include_string_cb()`
+ *
+ * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
+ * @return: TPP_EOK:    Continue handling like usual@return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing
+ *                      the file containing the `#include`-directive as though the file
+ *                      could not be found, and the `TPP_W_NO_SUCH_FILE` error was being
+ *                      suppressed.
+ * @return: TPP_E*:     Some other error -- propagate immdediately */
+#if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
+#define tpp_hooks_call_include_encountered(self, lexer, include_kind) \
+	((self)->TPP_INTERNAL(th_include_encountered) ? (*(self)->TPP_INTERNAL(th_include_encountered))(lexer, include_kind) : TPP_EOK)
+#define tpp_hooks_get_include_encountered(self)    (self)->TPP_INTERNAL(th_include_encountered)
+#define tpp_hooks_set_include_encountered(self, v) (void)((self)->TPP_INTERNAL(th_include_encountered) = (v))
+#define tpp_hooks_reset_include_encountered(self)  (void)((self)->TPP_INTERNAL(th_include_encountered) = _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED)
+#define _tpp_hooks_init_include_encountered(self)  , (self)->TPP_INTERNAL(th_include_encountered) = _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED
+#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_INCLUDE_ENCOUNTERED)
+#define _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED (&TPP_HOOK_INCLUDE_ENCOUNTERED)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
+#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_include_encountered(self, lexer, include_kind) \
+	TPP_HOOK_INCLUDE_ENCOUNTERED(lexer, include_kind)
+#else /*  */
+#define tpp_hooks_call_include_encountered(self, lexer, include_kind) TPP_EOK
+#endif /* ... */
+#define _tpp_hooks_init_include_encountered(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
+
 /* Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
  * directive could not be found, this hook may be used to either suppress the error (by returning
  * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
- * commandline switch. This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with
- * the lexer's current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
+ * commandline switch.
+ *
+ * This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's
+ * current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
  * to know what that string says, you can use `tpp_lexer_decode_include_string_cb()` to decode it.
+ *
+ * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
  * @return: TPP_EOK:    Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
  *                      the file could not be found (*DONT* use this hook to manually push a file or
  *                      something like that)@return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
  * @return: TPP_E*:     Some other error -- propagate immdediately */
 #if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
-#define tpp_hooks_call_include_not_found(self, lexer) \
-	((self)->TPP_INTERNAL(th_include_not_found) ? (*(self)->TPP_INTERNAL(th_include_not_found))(lexer) : TPP_ENOENT)
+#define tpp_hooks_call_include_not_found(self, lexer, include_kind) \
+	((self)->TPP_INTERNAL(th_include_not_found) ? (*(self)->TPP_INTERNAL(th_include_not_found))(lexer, include_kind) : TPP_ENOENT)
 #define tpp_hooks_get_include_not_found(self)    (self)->TPP_INTERNAL(th_include_not_found)
 #define tpp_hooks_set_include_not_found(self, v) (void)((self)->TPP_INTERNAL(th_include_not_found) = (v))
 #define tpp_hooks_reset_include_not_found(self)  (void)((self)->TPP_INTERNAL(th_include_not_found) = _TPP_HOOKS_DEFAULT_INCLUDE_NOT_FOUND)
@@ -22916,10 +23059,10 @@ typedef struct tpp_hooks {
 #endif /* !... */
 #else /* TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 #if TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_CONST_USER
-#define tpp_hooks_call_include_not_found(self, lexer) \
-	TPP_HOOK_INCLUDE_NOT_FOUND(lexer)
+#define tpp_hooks_call_include_not_found(self, lexer, include_kind) \
+	TPP_HOOK_INCLUDE_NOT_FOUND(lexer, include_kind)
 #else /*  */
-#define tpp_hooks_call_include_not_found(self, lexer) TPP_ENOENT
+#define tpp_hooks_call_include_not_found(self, lexer, include_kind) TPP_ENOENT
 #endif /* ... */
 #define _tpp_hooks_init_include_not_found(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
@@ -23192,6 +23335,7 @@ typedef struct tpp_hooks {
 	       _tpp_hooks_init_new_dependency(self) \
 	       _tpp_hooks_init_file_pushed(self) \
 	       _tpp_hooks_init_file_popped(self) \
+	       _tpp_hooks_init_include_encountered(self) \
 	       _tpp_hooks_init_include_not_found(self) \
 	       _tpp_hooks_init_macro_defined(self) \
 	       _tpp_hooks_init_macro_undefined(self) \
@@ -23759,19 +23903,50 @@ typedef struct tpp_lexer {
 #define tpp_lexer_resethook_file_popped(self)  tpp_hooks_reset_file_popped(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_file_popped */
 
-/* >> tpp_errno tpp_lexer_callhook_include_not_found(tpp_lexer *tpp_restrict self);
+/* >> tpp_errno tpp_lexer_callhook_include_encountered(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
+ * Called when a `#include` (or `#include_next`, `#import` or `#embed`)-directive
+ * is encountered, at the point in time when the lexer's current token has already
+ * been populated by `tpp_lexer_yieldraw_at_include_string_blocking()` (and macros
+ * were also already expanded), and the current token is `TPP_TOK_INCPATH_DQUOTE` or
+ * `TPP_TOK_INCPATH_LANGLE`.
+ *
+ * This hook is primarily here for the purpose of implementing GCC's `-dI` switch, but
+ * it could also be used for other purposes, such as intentionally skipping certain
+ * `#include`-directives.
+ *
+ * To gain access to the `#include`-string, you must use `tpp_lexer_decode_include_string_cb()`
+ *
+ * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
+ * @return: TPP_EOK:    Continue handling like usual@return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing
+ *                      the file containing the `#include`-directive as though the file
+ *                      could not be found, and the `TPP_W_NO_SUCH_FILE` error was being
+ *                      suppressed.
+ * @return: TPP_E*:     Some other error -- propagate immdediately */
+#define tpp_lexer_callhook_include_encountered(self, include_kind) \
+	tpp_hooks_call_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), self, include_kind)
+#ifdef tpp_hooks_set_include_encountered
+#define tpp_lexer_gethook_include_encountered(self)    tpp_hooks_get_include_encountered(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_include_encountered(self, v) tpp_hooks_set_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_include_encountered(self)  tpp_hooks_reset_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_include_encountered */
+
+/* >> tpp_errno tpp_lexer_callhook_include_not_found(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
  * Called when the file specified by a `#include` (or `#include_next`, `#import` or `#embed`)-
  * directive could not be found, this hook may be used to either suppress the error (by returning
  * something other than `TPP_ENOENT`), or log the error to implement something like GCC's `-MG`
- * commandline switch. This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with
- * the lexer's current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
+ * commandline switch.
+ *
+ * This hook is called just before `TPP_W_NO_SUCH_FILE` would be emitted, with the lexer's
+ * current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
  * to know what that string says, you can use `tpp_lexer_decode_include_string_cb()` to decode it.
+ *
+ * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
  * @return: TPP_EOK:    Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
  *                      the file could not be found (*DONT* use this hook to manually push a file or
  *                      something like that)@return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
  * @return: TPP_E*:     Some other error -- propagate immdediately */
-#define tpp_lexer_callhook_include_not_found(self) \
-	tpp_hooks_call_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_callhook_include_not_found(self, include_kind) \
+	tpp_hooks_call_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self, include_kind)
 #ifdef tpp_hooks_set_include_not_found
 #define tpp_lexer_gethook_include_not_found(self)    tpp_hooks_get_include_not_found(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_include_not_found(self, v) tpp_hooks_set_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), v)

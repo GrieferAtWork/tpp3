@@ -66,6 +66,9 @@ int main(int argc, char **argv) {
 	}
 
 	/* XXX: Support for CLI arguments that must be handled by front-end:
+	 * - "-o file", "--output file", "--output=file"
+	 *   No special handling needed in TPP backend
+	 *   Simply redirect what below stuff often calls "preprocessor output" to "file"
 	 * - "-M", "--dependencies"
 	 *   - Using TPP_HAVE_NEW_DEPENDENCY_HOOK
 	 * - "-MM", "--user-dependencies"
@@ -120,8 +123,8 @@ int main(int argc, char **argv) {
 	 *   No special handling needed in TPP backend
 	 *   Same as "-dD", but only write `#define FOO` for `#define FOO(x, y) 10` or `#define FOO 20`
 	 * - "-dI", "--dump=I"
-	 *   TODO: Need another hook called from `tpp_lexer_parse_include_directive_impl_()`,
-	 *         just before `tpp_lexer_open_include_string_ex()` is called.
+	 *   - Set hook for TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK that echoes the operator
+	 *     to preprocessor output
 	 * - "-dU", "--dump=U"
 	 *   No (additional) special handling needed in TPP backend
 	 *   - Have a map `currently_defined_used_macros: {tpp_keyword: tpp_macro}`
