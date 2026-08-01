@@ -609,7 +609,8 @@ for (local doc, name,
  * To gain access to the `#include`-string, you must use `tpp_lexer_decode_include_string_cb()`
  *
  * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
- * @return: TPP_EOK:    Continue handling like usual@return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing
+ * @return: TPP_EOK:    Continue handling like usual
+ * @return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing
  *                      the file containing the `#include`-directive as though the file
  *                      could not be found, and the `TPP_W_NO_SUCH_FILE` error was being
  *                      suppressed.
@@ -635,7 +636,8 @@ for (local doc, name,
  * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
  * @return: TPP_EOK:    Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
  *                      the file could not be found (*DONT* use this hook to manually push a file or
- *                      something like that)@return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
+ *                      something like that)
+ * @return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
  * @return: TPP_E*:     Some other error -- propagate immdediately */
 #define tpp_lexer_callhook_include_not_found(self, include_kind) \
 	tpp_hooks_call_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self, include_kind)

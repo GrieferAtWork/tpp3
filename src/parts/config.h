@@ -3313,7 +3313,7 @@ local HOOKS = {
 		"To gain access to the `#include`-string, you must use `tpp_lexer_decode_include_string_cb()`\n" +
 		"\n" +
 		"@param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)\n" +
-		"@return: TPP_EOK:    Continue handling like usual" +
+		"@return: TPP_EOK:    Continue handling like usual\n" +
 		"@return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing\n" +
 		"                     the file containing the `#include`-directive as though the file\n" +
 		"                     could not be found, and the `TPP_W_NO_SUCH_FILE` error was being\n" +
@@ -3339,7 +3339,7 @@ local HOOKS = {
 		"@param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)\n" +
 		"@return: TPP_EOK:    Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like\n" +
 		"                     the file could not be found (*DONT* use this hook to manually push a file or\n" +
-		"                     something like that)" +
+		"                     something like that)\n" +
 		"@return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error\n" +
 		"@return: TPP_E*:     Some other error -- propagate immdediately",
 		"INCLUDE_NOT_FOUND",
@@ -3851,7 +3851,8 @@ for (local doc, name,
  * To gain access to the `#include`-string, you must use `tpp_lexer_decode_include_string_cb()`
  *
  * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
- * @return: TPP_EOK:    Continue handling like usual@return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing
+ * @return: TPP_EOK:    Continue handling like usual
+ * @return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing
  *                      the file containing the `#include`-directive as though the file
  *                      could not be found, and the `TPP_W_NO_SUCH_FILE` error was being
  *                      suppressed.
@@ -3899,7 +3900,8 @@ for (local doc, name,
  * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
  * @return: TPP_EOK:    Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
  *                      the file could not be found (*DONT* use this hook to manually push a file or
- *                      something like that)@return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
+ *                      something like that)
+ * @return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
  * @return: TPP_E*:     Some other error -- propagate immdediately */
 #ifndef TPP_HAVE_INCLUDE_NOT_FOUND_HOOK
 #ifdef TPP_HOOK_INCLUDE_NOT_FOUND
