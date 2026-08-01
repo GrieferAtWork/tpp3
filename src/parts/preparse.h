@@ -43,14 +43,14 @@ struct tpp_lexer;
 #define _tpp_preparse_skipbse_lexer__ARG(x) /* nothing */
 #endif /* !TPP_HAVE_BSE || !TPP_HAVE_UNICODE */
 
-/* Check if "ch" may be the first byte of a \-character */
+/* Check if `ch` may be the first byte of a `\`-character */
 #if TPP_HAVE_TRIGRAPHS
-#define _tpp_maybe_isbackslash(ch) ((ch) == '\\' || (ch) == '?') /* ?: because "??/" maps to "\" */
+#define _tpp_maybe_isbackslash(ch) ((ch) == '\\' || (ch) == '?') /* `?`: because `??/` maps to `\` */
 #else /* TPP_HAVE_TRIGRAPHS */
 #define _tpp_maybe_isbackslash(ch) ((ch) == '\\')
 #endif /* !TPP_HAVE_TRIGRAPHS */
 
-/* Check if "ch" may be the first byte of a LF-style character */
+/* Check if `ch` may be the first byte of a LF-style character */
 #if TPP_HAVE_UNICODE
 #define _tpp_maybe_islf(ch) tpp_ascii_islf_or_mblf(ch)
 #else /* TPP_HAVE_UNICODE */
@@ -58,8 +58,8 @@ struct tpp_lexer;
 #endif /* !TPP_HAVE_UNICODE */
 
 /* Helper macros to skip over BSE when parsing already-loaded text.
- * tpp_preparse_skipbse_fwd: If "pos" points at a \-character, skip forward until end of BSE (if it is one)
- * tpp_preparse_skipbse_bck: If "pos" points after a line-feed character, skip backward until start of BSE (if it is one) */
+ * tpp_preparse_skipbse_fwd: If `pos` points at a `\`-character, skip forward until end of BSE (if it is one)
+ * tpp_preparse_skipbse_bck: If `pos` points after a line-feed character, skip backward until start of BSE (if it is one) */
 #if TPP_HAVE_BSE
 TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
 _tpp_preparse_skipbse_fwd(tpp_char const *pos, tpp_char const *end

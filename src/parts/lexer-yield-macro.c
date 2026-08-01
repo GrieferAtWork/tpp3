@@ -109,7 +109,7 @@ tpp_string_buffer_truncate(tpp_string_buffer *tpp_restrict self) {
 typedef struct tpp_macro_expinfo {
 	tpp_char *tmei_expand_data; /* [0..tmei_expand_size][owned_if(MAYBE)]
 	                             * Buffer containing the expanded argument text. */
-	tpp_size  tmei_expand_size; /* Length of "tmei_expand_data" (in bytes) */
+	tpp_size  tmei_expand_size; /* Length of `tmei_expand_data` (in bytes) */
 } tpp_macro_expinfo;
 
 #define tpp_macro_expinfo_fini(self, arginfo)                      \
@@ -119,7 +119,7 @@ typedef struct tpp_macro_expinfo {
 #define tpp_macro_expinfo_getdata(self) ((self)->tmei_expand_data)
 #define tpp_macro_expinfo_getsize(self) ((self)->tmei_expand_size)
 
-/* Initialize "self" by expanding `argument_start...argument_end'
+/* Initialize `self` by expanding `argument_start...argument_end`
  * @return: TPP_EOK: Success
  * @return: * :      Error (must be propagated) */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
@@ -167,7 +167,7 @@ tpp_macro_expinfo_init(tpp_macro_expinfo *tpp_restrict self,
 	(void)macro;
 
 next_tok:
-	tok = tpp_lexer_yield(lexer); /* Caller has pre-loaded, so no need for `tpp_lexer_yield_blocking()' */
+	tok = tpp_lexer_yield(lexer); /* Caller has pre-loaded, so no need for `tpp_lexer_yield_blocking()` */
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	if (tok == TPP_TOK_EOF) {
@@ -249,7 +249,7 @@ again_print_token:
 	                              (tpp_size)(token->tt_end -
 	                                         token->tt_start)))
 		goto err_builder_nomem;
-	tok = tpp_lexer_yield(lexer); /* Caller has pre-loaded, so no need for `tpp_lexer_yield_blocking()' */
+	tok = tpp_lexer_yield(lexer); /* Caller has pre-loaded, so no need for `tpp_lexer_yield_blocking()` */
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	if (tok != TPP_TOK_EOF)
@@ -260,7 +260,7 @@ again_print_token:
 	self->tmei_expand_data = buffer.tsb_data;
 	self->tmei_expand_size = buffer.tsb_size;
 done:
-	/* Verify that the #ifdef-stack of "file" is empty.
+	/* Verify that the `#ifdef`-stack of "file" is empty.
 	 * If it isn't, emit warnings and clear it now. */
 	return tpp_lexer_warn_nonempty_ifdef(lexer);
 err_builder_nomem:
@@ -282,7 +282,7 @@ typedef struct tpp_macro_argbuf {
 
 
 /* >> tpp_lexer_seek_rparen_flags_frommacro(macro)
- * Return `TPP_LEXER_SEEK_RPAREN_FLAG_*' flags needed by "macro" */
+ * Return `TPP_LEXER_SEEK_RPAREN_FLAG_*` flags needed by "macro" */
 #if !TPP_HAVE_MACRO_FLAGS
 #define tpp_lexer_seek_rparen_flags_frommacro(macro) TPP_LEXER_SEEK_RPAREN_FLAG_NORMAL
 #else /* !TPP_HAVE_MACRO_FLAGS */
@@ -333,7 +333,7 @@ typedef struct tpp_macro_argbuf {
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
 
-/* Return the invocation argument buffer of "macro"
+/* Return the invocation argument buffer of `macro`
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_macro_argbuf *TPPCALL
 tpp_macro_acquire_argbuf(tpp_macro *tpp_restrict macro) {
@@ -714,10 +714,10 @@ next_op:
 		}
 		tpp_assert((dst == tpp_string_end(result_chunk)) &&
 		           "This failing means that argument specs and macro opcodes have diverged ("
-		           "this shouldn't happen and indicates a bug in `tpp_macro_builder_compile()')");
+		           "this shouldn't happen and indicates a bug in `tpp_macro_builder_compile()`)");
 		tpp_assert((src <= macro->tm_body_end) &&
 		           "Similar to 'dst'-assertion, but source-body pointer went beyond end of "
-		           "macro definition body (bug in `tpp_macro_builder_compile()')");
+		           "macro definition body (bug in `tpp_macro_builder_compile()`)");
 	}
 
 	/* Cleanup temporary expansion buffers. */
@@ -863,9 +863,9 @@ err_tok:
 	return tok;
 }
 
-/* Perform the expansion of a user-defined "macro", with the lexer's
+/* Perform the expansion of a user-defined `macro`, with the lexer's
  * current token set to point at the macro's identifier (meaning that
- * you have to seek ahead in order to find the opening '(' token in
+ * you have to seek ahead in order to find the opening `(` token in
  * case of a function-style macro).
  *
  * @return: tpp_lexer_gettoken(self)->tt_id : Function-style macro cannot be expanded

@@ -81,19 +81,19 @@ tpp_lexer_yieldraw_eol(tpp_lexer *tpp_restrict self) {
 
 /************************************************************************/
 #if TPP_HAVE_PRAGMA
-/* Process a #pragma directive, start at the first token that comes after
- * the leading "#pragma" (i.e.: the first token of the actual directive
+/* Process a `#pragma` directive, start at the first token that comes after
+ * the leading `#pragma` (i.e.: the first token of the actual directive
  * itself)
  *
  * @return: TPP_EOK:    Success (but there may still be garbage after
  *                      the directive that hasn't been parsed, yet).
  * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
- *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
+ *                      `TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE`)
  * @return: TPP_E*:     Error */
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 
-/* Process a pragma directive, starting after the "TPP_KWD_pragma" keyword */
+/* Process a pragma directive, starting after the `TPP_KWD_pragma` keyword */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_pragma_directive(tpp_lexer *tpp_restrict self) {
 	tpp_token *const token = tpp_lexer_gettoken(self);
@@ -225,7 +225,7 @@ tpp_lexer_handle_error_directive(tpp_lexer *tpp_restrict self,
 
 /************************************************************************/
 #if TPP_HAVE_CPP_DEFINE
-/* Handle a "#define" directive, with "self" pointing at the macro's name-keyword
+/* Handle a `#define` directive, with `self` pointing at the macro's name-keyword
  * @return: TPP_TOK_ISERR: Error
  * @return: TPP_TOK_EOF: Success; caller should yield the next raw token */
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -403,11 +403,11 @@ again_yield_and_handle_after_lparen:
 
 
 /************************************************************************/
-/* Delete "tpp_keyword_misc::tkm_file_guard" for the current file if appropriate
- * - Must be called just before calling "tpp_ifdef_stack_append()", to deal with
+/* Delete `tpp_keyword_misc::tkm_file_guard` for the current file if appropriate
+ * - Must be called just before calling `tpp_ifdef_stack_append()`, to deal with
  *   the case of a file having multiple top-level #if-blocks (in which case the
- *   file can't have a #ifndef-style #include-guard)
- * - Must also be called when returning a token from tpp_lexer_yieldpp()
+ *   file can't have a `#ifndef`-style `#include`-guard)
+ * - Must also be called when returning a token from `tpp_lexer_yieldpp()`
  */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 static TPP_NONNULL((1)) void TPPCALL
@@ -437,11 +437,11 @@ tpp_file_maybe_delete_include_guard_keyword(tpp_file *tpp_restrict self) {
 
 /************************************************************************/
 #if TPP_HAVE_CPP_IF_ELSE_ENDIF
-/* Call with the current token loaded as "if" or "elif"
- * @param: p_directive_start: [out] On success (TPP_EOK or TPP_ENOENT), set
- *                                  to the start of the "if" or "elif" keyword
- * @return: TPP_EOK:    Directive evaluates to "true"
- * @return: TPP_ENOENT: Directive evaluates to "false"
+/* Call with the current token loaded as `if` or `elif`
+ * @param: p_directive_start: [out] On success (`TPP_EOK` or `TPP_ENOENT`), set
+ *                                  to the start of the `if` or `elif` keyword
+ * @return: TPP_EOK:    Directive evaluates to `true`
+ * @return: TPP_ENOENT: Directive evaluates to `false`
  * @return: * :         Error */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
@@ -458,7 +458,7 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 	char const *const directive_name = tpp_lexer_gettokenkwdcstr(self);
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 	directive_iter = file->tf_pos;
-	file->tf_pos = file->tf_tpos; /* Retain start of "if" / "elif" keyword */
+	file->tf_pos = file->tf_tpos; /* Retain start of `if` / `elif` keyword */
 	directive_keyword_len = (tpp_size)(directive_iter - file->tf_pos);
 
 	/* Seek end-of-line */
@@ -506,11 +506,11 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 	return result;
 }
 
-/* Call with the current token loaded as "ifdef", "ifndef", "elifdef" or "elifndef"
+/* Call with the current token loaded as `ifdef`, `ifndef`, `elifdef` or `elifndef`
  * @param: p_directive_start: [out] On success (TPP_EOK or TPP_ENOENT), set
- *                                  to the start of the "ifdef", ... keyword
- * @return: TPP_EOK:    Directive evaluates to "true"
- * @return: TPP_ENOENT: Directive evaluates to "false"
+ *                                  to the start of the `ifdef`, ... keyword
+ * @return: TPP_EOK:    Directive evaluates to *true*
+ * @return: TPP_ENOENT: Directive evaluates to *false*
  * @return: * :         Error */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 #define tpp_lexer_parse_ifdef_directive(self, p_directive_start) \
@@ -629,18 +629,18 @@ tpp_token_sol_shell_find_after_pound(tpp_lexer const *tpp_restrict self) {
 }
 #endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 
-/* Load the next #ifdef-like directive into "self", and return it.
+/* Load the next `#ifdef`-like directive into `self`, and return it.
  * On entry, allowed to be pretty much anywhere (method starts out
  * by seeking the next newline, then scanning for directives from
  * there on...)
  *
- * @return: TPP_KWD_ifdef:    Found an #ifdef-directive    (current token is [...] in: "# [ifdef] foo")
- * @return: TPP_KWD_ifndef:   Found an #ifndef-directive   (current token is [...] in: "# [ifndef] foo")
- * @return: TPP_KWD_elif:     Found an #elif-directive     (current token is [...] in: "# [elif] foo")
- * @return: TPP_KWD_elifdef:  Found an #elifdef-directive  (current token is [...] in: "# [elifdef] foo")
- * @return: TPP_KWD_elifndef: Found an #elifndef-directive (current token is [...] in: "# [elifndef] foo")
- * @return: TPP_KWD_else:     Found an #else-directive     (current token is [...] in: "# [else]")
- * @return: TPP_KWD_endif:    Found an #endif-directive    (current token is [...] in: "# [endif]")
+ * @return: TPP_KWD_ifdef:    Found an `#ifdef`-directive    (current token is `[*]` in: `# [ifdef] foo`)
+ * @return: TPP_KWD_ifndef:   Found an `#ifndef`-directive   (current token is `[*]` in: `# [ifndef] foo`)
+ * @return: TPP_KWD_elif:     Found an `#elif`-directive     (current token is `[*]` in: `# [elif] foo`)
+ * @return: TPP_KWD_elifdef:  Found an `#elifdef`-directive  (current token is `[*]` in: `# [elifdef] foo`)
+ * @return: TPP_KWD_elifndef: Found an `#elifndef`-directive (current token is `[*]` in: `# [elifndef] foo`)
+ * @return: TPP_KWD_else:     Found an `#else`-directive     (current token is `[*]` in: `# [else]`)
+ * @return: TPP_KWD_endif:    Found an `#endif`-directive    (current token is `[*]` in: `# [endif]`)
  * @return: TPP_TOK_EOF:      End-of-file (no warning issued, yet)
  * @return: TPP_TOK_ISERR(*): Error
  */
@@ -768,8 +768,8 @@ tpp_lexer_seek_next_ifdef_directive(tpp_lexer *tpp_restrict self) {
 	return result;
 }
 
-/* Seek end of an inactive "#if 1 ... #else"-style block.
- * - Warn about "#elif" / "#else" directives via "TPP_W_ELIF_OR_ELSE_AFTER_ELSE"
+/* Seek end of an inactive `#if 1 ... #else`-style block.
+ * - Warn about `#elif` / `#else` directives via `TPP_W_ELIF_OR_ELSE_AFTER_ELSE`
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_next_unmatched_endif(tpp_lexer *tpp_restrict self,
@@ -855,10 +855,10 @@ again:
 	goto again;
 }
 
-/* Seek end of an inactive "#if 0"-style block.
- * - If a "#else" or "#elif 1"-style block is found, push+create a
- *   new #ifdef-entry using "ifdef_location" as the created-position
- * - If a "#endif" is found, behave like "tpp_lexer_seek_end_of_next_unmatched_endif" */
+/* Seek end of an inactive `#if 0`-style block.
+ * - If a `#else` or `#elif 1`-style block is found, push+create a
+ *   new `#ifdef`-entry using `ifdef_location` as the created-position
+ * - If a `#endif` is found, behave like `tpp_lexer_seek_end_of_next_unmatched_endif()` */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_inactive_ifdef(tpp_lexer *tpp_restrict self,
                                      tpp_lcinfo ifdef_location) {
@@ -1198,14 +1198,14 @@ tpp_lexer_handle_endif_directive(tpp_lexer *tpp_restrict self) {
 	((TPP_HAVE_CPP_EMBED && TPP_HAVE_LEXER_OPEN_EMBED_STRING) && \
 	 (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT))
 
-/* Parse the string with the current token pointing at the "include"-keyword
+/* Parse the string with the current token pointing at the `include`-keyword
  * Returns with the current token ending directly after the include-string (meaning
  * that any trailing comments, or the trailing line-feed have *NOT* been parsed, yet,
  * and that the lexer may even be inside of a nested macro right now)
  *
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOENT:  No such file or directory (a warning was already emitted),
- *                       or file was marked according to "mask_flags"
+ *                       or file was marked according to `mask_flags`
  * @return: TPP_ENOMEM:  Out of memory
  * @return: TPP_EIO:     I/O error */
 #if TPP_HAVE_LEXER_OPENFILE_EX && TPP_LEXER_PARSE_INCLUDE_DIRECTIVE_IMPL_HAS__FOR_EMBED
@@ -1355,10 +1355,10 @@ again:
 /************************************************************************/
 #if TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT
 
-/* Parse the string with the current token pointing at the "include"-keyword
+/* Parse the string with the current token pointing at the `include`-keyword
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOENT:  No such file or directory (a warning was already emitted),
- *                       or file was marked according to "mask_flags"
+ *                       or file was marked according to `mask_flags`
  * @return: TPP_ENOMEM:  Out of memory
  * @return: TPP_EIO:     I/O error */
 #if TPP_HAVE_LEXER_OPENFILE_EX
@@ -1523,7 +1523,7 @@ typedef struct tpp_embed_builder {
 	tpp_lexer_arginfo         teb_suffix;    /* Suffix to put after a non-empty file */
 	tpp_lexer_arginfo         teb_if_empty;  /* Replacement for an empty file */
 	tpp_lexer_openfile_result teb_ofr;       /* [valid_if(teb_ofr_error == TPP_EOK)] The file to embed */
-	tpp_errno                 teb_ofr_error; /* Error from opening "teb_ofr" (either TPP_EOK, or TPP_ENOENT) */
+	tpp_errno                 teb_ofr_error; /* Error from opening `teb_ofr` (either `TPP_EOK`, or `TPP_ENOENT`) */
 #endif /* TPP_HAVE_CPP_EMBED */
 } tpp_embed_builder;
 
@@ -1556,7 +1556,7 @@ yield_and_skip_whitespace:
 	return TPP_TOK_ASERR_OR_EOK(tok);
 }
 
-/* Parse trailing parameters following a #embed directive */
+/* Parse trailing parameters following a `#embed` directive */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_embed_builder_handle_param(tpp_embed_builder *tpp_restrict self,
                                tpp_lexer *tpp_restrict lexer,
@@ -2036,7 +2036,7 @@ err_nomem:
 	goto return_result_and_fini;
 }
 
-/* Must be called with "self" pointing at the token preceding the #include-string */
+/* Must be called with `self` pointing at the token preceding the `#include`-string */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_embed_builder_init_parse(tpp_embed_builder *tpp_restrict self,
                              tpp_lexer *tpp_restrict lexer) {
@@ -2543,7 +2543,7 @@ tpp_lexer_handle_ident_sccs_directive(tpp_lexer *tpp_restrict self) {
  * @return: TPP_TOK_ISERR         : Error
  * @return: TPP_TOK_EOF           : Caller should yield the next raw token
  * @return: TPP_TOK_SHELL_COMMENT : Directive was transformed to a shell-comment which the caller should re-emit
- * @return: TPP_TOK_SOL_SHELL_COMMENT: Like `TPP_TOK_SHELL_COMMENT' */
+ * @return: TPP_TOK_SOL_SHELL_COMMENT: Like `TPP_TOK_SHELL_COMMENT` */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_directive(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
@@ -3006,17 +3006,17 @@ return_result:
 
 
 
-/* Wrapper around `tpp_lexer_yieldraw()' that filters certain tokens (based on
+/* Wrapper around `tpp_lexer_yieldraw()` that filters certain tokens (based on
  * configured features), and implements handling for preprocessor directives,
- * like "#define", "#include", etc:
- * - TPP_TOK_LF:      Filtered based on `TPP_HAVE_TOK_LF' / `TPP_FEAT_TPP_TOK_LF'
- * - TPP_TOK_SPACE:   Filtered based on `TPP_HAVE_TOK_SPACE' / `TPP_FEAT_TPP_TOK_SPACE'
- * - TPP_TOK_COMMENT: Filtered based on `TPP_HAVE_TOK_COMMENT' / `TPP_FEAT_TPP_TOK_COMMENT'
+ * like `#define`, `#include`, etc:
+ * - TPP_TOK_LF:      Filtered based on `TPP_HAVE_TOK_LF` / `TPP_FEAT_TPP_TOK_LF`
+ * - TPP_TOK_SPACE:   Filtered based on `TPP_HAVE_TOK_SPACE` / `TPP_FEAT_TPP_TOK_SPACE`
+ * - TPP_TOK_COMMENT: Filtered based on `TPP_HAVE_TOK_COMMENT` / `TPP_FEAT_TPP_TOK_COMMENT`
  *
  * @return: * :                  The newly read token (after accounting for preprocessor directives)
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses `TPP_FILE_FLAGS_NONBLOCK` and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL

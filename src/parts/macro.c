@@ -93,7 +93,7 @@ tpp_macro_func_expand_count(tpp_macro const *tpp_restrict self) {
 #pragma GCC diagnostic ignored "-Walloc-size"
 #endif /* TPP_GCC_VERSION_NUM >= 140001 */
 
-/* Allocate+return a hard-copy of "self"
+/* Allocate+return a hard-copy of `self`
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_macro *TPPCALL
 tpp_macro_copy(tpp_macro const *tpp_restrict self) {
@@ -258,7 +258,7 @@ tpp_memmem(void const *haystack, tpp_size haystack_length,
 #endif /* !tpp_memmem */
 
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-/* Return a pointer *after* the next unescaped "quote_ch", or re-return "end" */
+/* Return a pointer *after* the next unescaped `quote_ch`, or re-return `end` */
 static TPP_PURECALL TPP_RETNONNULL TPP_WUNUSED tpp_char const *TPPCALL
 tpp_find_next_unescaped_quote(tpp_char const *text, tpp_char const *end, tpp_char quote_ch) {
 	while (text < end) {
@@ -568,8 +568,8 @@ again_read_opcode:
 	goto again_read_opcode;
 }
 
-/* Return "(tpp_size)(argument_pos - argument_start)", but do special handling when
- * "TPP_MACRO_OPCODE_INS_STR" / "TPP_MACRO_OPCODE_INS_CHR", where the offset into
+/* Return `(tpp_size)(argument_pos - argument_start)`, but do special handling when
+ * `TPP_MACRO_OPCODE_INS_STR` / `TPP_MACRO_OPCODE_INS_CHR`, where the offset into
  * the text that was originally encoded (via tpp_token_encodestring()) is returned
  * instead. */
 static tpp_size TPPCALL
@@ -613,8 +613,8 @@ tpp_macro_determine_argument_offset(tpp_macro_opcode argument_opcode,
 }
 
 
-/* Figure out the line/column of "pos" in "expanded_text", as produced
- * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
+/* Figure out the line/column of `pos` in `expanded_text`, as produced
+ * by `self`, which must be `TPP_MACRO_KIND_ISFUNC(self->tm_kind)`. */
 TPP_INTERN_IMPL TPP_NONNULL((1, 2, 3, 4, 5)) void TPPCALL
 tpp_macro_func_lcinfo(tpp_macro const *self,
                       tpp_file const *expanded_text_file,

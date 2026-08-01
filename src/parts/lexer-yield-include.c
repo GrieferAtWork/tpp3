@@ -164,22 +164,22 @@ again:
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 
 
-/* (Mostly) the same as "tpp_lexer_yield()", except:
+/* (Mostly) the same as `tpp_lexer_yield()`, except:
  * - Never process preprocessor directives (but macros are still expanded)
- * - If the next token starts with '"' or '<', parse it as a #include-string,
+ * - If the next token starts with `"` or `<`, parse it as a `#include`-string,
  *   with the token's start/end bounds pointing at the string's bounds. In
  *   this case, the token's ID (and return value) is:
- *   - TPP_TOK_INCPATH_DQUOTE  // For #include "foo.h"
- *   - TPP_TOK_INCPATH_LANGLE  // For #include <foo.h>
+ *   - `TPP_TOK_INCPATH_DQUOTE` (For `#include "foo.h"`)
+ *   - `TPP_TOK_INCPATH_LANGLE` (For `#include <foo.h>`)
  * - WARNING: This function doesn't filter SPACE/LF/COMMENT tokens
- *   (behaves as though 'TPP_LEXER_STATE_FLAG_ALLTOKENS' was set)
+ *   (behaves as though `TPP_LEXER_STATE_FLAG_ALLTOKENS` was set)
  *
  * @return: * : Some other token encountered (token was parsed like tpp_lexer_yieldraw())
- * @return: TPP_TOK_INCPATH_DQUOTE: #include-string parsed: "foo.h"
- * @return: TPP_TOK_INCPATH_LANGLE: #include-string parsed: <foo.h>
+ * @return: TPP_TOK_INCPATH_DQUOTE: `#include`-string parsed: `"foo.h"`
+ * @return: TPP_TOK_INCPATH_LANGLE: `#include`-string parsed: `<foo.h>`
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses `TPP_FILE_FLAGS_NONBLOCK` and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 #if TPP_HAVE_CPP_MACROS
@@ -201,9 +201,9 @@ again:
 
 
 #if TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
-/* Decode the current token as a #include-string. The caller is responsible to
- * ensure that the current token was loaded by `tpp_lexer_yield_include_string()'
- * and is either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE
+/* Decode the current token as a `#include`-string. The caller is responsible to
+ * ensure that the current token was loaded by `tpp_lexer_yield_include_string()`
+ * and is either `TPP_TOK_INCPATH_LANGLE` or `TPP_TOK_INCPATH_DQUOTE`.
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers */
@@ -269,7 +269,7 @@ tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
 				}
 				--iter;
 
-				/* No need to warn about trigraph -- was already done in `tpp_lexer_yieldraw()' */
+				/* No need to warn about trigraph -- was already done in `tpp_lexer_yieldraw()` */
 
 				/* Print trigraph character (but also handle case where "??/" was encoded) */
 				temp = tpp_formatprinter_print(printer, arg, start, (tpp_size)(iter - start));
@@ -345,10 +345,10 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decode_include_string_count_cb, arg, t
 }
 #endif /* TPP_CONF_MAYBE_1(TPP_HAVE_BSE) || TPP_CONF_MAYBE_1(TPP_HAVE_TRIGRAPHS) */
 
-/* Same as `tpp_lexer_decode_include_string()', but the given "cb" is only
- * invoked once whilst being passed the *entire* (decoded) #include-string.
+/* Same as `tpp_lexer_decode_include_string()`, but the given `cb` is only
+ * invoked once whilst being passed the *entire* (decoded) `#include`-string.
  *
- * @return: * : Return value of the (singular) invocation of "cb"
+ * @return: * : Return value of the (singular) invocation of `cb`
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
@@ -394,7 +394,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 #if TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
 
 #if TPP_HAVE_INCLUDE_PATH
-/* Try to open "str" in "paths"; returns TPP_ENOENT if not found */
+/* Try to open `str` in `paths`; returns TPP_ENOENT if not found */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_foreach_include_path_in_list(tpp_include_path_list const *paths,
                                        tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
@@ -413,19 +413,19 @@ tpp_lexer_foreach_include_path_in_list(tpp_include_path_list const *paths,
 }
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
-/* Enumerate #include-paths according to "mode"
- * @param: mode: #include-mode (either TPP_TOK_INCPATH_LANGLE or TPP_TOK_INCPATH_DQUOTE)
- * @param: cb:   Callback invoked for each available #include-path. The first time
+/* Enumerate `#include`-paths according to `mode`
+ * @param: mode: `#include`-mode (either `TPP_TOK_INCPATH_LANGLE` or `TPP_TOK_INCPATH_DQUOTE`)
+ * @param: cb:   Callback invoked for each available `#include`-path. The first time
  *               this callback returns something other than TPP_ENOENT, that return
  *               value is propagated.
- * @param: cb.flags: Either "TPP_FILE_FLAGS_NORMAL" or "TPP_FILE_FLAGS_SYSHDR",
- *                   possibly or'd with "TPP_FILE_FLAGS_EXTERN_C" depending on
- *                   where "relative_to" originates from, and how "self" has been
- *                   configured (see "TPP_HAVE_EXTERN_C_FOR_SYSHDR")
- * @param: arg:  Cookie for "cb"
- * @return: * :  The first non-TPP_ENOENT return value of "cb"
- * @return: TPP_ENOENT: Either "cb" was never invoked (no #include-paths),
- *                      or all invocations of "cb" returned "TPP_ENOENT". */
+ * @param: cb.flags: Either `TPP_FILE_FLAGS_NORMAL` or `TPP_FILE_FLAGS_SYSHDR`,
+ *                   possibly or'd with `TPP_FILE_FLAGS_EXTERN_C` depending on
+ *                   where `relative_to` originates from, and how `self` has been
+ *                   configured (see `TPP_HAVE_EXTERN_C_FOR_SYSHDR`)
+ * @param: arg:  Cookie for `cb`
+ * @return: * :  The first non-TPP_ENOENT return value of `cb`
+ * @return: TPP_ENOENT: Either `cb` was never invoked (no `#include`-paths),
+ *                      or all invocations of `cb` returned `TPP_ENOENT`. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
                                tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to
@@ -459,7 +459,7 @@ tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
 			do {
 #if TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_CPP_MACROS
 				/* Must also accept TEXT-files as base:
-				 * - The API user may have explicitly pushed a file using `tpp_lexer_pushfile_text_*'
+				 * - The API user may have explicitly pushed a file using `tpp_lexer_pushfile_text_*`
 				 * - We might be inside of a "tpp_file_pusheof()"-block (actually, this is *highly*
 				 *   likely, since regular #if and #embed directives are usually parsed within such
 				 *   a block to ensure they don't span past EOL, meaning that __has_include and the
@@ -558,8 +558,8 @@ struct tpp_lexer_open_include_string_data {
 #if TPP_HAVE_LEXER_OPENFILE_EX
 	tpp_lexer_openfile_flags   tloisd_mask_flags; /* Mask flags */
 #endif /* TPP_HAVE_LEXER_OPENFILE_EX */
-	char const                *tloisd_str;        /* #include-string (used during callback) */
-	tpp_size                   tloisd_length;     /* #include-string length (used during callback) */
+	char const                *tloisd_str;        /* `#include`-string (used during callback) */
+	tpp_size                   tloisd_length;     /* `#include`-string length (used during callback) */
 };
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -603,24 +603,24 @@ tpp_lexer_open_include_string_cb(void *arg, char const *str, tpp_size length) {
 }
 
 
-/* Wrapper around `tpp_lexer_decode_include_string_cb()' that automatically
- * does the necessary calls to `tpp_lexer_openfile_ex()'. It also handles
- * the `TPP_ENOENT' (as far as possible) by continuing to search for other
- * matching files. The specified "mask_flags" should be set depending on
+/* Wrapper around `tpp_lexer_decode_include_string_cb()` that automatically
+ * does the necessary calls to `tpp_lexer_openfile_ex()`. It also handles
+ * the `TPP_ENOENT` (as far as possible) by continuing to search for other
+ * matching files. The specified `mask_flags` should be set depending on
  * context like:
- * - #include ...             TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
- * - __has_include(...)       TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
- * - #include_next ...        TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
- * - __has_include_next(...)  TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
- * - #import ...              TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
- * - #embed ...               TPP_LEXER_OPENFILE_FLAG_NORMAL
- * - __has_embed(...)         TPP_LEXER_OPENFILE_FLAG_NORMAL
+ * - `#include ...`:             `TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`
+ * - `__has_include(...)`:       `TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`
+ * - `#include_next ...`:        `TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`
+ * - `__has_include_next(...)`:  `TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`
+ * - `#import ...`:              `TPP_LEXER_OPENFILE_FLAG_HDR_ONCE | TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED | TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED`
+ * - `#embed ...`:               `TPP_LEXER_OPENFILE_FLAG_NORMAL`
+ * - `__has_embed(...)`:         `TPP_LEXER_OPENFILE_FLAG_NORMAL`
  *
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOMEM:  Insufficient memory
  * @return: TPP_ENOENT:  No such file (no warning printed, yet)
  * @return: TPP_EMASKED: (tpp_lexer_open_include_string_ex only): Flags
- *                       specified by "mask_flags" were already set. */
+ *                       specified by `mask_flags` were already set. */
 #if TPP_HAVE_LEXER_OPENFILE_EX
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_open_include_string_ex(tpp_lexer *tpp_restrict self,
@@ -645,7 +645,7 @@ tpp_lexer_open_include_string(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_LEXER_OPEN_EMBED_STRING
 
-/* Enumerate `#embed`-paths according to "mode" (s.a. `tpp_lexer_foreach_include_path()`) */
+/* Enumerate `#embed`-paths according to `mode` (s.a. `tpp_lexer_foreach_include_path()`) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_lexer_foreach_embed_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
                              tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to),

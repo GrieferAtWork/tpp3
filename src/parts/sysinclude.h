@@ -53,17 +53,17 @@ typedef struct tpp_include_path_entry {
 
 typedef struct tpp_include_path_list {
 	tpp_include_path_entry *TPP_INTERNAL(tipl_list); /* [0..tipl_size][owned] List of include paths. */
-	tpp_size                TPP_INTERNAL(tipl_size); /* # of entries in `tipl_list' */
+	tpp_size                TPP_INTERNAL(tipl_size); /* # of entries in `tipl_list` */
 } tpp_include_path_list;
 
-/* Initialize/finalize a given "tpp_include_path_list" */
+/* Initialize/finalize a given `tpp_include_path_list` */
 #define tpp_include_path_list_init(self)           \
 	(void)((self)->TPP_INTERNAL(tipl_list) = NULL, \
 	       (self)->TPP_INTERNAL(tipl_size) = 0)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_include_path_list_fini(tpp_include_path_list *tpp_restrict self);
 
-/* Return the # of paths described by "self" */
+/* Return the # of paths described by `self` */
 #define tpp_include_path_list_getcount(self) \
 	(self)->TPP_INTERNAL(tipl_size)
 
@@ -76,10 +76,10 @@ tpp_include_path_list_fini(tpp_include_path_list *tpp_restrict self);
 	(tpp_include_path_list_fini(self),    \
 	 tpp_include_path_list_init(self))
 
-/* Append the given "path" to "self".
+/* Append the given `path` to `self`.
  * @param: path:        The path to append.
- * @param: path_maxlen: The max length of "path". The actual length of the path that will
- *                      be appended to the path list is "tpp_strnlen(path, path_maxlen)".
+ * @param: path_maxlen: The max length of `path`. The actual length of the path that will
+ *                      be appended to the path list is `tpp_strnlen(path, path_maxlen)`.
  *
  * @return: TPP_EOK:    Success, or path was already present and was moved to the end.
  * @return: TPP_ENOMEM: Out of memory. */
@@ -90,10 +90,10 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_include_path_list_pushhead(tpp_include_path_list *tpp_restrict self,
                                char const *path, tpp_size path_maxlen);
 
-/* Remove the given "path" from "self".
+/* Remove the given `path` from `self`.
  * @param: path:        The path to remove.
- * @param: path_maxlen: The max length of "path". The actual length of the path that will
- *                      be removed from the path list is "tpp_strnlen(path, path_maxlen)".
+ * @param: path_maxlen: The max length of `path`. The actual length of the path that will
+ *                      be removed from the path list is `tpp_strnlen(path, path_maxlen)`.
  *
  * @return: TPP_EOK:    Path was located and removed
  * @return: TPP_ENOENT: Path could not be found */
@@ -106,19 +106,19 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 /* Collective descriptor for defined include paths.
  * The actual order of paths in TPP3 is as follows (this matches GCC):
  *
- * 1.  (#include "foo.h" only): Relative to the current I/O-file, or (when
- *                              "TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE" is
- *                              enabled): every I/O-file on the #include-stack
- * 2.  (#include "foo.h" only): Paths specified in "tip_quote_list" (if available)
- * 3.  Paths specified in "tip_system_list"
- * 4.  Paths specified in "tip_syshdr_list"
- * 5.  Paths hard-coded using "TPP_CONFIG_SYSTEM_INCLUDE_PATH"
- * 6.  Paths specified in "tip_after_list" (if available)
+ * 1.  (`#include "foo.h"` only): Relative to the current I/O-file, or (when
+ *                                `TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE` is
+ *                                enabled): every I/O-file on the `#include`-stack
+ * 2.  (`#include "foo.h"` only): Paths specified in `tip_quote_list` (if available)
+ * 3.  Paths specified in `tip_system_list`
+ * 4.  Paths specified in `tip_syshdr_list`
+ * 5.  Paths hard-coded using `TPP_CONFIG_SYSTEM_INCLUDE_PATH`
+ * 6.  Paths specified in `tip_after_list` (if available)
  */
 typedef struct tpp_include_paths {
-	tpp_include_path_list TPP_INTERNAL(tip_system_list); /* System #include-path list: #pragma TPP include_path("/usr/include") */
+	tpp_include_path_list TPP_INTERNAL(tip_system_list); /* System `#include`-path list: `#pragma TPP include_path("/usr/include")` */
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
-	tpp_include_path_list TPP_INTERNAL(tip_quote_list);  /* "-quote #include-path list: #pragma TPP include_path(quote: "/usr/include") */
+	tpp_include_path_list TPP_INTERNAL(tip_quote_list);  /* `"`-quote `#include`-path list: `#pragma TPP include_path(quote: "/usr/include")` */
 #define _tpp_include_paths_init_quote(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_quote_list))
 #define _tpp_include_paths_fini_quote(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_quote_list))
 #else /* TPP_HAVE_INCLUDE_PATH_QUOTE */
@@ -126,7 +126,7 @@ typedef struct tpp_include_paths {
 #define _tpp_include_paths_fini_quote(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
-	tpp_include_path_list TPP_INTERNAL(tip_syshdr_list);  /* #include-paths treated as TPP_FILE_FLAGS_SYSHDR: #pragma TPP include_path(system: "/usr/include") */
+	tpp_include_path_list TPP_INTERNAL(tip_syshdr_list);  /* `#include`-paths treated as TPP_FILE_FLAGS_SYSHDR: `#pragma TPP include_path(system: "/usr/include")` */
 #define _tpp_include_paths_init_syshdr(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_syshdr_list))
 #define _tpp_include_paths_fini_syshdr(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_syshdr_list))
 #else /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
@@ -134,7 +134,7 @@ typedef struct tpp_include_paths {
 #define _tpp_include_paths_fini_syshdr(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
-	tpp_include_path_list TPP_INTERNAL(tip_after_list);  /* #include-path list searched after all others: #pragma TPP include_path(dirafter: "/usr/include") */
+	tpp_include_path_list TPP_INTERNAL(tip_after_list);  /* `#include`-path list searched after all others: `#pragma TPP include_path(dirafter: "/usr/include")` */
 #define _tpp_include_paths_init_after(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_after_list))
 #define _tpp_include_paths_fini_after(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_after_list))
 #else /* TPP_HAVE_INCLUDE_PATH_AFTER */
@@ -143,7 +143,7 @@ typedef struct tpp_include_paths {
 #endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
 
 #if TPP_HAVE_INCLUDE_PATH_EMBED
-	tpp_include_path_list TPP_INTERNAL(tip_embed_list);  /* #embed-path list searched for `#embed <file>`-like filenames */
+	tpp_include_path_list TPP_INTERNAL(tip_embed_list);  /* #embed-path list searched for `#embed <file>`-like filenames: `#pragma TPP include_path(embed: "/usr/include")` */
 #define _tpp_include_paths_init_embed(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_embed_list))
 #define _tpp_include_paths_fini_embed(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_embed_list))
 #else /* TPP_HAVE_INCLUDE_PATH_EMBED */
@@ -171,7 +171,7 @@ typedef struct tpp_include_paths {
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_include_paths_fini(tpp_include_paths *tpp_restrict self);
 
-/* Reset (re-initialize) "self" */
+/* Reset (re-initialize) `self` */
 #define tpp_include_paths_reset(self) \
 	(tpp_include_paths_fini(self), tpp_include_paths_init(self))
 
@@ -326,13 +326,14 @@ _tpp_include_paths_clearbykind(tpp_include_paths *tpp_restrict self);
 /* Push the current include paths state */
 #define tpp_include_paths_push(self) (void)(++(self)->TPP_INTERNAL(tip_pushcnt))
 
-/* Pop the current include paths state (may only be called when `tpp_include_paths_canpop(self)') */
+/* Pop the current include paths state (may only
+ * be called when `tpp_include_paths_canpop(self)`) */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *tpp_restrict self);
 #define tpp_include_paths_canpop(self)         \
 	((self)->TPP_INTERNAL(tip_pushcnt) != 0 || \
 	 (self)->TPP_INTERNAL(tip_prev) != NULL)
 
-/* When true, `tpp_include_paths_setctx()' must first copy the extension
+/* When true, `tpp_include_paths_setctx()` must first copy the extension
  * state (which requires heap memory, and may thus fail) */
 #define tpp_include_paths_mustcopy(self) ((self)->TPP_INTERNAL(tip_pushcnt) != 0)
 

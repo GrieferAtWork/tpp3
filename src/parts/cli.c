@@ -1390,13 +1390,13 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
 	return result;
 }
 
-/* Ensure that `self` is in a "normal" state (meaning that there aren't any remaining,
+/* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
  * unterminated multi-argument parameters). If that is not the case, then a warning
  * `TPP_W_MISSING_CLI_ARGUMENT` is emitted on `tpp_cli_loader_getlexer(self)`
  *
  * Unlike the other CLI loader functions above, this one *MUST* be called
  * *AFTER* the lexer's initial input file has been initialized, as it may
- * need to push additional files onto the #include-stack.
+ * need to push additional files onto the `#include`-stack.
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ENOMEM:     Out of memory

@@ -1855,9 +1855,9 @@ static uint_least16_t const tpp_token_str_offsets[] = {
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_token_str_offsets) == TPP_TOK_MULTICHAR_END);
 /*[[[end]]]*/
 
-/* Returns the "*" in "TPP_TOK_*" of "id", which must be a (non-keyword and non-error) token ID
- * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // "EQUAL_EQUAL"
- * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // "==" */
+/* Returns the `*` in `TPP_TOK_*` of `id`, which must be a (non-keyword and non-error) token ID
+ * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // `EQUAL_EQUAL`
+ * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // `==` */
 TPP_IMPL TPP_WUNUSED char const *TPPCALL
 tpp_strtokenid(tpp_token_id id) {
 	if ((unsigned int)id < TPP_TOK_MULTICHAR_END) {

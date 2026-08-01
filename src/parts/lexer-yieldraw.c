@@ -115,7 +115,7 @@ tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end) {
 	return uc;
 }
 
-/* Same as `tpp_unicode_readutf8()', but read in reverse, such
+/* Same as `tpp_unicode_readutf8()`, but read in reverse, such
  * that the last byte of the returned character is `(*p_end)[-1]`
  * (assuming that `*p_end > base`). */
 TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
@@ -208,14 +208,14 @@ tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **p_end) {
  * - If necessary, expand the current file's chunk
  * - If an illegal utf-8 byte sequence is encountered,
  *   change TPP_FILE_ENCODING_UTF8 to TPP_FILE_ENCODING_ASCII,
- *   leave `*p_pos' unchanged, set `*p_result = 0' and return
- *   `TPP_EOK'. However, if TPP_FILE_ENCODING_FORCE_UTF8 is
+ *   leave `*p_pos` unchanged, set `*p_result = 0` and return
+ *   `TPP_EOK`. However, if TPP_FILE_ENCODING_FORCE_UTF8 is
  *   used, this never happens and *all* characters are valid
  *
  * Caller must ensure:
- * - That `tpp_file_isutf8(tpp_lexer_getfile(self))'
- * - That `*p_pos < tpp_lexer_getfile(self)->tf_end'
- * - That `tpp_ascii_ismb(**p_pos)'
+ * - That `tpp_file_isutf8(tpp_lexer_getfile(self))`
+ * - That `*p_pos < tpp_lexer_getfile(self)->tf_end`
+ * - That `tpp_ascii_ismb(**p_pos)`
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
@@ -529,13 +529,13 @@ return_error:
 
 
 #if TPP_HAVE_BSE
-/* Check if **p_pos is the \-character of an escaped line-feed, and if BSE is enabled.
+/* Check if **p_pos is the `\`-character of an escaped line-feed, and if BSE is enabled.
  * If both are the case, skip over said escaped linefeed, possibly expanding the
  * currently loaded text-chunk, before returning a pointer past said BSE. (if the
  * BSE is followed by further BSE, those are all skipped also, meaning that the
  * returned pointer is either EOF or something other than the start of a BSE)
  *
- * When BSE isn't enabled, or the \-character doesn't escape a line-feed, don't alter `*p_pos'
+ * When BSE isn't enabled, or the `\`-character doesn't escape a line-feed, don't alter `*p_pos`
  */
 static tpp_errno TPPCALL
 tpp_lexer_skip_bse(tpp_lexer *self, tpp_char const **p_pos) {
@@ -945,7 +945,7 @@ not_a_trigraph:
 
 
 #if TPP_HAVE_UNICODE
-/* Same as `tpp_lexer_readchar()', but (if the current file's encoding allows
+/* Same as `tpp_lexer_readchar()`, but (if the current file's encoding allows
  * it, and IN(*p_pos) points at a multi-byte character), decode a multi-byte
  * character and return it. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
@@ -986,7 +986,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 #endif /* !TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
 
 /* Seek forward until *after* the next line-feed character (or true EOF)
- * Given `*p_pos' will be updated to point *after* the LF character (or *at* the EOF) */
+ * Given `*p_pos` will be updated to point *after* the LF character (or *at* the EOF) */
 #if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
@@ -2085,20 +2085,21 @@ again:
 
 
 
-/* Do a raw yield and update `self->tl_tok' in the process, then return `tl_tok.tt_id'.
- * - On EOF, automatically pop `tl_file->tf_prev' and continue reading from there
- * - On error, return one of `TPP_TOK_E*' (e.g. `TPP_TOK_EIO').
- *   Such error codes will NOT be stored in `tl_tok.tt_id'!
+/* Do a raw yield and update `self->tl_tok` in the process, then return `tl_tok.tt_id`.
+ * - On EOF, automatically pop `tl_file->tf_prev` and continue reading from there
+ * - On error, return one of `TPP_TOK_E*` (e.g. `TPP_TOK_EIO`).
+ *   Such error codes will NOT be stored in `tl_tok.tt_id`!
  *
  * NOTE: This function does *NOT* deal with:
  * - Preprocessor directives
  * - Builtin macros
  * - User-defined macros
+ * - Filtering out comment, line-feed, and whitespace tokens
  *
  * @return: * :                  The newly read token
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses `TPP_FILE_FLAGS_NONBLOCK` and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -2416,32 +2417,32 @@ return_error:
 
 
 
-/* Same as `tpp_lexer_yieldraw()', but populate the token from a custom `*p_pos',
- * and don't pop files from the current #include-stack (unless `p_pos' is the top-
- * most file's `tf_pos')
+/* Same as `tpp_lexer_yieldraw()`, but populate the token from a custom `*p_pos`,
+ * and don't pop files from the current `#include`-stack (unless `p_pos` is the top-
+ * most file's `tf_pos`)
  *
  * NOTES:
- *  - This function will *NOT* populate "tpp_lexer_gettoken(self)->tt_end",
- *    however the value it would have written there is OUT(*p_pos), meaning
- *    you can just use that instead, and call this function multiple times
+ *  - This function will *NOT* update `tpp_lexer_gettokenend(self)`, however
+ *    the value it would have written there is `OUT(*p_pos)`, meaning you
+ *    can just use that instead, and call this function multiple times
  *    to yield more than 1 token
  *  - This function can be used to peek future tokens, as it will also expand
- *    the current file when `*p_pos' would go beyond its end. (in this case,
- *    `*p_pos' is updated such that it always remains valid)
- *  - Unlike `tpp_lexer_yieldraw()', this function will *not* modify the
- *    currently loaded file's `tf_pos' (unless `p_pos == &file->tf_pos'),
+ *    the current file when `*p_pos` would go beyond its end. (in this case,
+ *    `*p_pos` is updated such that it always remains valid)
+ *  - Unlike `tpp_lexer_yieldraw()`, this function will *not* modify the
+ *    currently loaded file's `tf_pos` (unless `p_pos == &file->tf_pos`),
  *    meaning that if EOF is reached, the file's chunk will only ever be
- *    expanded, but no old data (that would appear before `tf_pos') will
+ *    expanded, but no old data (that would appear before `tf_pos`) will
  *    be deallocated
  *  - This function will also not automatically move on to the next file
  *    in line when the current one has been fully exhausted (unless the
- *    given `p_pos == &file->tf_pos'), meaning that TPP_TOK_EOF will be
+ *    given `p_pos == &file->tf_pos`), meaning that `TPP_TOK_EOF` will be
  *    returned when no more data can be loaded.
  *
- * This is used to implement `tpp_lexer_yieldraw()', which simply
- * passes `p_pos = &tpp_lexer_gettoken(self)->tt_end'
+ * This is used to implement `tpp_lexer_yieldraw()`, which simply
+ * passes `p_pos = &tpp_lexer_gettoken(self)->tt_end`
  *
- * @return: * : See `tpp_lexer_yieldraw()' */
+ * @return: * : See `tpp_lexer_yieldraw()` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 #undef NEED_read_ch2
@@ -2467,7 +2468,7 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	tpp_char const *pos, *end;
 
 	/* Relative offset from start of loaded area of file
-	 * (usually `0', unless a custom "p_pos" is used) */
+	 * (usually "0", unless a custom "p_pos" is used) */
 	tpp_size rel_start;
 #if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
 	int curtoken_is_at_sol = -1;
@@ -5669,8 +5670,8 @@ eof:
 #if 0
 		if ((file->tf_tprev == NULL) && tpp_file_getkind(file) == TPP_FILE_KIND_IO) {
 			/* XXX: -Wunused-macros (warn about macros define by __BASE_FILE__,
-			 *      but that were never expanded, or otherwise used in `#ifdef`
-			 *      or `defined` expressions)
+			 *      but that were never expanded, or otherwise used in #ifdef
+			 *      or defined expressions)
 			 * NOTE: If the macro is an #include-guard for __BASE_FILE__, then
 			 *       don't warn about its usage, either! */
 		}
@@ -5686,9 +5687,9 @@ eof:
 	return TPP_TOK_EOF;
 
 return_error:
-	/* Fix the caller's `p_pos` (unless it's the one from the file),
-	 * in which case `rel_start` would need to be relative to itself,
-	 * which it could only be when it's equal to `0` (which it would
+	/* Fix the caller's "p_pos" (unless it's the one from the file),
+	 * in which case "rel_start" would need to be relative to itself,
+	 * which it could only be when it's equal to "0" (which it would
 	 * actually be *most* of the time), but might not be when a free-
 	 * standing BSE sequence was skipped (since those don't appear in
 	 * tokens we produce). */

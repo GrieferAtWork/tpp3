@@ -146,13 +146,13 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
                          int *p_argc, char ***p_argv);
 
-/* Ensure that `self` is in a "normal" state (meaning that there aren't any remaining,
+/* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
  * unterminated multi-argument parameters). If that is not the case, then a warning
  * `TPP_W_MISSING_CLI_ARGUMENT` is emitted on `tpp_cli_loader_getlexer(self)`
  *
  * Unlike the other CLI loader functions above, this one *MUST* be called
  * *AFTER* the lexer's initial input file has been initialized, as it may
- * need to push additional files onto the #include-stack.
+ * need to push additional files onto the `#include`-stack.
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ENOMEM:     Out of memory
@@ -162,6 +162,9 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self);
 #endif /* TPP_HAVE_CLI */
+
+/* TODO: API to query supported CLI flags, for use by someone wanting to implement `--help`,
+ *       or get a list of supported flags. */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

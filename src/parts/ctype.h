@@ -42,12 +42,12 @@ TPP_DECL_BEGIN
 #define TPP_HAVE_BUILTIN_CTYPE 0
 #endif /* !... */
 
-/* Assume that all "tpp_ascii_is*" macros are ascii-compatible
+/* Assume that all `tpp_ascii_is*` macros are ascii-compatible
  * This allows for some additional optimizations when it comes
  * to routing character bytes to token decoders.
  *
- * iow: When this is enabled, "tpp_ascii_islf()" in a switch can
- *      be replaced with "case TPP_ASCII_LF: case TPP_ASCII_CR:"
+ * iow: When this is enabled, `tpp_ascii_islf()` in a switch can
+ *      be replaced with `case TPP_ASCII_LF: case TPP_ASCII_CR:`
  */
 #ifndef TPP_HAVE_ASSUME_ASCII_CTYPE
 #define TPP_HAVE_ASSUME_ASCII_CTYPE (TPP_HAVE_BUILTIN_CTYPE || 1)
@@ -83,9 +83,9 @@ TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (c
 #define tpp_ascii_isspace_nolf(ch) (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSPACE)
 #endif /* TPP_HAVE_BUILTIN_CTYPE */
 
-/* Check if "ch" is the first byte of a multi-byte UTF-8 sequence */
+/* Check if `ch` is the first byte of a multi-byte UTF-8 sequence */
 #ifndef tpp_ascii_ismb
-#if 0 /* Setting "1" here reduces the chances of unicode encoding errors being detected */
+#if 0 /* Setting `1` here reduces the chances of unicode encoding errors being detected */
 #define tpp_ascii_ismb(ch) ((ch) >= 0xc0)
 #else
 #define tpp_ascii_ismb(ch) ((ch) >= 0x80)
@@ -183,20 +183,20 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
 
 
 
-/* Unicode character traits (all of these take "tpp_unichar ord")
+/* Unicode character traits (all of these take `tpp_unichar ord`)
  *
  * If you want TPP to understand character traits across the full
  * unicode character range, you must define (at least) the following
  * macros prior to including any TPP header/source:
- * >> #define tpp_unicode_isspace(ord)    <"ord" is a unicode SPACE or LF character>
- * >> #define tpp_unicode_islf(ord)       <"ord" is a unicode LF character>
- * >> #define tpp_unicode_issymstrt(ord)  <"ord" may be the first character of a keyword>
- * >> #define tpp_unicode_issymcont(ord)  <"ord" may be the 2nd+ character of a keyword>
+ * >> #define tpp_unicode_isspace(ord)    <`ord` is a unicode SPACE or LF character>
+ * >> #define tpp_unicode_islf(ord)       <`ord` is a unicode LF character>
+ * >> #define tpp_unicode_issymstrt(ord)  <`ord` may be the first character of a keyword>
+ * >> #define tpp_unicode_issymcont(ord)  <`ord` may be the 2nd+ character of a keyword>
  *
- * These macros are then used by "tpp_lexer_yieldraw_at()" to determine
+ * These macros are then used by `tpp_lexer_yieldraw_at()` to determine
  * the meaning of unicode characters encountered as part of input text,
  * with any character not satisfying at least one of the above traits
- * being yielded as a "TPP_TOK_UNICHAR" token. */
+ * being yielded as a `TPP_TOK_UNICHAR` token. */
 #ifndef tpp_unicode_isspace_nolf
 #if defined(tpp_unicode_isspace) && defined(tpp_unicode_islf)
 #define tpp_unicode_isspace_nolf(ord) (tpp_unicode_isspace(ord) && !tpp_unicode_islf(ord))
@@ -285,7 +285,7 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128];
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
 tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end);
 
-/* Same as `tpp_unicode_readutf8()', but read in reverse, such
+/* Same as `tpp_unicode_readutf8()`, but read in reverse, such
  * that the last byte of the returned character is `(*p_end)[-1]`
  * (assuming that `*p_end > base`). */
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
@@ -295,21 +295,21 @@ tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **p_end);
 
 #ifndef TPP_UTOA_MAXLEN
 #if TPP_UINTMAX_MAX <= TPP_UINTMAX_C(255)
-#define TPP_UTOA_MAXLEN 3  /* "255" */
+#define TPP_UTOA_MAXLEN 3  /* `255` */
 #elif TPP_UINTMAX_MAX <= TPP_UINTMAX_C(65535)
-#define TPP_UTOA_MAXLEN 5  /* "65535" */
+#define TPP_UTOA_MAXLEN 5  /* `65535` */
 #elif TPP_UINTMAX_MAX <= TPP_UINTMAX_C(4294967295)
-#define TPP_UTOA_MAXLEN 10 /* "4294967295" */
+#define TPP_UTOA_MAXLEN 10 /* `4294967295` */
 #elif TPP_UINTMAX_MAX <= TPP_UINTMAX_C(18446744073709551615)
-#define TPP_UTOA_MAXLEN 20 /* "18446744073709551615" */
+#define TPP_UTOA_MAXLEN 20 /* `18446744073709551615` */
 #elif TPP_UINTMAX_MAX <= TPP_UINTMAX_C(340282366920938463463374607431768211455)
-#define TPP_UTOA_MAXLEN 39 /* "340282366920938463463374607431768211455" */
+#define TPP_UTOA_MAXLEN 39 /* `340282366920938463463374607431768211455` */
 #else /* TPP_UINTMAX_MAX <= ... */
 #error "Unsupported 'TPP_UINTMAX_MAX'"
 #endif /* TPP_UINTMAX_MAX > ... */
 #endif /* !TPP_UTOA_MAXLEN */
 #ifndef TPP_ITOA_MAXLEN
-#define TPP_ITOA_MAXLEN (TPP_UTOA_MAXLEN + 1) /* +1 for leading "-" */
+#define TPP_ITOA_MAXLEN (TPP_UTOA_MAXLEN + 1) /* +1 for leading `-` */
 #endif /* !TPP_ITOA_MAXLEN */
 
 
@@ -335,21 +335,21 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_size TPPCALL tpp_ftoa(char buf[TPP_FTO
 #define TPP_UTF8_MAXLEN 7 /* Enough to write *any* 32-bit unicode ordinal as utf-8 (including invalid ones) */
 
 #if TPP_HAVE_TPP_UNICODE_WRITEUTF8
-/* Encode "uch" as utf-8 into "buf" and return the pointer after the last-written byte. */
+/* Encode `uch` as utf-8 into `buf` and return the pointer after the last-written byte. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc);
 #endif /* TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
 
 
 #if TPP_HAVE_TPP_FUZZY_MEMCMP
-/* Quantify the "fuzziness" of how close 2 memory-blocks are to each
- * other (less means closer to each other, and "0" means identical)
+/* Quantify the *fuzziness* of how close 2 memory-blocks are to each
+ * other (less means closer to each other, and `0` means identical)
  *
  * #ifndef tpp_alloca
  * @return: TPP_SIZE_MAX: Cannot compare strings (insufficient memory,
  *                        and no tpp_alloca() function available to
  *                        supplement).
- *                        The implementation uses "tpp_trymalloc", so
+ *                        The implementation uses `tpp_trymalloc`, so
  *                        this shouldn't be considered a fatal error
  * #endif // !tpp_alloca */
 TPP_DECL TPP_WUNUSED tpp_size TPPCALL
@@ -408,7 +408,7 @@ tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon
 
 /* Return the unicode ordinal associated with `*p_iter`
  * @return: 0 : Unknown (`*p_iter` was left unchanged)
- * @return: * : # of unicode ordinals written to "result" */
+ * @return: * : # of unicode ordinals written to `result` */
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 struct tpp_lexer;
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
@@ -433,7 +433,7 @@ tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
 #define TPP_DECODE_NAMED_ESCAPE_MAXLEN 1
 #endif /* !TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES */
 
-/* Decode a named \N{...} sequence and update `*p_iter` to point to
+/* Decode a named `\N{...}` sequence and update `*p_iter` to point to
  * its end. This function implement the routing between the different
  * (currently enabled) named escape decoders, as configured by:
  * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES`

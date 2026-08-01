@@ -37,19 +37,19 @@ typedef enum tpp_token_id {
 
 
 	/* --------------------------------------------------------------------
-	 * HARD_ERROR: TPP_ENOMEM
+	 * HARD_ERROR: `TPP_ENOMEM`
 	 * --------------------------------------------------------------------
 	 *
 	 * Out of memory
 	 *
-	 * A call to `tpp_malloc()' or `tpp_realloc()' returned NULL, indicating
+	 * A call to `tpp_malloc()` or `tpp_realloc()` returned NULL, indicating
 	 * that the system is out of heap memory. */
 	TPP_TOK_ENOMEM = (int)TPP_ENOMEM,
 
 
 
 	/* --------------------------------------------------------------------
-	 * HARD_ERROR: TPP_EIO
+	 * HARD_ERROR: `TPP_EIO`
 	 * --------------------------------------------------------------------
 	 *
 	 * Filesystem I/O operation failed */
@@ -59,17 +59,17 @@ typedef enum tpp_token_id {
 
 #if TPP_HAVE_FILE_NONBLOCK
 	/* --------------------------------------------------------------------
-	 * SOFT_ERROR: TPP_EWOULDBLOCK
+	 * SOFT_ERROR: `TPP_EWOULDBLOCK`
 	 * --------------------------------------------------------------------
 	 *
 	 * Operation would block, but non-blocking was requested
 	 *
-	 * You will only see this error if you made use of "TPP_HAVE_FILE_NONBLOCK"
+	 * You will only see this error if you made use of `TPP_HAVE_FILE_NONBLOCK`
 	 * This is a temporary error that means that the next token cannot be read
 	 * *right now* because reading from the underlying I/O file would block.
 	 *
-	 * -> You will not see this error when building with "-DTPP_HAVE_FILE_NONBLOCK=0"
-	 * -> You will not see this error when not using the "TPP_FILE_FLAGS_NONBLOCK" flag */
+	 * -> You will not see this error when building with `-DTPP_HAVE_FILE_NONBLOCK=0`
+	 * -> You will not see this error when not using the `TPP_FILE_FLAGS_NONBLOCK` flag */
 	TPP_TOK_EWOULDBLOCK = (int)TPP_EWOULDBLOCK, /* [SOFT_ERROR] */
 #define _TPP_CASE_TPP_TOK_EWOULDBLOCK case TPP_TOK_EWOULDBLOCK:
 #else /* TPP_HAVE_FILE_NONBLOCK */
@@ -80,7 +80,7 @@ typedef enum tpp_token_id {
 
 #if TPP_HAVE_WARNINGS
 	/* --------------------------------------------------------------------
-	 * SOFT_ERROR / HARD_ERROR: TPP_ELEXERROR
+	 * SOFT_ERROR / HARD_ERROR: `TPP_ELEXERROR`
 	 * --------------------------------------------------------------------
 	 *
 	 * Hard lexer error (usually when too many -Werror were emitted)
@@ -96,7 +96,7 @@ typedef enum tpp_token_id {
 	 * HARD_ERROR: TPP_EWARNPRINT
 	 * --------------------------------------------------------------------
 	 *
-	 * Printer registered for "tpp_lexer_warnf" returned an error.
+	 * Printer registered for `tpp_lexer_warnf()` returned an error.
 	 * Since this error is not related to TPP itself, this error should
 	 * be propagated. */
 	TPP_TOK_EWARNPRINT = (int)TPP_EWARNPRINT,
@@ -107,33 +107,33 @@ typedef enum tpp_token_id {
 #define _TPP_CASE_TPP_TOK_EWARNPRINT /* nothing */
 #endif /* !TPP_HAVE_WARNINGS */
 
-/* Check if a given "tpp_token_id id" describes an error (rather than a token) */
+/* Check if a given `tpp_token_id id` describes an error (rather than a token) */
 #define TPP_TOK_ISERR(id) tpp_unlikely((int)(id) < 0)
 
-/* Check if a given "tpp_token_id id" describes an error, or TPP_TOK_EOF */
+/* Check if a given `tpp_token_id id` describes an error, or TPP_TOK_EOF */
 #if 1
 #define TPP_TOK_ISERR_OR_EOF(id) ((int)(id) <= 0)
 #else
 #define TPP_TOK_ISERR_OR_EOF(id) (TPP_TOK_ISERR(id) || (id) == TPP_TOK_EOF)
 #endif
 
-/* Return the "tpp_token_id" representation of "err".
- * The caller must ensure that "err" has an associated "TPP_TOK_E*" entry. */
+/* Return the `tpp_token_id` representation of `err`.
+ * The caller must ensure that `err` has an associated `TPP_TOK_E*` entry. */
 #define TPP_TOK_OFERR(err) ((tpp_token_id)(int)(err))
 
-/* Same as "TPP_TOK_OFERR()", but returns "TPP_TOK_EOF" for "TPP_EOK" */
+/* Same as `TPP_TOK_OFERR()`, but returns `TPP_TOK_EOF` for `TPP_EOK` */
 #if 1
 #define TPP_TOK_OFERR_OR_EOF(err) ((tpp_token_id)(int)(err))
 #else
 #define TPP_TOK_OFERR_OR_EOF(err) ((err) == TPP_EOK ? TPP_TOK_EOF : TPP_TOK_OFERR(err))
 #endif
 
-/* Convert a given "tpp_token_id id" into the associated error code "TPP_E*"
- * The caller must ensure that "TPP_TOK_ISERR(id) == true" */
+/* Convert a given `tpp_token_id id` into the associated error code `TPP_E*`
+ * The caller must ensure that `TPP_TOK_ISERR(id) == true` */
 #define TPP_TOK_ASERR(id)        ((tpp_errno)(int)(id))
 #define TPP_TOK_ASERR_OR_EOK(id) (TPP_TOK_ISERR(id) ? TPP_TOK_ASERR(id) : TPP_EOK)
 
-/* Convenience macro to list the case-labels for all "TPP_TOK_E*" errors. */
+/* Convenience macro to list the case-labels for all `TPP_TOK_E*` errors. */
 #define TPP_CASE_TPP_TOK_ERR      \
 	case TPP_TOK_ENOMEM:          \
 	case TPP_TOK_EIO:             \
@@ -141,15 +141,15 @@ typedef enum tpp_token_id {
 	_TPP_CASE_TPP_TOK_ELEXERROR   \
 	_TPP_CASE_TPP_TOK_EWARNPRINT
 
-/* Return the token ID used to describe the single-character token of "ch" */
+/* Return the token ID used to describe the single-character token of `ch` */
 #define TPP_TOK_OFCHAR(ch) ((tpp_token_id)(unsigned int)(tpp_char)(ch))
 #define TPP_TOK_ISCHAR(id) ((unsigned int)(id) <= 0xff)
 
 
 
-	TPP_TOK_EOF   = '\0', /* "<eof>" END-OF-FILE (will always be ZERO; an actual \0-byte in input is treated as `TPP_TOK_SPACE') */
-	TPP_TOK_LF    = '\n', /* "<linefeed>" Line-feed (always generated by `tpp_lexer_yieldraw()', filtered later if disabled) */
-	TPP_TOK_SPACE = ' ',  /* "<space>" Whitespace (always generated by `tpp_lexer_yieldraw()', filtered later if disabled) */
+	TPP_TOK_EOF   = '\0', /* "<eof>" END-OF-FILE (will always be ZERO; an actual `\0`-byte in input is treated as `TPP_TOK_SPACE`) */
+	TPP_TOK_LF    = '\n', /* "<linefeed>" Line-feed (always generated by `tpp_lexer_yieldraw()`, filtered later if disabled) */
+	TPP_TOK_SPACE = ' ',  /* "<space>" Whitespace (always generated by `tpp_lexer_yieldraw()`, filtered later if disabled) */
 
 	/* Single-character tokens (always equal to that character's ordinal). */
 	TPP_TOK_EXCLAIM   = '!',
@@ -1614,7 +1614,7 @@ for (local firstChar: firstChars) {
 #define TPP_TOK_ISSPACE_OR_LF_OR_COMMENT_OR_EOF(id) ((id) == TPP_TOK_SPACE || (id) == TPP_TOK_LF || TPP_TOK_ISCOMMENT(id) || (id) == TPP_TOK_EOF)
 
 
-/* Helper macros to determine which (and what kind of) keyword is described by a given `id' */
+/* Helper macros to determine which (and what kind of) keyword is described by a given `id` */
 #define TPP_TOK_ISKEYWORD(id)        ((int)(id) >= (int)TPP_TOK_KEYWORD_BEGIN)
 #if TPP_HAVE_USER_KEYWORDS
 #define TPP_TOK_ISUSERKEYWORD(id)    ((int)(id) >= (int)TPP_TOK_USERKEYWORD_BEGIN)
@@ -1624,18 +1624,18 @@ for (local firstChar: firstChars) {
 #define TPP_TOK_ISBUILTINKEYWORD(id) (TPP_TOK_ISKEYWORD(id) && !TPP_TOK_ISUSERKEYWORD(id))
 
 #if TPP_HAVE_STRTOKENID
-/* Returns the "*" in "TPP_TOK_*" of "id", which must be a (non-keyword and non-error) token ID
- * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // "EQUAL_EQUAL"
- * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // "==" */
+/* Returns the `*` in `TPP_TOK_*` of `id`, which must be a (non-keyword and non-error) token ID
+ * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // `EQUAL_EQUAL`
+ * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // `==` */
 TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_strtokenid(tpp_token_id id);
 #else /* TPP_HAVE_STRTOKENID */
 #define tpp_strtokenid(id) ((char const *)NULL)
 #endif /* !TPP_HAVE_STRTOKENID */
 
 #if TPP_HAVE_REPRTOKENID
-/* Similar to `tpp_strtokenid()', but returns a (canonical) representation of "id":
- * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // "EQUAL_EQUAL"
- * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // "==" */
+/* Similar to `tpp_strtokenid()`, but returns a (canonical) representation of `id`:
+ * >> printf("%s\n", tpp_strtokenid(TPP_TOK_EQUAL_EQUAL));  // `EQUAL_EQUAL`
+ * >> printf("%s\n", tpp_reprtokenid(TPP_TOK_EQUAL_EQUAL)); // `==` */
 TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_reprtokenid(tpp_token_id id);
 #else /* TPP_HAVE_STRTOKENID */
 #define tpp_reprtokenid(id) ((char const *)NULL)
@@ -1643,11 +1643,11 @@ TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_reprtokenid(tpp_token_id id);
 
 struct tpp_keyword;
 typedef struct tpp_token {
-	tpp_token_id              TPP_INTERNAL(tt_id);    /* Token ID (never set to one of `TPP_TOK_E*'; iow: always positive or TPP_TOK_EOF) */
-	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(tpp_token_haskwd(self))] Keyword identified by `tt_id' */
+	tpp_token_id              TPP_INTERNAL(tt_id);    /* Token ID (never set to one of `TPP_TOK_E*`; iow: always positive or `TPP_TOK_EOF`) */
+	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(tpp_token_haskwd(self))] Keyword identified by `tt_id` */
 	tpp_char const           *TPP_INTERNAL(tt_start); /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
 	tpp_char const           *TPP_INTERNAL(tt_end);   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
-	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing "tt_start" and "tt_end" (or "NULL" if not needed) */
+	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing `tt_start` and `tt_end` (or `NULL` if not needed) */
 } tpp_token;
 
 /* Public API */
@@ -1667,20 +1667,20 @@ typedef struct tpp_token {
 #define tpp_token_haskwd(self)     TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(self))
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 #define tpp_token_getid(self)      ((self)->TPP_INTERNAL(tt_id))
-#define tpp_token_getkwd(self)     ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when "tpp_token_haskwd(self)" */
+#define tpp_token_getkwd(self)     ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when `tpp_token_haskwd(self)` */
 #define tpp_token_getstart(self)   ((self)->TPP_INTERNAL(tt_start))
 #define tpp_token_getend(self)     ((self)->TPP_INTERNAL(tt_end)) /* WARNING: Don't dereference -- pointed-to memory may not have been loaded! */
 #define tpp_token_getlen(self)     ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
 #define tpp_token_getkwdcstr(self) tpp_keyword_getcstr(tpp_token_getkwd(self))
 
-/* Helpers to set the data-fields of "self" */
+/* Helpers to set the data-fields of `self` */
 #define tpp_token_setid(self, id) \
 	(void)((self)->TPP_INTERNAL(tt_id) = (id))
 #define tpp_token_setkwd(self, kwd) \
 	(void)((self)->TPP_INTERNAL(tt_id) = ((self)->TPP_INTERNAL(tt_kwd) = (kwd))->TPP_INTERNAL(tk_id))
 
 /* Set the text-range of the token.
- * WARNING: When used on tpp_lexer_gettoken(), the given "end" pointer
+ * WARNING: When used on tpp_lexer_gettoken(), the given `end` pointer
  *          also specifies where the next call to tpp_lexer_yield() will
  *          start scanning for tokens! */
 #define tpp_token_setrange(self, start, end)         \
@@ -1702,15 +1702,15 @@ typedef struct tpp_token {
 
 
 #if TPP_HAVE_TOKEN_ENCODESTRING
-/* \-encode "data...+=num_bytes" by passing it to "printer"
- * NOTE: Leading/trailing " (or ')-characters are *NOT* printed!
+/* `\`-encode `data...+=num_bytes` by passing it to `printer`
+ * NOTE: the leading/trailing `"` (or `'`) character is *NOT* printed!
  *
- * @return: >= 0: Sum of positive return values of "printer"
- * @return: < 0:  First negative return value of "printer".
+ * @return: >= 0: Sum of positive return values of `printer`
+ * @return: < 0:  First negative return value of `printer`.
  *                Note that this function never causes errors
  *                on its own, meaning that the meaning of
  *                *all* negative values is entirely up to the
- *                given "printer"! */
+ *                given `printer`! */
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes);

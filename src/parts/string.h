@@ -30,7 +30,7 @@ typedef struct tpp_string {
 	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt);              /* Reference counter (must be atomic because of "_tpp_string_empty") */
 	tpp_size          TPP_INTERNAL(ts_len);                 /* [const] Length of the string */
 	tpp_char          TPP_INTERNAL(ts_str)[TPP_FLEX_ARRAY]; /* [const][ts_len] String content */
-/*	tpp_char          TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing \0-character */
+/*	tpp_char          TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing `\0`-character */
 } tpp_string;
 
 /* Helper macro to statically define a string. */
@@ -84,7 +84,7 @@ TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_malloc(tpp_size len);
 TPP_DECL struct tpp_string_empty_struct {
 	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt); /* Reference counter */
 	tpp_size          TPP_INTERNAL(ts_len);    /* [const] Length of the string */
-	tpp_char          TPP_INTERNAL(ts_nul);    /* [const][== 0] Trailing \0-character */
+	tpp_char          TPP_INTERNAL(ts_nul);    /* [const][== 0] Trailing `\0`-character */
 } _tpp_string_empty;
 
 #define tpp_string_newempty()               \
@@ -98,11 +98,11 @@ TPP_DECL struct tpp_string_empty_struct {
 /************************************************************************/
 #if TPP_HAVE_STRING_BUILDER
 typedef struct tpp_string_builder {
-	tpp_string *TPP_INTERNAL(tsb_buf); /* [0..1][owned] Allocated string buffer ("ts_len" in here is then *allocated* buffer size) */
+	tpp_string *TPP_INTERNAL(tsb_buf); /* [0..1][owned] Allocated string buffer (`ts_len` in here is then *allocated* buffer size) */
 	tpp_size    TPP_INTERNAL(tsb_len); /* [<= tsb_buf->ts_len] Used buffer size */
 } tpp_string_builder;
 
-/* Initialize / finalize a given "tpp_string_builder *self" */
+/* Initialize / finalize a given `tpp_string_builder *self` */
 #define tpp_string_builder_init(self)            \
 	(void)((self)->TPP_INTERNAL(tsb_buf) = NULL, \
 	       (self)->TPP_INTERNAL(tsb_len) = 0)
@@ -115,22 +115,22 @@ typedef struct tpp_string_builder {
 /* Check if the builder is empty */
 #define tpp_string_builder_isempty(self) ((self)->TPP_INTERNAL(tsb_len) == 0)
 
-/* Package "self" into a tpp string and return said string.
- * This function never fails, but it *DOES* finalize "self"
- * iow: DO NOT CALL `tpp_string_builder_fini()' AFTER THIS FUNCTION!
+/* Package `self` into a tpp string and return said string.
+ * This function never fails, but it *DOES* finalize `self`
+ * iow: DO NOT CALL `tpp_string_builder_fini()` AFTER THIS FUNCTION!
  *
  * @return: * : The string that was written to this builder */
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
 tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict self);
 
-/* Allocate (and return) an additional buffer of at least "num_bytes" characters,
+/* Allocate (and return) an additional buffer of at least `num_bytes` characters,
  * to-be initialized by the caller at the end of all string data that has already
  * been allocated to the given builder.
  *
- * @return: * :   Pointer to the base of a "num_bytes"-bytes
+ * @return: * :   Pointer to the base of a `num_bytes`-bytes
  *                long buffer (to-be initialized by the caller)
  *                This pointer ONLY remains valid until the next
- *                call to this function with the same "self".
+ *                call to this function with the same `self`.
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self, tpp_size num_bytes);
@@ -139,18 +139,18 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_string_builder_tryalloc(tpp_string_builder *tpp_restrict self, tpp_size num_bytes);
 #endif /* TPP_HAVE_STRING_BUILDER_TRYALLOC */
 
-/* After a call to `tpp_string_builder_tryalloc()' that didn't actually end up
+/* After a call to `tpp_string_builder_tryalloc()` that didn't actually end up
  * needing all memory, use this function release the unused, trailing portion. */
 #define tpp_string_builder_release(self, num_unused_trailing_bytes)                  \
 	(void)(tpp_assert((self)->TPP_INTERNAL(tsb_len) >= (num_unused_trailing_bytes)), \
 	       (self)->TPP_INTERNAL(tsb_len) -= (num_unused_trailing_bytes))
 
-/* Assign a new length to "self", releasing unused, trailing memory */
+/* Assign a new length to `self`, releasing unused, trailing memory */
 #define tpp_string_builder_truncate(self, new_length)                 \
 	(void)(tpp_assert((self)->TPP_INTERNAL(tsb_len) >= (new_length)), \
 	       (self)->TPP_INTERNAL(tsb_len) = (new_length))
 
-/* Print "text" into "tpp_string_builder *self"
+/* Print `text` into `tpp_string_builder *self`
  * @return: num_bytes:                   Success
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
 TPP_DECL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes);

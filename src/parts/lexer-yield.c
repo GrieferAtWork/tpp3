@@ -38,9 +38,9 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_MACROS
 
-/* Perform the expansion of a user-defined "macro", with the lexer's
+/* Perform the expansion of a user-defined `macro`, with the lexer's
  * current token set to point at the macro's identifier (meaning that
- * you have to seek ahead in order to find the opening '(' token in
+ * you have to seek ahead in order to find the opening `(` token in
  * case of a function-style macro).
  *
  * @return: tpp_lexer_gettoken(self)->tt_id : Function-style macro cannot be expanded
@@ -544,14 +544,14 @@ seek_end_of_macro:
 
 
 #if TPP_HAVE_PRAGMA
-/* Process a #pragma directive, start at the first token that comes after
- * the leading "#pragma" (i.e.: the first token of the actual directive
+/* Process a `#pragma` directive, start at the first token that comes after
+ * the leading `#pragma` (i.e.: the first token of the actual directive
  * itself)
  *
  * @return: TPP_EOK:    Success (but there may still be garbage after
  *                      the directive that hasn't been parsed, yet).
  * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
- *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
+ *                      `TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE`)
  * @return: TPP_E*:     Error */
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
@@ -585,7 +585,7 @@ tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
 		result = tpp_lexer_warn_nonempty_ifdef(self);
 #endif /* TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 
-	/* Make sure that absolutely *nothing* is left on the #include-stack!
+	/* Make sure that absolutely *nothing* is left on the `#include`-stack!
 	 * This is important in case the pragma terminated *inside* of a macro,
 	 * or "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE" was emitted about a
 	 * trailing token
@@ -972,7 +972,7 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	/* Setup file to (re-)parse the identifier string */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
-	tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()', so no need for `tpp_lexer_yield_blocking()' */
+	tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()`, so no need for `tpp_lexer_yield_blocking()` */
 	data.tlhtid_lexer = self;
 	if (TPP_TOK_ISSTRING(tok)) {
 		tpp_errno error;
@@ -1268,7 +1268,7 @@ err_tok_ofr:
 struct tpp_lexer_handle_str_decompile_string_data {
 	TPP_REF tpp_string *tlhsdsd_chunk;   /* [0..1] Out: chunk containing string */
 	tpp_char const     *tlhsdsd_str;     /* String to decompile */
-	tpp_size            tlhsdsd_length;  /* Length of "tlhsdsd_str" */
+	tpp_size            tlhsdsd_length;  /* Length of `tlhsdsd_str` */
 };
 static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_handle_str_decompile_string(void *arg, tpp_string *chunk,
@@ -1307,7 +1307,7 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 	/* Setup file to (re-)parse the string that's being decompiled */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
-	tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()', so no need for `tpp_lexer_yield_blocking()' */
+	tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()`, so no need for `tpp_lexer_yield_blocking()` */
 	if (TPP_TOK_ISSTRING(tok)) {
 		tpp_errno error;
 		/* IMPORTANT: Don't set "TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS" here! */
@@ -1392,7 +1392,7 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 		goto err_nomem_builder;
 	for (;;) {
 		tpp_ssize status;
-		tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()', so no need for `tpp_lexer_yield_blocking()' */
+		tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()`, so no need for `tpp_lexer_yield_blocking()` */
 #if TPP_HAVE_TOK_INT && TPP_HAVE_LEXER_PARSEEMBED
 again_handle_tok:
 #endif /* TPP_HAVE_TOK_INT && TPP_HAVE_LEXER_PARSEEMBED */
@@ -1757,7 +1757,7 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	/* Setup file to (re-)parse the string that's being exec'd */
 	tpp_file_subtext_push(file);
 	tpp_file_subtext_setchunk_fromarg(file, &argv[0]);
-	tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()', so no need for `tpp_lexer_yield_blocking()' */
+	tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()`, so no need for `tpp_lexer_yield_blocking()` */
 
 	tpp_string_builder_init(&data.tlhed_builder);
 	data.tlhed_lexer = self;
@@ -2028,7 +2028,7 @@ err_tok_data_result_builder:
 struct tpp_string_builder_inplace_escape_data {
 	tpp_string_builder *tsbied_builder; /* [1..1] Builder */
 	tpp_char           *tsbied_text;    /* [0..tsbied_size] Remaining data to escape */
-	tpp_size            tsbied_size;    /* Size of "tsbied_size" (in bytes) */
+	tpp_size            tsbied_size;    /* Size of `tsbied_size` (in bytes) */
 };
 
 #define TPP_STRING_BUILDER_INPLACE_ESCAPE_RESTART ((tpp_ssize)(TPP_ELAST - 1))
@@ -2094,8 +2094,8 @@ tpp_string_builder_inplace_escape(tpp_string_builder *tpp_restrict self,
 	return TPP_EOK;
 }
 
-/* Read all data from "handle", escape it like "tpp_token_encodestring"
- * would, then append the escaped contents onto "self". */
+/* Read all data from `handle`, escape it like `tpp_token_encodestring()`
+ * would, then append the escaped contents onto `self`. */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_string_builder_print_escaped_file(tpp_string_builder *tpp_restrict self,
                                       tpp_io_handle handle) {
@@ -2188,17 +2188,17 @@ tpp_lexer_yield_handle___TPP_LOAD_FILE(tpp_lexer *tpp_restrict self) {
 		goto err_tok_ofr;
 
 	/* Load+escape the entire file into a string literal.
-	 * NOTE: There'd be no point in doing something similar to `TPP_FILE_ENCODING_EMBED',
-	 *       since unlike `#embed', which can just lazily load file-data because it produces
-	 *       a `,'-separated sequence of integer tokens, we're actually only producing a
+	 * NOTE: There'd be no point in doing something similar to `TPP_FILE_ENCODING_EMBED`,
+	 *       since unlike `#embed`, which can just lazily load file-data because it produces
+	 *       a `,`-separated sequence of integer tokens, we're actually only producing a
 	 *       single string token, which would just be loaded in its entirety anyways the
-	 *       next time a call to `tpp_lexer_yieldraw()' was made -- so we wouldn't gain
+	 *       next time a call to `tpp_lexer_yieldraw()` was made -- so we wouldn't gain
 	 *       anything...
-	 * In order for something like that to make sense, `tpp_lexer_yieldraw()' would firstly
+	 * In order for something like that to make sense, `tpp_lexer_yieldraw()` would firstly
 	 * need to be able to yield the start of a string token *without* having to parse that
 	 * string token in its entirety first -- which would be impossible since it'd mean that
-	 * when `tpp_lexer_yieldraw()' returns after partially loading a string-encoded file,
-	 * there'd be no valid value that could be returned by `tpp_lexer_gettokenend()' (since
+	 * when `tpp_lexer_yieldraw()` returns after partially loading a string-encoded file,
+	 * there'd be no valid value that could be returned by `tpp_lexer_gettokenend()` (since
 	 * the end of the token wouldn't be loaded yet at that point). */
 	tpp_string_builder_init(&result_builder);
 	if (tpp_string_builder_print(&result_builder, (tpp_char const *)"\"", 1) < 0) {
@@ -2593,7 +2593,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 #endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 #endif /* TPP_HAVE_CPP_MACROS */
 
-/* Handle a keyword-style macro (used to implement "tpp_lexer_yield()").
+/* Handle a keyword-style macro (used to implement `tpp_lexer_yield()`).
  * @return: TPP_TOK_EOF: Caller should yield again.
  * @return: * : The new expansion token after keywords were handled */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -2681,11 +2681,11 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* !TPP_HAVE_CPP_MACROS */
 }
 
-/* Wrapper around `tpp_lexer_yieldpp()' that adds handling for macro expansion.
+/* Wrapper around `tpp_lexer_yieldpp()` that adds handling for macro expansion.
  * @return: * :                  The newly read token (after accounting for macros)
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
+ * @return: TPP_TOK_EWOULDBLOCK: Current file uses `TPP_FILE_FLAGS_NONBLOCK` and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
  * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -2705,8 +2705,8 @@ again:
 
 #if TPP_HAVE_FILE_NONBLOCK
 
-/* Same as `tpp_lexer_yield()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
- * clearing the "TPP_FILE_FLAGS_NONBLOCK" flag, and re-attempting the yield. */
+/* Same as `tpp_lexer_yield()`, but handle `TPP_TOK_EWOULDBLOCK` by temporarily
+ * clearing the `TPP_FILE_FLAGS_NONBLOCK` flag, and re-attempting the yield. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_blocking(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;
@@ -2728,8 +2728,8 @@ again:
 	return result;
 }
 
-/* Same as `tpp_lexer_yieldpp()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
- * clearing the "TPP_FILE_FLAGS_NONBLOCK" flag, and re-attempting the yield. */
+/* Same as `tpp_lexer_yieldpp()`, but handle `TPP_TOK_EWOULDBLOCK` by temporarily
+ * clearing the `TPP_FILE_FLAGS_NONBLOCK` flag, and re-attempting the yield. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yieldpp_blocking(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;
@@ -2751,8 +2751,8 @@ again:
 	return result;
 }
 
-/* Same as `tpp_lexer_yieldraw_at()', but handle "TPP_TOK_EWOULDBLOCK" by temporarily
- * clearing the "TPP_FILE_FLAGS_NONBLOCK" flag, and re-attempting the yield. */
+/* Same as `tpp_lexer_yieldraw_at()`, but handle `TPP_TOK_EWOULDBLOCK` by temporarily
+ * clearing the `TPP_FILE_FLAGS_NONBLOCK` flag, and re-attempting the yield. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	tpp_token_id result;

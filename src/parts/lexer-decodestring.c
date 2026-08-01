@@ -426,7 +426,7 @@ _tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end)
 
 #if TPP_HAVE_STRING_ESCAPE_UNI_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BRACE
 /* Find the first unmatched '}'-character and update `*p_iter` to point *after* it.
- * If no such character can be found update `*p_iter` to point at "end". In either
+ * If no such character can be found update `*p_iter` to point at `end`. In either
  * case, emit a warning `TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE` referencing
  * the skipped portion of input. */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
@@ -518,7 +518,7 @@ again:
 		}
 		--iter;
 
-		/* Warn about trigraph, because `tpp_lexer_yieldraw()' hadn't done so already */
+		/* Warn about trigraph, because `tpp_lexer_yieldraw()` hadn't done so already */
 #if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
 		{
 			tpp_file *const file = tpp_lexer_getfile(self);
@@ -1219,7 +1219,7 @@ struct tpp_block_string_prefix {
 	((self)->tbsp_start >= (self)->tbsp_end)
 
 
-/* Turn "lhs" into the union of "lhs" and "rhs" */
+/* Turn `lhs` into the union of `lhs` and `rhs` */
 static TPP_NONNULL((1, 2)) void TPPCALL
 tpp_block_string_prefix_union(struct tpp_block_string_prefix *tpp_restrict lhs,
                               struct tpp_block_string_prefix const *tpp_restrict rhs) {
@@ -1452,15 +1452,15 @@ tpp_token_decodestring_raw_bse(tpp_lexer *self, tpp_char const *start, tpp_char 
 #endif /* !TPP_HAVE_BSE */
 
 
-/* Print the unescaped representation of the string-token described by "self"
- * The caller must ensure that `TPP_TOK_ISSTRING(tpp_lexer_gettoken(self)->tt_id)'
+/* Print the unescaped representation of the string-token described by `self`
+ * The caller must ensure that `TPP_TOK_ISSTRING(tpp_lexer_gettoken(self)->tt_id)`
  *
  * @param: config: Printer configuration
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
  * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
- *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
- * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()')
+ *                                           a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()`)
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
@@ -1700,20 +1700,20 @@ do_decode_basic:
 }
 
 
-/* Same as "tpp_lexer_decodestring()", but also "tpp_lexer_yield()" to the next token.
- * Then, if that token is also string-like (TPP_TOK_ISSTRING()), decode it also,
+/* Same as `tpp_lexer_decodestring()`, but also `tpp_lexer_yield()` to the next token.
+ * Then, if that token is also string-like (`TPP_TOK_ISSTRING()`), decode it also,
  * then yield again, and so on, until a non-string-like token is encountered, an
  * error happens, or one of the printers returned a negative value.
  *
- * HINT: This function automatically handles "TPP_EWOULDBLOCK" during
+ * HINT: This function automatically handles `TPP_EWOULDBLOCK` during
  *       yield by trying again with TPP_FILE_FLAGS_NONBLOCK disabled.
  *
- * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
  * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
- *                                           a lexer error happened (s.a. `tpp_lexer_warnf()').
+ *                                           a lexer error happened (s.a. `tpp_lexer_warnf()`).
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory
  * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
  * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
@@ -1779,14 +1779,14 @@ again_yield:
 }
 
 
-/* Convenience wrapper around `tpp_lexer_parsestring_ex()'
- * On success (!TPP_ISERR(return)), caller must "tpp_string_decref(*p_result)"
+/* Convenience wrapper around `tpp_lexer_parsestring_ex()`
+ * On success (`!TPP_ISERR(return)`), caller must `tpp_string_decref(*p_result)`
  *
- * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
  * @return: TPP_ENOMEM:     Out of memory
  * @return: TPP_EIO:        I/O error while yielding to next token
  * @return: TPP_EWARNPRINT: Error while printing a warning */
@@ -1818,9 +1818,9 @@ err_builder:
 
 struct tpp_lexer_decodestring_chunk_count_data {
 	tpp_lexer const *tldsccd_lexer; /* [1..1] Current lexer (needed to see if text bounds lie within current token) */
-	unsigned int     tldsccd_count; /* # of chuniks (one of `TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_*') */
+	unsigned int     tldsccd_count; /* # of chuniks (one of `TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_*`) */
 #if TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
-	unsigned int     tldsccd_flags; /* Set of `TPP_LEXER_PARSESTRING_FLAG_*' */
+	unsigned int     tldsccd_flags; /* Set of `TPP_LEXER_PARSESTRING_FLAG_*` */
 #endif /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 };
 
@@ -1876,7 +1876,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_chunk_count, arg, text, n
 #endif /* !TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 
 /* Check if the currently loaded string-token can be printed in 0/1 chunks
- * @return: * : One of `TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_*' */
+ * @return: * : One of `TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_*` */
 static TPP_NONNULL((1)) unsigned int TPPCALL
 tpp_lexer_decodestring_is_single_chunk(tpp_lexer *tpp_restrict self
                                        tpp_lexer_decodestring_single_chunk_flags__param) {
@@ -1969,25 +1969,25 @@ tpp_lexer_decodestring_as_single_chunk(tpp_lexer *self,
 	return TPP_SSIZE_ASERR_OR_EOK(status);
 }
 
-/* Wrapper around `tpp_lexer_parsestring()' that passes the actual string data
+/* Wrapper around `tpp_lexer_parsestring()` that passes the actual string data
  * to a given callback. This function also enables some (optional) optimizations
- * for the most common case where the string token in "self" isn't followed by
+ * for the most common case where the string token in `self` isn't followed by
  * another string token, and can be printed as a singular chunk. When this is
- * the case, no intermediate heap-buffer needs to be created, as "cb" can just
+ * the case, no intermediate heap-buffer needs to be created, as `cb` can just
  * be invoked using the currently loaded file's content-buffer.
  *
- * @param: cb.arg:   Cookie argument (s.a. `arg')
- * @param: cb.chunk: The string-chunk containing "str" (or "NULL" if "str" is statically allocated)
- *                   NOTE: May be non-NULL, even if "str" is statically allocated!
- * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: cb.arg:   Cookie argument (s.a. `arg`)
+ * @param: cb.chunk: The string-chunk containing `str` (or `NULL` if `str` is statically allocated)
+ *                   NOTE: May be non-NULL, even if `str` is statically allocated!
+ * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
  * @return: TPP_ENOMEM:     Out of memory
  * @return: TPP_EIO:        I/O error while yielding to next token
  * @return: TPP_EWARNPRINT: Error while printing a warning
- * @return: * :             Return value of given "cb" */
+ * @return: * :             Return value of given `cb` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsestring_cb(tpp_lexer *self,
                          tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
@@ -2247,15 +2247,16 @@ do_multi_chunk_string:
 #undef tpp_lexer_decodestring_single_chunk_flags__arg
 #endif /* TPP_HAVE_LEXER_DECODESTRING */
 
-#if TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR
-/* Convenience wrapper around `tpp_lexer_parsestring()'
- * On success (!TPP_ISERR(return)), caller must "tpp_expr_value_fini(result)"
+#if TPP_HAVE_LEXER_PARSESTRING_EXPR
+#ifndef tpp_lexer_parsestring_expr
+/* Convenience wrapper around `tpp_lexer_parsestring()`
+ * On success (`!TPP_ISERR(return)`), caller must `tpp_expr_value_fini(result)`
  *
- * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
  * @return: TPP_ENOMEM:     Out of memory
  * @return: TPP_EIO:        I/O error while yielding to next token
  * @return: TPP_EWARNPRINT: Error while printing a warning */
@@ -2269,7 +2270,8 @@ tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
 		return error;
 	return tpp_expr_value_init_string_inherited(result, string);
 }
-#endif /* TPP_HAVE_BUILTIN_LEXER_PARSESTRING_EXPR */
+#endif /* !tpp_lexer_parsestring_expr */
+#endif /* TPP_HAVE_LEXER_PARSESTRING_EXPR */
 
 
 #if TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
@@ -2354,11 +2356,11 @@ tpp_lexer_decodecharacter_big_cb(void *arg, tpp_lexer *tpp_restrict lexer, tpp_u
 
 /* Convenience wrapper to parse a character integer literal
  *
- * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*'
+ * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
  * @return: TPP_ENOMEM:     Out of memory
  * @return: TPP_EIO:        I/O error while yielding to next token
  * @return: TPP_EWARNPRINT: Error while printing a warning */
@@ -2398,15 +2400,16 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_LITERAL */
 
 
-#if TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR
-/* Convenience wrapper around `tpp_lexer_parsecharacter_literal()'
+#if TPP_HAVE_LEXER_PARSECHARACTER_EXPR
+#ifndef tpp_lexer_parsecharacter_expr
+/* Convenience wrapper around `tpp_lexer_parsecharacter_literal()`
  * On success (!TPP_ISERR(return)), caller must "tpp_expr_value_fini(result)"
  *
- * @param: flags: Set of `TPP_LEXER_PARSECHARACTER_FLAG_*'
+ * @param: flags: Set of `TPP_LEXER_PARSECHARACTER_FLAG_*`
  *
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()').
+ *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
  * @return: TPP_ENOMEM:     Out of memory
  * @return: TPP_EIO:        I/O error while yielding to next token
  * @return: TPP_EWARNPRINT: Error while printing a warning */
@@ -2420,7 +2423,8 @@ tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
 		return error;
 	return tpp_expr_value_init_int(result, (tpp_intmax)value);
 }
-#endif /* TPP_HAVE_BUILTIN_LEXER_PARSECHARACTER_EXPR */
+#endif /* !tpp_lexer_parsecharacter_expr */
+#endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
 
 
 TPP_DECL_END

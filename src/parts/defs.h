@@ -29,7 +29,7 @@
  * Supplying your own keywords/warnings/extensions/etc. to TPP3:
  * >> #define TPP_CONFIG_USERDEFS_FILENAME "../../relative/path/to/your/defs.h"
  *
- * If defined, this is the (relative to "tpp-amalgamation.h") name of a file that
+ * If defined, this is the (relative to `tpp-amalgamation.h`) name of a file that
  * should be included in various places to define additional keywords/warnings/
  * extensions/etc. for integration into TPP3.
  ********************************************************************************
@@ -38,50 +38,26 @@
  *
  *
  * >> #define TPP_DEFS
- *    Defined, but no explicit meaning (for use in "#ifdef TPP_DEFS" to detect context)
- *    If you #include other files for "your/defs.h", you can use this macro prevent
+ *    Defined, but no explicit meaning (for use in `#ifdef TPP_DEFS` to detect context)
+ *    If you #include other files for `your/defs.h`, you can use this macro prevent
  *    unexpected tokens from appearing within the definitions file.
  *
  *
  * >> #define TPP_KWD(id, string)  <magic>
- *    Define an additional keyword within "tpp_token_id" by the name "id".
- *    This keyword token is returned when an identifier equal to "string" was parsed.
+ *    Define an additional keyword within `tpp_token_id` by the name `id`.
+ *    This keyword token is returned when an identifier equal to `string` was parsed.
  *    Example:
  *       >> TPP_KWD(KWD_function, "function")
- *    Your compiler can then check for the "function" keyword token like:
+ *    Your compiler can then check for the `function` keyword token like:
  *       >> if (tpp_lexer_gettok(LEXER) == KWD_function) {
  *       >>     ...
  *       >> }
  *
  *
- * >> #define TPP_KWD_FLAGS(id, flags_expr)  <magic>
- *    For use with "TPP_KWD": defines flags that should be associated with the keyword
- *    token "id". The given "flags_expr" parameter is allowed to be a runtime expression,
- *    and should evaluate to a set of `TPP_KEYWORD_FLAG_*', and can thus be used to encode
- *    the intended expansion values of builtins like `__has_extension()'.
- *    The specified "flags_expr" has access to the following predefined function:
- *       >> tpp_lexer *tpp_current_lexer(void);            // The current lexer
- *       >> tpp_keyword const *tpp_current_keyword(void);  // The current keyword
- *       >> tpp_token_id tpp_current_keyword_id(void);     // The current keyword ID
- *       WARNING: The state of the current lexer is undefined inside of "if_expr"!
- *                Do not appear to yield tokens, or modify "tpp_current_lexer()"
- *                in any way.
- *    Example:
- *       >> // Allow user-code to query support for "#pragma once" using "__has_extension(pragma_once)"
- *       >> TPP_KWD(pragma_once, "pragma_once")
- *       >> TPP_KWD_FLAGS(pragma_once, tpp_lexer_has(tpp_current_lexer(), PRAGMA_ONCE)
- *       >>                            ? TPP_KEYWORD_FLAG_HAS_EXTENSION
- *       >>                            ? 0)
- *    User-code can how evaluate the specified "flags_expr" like so:
- *       >> #if __has_extension(pragma_once)
- *       >> #pragma once
- *       >> #endif
- *
- *
  * >> #define TPP_KWD_IS_IDENTIFIER(id, is_identifier_expr)  <magic>
- *    Specify whether or not a keyword should not be treated as an "identifier".
+ *    Specify whether or not a keyword should not be treated as an *identifier*.
  *    This specifies if `__is_identifier()` should expand to `0` or `1`, and if
- *    declared as "no-an-identifier", the `-Wkeyword-macro` is not triggered if
+ *    declared as *no-an-identifier*, the `-Wkeyword-macro` is not triggered if
  *    the user tries to `#define` a macro using this keyword's name.
  *    The specified `is_identifier_expr` is evaluated at runtime, and has access
  *    to the following predefined functions:
@@ -97,12 +73,12 @@
  *
  *
  * >> #define TPP_EXTENSION(id, name, default)  <magic>
- *    Define an extension that can be tested-for using `tpp_lexer_getextension(LEXER, id)',
- *    and can be configured by user-code as `#pragma extension("-f<name>")'. The "default"
+ *    Define an extension that can be tested-for using `tpp_lexer_getextension(LEXER, id)`,
+ *    and can be configured by user-code as `#pragma extension("-f<name>")`. The `default`
  *    argument is a compile-time constant expression specifying if the extension should be
  *    enabled (!= 0) or disabled (== 0) by default.
  *    Example:
- *       >> // "-fmy-cool-expresion" is enabled by default
+ *       >> // `-fmy-cool-expresion` is enabled by default
  *       >> TPP_EXTENSION(EXT_MY_COOL_EXTENSION, "my-cool-expresion", 1)
  *    User-code can now control this extension like so:
  *       >> #pragma extension("-fmy-cool-expresion")    // Enable
@@ -111,47 +87,47 @@
  *       >> if (tpp_lexer_getextension(LEXER, EXT_MY_COOL_EXTENSION)) {
  *       >>     ...
  *       >> }
- *    When "TPP_HAVE_EXTENSIONS" is disabled, uses of this macro are ignored
+ *    When `TPP_HAVE_EXTENSIONS` is disabled, uses of this macro are ignored
  *
  *
  * >> #define TPP_WGROUP(wgroup_id, names, default)  <magic>
- *    Define a warning group identified by "wgroup_id" and addressable by the
- *    specified "names" (which must be a "preprocessor tuple"). The "default"
+ *    Define a warning group identified by `wgroup_id` and addressable by the
+ *    specified `names` (which must be a *preprocessor tuple*). The `default`
  *    argument is a compile-time constant expression specifying the warning
- *    group's default "tpp_warning_state" and must evaluate to one of:
+ *    group's default `tpp_warning_state` and must evaluate to one of:
  *       - TPP_WSTATE_DISABLED
  *       - TPP_WSTATE_WARN
  *       - TPP_WSTATE_ERROR     (only #if TPP_HAVE_WARNING_ERROR)
  *       - TPP_WSTATE_FATAL
  *       Other values (particularly 'TPP_WSTATE_SUPPRESS') are NOT allowed
  *    Example:
- *       >> // "-fmy-cool-expresion" is enabled by default
+ *       >> // `-Wbad-thing-happened` is enabled by default
  *       >> TPP_WGROUP(WG_BAD_THING_HAPPEND, 2("bad-thing-happened", "same-bad-thing-happened"), TPP_WSTATE_ERROR)
  *    Usercode can then control this warning like:
  *       >> #pragma warning("-Wno-bad-thing-happened")
  *       >> #pragma warning("-Wno-same-bad-thing-happened") // Same as previous line
- *    When "TPP_HAVE_WARNINGS" is disabled, uses of this macro are ignored
+ *    When `TPP_HAVE_WARNINGS` is disabled, uses of this macro are ignored
  *
  *
  * >> TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format)
  * >> TPP_WARNING_EX(warning_id, wgroup_ids, numbers, numbers_default, expr)
- *    Defines a warning that can be emitted as "tpp_lexer_warnf(LEXER, warning_id, ...)",
- *    and belongs to the specified "wgroup_ids" (which must be a "preprocessor tuple").
- *    - When "TPP_HAVE_WARNING_NUMBERS" is enabled, "numbers" is another preprocessor
- *      tuple, expanding to the set of "numbers" that can be used to identify this warning
- *      specifically, in which case "numbers_default" is the default state of that warning
+ *    Defines a warning that can be emitted as `tpp_lexer_warnf(LEXER, warning_id, ...)`,
+ *    and belongs to the specified `wgroup_ids` (which must be a `preprocessor tuple`).
+ *    - When `TPP_HAVE_WARNING_NUMBERS` is enabled, `numbers` is another preprocessor
+ *      tuple, expanding to the set of `numbers` that can be used to identify this warning
+ *      specifically, in which case `numbers_default` is the default state of that warning
  *      specifically.
- *    - When "TPP_HAVE_WARNING_NUMBERS" is disabled, or "numbers" is "0()" (an empty tuple),
- *      the the "numbers_default" parameter is ignored and never used.
- *    - When "TPP_WARNING" is used, "format" is the format string that is returned by
- *      the TPP API function `tpp_warning_getformat()', and is also the string passed to
- *      `tpp_lexer_printf_warning()' when the warning is emitted by `tpp_lexer_warnf()'.
+ *    - When `TPP_HAVE_WARNING_NUMBERS` is disabled, or `numbers` is `0()` (an empty tuple),
+ *      the the `numbers_default` parameter is ignored and never used.
+ *    - When `TPP_WARNING` is used, `format` is the format string that is returned by
+ *      the TPP API function `tpp_warning_getformat()`, and is also the string passed to
+ *      `tpp_lexer_printf_warning()` when the warning is emitted by `tpp_lexer_warnf()`.
  *      Operands like '%s' that may appear in this format-string are taken from varargs
- *      passed to `tpp_lexer_warnf()' at the time the warning is emitted.
- *    The alternate macro "TPP_WARNING_EX()" behaves the same as "TPP_WARNING()", except
- *    that instead of directly specifying a "format" string literal, an "expr" is supplied,
+ *      passed to `tpp_lexer_warnf()` at the time the warning is emitted.
+ *    The alternate macro `TPP_WARNING_EX()` behaves the same as `TPP_WARNING()`, except
+ *    that instead of directly specifying a `format` string literal, an `expr` is supplied,
  *    that is executed (as a block-statement) when the warning is emitted. When this happens,
- *    "expr" has access to the following functions:
+ *    `expr` has access to the following functions:
  *       >> tpp_lexer *tpp_current_lexer(void);            // The current lext
  *       >> tpp_lexer_printf_info *tpp_current_info(void); // Warning emission info
  *       >> tpp_warning_id tpp_current_warning_id(void);   // The warning that is being invoked
@@ -172,9 +148,9 @@
  *       >> void tpp_warn_printf2(tpp_lexer_printf_info *info, char const *format, A a, B b);
  *       >> void tpp_warn_printf3(tpp_lexer_printf_info *info, char const *format, A a, B b, C c);
  *       >> void tpp_warn_printf4(tpp_lexer_printf_info *info, char const *format, A a, B b, C c, D d);
- *       - Any "return" statement executed must specify some "tpp_errno", and causes
- *         the associated `tpp_lexer_warnf()' to eventually return with that value.
- *         In case "TPP_EOK" is returned, trailing notes are still printed.
+ *       - Any `return` statement executed must specify some `tpp_errno`, and causes
+ *         the associated `tpp_lexer_warnf()` to eventually return with that value.
+ *         In case `TPP_EOK` is returned, trailing notes are still printed.
  *    Example:
  *       >> TPP_WARNING(W_BAD_THING_HAPPEND, 1(WG_BAD_THING_HAPPEND), 2(100, 101), "bad thing happened: %s")
  *       >> TPP_WARNING_EX(W_BAD_THING_HAPPEND, 1(WG_BAD_THING_HAPPEND), 2(100, 101), {
@@ -188,24 +164,24 @@
  *
  *
  * >> #define TPP_MACRO(keyword_id, if_expr)
- *    For use with "TPP_KWD": specifies if the associated keyword should be considered to
- *    be "#if defined(<keyword_id>)" for the purposes of #ifdef-checks, as well as builtin
- *    macro expansions. For this purpose, "if_expr" should be a "bool"-expression.
- *    The specified "if_expr" has access to the following predefined function:
+ *    For use with `TPP_KWD`: specifies if the associated keyword should be considered to
+ *    be `#if defined(<keyword_id>)` for the purposes of `#ifdef`-checks, as well as builtin
+ *    macro expansions. For this purpose, `if_expr` should be a `bool`-expression.
+ *    The specified `if_expr` has access to the following predefined function:
  *       >> tpp_lexer *tpp_current_lexer(void);            // The current lexer
  *       >> tpp_keyword const *tpp_current_keyword(void);  // The current keyword
  *       >> tpp_token_id tpp_current_keyword_id(void);     // The current keyword ID
- *       WARNING: The state of the current lexer is undefined inside of "if_expr"!
- *                Do not appear to yield tokens, or modify "tpp_current_lexer()"
+ *       WARNING: The state of the current lexer is undefined inside of `if_expr`!
+ *                Do not appear to yield tokens, or modify `tpp_current_lexer()`
  *                in any way.
  *    Example:
- *       >> // Allow user-code to query support for "#pragma once" using "__has_extension(pragma_once)"
+ *       >> // Allow user-code to query support for `#pragma once` using `__has_extension(pragma_once)`
  *       >> TPP_KWD(KWD___MY_COOL_EXTENSION_ENABLED__, "__MY_COOL_EXTENSION_ENABLED__")
  *       >> TPP_MACRO(KWD___MY_COOL_EXTENSION_ENABLED__, tpp_lexer_getextension(tpp_current_lexer(), EXT_MY_COOL_EXTENSION))
- *    User-code can now test the state of "EXT_MY_COOL_EXTENSION" like:
+ *    User-code can now test the state of `EXT_MY_COOL_EXTENSION` like:
  *       >> #ifdef __MY_COOL_EXTENSION_ENABLED__
  *    Hint:
- *       - You can use "container_of" to access structure surrounding TPP's lexer,
+ *       - You can use `container_of` to access structure surrounding TPP's lexer,
  *         allowing you to (safely) access other components of your compiler, thus
  *         enabling user-code to test feature flags you implemented without the use
  *         of TPP's extension system
@@ -289,7 +265,7 @@
 /* Definitions for builtin macros*/
 #ifndef TPP_MACRO
 /* Reference a keyword that would behave as a predefined
- * macro only defined when `if' evaluates to true at runtime.
+ * macro only defined when `if_expr` evaluates to true at runtime.
  * NOTE: Such a macro can still be re-defined by the user, but may
  *       later be #undef'd again to restore its original meaning. */
 #define TPP_MACRO(keyword_id, if_expr)

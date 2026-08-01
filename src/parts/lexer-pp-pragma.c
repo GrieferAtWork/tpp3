@@ -1036,7 +1036,7 @@ tpp_lexer_process_pragma_GCC_poison(tpp_lexer *tpp_restrict self) {
 	 *              Re-determining that location at this point will also be complicated,
 	 *              but the same functionality is also needed in "tpp_macro_func_lcinfo()"
 	 *              - If the macro argument call site cannot be determined (which can be
-	 *                the case when the argument call site is no longer on the #include-
+	 *                the case when the argument call site is no longer on the `#include`-
 	 *                stack): emit warning
 	 *          - If the keyword appeared because of something else (e.g. token concat): emit warning
 	 */
@@ -1112,8 +1112,8 @@ struct tpp_lexer_process_pragma_GCC_dependency_data {
 	tpp_file const *tlppgdd_textfile; /* [1..1] The current tpp_file_gettextfile()-file */
 	int             tlppgdd_cmpres;   /* Result of last-modified comparison (lhs: current file, rhs: dependency)
 	                                   * Set to "0" if the comparison failed for some non-fatal reason. */
-	char const     *tlppgdd_str;      /* #include-string (used during callback) */
-	tpp_size        tlppgdd_length;   /* #include-string length (used during callback) */
+	char const     *tlppgdd_str;      /* `#include`-string (used during callback) */
+	tpp_size        tlppgdd_length;   /* `#include`-string length (used during callback) */
 	char           *tlppgdd_depfile;  /* [1..1][OUT][owned][valid_if(tlppgdd_cmpres < 0)] Filename of changed dependency. */
 };
 
@@ -1359,12 +1359,12 @@ tpp_lexer_process_pragma_tpp_exec(tpp_lexer *tpp_restrict self) {
 /* #pragma tpp_set_keyword_flags("foo", 0x7f)                           */
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS || TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS
-#define TPP_LEGACY_KEYWORD_FLAG_HAS_ATTRIBUTE          0x01 /* Historical constant: `__has_attribute()' */
-#define TPP_LEGACY_KEYWORD_FLAG_HAS_BUILTIN            0x02 /* Historical constant: `__has_builtin()' */
-#define TPP_LEGACY_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE      0x04 /* Historical constant: `__has_cpp_attribute()' */
-#define TPP_LEGACY_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE 0x08 /* Historical constant: `__has_declspec_attribute()' */
-#define TPP_LEGACY_KEYWORD_FLAG_HAS_EXTENSION          0x10 /* Historical constant: `__has_extension()' */
-#define TPP_LEGACY_KEYWORD_FLAG_HAS_FEATURE            0x20 /* Historical constant: `__has_feature()' */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_ATTRIBUTE          0x01 /* Historical constant: `__has_attribute()` */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_BUILTIN            0x02 /* Historical constant: `__has_builtin()` */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_CPP_ATTRIBUTE      0x04 /* Historical constant: `__has_cpp_attribute()` */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_DECLSPEC_ATTRIBUTE 0x08 /* Historical constant: `__has_declspec_attribute()` */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_EXTENSION          0x10 /* Historical constant: `__has_extension()` */
+#define TPP_LEGACY_KEYWORD_FLAG_HAS_FEATURE            0x20 /* Historical constant: `__has_feature()` */
 #define TPP_LEGACY_KEYWORD_FLAG_IS_DEPRECATED          0x40 /* Historical constant: Warn when the keyword appears as the result of lexical processing. */
 #define TPP_LEGACY_KEYWORD_FLAG_MASK                   0x7f /* Historical constant */
 
@@ -2180,17 +2180,15 @@ for (local kind: KEYWORD_FEATURE_KINDS) {
 
 
 
-/* Process a #pragma directive, start at the first token that comes after
- * the leading "#pragma" (i.e.: the first token of the actual directive
+/* Process a `#pragma` directive, start at the first token that comes after
+ * the leading `#pragma` (i.e.: the first token of the actual directive
  * itself)
  *
  * @return: TPP_EOK:    Success (but there may still be garbage after
  *                      the directive that hasn't been parsed, yet).
  * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
- *                      "TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE")
+ *                      `TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE`)
  * @return: TPP_E*:     Error */
-TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
 	tpp_token_id tok = tpp_lexer_gettok(self);

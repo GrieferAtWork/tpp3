@@ -147,7 +147,7 @@ tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
 #endif /* tpp_io_handle_IS_FILE */
 }
 
-/* Close a file previously opened by `tpp_io_open()' */
+/* Close a file previously opened by `tpp_io_open()` */
 TPP_IMPL void TPPCALL tpp_io_close(tpp_io_handle file) {
 #ifdef tpp_io_handle_IS_HANDLE
 	TPP_SYSCALL_NOFAIL({
@@ -168,13 +168,13 @@ TPP_IMPL void TPPCALL tpp_io_close(tpp_io_handle file) {
 #endif /* tpp_io_handle_IS_FILE */
 }
 
-/* Read data from a given `file' into `buf'
- * @return: * : The # of bytes read into `buf' (at most `bufsize')
- *              NOTE: Use "TPP_SSIZE_ISERR()" to detect error conditions!
+/* Read data from a given `file` into `buf`
+ * @return: * : The # of bytes read into `buf` (at most `bufsize`)
+ *              NOTE: Use `TPP_SSIZE_ISERR()` to detect error conditions!
  * @return: TPP_SSIZE_OFERR(TPP_EIO):         I/O error
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):      Out of memory
  * #if TPP_HAVE_FILE_NONBLOCK
- * @return: TPP_SSIZE_OFERR(TPP_EWOULDBLOCK): `nonblock' was given, but operation would block
+ * @return: TPP_SSIZE_OFERR(TPP_EWOULDBLOCK): `nonblock` was given, but operation would block
  * #endif // TPP_HAVE_FILE_NONBLOCK */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_io_read(tpp_io_handle file, void *buf,
@@ -200,7 +200,7 @@ tpp_io_read(tpp_io_handle file, void *buf,
 		if (dwFileType == FILE_TYPE_PIPE) {
 			BYTE temp_buffer[1];
 			BOOL bPeek;
-			/* `WaitForSingleObject()' doesn't work on pipes (for some reason...) */
+			/* "WaitForSingleObject()" doesn't work on pipes (for some reason...) */
 			dwResult = 0;
 			TPP_SYSCALL({
 				bPeek = PeekNamedPipe(file, temp_buffer, sizeof(temp_buffer), &dwResult, NULL, NULL);
@@ -265,27 +265,27 @@ tpp_io_read(tpp_io_handle file, void *buf,
 
 
 #if TPP_HAVE_IO_COMPARE_MTIME
-/* Compare the last-modified timestamp of "lhs_handle" with the last-
- * modified timestamp of "rhs_filename". If available, "lhs_filename"
- * specifies the filename linked to "lhs_handle", though this may be
- * "NULL" if unknown.
+/* Compare the last-modified timestamp of `lhs_handle` with the last-
+ * modified timestamp of `rhs_filename`. If available, `lhs_filename`
+ * specifies the filename linked to `lhs_handle`, though this may be
+ * `NULL` if unknown.
  *
- * This function is used to implement "#pragma GCC dependency"
+ * This function is used to implement `#pragma GCC dependency`
  *
- * @param: lhs_filename: Filename of "lhs_handle" (or "NULL" if unknown)
- * @param: lhs_handle:   File handle for left file (only valid if "lhs_handle_valid")
+ * @param: lhs_filename: Filename of `lhs_handle` (or `NULL` if unknown)
+ * @param: lhs_handle:   File handle for left file (only valid if `lhs_handle_valid`)
  * @param: rhs_filename: Filename of right file (always non-NULL)
  * @param: p_cmp_result: Set according to compare result on TPP_EOK:
  *                        *p_cmp_result <  0  <=>  fstat(lhs_handle).st_mtime <  stat(rhs_filename).st_mtime
  *                        *p_cmp_result == 0  <=>  fstat(lhs_handle).st_mtime == stat(rhs_filename).st_mtime
  *                        *p_cmp_result >  0  <=>  fstat(lhs_handle).st_mtime >  stat(rhs_filename).st_mtime
  * @return: TPP_EOK:     Success
- * @return: TPP_ENOENT:  No such file "rhs_filename" (SOFT_ERROR)
+ * @return: TPP_ENOENT:  No such file `rhs_filename` (SOFT_ERROR)
  * @return: TPP_EIO:     I/O error (HARD_ERROR)
  * @return: TPP_ENOMEM:  Out of memory (HARD_ERROR)
  * @return: TPP_ELAST:   Unable to fstat(lhs_handle) / stat(lhs_filename)
- *                       [os-specific: or "lhs_filename == NULL" or doesn't exist], or unable
- *                       to implement function and "TPP_IGNORE_INVALID_CONFIGURATION" is enabled. */
+ *                       [os-specific: or `lhs_filename == NULL` or doesn't exist], or unable
+ *                       to implement function and `TPP_IGNORE_INVALID_CONFIGURATION` is enabled. */
 #ifndef tpp_io_compare_mtime
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((4, 5)) tpp_errno TPPCALL
 tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lhs_handle_valid,
@@ -439,16 +439,16 @@ got_lhs_info:
  *      ^           ^                             ^
  *      filename    after_last_sep                after_last_sep+after_last_sep_bufsize
  *
- * Check that the casing of the last part of the filename (here: "Desktop")
- * is correct. If it is, do nothing and return "0". If it isn't, check the
- * length of the correctly cased filename. If it's "<= after_last_sep_bufsize",
- * copy it to "after_last_sep" (without a trailing \0-character) and return
+ * Check that the casing of the last part of the filename (here: `Desktop`)
+ * is correct. If it is, do nothing and return `0`. If it isn't, check the
+ * length of the correctly cased filename. If it's `<= after_last_sep_bufsize`,
+ * copy it to `after_last_sep` (without a trailing `\0`-character) and return
  * the number of copied bytes (here: return <= after_last_sep_bufsize). If
- * it's "> after_last_sep_bufsize", don't copy anything to "after_last_sep"
+ * it's `> after_last_sep_bufsize`, don't copy anything to `after_last_sep`
  * and return the required buffer size (here: return > after_last_sep_bufsize)
  *
  * @return: 0 :                          Casing is correct
- * @return: <= after_last_sep_bufsize:   Casing was fixed by copying "return" bytes to "after_last_sep"
+ * @return: <= after_last_sep_bufsize:   Casing was fixed by copying `return` bytes to `after_last_sep`
  * @return: > after_last_sep_bufsize:    Casing is incorrect, and you must supply a larger buffer
  * @return: TPP_SSIZE_OFERR(TPP_ENOENT): [SOFT_ERROR] No such file or directory (you can stop checking casing)
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): [HARD_ERROR] Out of memory

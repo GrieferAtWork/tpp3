@@ -44,24 +44,24 @@ TPP_DECL_BEGIN
 #endif /* !tpp_lexer_foreach_include_path_flags__PARAM */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
-/* Possible values for `tpp_hooks_call_system_include_path(when)' */
+/* Possible values for `tpp_hooks_call_system_include_path(when)` */
 #if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK
 typedef enum tpp_hook_system_include_path_when {
 	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_FIRST,         /* Called at the very start */
 #if TPP_HAVE_INCLUDE_PATH
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_QUOTE,  /* Called for '"'-paths after trying to import relative to current file, but before "tip_quote_list" is checked */
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_QUOTE,  /* Called for `"`-paths after trying to import relative to current file, but before `tip_quote_list` is checked */
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSTEM, /* Called before "tip_system_list" is checked */
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSTEM, /* Called before `tip_system_list` is checked */
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSHDR, /* Called before "tip_syshdr_list" is checked */
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSHDR, /* Called before `tip_syshdr_list` is checked */
 #endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #endif /* TPP_HAVE_INCLUDE_PATH */
 #if TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_CONFIG, /* Called before "TPP_CONFIG_SYSTEM_INCLUDE_PATH" is checked */
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_CONFIG, /* Called before `TPP_CONFIG_SYSTEM_INCLUDE_PATH` is checked */
 #endif /* TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH */
 #if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_AFTER,  /* Called before "tip_after_list" is checked */
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_AFTER,  /* Called before `tip_after_list` is checked */
 #endif /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_AFTER */
 	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_LAST,          /* Called at the very end */
 } tpp_hook_system_include_path_when;
@@ -72,7 +72,7 @@ typedef enum tpp_hook_system_include_path_when {
 typedef enum tpp_hook_system_embed_path_when {
 	TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_FIRST,         /* Called at the very start */
 #if TPP_HAVE_INCLUDE_PATH_EMBED
-	TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_BEFORE_SYSTEM, /* Called before "tip_embed_list" is checked */
+	TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_BEFORE_SYSTEM, /* Called before `tip_embed_list` is checked */
 #endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 	TPP_HOOK_SYSTEM_EMBED_PATH_WHEN_LAST,          /* Called at the very end */
 } tpp_hook_system_embed_path_when;

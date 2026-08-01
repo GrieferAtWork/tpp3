@@ -30,16 +30,15 @@
 TPP_DECL_BEGIN
 
 #if TPP_HAVE_TOKEN_ENCODESTRING
-
-/* \-encode "data...+=num_bytes" by passing it to "printer"
- * NOTE: Leading/trailing " (or ')-characters are *NOT* printed!
+/* `\`-encode `data...+=num_bytes` by passing it to `printer`
+ * NOTE: the leading/trailing `"` (or `'`) character is *NOT* printed!
  *
- * @return: >= 0: Sum of positive return values of "printer"
- * @return: < 0:  First negative return value of "printer".
+ * @return: >= 0: Sum of positive return values of `printer`
+ * @return: < 0:  First negative return value of `printer`.
  *                Note that this function never causes errors
  *                on its own, meaning that the meaning of
  *                *all* negative values is entirely up to the
- *                given "printer"! */
+ *                given `printer`! */
 TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_token_encodestring(tpp_formatprinter printer, void *arg,
                        void const *data, tpp_size num_bytes) {

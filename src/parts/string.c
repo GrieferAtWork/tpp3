@@ -64,9 +64,9 @@ TPP_IMPL struct tpp_string_empty_struct _tpp_string_empty = {
 /************************************************************************/
 
 #if TPP_HAVE_STRING_BUILDER
-/* Package "self" into a tpp string and return said string.
- * This function never fails, but it *DOES* finalize "self"
- * iow: DO NOT CALL `tpp_string_builder_fini()' AFTER THIS FUNCTION!
+/* Package `self` into a tpp string and return said string.
+ * This function never fails, but it *DOES* finalize `self`
+ * iow: DO NOT CALL `tpp_string_builder_fini()` AFTER THIS FUNCTION!
  *
  * @return: * : The string that was written to this builder */
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
@@ -141,7 +141,7 @@ tpp_string_builder_alloc_impl(tpp_string_builder *tpp_restrict self,
  * @return: * :   Pointer to the base of a "num_bytes"-bytes
  *                long buffer (to-be initialized by the caller)
  *                This pointer ONLY remains valid until the next
- *                call to this function with the same "self".
+ *                call to this function with the same `self`.
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_string_builder_alloc(tpp_string_builder *tpp_restrict self,

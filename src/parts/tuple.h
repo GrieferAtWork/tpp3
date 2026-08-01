@@ -158,13 +158,13 @@ for (local n: [:N]) {
 /*[[[end]]]*/
 
 /* >> TPP_TUPLE_NONEMPTY(tuple)
- * expands to "0" if "tuple" is empty; otherwise, expands to "1" */
+ * expands to `0` if `tuple` is empty; otherwise, expands to `1` */
 #define TPP_TUPLE_NONEMPTY(tuple)  _TPP_TUPLE_NONEMPTY(tuple)
 #define _TPP_TUPLE_NONEMPTY(tuple) _TPP_TUPLE_NONEMPTY_(_TPP_TUPLE_NE_##tuple)
 #define _TPP_TUPLE_NONEMPTY_(x)    x
 
 /* >> TPP_TUPLE_IF_NONEMPTY(tuple, what, _)
- * expands to "what(_)" if "tuple" is non-empty; otherwise, expands to nothing */
+ * expands to `what(_)` if `tuple` is non-empty; otherwise, expands to nothing */
 #define TPP_TUPLE_IF_NONEMPTY(tuple, what, _) _TPP_TUPLE_IF_NONEMPTY(TPP_TUPLE_NONEMPTY(tuple), what, _)
 #define _TPP_TUPLE_IF_NONEMPTY(if, what, _)   _TPP_TUPLE_IF_NONEMPTY_(if, what, _)
 #define _TPP_TUPLE_IF_NONEMPTY_(if, what, _)  _TPP_TUPLE_IF_NONEMPTY_##if (what, _)
@@ -172,7 +172,7 @@ for (local n: [:N]) {
 #define _TPP_TUPLE_IF_NONEMPTY_0(what, _)
 
 /* >> TPP_TUPLE_IF_EMPTY(tuple, what, _)
- * expands to "what(_)" if "tuple" is empty; otherwise, expands to nothing */
+ * expands to `what(_)` if `tuple` is empty; otherwise, expands to nothing */
 #define TPP_TUPLE_IF_EMPTY(tuple, what, _) _TPP_TUPLE_IF_EMPTY(TPP_TUPLE_NONEMPTY(tuple), what, _)
 #define _TPP_TUPLE_IF_EMPTY(if, what, _)   _TPP_TUPLE_IF_EMPTY_(if, what, _)
 #define _TPP_TUPLE_IF_EMPTY_(if, what, _)  _TPP_TUPLE_IF_EMPTY_##if (what, _)
@@ -180,13 +180,13 @@ for (local n: [:N]) {
 #define _TPP_TUPLE_IF_EMPTY_1(what, _)
 
 /* >> TPP_TUPLE_SIZE(tuple)
- * expands to a decimal number describing the size of "tuple" */
+ * expands to a decimal number describing the size of `tuple` */
 #define TPP_TUPLE_SIZE(tuple)  _TPP_TUPLE_SIZE(tuple)
 #define _TPP_TUPLE_SIZE(tuple) _TPP_TUPLE_SIZE_(_TPP_TUPLE_SIZE_##tuple)
 #define _TPP_TUPLE_SIZE_(x)    x
 
 /* >> TPP_TUPLE_GET(tuple, i)
- * expands to the i'th element of "tuple" */
+ * expands to the i'th element of `tuple` */
 #define TPP_TUPLE_GET(tuple, i)  _TPP_TUPLE_GET(tuple, i)
 #define _TPP_TUPLE_GET(tuple, i) _TPP_TUPLE_GET_(_TPP_TUPLE_GET_##i##_##tuple)
 #define _TPP_TUPLE_GET_(x)       x

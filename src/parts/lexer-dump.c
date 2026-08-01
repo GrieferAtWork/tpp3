@@ -44,9 +44,9 @@ TPP_DECL_BEGIN
 typedef struct tpp_lexer_dumper {
 	tpp_lexer        *tld_lexer;   /* [1..1][const] Lexer */
 	tpp_formatprinter tld_printer; /* [1..1][const] Printer */
-	void             *tld_arg;     /* [?..?][const] Cookie for "tld_printer" */
-	tpp_ssize         tld_result;  /* Accumulated results of "tld_printer", or negative on error */
-	unsigned int      tld_what;    /* What to print (set of `TPP_LEXER_DUMP_DEFINITIONS_*') */
+	void             *tld_arg;     /* [?..?][const] Cookie for `tld_printer` */
+	tpp_ssize         tld_result;  /* Accumulated results of `tld_printer`, or negative on error */
+	unsigned int      tld_what;    /* What to print (set of `TPP_LEXER_DUMP_DEFINITIONS_*`) */
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
 #if TPP_HAVE_CPP_MACROS
 #if TPP_CONF_IS_EXT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
@@ -706,10 +706,10 @@ tpp_lexer_dumper_printincludes(tpp_lexer_dumper *tpp_restrict self,
 #endif /* TPP_HAVE_PRAGMA_TPP_INCLUDE_PATH */
 
 
-/* Dump all user-defined macros and assertions to "printer"
- * @param: what: Set of `TPP_LEXER_DUMP_DEFINITIONS_*'
- * @return: * :  Sum of return values of "printer"
- * @return: < 0: First negative return value of "printer" */
+/* Dump all user-defined macros and assertions to `printer`
+ * @param: what: Set of `TPP_LEXER_DUMP_DEFINITIONS_*`
+ * @return: * :  Sum of return values of `printer`
+ * @return: < 0: First negative return value of `printer` */
 TPP_IMPL TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
                            tpp_formatprinter printer, void *arg,

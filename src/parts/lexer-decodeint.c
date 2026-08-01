@@ -220,14 +220,14 @@ handle_invalid:
  * make up those parts of the token will be yielded next)
  *
  * @param: p_suffix_start: When non-NULL, store a pointer to the first character
- *                         of the int token's suffix (e.g. "ull" in "123ull").
+ *                         of the int token's suffix (e.g. `ull` in `123ull`).
  *                         Note that when `TPP_HAVE_BSE` is enabled, you will
- *                         have to skip over \-sequences yourself. However, TPP
+ *                         have to skip over `\`-sequences yourself. However, TPP
  *                         will ensure that pointer written here points *after*
  *                         a potential BSE between the int and the suffix. The
- *                         suffix always ends at `tpp_lexer_gettokenend(self)',
+ *                         suffix always ends at `tpp_lexer_gettokenend(self)`,
  *                         and if there is no suffix, this function will store
- *                         a pointer to `tpp_lexer_gettokenend(self)' instead.
+ *                         a pointer to `tpp_lexer_gettokenend(self)` instead.
  * @return: TPP_EOK:        Success
  * @return: TPP_ELEXERROR:  Lexer error happened
  * @return: TPP_EWARNPRINT: Error while printing a warning */

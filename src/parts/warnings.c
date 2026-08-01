@@ -39,9 +39,8 @@ TPP_DECL_BEGIN
 #define _tpp_warnings_fini_common(self) (void)0
 #endif /* !TPP_HAVE_WARNING_SUPPRESS */
 
-/* Finalize a given warnings context "self" */
+/* Finalize a given warnings context `self` */
 #if TPP_HAVE_WARNINGS_FINI
-
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_warnings_fini(tpp_warnings *tpp_restrict self) {
 	/* Finalize common data */
@@ -147,7 +146,7 @@ destroy_copied_warning_states_and_return_error:
 
 
 #if TPP_HAVE_WARNINGS_PUSH_POP
-/* Pop the current warnings state (may only be called when `tpp_warnings_canpop(self)') */
+/* Pop the current warnings state (may only be called when `tpp_warnings_canpop(self)`) */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_warnings_pop(tpp_warnings *tpp_restrict self) {
 	tpp_assert(tpp_warnings_canpop(self));
@@ -162,8 +161,8 @@ tpp_warnings_pop(tpp_warnings *tpp_restrict self) {
 }
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 
-/* Return the state of "ctx_id". The caller is
- * responsible to ensure that "ctx_id" is valid. */
+/* Return the state of `ctx_id`. The caller is
+ * responsible to ensure that `ctx_id` is valid. */
 #if TPP_HAVE_WARNING_SUPPRESS
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_state TPPCALL
 tpp_warnings_getctx(tpp_warnings const *tpp_restrict self,
@@ -194,7 +193,7 @@ tpp_warnings_getctx(tpp_warnings const *tpp_restrict self,
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 
 #if TPP_HAVE_WARNINGS_PUSH_POP
-/* Create a heap-copy of "self".
+/* Create a heap-copy of `self`.
  * @return: * :   The newly allocated copy
  * @return: NULL: Out of memory. */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_warnings *TPPCALL
@@ -235,8 +234,8 @@ tpp_warnings_find_suppress(tpp_warnings *tpp_restrict self,
 	return NULL;
 }
 
-/* Ensure that an entry for "ctx_id" is allocated in `&self->tw_suppressions'
- * @return: * :   The suppression entry for "ctx_id"
+/* Ensure that an entry for `ctx_id` is allocated in `&self->tw_suppressions`
+ * @return: * :   The suppression entry for `ctx_id`
  * @return: NULL: Out of memory. */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_suppress_item *TPPCALL
 tpp_warnings_require_suppress(tpp_warnings *tpp_restrict self,
@@ -295,7 +294,7 @@ err_nomem:
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 
 
-/* Set the state of "ctx_id" to "state".
+/* Set the state of `ctx_id` to `state`.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 #if TPP_HAVE_WARNINGS_SETCTX_MAYFAIL
@@ -312,7 +311,7 @@ _tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
 {
 	tpp_assert((unsigned int)ctx_id < (unsigned int)TPP_WC_COUNT);
 
-	/* Deal with `TPP_WSTATE_DEFAULT' */
+	/* Deal with `TPP_WSTATE_DEFAULT` */
 #if TPP_HAVE_WARNING_DEFAULT
 	if (state == TPP_WSTATE_DEFAULT)
 		state = tpp_warnings_state_get(&tpp_warnings_state_default, ctx_id);
@@ -336,7 +335,7 @@ _tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
 	}
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 
-	/* Deal with `TPP_WSTATE_SUPPRESS' */
+	/* Deal with `TPP_WSTATE_SUPPRESS` */
 #if TPP_HAVE_WARNING_SUPPRESS
 	if (state == TPP_WSTATE_SUPPRESS) {
 		tpp_warning_suppress_item *item;
@@ -388,7 +387,7 @@ _tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
 
 
 
-/* Invoke "warning_id" (updating suppression counters if necessary) and
+/* Invoke `warning_id` (updating suppression counters if necessary) and
  * returning information about the context/state with which the warning
  * should be processed.
  *
@@ -398,7 +397,7 @@ _tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
  * - `TPP_HAVE_WERROR`
  *
  * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out of memory (only "#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
+ * @return: TPP_ENOMEM: Out of memory (only `#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL`) */
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,

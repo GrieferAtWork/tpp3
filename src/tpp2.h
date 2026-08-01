@@ -1411,7 +1411,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   - `TPP_FS_ALTSEP`
  *   - `TPP_FS_ISSEP`
  *   - `TPP_FS_ISABS`
- *   Additionally, you may take a look at `tpp_fs_normalize()'
+ *   Additionally, you may take a look at `tpp_fs_normalize()`
  */
 
 /* TOK_CHAR, TPP_TOK_CHAR, TOK_STRING, TPP_TOK_STRING:
@@ -1491,7 +1491,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * - These functions should have never been exposed by the TPP2 API.
  *   If you've been using them, you'll have to decide how to migrate
  * - TPP3 uses a completely different model when it comes to how files
- *   are managed and pushed on the #include-stack: namely, the current
+ *   are managed and pushed on the `#include`-stack: namely, the current
  *   file is *inlined* within the lexer, allowing for faster access,
  *   and allowing a simple lexer to be constructed without the need
  *   for *any* heap allocations
@@ -1500,7 +1500,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 /* >> struct TPPFile *TPPFile_Open(char const *filename);
  * >> struct TPPFile *TPPFile_OpenStream(TPP_stream_t stream, char const *name);
  * - TPP3 uses a completely different model when it comes to how files
- *   are managed and pushed on the #include-stack
+ *   are managed and pushed on the `#include`-stack
  * - These functions don't exist in the same manner anymore
  * - To migrate these functions, see the following:
  *                         First file                  Additional file
@@ -1515,7 +1515,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * >> size_t TPP_SizeofUnescape(char const *data, size_t size);
  * >> size_t TPP_SizeofUnescapeRaw(char const *data, size_t size);
  * - Since TPP3 supports many different string formats (some of which don't even
- *   support \-escape sequences), these function no longer exist.
+ *   support `\`-escape sequences), these function no longer exist.
  * - Instead, TPP3 has a function "tpp_lexer_decodestring()" can can be used to
  *   decode the character data of *any* type of string token. However, unlike
  *   the TPP2 api, "tpp_lexer_decodestring()" expects the currently loaded token
@@ -1596,10 +1596,10 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  */
 
 /* TPPLEXER_FLAG_INCLUDESTRING:
- * - No longer supported; in TPP3, #include-strings are parsed without the use
+ * - No longer supported; in TPP3, `#include`-strings are parsed without the use
  *   of "tpp_lexer_yieldraw()" (with macro expansion also handled manually)
  *   meaning that there is no need to have some special flag to alter the
- *   parsing of "string" literals for the sake of complying with #include-strings.
+ *   parsing of "string" literals for the sake of complying with `#include`-strings.
  */
 
 /* TPPLEXER_FLAG_EXTENDFILE:
@@ -1632,7 +1632,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  */
 
 /* TPPLEXER_FLAG_NO_LEGACY_GUARDS:
- * - In TPP3, detection of #ifndef-style #include-guards cannot be disabled
+ * - In TPP3, detection of #ifndef-style `#include`-guards cannot be disabled
  *   at runtime, though you can disable for some specific file at the time
  *   when that file is pushed by setting "TPP_FILE_FLAGS_NOGUARD".
  * - TPP3 does however let you compile-time disable this feature by building
@@ -1655,7 +1655,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 
 /* TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA, __has_extension(tpp_reemit_unknown_pragmas):
  * - TPP3 does no longer support re-emission of unknown #pragma-directives
- * - Instead, you should define you own, custom #pragma-hook `TPP_HOOK_UNKNOWN_PRAGMA'
+ * - Instead, you should define you own, custom #pragma-hook `TPP_HOOK_UNKNOWN_PRAGMA`
  *   that will be called whenever TPP encounters an unknown pragma.
  */
 
@@ -1803,7 +1803,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #   define TPP2_VA_NARGS(...) TPP2_PP_PRIVATE__VA_NARGS(~,##__VA_ARGS__,59,58,57,56,55,54,53,52,51,50,49,48,47,46,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0)
 #else /* ... */
 /* Check if __VA_OPT__ is supported, and if it is, use it for a standard, 0-arg-capable implementation.
- * Note that we can check for `__VA_OPT__' without having to rely on any feature-test macros, since its
+ * Note that we can check for `__VA_OPT__` without having to rely on any feature-test macros, since its
  * behavior is well-defined even on preprocessors that don't support it! */
 #define TPP2_PP_PRIVATE__TEST_VA_OPT2(a, b, ...) b
 #define TPP2_PP_PRIVATE__TEST_VA_OPT(...) TPP2_PP_PRIVATE__TEST_VA_OPT2(__VA_OPT__(,) 1, 0)
@@ -2250,9 +2250,9 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
      defined(_WIN32) || defined(WIN32) || \
      defined(_WIN64) || defined(WIN64) || \
      defined(__WIN32__) || defined(__TOS_WIN__))
-#define TPPLEXER_DEFAULT_TABSIZE 4 /* Default tab size (used for `__COLUMN__' and in error messages). */
+#define TPPLEXER_DEFAULT_TABSIZE 4 /* Default tab size (used for `__COLUMN__` and in error messages). */
 #else /* Windows... */
-#define TPPLEXER_DEFAULT_TABSIZE 8 /* Default tab size (used for `__COLUMN__' and in error messages). */
+#define TPPLEXER_DEFAULT_TABSIZE 8 /* Default tab size (used for `__COLUMN__` and in error messages). */
 #endif /* Unix... */
 #endif /* !TPPLEXER_DEFAULT_TABSIZE */
 #undef TPP_TABSIZE
@@ -2336,7 +2336,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_TOK_SHELL_COMMENT              TPP_CONF_FEAT0 /* Configurable, default=false (TPP2 used to configure this via "TPPLEXER_FLAG_ASM_COMMENTS"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_SHELL_COMMENT)") */
 #define TPP_HAVE_TOK_SLASH_COMMENT              0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TOK_AT_COMMENT                 0              /* TPP2 only recognized C/C++-like comments */
-#define TPP_HAVE_TOK_SOL_SHELL_COMMENT          0              /* Not needed -- treated like `TPP_HAVE_TOK_SHELL_COMMENT' */
+#define TPP_HAVE_TOK_SOL_SHELL_COMMENT          0              /* Not needed -- treated like `TPP_HAVE_TOK_SHELL_COMMENT` */
 #define TPP_HAVE_TOK_SOL_SLASH_COMMENT          0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TOK_SOL_AT_COMMENT             0              /* TPP2 only recognized C/C++-like comments */
 #define TPP_HAVE_TOK_DOLLAR                     TPP_CONF_FEAT0 /* "$" Configurable, default=false (TPP2 used to configure this via "TPPLEXER_TOKEN_DOLLAR"; use "tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_DOLLAR)") */
@@ -4361,9 +4361,9 @@ extern tpp_lexer *TPPLexer_Current;
 #undef TPP_MACROFILE_KIND_HASCOMMON        /* Macro definition and expansion are different structures in TPP3 */
 #define TPP_MACROFILE_KIND_KEYWORD         TPP_MACRO_KIND_KEYWORD
 #undef TPP_MACROFILE_KIND_FUNCTION         /* Use 'TPP_MACRO_KIND_ISFUNC()' */
-#define TPP_MACROFILE_FLAG_FUNC_VARIADIC   TPP_MACRO_FLAG_VARIADIC   /* Use `tpp_macro_isvarargs()' */
-#define TPP_MACROFILE_FLAG_FUNC_SELFEXPAND TPP_MACRO_FLAG_SELFEXPAND /* Use `tpp_macro_allowsselfexpansion()' */
-#define TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC TPP_MACRO_FLAG_KEEPARGSPC /* Use `tpp_macro_keepsargspc()' */
+#define TPP_MACROFILE_FLAG_FUNC_VARIADIC   TPP_MACRO_FLAG_VARIADIC   /* Use `tpp_macro_isvarargs()` */
+#define TPP_MACROFILE_FLAG_FUNC_SELFEXPAND TPP_MACRO_FLAG_SELFEXPAND /* Use `tpp_macro_allowsselfexpansion()` */
+#define TPP_MACROFILE_FLAG_FUNC_KEEPARGSPC TPP_MACRO_FLAG_KEEPARGSPC /* Use `tpp_macro_keepsargspc()` */
 #undef TPP_MACROFILE_FLAG_OWNSNAME         /* TPP3 macros don't know their own name */
 #undef TPP_MACROFILE_MASK_FUNC_STARTCH     /* Use TPP_MACRO_KIND_ASTOK() */
 #define TPP_MACROFILE_FUNC_START_LPAREN    TPP_MACRO_KIND_FUNC_PAREN
@@ -4373,8 +4373,8 @@ extern tpp_lexer *TPPLexer_Current;
 #undef TPP_MACROFILE_FUNC_START            /* Use TPP_MACRO_KIND_OFTOK() */
 #undef TPP_MACROFILE_KIND_EXPANDED         /* Macro definition and expansion are different structures in TPP3 */
 #define m_flags TPP_INTERNAL(tm_flags)     /* WARNING: TPP3 splits this field in 2: tm_kind, tm_flags */
-#undef m_deffile                           /* Use `tpp_macro_getdeffilename()' */
-#define m_defloc TPP_INTERNAL(tm_body_lc)  /* Use `tpp_macro_getbodylcinfo()' */
+#undef m_deffile                           /* Use `tpp_macro_getdeffilename()` */
+#define m_defloc TPP_INTERNAL(tm_body_lc)  /* Use `tpp_macro_getbodylcinfo()` */
 #undef m_pushprev                          /* TPP3 stores this elsewhere: tpp_keyword_misc::tkm_macro_pushstack */
 #undef m_pushcount                         /* TPP3 stores this elsewhere: tpp_keyword_misc::tkm_macro_pushstack */
 #if TPP_HAVE_UNNAMED_UNION
@@ -4383,11 +4383,11 @@ extern tpp_lexer *TPPLexer_Current;
 #define m_specific  TPP_INTERNAL(tm_data)
 #define m_function  TPP_INTERNAL(tmd_func)
 #endif /* !TPP_HAVE_UNNAMED_UNION */
-#define f_argc      TPP_INTERNAL(tmf_argc)      /* Use `tpp_macro_getfuncargc()' */
-#undef f_expansions                             /* Replaced by `tpp_macro::tm_expansions' */
+#define f_argc      TPP_INTERNAL(tmf_argc)      /* Use `tpp_macro_getfuncargc()` */
+#undef f_expansions                             /* Replaced by `tpp_macro::tm_expansions` */
 #define f_expand    TPP_INTERNAL(tmf_expand)    /* Don't access */
-#define f_arginfo   TPP_INTERNAL(tmf_argv)      /* Use `tpp_macro_getfuncargtok()' */
-#undef f_deltotal                               /* Replaced by `tmf_expbase' */
+#define f_arginfo   TPP_INTERNAL(tmf_argv)      /* Use `tpp_macro_getfuncargtok()` */
+#undef f_deltotal                               /* Replaced by `tmf_expbase` */
 #define f_n_vacomma TPP_INTERNAL(tmf_n_vaopt)   /* Don't access */
 #define f_n_vanargs TPP_INTERNAL(tmf_n_vanargs) /* Don't access */
 #define f_argbuf    TPP_INTERNAL(tmf_argbuf)    /* Don't access */
@@ -4407,7 +4407,7 @@ extern tpp_lexer *TPPLexer_Current;
 #define f_prev                TPP_INTERNAL(tf_tprev) /* Don't access */ /* Or maybe "tf_prev"... */
 #define f_name                TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) /* Use tpp_file_getrealfilename() */
 #undef f_namesize                                    /* Use tpp_strlen(tpp_file_getrealfilename()) */
-#undef f_namehash                                    /* Why do you need this? Do you want to access `tpp_file_getrealfilenamekwd()'? */
+#undef f_namehash                                    /* Why do you need this? Do you want to access `tpp_file_getrealfilenamekwd()`? */
 #define f_text                TPP_INTERNAL(tf_chunk) /* Use tpp_file_getchunk() */
 #define f_begin               TPP_INTERNAL(tf_chunk)->TPP_INTERNAL(ts_str) /* Shouldn't be used */
 #define f_end                 TPP_INTERNAL(tf_end)   /* Use tpp_file_getend() */
@@ -4418,21 +4418,21 @@ extern tpp_lexer *TPPLexer_Current;
 #else /* TPP_HAVE_UNNAMED_UNION */
 #define f_specific            TPP_INTERNAL(tf_data)
 #define f_textfile            TPP_INTERNAL(td_io)
-#define f_macro               TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro)[0] /* Use `tpp_file_getmacro()' */
+#define f_macro               TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro)[0] /* Use `tpp_file_getmacro()` */
 #endif /* !TPP_HAVE_UNNAMED_UNION */
 /* }; */
 
 
 
 /* struct TPPTextFile { */
-#undef TPPTextFile    /* TPP3 has this as an unnamed struct under "tpp_file::tf_data::td_io" */
+#undef TPPTextFile    /* TPP3 has this as an unnamed struct under `tpp_file::tf_data::td_io` */
 #undef f_cacheentry   /* TPP3 no longer caches copies of files so-as to (greatly) reduce memory consumption */
-#define f_usedname    TPP_INTERNAL(tff_user_filename)                   /* Use `tpp_file_getfilename()' */
-#define f_lineoff     TPP_INTERNAL(tff_start_lc).TPP_INTERNAL(lci_line) /* Use `tpp_file_getlcinfo()' -- also note that "f_begin" (aka.: the current chunk's start) no longer necessarily lines up with the start of a line */
+#define f_usedname    TPP_INTERNAL(tff_user_filename)                   /* Use `tpp_file_getfilename()` */
+#define f_lineoff     TPP_INTERNAL(tff_start_lc).TPP_INTERNAL(lci_line) /* Use `tpp_file_getlcinfo()` -- also note that `f_begin` (aka.: the current chunk's start) no longer necessarily lines up with the start of a line */
 #define f_stream      TPP_INTERNAL(tff_file)                            /* Don't access directly! */
-#define f_ownedstream TPP_INTERNAL(tff_file)                            /* Don't access directly; also: TPP3 uses "TPP_FILE_FLAGS_NOCLOSE" to know if the file should be closed */
-#undef f_guard        /* TPP3 stores this in "tpp_keyword_misc::tkm_file_guard" */
-#undef f_cacheinc     /* TPP3 no longer tracks how often some specific file was #include-ed */
+#define f_ownedstream TPP_INTERNAL(tff_file)                            /* Don't access directly; also: TPP3 uses `TPP_FILE_FLAGS_NOCLOSE` to know if the file should be closed */
+#undef f_guard        /* TPP3 stores this in `tpp_keyword_misc::tkm_file_guard` */
+#undef f_cacheinc     /* TPP3 no longer tracks how often some specific file was `#include`-ed */
 #undef f_rdata        /* TPP3 no longer tracks how much file-data has already been processed; you can use "tpp_file_pushkeep" + "tpp_file_keep_ptr2rel" for markers */
 #undef f_prefixdel    /* TPP3 no longer guaranties that the currently loaded chunk ends with a '\0'-character. File chunks in TPP3 can end arbitrarily! */
 #define TPP_TEXTFILE_FLAG_NONE      TPP_FILE_FLAGS_NORMAL
@@ -4442,16 +4442,16 @@ extern tpp_lexer *TPPLexer_Current;
 #define TPP_TEXTFILE_FLAG_NONBLOCK  TPP_FILE_FLAGS_NONBLOCK
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 #undef TPP_TEXTFILE_FLAG_INTERNAL /* No longer exists in TPP3; similar behavior can be facilitated through "TPP_FILE_KIND_TEXT" */
-#undef f_flags     /* Replaced with tpp_file::tf_flags           -- Don't access directly; use helper functions/macros */
-#undef f_encoding  /* Replaced with tpp_file::tf_enc             -- Use `tpp_file_isutf8()' */
+#undef f_flags     /* Replaced with `tpp_file::tf_flags`           -- Don't access directly; use helper functions/macros */
+#undef f_encoding  /* Replaced with `tpp_file::tf_enc`             -- Use `tpp_file_isutf8()` */
 #undef f_padding   /* ... */
 #undef f_newguard  /* TPP3 stores this in "tpp_keyword_misc::tkm_file_guard" */
 #if TPP_HAVE_FILE_LC_CACHE
-#undef f_lfpos     /* Replaced with tpp_file::tf_lcpos           -- Don't access directly; just use `tpp_file_getlcinfo()' */
-#undef f_lfcnt     /* Replaced with tpp_file::tf_lcval.lci_line  -- Don't access directly; just use `tpp_file_getlcinfo()' */
+#undef f_lfpos     /* Replaced with `tpp_file::tf_lcpos`           -- Don't access directly; just use `tpp_file_getlcinfo()` */
+#undef f_lfcnt     /* Replaced with `tpp_file::tf_lcval.lci_line`  -- Don't access directly; just use `tpp_file_getlcinfo()` */
 #endif /* TPP_HAVE_FILE_LC_CACHE */
 #ifdef TPP_USERTEXTDATA
-#error "TPP3 no longer supports custom 'TPP_USERTEXTDATA' -- You could in theory use `tpp_keyword_setuserdata(tpp_file_getrealfilenamekwd())'"
+#error "TPP3 no longer supports custom 'TPP_USERTEXTDATA' -- You could in theory use `tpp_keyword_setuserdata(tpp_file_getrealfilenamekwd())`"
 #endif /* TPP_USERTEXTDATA */
 /* }; */
 
@@ -4556,7 +4556,7 @@ TPP_Escape(char *tpp_restrict buf, char const *tpp_restrict data, size_t size) {
 
 
 /* Set the state of a given warning number.
- * NOTE: If the given state is `WSTATE_SUPPRESS', ONE(1)
+ * NOTE: If the given state is `WSTATE_SUPPRESS`, ONE(1)
  *       will be added to the suppress recursion counter.
  * @return: 0: Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
  * @return: 1: Successfully set the given warning number.
@@ -4594,17 +4594,17 @@ TPP_INLINE TPP_wstate_t TPPCALL TPPLexer_GetWarningGroup_(tpp_lexer *self, int w
 	return tpp_lexer_getwarningctx(self, ctx);
 }
 
-/* Similar to `TPPLexer_SetWarning', but set the state of all warnings from a given group.
+/* Similar to `TPPLexer_SetWarning`, but set the state of all warnings from a given group.
  * NOTES:
  *   - Groups work independent of warning ids, meaning you can even
- *     specify `WSTATE_SUPPRESS' as state, with the next warning
+ *     specify `WSTATE_SUPPRESS` as state, with the next warning
  *     part of that group occurring simply consuming that suppression.
  *   - If you disable an entire warning group, no warning apart of it will be emit.
  *   - If a warning is invoked, that is both part of an error and a warning/disabled
  *     group it will always tend to do as little damage as possible:
  *     >> suppress >= disabled >= warning >= error
  *     With that in mind, both the warning itself, as well as all of its groups
- *     must be configured as `WSTATE_FATAL' for the warning to actually result
+ *     must be configured as `WSTATE_FATAL` for the warning to actually result
  *     in an error.
  * @return: 0: Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
  * @return: 1: Successfully set the given warning number.
@@ -4627,8 +4627,8 @@ TPPLexer_GetWarnings_(tpp_lexer *self, char const *tpp_restrict group) {
 #define TPP_WARNINGMODE_WARN   ((int)TPP_WSTATE_WARN)
 #define TPP_WARNINGMODE_IGNORE ((int)TPP_WSTATE_DISABLED)
 
-/* Invoke a given warning number, returning one of `TPP_WARNINGMODE_*'.
- * NOTE: Unknown warnings will always result in `TPP_WARNINGMODE_WARN' being returned. */
+/* Invoke a given warning number, returning one of `TPP_WARNINGMODE_*`.
+ * NOTE: Unknown warnings will always result in `TPP_WARNINGMODE_WARN` being returned. */
 #define TPPLexer_InvokeWarning(wnum) TPPLexer_InvokeWarning_(TPP2_LEXER, wnum)
 TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 	tpp_errno error;
@@ -4650,7 +4650,7 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 #define TPP_IFDEFMODE_ELSE TPP_IFDEF_MODE_ELSE  /* The block follows an #else. */
 #define iss_mode TPP_INTERNAL(tidse_mode)                           /* Use tpp_ifdef_stack_isafterelse() */
 #define iss_line TPP_INTERNAL(tidse_updated).TPP_INTERNAL(lci_line) /* Use tpp_ifdef_stack_entry_getupdated() */
-#undef iss_file /* TPP3 #ifdef-stack is per file so there is no file property */
+#undef iss_file /* TPP3 `#ifdef`-stack is per file so there is no file property */
 /* }; */
 
 
@@ -4669,13 +4669,13 @@ TPP_INLINE int TPPCALL TPPLexer_InvokeWarning_(tpp_lexer *self, int wnum) {
 #define es_bitset   TPP_INTERNAL(te_state).TPP_INTERNAL(tes_bitset) /* Don't access */
 /* }; */
 
-/* Check if a given extension `ext' is currently enabled.
+/* Check if a given extension `ext` is currently enabled.
  * @return: 0: The extension is disabled.
  * @return: !0: The extension is enabled. */
 #define TPPLexer_HasExtension_(_current, ext) tpp_lexer_getextension(_current, expt)
 #define TPPLexer_HasExtension(ext)            TPPLexer_HasExtension_(TPP2_LEXER, ext)
 
-/* Set the state of a given extension `ext'. */
+/* Set the state of a given extension `ext`. */
 #define TPPLexer_EnableExtension_(_current, ext)  tpp_lexer_enableextension(_current, ext)
 #define TPPLexer_DisableExtension_(_current, ext) tpp_lexer_disableextension(_current, ext)
 #define TPPLexer_EnableExtension(ext)             TPPLexer_EnableExtension_(TPP2_LEXER, ext)
@@ -4721,10 +4721,10 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define il_pathv TPP_INTERNAL(tip_system_list).TPP_INTERNAL(tipl_list) /* Use tpp_lexer_includes_getsystem() */
 /* }; */
 
-/* Push/Pop the current system #include-path list.
+/* Push/Pop the current system `#include`-path list.
  * @return: 0: [TPPLexer_PushInclude] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
- * @return: 0: [TPPLexer_PopInclude] No older #include-path list was available to restore.
- * @return: 1: Successfully pushed/popped the system #include-path list. */
+ * @return: 0: [TPPLexer_PopInclude] No older `#include`-path list was available to restore.
+ * @return: 1: Successfully pushed/popped the system `#include`-path list. */
 #define TPPLexer_PushInclude_(self) (tpp_lexer_pushincludes(self), 1)
 #define TPPLexer_PopInclude_(self)  (tpp_lexer_canpopincludes(self) ? (tpp_lexer_popincludes(self), 1) : 0)
 #define TPPLexer_PushInclude()      TPPLexer_PushInclude_(TPP2_LEXER)
@@ -4734,7 +4734,7 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
  * WARNING: This function will modify the given path.
  * WARNING: Be careful with absolute vs. relative paths!
  *          TPP can not tell that they're the same and
- *          `#pragma once' might break as a consequence!
+ *          `#pragma once` might break as a consequence!
  *       >> As a solution, _always_ use either absolute
  *          or relative paths for the same file/path.
  *          (This also goes for #include directives)
@@ -4766,8 +4766,8 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 
 
 #define TPP_KEYWORDFLAG_NONE TPP_KEYWORD_FLAG_NORMAL
-#undef TPP_KEYWORDFLAG_BUILTINMACRO   /* Must be checked for using `tpp_lexer_getpredefinedmacro()' */
-#undef TPP_KEYWORDFLAG_NO_UNDERSCORES /* Must be checked for using `tpp_lexer_getpredefinedmacro()' */
+#undef TPP_KEYWORDFLAG_BUILTINMACRO   /* Must be checked for using `tpp_lexer_getpredefinedmacro()` */
+#undef TPP_KEYWORDFLAG_NO_UNDERSCORES /* Must be checked for using `tpp_lexer_getpredefinedmacro()` */
 #define TPP_KEYWORDFLAG_IMPORTED               TPP_KEYWORD_FLAG_HDR_IMPORTED
 #define TPP_KEYWORDFLAG_IS_DEPRECATED          TPP_KEYWORD_FLAG_IS_DEPRECATED
 #define TPP_KEYWORDFLAG_IS_POISONED            TPP_KEYWORD_FLAG_IS_POISONED
@@ -4784,7 +4784,7 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define TPPRareKeyword tpp_keyword_misc
 #undef kr_file     /* Replaced with "tkm_file_guard" (which has a slightly different meaning) */
 #undef kr_oldmacro /* Replaced with "tkm_macro_pushstack" (which has a slightly different meaning) */
-#undef kr_defmacro /* Builtin macros are now handled by `tpp_lexer_getpredefinedmacro()' */
+#undef kr_defmacro /* Builtin macros are now handled by `tpp_lexer_getpredefinedmacro()` */
 #define kr_flags   TPP_INTERNAL(tkm_flags) /* Use tpp_lexer_getkeywordflags() */
 #define kr_counter TPP_INTERNAL(tkm_builtin_counter) /* Don't access */
 #if TPP_HAVE_CPP_ASSERT
@@ -4812,8 +4812,8 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define TPPKeyword_EQUALS(self, constant_string) \
 	tpp_keyword_equals_conststr(self, constant_string)
 
-/* Returns the effective keyword flags of `self'.
- * @return: A set of `TPP_KEYWORDFLAG_*' */
+/* Returns the effective keyword flags of `self`.
+ * @return: A set of `TPP_KEYWORDFLAG_*` */
 #define TPPKeyword_GetFlags(self, check_without_underscores) \
 	TPPKeyword_GetFlags_(TPP_LEXER_ARG_ self, check_without_underscores)
 TPP_INLINE tpp_keyword_flags TPPCALL
@@ -4855,8 +4855,8 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 #define t_id TPP_INTERNAL(tt_id)
 #undef t_num  /* Not supported by TPP3 */
 #undef t_file /* In TPP3, the lexer always re-uses the same file structure as the current file.
-               * (when a new file is #include-ed, the old one is saved in the #include-stack)
-               * To access the current file, use `tpp_lexer_getfile()' */
+               * (when a new file is `#include`-ed, the old one is saved in the `#include`-stack)
+               * To access the current file, use `tpp_lexer_getfile()` */
 #define t_begin TPP_INTERNAL(tt_start)
 #define t_end   TPP_INTERNAL(tt_end)
 #define t_kwd   TPP_INTERNAL(tt_kwd)
@@ -4916,14 +4916,14 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 #undef TPPLEXER_FLAG_COMMENT_NOOWN_LF      /* No longer supported; in TPP3, line-comments *always* include the trailing line-feed */
 #undef TPPLEXER_FLAG_MESSAGE_LOCATION      /* Use tpp_lexer_setextension(TPP_EXT_PRAGMA_MESSAGE_PRINTS_LOCATION) */
 #undef TPPLEXER_FLAG_MESSAGE_NOLINEFEED    /* Use tpp_lexer_setextension(TPP_EXT_PRAGMA_MESSAGE_OMITS_TRAILING_LINEFEED) */
-#undef TPPLEXER_FLAG_INCLUDESTRING         /* No longer supported; in TPP3, #include-strings parsing bypasses regular tokenization done by "tpp_lexer_yieldraw()" */
+#undef TPPLEXER_FLAG_INCLUDESTRING         /* No longer supported; in TPP3, `#include`-strings parsing bypasses regular tokenization done by "tpp_lexer_yieldraw()" */
 #undef TPPLEXER_FLAG_EXTENDFILE            /* Use tpp_file_pushkeep() to keep certain file data loaded into memory */
 #undef TPPLEXER_FLAG_NO_LEGACY_GUARDS      /* No longer supported; in TPP3, this can only be compile-time configured via "TPP_HAVE_IFNDEF_INCLUDE_GUARDS" */
 #undef TPPLEXER_FLAG_WERROR                /* Use tpp_lexer_setextension(TPP_EXT_WERROR) */
 #undef TPPLEXER_FLAG_WSYSTEMHEADERS        /* Use tpp_lexer_setextension(WSYSTEM_HEADERS) */
 #undef TPPLEXER_FLAG_NO_DEPRECATED         /* Use `tpp_lexer_getwarninggrp(TPP_WG_DEPRECATED)` / `tpp_lexer_setwarninggrp(TPP_WG_DEPRECATED)` */
-#undef TPPLEXER_FLAG_MSVC_MESSAGEFORMAT    /* Use `tpp_lexer_setfileandlineformat("%Pf(%Pl, %Pc): ")' to enable
-                                            * Use `tpp_lexer_setfileandlineformat("%Pf:%Pl:%Pc: ")' to disable */
+#undef TPPLEXER_FLAG_MSVC_MESSAGEFORMAT    /* Use `tpp_lexer_setfileandlineformat("%Pf(%Pl, %Pc): ")` to enable
+                                            * Use `tpp_lexer_setfileandlineformat("%Pf:%Pl:%Pc: ")` to disable */
 #define TPPLEXER_FLAG_NO_WARNINGS TPP_LEXER_STATE_FLAG_NOWARNINGS
 #undef TPPLEXER_FLAG_NO_ENCODING           /* No longer supported; encoding detection can be disabled on a per-file basis, though */
 #undef TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA /* No longer supported; define your own hook that gets called for unknown pragmas */
@@ -4938,8 +4938,8 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 
 
 /* Recognized extension token flags. */
-#undef TPPLEXER_TOKEN_NONE         /* No longer exists in TPP3 (though for default tokens, though you could do `tpp_lexer_resetfeatures()' to reset token emissions to their default) */
-#undef TPPLEXER_TOKEN_DEFAULT      /* No longer exists in TPP3 (though for default tokens, though you could do `tpp_lexer_resetfeatures()' to reset token emissions to their default) */
+#undef TPPLEXER_TOKEN_NONE         /* No longer exists in TPP3 (though for default tokens, though you could do `tpp_lexer_resetfeatures()` to reset token emissions to their default) */
+#undef TPPLEXER_TOKEN_DEFAULT      /* No longer exists in TPP3 (though for default tokens, though you could do `tpp_lexer_resetfeatures()` to reset token emissions to their default) */
 #undef TPPLEXER_TOKEN_TILDETILDE   /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_TILDE_TILDE) */
 #undef TPPLEXER_TOKEN_ROOFROOF     /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_HAT_HAT) */
 #undef TPPLEXER_TOKEN_COLONCOLON   /* Use tpp_lexer_setfeat(TPP_FEAT_TPP_TOK_COLON_COLON) */
@@ -4980,7 +4980,7 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 #define l_syspaths   TPP_INTERNAL(tl_include_paths) /* Use tpp_lexer_includes_*() */
 #define l_limit_mrec TPP_INTERNAL(tl_recursive_macro_limit) /* Use tpp_lexer_getrecursivemacrolimit() / tpp_lexer_setrecursivemacrolimit() */
 #define l_limit_incl TPP_INTERNAL(tl_inclusion_limit) /* Use tpp_lexer_getinclusionlimit() / tpp_lexer_setinclusionlimit() */
-#undef l_eof_paren   /* No longer supported; see `TPPLEXER_FLAG_EOF_ON_PAREN' */
+#undef l_eof_paren   /* No longer supported; see `TPPLEXER_FLAG_EOF_ON_PAREN` */
 #define l_warncount  TPP_INTERNAL(tl_warning_count) /* Use tpp_lexer_getwarningcount() / tpp_lexer_setwarningcount() */
 #if TPP_HAVE_HOOKS
 #define l_callbacks  TPP_INTERNAL(tl_hooks) /* Use tpp_lexer_callhook_*(), tpp_lexer_gethook_*(), tpp_lexer_sethook_*(), tpp_lexer_resethook_*() */
@@ -5015,24 +5015,24 @@ TPP_INLINE int TPPCALL TPPLexer_ClearIfdefStack_(tpp_lexer *self) {
 }
 
 #define TPPLEXER_RESET_NONE       0x00000000 /* no-op */
-#undef TPPLEXER_RESET_INCLUDE                /* In TPP3, you *could* in theory call `tpp_lexer_finifile()`, but TPP3 doesn't have the concept of an "empty" #include-stack */
-#define TPPLEXER_RESET_ESTATE     0x00000002 /* Use `tpp_lexer_resetextensions()' / `tpp_lexer_resetfeatures()' */
-#undef TPPLEXER_RESET_ESTACK                 /* In TPP3, this is already done by `tpp_lexer_resetextensions()' */
-#define TPPLEXER_RESET_WSTATE     0x00000008 /* Use `tpp_lexer_resetwarnings()' */
-#undef TPPLEXER_RESET_WSTACK                 /* In TPP3, this is already done by `tpp_lexer_resetwarnings()' */
-#define TPPLEXER_RESET_SYSPATHS   0x00000020 /* Clears all system #include-paths. */
-#define TPPLEXER_RESET_MACRO      0x00000040 /* Delete all user-defined macro. Since TPP3 doesn*t have `TPPLEXER_RESET_NORESTOREMACROS', this also includes `TPPLEXER_DEFINE_FLAG_BUILTIN' macros (s.a. the fact that `TPPLEXER_DEFINE_FLAG_BUILTIN' is #undef'd below) */
+#undef TPPLEXER_RESET_INCLUDE                /* In TPP3, you *could* in theory call `tpp_lexer_finifile()`, but TPP3 doesn't have the concept of an "empty" `#include`-stack */
+#define TPPLEXER_RESET_ESTATE     0x00000002 /* Use `tpp_lexer_resetextensions()` / `tpp_lexer_resetfeatures()` */
+#undef TPPLEXER_RESET_ESTACK                 /* In TPP3, this is already done by `tpp_lexer_resetextensions()` */
+#define TPPLEXER_RESET_WSTATE     0x00000008 /* Use `tpp_lexer_resetwarnings()` */
+#undef TPPLEXER_RESET_WSTACK                 /* In TPP3, this is already done by `tpp_lexer_resetwarnings()` */
+#define TPPLEXER_RESET_SYSPATHS   0x00000020 /* Clears all system `#include`-paths. */
+#define TPPLEXER_RESET_MACRO      0x00000040 /* Delete all user-defined macro. Since TPP3 doesn*t have `TPPLEXER_RESET_NORESTOREMACROS`, this also includes `TPPLEXER_DEFINE_FLAG_BUILTIN` macros (s.a. the fact that `TPPLEXER_DEFINE_FLAG_BUILTIN` is #undef'd below) */
 #define TPPLEXER_RESET_ASSERT     0x00000080 /* Reset user-defined assertions. */
 #define TPPLEXER_RESET_KWDFLAGS   0x00000100 /* Reset user-defined keyword flags. */
 #define TPPLEXER_RESET_COUNTER    0x00000200 /* Reset __COUNTER__ and __TPP_COUNTER for all keywords. */
-#define TPPLEXER_RESET_FONCE      0x00000400 /* Clear all `#pragma once' descriptors. */
+#define TPPLEXER_RESET_FONCE      0x00000400 /* Clear all `#pragma once` descriptors. */
 #define TPPLEXER_RESET_KEYWORDS   0x00000800 /* Clear all keywords, but keep all predefined. */
-#undef TPPLEXER_RESET_NORESTOREMACROS        /* TPP3 no longer supports `TPPLEXER_RESET_NORESTOREMACROS', so this flag would essentially always have to be set -- instead, it just doesn't exist anymore. */
+#undef TPPLEXER_RESET_NORESTOREMACROS        /* TPP3 no longer supports `TPPLEXER_RESET_NORESTOREMACROS`, so this flag would essentially always have to be set -- instead, it just doesn't exist anymore. */
 #define TPPLEXER_RESET_EXTENSIONS (TPPLEXER_RESET_ESTATE/*|TPPLEXER_RESET_ESTACK*/)
 #define TPPLEXER_RESET_WARNINGS   (TPPLEXER_RESET_WSTATE/*|TPPLEXER_RESET_WSTACK*/)
 
 /* Reset certain parts of the lexer.
- * @param: flags: Set of `TPPLEXER_RESET_*' */
+ * @param: flags: Set of `TPPLEXER_RESET_*` */
 TPP_INLINE void TPPCALL
 TPPLexer_Reset(tpp_lexer *tpp_restrict self, uint32_t flags) {
 	if (flags & TPPLEXER_RESET_ESTATE) {
@@ -5076,7 +5076,7 @@ TPP_INLINE int TPPCALL TPPLexer_PopExtensions_(tpp_lexer *self) {
 	return 1;
 }
 
-/* Set the state of a given extension `name'.
+/* Set the state of a given extension `name`.
  * Extension names attempt to follow gcc names of the same extension.
  * The name of an extension can be found above.
  * @return: 0: Unknown extension.
@@ -5115,29 +5115,29 @@ TPPFUN struct TPPFile TPPFile_Empty;
 #define TPPFile_DecrefNoKill(self) (void)(TPP_assert((self)->f_refcnt >= 2), --(self)->f_refcnt)
 TPPFUN void TPPCALL TPPFile_Destroy(struct TPPFile *__restrict self);
 
-/* Create a new explicit text file by inherited the given `inherited_text'.
+/* Create a new explicit text file by inherited the given `inherited_text`.
  * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
 TPPFUN /*ref*/struct TPPFile *TPPCALL
 TPPFile_NewExplicitInherited(/*ref*/struct TPPString *__restrict inherited_text);
 
 /* Opens a file.
  * NOTE: The given filename is what will appear as text when expanding __FILE__
- * @return: NULL: Failed to open the given file (`errno' was set to ENOENT)
+ * @return: NULL: Failed to open the given file (`errno` was set to ENOENT)
  * @return: NULL: Not enough available memory (TPP_CONFIG_SET_API_ERROR) */
 TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_Open(char const *__restrict filename);
 
-/* Similar to `TPPFile_Open', but allows the caller to specify a stream,
+/* Similar to `TPPFile_Open`, but allows the caller to specify a stream,
  * allowing them to use this function for opening things like STD handles.
  * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
 TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, char const *__restrict name);
 
 
 /* Searches the cache and opens a new file if not found.
- * WARNING: If the caller intends to push the file onto the #include-stack,
+ * WARNING: If the caller intends to push the file onto the `#include`-stack,
  *          additional steps must be taken when the file was already
  *          located on the stack (in which case another stream must be opened,
- *          and a file that is not cached must be pushed onto the #include-stack).
- * WARNING: This function may modify the given `filename..filename_size+1' area of memory.
+ *          and a file that is not cached must be pushed onto the `#include`-stack).
+ * WARNING: This function may modify the given `filename..filename_size+1` area of memory.
  * @param: pkeyword_entry: When non-NULL, the keyword entry associated with the filename is stored here.
  * @return: * :   A pointer to the already-chached file (WARNING: This is not a reference)
  * @return: NULL: File not found. */
@@ -5148,19 +5148,19 @@ TPPLexer_OpenFile_(TPP_LEXER_PARAM_
 #define TPPLexer_OpenFile(mode, filename, filename_size, pkeyword_entry) \
 	TPPLexer_OpenFile_(TPP_LEXER_ARG_ mode, filename, filename_size, pkeyword_entry)
 #define TPPLEXER_OPENFILE_MODE_NORMAL     0x00 /* Normal open (simply pass the given filename to TPPFile_Open, but still sanitize and cache the filename) */
-#define TPPLEXER_OPENFILE_MODE_RELATIVE   0x01 /* #include "foo.h" (Search for the file relative to the path of every text file on the #include-stack in reverse. - If this fails, search in system folders). */
-#define TPPLEXER_OPENFILE_MODE_SYSTEM     0x02 /* #include <stdlib.h> (Search through system folders usually specified with `-I' on the commandline). */
-#define TPPLEXER_OPENFILE_FLAG_NEXT       0x04 /* FLAG: Only open a file not already part of the #include-stack
-                                                * WARNING: May not be used for `TPPLEXER_OPENFILE_MODE_NORMAL'! */
+#define TPPLEXER_OPENFILE_MODE_RELATIVE   0x01 /* #include "foo.h" (Search for the file relative to the path of every text file on the `#include`-stack in reverse. - If this fails, search in system folders). */
+#define TPPLEXER_OPENFILE_MODE_SYSTEM     0x02 /* #include <stdlib.h> (Search through system folders usually specified with `-I` on the commandline). */
+#define TPPLEXER_OPENFILE_FLAG_NEXT       0x04 /* FLAG: Only open a file not already part of the `#include`-stack
+                                                * WARNING: May not be used for `TPPLEXER_OPENFILE_MODE_NORMAL`! */
 #define TPPLEXER_OPENFILE_FLAG_NOCASEWARN 0x08 /* FLAG: Don't warn about filename casing on windows. */
 #ifndef TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE
 #define TPPLEXER_OPENFILE_FLAG_NOCALLBACK 0x10 /* FLAG: Don't invoke the unknown-file callback when set. */
 #endif /* !TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE */
-#define TPPLEXER_OPENFILE_FLAG_CONSTNAME  0x20 /* FLAG: The given `filename' may not be modified, but is guarantied to be '\0'-terminated. */
+#define TPPLEXER_OPENFILE_FLAG_CONSTNAME  0x20 /* FLAG: The given `filename` may not be modified, but is guarantied to be '\0'-terminated. */
 
-/* Push a given file into the #include-stack of the current lexer.
+/* Push a given file into the `#include`-stack of the current lexer.
  * NOTE: These functions never fail and return void.
- * HINT: Call `TPPLexer_PushFileInherited' if you want the lexer to inherit the file.
+ * HINT: Call `TPPLexer_PushFileInherited` if you want the lexer to inherit the file.
  * WARNING: The file argument may be evaluated more than once! */
 #define TPPLexer_PushFileInherited(f) TPPLexer_PushFileInherited_(TPPLexer_Current, f)
 #define TPPLexer_PushFile(f)          TPPLexer_PushFile_(TPPLexer_Current, f)
@@ -5171,7 +5171,7 @@ TPPLexer_OpenFile_(TPP_LEXER_PARAM_
 	(TPPFile_Incref(f), TPPLexer_PushFileInherited_(_current, f))
 #endif
 
-/* Returns the currently active #include-file.
+/* Returns the currently active `#include`-file.
  * WARNING: The file returned here will *always* be the "current" file!
  *          This is because in TPP3, the file currently being read from
  *          is inlined into the lexer, and pushing/popping files saved/
@@ -5179,7 +5179,7 @@ TPPLexer_OpenFile_(TPP_LEXER_PARAM_
 #define TPPLexer_GetFile_(self) tpp_lexer_getfile(self)
 #define TPPLexer_GetFile()      tpp_lexer_getfile(TPP2_LEXER)
 
-/* Pop the current file off of the #include-stack. */
+/* Pop the current file off of the `#include`-stack. */
 #define TPPLexer_PopFile_(self) tpp_lexer_popfile(self)
 #define TPPLexer_PopFile()      TPPLexer_PopFile_(TPP2_LEXER)
 
@@ -5198,18 +5198,18 @@ TPPLexer_OpenFile_(TPP_LEXER_PARAM_
 #define TPPLexer_LookupKeywordID_(self, id) tpp_lexer_kwds_getkeyword_byid(self, id)
 #define TPPLexer_LookupKeywordID(id)        tpp_lexer_kwds_getkeyword_byid(TPP2_LEXER, id)
 
-/* Define a regular, keyword-style macro `name' as `value'.
- * @param: flags: A set of `TPPLEXER_DEFINE_FLAG_*'
+/* Define a regular, keyword-style macro `name` as `value`.
+ * @param: flags: A set of `TPPLEXER_DEFINE_FLAG_*`
  * @return: 0: Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
  * @return: 1: Successfully defined the given macro.
- * @return: 2: A macro named `name' was already defined, and was overwritten. */
+ * @return: 2: A macro named `name` was already defined, and was overwritten. */
 #define TPPLexer_Define_(lexer, name, name_size, value, value_size, flags) \
 	(TPP_ISERR(tpp_lexer_define(lexer, name, name_size, value, value_size)) ? 0 : 1)
 #define TPPLexer_Define(name, name_size, value, value_size, flags) \
 	TPPLexer_Define_(TPP2_LEXER, name, name_size, value, value_size, flags)
 #undef TPPLEXER_DEFINE_FLAG_NONE
-#undef TPPLEXER_DEFINE_FLAG_BUILTIN /* No longer exists in TPP3 -- was used by `TPPLEXER_RESET_MACRO',
-                                     * but in TPP3 you should use `tpp_lexer_copy()' if you want to
+#undef TPPLEXER_DEFINE_FLAG_BUILTIN /* No longer exists in TPP3 -- was used by `TPPLEXER_RESET_MACRO`,
+                                     * but in TPP3 you should use `tpp_lexer_copy()` if you want to
                                      * intend to restore a previous state at a later point in time. */
 
 /* Undefine the macro associated with a given name.
@@ -5234,12 +5234,12 @@ TPPLexer_OpenFile_(TPP_LEXER_PARAM_
 	TPPLexer_DelAssert_(TPP2_LEXER, predicate, predicate_size, answer, answer_size)
 #endif /* TPP_HAVE_CPP_ASSERT */
 
-/* Similar to `TPPLexer_Yield' and used to implement it, but
+/* Similar to `TPPLexer_Yield` and used to implement it, but
  * doesn't expand macros or execute preprocessor directives. */
 #define TPPLexer_YieldRaw_(self) tpp_lexer_yieldraw_blocking(self)
 #define TPPLexer_YieldRaw()      tpp_lexer_yieldraw_blocking(TPP2_LEXER)
 
-/* Similar to `TPPLexer_Yield' and used to
+/* Similar to `TPPLexer_Yield` and used to
  * implement it, but doesn't expand macros. */
 #define TPPLexer_YieldPP_(self) tpp_lexer_yieldpp_blocking(self)
 #define TPPLexer_YieldPP()      tpp_lexer_yieldpp_blocking(TPP2_LEXER)
@@ -5415,8 +5415,8 @@ TPP_INLINE void TPPConst_ZERO(tpp_expr_value *self) {
 /* Convert a given preprocessor constant into a string:
  * >> The returned string can be used to create a file
  *    that represents the constant's value as loaded
- *    by the `__TPP_EVAL' extension.
- * NOTE: If `self' is a string, it will be escaped.
+ *    by the `__TPP_EVAL` extension.
+ * NOTE: If `self` is a string, it will be escaped.
  * @return: NULL: Not enough available memory. */
 #define TPPConst_ToString_(lexer, self) TPPConst_ToString(self)
 TPP_INLINE /*ref*/ tpp_string *TPPCALL
@@ -5434,13 +5434,13 @@ TPPConst_ToString(tpp_expr_value const *tpp_restrict self) {
 	return tpp_string_builder_pack(&builder);
 }
 
-/* Evaluate a constant expression as found after `#if' or in `__TPP_EVAL(...)'
- * NOTE: If `result' is NULL, the expression's is
+/* Evaluate a constant expression as found after `#if` or in `__TPP_EVAL(...)`
+ * NOTE: If `result` is NULL, the expression's is
  *       parsed, yet warnings will not be emit.
  * NOTE: Expects the current token to point to the first one part of the expression.
  *       Upon exit, that token will point to the first one past the expression.
  * NOTE: Evaluation is compatible with standard c rules, but
- *       `,' operators are not parsed at the highest level.
+ *       `,` operators are not parsed at the highest level.
  * @return: 1: Successfully parsed an expression
  * @return: 0: An error occurred. */
 #define TPPLexer_Eval(result) TPPLexer_Eval_(TPP2_LEXER, result)
@@ -5472,21 +5472,21 @@ TPP_INLINE TPP_REF tpp_string *TPPCALL TPPLexer_ParseString_(tpp_lexer *self) {
 #define TPP_ATOI_OK            0x01 /* Always set on success. */
 #define TPP_ATOI_UNSIGNED      0x02 /* Unless set, the integral is signed. */
 #define TPP_ATOI_TYPE_MASK     0xf0 /* Mask of the integral's typing (NOTE: The function already clamped the resulting value with this type's range). */
-#define TPP_ATOI_TYPE_INT      0x00 /* `int' (default typing without suffix/for chars). */
-#define TPP_ATOI_TYPE_LONG     0x10 /* `long'. */
-#define TPP_ATOI_TYPE_LONGLONG 0x20 /* `long long'. */
-#define TPP_ATOI_TYPE_INT8     0x30 /* `__int8' (msvc-extension). */
-#define TPP_ATOI_TYPE_INT16    0x40 /* `__int16' (msvc-extension). */
-#define TPP_ATOI_TYPE_INT32    0x50 /* `__int32' (msvc-extension). */
-#define TPP_ATOI_TYPE_INT64    0x60 /* `__int64' (msvc-extension). */
+#define TPP_ATOI_TYPE_INT      0x00 /* `int` (default typing without suffix/for chars). */
+#define TPP_ATOI_TYPE_LONG     0x10 /* `long`. */
+#define TPP_ATOI_TYPE_LONGLONG 0x20 /* `long long`. */
+#define TPP_ATOI_TYPE_INT8     0x30 /* `__int8` (msvc-extension). */
+#define TPP_ATOI_TYPE_INT16    0x40 /* `__int16` (msvc-extension). */
+#define TPP_ATOI_TYPE_INT32    0x50 /* `__int32` (msvc-extension). */
+#define TPP_ATOI_TYPE_INT64    0x60 /* `__int64` (msvc-extension). */
 
-/* Transform the current token (which must either be `TOK_INT' or `TOK_CHAR')
- * into an integral value, storing that value in `*pint' and returning
- * a set of `TPP_ATOI_*' flags, indicating typing and success.
+/* Transform the current token (which must either be `TOK_INT` or `TOK_CHAR`)
+ * into an integral value, storing that value in `*pint` and returning
+ * a set of `TPP_ATOI_*` flags, indicating typing and success.
  * NOTE: This function does _NOT_ yield the current token once finished.
  *       If intended, the caller is responsible for advancing it upon success.
  * @return: TPP_ATOI_ERR: Emiting a warning caused the lexer to error out (TPPLexer_SetErr() was set).
- * @return: * :           A set of `TPP_ATOI_*' (see below) */
+ * @return: * :           A set of `TPP_ATOI_*` (see below) */
 #define TPP_Atoi(pint) TPP_Atoi_(TPP_LEXER_ARG_ pint)
 TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint) {
 	tpp_errno error;
@@ -5654,17 +5654,17 @@ handle_invalid:
 #define TPP_ATOF_ERR             0x00 /* NOTE: Never used with any flags (indicates failure). */
 #define TPP_ATOF_OK              0x01 /* Always set on success. */
 #define TPP_ATOF_TYPE_MASK       0xf0 /* Mask of the float's typing. */
-#define TPP_ATOF_TYPE_DOUBLE     0x00 /* `double' (default typing without suffix). */
-#define TPP_ATOF_TYPE_FLOAT      0x10 /* `float' (float-suffix `f') */
-#define TPP_ATOF_TYPE_LONGDOUBLE 0x20 /* `long double' (long-double-suffix `L'). */
+#define TPP_ATOF_TYPE_DOUBLE     0x00 /* `double` (default typing without suffix). */
+#define TPP_ATOF_TYPE_FLOAT      0x10 /* `float` (float-suffix `f`) */
+#define TPP_ATOF_TYPE_LONGDOUBLE 0x20 /* `long double` (long-double-suffix `L`). */
 
-/* Transform the current token (which must be `TOK_FLOAT') into a
- * floating point value, storing that value in `*pfloat' and returning
- * a set of `TPP_ATOF_*' flags, indicating typing and success.
+/* Transform the current token (which must be `TOK_FLOAT`) into a
+ * floating point value, storing that value in `*pfloat` and returning
+ * a set of `TPP_ATOF_*` flags, indicating typing and success.
  * NOTE: This function does _NOT_ yield the current token once finished.
  *       If intended, the caller is responsible for advancing it upon success.
  * @return: TPP_ATOF_ERR: Emiting a warning caused the lexer to error out (TPPLexer_SetErr() was set).
- * @return: * :           A set of `TPP_ATOF_*' (see below) */
+ * @return: * :           A set of `TPP_ATOF_*` (see below) */
 #define TPP_Atof(pfloat) TPP_Atof_(TPP2_LEXER, pfloat)
 TPP_INLINE int TPPCALL TPP_Atof_(tpp_lexer *self, TPP_tfloat_t *tpp_restrict pfloat) {
 	tpp_errno error;
@@ -5701,11 +5701,11 @@ handle_invalid:
 #if 0 /* TODO */
 /* Prints the text contained within the current token, automatically
  * skipping escaped linefeeds and converting di/trigraphs.
- * NOTE: `TPP_PrintComment' behaves similar, but will
+ * NOTE: `TPP_PrintComment` behaves similar, but will
  *        instead handle any kind of comment token,
  *        printing the comment text within.
- * @return: >= 0: Sum of all return values from `printer'.
- * @return: <  0: The first negative value returned by `printer' */
+ * @return: >= 0: Sum of all return values from `printer`.
+ * @return: <  0: The first negative value returned by `printer` */
 TPPFUN ptrdiff_t TPPCALL TPP_PrintToken_(TPP_LEXER_PARAM_ TPP(printer_t) printer, void *closure);
 TPPFUN ptrdiff_t TPPCALL TPP_PrintComment_(TPP_LEXER_PARAM_ TPP(printer_t) printer, void *closure);
 #define TPP_PrintToken(printer, closure)   TPP_PrintToken_(TPP_LEXER_ARG_ printer, closure)
@@ -5715,7 +5715,7 @@ TPPFUN ptrdiff_t TPPCALL TPP_PrintComment_(TPP_LEXER_PARAM_ TPP(printer_t) print
 
 /* Helper macros to initialize/finalize the global TPP context.
  * NOTE: These macros can (obviously) be called when
- *      `TPPLexer_Current' is NULL, or not initialized. */
+ *      `TPPLexer_Current` is NULL, or not initialized. */
 #if TPP_CONFIG_ONELEXER == 3
 /* You have to allocate+TPPLexer_Init()+TPPLexer_Quit() your own lexer(s) */
 #elif TPP_CONFIG_ONELEXER

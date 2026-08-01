@@ -326,8 +326,8 @@ set_threechar:
 	return false;
 }
 
-/* Same as "tpp_lexer_skip()", but don't advance to the next token,
- * except in those cases where the requested "tok" could be found
+/* Same as `tpp_lexer_skip()`, but don't advance to the next token,
+ * except in those cases where the requested `tok` could be found
  * a little further up ahead, and the implementation decided that
  * the tokens that lay in-between should be skipped.
  *
@@ -447,12 +447,12 @@ err_result_rollback:
 	return result;
 }
 
-/* Check that the currently loaded token is 'tok'. If so, "tpp_lexer_yield_blocking()" to
+/* Check that the currently loaded token is `tok`. If so, `tpp_lexer_yield_blocking()` to
  * the next token (which is also returned). Otherwise, trigger 'TPP_W_UNEXPECTED_TOKEN'
- * and (if that warning wasn't fatal), try to seek ahead to see if "tok" can be found
- * somewhere close by (depending on what 'tok' and what was actually loaded on entry)
+ * and (if that warning wasn't fatal), try to seek ahead to see if `tok` can be found
+ * somewhere close by (depending on what `tok` and what was actually loaded on entry)
  *
- * NOTE: This function automatically handles "TPP_TOK_EWOULDBLOCK"
+ * NOTE: This function automatically handles `TPP_TOK_EWOULDBLOCK`
  *
  * @return: * :                 The token that comes after the one that was just skipped
  * @return: TPP_TOK_ENOMEM:     Out of memory

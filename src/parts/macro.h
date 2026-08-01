@@ -77,7 +77,7 @@ TPP_DECL_BEGIN
 
 
 #if TPP_HAVE_MACRO_FLAGS
-#define tpp_macro_flag uint_least8_t /* Set of `TPP_MACRO_FLAG_*' */
+#define tpp_macro_flag uint_least8_t /* Set of `TPP_MACRO_FLAG_*` */
 #define TPP_MACRO_FLAG_NORMAL     UINT8_C(0x00) /* Normal flags */
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS
 #define TPP_MACRO_FLAG_VARIADIC   UINT8_C(0x01) /* The last argument of the function is variadic. */
@@ -91,7 +91,7 @@ TPP_DECL_BEGIN
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION)
 #define TPP_MACRO_FLAG_SELFEXPAND UINT8_C(0x08) /* After being expanded, this function is allowed to re-invoke itself and be expanded, when
-                                                 * the generated text is not identical to a previous iteration. (s.a.: `-fmacro-recursion') */
+                                                 * the generated text is not identical to a previous iteration. (s.a.: `-fmacro-recursion`) */
 #endif /* TPP_CONF_IS_RT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
@@ -111,27 +111,27 @@ typedef struct tpp_macro_argument {
 /* Opcodes for function-tyle macro expansion */
 #define tpp_macro_opcode tpp_size
 enum {
-	TPP_INTERNAL(TPP_MACRO_OPCODE_END),      /* +0  Expansion has finished */
-	TPP_INTERNAL(TPP_MACRO_OPCODE_SKIP),     /* +1  Advance macro body template reader by ARG[0] bytes */
-	TPP_INTERNAL(TPP_MACRO_OPCODE_COPY),     /* +1  Copy ARG[0] bytes from macro body template & advance reader */
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_EXP),  /* +2  Insert argument[ARG[0]] (expanded) and advance macro body template reader by ARG[1] bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_END),      /* `+0`: Expansion has finished */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_SKIP),     /* `+1`: Advance macro body template reader by `ARG[0]` bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_COPY),     /* `+1`: Copy `ARG[0]` bytes from macro body template & advance reader */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_EXP),  /* `+2`: Insert argument[`ARG[0]`] (expanded) and advance macro body template reader by `ARG[1]` bytes */
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_STR),  /* +2  Insert argument[ARG[0]] ("-escaped) and advance macro body template reader by ARG[1] bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_STR),  /* `+2`: Insert argument[`ARG[0]`] (`"`-escaped) and advance macro body template reader by `ARG[1]` bytes */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_CHR),  /* +2  Insert argument[ARG[0]] ('-escaped) and advance macro body template reader by ARG[1] bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_CHR),  /* `+2`: Insert argument[`ARG[0]`] (`'`-escaped) and advance macro body template reader by `ARG[1]` bytes */
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS),      /* +2  Insert argument[ARG[0]] (non-expanded) and advance macro body template reader by ARG[1] bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS),      /* `+2`: Insert argument[`ARG[0]`] (non-expanded) and advance macro body template reader by `ARG[1]` bytes */
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 #if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
-	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_COMMA), /* +1  TPP_MACRO_OPCODE_SKIP[ARG[0]]; If varargs are non-empty: insert a ','-character */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_COMMA), /* `+1`: `TPP_MACRO_OPCODE_SKIP[ARG[0]]`; If varargs are non-empty: insert a `,`-character */
 #endif /* TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS */
 #if TPP_HAVE_VA_OPT_IN_MACROS
-	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_OPT),   /* +3  TPP_MACRO_OPCODE_SKIP[ARG[0]]; If varargs are non-empty: TPP_MACRO_OPCODE_COPY[ARG[1]]; TPP_MACRO_OPCODE_SKIP[ARG[2]] */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_OPT),   /* `+3`: `TPP_MACRO_OPCODE_SKIP[ARG[0]]`; If varargs are non-empty: `TPP_MACRO_OPCODE_COPY[ARG[1]]; TPP_MACRO_OPCODE_SKIP[ARG[2]]` */
 #endif /* TPP_HAVE_VA_OPT_IN_MACROS */
 #if TPP_HAVE_VA_NARGS_IN_MACROS
-	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_NARGS), /* +1  TPP_MACRO_OPCODE_SKIP[ARG[0]]; insert decimal token representing # of varargs (or "0" if there are no varargs) */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_NARGS), /* `+1`: `TPP_MACRO_OPCODE_SKIP[ARG[0]]`; insert decimal token representing # of varargs (or `0` if there are no varargs) */
 #endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
 };
 
@@ -139,20 +139,20 @@ struct tpp_keyword;
 struct tpp_macro_argbuf; /* Opaque... */
 typedef struct tpp_macro {
 	tpp_refcnt          TPP_INTERNAL(tm_refcnt);     /* Reference count */
-	tpp_macro_kind      TPP_INTERNAL(tm_kind);       /* [const] Macro kind (one of `TPP_MACRO_KIND_*') */
+	tpp_macro_kind      TPP_INTERNAL(tm_kind);       /* [const] Macro kind (one of `TPP_MACRO_KIND_*`) */
 #if TPP_HAVE_MACRO_FLAGS
-	tpp_macro_flag      TPP_INTERNAL(tm_flags);      /* [const] Macro flags (set of `TPP_MACRO_FLAG_*') */
+	tpp_macro_flag      TPP_INTERNAL(tm_flags);      /* [const] Macro flags (set of `TPP_MACRO_FLAG_*`) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
-	TPP_REF tpp_string *TPP_INTERNAL(tm_body_chunk); /* [0..1][const] Data-chunk containing the macro's body (or "NULL" if static or originating from file with "tf_chunk == NULL") */
+	TPP_REF tpp_string *TPP_INTERNAL(tm_body_chunk); /* [0..1][const] Data-chunk containing the macro's body (or `NULL` if static or originating from file with `tf_chunk == NULL`) */
 	tpp_char const     *TPP_INTERNAL(tm_body_start); /* [1..1][const] Pointer to start of macro body */
 	tpp_char const     *TPP_INTERNAL(tm_body_end);   /* [1..1][const] Pointer to end of macro body */
 #if TPP_HAVE_UNICODE
 	tpp_file_encoding   TPP_INTERNAL(tm_body_enc);   /* Encoding of body. */
 #endif /* TPP_HAVE_UNICODE */
 	tpp_size            TPP_INTERNAL(tm_expansions); /* The amount of existing expansions of this macro.
-	                                                  * NOTE: Depending on the `TPP_MACRO_FLAG_SELFEXPAND' flag,
+	                                                  * NOTE: Depending on the `TPP_MACRO_FLAG_SELFEXPAND` flag,
 	                                                  *       this value may not be allowed to exceed one(1). */
-	char const         *TPP_INTERNAL(tm_deffile);    /* [0..1][const] File in which this macro was defined (or "NULL" if unknown / custom definition) */
+	char const         *TPP_INTERNAL(tm_deffile);    /* [0..1][const] File in which this macro was defined (or `NULL` if unknown / custom definition) */
 	tpp_lcinfo          TPP_INTERNAL(tm_deflc);      /* [const][valid_if(tm_deffile != NULL)] Macro name line/column (0-based) */
 	tpp_lcinfo          TPP_INTERNAL(tm_body_lc);    /* [const][valid_if(tm_deffile != NULL)] Macro body line/column (0-based) */
 	union {
@@ -164,11 +164,11 @@ typedef struct tpp_macro {
 			tpp_size            TPP_INTERNAL(tmf_n_vaopt);    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seekraw_rparen:OUT(*p_argc) > tmf_argc). */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
-			tpp_size            TPP_INTERNAL(tmf_n_vanargs);  /* [const] Amount of times `__VA_NARGS__' is used in `tmf_expand'. */
+			tpp_size            TPP_INTERNAL(tmf_n_vanargs);  /* [const] Amount of times `__VA_NARGS__` is used in `tmf_expand`. */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
 			struct tpp_macro_argbuf
 			                   *TPP_INTERNAL(tmf_argbuf);     /* [0..1][owned] Internal cache used during macro expansion */
-			tpp_macro_opcode    TPP_INTERNAL(tmf_expand)[TPP_FLEX_ARRAY]; /* [const][1..n] Sequence of `TPP_MACRO_OPCODE_*'-opcodes, together with their operands */
+			tpp_macro_opcode    TPP_INTERNAL(tmf_expand)[TPP_FLEX_ARRAY]; /* [const][1..n] Sequence of `TPP_MACRO_OPCODE_*`-opcodes, together with their operands */
 		} TPP_INTERNAL(tmd_func); /* [TPP_MACRO_KIND_ISFUNC(tm_kind)] */
 	} TPP_INTERNAL(tm_data);
 } tpp_macro;
@@ -192,7 +192,7 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_macro_destroy(tpp_macro *tpp_restrict
 #define tpp_macro_decref(self)   (void)(tpp_refcnt_decfetch(&(self)->TPP_INTERNAL(tm_refcnt)) || (tpp_macro_destroy(self), 0))
 
 #if TPP_HAVE_LEXER_COPY
-/* Allocate+return a hard-copy of "self"
+/* Allocate+return a hard-copy of `self`
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_macro *TPPCALL
 tpp_macro_copy(tpp_macro const *tpp_restrict self);
@@ -222,7 +222,7 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #define tpp_macro_isbodyascii(self) 1
 #endif /* !TPP_HAVE_UNICODE */
 
-/* The following all require the caller to ensure that `tpp_macro_isfunction(self)' */
+/* The following all require the caller to ensure that `tpp_macro_isfunction(self)` */
 #define tpp_macro_getfuncargc(self)      ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argc))
 #define tpp_macro_getfuncargtok(self, i) ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argv)[i].TPP_INTERNAL(tma_id))
 #define tpp_macro_getfunclparen(self)    TPP_MACRO_KIND_ASTOK((self)->TPP_INTERNAL(tm_kind))

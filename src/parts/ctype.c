@@ -31,17 +31,17 @@ TPP_DECL_BEGIN
 /* clang-format off */
 #define TPP_UTF8_SEQLEN_INIT(_0, _1, _2, _3, _4, _5, _6, _7, _8)         \
 	{                                                                    \
-		/* Unicode follow-up word (`0b10??????'). */                     \
+		/* Unicode follow-up word (`0b10??????`). */                     \
 		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0x80-0x8f */ \
 		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0x90-0x9f */ \
 		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0xa0-0xaf */ \
 		_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0,_0, /* 0xb0-0xbf */ \
-		/* `0b110?????' */                                               \
+		/* `0b110?????` */                                               \
 		_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2, /* 0xc0-0xcf */ \
 		_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2,_2, /* 0xd0-0xdf */ \
-		/* `0b1110????' */                                               \
+		/* `0b1110????` */                                               \
 		_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3, /* 0xe0-0xef */ \
-		/* `0b11110???' */                                               \
+		/* `0b11110???` */                                               \
 		_4,_4,_4,_4,_4,_4,_4,_4,                         /* 0xf0-0xf7 */ \
 		_5,_5,_5,_5,                                     /* 0xf8-0xfb */ \
 		_6,_6,                                           /* 0xfc-0xfd */ \
@@ -188,7 +188,7 @@ tpp_ftoa(char buf[TPP_FTOA_MAXLEN], tpp_float value) {
 
 
 #if TPP_HAVE_TPP_UNICODE_WRITEUTF8
-/* Encode "uch" as utf-8 into "buf" and return the pointer after the last-written byte. */
+/* Encode `uch` as utf-8 into `buf` and return the pointer after the last-written byte. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc) {
 	tpp_char *dst = buf;
@@ -233,14 +233,14 @@ tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc) {
 #endif /* TPP_HAVE_TPP_UNICODE_WRITEUTF8 */
 
 #if TPP_HAVE_TPP_FUZZY_MEMCMP
-/* Quantify the "fuzziness" of how close 2 memory-blocks are to each
- * other (less means closer to each other, and "0" means identical)
+/* Quantify the *fuzziness* of how close 2 memory-blocks are to each
+ * other (less means closer to each other, and `0` means identical)
  *
  * #ifndef tpp_alloca
  * @return: TPP_SIZE_MAX: Cannot compare strings (insufficient memory,
  *                        and no tpp_alloca() function available to
  *                        supplement).
- *                        The implementation uses "tpp_trymalloc", so
+ *                        The implementation uses `tpp_trymalloc`, so
  *                        this shouldn't be considered a fatal error
  * #endif // !tpp_alloca */
 TPP_IMPL TPP_WUNUSED tpp_size TPPCALL

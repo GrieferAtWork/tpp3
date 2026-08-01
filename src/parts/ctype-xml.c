@@ -2178,7 +2178,7 @@ tpp_xml_entity_fromptr(tpp_char const *tpp_restrict ptr) {
 	iter = ptr + tpp_strlen((char const *)ptr) + 1;
 	iter += tpp_unicode_utf8seqlen_getmax(*iter);
 	if (*iter == 0) {
-		/* `ptr' points into the first string! */
+		/* `ptr` points into the first string! */
 		if (*ptr == 0x01)
 			return (tpp_xml_entity const *)(ptr + 1);
 		while ((unsigned char)ptr[-1] >= 0x02)
@@ -2186,18 +2186,18 @@ tpp_xml_entity_fromptr(tpp_char const *tpp_restrict ptr) {
 		return (tpp_xml_entity const *)ptr;
 	}
 
-	/* `ptr' points into the second string! */
+	/* `ptr` points into the second string! */
 	while (ptr[-1] != 0)
 		--ptr;
 
-	/* `ptr' now points at the start of the second string. */
+	/* `ptr` now points at the start of the second string. */
 	--ptr;
 
-	/* `ptr' now points at the nul after the first string. */
+	/* `ptr` now points at the nul after the first string. */
 	while ((unsigned char)ptr[-1] >= 0x02)
 		--ptr;
 
-	/* `ptr' now points at the start of the first string. */
+	/* `ptr` now points at the start of the first string. */
 	return (tpp_xml_entity const *)ptr;
 }
 

@@ -88,7 +88,7 @@ tpp_extensions_copy(tpp_extensions *tpp_restrict self,
 }
 #endif /* TPP_HAVE_LEXER_COPY */
 
-/* Pop the current extensions state (may only be called when `tpp_extensions_canpop(self)') */
+/* Pop the current extensions state (may only be called when `tpp_extensions_canpop(self)`) */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_extensions_pop(tpp_extensions *tpp_restrict self) {
 	tpp_assert(tpp_extensions_canpop(self));

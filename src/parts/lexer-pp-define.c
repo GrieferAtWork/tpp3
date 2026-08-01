@@ -55,13 +55,13 @@ typedef struct tpp_macro_builder {
 #define _tpp_macro_builder_init_n_vaopt(self) /* nothing */
 #endif /* !TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
-	tpp_size            mab_n_vanargs;   /* Amount of times `__VA_NARGS__' is used in `tmf_expand'. */
+	tpp_size            mab_n_vanargs;   /* Amount of times `__VA_NARGS__` is used in `tmf_expand`. */
 #define _tpp_macro_builder_init_n_vanargs(self) , (self)->mab_n_vanargs = 0
 #else /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
 #define _tpp_macro_builder_init_n_vanargs(self) /* nothing */
 #endif /* !TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
-	tpp_size            mab_tmf_expandc; /* Used buffer size in `mab_macro->tm_data.tmd_func.tmf_expand' */
-	tpp_size            mab_tmf_expanda; /* Allocated buffer size in `mab_macro->tm_data.tmd_func.tmf_expand' */
+	tpp_size            mab_tmf_expandc; /* Used buffer size in `mab_macro->tm_data.tmd_func.tmf_expand` */
+	tpp_size            mab_tmf_expanda; /* Allocated buffer size in `mab_macro->tm_data.tmd_func.tmf_expand` */
 	tpp_macro          *mab_macro;       /* [0..*] The macro being built */
 } tpp_macro_builder;
 
@@ -97,7 +97,7 @@ tpp_macro_builder_truncate_argv(tpp_macro_builder *tpp_restrict self) {
 }
 #endif /* !__OPTIMIZE_SIZE__ */
 
-/* Check if "name" identifies a known argument. If so: return it. Otherwise, return "NULL" */
+/* Check if `name` identifies a known argument. If so: return it. Otherwise, return `NULL` */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_macro_argument *TPPCALL
 tpp_macro_builder_getargument(tpp_macro_builder const *tpp_restrict self, tpp_token_id name) {
 	tpp_size i;
@@ -501,7 +501,7 @@ tpp_macro_builder_requireop(tpp_macro_builder *tpp_restrict self,
 
 
 #if TPP_HAVE_TRADITIONAL_MACROS
-/* Compile a traditional macro (allowed to clobber the token in "builder") */
+/* Compile a traditional macro (allowed to clobber the token in `builder`) */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_macro_builder_compile_traditional_impl(tpp_macro_builder *tpp_restrict builder,
                                            tpp_lexer *tpp_restrict self,
@@ -628,7 +628,7 @@ tpp_macro_builder_compile_traditional(tpp_macro_builder *tpp_restrict builder,
 #endif /* TPP_HAVE_TRADITIONAL_MACROS */
 
 #if TPP_CONF_MAYBE_0(TPP_HAVE_TRADITIONAL_MACROS)
-/* Compile a modern macro (allowed to clobber the token in "builder") */
+/* Compile a modern macro (allowed to clobber the token in `builder`) */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_macro_builder_compile_modern(tpp_macro_builder *tpp_restrict builder,
                                  tpp_lexer *tpp_restrict self,
@@ -1580,7 +1580,7 @@ err_builder:
 #pragma GCC diagnostic pop
 #endif /* TPP_GCC_VERSION_NUM >= 140001 */
 
-/* Handle a "#define" directive, with "self" pointing at the macro's name-keyword
+/* Handle a `#define` directive, with `self` pointing at the macro's name-keyword
  * @return: TPP_TOK_ISERR: Error
  * @return: TPP_TOK_EOF: Success; caller should yield the next raw token */
 TPP_INTERN_IMPL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL

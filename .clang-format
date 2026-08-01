@@ -8,9 +8,9 @@
 #  REPLACE:  "}[ \t]*\n[ \t]+(?=\bEXCEPT\b)" --> "} "
 #             - EXCEPT on a new line
 #  REPLACE:  "#else  +/\*" --> "#else /\*"
-#             - More than 1 whitespace before comment after `#else' (clang-format likes to
+#             - More than 1 whitespace before comment after `#else` (clang-format likes to
 #               introduce these non-sensical whitespaces because of AlignTrailingComments,
-#               which it does with the associated `#endif' for whatever reason).
+#               which it does with the associated `#endif` for whatever reason).
 #             - I don't really know why it does that, since the following works fine:
 #               >> foo();    // Comment 1
 #               >> barfoo(); // Comment 2
@@ -31,7 +31,7 @@
 # >>     Replacement: '} '
 #
 # Additionally, look out for:
-#  - `THROWS' annotations written on a separate line:
+#  - `THROWS` annotations written on a separate line:
 #    >> PUBLIC BLOCKING NONNULL((1)) void KCALL
 #    >> fnode_syncattr(struct fnode *__restrict self)
 #    >> 		THROWS(E_WOULDBLOCK, E_IOERROR, ...) {
@@ -314,7 +314,7 @@ SpaceBeforeParensOptions:
   AfterForeachMacros: true
   AfterFunctionDeclarationName: false
   AfterFunctionDefinitionName: false
-  AfterIfMacros: false  # Needed for our `IfMacros' hack above ;)
+  AfterIfMacros: false  # Needed for our `IfMacros` hack above ;)
   AfterOverloadedOperator: false
   #AfterRequiresInClause: false
   #AfterRequiresInExpression: false

@@ -58,8 +58,8 @@ tpp_decode_uleb128(tpp_char const **tpp_restrict p_iter) {
 }
 
 /* Return a pointer to the start (the first byte of the compressed TEXT
- * section) of the token record into which "db_ptr" points. For this purpose,
- * it doesn't matter which part of the record "db_ptr" points at: this function
+ * section) of the token record into which `db_ptr` points. For this purpose,
+ * it doesn't matter which part of the record `db_ptr` points at: this function
  * will always find the record's start and return a pointer for that. */
 static TPP_PURECALL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_char const *TPPCALL
 tpp_unam_token_getstart(tpp_char const *tpp_restrict db_ptr) {
@@ -103,7 +103,7 @@ typedef struct tpp_unam_text_reader {
 	(void)((self)->tuntr_word = ((self)->tuntr_ptr = (db_ptr) + 1)[-1], \
 	       (self)->tuntr_bits = TPP_CHAR_BIT)
 
-/* Read bits from "self" */
+/* Read bits from `self` */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_char TPPCALL
 tpp_unam_text_reader_readbits(tpp_unam_text_reader *tpp_restrict self, tpp_char num_bits) {
 	tpp_char result, remaining_bits;
@@ -121,10 +121,10 @@ tpp_unam_text_reader_readbits(tpp_unam_text_reader *tpp_restrict self, tpp_char 
 	return result;
 }
 
-/* Decode+read a compressed unicode character from "self".
+/* Decode+read a compressed unicode character from `self`.
  * s.a. the compression function `ctype-names.dee:serializeText()`
  *
- * Returns "0" if EOF has been reached */
+ * Returns `0` if EOF has been reached */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_unichar TPPCALL
 tpp_unam_text_reader_readchar(tpp_unam_text_reader *tpp_restrict self) {
 	static char const simple_chars[29] = {
@@ -360,25 +360,25 @@ handle_space:
 	tpp_unreachable();
 }
 
-/* Perform a strcmp() operation between text in "self" and "*p_compressed_text".
+/* Perform a strcmp() operation between text in `self` and `*p_compressed_text`.
  * For this purpose:
- * - "self" is always updated to point *at* the first non-matching character,
+ * - `self` is always updated to point *at* the first non-matching character,
  *   no matter the return value.
- * - "*p_compressed_text" is only updated when `0` is returned (otherwise, it
+ * - `*p_compressed_text` is only updated when `0` is returned (otherwise, it
  *   is left unmodified). When `0` is returned, it will point to the first
  *   byte *after* the compressed TEXT-block located at the start of a token
  *   record.
  *
- * @return: < 0:  "TEXT(self) < TEXT(*p_compressed_text)" -- "self->tuntp_pos"
+ * @return: < 0:  `TEXT(self) < TEXT(*p_compressed_text)` -- `self->tuntp_pos`
  *                now points at the start of the first non-equal character
- * @return: > 0:  "TEXT(self) > TEXT(*p_compressed_text)" -- "self->tuntp_pos"
+ * @return: > 0:  `TEXT(self) > TEXT(*p_compressed_text)` -- `self->tuntp_pos`
  *                now points at the start of the first non-equal character
  * @return: == 0: Text match achieved:
- *                - "self->tuntp_pos" now points to the first character *after* the matched token
- *                - "*p_compressed_text" now updated to point at either the 00h-byte between the
+ *                - `self->tuntp_pos` now points to the first character *after* the matched token
+ *                - `*p_compressed_text` now updated to point at either the 00h-byte between the
  *                  record's TEXT and ULEB128, or (if that 00h-byte was needed by TEXT), will
  *                  point at the first byte of ULEB128 (which is never another 00h, so you can
- *                  always seek to the ULEB128 by incrementing "*p_compressed_text" if the byte
+ *                  always seek to the ULEB128 by incrementing `*p_compressed_text` if the byte
  *                  pointed-to by it is 00h) */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) int TPPCALL
 tpp_unam_token_parser_strcmp_text(tpp_unam_token_parser *tpp_restrict self,
@@ -394,12 +394,12 @@ tpp_unam_token_parser_strcmp_text(tpp_unam_token_parser *tpp_restrict self,
 
 
 
-/* Parse the next token, updating "parser" along-the-way.
+/* Parse the next token, updating `parser` along-the-way.
  * This function greedily matches the longest token found,
  * only stopping when WHITESPACE or `_` is countered, or
  * the position described by `tuntp_end` is reached.
  *
- * When no matching token can be located, return "0" */
+ * When no matching token can be located, return `0` */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_unam_tokenid TPPCALL
 tpp_unam_token_lookup(tpp_unam_token_parser *tpp_restrict parser) {
 	tpp_unam_tokenid result = 0;
@@ -491,7 +491,7 @@ tpp_unam_token_parser_skip_tokenid(tpp_unam_token_parser *tpp_restrict self,
 	return false;
 }
 
-/* Skip over the token described by "p_db_token"
+/* Skip over the token described by `p_db_token`
  * @param: p_db_token: Updated to point *after* match on success;
  *                     Contents are undefined on failure */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
@@ -523,7 +523,7 @@ typedef tpp_char tpp_unam_node;
 #define TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_REQUIRES_SPACE 0x40
 #define TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_LAST           0x80
 
-/* Find the first top-level node whose first token is "token" */
+/* Find the first top-level node whose first token is `first_token` */
 static TPP_PURECALL TPP_WUNUSED tpp_unam_node const *TPPCALL
 tpp_unam_tree_enter_with_token(tpp_unam_tokenid first_token) {
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
@@ -546,7 +546,7 @@ tpp_unam_tree_enter_with_token(tpp_unam_tokenid first_token) {
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE */
 }
 
-/* Find the first top-level node whose first token is "token" */
+/* Find the first top-level node whose first character is `first_ch` */
 static TPP_PURECALL TPP_WUNUSED tpp_unam_node const *TPPCALL
 tpp_unam_tree_enter_with_char(tpp_char first_ch) {
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
@@ -611,7 +611,7 @@ tpp_unam_node_match_text_token_after_1char(tpp_unam_node const *tpp_restrict db_
 }
 
 
-/* Try to match the children of some parent-node, starting with "db_first_child" */
+/* Try to match the children of some parent-node, starting with `db_first_child` */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
 tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_child,
                                  tpp_unam_token_parser *tpp_restrict parser,
@@ -843,8 +843,8 @@ next_ns:
 }
 
 /* Find the perfectly matching node, whilst being allowed to assume
- * that the first token of "db_self" has already been matched (such
- * that "parser" points *after* said first token) */
+ * that the first token of `db_self` has already been matched (such
+ * that `parser` points *after* said first token) */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
 tpp_unam_node_matchtext_after_1token(tpp_unam_node const *tpp_restrict db_self,
                                      tpp_unam_token_parser *tpp_restrict parser,
@@ -861,7 +861,7 @@ tpp_unam_node_matchtext_after_1token(tpp_unam_node const *tpp_restrict db_self,
 	return tpp_unam_node_matchtext_after_1token_ex(db_iter, parser, uc, features);
 }
 
-/* Try to match the children of some parent-node, starting with "db_first_child" */
+/* Try to match the children of some parent-node, starting with `db_first_child` */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
 tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_child,
                                  tpp_unam_token_parser *tpp_restrict parser,
@@ -916,7 +916,7 @@ tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_chil
 
 /* Return the unicode ordinal associated with `*p_iter`
  * @return: 0 : Unknown (`*p_iter` was left unchanged)
- * @return: * : # of unicode ordinals written to "uc" */
+ * @return: * : # of unicode ordinals written to `uc` */
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
 tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,

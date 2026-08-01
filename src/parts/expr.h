@@ -87,20 +87,20 @@ typedef struct tpp_expr_value {
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 
-/* Move "src" into "dst", invalidating "src" along the way and initializing "dst"
+/* Move `src` into `dst`, invalidating `src` along the way and initializing `dst`
  * @return: TPP_EOK: Success */
 #define tpp_expr_value_move(dst, src) (void)(*(dst) = *(src))
 
-/* Copy-construct "src" into "dst"
+/* Copy-construct `src` into `dst`
  * @return: TPP_EOK: Success */
 #define tpp_expr_value_copy(dst, src) \
 	(*(dst) = *(src)_tpp_expr_value_incref(dst), TPP_EOK)
 
-/* Finalize "self" (never fails) */
+/* Finalize `self` (never fails) */
 #define tpp_expr_value_fini(self) \
 	((void)0 _tpp_expr_value_decref(self), tpp_dbg_memset(self, sizeof(*(self))))
 
-/* Check which native representation is used by "self" (never fails) */
+/* Check which native representation is used by `self` (never fails) */
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE
 #define tpp_expr_value_isint(self) (_tpp_expr_value_getkind(self) == _TPP_EXPR_VALUE_KIND_INT)
 #else /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
@@ -117,8 +117,8 @@ typedef struct tpp_expr_value {
 #define tpp_expr_value_isstring(self) 0
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
-/* Extract a specifically-typed value from "self"
- * Caller must ensure that "tpp_expr_value_is*" returned true.
+/* Extract a specifically-typed value from `self`
+ * Caller must ensure that `tpp_expr_value_is*` returned true.
  * @return: TPP_EOK: Success */
 #define tpp_expr_value_asint(self, p_result) (*(p_result) = _tpp_expr_value_getint(self), TPP_EOK)
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
@@ -131,14 +131,14 @@ typedef struct tpp_expr_value {
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 
-/* Initialize "self" as int-typed, with "v" as value
+/* Initialize `self` as int-typed, with `v` as value
  * @return: TPP_EOK: Success */
 #define tpp_expr_value_init_int(self, /*tpp_intmax*/ v)       \
 	((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_int) = (v) \
 	 _tpp_expr_value_setkind(self, _TPP_EXPR_VALUE_KIND_INT), \
 	 TPP_EOK)
 
-/* Initialize "self" as float-typed, with "v" as value
+/* Initialize `self` as float-typed, with `v` as value
  * @return: TPP_EOK: Success */
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 #define tpp_expr_value_init_float(self, /*tpp_float*/ v)        \
@@ -147,7 +147,7 @@ typedef struct tpp_expr_value {
 	 TPP_EOK)
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
-/* Initialize "self" as string-typed, with "v" as value
+/* Initialize `self` as string-typed, with `v` as value
  * @param: str: [1..1] The string value to assign
  * @return: TPP_EOK: Success */
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
@@ -212,7 +212,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 5)) tpp_errno TPPCALL tpp_expr_value_get
 #define tpp_expr_value_getrange tpp_expr_value_getrange
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
-/* Determine the boolean-style value of "self"
+/* Determine the boolean-style value of `self`
  * Works for any kind of expression value.
  * @return: TPP_EOK: Success */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_asbool(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict self, bool *tpp_restrict p_bool_result);
@@ -237,7 +237,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_asb
 #define tpp_expr_value_cmp_gr(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) > _tpp_expr_value_getint(rhs)), TPP_EOK)
 #define tpp_expr_value_cmp_ge(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) >= _tpp_expr_value_getint(rhs)), TPP_EOK)
 
-/* Determine the boolean-style value of "self"
+/* Determine the boolean-style value of `self`
  * Works for any kind of expression value.
  * @return: TPP_EOK: Success */
 #define tpp_expr_value_asbool(lexer, self, p_bool_result) \
@@ -249,9 +249,9 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_asb
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_div(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
 
-/* Print the representation of "self" to "printer" (in target encoding; used to implement __TPP_EVAL)
- * @return: *  : Sum of positive return value of `printer'
- * @return: < 0: An error was thrown (TPP_SSIZE_ISERR), or `printer' returned this value */
+/* Print the representation of `self` to `printer` (in target encoding; used to implement __TPP_EVAL)
+ * @return: *  : Sum of positive return value of `printer`
+ * @return: < 0: An error was thrown (TPP_SSIZE_ISERR), or `printer` returned this value */
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,

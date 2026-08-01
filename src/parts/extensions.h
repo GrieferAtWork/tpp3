@@ -88,11 +88,11 @@ tpp_extensions_copy(tpp_extensions *tpp_restrict self,
 /* Push the current extensions state */
 #define tpp_extensions_push(self) (void)(++(self)->TPP_INTERNAL(te_pushcnt))
 
-/* Pop the current extensions state (may only be called when `tpp_extensions_canpop(self)') */
+/* Pop the current extensions state (may only be called when `tpp_extensions_canpop(self)`) */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_extensions_pop(tpp_extensions *tpp_restrict self);
 #define tpp_extensions_canpop(self) ((self)->TPP_INTERNAL(te_pushcnt) != 0 || (self)->TPP_INTERNAL(te_prev) != NULL)
 
-/* When true, `tpp_extensions_setid()' must first copy the extension
+/* When true, `tpp_extensions_setid()` must first copy the extension
  * state (which requires heap memory, and may thus fail) */
 #define tpp_extensions_mustcopy(self) ((self)->TPP_INTERNAL(te_pushcnt) != 0)
 
@@ -113,7 +113,7 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 #define tpp_extensions_getid(self, id) \
 	tpp_extensions_state_getid(&(self)->TPP_INTERNAL(te_state), id)
 
-/* Reset (re-initialize) "self" */
+/* Reset (re-initialize) `self` */
 #define tpp_extensions_reset(self) \
 	(tpp_extensions_fini(self), tpp_extensions_init(self))
 
@@ -128,8 +128,8 @@ tpp_extension_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 #define tpp_extension_byname(name) tpp_extension_byname_ex(name, TPP_SIZE_MAX)
 
 #if TPP_HAVE_TPP_EXTENSION_NEAREST
-/* Returns the ID of the extension with the name that is closest to "name"
- * When no extensions are defined (at all), this will return "TPP_EXT_COUNT" */
+/* Returns the ID of the extension with the name that is closest to `name`
+ * When no extensions are defined (at all), this will return `TPP_EXT_COUNT` */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_extension_id TPPCALL
 tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 #define tpp_extension_nearest(name) tpp_extension_nearest_ex(name, TPP_SIZE_MAX)

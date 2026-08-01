@@ -43,38 +43,38 @@ TPP_DECL_BEGIN
  *
  * NOTE: When a warning has multiple groups (and/or a number), and is triggered,
  *       then the state used for emission is the one with the lowest, numerical
- *       value (e.g.: if at least one group is "TPP_WSTATE_DISABLED", then the
+ *       value (e.g.: if at least one group is `TPP_WSTATE_DISABLED`, then the
  *       warning is disabled). The used group/number will be printed however. */
 typedef enum tpp_warning_state {
 	TPP_WSTATE_DISABLED = 0, /* Warning exists, but is disabled */
 	TPP_WSTATE_WARN     = 1, /* Regular warning */
 #if TPP_HAVE_WARNING_ERROR
-	TPP_WSTATE_ERROR    = 2, /* Error (s.a. `tpp_lexer::tl_maxerrors') */
+	TPP_WSTATE_ERROR    = 2, /* Error (s.a. `tpp_lexer::tl_maxerrors`) */
 #define TPP_WSTATE_ERROR_OR_FATAL TPP_WSTATE_ERROR
 #else /* TPP_HAVE_WARNING_ERROR */
 #define TPP_WSTATE_ERROR_OR_FATAL TPP_WSTATE_FATAL
 #endif /* !TPP_HAVE_WARNING_ERROR */
-	TPP_WSTATE_FATAL    = 3, /* Immediately cause a `TPP_ELEXERROR' error */
+	TPP_WSTATE_FATAL    = 3, /* Immediately cause a `TPP_ELEXERROR` error */
 #define TPP_WSTATE_UNDEFINED TPP_WSTATE_FATAL /* Intended for numbers-definitions: refer to linked groups */
 
 #if TPP_HAVE_WARNING_SUPPRESS
-	TPP_WSTATE_SUPPRESS = -1, /* Treat as `TPP_WSTATE_DISABLED' a couple of times, then switch to old state
-	                           * HINT: In "tpp_warnings_state", this is represented as "TPP_WSTATE_FATAL". */
+	TPP_WSTATE_SUPPRESS = -1, /* Treat as `TPP_WSTATE_DISABLED` a couple of times, then switch to old state
+	                           * HINT: In `tpp_warnings_state`, this is represented as `TPP_WSTATE_FATAL`. */
 #endif /* TPP_HAVE_WARNING_SUPPRESS */
 
 #if TPP_HAVE_WARNING_DEFAULT
-	TPP_WSTATE_DEFAULT = 99, /* Only for `tpp_warnings_setctx()': restore behavior from `tpp_warnings_state_default' */
+	TPP_WSTATE_DEFAULT = 99, /* Only for `tpp_warnings_setctx()`: restore behavior from `tpp_warnings_state_default` */
 #endif /* TPP_HAVE_WARNING_DEFAULT */
 } tpp_warning_state;
 
-/* Check if "lhs" is more important than "rhs".
+/* Check if `lhs` is more important than `rhs`.
  *
  * When a warning is emitted, the context that is configured to the greatest
  * importance is used to determine how that specific warning should be treated. */
 #define tpp_warning_state_ismoreimportant(lhs, rhs) \
 	((int)(lhs) < (int)(rhs))
 
-/* Check if the warning state specified by "self" will cause something to be emitted. */
+/* Check if the warning state specified by `self` will cause something to be emitted. */
 #if TPP_HAVE_WARNING_SUPPRESS
 #if 1
 #define tpp_warning_state_willemit(self) ((int)(self) > 0)
@@ -102,8 +102,8 @@ typedef enum tpp_warning_group_id {
 	TPP_WG_COUNT
 } tpp_warning_group_id;
 
-/* Return a pointer to a \0\0-terminated list of strings describing the names
- * of for the given warning group "id". Returns "NULL" if "id" is "TPP_WG_COUNT"
+/* Return a pointer to a `\0\0`-terminated list of strings describing the names
+ * of for the given warning group `id`. Returns `NULL` if `id` is `TPP_WG_COUNT`
  * or some other invalid warning group ID. */
 TPP_DECL TPP_WUNUSED char const *TPPCALL
 tpp_warning_group_getnames(tpp_warning_group_id id);
@@ -114,8 +114,8 @@ tpp_warning_group_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen)
 #define tpp_warning_group_byname(name) tpp_warning_group_byname_ex(name, TPP_SIZE_MAX)
 
 #if TPP_HAVE_TPP_WARNING_GROUP_NEAREST
-/* Returns the ID of the warning group with the name that is closest to "name"
- * When no warning groups are defined (at all), this will return "TPP_WG_COUNT" */
+/* Returns the ID of the warning group with the name that is closest to `name`
+ * When no warning groups are defined (at all), this will return `TPP_WG_COUNT` */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_group_id TPPCALL
 tpp_warning_group_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 #define tpp_warning_group_nearest(name) tpp_warning_group_nearest_ex(name, TPP_SIZE_MAX)
@@ -136,24 +136,25 @@ typedef enum tpp_warning_id {
 	TPP_W_COUNT
 } tpp_warning_id;
 
-/* Returns a TPP_WG_COUNT-terminated list of group IDs associated with the given warning "id".
- * When the given "id" is "TPP_W_COUNT" or invalid, return a pointer to an empty warning-group-id-list. */
+/* Returns a `TPP_WG_COUNT`-terminated list of group IDs associated with the given warning `id`.
+ * When the given `id` is `TPP_W_COUNT` or invalid, return a pointer to an empty warning-group-id-list. */
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED tpp_warning_group_id const *TPPCALL
 tpp_warning_getgroups(tpp_warning_id id);
 
-/* Returns the "tpp_lexer_printf_warning"-style format string assigned with "id".
- * When "id" is TPP_W_COUNT, invalid, or declared as "TPP_WARNING_EX", return "NULL" instead. */
+/* Returns the `tpp_lexer_printf_warning`-style format string assigned with `id`.
+ * When `id` is `TPP_W_COUNT`, invalid, or declared as `TPP_WARNING_EX`, return `NULL` instead. */
 TPP_DECL TPP_WUNUSED char const *TPPCALL
 tpp_warning_getformat(tpp_warning_id id);
 
 #if TPP_HAVE_WARNING_NUMBERS
-/* Returns the warning ID linked to a given "number", or "TPP_W_COUNT" if "number" is unknown */
+/* Returns the warning ID linked to a given `number`,
+ * or `TPP_W_COUNT` if `number` is unknown */
 TPP_DECL TPP_WUNUSED tpp_warning_id TPPCALL
 tpp_warning_ofnumber(unsigned int number);
 
-/* Returns the TPP_WARNING_NUMBER_INVALID-terminated list of warning numbers
- * associated with "warning_id". If "warning_id" doesn't have any warning
- * numbers, return a pointer to "TPP_WARNING_NUMBER_INVALID". */
+/* Returns the `TPP_WARNING_NUMBER_INVALID`-terminated list of warning numbers
+ * associated with `warning_id`. If `warning_id` doesn't have any warning
+ * numbers, return a pointer to `TPP_WARNING_NUMBER_INVALID`. */
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED unsigned int const *TPPCALL
 tpp_warning_getnumbers(tpp_warning_id warning_id);
 #else /* TPP_HAVE_WARNING_NUMBERS */
@@ -189,7 +190,7 @@ typedef enum tpp_warning_context_id {
 	TPP_WC_COUNT
 } tpp_warning_context_id;
 
-/* Check what kind of context is being described by "self" */
+/* Check what kind of context is being described by `self` */
 #if TPP_HAVE_WARNING_NUMBERS
 #define tpp_warning_context_id_isgroup(self) \
 	(!tpp_warning_context_id_isnumber(self))
@@ -200,25 +201,25 @@ typedef enum tpp_warning_context_id {
 #define tpp_warning_context_id_isnumber(self) 0
 #endif /* !TPP_HAVE_WARNING_NUMBERS */
 
-/* Return the context-id of a given "tpp_warning_group_id wgroup_id" */
+/* Return the context-id of a given `tpp_warning_group_id wgroup_id` */
 #define tpp_warning_context_id_ofgroup(wgroup_id) \
 	((tpp_warning_context_id)(unsigned int)(wgroup_id))
 
-/* Return the group-id of a given "tpp_warning_context_id ctx_id".
- * Caller must ensure that `tpp_warning_context_id_isgroup(ctx_id)' */
+/* Return the group-id of a given `tpp_warning_context_id ctx_id`.
+ * Caller must ensure that `tpp_warning_context_id_isgroup(ctx_id)` */
 #define tpp_warning_context_id_asgroup(ctx_id) \
 	((tpp_warning_group_id)(unsigned int)(ctx_id))
 
 #if TPP_HAVE_WARNING_NUMBERS
-/* Returns the context-id of a given (should-be) "numbered" warning.
- * When "warning_id" is invalid, "TPP_W_COUNT", or not numbered, this
- * function will return "TPP_WC_COUNT" instead. */
+/* Returns the context-id of a given (should-be) *numbered* warning.
+ * When `warning_id` is invalid, `TPP_W_COUNT`, or not numbered, this
+ * function will return `TPP_WC_COUNT` instead. */
 TPP_DECL TPP_WUNUSED tpp_warning_context_id TPPCALL
 tpp_warning_context_id_ofwarning(tpp_warning_id warning_id);
 
-/* Returns the warning-id linked to "ctx_id", when `tpp_warning_context_id_isnumber(ctx_id)'.
- * When no warning is linked to "ctx_id" ("ctx_id" is either linked to a warning group, or
- * is "TPP_WC_COUNT" or some other invalid ID), return "TPP_W_COUNT" instead. */
+/* Returns the warning-id linked to `ctx_id`, when `tpp_warning_context_id_isnumber(ctx_id)`.
+ * When no warning is linked to `ctx_id` (`ctx_id` is either linked to a warning group, or
+ * is `TPP_WC_COUNT` or some other invalid ID), return `TPP_W_COUNT` instead. */
 TPP_DECL TPP_WUNUSED tpp_warning_id TPPCALL
 tpp_warning_context_id_aswarning(tpp_warning_context_id ctx_id);
 #else /* TPP_HAVE_WARNING_NUMBERS */
@@ -236,12 +237,12 @@ typedef union tpp_warnings_state {
 	struct {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
-	unsigned int TPP_INTERNAL(twsg_##wgroup_id): 2; /* One of `tpp_warning_state' */
+	unsigned int TPP_INTERNAL(twsg_##wgroup_id): 2; /* One of `tpp_warning_state` */
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 #if TPP_HAVE_WARNING_NUMBERS
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) \
-	unsigned int TPP_INTERNAL(twsn_##warning_id): 2; /* One of `tpp_warning_state' */
+	unsigned int TPP_INTERNAL(twsn_##warning_id): 2; /* One of `tpp_warning_state` */
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
 	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
 #undef GUARD_TPP_AMALGAMATION_H
@@ -258,7 +259,7 @@ TPP_DECL tpp_warnings_state const tpp_warnings_state_default;
 #define _tpp_warnings_state_bitindx(ctx_id) (((unsigned int)((unsigned int)(ctx_id) / (TPP_CHAR_BIT >> 1))))
 #define _tpp_warnings_state_bitshft(ctx_id) (((unsigned int)((unsigned int)(ctx_id) % (TPP_CHAR_BIT >> 1))) << 1)
 
-/* Get/set the warning state of a given "tpp_warning_context_id ctx_id" */
+/* Get/set the warning state of a given `tpp_warning_context_id ctx_id` */
 #define tpp_warnings_state_get(self, ctx_id) \
 	((tpp_warning_state)(((self)->TPP_INTERNAL(tws_bitset)[_tpp_warnings_state_bitindx(ctx_id)] >> _tpp_warnings_state_bitshft(ctx_id)) & 3))
 #define tpp_warnings_state_set(self, ctx_id, value)                                                                                \
@@ -277,8 +278,8 @@ typedef struct tpp_warning_suppress_item {
 
 typedef struct tpp_warning_suppressions {
 	tpp_size                   TPP_INTERNAL(tws_ctxc); /* # of warnings that are being suppressed right now */
-	tpp_size                   TPP_INTERNAL(tws_ctxa); /* Allocated size of `tws_ctxv' */
-	tpp_warning_suppress_item *TPP_INTERNAL(tws_ctxv); /* [0..tws_ctxc|alloc(tws_ctxa)][owned] Vector of suppressions (sorted by `twsi_ctx_id') */
+	tpp_size                   TPP_INTERNAL(tws_ctxa); /* Allocated size of `tws_ctxv` */
+	tpp_warning_suppress_item *TPP_INTERNAL(tws_ctxv); /* [0..tws_ctxc|alloc(tws_ctxa)][owned] Vector of suppressions (sorted by `twsi_ctx_id`) */
 } tpp_warning_suppressions;
 #define tpp_warning_suppressions_init(self)    \
 	(void)((self)->TPP_INTERNAL(tws_ctxc) = 0, \
@@ -308,7 +309,7 @@ typedef struct tpp_warnings {
 #endif /* !TPP_HAVE_WARNINGS_PUSH_POP */
 } tpp_warnings;
 
-/* Initialize a given warnings context "self" */
+/* Initialize a given warnings context `self` */
 #define tpp_warnings_init(self)                                        \
 	(void)((self)->TPP_INTERNAL(tw_state) = tpp_warnings_state_default \
 	       _tpp_warnings_init_suppressions(self)                       \
@@ -318,7 +319,7 @@ typedef struct tpp_warnings {
 #define TPP_HAVE_WARNINGS_FINI \
 	(TPP_HAVE_WARNING_SUPPRESS || TPP_HAVE_WARNINGS_PUSH_POP)
 
-/* Finalize a given warnings context "self" */
+/* Finalize a given warnings context `self` */
 #if TPP_HAVE_WARNINGS_FINI
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_warnings_fini(tpp_warnings *tpp_restrict self);
@@ -335,7 +336,7 @@ tpp_warnings_copy(tpp_warnings *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_COPY */
 #endif /* !TPP_HAVE_WARNINGS_FINI */
 
-/* Reset (re-initialize) "self" */
+/* Reset (re-initialize) `self` */
 #define tpp_warnings_reset(self) \
 	(tpp_warnings_fini(self), tpp_warnings_init(self))
 
@@ -347,19 +348,19 @@ tpp_warnings_copy(tpp_warnings *tpp_restrict self,
 /* Push the current warnings state */
 #define tpp_warnings_push(self) (void)(++(self)->TPP_INTERNAL(tw_pushcnt))
 
-/* Pop the current warnings state (may only be called when `tpp_warnings_canpop(self)') */
+/* Pop the current warnings state (may only be called when `tpp_warnings_canpop(self)`) */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_warnings_pop(tpp_warnings *tpp_restrict self);
 #define tpp_warnings_canpop(self)             \
 	((self)->TPP_INTERNAL(tw_pushcnt) != 0 || \
 	 (self)->TPP_INTERNAL(tw_prev) != NULL)
 
-/* When true, `tpp_warnings_setctx()' must first copy the extension
+/* When true, `tpp_warnings_setctx()` must first copy the extension
  * state (which requires heap memory, and may thus fail) */
 #define tpp_warnings_mustcopy(self) ((self)->TPP_INTERNAL(tw_pushcnt) != 0)
 #endif /* TPP_HAVE_WARNINGS_PUSH_POP */
 
-/* Return the state of "ctx_id". The caller is
- * responsible to ensure that "ctx_id" is valid. */
+/* Return the state of `ctx_id`. The caller is
+ * responsible to ensure that `ctx_id` is valid. */
 #if TPP_HAVE_WARNING_SUPPRESS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_warning_state TPPCALL
 tpp_warnings_getctx(tpp_warnings const *tpp_restrict self,
@@ -374,7 +375,7 @@ tpp_warnings_getctx(tpp_warnings const *tpp_restrict self,
 #define TPP_HAVE_WARNINGS_SETCTX_MAYFAIL \
 	(TPP_HAVE_WARNING_SUPPRESS || TPP_HAVE_WARNINGS_PUSH_POP)
 
-/* Set the state of "ctx_id" to "state".
+/* Set the state of `ctx_id` to `state`.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 #if TPP_HAVE_WARNINGS_SETCTX_MAYFAIL
@@ -411,7 +412,7 @@ typedef struct tpp_warning_invokeinfo {
 #define TPP_HAVE_WARNINGS_INVOKE_MAYFAIL \
 	(TPP_HAVE_WARNING_SUPPRESS && TPP_HAVE_WARNINGS_PUSH_POP)
 
-/* Invoke "warning_id" (updating suppression counters if necessary) and
+/* Invoke `warning_id` (updating suppression counters if necessary) and
  * returning information about the context/state with which the warning
  * should be processed.
  *
@@ -421,7 +422,7 @@ typedef struct tpp_warning_invokeinfo {
  * - `TPP_HAVE_WERROR`
  *
  * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Out of memory (only "#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL") */
+ * @return: TPP_ENOMEM: Out of memory (only `#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL`) */
 #if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_errno TPPCALL
 tpp_warnings_invoke(tpp_warnings *tpp_restrict self, tpp_warning_id warning_id,

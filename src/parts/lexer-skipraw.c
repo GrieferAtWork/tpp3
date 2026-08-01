@@ -37,11 +37,11 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_TRYSKIP_RAW
 
-/* Check if "tok == expected", with special handling when
- * "TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && expected == '<'",
- * in which case "tok" is allowed to be some other token whose
- * first character is '<'. In that last case, "self" is updated
- * to describe '<' before "true" is returned. */
+/* Check if `tok == expected`, with special handling when
+ * `TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && expected == '<'`,
+ * in which case `tok` is allowed to be some other token whose
+ * first character is '<'. In that last case, `self` is updated
+ * to describe '<' before `true` is returned. */
 #if (TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && \
      TPP_HAVE_TOK_MC_STARTSWITH_LANGLE)
 static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
@@ -71,19 +71,19 @@ tpp_lexer_istok(tpp_lexer *tpp_restrict self,
 #endif /* !... */
 
 /* Make use of:
- * - tpp_lexer_seek_start()
- * - tpp_lexer_yieldraw_at()
- * - tpp_lexer_manualpopfile_start(self)
+ * - `tpp_lexer_seek_start()`
+ * - `tpp_lexer_yieldraw_at()`
+ * - `tpp_lexer_manualpopfile_start(self)`
  * to seek ahead to the next token, skipping whitespace/line-feed (+resp. comments)
- * based on "flags", check if said "next token" is equal to "expected" (with some extra-
- * extra handling when "TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && expected == '<'").
+ * based on `flags`, check if said *next token* is equal to `expected` (with some extra-
+ * extra handling when `TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && expected == '<'`).
  * If that is the case, commit the lexer such that it points at a token equal to
- * the specified "expected", truly disposing of any files popped in the mean-time.
- * Otherwise (the next token is "!= expected"), roll back any changes made, such
- * that "self" once again points at the same token it did upon entry. In either
+ * the specified `expected`, truly disposing of any files popped in the mean-time.
+ * Otherwise (the next token is `!= expected`), roll back any changes made, such
+ * that `self` once again points at the same token it did upon entry. In either
  * case, return the ID of whatever token came next.
  *
- * NOTE: This function automatically handles "TPP_TOK_EWOULDBLOCK" by blocking!
+ * NOTE: This function automatically handles `TPP_TOK_EWOULDBLOCK` by blocking!
  *
  * @return: * :                 The next token (rollback)
  * @return: expected:           The next token (commit; iow: this is now also the current token)
@@ -120,7 +120,7 @@ again_yield_mainfile:
 	tpp_lexer_seek_rollback(self, &backup);
 #if TPP_HAVE_INCLUDE_STACK
 	if (tok == TPP_TOK_EOF) {
-		/* Check files further up the #include-stack */
+		/* Check files further up the `#include`-stack */
 		tpp_lexer_manualpopfile_start(self);
 		while (tpp_lexer_manualpopfile_canpopfile(self) &&
 		       tpp_lexer_getfilekind(self) != TPP_FILE_KIND_IO) {

@@ -87,11 +87,11 @@ typedef struct tpp_seek_rparen_state {
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
 #if TPP_HAVE_INCLUDE_STACK
-	tpp_file       *tsrps_curfile_saved_prev;     /* [0..1] Saved "tf_prev" of current file */
+	tpp_file       *tsrps_curfile_saved_prev;     /* [0..1] Saved `tf_prev` of current file */
 #endif /* TPP_HAVE_INCLUDE_STACK */
-	tpp_size        tsrps_curfile_saved_keep;     /* Saved "ttf_keep" of current file, relative to current "ttf_keep", or (tpp_size)-1 if there was no keep-pointer */
-	tpp_size        tsrps_curfile_saved_tpos_rel; /* Saved "tf_tpos" of current file, relative to current "ttf_keep" */
-	tpp_size        tsrps_curfile_saved_pos_rel;  /* Saved "tf_pos" of current file, relative to current "ttf_keep" */
+	tpp_size        tsrps_curfile_saved_keep;     /* Saved `ttf_keep` of current file, relative to current `ttf_keep`, or `(tpp_size)-1` if there was no keep-pointer */
+	tpp_size        tsrps_curfile_saved_tpos_rel; /* Saved `tf_tpos` of current file, relative to current `ttf_keep` */
+	tpp_size        tsrps_curfile_saved_pos_rel;  /* Saved `tf_pos` of current file, relative to current `ttf_keep` */
 
 	/* Already-parsed text that must be prepended before the current argument. */
 
@@ -158,35 +158,35 @@ tpp_seek_rparen_state_rstr_curfile(tpp_seek_rparen_state *tpp_restrict self,
 	       (self)->tlai_end   = (tpp_char const *)tpp_file_keep_ptr2rel(file, (self)->tlai_end))
 
 
-/* Seek the first unmatched ')'-token, whilst collecting information
- * about every ','-separated text-area encountered until then.
+/* Seek the first unmatched `)`-token, whilst collecting information
+ * about every `,`-separated text-area encountered until then.
  *
  * NOTES:
  *  - This function is used to parse the argument list for user-defined
  *    macros, as well as a couple of built-in macros.
- *  - This function preserves the effective "tf_tpos" (aka. tpp_token_getstart())
- *    of the final output file (and when using "tpp_lexer_manualpopfile_start":
+ *  - This function preserves the effective `tf_tpos` (aka. tpp_token_getstart())
+ *    of the final output file (and when using `tpp_lexer_manualpopfile_start()`:
  *    all intermediate popped files also)
  *
  * @param: p_argv: [out]    Output buffer for the bounds of macro
  *                          arguments encountered along the way.
- *                          The size of this buffer is IN(*p_argc)
- * @param: p_argc: [in/out] In:  Size of provided "p_argv" buffer (in elements)
+ *                          The size of this buffer is `IN(*p_argc)`
+ * @param: p_argc: [in/out] In:  Size of provided `p_argv` buffer (in elements)
  *                          Out: Number of arguments actually encountered. May
- *                               be set to a number greater tha IN(*p_argc), in
- *                               which case the last argument (IN(*p_argc) - 1)
+ *                               be set to a number greater tha `IN(*p_argc)`, in
+ *                               which case the last argument (`IN(*p_argc) - 1`)
  *                               is treated as a varargs argument. Unless the
- *                               `TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS' flag is
+ *                               `TPP_LEXER_SEEK_RPAREN_FLAG_VARARGS` flag is
  *                               given in this case, this also causes a warning
  *                               to be emitted.
  * @param: p_rollback_pos:  [out] Set to the position that the current file should
  *                                be rewound to for the sake of performing a rollback
  * @param: opt_function_name_for_messages:
  *                          Function name for warning messages
- * @param: flags:           Set of `TPP_LEXER_SEEK_RPAREN_FLAG_*'
+ * @param: flags:           Set of `TPP_LEXER_SEEK_RPAREN_FLAG_*`
  *
- * @return: TPP_TOK_EOF:         EOF was encountered before an unmatched ')' was found
- * @return: TPP_TOK_RPAREN:      Unmatched closing ')' was encountered
+ * @return: TPP_TOK_EOF:         EOF was encountered before an unmatched `)` was found
+ * @return: TPP_TOK_RPAREN:      Unmatched closing `)` was encountered
  * @return: TPP_TOK_ENOMEM:      Out of memory
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_ELEXERROR:   Lexer error
@@ -840,8 +840,8 @@ err_nomem:
 
 
 
-/* Same as above, but always initializes *exactly* "argc" arguments,
- * and automatically emits "TPP_W_TOO_FEW_ARGUMENTS" when fewer were
+/* Same as above, but always initializes *exactly* `argc` arguments,
+ * and automatically emits `TPP_W_TOO_FEW_ARGUMENTS` when fewer were
  * parsed. */
 #if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL

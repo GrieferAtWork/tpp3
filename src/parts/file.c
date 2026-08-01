@@ -36,7 +36,7 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-/* Width of \t as reported by `tpp_file_getlcinfo()' */
+/* Width of `\t` as reported by `tpp_file_getlcinfo()` */
 #if TPP_TABSIZE < 0
 TPP_IMPL tpp_column _tpp_tabsize = -TPP_TABSIZE;
 #endif /* TPP_TABSIZE < 0 */
@@ -65,12 +65,12 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_user_filename) ==
 
 
 #if TPP_HAVE_IFDEF_STACK
-/* Allocate an additional #ifdef-stack entry, and return a pointer to it.
- * This function will increment `self->tids_cnt', but it is up to the
- * caller to initialize the returned #ifdef-stack entry
+/* Allocate an additional `#ifdef`-stack entry, and return a pointer to it.
+ * This function will increment `self->tids_cnt`, but it is up to the
+ * caller to initialize the returned `#ifdef`-stack entry
  *
- * @return: * :   The (uninitialized) #ifdef-stack entry
- * @return: NULL: Out of memory (TPP_ENOMEM) */
+ * @return: * :   The (uninitialized) `#ifdef`-stack entry
+ * @return: NULL: Out of memory (`TPP_ENOMEM`) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ifdef_stack_entry *TPPCALL
 tpp_ifdef_stack_append(tpp_ifdef_stack *tpp_restrict self) {
 	tpp_ifdef_stack_entry *result;
@@ -106,9 +106,9 @@ tpp_ifdef_stack_append(tpp_ifdef_stack *tpp_restrict self) {
 	return result;
 }
 
-/* Do the inverse of "tpp_ifdef_stack_append()", removing the last entry, and
+/* Do the inverse of `tpp_ifdef_stack_append()`, removing the last entry, and
  * potentially freeing unused memory.
- * The caller is responsible to ensure that `tpp_ifdef_stack_isnonempty(self)' */
+ * The caller is responsible to ensure that `tpp_ifdef_stack_isnonempty(self)` */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_ifdef_stack_remove(tpp_ifdef_stack *tpp_restrict self) {
 	tpp_assert(self->tids_cnt != 0);
@@ -144,7 +144,7 @@ tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
 
 
 /* Tell an I/O file that it has been initialized, causing its associated
- * keyword's "tkm_file_inclcount" to be updated if necessary. */
+ * keyword's `tkm_file_inclcount` to be updated if necessary. */
 #if TPP_HAVE_KEYWORD_INCLCOUNT
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self) {
@@ -279,7 +279,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 	tpp_dbg_memset(self, sizeof(*self));
 }
 
-/* Update "self" according to text-data from [text,text+size) */
+/* Update `self` according to text-data from [text,text+size) */
 #if TPP_HAVE_UNICODE
 TPP_IMPL TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_account_ex(tpp_lcinfo lc, tpp_char const *text,
@@ -366,7 +366,7 @@ handle_linefeed:
 
 #if TPP_HAVE_FILE_LC_CACHE
 /* Find+return a pointer 1 past the last line-feed in [ptr,end)
- * If no such linefeed exists, return "NULL" instead. */
+ * If no such linefeed exists, return `NULL` instead. */
 static TPP_WUNUSED tpp_char const *TPPCALL
 tpp_lcinfo_find_last_linefeed(tpp_file const *tpp_restrict self,
                               tpp_char const *ptr, tpp_char const *end) {
@@ -522,7 +522,7 @@ union tpp_word32 {
 	 ((uint_least32_t)(self).w8[0] << 24))
 };
 
-/* @param: src_count: # of utf-16 words in "src" (== # of bytes/2) */
+/* @param: src_count: # of utf-16 words in `src` (== # of bytes/2) */
 static tpp_char *TPPCALL
 tpp_utf16le_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
@@ -579,7 +579,7 @@ tpp_utf16be_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst
 	return dst_end;
 }
 
-/* @param: src_count: # of utf-32 words in "src" (== # of bytes/4) */
+/* @param: src_count: # of utf-32 words in `src` (== # of bytes/4) */
 static tpp_char *TPPCALL
 tpp_utf32le_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
@@ -657,15 +657,15 @@ tpp_file_io_prepare_unload(tpp_file *tpp_restrict self,
 #endif /* TPP_HAVE_FILE_GETHASH */
 }
 
-/* Try to expand the currently loaded `self->tf_chunk':
- * - If the file's kind isn't `TPP_FILE_KIND_IO', return `TPP_EOK'
- * - Allocate a new `tpp_string' suitable for holding both
+/* Try to expand the currently loaded `self->tf_chunk`:
+ * - If the file's kind isn't `TPP_FILE_KIND_IO`, return `TPP_EOK`
+ * - Allocate a new `tpp_string` suitable for holding both
  *   [tf_pos,tf_end), as well as at least 1 additional byte.
- *   HINT: When `!tpp_string_isshared(self->tf_chunk)', the old
+ *   HINT: When `!tpp_string_isshared(self->tf_chunk)`, the old
  *         chunk string may simply be re-used (since it'd be free'd
  *         during the re-assignment below anyways). If this isn't
  *         intended (iow: you want to keep the contents of the previous
- *         chunk loaded into memory), you can simply `tpp_string_incref'
+ *         chunk loaded into memory), you can simply `tpp_string_incref`
  *         it before calling this function.
  * - Copy [tf_pos,tf_end) into this new string
  * - Read from the underlying file into the tail of the new string
@@ -673,16 +673,16 @@ tpp_file_io_prepare_unload(tpp_file *tpp_restrict self,
  *   - If the underlying file's encoding is TPP_FILE_ENCODING_UTF(16|32)_(LE|BE),
  *     the read data is converted to utf-8 at this point.
  * #endif // TPP_HAVE_UNICODE
- *   - If the underlying file could not be read, return `TPP_EIO'
- *   - If nothing could be read, free the new string and return `TPP_EOK'
+ *   - If the underlying file could not be read, return `TPP_EIO`
+ *   - If nothing could be read, free the new string and return `TPP_EOK`
  *   - Else:
- *     - adjust `tf_pos' to point into the new string, and
- *       set `tf_end' to point at the end of the new string.
- *     - replace `tf_chunk' with the new string
- *     - return `TPP_EOK'
+ *     - adjust `tf_pos` to point into the new string, and
+ *       set `tf_end` to point at the end of the new string.
+ *     - replace `tf_chunk` with the new string
+ *     - return `TPP_EOK`
  * @return: TPP_EOK:         Either the current chunk was expanded (the delta
- *                           between `tf_pos' and `tf_end' has increased), or
- *                           no further data can be read from `self'.
+ *                           between `tf_pos` and `tf_end` has increased), or
+ *                           no further data can be read from `self`.
  * @return: TPP_EIO:         I/O error
  * @return: TPP_ENOMEM:      Out of memory
  * #if TPP_HAVE_FILE_NONBLOCK
@@ -1110,7 +1110,7 @@ convert_multiword_to_utf8:
 	default: tpp_unreachable();
 	}
 #elif TPP_HAVE_FILE_ENCODING_EMBED
-#error "'TPP_HAVE_FILE_ENCODING_EMBED' cannot be enabled without 'TPP_HAVE_UNICODE'"
+#error "`TPP_HAVE_FILE_ENCODING_EMBED` cannot be enabled without `TPP_HAVE_UNICODE`"
 #endif /* ... */
 
 	/* Remember that more buffer space is now available! */
@@ -1129,7 +1129,7 @@ done:
 /* These are needed for the shared
  * >> case TPP_FILE_KIND_IO:
  * >> case TPP_FILE_KIND_TEXT: {
- * in "tpp_file_getlcinfo()" */
+ * in `tpp_file_getlcinfo()` */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
@@ -1143,8 +1143,8 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_start_lc) ==
 
 
 #if TPP_HAVE_CPP_MACROS
-/* Figure out the line/column of "pos" in "expanded_text", as produced
- * by "self", which must be "TPP_MACRO_KIND_ISFUNC(self->tm_kind)". */
+/* Figure out the line/column of `pos` in `expanded_text`, as produced
+ * by `self`, which must be `TPP_MACRO_KIND_ISFUNC(self->tm_kind)`. */
 TPP_INTERN_DECL TPP_NONNULL((1, 2, 3, 4, 5)) void TPPCALL
 tpp_macro_func_lcinfo(tpp_macro const *self,
                       tpp_file const *expanded_text_file,
@@ -1154,7 +1154,7 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 #endif /* TPP_HAVE_CPP_MACROS */
 
 
-/* Return line/column information (0-based) for "pos"
+/* Return line/column information (0-based) for `pos`
  * @return: TPP_LCINFO_INVALID: line/column information could not be determined */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
@@ -1286,8 +1286,8 @@ done_nocache:
 	return result;
 }
 
-/* Same as "tpp_file_getlcinfo()", but if the current file is an expanded macro, see if
- * the specified "pos" points into the expanded portion of a macro argument, in which
+/* Same as `tpp_file_getlcinfo()`, but if the current file is an expanded macro, see if
+ * the specified `pos` points into the expanded portion of a macro argument, in which
  * case this function also (tries to) include information on where that argument was
  * projected from. */
 #if TPP_HAVE_CPP_MACROS
@@ -1326,7 +1326,7 @@ tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
 /* These are needed for the shared
  * >> case TPP_FILE_KIND_IO:
  * >> case TPP_FILE_KIND_TEXT:
- * in "tpp_file_getrealfilename()" */
+ * in `tpp_file_getrealfilename()` */
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_text.tft_name));
 #if TPP_HAVE_FILE_DUMMY
@@ -1334,7 +1334,7 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_name) ==
                   tpp_offsetof(tpp_file, tf_data.td_dummy.tfd_name));
 #endif /* TPP_HAVE_FILE_DUMMY */
 
-/* Returns the filename of "self", or "NULL" if unknown. */
+/* Returns the filename of `self`, or `NULL` if unknown. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_getrealfilename(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
@@ -1365,7 +1365,7 @@ again:
 	}
 }
 
-/* Same as `tpp_file_getrealfilename()', but may be overwritten by "#line" directives */
+/* Same as `tpp_file_getrealfilename()`, but may be overwritten by `#line` directives */
 #if TPP_HAVE_FILE_SETFILENAME
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_getfilename(tpp_file const *tpp_restrict self) {
@@ -1403,13 +1403,13 @@ again:
 	}
 }
 
-/* Sets the user-filename override of "self" to "filename"
+/* Sets the user-filename override of `self` to `filename`
  *
  * NOTE: The caller must ensure that:
  *       >> self->tf_kind == TPP_FILE_KIND_IO ||
  *       >> self->tf_kind == TPP_FILE_KIND_TEXT;
  *
- * You may also pass "NULL" for `filename' to disable the override */
+ * You may also pass `NULL` for `filename` to disable the override */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename) {
 	tpp_string *old_override;
@@ -1425,8 +1425,8 @@ tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename) {
 #endif /* TPP_HAVE_FILE_SETFILENAME */
 
 
-/* Set the (0-based) line that applies to "pos"
- * (as returned by "tpp_file_getlcinfo") in "self"
+/* Set the (0-based) line that applies to `pos`
+ * (as returned by `tpp_file_getlcinfo()`) in `self`
  *
  * NOTE: The caller must ensure that:
  *       >> self->tf_kind == TPP_FILE_KIND_IO ||
@@ -1458,11 +1458,11 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 
 
 #if TPP_HAVE_FILE_GETHASH
-/* Return the hash of all (decoded) bytes read from "self" up to (but not including) "pos"
- * This *includes* the bytes of any already-unloaded chunk of "self", though "pos" must
+/* Return the hash of all (decoded) bytes read from `self` up to (but not including) `pos`
+ * This *includes* the bytes of any already-unloaded chunk of `self`, though `pos` must
  * point into the current chunk (past hash values from previous chunks cannot be determined)
  *
- * Also note that the hash can *only* be determined when `tpp_file_getchunk(self) != NULL'.
+ * Also note that the hash can *only* be determined when `tpp_file_getchunk(self) != NULL`.
  * If the file doesn't have an input chunk (e.g.: its contents are statically allocated),
  * then this function always returns the same value. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
@@ -1482,11 +1482,11 @@ tpp_file_gethash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
 
 
 #if TPP_HAVE_FILE_GETFULLHASH
-/* Same as `tpp_file_gethash()', but also includes the hash values of all parent files,
- * such that the `tpp_file_gethash(f, tpp_file_getlastpos(f))' of every file reachable
- * via `tpp_file_getprev()' is included in the return value in one way or another. Note
+/* Same as `tpp_file_gethash()`, but also includes the hash values of all parent files,
+ * such that the `tpp_file_gethash(f, tpp_file_getlastpos(f))` of every file reachable
+ * via `tpp_file_getprev()` is included in the return value in one way or another. Note
  * that the value returned here may be different from the hash that would be calculated
- * if all #include-ed files had been inlined into each other. */
+ * if all `#include`-ed files had been inlined into each other. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
 tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
 	tpp_hash result = tpp_file_gethash(self, pos);
@@ -1502,8 +1502,8 @@ tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
 
 
 #if TPP_HAVE_FILE_GETREALFILENAMEKWD
-/* Returns the filename "keyword" (which may not always be available,
- * even when "tpp_file_getrealfilename()" returns non-NULL) */
+/* Returns the filename *keyword* (which may not always be available,
+ * even when `tpp_file_getrealfilename()` returns non-NULL) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
 tpp_file_getrealfilenamekwd(tpp_file const *tpp_restrict self) {
 #if TPP_HAVE_FILE_SUBTEXT
@@ -1546,7 +1546,7 @@ again:
 
 
 #if TPP_HAVE_INCLUDE_STACK
-/* Returns the last file in the #include-stack (using "tf_tprev") */
+/* Returns the last file in the `#include`-stack (using `tf_tprev`) */
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
 	while (!tpp_file_isbasefile(self))
@@ -1555,8 +1555,8 @@ tpp_file_getbasefile(tpp_file const *tpp_restrict self) {
 }
 
 #if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY
-/* Returns the first tf_kind==TPP_FILE_KIND_IO || tf_kind==TPP_FILE_KIND_TEXT file
- * in the #include-stack (using "tf_tprev"). If no such file exists, returns "NULL" */
+/* Returns the first `tf_kind==TPP_FILE_KIND_IO || tf_kind==TPP_FILE_KIND_TEXT` file
+ * in the `#include`-stack (using `tf_tprev`). If no such file exists, returns `NULL` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_gettextfile(tpp_file const *tpp_restrict self) {
 	tpp_file *iter = (tpp_file *)self;
@@ -1569,8 +1569,8 @@ tpp_file_gettextfile(tpp_file const *tpp_restrict self) {
 	return iter;
 }
 
-/* Same as `tpp_file_gettextfile()', but re-return "self" instead of returning "NULL"
- * The term "lc" here refers to the fact that this is the file that's used as basis
+/* Same as `tpp_file_gettextfile()`, but re-return `self` instead of returning `NULL`
+ * The term `lc` here refers to the fact that this is the file that's used as basis
  * for the builtin __FILE__, __LINE__ and __COLUMN__ macros. */
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
@@ -1580,16 +1580,15 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 #endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY */
 
 #if TPP_HAVE_FILE_DUMMY
-/* Push/pop a so-called "dummy-file" that goes between "self" and its parent,
- * which is a copy of "self", but with all file/chunk-data stripped, except
+/* Push/pop a so-called *dummy-file* that goes between `self` and its parent,
+ * which is a copy of `self`, but with all file/chunk-data stripped, except
  * that the current values for the following are preserved (for tracebacks):
- * - tpp_file_getfilename(self)
- * - tpp_file_getlcinfo(self, pos)   (returned by tpp_file_getlcinfo() for any pointer)
+ * - `tpp_file_getfilename(self)`
+ * - `tpp_file_getlcinfo(self, pos)`   (returned by `tpp_file_getlcinfo()` for any pointer)
  *
  * NOTES:
- * - The caller must ensure that self->tf_kind == TPP_FILE_KIND_IO ||
- *                               self->tf_kind == TPP_FILE_KIND_TEXT
- * - Used to implement gcc's "# <linenum> <filename> 1" directive
+ * - The caller must ensure that `self->tf_kind == TPP_FILE_KIND_IO || self->tf_kind == TPP_FILE_KIND_TEXT`
+ * - Used to implement gcc's `# <linenum> <filename> 1` directive
  *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
@@ -1626,14 +1625,13 @@ tpp_file_pushdummy(tpp_file *tpp_restrict self, tpp_char const *pos) {
 }
 
 
-/* Check if "self" has a parent, and if so: if that parent is a "dummy"
- * file. If that is the case, unlink that dummy file from the #include-
+/* Check if `self` has a parent, and if so: if that parent is a *dummy*
+ * file. If that is the case, unlink that dummy file from the `#include`-
  * stack and free it. Otherwise, do nothing
  *
  * NOTES:
- * - The caller must ensure that self->tf_kind == TPP_FILE_KIND_IO ||
- *                               self->tf_kind == TPP_FILE_KIND_TEXT
- * - Used to implement gcc's "# <linenum> <filename> 2" directive
+ * - The caller must ensure that `self->tf_kind == TPP_FILE_KIND_IO || self->tf_kind == TPP_FILE_KIND_TEXT`
+ * - Used to implement gcc's `# <linenum> <filename> 2` directive
  *
  * @return: true:  Success (a dummy file was popped)
  * @return: false: Failure (there was no dummy file to pop) */

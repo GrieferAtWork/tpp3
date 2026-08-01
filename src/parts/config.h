@@ -634,8 +634,8 @@
  *          #define prefoobarpost 0
  *          #define prefoo        1
  *          #define barpost       +1
- *          #if SCAN(FOO()BAR) // "0" if disabled (non-standard-conforming, like mscv);
- *                             // "1 +1" if enabled (standard-conforming, like gcc)
+ *          #if SCAN(FOO()BAR) // `0` if disabled (non-standard-conforming, like mscv);
+ *                             // `1 +1` if enabled (standard-conforming, like gcc)
  */
 #ifndef TPP_HAVE_MAGIC_WHITESPACE
 #define TPP_HAVE_MAGIC_WHITESPACE ((TPP_HAVE_CPP_MACROS || TPP_HAVE_MACRO___TPP_EXEC) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : 1) : 0) /* "-fmagic-whitespace" */
@@ -1230,7 +1230,7 @@ print("#endif /" "* !... *" "/");
 
 /* Support for the builtin macro `__INCLUDE_LEVEL__`,
  * which expands to numerical representation of include depth.
- * Whilst inside the "base"-file, it expands to `0`
+ * Whilst inside the *base*-file, it expands to `0`
  *
  * @detect: #ifdef __INCLUDE_LEVEL__ */
 #ifndef TPP_HAVE_MACRO___INCLUDE_LEVEL__
@@ -1688,9 +1688,9 @@ print("#endif /" "* !... *" "/");
  * #define min_2(a, b)    ((a) < (b) ? (a) : (b))
  * #define min_3(a, b, c) min_2(min_2(a, b), c)
  * #define min(...)       min_##__VA_NARGS__(__VA_ARGS__)
- * min()        // Expands to: "0"
- * min(10)      // Expands to: "10"
- * min(10, 20)  // Expands to: "((10) < (20) ? (10) : (20))"
+ * min()        // Expands to: `0`
+ * min(10)      // Expands to: `10`
+ * min(10, 20)  // Expands to: `((10) < (20) ? (10) : (20))`
  * ```
  *
  * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
@@ -2291,8 +2291,8 @@ print("#endif /" "* !... *" "/");
 
 /* XXX: Support for sql-style '-string literals ('' is escape for ', and line-feeds are allowed) */
 /* XXX: Support for sql-style "-string literals ("" is escape for ", and line-feeds are allowed) */
-/* XXX: Support for sql-style E'foo'-string literals (line-feeds are allowed, and \-escape sequences are handled) */
-/* XXX: Support for sql-style E"foo"-string literals (line-feeds are allowed, and \-escape sequences are handled) */
+/* XXX: Support for sql-style E'foo'-string literals (line-feeds are allowed, and `\`-escape sequences are handled) */
+/* XXX: Support for sql-style E"foo"-string literals (line-feeds are allowed, and `\`-escape sequences are handled) */
 /* XXX: Support for javascript-style `foo` format string literals (use a hook for implementing `${expr}`) */
 /* XXX: Support for deemon-style f"foo" / F"foo" format string literals (use a hook for implementing `{expr}`) */
 /* XXX: Support for raw block-strings: r"""foo"\"""  -- same as R"(foo"\)" */
@@ -2554,7 +2554,7 @@ print("#endif /" "* !... *" "/");
 /* Provide a function `tpp_lexer_yield_include_string()` to
  * do yield the next token with special handling if the next
  * token's first character is `<` or `"`in which case the
- * token is parsed as a #include-string */
+ * token is parsed as a `#include`-string */
 #ifndef TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
 #if (TPP_HAVE_PROFILE_ALL || \
      TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
@@ -3987,7 +3987,7 @@ function tokenName(tok: string): string {
 }
 for (local tok, def, comment: MC_TOKENS.sorted()) {
 	local name = tokenName(tok);
-	print('/' '* "', tok, '"', comment ? f"  ({comment})" : "");
+	print('/' '* `', tok, '`', comment ? f"  ({comment})" : "");
 	print(' * @detect: #if __TPP_COUNT_TOKENS("', tok, '") == 1 *' '/');
 	print('#ifndef TPP_HAVE_TOK_', name, '');
 	print('#define TPP_HAVE_TOK_', name, ' ', def, ' /' '* "-ftok-', name.lower(), '" *' '/');
@@ -4011,577 +4011,577 @@ print("#else /" "* ... *" "/");
 print("#define TPP_HAVE_TOK_MC 0");
 print("#endif /" "* !... *" "/");
 ]]]*/
-/* "!!"
+/* `!!`
  * @detect: #if __TPP_COUNT_TOKENS("!!") == 1 */
 #ifndef TPP_HAVE_TOK_EXCLAIM_EXCLAIM
 #define TPP_HAVE_TOK_EXCLAIM_EXCLAIM TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-exclaim_exclaim" */
 #endif /* !TPP_HAVE_TOK_EXCLAIM_EXCLAIM */
 
-/* "!="
+/* `!=`
  * @detect: #if __TPP_COUNT_TOKENS("!=") == 1 */
 #ifndef TPP_HAVE_TOK_EXCLAIM_EQUAL
 #define TPP_HAVE_TOK_EXCLAIM_EQUAL (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-exclaim_equal" */
 #endif /* !TPP_HAVE_TOK_EXCLAIM_EQUAL */
 
-/* "!=="
+/* `!==`
  * @detect: #if __TPP_COUNT_TOKENS("!==") == 1 */
 #ifndef TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL
 #define TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-exclaim_equal_equal" */
 #endif /* !TPP_HAVE_TOK_EXCLAIM_EQUAL_EQUAL */
 
-/* "##"
+/* `##`
  * @detect: #if __TPP_COUNT_TOKENS("##") == 1 */
 #ifndef TPP_HAVE_TOK_POUND_POUND
 #define TPP_HAVE_TOK_POUND_POUND (TPP_HAVE_GLUE_MACRO_ARGUMENT || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-pound_pound" */
 #endif /* !TPP_HAVE_TOK_POUND_POUND */
 
-/* "%%"
+/* `%%`
  * @detect: #if __TPP_COUNT_TOKENS("%%") == 1 */
 #ifndef TPP_HAVE_TOK_PERCENT_PERCENT
 #define TPP_HAVE_TOK_PERCENT_PERCENT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-percent_percent" */
 #endif /* !TPP_HAVE_TOK_PERCENT_PERCENT */
 
-/* "%%="
+/* `%%=`
  * @detect: #if __TPP_COUNT_TOKENS("%%=") == 1 */
 #ifndef TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL
 #define TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-percent_percent_equal" */
 #endif /* !TPP_HAVE_TOK_PERCENT_PERCENT_EQUAL */
 
-/* "%="
+/* `%=`
  * @detect: #if __TPP_COUNT_TOKENS("%=") == 1 */
 #ifndef TPP_HAVE_TOK_PERCENT_EQUAL
 #define TPP_HAVE_TOK_PERCENT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-percent_equal" */
 #endif /* !TPP_HAVE_TOK_PERCENT_EQUAL */
 
-/* "&&"
+/* `&&`
  * @detect: #if __TPP_COUNT_TOKENS("&&") == 1 */
 #ifndef TPP_HAVE_TOK_AMP_AMP
 #define TPP_HAVE_TOK_AMP_AMP (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-amp_amp" */
 #endif /* !TPP_HAVE_TOK_AMP_AMP */
 
-/* "&="
+/* `&=`
  * @detect: #if __TPP_COUNT_TOKENS("&=") == 1 */
 #ifndef TPP_HAVE_TOK_AMP_EQUAL
 #define TPP_HAVE_TOK_AMP_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-amp_equal" */
 #endif /* !TPP_HAVE_TOK_AMP_EQUAL */
 
-/* "**"
+/* `**`
  * @detect: #if __TPP_COUNT_TOKENS("**") == 1 */
 #ifndef TPP_HAVE_TOK_STAR_STAR
 #define TPP_HAVE_TOK_STAR_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_star" */
 #endif /* !TPP_HAVE_TOK_STAR_STAR */
 
-/* "**="
+/* `**=`
  * @detect: #if __TPP_COUNT_TOKENS("**=") == 1 */
 #ifndef TPP_HAVE_TOK_STAR_STAR_EQUAL
 #define TPP_HAVE_TOK_STAR_STAR_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_star_equal" */
 #endif /* !TPP_HAVE_TOK_STAR_STAR_EQUAL */
 
-/* "*."
+/* `*.`
  * @detect: #if __TPP_COUNT_TOKENS("*.") == 1 */
 #ifndef TPP_HAVE_TOK_STAR_DOT
 #define TPP_HAVE_TOK_STAR_DOT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_dot" */
 #endif /* !TPP_HAVE_TOK_STAR_DOT */
 
-/* "*<-"
+/* `*<-`
  * @detect: #if __TPP_COUNT_TOKENS("*<-") == 1 */
 #ifndef TPP_HAVE_TOK_STAR_LANGLE_MINUS
 #define TPP_HAVE_TOK_STAR_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-star_langle_minus" */
 #endif /* !TPP_HAVE_TOK_STAR_LANGLE_MINUS */
 
-/* "*="
+/* `*=`
  * @detect: #if __TPP_COUNT_TOKENS("*=") == 1 */
 #ifndef TPP_HAVE_TOK_STAR_EQUAL
 #define TPP_HAVE_TOK_STAR_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-star_equal" */
 #endif /* !TPP_HAVE_TOK_STAR_EQUAL */
 
-/* "++"
+/* `++`
  * @detect: #if __TPP_COUNT_TOKENS("++") == 1 */
 #ifndef TPP_HAVE_TOK_PLUS_PLUS
 #define TPP_HAVE_TOK_PLUS_PLUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-plus_plus" */
 #endif /* !TPP_HAVE_TOK_PLUS_PLUS */
 
-/* "+="
+/* `+=`
  * @detect: #if __TPP_COUNT_TOKENS("+=") == 1 */
 #ifndef TPP_HAVE_TOK_PLUS_EQUAL
 #define TPP_HAVE_TOK_PLUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-plus_equal" */
 #endif /* !TPP_HAVE_TOK_PLUS_EQUAL */
 
-/* "--"  (WARNING: This token conflicts with TPP_HAVE_TOK_SQL_COMMENT)
+/* `--`  (WARNING: This token conflicts with TPP_HAVE_TOK_SQL_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("--") == 1 */
 #ifndef TPP_HAVE_TOK_MINUS_MINUS
 #define TPP_HAVE_TOK_MINUS_MINUS TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_minus" */
 #endif /* !TPP_HAVE_TOK_MINUS_MINUS */
 
-/* "-<"
+/* `-<`
  * @detect: #if __TPP_COUNT_TOKENS("-<") == 1 */
 #ifndef TPP_HAVE_TOK_MINUS_LANGLE
 #define TPP_HAVE_TOK_MINUS_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_langle" */
 #endif /* !TPP_HAVE_TOK_MINUS_LANGLE */
 
-/* "-<<"
+/* `-<<`
  * @detect: #if __TPP_COUNT_TOKENS("-<<") == 1 */
 #ifndef TPP_HAVE_TOK_MINUS_LANGLE_LANGLE
 #define TPP_HAVE_TOK_MINUS_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_langle_langle" */
 #endif /* !TPP_HAVE_TOK_MINUS_LANGLE_LANGLE */
 
-/* "-<<<"
+/* `-<<<`
  * @detect: #if __TPP_COUNT_TOKENS("-<<<") == 1 */
 #ifndef TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
 #define TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_langle_langle_langle" */
 #endif /* !TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE */
 
-/* "-="
+/* `-=`
  * @detect: #if __TPP_COUNT_TOKENS("-=") == 1 */
 #ifndef TPP_HAVE_TOK_MINUS_EQUAL
 #define TPP_HAVE_TOK_MINUS_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_equal" */
 #endif /* !TPP_HAVE_TOK_MINUS_EQUAL */
 
-/* "->"
+/* `->`
  * @detect: #if __TPP_COUNT_TOKENS("->") == 1 */
 #ifndef TPP_HAVE_TOK_MINUS_RANGLE
 #define TPP_HAVE_TOK_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-minus_rangle" */
 #endif /* !TPP_HAVE_TOK_MINUS_RANGLE */
 
-/* "->*"
+/* `->*`
  * @detect: #if __TPP_COUNT_TOKENS("->*") == 1 */
 #ifndef TPP_HAVE_TOK_MINUS_RANGLE_STAR
 #define TPP_HAVE_TOK_MINUS_RANGLE_STAR TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "-ftok-minus_rangle_star" */
 #endif /* !TPP_HAVE_TOK_MINUS_RANGLE_STAR */
 
-/* "->>"
+/* `->>`
  * @detect: #if __TPP_COUNT_TOKENS("->>") == 1 */
 #ifndef TPP_HAVE_TOK_MINUS_RANGLE_RANGLE
 #define TPP_HAVE_TOK_MINUS_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_rangle_rangle" */
 #endif /* !TPP_HAVE_TOK_MINUS_RANGLE_RANGLE */
 
-/* "->>>"
+/* `->>>`
  * @detect: #if __TPP_COUNT_TOKENS("->>>") == 1 */
 #ifndef TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE
 #define TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-minus_rangle_rangle_rangle" */
 #endif /* !TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE */
 
-/* ".*"
+/* `.*`
  * @detect: #if __TPP_COUNT_TOKENS(".*") == 1 */
 #ifndef TPP_HAVE_TOK_DOT_STAR
 #define TPP_HAVE_TOK_DOT_STAR TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "-ftok-dot_star" */
 #endif /* !TPP_HAVE_TOK_DOT_STAR */
 
-/* ".."
+/* `..`
  * @detect: #if __TPP_COUNT_TOKENS("..") == 1 */
 #ifndef TPP_HAVE_TOK_DOT_DOT
 #define TPP_HAVE_TOK_DOT_DOT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-dot_dot" */
 #endif /* !TPP_HAVE_TOK_DOT_DOT */
 
-/* "..."
+/* `...`
  * @detect: #if __TPP_COUNT_TOKENS("...") == 1 */
 #ifndef TPP_HAVE_TOK_DOT_DOT_DOT
 #define TPP_HAVE_TOK_DOT_DOT_DOT (TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-dot_dot_dot" */
 #endif /* !TPP_HAVE_TOK_DOT_DOT_DOT */
 
-/* "//"  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
+/* `//`  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("//") == 1 */
 #ifndef TPP_HAVE_TOK_SLASH_SLASH
 #define TPP_HAVE_TOK_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-slash_slash" */
 #endif /* !TPP_HAVE_TOK_SLASH_SLASH */
 
-/* "//="  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
+/* `//=`  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("//=") == 1 */
 #ifndef TPP_HAVE_TOK_SLASH_SLASH_EQUAL
 #define TPP_HAVE_TOK_SLASH_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-slash_slash_equal" */
 #endif /* !TPP_HAVE_TOK_SLASH_SLASH_EQUAL */
 
-/* "/="
+/* `/=`
  * @detect: #if __TPP_COUNT_TOKENS("/=") == 1 */
 #ifndef TPP_HAVE_TOK_SLASH_EQUAL
 #define TPP_HAVE_TOK_SLASH_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-slash_equal" */
 #endif /* !TPP_HAVE_TOK_SLASH_EQUAL */
 
-/* "::"
+/* `::`
  * @detect: #if __TPP_COUNT_TOKENS("::") == 1 */
 #ifndef TPP_HAVE_TOK_COLON_COLON
 #define TPP_HAVE_TOK_COLON_COLON TPP_COMMON_HAVE_TPP_TOK_CXX_TOKENS /* "-ftok-colon_colon" */
 #endif /* !TPP_HAVE_TOK_COLON_COLON */
 
-/* ":="
+/* `:=`
  * @detect: #if __TPP_COUNT_TOKENS(":=") == 1 */
 #ifndef TPP_HAVE_TOK_COLON_EQUAL
 #define TPP_HAVE_TOK_COLON_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-colon_equal" */
 #endif /* !TPP_HAVE_TOK_COLON_EQUAL */
 
-/* "<-"
+/* `<-`
  * @detect: #if __TPP_COUNT_TOKENS("<-") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_MINUS
 #define TPP_HAVE_TOK_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_minus" */
 #endif /* !TPP_HAVE_TOK_LANGLE_MINUS */
 
-/* "<-<"
+/* `<-<`
  * @detect: #if __TPP_COUNT_TOKENS("<-<") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_MINUS_LANGLE
 #define TPP_HAVE_TOK_LANGLE_MINUS_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_minus_langle" */
 #endif /* !TPP_HAVE_TOK_LANGLE_MINUS_LANGLE */
 
-/* "<->"
+/* `<->`
  * @detect: #if __TPP_COUNT_TOKENS("<->") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_MINUS_RANGLE
 #define TPP_HAVE_TOK_LANGLE_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_minus_rangle" */
 #endif /* !TPP_HAVE_TOK_LANGLE_MINUS_RANGLE */
 
-/* "<<"
+/* `<<`
  * @detect: #if __TPP_COUNT_TOKENS("<<") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_LANGLE
 #define TPP_HAVE_TOK_LANGLE_LANGLE (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-langle_langle" */
 #endif /* !TPP_HAVE_TOK_LANGLE_LANGLE */
 
-/* "<<-"
+/* `<<-`
  * @detect: #if __TPP_COUNT_TOKENS("<<-") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_LANGLE_MINUS
 #define TPP_HAVE_TOK_LANGLE_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_minus" */
 #endif /* !TPP_HAVE_TOK_LANGLE_LANGLE_MINUS */
 
-/* "<<<"
+/* `<<<`
  * @detect: #if __TPP_COUNT_TOKENS("<<<") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE
 #define TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_langle" */
 #endif /* !TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE */
 
-/* "<<<-"
+/* `<<<-`
  * @detect: #if __TPP_COUNT_TOKENS("<<<-") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS
 #define TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_langle_minus" */
 #endif /* !TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_MINUS */
 
-/* "<<<="
+/* `<<<=`
  * @detect: #if __TPP_COUNT_TOKENS("<<<=") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL
 #define TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_langle_langle_equal" */
 #endif /* !TPP_HAVE_TOK_LANGLE_LANGLE_LANGLE_EQUAL */
 
-/* "<<="
+/* `<<=`
  * @detect: #if __TPP_COUNT_TOKENS("<<=") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL
 #define TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-langle_langle_equal" */
 #endif /* !TPP_HAVE_TOK_LANGLE_LANGLE_EQUAL */
 
-/* "<="
+/* `<=`
  * @detect: #if __TPP_COUNT_TOKENS("<=") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_EQUAL
 #define TPP_HAVE_TOK_LANGLE_EQUAL (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-langle_equal" */
 #endif /* !TPP_HAVE_TOK_LANGLE_EQUAL */
 
-/* "<=<"
+/* `<=<`
  * @detect: #if __TPP_COUNT_TOKENS("<=<") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE
 #define TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_equal_langle" */
 #endif /* !TPP_HAVE_TOK_LANGLE_EQUAL_LANGLE */
 
-/* "<=>"
+/* `<=>`
  * @detect: #if __TPP_COUNT_TOKENS("<=>") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE
 #define TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_equal_rangle" */
 #endif /* !TPP_HAVE_TOK_LANGLE_EQUAL_RANGLE */
 
-/* "<>"
+/* `<>`
  * @detect: #if __TPP_COUNT_TOKENS("<>") == 1 */
 #ifndef TPP_HAVE_TOK_LANGLE_RANGLE
 #define TPP_HAVE_TOK_LANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-langle_rangle" */
 #endif /* !TPP_HAVE_TOK_LANGLE_RANGLE */
 
-/* "=!"
+/* `=!`
  * @detect: #if __TPP_COUNT_TOKENS("=!") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_EXCLAIM
 #define TPP_HAVE_TOK_EQUAL_EXCLAIM TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_exclaim" */
 #endif /* !TPP_HAVE_TOK_EQUAL_EXCLAIM */
 
-/* "=%"
+/* `=%`
  * @detect: #if __TPP_COUNT_TOKENS("=%") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_PERCENT
 #define TPP_HAVE_TOK_EQUAL_PERCENT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_percent" */
 #endif /* !TPP_HAVE_TOK_EQUAL_PERCENT */
 
-/* "=%%"
+/* `=%%`
  * @detect: #if __TPP_COUNT_TOKENS("=%%") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT
 #define TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_percent_percent" */
 #endif /* !TPP_HAVE_TOK_EQUAL_PERCENT_PERCENT */
 
-/* "=&"
+/* `=&`
  * @detect: #if __TPP_COUNT_TOKENS("=&") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_AMP
 #define TPP_HAVE_TOK_EQUAL_AMP TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_amp" */
 #endif /* !TPP_HAVE_TOK_EQUAL_AMP */
 
-/* "=*"
+/* `=*`
  * @detect: #if __TPP_COUNT_TOKENS("=*") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_STAR
 #define TPP_HAVE_TOK_EQUAL_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_star" */
 #endif /* !TPP_HAVE_TOK_EQUAL_STAR */
 
-/* "=**"
+/* `=**`
  * @detect: #if __TPP_COUNT_TOKENS("=**") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_STAR_STAR
 #define TPP_HAVE_TOK_EQUAL_STAR_STAR TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_star_star" */
 #endif /* !TPP_HAVE_TOK_EQUAL_STAR_STAR */
 
-/* "=+"
+/* `=+`
  * @detect: #if __TPP_COUNT_TOKENS("=+") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_PLUS
 #define TPP_HAVE_TOK_EQUAL_PLUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_plus" */
 #endif /* !TPP_HAVE_TOK_EQUAL_PLUS */
 
-/* "=-"
+/* `=-`
  * @detect: #if __TPP_COUNT_TOKENS("=-") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_MINUS
 #define TPP_HAVE_TOK_EQUAL_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_minus" */
 #endif /* !TPP_HAVE_TOK_EQUAL_MINUS */
 
-/* "=/"
+/* `=/`
  * @detect: #if __TPP_COUNT_TOKENS("=/") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_SLASH
 #define TPP_HAVE_TOK_EQUAL_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_slash" */
 #endif /* !TPP_HAVE_TOK_EQUAL_SLASH */
 
-/* "=//"  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
+/* `=//`  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
  * @detect: #if __TPP_COUNT_TOKENS("=//") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_SLASH_SLASH
 #define TPP_HAVE_TOK_EQUAL_SLASH_SLASH TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_slash_slash" */
 #endif /* !TPP_HAVE_TOK_EQUAL_SLASH_SLASH */
 
-/* "=:"
+/* `=:`
  * @detect: #if __TPP_COUNT_TOKENS("=:") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_COLON
 #define TPP_HAVE_TOK_EQUAL_COLON TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_colon" */
 #endif /* !TPP_HAVE_TOK_EQUAL_COLON */
 
-/* "=<"
+/* `=<`
  * @detect: #if __TPP_COUNT_TOKENS("=<") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_LANGLE
 #define TPP_HAVE_TOK_EQUAL_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_langle" */
 #endif /* !TPP_HAVE_TOK_EQUAL_LANGLE */
 
-/* "=<<"
+/* `=<<`
  * @detect: #if __TPP_COUNT_TOKENS("=<<") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE
 #define TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_langle_langle" */
 #endif /* !TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE */
 
-/* "=<<<"
+/* `=<<<`
  * @detect: #if __TPP_COUNT_TOKENS("=<<<") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE
 #define TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_langle_langle_langle" */
 #endif /* !TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE */
 
-/* "=="
+/* `==`
  * @detect: #if __TPP_COUNT_TOKENS("==") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_EQUAL
 #define TPP_HAVE_TOK_EQUAL_EQUAL (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-equal_equal" */
 #endif /* !TPP_HAVE_TOK_EQUAL_EQUAL */
 
-/* "==!"
+/* `==!`
  * @detect: #if __TPP_COUNT_TOKENS("==!") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM
 #define TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_equal_exclaim" */
 #endif /* !TPP_HAVE_TOK_EQUAL_EQUAL_EXCLAIM */
 
-/* "==="
+/* `===`
  * @detect: #if __TPP_COUNT_TOKENS("===") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL
 #define TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_equal_equal" */
 #endif /* !TPP_HAVE_TOK_EQUAL_EQUAL_EQUAL */
 
-/* "=>"
+/* `=>`
  * @detect: #if __TPP_COUNT_TOKENS("=>") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_RANGLE
 #define TPP_HAVE_TOK_EQUAL_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_rangle" */
 #endif /* !TPP_HAVE_TOK_EQUAL_RANGLE */
 
-/* "=>>"
+/* `=>>`
  * @detect: #if __TPP_COUNT_TOKENS("=>>") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE
 #define TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_rangle_rangle" */
 #endif /* !TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE */
 
-/* "=>>>"
+/* `=>>>`
  * @detect: #if __TPP_COUNT_TOKENS("=>>>") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE
 #define TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_rangle_rangle_rangle" */
 #endif /* !TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 
-/* "=?"
+/* `=?`
  * @detect: #if __TPP_COUNT_TOKENS("=?") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_QMARK
 #define TPP_HAVE_TOK_EQUAL_QMARK TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_qmark" */
 #endif /* !TPP_HAVE_TOK_EQUAL_QMARK */
 
-/* "=@"
+/* `=@`
  * @detect: #if __TPP_COUNT_TOKENS("=@") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_AT
 #define TPP_HAVE_TOK_EQUAL_AT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_at" */
 #endif /* !TPP_HAVE_TOK_EQUAL_AT */
 
-/* "=@@"
+/* `=@@`
  * @detect: #if __TPP_COUNT_TOKENS("=@@") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_AT_AT
 #define TPP_HAVE_TOK_EQUAL_AT_AT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_at_at" */
 #endif /* !TPP_HAVE_TOK_EQUAL_AT_AT */
 
-/* "=^"
+/* `=^`
  * @detect: #if __TPP_COUNT_TOKENS("=^") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_HAT
 #define TPP_HAVE_TOK_EQUAL_HAT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_hat" */
 #endif /* !TPP_HAVE_TOK_EQUAL_HAT */
 
-/* "=|"
+/* `=|`
  * @detect: #if __TPP_COUNT_TOKENS("=|") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_PIPE
 #define TPP_HAVE_TOK_EQUAL_PIPE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_pipe" */
 #endif /* !TPP_HAVE_TOK_EQUAL_PIPE */
 
-/* "=~"
+/* `=~`
  * @detect: #if __TPP_COUNT_TOKENS("=~") == 1 */
 #ifndef TPP_HAVE_TOK_EQUAL_TILDE
 #define TPP_HAVE_TOK_EQUAL_TILDE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-equal_tilde" */
 #endif /* !TPP_HAVE_TOK_EQUAL_TILDE */
 
-/* ">-"
+/* `>-`
  * @detect: #if __TPP_COUNT_TOKENS(">-") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_MINUS
 #define TPP_HAVE_TOK_RANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_minus" */
 #endif /* !TPP_HAVE_TOK_RANGLE_MINUS */
 
-/* ">-<"
+/* `>-<`
  * @detect: #if __TPP_COUNT_TOKENS(">-<") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_MINUS_LANGLE
 #define TPP_HAVE_TOK_RANGLE_MINUS_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_minus_langle" */
 #endif /* !TPP_HAVE_TOK_RANGLE_MINUS_LANGLE */
 
-/* ">->"
+/* `>->`
  * @detect: #if __TPP_COUNT_TOKENS(">->") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_MINUS_RANGLE
 #define TPP_HAVE_TOK_RANGLE_MINUS_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_minus_rangle" */
 #endif /* !TPP_HAVE_TOK_RANGLE_MINUS_RANGLE */
 
-/* "><"
+/* `><`
  * @detect: #if __TPP_COUNT_TOKENS("><") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_LANGLE
 #define TPP_HAVE_TOK_RANGLE_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_langle" */
 #endif /* !TPP_HAVE_TOK_RANGLE_LANGLE */
 
-/* ">="
+/* `>=`
  * @detect: #if __TPP_COUNT_TOKENS(">=") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_EQUAL
 #define TPP_HAVE_TOK_RANGLE_EQUAL (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-rangle_equal" */
 #endif /* !TPP_HAVE_TOK_RANGLE_EQUAL */
 
-/* ">=<"
+/* `>=<`
  * @detect: #if __TPP_COUNT_TOKENS(">=<") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE
 #define TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_equal_langle" */
 #endif /* !TPP_HAVE_TOK_RANGLE_EQUAL_LANGLE */
 
-/* ">=>"
+/* `>=>`
  * @detect: #if __TPP_COUNT_TOKENS(">=>") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE
 #define TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_equal_rangle" */
 #endif /* !TPP_HAVE_TOK_RANGLE_EQUAL_RANGLE */
 
-/* ">>"
+/* `>>`
  * @detect: #if __TPP_COUNT_TOKENS(">>") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_RANGLE
 #define TPP_HAVE_TOK_RANGLE_RANGLE (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-rangle_rangle" */
 #endif /* !TPP_HAVE_TOK_RANGLE_RANGLE */
 
-/* ">>-"
+/* `>>-`
  * @detect: #if __TPP_COUNT_TOKENS(">>-") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_RANGLE_MINUS
 #define TPP_HAVE_TOK_RANGLE_RANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_minus" */
 #endif /* !TPP_HAVE_TOK_RANGLE_RANGLE_MINUS */
 
-/* ">>="
+/* `>>=`
  * @detect: #if __TPP_COUNT_TOKENS(">>=") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL
 #define TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-rangle_rangle_equal" */
 #endif /* !TPP_HAVE_TOK_RANGLE_RANGLE_EQUAL */
 
-/* ">>>"
+/* `>>>`
  * @detect: #if __TPP_COUNT_TOKENS(">>>") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE
 #define TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_rangle" */
 #endif /* !TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE */
 
-/* ">>>-"
+/* `>>>-`
  * @detect: #if __TPP_COUNT_TOKENS(">>>-") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS
 #define TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_rangle_minus" */
 #endif /* !TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_MINUS */
 
-/* ">>>="
+/* `>>>=`
  * @detect: #if __TPP_COUNT_TOKENS(">>>=") == 1 */
 #ifndef TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL
 #define TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-rangle_rangle_rangle_equal" */
 #endif /* !TPP_HAVE_TOK_RANGLE_RANGLE_RANGLE_EQUAL */
 
-/* "?="
+/* `?=`
  * @detect: #if __TPP_COUNT_TOKENS("?=") == 1 */
 #ifndef TPP_HAVE_TOK_QMARK_EQUAL
 #define TPP_HAVE_TOK_QMARK_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-qmark_equal" */
 #endif /* !TPP_HAVE_TOK_QMARK_EQUAL */
 
-/* "??"
+/* `??`
  * @detect: #if __TPP_COUNT_TOKENS("??") == 1 */
 #ifndef TPP_HAVE_TOK_QMARK_QMARK
 #define TPP_HAVE_TOK_QMARK_QMARK TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-qmark_qmark" */
 #endif /* !TPP_HAVE_TOK_QMARK_QMARK */
 
-/* "@="
+/* `@=`
  * @detect: #if __TPP_COUNT_TOKENS("@=") == 1 */
 #ifndef TPP_HAVE_TOK_AT_EQUAL
 #define TPP_HAVE_TOK_AT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-at_equal" */
 #endif /* !TPP_HAVE_TOK_AT_EQUAL */
 
-/* "@@"
+/* `@@`
  * @detect: #if __TPP_COUNT_TOKENS("@@") == 1 */
 #ifndef TPP_HAVE_TOK_AT_AT
 #define TPP_HAVE_TOK_AT_AT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-at_at" */
 #endif /* !TPP_HAVE_TOK_AT_AT */
 
-/* "@@="
+/* `@@=`
  * @detect: #if __TPP_COUNT_TOKENS("@@=") == 1 */
 #ifndef TPP_HAVE_TOK_AT_AT_EQUAL
 #define TPP_HAVE_TOK_AT_AT_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-at_at_equal" */
 #endif /* !TPP_HAVE_TOK_AT_AT_EQUAL */
 
-/* "^="
+/* `^=`
  * @detect: #if __TPP_COUNT_TOKENS("^=") == 1 */
 #ifndef TPP_HAVE_TOK_HAT_EQUAL
 #define TPP_HAVE_TOK_HAT_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-hat_equal" */
 #endif /* !TPP_HAVE_TOK_HAT_EQUAL */
 
-/* "^^"
+/* `^^`
  * @detect: #if __TPP_COUNT_TOKENS("^^") == 1 */
 #ifndef TPP_HAVE_TOK_HAT_HAT
 #define TPP_HAVE_TOK_HAT_HAT TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-hat_hat" */
 #endif /* !TPP_HAVE_TOK_HAT_HAT */
 
-/* "|="
+/* `|=`
  * @detect: #if __TPP_COUNT_TOKENS("|=") == 1 */
 #ifndef TPP_HAVE_TOK_PIPE_EQUAL
 #define TPP_HAVE_TOK_PIPE_EQUAL TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-pipe_equal" */
 #endif /* !TPP_HAVE_TOK_PIPE_EQUAL */
 
-/* "||"
+/* `||`
  * @detect: #if __TPP_COUNT_TOKENS("||") == 1 */
 #ifndef TPP_HAVE_TOK_PIPE_PIPE
 #define TPP_HAVE_TOK_PIPE_PIPE (TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-pipe_pipe" */
 #endif /* !TPP_HAVE_TOK_PIPE_PIPE */
 
-/* "~="
+/* `~=`
  * @detect: #if __TPP_COUNT_TOKENS("~=") == 1 */
 #ifndef TPP_HAVE_TOK_TILDE_EQUAL
 #define TPP_HAVE_TOK_TILDE_EQUAL TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-tilde_equal" */
 #endif /* !TPP_HAVE_TOK_TILDE_EQUAL */
 
-/* "~~"
+/* `~~`
  * @detect: #if __TPP_COUNT_TOKENS("~~") == 1 */
 #ifndef TPP_HAVE_TOK_TILDE_TILDE
 #define TPP_HAVE_TOK_TILDE_TILDE TPP_COMMON_HAVE_TPP_TOK_MISC_TOKENS /* "-ftok-tilde_tilde" */
@@ -5296,7 +5296,7 @@ print("#endif /" "* !... *" "/");
 /* Enable support for `TPP_FILE_KIND_DUMMY`, which is
  * needed to support gcc's `# <linenum>` -> `1`/`2` flags
  *
- * These flags push so-called "dummy" files onto the
+ * These flags push so-called *dummy* files onto the
  * `#include`-stack (without altering the actual current
  * file), with those dummy files acting as additional
  * entries for `#include` tracebacks. */
@@ -5418,7 +5418,7 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK) ? TPP_COMMON_CONF_EXT0 : 0) /* "-finclude-relative-to-every-file" */
 #endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_EVERY_FILE */
 
-/* Add another #include-path list specifically for `#embed` and `__has_embed`. This list
+/* Add another `#include`-path list specifically for `#embed` and `__has_embed`. This list
  * is used for filenames specified in `#embed <file>` and `#embed "file"`, whereas use
  * of `#embed "file"` will also try to open relative to the current file.
  *
@@ -5867,7 +5867,7 @@ print("#endif /" "* !... *" "/");
 
 /* Provide a set of macros/functions `tpp_lexer_manualpopfile_*`
  * that can be used to seek through the contents of files further
- * up the #include-stack in a way that allows for rollback.
+ * up the `#include`-stack in a way that allows for rollback.
  *
  * - `tpp_lexer_manualpopfile_start()`
  * - `tpp_lexer_manualpopfile_popfile()`
@@ -6383,7 +6383,7 @@ print("#endif /" "* !... *" "/");
 /* CLI PARSER CONFIGURATION                                             */
 /************************************************************************/
 
-/* XXX: Lexer functionality to automatically rename files as they are #include-ded,
+/* XXX: Lexer functionality to automatically rename files as they are `#include`-ded,
  *      by assigning them custom `tpp_file_setfilename()` immediately after being
  *      initialized. The way names are assigned here is by replacing directory
  *      prefixes, which should be configurable via `-fmacro-prefix-map`. */

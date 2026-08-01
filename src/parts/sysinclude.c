@@ -99,7 +99,7 @@ tpp_include_path_string_new(char const *path, tpp_size pathlen) {
 	return result;
 }
 
-/* Append the given "path" to "self".
+/* Append the given "path" to `self`.
  * @param: path:        The path to append.
  * @param: path_maxlen: The max length of "path". The actual length of the path that will
  *                      be appended to the path list is "tpp_strnlen(path, path_maxlen)".
@@ -192,7 +192,7 @@ tpp_include_path_list_pushhead(tpp_include_path_list *tpp_restrict self,
 	return TPP_EOK;
 }
 
-/* Remove the given "path" from "self".
+/* Remove the given "path" from `self`.
  * @param: path:        The path to remove.
  * @param: path_maxlen: The max length of "path". The actual length of the path that will
  *                      be removed from the path list is "tpp_strnlen(path, path_maxlen)".
@@ -298,12 +298,12 @@ tpp_include_paths_copyone(tpp_include_paths *tpp_restrict self,
 #if TPP_HAVE_INCLUDE_PATH_PUSH_POP
 	self->tip_pushcnt = from->tip_pushcnt;
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
-#if TPP_HAVE_INCLUDE_PATH_AFTER
+#if TPP_HAVE_INCLUDE_PATH_EMBED
 	error = tpp_include_path_list_copy(&self->tip_embed_list,
 	                                   &from->tip_embed_list);
 	if (TPP_ISERR(error))
 		goto err;
-#endif /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 	error = tpp_include_path_list_copy(&self->tip_after_list,
 	                                   &from->tip_after_list);
@@ -507,7 +507,8 @@ _tpp_include_paths_clearbykind(tpp_include_paths *tpp_restrict self)
 	return error;
 }
 
-/* Pop the current include paths state (may only be called when `tpp_include_paths_canpop(self)') */
+/* Pop the current include paths state (may only
+ * be called when `tpp_include_paths_canpop(self)`) */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_include_paths_pop(tpp_include_paths *tpp_restrict self) {
 	tpp_assert(tpp_include_paths_canpop(self));

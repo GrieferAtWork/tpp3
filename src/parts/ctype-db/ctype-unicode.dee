@@ -77,7 +77,7 @@ function sizeofGreatestIntegerInBytes(values: {int...}): int {
 @@while   accessing    the   original    values   as    follows:
 @@>> local a, b, shift = return...;
 @@>> tab[i] == b[(a[(unsigned)i >> shift] << shift) + (i & ((1 << shift)-1))];
-@@HINT: If  no  mapping exists  to optimize  for this,  shift will  equal `0'
+@@HINT: If  no  mapping exists  to optimize  for this,  shift will  equal `0`
 function splitTables(tab: {int: int}, errorValue: int): ({int...}, {int...}, int) {
 	local maxShift = 0;
 	local table = List();

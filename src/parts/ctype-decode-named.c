@@ -179,7 +179,7 @@ nope:
 
 #if TPP_HAVE_DECODE_NAMED_ESCAPE
 
-/* Decode a named \N{...} sequence and update `*p_iter` to point to
+/* Decode a named `\N{...}` sequence and update `*p_iter` to point to
  * its end. This function implement the routing between the different
  * (currently enabled) named escape decoders, as configured by:
  * - `TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES`

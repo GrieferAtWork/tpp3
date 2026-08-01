@@ -55,32 +55,32 @@ TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, 
 
 
 #if TPP_HAVE_WARNINGS
-/* Interpret + print a warning-message "format" string.
+/* Interpret + print a warning-message `format` string.
  * The following %-encoded escape sequences are recognized:
- * - "%["    Start quoting text
- * - "%]"    Stop quoting text
- * - "%Pl"   1-based line described by "info"
- * - "%Pc"   1-based column described by "info"
- * - "%Pf"   Filename described by "info"
- * - "%Pt"   "%[current-token%]"   (based on tpp_lexer_gettoken(self))
- * - "%s"    As defined by stdc, using va_arg(args, char *)
- * - "%.*s"  As defined by stdc, using va_arg(args, int) + va_arg(args, char *)
- * - "%.Ns"  As defined by stdc, using va_arg(args, char *)
- * - "%.NPt" "%[<N bytes starting at "info->tlpfi_pos">%]"   (clamped if too big)
- * - "%d"    As defined by stdc, using va_arg(args, int)
- * - "%u"    As defined by stdc, using va_arg(args, unsigned int)
- * - "%c"    As defined by stdc, using va_arg(args, int)
- * - "%%"    "%" (emit a singular %-character)
+ * - `%[`    Start quoting text
+ * - `%]`    Stop quoting text
+ * - `%Pl`   1-based line described by `info`
+ * - `%Pc`   1-based column described by `info`
+ * - `%Pf`   Filename described by `info`
+ * - `%Pt`   `%[current-token%]`   (based on tpp_lexer_gettoken(self))
+ * - `%s`    As defined by stdc, using va_arg(args, char *)
+ * - `%.*s`  As defined by stdc, using va_arg(args, int) + va_arg(args, char *)
+ * - `%.Ns`  As defined by stdc, using va_arg(args, char *)
+ * - `%.NPt` `%[<N bytes starting at *info->tlpfi_pos*>%]`   (clamped if too big)
+ * - `%d`    As defined by stdc, using va_arg(args, int)
+ * - `%u`    As defined by stdc, using va_arg(args, unsigned int)
+ * - `%c`    As defined by stdc, using va_arg(args, int)
+ * - `%%`    `%` (emit a singular %-character)
  *
  * @param: info:    Information for special format descriptors
  *                  (unpopulated parts may be populated lazily)
  * @param: printer: Output printer for formatted text
- * @param: arg:     Cookie argument for "printer"
+ * @param: arg:     Cookie argument for `printer`
  * @param: format:  Format pattern (see above)
- * @param: args:    Extra varargs-arguments for "format"
- * @return: >= 0:   Sum of return values of "printer".
- * @return: < 0:    First negative return value of "printer". The more high-level
- *                  "tpp_lexer_warnf" API returns "TPP_EWARNPRINT" in this case. */
+ * @param: args:    Extra varargs-arguments for `format`
+ * @return: >= 0:   Sum of return values of `printer`.
+ * @return: < 0:    First negative return value of `printer`. The more high-level
+ *                  `tpp_lexer_warnf` API returns `TPP_EWARNPRINT` in this case. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
 tpp_lexer_printf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
                          tpp_formatprinter printer, void *arg,
@@ -589,14 +589,14 @@ static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
 #endif /* !tpp_lexer_gethook_warnprinter */
 
 /* Print the actual warning message (and only the message, including
- * its trailing linefeed) to "printer". When "id" uses `TPP_WARNING_EX`,
+ * its trailing linefeed) to `printer`. When `id` uses `TPP_WARNING_EX`,
  * the warning's printer callback is invoked with the relevant parameters
  *
- * @return: TPP_EOK:        Success (sum of return values of `printer' is stored in
- *                          `*p_printer_result', assuming that `p_printer_result != NULL')
- * @return: TPP_EWARNPRINT: An invocation of `*printer' returned a negative value
- *                          (that value was stored in `*p_printer_result', assuming
- *                          that `p_printer_result != NULL')
+ * @return: TPP_EOK:        Success (sum of return values of `printer` is stored in
+ *                          `*p_printer_result`, assuming that `p_printer_result != NULL`)
+ * @return: TPP_EWARNPRINT: An invocation of `*printer` returned a negative value
+ *                          (that value was stored in `*p_printer_result`, assuming
+ *                          that `p_printer_result != NULL`)
  * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
  * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
  * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
@@ -739,7 +739,7 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			 * This range of bytes describes the "expression" that caused
 			 * the include/macro-expansion to happen (it is either the range
 			 * from the start of a macro's name, to the end of its parameter
-			 * list, or the start of a #include-directive, to the trailing
+			 * list, or the start of a `#include`-directive, to the trailing
 			 * line-feed) */
 			tpp_lexer_printf_info caller_info;
 			tpp_lexer_printf_info_init_at(&caller_info, caller, caller->tf_tpos);
@@ -844,7 +844,7 @@ done:
 
 
 /* Emits the specified lexer warning at the start of the current token.
- * @param: args: Format arguments specific to "id" (see '%'-sequences in warning expressions)
+ * @param: args: Format arguments specific to `id` (see `%`-sequences in warning expressions)
  * @return: TPP_EOK:        Warning was emitted, but you may proceed
  * @return: TPP_ELEXERROR:  Warning was emitted, but was configured as an error
  * @return: TPP_EWARNPRINT: Error while printing warning */
@@ -907,8 +907,8 @@ tpp_lexer_warnf_lc(tpp_lexer *tpp_restrict self, char const *filename,
 #endif /* TPP_HAVE_WARNINGS */
 
 
-/* Warn if the current file's #ifdef-stack is non-empty.
- * @return: * : See `tpp_lexer_warnf()' */
+/* Warn if the current file's `#ifdef`-stack is non-empty.
+ * @return: * : See `tpp_lexer_warnf()` */
 #if TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_warn_nonempty_ifdef(tpp_lexer *tpp_restrict self) {

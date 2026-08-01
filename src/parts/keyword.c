@@ -34,7 +34,7 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-/* Assert that "tpp_keyword" and "tpp_string" are binary-compatible. */
+/* Assert that `tpp_keyword` and `tpp_string` are binary-compatible. */
 #if TPP_HAVE_KEYWORD_ASSTRING
 TPP_STATIC_ASSERT((tpp_offsetof(tpp_keyword, tk_refcnt) -
                    tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)) ==
@@ -107,7 +107,7 @@ tpp_macro_pushstack_copy(tpp_macro_pushstack *tpp_restrict self,
 
 /* Allocate space for- and return a new (uninitialized) macro-push entry
  * @return: * :   The newly allocated macro-push entry.
- * @return: NULL: Out-of-memory (TPP_ENOMEM) */
+ * @return: NULL: Out-of-memory (`TPP_ENOMEM`) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_macro_pushent *TPPCALL
 tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self) {
 	tpp_macro_pushent *new_vec;
@@ -187,7 +187,7 @@ tpp_assertions_copy(tpp_assertions *tpp_restrict self,
 }
 #endif /* TPP_HAVE_LEXER_COPY */
 
-/* Check if a given "value" is being asserted by "self" */
+/* Check if a given `value` is being asserted by `self` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_assertions_contains(tpp_assertions const *tpp_restrict self,
                         struct tpp_keyword const *tpp_restrict value) {
@@ -205,7 +205,7 @@ tpp_assertions_contains(tpp_assertions const *tpp_restrict self,
 }
 
 
-/* Assert a given "value" within "self".
+/* Assert a given `value` within `self`.
  * @return: TPP_EOK:    Assertion was added
  * @return: TPP_ENOENT: Assertion was already added before (SOFT_ERROR)
  * @return: TPP_ENOMEM: Out of memory (HARD_ERROR) */
@@ -280,7 +280,7 @@ tpp_assertions_fixtable(tpp_assertions *tpp_restrict self) {
 	return result;
 }
 
-/* Unassert a given "value" within "self".
+/* Unassert a given `value` within `self`.
  * @return: true:  Assertion was removed
  * @return: false: Assertion didn't exist in the first place */
 TPP_IMPL TPP_NONNULL((1, 2)) bool TPPCALL
@@ -322,11 +322,11 @@ tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
 
 
 #if TPP_HAVE_KEYWORD_MISC
-/* Ensure that `self->tk_misc' has been allocated and return it.
+/* Ensure that `self->tk_misc` has been allocated and return it.
  * If it isn't already allocated, allocate+return it lazily.
- * WARNING: Only call this function on a "writable" keyword (s.a. `tpp_keywords_copybuiltin()')
+ * WARNING: Only call this function on a *writable* keyword (s.a. `tpp_keywords_copybuiltin()`)
  *
- * @return: * :   The "misc" data of "self" (freshly allocated)
+ * @return: * :   The *misc* data of `self` (freshly allocated)
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_misc *TPPCALL
 tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
@@ -344,7 +344,7 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 
 
 #if TPP_HAVE_KEYWORD_USERDATA
-/* Set the user-data pointer for "self"
+/* Set the user-data pointer for `self`
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -365,7 +365,7 @@ tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
 
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
-/* Push the current macro-definition of "self"
+/* Push the current macro-definition of `self`
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -401,7 +401,7 @@ err_nomem:
 }
 
 
-/* Pop the current macro-definition of "self"
+/* Pop the current macro-definition of `self`
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOENT: Macro-push-stack was already empty (soft-error) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -454,7 +454,7 @@ err_empty:
 
 
 #if TPP_HAVE_CPP_MACROS
-/* Delete the macro definition of `self'. */
+/* Delete the macro definition of `self`. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undef(tpp_keyword *tpp_restrict self) {
 	TPP_REF tpp_macro *old_macro;
@@ -486,7 +486,7 @@ tpp_keyword_undefuser(tpp_keyword *tpp_restrict self) {
 
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 /* Set the keyword registered as #ifndef-guard of
- * the given (should-be) filename-keyword "self"
+ * the given (should-be) filename-keyword `self`
  *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
@@ -520,7 +520,7 @@ tpp_keyword_inc_builtin_counter(tpp_keyword *tpp_restrict self,
 
 
 #if TPP_HAVE_KEYWORD_FLAGS
-/* Set the flags (set of `TPP_KEYWORD_FLAG_*') linked to "self"
+/* Set the flags (set of `TPP_KEYWORD_FLAG_*`) linked to `self`
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -546,7 +546,7 @@ tpp_keyword_setflags(tpp_keyword *tpp_restrict self,
  * instead of this function, since this one doesn't handle
  * builtin expansions!
  *
- * @return: * :   The custom override for what "self" should expand to
+ * @return: * :   The custom override for what `self` should expand to
  * @return: NULL: No custom override present. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
 tpp_keyword_getfeature(tpp_keyword const *tpp_restrict self,
@@ -564,8 +564,8 @@ tpp_keyword_getfeature(tpp_keyword const *tpp_restrict self,
 }
 
 /* Set the text that a feature-check of `kind` expands to when used
- * with the given keyword `self`. You may also pass `value: NULL` to
- * reset that specific feature back to its builtin (or "0") state.
+ * with the given keyword `self`. You may also pass `NULL` for `value`
+ * to reset that specific feature back to its builtin (or `0`) state.
  *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
@@ -592,7 +592,7 @@ tpp_keyword_setfeature(tpp_keyword *tpp_restrict self,
 
 
 #if TPP_HAVE_CPP_ASSERT
-/* Assert a given "value" within "self".
+/* Assert a given `value` within `self`.
  * @return: TPP_EOK:    Assertion was added
  * @return: TPP_ENOENT: Assertion was already added before (SOFT_ERROR)
  * @return: TPP_ENOMEM: Out of memory (HARD_ERROR) */
@@ -709,29 +709,28 @@ _tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p
 
 
 
-/* Check if "*p_iter" is a BSI sequence.
- * - If so, decode it, update `*p_iter' to point to its end,
- *   and return the # of utf-8 bytes written to "buf"
- * - Otherwise, return "0"
+/* Check if `*p_iter` is a BSI sequence.
+ * - If so, decode it, update `*p_iter` to point to its end,
+ *   and return the # of utf-8 bytes written to `buf`
+ * - Otherwise, return `0`
  *
- * NOTE: Given *p_iter points **AFTER** the leading \ character
+ * NOTE: Given `*p_iter` points **AFTER** the leading `\` character
  *
- * Caller must ensure that _tpp_maybe_isbackslash((*p_iter)[-1]) */
+ * Caller must ensure that `_tpp_maybe_isbackslash((*p_iter)[-1])` */
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-_tpp_decode_bsi(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p_iter,
-                tpp_char const *end _tpp_esc_lexer__PARAM,
-                bool *tpp_restrict p_continue)
 #define tpp_decode_bsi(buf, p_iter, end, lexer, p_continue) \
-	_tpp_decode_bsi(buf, p_iter, end _tpp_esc_lexer__ARG(lexer), p_continue)
+	tpp_decode_bsi_(buf, p_iter, end _tpp_esc_lexer__ARG(lexer), p_continue)
 #else /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-_tpp_decode_bsi(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p_iter,
-                tpp_char const *end _tpp_esc_lexer__PARAM)
 #define tpp_decode_bsi(buf, p_iter, end, lexer, p_continue) \
-	_tpp_decode_bsi(buf, p_iter, end _tpp_esc_lexer__ARG(lexer))
+	tpp_decode_bsi_(buf, p_iter, end _tpp_esc_lexer__ARG(lexer))
 #endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
-{
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
+tpp_decode_bsi_(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p_iter,
+                tpp_char const *end _tpp_esc_lexer__PARAM
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+                , bool *tpp_restrict p_continue
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+                ) {
 	tpp_char ch;
 	tpp_char const *iter = *p_iter;
 	tpp_assert(_tpp_maybe_isbackslash(iter[-1]));
@@ -826,7 +825,7 @@ nope:
 #endif /* TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED */
 
 
-/* Same as `tpp_hashof()', but skip over \-escaped linefeeds when calculating the hash */
+/* Same as `tpp_hashof()`, but skip over `\`-escaped linefeeds when calculating the hash */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
 tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len _tpp_esc_lexer__PARAM) {
 	tpp_hash result = TPP_HASH_INITIAL;
@@ -865,9 +864,9 @@ tpp_hashof_esc_(tpp_char const *tpp_restrict kwd, tpp_size len _tpp_esc_lexer__P
 	return result;
 }
 
-/* Copy `in_text...+=len' to `out_text', whilst removing \-escaped linefeeds
- * The caller must ensure that `out_text' has space for at least `len' bytes,
- * and the actual # of used bytes of `out_text' is returned. */
+/* Copy `in_text...+=len` to `out_text`, whilst removing `\`-escaped linefeeds
+ * The caller must ensure that `out_text` has space for at least `len` bytes,
+ * and the actual # of used bytes of `out_text` is returned. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
 tpp_without_esc_(tpp_char *tpp_restrict out_text,
                  tpp_char const *tpp_restrict in_text,
@@ -903,7 +902,7 @@ tpp_without_esc_(tpp_char *tpp_restrict out_text,
 	return result;
 }
 
-/* Compare 2 strings, one of which may contain \-escaped linefeeds that must be skipped. */
+/* Compare 2 strings, one of which may contain `\`-escaped linefeeds that must be skipped. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) int TPPCALL
 tpp_memcmp_esc_(tpp_char const *lhs_without_esc, tpp_size lhs_len,
                 tpp_char const *rhs_with_esc, tpp_size rhs_len
@@ -1076,7 +1075,7 @@ tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
 }
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
-/* Copy+return "self", but leave "return->tk_next" undefined */
+/* Copy+return `self`, but leave `return->tk_next` undefined */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
 tpp_keyword_copy(tpp_keyword const *tpp_restrict self) {
 	tpp_keyword *result;
@@ -1137,7 +1136,7 @@ err_r:
 }
 
 #if TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO
-/* Relocate "self->tm_deffile" in case it references a keyword */
+/* Relocate `self->tm_deffile` in case it references a keyword */
 static TPP_NONNULL((1, 2)) void TPPCALL
 tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
                            tpp_keywords const *tpp_restrict keywords) {
@@ -1155,7 +1154,7 @@ tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
 #endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
 
 #if TPP_HAVE_CPP_ASSERT
-/* Relocate "self->tm_deffile" in case it references a keyword */
+/* Relocate `self->tm_deffile` in case it references a keyword */
 static TPP_NONNULL((1, 2)) void TPPCALL
 tpp_assertion_relocate_keyword(tpp_assertion *tpp_restrict self,
                                tpp_keywords const *tpp_restrict keywords) {
@@ -1259,8 +1258,8 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
 
 /* Lookup keywords within the given keywords-table **ONLY**
  * @return: * :   The keyword in question
- * @return: NULL: No such keyword (consider using "tpp_keywords_getkeyword" to
- *                also check for builtin keywords, or "tpp_keywords_newkeyword"
+ * @return: NULL: No such keyword (consider using `tpp_keywords_getkeyword()` to
+ *                also check for builtin keywords, or `tpp_keywords_newkeyword()`
  *                to do the same, but lazily create missing keywords) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 _tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
@@ -1316,7 +1315,7 @@ _tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
-/* Same as above, but also search the built-in keyword table (tpp_builtin_getkeyword) */
+/* Same as above, but also search the built-in keyword table (`tpp_builtin_getkeyword()`) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_getkeyword(tpp_keywords const *tpp_restrict self,
                         tpp_char const *tpp_restrict kwd,
@@ -1353,8 +1352,8 @@ tpp_keywords_getkeyword_esc_(tpp_keywords const *tpp_restrict self,
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 
 
-/* Insert "kwd" into "self". If necessary, resize the hash-map.
- * If resizing fails, "kwd" is destroyed and "NULL" is returned. */
+/* Insert `kwd` into `self`. If necessary, resize the hash-map.
+ * If resizing fails, `kwd` is destroyed and `NULL` is returned. */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 tpp_keywords_inskeyword(tpp_keywords *tpp_restrict self,
                         /*inherit(always)*/ tpp_keyword *kwd) {
@@ -1413,9 +1412,9 @@ err_oom:
 	return NULL;
 }
 
-/* Same as above, but if the keyword doesn't exist in `self' or the builtin
- * keyword table, a new keyword is allocated, given an ID, and inserted into `self'
- * @return: * :   The keyword associated with `kwd' (possibly having been just allocated)
+/* Same as above, but if the keyword doesn't exist in `self` or the builtin
+ * keyword table, a new keyword is allocated, given an ID, and inserted into `self`
+ * @return: * :   The keyword associated with `kwd` (possibly having been just allocated)
  * @return: NULL: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword const *TPPCALL
 tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
@@ -1492,20 +1491,20 @@ done:
 
 
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
-/* Check if "kwd" is contained in "self".
- * If so: do nothing and simply re-return "kwd"
+/* Check if `kwd` is contained in `self`.
+ * If so: do nothing and simply re-return `kwd`
  *
- * Otherwise, assume that "kwd" is a "builtin" keyword (as returned
- * by `tpp_builtin_getkeyword()'), in which the keyword is copied,
- * inserted into "self", and said copy is returned.
+ * Otherwise, assume that `kwd` is a *builtin* keyword (as returned
+ * by `tpp_builtin_getkeyword()`), in which the keyword is copied,
+ * inserted into `self`, and said copy is returned.
  *
- * This function must be used to make a keyword "writable" (which is
- * required before its `tk_macro' / `tk_misc' fields can safely be
+ * This function must be used to make a keyword *writable* (which is
+ * required before its `tk_macro` / `tk_misc` fields can safely be
  * written to (and in the later case: all fields of a potentially
- * pointed-to `tpp_keyword_misc', too)
+ * pointed-to `tpp_keyword_misc`, too)
  *
- * @return: * :   A writable copy of "kwd"
- * @return: NULL: Out of memory (TPP_ENOMEM) */
+ * @return: * :   A writable copy of `kwd`
+ * @return: NULL: Out of memory (`TPP_ENOMEM`) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword *TPPCALL
 tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
                          tpp_keyword const *tpp_restrict kwd) {
@@ -1552,10 +1551,10 @@ done:
 
 #if TPP_HAVE_LEXER_OPENFILE || TPP_HAVE_JOINPATH
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) /*utf-8*/char *TPPCALL
-tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer (with at least "srclen" char-s of space) */
+tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer (with at least `srclen` char-s of space) */
                  /*utf-8*/ char *dst_base,  /* Base pointer of destination buffer (start of destination filename string) */
-                 /*utf-8*/ char const *src, /* Filename string to append to "dst_iter" (".."-refs don't go beyond "dst_base") */
-                 tpp_size srclen) {         /* Length of "src" (in char-s) */
+                 /*utf-8*/ char const *src, /* Filename string to append to `dst_iter` (`..`-refs don't go beyond `dst_base`) */
+                 tpp_size srclen) {         /* Length of `src` (in char-s) */
 	char const *src_end = src + srclen;
 
 #if TPP_FS_HAVE_DRIVES
@@ -1757,37 +1756,37 @@ tpp_lexer_openfile_ex_check_mask_flags(/*1..1*/ tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE_EX */
 
 
-/* Same as `tpp_lexer_openfile', but return `TPP_EMASKED' if the file was already
- * included before, and its keyword has any of the bits specified by `mask_flags' set.
+/* Same as `tpp_lexer_openfile`, but return `TPP_EMASKED` if the file was already
+ * included before, and its keyword has any of the bits specified by `mask_flags` set.
  *
  * NOTES:
- * - A special case is made when "mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED",
- *   in which case, "TPP_EMASKED" is only returned if "tkm_file_guard" is a macro that
- *   is currently considered to be `#if defined()'.
- * - Another special case is made for "TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT", which
- *   causes "TPP_EMASKED" to be returned if the file's keyword is already included
- *   somewhere on the #include-stack.
- * - Also: when "mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED", and the file's keyword
- *   doesn't already have the "TPP_KEYWORD_FLAG_HDR_IMPORTED" flag set, the open will
- *   succeed, and the "TPP_KEYWORD_FLAG_HDR_IMPORTED" flag will become set (so-as to
- *   implement the include-once semantics of "#import")
- * - This function always sets "tlofr_fileflags = TPP_FILE_FLAGS_NORMAL".
- *   If the given "relative_to" belongs to a system header, then it is up
- *   to the caller to set that flag. "tpp_lexer_open_include_string_ex()"
+ * - A special case is made when `mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`,
+ *   in which case, `TPP_EMASKED` is only returned if `tkm_file_guard` is a macro that
+ *   is currently considered to be `#if defined()`.
+ * - Another special case is made for `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`, which
+ *   causes `TPP_EMASKED` to be returned if the file's keyword is already included
+ *   somewhere on the `#include`-stack.
+ * - Also: when `mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED`, and the file's keyword
+ *   doesn't already have the `TPP_KEYWORD_FLAG_HDR_IMPORTED` flag set, the open will
+ *   succeed, and the `TPP_KEYWORD_FLAG_HDR_IMPORTED` flag will become set (so-as to
+ *   implement the include-once semantics of `#import`)
+ * - This function always sets `tlofr_fileflags = TPP_FILE_FLAGS_NORMAL`.
+ *   If the given `relative_to` belongs to a system header, then it is up
+ *   to the caller to set that flag. `tpp_lexer_open_include_string_ex()`
  *   will do so automatically after calling this function.
  *
- * @param: mask_flags: Set of flags describing circumstances under which TPP_EMASKED
+ * @param: mask_flags: Set of flags describing circumstances under which `TPP_EMASKED`
  *                     should be returned:
- *                     - TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED
- *                     - TPP_LEXER_OPENFILE_FLAG_HDR_ONCE
- *                     - TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED
- *                     - TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT
+ *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED`
+ *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_ONCE`
+ *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`
+ *                     - `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`
  *
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOMEM:  Insufficient memory
- * @return: TPP_ENOENT:  No such file, or TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT was
- *                       given, and the file is already located on the #include-stack.
- * @return: TPP_EMASKED: Flags specified by "mask_flags" were already set */
+ * @return: TPP_ENOENT:  No such file, or `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT` was
+ *                       given, and the file is already located on the `#include`-stack.
+ * @return: TPP_EMASKED: Flags specified by `mask_flags` were already set */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
 tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       /*0..1*/ char const *tpp_restrict relative_to,
@@ -1795,15 +1794,15 @@ tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                       tpp_lexer_openfile_flags mask_flags)
 #else /* TPP_HAVE_LEXER_OPENFILE_EX */
-/* Construct the filename, open the file, and initialize "result" accordingly
- * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name' of another file,
- *                      in case "filename" is a relative path, in which case the
+/* Construct the filename, open the file, and initialize `result` accordingly
+ * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name` of another file,
+ *                      in case `filename` is a relative path, in which case the
  *                      filename of the file to open should be relative to the
- *                      directory of "relative_to"
- * @param: result:      Open file information (pass along to "tpp_file_init_io()")
+ *                      directory of `relative_to`
+ * @param: result:      Open file information (pass along to `tpp_file_init_io()`)
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Insufficient memory
- * @return: TPP_ENOENT: File not found (if you have additional "relative_to", try them) */
+ * @return: TPP_ENOENT: File not found (if you have additional `relative_to`, try them) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
 tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
                    /*0..1*/ char const *tpp_restrict relative_to,
@@ -2248,8 +2247,8 @@ err_nomem:
 
 
 #if TPP_HAVE_JOINPATH
-/* Form an absolute filename by combining "relative_to" with "filename"
- * @return: * :   The absolute path (must be free'd by caller using "tpp_free()")
+/* Form an absolute filename by combining `relative_to` with `filename`
+ * @return: * :   The absolute path (must be free'd by caller using `tpp_free()`)
  * @return: NULL: Out of memory. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) char *TPPCALL
 tpp_joinpath(/*0..1*/ char const *tpp_restrict relative_to,
@@ -2397,7 +2396,7 @@ tpp_keywords_unassertall(tpp_keywords *tpp_restrict self) {
 
 
 #if TPP_HAVE_KEYWORDS_RESETFLAGS && TPP_HAVE_KEYWORD_FLAGS
-/* Modify the flags of all keywords as `flags = flags & keep_mask' */
+/* Modify the flags of all keywords as `flags = flags & keep_mask` */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_resetflags(tpp_keywords *tpp_restrict self,
                         tpp_keyword_flags keep_mask) {
@@ -2428,8 +2427,8 @@ tpp_keywords_resetfeatures(tpp_keywords *tpp_restrict self) {
 #endif /* TPP_HAVE_KEYWORDS_RESETFEATURES && TPP_HAVE_KEYWORD_FEATURES */
 
 #if TPP_HAVE_KEYWORDS_RESETCOUNTERS && TPP_HAVE_MACRO___TPP_COUNTER
-/* Call `tpp_keyword_reset_builtin_counter()' on every keyword, thereby
- * resetting all side-effects of expansions of `__TPP_COUNTER' thus far. */
+/* Call `tpp_keyword_reset_builtin_counter()` on every keyword, thereby
+ * resetting all side-effects of expansions of `__TPP_COUNTER` thus far. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_resetcounters(tpp_keywords *tpp_restrict self) {
 	tpp_hash i;
