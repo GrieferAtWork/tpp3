@@ -135,10 +135,12 @@ enum {
 #endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
 };
 
-struct tpp_keyword;
 struct tpp_macro_argbuf; /* Opaque... */
 typedef struct tpp_macro {
 	tpp_refcnt          TPP_INTERNAL(tm_refcnt);     /* Reference count */
+	/* TODO: Config that adds a `struct tpp_keyword` field here, specifying the macro's name keyword.
+	 *       This could then be used to improve the "originating from here" lines in warning messages,
+	 *       as well as be used to implement GCC's `-dU` switch. */
 	tpp_macro_kind      TPP_INTERNAL(tm_kind);       /* [const] Macro kind (one of `TPP_MACRO_KIND_*`) */
 #if TPP_HAVE_MACRO_FLAGS
 	tpp_macro_flag      TPP_INTERNAL(tm_flags);      /* [const] Macro flags (set of `TPP_MACRO_FLAG_*`) */

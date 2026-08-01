@@ -106,13 +106,39 @@ int main(int argc, char **argv) {
 	 *     like this to stderr:
 	 *     >> print("." * NUMBER_OF_IO_FILES_ON_INCLUDE_STACK, " ", tpp_file_getrealfilename(file));
 	 * - "-dM", "--dump=M"
-	 *   - Use `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`
-	 *     at the very start, just before the first token is yielded.
-	 *   - Use `TODO:NEW_HOOK` to 
+	 *   - Call `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` and
+	 *     print the results to our output just before the first call to `tpp_lexer_yield()`.
+	 *   - Set hooks for:
+	 *     - TPP_HAVE_MACRO_DEFINED_HOOK
+	 *     - TPP_HAVE_MACRO_UNDEFINED_HOOK
+	 *     ... that print a replication of the operation in its canonical form to our preprocessor output
+	 *   - Also: turn off output of tokens to preprocessor output
 	 * - "-dD", "--dump=D"
+	 *   No special handling needed in TPP backend
+	 *   Same as "-dM", but don't turn off output of tokens to preprocessor output
 	 * - "-dN", "--dump=N"
+	 *   No special handling needed in TPP backend
+	 *   Same as "-dD", but only write `#define FOO` for `#define FOO(x, y) 10` or `#define FOO 20`
 	 * - "-dI", "--dump=I"
+	 *   TODO: Need another hook called from `tpp_lexer_parse_include_directive_impl_()`,
+	 *         just before `tpp_lexer_open_include_string_ex()` is called.
 	 * - "-dU", "--dump=U"
+	 *   No (additional) special handling needed in TPP backend
+	 *   - Have a map `currently_defined_used_macros: {tpp_keyword: tpp_macro}`
+	 *   - Use TPP_HAVE_FILE_PUSHED_HOOK to watch for TPP_FILE_KIND_MACRO-files being pushed
+	 *     - Whenever this happens, see if the associated macro is in `currently_defined_used_macros`,
+	 *       and if the macro stored in `currently_defined_used_macros` is the same one that's just
+	 *       been pushed onto the #include-stack:
+	 *       - If the macros differ, print a `#undef <NAME>` line first
+	 *       - If the macros differ, or there wasn't a pre-existing macro under
+	 *         that name, print a `#define <NAME>...` line to declare the new macro's
+	 *         definition
+	 *   - Whenever a TPP_TOK_ISKEYWORD()-token is read from the preprocessor, and
+	 *     the associated keyword doesn't have a user-defined macro expansion, check
+	 *     `currently_defined_used_macros` if it still contains a macro definition
+	 *     for that keyword. If so: remove it from `currently_defined_used_macros`,
+	 *     and print a `#undef <NAME>` line before the keyword-token is handled as
+	 *     per usual.
 	 */
 	if (argc && strcmp(*argv, "--") == 0)
 		--argc, ++argv;

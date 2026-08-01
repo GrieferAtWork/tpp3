@@ -673,6 +673,8 @@
 #define th_file_pushed                                     TPP_INTERNAL(th_file_pushed)
 #define th_file_popped                                     TPP_INTERNAL(th_file_popped)
 #define th_include_not_found                               TPP_INTERNAL(th_include_not_found)
+#define th_macro_defined                                   TPP_INTERNAL(th_macro_defined)
+#define th_macro_undefined                                 TPP_INTERNAL(th_macro_undefined)
 #define th_ident_sccs                                      TPP_INTERNAL(th_ident_sccs)
 #define th_system_include_path                             TPP_INTERNAL(th_system_include_path)
 #define th_system_embed_path                               TPP_INTERNAL(th_system_embed_path)
@@ -42296,6 +42298,15 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	token->tt_start = token->tt_end;
 	token->tt_end   = pos;
 
+	/* Invoke macro-definition hook */
+#if TPP_HAVE_MACRO_DEFINED_HOOK
+	error = tpp_lexer_callhook_macro_defined(self, keyword, macro);
+	if (TPP_ISERR(error)) {
+		tpp_macro_decref(macro);
+		return TPP_TOK_OFERR(error);
+	}
+#endif /* TPP_HAVE_MACRO_DEFINED_HOOK */
+
 	/* Store the macro definition within the keyword. */
 	if (!_TPP_KEYWORD_MACRO_ISDEFINED(keyword->tk_macro)) {
 #if TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO
@@ -42504,12 +42515,17 @@ tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
 	/* Push/pop the macro linked to this keyword. */
 	if (data->tlhppmd_mode == TPP_KWD_push_macro) {
 		result = tpp_keyword_pushmacro(keyword);
-		if (data->tlhppmd_undef)
-			tpp_keyword_undef(keyword); /* Also #undef the keyword if requested */
+		if (data->tlhppmd_undef && !TPP_ISERR(result)) {
+#if TPP_HAVE_MACRO_UNDEFINED_HOOK
+			result = tpp_lexer_callhook_macro_undefined(lexer, keyword);
+			if (!TPP_ISERR(result))
+#endif /* TPP_HAVE_MACRO_UNDEFINED_HOOK */
+			{
+				tpp_keyword_undef(keyword); /* Also #undef the keyword if requested */
+			}
+		}
 	} else {
 		result = tpp_keyword_popmacro(keyword);
-		tpp_assert(!TPP_ISERR(result) ||
-		           result == TPP_ENOENT);
 		if (result == TPP_ENOENT) {
 			/* Emit a warning */
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -42518,6 +42534,12 @@ tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
 #else /* TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
 			result = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
+		} else {
+			tpp_assert(!TPP_ISERR(result));
+#if TPP_HAVE_MACRO_DEFINED_HOOK
+			if (keyword->tk_macro)
+				result = tpp_lexer_callhook_macro_defined(lexer, keyword, keyword->tk_macro);
+#endif /* TPP_HAVE_MACRO_DEFINED_HOOK */
 		}
 	}
 	return result;
@@ -45678,6 +45700,18 @@ tpp_lexer_handle_undef_directive(tpp_lexer *tpp_restrict self) {
 		tpp_keyword *keyword = tpp_lexer_kwds_copybuiltin(self, ro_keyword);
 		if tpp_unlikely(!keyword)
 			return TPP_TOK_ENOMEM;
+
+		/* Invoke #undef-hook */
+#if TPP_HAVE_MACRO_UNDEFINED_HOOK
+		{
+			tpp_errno hook_error;
+			hook_error = tpp_lexer_callhook_macro_undefined(self, keyword);
+			if (TPP_ISERR(hook_error))
+				return TPP_TOK_OFERR(hook_error);
+		}
+#endif /* TPP_HAVE_MACRO_UNDEFINED_HOOK */
+
+		/* Actually #undef the keyword */
 		tpp_keyword_undef(keyword);
 
 		/* Seek to next token (which should be a line-feed) */

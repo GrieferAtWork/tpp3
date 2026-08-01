@@ -271,6 +271,18 @@ tpp_lexer_handle_undef_directive(tpp_lexer *tpp_restrict self) {
 		tpp_keyword *keyword = tpp_lexer_kwds_copybuiltin(self, ro_keyword);
 		if tpp_unlikely(!keyword)
 			return TPP_TOK_ENOMEM;
+
+		/* Invoke #undef-hook */
+#if TPP_HAVE_MACRO_UNDEFINED_HOOK
+		{
+			tpp_errno hook_error;
+			hook_error = tpp_lexer_callhook_macro_undefined(self, keyword);
+			if (TPP_ISERR(hook_error))
+				return TPP_TOK_OFERR(hook_error);
+		}
+#endif /* TPP_HAVE_MACRO_UNDEFINED_HOOK */
+
+		/* Actually #undef the keyword */
 		tpp_keyword_undef(keyword);
 
 		/* Seek to next token (which should be a line-feed) */

@@ -3319,6 +3319,43 @@ local HOOKS = {
 	},
 
 	{
+		"Called whenever a `#define` directive has just been fully\n" +
+		"parsed (macro was has not yet been registered with keyword).\n" +
+		"\n" +
+		"This hook is *ONLY* invoked when `#define` is encountered, or\n" +
+		"`#pragma pop_macro(\"foo\")` was used to restore a macro's previous\n" +
+		"definition.\n" +
+		"\n" +
+		"Calls to `tpp_lexer_define()` or other related functions will\n"+
+		"*NOT* invoke this hook.",
+		"MACRO_DEFINED",
+		"(TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_DEFINE)",
+		"",
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro)", { "lexer", "name", "macro" },
+		"TPP_EOK"
+	},
+
+	{
+		"Called whenever a `#undef` directive has just been fully\n" +
+		"parsed (macro hasn't been deleted from keyword, yet). Note\n" +
+		"that this hook is still called, even if the keyword doesn't\n" +
+		"have a macro (and might have even already been marked as having\n" +
+		"no predefined definition: `_TPP_KEYWORD_MACRO_UNDEFINED`). This\n" +
+		"hook is imply called as part of the process of evaluating `#undef`\n" +
+		"\n" +
+		"This hook is *ONLY* invoked when `#undef` is encountered.\n" +
+		"Calls to `tpp_lexer_undef()`, `tpp_keyword_undef()`, or other\n"+
+		"related functions will *NOT* invoke this hook.\n" +
+		"\n" +
+		"NOTE: this hook *will* actually also be called by `#pragma push_macro(undef, \"foo\")`",
+		"MACRO_UNDEFINED",
+		"(TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_DEFINE)",
+		"",
+		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name)", { "lexer", "name" },
+		"TPP_EOK"
+	},
+
+	{
 		"Called to handle `#ident` and `#sccs` directives\n" +
 		"@param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`\n" +
 		"@param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d\n" +
@@ -3809,6 +3846,89 @@ for (local doc, name,
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_INCLUDE_NOT_FOUND) && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 #error "Invalid configuration: 'TPP_HOOK_INCLUDE_NOT_FOUND' is defined, but 'TPP_HAVE_INCLUDE_NOT_FOUND_HOOK' isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_INCLUDE_NOT_FOUND && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_MACRO_DEFINED(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro);
+ * Called whenever a `#define` directive has just been fully
+ * parsed (macro was has not yet been registered with keyword).
+ *
+ * This hook is *ONLY* invoked when `#define` is encountered, or
+ * `#pragma pop_macro("foo")` was used to restore a macro's previous
+ * definition.
+ *
+ * Calls to `tpp_lexer_define()` or other related functions will
+ * *NOT* invoke this hook. */
+#ifndef TPP_HAVE_MACRO_DEFINED_HOOK
+#ifdef TPP_HOOK_MACRO_DEFINED
+#define TPP_HAVE_MACRO_DEFINED_HOOK ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_DEFINE) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_MACRO_DEFINED */
+#define TPP_HAVE_MACRO_DEFINED_HOOK ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_DEFINE) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_MACRO_DEFINED */
+#endif /* !TPP_HAVE_MACRO_DEFINED_HOOK */
+#if TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_MACRO_DEFINED)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_MACRO_DEFINED_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_MACRO_DEFINED' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MACRO_DEFINED_HOOK
+#define TPP_HAVE_MACRO_DEFINED_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_MACRO_DEFINED)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_MACRO_DEFINED_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_MACRO_DEFINED' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MACRO_DEFINED_HOOK
+#define TPP_HAVE_MACRO_DEFINED_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_MACRO_DEFINED_HOOK /* There is no builtin version */
+#define TPP_HAVE_MACRO_DEFINED_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_MACRO_DEFINED_HOOK /* There is no builtin version */
+#define TPP_HAVE_MACRO_DEFINED_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_MACRO_DEFINED) && !TPP_HOOK_USESUSER(TPP_HAVE_MACRO_DEFINED_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_MACRO_DEFINED' is defined, but 'TPP_HAVE_MACRO_DEFINED_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MACRO_DEFINED && !TPP_HOOK_USESUSER(TPP_HAVE_MACRO_DEFINED_HOOK) */
+
+/* >> tpp_errno TPP_HOOK_MACRO_UNDEFINED(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name);
+ * Called whenever a `#undef` directive has just been fully
+ * parsed (macro hasn't been deleted from keyword, yet). Note
+ * that this hook is still called, even if the keyword doesn't
+ * have a macro (and might have even already been marked as having
+ * no predefined definition: `_TPP_KEYWORD_MACRO_UNDEFINED`). This
+ * hook is imply called as part of the process of evaluating `#undef`
+ *
+ * This hook is *ONLY* invoked when `#undef` is encountered.
+ * Calls to `tpp_lexer_undef()`, `tpp_keyword_undef()`, or other
+ * related functions will *NOT* invoke this hook.
+ *
+ * NOTE: this hook *will* actually also be called by `#pragma push_macro(undef, "foo")` */
+#ifndef TPP_HAVE_MACRO_UNDEFINED_HOOK
+#ifdef TPP_HOOK_MACRO_UNDEFINED
+#define TPP_HAVE_MACRO_UNDEFINED_HOOK ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_DEFINE) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
+#else /* TPP_HOOK_MACRO_UNDEFINED */
+#define TPP_HAVE_MACRO_UNDEFINED_HOOK ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_DEFINE) ? TPP_HOOK_DEFAULT_NOOP : TPP_HOOK_DISABLED)
+#endif /* !TPP_HOOK_MACRO_UNDEFINED */
+#endif /* !TPP_HAVE_MACRO_UNDEFINED_HOOK */
+#if TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_CONST_USER && !defined(TPP_HOOK_MACRO_UNDEFINED)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_MACRO_UNDEFINED_HOOK' is configured as 'TPP_HOOK_CONST_USER', but 'TPP_HOOK_MACRO_UNDEFINED' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MACRO_UNDEFINED_HOOK
+#define TPP_HAVE_MACRO_UNDEFINED_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_USER && !defined(TPP_HOOK_MACRO_UNDEFINED)
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_HAVE_MACRO_UNDEFINED_HOOK' is configured as 'TPP_HOOK_RT_USER', but 'TPP_HOOK_MACRO_UNDEFINED' isn't defined. Configure the hook differently, or supply your definition"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MACRO_UNDEFINED_HOOK
+#define TPP_HAVE_MACRO_UNDEFINED_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_CONST_BUILTIN
+#undef TPP_HAVE_MACRO_UNDEFINED_HOOK /* There is no builtin version */
+#define TPP_HAVE_MACRO_UNDEFINED_HOOK TPP_HOOK_DISABLED
+#elif TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_BUILTIN
+#undef TPP_HAVE_MACRO_UNDEFINED_HOOK /* There is no builtin version */
+#define TPP_HAVE_MACRO_UNDEFINED_HOOK TPP_HOOK_RT_NOOP
+#endif /* ... */
+#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_MACRO_UNDEFINED) && !TPP_HOOK_USESUSER(TPP_HAVE_MACRO_UNDEFINED_HOOK)
+#error "Invalid configuration: 'TPP_HOOK_MACRO_UNDEFINED' is defined, but 'TPP_HAVE_MACRO_UNDEFINED_HOOK' isn't using it"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MACRO_UNDEFINED && !TPP_HOOK_USESUSER(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 
 /* >> tpp_errno TPP_HOOK_IDENT_SCCS(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
  * Called to handle `#ident` and `#sccs` directives

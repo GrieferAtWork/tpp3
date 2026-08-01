@@ -75,12 +75,17 @@ tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
 	/* Push/pop the macro linked to this keyword. */
 	if (data->tlhppmd_mode == TPP_KWD_push_macro) {
 		result = tpp_keyword_pushmacro(keyword);
-		if (data->tlhppmd_undef)
-			tpp_keyword_undef(keyword); /* Also #undef the keyword if requested */
+		if (data->tlhppmd_undef && !TPP_ISERR(result)) {
+#if TPP_HAVE_MACRO_UNDEFINED_HOOK
+			result = tpp_lexer_callhook_macro_undefined(lexer, keyword);
+			if (!TPP_ISERR(result))
+#endif /* TPP_HAVE_MACRO_UNDEFINED_HOOK */
+			{
+				tpp_keyword_undef(keyword); /* Also #undef the keyword if requested */
+			}
+		}
 	} else {
 		result = tpp_keyword_popmacro(keyword);
-		tpp_assert(!TPP_ISERR(result) ||
-		           result == TPP_ENOENT);
 		if (result == TPP_ENOENT) {
 			/* Emit a warning */
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -89,6 +94,12 @@ tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
 #else /* TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
 			result = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK */
+		} else {
+			tpp_assert(!TPP_ISERR(result));
+#if TPP_HAVE_MACRO_DEFINED_HOOK
+			if (keyword->tk_macro)
+				result = tpp_lexer_callhook_macro_defined(lexer, keyword, keyword->tk_macro);
+#endif /* TPP_HAVE_MACRO_DEFINED_HOOK */
 		}
 	}
 	return result;

@@ -615,6 +615,45 @@ for (local doc, name,
 #define tpp_lexer_resethook_include_not_found(self)  tpp_hooks_reset_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), v)
 #endif /* tpp_hooks_set_include_not_found */
 
+/* >> tpp_errno tpp_lexer_callhook_macro_defined(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro);
+ * Called whenever a `#define` directive has just been fully
+ * parsed (macro was has not yet been registered with keyword).
+ *
+ * This hook is *ONLY* invoked when `#define` is encountered, or
+ * `#pragma pop_macro("foo")` was used to restore a macro's previous
+ * definition.
+ *
+ * Calls to `tpp_lexer_define()` or other related functions will
+ * *NOT* invoke this hook. */
+#define tpp_lexer_callhook_macro_defined(self, name, macro) \
+	tpp_hooks_call_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), self, name, macro)
+#ifdef tpp_hooks_set_macro_defined
+#define tpp_lexer_gethook_macro_defined(self)    tpp_hooks_get_macro_defined(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_macro_defined(self, v) tpp_hooks_set_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_macro_defined(self)  tpp_hooks_reset_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_macro_defined */
+
+/* >> tpp_errno tpp_lexer_callhook_macro_undefined(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name);
+ * Called whenever a `#undef` directive has just been fully
+ * parsed (macro hasn't been deleted from keyword, yet). Note
+ * that this hook is still called, even if the keyword doesn't
+ * have a macro (and might have even already been marked as having
+ * no predefined definition: `_TPP_KEYWORD_MACRO_UNDEFINED`). This
+ * hook is imply called as part of the process of evaluating `#undef`
+ *
+ * This hook is *ONLY* invoked when `#undef` is encountered.
+ * Calls to `tpp_lexer_undef()`, `tpp_keyword_undef()`, or other
+ * related functions will *NOT* invoke this hook.
+ *
+ * NOTE: this hook *will* actually also be called by `#pragma push_macro(undef, "foo")` */
+#define tpp_lexer_callhook_macro_undefined(self, name) \
+	tpp_hooks_call_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), self, name)
+#ifdef tpp_hooks_set_macro_undefined
+#define tpp_lexer_gethook_macro_undefined(self)    tpp_hooks_get_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks))
+#define tpp_lexer_sethook_macro_undefined(self, v) tpp_hooks_set_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_macro_undefined(self)  tpp_hooks_reset_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), v)
+#endif /* tpp_hooks_set_macro_undefined */
+
 /* >> tpp_errno tpp_lexer_callhook_ident_sccs(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
  * Called to handle `#ident` and `#sccs` directives
  * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`

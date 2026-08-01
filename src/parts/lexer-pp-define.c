@@ -1627,6 +1627,15 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	token->tt_start = token->tt_end;
 	token->tt_end   = pos;
 
+	/* Invoke macro-definition hook */
+#if TPP_HAVE_MACRO_DEFINED_HOOK
+	error = tpp_lexer_callhook_macro_defined(self, keyword, macro);
+	if (TPP_ISERR(error)) {
+		tpp_macro_decref(macro);
+		return TPP_TOK_OFERR(error);
+	}
+#endif /* TPP_HAVE_MACRO_DEFINED_HOOK */
+
 	/* Store the macro definition within the keyword. */
 	if (!_TPP_KEYWORD_MACRO_ISDEFINED(keyword->tk_macro)) {
 #if TPP_HAVE_TPP_W_DEFINE_BUILTIN_MACRO

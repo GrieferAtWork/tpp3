@@ -759,7 +759,7 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 	       (self)->tf_end   = (end)                                      \
 	       _tpp_file_init_common(file),                                  \
 	       (self)->tf_prev = (self)->tf_tprev = (prev_file),             \
-	       (self)->tf_kind                    = TPP_FILE_KIND_MACRO      \
+	       (self)->tf_kind = TPP_FILE_KIND_MACRO                         \
 	       _tpp_file_init_enc_ex(self, (macro)->tm_body_enc)             \
 	       _tpp_file_init_macro_flags(self),                             \
 	       ++((self)->tf_data.td_macro.tfm_macro = macro)->tm_expansions)

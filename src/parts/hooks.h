@@ -27,6 +27,7 @@
 #include "error.h"
 #include "expr.h"
 #include "keyword.h"
+#include "macro.h"
 #include "warnings.h"
 
 /*[[[tpp-begin]]]*/
@@ -227,6 +228,8 @@ print(")");
      TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) ||           \
      TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) ||           \
      TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) ||     \
+     TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) ||         \
+     TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK) ||       \
      TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) ||            \
      TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) ||   \
      TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) ||     \
@@ -370,6 +373,37 @@ typedef struct tpp_hooks {
 #if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_include_not_found))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_macro_defined)(struct tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro);
+	 * Called whenever a `#define` directive has just been fully
+	 * parsed (macro was has not yet been registered with keyword).
+	 *
+	 * This hook is *ONLY* invoked when `#define` is encountered, or
+	 * `#pragma pop_macro("foo")` was used to restore a macro's previous
+	 * definition.
+	 *
+	 * Calls to `tpp_lexer_define()` or other related functions will
+	 * *NOT* invoke this hook. */
+#if TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_macro_defined))(struct tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) */
+
+	/* >> tpp_errno (TPPCALL *th_macro_undefined)(struct tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name);
+	 * Called whenever a `#undef` directive has just been fully
+	 * parsed (macro hasn't been deleted from keyword, yet). Note
+	 * that this hook is still called, even if the keyword doesn't
+	 * have a macro (and might have even already been marked as having
+	 * no predefined definition: `_TPP_KEYWORD_MACRO_UNDEFINED`). This
+	 * hook is imply called as part of the process of evaluating `#undef`
+	 *
+	 * This hook is *ONLY* invoked when `#undef` is encountered.
+	 * Calls to `tpp_lexer_undef()`, `tpp_keyword_undef()`, or other
+	 * related functions will *NOT* invoke this hook.
+	 *
+	 * NOTE: this hook *will* actually also be called by `#pragma push_macro(undef, "foo")` */
+#if TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)
+	tpp_errno (TPPCALL *TPP_INTERNAL(th_macro_undefined))(struct tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name); /* [0..1] */
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 
 	/* >> tpp_errno (TPPCALL *th_ident_sccs)(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
 	 * Called to handle `#ident` and `#sccs` directives
@@ -771,6 +805,71 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_init_include_not_found(self) /* nothing */
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 
+/* Called whenever a `#define` directive has just been fully
+ * parsed (macro was has not yet been registered with keyword).
+ *
+ * This hook is *ONLY* invoked when `#define` is encountered, or
+ * `#pragma pop_macro("foo")` was used to restore a macro's previous
+ * definition.
+ *
+ * Calls to `tpp_lexer_define()` or other related functions will
+ * *NOT* invoke this hook. */
+#if TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK)
+#define tpp_hooks_call_macro_defined(self, lexer, name, macro) \
+	((self)->TPP_INTERNAL(th_macro_defined) ? (*(self)->TPP_INTERNAL(th_macro_defined))(lexer, name, macro) : TPP_EOK)
+#define tpp_hooks_get_macro_defined(self)    (self)->TPP_INTERNAL(th_macro_defined)
+#define tpp_hooks_set_macro_defined(self, v) (void)((self)->TPP_INTERNAL(th_macro_defined) = (v))
+#define tpp_hooks_reset_macro_defined(self)  (void)((self)->TPP_INTERNAL(th_macro_defined) = _TPP_HOOKS_DEFAULT_MACRO_DEFINED)
+#define _tpp_hooks_init_macro_defined(self)  , (self)->TPP_INTERNAL(th_macro_defined) = _TPP_HOOKS_DEFAULT_MACRO_DEFINED
+#if TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_MACRO_DEFINED)
+#define _TPP_HOOKS_DEFAULT_MACRO_DEFINED (&TPP_HOOK_MACRO_DEFINED)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_MACRO_DEFINED NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) */
+#if TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_macro_defined(self, lexer, name, macro) \
+	TPP_HOOK_MACRO_DEFINED(lexer, name, macro)
+#else /*  */
+#define tpp_hooks_call_macro_defined(self, lexer, name, macro) TPP_EOK
+#endif /* ... */
+#define _tpp_hooks_init_macro_defined(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) */
+
+/* Called whenever a `#undef` directive has just been fully
+ * parsed (macro hasn't been deleted from keyword, yet). Note
+ * that this hook is still called, even if the keyword doesn't
+ * have a macro (and might have even already been marked as having
+ * no predefined definition: `_TPP_KEYWORD_MACRO_UNDEFINED`). This
+ * hook is imply called as part of the process of evaluating `#undef`
+ *
+ * This hook is *ONLY* invoked when `#undef` is encountered.
+ * Calls to `tpp_lexer_undef()`, `tpp_keyword_undef()`, or other
+ * related functions will *NOT* invoke this hook.
+ *
+ * NOTE: this hook *will* actually also be called by `#pragma push_macro(undef, "foo")` */
+#if TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)
+#define tpp_hooks_call_macro_undefined(self, lexer, name) \
+	((self)->TPP_INTERNAL(th_macro_undefined) ? (*(self)->TPP_INTERNAL(th_macro_undefined))(lexer, name) : TPP_EOK)
+#define tpp_hooks_get_macro_undefined(self)    (self)->TPP_INTERNAL(th_macro_undefined)
+#define tpp_hooks_set_macro_undefined(self, v) (void)((self)->TPP_INTERNAL(th_macro_undefined) = (v))
+#define tpp_hooks_reset_macro_undefined(self)  (void)((self)->TPP_INTERNAL(th_macro_undefined) = _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED)
+#define _tpp_hooks_init_macro_undefined(self)  , (self)->TPP_INTERNAL(th_macro_undefined) = _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED
+#if TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_MACRO_UNDEFINED)
+#define _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED (&TPP_HOOK_MACRO_UNDEFINED)
+#else /* ... */
+#define _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED NULL
+#endif /* !... */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
+#if TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_CONST_USER
+#define tpp_hooks_call_macro_undefined(self, lexer, name) \
+	TPP_HOOK_MACRO_UNDEFINED(lexer, name)
+#else /*  */
+#define tpp_hooks_call_macro_undefined(self, lexer, name) TPP_EOK
+#endif /* ... */
+#define _tpp_hooks_init_macro_undefined(self) /* nothing */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
+
 /* Called to handle `#ident` and `#sccs` directives
  * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
  * @param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d
@@ -975,6 +1074,8 @@ typedef struct tpp_hooks {
 	       _tpp_hooks_init_file_pushed(self) \
 	       _tpp_hooks_init_file_popped(self) \
 	       _tpp_hooks_init_include_not_found(self) \
+	       _tpp_hooks_init_macro_defined(self) \
+	       _tpp_hooks_init_macro_undefined(self) \
 	       _tpp_hooks_init_ident_sccs(self) \
 	       _tpp_hooks_init_system_include_path(self) \
 	       _tpp_hooks_init_system_embed_path(self) \
