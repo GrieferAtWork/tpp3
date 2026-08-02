@@ -1403,6 +1403,45 @@ again:
 	}
 }
 
+/* Same as `tpp_file_getfilename()`, but if the filename was overwritten
+ * by use of `tpp_file_setfilename()`, this returns the string object that
+ * was passed during that override (so the caller can `tpp_string_incref()`
+ * that string to preserve it across further tpp_file_setfilename-calls).
+ *
+ * WARNING: This returns `NULL` if the current filename wasn't set by a call
+ *          to `tpp_file_setfilename()`, even when `tpp_file_getfilename()`
+ *          would return non-NULL */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_string *TPPCALL
+tpp_file_getfilenamestr(tpp_file const *tpp_restrict self) {
+#if TPP_HAVE_FILE_SUBTEXT
+again:
+#endif /* TPP_HAVE_FILE_SUBTEXT */
+	switch (self->tf_kind) {
+
+	case TPP_FILE_KIND_IO:
+	case TPP_FILE_KIND_TEXT:
+#if TPP_HAVE_FILE_DUMMY
+	case TPP_FILE_KIND_DUMMY:
+#endif /* TPP_HAVE_FILE_DUMMY */
+		return self->tf_data.td_io.tff_user_filename;
+
+#if TPP_HAVE_FILE_SUBTEXT
+	case TPP_FILE_KIND_SUBTEXT:
+		tpp_assert(self->tf_tprev && "SUBTEXT file without traceback predecessor");
+		self = self->tf_tprev;
+		goto again;
+#endif /* TPP_HAVE_FILE_SUBTEXT */
+
+#if TPP_HAVE_CPP_MACROS
+	case TPP_FILE_KIND_MACRO:
+		break;
+#endif /* TPP_HAVE_CPP_MACROS */
+
+	default: tpp_unreachable();
+	}
+	return NULL;
+}
+
 /* Sets the user-filename override of `self` to `filename`
  *
  * NOTE: The caller must ensure that:
@@ -1569,13 +1608,22 @@ tpp_file_gettextfile(tpp_file const *tpp_restrict self) {
 	return iter;
 }
 
-/* Same as `tpp_file_gettextfile()`, but re-return `self` instead of returning `NULL`
+/* Similar to `tpp_file_gettextfile()`, but re-return `self` instead of returning `NULL`.
+ * Also: try not to return a file with invalid L/C information (which could otherwise
+ *       happen as a result of manually pushed text files that don't contain L/C info)
+ *
  * The term `lc` here refers to the fact that this is the file that's used as basis
  * for the builtin __FILE__, __LINE__ and __COLUMN__ macros. */
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
-	tpp_file *result = tpp_file_gettextfile(self);
-	return result ? result : (tpp_file *)self;
+	tpp_file *iter = (tpp_file *)self;
+	while ((iter->tf_kind != TPP_FILE_KIND_IO && iter->tf_kind != TPP_FILE_KIND_TEXT) ||
+	       (iter->tf_chunk == NULL || !tpp_lcinfo_isvalid(iter->tf_data.td_io.tff_start_lc))) {
+		iter = iter->tf_tprev;
+		if (iter == NULL)
+			return tpp_file_gettextfile(self);
+	}
+	return iter;
 }
 #endif /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY */
 

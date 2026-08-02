@@ -58,7 +58,11 @@
 #define TPP_BUILDING 0
 #endif /* !TPP_BUILDING */
 
-#if TPP_BUILDING
+#ifndef TPP_BUILDING_OPTIONAL
+#define TPP_BUILDING_OPTIONAL 0
+#endif /* !TPP_BUILDING_OPTIONAL */
+
+#if TPP_BUILDING || TPP_BUILDING_OPTIONAL
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #define _CRT_NONSTDC_NO_WARNINGS
@@ -78,7 +82,7 @@
 #pragma warning(disable: 26448)
 #pragma warning(disable: 26461) /* Kind-of like this one, but also warns in cases where adding "const" causes compiler errors due to function prototype conflicts... */
 #endif /* _MSC_VER */
-#endif /* TPP_BUILDING */
+#endif /* TPP_BUILDING || TPP_BUILDING_OPTIONAL */
 
 /************************************************************************/
 /* HOST COMPILER/SYSTEM/OS CONFIGURATION: TPP_HOST_*                    */

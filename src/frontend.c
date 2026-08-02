@@ -22,8 +22,10 @@
 #define TPP_COMMON_HAVE_FEATURES 0  /* Use extensions for everything */
 
 #include "tpp-amalgamation.c"
+#include "tpp-emitter-amalgamation.c"
 #else /* USE_AMALGAMATION */
 #include "tpp.h"
+#include "tpp-emitter.h"
 #endif /* !USE_AMALGAMATION */
 
 #include <stdio.h>
@@ -34,13 +36,11 @@
 
 TPP_DECL_BEGIN
 
-#if TPP_HAVE_LEXER_DUMP_DEFINITIONS
-static TPP_FORMATPRINTER_DEFINE(dump_defs_printer, arg, text, num_bytes) {
+static TPP_FORMATPRINTER_DEFINE(output_printer, arg, text, num_bytes) {
 	(void)arg;
 	fwrite(text, 1, num_bytes, stdout);
 	return 0;
 }
-#endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
 int main(int argc, char **argv) {
 	int result    = 1;
@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
 	tpp_errno error;
 	tpp_lexer lexer;
 	tpp_cli_loader cli_loader;
+	tpp_emitter emitter;
 	char const *filename = "input.c";
 
 #if TPP_OS_WINDOWS
@@ -162,15 +163,19 @@ int main(int argc, char **argv) {
 		goto out_lexer_file;
 	}
 
+	tpp_emitter_init(&emitter, &lexer, &output_printer, NULL);
 	for (;;) {
-		tpp_token_id tok = tpp_lexer_yield(&lexer);
+		tpp_token_id const tok = tpp_lexer_yield(&lexer);
 		if (TPP_TOK_ISERR(tok)) {
 			fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
 			break;
 		}
 		if (tok == TPP_TOK_EOF)
 			break;
-#if 0
+
+#if 1
+		(void)tpp_emitter_emitcurrent(&emitter);
+#elif 0
 		fwrite(tpp_lexer_gettokenstart(&lexer), 1,
 		       tpp_lexer_gettokenlen(&lexer), stdout);
 #elif 0
@@ -222,7 +227,7 @@ int main(int argc, char **argv) {
 	}
 
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS
-	tpp_lexer_dump_definitions(&lexer, &dump_defs_printer, NULL,
+	tpp_lexer_dump_definitions(&lexer, &output_printer, NULL,
 	                           TPP_LEXER_DUMP_DEFINITIONS_ALL |
 	                           TPP_LEXER_DUMP_DEFINITIONS_SORTED |
 	                           TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO);

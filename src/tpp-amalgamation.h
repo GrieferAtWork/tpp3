@@ -5046,7 +5046,11 @@ TPP_WARNING(TPP_W_MISSING_CLI_ARGUMENT, 0(), 0(), ~,
 #define TPP_BUILDING 0
 #endif /* !TPP_BUILDING */
 
-#if TPP_BUILDING
+#ifndef TPP_BUILDING_OPTIONAL
+#define TPP_BUILDING_OPTIONAL 0
+#endif /* !TPP_BUILDING_OPTIONAL */
+
+#if TPP_BUILDING || TPP_BUILDING_OPTIONAL
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #define _CRT_NONSTDC_NO_WARNINGS
@@ -5066,7 +5070,7 @@ TPP_WARNING(TPP_W_MISSING_CLI_ARGUMENT, 0(), 0(), ~,
 #pragma warning(disable: 26448)
 #pragma warning(disable: 26461) /* Kind-of like this one, but also warns in cases where adding "const" causes compiler errors due to function prototype conflicts... */
 #endif /* _MSC_VER */
-#endif /* TPP_BUILDING */
+#endif /* TPP_BUILDING || TPP_BUILDING_OPTIONAL */
 
 /************************************************************************/
 /* HOST COMPILER/SYSTEM/OS CONFIGURATION: TPP_HOST_*                    */
@@ -19597,6 +19601,7 @@ typedef struct tpp_file {
 #if TPP_HAVE_UNICODE
 #define tpp_file_isutf8(self)  TPP_FILE_ENCODING_ISUTF8((self)->TPP_INTERNAL(tf_enc))
 #define tpp_file_isascii(self) TPP_FILE_ENCODING_ISASCII((self)->TPP_INTERNAL(tf_enc))
+#define tpp_file_getencoding(self) (self)->TPP_INTERNAL(tf_enc)
 #else /* TPP_HAVE_UNICODE */
 #define tpp_file_isutf8(self)  0
 #define tpp_file_isascii(self) 1
@@ -20124,6 +20129,17 @@ tpp_file_getrealfilenamekwd(tpp_file const *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_getfilename(tpp_file const *tpp_restrict self);
 
+/* Same as `tpp_file_getfilename()`, but if the filename was overwritten
+ * by use of `tpp_file_setfilename()`, this returns the string object that
+ * was passed during that override (so the caller can `tpp_string_incref()`
+ * that string to preserve it across further tpp_file_setfilename-calls).
+ *
+ * WARNING: This returns `NULL` if the current filename wasn't set by a call
+ *          to `tpp_file_setfilename()`, even when `tpp_file_getfilename()`
+ *          would return non-NULL */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_string *TPPCALL
+tpp_file_getfilenamestr(tpp_file const *tpp_restrict self);
+
 /* Sets the user-filename override of `self` to `filename`
  *
  * NOTE: The caller must ensure that:
@@ -20134,7 +20150,8 @@ tpp_file_getfilename(tpp_file const *tpp_restrict self);
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename);
 #else /* TPP_HAVE_FILE_SETFILENAME */
-#define tpp_file_getfilename(self) tpp_file_getrealfilename(self)
+#define tpp_file_getfilename(self)    tpp_file_getrealfilename(self)
+#define tpp_file_getfilenamestr(self) ((tpp_string *)NULL)
 #endif /* !TPP_HAVE_FILE_SETFILENAME */
 
 /* Set the (0-based) line that applies to `pos`
@@ -20224,7 +20241,10 @@ tpp_file_getbasefile(tpp_file const *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_gettextfile(tpp_file const *tpp_restrict self);
 
-/* Same as `tpp_file_gettextfile()`, but re-return `self` instead of returning `NULL`
+/* Similar to `tpp_file_gettextfile()`, but re-return `self` instead of returning `NULL`.
+ * Also: try not to return a file with invalid L/C information (which could otherwise
+ *       happen as a result of manually pushed text files that don't contain L/C info)
+ *
  * The term `lc` here refers to the fact that this is the file that's used as basis
  * for the builtin __FILE__, __LINE__ and __COLUMN__ macros. */
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL

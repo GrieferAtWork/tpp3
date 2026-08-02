@@ -1978,19 +1978,13 @@ tpp_lexer_process_pragma_TPP_keyword_feature(tpp_lexer *tpp_restrict self) {
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')'));
-	if (TPP_TOK_ISERR(tok))
-		return TPP_TOK_ASERR(tok);
-	do {
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 		tok = tpp_lexer_yield_blocking(self);
-	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR('='));
-	if (TPP_TOK_ISERR(tok))
-		return TPP_TOK_ASERR(tok);
-	do {
+	while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 		tok = tpp_lexer_yield_blocking(self);
-	} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);
 	if (TPP_TOK_ISSTRING(tok)) {

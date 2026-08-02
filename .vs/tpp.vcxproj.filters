@@ -16,6 +16,12 @@
     <Filter Include="src\parts\ctype-db">
       <UniqueIdentifier>{9271e7b3-35f4-4203-9b6a-92417b141a34}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\parts\optional">
+      <UniqueIdentifier>{a345e93d-96a4-4066-aa9e-e59cba3da4ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\parts\optional\emitter">
+      <UniqueIdentifier>{03246e83-1de2-4fa8-9497-65366594ffe7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\frontend.c">
@@ -144,6 +150,12 @@
     <ClCompile Include="..\src\parts\cli.c">
       <Filter>src\parts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\optional\emitter\emitter.c">
+      <Filter>src\parts\optional\emitter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tpp-emitter.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">
@@ -226,6 +238,18 @@
     </ClInclude>
     <ClInclude Include="..\src\parts\cli.h">
       <Filter>src\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\emitter\config.h">
+      <Filter>src\parts\optional\emitter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\emitter\emitter.h">
+      <Filter>src\parts\optional\emitter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tpp-emitter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\emitter\api.h">
+      <Filter>src\parts\optional\emitter</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
