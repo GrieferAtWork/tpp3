@@ -41,6 +41,8 @@ If this is what you want, you just need to download the following 2 files (this 
 ... And add them to your C project. Examples for a simple integration setup can be found in [/samples](./samples) and available configuration options (and the features they control) are listed in [/doc/config.md](./doc/config.md).
 
 
+### Frontend
+
 Secondly, TPP provides a CLI [`frontend`](/src/frontend.c) that implements a (highly) GCC/CPP-compatible commandline utility. This one's mainly there as a proof-of-concept, since such a tool alone doesn't warrant the degree of customization offered by TPP.
 
 
@@ -88,6 +90,18 @@ NOTES:
 ### Configuration
 
 - [/doc/config.md](doc/config.md)
+
+
+### Source Extensions
+
+In addition to the amalgamations, TPP also offers some additional, secondary amalgamations that can be used to gain additional functionality that has intentionally not been included within the TPP core.
+
+Each of these extensions can be included the same way as the TPP core can be, each coming with its own stand-alone amalgamation-header and source. To use any one of these, simply download its header and source, and put them in the same directory as you've put [`tpp-amalgamation.h`](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.h) and [`tpp-amalgamation.c`](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.c). Then, you can simply `#include` the extra amalgamations just like you're already doing with the core ones.
+
+| Name | Header | Source | Description |
+| ---- | ------ | ------ | ----------- |
+| **EMITTER** | [`tpp-emitter-amalgamation.h`](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-emitter-amalgamation.h) | [`tpp-emitter-amalgamation.c`](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-emitter-amalgamation.c) | Standardized ways of re-emitting tokens (think: `gcc -E`), whilst injecting `#line` directives to ensure that `__FILE__`, `__LINE__` and `__COLUMN__` are retained for every token.<br/>Also used to implement TPP's [frontend](#frontend) |
+| - | - | - | - |
 
 
 ## Implementation Notes
