@@ -5677,7 +5677,13 @@ eof:
 		}
 #endif
 	}
-#endif /* TPP_HAVE_INCLUDE_STACK */
+#elif TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+	if (p_pos == &file->tf_pos && file->tf_prev == file->tf_tprev) {
+		error = tpp_lexer_warn_nonempty_ifdef(self);
+		if (TPP_ISERR(error))
+			goto return_error;
+	}
+#endif /* ... */
 
 	/* EOF reached */
 	tpp_assert(pos == end);

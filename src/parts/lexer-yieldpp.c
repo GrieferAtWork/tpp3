@@ -133,7 +133,7 @@ tpp_lexer_handle_pragma_directive(tpp_lexer *tpp_restrict self) {
 	}
 
 	/* Handle the pragma, but in a context where the file can't be read beyond EOL */
-	tpp_file_pusheof(file);
+	tpp_file_push_eof_and_ifdef(file);
 	tpp_file_seteof(file, eol_start);
 	error = tpp_lexer_process_pragma(self);
 	if (error == TPP_ENOENT) {
@@ -159,7 +159,7 @@ tpp_lexer_handle_pragma_directive(tpp_lexer *tpp_restrict self) {
 	tpp_lexer_popallfiles(self);
 #endif /* TPP_HAVE_INCLUDE_STACK */
 
-	tpp_file_popeof(file);
+	tpp_file_pop_eof_and_ifdef(file);
 	file->tf_pos = eol_end; /* Continue parsing after EOL (comment) */
 	return TPP_TOK_OFERR_OR_EOF(error);
 }
@@ -484,8 +484,7 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 
 	trailing_lf_start = file->tf_tpos;
 	trailing_lf_end   = directive_iter;
-	tpp_file_pushifdef(file);
-	tpp_file_pusheof(file);
+	tpp_file_push_eof_and_ifdef(file);
 	*p_directive_start = file->tf_pos;     /* Restore to continue pointing at effective start of expression */
 	file->tf_end = trailing_lf_start;      /* Mark as EOF */
 	file->tf_pos += directive_keyword_len; /* Skip over leading keyword */
@@ -511,8 +510,7 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 	tpp_lexer_popallfiles(self);
 #endif /* TPP_HAVE_INCLUDE_STACK */
 	file->tf_pos = trailing_lf_end; /* Tell caller to continue parsing *after* EOL */
-	tpp_file_popeof(file);
-	tpp_file_popifdef(file);
+	tpp_file_pop_eof_and_ifdef(file);
 	tpp_lexer_gettoken(self)->tt_id = TPP_TOK_LF; /* Tell caller that currently loaded token is LF */
 	return result;
 }
@@ -2189,7 +2187,7 @@ tpp_lexer_handle_embed_directive(tpp_lexer *tpp_restrict self,
 	 *    ^
 	 *    directive_eol */
 	directive_start = file->tf_tpos;
-	tpp_file_pusheof(file);
+	tpp_file_push_eof_and_ifdef(file);
 	tpp_file_seteof(file, directive_eol);
 	error = tpp_embed_builder_init_parse(&builder, self);
 
@@ -2208,7 +2206,7 @@ tpp_lexer_handle_embed_directive(tpp_lexer *tpp_restrict self,
 	}
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 	tpp_lexer_popallfiles(self);
-	tpp_file_popeof(file);
+	tpp_file_pop_eof_and_ifdef(file);
 	file->tf_tpos = directive_start;
 	file->tf_pos  = directive_eol;
 	tpp_lexer_autopopfile_break(self);
@@ -2261,7 +2259,7 @@ err_autopopfile_break_error:
 	if (TPP_ISERR(error))
 		goto err_autopopfile_break_error;
 	directive_start = file->tf_tpos; /* Location used by "tpp_file_pushdummy()", and used during rollback */
-	tpp_file_pusheof(file);
+	tpp_file_push_eof_and_ifdef(file);
 	tpp_file_seteof(file, directive_eol);
 	do {
 		tok = tpp_lexer_yield_blocking(self);
@@ -2269,7 +2267,7 @@ err_autopopfile_break_error:
 	if (TPP_TOK_ISERR(tok)) {
 err_tok_rollback:
 		tpp_lexer_popallfiles(self);
-		tpp_file_breakeof(file);
+		tpp_file_break_eof_and_ifdef(file);
 		file->tf_pos = directive_start;
 		tpp_file_autopopfile_break(file);
 		return tok;
@@ -2382,7 +2380,7 @@ err_tok_rollback_new_filename:
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 
 	tpp_lexer_popallfiles(self);
-	tpp_file_popeof(file);
+	tpp_file_pop_eof_and_ifdef(file);
 	file->tf_pos = directive_eol;
 	tpp_file_autopopfile_break(file);
 

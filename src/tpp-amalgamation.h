@@ -19762,24 +19762,41 @@ typedef struct tpp_file {
  * WARNING:
  * - The caller must ensure that all files pushed are
  *   also popped before breaking out of a PUSHEOF block
- * - These functions don't save/restore the `#ifdef`-stack
- *   For that, also make use of `tpp_file_pushifdef()` */
+ * - These functions don't save/restore the `#ifdef`-stack.
+ *   Furthermore, you must not do anything that may alter
+ *   the state of the `#ifdef`-stack while this is active!
+ *   Else, use `tpp_file_push_eof_and_ifdef()` instead. */
+#if TPP_HAVE_IFDEF_STACK && TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF
+#define tpp_file_pusheof(self)                                                                \
+	do {                                                                                      \
+		tpp_file_kind const _tfpeof_kind = (self)->TPP_INTERNAL(tf_kind);                     \
+		tpp_char const *const _tfpeof_end = (self)->TPP_INTERNAL(tf_end);                     \
+		tpp_size const _tfpeof_ifdef = (self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt); \
+		/* Temporarily set the #ifdef-stack size to "0" so `TPP_TOK_EOF` doesn't trigger any  \
+		 * warnings about unterminated `#if`-directives: `TPP_W_EOF_BEFORE_ENDIF` */          \
+		(self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt) = 0;                            \
+		_tpp_file_io2text(self)
+#define tpp_file_breakeof(self)                          \
+	(void)((self)->TPP_INTERNAL(tf_end)  = _tfpeof_end,  \
+	       (self)->TPP_INTERNAL(tf_kind) = _tfpeof_kind, \
+	       (self)->TPP_INTERNAL(tf_ifdef).TPP_INTERNAL(tids_cnt) = _tfpeof_ifdef)
+#else /* TPP_HAVE_IFDEF_STACK && TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 #define tpp_file_pusheof(self)                                            \
 	do {                                                                  \
 		tpp_file_kind const _tfpeof_kind = (self)->TPP_INTERNAL(tf_kind); \
 		tpp_char const *const _tfpeof_end = (self)->TPP_INTERNAL(tf_end); \
 		_tpp_file_io2text(self)
+#define tpp_file_breakeof(self)                             \
+		(void)((self)->TPP_INTERNAL(tf_end)  = _tfpeof_end, \
+		       (self)->TPP_INTERNAL(tf_kind) = _tfpeof_kind)
+#endif /* !TPP_HAVE_IFDEF_STACK || !TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF */
 #define tpp_file_setpos(self, pos) \
 		(void)((self)->TPP_INTERNAL(tf_pos) = (pos))
 #define tpp_file_seteof(self, end) \
 		(void)((self)->TPP_INTERNAL(tf_end) = (end))
-#define tpp_file_breakeof(self)                             \
-		(void)((self)->TPP_INTERNAL(tf_end)  = _tfpeof_end, \
-		       (self)->TPP_INTERNAL(tf_kind) = _tfpeof_kind)
 #define tpp_file_popeof(self)    \
 		tpp_file_breakeof(self); \
 	} while (0)
-
 
 /* Push (+clear) and later (clear+)restore the `#ifdef`-stack of a given file */
 #if TPP_HAVE_IFDEF_STACK
@@ -19799,6 +19816,30 @@ typedef struct tpp_file {
 #define tpp_file_popifdef(self)   } while (0)
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
+/* Combination of `tpp_file_pusheof(self)` + `tpp_file_pushifdef(self)`.
+ * If you need to do both, you must use this. Trying to use the 2 push
+ * macros individually might not work under certain configurations. */
+#if TPP_HAVE_IFDEF_STACK
+#define tpp_file_push_eof_and_ifdef(self)                                        \
+	do {                                                                         \
+		tpp_file_kind const _tfpeofaid_kind = (self)->TPP_INTERNAL(tf_kind);     \
+		tpp_char const *const _tfpeofaid_end = (self)->TPP_INTERNAL(tf_end);     \
+		tpp_ifdef_stack const _tfpeofaid_ifdef = (self)->TPP_INTERNAL(tf_ifdef); \
+		_tpp_file_io2text(self);                                                 \
+		tpp_ifdef_stack_init(&(self)->TPP_INTERNAL(tf_ifdef))
+#define tpp_file_break_eof_and_ifdef(self)                            \
+		(void)(tpp_ifdef_stack_fini(&(self)->TPP_INTERNAL(tf_ifdef)), \
+		       (self)->TPP_INTERNAL(tf_ifdef) = _tfpeofaid_ifdef,     \
+		       (self)->TPP_INTERNAL(tf_end)   = _tfpeofaid_end,       \
+		       (self)->TPP_INTERNAL(tf_kind)  = _tfpeofaid_kind)
+#define tpp_file_pop_eof_and_ifdef(self)    \
+		tpp_file_break_eof_and_ifdef(self); \
+	} while (0)
+#else /* TPP_HAVE_IFDEF_STACK */
+#define tpp_file_push_eof_and_ifdef(self)  tpp_file_pusheof(self)
+#define tpp_file_break_eof_and_ifdef(self) tpp_file_breakeof(self)
+#define tpp_file_pop_eof_and_ifdef(self)   tpp_file_popeof(self)
+#endif /* !TPP_HAVE_IFDEF_STACK */
 
 #if TPP_HAVE_FILE_KEEPPOS
 /* Returns the keep-pointer for the file (which may be `NULL`).
