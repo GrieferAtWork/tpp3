@@ -1376,7 +1376,7 @@ tpp_emitter_cli_warnf(tpp_emitter *tpp_restrict self, tpp_char const *token_star
 #endif /* TPP_HAVE_EMITTER_CLI_WARN */
 
 
-#if TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS
+#if TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_no_line_commands(tpp_emitter_cli_loader *tpp_restrict self) {
 	tpp_errno result;
@@ -1389,10 +1389,10 @@ tpp_emitter_cli_enable_no_line_commands(tpp_emitter_cli_loader *tpp_restrict sel
 		result = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
 	return result;
 }
-#endif /* TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS */
 
 
-#if TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
+#if TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_trace_includes(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
@@ -1401,10 +1401,10 @@ tpp_emitter_cli_enable_trace_includes(tpp_emitter_cli_loader *tpp_restrict self)
 #endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_NOLINE) */
 	return TPP_EOK;
 }
-#endif /* TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES */
 
 
-#if TPP_EMITTER_HAVE_CLI_DUMP_M
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_M
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_dump_M(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
@@ -1424,10 +1424,10 @@ tpp_emitter_cli_enable_dump_M(tpp_emitter_cli_loader *tpp_restrict self) {
 
 	return TPP_EOK;
 }
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_M */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_M */
 
 
-#if TPP_EMITTER_HAVE_CLI_DUMP_D
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_D
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_dump_D(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
@@ -1442,10 +1442,10 @@ tpp_emitter_cli_enable_dump_D(tpp_emitter_cli_loader *tpp_restrict self) {
 
 	return TPP_EOK;
 }
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_D */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_D */
 
 
-#if TPP_EMITTER_HAVE_CLI_DUMP_N
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_N
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_dump_N(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
@@ -1465,10 +1465,10 @@ tpp_emitter_cli_enable_dump_N(tpp_emitter_cli_loader *tpp_restrict self) {
 
 	return TPP_EOK;
 }
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_N */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_N */
 
 
-#if TPP_EMITTER_HAVE_CLI_DUMP_I
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_I
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_dump_I(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
@@ -1480,10 +1480,10 @@ tpp_emitter_cli_enable_dump_I(tpp_emitter_cli_loader *tpp_restrict self) {
 
 	return TPP_EOK;
 }
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_I */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_I */
 
 
-#if TPP_EMITTER_HAVE_CLI_DUMP_U
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_U
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_dump_U(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
@@ -1495,47 +1495,47 @@ tpp_emitter_cli_enable_dump_U(tpp_emitter_cli_loader *tpp_restrict self) {
 
 	return TPP_EOK;
 }
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_U */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_U */
 
 
-#undef TPP_EMITTER_HAVE_CLI_DUMP
-#define TPP_EMITTER_HAVE_CLI_DUMP   \
-	(TPP_EMITTER_HAVE_CLI_DUMP_M || \
-	 TPP_EMITTER_HAVE_CLI_DUMP_D || \
-	 TPP_EMITTER_HAVE_CLI_DUMP_N || \
-	 TPP_EMITTER_HAVE_CLI_DUMP_I || \
-	 TPP_EMITTER_HAVE_CLI_DUMP_U)
+#undef TPP_EMITTER_HAVE_CLI_DASH_DUMP
+#define TPP_EMITTER_HAVE_CLI_DASH_DUMP   \
+	(TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || \
+	 TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || \
+	 TPP_EMITTER_HAVE_CLI_DASH_DUMP_N || \
+	 TPP_EMITTER_HAVE_CLI_DASH_DUMP_I || \
+	 TPP_EMITTER_HAVE_CLI_DASH_DUMP_U)
 
-#if TPP_EMITTER_HAVE_CLI_DUMP
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_dump(tpp_emitter_cli_loader *tpp_restrict self,
                             tpp_char what) {
 	switch (what) {
 
-#if TPP_EMITTER_HAVE_CLI_DUMP_M
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_M
 	case 'M':
 		return tpp_emitter_cli_enable_dump_M(self);
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_M */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_M */
 
-#if TPP_EMITTER_HAVE_CLI_DUMP_D
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_D
 	case 'D':
 		return tpp_emitter_cli_enable_dump_D(self);
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_D */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_D */
 
-#if TPP_EMITTER_HAVE_CLI_DUMP_N
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_N
 	case 'N':
 		return tpp_emitter_cli_enable_dump_N(self);
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_N */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_N */
 
-#if TPP_EMITTER_HAVE_CLI_DUMP_I
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_I
 	case 'I':
 		return tpp_emitter_cli_enable_dump_I(self);
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_I */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_I */
 
-#if TPP_EMITTER_HAVE_CLI_DUMP_U
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_U
 	case 'U':
 		return tpp_emitter_cli_enable_dump_U(self);
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_U */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_U */
 
 	default: break;
 	}
@@ -1556,7 +1556,7 @@ tpp_emitter_cli_enable_dumps(tpp_emitter_cli_loader *tpp_restrict self,
 	}
 	return result;
 }
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP */
 
 
 /* Feed an argument to the loader. How exactly the argument is parsed
@@ -1599,49 +1599,49 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				return TPP_EOK;
 
 			case 'n':
-#if TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS
+#if TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS
 				if (tpp_streq(arg, "o-line-commands\0")) {
 					return tpp_emitter_cli_enable_no_line_commands(self);
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS */
 				{
 				}
 				break;
 
 			case 't':
-#if TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
+#if TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES
 				if (tpp_streq(arg, "race-includes\0")) {
 					return tpp_emitter_cli_enable_trace_includes(self);
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES */
 				{
 				}
 				break;
 
 			case 'd':
-#if TPP_EMITTER_HAVE_CLI_DUMP
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP
 				if (tpp_streq(arg, "ump=")) {
 					arg += (sizeof("ump=") - sizeof(char));
 					if (*arg)
 						return tpp_emitter_cli_enable_dumps(self, arg);
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP */
 				{
 				}
 				break;
 
-#undef TPP_EMITTER_HAVE_CLI_MODE
-#define TPP_EMITTER_HAVE_CLI_MODE         \
-	(TPP_EMITTER_HAVE_CLI_MODE_EMIT ||    \
-	 TPP_EMITTER_HAVE_CLI_MODE_DISPOSE || \
-	 TPP_EMITTER_HAVE_CLI_MODE_BRACKET || \
-	 TPP_EMITTER_HAVE_CLI_MODE_TYPED)
+#undef TPP_EMITTER_HAVE_CLI_DASH_MODE
+#define TPP_EMITTER_HAVE_CLI_DASH_MODE         \
+	(TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT ||    \
+	 TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE || \
+	 TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET || \
+	 TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED)
 
 			case 'm':
-#if TPP_EMITTER_HAVE_CLI_MODE
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE
 				if (tpp_streq(arg, "ode=")) {
 					arg += (sizeof("ode=") - sizeof(char));
-#if TPP_EMITTER_HAVE_CLI_MODE_EMIT
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT
 					if (tpp_streq(arg, "emit\0")) {
 						tpp_errno error;
 						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_EMIT);
@@ -1652,14 +1652,14 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 							error = tpp_lexer_disable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
 						return error;
 					} else
-#endif /* !TPP_EMITTER_HAVE_CLI_MODE_EMIT */
-#if TPP_EMITTER_HAVE_CLI_MODE_DISPOSE
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT */
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE
 					if (tpp_streq(arg, "dispose\0")) {
 						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_DISPOSE);
 						return TPP_EOK;
 					} else
-#endif /* !TPP_EMITTER_HAVE_CLI_MODE_DISPOSE */
-#if TPP_EMITTER_HAVE_CLI_MODE_BRACKET
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE */
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET
 					if (tpp_streq(arg, "bracket\0")) {
 						tpp_errno error;
 						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_BRACKET);
@@ -1668,8 +1668,8 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 							error = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
 						return error;
 					} else
-#endif /* !TPP_EMITTER_HAVE_CLI_MODE_BRACKET */
-#if TPP_EMITTER_HAVE_CLI_MODE_TYPED
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET */
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED
 					if (tpp_streq(arg, "typed\0")) {
 						tpp_errno error;
 						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_TYPED);
@@ -1678,11 +1678,11 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 							error = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
 						return error;
 					} else
-#endif /* !TPP_EMITTER_HAVE_CLI_MODE_TYPED */
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED */
 					{
 					}
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_MODE */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_MODE */
 				{
 				}
 				break;
@@ -1692,102 +1692,102 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 			break;
 
 		case 'P':
-#if TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS
+#if TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS
 			if (*arg == '\0')
 				return tpp_emitter_cli_enable_no_line_commands(self);
-#endif /* TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS */
 			break;
 
 		case 'H':
-#if TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
+#if TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES
 			if (*arg == '\0')
 				return tpp_emitter_cli_enable_trace_includes(self);
-#endif /* TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES */
 			break;
 
 		case 'd':
-#if TPP_EMITTER_HAVE_CLI_DUMP
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP
 			if (*arg)
 				return tpp_emitter_cli_enable_dumps(self, arg);
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP */
 			break;
 
 		case 'f': {
-#if (TPP_EMITTER_HAVE_CLI_FRELAXED_MACRO_COLUMN || \
-     TPP_EMITTER_HAVE_CLI_FREEMIT_UNKNOWN_PRAGMA)
+#if (TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN || \
+     TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
 			bool no = false;
 			if (tpp_streq(arg, "no-"))
 				no = true, arg += 3;
 #endif /* ... */
 
-#if TPP_EMITTER_HAVE_CLI_FRELAXED_MACRO_COLUMN
+#if TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN
 			if (tpp_streq(arg, "relaxed-macro-column\0")) {
 				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_RELAXED_MACRO_COLUMN, !no);
 				return TPP_EOK;
 			} else
-#endif /* TPP_EMITTER_HAVE_CLI_FRELAXED_MACRO_COLUMN */
-#if TPP_EMITTER_HAVE_CLI_FREEMIT_UNKNOWN_PRAGMA
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN */
+#if TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA
 			if (tpp_streq(arg, "reemit-unknown-pragma\0")) {
 				tpp_emitter_set_reemit_unknown_pragma(self->tcl_emitter, !no);
 				return TPP_EOK;
 			} else
-#endif /* TPP_EMITTER_HAVE_CLI_FREEMIT_UNKNOWN_PRAGMA */
-#if (TPP_EMITTER_HAVE_CLI_FNORMALIZE_SPACE ||     \
-     TPP_EMITTER_HAVE_CLI_FNORMALIZE_LF ||        \
-     TPP_EMITTER_HAVE_CLI_FNORMALIZE_STRINGS ||   \
-     TPP_EMITTER_HAVE_CLI_FNORMALIZE_KEYWORDS ||  \
-     TPP_EMITTER_HAVE_CLI_FNORMALIZE_BSE ||       \
-     TPP_EMITTER_HAVE_CLI_FNORMALIZE_TRIGRAPHS || \
-     TPP_EMITTER_HAVE_CLI_FNORMALIZE_DIGRAPHS)
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+#if (TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE ||     \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF ||        \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS ||   \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS ||  \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE ||       \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS || \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS)
 			if (tpp_streq(arg, "normalize-")) {
 				arg += (sizeof("normalize-") - sizeof(char));
-#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_SPACE
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE
 				if (tpp_streq(arg, "space\0")) {
 					tpp_emitter_set_NORMALIZE_SPACE(self->tcl_emitter, !no);
 					return TPP_EOK;
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_SPACE */
-#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_LF
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF
 				if (tpp_streq(arg, "lf\0")) {
 					tpp_emitter_set_NORMALIZE_LF(self->tcl_emitter, !no);
 					return TPP_EOK;
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_LF */
-#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_STRINGS
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS
 				if (tpp_streq(arg, "strings\0")) {
 					tpp_emitter_set_NORMALIZE_C_STRING(self->tcl_emitter, !no);
 					return TPP_EOK;
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_STRINGS */
-#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_KEYWORDS
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS
 				if (tpp_streq(arg, "keywords\0")) {
 					tpp_emitter_set_NORMALIZE_KEYWORDS(self->tcl_emitter, !no);
 					return TPP_EOK;
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_KEYWORDS */
-#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_BSE
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE
 				if (tpp_streq(arg, "bse\0")) {
 					tpp_emitter_set_NORMALIZE_BSE(self->tcl_emitter, !no);
 					return TPP_EOK;
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_BSE */
-#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_TRIGRAPHS
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS
 				if (tpp_streq(arg, "trigraphs\0")) {
 					tpp_emitter_set_NORMALIZE_TRIGRAPHS(self->tcl_emitter, !no);
 					return TPP_EOK;
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_TRIGRAPHS */
-#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_DIGRAPHS
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS
 				if (tpp_streq(arg, "digraphs\0")) {
 					tpp_emitter_set_NORMALIZE_DIGRAPHS(self->tcl_emitter, !no);
 					return TPP_EOK;
 				} else
-#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_DIGRAPHS */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS */
 				{
 				}
 		} else
 #endif /* ... */
-#if TPP_EMITTER_HAVE_CLI_FNORMALIZE
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE
 			if (tpp_streq(arg, "normalize\0")) {
 				tpp_emitter_set_NORMALIZE_SPACE(self->tcl_emitter, !no);
 				tpp_emitter_set_NORMALIZE_LF(self->tcl_emitter, !no);
@@ -1798,7 +1798,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				tpp_emitter_set_NORMALIZE_DIGRAPHS(self->tcl_emitter, !no);
 				return TPP_EOK;
 			} else
-#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE */
 			{
 			}
 		}	break;
@@ -1844,19 +1844,19 @@ tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char
 	(void)arg;
 	switch (flag) {
 
-#if TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS
+#if TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS
 	case 'P': {
 		*p_arg = arg;
 		return tpp_emitter_cli_enable_no_line_commands(self);
 	}	break;
-#endif /* TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS */
 
-#if TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
+#if TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES
 	case 'H': {
 		*p_arg = arg;
 		return tpp_emitter_cli_enable_trace_includes(self);
 	}	break;
-#endif /* TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES */
 
 	default: break;
 	}
@@ -1953,7 +1953,7 @@ tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self) {
 	}
 #endif /* TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
 
-#if (TPP_EMITTER_HAVE_CLI_DUMP_M || TPP_EMITTER_HAVE_CLI_DUMP_D || TPP_EMITTER_HAVE_CLI_DUMP_N) && TPP_HAVE_LEXER_DUMP_DEFINITIONS
+#if (TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N) && TPP_HAVE_LEXER_DUMP_DEFINITIONS
 	if (self->tcl_flags & _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M) {
 		tpp_ssize temp;
 		temp = tpp_lexer_dump_definitions(tpp_emitter_getlexer(self->tcl_emitter),
@@ -1963,7 +1963,7 @@ tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self) {
 		if (temp < 0)
 			return TPP_SSIZE_ASERR(temp);
 	}
-#endif /* (TPP_EMITTER_HAVE_CLI_DUMP_M || TPP_EMITTER_HAVE_CLI_DUMP_D || TPP_EMITTER_HAVE_CLI_DUMP_N) && TPP_HAVE_LEXER_DUMP_DEFINITIONS */
+#endif /* (TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N) && TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
 	return TPP_EOK;
 }

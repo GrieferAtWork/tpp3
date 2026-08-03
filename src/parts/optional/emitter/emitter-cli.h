@@ -34,29 +34,29 @@ TPP_DECL_BEGIN
 #define TPP_EMITTER_CLI_LOADER_STATE_NORMAL 0 /* Normal state */
 #define TPP_EMITTER_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
 
-#undef TPP_EMITTER_HAVE_CLI_FLAGS
-#define TPP_EMITTER_HAVE_CLI_FLAGS \
-	((TPP_EMITTER_HAVE_CLI_DUMP_M || TPP_EMITTER_HAVE_CLI_DUMP_D || TPP_EMITTER_HAVE_CLI_DUMP_N))
+#undef TPP_EMITTER_HAVE_CLI_DASH_FLAGS
+#define TPP_EMITTER_HAVE_CLI_DASH_FLAGS \
+	((TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N))
 
-#if TPP_EMITTER_HAVE_CLI_FLAGS
+#if TPP_EMITTER_HAVE_CLI_DASH_FLAGS
 #define _tpp_emitter_cli_loader_flags uint_least32_t
 #define _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL UINT32_C(0x00000000)
-#if TPP_EMITTER_HAVE_CLI_DUMP_M || TPP_EMITTER_HAVE_CLI_DUMP_D || TPP_EMITTER_HAVE_CLI_DUMP_N
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N
 #define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M UINT32_C(0x00000001) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
-#endif /* TPP_EMITTER_HAVE_CLI_DUMP_M || TPP_EMITTER_HAVE_CLI_DUMP_D || TPP_EMITTER_HAVE_CLI_DUMP_N */
-#endif /* TPP_EMITTER_HAVE_CLI_FLAGS */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N */
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
 
 
 #undef TPP_HAVE_EMITTER_CLI_NEEDS_FINI
 typedef struct tpp_emitter_cli_loader {
 	tpp_emitter *TPP_EMITTER_INTERNAL(tcl_emitter); /* [1..1][const] The emitter being configured by this CLI loader */
 	unsigned int TPP_EMITTER_INTERNAL(tcl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_EMITTER_CLI_LOADER_STATE_*` listed above) */
-#if TPP_EMITTER_HAVE_CLI_FLAGS
+#if TPP_EMITTER_HAVE_CLI_DASH_FLAGS
 	_tpp_emitter_cli_loader_flags TPP_EMITTER_INTERNAL(tcl_flags);
 #define _tpp_emitter_cli_loader_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(tcl_flags) = _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
-#else /* TPP_EMITTER_HAVE_CLI_FLAGS */
+#else /* TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
 #define _tpp_emitter_cli_loader_init_flags(self) /* nothing */
-#endif /* !TPP_EMITTER_HAVE_CLI_FLAGS */
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
 } tpp_emitter_cli_loader;
 
 /* Initialize a CLI loader for `emitter`

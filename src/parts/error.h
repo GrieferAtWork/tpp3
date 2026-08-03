@@ -39,7 +39,7 @@ enum {
 #endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 #if TPP_HAVE_WARNINGS
 	_TPP_ERRCODE_LEXERROR,
-	_TPP_ERRCODE_WARNPRINT,
+	_TPP_ERRCODE_WARNPRINT, /* TODO: Get rid of this error -- printer callbacks can just return TPP_SSIZE_OFERR(TPP_EIO) for the same effect! */
 #endif /* TPP_HAVE_WARNINGS */
 	_TPP_ERRCODE_COUNT,
 };
