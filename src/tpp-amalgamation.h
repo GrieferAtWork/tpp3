@@ -6328,7 +6328,7 @@ TPP_DECL_END
  * `TPP_HAVE_TOK_COMMENT`, indicating if tokens that are normally through
  * of as no-ops should be emitted by `tpp_lexer_yieldpp()` */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_SPACE
-#define TPP_COMMON_HAVE_TPP_TOK_SPACE (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : (TPP_HAVE_PROFILE_DEFAULT ? TPP_COMMON_CONF_FEAT0 : 0))
+#define TPP_COMMON_HAVE_TPP_TOK_SPACE (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0)
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_SPACE */
 
 /* Default configuration describing if otherwise unconfigured comment tokens should be supported */
@@ -20495,7 +20495,7 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #define tpp_macro_getbodychunk(self)   ((self)->TPP_INTERNAL(tm_body_chunk))
 #define tpp_macro_getbodystart(self)   ((self)->TPP_INTERNAL(tm_body_start))
 #define tpp_macro_getbodyend(self)     ((self)->TPP_INTERNAL(tm_body_end))
-#define tpp_macro_getbodysize(self)    ((tpp_size)(tpp_macro_getbodyend(self) - tpp_macro_getbodystart(self)))
+#define tpp_macro_getbodylen(self)     ((tpp_size)(tpp_macro_getbodyend(self) - tpp_macro_getbodystart(self)))
 #define tpp_macro_getdeffilename(self) ((self)->TPP_INTERNAL(tm_deffile))
 #define tpp_macro_getdeflcinfo(self)   ((self)->TPP_INTERNAL(tm_deflc))
 #define tpp_macro_getbodylcinfo(self)  ((self)->TPP_INTERNAL(tm_body_lc))
@@ -26060,7 +26060,7 @@ tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);
 #define tpp_cli_loader_fini(self) tpp_dbg_memset(self, sizeof(tpp_cli_loader))
 #endif /* !TPP_HAVE_CLI_NEEDS_FINI */
 
-/* Feed an argument to the loader how exactly the argument is parsed
+/* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
  * default/initial state, `arg` should be something like `-Dfoo=bar`
  * or `-I/usr/include`, etc.

@@ -448,7 +448,7 @@
  * `TPP_HAVE_TOK_COMMENT`, indicating if tokens that are normally through
  * of as no-ops should be emitted by `tpp_lexer_yieldpp()` */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_SPACE
-#define TPP_COMMON_HAVE_TPP_TOK_SPACE (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : (TPP_HAVE_PROFILE_DEFAULT ? TPP_COMMON_CONF_FEAT0 : 0))
+#define TPP_COMMON_HAVE_TPP_TOK_SPACE (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0)
 #endif /* !TPP_COMMON_HAVE_TPP_TOK_SPACE */
 
 /* Default configuration describing if otherwise unconfigured comment tokens should be supported */

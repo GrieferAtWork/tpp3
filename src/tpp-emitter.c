@@ -38,5 +38,6 @@
 
 #include "parts/optional/emitter/emitter-features.c"
 #include "parts/optional/emitter/emitter.c"
+#include "parts/optional/emitter/emitter-cli.c"
 #endif /* !GUARD_TPP_EMITTER_AMALGAMATION_C */
 /* clang-format on */

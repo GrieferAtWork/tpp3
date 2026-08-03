@@ -96,7 +96,7 @@ tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);
 #define tpp_cli_loader_fini(self) tpp_dbg_memset(self, sizeof(tpp_cli_loader))
 #endif /* !TPP_HAVE_CLI_NEEDS_FINI */
 
-/* Feed an argument to the loader how exactly the argument is parsed
+/* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
  * default/initial state, `arg` should be something like `-Dfoo=bar`
  * or `-I/usr/include`, etc.

@@ -39,16 +39,26 @@ tpp_emitter_init_after_lexer(tpp_emitter *tpp_restrict self,
                              tpp_formatprinter output) {
 	self->te_output = output;
 	tpp_emitter_state_init(&self->te_state);
-	(void)0 _tpp_emitter_init_feat(self);
+#if TPP_EMITTER_HAVE_FEATURES
+	tpp_emitter_features_init(&self->te_feat);
+#endif /* TPP_EMITTER_HAVE_FEATURES */
+#if TPP_EMITTER_MODE_HAVE_MULTIPLE
+	self->te_mode = _TPP_EMITTER_MODE_DEFAULT;
+#endif /* TPP_EMITTER_MODE_HAVE_MULTIPLE */
 #if TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA > 0
 	tpp_emitter_enable_reemit_unknown_pragma(self);
 #endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA > 0 */
+#if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS > 0
+	tpp_emitter_enable_reemit_macro_definitions(self);
+#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS > 0 */
 }
 
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_emitter_fini_before_lexer(tpp_emitter *tpp_restrict self) {
 	tpp_emitter_state_fini(&self->te_state);
-	(void)0 _tpp_emitter_fini_feat(self);
+#if TPP_EMITTER_HAVE_FEATURES
+	tpp_emitter_features_fini(&self->te_feat);
+#endif /* TPP_EMITTER_HAVE_FEATURES */
 }
 
 
@@ -79,6 +89,42 @@ err_temp:
 	return temp;
 }
 
+/* Emit space characters (and update `self->te_state`) */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_emitter_printspace(tpp_emitter *tpp_restrict self, tpp_column count) {
+	tpp_size num_printed;
+	tpp_ssize result = tpp_emitter_printrepeat(self, &num_printed, (tpp_size)count, ' ');
+#if TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
+	tpp_lcinfo_init(self->te_state.tes_curpos,
+	                tpp_lcinfo_getline(self->te_state.tes_curpos),
+	                tpp_lcinfo_getcol(self->te_state.tes_curpos) + num_printed);
+#endif /* TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+	return result;
+}
+
+#if TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
+#define tpp_emitter_getprinter(self) &_tpp_emitter_print
+static TPP_FORMATPRINTER_DEFINE(_tpp_emitter_print, arg, text, num_bytes) {
+	tpp_emitter *self = (tpp_emitter *)arg;
+	tpp_ssize result = tpp_emitter_output_printraw(self, text, num_bytes);
+	if (result >= 0) {
+		self->te_state.tes_curpos = tpp_lcinfo_account_ex(self->te_state.tes_curpos, text, num_bytes,
+		                                                  tpp_file_getencoding(tpp_lexer_getfile(tpp_emitter_getlexer(self))));
+	}
+	return result;
+}
+#else /* TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#define tpp_emitter_getprinter(self) tpp_emitter_getoutput(self)
+#endif /* !TPP_EMITTER_HAVE_MODE_EMIT || !TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#define tpp_emitter_print(self, text, num_bytes) \
+	tpp_formatprinter_print(tpp_emitter_getprinter(self), self, text, num_bytes)
+#define tpp_emitter_print_cstr(self, cstr, num_bytes) \
+	tpp_formatprinter_print_cstr(tpp_emitter_getprinter(self), self, cstr, num_bytes)
+#define tpp_emitter_print_conststr(self, CONSTstr) \
+	tpp_formatprinter_print_conststr(tpp_emitter_getprinter(self), self, CONSTstr)
+
+
+
 /* Emit linefeed characters (and update `self->te_state`) */
 #if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) || TPP_EMITTER_HAVE_NORMALIZE_LF
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
@@ -92,23 +138,12 @@ tpp_emitter_printlf(tpp_emitter *tpp_restrict self, tpp_line count) {
 }
 #endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) || TPP_EMITTER_HAVE_NORMALIZE_LF */
 
-/* Emit space characters (and update `self->te_state`) */
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
-tpp_emitter_printspace(tpp_emitter *tpp_restrict self, tpp_column count) {
-	tpp_size num_printed;
-	tpp_ssize result = tpp_emitter_printrepeat(self, &num_printed, (tpp_size)count, ' ');
-	tpp_lcinfo_init(self->te_state.tes_curpos,
-	                tpp_lcinfo_getline(self->te_state.tes_curpos),
-	                tpp_lcinfo_getcol(self->te_state.tes_curpos) + num_printed);
-	return result;
-}
-
-#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
+#if TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
 /* Emit a `#line` directive (and update `self->te_state`) */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
-tpp_emitter_printline(tpp_emitter *tpp_restrict self,
-                      tpp_line line, char const *filename,
-                      tpp_string *filename_str) {
+tpp_emitter_print_line_directive(tpp_emitter *tpp_restrict self,
+                                 tpp_line line, char const *filename,
+                                 tpp_string *filename_str) {
 	tpp_ssize temp, result = 0;
 	char buffer[(sizeof("\n#line ") - sizeof(char)) + TPP_ITOA_MAXLEN + 2];
 	char *ptr = buffer, *buf_temp;
@@ -168,22 +203,12 @@ tpp_emitter_printline(tpp_emitter *tpp_restrict self,
 err_temp:
 	return temp;
 }
-#endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#endif /* TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
 
-
-static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print, arg, text, num_bytes) {
-	tpp_emitter *self = (tpp_emitter *)arg;
-	tpp_ssize result = tpp_emitter_output_printraw(self, text, num_bytes);
-	if (result >= 0) {
-		self->te_state.tes_curpos = tpp_lcinfo_account_ex(self->te_state.tes_curpos, text, num_bytes,
-		                                                  tpp_file_getencoding(tpp_lexer_getfile(tpp_emitter_getlexer(self))));
-	}
-	return result;
-}
 
 #if TPP_EMITTER_HAVE_NORMALIZE_C_STRING
 static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_encodestring, arg, text, num_bytes) {
-	return tpp_token_encodestring(&tpp_emitter_print, arg, text, num_bytes);
+	return tpp_token_encodestring(tpp_emitter_getprinter((tpp_emitter *)arg), arg, text, num_bytes);
 }
 
 #if TPP_HAVE_STRING_ESCAPE_BIGCHAR
@@ -194,7 +219,7 @@ struct tpp_emitter_printbig_data {
 };
 
 static TPP_FORMATPRINTER_DEFINE(tpp_emitter_printbig_normal, arg, text, num_bytes) {
-	tpp_size temp, result = 0;
+	tpp_ssize temp, result = 0;
 	struct tpp_emitter_printbig_data *data;
 	data = (struct tpp_emitter_printbig_data *)arg;
 	if (!num_bytes)
@@ -247,7 +272,10 @@ tpp_emitter_printbig_big(void *arg, tpp_lexer *tpp_restrict lexer, tpp_uintmax v
 #endif /* TPP_EMITTER_HAVE_NORMALIZE_C_STRING */
 
 
-#if TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS
+#if !TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS
+#define tpp_emitter_print_keyword(self, text, num_bytes) \
+	tpp_emitter_print((tpp_emitter *)(self), text, num_bytes)
+#else /* TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS */
 static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_keyword, arg, text, num_bytes) {
 	tpp_ssize temp, result = 0;
 	tpp_emitter *self = (tpp_emitter *)arg;
@@ -320,7 +348,10 @@ err_temp:
 #endif /* TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS */
 
 
-#if TPP_EMITTER_HAVE_NORMALIZE_BSE || TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS
+#if !TPP_EMITTER_HAVE_NORMALIZE_BSE && !TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS
+#define tpp_emitter_print_generic(self, text, num_bytes) \
+	tpp_emitter_print((tpp_emitter *)(self), text, num_bytes)
+#else /* !TPP_EMITTER_HAVE_NORMALIZE_BSE && !TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS */
 static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_generic, arg, text, num_bytes) {
 	tpp_ssize temp, result = 0;
 	tpp_emitter *self = (tpp_emitter *)arg;
@@ -381,12 +412,16 @@ not_a_trigraph:
 err_temp:
 	return temp;
 }
-#else /* TPP_EMITTER_HAVE_NORMALIZE_BSE || TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS */
-#define tpp_emitter_print_generic tpp_emitter_print
-#endif /* !TPP_EMITTER_HAVE_NORMALIZE_BSE && !TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS */
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_BSE || TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS */
 
 
 /* Emit the currently loaded token (and update `self->te_state`) */
+#if !TPP_EMITTER_HAVE_MODE_EMIT
+#define tpp_emitter_print_current_token(self)                                      \
+	tpp_emitter_print_generic(self,                                                \
+	                          tpp_lexer_gettokenstart(tpp_emitter_getlexer(self)), \
+	                          tpp_lexer_gettokenlen(tpp_emitter_getlexer(self)))
+#else /* !TPP_EMITTER_HAVE_MODE_EMIT */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_emitter_print_current_token(tpp_emitter *tpp_restrict self) {
 	tpp_lexer *const lexer = tpp_emitter_getlexer(self);
@@ -515,14 +550,11 @@ tpp_emitter_print_current_token(tpp_emitter *tpp_restrict self) {
 	/* Do generic processing for this type of token */
 	return tpp_emitter_print_generic(self, token_start, (tpp_size)(token_end - token_start));
 }
+#endif /* TPP_EMITTER_HAVE_MODE_EMIT */
 
-/* Emit the token currently loaded into `tpp_emitter_getlexer(self)`,
- * and update the emitter's `te_state` accordingly
- *
- * @return: * :  Sum of return values of `tpp_emitter_getoutput(self)`
- * @return: < 0: First negative return value of `tpp_emitter_getoutput(self)` */
-TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
-tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self) {
+#if TPP_EMITTER_HAVE_MODE_EMIT
+static /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_emitter_emitcurrent_emit(tpp_emitter *tpp_restrict self) {
 	tpp_ssize temp, result = 0;
 	tpp_lexer const *const lexer = tpp_emitter_getlexer(self);
 	tpp_token_id const tok = tpp_lexer_gettok(lexer);
@@ -603,8 +635,8 @@ emit_without_alignment:
 				char const *emit_filename = lc_filename;
 				if (self->te_state.tes_curfilename == lc_filename)
 					emit_filename = NULL;
-				temp = tpp_emitter_printline(self, newline, emit_filename,
-				                             tpp_file_getfilenamestr(lcfile));
+				temp = tpp_emitter_print_line_directive(self, newline, emit_filename,
+				                                        tpp_file_getfilenamestr(lcfile));
 				if (temp < 0)
 					goto err_temp;
 				result += temp;
@@ -645,6 +677,33 @@ emit_without_alignment:
 	return result;
 err_temp:
 	return temp;
+}
+#endif /* TPP_EMITTER_HAVE_MODE_EMIT */
+
+
+/* Emit the token currently loaded into `tpp_emitter_getlexer(self)`,
+ * and update the emitter's `te_state` accordingly
+ *
+ * @return: * :  Sum of return values of `tpp_emitter_getoutput(self)`
+ * @return: < 0: First negative return value of `tpp_emitter_getoutput(self)` */
+TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self) {
+	switch (tpp_emitter_getmode(self)) {
+
+#if TPP_EMITTER_HAVE_MODE_EMIT
+	case TPP_EMITTER_MODE_EMIT:
+		return tpp_emitter_emitcurrent_emit(self);
+#endif /* TPP_EMITTER_HAVE_MODE_EMIT */
+
+#if TPP_EMITTER_HAVE_MODE_DISPOSE
+	case TPP_EMITTER_MODE_DISPOSE:
+		/* Dispose tokens... */
+		return 0;
+#endif /* TPP_EMITTER_HAVE_MODE_DISPOSE */
+
+	default: tpp_unreachable();
+	}
+	tpp_unreachable();
 }
 
 /* API support for (re-)emission of unknown `#pragma` directives */
@@ -691,6 +750,116 @@ err_temp:
 	return TPP_SSIZE_ASERR(temp);
 }
 #endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
+
+/* API support for (re-)emission of `#define` and `#undef` directives */
+#if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_emitter_hook_macro_defined(tpp_lexer *tpp_restrict lexer,
+                                tpp_keyword *tpp_restrict name,
+                                tpp_macro *tpp_restrict macro) {
+	tpp_emitter *self = tpp_emitter_oflexer(lexer);
+	tpp_ssize temp;
+	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
+		temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+		if (temp < 0)
+			goto err_temp;
+	}
+	temp = tpp_emitter_print(self, (tpp_char const *)"#define ", 8);
+	if (temp < 0)
+		goto err_temp;
+	temp = tpp_emitter_print(self, tpp_keyword_getstr(name), tpp_keyword_getlen(name));
+	if (temp < 0)
+		goto err_temp;
+#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
+	if (macro && !tpp_emitter_has(self, REEMIT_MACRO_DEFINITIONS_NAME_ONLY)) {
+		/* Print function-like argument list. */
+		if (tpp_macro_isfunction(macro)) {
+			tpp_size i, argc = tpp_macro_getfuncargc(macro);
+			tpp_char lparen = tpp_macro_getfunclparen(macro);
+			tpp_char rparen = tpp_macro_getfuncrparen(macro);
+			temp = tpp_emitter_print(self, &lparen, 1);
+			if (temp < 0)
+				goto err_temp;
+			for (i = 0; i < argc; ++i) {
+				tpp_token_id arg = tpp_macro_getfuncargtok(macro, i);
+				tpp_keyword const *kwd;
+				if (i != 0) {
+					temp = tpp_emitter_print(self, (tpp_char const *)", ", 3);
+					if (temp < 0)
+						goto err_temp;
+				}
+#if TPP_HAVE_VA_ARGS_IN_MACROS
+				if ((i == argc - 1) && arg == TPP_KWD___VA_ARGS__)
+					break;
+#endif /* TPP_HAVE_VA_ARGS_IN_MACROS */
+				kwd = tpp_lexer_kwds_getkeyword_byid(lexer, arg);
+				if (kwd) {
+					temp = tpp_emitter_print_keyword(self,
+					                                 tpp_keyword_getstr(kwd),
+					                                 tpp_keyword_getlen(kwd));
+				} else { /* Should never get here */
+					temp = tpp_emitter_print(self, (tpp_char const *)"?", 1);
+				}
+				if (temp < 0)
+					goto err_temp;
+			}
+			if (tpp_macro_isvarargs(macro)) {
+				temp = tpp_emitter_print(self, (tpp_char const *)"...", 3);
+				if (temp < 0)
+					goto err_temp;
+			}
+			temp = tpp_emitter_print(self, &rparen, 1);
+			if (temp < 0)
+				goto err_temp;
+		}
+
+		/* Print macro body... */
+		if (tpp_macro_getbodylen(macro)) {
+			temp = tpp_emitter_printspace(self, 1);
+			if (temp < 0)
+				goto err_temp;
+			temp = tpp_emitter_print_generic(self,
+			                                 tpp_macro_getbodystart(macro),
+			                                 tpp_macro_getbodylen(macro));
+			if (temp < 0)
+				goto err_temp;
+		}
+	}
+#endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
+	temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+	if (temp < 0)
+		goto err_temp;
+	self->te_state.tes_prevtok = TPP_TOK_EOF;
+	return TPP_EOK;
+err_temp:
+	return TPP_SSIZE_ASERR(temp);
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_emitter_hook_macro_undefined(tpp_lexer *tpp_restrict lexer,
+                                  tpp_keyword *tpp_restrict name) {
+	tpp_emitter *self = tpp_emitter_oflexer(lexer);
+	tpp_ssize temp;
+	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
+		temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+		if (temp < 0)
+			goto err_temp;
+	}
+	temp = tpp_emitter_print(self, (tpp_char const *)"#undef ", 7);
+	if (temp < 0)
+		goto err_temp;
+	temp = tpp_emitter_print(self, tpp_keyword_getstr(name), tpp_keyword_getlen(name));
+	if (temp < 0)
+		goto err_temp;
+	temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+	if (temp < 0)
+		goto err_temp;
+	self->te_state.tes_prevtok = TPP_TOK_EOF;
+	return TPP_EOK;
+err_temp:
+	return TPP_SSIZE_ASERR(temp);
+}
+#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
 
 TPP_DECL_END

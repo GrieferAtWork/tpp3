@@ -674,7 +674,7 @@ tpp_cli_loader_parse_isysroot(tpp_cli_loader *tpp_restrict self, char const *arg
 
 
 
-/* Feed an argument to the loader how exactly the argument is parsed
+/* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
  * default/initial state, `arg` should be something like `-Dfoo=bar`
  * or `-I/usr/include`, etc.
@@ -699,6 +699,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 #define tpp_streq(at, CONSTstr) \
 	(tpp_memcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
 	switch (self->tcl_state) {
+
 	case TPP_CLI_LOADER_STATE_NORMAL: {
 		if (*arg++ != '-')
 			break; /* All arguments must start with at least 1 "-" */

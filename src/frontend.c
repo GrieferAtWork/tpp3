@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
 	char *appname = argv[0];
 	tpp_errno error;
 	tpp_cli_loader cli_loader;
+	tpp_emitter_cli_loader emitter_cli_loader;
 	tpp_emitter emitter;
 	tpp_lexer *lexer;
 	char const *filename = "input.c";
@@ -58,9 +59,14 @@ int main(int argc, char **argv) {
 	tpp_emitter_init(&emitter, &output_printer);
 	lexer = tpp_emitter_getlexer(&emitter);
 	tpp_cli_loader_init(&cli_loader, lexer);
+	tpp_emitter_cli_loader_init(&emitter_cli_loader, &emitter);
 	if (argc)
 		--argc, ++argv; /* Skip "appname" argument */
+
+	/* Let the lexer's and emitter's CLI loaders try to parse arguments... */
 	error = tpp_cli_loader_parseargv(&cli_loader, &argc, &argv);
+	if (!TPP_ISERR(error))
+		error = tpp_emitter_cli_loader_parseargv(&emitter_cli_loader, &argc, &argv);
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
 		goto out_emitter_loader;
@@ -102,28 +108,12 @@ int main(int argc, char **argv) {
 	 *   The first time the frontend emits a `# <linenum>` marker, it must simply
 	 *   follow this up by emitting a second marker like: `# 1 "$(pwd)//"`
 	 *
-	 * - "-P", "--no-line-commands"
-	 *   No special handling needed in TPP backend
-	 *   Frontend simply mustn't emit any `# <linenum>` or `#line` directives
 	 * - "-H", "--trace-includes"
 	 *   - Use TPP_HAVE_FILE_PUSHED_HOOK to filter for TPP_FILE_KIND_IO files being
 	 *     pushed onto the #include-stack. Whenever that has happened, print a line
 	 *     like this to stderr:
 	 *     >> print("." * NUMBER_OF_IO_FILES_ON_INCLUDE_STACK, " ", tpp_file_getrealfilename(file));
-	 * - "-dM", "--dump=M"
-	 *   - Call `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` and
-	 *     print the results to our output just before the first call to `tpp_lexer_yield()`.
-	 *   - Set hooks for:
-	 *     - TPP_HAVE_MACRO_DEFINED_HOOK
-	 *     - TPP_HAVE_MACRO_UNDEFINED_HOOK
-	 *     ... that print a replication of the operation in its canonical form to our preprocessor output
-	 *   - Also: turn off output of tokens to preprocessor output
-	 * - "-dD", "--dump=D"
-	 *   No special handling needed in TPP backend
-	 *   Same as "-dM", but don't turn off output of tokens to preprocessor output
-	 * - "-dN", "--dump=N"
-	 *   No special handling needed in TPP backend
-	 *   Same as "-dD", but only write `#define FOO` for `#define FOO(x, y) 10` or `#define FOO 20`
+	 *
 	 * - "-dI", "--dump=I"
 	 *   - Set hook for TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK that echoes the operator
 	 *     to preprocessor output
@@ -158,8 +148,11 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "failed to open '%s': %s\n", filename, tpp_strerror(error));
 		goto out_emitter_loader;
 	}
-	error = tpp_cli_loader_flush(&cli_loader);
+	error = tpp_emitter_cli_loader_flush(&emitter_cli_loader);
+	if (!TPP_ISERR(error))
+		error = tpp_cli_loader_flush(&cli_loader);
 	tpp_cli_loader_fini(&cli_loader);
+	tpp_emitter_cli_loader_fini(&emitter_cli_loader);
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to complete arguments: %s\n", tpp_strerror(error));
 		goto out_emitter_file;
@@ -226,12 +219,6 @@ int main(int argc, char **argv) {
 #endif
 	}
 
-#if TPP_HAVE_LEXER_DUMP_DEFINITIONS
-	tpp_lexer_dump_definitions(lexer, &output_printer, NULL,
-	                           TPP_LEXER_DUMP_DEFINITIONS_ALL |
-	                           TPP_LEXER_DUMP_DEFINITIONS_SORTED |
-	                           TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO);
-#endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 	if (tpp_lexer_geterrorcount(lexer)) {
 		fprintf(stderr, "There were lexer errors\n");
 		goto out_emitter_file;
@@ -248,6 +235,7 @@ out_emitter:
 	return result;
 out_emitter_loader:
 	tpp_cli_loader_fini(&cli_loader);
+	tpp_emitter_cli_loader_fini(&emitter_cli_loader);
 	goto out_emitter;
 }
 

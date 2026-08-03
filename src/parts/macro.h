@@ -212,7 +212,7 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #define tpp_macro_getbodychunk(self)   ((self)->TPP_INTERNAL(tm_body_chunk))
 #define tpp_macro_getbodystart(self)   ((self)->TPP_INTERNAL(tm_body_start))
 #define tpp_macro_getbodyend(self)     ((self)->TPP_INTERNAL(tm_body_end))
-#define tpp_macro_getbodysize(self)    ((tpp_size)(tpp_macro_getbodyend(self) - tpp_macro_getbodystart(self)))
+#define tpp_macro_getbodylen(self)     ((tpp_size)(tpp_macro_getbodyend(self) - tpp_macro_getbodystart(self)))
 #define tpp_macro_getdeffilename(self) ((self)->TPP_INTERNAL(tm_deffile))
 #define tpp_macro_getdeflcinfo(self)   ((self)->TPP_INTERNAL(tm_deflc))
 #define tpp_macro_getbodylcinfo(self)  ((self)->TPP_INTERNAL(tm_body_lc))

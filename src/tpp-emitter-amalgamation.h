@@ -71,45 +71,36 @@
 /************************************************************************/
 /* File: parts/optional/emitter/config.h                                */
 /************************************************************************/
-/* Enable support for re-emission of unknown pragmas. Requires that the TPP core
- * is configured to allow runtime override of its `TPP_HAVE_UNKNOWN_PRAGMA_HOOK`
- * hook (since the emitter needs to be able to override that hook during its
- * initialization)
- *
- * Can be configured in one of 3 ways:
- * - `0`:  Disabled (unknown pragmas cause warnings and are not (re-)emitted
- * - `1`:  Enabled
- * - `-1`: Available (but not enabled by default)
- *
- * When not *Disabled*, can be turned on/off using:
- * - `tpp_emitter_set_reemit_unknown_pragma()`
- * - `tpp_emitter_enable_reemit_unknown_pragma()`
- * - `tpp_emitter_disable_reemit_unknown_pragma()`
- */
-#ifndef TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA
-#define TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA \
-	(TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) ? 1 : 0)
-#endif /* !TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
+/* Provide support for `TPP_EMITTER_MODE_EMIT`, which emits tokens */
+#ifndef TPP_EMITTER_HAVE_MODE_EMIT
+#define TPP_EMITTER_HAVE_MODE_EMIT 1
+#endif /* !TPP_EMITTER_HAVE_MODE_EMIT */
 
-/* When enabled, any `TPP_TOK_SPACE`-token is emitted as an (appropriately long)
- * sequence of ` `-characters, rather than as an echo of the original token's
- * space characters (thereby normalizing any unicode whitespace or other control
- * characters to `U+0020 SPACE`). */
+/* Provide support for `TPP_EMITTER_MODE_DISPOSE`, which discards tokens */
+#ifndef TPP_EMITTER_HAVE_MODE_DISPOSE
+#define TPP_EMITTER_HAVE_MODE_DISPOSE (TPP_HAVE_PROFILE_ALL)
+#endif /* !TPP_EMITTER_HAVE_MODE_DISPOSE */
+
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any `TPP_TOK_SPACE`-token
+ * is emitted as an (appropriately long) sequence of ` `-characters, rather
+ * than as an echo of the original token's space characters (thereby normalizing
+ * any unicode whitespace or other control characters to `U+0020 SPACE`). */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_SPACE
-#define TPP_EMITTER_HAVE_NORMALIZE_SPACE TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NORMALIZE_SPACE (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_SPACE */
 
-/* When enabled, any `TPP_TOK_LF`-token is emitted as a `\n`-character, rather
- * than as an echo of the original token's linefeed bytes (thereby normalizing
- * any unicode linefeed, CR, or CRLF sequences to LF). */
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any `TPP_TOK_LF`-token is
+ * emitted as a `\n`-character, rather than as an echo of the original token's
+ * linefeed bytes (thereby normalizing any unicode linefeed, CR, or CRLF
+ * sequences to LF). */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_LF
-#define TPP_EMITTER_HAVE_NORMALIZE_LF TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_NORMALIZE_LF (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_LF */
 
-/* When enabled, any `TPP_TOK_ISSTRING`-token is emitted as a `TPP_TOK_C_STRING`
- * (or `TPP_TOK_C_CHAR`, when `TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS` is
- * enabled in the lexer) token (though only done if the desired target token
- * is enabled).
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any `TPP_TOK_ISSTRING`-token
+ * is emitted as a `TPP_TOK_C_STRING` (or `TPP_TOK_C_CHAR`, when
+ * `TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS` is enabled in the lexer) token
+ * (though only done if the desired target token is enabled).
  *
  * In order to do this normalization, the string is decoded and re-encoded via
  * use of `tpp_lexer_decodestring()` and `tpp_token_encodestring()`, thereby
@@ -117,13 +108,14 @@
  * greatly reduced set of string tokens (and escape sequences) in order to
  * fully understand *any* kind of string token that may be produced by TPP. */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_C_STRING
-#define TPP_EMITTER_HAVE_NORMALIZE_C_STRING ((TPP_HAVE_TOK_C_STRING && TPP_HAVE_TOKEN_ENCODESTRING && TPP_HAVE_LEXER_DECODESTRING) ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_C_STRING ((TPP_EMITTER_HAVE_MODE_EMIT && TPP_HAVE_TOK_C_STRING && TPP_HAVE_TOKEN_ENCODESTRING && TPP_HAVE_LEXER_DECODESTRING) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_C_STRING */
 
-/* When enabled, normalize `\u`, `\U` and `\N` escape sequences in keywords
- * names to their actual utf-8 character representation (also causes BSE
- * sequences to be normalized, though if that's all you want (and not just
- * for keywords), you could also enable `TPP_EMITTER_HAVE_NORMALIZE_BSE`).
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, normalize `\u`, `\U`
+ * and `\N` escape sequences in keywords names to their actual utf-8 character
+ * representation (also causes BSE sequences to be normalized, though if that's
+ * all you want (and not just for keywords), you could also enable
+ * `TPP_EMITTER_HAVE_NORMALIZE_BSE`).
  *
  * This feature is also required to emit `__TPP_IDENTIFIER()` as the actual
  * identifier, rather than as a copy of the identifier itself.
@@ -137,38 +129,44 @@
  *       be emitted as `__TPP_IDENTIFIER("")`, since there's no other way
  *       to write that identifier. */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS
-#define TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS ((TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED) ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS ((TPP_EMITTER_HAVE_MODE_EMIT && (TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS */
 
-/* Remove \-escaped line-feeds from generic tokens. */
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, remove `\`-escaped
+ * line-feeds from generic tokens. */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_BSE
-#define TPP_EMITTER_HAVE_NORMALIZE_BSE (TPP_HAVE_BSE ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_BSE ((TPP_EMITTER_HAVE_MODE_EMIT && TPP_HAVE_BSE) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_BSE */
 
-/* Normalize trigraph sequences in generic tokens. */
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, normalize trigraph
+ * sequences in generic tokens. */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS
-#define TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS (TPP_HAVE_TRIGRAPHS ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS ((TPP_EMITTER_HAVE_MODE_EMIT && TPP_HAVE_TRIGRAPHS) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS */
 
-/* Normalize digraph sequences in generic tokens. */
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, normalize digraph
+ * sequences in generic tokens. */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS
-#define TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS (TPP_HAVE_DIGRAPHS ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS ((TPP_EMITTER_HAVE_MODE_EMIT && TPP_HAVE_DIGRAPHS) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS */
 
-/* Inhibit emission of `#line` directives, as well as (re-)alignment
- * of the output stream in order to match source L/C info. When this
- * is enabled, it is *highly* suggested that you turn on emission of
- * SPACE+LF tokens in the source lexer, since otherwise the emitter
- * will (probably) put everything on 1 line.
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, inhibit emission of
+ * `#line` directives, as well as (re-)alignment of the output stream in
+ * order to match source L/C info. When this is enabled, it is *highly*
+ * suggested that you turn on emission of SPACE+LF tokens in the source
+ * lexer, since otherwise the emitter will (probably) put everything on
+ * 1 line.
  *
  * Can be used to implement the `-P` CLI switch */
 #ifndef TPP_EMITTER_HAVE_NOLINE
-#define TPP_EMITTER_HAVE_NOLINE TPP_CONF_FEAT0
+#define TPP_EMITTER_HAVE_NOLINE (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_NOLINE */
 
-/* When inside of a macro -- so-as to prevent every token from causing
- * another `#line`-directive being emitted, don't be too precise
- * in terms of *all* tokens needing to have the proper column:
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, token emitted
+ * from within a macro do not require proper alignment with __COLUMN__,
+ * so-as to prevent every token from causing another `#line`-directive
+ * being emitted, don't be too precise in terms of *all* tokens needing
+ * to have the proper column:
  * ```c
  * #define my_macro  10+20+30+40
  * 5+my_macro+50
@@ -198,7 +196,7 @@
  *           +50
  * ``` */
 #ifndef TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES
-#define TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES TPP_CONF_FEAT1
+#define TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES */
 
 /* TODO: Config to select between use of `# <linenum>` and `#line` */
@@ -207,21 +205,118 @@
 
 /* TODO: Configs for each of the CLI switches listed in "frontend.c" */
 
+/* Enable support for re-emission of unknown pragmas. Requires that the TPP core
+ * is configured to allow runtime override of its `TPP_HAVE_UNKNOWN_PRAGMA_HOOK`
+ * hook (since the emitter needs to be able to override that hook during its
+ * initialization)
+ *
+ * Can be configured in one of 3 ways:
+ * - `0`:  Disabled (unknown pragmas cause warnings and are not (re-)emitted
+ * - `1`:  Enabled
+ * - `-1`: Available (but not enabled by default)
+ *
+ * When not *Disabled*, can be turned on/off using:
+ * - `tpp_emitter_set_reemit_unknown_pragma()`
+ * - `tpp_emitter_enable_reemit_unknown_pragma()`
+ * - `tpp_emitter_disable_reemit_unknown_pragma()` */
+#ifndef TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA
+#define TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA \
+	(TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) ? 1 : 0)
+#endif /* !TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
+
+/* Enable support for re-emission of `#define` and `#undef` directives.
+ * Requires that the TPP core is configured to allow runtime override of
+ * its `TPP_HAVE_MACRO_DEFINED_HOOK` and `TPP_HAVE_MACRO_UNDEFINED_HOOK`
+ * hooks (since the emitter needs to be able to override these hook during
+ * its initialization)
+ *
+ * Can be configured in one of 3 ways:
+ * - `0`:  Disabled 
+ * - `1`:  Enabled (#define/#undef are re-emitted)
+ * - `-1`: Available (but not enabled by default)
+ *
+ * When not *Disabled*, can be turned on/off using:
+ * - `tpp_emitter_set_reemit_macro_definitions()`
+ * - `tpp_emitter_enable_reemit_macro_definitions()`
+ * - `tpp_emitter_disable_reemit_macro_definitions()` */
+#ifndef TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS  \
+	(TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) && \
+	 TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK))
+#endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
+
+/* Extension to `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`: when emitting
+ * `#define` directives, only emit `#define <MACRO_NAME>`, excluding the
+ * macro's actual definition. */
+#ifndef TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY (TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS ? TPP_CONF_FEAT0 : 0)
+#endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY */
+
+
+
+/************************************************************************/
+/* EMITTER CLI CONFIG                                                   */
+/************************************************************************/
+#ifndef TPP_EMITTER_HAVE_CLI
+#define TPP_EMITTER_HAVE_CLI TPP_HAVE_CLI
+#endif /* !TPP_EMITTER_HAVE_CLI */
+
+/* `-P`, `--no-line-commands`:
+ * Disable emission of `#line`-directives, but also turn
+ * on emission of SPACE/LF tokens (if runtime-configurable). */
+#ifndef TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS
+#define TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS \
+	(TPP_EMITTER_HAVE_NOLINE && (TPP_HAVE_TOK_SPACE && TPP_HAVE_TOK_LF))
+#endif /* !TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS */
+
+/* `-dM`, `--dump=M`:
+ * Dump builtin/predefined macros to the emitters output during the
+ * CLI flush phase (i.e.: when `tpp_emitter_cli_loader_flush()` is called):
+ * `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`
+ *
+ * Also turns on `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`, and sets the emitters
+ * mode of operations to `TPP_EMITTER_MODE_DISPOSE` (see `TPP_EMITTER_HAVE_MODE_DISPOSE`). */
+#ifndef TPP_EMITTER_HAVE_CLI_DUMP_M
+#define TPP_EMITTER_HAVE_CLI_DUMP_M               \
+	(TPP_HAVE_LEXER_DUMP_DEFINITIONS &&           \
+	 TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS && \
+	 TPP_EMITTER_HAVE_MODE_DISPOSE)
+#endif /* !TPP_EMITTER_HAVE_CLI_DUMP_M */
+
+/* `-dD`, `--dump=D`:
+ * Same as `TPP_EMITTER_HAVE_CLI_DUMP_M`, but doesn't turn on `TPP_EMITTER_MODE_DISPOSE` */
+#ifndef TPP_EMITTER_HAVE_CLI_DUMP_D
+#define TPP_EMITTER_HAVE_CLI_DUMP_D     \
+	(TPP_HAVE_LEXER_DUMP_DEFINITIONS && \
+	 TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS)
+#endif /* !TPP_EMITTER_HAVE_CLI_DUMP_D */
+
+/* `-dN`, `--dump=N`:
+ * Same as `TPP_EMITTER_HAVE_CLI_DUMP_D`, but also turns on
+ * `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY` */
+#ifndef TPP_EMITTER_HAVE_CLI_DUMP_N
+#define TPP_EMITTER_HAVE_CLI_DUMP_N               \
+	(TPP_HAVE_LEXER_DUMP_DEFINITIONS &&           \
+	 TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS && \
+	 TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
+#endif /* !TPP_EMITTER_HAVE_CLI_DUMP_N */
+
 /************************************************************************/
 /* File: parts/optional/emitter/emitter-features.h                      */
 /************************************************************************/
 TPP_DECL_BEGIN
 
 #undef TPP_EMITTER_HAVE_FEATURES
-#if (TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) ||   \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF) ||      \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) ||\
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) ||\
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE) ||     \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS) ||\
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS) ||\
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) ||            \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES))
+#if (TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) ||             \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF) ||                \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) ||          \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) ||          \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE) ||               \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS) ||         \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS) ||          \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) ||                      \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES) ||    \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY))
 #define TPP_EMITTER_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_EMITTER_HAVE_FEATURES 0
@@ -256,6 +351,9 @@ typedef enum tpp_emitter_feature_id {
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES)
 	TPP_EMITTER_FEAT_RELAXED_MACRO_LINE_RULES,
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
+	TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_NAME_ONLY,
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
 	TPP_EMITTER_FEAT_COUNT
 } tpp_emitter_feature_id;
 
@@ -297,6 +395,10 @@ typedef union tpp_emitter_features {
 		unsigned int TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_LINE_RULES): 1;
 #define _tpp_emitter_has_RELAXED_MACRO_LINE_RULES(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_LINE_RULES)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
+		unsigned int TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY): 1;
+#define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_NAME_ONLY(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
 	} TPP_EMITTER_INTERNAL(tef_flags);
 	unsigned char TPP_EMITTER_INTERNAL(tetf_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_emitter_features;
@@ -343,13 +445,16 @@ TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
 #if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES)
 #define _tpp_emitter_has_RELAXED_MACRO_LINE_RULES(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES)
 #endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES) */
+#if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
+#define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_NAME_ONLY(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
+#endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
 
 /************************************************************************/
 /* File: parts/optional/emitter/emitter.h                               */
 /************************************************************************/
 
 typedef struct tpp_emitter_state {
-#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
+#if TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
 	tpp_lcinfo          TPP_EMITTER_INTERNAL(tes_curpos);          /* Current line/column position in output (with respect to emitted `#line` directives) */
 	char const         *TPP_EMITTER_INTERNAL(tes_curfilename);     /* [0..1] The filename (tpp_file_getfilename()) that goes with `tes_curpos` (or "NULL" if unknown, or this is the first token) */
 	TPP_REF tpp_string *TPP_EMITTER_INTERNAL(tes_curfilename_str); /* [0..1] Same as `tes_curfilename`, but keeps a reference to `tpp_file_getfilenamestr()` so custom filename overrides aren't free'd early */
@@ -361,10 +466,10 @@ typedef struct tpp_emitter_state {
 	, (self)->TPP_EMITTER_INTERNAL(tes_curfilename_str)                            \
 	  ? (void)tpp_string_decref((self)->TPP_EMITTER_INTERNAL(tes_curfilename_str)) \
 	  : (void)0
-#else /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#else /* TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
 #define _tpp_emitter_state_init_cur(self) /* nothing */
 #define _tpp_emitter_state_fini_cur(self) /* nothing */
-#endif /* !TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#endif /* TPP_EMITTER_HAVE_MODE_EMIT && !TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
 	tpp_token_id        TPP_EMITTER_INTERNAL(tes_prevtok);         /* Last token ID (preceding the token currently being emitted).
 	                                                                * When the current token is the first, this is `TPP_TOK_EOF` */
 } tpp_emitter_state;
@@ -374,6 +479,33 @@ typedef struct tpp_emitter_state {
 	       _tpp_emitter_state_init_cur(self))
 #define tpp_emitter_state_fini(self) \
 	(void)((void)0 _tpp_emitter_state_fini_cur(self))
+
+#undef _TPP_EMITTER_MODE_DEFAULT
+#undef TPP_EMITTER_MODE_HAVE_MULTIPLE
+typedef enum tpp_emitter_mode {
+
+	/* Emit tokens to the emitter output (do what e.g. `gcc -E` does) */
+#if TPP_EMITTER_HAVE_MODE_EMIT
+	TPP_EMITTER_MODE_EMIT,
+#define _TPP_EMITTER_MODE_DEFAULT TPP_EMITTER_MODE_EMIT
+#endif /* TPP_EMITTER_HAVE_MODE_EMIT */
+
+	/* Dispose tokens (output can only be produced by hooks or "raw" printing) */
+#if TPP_EMITTER_HAVE_MODE_DISPOSE
+	TPP_EMITTER_MODE_DISPOSE,
+#ifndef _TPP_EMITTER_MODE_DEFAULT
+#define _TPP_EMITTER_MODE_DEFAULT TPP_EMITTER_MODE_DISPOSE
+#else /* !_TPP_EMITTER_MODE_DEFAULT */
+#define TPP_EMITTER_MODE_HAVE_MULTIPLE 1
+#endif /* _TPP_EMITTER_MODE_DEFAULT */
+#endif /* TPP_EMITTER_HAVE_MODE_DISPOSE */
+
+} tpp_emitter_mode;
+
+#ifndef TPP_EMITTER_MODE_HAVE_MULTIPLE
+#define TPP_EMITTER_MODE_HAVE_MULTIPLE 0
+#endif /* !TPP_EMITTER_MODE_HAVE_MULTIPLE */
+
 
 typedef struct tpp_emitter {
 	/* NOTE: The lexer will *always* be at offset=0 here, meaning you're allowed to do:
@@ -393,12 +525,15 @@ typedef struct tpp_emitter {
 	tpp_emitter_state    TPP_EMITTER_INTERNAL(te_state);  /* Emitter output state */
 #if TPP_EMITTER_HAVE_FEATURES
 	tpp_emitter_features TPP_EMITTER_INTERNAL(te_feat);   /* Emitter feature configuration */
-#define _tpp_emitter_init_feat(self) , tpp_emitter_features_init(&(self)->TPP_EMITTER_INTERNAL(te_feat))
-#define _tpp_emitter_fini_feat(self) , tpp_emitter_features_fini(&(self)->TPP_EMITTER_INTERNAL(te_feat))
-#else /* TPP_EMITTER_HAVE_FEATURES */
-#define _tpp_emitter_init_feat(self) /* nothing */
-#define _tpp_emitter_fini_feat(self) /* nothing */
-#endif /* !TPP_EMITTER_HAVE_FEATURES */
+#endif /* TPP_EMITTER_HAVE_FEATURES */
+#if TPP_EMITTER_MODE_HAVE_MULTIPLE
+	tpp_emitter_mode     TPP_EMITTER_INTERNAL(te_mode);   /* Mode in which tokens are emitted. */
+#define tpp_emitter_getmode(self)    ((self)->TPP_EMITTER_INTERNAL(te_mode))
+#define tpp_emitter_setmode(self, v) (void)((self)->TPP_EMITTER_INTERNAL(te_mode) = (v))
+#else /* TPP_EMITTER_MODE_HAVE_MULTIPLE */
+#define tpp_emitter_getmode(self)    _TPP_EMITTER_MODE_DEFAULT
+#define tpp_emitter_setmode(self, v) (void)(v)
+#endif /* !TPP_EMITTER_MODE_HAVE_MULTIPLE */
 } tpp_emitter;
 
 /* Initialize (after `tpp_lexer_init()` was called) or finalize
@@ -483,6 +618,146 @@ tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_emitter_hook_unknown_pragma(tpp_lexer *tpp_restrict self);
 #endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
+
+/* API support for (re-)emission of `#define` and `#undef` directives */
+#if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
+#define tpp_emitter_enable_reemit_macro_definitions(self)                                           \
+	(tpp_lexer_sethook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined), \
+	 tpp_lexer_sethook_macro_undefined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined))
+#define tpp_emitter_disable_reemit_macro_definitions(self)          \
+	(tpp_lexer_resethook_macro_defined(tpp_emitter_getlexer(self)), \
+	 tpp_lexer_resethook_macro_undefined(tpp_emitter_getlexer(self)))
+#define tpp_emitter_get_reemit_macro_definitions(self) \
+	(tpp_lexer_gethook_macro_defined(tpp_emitter_getlexer(self)) == &_tpp_emitter_hook_macro_defined)
+#define tpp_emitter_set_reemit_macro_definitions(self, v)    \
+	((v) ? tpp_emitter_enable_reemit_macro_definitions(self) \
+	     : tpp_emitter_disable_reemit_macro_definitions(self))
+
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_emitter_hook_macro_defined(tpp_lexer *tpp_restrict self,
+                                tpp_keyword *tpp_restrict name,
+                                tpp_macro *tpp_restrict macro);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_emitter_hook_macro_undefined(tpp_lexer *tpp_restrict self,
+                                  tpp_keyword *tpp_restrict name);
+#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
+
+/************************************************************************/
+/* File: parts/optional/emitter/emitter-cli.h                           */
+/************************************************************************/
+
+#if TPP_EMITTER_HAVE_CLI
+
+/* Publicly exposed CLI loader states */
+#define TPP_EMITTER_CLI_LOADER_STATE_NORMAL 0 /* Normal state */
+#define TPP_EMITTER_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
+
+#undef TPP_EMITTER_HAVE_CLI_FLAGS
+#define TPP_EMITTER_HAVE_CLI_FLAGS \
+	((TPP_EMITTER_HAVE_CLI_DUMP_M || TPP_EMITTER_HAVE_CLI_DUMP_D || TPP_EMITTER_HAVE_CLI_DUMP_N))
+
+#if TPP_EMITTER_HAVE_CLI_FLAGS
+#define _tpp_emitter_cli_loader_flags uint_least32_t
+#define _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL UINT32_C(0x00000000)
+#if TPP_EMITTER_HAVE_CLI_DUMP_M || TPP_EMITTER_HAVE_CLI_DUMP_D || TPP_EMITTER_HAVE_CLI_DUMP_N
+#define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M UINT32_C(0x00000001) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
+#endif /* TPP_EMITTER_HAVE_CLI_DUMP_M || TPP_EMITTER_HAVE_CLI_DUMP_D || TPP_EMITTER_HAVE_CLI_DUMP_N */
+#endif /* TPP_EMITTER_HAVE_CLI_FLAGS */
+
+
+#undef TPP_HAVE_EMITTER_CLI_NEEDS_FINI
+typedef struct tpp_emitter_cli_loader {
+	tpp_emitter *TPP_EMITTER_INTERNAL(tcl_emitter); /* [1..1][const] The emitter being configured by this CLI loader */
+	unsigned int TPP_EMITTER_INTERNAL(tcl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_EMITTER_CLI_LOADER_STATE_*` listed above) */
+#if TPP_EMITTER_HAVE_CLI_FLAGS
+	_tpp_emitter_cli_loader_flags TPP_EMITTER_INTERNAL(tcl_flags);
+#define _tpp_emitter_cli_loader_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(tcl_flags) = _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
+#else /* TPP_EMITTER_HAVE_CLI_FLAGS */
+#define _tpp_emitter_cli_loader_init_flags(self) /* nothing */
+#endif /* !TPP_EMITTER_HAVE_CLI_FLAGS */
+} tpp_emitter_cli_loader;
+
+/* Initialize a CLI loader for `emitter`
+ *
+ * The CLI loader must be used on a lexer/emitter that has already been initialized
+ * itself (as per `tpp_emitter_init()`), though whether or not the its initial
+ * file has already been initialized doesn't matter (the CLI loader will never
+ * make persistent modifications to a lexer's current file/token). */
+#define tpp_emitter_cli_loader_init(self, emitter)                                         \
+	(void)((self)->TPP_EMITTER_INTERNAL(tcl_emitter) = (emitter),                          \
+	       (self)->TPP_EMITTER_INTERNAL(tcl_state)   = TPP_EMITTER_CLI_LOADER_STATE_NORMAL \
+	       _tpp_emitter_cli_loader_init_flags(self))
+#define tpp_emitter_cli_loader_fini(self) \
+	tpp_dbg_memset(self, sizeof(tpp_emitter_cli_loader))
+
+/* Return the emitter that is being initialized by the given CLI loader. */
+#define tpp_emitter_cli_loader_getemitter(self) \
+	(self)->TPP_EMITTER_INTERNAL(tcl_emitter)
+
+/* Check if a "--" argument was encountered during CLI parsing.
+ * Once that is the case, `tpp_emitter_cli_loader_parsearg()` will
+ * no longer accept additional CLI arguments, and all remaining
+ * arguments should be treated as input files (for the compiler
+ * that you're building) */
+#define tpp_emitter_cli_loader_hasddash(self) \
+	((self)->TPP_EMITTER_INTERNAL(tcl_state) == TPP_EMITTER_CLI_LOADER_STATE_DDASH)
+
+/* Feed an argument to the loader. How exactly the argument is parsed
+ * depends on the loader's current state, but sufficed to say: in its
+ * default/initial state, `arg` is a CLI argument as you'd expect.
+ *
+ * WARNING: When you call this function, you must guaranty that `arg` remains
+ *          valid, allocated, and unaltered until `tpp_emitter_cli_loader_fini()` is
+ *          called.
+ *
+ * @return: TPP_EOK:        Success (argument was parsed + consumed)
+ * @return: TPP_ENOENT:     SOFT_ERROR: Argument could not be understood (but no
+ *                          warning was emitted). You must either handle it yourself
+ *                          by treating it as an argument for *your* compiler's
+ *                          CLI, or as an input file for the emitter, or emit a
+ *                          warning informing the user that their CLI argument
+ *                          was not understood. You should also probably try to
+ *                          pass it to `tpp_cli_loader_parsearg()`.
+ * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
+ * @return: TPP_EIO:        HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR:  HARD_ERROR: A emitter error was thrown
+ * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char const *arg);
+
+/* Convenience wrapper around `tpp_emitter_cli_loader_parsearg()`.
+ * For more information, see `tpp_cli_loader_parseargv()`.
+ *
+ * @return: TPP_EOK:        Success (`*p_argc` and `*p_argv` were updated such that
+ *                          they contain all unrecognized arguments, as well as all
+ *                          input files for the emitter).
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O Error
+ * @return: TPP_ELEXERROR:  A emitter error was thrown
+ * @return: TPP_EWARNPRINT: An error happened within a warning printer */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
+                                 int *p_argc, char ***p_argv);
+
+/* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
+ * unterminated multi-argument parameters). If that is not the case, then a warning
+ * `TPP_W_MISSING_CLI_ARGUMENT` is emitted on `tpp_emitter_cli_loader_getemitter(self)`
+ *
+ * Unlike the other CLI loader functions above, this one *MUST* be called
+ * *AFTER* the lexer's initial input file has been initialized, as it may
+ * need to push additional files onto the `#include`-stack.
+ *
+ * @return: TPP_EOK:        Success
+ * @return: TPP_ENOMEM:     Out of memory
+ * @return: TPP_EIO:        I/O Error
+ * @return: TPP_ELEXERROR:  A emitter error was thrown
+ * @return: TPP_EWARNPRINT: An error happened within a warning printer */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self);
+#endif /* TPP_EMITTER_HAVE_CLI */
+
+/* TODO: API to query supported CLI flags, for use by someone wanting to implement `--help`,
+ *       or get a list of supported flags. */
 
 TPP_DECL_END
 

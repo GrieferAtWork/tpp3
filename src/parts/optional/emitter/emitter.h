@@ -29,7 +29,7 @@
 TPP_DECL_BEGIN
 
 typedef struct tpp_emitter_state {
-#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
+#if TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
 	tpp_lcinfo          TPP_EMITTER_INTERNAL(tes_curpos);          /* Current line/column position in output (with respect to emitted `#line` directives) */
 	char const         *TPP_EMITTER_INTERNAL(tes_curfilename);     /* [0..1] The filename (tpp_file_getfilename()) that goes with `tes_curpos` (or "NULL" if unknown, or this is the first token) */
 	TPP_REF tpp_string *TPP_EMITTER_INTERNAL(tes_curfilename_str); /* [0..1] Same as `tes_curfilename`, but keeps a reference to `tpp_file_getfilenamestr()` so custom filename overrides aren't free'd early */
@@ -41,10 +41,10 @@ typedef struct tpp_emitter_state {
 	, (self)->TPP_EMITTER_INTERNAL(tes_curfilename_str)                            \
 	  ? (void)tpp_string_decref((self)->TPP_EMITTER_INTERNAL(tes_curfilename_str)) \
 	  : (void)0
-#else /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#else /* TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
 #define _tpp_emitter_state_init_cur(self) /* nothing */
 #define _tpp_emitter_state_fini_cur(self) /* nothing */
-#endif /* !TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#endif /* TPP_EMITTER_HAVE_MODE_EMIT && !TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
 	tpp_token_id        TPP_EMITTER_INTERNAL(tes_prevtok);         /* Last token ID (preceding the token currently being emitted).
 	                                                                * When the current token is the first, this is `TPP_TOK_EOF` */
 } tpp_emitter_state;
@@ -54,6 +54,33 @@ typedef struct tpp_emitter_state {
 	       _tpp_emitter_state_init_cur(self))
 #define tpp_emitter_state_fini(self) \
 	(void)((void)0 _tpp_emitter_state_fini_cur(self))
+
+#undef _TPP_EMITTER_MODE_DEFAULT
+#undef TPP_EMITTER_MODE_HAVE_MULTIPLE
+typedef enum tpp_emitter_mode {
+
+	/* Emit tokens to the emitter output (do what e.g. `gcc -E` does) */
+#if TPP_EMITTER_HAVE_MODE_EMIT
+	TPP_EMITTER_MODE_EMIT,
+#define _TPP_EMITTER_MODE_DEFAULT TPP_EMITTER_MODE_EMIT
+#endif /* TPP_EMITTER_HAVE_MODE_EMIT */
+
+	/* Dispose tokens (output can only be produced by hooks or "raw" printing) */
+#if TPP_EMITTER_HAVE_MODE_DISPOSE
+	TPP_EMITTER_MODE_DISPOSE,
+#ifndef _TPP_EMITTER_MODE_DEFAULT
+#define _TPP_EMITTER_MODE_DEFAULT TPP_EMITTER_MODE_DISPOSE
+#else /* !_TPP_EMITTER_MODE_DEFAULT */
+#define TPP_EMITTER_MODE_HAVE_MULTIPLE 1
+#endif /* _TPP_EMITTER_MODE_DEFAULT */
+#endif /* TPP_EMITTER_HAVE_MODE_DISPOSE */
+
+} tpp_emitter_mode;
+
+#ifndef TPP_EMITTER_MODE_HAVE_MULTIPLE
+#define TPP_EMITTER_MODE_HAVE_MULTIPLE 0
+#endif /* !TPP_EMITTER_MODE_HAVE_MULTIPLE */
+
 
 typedef struct tpp_emitter {
 	/* NOTE: The lexer will *always* be at offset=0 here, meaning you're allowed to do:
@@ -73,12 +100,15 @@ typedef struct tpp_emitter {
 	tpp_emitter_state    TPP_EMITTER_INTERNAL(te_state);  /* Emitter output state */
 #if TPP_EMITTER_HAVE_FEATURES
 	tpp_emitter_features TPP_EMITTER_INTERNAL(te_feat);   /* Emitter feature configuration */
-#define _tpp_emitter_init_feat(self) , tpp_emitter_features_init(&(self)->TPP_EMITTER_INTERNAL(te_feat))
-#define _tpp_emitter_fini_feat(self) , tpp_emitter_features_fini(&(self)->TPP_EMITTER_INTERNAL(te_feat))
-#else /* TPP_EMITTER_HAVE_FEATURES */
-#define _tpp_emitter_init_feat(self) /* nothing */
-#define _tpp_emitter_fini_feat(self) /* nothing */
-#endif /* !TPP_EMITTER_HAVE_FEATURES */
+#endif /* TPP_EMITTER_HAVE_FEATURES */
+#if TPP_EMITTER_MODE_HAVE_MULTIPLE
+	tpp_emitter_mode     TPP_EMITTER_INTERNAL(te_mode);   /* Mode in which tokens are emitted. */
+#define tpp_emitter_getmode(self)    ((self)->TPP_EMITTER_INTERNAL(te_mode))
+#define tpp_emitter_setmode(self, v) (void)((self)->TPP_EMITTER_INTERNAL(te_mode) = (v))
+#else /* TPP_EMITTER_MODE_HAVE_MULTIPLE */
+#define tpp_emitter_getmode(self)    _TPP_EMITTER_MODE_DEFAULT
+#define tpp_emitter_setmode(self, v) (void)(v)
+#endif /* !TPP_EMITTER_MODE_HAVE_MULTIPLE */
 } tpp_emitter;
 
 /* Initialize (after `tpp_lexer_init()` was called) or finalize
@@ -163,6 +193,29 @@ tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_emitter_hook_unknown_pragma(tpp_lexer *tpp_restrict self);
 #endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
+
+/* API support for (re-)emission of `#define` and `#undef` directives */
+#if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
+#define tpp_emitter_enable_reemit_macro_definitions(self)                                           \
+	(tpp_lexer_sethook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined), \
+	 tpp_lexer_sethook_macro_undefined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined))
+#define tpp_emitter_disable_reemit_macro_definitions(self)          \
+	(tpp_lexer_resethook_macro_defined(tpp_emitter_getlexer(self)), \
+	 tpp_lexer_resethook_macro_undefined(tpp_emitter_getlexer(self)))
+#define tpp_emitter_get_reemit_macro_definitions(self) \
+	(tpp_lexer_gethook_macro_defined(tpp_emitter_getlexer(self)) == &_tpp_emitter_hook_macro_defined)
+#define tpp_emitter_set_reemit_macro_definitions(self, v)    \
+	((v) ? tpp_emitter_enable_reemit_macro_definitions(self) \
+	     : tpp_emitter_disable_reemit_macro_definitions(self))
+
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_emitter_hook_macro_defined(tpp_lexer *tpp_restrict self,
+                                tpp_keyword *tpp_restrict name,
+                                tpp_macro *tpp_restrict macro);
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_emitter_hook_macro_undefined(tpp_lexer *tpp_restrict self,
+                                  tpp_keyword *tpp_restrict name);
+#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

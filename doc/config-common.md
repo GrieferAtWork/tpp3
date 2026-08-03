@@ -63,7 +63,7 @@ of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamatio
 Default:
 
 ```c
-(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : ((TPP_PROFILE == TPP_PROFILE_ALL || TPP_PROFILE == TPP_PROFILE_DEFAULT) ? TPP_CONF_FEAT0 : 0)
+(TPP_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT0 : 0
 ```
 </details>
 
