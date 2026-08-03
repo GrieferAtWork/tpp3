@@ -309,6 +309,20 @@ tpp_emitter_cli_enable_dump_U(tpp_emitter_cli_loader *tpp_restrict self) {
 	 TPP_EMITTER_HAVE_CLI_DASH_DUMP_N || \
 	 TPP_EMITTER_HAVE_CLI_DASH_DUMP_I || \
 	 TPP_EMITTER_HAVE_CLI_DASH_DUMP_U)
+#undef TPP_EMITTER_HAVE_CLI_DASH_MODE
+#define TPP_EMITTER_HAVE_CLI_DASH_MODE         \
+	(TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT ||    \
+	 TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE || \
+	 TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET || \
+	 TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED)
+
+
+enum {
+	_TPP_EMITTER_CLI_LOADER_STATE_FIRST_INTERNAL = TPP_EMITTER_CLI_LOADER_STATE_DDASH,
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP
+	TPP_EMITTER_CLI_LOADER_STATE_DUMP,
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP */
+};
 
 #if TPP_EMITTER_HAVE_CLI_DASH_DUMP
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -424,22 +438,19 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 
 			case 'd':
 #if TPP_EMITTER_HAVE_CLI_DASH_DUMP
-				if (tpp_streq(arg, "ump=")) {
-					arg += (sizeof("ump=") - sizeof(char));
-					if (*arg)
-						return tpp_emitter_cli_enable_dumps(self, arg);
+				if (tpp_streq(arg, "ump")) { /* --dump= */
+					arg += (sizeof("ump") - sizeof(char));
+					if (*arg == '=') {
+						return tpp_emitter_cli_enable_dumps(self, arg + 1);
+					} else if (*arg == '\0') {
+						self->tcl_state = TPP_EMITTER_CLI_LOADER_STATE_DUMP;
+						return TPP_EOK;
+					}
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP */
 				{
 				}
 				break;
-
-#undef TPP_EMITTER_HAVE_CLI_DASH_MODE
-#define TPP_EMITTER_HAVE_CLI_DASH_MODE         \
-	(TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT ||    \
-	 TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE || \
-	 TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET || \
-	 TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED)
 
 			case 'm':
 #if TPP_EMITTER_HAVE_CLI_DASH_MODE
@@ -613,6 +624,12 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 
 	case TPP_EMITTER_CLI_LOADER_STATE_DDASH:
 		break; /* Don't accept any more arguments after having encountered a "--" arguments */
+
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP
+	case TPP_EMITTER_CLI_LOADER_STATE_DUMP:
+		self->tcl_state = TPP_EMITTER_CLI_LOADER_STATE_NORMAL;
+		return tpp_emitter_cli_enable_dumps(self, arg);
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP */
 
 	default: tpp_unreachable();
 	}
