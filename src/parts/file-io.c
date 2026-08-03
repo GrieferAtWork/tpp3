@@ -401,7 +401,7 @@ got_lhs_info:
 			return TPP_ELAST; /* Cannot compare */
 	}
 	TPP_SYSCALL({
-		status = stat(rhs_filename, &lhs_st);
+		status = stat(rhs_filename, &rhs_st);
 	}, return);
 	if (status != 0)
 		return TPP_ENOENT;

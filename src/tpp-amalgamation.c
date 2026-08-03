@@ -22862,7 +22862,7 @@ got_lhs_info:
 			return TPP_ELAST; /* Cannot compare */
 	}
 	TPP_SYSCALL({
-		status = stat(rhs_filename, &lhs_st);
+		status = stat(rhs_filename, &rhs_st);
 	}, return);
 	if (status != 0)
 		return TPP_ENOENT;
@@ -28865,12 +28865,15 @@ tpp_macro_func_expand_count(tpp_macro const *tpp_restrict self) {
 	return (tpp_size)(iter - self->tm_data.tmd_func.tmf_expand);
 }
 
-/* Suppress "-Walloc-size" because `_tpp_macro_alloc_keyword()`
+/* Suppress "-Warray-bounds" and "-Walloc-size" because `_tpp_macro_alloc_keyword()`
  * doesn't allocate memory for the function-only portion of a macro */
-#if TPP_GCC_VERSION_NUM >= 140001
+#if TPP_GCC_VERSION_NUM >= 40400
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#if TPP_GCC_VERSION_NUM >= 140001
 #pragma GCC diagnostic ignored "-Walloc-size"
 #endif /* TPP_GCC_VERSION_NUM >= 140001 */
+#endif /* TPP_GCC_VERSION_NUM >= 40400 */
 
 /* Allocate+return a hard-copy of `self`
  * @return: NULL: Out of memory (TPP_ENOMEM) */
@@ -28933,9 +28936,9 @@ tpp_macro_copy(tpp_macro const *tpp_restrict self) {
 	return result;
 }
 
-#if TPP_GCC_VERSION_NUM >= 140001
+#if TPP_GCC_VERSION_NUM >= 40400
 #pragma GCC diagnostic pop
-#endif /* TPP_GCC_VERSION_NUM >= 140001 */
+#endif /* TPP_GCC_VERSION_NUM >= 40400 */
 #endif /* TPP_HAVE_LEXER_COPY */
 
 #if TPP_HAVE_MACRO_EQUALS
@@ -35381,15 +35384,17 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
                       tpp_unichar *tpp_restrict p_result) {
 	tpp_char ch;
 	tpp_errno error = tpp_lexer_readchar(self, p_pos, &ch);
-	if (!TPP_ISERR(error) && tpp_ascii_ismb(ch)) {
-		tpp_file const *const file = tpp_lexer_getfile(self);
-		if (tpp_file_isutf8(file)) {
-			--(*p_pos);
-			return tpp_lexer_readutf8(self, p_pos, p_result);
+	if (!TPP_ISERR(error)) {
+		if (tpp_ascii_ismb(ch)) {
+			tpp_file const *const file = tpp_lexer_getfile(self);
+			if (tpp_file_isutf8(file)) {
+				--(*p_pos);
+				return tpp_lexer_readutf8(self, p_pos, p_result);
+			}
+			ch &= 0x7f; /* ??? What else could be done here? */
 		}
-		ch &= 0x7f; /* ??? What else could be done here? */
+		*p_result = (tpp_unichar)ch;
 	}
-	*p_result = (tpp_unichar)ch;
 	return error;
 }
 #endif /* TPP_HAVE_UNICODE */
@@ -42189,12 +42194,15 @@ static TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_char const *TPPCALL
 tpp_token_sol_shell_find_after_pound(tpp_lexer const *tpp_restrict self);
 #endif /* TPP_HAVE_TOK_SOL_SHELL_COMMENT */
 
-/* Suppress "-Walloc-size" because `_tpp_macro_alloc_keyword()`
+/* Suppress "-Warray-bounds" and "-Walloc-size" because `_tpp_macro_alloc_keyword()`
  * doesn't allocate memory for the function-only portion of a macro */
-#if TPP_GCC_VERSION_NUM >= 140001
+#if TPP_GCC_VERSION_NUM >= 40400
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#if TPP_GCC_VERSION_NUM >= 140001
 #pragma GCC diagnostic ignored "-Walloc-size"
 #endif /* TPP_GCC_VERSION_NUM >= 140001 */
+#endif /* TPP_GCC_VERSION_NUM >= 40400 */
 
 /* Parse a macro-definition, with self/p_pos pointing at the first non-inline-comment
  * token following the macro's name. (in the case of a keyword-style macro, this may
@@ -42378,9 +42386,9 @@ err_builder:
 	return error;
 }
 
-#if TPP_GCC_VERSION_NUM >= 140001
+#if TPP_GCC_VERSION_NUM >= 40400
 #pragma GCC diagnostic pop
-#endif /* TPP_GCC_VERSION_NUM >= 140001 */
+#endif /* TPP_GCC_VERSION_NUM >= 40400 */
 
 /* Handle a `#define` directive, with `self` pointing at the macro's name-keyword
  * @return: TPP_TOK_ISERR: Error
@@ -45524,8 +45532,11 @@ tpp_lexer_parseembed(tpp_lexer *tpp_restrict self,
 			temp = tpp_lexer_parseembed(self, printer, arg, &inner_final_state);
 			file->tf_kind = TPP_FILE_KIND_IO;
 			tpp_file_autopopfile_pop(file);
-			if (temp < 0)
+			if (temp < 0) {
+				if (p_final_state)
+					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
 				return temp;
+			}
 			result += temp;
 
 			/* Make sure that everything was parsed and we're at EOF now.
@@ -45544,16 +45555,22 @@ tpp_lexer_parseembed(tpp_lexer *tpp_restrict self,
 			temp = tpp_io_readfile_blocking(file->tf_data.td_io.tff_file, printer, arg, &read_bytes,
 			                                file->tf_data.td_io.tff_encdat.tffed_embedlimit);
 			file->tf_data.td_io.tff_encdat.tffed_embedlimit -= read_bytes;
-			if (temp < 0)
+			if (temp < 0) {
+				if (p_final_state)
+					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_COMMA;
 				return temp;
+			}
 			result += temp;
 yield_at_eof_when_expecting_int:;
 		} else
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 		{
 			error = tpp_lexer_decodeint(self, &intval);
-			if (TPP_ISERR(error))
+			if (TPP_ISERR(error)) {
+				if (p_final_state)
+					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
 				return TPP_SSIZE_OFERR(error);
+			}
 			if (intval < 0 || intval > 0xff) {
 				if (p_final_state)
 					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
@@ -45562,16 +45579,20 @@ yield_at_eof_when_expecting_int:;
 			byte = (tpp_char)intval;
 			temp = tpp_formatprinter_print(printer, arg, &byte, 1);
 			if (temp < 0) {
-				result = temp;
-				break;
+				if (p_final_state)
+					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
+				return temp;
 			}
 			result += temp;
 		}
 		do {
 			tok = tpp_lexer_yield_blocking(self);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-		if (TPP_TOK_ISERR(tok))
+		if (TPP_TOK_ISERR(tok)) {
+			if (p_final_state)
+				*p_final_state = TPP_LEXER_PARSEEMBED_STATE_COMMA;
 			return TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
+		}
 		if (tok != ',') {
 			if (p_final_state)
 				*p_final_state = TPP_LEXER_PARSEEMBED_STATE_COMMA;
@@ -45580,8 +45601,11 @@ yield_at_eof_when_expecting_int:;
 		do {
 			tok = tpp_lexer_yield_blocking(self);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-		if (TPP_TOK_ISERR(tok))
+		if (TPP_TOK_ISERR(tok)) {
+			if (p_final_state)
+				*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
 			return TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
+		}
 		if (!TPP_TOK_ISINT(tok)) {
 			if (p_final_state)
 				*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;

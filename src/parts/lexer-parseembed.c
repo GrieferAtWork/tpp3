@@ -175,8 +175,11 @@ tpp_lexer_parseembed(tpp_lexer *tpp_restrict self,
 			temp = tpp_lexer_parseembed(self, printer, arg, &inner_final_state);
 			file->tf_kind = TPP_FILE_KIND_IO;
 			tpp_file_autopopfile_pop(file);
-			if (temp < 0)
+			if (temp < 0) {
+				if (p_final_state)
+					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
 				return temp;
+			}
 			result += temp;
 
 			/* Make sure that everything was parsed and we're at EOF now.
@@ -195,16 +198,22 @@ tpp_lexer_parseembed(tpp_lexer *tpp_restrict self,
 			temp = tpp_io_readfile_blocking(file->tf_data.td_io.tff_file, printer, arg, &read_bytes,
 			                                file->tf_data.td_io.tff_encdat.tffed_embedlimit);
 			file->tf_data.td_io.tff_encdat.tffed_embedlimit -= read_bytes;
-			if (temp < 0)
+			if (temp < 0) {
+				if (p_final_state)
+					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_COMMA;
 				return temp;
+			}
 			result += temp;
 yield_at_eof_when_expecting_int:;
 		} else
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 		{
 			error = tpp_lexer_decodeint(self, &intval);
-			if (TPP_ISERR(error))
+			if (TPP_ISERR(error)) {
+				if (p_final_state)
+					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
 				return TPP_SSIZE_OFERR(error);
+			}
 			if (intval < 0 || intval > 0xff) {
 				if (p_final_state)
 					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
@@ -213,16 +222,20 @@ yield_at_eof_when_expecting_int:;
 			byte = (tpp_char)intval;
 			temp = tpp_formatprinter_print(printer, arg, &byte, 1);
 			if (temp < 0) {
-				result = temp;
-				break;
+				if (p_final_state)
+					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
+				return temp;
 			}
 			result += temp;
 		}
 		do {
 			tok = tpp_lexer_yield_blocking(self);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-		if (TPP_TOK_ISERR(tok))
+		if (TPP_TOK_ISERR(tok)) {
+			if (p_final_state)
+				*p_final_state = TPP_LEXER_PARSEEMBED_STATE_COMMA;
 			return TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
+		}
 		if (tok != ',') {
 			if (p_final_state)
 				*p_final_state = TPP_LEXER_PARSEEMBED_STATE_COMMA;
@@ -231,8 +244,11 @@ yield_at_eof_when_expecting_int:;
 		do {
 			tok = tpp_lexer_yield_blocking(self);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
-		if (TPP_TOK_ISERR(tok))
+		if (TPP_TOK_ISERR(tok)) {
+			if (p_final_state)
+				*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
 			return TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
+		}
 		if (!TPP_TOK_ISINT(tok)) {
 			if (p_final_state)
 				*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;

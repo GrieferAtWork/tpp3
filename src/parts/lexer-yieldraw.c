@@ -954,15 +954,17 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
                       tpp_unichar *tpp_restrict p_result) {
 	tpp_char ch;
 	tpp_errno error = tpp_lexer_readchar(self, p_pos, &ch);
-	if (!TPP_ISERR(error) && tpp_ascii_ismb(ch)) {
-		tpp_file const *const file = tpp_lexer_getfile(self);
-		if (tpp_file_isutf8(file)) {
-			--(*p_pos);
-			return tpp_lexer_readutf8(self, p_pos, p_result);
+	if (!TPP_ISERR(error)) {
+		if (tpp_ascii_ismb(ch)) {
+			tpp_file const *const file = tpp_lexer_getfile(self);
+			if (tpp_file_isutf8(file)) {
+				--(*p_pos);
+				return tpp_lexer_readutf8(self, p_pos, p_result);
+			}
+			ch &= 0x7f; /* ??? What else could be done here? */
 		}
-		ch &= 0x7f; /* ??? What else could be done here? */
+		*p_result = (tpp_unichar)ch;
 	}
-	*p_result = (tpp_unichar)ch;
 	return error;
 }
 #endif /* TPP_HAVE_UNICODE */
