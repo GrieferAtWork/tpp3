@@ -1137,9 +1137,9 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 #endif /* TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH */
 #if TPP_HAVE_CLI_DASH_FTABSTOP
 			if (tpp_streq(arg, "tabstop=") tpp_cli__and_not_no) { /* -ftabstop=... */
-				tpp_size new_stop;
+				tpp_column new_stop;
 				arg += (sizeof("tabstop=") - sizeof(char));
-				new_stop = tpp_simple_atoz(arg);
+				new_stop = (tpp_column)tpp_simple_atoz(arg);
 				tpp_settabsize(new_stop);
 				return TPP_EOK;
 			} else

@@ -367,7 +367,6 @@ struct tpp_macro;
 #undef TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 typedef struct tpp_keyword {
 	tpp_token_id              TPP_INTERNAL(tk_id);                  /* [const] Keyword ID */
-	struct tpp_keyword       *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
 #if TPP_HAVE_CPP_MACROS
 	TPP_REF struct tpp_macro *TPP_INTERNAL(tk_macro);               /* [0..1][const_if(IS_BUILTIN)] Macro definition or one of `_TPP_KEYWORD_MACRO_*` */
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
@@ -377,6 +376,7 @@ typedef struct tpp_keyword {
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_KEYWORD_MISC */
 	tpp_hash                  TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd` */
+	struct tpp_keyword       *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
 #if TPP_HAVE_KEYWORD_ASSTRING
 	tpp_refcnt_atomic         TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with `tpp_string`) */
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */

@@ -452,7 +452,7 @@ tpp_emitter_print_current_token(tpp_emitter *tpp_restrict self) {
 #endif /* TPP_HAVE_UNICODE */
 			token_start = tpp_preparse_skipbse_fwd(lexer, token_start, token_end);
 		}
-		return tpp_emitter_printspace(self, space_count);
+		return tpp_emitter_printspace(self, (tpp_column)space_count);
 	}	break;
 #endif /* TPP_EMITTER_HAVE_NORMALIZE_SPACE */
 

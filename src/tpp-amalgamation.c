@@ -708,10 +708,10 @@
 #define tkm_userdata_ptr                                   TPP_INTERNAL(tkm_userdata_ptr)
 #define tkm_userdata_dtor                                  TPP_INTERNAL(tkm_userdata_dtor)
 #define tk_id                                              TPP_INTERNAL(tk_id)
-#define tk_next                                            TPP_INTERNAL(tk_next)
 #define tk_macro                                           TPP_INTERNAL(tk_macro)
 #define tk_misc                                            TPP_INTERNAL(tk_misc)
 #define tk_hash                                            TPP_INTERNAL(tk_hash)
+#define tk_next                                            TPP_INTERNAL(tk_next)
 #define tk_refcnt                                          TPP_INTERNAL(tk_refcnt)
 #define tk_len                                             TPP_INTERNAL(tk_len)
 #define tk_kwd                                             TPP_INTERNAL(tk_kwd)
@@ -27623,19 +27623,19 @@ TPP_IMPL tpp_warnings_state const tpp_warnings_state_default = {
 #define TPP_BUILTIN_KEYWORD(id, kwd_len, kwd, next, hash_hi, hash_lo) \
 	static struct tpp_builtin_keyword_struct_##id {                   \
 		tpp_token_id         tk_id;                                   \
-		tpp_keyword         *tk_next;                                 \
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                             \
 		_TPP_BUILTIN_KEYWORD_tk_misc_DEF                              \
 		tpp_hash             tk_hash;                                 \
+		tpp_keyword         *tk_next;                                 \
 		_TPP_BUILTIN_KEYWORD_tk_refcnt_DEF                            \
 		tpp_size             tk_len;                                  \
 		char                 tk_kwd[kwd_len + 1];                     \
 	} tpp_builtin_keyword_##id = {                                    \
 		/* .tk_id        = */ id,                                     \
-		/* .tk_next      = */ (tpp_keyword *)next,                    \
 		_TPP_BUILTIN_KEYWORD_tk_macro_INIT                            \
 		_TPP_BUILTIN_KEYWORD_tk_misc_INIT                             \
 		/* .tk_hash      = */ TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo), \
+		/* .tk_next      = */ (tpp_keyword *)next,                    \
 		_TPP_BUILTIN_KEYWORD_tk_refcnt_INIT                           \
 		/* .tk_len       = */ kwd_len,                                \
 		/* .tk_kwd       = */ kwd                                     \
@@ -27822,19 +27822,19 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
 #define TPP_DEFINE_BUILTIN_KEYWORD(id, str)                      \
 	static struct tpp_builtin_keyword_struct_##id {              \
 		tpp_token_id         tk_id;                              \
-		tpp_keyword  *tk_next;                                   \
 		_TPP_BUILTIN_KEYWORD_tk_macro_DEF                        \
 		_TPP_BUILTIN_KEYWORD_tk_misc_DEF                         \
 		tpp_hash             tk_hash;                            \
+		tpp_keyword         *tk_next;                            \
 		_TPP_BUILTIN_KEYWORD_tk_refcnt_DEF                       \
 		tpp_size             tk_len;                             \
 		char                 tk_kwd[sizeof(str) / sizeof(char)]; \
 	} tpp_builtin_keyword_##id = {                               \
 		/* .tk_id        = */ id,                                \
-		/* .tk_next      = */ NULL,                              \
 		_TPP_BUILTIN_KEYWORD_tk_macro_INIT                       \
 		_TPP_BUILTIN_KEYWORD_tk_misc_INIT                        \
 		/* .tk_hash      = */ TPP_MAYBE_HASHOF(str),             \
+		/* .tk_next      = */ NULL,                              \
 		_TPP_BUILTIN_KEYWORD_tk_refcnt_INIT                      \
 		/* .tk_len       = */ (sizeof(str) / sizeof(char)) - 1,  \
 		/* .tk_kwd       = */ str                                \
@@ -59347,9 +59347,9 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 #endif /* TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH */
 #if TPP_HAVE_CLI_DASH_FTABSTOP
 			if (tpp_streq(arg, "tabstop=") tpp_cli__and_not_no) { /* -ftabstop=... */
-				tpp_size new_stop;
+				tpp_column new_stop;
 				arg += (sizeof("tabstop=") - sizeof(char));
-				new_stop = tpp_simple_atoz(arg);
+				new_stop = (tpp_column)tpp_simple_atoz(arg);
 				tpp_settabsize(new_stop);
 				return TPP_EOK;
 			} else
