@@ -41,7 +41,8 @@ If this is what you want, you just need to download the following 2 files (this 
 ... And add them to your C project. Examples for a simple integration setup can be found in [/samples](./samples) and available configuration options (and the features they control) are listed in [/doc/config.md](./doc/config.md).
 
 
-(((WIP: Secondly, TPP provides a CLI "frontend" that implements a (mostly) GCC/CPP-compatible commandline utility. This one's mainly there as a proof-of-concept, since such a tool alone doesn't warrant the degree of customization offered by TPP)))
+Secondly, TPP provides a CLI [`frontend`](/src/frontend.c) that implements a (highly) GCC/CPP-compatible commandline utility. This one's mainly there as a proof-of-concept, since such a tool alone doesn't warrant the degree of customization offered by TPP.
+
 
 ### Basic example
 
