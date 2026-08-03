@@ -188,6 +188,7 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs) {
 	 * (we already compared "kind", so if one's a function, we
 	 * know that both of them are) */
 	if (tpp_macro_isfunction(lhs)) {
+		tpp_size i;
 		if (lhs->tm_data.tmd_func.tmf_argc != rhs->tm_data.tmd_func.tmf_argc)
 			goto nope;
 		if (lhs->tm_data.tmd_func.tmf_expbase != rhs->tm_data.tmd_func.tmf_expbase)
@@ -200,11 +201,28 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs) {
 		if (lhs->tm_data.tmd_func.tmf_n_vanargs != rhs->tm_data.tmd_func.tmf_n_vanargs)
 			goto nope;
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
-		if (tpp_memcmp(lhs->tm_data.tmd_func.tmf_argv,
-		               rhs->tm_data.tmd_func.tmf_argv,
-		               lhs->tm_data.tmd_func.tmf_argc *
-		               sizeof(tpp_macro_argument)) != 0)
-			goto nope;
+
+		/* Must manually compare fields here (can't use `tpp_memcmp`).
+		 *
+		 * Reason: there may be unused padding after `tpp_token_id` in
+		 *         case that `alignof(tpp_size) > sizeof(tpp_token_id)`,
+		 *         which can easily happen on 64-bit platforms */
+		for (i = 0; i < lhs->tm_data.tmd_func.tmf_argc; ++i) {
+			tpp_macro_argument const *lhs_arg = &lhs->tm_data.tmd_func.tmf_argv[i];
+			tpp_macro_argument const *rhs_arg = &rhs->tm_data.tmd_func.tmf_argv[i];
+			if (lhs_arg->tma_id != rhs_arg->tma_id)
+				goto nope;
+			if (lhs_arg->tma_ins_exp != rhs_arg->tma_ins_exp)
+				goto nope;
+#if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
+			if (lhs_arg->tma_ins_str != rhs_arg->tma_ins_str)
+				goto nope;
+#endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
+#if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
+			if (lhs_arg->tma_ins != rhs_arg->tma_ins)
+				goto nope;
+#endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
+		}
 		/* No need to compare "tmf_expand" -- if everything until here is equal
 		 * (especially the bodies), we can assume that expansion opcodes are, too */
 	}

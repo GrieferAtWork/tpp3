@@ -5186,7 +5186,7 @@ TPP_WARNING_EX(TPP_W_REDEFINE_MACRO, 0(), 1(4005), TPP_WSTATE_WARN, {
 	tpp_warn_printf1(tpp_current_info(), "macro %[%s%] redefined\n", tpp_keyword_getcstr(keyword));
 	if (tpp_macro_getdeffilename(old_definition)) {
 		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(old_definition),
-		                           tpp_macro_getdeflcinfo(old_definition));
+		                                tpp_macro_getdeflcinfo(old_definition));
 		tpp_warn_printf1(tpp_current_info(), "note: see previous definition of %[%s%]\n",
 		                 tpp_keyword_getcstr(keyword));
 	}
