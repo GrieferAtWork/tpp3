@@ -34,6 +34,9 @@
 #define TPP_EMITTER_HAVE_MODE_DISPOSE (TPP_HAVE_PROFILE_ALL)
 #endif /* !TPP_EMITTER_HAVE_MODE_DISPOSE */
 
+/* TODO: Emitter mode similar to TPP2's `--tok`, where tokens are emitted
+ *       in a format that is very easily parseable by a machine. */
+
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any `TPP_TOK_SPACE`-token
  * is emitted as an (appropriately long) sequence of ` `-characters, rather
  * than as an echo of the original token's space characters (thereby normalizing
@@ -185,7 +188,7 @@
  *
  * Can be configured in one of 3 ways:
  * - `0`:  Disabled 
- * - `1`:  Enabled (#define/#undef are re-emitted)
+ * - `1`:  Enabled (`#define`/`#undef` are re-emitted)
  * - `-1`: Available (but not enabled by default)
  *
  * When not *Disabled*, can be turned on/off using:
@@ -193,9 +196,11 @@
  * - `tpp_emitter_enable_reemit_macro_definitions()`
  * - `tpp_emitter_disable_reemit_macro_definitions()` */
 #ifndef TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
-#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS  \
-	(TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) && \
-	 TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK))
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS   \
+	((TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) && \
+	  TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)) \
+	 ? -1                                           \
+	 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
 /* Extension to `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`: when emitting
@@ -204,6 +209,27 @@
 #ifndef TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY
 #define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY (TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY */
+
+/* Enable support for re-emission of `#include`, `#include_next`, `#import`
+ * and `#embed` directives.
+ *
+ * Requires that the TPP core is configured to allow runtime override of
+ * its `TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK` hook (since the emitter needs
+ * to be able to override that hook during its initialization)
+ *
+ * Can be configured in one of 3 ways:
+ * - `0`:  Disabled 
+ * - `1`:  Enabled (`#include` are re-emitted)
+ * - `-1`: Available (but not enabled by default)
+ *
+ * When not *Disabled*, can be turned on/off using:
+ * - `tpp_emitter_set_reemit_include_directives()`
+ * - `tpp_emitter_enable_reemit_include_directives()`
+ * - `tpp_emitter_disable_reemit_include_directives()` */
+#ifndef TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
+#define TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES  \
+	(TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? -1 : 0)
+#endif /* !TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
 
 
@@ -253,6 +279,13 @@
 	 TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS && \
 	 TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 #endif /* !TPP_EMITTER_HAVE_CLI_DUMP_N */
+
+/* `-dI`, `--dump=I`:
+ * Turn on `TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES` */
+#ifndef TPP_EMITTER_HAVE_CLI_DUMP_I
+#define TPP_EMITTER_HAVE_CLI_DUMP_I \
+	(TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES)
+#endif /* !TPP_EMITTER_HAVE_CLI_DUMP_I */
 
 /*[[[tpp-end]]]*/
 

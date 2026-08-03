@@ -217,6 +217,23 @@ _tpp_emitter_hook_macro_undefined(tpp_lexer *tpp_restrict self,
                                   tpp_keyword *tpp_restrict name);
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
+/* API support for (re-)emission of `#include` (and friends) directives */
+#if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
+#define tpp_emitter_enable_reemit_include_directives(self) \
+	tpp_lexer_sethook_include_encountered(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered)
+#define tpp_emitter_disable_reemit_include_directives(self) \
+	tpp_lexer_resethook_include_encountered(tpp_emitter_getlexer(self))
+#define tpp_emitter_get_reemit_include_directives(self) \
+	(tpp_lexer_gethook_include_encountered(tpp_emitter_getlexer(self)) == &_tpp_emitter_hook_include_encountered)
+#define tpp_emitter_set_reemit_include_directives(self, v)    \
+	((v) ? tpp_emitter_enable_reemit_include_directives(self) \
+	     : tpp_emitter_disable_reemit_include_directives(self))
+
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_emitter_hook_include_encountered(tpp_lexer *tpp_restrict self,
+                                      tpp_hook_include_kind include_kind);
+#endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

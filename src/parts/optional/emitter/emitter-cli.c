@@ -178,11 +178,27 @@ tpp_emitter_set_dump_N(tpp_emitter_cli_loader *tpp_restrict self) {
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP_N */
 
 
+#if TPP_EMITTER_HAVE_CLI_DUMP_I
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_set_dump_I(tpp_emitter_cli_loader *tpp_restrict self) {
+	(void)self;
+
+	/* Turn on re-emission of #include-directives */
+#if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
+	tpp_emitter_enable_reemit_include_directives(self->tcl_emitter);
+#endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
+
+	return TPP_EOK;
+}
+#endif /* TPP_EMITTER_HAVE_CLI_DUMP_I */
+
+
 #undef TPP_EMITTER_HAVE_CLI_DUMP
 #define TPP_EMITTER_HAVE_CLI_DUMP   \
 	(TPP_EMITTER_HAVE_CLI_DUMP_M || \
 	 TPP_EMITTER_HAVE_CLI_DUMP_D || \
-	 TPP_EMITTER_HAVE_CLI_DUMP_N)
+	 TPP_EMITTER_HAVE_CLI_DUMP_N || \
+	 TPP_EMITTER_HAVE_CLI_DUMP_I)
 
 #if TPP_EMITTER_HAVE_CLI_DUMP
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
@@ -204,9 +220,29 @@ tpp_emitter_set_dump(tpp_emitter_cli_loader *tpp_restrict self, tpp_char what) {
 		return tpp_emitter_set_dump_N(self);
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP_N */
 
+#if TPP_EMITTER_HAVE_CLI_DUMP_I
+	case 'I':
+		return tpp_emitter_set_dump_I(self);
+#endif /* TPP_EMITTER_HAVE_CLI_DUMP_I */
+
 	default: break;
 	}
 	return TPP_ENOENT;
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_set_dumps(tpp_emitter_cli_loader *tpp_restrict self,
+                      char const *whats) {
+	tpp_errno result = TPP_EOK;
+	for (;;) {
+		char what = *whats++;
+		if (what == '\0')
+			break;
+		result = tpp_emitter_set_dump(self, what);
+		if (TPP_ISERR(result))
+			break;
+	}
+	return result;
 }
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP */
 
@@ -264,8 +300,8 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 #if TPP_EMITTER_HAVE_CLI_DUMP
 				if (tpp_streq(arg, "ump=")) {
 					arg += sizeof("ump=") - sizeof(char);
-					if (arg[0] && !arg[1])
-						return tpp_emitter_set_dump(self, arg[0]);
+					if (*arg)
+						return tpp_emitter_set_dumps(self, arg);
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP */
 				{
@@ -285,8 +321,8 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 
 		case 'd':
 #if TPP_EMITTER_HAVE_CLI_DUMP
-			if (arg[0] && !arg[1])
-				return tpp_emitter_set_dump(self, arg[0]);
+			if (*arg)
+				return tpp_emitter_set_dumps(self, arg);
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP */
 			break;
 

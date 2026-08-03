@@ -51,6 +51,9 @@ tpp_emitter_init_after_lexer(tpp_emitter *tpp_restrict self,
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS > 0
 	tpp_emitter_enable_reemit_macro_definitions(self);
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS > 0 */
+#if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES > 0
+	tpp_emitter_enable_reemit_include_directives(self);
+#endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES > 0 */
 }
 
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
@@ -284,9 +287,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_keyword, arg, text, num_bytes)
 	bool is_first = true;
 	if (iter >= end) {
 		/* Special case: *empty* keyword */
-		static char const empty_keyword_repr[] = "__TPP_IDENTIFIER(\"\")";
-		return tpp_emitter_print(self, (tpp_char const *)empty_keyword_repr,
-		                         sizeof(empty_keyword_repr) - sizeof(char));
+		return tpp_emitter_print_conststr(self, "__TPP_IDENTIFIER(\"\")");
 	}
 	do {
 		tpp_char const *uc_start = iter;
@@ -527,7 +528,7 @@ tpp_emitter_print_current_token(tpp_emitter *tpp_restrict self) {
 	case TPP_TOK_POUND_POUND:
 		if (!tpp_emitter_has(self, NORMALIZE_DIGRAPHS))
 			break;
-		return tpp_emitter_print(self, (tpp_char const *)"##", 2);
+		return tpp_emitter_print_conststr(self, "##");
 #endif /* TPP_HAVE_TOK_POUND_POUND */
 #endif /* TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS */
 
@@ -715,11 +716,11 @@ _tpp_emitter_hook_unknown_pragma(tpp_lexer *tpp_restrict lexer) {
 	tpp_token_id prev_token;
 	tpp_token_id tok = tpp_lexer_gettok(lexer);
 	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
-		temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+		temp = tpp_emitter_print_conststr(self, "\n");
 		if (temp < 0)
 			goto err_temp;
 	}
-	temp = tpp_emitter_print(self, (tpp_char const *)"#pragma", 7);
+	temp = tpp_emitter_print_conststr(self, "#pragma");
 	if (temp < 0)
 		goto err_temp;
 	/* Print+yield tokens until the #pragma's end is reached */
@@ -728,7 +729,7 @@ _tpp_emitter_hook_unknown_pragma(tpp_lexer *tpp_restrict lexer) {
 		if (!TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok)) {
 			/* Print token... */
 			if (tpp_lexer_require_whitespace(lexer, prev_token, tok)) {
-				temp = tpp_emitter_print(self, (tpp_char const *)" ", 1);
+				temp = tpp_emitter_print_conststr(self, " ");
 				if (temp < 0)
 					goto err_temp;
 			}
@@ -741,7 +742,7 @@ _tpp_emitter_hook_unknown_pragma(tpp_lexer *tpp_restrict lexer) {
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
 	}
-	temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+	temp = tpp_emitter_print_conststr(self, "\n");
 	if (temp < 0)
 		goto err_temp;
 	self->te_state.tes_prevtok = TPP_TOK_EOF;
@@ -750,6 +751,8 @@ err_temp:
 	return TPP_SSIZE_ASERR(temp);
 }
 #endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
+
+
 
 /* API support for (re-)emission of `#define` and `#undef` directives */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
@@ -760,11 +763,11 @@ _tpp_emitter_hook_macro_defined(tpp_lexer *tpp_restrict lexer,
 	tpp_emitter *self = tpp_emitter_oflexer(lexer);
 	tpp_ssize temp;
 	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
-		temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+		temp = tpp_emitter_print_conststr(self, "\n");
 		if (temp < 0)
 			goto err_temp;
 	}
-	temp = tpp_emitter_print(self, (tpp_char const *)"#define ", 8);
+	temp = tpp_emitter_print_conststr(self, "#define ");
 	if (temp < 0)
 		goto err_temp;
 	temp = tpp_emitter_print(self, tpp_keyword_getstr(name), tpp_keyword_getlen(name));
@@ -784,7 +787,7 @@ _tpp_emitter_hook_macro_defined(tpp_lexer *tpp_restrict lexer,
 				tpp_token_id arg = tpp_macro_getfuncargtok(macro, i);
 				tpp_keyword const *kwd;
 				if (i != 0) {
-					temp = tpp_emitter_print(self, (tpp_char const *)", ", 3);
+					temp = tpp_emitter_print_conststr(self, ", ");
 					if (temp < 0)
 						goto err_temp;
 				}
@@ -798,13 +801,13 @@ _tpp_emitter_hook_macro_defined(tpp_lexer *tpp_restrict lexer,
 					                                 tpp_keyword_getstr(kwd),
 					                                 tpp_keyword_getlen(kwd));
 				} else { /* Should never get here */
-					temp = tpp_emitter_print(self, (tpp_char const *)"?", 1);
+					temp = tpp_emitter_print_conststr(self, "?");
 				}
 				if (temp < 0)
 					goto err_temp;
 			}
 			if (tpp_macro_isvarargs(macro)) {
-				temp = tpp_emitter_print(self, (tpp_char const *)"...", 3);
+				temp = tpp_emitter_print_conststr(self, "...");
 				if (temp < 0)
 					goto err_temp;
 			}
@@ -826,7 +829,7 @@ _tpp_emitter_hook_macro_defined(tpp_lexer *tpp_restrict lexer,
 		}
 	}
 #endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
-	temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+	temp = tpp_emitter_print_conststr(self, "\n");
 	if (temp < 0)
 		goto err_temp;
 	self->te_state.tes_prevtok = TPP_TOK_EOF;
@@ -841,17 +844,17 @@ _tpp_emitter_hook_macro_undefined(tpp_lexer *tpp_restrict lexer,
 	tpp_emitter *self = tpp_emitter_oflexer(lexer);
 	tpp_ssize temp;
 	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
-		temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+		temp = tpp_emitter_print_conststr(self, "\n");
 		if (temp < 0)
 			goto err_temp;
 	}
-	temp = tpp_emitter_print(self, (tpp_char const *)"#undef ", 7);
+	temp = tpp_emitter_print_conststr(self, "#undef ");
 	if (temp < 0)
 		goto err_temp;
 	temp = tpp_emitter_print(self, tpp_keyword_getstr(name), tpp_keyword_getlen(name));
 	if (temp < 0)
 		goto err_temp;
-	temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+	temp = tpp_emitter_print_conststr(self, "\n");
 	if (temp < 0)
 		goto err_temp;
 	self->te_state.tes_prevtok = TPP_TOK_EOF;
@@ -860,6 +863,60 @@ err_temp:
 	return TPP_SSIZE_ASERR(temp);
 }
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
+
+
+
+/* API support for (re-)emission of `#include` (and friends) directives */
+#if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_emitter_hook_include_encountered(tpp_lexer *tpp_restrict lexer,
+                                      tpp_hook_include_kind include_kind) {
+	tpp_emitter *self = tpp_emitter_oflexer(lexer);
+	tpp_ssize temp;
+	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
+		temp = tpp_emitter_print_conststr(self, "\n");
+		if (temp < 0)
+			goto err_temp;
+	}
+	switch (include_kind) {
+#if TPP_HAVE_CPP_INCLUDE
+	case TPP_HOOK_INCLUDE_KIND_INCLUDE:
+		temp = tpp_emitter_print_conststr(self, "#include ");
+		break;
+#endif /* TPP_HAVE_CPP_INCLUDE */
+#if TPP_HAVE_CPP_INCLUDE_NEXT
+	case TPP_HOOK_INCLUDE_KIND_INCLUDE_NEXT:
+		temp = tpp_emitter_print_conststr(self, "#include_next ");
+		break;
+#endif /* TPP_HAVE_CPP_INCLUDE_NEXT */
+#if TPP_HAVE_CPP_IMPORT
+	case TPP_HOOK_INCLUDE_KIND_IMPORT:
+		temp = tpp_emitter_print_conststr(self, "#import ");
+		break;
+#endif /* TPP_HAVE_CPP_IMPORT */
+#if TPP_HAVE_CPP_EMBED
+	case TPP_HOOK_INCLUDE_KIND_EMBED:
+		temp = tpp_emitter_print_conststr(self, "#embed ");
+		break;
+#endif /* TPP_HAVE_CPP_EMBED */
+	default: tpp_unreachable();
+	}
+	if (temp < 0)
+		goto err_temp;
+	temp = tpp_emitter_print_generic(self,
+	                                 tpp_lexer_gettokenstart(lexer),
+	                                 tpp_lexer_gettokenlen(lexer));
+	if (temp < 0)
+		goto err_temp;
+	temp = tpp_emitter_print_conststr(self, "\n");
+	if (temp < 0)
+		goto err_temp;
+	self->te_state.tes_prevtok = TPP_TOK_EOF;
+	return TPP_EOK;
+err_temp:
+	return TPP_SSIZE_ASERR(temp);
+}
+#endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
 
 TPP_DECL_END

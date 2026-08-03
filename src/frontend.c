@@ -114,9 +114,6 @@ int main(int argc, char **argv) {
 	 *     like this to stderr:
 	 *     >> print("." * NUMBER_OF_IO_FILES_ON_INCLUDE_STACK, " ", tpp_file_getrealfilename(file));
 	 *
-	 * - "-dI", "--dump=I"
-	 *   - Set hook for TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK that echoes the operator
-	 *     to preprocessor output
 	 * - "-dU", "--dump=U"
 	 *   No (additional) special handling needed in TPP backend
 	 *   - Have a map `currently_defined_used_macros: {tpp_keyword: tpp_macro}`
