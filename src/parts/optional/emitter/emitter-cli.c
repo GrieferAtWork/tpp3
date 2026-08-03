@@ -37,6 +37,8 @@ TPP_DECL_BEGIN
 for (local option, what: {
 	{"TOK_SPACE", "enable"},
 	{"TOK_LF", "enable"},
+	{"TOK_SPACE", "disable"},
+	{"TOK_LF", "disable"},
 }) {
 	local extraArgs = what == "set" ? ", v" : "";
 	print("#if TPP_CONF_ISEXT(TPP_HAVE_", option, ")");
@@ -62,6 +64,20 @@ for (local option, what: {
 #else /* ... */
 #define tpp_lexer_enable_TOK_LF(self) TPP_EOK
 #endif /* !... */
+#if TPP_CONF_ISEXT(TPP_HAVE_TOK_SPACE)
+#define tpp_lexer_disable_TOK_SPACE(self) tpp_lexer_disableextension(self, TPP_EXT_TOK_SPACE)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TOK_SPACE)
+#define tpp_lexer_disable_TOK_SPACE(self) (tpp_lexer_disablefeature(self, TPP_FEAT_TOK_SPACE), TPP_EOK)
+#else /* ... */
+#define tpp_lexer_disable_TOK_SPACE(self) TPP_EOK
+#endif /* !... */
+#if TPP_CONF_ISEXT(TPP_HAVE_TOK_LF)
+#define tpp_lexer_disable_TOK_LF(self) tpp_lexer_disableextension(self, TPP_EXT_TOK_LF)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TOK_LF)
+#define tpp_lexer_disable_TOK_LF(self) (tpp_lexer_disablefeature(self, TPP_FEAT_TOK_LF), TPP_EOK)
+#else /* ... */
+#define tpp_lexer_disable_TOK_LF(self) TPP_EOK
+#endif /* !... */
 /*[[[end]]]*/
 
 
@@ -74,6 +90,8 @@ for (local option, what: {
 	{"NORMALIZE_BSE", "set"},
 	{"NORMALIZE_TRIGRAPHS", "set"},
 	{"NORMALIZE_DIGRAPHS", "set"},
+	{"NOLINE", "enable"},
+	{"NOLINE", "disable"},
 }) {
 	local extraArgs = what == "set" ? ", v" : "";
 	print("#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_", option, ")");
@@ -118,6 +136,16 @@ for (local option, what: {
 #else /* ... */
 #define tpp_emitter_set_NORMALIZE_DIGRAPHS(self, v) (void)0
 #endif /* !... */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE)
+#define tpp_emitter_enable_NOLINE(self) tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_NOLINE)
+#else /* ... */
+#define tpp_emitter_enable_NOLINE(self) (void)0
+#endif /* !... */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE)
+#define tpp_emitter_disable_NOLINE(self) tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_NOLINE)
+#else /* ... */
+#define tpp_emitter_disable_NOLINE(self) (void)0
+#endif /* !... */
 /*[[[end]]]*/
 
 
@@ -157,9 +185,7 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_no_line_commands(tpp_emitter_cli_loader *tpp_restrict self) {
 	tpp_errno result;
 	(void)self;
-#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_NOLINE)
-	tpp_emitter_enablefeature(self->tcl_emitter, TPP_EMITTER_FEAT_NOLINE);
-#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_NOLINE) */
+	tpp_emitter_enable_NOLINE(self->tcl_emitter);
 
 	/* Enable emission of SPACE/LF tokens */
 	result = tpp_lexer_enable_TOK_SPACE(tpp_emitter_getlexer(self->tcl_emitter));
@@ -399,11 +425,68 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 			case 'd':
 #if TPP_EMITTER_HAVE_CLI_DUMP
 				if (tpp_streq(arg, "ump=")) {
-					arg += sizeof("ump=") - sizeof(char);
+					arg += (sizeof("ump=") - sizeof(char));
 					if (*arg)
 						return tpp_emitter_cli_enable_dumps(self, arg);
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP */
+				{
+				}
+				break;
+
+#undef TPP_EMITTER_HAVE_CLI_MODE
+#define TPP_EMITTER_HAVE_CLI_MODE         \
+	(TPP_EMITTER_HAVE_CLI_MODE_EMIT ||    \
+	 TPP_EMITTER_HAVE_CLI_MODE_DISPOSE || \
+	 TPP_EMITTER_HAVE_CLI_MODE_BRACKET || \
+	 TPP_EMITTER_HAVE_CLI_MODE_TYPED)
+
+			case 'm':
+#if TPP_EMITTER_HAVE_CLI_MODE
+				if (tpp_streq(arg, "ode=")) {
+					arg += (sizeof("ode=") - sizeof(char));
+#if TPP_EMITTER_HAVE_CLI_MODE_EMIT
+					if (tpp_streq(arg, "emit\0")) {
+						tpp_errno error;
+						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_EMIT);
+						tpp_emitter_disable_NOLINE(self->tcl_emitter);
+						/* Turn off emission of `SPACE` and `LF` tokens */
+						error = tpp_lexer_disable_TOK_SPACE(tpp_emitter_getlexer(self->tcl_emitter));
+						if (!TPP_ISERR(error))
+							error = tpp_lexer_disable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
+						return error;
+					} else
+#endif /* !TPP_EMITTER_HAVE_CLI_MODE_EMIT */
+#if TPP_EMITTER_HAVE_CLI_MODE_DISPOSE
+					if (tpp_streq(arg, "dispose\0")) {
+						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_DISPOSE);
+						return TPP_EOK;
+					} else
+#endif /* !TPP_EMITTER_HAVE_CLI_MODE_DISPOSE */
+#if TPP_EMITTER_HAVE_CLI_MODE_BRACKET
+					if (tpp_streq(arg, "bracket\0")) {
+						tpp_errno error;
+						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_BRACKET);
+						error = tpp_lexer_enable_TOK_SPACE(tpp_emitter_getlexer(self->tcl_emitter));
+						if (!TPP_ISERR(error))
+							error = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
+						return error;
+					} else
+#endif /* !TPP_EMITTER_HAVE_CLI_MODE_BRACKET */
+#if TPP_EMITTER_HAVE_CLI_MODE_TYPED
+					if (tpp_streq(arg, "typed\0")) {
+						tpp_errno error;
+						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_TYPED);
+						error = tpp_lexer_enable_TOK_SPACE(tpp_emitter_getlexer(self->tcl_emitter));
+						if (!TPP_ISERR(error))
+							error = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
+						return error;
+					} else
+#endif /* !TPP_EMITTER_HAVE_CLI_MODE_TYPED */
+					{
+					}
+				} else
+#endif /* TPP_EMITTER_HAVE_CLI_MODE */
 				{
 				}
 				break;

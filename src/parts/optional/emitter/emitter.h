@@ -28,8 +28,15 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-typedef struct tpp_emitter_state {
+#undef TPP_EMITTER_HAVE_CURPOS
 #if TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
+#define TPP_EMITTER_HAVE_CURPOS 1
+#else /* ... */
+#define TPP_EMITTER_HAVE_CURPOS 0
+#endif /* !... */
+
+typedef struct tpp_emitter_state {
+#if TPP_EMITTER_HAVE_CURPOS
 	tpp_lcinfo          TPP_EMITTER_INTERNAL(tes_curpos);          /* Current line/column position in output (with respect to emitted `#line` directives) */
 	char const         *TPP_EMITTER_INTERNAL(tes_curfilename);     /* [0..1] The filename (tpp_file_getfilename()) that goes with `tes_curpos` (or "NULL" if unknown, or this is the first token) */
 	TPP_REF tpp_string *TPP_EMITTER_INTERNAL(tes_curfilename_str); /* [0..1] Same as `tes_curfilename`, but keeps a reference to `tpp_file_getfilenamestr()` so custom filename overrides aren't free'd early */
@@ -41,10 +48,10 @@ typedef struct tpp_emitter_state {
 	, (self)->TPP_EMITTER_INTERNAL(tes_curfilename_str)                            \
 	  ? (void)tpp_string_decref((self)->TPP_EMITTER_INTERNAL(tes_curfilename_str)) \
 	  : (void)0
-#else /* TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#else /* TPP_EMITTER_HAVE_CURPOS */
 #define _tpp_emitter_state_init_cur(self) /* nothing */
 #define _tpp_emitter_state_fini_cur(self) /* nothing */
-#endif /* TPP_EMITTER_HAVE_MODE_EMIT && !TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#endif /* !TPP_EMITTER_HAVE_CURPOS */
 	tpp_token_id        TPP_EMITTER_INTERNAL(tes_prevtok);         /* Last token ID (preceding the token currently being emitted).
 	                                                                * When the current token is the first, this is `TPP_TOK_EOF` */
 } tpp_emitter_state;
@@ -74,6 +81,26 @@ typedef enum tpp_emitter_mode {
 #define TPP_EMITTER_MODE_HAVE_MULTIPLE 1
 #endif /* _TPP_EMITTER_MODE_DEFAULT */
 #endif /* TPP_EMITTER_HAVE_MODE_DISPOSE */
+
+	/* Print tokens in [brackets] */
+#if TPP_EMITTER_HAVE_MODE_BRACKET
+	TPP_EMITTER_MODE_BRACKET,
+#ifndef _TPP_EMITTER_MODE_DEFAULT
+#define _TPP_EMITTER_MODE_DEFAULT TPP_EMITTER_MODE_BRACKET
+#else /* !_TPP_EMITTER_MODE_DEFAULT */
+#define TPP_EMITTER_MODE_HAVE_MULTIPLE 1
+#endif /* _TPP_EMITTER_MODE_DEFAULT */
+#endif /* TPP_EMITTER_HAVE_MODE_BRACKET */
+
+	/* Print tokens as `[{TYPE}:{TOKEN}]` */
+#if TPP_EMITTER_HAVE_MODE_TYPED
+	TPP_EMITTER_MODE_TYPED,
+#ifndef _TPP_EMITTER_MODE_DEFAULT
+#define _TPP_EMITTER_MODE_DEFAULT TPP_EMITTER_MODE_TYPED
+#else /* !_TPP_EMITTER_MODE_DEFAULT */
+#define TPP_EMITTER_MODE_HAVE_MULTIPLE 1
+#endif /* _TPP_EMITTER_MODE_DEFAULT */
+#endif /* TPP_EMITTER_HAVE_MODE_TYPED */
 
 } tpp_emitter_mode;
 

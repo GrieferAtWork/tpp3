@@ -81,6 +81,29 @@
 #define TPP_EMITTER_HAVE_MODE_DISPOSE (TPP_HAVE_PROFILE_ALL)
 #endif /* !TPP_EMITTER_HAVE_MODE_DISPOSE */
 
+/* Provide support for `TPP_EMITTER_MODE_BRACKET`, where
+ * tokens are emitted as per `TPP_EMITTER_HAVE_MODE_EMIT`,
+ * but surrounded by brackets. */
+#ifndef TPP_EMITTER_HAVE_MODE_BRACKET
+#define TPP_EMITTER_HAVE_MODE_BRACKET (TPP_HAVE_PROFILE_ALL)
+#endif /* !TPP_EMITTER_HAVE_MODE_BRACKET */
+
+/* Provide support for `TPP_EMITTER_MODE_TYPED`, where
+ * tokens are emitted as per `TPP_EMITTER_HAVE_MODE_EMIT`,
+ * but surrounded as `[{TYPE}:{TOKEN}]`, where `TYPE` is the
+ * result of `tpp_strtokenid()` and the canonical keyword name. */
+#ifndef TPP_EMITTER_HAVE_MODE_TYPED
+#define TPP_EMITTER_HAVE_MODE_TYPED (TPP_HAVE_STRTOKENID && TPP_HAVE_PROFILE_ALL)
+#endif /* !TPP_EMITTER_HAVE_MODE_TYPED */
+
+#undef TPP_EMITTER_HAVE_EMIT_TOKEN
+#if (TPP_EMITTER_HAVE_MODE_EMIT || \
+     TPP_EMITTER_HAVE_MODE_BRACKET)
+#define TPP_EMITTER_HAVE_EMIT_TOKEN 1
+#else /* ... */
+#define TPP_EMITTER_HAVE_EMIT_TOKEN 0
+#endif /* !... */
+
 /* TODO: Emitter mode similar to TPP2's `--tok`, where tokens are emitted
  *       in a format that is very easily parseable by a machine. */
 
@@ -89,7 +112,7 @@
  * than as an echo of the original token's space characters (thereby normalizing
  * any unicode whitespace or other control characters to `U+0020 SPACE`). */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_SPACE
-#define TPP_EMITTER_HAVE_NORMALIZE_SPACE (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_SPACE (TPP_EMITTER_HAVE_EMIT_TOKEN ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_SPACE */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any `TPP_TOK_LF`-token is
@@ -97,7 +120,7 @@
  * linefeed bytes (thereby normalizing any unicode linefeed, CR, or CRLF
  * sequences to LF). */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_LF
-#define TPP_EMITTER_HAVE_NORMALIZE_LF (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_LF (TPP_EMITTER_HAVE_EMIT_TOKEN ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_LF */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any `TPP_TOK_ISSTRING`-token
@@ -111,7 +134,7 @@
  * greatly reduced set of string tokens (and escape sequences) in order to
  * fully understand *any* kind of string token that may be produced by TPP. */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_C_STRING
-#define TPP_EMITTER_HAVE_NORMALIZE_C_STRING ((TPP_EMITTER_HAVE_MODE_EMIT && TPP_HAVE_TOK_C_STRING && TPP_HAVE_TOKEN_ENCODESTRING && TPP_HAVE_LEXER_DECODESTRING) ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_C_STRING ((TPP_EMITTER_HAVE_EMIT_TOKEN && TPP_HAVE_TOK_C_STRING && TPP_HAVE_TOKEN_ENCODESTRING && TPP_HAVE_LEXER_DECODESTRING) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_C_STRING */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, normalize `\u`, `\U`
@@ -132,25 +155,25 @@
  *       be emitted as `__TPP_IDENTIFIER("")`, since there's no other way
  *       to write that identifier. */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS
-#define TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS ((TPP_EMITTER_HAVE_MODE_EMIT && (TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)) ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS ((TPP_EMITTER_HAVE_EMIT_TOKEN && (TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED)) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, remove `\`-escaped
  * line-feeds from generic tokens. */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_BSE
-#define TPP_EMITTER_HAVE_NORMALIZE_BSE ((TPP_EMITTER_HAVE_MODE_EMIT && TPP_HAVE_BSE) ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_BSE ((TPP_EMITTER_HAVE_EMIT_TOKEN && TPP_HAVE_BSE) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_BSE */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, normalize trigraph
  * sequences in generic tokens. */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS
-#define TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS ((TPP_EMITTER_HAVE_MODE_EMIT && TPP_HAVE_TRIGRAPHS) ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS ((TPP_EMITTER_HAVE_EMIT_TOKEN && TPP_HAVE_TRIGRAPHS) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, normalize digraph
  * sequences in generic tokens. */
 #ifndef TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS
-#define TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS ((TPP_EMITTER_HAVE_MODE_EMIT && TPP_HAVE_DIGRAPHS) ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS ((TPP_EMITTER_HAVE_EMIT_TOKEN && TPP_HAVE_DIGRAPHS) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, inhibit emission of
@@ -343,7 +366,7 @@
  * on emission of SPACE/LF tokens (if runtime-configurable). */
 #ifndef TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS
 #define TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS \
-	(TPP_EMITTER_HAVE_NOLINE && (TPP_HAVE_TOK_SPACE && TPP_HAVE_TOK_LF))
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_NOLINE && (TPP_HAVE_TOK_SPACE && TPP_HAVE_TOK_LF))
 #endif /* !TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS */
 
 /* `-dM`, `--dump=M`:
@@ -355,7 +378,8 @@
  * mode of operations to `TPP_EMITTER_MODE_DISPOSE` (see `TPP_EMITTER_HAVE_MODE_DISPOSE`). */
 #ifndef TPP_EMITTER_HAVE_CLI_DUMP_M
 #define TPP_EMITTER_HAVE_CLI_DUMP_M               \
-	(TPP_HAVE_LEXER_DUMP_DEFINITIONS &&           \
+	(TPP_EMITTER_HAVE_CLI &&                      \
+	 TPP_HAVE_LEXER_DUMP_DEFINITIONS &&           \
 	 TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS && \
 	 TPP_EMITTER_HAVE_MODE_DISPOSE)
 #endif /* !TPP_EMITTER_HAVE_CLI_DUMP_M */
@@ -364,7 +388,8 @@
  * Same as `TPP_EMITTER_HAVE_CLI_DUMP_M`, but doesn't turn on `TPP_EMITTER_MODE_DISPOSE` */
 #ifndef TPP_EMITTER_HAVE_CLI_DUMP_D
 #define TPP_EMITTER_HAVE_CLI_DUMP_D     \
-	(TPP_HAVE_LEXER_DUMP_DEFINITIONS && \
+	(TPP_EMITTER_HAVE_CLI &&            \
+	 TPP_HAVE_LEXER_DUMP_DEFINITIONS && \
 	 TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS)
 #endif /* !TPP_EMITTER_HAVE_CLI_DUMP_D */
 
@@ -373,7 +398,8 @@
  * `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY` */
 #ifndef TPP_EMITTER_HAVE_CLI_DUMP_N
 #define TPP_EMITTER_HAVE_CLI_DUMP_N               \
-	(TPP_HAVE_LEXER_DUMP_DEFINITIONS &&           \
+	(TPP_EMITTER_HAVE_CLI &&                      \
+	 TPP_HAVE_LEXER_DUMP_DEFINITIONS &&           \
 	 TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS && \
 	 TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 #endif /* !TPP_EMITTER_HAVE_CLI_DUMP_N */
@@ -382,35 +408,35 @@
  * Turn on `TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES` */
 #ifndef TPP_EMITTER_HAVE_CLI_DUMP_I
 #define TPP_EMITTER_HAVE_CLI_DUMP_I \
-	(TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES)
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES)
 #endif /* !TPP_EMITTER_HAVE_CLI_DUMP_I */
 
 /* `-dU`, `--dump=U`:
  * Turn on `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY` */
 #ifndef TPP_EMITTER_HAVE_CLI_DUMP_U
 #define TPP_EMITTER_HAVE_CLI_DUMP_U \
-	(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
 #endif /* !TPP_EMITTER_HAVE_CLI_DUMP_U */
 
 /* `-H`, `--trace-includes`:
  * Turn on `TPP_EMITTER_HAVE_TRACE_INCLUDES` */
 #ifndef TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
 #define TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES \
-	(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_TRACE_INCLUDES)
 #endif /* !TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
 
 /* `-frelaxed-macro-column`, `-fno-relaxed-macro-column`:
  * Turn `TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_FRELAXED_MACRO_COLUMN
 #define TPP_EMITTER_HAVE_CLI_FRELAXED_MACRO_COLUMN \
-	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN))
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN))
 #endif /* !TPP_EMITTER_HAVE_CLI_FRELAXED_MACRO_COLUMN */
 
 /* `-freemit-unknown-pragma`, `-fno-reemit-unknown-pragma`:
  * Turn `TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_FREEMIT_UNKNOWN_PRAGMA
 #define TPP_EMITTER_HAVE_CLI_FREEMIT_UNKNOWN_PRAGMA \
-	(TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA)
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA)
 #endif /* !TPP_EMITTER_HAVE_CLI_FREEMIT_UNKNOWN_PRAGMA */
 
 
@@ -418,49 +444,49 @@
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_SPACE` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_FNORMALIZE_SPACE
 #define TPP_EMITTER_HAVE_CLI_FNORMALIZE_SPACE \
-	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_SPACE))
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_SPACE))
 #endif /* !TPP_EMITTER_HAVE_CLI_FNORMALIZE_SPACE */
 
 /* `-fnormalize-lf`, `-fno-normalize-lf`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_LF` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_FNORMALIZE_LF
 #define TPP_EMITTER_HAVE_CLI_FNORMALIZE_LF \
-	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_LF))
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_LF))
 #endif /* !TPP_EMITTER_HAVE_CLI_FNORMALIZE_LF */
 
 /* `-fnormalize-strings`, `-fno-normalize-strings`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_C_STRING` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_FNORMALIZE_STRINGS
 #define TPP_EMITTER_HAVE_CLI_FNORMALIZE_STRINGS \
-	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING))
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING))
 #endif /* !TPP_EMITTER_HAVE_CLI_FNORMALIZE_STRINGS */
 
 /* `-fnormalize-keywords`, `-fno-normalize-keywords`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_FNORMALIZE_KEYWORDS
 #define TPP_EMITTER_HAVE_CLI_FNORMALIZE_KEYWORDS \
-	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS))
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS))
 #endif /* !TPP_EMITTER_HAVE_CLI_FNORMALIZE_KEYWORDS */
 
 /* `-fnormalize-bse`, `-fno-normalize-bse`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_BSE` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_FNORMALIZE_BSE
 #define TPP_EMITTER_HAVE_CLI_FNORMALIZE_BSE \
-	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_BSE))
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_BSE))
 #endif /* !TPP_EMITTER_HAVE_CLI_FNORMALIZE_BSE */
 
 /* `-fnormalize-trigraphs`, `-fno-normalize-trigraphs`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_BSE` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_FNORMALIZE_TRIGRAPHS
 #define TPP_EMITTER_HAVE_CLI_FNORMALIZE_TRIGRAPHS \
-	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS))
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS))
 #endif /* !TPP_EMITTER_HAVE_CLI_FNORMALIZE_TRIGRAPHS */
 
 /* `-fnormalize-digraphs`, `-fno-normalize-digraphs`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_BSE` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_FNORMALIZE_DIGRAPHS
 #define TPP_EMITTER_HAVE_CLI_FNORMALIZE_DIGRAPHS \
-	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS))
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS))
 #endif /* !TPP_EMITTER_HAVE_CLI_FNORMALIZE_DIGRAPHS */
 
 /* `-fnormalize`, `-fno-normalize`:
@@ -473,15 +499,48 @@
  * - `TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS`
  * - `TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS` */
 #ifndef TPP_EMITTER_HAVE_CLI_FNORMALIZE
-#define TPP_EMITTER_HAVE_CLI_FNORMALIZE                     \
-	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) ||     \
-	 TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_LF) ||        \
-	 TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) ||  \
-	 TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) ||  \
-	 TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_BSE) ||       \
-	 TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS) || \
-	 TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS))
+#define TPP_EMITTER_HAVE_CLI_FNORMALIZE                      \
+	(TPP_EMITTER_HAVE_CLI &&                                 \
+	 (TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) ||     \
+	  TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_LF) ||        \
+	  TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) ||  \
+	  TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) ||  \
+	  TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_BSE) ||       \
+	  TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS) || \
+	  TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS)))
 #endif /* !TPP_EMITTER_HAVE_CLI_FNORMALIZE */
+
+/* `--mode=emit`
+ * - Set emitter mode to `TPP_EMITTER_MODE_EMIT`
+ * - Turn off `TPP_EMITTER_HAVE_NOLINE`
+ * - Turn off emission of `SPACE` and `LF` tokens */
+#ifndef TPP_EMITTER_HAVE_CLI_MODE_EMIT
+#define TPP_EMITTER_HAVE_CLI_MODE_EMIT \
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_MODE_EMIT)
+#endif /* !TPP_EMITTER_HAVE_CLI_MODE_EMIT */
+
+/* `--mode=dispose`
+ * - Set emitter mode to `TPP_EMITTER_MODE_DISPOSE` */
+#ifndef TPP_EMITTER_HAVE_CLI_MODE_DISPOSE
+#define TPP_EMITTER_HAVE_CLI_MODE_DISPOSE \
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_MODE_DISPOSE)
+#endif /* !TPP_EMITTER_HAVE_CLI_MODE_DISPOSE */
+
+/* `--mode=bracket`
+ * - Set emitter mode to `TPP_EMITTER_MODE_BRACKET`
+ * - Turn on emission of `SPACE` and `LF` tokens */
+#ifndef TPP_EMITTER_HAVE_CLI_MODE_BRACKET
+#define TPP_EMITTER_HAVE_CLI_MODE_BRACKET \
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_MODE_BRACKET)
+#endif /* !TPP_EMITTER_HAVE_CLI_MODE_BRACKET */
+
+/* `--mode=typed`
+ * - Set emitter mode to `TPP_EMITTER_HAVE_MODE_TYPED`
+ * - Turn on emission of `SPACE` and `LF` tokens */
+#ifndef TPP_EMITTER_HAVE_CLI_MODE_TYPED
+#define TPP_EMITTER_HAVE_CLI_MODE_TYPED \
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_MODE_TYPED)
+#endif /* !TPP_EMITTER_HAVE_CLI_MODE_TYPED */
 
 /************************************************************************/
 /* File: parts/optional/emitter/emitter-features.h                      */
@@ -657,8 +716,15 @@ TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
 /* File: parts/optional/emitter/emitter.h                               */
 /************************************************************************/
 
-typedef struct tpp_emitter_state {
+#undef TPP_EMITTER_HAVE_CURPOS
 #if TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
+#define TPP_EMITTER_HAVE_CURPOS 1
+#else /* ... */
+#define TPP_EMITTER_HAVE_CURPOS 0
+#endif /* !... */
+
+typedef struct tpp_emitter_state {
+#if TPP_EMITTER_HAVE_CURPOS
 	tpp_lcinfo          TPP_EMITTER_INTERNAL(tes_curpos);          /* Current line/column position in output (with respect to emitted `#line` directives) */
 	char const         *TPP_EMITTER_INTERNAL(tes_curfilename);     /* [0..1] The filename (tpp_file_getfilename()) that goes with `tes_curpos` (or "NULL" if unknown, or this is the first token) */
 	TPP_REF tpp_string *TPP_EMITTER_INTERNAL(tes_curfilename_str); /* [0..1] Same as `tes_curfilename`, but keeps a reference to `tpp_file_getfilenamestr()` so custom filename overrides aren't free'd early */
@@ -670,10 +736,10 @@ typedef struct tpp_emitter_state {
 	, (self)->TPP_EMITTER_INTERNAL(tes_curfilename_str)                            \
 	  ? (void)tpp_string_decref((self)->TPP_EMITTER_INTERNAL(tes_curfilename_str)) \
 	  : (void)0
-#else /* TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#else /* TPP_EMITTER_HAVE_CURPOS */
 #define _tpp_emitter_state_init_cur(self) /* nothing */
 #define _tpp_emitter_state_fini_cur(self) /* nothing */
-#endif /* TPP_EMITTER_HAVE_MODE_EMIT && !TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#endif /* !TPP_EMITTER_HAVE_CURPOS */
 	tpp_token_id        TPP_EMITTER_INTERNAL(tes_prevtok);         /* Last token ID (preceding the token currently being emitted).
 	                                                                * When the current token is the first, this is `TPP_TOK_EOF` */
 } tpp_emitter_state;
@@ -703,6 +769,26 @@ typedef enum tpp_emitter_mode {
 #define TPP_EMITTER_MODE_HAVE_MULTIPLE 1
 #endif /* _TPP_EMITTER_MODE_DEFAULT */
 #endif /* TPP_EMITTER_HAVE_MODE_DISPOSE */
+
+	/* Print tokens in [brackets] */
+#if TPP_EMITTER_HAVE_MODE_BRACKET
+	TPP_EMITTER_MODE_BRACKET,
+#ifndef _TPP_EMITTER_MODE_DEFAULT
+#define _TPP_EMITTER_MODE_DEFAULT TPP_EMITTER_MODE_BRACKET
+#else /* !_TPP_EMITTER_MODE_DEFAULT */
+#define TPP_EMITTER_MODE_HAVE_MULTIPLE 1
+#endif /* _TPP_EMITTER_MODE_DEFAULT */
+#endif /* TPP_EMITTER_HAVE_MODE_BRACKET */
+
+	/* Print tokens as `[{TYPE}:{TOKEN}]` */
+#if TPP_EMITTER_HAVE_MODE_TYPED
+	TPP_EMITTER_MODE_TYPED,
+#ifndef _TPP_EMITTER_MODE_DEFAULT
+#define _TPP_EMITTER_MODE_DEFAULT TPP_EMITTER_MODE_TYPED
+#else /* !_TPP_EMITTER_MODE_DEFAULT */
+#define TPP_EMITTER_MODE_HAVE_MULTIPLE 1
+#endif /* _TPP_EMITTER_MODE_DEFAULT */
+#endif /* TPP_EMITTER_HAVE_MODE_TYPED */
 
 } tpp_emitter_mode;
 
