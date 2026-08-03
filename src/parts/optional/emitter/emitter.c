@@ -618,17 +618,17 @@ emit_without_alignment:
 				need_line_directive = true;
 			} else if (newline == oldline) {
 				if (newcol < oldcol) {
-#if TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES
+#if TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN
 					if (lcfile != tpp_lexer_getfile(lexer) &&
 					    tpp_file_ismacro(tpp_lexer_getfile(lexer)) &&
-						tpp_emitter_has(self, RELAXED_MACRO_LINE_RULES)) {
+						tpp_emitter_has(self, RELAXED_MACRO_COLUMN)) {
 						/* Inside of a macro -- so-as to prevent every token from causing
 						 * another `#line`-directive being emitted, don't be too precise
 						 * in terms of *all* tokens needing to have the proper column */
 						if (require_whitespace)
 							newcol = oldcol + 1;
 					} else
-#endif /* TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES */
+#endif /* TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN */
 					{
 						need_line_directive = true;
 					}

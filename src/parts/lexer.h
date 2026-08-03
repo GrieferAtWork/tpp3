@@ -459,7 +459,7 @@ for (local doc, name,
 	if (!hookMustBeFunctionPointer)
 		print("#define tpp_lexer_gethook_", name.lower(), "(self)    tpp_hooks_get_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks))");
 	print("#define tpp_lexer_sethook_", name.lower(), "(self, v) tpp_hooks_set_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks), v)");
-	print("#define tpp_lexer_resethook_", name.lower(), "(self)  tpp_hooks_reset_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks), v)");
+	print("#define tpp_lexer_resethook_", name.lower(), "(self)  tpp_hooks_reset_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks))");
 	print("#endif /" "* tpp_hooks_set_", name.lower(), " *" "/");
 	print;
 }
@@ -475,7 +475,7 @@ for (local doc, name,
 #endif /* tpp_hooks_get_warnprinter */
 #ifdef tpp_hooks_set_warnprinter
 #define tpp_lexer_sethook_warnprinter(self, v) tpp_hooks_set_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_warnprinter(self)  tpp_hooks_reset_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_warnprinter(self)  tpp_hooks_reset_warnprinter(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_warnprinter */
 
 /* >> tpp_errno tpp_lexer_callhook_warnhandler(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
@@ -495,7 +495,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_warnhandler
 #define tpp_lexer_gethook_warnhandler(self)    tpp_hooks_get_warnhandler(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_warnhandler(self, v) tpp_hooks_set_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_warnhandler(self)  tpp_hooks_reset_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_warnhandler(self)  tpp_hooks_reset_warnhandler(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_warnhandler */
 
 /* >> TPP_FORMATPRINTER_DEFINE(tpp_lexer_callhook_mesgprinter, arg, text, num_bytes);
@@ -508,7 +508,7 @@ for (local doc, name,
 #endif /* tpp_hooks_get_mesgprinter */
 #ifdef tpp_hooks_set_mesgprinter
 #define tpp_lexer_sethook_mesgprinter(self, v) tpp_hooks_set_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_mesgprinter(self)  tpp_hooks_reset_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_mesgprinter(self)  tpp_hooks_reset_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_mesgprinter */
 
 /* >> tpp_errno tpp_lexer_callhook_parseexpr(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
@@ -537,7 +537,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_parseexpr
 #define tpp_lexer_gethook_parseexpr(self)    tpp_hooks_get_parseexpr(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_parseexpr(self, v) tpp_hooks_set_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_parseexpr(self)  tpp_hooks_reset_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_parseexpr(self)  tpp_hooks_reset_parseexpr(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_parseexpr */
 
 /* >> tpp_errno tpp_lexer_callhook_unknown_pragma(tpp_lexer *tpp_restrict self);
@@ -552,7 +552,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_unknown_pragma
 #define tpp_lexer_gethook_unknown_pragma(self)    tpp_hooks_get_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_unknown_pragma(self, v) tpp_hooks_set_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_unknown_pragma(self)  tpp_hooks_reset_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_unknown_pragma(self)  tpp_hooks_reset_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_unknown_pragma */
 
 /* >> tpp_errno tpp_lexer_callhook_new_dependency(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
@@ -564,7 +564,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_new_dependency
 #define tpp_lexer_gethook_new_dependency(self)    tpp_hooks_get_new_dependency(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_new_dependency(self, v) tpp_hooks_set_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_new_dependency(self)  tpp_hooks_reset_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_new_dependency(self)  tpp_hooks_reset_new_dependency(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_new_dependency */
 
 /* >> tpp_errno tpp_lexer_callhook_file_pushed(tpp_lexer *tpp_restrict self);
@@ -579,7 +579,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_file_pushed
 #define tpp_lexer_gethook_file_pushed(self)    tpp_hooks_get_file_pushed(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_file_pushed(self, v) tpp_hooks_set_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_file_pushed(self)  tpp_hooks_reset_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_file_pushed(self)  tpp_hooks_reset_file_pushed(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_file_pushed */
 
 /* >> void tpp_lexer_callhook_file_popped(tpp_lexer *tpp_restrict self);
@@ -598,7 +598,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_file_popped
 #define tpp_lexer_gethook_file_popped(self)    tpp_hooks_get_file_popped(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_file_popped(self, v) tpp_hooks_set_file_popped(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_file_popped(self)  tpp_hooks_reset_file_popped(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_file_popped(self)  tpp_hooks_reset_file_popped(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_file_popped */
 
 /* >> tpp_errno tpp_lexer_callhook_include_encountered(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
@@ -626,7 +626,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_include_encountered
 #define tpp_lexer_gethook_include_encountered(self)    tpp_hooks_get_include_encountered(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_include_encountered(self, v) tpp_hooks_set_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_include_encountered(self)  tpp_hooks_reset_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_include_encountered(self)  tpp_hooks_reset_include_encountered(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_include_encountered */
 
 /* >> tpp_errno tpp_lexer_callhook_include_not_found(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
@@ -650,7 +650,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_include_not_found
 #define tpp_lexer_gethook_include_not_found(self)    tpp_hooks_get_include_not_found(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_include_not_found(self, v) tpp_hooks_set_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_include_not_found(self)  tpp_hooks_reset_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_include_not_found(self)  tpp_hooks_reset_include_not_found(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_include_not_found */
 
 /* >> tpp_errno tpp_lexer_callhook_macro_defined(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro);
@@ -668,7 +668,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_macro_defined
 #define tpp_lexer_gethook_macro_defined(self)    tpp_hooks_get_macro_defined(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_macro_defined(self, v) tpp_hooks_set_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_macro_defined(self)  tpp_hooks_reset_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_macro_defined(self)  tpp_hooks_reset_macro_defined(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_macro_defined */
 
 /* >> tpp_errno tpp_lexer_callhook_macro_undefined(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name);
@@ -689,7 +689,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_macro_undefined
 #define tpp_lexer_gethook_macro_undefined(self)    tpp_hooks_get_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_macro_undefined(self, v) tpp_hooks_set_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_macro_undefined(self)  tpp_hooks_reset_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_macro_undefined(self)  tpp_hooks_reset_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_macro_undefined */
 
 /* >> tpp_errno tpp_lexer_callhook_ident_sccs(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
@@ -709,7 +709,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_ident_sccs
 #define tpp_lexer_gethook_ident_sccs(self)    tpp_hooks_get_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_ident_sccs(self, v) tpp_hooks_set_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_ident_sccs */
 
 /* >> tpp_errno tpp_lexer_callhook_system_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
@@ -729,7 +729,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_system_include_path
 #define tpp_lexer_gethook_system_include_path(self)    tpp_hooks_get_system_include_path(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_system_include_path(self, v) tpp_hooks_set_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_system_include_path */
 
 /* >> tpp_errno tpp_lexer_callhook_system_embed_path(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
@@ -746,7 +746,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_system_embed_path
 #define tpp_lexer_gethook_system_embed_path(self)    tpp_hooks_get_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_system_embed_path(self, v) tpp_hooks_set_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_system_embed_path(self)  tpp_hooks_reset_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_system_embed_path(self)  tpp_hooks_reset_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_system_embed_path */
 
 /* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
@@ -771,7 +771,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_unknown_string_escape
 #define tpp_lexer_gethook_unknown_string_escape(self)    tpp_hooks_get_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_unknown_string_escape(self, v) tpp_hooks_set_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_unknown_string_escape(self)  tpp_hooks_reset_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_unknown_string_escape(self)  tpp_hooks_reset_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_unknown_string_escape */
 
 /* >> tpp_errno tpp_lexer_callhook_raise_lexerror(tpp_lexer *tpp_restrict self);
@@ -785,7 +785,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_raise_lexerror
 #define tpp_lexer_gethook_raise_lexerror(self)    tpp_hooks_get_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_raise_lexerror(self, v) tpp_hooks_set_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_raise_lexerror(self)  tpp_hooks_reset_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_raise_lexerror(self)  tpp_hooks_reset_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_raise_lexerror */
 
 /* >> tpp_errno tpp_lexer_callhook_isfloatsuffix(tpp_lexer *tpp_restrict self, tpp_char const *pos);
@@ -804,7 +804,7 @@ for (local doc, name,
 #ifdef tpp_hooks_set_isfloatsuffix
 #define tpp_lexer_gethook_isfloatsuffix(self)    tpp_hooks_get_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks))
 #define tpp_lexer_sethook_isfloatsuffix(self, v) tpp_hooks_set_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), v)
-#define tpp_lexer_resethook_isfloatsuffix(self)  tpp_hooks_reset_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), v)
+#define tpp_lexer_resethook_isfloatsuffix(self)  tpp_hooks_reset_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_set_isfloatsuffix */
 /*[[[end]]]*/
 

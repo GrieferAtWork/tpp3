@@ -52,7 +52,7 @@
 #define teff_NORMALIZE_TRIGRAPHS                TPP_EMITTER_INTERNAL(teff_NORMALIZE_TRIGRAPHS)
 #define teff_NORMALIZE_DIGRAPHS                 TPP_EMITTER_INTERNAL(teff_NORMALIZE_DIGRAPHS)
 #define teff_NOLINE                             TPP_EMITTER_INTERNAL(teff_NOLINE)
-#define teff_RELAXED_MACRO_LINE_RULES           TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_LINE_RULES)
+#define teff_RELAXED_MACRO_COLUMN               TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_COLUMN)
 #define teff_REEMIT_MACRO_DEFINITIONS_LAZY      TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_LAZY)
 #define teff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 #define teff_TRACE_INCLUDES                     TPP_EMITTER_INTERNAL(teff_TRACE_INCLUDES)
@@ -99,9 +99,9 @@ TPP_CONST_IMPL tpp_emitter_features const tpp_emitter_features_default = {
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE)
 		/* .teff_NOLINE                             = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NOLINE),
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) */
-#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES)
-		/* .teff_RELAXED_MACRO_LINE_RULES           = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES),
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN)
+		/* .teff_RELAXED_MACRO_COLUMN               = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN),
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
 		/* .teff_REEMIT_MACRO_DEFINITIONS_LAZY      = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY),
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
@@ -707,17 +707,17 @@ emit_without_alignment:
 				need_line_directive = true;
 			} else if (newline == oldline) {
 				if (newcol < oldcol) {
-#if TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES
+#if TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN
 					if (lcfile != tpp_lexer_getfile(lexer) &&
 					    tpp_file_ismacro(tpp_lexer_getfile(lexer)) &&
-						tpp_emitter_has(self, RELAXED_MACRO_LINE_RULES)) {
+						tpp_emitter_has(self, RELAXED_MACRO_COLUMN)) {
 						/* Inside of a macro -- so-as to prevent every token from causing
 						 * another `#line`-directive being emitted, don't be too precise
 						 * in terms of *all* tokens needing to have the proper column */
 						if (require_whitespace)
 							newcol = oldcol + 1;
 					} else
-#endif /* TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES */
+#endif /* TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN */
 					{
 						need_line_directive = true;
 					}
@@ -1216,6 +1216,43 @@ tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self) {
 #endif /* !... */
 
 
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE)
+#define tpp_emitter_set_NORMALIZE_SPACE(self, v) tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_NORMALIZE_SPACE, v)
+#else /* ... */
+#define tpp_emitter_set_NORMALIZE_SPACE(self, v) (void)0
+#endif /* !... */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF)
+#define tpp_emitter_set_NORMALIZE_LF(self, v) tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_NORMALIZE_LF, v)
+#else /* ... */
+#define tpp_emitter_set_NORMALIZE_LF(self, v) (void)0
+#endif /* !... */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING)
+#define tpp_emitter_set_NORMALIZE_C_STRING(self, v) tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_NORMALIZE_C_STRING, v)
+#else /* ... */
+#define tpp_emitter_set_NORMALIZE_C_STRING(self, v) (void)0
+#endif /* !... */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS)
+#define tpp_emitter_set_NORMALIZE_KEYWORDS(self, v) tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_NORMALIZE_KEYWORDS, v)
+#else /* ... */
+#define tpp_emitter_set_NORMALIZE_KEYWORDS(self, v) (void)0
+#endif /* !... */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE)
+#define tpp_emitter_set_NORMALIZE_BSE(self, v) tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_NORMALIZE_BSE, v)
+#else /* ... */
+#define tpp_emitter_set_NORMALIZE_BSE(self, v) (void)0
+#endif /* !... */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS)
+#define tpp_emitter_set_NORMALIZE_TRIGRAPHS(self, v) tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_NORMALIZE_TRIGRAPHS, v)
+#else /* ... */
+#define tpp_emitter_set_NORMALIZE_TRIGRAPHS(self, v) (void)0
+#endif /* !... */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS)
+#define tpp_emitter_set_NORMALIZE_DIGRAPHS(self, v) tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_NORMALIZE_DIGRAPHS, v)
+#else /* ... */
+#define tpp_emitter_set_NORMALIZE_DIGRAPHS(self, v) (void)0
+#endif /* !... */
+
+
 /* Define a function `tpp_emitter_cli_warnf()` */
 #undef TPP_HAVE_EMITTER_CLI_WARN
 #define TPP_HAVE_EMITTER_CLI_WARN \
@@ -1527,6 +1564,97 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				return tpp_emitter_cli_enable_dumps(self, arg);
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP */
 			break;
+
+		case 'f': {
+#if (TPP_EMITTER_HAVE_CLI_FRELAXED_MACRO_COLUMN || \
+     TPP_EMITTER_HAVE_CLI_FREEMIT_UNKNOWN_PRAGMA)
+			bool no = false;
+			if (tpp_streq(arg, "no-"))
+				no = true, arg += 3;
+#endif /* ... */
+
+#if TPP_EMITTER_HAVE_CLI_FRELAXED_MACRO_COLUMN
+			if (tpp_streq(arg, "relaxed-macro-column\0")) {
+				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_RELAXED_MACRO_COLUMN, !no);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_FRELAXED_MACRO_COLUMN */
+#if TPP_EMITTER_HAVE_CLI_FREEMIT_UNKNOWN_PRAGMA
+			if (tpp_streq(arg, "reemit-unknown-pragma\0")) {
+				tpp_emitter_set_reemit_unknown_pragma(self->tcl_emitter, !no);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_FREEMIT_UNKNOWN_PRAGMA */
+#if (TPP_EMITTER_HAVE_CLI_FNORMALIZE_SPACE ||     \
+     TPP_EMITTER_HAVE_CLI_FNORMALIZE_LF ||        \
+     TPP_EMITTER_HAVE_CLI_FNORMALIZE_STRINGS ||   \
+     TPP_EMITTER_HAVE_CLI_FNORMALIZE_KEYWORDS ||  \
+     TPP_EMITTER_HAVE_CLI_FNORMALIZE_BSE ||       \
+     TPP_EMITTER_HAVE_CLI_FNORMALIZE_TRIGRAPHS || \
+     TPP_EMITTER_HAVE_CLI_FNORMALIZE_DIGRAPHS)
+			if (tpp_streq(arg, "normalize-")) {
+				arg += (sizeof("normalize-") - sizeof(char));
+#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_SPACE
+				if (tpp_streq(arg, "space\0")) {
+					tpp_emitter_set_NORMALIZE_SPACE(self->tcl_emitter, !no);
+					return TPP_EOK;
+				} else
+#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_SPACE */
+#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_LF
+				if (tpp_streq(arg, "lf\0")) {
+					tpp_emitter_set_NORMALIZE_LF(self->tcl_emitter, !no);
+					return TPP_EOK;
+				} else
+#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_LF */
+#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_STRINGS
+				if (tpp_streq(arg, "strings\0")) {
+					tpp_emitter_set_NORMALIZE_C_STRING(self->tcl_emitter, !no);
+					return TPP_EOK;
+				} else
+#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_STRINGS */
+#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_KEYWORDS
+				if (tpp_streq(arg, "keywords\0")) {
+					tpp_emitter_set_NORMALIZE_KEYWORDS(self->tcl_emitter, !no);
+					return TPP_EOK;
+				} else
+#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_KEYWORDS */
+#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_BSE
+				if (tpp_streq(arg, "bse\0")) {
+					tpp_emitter_set_NORMALIZE_BSE(self->tcl_emitter, !no);
+					return TPP_EOK;
+				} else
+#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_BSE */
+#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_TRIGRAPHS
+				if (tpp_streq(arg, "trigraphs\0")) {
+					tpp_emitter_set_NORMALIZE_TRIGRAPHS(self->tcl_emitter, !no);
+					return TPP_EOK;
+				} else
+#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_TRIGRAPHS */
+#if TPP_EMITTER_HAVE_CLI_FNORMALIZE_DIGRAPHS
+				if (tpp_streq(arg, "digraphs\0")) {
+					tpp_emitter_set_NORMALIZE_DIGRAPHS(self->tcl_emitter, !no);
+					return TPP_EOK;
+				} else
+#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE_DIGRAPHS */
+				{
+				}
+		} else
+#endif /* ... */
+#if TPP_EMITTER_HAVE_CLI_FNORMALIZE
+			if (tpp_streq(arg, "normalize\0")) {
+				tpp_emitter_set_NORMALIZE_SPACE(self->tcl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_LF(self->tcl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_C_STRING(self->tcl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_KEYWORDS(self->tcl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_BSE(self->tcl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_TRIGRAPHS(self->tcl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_DIGRAPHS(self->tcl_emitter, !no);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_FNORMALIZE */
+			{
+			}
+		}	break;
 
 		default: break;
 		}
