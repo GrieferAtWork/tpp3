@@ -345,19 +345,30 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 
 #if TPP_HAVE_KEYWORD_USERDATA
 /* Set the user-data pointer for `self`
+ * @param: destroy_prev: When true, and `tpp_keyword_getuserdata_dtor(self) != NULL`,
+ *                       as well as `tpp_keyword_getuserdata(self) != NULL` on entry,
+ *                       invoke the existing destructor on the old user-data after
+ *                       assigning the new `ptr` and `dtor`
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
-                        void *ptr, void (TPPCALL *dtor)(void *ptr)) {
+                        void *ptr, void (TPPCALL *dtor)(void *ptr),
+                        bool destroy_prev) {
+	void *old_ptr;
+	void (TPPCALL *old_dtor)(void *ptr);
 	tpp_keyword_misc *misc;
 	if (!ptr && !dtor && !self->tk_misc)
 		return TPP_EOK;
 	misc = tpp_keyword_requiremisc(self);
 	if tpp_unlikely(!misc)
 		return TPP_ENOMEM;
+	old_ptr  = misc->tkm_userdata_ptr;
+	old_dtor = misc->tkm_userdata_dtor;
 	misc->tkm_userdata_ptr  = ptr;
 	misc->tkm_userdata_dtor = dtor;
+	if (destroy_prev && old_dtor && old_dtor)
+		(*old_dtor)(old_ptr);
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_KEYWORD_USERDATA */
@@ -1137,9 +1148,10 @@ err_r:
 
 #if TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO
 /* Relocate `self->tm_deffile` in case it references a keyword */
-static TPP_NONNULL((1, 2)) void TPPCALL
-tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
-                           tpp_keywords const *tpp_restrict keywords) {
+static TPP_NONNULL((1, 2, 3)) void TPPCALL
+tpp_macro_relocate(tpp_macro *tpp_restrict self,
+                   tpp_keywords const *tpp_restrict keywords,
+                   tpp_keyword *tpp_restrict keyword) {
 	tpp_char const *deffile = (tpp_char const *)self->tm_deffile;
 	if (deffile) {
 		tpp_size deffile_len = tpp_strlen((char const *)deffile);
@@ -1150,6 +1162,10 @@ tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
 		if (deffile_kwd)
 			self->tm_deffile = tpp_keyword_getcstr(deffile_kwd);
 	}
+	(void)keyword;
+#if TPP_HAVE_MACRO_NAME
+	self->tm_name = keyword;
+#endif /* TPP_HAVE_MACRO_NAME */
 }
 #endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
 
@@ -1228,7 +1244,7 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
 						tpp_size j;
 						for (j = 0; j < misc->tkm_macro_pushstack.tmps_cnt; ++j) {
 							tpp_macro_pushent *ent = &misc->tkm_macro_pushstack.tmps_vec[j];
-							tpp_macro_relocate_deffile(ent->tmpe_macro, self);
+							tpp_macro_relocate(ent->tmpe_macro, self, chain);
 						}
 					}
 #endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
@@ -1245,7 +1261,7 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_ASSERT || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO) */
 #if TPP_HAVE_CPP_MACROS
 				if (_TPP_KEYWORD_MACRO_ISDEFINED(chain->tk_macro))
-					tpp_macro_relocate_deffile(chain->tk_macro, self);
+					tpp_macro_relocate(chain->tk_macro, self, chain);
 #endif /* TPP_HAVE_CPP_MACROS */
 			}
 		}

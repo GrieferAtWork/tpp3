@@ -6296,6 +6296,19 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_MACRO_EQUALS */
 
+/* Add an extra field to `tpp_macro` for the `tpp_keyword` describing
+ * the macro's name. Other than allowing for some slight improvements
+ * to error messages (and allowing the *EMITTER* amalgamation to
+ * implement `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY`), this
+ * being enabled/disabled doesn't have any effects on semantics. */
+#ifndef TPP_HAVE_MACRO_NAME
+#if (TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_MACRO_NAME 1
+#else /* ... */
+#define TPP_HAVE_MACRO_NAME 0
+#endif /* !... */
+#endif /* !TPP_HAVE_MACRO_NAME */
+
 /* Provide a function `tpp_expr_value_printrepr()` to construct the result
  * of `__TPP_EVAL` (see `TPP_HAVE_MACRO___TPP_EVAL`) */
 #ifndef TPP_HAVE_EXPR_VALUE_PRINTREPR

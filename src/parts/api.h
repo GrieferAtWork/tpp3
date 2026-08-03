@@ -45,9 +45,14 @@
 #define TPP_INTERN_DECL extern TPP_INTERN_IMPL
 #endif /* !TPP_INTERN_DECL */
 
-
 /* Not for amalgamation: enable memory leak debugger */
 #ifdef _MSC_VER
+#if ((defined(TPP_BUILDING) && TPP_BUILDING) || \
+     (defined(TPP_BUILDING_OPTIONAL) && TPP_BUILDING_OPTIONAL))
+#define _CRT_SECURE_NO_WARNINGS    /* Know your... */
+#define _CRT_NONSTDC_NO_WARNINGS   /* ... f$cking place ... */
+#define _CRT_OBSOLETE_NO_DEPRECATE /* ... trash! */
+#endif /* ... */
 #define _CRTDBG_MAP_ALLOC 1
 #include <crtdbg.h>
 #endif /* _MSC_VER */
@@ -390,6 +395,11 @@
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_offsetof offsetof
 #endif /* !tpp_offsetof */
+
+#ifndef tpp_container_of
+#define tpp_container_of(ptr, type, member) \
+	((type *)((char *)(ptr) - tpp_offsetof(type, member)))
+#endif /* !tpp_container_of */
 
 #ifndef tpp_lengthof
 #define tpp_lengthof(a) (sizeof(a) / sizeof(*(a)))

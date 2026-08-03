@@ -5379,6 +5379,11 @@ TPP_WARNING(TPP_W_MISSING_CLI_ARGUMENT, 0(), 0(), ~,
 #define tpp_offsetof offsetof
 #endif /* !tpp_offsetof */
 
+#ifndef tpp_container_of
+#define tpp_container_of(ptr, type, member) \
+	((type *)((char *)(ptr) - tpp_offsetof(type, member)))
+#endif /* !tpp_container_of */
+
 #ifndef tpp_lengthof
 #define tpp_lengthof(a) (sizeof(a) / sizeof(*(a)))
 #endif /* !tpp_lengthof */
@@ -11584,6 +11589,19 @@ TPP_DECL_END
 #define TPP_HAVE_MACRO_EQUALS 0
 #endif /* !... */
 #endif /* !TPP_HAVE_MACRO_EQUALS */
+
+/* Add an extra field to `tpp_macro` for the `tpp_keyword` describing
+ * the macro's name. Other than allowing for some slight improvements
+ * to error messages (and allowing the *EMITTER* amalgamation to
+ * implement `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY`), this
+ * being enabled/disabled doesn't have any effects on semantics. */
+#ifndef TPP_HAVE_MACRO_NAME
+#if (TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_MACRO_NAME 1
+#else /* ... */
+#define TPP_HAVE_MACRO_NAME 0
+#endif /* !... */
+#endif /* !TPP_HAVE_MACRO_NAME */
 
 /* Provide a function `tpp_expr_value_printrepr()` to construct the result
  * of `__TPP_EVAL` (see `TPP_HAVE_MACRO___TPP_EVAL`) */
@@ -20419,11 +20437,14 @@ enum {
 };
 
 struct tpp_macro_argbuf; /* Opaque... */
+#if TPP_HAVE_MACRO_NAME
+struct tpp_keyword;
+#endif /* TPP_HAVE_MACRO_NAME */
 typedef struct tpp_macro {
 	tpp_refcnt          TPP_INTERNAL(tm_refcnt);     /* Reference count */
-	/* TODO: Config that adds a `struct tpp_keyword` field here, specifying the macro's name keyword.
-	 *       This could then be used to improve the "originating from here" lines in warning messages,
-	 *       as well as be used to implement GCC's `-dU` switch. */
+#if TPP_HAVE_MACRO_NAME
+	struct tpp_keyword *TPP_INTERNAL(tm_name);       /* [0..1][const] Macro name (if available) */
+#endif /* TPP_HAVE_MACRO_NAME */
 	tpp_macro_kind      TPP_INTERNAL(tm_kind);       /* [const] Macro kind (one of `TPP_MACRO_KIND_*`) */
 #if TPP_HAVE_MACRO_FLAGS
 	tpp_macro_flag      TPP_INTERNAL(tm_flags);      /* [const] Macro flags (set of `TPP_MACRO_FLAG_*`) */
@@ -20499,6 +20520,9 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #define tpp_macro_getdeffilename(self) ((self)->TPP_INTERNAL(tm_deffile))
 #define tpp_macro_getdeflcinfo(self)   ((self)->TPP_INTERNAL(tm_deflc))
 #define tpp_macro_getbodylcinfo(self)  ((self)->TPP_INTERNAL(tm_body_lc))
+#if TPP_HAVE_MACRO_NAME
+#define tpp_macro_getname(self) ((self)->TPP_INTERNAL(tm_name))
+#endif /* TPP_HAVE_MACRO_NAME */
 #if TPP_HAVE_UNICODE
 #define tpp_macro_isbodyutf8(self)  TPP_FILE_ENCODING_ISUTF8((self)->TPP_INTERNAL(tm_body_enc))
 #define tpp_macro_isbodyascii(self) TPP_FILE_ENCODING_ISASCII((self)->TPP_INTERNAL(tm_body_enc))
@@ -21027,11 +21051,16 @@ typedef struct tpp_keyword {
 	 : NULL)
 
 /* Set the user-data pointer for `self`
+ * @param: destroy_prev: When true, and `tpp_keyword_getuserdata_dtor(self) != NULL`,
+ *                       as well as `tpp_keyword_getuserdata(self) != NULL` on entry,
+ *                       invoke the existing destructor on the old user-data after
+ *                       assigning the new `ptr` and `dtor`
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
-                        void *ptr, void (TPPCALL *dtor)(void *ptr));
+                        void *ptr, void (TPPCALL *dtor)(void *ptr),
+                        bool destroy_prev);
 #endif /* TPP_HAVE_KEYWORD_USERDATA */
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
@@ -26082,6 +26111,27 @@ tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);
  * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg);
+
+/* Try to parse a *flag*-style parameter, that is: an argument that actually consists
+ * of multiple, tightly packed parameters, whilst having a singular, leading `-` (that
+ * was already skipped by the caller).
+ *
+ * Example: `-PH` or `-HP`
+ * - This argument consists of 2 flags `-H` and `-P`, which are simply concatenated
+ *   into a single argument here. This function will then parse one of those flags
+ *   from `**p_arg` (iow: `**p_arg` must be one of `H` or `P`), and advance `*p_arg`
+ *   to either the end of the argument, or the next *flag*-style parameter.
+ *
+ * @return: TPP_EOK:    Success (`*p_arg` was updated to point to the next *flag*-style
+ *                      parameter, or the argument string's end)
+ * @return: TPP_ENOENT: Did not recognize the flag in `**p_arg` (caller should try to
+ *                      handle the flag in a different context).
+ * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
+ * @return: TPP_EIO:        HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR:  HARD_ERROR: A emitter error was thrown
+ * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg);
 
 /* Convenience wrapper around `tpp_cli_loader_parsearg()`:
  * - This function passes every argument given to `tpp_cli_loader_parsearg()`

@@ -203,11 +203,45 @@
 	 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
-/* Extension to `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`: when emitting
- * `#define` directives, only emit `#define <MACRO_NAME>`, excluding the
- * macro's actual definition. */
+/* Similar end result to `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`,
+ * but taking a completely different approach in order to get there:
+ * - Hook `TPP_HAVE_FILE_PUSHED_HOOK` to get informed whenever a file
+ *   is pushed onto the `#include`-stack. If that file turns out to
+ *   be a macro, see if that macro's most-recent definition has already
+ *   been dumped.
+ *   - If not, or if the macro's definition has changed, dump it now
+ *     If there was a different definition, emit a `#undef` first
+ * - Whenever a `TPP_TOK_ISKEYWORD()`-token is emitted (`tpp_emitter_emitcurrent()`
+ *   is called while a keyword-token is loaded into the lexer), and the
+ *   linked keyword doesn't have a user-defined macro definition (i.e.
+ *   `!tpp_keyword_hasmacro()`), check what was most-recently emitted
+ *   about that keyword in regards to macro definitions:
+ *   - If the thing that came last was a `#define`-directive, then
+ *     emit a `#undef`-directive and delete the saved macro definition.
+ * - In order to remember the *most-recently-dumped* macro definition
+ *   linked to a keyword, `TPP_HAVE_KEYWORD_USERDATA` is used to store
+ *   a reference to the `tpp_macro` that was most-recently dumped
+ *
+ * NOTE: In order to determine the name of the macro when it is used
+ *       as a result of being expanded onto the #include-stack, this
+ *       feature also requires `TPP_HAVE_MACRO_NAME` to be enabled.
+ *
+ * Because this feature also requires a hook, it must be turned on
+ * using the following APIs, rather than directly setting its feature:
+ * - `tpp_emitter_enable_reemit_macro_definitions_lazy()`
+ * - `tpp_emitter_disable_reemit_macro_definitions_lazy()`
+ * - `tpp_emitter_get_reemit_macro_definitions_lazy()`
+ * - `tpp_emitter_set_reemit_macro_definitions_lazy()` */
+#ifndef TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY ((TPP_HAVE_FILE_PUSHED_HOOK && TPP_HAVE_KEYWORD_USERDATA && TPP_HAVE_MACRO_NAME) ? TPP_CONF_FEAT0 : 0)
+#endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY */
+
+/* Extension to `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS` and
+ * `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY`: when emitting
+ * `#define` directives, only emit `#define <MACRO_NAME>`, excluding
+ * the macro's actual definition. */
 #ifndef TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY
-#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY (TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS ? TPP_CONF_FEAT0 : 0)
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY ((TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS || TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY */
 
 /* Enable support for re-emission of `#include`, `#include_next`, `#import`
@@ -231,6 +265,23 @@
 	(TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? -1 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
+/* Trace includes (and the depth of the `#include`-stack in terms of IO files)
+ * by emitting a line like the following to `tpp_lexer_gethook_mesgprinter()`
+ * whenever an I/O file is pushed to the `#include`-stack:
+ * ```deemon
+ * print("." * NUMBER_OF_IO_FILES_ON_INCLUDE_STACK, " ", tpp_file_getrealfilename(file));
+ * ```
+ *
+ * Because this feature uses the `TPP_HAVE_FILE_PUSHED_HOOK` hook, it
+ * must be turned on using the following APIs, rather than directly
+ * setting its feature:
+ * - `tpp_emitter_enable_trace_includes()`
+ * - `tpp_emitter_disable_trace_includes()`
+ * - `tpp_emitter_get_trace_includes()`
+ * - `tpp_emitter_set_trace_includes()` */
+#ifndef TPP_EMITTER_HAVE_TRACE_INCLUDES
+#define TPP_EMITTER_HAVE_TRACE_INCLUDES ((TPP_HAVE_FILE_PUSHED_HOOK && TPP_HAVE_MESGPRINTER_HOOK) ? TPP_CONF_FEAT0 : 0)
+#endif /* !TPP_EMITTER_HAVE_TRACE_INCLUDES */
 
 
 /************************************************************************/
@@ -286,6 +337,20 @@
 #define TPP_EMITTER_HAVE_CLI_DUMP_I \
 	(TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES)
 #endif /* !TPP_EMITTER_HAVE_CLI_DUMP_I */
+
+/* `-dU`, `--dump=U`:
+ * Turn on `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY` */
+#ifndef TPP_EMITTER_HAVE_CLI_DUMP_U
+#define TPP_EMITTER_HAVE_CLI_DUMP_U \
+	(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+#endif /* !TPP_EMITTER_HAVE_CLI_DUMP_U */
+
+/* `-H`, `--trace-includes`:
+ * Turn on `TPP_EMITTER_HAVE_TRACE_INCLUDES` */
+#ifndef TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
+#define TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES \
+	(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+#endif /* !TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
 
 /*[[[tpp-end]]]*/
 

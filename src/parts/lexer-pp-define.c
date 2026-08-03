@@ -1406,6 +1406,10 @@ tpp_token_sol_shell_find_after_pound(tpp_lexer const *tpp_restrict self);
  * following the definition, or is set to TPP_TOK_EOF if the macro definition is
  * followed by eof-of-file.
  *
+ * #if TPP_HAVE_MACRO_NAME
+ * WARNING: The caller must still initialize `tm_name`
+ * #endif // TPP_HAVE_MACRO_NAME
+ *
  * @return: TPP_EOK: The newly parsed macro definition
  * @return: * :      Error */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
@@ -1622,6 +1626,9 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	error = tpp_lexer_parse_macro_definition(self, &macro, &pos, deflc);
 	if (TPP_ISERR(error))
 		return TPP_TOK_OFERR(error);
+#if TPP_HAVE_MACRO_NAME
+	macro->tm_name = keyword;
+#endif /* TPP_HAVE_MACRO_NAME */
 
 	/* Setup token such that it describes the entire macro definition (for messages) */
 	token->tt_start = token->tt_end;
@@ -1752,6 +1759,9 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 	tpp_file_fini(file); /* Lexer core (including the file) will be restored by caller */
 	if (TPP_ISERR(error))
 		return error;
+#if TPP_HAVE_MACRO_NAME
+	macro->tm_name = macro_keyword;
+#endif /* TPP_HAVE_MACRO_NAME */
 
 	/* Store macro definition */
 	if (_TPP_KEYWORD_MACRO_ISDEFINED(macro_keyword->tk_macro))

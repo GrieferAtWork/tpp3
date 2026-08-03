@@ -98,7 +98,7 @@ tpp_emitter_cli_warnf(tpp_emitter *tpp_restrict self, tpp_char const *token_star
 
 #if TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_emitter_set_no_line_commands(tpp_emitter_cli_loader *tpp_restrict self) {
+tpp_emitter_cli_enable_no_line_commands(tpp_emitter_cli_loader *tpp_restrict self) {
 	tpp_errno result;
 	(void)self;
 #if TPP_CONF_ISRT(TPP_EMITTER_HAVE_NOLINE)
@@ -114,9 +114,21 @@ tpp_emitter_set_no_line_commands(tpp_emitter_cli_loader *tpp_restrict self) {
 #endif /* TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS */
 
 
+#if TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_cli_enable_trace_includes(tpp_emitter_cli_loader *tpp_restrict self) {
+	(void)self;
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+	tpp_emitter_enable_trace_includes(self->tcl_emitter);
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_NOLINE) */
+	return TPP_EOK;
+}
+#endif /* TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
+
+
 #if TPP_EMITTER_HAVE_CLI_DUMP_M
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_emitter_set_dump_M(tpp_emitter_cli_loader *tpp_restrict self) {
+tpp_emitter_cli_enable_dump_M(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
 	/* Set flag to dump definitions of builtin/predefined macros later. */
@@ -139,7 +151,7 @@ tpp_emitter_set_dump_M(tpp_emitter_cli_loader *tpp_restrict self) {
 
 #if TPP_EMITTER_HAVE_CLI_DUMP_D
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_emitter_set_dump_D(tpp_emitter_cli_loader *tpp_restrict self) {
+tpp_emitter_cli_enable_dump_D(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
 	/* Set flag to dump definitions of builtin/predefined macros later. */
@@ -157,7 +169,7 @@ tpp_emitter_set_dump_D(tpp_emitter_cli_loader *tpp_restrict self) {
 
 #if TPP_EMITTER_HAVE_CLI_DUMP_N
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_emitter_set_dump_N(tpp_emitter_cli_loader *tpp_restrict self) {
+tpp_emitter_cli_enable_dump_N(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
 	/* Set flag to dump definitions of builtin/predefined macros later. */
@@ -180,7 +192,7 @@ tpp_emitter_set_dump_N(tpp_emitter_cli_loader *tpp_restrict self) {
 
 #if TPP_EMITTER_HAVE_CLI_DUMP_I
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_emitter_set_dump_I(tpp_emitter_cli_loader *tpp_restrict self) {
+tpp_emitter_cli_enable_dump_I(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
 	/* Turn on re-emission of #include-directives */
@@ -193,37 +205,59 @@ tpp_emitter_set_dump_I(tpp_emitter_cli_loader *tpp_restrict self) {
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP_I */
 
 
+#if TPP_EMITTER_HAVE_CLI_DUMP_U
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_cli_enable_dump_U(tpp_emitter_cli_loader *tpp_restrict self) {
+	(void)self;
+
+	/* Turn on re-emission of #include-directives */
+#if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY
+	tpp_emitter_enable_reemit_macro_definitions_lazy(self->tcl_emitter);
+#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY */
+
+	return TPP_EOK;
+}
+#endif /* TPP_EMITTER_HAVE_CLI_DUMP_U */
+
+
 #undef TPP_EMITTER_HAVE_CLI_DUMP
 #define TPP_EMITTER_HAVE_CLI_DUMP   \
 	(TPP_EMITTER_HAVE_CLI_DUMP_M || \
 	 TPP_EMITTER_HAVE_CLI_DUMP_D || \
 	 TPP_EMITTER_HAVE_CLI_DUMP_N || \
-	 TPP_EMITTER_HAVE_CLI_DUMP_I)
+	 TPP_EMITTER_HAVE_CLI_DUMP_I || \
+	 TPP_EMITTER_HAVE_CLI_DUMP_U)
 
 #if TPP_EMITTER_HAVE_CLI_DUMP
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_emitter_set_dump(tpp_emitter_cli_loader *tpp_restrict self, tpp_char what) {
+tpp_emitter_cli_enable_dump(tpp_emitter_cli_loader *tpp_restrict self,
+                            tpp_char what) {
 	switch (what) {
 
 #if TPP_EMITTER_HAVE_CLI_DUMP_M
 	case 'M':
-		return tpp_emitter_set_dump_M(self);
+		return tpp_emitter_cli_enable_dump_M(self);
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP_M */
 
 #if TPP_EMITTER_HAVE_CLI_DUMP_D
 	case 'D':
-		return tpp_emitter_set_dump_D(self);
+		return tpp_emitter_cli_enable_dump_D(self);
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP_D */
 
 #if TPP_EMITTER_HAVE_CLI_DUMP_N
 	case 'N':
-		return tpp_emitter_set_dump_N(self);
+		return tpp_emitter_cli_enable_dump_N(self);
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP_N */
 
 #if TPP_EMITTER_HAVE_CLI_DUMP_I
 	case 'I':
-		return tpp_emitter_set_dump_I(self);
+		return tpp_emitter_cli_enable_dump_I(self);
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP_I */
+
+#if TPP_EMITTER_HAVE_CLI_DUMP_U
+	case 'U':
+		return tpp_emitter_cli_enable_dump_U(self);
+#endif /* TPP_EMITTER_HAVE_CLI_DUMP_U */
 
 	default: break;
 	}
@@ -231,14 +265,14 @@ tpp_emitter_set_dump(tpp_emitter_cli_loader *tpp_restrict self, tpp_char what) {
 }
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_emitter_set_dumps(tpp_emitter_cli_loader *tpp_restrict self,
-                      char const *whats) {
+tpp_emitter_cli_enable_dumps(tpp_emitter_cli_loader *tpp_restrict self,
+                             char const *whats) {
 	tpp_errno result = TPP_EOK;
 	for (;;) {
 		char what = *whats++;
 		if (what == '\0')
 			break;
-		result = tpp_emitter_set_dump(self, what);
+		result = tpp_emitter_cli_enable_dump(self, what);
 		if (TPP_ISERR(result))
 			break;
 	}
@@ -289,9 +323,19 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 			case 'n':
 #if TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS
 				if (tpp_streq(arg, "o-line-commands\0")) {
-					return tpp_emitter_set_no_line_commands(self);
+					return tpp_emitter_cli_enable_no_line_commands(self);
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS */
+				{
+				}
+				break;
+
+			case 't':
+#if TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
+				if (tpp_streq(arg, "race-includes\0")) {
+					return tpp_emitter_cli_enable_trace_includes(self);
+				} else
+#endif /* TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
 				{
 				}
 				break;
@@ -301,7 +345,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				if (tpp_streq(arg, "ump=")) {
 					arg += sizeof("ump=") - sizeof(char);
 					if (*arg)
-						return tpp_emitter_set_dumps(self, arg);
+						return tpp_emitter_cli_enable_dumps(self, arg);
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP */
 				{
@@ -315,14 +359,21 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 		case 'P':
 #if TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS
 			if (*arg == '\0')
-				return tpp_emitter_set_no_line_commands(self);
+				return tpp_emitter_cli_enable_no_line_commands(self);
 #endif /* TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS */
+			break;
+
+		case 'H':
+#if TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
+			if (*arg == '\0')
+				return tpp_emitter_cli_enable_trace_includes(self);
+#endif /* TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
 			break;
 
 		case 'd':
 #if TPP_EMITTER_HAVE_CLI_DUMP
 			if (*arg)
-				return tpp_emitter_set_dumps(self, arg);
+				return tpp_emitter_cli_enable_dumps(self, arg);
 #endif /* TPP_EMITTER_HAVE_CLI_DUMP */
 			break;
 
@@ -338,6 +389,54 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 	return TPP_ENOENT;
 #undef tpp_streq
 }
+
+
+/* Try to parse a *flag*-style parameter, that is: an argument that actually consists
+ * of multiple, tightly packed parameters, whilst having a singular, leading `-` (that
+ * was already skipped by the caller).
+ *
+ * Example: `-PH` or `-HP`
+ * - This argument consists of 2 flags `-H` and `-P`, which are simply concatenated
+ *   into a single argument here. This function will then parse one of those flags
+ *   from `**p_arg` (iow: `**p_arg` must be one of `H` or `P`), and advance `*p_arg`
+ *   to either the end of the argument, or the next *flag*-style parameter.
+ *
+ * @return: TPP_EOK:    Success (`*p_arg` was updated to point to the next *flag*-style
+ *                      parameter, or the argument string's end)
+ * @return: TPP_ENOENT: Did not recognize the flag in `**p_arg` (caller should try to
+ *                      handle the flag in a different context).
+ * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
+ * @return: TPP_EIO:        HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR:  HARD_ERROR: A emitter error was thrown
+ * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char const **p_arg) {
+	char const *arg = *p_arg;
+	char flag = *arg++;
+	(void)self;
+	(void)flag;
+	(void)arg;
+	switch (flag) {
+
+#if TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS
+	case 'P': {
+		*p_arg = arg;
+		return tpp_emitter_cli_enable_no_line_commands(self);
+	}	break;
+#endif /* TPP_EMITTER_HAVE_CLI_NO_LINE_COMMANDS */
+
+#if TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
+	case 'H': {
+		*p_arg = arg;
+		return tpp_emitter_cli_enable_trace_includes(self);
+	}	break;
+#endif /* TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
+
+	default: break;
+	}
+	return TPP_ENOENT;
+}
+
 
 
 /* Convenience wrapper around `tpp_emitter_cli_loader_parsearg()`.

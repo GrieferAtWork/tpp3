@@ -136,11 +136,14 @@ enum {
 };
 
 struct tpp_macro_argbuf; /* Opaque... */
+#if TPP_HAVE_MACRO_NAME
+struct tpp_keyword;
+#endif /* TPP_HAVE_MACRO_NAME */
 typedef struct tpp_macro {
 	tpp_refcnt          TPP_INTERNAL(tm_refcnt);     /* Reference count */
-	/* TODO: Config that adds a `struct tpp_keyword` field here, specifying the macro's name keyword.
-	 *       This could then be used to improve the "originating from here" lines in warning messages,
-	 *       as well as be used to implement GCC's `-dU` switch. */
+#if TPP_HAVE_MACRO_NAME
+	struct tpp_keyword *TPP_INTERNAL(tm_name);       /* [0..1][const] Macro name (if available) */
+#endif /* TPP_HAVE_MACRO_NAME */
 	tpp_macro_kind      TPP_INTERNAL(tm_kind);       /* [const] Macro kind (one of `TPP_MACRO_KIND_*`) */
 #if TPP_HAVE_MACRO_FLAGS
 	tpp_macro_flag      TPP_INTERNAL(tm_flags);      /* [const] Macro flags (set of `TPP_MACRO_FLAG_*`) */
@@ -216,6 +219,9 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 #define tpp_macro_getdeffilename(self) ((self)->TPP_INTERNAL(tm_deffile))
 #define tpp_macro_getdeflcinfo(self)   ((self)->TPP_INTERNAL(tm_deflc))
 #define tpp_macro_getbodylcinfo(self)  ((self)->TPP_INTERNAL(tm_body_lc))
+#if TPP_HAVE_MACRO_NAME
+#define tpp_macro_getname(self) ((self)->TPP_INTERNAL(tm_name))
+#endif /* TPP_HAVE_MACRO_NAME */
 #if TPP_HAVE_UNICODE
 #define tpp_macro_isbodyutf8(self)  TPP_FILE_ENCODING_ISUTF8((self)->TPP_INTERNAL(tm_body_enc))
 #define tpp_macro_isbodyascii(self) TPP_FILE_ENCODING_ISASCII((self)->TPP_INTERNAL(tm_body_enc))

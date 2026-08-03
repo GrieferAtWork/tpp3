@@ -470,11 +470,16 @@ typedef struct tpp_keyword {
 	 : NULL)
 
 /* Set the user-data pointer for `self`
+ * @param: destroy_prev: When true, and `tpp_keyword_getuserdata_dtor(self) != NULL`,
+ *                       as well as `tpp_keyword_getuserdata(self) != NULL` on entry,
+ *                       invoke the existing destructor on the old user-data after
+ *                       assigning the new `ptr` and `dtor`
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
-                        void *ptr, void (TPPCALL *dtor)(void *ptr));
+                        void *ptr, void (TPPCALL *dtor)(void *ptr),
+                        bool destroy_prev);
 #endif /* TPP_HAVE_KEYWORD_USERDATA */
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO

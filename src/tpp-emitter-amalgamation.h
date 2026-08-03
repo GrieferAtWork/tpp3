@@ -250,11 +250,45 @@
 	 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
-/* Extension to `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`: when emitting
- * `#define` directives, only emit `#define <MACRO_NAME>`, excluding the
- * macro's actual definition. */
+/* Similar end result to `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`,
+ * but taking a completely different approach in order to get there:
+ * - Hook `TPP_HAVE_FILE_PUSHED_HOOK` to get informed whenever a file
+ *   is pushed onto the `#include`-stack. If that file turns out to
+ *   be a macro, see if that macro's most-recent definition has already
+ *   been dumped.
+ *   - If not, or if the macro's definition has changed, dump it now
+ *     If there was a different definition, emit a `#undef` first
+ * - Whenever a `TPP_TOK_ISKEYWORD()`-token is emitted (`tpp_emitter_emitcurrent()`
+ *   is called while a keyword-token is loaded into the lexer), and the
+ *   linked keyword doesn't have a user-defined macro definition (i.e.
+ *   `!tpp_keyword_hasmacro()`), check what was most-recently emitted
+ *   about that keyword in regards to macro definitions:
+ *   - If the thing that came last was a `#define`-directive, then
+ *     emit a `#undef`-directive and delete the saved macro definition.
+ * - In order to remember the *most-recently-dumped* macro definition
+ *   linked to a keyword, `TPP_HAVE_KEYWORD_USERDATA` is used to store
+ *   a reference to the `tpp_macro` that was most-recently dumped
+ *
+ * NOTE: In order to determine the name of the macro when it is used
+ *       as a result of being expanded onto the #include-stack, this
+ *       feature also requires `TPP_HAVE_MACRO_NAME` to be enabled.
+ *
+ * Because this feature also requires a hook, it must be turned on
+ * using the following APIs, rather than directly setting its feature:
+ * - `tpp_emitter_enable_reemit_macro_definitions_lazy()`
+ * - `tpp_emitter_disable_reemit_macro_definitions_lazy()`
+ * - `tpp_emitter_get_reemit_macro_definitions_lazy()`
+ * - `tpp_emitter_set_reemit_macro_definitions_lazy()` */
+#ifndef TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY ((TPP_HAVE_FILE_PUSHED_HOOK && TPP_HAVE_KEYWORD_USERDATA && TPP_HAVE_MACRO_NAME) ? TPP_CONF_FEAT0 : 0)
+#endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY */
+
+/* Extension to `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS` and
+ * `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY`: when emitting
+ * `#define` directives, only emit `#define <MACRO_NAME>`, excluding
+ * the macro's actual definition. */
 #ifndef TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY
-#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY (TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS ? TPP_CONF_FEAT0 : 0)
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY ((TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS || TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY */
 
 /* Enable support for re-emission of `#include`, `#include_next`, `#import`
@@ -278,6 +312,23 @@
 	(TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? -1 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
+/* Trace includes (and the depth of the `#include`-stack in terms of IO files)
+ * by emitting a line like the following to `tpp_lexer_gethook_mesgprinter()`
+ * whenever an I/O file is pushed to the `#include`-stack:
+ * ```deemon
+ * print("." * NUMBER_OF_IO_FILES_ON_INCLUDE_STACK, " ", tpp_file_getrealfilename(file));
+ * ```
+ *
+ * Because this feature uses the `TPP_HAVE_FILE_PUSHED_HOOK` hook, it
+ * must be turned on using the following APIs, rather than directly
+ * setting its feature:
+ * - `tpp_emitter_enable_trace_includes()`
+ * - `tpp_emitter_disable_trace_includes()`
+ * - `tpp_emitter_get_trace_includes()`
+ * - `tpp_emitter_set_trace_includes()` */
+#ifndef TPP_EMITTER_HAVE_TRACE_INCLUDES
+#define TPP_EMITTER_HAVE_TRACE_INCLUDES ((TPP_HAVE_FILE_PUSHED_HOOK && TPP_HAVE_MESGPRINTER_HOOK) ? TPP_CONF_FEAT0 : 0)
+#endif /* !TPP_EMITTER_HAVE_TRACE_INCLUDES */
 
 
 /************************************************************************/
@@ -334,6 +385,20 @@
 	(TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES)
 #endif /* !TPP_EMITTER_HAVE_CLI_DUMP_I */
 
+/* `-dU`, `--dump=U`:
+ * Turn on `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY` */
+#ifndef TPP_EMITTER_HAVE_CLI_DUMP_U
+#define TPP_EMITTER_HAVE_CLI_DUMP_U \
+	(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+#endif /* !TPP_EMITTER_HAVE_CLI_DUMP_U */
+
+/* `-H`, `--trace-includes`:
+ * Turn on `TPP_EMITTER_HAVE_TRACE_INCLUDES` */
+#ifndef TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES
+#define TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES \
+	(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+#endif /* !TPP_EMITTER_HAVE_CLI_TRACE_INCLUDES */
+
 /************************************************************************/
 /* File: parts/optional/emitter/emitter-features.h                      */
 /************************************************************************/
@@ -349,7 +414,9 @@ TPP_DECL_BEGIN
      TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS) ||          \
      TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) ||                      \
      TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES) ||    \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY))
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) ||\
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) ||\
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES))
 #define TPP_EMITTER_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_EMITTER_HAVE_FEATURES 0
@@ -384,9 +451,15 @@ typedef enum tpp_emitter_feature_id {
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES)
 	TPP_EMITTER_FEAT_RELAXED_MACRO_LINE_RULES,
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+	TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY,
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 	TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_NAME_ONLY,
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+	TPP_EMITTER_FEAT_TRACE_INCLUDES,
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
 	TPP_EMITTER_FEAT_COUNT
 } tpp_emitter_feature_id;
 
@@ -428,10 +501,18 @@ typedef union tpp_emitter_features {
 		unsigned int TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_LINE_RULES): 1;
 #define _tpp_emitter_has_RELAXED_MACRO_LINE_RULES(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_LINE_RULES)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+		unsigned int TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_LAZY): 1;
+#define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_LAZY(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_LAZY)
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 		unsigned int TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY): 1;
 #define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_NAME_ONLY(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+		unsigned int TPP_EMITTER_INTERNAL(teff_TRACE_INCLUDES): 1;
+#define _tpp_emitter_has_TRACE_INCLUDES(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_TRACE_INCLUDES)
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
 	} TPP_EMITTER_INTERNAL(tef_flags);
 	unsigned char TPP_EMITTER_INTERNAL(tetf_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_emitter_features;
@@ -478,9 +559,15 @@ TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
 #if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES)
 #define _tpp_emitter_has_RELAXED_MACRO_LINE_RULES(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES)
 #endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES) */
+#if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+#define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_LAZY(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+#endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
 #if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 #define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_NAME_ONLY(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 #endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
+#if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+#define _tpp_emitter_has_TRACE_INCLUDES(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+#endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
 
 /************************************************************************/
 /* File: parts/optional/emitter/emitter.h                               */
@@ -692,6 +779,61 @@ _tpp_emitter_hook_include_encountered(tpp_lexer *tpp_restrict self,
                                       tpp_hook_include_kind include_kind);
 #endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
+#if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_EMITTER_HAVE_TRACE_INCLUDES
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_emitter_hook_file_pushed(tpp_lexer *tpp_restrict self);
+#define _tpp_emitter_enable_file_pushed_hook(self) \
+	tpp_lexer_sethook_file_pushed(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed)
+#if ((!TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)) && \
+     (!TPP_EMITTER_HAVE_TRACE_INCLUDES || TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)))
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) && TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+#define _tpp_emitter_candisable_file_pushed_hook(self)                                \
+	(!tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY) && \
+	 !tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES))
+#elif TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+#define _tpp_emitter_candisable_file_pushed_hook(self) (!tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY))
+#else /* ... */
+#define _tpp_emitter_candisable_file_pushed_hook(self) (!tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES))
+#endif /* !... */
+#define _tpp_emitter_disable_file_pushed_hook(self)                \
+	(_tpp_emitter_candisable_file_pushed_hook(self)                \
+	 ? tpp_lexer_resethook_file_pushed(tpp_emitter_getlexer(self)) \
+	 : (void)0)
+#else /* ... */
+#define _tpp_emitter_disable_file_pushed_hook(self) (void)0
+#endif /* !... */
+#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_EMITTER_HAVE_TRACE_INCLUDES */
+
+/* API support for *lazy* (re-)emission of `#define` and `#undef` directives */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+#define tpp_emitter_enable_reemit_macro_definitions_lazy(self)                        \
+	(tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY), \
+	 _tpp_emitter_enable_file_pushed_hook(self))
+#define tpp_emitter_disable_reemit_macro_definitions_lazy(self)                        \
+	(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY), \
+	 _tpp_emitter_disable_file_pushed_hook(self))
+#define tpp_emitter_get_reemit_macro_definitions_lazy(self) \
+	tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY)
+#define tpp_emitter_set_reemit_macro_definitions_lazy(self, v)    \
+	((v) ? tpp_emitter_enable_reemit_macro_definitions_lazy(self) \
+	     : tpp_emitter_disable_reemit_macro_definitions_lazy(self))
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
+
+/* API support for tracing of #incude-depth and files */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+#define tpp_emitter_enable_trace_includes(self)                        \
+	(tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES), \
+	 _tpp_emitter_enable_file_pushed_hook(self))
+#define tpp_emitter_disable_trace_includes(self)                        \
+	(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES), \
+	 _tpp_emitter_disable_file_pushed_hook(self))
+#define tpp_emitter_get_trace_includes(self) \
+	tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES)
+#define tpp_emitter_set_trace_includes(self, v)    \
+	((v) ? tpp_emitter_enable_trace_includes(self) \
+	     : tpp_emitter_disable_trace_includes(self))
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+
 /************************************************************************/
 /* File: parts/optional/emitter/emitter-cli.h                           */
 /************************************************************************/
@@ -774,6 +916,27 @@ typedef struct tpp_emitter_cli_loader {
  * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char const *arg);
+
+/* Try to parse a *flag*-style parameter, that is: an argument that actually consists
+ * of multiple, tightly packed parameters, whilst having a singular, leading `-` (that
+ * was already skipped by the caller).
+ *
+ * Example: `-PH` or `-HP`
+ * - This argument consists of 2 flags `-H` and `-P`, which are simply concatenated
+ *   into a single argument here. This function will then parse one of those flags
+ *   from `**p_arg` (iow: `**p_arg` must be one of `H` or `P`), and advance `*p_arg`
+ *   to either the end of the argument, or the next *flag*-style parameter.
+ *
+ * @return: TPP_EOK:    Success (`*p_arg` was updated to point to the next *flag*-style
+ *                      parameter, or the argument string's end)
+ * @return: TPP_ENOENT: Did not recognize the flag in `**p_arg` (caller should try to
+ *                      handle the flag in a different context).
+ * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
+ * @return: TPP_EIO:        HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR:  HARD_ERROR: A emitter error was thrown
+ * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char const **p_arg);
 
 /* Convenience wrapper around `tpp_emitter_cli_loader_parsearg()`.
  * For more information, see `tpp_cli_loader_parseargv()`.

@@ -764,6 +764,7 @@
 #define TPP_MACRO_OPCODE_VA_OPT                            TPP_INTERNAL(TPP_MACRO_OPCODE_VA_OPT)
 #define TPP_MACRO_OPCODE_VA_NARGS                          TPP_INTERNAL(TPP_MACRO_OPCODE_VA_NARGS)
 #define tm_refcnt                                          TPP_INTERNAL(tm_refcnt)
+#define tm_name                                            TPP_INTERNAL(tm_name)
 #define tm_kind                                            TPP_INTERNAL(tm_kind)
 #define tm_flags                                           TPP_INTERNAL(tm_flags)
 #define tm_body_chunk                                      TPP_INTERNAL(tm_body_chunk)
@@ -25263,19 +25264,30 @@ tpp_keyword_requiremisc(tpp_keyword *tpp_restrict self) {
 
 #if TPP_HAVE_KEYWORD_USERDATA
 /* Set the user-data pointer for `self`
+ * @param: destroy_prev: When true, and `tpp_keyword_getuserdata_dtor(self) != NULL`,
+ *                       as well as `tpp_keyword_getuserdata(self) != NULL` on entry,
+ *                       invoke the existing destructor on the old user-data after
+ *                       assigning the new `ptr` and `dtor`
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory (TPP_ENOMEM) */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
-                        void *ptr, void (TPPCALL *dtor)(void *ptr)) {
+                        void *ptr, void (TPPCALL *dtor)(void *ptr),
+                        bool destroy_prev) {
+	void *old_ptr;
+	void (TPPCALL *old_dtor)(void *ptr);
 	tpp_keyword_misc *misc;
 	if (!ptr && !dtor && !self->tk_misc)
 		return TPP_EOK;
 	misc = tpp_keyword_requiremisc(self);
 	if tpp_unlikely(!misc)
 		return TPP_ENOMEM;
+	old_ptr  = misc->tkm_userdata_ptr;
+	old_dtor = misc->tkm_userdata_dtor;
 	misc->tkm_userdata_ptr  = ptr;
 	misc->tkm_userdata_dtor = dtor;
+	if (destroy_prev && old_dtor && old_dtor)
+		(*old_dtor)(old_ptr);
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_KEYWORD_USERDATA */
@@ -26055,9 +26067,10 @@ err_r:
 
 #if TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO
 /* Relocate `self->tm_deffile` in case it references a keyword */
-static TPP_NONNULL((1, 2)) void TPPCALL
-tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
-                           tpp_keywords const *tpp_restrict keywords) {
+static TPP_NONNULL((1, 2, 3)) void TPPCALL
+tpp_macro_relocate(tpp_macro *tpp_restrict self,
+                   tpp_keywords const *tpp_restrict keywords,
+                   tpp_keyword *tpp_restrict keyword) {
 	tpp_char const *deffile = (tpp_char const *)self->tm_deffile;
 	if (deffile) {
 		tpp_size deffile_len = tpp_strlen((char const *)deffile);
@@ -26068,6 +26081,10 @@ tpp_macro_relocate_deffile(tpp_macro *tpp_restrict self,
 		if (deffile_kwd)
 			self->tm_deffile = tpp_keyword_getcstr(deffile_kwd);
 	}
+	(void)keyword;
+#if TPP_HAVE_MACRO_NAME
+	self->tm_name = keyword;
+#endif /* TPP_HAVE_MACRO_NAME */
 }
 #endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
 
@@ -26146,7 +26163,7 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
 						tpp_size j;
 						for (j = 0; j < misc->tkm_macro_pushstack.tmps_cnt; ++j) {
 							tpp_macro_pushent *ent = &misc->tkm_macro_pushstack.tmps_vec[j];
-							tpp_macro_relocate_deffile(ent->tmpe_macro, self);
+							tpp_macro_relocate(ent->tmpe_macro, self, chain);
 						}
 					}
 #endif /* TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO */
@@ -26163,7 +26180,7 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_CPP_ASSERT || (TPP_HAVE_CPP_MACROS && TPP_HAVE_PRAGMA_PUSH_MACRO) */
 #if TPP_HAVE_CPP_MACROS
 				if (_TPP_KEYWORD_MACRO_ISDEFINED(chain->tk_macro))
-					tpp_macro_relocate_deffile(chain->tk_macro, self);
+					tpp_macro_relocate(chain->tk_macro, self, chain);
 #endif /* TPP_HAVE_CPP_MACROS */
 			}
 		}
@@ -28894,6 +28911,9 @@ tpp_macro_copy(tpp_macro const *tpp_restrict self) {
 		result->tm_data.tmd_func.tmf_argbuf = NULL; /* Lazily allocated once needed */
 	}
 	tpp_refcnt_init(&result->tm_refcnt, 1);
+#if TPP_HAVE_MACRO_NAME
+	result->tm_name = self->tm_name;
+#endif /* TPP_HAVE_MACRO_NAME */
 	result->tm_kind = self->tm_kind;
 #if TPP_HAVE_MACRO_FLAGS
 	result->tm_flags = self->tm_flags;
@@ -32955,9 +32975,22 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			if (tpp_lexer_printf_warning(self, &projection_info, printer, printer_arg,
 			                             tpp_lexer_getfileandlineformat(self)) < 0)
 				goto err_printer;
-			if (tpp_formatprinter_print_conststr(printer, printer_arg,
-			                                     "note: projected from here\n") < 0)
-				goto err_printer;
+#if TPP_HAVE_MACRO_NAME
+			if (tpp_file_ismacro(lcx.tlcix_projfile) &&
+			    tpp_macro_getname(tpp_file_getmacro(lcx.tlcix_projfile))) {
+				tpp_keyword const *macro_name = tpp_macro_getname(tpp_file_getmacro(lcx.tlcix_projfile));
+				if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
+				                             "note: projected from expansion of %[%.*s%]\n",
+				                             (unsigned int)tpp_keyword_getlen(macro_name),
+				                             tpp_keyword_getstr(macro_name)) < 0)
+					goto err_printer;
+			} else
+#endif /* TPP_HAVE_MACRO_NAME */
+			{
+				if (tpp_formatprinter_print_conststr(printer, printer_arg,
+				                                     "note: projected from here\n") < 0)
+					goto err_printer;
+			}
 			lcx = nlcx;
 		}
 	}
@@ -32981,8 +33014,22 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			if (tpp_lexer_printf_warning(self, &caller_info, printer, printer_arg,
 			                             tpp_lexer_getfileandlineformat(self)) < 0)
 				goto err_printer;
-			if (tpp_formatprinter_print_conststr(printer, printer_arg, "note: originating from here\n") < 0)
-				goto err_printer;
+#if TPP_HAVE_MACRO_NAME
+			if (tpp_file_ismacro(caller) &&
+			    tpp_macro_getname(tpp_file_getmacro(caller))) {
+				tpp_keyword const *macro_name = tpp_macro_getname(tpp_file_getmacro(caller));
+				if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
+				                             "note: originating from expansion of %[%.*s%]\n",
+				                             (unsigned int)tpp_keyword_getlen(macro_name),
+				                             tpp_keyword_getstr(macro_name)) < 0)
+					goto err_printer;
+			} else
+#endif /* TPP_HAVE_MACRO_NAME */
+			{
+				if (tpp_formatprinter_print_conststr(printer, printer_arg,
+				                                     "note: originating from here\n") < 0)
+					goto err_printer;
+			}
 		}
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */
@@ -42133,6 +42180,10 @@ tpp_token_sol_shell_find_after_pound(tpp_lexer const *tpp_restrict self);
  * following the definition, or is set to TPP_TOK_EOF if the macro definition is
  * followed by eof-of-file.
  *
+ * #if TPP_HAVE_MACRO_NAME
+ * WARNING: The caller must still initialize `tm_name`
+ * #endif // TPP_HAVE_MACRO_NAME
+ *
  * @return: TPP_EOK: The newly parsed macro definition
  * @return: * :      Error */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
@@ -42349,6 +42400,9 @@ tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self) {
 	error = tpp_lexer_parse_macro_definition(self, &macro, &pos, deflc);
 	if (TPP_ISERR(error))
 		return TPP_TOK_OFERR(error);
+#if TPP_HAVE_MACRO_NAME
+	macro->tm_name = keyword;
+#endif /* TPP_HAVE_MACRO_NAME */
 
 	/* Setup token such that it describes the entire macro definition (for messages) */
 	token->tt_start = token->tt_end;
@@ -42479,6 +42533,9 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 	tpp_file_fini(file); /* Lexer core (including the file) will be restored by caller */
 	if (TPP_ISERR(error))
 		return error;
+#if TPP_HAVE_MACRO_NAME
+	macro->tm_name = macro_keyword;
+#endif /* TPP_HAVE_MACRO_NAME */
 
 	/* Store macro definition */
 	if (_TPP_KEYWORD_MACRO_ISDEFINED(macro_keyword->tk_macro))
@@ -59499,6 +59556,41 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 	return TPP_ENOENT;
 #undef tpp_streq
 }
+
+/* Try to parse a *flag*-style parameter, that is: an argument that actually consists
+ * of multiple, tightly packed parameters, whilst having a singular, leading `-` (that
+ * was already skipped by the caller).
+ *
+ * Example: `-PH` or `-HP`
+ * - This argument consists of 2 flags `-H` and `-P`, which are simply concatenated
+ *   into a single argument here. This function will then parse one of those flags
+ *   from `**p_arg` (iow: `**p_arg` must be one of `H` or `P`), and advance `*p_arg`
+ *   to either the end of the argument, or the next *flag*-style parameter.
+ *
+ * @return: TPP_EOK:    Success (`*p_arg` was updated to point to the next *flag*-style
+ *                      parameter, or the argument string's end)
+ * @return: TPP_ENOENT: Did not recognize the flag in `**p_arg` (caller should try to
+ *                      handle the flag in a different context).
+ * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
+ * @return: TPP_EIO:        HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR:  HARD_ERROR: A emitter error was thrown
+ * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg) {
+	char const *arg = *p_arg;
+	char flag = *arg++;
+	(void)self;
+	(void)flag;
+	(void)arg;
+	switch (flag) {
+
+		/* ... */
+
+	default: break;
+	}
+	return TPP_ENOENT;
+}
+
 
 /* Convenience wrapper around `tpp_cli_loader_parsearg()`:
  * - This function passes every argument given to `tpp_cli_loader_parsearg()`

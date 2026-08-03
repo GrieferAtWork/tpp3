@@ -720,9 +720,22 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			if (tpp_lexer_printf_warning(self, &projection_info, printer, printer_arg,
 			                             tpp_lexer_getfileandlineformat(self)) < 0)
 				goto err_printer;
-			if (tpp_formatprinter_print_conststr(printer, printer_arg,
-			                                     "note: projected from here\n") < 0)
-				goto err_printer;
+#if TPP_HAVE_MACRO_NAME
+			if (tpp_file_ismacro(lcx.tlcix_projfile) &&
+			    tpp_macro_getname(tpp_file_getmacro(lcx.tlcix_projfile))) {
+				tpp_keyword const *macro_name = tpp_macro_getname(tpp_file_getmacro(lcx.tlcix_projfile));
+				if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
+				                             "note: projected from expansion of %[%.*s%]\n",
+				                             (unsigned int)tpp_keyword_getlen(macro_name),
+				                             tpp_keyword_getstr(macro_name)) < 0)
+					goto err_printer;
+			} else
+#endif /* TPP_HAVE_MACRO_NAME */
+			{
+				if (tpp_formatprinter_print_conststr(printer, printer_arg,
+				                                     "note: projected from here\n") < 0)
+					goto err_printer;
+			}
 			lcx = nlcx;
 		}
 	}
@@ -746,8 +759,22 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			if (tpp_lexer_printf_warning(self, &caller_info, printer, printer_arg,
 			                             tpp_lexer_getfileandlineformat(self)) < 0)
 				goto err_printer;
-			if (tpp_formatprinter_print_conststr(printer, printer_arg, "note: originating from here\n") < 0)
-				goto err_printer;
+#if TPP_HAVE_MACRO_NAME
+			if (tpp_file_ismacro(caller) &&
+			    tpp_macro_getname(tpp_file_getmacro(caller))) {
+				tpp_keyword const *macro_name = tpp_macro_getname(tpp_file_getmacro(caller));
+				if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
+				                             "note: originating from expansion of %[%.*s%]\n",
+				                             (unsigned int)tpp_keyword_getlen(macro_name),
+				                             tpp_keyword_getstr(macro_name)) < 0)
+					goto err_printer;
+			} else
+#endif /* TPP_HAVE_MACRO_NAME */
+			{
+				if (tpp_formatprinter_print_conststr(printer, printer_arg,
+				                                     "note: originating from here\n") < 0)
+					goto err_printer;
+			}
 		}
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */

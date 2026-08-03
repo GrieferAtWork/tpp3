@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+#define TPP_BUILDING_OPTIONAL 1
 #ifdef USE_AMALGAMATION
 #define TPP_PROFILE TPP_PROFILE_ALL /* Enable all features */
 #define TPP_COMMON_HAVE_FEATURES 0  /* Use extensions for everything */
@@ -36,46 +37,51 @@
 
 TPP_DECL_BEGIN
 
-static TPP_FORMATPRINTER_DEFINE(output_printer, arg, text, num_bytes) {
-	(void)arg;
-	fwrite(text, 1, num_bytes, stdout);
+typedef enum tpp_frontend_cli_state {
+	TPP_FRONTEND_CLI_STATE_NORMAL,
+	TPP_FRONTEND_CLI_STATE_DDASH,  /* After "--" */
+	TPP_FRONTEND_CLI_STATE_OUTPUT, /* Expecting argument for "-o" */
+} tpp_frontend_cli_state;
+
+/* TPP frontend */
+typedef struct tpp_frontend {
+	tpp_emitter            tf_emitter;            /* Emitter and (contained within): lexer */
+	FILE                  *tf_output_file;        /* [0..1] File for preprocessor output */
+	tpp_cli_loader         tf_cli_loader;         /* CLI loader for lexer */
+	tpp_emitter_cli_loader tf_emitter_cli_loader; /* CLI loader for emitter */
+	tpp_frontend_cli_state tf_cli_state;          /* CLI parsing state */
+} tpp_frontend;
+
+static TPP_FORMATPRINTER_DEFINE(tpp_frontend_output_printer, arg, text, num_bytes) {
+	tpp_emitter *emitter = (tpp_emitter *)arg;
+	tpp_frontend *fe = tpp_container_of(emitter, tpp_frontend, tf_emitter);
+	if (fe->tf_output_file == NULL)
+		fe->tf_output_file = stdout;
+	fwrite(text, 1, num_bytes, fe->tf_output_file);
 	return 0;
 }
 
-int main(int argc, char **argv) {
-	int result    = 1;
-	char *appname = argv[0];
-	tpp_errno error;
-	tpp_cli_loader cli_loader;
-	tpp_emitter_cli_loader emitter_cli_loader;
-	tpp_emitter emitter;
-	tpp_lexer *lexer;
-	char const *filename = "input.c";
-
-#if TPP_OS_WINDOWS
-	SetConsoleOutputCP(CP_UTF8);
-#endif /* TPP_OS_WINDOWS */
-
-	tpp_emitter_init(&emitter, &output_printer);
-	lexer = tpp_emitter_getlexer(&emitter);
-	tpp_cli_loader_init(&cli_loader, lexer);
-	tpp_emitter_cli_loader_init(&emitter_cli_loader, &emitter);
-	if (argc)
-		--argc, ++argv; /* Skip "appname" argument */
-
-	/* Let the lexer's and emitter's CLI loaders try to parse arguments... */
-	error = tpp_cli_loader_parseargv(&cli_loader, &argc, &argv);
-	if (!TPP_ISERR(error))
-		error = tpp_emitter_cli_loader_parseargv(&emitter_cli_loader, &argc, &argv);
-	if (TPP_ISERR(error)) {
-		fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
-		goto out_emitter_loader;
+static tpp_errno tpp_frontend_set_output_file(tpp_frontend *self, char const *filename) {
+	if (self->tf_output_file != NULL)
+		fclose(self->tf_output_file);
+	if (strcmp(filename, "-") == 0) {
+		self->tf_output_file = NULL; /* Causes `tpp_frontend_output_printer()` to use "stdout" */
+		return TPP_EOK;
 	}
+	self->tf_output_file = fopen(filename, "wb");
+	if (self->tf_output_file == NULL) {
+		fprintf(stderr, "failed to open output file: %s\n", filename);
+		return TPP_EIO;
+	}
+	return TPP_EOK;
+}
+
+static tpp_errno TPPCALL tpp_frontend_parse_arg(tpp_frontend *self, char const *arg) {
+#define tpp_streq(at, CONSTstr) \
+	(tpp_memcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
+	switch (self->tf_cli_state) {
 
 	/* TODO: Support for CLI arguments that must be handled by front-end:
-	 * - "-o file", "--output file", "--output=file"
-	 *   No special handling needed in TPP backend
-	 *   Simply redirect what below stuff often calls "preprocessor output" to "file"
 	 * - "-M", "--dependencies"
 	 *   - Using TPP_HAVE_NEW_DEPENDENCY_HOOK
 	 * - "-MM", "--user-dependencies"
@@ -107,55 +113,138 @@ int main(int argc, char **argv) {
 	 *   No special handling needed in TPP backend
 	 *   The first time the frontend emits a `# <linenum>` marker, it must simply
 	 *   follow this up by emitting a second marker like: `# 1 "$(pwd)//"`
-	 *
-	 * - "-H", "--trace-includes"
-	 *   - Use TPP_HAVE_FILE_PUSHED_HOOK to filter for TPP_FILE_KIND_IO files being
-	 *     pushed onto the #include-stack. Whenever that has happened, print a line
-	 *     like this to stderr:
-	 *     >> print("." * NUMBER_OF_IO_FILES_ON_INCLUDE_STACK, " ", tpp_file_getrealfilename(file));
-	 *
-	 * - "-dU", "--dump=U"
-	 *   No (additional) special handling needed in TPP backend
-	 *   - Have a map `currently_defined_used_macros: {tpp_keyword: tpp_macro}`
-	 *   - Use TPP_HAVE_FILE_PUSHED_HOOK to watch for TPP_FILE_KIND_MACRO-files being pushed
-	 *     - Whenever this happens, see if the associated macro is in `currently_defined_used_macros`,
-	 *       and if the macro stored in `currently_defined_used_macros` is the same one that's just
-	 *       been pushed onto the #include-stack:
-	 *       - If the macros differ, print a `#undef <NAME>` line first
-	 *       - If the macros differ, or there wasn't a pre-existing macro under
-	 *         that name, print a `#define <NAME>...` line to declare the new macro's
-	 *         definition
-	 *   - Whenever a TPP_TOK_ISKEYWORD()-token is read from the preprocessor, and
-	 *     the associated keyword doesn't have a user-defined macro expansion, check
-	 *     `currently_defined_used_macros` if it still contains a macro definition
-	 *     for that keyword. If so: remove it from `currently_defined_used_macros`,
-	 *     and print a `#undef <NAME>` line before the keyword-token is handled as
-	 *     per usual.
 	 */
-	if (argc && strcmp(*argv, "--") == 0)
-		--argc, ++argv;
-	if (argc == 1) {
-		filename = argv[0];
-	} else if (argc != 0) {
-		fprintf(stderr, "bad arguments\nUSAGE: %s [ARGS...] [INFILE]\n", appname);
-		goto out_emitter_loader;
+
+	case TPP_FRONTEND_CLI_STATE_NORMAL:
+		switch (*arg++) {
+		case '-': {
+			char const *after_dash = arg;
+			switch (*arg++) {
+			case '\0':
+				return TPP_ENOENT;
+			case 'o':
+				if (*arg == '\0') {
+					self->tf_cli_state = TPP_FRONTEND_CLI_STATE_OUTPUT;
+					return TPP_EOK;
+				}
+				break;
+
+			case '-':
+				switch (*arg++) {
+				case '\0':
+					self->tf_cli_state = TPP_FRONTEND_CLI_STATE_DDASH; /* -- */
+					return TPP_EOK;
+
+				case 'o':
+					if (tpp_streq(arg, "utput=")) { /* --output=... */
+						arg += (sizeof("utput=") - sizeof(char));
+						return tpp_frontend_set_output_file(self, arg);
+					}
+					break;
+
+				default: break;
+				}
+				break;
+
+			default: break;
+			}
+
+			/* Try to consult "flag" parsers. */
+			while (*after_dash) {
+				tpp_errno error = tpp_cli_loader_parseflag(&self->tf_cli_loader, &after_dash);
+				if (error == TPP_ENOENT)
+					error = tpp_emitter_cli_loader_parseflag(&self->tf_emitter_cli_loader, &after_dash);
+				if (TPP_ISERR(error))
+					return error;
+			}
+		}	break;
+
+		default: break;
+		}
+		break;
+
+	case TPP_FRONTEND_CLI_STATE_DDASH:
+		break; /* Don't accept any more arguments */
+
+	case TPP_FRONTEND_CLI_STATE_OUTPUT:
+		self->tf_cli_state = TPP_FRONTEND_CLI_STATE_NORMAL;
+		return tpp_frontend_set_output_file(self, arg);
+
+	default: tpp_unreachable();
 	}
-	error = tpp_lexer_initfile_open(lexer, filename, TPP_SIZE_MAX);
-	if (TPP_ISERR(error)) {
-		fprintf(stderr, "failed to open '%s': %s\n", filename, tpp_strerror(error));
-		goto out_emitter_loader;
-	}
-	error = tpp_emitter_cli_loader_flush(&emitter_cli_loader);
+	return TPP_ENOENT;
+#undef tpp_streq
+}
+
+int main(int argc, char **argv) {
+	tpp_errno error;
+	int result = 1;
+	tpp_frontend fe;
+	char const *input_filename = "input.c";
+	char *appname = argv[0];
+	if (argc)
+		--argc, ++argv; /* Skip "appname" argument */
+
+#if TPP_OS_WINDOWS
+	SetConsoleOutputCP(CP_UTF8);
+#endif /* TPP_OS_WINDOWS */
+
+	/* Initialize frontend */
+	tpp_emitter_init(&fe.tf_emitter, &tpp_frontend_output_printer);
+	tpp_cli_loader_init(&fe.tf_cli_loader, tpp_emitter_getlexer(&fe.tf_emitter));
+	tpp_emitter_cli_loader_init(&fe.tf_emitter_cli_loader, &fe.tf_emitter);
+	fe.tf_output_file = NULL;
+	fe.tf_cli_state = TPP_FRONTEND_CLI_STATE_NORMAL;
+
+	/* Parse arguments... */
+	error = tpp_cli_loader_parseargv(&fe.tf_cli_loader, &argc, &argv);
 	if (!TPP_ISERR(error))
-		error = tpp_cli_loader_flush(&cli_loader);
-	tpp_cli_loader_fini(&cli_loader);
-	tpp_emitter_cli_loader_fini(&emitter_cli_loader);
+		error = tpp_emitter_cli_loader_parseargv(&fe.tf_emitter_cli_loader, &argc, &argv);
+	if (TPP_ISERR(error)) {
+		fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
+		goto out_emitter_loader;
+	}
+
+	/* Parse remainder of argument list using our own CLI handler, as well */
+	for (; argc; --argc, ++argv) {
+		char *arg = argv[0];
+		error = tpp_frontend_parse_arg(&fe, arg);
+		if (error == TPP_ENOENT)
+			break;
+		if (TPP_ISERR(error)) {
+			fprintf(stderr, "failed to parse argument `%s`: %s\n", arg, tpp_strerror(error));
+			goto out_emitter_loader;
+		}
+	}
+	if (argc && fe.tf_cli_state != TPP_FRONTEND_CLI_STATE_DDASH && **argv == '-') {
+		fprintf(stderr, "unknown argument `%s`\n", *argv);
+		goto out_emitter_loader;
+	}
+	if (argc == 1) {
+		input_filename = argv[0];
+	} else if (argc != 0) {
+		fprintf(stderr, "bad arguments\n"
+		                "USAGE: %s [ARGS...] [--] [INFILE]\n",
+		        appname);
+		goto out_emitter_loader;
+	}
+	error = tpp_lexer_initfile_open(tpp_emitter_getlexer(&fe.tf_emitter),
+	                                input_filename, TPP_SIZE_MAX);
+	if (TPP_ISERR(error)) {
+		fprintf(stderr, "failed to open '%s': %s\n", input_filename, tpp_strerror(error));
+		goto out_emitter_loader;
+	}
+	error = tpp_emitter_cli_loader_flush(&fe.tf_emitter_cli_loader);
+	if (!TPP_ISERR(error))
+		error = tpp_cli_loader_flush(&fe.tf_cli_loader);
+	tpp_cli_loader_fini(&fe.tf_cli_loader);
+	tpp_emitter_cli_loader_fini(&fe.tf_emitter_cli_loader);
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to complete arguments: %s\n", tpp_strerror(error));
 		goto out_emitter_file;
 	}
 	for (;;) {
-		tpp_token_id const tok = tpp_lexer_yield(lexer);
+		tpp_token_id const tok = tpp_lexer_yield(tpp_emitter_getlexer(&fe.tf_emitter));
 		if (TPP_TOK_ISERR(tok)) {
 			fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
 			break;
@@ -163,76 +252,26 @@ int main(int argc, char **argv) {
 		if (tok == TPP_TOK_EOF)
 			break;
 
-#if 1
-		(void)tpp_emitter_emitcurrent(&emitter);
-#elif 0
-		fwrite(tpp_lexer_gettokenstart(lexer), 1,
-		       tpp_lexer_gettokenlen(lexer), stdout);
-#elif 0
-		printf("[%.*s]",
-		       (int)tpp_lexer_gettokenlen(lexer),
-		       tpp_lexer_gettokenstart(lexer));
-#elif 1
-		{
-			char const *desc = tpp_strtokenid(tok);
-			if (desc == NULL && tpp_lexer_hastokenkwd(lexer))
-				desc = tpp_lexer_gettokenkwdcstr(lexer);
-			if (desc == NULL)
-				desc = "?";
-			printf("[%s:%.*s]", desc,
-			       (int)tpp_lexer_gettokenlen(lexer),
-			       tpp_lexer_gettokenstart(lexer));
-		}
-#else
-		{
-			tpp_lcinfo_ex lc;
-			tpp_file *file = tpp_lexer_getfile(lexer);
-			char const *lexer_filename = tpp_file_getfilename(file);
-			char const *desc = tpp_strtokenid(tok);
-			if (desc == NULL && tpp_lexer_hastokenkwd(lexer))
-				desc = tpp_lexer_gettokenkwdcstr(lexer);
-			if (desc == NULL)
-				desc = "?";
-			tpp_file_getlcinfo_ex(file, tpp_lexer_gettokenstart(lexer), &lc);
-			printf("[%s:%d:%d:%s(%d):%.*s",
-			       lexer_filename ? lexer_filename : "?",
-			       (int)(tpp_lcinfo_getline(lc.tlcix_info) + 1),
-			       (int)(tpp_lcinfo_getcol(lc.tlcix_info) + 1),
-			       desc, tok,
-			       (int)tpp_lexer_gettokenlen(lexer),
-			       tpp_lexer_gettokenstart(lexer));
-#if TPP_HAVE_CPP_MACROS
-			while (lc.tlcix_projfile) {
-				tpp_file_getlcinfo_ex(lc.tlcix_projfile, lc.tlcix_projpos, &lc);
-				lexer_filename = tpp_file_getfilename(file);
-				printf(" --- %s:%d:%d",
-				       lexer_filename ? lexer_filename : "?",
-				       (int)(tpp_lcinfo_getline(lc.tlcix_info) + 1),
-				       (int)(tpp_lcinfo_getcol(lc.tlcix_info) + 1));
-			}
-#endif /* TPP_HAVE_CPP_MACROS */
-		}
-		printf("]\n");
-#endif
+		(void)tpp_emitter_emitcurrent(&fe.tf_emitter);
 	}
 
-	if (tpp_lexer_geterrorcount(lexer)) {
+	if (tpp_lexer_geterrorcount(tpp_emitter_getlexer(&fe.tf_emitter))) {
 		fprintf(stderr, "There were lexer errors\n");
 		goto out_emitter_file;
 	}
 	result = 0;
 
 out_emitter_file:
-	tpp_lexer_finifile(lexer);
+	tpp_lexer_finifile(tpp_emitter_getlexer(&fe.tf_emitter));
 out_emitter:
-	tpp_emitter_fini(&emitter);
+	tpp_emitter_fini(&fe.tf_emitter);
 #ifdef _MSC_VER
 	_CrtDumpMemoryLeaks();
 #endif /* _MSC_VER */
 	return result;
 out_emitter_loader:
-	tpp_cli_loader_fini(&cli_loader);
-	tpp_emitter_cli_loader_fini(&emitter_cli_loader);
+	tpp_cli_loader_fini(&fe.tf_cli_loader);
+	tpp_emitter_cli_loader_fini(&fe.tf_emitter_cli_loader);
 	goto out_emitter;
 }
 

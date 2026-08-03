@@ -1365,6 +1365,41 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 #undef tpp_streq
 }
 
+/* Try to parse a *flag*-style parameter, that is: an argument that actually consists
+ * of multiple, tightly packed parameters, whilst having a singular, leading `-` (that
+ * was already skipped by the caller).
+ *
+ * Example: `-PH` or `-HP`
+ * - This argument consists of 2 flags `-H` and `-P`, which are simply concatenated
+ *   into a single argument here. This function will then parse one of those flags
+ *   from `**p_arg` (iow: `**p_arg` must be one of `H` or `P`), and advance `*p_arg`
+ *   to either the end of the argument, or the next *flag*-style parameter.
+ *
+ * @return: TPP_EOK:    Success (`*p_arg` was updated to point to the next *flag*-style
+ *                      parameter, or the argument string's end)
+ * @return: TPP_ENOENT: Did not recognize the flag in `**p_arg` (caller should try to
+ *                      handle the flag in a different context).
+ * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
+ * @return: TPP_EIO:        HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR:  HARD_ERROR: A emitter error was thrown
+ * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg) {
+	char const *arg = *p_arg;
+	char flag = *arg++;
+	(void)self;
+	(void)flag;
+	(void)arg;
+	switch (flag) {
+
+		/* ... */
+
+	default: break;
+	}
+	return TPP_ENOENT;
+}
+
+
 /* Convenience wrapper around `tpp_cli_loader_parsearg()`:
  * - This function passes every argument given to `tpp_cli_loader_parsearg()`
  *   in the order they appear within the specified argument vector (as it was

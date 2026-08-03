@@ -132,6 +132,9 @@ tpp_macro_copy(tpp_macro const *tpp_restrict self) {
 		result->tm_data.tmd_func.tmf_argbuf = NULL; /* Lazily allocated once needed */
 	}
 	tpp_refcnt_init(&result->tm_refcnt, 1);
+#if TPP_HAVE_MACRO_NAME
+	result->tm_name = self->tm_name;
+#endif /* TPP_HAVE_MACRO_NAME */
 	result->tm_kind = self->tm_kind;
 #if TPP_HAVE_MACRO_FLAGS
 	result->tm_flags = self->tm_flags;

@@ -234,6 +234,61 @@ _tpp_emitter_hook_include_encountered(tpp_lexer *tpp_restrict self,
                                       tpp_hook_include_kind include_kind);
 #endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
+#if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_EMITTER_HAVE_TRACE_INCLUDES
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_emitter_hook_file_pushed(tpp_lexer *tpp_restrict self);
+#define _tpp_emitter_enable_file_pushed_hook(self) \
+	tpp_lexer_sethook_file_pushed(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed)
+#if ((!TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)) && \
+     (!TPP_EMITTER_HAVE_TRACE_INCLUDES || TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)))
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) && TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+#define _tpp_emitter_candisable_file_pushed_hook(self)                                \
+	(!tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY) && \
+	 !tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES))
+#elif TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+#define _tpp_emitter_candisable_file_pushed_hook(self) (!tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY))
+#else /* ... */
+#define _tpp_emitter_candisable_file_pushed_hook(self) (!tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES))
+#endif /* !... */
+#define _tpp_emitter_disable_file_pushed_hook(self)                \
+	(_tpp_emitter_candisable_file_pushed_hook(self)                \
+	 ? tpp_lexer_resethook_file_pushed(tpp_emitter_getlexer(self)) \
+	 : (void)0)
+#else /* ... */
+#define _tpp_emitter_disable_file_pushed_hook(self) (void)0
+#endif /* !... */
+#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_EMITTER_HAVE_TRACE_INCLUDES */
+
+/* API support for *lazy* (re-)emission of `#define` and `#undef` directives */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+#define tpp_emitter_enable_reemit_macro_definitions_lazy(self)                        \
+	(tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY), \
+	 _tpp_emitter_enable_file_pushed_hook(self))
+#define tpp_emitter_disable_reemit_macro_definitions_lazy(self)                        \
+	(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY), \
+	 _tpp_emitter_disable_file_pushed_hook(self))
+#define tpp_emitter_get_reemit_macro_definitions_lazy(self) \
+	tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY)
+#define tpp_emitter_set_reemit_macro_definitions_lazy(self, v)    \
+	((v) ? tpp_emitter_enable_reemit_macro_definitions_lazy(self) \
+	     : tpp_emitter_disable_reemit_macro_definitions_lazy(self))
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
+
+/* API support for tracing of #incude-depth and files */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+#define tpp_emitter_enable_trace_includes(self)                        \
+	(tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES), \
+	 _tpp_emitter_enable_file_pushed_hook(self))
+#define tpp_emitter_disable_trace_includes(self)                        \
+	(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES), \
+	 _tpp_emitter_disable_file_pushed_hook(self))
+#define tpp_emitter_get_trace_includes(self) \
+	tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES)
+#define tpp_emitter_set_trace_includes(self, v)    \
+	((v) ? tpp_emitter_enable_trace_includes(self) \
+	     : tpp_emitter_disable_trace_includes(self))
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

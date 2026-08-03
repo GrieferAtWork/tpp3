@@ -46,7 +46,6 @@ TPP_ASSERT_EXPANDS(
 	xstr(misc/INCFILE(2).h)
 )
 
-xstr(misc/INCFILE(2).h)
 TPP_ASSERT(!defined(IN_MISC_VERS2_H))
 #include xstr(misc/INCFILE(2).h)
 TPP_ASSERT(defined(IN_MISC_VERS2_H))
