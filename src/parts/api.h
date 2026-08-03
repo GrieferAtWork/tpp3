@@ -64,9 +64,9 @@
 
 #if TPP_BUILDING || TPP_BUILDING_OPTIONAL
 #ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#define _CRT_NONSTDC_NO_WARNINGS
-#define _CRT_OBSOLETE_NO_DEPRECATE
+#define _CRT_SECURE_NO_WARNINGS    /* Know your... */
+#define _CRT_NONSTDC_NO_WARNINGS   /* ... f$cking place ... */
+#define _CRT_OBSOLETE_NO_DEPRECATE /* ... trash! */
 
 /* Disable some warnings */
 #pragma warning(disable: 4065) /* "switch statement contains 'default' but no 'case' labels" (cannot be avoided under certain feature-configurations) */
@@ -632,8 +632,8 @@ TPP_DECL_BEGIN
 typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
 #define tpp_formatprinter_print(printer, arg, text, num_bytes) \
 	((*printer)(arg, text, num_bytes))
-#define tpp_formatprinter_print_conststr(printer, arg, STR) \
-	((*printer)(arg, (tpp_char const *)(STR), sizeof(STR) - sizeof(char)))
+#define tpp_formatprinter_print_conststr(printer, arg, CONSTstr) \
+	((*printer)(arg, (tpp_char const *)(CONSTstr), sizeof(CONSTstr) - sizeof(char)))
 #define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
 	tpp_ssize (TPP_FORMATPRINTER_CC name)(void *arg, tpp_char const *text, tpp_size num_bytes)
 #endif /* !tpp_formatprinter */

@@ -4645,7 +4645,7 @@ TPP_WARNING(TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION, 1(TPP_WG_UNDEF), 0(), ~,
 
 
 /************************************************************************/
-/* -Wendif-labels                                                              */
+/* -Wendif-labels                                                       */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_ENDIF_LABELS
 #define TPP_HAVE_TPP_WG_ENDIF_LABELS (TPP_HAVE_TPP_W_ENDIF_LABELS)
@@ -4946,7 +4946,7 @@ TPP_WARNING(TPP_W_CANNOT_POP_EXTENSIONS, 1(TPP_WG_EXTENSION), 0(), ~,
 
 
 /************************************************************************/
-/* -Wwarning                                                          */
+/* -Wwarning                                                            */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_WARNING
 #define TPP_HAVE_TPP_WG_WARNING               \

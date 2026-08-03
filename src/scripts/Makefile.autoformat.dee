@@ -31,21 +31,27 @@ global allFiles: {string...} = [];
 @@Rules described within `/*!depends ... */` comments
 global dependsOnRules: {string: string} = Dict();
 
-for (local ent: opendir(PARTS_DIR)) {
-	if (ent.d_type == DT_REG) {
-		local filename = ent.d_name;
-		local fileData = File.open(joinpath(PARTS_DIR, filename), "rb").read();
-		if ("[[[deemon" in fileData)
-			filesWithDeemonScripts.append(filename);
-		
-		local dependsOnStart = fileData.find("/*!depends");
-		if (dependsOnStart >= 0) {
-			dependsOnStart += 10;
-			local dependsOnEnd = fileData.index("*/", dependsOnStart);
-			local dependsOnText = fileData[dependsOnStart:dependsOnEnd].strip().decode("utf-8");
-			dependsOnRules[filename] = dependsOnText;
+for (local partsDir: {
+	PARTS_DIR,
+	f"{PARTS_DIR}/optional/emitter",
+}) {
+	for (local ent: opendir(partsDir)) {
+		if (ent.d_type == DT_REG) {
+			local filename = joinpath(partsDir, ent.d_name);
+			local relFilename = relpath(filename, PARTS_DIR).replace("\\", "/");
+			local fileData = File.open(filename, "rb").read();
+			if ("[[[deemon" in fileData)
+				filesWithDeemonScripts.append(relFilename);
+
+			local dependsOnStart = fileData.find("/*!depends");
+			if (dependsOnStart >= 0) {
+				dependsOnStart += 10;
+				local dependsOnEnd = fileData.index("*/", dependsOnStart);
+				local dependsOnText = fileData[dependsOnStart:dependsOnEnd].strip().decode("utf-8");
+				dependsOnRules[relFilename] = dependsOnText;
+			}
+			allFiles.append(relFilename);
 		}
-		allFiles.append(filename);
 	}
 }
 
@@ -67,6 +73,16 @@ function printIncludeDependencies(tppH: string, tppAmalgamationH: string) {
 	print(f"src/{tppAmalgamationH}: {" ".join(finalPartIncludes)}");
 }
 
+function pathWmatch(path: string, srcFile: string, rule: string): bool {
+	rule = joinpath(headof(srcFile), rule).replace("\\", "/");
+	if ("/" !in path)
+		path = "./" + path;
+	if ("/" !in rule)
+		rule = "./" + rule;
+//	print File.stderr: repr path, repr srcFile, repr rule;
+	return path.wmatch(rule);
+}
+
 function main() {
 	for (local filename: filesWithDeemonScripts) {
 		local dependencies = [filename];
@@ -81,7 +97,7 @@ function main() {
 					continue;
 				if (!allFile.endswith(".h") && !allFile.endswith(".c"))
 					continue;
-				if ((for (local rule: rules) allFile.wmatch(rule)) || ...) {
+				if ((for (local rule: rules) pathWmatch(allFile, filename, rule)) || ...) {
 					if (allFile in filesWithDeemonScripts)
 						allFile = f"{FORMAT_CACHE}/{allFile}";
 					dependencies.append(allFile);
@@ -98,6 +114,8 @@ function main() {
 
 	printIncludeDependencies(joinpath(SRC_DIR, "tpp.h"), "tpp-amalgamation.h");
 	printIncludeDependencies(joinpath(SRC_DIR, "tpp.c"), "tpp-amalgamation.c");
+	printIncludeDependencies(joinpath(SRC_DIR, "tpp-emitter.h"), "tpp-emitter-amalgamation.h");
+	printIncludeDependencies(joinpath(SRC_DIR, "tpp-emitter.c"), "tpp-emitter-amalgamation.c");
 }
 
 #ifdef __MAIN__

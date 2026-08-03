@@ -69,6 +69,8 @@ typedef enum tpp_file_encoding {
 TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_account_ex(tpp_lcinfo lc, tpp_char const *text,
                       tpp_size size, tpp_file_encoding enc);
+#define tpp_lcinfo_account(lc, text, size) \
+	tpp_lcinfo_account_ex(lc, text, size, TPP_FILE_ENCODING_UTF8)
 #else /* TPP_HAVE_UNICODE */
 TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size);

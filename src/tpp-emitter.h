@@ -23,7 +23,7 @@
 
 #include "parts/optional/emitter/api.h"
 #include "parts/optional/emitter/config.h"
+#include "parts/optional/emitter/emitter-features.h"
 #include "parts/optional/emitter/emitter.h"
-
 #endif /* !GUARD_TPP_EMITTER_AMALGAMATION_H */
 /* clang-format on */

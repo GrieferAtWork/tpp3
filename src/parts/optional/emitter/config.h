@@ -20,14 +20,75 @@
 #ifndef GUARD_TPP_OPTIONAL_EMITTER_CONFIG_H
 #define GUARD_TPP_OPTIONAL_EMITTER_CONFIG_H 1
 
-#include "../../../tpp.h"
-/**/
+#include "api.h"
 
 /*[[[tpp-begin]]]*/
 
-#ifndef TPP_EMITTER_HAVE_FOO
-#define TPP_EMITTER_HAVE_FOO 1
-#endif /* !TPP_EMITTER_HAVE_FOO */
+/* Enable support for re-emission of unknown pragmas. Requires that the TPP core
+ * is configured to allow runtime override of its `TPP_HAVE_UNKNOWN_PRAGMA_HOOK`
+ * hook (since the emitter needs to be able to override that hook during its
+ * initialization)
+ *
+ * Can be configured in one of 3 ways:
+ * - `0`:  Disabled (unknown pragmas cause warnings and are not (re-)emitted
+ * - `1`:  Enabled
+ * - `-1`: Available (but not enabled by default)
+ *
+ * When not *Disabled*, can be turned on/off using:
+ * - `tpp_emitter_set_reemit_unknown_pragma()`
+ * - `tpp_emitter_enable_reemit_unknown_pragma()`
+ * - `tpp_emitter_disable_reemit_unknown_pragma()`
+ */
+#ifndef TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA
+#define TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA \
+	(TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) ? 1 : 0)
+#endif /* !TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
+
+/* Inhibit emission of `#line` directives, as well as (re-)alignment
+ * of the output stream in order to match source L/C info. When this
+ * is enabled, it is *highly* suggested that you turn on emission of
+ * SPACE+LF tokens in the source lexer, since otherwise the emitter
+ * will (probably) put everything on 1 line.
+ *
+ * Can be used to implement the `-P` CLI switch */
+#ifndef TPP_EMITTER_HAVE_NOLINE
+#define TPP_EMITTER_HAVE_NOLINE TPP_CONF_FEAT0
+#endif /* !TPP_EMITTER_HAVE_NOLINE */
+
+/* When inside of a macro -- so-as to prevent every token from causing
+ * another `#line`-directive being emitted, don't be too precise
+ * in terms of *all* tokens needing to have the proper column:
+ * ```c
+ * #define my_macro  10+20+30+40
+ * 5+my_macro+50
+ * ```
+ *
+ * Without this (technically more correct):
+ * ```c
+ * 5+10
+ * #line 2
+ *   +
+ * #line 2
+ *   20
+ * #line 2
+ *   +
+ * #line 2
+ *   30
+ * #line 2
+ *   +
+ * #line 2
+ *   40      +50
+ * ```
+ *
+ * With this:
+ * ```c
+ * 5+10+20+30+40
+ * #line 2
+ *           +50
+ * ``` */
+#ifndef TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES
+#define TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES TPP_CONF_FEAT1
+#endif /* !TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES */
 
 /*[[[tpp-end]]]*/
 

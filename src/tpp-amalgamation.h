@@ -4433,7 +4433,7 @@ TPP_WARNING(TPP_W_UNDEFINED_KEYWORD_IN_EXPRESSION, 1(TPP_WG_UNDEF), 0(), ~,
 
 
 /************************************************************************/
-/* -Wendif-labels                                                              */
+/* -Wendif-labels                                                       */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_ENDIF_LABELS
 #define TPP_HAVE_TPP_WG_ENDIF_LABELS (TPP_HAVE_TPP_W_ENDIF_LABELS)
@@ -4734,7 +4734,7 @@ TPP_WARNING(TPP_W_CANNOT_POP_EXTENSIONS, 1(TPP_WG_EXTENSION), 0(), ~,
 
 
 /************************************************************************/
-/* -Wwarning                                                          */
+/* -Wwarning                                                            */
 /************************************************************************/
 #ifndef TPP_HAVE_TPP_WG_WARNING
 #define TPP_HAVE_TPP_WG_WARNING               \
@@ -5052,9 +5052,9 @@ TPP_WARNING(TPP_W_MISSING_CLI_ARGUMENT, 0(), 0(), ~,
 
 #if TPP_BUILDING || TPP_BUILDING_OPTIONAL
 #ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#define _CRT_NONSTDC_NO_WARNINGS
-#define _CRT_OBSOLETE_NO_DEPRECATE
+#define _CRT_SECURE_NO_WARNINGS    /* Know your... */
+#define _CRT_NONSTDC_NO_WARNINGS   /* ... f$cking place ... */
+#define _CRT_OBSOLETE_NO_DEPRECATE /* ... trash! */
 
 /* Disable some warnings */
 #pragma warning(disable: 4065) /* "switch statement contains 'default' but no 'case' labels" (cannot be avoided under certain feature-configurations) */
@@ -5620,8 +5620,8 @@ TPP_DECL_BEGIN
 typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
 #define tpp_formatprinter_print(printer, arg, text, num_bytes) \
 	((*printer)(arg, text, num_bytes))
-#define tpp_formatprinter_print_conststr(printer, arg, STR) \
-	((*printer)(arg, (tpp_char const *)(STR), sizeof(STR) - sizeof(char)))
+#define tpp_formatprinter_print_conststr(printer, arg, CONSTstr) \
+	((*printer)(arg, (tpp_char const *)(CONSTstr), sizeof(CONSTstr) - sizeof(char)))
 #define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
 	tpp_ssize (TPP_FORMATPRINTER_CC name)(void *arg, tpp_char const *text, tpp_size num_bytes)
 #endif /* !tpp_formatprinter */
@@ -19300,6 +19300,8 @@ typedef enum tpp_file_encoding {
 TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_account_ex(tpp_lcinfo lc, tpp_char const *text,
                       tpp_size size, tpp_file_encoding enc);
+#define tpp_lcinfo_account(lc, text, size) \
+	tpp_lcinfo_account_ex(lc, text, size, TPP_FILE_ENCODING_UTF8)
 #else /* TPP_HAVE_UNICODE */
 TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size);
@@ -20389,21 +20391,21 @@ typedef struct tpp_macro_argument {
 } tpp_macro_argument;
 
 
-/* Opcodes for function-tyle macro expansion */
+/* Opcodes for function-style macro expansion */
 #define tpp_macro_opcode tpp_size
 enum {
 	TPP_INTERNAL(TPP_MACRO_OPCODE_END),      /* `+0`: Expansion has finished */
 	TPP_INTERNAL(TPP_MACRO_OPCODE_SKIP),     /* `+1`: Advance macro body template reader by `ARG[0]` bytes */
 	TPP_INTERNAL(TPP_MACRO_OPCODE_COPY),     /* `+1`: Copy `ARG[0]` bytes from macro body template & advance reader */
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_EXP),  /* `+2`: Insert argument[`ARG[0]`] (expanded) and advance macro body template reader by `ARG[1]` bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_EXP),  /* `+2`: Insert `argument[ARG[0]]` (expanded) and advance macro body template reader by `ARG[1]` bytes */
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_STR),  /* `+2`: Insert argument[`ARG[0]`] (`"`-escaped) and advance macro body template reader by `ARG[1]` bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_STR),  /* `+2`: Insert `argument[ARG[0]]` (`"`-escaped) and advance macro body template reader by `ARG[1]` bytes */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_CHR),  /* `+2`: Insert argument[`ARG[0]`] (`'`-escaped) and advance macro body template reader by `ARG[1]` bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_CHR),  /* `+2`: Insert `argument[ARG[0]]` (`'`-escaped) and advance macro body template reader by `ARG[1]` bytes */
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS),      /* `+2`: Insert argument[`ARG[0]`] (non-expanded) and advance macro body template reader by `ARG[1]` bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS),      /* `+2`: Insert `argument[ARG[0]]` (non-expanded) and advance macro body template reader by `ARG[1]` bytes */
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 #if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
 	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_COMMA), /* `+1`: `TPP_MACRO_OPCODE_SKIP[ARG[0]]`; If varargs are non-empty: insert a `,`-character */

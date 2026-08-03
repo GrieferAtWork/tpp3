@@ -46,23 +46,24 @@ int main(int argc, char **argv) {
 	int result    = 1;
 	char *appname = argv[0];
 	tpp_errno error;
-	tpp_lexer lexer;
 	tpp_cli_loader cli_loader;
 	tpp_emitter emitter;
+	tpp_lexer *lexer;
 	char const *filename = "input.c";
 
 #if TPP_OS_WINDOWS
 	SetConsoleOutputCP(CP_UTF8);
 #endif /* TPP_OS_WINDOWS */
 
-	tpp_lexer_init(&lexer);
-	tpp_cli_loader_init(&cli_loader, &lexer);
+	tpp_emitter_init(&emitter, &output_printer);
+	lexer = tpp_emitter_getlexer(&emitter);
+	tpp_cli_loader_init(&cli_loader, lexer);
 	if (argc)
 		--argc, ++argv; /* Skip "appname" argument */
 	error = tpp_cli_loader_parseargv(&cli_loader, &argc, &argv);
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
-		goto out_lexer_loader;
+		goto out_emitter_loader;
 	}
 
 	/* TODO: Support for CLI arguments that must be handled by front-end:
@@ -149,23 +150,21 @@ int main(int argc, char **argv) {
 		filename = argv[0];
 	} else if (argc != 0) {
 		fprintf(stderr, "bad arguments\nUSAGE: %s [ARGS...] [INFILE]\n", appname);
-		goto out_lexer_loader;
+		goto out_emitter_loader;
 	}
-	error = tpp_lexer_initfile_open(&lexer, filename, TPP_SIZE_MAX);
+	error = tpp_lexer_initfile_open(lexer, filename, TPP_SIZE_MAX);
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to open '%s': %s\n", filename, tpp_strerror(error));
-		goto out_lexer_loader;
+		goto out_emitter_loader;
 	}
 	error = tpp_cli_loader_flush(&cli_loader);
 	tpp_cli_loader_fini(&cli_loader);
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to complete arguments: %s\n", tpp_strerror(error));
-		goto out_lexer_file;
+		goto out_emitter_file;
 	}
-
-	tpp_emitter_init(&emitter, &lexer, &output_printer, NULL);
 	for (;;) {
-		tpp_token_id const tok = tpp_lexer_yield(&lexer);
+		tpp_token_id const tok = tpp_lexer_yield(lexer);
 		if (TPP_TOK_ISERR(tok)) {
 			fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
 			break;
@@ -176,41 +175,41 @@ int main(int argc, char **argv) {
 #if 1
 		(void)tpp_emitter_emitcurrent(&emitter);
 #elif 0
-		fwrite(tpp_lexer_gettokenstart(&lexer), 1,
-		       tpp_lexer_gettokenlen(&lexer), stdout);
+		fwrite(tpp_lexer_gettokenstart(lexer), 1,
+		       tpp_lexer_gettokenlen(lexer), stdout);
 #elif 0
 		printf("[%.*s]",
-		       (int)tpp_lexer_gettokenlen(&lexer),
-		       tpp_lexer_gettokenstart(&lexer));
+		       (int)tpp_lexer_gettokenlen(lexer),
+		       tpp_lexer_gettokenstart(lexer));
 #elif 1
 		{
 			char const *desc = tpp_strtokenid(tok);
-			if (desc == NULL && tpp_lexer_hastokenkwd(&lexer))
-				desc = tpp_lexer_gettokenkwdcstr(&lexer);
+			if (desc == NULL && tpp_lexer_hastokenkwd(lexer))
+				desc = tpp_lexer_gettokenkwdcstr(lexer);
 			if (desc == NULL)
 				desc = "?";
 			printf("[%s:%.*s]", desc,
-			       (int)tpp_lexer_gettokenlen(&lexer),
-			       tpp_lexer_gettokenstart(&lexer));
+			       (int)tpp_lexer_gettokenlen(lexer),
+			       tpp_lexer_gettokenstart(lexer));
 		}
 #else
 		{
 			tpp_lcinfo_ex lc;
-			tpp_file *file = tpp_lexer_getfile(&lexer);
+			tpp_file *file = tpp_lexer_getfile(lexer);
 			char const *lexer_filename = tpp_file_getfilename(file);
 			char const *desc = tpp_strtokenid(tok);
-			if (desc == NULL && tpp_lexer_hastokenkwd(&lexer))
-				desc = tpp_lexer_gettokenkwdcstr(&lexer);
+			if (desc == NULL && tpp_lexer_hastokenkwd(lexer))
+				desc = tpp_lexer_gettokenkwdcstr(lexer);
 			if (desc == NULL)
 				desc = "?";
-			tpp_file_getlcinfo_ex(file, tpp_lexer_gettokenstart(&lexer), &lc);
+			tpp_file_getlcinfo_ex(file, tpp_lexer_gettokenstart(lexer), &lc);
 			printf("[%s:%d:%d:%s(%d):%.*s",
 			       lexer_filename ? lexer_filename : "?",
 			       (int)(tpp_lcinfo_getline(lc.tlcix_info) + 1),
 			       (int)(tpp_lcinfo_getcol(lc.tlcix_info) + 1),
 			       desc, tok,
-			       (int)tpp_lexer_gettokenlen(&lexer),
-			       tpp_lexer_gettokenstart(&lexer));
+			       (int)tpp_lexer_gettokenlen(lexer),
+			       tpp_lexer_gettokenstart(lexer));
 #if TPP_HAVE_CPP_MACROS
 			while (lc.tlcix_projfile) {
 				tpp_file_getlcinfo_ex(lc.tlcix_projfile, lc.tlcix_projpos, &lc);
@@ -227,28 +226,28 @@ int main(int argc, char **argv) {
 	}
 
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS
-	tpp_lexer_dump_definitions(&lexer, &output_printer, NULL,
+	tpp_lexer_dump_definitions(lexer, &output_printer, NULL,
 	                           TPP_LEXER_DUMP_DEFINITIONS_ALL |
 	                           TPP_LEXER_DUMP_DEFINITIONS_SORTED |
 	                           TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO);
 #endif /* TPP_HAVE_LEXER_DUMP_DEFINITIONS */
-	if (tpp_lexer_geterrorcount(&lexer)) {
+	if (tpp_lexer_geterrorcount(lexer)) {
 		fprintf(stderr, "There were lexer errors\n");
-		goto out_lexer_file;
+		goto out_emitter_file;
 	}
 	result = 0;
 
-out_lexer_file:
-	tpp_lexer_finifile(&lexer);
-out_lexer:
-	tpp_lexer_fini(&lexer);
+out_emitter_file:
+	tpp_lexer_finifile(lexer);
+out_emitter:
+	tpp_emitter_fini(&emitter);
 #ifdef _MSC_VER
 	_CrtDumpMemoryLeaks();
 #endif /* _MSC_VER */
 	return result;
-out_lexer_loader:
+out_emitter_loader:
 	tpp_cli_loader_fini(&cli_loader);
-	goto out_lexer;
+	goto out_emitter;
 }
 
 TPP_DECL_END

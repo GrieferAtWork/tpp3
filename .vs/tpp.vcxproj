@@ -45,6 +45,7 @@
     <ClCompile Include="..\src\parts\lexer-yieldraw.c" />
     <ClCompile Include="..\src\parts\lexer.c" />
     <ClCompile Include="..\src\parts\macro.c" />
+    <ClCompile Include="..\src\parts\optional\emitter\emitter-features.c" />
     <ClCompile Include="..\src\parts\optional\emitter\emitter.c" />
     <ClCompile Include="..\src\parts\preparse.c" />
     <ClCompile Include="..\src\parts\string.c" />
@@ -82,7 +83,9 @@
     <ClInclude Include="..\src\parts\macro.h" />
     <ClInclude Include="..\src\parts\optional\emitter\api.h" />
     <ClInclude Include="..\src\parts\optional\emitter\config.h" />
+    <ClInclude Include="..\src\parts\optional\emitter\emitter-features.h" />
     <ClInclude Include="..\src\parts\optional\emitter\emitter.h" />
+    <ClInclude Include="..\src\parts\optional\emitter\expose-internals.h" />
     <ClInclude Include="..\src\parts\preparse.h" />
     <ClInclude Include="..\src\parts\string.h" />
     <ClInclude Include="..\src\parts\sysinclude.h" />

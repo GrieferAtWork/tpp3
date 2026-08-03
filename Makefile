@@ -36,7 +36,7 @@ all: Makefile.autoformat \
 .PHONY: all
 
 # Inline code generation self-dependencies...
-Makefile.autoformat: src/scripts/Makefile.autoformat.dee src/tpp.h src/tpp.c
+Makefile.autoformat: src/scripts/Makefile.autoformat.dee src/tpp.h src/tpp.c src/tpp-emitter.h src/tpp-emitter.c
 	deemon src/scripts/Makefile.autoformat.dee > Makefile.autoformat
 -include Makefile.autoformat
 

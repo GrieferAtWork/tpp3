@@ -25,14 +25,80 @@
 #define TPP_EMITTER_AMALGAMATION_H "tpp-emitter-amalgamation.h"
 #endif /* !TPP_EMITTER_AMALGAMATION_H */
 
+/* Include "tpp-emitter-amalgamation.h" header... */
+#ifndef GUARD_TPP_EMITTER_AMALGAMATION_H
+#undef TPP_EMITTER_BUILDING
+#define TPP_EMITTER_BUILDING 1
 #include TPP_EMITTER_AMALGAMATION_H
+#endif /* !GUARD_TPP_EMITTER_AMALGAMATION_H */
+
+#if !TPP_EMITTER_BUILDING
+/************************************************************************/
+/* File: parts/optional/emitter/expose-internals.h                      */
+/************************************************************************/
+/* If "tpp-emitter-amalgamation.h" was already included, re-define
+ * `TPP_EMITTER_INTERNAL()` identifers to their unescaped names. */
+#define te_feat                       TPP_EMITTER_INTERNAL(te_feat)
+#define tef_flags                     TPP_EMITTER_INTERNAL(tef_flags)
+#define tetf_bitset                   TPP_EMITTER_INTERNAL(tetf_bitset)
+#define teff_NOLINE                   TPP_EMITTER_INTERNAL(teff_NOLINE)
+#define teff_RELAXED_MACRO_LINE_RULES TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_LINE_RULES)
+#define tes_curpos                    TPP_EMITTER_INTERNAL(tes_curpos)
+#define tes_curfilename               TPP_EMITTER_INTERNAL(tes_curfilename)
+#define tes_curfilename_str           TPP_EMITTER_INTERNAL(tes_curfilename_str)
+#define tes_prevtok                   TPP_EMITTER_INTERNAL(tes_prevtok)
+#define te_lexer                      TPP_EMITTER_INTERNAL(te_lexer)
+#define te_output                     TPP_EMITTER_INTERNAL(te_output)
+#define te_state                      TPP_EMITTER_INTERNAL(te_state)
+
+#endif /* !TPP_EMITTER_BUILDING */
+
+/************************************************************************/
+/* File: parts/optional/emitter/emitter-features.c                      */
+/************************************************************************/
+TPP_DECL_BEGIN
+
+#if TPP_EMITTER_HAVE_FEATURES
+TPP_CONST_IMPL tpp_emitter_features const tpp_emitter_features_default = {
+	/* .tef_flags = */ {
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE)
+		/* .teff_NOLINE                   = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NOLINE),
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES)
+		/* .teff_RELAXED_MACRO_LINE_RULES = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES),
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES) */
+	}
+};
+#endif /* TPP_EMITTER_HAVE_FEATURES */
 
 /************************************************************************/
 /* File: parts/optional/emitter/emitter.c                               */
 /************************************************************************/
-TPP_DECL_BEGIN
 
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+/* Initialize (after `tpp_lexer_init()` was called) or finalize
+ * (before `tpp_lexer_fini()` is called) a given emitter.
+ *
+ * @param: output: Output printer. On error, must return one of `TPP_SSIZE_OFERR(*)`*/
+TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
+tpp_emitter_init_after_lexer(tpp_emitter *tpp_restrict self,
+                             tpp_formatprinter output) {
+	self->te_output = output;
+	tpp_emitter_state_init(&self->te_state);
+	(void)0 _tpp_emitter_init_feat(self);
+#if TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA > 0
+	tpp_emitter_enable_reemit_unknown_pragma(self);
+#endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA > 0 */
+}
+
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_emitter_fini_before_lexer(tpp_emitter *tpp_restrict self) {
+	tpp_emitter_state_fini(&self->te_state);
+	(void)0 _tpp_emitter_fini_feat(self);
+}
+
+
+
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_emitter_printrepeat(tpp_emitter *tpp_restrict self,
                         tpp_size *tpp_restrict p_num_printed,
                         tpp_size count, tpp_char ch) {
@@ -44,8 +110,7 @@ tpp_emitter_printrepeat(tpp_emitter *tpp_restrict self,
 	tpp_memset(buffer, ch, bufmax * sizeof(tpp_char));
 	*p_num_printed = 0;
 	while (count) {
-		temp = tpp_formatprinter_print(self->te_output, self->te_outarg,
-		                               buffer, bufmax);
+		temp = tpp_emitter_output_printraw(self, buffer, bufmax);
 		if (temp < 0)
 			goto err_temp;
 		*p_num_printed += bufmax;
@@ -60,6 +125,7 @@ err_temp:
 }
 
 /* Emit linefeed characters (and update `self->te_state`) */
+#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_emitter_printlf(tpp_emitter *tpp_restrict self, tpp_line count) {
 	tpp_size num_printed;
@@ -69,6 +135,7 @@ tpp_emitter_printlf(tpp_emitter *tpp_restrict self, tpp_line count) {
 	                num_printed ? 0 : tpp_lcinfo_getcol(self->te_state.tes_curpos));
 	return result;
 }
+#endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
 
 /* Emit space characters (and update `self->te_state`) */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
@@ -81,6 +148,7 @@ tpp_emitter_printspace(tpp_emitter *tpp_restrict self, tpp_column count) {
 	return result;
 }
 
+#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
 /* Emit a `#line` directive (and update `self->te_state`) */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_emitter_printline(tpp_emitter *tpp_restrict self,
@@ -109,15 +177,13 @@ tpp_emitter_printline(tpp_emitter *tpp_restrict self,
 	} else {
 		*ptr++ = '\n';
 	}
-	temp = tpp_formatprinter_print_cstr(self->te_output, self->te_outarg,
-	                                    buffer, (tpp_size)(ptr - buffer));
+	temp = tpp_emitter_output_printraw_cstr(self, buffer, (tpp_size)(ptr - buffer));
 	if (temp < 0)
 		goto err_temp;
 	result += temp;
 	if (filename) {
 		partlen = tpp_strlen(filename);
-		temp = tpp_formatprinter_print_cstr(self->te_output, self->te_outarg,
-		                                    filename, partlen);
+		temp = tpp_emitter_output_printraw_cstr(self, filename, partlen);
 		if (temp < 0) {
 			tpp_lcinfo_init(self->te_state.tes_curpos,
 			                tpp_lcinfo_getline(self->te_state.tes_curpos) + (oldcol ? 1 : 0),
@@ -125,7 +191,7 @@ tpp_emitter_printline(tpp_emitter *tpp_restrict self,
 			goto err_temp;
 		}
 		result += temp;
-		temp = tpp_formatprinter_print_conststr(self->te_output, self->te_outarg, "\"\n");
+		temp = tpp_emitter_output_printraw_conststr(self, "\"\n");
 		if (temp < 0) {
 			tpp_lcinfo_init(self->te_state.tes_curpos,
 			                tpp_lcinfo_getline(self->te_state.tes_curpos),
@@ -147,40 +213,45 @@ tpp_emitter_printline(tpp_emitter *tpp_restrict self,
 err_temp:
 	return temp;
 }
+#endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_emitter_print(tpp_emitter *tpp_restrict self,
+                  tpp_char const *text, tpp_size len) {
+	tpp_ssize result = tpp_emitter_output_printraw(self, text, len);
+	if (result >= 0) {
+		self->te_state.tes_curpos = tpp_lcinfo_account_ex(self->te_state.tes_curpos, text, len,
+		                                                  tpp_file_getencoding(tpp_lexer_getfile(tpp_emitter_getlexer(self))));
+	}
+	return result;
+}
 
 /* Emit a `#line` directive (and update `self->te_state`) */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_emitter_printtoken(tpp_emitter *tpp_restrict self,
                        tpp_lexer const *tpp_restrict lexer) {
-	tpp_token const *const token = tpp_lexer_gettoken(lexer);
-	tpp_file const *const file = tpp_lexer_getfile(lexer);
-	tpp_char const *token_start = tpp_token_getstart(token);
-	tpp_size token_len = tpp_token_getlen(token);
+	tpp_char const *token_start = tpp_lexer_gettokenstart(lexer);
+	tpp_size token_len = tpp_lexer_gettokenlen(lexer);
 	/* TODO: Config to normalize certain tokens (see "emitter.h") */
-	tpp_ssize result = tpp_formatprinter_print(self->te_output, self->te_outarg,
-	                                           token_start, token_len);
-	if (result >= 0) {
-		self->te_state.tes_curpos = tpp_lcinfo_account_ex(self->te_state.tes_curpos,
-		                                                  token_start, token_len,
-		                                                  tpp_file_getencoding(file));
-	}
-	return result;
+	return tpp_emitter_print(self, token_start, token_len);
 }
 
-/* Emit the token currently loaded into `self->te_lexer`,
+/* Emit the token currently loaded into `tpp_emitter_getlexer(self)`,
  * and update the emitter's `te_state` accordingly
  *
- * @return: * :  Sum of return values of `self->te_output`
- * @return: < 0: First negative return value of `self->te_output` */
+ * @return: * :  Sum of return values of `tpp_emitter_getoutput(self)`
+ * @return: < 0: First negative return value of `tpp_emitter_getoutput(self)` */
 TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self) {
 	tpp_ssize temp, result = 0;
-	tpp_lexer const *const lexer = self->te_lexer;
+	tpp_lexer const *const lexer = tpp_emitter_getlexer(self);
 	tpp_token_id const tok = tpp_lexer_gettok(lexer);
 	bool const require_whitespace = tpp_lexer_require_whitespace(lexer, self->te_state.tes_prevtok, tok);
 
-	if (0) { /* TODO: Config: inhibit emission of `#line` directives */
+	if (tpp_emitter_has(self, NOLINE)) {
+#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
 emit_without_alignment:
+#endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
 		if (require_whitespace) {
 			temp = tpp_emitter_printspace(self, 1);
 			if (temp < 0)
@@ -188,6 +259,7 @@ emit_without_alignment:
 			result += temp;
 		}
 	} else {
+#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
 		tpp_file *const lcfile = tpp_lexer_getlcfile(lexer);
 		char const *const lc_filename = tpp_file_getfilename(lcfile);
 		tpp_lcinfo const lcinfo = tpp_file_getstartlcinfo(lcfile);
@@ -218,6 +290,7 @@ emit_without_alignment:
 			tpp_column oldcol = tpp_lcinfo_getcol(self->te_state.tes_curpos);
 			tpp_column newcol = tpp_lcinfo_getcol(lcinfo);
 			bool need_line_directive = false;
+
 			/* TODO: Must also emit a directive if the system_header or
 			 *       extern_c flags changed, and the `# <linenum>` is being used. */
 			if (self->te_state.tes_curfilename != lc_filename) {
@@ -228,38 +301,17 @@ emit_without_alignment:
 				need_line_directive = true;
 			} else if (newline == oldline) {
 				if (newcol < oldcol) {
-#if 1 /* TODO: Config: relax alignment rules inside of macros */
+#if TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES
 					if (lcfile != tpp_lexer_getfile(lexer) &&
-					    tpp_file_ismacro(tpp_lexer_getfile(lexer))) {
+					    tpp_file_ismacro(tpp_lexer_getfile(lexer)) &&
+						tpp_emitter_has(self, RELAXED_MACRO_LINE_RULES)) {
 						/* Inside of a macro -- so-as to prevent every token from causing
 						 * another `#line`-directive being emitted, don't be too precise
-						 * in terms of *all* tokens needing to have the proper column:
-						 *
-						 * >> #define my_macro  10+20+30+40
-						 * >> 5+my_macro+50
-						 *
-						 * Without this (technically more correct):
-						 * >> 5+10
-						 * >> #line 2
-						 * >>   +
-						 * >> #line 2
-						 * >>   20
-						 * >>   +
-						 * >> #line 2
-						 * >>   30
-						 * >>   +
-						 * >> #line 2
-						 * >>   40      +50
-						 *
-						 * With this:
-						 * >> 5+10+20+30+40
-						 * >> #line 2
-						 * >>           +50
-						 */
+						 * in terms of *all* tokens needing to have the proper column */
 						if (require_whitespace)
 							newcol = oldcol + 1;
 					} else
-#endif
+#endif /* TPP_EMITTER_HAVE_RELAXED_MACRO_LINE_RULES */
 					{
 						need_line_directive = true;
 					}
@@ -279,6 +331,7 @@ emit_without_alignment:
 				oldline = tpp_lcinfo_getline(self->te_state.tes_curpos);
 				oldcol  = tpp_lcinfo_getcol(self->te_state.tes_curpos);
 			}
+
 			/* Align with extra line-feed characters. */
 			if (newline > oldline) {
 				temp = tpp_emitter_printlf(self, (tpp_line)(newline - oldline));
@@ -288,6 +341,7 @@ emit_without_alignment:
 				oldcol = tpp_lcinfo_getcol(self->te_state.tes_curpos);
 				tpp_assert(oldcol == 0);
 			}
+
 			/* Align with extra space characters. */
 			if (newcol > oldcol) {
 				temp = tpp_emitter_printspace(self, (tpp_column)(newcol - oldcol));
@@ -297,6 +351,7 @@ emit_without_alignment:
 				tpp_assert(tpp_lcinfo_getcol(self->te_state.tes_curpos) == newcol);
 			}
 		}
+#endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
 	}
 
 	/* Actually emit the token */
@@ -312,8 +367,53 @@ err_temp:
 	return temp;
 }
 
-TPP_DECL_END
+/* API support for (re-)emission of unknown `#pragma` directives */
+#if TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_emitter_hook_unknown_pragma(tpp_lexer *tpp_restrict lexer) {
+	tpp_emitter *self = tpp_emitter_oflexer(lexer);
+	tpp_ssize temp;
+	tpp_token_id prev_token;
+	tpp_token_id tok = tpp_lexer_gettok(lexer);
+	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
+		temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+		if (temp < 0)
+			goto err_temp;
+	}
+	temp = tpp_emitter_print(self, (tpp_char const *)"#pragma", 7);
+	if (temp < 0)
+		goto err_temp;
+	/* Print+yield tokens until the #pragma's end is reached */
+	prev_token = TPP_KWD_pragma;
+	while (tok != TPP_TOK_EOF) {
+		if (!TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok)) {
+			/* Print token... */
+			if (tpp_lexer_require_whitespace(lexer, prev_token, tok)) {
+				temp = tpp_emitter_print(self, (tpp_char const *)" ", 1);
+				if (temp < 0)
+					goto err_temp;
+			}
+			temp = tpp_emitter_printtoken(self, lexer);
+			if (temp < 0)
+				goto err_temp;
+			prev_token = tok;
+		}
+		tok = tpp_lexer_yieldraw(lexer);
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+	}
+	temp = tpp_emitter_print(self, (tpp_char const *)"\n", 1);
+	if (temp < 0)
+		goto err_temp;
+	self->te_state.tes_prevtok = TPP_TOK_EOF;
+	return TPP_EOK;
+err_temp:
+	return TPP_SSIZE_ASERR(temp);
+}
+#endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
 
+
+TPP_DECL_END
 
 #endif /* !GUARD_TPP_EMITTER_AMALGAMATION_C */
 /* clang-format on */

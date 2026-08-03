@@ -41,3 +41,4 @@
 #define TPP_PREDEFINED_FEATURE_HAS_C_ATTRIBUTE(id, expansion_expr)
 #define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
 	tpp_ssize (name)(void *arg, tpp_char const *text, tpp_size num_bytes)
+#define TPP_EMITTER_INTERNAL(x) x

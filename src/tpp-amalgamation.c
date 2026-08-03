@@ -24574,8 +24574,10 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 	while ((iter->tf_kind != TPP_FILE_KIND_IO && iter->tf_kind != TPP_FILE_KIND_TEXT) ||
 	       (iter->tf_chunk == NULL || !tpp_lcinfo_isvalid(iter->tf_data.td_io.tff_start_lc))) {
 		iter = iter->tf_tprev;
-		if (iter == NULL)
-			return tpp_file_gettextfile(self);
+		if (iter == NULL) {
+			iter = tpp_file_gettextfile(self);
+			return iter ? iter : (tpp_file *)self;
+		}
 	}
 	return iter;
 }

@@ -108,21 +108,21 @@ typedef struct tpp_macro_argument {
 } tpp_macro_argument;
 
 
-/* Opcodes for function-tyle macro expansion */
+/* Opcodes for function-style macro expansion */
 #define tpp_macro_opcode tpp_size
 enum {
 	TPP_INTERNAL(TPP_MACRO_OPCODE_END),      /* `+0`: Expansion has finished */
 	TPP_INTERNAL(TPP_MACRO_OPCODE_SKIP),     /* `+1`: Advance macro body template reader by `ARG[0]` bytes */
 	TPP_INTERNAL(TPP_MACRO_OPCODE_COPY),     /* `+1`: Copy `ARG[0]` bytes from macro body template & advance reader */
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_EXP),  /* `+2`: Insert argument[`ARG[0]`] (expanded) and advance macro body template reader by `ARG[1]` bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_EXP),  /* `+2`: Insert `argument[ARG[0]]` (expanded) and advance macro body template reader by `ARG[1]` bytes */
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_STR),  /* `+2`: Insert argument[`ARG[0]`] (`"`-escaped) and advance macro body template reader by `ARG[1]` bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_STR),  /* `+2`: Insert `argument[ARG[0]]` (`"`-escaped) and advance macro body template reader by `ARG[1]` bytes */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_CHR),  /* `+2`: Insert argument[`ARG[0]`] (`'`-escaped) and advance macro body template reader by `ARG[1]` bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS_CHR),  /* `+2`: Insert `argument[ARG[0]]` (`'`-escaped) and advance macro body template reader by `ARG[1]` bytes */
 #endif /* TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
-	TPP_INTERNAL(TPP_MACRO_OPCODE_INS),      /* `+2`: Insert argument[`ARG[0]`] (non-expanded) and advance macro body template reader by `ARG[1]` bytes */
+	TPP_INTERNAL(TPP_MACRO_OPCODE_INS),      /* `+2`: Insert `argument[ARG[0]]` (non-expanded) and advance macro body template reader by `ARG[1]` bytes */
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
 #if TPP_HAVE_VA_COMMA_IN_MACROS || TPP_HAVE_VA_GLUE_COMMA_IN_MACROS
 	TPP_INTERNAL(TPP_MACRO_OPCODE_VA_COMMA), /* `+1`: `TPP_MACRO_OPCODE_SKIP[ARG[0]]`; If varargs are non-empty: insert a `,`-character */

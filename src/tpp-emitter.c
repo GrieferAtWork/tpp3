@@ -25,9 +25,18 @@
 #define TPP_EMITTER_AMALGAMATION_H "tpp-emitter-amalgamation.h"
 #endif /* !TPP_EMITTER_AMALGAMATION_H */
 
+/* Include "tpp-emitter-amalgamation.h" header... */
+#ifndef GUARD_TPP_EMITTER_AMALGAMATION_H
+#undef TPP_EMITTER_BUILDING
+#define TPP_EMITTER_BUILDING 1
 #include TPP_EMITTER_AMALGAMATION_H
+#endif /* !GUARD_TPP_EMITTER_AMALGAMATION_H */
 
+#if !TPP_EMITTER_BUILDING
+#include "parts/optional/emitter/expose-internals.h"
+#endif /* !TPP_EMITTER_BUILDING */
+
+#include "parts/optional/emitter/emitter-features.c"
 #include "parts/optional/emitter/emitter.c"
-
 #endif /* !GUARD_TPP_EMITTER_AMALGAMATION_C */
 /* clang-format on */
