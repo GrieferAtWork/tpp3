@@ -254,8 +254,9 @@ int main(int argc, char **argv) {
 	tpp_errno error;
 	int result = 1;
 	tpp_frontend fe;
-	char const *input_filename = "-";
+	bool first_file;
 	char *appname = argv[0];
+	char *fallback_input_filename;
 	if (argc)
 		--argc, ++argv; /* Skip "appname" argument */
 
@@ -286,41 +287,71 @@ int main(int argc, char **argv) {
 		--argc;
 		++argv;
 	} else if (argc && (*argv)[0] == '-' && (*argv)[1])  {
-		fprintf(stderr, "unknown argument `%s`\n", *argv);
+		fprintf(stderr, "unknown argument `%s`\n"
+		                "USAGE: %s [ARGS...] [--] [INFILES]\n",
+		        *argv, appname);
 		goto out_emitter_loader;
 	}
-	if (argc == 1) {
-		input_filename = argv[0];
-	} else if (argc != 0) {
-		fprintf(stderr, "wrong number of input files (%d)\n"
-		                "USAGE: %s [ARGS...] [--] [INFILE]\n",
-		        argc, appname);
-		goto out_emitter_loader;
+	if (argc == 0) {
+		argc = 1;
+		argv = &fallback_input_filename;
+		fallback_input_filename = (char *)"-";
 	}
+
+	first_file = true;
+	do {
+		char *filename;
+		--argc;
+		filename = argv[argc];
 #ifdef tpp_get_stdin
-	if (tpp_strcmp(input_filename, "-") == 0) {
-		tpp_lexer_initfile_io_ex(tpp_emitter_getlexer(&fe.tf_emitter),
-		                         "<stdin>", tpp_get_stdin(),
-		                         TPP_FILE_FLAGS_NOCLOSE);
-	} else
+		if (tpp_strcmp(filename, "-") == 0) {
+			filename = (char *)"<stdin>";
+			if (first_file) {
+				tpp_lexer_initfile_io_ex(tpp_emitter_getlexer(&fe.tf_emitter),
+				                         filename, tpp_get_stdin(),
+				                         TPP_FILE_FLAGS_NOCLOSE);
+				error = TPP_EOK;
+			} else {
+				error = tpp_lexer_pushfile_io_ex(tpp_emitter_getlexer(&fe.tf_emitter),
+				                                 filename, tpp_get_stdin(),
+				                                 TPP_FILE_FLAGS_NOCLOSE);
+			}
+		} else
 #endif /* tpp_get_stdin */
-	{
-		error = tpp_lexer_initfile_open(tpp_emitter_getlexer(&fe.tf_emitter),
-		                                input_filename, TPP_SIZE_MAX);
-		if (TPP_ISERR(error)) {
-			fprintf(stderr, "failed to open '%s': %s\n", input_filename, tpp_strerror(error));
-			goto out_emitter_loader;
+		{
+			if (first_file) {
+				error = tpp_lexer_initfile_open(tpp_emitter_getlexer(&fe.tf_emitter),
+				                                filename, TPP_SIZE_MAX);
+			} else {
+				error = tpp_lexer_pushfile_open(tpp_emitter_getlexer(&fe.tf_emitter),
+				                                filename, TPP_SIZE_MAX);
+			}
 		}
-	}
+		if (TPP_ISERR(error)) {
+			fprintf(stderr, "failed to open '%s': %s\n", filename, tpp_strerror(error));
+			if (first_file)
+				goto out_emitter_loader;
+			goto out_emitter_loader_file;
+		}
+		first_file = false;
+	} while (argc);
+
+	/* Flush CLI loaders */
 	error = tpp_emitter_cli_loader_flush(&fe.tf_emitter_cli_loader);
 	if (!TPP_ISERR(error))
 		error = tpp_cli_loader_flush(&fe.tf_cli_loader);
+
+	/* Finalize CLI loaders */
 	tpp_cli_loader_fini(&fe.tf_cli_loader);
 	tpp_emitter_cli_loader_fini(&fe.tf_emitter_cli_loader);
+
+	/* Final check for errors. */
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to complete arguments: %s\n", tpp_strerror(error));
 		goto out_emitter_file;
 	}
+
+	/* Yield & re-emit tokens. */
 	for (;;) {
 		tpp_token_id const tok = tpp_lexer_yield(tpp_emitter_getlexer(&fe.tf_emitter));
 		if (TPP_TOK_ISERR(tok)) {
@@ -345,6 +376,8 @@ out_emitter:
 	_CrtDumpMemoryLeaks();
 #endif /* _MSC_VER */
 	return result;
+out_emitter_loader_file:
+	tpp_lexer_finifile(tpp_emitter_getlexer(&fe.tf_emitter));
 out_emitter_loader:
 	tpp_cli_loader_fini(&fe.tf_cli_loader);
 	tpp_emitter_cli_loader_fini(&fe.tf_emitter_cli_loader);
