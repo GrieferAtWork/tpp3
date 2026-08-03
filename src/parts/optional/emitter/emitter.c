@@ -80,7 +80,7 @@ err_temp:
 }
 
 /* Emit linefeed characters (and update `self->te_state`) */
-#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
+#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) || TPP_EMITTER_HAVE_NORMALIZE_LF
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_emitter_printlf(tpp_emitter *tpp_restrict self, tpp_line count) {
 	tpp_size num_printed;
@@ -90,7 +90,7 @@ tpp_emitter_printlf(tpp_emitter *tpp_restrict self, tpp_line count) {
 	                num_printed ? 0 : tpp_lcinfo_getcol(self->te_state.tes_curpos));
 	return result;
 }
-#endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
+#endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) || TPP_EMITTER_HAVE_NORMALIZE_LF */
 
 /* Emit space characters (and update `self->te_state`) */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
@@ -170,25 +170,350 @@ err_temp:
 }
 #endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
 
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
-tpp_emitter_print(tpp_emitter *tpp_restrict self,
-                  tpp_char const *text, tpp_size len) {
-	tpp_ssize result = tpp_emitter_output_printraw(self, text, len);
+
+static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print, arg, text, num_bytes) {
+	tpp_emitter *self = (tpp_emitter *)arg;
+	tpp_ssize result = tpp_emitter_output_printraw(self, text, num_bytes);
 	if (result >= 0) {
-		self->te_state.tes_curpos = tpp_lcinfo_account_ex(self->te_state.tes_curpos, text, len,
+		self->te_state.tes_curpos = tpp_lcinfo_account_ex(self->te_state.tes_curpos, text, num_bytes,
 		                                                  tpp_file_getencoding(tpp_lexer_getfile(tpp_emitter_getlexer(self))));
 	}
 	return result;
 }
 
-/* Emit a `#line` directive (and update `self->te_state`) */
+#if TPP_EMITTER_HAVE_NORMALIZE_C_STRING
+static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_encodestring, arg, text, num_bytes) {
+	return tpp_token_encodestring(&tpp_emitter_print, arg, text, num_bytes);
+}
+
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+struct tpp_emitter_printbig_data {
+	tpp_emitter *tepbd_emitter; /* Emitter */
+	tpp_char     tepbd_quote;   /* Used "-character */
+	bool         tepbd_after_x; /* True if after \x-sequence (meaning next regular byte mustn't be 0-9, a-f, A-F) */
+};
+
+static TPP_FORMATPRINTER_DEFINE(tpp_emitter_printbig_normal, arg, text, num_bytes) {
+	tpp_size temp, result = 0;
+	struct tpp_emitter_printbig_data *data;
+	data = (struct tpp_emitter_printbig_data *)arg;
+	if (!num_bytes)
+		return 0;
+	if (data->tepbd_after_x) {
+		if (tpp_ascii_isxdigit(*text)) {
+			tpp_char seq[sizeof("' '") - sizeof(char)];
+			seq[0] = data->tepbd_quote;
+			seq[1] = ' ';
+			seq[2] = data->tepbd_quote;
+			result = tpp_emitter_print(data->tepbd_emitter, seq, 3);
+			if (result < 0)
+				return result;
+		}
+		data->tepbd_after_x = false;
+	}
+	temp = tpp_emitter_print_encodestring(data->tepbd_emitter, text, num_bytes);
+	if (temp < 0)
+		return temp;
+	result += temp;
+	return result;
+}
+
+static tpp_ssize TPPCALL
+tpp_emitter_printbig_big(void *arg, tpp_lexer *tpp_restrict lexer, tpp_uintmax value) {
+#if TPP_UINTMAX_MAX <= TPP_UINTMAX_C(0xffff)
+	tpp_char seq[sizeof("\\xFFFF") - sizeof(char)];
+#elif TPP_UINTMAX_MAX <= TPP_UINTMAX_C(0xffffffff)
+	tpp_char seq[sizeof("\\xFFFFFFFF") - sizeof(char)];
+#elif TPP_UINTMAX_MAX <= TPP_UINTMAX_C(0xffffffffffffffff)
+	tpp_char seq[sizeof("\\xFFFFFFFFFFFFFFFF") - sizeof(char)];
+#else /* TPP_UINTMAX_MAX <= ... */
+	tpp_char seq[sizeof("\\xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF") - sizeof(char)];
+#endif /* TPP_UINTMAX_MAX < ... */
+	tpp_char *seq_dst = seq + sizeof(seq);
+	struct tpp_emitter_printbig_data *data;
+	data = (struct tpp_emitter_printbig_data *)arg;
+	do {
+		tpp_char nibble = value & 0xf;
+		*--seq_dst = tpp_ascii_ofuprxdigit(nibble);
+		value >>= 4;
+	} while (value);
+	*--seq_dst = 'x';
+	*--seq_dst = '\\';
+	data->tepbd_after_x = true;
+	(void)lexer;
+	return tpp_emitter_print(data->tepbd_emitter, seq_dst, (tpp_size)(seq + sizeof(seq) - seq_dst));
+}
+#endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_C_STRING */
+
+
+#if TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS
+static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_keyword, arg, text, num_bytes) {
+	tpp_ssize temp, result = 0;
+	tpp_emitter *self = (tpp_emitter *)arg;
+	tpp_char const *end = text + num_bytes;
+	tpp_char const *iter = text;
+	bool is_first = true;
+	if (iter >= end) {
+		/* Special case: *empty* keyword */
+		static char const empty_keyword_repr[] = "__TPP_IDENTIFIER(\"\")";
+		return tpp_emitter_print(self, (tpp_char const *)empty_keyword_repr,
+		                         sizeof(empty_keyword_repr) - sizeof(char));
+	}
+	do {
+		tpp_char const *uc_start = iter;
+#if TPP_HAVE_UNICODE
+		tpp_unichar uc = tpp_unicode_readutf8(&iter, end);
+		if (is_first ? !tpp_unicode_issymstrt(uc)
+		             : !tpp_unicode_issymcont(uc))
+#else /* TPP_HAVE_UNICODE */
+		tpp_char ch = *iter++;
+		if (is_first ? !tpp_ascii_issymstrt(ch)
+		             : !tpp_ascii_issymcont(ch))
+#endif /* !TPP_HAVE_UNICODE */
+		{
+			/* Must escape! */
+			tpp_char buf[sizeof("\\U12345678") - sizeof(char)], *dst = buf;
+			temp = tpp_emitter_print(self, text, (tpp_size)(uc_start - text));
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			*dst++ = '\\';
+			*dst++ = 'U';
+#if TPP_HAVE_UNICODE
+			*dst++ = tpp_ascii_touprxdigit((uc & 0xf0000000) >> 28);
+			*dst++ = tpp_ascii_touprxdigit((uc & 0x0f000000) >> 24);
+			*dst++ = tpp_ascii_touprxdigit((uc & 0x00f00000) >> 20);
+			*dst++ = tpp_ascii_touprxdigit((uc & 0x000f0000) >> 16);
+			*dst++ = tpp_ascii_touprxdigit((uc & 0x0000f000) >> 12);
+			*dst++ = tpp_ascii_touprxdigit((uc & 0x00000f00) >> 8);
+			*dst++ = tpp_ascii_touprxdigit((uc & 0x000000f0) >> 4);
+			*dst++ = tpp_ascii_touprxdigit((uc & 0x0000000f));
+#else /* TPP_HAVE_UNICODE */
+			*dst++ = '0';
+			*dst++ = '0';
+			*dst++ = '0';
+			*dst++ = '0';
+			*dst++ = '0';
+			*dst++ = '0';
+			*dst++ = tpp_ascii_touprxdigit((ch & 0xf0) >> 4);
+			*dst++ = tpp_ascii_touprxdigit((ch & 0x0f));
+#endif /* !TPP_HAVE_UNICODE */
+			text = iter;
+			temp = tpp_emitter_print(self, buf, sizeof(buf));
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+		is_first = false;
+	} while (iter < end);
+
+	/* Flush remainder */
+	temp = tpp_emitter_print(self, text, (tpp_size)(end - text));
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+	return result;
+err_temp:
+	return temp;
+}
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS */
+
+
+#if TPP_EMITTER_HAVE_NORMALIZE_BSE || TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS
+static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_generic, arg, text, num_bytes) {
+	tpp_ssize temp, result = 0;
+	tpp_emitter *self = (tpp_emitter *)arg;
+	tpp_char const *end = text + num_bytes;
+	tpp_char const *iter = text;
+	while (iter < end) {
+#if TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS
+		if (iter[0] == '?' && (iter + 2) < end && iter[1] == '?' &&
+		    tpp_emitter_has(self, NORMALIZE_TRIGRAPHS)) {
+			tpp_char trich;
+			switch (iter[2]) {
+			case '=': trich = '#'; break;
+			case '(': trich = '['; break;
+			case '/': trich = '\\'; break;
+			case ')': trich = ']'; break;
+			case '\'': trich = '^'; break;
+			case '<': trich = '{'; break;
+			case '!': trich = '|'; break;
+			case '>': trich = '}'; break;
+			case '-': trich = '~'; break;
+			default: goto not_a_trigraph;
+			}
+			temp = tpp_emitter_print(self, text, (tpp_size)(iter - text));
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			temp = tpp_emitter_print(self, &trich, 1);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			iter += 3;
+			text = iter;
+		}
+not_a_trigraph:
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS */
+
+#if TPP_EMITTER_HAVE_NORMALIZE_BSE
+		if (tpp_emitter_has(self, NORMALIZE_BSE)) {
+			tpp_char const *new_iter;
+			new_iter = tpp_preparse_skipbse_fwd(tpp_emitter_getlexer(self), iter, end);
+			tpp_assert(new_iter >= iter);
+			if (new_iter > iter) {
+				temp = tpp_emitter_print(self, text, (tpp_size)(iter - text));
+				if (temp < 0)
+					goto err_temp;
+				result += temp;
+				iter = text = new_iter;
+			}
+		}
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_BSE */
+		++iter;
+	}
+	temp = tpp_emitter_print(self, text, (tpp_size)(end - text));
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+	return result;
+err_temp:
+	return temp;
+}
+#else /* TPP_EMITTER_HAVE_NORMALIZE_BSE || TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS */
+#define tpp_emitter_print_generic tpp_emitter_print
+#endif /* !TPP_EMITTER_HAVE_NORMALIZE_BSE && !TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS */
+
+
+/* Emit the currently loaded token (and update `self->te_state`) */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
-tpp_emitter_printtoken(tpp_emitter *tpp_restrict self,
-                       tpp_lexer const *tpp_restrict lexer) {
+tpp_emitter_print_current_token(tpp_emitter *tpp_restrict self) {
+	tpp_lexer *const lexer = tpp_emitter_getlexer(self);
 	tpp_char const *token_start = tpp_lexer_gettokenstart(lexer);
-	tpp_size token_len = tpp_lexer_gettokenlen(lexer);
-	/* TODO: Config to normalize certain tokens (see "emitter.h") */
-	return tpp_emitter_print(self, token_start, token_len);
+	tpp_char const *token_end = tpp_lexer_gettokenend(lexer);
+
+	/* Configs to normalize certain tokens (see "emitter.h") */
+	switch (tpp_lexer_gettok(lexer)) {
+
+#if TPP_EMITTER_HAVE_NORMALIZE_SPACE
+	case TPP_TOK_SPACE: {
+		tpp_size space_count;
+		if (!tpp_emitter_has(self, NORMALIZE_SPACE))
+			break;
+		space_count = 0;
+		while (token_start < token_end) {
+			tpp_char ch = *token_start++;
+			(void)ch;
+			++space_count;
+#if TPP_HAVE_UNICODE
+			if (tpp_ascii_ismb(ch) && tpp_file_isutf8(tpp_lexer_getfile(lexer)))
+				token_start += tpp_unicode_utf8seqlen_mb_getmax(ch) - 1;
+#endif /* TPP_HAVE_UNICODE */
+			token_start = tpp_preparse_skipbse_fwd(lexer, token_start, token_end);
+		}
+		return tpp_emitter_printspace(self, space_count);
+	}	break;
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_SPACE */
+
+#if TPP_EMITTER_HAVE_NORMALIZE_LF
+	case TPP_TOK_LF: {
+		if (!tpp_emitter_has(self, NORMALIZE_LF))
+			break;
+		return tpp_emitter_printlf(self, 1);
+	}	break;
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_LF */
+
+#if TPP_EMITTER_HAVE_NORMALIZE_C_STRING
+	TPP_CASE_TPP_TOK_STRING {
+		tpp_lexer_decodestring_config config;
+		tpp_ssize temp, result;
+		tpp_char quote;
+		if (!tpp_emitter_has(self, NORMALIZE_C_STRING))
+			break;
+#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+		if (TPP_TOK_ISSTRING_SQUOTE(tpp_lexer_gettok(lexer)) &&
+		    tpp_lexer_has(lexer, BUILTIN_EXPR_CHARACTER_LITERALS)) {
+			if (!tpp_lexer_has(lexer, TOK_C_CHAR))
+				break;
+			quote = '\'';
+		} else
+#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+		{
+			if (!tpp_lexer_has(lexer, TOK_C_STRING))
+				break;
+			quote = '"';
+		}
+		result = tpp_emitter_print(self, &quote, 1);
+		if (result < 0)
+			return result;
+
+		/* Decode+re-encode string on-the-fly. */
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+		{
+			struct tpp_emitter_printbig_data data;
+			data.tepbd_emitter = self;
+			data.tepbd_quote   = quote;
+			data.tepbd_after_x = false;
+			config.tldsc_arg = &data;
+			config.tldsc_dataprinter = &tpp_emitter_printbig_normal;
+#if TPP_HAVE_UNICODE
+			config.tldsc_utf8printer = &tpp_emitter_printbig_normal;
+#endif /* TPP_HAVE_UNICODE */
+			config.tldsc_bigprinter = &tpp_emitter_printbig_big;
+			temp = tpp_lexer_decodestring(lexer, &config);
+		}
+#else /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+		tpp_lexer_decodestring_config_init_simple(&config, &tpp_emitter_print_encodestring, self);
+		temp = tpp_lexer_decodestring(lexer, &config);
+#endif /* !TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+		temp = tpp_emitter_print(self, &quote, 1);
+		if (temp < 0)
+			return temp;
+		result += temp;
+		return result;
+	}	break;
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_C_STRING */
+
+#if TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS
+	case '{':
+	case '[':
+	case '}':
+	case ']':
+	case '#': {
+		tpp_char digraph_esc[1];
+		if (!tpp_emitter_has(self, NORMALIZE_DIGRAPHS))
+			break;
+		digraph_esc[0] = (tpp_char)tpp_lexer_gettok(lexer);
+		return tpp_emitter_print(self, digraph_esc, 1);
+	}	break;
+
+#if TPP_HAVE_TOK_POUND_POUND
+	case TPP_TOK_POUND_POUND:
+		if (!tpp_emitter_has(self, NORMALIZE_DIGRAPHS))
+			break;
+		return tpp_emitter_print(self, (tpp_char const *)"##", 2);
+#endif /* TPP_HAVE_TOK_POUND_POUND */
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS */
+
+	default: {
+#if TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS
+		if (TPP_TOK_ISKEYWORD(tpp_lexer_gettok(lexer))) {
+			if (tpp_emitter_has(self, NORMALIZE_KEYWORDS)) {
+				tpp_keyword const *const kwd = tpp_lexer_gettokenkwd(lexer);
+				tpp_char const *kwd_start = tpp_keyword_getstr(kwd);
+				tpp_size kwd_len = tpp_keyword_getlen(kwd);
+				return tpp_emitter_print_keyword(self, kwd_start, kwd_len);
+			}
+		} else
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS */
+		{
+		}
+	}	break;
+	}
+
+	/* Do generic processing for this type of token */
+	return tpp_emitter_print_generic(self, token_start, (tpp_size)(token_end - token_start));
 }
 
 /* Emit the token currently loaded into `tpp_emitter_getlexer(self)`,
@@ -310,7 +635,7 @@ emit_without_alignment:
 	}
 
 	/* Actually emit the token */
-	temp = tpp_emitter_printtoken(self, lexer);
+	temp = tpp_emitter_print_current_token(self);
 	if (temp < 0)
 		goto err_temp;
 	result += temp;
@@ -348,7 +673,7 @@ _tpp_emitter_hook_unknown_pragma(tpp_lexer *tpp_restrict lexer) {
 				if (temp < 0)
 					goto err_temp;
 			}
-			temp = tpp_emitter_printtoken(self, lexer);
+			temp = tpp_emitter_print_current_token(self);
 			if (temp < 0)
 				goto err_temp;
 			prev_token = tok;

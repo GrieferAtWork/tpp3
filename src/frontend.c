@@ -101,6 +101,7 @@ int main(int argc, char **argv) {
 	 *   No special handling needed in TPP backend
 	 *   The first time the frontend emits a `# <linenum>` marker, it must simply
 	 *   follow this up by emitting a second marker like: `# 1 "$(pwd)//"`
+	 *
 	 * - "-P", "--no-line-commands"
 	 *   No special handling needed in TPP backend
 	 *   Frontend simply mustn't emit any `# <linenum>` or `#line` directives

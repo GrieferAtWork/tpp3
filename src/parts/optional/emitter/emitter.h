@@ -28,21 +28,6 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-/* TODO: Config to normalize (simplify) tokens before re-emitting them
- *       (each of these things listed here should also have its own,
- *       individual sub-config that only takes effect when the main
- *       config is enabled):
- * - BSE, \u, \U and \N sequences are removed from keywords
- * - BSE sequences are removed from all others tokens, too
- * - Strings are decoded, then re-encoded using `tpp_token_encodestring()`
- *   to force normalization (though `tldsc_bigprinter` is forwarded as-is) */
-
-/* TODO: Config to select between use of `# <linenum>` and `#line` */
-
-/* TODO: Config to enable emission of 1/2/3/4 flags in `# <linenum>`-directives */
-
-/* TODO: Configs for each of the CLI switches listed in "frontend.c" */
-
 typedef struct tpp_emitter_state {
 #if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
 	tpp_lcinfo          TPP_EMITTER_INTERNAL(tes_curpos);          /* Current line/column position in output (with respect to emitted `#line` directives) */
