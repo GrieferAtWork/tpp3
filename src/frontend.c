@@ -32,7 +32,7 @@
 #include <stdio.h>
 
 #if TPP_OS_WINDOWS
-#include <Windows.h>
+#include <Windows.h> /* For: `SetConsoleOutputCP(CP_UTF8)` */
 #endif /* TPP_OS_WINDOWS */
 
 TPP_DECL_BEGIN
@@ -76,7 +76,7 @@ static tpp_errno tpp_frontend_set_output_file(tpp_frontend *self, char const *fi
 	return TPP_EOK;
 }
 
-static tpp_errno TPPCALL tpp_frontend_parse_arg(tpp_frontend *self, char const *arg) {
+static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 #define tpp_streq(at, CONSTstr) \
 	(tpp_memcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
 	switch (self->tf_cli_state) {
@@ -103,6 +103,13 @@ static tpp_errno TPPCALL tpp_frontend_parse_arg(tpp_frontend *self, char const *
 	 *   No special handling needed in TPP backend
 	 * - "-MMD", "--write-user-dependencies"
 	 *   No special handling needed in TPP backend (see "-MM")
+	 *
+	 * TODO: The `-M*` flags above should really (somehow) be handled by the TPP core!
+	 *       Being able to generate Makefile-compatible dependency definitions really
+	 *       is something that pretty much any compiler that's using the C preprocessor
+	 *       should be capable of doing. Therefor, the functionality to do so should be
+	 *       part of the TPP core, too!
+	 *
 	 * - "-fsearch-include-path[=kind]"  (kind=R"(user|system)", default="user")
 	 *   No special handling needed in TPP backend
 	 *   When kind=user, and the main input file could not be found, it must be
@@ -176,11 +183,78 @@ static tpp_errno TPPCALL tpp_frontend_parse_arg(tpp_frontend *self, char const *
 #undef tpp_streq
 }
 
+static tpp_errno tpp_frontend_parseargv(tpp_frontend *self, int *p_argc, char ***p_argv) {
+	tpp_errno result = TPP_EOK;
+	int argc    = *p_argc;
+	char **argv = *p_argv;
+	unsigned int unknown_count = 0;
+	while (argc > 0) {
+		char *arg = argv[0];
+		result = tpp_frontend_parsearg(self, arg);
+		if (TPP_ISERR(result)) {
+			if (result != TPP_ENOENT)
+				break;
+			/* Add "arg" to trailing list of unknown arguments */
+			--argc;
+			tpp_memmovedown(&argv[0], &argv[1],
+			                (argc + unknown_count) *
+			                sizeof(char *));
+			argv[argc + unknown_count] = arg;
+			++unknown_count;
+			result = TPP_EOK;
+			continue;
+		}
+		if (self->tf_cli_state == TPP_FRONTEND_CLI_STATE_DDASH) {
+			if (unknown_count) {
+				/* Right now, "argv" looks like this:
+				 * >> argv = { "--", "file1.c", "file2.c", "-unknown-arg", "file0.c" }
+				 * >> argc = 3
+				 * >> unknown_count = 2
+				 *
+				 * Our job now is to make `argv` look like this:
+				 * >> argv = { "-unknown-arg", "file0.c", "--", "file1.c", "file2.c" } */
+				unsigned int shift_count = unknown_count;
+				unsigned int total_count_minus_1 = argc + unknown_count - 1;
+				while (shift_count--) {
+					arg = argv[0];
+					tpp_memmovedown(&argv[0], &argv[1], total_count_minus_1 * sizeof(char *));
+					argv[total_count_minus_1] = arg;
+				}
+			}
+			break;
+		}
+		++argv;
+		--argc;
+	}
+	*p_argc = argc + unknown_count;
+	*p_argv = argv;
+	return result;
+}
+
+#ifdef tpp_io_handle_IS_HANDLE
+#define tpp_get_stdin tpp_get_stdin
+static HANDLE tpp_get_stdin(void) {
+	return GetStdHandle(STD_INPUT_HANDLE);
+}
+#endif /* tpp_io_handle_IS_HANDLE */
+
+#ifdef tpp_io_handle_IS_int
+#ifdef STDIN_FILENO
+#define tpp_get_stdin() STDIN_FILENO
+#else /* STDIN_FILENO */
+#define tpp_get_stdin() 0
+#endif /* !STDIN_FILENO */
+#endif /* tpp_io_handle_IS_int */
+
+#ifdef tpp_io_handle_IS_FILE
+#define tpp_get_stdin() stdin
+#endif /* tpp_io_handle_IS_FILE */
+
 int main(int argc, char **argv) {
 	tpp_errno error;
 	int result = 1;
 	tpp_frontend fe;
-	char const *input_filename = "input.c";
+	char const *input_filename = "-";
 	char *appname = argv[0];
 	if (argc)
 		--argc, ++argv; /* Skip "appname" argument */
@@ -200,39 +274,43 @@ int main(int argc, char **argv) {
 	error = tpp_cli_loader_parseargv(&fe.tf_cli_loader, &argc, &argv);
 	if (!TPP_ISERR(error))
 		error = tpp_emitter_cli_loader_parseargv(&fe.tf_emitter_cli_loader, &argc, &argv);
+	if (!TPP_ISERR(error))
+		error = tpp_frontend_parseargv(&fe, &argc, &argv);
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
 		goto out_emitter_loader;
 	}
 
 	/* Parse remainder of argument list using our own CLI handler, as well */
-	for (; argc; --argc, ++argv) {
-		char *arg = argv[0];
-		error = tpp_frontend_parse_arg(&fe, arg);
-		if (error == TPP_ENOENT)
-			break;
-		if (TPP_ISERR(error)) {
-			fprintf(stderr, "failed to parse argument `%s`: %s\n", arg, tpp_strerror(error));
-			goto out_emitter_loader;
-		}
-	}
-	if (argc && fe.tf_cli_state != TPP_FRONTEND_CLI_STATE_DDASH && **argv == '-') {
+	if (argc && tpp_strcmp(*argv, "--") == 0) {
+		--argc;
+		++argv;
+	} else if (argc && (*argv)[0] == '-' && (*argv)[1])  {
 		fprintf(stderr, "unknown argument `%s`\n", *argv);
 		goto out_emitter_loader;
 	}
 	if (argc == 1) {
 		input_filename = argv[0];
 	} else if (argc != 0) {
-		fprintf(stderr, "bad arguments\n"
+		fprintf(stderr, "wrong number of input files (%d)\n"
 		                "USAGE: %s [ARGS...] [--] [INFILE]\n",
-		        appname);
+		        argc, appname);
 		goto out_emitter_loader;
 	}
-	error = tpp_lexer_initfile_open(tpp_emitter_getlexer(&fe.tf_emitter),
-	                                input_filename, TPP_SIZE_MAX);
-	if (TPP_ISERR(error)) {
-		fprintf(stderr, "failed to open '%s': %s\n", input_filename, tpp_strerror(error));
-		goto out_emitter_loader;
+#ifdef tpp_get_stdin
+	if (tpp_strcmp(input_filename, "-") == 0) {
+		tpp_lexer_initfile_io_ex(tpp_emitter_getlexer(&fe.tf_emitter),
+		                         "<stdin>", tpp_get_stdin(),
+		                         TPP_FILE_FLAGS_NOCLOSE);
+	} else
+#endif /* tpp_get_stdin */
+	{
+		error = tpp_lexer_initfile_open(tpp_emitter_getlexer(&fe.tf_emitter),
+		                                input_filename, TPP_SIZE_MAX);
+		if (TPP_ISERR(error)) {
+			fprintf(stderr, "failed to open '%s': %s\n", input_filename, tpp_strerror(error));
+			goto out_emitter_loader;
+		}
 	}
 	error = tpp_emitter_cli_loader_flush(&fe.tf_emitter_cli_loader);
 	if (!TPP_ISERR(error))
@@ -255,11 +333,9 @@ int main(int argc, char **argv) {
 		(void)tpp_emitter_emitcurrent(&fe.tf_emitter);
 	}
 
-	if (tpp_lexer_geterrorcount(tpp_emitter_getlexer(&fe.tf_emitter))) {
-		fprintf(stderr, "There were lexer errors\n");
-		goto out_emitter_file;
-	}
-	result = 0;
+	/* Return "0" if there were no TPP_WSTATE_ERROR-level messages */
+	if (tpp_lexer_geterrorcount(tpp_emitter_getlexer(&fe.tf_emitter)) == 0)
+		result = 0;
 
 out_emitter_file:
 	tpp_lexer_finifile(tpp_emitter_getlexer(&fe.tf_emitter));

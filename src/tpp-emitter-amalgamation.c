@@ -1146,7 +1146,7 @@ _tpp_emitter_hook_file_pushed(tpp_lexer *tpp_restrict lexer) {
 #if TPP_EMITTER_HAVE_MODE_BRACKET
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_emitter_emitcurrent_bracket(tpp_emitter *tpp_restrict self) {
-	tpp_size temp, result;
+	tpp_ssize temp, result;
 	result = tpp_emitter_print_conststr(self, "[");
 	if (result < 0)
 		return result;
@@ -1166,7 +1166,7 @@ tpp_emitter_emitcurrent_bracket(tpp_emitter *tpp_restrict self) {
 #if TPP_EMITTER_HAVE_MODE_TYPED
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_emitter_emitcurrent_typed(tpp_emitter *tpp_restrict self) {
-	tpp_size temp, result;
+	tpp_ssize temp, result;
 	char const *strtoken;
 	tpp_lexer const *const lexer = tpp_emitter_getlexer(self);
 	result = tpp_emitter_print_conststr(self, "[");
@@ -1235,12 +1235,7 @@ tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self) {
 	}
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY */
 
-#if TPP_EMITTER_HAVE_MODE_EMIT
-	switch (tpp_expect(tpp_emitter_getmode(self), TPP_EMITTER_MODE_EMIT))
-#else /* TPP_EMITTER_HAVE_MODE_EMIT */
-	switch (tpp_emitter_getmode(self))
-#endif /* !TPP_EMITTER_HAVE_MODE_EMIT */
-	{
+	switch (tpp_expect(tpp_emitter_getmode(self), _TPP_EMITTER_MODE_DEFAULT)) {
 
 #if TPP_EMITTER_HAVE_MODE_EMIT
 	case TPP_EMITTER_MODE_EMIT:
