@@ -398,6 +398,7 @@ int main(int argc, char **argv) {
 		--argc, ++argv; /* Skip "appname" argument */
 
 #if TPP_OS_WINDOWS
+	SetConsoleCP(CP_UTF8);
 	SetConsoleOutputCP(CP_UTF8);
 #endif /* TPP_OS_WINDOWS */
 
