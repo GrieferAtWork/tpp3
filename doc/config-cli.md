@@ -5,14 +5,14 @@ In order to help you more easily create CLI frontends for TPP, there also exists
 <!--BEGIN:cli-->
 ## TPP_HAVE_CLI
 
-Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L26074), which can be used to configure a lexer
+Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L26087), which can be used to configure a lexer
 using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.
 
 This API is entirely optional: there's nothing it can do that can't already
 be done using some other C API; it's only there as a convenience to you.
 
 The CLI loader must be used on a lexer that has already been initialized
-itself (as per [`tpp_lexer_init()`](../src/tpp-amalgamation.h#L24240)), though whether or not the its initial
+itself (as per [`tpp_lexer_init()`](../src/tpp-amalgamation.h#L24253)), though whether or not the its initial
 file has already been initialized doesn't matter (the CLI loader will never
 make persistent modifications to a lexer's current file/token).
 
@@ -74,6 +74,34 @@ TPP_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
+## TPP_HAVE_CLI_HELP
+
+Enable support for `tpp_cli_loader_help`, which exposes a small database
+of supported commandline flags in a human-readable format that can also
+be rendered (fairly) easily.
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_CLI
+```
+</details>
+
+## TPP_HAVE_CLI_HELP_ALL_SPELLINGS
+
+Include extra spellings (i.e.: in addition to the primary spelling) of CLI options.
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_CLI_HELP && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
+```
+</details>
+
 ## TPP_HAVE_CLI_DASH_DEFINE_MACRO
 
 `-Dmacro[=def]`, `-D macro[=def]`,
@@ -95,7 +123,7 @@ TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_DEFINE
 `-Umacro`, `-U macro`, `--undefine-macro=macro`, `--undefine-macro macro`:
 Delete a macro definition, the same way `#undef macro` would.
 
-Implementation makes use of: [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L24611) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L24619)
+Implementation makes use of: [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L24624) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L24632)
 
 <details><summary>Details</summary>
 
@@ -113,8 +141,8 @@ TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_DEFINE
 `--assert=-predicate[=answer]`, `--assert -predicate[=answer]`:
 Define or delete a preprocessor *"assertion"* (see [`TPP_HAVE_CPP_ASSERT`](config-conf.md#tpp_have_cpp_assert)).
 
-Implementation makes use of: [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L24635) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L24644) +
-                             [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L24651)
+Implementation makes use of: [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L24648) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L24657) +
+                             [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L24664)
 
 <details><summary>Details</summary>
 
@@ -231,7 +259,7 @@ TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_CPP_MACROS)
 
 ## TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS
 
-`-fdollars-in-identifiers`:
+`-fdollars-in-identifiers`, `-fno-dollars-in-identifiers`:
 Turns off `$` being treated as a distinct token when enabled.
 Essentially does the inverse of `-ftok-dollar` (s.a. [`TPP_HAVE_TOK_DOLLAR`](config-conf.md#tpp_have_tok_dollar))
 
@@ -241,6 +269,22 @@ Default:
 
 ```c
 TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_TOK_DOLLAR)
+```
+</details>
+
+## TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH
+
+`-fmax-include-depth=<count>`:
+Configure the max # of times the same file may appear on the `#include`-stack.
+This slightly differs from how GCC treats this CLI switch, in that GCC treats
+this as the max size of the `#include`-stack as a whole.
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_HAVE_CLI && (TPP_MAX_INCLUDE_DEPTH < 0)
 ```
 </details>
 
@@ -266,9 +310,9 @@ TPP_HAVE_CLI && (TPP_TABSIZE < 0)
 ## TPP_HAVE_CLI_DASH_COMMENTS
 
 `-C`, `-CC`, `--comments`, `--comments-in-macros`:
-Enable emission of comment-like tokens in output. Without this, comments
-are simply skipped the same way that preprocessor directives and macros
-that expand to nothing are skipped.
+Enable emission of COMMENT/SPACE/LF tokens in output. Without this,
+comments are simply skipped the same way that preprocessor directives
+and macros that expand to nothing are skipped.
 
 NOTE: TPP doesn't differentiate between comments in-source and comments
       in macros, so both of these CLI switches are handled the same by
@@ -453,7 +497,7 @@ TPP_HAVE_CLI && (TPP_HAVE_CLI_DASH_IWITHPREFIX || TPP_HAVE_CLI_DASH_IWITHPREFIXB
 
 ## TPP_HAVE_CLI_DASH_ISYSROOT
 
-`-isysroot path`, `--sysroot=path`:
+`-isysroot path`, `--sysroot path`:
 Override what a `=` or `$SYSROOT` prefix in include paths should be replaced with in:
 
 - [`TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY`](#tpp_have_cli_dash_include_directory)
@@ -508,7 +552,7 @@ TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_WERROR)
 Change the max-error limit (as specified by [`TPP_ERROR_LIMIT`](config-limit.md#tpp_error_limit))
 to `1`, or restore its default when this flag is disabled.
 
-Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L23587) be available.
+Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L23600) be available.
 
 <details><summary>Details</summary>
 
@@ -524,7 +568,7 @@ TPP_HAVE_CLI && TPP_HAVE_WARNING_ERROR && (TPP_ERROR_LIMIT < 0)
 `-fmax-errors=COUNT`:
 Change the max-error limit (as specified by [`TPP_ERROR_LIMIT`](config-limit.md#tpp_error_limit)) to `COUNT`.
 
-Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L23587) be available.
+Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L23600) be available.
 
 <details><summary>Details</summary>
 
@@ -540,13 +584,13 @@ TPP_HAVE_CLI && TPP_HAVE_WARNING_ERROR && (TPP_ERROR_LIMIT < 0)
 `-W...`, `-Wno-...`:
 Turn emission of a specific warning on/off (similar to `#pragma TPP warning("-W...")`).
 
-When turned off, the warning state is set to [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L21705). When turned on,
+When turned off, the warning state is set to [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L21718). When turned on,
 the warning state is gradually increased from what it's previous state was:
 
-- [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L21705) is changed to [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L21706)
-- [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L21706) is changed to [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L21708) (if [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error)
-  is available; else, changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L21713) instead)
-- [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error) is changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L21713)
+- [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L21718) is changed to [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L21719)
+- [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L21719) is changed to [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L21721) (if [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error)
+  is available; else, changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L21726) instead)
+- [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error) is changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L21726)
 
 <details><summary>Details</summary>
 
@@ -560,7 +604,7 @@ TPP_HAVE_CLI && TPP_HAVE_WARNINGS
 ## TPP_HAVE_CLI_DASH_WERROR_WARNING
 
 `-Werror=NAME`:
-Configure the specified warning `NAME` as [`TPP_WSTATE_ERROR_OR_FATAL`](../src/tpp-amalgamation.h#L21709), or [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L21706)
+Configure the specified warning `NAME` as [`TPP_WSTATE_ERROR_OR_FATAL`](../src/tpp-amalgamation.h#L21722), or [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L21719)
 
 <details><summary>Details</summary>
 

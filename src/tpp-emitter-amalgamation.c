@@ -1750,8 +1750,8 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE ||       \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS || \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS)
-			if (tpp_streq(arg, "normalize-")) {
-				arg += (sizeof("normalize-") - sizeof(char));
+			if (tpp_streq(arg, "normalize=")) {
+				arg += (sizeof("normalize=") - sizeof(char));
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE
 				if (tpp_streq(arg, "space\0")) {
 					tpp_emitter_set_NORMALIZE_SPACE(self->tcl_emitter, !no);
@@ -1984,6 +1984,115 @@ tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self) {
 
 	return TPP_EOK;
 }
+
+#if TPP_EMITTER_HAVE_CLI_HELP
+#undef TPP_CLI_HELP1
+#undef TPP_CLI_HELP2
+#define TPP_CLI_HELP1(spelling, description) \
+	spelling "\0\0" description "\0"
+#if TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS
+#define TPP_CLI_HELP2(spelling1, spelling2, description) \
+	spelling1 "\0" spelling2 "\0\0" description "\0"
+#else /* TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS */
+#define TPP_CLI_HELP2(spelling1, spelling2, description) \
+	TPP_CLI_HELP1(spelling1, description)
+#endif /* !TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS */
+
+/* Returns supported CLI parameters, and human-readable information
+ * for them. Same format as `tpp_cli_loader_help` (see for more info) */
+TPP_CONST_IMPL char const tpp_emitter_cli_loader_help[] =
+#if TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS
+TPP_CLI_HELP2("-P", "--no-line-commands",
+              "Disable emission of #line-directives")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS */
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_M
+TPP_CLI_HELP2("-dM", "--dump=M",
+              "Dump builtin/predefined macros\n"
+              "Dump #define and #undef directives as they appear\n"
+              "Turn off emission of preprocessor output")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_M */
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_D
+TPP_CLI_HELP2("-dD", "--dump=D",
+              "Like -dM but don't turn off emission of preprocessor output")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_D */
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_N
+TPP_CLI_HELP2("-dN", "--dump=N",
+              "Like -dD but only print name when emitting #define")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_N */
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_I
+TPP_CLI_HELP2("-dI", "--dump=I",
+              "Emit #include directives")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_I */
+#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_U
+TPP_CLI_HELP2("-dU", "--dump=U",
+              "Similar to -dD, but emit #define/#undef lazily")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_U */
+#if TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES
+TPP_CLI_HELP2("-H", "--trace-includes",
+              "Print visual representation of #include-stack when files are pushed")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES */
+#if TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN
+TPP_CLI_HELP1("-f[no-]relaxed-macro-column",
+              "Relax column retention rules when emitting tokens from within macros")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN */
+#if TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA
+TPP_CLI_HELP1("-f[no-]reemit-unknown-pragma",
+              "Re-emit unknown #pragma directives")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE
+TPP_CLI_HELP1("-f[no-]normalize=space",
+              "Emit SPACE tokens using only ASCII SPACE")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF
+TPP_CLI_HELP1("-f[no-]normalize=lf",
+              "Emit LF tokens using only ASCII LF")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS
+TPP_CLI_HELP1("-f[no-]normalize=strings",
+              "Re-encode string tokens as \"foo\" or 'foo' before emission")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS
+TPP_CLI_HELP1("-f[no-]normalize=keywords",
+              "Re-encode keywords before emission")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE
+TPP_CLI_HELP1("-f[no-]normalize=bse",
+              "Remove \\-escaped newline before emission")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS
+TPP_CLI_HELP1("-f[no-]normalize=trigraphs",
+              "Remove trigraph sequences before emission")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS
+TPP_CLI_HELP1("-f[no-]normalize=digraphs",
+              "Remove digraph sequences before emission")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE
+TPP_CLI_HELP1("-f[no-]normalize",
+              "Turn all normalization on/off")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE */
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT
+TPP_CLI_HELP1("--mode=emit",
+              "Set emitter to emit preprocessor output (default)")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT */
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE
+TPP_CLI_HELP1("--mode=dispose",
+              "Set emitter to dispose output (except for special output)")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE */
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET
+TPP_CLI_HELP1("--mode=bracket",
+              "Set emitter to print tokens in [bracket] notation\n"
+              "Turn on emission of SPACE/LF tokens")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET */
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED
+TPP_CLI_HELP1("--mode=typed",
+              "Set emitter to print tokens in [TYPE:REPR] notation\n"
+              "Turn on emission of SPACE/LF tokens")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED */
+"";
+#undef TPP_CLI_HELP1
+#undef TPP_CLI_HELP2
+#endif /* TPP_EMITTER_HAVE_CLI_HELP */
 
 #endif /* TPP_EMITTER_HAVE_CLI */
 

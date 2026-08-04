@@ -83,6 +83,8 @@ for (local option, what: {
 	{"CPP_ASSERT", "set"},
 	{"TOK_DOLLAR", "set"},
 	{"TOK_COMMENT", "enable"},
+	{"TOK_SPACE", "enable"},
+	{"TOK_LF", "enable"},
 	{"TRADITIONAL_MACROS", "enable"},
 	{"TOK_CXX_COMMENT", "disable"},
 	{"INCLUDE_RELATIVE_TO_CURRENT_FILE", "disable"},
@@ -196,6 +198,20 @@ for (local option, what: {
 #define tpp_lexer_enable_TOK_COMMENT(self) (tpp_lexer_enablefeature(self, TPP_FEAT_TOK_COMMENT), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_enable_TOK_COMMENT(self) TPP_EOK
+#endif /* !... */
+#if TPP_CONF_ISEXT(TPP_HAVE_TOK_SPACE)
+#define tpp_lexer_enable_TOK_SPACE(self) tpp_lexer_enableextension(self, TPP_EXT_TOK_SPACE)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TOK_SPACE)
+#define tpp_lexer_enable_TOK_SPACE(self) (tpp_lexer_enablefeature(self, TPP_FEAT_TOK_SPACE), TPP_EOK)
+#else /* ... */
+#define tpp_lexer_enable_TOK_SPACE(self) TPP_EOK
+#endif /* !... */
+#if TPP_CONF_ISEXT(TPP_HAVE_TOK_LF)
+#define tpp_lexer_enable_TOK_LF(self) tpp_lexer_enableextension(self, TPP_EXT_TOK_LF)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_TOK_LF)
+#define tpp_lexer_enable_TOK_LF(self) (tpp_lexer_enablefeature(self, TPP_FEAT_TOK_LF), TPP_EOK)
+#else /* ... */
+#define tpp_lexer_enable_TOK_LF(self) TPP_EOK
 #endif /* !... */
 #if TPP_CONF_ISEXT(TPP_HAVE_TRADITIONAL_MACROS)
 #define tpp_lexer_enable_TRADITIONAL_MACROS(self) tpp_lexer_enableextension(self, TPP_EXT_TRADITIONAL_MACROS)
@@ -552,6 +568,20 @@ tpp_lexer_set_fpreprocessed(tpp_lexer *tpp_restrict self, bool no) {
 	return result;
 }
 #endif /* TPP_HAVE_CLI_DASH_FPREPROCESSED */
+
+
+#if TPP_HAVE_CLI_DASH_COMMENTS
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_enable_comments(tpp_lexer *tpp_restrict self) {
+	/* Enable COMMENT, SPACE and LF tokens */
+	tpp_errno result = tpp_lexer_enable_TOK_COMMENT(self);
+	if (!TPP_ISERR(result))
+		result = tpp_lexer_enable_TOK_SPACE(self);
+	if (!TPP_ISERR(result))
+		result = tpp_lexer_enable_TOK_LF(self);
+	return result;
+}
+#endif /* TPP_HAVE_CLI_DASH_COMMENTS */
 
 
 #if TPP_HAVE_CLI_DASH_TRADITIONAL
@@ -933,7 +963,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 #if TPP_HAVE_CLI_DASH_COMMENTS
 				if (tpp_streq(arg, "omments\0") ||           /* --comments */
 				    tpp_streq(arg, "omments-in-macros\0")) { /* --comments-in-macros */
-					return tpp_lexer_enable_TOK_COMMENT(self->tcl_lexer);
+					return tpp_lexer_enable_comments(self->tcl_lexer);
 				} else
 #endif /* TPP_HAVE_CLI_DASH_COMMENTS */
 				{
@@ -1240,7 +1270,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 		case 'C':
 #if TPP_HAVE_CLI_DASH_COMMENTS
 			if (*arg == '\0' || tpp_streq(arg, "C\0")) { /* -C -CC */
-				return tpp_lexer_enable_TOK_COMMENT(self->tcl_lexer);
+				return tpp_lexer_enable_comments(self->tcl_lexer);
 			} else
 #endif /* TPP_HAVE_CLI_DASH_COMMENTS */
 			{
@@ -1529,6 +1559,193 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
 #endif /* TPP_HAVE_CLI_DASH_INCLUDE */
 	return TPP_EOK;
 }
+
+#if TPP_HAVE_CLI_HELP
+#undef TPP_CLI_HELP1
+#undef TPP_CLI_HELP2
+#define TPP_CLI_HELP1(spelling, description) \
+	spelling "\0\0" description "\0"
+#if TPP_HAVE_CLI_HELP_ALL_SPELLINGS
+#define TPP_CLI_HELP2(spelling1, spelling2, description) \
+	spelling1 "\0" spelling2 "\0\0" description "\0"
+#else /* TPP_HAVE_CLI_HELP_ALL_SPELLINGS */
+#define TPP_CLI_HELP2(spelling1, spelling2, description) \
+	TPP_CLI_HELP1(spelling1, description)
+#endif /* !TPP_HAVE_CLI_HELP_ALL_SPELLINGS */
+
+/* Returns supported CLI parameters, and human-readable information
+ * for them in the form of:
+ * >> "-Dmacro[=def]\0--define-macro macro[=def]\0\0"
+ * >> "Define a macro with def, or 1 as its value.\0"
+ * >> "-Umacro\0--undefine-macro macro\0\0"
+ * >> "Undefined macro\0"
+ * >> ...
+ * >> "\0"
+ *
+ * Format (repeated):
+ * >> <SPELLING1>[\0<SPELLING2>][\0<SPELLING3>][...]\0\0<DESCRIPTION>\0
+ * >> \0
+ *
+ * The end is reached when "DESCRIPTION" is immediately followed
+ * by another NUL-character, where there would otherwise be the
+ * first character of the first spelling of the next CLI parameter.
+ *
+ * CLI parameter spellings are sorted such that the most *prominent*
+ * spelling comes first. For the sake of keeping your `--help` readable,
+ * I suggest you only print `SPELLING1` and have some kind of `--help all`
+ * option (or similar) that will print *all* spellings.
+ *
+ * To enumerate available options, you can use code like this:
+ * ```c
+ * char const *iter = tpp_cli_loader_help;
+ * while (*iter) {
+ *     bool first = true;
+ *     // Print spellings
+ *     do {
+ *         printf("%s%s", first ? "" : " ", iter);
+ *         iter += tpp_strlen(iter) + 1;
+ *         first = false;
+ *     } while (*iter);
+ *     ++iter;
+ *     // Print description
+ *     printf("\n\t\t\t%s\n", iter);
+ *     iter += tpp_strlen(iter) + 1;
+ * }
+ * ``` */
+TPP_CONST_IMPL char const tpp_cli_loader_help[] =
+#if TPP_HAVE_CLI_DASH_DEFINE_MACRO
+TPP_CLI_HELP2("-DMACRO[=DEF]", "--define-macro MACRO[=DEF]",
+              "Define a macro with DEF, or 1 as its value.")
+#endif /* TPP_HAVE_CLI_DASH_DEFINE_MACRO */
+#if TPP_HAVE_CLI_DASH_UNDEFINE_MACRO
+TPP_CLI_HELP2("-UMACRO", "--undefine-macro MACRO",
+              "Undefined MACRO")
+#endif /* TPP_HAVE_CLI_DASH_UNDEFINE_MACRO */
+#if TPP_HAVE_CLI_DASH_ASSERT
+TPP_CLI_HELP2("-APREDICATE=ANSWER", "--assert=PREDICATE=ANSWER",
+              "Define a preprocessor assertion")
+TPP_CLI_HELP2("-A-PREDICATE[=ANSWER]", "--assert=-PREDICATE[=ANSWER]",
+              "Delete a preprocessor assertion")
+#endif /* TPP_HAVE_CLI_DASH_ASSERT */
+#if TPP_HAVE_CLI_DASH_INCLUDE
+TPP_CLI_HELP1("-include FILE",
+              "Inject a FILE at the start of main input")
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE */
+#if TPP_HAVE_CLI_DASH_IMACROS
+TPP_CLI_HELP2("-imacros FILE", "--imacros=FILE",
+              "Include macro definitions from FILE")
+#endif /* TPP_HAVE_CLI_DASH_IMACROS */
+#if TPP_HAVE_CLI_DASH_UNDEF
+TPP_CLI_HELP1("-undef",
+              "Delete all predefined macro definitions")
+#endif /* TPP_HAVE_CLI_DASH_UNDEF */
+#if TPP_HAVE_CLI_DASH_FEXTENSION
+TPP_CLI_HELP1("-f[no-]EXTENSION",
+              "Enable or disable EXTENSION")
+#endif /* TPP_HAVE_CLI_DASH_FEXTENSION */
+#if TPP_HAVE_CLI_DASH_FPREPROCESSED
+TPP_CLI_HELP1("-f[no-]preprocessed",
+              "Turn off unnecessary features for already-preprocessed input")
+#endif /* TPP_HAVE_CLI_DASH_FPREPROCESSED */
+#if TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY
+TPP_CLI_HELP1("-f[no-]directives-only",
+              "Disable macro expansion")
+#endif /* TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY */
+#if TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS
+TPP_CLI_HELP1("-f[no-]dollars-in-identifiers",
+              "Allow $ to appear in identifiers")
+#endif /* TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS */
+#if TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH
+TPP_CLI_HELP1("-fmax-include-depth=COUNT",
+              "Set max # of times a file may appear on #include-stack")
+#endif /* TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH */
+#if TPP_HAVE_CLI_DASH_FTABSTOP
+TPP_CLI_HELP1("-ftabstop=WIDTH",
+              "Set WIDTH of \\t in columns")
+#endif /* TPP_HAVE_CLI_DASH_FTABSTOP */
+#if TPP_HAVE_CLI_DASH_FTABSTOP
+TPP_CLI_HELP2("-C", "--comments\0-CC\0--comments-in-macros",
+              "Enable emission of COMMENT/SPACE/LF tokens")
+#endif /* TPP_HAVE_CLI_DASH_FTABSTOP */
+#if TPP_HAVE_CLI_DASH_TRADITIONAL
+TPP_CLI_HELP2("-traditional", "--traditional\0-traditional-cpp\0--traditional-cpp",
+              "Enable traditional macro expansion rules\n"
+              "Turn off trigraphs and //-comments")
+#endif /* TPP_HAVE_CLI_DASH_TRADITIONAL */
+#if TPP_HAVE_CLI_DASH_TRIGRAPHS
+TPP_CLI_HELP2("-trigraphs", "--trigraphs",
+              "Enable trigraph sequences")
+#endif /* TPP_HAVE_CLI_DASH_TRIGRAPHS */
+#if TPP_HAVE_CLI_DASH_INCLUDE_BARRIER
+TPP_CLI_HELP2("-I-", "--include-barrier",
+              "Turn all preceding -IPATH to -iquote PATH\n"
+              "Turn off relative filenames in #include \"file\"")
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE_BARRIER */
+#if TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY
+TPP_CLI_HELP2("-IPATH", "--include-directory=PATH",
+              "Add PATH to list of #include <file> search directories")
+#endif /* TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY */
+#if TPP_HAVE_CLI_DASH_IQUOTE
+TPP_CLI_HELP1("-iquote PATH",
+              "Add PATH to list of #include \"file\" search directories")
+#endif /* TPP_HAVE_CLI_DASH_IQUOTE */
+#if TPP_HAVE_CLI_DASH_ISYSTEM
+TPP_CLI_HELP1("-isystem PATH",
+              "Like -IPATH, but treat files like #pragma GCC system_header")
+#endif /* TPP_HAVE_CLI_DASH_ISYSTEM */
+#if TPP_HAVE_CLI_DASH_IDIRAFTER
+TPP_CLI_HELP2("-idirafter PATH", "--include-directory-after=PATH",
+              "Search PATH in #include after all others have been searched")
+#endif /* TPP_HAVE_CLI_DASH_IDIRAFTER */
+#if TPP_HAVE_CLI_DASH_EMBED_DIR
+TPP_CLI_HELP2("--embed-dir=PATH", "--embed-directory PATH",
+              "Search PATH in #embed <file>")
+#endif /* TPP_HAVE_CLI_DASH_EMBED_DIR */
+#if TPP_HAVE_CLI_DASH_IPREFIX
+TPP_CLI_HELP2("-iprefix PREFIX", "--include-prefix PREFIX",
+              "Set PREFIX for -iwithprefix and -iwithprefixbefore")
+#endif /* TPP_HAVE_CLI_DASH_IPREFIX */
+#if TPP_HAVE_CLI_DASH_IWITHPREFIX
+TPP_CLI_HELP2("-iwithprefix PATH", "--include-with-prefix PATH\0--include-with-prefix-after PATH",
+              "Like -idirafter but combine PATH with PREFIX from -iprefix")
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIX */
+#if TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE
+TPP_CLI_HELP2("-iwithprefixbefore PATH", "--include-with-prefix-before PATH",
+              "Like -I but combine PATH with PREFIX from -iprefix")
+#endif /* TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE */
+#if TPP_HAVE_CLI_DASH_ISYSROOT
+TPP_CLI_HELP2("-isysroot PATH", "--sysroot PATH",
+              "Use PATH to expand leading = or $SYSROOT in -I and friends")
+#endif /* TPP_HAVE_CLI_DASH_ISYSROOT */
+#if TPP_HAVE_CLI_DASH_NOSTDINC
+TPP_CLI_HELP2("-nostdinc", "--no-standard-includes",
+              "Don't search builtin system include paths")
+#endif /* TPP_HAVE_CLI_DASH_NOSTDINC */
+#if TPP_HAVE_CLI_DASH_WERROR
+TPP_CLI_HELP1("-W[no-]error",
+              "Treat all warnings as errors")
+#endif /* TPP_HAVE_CLI_DASH_WERROR */
+#if TPP_HAVE_CLI_DASH_WFATAL_ERROR
+TPP_CLI_HELP1("-W[no-]fatal-errors",
+              "Treat the first error as fatal")
+#endif /* TPP_HAVE_CLI_DASH_WFATAL_ERROR */
+#if TPP_HAVE_CLI_DASH_FMAX_ERRORS
+TPP_CLI_HELP1("-fmax-errors=COUNT",
+              "Set number of errors before one treating as fatal")
+#endif /* TPP_HAVE_CLI_DASH_FMAX_ERRORS */
+#if TPP_HAVE_CLI_DASH_WWARNING
+TPP_CLI_HELP1("-W[no-]WARNING",
+              "Turn WARNING on or off")
+#endif /* TPP_HAVE_CLI_DASH_WWARNING */
+#if TPP_HAVE_CLI_DASH_WERROR_WARNING
+TPP_CLI_HELP1("-Werror=WARNING",
+              "Treat WARNING as error")
+#endif /* TPP_HAVE_CLI_DASH_WERROR_WARNING */
+"";
+#undef TPP_CLI_HELP1
+#undef TPP_CLI_HELP2
+#endif /* TPP_HAVE_CLI_HELP */
+
 #endif /* TPP_HAVE_CLI */
 
 TPP_DECL_END

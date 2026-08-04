@@ -189,6 +189,58 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
  * @return: TPP_EWARNPRINT: An error happened within a warning printer */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self);
+
+#if TPP_HAVE_CLI_HELP
+/* Returns supported CLI parameters, and human-readable information
+ * for them in the form of:
+ * >> "-Dmacro[=def]\0--define-macro macro[=def]\0\0"
+ * >> "Define a macro with def, or 1 as its value.\0"
+ * >> "-Umacro\0--undefine-macro macro\0\0"
+ * >> "Undefined macro\0"
+ * >> ...
+ * >> "\0"
+ *
+ * Format (repeated):
+ * >> <SPELLING1>[\0<SPELLING2>][\0<SPELLING3>][...]\0\0<DESCRIPTION>\0
+ * >> \0
+ *
+ * The end is reached when "DESCRIPTION" is immediately followed
+ * by another NUL-character, where there would otherwise be the
+ * first character of the first spelling of the next CLI parameter.
+ *
+ * CLI parameter spellings are sorted such that the most *prominent*
+ * spelling comes first. For the sake of keeping your `--help` readable,
+ * I suggest you only print `SPELLING1` and have some kind of `--help all`
+ * option (or similar) that will print *all* spellings.
+ *
+ * To enumerate available options, you can use code like this:
+ * ```c
+ * char const *iter = tpp_cli_loader_help;
+ * while (*iter) {
+ *     bool first = true;
+ *     // Print spellings
+ *     do {
+ *         printf("%s%s", first ? "" : " ", iter);
+ *         iter += tpp_strlen(iter) + 1;
+ *         first = false;
+ *     } while (*iter);
+ *     ++iter;
+ *     // Print description
+ *     printf("\n\t\t\t%s\n", iter);
+ *     iter += tpp_strlen(iter) + 1;
+ * }
+ * ```
+ *
+ * NOTE: This string doesn't contain information about CLI flags:
+ * - `TPP_HAVE_CLI_DASH_FEXTENSION`
+ * - `TPP_HAVE_CLI_DASH_WWARNING`
+ *
+ * If you want to print help for those, you must enumerate them using:
+ * - `tpp_extension_getname()`
+ * - `tpp_warning_group_getnames()`
+ */
+TPP_CONST_DECL char const tpp_cli_loader_help[];
+#endif /* TPP_HAVE_CLI_HELP */
 #endif /* TPP_HAVE_CLI */
 
 /* TODO: API to query supported CLI flags, for use by someone wanting to implement `--help`,

@@ -76,6 +76,145 @@ static tpp_errno tpp_frontend_set_output_file(tpp_frontend *self, char const *fi
 	return TPP_EOK;
 }
 
+#undef TPP_CLI_HELP1
+#define TPP_CLI_HELP1(spelling, description) \
+	spelling "\0\0" description "\0"
+#undef TPP_CLI_HELP2
+#define TPP_CLI_HELP2(spelling1, spelling2, description) \
+	spelling1 "\0" spelling2 "\0\0" description "\0"
+
+static char const tpp_frontend_help_text[] =
+TPP_CLI_HELP1("--help", "Display this help")
+TPP_CLI_HELP1("--help SUBJECT", "Display extra help on {cli|extensions|warnings}")
+TPP_CLI_HELP1("--version", "Display version information")
+TPP_CLI_HELP2("-o FILE", "--output=FILE", "Write output to FILE")
+"";
+
+static tpp_size tpp_help_maxspelling(char const *db, bool all_spellings) {
+	tpp_size result = 0;
+	char const *iter = db;
+	while (*iter) {
+		tpp_size len = tpp_strlen(iter);
+		tpp_size options_len = len;
+		iter += len + 1;
+		while (*iter) {
+			len = tpp_strlen(iter) + 1;
+			if (all_spellings)
+				options_len += len;
+			iter += len;
+		}
+		if (result < options_len)
+			result = options_len;
+		++iter;
+		iter += tpp_strlen(iter) + 1;
+	}
+	return result;
+}
+
+static void print_description(char const *desc, tpp_size indent) {
+	for (;;) {
+		char const *end = strchr(desc, '\n');
+		if (!end) {
+			puts(desc);
+			break;
+		}
+		++end;
+		fwrite(desc, sizeof(char), (tpp_size)(end - desc), stdout);
+		printf("%*s", (int)(unsigned int)indent, "");
+		desc = end;
+	}
+}
+
+static void tpp_frontend_help_cli_for(char const *db, tpp_size padlen, bool all_spellings) {
+	char const *iter = db;
+	while (*iter) {
+		/* Print spellings */
+		tpp_size len = tpp_strlen(iter);
+		tpp_size options_len = len;
+		printf("%s", iter);
+		iter += len + 1;
+		while (*iter) {
+			len = tpp_strlen(iter) + 1;
+			if (all_spellings) {
+				printf(" %s", iter);
+				options_len += len;
+			}
+			iter += len;
+		}
+		++iter;
+		/* Print description */
+		printf(" %*s", (int)(unsigned int)(padlen - options_len), "");
+		print_description(iter, padlen + 1);
+		iter += tpp_strlen(iter) + 1;
+	}
+}
+
+static void tpp_frontend_help_cli(bool all_spellings) {
+	tpp_size padlen, temp;
+	padlen = tpp_help_maxspelling(tpp_cli_loader_help, all_spellings);
+	temp = tpp_help_maxspelling(tpp_emitter_cli_loader_help, all_spellings);
+	if (padlen < temp)
+		padlen = temp;
+	temp = tpp_help_maxspelling(tpp_frontend_help_text, all_spellings);
+	if (padlen < temp)
+		padlen = temp;
+	tpp_frontend_help_cli_for(tpp_frontend_help_text, padlen, all_spellings);
+	tpp_frontend_help_cli_for(tpp_cli_loader_help, padlen, all_spellings);
+	tpp_frontend_help_cli_for(tpp_emitter_cli_loader_help, padlen, all_spellings);
+}
+
+static void tpp_frontend_help_extensions(void) {
+	tpp_extension_id id;
+	for (id = (tpp_extension_id)0; id < TPP_EXT_COUNT;
+	     id = (tpp_extension_id)((unsigned int)id + 1)) {
+		char const *name = tpp_extension_getname(id);
+		if (name)
+			printf("-f[no-]%s\n", name);
+	}
+}
+
+static void tpp_frontend_help_warnings(void) {
+	tpp_warning_group_id id;
+	for (id = (tpp_warning_group_id)0; id < TPP_WG_COUNT;
+	     id = (tpp_warning_group_id)((unsigned int)id + 1)) {
+		char const *names = tpp_warning_group_getnames(id);
+		if (names) {
+			printf("-W[no-]%s", names);
+			names += tpp_strlen(names) + 1;
+			while (*names) {
+				printf(" -W[no-]%s", names);
+				names += tpp_strlen(names) + 1;
+			}
+			putchar('\n');
+		}
+	}
+}
+
+static void tpp_frontend_help(char const *appname, int argc, char **argv) {
+	if (!argc) {
+		printf("Usage: %s [ARGS...] [--] [INFILES]\nARGS:\n", appname);
+		tpp_frontend_help_cli(false);
+		return;
+	}
+	do {
+		char *what = *argv++;
+		if (tpp_strcmp(what, "cli") == 0) {
+			tpp_frontend_help_cli(true);
+		} else if (tpp_strcmp(what, "extensions") == 0) {
+			tpp_frontend_help_extensions();
+		} else if (tpp_strcmp(what, "warnings") == 0) {
+			tpp_frontend_help_warnings();
+		} else {
+			printf("Unknown help subject '%s'\n", what);
+		}
+	} while (--argc);
+}
+
+static void tpp_frontend_version(void) {
+	printf("TPP " TPP_PREPROCESSOR_VERSION_STR "\n"
+	       "Copyright (c) 2017-2026 Griefer@Work\n");
+}
+
 static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 #define tpp_streq(at, CONSTstr) \
 	(tpp_memcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
@@ -116,10 +255,6 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 	 *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_DQUOTE)`
 	 *   When kind=system, and the main input file could not be found, it must be
 	 *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_LANGLE)`
-	 * - "-fworking-directory"
-	 *   No special handling needed in TPP backend
-	 *   The first time the frontend emits a `# <linenum>` marker, it must simply
-	 *   follow this up by emitting a second marker like: `# 1 "$(pwd)//"`
 	 */
 
 	case TPP_FRONTEND_CLI_STATE_NORMAL:
@@ -231,11 +366,9 @@ static tpp_errno tpp_frontend_parseargv(tpp_frontend *self, int *p_argc, char **
 	return result;
 }
 
+#undef tpp_get_stdin
 #ifdef tpp_io_handle_IS_HANDLE
-#define tpp_get_stdin tpp_get_stdin
-static HANDLE tpp_get_stdin(void) {
-	return GetStdHandle(STD_INPUT_HANDLE);
-}
+#define tpp_get_stdin() GetStdHandle(STD_INPUT_HANDLE)
 #endif /* tpp_io_handle_IS_HANDLE */
 
 #ifdef tpp_io_handle_IS_int
@@ -287,8 +420,20 @@ int main(int argc, char **argv) {
 		--argc;
 		++argv;
 	} else if (argc && (*argv)[0] == '-' && (*argv)[1])  {
-		fprintf(stderr, "unknown argument `%s`\n"
-		                "USAGE: %s [ARGS...] [--] [INFILES]\n",
+		if (tpp_strcmp(*argv, "--help") == 0) {
+			--argc;
+			++argv;
+			tpp_frontend_help(appname, argc, argv);
+			result = 0;
+			goto out_emitter_loader;
+		} else if (tpp_strcmp(*argv, "--version") == 0) {
+			tpp_frontend_version();
+			result = 0;
+			goto out_emitter_loader;
+		}
+		fprintf(stderr, "unknown argument %s\n"
+		                "Usage: %s [ARGS...] [--] [INFILES]\n"
+		                "See --help for more info\n",
 		        *argv, appname);
 		goto out_emitter_loader;
 	}
@@ -356,7 +501,7 @@ int main(int argc, char **argv) {
 		tpp_token_id const tok = tpp_lexer_yield(tpp_emitter_getlexer(&fe.tf_emitter));
 		if (TPP_TOK_ISERR(tok)) {
 			fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
-			break;
+			goto out_emitter_file;
 		}
 		if (tok == TPP_TOK_EOF)
 			break;

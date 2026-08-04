@@ -6853,6 +6853,18 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_CLI TPP_HAVE_PROFILE_ALL
 #endif /* !TPP_HAVE_CLI */
 
+/* Enable support for `tpp_cli_loader_help`, which exposes a small database
+ * of supported commandline flags in a human-readable format that can also
+ * be rendered (fairly) easily. */
+#ifndef TPP_HAVE_CLI_HELP
+#define TPP_HAVE_CLI_HELP (TPP_HAVE_PROFILE_ALL && TPP_HAVE_CLI)
+#endif /* !TPP_HAVE_CLI_HELP */
+
+/* Include extra spellings (i.e.: in addition to the primary spelling) of CLI options. */
+#ifndef TPP_HAVE_CLI_HELP_ALL_SPELLINGS
+#define TPP_HAVE_CLI_HELP_ALL_SPELLINGS (TPP_HAVE_CLI_HELP && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_CLI_HELP_ALL_SPELLINGS */
+
 /* `-Dmacro[=def]`, `-D macro[=def]`,
  * `--define-macro=macro[=def]`, `--define-macro macro[=def]`:
  * Define an additional macro as `#define macro def` (or
@@ -6950,7 +6962,7 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_CPP_MACROS))
 #endif /* !TPP_HAVE_CLI_DASH_FDIRECTIVES_ONLY */
 
-/* `-fdollars-in-identifiers`:
+/* `-fdollars-in-identifiers`, `-fno-dollars-in-identifiers`:
  * Turns off `$` being treated as a distinct token when enabled.
  * Essentially does the inverse of `-ftok-dollar` (s.a. `TPP_HAVE_TOK_DOLLAR`) */
 #ifndef TPP_HAVE_CLI_DASH_FDOLLARS_IN_IDENTIFIERS
@@ -6962,9 +6974,10 @@ print("#endif /" "* !... *" "/");
  * Configure the max # of times the same file may appear on the `#include`-stack.
  * This slightly differs from how GCC treats this CLI switch, in that GCC treats
  * this as the max size of the `#include`-stack as a whole. */
-#undef TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH
+#ifndef TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH
 #define TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH \
 	(TPP_HAVE_CLI && (TPP_MAX_INCLUDE_DEPTH < 0))
+#endif /* !TPP_HAVE_CLI_DASH_FMAX_INCLUDE_DEPTH */
 
 /* `-ftabstop=<width>`:
  * Configure the number of columns to assign to `U+0008` (`\t`) characters.
@@ -6979,9 +6992,9 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_CLI_DASH_FTABSTOP */
 
 /* `-C`, `-CC`, `--comments`, `--comments-in-macros`:
- * Enable emission of comment-like tokens in output. Without this, comments
- * are simply skipped the same way that preprocessor directives and macros
- * that expand to nothing are skipped.
+ * Enable emission of COMMENT/SPACE/LF tokens in output. Without this,
+ * comments are simply skipped the same way that preprocessor directives
+ * and macros that expand to nothing are skipped.
  *
  * NOTE: TPP doesn't differentiate between comments in-source and comments
  *       in macros, so both of these CLI switches are handled the same by
@@ -7081,7 +7094,7 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_CLI && (TPP_HAVE_CLI_DASH_IWITHPREFIX || TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE))
 #endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
 
-/* `-isysroot path`, `--sysroot=path`:
+/* `-isysroot path`, `--sysroot path`:
  * Override what a `=` or `$SYSROOT` prefix in include paths should be replaced with in:
  * - `TPP_HAVE_CLI_DASH_INCLUDE_DIRECTORY`
  * - `TPP_HAVE_CLI_DASH_IQUOTE`

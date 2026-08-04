@@ -137,6 +137,10 @@
 #define TPP_EMITTER_HAVE_NORMALIZE_C_STRING ((TPP_EMITTER_HAVE_EMIT_TOKEN && TPP_HAVE_TOK_C_STRING && TPP_HAVE_TOKEN_ENCODESTRING && TPP_HAVE_LEXER_DECODESTRING) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_C_STRING */
 
+/* TODO: `TPP_EMITTER_HAVE_NORMALIZE_C_STRING` must retain c++ string-type prefixes (e.g. L"foo" must be emitted as L"foo" -- the leading L must not be omitted) */
+
+/* TODO: Config `TPP_EMITTER_HAVE_NORMALIZE_C_INT` -- normalize integer tokens to decimals (whilst retaining suffix) */
+
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, normalize `\u`, `\U`
  * and `\N` escape sequences in keywords names to their actual utf-8 character
  * representation (also causes BSE sequences to be normalized, though if that's
@@ -226,6 +230,10 @@
 #endif /* !TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN */
 
 /* TODO: Config to select between use of `# <linenum>` and `#line` */
+
+/* TODO: "-fworking-directory"
+ *       The first time the emitter emits a `# <linenum>` marker, it must simply
+ *       follow this up by emitting a second marker like: `# <linenum> "$(pwd)//"` */
 
 /* TODO: Config to enable emission of 1/2/3/4 flags in `# <linenum>`-directives */
 
@@ -357,9 +365,22 @@
 /************************************************************************/
 /* EMITTER CLI CONFIG                                                   */
 /************************************************************************/
+/* Enable support for `tpp_emitter_cli_loader` */
 #ifndef TPP_EMITTER_HAVE_CLI
 #define TPP_EMITTER_HAVE_CLI TPP_HAVE_CLI
 #endif /* !TPP_EMITTER_HAVE_CLI */
+
+/* Enable support for `tpp_emitter_cli_loader_help`, which exposes a small
+ * database of supported commandline flags in a human-readable format that
+ * can also be rendered (fairly) easily. */
+#ifndef TPP_EMITTER_HAVE_CLI_HELP
+#define TPP_EMITTER_HAVE_CLI_HELP (TPP_HAVE_PROFILE_ALL && TPP_EMITTER_HAVE_CLI)
+#endif /* !TPP_EMITTER_HAVE_CLI_HELP */
+
+/* Include extra spellings (i.e.: in addition to the primary spelling) of CLI options. */
+#ifndef TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS
+#define TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS (TPP_EMITTER_HAVE_CLI_HELP && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS */
 
 /* `-P`, `--no-line-commands`:
  * Disable emission of `#line`-directives, but also turn
@@ -440,49 +461,49 @@
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
 
 
-/* `-fnormalize-space`, `-fno-normalize-space`:
+/* `-fnormalize=space`, `-fno-normalize=space`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_SPACE` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE
 #define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE \
 	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_SPACE))
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE */
 
-/* `-fnormalize-lf`, `-fno-normalize-lf`:
+/* `-fnormalize=lf`, `-fno-normalize=lf`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_LF` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF
 #define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF \
 	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_LF))
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF */
 
-/* `-fnormalize-strings`, `-fno-normalize-strings`:
+/* `-fnormalize=strings`, `-fno-normalize=strings`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_C_STRING` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS
 #define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS \
 	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING))
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS */
 
-/* `-fnormalize-keywords`, `-fno-normalize-keywords`:
+/* `-fnormalize=keywords`, `-fno-normalize=keywords`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS
 #define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS \
 	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS))
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS */
 
-/* `-fnormalize-bse`, `-fno-normalize-bse`:
+/* `-fnormalize=bse`, `-fno-normalize=bse`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_BSE` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE
 #define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE \
 	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_BSE))
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE */
 
-/* `-fnormalize-trigraphs`, `-fno-normalize-trigraphs`:
+/* `-fnormalize=trigraphs`, `-fno-normalize=trigraphs`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_BSE` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS
 #define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS \
 	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS))
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS */
 
-/* `-fnormalize-digraphs`, `-fno-normalize-digraphs`:
+/* `-fnormalize=digraphs`, `-fno-normalize=digraphs`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_BSE` on/off */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS
 #define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS \
@@ -1137,6 +1158,11 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
  * @return: TPP_EWARNPRINT: An error happened within a warning printer */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self);
+#if TPP_EMITTER_HAVE_CLI_HELP
+/* Returns supported CLI parameters, and human-readable information
+ * for them. Same format as `tpp_cli_loader_help` (see for more info) */
+TPP_CONST_DECL char const tpp_emitter_cli_loader_help[];
+#endif /* TPP_EMITTER_HAVE_CLI_HELP */
 #endif /* TPP_EMITTER_HAVE_CLI */
 
 /* TODO: API to query supported CLI flags, for use by someone wanting to implement `--help`,
