@@ -35,23 +35,22 @@
 #endif /* !TPP_EMITTER_HAVE_MODE_DISPOSE */
 
 /* Provide support for `TPP_EMITTER_MODE_BRACKET`, where
- * tokens are emitted as per `TPP_EMITTER_HAVE_MODE_EMIT`,
- * but surrounded by brackets. */
+ * tokens are emitted surrounded by brackets. */
 #ifndef TPP_EMITTER_HAVE_MODE_BRACKET
 #define TPP_EMITTER_HAVE_MODE_BRACKET (TPP_HAVE_PROFILE_ALL)
 #endif /* !TPP_EMITTER_HAVE_MODE_BRACKET */
 
-/* Provide support for `TPP_EMITTER_MODE_TYPED`, where
- * tokens are emitted as per `TPP_EMITTER_HAVE_MODE_EMIT`,
- * but surrounded as `[{TYPE}:{TOKEN}]`, where `TYPE` is the
+/* Provide support for `TPP_EMITTER_MODE_TYPED`, where tokens are
+ * emitted surrounded as `[{TYPE}:{TOKEN}]`, where `TYPE` is the
  * result of `tpp_strtokenid()` and the canonical keyword name. */
 #ifndef TPP_EMITTER_HAVE_MODE_TYPED
 #define TPP_EMITTER_HAVE_MODE_TYPED (TPP_HAVE_STRTOKENID && TPP_HAVE_PROFILE_ALL)
 #endif /* !TPP_EMITTER_HAVE_MODE_TYPED */
 
 #undef TPP_EMITTER_HAVE_EMIT_TOKEN
-#if (TPP_EMITTER_HAVE_MODE_EMIT || \
-     TPP_EMITTER_HAVE_MODE_BRACKET)
+#if (TPP_EMITTER_HAVE_MODE_EMIT ||    \
+     TPP_EMITTER_HAVE_MODE_BRACKET || \
+     TPP_EMITTER_HAVE_MODE_TYPED)
 #define TPP_EMITTER_HAVE_EMIT_TOKEN 1
 #else /* ... */
 #define TPP_EMITTER_HAVE_EMIT_TOKEN 0
@@ -145,7 +144,7 @@
 #define TPP_EMITTER_HAVE_NOLINE (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_NOLINE */
 
-/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, token emitted
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, tokens emitted
  * from within a macro do not require proper alignment with __COLUMN__,
  * so-as to prevent every token from causing another `#line`-directive
  * being emitted, don't be too precise in terms of *all* tokens needing
@@ -190,8 +189,6 @@
 
 /* TODO: Config to enable emission of 1/2/3/4 flags in `# <linenum>`-directives */
 
-/* TODO: Configs for each of the CLI switches listed in "frontend.c" */
-
 /* Enable support for re-emission of unknown pragmas. Requires that the TPP core
  * is configured to allow runtime override of its `TPP_HAVE_UNKNOWN_PRAGMA_HOOK`
  * hook (since the emitter needs to be able to override that hook during its
@@ -203,6 +200,7 @@
  * - `-1`: Available (but not enabled by default)
  *
  * When not *Disabled*, can be turned on/off using:
+ * - `tpp_emitter_get_reemit_unknown_pragma()`
  * - `tpp_emitter_set_reemit_unknown_pragma()`
  * - `tpp_emitter_enable_reemit_unknown_pragma()`
  * - `tpp_emitter_disable_reemit_unknown_pragma()` */
@@ -223,6 +221,7 @@
  * - `-1`: Available (but not enabled by default)
  *
  * When not *Disabled*, can be turned on/off using:
+ * - `tpp_emitter_get_reemit_macro_definitions()`
  * - `tpp_emitter_set_reemit_macro_definitions()`
  * - `tpp_emitter_enable_reemit_macro_definitions()`
  * - `tpp_emitter_disable_reemit_macro_definitions()` */
@@ -247,7 +246,7 @@
  *   linked keyword doesn't have a user-defined macro definition (i.e.
  *   `!tpp_keyword_hasmacro()`), check what was most-recently emitted
  *   about that keyword in regards to macro definitions:
- *   - If the thing that came last was a `#define`-directive, then
+ *   - If the thing that was last emitted was a `#define`-directive, then
  *     emit a `#undef`-directive and delete the saved macro definition.
  * - In order to remember the *most-recently-dumped* macro definition
  *   linked to a keyword, `TPP_HAVE_KEYWORD_USERDATA` is used to store
@@ -259,10 +258,10 @@
  *
  * Because this feature also requires a hook, it must be turned on
  * using the following APIs, rather than directly setting its feature:
- * - `tpp_emitter_enable_reemit_macro_definitions_lazy()`
- * - `tpp_emitter_disable_reemit_macro_definitions_lazy()`
  * - `tpp_emitter_get_reemit_macro_definitions_lazy()`
- * - `tpp_emitter_set_reemit_macro_definitions_lazy()` */
+ * - `tpp_emitter_set_reemit_macro_definitions_lazy()`
+ * - `tpp_emitter_enable_reemit_macro_definitions_lazy()`
+ * - `tpp_emitter_disable_reemit_macro_definitions_lazy()` */
 #ifndef TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY
 #define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY ((TPP_HAVE_FILE_PUSHED_HOOK && TPP_HAVE_KEYWORD_USERDATA && TPP_HAVE_MACRO_NAME) ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY */
@@ -288,6 +287,7 @@
  * - `-1`: Available (but not enabled by default)
  *
  * When not *Disabled*, can be turned on/off using:
+ * - `tpp_emitter_get_reemit_include_directives()`
  * - `tpp_emitter_set_reemit_include_directives()`
  * - `tpp_emitter_enable_reemit_include_directives()`
  * - `tpp_emitter_disable_reemit_include_directives()` */
@@ -306,10 +306,10 @@
  * Because this feature uses the `TPP_HAVE_FILE_PUSHED_HOOK` hook, it
  * must be turned on using the following APIs, rather than directly
  * setting its feature:
- * - `tpp_emitter_enable_trace_includes()`
- * - `tpp_emitter_disable_trace_includes()`
  * - `tpp_emitter_get_trace_includes()`
- * - `tpp_emitter_set_trace_includes()` */
+ * - `tpp_emitter_set_trace_includes()`
+ * - `tpp_emitter_enable_trace_includes()`
+ * - `tpp_emitter_disable_trace_includes()` */
 #ifndef TPP_EMITTER_HAVE_TRACE_INCLUDES
 #define TPP_EMITTER_HAVE_TRACE_INCLUDES ((TPP_HAVE_FILE_PUSHED_HOOK && TPP_HAVE_MESGPRINTER_HOOK) ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_TRACE_INCLUDES */
@@ -348,7 +348,7 @@
  * CLI flush phase (i.e.: when `tpp_emitter_cli_loader_flush()` is called):
  * `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`
  *
- * Also turns on `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`, and sets the emitters
+ * Also turns on `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`, and sets the emitter's
  * mode of operations to `TPP_EMITTER_MODE_DISPOSE` (see `TPP_EMITTER_HAVE_MODE_DISPOSE`). */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_DUMP_M
 #define TPP_EMITTER_HAVE_CLI_DASH_DUMP_M          \

@@ -26291,9 +26291,6 @@ TPP_CONST_DECL char const tpp_cli_loader_help[];
 #endif /* TPP_HAVE_CLI_HELP */
 #endif /* TPP_HAVE_CLI */
 
-/* TODO: API to query supported CLI flags, for use by someone wanting to implement `--help`,
- *       or get a list of supported flags. */
-
 TPP_DECL_END
 
 #endif /* !TPP_DEFS */

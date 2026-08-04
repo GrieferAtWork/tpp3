@@ -59851,7 +59851,7 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
 TPP_CONST_IMPL char const tpp_cli_loader_help[] =
 #if TPP_HAVE_CLI_DASH_DEFINE_MACRO
 TPP_CLI_HELP2("-DMACRO[=DEF]", "--define-macro MACRO[=DEF]",
-              "Define a macro with DEF, or 1 as its value.")
+              "Define MACRO as DEF or 1")
 #endif /* TPP_HAVE_CLI_DASH_DEFINE_MACRO */
 #if TPP_HAVE_CLI_DASH_UNDEFINE_MACRO
 TPP_CLI_HELP2("-UMACRO", "--undefine-macro MACRO",
@@ -59859,13 +59859,13 @@ TPP_CLI_HELP2("-UMACRO", "--undefine-macro MACRO",
 #endif /* TPP_HAVE_CLI_DASH_UNDEFINE_MACRO */
 #if TPP_HAVE_CLI_DASH_ASSERT
 TPP_CLI_HELP2("-APREDICATE=ANSWER", "--assert=PREDICATE=ANSWER",
-              "Define a preprocessor assertion")
+              "Define preprocessor assertion")
 TPP_CLI_HELP2("-A-PREDICATE[=ANSWER]", "--assert=-PREDICATE[=ANSWER]",
-              "Delete a preprocessor assertion")
+              "Delete preprocessor assertion")
 #endif /* TPP_HAVE_CLI_DASH_ASSERT */
 #if TPP_HAVE_CLI_DASH_INCLUDE
 TPP_CLI_HELP1("-include FILE",
-              "Inject a FILE at the start of main input")
+              "Inject FILE at the start of main input")
 #endif /* TPP_HAVE_CLI_DASH_INCLUDE */
 #if TPP_HAVE_CLI_DASH_IMACROS
 TPP_CLI_HELP2("-imacros FILE", "--imacros=FILE",
@@ -59963,11 +59963,11 @@ TPP_CLI_HELP1("-W[no-]error",
 #endif /* TPP_HAVE_CLI_DASH_WERROR */
 #if TPP_HAVE_CLI_DASH_WFATAL_ERROR
 TPP_CLI_HELP1("-W[no-]fatal-errors",
-              "Treat the first error as fatal")
+              "Treat all errors as fatal")
 #endif /* TPP_HAVE_CLI_DASH_WFATAL_ERROR */
 #if TPP_HAVE_CLI_DASH_FMAX_ERRORS
 TPP_CLI_HELP1("-fmax-errors=COUNT",
-              "Set number of errors before one treating as fatal")
+              "Set number of errors before treating as fatal")
 #endif /* TPP_HAVE_CLI_DASH_FMAX_ERRORS */
 #if TPP_HAVE_CLI_DASH_WWARNING
 TPP_CLI_HELP1("-W[no-]WARNING",

@@ -157,15 +157,13 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
  * @return: TPP_EWARNPRINT: An error happened within a warning printer */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self);
+
 #if TPP_EMITTER_HAVE_CLI_HELP
 /* Returns supported CLI parameters, and human-readable information
  * for them. Same format as `tpp_cli_loader_help` (see for more info) */
 TPP_CONST_DECL char const tpp_emitter_cli_loader_help[];
 #endif /* TPP_EMITTER_HAVE_CLI_HELP */
 #endif /* TPP_EMITTER_HAVE_CLI */
-
-/* TODO: API to query supported CLI flags, for use by someone wanting to implement `--help`,
- *       or get a list of supported flags. */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

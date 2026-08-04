@@ -211,8 +211,12 @@ static void tpp_frontend_help(char const *appname, int argc, char **argv) {
 }
 
 static void tpp_frontend_version(void) {
-	printf("TPP " TPP_PREPROCESSOR_VERSION_STR "\n"
-	       "Copyright (c) 2017-2026 Griefer@Work\n");
+	printf("TPP version %d/%d\n"
+	       "Copyright (c) 2017-2026 Griefer@Work\n"
+	       "If you use this software in a product, an "
+	       /**/ "acknowledgement in the product "
+	       /**/ "documentation is required (see LICENSE)\n",
+	       TPP_API_VERSION, TPP_PREPROCESSOR_VERSION);
 }
 
 static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {

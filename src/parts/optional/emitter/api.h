@@ -32,7 +32,7 @@
  * - Retain (make sure it doesn't change) all information normally returned by:
  *   - tpp_file_getfilename(tpp_lexer_getlcfile(LEXER))
  *   - tpp_file_getstartlcinfo(tpp_lexer_getlcfile(LEXER))
- *   - tpp_file_getendlcinfo(tpp_lexer_getlcfile(LEXER))   (only if token-passthrough is enabled)
+ *   - tpp_file_getendlcinfo(tpp_lexer_getlcfile(LEXER))   (only if normalization is disabled)
  * - One downside is that the emitter (must be) allowed to inject additional
  *   line-feed/whitespace tokens between any 2 regular tokens. This is required
  *   because the emitter must be able to emit `#line` directives whenever the
