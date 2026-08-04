@@ -25,7 +25,7 @@
 
 #define ㄒ卩卩(ᗪㄖ乇丂) ㄩ几丨匚ㄖᗪ乇•ᗪㄖ乇丂•山ㄖ尺Ҝ
 TPP_ASSERT_EXPANDS("ㄩ几丨匚ㄖᗪ乇•sure does•山ㄖ尺Ҝ", ㄒ卩卩(sure does))
-TPP_ASSERT_EXPANDS("ㄩ几丨匚ㄖᗪ乇•sure\342\200\250does•山ㄖ尺Ҝ", ㄒ卩卩(sure does)) #undef ㄒ卩卩
+TPP_ASSERT_EXPANDS("ㄩ几丨匚ㄖᗪ乇•sure\N{LINE SEPARATOR}does•山ㄖ尺Ҝ", ㄒ卩卩(sure does)) #undef ㄒ卩卩
 
 TPP_ASSERT(!defined(ㄒ卩卩))
 TPP_ASSERT(__LINE__ == 34) /* An editor that doesn't understand unicode linefeeds will show this as line #31 */
