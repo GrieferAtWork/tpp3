@@ -617,6 +617,30 @@ print_generic_string:;
 	}	break;
 #endif /* TPP_EMITTER_HAVE_NORMALIZE_C_STRING */
 
+#if TPP_EMITTER_HAVE_NORMALIZE_C_INT
+	TPP_CASE_TPP_TOK_INT {
+		tpp_intmax intval;
+		tpp_char const *suffix_start;
+		char buf[TPP_ITOA_MAXLEN], *intbase;
+		tpp_errno error;
+		tpp_ssize temp, result;
+		if (!tpp_emitter_has(self, NORMALIZE_C_INT))
+			break;
+		error = tpp_lexer_decodeint_ex(lexer, &intval, &suffix_start);
+		if (TPP_ISERR(error))
+			return TPP_SSIZE_OFERR(error);
+		intbase = tpp_itoa(buf, intval);
+		result = tpp_emitter_print_cstr(self, intbase, (tpp_size)(buf + TPP_ITOA_MAXLEN - intbase));
+		if (result < 0)
+			return result;
+		temp = tpp_emitter_print_generic(self, suffix_start, (tpp_size)(token_end - suffix_start));
+		if (temp < 0)
+			return temp;
+		result += temp;
+		return result;
+	}	break;
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_C_INT */
+
 #if TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS
 	case '{':
 	case '[':

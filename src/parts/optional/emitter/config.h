@@ -89,9 +89,11 @@
 #define TPP_EMITTER_HAVE_NORMALIZE_C_STRING ((TPP_EMITTER_HAVE_EMIT_TOKEN && TPP_HAVE_TOK_C_STRING && TPP_HAVE_TOKEN_ENCODESTRING && TPP_HAVE_LEXER_DECODESTRING) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_NORMALIZE_C_STRING */
 
-/* TODO: `TPP_EMITTER_HAVE_NORMALIZE_C_STRING` must retain c++ string-type prefixes (e.g. L"foo" must be emitted as L"foo" -- the leading L must not be omitted) */
-
-/* TODO: Config `TPP_EMITTER_HAVE_NORMALIZE_C_INT` -- normalize integer tokens to decimals (whilst retaining suffix) */
+/* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any
+ * `TPP_TOK_ISINT`-token is emitted as a `TPP_TOK_C_INT` token. */
+#ifndef TPP_EMITTER_HAVE_NORMALIZE_C_INT
+#define TPP_EMITTER_HAVE_NORMALIZE_C_INT ((TPP_EMITTER_HAVE_EMIT_TOKEN && TPP_HAVE_TOK_C_INT && TPP_HAVE_LEXER_DECODEINT) ? TPP_CONF_FEAT1 : 0)
+#endif /* !TPP_EMITTER_HAVE_NORMALIZE_C_INT */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, normalize `\u`, `\U`
  * and `\N` escape sequences in keywords names to their actual utf-8 character
@@ -434,6 +436,13 @@
 #define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS \
 	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING))
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS */
+
+/* `-fnormalize=int`, `-fno-normalize=int`:
+ * Turn `TPP_EMITTER_HAVE_NORMALIZE_C_INT` on/off */
+#ifndef TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT
+#define TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT \
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_NORMALIZE_C_INT))
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT */
 
 /* `-fnormalize=keywords`, `-fno-normalize=keywords`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS` on/off */

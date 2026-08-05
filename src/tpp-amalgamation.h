@@ -6347,9 +6347,9 @@ TPP_DECL_END
  * - `TPP_HAVE_TOK_C_FLOAT`
  * - `TPP_HAVE_TOK_C_CHAR`
  * - `TPP_HAVE_TOK_C_STRING` */
-#ifndef TPP_COMMON_HAVE_TPP_TOK_GENERIC
-#define TPP_COMMON_HAVE_TPP_TOK_GENERIC TPP_COMMON_HAVE_TPP_TOK
-#endif /* !TPP_COMMON_HAVE_TPP_TOK_GENERIC */
+#ifndef TPP_COMMON_HAVE_TPP_TOK_C_GENERIC
+#define TPP_COMMON_HAVE_TPP_TOK_C_GENERIC TPP_COMMON_HAVE_TPP_TOK
+#endif /* !TPP_COMMON_HAVE_TPP_TOK_C_GENERIC */
 
 /* Default configuration for extended C/C++ string tokens:
  * - `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL`
@@ -6362,18 +6362,9 @@ TPP_DECL_END
  * - `TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL`
  * - `TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL`
  * - `TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL` */
-#ifndef TPP_COMMON_HAVE_TPP_TOK_C_STRING
-#define TPP_COMMON_HAVE_TPP_TOK_C_STRING (TPP_HAVE_PROFILE_DEFAULT ? TPP_COMMON_CONF_FEAT0 : TPP_HAVE_PROFILE_C_LIKE)
-#endif /* !TPP_COMMON_HAVE_TPP_TOK_C_STRING */
-
-/* Default configuration for deemon-specific string tokens:
- * - `TPP_HAVE_TOK_RAW_STRING_LITERAL`
- * - `TPP_HAVE_TOK_RAW_CHAR_LITERAL`
- * - `TPP_HAVE_TOK_BLOCK_STRING_LITERAL`
- * - `TPP_HAVE_TOK_BLOCK_CHAR_LITERAL` */
-#ifndef TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING
-#define TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0)
-#endif /* !TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING */
+#ifndef TPP_COMMON_HAVE_TPP_TOK_CXX_STRING
+#define TPP_COMMON_HAVE_TPP_TOK_CXX_STRING (TPP_HAVE_PROFILE_DEFAULT ? TPP_COMMON_CONF_FEAT0 : TPP_HAVE_PROFILE_C_LIKE)
+#endif /* !TPP_COMMON_HAVE_TPP_TOK_CXX_STRING */
 
 /* Default configuration for tokens needed to implement a C- or C++-compiler */
 #ifndef TPP_COMMON_HAVE_TPP_TOK_C_TOKENS
@@ -8028,7 +8019,7 @@ TPP_DECL_END
 /* C-style integer token `123`
  * @detect: #if __TPP_COUNT_TOKENS("123") == 1 */
 #ifndef TPP_HAVE_TOK_C_INT
-#define TPP_HAVE_TOK_C_INT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-c-int" */
+#define TPP_HAVE_TOK_C_INT TPP_COMMON_HAVE_TPP_TOK_C_GENERIC /* "-ftok-c-int" */
 #endif /* !TPP_HAVE_TOK_C_INT */
 
 /* Allow use of `_` as a thousands separator `123_456_789`
@@ -8054,7 +8045,7 @@ TPP_DECL_END
 /* C-style float token `123.0`
  * @detect: #if __TPP_COUNT_TOKENS("123.0") == 1 */
 #ifndef TPP_HAVE_TOK_C_FLOAT
-#define TPP_HAVE_TOK_C_FLOAT TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-c-float" */
+#define TPP_HAVE_TOK_C_FLOAT TPP_COMMON_HAVE_TPP_TOK_C_GENERIC /* "-ftok-c-float" */
 #endif /* !TPP_HAVE_TOK_C_FLOAT */
 
 /* (Try to) be smarter regarding how float tokens are detected.
@@ -8145,105 +8136,105 @@ TPP_DECL_END
 /* Support for C character literals: `'foo'`
  * @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1 */
 #ifndef TPP_HAVE_TOK_C_CHAR
-#define TPP_HAVE_TOK_C_CHAR TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-char" */
+#define TPP_HAVE_TOK_C_CHAR TPP_COMMON_HAVE_TPP_TOK_C_GENERIC /* "-ftok-char" */
 #endif /* !TPP_HAVE_TOK_C_CHAR */
 
 /* Support for C string literals: `"foo"`
  * @detect: #if __TPP_COUNT_TOKENS('"foo"') == 1 */
 #ifndef TPP_HAVE_TOK_C_STRING
-#define TPP_HAVE_TOK_C_STRING TPP_COMMON_HAVE_TPP_TOK_GENERIC /* "-ftok-string" */
+#define TPP_HAVE_TOK_C_STRING TPP_COMMON_HAVE_TPP_TOK_C_GENERIC /* "-ftok-string" */
 #endif /* !TPP_HAVE_TOK_C_STRING */
 
 /* Support for string literals: `R"AB(foo)AB"`
  * @detect: #if __TPP_COUNT_TOKENS('R"AB(foo)AB"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 3 */
 #ifndef TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL
-#define TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-raw-string-literal" */
+#define TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-raw-string-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL */
 
 /* Support for string literals: `L"foo"`
  * When `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `LR"AB(foo)AB")`
  * @detect: #if __TPP_COUNT_TOKENS('L"foo"') == 1 */
 #ifndef TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL
-#define TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-wide-string-literal" */
+#define TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-wide-string-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL */
 
 /* Support for string literals: `u8"foo"`
  * When `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `u8R"AB(foo)AB"`
  * @detect: #if __TPP_COUNT_TOKENS('u8"foo"') == 1 */
 #ifndef TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL
-#define TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf8-string-literal" */
+#define TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-utf8-string-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL */
 
 /* Support for string literals: `u"foo"`
  * When `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `uR"AB(foo)AB"`
  * @detect: #if __TPP_COUNT_TOKENS('u"foo"') == 1 */
 #ifndef TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL
-#define TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf16-string-literal" */
+#define TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-utf16-string-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL */
 
 /* Support for string literals: `U"foo"`
  * When `TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL` is also enabled, also support `UR"AB(foo)AB"`
  * @detect: #if __TPP_COUNT_TOKENS('U"foo"') == 1 */
 #ifndef TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL
-#define TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf32-string-literal" */
+#define TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-utf32-string-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL */
 
 /* Support for string literals: `R'AB(f)AB'`
  * @detect: #if __TPP_COUNT_TOKENS("R'AB(foo)AB'") == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 3 */
 #ifndef TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL
-#define TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-raw-char-literal" */
+#define TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-raw-char-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL */
 
 /* Support for string literals: `L'f'`
  * When `TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `LR'AB(f)AB'`
  * @detect: #if __TPP_COUNT_TOKENS("L'f'") == 1 */
 #ifndef TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL
-#define TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-wide-char-literal" */
+#define TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-wide-char-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL */
 
 /* Support for string literals: `u8'f'`
  * When `TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `u8R'AB(f)AB'`
  * @detect: #if __TPP_COUNT_TOKENS("u8'f'") == 1 */
 #ifndef TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL
-#define TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf8-char-literal" */
+#define TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-utf8-char-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL */
 
 /* Support for string literals: `u'f'`
  * When `TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `uR'AB(f)AB'`
  * @detect: #if __TPP_COUNT_TOKENS("u'f'") == 1 */
 #ifndef TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL
-#define TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf16-char-literal" */
+#define TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-utf16-char-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL */
 
 /* Support for string literals: `U'f'`
  * When `TPP_HAVE_TOK_CXX_RAW_CHAR_LITERAL` is also enabled, also support `UR'AB(f)AB'`
  * @detect: #if __TPP_COUNT_TOKENS("U'f'") == 1 */
 #ifndef TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL
-#define TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_C_STRING /* "-ftok-cxx-utf32-char-literal" */
+#define TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-utf32-char-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL */
 
 /* Support for deemon/python-style raw string literals: `r"foo"`
  * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 9 */
 #ifndef TPP_HAVE_TOK_RAW_STRING_LITERAL
-#define TPP_HAVE_TOK_RAW_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-raw-string-literal" */
+#define TPP_HAVE_TOK_RAW_STRING_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-raw-string-literal" */
 #endif /* !TPP_HAVE_TOK_RAW_STRING_LITERAL */
 
 /* Support for deemon/python-style raw string literals: `r'bar'`
  * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 9 */
 #ifndef TPP_HAVE_TOK_RAW_CHAR_LITERAL
-#define TPP_HAVE_TOK_RAW_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-raw-char-literal" */
+#define TPP_HAVE_TOK_RAW_CHAR_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-raw-char-literal" */
 #endif /* !TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 
 /* Support for java-style block string literals: `"""foo"""`
  * @detect: #if __TPP_COUNT_TOKENS('"""\n a\n b"""') == 1 */
 #ifndef TPP_HAVE_TOK_BLOCK_STRING_LITERAL
-#define TPP_HAVE_TOK_BLOCK_STRING_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-block-string-literal" */
+#define TPP_HAVE_TOK_BLOCK_STRING_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-block-string-literal" */
 #endif /* !TPP_HAVE_TOK_BLOCK_STRING_LITERAL */
 
 /* Support for java-style block string literals (but with single-ticks): `'''foo'''`
  * @detect: #if __TPP_COUNT_TOKENS("'''\n a\n b'''") == 1 */
 #ifndef TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
-#define TPP_HAVE_TOK_BLOCK_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_DEEMON_STRING /* "-ftok-block-char-literal" */
+#define TPP_HAVE_TOK_BLOCK_CHAR_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-block-char-literal" */
 #endif /* !TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
 
 #undef TPP_HAVE_TOK_INT

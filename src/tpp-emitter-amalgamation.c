@@ -47,6 +47,7 @@
 #define teff_NORMALIZE_SPACE                    TPP_EMITTER_INTERNAL(teff_NORMALIZE_SPACE)
 #define teff_NORMALIZE_LF                       TPP_EMITTER_INTERNAL(teff_NORMALIZE_LF)
 #define teff_NORMALIZE_C_STRING                 TPP_EMITTER_INTERNAL(teff_NORMALIZE_C_STRING)
+#define teff_NORMALIZE_C_INT                    TPP_EMITTER_INTERNAL(teff_NORMALIZE_C_INT)
 #define teff_NORMALIZE_KEYWORDS                 TPP_EMITTER_INTERNAL(teff_NORMALIZE_KEYWORDS)
 #define teff_NORMALIZE_BSE                      TPP_EMITTER_INTERNAL(teff_NORMALIZE_BSE)
 #define teff_NORMALIZE_TRIGRAPHS                TPP_EMITTER_INTERNAL(teff_NORMALIZE_TRIGRAPHS)
@@ -84,6 +85,9 @@ TPP_CONST_IMPL tpp_emitter_features const tpp_emitter_features_default = {
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING)
 		/* .teff_NORMALIZE_C_STRING                 = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING),
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT)
+		/* .teff_NORMALIZE_C_INT                    = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_C_INT),
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS)
 		/* .teff_NORMALIZE_KEYWORDS                 = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS),
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) */
@@ -705,6 +709,30 @@ tpp_emitter_print_current_token(tpp_emitter *tpp_restrict self) {
 print_generic_string:;
 	}	break;
 #endif /* TPP_EMITTER_HAVE_NORMALIZE_C_STRING */
+
+#if TPP_EMITTER_HAVE_NORMALIZE_C_INT
+	TPP_CASE_TPP_TOK_INT {
+		tpp_intmax intval;
+		tpp_char const *suffix_start;
+		char buf[TPP_ITOA_MAXLEN], *intbase;
+		tpp_errno error;
+		tpp_ssize temp, result;
+		if (!tpp_emitter_has(self, NORMALIZE_C_INT))
+			break;
+		error = tpp_lexer_decodeint_ex(lexer, &intval, &suffix_start);
+		if (TPP_ISERR(error))
+			return TPP_SSIZE_OFERR(error);
+		intbase = tpp_itoa(buf, intval);
+		result = tpp_emitter_print_cstr(self, intbase, (tpp_size)(buf + TPP_ITOA_MAXLEN - intbase));
+		if (result < 0)
+			return result;
+		temp = tpp_emitter_print_generic(self, suffix_start, (tpp_size)(token_end - suffix_start));
+		if (temp < 0)
+			return temp;
+		result += temp;
+		return result;
+	}	break;
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_C_INT */
 
 #if TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS
 	case '{':
@@ -1413,6 +1441,11 @@ tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self) {
 #else /* ... */
 #define tpp_emitter_set_NORMALIZE_C_STRING(self, v) (void)0
 #endif /* !... */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT)
+#define tpp_emitter_set_NORMALIZE_C_INT(self, v) tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_NORMALIZE_C_INT, v)
+#else /* ... */
+#define tpp_emitter_set_NORMALIZE_C_INT(self, v) (void)0
+#endif /* !... */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS)
 #define tpp_emitter_set_NORMALIZE_KEYWORDS(self, v) tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_NORMALIZE_KEYWORDS, v)
 #else /* ... */
@@ -1846,6 +1879,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 #if (TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE ||     \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF ||        \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS ||   \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT ||       \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS ||  \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE ||       \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS || \
@@ -1870,6 +1904,12 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 					return TPP_EOK;
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT
+				if (tpp_streq(arg, "int\0")) {
+					tpp_emitter_set_NORMALIZE_C_INT(self->tcl_emitter, !no);
+					return TPP_EOK;
+				} else
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS
 				if (tpp_streq(arg, "keywords\0")) {
 					tpp_emitter_set_NORMALIZE_KEYWORDS(self->tcl_emitter, !no);
@@ -1903,6 +1943,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				tpp_emitter_set_NORMALIZE_SPACE(self->tcl_emitter, !no);
 				tpp_emitter_set_NORMALIZE_LF(self->tcl_emitter, !no);
 				tpp_emitter_set_NORMALIZE_C_STRING(self->tcl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_C_INT(self->tcl_emitter, !no);
 				tpp_emitter_set_NORMALIZE_KEYWORDS(self->tcl_emitter, !no);
 				tpp_emitter_set_NORMALIZE_BSE(self->tcl_emitter, !no);
 				tpp_emitter_set_NORMALIZE_TRIGRAPHS(self->tcl_emitter, !no);
@@ -2151,6 +2192,10 @@ TPP_CLI_HELP1("-f[no-]normalize=lf",
 TPP_CLI_HELP1("-f[no-]normalize=strings",
               "Re-encode string tokens as \"foo\" or 'foo' before emission")
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS */
+#if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT
+TPP_CLI_HELP1("-f[no-]normalize=int",
+              "Re-encode integer tokens as decimals before emission")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS
 TPP_CLI_HELP1("-f[no-]normalize=keywords",
               "Re-encode keywords before emission")
