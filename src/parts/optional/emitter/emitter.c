@@ -476,19 +476,118 @@ tpp_emitter_print_current_token(tpp_emitter *tpp_restrict self) {
 #if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
 		if (TPP_TOK_ISSTRING_SQUOTE(tpp_lexer_gettok(lexer)) &&
 		    tpp_lexer_has(lexer, BUILTIN_EXPR_CHARACTER_LITERALS)) {
-			if (!tpp_lexer_has(lexer, TOK_C_CHAR))
-				break;
 			quote = '\'';
 		} else
 #endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
 		{
-			if (!tpp_lexer_has(lexer, TOK_C_STRING))
-				break;
 			quote = '"';
 		}
-		result = tpp_emitter_print(self, &quote, 1);
-		if (result < 0)
-			return result;
+
+		/* Emit string encoding prefix. */
+		result = 0;
+		switch (tpp_lexer_gettok(lexer)) {
+#if TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_WIDE_STRING_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_WIDE_CHAR_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_RAW_WIDE_STRING_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_RAW_WIDE_CHAR_LITERAL
+#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+			if (quote != '"') {
+				if (!tpp_lexer_has(lexer, TOK_CXX_WIDE_CHAR_LITERAL))
+					goto print_generic_string;
+			} else
+#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+			{
+				if (!tpp_lexer_has(lexer, TOK_CXX_WIDE_STRING_LITERAL))
+					goto print_generic_string;
+			}
+			result = tpp_emitter_print_conststr(self, "L");
+			if (result < 0)
+				return result;
+			break;
+#endif /* TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL || TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL */
+
+#if TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_UTF8_STRING_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_UTF8_CHAR_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_RAW_UTF8_STRING_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_RAW_UTF8_CHAR_LITERAL
+#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+			if (quote != '"') {
+				if (!tpp_lexer_has(lexer, TOK_CXX_UTF8_CHAR_LITERAL))
+					goto print_generic_string;
+			} else
+#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+			{
+				if (!tpp_lexer_has(lexer, TOK_CXX_UTF8_STRING_LITERAL))
+					goto print_generic_string;
+			}
+			result = tpp_emitter_print_conststr(self, "u8");
+			if (result < 0)
+				return result;
+			break;
+#endif /* TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL */
+
+#if TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_UTF16_STRING_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_UTF16_CHAR_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_RAW_UTF16_STRING_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_RAW_UTF16_CHAR_LITERAL
+#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+			if (quote != '"') {
+				if (!tpp_lexer_has(lexer, TOK_CXX_UTF16_CHAR_LITERAL))
+					goto print_generic_string;
+			} else
+#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+			{
+				if (!tpp_lexer_has(lexer, TOK_CXX_UTF16_STRING_LITERAL))
+					goto print_generic_string;
+			}
+			result = tpp_emitter_print_conststr(self, "u");
+			if (result < 0)
+				return result;
+			break;
+#endif /* TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL */
+
+#if TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_UTF32_STRING_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_UTF32_CHAR_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_RAW_UTF32_STRING_LITERAL
+		_TPP_CASE_TPP_TOK_CXX_RAW_UTF32_CHAR_LITERAL
+#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+			if (quote != '"') {
+				if (!tpp_lexer_has(lexer, TOK_CXX_UTF32_CHAR_LITERAL))
+					goto print_generic_string;
+			} else
+#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+			{
+				if (!tpp_lexer_has(lexer, TOK_CXX_UTF32_STRING_LITERAL))
+					goto print_generic_string;
+			}
+			result = tpp_emitter_print_conststr(self, "U");
+			if (result < 0)
+				return result;
+			break;
+#endif /* TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL */
+
+		default:
+#if TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
+			if (quote != '"') {
+				if (!tpp_lexer_has(lexer, TOK_C_CHAR))
+					goto print_generic_string;
+			} else
+#endif /* TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS */
+			{
+				if (!tpp_lexer_has(lexer, TOK_C_STRING))
+					goto print_generic_string;
+			}
+			break;
+		}
+
+		temp = tpp_emitter_print(self, &quote, 1);
+		if (temp < 0)
+			return temp;
+		result += temp;
 
 		/* Decode+re-encode string on-the-fly. */
 #if TPP_HAVE_STRING_ESCAPE_BIGCHAR
@@ -514,6 +613,7 @@ tpp_emitter_print_current_token(tpp_emitter *tpp_restrict self) {
 			return temp;
 		result += temp;
 		return result;
+print_generic_string:;
 	}	break;
 #endif /* TPP_EMITTER_HAVE_NORMALIZE_C_STRING */
 
