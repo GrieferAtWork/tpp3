@@ -38,7 +38,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_DIRECTIVES
 
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE
+#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE
 #undef tpp_lexer_seek_eol__STYLE_PARAM
 #undef tpp_lexer_seek_eol__STYLE_ARG
 #if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
@@ -54,7 +54,7 @@ TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM);
-#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE */
+#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE */
 
 
 #undef TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
@@ -2416,26 +2416,44 @@ tpp_lexer_handle_line_directive(tpp_lexer *tpp_restrict self,
 	                            file->tf_kind != TPP_FILE_KIND_TEXT)
 	                           ? tpp_file_gettextfile(prev_file)
 	                           : file;
+	tpp_char const *directive_eol;
 	tpp_errno error;
 	tpp_intmax new_linenumber;
+	TPP_REF tpp_string *new_filename = NULL;
 	tpp_token_id tok;
+
+	/* Load the remainder of the directive. */
+	tpp_assert(file->tf_prev == NULL);
+	directive_eol = file->tf_pos;
+	error = tpp_lexer_seek_eol(self, &directive_eol tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_EOF));
+	if (TPP_ISERR(error))
+		return TPP_TOK_OFERR(error);
+	tpp_file_push_eof_and_ifdef(file);
+	tpp_file_seteof(file, directive_eol);
+
 	do {
 		tok = tpp_lexer_yield_blocking(self);
 	} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
-	if (TPP_TOK_ISERR(tok))
+	if (TPP_TOK_ISERR(tok)) {
+err_tok_rollback:
+		tpp_lexer_popallfiles(self);
+		tpp_file_break_eof_and_ifdef(file);
 		return tok;
+	}
 
 #if TPP_HAVE_TOK_INT
 	if (TPP_TOK_ISINT(tok)) {
 		/* Decode line number */
 		error = tpp_lexer_decodeint(self, &new_linenumber);
-		if (TPP_ISERR(error))
-			return TPP_TOK_OFERR(error);
+		if (TPP_ISERR(error)) {
+			tok = TPP_TOK_OFERR(error);
+			goto err_tok_rollback;
+		}
 		do {
 			tok = tpp_lexer_yield_blocking(self);
 		} while (TPP_TOK_ISSPACE_OR_COMMENT(tok));
 		if (TPP_TOK_ISERR(tok))
-			return tok;
+			goto err_tok_rollback;
 	} else
 #endif /* TPP_HAVE_TOK_INT */
 	{
@@ -2443,20 +2461,20 @@ tpp_lexer_handle_line_directive(tpp_lexer *tpp_restrict self,
 		new_linenumber = tpp_lcinfo_getline(lc) - 1;
 #if TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE
 		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE);
-		if (TPP_ISERR(error))
-			return TPP_TOK_OFERR(error);
+		if (TPP_ISERR(error)) {
+			tok = TPP_TOK_OFERR(error);
+			goto err_tok_rollback;
+		}
 #endif /* TPP_HAVE_TPP_W_EXPECTED_INT_AFTER_LINE_DIRECTIVE */
 	}
 
-	/* Apply filename override if one is defined */
+	/* If there's a string, use it as the new filename */
 	if (TPP_TOK_ISSTRING(tok)) {
-		TPP_REF tpp_string *new_filename;
 		error = tpp_lexer_parsestring(self, &new_filename, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
-		if (TPP_ISERR(error))
-			return TPP_TOK_OFERR(error);
-		if (textfile)
-			tpp_file_setfilename(textfile, new_filename);
-		tpp_string_decref(new_filename);
+		if (TPP_ISERR(error)) {
+			tok = TPP_TOK_OFERR(error);
+			goto err_tok_rollback;
+		}
 		tok = tpp_lexer_gettok(self);
 	}
 
@@ -2466,32 +2484,34 @@ tpp_lexer_handle_line_directive(tpp_lexer *tpp_restrict self,
 		tok = tpp_lexer_yield_blocking(self);
 	if (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
 		if (TPP_TOK_ISERR(tok))
-			return tok;
+			goto err_tok_rollback;
 		error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, "line");
-		if (TPP_ISERR(error))
-			return TPP_TOK_OFERR(error);
-		do {
-			tok = tpp_lexer_yield_blocking(self);
-			if (TPP_TOK_ISERR(tok))
-				return tok;
-		} while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok));
+		if (TPP_ISERR(error)) {
+			tok = TPP_TOK_OFERR(error);
+			goto err_tok_rollback;
+		}
 	}
-#else /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
-	while (!TPP_TOK_ISLF_OR_COMMENT_OR_EOF(tok)) {
-		tok = tpp_lexer_yield_blocking(self);
-		if (TPP_TOK_ISERR(tok))
-			return tok;
-	}
-#endif /* !TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
+#endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
 
-	/* Apply new line number at start of next line */
+	tpp_lexer_popallfiles(self);
+	tpp_file_pop_eof_and_ifdef(file);
+	file->tf_pos = directive_eol;
+
 	if (textfile) {
+		/* Apply line number override (at directive EOL)
+		 * If "textfile != file", then the file's current position should point
+		 * at wherever it will parse its next token, which should be the start
+		 * of the next effective line (this can happen e.g. if we get here from
+		 * within a "#pragma tpp_exec()" directive) */
 		--new_linenumber; /* "tpp_file_setline()" is 0-based, but user-supplied number is 1-based */
 		tpp_file_setline(textfile, tpp_file_getpos(textfile), (tpp_line)new_linenumber);
-	}
 
-	/* Tell caller to yield the first token of the next
-	 * (physical) line (now with a custom line-number) */
+		/* Apply filename override */
+		if (new_filename != NULL)
+			tpp_file_setfilename(textfile, new_filename);
+	}
+	if (new_filename)
+		tpp_string_decref(new_filename);
 	return TPP_TOK_EOF;
 }
 #endif /* TPP_HAVE_CPP_LINE */

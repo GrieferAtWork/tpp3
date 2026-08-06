@@ -870,7 +870,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_emitter_printbig_normal, arg, text, num_byte
 		return 0;
 	if (data->tepbd_after_x) {
 		if (tpp_ascii_isxdigit(*text)) {
-			tpp_char seq[sizeof("' '") - sizeof(char)];
+			tpp_char seq[3];
 			seq[0] = data->tepbd_quote;
 			seq[1] = ' ';
 			seq[2] = data->tepbd_quote;
